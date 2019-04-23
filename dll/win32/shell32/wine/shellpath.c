@@ -647,6 +647,7 @@ static const WCHAR AllUsersW[] = {'P','u','b','l','i','c',0};
 
 typedef enum _CSIDL_Type {
     CSIDL_Type_User,
+    CSIDL_Type_InUserDocument,
     CSIDL_Type_AllUsers,
     CSIDL_Type_CurrVer,
     CSIDL_Type_Disallowed,
@@ -766,14 +767,14 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x0d - CSIDL_MYMUSIC */
         &FOLDERID_Music,
-        CSIDL_Type_User,
+        CSIDL_Type_InUserDocument,
         My_MusicW,
         MAKEINTRESOURCEW(IDS_MYMUSIC),
         -IDI_SHELL_MY_MUSIC
     },
     { /* 0x0e - CSIDL_MYVIDEO */
         &FOLDERID_Videos,
-        CSIDL_Type_User,
+        CSIDL_Type_InUserDocument,
         My_VideoW,
         MAKEINTRESOURCEW(IDS_MYVIDEO),
         -IDI_SHELL_MY_MOVIES
@@ -937,7 +938,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
-        CSIDL_Type_User,
+        CSIDL_Type_InUserDocument,
         My_PicturesW,
         MAKEINTRESOURCEW(IDS_MYPICTURES),
         -IDI_SHELL_MY_PICTURES
@@ -1140,7 +1141,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x47 - CSIDL_DOWNLOADS */
         &FOLDERID_Downloads,
-        CSIDL_Type_User,
+        CSIDL_Type_InUserDocument,
         NULL,
         DownloadsW
     },
@@ -1525,6 +1526,25 @@ BOOL _SHGetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath
     return result;
 }
 
+static BOOL IsShellFoldersStyleXP(void)
+{
+    static const WCHAR s_szReactOSKey[] = L"Software\\ReactOS";
+    HKEY hKey = NULL;
+    BOOL ret = FALSE;
+    DWORD dwValue, cbValue;
+
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, s_szReactOSKey, &hKey))
+        return ret;
+
+    dwValue = 0;
+    cbValue = sizeof(dwValue);
+    RegQueryValueExW(hKey, L"Shell Folders Style", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+
+    RegCloseKey(hKey);
+
+    return dwValue != 0;
+}
+
 /* Gets a 'semi-expanded' default value of the CSIDL with index folder into
  * pszPath, based on the entries in CSIDL_Data.  By semi-expanded, I mean:
  * - The entry's szDefaultPath may be either a string value or an integer
@@ -1586,6 +1606,27 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
     {
         case CSIDL_Type_User:
             strcpyW(pszPath, UserProfileW);
+            break;
+        case CSIDL_Type_InUserDocument:
+            if (IsShellFoldersStyleXP())
+            {
+                strcpyW(pszPath, UserProfileW);
+                if (IS_INTRESOURCE(CSIDL_Data[0x05].szDefaultPath))
+                {
+                    WCHAR szPath[MAX_PATH];
+                    LoadStringW(shell32_hInstance, LOWORD(CSIDL_Data[0x05].szDefaultPath),
+                                szPath, ARRAY_SIZE(szPath));
+                    strcatW(pszPath, szPath);
+                }
+                else
+                {
+                    strcatW(pszPath, CSIDL_Data[0x05].szDefaultPath);
+                }
+            }
+            else
+            {
+                strcpyW(pszPath, UserProfileW);
+            }
             break;
         case CSIDL_Type_AllUsers:
 #ifndef __REACTOS__
@@ -1754,8 +1795,11 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
-    if (CSIDL_Data[folder].type != CSIDL_Type_User)
+    if (CSIDL_Data[folder].type != CSIDL_Type_User &&
+        CSIDL_Data[folder].type != CSIDL_Type_InUserDocument)
+    {
         return E_INVALIDARG;
+    }
     if (!pszPath)
         return E_INVALIDARG;
 
@@ -2220,6 +2264,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
             hr = _SHGetCurrentVersionPath(dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_User:
+        case CSIDL_Type_InUserDocument:
             hr = _SHGetUserProfilePath(hToken, dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_AllUsers:
@@ -2384,7 +2429,9 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
 
         /* For CSIDL_Type_User we also use the GUID if no szValueName is provided */
         szValueName = CSIDL_Data[folders[i]].szValueName;
-        if (!szValueName && CSIDL_Data[folders[i]].type == CSIDL_Type_User)
+        if (!szValueName &&
+            (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
+             CSIDL_Data[folders[i]].type == CSIDL_Type_InUserDocument))
         {
             StringFromGUID2( CSIDL_Data[folders[i]].id, buffer, 39 );
             szValueName = &buffer[0];
@@ -2395,9 +2442,12 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
          dwType != REG_EXPAND_SZ))
         {
             *path = '\0';
-            if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
+            if (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
+                CSIDL_Data[folders[i]].type == CSIDL_Type_InUserDocument)
+            {
                 _SHGetUserProfilePath(hToken, SHGFP_TYPE_DEFAULT, folders[i],
                  path);
+            }
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
                 _SHGetAllUsersProfilePath(SHGFP_TYPE_DEFAULT, folders[i], path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_WindowsPath)

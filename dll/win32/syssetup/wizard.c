@@ -528,6 +528,88 @@ OwnerPageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static INT_PTR CALLBACK
+ShellFolderPageDlgProc(HWND hwndDlg,
+                       UINT uMsg,
+                       WPARAM wParam,
+                       LPARAM lParam)
+{
+    LPNMHDR lpnm;
+    PSETUPDATA pSetupData;
+    BOOL bXP;
+    HKEY hKey;
+    DWORD dwValue, cbValue;
+    static const WCHAR s_szStyle[] = L"Shell Folders Style";
+
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
+
+            bXP = TRUE;
+            hKey = NULL;
+            RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
+            if (hKey)
+            {
+                dwValue = bXP;
+                cbValue = sizeof(dwValue);
+                RegQueryValueExW(hKey, s_szStyle, NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+                RegCloseKey(hKey);
+
+                bXP = (dwValue != 0);
+            }
+
+            if (bXP)
+                CheckRadioButton(hwndDlg, IDC_STYLE2003, IDC_STYLEXP, IDC_STYLEXP);
+            else
+                CheckRadioButton(hwndDlg, IDC_STYLE2003, IDC_STYLEXP, IDC_STYLE2003);
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Enable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    break;
+
+                case PSN_WIZNEXT:
+                    bXP = (IsDlgButtonChecked(hwndDlg, IDC_STYLEXP) == BST_CHECKED);
+
+                    hKey = NULL;
+                    RegCreateKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
+                    if (hKey)
+                    {
+                        DWORD dwValue = bXP;
+                        RegSetValueExW(hKey, s_szStyle, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
+                        RegCloseKey(hKey);
+                    }
+                    break;
+
+                case PSN_WIZBACK:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
 static
 BOOL
 WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
@@ -2640,7 +2722,7 @@ InstallWizard(VOID)
     PSETUPDATA pSetupData = NULL;
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
-    DWORD dwPageCount = 9, dwNetworkPageCount = 0;
+    DWORD dwPageCount = 10, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2713,6 +2795,14 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
     psp.pfnDlgProc = LocalePageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the Shell Folders page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SHELLFOLDERSTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SHELLFOLDERSSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_SHELLFOLDERSPAGE);
+    psp.pfnDlgProc = ShellFolderPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Owner page */

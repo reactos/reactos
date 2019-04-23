@@ -24,6 +24,18 @@ BEGIN
     LTEXT "Kur'la sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
 END
 
+IDD_SHELLFOLDERSPAGE DIALOG 0, 0, 317, 143
+CAPTION "ReactOS Setup"
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Choose the style of shell folders.", -1, 54, 7, 250, 24
+    AUTORADIOBUTTON "2003 Style (Not Recommended)", IDC_STYLE2003, 54, 38, 143, 11
+    AUTORADIOBUTTON "XP Style (Recommended)", IDC_STYLEXP, 54, 80, 143, 11
+    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents"". This is behaivor of Windows 2003.", -1, 67, 55, 225, 19
+    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents"". This is behaivor of Windows XP.", -1, 67, 95, 225, 20
+END
+
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Kur"
@@ -166,6 +178,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Lütfen bekleyiniz..."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
+    IDS_SHELLFOLDERSTITLE "Shell Folders"
+    IDS_SHELLFOLDERSSUBTITLE "Set the style of Shell Folders."
 END
 
 STRINGTABLE
