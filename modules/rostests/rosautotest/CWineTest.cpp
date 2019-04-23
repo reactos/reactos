@@ -2,12 +2,13 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class implementing functions for handling Wine tests
- * COPYRIGHT:   Copyright 2009-2015 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2009-2019 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
 
 static const DWORD ListTimeout = 10000;
+static const DWORD ProcessActivityTimeout = 120000;
 
 /**
  * Constructs a CWineTest object.
@@ -140,7 +141,7 @@ CWineTest::DoListCommand()
     /* Read the data */
     m_ListBuffer = new char[BytesAvailable];
 
-    if(!Pipe.Read(m_ListBuffer, BytesAvailable, &Temp))
+    if(Pipe.Read(m_ListBuffer, BytesAvailable, &Temp, INFINITE) != ERROR_SUCCESS)
         TESTEXCEPTION("CPipe::Read failed\n");
 
     return BytesAvailable;
@@ -291,17 +292,34 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         CPipedProcess Process(TestInfo->CommandLine, Pipe);
 
         /* Receive all the data from the pipe */
-        while(Pipe.Read(Buffer, sizeof(Buffer) - 1, &BytesAvailable) && BytesAvailable)
+        for (;;)
         {
-            /* Output text through StringOut, even while the test is still running */
-            Buffer[BytesAvailable] = 0;
-            tailString = StringOut(tailString.append(string(Buffer)), false);
+            DWORD dwReadResult = Pipe.Read(Buffer, sizeof(Buffer) - 1, &BytesAvailable, ProcessActivityTimeout);
+            if (dwReadResult == ERROR_SUCCESS)
+            {
+                /* Output text through StringOut, even while the test is still running */
+                Buffer[BytesAvailable] = 0;
+                tailString = StringOut(tailString.append(string(Buffer)), false);
 
-            if(Configuration.DoSubmit())
-                TestInfo->Log += Buffer;
+                if (Configuration.DoSubmit())
+                    TestInfo->Log += Buffer;
+            }
+            else if (dwReadResult == ERROR_BROKEN_PIPE)
+            {
+                // The process finished and has been terminated.
+                break;
+            }
+            else if (dwReadResult == WAIT_TIMEOUT)
+            {
+                // The process activity timeout above has elapsed without any new data.
+                TESTEXCEPTION("Timeout while waiting for the test process\n");
+            }
+            else
+            {
+                // An unexpected error.
+                TESTEXCEPTION("CPipe::Read failed for the test run\n");
+            }
         }
-        if(GetLastError() != ERROR_BROKEN_PIPE)
-            TESTEXCEPTION("CPipe::Read failed for the test run\n");
     }
     catch(CTestException& e)
     {
