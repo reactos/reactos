@@ -30,6 +30,7 @@
 #define IDI_ICON3 12
 #define IDI_ICON4 13
 #define IDI_ICON5 14
+#define IDI_ICON6 15
 
 #define IDC_STATIC -1
 
