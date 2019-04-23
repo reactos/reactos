@@ -2812,10 +2812,22 @@ DWORD WINAPI WNetConnectionDialog1W( LPCONNECTDLGSTRUCTW lpConnDlgStruct )
  */
 DWORD WINAPI WNetDisconnectDialog( HWND hwnd, DWORD dwType )
 {
+#ifdef __REACTOS__
+    DWORD dwRet;
+    HMODULE hDll = LoadLibraryW(L"netplwiz.dll");
+    static BOOL (WINAPI *pSHDisconnectNetDrives)(PVOID);
+    pSHDisconnectNetDrives = (VOID *) GetProcAddress(hDll, "SHDisconnectNetDrives");
+    
+    dwRet = pSHDisconnectNetDrives(NULL);
+    
+    FreeLibrary(hDll);
+    return dwRet;
+#else
     FIXME( "(%p, %08X): stub\n", hwnd, dwType );
 
     SetLastError(WN_NO_NETWORK);
     return WN_NO_NETWORK;
+#endif
 }
 
 /*********************************************************************
