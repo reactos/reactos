@@ -533,6 +533,7 @@ static const WCHAR s_szReactOSKey[] = L"Software\\ReactOS";
 static const WCHAR s_szLayout[] = L"Shell Folders Layout";
 #define SHELL_LAYOUT_MODERN 0
 #define SHELL_LAYOUT_LEGACY 1
+#define SHELL_LAYOUT_DEFAULT SHELL_LAYOUT_MODERN
 
 static BOOL GetShellFoldersLayout(HKEY hRootKey, LPDWORD pdwLayout)
 {
@@ -543,7 +544,7 @@ static BOOL GetShellFoldersLayout(HKEY hRootKey, LPDWORD pdwLayout)
     if (!hKey)
         return FALSE;
 
-    dwValue = SHELL_LAYOUT_MODERN;
+    dwValue = SHELL_LAYOUT_DEFAULT;
     cbValue = sizeof(dwValue);
     RegQueryValueExW(hKey, s_szLayout, NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
@@ -555,7 +556,7 @@ static BOOL GetShellFoldersLayout(HKEY hRootKey, LPDWORD pdwLayout)
     case SHELL_LAYOUT_LEGACY:
         break;
     default:
-        dwValue = SHELL_LAYOUT_MODERN;
+        dwValue = SHELL_LAYOUT_DEFAULT;
         break;
     }
 
@@ -599,7 +600,7 @@ ShellFolderPageDlgProc(HWND hwndDlg,
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
-            dwLayout = SHELL_LAYOUT_MODERN;
+            dwLayout = SHELL_LAYOUT_DEFAULT;
             if ((GetShellFoldersLayout(HKEY_CURRENT_USER, &dwLayout) ||
                  GetShellFoldersLayout(HKEY_LOCAL_MACHINE, &dwLayout)) && dwLayout == SHELL_LAYOUT_MODERN)
             {
