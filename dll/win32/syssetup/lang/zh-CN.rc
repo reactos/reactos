@@ -180,7 +180,7 @@ BEGIN
     IDS_THEMESELECTIONTITLE "外观"
     IDS_THEMESELECTIONSUBTITLE "选择您的主题:"
     IDS_SHELLFOLDERSTITLE "Shell Folders"
-    IDS_SHELLFOLDERSSUBTITLE "Set the style of Shell Folders."
+    IDS_SHELLFOLDERSSUBTITLE "Set the layout of the shell folders."
 END
 
 STRINGTABLE

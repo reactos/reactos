@@ -186,7 +186,7 @@ BEGIN
     IDS_THEMESELECTIONTITLE "Зовнішній вигляд"
     IDS_THEMESELECTIONSUBTITLE "Виберіть тему, яку ви вважаєте за краще"
     IDS_SHELLFOLDERSTITLE "Shell Folders"
-    IDS_SHELLFOLDERSSUBTITLE "Set the style of Shell Folders."
+    IDS_SHELLFOLDERSSUBTITLE "Set the layout of the shell folders."
 END
 
 STRINGTABLE

@@ -184,7 +184,7 @@ BEGIN
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
     IDS_SHELLFOLDERSTITLE "Shell Folders"
-    IDS_SHELLFOLDERSSUBTITLE "Set the style of Shell Folders."
+    IDS_SHELLFOLDERSSUBTITLE "Set the layout of the shell folders."
 END
 
 STRINGTABLE

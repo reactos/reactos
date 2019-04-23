@@ -187,7 +187,7 @@ BEGIN
     IDS_THEMESELECTIONTITLE "Aspect"
     IDS_THEMESELECTIONSUBTITLE "Selectați tema preferată"
     IDS_SHELLFOLDERSTITLE "Shell Folders"
-    IDS_SHELLFOLDERSSUBTITLE "Set the style of Shell Folders."
+    IDS_SHELLFOLDERSSUBTITLE "Set the layout of the shell folders."
 END
 
 STRINGTABLE
