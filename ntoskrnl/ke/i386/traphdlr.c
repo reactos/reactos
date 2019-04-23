@@ -455,7 +455,6 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
-DECLSPEC_NORETURN
 VOID
 __cdecl
 KiTrap02Handler(VOID)
@@ -561,25 +560,24 @@ KiTrap02Handler(VOID)
      * We have to make sure we're still in our original NMI -- a nested NMI
      * will point back to the NMI TSS, and in that case we're hosed.
      */
-    if (PCR->TSS->Backlink != KGDT_NMI_TSS)
+    if (PCR->TSS->Backlink == KGDT_NMI_TSS)
     {
-        /* Restore original TSS */
-        PCR->TSS = Tss;
-
-        /* Set it back to busy */
-        TssGdt->HighWord.Bits.Dpl = 0;
-        TssGdt->HighWord.Bits.Pres = 1;
-        TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
-
-        /* Restore nested flag */
-        __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
-
-        /* Handled, return from interrupt */
-        KiIret();
+        /* Unhandled: crash the system */
+        KiSystemFatalException(EXCEPTION_NMI, NULL);
     }
 
-    /* Unhandled: crash the system */
-    KiSystemFatalException(EXCEPTION_NMI, NULL);
+    /* Restore original TSS */
+    PCR->TSS = Tss;
+
+    /* Set it back to busy */
+    TssGdt->HighWord.Bits.Dpl = 0;
+    TssGdt->HighWord.Bits.Pres = 1;
+    TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
+
+    /* Restore nested flag */
+    __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
+
+    /* Handled, return from interrupt */
 }
 
 DECLSPEC_NORETURN
