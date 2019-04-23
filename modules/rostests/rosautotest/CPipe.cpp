@@ -3,9 +3,13 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class that manages an unidirectional anonymous byte stream pipe
  * COPYRIGHT:   Copyright 2015 Thomas Faber (thomas.faber@reactos.org)
+ *              Copyright 2019 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
+
+LONG CPipe::m_lPipeCount = 0;
+
 
 /**
  * Constructs a CPipe object and initializes read and write handles.
@@ -18,8 +22,50 @@ CPipe::CPipe()
     SecurityAttributes.bInheritHandle = TRUE;
     SecurityAttributes.lpSecurityDescriptor = NULL;
 
-    if(!CreatePipe(&m_hReadPipe, &m_hWritePipe, &SecurityAttributes, 0))
-        FATAL("CreatePipe failed\n");
+    // Construct a unique pipe name.
+    WCHAR wszPipeName[MAX_PATH];
+    InterlockedIncrement(&m_lPipeCount);
+    swprintf(wszPipeName, L"\\\\.\\pipe\\TestmanPipe%ld", m_lPipeCount);
+
+    // Create a named pipe with the default settings, but overlapped (asynchronous) operations.
+    // Latter feature is why we can't simply use CreatePipe.
+    const DWORD dwDefaultBufferSize = 4096;
+    const DWORD dwDefaultTimeoutMilliseconds = 120000;
+
+    m_hReadPipe = CreateNamedPipeW(wszPipeName,
+        PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        1,
+        dwDefaultBufferSize,
+        dwDefaultBufferSize,
+        dwDefaultTimeoutMilliseconds,
+        &SecurityAttributes);
+    if (m_hReadPipe == INVALID_HANDLE_VALUE)
+    {
+        FATAL("CreateNamedPipe failed\n");
+    }
+
+    // Use CreateFileW to get the write handle to the pipe.
+    // Writing is done synchronously, so no FILE_FLAG_OVERLAPPED here!
+    m_hWritePipe = CreateFileW(wszPipeName,
+        GENERIC_WRITE,
+        0,
+        &SecurityAttributes,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
+    if (m_hWritePipe == INVALID_HANDLE_VALUE)
+    {
+        FATAL("CreateFileW failed\n");
+    }
+
+    // Prepare the OVERLAPPED structure for reading.
+    ZeroMemory(&m_ReadOverlapped, sizeof(m_ReadOverlapped));
+    m_ReadOverlapped.hEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
+    if (!m_ReadOverlapped.hEvent)
+    {
+        FATAL("CreateEvent failed\n");
+    }
 }
 
 /**
@@ -103,17 +149,60 @@ CPipe::Peek(PVOID Buffer, DWORD BufferSize, PDWORD BytesRead, PDWORD TotalBytesA
  * On return, the number of bytes actually read from the pipe into Buffer.
  *
  * @return
- * True on success, false on failure; call GetLastError for error information.
+ * Returns a Win32 error code. Expected error codes include:
+ *   - ERROR_SUCCESS:     The read has completed successfully.
+ *   - WAIT_TIMEOUT:      The given timeout has elapsed before any data was read.
+ *   - ERROR_BROKEN_PIPE: The other end of the pipe has been closed.
  *
  * @see ReadFile
  */
-bool
-CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead)
+DWORD
+CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, DWORD TimeoutMilliseconds)
 {
     if (!m_hReadPipe)
+    {
         FATAL("Trying to read from a closed read pipe");
+    }
 
-    return ReadFile(m_hReadPipe, Buffer, NumberOfBytesToRead, NumberOfBytesRead, NULL);
+    if (ReadFile(m_hReadPipe, Buffer, NumberOfBytesToRead, NumberOfBytesRead, &m_ReadOverlapped))
+    {
+        // The asynchronous read request could be satisfied immediately.
+        return ERROR_SUCCESS;
+    }
+    else if (GetLastError() == ERROR_IO_PENDING)
+    {
+        // The asynchronous read request could not be satisfied immediately, so wait for it with the given timeout.
+        DWORD dwWaitResult = WaitForSingleObject(m_ReadOverlapped.hEvent, TimeoutMilliseconds);
+        if (dwWaitResult == WAIT_OBJECT_0)
+        {
+            // Fill NumberOfBytesRead.
+            if (GetOverlappedResult(m_hReadPipe, &m_ReadOverlapped, NumberOfBytesRead, FALSE))
+            {
+                // We successfully read NumberOfBytesRead bytes.
+                return ERROR_SUCCESS;
+            }
+            else if (GetLastError() == ERROR_BROKEN_PIPE)
+            {
+                // The other end of the pipe has been closed.
+                return ERROR_BROKEN_PIPE;
+            }
+            else
+            {
+                // An unexpected error.
+                FATAL("GetOverlappedResult failed\n");
+            }
+        }
+        else
+        {
+            // This may be WAIT_TIMEOUT or an unexpected error.
+            return dwWaitResult;
+        }
+    }
+    else
+    {
+        // This may be ERROR_BROKEN_PIPE or an unexpected error.
+        return GetLastError();
+    }
 }
 
 /**
