@@ -47,10 +47,10 @@ STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Choose the style of shell folders.", -1, 54, 7, 250, 24
-    AUTORADIOBUTTON "2003 Style (Not Recommended)", IDC_STYLE2003, 54, 38, 143, 11
-    AUTORADIOBUTTON "XP Style (Recommended)", IDC_STYLEXP, 54, 80, 143, 11
-    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents"". This is behaivor of Windows 2003.", -1, 67, 55, 225, 19
-    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents"". This is behaivor of Windows XP.", -1, 67, 95, 225, 20
+    AUTORADIOBUTTON "2003 Style (Not Recommended)", IDC_STYLE2003, 54, 30, 143, 11
+    AUTORADIOBUTTON "XP Style (Recommended)", IDC_STYLEXP, 54, 85, 143, 11
+    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents"". This is behaivor of Windows 2003.", -1, 67, 50, 225, 30
+    LTEXT "Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents"". This is behaivor of Windows XP.", -1, 67, 105, 225, 30
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
