@@ -510,6 +510,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
+                    break;
 
                 case PSN_WIZBACK:
                     pSetupData->UnattendSetup = FALSE;
@@ -608,7 +609,7 @@ ShellFolderPageDlgProc(HWND hwndDlg,
                     }
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
                     break;
