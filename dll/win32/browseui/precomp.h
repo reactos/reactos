@@ -11,6 +11,7 @@
 #include <winbase.h>
 #include <wincon.h>
 #include <wingdi.h>
+#include <winnetwk.h>
 #include <shlobj.h>
 #include <tlogstg.h>
 #include <shellapi.h>

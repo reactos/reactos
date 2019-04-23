@@ -3536,7 +3536,6 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     {
         // FIXME: Remove once implemented
         SHEnableMenuItem(theMenu, IDM_TOOLS_MAPNETWORKDRIVE, FALSE);
-        SHEnableMenuItem(theMenu, IDM_TOOLS_DISCONNECTNETWORKDRIVE, FALSE);
         SHEnableMenuItem(theMenu, IDM_TOOLS_SYNCHRONIZE, FALSE);
         menuIndex = 4;
     }
@@ -3595,9 +3594,7 @@ LRESULT CShellBrowser::OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCt
 
 LRESULT CShellBrowser::OnDisconnectNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-#ifndef __REACTOS__
     WNetDisconnectDialog(m_hWnd, RESOURCETYPE_DISK);
-#endif /* __REACTOS__ */
     return 0;
 }
 
