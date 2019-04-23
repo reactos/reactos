@@ -579,6 +579,20 @@ ShellFolderPageDlgProc(HWND hwndDlg,
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    if (pSetupData->UnattendSetup)
+                    {
+                        bXP = TRUE;
+                        hKey = NULL;
+                        RegCreateKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
+                        if (hKey)
+                        {
+                            DWORD dwValue = bXP;
+                            RegSetValueExW(hKey, s_szStyle, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
+                            RegCloseKey(hKey);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
+                            return TRUE;
+                        }
+                    }
                     break;
 
                 case PSN_WIZNEXT:
@@ -592,9 +606,15 @@ ShellFolderPageDlgProc(HWND hwndDlg,
                         RegSetValueExW(hKey, s_szStyle, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
                         RegCloseKey(hKey);
                     }
+                    if (pSetupData->UnattendSetup)
+                    {
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
+                        return TRUE;
+                    }
                     break;
 
                 case PSN_WIZBACK:
+                    pSetupData->UnattendSetup = FALSE;
                     break;
 
                 default:
@@ -882,7 +902,6 @@ ComputerPageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
-
 static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
@@ -1067,7 +1086,7 @@ LocalePageDlgProc(HWND hwndDlg,
                             RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"$winnt$.inf\""); // Should be in System32
                         }
 
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_SHELLFOLDERSPAGE);
                         return TRUE;
                     }
                     break;
