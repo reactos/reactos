@@ -450,7 +450,14 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         StringCchCopyW(pContext->szOldFile, _countof(pContext->szOldFile), szPath);
         pch = PathFindFileNameW(pContext->szOrigin);
         if (pch && *pch)
+        {
+            /* build szDescription */
+            StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), pch);
             *pch = 0;
+
+            pch = PathFindExtensionW(pContext->szDescription);
+            *pch = 0;
+        }
     }
     PathAddBackslashW(pContext->szOrigin);
 
