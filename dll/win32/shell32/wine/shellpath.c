@@ -1526,23 +1526,38 @@ BOOL _SHGetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath
     return result;
 }
 
-static BOOL IsShellFoldersStyleXP(void)
+static const WCHAR s_szReactOSKey[] = L"Software\\ReactOS";
+static const WCHAR s_szLayout[] = L"Shell Folders Layout";
+#define SHELL_LAYOUT_MODERN 0
+#define SHELL_LAYOUT_LEGACY 1
+
+static BOOL GetShellFoldersLayout(HKEY hRootKey, LPDWORD pdwLayout)
 {
-    static const WCHAR s_szReactOSKey[] = L"Software\\ReactOS";
     HKEY hKey = NULL;
-    BOOL ret = FALSE;
     DWORD dwValue, cbValue;
 
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, s_szReactOSKey, &hKey))
-        return ret;
+    RegOpenKeyExW(hRootKey, s_szReactOSKey, 0, KEY_READ, &hKey);
+    if (!hKey)
+        return FALSE;
 
-    dwValue = 0;
+    dwValue = SHELL_LAYOUT_MODERN;
     cbValue = sizeof(dwValue);
-    RegQueryValueExW(hKey, L"Shell Folders Style", NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+    RegQueryValueExW(hKey, s_szLayout, NULL, NULL, (LPBYTE)&dwValue, &cbValue);
 
     RegCloseKey(hKey);
 
-    return dwValue != 0;
+    switch (dwValue)
+    {
+    case SHELL_LAYOUT_MODERN:
+    case SHELL_LAYOUT_LEGACY:
+        break;
+    default:
+        dwValue = SHELL_LAYOUT_MODERN;
+        break;
+    }
+
+    *pdwLayout = dwValue;
+    return TRUE;
 }
 
 /* Gets a 'semi-expanded' default value of the CSIDL with index folder into
@@ -1567,6 +1582,7 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 {
     HRESULT hr;
     WCHAR resourcePath[MAX_PATH];
+    DWORD dwLayout;
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
@@ -1608,19 +1624,29 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
             strcpyW(pszPath, UserProfileW);
             break;
         case CSIDL_Type_InUserDocument:
-            if (IsShellFoldersStyleXP())
+            dwLayout = SHELL_LAYOUT_MODERN;
+            if (GetShellFoldersLayout(HKEY_CURRENT_USER, &dwLayout) ||
+                GetShellFoldersLayout(HKEY_LOCAL_MACHINE, &dwLayout))
             {
-                strcpyW(pszPath, UserProfileW);
-                if (IS_INTRESOURCE(CSIDL_Data[0x05].szDefaultPath))
+                if (dwLayout == SHELL_LAYOUT_LEGACY)
                 {
-                    WCHAR szPath[MAX_PATH];
-                    LoadStringW(shell32_hInstance, LOWORD(CSIDL_Data[0x05].szDefaultPath),
-                                szPath, ARRAY_SIZE(szPath));
-                    strcatW(pszPath, szPath);
+                    strcpyW(pszPath, UserProfileW);
+                    PathAddBackslashW(pszPath);
+                    if (IS_INTRESOURCE(CSIDL_Data[0x05].szDefaultPath))
+                    {
+                        WCHAR szPath[MAX_PATH];
+                        LoadStringW(shell32_hInstance, LOWORD(CSIDL_Data[0x05].szDefaultPath),
+                                    szPath, ARRAY_SIZE(szPath));
+                        strcatW(pszPath, szPath);
+                    }
+                    else
+                    {
+                        strcatW(pszPath, CSIDL_Data[0x05].szDefaultPath);
+                    }
                 }
                 else
                 {
-                    strcatW(pszPath, CSIDL_Data[0x05].szDefaultPath);
+                    strcpyW(pszPath, UserProfileW);
                 }
             }
             else

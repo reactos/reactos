@@ -529,6 +529,57 @@ OwnerPageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static const WCHAR s_szReactOSKey[] = L"Software\\ReactOS";
+static const WCHAR s_szLayout[] = L"Shell Folders Layout";
+#define SHELL_LAYOUT_MODERN 0
+#define SHELL_LAYOUT_LEGACY 1
+
+static BOOL GetShellFoldersLayout(HKEY hRootKey, LPDWORD pdwLayout)
+{
+    HKEY hKey = NULL;
+    DWORD dwValue, cbValue;
+
+    RegOpenKeyExW(hRootKey, s_szReactOSKey, 0, KEY_READ, &hKey);
+    if (!hKey)
+        return FALSE;
+
+    dwValue = SHELL_LAYOUT_MODERN;
+    cbValue = sizeof(dwValue);
+    RegQueryValueExW(hKey, s_szLayout, NULL, NULL, (LPBYTE)&dwValue, &cbValue);
+
+    RegCloseKey(hKey);
+
+    switch (dwValue)
+    {
+    case SHELL_LAYOUT_MODERN:
+    case SHELL_LAYOUT_LEGACY:
+        break;
+    default:
+        dwValue = SHELL_LAYOUT_MODERN;
+        break;
+    }
+
+    *pdwLayout = dwValue;
+    return TRUE;
+}
+
+static BOOL SetShellFoldersLayout(HKEY hRootKey, DWORD dwLayout)
+{
+    DWORD dwValue;
+    LONG result;
+    HKEY hKey = NULL;
+
+    RegOpenKeyExW(hRootKey, s_szReactOSKey, 0, KEY_WRITE, &hKey);
+    if (!hKey)
+        return FALSE;
+
+    dwValue = dwLayout;
+    result = RegSetValueExW(hKey, s_szLayout, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
+    RegCloseKey(hKey);
+
+    return result == ERROR_SUCCESS;
+}
+
 static INT_PTR CALLBACK
 ShellFolderPageDlgProc(HWND hwndDlg,
                        UINT uMsg,
@@ -537,10 +588,7 @@ ShellFolderPageDlgProc(HWND hwndDlg,
 {
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
-    BOOL bXP;
-    HKEY hKey;
-    DWORD dwValue, cbValue;
-    static const WCHAR s_szStyle[] = L"Shell Folders Style";
+    DWORD dwLayout;
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -551,29 +599,26 @@ ShellFolderPageDlgProc(HWND hwndDlg,
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
-            bXP = TRUE;
-            hKey = NULL;
-            RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
-            if (hKey)
+            dwLayout = SHELL_LAYOUT_MODERN;
+            if ((GetShellFoldersLayout(HKEY_CURRENT_USER, &dwLayout) ||
+                 GetShellFoldersLayout(HKEY_LOCAL_MACHINE, &dwLayout)) && dwLayout == SHELL_LAYOUT_MODERN)
             {
-                dwValue = bXP;
-                cbValue = sizeof(dwValue);
-                RegQueryValueExW(hKey, s_szStyle, NULL, NULL, (LPBYTE)&dwValue, &cbValue);
-                RegCloseKey(hKey);
-
-                bXP = (dwValue != 0);
+                CheckRadioButton(hwndDlg, IDC_MODERN_LAYOUT, IDC_LEGACY_LAYOUT, IDC_MODERN_LAYOUT);
             }
-
-            if (bXP)
-                CheckRadioButton(hwndDlg, IDC_STYLE2003, IDC_STYLEXP, IDC_STYLEXP);
             else
-                CheckRadioButton(hwndDlg, IDC_STYLE2003, IDC_STYLEXP, IDC_STYLE2003);
+            {
+                CheckRadioButton(hwndDlg, IDC_MODERN_LAYOUT, IDC_LEGACY_LAYOUT, IDC_LEGACY_LAYOUT);
+            }
         }
         break;
 
         case WM_NOTIFY:
         {
             lpnm = (LPNMHDR)lParam;
+
+            dwLayout = SHELL_LAYOUT_MODERN;
+            if (IsDlgButtonChecked(hwndDlg, IDC_LEGACY_LAYOUT) == BST_CHECKED)
+                dwLayout = SHELL_LAYOUT_LEGACY;
 
             switch (lpnm->code)
             {
@@ -582,31 +627,18 @@ ShellFolderPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        bXP = TRUE;
-                        hKey = NULL;
-                        RegCreateKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
-                        if (hKey)
-                        {
-                            DWORD dwValue = bXP;
-                            RegSetValueExW(hKey, s_szStyle, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
-                            RegCloseKey(hKey);
-                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
-                            return TRUE;
-                        }
+                        SetShellFoldersLayout(HKEY_LOCAL_MACHINE, dwLayout);
+                        SetShellFoldersLayout(HKEY_CURRENT_USER, dwLayout);
+
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
+                        return TRUE;
                     }
                     break;
 
                 case PSN_WIZNEXT:
-                    bXP = (IsDlgButtonChecked(hwndDlg, IDC_STYLEXP) == BST_CHECKED);
+                    SetShellFoldersLayout(HKEY_LOCAL_MACHINE, dwLayout);
+                    SetShellFoldersLayout(HKEY_CURRENT_USER, dwLayout);
 
-                    hKey = NULL;
-                    RegCreateKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS", &hKey);
-                    if (hKey)
-                    {
-                        DWORD dwValue = bXP;
-                        RegSetValueExW(hKey, s_szStyle, 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(dwValue));
-                        RegCloseKey(hKey);
-                    }
                     if (pSetupData->UnattendSetup)
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);

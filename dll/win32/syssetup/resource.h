@@ -75,8 +75,8 @@
 #define IDC_THEMEPICKER      1081
 
 #define IDD_SHELLFOLDERSPAGE 1090
-#define IDC_STYLE2003        1091
-#define IDC_STYLEXP          1092
+#define IDC_MODERN_LAYOUT    1091
+#define IDC_LEGACY_LAYOUT    1092
 
 #define IDD_GPL      2100
 #define IDC_GPL_TEXT 2101
