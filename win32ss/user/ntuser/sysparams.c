@@ -2107,7 +2107,7 @@ UserSystemParametersInfo(
         InitMetrics();
 
         /* Send notification to toplevel windows, if requested */
-        if (fWinIni & (SPIF_SENDCHANGE | SPIF_SENDWININICHANGE))
+        if (fWinIni & SPIF_SENDCHANGE)
         {
             /* Send WM_SETTINGCHANGE to all toplevel windows */
             co_IntSendMessageTimeout(HWND_BROADCAST,
