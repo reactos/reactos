@@ -1,7 +1,7 @@
 
-add_subdirectory(blackshade.msstyles)
-add_subdirectory(lautus.msstyles)
-add_subdirectory(lunar.msstyles)
-add_subdirectory(modern.msstyles)
-add_subdirectory(mizu.msstyles)
-
+# Blackshade is just a placeholder for now.
+# add_subdirectory(Blackshade)
+add_subdirectory(Lautus)
+add_subdirectory(Lunar)
+add_subdirectory(Mizu)
+add_subdirectory(Modern)
