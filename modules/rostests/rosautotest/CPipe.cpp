@@ -169,7 +169,9 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
         // The asynchronous read request could be satisfied immediately.
         return ERROR_SUCCESS;
     }
-    else if (GetLastError() == ERROR_IO_PENDING)
+
+    DWORD dwLastError = GetLastError();
+    if (dwLastError == ERROR_IO_PENDING)
     {
         // The asynchronous read request could not be satisfied immediately, so wait for it with the given timeout.
         DWORD dwWaitResult = WaitForSingleObject(m_ReadOverlapped.hEvent, TimeoutMilliseconds);
@@ -181,7 +183,9 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
                 // We successfully read NumberOfBytesRead bytes.
                 return ERROR_SUCCESS;
             }
-            else if (GetLastError() == ERROR_BROKEN_PIPE)
+
+            dwLastError = GetLastError();
+            if (dwLastError == ERROR_BROKEN_PIPE)
             {
                 // The other end of the pipe has been closed.
                 return ERROR_BROKEN_PIPE;
@@ -201,7 +205,7 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
     else
     {
         // This may be ERROR_BROKEN_PIPE or an unexpected error.
-        return GetLastError();
+        return dwLastError;
     }
 }
 
