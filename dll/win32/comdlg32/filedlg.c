@@ -2501,7 +2501,7 @@ typedef struct tagMRUINFOW
     UINT    uMax;
     UINT    fFlags;
     HKEY    hKey;
-    LPWSTR  lpszSubKey;
+    LPCWSTR lpszSubKey;
     union
     {
         MRUStringCmpFnW string_cmpfn;
@@ -2510,6 +2510,7 @@ typedef struct tagMRUINFOW
 } MRUINFOW, *LPMRUINFOW;
 
 /* flags for MRUINFOW.fFlags */
+#define MRU_STRING 0x0000
 #define MRU_BINARY 0x0001
 #define MRU_CACHEWRITE 0x0002
 
@@ -2614,11 +2615,10 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR de
         ZeroMemory(&mi, sizeof(mi));
         mi.cbSize = sizeof(mi);
         mi.uMax = 26;
-        mi.fFlags = 0;
+        mi.fFlags = MRU_STRING;
         mi.hKey = hOpenSaveMRT;
-        mi.lpszSubKey = (LPWSTR)defext;
+        mi.lpszSubKey = defext;
         mi.u.string_cmpfn = lstrcmpiW;
-
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
         {
@@ -2635,9 +2635,9 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR de
         {
             mi.cbSize = sizeof(mi);
             mi.uMax = 26;
-            mi.fFlags = 0;
+            mi.fFlags = MRU_STRING;
             mi.hKey = hOpenSaveMRT;
-            mi.lpszSubKey = (LPWSTR)s_szAst;
+            mi.lpszSubKey = s_szAst;
             mi.u.string_cmpfn = lstrcmpiW;
             hList = (*s_pCreateMRUListW)(&mi);
             if (hList)
@@ -2693,11 +2693,10 @@ static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
         ZeroMemory(&mi, sizeof(mi));
         mi.cbSize = sizeof(mi);
         mi.uMax = 26;
-        mi.fFlags = 0;
+        mi.fFlags = MRU_STRING;
         mi.hKey = hOpenSaveMRT;
-        mi.lpszSubKey = (LPWSTR)defext;
+        mi.lpszSubKey = defext;
         mi.u.string_cmpfn = lstrcmpiW;
-
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
         {
@@ -2707,9 +2706,9 @@ static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
 
         mi.cbSize = sizeof(mi);
         mi.uMax = 26;
-        mi.fFlags = 0;
+        mi.fFlags = MRU_STRING;
         mi.hKey = hOpenSaveMRT;
-        mi.lpszSubKey = (LPWSTR)s_szAst;
+        mi.lpszSubKey = s_szAst;
         mi.u.string_cmpfn = lstrcmpiW;
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
