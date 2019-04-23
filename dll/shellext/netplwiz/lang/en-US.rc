@@ -1,0 +1,21 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_DISCONNECTDRIVES DIALOGEX 0, 0, 300, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disconnect Network Drives"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Select the network drive(s) you want to disconnect, then click OK.", -1, 7, 7, 286, 8
+    LTEXT "&Network Drives:", -1, 7, 23, 286, 8
+    CONTROL "", IDC_CONNECTEDDRIVELIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SINGLESEL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 31, 286, 140
+    PUSHBUTTON "OK", ID_OK, 189, 179, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 243, 179, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DIALOG_CAPTION "Disconnect Network Drive"
+    IDS_DRIVE_LETTER "Drive Letter"
+    IDS_NETWORK_PATH "Network Path"
+    IDS_NO_DRIVES "You have no network drives to disconnect."
+END
