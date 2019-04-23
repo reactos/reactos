@@ -701,7 +701,8 @@ GetUsbStringDescriptor(
         ExFreePool(StringDesc);
         return STATUS_DEVICE_DATA_ERROR;
     }
-    SizeNeeded = StringDesc->bLength + sizeof(WCHAR);
+
+    SizeNeeded = StringDesc->bLength;
 
     //
     // Free String
@@ -739,6 +740,11 @@ GetUsbStringDescriptor(
     }
 
     //
+    // Calculate buffer size
+    //
+    SizeNeeded = (StringDesc->bLength - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bString)) + sizeof(WCHAR);
+
+    //
     // Allocate Buffer to return
     //
     Buffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -756,7 +762,8 @@ GetUsbStringDescriptor(
     //
     // Copy the string to destination
     //
-    RtlCopyMemory(Buffer, StringDesc->bString, SizeNeeded - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bString));
+    RtlCopyMemory(Buffer, StringDesc->bString, StringDesc->bLength - FIELD_OFFSET(USB_STRING_DESCRIPTOR, bString));
+    
     *Size = SizeNeeded;
     *TransferBuffer = Buffer;
 

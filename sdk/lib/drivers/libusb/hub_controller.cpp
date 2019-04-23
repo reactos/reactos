@@ -452,8 +452,14 @@ CHubController::HandlePnp(
                     // query device id
                     //
                     Status = m_Hardware->GetDeviceDetails(&VendorID, &DeviceID, &NumPorts, &HiSpeed);
-
-                    if (HiSpeed == 0x200)
+                    if (HiSpeed == 0x300)
+                    {
+                        //
+                        // USB 3.0 hub
+                        //
+                        swprintf(Buffer, L"USB\\ROOT_HUB30");
+                    }
+                    else if (HiSpeed == 0x200)
                     {
                         //
                         // USB 2.0 hub
@@ -520,6 +526,15 @@ CHubController::HandlePnp(
                          DeviceID = 0x3A37;
                     }
 
+                    if (HiSpeed == 0x300)
+                    {
+                        //
+                        // USB 3.0 hub
+                        //
+                        Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB30&VID%04x&PID%04x&REV0000", VendorID, DeviceID) + 1;
+                        Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB30&VID%04x&PID%04x", VendorID, DeviceID) + 1;
+                        Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB30") + 1;
+                    }
                     if (HiSpeed == 0x200)
                     {
                         //
