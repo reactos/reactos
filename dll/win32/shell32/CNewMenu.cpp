@@ -31,6 +31,9 @@ CNewMenu::CNewMenu() :
     m_pItems(NULL),
     m_pLinkItem(NULL),
     m_pSite(NULL),
+    m_idCmdFirst(0),
+    m_idCmdFolder(-1),
+    m_idCmdLink(-1),
     m_hIconFolder(NULL),
     m_hIconLink(NULL)
 {
@@ -297,6 +300,9 @@ CNewMenu::LoadCachedItems()
 BOOL
 CNewMenu::LoadAllItems()
 {
+    // TODO: We need to find a way to refresh the cache from time to time, when
+    // e.g. new extensions with ShellNew handlers have been added or removed.
+
     /* If there are any unload them */
     UnloadAllItems();
 
@@ -324,6 +330,8 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
 
+    m_idCmdFirst = idCmd;
+
     /* Insert the new folder action */
     if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
@@ -333,7 +341,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     mii.wID = idCmd;
     mii.hbmpItem = HBMMENU_CALLBACK;
     if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
-        ++idCmd;
+        m_idCmdFolder = idCmd++;
 
     /* Insert the new shortcut action */
     if (m_pLinkItem)
@@ -344,7 +352,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
         mii.cch = wcslen(mii.dwTypeData);
         mii.wID = idCmd;
         if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
-            ++idCmd;
+            m_idCmdLink = idCmd++;
     }
 
     /* Insert a seperator for the custom new action */
@@ -354,7 +362,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     InsertMenuItemW(hMenu, Pos++, TRUE, &mii);
 
     /* Insert the rest of the items */
-    mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING;
+    mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING | MIIM_DATA;
     mii.fType = 0;
 
     for (SHELLNEW_ITEM *pCurItem = m_pItems; pCurItem; pCurItem = pCurItem->pNext)
@@ -364,6 +372,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             continue;
 
         TRACE("szDesc %s\n", debugstr_w(pCurItem->pwszDesc));
+        mii.dwItemData = (ULONG_PTR)pCurItem;
         mii.dwTypeData = pCurItem->pwszDesc;
         mii.cch = wcslen(mii.dwTypeData);
         mii.wID = idCmd;
@@ -376,23 +385,24 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 
 CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
 {
-    if (IdOffset == 0)
-        return NULL; /* Folder */
+    /* Folder */
+    if (m_idCmdFirst + IdOffset == m_idCmdFolder)
+        return NULL;
 
-    if (IdOffset == 1)
-        return m_pLinkItem; /* shortcut */
+    /* Shortcut */
+    if (m_idCmdFirst + IdOffset == m_idCmdLink)
+        return m_pLinkItem;
 
-    /* Find shell new item */
-    SHELLNEW_ITEM *pItem = m_pItems;
-    for (UINT i = 2; pItem; ++i)
-    {
-        if (i == IdOffset)
-            break;
+    /* Find shell new item - Retrieve menu item info */
+    MENUITEMINFOW mii;
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_DATA;
 
-        pItem = pItem->pNext;
-    }
-
-    return pItem;
+    if (GetMenuItemInfoW(m_hSubMenu, m_idCmdFirst + IdOffset, FALSE, &mii) && mii.dwItemData)
+        return (SHELLNEW_ITEM *)mii.dwItemData;
+    else
+        return NULL;
 }
 
 HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bRename)
@@ -657,7 +667,7 @@ CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
 
-    if (LOWORD(lpici->lpVerb) == 0)
+    if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdFolder)
     {
         hr = CreateNewFolder(lpici);
     }
@@ -722,11 +732,11 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
 
             DWORD id = LOWORD(lpdis->itemID);
             HICON hIcon = NULL;
-            if (id == 0)
+            if (m_idCmdFirst + id == m_idCmdFolder)
             {
                 hIcon = m_hIconFolder;
             }
-            else if (id == 1)
+            else if (m_idCmdFirst + id == m_idCmdLink)
             {
                 hIcon = m_hIconLink;
             }
