@@ -31,8 +31,8 @@ CNewMenu::CNewMenu() :
     m_pItems(NULL),
     m_pLinkItem(NULL),
     m_pSite(NULL),
-    m_hiconFolder(NULL),
-    m_hiconLink(NULL)
+    m_hIconFolder(NULL),
+    m_hIconLink(NULL)
 {
 }
 
@@ -76,7 +76,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 {
     HKEY hKey;
     WCHAR wszBuf[MAX_PATH];
-    BYTE *pData = NULL;
+    PBYTE pData = NULL;
     DWORD cbData;
 
     StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\ShellNew", pwszExt);
@@ -115,7 +115,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
         {
             if (Types[i].bNeedData && cbData > 0)
             {
-                pData = (BYTE*)malloc(cbData);
+                pData = (PBYTE)malloc(cbData);
                 RegGetValueW(hKey, NULL, Types[i].pszName, dwFlags, &dwType, pData, &cbData);
                 if (!Types[i].bStr && (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
                 {
@@ -132,11 +132,17 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 
     /* Was any key found? */
     if (!Types[i].pszName)
+    {
+        free(pData);
         return NULL;
+    }
 
     SHFILEINFOW fi;
-    if (!SHGetFileInfoW(pwszExt, FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_USEFILEATTRIBUTES|SHGFI_TYPENAME|SHGFI_ICON|SHGFI_SMALLICON))
+    if (!SHGetFileInfoW(pwszExt, FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | SHGFI_ICON | SHGFI_SMALLICON))
+    {
+        free(pData);
         return NULL;
+    }
 
     /* Create new item */
     SHELLNEW_ITEM *pNewItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));
@@ -198,9 +204,9 @@ CNewMenu::CacheItems()
             }
         }
     }
-    
+
     dwSize++;
-    
+
     lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
     if (!lpValues)
         return FALSE;
@@ -216,17 +222,17 @@ CNewMenu::CacheItems()
         HeapFree(GetProcessHeap(), 0, lpValues);
         return FALSE;
     }
-    
+
     if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
         RegCloseKey(hKey);
         return FALSE;
     }
-    
+
     HeapFree(GetProcessHeap(), 0, lpValues);
     RegCloseKey(hKey);
-    
+
     return TRUE;
 }
 
@@ -239,17 +245,17 @@ CNewMenu::LoadCachedItems()
     HKEY hKey;
     SHELLNEW_ITEM *pNewItem;
     SHELLNEW_ITEM *pCurItem = NULL;
-    
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, ShellNewKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, ShellNewKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
-    
+
     if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, NULL, &dwSize) != ERROR_SUCCESS)
         return FALSE;
-    
+
     lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (!lpValues)
         return FALSE;
-    
+
     if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, (LPBYTE)lpValues, &dwSize) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
@@ -258,7 +264,7 @@ CNewMenu::LoadCachedItems()
 
     wszName = lpValues;
 
-    for (; '\0' != *wszName; wszName += wcslen(wszName) + 1)
+    for (; *wszName != '\0'; wszName += wcslen(wszName) + 1)
     {
         pNewItem = LoadItem(wszName);
         if (pNewItem)
@@ -281,10 +287,10 @@ CNewMenu::LoadCachedItems()
             }
         }
     }
-    
+
     HeapFree(GetProcessHeap(), 0, lpValues);
     RegCloseKey(hKey);
-    
+
     return TRUE;
 }
 
@@ -306,8 +312,8 @@ UINT
 CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 {
     MENUITEMINFOW mii;
-    WCHAR wszBuf[256];
     UINT idCmd = idCmdFirst;
+    WCHAR wszBuf[256];
 
     if (m_pItems == NULL)
     {
@@ -318,7 +324,7 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
 
-    /* Insert new folder action */
+    /* Insert the new folder action */
     if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
     mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING;
@@ -341,18 +347,17 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             ++idCmd;
     }
 
-    /* Insert seperator for custom new action */
+    /* Insert a seperator for the custom new action */
     mii.fMask = MIIM_TYPE | MIIM_ID;
     mii.fType = MFT_SEPARATOR;
     mii.wID = -1;
     InsertMenuItemW(hMenu, Pos++, TRUE, &mii);
 
-    /* Insert rest of items */
+    /* Insert the rest of the items */
     mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING;
     mii.fType = 0;
 
-    SHELLNEW_ITEM *pCurItem = m_pItems;
-    while (pCurItem)
+    for (SHELLNEW_ITEM *pCurItem = m_pItems; pCurItem; pCurItem = pCurItem->pNext)
     {
         /* Skip shortcut item */
         if (pCurItem == m_pLinkItem)
@@ -364,7 +369,6 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
         mii.wID = idCmd;
         if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
             ++idCmd;
-        pCurItem = pCurItem->pNext;
     }
 
     return idCmd - idCmdFirst;
@@ -436,7 +440,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
     WCHAR wszName[MAX_PATH];
     WCHAR wszNewFolder[25];
     HRESULT hr;
-    
+
     /* Get folder path */
     hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -553,7 +557,7 @@ HRESULT CNewMenu::NewItemByNonCommand(SHELLNEW_ITEM *pItem, LPWSTR wszName,
     else
     {
         StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", wszName);
-        MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME load localized error msg
+        MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK | MB_ICONERROR); // FIXME load localized error msg
     }
 
     return S_OK;
@@ -615,9 +619,9 @@ CNewMenu::QueryContextMenu(HMENU hMenu,
                            UINT idCmdLast,
                            UINT uFlags)
 {
-    WCHAR wszNew[200];
     MENUITEMINFOW mii;
     UINT cItems = 0;
+    WCHAR wszNew[200];
 
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
@@ -631,7 +635,7 @@ CNewMenu::QueryContextMenu(HMENU hMenu,
 
     cItems = InsertShellNewItems(m_hSubMenu, idCmdFirst, 0);
 
-    memset(&mii, 0, sizeof(mii));
+    ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
     mii.fType = MFT_STRING;
@@ -654,7 +658,9 @@ CNewMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr = E_FAIL;
 
     if (LOWORD(lpici->lpVerb) == 0)
+    {
         hr = CreateNewFolder(lpici);
+    }
     else
     {
         SHELLNEW_ITEM *pItem = FindItemFromIdOffset(LOWORD(lpici->lpVerb));
@@ -715,11 +721,15 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
                 break;
 
             DWORD id = LOWORD(lpdis->itemID);
-            HICON hIcon = 0;
+            HICON hIcon = NULL;
             if (id == 0)
-                hIcon = m_hiconFolder;  
+            {
+                hIcon = m_hIconFolder;
+            }
             else if (id == 1)
-                hIcon = m_hiconLink;
+            {
+                hIcon = m_hIconLink;
+            }
             else
             {
                 SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id);
@@ -730,12 +740,12 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!hIcon)
                 break;
 
-            DrawIconEx(lpdis->hDC, 
-                       2, 
-                       lpdis->rcItem.top + (lpdis->rcItem.bottom - lpdis->rcItem.top - 16) / 2, 
-                       hIcon, 
-                       16, 
-                       16, 
+            DrawIconEx(lpdis->hDC,
+                       2,
+                       lpdis->rcItem.top + (lpdis->rcItem.bottom - lpdis->rcItem.top - 16) / 2,
+                       hIcon,
+                       16,
+                       16,
                        0, NULL, DI_NORMAL);
 
             if(plResult)
@@ -753,7 +763,7 @@ CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
     m_pidlFolder = ILClone(pidlFolder);
 
     /* Load folder and shortcut icons */
-    m_hiconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
-    m_hiconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
+    m_hIconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
+    m_hIconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
     return S_OK;
 }

@@ -59,7 +59,7 @@ private:
     SHELLNEW_ITEM *m_pLinkItem; // Points to the link handler item in the m_pItems list.
     CComPtr<IUnknown> m_pSite;
     HMENU m_hSubMenu;
-    HICON m_hiconFolder, m_hiconLink;
+    HICON m_hIconFolder, m_hIconLink;
 
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
     void UnloadItem(SHELLNEW_ITEM *pItem);
