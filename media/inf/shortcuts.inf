@@ -50,6 +50,7 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 [AccessibilityShortcuts]
 %SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\utilman.exe, %UTILMAN_TITLE%, %UTILMAN_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [EntertainmentShortcuts]
 %SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
@@ -133,6 +134,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
+UTILMAN_TITLE=Accessibility Utility Manager
+UTILMAN_DESC=Launch Accessibility Utility Manager
 
 ; Bulgarian
 [Strings.0402]

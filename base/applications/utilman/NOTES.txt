@@ -1,0 +1,11 @@
+ReactOS Accessibility Utility Manager
+=======================================
+
+Currently the application can manage the state of the accessibility tools however there are some things which needs to be DONE in order to consider the program as fully complete. The following are:
+
+- The warning dialog is not implemented YET
+- The program can only control the launch/stopping states of accessibility tools, the code which manages the options for each utility is not implemented YET
+- Function helper which catches the Windows logo + U keys is not implemented YET
+- Registry configuration saver/loader is not implemented YET (XP's Utility Manager creates a key on HKEY_CURRENT_USER\Software\Microsoft with the name "Utility Manager" although the rest of other configuration values for utility options are stored elsewhere and I don't know exactly where are those)
+- XP's and Server 2003's main Utility Manager implementation is compiled in a DLL (+ an executable which loads the DLL in question) whereas our Utility Manager is compiled as a whole executable
+- On Windows Vista and later, it complains for required elevation to open a process. We need to improve our process creation code and discard ShellExecuteW()
