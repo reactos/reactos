@@ -4847,10 +4847,7 @@ RegSetValueExA(HKEY hKey,
     /* Convert SubKey name to Unicode */
     if (lpValueName != NULL && lpValueName[0] != '\0')
     {
-        BOOL bConverted;
-        bConverted = RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                                  (PSTR)lpValueName);
-        if(!bConverted)
+        if (!RtlCreateUnicodeStringFromAsciiz(&ValueName, (PSTR)lpValueName))
             return ERROR_NOT_ENOUGH_MEMORY;
     }
     else
