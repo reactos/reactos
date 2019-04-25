@@ -233,33 +233,30 @@ Pos_InitData(
 
     if (!spc.SystemBatteriesPresent)
     {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SAT), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_IAC), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SAC), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_IDC), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SDC), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_MONITORDCLIST), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_DISKDCLIST), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), FALSE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST), spc.HiberFilePresent);
-
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SAT), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_IAC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SAC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_IDC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SDC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_MONITORDCLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_DISKDCLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), SW_HIDE);
     }
-    else
+
+    if (!(spc.SystemS1 || spc.SystemS2 || spc.SystemS3))
     {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), spc.HiberFilePresent);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST), FALSE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), SW_HIDE);
     }
 
-
-    if (!(spc.SystemS1 ||spc.SystemS2 || spc.SystemS3))
+    if (!spc.HiberFilePresent)
     {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST), TRUE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), TRUE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY), TRUE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATE), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), SW_HIDE);
     }
-
-    ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATE), spc.HiberFilePresent);
 
     return TRUE;
 }
