@@ -405,7 +405,6 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
         //
         // Sorry!
         //
-        DPRINT1("Thread wants too much stack\n");
         return STATUS_STACK_OVERFLOW;
     }
 
