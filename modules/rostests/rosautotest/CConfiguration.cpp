@@ -27,7 +27,7 @@ CConfiguration::CConfiguration()
 
     /* Check if we are running under ReactOS from the SystemRoot directory */
     if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
-        FATAL("GetWindowsDirectoryW failed");
+        FATAL("GetWindowsDirectoryW failed\n");
 
     m_IsReactOS = !_wcsnicmp(&WindowsDirectory[3], L"reactos", 7);
 

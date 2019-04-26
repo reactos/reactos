@@ -86,7 +86,7 @@ void
 CPipe::CloseReadPipe()
 {
     if (!m_hReadPipe)
-        FATAL("Trying to close already closed read pipe");
+        FATAL("Trying to close already closed read pipe\n");
     CloseHandle(m_hReadPipe);
     m_hReadPipe = NULL;
 }
@@ -98,7 +98,7 @@ void
 CPipe::CloseWritePipe()
 {
     if (!m_hWritePipe)
-        FATAL("Trying to close already closed write pipe");
+        FATAL("Trying to close already closed write pipe\n");
     CloseHandle(m_hWritePipe);
     m_hWritePipe = NULL;
 }
@@ -129,7 +129,7 @@ bool
 CPipe::Peek(PVOID Buffer, DWORD BufferSize, PDWORD BytesRead, PDWORD TotalBytesAvailable)
 {
     if (!m_hReadPipe)
-        FATAL("Trying to peek from a closed read pipe");
+        FATAL("Trying to peek from a closed read pipe\n");
 
     return PeekNamedPipe(m_hReadPipe, Buffer, BufferSize, BytesRead, TotalBytesAvailable, NULL);
 }
@@ -161,7 +161,7 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
 {
     if (!m_hReadPipe)
     {
-        FATAL("Trying to read from a closed read pipe");
+        FATAL("Trying to read from a closed read pipe\n");
     }
 
     if (ReadFile(m_hReadPipe, Buffer, NumberOfBytesToRead, NumberOfBytesRead, &m_ReadOverlapped))
@@ -232,7 +232,7 @@ bool
 CPipe::Write(LPCVOID Buffer, DWORD NumberOfBytesToWrite, PDWORD NumberOfBytesWritten)
 {
     if (!m_hWritePipe)
-        FATAL("Trying to write to a closed write pipe");
+        FATAL("Trying to write to a closed write pipe\n");
 
     return WriteFile(m_hWritePipe, Buffer, NumberOfBytesToWrite, NumberOfBytesWritten, NULL);
 }
