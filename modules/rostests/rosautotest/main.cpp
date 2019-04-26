@@ -59,8 +59,10 @@ wmain(int argc, wchar_t* argv[])
         Configuration.GetSystemInformation();
         Configuration.GetConfigurationFromFile();
 
-        ss << "\n\nSystem uptime " << setprecision(2) << fixed ;
-        ss << ((float)GetTickCount()/1000) << " seconds\n";
+        ss << endl
+           << endl
+           << "System uptime " << setprecision(2) << fixed;
+        ss << ((float)GetTickCount()/1000) << " seconds" << endl;
         StringOut(ss.str());
         
         /* Report tests startup */
