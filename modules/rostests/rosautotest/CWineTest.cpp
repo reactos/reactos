@@ -8,7 +8,11 @@
 #include "precomp.h"
 
 static const DWORD ListTimeout = 10000;
-static const DWORD ProcessActivityTimeout = 120000;
+
+// This value needs to be lower than the <timeout> configured in sysreg.xml! (usually 180000)
+// Otherwise, sysreg2 kills the VM before we can kill the process.
+static const DWORD ProcessActivityTimeout = 170000;
+
 
 /**
  * Constructs a CWineTest object.
