@@ -37,9 +37,6 @@ add_host_tool(widl ${SOURCE})
 target_link_libraries(widl wpphost)
 
 if(MSVC)
-    # Disable warning "'_getopt_internal' undefined; assuming extern returning int"
-    add_target_compile_flags(widl "/wd4013")
-
     # Disable warning "'>': signed/unsigned mismatch"
     add_target_compile_flags(widl "/wd4018")
 

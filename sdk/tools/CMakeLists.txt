@@ -12,9 +12,6 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DHAVE_IO_H=1)
     add_compile_flags_language("/EHsc" "CXX")
 
-    # Disable warning "conversion from 'a' to 'b', possible loss of data"
-    #add_compile_flags("/wd4244")
-
     # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
     add_compile_flags("/wd4267")
 endif()

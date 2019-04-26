@@ -3,11 +3,7 @@ add_definitions(
     -DDUPLICATES_ONCE
     -DINS_BASE="\\\".\\\""
     -DSCHILY_BUILD
-    -DSORTING
-    -DHAVE_ENVIRON_DEF
-    -DHAVE_RENAME
-    -DHAVE_STRNLEN
-    -D_CRT_NONSTDC_NO_DEPRECATE)
+    -DSORTING)
 
 include_directories(
     schilytools/include
@@ -96,9 +92,6 @@ if(MSVC)
         # Disable warning "'type cast': pointer truncation from 'const char *' to 'long'"
         add_target_compile_flags(libschily "/wd4311")
     endif()
-
-    # Disable warning "'close' undefined; assuming extern returning int"
-    add_target_compile_flags(libschily "/wd4013")
 
     # Disable warning "'<': signed/unsigned mismatch"
     add_target_compile_flags(mkisofs "/wd4018")

@@ -36,7 +36,7 @@ protected:
     enc_types encoding;
     bom_types bom_type;
     unsigned char buffer[4], index; // need 4 char buffer for optional BOM handling
-	std::streamsize fill;
+    std::streamsize fill;
     fstream inputfile,outputfile;
     static const unsigned char utf8table[64];
 public:
@@ -150,7 +150,7 @@ public:
             return inputfile.gcount();
         }
     }
-	std::streamsize getWord(unsigned short &w)
+    std::streamsize getWord(unsigned short &w)
     {
         unsigned char c[2];
         if (!getByte(c[0]))
@@ -163,7 +163,7 @@ public:
             w = c[1] | (c[0] << 8);
         return 2;
     }
-	std::streamsize getDWord(wchar_t &d)
+    std::streamsize getDWord(wchar_t &d)
     {
         unsigned char c[4];
         for (int i=0;i<4;i++)

@@ -195,12 +195,19 @@
 
 #define HAVE_TYPE_INTMAX_T 1
 #define HAVE_TYPE_UINTMAX_T 1
+#define HAVE_ENVIRON_DEF 1
+#define HAVE_RENAME 1
+#define HAVE_STRNLEN 1
+#ifdef _WIN32
+    #define _CRT_NONSTDC_NO_DEPRECATE 1
+#endif
 
 /*
  * ReactOS additions
  */
 #ifdef _MSC_VER
-    #define ssize_t int
+    #define ssize_t intptr_t
+    #include <io.h>
 #endif
 
 /* Would need additional fprformat.c, less portable */

@@ -5,12 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
-#include <io.h>
 
 #ifdef _WIN32
 #include <malloc.h>
 #include <windows.h>
+#include <process.h>
+#include <io.h>
 #else
 #include <alloca.h>
 #include <unistd.h>
