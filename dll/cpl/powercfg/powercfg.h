@@ -17,6 +17,7 @@
 #include <shlwapi.h>
 #include <powrprof.h>
 #include <ndk/rtlfuncs.h>
+#include <strsafe.h>
 
 #include "resource.h"
 

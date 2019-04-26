@@ -136,6 +136,6 @@ BEGIN
     IDS_TIMEOUT14 "Po 4 hodinách"
     IDS_TIMEOUT15 "Po 5 hodinách"
     IDS_TIMEOUT16 "Nikdy"
-    IDS_DEL_SCHEME "Opravdu si přejete smazat toto schéma napájení?"
+    IDS_DEL_SCHEME "Opravdu si přejete smazat toto schéma napájení: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Smazat schéma"
 END

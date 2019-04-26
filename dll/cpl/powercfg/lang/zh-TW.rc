@@ -110,8 +110,8 @@ BEGIN
     IDS_PERCENT "%i%%"
     IDS_SOUND "聲音"
     IDS_TEXT "文本"
-    IDS_CONFIG1 "爲 %i 設置電源使用方案"
-    IDS_CONFIG2 "%i 的高級設置"
+    IDS_CONFIG1 "爲 %s 設置電源使用方案"
+    IDS_CONFIG2 "%s 的高級設置"
     IDS_NOACTION "無操作"
     IDS_PowerActionNone1 "無動作"
     IDS_PowerActionUnknown "未知"
@@ -138,6 +138,6 @@ BEGIN
     IDS_TIMEOUT14 "4 小時之後"
     IDS_TIMEOUT15 "5 小時之後"
     IDS_TIMEOUT16 "從不"
-    IDS_DEL_SCHEME "您確定要刪除電源使用方案嗎?"
+    IDS_DEL_SCHEME "您確定要刪除電源使用方案嗎: ""%s""?"
     IDS_DEL_SCHEME_TITLE "刪除方案"
 END

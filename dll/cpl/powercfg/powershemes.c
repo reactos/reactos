@@ -560,9 +560,10 @@ Pos_SaveData(HWND hwndDlg)
 static BOOL
 DelScheme(HWND hwnd)
 {
+    WCHAR szTitleBuffer[256];
+    WCHAR szRawBuffer[256], szCookedBuffer[512];
     INT iCurSel;
     HWND hList;
-    TCHAR szBuf[1024], szBufT[1024];
     PPOWER_SCHEME pScheme;
 
     hList = GetDlgItem(hwnd, IDC_ENERGYLIST);
@@ -577,10 +578,11 @@ DelScheme(HWND hwnd)
     if (pScheme == (PPOWER_SCHEME)CB_ERR)
         return FALSE;
 
-    LoadString(hApplet, IDS_DEL_SCHEME_TITLE, szBufT, sizeof(szBufT) / sizeof(TCHAR));
-    LoadString(hApplet, IDS_DEL_SCHEME, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+    LoadStringW(hApplet, IDS_DEL_SCHEME_TITLE, szTitleBuffer, ARRAYSIZE(szTitleBuffer));
+    LoadStringW(hApplet, IDS_DEL_SCHEME, szRawBuffer, ARRAYSIZE(szRawBuffer));
+    StringCchPrintfW(szCookedBuffer, ARRAYSIZE(szCookedBuffer), szRawBuffer, pScheme->pszName);
 
-    if (MessageBox(hwnd, szBuf, szBufT, MB_YESNO | MB_ICONQUESTION) == IDYES)
+    if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         UINT Current;
 

@@ -138,6 +138,6 @@ BEGIN
     IDS_TIMEOUT14 "Tras 4 horas"
     IDS_TIMEOUT15 "Tras 5 horas"
     IDS_TIMEOUT16 "Nunca"
-    IDS_DEL_SCHEME "¿Está seguro de que desea eliminar la combinación de energía?"
+    IDS_DEL_SCHEME "¿Está seguro de que desea eliminar la combinación de energía: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminar combinación"
 END

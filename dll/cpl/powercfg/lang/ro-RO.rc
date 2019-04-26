@@ -141,6 +141,6 @@ BEGIN
     IDS_TIMEOUT14 "după 4 ore"
     IDS_TIMEOUT15 "după 5 ore"
     IDS_TIMEOUT16 "dezactivată"
-    IDS_DEL_SCHEME "Sigur doriți eliminarea aceastui regim de consum energetic?"
+    IDS_DEL_SCHEME "Sigur doriți eliminarea aceastui regim de consum energetic: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminarea regumului de consum"
 END

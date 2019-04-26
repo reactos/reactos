@@ -138,6 +138,6 @@ BEGIN
     IDS_TIMEOUT14 "אחרי 4 שעות"
     IDS_TIMEOUT15 "אחרי 5 דקות"
     IDS_TIMEOUT16 "אף פעם"
-    IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+    IDS_DEL_SCHEME "Are you sure you want to delete the power scheme: ""%s""?"
     IDS_DEL_SCHEME_TITLE "מחק ערכה"
 END

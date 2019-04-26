@@ -141,6 +141,6 @@ BEGIN
     IDS_TIMEOUT14 "Pas 4 hours"
     IDS_TIMEOUT15 "Pas 5 hours"
     IDS_TIMEOUT16 "Kurrë"
-    IDS_DEL_SCHEME "Jeni te sigurte qe doni te fshini skemën energjise?"
+    IDS_DEL_SCHEME "Jeni te sigurte qe doni te fshini skemën energjise: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Fshij Skemen"
 END

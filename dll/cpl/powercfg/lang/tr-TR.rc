@@ -138,6 +138,6 @@ BEGIN
     IDS_TIMEOUT14 "4 Saat Sonra"
     IDS_TIMEOUT15 "5 Saat Sonra"
     IDS_TIMEOUT16 "Hiçbir Zaman"
-    IDS_DEL_SCHEME "Güç düzenini silmek istediğinizden emin misiniz?"
+    IDS_DEL_SCHEME "Güç düzenini silmek istediğinizden emin misiniz: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Düzeni Sil"
 END
