@@ -9,7 +9,7 @@ version: reactos.appveyor.{build}
 skip_branch_with_pr: true
 clone_depth: 5
 clone_folder: c:\reactos-cov
-matrix: 
+matrix:
   fast_finish: true
 
 init:
