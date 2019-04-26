@@ -31,9 +31,9 @@ BEGIN
     LTEXT "Sistemi gatishmërisë:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Sistemi &hibernates:", IDC_HYBERNATE, 13, 212, 84, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Sistemi &hibernates:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
@@ -110,11 +110,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Opsionet e energjisë"
     IDS_CPLDESCRIPTION_1 "Konfiguro parametrat e kursimit të energjisë për kompjuterin tuaj."
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "Zëri"
     IDS_TEXT "Teksti"
-    IDS_CONFIG1 "Konfigurimet për %1 skema energjise"
-    IDS_CONFIG2 "Konfigurimet Avancuara për %1"
+    IDS_CONFIG1 "Konfigurimet për %s skema energjise"
+    IDS_CONFIG2 "Konfigurimet Avancuara për %s"
     IDS_NOACTION "Mos bëj gjë"
     IDS_PowerActionNone1 "Asnjë veprim"
     IDS_PowerActionUnknown "i panjohur"

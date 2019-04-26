@@ -31,9 +31,9 @@ BEGIN
     LTEXT "Starea de &veghe:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Hibernarea:", IDC_HYBERNATE, 13, 212, 84, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Hibernarea:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
@@ -110,11 +110,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Alimentare"
     IDS_CPLDESCRIPTION_1 "Configurarea metodelor de economisire a consumului de energie al calculatorului."
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "sonoră"
     IDS_TEXT "text"
-    IDS_CONFIG1 "Configurare regim %1"
-    IDS_CONFIG2 "Opțiuni avansate pentru %1"
+    IDS_CONFIG1 "Configurare regim %s"
+    IDS_CONFIG2 "Opțiuni avansate pentru %s"
     IDS_NOACTION "nespecificată"
     IDS_PowerActionNone1 "acțiune nespecificată"
     IDS_PowerActionUnknown "acțiune necunoscută"

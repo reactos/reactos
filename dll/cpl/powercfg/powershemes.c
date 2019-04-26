@@ -191,9 +191,9 @@ Pos_InitData(
                     {
                         MoveWindow(GetDlgItem(hwndDlg, IDC_STANDBY),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
                     }
-                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HYBERNATE),&rectCtl))
+                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HIBERNATE),&rectCtl))
                     {
-                        MoveWindow(GetDlgItem(hwndDlg, IDC_HYBERNATE),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
+                        MoveWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
                     }
                     if (GetWindowRect(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),&rectCtl2))
                     {
@@ -210,9 +210,9 @@ Pos_InitData(
                             {
                                 MoveWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
                             }
-                            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST),&rectCtl))
+                            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),&rectCtl))
                             {
-                                MoveWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
+                                MoveWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
                             }
                         }
                         if (GetWindowRect(GetDlgItem(hwndDlg, IDC_GRPDETAIL),&rectCtl))
@@ -241,7 +241,7 @@ Pos_InitData(
         ShowWindow(GetDlgItem(hwndDlg, IDC_MONITORDCLIST), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_DISKDCLIST), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST), SW_HIDE);
     }
 
     if (!(spc.SystemS1 || spc.SystemS2 || spc.SystemS3))
@@ -253,9 +253,9 @@ Pos_InitData(
 
     if (!spc.HiberFilePresent)
     {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATE), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST), SW_HIDE);
     }
 
     return TRUE;
@@ -349,7 +349,7 @@ LoadConfig(
 
         if (Sec[i] == pp->mach.DozeS4TimeoutAc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_HYBERNATEACLIST,
+            SendDlgItemMessage(hwndDlg, IDC_HIBERNATEACLIST,
                        CB_SETCURSEL,
                        i,
                     (LPARAM)0);
@@ -357,7 +357,7 @@ LoadConfig(
 
         if (Sec[i] == pp->mach.DozeS4TimeoutDc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_HYBERNATEDCLIST,
+            SendDlgItemMessage(hwndDlg, IDC_HIBERNATEDCLIST,
                        CB_SETCURSEL,
                        i,
                        (LPARAM)0);
@@ -394,7 +394,7 @@ Pos_InitPage(HWND hwndDlg)
                 break;
 
             case 4:
-                hwnd = GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST);
+                hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
                 imin = IDS_TIMEOUT3;
                 break;
 
@@ -414,7 +414,7 @@ Pos_InitPage(HWND hwndDlg)
                 break;
 
             case 8:
-                hwnd = GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST);
+                hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
                 imin = IDS_TIMEOUT3;
                 break;
 
@@ -534,7 +534,7 @@ Pos_SaveData(HWND hwndDlg)
         pScheme->PowerPolicy.user.IdleTimeoutDc = Sec[tmp];
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HYBERNATEACLIST,
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HIBERNATEACLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -543,7 +543,7 @@ Pos_SaveData(HWND hwndDlg)
         pScheme->PowerPolicy.mach.DozeS4TimeoutAc = Sec[tmp];
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HYBERNATEDCLIST,
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HIBERNATEDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -758,8 +758,8 @@ PowerSchemesDlgProc(
                 case IDC_DISKDCLIST:
                 case IDC_STANDBYACLIST:
                 case IDC_STANDBYDCLIST:
-                case IDC_HYBERNATEACLIST:
-                case IDC_HYBERNATEDCLIST:
+                case IDC_HIBERNATEACLIST:
+                case IDC_HIBERNATEDCLIST:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

@@ -28,9 +28,9 @@ BEGIN
     LTEXT "&Ждущий режим через:", IDC_STANDBY, 15, 177, 80, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 175, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "С&пящий режим через:", IDC_HYBERNATE, 15, 192, 80, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "С&пящий режим через:", IDC_HIBERNATE, 15, 192, 80, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 250, 220
@@ -107,11 +107,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Электропитание"
     IDS_CPLDESCRIPTION_1 "Настройка параметров энергосбережения для компьютера."
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "Звук"
     IDS_TEXT "Текст"
-    IDS_CONFIG1 "Параметры схемы %1"
-    IDS_CONFIG2 "Дополнительные параметры схемы %1"
+    IDS_CONFIG1 "Параметры схемы %s"
+    IDS_CONFIG2 "Дополнительные параметры схемы %s"
     IDS_NOACTION "Не делать ничего"
     IDS_PowerActionNone1 "Действие не требуется"
     IDS_PowerActionUnknown "Нет данных"

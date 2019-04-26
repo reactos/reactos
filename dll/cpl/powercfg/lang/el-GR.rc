@@ -28,9 +28,9 @@ BEGIN
     LTEXT "Σύστημα σε α&ναμονή:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Σύστημα σε α&δράνεια:", IDC_HYBERNATE, 13, 212, 84, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Σύστημα σε α&δράνεια:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
@@ -107,11 +107,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Επιλογές Ενέργειας"
     IDS_CPLDESCRIPTION_1 "Ρύθμιση χαρακτηριστικών εξοικονόμησης ενέργειας."
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "Ήχος"
     IDS_TEXT "Κείμενο"
-    IDS_CONFIG1 "Ρυθμίσεις του συνδιασμού τροφοδοσίας %1"
-    IDS_CONFIG2 "Ειδικές ρυθμίσεις του συνδιασμού %1"
+    IDS_CONFIG1 "Ρυθμίσεις του συνδιασμού τροφοδοσίας %s"
+    IDS_CONFIG2 "Ειδικές ρυθμίσεις του συνδιασμού %s"
     IDS_NOACTION "Καμία ενέργεια"
     IDS_PowerActionNone1 "Να μη γίνεται καμία ενέργεια"
     IDS_PowerActionUnknown "Unknown"

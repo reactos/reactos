@@ -5,7 +5,7 @@
 /* Set default to IDI_AC */
 #define IDC_CPLICON_1 IDI_AC
 
-#define IDS_PROCENT  49
+#define IDS_PERCENT  49
 #define IDS_SOUND    50
 #define IDS_TEXT     51
 #define IDS_CONFIG1  53
@@ -67,9 +67,9 @@
 #define IDC_DISKACLIST      216
 #define IDC_DISKDCLIST      217
 #define IDC_DISK            218
-#define IDC_HYBERNATEACLIST 219
-#define IDC_HYBERNATEDCLIST 220
-#define IDC_HYBERNATE       221
+#define IDC_HIBERNATEACLIST 219
+#define IDC_HIBERNATEDCLIST 220
+#define IDC_HIBERNATE       221
 
 #define IDC_STANDBY             211
 #define IDC_MONITOR             212

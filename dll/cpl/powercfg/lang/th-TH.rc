@@ -26,9 +26,9 @@ BEGIN
     LTEXT "System s&tandby:", IDC_STANDBY, 15, 180, 80, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 175, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "System &hibernates:", IDC_HYBERNATE, 15, 195, 80, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "System &hibernates:", IDC_HIBERNATE, 15, 195, 80, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
@@ -105,11 +105,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "ตัวเลือกค่าพลังงาน"
     IDS_CPLDESCRIPTION_1 "ปรับค่าพลังงาน-กำลังบันทึกการตั้งค่าให้กับคอมพิวเตอร์ของคุณ"
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "เสียง"
     IDS_TEXT "ข้อความ"
-    IDS_CONFIG1 "ตั้งค่าให้กับ %1 ค่าพลังงาน"
-    IDS_CONFIG2 "การตั้งค่าแบบขั้นสูงเป็น %1"
+    IDS_CONFIG1 "ตั้งค่าให้กับ %s ค่าพลังงาน"
+    IDS_CONFIG2 "การตั้งค่าแบบขั้นสูงเป็น %s"
     IDS_NOACTION "ไม่เปลี่ยนค่า"
     IDS_PowerActionNone1 "ไม่เปลี่ยนค่า"
     IDS_PowerActionUnknown "ไม่ทราบ"

@@ -28,9 +28,9 @@ BEGIN
     LTEXT "&Suspender el equipo:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "El sistema &hiberna:", IDC_HYBERNATE, 13, 212, 84, 10
-    COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "El sistema &hiberna:", IDC_HIBERNATE, 13, 212, 84, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 262, 237
@@ -107,11 +107,11 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Opciones de energía"
     IDS_CPLDESCRIPTION_1 "Configura los parámetros de ahorro de energía de su equipo."
-    IDS_PROCENT "%i%%"
+    IDS_PERCENT "%i%%"
     IDS_SOUND "Sonido"
     IDS_TEXT "Texto"
-    IDS_CONFIG1 "Configuración para la combinación de energía %1"
-    IDS_CONFIG2 "Opciones avanzadas para %1"
+    IDS_CONFIG1 "Configuración para la combinación de energía %s"
+    IDS_CONFIG2 "Opciones avanzadas para %s"
     IDS_NOACTION "No hacer nada"
     IDS_PowerActionNone1 "No hacer nada"
     IDS_PowerActionUnknown "desconocido"
