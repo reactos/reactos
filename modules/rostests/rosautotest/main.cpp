@@ -89,6 +89,7 @@ wmain(int argc, wchar_t* argv[])
     }
     catch(CSimpleException& e)
     {
+        // e.GetMessage() must include ending '\n'.
         StringOut(e.GetMessage());
     }
     catch(CFatalException& e)
