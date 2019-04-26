@@ -61,7 +61,7 @@ wmain(int argc, wchar_t* argv[])
 
         ss << endl
            << endl
-           << "System uptime " << setprecision(2) << fixed;
+           << "[ROSAUTOTEST] System uptime " << setprecision(2) << fixed;
         ss << ((float)GetTickCount()/1000) << " seconds" << endl;
         StringOut(ss.str());
         
@@ -91,8 +91,11 @@ wmain(int argc, wchar_t* argv[])
     }
     catch(CSimpleException& e)
     {
+        stringstream ss;
+
         // e.GetMessage() must include ending '\n'.
-        StringOut(e.GetMessage());
+        ss << "[ROSAUTOTEST] " << e.GetMessage();
+        StringOut(ss.str());
     }
     catch(CFatalException& e)
     {
