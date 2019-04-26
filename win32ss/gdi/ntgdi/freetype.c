@@ -2821,7 +2821,13 @@ GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
         GetFontFamilyInfoForList(&lf, Info, pFromW->Buffer, pCount, MaxCount,
                                  &Win32Process->PrivateFontListHead);
         IntUnLockProcessPrivateFonts(Win32Process);
-        break;
+
+        if (LogFont->lfFaceName[0])
+        {
+            /* it's already matched to the exact name and charset if the name
+               was specified at here, then so don't scan more for another name */
+            break;
+        }
     }
 
     return TRUE;
