@@ -61,8 +61,13 @@ typedef struct _GUID
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #endif
 #else
+#if __GNUC__ >= 8
+#define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    EXTERN_C const GUID DECLSPEC_SELECTANY name
+#else
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     EXTERN_C const GUID name
+#endif // __GNUC__ >= 7
 #endif
 
 #define DEFINE_OLEGUID(name, l, w1, w2) \
