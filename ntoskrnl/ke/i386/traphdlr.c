@@ -477,8 +477,8 @@ KiTrap02Handler(VOID)
     _disable();
 
     /* Get the current TSS, thread, and process */
-    Tss = PCR->TSS;
-    Thread = ((PKIPCR)PCR)->PrcbData.CurrentThread;
+    Tss = KeGetPcr()->TSS;
+    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
     Process = Thread->ApcState.Process;
 
     /* Save data usually not present in the TSS */
@@ -498,7 +498,7 @@ KiTrap02Handler(VOID)
      * Note that in reality, we are already on the NMI TSS -- we just
      * need to update the PCR to reflect this.
      */
-    PCR->TSS = NmiTss;
+    KeGetPcr()->TSS = NmiTss;
     __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
     TssGdt->HighWord.Bits.Dpl = 0;
     TssGdt->HighWord.Bits.Pres = 1;
@@ -523,7 +523,7 @@ KiTrap02Handler(VOID)
     TrapFrame.Esi = Tss->Esi;
     TrapFrame.Edi = Tss->Edi;
     TrapFrame.SegFs = Tss->Fs;
-    TrapFrame.ExceptionList = PCR->NtTib.ExceptionList;
+    TrapFrame.ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     TrapFrame.PreviousPreviousMode = (ULONG)-1;
     TrapFrame.Eax = Tss->Eax;
     TrapFrame.Ecx = Tss->Ecx;
@@ -547,10 +547,10 @@ KiTrap02Handler(VOID)
          * the normal APIs here as playing with the IRQL could change the system
          * state.
          */
-        OldIrql = PCR->Irql;
-        PCR->Irql = HIGH_LEVEL;
+        OldIrql = KeGetPcr()->Irql;
+        KeGetPcr()->Irql = HIGH_LEVEL;
         HalHandleNMI(NULL);
-        PCR->Irql = OldIrql;
+        KeGetPcr()->Irql = OldIrql;
     }
 
     /*
@@ -560,14 +560,14 @@ KiTrap02Handler(VOID)
      * We have to make sure we're still in our original NMI -- a nested NMI
      * will point back to the NMI TSS, and in that case we're hosed.
      */
-    if (PCR->TSS->Backlink == KGDT_NMI_TSS)
+    if (KeGetPcr()->TSS->Backlink == KGDT_NMI_TSS)
     {
         /* Unhandled: crash the system */
         KiSystemFatalException(EXCEPTION_NMI, NULL);
     }
 
     /* Restore original TSS */
-    PCR->TSS = Tss;
+    KeGetPcr()->TSS = Tss;
 
     /* Set it back to busy */
     TssGdt->HighWord.Bits.Dpl = 0;
