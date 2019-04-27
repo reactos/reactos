@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    2   /* Version 2 */
+#define _INC_MSGDUMP    3   /* Version 3 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -28,7 +28,7 @@
 #endif
 
 #ifndef MSGDUMP_PREFIX
-    #define MSGDUMP_PREFIX ""
+    #define MSGDUMP_PREFIX TEXT("")
 #endif
 
 /* MD_msgdump function */
@@ -1620,6 +1620,7 @@ MD_Edit_OnScroll(HWND hwnd, INT nScroll)
 {
     MSGDUMP_TPRINTF(TEXT("%sEM_SCROLL(hwnd:%p, nScroll:%d)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, nScroll);
+    return 0;
 }
 
 static __inline BOOL MSGDUMP_API
@@ -1689,6 +1690,7 @@ MD_Edit_OnGetThumb(HWND hwnd)
 {
     MSGDUMP_TPRINTF(TEXT("%sEM_GETTHUMB(hwnd:%p)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
 }
 
 static __inline INT MSGDUMP_API
@@ -1789,6 +1791,7 @@ MD_Edit_OnSetReadOnly(HWND hwnd, BOOL fReadOnly)
 {
     MSGDUMP_TPRINTF(TEXT("%sEM_SETREADONLY(hwnd:%p, fReadOnly:%d)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, fReadOnly);
+    return 0;
 }
 
 static __inline void MSGDUMP_API
@@ -2349,6 +2352,7 @@ MD_ComboBox_OnInsertString(HWND hwnd, INT index, LPCTSTR lpsz)
     else
         MSGDUMP_TPRINTF(TEXT("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%hs)\n"),
                         MSGDUMP_PREFIX, (void *)hwnd, index, (LPCSTR)lpsz);
+    return 0;
 }
 
 static __inline void MSGDUMP_API
