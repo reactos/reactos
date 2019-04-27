@@ -603,7 +603,7 @@ void
 read_mbr_template(char *path, uint8_t *mbr)
 {
     FILE *fp;
-    int ret;
+    size_t ret;
 
     fp = fopen(path, "rb");
     if (fp == NULL)
@@ -616,7 +616,7 @@ read_mbr_template(char *path, uint8_t *mbr)
 }
 
 
-int
+size_t
 initialise_mbr(uint8_t *mbr)
 {
     int i = 0;
@@ -975,7 +975,10 @@ main(int argc, char *argv[])
     FILE *fp = NULL;
     uint8_t *buf = NULL, *bufz = NULL;
     int cylsize = 0, frac = 0;
+    size_t mbr_size;
+#ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
     size_t orig_gpt_size, free_space, gpt_size;
+#endif
     struct iso_primary_descriptor descriptor;
 
     prog = strcpy(alloca(strlen(argv[0]) + 1), argv[0]);
@@ -1089,7 +1092,9 @@ main(int argc, char *argv[])
         err(1, "%s", argv[0]);
 
     isosize = lendian_int(descriptor.size) * lendian_short(descriptor.block_size);
+#ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
     free_space = isostat.st_size - isosize;
+#endif
 
     cylsize = head * sector * 512;
     frac = isostat.st_size % cylsize;
@@ -1127,15 +1132,15 @@ main(int argc, char *argv[])
 
     buf = bufz;
     memset(buf, 0, BUFSIZE);
-    i = initialise_mbr(buf);
+    mbr_size = initialise_mbr(buf);
 
     if (mode & VERBOSE)
-        display_mbr(buf, i);
+        display_mbr(buf, mbr_size);
 
     if (fseeko(fp, (off_t) 0, SEEK_SET))
         err(1, "%s: seek error - 5", argv[0]);
 
-    if (fwrite(buf, sizeof(char), i, fp) != (size_t)i)
+    if (fwrite(buf, sizeof(char), mbr_size, fp) != mbr_size)
         err(1, "%s: write error - 1", argv[0]);
 
 #ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
@@ -1177,7 +1182,7 @@ main(int argc, char *argv[])
 	if (fseeko(fp, (off_t) 512, SEEK_SET))
 	    err(1, "%s: seek error - 6", argv[0]);
 
-	if (fwrite(buf, sizeof(char), gpt_size, fp) != (size_t)gpt_size)
+	if (fwrite(buf, sizeof(char), gpt_size, fp) != gpt_size)
 	    err(1, "%s: write error - 2", argv[0]);
     }
 
