@@ -5,7 +5,7 @@
 #  while others require space-separated strings. The function has a list of
 #  properties of the former variety and handles the values accordingly
 function(add_target_property _module _propname)
-    list(APPEND _list_properties COMPILE_DEFINITIONS INCLUDE_DIRECTORIES)
+    list(APPEND _list_properties COMPILE_DEFINITIONS INCLUDE_DIRECTORIES LINK_DEPENDS)
     set(_newvalue "")
     get_target_property(_oldvalue ${_module} ${_propname})
     if(_oldvalue)
