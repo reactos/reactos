@@ -211,6 +211,10 @@ static void    FILEDLG95_LOOKIN_Clean(HWND hwnd);
 static void FILEDLG95_MRU_load_filename(LPWSTR stored_path);
 static WCHAR FILEDLG95_MRU_get_slot(LPCWSTR module_name, LPWSTR stored_path, PHKEY hkey_ret);
 static void FILEDLG95_MRU_save_filename(LPCWSTR filename);
+#ifdef __REACTOS__
+static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR defext);
+static void FILEDLG95_MRU_save_ext(LPCWSTR filename);
+#endif
 
 /* Miscellaneous tool functions */
 static HRESULT GetName(LPSHELLFOLDER lpsf, LPITEMIDLIST pidl,DWORD dwFlags,LPWSTR lpstrFileName);
@@ -1754,6 +1758,26 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
         }
   }
 
+#ifdef __REACTOS__
+  if (!handledPath && (!fodInfos->initdir || !*fodInfos->initdir))
+  {
+      /* 2.5. Win2000+: Recently used defext */
+      if (win2000plus) {
+          fodInfos->initdir = heap_alloc(MAX_PATH * sizeof(WCHAR));
+          fodInfos->initdir[0] = '\0';
+
+          FILEDLG95_MRU_load_ext(fodInfos->initdir, MAX_PATH, fodInfos->defext);
+
+          if (fodInfos->initdir[0] && PathIsDirectoryW(fodInfos->initdir)) {
+             handledPath = TRUE;
+          } else {
+             heap_free(fodInfos->initdir);
+             fodInfos->initdir = NULL;
+          }
+      }
+  }
+#endif
+
   if (!handledPath && (!fodInfos->initdir || !*fodInfos->initdir))
   {
       /* 3. All except w2k+: if filename contains a path use it */
@@ -2457,6 +2481,246 @@ static void FILEDLG95_MRU_load_filename(LPWSTR stored_path)
     FILEDLG95_MRU_get_slot(module_name, stored_path, NULL);
     TRACE("got MRU path: %s\n", wine_dbgstr_w(stored_path));
 }
+#ifdef __REACTOS__
+static const WCHAR s_subkey[] =
+{
+    'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+    'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s',
+    'i','o','n','\\','E','x','p','l','o','r','e','r','\\','C','o','m','D','l','g',
+    '3','2','\\','O','p','e','n','S','a','v','e','M','R','U',0
+};
+static const WCHAR s_szAst[] = { '*', 0 };
+
+typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
+typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
+
+/* https://docs.microsoft.com/en-us/windows/desktop/shell/mruinfo */
+typedef struct tagMRUINFOW
+{
+    DWORD   cbSize;
+    UINT    uMax;
+    UINT    fFlags;
+    HKEY    hKey;
+    LPCWSTR lpszSubKey;
+    union
+    {
+        MRUStringCmpFnW string_cmpfn;
+        MRUBinaryCmpFn  binary_cmpfn;
+    } u;
+} MRUINFOW, *LPMRUINFOW;
+
+/* flags for MRUINFOW.fFlags */
+#define MRU_STRING 0x0000
+#define MRU_BINARY 0x0001
+#define MRU_CACHEWRITE 0x0002
+
+static HINSTANCE s_hComCtl32 = NULL;
+
+/* comctl32.400: CreateMRUListW */
+typedef HANDLE (WINAPI *CREATEMRULISTW)(const MRUINFOW *);
+static CREATEMRULISTW s_pCreateMRUListW = NULL;
+
+/* comctl32.401: AddMRUStringW */
+typedef INT (WINAPI *ADDMRUSTRINGW)(HANDLE, LPCWSTR);
+static ADDMRUSTRINGW s_pAddMRUStringW = NULL;
+
+/* comctl32.402: FindMRUStringW */
+typedef INT (WINAPI *FINDMRUSTRINGW)(HANDLE, LPCWSTR, LPINT);
+static FINDMRUSTRINGW s_pFindMRUStringW = NULL;
+
+/* comctl32.403: EnumMRUListW */
+typedef INT (WINAPI *ENUMMRULISTW)(HANDLE, INT, LPVOID, DWORD);
+static ENUMMRULISTW s_pEnumMRUListW = NULL;
+
+/* comctl32.152: FreeMRUList */
+typedef void (WINAPI *FREEMRULIST)(HANDLE);
+static FREEMRULIST s_pFreeMRUList = NULL;
+
+static BOOL FILEDLG_InitMRUList(void)
+{
+    if (s_hComCtl32)
+        return TRUE;
+
+    s_hComCtl32 = GetModuleHandleA("comctl32");
+    if (!s_hComCtl32)
+        return FALSE;
+
+    s_pCreateMRUListW = (CREATEMRULISTW)GetProcAddress(s_hComCtl32, (LPCSTR)400);
+    s_pAddMRUStringW = (ADDMRUSTRINGW)GetProcAddress(s_hComCtl32, (LPCSTR)401);
+    s_pFindMRUStringW = (FINDMRUSTRINGW)GetProcAddress(s_hComCtl32, (LPCSTR)402);
+    s_pEnumMRUListW = (ENUMMRULISTW)GetProcAddress(s_hComCtl32, (LPCSTR)403);
+    s_pFreeMRUList = (FREEMRULIST)GetProcAddress(s_hComCtl32, (LPCSTR)152);
+    if (!s_pCreateMRUListW ||
+        !s_pAddMRUStringW ||
+        !s_pFindMRUStringW ||
+        !s_pEnumMRUListW ||
+        !s_pFreeMRUList)
+    {
+        s_hComCtl32 = NULL;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL ExtIsPicture(LPCWSTR ext)
+{
+    static const WCHAR s_image_exts[][6] =
+    {
+        { 'b','m','p',0 },
+        { 'd','i','b',0 },
+        { 'j','p','g',0 },
+        { 'j','p','e','g',0 },
+        { 'j','p','e',0 },
+        { 'j','f','i','f',0 },
+        { 'p','n','g',0 },
+        { 'g','i','f',0 },
+        { 't','i','f',0 },
+        { 't','i','f','f',0 }
+    };
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE(s_image_exts); ++i)
+    {
+        if (lstrcmpiW(ext, s_image_exts[i]) == 0)
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR defext)
+{
+    HKEY hOpenSaveMRT = NULL;
+    LONG result;
+    MRUINFOW mi;
+    HANDLE hList;
+    WCHAR szText[MAX_PATH];
+    INT ret = 0;
+
+    stored_path[0] = 0;
+
+    if (!defext || !*defext || !FILEDLG_InitMRUList())
+    {
+        return;
+    }
+
+    if (*defext == '.')
+        ++defext;
+
+    result = RegOpenKeyW(HKEY_CURRENT_USER, s_subkey, &hOpenSaveMRT);
+    if (!result && hOpenSaveMRT)
+    {
+        ZeroMemory(&mi, sizeof(mi));
+        mi.cbSize = sizeof(mi);
+        mi.uMax = 26;
+        mi.fFlags = MRU_STRING;
+        mi.hKey = hOpenSaveMRT;
+        mi.lpszSubKey = defext;
+        mi.u.string_cmpfn = lstrcmpiW;
+        hList = (*s_pCreateMRUListW)(&mi);
+        if (hList)
+        {
+            ret = (*s_pEnumMRUListW)(hList, 0, szText, sizeof(szText));
+            if (ret > 0)
+            {
+                lstrcpynW(stored_path, szText, cchMax);
+                PathRemoveFileSpecW(stored_path);
+            }
+            (*s_pFreeMRUList)(hList);
+        }
+
+        if (stored_path[0] == 0)
+        {
+            mi.cbSize = sizeof(mi);
+            mi.uMax = 26;
+            mi.fFlags = MRU_STRING;
+            mi.hKey = hOpenSaveMRT;
+            mi.lpszSubKey = s_szAst;
+            mi.u.string_cmpfn = lstrcmpiW;
+            hList = (*s_pCreateMRUListW)(&mi);
+            if (hList)
+            {
+                ret = (*s_pEnumMRUListW)(hList, 0, szText, sizeof(szText));
+                if (ret > 0)
+                {
+                    lstrcpynW(stored_path, szText, cchMax);
+                    PathRemoveFileSpecW(stored_path);
+                }
+                (*s_pFreeMRUList)(hList);
+            }
+        }
+
+        RegCloseKey(hOpenSaveMRT);
+    }
+
+    if (stored_path[0] == 0)
+    {
+        LPITEMIDLIST pidl;
+        if (ExtIsPicture(defext))
+        {
+            SHGetSpecialFolderLocation(NULL, CSIDL_MYPICTURES, &pidl);
+        }
+        else
+        {
+            SHGetSpecialFolderLocation(NULL, CSIDL_MYDOCUMENTS, &pidl);
+        }
+        SHGetPathFromIDListW(pidl, stored_path);
+        ILFree(pidl);
+    }
+}
+
+static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
+{
+    HKEY hOpenSaveMRT = NULL;
+    LONG result;
+    MRUINFOW mi;
+    HANDLE hList;
+    LPCWSTR defext = PathFindExtensionW(filename);
+
+    if (!defext || !*defext || !FILEDLG_InitMRUList())
+    {
+        return;
+    }
+
+    if (*defext == '.')
+        ++defext;
+
+    result = RegOpenKeyW(HKEY_CURRENT_USER, s_subkey, &hOpenSaveMRT);
+    if (!result && hOpenSaveMRT)
+    {
+        ZeroMemory(&mi, sizeof(mi));
+        mi.cbSize = sizeof(mi);
+        mi.uMax = 26;
+        mi.fFlags = MRU_STRING;
+        mi.hKey = hOpenSaveMRT;
+        mi.lpszSubKey = defext;
+        mi.u.string_cmpfn = lstrcmpiW;
+        hList = (*s_pCreateMRUListW)(&mi);
+        if (hList)
+        {
+            (*s_pAddMRUStringW)(hList, filename);
+            (*s_pFreeMRUList)(hList);
+        }
+
+        mi.cbSize = sizeof(mi);
+        mi.uMax = 26;
+        mi.fFlags = MRU_STRING;
+        mi.hKey = hOpenSaveMRT;
+        mi.lpszSubKey = s_szAst;
+        mi.u.string_cmpfn = lstrcmpiW;
+        hList = (*s_pCreateMRUListW)(&mi);
+        if (hList)
+        {
+            (*s_pAddMRUStringW)(hList, filename);
+            (*s_pFreeMRUList)(hList);
+        }
+
+        RegCloseKey(hOpenSaveMRT);
+    }
+}
+#endif
 
 void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText)
 {
@@ -2930,6 +3194,9 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	      goto ret;
 
           FILEDLG95_MRU_save_filename(lpstrPathAndFile);
+#ifdef __REACTOS__
+          FILEDLG95_MRU_save_ext(lpstrPathAndFile);
+#endif
 
           TRACE("close\n");
 	  FILEDLG95_Clean(hwnd);
