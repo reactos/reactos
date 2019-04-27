@@ -5,7 +5,6 @@
 #include <ntddk.h>
 #include <hidpddi.h>
 #include <hidpi.h>
-#include "hidparser.h"
 #include <stdio.h>
 
 #define HIDPARSE_TAG 'PdiH'

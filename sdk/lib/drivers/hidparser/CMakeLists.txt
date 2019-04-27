@@ -6,8 +6,11 @@ list(APPEND SOURCE
     hidparser.c
     parser.c
     api.c
-    parser.h)
+    parser.h
+    hidp.c
+    hidp.h)
 
-add_library(hidparser ${SOURCE})
-add_dependencies(hidparser bugcodes xdk)
-add_pch(hidparser parser.h SOURCE)
+add_library(hidparser_km ${SOURCE})
+add_importlibs(hidparser_km ntoskrnl)
+add_dependencies(hidparser_km bugcodes xdk)
+add_pch(hidparser_km parser.h SOURCE)

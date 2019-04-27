@@ -57,7 +57,7 @@ typedef struct
     //
     // free function
     //
-    PFREE_FUNCTION Free;
+    PHIDPARSER_FREE_FUNCTION Free;
 
     //
     // zero function
