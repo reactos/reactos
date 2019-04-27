@@ -2822,7 +2822,7 @@ GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
                                  &Win32Process->PrivateFontListHead);
         IntUnLockProcessPrivateFonts(Win32Process);
 
-        if (LogFont->lfFaceName[0])
+        if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
             /* it's already matched to the exact name and charset if the name
                was specified at here, then so don't scan more for another name */
@@ -4487,7 +4487,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
 
     ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
-    if (LogFont->lfFaceName[0])
+    if (LogFont->lfFaceName[0] != UNICODE_NULL)
     {
         BOOL Found = FALSE;
 
