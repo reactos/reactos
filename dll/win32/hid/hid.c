@@ -27,16 +27,66 @@
  */
 
 #include "precomp.h"
+#include <stdarg.h>
 
 #include <winbase.h>
 
 #define NDEBUG
 #include <debug.h>
+#include "hidp.h"
 
 HINSTANCE hDllInstance;
 
 /* device interface GUID for HIDClass devices */
 const GUID HidClassGuid = {0x4D1E55B2, 0xF16F, 0x11CF, {0x88,0xCB,0x00,0x11,0x11,0x00,0x00,0x30}};
+
+PVOID
+NTAPI
+AllocFunction(
+    IN ULONG ItemSize)
+{
+    return LocalAlloc(LHND, ItemSize);
+}
+
+VOID
+NTAPI
+FreeFunction(
+    IN PVOID Item)
+{
+    LocalFree((HLOCAL)Item);
+}
+
+VOID
+NTAPI
+ZeroFunction(
+    IN PVOID Item,
+    IN ULONG ItemSize)
+{
+    memset(Item, 0, ItemSize);
+}
+
+VOID
+NTAPI
+CopyFunction(
+    IN PVOID Target,
+    IN PVOID Source,
+    IN ULONG Length)
+{
+    memcpy(Target, Source, Length);
+}
+
+VOID
+__cdecl
+DebugFunction(
+    IN LPCSTR FormatStr, ...)
+{
+#if 0
+    va_arg list;
+    va_start(list, FormatStr);
+    vDbgPrintEx(FormatStr, list);
+    va_end(list);
+#endif
+}
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
@@ -120,23 +170,6 @@ HidD_GetAttributes(IN HANDLE HidDeviceObject,
   Attributes->VersionNumber = hci.VersionNumber;
 
   return TRUE;
-}
-
-
-/*
- * HidP_GetButtonCaps							EXPORTED
- *
- * @implemented
- */
-HIDAPI
-NTSTATUS WINAPI
-HidP_GetButtonCaps(IN HIDP_REPORT_TYPE ReportType,
-                   OUT PHIDP_BUTTON_CAPS ButtonCaps,
-                   IN OUT PUSHORT ButtonCapsLength,
-                   IN PHIDP_PREPARSED_DATA PreparsedData)
-{
-  return HidP_GetSpecificButtonCaps(ReportType, 0, 0, 0, ButtonCaps,
-                                    ButtonCapsLength, PreparsedData);
 }
 
 
@@ -341,23 +374,6 @@ HidD_GetSerialNumberString(IN HANDLE HidDeviceObject,
 
 
 /*
- * HidP_GetValueCaps							EXPORTED
- *
- * @implemented
- */
-HIDAPI
-NTSTATUS WINAPI
-HidP_GetValueCaps(IN HIDP_REPORT_TYPE ReportType,
-                  OUT PHIDP_VALUE_CAPS ValueCaps,
-                  IN OUT PUSHORT ValueCapsLength,
-                  IN PHIDP_PREPARSED_DATA PreparsedData)
-{
-  return HidP_GetSpecificValueCaps(ReportType, 0, 0, 0, ValueCaps,
-                                   ValueCapsLength, PreparsedData);
-}
-
-
-/*
  * HidD_Hello								EXPORTED
  *
  * Undocumented easter egg function. It fills the buffer with "Hello\n"
@@ -524,24 +540,5 @@ HidD_SetConfiguration(IN HANDLE HidDeviceObject,
 
     return Ret;
 }
-
-/*
- * HidP_GetUsagesEx							EXPORTED
- *
- * @implemented
- */
-HIDAPI
-NTSTATUS WINAPI
-HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
-                 IN USHORT LinkCollection,
-                 OUT PUSAGE_AND_PAGE ButtonList,
-                 IN OUT ULONG *UsageLength,
-                 IN PHIDP_PREPARSED_DATA PreparsedData,
-                 IN PCHAR Report,
-                 IN ULONG ReportLength)
-{
-    return HidP_GetUsages(ReportType, ButtonList->UsagePage, LinkCollection, &ButtonList->Usage, UsageLength, PreparsedData, Report, ReportLength);
-}
-
 
 /* EOF */
