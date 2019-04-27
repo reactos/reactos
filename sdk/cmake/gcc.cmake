@@ -479,8 +479,5 @@ endmacro()
 function(add_linker_script _target _linker_script_file)
     get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
     add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
-
-    # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
-    # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
     add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
 endfunction()
