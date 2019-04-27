@@ -897,7 +897,7 @@ USBSTOR_CreatePDO(
         return Status;
     }
 
-    if (PDODeviceExtension->InquiryData->DeviceType == DIRECT_ACCESS_DEVICE)
+    if (PDODeviceExtension->InquiryData->DeviceType == DIRECT_ACCESS_DEVICE || PDODeviceExtension->InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE)
     {
         PDODeviceExtension->IsFloppy = FALSE; // TODO: implement the actual check
     }

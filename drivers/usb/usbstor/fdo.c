@@ -177,12 +177,12 @@ USBSTOR_FdoHandleStartDevice(
         return STATUS_NOT_SUPPORTED;
     }
 
-    if (InterfaceDesc->bInterfaceSubClass != 0x06)
+    if (InterfaceDesc->bInterfaceSubClass == 0x04) // UFI subclass
     {
         // FIXME: need to pad CDBs to 12 byte
         // mode select commands must be translated from 1AH / 15h to 5AH / 55h
         DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
-        return STATUS_NOT_IMPLEMENTED;
+        return STATUS_NOT_SUPPORTED;
     }
 
     // now select an interface
