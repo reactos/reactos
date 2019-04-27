@@ -7,7 +7,7 @@ list(APPEND SOURCE
     chmc/err.c
     lzx_compress/lz_nonslide.c
     lzx_compress/lzx_layer.c
-    port/mkstemps.c)
+    ../port/mkstemps.c)
 
 # used by lzx_compress
 add_definitions(-DNONSLIDE)

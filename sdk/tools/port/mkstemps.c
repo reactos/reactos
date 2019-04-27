@@ -17,22 +17,19 @@
    Boston, MA 02110-1301, USA.
 */
 
-#include "config.h"
-
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#ifdef HAVE_PROCESS_H
-#include <process.h>
+
+#ifdef _WIN32
+    #include <io.h>
+    #include <process.h>
+#else
+    #include <unistd.h>
+    #include <sys/time.h>
 #endif
 
 /* We need to provide a type for gcc_uint64_t.  */
@@ -44,6 +41,11 @@ typedef unsigned long gcc_uint64_t;
 
 #ifndef TMP_MAX
 #define TMP_MAX 16384
+#endif
+
+/* if O_BINARY is not defined, the system is probably not expecting any such flag */
+#ifndef O_BINARY
+#define O_BINARY 0
 #endif
 
 /*
@@ -87,6 +89,7 @@ mkstemps (
   if ((int) len < 6 + suffix_len
       || strncmp (&template[len - 6 - suffix_len], "XXXXXX", 6))
     {
+      printf("wrong parameter\n");
       return -1;
     }
 
@@ -121,7 +124,7 @@ mkstemps (
 #ifdef VMS
       fd = open (template, O_RDWR|O_CREAT|O_EXCL, 0600, "fop=tmd");
 #else
-      fd = open (template, O_RDWR|O_CREAT|O_EXCL, 0600);
+      fd = open (template, O_RDWR|O_CREAT|O_EXCL|O_BINARY, 0600);
 #endif
       if (fd >= 0)
 	/* The file does not exist.  */
