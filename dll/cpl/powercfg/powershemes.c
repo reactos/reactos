@@ -78,8 +78,12 @@ AddPowerScheme(
                                         dwDescription + sizeof(TCHAR));
     if (pScheme->pszName == NULL || pScheme->pszDescription == NULL)
     {
-        HeapFree(GetProcessHeap(), 0, pScheme->pszName);
-        HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
+        if (pScheme->pszName)
+            HeapFree(GetProcessHeap(), 0, pScheme->pszName);
+
+        if (pScheme->pszDescription)
+            HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
+
         HeapFree(GetProcessHeap(), 0, pScheme);
         return NULL;
     }
@@ -103,8 +107,12 @@ DeletePowerScheme(
 {
     RemoveEntryList(&pScheme->ListEntry);
 
-    HeapFree(GetProcessHeap(), 0, pScheme->pszName);
-    HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
+    if (pScheme->pszName)
+        HeapFree(GetProcessHeap(), 0, pScheme->pszName);
+
+    if (pScheme->pszDescription)
+        HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
+
     HeapFree(GetProcessHeap(), 0, pScheme);
 }
 
