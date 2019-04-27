@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    3   /* Version 3 */
+#define _INC_MSGDUMP    4   /* Version 4 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -1791,7 +1791,7 @@ MD_Edit_OnSetReadOnly(HWND hwnd, BOOL fReadOnly)
 {
     MSGDUMP_TPRINTF(TEXT("%sEM_SETREADONLY(hwnd:%p, fReadOnly:%d)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, fReadOnly);
-    return 0;
+    return FALSE;
 }
 
 static __inline void MSGDUMP_API
@@ -2399,7 +2399,7 @@ MD_ComboBox_OnShowDropDown(HWND hwnd, BOOL fShow)
 {
     MSGDUMP_TPRINTF(TEXT("%sCB_SHOWDROPDOWN(hwnd:%p, fShow:%d)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, fShow);
-    return 0;
+    return FALSE;
 }
 
 static __inline INT_PTR MSGDUMP_API
@@ -2608,7 +2608,7 @@ MD_ScrollBar_OnGetScrollInfo(HWND hwnd, LPSCROLLINFO lpsi)
 {
     MSGDUMP_TPRINTF(TEXT("%sSBM_GETSCROLLINFO(hwnd:%p, lpsi:%p)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsi);
-    return 0;
+    return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
@@ -2616,7 +2616,7 @@ MD_ScrollBar_OnGetScrollBarInfo(HWND hwnd, LPSCROLLBARINFO lpsbi)
 {
     MSGDUMP_TPRINTF(TEXT("%sSBM_GETSCROLLBARINFO(hwnd:%p, lpsbi:%p)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsbi);
-    return 0;
+    return FALSE;
 }
 
 static __inline LRESULT MSGDUMP_API
