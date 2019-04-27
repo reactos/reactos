@@ -3312,10 +3312,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
     FontGDI->Magic = FONTGDI_MAGIC;
 
-    if (lfHeight > 0)
-        EmHeight64 = (FontGDI->EmHeight << 6) + 31;
-    else
-        EmHeight64 = (FontGDI->EmHeight << 6);
+    EmHeight64 = (FontGDI->EmHeight << 6);
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = 0;
