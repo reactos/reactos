@@ -2631,27 +2631,6 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR de
             (*s_pFreeMRUList)(hList);
         }
 
-        if (stored_path[0] == 0)
-        {
-            mi.cbSize = sizeof(mi);
-            mi.uMax = 26;
-            mi.fFlags = MRU_STRING;
-            mi.hKey = hOpenSaveMRT;
-            mi.lpszSubKey = s_szAst;
-            mi.u.string_cmpfn = lstrcmpiW;
-            hList = (*s_pCreateMRUListW)(&mi);
-            if (hList)
-            {
-                ret = (*s_pEnumMRUListW)(hList, 0, szText, sizeof(szText));
-                if (ret > 0)
-                {
-                    lstrcpynW(stored_path, szText, cchMax);
-                    PathRemoveFileSpecW(stored_path);
-                }
-                (*s_pFreeMRUList)(hList);
-            }
-        }
-
         RegCloseKey(hOpenSaveMRT);
     }
 
