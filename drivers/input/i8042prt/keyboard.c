@@ -465,7 +465,6 @@ i8042KbdDeviceControl(
 		{
 			ERR_(I8042PRT, "IRP_MJ_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
 				Stack->Parameters.DeviceIoControl.IoControlCode);
-			ASSERT(FALSE);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
