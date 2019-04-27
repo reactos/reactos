@@ -8,8 +8,6 @@ if(MSVC)
             add_definitions(-Dvsnprintf=_vsnprintf)
         endif()
     endif()
-
-    list(APPEND SOURCE getopt.c)
 endif()
 
 list(APPEND SOURCE
@@ -29,7 +27,9 @@ list(APPEND SOURCE
     write_sltg.c
     parser.yy.c
     parser.tab.c
-    port/mkstemps.c)
+    ../port/getopt.c
+    ../port/getopt1.c
+    ../port/mkstemps.c)
 
 # Taken from widl.rbuild
 add_definitions(-DINT16=SHORT)
