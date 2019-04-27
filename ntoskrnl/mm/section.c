@@ -197,7 +197,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ULONG cbHeadersSize = 0;
     ULONG nSectionAlignment;
     ULONG nFileAlignment;
-    ULONG_PTR ImageBase;
+    ULONG_PTR ImageBase = 0;
     const IMAGE_DOS_HEADER * pidhDosHeader;
     const IMAGE_NT_HEADERS32 * pinhNtHeader;
     const IMAGE_OPTIONAL_HEADER32 * piohOptHeader;
