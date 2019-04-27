@@ -1,4 +1,4 @@
-#ifdef _NFS_PRECOMP_H_
+#ifndef _NFS_PRECOMP_H_
 #define _NFS_PRECOMP_H_
 
 #include <windows.h>
