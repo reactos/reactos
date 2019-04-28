@@ -792,12 +792,14 @@ class CMainWindow :
     BOOL bUpdating;
 
     ATL::CStringW szSearchPattern;
+    INT SelectedEnumType;
 
 public:
     CMainWindow() :
         m_ClientPanel(NULL),
         pLink(NULL),
-        bSearchEnabled(FALSE)
+        bSearchEnabled(FALSE),
+        SelectedEnumType(ENUM_ALL_INSTALLED)
     {
     }
 

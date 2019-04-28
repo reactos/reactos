@@ -25,7 +25,6 @@ typedef SETTINGS_INFO *PSETTINGS_INFO;
 
 extern HWND hMainWnd;
 extern HINSTANCE hInst;
-extern INT SelectedEnumType;
 extern SETTINGS_INFO SettingsInfo;
 
 VOID SaveSettings(HWND hwnd);

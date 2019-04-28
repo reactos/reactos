@@ -15,7 +15,6 @@
 
 HWND hMainWnd;
 HINSTANCE hInst;
-INT SelectedEnumType = ENUM_ALL_INSTALLED;
 SETTINGS_INFO SettingsInfo;
 
 class CRAppsModule : public CComModule
