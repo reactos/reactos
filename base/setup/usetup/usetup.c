@@ -27,6 +27,7 @@
 
 #include <usetup.h>
 #include <math.h>
+#include <ntstrsafe.h>
 
 #include "bootsup.h"
 #include "chkdsk.h"
@@ -3403,12 +3404,13 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
          */
         PartEntry->NeedsCheck = FALSE;
 
-        sprintf(Buffer,
-                "Setup is currently unable to check a partition formatted in %S.\n"
-                "\n"
-                "  \x07  Press ENTER to continue Setup.\n"
-                "  \x07  Press F3 to quit Setup.",
-                PartEntry->FileSystem);
+        RtlStringCbPrintfA(Buffer,
+                           sizeof(Buffer),
+                           "Setup is currently unable to check a partition formatted in %S.\n"
+                           "\n"
+                           "  \x07  Press ENTER to continue Setup.\n"
+                           "  \x07  Press F3 to quit Setup.",
+                           PartEntry->FileSystem);
 
         PopupError(Buffer,
                    MUIGetString(STRING_QUITCONTINUE),
