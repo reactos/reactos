@@ -26,6 +26,9 @@
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
 #include "vfatlib.h"
+#ifdef __REACTOS__
+#include <ntstrsafe.h>
+#endif // __REACTOS__
 
 #define NDEBUG
 #include <debug.h>
@@ -170,7 +173,11 @@ static void check_backup_boot(DOS_FS * fs, struct boot_sector *b, unsigned int l
 	for (p = (uint8_t *) b, q = (uint8_t *) & b2, i = 0; i < sizeof(b2);
 	     ++p, ++q, ++i) {
 	    if (*p != *q) {
+#ifndef __REACTOS__
 		sprintf(buf, "%s%u:%02x/%02x", first ? "" : ", ",
+#else
+		RtlStringCbPrintfA(buf, sizeof(buf), "%s%u:%02x/%02x", first ? "" : ", ",
+#endif // __REACTOS__
 			(unsigned)(p - (uint8_t *) b), *p, *q);
 		if (pos + strlen(buf) > 78)
 		    printf("\n  "), pos = 2;
