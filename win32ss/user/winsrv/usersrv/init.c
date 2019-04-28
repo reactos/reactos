@@ -10,8 +10,8 @@
 /* INCLUDES *******************************************************************/
 
 #include "usersrv.h"
-
-#include "api.h"
+#include "api.h"            // USERSRV Public server APIs definitions
+#include "../consrv/api.h"  //  CONSRV Public server APIs definitions
 
 #define NDEBUG
 #include <debug.h>
@@ -138,14 +138,18 @@ CSR_API(SrvActivateDebugger)
 
 CSR_API(SrvGetThreadConsoleDesktop)
 {
+    NTSTATUS Status;
     PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.GetThreadConsoleDesktopRequest;
 
-    UNIMPLEMENTED_ONCE;
+    Status = GetThreadConsoleDesktop(GetThreadConsoleDesktopRequest->ThreadId,
+                                     &GetThreadConsoleDesktopRequest->ConsoleDesktop);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetThreadConsoleDesktop(%lu) failed with Status 0x%08x\n",
+                GetThreadConsoleDesktopRequest->ThreadId, Status);
+    }
 
-    /* Return nothing for the moment... */
-    GetThreadConsoleDesktopRequest->ConsoleDesktop = NULL;
-
-    /* Always succeeds */
+    /* Windows-compatibility: Always return success since User32 relies on this! */
     return STATUS_SUCCESS;
 }
 

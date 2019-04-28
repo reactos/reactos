@@ -89,6 +89,7 @@ typedef struct _FRONTEND_VTBL
     VOID (NTAPI *ChangeTitle)(IN OUT PFRONTEND This);
     BOOL (NTAPI *ChangeIcon)(IN OUT PFRONTEND This,
                              HICON IconHandle);
+    HDESK (NTAPI *GetThreadConsoleDesktop)(IN OUT PFRONTEND This);
     HWND (NTAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
     VOID (NTAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                               PCOORD pSize);

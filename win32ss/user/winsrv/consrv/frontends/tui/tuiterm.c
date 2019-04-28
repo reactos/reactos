@@ -831,6 +831,13 @@ TuiChangeIcon(IN OUT PFRONTEND This,
     return TRUE;
 }
 
+static HDESK NTAPI
+TuiGetThreadConsoleDesktop(IN OUT PFRONTEND This)
+{
+    // PTUI_CONSOLE_DATA TuiData = This->Context;
+    return NULL;
+}
+
 static HWND NTAPI
 TuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
@@ -920,6 +927,7 @@ static FRONTEND_VTBL TuiVtbl =
     TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,
+    TuiGetThreadConsoleDesktop,
     TuiGetConsoleWindowHandle,
     TuiGetLargestConsoleWindowSize,
     TuiGetSelectionInfo,

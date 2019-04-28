@@ -68,7 +68,7 @@ typedef struct _USER_LOGON
 typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
 {
     ULONG_PTR ThreadId;
-    HANDLE ConsoleDesktop;
+    HDESK ConsoleDesktop;
 } USER_GET_THREAD_CONSOLE_DESKTOP, *PUSER_GET_THREAD_CONSOLE_DESKTOP;
 
 typedef struct _USER_REGISTER_SERVICES_PROCESS

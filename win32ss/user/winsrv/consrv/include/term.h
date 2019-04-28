@@ -47,6 +47,8 @@
     (Console)->FrontEndIFace.Vtbl->ChangeTitle(&(Console)->FrontEndIFace)
 #define TermChangeIcon(Console, IconHandle) \
     (Console)->FrontEndIFace.Vtbl->ChangeIcon(&(Console)->FrontEndIFace, (IconHandle))
+#define TermGetThreadConsoleDesktop(Console) \
+    (Console)->FrontEndIFace.Vtbl->GetThreadConsoleDesktop(&(Console)->FrontEndIFace)
 #define TermGetConsoleWindowHandle(Console) \
     (Console)->FrontEndIFace.Vtbl->GetConsoleWindowHandle(&(Console)->FrontEndIFace)
 #define TermGetSelectionInfo(Console, pSelectionInfo) \

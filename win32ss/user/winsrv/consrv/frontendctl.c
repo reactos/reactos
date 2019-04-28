@@ -275,6 +275,42 @@ CSR_API(SrvSetConsoleMenuClose)
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
+/* Used by USERSRV!SrvGetThreadConsoleDesktop() */
+NTSTATUS
+NTAPI
+GetThreadConsoleDesktop(
+    IN ULONG_PTR ThreadId,
+    OUT HDESK* ConsoleDesktop)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CsrThread;
+    PCONSRV_CONSOLE Console;
+
+    /* No console desktop handle by default */
+    *ConsoleDesktop = NULL;
+
+    /* Retrieve and lock the thread */
+    Status = CsrLockThreadByClientId(ULongToHandle(ThreadId), &CsrThread);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT(CsrThread->Process);
+
+    /* Retrieve the console to which the process is attached, and unlock the thread */
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrThread->Process),
+                              &Console, TRUE);
+    CsrUnlockThread(CsrThread);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Retrieve the console desktop handle, and release the console */
+    *ConsoleDesktop = TermGetThreadConsoleDesktop(Console);
+    ConSrvReleaseConsole(Console, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
 CSR_API(SrvGetConsoleWindow)
 {
     NTSTATUS Status;

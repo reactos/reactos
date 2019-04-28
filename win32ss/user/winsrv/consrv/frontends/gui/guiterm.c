@@ -911,6 +911,13 @@ GuiChangeIcon(IN OUT PFRONTEND This,
     return TRUE;
 }
 
+static HDESK NTAPI
+GuiGetThreadConsoleDesktop(IN OUT PFRONTEND This)
+{
+    PGUI_CONSOLE_DATA GuiData = This->Context;
+    return GuiData->Desktop;
+}
+
 static HWND NTAPI
 GuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
@@ -1148,6 +1155,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiRefreshInternalInfo,
     GuiChangeTitle,
     GuiChangeIcon,
+    GuiGetThreadConsoleDesktop,
     GuiGetConsoleWindowHandle,
     GuiGetLargestConsoleWindowSize,
     GuiGetSelectionInfo,

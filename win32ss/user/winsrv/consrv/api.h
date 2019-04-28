@@ -78,6 +78,14 @@ CSR_API(SrvShowConsoleCursor);
 CSR_API(SrvSetConsoleCursor);
 CSR_API(SrvConsoleMenuControl);
 CSR_API(SrvSetConsoleMenuClose);
+
+/* Used by USERSRV!SrvGetThreadConsoleDesktop() */
+NTSTATUS
+NTAPI
+GetThreadConsoleDesktop(
+    IN ULONG_PTR ThreadId,
+    OUT HDESK* ConsoleDesktop);
+
 CSR_API(SrvGetConsoleWindow);
 CSR_API(SrvSetConsoleIcon);
 CSR_API(SrvGetConsoleSelectionInfo);
