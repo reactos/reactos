@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Coordinate systems
  * FILE:             win32ss/gdi/ntgdi/coord.c
- * PROGRAMER:        Timo Kreuzer (timo.kreuzer@rectos.org)
+ * PROGRAMERS:       Timo Kreuzer (timo.kreuzer@rectos.org)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /* Coordinate translation overview
@@ -213,7 +214,7 @@ DC_vUpdateDeviceToWorld(PDC pdc)
     XFORMOBJ_vInit(&xoDeviceToWorld, &pdc->pdcattr->mxDeviceToWorld);
     if (XFORMOBJ_iInverse(&xoDeviceToWorld, &xoWorldToDevice) == DDI_ERROR)
     {
-        // FIXME: do we need to reset anything?
+        MX_Set0(&pdc->pdcattr->mxDeviceToWorld);
         return;
     }
 
@@ -411,6 +412,13 @@ NtGdiTransformPoints(
     switch (iMode)
     {
         case GdiDpToLp:
+            if (pdc->pdcattr->iMapMode == MM_ISOTROPIC &&
+                (pdc->pdcattr->szlViewportExt.cx * pdc->pdcattr->szlWindowExt.cy !=
+                 pdc->pdcattr->szlWindowExt.cx * pdc->pdcattr->szlViewportExt.cy))
+            {
+                ret = FALSE;
+                goto leave;
+            }
             DC_vXformDeviceToWorld(pdc, Count, Points, Points);
             break;
 
@@ -595,7 +603,7 @@ NtGdiOffsetViewportOrgEx(
     }
     pdcattr->ptlViewportOrg.x += XOffset;
     pdcattr->ptlViewportOrg.y += YOffset;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -921,7 +929,7 @@ GreSetViewportOrgEx(
 
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
     return TRUE;
@@ -972,7 +980,7 @@ NtGdiSetViewportOrgEx(
 
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -1024,7 +1032,7 @@ NtGdiSetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x = X;
     pdcattr->ptlWindowOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -1060,7 +1068,7 @@ IntMirrorWindowOrg(PDC dc)
     X = (X * pdcattr->szlWindowExt.cx) / cx;
 
     pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx - X; // Now set the inverted win origion.
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     return;
 }

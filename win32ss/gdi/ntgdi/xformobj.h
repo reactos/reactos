@@ -74,3 +74,6 @@ XFORMOBJ_bApplyXform(
     IN ULONG cPoints,
     IN PVOID pvIn,
     OUT PVOID pvOut);
+
+BOOL FASTCALL MX_IsValid(IN PMATRIX pmx);
+VOID FASTCALL MX_Set0(OUT PMATRIX pmx);

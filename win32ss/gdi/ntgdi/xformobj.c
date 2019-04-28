@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/xformobj.c
  * PURPOSE:         XFORMOBJ API
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMERS:     Timo Kreuzer
+ *                  Katayama Hirofumi MZ
  */
 
 /** Includes ******************************************************************/
@@ -241,6 +242,25 @@ XFORMOBJ_iCombineXform(
     {
         return XFORMOBJ_iCombine(pxo, pxo1, &xo2);
     }
+}
+
+BOOL FASTCALL
+MX_IsValid(IN PMATRIX pmx)
+{
+    FLOATOBJ foDet;
+    MulSub(&foDet, &pmx->efM11, &pmx->efM22, &pmx->efM12, &pmx->efM21);
+    return !FLOATOBJ_Equal0(&foDet);
+}
+
+VOID FASTCALL
+MX_Set0(OUT PMATRIX pmx)
+{
+    FLOATOBJ_Set0(&pmx->efM11);
+    FLOATOBJ_Set0(&pmx->efM12);
+    FLOATOBJ_Set0(&pmx->efM21);
+    FLOATOBJ_Set0(&pmx->efM22);
+    FLOATOBJ_Set0(&pmx->efDx);
+    FLOATOBJ_Set0(&pmx->efDy);
 }
 
 /*
