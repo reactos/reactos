@@ -1094,6 +1094,44 @@ private:
 
     }
 
+    VOID RemoveSelectedAppFromRegistry()
+    {
+        PINSTALLED_INFO Info;
+        WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
+        ATL::CStringW szMsgText, szMsgTitle;
+        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
+
+        if (!IsInstalledEnum(SelectedEnumType))
+            return;
+
+        Info = reinterpret_cast<PINSTALLED_INFO>(m_ListView->GetItemData(ItemIndex));
+        if (!Info || !Info->hSubKey || (ItemIndex == -1)) 
+            return;
+
+        if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
+            !szMsgTitle.LoadStringW(IDS_INFORMATION))
+            return;
+
+        if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+            ATL::CStringW::CopyChars(szFullName,
+                                     MAX_PATH,
+                                     Info->szKeyName.GetString(),
+                                     MAX_PATH - wcslen(szFullName));
+
+            if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
+            {
+                m_ListView->DeleteItem(ItemIndex);
+                return;
+            }
+
+            if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
+                return;
+
+            MessageBoxW(szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+        }
+    }
+
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
         theResult = 0;
@@ -1563,7 +1601,7 @@ private:
             break;
 
         case ID_REGREMOVE:
-            RemoveAppFromRegistry(-1);
+            RemoveSelectedAppFromRegistry();
             break;
 
         case ID_REFRESH:

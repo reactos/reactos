@@ -92,43 +92,6 @@ BOOL UninstallApplication(INT Index, BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-VOID RemoveAppFromRegistry(INT Index)
-{
-    PINSTALLED_INFO Info;
-    WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
-    ATL::CStringW szMsgText, szMsgTitle;
-    INT ItemIndex = SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-
-    if (!IsInstalledEnum(SelectedEnumType))
-        return;
-
-    Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
-    if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
-
-    if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
-        !szMsgTitle.LoadStringW(IDS_INFORMATION))
-        return;
-
-    if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-    {
-        ATL::CStringW::CopyChars(szFullName,
-                                 MAX_PATH,
-                                 Info->szKeyName.GetString(),
-                                 MAX_PATH - wcslen(szFullName));
-
-        if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
-        {
-            ListView_DeleteItem(hListView, ItemIndex);
-            return;
-        }
-
-        if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
-            return;
-
-        MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
-    }
-}
-
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
