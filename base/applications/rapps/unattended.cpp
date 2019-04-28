@@ -62,7 +62,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
 
     CAvailableApps apps;
     apps.UpdateAppsDB();
-    apps.Enum(ENUM_ALL_AVAILABLE, NULL);
+    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
 
     ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)

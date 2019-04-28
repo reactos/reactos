@@ -554,14 +554,14 @@ public:
         return (InsertColumn(Index, &Column) == -1) ? FALSE : TRUE;
     }
 
-    INT AddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam)
+    INT AddItem(INT ItemIndex, INT IconIndex, LPCWSTR lpText, LPARAM lParam)
     {
         LVITEMW Item;
 
         ZeroMemory(&Item, sizeof(Item));
 
         Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-        Item.pszText = lpText;
+        Item.pszText = const_cast<LPWSTR>(lpText);
         Item.lParam = lParam;
         Item.iItem = ItemIndex;
         Item.iImage = IconIndex;
@@ -1614,7 +1614,7 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
+    BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
     {
         PINSTALLED_INFO ItemInfo;
         ATL::CStringW szText;
@@ -1633,20 +1633,20 @@ private:
             return FALSE;
         }
 
-        Index = ListViewAddItem(ItemIndex, 0, m_szName, (LPARAM) ItemInfo);
+        Index = m_ListView->AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM) ItemInfo);
 
         /* Get version info */
         ItemInfo->GetApplicationString(L"DisplayVersion", szText);
-        ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(szText.GetString()));
+        m_ListView->SetItemText(Index, 1, szText.GetString());
 
         /* Get comments */
         ItemInfo->GetApplicationString(L"Comments", szText);
-        ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(szText.GetString()));
+        m_ListView->SetItemText(Index, 2, szText.GetString());
 
         return TRUE;
     }
 
-    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
+    BOOL EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
     {
         INT Index;
         HICON hIcon = NULL;
@@ -1678,14 +1678,25 @@ private:
         Index = ImageList_AddIcon(hImageListView, hIcon);
         DestroyIcon(hIcon);
 
-        Index = ListViewAddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
-        ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
-
-        ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
-        ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(Info->m_szDesc.GetString()));
-        ListView_SetCheckState(hListView, Index, Info->m_IsSelected);
+        Index = m_ListView->AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
+        m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
+        m_ListView->SetItemText(Index, 1, Info->m_szVersion.GetString());
+        m_ListView->SetItemText(Index, 2, Info->m_szDesc.GetString());
+        m_ListView->SetCheckState(Index, Info->m_IsSelected);
 
         return TRUE;
+    }
+
+    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info, PVOID param)
+    {
+        CMainWindow* pThis = (CMainWindow*)param;
+        return pThis->EnumInstalledAppProc(ItemIndex, m_szName, Info);
+    }
+
+    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath, PVOID param)
+    {
+        CMainWindow* pThis = (CMainWindow*)param;
+        return pThis->EnumAvailableAppProc(Info, szFolderPath);
     }
 
     VOID UpdateStatusBarText()
@@ -1745,8 +1756,8 @@ private:
             DestroyIcon(hIcon);
 
             // Enum installed applications and updates
-            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
-            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
+            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
+            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc, this);
         }
         else if (IsAvailableEnum(EnumType))
         {
@@ -1756,7 +1767,7 @@ private:
             }
 
             // Enum available applications
-            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc);
+            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
         }
 
         SelectedEnumType = EnumType;

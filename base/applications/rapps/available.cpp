@@ -320,7 +320,7 @@ BOOL CAvailableApps::ForceUpdateAppsDB()
     return UpdateAppsDB();
 }
 
-BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc)
+BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 {
 
     HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -381,7 +381,7 @@ skip_if_cached:
             Info->RefreshAppInfo();
 
             if (lpEnumProc)
-                lpEnumProc(Info, m_Strings.szAppsPath.GetString());
+                lpEnumProc(Info, m_Strings.szAppsPath.GetString(), param);
         }
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 

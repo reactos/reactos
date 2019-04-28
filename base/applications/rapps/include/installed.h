@@ -13,9 +13,9 @@ struct INSTALLED_INFO
 };
 
 typedef INSTALLED_INFO *PINSTALLED_INFO;
-typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALLED_INFO Info);
+typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALLED_INFO Info, PVOID param);
 
-BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
+BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param);
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
 
 BOOL UninstallApplication(INT Index, BOOL bModify);
