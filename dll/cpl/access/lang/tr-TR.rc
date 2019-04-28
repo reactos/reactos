@@ -17,7 +17,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "&Süzgeç Düğmeleri'ni Kullan", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Aya&rlar", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "Geçiş Düğmeleri", -1, 6, 145, 234, 62
+    GROUPBOX "Geçiş Düğmeleri", -1, 6, 148, 234, 62
     LTEXT "Eğer Büyük Harf Kilidi'ni, Sayılık Kilit'i ve Kaydırma Kilidi'ni basarken ses duymanızı istiyorsanız Geçiş Düğmeleri'ni kullanınız.",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "&Geçiş Düğmeleri'ni Kullan", IDC_TOGGLE_BOX, 12, 184, 126, 14

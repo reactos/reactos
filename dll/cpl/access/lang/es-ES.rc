@@ -17,7 +17,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Utilizar &FilterKeys", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Co&nfiguración", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "ToogleKeys ", -1, 6, 145, 234, 62
+    GROUPBOX "ToogleKeys ", -1, 6, 148, 234, 62
     LTEXT "Use &ToogleKeys si desea escuchar tonos al presionar Bloq Mayús, Bloq Num, y Bloq Despl.",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "Utilizar &ToogleKeys", IDC_TOGGLE_BOX, 12, 184, 126, 14

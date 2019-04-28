@@ -19,7 +19,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Perdor &FilterKeys", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Konfigurime", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "ToggleKeys", -1, 6, 145, 234, 62
+    GROUPBOX "ToggleKeys", -1, 6, 148, 234, 62
     LTEXT "Perdor ToggleKeys nese doni te degjoni tone gjate shtypjes se Caps Lock, Num Lock, dhe Scroll Lock.",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "Perdor &ToggleKeys", IDC_TOGGLE_BOX, 12, 184, 126, 14

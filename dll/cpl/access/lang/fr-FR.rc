@@ -17,11 +17,11 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Utiliser les touches &filtre", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "P&aramètres", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "Touches bascules", -1, 6, 145, 234, 62
+    GROUPBOX "Touches bascules", -1, 6, 148, 234, 62
     LTEXT "Utilisez les touches &bascules si vous voulez entendre un son émis à chaque fois que vous appuyez sur Verr. maj, Verr. num, et Arrêt défil.",
           -1, 12, 161, 222, 29
-    AUTOCHECKBOX "Utiliser les touches bascules", IDC_TOGGLE_BOX, 12, 184, 126, 14
-    PUSHBUTTON "Para&mètres", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
+    AUTOCHECKBOX "Utiliser les touches bascules", IDC_TOGGLE_BOX, 12, 189, 126, 14
+    PUSHBUTTON "Para&mètres", IDC_TOGGLE_BUTTON, 144, 189, 90, 14
     AUTOCHECKBOX "&Afficher l'aide supplémentaire sur le clavier dans les programmes", IDC_KEYBOARD_EXTRA,
                  6, 212, 234, 14
 END

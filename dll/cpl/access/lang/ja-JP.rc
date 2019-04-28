@@ -15,7 +15,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "フィルタ キー機能を使う(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "切り替えキー機能", -1, 6, 145, 234, 62
+    GROUPBOX "切り替えキー機能", -1, 6, 148, 234, 62
     LTEXT "切り替えキー機能を使うと、CapsLock、NumLock、ScrollLock キーを押したときに音を鳴らします。",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "切り替えキー機能を使う(&T)", IDC_TOGGLE_BOX, 12, 184, 126, 14

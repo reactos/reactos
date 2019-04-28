@@ -20,7 +20,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Doresc folosirea de Filt&ruTaste", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "O&pțiuni…", IDC_FILTER_BUTTON, 154, 121, 80, 14
-    GROUPBOX "TasteDeComutare", -1, 6, 145, 234, 62
+    GROUPBOX "TasteDeComutare", -1, 6, 148, 234, 62
     LTEXT "Utilizați TasteDeComutare pentru a semnala sonor apăsarea tastelor «Caps Lock», «Num Lock» sau «Scroll Lock».",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "Doresc folosirea de TasteDe&Comutare", IDC_TOGGLE_BOX, 12, 184, 136, 14
