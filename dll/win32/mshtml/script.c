@@ -839,10 +839,10 @@ static HRESULT ScriptBSC_read_data(BSCallback *bsc, IStream *stream)
 
     do {
         if(This->bsc.readed >= This->size) {
-	  void *new_buf;
-	  new_buf = heap_realloc(This->buf, This->size << 1);
-	  if(!new_buf)
-	    return E_OUTOFMEMORY;
+            void *new_buf;
+            new_buf = heap_realloc(This->buf, This->size << 1);
+            if(!new_buf)
+                return E_OUTOFMEMORY;
             This->size <<= 1;
             This->buf = new_buf;
         }
