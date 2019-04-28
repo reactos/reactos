@@ -2662,15 +2662,16 @@ KdbpPrint(
         {
             while ((p2 = strrchr(p, '\x1b'))) /* Look for escape character */
             {
+                size_t len = strlen(p2);
                 if (p2[1] == '[')
                 {
                     j = 2;
                     while (!isalpha(p2[j++]));
-                    strcpy(p2, p2 + j);
+                    memmove(p2, p2 + j, len + 1 - j);
                 }
                 else
                 {
-                    strcpy(p2, p2 + 1);
+                    memmove(p2, p2 + 1, len);
                 }
             }
         }
@@ -3007,15 +3008,16 @@ KdbpPager(
         {
             while ((p2 = strrchr(p, '\x1b'))) /* Look for escape character */
             {
+                size_t len = strlen(p2);
                 if (p2[1] == '[')
                 {
                     j = 2;
                     while (!isalpha(p2[j++]));
-                    strcpy(p2, p2 + j);
+                    memmove(p2, p2 + j, len + 1 - j);
                 }
                 else
                 {
-                    strcpy(p2, p2 + 1);
+                    memmove(p2, p2 + 1, len);
                 }
             }
         }
