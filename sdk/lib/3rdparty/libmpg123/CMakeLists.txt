@@ -9,7 +9,8 @@ add_definitions(
     -Dread=_read
     -Dstrdup=_strdup
     -D_CRT_NONSTDC_NO_DEPRECATE
-    -D_DLL -D__USE_CRTIMP)
+    -D_DLL -D__USE_CRTIMP
+    -D_CRT_NO_POSIX_ERROR_CODES)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libmpg123)
 

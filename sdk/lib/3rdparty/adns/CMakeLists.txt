@@ -5,7 +5,8 @@ include_directories(
 
 add_definitions(
     -D_DLL -D__USE_CRTIMP
-    -DADNS_JGAA_WIN32)
+    -DADNS_JGAA_WIN32
+    -D_CRT_NO_POSIX_ERROR_CODES)
 
 list(APPEND SOURCE
     adns_win32/adns_unix_calls.c
