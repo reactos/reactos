@@ -473,7 +473,7 @@ static void UXTHEME_RestoreSystemMetrics(void)
 /* Make system settings persistent, so they're in effect even w/o uxtheme 
  * loaded.
  * For efficiency reasons, only the last SystemParametersInfoW sets
- * SPIF_SENDWININICHANGE */
+ * SPIF_SENDCHANGE */
 static void UXTHEME_SaveSystemMetrics(void)
 {
     const struct BackupSysParam* bsp = backupSysParams;
