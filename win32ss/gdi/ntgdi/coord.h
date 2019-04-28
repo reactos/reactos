@@ -131,7 +131,7 @@ DC_vXformDeviceToWorld(
     PMATRIX pmx;
 
     pmx = DC_pmxDeviceToWorld(pdc);
-    if (!MX_IsValid(pmx))
+    if (!MX_IsInvertible(pmx))
         return;
 
     XFORMOBJ_vInit(&xo, pmx);

@@ -245,7 +245,7 @@ XFORMOBJ_iCombineXform(
 }
 
 BOOL FASTCALL
-MX_IsValid(IN PMATRIX pmx)
+MX_IsInvertible(IN PMATRIX pmx)
 {
     FLOATOBJ foDet;
     MulSub(&foDet, &pmx->efM11, &pmx->efM22, &pmx->efM12, &pmx->efM21);
