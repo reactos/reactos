@@ -43,6 +43,7 @@
 #include <objbase.h>
 #include <rpcproxy.h>
 #include <aclapi.h>
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -1104,7 +1105,7 @@ static BOOL create_container_key(KEYCONTAINER *pKeyContainer, REGSAM sam, HKEY *
     CHAR szRSABase[MAX_PATH];
     HKEY hRootKey;
 
-    sprintf(szRSABase, RSAENH_REGKEY, pKeyContainer->szName);
+    StringCbPrintfA(szRSABase, sizeof(szRSABase), RSAENH_REGKEY, pKeyContainer->szName);
 
     if (pKeyContainer->dwFlags & CRYPT_MACHINE_KEYSET)
         hRootKey = HKEY_LOCAL_MACHINE;
