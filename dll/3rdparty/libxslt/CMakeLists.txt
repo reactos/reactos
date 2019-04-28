@@ -1,4 +1,8 @@
 
+if(NOT MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
+    add_compile_flags("-Wno-misleading-indentation")
+endif()
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libxslt
                     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
