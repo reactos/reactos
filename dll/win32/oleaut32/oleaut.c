@@ -873,7 +873,11 @@ static HRESULT reg_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
 
     RegCloseKey(ikey);
 
+#ifndef __REACTOS__
     sprintf(typelibkey, "Typelib\\%s\\%s\\0\\win%u", tlguid, ver, sizeof(void *) == 8 ? 64 : 32);
+#else
+    snprintf(typelibkey, sizeof(typelibkey), "Typelib\\%s\\%s\\0\\win%u", tlguid, ver, sizeof(void *) == 8 ? 64 : 32);
+#endif // __REACTOS__
     tlfnlen = sizeof(tlfn);
     if (RegQueryValueA(HKEY_CLASSES_ROOT, typelibkey, tlfn, &tlfnlen))
     {
