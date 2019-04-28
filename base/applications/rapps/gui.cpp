@@ -799,6 +799,8 @@ class CMainWindow :
     BOOL bSearchEnabled;
     BOOL bUpdating;
 
+    ATL::CStringW szSearchPattern;
+
 public:
     CMainWindow() :
         m_ClientPanel(NULL),

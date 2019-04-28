@@ -18,8 +18,6 @@ HINSTANCE hInst;
 INT SelectedEnumType = ENUM_ALL_INSTALLED;
 SETTINGS_INFO SettingsInfo;
 
-ATL::CStringW szSearchPattern;
-
 class CRAppsModule : public CComModule
 {
 public:
