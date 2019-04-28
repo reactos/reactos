@@ -105,7 +105,7 @@ HintFromAccel(ULONG flAccel)
 ULONG
 NTAPI
 XFORMOBJ_UpdateAccel(
-    IN XFORMOBJ *pxo)
+    IN OUT XFORMOBJ *pxo)
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
@@ -146,7 +146,7 @@ XFORMOBJ_UpdateAccel(
 ULONG
 NTAPI
 XFORMOBJ_iSetXform(
-    OUT XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN const XFORML *pxform)
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
@@ -189,7 +189,7 @@ XFORMOBJ_iSetXform(
 ULONG
 NTAPI
 XFORMOBJ_iCombine(
-    IN XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
     IN XFORMOBJ *pxo2)
 {
@@ -222,7 +222,7 @@ XFORMOBJ_iCombine(
 ULONG
 NTAPI
 XFORMOBJ_iCombineXform(
-    IN XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
     IN XFORML *pxform,
     IN BOOL bLeftMultiply)

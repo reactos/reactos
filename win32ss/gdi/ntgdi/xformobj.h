@@ -36,20 +36,20 @@ XFORMOBJ_pmx(
 ULONG
 NTAPI
 XFORMOBJ_iSetXform(
-    OUT XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN const XFORML *pxform);
 
 ULONG
 NTAPI
 XFORMOBJ_iCombine(
-    IN XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
     IN XFORMOBJ *pxo2);
 
 ULONG
 NTAPI
 XFORMOBJ_iCombineXform(
-    IN XFORMOBJ *pxo,
+    IN OUT XFORMOBJ *pxo,
     IN XFORMOBJ *pxo1,
     IN XFORML *pxform,
     IN BOOL bLeftMultiply);
