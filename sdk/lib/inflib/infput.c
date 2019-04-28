@@ -89,7 +89,7 @@ Output(POUTPUTBUFFER OutBuf, PCWSTR Text)
 INFSTATUS
 InfpBuildFileBuffer(PINFCACHE Cache,
                     PWCHAR *Buffer,
-                    PSIZE_T BufferSize)
+                    PULONG BufferSize)
 {
   OUTPUTBUFFER OutBuf;
   PINFCACHESECTION CacheSection;

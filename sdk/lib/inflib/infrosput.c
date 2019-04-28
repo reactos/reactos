@@ -23,7 +23,7 @@ InfWriteFile(HINF InfHandle,
   NTSTATUS Status;
   INFSTATUS InfStatus;
   PWCHAR Buffer;
-  SIZE_T BufferSize;
+  ULONG BufferSize;
   PWCHAR HeaderBuffer;
   ULONG HeaderBufferSize;
   UINT Index;
@@ -91,7 +91,7 @@ InfWriteFile(HINF InfHandle,
                        NULL,
                        &IoStatusBlock,
                        Buffer,
-                       (ULONG)BufferSize,
+                       BufferSize,
                        NULL,
                        NULL);
 

@@ -46,21 +46,21 @@ extern LONG InfGetFieldCount(PINFCONTEXT Context);
 extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
                                  PUCHAR ReturnBuffer,
-                                 SIZE_T ReturnBufferSize,
-                                 PSIZE_T RequiredSize);
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
 extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
                               INT *IntegerValue);
 extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
                                   PWSTR ReturnBuffer,
-                                  SIZE_T ReturnBufferSize,
-                                  PSIZE_T RequiredSize);
+                                  ULONG ReturnBufferSize,
+                                  PULONG RequiredSize);
 extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
                                  PWSTR ReturnBuffer,
-                                 SIZE_T ReturnBufferSize,
-                                 PSIZE_T RequiredSize);
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
 extern BOOLEAN InfGetData(PINFCONTEXT Context,
                           PWCHAR *Key,
                           PWCHAR *Data);

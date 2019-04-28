@@ -93,7 +93,7 @@ extern PINFCACHESECTION InfpFindSection(PINFCACHE Cache,
 
 extern INFSTATUS InfpBuildFileBuffer(PINFCACHE InfHandle,
                                      PWCHAR *Buffer,
-                                     PSIZE_T BufferSize);
+                                     PULONG BufferSize);
 
 extern INFSTATUS InfpFindFirstLine(PINFCACHE InfHandle,
                                    PCWSTR Section,
@@ -113,21 +113,21 @@ extern LONG InfpGetFieldCount(PINFCONTEXT Context);
 extern INFSTATUS InfpGetBinaryField(PINFCONTEXT Context,
                                     ULONG FieldIndex,
                                     PUCHAR ReturnBuffer,
-                                    SIZE_T ReturnBufferSize,
-                                    PSIZE_T RequiredSize);
+                                    ULONG ReturnBufferSize,
+                                    PULONG RequiredSize);
 extern INFSTATUS InfpGetIntField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
                                  INT *IntegerValue);
 extern INFSTATUS InfpGetMultiSzField(PINFCONTEXT Context,
                                      ULONG FieldIndex,
                                      PWSTR ReturnBuffer,
-                                     SIZE_T ReturnBufferSize,
-                                     PSIZE_T RequiredSize);
+                                     ULONG ReturnBufferSize,
+                                     PULONG RequiredSize);
 extern INFSTATUS InfpGetStringField(PINFCONTEXT Context,
                                     ULONG FieldIndex,
                                     PWSTR ReturnBuffer,
-                                    SIZE_T ReturnBufferSize,
-                                    PSIZE_T RequiredSize);
+                                    ULONG ReturnBufferSize,
+                                    PULONG RequiredSize);
 extern INFSTATUS InfpGetData(PINFCONTEXT Context,
                              PWCHAR *Key,
                              PWCHAR *Data);

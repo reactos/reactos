@@ -124,7 +124,7 @@ append_multi_sz_value(
     IN HKEY KeyHandle,
     IN PCWSTR ValueName,
     IN PCWSTR Strings,
-    IN SIZE_T StringSize) // In characters
+    IN ULONG StringSize) // In characters
 {
     ULONG Size, Total;   // In bytes
     ULONG Type;
@@ -204,7 +204,7 @@ do_reg_operation(
 {
     WCHAR EmptyStr = 0;
     ULONG Type;
-    SIZE_T Size;
+    ULONG Size;
     LONG Error;
 
     if (Flags & (FLG_ADDREG_DELREG_BIT | FLG_ADDREG_DELVAL))  /* deletion */

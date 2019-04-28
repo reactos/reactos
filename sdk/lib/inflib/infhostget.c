@@ -116,8 +116,8 @@ int
 InfHostGetBinaryField(PINFCONTEXT Context,
                       ULONG FieldIndex,
                       UCHAR *ReturnBuffer,
-                      SIZE_T ReturnBufferSize,
-                      PSIZE_T RequiredSize)
+                      ULONG ReturnBufferSize,
+                      ULONG *RequiredSize)
 {
   INFSTATUS Status;
 
@@ -159,8 +159,8 @@ int
 InfHostGetMultiSzField(PINFCONTEXT Context,
                        ULONG FieldIndex,
                        WCHAR *ReturnBuffer,
-                       SIZE_T ReturnBufferSize,
-                       PSIZE_T RequiredSize)
+                       ULONG ReturnBufferSize,
+                       ULONG *RequiredSize)
 {
   INFSTATUS Status;
 
@@ -182,8 +182,8 @@ int
 InfHostGetStringField(PINFCONTEXT Context,
                       ULONG FieldIndex,
                       WCHAR *ReturnBuffer,
-                      SIZE_T ReturnBufferSize,
-                      PSIZE_T RequiredSize)
+                      ULONG ReturnBufferSize,
+                      ULONG *RequiredSize)
 {
   INFSTATUS Status;
 
