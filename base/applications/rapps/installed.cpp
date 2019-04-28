@@ -13,9 +13,9 @@
 #include "gui.h"
 #include "misc.h"
 
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
+BOOL INSTALLED_INFO::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
-    BOOL result = GetApplicationString(hKey, lpKeyName, String.GetBuffer(MAX_PATH));
+    BOOL result = ::GetApplicationString(hSubKey, lpKeyName, String.GetBuffer(MAX_PATH));
     String.ReleaseBuffer();
     return result;
 }
@@ -90,47 +90,6 @@ BOOL UninstallApplication(INT Index, BOOL bModify)
     }
 
     return StartProcess(szPath, TRUE);
-}
-
-BOOL ShowInstalledAppInfo(INT Index)
-{
-    ATL::CStringW szText;
-    ATL::CStringW szInfo;
-    PINSTALLED_INFO Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
-
-    if (!Info || !Info->hSubKey) return FALSE;
-
-    GetApplicationString(Info->hSubKey, L"DisplayName", szText);
-    NewRichEditText(szText, CFE_BOLD);
-    InsertRichEditText(L"\n", 0);
-
-#define GET_INFO(a, b, c, d) \
-    if (GetApplicationString(Info->hSubKey, a, szInfo)) \
-    { \
-        szText.LoadStringW(b); \
-        InsertRichEditText(szText, c); \
-        InsertRichEditText(szInfo, d); \
-    } \
-
-    GET_INFO(L"DisplayVersion", IDS_INFO_VERSION, CFE_BOLD, 0);
-    GET_INFO(L"Publisher", IDS_INFO_PUBLISHER, CFE_BOLD, 0);
-    GET_INFO(L"RegOwner", IDS_INFO_REGOWNER, CFE_BOLD, 0);
-    GET_INFO(L"ProductID", IDS_INFO_PRODUCTID, CFE_BOLD, 0);
-    GET_INFO(L"HelpLink", IDS_INFO_HELPLINK, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"HelpTelephone", IDS_INFO_HELPPHONE, CFE_BOLD, 0);
-    GET_INFO(L"Readme", IDS_INFO_README, CFE_BOLD, 0);
-    GET_INFO(L"Contact", IDS_INFO_CONTACT, CFE_BOLD, 0);
-    GET_INFO(L"URLUpdateInfo", IDS_INFO_UPDATEINFO, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"URLInfoAbout", IDS_INFO_INFOABOUT, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"Comments", IDS_INFO_COMMENTS, CFE_BOLD, 0);
-    GET_INFO(L"InstallDate", IDS_INFO_INSTALLDATE, CFE_BOLD, 0);
-    GET_INFO(L"InstallLocation", IDS_INFO_INSTLOCATION, CFE_BOLD, 0);
-    GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-    GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
-    GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-    GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
-    
-    return TRUE;
 }
 
 VOID RemoveAppFromRegistry(INT Index)

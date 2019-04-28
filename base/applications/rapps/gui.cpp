@@ -55,60 +55,62 @@ INT GetSystemColorDepth()
     return ColorDepth;
 }
 
-class CAvailableAppView
+class CAppRichEdit: 
+    public CUiWindow<CRichEdit>
 {
-    static inline VOID InsertTextAfterLoaded_RichEdit(UINT uStringID,
-                                                      const ATL::CStringW& szText,
-                                                      DWORD StringFlags,
-                                                      DWORD TextFlags)
+private:
+    VOID LoadAndInsertText(UINT uStringID,
+                           const ATL::CStringW& szText,
+                           DWORD StringFlags,
+                           DWORD TextFlags)
     {
         ATL::CStringW szLoadedText;
         if (!szText.IsEmpty() && szLoadedText.LoadStringW(uStringID))
         {
-            InsertRichEditText(szLoadedText, StringFlags);
-            InsertRichEditText(szText, TextFlags);
+            InsertText(szLoadedText, StringFlags);
+            InsertText(szText, TextFlags);
         }
     }
 
-    static inline VOID InsertLoadedTextNewl_RichEdit(UINT uStringID,
-                                                     DWORD StringFlags)
+    VOID LoadAndInsertText(UINT uStringID,
+                                       DWORD StringFlags)
     {
         ATL::CStringW szLoadedText;
         if (szLoadedText.LoadStringW(uStringID))
         {
-            InsertRichEditText(L"\n", 0);
-            InsertRichEditText(szLoadedText, StringFlags);
-            InsertRichEditText(L"\n", 0);
+            InsertText(L"\n", 0);
+            InsertText(szLoadedText, StringFlags);
+            InsertText(L"\n", 0);
         }
     }
 
-    static VOID InsertVersionInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertVersionInfo(CAvailableApplicationInfo* Info)
     {
         if (Info->IsInstalled())
         {
             if (Info->HasInstalledVersion())
             {
                 if (Info->HasUpdate())
-                    InsertLoadedTextNewl_RichEdit(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
+                    LoadAndInsertText(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
                 else
-                    InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
+                    LoadAndInsertText(IDS_STATUS_INSTALLED, CFE_ITALIC);
 
-                InsertTextAfterLoaded_RichEdit(IDS_AINFO_VERSION, Info->m_szInstalledVersion, CFE_BOLD, 0);
+                LoadAndInsertText(IDS_AINFO_VERSION, Info->m_szInstalledVersion, CFE_BOLD, 0);
             }
             else
             {
-                InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
+                LoadAndInsertText(IDS_STATUS_INSTALLED, CFE_ITALIC);
             }
         }
         else
         {
-            InsertLoadedTextNewl_RichEdit(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+            LoadAndInsertText(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
         }
 
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_AVAILABLEVERSION, Info->m_szVersion, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_AVAILABLEVERSION, Info->m_szVersion, CFE_BOLD, 0);
     }
 
-    static VOID InsertLicenseInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertLicenseInfo(CAvailableApplicationInfo* Info)
     {
         ATL::CStringW szLicense;
         switch (Info->m_LicenseType)
@@ -123,15 +125,15 @@ class CAvailableAppView
             szLicense.LoadStringW(IDS_LICENSE_TRIAL);
             break;
         default:
-            InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, Info->m_szLicense, CFE_BOLD, 0);
+            LoadAndInsertText(IDS_AINFO_LICENSE, Info->m_szLicense, CFE_BOLD, 0);
             return;
         }
 
         szLicense += L" (" + Info->m_szLicense + L")";
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
     }
 
-    static VOID InsertLanguageInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertLanguageInfo(CAvailableApplicationInfo* Info)
     {
         if (!Info->HasLanguageInfo())
         {
@@ -180,28 +182,80 @@ class CAvailableAppView
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_NO_TRANSLATION);
         }
 
-        InsertRichEditText(szLoadedAInfoText, CFE_BOLD);
-        InsertRichEditText(szLoadedTextAvailability, NULL);
-        InsertRichEditText(szLangInfo, CFE_ITALIC);
+        InsertText(szLoadedAInfoText, CFE_BOLD);
+        InsertText(szLoadedTextAvailability, NULL);
+        InsertText(szLangInfo, CFE_ITALIC);
     }
 
 public:
-    static BOOL ShowAvailableAppInfo(INT Index)
+    BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
-        CAvailableApplicationInfo* Info = (CAvailableApplicationInfo*) ListViewGetlParam(Index);
         if (!Info) return FALSE;
 
-        NewRichEditText(Info->m_szName, CFE_BOLD);
-        InsertVersionInfo_RichEdit(Info);
-        InsertLicenseInfo_RichEdit(Info);
-        InsertLanguageInfo_RichEdit(Info);
+        SetText(Info->m_szName, CFE_BOLD);
+        InsertVersionInfo(Info);
+        InsertLicenseInfo(Info);
+        InsertLanguageInfo(Info);
 
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_SIZE, Info->m_szSize, CFE_BOLD, 0);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLSITE, Info->m_szUrlSite, CFE_BOLD, CFE_LINK);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_DESCRIPTION, Info->m_szDesc, CFE_BOLD, 0);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLDOWNLOAD, Info->m_szUrlDownload, CFE_BOLD, CFE_LINK);
+        LoadAndInsertText(IDS_AINFO_SIZE, Info->m_szSize, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_URLSITE, Info->m_szUrlSite, CFE_BOLD, CFE_LINK);
+        LoadAndInsertText(IDS_AINFO_DESCRIPTION, Info->m_szDesc, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_URLDOWNLOAD, Info->m_szUrlDownload, CFE_BOLD, CFE_LINK);
 
         return TRUE;
+    }
+
+    BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
+    {
+        ATL::CStringW szText;
+        ATL::CStringW szInfo;
+
+        if (!Info || !Info->hSubKey)
+            return FALSE;
+
+        Info->GetApplicationString(L"DisplayName", szText);
+        SetText(szText, CFE_BOLD);
+        InsertText(L"\n", 0);
+
+#define GET_INFO(a, b, c, d) \
+    if (Info->GetApplicationString(a, szInfo)) \
+    { \
+        LoadAndInsertText(b, szInfo, c, d); \
+    }
+
+        GET_INFO(L"DisplayVersion", IDS_INFO_VERSION, CFE_BOLD, 0);
+        GET_INFO(L"Publisher", IDS_INFO_PUBLISHER, CFE_BOLD, 0);
+        GET_INFO(L"RegOwner", IDS_INFO_REGOWNER, CFE_BOLD, 0);
+        GET_INFO(L"ProductID", IDS_INFO_PRODUCTID, CFE_BOLD, 0);
+        GET_INFO(L"HelpLink", IDS_INFO_HELPLINK, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"HelpTelephone", IDS_INFO_HELPPHONE, CFE_BOLD, 0);
+        GET_INFO(L"Readme", IDS_INFO_README, CFE_BOLD, 0);
+        GET_INFO(L"Contact", IDS_INFO_CONTACT, CFE_BOLD, 0);
+        GET_INFO(L"URLUpdateInfo", IDS_INFO_UPDATEINFO, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"URLInfoAbout", IDS_INFO_INFOABOUT, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"Comments", IDS_INFO_COMMENTS, CFE_BOLD, 0);
+        GET_INFO(L"InstallDate", IDS_INFO_INSTALLDATE, CFE_BOLD, 0);
+        GET_INFO(L"InstallLocation", IDS_INFO_INSTLOCATION, CFE_BOLD, 0);
+        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
+        GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
+        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
+        GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
+
+        return TRUE;
+    }
+
+    VOID SetWelcomeText()
+    {
+        ATL::CStringW szText;
+
+        szText.LoadStringW(IDS_WELCOME_TITLE);
+        SetText(szText, CFE_BOLD);
+
+        szText.LoadStringW(IDS_WELCOME_TEXT);
+        InsertText(szText, 0);
+
+        szText.LoadStringW(IDS_WELCOME_URL);
+        InsertText(szText, CFM_LINK);
     }
 };
 
@@ -733,7 +787,7 @@ class CMainWindow :
 
     CSideTreeView* m_TreeView;
     CUiWindow<CStatusBar>* m_StatusBar;
-    CUiWindow<CRichEdit>* m_RichEdit;
+    CAppRichEdit* m_RichEdit;
 
     CUiWindow<CSearchBar>* m_SearchBar;
     CAvailableApps m_AvailableApps;
@@ -854,7 +908,7 @@ private:
 
     BOOL CreateRichEdit()
     {
-        m_RichEdit = new CUiWindow<CRichEdit>();
+        m_RichEdit = new CAppRichEdit();
         m_RichEdit->m_VerticalAlignment = UiAlign_Stretch;
         m_RichEdit->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->Second().Append(m_RichEdit);
@@ -963,6 +1017,28 @@ private:
         }
 
         return FALSE;
+    }
+
+    VOID ShowAppInfo(INT Index)
+    {
+        if (IsInstalledEnum(SelectedEnumType))
+        {
+            if (Index == -1)
+                Index = m_ListView->GetSelectionMark();
+
+            PINSTALLED_INFO Info = (PINSTALLED_INFO) m_ListView->GetItemData(Index);
+
+            m_RichEdit->ShowInstalledAppInfo(Info);
+        }
+        else if (IsAvailableEnum(SelectedEnumType))
+        {
+            if (Index == -1)
+                return;
+
+            CAvailableApplicationInfo* Info = (CAvailableApplicationInfo*) m_ListView->GetItemData(Index);
+
+            m_RichEdit->ShowAvailableAppInfo(Info);
+        }
     }
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -1208,10 +1284,7 @@ private:
                         (pnic->uNewState & LVIS_FOCUSED) &&
                         !(pnic->uOldState & LVIS_FOCUSED))
                     {
-                        if (IsInstalledEnum(SelectedEnumType))
-                            ShowInstalledAppInfo(ItemIndex);
-                        if (IsAvailableEnum(SelectedEnumType))
-                            CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
+                        ShowAppInfo(ItemIndex);
                     }
                     /* Check if the item is checked */
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
@@ -1250,10 +1323,7 @@ private:
             {
                 if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
                 {
-                    if (IsInstalledEnum(SelectedEnumType))
-                        ShowInstalledAppInfo(-1);
-                    if (IsAvailableEnum(SelectedEnumType))
-                        CAvailableAppView::ShowAvailableAppInfo(-1);
+                    ShowAppInfo(-1);
                 }
             }
             break;
@@ -1566,11 +1636,11 @@ private:
         Index = ListViewAddItem(ItemIndex, 0, m_szName, (LPARAM) ItemInfo);
 
         /* Get version info */
-        GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
+        ItemInfo->GetApplicationString(L"DisplayVersion", szText);
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(szText.GetString()));
 
         /* Get comments */
-        GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
+        ItemInfo->GetApplicationString(L"Comments", szText);
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(szText.GetString()));
 
         return TRUE;
@@ -1691,7 +1761,7 @@ private:
 
         SelectedEnumType = EnumType;
         UpdateStatusBarText();
-        SetWelcomeText();
+        m_RichEdit->SetWelcomeText();
 
         // Set automatic column width for program names if the list is not empty
         if (m_ListView->GetItemCount() > 0)

@@ -72,20 +72,6 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     CloseClipboard();
 }
 
-VOID SetWelcomeText()
-{
-    ATL::CStringW szText;
-
-    szText.LoadStringW(IDS_WELCOME_TITLE);
-    NewRichEditText(szText, CFE_BOLD);
-
-    szText.LoadStringW(IDS_WELCOME_TEXT);
-    InsertRichEditText(szText, 0);
-
-    szText.LoadStringW(IDS_WELCOME_URL);
-    InsertRichEditText(szText, CFM_LINK);
-}
-
 VOID ShowPopupMenu(HWND hwnd, UINT MenuID, UINT DefaultItem)
 {
     HMENU hMenu = NULL;

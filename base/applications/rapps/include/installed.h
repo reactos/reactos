@@ -8,6 +8,8 @@ struct INSTALLED_INFO
     HKEY hRootKey;
     HKEY hSubKey;
     ATL::CStringW szKeyName;
+
+    BOOL GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String);
 };
 
 typedef INSTALLED_INFO *PINSTALLED_INFO;
@@ -15,8 +17,6 @@ typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALL
 
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
-BOOL GetApplicationString(HKEY hKey, LPCWSTR RegName, ATL::CStringW &String);
 
-BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
 VOID RemoveAppFromRegistry(INT Index);
