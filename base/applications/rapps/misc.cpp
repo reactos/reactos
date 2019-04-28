@@ -9,7 +9,6 @@
  */
 #include "rapps.h"
 
-#include "gui.h"
 #include "misc.h"
 
 static HANDLE hLog = NULL;

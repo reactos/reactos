@@ -26,8 +26,6 @@
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
-HWND hListView = NULL;
-
 INT GetSystemColorDepth()
 {
     DEVMODEW pDevMode;
@@ -508,24 +506,6 @@ public:
         bIsAscending = !bIsAscending;
     }
 
-    PVOID GetLParam(INT Index)
-    {
-        INT ItemIndex;
-
-        if (Index == -1)
-        {
-            ItemIndex = (INT) SendMessage(LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-            if (ItemIndex == -1)
-                return NULL;
-        }
-        else
-        {
-            ItemIndex = Index;
-        }
-
-        return (PVOID) GetItemData(ItemIndex);
-    }
-
     BOOL AddColumn(INT Index, ATL::CStringW& Text, INT Width, INT Format)
     {
         return AddColumn(Index, const_cast<LPWSTR>(Text.GetString()), Width, Format);
@@ -898,8 +878,7 @@ private:
         m_ListView->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->First().Append(m_ListView);
 
-        hListView = m_ListView->Create(m_hWnd);
-        return hListView != NULL;
+        return m_ListView->Create(m_hWnd) != NULL;
     }
 
     BOOL CreateRichEdit()
@@ -1647,7 +1626,7 @@ private:
 
         while (Count >= 0)
         {
-            Info = (PINSTALLED_INFO) ListViewGetlParam(Count);
+            Info = (PINSTALLED_INFO) m_ListView->GetItemData(Count);
             if (Info)
             {
                 RegCloseKey(Info->hSubKey);
@@ -1702,7 +1681,7 @@ private:
         INT Index;
         HICON hIcon = NULL;
 
-        HIMAGELIST hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
+        HIMAGELIST hImageListView = (HIMAGELIST)m_ListView->SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
 
         if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
@@ -1876,116 +1855,37 @@ public:
 
         return CWindowImpl::Create(NULL, r, szWindowName.GetString(), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
     }
-
-    CStatusBar * GetStatusBar()
-    {
-        return m_StatusBar;
-    }
-
-    CAppsListView * GetListView()
-    {
-        return m_ListView;
-    }
-
-    CRichEdit * GetRichEdit()
-    {
-        return m_RichEdit;
-    }
-
-    CAvailableApps * GetAvailableApps()
-    {
-        return &m_AvailableApps;
-    }
 };
-
-// global interface
-CMainWindow * g_MainWindow;
-
-HWND CreateMainWindow()
-{
-    g_MainWindow = new CMainWindow();
-    return g_MainWindow->Create();
-}
-
-DWORD_PTR ListViewGetlParam(INT item)
-{
-    if (item < 0)
-    {
-        item = g_MainWindow->GetListView()->GetSelectionMark();
-    }
-    return g_MainWindow->GetListView()->GetItemData(item);
-}
-
-VOID SetStatusBarText(LPCWSTR szText)
-{
-    g_MainWindow->GetStatusBar()->SetText(szText);
-}
-
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpName, LPARAM lParam)
-{
-    return g_MainWindow->GetListView()->AddItem(ItemIndex, IconIndex, lpName, lParam);
-}
-
-VOID NewRichEditText(LPCWSTR szText, DWORD flags)
-{
-    g_MainWindow->GetRichEdit()->SetText(szText, flags);
-}
-
-VOID InsertRichEditText(LPCWSTR szText, DWORD flags)
-{
-    g_MainWindow->GetRichEdit()->InsertText(szText, flags);
-}
-
-CAvailableApps* GetAvailableApps()
-{
-    return g_MainWindow->GetAvailableApps();
-}
-
-// ATL version of functions above
-VOID SetStatusBarText(const ATL::CStringW& szText)
-{
-    SetStatusBarText(szText.GetString());
-}
-
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, const ATL::CStringW& Name, LPARAM lParam)
-{
-    return ListViewAddItem(ItemIndex, IconIndex, const_cast<LPWSTR>(Name.GetString()), lParam);
-}
-
-VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags)
-{
-    NewRichEditText(szText.GetString(), flags);
-}
-
-VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags)
-{
-    InsertRichEditText(szText.GetString(), flags);
-}
 
 VOID ShowMainWindow(INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;
 
-    hMainWnd = CreateMainWindow();
+    CMainWindow* wnd = new CMainWindow();
+    if (!wnd)
+        return;
 
-    if (hMainWnd)
+    hMainWnd = wnd->Create();
+    if (!hMainWnd)
+        return;
+
+    /* Maximize it if we must */
+    ShowWindow(hMainWnd, ((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd));
+    UpdateWindow(hMainWnd);
+
+    /* Load the menu hotkeys */
+    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
+
+    /* Message Loop */
+    while (GetMessageW(&Msg, NULL, 0, 0))
     {
-        /* Maximize it if we must */
-        ShowWindow(hMainWnd, ((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd));
-        UpdateWindow(hMainWnd);
-
-        /* Load the menu hotkeys */
-        KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
-
-        /* Message Loop */
-        while (GetMessageW(&Msg, NULL, 0, 0))
+        if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
         {
-            if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
-            {
-                TranslateMessage(&Msg);
-                DispatchMessageW(&Msg);
-            }
+            TranslateMessage(&Msg);
+            DispatchMessageW(&Msg);
         }
-    }    
+    }
+
+    delete wnd;
 }

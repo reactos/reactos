@@ -10,7 +10,6 @@
 
 #include "installed.h"
 
-#include "gui.h"
 #include "misc.h"
 
 BOOL INSTALLED_INFO::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
