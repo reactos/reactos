@@ -806,11 +806,9 @@ FATAddEntry(
         {
             RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
             /* create '.' and '..' */
-            RtlCopyMemory(&pFatEntry[0].Attrib, &DirContext.DirEntry.Fat.Attrib,
-                          sizeof(FAT_DIR_ENTRY) - FIELD_OFFSET(FAT_DIR_ENTRY, Attrib));
+            pFatEntry[0] = DirContext.DirEntry.Fat;
             RtlCopyMemory(pFatEntry[0].ShortName, ".          ", 11);
-            RtlCopyMemory(&pFatEntry[1].Attrib, &DirContext.DirEntry.Fat.Attrib,
-                          sizeof(FAT_DIR_ENTRY) - FIELD_OFFSET(FAT_DIR_ENTRY, Attrib));
+            pFatEntry[1] = DirContext.DirEntry.Fat;
             RtlCopyMemory(pFatEntry[1].ShortName, "..         ", 11);
         }
 
