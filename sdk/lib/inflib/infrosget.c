@@ -73,8 +73,8 @@ BOOLEAN
 InfGetBinaryField(PINFCONTEXT Context,
                   ULONG FieldIndex,
                   PUCHAR ReturnBuffer,
-                  ULONG ReturnBufferSize,
-                  PULONG RequiredSize)
+                  SIZE_T ReturnBufferSize,
+                  PSIZE_T RequiredSize)
 {
   return INF_SUCCESS(InfpGetBinaryField(Context, FieldIndex, ReturnBuffer,
                                         ReturnBufferSize, RequiredSize));
@@ -94,8 +94,8 @@ BOOLEAN
 InfGetMultiSzField(PINFCONTEXT Context,
                    ULONG FieldIndex,
                    PWSTR ReturnBuffer,
-                   ULONG ReturnBufferSize,
-                   PULONG RequiredSize)
+                   SIZE_T ReturnBufferSize,
+                   PSIZE_T RequiredSize)
 {
   return INF_SUCCESS(InfpGetMultiSzField(Context, FieldIndex, ReturnBuffer,
                                          ReturnBufferSize, RequiredSize));
@@ -106,8 +106,8 @@ BOOLEAN
 InfGetStringField(PINFCONTEXT Context,
                   ULONG FieldIndex,
                   PWSTR ReturnBuffer,
-                  ULONG ReturnBufferSize,
-                  PULONG RequiredSize)
+                  SIZE_T ReturnBufferSize,
+                  PSIZE_T RequiredSize)
 {
   return INF_SUCCESS(InfpGetStringField(Context, FieldIndex, ReturnBuffer,
                                         ReturnBufferSize, RequiredSize));
