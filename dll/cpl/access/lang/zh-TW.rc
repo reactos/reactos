@@ -17,7 +17,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用篩選鍵(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "切換鍵", -1, 6, 145, 234, 62
+    GROUPBOX "切換鍵", -1, 6, 148, 234, 62
     LTEXT "如果希望在按 CAPS、NUM LOCK 和 SCROLL LOCK 鍵時聽到聲音， 請用切換鍵。",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "使用切換鍵(&T)", IDC_TOGGLE_BOX, 12, 184, 126, 14

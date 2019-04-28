@@ -22,7 +22,7 @@ BEGIN
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Kasuta &filterklahve", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "S&ätted", IDC_FILTER_BUTTON, 144, 121, 90, 14
-    GROUPBOX "Tumblerklahvid", -1, 6, 145, 234, 62
+    GROUPBOX "Tumblerklahvid", -1, 6, 148, 234, 62
     LTEXT "Kasutage tumblerklahve, kui soovite klahve CAPS LOCK, NUM LOCK ja SCROLL LOCK vajutamisel kuulda heli.",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "Kasuta &tumblerklahve", IDC_TOGGLE_BOX, 12, 184, 126, 14
