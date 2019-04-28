@@ -183,6 +183,19 @@ public:
         SendMessage(LVM_SETITEMSTATE, i, reinterpret_cast<LPARAM>(&item));
     }
 
+    BOOL SetItemText(int i, int subItem, LPCWSTR text)
+    {
+        LVITEMW item;
+        item.iSubItem = subItem;
+        item.pszText = (LPWSTR)text;
+        return SendMessage(LVM_SETITEMTEXT, i, (LPARAM)&item);
+    }
+
+    void SetCheckState(int i, BOOL check)
+    {
+        SetItemState(i, INDEXTOSTATEIMAGEMASK((check)?2:1), LVIS_STATEIMAGEMASK);
+    }
+
     int HitTest(LV_HITTESTINFO * phtInfo)
     {
         return (int)SendMessage(LVM_HITTEST, 0, reinterpret_cast<LPARAM>(phtInfo));
