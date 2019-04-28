@@ -62,7 +62,8 @@ Quilt::deleteMe( Pool& p )
 {
     for( Quiltspec *q=qspec; q != eqspec; q++ ) {
 #if 1
-	if( q->breakpoints) delete[] q->breakpoints;  q->breakpoints = 0;
+	if( q->breakpoints) delete[] q->breakpoints;
+    q->breakpoints = 0;
 #else
 	if( q->breakpoints) {
 	   delete[] q->breakpoints;  

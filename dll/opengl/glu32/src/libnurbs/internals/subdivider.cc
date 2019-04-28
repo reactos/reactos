@@ -849,8 +849,10 @@ Subdivider::freejarcs( Bin& bin )
 
     Arc_ptr jarc;
     while( (jarc = bin.removearc()) != NULL ) {
-	if( jarc->pwlArc ) jarc->pwlArc->deleteMe( pwlarcpool ); jarc->pwlArc = 0;
-	if( jarc->bezierArc) jarc->bezierArc->deleteMe( bezierarcpool ); jarc->bezierArc = 0;
+	if( jarc->pwlArc ) jarc->pwlArc->deleteMe( pwlarcpool );
+    jarc->pwlArc = 0;
+	if( jarc->bezierArc) jarc->bezierArc->deleteMe( bezierarcpool );
+    jarc->bezierArc = 0;
 	jarc->deleteMe( arcpool );
     }
 }
