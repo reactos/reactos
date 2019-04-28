@@ -108,7 +108,7 @@ CWebService::Finish(const char* TestType)
     stringstream ss;
 
     if (!m_TestID)
-        EXCEPTION("CWebService::Finish was called, but not a single result had been submitted!");
+        EXCEPTION("CWebService::Finish was called, but not a single result had been submitted!\n");
 
     Data = "action=finish";
     Data += Configuration.GetAuthenticationRequestString();

@@ -89,14 +89,16 @@ wmain(int argc, wchar_t* argv[])
     }
     catch(CSimpleException& e)
     {
+        // e.GetMessage() must include ending '\n'.
         StringOut(e.GetMessage());
     }
     catch(CFatalException& e)
     {
         stringstream ss;
 
+        // e.GetMessage() must include ending '\n'.
         ss << "An exception occured in rosautotest." << endl
-           << "Message: " << e.GetMessage() << endl
+           << "Message: " << e.GetMessage()
            << "File: " << e.GetFile() << endl
            << "Line: " << e.GetLine() << endl
            << "Last Win32 Error: " << GetLastError() << endl;

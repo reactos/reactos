@@ -32,7 +32,7 @@ CWineTest::CWineTest()
     else
     {
         if (!GetWindowsDirectoryW(wszDirectory, MAX_PATH))
-            FATAL("GetWindowsDirectoryW failed");
+            FATAL("GetWindowsDirectoryW failed\n");
 
         m_TestPath = wszDirectory;
         m_TestPath += L"\\bin\\";
