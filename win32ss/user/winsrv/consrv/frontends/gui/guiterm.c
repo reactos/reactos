@@ -96,6 +96,7 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
  *                        GUI Terminal Initialization                         *
  ******************************************************************************/
 
+// FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
 VOID
 CreateSysMenu(HWND hWnd);
 
@@ -1116,7 +1117,7 @@ GuiMenuControl(IN OUT PFRONTEND This,
     GuiData->CmdIdLow  = CmdIdLow ;
     GuiData->CmdIdHigh = CmdIdHigh;
 
-    return GetSystemMenu(GuiData->hWindow, FALSE);
+    return GuiData->hSysMenu;
 }
 
 static BOOL NTAPI
@@ -1130,12 +1131,11 @@ GuiSetMenuClose(IN OUT PFRONTEND This,
      */
 
     PGUI_CONSOLE_DATA GuiData = This->Context;
-    HMENU hSysMenu = GetSystemMenu(GuiData->hWindow, FALSE);
 
-    if (hSysMenu == NULL) return FALSE;
+    if (GuiData->hSysMenu == NULL) return FALSE;
 
     GuiData->IsCloseButtonEnabled = Enable;
-    EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
+    EnableMenuItem(GuiData->hSysMenu, SC_CLOSE, MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
 
     return TRUE;
 }

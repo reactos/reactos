@@ -231,30 +231,32 @@ VOID
 CreateSysMenu(HWND hWnd)
 {
     MENUITEMINFOW mii;
+    HMENU hMenu;
+    PWCHAR ptrTab;
     WCHAR szMenuStringBack[255];
-    WCHAR *ptrTab;
-    HMENU hMenu = GetSystemMenu(hWnd, FALSE);
-    if (hMenu != NULL)
+
+    hMenu = GetSystemMenu(hWnd, FALSE);
+    if (hMenu == NULL)
+        return;
+
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STRING;
+    mii.dwTypeData = szMenuStringBack;
+    mii.cch = ARRAYSIZE(szMenuStringBack);
+
+    GetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
+
+    ptrTab = wcschr(szMenuStringBack, L'\t');
+    if (ptrTab)
     {
-        mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STRING;
-        mii.dwTypeData = szMenuStringBack;
-        mii.cch = sizeof(szMenuStringBack)/sizeof(WCHAR);
+        *ptrTab = L'\0';
+        mii.cch = wcslen(szMenuStringBack);
 
-        GetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
-
-        ptrTab = wcschr(szMenuStringBack, '\t');
-        if (ptrTab)
-        {
-           *ptrTab = '\0';
-           mii.cch = wcslen(szMenuStringBack);
-
-           SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
-        }
-
-        AppendMenuItems(hMenu, GuiConsoleMainMenuItems);
-        DrawMenuBar(hWnd);
+        SetMenuItemInfoW(hMenu, SC_CLOSE, FALSE, &mii);
     }
+
+    AppendMenuItems(hMenu, GuiConsoleMainMenuItems);
+    DrawMenuBar(hWnd);
 }
 
 static VOID
@@ -597,6 +599,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     Console = GuiData->Console;
 
     GuiData->hWindow = hWnd;
+    GuiData->hSysMenu = GetSystemMenu(hWnd, FALSE);
 
     /* Initialize the fonts */
     if (!InitFonts(GuiData,
@@ -1370,6 +1373,7 @@ OnNcDestroy(HWND hWnd)
     /* Free the GuiData registration */
     SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)NULL);
 
+    /* Reset the system menu back to default and destroy the previous menu */
     GetSystemMenu(hWnd, TRUE);
 
     if (GuiData)

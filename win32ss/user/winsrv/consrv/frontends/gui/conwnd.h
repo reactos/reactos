@@ -73,6 +73,7 @@ typedef struct _GUI_CONSOLE_DATA
 
     BOOL HackCORE8394IgnoreNextMove; /* HACK FOR CORE-8394. See conwnd.c!OnMouse for more details. */
 
+    HMENU hSysMenu;             /* Handle to the console window system menu */
     BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled (default), FALSE otherwise */
     UINT CmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */
     UINT CmdIdHigh;             /* Highest menu id of the user-reserved menu id range */
