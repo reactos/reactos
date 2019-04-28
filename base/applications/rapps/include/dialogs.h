@@ -38,3 +38,5 @@ VOID CreateSettingsDlg(HWND hwnd);
 
 // About dialog (aboutdlg.cpp)
 VOID ShowAboutDialog();
+
+VOID ShowMainWindow(INT nShowCmd);

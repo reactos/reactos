@@ -1829,3 +1829,31 @@ VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags)
 {
     InsertRichEditText(szText.GetString(), flags);
 }
+
+VOID ShowMainWindow(INT nShowCmd)
+{
+    HACCEL KeyBrd;
+    MSG Msg;
+
+    hMainWnd = CreateMainWindow();
+
+    if (hMainWnd)
+    {
+        /* Maximize it if we must */
+        ShowWindow(hMainWnd, ((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd));
+        UpdateWindow(hMainWnd);
+
+        /* Load the menu hotkeys */
+        KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
+
+        /* Message Loop */
+        while (GetMessageW(&Msg, NULL, 0, 0))
+        {
+            if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+            {
+                TranslateMessage(&Msg);
+                DispatchMessageW(&Msg);
+            }
+        }
+    }    
+}

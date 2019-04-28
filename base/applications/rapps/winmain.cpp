@@ -126,8 +126,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 {
     LPCWSTR szWindowClass = L"ROSAPPMGR";
     HANDLE hMutex;
-    HACCEL KeyBrd;
-    MSG Msg;
     BOOL bIsFirstLaunch;
 
     InitializeAtlModule(hInstance, TRUE);
@@ -165,27 +163,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             CAvailableApps::ForceUpdateAppsDB();
 
-        hMainWnd = CreateMainWindow();
-
-        if (hMainWnd)
-        {
-            /* Maximize it if we must */
-            ShowWindow(hMainWnd, ((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd));
-            UpdateWindow(hMainWnd);
-
-            /* Load the menu hotkeys */
-            KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
-
-            /* Message Loop */
-            while (GetMessageW(&Msg, NULL, 0, 0))
-            {
-                if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
-                {
-                    TranslateMessage(&Msg);
-                    DispatchMessageW(&Msg);
-                }
-            }
-        }
+        ShowMainWindow(nShowCmd);
     }
 
     if (hMutex)
