@@ -1,6 +1,6 @@
 #include <asm.inc>
 
-.code64
+.code
 .align 4
 
 MACRO(DEFINE_ALIAS, alias, alias2, origstring)
