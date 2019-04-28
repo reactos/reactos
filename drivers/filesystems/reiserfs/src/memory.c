@@ -874,7 +874,7 @@ RfsdCreateFcbFromMcb(PRFSD_VCB Vcb, PRFSD_MCB Mcb)
     if (Mcb->RfsdFcb)
         return Mcb->RfsdFcb;
 
-	if (RfsdLoadInode(Vcb, &(Mcb->Key), &RfsdIno)) {
+    if (RfsdLoadInode(Vcb, &(Mcb->Key), &RfsdIno)) {
         PRFSD_INODE pTmpInode = ExAllocatePoolWithTag(PagedPool, sizeof(RFSD_INODE), RFSD_POOL_TAG);
         if (!pTmpInode) {
             goto errorout;
