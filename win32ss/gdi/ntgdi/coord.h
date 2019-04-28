@@ -124,7 +124,7 @@ VOID
 DC_vXformDeviceToWorld(
     IN PDC pdc,
     IN ULONG cNumPoints,
-    IN PPOINTL pptlDest,
+    OUT PPOINTL pptlDest,
     IN PPOINTL pptlSource)
 {
     XFORMOBJ xo;
@@ -140,7 +140,7 @@ VOID
 DC_vXformWorldToDevice(
     IN PDC pdc,
     IN ULONG cNumPoints,
-    IN PPOINTL pptlDest,
+    OUT PPOINTL pptlDest,
     IN PPOINTL pptlSource)
 {
     XFORMOBJ xo;

@@ -1259,7 +1259,7 @@ NTAPI
 GreGetObject(
     IN HGDIOBJ hobj,
     IN INT cbCount,
-    IN PVOID pvBuffer)
+    OUT PVOID pvBuffer)
 {
     PVOID pvObj;
     UCHAR objt;
