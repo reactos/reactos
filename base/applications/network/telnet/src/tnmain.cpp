@@ -168,14 +168,18 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 						if(InputRecord.Event.KeyEvent.dwControlKeyState &
 							(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
 							int j, k;
-							for (j = cursor; j >= 0; j--)
-								if (buf[j-1] != ' ')
-									break;
-								for (k = --j; k >= 0; k--)
-									if (buf[k] == ' ' || k == 0) {
-										cursor = !k ? k : ++k;
-										break;
-									}
+                            for (j = cursor; j >= 0; j--)
+                            {
+                                if (buf[j - 1] != ' ')
+                                    break;
+                                for (k = --j; k >= 0; k--)
+                                {
+                                    if (buf[k] == ' ' || k == 0) {
+                                        cursor = !k ? k : ++k;
+                                        break;
+                                    }
+                                }
+                            }
 						} else
 							cursor--;
 						MustRefresh = 1;
