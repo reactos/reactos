@@ -1470,11 +1470,11 @@ private:
             {
                 if (nSelectedApps > 0)
                 {
-                    CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
+                    DownloadListOfApplications(m_AvailableApps.GetSelected(), FALSE);
                     UpdateApplicationsList(-1);
                     m_ListView->SetSelected(-1, FALSE);
                 }
-                else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
+                else if (DownloadApplication(m_ListView->GetSelectedData(), FALSE))
                 {
                     UpdateApplicationsList(-1);
                 }

@@ -67,7 +67,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
     ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)
     {
-        CDownloadManager::DownloadListOfApplications(arrAppInfo, TRUE);
+        DownloadListOfApplications(arrAppInfo, TRUE);
         return TRUE;
     }
 

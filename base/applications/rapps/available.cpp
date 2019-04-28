@@ -300,7 +300,7 @@ BOOL CAvailableApps::UpdateAppsDB()
         return TRUE;
     }
 
-    CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
+    DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
     if (!ExtractFilesFromCab(m_Strings.szCabName, 
                              m_Strings.szCabDir,

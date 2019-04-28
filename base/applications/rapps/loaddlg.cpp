@@ -384,9 +384,42 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
     }
 }
 
+
+// Download dialog (loaddlg.cpp)
+class CDownloadManager
+{
+    static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
+    static CDowloadingAppsListView DownloadsListView;
+
+    static VOID SetProgressMarquee(HWND Item, BOOL Enable);
+
+public:
+    static VOID Add(DownloadInfo info);
+    static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
+    static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK DownloadProgressProc(HWND hWnd,
+                                                 UINT uMsg,
+                                                 WPARAM wParam,
+                                                 LPARAM lParam,
+                                                 UINT_PTR uIdSubclass,
+                                                 DWORD_PTR dwRefData);
+
+    static DWORD WINAPI ThreadFunc(LPVOID Context);
+    static BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal = FALSE);
+    static BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal = FALSE);
+    static VOID DownloadApplicationsDB(LPCWSTR lpUrl);
+    static VOID LaunchDownloadDialog(BOOL);
+};
+
+
 // CDownloadManager
 ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
+
+VOID CDownloadManager::Add(DownloadInfo info)
+{
+    AppsToInstallList.Add(info);
+}
 
 VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
 {
@@ -927,40 +960,6 @@ end:
     return 0;
 }
 
-BOOL CDownloadManager::DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
-{
-    if (AppsList.GetSize() == 0)
-        return FALSE;
-
-    // Initialize shared variables
-    for (INT i = 0; i < AppsList.GetSize(); ++i)
-    {
-        AppsToInstallList.Add(AppsList[i]); // implicit conversion to DownloadInfo
-    }
-
-    // Create a dialog and issue a download process
-    LaunchDownloadDialog(bIsModal);
-
-    return TRUE;
-}
-
-BOOL CDownloadManager::DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
-{
-    if (!pAppInfo)
-        return FALSE;
-
-    Download(*pAppInfo, bIsModal);
-    return TRUE;
-}
-
-VOID CDownloadManager::DownloadApplicationsDB(LPCWSTR lpUrl)
-{
-    static DownloadInfo DatabaseDLInfo;
-    DatabaseDLInfo.szUrl = lpUrl;
-    DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
-    Download(DatabaseDLInfo, TRUE);
-}
-
 //TODO: Reuse the dialog
 VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
@@ -980,3 +979,39 @@ VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
     }
 }
 // CDownloadManager
+
+
+BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
+{
+    if (AppsList.GetSize() == 0)
+        return FALSE;
+
+    // Initialize shared variables
+    for (INT i = 0; i < AppsList.GetSize(); ++i)
+    {
+        CDownloadManager::Add(AppsList[i]); // implicit conversion to DownloadInfo
+    }
+
+    // Create a dialog and issue a download process
+    CDownloadManager::LaunchDownloadDialog(bIsModal);
+
+    return TRUE;
+}
+
+BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
+{
+    if (!pAppInfo)
+        return FALSE;
+
+    CDownloadManager::Download(*pAppInfo, bIsModal);
+    return TRUE;
+}
+
+VOID DownloadApplicationsDB(LPCWSTR lpUrl)
+{
+    static DownloadInfo DatabaseDLInfo;
+    DatabaseDLInfo.szUrl = lpUrl;
+    DatabaseDLInfo.szName.LoadStringW(IDS_DL_DIALOG_DB_DISP);
+    CDownloadManager::Download(DatabaseDLInfo, TRUE);
+}
+
