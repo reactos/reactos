@@ -162,9 +162,12 @@ DestroySchemesList(
     PLIST_ENTRY ListEntry;
     PPOWER_SCHEME pScheme;
 
-    while (!IsListEmpty(&pPageData->PowerSchemesList))
+    for (;;)
     {
         ListEntry = pPageData->PowerSchemesList.Flink;
+        if (ListEntry == &pPageData->PowerSchemesList)
+            break;
+
         pScheme = CONTAINING_RECORD(ListEntry, POWER_SCHEME, ListEntry);
         DeletePowerScheme(pScheme);
     }
@@ -560,7 +563,7 @@ Pos_SaveData(HWND hwndDlg)
         pScheme->PowerPolicy.mach.DozeS4TimeoutDc = Sec[tmp];
     }
 
-    SetActivePwrScheme(iCurSel, NULL, &pScheme->PowerPolicy);
+    SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy);
     LoadConfig(hwndDlg);
 }
 
