@@ -446,7 +446,7 @@ static void test_cp932(HANDLE hConOut)
     SetConsoleOutputCP(oldcp);
 }
 
-START_TEST(Console)
+START_TEST(ConsoleCP)
 {
     HANDLE hConIn, hConOut;
     FreeConsole();
