@@ -38,48 +38,16 @@ BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
     return FALSE;
 }
 
-BOOL UninstallApplication(INT Index, BOOL bModify)
+BOOL UninstallApplication(PINSTALLED_INFO ItemInfo, BOOL bModify)
 {
     LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
-    WCHAR szPath[MAX_PATH];
-    WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
-    INT ItemIndex;
-    LVITEMW Item;
-    HKEY hKey;
-    PINSTALLED_INFO ItemInfo;
-
-    if (!IsInstalledEnum(SelectedEnumType))
-        return FALSE;
-
-    if (Index == -1)
-    {
-        ItemIndex = (INT) SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-        if (ItemIndex == -1)
-            return FALSE;
-    }
-    else
-    {
-        ItemIndex = Index;
-    }
-
-    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, _countof(szAppName));
-    WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
-
-    ZeroMemory(&Item, sizeof(Item));
-
-    Item.mask = LVIF_PARAM;
-    Item.iItem = ItemIndex;
-    if (!ListView_GetItem(hListView, &Item))
-        return FALSE;
-
-    ItemInfo = (PINSTALLED_INFO) Item.lParam;
-    hKey = ItemInfo->hSubKey;
+    WCHAR szPath[MAX_PATH];
 
     dwType = REG_SZ;
     dwSize = MAX_PATH * sizeof(WCHAR);
-    if (RegQueryValueExW(hKey,
+    if (RegQueryValueExW(ItemInfo->hSubKey,
                          bModify ? szModify : szUninstall,
                          NULL,
                          &dwType,

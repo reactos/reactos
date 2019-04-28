@@ -511,7 +511,6 @@ public:
     PVOID GetLParam(INT Index)
     {
         INT ItemIndex;
-        LVITEMW Item;
 
         if (Index == -1)
         {
@@ -524,14 +523,7 @@ public:
             ItemIndex = Index;
         }
 
-        ZeroMemory(&Item, sizeof(Item));
-
-        Item.mask = LVIF_PARAM;
-        Item.iItem = ItemIndex;
-        if (!GetItem(&Item))
-            return NULL;
-
-        return (PVOID) Item.lParam;
+        return (PVOID) GetItemData(ItemIndex);
     }
 
     BOOL AddColumn(INT Index, ATL::CStringW& Text, INT Width, INT Format)
@@ -1134,6 +1126,23 @@ private:
         }
     }
 
+    BOOL UninstallSelectedApp(BOOL bModify)
+    {
+        WCHAR szAppName[MAX_STR_LEN];
+
+        if (!IsInstalledEnum(SelectedEnumType))
+            return FALSE;
+
+        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
+        if (ItemIndex == -1)
+            return FALSE;
+
+        m_ListView->GetItemText(ItemIndex, 0, szAppName, _countof(szAppName));
+        WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
+
+        PINSTALLED_INFO ItemInfo = (PINSTALLED_INFO)m_ListView->GetItemData(ItemIndex);
+        return UninstallApplication(ItemInfo, bModify);
+    }
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
         theResult = 0;
@@ -1593,12 +1602,12 @@ private:
             break;
 
         case ID_UNINSTALL:
-            if (UninstallApplication(-1, FALSE))
+            if (UninstallSelectedApp(FALSE))
                 UpdateApplicationsList(-1);
             break;
 
         case ID_MODIFY:
-            if (UninstallApplication(-1, TRUE))
+            if (UninstallSelectedApp(TRUE))
                 UpdateApplicationsList(-1);
             break;
 

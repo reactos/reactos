@@ -18,5 +18,4 @@ typedef BOOL(CALLBACK *APPENUMPROC)(INT ItemIndex, ATL::CStringW &Name, PINSTALL
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param);
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString);
 
-BOOL UninstallApplication(INT Index, BOOL bModify);
-VOID RemoveAppFromRegistry(INT Index);
+BOOL UninstallApplication(PINSTALLED_INFO ItemInfo, BOOL bModify);
