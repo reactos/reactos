@@ -67,18 +67,20 @@ static char * getline(istream& i, char* buf, int size){
 		if ((buf[0]==0)||(buf[0]==';')) continue;
 
 		len = 0; // look for comment like this one
-		while (buf[len])
-			if ((buf[len] == '/') && (buf[len+1] == '/')) buf[len] = 0;
-			else len++;
+        while (buf[len])
+        {
+            if ((buf[len] == '/') && (buf[len + 1] == '/')) buf[len] = 0;
+            else len++;
 
-			if (len && (buf[len-1] == ' ')) {
+            if (len && (buf[len - 1] == ' ')) {
                 len--;
-                buf[len]=0;
-			};
-			// in case for comment like this one (in line just a comment)
-			if (buf[0]==0) continue;
+                buf[len] = 0;
+            };
+        }
+        // in case for comment like this one (in line just a comment)
+        if (buf[0] == 0) continue;
 
-			break;
+        break;
 	};
 	return (buf);
 };
