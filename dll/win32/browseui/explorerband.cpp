@@ -1329,8 +1329,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                     LPCITEMIDLIST pidlChild;
 
                     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
-                if (!SUCCEEDED(hr) || !pParent.p)
-                    return E_FAIL;
+                    if (!SUCCEEDED(hr) || !pParent.p)
+                        return E_FAIL;
 
                     hr = pParent->SetNameOf(0, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
                     if(SUCCEEDED(hr) && pidlNew)
