@@ -586,15 +586,15 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");
                         TempImagePath[0] = 0;
-                        sprintf(ImagePath, "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
                     }
                     else if (TempImagePath[0] != L'\\')
                     {
-                        sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", DirectoryPath, TempImagePath);
                     }
                     else
                     {
-                        sprintf(ImagePath, "%S", TempImagePath);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
                         TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
                     }
 
@@ -666,15 +666,15 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 {
                     TRACE_CH(REACTOS, "ImagePath: not found\n");
                     TempImagePath[0] = 0;
-                    sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
                 }
                 else if (TempImagePath[0] != L'\\')
                 {
-                    sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", DirectoryPath, TempImagePath);
                 }
                 else
                 {
-                    sprintf(ImagePath, "%S", TempImagePath);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
                     TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
                 }
                 TRACE("  Adding boot driver: '%s'\n", ImagePath);

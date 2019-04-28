@@ -50,6 +50,7 @@
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
 #include <winerror.h>
+#include <ntstrsafe.h>
 #else
 #include <ntsup.h>
 #endif
