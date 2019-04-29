@@ -177,6 +177,9 @@ endif()
 
 add_definitions(-D_inline=__inline)
 
+# Fix build with GLIBCXX + our c++ headers
+add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
+
 # Alternative arch name
 if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
