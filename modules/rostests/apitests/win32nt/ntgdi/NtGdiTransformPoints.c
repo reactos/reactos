@@ -155,6 +155,8 @@ START_TEST(NtGdiTransformPoints)
     ok_long(apt2[0].x, 256);
     ok_long(apt2[0].x, 256);
 
+    /* MM_ISOTROPIC */
+
     SetMapMode(hDC, MM_ISOTROPIC);
     ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
     ok_int(GetWindowExtEx(hDC, &siz), TRUE);
@@ -224,6 +226,128 @@ START_TEST(NtGdiTransformPoints)
     ok_int(GetViewportExtEx(hDC, &siz), TRUE);
     ok_long(siz.cx, 20);
     ok_long(siz.cy, 20);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 128);
+    ok_long(apt2[0].x, 128);
+
+    SetMapMode(hDC, MM_ISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 0, 0, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 20);
+    ok_long(siz.cy, 20);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 128);
+    ok_long(apt2[0].x, 128);
+
+    /* MM_ANISOTROPIC */
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 100, 100, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 100);
+    ok_long(siz.cy, 100);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 26);
+    ok_long(apt2[0].x, 26);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 20, 100, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 20);
+    ok_long(siz.cy, 100);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 128);
+    ok_long(apt2[0].x, 128);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 100, 0, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 20);
+    ok_long(siz.cy, 100);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 128);
+    ok_long(apt2[0].x, 128);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 0, 100, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 20);
+    ok_long(siz.cy, 100);
+    SetLastError(0xDEADBEEF);
+    apt1[0].x = apt1[0].y = 256;
+    apt2[0].x = apt2[0].y = 0xBEEFDEAD;
+    ret = NtGdiTransformPoints(hDC, apt1, apt2, 1, GdiDpToLp);
+    ok_int(ret, TRUE);
+    ok_err(0xDEADBEEF);
+    ok_long(apt1[0].x, 256);
+    ok_long(apt1[0].y, 256);
+    ok_long(apt2[0].x, 128);
+    ok_long(apt2[0].x, 128);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    ok_int(SetWindowExtEx(hDC, 10, 10, NULL), TRUE);
+    ok_int(GetWindowExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 10);
+    ok_long(siz.cy, 10);
+    ok_int(SetViewportExtEx(hDC, 0, 0, NULL), TRUE);
+    ok_int(GetViewportExtEx(hDC, &siz), TRUE);
+    ok_long(siz.cx, 20);
+    ok_long(siz.cy, 100);
     SetLastError(0xDEADBEEF);
     apt1[0].x = apt1[0].y = 256;
     apt2[0].x = apt2[0].y = 0xBEEFDEAD;
