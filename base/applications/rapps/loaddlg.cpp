@@ -218,127 +218,6 @@ public:
     END_MSG_MAP()
 };
 
-class CDownloadDialog :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IBindStatusCallback
-{
-    HWND m_hDialog;
-    BOOL m_UrlHasBeenCopied;
-    CDownloaderProgress* m_progress;
-
-public:
-    ~CDownloadDialog()
-    {
-        //DestroyWindow(m_hDialog);
-    }
-
-    HRESULT Initialize(HWND Dlg, CDownloaderProgress* pProgress)
-    {
-        m_hDialog = Dlg;
-        m_UrlHasBeenCopied = FALSE;
-        m_progress = pProgress;
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnStartBinding(
-        DWORD dwReserved,
-        IBinding *pib)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetPriority(
-        LONG *pnPriority)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnLowResource(
-        DWORD reserved)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnProgress(
-        ULONG ulProgress,
-        ULONG ulProgressMax,
-        ULONG ulStatusCode,
-        LPCWSTR szStatusText)
-    {
-        HWND Item;
-        LONG r;
-
-        m_progress->SetProgress(ulProgress, ulProgressMax);
-
-        Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
-        if (Item && szStatusText && wcslen(szStatusText) > 0 && m_UrlHasBeenCopied == FALSE)
-        {
-            SIZE_T len = wcslen(szStatusText) + 1;
-            ATL::CStringW buf;
-            DWORD dummyLen;
-
-            /* beautify our url for display purposes */
-            if (!InternetCanonicalizeUrlW(szStatusText, buf.GetBuffer(len), &dummyLen, ICU_DECODE | ICU_NO_ENCODE))
-            {
-                /* just use the original */
-                buf.ReleaseBuffer();
-                buf = szStatusText;
-            }
-            else
-            {
-                buf.ReleaseBuffer();
-            }
-
-            /* paste it into our dialog and don't do it again in this instance */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetString());
-            m_UrlHasBeenCopied = TRUE;
-        }
-
-        SetLastError(ERROR_SUCCESS);
-        r = GetWindowLongPtrW(m_hDialog, GWLP_USERDATA);
-        if (r || GetLastError() != ERROR_SUCCESS)
-        {
-            return E_ABORT;
-        }
-
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnStopBinding(
-        HRESULT hresult,
-        LPCWSTR szError)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetBindInfo(
-        DWORD *grfBINDF,
-        BINDINFO *pbindinfo)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(
-        DWORD grfBSCF,
-        DWORD dwSize,
-        FORMATETC *pformatetc,
-        STGMEDIUM *pstgmed)
-    {
-        return S_OK;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(
-        REFIID riid,
-        IUnknown *punk)
-    {
-        return S_OK;
-    }
-
-    BEGIN_COM_MAP(CDownloadDialog)
-        COM_INTERFACE_ENTRY_IID(IID_IBindStatusCallback, IBindStatusCallback)
-    END_COM_MAP()
-};
-
 class CDowloadingAppsListView
     : public CListView
 {
@@ -406,12 +285,6 @@ public:
     }
 };
 
-extern "C"
-HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, CDownloaderProgress* pProgress, REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pProgress, riid, ppv);
-}
-
 #ifdef USE_CERT_PINNING
 typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
 
@@ -472,6 +345,7 @@ class CDownloadManager
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
+    static VOID UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
 public:
     static VOID Add(DownloadInfo info);
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
@@ -586,9 +460,46 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     }
 }
 
+BOOL UrlHasBeenCopied;
+
+VOID CDownloadManager::UpdateProgress(
+    HWND hDlg,
+    ULONG ulProgress,
+    ULONG ulProgressMax,
+    ULONG ulStatusCode,
+    LPCWSTR szStatusText)
+{
+    HWND Item;
+
+    ProgressBar.SetProgress(ulProgress, ulProgressMax);
+
+    Item = GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS);
+    if (Item && szStatusText && wcslen(szStatusText) > 0 && UrlHasBeenCopied == FALSE)
+    {
+        SIZE_T len = wcslen(szStatusText) + 1;
+        ATL::CStringW buf;
+        DWORD dummyLen;
+
+        /* beautify our url for display purposes */
+        if (!InternetCanonicalizeUrlW(szStatusText, buf.GetBuffer(len), &dummyLen, ICU_DECODE | ICU_NO_ENCODE))
+        {
+            /* just use the original */
+            buf.ReleaseBuffer();
+            buf = szStatusText;
+        }
+        else
+        {
+            buf.ReleaseBuffer();
+        }
+
+        /* paste it into our dialog and don't do it again in this instance */
+        SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetString());
+        UrlHasBeenCopied = TRUE;
+    }
+}
+
 DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
-    CComPtr<IBindStatusCallback> dl;
     ATL::CStringW Path;
     PWSTR p, q;
 
@@ -700,11 +611,8 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_DOWNLOADING);
 
         // download it
+        UrlHasBeenCopied = FALSE;
         bTempfile = TRUE;
-        CDownloadDialog_Constructor(hDlg, &ProgressBar, IID_PPV_ARG(IBindStatusCallback, &dl));
-
-        if (dl == NULL)
-            goto end;
 
         /* FIXME: this should just be using the system-wide proxy settings */
         switch (SettingsInfo.Proxy)
@@ -843,7 +751,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
-            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
+            UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         } while (dwBytesRead && !bCancelled);
 
         CloseHandle(hOut);
@@ -858,7 +766,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             ProgressBar.SetMarquee(FALSE);
 
             dwContentLen = dwCurrentBytesRead;
-            dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
+            UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         }
 
         /* if this thing isn't a RAPPS update and it has a SHA-1 checksum
