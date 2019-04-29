@@ -211,28 +211,6 @@ LPtoDP(
     _In_ INT nCount)
 {
     PDC_ATTR pdcattr;
-#if 0
-    INT i;
-    PDC_ATTR pdcattr;
-
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (!pdcattr)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (pdcattr->flXform & ANY_XFORM_CHANGES)
-    {
-        GdiFixupTransforms(pdcattr);
-    }
-
-    // FIXME: can this fail on Windows?
-    GdiTransformPoints(&pdcattr->mxWorldToDevice, lpPoints, lpPoints, nCount);
-
-    return TRUE;
-#endif
 
     if (nCount <= 0)
         return TRUE;
