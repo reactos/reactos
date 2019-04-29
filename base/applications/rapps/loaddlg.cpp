@@ -223,7 +223,6 @@ class CDownloadDialog :
     public IBindStatusCallback
 {
     HWND m_hDialog;
-    PBOOL m_pbCancelled;
     BOOL m_UrlHasBeenCopied;
     CDownloaderProgress* m_progress;
 
@@ -233,10 +232,9 @@ public:
         //DestroyWindow(m_hDialog);
     }
 
-    HRESULT Initialize(HWND Dlg, BOOL *pbCancelled, CDownloaderProgress* pProgress)
+    HRESULT Initialize(HWND Dlg, CDownloaderProgress* pProgress)
     {
         m_hDialog = Dlg;
-        m_pbCancelled = pbCancelled;
         m_UrlHasBeenCopied = FALSE;
         m_progress = pProgress;
         return S_OK;
@@ -300,7 +298,6 @@ public:
         r = GetWindowLongPtrW(m_hDialog, GWLP_USERDATA);
         if (r || GetLastError() != ERROR_SUCCESS)
         {
-            *m_pbCancelled = TRUE;
             return E_ABORT;
         }
 
@@ -410,9 +407,9 @@ public:
 };
 
 extern "C"
-HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, CDownloaderProgress* pProgress, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, CDownloaderProgress* pProgress, REFIID riid, LPVOID *ppv)
 {
-    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pbCancelled, pProgress, riid, ppv);
+    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pProgress, riid, ppv);
 }
 
 #ifdef USE_CERT_PINNING
@@ -468,14 +465,13 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
     }
 }
 
-
 // Download dialog (loaddlg.cpp)
 class CDownloadManager
 {
     static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
-
+    static BOOL bCancelled;
 public:
     static VOID Add(DownloadInfo info);
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
@@ -492,7 +488,7 @@ public:
 ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 CDownloaderProgress                     CDownloadManager::ProgressBar;
-
+BOOL                                    CDownloadManager::bCancelled;
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
@@ -516,6 +512,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     {
         HICON hIconSm, hIconBg;
         ATL::CStringW szTempCaption;
+
+        bCancelled = FALSE;
 
         hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
         hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
@@ -573,7 +571,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     case WM_COMMAND:
         if (wParam == IDCANCEL)
         {
-            SetWindowLongW(Dlg, GWLP_USERDATA, 1);
+            bCancelled = TRUE;
             PostMessageW(Dlg, WM_CLOSE, 0, 0);
         }
         return FALSE;
@@ -602,7 +600,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     ULONG dwCurrentBytesRead = 0;
     ULONG dwStatusLen = sizeof(dwStatus);
 
-    BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
     BOOL bCab = FALSE;
 
@@ -704,7 +701,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         // download it
         bTempfile = TRUE;
-        CDownloadDialog_Constructor(hDlg, &bCancelled, &ProgressBar, IID_PPV_ARG(IBindStatusCallback, &dl));
+        CDownloadDialog_Constructor(hDlg, &ProgressBar, IID_PPV_ARG(IBindStatusCallback, &dl));
 
         if (dl == NULL)
             goto end;
