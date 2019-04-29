@@ -258,7 +258,7 @@ public:
 };
 
 class CDowloadingAppsListView
-    : public CUiWindow<CListView>
+    : public CListView
 {
 public:
     HWND Create(HWND hwndParent)
@@ -285,9 +285,8 @@ public:
 
     VOID SetDownloadStatus(INT ItemIndex, DownloadStatus Status)
     {
-        HWND hListView = GetWindow();
         ATL::CStringW szBuffer = LoadStatusString(Status);
-        ListView_SetItemText(hListView, ItemIndex, 1, const_cast<LPWSTR>(szBuffer.GetString()));
+        SetItemText(ItemIndex, 1, szBuffer.GetString());
     }
 
     BOOL AddItem(INT ItemIndex, LPWSTR lpText)
