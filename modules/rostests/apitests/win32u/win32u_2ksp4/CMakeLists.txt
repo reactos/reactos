@@ -7,5 +7,5 @@ add_library(win32u_2ksp4 MODULE
     ${win32ku_2ksp4_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/win32u_2ksp4.def)
 
-set_module_type(win32u_2ksp4 win32dll)
+set_module_type(win32u_2ksp4 module)
 add_dependencies(win32u_2ksp4 psdk)
