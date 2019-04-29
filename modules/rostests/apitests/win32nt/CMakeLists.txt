@@ -35,7 +35,7 @@ list(APPEND SOURCE
     ntgdi/NtGdiSelectPen.c
     ntgdi/NtGdiSetBitmapBits.c
     ntgdi/NtGdiSetDIBitsToDeviceInternal.c
-    ntgdi/NtGdiTransformPoints
+    ntgdi/NtGdiTransformPoints.c
 
 #    ntuser/NtUserCallHwnd.c
 #    ntuser/NtUserCallHwndLock.c
