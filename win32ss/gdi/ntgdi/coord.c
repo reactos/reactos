@@ -416,13 +416,6 @@ NtGdiTransformPoints(
     switch (iMode)
     {
         case GdiDpToLp:
-            if (pdc->pdcattr->iMapMode == MM_ISOTROPIC &&
-                (pdc->pdcattr->szlViewportExt.cx * pdc->pdcattr->szlWindowExt.cy !=
-                 pdc->pdcattr->szlWindowExt.cx * pdc->pdcattr->szlViewportExt.cy))
-            {
-                ret = FALSE;
-                goto leave;
-            }
             DC_vXformDeviceToWorld(pdc, Count, Points, Points);
             break;
 

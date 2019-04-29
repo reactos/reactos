@@ -171,29 +171,38 @@ DPtoLP(
     _Inout_updates_(nCount) LPPOINT lpPoints,
     _In_ INT nCount)
 {
-#if 0
-    INT i;
     PDC_ATTR pdcattr;
+    SIZEL sizlView;
 
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (!pdcattr)
+    if (nCount > 0)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+        if (hdc == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+        if (lpPoints == NULL)
+        {
+            return TRUE;
+        }
 
-    if (pdcattr->flXform & ANY_XFORM_CHANGES)
-    {
-        GdiFixupTransforms(pdcattr);
-    }
+        pdcattr = GdiGetDcAttr(hdc);
+        if (pdcattr == NULL)
+            return FALSE;
 
-    // FIXME: can this fail on Windows?
-    GdiTransformPoints(&pdcattr->mxDeviceToWorld, lpPoints, lpPoints, nCount);
+        if (pdcattr->iMapMode == MM_ISOTROPIC)
+        {
+            if (NtGdiGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)&sizlView))
+            {
+                if (sizlView.cx == 0 || sizlView.cy == 0)
+                    return FALSE;
+            }
+        }
+
+        return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
+    }
 
     return TRUE;
-#endif
-    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
 }
 
 BOOL
@@ -203,6 +212,7 @@ LPtoDP(
     _Inout_updates_(nCount) LPPOINT lpPoints,
     _In_ INT nCount)
 {
+    PDC_ATTR pdcattr;
 #if 0
     INT i;
     PDC_ATTR pdcattr;
@@ -225,7 +235,27 @@ LPtoDP(
 
     return TRUE;
 #endif
-    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
+
+    if (nCount > 0)
+    {
+        if (hdc == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+        if (lpPoints == NULL)
+        {
+            return TRUE;
+        }
+
+        pdcattr = GdiGetDcAttr(hdc);
+        if (pdcattr == NULL)
+            return FALSE;
+
+        return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
+    }
+
+    return TRUE;
 }
 
 /*
