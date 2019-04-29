@@ -985,8 +985,8 @@ SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
     // FIXME: Unimplemented!
     UNIMPLEMENTED_ONCE;
 
-    // return TRUE;
-    return FALSE;
+    // Temporary HACK for supporting applications!
+    return TRUE; // FALSE;
 }
 
 /*
