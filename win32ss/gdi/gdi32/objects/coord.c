@@ -490,33 +490,33 @@ SetViewportExtEx(
         (pdcattr->szlViewportExt.cy == nYExtent))
         return TRUE;
 
+    if (nXExtent == 0 || nYExtent == 0)
+        return TRUE;
+
     /* Only change viewport extension if we are in iso or aniso mode */
     if ((pdcattr->iMapMode == MM_ISOTROPIC) ||
         (pdcattr->iMapMode == MM_ANISOTROPIC))
     {
-        if (nXExtent != 0 && nYExtent != 0)
+        if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
-            if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+            if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
             {
-                if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
-                {
-                    NtGdiFlush(); // Sync up pdcattr from Kernel space.
-                    pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
-                }
+                NtGdiFlush(); // Sync up pdcattr from Kernel space.
+                pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
             }
-
-            /* Set the new viewport extension */
-            pdcattr->szlViewportExt.cx = nXExtent;
-            pdcattr->szlViewportExt.cy = nYExtent;
-
-            /* Handle right-to-left layout */
-            if (pdcattr->dwLayout & LAYOUT_RTL)
-                NtGdiMirrorWindowOrg(hdc);
-
-            /* Update xform flags */
-            pdcattr->flXform |= (PAGE_EXTENTS_CHANGED | INVALIDATE_ATTRIBUTES |
-                                 DEVICE_TO_WORLD_INVALID);
         }
+
+        /* Set the new viewport extension */
+        pdcattr->szlViewportExt.cx = nXExtent;
+        pdcattr->szlViewportExt.cy = nYExtent;
+
+        /* Handle right-to-left layout */
+        if (pdcattr->dwLayout & LAYOUT_RTL)
+            NtGdiMirrorWindowOrg(hdc);
+
+        /* Update xform flags */
+        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED | INVALIDATE_ATTRIBUTES |
+                             DEVICE_TO_WORLD_INVALID);
     }
 
     return TRUE;
