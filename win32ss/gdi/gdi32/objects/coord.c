@@ -174,35 +174,33 @@ DPtoLP(
     PDC_ATTR pdcattr;
     SIZEL sizlView;
 
-    if (nCount > 0)
+    if (nCount <= 0)
+        return TRUE;
+
+    if (hdc == NULL)
     {
-        if (hdc == NULL)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-        if (lpPoints == NULL)
-        {
-            return TRUE;
-        }
-
-        pdcattr = GdiGetDcAttr(hdc);
-        if (pdcattr == NULL)
-            return FALSE;
-
-        if (pdcattr->iMapMode == MM_ISOTROPIC)
-        {
-            if (NtGdiGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)&sizlView))
-            {
-                if (sizlView.cx == 0 || sizlView.cy == 0)
-                    return FALSE;
-            }
-        }
-
-        return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (lpPoints == NULL)
+    {
+        return TRUE;
     }
 
-    return TRUE;
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+        return FALSE;
+
+    if (pdcattr->iMapMode == MM_ISOTROPIC)
+    {
+        if (NtGdiGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)&sizlView))
+        {
+            if (sizlView.cx == 0 || sizlView.cy == 0)
+                return FALSE;
+        }
+    }
+
+    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
 }
 
 BOOL
@@ -236,26 +234,24 @@ LPtoDP(
     return TRUE;
 #endif
 
-    if (nCount > 0)
+    if (nCount <= 0)
+        return TRUE;
+
+    if (hdc == NULL)
     {
-        if (hdc == NULL)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-        if (lpPoints == NULL)
-        {
-            return TRUE;
-        }
-
-        pdcattr = GdiGetDcAttr(hdc);
-        if (pdcattr == NULL)
-            return FALSE;
-
-        return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (lpPoints == NULL)
+    {
+        return TRUE;
     }
 
-    return TRUE;
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+        return FALSE;
+
+    return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
 }
 
 /*
