@@ -171,28 +171,35 @@ DPtoLP(
     _Inout_updates_(nCount) LPPOINT lpPoints,
     _In_ INT nCount)
 {
-#if 0
-    INT i;
     PDC_ATTR pdcattr;
+    SIZEL sizlView;
 
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (!pdcattr)
+    if (nCount <= 0)
+        return TRUE;
+
+    if (hdc == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-
-    if (pdcattr->flXform & ANY_XFORM_CHANGES)
+    if (lpPoints == NULL)
     {
-        GdiFixupTransforms(pdcattr);
+        return TRUE;
     }
 
-    // FIXME: can this fail on Windows?
-    GdiTransformPoints(&pdcattr->mxDeviceToWorld, lpPoints, lpPoints, nCount);
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+        return FALSE;
 
-    return TRUE;
-#endif
+    if (pdcattr->iMapMode == MM_ISOTROPIC)
+    {
+        if (NtGdiGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)&sizlView))
+        {
+            if (sizlView.cx == 0 || sizlView.cy == 0)
+                return FALSE;
+        }
+    }
+
     return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiDpToLp);
 }
 
@@ -203,28 +210,25 @@ LPtoDP(
     _Inout_updates_(nCount) LPPOINT lpPoints,
     _In_ INT nCount)
 {
-#if 0
-    INT i;
     PDC_ATTR pdcattr;
 
-    /* Get the DC attribute */
-    pdcattr = GdiGetDcAttr(hdc);
-    if (!pdcattr)
+    if (nCount <= 0)
+        return TRUE;
+
+    if (hdc == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-
-    if (pdcattr->flXform & ANY_XFORM_CHANGES)
+    if (lpPoints == NULL)
     {
-        GdiFixupTransforms(pdcattr);
+        return TRUE;
     }
 
-    // FIXME: can this fail on Windows?
-    GdiTransformPoints(&pdcattr->mxWorldToDevice, lpPoints, lpPoints, nCount);
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+        return FALSE;
 
-    return TRUE;
-#endif
     return NtGdiTransformPoints(hdc, lpPoints, lpPoints, nCount, GdiLpToDp);
 }
 
@@ -490,6 +494,9 @@ SetViewportExtEx(
         (pdcattr->szlViewportExt.cy == nYExtent))
         return TRUE;
 
+    if (nXExtent == 0 || nYExtent == 0)
+        return TRUE;
+
     /* Only change viewport extension if we are in iso or aniso mode */
     if ((pdcattr->iMapMode == MM_ISOTROPIC) ||
         (pdcattr->iMapMode == MM_ANISOTROPIC))
@@ -512,7 +519,8 @@ SetViewportExtEx(
             NtGdiMirrorWindowOrg(hdc);
 
         /* Update xform flags */
-        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED | INVALIDATE_ATTRIBUTES |
+                             DEVICE_TO_WORLD_INVALID);
     }
 
     return TRUE;

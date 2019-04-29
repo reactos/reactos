@@ -131,6 +131,9 @@ DC_vXformDeviceToWorld(
     PMATRIX pmx;
 
     pmx = DC_pmxDeviceToWorld(pdc);
+    if (!MX_IsInvertible(pmx))
+        return;
+
     XFORMOBJ_vInit(&xo, pmx);
     XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
 }
