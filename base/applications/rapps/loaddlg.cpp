@@ -41,6 +41,7 @@
 
 #include <rosctrls.h>
 #include <windowsx.h>
+#undef SubclassWindow
 
 #include "rosui.h"
 #include "dialogs.h"
@@ -95,6 +96,128 @@ struct DownloadParam
 };
 
 
+class CDownloaderProgress
+    : public CWindowImpl<CDownloaderProgress, CWindow, CControlWinTraits>
+{
+    ATL::CStringW m_szProgressText;
+
+public:
+    CDownloaderProgress()
+    {
+    }
+
+    VOID SetMarquee(BOOL Enable)
+    {
+        if (Enable)
+            ModifyStyle(0, PBS_MARQUEE, 0);
+        else
+            ModifyStyle(PBS_MARQUEE, 0, 0);
+
+        SendMessage(PBM_SETMARQUEE, Enable, 0);
+    }
+
+    VOID SetProgress(ULONG ulProgress, ULONG ulProgressMax)
+    {
+        WCHAR szProgress[100];
+
+        /* format the bits and bytes into pretty and accessible units... */
+        StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
+
+        /* use our subclassed progress bar text subroutine */
+        ATL::CStringW ProgressText;
+
+        if (ulProgressMax)
+        {
+            /* total size is known */
+            WCHAR szProgressMax[100];
+            UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
+
+            /* send the current progress to the progress bar */
+            SendMessage(PBM_SETPOS, uiPercentage, 0);
+
+            /* format total download size */
+            StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
+
+            /* generate the text on progress bar */
+            ProgressText.Format(L"%u%% \x2014 %ls / %ls",
+                                uiPercentage,
+                                szProgress,
+                                szProgressMax);
+        }
+        else
+        {
+            /* send the current progress to the progress bar */
+            SendMessage(PBM_SETPOS, 0, 0);
+
+            /* total size is not known, display only current size */
+            ProgressText.Format(L"%ls...", szProgress);
+        }
+
+        /* and finally display it */
+        SendMessage(WM_SETTEXT, 0, (LPARAM) ProgressText.GetString());
+    }
+
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        PAINTSTRUCT  ps;
+        HDC hDC = BeginPaint(&ps), hdcMem;
+        HBITMAP hbmMem;
+        HANDLE hOld;
+        RECT myRect;
+        UINT win_width, win_height;
+
+        GetClientRect(&myRect);
+
+        /* grab the progress bar rect size */
+        win_width = myRect.right - myRect.left;
+        win_height = myRect.bottom - myRect.top;
+
+        /* create an off-screen DC for double-buffering */
+        hdcMem = CreateCompatibleDC(hDC);
+        hbmMem = CreateCompatibleBitmap(hDC, win_width, win_height);
+
+        hOld = SelectObject(hdcMem, hbmMem);
+
+        /* call the original draw code and redirect it to our memory buffer */
+        DefWindowProc(uMsg, (WPARAM) hdcMem, lParam);
+
+        /* draw our nifty progress text over it */
+        SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
+        DrawShadowText(hdcMem, m_szProgressText.GetString(), m_szProgressText.GetLength(),
+                       &myRect,
+                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
+                       GetSysColor(COLOR_CAPTIONTEXT),
+                       GetSysColor(COLOR_3DSHADOW),
+                       1, 1);
+
+        /* transfer the off-screen DC to the screen */
+        BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
+
+        /* free the off-screen DC */
+        SelectObject(hdcMem, hOld);
+        DeleteObject(hbmMem);
+        DeleteDC(hdcMem);
+
+        EndPaint(&ps);
+        return 0;
+    }
+
+    LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        if (lParam)
+        {
+            m_szProgressText = (PCWSTR) lParam;
+        }
+        return 0;
+    }
+
+    BEGIN_MSG_MAP(CDownloaderProgress)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnPaint)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
+    END_MSG_MAP()
+};
+
 class CDownloadDialog :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBindStatusCallback
@@ -102,6 +225,7 @@ class CDownloadDialog :
     HWND m_hDialog;
     PBOOL m_pbCancelled;
     BOOL m_UrlHasBeenCopied;
+    CDownloaderProgress* m_progress;
 
 public:
     ~CDownloadDialog()
@@ -109,11 +233,12 @@ public:
         //DestroyWindow(m_hDialog);
     }
 
-    HRESULT Initialize(HWND Dlg, BOOL *pbCancelled)
+    HRESULT Initialize(HWND Dlg, BOOL *pbCancelled, CDownloaderProgress* pProgress)
     {
         m_hDialog = Dlg;
         m_pbCancelled = pbCancelled;
         m_UrlHasBeenCopied = FALSE;
+        m_progress = pProgress;
         return S_OK;
     }
 
@@ -145,47 +270,7 @@ public:
         HWND Item;
         LONG r;
 
-        Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_PROGRESS);
-        if (Item)
-        {
-            WCHAR szProgress[100];
-
-            /* format the bits and bytes into pretty and accessible units... */
-            StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
-
-            /* use our subclassed progress bar text subroutine */
-            ATL::CStringW m_ProgressText;
-
-            if (ulProgressMax)
-            {
-                /* total size is known */
-                WCHAR szProgressMax[100];
-                UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
-
-                /* send the current progress to the progress bar */
-                SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
-
-                /* format total download size */
-                StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
-
-                /* generate the text on progress bar */
-                m_ProgressText.Format(L"%u%% \x2014 %ls / %ls",
-                                      uiPercentage,
-                                      szProgress,
-                                      szProgressMax);
-            }
-            else
-            {
-                /* send the current progress to the progress bar */
-                SendMessageW(Item, PBM_SETPOS, 0, 0);
-
-                /* total size is not known, display only current size */
-                m_ProgressText.Format(L"%ls...",
-                                      szProgress);
-            }
-            /* and finally display it */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) m_ProgressText.GetString());
-        }
+        m_progress->SetProgress(ulProgress, ulProgressMax);
 
         Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
         if (Item && szStatusText && wcslen(szStatusText) > 0 && m_UrlHasBeenCopied == FALSE)
@@ -325,9 +410,9 @@ public:
 };
 
 extern "C"
-HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, CDownloaderProgress* pProgress, REFIID riid, LPVOID *ppv)
 {
-    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pbCancelled, riid, ppv);
+    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pbCancelled, pProgress, riid, ppv);
 }
 
 #ifdef USE_CERT_PINNING
@@ -389,20 +474,12 @@ class CDownloadManager
 {
     static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
     static CDowloadingAppsListView DownloadsListView;
-
-    static VOID SetProgressMarquee(HWND Item, BOOL Enable);
+    static CDownloaderProgress ProgressBar;
 
 public:
     static VOID Add(DownloadInfo info);
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK DownloadProgressProc(HWND hWnd,
-                                                 UINT uMsg,
-                                                 WPARAM wParam,
-                                                 LPARAM lParam,
-                                                 UINT_PTR uIdSubclass,
-                                                 DWORD_PTR dwRefData);
-
     static DWORD WINAPI ThreadFunc(LPVOID Context);
     static BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal = FALSE);
     static BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal = FALSE);
@@ -414,6 +491,8 @@ public:
 // CDownloadManager
 ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
+CDownloaderProgress                     CDownloadManager::ProgressBar;
+
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
@@ -453,10 +532,9 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         {
             // initialize the default values for our nifty progress bar
             // and subclass it so that it learns to print a status text
-            SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
-            SendMessageW(Item, PBM_SETPOS, 0, 0);
-
-            SetWindowSubclass(Item, DownloadProgressProc, 0, 0);
+            ProgressBar.SubclassWindow(Item);
+            ProgressBar.SendMessage(PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+            ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
         }
 
         // Add a ListView
@@ -510,101 +588,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     }
 }
 
-LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
-                                                        UINT uMsg,
-                                                        WPARAM wParam,
-                                                        LPARAM lParam,
-                                                        UINT_PTR uIdSubclass,
-                                                        DWORD_PTR dwRefData)
-{
-    static ATL::CStringW szProgressText;
-
-    switch (uMsg)
-    {
-    case WM_SETTEXT:
-    {
-        if (lParam)
-        {
-            szProgressText = (PCWSTR) lParam;
-        }
-        return TRUE;
-    }
-
-    case WM_ERASEBKGND:
-    case WM_PAINT:
-    {
-        PAINTSTRUCT  ps;
-        HDC hDC = BeginPaint(hWnd, &ps), hdcMem;
-        HBITMAP hbmMem;
-        HANDLE hOld;
-        RECT myRect;
-        UINT win_width, win_height;
-
-        GetClientRect(hWnd, &myRect);
-
-        /* grab the progress bar rect size */
-        win_width = myRect.right - myRect.left;
-        win_height = myRect.bottom - myRect.top;
-
-        /* create an off-screen DC for double-buffering */
-        hdcMem = CreateCompatibleDC(hDC);
-        hbmMem = CreateCompatibleBitmap(hDC, win_width, win_height);
-
-        hOld = SelectObject(hdcMem, hbmMem);
-
-        /* call the original draw code and redirect it to our memory buffer */
-        DefSubclassProc(hWnd, uMsg, (WPARAM) hdcMem, lParam);
-
-        /* draw our nifty progress text over it */
-        SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
-        DrawShadowText(hdcMem, szProgressText.GetString(), szProgressText.GetLength(),
-                       &myRect,
-                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
-                       GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DSHADOW),
-                       1, 1);
-
-        /* transfer the off-screen DC to the screen */
-        BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
-
-        /* free the off-screen DC */
-        SelectObject(hdcMem, hOld);
-        DeleteObject(hbmMem);
-        DeleteDC(hdcMem);
-
-        EndPaint(hWnd, &ps);
-        return 0;
-    }
-
-    /* Raymond Chen says that we should safely unsubclass all the things!
-    (http://blogs.msdn.com/b/oldnewthing/archive/2003/11/11/55653.aspx) */
-
-    case WM_NCDESTROY:
-    {
-        szProgressText.Empty();
-        RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
-    }
-    /* Fall-through */
-    default:
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-    }
-}
-
-VOID CDownloadManager::SetProgressMarquee(HWND Item, BOOL Enable)
-{
-    if (!Item)
-        return;
-
-    DWORD style = GetWindowLongPtr(Item, GWL_STYLE);
-    if (!style)
-        return;
-
-    if (!SetWindowLongPtr(Item, GWL_STYLE, (Enable ? style | PBS_MARQUEE : style & ~PBS_MARQUEE)))
-        return;
-
-    SendMessageW(Item, PBM_SETMARQUEE, Enable, 0);
-}
-
 DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 {
     CComPtr<IBindStatusCallback> dl;
@@ -650,9 +633,9 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
-            SetProgressMarquee(Item, FALSE);
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) L"");
-            SendMessageW(Item, PBM_SETPOS, 0, 0);
+            ProgressBar.SetMarquee(FALSE);
+            ProgressBar.SendMessage(WM_SETTEXT, 0, (LPARAM) L"");
+            ProgressBar.SendMessage(PBM_SETPOS, 0, 0);
         }
 
         // is this URL an update package for RAPPS? if so store it in a different place
@@ -721,7 +704,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         // download it
         bTempfile = TRUE;
-        CDownloadDialog_Constructor(hDlg, &bCancelled, IID_PPV_ARG(IBindStatusCallback, &dl));
+        CDownloadDialog_Constructor(hDlg, &bCancelled, &ProgressBar, IID_PPV_ARG(IBindStatusCallback, &dl));
 
         if (dl == NULL)
             goto end;
@@ -803,7 +786,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (!dwContentLen)
         {
             // content-length is not known, enable marquee mode
-            SetProgressMarquee(Item, TRUE);
+            ProgressBar.SetMarquee(TRUE);
         }
 
         free(urlComponents.lpszScheme);
@@ -875,7 +858,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (!dwContentLen)
         {
             // set progress bar to 100%
-            SetProgressMarquee(Item, FALSE);
+            ProgressBar.SetMarquee(FALSE);
 
             dwContentLen = dwCurrentBytesRead;
             dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
