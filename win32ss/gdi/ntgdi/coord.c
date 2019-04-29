@@ -196,7 +196,7 @@ DC_vUpdateWorldToDevice(PDC pdc)
     XFORMOBJ_iCombine(&xoWorldToDevice, &xoWorldToPage, &xoPageToDevice);
 
     /* Reset the flags */
-    pdc->pdcattr->flXform &= ~(PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|WORLD_XFORM_CHANGED);
+    pdc->pdcattr->flXform &= ~WORLD_XFORM_CHANGED;
 }
 
 VOID
@@ -378,10 +378,14 @@ NtGdiTransformPoints(
     if (Count <= 0)
         return TRUE;
 
+    if (!UnsafePtsIn || !UnsafePtOut)
+    {
+        return FALSE;
+    }
+
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -828,6 +832,9 @@ IntGdiSetMapMode(
     INT iPrevMapMode;
     FLONG flXform;
     PDC_ATTR pdcattr = dc->pdcattr;
+
+    if (MapMode == pdcattr->iMapMode)
+        return MapMode;
 
     flXform = pdcattr->flXform & ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
         PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP|PAGE_TO_DEVICE_SCALE_IDENTITY|
