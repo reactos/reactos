@@ -225,6 +225,10 @@
             <SHIM NAME="IgnoreLoadLibrary">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="ShimTest">
+                <DLLFILE>acgenral.dll</DLLFILE>
+                <DESCRIPTION>Shim used to test ReactOS shim engine functionality</DESCRIPTION>
+            </SHIM>
             <SHIM NAME="VMHorizonSetup">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
@@ -405,5 +409,15 @@
             <SHIM_REF NAME="IgnoreFreeLibrary" COMMAND_LINE="libpng12.dll" />
         </EXE>
 
+        <!-- ReactOS shim used to test the shim engine -->
+        <EXE NAME="shimtest_ros.exe" APP_NAME="Shim test application" VENDOR="ReactOS">
+            <MATCHING_FILE NAME="*">
+                <FILE_DESCRIPTION>ReactOS Shim Engine test utility</FILE_DESCRIPTION>
+                <ORIGINAL_FILENAME>shimtest_ros.exe</ORIGINAL_FILENAME>
+                <INTERNAL_NAME>shimtest_ros</INTERNAL_NAME>
+                <COMPANY_NAME>ReactOS - test</COMPANY_NAME>
+            </MATCHING_FILE>
+            <SHIM_REF NAME="ShimTest" />
+        </EXE>
     </DATABASE>
 </SDB>

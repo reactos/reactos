@@ -7,6 +7,7 @@ list(APPEND SOURCE
     ignoredbgout.c
     ignorefreelib.c
     main.c
+    shimtest.c
     themes.c
     genral.spec)
 
