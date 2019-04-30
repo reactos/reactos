@@ -364,6 +364,10 @@ l_ReadHeaderFromFile:
 #endif // _WIN64
         break;
 
+#ifndef _WIN64
+    case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
+        nStatus = STATUS_INVALID_IMAGE_WIN_64;
+#endif
     default:
         DIE(("Unrecognized optional header, Magic is %X\n", piohOptHeader->Magic));
     }
