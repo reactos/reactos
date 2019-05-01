@@ -13,6 +13,7 @@ void Test_SetMapMode()
     HDC hDC;
     SIZE WindowExt, ViewportExt;
     ULONG ulMapMode;
+    POINT pt;
 
     hDC = CreateCompatibleDC(NULL);
     ok(hDC != 0, "CreateCompatibleDC failed, skipping tests.\n");
@@ -104,7 +105,7 @@ void Test_SetMapMode()
     GetViewportExtEx(hDC, &ViewportExt);
     //ok_long(WindowExt.cx, 3600);
     //ok_long(WindowExt.cy, 2700);
-    ok_long(ViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES));
+    //ok_long(ViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES) - 4);
     ok_long(ViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
     DeleteDC(hDC);
 
@@ -183,10 +184,105 @@ void Test_SetMapMode()
     ok_long(ViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES));
     ok_long(ViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
     DeleteDC(hDC);
+
+    //
+    // Test mode and extents
+    //
+    hDC = CreateCompatibleDC(NULL);
+    GetViewportExtEx(hDC, &ViewportExt);
+    GetWindowExtEx(hDC, &WindowExt);
+    ok_long(ViewportExt.cx, 1);
+    ok_long(ViewportExt.cy, 1);
+    ok_long(WindowExt.cx, 1);
+    ok_long(WindowExt.cy, 1);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    GetWindowExtEx(hDC, &WindowExt);
+    ok_long(ViewportExt.cx, 1);
+    ok_long(ViewportExt.cy, 1);
+    ok_long(WindowExt.cx, 1);
+    ok_long(WindowExt.cy, 1);
+    SetWindowExtEx(hDC, 200, 200, NULL);
+    SetViewportExtEx(hDC, 100, 100, NULL);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    GetWindowExtEx(hDC, &WindowExt);
+    ok_long(ViewportExt.cx, 100);
+    ok_long(ViewportExt.cy, 100);
+    ok_long(WindowExt.cx, 200);
+    ok_long(WindowExt.cy, 200);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    ok_long(ViewportExt.cx, 100);
+    ok_long(ViewportExt.cy, 100);
+    ok_long(WindowExt.cx, 200);
+    ok_long(WindowExt.cy, 200);
+
+    SetMapMode(hDC, MM_ISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    //ok_long(ViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES) - 4);
+    ok_long(ViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
+    SetWindowExtEx(hDC, 100, 100, NULL);
+    SetViewportExtEx(hDC, 100, 100, NULL);
+
+    SetMapMode(hDC, MM_ISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    ok_long(ViewportExt.cx, 100);
+    ok_long(ViewportExt.cy, 100);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    ok_long(ViewportExt.cx, 100);
+    ok_long(ViewportExt.cy, 100);
+
+    SetMapMode(hDC, MM_TEXT);
+    GetViewportExtEx(hDC, &ViewportExt);
+    ok_long(ViewportExt.cx, 1);
+    ok_long(ViewportExt.cy, 1);
+
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    ok_long(ViewportExt.cx, 1);
+    ok_long(ViewportExt.cy, 1);
+
+    SetMapMode(hDC, MM_ISOTROPIC);
+    GetViewportExtEx(hDC, &ViewportExt);
+    //ok_long(ViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES) - 4);
+    ok_long(ViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
+
+    SetMapMode(hDC, MM_TEXT);
+    GetViewportExtEx(hDC, &ViewportExt);
+    GetWindowExtEx(hDC, &WindowExt);
+    ok_long(ViewportExt.cx, 1);
+    ok_long(ViewportExt.cy, 1);
+    ok_long(WindowExt.cx, 1);
+    ok_long(WindowExt.cy, 1);
+    DeleteDC(hDC);
+
+    //
+    // Test mode and GetCurrentPositionEx
+    //
+    hDC = CreateCompatibleDC(NULL);
+    MoveToEx(hDC, 100, 100, NULL);
+    SetMapMode(hDC, MM_ANISOTROPIC);
+    GetCurrentPositionEx(hDC, &pt);
+    ok_long(pt.x, 100);
+    ok_long(pt.y, 100);
+    SetMapMode(hDC, MM_TEXT);
+    GetCurrentPositionEx(hDC, &pt);
+    ok_long(pt.x, 100);
+    ok_long(pt.y, 100);
+    SetMapMode(hDC, MM_ISOTROPIC);
+    GetCurrentPositionEx(hDC, &pt);
+    ok_long(pt.x, 100);
+    ok_long(pt.y, 100);
+    DeleteDC(hDC);
 }
 
 START_TEST(SetMapMode)
 {
     Test_SetMapMode();
 }
-
