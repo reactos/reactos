@@ -50,9 +50,6 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c)
 
-# xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
-set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 list(APPEND msxml3_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.manifest
     ${CMAKE_CURRENT_SOURCE_DIR}/msxml3_v1.rgs
