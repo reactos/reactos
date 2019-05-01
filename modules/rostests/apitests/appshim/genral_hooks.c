@@ -15,7 +15,6 @@
 #include "appshim_apitest.h"
 
 static DWORD g_WinVersion;
-#define WINVER_WIN8    0x0602
 
 
 typedef struct expect_shim_hook
@@ -36,7 +35,7 @@ static expect_shim_data data[] =
 {
     {
         L"IgnoreChromeSandbox",
-        WINVER_WIN8,
+        _WIN32_WINNT_WIN8,
         {
             { "KERNEL32.DLL", "CreateProcessW" },
         }
@@ -98,7 +97,10 @@ START_TEST(genral_hooks)
         PHOOKAPI hook = pGetHookAPIs("", current->ShimName, &num_shims);
 
         if (current->MinVersion > g_WinVersion && !hook)
+        {
+            skip("Shim %s not present\n", wine_dbgstr_w(current->ShimName));
             continue;
+        }
 
         ok(!!hook, "Expected a valid pointer, got nothing for %s\n", wine_dbgstr_w(current->ShimName));
         ok(num_shims == expected_shims, "Expected %u shims, got %u for %s\n",

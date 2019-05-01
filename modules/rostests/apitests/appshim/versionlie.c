@@ -22,8 +22,9 @@ static tGETHOOKAPIS pGetHookAPIs;
 
 
 static DWORD g_WinVersion;
-#define WINVER_WINXP   0x0501
 
+#define FLAG_BUGGY_ServicePackMajorMinor    1
+#define FLAG_AlternateHookOrder             2
 
 typedef struct VersionLieInfo
 {
@@ -34,6 +35,7 @@ typedef struct VersionLieInfo
     DWORD dwPlatformId;
     WORD wServicePackMajor;
     WORD wServicePackMinor;
+    WORD wFlags;
 } VersionLieInfo;
 
 typedef BOOL(WINAPI* GETVERSIONEXAPROC)(LPOSVERSIONINFOEXA);
@@ -83,7 +85,7 @@ static void verify_shima_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
             if (v1.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXA))
             {
-                if (info->dwPlatformId != VER_PLATFORM_WIN32_WINDOWS)
+                if (!(info->wFlags & FLAG_BUGGY_ServicePackMajorMinor))
                 {
                     winetest_ok(info->wServicePackMajor == v2.wServicePackMajor, "Expected wServicePackMajor to be equal, was: %i, %i for %s\n", info->wServicePackMajor, v2.wServicePackMajor, shim);
                     winetest_ok(info->wServicePackMinor == v2.wServicePackMinor, "Expected wServicePackMinor to be equal, was: %i, %i for %s\n", info->wServicePackMinor, v2.wServicePackMinor, shim);
@@ -155,7 +157,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
             if (v1.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
             {
-                if (info->dwPlatformId != VER_PLATFORM_WIN32_WINDOWS)
+                if (!(info->wFlags & FLAG_BUGGY_ServicePackMajorMinor))
                 {
                     winetest_ok(info->wServicePackMajor == v2.wServicePackMajor, "Expected wServicePackMajor to be equal, was: %i, %i for %s\n", info->wServicePackMajor, v2.wServicePackMajor, shim);
                     winetest_ok(info->wServicePackMinor == v2.wServicePackMinor, "Expected wServicePackMinor to be equal, was: %i, %i for %s\n", info->wServicePackMinor, v2.wServicePackMinor, shim);
@@ -222,24 +224,24 @@ static void run_test(LPCSTR shim, const VersionLieInfo* info)
         return;
     }
     ok(hook != NULL, "Expected hook to be a valid pointer for %s\n", shim);
-    if (info->dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+    if (info->wFlags & FLAG_AlternateHookOrder)
     {
         ok(num_shims == 3, "Expected num_shims to be 3, was: %u for %s\n", num_shims, shim);
         if (hook && num_shims == 3)
         {
-            int off = info->dwBuildNumber == 0x040A08AE ? 0 : 1, same = 0;
-            expect_shim(hook + ((0+off)%3), "KERNEL32.DLL", "GetVersionExA", shim, &same);
-            verify_shima(hook + ((0+off)%3), info, shim, same);
-            expect_shim(hook + ((1+off)%3), "KERNEL32.DLL", "GetVersionExW", shim, &same);
-            verify_shimw(hook + ((1+off)%3), info, shim, same, 0);
-            expect_shim(hook + ((2+off)%3), "KERNEL32.DLL", "GetVersion", shim, &same);
-            verify_shim(hook + ((2+off)%3), info, shim, same);
+            int same = 0;
+            expect_shim(hook + 0, "KERNEL32.DLL", "GetVersion", shim, &same);
+            verify_shim(hook + 0, info, shim, same);
+            expect_shim(hook + 1, "KERNEL32.DLL", "GetVersionExA", shim, &same);
+            verify_shima(hook + 1, info, shim, same);
+            expect_shim(hook + 2, "KERNEL32.DLL", "GetVersionExW", shim, &same);
+            verify_shimw(hook + 2, info, shim, same, 0);
         }
     }
     else
     {
-        int shimnum_ok = num_shims == 4 || ((ver < WINVER_WINXP) && (num_shims == 3));
-        ok(shimnum_ok, "Expected num_shims to be 4%s, was: %u for %s\n", ((ver < WINVER_WINXP) ? " or 3":""), num_shims, shim);
+        int shimnum_ok = num_shims == 4 || ((ver < _WIN32_WINNT_WINXP) && (num_shims == 3));
+        ok(shimnum_ok, "Expected num_shims to be 4%s, was: %u for %s\n", ((ver < _WIN32_WINNT_WINXP) ? " or 3":""), num_shims, shim);
         if (hook && shimnum_ok)
         {
             int same = 0;
@@ -259,9 +261,9 @@ static void run_test(LPCSTR shim, const VersionLieInfo* info)
 }
 
 
-VersionLieInfo g_Win95 = { 0xC3B60004, 4, 0, 950, VER_PLATFORM_WIN32_WINDOWS, 0, 0 };
-VersionLieInfo g_WinNT4SP5 = { 0x05650004, 4, 0, 1381, VER_PLATFORM_WIN32_NT, 5, 0 };
-VersionLieInfo g_Win98 = { 0xC0000A04, 4, 10, 0x040A08AE, VER_PLATFORM_WIN32_WINDOWS, 0, 0 };
+VersionLieInfo g_Win95 = { 0xC3B60004, 4, 0, 950, VER_PLATFORM_WIN32_WINDOWS, 0, 0, FLAG_BUGGY_ServicePackMajorMinor | FLAG_AlternateHookOrder };
+VersionLieInfo g_WinNT4SP5 = { 0x05650004, 4, 0, 1381, VER_PLATFORM_WIN32_NT, 5, 0, FLAG_BUGGY_ServicePackMajorMinor };
+VersionLieInfo g_Win98 = { 0xC0000A04, 4, 10, 0x040A08AE, VER_PLATFORM_WIN32_WINDOWS, 0, 0, FLAG_BUGGY_ServicePackMajorMinor };
 
 VersionLieInfo g_Win2000 = { 0x08930005, 5, 0, 2195, VER_PLATFORM_WIN32_NT, 0, 0 };
 VersionLieInfo g_Win2000SP1 = { 0x08930005, 5, 0, 2195, VER_PLATFORM_WIN32_NT, 1, 0 };

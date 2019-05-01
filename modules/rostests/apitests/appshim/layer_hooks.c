@@ -47,7 +47,7 @@ static expect_shim_data data[] =
     },
     {
         L"VerifyVersionInfoLite",
-        0,
+        _WIN32_WINNT_VISTA,
         {
             { "KERNEL32.DLL", "VerifyVersionInfoA" },
             { "KERNEL32.DLL", "VerifyVersionInfoW" },
@@ -56,7 +56,7 @@ static expect_shim_data data[] =
     /* Show that it is not case sensitive */
     {
         L"VeRiFyVeRsIoNInFoLiTe",
-        0,
+        _WIN32_WINNT_VISTA,
         {
             { "KERNEL32.DLL", "VerifyVersionInfoA" },
             { "KERNEL32.DLL", "VerifyVersionInfoW" },
@@ -109,7 +109,10 @@ START_TEST(layer_hooks)
         PHOOKAPI hook = pGetHookAPIs("", current->ShimName, &num_shims);
 
         if (current->MinVersion > g_WinVersion && !hook)
+        {
+            skip("Shim %s not present\n", wine_dbgstr_w(current->ShimName));
             continue;
+        }
 
         ok(!!hook, "Expected a valid pointer, got nothing for %s\n", wine_dbgstr_w(current->ShimName));
         ok(num_shims == expected_shims, "Expected %u shims, got %u for %s\n",
