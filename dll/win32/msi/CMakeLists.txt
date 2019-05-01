@@ -57,9 +57,6 @@ list(APPEND PCH_SKIP_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
 
-# cond.tab.c/sql.tab.c have been generated with relative file paths...
-set_source_files_properties(cond.tab.c sql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
-
 add_library(msi MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
