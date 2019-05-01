@@ -3051,12 +3051,16 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
             if (the_ext && *the_ext && lstrcmpiW(&ext[1], the_ext) != 0)
             {
-                /* append the dot */
-                lstrcatW(lpstrPathAndFile, szwDot);
-                /* append the extension */
-                lstrcatW(lpstrPathAndFile, the_ext);
-                /* update ext */
-                ext = PathFindExtensionW(lpstrPathAndFile);
+                if (strlenW(lpstrPathAndFile) + 1 + strlenW(the_ext) + 1 <=
+                    fodInfos->ofnInfos->nMaxFile)
+                {
+                    /* append the dot */
+                    lstrcatW(lpstrPathAndFile, szwDot);
+                    /* append the extension */
+                    lstrcatW(lpstrPathAndFile, the_ext);
+                    /* update ext */
+                    ext = PathFindExtensionW(lpstrPathAndFile);
+                }
             }
 
             heap_free(filterExt);
