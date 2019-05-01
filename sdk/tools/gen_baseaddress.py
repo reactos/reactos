@@ -90,9 +90,12 @@ PRIORITIES = (
 EXCLUDE = (
     'bmfd.dll',
     'bootvid.dll',
+    'framebuf.dll',
+    'framebuf_new.dll',
     'freeldr_pe.dll',
     'ftfd.dll',
     'fusion.dll',
+    'genincdata.dll',
     'hal.dll',
     'halaacpi.dll',
     'halacpi.dll',
