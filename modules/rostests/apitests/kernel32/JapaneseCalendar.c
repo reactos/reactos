@@ -37,8 +37,9 @@ START_TEST(JapaneseCalendar)
     static const WCHAR s_szSeireki19[] = {0x897F, 0x66A6, '1', '9', 0}; // L"\u897F\u66A6" L"19"
     static const WCHAR s_szHeisei[] = {0x5E73, 0x6210, 0};  // L"\u5E73\u6210"
     static const WCHAR s_szHeisei31[] = {0x5E73, 0x6210, '3', '1', 0};  // L"\u5E73\u6210" L"31"
-    static const WCHAR s_szOneCharHeisei1[] = {0x337B, 0};   // L"\u337B"
-    static const WCHAR s_szOneCharHeisei2[] = {0x5E73, 0};   // L"\u5E73"
+    static const WCHAR s_szReiwa[] = {0x4EE4, 0x548C, 0};   // L"\u4EE4\u548C"
+    static const WCHAR s_szOneCharHeisei1[] = {0x337B, 0};  // L"\u337B"
+    static const WCHAR s_szOneCharHeisei2[] = {0x5E73, 0};  // L"\u5E73"
     static const WCHAR s_szOneCharReiwa1[] = {0x32FF, 0};   // L"\u32FF"
     static const WCHAR s_szOneCharReiwa2[] = {0x4EE4, 0};   // L"\u4EE4"
     static const WCHAR s_szOneCharReiwa3[] = {0xF9A8, 0};   // L"\uF9A8"
@@ -215,7 +216,8 @@ START_TEST(JapaneseCalendar)
         type = CAL_SERASTRING;
         ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
         ok(ret != 0, "ret: %d\n", ret);
-        ok(wcsstr(szTextW, s_szHeisei) != NULL, "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
+        ok(wcsstr(szTextW, s_szHeisei) != NULL ||
+           wcsstr(szTextW, s_szReiwa) != NULL, "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
