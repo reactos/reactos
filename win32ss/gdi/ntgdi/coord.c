@@ -600,7 +600,7 @@ NtGdiOffsetViewportOrgEx(
     }
     pdcattr->ptlViewportOrg.x += XOffset;
     pdcattr->ptlViewportOrg.y += YOffset;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -652,7 +652,7 @@ NtGdiOffsetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x += XOffset;
     pdcattr->ptlWindowOrg.y += YOffset;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -701,6 +701,7 @@ NtGdiScaleViewportExtEx(
 
                     pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
                                          INVALIDATE_ATTRIBUTES |
+                                         WORLD_XFORM_CHANGED |
                                          DEVICE_TO_WORLD_INVALID);
 
                     if (pdcattr->iMapMode == MM_ISOTROPIC)
@@ -802,7 +803,10 @@ NtGdiScaleWindowExtEx(
 
                     IntMirrorWindowOrg(pDC);
 
-                    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+                    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
+                                         INVALIDATE_ATTRIBUTES |
+                                         WORLD_XFORM_CHANGED |
+                                         DEVICE_TO_WORLD_INVALID);
 
                     Ret = TRUE;
                 }
@@ -896,8 +900,9 @@ IntGdiSetMapMode(
     pdcattr->iMapMode = MapMode;
 
     /* Update xform flags */
-    pdcattr->flXform = flXform | (PAGE_XLATE_CHANGED|PAGE_EXTENTS_CHANGED|
-        INVALIDATE_ATTRIBUTES|DEVICE_TO_PAGE_INVALID|DEVICE_TO_WORLD_INVALID);
+    pdcattr->flXform = flXform | (PAGE_XLATE_CHANGED | PAGE_EXTENTS_CHANGED |
+                                  INVALIDATE_ATTRIBUTES | DEVICE_TO_PAGE_INVALID |
+                                  WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID);
 
     return iPrevMapMode;
 }
@@ -929,7 +934,7 @@ GreSetViewportOrgEx(
 
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
     return TRUE;
@@ -980,7 +985,7 @@ NtGdiSetViewportOrgEx(
 
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -1032,7 +1037,7 @@ NtGdiSetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x = X;
     pdcattr->ptlWindowOrg.y = Y;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -1068,7 +1073,7 @@ IntMirrorWindowOrg(PDC dc)
     X = (X * pdcattr->szlWindowExt.cx) / cx;
 
     pdcattr->ptlWindowOrg.x = pdcattr->lWindowOrgx - X; // Now set the inverted win origion.
-    pdcattr->flXform |= PAGE_XLATE_CHANGED | DEVICE_TO_WORLD_INVALID;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED | WORLD_XFORM_CHANGED | DEVICE_TO_WORLD_INVALID;
 
     return;
 }
@@ -1108,6 +1113,7 @@ DC_vSetLayout(
 
     pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
                          INVALIDATE_ATTRIBUTES |
+                         WORLD_XFORM_CHANGED |
                          DEVICE_TO_WORLD_INVALID);
 }
 
