@@ -181,7 +181,7 @@ int OSK_DlgInitDialog(HWND hDlg)
     GetMonitorInfoW(monitor, &info);
     GetWindowRect(hDlg, &rcWindow);
 
-    /* 
+    /*
         If the coordination values are default then re-initialize using the specific formulas
         to move the dialog at the bottom of the screen.
     */
@@ -191,7 +191,7 @@ int OSK_DlgInitDialog(HWND hDlg)
         Globals.PosY = info.rcMonitor.bottom - (rcWindow.bottom - rcWindow.top);
     }
 
-    /*  
+    /*
         Calculate the intersection of two rectangle sources (dialog and work desktop area).
         If such sources do not intersect, then the dialog is deemed as "off screen".
     */
@@ -439,6 +439,7 @@ LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw)
 {
     HTHEME hTheme;
     HWND hDlgButtonCtrl;
+    LRESULT Ret;
     INT iState = PBS_NORMAL;
 
     /* Retrieve the theme handle for the button controls */
@@ -451,34 +452,59 @@ LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw)
     */
     if (hTheme)
     {
-        /*
-            The button could be either in normal state or pushed.
-            Retrieve its state and save to a variable.
-        */
-        if (pNmDraw->uItemState & CDIS_DEFAULT)
+        /* Obtain CDDS drawing stages */
+        switch (pNmDraw->dwDrawStage)
         {
-            iState = PBS_DEFAULTED;
-        }
-        else if (pNmDraw->uItemState & CDIS_SELECTED)
-        {
-            iState = PBS_PRESSED;
-        }
-        else if (pNmDraw->uItemState & CDIS_HOT)
-        {
-            iState = PBS_HOT;
-        }
+            case CDDS_PREPAINT:
+            {
+                /*
+                    The button could be either in normal state or pushed.
+                    Retrieve its state and save to a variable.
+                */
+                if (pNmDraw->uItemState & CDIS_DEFAULT)
+                {
+                    iState = PBS_DEFAULTED;
+                }
+                else if (pNmDraw->uItemState & CDIS_SELECTED)
+                {
+                    iState = PBS_PRESSED;
+                }
+                else if (pNmDraw->uItemState & CDIS_HOT)
+                {
+                    iState = PBS_HOT;
+                }
 
-        if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
-        {
-            /* Draw the application if the theme is transparent */
-            DrawThemeParentBackground(hDlg, pNmDraw->hdc, &pNmDraw->rc);
-        }
+                if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+                {
+                    /* Draw the application if the theme is transparent */
+                    DrawThemeParentBackground(hDlgButtonCtrl, pNmDraw->hdc, &pNmDraw->rc);
+                }
 
-        /* Draw it */
-        DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+                /* Draw it */
+                DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+
+                Ret = CDRF_SKIPDEFAULT;
+                break;
+            }
+
+            case CDDS_PREERASE:
+            {
+                Ret = CDRF_DODEFAULT;
+                break;
+            }
+
+            default:
+                Ret = CDRF_SKIPDEFAULT;
+                break;
+        }
+    }
+    else
+    {
+        /* hTheme is NULL so bail right away */
+        Ret = CDRF_DODEFAULT;
     }
 
-    return CDRF_SKIPDEFAULT;
+    return Ret;
 }
 
 /***********************************************************************
@@ -543,7 +569,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     if (!Globals.bIsEnhancedKeyboard)
                     {
-                        /* 
+                        /*
                             The user attempted to switch to enhanced keyboard dialog type.
                             Set the member value as TRUE, destroy the dialog and save the data configuration into the registry.
                         */
