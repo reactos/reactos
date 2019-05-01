@@ -6306,8 +6306,11 @@ IntExtTextOutW(
             MouseSafetyOnDrawEnd(dc->ppdev);
     }
 
-    if (pdcattr->flTextAlign & TA_UPDATECP) {
-        pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
+    if (pdcattr->flTextAlign & TA_UPDATECP)
+    {
+        pdcattr->ptlCurrent.x = vecs[2].x - dc->ptlDCOrig.x;
+        pdcattr->ptlCurrent.y = vecs[2].y - dc->ptlDCOrig.y;
+        IntDPtoLP(dc, &pdcattr->ptlCurrent, 1);
     }
 
     IntUnLockFreeType();
