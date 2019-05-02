@@ -65,7 +65,7 @@ ReadBytes(
 	}
 
 	/* while buffer is not fully filled */
-	while (Length > 0)
+	while (TRUE)
 	{
 		/* read already received bytes from buffer */
 		KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
@@ -80,6 +80,12 @@ ReadBytes(
 		}
 		KeClearEvent(&DeviceExtension->InputBufferNotEmpty);
 		KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
+
+		if (Length == 0)
+		{
+			INFO_(SERIAL, "All bytes read\n");
+			break;
+		}
 
 		if (WorkItemData->DontWait
 			&& !(WorkItemData->ReadAtLeastOneByte && Information == 0))
