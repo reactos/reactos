@@ -866,7 +866,7 @@ OffsetViewportOrgEx(
 
     if (lpPoint)
     {
-        *lpPoint = (POINT)pdcattr->ptlViewportOrg;
+        *lpPoint = pdcattr->ptlViewportOrg;
         if ( pdcattr->dwLayout & LAYOUT_RTL) lpPoint->x = -lpPoint->x;
     }
 
@@ -917,7 +917,7 @@ OffsetWindowOrgEx(
 
     if ( lpPoint )
     {
-        *lpPoint   = (POINT)pdcattr->ptlWindowOrg;
+        *lpPoint   = pdcattr->ptlWindowOrg;
         //lpPoint->x = pdcattr->lWindowOrgx;
     }
 
