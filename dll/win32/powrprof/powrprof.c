@@ -874,7 +874,7 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if ((int)pGPP->mach.LidOpenWakeAc >= PowerSystemShutdown)
+        if ((int)pGPP->mach.LidOpenWakeAc > PowerSystemShutdown)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
@@ -884,7 +884,7 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if ((int)pGPP->mach.LidOpenWakeDc >= PowerSystemShutdown)
+        if ((int)pGPP->mach.LidOpenWakeDc > PowerSystemShutdown)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
@@ -963,22 +963,22 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if (pPP->mach.ReducedLatencySleepAc == PowerSystemUnspecified)
+        if ((int)pPP->mach.ReducedLatencySleepAc == PowerSystemUnspecified)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if ((int)pPP->mach.ReducedLatencySleepAc >= PowerSystemShutdown)
+        if ((int)pPP->mach.ReducedLatencySleepAc > PowerSystemShutdown)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if (pPP->mach.ReducedLatencySleepDc < PowerSystemWorking)
+        if ((int)pPP->mach.ReducedLatencySleepDc < PowerSystemWorking)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
-        if ((int)pPP->mach.ReducedLatencySleepDc >= PowerSystemShutdown)
+        if ((int)pPP->mach.ReducedLatencySleepDc > PowerSystemShutdown)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
