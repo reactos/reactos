@@ -38,6 +38,24 @@ SizeOfMdl(VOID)
     return Is64BitSystem() ? 48 : 28;
 }
 
+static
+ULONG
+SizeOfSector(VOID)
+{
+    BOOL Ret;
+    ULONG SectorSize;
+
+    /* FIXME: Would be better to actually open systemroot */
+    Ret = GetDiskFreeSpaceW(NULL, NULL, &SectorSize, NULL, NULL);
+    ok(Ret != FALSE, "GetDiskFreeSpaceW failed: %lx\n", GetLastError());
+    if (!Ret)
+    {
+        SectorSize = 4096; /* On failure, assume max size */
+    }
+
+    return SectorSize;
+}
+
 START_TEST(NtWriteFile)
 {
     NTSTATUS Status;
@@ -213,7 +231,10 @@ START_TEST(NtWriteFile)
     ok_hex(Status, STATUS_SUCCESS);
 
     /* Now, testing aligned/non aligned writes */
-    BufferSize = 4096; /* We assume max sector size */
+
+    BufferSize = SizeOfSector();
+    trace("Sector is %ld bytes\n", BufferSize);
+
     Status = NtAllocateVirtualMemory(NtCurrentProcess(),
                                      &Buffer,
                                      0,
