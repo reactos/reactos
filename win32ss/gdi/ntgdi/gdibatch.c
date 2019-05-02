@@ -350,6 +350,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
            dc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
         }
         dc->pdcattr->ulDirty_ |= saveflags | flags;
+        dc->pdcattr->flXform  |= saveflXform | flXform;
         break;
      }
 
@@ -408,6 +409,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
             dc->pdcattr->ulBackgroundClr = ulBackgroundClr;
         }
         dc->pdcattr->ulDirty_ |= saveflags | flags;
+        dc->pdcattr->flXform  |= saveflXform | flXform;
         break;
      }
 
@@ -523,5 +525,3 @@ NtGdiFlushUserBatch(VOID)
   // FIXME: On Windows XP the function returns &pTeb->RealClientId, maybe VOID?
   return STATUS_SUCCESS;
 }
-
-
