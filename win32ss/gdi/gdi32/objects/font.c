@@ -2239,27 +2239,14 @@ SetMapperFlags(
 {
     DWORD Ret = GDI_ERROR;
     PDC_ATTR Dc_Attr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+
+    /* Get the DC attribute */
+    Dc_Attr = GdiGetDcAttr(hDC);
+    if (Dc_Attr == NULL)
     {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetMapperFlags( hDC, flags);
-        else
-        {
-            PLDC pLDC = Dc_Attr->pvLDC;
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return GDI_ERROR;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetMapperFlags( hDC, flags);
-            }
-        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return GDI_ERROR;
     }
-#endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return GDI_ERROR;
 
     if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
     {

@@ -469,6 +469,7 @@ PatBlt(
         pgO = GdiAllocBatchCommand(hdc, GdiBCPatBlt);
         if (pgO)
         {
+            pdcattr->ulDirty_ |= DC_MODE_DIRTY;
             pgO->nXLeft  = nXLeft;
             pgO->nYLeft  = nYLeft;
             pgO->nWidth  = nWidth;
@@ -553,6 +554,7 @@ PolyPatBlt(
 
             if ((pTeb->GdiTebBatch.Offset + cjSize) <= GDIBATCHBUFSIZE)
             {
+                pdcattr->ulDirty_ |= DC_MODE_DIRTY;
                 pgO->Count = nCount;
                 pgO->Mode  = dwMode;
                 pgO->rop4  = dwRop;

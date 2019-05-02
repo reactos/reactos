@@ -526,6 +526,7 @@ ExtTextOutW(
                 pgO = GdiAllocBatchCommand(hdc, GdiBCExtTextOut);
                 if (pgO)
                 {
+                    pdcattr->ulDirty_ |= DC_MODE_DIRTY;
                     pgO->Count = cwc;
                     pgO->Rect = *lprc;
                     pgO->Options = fuOptions;

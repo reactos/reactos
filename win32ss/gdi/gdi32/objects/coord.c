@@ -279,7 +279,6 @@ GetWorldTransform(
     _In_ HDC hdc,
     _Out_ LPXFORM pxform)
 {
-#if 0
     PDC_ATTR pdcattr;
 
     pdcattr = GdiGetDcAttr(hdc);
@@ -288,7 +287,7 @@ GetWorldTransform(
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-
+#if 0
     if (pdcattr->flXform & ANY_XFORM_INVALID)
     {
         GdiFixupTransforms(pdcattr);
@@ -503,10 +502,10 @@ SetViewportExtEx(
     {
         if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
-            if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
+            if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
             {
                 NtGdiFlush(); // Sync up pdcattr from Kernel space.
-                pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+                pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
             }
         }
 
@@ -519,8 +518,7 @@ SetViewportExtEx(
             NtGdiMirrorWindowOrg(hdc);
 
         /* Update xform flags */
-        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED | INVALIDATE_ATTRIBUTES |
-                             DEVICE_TO_WORLD_INVALID);
+        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
     }
 
     return TRUE;
@@ -548,7 +546,7 @@ SetWindowOrgEx(
         /* Do not set LastError here! */
         return FALSE;
     }
-#if 0
+
     if (lpPoint)
     {
         lpPoint->x = pdcattr->ptlWindowOrg.x;
@@ -558,23 +556,24 @@ SetWindowOrgEx(
     if ((pdcattr->ptlWindowOrg.x == X) && (pdcattr->ptlWindowOrg.y == Y))
         return TRUE;
 
-    if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
     {
-        if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
+        if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
         {
             NtGdiFlush(); // Sync up pdcattr from Kernel space.
-            pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+            pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
         }
     }
 
     pdcattr->ptlWindowOrg.x = X;
-    pdcattr->lWindowOrgx    = X;
     pdcattr->ptlWindowOrg.y = Y;
+
+    pdcattr->lWindowOrgx    = X;
     if (pdcattr->dwLayout & LAYOUT_RTL) NtGdiMirrorWindowOrg(hdc);
-    pdcattr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+    pdcattr->flXform |= (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
     return TRUE;
-#endif
-    return NtGdiSetWindowOrgEx(hdc, X, Y, lpPoint);
+
+//    return NtGdiSetWindowOrgEx(hdc, X, Y, lpPoint);
 }
 
 /*
@@ -630,10 +629,10 @@ SetWindowExtEx(
 
         if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
-            if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
+            if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
             {
                 NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-                pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+                pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
             }
         }
 
@@ -671,20 +670,19 @@ SetViewportOrgEx(
         return FALSE;
     }
 
-#if 0
     if (lpPoint)
     {
         lpPoint->x = pdcattr->ptlViewportOrg.x;
         lpPoint->y = pdcattr->ptlViewportOrg.y;
         if (pdcattr->dwLayout & LAYOUT_RTL) lpPoint->x = -lpPoint->x;
     }
-    pdcattr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+    pdcattr->flXform |= (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
     if (pdcattr->dwLayout & LAYOUT_RTL) X = -X;
     pdcattr->ptlViewportOrg.x = X;
     pdcattr->ptlViewportOrg.y = Y;
     return TRUE;
-#endif
-    return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
+
+//    return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
 }
 
 /*
@@ -854,10 +852,9 @@ OffsetViewportOrgEx(
     _In_ int nYOffset,
     _Out_opt_ LPPOINT lpPoint)
 {
-    //PDC_ATTR pdcattr;
+    PDC_ATTR pdcattr;
 
     HANDLE_METADC(BOOL, OffsetViewportOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
-#if 0
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -875,7 +872,7 @@ OffsetViewportOrgEx(
 
     if ( nXOffset || nYOffset != nXOffset )
     {
-        if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+        if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
             if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
             {
@@ -884,14 +881,14 @@ OffsetViewportOrgEx(
             }
         }
 
-        pdcattr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+        pdcattr->flXform |= (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
         if (pdcattr->dwLayout & LAYOUT_RTL) nXOffset = -nXOffset;
         pdcattr->ptlViewportOrg.x += nXOffset;
         pdcattr->ptlViewportOrg.y += nYOffset;
     }
     return TRUE;
-#endif
-    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+
+//    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
 }
 
 /*
@@ -906,11 +903,10 @@ OffsetWindowOrgEx(
     _In_ int nYOffset,
     _Out_opt_ LPPOINT lpPoint)
 {
-    //PDC_ATTR pdcattr;
+    PDC_ATTR pdcattr;
 
     HANDLE_METADC(BOOL, OffsetWindowOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
 
-#if 0
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (!pdcattr)
@@ -922,12 +918,12 @@ OffsetWindowOrgEx(
     if ( lpPoint )
     {
         *lpPoint   = (POINT)pdcattr->ptlWindowOrg;
-        lpPoint->x = pdcattr->lWindowOrgx;
+        //lpPoint->x = pdcattr->lWindowOrgx;
     }
 
     if ( nXOffset || nYOffset != nXOffset )
     {
-        if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+        if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
             if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
             {
@@ -936,13 +932,13 @@ OffsetWindowOrgEx(
             }
         }
 
-        pdcattr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+        pdcattr->flXform |= (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
         pdcattr->ptlWindowOrg.x += nXOffset;
         pdcattr->ptlWindowOrg.y += nYOffset;
         pdcattr->lWindowOrgx += nXOffset;
     }
     return TRUE;
-#endif
-    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+
+//    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
 }
 

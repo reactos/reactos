@@ -1162,7 +1162,7 @@ SetPolyFillMode(
         if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
         {
             NtGdiFlush(); // Sync up pdcattr from Kernel space.
-            pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+            pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
         }
     }
 
@@ -1230,7 +1230,7 @@ SetGraphicsMode(
         if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
         {
             NtGdiFlush(); // Sync up pdcattr from Kernel space.
-            pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+            pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
         }
     }
 
