@@ -2985,6 +2985,102 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
         /* Attach the file extension with file name*/
         ext = PathFindExtensionW(lpstrPathAndFile);
+#ifdef __REACTOS__
+        {
+            LPWSTR filterExt = NULL, lpstrFilter = NULL, pch, pchNext;
+            LPCWSTR the_ext = NULL;
+            static const WCHAR szwDot[] = {'.',0};
+            int PathLength = lstrlenW(lpstrPathAndFile);
+
+            /* get filter extensions */
+            lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
+                                                    fodInfos->ofnInfos->nFilterIndex - 1);
+            if (lpstrFilter != (LPWSTR)CB_ERR)  /* control is not empty */
+            {
+                LPWSTR filterSearchIndex, pchFirst = NULL;
+                filterExt = heap_alloc((lstrlenW(lpstrFilter) + 1) * sizeof(WCHAR));
+                if (filterExt)
+                {
+                    strcpyW(filterExt, lpstrFilter);
+
+                    if (ext && *ext)
+                    {
+                        /* find ext in filter */
+                        for (pch = filterExt; pch && *pch; pch = pchNext)
+                        {
+                            filterSearchIndex = strchrW(pch, ';');
+                            if (filterSearchIndex)
+                            {
+                                filterSearchIndex[0] = 0;
+                                pchNext = filterSearchIndex + 1;
+                            }
+                            else
+                            {
+                                pchNext = NULL;
+                            }
+
+                            while (*pch == '*' || *pch == '.' || *pch == '?')
+                            {
+                                ++pch;
+                            }
+
+                            if (!pchFirst)
+                                pchFirst = pch;
+
+                            if (lstrcmpiW(pch, &ext[1]) == 0)
+                            {
+                                the_ext = pch;
+                                break;
+                            }
+                        }
+
+                        /* use first one if not found */
+                        if (!the_ext && pchFirst && *pchFirst)
+                        {
+                            the_ext = pchFirst;
+                        }
+                    }
+                }
+            }
+
+            if (!the_ext)
+            {
+                /* use default extension if no extension in filter */
+                the_ext = fodInfos->defext;
+            }
+
+            if (the_ext && *the_ext && lstrcmpiW(&ext[1], the_ext) != 0)
+            {
+                if (strlenW(lpstrPathAndFile) + 1 + strlenW(the_ext) + 1 <=
+                    fodInfos->ofnInfos->nMaxFile)
+                {
+                    /* append the dot */
+                    lstrcatW(lpstrPathAndFile, szwDot);
+                    /* append the extension */
+                    lstrcatW(lpstrPathAndFile, the_ext);
+                    /* update ext */
+                    ext = PathFindExtensionW(lpstrPathAndFile);
+                }
+            }
+
+            heap_free(filterExt);
+
+            /* In Open dialog: if file does not exist try without extension */
+            if (!(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG) && !PathFileExistsW(lpstrPathAndFile))
+                lpstrPathAndFile[PathLength] = 0;
+
+            /* Set/clear the output OFN_EXTENSIONDIFFERENT flag */
+            if (*ext)
+                ext++;
+            if (!lstrcmpiW(fodInfos->defext, ext))
+                fodInfos->ofnInfos->Flags &= ~OFN_EXTENSIONDIFFERENT;
+            else
+                fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
+        }
+
+        /* update dialog data */
+        SetWindowTextW(fodInfos->DlgInfos.hwndFileName, PathFindFileNameW(lpstrPathAndFile));
+#else
         if (! *ext && fodInfos->defext)
         {
             /* if no extension is specified with file name, then */
@@ -3058,6 +3154,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             else
                 fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
 	}
+#endif
 
 	/* In Save dialog: check if the file already exists */
 	if (fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG
