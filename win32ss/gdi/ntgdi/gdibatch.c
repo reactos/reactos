@@ -298,6 +298,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
             flXform = (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
         }
 
+        dc->pdcattr->flXform  |= flXform;
         dc->pdcattr->ulDirty_ |= flags;
 
         jBkMode = dc->pdcattr->jBkMode;
@@ -382,6 +383,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
             flXform = (PAGE_XLATE_CHANGED|WORLD_XFORM_CHANGED|DEVICE_TO_WORLD_INVALID);
         }
 
+        dc->pdcattr->flXform  |= flXform;
         dc->pdcattr->ulDirty_ |= flags;
 
         IntExtTextOutW( dc,
