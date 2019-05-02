@@ -76,4 +76,8 @@ rm -f CMakeCache.txt host-tools/CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DNEW_STYLE_BUILD:BOOL=$USE_NEW_STYLE $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
+if [ $USE_NEW_STYLE -eq 0 ]; then
+	cd ..
+fi
+
 echo Configure script complete! Enter directories and execute appropriate build commands \(ex: ninja, make, makex, etc...\).
