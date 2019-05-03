@@ -47,7 +47,6 @@ TranslateHidParserStatus(
 NTSTATUS
 NTAPI
 HidParser_GetCollectionDescription(
-    IN PHID_PARSER Parser,
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
     IN ULONG DescLength,
     IN POOL_TYPE PoolType,
@@ -61,13 +60,13 @@ HidParser_GetCollectionDescription(
     //
     // first parse the report descriptor
     //
-    ParserStatus = HidParser_ParseReportDescriptor(Parser, ReportDesc, DescLength, &ParserContext);
+    ParserStatus = HidParser_ParseReportDescriptor(ReportDesc, DescLength, &ParserContext);
     if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
     {
         //
         // failed to parse report descriptor
         //
-        Parser->Debug("[HIDPARSER] Failed to parse report descriptor with %x\n", ParserStatus);
+        DebugFunction("[HIDPARSER] Failed to parse report descriptor with %x\n", ParserStatus);
         return ParserStatus;
     }
 
@@ -87,12 +86,12 @@ HidParser_GetCollectionDescription(
     //
     // zero description
     //
-    Parser->Zero(DeviceDescription, sizeof(HIDP_DEVICE_DESC));
+    ZeroFunction(DeviceDescription, sizeof(HIDP_DEVICE_DESC));
 
     //
     // allocate collection
     //
-    DeviceDescription->CollectionDesc = (PHIDP_COLLECTION_DESC)Parser->Alloc(sizeof(HIDP_COLLECTION_DESC) * CollectionCount);
+    DeviceDescription->CollectionDesc = (PHIDP_COLLECTION_DESC)AllocFunction(sizeof(HIDP_COLLECTION_DESC) * CollectionCount);
     if (!DeviceDescription->CollectionDesc)
     {
         //
@@ -104,13 +103,13 @@ HidParser_GetCollectionDescription(
     //
     // allocate report description
     //
-    DeviceDescription->ReportIDs = (PHIDP_REPORT_IDS)Parser->Alloc(sizeof(HIDP_REPORT_IDS) * CollectionCount);
+    DeviceDescription->ReportIDs = (PHIDP_REPORT_IDS)AllocFunction(sizeof(HIDP_REPORT_IDS) * CollectionCount);
     if (!DeviceDescription->ReportIDs)
     {
         //
         // no memory
         //
-        Parser->Free(DeviceDescription->CollectionDesc);
+        FreeFunction(DeviceDescription->CollectionDesc);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -119,15 +118,15 @@ HidParser_GetCollectionDescription(
         //
         // set preparsed data length
         //
-        DeviceDescription->CollectionDesc[Index].PreparsedDataLength = HidParser_GetContextSize(Parser, ParserContext, Index);
-        ParserStatus = HidParser_BuildContext(Parser, ParserContext, Index, DeviceDescription->CollectionDesc[Index].PreparsedDataLength, (PVOID*)&DeviceDescription->CollectionDesc[Index].PreparsedData);
+        DeviceDescription->CollectionDesc[Index].PreparsedDataLength = HidParser_GetContextSize(ParserContext, Index);
+        ParserStatus = HidParser_BuildContext(ParserContext, Index, DeviceDescription->CollectionDesc[Index].PreparsedDataLength, (PVOID*)&DeviceDescription->CollectionDesc[Index].PreparsedData);
         if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
         {
             //
             // no memory
             //
-            Parser->Free(DeviceDescription->CollectionDesc);
-            Parser->Free(DeviceDescription->ReportIDs);
+            FreeFunction(DeviceDescription->CollectionDesc);
+            FreeFunction(DeviceDescription->ReportIDs);
             return ParserStatus;
         }
 
@@ -158,8 +157,8 @@ HidParser_GetCollectionDescription(
         if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
         {
             // collection not found
-            Parser->Free(DeviceDescription->CollectionDesc);
-            Parser->Free(DeviceDescription->ReportIDs);
+            FreeFunction(DeviceDescription->CollectionDesc);
+            FreeFunction(DeviceDescription->ReportIDs);
             return ParserStatus;
         }
 
@@ -193,7 +192,6 @@ HidParser_GetCollectionDescription(
 VOID
 NTAPI
 HidParser_FreeCollectionDescription(
-    IN PHID_PARSER Parser,
     IN PHIDP_DEVICE_DESC   DeviceDescription)
 {
     ULONG Index;
@@ -206,32 +204,31 @@ HidParser_FreeCollectionDescription(
         //
         // free collection context
         //
-        Parser->Free(DeviceDescription->CollectionDesc[Index].PreparsedData);
+        FreeFunction(DeviceDescription->CollectionDesc[Index].PreparsedData);
     }
 
     //
     // now free collection description
     //
-    Parser->Free(DeviceDescription->CollectionDesc);
+    FreeFunction(DeviceDescription->CollectionDesc);
 
     //
     // free report description
     //
-    Parser->Free(DeviceDescription->ReportIDs);
+    FreeFunction(DeviceDescription->ReportIDs);
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetCaps(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     OUT PHIDP_CAPS  Capabilities)
 {
     //
     // zero capabilities
     //
-    Parser->Zero(Capabilities, sizeof(HIDP_CAPS));
+    ZeroFunction(Capabilities, sizeof(HIDP_CAPS));
 
     //
     // init capabilities
@@ -285,7 +282,6 @@ HIDAPI
 ULONG
 NTAPI
 HidParser_MaxUsageListLength(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage  OPTIONAL)
@@ -342,20 +338,18 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetButtonCaps(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE ReportType,
     IN PHIDP_BUTTON_CAPS ButtonCaps,
     IN PUSHORT ButtonCapsLength)
 {
-    return HidParser_GetSpecificButtonCaps(Parser, CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_PAGE_UNDEFINED, ButtonCaps, (PULONG)ButtonCapsLength);
+    return HidParser_GetSpecificButtonCaps(CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, HIDP_LINK_COLLECTION_UNSPECIFIED, HID_USAGE_PAGE_UNDEFINED, ButtonCaps, (PULONG)ButtonCapsLength);
 }
 
 HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetSpecificValueCaps(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -376,21 +370,21 @@ HidParser_GetSpecificValueCaps(
         //
         // input report
         //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(Parser, CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
+        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
     }
     else if (ReportType == HidP_Output)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(Parser, CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
+        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, ValueCaps, ValueCapsLength);
     }
     else if (ReportType == HidP_Feature)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetSpecificValueCapsWithReport(Parser, CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, Usage, ValueCaps, ValueCapsLength);
+        ParserStatus = HidParser_GetSpecificValueCapsWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, Usage, ValueCaps, ValueCapsLength);
     }
     else
     {
@@ -548,7 +542,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsages(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -570,21 +563,21 @@ HidParser_GetUsages(
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsagesWithReport(Parser, CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
+        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
     }
     else if (ReportType == HidP_Output)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsagesWithReport(Parser, CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
+        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, UsageList, UsageLength, Report, ReportLength);
     }
     else if (ReportType == HidP_Feature)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsagesWithReport(Parser, CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, UsageList, UsageLength, Report, ReportLength);
+        ParserStatus = HidParser_GetUsagesWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE, UsagePage, UsageList, UsageLength, Report, ReportLength);
     }
     else
     {
@@ -612,7 +605,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetScaledUsageValue(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -634,21 +626,21 @@ HidParser_GetScaledUsageValue(
         //
         // input report
         //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else if (ReportType == HidP_Output)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else if (ReportType == HidP_Feature)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetScaledUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetScaledUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else
     {
@@ -676,7 +668,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_TranslateUsageAndPagesToI8042ScanCodes(
-   IN PHID_PARSER Parser,
    IN PUSAGE_AND_PAGE  ChangedUsageList,
    IN ULONG  UsageListLength,
    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
@@ -697,14 +688,14 @@ HidParser_TranslateUsageAndPagesToI8042ScanCodes(
             //
             // process keyboard usage
             //
-            Status = HidParser_TranslateKbdUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+            Status = HidParser_TranslateKbdUsage(ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
         }
         else if (ChangedUsageList[Index].UsagePage == HID_USAGE_PAGE_CONSUMER)
         {
             //
             // process consumer usage
             //
-            Status = HidParser_TranslateCustUsage(Parser, ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+            Status = HidParser_TranslateCustUsage(ChangedUsageList[Index].Usage, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
         }
         else
         {
@@ -745,7 +736,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsagesEx(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USHORT  LinkCollection,
@@ -754,7 +744,7 @@ HidParser_GetUsagesEx(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    return HidParser_GetUsages(Parser, CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, Report, ReportLength);
+    return HidParser_GetUsages(CollectionContext, ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, Report, ReportLength);
 }
 
 HIDAPI
@@ -890,7 +880,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetSpecificButtonCaps(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -909,7 +898,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetData(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     OUT PHIDP_DATA  DataList,
@@ -926,7 +914,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetExtendedAttributes(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USHORT  DataIndex,
@@ -942,7 +929,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetLinkCollectionNodes(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     OUT PHIDP_LINK_COLLECTION_NODE  LinkCollectionNodes,
     IN OUT PULONG  LinkCollectionNodesLength)
@@ -956,7 +942,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValue(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -978,21 +963,21 @@ HidParser_GetUsageValue(
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else if (ReportType == HidP_Output)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else if (ReportType == HidP_Feature)
     {
         //
         // input report
         //
-        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
+        ParserStatus = HidParser_GetUsageValueWithReport(CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
     }
     else
     {
@@ -1019,7 +1004,6 @@ HidParser_GetUsageValue(
 NTSTATUS
 NTAPI
 HidParser_SysPowerEvent(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN PCHAR HidPacket,
     IN USHORT HidPacketLength,
@@ -1033,7 +1017,6 @@ HidParser_SysPowerEvent(
 NTSTATUS
 NTAPI
 HidParser_SysPowerCaps (
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     OUT PULONG OutputBuffer)
 {
@@ -1046,7 +1029,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetUsageValueArray(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1066,7 +1048,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_UnsetUsages(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1101,7 +1082,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsages(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1120,7 +1100,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValueArray(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1140,7 +1119,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetUsageValue(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1159,7 +1137,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetScaledUsageValue(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN USAGE  UsagePage,
@@ -1178,7 +1155,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_SetData(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN PHIDP_DATA  DataList,
@@ -1195,7 +1171,6 @@ HIDAPI
 ULONG
 NTAPI
 HidParser_MaxDataListLength(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType)
 {
@@ -1208,7 +1183,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_InitializeReportForID(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN HIDP_REPORT_TYPE  ReportType,
     IN UCHAR  ReportID,
@@ -1226,7 +1200,6 @@ HIDAPI
 NTSTATUS
 NTAPI
 HidParser_GetValueCaps(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     HIDP_REPORT_TYPE ReportType,
     PHIDP_VALUE_CAPS ValueCaps,

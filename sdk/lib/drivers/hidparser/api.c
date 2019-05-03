@@ -206,23 +206,6 @@ HidParser_GetReportItemTypeCountFromReportType(
     return ItemCount;
 }
 
-
-VOID
-HidParser_InitParser(
-    IN PHIDPARSER_ALLOC_FUNCTION AllocFunction,
-    IN PHIDPARSER_FREE_FUNCTION FreeFunction,
-    IN PHIDPARSER_ZERO_FUNCTION ZeroFunction,
-    IN PHIDPARSER_COPY_FUNCTION CopyFunction,
-    IN PHIDPARSER_DEBUG_FUNCTION DebugFunction,
-    OUT PHID_PARSER Parser)
-{
-    Parser->Alloc = AllocFunction;
-    Parser->Free = FreeFunction;
-    Parser->Zero = ZeroFunction;
-    Parser->Copy = CopyFunction;
-    Parser->Debug = DebugFunction;
-}
-
 ULONG
 HidParser_GetMaxUsageListLengthWithReportAndPage(
     IN PVOID CollectionContext,
@@ -269,7 +252,6 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
 
 HIDPARSER_STATUS
 HidParser_GetSpecificValueCapsWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USHORT UsagePage,
@@ -313,7 +295,7 @@ HidParser_GetSpecificValueCapsWithReport(
                 //
                 // zero caps
                 //
-                Parser->Zero(&ValueCaps[ItemCount], sizeof(HIDP_VALUE_CAPS));
+                ZeroFunction(&ValueCaps[ItemCount], sizeof(HIDP_VALUE_CAPS));
 
                 //
                 // init caps
@@ -359,7 +341,6 @@ HidParser_GetSpecificValueCapsWithReport(
 
 HIDPARSER_STATUS
 HidParser_GetUsagesWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR  ReportType,
     IN USAGE  UsagePage,
@@ -517,14 +498,14 @@ HidParser_GetUsagesWithReport(
         //
         // success, clear rest of array
         //
-        Parser->Zero(&UsageAndPage[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE_AND_PAGE));
+        ZeroFunction(&UsageAndPage[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE_AND_PAGE));
     }
     else
     {
         //
         // success, clear rest of array
         //
-        Parser->Zero(&UsageList[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE));
+        ZeroFunction(&UsageList[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE));
     }
 
 
@@ -567,7 +548,6 @@ HidParser_UsesReportId(
 
 HIDPARSER_STATUS
 HidParser_GetUsageValueWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USAGE UsagePage,
@@ -635,7 +615,7 @@ HidParser_GetUsageValueWithReport(
         // one extra shift for skipping the prepended report id
         //
         Data = 0;
-        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
+        CopyFunction(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
 
         //
         // shift data
@@ -664,7 +644,6 @@ HidParser_GetUsageValueWithReport(
 
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USAGE UsagePage,
@@ -732,7 +711,7 @@ HidParser_GetScaledUsageValueWithReport(
         // one extra shift for skipping the prepended report id
         //
         Data = 0;
-        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
+        CopyFunction(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
 
         //
         // shift data
@@ -870,7 +849,6 @@ HidParser_DispatchKey(
 
 HIDPARSER_STATUS
 HidParser_TranslateKbdUsage(
-    IN PHID_PARSER Parser,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
@@ -933,7 +911,6 @@ HidParser_TranslateKbdUsage(
 
 HIDPARSER_STATUS
 HidParser_TranslateCustUsage(
-    IN PHID_PARSER Parser,
     IN USAGE Usage,
     IN HIDP_KEYBOARD_DIRECTION  KeyAction,
     IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,

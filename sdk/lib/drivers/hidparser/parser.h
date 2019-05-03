@@ -8,6 +8,7 @@
 #include <hidpddi.h>
 
 #include "hidparser.h"
+#include "hidp.h"
 
  /*
   * Copyright 2007, Haiku, Inc. All Rights Reserved.
@@ -276,10 +277,6 @@ HidParser_GetReportLength(
     IN PVOID CollectionContext,
     IN UCHAR ReportType);
 
-UCHAR
-HidParser_IsReportIDUsed(
-    IN PHID_PARSER Parser);
-
 ULONG
 HidParser_GetReportItemCountFromReportType(
     IN PVOID CollectionContext,
@@ -299,7 +296,6 @@ HidParser_GetMaxUsageListLengthWithReportAndPage(
 
 HIDPARSER_STATUS
 HidParser_GetSpecificValueCapsWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USHORT UsagePage,
@@ -310,7 +306,6 @@ HidParser_GetSpecificValueCapsWithReport(
 
 HIDPARSER_STATUS
 HidParser_GetUsagesWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR  ReportType,
     IN USAGE  UsagePage,
@@ -321,7 +316,6 @@ HidParser_GetUsagesWithReport(
 
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USAGE UsagePage,
@@ -332,7 +326,6 @@ HidParser_GetScaledUsageValueWithReport(
 
 HIDPARSER_STATUS
 HidParser_GetUsageValueWithReport(
-    IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
     IN UCHAR ReportType,
     IN USAGE UsagePage,
@@ -345,7 +338,6 @@ HidParser_GetUsageValueWithReport(
 
 HIDPARSER_STATUS
 HidParser_BuildContext(
-    IN PHID_PARSER Parser,
     IN PVOID ParserContext,
     IN ULONG CollectionIndex,
     IN ULONG ContextSize,
@@ -357,7 +349,6 @@ HidParser_CalculateContextSize(
 
 HIDPARSER_STATUS
 HidParser_ParseReportDescriptor(
-    PHID_PARSER Parser,
     PUCHAR Report,
     ULONG ReportSize,
     OUT PVOID *ParserContext);
@@ -368,7 +359,6 @@ HidParser_NumberOfTopCollections(
 
 ULONG
 HidParser_GetContextSize(
-    IN PHID_PARSER Parser,
     IN PVOID ParserContext,
     IN ULONG CollectionNumber);
 
@@ -385,7 +375,6 @@ HidParser_GetTotalCollectionCount(
 
 HIDPARSER_STATUS
 HidParser_BuildCollectionContext(
-    IN PHID_PARSER Parser,
     IN PHID_COLLECTION RootCollection,
     IN PVOID Context,
     IN ULONG ContextSize);
