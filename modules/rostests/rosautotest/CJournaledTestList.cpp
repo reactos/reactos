@@ -70,7 +70,7 @@ CJournaledTestList::OpenJournal(DWORD DesiredAccess, bool CreateNew)
         0,
         NULL,
         (CreateNew ? CREATE_ALWAYS : OPEN_EXISTING),
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
         NULL
     );
 
