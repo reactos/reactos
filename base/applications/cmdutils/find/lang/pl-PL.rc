@@ -11,11 +11,13 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Wyświetla wszystkie linie danego pliku, zawierające szukany ciąg znaków.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ciąg znaków"" [ plik... ]\n\
-    /C  Oblicza w ilu liniach pojawił się szukany ciąg znaków\n\
-    /I  Ignoruje wielkość liter\n\
-    /N  Numeruje wyświetlane linie, zaczynając od 1\n\
-    /V  Wyświetla te linie, które nie zawierają szukanego ciągu znaków"
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""ciąg znaków"" [plik...]\n\
+  /V         Wyświetla te linie, które nie zawierają szukanego ciągu znaków.\n\
+  /C         Oblicza w ilu liniach pojawił się szukany ciąg znaków.\n\
+  /N         Numeruje wyświetlane linie, zaczynając od 1.\n\
+  /I         Ignoruje wielkość liter.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: %s: Plik nie został znaleziony\n"
     IDS_CANNOT_OPEN "FIND: %s: Nie można otworzyć pliku\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

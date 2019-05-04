@@ -7,11 +7,13 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Zobrazí všetky riadky súboru obsahujúce hľadaný reťazec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""reťazec"" [ súbor... ]\n\
-    /C  Zobrazí počet riadkov, ktoré obsahujú reťazec.\n\
-    /I  Ignoruje veľkosť písmen.\n\
-    /N  Čísluje zobrazené riadky, začína od 1.\n\
-    /V  Zobrazí všetky riadky, ktoré neobsahujú hľadaný reťazec."
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""reťazec"" [súbor...]\n\
+  /V         Zobrazí všetky riadky, ktoré neobsahujú hľadaný reťazec.\n\
+  /C         Zobrazí počet riadkov, ktoré obsahujú reťazec.\n\
+  /N         Čísluje zobrazené riadky, začína od 1.\n\
+  /I         Ignoruje veľkosť písmen.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: Súbor %s sa nenašiel.\n"
     IDS_CANNOT_OPEN "FIND: Súbor %s sa nedá otvoriť.\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

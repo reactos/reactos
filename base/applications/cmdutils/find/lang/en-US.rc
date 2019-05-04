@@ -3,11 +3,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
-    /C  Count the number of lines that contain string\n\
-    /I  Ignore case\n\
-    /N  Number the displayed lines, starting at 1\n\
-    /V  Print lines that do not contain the string"
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""string"" [file...]\n\
+  /V         Print lines that do not contain the string.\n\
+  /C         Count the number of lines that contain the string.\n\
+  /N         Number the displayed lines, starting at 1.\n\
+  /I         Ignore case.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: %s: No such file\n"
     IDS_CANNOT_OPEN "FIND: %s: Cannot open file\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

@@ -9,11 +9,13 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Zobrazí všechny řádky souboru obsahující hledaný řetězec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""řetězec"" [ soubor... ]\n\
-    /C  Zobrazí počet řádků obsahující řetězec.\n\
-    /I  Ignoruje velikost písmen.\n\
-    /N  Čísluje zobrazené řádky, začíná od 1.\n\
-    /V  Zobrazí všechny řádky, které NEobsahují zadaný řetěžec."
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""řetězec"" [soubor...]\n\
+  /V         Zobrazí všechny řádky, které NEobsahují zadaný řetěžec.\n\
+  /C         Zobrazí počet řádků obsahující řetězec.\n\
+  /N         Čísluje zobrazené řádky, začíná od 1.\n\
+  /I         Ignoruje velikost písmen.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: Soubor %s nebyl nalezen.\n"
     IDS_CANNOT_OPEN "FIND: Soubor %s nelze otevřít!\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

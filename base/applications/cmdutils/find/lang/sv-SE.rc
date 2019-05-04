@@ -3,11 +3,13 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Skriver ut alla rader i en fil som innehåller en sträng.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""sträng"" [ fil... ]\n\
-    /C  Räkna antalet rader som innehåller en strängen\n\
-    /I  Ignorera skiftläge\n\
-    /N  Antal visade rader, börjar på 1\n\
-    /V  Skriver ut rader som inte innehåller strängen"
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""sträng"" [fil...]\n\
+  /V         Skriver ut rader som inte innehåller strängen.\n\
+  /C         Räkna antalet rader som innehåller en strängen.\n\
+  /N         Antal visade rader, börjar på 1.\n\
+  /I         Ignorera skiftläge.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: %s: Ingen sorts fil\n"
     IDS_CANNOT_OPEN "FIND: %s: Kan inte öppna filen\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

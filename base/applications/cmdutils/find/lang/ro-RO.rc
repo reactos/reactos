@@ -11,11 +11,13 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Tipărește toate rândurile unui fișier ce conțin un șir.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""șir"" [ fișier... ]\n\
-    /C  Numără liniile ce conțin șirul.\n\
-    /I  Ignoră diferențele între majuscule și minuscule.\n\
-    /N  Numără rândurile afișate, începând cu 1.\n\
-    /V  Tipărește rândurile ce nu conțin șirul."
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""șir"" [fișier...]\n\
+  /V         Tipărește rândurile ce nu conțin șirul.\n\
+  /C         Numără liniile ce conțin șirul.\n\
+  /N         Numără rândurile afișate, începând cu 1.\n\
+  /I         Ignoră diferențele între majuscule și minuscule.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: Fișierul «%s» nu există!\n"
     IDS_CANNOT_OPEN "FIND: Fișierul «%s» nu poate fi deschis!\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END

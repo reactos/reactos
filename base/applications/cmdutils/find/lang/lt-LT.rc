@@ -12,11 +12,13 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "FIND: Spausdina visas bylos eilutes, kuriose yra ieškomas tekstas.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""tekstas"" [ byla... ]\n\
-    /C  Skaičiuoti eilutes, kuriose yra ieškomas tekstas\n\
-    /I  Ignoruoti raidžių dydį\n\
-    /N  Numeruoti vaizduojamas eilutes, pradedant nuo 1\n\
-    /V  Spausdinti eilutes, kuriose nėra ieškomo teksto"
+FIND [/V] [/C] [/N] [/I] [/OFF[LINE]] ""tekstas"" [byla...]\n\
+  /V         Spausdinti eilutes, kuriose nėra ieškomo teksto.\n\
+  /C         Skaičiuoti eilutes, kuriose yra ieškomas tekstas.\n\
+  /N         Numeruoti vaizduojamas eilutes, pradedant nuo 1.\n\
+  /I         Ignoruoti raidžių dydį.\n\
+  /OFF[LINE] Do not skip files that have the offline attribute set."
     IDS_NO_SUCH_FILE "FIND: %s: Tokios bylos nėra\n"
     IDS_CANNOT_OPEN "FIND: %s: Nepavyko atverti bylos\n"
+    IDS_INVALID_SWITCH "FIND: Invalid switch\n"
 END
