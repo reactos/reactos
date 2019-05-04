@@ -5667,9 +5667,10 @@ IntExtTextOutW(
 
     if (pdcattr->flTextAlign & TA_UPDATECP)
     {
-        Start.x = pdcattr->ptlCurrent.x;
-        Start.y = pdcattr->ptlCurrent.y;
-    } else {
+        IntGetCurrentPositionEx(dc, &Start);
+    }
+    else
+    {
         Start.x = XStart;
         Start.y = YStart;
     }
@@ -6311,6 +6312,8 @@ IntExtTextOutW(
         pdcattr->ptlCurrent.x = vecs[2].x - dc->ptlDCOrig.x;
         pdcattr->ptlCurrent.y = vecs[2].y - dc->ptlDCOrig.y;
         IntDPtoLP(dc, &pdcattr->ptlCurrent, 1);
+        pdcattr->ulDirty_ &= ~DIRTY_PTLCURRENT;
+        pdcattr->ulDirty_ |= (DIRTY_PTFXCURRENT | DIRTY_STYLESTATE);
     }
 
     IntUnLockFreeType();
