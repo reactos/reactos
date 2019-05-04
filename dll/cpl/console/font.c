@@ -18,7 +18,7 @@
  * Current active font, corresponding to the active console font,
  * and used for painting the text samples.
  */
-HFONT hCurrentFont = NULL;
+FONT_PREVIEW FontPreview = {NULL, 0, 0};
 
 
 /*
@@ -597,8 +597,7 @@ FontSizeChange(
     IN PFONTSIZE_LIST_CTL SizeList,
     IN OUT PCONSOLE_STATE_INFO pConInfo)
 {
-    HDC hDC;
-    LONG CharWidth, CharHeight, FontSize;
+    LONG FontSize, CharWidth, CharHeight;
     WCHAR szFontSize[100];
 
     /*
@@ -614,33 +613,32 @@ FontSizeChange(
     CharHeight = (SizeList->UseRasterOrTTList ? (LONG)HIWORD(FontSize) : FontSize);
     CharWidth  = (SizeList->UseRasterOrTTList ? (LONG)LOWORD(FontSize) : 0);
 
-    if (hCurrentFont) DeleteObject(hCurrentFont);
-    hCurrentFont = CreateConsoleFont2(CharHeight, CharWidth, pConInfo);
-    if (hCurrentFont == NULL)
-        DPRINT1("FontSizeChange: CreateConsoleFont2 failed\n");
+    if (FontPreview.hFont) DeleteObject(FontPreview.hFont);
+    FontPreview.hFont = CreateConsoleFont2(CharHeight, CharWidth, pConInfo);
+    if (FontPreview.hFont == NULL)
+        DPRINT1("FontSizeChange: CreateConsoleFont2() failed\n");
 
     /* Retrieve the real character size in pixels */
-    hDC = GetDC(NULL);
-    GetFontCellSize(hDC, hCurrentFont, (PUINT)&CharHeight, (PUINT)&CharWidth);
-    ReleaseDC(NULL, hDC);
+    GetFontCellSize(NULL, FontPreview.hFont, &FontPreview.CharHeight, &FontPreview.CharWidth);
 
     /*
      * Format:
      * Width  = FontSize.X = LOWORD(FontSize);
      * Height = FontSize.Y = HIWORD(FontSize);
      */
-    pConInfo->FontSize.X = (SHORT)(SizeList->UseRasterOrTTList ? CharWidth : 0);
-    pConInfo->FontSize.Y = (SHORT)CharHeight;
+    pConInfo->FontSize.X = (SHORT)(SizeList->UseRasterOrTTList ? FontPreview.CharWidth : 0);
+    pConInfo->FontSize.Y = (SHORT)FontPreview.CharHeight;
 
     DPRINT1("pConInfo->FontSize = (%d x %d) ; (CharWidth x CharHeight) = (%d x %d)\n",
-            pConInfo->FontSize.X, pConInfo->FontSize.Y, CharWidth, CharHeight);
+            pConInfo->FontSize.X, pConInfo->FontSize.Y,
+            FontPreview.CharWidth, FontPreview.CharHeight);
 
     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
 
-    StringCchPrintfW(szFontSize, ARRAYSIZE(szFontSize), L"%d", CharWidth);
+    StringCchPrintfW(szFontSize, ARRAYSIZE(szFontSize), L"%d", FontPreview.CharWidth);
     SetDlgItemText(hDlg, IDC_FONT_SIZE_X, szFontSize);
-    StringCchPrintfW(szFontSize, ARRAYSIZE(szFontSize), L"%d", CharHeight);
+    StringCchPrintfW(szFontSize, ARRAYSIZE(szFontSize), L"%d", FontPreview.CharHeight);
     SetDlgItemText(hDlg, IDC_FONT_SIZE_Y, szFontSize);
 
     return TRUE;

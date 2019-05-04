@@ -120,7 +120,7 @@ ConCfgOpenUserSettings(
     Status = RtlOpenCurrentUser(/*samDesired*/MAXIMUM_ALLOWED, (PHANDLE)&/*CurrentUserKeyHandle*/hKey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlOpenCurrentUser failed, Status = 0x%08lx\n", Status);
+        DPRINT1("RtlOpenCurrentUser() failed, Status = 0x%08lx\n", Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
@@ -170,7 +170,7 @@ ConCfgReadUserSettings(
 {
     BOOLEAN Success = FALSE;
     HKEY  hKey;
-    DWORD dwNumSubKeys = 0;
+    DWORD dwNumValues = 0;
     DWORD dwIndex;
     DWORD dwColorIndex = 0;
     DWORD dwType;
@@ -183,21 +183,21 @@ ConCfgReadUserSettings(
     if (!ConCfgOpenUserSettings(DefaultSettings ? L"" : ConsoleInfo->ConsoleTitle,
                                 &hKey, KEY_READ, FALSE))
     {
-        DPRINT("ConCfgOpenUserSettings failed\n");
+        DPRINT("ConCfgOpenUserSettings() failed\n");
         return FALSE;
     }
 
     if (RegQueryInfoKeyW(hKey, NULL, NULL, NULL, NULL, NULL, NULL,
-                         &dwNumSubKeys, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+                         &dwNumValues, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
     {
-        DPRINT("ConCfgReadUserSettings: RegQueryInfoKeyW failed\n");
+        DPRINT("ConCfgReadUserSettings: RegQueryInfoKeyW() failed\n");
         RegCloseKey(hKey);
         return FALSE;
     }
 
-    DPRINT("ConCfgReadUserSettings entered dwNumSubKeys %d\n", dwNumSubKeys);
+    DPRINT("ConCfgReadUserSettings() entered, dwNumValues %d\n", dwNumValues);
 
-    for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
+    for (dwIndex = 0; dwIndex < dwNumValues; dwIndex++)
     {
         dwValue = sizeof(Value);
         dwValueName = ARRAYSIZE(szValueName);
@@ -238,24 +238,36 @@ ConCfgReadUserSettings(
         }
         else if (!wcscmp(szValueName, L"FaceName"))
         {
-            StringCchCopyNW(ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName),
-                            szValue, ARRAYSIZE(szValue));
+            /* A NULL value means that the defaults should be used instead */
+            if (*szValue)
+            {
+                StringCchCopyNW(ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName),
+                                szValue, ARRAYSIZE(szValue));
+            }
             Success = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontFamily"))
         {
-            ConsoleInfo->FontFamily = Value;
+            /* A zero value means that the defaults should be used instead */
+            if (Value)
+                ConsoleInfo->FontFamily = Value;
             Success = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontSize"))
         {
-            ConsoleInfo->FontSize.X = LOWORD(Value); // Width
-            ConsoleInfo->FontSize.Y = HIWORD(Value); // Height
+            /* A zero value means that the defaults should be used instead */
+            if (Value)
+            {
+                ConsoleInfo->FontSize.X = LOWORD(Value); // Width
+                ConsoleInfo->FontSize.Y = HIWORD(Value); // Height
+            }
             Success = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontWeight"))
         {
-            ConsoleInfo->FontWeight = Value;
+            /* A zero value means that the defaults should be used instead */
+            if (Value)
+                ConsoleInfo->FontWeight = Value;
             Success = TRUE;
         }
         else if (!wcscmp(szValueName, L"HistoryBufferSize"))

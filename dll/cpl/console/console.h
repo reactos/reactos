@@ -35,10 +35,17 @@ typedef enum _TEXT_TYPE
     Popup
 } TEXT_TYPE;
 
+typedef struct _FONT_PREVIEW
+{
+    HFONT hFont;
+    UINT  CharWidth;
+    UINT  CharHeight;
+} FONT_PREVIEW;
+
 /* Globals */
 extern HINSTANCE hApplet;
 extern PCONSOLE_STATE_INFO ConInfo;
-extern HFONT hCurrentFont;
+extern FONT_PREVIEW FontPreview;
 
 VOID ApplyConsoleInfo(HWND hwndDlg);
 
