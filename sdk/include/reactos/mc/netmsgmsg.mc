@@ -35166,25 +35166,25 @@ Language=English
 PRIMARY%0.
 .
 Language=Polish
-PRIMARY%0.
+Serwer podstawowy%0.
 .
 Language=Romanian
-PRIMARY%0.
+Server primar%0.
 .
 Language=Russian
-PRIMARY%0.
+Основной сервер%0.
 .
 Language=Spanish
-PRIMARY%0.
+Servidor primario%0.
 .
 Language=Turkish
-PRIMARY%0.
+Birinci sunucu%0.
 .
 Language=Chinese
-PRIMARY%0.
+主服务器%0.
 .
 Language=Taiwanese
-PRIMARY%0.
+主伺服器%0.
 .
 
 MessageId=5071
@@ -35195,25 +35195,25 @@ Language=English
 BACKUP%0.
 .
 Language=Polish
-BACKUP%0.
+Serwer zapasowy%0.
 .
 Language=Romanian
-BACKUP%0.
+Server de rezervă%0.
 .
 Language=Russian
-BACKUP%0.
+Резервный сервер%0.
 .
 Language=Spanish
-BACKUP%0.
+Servidor de respaldo%0.
 .
 Language=Turkish
-BACKUP%0.
+Yedekleme sunucusu%0.
 .
 Language=Chinese
-BACKUP%0.
+备份服务器%0.
 .
 Language=Taiwanese
-BACKUP%0.
+備份伺服器%0.
 .
 
 MessageId=5072
@@ -35224,25 +35224,25 @@ Language=English
 WORKSTATION%0.
 .
 Language=Polish
-WORKSTATION%0.
+Stacja robocza%0.
 .
 Language=Romanian
-WORKSTATION%0.
+Stație de lucru%0.
 .
 Language=Russian
-WORKSTATION%0.
+Рабочая станция%0.
 .
 Language=Spanish
-WORKSTATION%0.
+Estación de trabajo%0.
 .
 Language=Turkish
-WORKSTATION%0.
+İş istasyonu%0.
 .
 Language=Chinese
-WORKSTATION%0.
+工作站%0.
 .
 Language=Taiwanese
-WORKSTATION%0.
+工作站%0.
 .
 
 MessageId=5073
@@ -35253,25 +35253,25 @@ Language=English
 SERVER%0.
 .
 Language=Polish
-SERVER%0.
+Serwer autonomiczny%0.
 .
 Language=Romanian
-SERVER%0.
+Server de sine stătător%0.
 .
 Language=Russian
-SERVER%0.
+Автономный сервер%0.
 .
 Language=Spanish
-SERVER%0.
+Servidor independiente%0.
 .
 Language=Turkish
-SERVER%0.
+Bağımsız sunucu%0.
 .
 Language=Chinese
-SERVER%0.
+独立服务器%0.
 .
 Language=Taiwanese
-SERVER%0.
+獨立伺服器%0.
 .
 
 MessageId=5080
