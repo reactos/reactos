@@ -174,11 +174,11 @@ cmdAccounts(
 
         RtlGetNtProductType(&ProductType);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_FORCE_LOGOFF, nPaddedLength);
+        PrintPaddedMessageString(4570, nPaddedLength);
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
             PrintMessageString(4305);
         else
-            ConResPrintf(StdOut, IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
+            ConPrintf(StdOut, L"%lu", Info0->usrmod0_force_logoff);
         ConPuts(StdOut, L"\n");
 
         PrintPaddedMessageString(4572, nPaddedLength);
@@ -215,20 +215,20 @@ cmdAccounts(
         {
             if (ProductType == NtProductLanManNt)
             {
-                ConResPuts(StdOut, IDS_ACCOUNTS_PRIMARY_SERVER);
+                PrintMessageString(5070);
             }
             else if (ProductType == NtProductServer)
             {
-                ConResPuts(StdOut, IDS_ACCOUNTS_STANDALONE_SERVER);
+                PrintMessageString(5073);
             }
             else
             {
-                ConResPuts(StdOut, IDS_ACCOUNTS_WORKSTATION);
+                PrintMessageString(5072);
             }
         }
         else
         {
-            ConResPuts(StdOut, IDS_ACCOUNTS_BACKUP_SERVER);
+            PrintMessageString(5071);
         }
         ConPuts(StdOut, L"\n");
     }

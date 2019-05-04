@@ -5,12 +5,5 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_FORCE_LOGOFF "Forzar cierre de sesión tras"
-    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu segundos"
-    IDS_ACCOUNTS_PRIMARY_SERVER "Servidor primario"
-    IDS_ACCOUNTS_BACKUP_SERVER "Servidor de respaldo"
-    IDS_ACCOUNTS_STANDALONE_SERVER "Servidor independiente"
-    IDS_ACCOUNTS_WORKSTATION "Estación de trabajo"
-
     IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
 END

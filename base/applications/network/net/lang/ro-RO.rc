@@ -8,12 +8,5 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_FORCE_LOGOFF "Forțează deautentificarea după"
-    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu secunde"
-    IDS_ACCOUNTS_PRIMARY_SERVER "Server primar"
-    IDS_ACCOUNTS_BACKUP_SERVER "Server de rezervă"
-    IDS_ACCOUNTS_STANDALONE_SERVER "Server de sine stătător"
-    IDS_ACCOUNTS_WORKSTATION "Stație de lucru"
-
     IDS_USE_NOW_CONNECTED "Conectarea %s la %s a fost realizată.\n"
 END

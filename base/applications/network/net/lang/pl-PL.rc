@@ -1,12 +1,5 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_FORCE_LOGOFF "Wymuś wylogowanie po upływie"
-    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu sekund"
-    IDS_ACCOUNTS_PRIMARY_SERVER "Serwer podstawowy"
-    IDS_ACCOUNTS_BACKUP_SERVER "Serwer zapasowy"
-    IDS_ACCOUNTS_STANDALONE_SERVER "Serwer autonomiczny"
-    IDS_ACCOUNTS_WORKSTATION "Stacja robocza"
-
     IDS_USE_NOW_CONNECTED "%s jest obecnie podłączony do %s\n"
 END

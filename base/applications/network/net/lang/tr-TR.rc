@@ -4,12 +4,5 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_FORCE_LOGOFF "Sonra oturum kapatmaya zorla"
-    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu sâniye"
-    IDS_ACCOUNTS_PRIMARY_SERVER "Birinci sunucu"
-    IDS_ACCOUNTS_BACKUP_SERVER "Yedekleme sunucusu"
-    IDS_ACCOUNTS_STANDALONE_SERVER "Bağımsız sunucu"
-    IDS_ACCOUNTS_WORKSTATION "İş istasyonu"
-
     IDS_USE_NOW_CONNECTED "%s şuna bağlandı: %s\n"
 END

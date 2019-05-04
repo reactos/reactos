@@ -4,12 +4,5 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_FORCE_LOGOFF "Принудительный выход через"
-    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu секунд"
-    IDS_ACCOUNTS_PRIMARY_SERVER "Основной сервер"
-    IDS_ACCOUNTS_BACKUP_SERVER "Резервный сервер"
-    IDS_ACCOUNTS_STANDALONE_SERVER "Автономный сервер"
-    IDS_ACCOUNTS_WORKSTATION "Рабочая станция"
-
     IDS_USE_NOW_CONNECTED "%s сейчас подключен к %s\n"
 END
