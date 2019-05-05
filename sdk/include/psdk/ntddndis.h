@@ -318,6 +318,19 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define OID_802_11_WEP_STATUS                   0x0D01011B
 #define OID_802_11_RELOAD_DEFAULTS              0x0D01011C
 
+/* PnP and Power Management (PM) OIDs */
+#define OID_PNP_CAPABILITIES                    0xFD010100
+#define OID_PNP_SET_POWER                       0xFD010101
+#define OID_PNP_QUERY_POWER                     0xFD010102
+#define OID_PNP_ADD_WAKE_UP_PATTERN             0xFD010103
+#define OID_PNP_REMOVE_WAKE_UP_PATTERN          0xFD010104
+#define OID_PNP_WAKE_UP_PATTERN_LIST            0xFD010105
+#define OID_PNP_ENABLE_WAKE_UP                  0xFD010106
+
+/* Optional PnP/PM statistics OIDs */
+#define OID_PNP_WAKE_UP_OK                      0xFD020200
+#define OID_PNP_WAKE_UP_ERROR                   0xFD020201
+
 /* OID_GEN_MINIPORT_INFO constants */
 #define NDIS_MINIPORT_BUS_MASTER                      0x00000001
 #define NDIS_MINIPORT_WDM_DRIVER                      0x00000002
