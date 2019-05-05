@@ -591,8 +591,11 @@ Pos_SaveData(
 }
 
 
-static BOOL
-DelScheme(HWND hwnd)
+static
+BOOL
+DelScheme(
+    HWND hwnd,
+    PPOWER_SCHEMES_PAGE_DATA pPageData)
 {
     WCHAR szTitleBuffer[256];
     WCHAR szRawBuffer[256], szCookedBuffer[512];
@@ -618,16 +621,24 @@ DelScheme(HWND hwnd)
 
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
-        UINT Current;
-
-        if (GetActivePwrScheme(&Current))
+        if (!DeletePwrScheme(pScheme->uId))
         {
-            SendMessage(hList, CB_SETCURSEL, (WPARAM)0, 0);
-            SendMessage(hList, CB_DELETESTRING, (WPARAM)iCurSel, 0);
+            // FIXME: Show an error message box
+            return FALSE;
         }
 
-        if (DeletePwrScheme(pScheme->uId) != 0)
-            return TRUE;
+        iCurSel = SendMessage(hList, CB_FINDSTRING, -1, (LPARAM)pScheme->pszName);
+        if (iCurSel != CB_ERR)
+            SendMessage(hList, CB_DELETESTRING, iCurSel, 0);
+
+        DeletePowerScheme(pScheme);
+
+        iCurSel = SendMessage(hList, CB_FINDSTRING, -1, (LPARAM)pPageData->pActivePowerScheme->pszName);
+        if (iCurSel != CB_ERR)
+            SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+
+        LoadConfig(hwnd, pPageData);
+        return TRUE;
     }
 
     return FALSE;
@@ -780,7 +791,7 @@ PowerSchemesDlgProc(
                     break;
 
                 case IDC_DELETE_BTN:
-                    DelScheme(hwndDlg);
+                    DelScheme(hwndDlg, pPageData);
                     break;
 
                 case IDC_SAVEAS_BTN:
