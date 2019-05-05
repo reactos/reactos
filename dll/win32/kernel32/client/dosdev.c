@@ -30,41 +30,61 @@ DefineDosDeviceA(
     LPCSTR lpTargetPath
     )
 {
-    UNICODE_STRING DeviceNameU = {0};
-    UNICODE_STRING TargetPathU = {0};
     BOOL Result;
+    NTSTATUS Status;
+    ANSI_STRING AnsiString;
+    PWSTR TargetPathBuffer;
+    UNICODE_STRING TargetPathU;
+    PUNICODE_STRING DeviceNameU;
 
-    if (lpDeviceName &&
-        !RtlCreateUnicodeStringFromAsciiz(&DeviceNameU, lpDeviceName))
+    /* Convert DeviceName using static unicode string */
+    RtlInitAnsiString(&AnsiString, lpDeviceName);
+    DeviceNameU = &NtCurrentTeb()->StaticUnicodeString;
+    Status = RtlAnsiStringToUnicodeString(DeviceNameU, &AnsiString, FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
-    }
-
-    if (lpTargetPath &&
-        !RtlCreateUnicodeStringFromAsciiz(&TargetPathU, lpTargetPath))
-    {
-        if (DeviceNameU.Buffer)
+        /*
+         * If the static unicode string is too small,
+         * it's because the name is too long...
+         * so, return appropriate status!
+         */
+        if (Status == STATUS_BUFFER_OVERFLOW)
         {
-            RtlFreeUnicodeString(&DeviceNameU);
+            SetLastError(ERROR_FILENAME_EXCED_RANGE);
+            return FALSE;
         }
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
+
+        BaseSetLastNTError(Status);
+        return FALSE;
     }
 
-    Result = DefineDosDeviceW(dwFlags,
-                              DeviceNameU.Buffer,
-                              TargetPathU.Buffer);
+    /* Convert target path if existing */
+    if (lpTargetPath != NULL)
+    {
+        RtlInitAnsiString(&AnsiString, lpTargetPath);
+        Status = RtlAnsiStringToUnicodeString(&TargetPathU, &AnsiString, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
 
-    if (TargetPathU.Buffer)
+        TargetPathBuffer = TargetPathU.Buffer;
+    }
+    else
+    {
+        TargetPathBuffer = NULL;
+    }
+
+    /* Call W */
+    Result = DefineDosDeviceW(dwFlags, DeviceNameU->Buffer, TargetPathBuffer);
+
+    /* Free target path if allocated */
+    if (TargetPathBuffer != NULL)
     {
         RtlFreeUnicodeString(&TargetPathU);
     }
 
-    if (DeviceNameU.Buffer)
-    {
-        RtlFreeUnicodeString(&DeviceNameU);
-    }
     return Result;
 }
 
