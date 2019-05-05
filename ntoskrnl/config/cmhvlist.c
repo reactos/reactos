@@ -178,7 +178,7 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
                                NULL,
                                0,
                                &Length);
-        if (Status != STATUS_BUFFER_TOO_SMALL)
+        if (Status != STATUS_INFO_LENGTH_MISMATCH)
         {
             DPRINT1("CmpAddToHiveFileList: Hive file name size query failed, status = 0x%08lx\n", Status);
             goto Quickie;
