@@ -261,62 +261,112 @@ QueryDosDeviceA(
     DWORD ucchMax
     )
 {
-    UNICODE_STRING DeviceNameU;
+    NTSTATUS Status;
+    USHORT CurrentPosition;
+    ANSI_STRING AnsiString;
     UNICODE_STRING TargetPathU;
-    ANSI_STRING TargetPathA;
-    DWORD Length;
-    DWORD CurrentLength;
-    PWCHAR Buffer;
+    PUNICODE_STRING DeviceNameU;
+    DWORD RetLength, CurrentLength, Length;
+    PWSTR DeviceNameBuffer, TargetPathBuffer;
 
-    if (lpDeviceName)
+    /* If we want a specific device name, convert it */
+    if (lpDeviceName != NULL)
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&DeviceNameU, 
-                                              (LPSTR)lpDeviceName))
+        /* Convert DeviceName using static unicode string */
+        RtlInitAnsiString(&AnsiString, lpDeviceName);
+        DeviceNameU = &NtCurrentTeb()->StaticUnicodeString;
+        Status = RtlAnsiStringToUnicodeString(DeviceNameU, &AnsiString, FALSE);
+        if (!NT_SUCCESS(Status))
         {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return 0;
+            /*
+             * If the static unicode string is too small,
+             * it's because the name is too long...
+             * so, return appropriate status!
+             */
+            if (Status == STATUS_BUFFER_OVERFLOW)
+            {
+                SetLastError(ERROR_FILENAME_EXCED_RANGE);
+                return FALSE;
+            }
+
+            BaseSetLastNTError(Status);
+            return FALSE;
         }
+
+        DeviceNameBuffer = DeviceNameU->Buffer;
     }
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, ucchMax * sizeof(WCHAR));
-    if (Buffer == NULL)
+    else
     {
-        if (lpDeviceName)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, DeviceNameU.Buffer);
-        }
+        DeviceNameBuffer = NULL;
+    }
+
+    /* Allocate the output buffer for W call */
+    TargetPathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, ucchMax * sizeof(WCHAR));
+    if (TargetPathBuffer == NULL)
+    {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    Length = QueryDosDeviceW(lpDeviceName ? DeviceNameU.Buffer : NULL,
-                             Buffer, ucchMax);
+    /* Call W */
+    Length = QueryDosDeviceW(DeviceNameBuffer, TargetPathBuffer, ucchMax);
+    /* We'll return that length in case of a success */
+    RetLength = Length;
+
+    /* Handle the case where we would fill output buffer completly */
+    if (Length != 0 && Length == ucchMax)
+    {
+        /* This will be our work length (but not the one we return) */
+        --Length;
+        /* Already 0 the last char */
+        lpTargetPath[Length] = ANSI_NULL;
+    }
+
+    /* If we had an output, start the convert loop */
     if (Length != 0)
     {
-        TargetPathA.Buffer = lpTargetPath;
-        TargetPathU.Buffer = Buffer;
-        ucchMax = Length;
-
-        while (ucchMax)
+        /*
+         * We'll have to loop because TargetPathBuffer may contain
+         * several strings (NULL separated)
+         * We'll start at position 0
+         */
+        CurrentPosition = 0;
+        while (CurrentPosition < Length)
         {
-            CurrentLength = min(ucchMax, MAXUSHORT / 2);
-            TargetPathU.MaximumLength = TargetPathU.Length = (USHORT)CurrentLength * sizeof(WCHAR);
+            /* Get the maximum length */
+            CurrentLength = min(Length - CurrentPosition, MAXUSHORT / 2);
 
-            TargetPathA.Length = 0;
-            TargetPathA.MaximumLength = (USHORT)CurrentLength;
+            /* Initialize our output string */
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = CurrentLength + sizeof(ANSI_NULL);
+            AnsiString.Buffer = &lpTargetPath[CurrentPosition];
 
-            RtlUnicodeStringToAnsiString(&TargetPathA, &TargetPathU, FALSE);
-            ucchMax -= CurrentLength;
-            TargetPathA.Buffer += TargetPathA.Length;
-            TargetPathU.Buffer += TargetPathU.Length / sizeof(WCHAR);
+            /* Initialize input string that will be converted */
+            TargetPathU.Length = CurrentLength * sizeof(WCHAR);
+            TargetPathU.MaximumLength = CurrentLength * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+            TargetPathU.Buffer = &TargetPathBuffer[CurrentPosition];
+
+            /* Convert to ANSI */
+            Status = RtlUnicodeStringToAnsiString(&AnsiString, &TargetPathU, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                BaseSetLastNTError(Status);
+                /* In case of a failure, forget about everything */
+                RetLength = 0;
+
+                goto Leave;
+            }
+
+            /* Move to the next string */
+            CurrentPosition += CurrentLength;
         }
     }
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-    if (lpDeviceName)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DeviceNameU.Buffer);
-    }
-    return Length;
+Leave:
+    /* Free our intermediate buffer and leave */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TargetPathBuffer);
+
+    return RetLength;
 }
 
 
