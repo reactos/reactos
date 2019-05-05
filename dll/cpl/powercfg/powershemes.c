@@ -51,7 +51,7 @@ UINT Sec[]=
 
 
 static
-PPOWER_SCHEME
+BOOL
 AddPowerScheme(
     PPOWER_SCHEMES_PAGE_DATA pPageData,
     UINT uId,
@@ -62,21 +62,44 @@ AddPowerScheme(
     PPOWER_POLICY pp)
 {
     PPOWER_SCHEME pScheme;
+    BOOL bResult = FALSE;
 
     pScheme = HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         sizeof(POWER_SCHEME));
     if (pScheme == NULL)
-        return NULL;
+        return FALSE;
 
-    pScheme->pszName = HeapAlloc(GetProcessHeap(),
-                                 HEAP_ZERO_MEMORY,
-                                 dwName + sizeof(TCHAR));
+    pScheme->uId = uId;
+    CopyMemory(&pScheme->PowerPolicy, pp, sizeof(POWER_POLICY));
 
-    pScheme->pszDescription = HeapAlloc(GetProcessHeap(),
-                                        HEAP_ZERO_MEMORY,
-                                        dwDescription + sizeof(TCHAR));
-    if (pScheme->pszName == NULL || pScheme->pszDescription == NULL)
+    if (dwName != 0)
+    {
+        pScheme->pszName = HeapAlloc(GetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     dwName);
+        if (pScheme->pszName == NULL)
+            goto done;
+
+        _tcscpy(pScheme->pszName, pszName);
+    }
+
+    if (dwDescription != 0)
+    {
+        pScheme->pszDescription = HeapAlloc(GetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            dwDescription);
+        if (pScheme->pszDescription == NULL)
+            goto done;
+
+        _tcscpy(pScheme->pszDescription, pszDescription);
+    }
+
+    InsertTailList(&pPageData->PowerSchemesList, &pScheme->ListEntry);
+    bResult = TRUE;
+
+done:
+    if (bResult == FALSE)
     {
         if (pScheme->pszName)
             HeapFree(GetProcessHeap(), 0, pScheme->pszName);
@@ -85,18 +108,9 @@ AddPowerScheme(
             HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
 
         HeapFree(GetProcessHeap(), 0, pScheme);
-        return NULL;
     }
 
-    pScheme->uId = uId;
-    _tcscpy(pScheme->pszName, pszName);
-    _tcscpy(pScheme->pszDescription, pszDescription);
-
-    CopyMemory(&pScheme->PowerPolicy, pp, sizeof(POWER_POLICY));
-
-    InsertTailList(&pPageData->PowerSchemesList, &pScheme->ListEntry);
-
-    return pScheme;
+    return bResult;
 }
 
 
@@ -276,7 +290,8 @@ Pos_InitData(
 static
 VOID
 LoadConfig(
-    HWND hwndDlg)
+    HWND hwndDlg,
+    PPOWER_SCHEMES_PAGE_DATA pPageData)
 {
     PPOWER_SCHEME pScheme;
     INT i = 0, iCurSel = 0;
@@ -374,6 +389,9 @@ LoadConfig(
                        (LPARAM)0);
         }
     }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
+                 (pScheme != pPageData->pActivePowerScheme));
 }
 
 
@@ -470,7 +488,9 @@ Pos_InitPage(HWND hwndDlg)
 
 
 static VOID
-Pos_SaveData(HWND hwndDlg)
+Pos_SaveData(
+    HWND hwndDlg,
+    PPOWER_SCHEMES_PAGE_DATA pPageData)
 {
     PPOWER_SCHEME pScheme;
     INT iCurSel, tmp;
@@ -563,8 +583,11 @@ Pos_SaveData(HWND hwndDlg)
         pScheme->PowerPolicy.mach.DozeS4TimeoutDc = Sec[tmp];
     }
 
-    SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy);
-    LoadConfig(hwndDlg);
+    if (SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy))
+    {
+        pPageData->pActivePowerScheme = pScheme;
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), FALSE);
+    }
 }
 
 
@@ -601,8 +624,6 @@ DelScheme(HWND hwnd)
         {
             SendMessage(hList, CB_SETCURSEL, (WPARAM)0, 0);
             SendMessage(hList, CB_DELETESTRING, (WPARAM)iCurSel, 0);
-            if (Current == pScheme->uId)
-                Pos_SaveData(hwnd);
         }
 
         if (DeletePwrScheme(pScheme->uId) != 0)
@@ -624,7 +645,7 @@ CreateEnergyList(
     POWER_POLICY pp;
     SYSTEM_POWER_CAPABILITIES spc;
     HWND hwndList;
-    unsigned aps = 0;
+    UINT aps = 0;
 
     hwndList = GetDlgItem(hwndDlg, IDC_ENERGYLIST);
 
@@ -683,7 +704,8 @@ CreateEnergyList(
                         TRUE,
                         (LPARAM)pScheme->pszName);
 
-            LoadConfig(hwndDlg);
+            pPageData->pActivePowerScheme = pScheme;
+            LoadConfig(hwndDlg, pPageData);
         }
 
         ListEntry = ListEntry->Flink;
@@ -691,7 +713,6 @@ CreateEnergyList(
 
     if (SendMessage(hwndList, CB_GETCOUNT, 0, 0) > 0)
     {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SAVEAS_BTN), TRUE);
     }
 
@@ -753,7 +774,7 @@ PowerSchemesDlgProc(
                 case IDC_ENERGYLIST:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        LoadConfig(hwndDlg);
+                        LoadConfig(hwndDlg, pPageData);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -786,7 +807,7 @@ PowerSchemesDlgProc(
                 LPNMHDR lpnm = (LPNMHDR)lParam;
                 if (lpnm->code == (UINT)PSN_APPLY)
                 {
-                    Pos_SaveData(hwndDlg);
+                    Pos_SaveData(hwndDlg, pPageData);
                 }
                 return TRUE;
             }
