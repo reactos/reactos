@@ -715,8 +715,8 @@ PowerSchemesDlgProc(
     {
         case WM_INITDIALOG:
             pPageData = (PPOWER_SCHEMES_PAGE_DATA)HeapAlloc(GetProcessHeap(),
-                                                            0,
-                                                            sizeof(PPOWER_SCHEMES_PAGE_DATA));
+                                                            HEAP_ZERO_MEMORY,
+                                                            sizeof(POWER_SCHEMES_PAGE_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pPageData);
 
             BuildSchemesList(pPageData);
