@@ -4,6 +4,7 @@
  * FILE:            dll/win32/kernel32/client/dosdev.c
  * PURPOSE:         Dos device functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
+ *                  Pierre Schweitzer
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -18,6 +19,142 @@
 DEBUG_CHANNEL(kernel32file);
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+IsGlobalDeviceMap(
+    HANDLE DirectoryHandle,
+    PBOOLEAN IsGlobal)
+{
+    NTSTATUS Status;
+    DWORD ReturnLength;
+    UNICODE_STRING GlobalString;
+    OBJECT_NAME_INFORMATION NameInfo, *PNameInfo;
+
+    /* We need both parameters */
+    if (DirectoryHandle == 0 || IsGlobal == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PNameInfo = NULL;
+    _SEH2_TRY
+    {
+        /* Query handle information */
+        Status = NtQueryObject(DirectoryHandle,
+                               ObjectNameInformation,
+                               &NameInfo,
+                               0,
+                               &ReturnLength);
+        /* Only failure we tolerate is length mismatch */
+        if (NT_SUCCESS(Status) || Status == STATUS_INFO_LENGTH_MISMATCH)
+        {
+            /* Allocate big enough buffer */
+            PNameInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, ReturnLength);
+            if (PNameInfo == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                _SEH2_LEAVE;
+            }
+
+            /* Query again handle information */
+            Status = NtQueryObject(DirectoryHandle,
+                                   ObjectNameInformation,
+                                   PNameInfo,
+                                   ReturnLength,
+                                   &ReturnLength);
+
+            /*
+             * If it succeed, check we have Global??
+             * If so, return success
+             */
+            if (NT_SUCCESS(Status))
+            {
+                RtlInitUnicodeString(&GlobalString, L"\\GLOBAL??");
+                *IsGlobal = RtlEqualUnicodeString(&GlobalString, &PNameInfo->Name, FALSE);
+                Status = STATUS_SUCCESS;
+            }
+
+
+        }
+    }
+    _SEH2_FINALLY
+    {
+        if (PNameInfo != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, PNameInfo);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+FindSymbolicLinkEntry(
+    PWSTR NameToFind,
+    PWSTR NamesList,
+    DWORD TotalEntries,
+    PBOOLEAN Found)
+{
+    WCHAR Current;
+    DWORD Entries;
+    PWSTR PartialNamesList;
+
+    /* We need all parameters to be set */
+    if (NameToFind == NULL || NamesList == NULL || Found == NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Assume failure */
+    *Found = FALSE;
+
+    /* If no entries, job done, nothing found */
+    if (TotalEntries == 0)
+    {
+        return ERROR_SUCCESS;
+    }
+
+    /* Start browsing the names list */
+    Entries = 0;
+    PartialNamesList = NamesList;
+    /* As long as we didn't find the name... */
+    while (wcscmp(NameToFind, PartialNamesList) != 0)
+    {
+        /* We chomped an entry! */
+        ++Entries;
+
+        /* We're out of entries, bail out not to overrun */
+        if (Entries > TotalEntries)
+        {
+            /*
+             * Even though we found nothing,
+             * the function ran fine
+             */
+            return ERROR_SUCCESS;
+        }
+
+        /* Jump to the next string */
+        do
+        {
+            Current = *PartialNamesList;
+            ++PartialNamesList;
+        } while (Current != UNICODE_NULL);
+    }
+
+    /*
+     * We're here because the loop stopped:
+     * it means we found the name in the list
+     */
+    *Found = TRUE;
+    return ERROR_SUCCESS;
+}
 
 /*
  * @implemented
@@ -381,19 +518,17 @@ QueryDosDeviceW(
     DWORD ucchMax
     )
 {
-    POBJECT_DIRECTORY_INFORMATION DirInfo;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING UnicodeString;
-    HANDLE DirectoryHandle;
-    HANDLE DeviceHandle;
-    ULONG ReturnLength;
-    ULONG NameLength;
-    ULONG Length;
-    ULONG Context;
-    BOOLEAN RestartScan;
-    NTSTATUS Status;
-    UCHAR Buffer[512];
     PWSTR Ptr;
+    PVOID Buffer;
+    NTSTATUS Status;
+    USHORT i, TotalEntries;
+    UNICODE_STRING UnicodeString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE DirectoryHandle, DeviceHandle;
+    BOOLEAN IsGlobal, GlobalNeeded, Found;
+    POBJECT_DIRECTORY_INFORMATION DirInfo;
+    OBJECT_DIRECTORY_INFORMATION NullEntry = {{0}};
+    ULONG ReturnLength, NameLength, Length, Context, BufferLength;
 
     /* Open the '\??' directory */
     RtlInitUnicodeString(&UnicodeString, L"\\??");
@@ -412,123 +547,455 @@ QueryDosDeviceW(
         return 0;
     }
 
-    Length = 0;
-
-    if (lpDeviceName != NULL)
+    Buffer = NULL;
+    _SEH2_TRY
     {
-        /* Open the lpDeviceName link object */
-        RtlInitUnicodeString(&UnicodeString, (PWSTR)lpDeviceName);
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &UnicodeString,
-                                   OBJ_CASE_INSENSITIVE,
-                                   DirectoryHandle,
-                                   NULL);
-        Status = NtOpenSymbolicLinkObject(&DeviceHandle,
-                                          SYMBOLIC_LINK_QUERY,
-                                          &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
+        if (lpDeviceName != NULL)
         {
-            WARN("NtOpenSymbolicLinkObject() failed (Status %lx)\n", Status);
-            NtClose(DirectoryHandle);
-            BaseSetLastNTError(Status);
-            return 0;
-        }
-
-        /* Query link target */
-        UnicodeString.Length = 0;
-        UnicodeString.MaximumLength = (USHORT)ucchMax * sizeof(WCHAR);
-        UnicodeString.Buffer = lpTargetPath;
-
-        ReturnLength = 0;
-        Status = NtQuerySymbolicLinkObject(DeviceHandle,
-                                           &UnicodeString,
-                                           &ReturnLength);
-        NtClose(DeviceHandle);
-        NtClose(DirectoryHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            WARN("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
-            BaseSetLastNTError(Status);
-            return 0;
-        }
-
-        TRACE("ReturnLength: %lu\n", ReturnLength);
-        TRACE("TargetLength: %hu\n", UnicodeString.Length);
-        TRACE("Target: '%wZ'\n", &UnicodeString);
-
-        Length = UnicodeString.Length / sizeof(WCHAR);
-        if (Length < ucchMax)
-        {
-            /* Append null-character */
-            lpTargetPath[Length] = UNICODE_NULL;
-            Length++;
-        }
-        else
-        {
-            TRACE("Buffer is too small\n");
-            BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
-            return 0;
-        }
-    }
-    else
-    {
-        RestartScan = TRUE;
-        Context = 0;
-        Ptr = lpTargetPath;
-        DirInfo = (POBJECT_DIRECTORY_INFORMATION)Buffer;
-
-        while (TRUE)
-        {
-            Status = NtQueryDirectoryObject(DirectoryHandle,
-                                            Buffer,
-                                            sizeof(Buffer),
-                                            TRUE,
-                                            RestartScan,
-                                            &Context,
-                                            &ReturnLength);
+            /* Open the lpDeviceName link object */
+            RtlInitUnicodeString(&UnicodeString, lpDeviceName);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &UnicodeString,
+                                       OBJ_CASE_INSENSITIVE,
+                                       DirectoryHandle,
+                                       NULL);
+            Status = NtOpenSymbolicLinkObject(&DeviceHandle,
+                                              SYMBOLIC_LINK_QUERY,
+                                              &ObjectAttributes);
             if (!NT_SUCCESS(Status))
             {
-                if (Status == STATUS_NO_MORE_ENTRIES)
-                {
-                    /* Terminate the buffer */
-                    *Ptr = UNICODE_NULL;
-                    Length++;
-
-                    Status = STATUS_SUCCESS;
-                }
-                else
-                {
-                    Length = 0;
-                }
-                BaseSetLastNTError(Status);
-                break;
+                WARN("NtOpenSymbolicLinkObject() failed (Status %lx)\n", Status);
+                _SEH2_LEAVE;
             }
 
-            if (!wcscmp(DirInfo->TypeName.Buffer, L"SymbolicLink"))
-            {
-                TRACE("Name: '%wZ'\n", &DirInfo->Name);
+            /*
+             * Make sure we don't overrun the output buffer, so convert our DWORD
+             * size to USHORT size properly
+             */
+            Length = (ucchMax <= MAXULONG / sizeof(WCHAR)) ? (ucchMax * sizeof(WCHAR)) : MAXULONG;
 
-                NameLength = DirInfo->Name.Length / sizeof(WCHAR);
-                if (Length + NameLength + 1 >= ucchMax)
+            /* Query link target */
+            UnicodeString.Length = 0;
+            UnicodeString.MaximumLength = Length <= MAXUSHORT ? Length : MAXUSHORT;
+            UnicodeString.Buffer = lpTargetPath;
+
+            ReturnLength = 0;
+            Status = NtQuerySymbolicLinkObject(DeviceHandle,
+                                               &UnicodeString,
+                                               &ReturnLength);
+            NtClose(DeviceHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                WARN("NtQuerySymbolicLinkObject() failed (Status %lx)\n", Status);
+                _SEH2_LEAVE;
+            }
+
+            TRACE("ReturnLength: %lu\n", ReturnLength);
+            TRACE("TargetLength: %hu\n", UnicodeString.Length);
+            TRACE("Target: '%wZ'\n", &UnicodeString);
+
+            Length = ReturnLength / sizeof(WCHAR);
+            /* Make sure we null terminate output buffer */
+            if (Length == 0 || lpTargetPath[Length - 1] != UNICODE_NULL)
+            {
+                if (Length >= ucchMax)
                 {
-                    Length = 0;
-                    BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
-                    break;
+                    TRACE("Buffer is too small\n");
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    _SEH2_LEAVE;
                 }
 
-                memcpy(Ptr, DirInfo->Name.Buffer, DirInfo->Name.Length);
-                Ptr += NameLength;
-                Length += NameLength;
-                *Ptr = UNICODE_NULL;
-                Ptr++;
+                /* Append null-character */
+                lpTargetPath[Length] = UNICODE_NULL;
                 Length++;
             }
 
-            RestartScan = FALSE;
+            if (Length < ucchMax)
+            {
+                /* Append null-character */
+                lpTargetPath[Length] = UNICODE_NULL;
+                Length++;
+            }
+
+            _SEH2_LEAVE;
         }
 
-        NtClose(DirectoryHandle);
+        /*
+         * If LUID device maps are enabled,
+         * ?? may not point to BaseNamedObjects
+         * It may only be local DOS namespace.
+         * And thus, it might be required to browse
+         * Global?? for global devices
+         */
+        GlobalNeeded = FALSE;
+        if (BaseStaticServerData->LUIDDeviceMapsEnabled)
+        {
+            /* Assume ?? == Global?? */
+            IsGlobal = TRUE;
+            /* Check if it's the case */
+            Status = IsGlobalDeviceMap(DirectoryHandle, &IsGlobal);
+            if (NT_SUCCESS(Status) && !IsGlobal)
+            {
+                /* It's not, we'll have to browse Global?? too! */
+                GlobalNeeded = TRUE;
+            }
+        }
+
+        /*
+         * Make sure we don't overrun the output buffer, so convert our DWORD
+         * size to USHORT size properly
+         */
+        BufferLength = (ucchMax <= MAXULONG / sizeof(WCHAR)) ? (ucchMax * sizeof(WCHAR)) : MAXULONG;
+        Length = 0;
+        Ptr = lpTargetPath;
+
+        Context = 0;
+        TotalEntries = 0;
+
+        /*
+         * We'll query all entries at once, with a rather big buffer
+         * If it's too small, we'll grow it by 2.
+         * Limit the number of attempts to 3.
+         */
+        for (i = 0; i < 3; ++i)
+        {
+            /* Allocate the query buffer */
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+            if (Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                _SEH2_LEAVE;
+            }
+
+            /* Perform the query */
+            Status = NtQueryDirectoryObject(DirectoryHandle,
+                                            Buffer,
+                                            BufferLength,
+                                            FALSE,
+                                            TRUE,
+                                            &Context,
+                                            &ReturnLength);
+            /* Only failure accepted is: no more entries */
+            if (!NT_SUCCESS(Status))
+            {
+                if (Status != STATUS_NO_MORE_ENTRIES)
+                {
+                    _SEH2_LEAVE;
+                }
+
+                /*
+                 * Which is a success! But break out,
+                 * it means our query returned no results
+                 * so, nothing to parse.
+                 */
+                Status = STATUS_SUCCESS;
+                break;
+            }
+
+            /* In case we had them all, start browsing for devices */
+            if (Status != STATUS_MORE_ENTRIES)
+            {
+                DirInfo = Buffer;
+
+                /* Loop until we find the nul entry (terminating entry) */
+                while (TRUE)
+                {
+                    /* It's an entry full of zeroes */
+                    if (RtlCompareMemory(&NullEntry, DirInfo, sizeof(NullEntry)) == sizeof(NullEntry))
+                    {
+                        break;
+                    }
+
+                    /* Only handle symlinks */
+                    if (!wcscmp(DirInfo->TypeName.Buffer, L"SymbolicLink"))
+                    {
+                        TRACE("Name: '%wZ'\n", &DirInfo->Name);
+
+                        /* Get name length in chars to only comparisons */
+                        NameLength = DirInfo->Name.Length / sizeof(WCHAR);
+
+                        /* Make sure we don't overrun output buffer */
+                        if (Length > ucchMax ||
+                            NameLength > ucchMax - Length ||
+                            ucchMax - NameLength - Length < sizeof(WCHAR))
+                        {
+                            Status = STATUS_BUFFER_TOO_SMALL;
+                            _SEH2_LEAVE;
+                        }
+
+                        /* Copy and NULL terminate string */
+                        memcpy(Ptr, DirInfo->Name.Buffer, DirInfo->Name.Length);
+                        Ptr[NameLength] = UNICODE_NULL;
+
+                        Ptr += (NameLength + 1);
+                        Length += (NameLength + 1);
+
+                        /*
+                         * Keep the entries count, in case we would have to
+                         * handle GLOBAL?? too
+                         */
+                        ++TotalEntries;
+                    }
+
+                    /* Move to the next entry */
+                    ++DirInfo;
+                }
+
+                /*
+                 * No need to loop again here, we got all the entries
+                 * Note: we don't free the buffer here, because we may
+                 * need it for GLOBAL??, so we save a few cycles here.
+                 */
+                break;
+            }
+
+            /* Failure path here, we'll need bigger buffer */
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+            Buffer = NULL;
+
+            /* We can't have bigger than that one, so leave */
+            if (BufferLength == MAXULONG)
+            {
+                break;
+            }
+
+            /* Prevent any overflow while computing new size */
+            if (MAXULONG - BufferLength < BufferLength)
+            {
+                BufferLength = MAXULONG;
+            }
+            else
+            {
+                BufferLength *= 2;
+            }
+        }
+
+        /*
+         * Out of the hot loop, but with more entries left?
+         * that's an error case, leave here!
+         */
+        if (Status == STATUS_MORE_ENTRIES)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            _SEH2_LEAVE;
+        }
+
+        /* Now, if we had to handle GLOBAL??, go for it! */
+        if (BaseStaticServerData->LUIDDeviceMapsEnabled && NT_SUCCESS(Status) && GlobalNeeded)
+        {
+            NtClose(DirectoryHandle);
+            DirectoryHandle = 0;
+
+            RtlInitUnicodeString(&UnicodeString, L"\\GLOBAL??");
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &UnicodeString,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+            Status = NtOpenDirectoryObject(&DirectoryHandle,
+                                           DIRECTORY_QUERY,
+                                           &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
+            {
+                WARN("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
+                _SEH2_LEAVE;
+            }
+
+            /*
+             * We'll query all entries at once, with a rather big buffer
+             * If it's too small, we'll grow it by 2.
+             * Limit the number of attempts to 3.
+             */
+            for (i = 0; i < 3; ++i)
+            {
+                /* If we had no buffer from previous attempt, allocate one */
+                if (Buffer == NULL)
+                {
+                    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+                    if (Buffer == NULL)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        _SEH2_LEAVE;
+                    }
+                }
+
+                /* Perform the query */
+                Status = NtQueryDirectoryObject(DirectoryHandle,
+                                                Buffer,
+                                                BufferLength,
+                                                FALSE,
+                                                TRUE,
+                                                &Context,
+                                                &ReturnLength);
+                /* Only failure accepted is: no more entries */
+                if (!NT_SUCCESS(Status))
+                {
+                    if (Status != STATUS_NO_MORE_ENTRIES)
+                    {
+                        _SEH2_LEAVE;
+                    }
+
+                    /*
+                     * Which is a success! But break out,
+                     * it means our query returned no results
+                     * so, nothing to parse.
+                     */
+                    Status = STATUS_SUCCESS;
+                    break;
+                }
+
+                /* In case we had them all, start browsing for devices */
+                if (Status != STATUS_MORE_ENTRIES)
+                {
+                    DirInfo = Buffer;
+
+                    /* Loop until we find the nul entry (terminating entry) */
+                    while (TRUE)
+                    {
+                        /* It's an entry full of zeroes */
+                        if (RtlCompareMemory(&NullEntry, DirInfo, sizeof(NullEntry)) == sizeof(NullEntry))
+                        {
+                            break;
+                        }
+
+                        /* Only handle symlinks */
+                        if (!wcscmp(DirInfo->TypeName.Buffer, L"SymbolicLink"))
+                        {
+                            TRACE("Name: '%wZ'\n", &DirInfo->Name);
+
+                            /*
+                             * Now, we previously already browsed ??, and we
+                             * don't want to devices twice, so we'll check
+                             * the output buffer for duplicates.
+                             * We'll add our entry only if we don't have already
+                             * returned it.
+                             */
+                            if (FindSymbolicLinkEntry(DirInfo->Name.Buffer,
+                                                      lpTargetPath,
+                                                      TotalEntries,
+                                                      &Found) == ERROR_SUCCESS &&
+                                !Found)
+                            {
+                                /* Get name length in chars to only comparisons */
+                                NameLength = DirInfo->Name.Length / sizeof(WCHAR);
+
+                                /* Make sure we don't overrun output buffer */
+                                if (Length > ucchMax ||
+                                    NameLength > ucchMax - Length ||
+                                    ucchMax - NameLength - Length < sizeof(WCHAR))
+                                {
+                                    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+                                    NtClose(DirectoryHandle);
+                                    BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
+                                    return 0;
+                                }
+
+                                /* Copy and NULL terminate string */
+                                memcpy(Ptr, DirInfo->Name.Buffer, DirInfo->Name.Length);
+                                Ptr[NameLength] = UNICODE_NULL;
+
+                                Ptr += (NameLength + 1);
+                                Length += (NameLength + 1);
+                            }
+                        }
+
+                        /* Move to the next entry */
+                        ++DirInfo;
+                    }
+
+                    /* No need to loop again here, we got all the entries */
+                    break;
+                }
+
+                /* Failure path here, we'll need bigger buffer */
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+                Buffer = NULL;
+
+                /* We can't have bigger than that one, so leave */
+                if (BufferLength == MAXULONG)
+                {
+                    break;
+                }
+
+                /* Prevent any overflow while computing new size */
+                if (MAXULONG - BufferLength < BufferLength)
+                {
+                    BufferLength = MAXULONG;
+                }
+                else
+                {
+                    BufferLength *= 2;
+                }
+            }
+
+            /*
+             * Out of the hot loop, but with more entries left?
+             * that's an error case, leave here!
+             */
+            if (Status == STATUS_MORE_ENTRIES)
+            {
+                Status = STATUS_BUFFER_TOO_SMALL;
+                _SEH2_LEAVE;
+            }
+        }
+
+        /* If we failed somewhere, just leave */
+        if (!NT_SUCCESS(Status))
+        {
+            _SEH2_LEAVE;
+        }
+
+        /* If we returned no entries, time to write the empty string */
+        if (Length == 0)
+        {
+            /* Unless output buffer is too small! */
+            if (ucchMax <= 0)
+            {
+                Status = STATUS_BUFFER_TOO_SMALL;
+                _SEH2_LEAVE;
+            }
+
+            /* Emptry string is one char (terminator!) */
+            *Ptr = UNICODE_NULL;
+            ++Ptr;
+            Length = 1;
+        }
+
+        /*
+         * If we have enough room, we need to double terminate the buffer:
+         * that's a MULTI_SZ buffer, its end is marked by double NULL.
+         * One was already added during the "copy string" process.
+         * If we don't have enough room: that's a failure case.
+         */
+        if (Length < ucchMax)
+        {
+            *Ptr = UNICODE_NULL;
+            ++Ptr;
+        }
+        else
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
     }
+    _SEH2_FINALLY
+    {
+        if (DirectoryHandle != 0)
+        {
+            NtClose(DirectoryHandle);
+        }
+
+        if (Buffer != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            Length = 0;
+            BaseSetLastNTError(Status);
+        }
+    }
+    _SEH2_END;
 
     return Length;
 }
