@@ -26,7 +26,16 @@ typedef struct _POWER_SCHEMES_PAGE_DATA
 {
     LIST_ENTRY PowerSchemesList;
     PPOWER_SCHEME pActivePowerScheme;
+    PPOWER_SCHEME pSelectedPowerScheme;
 } POWER_SCHEMES_PAGE_DATA, *PPOWER_SCHEMES_PAGE_DATA;
+
+
+typedef struct _SAVE_POWER_SCHEME_DATA
+{
+    PPOWER_SCHEMES_PAGE_DATA pPageData;
+    PPOWER_SCHEME pNewScheme;
+    HWND hwndPage;
+} SAVE_POWER_SCHEME_DATA, *PSAVE_POWER_SCHEME_DATA;
 
 
 UINT Sec[]=
@@ -51,7 +60,7 @@ UINT Sec[]=
 
 
 static
-BOOL
+PPOWER_SCHEME
 AddPowerScheme(
     PPOWER_SCHEMES_PAGE_DATA pPageData,
     UINT uId,
@@ -68,7 +77,7 @@ AddPowerScheme(
                         HEAP_ZERO_MEMORY,
                         sizeof(POWER_SCHEME));
     if (pScheme == NULL)
-        return FALSE;
+        return NULL;
 
     pScheme->uId = uId;
     CopyMemory(&pScheme->PowerPolicy, pp, sizeof(POWER_POLICY));
@@ -108,9 +117,10 @@ done:
             HeapFree(GetProcessHeap(), 0, pScheme->pszDescription);
 
         HeapFree(GetProcessHeap(), 0, pScheme);
+        pScheme = NULL;
     }
 
-    return bResult;
+    return pScheme;
 }
 
 
@@ -187,6 +197,7 @@ DestroySchemesList(
     }
 
     pPageData->pActivePowerScheme = NULL;
+    pPageData->pSelectedPowerScheme = NULL;
 }
 
 
@@ -291,29 +302,34 @@ static
 VOID
 LoadConfig(
     HWND hwndDlg,
-    PPOWER_SCHEMES_PAGE_DATA pPageData)
+    PPOWER_SCHEMES_PAGE_DATA pPageData,
+    PPOWER_SCHEME pScheme)
 {
-    PPOWER_SCHEME pScheme;
     INT i = 0, iCurSel = 0;
     TCHAR szTemp[MAX_PATH];
     TCHAR szConfig[MAX_PATH];
     PPOWER_POLICY pp;
 
-    iCurSel = (INT)SendDlgItemMessage(hwndDlg,
-                                      IDC_ENERGYLIST,
-                                      CB_GETCURSEL,
-                                      0,
-                                      0);
-    if (iCurSel == CB_ERR)
-        return;
+    if (pScheme == NULL)
+    {
+        iCurSel = (INT)SendDlgItemMessage(hwndDlg,
+                                          IDC_ENERGYLIST,
+                                          CB_GETCURSEL,
+                                          0,
+                                          0);
+        if (iCurSel == CB_ERR)
+            return;
 
-    pScheme = (PPOWER_SCHEME)SendDlgItemMessage(hwndDlg,
-                                                IDC_ENERGYLIST,
-                                                CB_GETITEMDATA,
-                                                (WPARAM)iCurSel,
-                                                0);
-    if (pScheme == (PPOWER_SCHEME)CB_ERR)
-        return;
+        pScheme = (PPOWER_SCHEME)SendDlgItemMessage(hwndDlg,
+                                                    IDC_ENERGYLIST,
+                                                    CB_GETITEMDATA,
+                                                    (WPARAM)iCurSel,
+                                                    0);
+        if (pScheme == (PPOWER_SCHEME)CB_ERR)
+            return;
+    }
+
+    pPageData->pSelectedPowerScheme = pScheme;
 
     if (LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))
     {
@@ -493,23 +509,9 @@ Pos_SaveData(
     PPOWER_SCHEMES_PAGE_DATA pPageData)
 {
     PPOWER_SCHEME pScheme;
-    INT iCurSel, tmp;
+    INT tmp;
 
-    iCurSel = (INT)SendDlgItemMessage(hwndDlg,
-                                      IDC_ENERGYLIST,
-                                      CB_GETCURSEL,
-                                      0,
-                                      0);
-    if (iCurSel == CB_ERR)
-        return;
-
-    pScheme = (PPOWER_SCHEME)SendDlgItemMessage(hwndDlg,
-                                                IDC_ENERGYLIST,
-                                                CB_GETITEMDATA,
-                                                (WPARAM)iCurSel,
-                                                0);
-    if (pScheme == (PPOWER_SCHEME)CB_ERR)
-        return;
+    pScheme = pPageData->pSelectedPowerScheme;
 
     tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORACLIST,
                    CB_GETCURSEL,
@@ -637,11 +639,149 @@ DelScheme(
         if (iCurSel != CB_ERR)
             SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
 
-        LoadConfig(hwnd, pPageData);
+        LoadConfig(hwnd, pPageData, NULL);
         return TRUE;
     }
 
     return FALSE;
+}
+
+
+static
+BOOL
+SavePowerScheme(
+    HWND hwndDlg,
+    PSAVE_POWER_SCHEME_DATA pSaveSchemeData)
+{
+    PPOWER_SCHEMES_PAGE_DATA pPageData;
+    PPOWER_SCHEME pScheme;
+    TCHAR szSchemeName[512];
+    BOOL bRet = FALSE;
+
+    pPageData = pSaveSchemeData->pPageData;
+
+    GetDlgItemText(hwndDlg, IDC_SCHEMENAME, szSchemeName, ARRAYSIZE(szSchemeName));
+
+    pScheme = AddPowerScheme(pPageData,
+                             -1,
+                             (_tcslen(szSchemeName) + 1) * sizeof(TCHAR),
+                             szSchemeName,
+                             sizeof(TCHAR),
+                             TEXT(""),
+                             &pPageData->pSelectedPowerScheme->PowerPolicy);
+    if (pScheme != NULL)
+    {
+        if (WritePwrScheme(&pScheme->uId,
+                           pScheme->pszName,
+                           pScheme->pszDescription,
+                           &pScheme->PowerPolicy))
+        {
+            pSaveSchemeData->pNewScheme = pScheme;
+            bRet = TRUE;
+        }
+        else
+        {
+            DeletePowerScheme(pScheme);
+        }
+    }
+
+    return bRet;
+}
+
+
+INT_PTR
+CALLBACK
+SaveSchemeDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    PSAVE_POWER_SCHEME_DATA pSaveSchemeData;
+
+    pSaveSchemeData = (PSAVE_POWER_SCHEME_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pSaveSchemeData = (PSAVE_POWER_SCHEME_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSaveSchemeData);
+
+            SetDlgItemText(hwndDlg,
+                           IDC_SCHEMENAME,
+                           pSaveSchemeData->pPageData->pSelectedPowerScheme->pszName);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, SavePowerScheme(hwndDlg, pSaveSchemeData));
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static
+VOID
+SaveScheme(
+    HWND hwndDlg,
+    PPOWER_SCHEMES_PAGE_DATA pPageData)
+{
+    SAVE_POWER_SCHEME_DATA SaveSchemeData;
+    POWER_POLICY BackupPowerPolicy;
+    HWND hwndList;
+    INT index;
+
+    SaveSchemeData.pPageData = pPageData;
+    SaveSchemeData.pNewScheme = NULL;
+    SaveSchemeData.hwndPage = hwndDlg;
+
+    CopyMemory(&BackupPowerPolicy,
+               &pPageData->pSelectedPowerScheme->PowerPolicy,
+               sizeof(POWER_POLICY));
+
+    Pos_SaveData(hwndDlg, pPageData);
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_SAVEPOWERSCHEME),
+                       hwndDlg,
+                       SaveSchemeDlgProc,
+                       (LPARAM)&SaveSchemeData))
+    {
+        if (SaveSchemeData.pNewScheme)
+        {
+            hwndList = GetDlgItem(hwndDlg, IDC_ENERGYLIST);
+
+            index = (INT)SendMessage(hwndList,
+                                     CB_ADDSTRING,
+                                     0,
+                                     (LPARAM)SaveSchemeData.pNewScheme->pszName);
+            if (index != CB_ERR)
+            {
+                SendMessage(hwndList,
+                            CB_SETITEMDATA,
+                            index,
+                            (LPARAM)SaveSchemeData.pNewScheme);
+
+                SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
+
+                LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
+            }
+        }
+    }
+
+    CopyMemory(&pPageData->pSelectedPowerScheme->PowerPolicy,
+               &BackupPowerPolicy,
+               sizeof(POWER_POLICY));
 }
 
 
@@ -716,7 +856,7 @@ CreateEnergyList(
                         (LPARAM)pScheme->pszName);
 
             pPageData->pActivePowerScheme = pScheme;
-            LoadConfig(hwndDlg, pPageData);
+            LoadConfig(hwndDlg, pPageData, pScheme);
         }
 
         ListEntry = ListEntry->Flink;
@@ -785,7 +925,7 @@ PowerSchemesDlgProc(
                 case IDC_ENERGYLIST:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        LoadConfig(hwndDlg, pPageData);
+                        LoadConfig(hwndDlg, pPageData, NULL);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -795,6 +935,7 @@ PowerSchemesDlgProc(
                     break;
 
                 case IDC_SAVEAS_BTN:
+                    SaveScheme(hwndDlg, pPageData);
                     break;
 
                 case IDC_MONITORACLIST:
