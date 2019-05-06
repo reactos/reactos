@@ -316,7 +316,19 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define OID_802_11_PRIVACY_FILTER               0x0D010119
 #define OID_802_11_BSSID_LIST_SCAN              0x0D01011A
 #define OID_802_11_WEP_STATUS                   0x0D01011B
+/* New name is supposed to better reflect the extended set of encryption status */
+#define OID_802_11_ENCRYPTION_STATUS            OID_802_11_WEP_STATUS
 #define OID_802_11_RELOAD_DEFAULTS              0x0D01011C
+/* Allows key mapping and default keys */
+#define OID_802_11_ADD_KEY                      0x0D01011D
+#define OID_802_11_REMOVE_KEY                   0x0D01011E
+#define OID_802_11_ASSOCIATION_INFORMATION      0x0D01011F
+#define OID_802_11_TEST                         0x0D010120
+#define OID_802_11_MEDIA_STREAM_MODE            0x0D010121
+#define OID_802_11_CAPABILITY                   0x0D010122
+#define OID_802_11_PMKID                        0x0D010123
+#define OID_802_11_NON_BCAST_SSID_LIST          0x0D010124
+#define OID_802_11_RADIO_STATUS                 0x0D010125
 
 /* PnP and Power Management (PM) OIDs */
 #define OID_PNP_CAPABILITIES                    0xFD010100
@@ -330,6 +342,36 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 /* Optional PnP/PM statistics OIDs */
 #define OID_PNP_WAKE_UP_OK                      0xFD020200
 #define OID_PNP_WAKE_UP_ERROR                   0xFD020201
+
+/* TCP and IP OIDs */
+#define OID_TCP_TASK_OFFLOAD                    0xFC010201
+#define OID_TCP_TASK_IPSEC_ADD_SA               0xFC010202
+#define OID_TCP_TASK_IPSEC_DELETE_SA            0xFC010203
+#define OID_TCP_SAN_SUPPORT                     0xFC010204
+#define OID_TCP_TASK_IPSEC_ADD_UDPESP_SA        0xFC010205
+#define OID_TCP_TASK_IPSEC_DELETE_UDPESP_SA     0xFC010206
+#define OID_TCP4_OFFLOAD_STATS                  0xFC010207
+#define OID_TCP6_OFFLOAD_STATS                  0xFC010208
+#define OID_IP4_OFFLOAD_STATS                   0xFC010209
+#define OID_IP6_OFFLOAD_STATS                   0xFC01020A
+
+/* New NDIS 6 offload OIDs */
+#define OID_TCP_OFFLOAD_CURRENT_CONFIG                     0xFC01020B /* NDIS 5 handled. Query only */
+#define OID_TCP_OFFLOAD_PARAMETERS                         0xFC01020C /* Set only */
+#define OID_TCP_OFFLOAD_HARDWARE_CAPABILITIES              0xFC01020D /* Query only */
+#define OID_TCP_CONNECTION_OFFLOAD_CURRENT_CONFIG          0xFC01020E /* Query only */
+#define OID_TCP_CONNECTION_OFFLOAD_HARDWARE_CAPABILITIES   0xFC01020F /* Query only */
+#define OID_OFFLOAD_ENCAPSULATION                          0x0101010A
+
+/* Obsolete FFP defines */
+#define OID_FFP_SUPPORT                         0xFC010210
+#define OID_FFP_FLUSH                           0xFC010211
+#define OID_FFP_CONTROL                         0xFC010212
+#define OID_FFP_PARAMS                          0xFC010213
+#define OID_FFP_DATA                            0xFC010214
+
+#define OID_FFP_DRIVER_STATS                    0xFC020210
+#define OID_FFP_ADAPTER_STATS                   0xFC020211
 
 /* OID_GEN_MINIPORT_INFO constants */
 #define NDIS_MINIPORT_BUS_MASTER                      0x00000001
@@ -357,6 +399,16 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define NDIS_MINIPORT_HARDWARE_DEVICE                 0x00400000
 #define NDIS_MINIPORT_SUPPORTS_CANCEL_SEND_PACKETS    0x00800000
 #define NDIS_MINIPORT_64BITS_DMA                      0x01000000
+
+/* Full duplex driver */
+#define NDIS_MAC_OPTION_FULL_DUPLEX                      0x00000010 /* Deprecated flag */
+
+#define NDIS_MAC_OPTION_EOTX_INDICATION                  0x00000020
+#define NDIS_MAC_OPTION_8021P_PRIORITY                   0x00000040
+#define NDIS_MAC_OPTION_SUPPORTS_MAC_ADRESS_OVERWRITE    0x00000080
+#define NDIS_MAC_OPTION_RECEIVE_AT_DPC                   0x00000100
+#define NDIS_MAC_OPTION_8021Q_VLAN                       0x00000200
+#define NDIS_MAC_OPTION_RESERVED                         0x80000000
 
 #define IOCTL_NDIS_QUERY_GLOBAL_STATS CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, \
                                                0,                            \
