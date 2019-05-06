@@ -11,8 +11,8 @@
 
 #include "powercfg.h"
 
-BOOLEAN Pos_InitData();
-void Adv_InitDialog();
+//BOOLEAN Pos_InitData();
+//void Adv_InitDialog();
 
 
 static VOID
@@ -75,8 +75,9 @@ Hib_SaveData(HWND hwndDlg)
 
     if (CallNtPowerInformation(SystemReserveHiberFile, &bHibernate, sizeof(bHibernate), NULL, 0) == STATUS_SUCCESS)
     {
-        Pos_InitData();
-        Adv_InitDialog();
+        // FIXME: Do not call these functions directly! Post a message to the other pages instead!
+        // Pos_InitData();
+        // Adv_InitDialog();
         Hib_InitDialog(hwndDlg);
         return TRUE;
     }
