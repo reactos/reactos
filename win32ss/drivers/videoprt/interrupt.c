@@ -135,7 +135,11 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
                                               DeviceExtension->InterruptLevel);
 
     /* Make sure the interrupt was valid */
-    ASSERT(InterruptValid == TRUE);
+    if (!InterruptValid)
+    {
+        ERR_(VIDEOPRT, "HalEnableSystemInterrupt failed. Ignored\n");
+        /* FIXME: Should we (WARN_() only and) "return ERROR_INVALID_FUNCTION;"? */
+    }
 
     /* Return to caller */
     return NO_ERROR;
