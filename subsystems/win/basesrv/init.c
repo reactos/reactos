@@ -30,6 +30,7 @@ HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectio
 PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
 
 ULONG SessionId = 0;
+ULONG ProtectionMode = 0;
 
 PINIFILE_MAPPING BaseSrvIniFileMapping;
 
@@ -177,14 +178,10 @@ CreateBaseAcls(OUT PACL* Dacl,
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     NTSTATUS Status;
-#if 0 // Unused code
     UCHAR KeyValueBuffer[0x40];
     PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
     UNICODE_STRING KeyName;
-    ULONG ProtectionMode = 0;
-#endif
     ULONG AclLength;
-#if 0 // Unused code
     ULONG ResultLength;
     HANDLE hKey;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -220,7 +217,6 @@ CreateBaseAcls(OUT PACL* Dacl,
         /* Close the handle */
         NtClose(hKey);
     }
-#endif
 
     /* Allocate the System SID */
     Status = RtlAllocateAndInitializeSid(&NtAuthority,

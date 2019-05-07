@@ -65,5 +65,9 @@ extern HANDLE BaseSrvHeap;
 extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 extern ULONG SessionId;
+extern ULONG ProtectionMode;
+
+#define SM_REG_KEY \
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager"
 
 #endif /* __BASESRV_H__ */
