@@ -64,5 +64,6 @@ typedef NTSTATUS (WINAPI *PCREATE_NLS_SECURTY_DESCRIPTOR)(IN PVOID Buffer,
 extern HANDLE BaseSrvHeap;
 extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+extern ULONG SessionId;
 
 #endif /* __BASESRV_H__ */

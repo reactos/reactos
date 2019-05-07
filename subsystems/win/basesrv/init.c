@@ -29,6 +29,8 @@ HANDLE BaseSrvHeap = NULL;          // Our own heap.
 HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectionHeap)
 PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
 
+ULONG SessionId = 0;
+
 PINIFILE_MAPPING BaseSrvIniFileMapping;
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
@@ -301,7 +303,6 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     UNICODE_STRING BaseSrvWindowsSystemDirectory;
     UNICODE_STRING BnoString;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG SessionId;
     HANDLE BaseSrvNamedObjectDirectory;
     HANDLE BaseSrvRestrictedObjectDirectory;
     PACL BnoDacl, BnoRestrictedDacl;
