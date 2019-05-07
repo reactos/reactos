@@ -135,6 +135,7 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     UNICODE_STRING HivePath;
     PWCHAR FilePath;
     ULONG Length;
+    OBJECT_NAME_INFORMATION DummyNameInfo;
     POBJECT_NAME_INFORMATION FileNameInfo;
 
     HivePath.Buffer = NULL;
@@ -175,10 +176,10 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
         /* Determine the right buffer size and allocate */
         Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
                                ObjectNameInformation,
-                               NULL,
-                               0,
+                               &DummyNameInfo,
+                               sizeof(DummyNameInfo),
                                &Length);
-        if (Status != STATUS_INFO_LENGTH_MISMATCH)
+        if (Status != STATUS_BUFFER_OVERFLOW)
         {
             DPRINT1("CmpAddToHiveFileList: Hive file name size query failed, status = 0x%08lx\n", Status);
             goto Quickie;

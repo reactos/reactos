@@ -279,6 +279,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
     UNICODE_STRING FileName;
     PWCHAR FilePath;
     ULONG Length;
+    OBJECT_NAME_INFORMATION DummyNameInfo;
     POBJECT_NAME_INFORMATION FileNameInfo;
 
     PAGED_CODE();
@@ -299,10 +300,10 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
         /* Determine the right buffer size and allocate */
         Status = ZwQueryObject(FileAttributes->RootDirectory,
                                ObjectNameInformation,
-                               NULL,
-                               0,
+                               &DummyNameInfo,
+                               sizeof(DummyNameInfo),
                                &Length);
-        if (Status != STATUS_INFO_LENGTH_MISMATCH)
+        if (Status != STATUS_BUFFER_OVERFLOW)
         {
             DPRINT1("CmpCmdHiveOpen(): Root directory handle object name size query failed, Status = 0x%08lx\n", Status);
             return Status;
