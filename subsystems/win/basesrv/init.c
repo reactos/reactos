@@ -353,8 +353,14 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
                                      SystemRootString.Buffer);
     ASSERT(Success);
 
-    /* FIXME: Check Session ID */
-    wcscpy(BnoBuffer, L"\\BaseNamedObjects");
+    if (SessionId != 0)
+    {
+        swprintf(BnoBuffer, L"\\Sessions\\%ld\\BaseNamedObjects", SessionId);
+    }
+    else
+    {
+        wcscpy(BnoBuffer, L"\\BaseNamedObjects");
+    }
     RtlInitUnicodeString(&BnoString, BnoBuffer);
 
     /* Allocate the server data */
@@ -531,7 +537,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
         Status = NtCreateSymbolicLinkObject(&SymHandle,
                                             SYMBOLIC_LINK_ALL_ACCESS,
                                             &ObjectAttributes,
-                                            &SymlinkName);
+                                            &BnoString);
         if ((NT_SUCCESS(Status)) && SessionId == 0) NtClose(SymHandle);
 
         /* Make Session point back to BNOLINKS */
