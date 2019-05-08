@@ -290,7 +290,8 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 {
     NTSTATUS Status;
     BOOLEAN Success;
-    WCHAR Buffer[MAX_PATH];
+    WCHAR BnoBuffer[100];
+    WCHAR Buffer[100];
     PWCHAR HeapBuffer;
     UNICODE_STRING SystemRootString;
     UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
@@ -353,8 +354,8 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     ASSERT(Success);
 
     /* FIXME: Check Session ID */
-    wcscpy(Buffer, L"\\BaseNamedObjects");
-    RtlInitUnicodeString(&BnoString, Buffer);
+    wcscpy(BnoBuffer, L"\\BaseNamedObjects");
+    RtlInitUnicodeString(&BnoString, BnoBuffer);
 
     /* Allocate the server data */
     BaseStaticServerData = RtlAllocateHeap(BaseSrvSharedHeap,
@@ -474,7 +475,6 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     ASSERT(NT_SUCCESS(Status));
 
     /* Create the BNO directory */
-    RtlInitUnicodeString(&BnoString, L"\\BaseNamedObjects");
     InitializeObjectAttributes(&ObjectAttributes,
                                &BnoString,
                                OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
