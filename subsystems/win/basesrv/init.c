@@ -291,7 +291,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     NTSTATUS Status;
     BOOLEAN Success;
     WCHAR BnoBuffer[100];
-    WCHAR Buffer[100];
+    WCHAR Buffer[MAX_PATH];
     PWCHAR HeapBuffer;
     UNICODE_STRING SystemRootString;
     UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
