@@ -11,8 +11,6 @@
 
 #include "powercfg.h"
 
-HWND hAdv = 0;
-
 static POWER_ACTION g_SystemBatteries[3];
 static POWER_ACTION g_PowerButton[5];
 static POWER_ACTION g_SleepButton[5];
@@ -52,7 +50,7 @@ AddItem(HWND hDlgCtrl, INT ResourceId, LPARAM lParam, POWER_ACTION * lpAction)
 
     if (LoadString(hApplet, ResourceId, szBuffer, MAX_PATH) < MAX_PATH)
     {
-        Index = SendMessage(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+        Index = SendMessage(hDlgCtrl, CB_INSERTSTRING, -1, (LPARAM)szBuffer);
         if (Index != CB_ERR)
         {
             SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)Index, lParam);
@@ -298,7 +296,8 @@ ShowCurrentPowerActionPolicies(HWND hwndDlg)
 }
 
 VOID
-Adv_InitDialog(VOID)
+Adv_InitDialog(
+    HWND hwndDlg)
 {
     HWND hList1;
     HWND hList2;
@@ -318,13 +317,13 @@ Adv_InitDialog(VOID)
     else
         gGPP.user.GlobalFlags &= ~EnableSysTrayBatteryMeter;
 
-    CheckDlgButton(hAdv,
+    CheckDlgButton(hwndDlg,
         IDC_SYSTRAYBATTERYMETER,
         bEnabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hAdv,
+    CheckDlgButton(hwndDlg,
         IDC_PASSWORDLOGON,
         gGPP.user.GlobalFlags & EnablePasswordLogon ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hAdv,
+    CheckDlgButton(hwndDlg,
         IDC_VIDEODIMDISPLAY,
         gGPP.user.GlobalFlags & EnableVideoDimDisplay ? BST_CHECKED : BST_UNCHECKED);
 
@@ -336,7 +335,7 @@ Adv_InitDialog(VOID)
     bHibernate = spc.HiberFilePresent;
     bShutdown = spc.SystemS5;
 
-    hList1 = GetDlgItem(hAdv, IDC_LIDCLOSE);
+    hList1 = GetDlgItem(hwndDlg, IDC_LIDCLOSE);
     SendMessage(hList1, CB_RESETCONTENT, 0, 0);
 
     memset(g_SystemBatteries, 0x0, sizeof(g_SystemBatteries));
@@ -356,12 +355,12 @@ Adv_InitDialog(VOID)
     }
     else
     {
-        ShowWindow(GetDlgItem(hAdv, IDC_VIDEODIMDISPLAY), FALSE);
-        ShowWindow(GetDlgItem(hAdv, IDC_SLIDCLOSE), FALSE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_VIDEODIMDISPLAY), FALSE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SLIDCLOSE), FALSE);
         ShowWindow(hList1, FALSE);
     }
 
-    hList2 = GetDlgItem(hAdv, IDC_POWERBUTTON);
+    hList2 = GetDlgItem(hwndDlg, IDC_POWERBUTTON);
     SendMessage(hList2, CB_RESETCONTENT, 0, 0);
 
     memset(g_PowerButton, 0x0, sizeof(g_PowerButton));
@@ -387,11 +386,11 @@ Adv_InitDialog(VOID)
     }
     else
     {
-        ShowWindow(GetDlgItem(hAdv, IDC_SPOWERBUTTON), FALSE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SPOWERBUTTON), FALSE);
         ShowWindow(hList2, FALSE);
     }
 
-    hList3 = GetDlgItem(hAdv, IDC_SLEEPBUTTON);
+    hList3 = GetDlgItem(hwndDlg, IDC_SLEEPBUTTON);
     SendMessage(hList3, CB_RESETCONTENT, 0, 0);
     memset(g_SleepButton, 0x0, sizeof(g_SleepButton));
 
@@ -417,13 +416,13 @@ Adv_InitDialog(VOID)
     }
     else
     {
-        ShowWindow(GetDlgItem(hAdv, IDC_SSLEEPBUTTON), FALSE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_SSLEEPBUTTON), FALSE);
         ShowWindow(hList3, FALSE);
     }
 
     if (ReadGlobalPwrPolicy(&gGPP))
     {
-        ShowCurrentPowerActionPolicies(hAdv);
+        ShowCurrentPowerActionPolicies(hwndDlg);
     }
 }
 
@@ -490,17 +489,17 @@ Adv_SaveData(HWND hwndDlg)
 
     if (!IsBatteryUsed())
     {
-        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), &gGPP.user.PowerButtonAc);
 #if 0
         SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_LIDCLOSE), &gGPP.user.LidCloseAc);
-        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON), &gGPP.user.SleepButtonAc);
 #endif
+        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), &gGPP.user.PowerButtonAc);
+        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON), &gGPP.user.SleepButtonAc);
     }
     else
     {
 #if 0
-        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), &gGPP.user.PowerButtonDc);
         SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_LIDCLOSE), &gGPP.user.LidCloseDc);
+        SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON), &gGPP.user.PowerButtonDc);
         SaveCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON), &gGPP.user.SleepButtonDc);
 #endif
     }
@@ -512,7 +511,7 @@ Adv_SaveData(HWND hwndDlg)
 
     SetSystrayPowerIconState(bSystrayBatteryMeter);
 
-    Adv_InitDialog();
+//    Adv_InitDialog(hwndDlg);
 }
 
 /* Property page dialog callback */
@@ -525,8 +524,7 @@ AdvancedDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            hAdv = hwndDlg;
-            Adv_InitDialog();
+            Adv_InitDialog(hwndDlg);
             return TRUE;
 
         case WM_COMMAND:
@@ -553,14 +551,17 @@ AdvancedDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-            if (lpnm->code == (UINT)PSN_APPLY)
+            switch (((LPNMHDR)lParam)->code)
             {
-                Adv_SaveData(hwndDlg);
+                case PSN_APPLY:
+                    Adv_SaveData(hwndDlg);
+                    return TRUE;
+
+                case PSN_SETACTIVE:
+                    Adv_InitDialog(hwndDlg);
+                    return TRUE;
             }
-            return TRUE;
-        }
+            break;
     }
 
     return FALSE;

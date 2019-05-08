@@ -11,10 +11,6 @@
 
 #include "powercfg.h"
 
-//BOOLEAN Pos_InitData();
-//void Adv_InitDialog();
-
-
 static VOID
 Hib_InitDialog(HWND hwndDlg)
 {
@@ -75,9 +71,6 @@ Hib_SaveData(HWND hwndDlg)
 
     if (CallNtPowerInformation(SystemReserveHiberFile, &bHibernate, sizeof(bHibernate), NULL, 0) == STATUS_SUCCESS)
     {
-        // FIXME: Do not call these functions directly! Post a message to the other pages instead!
-        // Pos_InitData();
-        // Adv_InitDialog();
         Hib_InitDialog(hwndDlg);
         return TRUE;
     }
@@ -111,13 +104,11 @@ HibernateDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-            if (lpnm->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
                 return Hib_SaveData(hwndDlg);
             }
-        }
+            break;
     }
 
     return FALSE;

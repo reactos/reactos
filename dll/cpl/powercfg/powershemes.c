@@ -276,23 +276,21 @@ Pos_InitData(
         ShowWindow(GetDlgItem(hwndDlg, IDC_SDC), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_MONITORDCLIST), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_DISKDCLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST), SW_HIDE);
     }
 
-    if (!(spc.SystemS1 || spc.SystemS2 || spc.SystemS3))
-    {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST), SW_HIDE);
-    }
+    ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY),
+               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
+               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
+               ((spc.SystemS1 || spc.SystemS2 || spc.SystemS3) && spc.SystemBatteriesPresent) ? SW_SHOW : SW_HIDE);
 
-    if (!spc.HiberFilePresent)
-    {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST), SW_HIDE);
-    }
+    ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),
+               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),
+               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST),
+               (spc.HiberFilePresent && spc.SystemBatteriesPresent) ? SW_SHOW : SW_HIDE);
 
     return TRUE;
 }
@@ -955,13 +953,15 @@ PowerSchemesDlgProc(
             break;
 
         case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
             {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
-                if (lpnm->code == (UINT)PSN_APPLY)
-                {
+                case PSN_APPLY:
                     Pos_SaveData(hwndDlg, pPageData);
-                }
-                return TRUE;
+                    return TRUE;
+
+                case PSN_SETACTIVE:
+                    Pos_InitData(hwndDlg);
+                    return TRUE;
             }
             break;
     }
