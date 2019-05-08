@@ -76,8 +76,6 @@ IsGlobalDeviceMap(
                 *IsGlobal = RtlEqualUnicodeString(&GlobalString, &PNameInfo->Name, FALSE);
                 Status = STATUS_SUCCESS;
             }
-
-
         }
     }
     _SEH2_FINALLY
