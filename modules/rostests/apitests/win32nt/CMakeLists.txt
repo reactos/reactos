@@ -18,7 +18,7 @@ list(APPEND SOURCE
     ntgdi/NtGdiDoPalette.c
     ntgdi/NtGdiEngCreatePalette.c
     ntgdi/NtGdiEnumFontOpen.c
-    #ntgdi/NtGdiExtSelectClipRgn.c
+    ntgdi/NtGdiExtSelectClipRgn.c
     ntgdi/NtGdiExtTextOutW.c
     #ntgdi/NtGdiFlushUserBatch.c
     ntgdi/NtGdiGetBitmapBits.c
