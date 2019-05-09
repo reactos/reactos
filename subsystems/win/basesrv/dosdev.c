@@ -138,7 +138,7 @@ IsGlobalSymbolicLink(HANDLE LinkHandle,
     {
         if (PNameInfo != NULL)
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, PNameInfo);
+            RtlFreeHeap(BaseSrvHeap, 0, PNameInfo);
         }
     }
     _SEH2_END;
@@ -208,7 +208,7 @@ CSR_API(BaseSrvDefineDosDevice)
     }
 #endif
 
-    DPRINT1("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ (%d), TargetPath:%wZ (%d)\n",
+    DPRINT("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ (%d), TargetPath:%wZ (%d)\n",
            DefineDosDeviceRequest->Flags,
            &DefineDosDeviceRequest->DeviceName,
            DefineDosDeviceRequest->DeviceName.Length,
