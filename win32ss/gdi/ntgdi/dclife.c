@@ -950,7 +950,7 @@ APIENTRY
 NtGdiDeleteObjectApp(HANDLE hobj)
 {
     /* Complete all pending operations */
-    NtGdiFlushUserBatch(); // FIXME: We shouldn't need this
+    //NtGdiFlushUserBatch(); // FIXME: We shouldn't need this
 
     if (GDI_HANDLE_IS_STOCKOBJ(hobj)) return TRUE;
 

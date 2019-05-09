@@ -408,7 +408,7 @@ GdiAllocBatchCommand(
     else if (Cmd == GdiBCTextOut) cjSize = sizeof(GDIBSTEXTOUT);
     else if (Cmd == GdiBCExtTextOut) cjSize = sizeof(GDIBSEXTTEXTOUT);
     else if (Cmd == GdiBCSetBrushOrg) cjSize = sizeof(GDIBSSETBRHORG);
-    else if (Cmd == GdiBCExtSelClipRgn) cjSize = 0;
+    else if (Cmd == GdiBCExtSelClipRgn) cjSize = sizeof(GDIBSEXTSELCLPRGN);
     else if (Cmd == GdiBCSelObj) cjSize = sizeof(GDIBSOBJECT);
     else if (Cmd == GdiBCDelRgn) cjSize = sizeof(GDIBSOBJECT);
     else if (Cmd == GdiBCDelObj) cjSize = sizeof(GDIBSOBJECT);
