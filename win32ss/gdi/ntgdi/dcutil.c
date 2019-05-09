@@ -401,11 +401,10 @@ IntSetDefaultRegion(PDC pdc)
         pdc->erclWindow = rclWnd;
         pdc->erclClip = rclClip;
         /* Might be an InitDC or DCE... */
-        pdc->ptlFillOrigin.x = pdc->dcattr.ptlBrushOrigin.x;
-        pdc->ptlFillOrigin.y = pdc->dcattr.ptlBrushOrigin.y;
+        pdc->ptlFillOrigin = pdc->dcattr.ptlBrushOrigin;
         return TRUE;
     }
-
+    // No Vis use the Default System Region.
     pdc->prgnVis = prgnDefault;
     return FALSE;
 }

@@ -63,14 +63,12 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
     DPRINT("                 r %d b %d\n",rect.right,rect.bottom);
 
     {
-       RECTL rcRgn;
-       if (dc->fs & DC_FLAG_DIRTY_RAO) CLIPPING_UpdateGCRegion(dc);
-       if (REGION_GetRgnBox(dc->prgnRao, &rcRgn))
-       {
-          if (RECTL_bIntersectRect( &rcRgn, &rcRgn, &bounds )) IntUpdateBoundsRect(dc, &rcRgn);
-       }
+       RECTL rcRgn = dc->erclClip; // Use the clip box for now.
+
+       if (RECTL_bIntersectRect( &rcRgn, &rcRgn, &bounds ))
+           IntUpdateBoundsRect(dc, &rcRgn);
        else
-          IntUpdateBoundsRect(dc, &bounds);
+           IntUpdateBoundsRect(dc, &bounds);
     }
 }
 

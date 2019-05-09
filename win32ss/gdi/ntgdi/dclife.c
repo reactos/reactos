@@ -112,6 +112,11 @@ DC_InitHack(PDC pdc)
         DC_vCopyState(pdc, defaultDCstate, TRUE);
     }
 
+    if (prgnDefault == NULL)
+    {
+        prgnDefault = IntSysCreateRectpRgn(0, 0, 0, 0);
+    }
+
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -246,6 +251,9 @@ DC_vInitDc(
     /* Allocate a Vis region */
     pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
 	ASSERT(pdc->prgnVis);
+
+    /* Setup Vis Region Attribute information */
+    UpdateVisRgn(pdc);
 
 	/* Initialize Clip object */
 	IntEngInitClipObj(&pdc->co);
@@ -637,7 +645,7 @@ GreOpenDCW(
     BOOL bDisplay,
     HANDLE hspool,
     VOID *pDriverInfo2,
-    VOID *pUMdhpdev)
+    PVOID *pUMdhpdev)
 {
     PPDEVOBJ ppdev;
     PDC pdc;
@@ -667,6 +675,7 @@ GreOpenDCW(
 
     /* Lock ppdev and initialize the new DC */
     DC_vInitDc(pdc, iType, ppdev);
+    if (pUMdhpdev) *pUMdhpdev = ppdev->dhpdev;
     /* FIXME: HACK! */
     DC_InitHack(pdc);
 
@@ -689,6 +698,7 @@ NtGdiOpenDCW(
     _In_ ULONG iType,
     _In_ BOOL bDisplay,
     _In_opt_ HANDLE hspool,
+    /*_In_opt_ DRIVER_INFO2W *pdDriverInfo2, Need this soon!!!! */
     _At_((PUMDHPDEV*)pUMdhpdev, _Out_) PVOID pUMdhpdev)
 {
     UNICODE_STRING ustrDevice;
@@ -752,6 +762,7 @@ NtGdiOpenDCW(
     {
         pdmInit = NULL;
         pUMdhpdev = NULL;
+        // return UserGetDesktopDC(iType, FALSE, TRUE);
     }
 
     /* FIXME: HACK! */
@@ -777,7 +788,7 @@ NtGdiOpenDCW(
     /* If we got a HDC and a UM dhpdev is requested,... */
     if (hdc && pUMdhpdev)
     {
-        /* Copy dhpdev to caller (FIXME: use dhpdev?) */
+        /* Copy dhpdev to caller */
         _SEH2_TRY
         {
             /* Pointer was already probed */

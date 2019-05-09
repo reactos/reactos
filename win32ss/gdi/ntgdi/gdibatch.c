@@ -424,7 +424,13 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      }
 
      case GdiBCExtSelClipRgn:
+     {
+        PGDIBSEXTSELCLPRGN pgO;
+        if (!dc) break;
+        pgO = (PGDIBSEXTSELCLPRGN) pHdr;
+        IntGdiExtSelectClipRect( dc, &pgO->rcl, pgO->fnMode);
         break;
+     }
 
      case GdiBCSelObj:
      {

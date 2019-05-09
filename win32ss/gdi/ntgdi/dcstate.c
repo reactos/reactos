@@ -57,6 +57,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
             REGION_Delete(pdcDst->dclevel.prgnMeta);
             pdcDst->dclevel.prgnMeta = NULL;
         }
+        /* The only way to reset the Meta Region to its original state is to return to a previously saved version of the DC with SaveDC. */
         if (pdcSrc->dclevel.prgnMeta)
         {
             pdcDst->dclevel.prgnMeta = IntSysCreateRectpRgn(0, 0, 0, 0);
