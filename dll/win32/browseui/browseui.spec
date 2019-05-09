@@ -26,6 +26,6 @@
 133 stdcall -noname Channel_QuickLaunch()
 134 stdcall -noname SHGetNavigateTarget(long long long long)
 135 stdcall -noname GetInfoTip(ptr long wstr long)
-136 stdcall -noname SHEnumClassesOfCategories(long long long long long)
+136 stdcall -noname SHEnumClassesOfCategories(long ptr long ptr ptr)
 137 stdcall -noname SHWriteClassesOfCategories(long long long long long long long)
 138 stdcall -noname SHIsExplorerBrowser()
