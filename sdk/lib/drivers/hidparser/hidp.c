@@ -590,7 +590,11 @@ HidP_GetValueCaps(
     PUSHORT ValueCapsLength,
     PHIDP_PREPARSED_DATA PreparsedData)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    return HidP_GetSpecificValueCaps(ReportType,
+                                     HID_USAGE_PAGE_UNDEFINED,
+                                     HIDP_LINK_COLLECTION_UNSPECIFIED,
+                                     0,
+                                     ValueCaps,
+                                     ValueCapsLength,
+                                     PreparsedData);
 }
