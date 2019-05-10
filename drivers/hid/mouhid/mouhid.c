@@ -947,8 +947,8 @@ MouHid_StartDevice(
     }
 
     /* check if mice is absolute */
-    if (DeviceExtension->ValueCapsY.LogicalMax > DeviceExtension->ValueCapsY.LogicalMin ||
-        DeviceExtension->ValueCapsX.LogicalMax > DeviceExtension->ValueCapsX.LogicalMin)
+    if (DeviceExtension->ValueCapsY.IsAbsolute &&
+        DeviceExtension->ValueCapsX.IsAbsolute)
     {
         /* mice is absolute */
         DeviceExtension->MouseAbsolute = TRUE;
