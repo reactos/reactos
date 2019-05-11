@@ -483,8 +483,6 @@ void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lo
         }
 
         if (remove) {
-            PDEVICE_OBJECT pdo;
-
             if (vde->name.Buffer)
                 ExFreePool(vde->name.Buffer);
 
@@ -493,11 +491,7 @@ void remove_volume_child(_Inout_ _Requires_exclusive_lock_held_(_Curr_->child_lo
 
             ExDeleteResourceLite(&pdode->child_lock);
 
-            pdo = vde->pdo;
             IoDeleteDevice(vde->device);
-
-            if (!no_pnp)
-                IoDeleteDevice(pdo);
         }
     } else
         ExReleaseResourceLite(&pdode->child_lock);

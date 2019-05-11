@@ -161,7 +161,7 @@ static NTSTATUS pnp_cancel_remove_device(PDEVICE_OBJECT DeviceObject) {
 
     ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
 
-    acquire_fcb_lock_exclusive(Vcb);
+    ExAcquireResourceExclusiveLite(&Vcb->fileref_lock, TRUE);
 
     if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
         Status = STATUS_ACCESS_DENIED;
@@ -175,7 +175,7 @@ static NTSTATUS pnp_cancel_remove_device(PDEVICE_OBJECT DeviceObject) {
     }
 
 end:
-    release_fcb_lock(Vcb);
+    ExReleaseResourceLite(&Vcb->fileref_lock);
     ExReleaseResourceLite(&Vcb->tree_lock);
 
     return STATUS_SUCCESS;
@@ -186,8 +186,6 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     NTSTATUS Status;
 
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
-
-    acquire_fcb_lock_exclusive(Vcb);
 
     if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
         Status = STATUS_ACCESS_DENIED;
@@ -216,8 +214,6 @@ NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     Status = STATUS_SUCCESS;
 end:
-    release_fcb_lock(Vcb);
-
     ExReleaseResourceLite(&Vcb->tree_lock);
 
     return Status;

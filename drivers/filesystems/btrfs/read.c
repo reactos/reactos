@@ -3359,7 +3359,7 @@ NTSTATUS NTAPI drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     if (Irp->Flags & IRP_PAGING_IO)
         wait = TRUE;
 
-    if (!(Irp->Flags & IRP_PAGING_IO) && FileObject->SectionObjectPointer->DataSectionObject) {
+    if (!(Irp->Flags & IRP_PAGING_IO) && FileObject->SectionObjectPointer && FileObject->SectionObjectPointer->DataSectionObject) {
         IO_STATUS_BLOCK iosb;
 
         CcFlushCache(FileObject->SectionObjectPointer, &IrpSp->Parameters.Read.ByteOffset, IrpSp->Parameters.Read.Length, &iosb);

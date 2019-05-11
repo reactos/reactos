@@ -17,38 +17,33 @@
 
 #include "btrfs_drv.h"
 
-NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT64 generation, PIRP Irp) {
-    UINT8* buf;
-    NTSTATUS Status;
+NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, UINT8* buf, root* r, tree** pt) {
     tree_header* th;
     tree* t;
     tree_data* td;
-    chunk* c;
     UINT8 h;
     BOOL inserted;
     LIST_ENTRY* le;
-
-    buf = ExAllocatePoolWithTag(PagedPool, Vcb->superblock.node_size, ALLOC_TAG);
-    if (!buf) {
-        ERR("out of memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, NULL, &c, Irp, generation, FALSE, NormalPagePriority);
-    if (!NT_SUCCESS(Status)) {
-        ERR("read_data returned 0x%08x\n", Status);
-        ExFreePool(buf);
-        return Status;
-    }
 
     th = (tree_header*)buf;
 
     t = ExAllocatePoolWithTag(PagedPool, sizeof(tree), ALLOC_TAG);
     if (!t) {
         ERR("out of memory\n");
-        ExFreePool(buf);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    if (th->level > 0) {
+        t->nonpaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(tree_nonpaged), ALLOC_TAG);
+        if (!t->nonpaged) {
+            ERR("out of memory\n");
+            ExFreePool(t);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        ExInitializeFastMutex(&t->nonpaged->mutex);
+    } else
+        t->nonpaged = NULL;
 
     RtlCopyMemory(&t->header, th, sizeof(tree_header));
     t->hash = calc_crc32c(0xffffffff, (UINT8*)&addr, sizeof(UINT64));
@@ -73,7 +68,6 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
         if ((t->header.num_items * sizeof(leaf_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
             ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
             ExFreePool(t);
-            ExFreePool(buf);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -82,7 +76,6 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
             if (!td) {
                 ERR("out of memory\n");
                 ExFreePool(t);
-                ExFreePool(buf);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -97,7 +90,6 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
                 ERR("overlarge item in tree %llx: %u > %u\n", addr, ln[i].size, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node));
                 ExFreeToPagedLookasideList(&t->Vcb->tree_data_lookaside, td);
                 ExFreePool(t);
-                ExFreePool(buf);
                 return STATUS_INTERNAL_ERROR;
             }
 
@@ -119,7 +111,6 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
         if ((t->header.num_items * sizeof(internal_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
             ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
             ExFreePool(t);
-            ExFreePool(buf);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -128,7 +119,6 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
             if (!td) {
                 ERR("out of memory\n");
                 ExFreePool(t);
-                ExFreePool(buf);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -145,8 +135,9 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
 
         t->size = t->header.num_items * sizeof(internal_node);
         t->buf = NULL;
-        ExFreePool(buf);
     }
+
+    ExAcquireFastMutex(&Vcb->trees_list_mutex);
 
     InsertTailList(&Vcb->trees, &t->list_entry);
 
@@ -190,6 +181,8 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
     if (!Vcb->trees_ptrs[h] || t->list_entry_hash.Flink == Vcb->trees_ptrs[h])
         Vcb->trees_ptrs[h] = &t->list_entry_hash;
 
+    ExReleaseFastMutex(&Vcb->trees_list_mutex);
+
     TRACE("returning %p\n", t);
 
     *pt = t;
@@ -197,9 +190,78 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
     return STATUS_SUCCESS;
 }
 
-static tree* free_tree2(tree* t) {
+static NTSTATUS do_load_tree2(device_extension* Vcb, tree_holder* th, UINT8* buf, root* r, tree* t, tree_data* td) {
+    if (!th->tree) {
+        NTSTATUS Status;
+        tree* nt;
+
+        Status = load_tree(Vcb, th->address, buf, r, &nt);
+        if (!NT_SUCCESS(Status)) {
+            ERR("load_tree returned %08x\n", Status);
+            return Status;
+        }
+
+        nt->parent = t;
+
+#ifdef DEBUG_PARANOID
+        if (t && t->header.level <= nt->header.level) int3;
+#endif
+
+        nt->paritem = td;
+
+        th->tree = nt;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, PIRP Irp) {
+    NTSTATUS Status;
+    UINT8* buf;
+    chunk* c;
+
+    buf = ExAllocatePoolWithTag(PagedPool, Vcb->superblock.node_size, ALLOC_TAG);
+    if (!buf) {
+        ERR("out of memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = read_data(Vcb, th->address, Vcb->superblock.node_size, NULL, TRUE, buf, NULL,
+                       &c, Irp, th->generation, FALSE, NormalPagePriority);
+    if (!NT_SUCCESS(Status)) {
+        ERR("read_data returned 0x%08x\n", Status);
+        ExFreePool(buf);
+        return Status;
+    }
+
+    if (t)
+        ExAcquireFastMutex(&t->nonpaged->mutex);
+    else
+        ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
+
+    Status = do_load_tree2(Vcb, th, buf, r, t, td);
+
+    if (t)
+        ExReleaseFastMutex(&t->nonpaged->mutex);
+    else
+        ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
+
+    if (!th->tree || th->tree->buf != buf)
+        ExFreePool(buf);
+
+    if (!NT_SUCCESS(Status)) {
+        ERR("do_load_tree2 returned %08x\n", Status);
+        return Status;
+    }
+
+    return Status;
+}
+
+void free_tree(tree* t) {
     tree* par;
     root* r = t->root;
+
+    // No need to acquire lock, as this is only ever called while Vcb->tree_lock held exclusively
 
     par = t->parent;
 
@@ -245,59 +307,10 @@ static tree* free_tree2(tree* t) {
     if (t->buf)
         ExFreePool(t->buf);
 
+    if (t->nonpaged)
+        ExFreePool(t->nonpaged);
+
     ExFreePool(t);
-
-    return NULL;
-}
-
-NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, BOOL* loaded, PIRP Irp) {
-    BOOL ret;
-
-    ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
-
-    if (!th->tree) {
-        NTSTATUS Status;
-        tree* nt;
-
-        Status = load_tree(Vcb, th->address, r, &nt, th->generation, Irp);
-        if (!NT_SUCCESS(Status)) {
-            ERR("load_tree returned %08x\n", Status);
-            ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
-            return Status;
-        }
-
-        nt->parent = t;
-
-#ifdef DEBUG_PARANOID
-        if (t && t->header.level <= nt->header.level) int3;
-#endif
-
-        nt->paritem = td;
-
-        th->tree = nt;
-
-        ret = TRUE;
-    } else
-        ret = FALSE;
-
-    ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
-
-    *loaded = ret;
-
-    return STATUS_SUCCESS;
-}
-
-tree* free_tree(tree* t) {
-    tree* ret;
-    root* r = t->root;
-
-    ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
-
-    ret = free_tree2(t);
-
-    ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
-
-    return ret;
 }
 
 static __inline tree_data* first_item(tree* t) {
@@ -504,7 +517,6 @@ static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* 
         return STATUS_SUCCESS;
     } else {
         NTSTATUS Status;
-        BOOL loaded;
 
         while (td && td->treeholder.tree && IsListEmpty(&td->treeholder.tree->itemlist)) {
             td = prev_item(t, td);
@@ -520,7 +532,7 @@ static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* 
         }
 
         if (!td->treeholder.tree) {
-            Status = do_load_tree(Vcb, &td->treeholder, t->root, t, td, &loaded, Irp);
+            Status = do_load_tree(Vcb, &td->treeholder, t->root, t, td, Irp);
             if (!NT_SUCCESS(Status)) {
                 ERR("do_load_tree returned %08x\n", Status);
                 return Status;
@@ -536,10 +548,9 @@ static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* 
 NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_ root* r, _Out_ traverse_ptr* tp,
                    _In_ const KEY* searchkey, _In_ BOOL ignore, _In_opt_ PIRP Irp) {
     NTSTATUS Status;
-    BOOL loaded;
 
     if (!r->treeholder.tree) {
-        Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, Irp);
+        Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return Status;
@@ -556,10 +567,9 @@ NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension
 
 NTSTATUS find_item_to_level(device_extension* Vcb, root* r, traverse_ptr* tp, const KEY* searchkey, BOOL ignore, UINT8 level, PIRP Irp) {
     NTSTATUS Status;
-    BOOL loaded;
 
     if (!r->treeholder.tree) {
-        Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, Irp);
+        Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return Status;
@@ -583,7 +593,6 @@ BOOL find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     tree* t;
     tree_data *td = NULL, *next;
     NTSTATUS Status;
-    BOOL loaded;
 
     next = next_item(tp->tree, tp->item);
 
@@ -623,10 +632,12 @@ BOOL find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     if (!t)
         return FALSE;
 
-    Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, &loaded, Irp);
-    if (!NT_SUCCESS(Status)) {
-        ERR("do_load_tree returned %08x\n", Status);
-        return FALSE;
+    if (!td->treeholder.tree) {
+        Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, Irp);
+        if (!NT_SUCCESS(Status)) {
+            ERR("do_load_tree returned %08x\n", Status);
+            return FALSE;
+        }
     }
 
     t = td->treeholder.tree;
@@ -636,10 +647,12 @@ BOOL find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
         fi = first_item(t);
 
-        Status = do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, &loaded, Irp);
-        if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
-            return FALSE;
+        if (!fi->treeholder.tree) {
+            Status = do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, Irp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("do_load_tree returned %08x\n", Status);
+                return FALSE;
+            }
         }
 
         t = fi->treeholder.tree;
@@ -686,7 +699,6 @@ BOOL find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     tree* t;
     tree_data* td;
     NTSTATUS Status;
-    BOOL loaded;
 
     // FIXME - support ignore flag
     if (prev_item(tp->tree, tp->item)) {
@@ -709,10 +721,12 @@ BOOL find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
     td = prev_item(t->parent, t->paritem);
 
-    Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, &loaded, Irp);
-    if (!NT_SUCCESS(Status)) {
-        ERR("do_load_tree returned %08x\n", Status);
-        return FALSE;
+    if (!td->treeholder.tree) {
+        Status = do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, Irp);
+        if (!NT_SUCCESS(Status)) {
+            ERR("do_load_tree returned %08x\n", Status);
+            return FALSE;
+        }
     }
 
     t = td->treeholder.tree;
@@ -722,10 +736,12 @@ BOOL find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
         li = last_item(t);
 
-        Status = do_load_tree(Vcb, &li->treeholder, t->parent->root, t, li, &loaded, Irp);
-        if (!NT_SUCCESS(Status)) {
-            ERR("do_load_tree returned %08x\n", Status);
-            return FALSE;
+        if (!li->treeholder.tree) {
+            Status = do_load_tree(Vcb, &li->treeholder, t->parent->root, t, li, Irp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("do_load_tree returned %08x\n", Status);
+                return FALSE;
+            }
         }
 
         t = li->treeholder.tree;
@@ -756,7 +772,7 @@ void free_trees_root(device_extension* Vcb, root* r) {
 
                     empty = FALSE;
 
-                    free_tree2(t);
+                    free_tree(t);
                     if (top && r->treeholder.tree == t)
                         r->treeholder.tree = NULL;
 
@@ -793,7 +809,7 @@ void free_trees(device_extension* Vcb) {
 
                 empty = FALSE;
 
-                free_tree2(t);
+                free_tree(t);
                 if (top && r->treeholder.tree == t)
                     r->treeholder.tree = NULL;
 
@@ -808,6 +824,9 @@ void free_trees(device_extension* Vcb) {
         if (empty)
             break;
     }
+
+    reap_filerefs(Vcb, Vcb->root_fileref);
+    reap_fcbs(Vcb);
 }
 
 #ifdef _MSC_VER
@@ -859,9 +878,7 @@ NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
     if (Status == STATUS_NOT_FOUND) {
         if (r) {
             if (!r->treeholder.tree) {
-                BOOL loaded;
-
-                Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, Irp);
+                Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
                 if (!NT_SUCCESS(Status)) {
                     ERR("do_load_tree returned %08x\n", Status);
                     return Status;
