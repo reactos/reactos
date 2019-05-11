@@ -392,16 +392,6 @@ GdiAllocBatchCommand(
     /* Check if we have a valid environment */
     if (!pTeb || !pTeb->Win32ThreadInfo) return NULL;
 
-    /* Do we use a DC? */
-    if (hdc)
-    {
-        /* If the batch DC is NULL, we set this one as the new one */
-        if (!pTeb->GdiTebBatch.HDC) pTeb->GdiTebBatch.HDC = hdc;
-
-        /* If not, check if the batch DC equal to our DC */
-        else if (pTeb->GdiTebBatch.HDC != hdc) return NULL;
-    }
-
     /* Get the size of the entry */
     if      (Cmd == GdiBCPatBlt) cjSize = sizeof(GDIBSPATBLT);
     else if (Cmd == GdiBCPolyPatBlt) cjSize = sizeof(GDIBSPPATBLT);
@@ -416,6 +406,16 @@ GdiAllocBatchCommand(
 
     /* Unsupported operation */
     if (cjSize == 0) return NULL;
+
+    /* Do we use a DC? */
+    if (hdc)
+    {
+        /* If the batch DC is NULL, we set this one as the new one */
+        if (!pTeb->GdiTebBatch.HDC) pTeb->GdiTebBatch.HDC = hdc;
+
+        /* If not, check if the batch DC equal to our DC */
+        else if (pTeb->GdiTebBatch.HDC != hdc) return NULL;
+    }
 
     /* Check if the buffer is full */
     if ((pTeb->GdiBatchCount >= GDI_BatchLimit) ||
