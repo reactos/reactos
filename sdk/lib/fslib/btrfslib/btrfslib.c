@@ -887,7 +887,7 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
     UINT64 bytes_used;
     LIST_ENTRY* le;
 
-    sblen = sizeof(sb);
+    sblen = sizeof(*sb);
     if (sblen & (sector_size - 1))
         sblen = (sblen & sector_size) + sector_size;
 
@@ -1297,7 +1297,7 @@ static BOOL is_mounted_multi_device(HANDLE h, UINT32 sector_size) {
 
     static WCHAR btrfs[] = L"\\Btrfs";
 
-    sblen = sizeof(sb);
+    sblen = sizeof(*sb);
     if (sblen & (sector_size - 1))
         sblen = (sblen & sector_size) + sector_size;
 
