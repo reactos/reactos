@@ -206,91 +206,27 @@ Pos_InitData(
     HWND hwndDlg)
 {
     SYSTEM_POWER_CAPABILITIES spc;
-/*
-    RECT rectCtl, rectDlg, rectCtl2;
-    LONG movetop = 0;
-    LONG moveright = 0;
-
-    if (GetWindowRect(hwndDlg,&rectDlg))
-        {
-            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_SAT),&rectCtl2))
-            {
-                if (GetWindowRect(GetDlgItem(hwndDlg, IDC_MONITOR),&rectCtl))
-                {
-                    movetop=rectCtl.top - rectCtl2.top;
-                    MoveWindow(GetDlgItem(hwndDlg, IDC_MONITOR),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
-                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_DISK),&rectCtl))
-                    {
-                        MoveWindow(GetDlgItem(hwndDlg, IDC_DISK),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
-                    }
-                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_STANDBY),&rectCtl))
-                    {
-                        MoveWindow(GetDlgItem(hwndDlg, IDC_STANDBY),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
-                    }
-                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HIBERNATE),&rectCtl))
-                    {
-                        MoveWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
-                    }
-                    if (GetWindowRect(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),&rectCtl2))
-                    {
-                        movetop=movetop-8;
-                        if (GetWindowRect(GetDlgItem(hwndDlg, IDC_MONITORACLIST),&rectCtl))
-                        {
-                            moveright=rectCtl.right - rectCtl2.right;
-                            MoveWindow(GetDlgItem(hwndDlg, IDC_MONITORACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
-                            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_DISKACLIST),&rectCtl))
-                            {
-                                MoveWindow(GetDlgItem(hwndDlg, IDC_DISKACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
-                            }
-                            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),&rectCtl))
-                            {
-                                MoveWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
-                            }
-                            if (GetWindowRect(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),&rectCtl))
-                            {
-                                MoveWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top-movetop,rectCtl.right-rectCtl.left-moveright,rectCtl.bottom-rectCtl.top,FALSE);
-                            }
-                        }
-                        if (GetWindowRect(GetDlgItem(hwndDlg, IDC_GRPDETAIL),&rectCtl))
-                        {
-                            MoveWindow(GetDlgItem(hwndDlg, IDC_GRPDETAIL),rectCtl.left-rectDlg.left,rectCtl.top-rectDlg.top,rectCtl.right-rectCtl.left,rectCtl.bottom-rectCtl.top,FALSE);
-                        }
-                    }
-                }
-            }
-        }
-    }
-*/
 
     if (!GetPwrCapabilities(&spc))
     {
         return FALSE;
     }
 
-    if (!spc.SystemBatteriesPresent)
-    {
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SAT), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_IAC), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SAC), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_IDC), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_SDC), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_MONITORDCLIST), SW_HIDE);
-        ShowWindow(GetDlgItem(hwndDlg, IDC_DISKDCLIST), SW_HIDE);
-    }
-
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY),
                (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
                (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
-    ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
-               ((spc.SystemS1 || spc.SystemS2 || spc.SystemS3) && spc.SystemBatteriesPresent) ? SW_SHOW : SW_HIDE);
+    if (spc.SystemBatteriesPresent)
+        ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
+                   (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
 
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),
                (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),
                (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
-    ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST),
-               (spc.HiberFilePresent && spc.SystemBatteriesPresent) ? SW_SHOW : SW_HIDE);
+    if (spc.SystemBatteriesPresent)
+        ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST),
+                   (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
 
     return TRUE;
 }
@@ -307,6 +243,7 @@ LoadConfig(
     TCHAR szTemp[MAX_PATH];
     TCHAR szConfig[MAX_PATH];
     PPOWER_POLICY pp;
+    HWND hwndCtrl;
 
     if (pScheme == NULL)
     {
@@ -339,68 +276,52 @@ LoadConfig(
 
     for (i = 0; i < 16; i++)
     {
-        if (Sec[i] == pp->user.VideoTimeoutAc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.VideoTimeoutAc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_MONITORACLIST,
-                        CB_SETCURSEL,
-                        i,
-                        (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
-        if (Sec[i] == pp->user.VideoTimeoutDc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.VideoTimeoutDc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
-                        CB_SETCURSEL,
-                         i,
-                         (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
-        if (Sec[i] == pp->user.SpindownTimeoutAc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKACLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.SpindownTimeoutAc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_DISKACLIST,
-                       CB_SETCURSEL,
-                       i - 2,
-                       (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
 
-        if (Sec[i] == pp->user.SpindownTimeoutDc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.SpindownTimeoutDc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
-                       CB_SETCURSEL,
-                       i - 2,
-                       (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
 
-        if (Sec[i] == pp->user.IdleTimeoutAc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.IdleTimeoutAc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_STANDBYACLIST,
-                       CB_SETCURSEL,
-                       i,
-                       (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
-        if (Sec[i] == pp->user.IdleTimeoutDc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->user.IdleTimeoutDc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_STANDBYDCLIST,
-                       CB_SETCURSEL,
-                       i,
-                       (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
-        if (Sec[i] == pp->mach.DozeS4TimeoutAc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->mach.DozeS4TimeoutAc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_HIBERNATEACLIST,
-                       CB_SETCURSEL,
-                       i,
-                    (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
-        if (Sec[i] == pp->mach.DozeS4TimeoutDc)
+        hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
+        if (hwndCtrl != NULL && Sec[i] == pp->mach.DozeS4TimeoutDc)
         {
-            SendDlgItemMessage(hwndDlg, IDC_HIBERNATEDCLIST,
-                       CB_SETCURSEL,
-                       i,
-                       (LPARAM)0);
+            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
     }
 
@@ -462,8 +383,12 @@ Pos_InitPage(HWND hwndDlg)
                 break;
 
             default:
+                hwnd = NULL;
                 return;
         }
+
+        if (hwnd == NULL)
+            continue;
 
         for (ifrom = imin; ifrom < (IDS_TIMEOUT15 + 1); ifrom++)
         {
@@ -507,80 +432,89 @@ Pos_SaveData(
     PPOWER_SCHEMES_PAGE_DATA pPageData)
 {
     PPOWER_SCHEME pScheme;
+    HWND hwndCtrl;
     INT tmp;
 
     pScheme = pPageData->pSelectedPowerScheme;
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORACLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.VideoTimeoutAc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.VideoTimeoutAc = Sec[tmp];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.VideoTimeoutDc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.VideoTimeoutDc = Sec[tmp];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_DISKACLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKACLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.SpindownTimeoutAc = Sec[tmp + 2];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.SpindownTimeoutAc = Sec[tmp + 2];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.SpindownTimeoutDc = Sec[tmp + 2];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.SpindownTimeoutDc = Sec[tmp + 2];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_STANDBYACLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.IdleTimeoutAc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.IdleTimeoutAc = Sec[tmp];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_STANDBYDCLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.user.IdleTimeoutDc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.user.IdleTimeoutDc = Sec[tmp];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HIBERNATEACLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.mach.DozeS4TimeoutAc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.mach.DozeS4TimeoutAc = Sec[tmp];
+        }
     }
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HIBERNATEDCLIST,
-                   CB_GETCURSEL,
-                   0,
-                   (LPARAM)0);
-    if (tmp > 0 && tmp < 16)
+    hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
+    if (hwndCtrl != NULL)
     {
-        pScheme->PowerPolicy.mach.DozeS4TimeoutDc = Sec[tmp];
+        tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
+        if (tmp > 0 && tmp < 16)
+        {
+            pScheme->PowerPolicy.mach.DozeS4TimeoutDc = Sec[tmp];
+        }
     }
 
     if (SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy))

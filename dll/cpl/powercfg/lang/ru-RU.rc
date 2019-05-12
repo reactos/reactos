@@ -2,12 +2,12 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 250, 220
+IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 250, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Схемы управления питанием"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 5, 5, 32, 32
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 32, 32
     LTEXT "Выберите схему управления электропитанием с наиболее подходящими параметрами для этого компьютера. Изменение нижеследующих параметров изменит выбранную схему.", -1, 37, 5, 194, 36
     GROUPBOX "&Схемы управления питанием", -1, 7, 57, 240, 46
     COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
@@ -31,6 +31,28 @@ BEGIN
     LTEXT "С&пящий режим через:", IDC_HIBERNATE, 15, 192, 80, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_HIBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_POWERSCHEMESPAGE_AC DIALOGEX 0, 0, 250, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Схемы управления питанием"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 32, 32
+    LTEXT "Выберите схему управления электропитанием с наиболее подходящими параметрами для этого компьютера. Изменение нижеследующих параметров изменит выбранную схему.", -1, 37, 5, 194, 36
+    GROUPBOX "&Схемы управления питанием", -1, 7, 57, 240, 46
+    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "Сохранить &как...", IDC_SAVEAS_BTN, 103, 85, 75, 15, WS_DISABLED
+    PUSHBUTTON "&Удалить", IDC_DELETE_BTN, 183, 85, 55, 15, WS_DISABLED
+    GROUPBOX "Нет данных", IDC_GRPDETAIL, 7, 108, 240, 105
+    LTEXT "Отключить &монитор:", IDC_MONITOR, 15, 142, 80, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 140, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Отключить &диски:", IDC_DISK, 15, 157, 80, 10
+    COMBOBOX IDC_DISKACLIST, 100, 155, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Ждущий режим через:", IDC_STANDBY, 15, 177, 80, 10
+    COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "С&пящий режим через:", IDC_HIBERNATE, 15, 192, 80, 10
+    COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 250, 220
@@ -71,7 +93,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 5, 5, 32, 32
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 32, 32
     LTEXT "Выберите желаемые параметры энергосбережения.", -1, 37, 5, 205, 20
     GROUPBOX "Параметры", -1, 5, 35, 225, 55
     AUTOCHECKBOX "&Всегда отображать значок на панели задач", IDC_SYSTRAYBATTERYMETER, 15, 48, 200, 10, WS_TABSTOP
@@ -91,7 +113,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Спящий режим"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 32, 32
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 32, 32
     LTEXT "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.", -1, 37, 5, 195, 35
     GROUPBOX "Спящий режим", -1, 5, 57, 235, 25
     AUTOCHECKBOX "&Разрешить переход в спящий режим", IDC_HIBERNATEFILE, 10, 67, 210, 10, WS_TABSTOP

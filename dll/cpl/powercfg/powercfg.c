@@ -115,13 +115,19 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.phpage = hpsp;
     psh.pfnCallback = PropSheetProc;
 
-    InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSCHEMES, PowerSchemesDlgProc);
-    if (GetPwrCapabilities(&spc))
+    if (!GetPwrCapabilities(&spc))
     {
-        if (spc.SystemBatteriesPresent)
-        {
-            InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
-        }
+        return GetLastError();
+    }
+
+    if (spc.SystemBatteriesPresent)
+    {
+        InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_ACDC, PowerSchemesDlgProc);
+        InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
+    }
+    else
+    {
+        InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_AC, PowerSchemesDlgProc);
     }
     InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedDlgProc);
     InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
@@ -188,10 +194,10 @@ DllMain(HINSTANCE hinstDLL,
 {
     UNREFERENCED_PARAMETER(lpvReserved);
 
-    switch(dwReason)
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-        case DLL_THREAD_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
             hApplet = hinstDLL;
             break;
     }
