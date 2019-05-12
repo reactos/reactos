@@ -130,7 +130,10 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_AC, PowerSchemesDlgProc);
     }
     InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedDlgProc);
-    InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
+    if (spc.SystemS4)
+    {
+        InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
+    }
 
     /* Load additional pages provided by shell extensions */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);
