@@ -16,6 +16,7 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <commctrl.h>
 #include <shellapi.h>
 #include <windowsx.h>
 #include <stdlib.h>
@@ -77,6 +78,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     MSG msg;
     HACCEL hAccelTable;
+    INITCOMMONCONTROLSEX iccex;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -111,6 +113,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
+    /* Load the common controls */
+    iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    iccex.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&iccex);
 
     SelectObject(hdcOffscreen, hbmpOld);
     DeleteObject (hbmpOffscreen);
