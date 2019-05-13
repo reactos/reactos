@@ -40,6 +40,7 @@ static BOOLEAN InputQueueEmpty;
 static BOOLEAN WaitForInput;
 static KEYBOARD_INPUT_DATA InputDataQueue; // Only one element!
 static IO_STATUS_BLOCK InputIosb;
+static UINT LastLoadedCodepage;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -670,6 +671,9 @@ SetConsoleOutputCP(
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
+    if (wCodepage == LastLoadedCodepage)
+        return TRUE;
+
     hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
     Status = NtDeviceIoControlFile(hConsoleOutput,
@@ -682,7 +686,11 @@ SetConsoleOutputCP(
                                    sizeof(ULONG),
                                    NULL,
                                    0);
-    return NT_SUCCESS(Status);
+    if (!NT_SUCCESS(Status))
+          return FALSE;
+
+    LastLoadedCodepage = wCodepage;
+    return TRUE;
 }
 
 
