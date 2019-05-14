@@ -1311,7 +1311,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
     BOOL DoCallBack = TRUE;
-    LARGE_INTEGER LargeTickCount;
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
