@@ -1421,15 +1421,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         // Only happens when calling the client!
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-        KeQueryTickCount(&LargeTickCount);
-        Window->head.pti->timeLast = LargeTickCount.u.LowPart;
-        Window->head.pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
-
         RETURN( TRUE);
     }
 
     if (MsqIsHung(ptiSendTo))
     {
+        TRACE("Let's go Ghost!\n");
+        IntMakeHungWindowGhosted(hWnd);
+
         if (uFlags & SMTO_ABORTIFHUNG)
         {
             // FIXME: Set window hung and add to a list.
@@ -1463,11 +1462,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
-        if (MsqIsHung(ptiSendTo))
-        {
-            TRACE("Let's go Ghost!\n");
-            IntMakeHungWindowGhosted(hWnd);
-        }
 /*
  *  MSDN says:
  *  Microsoft Windows 2000: If GetLastError returns zero, then the function
@@ -1484,10 +1478,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         SetLastNtError(Status);
         RETURN( FALSE);
     }
-
-    KeQueryTickCount(&LargeTickCount);
-    ptiSendTo->timeLast = LargeTickCount.u.LowPart;
-    ptiSendTo->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
 
     RETURN( TRUE);
 
