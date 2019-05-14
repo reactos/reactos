@@ -801,11 +801,55 @@ HidClass_Write(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
+    PIRP SubIrp;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HID_XFER_PACKET XferPacket;
+    NTSTATUS Status;
+    ULONG Length;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Length = IoStack->Parameters.Write.Length;
+    if (Length < 1)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RtlZeroMemory(&XferPacket, sizeof(XferPacket));
+    XferPacket.reportBufferLen = Length;
+    XferPacket.reportBuffer = Irp->UserBuffer;
+    XferPacket.reportId = XferPacket.reportBuffer[0];
+
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
+    SubIrp = IoBuildDeviceIoControlRequest(
+        IOCTL_HID_WRITE_REPORT,
+        CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
+        NULL, 0,
+        NULL, 0,
+        TRUE,
+        &Event,
+        &IoStatusBlock);
+    if (!SubIrp)
+    {
+        Irp->IoStatus.Status = STATUS_NO_MEMORY;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    SubIrp->UserBuffer = &XferPacket;
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }
 
 NTSTATUS
