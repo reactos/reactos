@@ -16,6 +16,7 @@ list(APPEND SOURCE
     decode.c
     dispex.c
     engine.c
+    enumerator.c
     error.c
     function.c
     global.c
