@@ -652,6 +652,12 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
           return;
        }
 
+       if (MsqIsHung(pti))
+       {
+           TRACE("Let's go Ghost!\n");
+           IntMakeHungWindowGhosted(Msg->hwnd);
+       }
+
        // Check to see if this is attached.
        if ( pti != MessageQueue->ptiMouse &&
             MessageQueue->cThreads > 1 )

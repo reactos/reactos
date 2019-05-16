@@ -1349,6 +1349,12 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            RETURN( TRUE);
         }
 
+        if (MsqIsHung(Window->head.pti))
+        {
+            TRACE("Let's go Ghost!\n");
+            IntMakeHungWindowGhosted(hWnd);
+        }
+
         // Only happens when calling the client!
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
@@ -1461,6 +1467,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
+        if (MsqIsHung(ptiSendTo))
+        {
+            TRACE("Let's go Ghost!\n");
+            IntMakeHungWindowGhosted(hWnd);
+        }
 /*
  *  MSDN says:
  *  Microsoft Windows 2000: If GetLastError returns zero, then the function
