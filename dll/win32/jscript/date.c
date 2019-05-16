@@ -17,7 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <limits.h>
+#include <math.h>
+#include <assert.h>
+
 #include "jscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 /* 1601 to 1970 is 369 years plus 89 leap days */
 #define TIME_EPOCH  ((ULONGLONG)(369 * 365 + 89) * 86400 * 1000)
@@ -38,6 +49,7 @@ typedef struct {
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
+static const WCHAR toISOStringW[] = {'t','o','I','S','O','S','t','r','i','n','g',0};
 static const WCHAR toUTCStringW[] = {'t','o','U','T','C','S','t','r','i','n','g',0};
 static const WCHAR toGMTStringW[] = {'t','o','G','M','T','S','t','r','i','n','g',0};
 static const WCHAR toDateStringW[] = {'t','o','D','a','t','e','S','t','r','i','n','g',0};
@@ -81,6 +93,7 @@ static const WCHAR getYearW[] = {'g','e','t','Y','e','a','r',0};
 static const WCHAR setYearW[] = {'s','e','t','Y','e','a','r',0};
 
 static const WCHAR UTCW[] = {'U','T','C',0};
+static const WCHAR nowW[] = {'n','o','w',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
 
 static inline DateInstance *date_from_jsdisp(jsdisp_t *jsdisp)
@@ -441,6 +454,17 @@ static inline DOUBLE time_clip(DOUBLE time)
     return floor(time);
 }
 
+static double date_now(void)
+{
+    FILETIME ftime;
+    LONGLONG time;
+
+    GetSystemTimeAsFileTime(&ftime);
+    time = ((LONGLONG)ftime.dwHighDateTime << 32) + ftime.dwLowDateTime;
+
+    return time/10000 - TIME_EPOCH;
+}
+
 static SYSTEMTIME create_systemtime(DOUBLE time)
 {
     SYSTEMTIME st;
@@ -605,6 +629,52 @@ static HRESULT Date_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         ptr[date_len-1] = ' ';
 
         *r = jsval_string(date_str);
+    }
+    return S_OK;
+}
+
+static HRESULT Date_toISOString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    DateInstance *date;
+    WCHAR buf[64], *p = buf;
+    double year;
+
+    static const WCHAR short_year_formatW[] = {'%','0','4','d',0};
+    static const WCHAR long_year_formatW[] = {'%','0','6','d',0};
+    static const WCHAR formatW[] = {'-','%','0','2','d','-','%','0','2','d',
+        'T','%','0','2','d',':','%','0','2','d',':','%','0','2','d','.','%','0','3','d','Z',0};
+
+    TRACE("\n");
+
+    if(!(date = date_this(jsthis)))
+        return throw_type_error(ctx, JS_E_DATE_EXPECTED, NULL);
+
+    year = year_from_time(date->time);
+    if(isnan(year) || year > 999999 || year < -999999) {
+        FIXME("year %lf should throw an exception\n", year);
+        return E_FAIL;
+    }
+
+    if(year < 0) {
+        *p++ = '-';
+        p += sprintfW(p, long_year_formatW, -(int)year);
+    }else if(year > 9999) {
+        *p++ = '+';
+        p += sprintfW(p, long_year_formatW, (int)year);
+    }else {
+        p += sprintfW(p, short_year_formatW, (int)year);
+    }
+
+    sprintfW(p, formatW, (int)month_from_time(date->time) + 1, (int)date_from_time(date->time),
+             (int)hour_from_time(date->time), (int)min_from_time(date->time),
+             (int)sec_from_time(date->time), (int)ms_from_time(date->time));
+
+    if(r) {
+        jsstr_t *ret;
+        if(!(ret = jsstr_alloc(buf)))
+            return E_OUTOFMEMORY;
+        *r = jsval_string(ret);
     }
     return S_OK;
 }
@@ -1900,6 +1970,7 @@ static const builtin_prop_t Date_props[] = {
     {setYearW,               Date_setYear,               PROPF_METHOD|1},
     {toDateStringW,          Date_toDateString,          PROPF_METHOD},
     {toGMTStringW,           Date_toGMTString,           PROPF_METHOD},
+    {toISOStringW,           Date_toISOString,           PROPF_METHOD|PROPF_ES5},
     {toLocaleDateStringW,    Date_toLocaleDateString,    PROPF_METHOD},
     {toLocaleStringW,        Date_toLocaleString,        PROPF_METHOD},
     {toLocaleTimeStringW,    Date_toLocaleTimeString,    PROPF_METHOD},
@@ -2350,6 +2421,15 @@ static HRESULT DateConstr_UTC(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     return hres;
 }
 
+/* ECMA-262 5.1 Edition    15.9.4.4 */
+static HRESULT DateConstr_now(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    TRACE("\n");
+
+    if(r) *r = jsval_number(date_now());
+    return S_OK;
+}
+
 static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
@@ -2362,19 +2442,11 @@ static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
     case DISPATCH_CONSTRUCT:
         switch(argc) {
         /* ECMA-262 3rd Edition    15.9.3.3 */
-        case 0: {
-            FILETIME time;
-            LONGLONG lltime;
-
-            GetSystemTimeAsFileTime(&time);
-            lltime = ((LONGLONG)time.dwHighDateTime<<32)
-                + time.dwLowDateTime;
-
-            hres = create_date(ctx, NULL, lltime/10000-TIME_EPOCH, &date);
+        case 0:
+            hres = create_date(ctx, NULL, date_now(), &date);
             if(FAILED(hres))
                 return hres;
             break;
-        }
 
         /* ECMA-262 3rd Edition    15.9.3.2 */
         case 1: {
@@ -2443,6 +2515,7 @@ static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
 
 static const builtin_prop_t DateConstr_props[] = {
     {UTCW,    DateConstr_UTC,    PROPF_METHOD},
+    {nowW,    DateConstr_now,    PROPF_HTML|PROPF_METHOD},
     {parseW,  DateConstr_parse,  PROPF_METHOD}
 };
 

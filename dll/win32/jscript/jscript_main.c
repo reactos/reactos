@@ -16,13 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "initguid.h"
+
 #include "jscript.h"
 
-#include <rpcproxy.h>
-#include <initguid.h>
-#include <jscript_classes.h>
+#include "winreg.h"
+#include "advpub.h"
+#include "activaut.h"
+#include "objsafe.h"
+#include "mshtmhst.h"
+#include "rpcproxy.h"
+#include "jscript_classes.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 LONG module_ref = 0;
+
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 HINSTANCE jscript_hinstance;
 

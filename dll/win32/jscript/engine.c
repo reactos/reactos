@@ -16,9 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "jscript.h"
+#include "config.h"
+#include "wine/port.h"
 
-WINE_DECLARE_DEBUG_CHANNEL(jscript_except);
+#include <math.h>
+#include <assert.h>
+
+#include "jscript.h"
+#include "engine.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR booleanW[] = {'b','o','o','l','e','a','n',0};
 static const WCHAR functionW[] = {'f','u','n','c','t','i','o','n',0};
@@ -516,7 +525,7 @@ static HRESULT disp_cmp(IDispatch *disp1, IDispatch *disp2, BOOL *ret)
 }
 
 /* ECMA-262 3rd Edition    11.9.6 */
-static HRESULT equal2_values(jsval_t lval, jsval_t rval, BOOL *ret)
+HRESULT jsval_strict_equal(jsval_t lval, jsval_t rval, BOOL *ret)
 {
     jsval_type_t type = jsval_type(lval);
 
@@ -845,7 +854,7 @@ static HRESULT interp_case(script_ctx_t *ctx)
     TRACE("\n");
 
     v = stack_pop(ctx);
-    hres = equal2_values(stack_top(ctx), v, &b);
+    hres = jsval_strict_equal(stack_top(ctx), v, &b);
     jsval_release(v);
     if(FAILED(hres))
         return hres;
@@ -1292,7 +1301,7 @@ static HRESULT interp_local(script_ctx_t *ctx)
     jsval_t copy;
     HRESULT hres;
 
-    TRACE("%d\n", arg);
+    TRACE("%d: %s\n", arg, debugstr_w(local_name(frame, arg)));
 
     if(!frame->base_scope || !frame->base_scope->frame)
         return identifier_value(ctx, local_name(frame, arg));
@@ -1395,8 +1404,6 @@ static HRESULT interp_carray(script_ctx_t *ctx)
 {
     const unsigned arg = get_op_uint(ctx, 0);
     jsdisp_t *array;
-    jsval_t val;
-    unsigned i;
     HRESULT hres;
 
     TRACE("%u\n", arg);
@@ -1405,18 +1412,25 @@ static HRESULT interp_carray(script_ctx_t *ctx)
     if(FAILED(hres))
         return hres;
 
-    i = arg;
-    while(i--) {
-        val = stack_pop(ctx);
-        hres = jsdisp_propput_idx(array, i, val);
-        jsval_release(val);
-        if(FAILED(hres)) {
-            jsdisp_release(array);
-            return hres;
-        }
-    }
-
     return stack_push(ctx, jsval_obj(array));
+}
+
+static HRESULT interp_carray_set(script_ctx_t *ctx)
+{
+    const unsigned index = get_op_uint(ctx, 0);
+    jsval_t value, array;
+    HRESULT hres;
+
+    value = stack_pop(ctx);
+
+    TRACE("[%u] = %s\n", index, debugstr_jsval(value));
+
+    array = stack_top(ctx);
+    assert(is_object_instance(array));
+
+    hres = jsdisp_propput_idx(iface_to_jsdisp(get_object(array)), index, value);
+    jsval_release(value);
+    return hres;
 }
 
 /* ECMA-262 3rd Edition    11.1.5 */
@@ -2094,7 +2108,7 @@ static HRESULT interp_preinc(script_ctx_t *ctx)
 static HRESULT equal_values(script_ctx_t *ctx, jsval_t lval, jsval_t rval, BOOL *ret)
 {
     if(jsval_type(lval) == jsval_type(rval) || (is_number(lval) && is_number(rval)))
-       return equal2_values(lval, rval, ret);
+       return jsval_strict_equal(lval, rval, ret);
 
     /* FIXME: NULL disps should be handled in more general way */
     if(is_object_instance(lval) && !get_object(lval))
@@ -2224,7 +2238,7 @@ static HRESULT interp_eq2(script_ctx_t *ctx)
 
     TRACE("%s === %s\n", debugstr_jsval(l), debugstr_jsval(r));
 
-    hres = equal2_values(r, l, &b);
+    hres = jsval_strict_equal(r, l, &b);
     jsval_release(l);
     jsval_release(r);
     if(FAILED(hres))
@@ -2245,7 +2259,7 @@ static HRESULT interp_neq2(script_ctx_t *ctx)
     r = stack_pop(ctx);
     l = stack_pop(ctx);
 
-    hres = equal2_values(r, l, &b);
+    hres = jsval_strict_equal(r, l, &b);
     jsval_release(l);
     jsval_release(r);
     if(FAILED(hres))
@@ -2661,29 +2675,27 @@ static void print_backtrace(script_ctx_t *ctx)
     call_frame_t *frame;
 
     for(frame = ctx->call_ctx; frame; frame = frame->prev_frame) {
-        TRACE_(jscript_except)("%u\t", depth);
+        WARN("%u\t", depth);
         depth++;
 
         if(frame->this_obj && frame->this_obj != to_disp(ctx->global) && frame->this_obj != ctx->host_global)
-            TRACE_(jscript_except)("%p->", frame->this_obj);
-        TRACE_(jscript_except)("%s(", frame->function->name ? debugstr_w(frame->function->name) : "[unnamed]");
+            WARN("%p->", frame->this_obj);
+        WARN("%s(", frame->function->name ? debugstr_w(frame->function->name) : "[unnamed]");
         if(frame->base_scope && frame->base_scope->frame) {
             for(i=0; i < frame->argc; i++) {
                 if(i < frame->function->param_cnt)
-                    TRACE_(jscript_except)("%s%s=%s", i ? ", " : "",
-                                           debugstr_w(frame->function->params[i]),
-                                           debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+                    WARN("%s%s=%s", i ? ", " : "", debugstr_w(frame->function->params[i]),
+                         debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
                 else
-                    TRACE_(jscript_except)("%s%s", i ? ", " : "",
-                                           debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+                    WARN("%s%s", i ? ", " : "", debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
             }
         }else {
-            TRACE_(jscript_except)("[detached frame]");
+            WARN("[detached frame]");
         }
-        TRACE_(jscript_except)(")\n");
+        WARN(")\n");
 
         if(!(frame->flags & EXEC_RETURN_TO_INTERP)) {
-            TRACE_(jscript_except)("%u\t[native code]\n", depth);
+            WARN("%u\t[native code]\n", depth);
             depth++;
         }
     }
@@ -2697,26 +2709,24 @@ static HRESULT unwind_exception(script_ctx_t *ctx, HRESULT exception_hres)
     unsigned catch_off;
     HRESULT hres;
 
-    TRACE("%08x\n", exception_hres);
-
-    if(TRACE_ON(jscript_except)) {
+    if(WARN_ON(jscript)) {
         jsdisp_t *error_obj;
         jsval_t msg;
 
         static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
 
-        TRACE_(jscript_except)("Exception %08x %s", exception_hres, debugstr_jsval(ctx->ei.val));
+        WARN("Exception %08x %s", exception_hres, debugstr_jsval(ctx->ei.val));
         if(jsval_type(ctx->ei.val) == JSV_OBJECT) {
             error_obj = to_jsdisp(get_object(ctx->ei.val));
             if(error_obj) {
                 hres = jsdisp_propget_name(error_obj, messageW, &msg);
                 if(SUCCEEDED(hres)) {
-                    TRACE_(jscript_except)(" (message %s)", debugstr_jsval(msg));
+                    WARN(" (message %s)", debugstr_jsval(msg));
                     jsval_release(msg);
                 }
             }
         }
-        TRACE_(jscript_except)(" in:\n");
+        WARN(" in:\n");
 
         print_backtrace(ctx);
     }

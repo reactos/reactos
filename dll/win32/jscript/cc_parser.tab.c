@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -70,15 +70,23 @@
 /* Copy the first part of user declarations.  */
 #line 19 "cc_parser.y" /* yacc.c:339  */
 
+
 #include "jscript.h"
+#include "engine.h"
+#include "parser.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
+
 
 #line 84 "cc_parser.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -90,7 +98,10 @@
 # define YYERROR_VERBOSE 0
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "cc_parser.tab.h".  */
+#ifndef YY_CC_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_JSCRIPT_CC_PARSER_TAB_H_INCLUDED
+# define YY_CC_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_JSCRIPT_CC_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -128,7 +139,7 @@ union YYSTYPE
 
     ccval_t ccval;
 
-#line 140 "cc_parser.tab.c" /* yacc.c:355  */
+#line 143 "cc_parser.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -138,7 +149,7 @@ union YYSTYPE
 
 int cc_parser_parse (parser_ctx_t *ctx);
 
-
+#endif /* !YY_CC_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_JSCRIPT_CC_PARSER_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 #line 47 "cc_parser.y" /* yacc.c:358  */
@@ -235,7 +246,7 @@ static int cc_parser_lex(void *lval, parser_ctx_t *ctx)
 }
 
 
-#line 247 "cc_parser.tab.c" /* yacc.c:358  */
+#line 250 "cc_parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -292,30 +303,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -553,7 +545,7 @@ static const char *const yytname[] =
   "CCBitwiseORExpression", "CCBitwiseXORExpression",
   "CCBitwiseANDExpression", "CCEqualityExpression",
   "CCRelationalExpression", "CCShiftExpression", "CCAdditiveExpression",
-  "CCMultiplicativeExpression", YY_NULLPTR
+  "CCMultiplicativeExpression", YY_NULL
 };
 #endif
 
@@ -955,11 +947,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -1016,7 +1008,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -1355,233 +1347,233 @@ yyreduce:
         case 2:
 #line 146 "cc_parser.y" /* yacc.c:1646  */
     { ctx->ccval = (yyvsp[0].ccval); YYACCEPT; }
-#line 1367 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1351 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
 #line 149 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1373 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1357 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
 #line 150 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[-1].ccval); }
-#line 1379 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1363 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 151 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(!get_ccbool((yyvsp[0].ccval))); }
-#line 1385 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1369 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
 #line 152 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'~' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1391 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1375 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
 #line 153 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'+' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1397 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1381 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
 #line 154 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'-' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1403 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1387 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
 #line 157 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1409 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1393 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
 #line 159 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'||' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1415 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1399 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
 #line 162 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1421 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1405 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
 #line 164 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'&&' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1427 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1411 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
 #line 167 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1433 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1417 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 169 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'|' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1439 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1423 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 172 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1445 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1429 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
 #line 174 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'^' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1451 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1435 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
 #line 177 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1457 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1441 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 179 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'&' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1463 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1447 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
 #line 182 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1469 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1453 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
 #line 184 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) == get_ccnum((yyvsp[0].ccval))); }
-#line 1475 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1459 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
 #line 186 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) != get_ccnum((yyvsp[0].ccval))); }
-#line 1481 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1465 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 188 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'===' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1487 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1471 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
 #line 190 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'!==' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1493 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1477 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
 #line 193 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1499 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1483 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
 #line 195 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) < get_ccnum((yyvsp[0].ccval))); }
-#line 1505 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1489 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
 #line 197 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) <= get_ccnum((yyvsp[0].ccval))); }
-#line 1511 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1495 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
 #line 199 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) > get_ccnum((yyvsp[0].ccval))); }
-#line 1517 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1501 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
 #line 201 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_bool(get_ccnum((yyvsp[-2].ccval)) >= get_ccnum((yyvsp[0].ccval))); }
-#line 1523 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1507 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
 #line 204 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1529 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1513 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
 #line 206 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'<<' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1535 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1519 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
 #line 208 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'>>' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1541 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1525 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
 #line 210 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'>>>' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1547 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1531 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
 #line 213 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1553 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1537 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
 #line 215 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_num(get_ccnum((yyvsp[-2].ccval)) + get_ccnum((yyvsp[0].ccval))); }
-#line 1559 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1543 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
 #line 217 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_num(get_ccnum((yyvsp[-2].ccval)) - get_ccnum((yyvsp[0].ccval))); }
-#line 1565 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1549 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
 #line 220 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = (yyvsp[0].ccval); }
-#line 1571 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1555 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
 #line 222 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_num(get_ccnum((yyvsp[-2].ccval)) * get_ccnum((yyvsp[0].ccval))); }
-#line 1577 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1561 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
 #line 224 "cc_parser.y" /* yacc.c:1646  */
     { (yyval.ccval) = ccval_num(get_ccnum((yyvsp[-2].ccval)) / get_ccnum((yyvsp[0].ccval))); }
-#line 1583 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1567 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
 #line 226 "cc_parser.y" /* yacc.c:1646  */
     { FIXME("'%%' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
-#line 1589 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1573 "cc_parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1593 "cc_parser.tab.c" /* yacc.c:1646  */
+#line 1577 "cc_parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

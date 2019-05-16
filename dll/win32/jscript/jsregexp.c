@@ -16,7 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+
 #include "jscript.h"
+#include "regexp.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 typedef struct {
     jsdisp_t dispex;
@@ -249,24 +256,12 @@ static HRESULT RegExp_get_source(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r
     return S_OK;
 }
 
-static HRESULT RegExp_set_source(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT RegExp_get_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
     *r = jsval_bool(!!(regexp_from_jsdisp(jsthis)->jsregexp->flags & REG_GLOB));
     return S_OK;
-}
-
-static HRESULT RegExp_set_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
 }
 
 static HRESULT RegExp_get_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
@@ -277,24 +272,12 @@ static HRESULT RegExp_get_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_
     return S_OK;
 }
 
-static HRESULT RegExp_set_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT RegExp_get_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
     *r = jsval_bool(!!(regexp_from_jsdisp(jsthis)->jsregexp->flags & REG_MULTILINE));
     return S_OK;
-}
-
-static HRESULT RegExp_set_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
 }
 
 static INT index_from_val(script_ctx_t *ctx, jsval_t v)
@@ -600,11 +583,11 @@ static void RegExp_destructor(jsdisp_t *dispex)
 
 static const builtin_prop_t RegExp_props[] = {
     {execW,                  RegExp_exec,                  PROPF_METHOD|1},
-    {globalW,                NULL,0,                       RegExp_get_global,     RegExp_set_global},
-    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase, RegExp_set_ignoreCase},
+    {globalW,                NULL,0,                       RegExp_get_global},
+    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase},
     {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
-    {multilineW,             NULL,0,                       RegExp_get_multiline,  RegExp_set_multiline},
-    {sourceW,                NULL,0,                       RegExp_get_source,     RegExp_set_source},
+    {multilineW,             NULL,0,                       RegExp_get_multiline},
+    {sourceW,                NULL,0,                       RegExp_get_source},
     {testW,                  RegExp_test,                  PROPF_METHOD|1},
     {toStringW,              RegExp_toString,              PROPF_METHOD}
 };
@@ -619,11 +602,11 @@ static const builtin_info_t RegExp_info = {
 };
 
 static const builtin_prop_t RegExpInst_props[] = {
-    {globalW,                NULL,0,                       RegExp_get_global,     RegExp_set_global},
-    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase, RegExp_set_ignoreCase},
+    {globalW,                NULL,0,                       RegExp_get_global},
+    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase},
     {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
-    {multilineW,             NULL,0,                       RegExp_get_multiline,  RegExp_set_multiline},
-    {sourceW,                NULL,0,                       RegExp_get_source,     RegExp_set_source}
+    {multilineW,             NULL,0,                       RegExp_get_multiline},
+    {sourceW,                NULL,0,                       RegExp_get_source}
 };
 
 static const builtin_info_t RegExpInst_info = {

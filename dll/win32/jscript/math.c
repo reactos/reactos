@@ -17,9 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "jscript.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <ntsecapi.h>
+#include <math.h>
+#include <limits.h>
+
+#include "jscript.h"
+#include "ntsecapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR EW[] = {'E',0};
 static const WCHAR LOG2EW[] = {'L','O','G','2','E',0};
@@ -550,7 +559,8 @@ HRESULT create_math(script_ctx_t *ctx, jsdisp_t **ret)
     }
 
     for(i=0; i < sizeof(constants)/sizeof(*constants); i++) {
-        hres = jsdisp_propput_const(math, constants[i].name, jsval_number(constants[i].val));
+        hres = jsdisp_define_data_property(math, constants[i].name, 0,
+                                           jsval_number(constants[i].val));
         if(FAILED(hres)) {
             jsdisp_release(math);
             return hres;

@@ -31,7 +31,14 @@
  * the Initial Developer. All Rights Reserved.
  */
 
+#include <assert.h>
+
 #include "jscript.h"
+#include "regexp.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 /* FIXME: Better error handling */
 #define ReportRegExpError(a,b,c)
