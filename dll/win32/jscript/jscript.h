@@ -116,6 +116,7 @@ typedef enum {
     JSCLASS_ARRAY,
     JSCLASS_BOOLEAN,
     JSCLASS_DATE,
+    JSCLASS_ENUMERATOR,
     JSCLASS_ERROR,
     JSCLASS_FUNCTION,
     JSCLASS_GLOBAL,
@@ -326,6 +327,7 @@ HRESULT create_bool(script_ctx_t*,BOOL,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_number(script_ctx_t*,double,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_vbarray(script_ctx_t*,SAFEARRAY*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_json(script_ctx_t*,jsdisp_t**) DECLSPEC_HIDDEN;
+HRESULT create_enumerator(script_ctx_t *ctx, jsval_t *argv, jsdisp_t **ret) DECLSPEC_HIDDEN;
 
 typedef enum {
     NO_HINT,
@@ -435,6 +437,7 @@ struct _script_ctx_t {
     jsdisp_t *array_constr;
     jsdisp_t *bool_constr;
     jsdisp_t *date_constr;
+    jsdisp_t *enumerator_constr;
     jsdisp_t *error_constr;
     jsdisp_t *eval_error_constr;
     jsdisp_t *range_error_constr;
@@ -467,6 +470,7 @@ HRESULT create_array_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_bool_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_date_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT init_error_constr(script_ctx_t*,jsdisp_t*) DECLSPEC_HIDDEN;
+HRESULT create_enumerator_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_number_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_object_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
 HRESULT create_regexp_constr(script_ctx_t*,jsdisp_t*,jsdisp_t**) DECLSPEC_HIDDEN;
@@ -557,6 +561,7 @@ static inline DWORD make_grfdex(script_ctx_t *ctx, DWORD flags)
 #define JS_E_VBARRAY_EXPECTED        MAKE_JSERROR(IDS_NOT_VBARRAY)
 #define JS_E_INVALID_DELETE          MAKE_JSERROR(IDS_INVALID_DELETE)
 #define JS_E_JSCRIPT_EXPECTED        MAKE_JSERROR(IDS_JSCRIPT_EXPECTED)
+#define JS_E_ENUMERATOR_EXPECTED     MAKE_JSERROR(IDS_NOT_ENUMERATOR)
 #define JS_E_REGEXP_SYNTAX           MAKE_JSERROR(IDS_REGEXP_SYNTAX_ERROR)
 #define JS_E_INVALID_URI_CODING      MAKE_JSERROR(IDS_URI_INVALID_CODING)
 #define JS_E_INVALID_URI_CHAR        MAKE_JSERROR(IDS_URI_INVALID_CHAR)
