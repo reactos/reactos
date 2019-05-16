@@ -49,6 +49,7 @@ typedef struct {
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
+static const WCHAR toISOStringW[] = {'t','o','I','S','O','S','t','r','i','n','g',0};
 static const WCHAR toUTCStringW[] = {'t','o','U','T','C','S','t','r','i','n','g',0};
 static const WCHAR toGMTStringW[] = {'t','o','G','M','T','S','t','r','i','n','g',0};
 static const WCHAR toDateStringW[] = {'t','o','D','a','t','e','S','t','r','i','n','g',0};
@@ -628,6 +629,52 @@ static HRESULT Date_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         ptr[date_len-1] = ' ';
 
         *r = jsval_string(date_str);
+    }
+    return S_OK;
+}
+
+static HRESULT Date_toISOString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    DateInstance *date;
+    WCHAR buf[64], *p = buf;
+    double year;
+
+    static const WCHAR short_year_formatW[] = {'%','0','4','d',0};
+    static const WCHAR long_year_formatW[] = {'%','0','6','d',0};
+    static const WCHAR formatW[] = {'-','%','0','2','d','-','%','0','2','d',
+        'T','%','0','2','d',':','%','0','2','d',':','%','0','2','d','.','%','0','3','d','Z',0};
+
+    TRACE("\n");
+
+    if(!(date = date_this(jsthis)))
+        return throw_type_error(ctx, JS_E_DATE_EXPECTED, NULL);
+
+    year = year_from_time(date->time);
+    if(isnan(year) || year > 999999 || year < -999999) {
+        FIXME("year %lf should throw an exception\n", year);
+        return E_FAIL;
+    }
+
+    if(year < 0) {
+        *p++ = '-';
+        p += sprintfW(p, long_year_formatW, -(int)year);
+    }else if(year > 9999) {
+        *p++ = '+';
+        p += sprintfW(p, long_year_formatW, (int)year);
+    }else {
+        p += sprintfW(p, short_year_formatW, (int)year);
+    }
+
+    sprintfW(p, formatW, (int)month_from_time(date->time) + 1, (int)date_from_time(date->time),
+             (int)hour_from_time(date->time), (int)min_from_time(date->time),
+             (int)sec_from_time(date->time), (int)ms_from_time(date->time));
+
+    if(r) {
+        jsstr_t *ret;
+        if(!(ret = jsstr_alloc(buf)))
+            return E_OUTOFMEMORY;
+        *r = jsval_string(ret);
     }
     return S_OK;
 }
@@ -1923,6 +1970,7 @@ static const builtin_prop_t Date_props[] = {
     {setYearW,               Date_setYear,               PROPF_METHOD|1},
     {toDateStringW,          Date_toDateString,          PROPF_METHOD},
     {toGMTStringW,           Date_toGMTString,           PROPF_METHOD},
+    {toISOStringW,           Date_toISOString,           PROPF_METHOD|PROPF_ES5},
     {toLocaleDateStringW,    Date_toLocaleDateString,    PROPF_METHOD},
     {toLocaleStringW,        Date_toLocaleString,        PROPF_METHOD},
     {toLocaleTimeStringW,    Date_toLocaleTimeString,    PROPF_METHOD},

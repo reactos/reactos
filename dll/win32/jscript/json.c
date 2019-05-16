@@ -768,6 +768,12 @@ static HRESULT JSON_stringify(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
 
     TRACE("\n");
 
+    if(!argc) {
+        if(r)
+            *r = jsval_undefined();
+        return S_OK;
+    }
+
     if(argc >= 2 && is_object_instance(argv[1])) {
         FIXME("Replacer %s not yet supported\n", debugstr_jsval(argv[1]));
         return E_NOTIMPL;
