@@ -57,7 +57,7 @@ void
 __cdecl
 _RTC_NoInitialize(void)
 {
-    /* Do nothing, if RunTmChk.lib is not pulled in */
+    /* Do nothing, if runtmchk.lib is not pulled in */
 }
 
 _RTC_error_fnW
