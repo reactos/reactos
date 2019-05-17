@@ -1006,6 +1006,42 @@ error:
     return 1;
 }
 
+static int reg_restore(int argc, WCHAR* argv[])
+{
+    HKEY root, hkey;
+    LSTATUS status;
+    WCHAR* path, * long_key;
+
+    if (argc != 4) goto error;
+
+    if (!parse_registry_key(argv[2], &root, &path, &long_key))
+        return 1;
+
+    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
+    {
+        output_message(STRING_INVALID_KEY);
+        return 1;
+    }
+
+    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1;
+    if (!set_privilege(SE_RESTORE_NAME, TRUE)) return 1;
+
+    status = RegRestoreKeyW(hkey, argv[3], 0);
+    RegCloseKey(hkey);
+
+    if (status != ERROR_SUCCESS) {
+        output_error(status);
+        return 1;
+    }
+
+    return 0;
+
+error:
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, struprW(argv[1]));
+    return 1;
+}
+
 static BOOL is_help_switch(const WCHAR *s)
 {
     if (is_switch(s, '?') || is_switch(s, 'h'))
@@ -1118,6 +1154,9 @@ int wmain(int argc, WCHAR *argvW[])
 
     if (op == REG_SAVE)
         return reg_save(argc, argvW);
+
+    if (op == REG_RESTORE)
+        return reg_restore(argc, argvW);
 
     if (!parse_registry_key(argvW[2], &root, &path, &key_name))
         return 1;
