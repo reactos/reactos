@@ -2851,13 +2851,10 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 static
 BOOL
 SameScaleMatrix(
-    FT_Matrix *pmat1,
-    FT_Matrix *pmat2)
+    const FT_Matrix *pmat1,
+    const FT_Matrix *pmat2)
 {
-    return pmat1->xx == pmat2->xx &&
-           pmat1->xy == pmat2->xy &&
-           pmat1->yx == pmat2->yx &&
-           pmat1->yy == pmat2->yy;
+    return memcmp(pmat1, pmat2, sizeof(*pmat1));
 }
 
 FT_BitmapGlyph APIENTRY
