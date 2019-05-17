@@ -2848,14 +2848,8 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
-static
-BOOL
-SameScaleMatrix(
-    const FT_Matrix *pmat1,
-    const FT_Matrix *pmat2)
-{
-    return memcmp(pmat1, pmat2, sizeof(*pmat1)) == 0;
-}
+#define SameScaleMatrix(pmat1, pmat2) \
+    (memcmp(pmat1, pmat2, sizeof(*pmat1)) == 0)
 
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
