@@ -4765,10 +4765,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         /* update FontObj if lowest penalty */
         if (Otm)
         {
-            IntLockFreeType();
-            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-            IntUnLockFreeType();
-
             OtmSize = IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
             if (!OtmSize)
                 continue;
@@ -4939,10 +4935,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         UNICODE_STRING Name;
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
         PSHARED_FACE SharedFace = FontGdi->SharedFace;
-
-        IntLockFreeType();
-        IntRequestFontSize(NULL, FontGdi, pLogFont->lfWidth, pLogFont->lfHeight);
-        IntUnLockFreeType();
 
         TextObj->TextFace[0] = UNICODE_NULL;
         if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
