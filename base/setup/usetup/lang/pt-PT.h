@@ -563,7 +563,7 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         0,
         0,
-        "U = Actualizar   ESC = Não actualizar   F3 = Terminar",
+        "U = Actualizar   ESC = N\343o actualizar   F3 = Terminar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -910,7 +910,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
         8,
         15,
         "\x07  Para criar uma  parti\207\306o prim\240ria, pressione P.",
-//        "\x07  Para criar uma parti‡Æo no espa‡o nÆo particionado, pressione C.",
+//        "\x07  Para criar uma parti\207\306o no espa\207o n\306o particionado, pressione C.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1853,7 +1853,7 @@ MUI_STRING ptPTStrings[] =
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//    "   ENTER=Instalar  C=Criar parti‡Æo  F3=Sair"},
+//    "   ENTER=Instalar  C=Criar parti\207\306o  F3=Sair"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
@@ -1864,7 +1864,7 @@ MUI_STRING ptPTStrings[] =
     "Tamanho da nova parti\207\306o:"},
     {STRING_CHOOSENEWPARTITION,
      "Seleccionou criar uma parti\207\306o prim\240ria"},
-//    "Vocˆ solicitou a cria‡Æo de uma nova parti‡Æo em"},
+//    "Voc\210 solicitou a cria\207\306o de uma nova parti\207\306o em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Seleccionou criar uma parti\207\306o extendida"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
@@ -1978,6 +1978,6 @@ MUI_STRING ptPTStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adicionando tipos de teclado"},
+    "A adicionar tipos de teclado"},
     {0, 0}
 };
