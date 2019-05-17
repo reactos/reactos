@@ -1814,7 +1814,7 @@ static BOOL face_has_symbol_charmap(FT_Face ft_face)
 static void FASTCALL
 FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
          TT_OS2 *pOS2, TT_HoriHeader *pHori,
-         FT_WinFNT_HeaderRec *pFNT, BOOL RealFont)
+         FT_WinFNT_HeaderRec *pFNT)
 {
     FT_Fixed XScale, YScale;
     int Ascent, Descent;
@@ -1842,22 +1842,11 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar      = pFNT->default_char + pFNT->first_char;
         TM->tmBreakChar        = pFNT->break_char + pFNT->first_char;
         TM->tmPitchAndFamily   = pFNT->pitch_and_family;
-        if (RealFont)
-        {
-            TM->tmWeight       = FontGDI->OriginalWeight;
-            TM->tmItalic       = FontGDI->OriginalItalic;
-            TM->tmUnderlined   = pFNT->underline;
-            TM->tmStruckOut    = pFNT->strike_out;
-            TM->tmCharSet      = pFNT->charset;
-        }
-        else
-        {
-            TM->tmWeight       = FontGDI->RequestWeight;
-            TM->tmItalic       = FontGDI->RequestItalic;
-            TM->tmUnderlined   = FontGDI->RequestUnderline;
-            TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-            TM->tmCharSet      = FontGDI->CharSet;
-        }
+        TM->tmWeight       = FontGDI->RequestWeight;
+        TM->tmItalic       = FontGDI->RequestItalic;
+        TM->tmUnderlined   = FontGDI->RequestUnderline;
+        TM->tmStruckOut    = FontGDI->RequestStrikeOut;
+        TM->tmCharSet      = FontGDI->CharSet;
         return;
     }
 
@@ -1872,10 +1861,6 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-    if (FontGDI->Magic != FONTGDI_MAGIC)
-    {
-        IntRequestFontSize(NULL, FontGDI, 0, 0);
-    }
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
@@ -1898,21 +1883,14 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
 
-    if (RealFont)
+    if (FontGDI->OriginalWeight != FW_DONTCARE &&
+        FontGDI->OriginalWeight != FW_NORMAL)
     {
         TM->tmWeight = FontGDI->OriginalWeight;
     }
     else
     {
-        if (FontGDI->OriginalWeight != FW_DONTCARE &&
-            FontGDI->OriginalWeight != FW_NORMAL)
-        {
-            TM->tmWeight = FontGDI->OriginalWeight;
-        }
-        else
-        {
-            TM->tmWeight = FontGDI->RequestWeight;
-        }
+        TM->tmWeight = FontGDI->RequestWeight;
     }
 
     TM->tmOverhang = 0;
@@ -1950,25 +1928,16 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar = TM->tmBreakChar - 1;
     }
 
-    if (RealFont)
+    if (FontGDI->OriginalItalic || FontGDI->RequestItalic)
     {
-        TM->tmItalic = FontGDI->OriginalItalic;
-        TM->tmUnderlined = FALSE;
-        TM->tmStruckOut  = FALSE;
+        TM->tmItalic = 0xFF;
     }
     else
     {
-        if (FontGDI->OriginalItalic || FontGDI->RequestItalic)
-        {
-            TM->tmItalic = 0xFF;
-        }
-        else
-        {
-            TM->tmItalic = 0;
-        }
-        TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
-        TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
+        TM->tmItalic = 0;
     }
+    TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
+    TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
 
     if (!FT_IS_FIXED_WIDTH(Face))
     {
@@ -2051,14 +2020,6 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     }
 
     TM->tmCharSet = FontGDI->CharSet;
-}
-
-static void FASTCALL
-FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
-       TT_OS2 *pOS2, TT_HoriHeader *pHori,
-       FT_WinFNT_HeaderRec *pFNT)
-{
-    FillTMEx(TM, FontGDI, pOS2, pHori, pFNT, FALSE);
 }
 
 static NTSTATUS
@@ -2220,7 +2181,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     Otm->otmSize = Cache->OutlineRequiredSize;
 
-    FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &WinFNT : 0);
+    FillTMEx(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &WinFNT : NULL);
 
     Otm->otmFiller = 0;
     RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -4294,7 +4255,7 @@ ftGdiGetTextMetricsW(
 
             if (NT_SUCCESS(Status))
             {
-                FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+                FillTMEx(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : NULL);
 
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
