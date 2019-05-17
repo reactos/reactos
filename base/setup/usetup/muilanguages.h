@@ -326,9 +326,9 @@
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.h"
 #endif
-// #ifdef LANGUAGE_PT_PT
-    // #include "lang/pt-PT.h"
-// #endif
+ #ifdef LANGUAGE_PT_PT
+     #include "lang/pt-PT.h"
+ #endif
 // #ifdef LANGUAGE_RM_CH
     // #include "lang/rm-CH.h"
 // #endif
@@ -700,7 +700,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000415", L"Polish", plPLPages, plPLErrorEntries, plPLStrings},
 #endif
 #ifdef LANGUAGE_PT_PT
-    {L"00000816", L"Portuguese (Portugal)", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000816", L"Portuguese (Portugal)", ptPTPages, ptPTErrorEntries, ptPTStrings},
 #endif
 #ifdef LANGUAGE_PT_BR
     {L"00000416", L"Portuguese (Brazil)", ptBRPages, ptBRErrorEntries, ptBRStrings},

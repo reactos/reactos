@@ -108,6 +108,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.rc"
 #endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
