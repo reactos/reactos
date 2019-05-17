@@ -2854,7 +2854,7 @@ SameScaleMatrix(
     const FT_Matrix *pmat1,
     const FT_Matrix *pmat2)
 {
-    return memcmp(pmat1, pmat2, sizeof(*pmat1));
+    return memcmp(pmat1, pmat2, sizeof(*pmat1)) == 0;
 }
 
 FT_BitmapGlyph APIENTRY
