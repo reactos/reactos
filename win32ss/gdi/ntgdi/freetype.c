@@ -2851,13 +2851,13 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 static
 BOOL
 SameScaleMatrix(
-    PMATRIX pmx1,
-    PMATRIX pmx2)
+    FT_Matrix *pmat1,
+    FT_Matrix *pmat2)
 {
-    return (FLOATOBJ_Equal(&pmx1->efM11, &pmx2->efM11) &&
-            FLOATOBJ_Equal(&pmx1->efM12, &pmx2->efM12) &&
-            FLOATOBJ_Equal(&pmx1->efM21, &pmx2->efM21) &&
-            FLOATOBJ_Equal(&pmx1->efM22, &pmx2->efM22));
+    return pmat1->xx == pmat2->xx &&
+           pmat1->xy == pmat2->xy &&
+           pmat1->yx == pmat2->yx &&
+           pmat1->yy == pmat2->yy;
 }
 
 FT_BitmapGlyph APIENTRY
@@ -2866,7 +2866,7 @@ ftGdiGlyphCacheGet(
     INT GlyphIndex,
     INT Height,
     FT_Render_Mode RenderMode,
-    PMATRIX pmx)
+    FT_Matrix *pmat)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -2882,7 +2882,7 @@ ftGdiGlyphCacheGet(
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
             (FontEntry->RenderMode == RenderMode) &&
-            (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
+            (SameScaleMatrix(&FontEntry->mat, pmat)))
             break;
     }
 
@@ -2943,7 +2943,7 @@ ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
-    PMATRIX pmx,
+    FT_Matrix *pmat,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -2997,7 +2997,7 @@ ftGdiGlyphCacheSet(
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
     NewEntry->RenderMode = RenderMode;
-    NewEntry->mxWorldToDevice = *pmx;
+    NewEntry->mat = *pmat;
 
     InsertHeadList(&g_FontCacheListHead, &NewEntry->ListEntry);
     if (++g_FontCacheNumEntries > MAX_FONT_CACHE)
@@ -3930,6 +3930,7 @@ TextIntGetTextExtentPoint(PDC dc,
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
     LONG ascender, descender;
+    FT_Matrix mat;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -3957,6 +3958,8 @@ TextIntGetTextExtentPoint(PDC dc,
     pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
+    FtMatrixFromMx(&mat, pmxWorldToDevice);
+
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
 
@@ -3968,7 +3971,7 @@ TextIntGetTextExtentPoint(PDC dc,
             realglyph = NULL;
         else
             realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           RenderMode, pmxWorldToDevice);
+                                           RenderMode, &mat);
 
         if (EmuBold || EmuItalic || !realglyph)
         {
@@ -3993,7 +3996,7 @@ TextIntGetTextExtentPoint(PDC dc,
                 realglyph = ftGdiGlyphCacheSet(face,
                                                glyph_index,
                                                plf->lfHeight,
-                                               pmxWorldToDevice,
+                                               &mat,
                                                glyph,
                                                RenderMode);
             }
@@ -5626,6 +5629,7 @@ IntExtTextOutW(
     BOOL bResult;
     FT_Matrix mat = identityMat, matWidth, matEscape, matWorld;
     FT_Vector vecs[9];
+    BOOL bNeedCache;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -6050,14 +6054,13 @@ IntExtTextOutW(
     previous = 0;
     for (i = 0; i < Count; ++i)
     {
-        BOOL bNeedCache = (!EmuBold && !EmuItalic &&
-                           memcmp(&mat, &identityMat, sizeof(mat)) == 0);
+        bNeedCache = !EmuBold && !EmuItalic;
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
         realglyph = NULL;
         if (bNeedCache)
         {
             realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           RenderMode, pmxWorldToDevice);
+                                           RenderMode, &mat);
         }
         if (!realglyph)
         {
@@ -6074,7 +6077,7 @@ IntExtTextOutW(
                 realglyph = ftGdiGlyphCacheSet(face,
                                                glyph_index,
                                                plf->lfHeight,
-                                               pmxWorldToDevice,
+                                               &mat,
                                                glyph,
                                                RenderMode);
             }

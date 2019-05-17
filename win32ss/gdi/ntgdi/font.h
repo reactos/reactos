@@ -31,7 +31,7 @@ typedef struct _FONT_CACHE_ENTRY
     FT_BitmapGlyph BitmapGlyph;
     int Height;
     FT_Render_Mode RenderMode;
-    MATRIX mxWorldToDevice;
+    FT_Matrix mat;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 
 
