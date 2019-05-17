@@ -979,7 +979,7 @@ static int reg_save(int argc, WCHAR* argv[]) {
         }
         else
         {
-            if (ask_confirm(STRING_SAVE_OVERWRITE, argv[3]))
+            if (ask_confirm(STRING_OVERWRITE_FILE, argv[3]))
                 DeleteFile(argv[3]);
         }
     }

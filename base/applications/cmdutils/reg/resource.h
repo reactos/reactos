@@ -63,4 +63,3 @@
 #define STRING_OVERWRITE_FILE         138
 #define STRING_SAVE_USAGE             139
 #define STRING_RESTORE_USAGE          140
-#define STRING_SAVE_OVERWRITE         141
