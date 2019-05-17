@@ -42,4 +42,5 @@ STRINGTABLE
     STRING_OVERWRITE_FILE, "The file '%1' already exists. Do you want to overwrite it?"
     STRING_SAVE_USAGE, "REG SAVE key_name file_name [/y]"
     STRING_RESTORE_USAGE "REG RESTORE key_name file_name"
+    STRING_SAVE_OVERWRITE "Are you sure you want to overwrite the file '%1'?"
 }
