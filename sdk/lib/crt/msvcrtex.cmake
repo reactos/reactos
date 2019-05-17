@@ -116,4 +116,8 @@ if(STACK_PROTECTOR)
     target_link_libraries(msvcrtex gcc_ssp)
 endif()
 
+if(RUNTIME_CHECKS)
+    target_link_libraries(msvcrtex runtmchk)
+endif()
+
 add_dependencies(msvcrtex psdk asm)
