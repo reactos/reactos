@@ -911,7 +911,7 @@ static BOOL is_switch(const WCHAR *s, const WCHAR c)
 
 static BOOL set_privilege(LPCWSTR privilegeName, BOOL enabled)
 {
-    HANDLE hToken;
+    HANDLE hToken = INVALID_HANDLE_VALUE;
     TOKEN_PRIVILEGES tp;
     DWORD error = ERROR_SUCCESS;
 
@@ -948,12 +948,14 @@ static BOOL set_privilege(LPCWSTR privilegeName, BOOL enabled)
         goto fail;
     }
 
+    CloseHandle(hToken);
     return TRUE;
 
 fail:
     // Don't allow a success error to be printed, as that would confuse the user.
     // "Access denied" seems like a reasonable default.
     if (error == ERROR_SUCCESS) error = ERROR_ACCESS_DENIED;
+    if (hToken != INVALID_HANDLE_VALUE) CloseHandle(hToken);
 
     output_error(error);
     return FALSE;
