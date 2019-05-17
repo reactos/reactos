@@ -340,7 +340,6 @@ function(set_module_type_toolchain MODULE TYPE)
     if(RUNTIME_CHECKS)
         target_link_libraries(${MODULE} runtmchk)
     endif()
-
 endfunction()
 
 # Define those for having real libraries

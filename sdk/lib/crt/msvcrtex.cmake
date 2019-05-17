@@ -111,6 +111,7 @@ if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
+# dynamic analysis switches
 if(STACK_PROTECTOR)
     target_link_libraries(msvcrtex gcc_ssp)
 endif()

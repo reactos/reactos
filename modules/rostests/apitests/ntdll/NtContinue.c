@@ -133,6 +133,7 @@ START_TEST(NtContinue)
     skip("This test breaks MSVC runtime checks!\n");
     return;
 #endif /* __RUNTIME_CHECKS__ */
+
     initrand();
 
     /* First time */
