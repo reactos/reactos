@@ -347,9 +347,6 @@ extern KD_DISPATCH_TABLE WrapperTable;
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;
 
-/* Whether to enter KDB as early as possible or not */
-extern BOOLEAN KdpEarlyBreak;
-
 extern PKDEBUG_ROUTINE KiDebugRoutine;
 extern KD_CONTEXT KdpContext;
 extern ULONG Kd_WIN2000_Mask;

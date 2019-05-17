@@ -26,7 +26,6 @@ KDP_DEBUG_MODE KdpDebugMode;
 #endif
 PKDP_INIT_ROUTINE WrapperInitRoutine;
 KD_DISPATCH_TABLE WrapperTable;
-BOOLEAN KdpEarlyBreak = FALSE;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
@@ -188,7 +187,6 @@ KdInitSystem(ULONG BootPhase,
         _strupr(CommandLine);
 
         /* XXX Check for settings that we support */
-        if (strstr(CommandLine, "BREAK")) KdpEarlyBreak = TRUE;
         if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
         else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
         else if (strstr(CommandLine, "DEBUG"))
