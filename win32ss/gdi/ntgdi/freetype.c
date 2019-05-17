@@ -3956,6 +3956,8 @@ TextIntGetTextExtentPoint(PDC dc,
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     FtMatrixFromMx(&mat, pmxWorldToDevice);
+    mat.yx = -mat.yx;
+    mat.xy = -mat.xy;
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
