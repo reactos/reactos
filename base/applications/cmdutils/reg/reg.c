@@ -909,6 +909,56 @@ static BOOL is_switch(const WCHAR *s, const WCHAR c)
     return FALSE;
 }
 
+static BOOL set_privilege(LPCWSTR privilegeName, BOOL enabled)
+{
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
+    DWORD error = ERROR_SUCCESS;
+
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (enabled ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValueW(NULL, privilegeName, &tp.Privileges[0].Luid))
+        {
+            if (AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL))
+            {
+                if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                {
+                    error = ERROR_NOT_ALL_ASSIGNED;
+                    goto fail;
+                }
+            }
+            else
+            {
+                error = GetLastError();
+                goto fail;
+            }
+        }
+        else
+        {
+            error = GetLastError();
+            goto fail;
+        }
+    }
+    else
+    {
+        error = GetLastError();
+        goto fail;
+    }
+
+    return TRUE;
+
+fail:
+    // Don't allow a success error to be printed, as that would confuse the user.
+    // "Access denied" seems like a reasonable default.
+    if (error == ERROR_SUCCESS) error = ERROR_ACCESS_DENIED;
+
+    output_error(error);
+    return FALSE;
+}
+
 static int reg_save(int argc, WCHAR* argv[]) {
     HKEY root, hkey;
     LSTATUS status;
@@ -937,6 +987,8 @@ static int reg_save(int argc, WCHAR* argv[]) {
         output_message(STRING_INVALID_KEY);
         return 1;
     }
+
+    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1;
 
     status = RegSaveKeyW(hkey, argv[3], NULL);
     RegCloseKey(hkey);
