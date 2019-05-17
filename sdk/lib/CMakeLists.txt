@@ -13,7 +13,6 @@ add_subdirectory(cryptlib)
 
 if(MSVC)
     add_subdirectory(cpprt)
-    add_subdirectory(RunTmChk)
 endif()
 
 add_subdirectory(delayimp)
@@ -41,6 +40,11 @@ if(KDBG)
 endif()
 
 add_subdirectory(rtl)
+
+if(RUNTIME_CHECKS)
+    add_subdirectory(RunTmChk)
+endif()
+
 add_subdirectory(scrnsave)
 add_subdirectory(skiplist)
 add_subdirectory(strmiids)
