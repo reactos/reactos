@@ -13,7 +13,7 @@ add_subdirectory(cryptlib)
 
 if(MSVC)
     add_subdirectory(cpprt)
-    add_subdirectory(RunTmChk)
+    add_subdirectory(runtmchk)
 endif()
 
 add_subdirectory(delayimp)
