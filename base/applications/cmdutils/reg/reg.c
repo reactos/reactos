@@ -988,9 +988,9 @@ static int reg_save(int argc, WCHAR* argv[]) {
         return 1;
     }
 
-    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1;
+    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1; 
 
-    status = RegSaveKeyW(hkey, argv[3], NULL);
+    status = RegSaveKeyExW(hkey, argv[3], NULL, REG_LATEST_FORMAT);
     RegCloseKey(hkey);
 
     if (status != ERROR_SUCCESS) {
