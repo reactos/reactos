@@ -3431,6 +3431,9 @@ ftGdiGetGlyphOutline(
     OUTLINETEXTMETRICW *potm;
     XFORM xForm;
     LOGFONTW *plf;
+    PMATRIX pmx;
+    FT_Matrix scaleMat, worldMat, rotationMat, extraMat;
+    FT_Vector vecAngle;
 
     DPRINT("%u, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
            cjBuf, pvBuf, pmat2);
@@ -3521,7 +3524,6 @@ ftGdiGetGlyphOutline(
     /* Width scaling transform */
     if (widthRatio != 1.0)
     {
-        FT_Matrix scaleMat;
         scaleMat.xx = FT_FixedFromFloat(widthRatio);
         scaleMat.xy = 0;
         scaleMat.yx = 0;
@@ -3533,15 +3535,14 @@ ftGdiGetGlyphOutline(
 
     /* World transform */
     {
-        FT_Matrix ftmatrix;
-        PMATRIX pmx = DC_pmxWorldToDevice(dc);
+        pmx = DC_pmxWorldToDevice(dc);
 
         /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-        FtMatrixFromMx(&ftmatrix, pmx);
+        FtMatrixFromMx(&worldMat, pmx);
 
-        if (memcmp(&ftmatrix, &identityMat, sizeof(identityMat)) != 0)
+        if (memcmp(&worldMat, &identityMat, sizeof(identityMat)) != 0)
         {
-            FT_Matrix_Multiply(&ftmatrix, &transMat);
+            FT_Matrix_Multiply(&worldMat, &transMat);
             needsTransform = TRUE;
         }
     }
@@ -3549,8 +3550,6 @@ ftGdiGetGlyphOutline(
     /* Rotation transform */
     if (orientation)
     {
-        FT_Matrix rotationMat;
-        FT_Vector vecAngle;
         DPRINT("Rotation Trans!\n");
         angle = FT_FixedFromFloat((FLOAT)orientation / 10.0);
         FT_Vector_Unit(&vecAngle, angle);
@@ -3565,7 +3564,6 @@ ftGdiGetGlyphOutline(
     /* Extra transformation specified by caller */
     if (pmat2)
     {
-        FT_Matrix extraMat;
         DPRINT("MAT2 Matrix Trans!\n");
         extraMat.xx = FT_FixedFromFIXED(pmat2->eM11);
         extraMat.xy = FT_FixedFromFIXED(pmat2->eM21);
