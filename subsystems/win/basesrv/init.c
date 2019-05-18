@@ -185,6 +185,8 @@ CreateBaseAcls(OUT PACL* Dacl,
     ULONG ResultLength;
     HANDLE hKey;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG ObjectSecurityMode;
+    ACCESS_MASK WorldAccess, RestrictedAccess;
 
     /* Open the Session Manager Key */
     RtlInitUnicodeString(&KeyName, SM_REG_KEY);
@@ -216,6 +218,13 @@ CreateBaseAcls(OUT PACL* Dacl,
 
         /* Close the handle */
         NtClose(hKey);
+    }
+
+    /* Get object security mode */
+    if (SessionId == 0 ||
+        !NT_SUCCESS(NtQuerySystemInformation(SystemObjectSecurityMode, &ObjectSecurityMode, sizeof(ULONG), NULL)))
+    {
+        ObjectSecurityMode = 0;
     }
 
     /* Allocate the System SID */
@@ -251,9 +260,23 @@ CreateBaseAcls(OUT PACL* Dacl,
     Status = RtlCreateAcl(*Dacl, AclLength, ACL_REVISION2);
     ASSERT(NT_SUCCESS(Status));
 
+    /* Setup access for anyone depending on object security mode */
+    if (ObjectSecurityMode != 0)
+    {
+        /*
+         * If we have restrictions on security mode, make it read only
+         * it also means session ID is not 0
+         */
+        WorldAccess = DIRECTORY_QUERY | DIRECTORY_TRAVERSE;
+    }
+    else
+    {
+        /* Otherwise, open wide */
+        WorldAccess = READ_CONTROL | DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY;
+    }
+
     /* Give the appropriate rights to each SID */
-    /* FIXME: Should check SessionId/ProtectionMode */
-    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY | READ_CONTROL, WorldSid);
+    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, WorldAccess, WorldSid);
     ASSERT(NT_SUCCESS(Status));
     Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
     ASSERT(NT_SUCCESS(Status));
@@ -268,13 +291,24 @@ CreateBaseAcls(OUT PACL* Dacl,
     Status = RtlCreateAcl(*RestrictedDacl, AclLength, ACL_REVISION2);
     ASSERT(NT_SUCCESS(Status));
 
+    /* Setup access for restricted sid depending on session id and protection mode */
+    if (SessionId == 0 || (ProtectionMode & 3) == 0)
+    {
+        /* If we have no session ID or if protection mode is not set, then open wide */
+        RestrictedAccess = READ_CONTROL | DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY;
+    }
+    else
+    {
+        /* Otherwise, make read only */
+        RestrictedAccess = READ_CONTROL | DIRECTORY_QUERY | DIRECTORY_TRAVERSE;
+    }
+
     /* And add the same ACEs as before */
-    /* FIXME: Not really fully correct */
-    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY | READ_CONTROL, WorldSid);
+    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, WorldAccess, WorldSid);
     ASSERT(NT_SUCCESS(Status));
     Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
     ASSERT(NT_SUCCESS(Status));
-    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_TRAVERSE, RestrictedSid);
+    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, RestrictedAccess, RestrictedSid);
     ASSERT(NT_SUCCESS(Status));
 
     /* The SIDs are captured, can free them now */
