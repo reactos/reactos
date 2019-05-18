@@ -2615,6 +2615,22 @@ QSI_DEF(SystemExtendedHandleInformation)
     return Status;
 }
 
+/* Class 70 - System object security mode information  */
+QSI_DEF(SystemObjectSecurityMode)
+{
+    PULONG ObjectSecurityInfo = (PULONG)Buffer;
+
+    /* Validate input size */
+    if (Size != sizeof(ULONG))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    *ObjectSecurityInfo = ObpObjectSecurityMode;
+
+    return STATUS_SUCCESS;
+}
+
 /* Class 76 - System firmware table information  */
 QSI_DEF(SystemFirmwareTableInformation)
 {
@@ -2807,7 +2823,7 @@ CallQS [] =
     SI_XX(SystemSessionPoolTagInformation), /* FIXME: not implemented */
     SI_XX(SystemSessionMappedViewInformation), /* FIXME: not implemented */
     SI_XX(SystemHotpatchInformation), /* FIXME: not implemented */
-    SI_XX(SystemObjectSecurityMode), /* FIXME: not implemented */
+    SI_QX(SystemObjectSecurityMode),
     SI_XX(SystemWatchdogTimerHandler), /* FIXME: not implemented */
     SI_XX(SystemWatchdogTimerInformation), /* FIXME: not implemented */
     SI_XX(SystemLogicalProcessorInformation), /* FIXME: not implemented */
