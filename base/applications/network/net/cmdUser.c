@@ -307,6 +307,13 @@ PrintLogonHours(
             bFirst = FALSE;
         }
     }
+
+    if (bFirst)
+    {
+        /* No logon hours */
+        PrintMessageString(4434);
+        ConPuts(StdOut, L"\n");
+    }
 }
 
 
