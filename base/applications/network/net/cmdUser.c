@@ -10,6 +10,9 @@
 
 #include "net.h"
 
+#define SECONDS_PER_DAY (60 * 60 * 24)
+#define SECONDS_PER_HOUR (60 * 60)
+
 typedef struct _COUNTY_TABLE
 {
     DWORD dwCountryCode;
@@ -148,6 +151,31 @@ PrintDateTime(DWORD dwSeconds)
 
 
 static
+VOID
+PrintLocalTime(DWORD dwSeconds)
+{
+    LARGE_INTEGER Time;
+    FILETIME FileTime;
+    SYSTEMTIME SystemTime;
+    WCHAR TimeBuffer[80];
+
+    RtlSecondsSince1970ToTime(dwSeconds, &Time);
+    FileTime.dwLowDateTime = Time.u.LowPart;
+    FileTime.dwHighDateTime = Time.u.HighPart;
+    FileTimeToSystemTime(&FileTime, &SystemTime);
+
+    GetTimeFormatW(LOCALE_USER_DEFAULT,
+                   TIME_NOSECONDS,
+                   &SystemTime,
+                   NULL,
+                   TimeBuffer,
+                   ARRAYSIZE(TimeBuffer));
+
+    ConPrintf(StdOut, L"%s", TimeBuffer);
+}
+
+
+static
 DWORD
 GetTimeInSeconds(VOID)
 {
@@ -217,7 +245,7 @@ PrintLogonHours(
     INT nPaddedLength)
 {
     DWORD dwUnitsPerDay, dwBitNumber, dwSecondsPerUnit;
-    DWORD dwStartTime, dwEndTime;
+    DWORD dwStartTime, dwEndTime, dwStartDay, dwEndDay;
     BOOL bBitValue, bFirst = TRUE;
 
     if ((dwUnitsPerWeek == 0) ||
@@ -230,7 +258,7 @@ PrintLogonHours(
         ((dwUnitsPerDay / 24) > 6))
         return;
 
-    dwSecondsPerUnit = (24 * 60 * 60) / dwUnitsPerDay;
+    dwSecondsPerUnit = (SECONDS_PER_DAY) / dwUnitsPerDay;
 
     for (dwBitNumber = 0; dwBitNumber < dwUnitsPerWeek; dwBitNumber++)
     {
@@ -251,14 +279,29 @@ PrintLogonHours(
             if (!bFirst)
                 PrintPadding(L' ', nPaddedLength);
 
-            if (dwStartTime == 0 && dwEndTime == (60 * 60 * 24 * 7))
+            if (dwStartTime == 0 && dwEndTime == (SECONDS_PER_DAY * 7))
             {
                 PrintMessageString(4302);
                 ConPuts(StdOut, L"\n");
             }
             else
             {
-                ConPrintf(StdOut, L"%lu - %lu\n", dwStartTime, dwEndTime);
+                dwStartDay = dwStartTime / SECONDS_PER_DAY;
+                dwEndDay = (dwEndTime / SECONDS_PER_DAY) % 7;
+
+                PrintMessageString(4307 + dwStartDay);
+                ConPuts(StdOut, L" ");
+                PrintLocalTime((dwStartTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
+
+                ConPrintf(StdOut, L" - ");
+                if (dwStartDay != dwEndDay)
+                {
+                    PrintMessageString(4307 + dwEndDay);
+                    ConPuts(StdOut, L" ");
+                }
+
+                PrintLocalTime((dwEndTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
+                ConPuts(StdOut, L"\n");
             }
 
             bFirst = FALSE;
