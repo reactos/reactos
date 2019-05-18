@@ -5697,6 +5697,7 @@ IntExtTextOutW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
+
     if (FT_IS_SCALABLE(face))
     {
         lfEscapement = IntNormalizeAngle(plf->lfEscapement);
@@ -5706,6 +5707,8 @@ IntExtTextOutW(
     {
         lfEscapement = lfWidth = 0;
     }
+
+    bNeedCache = !EmuBold && !EmuItalic;
 
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
@@ -5761,29 +5764,45 @@ IntExtTextOutW(
         for (i = 0; i < Count; ++i)
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
-
-            // FIXME: Use FT_LOAD_BITMAP_METRICS_ONLY or cache.
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
+            realglyph = NULL;
+            if (bNeedCache)
             {
-                DPRINT1("Failed to load glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                bResult = FALSE;
-                goto Cleanup;
+                realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
+                                               RenderMode, &mat);
             }
-
-            glyph = face->glyph;
-            if (EmuBold)
-                FT_GlyphSlot_Embolden(glyph);
-            if (EmuItalic)
-                FT_GlyphSlot_Oblique(glyph);
-            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
             if (!realglyph)
             {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                bResult = FALSE;
-                goto Cleanup;
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+                if (error)
+                {
+                    DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
+                    bResult = FALSE;
+                    break;
+                }
+                glyph = face->glyph;
+                if (bNeedCache)
+                {
+                    realglyph = ftGdiGlyphCacheSet(face,
+                                                   glyph_index,
+                                                   plf->lfHeight,
+                                                   &mat,
+                                                   glyph,
+                                                   RenderMode);
+                }
+                else
+                {
+                    if (EmuBold)
+                        FT_GlyphSlot_Embolden(glyph);
+                    if (EmuItalic)
+                        FT_GlyphSlot_Oblique(glyph);
+                    realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
+                }
+                if (!realglyph)
+                {
+                    DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
+                    bResult = FALSE;
+                    break;
+                }
             }
 
             /* retrieve kerning distance and move pen position */
@@ -5819,7 +5838,8 @@ IntExtTextOutW(
 
             previous = glyph_index;
 
-            FT_Done_Glyph((FT_Glyph)realglyph);
+            if (!bNeedCache)
+                FT_Done_Glyph((FT_Glyph)realglyph);
         }
     }
 
@@ -6008,7 +6028,6 @@ IntExtTextOutW(
     previous = 0;
     for (i = 0; i < Count; ++i)
     {
-        bNeedCache = !EmuBold && !EmuItalic;
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
         realglyph = NULL;
         if (bNeedCache)
