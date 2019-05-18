@@ -5,6 +5,7 @@
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -232,21 +233,33 @@ CreateBaseAcls(OUT PACL* Dacl,
                                          1, SECURITY_LOCAL_SYSTEM_RID,
                                          0, 0, 0, 0, 0, 0, 0,
                                          &SystemSid);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     /* Allocate the World SID */
     Status = RtlAllocateAndInitializeSid(&WorldAuthority,
                                          1, SECURITY_WORLD_RID,
                                          0, 0, 0, 0, 0, 0, 0,
                                          &WorldSid);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeSid(SystemSid);
+        goto Return;
+    }
 
     /* Allocate the restricted SID */
     Status = RtlAllocateAndInitializeSid(&NtAuthority,
                                          1, SECURITY_RESTRICTED_CODE_RID,
                                          0, 0, 0, 0, 0, 0, 0,
                                          &RestrictedSid);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeSid(WorldSid);
+        RtlFreeSid(SystemSid);
+        goto Return;
+    }
 
     /* Allocate one ACL with 3 ACEs each for one SID */
     AclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) +
@@ -254,11 +267,19 @@ CreateBaseAcls(OUT PACL* Dacl,
                     RtlLengthSid(WorldSid)  +
                     RtlLengthSid(RestrictedSid);
     *Dacl = RtlAllocateHeap(BaseSrvHeap, 0, AclLength);
-    ASSERT(*Dacl != NULL);
+    if (*Dacl == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto FreeAndReturn;
+    }
 
     /* Set the correct header fields */
     Status = RtlCreateAcl(*Dacl, AclLength, ACL_REVISION2);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(BaseSrvHeap, 0, *Dacl);
+        goto FreeAndReturn;
+    }
 
     /* Setup access for anyone depending on object security mode */
     if (ObjectSecurityMode != 0)
@@ -276,20 +297,29 @@ CreateBaseAcls(OUT PACL* Dacl,
     }
 
     /* Give the appropriate rights to each SID */
-    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, WorldAccess, WorldSid);
-    ASSERT(NT_SUCCESS(Status));
-    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
-    ASSERT(NT_SUCCESS(Status));
-    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_TRAVERSE, RestrictedSid);
-    ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, WorldAccess, WorldSid)) &&
+        NT_SUCCESS(RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid)))
+    {
+        RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_TRAVERSE, RestrictedSid);
+    }
 
     /* Now allocate the restricted DACL */
     *RestrictedDacl = RtlAllocateHeap(BaseSrvHeap, 0, AclLength);
-    ASSERT(*RestrictedDacl != NULL);
+    if (*RestrictedDacl == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        RtlFreeHeap(BaseSrvHeap, 0, *Dacl);
+        goto FreeAndReturn;
+    }
 
     /* Initialize it */
     Status = RtlCreateAcl(*RestrictedDacl, AclLength, ACL_REVISION2);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(BaseSrvHeap, 0, *RestrictedDacl);
+        RtlFreeHeap(BaseSrvHeap, 0, *Dacl);
+        goto FreeAndReturn;
+    }
 
     /* Setup access for restricted sid depending on session id and protection mode */
     if (SessionId == 0 || (ProtectionMode & 3) == 0)
@@ -305,16 +335,22 @@ CreateBaseAcls(OUT PACL* Dacl,
 
     /* And add the same ACEs as before */
     Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, WorldAccess, WorldSid);
-    ASSERT(NT_SUCCESS(Status));
-    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
-    ASSERT(NT_SUCCESS(Status));
-    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, RestrictedAccess, RestrictedSid);
-    ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
+        if (NT_SUCCESS(Status))
+        {
+            Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, RestrictedAccess, RestrictedSid);
+        }
+    }
 
     /* The SIDs are captured, can free them now */
+FreeAndReturn:
     RtlFreeSid(RestrictedSid);
     RtlFreeSid(WorldSid);
     RtlFreeSid(SystemSid);
+
+Return:
     return Status;
 }
 
