@@ -5720,26 +5720,31 @@ IntExtTextOutW(
     }
 
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
-    DC_vUpdateWorldToDevice(dc);
+    if (lfWidth)
+    {
+        IntWidthMatrix(face, &matWidth, lfWidth);
+        FT_Matrix_Multiply(&matWidth, &mat);
+    }
+
+    if (lfEscapement)
+    {
+        IntEscapeMatrix(&matEscape, lfEscapement);
+        FT_Matrix_Multiply(&matEscape, &mat);
+    }
+
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+        FtMatrixFromMx(&matWorld, pmxWorldToDevice);
+        matWorld.yx = -matWorld.yx;
+        matWorld.xy = -matWorld.xy;
+        FT_Matrix_Multiply(&matWorld, &mat);
     }
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
+        matWorld = identityMat;
     }
-
-    IntWidthMatrix(face, &matWidth, lfWidth);
-    FT_Matrix_Multiply(&matWidth, &mat);
-
-    IntEscapeMatrix(&matEscape, lfEscapement);
-    FT_Matrix_Multiply(&matEscape, &mat);
-
-    FtMatrixFromMx(&matWorld, pmxWorldToDevice);
-    matWorld.yx = -matWorld.yx;
-    matWorld.xy = -matWorld.xy;
-    FT_Matrix_Multiply(&matWorld, &mat);
 
     FT_Set_Transform(face, &mat, NULL);
 
@@ -5895,8 +5900,11 @@ IntExtTextOutW(
         vecs[7].y = vecs[8].y = vecs[4].y - ((FontGDI->tmAscent / 3) << 16);
     }
 
-    // invert y axis
-    IntEscapeMatrix(&matEscape, -lfEscapement);
+    if (lfEscapement)
+    {
+        // invert y axis
+        IntEscapeMatrix(&matEscape, -lfEscapement);
+    }
 
     matWorld.yx = -matWorld.yx;
     matWorld.xy = -matWorld.xy;
@@ -5904,8 +5912,10 @@ IntExtTextOutW(
     // convert vecs
     for (i = 0; i < 9; ++i)
     {
-        FT_Vector_Transform(&vecs[i], &matWidth);
-        FT_Vector_Transform(&vecs[i], &matEscape);
+        if (lfWidth)
+            FT_Vector_Transform(&vecs[i], &matWidth);
+        if (lfEscapement)
+            FT_Vector_Transform(&vecs[i], &matEscape);
         FT_Vector_Transform(&vecs[i], &matWorld);
     }
     vecs[2].x += DeltaX64 << 10;
