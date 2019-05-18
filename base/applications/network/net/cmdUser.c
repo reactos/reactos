@@ -134,14 +134,14 @@ PrintDateTime(DWORD dwSeconds)
                    &SystemTime,
                    NULL,
                    DateBuffer,
-                   80);
+                   ARRAYSIZE(DateBuffer));
 
     GetTimeFormatW(LOCALE_USER_DEFAULT,
                    TIME_NOSECONDS,
                    &SystemTime,
                    NULL,
                    TimeBuffer,
-                   80);
+                   ARRAYSIZE(TimeBuffer));
 
     ConPrintf(StdOut, L"%s %s", DateBuffer, TimeBuffer);
 }
@@ -193,6 +193,77 @@ GetCountryFromCountryCode(
     }
 
     return FALSE;
+}
+
+
+static
+BOOL
+BitValue(
+    PBYTE pLogonHours,
+    DWORD dwBitNumber)
+{
+    DWORD dwIndex = dwBitNumber / 8;
+    BYTE Mask = 1 << (dwBitNumber & 7);
+
+    return ((pLogonHours[dwIndex] & Mask) != 0);
+}
+
+
+static
+VOID
+PrintLogonHours(
+    DWORD dwUnitsPerWeek,
+    PBYTE pLogonHours,
+    INT nPaddedLength)
+{
+    DWORD dwUnitsPerDay, dwBitNumber, dwSecondsPerUnit;
+    DWORD dwStartTime, dwEndTime;
+    BOOL bBitValue, bFirst = TRUE;
+
+    if ((dwUnitsPerWeek == 0) ||
+        ((dwUnitsPerWeek %7) != 0))
+        return;
+
+    dwUnitsPerDay = dwUnitsPerWeek / 7;
+
+    if (((dwUnitsPerDay % 24) != 0) ||
+        ((dwUnitsPerDay / 24) > 6))
+        return;
+
+    dwSecondsPerUnit = (24 * 60 * 60) / dwUnitsPerDay;
+
+    for (dwBitNumber = 0; dwBitNumber < dwUnitsPerWeek; dwBitNumber++)
+    {
+        bBitValue = BitValue(pLogonHours, dwBitNumber);
+        if (bBitValue)
+        {
+            dwStartTime = dwSecondsPerUnit * dwBitNumber;
+
+            while (bBitValue != 0 && dwBitNumber < dwUnitsPerWeek)
+            {
+                dwBitNumber++;
+                if (dwBitNumber < dwUnitsPerWeek)
+                    bBitValue = BitValue(pLogonHours, dwBitNumber);
+            }
+
+            dwEndTime = dwSecondsPerUnit * dwBitNumber;
+
+            if (!bFirst)
+                PrintPadding(L' ', nPaddedLength);
+
+            if (dwStartTime == 0 && dwEndTime == (60 * 60 * 24 * 7))
+            {
+                PrintMessageString(4302);
+                ConPuts(StdOut, L"\n");
+            }
+            else
+            {
+                ConPrintf(StdOut, L"%lu - %lu\n", dwStartTime, dwEndTime);
+            }
+
+            bFirst = FALSE;
+        }
+    }
 }
 
 
@@ -329,8 +400,16 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintPaddedMessageString(4432, nPaddedLength);
     if (pUserInfo->usri4_logon_hours == NULL)
+    {
         PrintMessageString(4302);
-    ConPuts(StdOut, L"\n\n");
+        ConPuts(StdOut, L"\n");
+    }
+    else
+    {
+        PrintLogonHours(pUserInfo->usri4_units_per_week,
+                        pUserInfo->usri4_logon_hours,
+                        nPaddedLength);
+    }
 
     ConPuts(StdOut, L"\n");
     PrintPaddedMessageString(4427, nPaddedLength);
