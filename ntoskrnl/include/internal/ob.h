@@ -618,6 +618,7 @@ extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
 extern UNICODE_STRING ObpDosDevicesShortName;
 extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
 extern ULONG ObpUnsecureGlobalNamesLength;
+extern ULONG ObpObjectSecurityMode;
 
 //
 // Inlined Functions
