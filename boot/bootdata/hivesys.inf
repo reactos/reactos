@@ -348,12 +348,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-3"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"SysSetup.Dll,KeyboardClassInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Mouse"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Mouse"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-2"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"SysSetup.Dll,MouseClassInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"mouclass"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
