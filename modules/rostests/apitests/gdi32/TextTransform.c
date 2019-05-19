@@ -86,37 +86,216 @@ static BOOL SaveBitmapToFile(LPCWSTR pszFileName, HBITMAP hbm)
 }
 #endif
 
-static VOID
-setXFORM(XFORM *pxform,
-         FLOAT eM11, FLOAT eM12,
-         FLOAT eM21, FLOAT eM22,
-         FLOAT eDx, FLOAT eDy)
+typedef struct TEST_ENTRY
 {
-    pxform->eM11 = eM11;
-    pxform->eM12 = eM12;
-    pxform->eM21 = eM21;
-    pxform->eM22 = eM22;
-    pxform->eDx = eDx;
-    pxform->eDy = eDy;
+    INT line;               // line number
+    INT GraphicsMode;       // GM_COMPATIBLE or GM_ADVANCED
+    POINT ptRef;            // reference point
+    INT TextAlign;
+    XFORM xform;
+    BOOL xform_ok;
+    LPCWSTR filename;
+    INT cWhitePoints;       // number of white points
+    POINT WhitePoints[4];
+    INT cBlackPoints;       // number of black points
+    POINT BlackPoints[4];
+} TEST_ENTRY;
+
+#define WIDTH 400
+#define HEIGHT 400
+#define XCENTER (WIDTH / 2)
+#define YCENTER (HEIGHT / 2)
+#define BLACK RGB(0, 0, 0)
+#define WHITE RGB(255, 255, 255)
+#define LFHEIGHT -100
+
+static const RECT s_rc = { 0, 0, WIDTH, HEIGHT };
+static HBRUSH s_hWhiteBrush = NULL;
+static HPEN s_hRedPen = NULL;
+
+#define POS(ix, iy) { XCENTER + (ix) * WIDTH/8, YCENTER + (iy) * HEIGHT/8 }
+
+#define NO_TRANS_1 \
+    3, { POS(1, 1), POS(-1, 1), POS(-1, -1) }, 1, { POS(1, -1) }
+
+#define NO_TRANS_2 \
+    3, { POS(1, -1), POS(-1, 1), POS(-1, -1) }, 1, { POS(1, 1) }
+
+static const TEST_ENTRY s_entries[] =
+{
+    // GM_COMPATIBLE TA_BOTTOM
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1, 0, 0 }, FALSE, L"000.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1.5, 0, 0, 1, 0, 0 }, FALSE, L"001.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1.5, 0, 0 }, FALSE, L"002.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { -1, 0, 0, 1, 0, 0 }, FALSE, L"003.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, -1, 0, 0 }, FALSE, L"004.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 1, 0, 0, 0 }, FALSE, L"005.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, 1, 0, 0, 0 }, FALSE, L"006.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, -1, 0, 0, 0 }, FALSE, L"007.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, -1, 0, 0, 0 }, FALSE, L"009.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 0, 1, 0, 0 }, FALSE, L"009.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 1, 1, 1, 0, 0 }, FALSE, L"010.bmp", NO_TRANS_1 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 0, 0, 0, 0, 0 }, FALSE, L"011.bmp", NO_TRANS_1 },
+
+    // GM_COMPATIBLE TA_TOP
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, 1, 0, 0 }, FALSE, L"100.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1.5, 0, 0, 1, 0, 0 }, FALSE, L"101.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, 1.5, 0, 0 }, FALSE, L"102.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { -1, 0, 0, 1, 0, 0 }, FALSE, L"103.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, -1, 0, 0 }, FALSE, L"104.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, 1, 0, 0, 0 }, FALSE, L"105.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, -1, 1, 0, 0, 0 }, FALSE, L"106.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, -1, 0, 0, 0 }, FALSE, L"107.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, -1, -1, 0, 0, 0 }, FALSE, L"109.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, 0, 1, 0, 0 }, FALSE, L"109.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 1, 1, 1, 0, 0 }, FALSE, L"110.bmp", NO_TRANS_2 },
+    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 0, 0, 0, 0, 0 }, FALSE, L"111.bmp", NO_TRANS_2 },
+
+    // GM_ADVANCED TA_LEFT TA_BOTTOM
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1, 0, 0 }, TRUE, L"200.bmp", NO_TRANS_1 },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1.5, 0, 0, 1, 0, 0 }, TRUE, L"201.bmp",
+        4, { POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1) }, 1, { POS(3, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1.5, 0, 0 }, TRUE, L"202.bmp",
+        3, { POS(-1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(1, 1) } },
+    { __LINE__, GM_ADVANCED, { -XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { -1, 0, 0, 1, 0, 0 }, TRUE, L"203.bmp",
+        3, { POS(1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(-1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, -1, 0, 0 }, TRUE, L"204.bmp",
+        3, { POS(-1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(1, 1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 1, 0, 0, 0 }, TRUE, L"205.bmp",
+        3, { POS(-1, -1), POS(1, 1), POS(1, -1) }, 1, { POS(-1, 1) } },
+    { __LINE__, GM_ADVANCED, { -XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, 1, 0, 0, 0 }, TRUE, L"206.bmp",
+        3, { POS(-1, 1), POS(1, 1), POS(1, -1) }, 1, { POS(-1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, -1, 0, 0, 0 }, TRUE, L"207.bmp",
+        3, { POS(-1, 1), POS(-1, -1), POS(1, -1) }, 1, { POS(1, 1) } },
+    { __LINE__, GM_ADVANCED, { -XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, -1, 0, 0, 0 }, TRUE, L"208.bmp",
+        3, { POS(-1, 1), POS(-1, -1), POS(1, 1) }, 1, { POS(1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 0, 1, 0, 0 }, FALSE, L"209.bmp", NO_TRANS_1 },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 1, 1, 1, 0, 0 }, FALSE, L"210.bmp", NO_TRANS_1 },
+    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 0, 0, 0, 0, 0 }, FALSE, L"211.bmp", NO_TRANS_1 },
+
+    // GM_ADVANCED TA_LEFT TA_TOP
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, 0, 0 }, TRUE, L"300.bmp",
+        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -3), POS(-1, -3) } },
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, 0, 0 }, TRUE, L"301.bmp",
+        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -3), POS(-3, -1) } },
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, WIDTH/4, 0 }, TRUE, L"302.bmp",
+        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(1, -3) } },
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"303.bmp",
+        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(-1, -1) } },
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, 0, HEIGHT/4 }, TRUE, L"304.bmp",
+        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -1), POS(-1, -1) } },
+    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, 0, HEIGHT/4 }, TRUE, L"305.bmp",
+        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -1), POS(-3, 1) } },
+
+    // GM_ADVANCED TA_CENTER TA_TOP
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, 0 }, TRUE, L"400.bmp",
+        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(1, -3), POS(3, -3) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, 0 }, TRUE, L"401.bmp",
+        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -3), POS(1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 2, -WIDTH/4, HEIGHT/4 }, TRUE, L"402.bmp",
+        2, { POS(-1, 1), POS(-1, -1) }, 4, { POS(1, -1), POS(3, -1), POS(1, 1), POS(3, 1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, 0 }, TRUE, L"403.bmp",
+        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -1), POS(1, -3) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, HEIGHT/4 }, TRUE, L"404.bmp",
+        2, { POS(-1, 1), POS(1, 1) }, 2, { POS(1, -1), POS(3, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, HEIGHT/4 }, TRUE, L"405.bmp",
+        2, { POS(-1, -1), POS(-1, 1) }, 2, { POS(1, -1), POS(1, 1) } },
+
+    // GM_ADVANCED TA_RIGHT TA_TOP
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, 0 }, TRUE, L"500.bmp",
+        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(1, -3) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"501.bmp",
+        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -3), POS(1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 2, -WIDTH/4, HEIGHT/4 }, TRUE, L"502.bmp",
+        0, {}, 4, { POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"503.bmp",
+        3, { POS(-1, 1), POS(1, 1), POS(-1, -1) }, 2, { POS(1, -1), POS(1, -3) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, HEIGHT/4 }, TRUE, L"504.bmp",
+        2, { POS(-1, 1), POS(1, 1) }, 2, { POS(-1, -1), POS(1, -1) } },
+    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, HEIGHT/4 }, TRUE, L"505.bmp",
+        2, { POS(-1, -1), POS(-1, 1) }, 2, { POS(1, -1), POS(1, 1) } },
+};
+static const INT s_entry_count = (INT)(sizeof(s_entries) / sizeof(s_entries[0]));
+
+void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
+{
+    HGDIOBJ hbmOld, hPenOld;
+    INT i;
+    COLORREF rgb;
+    BOOL ret;
+    static const WCHAR s_chBlackBox = L'g';
+
+    SetGraphicsMode(hDC, entry->GraphicsMode);
+
+    hbmOld = SelectObject(hDC, hbm);
+    {
+        ModifyWorldTransform(hDC, NULL, MWT_IDENTITY);
+
+        FillRect(hDC, &s_rc, s_hWhiteBrush);
+
+        hPenOld = SelectObject(hDC, s_hRedPen);
+        {
+            MoveToEx(hDC, XCENTER / 2, 0, NULL);
+            LineTo(hDC, XCENTER / 2, HEIGHT);
+
+            MoveToEx(hDC, XCENTER, 0, NULL);
+            LineTo(hDC, XCENTER, HEIGHT);
+
+            MoveToEx(hDC, XCENTER * 3 / 2, 0, NULL);
+            LineTo(hDC, XCENTER * 3 / 2, HEIGHT);
+
+            MoveToEx(hDC, 0, YCENTER / 2, NULL);
+            LineTo(hDC, WIDTH, YCENTER / 2);
+
+            MoveToEx(hDC, 0, YCENTER, NULL);
+            LineTo(hDC, WIDTH, YCENTER);
+
+            MoveToEx(hDC, 0, YCENTER * 3 / 2, NULL);
+            LineTo(hDC, WIDTH, YCENTER * 3 / 2);
+        }
+        SelectObject(hDC, hPenOld);
+
+        ret = SetWorldTransform(hDC, &entry->xform);
+        ok(ret == entry->xform_ok, "Line %d: SetWorldTransform returned %d\n", entry->line, ret);
+
+        SetTextAlign(hDC, entry->TextAlign);
+
+        TextOutW(hDC, entry->ptRef.x, entry->ptRef.y, &s_chBlackBox, 1);
+
+        ModifyWorldTransform(hDC, NULL, MWT_IDENTITY);
+
+        for (i = 0; i < entry->cWhitePoints; ++i)
+        {
+            rgb = GetPixel(hDC, entry->WhitePoints[i].x, entry->WhitePoints[i].y);
+            ok(rgb == WHITE, "Line %d: %d: (%ld, %ld) is not white\n", entry->line, i,
+               entry->WhitePoints[i].x, entry->WhitePoints[i].y);
+        }
+
+        for (i = 0; i < entry->cBlackPoints; ++i)
+        {
+            rgb = GetPixel(hDC, entry->BlackPoints[i].x, entry->BlackPoints[i].y);
+            ok(rgb == BLACK, "Line %d: %d: (%ld, %ld) is not black\n", entry->line, i,
+               entry->BlackPoints[i].x, entry->BlackPoints[i].y);
+        }
+    }
+    SelectObject(hDC, hbmOld);
+
+    SaveBitmapToFile(entry->filename, hbm);
 }
 
 START_TEST(TextTransform)
 {
     HDC hDC;
     BITMAPINFO bmi;
-    LPVOID pvBits;
     HBITMAP hbm;
+    LPVOID pvBits;
     LOGFONTA lf;
     HFONT hFont;
-    HGDIOBJ hbmOld, hFontOld;
-    RECT rc;
-    WCHAR chBlackBox = L'g';
-    SIZE siz;
-    POINT pt;
-    XFORM xform;
-    HBRUSH hWhiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    const COLORREF BLACK = RGB(0, 0, 0);
-    const COLORREF WHITE = RGB(255, 255, 255);
+    HGDIOBJ hFontOld;
+    INT i;
+
+    s_hWhiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    s_hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
 
     hDC = CreateCompatibleDC(NULL);
     ok(hDC != NULL, "hDC was NULL.\n");
@@ -124,146 +303,34 @@ START_TEST(TextTransform)
     SetBkMode(hDC, TRANSPARENT);
     SetMapMode(hDC, MM_ANISOTROPIC);
 
-    siz.cx = siz.cy = 100;
-    pt.x = siz.cx / 2;
-    pt.y = siz.cy / 2;
-    SetWindowOrgEx(hDC, -pt.x, -pt.y, NULL);
-
     ZeroMemory(&bmi, sizeof(bmi));
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = siz.cx;
-    bmi.bmiHeader.biHeight = siz.cy;
+    bmi.bmiHeader.biWidth = WIDTH;
+    bmi.bmiHeader.biHeight = HEIGHT;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 24;
     hbm = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
     ok(hbm != NULL, "hbm was NULL.\n");
 
     ZeroMemory(&lf, sizeof(lf));
-    lf.lfHeight = -50;
+    lf.lfHeight = LFHEIGHT;
     lf.lfCharSet = DEFAULT_CHARSET;
     lstrcpyA(lf.lfFaceName, "Marlett");
     hFont = CreateFontIndirectA(&lf);
     ok(hFont != NULL, "hFont was NULL.\n");
 
-    hbmOld = SelectObject(hDC, hbm);
     hFontOld = SelectObject(hDC, hFont);
-
-    SetRect(&rc, -siz.cx / 2, -siz.cy / 2, siz.cx / 2, siz.cy / 2);
-
-    FillRect(hDC, &rc, hWhiteBrush);
-    SaveBitmapToFile(L"1.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    FillRect(hDC, &rc, hWhiteBrush);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    SaveBitmapToFile(L"2.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    SetGraphicsMode(hDC, GM_ADVANCED);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, 2, 0, 0, 1, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"3.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, 1, 1, 1, 1, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), FALSE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"4.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, -1, 0, 0, 1, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"5.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), BLACK);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, 0, 1, 1, 0, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"6.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, 0, -1, 1, 0, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"7.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), BLACK);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, 0, 1, -1, 0, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"8.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    FillRect(hDC, &rc, hWhiteBrush);
-    setXFORM(&xform, -1, 0, 0.5, -1, 0, 0);
-    ok_int(SetWorldTransform(hDC, &xform), TRUE);
-    SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
-    TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(L"9.bmp", hbm);
-    ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), BLACK);
-    ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
-    ok_long(GetPixel(hDC, -siz.cx / 4, -siz.cy / 4), WHITE);
-
+    for (i = 0; i < s_entry_count; ++i)
+    {
+        DoTestEntry(&s_entries[i], hDC, hbm);
+    }
     SelectObject(hDC, hFontOld);
-    SelectObject(hDC, hbmOld);
 
     DeleteObject(hFont);
     DeleteObject(hbm);
+
+    DeleteObject(s_hWhiteBrush);
+    DeleteObject(s_hRedPen);
 
     DeleteDC(hDC);
 }
