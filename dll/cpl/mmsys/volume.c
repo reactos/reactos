@@ -37,7 +37,8 @@ typedef struct _GLOBAL_DATA
     DWORD volumeStep;
 
     DWORD maxVolume;
-    PMIXERCONTROLDETAILS_UNSIGNED volumeInitValues;
+    PMIXERCONTROLDETAILS_UNSIGNED volumeInitialValues;
+    PMIXERCONTROLDETAILS_UNSIGNED volumePreviousValues;
     PMIXERCONTROLDETAILS_UNSIGNED volumeCurrentValues;
 
 } GLOBAL_DATA, *PGLOBAL_DATA;
@@ -176,10 +177,16 @@ GetVolumeControl(PGLOBAL_DATA pGlobalData)
     pGlobalData->volumeControlID = mxc.dwControlID;
     pGlobalData->volumeStep = (pGlobalData->volumeMaximum - pGlobalData->volumeMinimum) / (VOLUME_MAX - VOLUME_MIN);
 
-    pGlobalData->volumeInitValues = HeapAlloc(GetProcessHeap(),
-                                              0,
-                                              mxln.cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
-    if (pGlobalData->volumeInitValues == NULL)
+    pGlobalData->volumeInitialValues = HeapAlloc(GetProcessHeap(),
+                                                 0,
+                                                 mxln.cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
+    if (pGlobalData->volumeInitialValues == NULL)
+        return;
+
+    pGlobalData->volumePreviousValues = HeapAlloc(GetProcessHeap(),
+                                                  0,
+                                                  mxln.cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
+    if (pGlobalData->volumePreviousValues == NULL)
         return;
 
     pGlobalData->volumeCurrentValues = HeapAlloc(GetProcessHeap(),
@@ -191,7 +198,9 @@ GetVolumeControl(PGLOBAL_DATA pGlobalData)
 
 
 VOID
-GetVolumeValue(PGLOBAL_DATA pGlobalData)
+GetVolumeValue(
+    PGLOBAL_DATA pGlobalData,
+    BOOL bInit)
 {
     MIXERCONTROLDETAILS mxcd;
     DWORD i;
@@ -204,7 +213,7 @@ GetVolumeValue(PGLOBAL_DATA pGlobalData)
     mxcd.cChannels = pGlobalData->volumeChannels;
     mxcd.cMultipleItems = 0;
     mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
-    mxcd.paDetails = pGlobalData->volumeInitValues;
+    mxcd.paDetails = pGlobalData->volumePreviousValues;
 
     if (mixerGetControlDetails((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE)
         != MMSYSERR_NOERROR)
@@ -213,10 +222,13 @@ GetVolumeValue(PGLOBAL_DATA pGlobalData)
     pGlobalData->maxVolume = 0;
     for (i = 0; i < pGlobalData->volumeChannels; i++)
     {
-        pGlobalData->volumeCurrentValues[i].dwValue = pGlobalData->volumeInitValues[i].dwValue;
+        pGlobalData->volumeCurrentValues[i].dwValue = pGlobalData->volumePreviousValues[i].dwValue;
 
-        if (pGlobalData->volumeInitValues[i].dwValue > pGlobalData->maxVolume)
-            pGlobalData->maxVolume = pGlobalData->volumeInitValues[i].dwValue;
+        if (pGlobalData->volumePreviousValues[i].dwValue > pGlobalData->maxVolume)
+            pGlobalData->maxVolume = pGlobalData->volumePreviousValues[i].dwValue;
+
+        if (bInit)
+            pGlobalData->volumeInitialValues[i].dwValue = pGlobalData->volumeCurrentValues[i].dwValue;
     }
 }
 
@@ -240,14 +252,14 @@ SetVolumeValue(PGLOBAL_DATA pGlobalData,
 
     for (i = 0; i < pGlobalData->volumeChannels; i++)
     {
-        if (pGlobalData->volumeInitValues[i].dwValue == pGlobalData->maxVolume)
+        if (pGlobalData->volumePreviousValues[i].dwValue == pGlobalData->maxVolume)
         {
             pGlobalData->volumeCurrentValues[i].dwValue = dwVolume;
         }
         else
         {
             pGlobalData->volumeCurrentValues[i].dwValue =
-                pGlobalData->volumeInitValues[i].dwValue * dwVolume / pGlobalData-> maxVolume;
+                pGlobalData->volumePreviousValues[i].dwValue * dwVolume / pGlobalData-> maxVolume;
         }
     }
 
@@ -261,6 +273,29 @@ SetVolumeValue(PGLOBAL_DATA pGlobalData,
     if (mixerSetControlDetails((HMIXEROBJ)pGlobalData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_SETCONTROLDETAILSF_VALUE)
         != MMSYSERR_NOERROR)
         return;
+}
+
+
+static
+VOID
+RestoreVolumeValue(
+    PGLOBAL_DATA pGlobalData)
+{
+    MIXERCONTROLDETAILS mxcd;
+
+    if (pGlobalData->hMixer == NULL)
+        return;
+
+    mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
+    mxcd.dwControlID = pGlobalData->volumeControlID;
+    mxcd.cChannels = pGlobalData->volumeChannels;
+    mxcd.cMultipleItems = 0;
+    mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    mxcd.paDetails = pGlobalData->volumeInitialValues;
+
+    mixerSetControlDetails((HMIXEROBJ)pGlobalData->hMixer,
+                           &mxcd,
+                           MIXER_OBJECTF_HMIXER | MIXER_SETCONTROLDETAILSF_VALUE);
 }
 
 
@@ -352,7 +387,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     }
 
     GetVolumeControl(pGlobalData);
-    GetVolumeValue(pGlobalData);
+    GetVolumeValue(pGlobalData, TRUE);
 
     SendDlgItemMessage(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, 0, (LPARAM)mxc.szPname);
     SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
@@ -410,7 +445,7 @@ VolumeDlgProc(HWND hwndDlg,
         }
         case MM_MIXM_CONTROL_CHANGE:
         {
-            GetVolumeValue(pGlobalData);
+            GetVolumeValue(pGlobalData, FALSE);
             SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
             break;
         }
@@ -524,11 +559,14 @@ VolumeDlgProc(HWND hwndDlg,
         case WM_DESTROY:
             if (pGlobalData)
             {
-                if (pGlobalData->volumeInitValues)
-                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitValues);
-
                 if (pGlobalData->volumeCurrentValues)
                     HeapFree(GetProcessHeap(), 0, pGlobalData->volumeCurrentValues);
+
+                if (pGlobalData->volumePreviousValues)
+                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumePreviousValues);
+
+                if (pGlobalData->volumeInitialValues)
+                    HeapFree(GetProcessHeap(), 0, pGlobalData->volumeInitialValues);
 
                 mixerClose(pGlobalData->hMixer);
                 DestroyIcon(pGlobalData->hIconMuted);
@@ -539,9 +577,15 @@ VolumeDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            switch (((LPNMHDR)lParam)->code)
             {
-                SaveData(hwndDlg);
+                case PSN_APPLY:
+                    SaveData(hwndDlg);
+                    break;
+
+                case PSN_RESET:
+                    RestoreVolumeValue(pGlobalData);
+                    break;
             }
             return TRUE;
     }
