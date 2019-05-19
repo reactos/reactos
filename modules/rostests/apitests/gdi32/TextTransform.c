@@ -207,7 +207,7 @@ static const TEST_ENTRY s_entries[] =
     {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"501.bmp",
         3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -3), POS(1, -1)}},
     {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, L"502.bmp",
-        0, {}, 4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1)}},
+        0, {POS(0, 0)}, 4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1)}},
     {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"503.bmp",
         3, {POS(-1, 1), POS(1, 1), POS(-1, -1)}, 2, {POS(1, -1), POS(1, -3)}},
     {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, L"504.bmp",
