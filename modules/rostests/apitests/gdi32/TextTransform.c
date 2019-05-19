@@ -109,115 +109,115 @@ typedef struct TEST_ENTRY
 #define WHITE RGB(255, 255, 255)
 #define LFHEIGHT -100
 
-static const RECT s_rc = { 0, 0, WIDTH, HEIGHT };
+static const RECT s_rc = {0, 0, WIDTH, HEIGHT};
 static HBRUSH s_hWhiteBrush = NULL;
 static HPEN s_hRedPen = NULL;
 
-#define POS(ix, iy) { XCENTER + (ix) * WIDTH/8, YCENTER + (iy) * HEIGHT/8 }
+#define POS(ix, iy) {XCENTER + (ix) * WIDTH/8, YCENTER + (iy) * HEIGHT/8}
 
 #define NO_TRANS_1 \
-    3, { POS(1, 1), POS(-1, 1), POS(-1, -1) }, 1, { POS(1, -1) }
+    3, {POS(1, 1), POS(-1, 1), POS(-1, -1)}, 1, {POS(1, -1)}
 
 #define NO_TRANS_2 \
-    3, { POS(1, -1), POS(-1, 1), POS(-1, -1) }, 1, { POS(1, 1) }
+    3, {POS(1, -1), POS(-1, 1), POS(-1, -1)}, 1, {POS(1, 1)}
 
 static const TEST_ENTRY s_entries[] =
 {
     // GM_COMPATIBLE TA_BOTTOM
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1, 0, 0 }, FALSE, L"000.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1.5, 0, 0, 1, 0, 0 }, FALSE, L"001.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1.5, 0, 0 }, FALSE, L"002.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { -1, 0, 0, 1, 0, 0 }, FALSE, L"003.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, -1, 0, 0 }, FALSE, L"004.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 1, 0, 0, 0 }, FALSE, L"005.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, 1, 0, 0, 0 }, FALSE, L"006.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, -1, 0, 0, 0 }, FALSE, L"007.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, -1, 0, 0, 0 }, FALSE, L"009.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 0, 1, 0, 0 }, FALSE, L"009.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 1, 1, 1, 0, 0 }, FALSE, L"010.bmp", NO_TRANS_1 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 0, 0, 0, 0, 0 }, FALSE, L"011.bmp", NO_TRANS_1 },
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, FALSE, L"000.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1.5, 0, 0, 1, 0, 0}, FALSE, L"001.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1.5, 0, 0}, FALSE, L"002.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, FALSE, L"003.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, FALSE, L"004.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, FALSE, L"005.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, 1, 0, 0, 0}, FALSE, L"006.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, -1, 0, 0, 0}, FALSE, L"007.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, FALSE, L"009.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 0, 1, 0, 0}, FALSE, L"009.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, L"010.bmp", NO_TRANS_1},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, L"011.bmp", NO_TRANS_1},
 
     // GM_COMPATIBLE TA_TOP
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, 1, 0, 0 }, FALSE, L"100.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1.5, 0, 0, 1, 0, 0 }, FALSE, L"101.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, 1.5, 0, 0 }, FALSE, L"102.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { -1, 0, 0, 1, 0, 0 }, FALSE, L"103.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 0, 0, -1, 0, 0 }, FALSE, L"104.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, 1, 0, 0, 0 }, FALSE, L"105.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, -1, 1, 0, 0, 0 }, FALSE, L"106.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, -1, 0, 0, 0 }, FALSE, L"107.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, -1, -1, 0, 0, 0 }, FALSE, L"109.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 1, 0, 1, 0, 0 }, FALSE, L"109.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 1, 1, 1, 1, 0, 0 }, FALSE, L"110.bmp", NO_TRANS_2 },
-    { __LINE__, GM_COMPATIBLE, { XCENTER, YCENTER }, TA_LEFT | TA_TOP, { 0, 0, 0, 0, 0, 0 }, FALSE, L"111.bmp", NO_TRANS_2 },
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1, 0, 0}, FALSE, L"100.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1.5, 0, 0, 1, 0, 0}, FALSE, L"101.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, 1.5, 0, 0}, FALSE, L"102.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {-1, 0, 0, 1, 0, 0}, FALSE, L"103.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 0, 0, -1, 0, 0}, FALSE, L"104.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 1, 0, 0, 0}, FALSE, L"105.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, 1, 0, 0, 0}, FALSE, L"106.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, -1, 0, 0, 0}, FALSE, L"107.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, -1, -1, 0, 0, 0}, FALSE, L"109.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 1, 0, 1, 0, 0}, FALSE, L"109.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {1, 1, 1, 1, 0, 0}, FALSE, L"110.bmp", NO_TRANS_2},
+    {__LINE__, GM_COMPATIBLE, {XCENTER, YCENTER}, TA_LEFT | TA_TOP, {0, 0, 0, 0, 0, 0}, FALSE, L"111.bmp", NO_TRANS_2},
 
     // GM_ADVANCED TA_LEFT TA_BOTTOM
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1, 0, 0 }, TRUE, L"200.bmp", NO_TRANS_1 },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1.5, 0, 0, 1, 0, 0 }, TRUE, L"201.bmp",
-        4, { POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1) }, 1, { POS(3, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, 1.5, 0, 0 }, TRUE, L"202.bmp",
-        3, { POS(-1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(1, 1) } },
-    { __LINE__, GM_ADVANCED, { -XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { -1, 0, 0, 1, 0, 0 }, TRUE, L"203.bmp",
-        3, { POS(1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(-1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 0, 0, -1, 0, 0 }, TRUE, L"204.bmp",
-        3, { POS(-1, -1), POS(-1, 1), POS(1, -1) }, 1, { POS(1, 1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 1, 0, 0, 0 }, TRUE, L"205.bmp",
-        3, { POS(-1, -1), POS(1, 1), POS(1, -1) }, 1, { POS(-1, 1) } },
-    { __LINE__, GM_ADVANCED, { -XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, 1, 0, 0, 0 }, TRUE, L"206.bmp",
-        3, { POS(-1, 1), POS(1, 1), POS(1, -1) }, 1, { POS(-1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, -1, 0, 0, 0 }, TRUE, L"207.bmp",
-        3, { POS(-1, 1), POS(-1, -1), POS(1, -1) }, 1, { POS(1, 1) } },
-    { __LINE__, GM_ADVANCED, { -XCENTER, -YCENTER }, TA_LEFT | TA_BOTTOM, { 0, -1, -1, 0, 0, 0 }, TRUE, L"208.bmp",
-        3, { POS(-1, 1), POS(-1, -1), POS(1, 1) }, 1, { POS(1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 1, 0, 1, 0, 0 }, FALSE, L"209.bmp", NO_TRANS_1 },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 1, 1, 1, 1, 0, 0 }, FALSE, L"210.bmp", NO_TRANS_1 },
-    { __LINE__, GM_ADVANCED, { XCENTER, YCENTER }, TA_LEFT | TA_BOTTOM, { 0, 0, 0, 0, 0, 0 }, FALSE, L"211.bmp", NO_TRANS_1 },
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1, 0, 0}, TRUE, L"200.bmp", NO_TRANS_1},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1.5, 0, 0, 1, 0, 0}, TRUE, L"201.bmp",
+        4, {POS(-1, -1), POS(1, -1), POS(-1, 1), POS(1, 1)}, 1, {POS(3, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, 1.5, 0, 0}, TRUE, L"202.bmp",
+        3, {POS(-1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(1, 1)}},
+    {__LINE__, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {-1, 0, 0, 1, 0, 0}, TRUE, L"203.bmp",
+        3, {POS(1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(-1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {1, 0, 0, -1, 0, 0}, TRUE, L"204.bmp",
+        3, {POS(-1, -1), POS(-1, 1), POS(1, -1)}, 1, {POS(1, 1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 1, 0, 0, 0}, TRUE, L"205.bmp",
+        3, {POS(-1, -1), POS(1, 1), POS(1, -1)}, 1, {POS(-1, 1)}},
+    {__LINE__, GM_ADVANCED, {-XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, 1, 0, 0, 0}, TRUE, L"206.bmp",
+        3, {POS(-1, 1), POS(1, 1), POS(1, -1)}, 1, {POS(-1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, -1, 0, 0, 0}, TRUE, L"207.bmp",
+        3, {POS(-1, 1), POS(-1, -1), POS(1, -1)}, 1, {POS(1, 1)}},
+    {__LINE__, GM_ADVANCED, {-XCENTER, -YCENTER}, TA_LEFT | TA_BOTTOM, {0, -1, -1, 0, 0, 0}, TRUE, L"208.bmp",
+        3, {POS(-1, 1), POS(-1, -1), POS(1, 1)}, 1, {POS(1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 1, 0, 1, 0, 0}, FALSE, L"209.bmp", NO_TRANS_1},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {1, 1, 1, 1, 0, 0}, FALSE, L"210.bmp", NO_TRANS_1},
+    {__LINE__, GM_ADVANCED, {XCENTER, YCENTER}, TA_LEFT | TA_BOTTOM, {0, 0, 0, 0, 0, 0}, FALSE, L"211.bmp", NO_TRANS_1},
 
     // GM_ADVANCED TA_LEFT TA_TOP
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, 0, 0 }, TRUE, L"300.bmp",
-        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -3), POS(-1, -3) } },
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, 0, 0 }, TRUE, L"301.bmp",
-        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -3), POS(-3, -1) } },
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, WIDTH/4, 0 }, TRUE, L"302.bmp",
-        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(1, -3) } },
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"303.bmp",
-        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(-1, -1) } },
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 2, 0, 0, 1, 0, HEIGHT/4 }, TRUE, L"304.bmp",
-        3, { POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -1), POS(-1, -1) } },
-    { __LINE__, GM_ADVANCED, { 0, 0 }, TA_LEFT | TA_TOP, { 1, 0, 0, 2, 0, HEIGHT/4 }, TRUE, L"305.bmp",
-        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-3, -1), POS(-3, 1) } },
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, 0}, TRUE, L"300.bmp",
+        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-1, -3)}},
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, 0}, TRUE, L"301.bmp",
+        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -3), POS(-3, -1)}},
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, WIDTH/4, 0}, TRUE, L"302.bmp",
+        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(1, -3)}},
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"303.bmp",
+        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(-1, -1)}},
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {2, 0, 0, 1, 0, HEIGHT/4}, TRUE, L"304.bmp",
+        3, {POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -1), POS(-1, -1)}},
+    {__LINE__, GM_ADVANCED, {0, 0}, TA_LEFT | TA_TOP, {1, 0, 0, 2, 0, HEIGHT/4}, TRUE, L"305.bmp",
+        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-3, -1), POS(-3, 1)}},
 
     // GM_ADVANCED TA_CENTER TA_TOP
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, 0 }, TRUE, L"400.bmp",
-        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(1, -3), POS(3, -3) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, 0 }, TRUE, L"401.bmp",
-        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -3), POS(1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 2, -WIDTH/4, HEIGHT/4 }, TRUE, L"402.bmp",
-        2, { POS(-1, 1), POS(-1, -1) }, 4, { POS(1, -1), POS(3, -1), POS(1, 1), POS(3, 1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, 0 }, TRUE, L"403.bmp",
-        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -1), POS(1, -3) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, HEIGHT/4 }, TRUE, L"404.bmp",
-        2, { POS(-1, 1), POS(1, 1) }, 2, { POS(1, -1), POS(3, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_CENTER | TA_TOP, { 1, 0, 0, 2, WIDTH/8, HEIGHT/4 }, TRUE, L"405.bmp",
-        2, { POS(-1, -1), POS(-1, 1) }, 2, { POS(1, -1), POS(1, 1) } },
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, L"400.bmp",
+        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(1, -3), POS(3, -3)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, 0}, TRUE, L"401.bmp",
+        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -3), POS(1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, L"402.bmp",
+        2, {POS(-1, 1), POS(-1, -1)}, 4, {POS(1, -1), POS(3, -1), POS(1, 1), POS(3, 1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, 0}, TRUE, L"403.bmp",
+        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -1), POS(1, -3)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, L"404.bmp",
+        2, {POS(-1, 1), POS(1, 1)}, 2, {POS(1, -1), POS(3, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_CENTER | TA_TOP, {1, 0, 0, 2, WIDTH/8, HEIGHT/4}, TRUE, L"405.bmp",
+        2, {POS(-1, -1), POS(-1, 1)}, 2, {POS(1, -1), POS(1, 1)}},
 
     // GM_ADVANCED TA_RIGHT TA_TOP
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, 0 }, TRUE, L"500.bmp",
-        4, { POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1) }, 2, { POS(-1, -3), POS(1, -3) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"501.bmp",
-        3, { POS(-1, -1), POS(-1, 1), POS(1, 1) }, 2, { POS(1, -3), POS(1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 2, -WIDTH/4, HEIGHT/4 }, TRUE, L"502.bmp",
-        0, {}, 4, { POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, 0 }, TRUE, L"503.bmp",
-        3, { POS(-1, 1), POS(1, 1), POS(-1, -1) }, 2, { POS(1, -1), POS(1, -3) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 2, 0, 0, 1, -WIDTH/4, HEIGHT/4 }, TRUE, L"504.bmp",
-        2, { POS(-1, 1), POS(1, 1) }, 2, { POS(-1, -1), POS(1, -1) } },
-    { __LINE__, GM_ADVANCED, { XCENTER, 0 }, TA_RIGHT | TA_TOP, { 1, 0, 0, 2, WIDTH/4, HEIGHT/4 }, TRUE, L"505.bmp",
-        2, { POS(-1, -1), POS(-1, 1) }, 2, { POS(1, -1), POS(1, 1) } },
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, 0}, TRUE, L"500.bmp",
+        4, {POS(-1, -1), POS(-1, 1), POS(1, -1), POS(1, 1)}, 2, {POS(-1, -3), POS(1, -3)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"501.bmp",
+        3, {POS(-1, -1), POS(-1, 1), POS(1, 1)}, 2, {POS(1, -3), POS(1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 2, -WIDTH/4, HEIGHT/4}, TRUE, L"502.bmp",
+        0, {}, 4, {POS(-1, -1), POS(1, -1), POS(1, -1), POS(-1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, 0}, TRUE, L"503.bmp",
+        3, {POS(-1, 1), POS(1, 1), POS(-1, -1)}, 2, {POS(1, -1), POS(1, -3)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {2, 0, 0, 1, -WIDTH/4, HEIGHT/4}, TRUE, L"504.bmp",
+        2, {POS(-1, 1), POS(1, 1)}, 2, {POS(-1, -1), POS(1, -1)}},
+    {__LINE__, GM_ADVANCED, {XCENTER, 0}, TA_RIGHT | TA_TOP, {1, 0, 0, 2, WIDTH/4, HEIGHT/4}, TRUE, L"505.bmp",
+        2, {POS(-1, -1), POS(-1, 1)}, 2, {POS(1, -1), POS(1, 1)}},
 };
 static const INT s_entry_count = (INT)(sizeof(s_entries) / sizeof(s_entries[0]));
 
-void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
+static void DoTestEntry(const TEST_ENTRY *entry, HDC hDC, HBITMAP hbm)
 {
     HGDIOBJ hbmOld, hPenOld;
     INT i;
@@ -287,8 +287,8 @@ START_TEST(TextTransform)
 {
     HDC hDC;
     BITMAPINFO bmi;
-    HBITMAP hbm;
     LPVOID pvBits;
+    HBITMAP hbm;
     LOGFONTA lf;
     HFONT hFont;
     HGDIOBJ hFontOld;
