@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "concfg/font.h"
 #include "guiterm.h"
 #include "guisettings.h"
 
@@ -331,7 +332,8 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
 
         /* Set the terminal informations */
 
-        /* Change the font */
+        /* Refresh the additional TrueType fonts cache and change the font */
+        RefreshTTFontCache();
         InitFonts(GuiData,
                   pConInfo->FaceName,
                   pConInfo->FontFamily,

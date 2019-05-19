@@ -20,6 +20,11 @@
 #include <debug.h>
 
 
+/* GLOBALS ********************************************************************/
+
+// RTL_STATIC_LIST_HEAD(TTFontCache);
+LIST_ENTRY TTFontCache = {&TTFontCache, &TTFontCache};
+
 /* FUNCTIONS ******************************************************************/
 
 /* Retrieves the character set associated with a given code page */
@@ -58,7 +63,10 @@ CreateConsoleFontEx(
     lf.lfOutPrecision  = OUT_DEFAULT_PRECIS;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = (BYTE)(FIXED_PITCH | FontFamily);
+
+    /* Set the mandatory flags and remove those that we do not support */
+    lf.lfPitchAndFamily = (BYTE)( (FIXED_PITCH | FF_MODERN | FontFamily) &
+                                 ~(VARIABLE_PITCH | FF_DECORATIVE | FF_ROMAN | FF_SCRIPT | FF_SWISS));
 
     if (!IsValidConsoleFont(FaceName, CodePage))
         StringCchCopyW(FaceName, LF_FACESIZE, L"Terminal");
@@ -179,13 +187,10 @@ IsValidConsoleFont2(
 {
     LPCWSTR FaceName = lplf->lfFaceName;
 
-    /* Record the font's attributes (Fixedwidth and Truetype) */
-    // BOOL fFixed    = ((lplf->lfPitchAndFamily & 0x03) == FIXED_PITCH);
-    // BOOL fTrueType = (lplf->lfOutPrecision == OUT_STROKE_PRECIS);
-
     /*
-     * According to: http://support.microsoft.com/kb/247815
-     * the criteria for console-eligible fonts are:
+     * According to: https://web.archive.org/web/20140901124501/http://support.microsoft.com/kb/247815
+     * "Necessary criteria for fonts to be available in a command window",
+     * the criteria for console-eligible fonts are as follows:
      * - The font must be a fixed-pitch font.
      * - The font cannot be an italic font.
      * - The font cannot have a negative A or C space.
@@ -198,6 +203,10 @@ IsValidConsoleFont2(
      * - If it is not a TrueType font, the face name must be "Terminal".
      * - If it is an Asian TrueType font, it must also be an Asian character set.
      *
+     * See also Raymond Chen's blog: https://devblogs.microsoft.com/oldnewthing/?p=26843
+     * and MIT-licensed Microsoft Terminal source code: https://github.com/microsoft/Terminal/blob/master/src/propsheet/misc.cpp
+     * for other details.
+     *
      * To install additional TrueType fonts to be available for the console,
      * add entries of type REG_SZ named "0", "00" etc... in:
      * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
@@ -205,27 +214,30 @@ IsValidConsoleFont2(
      * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts
      */
 
-     /*
-      * In ReactOS we relax some of the criteria:
-      * - We allow fixed-pitch FF_MODERN (Monospace) TrueType fonts
-      *   that can be italic or have negative A or C space.
-      * - If it is not a TrueType font, it can be from another character set
-      *   than OEM_CHARSET.
-      * - We do not look into the magic registry key mentioned above.
-      */
+    /*
+     * In ReactOS we relax some of the criteria:
+     * - We allow fixed-pitch FF_MODERN (Monospace) TrueType fonts
+     *   that can be italic or have negative A or C space.
+     * - If it is not a TrueType font, it can be from another character set
+     *   than OEM_CHARSET. When an Asian codepage is active however, we require
+     *   that this non-TrueType font has an Asian character set.
+     */
 
-    /* Reject variable width fonts */
-    if (((lplf->lfPitchAndFamily & 0x03) != FIXED_PITCH)
-#if 0 /* Reject italic and TrueType fonts with negative A or C space */
-        || (lplf->lfItalic)
-        || !(lpntm->ntmFlags & NTM_NONNEGATIVE_AC)
+    /* Reject variable-width fonts ... */
+    if ( ( ((lplf->lfPitchAndFamily & 0x03) != FIXED_PITCH)
+#if 0 /* Reject italic and TrueType fonts with negative A or C space ... */
+           || (lplf->lfItalic)
+           || !(lpntm->ntmFlags & NTM_NONNEGATIVE_AC)
 #endif
-        )
+         ) &&
+        /* ... if they are not in the list of additional TrueType fonts to include */
+         !IsAdditionalTTFont(FaceName) )
     {
-        DPRINT1("Font '%S' rejected because it%s (lfPitchAndFamily = %d).\n",
-                FaceName, !(lplf->lfPitchAndFamily & FIXED_PITCH) ? "'s not FIXED_PITCH"
-                                                                  : (!(lpntm->ntmFlags & NTM_NONNEGATIVE_AC) ? " has negative A or C space"
-                                                                                                             : " is broken"),
+        DPRINT1("Font '%S' rejected because it%s (lfPitchAndFamily = %d)\n",
+                FaceName,
+                !(lplf->lfPitchAndFamily & FIXED_PITCH) ? "'s not FIXED_PITCH"
+                    : (!(lpntm->ntmFlags & NTM_NONNEGATIVE_AC) ? " has negative A or C space"
+                                                               : " is broken"),
                 lplf->lfPitchAndFamily);
         return FALSE;
     }
@@ -238,25 +250,66 @@ IsValidConsoleFont2(
         return FALSE;
     }
 
+    /* Reject vertical fonts (tategaki) */
+    if (FaceName[0] == L'@')
+    {
+        DPRINT1("Font '%S' rejected because it's vertical\n", FaceName);
+        return FALSE;
+    }
+
     /* Is the current code page Chinese, Japanese or Korean? */
     if (IsCJKCodePage(CodePage))
     {
-        /* It's Asian */
+        /* It's CJK */
+
         if (FontType == TRUETYPE_FONTTYPE)
         {
-            if (lplf->lfCharSet != CodePageToCharSet(CodePage))
+            /*
+             * Here we are inclusive and check for any CJK character set,
+             * instead of looking just at the current one via CodePageToCharSet().
+             */
+            if (!IsCJKCharSet(lplf->lfCharSet)
+#if 1 // FIXME: Temporary HACK!
+                && wcscmp(FaceName, L"Terminal") != 0
+#endif
+               )
             {
-                DPRINT1("TrueType font '%S' rejected because it's not user Asian charset (lfCharSet = %d)\n",
+                DPRINT1("TrueType font '%S' rejected because it's not Asian charset (lfCharSet = %d)\n",
+                        FaceName, lplf->lfCharSet);
+                return FALSE;
+            }
+
+            /*
+             * If this is a cached TrueType font that is used only for certain
+             * code pages, verify that the charset it claims is the correct one.
+             *
+             * Since there may be multiple entries for a cached TrueType font,
+             * a general one (code page == 0) and one or more for explicit
+             * code pages, we need to perform two search queries instead of
+             * just one and retrieving the code page for this entry.
+             */
+            if (IsAdditionalTTFont(FaceName) && !IsAdditionalTTFontCP(FaceName, 0) &&
+                !IsCJKCharSet(lplf->lfCharSet))
+            {
+                DPRINT1("Cached TrueType font '%S' rejected because it claims a code page that is not Asian charset (lfCharSet = %d)\n",
                         FaceName, lplf->lfCharSet);
                 return FALSE;
             }
         }
         else
         {
+            /* Reject non-TrueType fonts that do not have an Asian character set */
+            if (!IsCJKCharSet(lplf->lfCharSet) && (lplf->lfCharSet != OEM_CHARSET))
+            {
+                DPRINT1("Non-TrueType font '%S' rejected because it's not Asian charset or OEM_CHARSET (lfCharSet = %d)\n",
+                        FaceName, lplf->lfCharSet);
+                return FALSE;
+            }
+
             /* Reject non-TrueType fonts that are not Terminal */
             if (wcscmp(FaceName, L"Terminal") != 0)
             {
-                DPRINT1("Non-TrueType font '%S' rejected because it's not Terminal\n", FaceName);
+                DPRINT1("Non-TrueType font '%S' rejected because it's not 'Terminal'\n", FaceName);
                 return FALSE;
             }
         }
@@ -264,6 +317,8 @@ IsValidConsoleFont2(
     else
     {
         /* Not CJK */
+
+        /* Reject non-TrueType fonts that are not OEM or similar */
         if ((FontType != TRUETYPE_FONTTYPE) &&
             (lplf->lfCharSet != ANSI_CHARSET) &&
             (lplf->lfCharSet != DEFAULT_CHARSET) &&
@@ -273,13 +328,6 @@ IsValidConsoleFont2(
                     FaceName, lplf->lfCharSet);
             return FALSE;
         }
-    }
-
-    /* Reject fonts that are vertical (tategaki) */
-    if (FaceName[0] == L'@')
-    {
-        DPRINT1("Font '%S' rejected because it's vertical\n", FaceName);
-        return FALSE;
     }
 
     /* All good */
@@ -320,7 +368,7 @@ IsValidConsoleFont(
 
     RtlZeroMemory(&lf, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET; // CodePageToCharSet(CodePage);
-    // lf.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
+    // lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
     StringCchCopyW(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), FaceName);
 
     hDC = GetDC(NULL);
@@ -328,6 +376,175 @@ IsValidConsoleFont(
     ReleaseDC(NULL, hDC);
 
     return Param.IsValidFont;
+}
+
+/*
+ * To install additional TrueType fonts to be available for the console,
+ * add entries of type REG_SZ named "0", "00" etc... in:
+ * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont
+ * The names of the fonts listed there should match those in:
+ * HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts
+ *
+ * This function initializes the cache of the fonts listed there.
+ */
+VOID
+InitTTFontCache(VOID)
+{
+    BOOLEAN Success;
+    HKEY  hKeyTTFonts; // hKey;
+    DWORD dwNumValues = 0;
+    DWORD dwIndex;
+    DWORD dwType;
+    WCHAR szValueName[MAX_PATH];
+    DWORD dwValueName;
+    WCHAR szValue[LF_FACESIZE] = L"";
+    DWORD dwValue;
+    PTT_FONT_ENTRY FontEntry;
+    PWCHAR pszNext = NULL;
+    UINT CodePage;
+
+    if (!IsListEmpty(&TTFontCache))
+        return;
+    // InitializeListHead(&TTFontCache);
+
+    /* Open the key */
+    // "\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont"
+    Success = (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                             L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont",
+                             0,
+                             KEY_READ,
+                             &hKeyTTFonts) == ERROR_SUCCESS);
+    if (!Success)
+        return;
+
+    /* Enumerate each value */
+    if (RegQueryInfoKeyW(hKeyTTFonts, NULL, NULL, NULL, NULL, NULL, NULL,
+                         &dwNumValues, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+    {
+        DPRINT("ConCfgReadUserSettings: RegQueryInfoKeyW failed\n");
+        RegCloseKey(hKeyTTFonts);
+        return;
+    }
+
+    for (dwIndex = 0; dwIndex < dwNumValues; dwIndex++)
+    {
+        dwValue = sizeof(szValue);
+        dwValueName = ARRAYSIZE(szValueName);
+        if (RegEnumValueW(hKeyTTFonts, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
+        {
+            DPRINT1("InitTTFontCache: RegEnumValueW failed, continuing...\n");
+            continue;
+        }
+        /* Only (multi-)string values are supported */
+        if ((dwType != REG_SZ) && (dwType != REG_MULTI_SZ))
+            continue;
+
+        /* The value name is a code page (in decimal), validate it */
+        CodePage = wcstoul(szValueName, &pszNext, 10);
+        if (*pszNext)
+            continue; // Non-numerical garbage followed...
+        // IsValidCodePage(CodePage);
+
+        FontEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*FontEntry));
+        if (!FontEntry)
+        {
+            DPRINT1("InitTTFontCache: Failed to allocate memory, continuing...\n");
+            continue;
+        }
+
+        FontEntry->CodePage = CodePage;
+
+        pszNext = szValue;
+
+        /* Check whether bold is disabled for this font */
+        if (*pszNext == L'*')
+        {
+            FontEntry->DisableBold = TRUE;
+            ++pszNext;
+        }
+        else
+        {
+            FontEntry->DisableBold = FALSE;
+        }
+
+        /* Copy the font name */
+        StringCchCopyNW(FontEntry->FaceName, ARRAYSIZE(FontEntry->FaceName),
+                        pszNext, wcslen(pszNext));
+
+        if (dwType == REG_MULTI_SZ)
+        {
+            /* There may be an alternate face name as the second string */
+            pszNext += wcslen(pszNext) + 1;
+
+            /* Check whether bold is disabled for this font */
+            if (*pszNext == L'*')
+            {
+                FontEntry->DisableBold = TRUE;
+                ++pszNext;
+            }
+            // else, keep the original setting.
+
+            /* Copy the alternate font name */
+            StringCchCopyNW(FontEntry->FaceNameAlt, ARRAYSIZE(FontEntry->FaceNameAlt),
+                            pszNext, wcslen(pszNext));
+        }
+
+        InsertTailList(&TTFontCache, &FontEntry->Entry);
+    }
+
+    /* Close the key and quit */
+    RegCloseKey(hKeyTTFonts);
+}
+
+VOID
+ClearTTFontCache(VOID)
+{
+    PLIST_ENTRY Entry;
+    PTT_FONT_ENTRY FontEntry;
+
+    while (!IsListEmpty(&TTFontCache))
+    {
+        Entry = RemoveHeadList(&TTFontCache);
+        FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FontEntry);
+    }
+    InitializeListHead(&TTFontCache);
+}
+
+VOID
+RefreshTTFontCache(VOID)
+{
+    ClearTTFontCache();
+    InitTTFontCache();
+}
+
+PTT_FONT_ENTRY
+FindCachedTTFont(
+    IN LPCWSTR FaceName,
+    IN UINT CodePage)
+{
+    PLIST_ENTRY Entry;
+    PTT_FONT_ENTRY FontEntry;
+
+    /* Search for the font in the cache */
+    for (Entry = TTFontCache.Flink;
+         Entry != &TTFontCache;
+         Entry = Entry->Flink)
+    {
+        FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
+
+        /* NOTE: The font face names are case-sensitive */
+        if ((wcscmp(FontEntry->FaceName   , FaceName) == 0) ||
+            (wcscmp(FontEntry->FaceNameAlt, FaceName) == 0))
+        {
+            /* Return a match if we don't look at the code pages, or when they match */
+            if ((CodePage == INVALID_CP) || (CodePage == FontEntry->CodePage))
+            {
+                return FontEntry;
+            }
+        }
+    }
+    return NULL;
 }
 
 /* EOF */

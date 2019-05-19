@@ -20,7 +20,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#include "font.h"
+#include "concfg/font.h"
 #include "guiterm.h"
 #include "resource.h"
 

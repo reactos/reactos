@@ -203,6 +203,9 @@ WinPrev_OnDraw(
      * Compute the console window layout
      */
 
+    if (FontPreview.hFont == NULL)
+        RefreshFontPreview(&FontPreview, pConInfo);
+
     /* We start with the console client area, rescaled for the preview */
     SetRect(&rcWin, 0, 0,
             pConInfo->WindowSize.X * FontPreview.CharWidth,
@@ -488,6 +491,9 @@ PaintText(
 
     hBrush = CreateSolidBrush(nbkColor);
     if (!hBrush) return;
+
+    if (FontPreview.hFont == NULL)
+        RefreshFontPreview(&FontPreview, pConInfo);
 
     hOldFont = SelectObject(drawItem->hDC, FontPreview.hFont);
     //if (hOldFont == NULL)

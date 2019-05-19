@@ -49,6 +49,23 @@ extern FONT_PREVIEW FontPreview;
 
 VOID ApplyConsoleInfo(HWND hwndDlg);
 
+
+VOID
+RefreshFontPreview(
+    IN FONT_PREVIEW* Preview,
+    IN PCONSOLE_STATE_INFO pConInfo);
+
+VOID
+UpdateFontPreview(
+    IN FONT_PREVIEW* Preview,
+    IN HFONT hFont,
+    IN UINT  CharWidth,
+    IN UINT  CharHeight);
+
+#define ResetFontPreview(Preview)   \
+    UpdateFontPreview((Preview), NULL, 0, 0)
+
+
 /* Preview Windows */
 BOOL
 RegisterWinPrevClass(

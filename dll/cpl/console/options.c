@@ -72,7 +72,8 @@ AddCodePage(
 
 static VOID
 BuildCodePageList(
-    IN HWND hDlg)
+    IN HWND hDlg,
+    IN UINT CurrentCodePage)
 {
     LIST_CTL ListCtl;
     HKEY hKey;
@@ -126,7 +127,7 @@ BuildCodePageList(
     AddCodePage(&ListCtl, CP_UTF8);
 
     /* Find and select the current code page in the sorted list */
-    if (BisectListSortedByValue(&ListCtl, ConInfo->CodePage, &CodePage, FALSE) == CB_ERR ||
+    if (BisectListSortedByValue(&ListCtl, CurrentCodePage, &CodePage, FALSE) == CB_ERR ||
         CodePage == CB_ERR)
     {
         /* Not found, select the first element */
@@ -212,7 +213,7 @@ OptionsProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            BuildCodePageList(hDlg);
+            BuildCodePageList(hDlg, ConInfo->CodePage);
             UpdateDialogElements(hDlg, ConInfo);
             return TRUE;
         }
@@ -332,6 +333,7 @@ OptionsProc(HWND hDlg,
                 }
             }
             else
+            // (HIWORD(wParam) == CBN_KILLFOCUS)
             if ((HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_SELENDOK) &&
                 (LOWORD(wParam) == IDL_CODEPAGE))
             {
@@ -347,11 +349,15 @@ OptionsProc(HWND hDlg,
                 if (CodePage == CB_ERR)
                     break;
 
-                ConInfo->CodePage = CodePage;
-
-                /* Change the property sheet state only if the user validated */
-                if (HIWORD(wParam) == CBN_SELENDOK)
+                /* If the user validated a different code page... */
+                if ((HIWORD(wParam) == CBN_SELENDOK) && (CodePage != ConInfo->CodePage))
+                {
+                    /* ... update the code page, notify the siblings and change the property sheet state */
+                    ConInfo->CodePage = CodePage;
+                    // PropSheet_QuerySiblings(GetParent(hDlg), IDL_CODEPAGE, 0);
+                    ResetFontPreview(&FontPreview);
                     PropSheet_Changed(GetParent(hDlg), hDlg);
+                }
             }
 
             break;

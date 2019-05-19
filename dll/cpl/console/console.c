@@ -227,11 +227,9 @@ InitApplet(HANDLE hSectionOrWnd)
         InitDefaultConsoleInfo(ConInfo);
     }
 
-    /* Initialize the font support */
-    FontPreview.hFont = CreateConsoleFont(ConInfo);
-    if (FontPreview.hFont == NULL)
-        DPRINT1("InitApplet: CreateConsoleFont() failed\n");
-    GetFontCellSize(NULL, FontPreview.hFont, &FontPreview.CharHeight, &FontPreview.CharWidth);
+    /* Initialize the font support -- additional TrueType fonts cache and current preview font */
+    InitTTFontCache();
+    RefreshFontPreview(&FontPreview, ConInfo);
 
     /* Initialize the property sheet structure */
     ZeroMemory(&psh, sizeof(psh));
@@ -274,8 +272,8 @@ InitApplet(HANDLE hSectionOrWnd)
     UnRegisterWinPrevClass(hApplet);
 
     /* Clear the font support */
-    if (FontPreview.hFont) DeleteObject(FontPreview.hFont);
-    FontPreview.hFont = NULL;
+    ResetFontPreview(&FontPreview);
+    ClearTTFontCache();
 
     /* Save the console settings */
     if (SetConsoleInfo)

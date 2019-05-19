@@ -16,6 +16,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "concfg/font.h"
 #include "guiterm.h"
 #include "resource.h"
 
@@ -294,12 +295,15 @@ GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
     HANDLE hInputThread;
     CLIENT_ID ClientId;
 
-    /*
-     * Initialize and register the console window class, if needed.
-     */
+    /* Perform one-time initialization */
     if (!ConsInitialized)
     {
+        /* Initialize and register the console window class */
         if (!RegisterConWndClass(ConSrvDllInstance)) return FALSE;
+
+        /* Initialize the font support -- additional TrueType fonts cache */
+        InitTTFontCache();
+
         ConsInitialized = TRUE;
     }
 
