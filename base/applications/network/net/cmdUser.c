@@ -809,6 +809,53 @@ ParseDate(
 }
 
 
+static
+DWORD
+ParseLogonHours(
+    PWSTR pszParams,
+    PBYTE *ppLogonHours,
+    PDWORD pdwUnitsPerWeek)
+{
+    PBYTE pLogonHours = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+
+    pLogonHours = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            UNITS_PER_WEEK / 8);
+    if (pLogonHours == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    if (*pszParams == UNICODE_NULL)
+    {
+        goto done;
+    }
+
+    if (wcsicmp(pszParams, L"all") == 0)
+    {
+        FillMemory(pLogonHours, UNITS_PER_WEEK / 8, 0xFF);
+        goto done;
+    }
+
+    /* FIXME */
+    /* Mockup error because we do not parse the line yet */
+    dwError = 3768;
+
+done:
+    if (dwError == ERROR_SUCCESS)
+    {
+        *ppLogonHours = pLogonHours;
+        *pdwUnitsPerWeek = UNITS_PER_WEEK;
+    }
+    else
+    {
+        if (pLogonHours != NULL)
+            HeapFree(GetProcessHeap(), 0, pLogonHours);
+    }
+
+    return dwError;
+}
+
+
 INT
 cmdUser(
     INT argc,
@@ -831,6 +878,8 @@ cmdUser(
     LPWSTR endptr;
     DWORD value;
     BOOL bPasswordAllocated = FALSE;
+    PBYTE pLogonHours = NULL;
+    DWORD dwUnitsPerWeek;
     NET_API_STATUS Status;
 
     i = 2;
@@ -884,7 +933,7 @@ cmdUser(
         ConPrintf(StdOut, L"Status: %lu\n", Status);
         return 0;
     }
-    else if (lpUserName != NULL && lpPassword == NULL)
+    else if (lpUserName != NULL && lpPassword == NULL && argc == 3)
     {
         Status = DisplayUser(lpUserName);
         ConPrintf(StdOut, L"Status: %lu\n", Status);
@@ -1039,8 +1088,19 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/times:", 7) == 0)
         {
-            /* FIXME */
-            ConPuts(StdErr, L"The /TIMES option is not supported yet.\n");
+            Status = ParseLogonHours(&argv[j][7],
+                                     &pLogonHours,
+                                     &dwUnitsPerWeek);
+            if (Status == ERROR_SUCCESS)
+            {
+                pUserInfo->usri4_logon_hours = pLogonHours;
+                pUserInfo->usri4_units_per_week = dwUnitsPerWeek;
+            }
+            else
+            {
+                PrintMessageString(Status);
+                goto done;
+            }
         }
         else if (_wcsnicmp(argv[j], L"/usercomment:", 13) == 0)
         {
@@ -1105,6 +1165,9 @@ cmdUser(
     }
 
 done:
+    if (pLogonHours != NULL)
+        HeapFree(GetProcessHeap(), 0, pLogonHours);
+
     if (pWorkstations != NULL)
         HeapFree(GetProcessHeap(), 0, pWorkstations);
 
