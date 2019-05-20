@@ -14,7 +14,7 @@ BEGIN
         MENUITEM "Lado a Lado &Horizontalmente", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Lado a Lado &Verticalmente", ID_SHELL_CMD_TILE_WND_V
         MENUITEM "&Exibir Área de Trabalho", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Desfazer", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "&Retroceder", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Gerenciador de Tarefas", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
@@ -45,7 +45,7 @@ BEGIN
             MENUITEM "&Painel de Controle", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Segurança...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Conexões de Rede", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Ligações de Rede", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Impressoras e Fax", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Barra de Tarefas e Menu Iniciar", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
@@ -91,10 +91,10 @@ CAPTION "Menu Iniciar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "&Menu 'Iniciar'", IDC_TASKBARPROP_STARTMENU, 7, 145, 105, 10
-    LTEXT "Seleccione este estilo para um acesso fácil à Internet, correio electrónicoe aos seus programas favoritos.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 155, 150, 24
+    AUTORADIOBUTTON "&Menu 'Iniciar'", IDC_TASKBARPROP_STARTMENU, 7, 135, 90, 10
+    LTEXT "Seleccione este estilo para um acesso fácil à Internet, correio electrónicoe e aos seus programas favoritos.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
-    AUTORADIOBUTTON "M&enu 'Inicar' clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 185, 105, 10
+    AUTORADIOBUTTON "M&enu 'Inicar' clássico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 185, 90, 10
     LTEXT "Seleccione esta opção para utilizar o estilo e funcionalidades do menu clássico", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 195, 150, 24
     PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
@@ -105,7 +105,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Personalizar Notificações"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS mostra icones para as notificações activas e urgentes, e oculta as inactivas. Pode modificar este comportamento para os items na lista abaixo.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "O ReactOS mostra icones para as notificações activas e urgentes, e oculta as inactivas. Pode modificar este comportamento para os items na lista abaixo.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Seleccione um item, e em seguida escolha o seu comportamento de notificação:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 80, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
@@ -145,7 +145,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Não executar esta verificação na inicialização", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Existe uma pasta ou ficheiro no seu computador, de nome %s que poderá causar funcionamento incorrecto em algumas aplicações .  Renomeando para %s, resolverá esse problema.  Gostaria de o renomear agora?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Existe uma pasta ou ficheiro no seu computador, de nome %s que poderá causar funcionamento incorrecto em algumas aplicações. Renomeando para %s, resolverá esse problema. Gostaria de o renomear agora?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -179,7 +179,7 @@ BEGIN
     LTEXT            "&Numero de programas no menu 'Iniciar':", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
-    PUSHBUTTON       "&Limpar Lista", IDC_CLEARLIST, 182, 98, 57, 14
+    PUSHBUTTON       "&Limpar a Lista", IDC_CLEARLIST, 182, 98, 57, 14
     GROUPBOX         "Mostrar no menu 'Iniciar'", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
@@ -191,8 +191,8 @@ STRINGTABLE
 BEGIN
     IDS_START "Iniciar"
     IDS_PROPERTIES "P&ropriedades"
-    IDS_OPEN_ALL_USERS "A&brir Todos os Usuários"
-    IDS_EXPLORE_ALL_USERS "E&xplorar Todos os Usuários"
+    IDS_OPEN_ALL_USERS "A&brir Todos os Utilizadores"
+    IDS_EXPLORE_ALL_USERS "E&xplorar Todos os Utilizadores"
     IDS_STARTUP_ERROR "O sistema não pode iniciar o explorer porque o registo está corrompido ou inacessível."
 END
 

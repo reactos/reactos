@@ -143,9 +143,9 @@ BEGIN
     DEFPUSHBUTTON    "&Ignore", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Rename", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "&Don't perform this check at startup", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "&Não executar esta verificação na inicialização", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "There is a file or folder on your computer called %s which could cause certain applications to not function correctly.  Renaming it to %s would solve this problem.  Would you like to rename it now?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Existe uma pasta ou ficheiro no seu computador, de nome %s que poderá causar funcionamento incorrecto em algumas aplicações. Renomeando para %s, resolverá esse problema. Gostaria de o renomear agora?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
