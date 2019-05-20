@@ -17,7 +17,6 @@ BOOLEAN KdDebuggerEnabled = FALSE;
 BOOLEAN KdEnteredDebugger = FALSE;
 BOOLEAN KdDebuggerNotPresent = TRUE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
-BOOLEAN KdpBreakPending = FALSE;
 BOOLEAN KdPitchDebugger = TRUE;
 BOOLEAN KdIgnoreUmExceptions = FALSE;
 KD_CONTEXT KdpContext;
@@ -366,7 +365,7 @@ BOOLEAN
 NTAPI
 KdPollBreakIn(VOID)
 {
-    return KdpBreakPending;
+    return FALSE;
 }
 
 /*
