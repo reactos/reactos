@@ -70,6 +70,30 @@ VOID OnClearRecentItems()
     }
 }
 
+INT_PTR CALLBACK CustomizeModernProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+    switch(Message)
+    {
+        case WM_INITDIALOG:
+            /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
+        return TRUE;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwnd, IDOK);
+                break;
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                break;
+            }
+        break;
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
 INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     switch(Message)
@@ -109,4 +133,10 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 VOID ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)
 {
     DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_CLASSICSTART_CUSTOMIZE), hExplorer, CustomizeClassicProc);
+}
+
+VOID ShowCustomizeModern(HINSTANCE hInst, HWND hExplorer)
+{
+   //  DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_MODERNSTART_GENERAL), hExplorer, CustomizeModernProc);
+     MessageBoxW(hExplorer,_T("DialogBox CusTomizeModern not implemented."),_T("FIXME"),MB_OK);
 }

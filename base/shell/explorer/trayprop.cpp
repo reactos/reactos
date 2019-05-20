@@ -46,7 +46,7 @@ static void SetBitmap(HWND hwnd, HBITMAP* hbmp, UINT uImageId)
 
 class CTaskBarSettingsPage : public CPropertyPageImpl<CTaskBarSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpTaskbar;
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
@@ -85,7 +85,7 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
@@ -107,7 +107,7 @@ private:
             uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
         else if (!bHideInactive && !bShowClock)
             uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
@@ -129,7 +129,7 @@ public:
         m_hwndTaskbar(hwnd)
     {
     }
-    
+
     ~CTaskBarSettingsPage()
     {
         if (m_hbmpTaskbar)
@@ -188,7 +188,7 @@ public:
 
 class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpStartBitmap;
 
     void UpdateDialog()
@@ -196,27 +196,27 @@ private:
         HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
-        HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
-        HWND hwndModernText = GetDlgItem(IDC_TASKBARPROP_STARTMENUMODERNTEXT);
-        BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) != 0;
+  //      HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
+  //      HWND hwndModernText = GetDlgItem(IDC_TASKBARPROP_STARTMENUMODERNTEXT);
+  //      BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) != 0;
         BOOL bModern = FALSE;
 
         /* If NoSimpleStartMenu, disable ability to use Modern Start Menu */
-        if (policyNoSimpleStartMenu)
-        {
+  //      if (policyNoSimpleStartMenu)
+  //      {
             /* Switch to classic */
-            CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+  //          CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
 
             /* Disable radio button */
-            ::EnableWindow(hwndModernRadioBtn, FALSE);
+  //          ::EnableWindow(hwndModernRadioBtn, FALSE);
 
             /* Hide controls related to modern menu */
-            ::ShowWindow(hwndModernRadioBtn, SW_HIDE);
-            ::ShowWindow(hwndModernText, SW_HIDE);
-            ::ShowWindow(hwndCustomizeModern, SW_HIDE);
-        }
+  //          ::ShowWindow(hwndModernRadioBtn, SW_HIDE);
+  //          ::ShowWindow(hwndModernText, SW_HIDE);
+  //          ::ShowWindow(hwndCustomizeModern, SW_HIDE);
+  //      }
         /* If no restrictions, then get bModern from dialog */
-        else
+  //      else
         {
             bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
         }
@@ -234,6 +234,9 @@ public:
     BEGIN_MSG_MAP(CTaskBarSettingsPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_ID_HANDLER(IDC_TASKBARPROP_STARTMENUCLASSICCUST, OnStartMenuCustomize)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_STARTMENUCUST, OnStartMenuCustomize)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_STARTMENU, OnStartMenuSelection)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_STARTMENUCLASSIC, OnStartMenuSelection)
         CHAIN_MSG_MAP(CPropertyPageImpl<CStartMenuSettingsPage>)
     END_MSG_MAP()
 
@@ -253,13 +256,43 @@ public:
         // fix me: start menu style (classic/modern) should be read somewhere from the registry.
         CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         UpdateDialog();
-    
+
         return TRUE;
+    }
+    LRESULT OnStartMenuSelection(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+    {
+        if(wNotifyCode == BN_CLICKED)
+        {
+                 HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
+                 HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
+                 HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
+                 if(wID == IDC_TASKBARPROP_STARTMENU)
+                 {
+                      CheckDlgButton(IDC_TASKBARPROP_STARTMENU, BST_CHECKED);
+                      CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_UNCHECKED);
+                    ::EnableWindow(hwndCustomizeModern, TRUE);
+                    ::EnableWindow(hwndCustomizeClassic, FALSE);
+                      SetBitmap(hwndStartBitmap, &m_hbmpStartBitmap, IDB_STARTPREVIEW);
+                 }
+                 else if(wID == IDC_TASKBARPROP_STARTMENUCLASSIC)
+                 {
+                      CheckDlgButton(IDC_TASKBARPROP_STARTMENU, BST_UNCHECKED);
+                      CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+                    ::EnableWindow(hwndCustomizeModern, FALSE);
+                    ::EnableWindow(hwndCustomizeClassic,TRUE);
+                      SetBitmap(hwndStartBitmap, &m_hbmpStartBitmap, IDB_STARTPREVIEW_CLASSIC);
+                 }
+
+        }
+        return FALSE;
     }
 
     LRESULT OnStartMenuCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        ShowCustomizeClassic(hExplorerInstance, m_hWnd);
+        if(IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU)==BST_CHECKED)
+            ShowCustomizeModern(hExplorerInstance, m_hWnd);
+        else
+            ShowCustomizeClassic(hExplorerInstance, m_hWnd);
         return 0;
     }
 
@@ -295,9 +328,9 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
     CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
     CStartMenuSettingsPage smSettingsPage;
     CStringW caption;
-    
+
     caption.LoadStringW(IDS_TASKBAR_STARTMENU_PROP_CAPTION);
-    
+
     hpsp[0] = tbSettingsPage.Create();
     hpsp[1] = smSettingsPage.Create();
 
