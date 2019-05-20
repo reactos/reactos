@@ -35,7 +35,7 @@ if(USE_DUMMY_PSEH)
 endif()
 
 if(STACK_PROTECTOR)
-    add_compile_flags(${MODULE} "-fstack-protector-all")
+    add_compile_flags("-fstack-protector-all")
 endif()
 
 # Compiler Core
