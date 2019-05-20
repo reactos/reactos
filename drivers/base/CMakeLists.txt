@@ -4,7 +4,7 @@ add_subdirectory(bootvid)
 add_subdirectory(condrv)
 
 if(_WINKD_)
-    if (GDB)
+    if(GDB)
         add_subdirectory(kdgdb)
     else()
         add_subdirectory(kdcom)

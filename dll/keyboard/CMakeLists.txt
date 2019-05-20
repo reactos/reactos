@@ -108,7 +108,7 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     endif()
 
     # dynamic analysis switches
-    if (STACK_PROTECTOR)
+    if(STACK_PROTECTOR)
         target_link_libraries(${_keyboard_layout} gcc_ssp)
     endif()
 

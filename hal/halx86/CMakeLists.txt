@@ -32,7 +32,7 @@ function(add_hal _halname)
         target_link_libraries(${_halname} ${_haldata_LIBS})
     endif()
 
-    if (${_halname} STREQUAL "hal")
+    if(${_halname} STREQUAL "hal")
         target_link_libraries(${_halname} libcntpr arbiter)
     else()
         target_link_libraries(${_halname} libcntpr)

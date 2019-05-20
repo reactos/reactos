@@ -85,7 +85,7 @@ if(MSVC)
     # MSVC complains about the resulting foo() vs. foo(void) mismatches.
     target_compile_options(mkisofs PRIVATE "/wd4113")
 
-    if (ARCH STREQUAL "amd64")
+    if(ARCH STREQUAL "amd64")
         # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
         target_compile_options(mkisofs PRIVATE "/wd4267")
 
