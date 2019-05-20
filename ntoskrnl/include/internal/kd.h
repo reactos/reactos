@@ -182,14 +182,6 @@ KdpKdbgInit(
 
 /* KD ROUTINES ***************************************************************/
 
-BOOLEAN
-NTAPI
-KdpCallGdb(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context
-);
-
 ULONG
 NTAPI
 KdpPrintString(
