@@ -21,6 +21,8 @@ BOOLEAN KdPitchDebugger = TRUE;
 BOOLEAN KdIgnoreUmExceptions = FALSE;
 KD_CONTEXT KdpContext;
 ULONG Kd_WIN2000_Mask;
+LONG KdpTimeSlipPending;
+KDDEBUGGER_DATA64 KdDebuggerDataBlock;
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
@@ -29,7 +31,7 @@ typedef struct
     ULONG Level;
 } KD_COMPONENT_DATA;
 #define MAX_KD_COMPONENT_TABLE_ENTRIES 128
-KD_COMPONENT_DATA KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
+KD_COMPONENT_DATA KdpComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
 ULONG KdComponentTableEntries = 0;
 
 ULONG Kd_DEFAULT_MASK = 1 << DPFLTR_ERROR_LEVEL;
@@ -204,7 +206,9 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                     ExceptionInformation[2],
                                     OutString,
                                     OutStringLength,
-                                    PreviousMode);
+                                    PreviousMode,
+                                    TrapFrame,
+                                    ExceptionFrame);
 
             /* Return the number of characters that we received */
             Context->Eax = ReturnValue;
@@ -264,6 +268,12 @@ KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+KdUpdateDataBlock(VOID)
+{
+}
+
 /*
  * @implemented
  */
@@ -300,6 +310,13 @@ KdDisableDebugger(VOID)
 
     /* Return success */
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
+{
+    return STATUS_ACCESS_DENIED;
 }
 
 /*
@@ -383,10 +400,10 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
         for (i = 0; i < KdComponentTableEntries; i++)
         {
             /* Check if it is the right component */
-            if (ComponentId == KdComponentTable[i].ComponentId)
+            if (ComponentId == KdpComponentTable[i].ComponentId)
             {
                 /* Check if mask are matching */
-                return (Level & KdComponentTable[i].Level) ? TRUE : FALSE;
+                return (Level & KdpComponentTable[i].Level) ? TRUE : FALSE;
             }
         }
     }
@@ -423,7 +440,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     /* Search for an existing entry */
     for (i = 0; i < KdComponentTableEntries; i++ )
     {
-        if (ComponentId == KdComponentTable[i].ComponentId)
+        if (ComponentId == KdpComponentTable[i].ComponentId)
             break;
     }
 
@@ -436,15 +453,15 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 
         /* Add a new entry */
         ++KdComponentTableEntries;
-        KdComponentTable[i].ComponentId = ComponentId;
-        KdComponentTable[i].Level = Kd_DEFAULT_MASK;
+        KdpComponentTable[i].ComponentId = ComponentId;
+        KdpComponentTable[i].Level = Kd_DEFAULT_MASK;
     }
 
     /* Update entry table */
     if (State)
-        KdComponentTable[i].Level |= Level;
+        KdpComponentTable[i].Level |= Level;
     else
-        KdComponentTable[i].Level &= ~Level;
+        KdpComponentTable[i].Level &= ~Level;
 
     return STATUS_SUCCESS;
 }

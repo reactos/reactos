@@ -3672,14 +3672,16 @@ KdpSerialDebugPrint(
 STRING KdpPromptString = RTL_CONSTANT_STRING("kdb:> ");
 extern KSPIN_LOCK KdpSerialSpinLock;
 
-ULONG
+USHORT
 NTAPI
 KdpPrompt(
     _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
     _In_ USHORT InStringLength,
     _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
     _In_ USHORT OutStringLength,
-    _In_ KPROCESSOR_MODE PreviousMode)
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
 {
     USHORT i;
     CHAR Response;

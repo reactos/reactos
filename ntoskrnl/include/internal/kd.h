@@ -189,16 +189,6 @@ KdpPrintString(
     _In_ ULONG Length,
     _In_ KPROCESSOR_MODE PreviousMode);
 
-ULONG
-NTAPI
-KdpPrompt(
-    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
-    _In_ USHORT InStringLength,
-    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
-    _In_ USHORT OutStringLength,
-    _In_ KPROCESSOR_MODE PreviousMode
-);
-
 BOOLEAN
 NTAPI
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);

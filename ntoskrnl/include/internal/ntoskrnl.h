@@ -61,11 +61,7 @@
 #include "po.h"
 #include "se.h"
 #include "ldr.h"
-#ifndef _WINKD_
-#include "kd.h"
-#else
 #include "kd64.h"
-#endif
 #include "fsrtl.h"
 #include "lpc.h"
 #include "rtl.h"

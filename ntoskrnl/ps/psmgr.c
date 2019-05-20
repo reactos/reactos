@@ -383,10 +383,8 @@ PspInitializeSystemDll(VOID)
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 8, 0, 0);
     }
 
-#ifdef _WINKD_
     /* Let KD know we are done */
     KdUpdateDataBlock();
-#endif
 
     /* Return status */
     return Status;

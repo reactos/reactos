@@ -1062,9 +1062,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
 
     /* Check if we need to save the context for KD */
-#ifdef _WINKD_
     if (!KdPitchDebugger) KdDebuggerDataBlock.SavedContext = (ULONG_PTR)&Context;
-#endif
 
     /* Check if a debugger is connected */
     if ((BugCheckCode != MANUALLY_INITIATED_CRASH) && (KdDebuggerEnabled))
@@ -1147,9 +1145,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
         {
             /* Enable it */
-#ifdef _WINKD_
             KdEnableDebuggerWithLock(FALSE);
-#endif
         }
         else
         {
