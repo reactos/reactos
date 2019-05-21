@@ -44,68 +44,115 @@ ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
     ULONG AclSize, SdSize;
     NTSTATUS Status;
 
-    AclSize = sizeof(ACL) +
-              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
-              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
-              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
-              sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
-              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
-              sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
-
-    SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
-
-    /* Allocate the SD and ACL */
-    Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
-    if (Sd == NULL)
+    if (ObpProtectionMode & 1)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        AclSize = sizeof(ACL) +
+                  sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+                  sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+                  sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+                  sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+                  sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+                  sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
+
+        SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
+
+        /* Allocate the SD and ACL */
+        Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+        if (Sd == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Initialize the SD */
+        Status = RtlCreateSecurityDescriptor(Sd,
+                                             SECURITY_DESCRIPTOR_REVISION);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+
+        /* Initialize the DACL */
+        RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+
+        /* Add the ACEs */
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_READ | GENERIC_EXECUTE,
+                               SeWorldSid);
+
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               SeLocalSystemSid);
+
+        RtlAddAccessAllowedAceEx(Dacl,
+                                 ACL_REVISION,
+                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                 GENERIC_EXECUTE,
+                                 SeWorldSid);
+
+        RtlAddAccessAllowedAceEx(Dacl,
+                                 ACL_REVISION,
+                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                 GENERIC_ALL,
+                                 SeAliasAdminsSid);
+
+        RtlAddAccessAllowedAceEx(Dacl,
+                                 ACL_REVISION,
+                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                 GENERIC_ALL,
+                                 SeLocalSystemSid);
+
+        RtlAddAccessAllowedAceEx(Dacl,
+                                 ACL_REVISION,
+                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                 GENERIC_ALL,
+                                 SeCreatorOwnerSid);
     }
+    else
+    {
+        AclSize = sizeof(ACL) +
+                  sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+                  sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+                  sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
 
-    /* Initialize the SD */
-    Status = RtlCreateSecurityDescriptor(Sd,
-                                         SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-        return Status;
+        SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
 
-    Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+        /* Allocate the SD and ACL */
+        Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+        if (Sd == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-    /* Initialize the DACL */
-    RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+        /* Initialize the SD */
+        Status = RtlCreateSecurityDescriptor(Sd,
+                                             SECURITY_DESCRIPTOR_REVISION);
+        if (!NT_SUCCESS(Status))
+            return Status;
 
-    /* Add the ACEs */
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_READ | GENERIC_EXECUTE,
-                           SeWorldSid);
+        Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
 
-    RtlAddAccessAllowedAce(Dacl,
-                           ACL_REVISION,
-                           GENERIC_ALL,
-                           SeLocalSystemSid);
+        /* Initialize the DACL */
+        RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
 
-    RtlAddAccessAllowedAceEx(Dacl,
-                             ACL_REVISION,
-                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                             GENERIC_EXECUTE,
-                             SeWorldSid);
+        /* Add the ACEs */
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_READ | GENERIC_EXECUTE | GENERIC_WRITE,
+                               SeWorldSid);
 
-    RtlAddAccessAllowedAceEx(Dacl,
-                             ACL_REVISION,
-                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                             GENERIC_ALL,
-                             SeAliasAdminsSid);
+        RtlAddAccessAllowedAce(Dacl,
+                               ACL_REVISION,
+                               GENERIC_ALL,
+                               SeLocalSystemSid);
 
-    RtlAddAccessAllowedAceEx(Dacl,
-                             ACL_REVISION,
-                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                             GENERIC_ALL,
-                             SeLocalSystemSid);
-
-    RtlAddAccessAllowedAceEx(Dacl,
-                             ACL_REVISION,
-                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                             GENERIC_ALL,
-                             SeCreatorOwnerSid);
+        RtlAddAccessAllowedAceEx(Dacl,
+                                 ACL_REVISION,
+                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                 GENERIC_ALL,
+                                 SeWorldSid);
+    }
 
     /* Attach the DACL to the SD */
     Status = RtlSetDaclSecurityDescriptor(Sd,
