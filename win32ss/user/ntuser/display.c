@@ -855,10 +855,13 @@ UserChangeDisplaySettings(
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
-        UserSendNotifyMessage(HWND_BROADCAST,
-                              WM_DISPLAYCHANGE,
-                              gpsi->BitCount,
-                              MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]));
+        co_IntSendMessageTimeout(HWND_BROADCAST,
+                                 WM_DISPLAYCHANGE,
+                                 (WPARAM)ppdev->gdiinfo.cBitsPixel,
+                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulVertRes << 16)),
+                                 SMTO_NORMAL,
+                                 100,
+                                 &ulResult);
 
         ERR("BitCount New %d Orig %d ChkNew %d\n",gpsi->BitCount,OrigBC,ppdev->gdiinfo.cBitsPixel);
 
