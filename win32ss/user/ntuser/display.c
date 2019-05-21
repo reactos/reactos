@@ -830,6 +830,8 @@ UserChangeDisplaySettings(
             gpsi->Planes      = ppdev->gdiinfo.cPlanes;
             gpsi->BitsPixel   = ppdev->gdiinfo.cBitsPixel;
             gpsi->BitCount    = gpsi->Planes * gpsi->BitsPixel;
+            gpsi->aiSysMet[SM_CXSCREEN] = ppdev->gdiinfo.ulHorzRes;
+            gpsi->aiSysMet[SM_CYSCREEN] = ppdev->gdiinfo.ulVertRes;
             if (ppdev->gdiinfo.flRaster & RC_PALETTE)
             {
                 gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
@@ -855,10 +857,13 @@ UserChangeDisplaySettings(
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
-        UserSendNotifyMessage(HWND_BROADCAST,
-                              WM_DISPLAYCHANGE,
-                              gpsi->BitCount,
-                              MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]));
+        co_IntSendMessageTimeout( HWND_BROADCAST,
+                                  WM_DISPLAYCHANGE,
+                                  gpsi->BitCount,
+                                  MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]),
+                                  SMTO_NORMAL,
+                                  100,
+                                  &ulResult );
 
         ERR("BitCount New %d Orig %d ChkNew %d\n",gpsi->BitCount,OrigBC,ppdev->gdiinfo.cBitsPixel);
 
