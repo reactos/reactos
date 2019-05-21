@@ -141,7 +141,7 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"ProtectionMode",
-        &DummyData,
+        &ObpProtectionMode,
         NULL,
         NULL
     },
