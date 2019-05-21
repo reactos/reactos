@@ -169,14 +169,13 @@ ObpCreateDosDevicesDirectory(VOID)
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
-    RtlGetDaclSecurityDescriptor(&DosDevicesSD, &DaclPresent, &Dacl, &DaclDefaulted);
-    ExFreePoolWithTag(Dacl, 'lcaD');
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Create the system device map */
     Status = ObpCreateDeviceMap(Handle);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto done;
 
     /*********************************************\
     |*** HACK until we support device mappings ***|
@@ -187,7 +186,7 @@ ObpCreateDosDevicesDirectory(VOID)
                                &LinkName,
                                OBJ_PERMANENT,
                                NULL,
-                               NULL);
+                               &DosDevicesSD);
     Status = NtCreateSymbolicLinkObject(&SymHandle,
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
@@ -208,7 +207,7 @@ ObpCreateDosDevicesDirectory(VOID)
                                &LinkName,
                                OBJ_PERMANENT,
                                Handle,
-                               NULL);
+                               &DosDevicesSD);
     Status = NtCreateSymbolicLinkObject(&SymHandle,
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
@@ -226,7 +225,7 @@ ObpCreateDosDevicesDirectory(VOID)
                                &LinkName,
                                OBJ_PERMANENT,
                                Handle,
-                               NULL);
+                               &DosDevicesSD);
     Status = NtCreateSymbolicLinkObject(&SymHandle,
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
@@ -235,7 +234,8 @@ ObpCreateDosDevicesDirectory(VOID)
 
     /* Close the directory handle */
     NtClose(Handle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /*
      * Initialize the \DosDevices symbolic link pointing to the global
@@ -248,12 +248,16 @@ ObpCreateDosDevicesDirectory(VOID)
                                &LinkName,
                                OBJ_PERMANENT,
                                NULL,
-                               NULL);
+                               &DosDevicesSD);
     Status = NtCreateSymbolicLinkObject(&SymHandle,
                                         SYMBOLIC_LINK_ALL_ACCESS,
                                         &ObjectAttributes,
                                         &RootName);
     if (NT_SUCCESS(Status)) NtClose(SymHandle);
+
+done:
+    RtlGetDaclSecurityDescriptor(&DosDevicesSD, &DaclPresent, &Dacl, &DaclDefaulted);
+    ExFreePoolWithTag(Dacl, 'lcaD');
 
     /* Return status */
     return Status;
