@@ -786,7 +786,7 @@ UserChangeDisplaySettings(
     /* Shall we apply the settings? */
     if (!(flags & CDS_NORESET))
     {
-        ULONG ulResult;
+        ULONG_PTR ulResult;
         PVOID pvOldCursor;
         TEXTMETRICW tmw;
 
