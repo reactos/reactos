@@ -719,7 +719,8 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
     FT_Vector vecAngle;
-    FT_Angle angle = FT_FixedFromFloat((FLOAT)(lfEscapement * M_PI) / (FLOAT)(180 * 10));
+    /* Convert from angle in tenths of degrees to 'FT_Angle' degrees */
+    FT_Angle angle = FT_FixedFromFloat((FLOAT)lfEscapement / 10);
     FT_Vector_Unit(&vecAngle, angle);
     pmat->xx = vecAngle.x;
     pmat->xy = -vecAngle.y;
