@@ -720,7 +720,7 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
     FT_Vector vecAngle;
     /* Convert the angle in tenths of degrees into degrees as a 16.16 fixed-point value */
-    FT_Angle angle = lfEscapement * (1 << 16) / 10;
+    FT_Angle angle = INT_TO_FIXED(lfEscapement) / 10;
     FT_Vector_Unit(&vecAngle, angle);
     pmat->xx = vecAngle.x;
     pmat->xy = -vecAngle.y;
