@@ -5927,7 +5927,7 @@ IntExtTextOutW(
     }
     else /* TA_TOP */
     {
-        vecs[1].y = 0;                           // upper left
+        vecs[1].y = 0;                          // upper left
         vecs[4].y = FontGDI->tmAscent << 16;    // baseline
         vecs[0].y = FontGDI->tmHeight << 16;    // lower left
     }
