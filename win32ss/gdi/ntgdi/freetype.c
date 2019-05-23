@@ -684,7 +684,7 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 {
     LONG tmAveCharWidth;
     TT_OS2 *pOS2;
@@ -693,12 +693,12 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
     *pmat = identityMat;
 
     if (lfWidth == 0)
-        return;
+        return 0;
 
     ASSERT_FREETYPE_LOCK_HELD();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
     if (!pOS2)
-        return;
+        return 0;
 
     XScale = face->size->metrics.x_scale;
     tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
@@ -708,12 +708,13 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
     }
 
     if (lfWidth == tmAveCharWidth)
-        return;
+        return 0;
 
     pmat->xx = (FT_Fixed)((1 << 16) * lfWidth / tmAveCharWidth);
     pmat->xy = 0;
     pmat->yx = 0;
     pmat->yy = (FT_Fixed)(1 << 16);
+    return lfWidth;
 }
 
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
@@ -5854,11 +5855,17 @@ IntExtTextOutW(
     }
 
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
-    IntWidthMatrix(face, &matWidth, lfWidth);
-    FT_Matrix_Multiply(&matWidth, &mat);
+    if (lfWidth)
+    {
+        lfWidth = IntWidthMatrix(face, &matWidth, lfWidth);
+        FT_Matrix_Multiply(&matWidth, &mat);
+    }
 
-    IntEscapeMatrix(&matEscape, lfEscapement);
-    FT_Matrix_Multiply(&matEscape, &mat);
+    if (lfEscapement)
+    {
+        IntEscapeMatrix(&matEscape, lfEscapement);
+        FT_Matrix_Multiply(&matEscape, &mat);
+    }
 
     DC_vUpdateWorldToDevice(dc);
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
@@ -5950,8 +5957,11 @@ IntExtTextOutW(
         vecs[8].x += (TextWidth64 << 10);
     }
 
-    // invert y axis
-    IntEscapeMatrix(&matEscape, -lfEscapement);
+    if (lfEscapement)
+    {
+        // invert y axis
+        IntEscapeMatrix(&matEscape, -lfEscapement);
+    }
 
     // convert vecs
     for (i = 0; i < 9; ++i)
