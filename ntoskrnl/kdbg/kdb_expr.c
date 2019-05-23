@@ -106,7 +106,7 @@ RpnStack =
 static const struct
 {
     PCHAR Name;
-    UCHAR Offset;
+    ULONG Offset;
     UCHAR Size;
 }
 RegisterToTrapFrame[] =
@@ -119,14 +119,14 @@ RegisterToTrapFrame[] =
     {"edx",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Edx),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Edx)},
     {"esi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Esi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Esi)},
     {"edi",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Edi),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Edi)},
-    {"esp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.HardwareEsp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.HardwareEsp)},
+    {"esp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Esp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Esp)},
     {"ebp",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Ebp),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Ebp)},
     {"cs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegCs),      2 }, /* Use only the lower 2 bytes */
     {"ds",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegDs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegDs)},
     {"es",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegEs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegEs)},
     {"fs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegFs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegFs)},
     {"gs",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegGs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegGs)},
-    {"ss",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.HardwareSegSs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.HardwareSegSs)},
+    {"ss",      FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.SegSs),      RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.SegSs)},
     {"dr0",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr0),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr0)},
     {"dr1",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr1),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr1)},
     {"dr2",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Dr2),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Dr2)},

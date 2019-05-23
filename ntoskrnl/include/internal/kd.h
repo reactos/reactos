@@ -59,7 +59,7 @@ KdbSymProcessSymbols(
 BOOLEAN
 KdbSymPrintAddress(
     IN PVOID Address,
-    IN PKTRAP_FRAME Context
+    IN PCONTEXT Context
 );
 
 NTSTATUS

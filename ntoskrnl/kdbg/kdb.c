@@ -134,40 +134,92 @@ KiEspToTrapFrame(
 
 static VOID
 KdbpTrapFrameToKdbTrapFrame(
+    PCONTEXT Context,
     PKTRAP_FRAME TrapFrame,
     PKDB_KTRAP_FRAME KdbTrapFrame)
 {
-    /* Copy the TrapFrame only up to Eflags and zero the rest*/
-    RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
-    RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
-                  sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+    if (Context)
+    {
+        KdbTrapFrame->Tf = *Context;
+    }
+    else
+    {
+        ASSERT(TrapFrame);
 
-    KdbTrapFrame->Cr0 = __readcr0();
-    KdbTrapFrame->Cr2 = __readcr2();
-    KdbTrapFrame->Cr3 = __readcr3();
-    KdbTrapFrame->Cr4 = __readcr4();
+        RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
+        KdbTrapFrame->Tf.Dr0 = TrapFrame->Dr0;
+        KdbTrapFrame->Tf.Dr1 = TrapFrame->Dr1;
+        KdbTrapFrame->Tf.Dr2 = TrapFrame->Dr2;
+        KdbTrapFrame->Tf.Dr3 = TrapFrame->Dr3;
+        KdbTrapFrame->Tf.Dr6 = TrapFrame->Dr6;
+        KdbTrapFrame->Tf.Dr7 = TrapFrame->Dr7;
+        KdbTrapFrame->Tf.SegGs = TrapFrame->SegGs;
+        KdbTrapFrame->Tf.SegEs = TrapFrame->SegEs;
+        KdbTrapFrame->Tf.SegDs = TrapFrame->SegDs;
+        KdbTrapFrame->Tf.Edx = TrapFrame->Edx;
+        KdbTrapFrame->Tf.Ecx = TrapFrame->Ecx;
+        KdbTrapFrame->Tf.Eax = TrapFrame->Eax;
+        KdbTrapFrame->Tf.SegFs = TrapFrame->SegFs;
+        KdbTrapFrame->Tf.Edi = TrapFrame->Edi;
+        KdbTrapFrame->Tf.Esi = TrapFrame->Esi;
+        KdbTrapFrame->Tf.Ebx = TrapFrame->Ebx;
+        KdbTrapFrame->Tf.Ebp = TrapFrame->Ebp;
+        KdbTrapFrame->Tf.Eip = TrapFrame->Eip;
+        KdbTrapFrame->Tf.SegCs = TrapFrame->SegCs;
+        KdbTrapFrame->Tf.EFlags = TrapFrame->EFlags;
+        KdbTrapFrame->Tf.Esp = KiEspFromTrapFrame(TrapFrame);
+        KdbTrapFrame->Tf.SegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
 
-    KdbTrapFrame->Tf.HardwareEsp = KiEspFromTrapFrame(TrapFrame);
-    KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
+        KdbTrapFrame->Cr0 = __readcr0();
+        KdbTrapFrame->Cr2 = __readcr2();
+        KdbTrapFrame->Cr3 = __readcr3();
+        KdbTrapFrame->Cr4 = __readcr4();
 
-
-    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+        /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+    }
 }
 
 static VOID
 KdbpKdbTrapFrameToTrapFrame(
     PKDB_KTRAP_FRAME KdbTrapFrame,
+    PCONTEXT Context,
     PKTRAP_FRAME TrapFrame)
 {
-    /* Copy the TrapFrame only up to Eflags and zero the rest*/
-    RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+    if (Context)
+    {
+        /* Update context */
+        *Context = KdbTrapFrame->Tf;
+    }
 
-    /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
+    if (TrapFrame)
+    {
+        TrapFrame->Dr0 = KdbTrapFrame->Tf.Dr0;
+        TrapFrame->Dr1 = KdbTrapFrame->Tf.Dr1;
+        TrapFrame->Dr2 = KdbTrapFrame->Tf.Dr2;
+        TrapFrame->Dr3 = KdbTrapFrame->Tf.Dr3;
+        TrapFrame->Dr6 = KdbTrapFrame->Tf.Dr6;
+        TrapFrame->Dr7 = KdbTrapFrame->Tf.Dr7;
+        TrapFrame->SegGs = KdbTrapFrame->Tf.SegGs;
+        TrapFrame->SegEs = KdbTrapFrame->Tf.SegEs;
+        TrapFrame->SegDs = KdbTrapFrame->Tf.SegDs;
+        TrapFrame->Edx = KdbTrapFrame->Tf.Edx;
+        TrapFrame->Ecx = KdbTrapFrame->Tf.Ecx;
+        TrapFrame->Eax = KdbTrapFrame->Tf.Eax;
+        TrapFrame->SegFs = KdbTrapFrame->Tf.SegFs;
+        TrapFrame->Edi = KdbTrapFrame->Tf.Edi;
+        TrapFrame->Esi = KdbTrapFrame->Tf.Esi;
+        TrapFrame->Ebx = KdbTrapFrame->Tf.Ebx;
+        TrapFrame->Ebp = KdbTrapFrame->Tf.Ebp;
+        TrapFrame->Eip = KdbTrapFrame->Tf.Eip;
+        TrapFrame->SegCs = KdbTrapFrame->Tf.SegCs;
+        TrapFrame->EFlags = KdbTrapFrame->Tf.EFlags;
+        KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.SegSs);
+        KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Esp);
 
-    KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareSegSs);
-    KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
+        /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
 
-    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+        /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+    }
 }
 
 static VOID
@@ -185,8 +237,8 @@ KdbpKdbTrapFrameFromKernelStack(
     KdbTrapFrame->Tf.Esi = StackPtr[5];
     KdbTrapFrame->Tf.Ebx = StackPtr[6];
     KdbTrapFrame->Tf.Eip = StackPtr[7];
-    KdbTrapFrame->Tf.HardwareEsp = (ULONG) (StackPtr + 8);
-    KdbTrapFrame->Tf.HardwareSegSs = KGDT_R0_DATA;
+    KdbTrapFrame->Tf.Esp = (ULONG) (StackPtr + 8);
+    KdbTrapFrame->Tf.SegSs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegCs = KGDT_R0_CODE;
     KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
@@ -1326,9 +1378,10 @@ KdbEnterDebuggerException(
     IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT Context,
-    IN OUT PKTRAP_FRAME TrapFrame,
+    IN OUT PKTRAP_FRAME InitialTrapFrame,
     IN BOOLEAN FirstChance)
 {
+    PKTRAP_FRAME TrapFrame = InitialTrapFrame;
     KDB_ENTER_CONDITION EnterCondition;
     KD_CONTINUE_TYPE ContinueType = kdHandleException;
     PKDB_BREAKPOINT BreakPoint;
@@ -1447,7 +1500,7 @@ KdbEnterDebuggerException(
         if (BreakPoint->Condition)
         {
             /* Setup the KDB trap frame */
-            KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
+            KdbpTrapFrameToKdbTrapFrame(Context, InitialTrapFrame, &KdbTrapFrame);
 
             ull = 0;
             if (!KdbpRpnEvaluateParsedExpression(BreakPoint->Condition, &KdbTrapFrame, &ull, NULL, NULL))
@@ -1608,7 +1661,7 @@ KdbEnterDebuggerException(
     KdbCurrentTrapFrame = &KdbTrapFrame;
 
     /* Setup the KDB trap frame */
-    KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
+    KdbpTrapFrameToKdbTrapFrame(Context, InitialTrapFrame, &KdbTrapFrame);
 
     /* Enter critical section */
     OldEflags = __readeflags();
@@ -1655,8 +1708,8 @@ KdbEnterDebuggerException(
         KeUnstackDetachProcess(&KdbApcState);
     }
 
-    /* Update the exception TrapFrame */
-    KdbpKdbTrapFrameToTrapFrame(&KdbTrapFrame, TrapFrame);
+    /* Update the exception Context/TrapFrame */
+    KdbpKdbTrapFrameToTrapFrame(&KdbTrapFrame, Context, InitialTrapFrame);
 
     /* Decrement the entry count */
     InterlockedDecrement(&KdbEntryCount);

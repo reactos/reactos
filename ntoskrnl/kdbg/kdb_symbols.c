@@ -147,7 +147,7 @@ KdbpSymUnicodeToAnsi(IN PUNICODE_STRING Unicode,
 BOOLEAN
 KdbSymPrintAddress(
     IN PVOID Address,
-    IN PKTRAP_FRAME Context)
+    IN PCONTEXT Context)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG_PTR RelativeAddress;
