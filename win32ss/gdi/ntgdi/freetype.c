@@ -710,10 +710,10 @@ LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
     if (lfWidth == tmAveCharWidth)
         return 0;
 
-    pmat->xx = (FT_Fixed)((1 << 16) * lfWidth / tmAveCharWidth);
+    pmat->xx = INT_TO_FIXED(lfWidth) / tmAveCharWidth);
     pmat->xy = 0;
     pmat->yx = 0;
-    pmat->yy = (FT_Fixed)(1 << 16);
+    pmat->yy = INT_TO_FIXED(1);
     return lfWidth;
 }
 
