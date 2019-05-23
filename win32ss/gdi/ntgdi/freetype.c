@@ -3469,7 +3469,6 @@ ftGdiGetGlyphOutline(
     FT_Bitmap ft_bitmap;
     FT_Error error;
     INT left, right, top = 0, bottom = 0;
-    FT_Angle angle = 0;
     FT_Int load_flags = FT_LOAD_DEFAULT | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
     FLOAT eM11, widthRatio = 1.0;
     FT_Matrix transMat = identityMat;
@@ -3599,14 +3598,8 @@ ftGdiGetGlyphOutline(
     if (orientation)
     {
         FT_Matrix rotationMat;
-        FT_Vector vecAngle;
         DPRINT("Rotation Trans!\n");
-        angle = FT_FixedFromFloat((FLOAT)orientation / 10.0);
-        FT_Vector_Unit(&vecAngle, angle);
-        rotationMat.xx = vecAngle.x;
-        rotationMat.xy = -vecAngle.y;
-        rotationMat.yx = -rotationMat.xy;
-        rotationMat.yy = rotationMat.xx;
+        IntEscapeMatrix(&rotationMat, orientation);
         FT_Matrix_Multiply(&rotationMat, &transMat);
         needsTransform = TRUE;
     }
