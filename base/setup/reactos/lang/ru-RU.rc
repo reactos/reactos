@@ -55,23 +55,23 @@ BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Создать", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "&Удалить", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "Д&райвер", IDC_DEVICEDRIVER, 162, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "&Дополнительные параметры...", IDC_PARTMOREOPTS, 176, 122, 122, 15
+    PUSHBUTTON "Д&райвер", IDC_DEVICEDRIVER, 119, 122, 50, 15, WS_DISABLED
+    PUSHBUTTON "&Дополнительные параметры...", IDC_PARTMOREOPTS, 189, 122, 122, 15
     // LTEXT "Для начала установки нажмите ""Далее"".", IDC_STATIC, 10, 180, 277, 20
 END
 
-IDD_PARTITION DIALOGEX 0, 0, 145, 90
+IDD_PARTITION DIALOGEX 0, 0, 167, 90
 STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
 CAPTION "Создать раздел на диске"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "Создать и отформатировать раздел диска", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 127, 22, 9, 13
+    CONTROL "Создать и отформатировать раздел диска", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 153, 57
     LTEXT "Размер:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
-    LTEXT "Гб", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Файловая система:", IDC_STATIC, 13, 46, 42, 9
-    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    EDITTEXT IDC_PARTSIZE, 80, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "Гб", IDC_UNIT, 143, 24, 14, 9
+    LTEXT "Файловая система:", IDC_STATIC, 13, 44, 65, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 80, 42, 73, 50
     PUSHBUTTON "&Есть", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Отставить", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
@@ -85,10 +85,10 @@ BEGIN
     EDITTEXT IDC_PATH, 10, 12, 283, 14, WS_VISIBLE
     CONTROL "Установка загрузчика", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
     CONTROL "Установить загрузчик на диск (MBR и VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 49, 278, 11
-    CONTROL "Установить загрузчик на диск (только VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Не устанавливать загрузчик", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
-    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Отмена", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    CONTROL "Установить загрузчик на диск (только VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 59, 278, 11
+    CONTROL "Не устанавливать загрузчик", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 69, 278, 11
+    PUSHBUTTON "&OK", IDOK, 184, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Отмена", IDCANCEL, 244, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -133,10 +133,10 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Первый этап установки ReactOS закончен.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "После нажатия клавиши ""Завершить"" ваш компьютер будет перезагружен.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Вы можете извлечь установочный диск. Для перезагрузки компьютера нажмите клавишу ""Завершить"".", IDC_STATIC, 10, 176, 297, 20
+    LTEXT "Первый этап установки ReactOS закончен.", IDC_STATIC, 115, 50, 182, 10
+    LTEXT "После нажатия клавиши ""Завершить"" ваш компьютер будет перезагружен.", IDC_STATIC, 115, 80, 182, 20
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 120, 182, 8
+    LTEXT "Вы можете извлечь установочный диск. Для перезагрузки компьютера нажмите клавишу ""Завершить"".", IDC_STATIC, 115, 166, 182, 25
 END
 
 STRINGTABLE
