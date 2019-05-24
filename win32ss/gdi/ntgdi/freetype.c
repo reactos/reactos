@@ -6063,7 +6063,7 @@ IntExtTextOutW(
         if (bNeedCache)
         {
             realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                           plf->lfWidth, plf->lfEscapement,
+                                           lfWidth, lfEscapement,
                                            RenderMode, pmxWorldToDevice);
         }
         if (!realglyph)
@@ -6080,9 +6080,7 @@ IntExtTextOutW(
             {
                 realglyph = ftGdiGlyphCacheSet(face,
                                                glyph_index,
-                                               plf->lfHeight,
-                                               plf->lfWidth,
-                                               plf->lfEscapement,
+                                               plf->lfHeight, lfWidth, lfEscapement,
                                                pmxWorldToDevice,
                                                glyph,
                                                RenderMode);
