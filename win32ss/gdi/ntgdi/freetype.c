@@ -6958,7 +6958,7 @@ NtGdiGetGlyphIndicesW(
                 cwc = GDI_ERROR;
                 goto ErrorRet;
             }
-            Size = IntGetOutlineTextMetrics(FontGDI, DataSize, potm);
+            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
             if (Size)
                 DefChar = potm->otmTextMetrics.tmDefaultChar;
             ExFreePoolWithTag(potm, GDITAG_TEXT);
