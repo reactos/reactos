@@ -151,7 +151,6 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
         {
             // PGRAPHICS_SCREEN_BUFFER Buffer = (PGRAPHICS_SCREEN_BUFFER)ActiveBuffer;
-            DPRINT1("GuiConsoleShowConsoleProperties - Graphics buffer\n");
 
             // FIXME: Gather defaults from the registry ?
             pSharedInfo->ScreenAttributes = DEFAULT_SCREEN_ATTRIB;

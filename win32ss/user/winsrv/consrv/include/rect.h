@@ -9,13 +9,22 @@
 
 #pragma once
 
+#define ConioInitLongRect(Rect, Top, Left, Bottom, Right) \
+do {    \
+    ((Rect)->top)    = Top;     \
+    ((Rect)->left)   = Left;    \
+    ((Rect)->bottom) = Bottom;  \
+    ((Rect)->right)  = Right;   \
+} while (0)
+
 #define ConioInitRect(Rect, top, left, bottom, right) \
 do {    \
-    ((Rect)->Top) = top;    \
-    ((Rect)->Left) = left;  \
+    ((Rect)->Top)    = top;     \
+    ((Rect)->Left)   = left;    \
     ((Rect)->Bottom) = bottom;  \
-    ((Rect)->Right) = right;    \
+    ((Rect)->Right)  = right;   \
 } while (0)
+
 #define ConioIsRectEmpty(Rect) \
     (((Rect)->Left > (Rect)->Right) || ((Rect)->Top > (Rect)->Bottom))
 

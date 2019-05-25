@@ -1017,6 +1017,8 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
             PaintSelectionRect(GuiData, &ps);
         }
 
+        // TODO: Move cursor display here!
+
         LeaveCriticalSection(&GuiData->Lock);
     }
     EndPaint(GuiData->hWindow, &ps);

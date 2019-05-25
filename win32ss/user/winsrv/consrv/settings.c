@@ -66,11 +66,9 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
 
     if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
     {
-        PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
-        COORD BufSize;
-
         /* Resize its active screen-buffer */
-        BufSize = ConsoleInfo->ScreenBufferSize;
+        PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
+        COORD BufSize = ConsoleInfo->ScreenBufferSize;
 
         if (Console->FixedSize)
         {
@@ -79,24 +77,24 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
              * at the moment. However, keep those settings somewhere so that
              * we can try to set them up when we will be allowed to do so.
              */
-            if (ConsoleInfo->WindowSize.X != Buffer->OldViewSize.X ||
-                ConsoleInfo->WindowSize.Y != Buffer->OldViewSize.Y)
+            if (ConsoleInfo->WindowSize.X != ActiveBuffer->OldViewSize.X ||
+                ConsoleInfo->WindowSize.Y != ActiveBuffer->OldViewSize.Y)
             {
-                Buffer->OldViewSize = ConsoleInfo->WindowSize;
+                ActiveBuffer->OldViewSize = ConsoleInfo->WindowSize;
             }
 
-            /* Buffer size is not allowed to be smaller than the view size */
-            if (BufSize.X >= Buffer->OldViewSize.X && BufSize.Y >= Buffer->OldViewSize.Y)
+            /* The buffer size is not allowed to be smaller than the view size */
+            if (BufSize.X >= ActiveBuffer->OldViewSize.X && BufSize.Y >= ActiveBuffer->OldViewSize.Y)
             {
-                if (BufSize.X != Buffer->OldScreenBufferSize.X ||
-                    BufSize.Y != Buffer->OldScreenBufferSize.Y)
+                if (BufSize.X != ActiveBuffer->OldScreenBufferSize.X ||
+                    BufSize.Y != ActiveBuffer->OldScreenBufferSize.Y)
                 {
                     /*
                      * The console is in fixed-size mode, so we cannot resize anything
                      * at the moment. However, keep those settings somewhere so that
                      * we can try to set them up when we will be allowed to do so.
                      */
-                    Buffer->OldScreenBufferSize = BufSize;
+                    ActiveBuffer->OldScreenBufferSize = BufSize;
                 }
             }
         }
@@ -105,16 +103,16 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
             BOOL SizeChanged = FALSE;
 
             /* Resize the console */
-            if (ConsoleInfo->WindowSize.X != Buffer->ViewSize.X ||
-                ConsoleInfo->WindowSize.Y != Buffer->ViewSize.Y)
+            if (ConsoleInfo->WindowSize.X != ActiveBuffer->ViewSize.X ||
+                ConsoleInfo->WindowSize.Y != ActiveBuffer->ViewSize.Y)
             {
-                Buffer->ViewSize = ConsoleInfo->WindowSize;
+                ActiveBuffer->ViewSize = ConsoleInfo->WindowSize;
                 SizeChanged = TRUE;
             }
 
             /* Resize the screen-buffer */
-            if (BufSize.X != Buffer->ScreenBufferSize.X ||
-                BufSize.Y != Buffer->ScreenBufferSize.Y)
+            if (BufSize.X != ActiveBuffer->ScreenBufferSize.X ||
+                BufSize.Y != ActiveBuffer->ScreenBufferSize.Y)
             {
                 if (NT_SUCCESS(ConioResizeBuffer(Console, Buffer, BufSize)))
                     SizeChanged = TRUE;
@@ -131,14 +129,11 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     }
     else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
     {
-        PGRAPHICS_SCREEN_BUFFER Buffer = (PGRAPHICS_SCREEN_BUFFER)ActiveBuffer;
-
         /*
          * In any case we do NOT modify the size of the graphics screen-buffer.
          * We just allow resizing the view only if the new size is smaller
          * than the older one.
          */
-
         if (Console->FixedSize)
         {
             /*
@@ -146,19 +141,19 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
              * at the moment. However, keep those settings somewhere so that
              * we can try to set them up when we will be allowed to do so.
              */
-            if (ConsoleInfo->WindowSize.X <= Buffer->ViewSize.X ||
-                ConsoleInfo->WindowSize.Y <= Buffer->ViewSize.Y)
+            if (ConsoleInfo->WindowSize.X <= ActiveBuffer->ViewSize.X ||
+                ConsoleInfo->WindowSize.Y <= ActiveBuffer->ViewSize.Y)
             {
-                Buffer->OldViewSize = ConsoleInfo->WindowSize;
+                ActiveBuffer->OldViewSize = ConsoleInfo->WindowSize;
             }
         }
         else
         {
             /* Resize the view if its size is bigger than the specified size */
-            if (ConsoleInfo->WindowSize.X <= Buffer->ViewSize.X ||
-                ConsoleInfo->WindowSize.Y <= Buffer->ViewSize.Y)
+            if (ConsoleInfo->WindowSize.X <= ActiveBuffer->ViewSize.X ||
+                ConsoleInfo->WindowSize.Y <= ActiveBuffer->ViewSize.Y)
             {
-                Buffer->ViewSize = ConsoleInfo->WindowSize;
+                ActiveBuffer->ViewSize = ConsoleInfo->WindowSize;
                 // SizeChanged = TRUE;
             }
         }

@@ -181,17 +181,24 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 PPOPUP_WINDOW
-CreatePopupWindow(PCONSRV_CONSOLE Console,
-                  PTEXTMODE_SCREEN_BUFFER Buffer,
-                  SHORT xLeft,
-                  SHORT yTop,
-                  SHORT Width,
-                  SHORT Height)
+CreatePopupWindow(
+    IN PCONSRV_CONSOLE Console,
+    IN PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+    IN SHORT xLeft,
+    IN SHORT yTop,
+    IN SHORT Width,
+    IN SHORT Height)
 {
+    PTEXTMODE_SCREEN_BUFFER Buffer;
     PPOPUP_WINDOW Popup;
     SMALL_RECT Region;
 
-    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+    ASSERT((PCONSOLE)Console == ScreenBuffer->Header.Console);
+
+    if (GetType(ScreenBuffer) != TEXTMODE_BUFFER)
+        return NULL;
+
+    Buffer = (PTEXTMODE_SCREEN_BUFFER)ScreenBuffer;
 
     /* Create the popup window */
     Popup = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*Popup));
@@ -234,7 +241,8 @@ CreatePopupWindow(PCONSRV_CONSOLE Console,
 }
 
 VOID
-DestroyPopupWindow(PPOPUP_WINDOW Popup)
+DestroyPopupWindow(
+    IN PPOPUP_WINDOW Popup)
 {
     SMALL_RECT Region;
 

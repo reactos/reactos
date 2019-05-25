@@ -129,16 +129,19 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
     PCONSRV_CONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
-    SetRectEmpty(rcFramebuffer);
+    ConioInitLongRect(rcFramebuffer, 0, 0, 0, 0);
 
-    if (Buffer->BitMap == NULL) return;
+    if (Buffer->BitMap == NULL)
+        return;
 
-    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
+        return;
 
-    rcFramebuffer->left   = Buffer->ViewOrigin.X * 1 + rcView->left;
-    rcFramebuffer->top    = Buffer->ViewOrigin.Y * 1 + rcView->top;
-    rcFramebuffer->right  = Buffer->ViewOrigin.X * 1 + rcView->right;
-    rcFramebuffer->bottom = Buffer->ViewOrigin.Y * 1 + rcView->bottom;
+    ConioInitLongRect(rcFramebuffer,
+                      Buffer->ViewOrigin.Y * 1 + rcView->top,
+                      Buffer->ViewOrigin.X * 1 + rcView->left,
+                      Buffer->ViewOrigin.Y * 1 + rcView->bottom,
+                      Buffer->ViewOrigin.X * 1 + rcView->right);
 
     /* Grab the mutex */
     NtWaitForSingleObject(Buffer->Mutex, FALSE, NULL);

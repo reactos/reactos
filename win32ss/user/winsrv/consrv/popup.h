@@ -27,11 +27,14 @@ typedef struct _POPUP_WINDOW
 
 
 PPOPUP_WINDOW
-CreatePopupWindow(PCONSRV_CONSOLE Console,
-                  PTEXTMODE_SCREEN_BUFFER Buffer,
-                  SHORT xLeft,
-                  SHORT yTop,
-                  SHORT Width,
-                  SHORT Height);
+CreatePopupWindow(
+    IN PCONSRV_CONSOLE Console,
+    IN PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+    IN SHORT xLeft,
+    IN SHORT yTop,
+    IN SHORT Width,
+    IN SHORT Height);
+
 VOID
-DestroyPopupWindow(PPOPUP_WINDOW Popup);
+DestroyPopupWindow(
+    IN PPOPUP_WINDOW Popup);

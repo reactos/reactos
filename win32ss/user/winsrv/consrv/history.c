@@ -271,7 +271,7 @@ PPOPUP_WINDOW
 HistoryDisplayCurrentHistory(PCONSRV_CONSOLE Console,
                              PUNICODE_STRING ExeName)
 {
-    PTEXTMODE_SCREEN_BUFFER ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     PPOPUP_WINDOW Popup;
 
     SHORT xLeft, yTop;
@@ -283,7 +283,7 @@ HistoryDisplayCurrentHistory(PCONSRV_CONSOLE Console,
     if (Hist->NumEntries == 0) return NULL;
 
     if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER) return NULL;
-    ActiveBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
+    ActiveBuffer = Console->ActiveBuffer;
 
     Width  = 40;
     Height = 10;

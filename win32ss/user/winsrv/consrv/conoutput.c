@@ -17,7 +17,7 @@
 /* PUBLIC SERVER APIS *********************************************************/
 
 /*
- * FIXME: This function MUST be moved fro condrv/conoutput.c because only
+ * FIXME: This function MUST be moved from condrv/conoutput.c because only
  * consrv knows how to manipulate VDM screenbuffers.
  */
 NTSTATUS NTAPI

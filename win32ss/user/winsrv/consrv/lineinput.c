@@ -121,12 +121,12 @@ LineInputEdit(PCONSRV_CONSOLE Console,
     LineInputSetPos(Console, Pos + NumToInsert);
 }
 
-#if 0
 static VOID
 LineInputRecallHistory(PCONSRV_CONSOLE Console,
                        PUNICODE_STRING ExeName,
                        INT Offset)
 {
+#if 0
     PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console, ExeName);
     UINT Position = 0;
 
@@ -140,13 +140,9 @@ LineInputRecallHistory(PCONSRV_CONSOLE Console,
     LineInputEdit(Console, Console->LineSize,
                   Hist->Entries[Hist->Position].Length / sizeof(WCHAR),
                   Hist->Entries[Hist->Position].Buffer);
-}
+
 #else
-static VOID
-LineInputRecallHistory(PCONSRV_CONSOLE Console,
-                       PUNICODE_STRING ExeName,
-                       INT Offset)
-{
+
     UNICODE_STRING Entry;
 
     if (!HistoryRecallHistory(Console, ExeName, Offset, &Entry)) return;
@@ -155,8 +151,8 @@ LineInputRecallHistory(PCONSRV_CONSOLE Console,
     LineInputEdit(Console, Console->LineSize,
                   Entry.Length / sizeof(WCHAR),
                   Entry.Buffer);
-}
 #endif
+}
 
 
 // TESTS!!

@@ -358,9 +358,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PRECT rcFramebuffer)
 {
     PCONSRV_CONSOLE Console = Buffer->Header.Console;
-    // ASSERT(Console == GuiData->Console);
-
-    ULONG TopLine, BottomLine, LeftChar, RightChar;
+    ULONG TopLine, BottomLine, LeftColumn, RightColumn;
     ULONG Line, Char, Start;
     PCHAR_INFO From;
     PWCHAR To;
@@ -370,26 +368,33 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     HFONT OldFont, NewFont;
     BOOLEAN IsUnderline;
 
-    SetRectEmpty(rcFramebuffer);
+    // ASSERT(Console == GuiData->Console);
 
-    if (Buffer->Buffer == NULL) return;
+    ConioInitLongRect(rcFramebuffer, 0, 0, 0, 0);
 
-    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
+    if (Buffer->Buffer == NULL)
+        return;
 
-    rcFramebuffer->left   = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->left;
-    rcFramebuffer->top    = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->top;
-    rcFramebuffer->right  = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->right;
-    rcFramebuffer->bottom = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->bottom;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
+        return;
 
-    LeftChar   = rcFramebuffer->left   / GuiData->CharWidth;
+    ConioInitLongRect(rcFramebuffer,
+                      Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->top,
+                      Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->left,
+                      Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->bottom,
+                      Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->right);
+
+    LeftColumn  = rcFramebuffer->left  / GuiData->CharWidth;
+    RightColumn = rcFramebuffer->right / GuiData->CharWidth;
+    if (RightColumn >= (ULONG)Buffer->ScreenBufferSize.X)
+        RightColumn  = Buffer->ScreenBufferSize.X - 1;
+
     TopLine    = rcFramebuffer->top    / GuiData->CharHeight;
-    RightChar  = rcFramebuffer->right  / GuiData->CharWidth;
     BottomLine = rcFramebuffer->bottom / GuiData->CharHeight;
+    if (BottomLine >= (ULONG)Buffer->ScreenBufferSize.Y)
+        BottomLine  = Buffer->ScreenBufferSize.Y - 1;
 
-    if (RightChar  >= (ULONG)Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
-    if (BottomLine >= (ULONG)Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
-
-    LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)->Attributes;
+    LastAttribute = ConioCoordToPointer(Buffer, LeftColumn, TopLine)->Attributes;
 
     SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
     SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
@@ -403,11 +408,11 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
         WCHAR LineBuffer[80];   // Buffer containing a part or all the line to be displayed
-        From  = ConioCoordToPointer(Buffer, LeftChar, Line);    // Get the first code of the line
-        Start = LeftChar;
+        From  = ConioCoordToPointer(Buffer, LeftColumn, Line);  // Get the first code of the line
+        Start = LeftColumn;
         To    = LineBuffer;
 
-        for (Char = LeftChar; Char <= RightChar; Char++)
+        for (Char = LeftColumn; Char <= RightColumn; Char++)
         {
             /*
              * We flush the buffer if the new attribute is different
@@ -447,7 +452,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                  Start * GuiData->CharWidth,
                  Line  * GuiData->CharHeight,
                  LineBuffer,
-                 RightChar - Start + 1);
+                 RightColumn - Start + 1);
     }
 
     /* Restore the old font */
@@ -462,13 +467,14 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     {
         CursorX = Buffer->CursorPosition.X;
         CursorY = Buffer->CursorPosition.Y;
-        if (LeftChar <= CursorX && CursorX <= RightChar &&
-            TopLine  <= CursorY && CursorY <= BottomLine)
+        if (LeftColumn <= CursorX && CursorX <= RightColumn &&
+            TopLine    <= CursorY && CursorY <= BottomLine)
         {
             CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
 
             Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
-            if (Attribute == DEFAULT_SCREEN_ATTRIB) Attribute = Buffer->ScreenDefaultAttrib;
+            if (Attribute == DEFAULT_SCREEN_ATTRIB)
+                Attribute = Buffer->ScreenDefaultAttrib;
 
             CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
             OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
