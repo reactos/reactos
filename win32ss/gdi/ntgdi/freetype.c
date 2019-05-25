@@ -6911,6 +6911,7 @@ NtGdiGetGlyphIndicesW(
     dc = DC_LockDc(hdc);
     if (!dc)
     {
+        DPRINT1("!DC_LockDC\n");
         return GDI_ERROR;
     }
     pdcattr = dc->pdcattr;
@@ -6919,103 +6920,111 @@ NtGdiGetGlyphIndicesW(
     DC_UnlockDc(dc);
     if (!TextObj)
     {
+        DPRINT1("!TextObj\n");
         return GDI_ERROR;
     }
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    do
+    if (cwc <= 0)
+        goto Exit;
+
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
+    if (!Buffer)
     {
-        if (cwc <= 0)
-            break;
+        DPRINT1("ExAllocatePoolWithTag\n");
+        return GDI_ERROR;
+    }
 
-        Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
-        if (!Buffer)
-            return GDI_ERROR;
-
-        /* Get DefChar */
-        if (iMode & GGI_MARK_NONEXISTING_GLYPHS)
+    /* Get DefChar */
+    if (iMode & GGI_MARK_NONEXISTING_GLYPHS)
+    {
+        DefChar = 0xffff;
+    }
+    else
+    {
+        Face = FontGDI->SharedFace->Face;
+        if (FT_IS_SFNT(Face))
         {
-            DefChar = 0xffff;
+            IntLockFreeType();
+            pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+            DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
+            IntUnLockFreeType();
         }
         else
         {
-            Face = FontGDI->SharedFace->Face;
-            if (FT_IS_SFNT(Face))
+            Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+            if (!Size)
             {
-                IntLockFreeType();
-                pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-                DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
-                IntUnLockFreeType();
+                cwc = GDI_ERROR;
+                DPRINT1("!Size\n");
+                goto Exit;
             }
-            else
+            potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
+            if (!potm)
             {
-                Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-                if (!Size)
-                {
-                    cwc = GDI_ERROR;
-                    break;
-                }
-                potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
-                if (!potm)
-                {
-                    cwc = GDI_ERROR;
-                    break;
-                }
-                Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
-                if (Size)
-                    DefChar = potm->otmTextMetrics.tmDefaultChar;
-                ExFreePoolWithTag(potm, GDITAG_TEXT);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                DPRINT1("!potm\n");
+                goto Exit;
             }
+            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
+            if (Size)
+                DefChar = potm->otmTextMetrics.tmDefaultChar;
+            ExFreePoolWithTag(potm, GDITAG_TEXT);
         }
+    }
 
-        /* Allocate for Safepwc */
-        pwcSize = cwc * sizeof(WCHAR);
-        Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-        if (!Safepwc)
-        {
-            Status = STATUS_NO_MEMORY;
-            break;
-        }
+    /* Allocate for Safepwc */
+    pwcSize = cwc * sizeof(WCHAR);
+    Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
+    if (!Safepwc)
+    {
+        Status = STATUS_NO_MEMORY;
+        DPRINT1("!Safepwc\n");
+        goto Exit;
+    }
 
-        _SEH2_TRY
-        {
-            ProbeForRead(UnSafepwc, pwcSize, 1);
-            RtlCopyMemory(Safepwc, UnSafepwc, pwcSize);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
+    _SEH2_TRY
+    {
+        ProbeForRead(UnSafepwc, pwcSize, 1);
+        RtlCopyMemory(Safepwc, UnSafepwc, pwcSize);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
-        if (!NT_SUCCESS(Status))
-            break;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Status: %08lX\n", Status);
+        goto Exit;
+    }
 
-        /* Get glyph indeces */
-        IntLockFreeType();
-        for (i = 0; i < cwc; i++)
+    /* Get glyph indeces */
+    IntLockFreeType();
+    for (i = 0; i < cwc; i++)
+    {
+        Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
+        if (Buffer[i] == 0)
         {
-            Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
-            if (Buffer[i] == 0)
-            {
-                Buffer[i] = DefChar;
-            }
+            Buffer[i] = DefChar;
         }
-        IntUnLockFreeType();
+    }
+    IntUnLockFreeType();
 
-        _SEH2_TRY
-        {
-            ProbeForWrite(UnSafepgi, cwc * sizeof(WORD), 1);
-            RtlCopyMemory(UnSafepgi, Buffer, cwc * sizeof(WORD));
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    } while (0);
+    _SEH2_TRY
+    {
+        ProbeForWrite(UnSafepgi, cwc * sizeof(WORD), 1);
+        RtlCopyMemory(UnSafepgi, Buffer, cwc * sizeof(WORD));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
+Exit:
     if (Buffer)
     {
         ExFreePoolWithTag(Buffer, GDITAG_TEXT);
