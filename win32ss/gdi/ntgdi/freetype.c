@@ -6886,7 +6886,7 @@ NtGdiGetGlyphIndicesW(
     INT i;
     WCHAR DefChar = 0xffff;
     PWSTR Buffer = NULL, Safepwc = NULL;
-    DWORD Size, pwcSize;
+    ULONG Size, pwcSize;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
     FT_Face Face;
