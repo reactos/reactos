@@ -26,6 +26,7 @@ extern void func_lstrlen(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_PrivMoveFileIdentityW(void);
+extern void func_SetComputerNameExW(void);
 extern void func_SetConsoleWindowInfo(void);
 extern void func_SetCurrentDirectory(void);
 extern void func_SetUnhandledExceptionFilter(void);
@@ -59,6 +60,7 @@ const struct test winetest_testlist[] =
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
+    { "SetComputerNameExW",          func_SetComputerNameExW },
     { "SetConsoleWindowInfo",        func_SetConsoleWindowInfo },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
     { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter },
@@ -68,4 +70,3 @@ const struct test winetest_testlist[] =
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
     { 0, 0 }
 };
-
