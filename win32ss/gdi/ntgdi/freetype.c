@@ -6990,18 +6990,21 @@ NtGdiGetGlyphIndicesW(
 
     if (!NT_SUCCESS(Status)) goto ErrorRet;
 
-    IntLockFreeType();
-
-    for (i = 0; i < cwc; i++)
+    if (cwc)
     {
-        Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
-        if (Buffer[i] == 0)
-        {
-            Buffer[i] = DefChar;
-        }
-    }
+        IntLockFreeType();
 
-    IntUnLockFreeType();
+        for (i = 0; i < cwc; i++)
+        {
+            Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
+            if (Buffer[i] == 0)
+            {
+                Buffer[i] = DefChar;
+            }
+        }
+
+        IntUnLockFreeType();
+    }
 
     _SEH2_TRY
     {
