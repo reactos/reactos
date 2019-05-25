@@ -6886,7 +6886,7 @@ NtGdiGetGlyphIndicesW(
     INT i;
     WCHAR DefChar = 0xffff;
     PWSTR Buffer = NULL;
-    ULONG Size, pwcSize;
+    SIZE_T Size, DataSize, pwcSize;
     PWSTR Safepwc = NULL;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
@@ -6901,20 +6901,6 @@ NtGdiGetGlyphIndicesW(
     if (!UnSafepwc || !UnSafepgi)
     {
         DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
-        return GDI_ERROR;
-    }
-
-    // TODO: Special undocumented case!
-    if (!pwc && !pgi && (cwc == 0))
-    {
-        DPRINT1("ERR: NtGdiGetGlyphIndicesW with (!pwc && !pgi && (cwc == 0)) is UNIMPLEMENTED!\n");
-        return 0;
-    }
-
-    // FIXME: This is a hack!! (triggered by e.g. Word 2010). See CORE-12825
-    if (cwc == 0)
-    {
-        DPRINT1("ERR: NtGdiGetGlyphIndicesW with (cwc == 0) is UNIMPLEMENTED!\n");
         return GDI_ERROR;
     }
 
@@ -6935,7 +6921,8 @@ NtGdiGetGlyphIndicesW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), GDITAG_TEXT);
+    DataSize = (cwc ? cwc * sizeof(WORD) : 1);
+    Buffer = ExAllocatePoolWithTag(PagedPool, DataSize, GDITAG_TEXT);
     if (!Buffer)
     {
         return GDI_ERROR;
@@ -6960,20 +6947,25 @@ NtGdiGetGlyphIndicesW(
         else
         {
             Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+            if (!Size)
+            {
+                cwc = GDI_ERROR;
+                goto ErrorRet;
+            }
             potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
             if (!potm)
             {
                 cwc = GDI_ERROR;
                 goto ErrorRet;
             }
-            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
+            Size = IntGetOutlineTextMetrics(FontGDI, DataSize, potm);
             if (Size)
                 DefChar = potm->otmTextMetrics.tmDefaultChar;
             ExFreePoolWithTag(potm, GDITAG_TEXT);
         }
     }
 
-    pwcSize = cwc * sizeof(WCHAR);
+    pwcSize = (cwc ? cwc * sizeof(WCHAR) : 1);
     Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
 
     if (!Safepwc)
@@ -6984,8 +6976,11 @@ NtGdiGetGlyphIndicesW(
 
     _SEH2_TRY
     {
-        ProbeForRead(UnSafepwc, pwcSize, 1);
-        RtlCopyMemory(Safepwc, UnSafepwc, pwcSize);
+        if (cwc)
+        {
+            ProbeForRead(UnSafepwc, pwcSize, 1);
+            RtlCopyMemory(Safepwc, UnSafepwc, pwcSize);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
