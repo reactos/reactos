@@ -2713,8 +2713,12 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       {
          Parent = Wnd->spwndParent;
          if (UserIsDesktopWindow(Wnd->spwndParent))
-             Parent = 0;
-         co_UserSetFocus(Parent);
+             Parent = NULL;
+         if (!Parent ||
+             (!(Parent->state2 & WNDS2_INDESTROY) && !(Parent->state & WNDS_DESTROYED)))
+         {
+             co_UserSetFocus(Parent);
+         }
       }
       // Hide, just return.
       if (Cmd == SW_HIDE) return WasVisible;
