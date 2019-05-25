@@ -1708,7 +1708,7 @@ NewStream
         )
     {
         CMiniportDMusUARTStream *pStream =
-            new(PoolType) CMiniportDMusUARTStream();
+            new(PoolType, 'wNcP') CMiniportDMusUARTStream();
 
         if (pStream)
         {
