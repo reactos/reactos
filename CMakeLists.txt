@@ -186,6 +186,7 @@ else()
     endif()
 
     # Other
+    add_definitions(-D_NEW_DELETE_OPERATORS_)
     if(ARCH STREQUAL "i386")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
     elseif(ARCH STREQUAL "amd64")

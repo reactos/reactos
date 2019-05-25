@@ -211,7 +211,7 @@ operator delete(
     ExFreePool(ptr);
 }
 
-#endif  /* ALLOCATION_OPERATORS_DEFINED */
+#endif  /* _NEW_DELETE_OPERATORS_ */
 
 
 #else   /* Being compiled with C */

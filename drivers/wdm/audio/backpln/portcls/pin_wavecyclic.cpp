@@ -18,6 +18,16 @@ class CPortPinWaveCyclic : public IPortPinWaveCyclic,
                            public IServiceSink
 {
 public:
+    inline
+    PVOID
+    operator new(
+        size_t Size,
+        POOL_TYPE PoolType,
+        ULONG Tag)
+    {
+        return ExAllocatePoolWithTag(PoolType, Size, Tag);
+    }
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
