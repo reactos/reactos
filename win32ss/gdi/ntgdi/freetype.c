@@ -6889,6 +6889,8 @@ NtGdiGetGlyphIndicesW(
     DWORD Size, pwcSize;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
+    FT_Face Face;
+    TT_OS2 *pOS2;
 
     if (cwc < 0)
     {
@@ -6905,6 +6907,7 @@ NtGdiGetGlyphIndicesW(
         return GDI_ERROR;
     }
 
+    /* Get FontGDI */
     dc = DC_LockDc(hdc);
     if (!dc)
     {
@@ -6928,21 +6931,18 @@ NtGdiGetGlyphIndicesW(
 
         Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
         if (!Buffer)
-        {
             return GDI_ERROR;
-        }
 
+        /* Get DefChar */
         if (iMode & GGI_MARK_NONEXISTING_GLYPHS)
         {
             DefChar = 0xffff;
         }
         else
         {
-            FT_Face Face = FontGDI->SharedFace->Face;
+            Face = FontGDI->SharedFace->Face;
             if (FT_IS_SFNT(Face))
             {
-                TT_OS2 *pOS2;
-                
                 IntLockFreeType();
                 pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
                 DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
@@ -6969,9 +6969,9 @@ NtGdiGetGlyphIndicesW(
             }
         }
 
+        /* Allocate for Safepwc */
         pwcSize = cwc * sizeof(WCHAR);
         Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-
         if (!Safepwc)
         {
             Status = STATUS_NO_MEMORY;
@@ -6992,8 +6992,8 @@ NtGdiGetGlyphIndicesW(
         if (!NT_SUCCESS(Status))
             break;
 
+        /* Get glyph indeces */
         IntLockFreeType();
-
         for (i = 0; i < cwc; i++)
         {
             Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
@@ -7002,7 +7002,6 @@ NtGdiGetGlyphIndicesW(
                 Buffer[i] = DefChar;
             }
         }
-
         IntUnLockFreeType();
 
         _SEH2_TRY
