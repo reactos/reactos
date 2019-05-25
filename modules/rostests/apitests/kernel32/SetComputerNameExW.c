@@ -74,28 +74,9 @@ START_TEST(SetComputerNameExW)
     ok_long(Error, ERROR_SUCCESS);
     ok(szComputerNameOld[0], "szHostNameOld is %S", szComputerNameOld);
 
-    /* Close keys */
-    Error = RegCloseKey(hKeyHN);
-    ok_long(Error, ERROR_SUCCESS);
-    Error = RegCloseKey(hKeyCN);
-    ok_long(Error, ERROR_SUCCESS);
-
     /* Change the value */
     ret = SetComputerNameExW(ComputerNamePhysicalDnsHostname, szNewName);
     ok_int(ret, TRUE);
-
-    /* Open keys */
-    hKeyHN = OpenHostNameKey();
-    hKeyCN = OpenComputerNameKey();
-    if (!hKeyHN || !hKeyCN)
-    {
-        if (hKeyHN)
-            RegCloseKey(hKeyHN);
-        if (hKeyCN)
-            RegCloseKey(hKeyCN);
-        skip("Unable to open keys (%p, %p).\n", hKeyHN, hKeyCN);
-        return;
-    }
 
     /* Get New Hostname */
     szHostNameNew[0] = UNICODE_NULL;
