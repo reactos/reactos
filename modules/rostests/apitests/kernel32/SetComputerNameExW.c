@@ -52,8 +52,10 @@ START_TEST(SetComputerNameExW)
     hKeyCN = OpenComputerNameKey();
     if (!hKeyHN || !hKeyCN)
     {
-        RegCloseKey(hKeyHN);
-        RegCloseKey(hKeyCN);
+        if (hKeyHN)
+            RegCloseKey(hKeyHN);
+        if (hKeyCN)
+            RegCloseKey(hKeyCN);
         skip("Unable to open keys (%p, %p).\n", hKeyHN, hKeyCN);
         return;
     }
@@ -87,8 +89,10 @@ START_TEST(SetComputerNameExW)
     hKeyCN = OpenComputerNameKey();
     if (!hKeyHN || !hKeyCN)
     {
-        RegCloseKey(hKeyHN);
-        RegCloseKey(hKeyCN);
+        if (hKeyHN)
+            RegCloseKey(hKeyHN);
+        if (hKeyCN)
+            RegCloseKey(hKeyCN);
         skip("Unable to open keys (%p, %p).\n", hKeyHN, hKeyCN);
         return;
     }
