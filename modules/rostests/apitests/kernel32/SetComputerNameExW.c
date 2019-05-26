@@ -44,6 +44,7 @@ START_TEST(SetComputerNameExW)
     BOOL ret;
     HKEY hKeyHN, hKeyCN;
     DWORD cbData;
+    WCHAR szNVHostNameOld[MAX_PATH], szNVHostNameNew[MAX_PATH];
     WCHAR szHostNameOld[MAX_PATH], szHostNameNew[MAX_PATH];
     WCHAR szComputerNameOld[MAX_PATH], szComputerNameNew[MAX_PATH];
 
@@ -62,6 +63,13 @@ START_TEST(SetComputerNameExW)
         return;
     }
 
+    /* Get Old NV Hostname */
+    szNVHostNameOld[0] = UNICODE_NULL;
+    cbData = sizeof(szNVHostNameOld);
+    Error = RegQueryValueExW(hKeyHN, L"NV Hostname", NULL, NULL, (LPBYTE)szNVHostNameOld, &cbData);
+    ok_long(Error, ERROR_SUCCESS);
+    ok(szNVHostNameOld[0], "szNVHostNameOld is empty\n");
+
     /* Get Old Hostname */
     szHostNameOld[0] = UNICODE_NULL;
     cbData = sizeof(szHostNameOld);
@@ -79,6 +87,15 @@ START_TEST(SetComputerNameExW)
     /* Change the value */
     ret = SetComputerNameExW(ComputerNamePhysicalDnsHostname, szNewName);
     ok_int(ret, TRUE);
+
+    /* Get New NV Hostname */
+    szNVHostNameNew[0] = UNICODE_NULL;
+    cbData = sizeof(szNVHostNameNew);
+    Error = RegQueryValueExW(hKeyHN, L"NV Hostname", NULL, NULL, (LPBYTE)szNVHostNameNew, &cbData);
+    ok_long(Error, ERROR_SUCCESS);
+    ok(szNVHostNameNew[0], "szNVHostNameNew is empty\n");
+    ok(lstrcmpW(szNVHostNameNew, szNewName) == 0,
+       "szNVHostNameNew '%S' should be szNewName '%S'\n", szNVHostNameNew, szNewName);
 
     /* Get New Hostname */
     szHostNameNew[0] = UNICODE_NULL;
@@ -99,6 +116,10 @@ START_TEST(SetComputerNameExW)
        "szComputerNameNew '%S' should be szNewName '%S'\n", szComputerNameNew, szNewName);
 
     /* Restore the registry values */
+    cbData = (lstrlenW(szNVHostNameOld) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKeyHN, L"NV Hostname", 0, REG_SZ, (LPBYTE)szNVHostNameOld, cbData);
+    ok_long(Error, ERROR_SUCCESS);
+
     cbData = (lstrlenW(szHostNameOld) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKeyHN, L"Hostname", 0, REG_SZ, (LPBYTE)szHostNameOld, cbData);
     ok_long(Error, ERROR_SUCCESS);
