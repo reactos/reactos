@@ -31,7 +31,7 @@ MemFree(IN PVOID lpMem)
 
 PVOID
 MemAlloc(IN DWORD dwFlags,
-         IN DWORD dwBytes)
+         IN SIZE_T dwBytes)
 {
     /* Allocate memory from the heap */
     return HeapAlloc(g_hHeap, dwFlags, dwBytes);

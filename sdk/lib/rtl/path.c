@@ -309,7 +309,7 @@ RtlpCollapsePath(PWSTR Path, /* ULONG PathBufferSize, ULONG PathLength, */ ULONG
 
     // FIXME: Do not suppose NULL-terminated strings!!
 
-    ULONG PathLength = wcslen(Path);
+    SIZE_T PathLength = wcslen(Path);
     PWSTR EndBuffer = Path + PathLength; // Path + PathBufferSize / sizeof(WCHAR);
     PWSTR EndPath;
 

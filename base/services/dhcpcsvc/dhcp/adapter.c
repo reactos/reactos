@@ -9,7 +9,7 @@ PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     DWORD Error;
     HKEY MainKey;
     PCHAR *Out, OutKeyName;
-    DWORD CharTotal = 0, AppendLen = 1 + strlen(Append);
+    SIZE_T CharTotal = 0, AppendLen = 1 + strlen(Append);
     DWORD MaxSubKeyLen = 0, MaxSubKeys = 0;
 
     Error = RegOpenKey( HKEY_LOCAL_MACHINE, MainKeyName, &MainKey );

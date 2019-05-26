@@ -515,7 +515,7 @@ RtlIpv6AddressToStringA(
     ASSERT(Result >= Buffer);
     ASSERT(Result < Buffer + RTL_NUMBER_OF(Buffer));
 
-    Status = RtlUnicodeToMultiByteN(S, RTLIPV6A2S_MAX_LEN, NULL, Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    Status = RtlUnicodeToMultiByteN(S, RTLIPV6A2S_MAX_LEN, NULL, Buffer, (ULONG)(wcslen(Buffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
         return (PSTR)~0;
 
@@ -544,7 +544,7 @@ RtlIpv6AddressToStringExA(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = RtlUnicodeToMultiByteN(AddressString, RTLIPV6A2SEX_MAX_LEN, NULL, Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    Status = RtlUnicodeToMultiByteN(AddressString, RTLIPV6A2SEX_MAX_LEN, NULL, Buffer, (*AddressStringLength + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
         return STATUS_INVALID_PARAMETER;
 

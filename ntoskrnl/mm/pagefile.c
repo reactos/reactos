@@ -357,7 +357,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     IO_STATUS_BLOCK IoStatus;
     PFILE_OBJECT FileObject;
     PMMPAGING_FILE PagingFile;
-    ULONG AllocMapSize;
+    SIZE_T AllocMapSize;
     ULONG Count;
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING PageFileName;

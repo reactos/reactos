@@ -119,7 +119,7 @@ ArcGetNextTokenA(
 {
     NTSTATUS Status;
     PCSTR p = ArcPath;
-    ULONG SpecifierLength;
+    SIZE_T SpecifierLength;
     ULONG KeyValue;
 
     /*
@@ -133,6 +133,10 @@ ArcGetNextTokenA(
         return NULL; /* Path starts with '(' and is thus invalid */
 
     SpecifierLength = (p - ArcPath) * sizeof(CHAR);
+    if (SpecifierLength > MAXUSHORT)
+    {
+        return NULL;
+    }
 
     /*
      * The strtoul function skips any leading whitespace.
@@ -163,7 +167,7 @@ ArcGetNextTokenA(
     if (!NT_SUCCESS(Status))
         return NULL;
 
-    TokenSpecifier->Length = strlen(TokenSpecifier->Buffer) * sizeof(CHAR);
+    TokenSpecifier->Length = (USHORT)SpecifierLength;
 
     /* We succeeded, return the token key value */
     *Key = KeyValue;
@@ -180,7 +184,7 @@ ArcGetNextTokenU(
 {
     NTSTATUS Status;
     PCWSTR p = ArcPath;
-    ULONG SpecifierLength;
+    SIZE_T SpecifierLength;
     ULONG KeyValue;
 
     /*
@@ -194,6 +198,10 @@ ArcGetNextTokenU(
         return NULL; /* Path starts with '(' and is thus invalid */
 
     SpecifierLength = (p - ArcPath) * sizeof(WCHAR);
+    if (SpecifierLength > UNICODE_STRING_MAX_BYTES)
+    {
+        return NULL;
+    }
 
     ++p;
 
@@ -226,7 +234,7 @@ ArcGetNextTokenU(
     if (!NT_SUCCESS(Status))
         return NULL;
 
-    TokenSpecifier->Length = wcslen(TokenSpecifier->Buffer) * sizeof(WCHAR);
+    TokenSpecifier->Length = (USHORT)SpecifierLength;
 
     /* We succeeded, return the token key value */
     *Key = KeyValue;
@@ -308,6 +316,7 @@ ArcPathNormalize(
     NTSTATUS Status;
     PCWSTR EndOfArcName;
     PCWSTR p;
+    SIZE_T PathLength;
 
     if (NormalizedArcPath->MaximumLength < sizeof(UNICODE_NULL))
         return FALSE;
@@ -350,7 +359,13 @@ ArcPathNormalize(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    NormalizedArcPath->Length = wcslen(NormalizedArcPath->Buffer) * sizeof(WCHAR);
+    PathLength = wcslen(NormalizedArcPath->Buffer);
+    if (PathLength > UNICODE_STRING_MAX_CHARS)
+    {
+        return FALSE;
+    }
+
+    NormalizedArcPath->Length = (USHORT)PathLength * sizeof(WCHAR);
     return TRUE;
 }
 
@@ -685,6 +700,7 @@ ResolveArcNameManually(
     CONTROLLER_TYPE ControllerType;
     PERIPHERAL_TYPE PeripheralType;
     BOOLEAN UseSignature;
+    SIZE_T NameLength;
 
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry = NULL;
@@ -787,7 +803,13 @@ ResolveArcNameManually(
     }
 
     /* Update NtName length */
-    NtName->Length = wcslen(NtName->Buffer) * sizeof(WCHAR);
+    NameLength = wcslen(NtName->Buffer);
+    if (NameLength > UNICODE_STRING_MAX_CHARS)
+    {
+        return STATUS_NAME_TOO_LONG;
+    }
+
+    NtName->Length = (USHORT)NameLength * sizeof(WCHAR);
 
     return STATUS_SUCCESS;
 }
@@ -802,6 +824,7 @@ ArcPathToNtPath(
     NTSTATUS Status;
     PCWSTR BeginOfPath;
     UNICODE_STRING ArcName;
+    SIZE_T PathLength;
 
     /* TODO: We should "normalize" the path, i.e. expand all the xxx() into xxx(0) */
 
@@ -877,7 +900,14 @@ ArcPathToNtPath(
             return FALSE;
         }
     }
-    NtPath->Length = wcslen(NtPath->Buffer) * sizeof(WCHAR);
+
+    PathLength = wcslen(NtPath->Buffer);
+    if (PathLength > UNICODE_STRING_MAX_CHARS)
+    {
+        return FALSE;
+    }
+
+    NtPath->Length = (USHORT)PathLength * sizeof(WCHAR);
 
     return TRUE;
 }
