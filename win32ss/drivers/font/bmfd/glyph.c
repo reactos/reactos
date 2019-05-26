@@ -83,7 +83,7 @@ BmfdQueryGlyphAndBitmap(
     PGLYPHENTRY pge;
     ULONG xSrc, ySrc, cxSrc, cySrc;
     ULONG xDst, yDst, cxDst, cyDst;
-    ULONG xScale, yScale;
+    LONG xScale, yScale;
     ULONG ulGlyphOffset, cjDstRow, color;
     PVOID pvSrc0, pvDst0;
 

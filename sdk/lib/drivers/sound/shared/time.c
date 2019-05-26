@@ -29,8 +29,8 @@ SleepMs(ULONG Milliseconds)
 {
     LARGE_INTEGER Period;
 
-    Period.QuadPart = -Milliseconds;
-    Period.QuadPart *= 10000;
+    Period.QuadPart = Milliseconds;
+    Period.QuadPart *= -10000;
 
     KeDelayExecutionThread(KernelMode, FALSE, &Period);
 }
