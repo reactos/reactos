@@ -2712,7 +2712,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       if (Wnd == pti->MessageQueue->spwndFocus)
       {
          Parent = Wnd->spwndParent;
-         if (UserIsDesktopWindow(Wnd->spwndParent))
+         if (UserIsDesktopWindow(Parent))
              Parent = NULL;
          if (!Parent ||
              (!(Parent->state2 & WNDS2_INDESTROY) && !(Parent->state & WNDS_DESTROYED)))
