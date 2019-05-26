@@ -6885,8 +6885,9 @@ NtGdiGetGlyphIndicesW(
     OUTLINETEXTMETRICW *potm;
     INT i;
     WCHAR DefChar = 0xffff;
-    PWSTR Buffer = NULL, Safepwc = NULL;
+    PWSTR Buffer = NULL;
     ULONG Size, pwcSize;
+    PWSTR Safepwc = NULL;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
     FT_Face Face;
@@ -6926,8 +6927,11 @@ NtGdiGetGlyphIndicesW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
-    if (cwc <= 0)
-        goto Exit;
+    if (cwc == 0)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto ErrorRet;
+    }
 
     Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
     if (!Buffer)
@@ -6956,16 +6960,16 @@ NtGdiGetGlyphIndicesW(
             Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
             if (!Size)
             {
-                cwc = GDI_ERROR;
+                Status = STATUS_UNSUCCESSFUL;
                 DPRINT1("!Size\n");
-                goto Exit;
+                goto ErrorRet;
             }
             potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
             if (!potm)
             {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 DPRINT1("!potm\n");
-                goto Exit;
+                goto ErrorRet;
             }
             Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
             if (Size)
@@ -6981,7 +6985,7 @@ NtGdiGetGlyphIndicesW(
     {
         Status = STATUS_NO_MEMORY;
         DPRINT1("!Safepwc\n");
-        goto Exit;
+        goto ErrorRet;
     }
 
     _SEH2_TRY
@@ -6998,7 +7002,7 @@ NtGdiGetGlyphIndicesW(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Status: %08lX\n", Status);
-        goto Exit;
+        goto ErrorRet;
     }
 
     /* Get glyph indeces */
@@ -7024,12 +7028,12 @@ NtGdiGetGlyphIndicesW(
     }
     _SEH2_END;
 
-Exit:
-    if (Buffer)
+ErrorRet:
+    if (Buffer != NULL)
     {
         ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     }
-    if (Safepwc)
+    if (Safepwc != NULL)
     {
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
     }
