@@ -25,7 +25,7 @@ MemFree(IN PVOID lpMem);
 
 PVOID
 MemAlloc(IN DWORD dwFlags,
-         IN DWORD dwBytes);
+         IN SIZE_T dwBytes);
 
 LPWSTR
 FormatDateTime(IN LPSYSTEMTIME pDateTime);

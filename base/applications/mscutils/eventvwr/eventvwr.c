@@ -560,7 +560,7 @@ SaveSettings(VOID)
                     Settings.wpPos.rcNormalPosition.bottom,
                     Settings.wpPos.showCmd);
 
-    dwSize = wcslen(buffer) * sizeof(WCHAR);
+    dwSize = (DWORD)(wcslen(buffer) * sizeof(WCHAR));
     RegSetValueExW(hKeyEventVwr, L"Window", 0, REG_SZ, (LPBYTE)buffer, dwSize);
 
 Quit:
@@ -1173,9 +1173,9 @@ FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
 UINT
 FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax)
 {
-    INT cchWritten;
+    UINT cchWritten, cchRemaining;
     LPWSTR pwszEnd;
-    size_t cchRemaining;
+    size_t cchStringRemaining;
 
     /* Write formated bytes count */
     cchWritten = FormatInteger(cbSize, pwszResult, cchResultMax);
@@ -1185,7 +1185,8 @@ FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax)
     /* Copy " bytes" to buffer */
     pwszEnd = pwszResult + cchWritten;
     cchRemaining = cchResultMax - cchWritten;
-    StringCchCopyExW(pwszEnd, cchRemaining, L" ", &pwszEnd, &cchRemaining, 0);
+    StringCchCopyExW(pwszEnd, cchRemaining, L" ", &pwszEnd, &cchStringRemaining, 0);
+    cchRemaining = (UINT)cchStringRemaining;
     cchWritten = LoadStringW(hInst, IDS_BYTES_FORMAT, pwszEnd, cchRemaining);
     cchRemaining -= cchWritten;
 
@@ -1195,9 +1196,9 @@ FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax)
 LPWSTR
 FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UINT cchResultMax)
 {
-    UINT cchWritten;
+    UINT cchWritten, cchRemaining;
     LPWSTR pwszEnd;
-    size_t cchRemaining;
+    size_t cchCopyRemaining;
 
     /* Format bytes in KBs, MBs etc */
     if (StrFormatByteSizeW(lpQwSize->QuadPart, pwszResult, cchResultMax) == NULL)
@@ -1208,10 +1209,11 @@ FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UINT 
         return pwszResult;
 
     /* Concatenate " (" */
-    cchWritten = wcslen(pwszResult);
+    cchWritten = (UINT)wcslen(pwszResult);
     pwszEnd = pwszResult + cchWritten;
     cchRemaining = cchResultMax - cchWritten;
-    StringCchCopyExW(pwszEnd, cchRemaining, L" (", &pwszEnd, &cchRemaining, 0);
+    StringCchCopyExW(pwszEnd, cchRemaining, L" (", &pwszEnd, &cchCopyRemaining, 0);
+    cchRemaining = (UINT)cchCopyRemaining;
 
     /* Write formated bytes count */
     cchWritten = FormatByteSize(lpQwSize->QuadPart, pwszEnd, cchRemaining);
@@ -1231,7 +1233,8 @@ GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
     FILETIME ft;
     SYSTEMTIME st;
     int cchWritten;
-    size_t cchRemaining = cchResult;
+    UINT cchRemaining = cchResult;
+    size_t cchCopyRemaining;
     LPWSTR pwszEnd = pwszResult;
 
     if (!FileTimeToLocalFileTime(lpFileTime, &ft) || !FileTimeToSystemTime(&ft, &st))
@@ -1246,7 +1249,8 @@ GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cchResult)
     cchRemaining -= cchWritten;
     pwszEnd += cchWritten;
 
-    StringCchCopyExW(pwszEnd, cchRemaining, L", ", &pwszEnd, &cchRemaining, 0);
+    StringCchCopyExW(pwszEnd, cchRemaining, L", ", &pwszEnd, &cchCopyRemaining, 0);
+    cchRemaining = (UINT)cchCopyRemaining;
 
     cchWritten = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, pwszEnd, cchRemaining);
     if (cchWritten)
@@ -1294,7 +1298,7 @@ AllocEventLog(IN PCWSTR ComputerName OPTIONAL,
               IN BOOL Permanent)
 {
     PEVENTLOG EventLog;
-    UINT cchName;
+    SIZE_T cchName;
 
     /* Allocate a new event log entry */
     EventLog = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*EventLog));
@@ -1467,7 +1471,7 @@ GetExpandedFilePathName(
     OUT LPWSTR lpFullFileName OPTIONAL,
     IN DWORD nSize)
 {
-    DWORD dwLength;
+    SIZE_T dwLength;
 
     /* Determine the needed size after expansion of any environment strings */
     dwLength = ExpandEnvironmentStringsW(lpFileName, NULL, 0);

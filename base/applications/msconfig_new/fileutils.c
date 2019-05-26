@@ -52,7 +52,7 @@ FileQueryFiles(IN LPCWSTR Path,
     WIN32_FIND_DATAW find_data;
 
     LPWSTR lpszQuery;
-    DWORD  dwNumOfChars;
+    SIZE_T dwNumOfChars;
     LPWSTR lpszExpandedQuery;
     HANDLE search;
 
@@ -93,7 +93,7 @@ FileQueryFiles(IN LPCWSTR Path,
 BOOL BackupIniFile(IN LPCWSTR lpszIniFile)
 {
     BOOL Success = FALSE;
-    DWORD dwNumOfChars = 0;
+    SIZE_T dwNumOfChars = 0;
     LPWSTR SourceFile, DestFile;
     LPWSTR lpName, lpPath;
 
