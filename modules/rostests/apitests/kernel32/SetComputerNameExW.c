@@ -39,24 +39,26 @@ static HKEY OpenComputerNameKey(void)
 
 START_TEST(SetComputerNameExW)
 {
+    static const WCHAR szNewName[] = L"SRVROSTEST";
     LONG Error;
     BOOL ret;
     HKEY hKeyHN, hKeyCN;
     DWORD cbData;
     WCHAR szHostNameOld[MAX_PATH], szHostNameNew[MAX_PATH];
     WCHAR szComputerNameOld[MAX_PATH], szComputerNameNew[MAX_PATH];
-    static const WCHAR szNewName[] = L"SRVROSTEST";
 
     /* Open keys */
     hKeyHN = OpenHostNameKey();
+    ok(hKeyHN, "hKeyHN is NULL\n");
     hKeyCN = OpenComputerNameKey();
+    ok(hKeyCN, "hKeyCN is NULL\n");
     if (!hKeyHN || !hKeyCN)
     {
         if (hKeyHN)
             RegCloseKey(hKeyHN);
         if (hKeyCN)
             RegCloseKey(hKeyCN);
-        skip("Unable to open keys (%p, %p).\n", hKeyHN, hKeyCN);
+        skip("Unable to open keys. Missing Admin rights?\n");
         return;
     }
 
@@ -65,14 +67,14 @@ START_TEST(SetComputerNameExW)
     cbData = sizeof(szHostNameOld);
     Error = RegQueryValueExW(hKeyHN, L"Hostname", NULL, NULL, (LPBYTE)szHostNameOld, &cbData);
     ok_long(Error, ERROR_SUCCESS);
-    ok(szHostNameOld[0], "szHostNameOld is %S", szHostNameOld);
+    ok(szHostNameOld[0], "szHostNameOld is empty\n");
 
     /* Get Old Computer Name */
     szComputerNameOld[0] = UNICODE_NULL;
     cbData = sizeof(szComputerNameOld);
     Error = RegQueryValueExW(hKeyCN, L"ComputerName", NULL, NULL, (LPBYTE)szComputerNameOld, &cbData);
     ok_long(Error, ERROR_SUCCESS);
-    ok(szComputerNameOld[0], "szHostNameOld is %S", szComputerNameOld);
+    ok(szComputerNameOld[0], "szComputerNameOld is empty\n");
 
     /* Change the value */
     ret = SetComputerNameExW(ComputerNamePhysicalDnsHostname, szNewName);
@@ -83,18 +85,18 @@ START_TEST(SetComputerNameExW)
     cbData = sizeof(szHostNameNew);
     Error = RegQueryValueExW(hKeyHN, L"Hostname", NULL, NULL, (LPBYTE)szHostNameNew, &cbData);
     ok_long(Error, ERROR_SUCCESS);
-    ok(szHostNameNew[0], "szHostNameNew was empty.\n");
+    ok(szHostNameNew[0], "szHostNameNew is empty\n");
     ok(lstrcmpW(szHostNameNew, szHostNameOld) == 0,
-       "szHostNameNew '%S' should be szHostNameOld '%S'.\n", szHostNameNew, szHostNameOld);
+       "szHostNameNew '%S' should be szHostNameOld '%S'\n", szHostNameNew, szHostNameOld);
 
     /* Get New Computer Name */
     szComputerNameNew[0] = UNICODE_NULL;
     cbData = sizeof(szComputerNameNew);
     Error = RegQueryValueExW(hKeyCN, L"ComputerName", NULL, NULL, (LPBYTE)szComputerNameNew, &cbData);
     ok_long(Error, ERROR_SUCCESS);
-    ok(szComputerNameNew[0], "szComputerNameNew was empty.\n");
+    ok(szComputerNameNew[0], "szComputerNameNew is empty\n");
     ok(lstrcmpW(szComputerNameNew, szNewName) == 0,
-       "szComputerNameNew '%S' should be szNewName '%S'.\n", szComputerNameNew, szNewName);
+       "szComputerNameNew '%S' should be szNewName '%S'\n", szComputerNameNew, szNewName);
 
     /* Restore the registry values */
     cbData = (lstrlenW(szHostNameOld) + 1) * sizeof(WCHAR);
