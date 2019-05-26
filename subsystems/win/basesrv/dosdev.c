@@ -809,7 +809,7 @@ CSR_API(BaseSrvDefineDosDevice)
         /* There's a target provided - new device, update buffer */
         else
         {
-            RtlInitUnicodeString(&LinkTarget, &CurrentBuffer[-TargetLength - 1]);
+            RtlInitUnicodeString(&LinkTarget, CurrentBuffer - TargetLength - 1);
         }
 
         /*

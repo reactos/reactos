@@ -244,8 +244,8 @@ typedef struct
 {
     FONTOBJ *pfo;
     PBMFD_FACE pface;
-    ULONG xScale;
-    ULONG yScale;
+    LONG xScale;
+    LONG yScale;
     ULONG ulAngle;
 } BMFD_FONT, *PBMFD_FONT;
 

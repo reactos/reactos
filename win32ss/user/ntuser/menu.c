@@ -1752,7 +1752,7 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
                 drawItem.itemData = lpitem->dwItemData;
                 /* some applications make this assumption on the DC's origin */
                 GreSetViewportOrgEx( hdc, lpitem->xItem, lpitem->yItem, &origorg);
-                RECTL_vOffsetRect( &drawItem.rcItem, - lpitem->xItem, - lpitem->yItem);
+                RECTL_vOffsetRect(&drawItem.rcItem, -(LONG)lpitem->xItem, -(LONG)lpitem->yItem);
                 co_IntSendMessage( UserHMGetHandle(WndOwner), WM_DRAWITEM, 0, (LPARAM)&drawItem);
                 GreSetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
                 return;
