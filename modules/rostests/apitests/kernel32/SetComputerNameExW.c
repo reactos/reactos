@@ -49,9 +49,9 @@ START_TEST(SetComputerNameExW)
 
     /* Open keys */
     hKeyHN = OpenHostNameKey();
-    ok(hKeyHN, "hKeyHN is NULL\n");
+    ok(hKeyHN != NULL, "hKeyHN is NULL\n");
     hKeyCN = OpenComputerNameKey();
-    ok(hKeyCN, "hKeyCN is NULL\n");
+    ok(hKeyCN != NULL, "hKeyCN is NULL\n");
     if (!hKeyHN || !hKeyCN)
     {
         if (hKeyHN)
