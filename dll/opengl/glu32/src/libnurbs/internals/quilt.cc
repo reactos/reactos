@@ -61,6 +61,7 @@ void
 Quilt::deleteMe( Pool& p )
 {
     for( Quiltspec *q=qspec; q != eqspec; q++ ) {
+#ifndef __REACTOS__
 #if 1
 	if( q->breakpoints) delete[] q->breakpoints;  q->breakpoints = 0;
 #else
@@ -70,6 +71,12 @@ Quilt::deleteMe( Pool& p )
 printf("in here\n");
         }
 #endif
+#else // __REACTOS__
+        if( q->breakpoints ) {
+            delete[] q->breakpoints;
+            q->breakpoints = NULL;
+        }
+#endif // __REACTOS__
     }
     if( cpts ) delete[] cpts;  
     cpts = 0;
