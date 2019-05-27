@@ -90,6 +90,8 @@ START_TEST(GetGlyphIndices)
     HFONT hFont;
     HDC hdc;
     int i;
+    DWORD ret;
+    static const WCHAR s_invalids[] = {0xFEFE, 0xFEFF, 0xFFFE, 0};
 
     if (!InstallTempFont(TempTTFFile))
     {
@@ -116,21 +118,32 @@ START_TEST(GetGlyphIndices)
     ok_lasterrornotchanged();
 
     /* Test invalid params */
+    ok_int(GetGlyphIndicesW(hdc, NULL, 1, NULL, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, NULL, 32, NULL, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
     ok_int(GetGlyphIndicesW(hdc, NULL, 0, Indices, 0), GDI_ERROR);
     ok_lasterrornotchanged();
     ok_int(GetGlyphIndicesW(hdc, NULL, 1, Indices, 0), GDI_ERROR);
     ok_lasterrornotchanged();
-    ok_int(GetGlyphIndicesW(hdc, Single, 0, NULL, 0), GDI_ERROR);
+    ok_int(GetGlyphIndicesW(hdc, NULL, 32, Indices, 0), GDI_ERROR);
     ok_lasterrornotchanged();
-    ok_int(GetGlyphIndicesW(hdc, Single, 0, Indices, 0), GDI_ERROR);
+    ok_int(GetGlyphIndicesW(hdc, Single, 0, NULL, 0), GDI_ERROR);
     ok_lasterrornotchanged();
     ok_int(GetGlyphIndicesW(hdc, Single, 1, NULL, 0), GDI_ERROR);
     ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, Glyphs, 32, NULL, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, Single, 0, Indices, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, Single, 1, Indices, 0xFFFFFFFF), 1);
+    ok_lasterrornotchanged();
 
     /* Test an exceptional case that does not seem to return an error */
-    // FIXME: What does the returned value exactly means?
-    ok(GetGlyphIndicesW(hdc, NULL, 0, NULL, 0) != 0,
-       "GetGlyphIndicesW(hdc, NULL, 0, NULL, 0) return expected not zero, but got zero!\n");
+    /* In this case, it returns the number of glyphs */
+    ret = GetGlyphIndicesW(hdc, NULL, 0, NULL, 0);
+    ok(ret == 988,
+       "GetGlyphIndicesW(hdc, NULL, 0, NULL, 0) return expected 988, but got %ld\n", ret);
     ok_lasterrornotchanged();
 
     /* Test a single valid char */
@@ -151,6 +164,18 @@ START_TEST(GetGlyphIndices)
     ok_int(Indices[1], 20);
     ok_int(Indices[2], 21);
     ok_int(Indices[3], 22);
+
+    ok_int(GetGlyphIndicesW(hdc, s_invalids, 3, Indices, 0), 3);
+    ok_lasterrornotchanged();
+    ok_int(Indices[0], 0);
+    ok_int(Indices[1], 0);
+    ok_int(Indices[2], 0);
+
+    ok_int(GetGlyphIndicesW(hdc, s_invalids, 3, Indices, GGI_MARK_NONEXISTING_GLYPHS), 3);
+    ok_lasterrornotchanged();
+    ok_int(Indices[0], 0xFFFF);
+    ok_int(Indices[1], 0xFFFF);
+    ok_int(Indices[2], 0xFFFF);
 
     /* Setup an array of all possible BMP glyphs */
     for (i = 0; i < MAX_BMP_GLYPHS; i++)
