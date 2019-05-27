@@ -592,6 +592,8 @@ WINAPI
 SetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                    LPCWSTR lpBuffer)
 {
+    BOOL ret1, ret2;
+
     if (!IsValidComputerName(NameType, lpBuffer))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -607,10 +609,16 @@ SetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                              lpBuffer);
 
         case ComputerNamePhysicalDnsHostname:
-            return SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
+            ret1 = SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
                                              L"\\Services\\Tcpip\\Parameters",
-                                             L"Hostname",
+                                             L"NV Hostname",
                                              lpBuffer);
+
+            ret2 = SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
+                                             L"\\Control\\ComputerName\\ComputerName",
+                                             L"ComputerName",
+                                             lpBuffer);
+            return (ret1 && ret2);
 
         case ComputerNamePhysicalNetBIOS:
             return SetComputerNameToRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
