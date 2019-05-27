@@ -253,7 +253,9 @@ set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-aut
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Release"))
+if((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND
+   (NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND
+   (NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0))
     # FIXME: Set this once Clang toolchain works with it
     set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
 endif()
