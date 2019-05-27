@@ -1332,7 +1332,7 @@ SkipCheck:
         ImageBase = (ULONG_PTR)NtHeaders->OptionalHeader.ImageBase;
         ImageEnd = ImageBase + ViewSize;
 
-        DPRINT1("LDR: LdrpMapDll Relocating Image Name %ws (%p-%p -> %p)\n", DllName, (PVOID)ImageBase, (PVOID)ImageEnd, ViewBase);
+        DPRINT("LDR: LdrpMapDll Relocating Image Name %ws (%p-%p -> %p)\n", DllName, (PVOID)ImageBase, (PVOID)ImageEnd, ViewBase);
 
         /* Scan all the modules */
         ListHead = &Peb->Ldr->InLoadOrderModuleList;
@@ -1371,7 +1371,7 @@ SkipCheck:
             RtlInitUnicodeString(&OverlapDll, L"Dynamically Allocated Memory");
         }
 
-        DPRINT1("Overlapping DLL: %wZ\n", &OverlapDll);
+        DPRINT("Overlapping DLL: %wZ\n", &OverlapDll);
 
         /* Are we dealing with a DLL? */
         if (LdrEntry->Flags & LDRP_IMAGE_DLL)
