@@ -6899,10 +6899,13 @@ NtGdiGetGlyphIndicesW(
         return GDI_ERROR;
     }
 
-    if (!UnSafepwc && !UnSafepgi)
-        return cwc;
+    if (!UnSafepwc && !UnSafepgi && cwc > 0)
+    {
+        DPRINT1("!UnSafepwc && !UnSafepgi && cwc > 0\n");
+        return GDI_ERROR;
+    }
 
-    if (!UnSafepwc || !UnSafepgi)
+    if (!UnSafepwc != !UnSafepgi)
     {
         DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
         return GDI_ERROR;
@@ -6929,8 +6932,16 @@ NtGdiGetGlyphIndicesW(
 
     if (cwc == 0)
     {
-        Status = STATUS_UNSUCCESSFUL;
-        goto ErrorRet;
+        if (!UnSafepwc && !UnSafepgi)
+        {
+            Face = FontGDI->SharedFace->Face;
+            return Face->num_glyphs;
+        }
+        else
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            goto ErrorRet;
+        }
     }
 
     Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
