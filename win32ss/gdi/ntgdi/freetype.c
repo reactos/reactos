@@ -685,10 +685,12 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
-    double radian = (lfEscapement * M_PI) / 180 / 10;
-
-    pmat->xx = (FT_Fixed)(cos(radian) * (1 << 16));
-    pmat->xy = (FT_Fixed)(-sin(radian) * (1 << 16));
+    FT_Vector vecAngle;
+    /* Convert the angle in tenths of degrees into degrees as a 16.16 fixed-point value */
+    FT_Angle angle = INT_TO_FIXED(lfEscapement) / 10;
+    FT_Vector_Unit(&vecAngle, angle);
+    pmat->xx = vecAngle.x;
+    pmat->xy = -vecAngle.y;
     pmat->yx = -pmat->xy;
     pmat->yy = pmat->xx;
 }
@@ -2987,18 +2989,6 @@ static void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
 }
 
 /*
-   This function builds an FT_Fixed from a float. It puts the integer part
-   in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
-   It fails if the integer part of the float number is greater than SHORT_MAX.
-*/
-static __inline FT_Fixed FT_FixedFromFloat(float f)
-{
-    short value = f;
-    unsigned short fract = (f - value) * 0xFFFF;
-    return (FT_Fixed)((long)value << 16 | (unsigned long)fract);
-}
-
-/*
    This function builds an FT_Fixed from a FIXED. It simply put f.value
    in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
 */
@@ -3465,16 +3455,16 @@ ftGdiGetGlyphOutline(
     FT_Bitmap ft_bitmap;
     FT_Error error;
     INT left, right, top = 0, bottom = 0;
-    FT_Angle angle = 0;
     FT_Int load_flags = FT_LOAD_DEFAULT | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
-    FLOAT eM11, widthRatio = 1.0;
+    FLOATOBJ eM11, widthRatio, eTemp;
     FT_Matrix transMat = identityMat;
     BOOL needsTransform = FALSE;
     INT orientation;
     LONG aveWidth;
     INT adv, lsb, bbx; /* These three hold to widths of the unrotated chars */
     OUTLINETEXTMETRICW *potm;
-    XFORM xForm;
+    XFORMOBJ xo;
+    XFORML xform;
     LOGFONTW *plf;
 
     DPRINT("%u, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
@@ -3482,8 +3472,9 @@ ftGdiGetGlyphOutline(
 
     pdcattr = dc->pdcattr;
 
-    MatrixS2XForm(&xForm, &dc->pdcattr->mxWorldToDevice);
-    eM11 = xForm.eM11;
+    XFORMOBJ_vInit(&xo, &dc->pdcattr->mxWorldToDevice);
+    XFORMOBJ_iGetXform(&xo, &xform);
+    FLOATOBJ_SetFloat(&eM11, xform.eM11);
 
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
@@ -3545,17 +3536,33 @@ ftGdiGetGlyphOutline(
     }
     IntUnLockFreeType();
 
+    FLOATOBJ_Set1(&widthRatio);
     if (aveWidth && potm)
     {
-        widthRatio = (FLOAT)aveWidth * eM11 /
-                     (FLOAT) potm->otmTextMetrics.tmAveCharWidth;
+        // widthRatio = aveWidth * eM11 / potm->otmTextMetrics.tmAveCharWidth
+        FLOATOBJ_SetLong(&widthRatio, aveWidth);
+        FLOATOBJ_Mul(&widthRatio, &eM11);
+        FLOATOBJ_DivLong(&widthRatio, potm->otmTextMetrics.tmAveCharWidth);
     }
 
-    left = (INT)(ft_face->glyph->metrics.horiBearingX * widthRatio) & -64;
-    right = (INT)((ft_face->glyph->metrics.horiBearingX +
-                   ft_face->glyph->metrics.width) * widthRatio + 63) & -64;
+    //left = (INT)(ft_face->glyph->metrics.horiBearingX * widthRatio) & -64;
+    FLOATOBJ_SetLong(&eTemp, ft_face->glyph->metrics.horiBearingX);
+    FLOATOBJ_Mul(&eTemp, &widthRatio);
+    left = FLOATOBJ_GetLong(&eTemp) & -64;
 
-    adv = (INT)((ft_face->glyph->metrics.horiAdvance * widthRatio) + 63) >> 6;
+    //right = (INT)((ft_face->glyph->metrics.horiBearingX +
+    //               ft_face->glyph->metrics.width) * widthRatio + 63) & -64;
+    FLOATOBJ_SetLong(&eTemp, ft_face->glyph->metrics.horiBearingX * ft_face->glyph->metrics.width);
+    FLOATOBJ_Mul(&eTemp, &widthRatio);
+    FLOATOBJ_AddLong(&eTemp, 63);
+    right = FLOATOBJ_GetLong(&eTemp) & -64;
+
+    //adv = (INT)((ft_face->glyph->metrics.horiAdvance * widthRatio) + 63) >> 6;
+    FLOATOBJ_SetLong(&eTemp, ft_face->glyph->metrics.horiAdvance);
+    FLOATOBJ_Mul(&eTemp, &widthRatio);
+    FLOATOBJ_AddLong(&eTemp, 63);
+    adv = FLOATOBJ_GetLong(&eTemp) >> 6;
+
     lsb = left >> 6;
     bbx = (right - left) >> 6;
 
@@ -3564,14 +3571,17 @@ ftGdiGetGlyphOutline(
     IntLockFreeType();
 
     /* Width scaling transform */
-    if (widthRatio != 1.0)
+    if (!FLOATOBJ_Equal1(&widthRatio))
     {
         FT_Matrix scaleMat;
-        scaleMat.xx = FT_FixedFromFloat(widthRatio);
+
+        eTemp = widthRatio;
+        FLOATOBJ_MulLong(&eTemp, 1 << 16);
+
+        scaleMat.xx = FLOATOBJ_GetLong(&eTemp);
         scaleMat.xy = 0;
         scaleMat.yx = 0;
-        scaleMat.yy = FT_FixedFromFloat(1.0);
-
+        scaleMat.yy = INT_TO_FIXED(1);
         FT_Matrix_Multiply(&scaleMat, &transMat);
         needsTransform = TRUE;
     }
@@ -3595,14 +3605,8 @@ ftGdiGetGlyphOutline(
     if (orientation)
     {
         FT_Matrix rotationMat;
-        FT_Vector vecAngle;
         DPRINT("Rotation Trans!\n");
-        angle = FT_FixedFromFloat((float)orientation / 10.0);
-        FT_Vector_Unit(&vecAngle, angle);
-        rotationMat.xx = vecAngle.x;
-        rotationMat.xy = -vecAngle.y;
-        rotationMat.yx = -rotationMat.xy;
-        rotationMat.yy = rotationMat.xx;
+        IntEscapeMatrix(&rotationMat, orientation);
         FT_Matrix_Multiply(&rotationMat, &transMat);
         needsTransform = TRUE;
     }
