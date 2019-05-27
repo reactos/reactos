@@ -45,9 +45,6 @@ extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
-/* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
-#define gmxWorldToDeviceDefault gmxWorldToPageDefault
-
 FT_Library  g_FreeTypeLibrary;
 
 /* special font names */

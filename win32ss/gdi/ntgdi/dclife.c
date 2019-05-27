@@ -19,18 +19,18 @@ PBRUSH pbrDefaultBrush = NULL;
 
 const MATRIX gmxWorldToDeviceDefault =
 {
-    FLOATOBJ_16, FLOATOBJ_0,
-    FLOATOBJ_0, FLOATOBJ_16,
+    FLOATOBJ_1, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_1,
     FLOATOBJ_0, FLOATOBJ_0,
-    0, 0, 0x4b
+    0, 0, 0x63
 };
 
 const MATRIX gmxDeviceToWorldDefault =
 {
-    FLOATOBJ_1_16, FLOATOBJ_0,
-    FLOATOBJ_0, FLOATOBJ_1_16,
+    FLOATOBJ_1, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_1,
     FLOATOBJ_0, FLOATOBJ_0,
-    0, 0, 0x53
+    0, 0, 0x63
 };
 
 const MATRIX gmxWorldToPageDefault =
@@ -40,10 +40,6 @@ const MATRIX gmxWorldToPageDefault =
     FLOATOBJ_0, FLOATOBJ_0,
     0, 0, 0x63
 };
-
-// HACK!! Fix XFORMOBJ then use 1:16 / 16:1
-#define gmxWorldToDeviceDefault gmxWorldToPageDefault
-#define gmxDeviceToWorldDefault gmxWorldToPageDefault
 
 /** Internal functions ********************************************************/
 
@@ -203,8 +199,8 @@ DC_vInitDc(
 	pdc->dclevel.mxWorldToDevice = gmxWorldToDeviceDefault;
 	pdc->dclevel.mxDeviceToWorld = gmxDeviceToWorldDefault;
 	pdc->dclevel.mxWorldToPage = gmxWorldToPageDefault;
-	pdc->dclevel.efM11PtoD = gef16;
-	pdc->dclevel.efM22PtoD = gef16;
+	pdc->dclevel.efM11PtoD = gef1;
+	pdc->dclevel.efM22PtoD = gef1;
 	pdc->dclevel.efDxPtoD = gef0;
 	pdc->dclevel.efDyPtoD = gef0;
 	pdc->dclevel.efM11_TWIPS = gef0;
