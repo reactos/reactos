@@ -12,6 +12,8 @@
 
 #define SECONDS_PER_DAY (60 * 60 * 24)
 #define SECONDS_PER_HOUR (60 * 60)
+#define HOURS_PER_DAY 24
+#define DAYS_PER_WEEK 7
 
 typedef struct _COUNTY_TABLE
 {
@@ -48,6 +50,8 @@ static COUNTRY_TABLE CountryTable[] =
   {785, 5103},   // Arabic
   {972, 5104} }; // Hebrew
 
+//static PWSTR DaysArray[] = {L"So", L"Mo", L"Di", L"Mi", L"Do", L"Fr", L"Sa"};
+static PWSTR DaysArray[] = {L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat"};
 
 static
 int
@@ -226,14 +230,27 @@ GetCountryFromCountryCode(
 
 static
 BOOL
-BitValue(
-    PBYTE pLogonHours,
+GetBitValue(
+    PBYTE pBitmap,
     DWORD dwBitNumber)
 {
     DWORD dwIndex = dwBitNumber / 8;
     BYTE Mask = 1 << (dwBitNumber & 7);
 
-    return ((pLogonHours[dwIndex] & Mask) != 0);
+    return ((pBitmap[dwIndex] & Mask) != 0);
+}
+
+
+static
+VOID
+SetBitValue(
+    PBYTE pBitmap,
+    DWORD dwBitNumber)
+{
+    DWORD dwIndex = dwBitNumber / 8;
+    BYTE Mask = 1 << (dwBitNumber & 7);
+
+    pBitmap[dwIndex] |= Mask;
 }
 
 
@@ -262,7 +279,7 @@ PrintLogonHours(
 
     for (dwBitNumber = 0; dwBitNumber < dwUnitsPerWeek; dwBitNumber++)
     {
-        bBitValue = BitValue(pLogonHours, dwBitNumber);
+        bBitValue = GetBitValue(pLogonHours, dwBitNumber);
         if (bBitValue)
         {
             dwStartTime = dwSecondsPerUnit * dwBitNumber;
@@ -271,7 +288,7 @@ PrintLogonHours(
             {
                 dwBitNumber++;
                 if (dwBitNumber < dwUnitsPerWeek)
-                    bBitValue = BitValue(pLogonHours, dwBitNumber);
+                    bBitValue = GetBitValue(pLogonHours, dwBitNumber);
             }
 
             dwEndTime = dwSecondsPerUnit * dwBitNumber;
@@ -291,6 +308,8 @@ PrintLogonHours(
 
                 PrintMessageString(4307 + dwStartDay);
                 ConPuts(StdOut, L" ");
+
+                // FIXME: Check if this is a converion from GMT to local timezone
                 PrintLocalTime((dwStartTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
 
                 ConPrintf(StdOut, L" - ");
@@ -300,6 +319,7 @@ PrintLogonHours(
                     ConPuts(StdOut, L" ");
                 }
 
+                // FIXME: Check if this is a converion from GMT to local timezone
                 PrintLocalTime((dwEndTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
                 ConPuts(StdOut, L"\n");
             }
@@ -810,19 +830,99 @@ ParseDate(
 
 
 static
+BOOL
+ParseHour(
+    PWSTR pszString,
+    PDWORD pdwHour)
+{
+    PWCHAR pChar;
+    DWORD dwHour = 0;
+
+    if (!iswdigit(pszString[0]))
+        return FALSE;
+
+    pChar = pszString;
+    while (iswdigit(*pChar))
+    {
+        dwHour = dwHour * 10 + *pChar - L'0';
+        pChar++;
+    }
+
+    if (dwHour > 24)
+        return FALSE;
+
+    if (dwHour == 24)
+        dwHour = 0;
+
+    if ((*pChar != UNICODE_NULL) &&
+        (dwHour >= 1) &&
+        (dwHour <= 12))
+    {
+        if ((_wcsicmp(pChar, L"am") == 0) ||
+            (_wcsicmp(pChar, L"a.m.") == 0))
+        {
+            if (dwHour == 12)
+                dwHour = 0;
+        }
+        else if ((_wcsicmp(pChar, L"pm") == 0) ||
+                 (_wcsicmp(pChar, L"p.m.") == 0))
+        {
+            if (dwHour != 12)
+                dwHour += 12;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
+    *pdwHour = dwHour;
+
+    return TRUE;
+}
+
+
+static
+BOOL
+ParseDay(
+    PWSTR pszString,
+    PDWORD pdwDay)
+{
+    DWORD i;
+
+    for (i = 0; i < ARRAYSIZE(DaysArray); i++)
+    {
+        if (_wcsicmp(pszString, DaysArray[i]) == 0)
+        {
+            *pdwDay = i;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
+static
 DWORD
 ParseLogonHours(
     PWSTR pszParams,
-    PBYTE *ppLogonHours,
+    PBYTE *ppLogonBitmap,
     PDWORD pdwUnitsPerWeek)
 {
-    PBYTE pLogonHours = NULL;
+    PBYTE pLogonBitmap = NULL;
     DWORD dwError = ERROR_SUCCESS;
+    WCHAR szBuffer[32];
+    PWSTR ptr1, ptr2;
+    WCHAR prevSep, nextSep;
+    DWORD dwStartHour, dwEndHour, dwStartDay, dwEndDay, i, j;
+    BYTE DayBitmap;
+    BYTE HourBitmap[6];
 
-    pLogonHours = HeapAlloc(GetProcessHeap(),
-                            HEAP_ZERO_MEMORY,
-                            UNITS_PER_WEEK / 8);
-    if (pLogonHours == NULL)
+    pLogonBitmap = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             UNITS_PER_WEEK / 8);
+    if (pLogonBitmap == NULL)
         return ERROR_OUTOFMEMORY;
 
     if (*pszParams == UNICODE_NULL)
@@ -832,24 +932,167 @@ ParseLogonHours(
 
     if (wcsicmp(pszParams, L"all") == 0)
     {
-        FillMemory(pLogonHours, UNITS_PER_WEEK / 8, 0xFF);
+        FillMemory(pLogonBitmap, UNITS_PER_WEEK / 8, 0xFF);
         goto done;
     }
 
-    /* FIXME */
-    /* Mockup error because we do not parse the line yet */
-    dwError = 3768;
+    ZeroMemory(&DayBitmap, sizeof(DayBitmap));
+    ZeroMemory(HourBitmap, sizeof(HourBitmap));
+
+    ZeroMemory(szBuffer, sizeof(szBuffer));
+    ptr1 = pszParams;
+    ptr2 = szBuffer;
+    prevSep = UNICODE_NULL;
+    nextSep = UNICODE_NULL;
+    for (;;)
+    {
+        if (*ptr1 != L'-' && *ptr1 != L',' && *ptr1 != L';' && *ptr1 != UNICODE_NULL)
+        {
+            *ptr2 = *ptr1;
+            ptr2++;
+        }
+        else
+        {
+            prevSep = nextSep;
+            nextSep = *ptr1;
+
+//            printf("Token: '%S'\n", szBuffer);
+            if (*ptr1 != UNICODE_NULL)
+                printf("Separator: '%C'\n", *ptr1);
+
+            if (prevSep != L'-')
+            {
+                // Set first value
+                if (iswdigit(szBuffer[0]))
+                {
+                    // parse hour
+                    if (!ParseHour(szBuffer, &dwStartHour))
+                    {
+                        dwError = 3769;
+                        break;
+                    }
+
+                    // FIXME: Check if this is a converion from local timezone to GMT
+                    if (dwStartHour > 0)
+                        dwStartHour--;
+                    else
+                        dwStartHour = UNITS_PER_WEEK - 1;
+
+                    SetBitValue(HourBitmap, dwStartHour);
+                }
+                else
+                {
+                    // parse day
+                    if (!ParseDay(szBuffer, &dwStartDay))
+                    {
+                        dwError = 3768;
+                        break;
+                    }
+
+                    SetBitValue(&DayBitmap, dwStartDay);
+                }
+            }
+            else
+            {
+                // Set second value
+                if (iswdigit(szBuffer[0]))
+                {
+                    // parse hour
+                    if (!ParseHour(szBuffer, &dwEndHour))
+                    {
+                        dwError = 3769;
+                        break;
+                    }
+
+                    if (dwEndHour < dwStartHour)
+                        dwEndHour += HOURS_PER_DAY;
+                    else if (dwEndHour == dwStartHour)
+                        dwEndHour = dwStartHour + HOURS_PER_DAY;
+
+                    // FIXME: Check if this is a converion from local timezone to GMT
+                    if (dwEndHour > 0)
+                        dwEndHour--;
+                    else
+                        dwEndHour = UNITS_PER_WEEK - 1;
+
+                    for (i = dwStartHour; i < dwEndHour; i++)
+                        SetBitValue(HourBitmap, i);
+                }
+                else
+                {
+                    // parse day
+                    if (!ParseDay(szBuffer, &dwEndDay))
+                    {
+                        dwError = 3768;
+                        break;
+                    }
+
+                    if (dwEndDay <= dwStartDay)
+                        dwEndDay += DAYS_PER_WEEK;
+
+                    for (i = dwStartDay; i <= dwEndDay; i++)
+                        SetBitValue(&DayBitmap, i % DAYS_PER_WEEK);
+                }
+            }
+
+            if (*ptr1 == L';' || *ptr1 == UNICODE_NULL)
+            {
+                // Process the data
+//                printf("DayBitmap: %02x  HourBitmap: %02x%02x%02x%02x%02x%02x\n",
+//                       DayBitmap, HourBitmap[5], HourBitmap[4], HourBitmap[3], HourBitmap[2], HourBitmap[1], HourBitmap[0]);
+
+                for (i = 0; i < DAYS_PER_WEEK; i++)
+                {
+                    if (GetBitValue(&DayBitmap, i))
+                    {
+                        for (j = 0; j < 48; j++)
+                        {
+                            if (GetBitValue(HourBitmap, j))
+                                SetBitValue(pLogonBitmap, ((i * HOURS_PER_DAY) + j) % UNITS_PER_WEEK);
+                        }
+                    }
+                }
+
+                // Reset the Bitmaps
+                ZeroMemory(&DayBitmap, sizeof(DayBitmap));
+                ZeroMemory(HourBitmap, sizeof(HourBitmap));
+            }
+
+            if (*ptr1 == UNICODE_NULL)
+            {
+//                printf("Done\n");
+                break;
+            }
+
+            ZeroMemory(szBuffer, sizeof(szBuffer));
+            ptr2 = szBuffer;
+        }
+
+        ptr1++;
+    }
+
+#if 0
+    printf("LogonBitmap:\n");
+    for (i = 0; i < DAYS_PER_WEEK; i++)
+    {
+        j = i * 3;
+        printf("%lu: %02x%02x%02x\n", i, pLogonHours[j + 2], pLogonHours[j + 1], pLogonHours[j + 0]);
+    }
+    printf("\n");
+#endif
 
 done:
     if (dwError == ERROR_SUCCESS)
     {
-        *ppLogonHours = pLogonHours;
+        *ppLogonBitmap = pLogonBitmap;
         *pdwUnitsPerWeek = UNITS_PER_WEEK;
     }
     else
     {
-        if (pLogonHours != NULL)
-            HeapFree(GetProcessHeap(), 0, pLogonHours);
+        if (pLogonBitmap != NULL)
+            HeapFree(GetProcessHeap(), 0, pLogonBitmap);
+        *ppLogonBitmap = NULL;
+        *pdwUnitsPerWeek = 0;
     }
 
     return dwError;
