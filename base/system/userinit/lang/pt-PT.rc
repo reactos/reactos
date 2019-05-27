@@ -10,10 +10,10 @@ BEGIN
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     RTEXT "&Estilo de teclado:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Seleccione a linguagem e o estilo de teclado. Click em Avan√ßar para continuar.", IDC_STATIC, 7, 152, 300, 8
+    LTEXT "Seleccione a linguagem e o estilo de teclado. Click em AvanÁar para continuar.", IDC_STATIC, 7, 152, 300, 8
 
     CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
-    DEFPUSHBUTTON "&Avan√ßar", IDOK, 205, 172, 50, 14
+    DEFPUSHBUTTON "&AvanÁar", IDOK, 205, 172, 50, 14
     PUSHBUTTON "&Cancelar", IDCANCEL, 260, 172, 50, 14
 END
 
@@ -37,7 +37,7 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit falhou ao iniciar o shell!"
     IDS_INSTALLER_FAIL "Userinit falhou ao iniciar o installer!"
-    IDS_CANCEL_CONFIRM "Tem a certeze que deseja fechar o ReactOS LiveCD?\nSe a sua escolha √© sim, o seu computador ir√° reiniciar."
+     IDS_CANCEL_CONFIRM "Tem a certeze que deseja fechar o ReactOS LiveCD?\nSe a sua escolha È sim, o seu computador ir· reiniciar."
 END
 
 STRINGTABLE
