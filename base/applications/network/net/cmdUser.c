@@ -262,8 +262,12 @@ PrintLogonHours(
     INT nPaddedLength)
 {
     DWORD dwUnitsPerDay, dwBitNumber, dwSecondsPerUnit;
-    DWORD dwStartTime, dwEndTime, dwStartDay, dwEndDay;
+    DWORD dwStartTime, dwEndTime, dwStartDay, dwEndDay, dwBias;
     BOOL bBitValue, bFirst = TRUE;
+    TIME_ZONE_INFORMATION TimeZoneInformation;
+
+    GetTimeZoneInformation(&TimeZoneInformation);
+    dwBias = (TimeZoneInformation.Bias / 60) * SECONDS_PER_HOUR;
 
     if ((dwUnitsPerWeek == 0) ||
         ((dwUnitsPerWeek %7) != 0))
@@ -309,8 +313,8 @@ PrintLogonHours(
                 PrintMessageString(4307 + dwStartDay);
                 ConPuts(StdOut, L" ");
 
-                // FIXME: Check if this is a converion from GMT to local timezone
-                PrintLocalTime((dwStartTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
+                /* Convert from GMT to local timezone */
+                PrintLocalTime((dwStartTime % SECONDS_PER_DAY) - dwBias);
 
                 ConPrintf(StdOut, L" - ");
                 if (dwStartDay != dwEndDay)
@@ -319,8 +323,8 @@ PrintLogonHours(
                     ConPuts(StdOut, L" ");
                 }
 
-                // FIXME: Check if this is a converion from GMT to local timezone
-                PrintLocalTime((dwEndTime % SECONDS_PER_DAY) + SECONDS_PER_HOUR);
+                /* Convert from GMT to local timezone */
+                PrintLocalTime((dwEndTime % SECONDS_PER_DAY) - dwBias);
                 ConPuts(StdOut, L"\n");
             }
 
@@ -833,10 +837,10 @@ static
 BOOL
 ParseHour(
     PWSTR pszString,
-    PDWORD pdwHour)
+    PLONG plHour)
 {
     PWCHAR pChar;
-    DWORD dwHour = 0;
+    LONG lHour = 0;
 
     if (!iswdigit(pszString[0]))
         return FALSE;
@@ -844,31 +848,31 @@ ParseHour(
     pChar = pszString;
     while (iswdigit(*pChar))
     {
-        dwHour = dwHour * 10 + *pChar - L'0';
+        lHour = lHour * 10 + *pChar - L'0';
         pChar++;
     }
 
-    if (dwHour > 24)
+    if (lHour > 24)
         return FALSE;
 
-    if (dwHour == 24)
-        dwHour = 0;
+    if (lHour == 24)
+        lHour = 0;
 
     if ((*pChar != UNICODE_NULL) &&
-        (dwHour >= 1) &&
-        (dwHour <= 12))
+        (lHour >= 1) &&
+        (lHour <= 12))
     {
         if ((_wcsicmp(pChar, L"am") == 0) ||
             (_wcsicmp(pChar, L"a.m.") == 0))
         {
-            if (dwHour == 12)
-                dwHour = 0;
+            if (lHour == 12)
+                lHour = 0;
         }
         else if ((_wcsicmp(pChar, L"pm") == 0) ||
                  (_wcsicmp(pChar, L"p.m.") == 0))
         {
-            if (dwHour != 12)
-                dwHour += 12;
+            if (lHour != 12)
+                lHour += 12;
         }
         else
         {
@@ -876,7 +880,7 @@ ParseHour(
         }
     }
 
-    *pdwHour = dwHour;
+    *plHour = lHour;
 
     return TRUE;
 }
@@ -910,14 +914,19 @@ ParseLogonHours(
     PBYTE *ppLogonBitmap,
     PDWORD pdwUnitsPerWeek)
 {
+    TIME_ZONE_INFORMATION TimeZoneInformation;
     PBYTE pLogonBitmap = NULL;
     DWORD dwError = ERROR_SUCCESS;
     WCHAR szBuffer[32];
     PWSTR ptr1, ptr2;
     WCHAR prevSep, nextSep;
-    DWORD dwStartHour, dwEndHour, dwStartDay, dwEndDay, i, j;
+    DWORD dwStartDay, dwEndDay, i, j;
+    LONG lStartHour, lEndHour, lBias;
     BYTE DayBitmap;
     BYTE HourBitmap[6];
+
+    GetTimeZoneInformation(&TimeZoneInformation);
+    lBias = TimeZoneInformation.Bias / 60;
 
     pLogonBitmap = HeapAlloc(GetProcessHeap(),
                              HEAP_ZERO_MEMORY,
@@ -956,33 +965,30 @@ ParseLogonHours(
             prevSep = nextSep;
             nextSep = *ptr1;
 
-//            printf("Token: '%S'\n", szBuffer);
-            if (*ptr1 != UNICODE_NULL)
-                printf("Separator: '%C'\n", *ptr1);
-
             if (prevSep != L'-')
             {
-                // Set first value
+                /* Set first value */
                 if (iswdigit(szBuffer[0]))
                 {
-                    // parse hour
-                    if (!ParseHour(szBuffer, &dwStartHour))
+                    /* Parse hour */
+                    if (!ParseHour(szBuffer, &lStartHour))
                     {
                         dwError = 3769;
                         break;
                     }
 
-                    // FIXME: Check if this is a converion from local timezone to GMT
-                    if (dwStartHour > 0)
-                        dwStartHour--;
-                    else
-                        dwStartHour = UNITS_PER_WEEK - 1;
+                    /* Convert from local timezone to GMT */
+                    lStartHour += lBias;
+                    if (lStartHour < 0)
+                        lStartHour += UNITS_PER_WEEK;
+                    else if (lStartHour > UNITS_PER_WEEK)
+                        lStartHour -= UNITS_PER_WEEK;
 
-                    SetBitValue(HourBitmap, dwStartHour);
+                    SetBitValue(HourBitmap, (DWORD)lStartHour);
                 }
                 else
                 {
-                    // parse day
+                    /* Parse day */
                     if (!ParseDay(szBuffer, &dwStartDay))
                     {
                         dwError = 3768;
@@ -994,33 +1000,34 @@ ParseLogonHours(
             }
             else
             {
-                // Set second value
+                /* Set second value */
                 if (iswdigit(szBuffer[0]))
                 {
-                    // parse hour
-                    if (!ParseHour(szBuffer, &dwEndHour))
+                    /* Parse hour */
+                    if (!ParseHour(szBuffer, &lEndHour))
                     {
                         dwError = 3769;
                         break;
                     }
 
-                    if (dwEndHour < dwStartHour)
-                        dwEndHour += HOURS_PER_DAY;
-                    else if (dwEndHour == dwStartHour)
-                        dwEndHour = dwStartHour + HOURS_PER_DAY;
+                    if (lEndHour < lStartHour)
+                        lEndHour += HOURS_PER_DAY;
+                    else if (lEndHour == lStartHour)
+                        lEndHour = lStartHour + HOURS_PER_DAY;
 
-                    // FIXME: Check if this is a converion from local timezone to GMT
-                    if (dwEndHour > 0)
-                        dwEndHour--;
-                    else
-                        dwEndHour = UNITS_PER_WEEK - 1;
+                    /* Convert from local timezone to GMT */
+                    lEndHour += lBias;
+                    if (lEndHour < 0)
+                        lEndHour += UNITS_PER_WEEK;
+                    else if (lEndHour > UNITS_PER_WEEK)
+                        lEndHour -= UNITS_PER_WEEK;
 
-                    for (i = dwStartHour; i < dwEndHour; i++)
+                    for (i = (DWORD)lStartHour; i < (DWORD)lEndHour; i++)
                         SetBitValue(HourBitmap, i);
                 }
                 else
                 {
-                    // parse day
+                    /* Parse day */
                     if (!ParseDay(szBuffer, &dwEndDay))
                     {
                         dwError = 3768;
@@ -1037,10 +1044,7 @@ ParseLogonHours(
 
             if (*ptr1 == L';' || *ptr1 == UNICODE_NULL)
             {
-                // Process the data
-//                printf("DayBitmap: %02x  HourBitmap: %02x%02x%02x%02x%02x%02x\n",
-//                       DayBitmap, HourBitmap[5], HourBitmap[4], HourBitmap[3], HourBitmap[2], HourBitmap[1], HourBitmap[0]);
-
+                /* Fill the logon hour bitmap */
                 for (i = 0; i < DAYS_PER_WEEK; i++)
                 {
                     if (GetBitValue(&DayBitmap, i))
@@ -1053,16 +1057,13 @@ ParseLogonHours(
                     }
                 }
 
-                // Reset the Bitmaps
+                /* Reset the Bitmaps */
                 ZeroMemory(&DayBitmap, sizeof(DayBitmap));
                 ZeroMemory(HourBitmap, sizeof(HourBitmap));
             }
 
             if (*ptr1 == UNICODE_NULL)
-            {
-//                printf("Done\n");
                 break;
-            }
 
             ZeroMemory(szBuffer, sizeof(szBuffer));
             ptr2 = szBuffer;
