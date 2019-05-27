@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -6,12 +6,12 @@ CAPTION "Teclado"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Teclas de aderência", -1, 6, 11, 234, 62
-    LTEXT "Use as teclas de aderência se você desejar usar SHIFT, CTRL, ALT ou a tecla de logotipo do ReactOS pressionando uma tecla de cada vez.",
+    LTEXT "Use as teclas de aderência se deseja usar SHIFT, CTRL, ALT ou a tecla de logotipo do ReactOS pressionando uma tecla de cada vez.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar as teclas de aderência", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Configurações", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Teclas de filtragem", -1, 6, 79, 234, 67
-    LTEXT "Use as teclas de filtragem para que o ReactOS ignore teclas pressionadas rápida ou repetidamente ou para que ele diminua a taxa de repetição.",
+    LTEXT "Use as teclas de filtragem para que o ReactOS ignore teclas pressionadas rápida ou repetidamente ou para que diminua a taxa de repetição.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Usar as teclas de &filtragem", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "C&onfigurações", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -86,14 +86,14 @@ CAPTION "Geral"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Reconfiguração automática", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "&Desativar recursos de acessibilidade se o computador ficar inativo por:",
+    AUTOCHECKBOX "&Desactivar recursos de acessibilidade se o computador ficar inactivo por:",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Notificação", -1, 6, 63, 234, 47
-    AUTOCHECKBOX "&Emitir uma mensagem de aviso ao ativar um recurso", IDC_NOTIFICATION_MESSAGE,
+    AUTOCHECKBOX "&Emitir uma mensagem de aviso ao activar um recurso", IDC_NOTIFICATION_MESSAGE,
                  12, 72, 222, 14
-    AUTOCHECKBOX "Emitir um &som ao ativar ou desativar um recurso", IDC_NOTIFICATION_SOUND,
+    AUTOCHECKBOX "Emitir um &som ao activar ou desactivar um recurso", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Dispositivos seriais de acessibilidade", -1, 6, 115, 234, 47
     LTEXT "Os dispositivos seriais de acessibilidade permitem o acesso alternativo aos recursos de teclado e mouse.",
@@ -103,7 +103,7 @@ BEGIN
     GROUPBOX "Opções administrativas", -1, 6, 169, 234, 47
     AUTOCHECKBOX "&Aplicar todas as configurações à área de trabalho de logon", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "Aplicar &todas as configurações padrão para novos usuários", IDC_ADMIN_USERS_BOX,
+    AUTOCHECKBOX "Aplicar &todas as configurações padrão para novos utilizadores", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
 END
 
@@ -119,7 +119,7 @@ BEGIN
     GROUPBOX "Opções", -1, 6, 83, 234, 44
     AUTOCHECKBOX "&Pressionar a tecla modificadora duas vezes para bloquear", IDC_STICKY_LOCK_CHECK,
                  12, 92, 222, 14
-    AUTOCHECKBOX "Desa&tivar teclas de aderência se duas teclas forem pressionadas ao mesmo tempo", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "Desac&tivar teclas de aderência se duas teclas forem pressionadas ao mesmo tempo", IDC_STICKY_UNLOCK_CHECK,
                  12, 105, 222, 18, BS_MULTILINE
     GROUPBOX "Notificação", -1, 6, 133, 234, 44
     AUTOCHECKBOX "&Emitir sons quando a tecla modificadora for pressionada", IDC_STICKY_SOUND_CHECK,
@@ -143,13 +143,13 @@ BEGIN
     AUTORADIOBUTTON "&Ignorar pressionamentos de tecla repetidos", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 162, 11, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Ig&norar teclas pressionadas rapidamente e diminuir a taxa de repetição", IDC_FILTER_REPEAT_RADIO,
-                    12, 106, 162, 29, BS_TOP | BS_MULTILINE
+                    12, 106, 162, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Configurações", IDC_FILTER_BOUNCE_BUTTON, 168, 88, 66, 14, WS_GROUP
     PUSHBUTTON "C&onfigurações", IDC_FILTER_REPEAT_BUTTON, 168, 106, 66, 14, WS_GROUP
-    LTEXT "C&lique e digite aqui para testar a configuração das teclas de filtragem:", -1, 12, 129, 222, 11
+    LTEXT "C&lique e digite para testar a configuração das teclas de filtragem:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "Notificação", -1, 6, 161, 234, 41
-    AUTOCHECKBOX "&Emitir alarme sonoro para teclas pressionadas ou aceitas", IDC_FILTER_SOUND_CHECK,
+    AUTOCHECKBOX "&Emitir alarme sonoro para teclas pressionadas ou aceites", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
     AUTOCHECKBOX "E&xibir o status da tecla de filtragem na tela", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
@@ -180,7 +180,7 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Usar atalho", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Esquema de aparência de alto contraste", -1, 6, 83, 234, 44
-    LTEXT "O e&squema atual de alto contraste é:", -1, 12, 94, 222, 11
+    LTEXT "O e&squema actual de alto contraste é:", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
@@ -211,8 +211,8 @@ BEGIN
     AUTOCHECKBOX "&Pressionar Ctrl p/ aumentar a velocidade e Shift p/ diminuí-la", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
     LTEXT "Usar as teclas para mouse quando Num Lock estiver:", -1, 6, 168, 120, 20
-    AUTORADIOBUTTON "A&tivado", IDC_MOUSEKEYS_ON_RADIO, 126, 171, 48, 11
-    AUTORADIOBUTTON "&Desativado", IDC_MOUSEKEYS_OFF_RADIO, 180, 171, 48, 11
+    AUTORADIOBUTTON "Ac&tivado", IDC_MOUSEKEYS_ON_RADIO, 126, 171, 48, 11
+    AUTORADIOBUTTON "&Desactivado", IDC_MOUSEKEYS_OFF_RADIO, 180, 171, 48, 11
     AUTOCHECKBOX "M&ostrar o status das teclas para mouse na tela", IDC_MOUSEKEYS_STATUS_CHECK,
                  6, 184, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
@@ -226,7 +226,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Repetição de teclas", -1, 6, 11, 234, 47
     LTEXT "&Ignorar pressionamentos de tecla repetidos em um intervalo de tempo menor que:", -1, 12, 21, 222, 20
-    COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
+    COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 40, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     LTEXT "Á&rea de teste:", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
@@ -266,7 +266,7 @@ CAPTION "Configurações de dispositivos seriais"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Teclas seriais", -1, 6, 11, 234, 92
-    LTEXT "Escolha a porta para a conexão de um dispositivo de entrada alternativo.",
+    LTEXT "Escolha a porta para a ligação de um dispositivo de entrada alternativo.",
           -1, 12, 20, 222, 20
     LTEXT "&Porta serial:", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
