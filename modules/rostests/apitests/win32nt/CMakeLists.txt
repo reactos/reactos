@@ -66,6 +66,7 @@ list(APPEND SOURCE
 
 add_library(win32knt_static STATIC ${SOURCE} w32knapi.rc)
 add_dependencies(win32knt_static xdk)
+add_pch(win32knt_static win32nt.h SOURCE)
 
 add_executable(win32knt_apitest testlist.c)
 add_executable(win32knt_xpsp2_apitest testlist.c)
@@ -106,7 +107,5 @@ if (0)  # vista
         win32u_vista
         gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
 endif()
-
-add_pch(win32knt_static win32nt.h SOURCE)
 
 add_rostests_file(TARGET win32knt_apitest)
