@@ -65,7 +65,7 @@ list(APPEND SOURCE
     win32nt.h)
 
 add_library(win32knt_static STATIC ${SOURCE} w32knapi.rc)
-add_dependencies(win32knt_static psdk)
+add_dependencies(win32knt_static xdk)
 
 add_executable(win32knt_apitest testlist.c)
 #add_executable(win32knt_2ksp4_apitest testlist.c)
@@ -100,12 +100,6 @@ add_importlibs(win32knt_2k3sp2_apitest
 #add_importlibs(win32knt_vista_apitest
 #    win32u_vista
 #    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
-
-add_dependencies(win32knt_apitest xdk)
-#add_dependencies(win32knt_2ksp4_apitest xdk)
-add_dependencies(win32knt_xpsp2_apitest xdk)
-add_dependencies(win32knt_2k3sp2_apitest xdk)
-#add_dependencies(win32knt_vista_apitest xdk)
 
 add_pch(win32knt_static win32nt.h SOURCE)
 
