@@ -80,17 +80,13 @@ set_module_type(win32knt_apitest win32cui)
 set_module_type(win32knt_xpsp2_apitest win32cui)
 set_module_type(win32knt_2k3sp2_apitest win32cui)
 
-add_importlibs(win32knt_apitest
-    win32u
-    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
-add_importlibs(win32knt_xpsp2_apitest
-    win32u_xpsp2
-    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
-add_importlibs(win32knt_2k3sp2_apitest
-    win32u_2k3sp2
-    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
+set(WIN32KNT_IMPORTLIBS gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
 
-if (0)  # 2ksp4
+add_importlibs(win32knt_apitest win32u ${WIN32KNT_IMPORTLIBS})
+add_importlibs(win32knt_xpsp2_apitest win32u_xpsp2 ${WIN32KNT_IMPORTLIBS})
+add_importlibs(win32knt_2k3sp2_apitest win32u_2k3sp2 ${WIN32KNT_IMPORTLIBS})
+
+if(0)  # Specify 1 if you want 2ksp4 version
     add_executable(win32knt_2ksp4_apitest testlist.c)
     target_link_libraries(win32knt_2ksp4_apitest ${PSEH_LIB} win32knt_static gditools)
     set_module_type(win32knt_2ksp4_apitest win32cui)
@@ -99,7 +95,7 @@ if (0)  # 2ksp4
         gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
 endif()
 
-if (0)  # vista
+if(0)  # Specify 1 if you want vista version
     add_executable(win32knt_vista_apitest testlist.c)
     target_link_libraries(win32knt_vista_apitest ${PSEH_LIB} win32knt_static gditools)
     set_module_type(win32knt_vista_apitest win32cui)
