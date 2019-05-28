@@ -579,7 +579,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
                            0,
                            REG_SZ,
                            (LPBYTE)ComputerName,
-                           (wcslen(ComputerName)+ 1) * sizeof(WCHAR));
+                           (wcslen(ComputerName) + 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"Hostname\") failed!\n");
