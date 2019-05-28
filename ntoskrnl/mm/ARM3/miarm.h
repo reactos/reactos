@@ -949,6 +949,12 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
     /* Write the valid PTE */
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
+#if _MI_HAS_NO_EXECUTE
+    if (MI_IS_PAGE_TABLE_ADDRESS(MiPteToAddress(PointerPte)))
+    {
+        TempPte.u.Hard.NoExecute = 0;
+    }
+#endif // _MI_HAS_NO_EXECUTE
     *PointerPte = TempPte;
 }
 
