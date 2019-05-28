@@ -65,6 +65,7 @@ list(APPEND SOURCE
     win32nt.h)
 
 add_library(win32knt_static STATIC ${SOURCE} w32knapi.rc)
+add_dependencies(win32knt_static psdk)
 
 add_executable(win32knt_apitest testlist.c)
 #add_executable(win32knt_2ksp4_apitest testlist.c)
