@@ -911,6 +911,24 @@ ParseDay(
 
 static
 DWORD
+LocalToGmtHour(
+    LONG lLocalHour,
+    LONG lBias)
+{
+    LONG lGmtHour;
+
+    lGmtHour = lLocalHour + lBias;
+    if (lGmtHour < 0)
+        lGmtHour += UNITS_PER_WEEK;
+    else if (lGmtHour > UNITS_PER_WEEK)
+        lGmtHour -= UNITS_PER_WEEK;
+
+    return (DWORD)lGmtHour;
+}
+
+
+static
+DWORD
 ParseLogonHours(
     PWSTR pszParams,
     PBYTE *ppLogonBitmap,
@@ -1018,14 +1036,7 @@ ParseLogonHours(
                         break;
                     }
 
-                    /* Convert from local timezone to GMT */
-                    lStartHour += lBias;
-                    if (lStartHour < 0)
-                        lStartHour += UNITS_PER_WEEK;
-                    else if (lStartHour > UNITS_PER_WEEK)
-                        lStartHour -= UNITS_PER_WEEK;
-
-                    SetBitValue(HourBitmap, (DWORD)lStartHour);
+                    SetBitValue(HourBitmap, LocalToGmtHour(lStartHour, lBias));
                 }
                 else
                 {
@@ -1051,19 +1062,10 @@ ParseLogonHours(
                         break;
                     }
 
-                    if (lEndHour < lStartHour)
+                    if (lEndHour <= lStartHour)
                         lEndHour += HOURS_PER_DAY;
-                    else if (lEndHour == lStartHour)
-                        lEndHour = lStartHour + HOURS_PER_DAY;
 
-                    /* Convert from local timezone to GMT */
-                    lEndHour += lBias;
-                    if (lEndHour < 0)
-                        lEndHour += UNITS_PER_WEEK;
-                    else if (lEndHour > UNITS_PER_WEEK)
-                        lEndHour -= UNITS_PER_WEEK;
-
-                    for (i = (DWORD)lStartHour; i < (DWORD)lEndHour; i++)
+                    for (i = LocalToGmtHour(lStartHour, lBias); i < LocalToGmtHour(lEndHour, lBias); i++)
                         SetBitValue(HourBitmap, i);
                 }
                 else
