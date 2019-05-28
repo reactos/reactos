@@ -316,6 +316,28 @@ KiSystemCallHandler(
     Offset = (ServiceNumber >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK;
     ServiceNumber &= SERVICE_NUMBER_MASK;
 
+    /* Check for win32k system calls */
+    if (Offset & SERVICE_TABLE_TEST)
+    {
+        ULONG GdiBatchCount;
+
+        /* Read the GDI batch count from the TEB */
+        _SEH2_TRY
+        {
+            GdiBatchCount = NtCurrentTeb()->GdiBatchCount;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            GdiBatchCount = 0;
+        }
+
+        /* Flush batch, if there are entries */
+        if (GdiBatchCount != 0)
+        {
+            KeGdiFlushUserBatch();
+        }
+    }
+
     /* Get descriptor table */
     DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
 
