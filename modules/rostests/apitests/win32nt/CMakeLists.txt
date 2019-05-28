@@ -64,23 +64,34 @@ list(APPEND SOURCE
     #osver.c
     win32nt.h)
 
-add_executable(win32knt_apitest
-    ${SOURCE}
-    testlist.c
-    w32knapi.rc)
+add_library(win32knt_static STATIC ${SOURCE} w32knapi.rc)
 
-target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
+add_executable(win32knt_apitest testlist.c)
+add_executable(win32knt_xpsp2_apitest testlist.c)
+add_executable(win32knt_2k3sp2_apitest testlist.c)
+
+target_link_libraries(win32knt_apitest ${PSEH_LIB} win32knt_static gditools)
+target_link_libraries(win32knt_xpsp2_apitest ${PSEH_LIB} win32knt_static gditools)
+target_link_libraries(win32knt_2k3sp2_apitest ${PSEH_LIB} win32knt_static gditools)
+
 set_module_type(win32knt_apitest win32cui)
+set_module_type(win32knt_xpsp2_apitest win32cui)
+set_module_type(win32knt_2k3sp2_apitest win32cui)
+
 add_importlibs(win32knt_apitest
-    win32u # win32u_2ksp4 win32u_xpsp2 win32u_2k3sp2 win32u_vista
-    gdi32
-    user32
-    shell32
-    advapi32
-    msvcrt
-    kernel32
-    ntdll)
+    win32u
+    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(win32knt_xpsp2_apitest
+    win32u_xpsp2
+    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(win32knt_2k3sp2_apitest
+    win32u_2k3sp2
+    gdi32 user32 shell32 advapi32 msvcrt kernel32 ntdll)
 
 add_dependencies(win32knt_apitest xdk)
-add_pch(win32knt_apitest win32nt.h SOURCE)
+add_dependencies(win32knt_xpsp2_apitest xdk)
+add_dependencies(win32knt_2k3sp2_apitest xdk)
+
+add_pch(win32knt_static win32nt.h SOURCE)
+
 add_rostests_file(TARGET win32knt_apitest)
