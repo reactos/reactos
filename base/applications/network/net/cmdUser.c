@@ -50,8 +50,6 @@ static COUNTRY_TABLE CountryTable[] =
   {785, 5103},   // Arabic
   {972, 5104} }; // Hebrew
 
-//static PWSTR DaysArray[] = {L"So", L"Mo", L"Di", L"Mi", L"Do", L"Fr", L"Sa"};
-static PWSTR DaysArray[] = {L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat"};
 
 static
 int
@@ -837,6 +835,7 @@ static
 BOOL
 ParseHour(
     PWSTR pszString,
+    PWSTR *AmPmArray,
     PLONG plHour)
 {
     PWCHAR pChar;
@@ -862,14 +861,14 @@ ParseHour(
         (lHour >= 1) &&
         (lHour <= 12))
     {
-        if ((_wcsicmp(pChar, L"am") == 0) ||
-            (_wcsicmp(pChar, L"a.m.") == 0))
+        if ((_wcsicmp(pChar, AmPmArray[0]) == 0) ||
+            (_wcsicmp(pChar, AmPmArray[1]) == 0))
         {
             if (lHour == 12)
                 lHour = 0;
         }
-        else if ((_wcsicmp(pChar, L"pm") == 0) ||
-                 (_wcsicmp(pChar, L"p.m.") == 0))
+        else if ((_wcsicmp(pChar, AmPmArray[2]) == 0) ||
+                 (_wcsicmp(pChar, AmPmArray[3]) == 0))
         {
             if (lHour != 12)
                 lHour += 12;
@@ -890,13 +889,16 @@ static
 BOOL
 ParseDay(
     PWSTR pszString,
+    PWSTR *ShortDays,
+    PWSTR *LongDays,
     PDWORD pdwDay)
 {
     DWORD i;
 
-    for (i = 0; i < ARRAYSIZE(DaysArray); i++)
+    for (i = 0; i < 7; i++)
     {
-        if (_wcsicmp(pszString, DaysArray[i]) == 0)
+        if (_wcsicmp(pszString, ShortDays[i]) == 0 ||
+            _wcsicmp(pszString, LongDays[i]) == 0)
         {
             *pdwDay = i;
             return TRUE;
@@ -924,6 +926,9 @@ ParseLogonHours(
     LONG lStartHour, lEndHour, lBias;
     BYTE DayBitmap;
     BYTE HourBitmap[6];
+    LPWSTR ShortDays[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    LPWSTR LongDays[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    LPWSTR AmPmArray[4] = {NULL, NULL, NULL, NULL};
 
     GetTimeZoneInformation(&TimeZoneInformation);
     lBias = TimeZoneInformation.Bias / 60;
@@ -943,6 +948,42 @@ ParseLogonHours(
     {
         FillMemory(pLogonBitmap, UNITS_PER_WEEK / 8, 0xFF);
         goto done;
+    }
+
+    for (i = 0; i < 7; i++)
+    {
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       hModuleNetMsg,
+                       4314 + i,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&ShortDays[i],
+                       0,
+                       NULL);
+
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       hModuleNetMsg,
+                       4307 + i,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&LongDays[i],
+                       0,
+                       NULL);
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       hModuleNetMsg,
+                       4322 + i,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&AmPmArray[i],
+                       0,
+                       NULL);
     }
 
     ZeroMemory(&DayBitmap, sizeof(DayBitmap));
@@ -971,7 +1012,7 @@ ParseLogonHours(
                 if (iswdigit(szBuffer[0]))
                 {
                     /* Parse hour */
-                    if (!ParseHour(szBuffer, &lStartHour))
+                    if (!ParseHour(szBuffer, AmPmArray, &lStartHour))
                     {
                         dwError = 3769;
                         break;
@@ -989,7 +1030,7 @@ ParseLogonHours(
                 else
                 {
                     /* Parse day */
-                    if (!ParseDay(szBuffer, &dwStartDay))
+                    if (!ParseDay(szBuffer, ShortDays, LongDays, &dwStartDay))
                     {
                         dwError = 3768;
                         break;
@@ -1004,7 +1045,7 @@ ParseLogonHours(
                 if (iswdigit(szBuffer[0]))
                 {
                     /* Parse hour */
-                    if (!ParseHour(szBuffer, &lEndHour))
+                    if (!ParseHour(szBuffer, AmPmArray, &lEndHour))
                     {
                         dwError = 3769;
                         break;
@@ -1028,7 +1069,7 @@ ParseLogonHours(
                 else
                 {
                     /* Parse day */
-                    if (!ParseDay(szBuffer, &dwEndDay))
+                    if (!ParseDay(szBuffer, ShortDays, LongDays, &dwEndDay))
                     {
                         dwError = 3768;
                         break;
@@ -1072,17 +1113,18 @@ ParseLogonHours(
         ptr1++;
     }
 
-#if 0
-    printf("LogonBitmap:\n");
-    for (i = 0; i < DAYS_PER_WEEK; i++)
-    {
-        j = i * 3;
-        printf("%lu: %02x%02x%02x\n", i, pLogonHours[j + 2], pLogonHours[j + 1], pLogonHours[j + 0]);
-    }
-    printf("\n");
-#endif
-
 done:
+    for (i = 0; i < 7; i++)
+    {
+        LocalFree(ShortDays[i]);
+        LocalFree(LongDays[i]);
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        LocalFree(AmPmArray[i]);
+    }
+
     if (dwError == ERROR_SUCCESS)
     {
         *ppLogonBitmap = pLogonBitmap;
