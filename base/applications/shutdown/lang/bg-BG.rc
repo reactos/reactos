@@ -39,8 +39,8 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /i      Show the graphical user interface (GUI). This option must be the\n\
             first one.\n\
     /l      Log off on the local system only. Cannot be used with /m or /d.\n\
-    /s      Shutdown the computer.\n\
-    /r      Restart the computer.\n\
+    /s      Изключване на компютъра.\n\
+    /r      Рестартиране на компютъра.\n\
     /g      Restart the computer and restart all the registered applications.\n\
     /a      Cancel a delayed shutdown. Can only be used during the delay\n\
             period.\n\
@@ -68,8 +68,8 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_TIMEOUT "ERROR: Timeout value of %u is out of bounds (0-315360000).\n"
     IDS_ERROR_ABORT "ERROR: Unable to abort the shutdown of the system.\n"
     IDS_ERROR_LOGOFF "ERROR: Unable to logoff the system.\n"
-    IDS_ERROR_SHUTDOWN "ERROR: Unable to shutdown the system.\n"
-    IDS_ERROR_RESTART "ERROR: Unable to restart the system.\n"
+    IDS_ERROR_SHUTDOWN "ERROR: Не може да се изключи компютъра.\n"
+    IDS_ERROR_RESTART "ERROR: Не може да се рестартира компютъра.\n"
     IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Comment length exceeds maximum character limit set by the system.\n"
     IDS_ERROR_HIBERNATE "ERROR: Unable to send system into hibernation mode.\n"
     IDS_ERROR_HIBERNATE_LOCAL "ERROR: Hibernation mode cannot be started remotely.\n"
@@ -81,15 +81,15 @@ END
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Shutdown the system"
-    IDS_ACTION_RESTART "Restart the system"
+    IDS_ACTION_SHUTDOWN "Изключвайте система"
+    IDS_ACTION_RESTART "Рестартирайте система"
     IDS_ACTION_UNEXPECTED_SHUTDOWN "Annotate the unexpected shutdown"
 END
 
 /* Remote shutdown reason strings */
 STRINGTABLE
 BEGIN
-    IDS_REASON_OTHER "Other"
+    IDS_REASON_OTHER "Друго"
     IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Maintenance"
     IDS_REASON_HARDWARE_INSTALL "Hardware: Installation"
     IDS_REASON_OS_RECOVER "Operating System: Recovery"
@@ -98,6 +98,6 @@ BEGIN
     IDS_REASON_APP_INSTALL "Application: Installation"
     IDS_REASON_APP_UNRESPONSIVE "Application: Unresponsive"
     IDS_REASON_APP_UNSTABLE "Application: Unstable"
-    IDS_REASON_SECURITY "Security Issue"
+    IDS_REASON_SECURITY "Проблеми със сигурността"
     IDS_REASON_NETWORK "Loss of network connectivity"
 END
