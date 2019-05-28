@@ -570,7 +570,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
                            &hKey);
     if (lError != ERROR_SUCCESS)
     {
-        DPRINT1("RegOpenKeyExW(\"HKLM\\System\\CurrentControlSet\\Services\\Tcpip\\Parameters\") failed!\n");
+        DPRINT1("RegOpenKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
         return FALSE;
     }
 
@@ -582,7 +582,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
                            (wcslen(ComputerName) + 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueEx(\"Hostname\") failed!\n");
+        DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
         return FALSE;
     }
 
