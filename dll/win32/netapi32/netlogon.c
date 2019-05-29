@@ -32,7 +32,7 @@ DsGetDcNameWithAccountA(
 DWORD
 WINAPI
 DsGetDcNameWithAccountW(
-    _In_ LPCWSTR ComputerName,
+    _In_opt_ LPCWSTR ComputerName,
     _In_opt_ LPCWSTR AccountName,
     _In_ ULONG AccountControlBits,
     _In_ LPCWSTR DomainName,
@@ -713,7 +713,7 @@ NetGetAnyDCName(
     _In_opt_ LPCWSTR DomainName,
     _Out_ LPBYTE *BufPtr)
 {
-    NET_API_STATUS status;
+    NET_API_STATUS Status;
 
     TRACE("NetGetAnyDCName(%s, %s, %p)\n",
           debugstr_w(ServerName), debugstr_w(DomainName), BufPtr);
@@ -722,31 +722,65 @@ NetGetAnyDCName(
 
     RpcTryExcept
     {
-        status = NetrGetAnyDCName((PWSTR)ServerName,
+        Status = NetrGetAnyDCName((PWSTR)ServerName,
                                   (PWSTR)DomainName,
                                   (PWSTR*)BufPtr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
 
-    return status;
+    return Status;
 }
 
 
 NET_API_STATUS
 WINAPI
 NetGetDCName(
-    _In_ LPCWSTR servername,
-    _In_ LPCWSTR domainname,
-    _Out_ LPBYTE *bufptr)
+    _In_opt_ LPCWSTR ServerName,
+    _In_opt_ LPCWSTR DomainName,
+    _Out_ LPBYTE *BufPtr)
 {
-    FIXME("NetGetDCName(%s, %s, %p)\n",
-          debugstr_w(servername), debugstr_w(domainname), bufptr);
+    PDOMAIN_CONTROLLER_INFOW pDomainControllerInfo = NULL;
+    NET_API_STATUS Status;
 
-    return NERR_DCNotFound;
+    FIXME("NetGetDCName(%s, %s, %p)\n",
+          debugstr_w(ServerName), debugstr_w(DomainName), BufPtr);
+
+    if (ServerName == NULL || *ServerName == UNICODE_NULL)
+    {
+        Status = DsGetDcNameWithAccountW(NULL,
+                                         NULL,
+                                         0,
+                                         DomainName,
+                                         NULL,
+                                         NULL,
+                                         0, //???
+                                         &pDomainControllerInfo);
+        if (Status != NERR_Success)
+            goto done;
+
+        Status = NetApiBufferAllocate((wcslen(pDomainControllerInfo->DomainControllerName) + 1) * sizeof(WCHAR),
+                                      (PVOID*)BufPtr);
+        if (Status != NERR_Success)
+            goto done;
+
+        wcscpy((PWSTR)*BufPtr,
+               pDomainControllerInfo->DomainControllerName);
+    }
+    else
+    {
+        FIXME("Not implemented yet!\n");
+        Status = NERR_DCNotFound;
+    }
+
+done:
+    if (pDomainControllerInfo != NULL)
+        NetApiBufferFree(pDomainControllerInfo);
+
+    return Status;
 }
 
 

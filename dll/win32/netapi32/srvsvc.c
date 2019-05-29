@@ -610,9 +610,9 @@ NetServerTransportEnum(
 NET_API_STATUS
 WINAPI
 NetSessionDel(
-    _In_ LMSTR servername,
-    _In_ LMSTR UncClientName,
-    _In_ LMSTR username)
+    _In_opt_ LMSTR servername,
+    _In_opt_ LMSTR UncClientName,
+    _In_opt_ LMSTR username)
 {
     NET_API_STATUS status;
 
@@ -638,9 +638,9 @@ NetSessionDel(
 NET_API_STATUS
 WINAPI
 NetSessionEnum(
-    _In_ LMSTR servername,
-    _In_ LMSTR UncClientName,
-    _In_ LMSTR username,
+    _In_opt_ LMSTR servername,
+    _In_opt_ LMSTR UncClientName,
+    _In_opt_ LMSTR username,
     _In_ DWORD level,
     _Out_ LPBYTE *bufptr,
     _In_ DWORD prefmaxlen,
@@ -759,7 +759,7 @@ NetSessionEnum(
 NET_API_STATUS
 WINAPI
 NetSessionGetInfo(
-    _In_ LMSTR servername,
+    _In_opt_ LMSTR servername,
     _In_ LMSTR UncClientName,
     _In_ LMSTR username,
     _In_ DWORD level,
