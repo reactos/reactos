@@ -2714,15 +2714,17 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
          USER_REFERENCE_ENTRY Ref;
          Parent = Wnd->spwndParent;
          if (UserIsDesktopWindow(Parent))
+         {
              Parent = NULL;
+         }
          if (Parent)
          {
-            UserRefObjectCo(Parent, &Ref);
+             UserRefObjectCo(Parent, &Ref);
          }
          co_UserSetFocus(Parent);
          if (Parent)
          {
-            UserDerefObjectCo(Parent);
+             UserDerefObjectCo(Parent);
          }
       }
       // Hide, just return.
