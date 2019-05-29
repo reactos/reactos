@@ -78,6 +78,7 @@ if(1)  # ros
 endif()
 
 if(0)  # Specify 1 if you want 2ksp4 version
+    # See also ../win32u/CMakeLists.txt
     add_executable(win32knt_2ksp4_apitest testlist.c)
     target_link_libraries(win32knt_2ksp4_apitest ${PSEH_LIB} win32knt_static gditools)
     set_module_type(win32knt_2ksp4_apitest win32cui)
@@ -99,6 +100,7 @@ if(1) # 2k3sp2
 endif()
 
 if(0)  # Specify 1 if you want vista version
+    # See also ../win32u/CMakeLists.txt
     add_executable(win32knt_vista_apitest testlist.c)
     target_link_libraries(win32knt_vista_apitest ${PSEH_LIB} win32knt_static gditools)
     set_module_type(win32knt_vista_apitest win32cui)
