@@ -613,20 +613,17 @@ WriteDefaultLogonData(LPWSTR Domain)
                            KEY_SET_VALUE,
                            &hKey);
     if (lError != ERROR_SUCCESS)
-    {
-        DPRINT1("RegOpenKeyExW for Winlogon failed (%08lX)\n", lError);
         return FALSE;
-    }
 
     lError = RegSetValueEx(hKey,
                            L"DefaultDomainName",
                            0,
                            REG_SZ,
                            (LPBYTE)Domain,
-                           (wcslen(Domain) + 1) * sizeof(WCHAR));
+                           (wcslen(Domain)+ 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueEx(\"DefaultDomainName\") failed (%08lX)\n", lError);
+        DPRINT1("RegSetValueEx(\"DefaultDomainName\") failed!\n");
     }
 
     lError = RegSetValueEx(hKey,
@@ -634,10 +631,10 @@ WriteDefaultLogonData(LPWSTR Domain)
                            0,
                            REG_SZ,
                            (LPBYTE)szAdministratorName,
-                           (wcslen(szAdministratorName) + 1) * sizeof(WCHAR));
+                           (wcslen(szAdministratorName)+ 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueEx(\"DefaultUserName\") failed (%08lX)\n", lError);
+        DPRINT1("RegSetValueEx(\"DefaultUserName\") failed!\n");
     }
 
     RegCloseKey(hKey);
