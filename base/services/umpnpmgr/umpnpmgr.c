@@ -3433,7 +3433,6 @@ PNP_QueryArbitratorFreeData(
     RESOURCEID ResourceID,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -3448,7 +3447,9 @@ PNP_QueryArbitratorFreeSize(
     RESOURCEID ResourceID,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
+    if (pulSize != NULL)
+        *pulSize = 0;
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
