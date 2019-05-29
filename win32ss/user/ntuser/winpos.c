@@ -2711,14 +2711,13 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       /* Revert focus to parent */
       if (Wnd == pti->MessageQueue->spwndFocus)
       {
+         USER_REFERENCE_ENTRY Ref;
          Parent = Wnd->spwndParent;
          if (UserIsDesktopWindow(Parent))
              Parent = NULL;
-         if (!Parent ||
-             (!(Parent->state2 & WNDS2_INDESTROY) && !(Parent->state & WNDS_DESTROYED)))
-         {
-             co_UserSetFocus(Parent);
-         }
+         if (Parent) UserRefObjectCo(Parent, &Ref);
+         co_UserSetFocus(Parent);
+         if (Parent) UserDerefObjectCo(Parent);
       }
       // Hide, just return.
       if (Cmd == SW_HIDE) return WasVisible;
