@@ -269,8 +269,8 @@
 @ stub NetpAllocConfigName
 @ stub NetpAllocFtinfoEntry
 @ stub NetpAllocStrFromWStr
-@ stub NetpAllocWStrFromStr
-@ stub NetpAllocWStrFromWStr
+@ stdcall NetpAllocWStrFromStr(str)
+@ stdcall NetpAllocWStrFromWStr(wstr)
 @ stub NetpApiStatusToNtStatus
 @ stub NetpAssertFailed
 @ stub NetpCleanFtinfoContext

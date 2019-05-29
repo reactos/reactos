@@ -33,10 +33,6 @@
 extern LIST_ENTRY g_EnumContextListHead;
 extern CRITICAL_SECTION g_EnumContextListLock;
 
-NET_API_STATUS
-WINAPI
-NetpNtStatusToApiStatus(NTSTATUS Status);
-
 /* misc.c */
 
 NTSTATUS
@@ -67,6 +63,26 @@ CopySidFromSidAndRid(
     _Out_ PSID DstSid,
     _In_ PSID SrcSid,
     _In_ ULONG RelativeId);
+
+PWSTR
+WINAPI
+NetpAllocWStrFromAnsiStr(
+    _In_ PSTR InString);
+
+PWSTR
+WINAPI
+NetpAllocWStrFromStr(
+    _In_ PSTR InString);
+
+PWSTR
+WINAPI
+NetpAllocWStrFromWStr(
+    _In_ PWSTR InString);
+
+NET_API_STATUS
+WINAPI
+NetpNtStatusToApiStatus(
+    _In_ NTSTATUS Status);
 
 /* wksta.c */
 
