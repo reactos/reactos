@@ -536,7 +536,6 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     WCHAR ErrorComputerName[256];
     LONG lError;
     HKEY hKey = NULL;
-    BOOL ret = TRUE;
 
     if (!SetComputerNameW(ComputerName))
     {
@@ -572,7 +571,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegOpenKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
-        return FALSE;
+        return TRUE;
     }
 
     lError = RegSetValueEx(hKey,
@@ -584,12 +583,11 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
-        ret = FALSE;
     }
 
     RegCloseKey(hKey);
 
-    return ret;
+    return TRUE;
 }
 
 
@@ -600,7 +598,6 @@ WriteDefaultLogonData(LPWSTR Domain)
     WCHAR szAdministratorName[256];
     HKEY hKey = NULL;
     LONG lError;
-    BOOL ret = TRUE;
 
     if (LoadStringW(hDllInstance,
                     IDS_ADMINISTRATOR_NAME,
@@ -630,7 +627,6 @@ WriteDefaultLogonData(LPWSTR Domain)
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"DefaultDomainName\") failed (%08lX)\n", lError);
-        ret = FALSE;
     }
 
     lError = RegSetValueEx(hKey,
@@ -642,12 +638,11 @@ WriteDefaultLogonData(LPWSTR Domain)
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"DefaultUserName\") failed (%08lX)\n", lError);
-        ret = FALSE;
     }
 
     RegCloseKey(hKey);
 
-    return ret;
+    return TRUE;
 }
 
 
