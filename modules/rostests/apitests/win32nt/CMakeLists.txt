@@ -75,6 +75,8 @@ if(1)  # ros
     target_link_libraries(win32knt_apitest ${PSEH_LIB} win32knt_static gditools)
     set_module_type(win32knt_apitest win32cui)
     add_importlibs(win32knt_apitest win32u ${WIN32KNT_IMPORTLIBS})
+
+    add_rostests_file(TARGET win32knt_apitest)
 endif()
 
 if(0)  # Specify 1 if you want 2ksp4 version
@@ -106,5 +108,3 @@ if(0)  # Specify 1 if you want vista version
     set_module_type(win32knt_vista_apitest win32cui)
     add_importlibs(win32knt_vista_apitest win32u_vista ${WIN32KNT_IMPORTLIBS})
 endif()
-
-add_rostests_file(TARGET win32knt_apitest)
