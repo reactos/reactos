@@ -52,7 +52,7 @@ _DoDLLInjection()
     }
 
     wcscpy(p, L".dll");
-    cbDLLPath = (wcslen(wszFilePath) + 1) * sizeof(WCHAR);
+    cbDLLPath = (lstrlenW(wszFilePath) + 1) * sizeof(WCHAR);
 
     // Create a snapshot of the currently running processes.
     hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

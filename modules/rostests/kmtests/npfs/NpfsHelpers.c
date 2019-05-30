@@ -291,7 +291,7 @@ NpWaitPipe(
     ok_eq_hex(IoStatusBlock.Status, Status);
     ok_eq_ulongptr(IoStatusBlock.Information, FILE_OPENED);
 
-    NameLength = wcslen(PipeName) * sizeof(WCHAR);
+    NameLength = (ULONG)(wcslen(PipeName) * sizeof(WCHAR));
     BufferSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER,
                               Name[NameLength / sizeof(WCHAR)]);
     WaitForBuffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize, 'WPmK');

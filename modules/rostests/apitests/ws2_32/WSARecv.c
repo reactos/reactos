@@ -95,7 +95,7 @@ void Test_WSARecv()
 
     /* Send the GET request */
     buffers.buf = szGetRequest;
-    buffers.len = strlen(szGetRequest);
+    buffers.len = lstrlenA(szGetRequest);
     dwSent = 0;
     iResult = WSASend(sck, &buffers, 1, &dwSent, 0, &overlapped, NULL);
     err = WSAGetLastError();

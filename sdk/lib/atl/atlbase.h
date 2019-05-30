@@ -1367,15 +1367,16 @@ protected:
     // get the total size of a multistring
     static ULONG _GetMultiStringSize(LPCTSTR pszz)
     {
-        int count = 0;
+        size_t count = 0;
         do
         {
-            int len = _tcslen(pszz);
+            size_t len = _tcslen(pszz);
             count += len + 1;
             pszz += len + 1;
         } while (*pszz != TEXT('\0'));
         ++count;
-        return count * sizeof(TCHAR);
+        ATLASSERT(count * sizeof(TCHAR) <= ULONGMAX);
+        return (ULONG)count * sizeof(TCHAR);
     }
 
     // delete key recursively

@@ -76,7 +76,7 @@ WriteRegistryValue(PCHAR ValueName, PCHAR Value)
                                    0,
                                    REG_SZ,
                                    (LPBYTE)Value,
-                                   strlen(Value) + 1);
+                                   lstrlenA(Value) + 1);
 
         /* Close the key */
         RegCloseKey(ParametersKey);

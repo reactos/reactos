@@ -16,7 +16,7 @@
 
 BOOL CheckWindowClass(HWND hwnd, PCWSTR className)
 {
-    ULONG size = (wcslen(className) + 1)* sizeof(WCHAR);
+    ULONG size = (lstrlenW(className) + 1)* sizeof(WCHAR);
     PWCHAR buffer = (PWCHAR)malloc(size);
     if (GetClassNameW(hwnd, buffer, size ) == 0)
     {

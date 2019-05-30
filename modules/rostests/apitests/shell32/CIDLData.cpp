@@ -111,7 +111,7 @@ static void TestHDROP(PVOID pData, SIZE_T Size, LPCWSTR ExpectRoot, LPCWSTR Expe
 
     LPCWSTR Expected[2] = { ExpectPath1, ExpectPath2 };
 
-    DWORD offset = pDropFiles->pFiles;
+    SIZE_T offset = pDropFiles->pFiles;
     UINT Count = 0;
     for (;;Count++)
     {

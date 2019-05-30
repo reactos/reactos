@@ -142,7 +142,7 @@ BOOL extract2(char* filename, const unsigned char* data, size_t len)
         return FALSE;
     }
 
-    bRet = WriteFile(hFile, data, len, &dwWritten, NULL);
+    bRet = WriteFile(hFile, data, (DWORD)len, &dwWritten, NULL);
     CloseHandle(hFile);
     bRet = bRet && (dwWritten == len);
 
@@ -187,7 +187,7 @@ void compare_file_(char* filename, const unsigned char* data, size_t len, const 
     if (buf)
     {
         DWORD dwRead;
-        if (ReadFile(hFile, buf, size, &dwRead, NULL) && dwRead == size)
+        if (ReadFile(hFile, buf, (DWORD)size, &dwRead, NULL) && dwRead == size)
         {
             ok(!memcmp(buf, data, min(size,len)), "Data mismatch, %s\n", test_name);
         }
@@ -333,10 +333,10 @@ static void validate_patch(patch_data* current)
 {
     UINT crc;
 
-    crc = crc32(~0, current->patch.data, current->patch.len);
+    crc = crc32(~0, current->patch.data, (UINT)current->patch.len);
     ok(crc == 0, "Invalid patch crc 0x%x for %s\n", crc, current->name);
 
-    crc = crc32(~0, current->patch_header.data, current->patch_header.len);
+    crc = crc32(~0, current->patch_header.data, (UINT)current->patch_header.len);
     ok(crc == 0, "Invalid patch_header crc 0x%x for %s\n", crc, current->name);
 }
 

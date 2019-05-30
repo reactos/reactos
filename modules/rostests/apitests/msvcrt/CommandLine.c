@@ -264,14 +264,14 @@ static void Test_CommandLine(IN ULONG TestNumber,
             /*
              * Now check the results.
              */
-            dwStringSize = min(wcslen(WinMainCmdLine), wcslen(Win32CmdLine));
+            dwStringSize = min(lstrlenW(WinMainCmdLine), lstrlenW(Win32CmdLine));
             ok(wcslen(WinMainCmdLine) == wcslen(Win32CmdLine), "Test %lu - WinMain and Win32 command lines do not have the same length !\n", TestNumber);
             ok(wcsncmp(WinMainCmdLine, Win32CmdLine, dwStringSize) == 0, "Test %lu - WinMain and Win32 command lines are different !\n", TestNumber);
 
-            dwStringSize = min(wcslen(WinMainCmdLine), NTCmdLine.Length / sizeof(WCHAR));
+            dwStringSize = min(lstrlenW(WinMainCmdLine), NTCmdLine.Length / sizeof(WCHAR));
             ok(wcsncmp(WinMainCmdLine, NTCmdLine.Buffer, dwStringSize) == 0, "Test %lu - WinMain and NT command lines are different !\n", TestNumber);
 
-            dwStringSize = min(wcslen(Win32CmdLine), NTCmdLine.Length / sizeof(WCHAR));
+            dwStringSize = min(lstrlenW(Win32CmdLine), NTCmdLine.Length / sizeof(WCHAR));
             ok(wcsncmp(Win32CmdLine, NTCmdLine.Buffer, dwStringSize) == 0, "Test %lu - Win32 and NT command lines are different !\n", TestNumber);
         }
     }

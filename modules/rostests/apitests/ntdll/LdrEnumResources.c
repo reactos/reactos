@@ -65,7 +65,7 @@ InitializeNamedEntry(
     DirEntry->OffsetToData = (PUCHAR)Data - (PUCHAR)Resource;
     if (DirEntry < Resource->Lang1Entries)
         DirEntry->DataIsDirectory = 1;
-    Resource->StringBuffer[Resource->StringIndex] = wcslen(Name);
+    Resource->StringBuffer[Resource->StringIndex] = (USHORT)wcslen(Name);
     wcscpy(&Resource->StringBuffer[Resource->StringIndex + 1], Name);
     Resource->StringIndex += Resource->StringBuffer[Resource->StringIndex] * 2 + 1;
 }

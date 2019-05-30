@@ -216,7 +216,7 @@ START_TEST(RegQueryValueExW)
     {
         ok(1, "RegSetValueExW failed: %lx, %lx\n", ret, GetLastError());
     }
-    if ((ret = RegSetValueExW(hkey_main, L"LONGSTRING", 0, REG_SZ, (const BYTE *)string22W, (wcslen(string22W)+1) * sizeof(WCHAR))) != ERROR_SUCCESS)
+    if ((ret = RegSetValueExW(hkey_main, L"LONGSTRING", 0, REG_SZ, (const BYTE *)string22W, (lstrlenW(string22W)+1) * sizeof(WCHAR))) != ERROR_SUCCESS)
     {
         ok(1, "RegSetValueExW failed: %lx, %lx\n", ret, GetLastError());
     }
