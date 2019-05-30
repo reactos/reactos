@@ -58,6 +58,13 @@ static ULONG randULONG(void)
     return n;
 }
 
+#ifdef _M_AMD64
+static ULONG64 randULONG64(void)
+{
+    return (ULONG64)randULONG() << 32 | randULONG();
+}
+#endif
+
 void check(CONTEXT * pContext)
 {
 #ifdef _M_IX86
@@ -159,6 +166,29 @@ START_TEST(NtContinue)
         continueContext.Eip = (ULONG)((ULONG_PTR)continuePoint & 0xFFFFFFF);
 
         /* Can't do a lot about segments */
+#elif defined(_M_AMD64)
+        continueContext.ContextFlags = CONTEXT_FULL;
+
+        /* Fill the integer registers with random values */
+        continueContext.Rdi = randULONG64();
+        continueContext.Rsi = randULONG64();
+        continueContext.Rbx = randULONG64();
+        continueContext.Rdx = randULONG64();
+        continueContext.Rcx = randULONG64();
+        continueContext.Rax = randULONG64();
+        continueContext.Rbp = randULONG64();
+
+        /* Randomize all the allowed flags (determined experimentally with WinDbg) */
+        continueContext.EFlags = randULONG64() & 0x3C0CD5;
+
+        /* Randomize the stack pointer as much as possible */
+        continueContext.Rsp = (((ULONG_PTR)&bogus)) +
+            sizeof(bogus) - (randULONG() & 0xF) * 4;
+
+        /* continuePoint() is implemented in assembler */
+        //continueContext.Rip = ((ULONG_PTR)continuePoint);
+        skip("NtContinue test does not yet work on x64.");
+        return;
 #endif
 
         NtContinue(&continueContext, FALSE);

@@ -1542,7 +1542,7 @@ Test_Truncate(VOID)
     HANDLE Handle;
     HANDLE SectionHandle;
 
-    ULONG Length;
+    SIZE_T Length;
     BOOL Success;
     DWORD Written, Error;
     VOID* BaseAddress;

@@ -16,7 +16,7 @@ START_TEST(NtUserProcessConnect)
     hProcess = GetCurrentProcess();
 
     UserConnect.ulVersion = MAKELONG(0, 5);
-    Status = NtUserProcessConnect(hProcess, (USERCONNECT*)&UserConnect, sizeof(USERCONNECT));
+    Status = NtUserProcessConnect(hProcess, &UserConnect, sizeof(USERCONNECT));
     TEST(NT_SUCCESS(Status));
 
     printf("UserConnect.ulVersion = 0x%lx\n", UserConnect.ulVersion);
@@ -25,6 +25,6 @@ START_TEST(NtUserProcessConnect)
     printf("UserConnect.siClient.psi = 0x%p\n", UserConnect.siClient.psi);
     printf("UserConnect.siClient.aheList = 0x%p\n", UserConnect.siClient.aheList);
     printf("UserConnect.siClient.pDispInfo = 0x%p\n", UserConnect.siClient.pDispInfo);
-    printf("UserConnect.siClient.ulSharedDelta = 0x%lx\n", UserConnect.siClient.ulSharedDelta);
+    printf("UserConnect.siClient.ulSharedDelta = 0x%Ix\n", UserConnect.siClient.ulSharedDelta);
 
 }

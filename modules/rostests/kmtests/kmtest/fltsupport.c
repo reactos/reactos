@@ -481,7 +481,7 @@ KmtFltAddAltitude(
                            0,
                            REG_SZ,
                            (LPBYTE)DefaultInstance,
-                           (wcslen(DefaultInstance) + 1) * sizeof(WCHAR));
+                           (lstrlenW(DefaultInstance) + 1) * sizeof(WCHAR));
     if (Error != ERROR_SUCCESS)
     {
         goto Quit;
@@ -498,7 +498,7 @@ KmtFltAddAltitude(
                            0,
                            REG_SZ,
                            (LPBYTE)Altitude,
-                           (wcslen(Altitude) + 1) * sizeof(WCHAR));
+                           (lstrlenW(Altitude) + 1) * sizeof(WCHAR));
     if (Error != ERROR_SUCCESS)
     {
         goto Quit;

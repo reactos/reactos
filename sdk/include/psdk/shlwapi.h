@@ -2072,7 +2072,11 @@ BOOL WINAPI IsOS(DWORD);
 typedef struct
 {
     const IID *piid;
-    int        dwOffset;
+#if defined(__REACTOS__) || (WINVER >= _WIN32_WINNT_WIN10)
+    DWORD dwOffset;
+#else
+    int dwOffset;
+#endif
 } QITAB, *LPQITAB;
 
 HRESULT

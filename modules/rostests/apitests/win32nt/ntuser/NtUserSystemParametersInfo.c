@@ -313,7 +313,7 @@ Test_NtUserSystemParametersInfo_Params(void)
 #endif
     /* Test invalid pointer */
     SetLastError(ERROR_SUCCESS);
-    TEST(NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, (PVOID)0x80000000, 0) == FALSE);
+    TEST(NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, (PVOID)(LONG_PTR)0x80000000, 0) == FALSE);
     TEST(GetLastError() == ERROR_NOACCESS);
     for(i = 0; i < 1000; i++) data[i] = 0xdeadbeef;
 
@@ -452,7 +452,7 @@ Test_UserPref(UINT uiGet, UINT uiSet, DWORD dwPrefMask)
     TEST((dwUserPref & (~dwPrefMask)) == (dwUserPrefOrg & (~dwPrefMask)));
 
     /* Restore original value */
-    NtUserSystemParametersInfo(uiSet, 0, (PVOID)bOrig, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(uiSet, 0, (PVOID)(ULONG_PTR)bOrig, SPIF_UPDATEINIFILE);
 
 
 }
@@ -744,7 +744,7 @@ Test_SPI_SETNONCLIENTMETRICS(void)
 
     metrics.cbSize = sizeof(NONCLIENTMETRICSW);
     TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), (PVOID)(LONG_PTR)0xdeadbeef, 0) == 0);
 
     origMetrics = metrics;
 
@@ -764,7 +764,7 @@ Test_SPI_SETMINIMIZEDMETRICS(void)
 
     metrics.cbSize = sizeof(MINIMIZEDMETRICS);
     TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)&metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)(LONG_PTR)0xdeadbeef, 0) == 0);
 
     origMetrics = metrics;
 
@@ -784,7 +784,7 @@ Test_SPI_SETICONMETRICS(void)
 
     metrics.cbSize = sizeof(ICONMETRICSW);
     TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)&metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)(LONG_PTR)0xdeadbeef, 0) == 0);
 
     origMetrics = metrics;
 
@@ -817,7 +817,7 @@ Test_SPI_SETWORKAREA(void)
     TEST(NtUserSystemParametersInfo(SPI_GETWORKAREA, 1, &rc, 0) == 1);
     TEST(NtUserSystemParametersInfo(SPI_GETWORKAREA, -1, &rc, 0) == 1);
     TEST(NtUserSystemParametersInfo(SPI_GETWORKAREA, 0xdeadbeef, &rc, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, (PVOID)(LONG_PTR)0xdeadbeef, 0) == 0);
 
     /* Test values */
     rc = rcOrig; rc.left = -1;
@@ -1032,7 +1032,7 @@ Test_SPI_SETMENUANIMATION(void)
 
 
     /* Restore original values */
-    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)bOrig, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)(ULONG_PTR)bOrig, SPIF_UPDATEINIFILE);
 }
 
 //  Test_SPI_SETCOMBOBOXANIMATION();

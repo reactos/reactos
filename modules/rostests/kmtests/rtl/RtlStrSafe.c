@@ -24,7 +24,7 @@ Test_RtlUnicodeStringPrintf()
 {
     NTSTATUS Status;
     PWSTR pBuffer = NULL;
-    size_t BufferSize;
+    USHORT BufferSize;
     size_t EqualBytes;
     UNICODE_STRING UsString;
 
@@ -103,7 +103,7 @@ Test_RtlUnicodeStringPrintfEx()
 {
     NTSTATUS Status;
     PWSTR pBuffer = NULL;
-    size_t BufferSize;
+    USHORT BufferSize;
     size_t EqualBytes;
     UNICODE_STRING RemString;
     UNICODE_STRING UsString;

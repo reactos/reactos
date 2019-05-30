@@ -13,7 +13,7 @@
     ok_dec((ai)->ai_family, family);                                    \
     ok_dec((ai)->ai_socktype, socktype);                                \
     ok_dec((ai)->ai_protocol, protocol);                                \
-    ok_dec((ai)->ai_addrlen, addrlen);                                  \
+    ok_dec((int)(ai)->ai_addrlen, addrlen);                             \
 } while (0)
 
 #define ok_sockaddr_in(sockaddr, family, port, addr) do                 \

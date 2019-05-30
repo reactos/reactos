@@ -30,7 +30,7 @@ TestGetComputerNameEx(
         return;
     }
     trace("[%d] Reference is %ls\n", NameType, Reference);
-    ReferenceLen = wcslen(Reference);
+    ReferenceLen = lstrlenW(Reference);
     ok(ReferenceLen < RTL_NUMBER_OF(Reference),
        "[%d] Unexpected ReferenceLen %lu\n", NameType, ReferenceLen);
     if (NameType != ComputerNameDnsDomain && NameType != ComputerNamePhysicalDnsDomain)
@@ -278,7 +278,7 @@ WriteRegistryValue(PCHAR ValueName, PCHAR Value)
                                    0,
                                    REG_SZ,
                                    (LPBYTE)Value,
-                                   strlen(Value) + 1);
+                                   lstrlenA(Value) + 1);
 
         /* Close the key */
         RegCloseKey(ParametersKey);

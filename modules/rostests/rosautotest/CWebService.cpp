@@ -77,7 +77,7 @@ CWebService::DoRequest(const string& InputData)
     Data.reset(new char[InputData.size() + 1]);
     strcpy(Data, InputData.c_str());
 
-    if(!HttpSendRequestW(m_hHTTPRequest, szHeaders, wcslen(szHeaders), Data, InputData.size()))
+    if(!HttpSendRequestW(m_hHTTPRequest, szHeaders, lstrlenW(szHeaders), Data, (DWORD)InputData.size()))
         FATAL("HttpSendRequestW failed\n");
 
     /* Get the response */

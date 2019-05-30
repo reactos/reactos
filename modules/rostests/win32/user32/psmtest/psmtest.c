@@ -32,15 +32,15 @@ static void DrawTest(HDC hdc, int ypos, LPCWSTR str, DWORD dwFlags, int testtype
 
     if (testtype == LPK)
     {
-        ret = LpkPSMTextOut(hdc, 0, ypos, str, (!str) ? 10 : wcslen(str), dwFlags);
+        ret = LpkPSMTextOut(hdc, 0, ypos, str, (!str) ? 10 : lstrlenW(str), dwFlags);
         StringCchPrintfW(Result, 100, L"Return Value = %d", ret);
-        TextOutW(hdc, 200, ypos, Result, wcslen(Result));
+        TextOutW(hdc, 200, ypos, Result, lstrlenW(Result));
     }
     else if (testtype == USERLPK)
     {
-        ret = UserLpkPSMTextOut(hdc, 400, ypos, str, wcslen(str), dwFlags);
+        ret = UserLpkPSMTextOut(hdc, 400, ypos, str, lstrlenW(str), dwFlags);
         StringCchPrintfW(Result, 100, L"Return Value = %d", ret);
-        TextOutW(hdc, 600, ypos, Result, wcslen(Result));
+        TextOutW(hdc, 600, ypos, Result, lstrlenW(Result));
     }
 
 }
