@@ -431,7 +431,7 @@ KeWaitForSingleObject(IN PVOID Object,
     ULONG Hand = 0;
 
     if (Thread->WaitNext)
-        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
     else
         ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
                (KeGetCurrentIrql() == DISPATCH_LEVEL &&
@@ -604,7 +604,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     ULONG Index, Hand = 0;
 
     if (Thread->WaitNext)
-        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
     else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
              (!Timeout || Timeout->QuadPart != 0))
     {
