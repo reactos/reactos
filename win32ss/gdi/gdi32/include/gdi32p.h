@@ -424,6 +424,7 @@ GdiAllocBatchCommand(
         /* Call win32k, the kernel will call NtGdiFlushUserBatch to flush
            the current batch */
         NtGdiFlush();
+        ASSERT(pTeb->GdiTebBatch.Offset == 0);
 
         // If Flushed, lose the hDC for this batch job! See CORE-15839.
         if (hdc)
