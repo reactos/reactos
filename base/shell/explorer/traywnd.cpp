@@ -3233,7 +3233,7 @@ HandleTrayContextMenu:
 
     void _Init()
     {
-        m_Position = (DWORD) -1;
+        m_Position = (DWORD) 0;
     }
 
     DECLARE_NOT_AGGREGATABLE(CTrayWindow)
