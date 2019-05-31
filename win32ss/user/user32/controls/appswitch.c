@@ -209,41 +209,36 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    return TRUE;
 }
 
-// Function mostly compatible with the normal EnumChildWindows,
-// except it lists in Z-Order and it doesn't ensure consistency
-// if a window is removed while enumerating
-void EnumWindowsZOrder(WNDENUMPROC callback, LPARAM lParam)
+static BOOL CALLBACK
+EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
-    HWND hwnd, hwndOwner;
+    HWND hwndOwner;
     WCHAR szClass[64];
     DWORD ExStyle;
 
-    for (hwnd = GetTopWindow(NULL); hwnd; hwnd = GetWindow(hwnd, GW_HWNDNEXT))
+    if (!IsWindowVisible(hwnd))
+        return TRUE;
+
+    // check special windows
+    if (!GetClassNameW(hwnd, szClass, _countof(szClass)) ||
+        wcscmp(szClass, L"Shell_TrayWnd") == 0 ||
+        wcscmp(szClass, L"Progman") == 0)
     {
-        if (!IsWindowVisible(hwnd))
-            continue;
-
-        // check special windows
-        if (!GetClassNameW(hwnd, szClass, _countof(szClass)) ||
-            wcscmp(szClass, L"Shell_TrayWnd") == 0 ||
-            wcscmp(szClass, L"Progman") == 0)
-        {
-            continue;
-        }
-
-        ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-        if (ExStyle & WS_EX_TOOLWINDOW)
-            continue;
-
-        hwndOwner = GetWindow(hwnd, GW_OWNER);
-        if ((ExStyle & WS_EX_APPWINDOW) || !IsWindowVisible(hwndOwner))
-        {
-            if (!callback(hwnd, lParam))
-                break;
-
-            continue;
-        }
+        return TRUE;
     }
+
+    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    if (ExStyle & WS_EX_TOOLWINDOW)
+        return TRUE;
+
+    hwndOwner = GetWindow(hwnd, GW_OWNER);
+    if (!IsWindowVisible(hwndOwner) || (ExStyle & WS_EX_APPWINDOW))
+    {
+        if (!EnumerateCallback(hwnd, lParam))
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 void ProcessMouseMessage(UINT message, LPARAM lParam)
@@ -428,8 +423,8 @@ BOOL ProcessHotKey(VOID)
 {
    if (!isOpen)
    {
-      windowCount=0;
-      EnumWindowsZOrder(EnumerateCallback, 0);
+      windowCount = 0;
+      EnumWindows(EnumWindowsProc, 0);
 
       if (windowCount == 0)
          return FALSE;
@@ -574,7 +569,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
       Esc = TRUE;
 
       windowCount = 0;
-      EnumWindowsZOrder(EnumerateCallback, 0);
+      EnumWindows(EnumWindowsProc, 0);
 
       if (windowCount < 2)
           return 0;
