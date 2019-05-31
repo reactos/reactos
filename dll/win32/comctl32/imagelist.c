@@ -1316,7 +1316,11 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
 #endif
     SelectObject( hdc, bmp );
 #ifdef __REACTOS__
-    BitBlt( hdc, 0, 0, cx, cy, srce_dc, src_x, src_y, SRCCOPY );
+    if (!BitBlt( hdc, 0, 0, cx, cy, srce_dc, src_x, src_y, SRCCOPY ))
+    {
+        TRACE("BitBlt failed\n");
+        goto done;
+    }
 #else
     BitBlt( hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY );
 #endif
@@ -1372,10 +1376,27 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
         info->bmiColors[1].rgbBlue     = 0xff;
         info->bmiColors[1].rgbReserved = 0;
         if (!(mask = CreateDIBSection( himl->hdcMask, info, DIB_RGB_COLORS, &mask_bits, 0, 0 )))
+        {
+            TRACE("CreateDIBSection failed %i\n", GetLastError());
             goto done;
-        SelectObject( hdc, mask );
-        BitBlt( hdc, 0, 0, cx, cy, himl->hdcMask, src_x, src_y, SRCCOPY );
-        SelectObject( hdc, bmp );
+        }
+        if (SelectObject(hdc, mask) == NULL)
+        {
+            TRACE("SelectObject failed %i\n", GetLastError());
+            SelectObject(hdc, bmp);
+            goto done;
+        }
+        if (!BitBlt(hdc, 0, 0, cx, cy, himl->hdcMask, src_x, src_y, SRCCOPY))
+        {
+            TRACE("BitBlt failed %i\n", GetLastError());
+            SelectObject(hdc, bmp);
+            goto done;
+        }
+        if (SelectObject(hdc, bmp) == NULL)
+        {
+            TRACE("SelectObject failed %i\n", GetLastError());
+            goto done;
+        }
         for (i = 0, ptr = bits; i < cy; i++)
             for (j = 0; j < cx; j++, ptr++)
                 if ((((BYTE *)mask_bits)[i * width_bytes + j / 8] << (j % 8)) & 0x80) *ptr = 0;
@@ -1422,10 +1443,18 @@ HDC saturate_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
     if (!(bmp = CreateDIBSection(himl->hdcImage, info, DIB_RGB_COLORS, &bits, 0, 0 ))) goto done;
 
     /* bind both surfaces */
-    SelectObject(hdc, bmp);
+    if (SelectObject(hdc, bmp) == NULL)
+    {
+        TRACE("SelectObject failed\n");
+        goto done;
+    }
 
     /* copy into our dc the section that covers just the icon we we're asked for */
-    BitBlt(hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY);
+    if (!BitBlt(hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY))
+    {
+        TRACE("BitBlt failed!\n");
+        goto done;
+    }
 
     /* loop every pixel of the bitmap */
     for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
@@ -1543,11 +1572,14 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
         hdcSaturated = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
                                       pt.x, pt.y, cx, cy, pimldp->rgbFg);
 
-        hImageListDC = hdcSaturated;
-        /* shitty way of getting subroutines to blit at the right place (top left corner),
-           as our modified imagelist only contains a single image for performance reasons */
-        pt.x = 0;
-        pt.y = 0;
+        if (hdcSaturated != NULL)
+        {
+            hImageListDC = hdcSaturated;
+            /* shitty way of getting subroutines to blit at the right place (top left corner),
+               as our modified imagelist only contains a single image for performance reasons */
+            pt.x = 0;
+            pt.y = 0;
+        }
     }
 #endif
 
