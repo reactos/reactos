@@ -119,14 +119,15 @@ void ok_fls_(DWORD dwIndex, PVOID pValue, PFLS_CALLBACK_FUNCTION lpCallback)
 static VOID init_funcs(void)
 {
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hNTDLL = GetModuleHandleA("ntdll.dll");
 
 #define X(f) p##f = (void*)GetProcAddress(hKernel32, #f);
     X(FlsAlloc);
     X(FlsFree);
     X(FlsGetValue);
     X(FlsSetValue);
-    X(RtlIsCriticalSectionLockedByThread);
 #undef X
+    pRtlIsCriticalSectionLockedByThread = (void*)GetProcAddress(hNTDLL, "RtlIsCriticalSectionLockedByThread");
 }
 
 
