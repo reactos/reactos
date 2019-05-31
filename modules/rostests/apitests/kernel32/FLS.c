@@ -14,6 +14,7 @@ static DWORD (WINAPI *pFlsAlloc)(PFLS_CALLBACK_FUNCTION);
 static BOOL (WINAPI *pFlsFree)(DWORD);
 static PVOID (WINAPI *pFlsGetValue)(DWORD);
 static BOOL (WINAPI *pFlsSetValue)(DWORD,PVOID);
+static BOOL (WINAPI *pRtlIsCriticalSectionLockedByThread)(RTL_CRITICAL_SECTION *);
 
 
 #define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
@@ -46,7 +47,7 @@ VOID WINAPI FlsCallback3(PVOID lpFlsData)
     ok(lpFlsData == g_FlsData3, "Expected g_FlsData3(%p), got %p\n", g_FlsData3, lpFlsData);
 
     if (g_WinVersion <= WINVER_2003)
-        ok(RtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock), "Expected lock on PEB\n");
+        ok(pRtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock), "Expected lock on PEB\n");
     InterlockedIncrement(&g_FlsCalled3);
     if (g_FlsExcept3)
     {
@@ -118,6 +119,7 @@ void ok_fls_(DWORD dwIndex, PVOID pValue, PFLS_CALLBACK_FUNCTION lpCallback)
 static VOID init_funcs(void)
 {
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hNTDLL = GetModuleHandleA("ntdll.dll");
 
 #define X(f) p##f = (void*)GetProcAddress(hKernel32, #f);
     X(FlsAlloc);
@@ -125,6 +127,7 @@ static VOID init_funcs(void)
     X(FlsGetValue);
     X(FlsSetValue);
 #undef X
+    pRtlIsCriticalSectionLockedByThread = (void*)GetProcAddress(hNTDLL, "RtlIsCriticalSectionLockedByThread");
 }
 
 
@@ -139,6 +142,11 @@ START_TEST(FLS)
     if (!pFlsAlloc || !pFlsFree || !pFlsGetValue || !pFlsSetValue)
     {
         skip("Fls functions not available\n");
+        return;
+    }
+    if (!pRtlIsCriticalSectionLockedByThread)
+    {
+        skip("RtlIsCriticalSectionLockedByThread function not available\n");
         return;
     }
 
@@ -222,7 +230,7 @@ START_TEST(FLS)
         dwErr = 0xdeaddead;
     }
     _SEH2_END;
-    ok(RtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock) == FALSE, "Expected no lock on PEB\n");
+    ok(pRtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock) == FALSE, "Expected no lock on PEB\n");
 
     ok(bRet == 12345, "FlsFree(%lu) should have failed, got %u\n", dwIndex3, bRet);
     ok(dwErr == 0xdeaddead, "Expected GetLastError() to be 0xdeaddead, was %lx\n", dwErr);
