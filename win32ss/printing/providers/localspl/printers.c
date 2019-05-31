@@ -510,7 +510,7 @@ _LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterI
     (*ppPrinterInfo)->dwGetVersion = GetVersion();
     (*ppPrinterInfo)->Status = pPrinter->dwStatus;
 
-#if !defined(DBG)
+#if !DBG
     (*ppPrinterInfo)->fFreeBuild = 1;
 #endif
 
