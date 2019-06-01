@@ -303,7 +303,7 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     DWORD dwSize;
     HANDLE hGlobal;
     LPVOID pMem;
-    HANDLE hRet = NULL;
+    HANDLE hRet = NULL, hTemp;
     SETCLIPBDATA scd = {FALSE, FALSE};
 
     /* Check if this is a delayed rendering */
@@ -318,13 +318,15 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     /* Meta files are probably checked for validity */
     else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT )
     {
-        hMem = GdiConvertMetaFilePict( hMem );
-        hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
+        hTemp = GdiConvertMetaFilePict( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hTemp, &scd); // Note : LOL, it returns a BOOL not a HANDLE!!!!
+        if (hRet == hTemp) hRet = hMem;                      // If successful "TRUE", return the original handle.
     }
     else if (uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
     {
-        hMem = GdiConvertEnhMetaFile( hMem );
-        hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
+        hTemp = GdiConvertEnhMetaFile( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hTemp, &scd);
+        if (hRet == hTemp) hRet = hMem;
     }
     else
     {
