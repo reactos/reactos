@@ -13,11 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
-// Need to move this to NtGdiTyp.h
-#define GDITAG_TYPE_EMF 'XEFM' // EnhMetaFile
-#define GDITAG_TYPE_MFP '_PFM' // MetaFile Picture
 
-// Internal Use
+// Internal Use Only
 typedef struct _METATYPEOBJ
 {
     BASEOBJECT  BaseObject;
@@ -29,18 +26,6 @@ typedef struct _METATYPEOBJ
     PBYTE pjData[4];
 } METATYPEOBJ, *PMETATYPEOBJ;
 
-
-//
-//  Plug Me in Somewhere? Clipboard cleanup?
-//
-VOID
-FASTCALL
-METATYPEOBJ__vCleanup(PVOID ObjectBody)
-{
-    PMETATYPEOBJ pmto = (PMETATYPEOBJ)ObjectBody;
-    GDIOBJ_hInsertObject(&pmto->BaseObject, GDI_OBJ_HMGR_POWNED);
-    GDIOBJ_vDeleteObject(&pmto->BaseObject);
-}
 
 /* System Service Calls ******************************************************/
 
@@ -79,7 +64,7 @@ NtGdiCreateServerMetaFile(
         cjData &&
         pjData )
     {
-        pmto = (PMETATYPEOBJ)GDIOBJ_AllocObjWithHandle(GDIObjType_META_TYPE, sizeof(METATYPEOBJ) + cjData);
+        pmto = (PMETATYPEOBJ)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_META_TYPE, sizeof(METATYPEOBJ) + cjData);
         if ( pmto )
         {
             pmto->iType  = iType;
@@ -90,8 +75,8 @@ NtGdiCreateServerMetaFile(
 
             _SEH2_TRY
             {
-                 ProbeForRead( pjData, cjData, 1 );
-                 RtlCopyMemory( pmto->pjData, pjData, cjData) ;
+                ProbeForRead( pjData, cjData, 1 );
+                RtlCopyMemory( pmto->pjData, pjData, cjData) ;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -102,7 +87,7 @@ NtGdiCreateServerMetaFile(
             if (Pass)
             {
                GDIOBJ_vSetObjectOwner(&pmto->BaseObject, GDI_OBJ_HMGR_PUBLIC);
-               GDIOBJ_vDereferenceObject ((POBJ)pmto);
+               GDIOBJ_vUnlockObject(&pmto->BaseObject);
                return pmto->BaseObject.hHmgr;
             }
             else
@@ -132,7 +117,7 @@ NtGdiGetServerMetaFileBits(
     ULONG cjRet = 0;
     PMETATYPEOBJ pmto;
 
-    pmto = (PMETATYPEOBJ) GDIOBJ_ShareLockObj ((HGDIOBJ) hmo, GDIObjType_META_TYPE);
+    pmto = (PMETATYPEOBJ) GDIOBJ_LockObject( hmo, GDIObjType_META_TYPE);
 
     if (!pmto)
         return 0;
@@ -175,7 +160,7 @@ NtGdiGetServerMetaFileBits(
         }
     }
 
-    GDIOBJ_vDereferenceObject ((POBJ)pmto);
+    GDIOBJ_vUnlockObject(&pmto->BaseObject);
     return cjRet;
 }
 

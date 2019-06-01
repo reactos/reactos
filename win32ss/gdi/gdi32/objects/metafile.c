@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include <precomp.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -101,14 +103,16 @@ GdiIsMetaPrintDC(HDC hDC)
  */
 HGLOBAL
 WINAPI
-GdiCreateLocalMetaFilePict(HENHMETAFILE hEMF)
+GdiCreateLocalMetaFilePict(HANDLE hmo)
 {
     HGLOBAL         hMetaFilePict;
     METAFILEPICT *  pInfo;
     HMETAFILE       hMF = NULL;
     BYTE *          Buffer = NULL;
+    BYTE *          BufNew = NULL;
     HDC             hDC = NULL;
-    UINT            nSize;
+    UINT            nSize, cSize;
+    DWORD           iType;
 
     // NOTE: On Win32, there is no difference between the local heap and
     //       the global heap. GlobalAlloc and LocalAlloc have same effect.
@@ -119,15 +123,7 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hEMF)
     if (pInfo == NULL)
         goto Exit;
 
-    // create DC
-    hDC = CreateCompatibleDC(NULL);
-    if (hDC == NULL)
-        goto Exit;
-
-    // get size of dest buffer
-    nSize = GetWinMetaFileBits(hEMF, 0, NULL, MM_ANISOTROPIC, hDC);
-    if (nSize == 0)
-        goto Exit;
+    nSize = NtGdiGetServerMetaFileBits( hmo, 0, NULL, NULL, NULL, NULL, NULL );
 
     // allocate buffer
     Buffer = (BYTE *)LocalAlloc(LPTR, nSize);
@@ -135,19 +131,53 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hEMF)
         goto Exit;
 
     // store to buffer
-    nSize = GetWinMetaFileBits(hEMF, nSize, Buffer, MM_ANISOTROPIC, hDC);
+    nSize = NtGdiGetServerMetaFileBits( hmo, nSize, Buffer, &iType, (PDWORD)&pInfo->mm, (PDWORD)&pInfo->xExt, (PDWORD)&pInfo->yExt );
     if (nSize == 0)
         goto Exit;
+
+    if ( iType == GDITAG_TYPE_EMF ) // handle conversion to MFP
+    {
+        static const WCHAR szDisplayW[] = { 'D','I','S','P','L','A','Y','\0' };
+        HENHMETAFILE hEMF;
+        PENHMETAHEADER pemh = (PENHMETAHEADER)Buffer;
+
+        pInfo->mm   = MM_ANISOTROPIC;
+        pInfo->xExt = pemh->rclFrame.right   - pemh->rclFrame.left; // Width
+        pInfo->yExt = pemh->rclFrame.bottom  - pemh->rclFrame.top;  // Height
+
+        hEMF = SetEnhMetaFileBits(nSize, Buffer);
+        if (hEMF == NULL)
+            goto Exit;
+
+        hDC = CreateDCW(szDisplayW, NULL, NULL, NULL);
+        if (hDC)
+        {
+            cSize = GetWinMetaFileBits( hEMF, 0, NULL, MM_ANISOTROPIC, hDC );
+            if (cSize)
+            {
+                BufNew = (BYTE *)LocalAlloc(LPTR, cSize);
+                if (BufNew)
+                {
+                    nSize = GetWinMetaFileBits( hEMF, cSize, (LPBYTE)BufNew, MM_ANISOTROPIC, hDC );
+                    if (nSize == cSize)
+                    {
+                        if (Buffer) LocalFree(Buffer);
+                        Buffer = BufNew;
+                    }
+                }
+            }
+            DeleteDC(hDC);
+        }
+        DeleteEnhMetaFile(hEMF);
+
+        if (Buffer != BufNew)
+            goto Exit;
+    }
 
     // create metafile from buffer
     hMF = SetMetaFileBitsEx(nSize, Buffer);
     if (hMF == NULL)
         goto Exit;
-
-    // no suggested size is supplied
-    pInfo->mm = MM_ANISOTROPIC;
-    pInfo->xExt = 0;
-    pInfo->yExt = 0;
 
     // set metafile handle
     pInfo->hMF = hMF;
@@ -156,8 +186,6 @@ Exit:
     // clean up
     if (Buffer)
         LocalFree(Buffer);
-    if (hDC)
-        DeleteDC(hDC);
     if (pInfo)
         GlobalUnlock(hMetaFilePict);
     if (hMF == NULL)
@@ -173,16 +201,15 @@ Exit:
 /*
  * @implemented
  */
-HENHMETAFILE
+HANDLE
 WINAPI
 GdiConvertMetaFilePict(HGLOBAL hMetaFilePict)
 {
     HMETAFILE       hMF;
     UINT            nSize;
-    HENHMETAFILE    hEMF    = NULL;
-    BYTE *          Buffer  = NULL;
-    HDC             hDC     = NULL;
-    METAFILEPICT *  pInfo   = NULL;
+    HANDLE          hmo    = NULL;
+    BYTE *          Buffer = NULL;
+    METAFILEPICT *  pInfo  = NULL;
 
     // get METAFILEPICT pointer
     pInfo = (METAFILEPICT *)GlobalLock(hMetaFilePict);
@@ -191,8 +218,6 @@ GdiConvertMetaFilePict(HGLOBAL hMetaFilePict)
 
     // get metafile handle
     hMF = pInfo->hMF;
-
-    // Missing test for GDILoObjType_LO_METADC16_TYPE (hMF)
 
     // get size of buffer
     nSize = GetMetaFileBitsEx(hMF, 0, NULL);
@@ -209,21 +234,13 @@ GdiConvertMetaFilePict(HGLOBAL hMetaFilePict)
     if (nSize == 0)
         goto Exit;
 
-    // create DC
-    hDC = CreateCompatibleDC(NULL);
-    if (hDC == NULL)
-        goto Exit;
-
-    // create enhanced metafile from buffer
-    hEMF = SetWinMetaFileBits(nSize, Buffer, hDC, pInfo);
+    hmo = NtGdiCreateServerMetaFile( GDITAG_TYPE_MFP, nSize, Buffer, pInfo->mm, pInfo->xExt, pInfo->yExt);
 
 Exit:
     // clean up
     if (pInfo)
         GlobalUnlock(hMetaFilePict);
-    if (hDC)
-        DeleteDC(hDC);
     if (Buffer)
         LocalFree(Buffer);
-    return hEMF;    // success if non-NULL
+    return hmo;    // success if non-NULL
 }

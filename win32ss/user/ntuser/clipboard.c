@@ -65,8 +65,13 @@ IntFreeElementData(PCLIP pElement)
     {
         if (pElement->fGlobalHandle)
             UserDeleteObject(pElement->hData, TYPE_CLIPDATA);
-        else if (pElement->fmt == CF_BITMAP || pElement->fmt == CF_PALETTE ||
-                 pElement->fmt == CF_DSPBITMAP)
+        else if (pElement->fmt == CF_BITMAP          ||
+                 pElement->fmt == CF_PALETTE         ||
+                 pElement->fmt == CF_DSPBITMAP       ||
+                 pElement->fmt == CF_METAFILEPICT    ||
+                 pElement->fmt == CF_DSPMETAFILEPICT ||
+                 pElement->fmt == CF_DSPENHMETAFILE  ||
+                 pElement->fmt == CF_ENHMETAFILE )
         {
             GreSetObjectOwner(pElement->hData, GDI_OBJ_HMGR_POWNED);
             GreDeleteObject(pElement->hData);

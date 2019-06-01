@@ -161,6 +161,8 @@ typedef enum GDILoObjType
     GDILoObjType_LO_REGION_TYPE = 0x40000,
     GDILoObjType_LO_ICMLCS_TYPE = 0x90000,
     GDILoObjType_LO_CLIENTOBJ_TYPE = 0x60000,
+    GDILoObjType_LO_UMPD_TYPE = 0x110000,
+    GDILoObjType_LO_META_TYPE = 0x150000,
     GDILoObjType_LO_ALTDC_TYPE = 0x210000,
     GDILoObjType_LO_PEN_TYPE = 0x300000,
     GDILoObjType_LO_EXTPEN_TYPE = 0x500000,
@@ -239,6 +241,9 @@ typedef DWORD LFTYPE;
 
 /* Get/SetBounds/Rect support. */
 #define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
+
+#define GDITAG_TYPE_EMF 'XEFM' // EnhMetaFile
+#define GDITAG_TYPE_MFP '_PFM' // MetaFile Picture
 
 /* TYPES *********************************************************************/
 

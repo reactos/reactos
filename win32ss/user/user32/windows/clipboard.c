@@ -15,6 +15,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+HANDLE WINAPI GdiConvertMetaFilePict(HANDLE);
+HANDLE WINAPI GdiConvertEnhMetaFile(HANDLE);
+HANDLE WINAPI GdiCreateLocalEnhMetaFile(HANDLE);
+HANDLE WINAPI GdiCreateLocalMetaFilePict(HANDLE);
+
+
 /*
  * @implemented
  */
@@ -202,6 +208,16 @@ GetClipboardData(UINT uFormat)
     if (!hData)
         return NULL;
 
+    switch (uFormat)
+    {
+        case CF_DSPMETAFILEPICT:
+        case CF_METAFILEPICT:
+            return GdiCreateLocalMetaFilePict(hData);
+        case CF_DSPENHMETAFILE:
+        case CF_ENHMETAFILE:
+            return GdiCreateLocalEnhMetaFile(hData);
+    }
+
     if (gcd.fGlobalHandle)
     {
         HANDLE hGlobal;
@@ -300,11 +316,15 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     else if (uFormat == CF_BITMAP || uFormat == CF_DSPBITMAP || uFormat == CF_PALETTE)
         hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
     /* Meta files are probably checked for validity */
-    else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT ||
-             uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+    else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT )
     {
-        UNIMPLEMENTED;
-        hRet = NULL; // not supported yet
+        hMem = GdiConvertMetaFilePict( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
+    }
+    else if (uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+    {
+        hMem = GdiConvertEnhMetaFile( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
     }
     else
     {
