@@ -399,9 +399,9 @@ ObReferenceFileObjectForWrite(
 //
 NTSTATUS
 NTAPI
-ObpCreateDeviceMap(
-    IN HANDLE DirectoryHandle
-);
+ObSetDeviceMap(
+    IN PEPROCESS Process,
+    IN HANDLE DirectoryHandle);
 
 VOID
 NTAPI

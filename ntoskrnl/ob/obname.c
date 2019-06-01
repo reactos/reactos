@@ -173,7 +173,7 @@ ObpCreateDosDevicesDirectory(VOID)
         goto done;
 
     /* Create the system device map */
-    Status = ObpCreateDeviceMap(Handle);
+    Status = ObSetDeviceMap(NULL, Handle);
     if (!NT_SUCCESS(Status))
         goto done;
 

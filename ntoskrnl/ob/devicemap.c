@@ -17,11 +17,14 @@
 
 NTSTATUS
 NTAPI
-ObpCreateDeviceMap(IN HANDLE DirectoryHandle)
+ObSetDeviceMap(IN PEPROCESS Process,
+               IN HANDLE DirectoryHandle)
 {
     POBJECT_DIRECTORY DirectoryObject = NULL;
-    PDEVICE_MAP DeviceMap = NULL;
+    PDEVICE_MAP DeviceMap = NULL, NewDeviceMap = NULL, OldDeviceMap;
     NTSTATUS Status;
+    PEPROCESS WorkProcess;
+    BOOLEAN MakePermanant = FALSE;
 
     Status = ObReferenceObjectByHandle(DirectoryHandle,
                                        DIRECTORY_TRAVERSE,
@@ -36,7 +39,7 @@ ObpCreateDeviceMap(IN HANDLE DirectoryHandle)
     }
 
     /* Allocate and initialize a new device map */
-    DeviceMap = ExAllocatePoolWithTag(NonPagedPool,
+    DeviceMap = ExAllocatePoolWithTag(PagedPool,
                                       sizeof(*DeviceMap),
                                       'mDbO');
     if (DeviceMap == NULL)
@@ -54,14 +57,84 @@ ObpCreateDeviceMap(IN HANDLE DirectoryHandle)
     KeAcquireGuardedMutex(&ObpDeviceMapLock);
 
     /* Attach the device map to the directory object */
-    DirectoryObject->DeviceMap = DeviceMap;
+    if (DirectoryObject->DeviceMap == NULL)
+    {
+        DirectoryObject->DeviceMap = DeviceMap;
+    }
+    else
+    {
+        NewDeviceMap = DeviceMap;
 
+        /* There's already a device map,
+           so reuse it */
+        DeviceMap = DirectoryObject->DeviceMap;
+        ++DeviceMap->ReferenceCount;
+    }
+
+    /* Caller gave a process, use it */
+    if (Process != NULL)
+    {
+        WorkProcess = Process;
+    }
+    /* If no process given, use current and
+     * set system device map */
+    else
+    {
+        WorkProcess = PsGetCurrentProcess();
+        ObSystemDeviceMap = DeviceMap;
+    }
+
+    /* If current object isn't system one, save system one in current
+     * device map */
+    if (DirectoryObject != ObSystemDeviceMap->DosDevicesDirectory)
+    {
+        /* We also need to make the object permanant */
+        DeviceMap->GlobalDosDevicesDirectory = ObSystemDeviceMap->DosDevicesDirectory;
+        MakePermanant = TRUE;
+    }
+
+    /* Save old process device map */
+    OldDeviceMap = WorkProcess->DeviceMap;
     /* Attach the device map to the process */
-    ObSystemDeviceMap = DeviceMap;
-    PsGetCurrentProcess()->DeviceMap = DeviceMap;
+    WorkProcess->DeviceMap = DeviceMap;
 
     /* Release the device map lock */
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* If we have to make the object permamant, do it now */
+    if (MakePermanant)
+    {
+        POBJECT_HEADER ObjectHeader;
+        POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(DirectoryObject);
+        HeaderNameInfo = ObpReferenceNameInfo(ObjectHeader);
+
+        ObpEnterObjectTypeMutex(ObjectHeader->Type);
+        if (HeaderNameInfo != NULL && HeaderNameInfo->Directory != NULL)
+        {
+            ObjectHeader->Flags |= OB_FLAG_PERMANENT;
+        }
+        ObpLeaveObjectTypeMutex(ObjectHeader->Type);
+
+        if (HeaderNameInfo != NULL)
+        {
+            ObpDereferenceNameInfo(HeaderNameInfo);
+        }
+    }
+
+    /* Release useless device map if required */
+    if (NewDeviceMap != NULL)
+    {
+        ObfDereferenceObject(DirectoryObject);
+        ExFreePoolWithTag(NewDeviceMap, 'mDbO');
+    }
+
+    /* And dereference previous process device map */
+    if (OldDeviceMap != NULL)
+    {
+        ObfDereferenceDeviceMap(OldDeviceMap);
+    }
 
     return STATUS_SUCCESS;
 }
