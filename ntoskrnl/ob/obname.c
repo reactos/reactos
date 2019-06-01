@@ -142,6 +142,22 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
 }
 
 INIT_FUNCTION
+VOID
+NTAPI
+ObpFreeDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    PACL Dacl;
+    NTSTATUS Status;
+    BOOLEAN DaclPresent, DaclDefaulted;
+
+    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor, &DaclPresent, &Dacl, &DaclDefaulted);
+    ASSERT(NT_SUCCESS(Status));
+    ASSERT(DaclPresent);
+    ASSERT(Dacl != NULL);
+    ExFreePoolWithTag(Dacl, 'lcaD');
+}
+
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 ObpCreateDosDevicesDirectory(VOID)
@@ -151,8 +167,6 @@ ObpCreateDosDevicesDirectory(VOID)
     HANDLE Handle, SymHandle;
     SECURITY_DESCRIPTOR DosDevicesSD;
     NTSTATUS Status;
-    PACL Dacl;
-    BOOLEAN DaclPresent, DaclDefaulted;
 
     /* Create a custom security descriptor for the global DosDevices directory */
     Status = ObpGetDosDevicesProtection(&DosDevicesSD);
@@ -256,8 +270,7 @@ ObpCreateDosDevicesDirectory(VOID)
     if (NT_SUCCESS(Status)) NtClose(SymHandle);
 
 done:
-    RtlGetDaclSecurityDescriptor(&DosDevicesSD, &DaclPresent, &Dacl, &DaclDefaulted);
-    ExFreePoolWithTag(Dacl, 'lcaD');
+    ObpFreeDosDevicesProtection(&DosDevicesSD);
 
     /* Return status */
     return Status;
