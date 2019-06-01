@@ -143,12 +143,142 @@ ObSetDeviceMap(IN PEPROCESS Process,
 }
 
 
+NTSTATUS
+NTAPI
+ObpSetCurrentProcessDeviceMap(VOID)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 PDEVICE_MAP
 NTAPI
 ObpReferenceDeviceMap(VOID)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    LUID LogonId;
+    NTSTATUS Status;
+    PTOKEN Token = NULL;
+    PDEVICE_MAP DeviceMap;
+    PETHREAD CurrentThread;
+    BOOLEAN LookingForSystem;
+    LUID SystemLuid = SYSTEM_LUID;
+    BOOLEAN CopyOnOpen, EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+
+    LookingForSystem = FALSE;
+
+    /* If LUID mapping is enable, try to get appropriate device map */
+    if (ObpLUIDDeviceMapsEnabled != 0)
+    {
+        /* In case of impersonation, we've got a bit of work to do */
+        CurrentThread = PsGetCurrentThread();
+        if (CurrentThread->ActiveImpersonationInfo)
+        {
+            /* Get impersonation token */
+            Token = PsReferenceImpersonationToken(CurrentThread,
+                                                  &CopyOnOpen,
+                                                  &EffectiveOnly,
+                                                  &ImpersonationLevel);
+            /* Get logon LUID */
+            if (Token != NULL)
+            {
+                Status = SeQueryAuthenticationIdToken(Token, &LogonId);
+            }
+            else
+            {
+                /* Force failure */
+                Status = STATUS_NO_TOKEN;
+            }
+
+            /* If we got logon LUID */
+            if (NT_SUCCESS(Status))
+            {
+                /*
+                 * Check it's not system, system is easy to handle,
+                 * we just need to return ObSystemDeviceMap
+                 */
+                if (!RtlEqualLuid(&LogonId, &SystemLuid))
+                {
+                    /* Ask Se for the device  map */
+                    Status = SeGetLogonIdDeviceMap(&LogonId, &DeviceMap);
+                    if (NT_SUCCESS(Status))
+                    {
+                        /* Acquire the device map lock */
+                        KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+                        /* Reference the device map if any */
+                        if (DeviceMap != NULL)
+                        {
+                            ++DeviceMap->ReferenceCount;
+                        }
+
+                        /* Release the device map lock */
+                        KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+                        /* If we got the device map, we're done! */
+                        if (DeviceMap != NULL)
+                        {
+                            ObDereferenceObject(Token);
+
+                            return DeviceMap;
+                        }
+                    }
+                }
+                else
+                {
+                    LookingForSystem = TRUE;
+                }
+            }
+        }
+
+        /*
+         * Fall back case of the LUID mapping, make sure there's a
+         * a device map attached to the current process
+         */
+        if (PsGetCurrentProcess()->DeviceMap == NULL &&
+            !NT_SUCCESS(ObpSetCurrentProcessDeviceMap()))
+        {
+            /* We may have failed after we got impersonation token */
+            if (Token != NULL)
+            {
+                ObDereferenceObject(Token);
+            }
+
+            return NULL;
+        }
+    }
+
+    /* Acquire the device map lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+    /* If we're looking for system map, use it */
+    if (LookingForSystem)
+    {
+        DeviceMap = ObSystemDeviceMap;
+    }
+    /* Otherwise, use current process device map */
+    else
+    {
+        DeviceMap = PsGetCurrentProcess()->DeviceMap;
+    }
+
+    /* If we got one, reference it */
+    if (DeviceMap != NULL)
+    {
+        ++DeviceMap->ReferenceCount;
+    }
+
+    /* Release the device map lock */
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* We may have impersonation token (if we failed in impersonation branch) */
+    if (Token != NULL)
+    {
+        ObDereferenceObject(Token);
+    }
+
+    /* Return the potentially found device map */
+    return DeviceMap;
 }
 
 
