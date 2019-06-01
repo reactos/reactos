@@ -5,6 +5,7 @@
  * PURPOSE:         Device map implementation
  * PROGRAMMERS:     Eric Kohl (eric.kohl@reactos.org)
  *                  Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES ***************************************************************/
@@ -147,7 +148,76 @@ NTSTATUS
 NTAPI
 ObpSetCurrentProcessDeviceMap(VOID)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PTOKEN Token;
+    LUID LogonId;
+    NTSTATUS Status;
+    PEPROCESS CurrentProcess;
+    LUID SystemLuid = SYSTEM_LUID;
+    PDEVICE_MAP DeviceMap, OldDeviceMap;
+
+    /* Get our impersonation token */
+    CurrentProcess = PsGetCurrentProcess();
+    Token = PsReferencePrimaryToken(CurrentProcess);
+    if (Token == NULL)
+    {
+        return STATUS_NO_TOKEN;
+    }
+
+    /* Query the Logon ID */
+    Status = SeQueryAuthenticationIdToken(Token, &LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
+    /* If that's system, then use system device map */
+    if (RtlEqualLuid(&LogonId, &SystemLuid))
+    {
+        DeviceMap = ObSystemDeviceMap;
+    }
+    /* Otherwise ask Se for the device map */
+    else
+    {
+        Status = SeGetLogonIdDeviceMap(&LogonId, &DeviceMap);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Normalize failure status */
+            Status = STATUS_OBJECT_PATH_INVALID;
+            goto done;
+        }
+    }
+
+    /* Fail if no device map */
+    if (DeviceMap == NULL)
+    {
+        Status = STATUS_OBJECT_PATH_INVALID;
+        goto done;
+    }
+
+    /* Acquire the device map lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+    /* Save old device map attached to the process */
+    OldDeviceMap = CurrentProcess->DeviceMap;
+
+    /* Set new device map & reference it */
+    ++DeviceMap->ReferenceCount;
+    CurrentProcess->DeviceMap = DeviceMap;
+
+    /* Release the device map lock */
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* If we had a device map, dereference it */
+    if (OldDeviceMap != NULL)
+    {
+        ObfDereferenceDeviceMap(OldDeviceMap);
+    }
+
+done:
+    /* We're done with the token! */
+    ObDereferenceObject(Token);
+
+    return Status;
 }
 
 
