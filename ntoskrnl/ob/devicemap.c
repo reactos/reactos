@@ -189,7 +189,8 @@ ObfDereferenceDeviceMap(IN PDEVICE_MAP DeviceMap)
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
 
     /* Dereference the DOS Devices Directory and free the Device Map */
-    ObDereferenceObject(DeviceMap->DosDevicesDirectory );
+    ObMakeTemporaryObject(DeviceMap->DosDevicesDirectory);
+    ObDereferenceObject(DeviceMap->DosDevicesDirectory);
     ExFreePoolWithTag(DeviceMap, 'mDbO');
 }
 
