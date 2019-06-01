@@ -149,8 +149,97 @@ NTAPI
 ObSetDirectoryDeviceMap(OUT PDEVICE_MAP * DeviceMap,
                         IN HANDLE DirectoryHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    POBJECT_DIRECTORY DirectoryObject = NULL;
+    PDEVICE_MAP LocalMap = NULL, NewDeviceMap = NULL;
+    NTSTATUS Status;
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+
+    Status = ObReferenceObjectByHandle(DirectoryHandle,
+                                       DIRECTORY_TRAVERSE,
+                                       ObpDirectoryObjectType,
+                                       KernelMode,
+                                       (PVOID*)&DirectoryObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Allocate and initialize a new device map */
+    LocalMap = ExAllocatePoolWithTag(PagedPool,
+                                     sizeof(*LocalMap),
+                                     'mDbO');
+    if (LocalMap == NULL)
+    {
+        ObDereferenceObject(DirectoryObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize the device map */
+    RtlZeroMemory(LocalMap, sizeof(*LocalMap));
+    LocalMap->ReferenceCount = 1;
+    LocalMap->DosDevicesDirectory = DirectoryObject;
+
+    /* Acquire the device map lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+    /* Attach the device map to the directory object */
+    if (DirectoryObject->DeviceMap == NULL)
+    {
+        DirectoryObject->DeviceMap = LocalMap;
+    }
+    else
+    {
+        NewDeviceMap = LocalMap;
+
+        /* There's already a device map,
+           so reuse it */
+        LocalMap = DirectoryObject->DeviceMap;
+        ++LocalMap->ReferenceCount;
+    }
+
+    /* If current object isn't system one, save system one in current
+     * device map */
+    if (DirectoryObject != ObSystemDeviceMap->DosDevicesDirectory)
+    {
+        /* We also need to make the object permanant */
+        LocalMap->GlobalDosDevicesDirectory = ObSystemDeviceMap->DosDevicesDirectory;
+    }
+
+    /* Release the device map lock */
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    if (DeviceMap != NULL)
+    {
+        *DeviceMap = LocalMap;
+    }
+
+    /* Caller expects us to make the object permanant, so do it! */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(DirectoryObject);
+    HeaderNameInfo = ObpReferenceNameInfo(ObjectHeader);
+
+    ObpEnterObjectTypeMutex(ObjectHeader->Type);
+    if (HeaderNameInfo != NULL && HeaderNameInfo->Directory != NULL)
+    {
+        ObjectHeader->Flags |= OB_FLAG_PERMANENT;
+    }
+    ObpLeaveObjectTypeMutex(ObjectHeader->Type);
+
+    if (HeaderNameInfo != NULL)
+    {
+        ObpDereferenceNameInfo(HeaderNameInfo);
+    }
+
+    /* Release useless device map if required */
+    if (NewDeviceMap != NULL)
+    {
+        ObfDereferenceObject(DirectoryObject);
+        ExFreePoolWithTag(NewDeviceMap, 'mDbO');
+    }
+
+    return Status;
 }
 
 
