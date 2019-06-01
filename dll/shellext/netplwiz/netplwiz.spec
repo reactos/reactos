@@ -5,7 +5,7 @@
 5 stub ClearAutoLogon
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
-8 stub -private DllInstall
+@ stub -private DllInstall
 9 stdcall DllMain(ptr long ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
