@@ -32,6 +32,9 @@ UNICODE_STRING ObpDosDevicesShortName =
 WCHAR ObpUnsecureGlobalNamesBuffer[128] = {0};
 ULONG ObpUnsecureGlobalNamesLength = sizeof(ObpUnsecureGlobalNamesBuffer);
 
+ULONG ObpLUIDDeviceMapsDisabled;
+ULONG ObpLUIDDeviceMapsEnabled;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 INIT_FUNCTION
@@ -181,6 +184,13 @@ ObpCreateDosDevicesDirectory(VOID)
     HANDLE Handle, SymHandle;
     SECURITY_DESCRIPTOR DosDevicesSD;
     NTSTATUS Status;
+
+    /*
+     * Enable LUID mappings only if not explicitely disabled
+     * and if protection mode is set
+     */
+    if (ObpProtectionMode == 0 || ObpLUIDDeviceMapsDisabled != 0)
+        ObpLUIDDeviceMapsEnabled = 0;
 
     /* Create a custom security descriptor for the global DosDevices directory */
     Status = ObpGetDosDevicesProtection(&DosDevicesSD);

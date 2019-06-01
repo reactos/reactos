@@ -620,6 +620,7 @@ extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
 extern ULONG ObpUnsecureGlobalNamesLength;
 extern ULONG ObpObjectSecurityMode;
 extern ULONG ObpProtectionMode;
+extern ULONG ObpLUIDDeviceMapsDisabled;
 
 //
 // Inlined Functions
