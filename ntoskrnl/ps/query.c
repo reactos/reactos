@@ -78,11 +78,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
     PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
     PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
-    PROCESS_DEVICEMAP_INFORMATION_EX DeviceMap;
     PUNICODE_STRING ImageName;
     ULONG Cookie, ExecuteOptions = 0;
     ULONG_PTR Wow64 = 0;
     PROCESS_VALUES ProcessValues;
+    ULONG Flags;
     PAGED_CODE();
 
     /* Check for user-mode caller */
@@ -577,7 +577,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 {
                     PPROCESS_DEVICEMAP_INFORMATION_EX DeviceMapEx = ProcessInformation;
 
-                    DeviceMap.Flags = DeviceMapEx->Flags;
+                    Flags = DeviceMapEx->Flags;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -592,7 +592,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 }
 
                 /* Only one flag is supported and it needs LUID mappings */
-                if ((DeviceMap.Flags & ~PROCESS_LUID_DOSDEVICES_ONLY) != 0 ||
+                if ((Flags & ~PROCESS_LUID_DOSDEVICES_ONLY) != 0 ||
                     !ObIsLUIDDeviceMapsEnabled())
                 {
                     Status = STATUS_INVALID_PARAMETER;
@@ -608,7 +608,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 }
 
                 /* No flags for standard call */
-                DeviceMap.Flags = 0;
+                Flags = 0;
             }
 
             /* Set the return length */
@@ -624,19 +624,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Query the device map information */
-            ObQueryDeviceMapInformation(Process, (PPROCESS_DEVICEMAP_INFORMATION)&DeviceMap, DeviceMap.Flags);
-
-            /* Enter SEH for writing back data */
-            _SEH2_TRY
-            {
-                RtlCopyMemory(ProcessInformation, &DeviceMap, sizeof(PROCESS_DEVICEMAP_INFORMATION));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            Status = ObQueryDeviceMapInformation(Process,
+                                                 ProcessInformation,
+                                                 Flags);
 
             /* Dereference the process */
             ObDereferenceObject(Process);
