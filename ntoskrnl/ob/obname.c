@@ -41,9 +41,11 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     PACL Dacl;
     ULONG AclSize;
+    NTSTATUS Status;
 
     /* Initialize the SD */
-    RtlCreateSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+    Status = RtlCreateSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+    ASSERT(NT_SUCCESS(Status));
 
     if (ObpProtectionMode & 1)
     {
@@ -63,42 +65,49 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
         }
 
         /* Initialize the DACL */
-        RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+        Status = RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+        ASSERT(NT_SUCCESS(Status));
 
         /* Add the ACEs */
-        RtlAddAccessAllowedAce(Dacl,
-                               ACL_REVISION,
-                               GENERIC_READ | GENERIC_EXECUTE,
-                               SeWorldSid);
+        Status = RtlAddAccessAllowedAce(Dacl,
+                                        ACL_REVISION,
+                                        GENERIC_READ | GENERIC_EXECUTE,
+                                        SeWorldSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAce(Dacl,
-                               ACL_REVISION,
-                               GENERIC_ALL,
-                               SeLocalSystemSid);
+        Status = RtlAddAccessAllowedAce(Dacl,
+                                        ACL_REVISION,
+                                        GENERIC_ALL,
+                                        SeLocalSystemSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAceEx(Dacl,
-                                 ACL_REVISION,
-                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                                 GENERIC_EXECUTE,
-                                 SeWorldSid);
+        Status = RtlAddAccessAllowedAceEx(Dacl,
+                                          ACL_REVISION,
+                                          INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                          GENERIC_EXECUTE,
+                                          SeWorldSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAceEx(Dacl,
-                                 ACL_REVISION,
-                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                                 GENERIC_ALL,
-                                 SeAliasAdminsSid);
+        Status = RtlAddAccessAllowedAceEx(Dacl,
+                                          ACL_REVISION,
+                                          INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                          GENERIC_ALL,
+                                          SeAliasAdminsSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAceEx(Dacl,
-                                 ACL_REVISION,
-                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                                 GENERIC_ALL,
-                                 SeLocalSystemSid);
+        Status = RtlAddAccessAllowedAceEx(Dacl,
+                                          ACL_REVISION,
+                                          INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                          GENERIC_ALL,
+                                          SeLocalSystemSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAceEx(Dacl,
-                                 ACL_REVISION,
-                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                                 GENERIC_ALL,
-                                 SeCreatorOwnerSid);
+        Status = RtlAddAccessAllowedAceEx(Dacl,
+                                          ACL_REVISION,
+                                          INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                          GENERIC_ALL,
+                                          SeCreatorOwnerSid);
+        ASSERT(NT_SUCCESS(Status));
     }
     else
     {
@@ -115,28 +124,33 @@ ObpGetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
         }
 
         /* Initialize the DACL */
-        RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+        Status = RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
+        ASSERT(NT_SUCCESS(Status));
 
         /* Add the ACEs */
-        RtlAddAccessAllowedAce(Dacl,
-                               ACL_REVISION,
-                               GENERIC_READ | GENERIC_EXECUTE | GENERIC_WRITE,
-                               SeWorldSid);
+        Status = RtlAddAccessAllowedAce(Dacl,
+                                        ACL_REVISION,
+                                        GENERIC_READ | GENERIC_EXECUTE | GENERIC_WRITE,
+                                        SeWorldSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAce(Dacl,
-                               ACL_REVISION,
-                               GENERIC_ALL,
-                               SeLocalSystemSid);
+        Status = RtlAddAccessAllowedAce(Dacl,
+                                        ACL_REVISION,
+                                        GENERIC_ALL,
+                                        SeLocalSystemSid);
+        ASSERT(NT_SUCCESS(Status));
 
-        RtlAddAccessAllowedAceEx(Dacl,
-                                 ACL_REVISION,
-                                 INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
-                                 GENERIC_ALL,
-                                 SeWorldSid);
+        Status = RtlAddAccessAllowedAceEx(Dacl,
+                                          ACL_REVISION,
+                                          INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                                          GENERIC_ALL,
+                                          SeWorldSid);
+        ASSERT(NT_SUCCESS(Status));
     }
 
     /* Attach the DACL to the SD */
-    RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Dacl, FALSE);
+    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Dacl, FALSE);
+    ASSERT(NT_SUCCESS(Status));
 
     return STATUS_SUCCESS;
 }
