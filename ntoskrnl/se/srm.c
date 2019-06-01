@@ -5,6 +5,7 @@
  * PURPOSE:         Security Reference Monitor Server
  *
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -701,8 +702,148 @@ SeGetLogonIdDeviceMap(
     OUT PDEVICE_MAP * DeviceMap
     )
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    WCHAR Buffer[63];
+    PDEVICE_MAP LocalMap;
+    HANDLE DirectoryHandle, LinkHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PSEP_LOGON_SESSION_REFERENCES CurrentSession;
+    UNICODE_STRING DirectoryName, LinkName, TargetName;
+
+    PAGED_CODE();
+
+    if  (LogonId == NULL ||
+         DeviceMap == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop all existing sessions */
+    for (CurrentSession = SepLogonSessions;
+         CurrentSession != NULL;
+         CurrentSession = CurrentSession->Next)
+    {
+        /* Check if the LUID matches the provided one */
+        if (RtlEqualLuid(&CurrentSession->LogonId, LogonId))
+        {
+            break;
+        }
+    }
+
+    /* No session found, fail */
+    if (CurrentSession == NULL)
+    {
+        /* Release the database lock */
+        KeReleaseGuardedMutex(&SepRmDbLock);
+
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /* The found session has a device map, return it! */
+    if (CurrentSession->pDeviceMap != NULL)
+    {
+        *DeviceMap = CurrentSession->pDeviceMap;
+
+        /* Release the database lock */
+        KeReleaseGuardedMutex(&SepRmDbLock);
+
+        return STATUS_SUCCESS;
+    }
+
+    /* At that point, we'll setup a new device map for the session */
+    LocalMap = NULL;
+
+    /* Reference the session so that it doesn't go away */
+    CurrentSession->ReferenceCount += 1;
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    /* Create our object directory given the LUID */
+    _snwprintf(Buffer,
+               sizeof(Buffer) / sizeof(WCHAR),
+               L"\\Sessions\\0\\DosDevices\\%08x-%08x",
+               LogonId->HighPart,
+               LogonId->LowPart);
+    RtlInitUnicodeString(&DirectoryName, Buffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DirectoryName,
+                               OBJ_KERNEL_HANDLE | OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateDirectoryObject(&DirectoryHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* Create the associated device map */
+        Status = ObSetDirectoryDeviceMap(&LocalMap, DirectoryHandle);
+        if (NT_SUCCESS(Status))
+        {
+            /* Make Global point to \Global?? in the directory */
+            RtlInitUnicodeString(&LinkName, L"Global");
+            RtlInitUnicodeString(&TargetName, L"\\Global??");
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &LinkName,
+                                       OBJ_KERNEL_HANDLE | OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                                       DirectoryHandle,
+                                       NULL);
+            Status = ZwCreateSymbolicLinkObject(&LinkHandle,
+                                                SYMBOLIC_LINK_ALL_ACCESS,
+                                                &ObjectAttributes,
+                                                &TargetName);
+            if (!NT_SUCCESS(Status))
+            {
+                ObfDereferenceDeviceMap(LocalMap);
+            }
+            else
+            {
+                ZwClose(LinkHandle);
+            }
+        }
+
+        ZwClose(DirectoryHandle);
+    }
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* If we succeed... */
+    if (NT_SUCCESS(Status))
+    {
+        /* The session now has a device map? We raced with someone else */
+        if (CurrentSession->pDeviceMap != NULL)
+        {
+            /* Give up on our new device map */
+            ObfDereferenceDeviceMap(LocalMap);
+        }
+        /* Otherwise use our newly allocated device map */
+        else
+        {
+            CurrentSession->pDeviceMap = LocalMap;
+        }
+
+        /* Return the device map */
+        *DeviceMap = CurrentSession->pDeviceMap;
+    }
+    /* Zero output */
+    else
+    {
+        *DeviceMap = NULL;
+    }
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    /* We're done with the session */
+    SepRmDereferenceLogonSession(&CurrentSession->LogonId);
+
+    return Status;
 }
 
 /*

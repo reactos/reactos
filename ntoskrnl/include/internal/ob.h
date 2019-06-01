@@ -402,7 +402,14 @@ NTSTATUS
 NTAPI
 ObSetDeviceMap(
     IN PEPROCESS Process,
-    IN HANDLE DirectoryHandle);
+    IN HANDLE DirectoryHandle
+);
+
+NTSTATUS
+NTAPI
+ObSetDirectoryDeviceMap(OUT PDEVICE_MAP * DeviceMap,
+                        IN HANDLE DirectoryHandle
+);
 
 VOID
 NTAPI

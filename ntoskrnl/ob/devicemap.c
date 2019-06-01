@@ -146,6 +146,16 @@ ObSetDeviceMap(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
+ObSetDirectoryDeviceMap(OUT PDEVICE_MAP * DeviceMap,
+                        IN HANDLE DirectoryHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
 ObpSetCurrentProcessDeviceMap(VOID)
 {
     PTOKEN Token;
