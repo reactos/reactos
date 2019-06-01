@@ -156,33 +156,8 @@ ObDereferenceDeviceMap(IN PEPROCESS Process)
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
 
     /* Continue only if there is a device map */
-    if (DeviceMap == NULL)
-        return;
-
-    /* Acquire the device map lock again */
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-    /* Decrement the reference counter */
-    DeviceMap->ReferenceCount--;
-    DPRINT("ReferenceCount: %lu\n", DeviceMap->ReferenceCount);
-
-    /* Leave, if there are still references to this device map */
-    if (DeviceMap->ReferenceCount != 0)
-    {
-        /* Release the device map lock and leave */
-        KeReleaseGuardedMutex(&ObpDeviceMapLock);
-        return;
-    }
-
-    /* Nobody is referencing it anymore, unlink the DOS directory */
-    DeviceMap->DosDevicesDirectory->DeviceMap = NULL;
-
-    /* Release the device map lock */
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-    /* Dereference the DOS Devices Directory and free the DeviceMap */
-    ObDereferenceObject(DeviceMap->DosDevicesDirectory);
-    ExFreePoolWithTag(DeviceMap, 'mDbO');
+    if (DeviceMap != NULL)
+        ObfDereferenceDeviceMap(DeviceMap);
 }
 
 
