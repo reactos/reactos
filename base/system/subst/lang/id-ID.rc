@@ -1,0 +1,20 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Nomor parameter tidak tepat - %s\n"
+    IDS_INVALID_PARAMETER "Nomor parameter tidak tepat - %s\n"
+    IDS_INVALID_PARAMETER2 "Parameter tidak valid - %s\n"
+    IDS_PATH_NOT_FOUND "Jalur tidak ditemukan - %s\n"
+    IDS_ACCESS_DENIED "Akses ditolak - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Drive already SUBSTed\n"
+    IDS_FAILED_WITH_ERRORCODE "Gagal dengan kode kesalahan 0x%x: %s\n"
+    IDS_USAGE "Mengasosiasikan jalur dengan huruf pada drive.\n\n\
+SUBST [drive1: [drive2:]path]\n\
+SUBST drive1: /D\n\n\
+  drive1:        Spesifikasikan drive maya yang jalurnya ingin ditetapkan.\n\
+  [drive2:]path  Spesifikasikan drive fisik dan jalur yang ingin ditetapkan\n\
+                 pada drive maya.\n\
+  /D             Menghapus drive yang telah terbagi (maya).\n\n\
+Ketik SUBST tanpa parameter untuk menampilkan daftar drive maya saat ini.\n"
+END
