@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG ObpLUIDDeviceMapsDisabled;
+ULONG ObpLUIDDeviceMapsEnabled;
+
 /* PRIVATE FUNCTIONS ******************************************************/
 
 NTSTATUS
@@ -246,6 +249,14 @@ ObQueryDeviceMapInformation(IN PEPROCESS Process,
 
     /* Release the device map lock */
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
+}
+
+
+ULONG
+NTAPI
+ObIsLUIDDeviceMapsEnabled(VOID)
+{
+    return ObpLUIDDeviceMapsEnabled;
 }
 
 

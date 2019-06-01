@@ -32,9 +32,6 @@ UNICODE_STRING ObpDosDevicesShortName =
 WCHAR ObpUnsecureGlobalNamesBuffer[128] = {0};
 ULONG ObpUnsecureGlobalNamesLength = sizeof(ObpUnsecureGlobalNamesBuffer);
 
-ULONG ObpLUIDDeviceMapsDisabled;
-ULONG ObpLUIDDeviceMapsEnabled;
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 INIT_FUNCTION

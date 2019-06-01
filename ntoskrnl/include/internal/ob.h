@@ -429,6 +429,12 @@ ObpCreateDosDevicesDirectory(
     VOID
 );
 
+ULONG
+NTAPI
+ObIsLUIDDeviceMapsEnabled(
+    VOID
+);
+
 //
 // Security descriptor cache functions
 //
@@ -621,6 +627,7 @@ extern ULONG ObpUnsecureGlobalNamesLength;
 extern ULONG ObpObjectSecurityMode;
 extern ULONG ObpProtectionMode;
 extern ULONG ObpLUIDDeviceMapsDisabled;
+extern ULONG ObpLUIDDeviceMapsEnabled;
 
 //
 // Inlined Functions

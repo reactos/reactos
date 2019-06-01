@@ -911,8 +911,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Protect write in SEH */
             _SEH2_TRY
             {
-                /* Return FALSE -- we don't support this */
-                *(PULONG)ProcessInformation = FALSE;
+                /* Query Ob */
+                *(PULONG)ProcessInformation = ObIsLUIDDeviceMapsEnabled();
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

@@ -17,7 +17,6 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOLEAN ObpLUIDDeviceMapsEnabled;
 POBJECT_TYPE ObpDirectoryObjectType = NULL;
 
 /* PRIVATE FUNCTIONS ******************************************************/
@@ -141,7 +140,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     PAGED_CODE();
 
     /* Check if we should search the shadow directory */
-    if (!ObpLUIDDeviceMapsEnabled) SearchShadow = FALSE;
+    if (ObpLUIDDeviceMapsEnabled == 0) SearchShadow = FALSE;
 
     /* Fail if we don't have a directory or name */
     if (!(Directory) || !(Name)) goto Quickie;
