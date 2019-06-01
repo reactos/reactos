@@ -229,7 +229,8 @@ ObInheritDeviceMap(IN PEPROCESS Parent,
 VOID
 NTAPI
 ObQueryDeviceMapInformation(IN PEPROCESS Process,
-                            IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
+                            IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+                            IN ULONG Flags)
 {
     PDEVICE_MAP DeviceMap;
 

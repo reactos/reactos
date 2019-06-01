@@ -296,7 +296,8 @@ VOID
 NTAPI
 ObQueryDeviceMapInformation(
     IN PEPROCESS Process,
-    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo
+    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    IN ULONG Flags
 );
 
 //

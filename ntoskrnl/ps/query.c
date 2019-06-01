@@ -78,7 +78,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
     PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
     PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
-    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    PROCESS_DEVICEMAP_INFORMATION_EX DeviceMap;
     PUNICODE_STRING ImageName;
     ULONG Cookie, ExecuteOptions = 0;
     ULONG_PTR Wow64 = 0;
@@ -564,22 +564,55 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength != RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query))
+            if (ProcessInformationLength < sizeof(PROCESS_DEVICEMAP_INFORMATION))
             {
-                if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
-                {
-                    DPRINT1("PROCESS_DEVICEMAP_INFORMATION_EX not supported!\n");
-                    Status = STATUS_NOT_IMPLEMENTED;
-                }
-                else
-                {
-                    Status = STATUS_INFO_LENGTH_MISMATCH;
-                }
+                Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
+            {
+                /* Protect read in SEH */
+                _SEH2_TRY
+                {
+                    PPROCESS_DEVICEMAP_INFORMATION_EX DeviceMapEx = ProcessInformation;
+
+                    DeviceMap.Flags = DeviceMapEx->Flags;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* Get the exception code */
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                if (!NT_SUCCESS(Status))
+                {
+                    break;
+                }
+
+                /* Only one flag is supported and it needs LUID mappings */
+                if ((DeviceMap.Flags & ~PROCESS_LUID_DOSDEVICES_ONLY) != 0 ||
+                    !ObIsLUIDDeviceMapsEnabled())
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+            }
+            else
+            {
+                if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    break;
+                }
+
+                /* No flags for standard call */
+                DeviceMap.Flags = 0;
+            }
+
             /* Set the return length */
-            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+            Length = ProcessInformationLength;
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -591,12 +624,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Query the device map information */
-            ObQueryDeviceMapInformation(Process, &DeviceMap);
+            ObQueryDeviceMapInformation(Process, (PPROCESS_DEVICEMAP_INFORMATION)&DeviceMap, DeviceMap.Flags);
 
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
-                *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
+                RtlCopyMemory(ProcessInformation, &DeviceMap, sizeof(PROCESS_DEVICEMAP_INFORMATION));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
