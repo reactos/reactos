@@ -292,7 +292,7 @@ ObpSetHandleAttributes(
     IN ULONG_PTR Context
 );
 
-VOID
+NTSTATUS
 NTAPI
 ObQueryDeviceMapInformation(
     IN PEPROCESS Process,

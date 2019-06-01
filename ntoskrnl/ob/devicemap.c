@@ -143,6 +143,15 @@ ObSetDeviceMap(IN PEPROCESS Process,
 }
 
 
+PDEVICE_MAP
+NTAPI
+ObpReferenceDeviceMap(VOID)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
 VOID
 NTAPI
 ObDereferenceDeviceMap(IN PEPROCESS Process)
@@ -226,30 +235,125 @@ ObInheritDeviceMap(IN PEPROCESS Parent,
 }
 
 
-VOID
+NTSTATUS
 NTAPI
 ObQueryDeviceMapInformation(IN PEPROCESS Process,
                             IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
                             IN ULONG Flags)
 {
-    PDEVICE_MAP DeviceMap;
+    PDEVICE_MAP DeviceMap = NULL, GlobalDeviceMap;
+    BOOLEAN Dereference;
+    PROCESS_DEVICEMAP_INFORMATION MapInfo;
+    ULONG BitMask, i;
+    BOOLEAN ReturnAny;
+    NTSTATUS Status;
+
+    /* Validate flags */
+    if (Flags & ~PROCESS_LUID_DOSDEVICES_ONLY)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Dereference = FALSE;
+    /* Do we want to return anything? */
+    ReturnAny = ~Flags & PROCESS_LUID_DOSDEVICES_ONLY;
+
+    /* If LUID mappings are enabled... */
+    if (ObpLUIDDeviceMapsEnabled != 0)
+    {
+        /* Check for process parameter validness */
+        if (Process != NULL && Process != PsGetCurrentProcess())
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* And get the device map */
+        DeviceMap = ObpReferenceDeviceMap();
+    }
 
     /* Acquire the device map lock */
     KeAcquireGuardedMutex(&ObpDeviceMapLock);
 
-    /* Get the process device map or the system device map */
-    DeviceMap = (Process != NULL) ? Process->DeviceMap : ObSystemDeviceMap;
+    /*
+     * If we had a device map, if because of LUID mappings,
+     * we'll have to dereference it afterwards
+     */
     if (DeviceMap != NULL)
     {
-        /* Make a copy */
-        DeviceMapInfo->Query.DriveMap = DeviceMap->DriveMap;
-        RtlCopyMemory(DeviceMapInfo->Query.DriveType,
-                      DeviceMap->DriveType,
-                      sizeof(DeviceMap->DriveType));
+        Dereference = TRUE;
+    }
+    else
+    {
+        /* Get the process device map or the system device map */
+        DeviceMap = (Process != NULL) ? Process->DeviceMap : ObSystemDeviceMap;
+    }
+
+    /* Fail if no device map */
+    if (DeviceMap == NULL)
+    {
+        KeReleaseGuardedMutex(&ObpDeviceMapLock);
+        return STATUS_END_OF_FILE;
+    }
+
+    /* At that point, assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Try to get the global device map if any */
+    GlobalDeviceMap = DeviceMap;
+    if (DeviceMap->GlobalDosDevicesDirectory != NULL)
+    {
+        if (DeviceMap->GlobalDosDevicesDirectory->DeviceMap != NULL)
+        {
+            GlobalDeviceMap = DeviceMap->GlobalDosDevicesDirectory->DeviceMap;
+        }
+    }
+
+    /* Now, setup our device map info, especially drive types */
+    MapInfo.Query.DriveMap = DeviceMap->DriveMap;
+    /* Browse every device */
+    for (i = 0, BitMask = 1; i < 32; ++i, BitMask *= 2)
+    {
+        /* Set the type given current device map */
+        MapInfo.Query.DriveType[i] = DeviceMap->DriveType[i];
+
+        /*
+         * If device is not existing and we're asked to return
+         * more than just LUID mapped, get the entry
+         * from global device map if not remote
+         */
+        if (!(MapInfo.Query.DriveMap & BitMask) && ReturnAny)
+        {
+            if (ObpLUIDDeviceMapsEnabled != 0 ||
+                (GlobalDeviceMap->DriveType[i] != DOSDEVICE_DRIVE_REMOTE &&
+                 GlobalDeviceMap->DriveType[i] != DOSDEVICE_DRIVE_CALCULATE))
+            {
+                MapInfo.Query.DriveType[i] = GlobalDeviceMap->DriveType[i];
+                MapInfo.Query.DriveMap |= BitMask & GlobalDeviceMap->DriveMap;
+            }
+        }
     }
 
     /* Release the device map lock */
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* Dereference LUID device map */
+    if (Dereference)
+    {
+        ObfDereferenceDeviceMap(DeviceMap);
+    }
+
+    /* Copy back data */
+    _SEH2_TRY
+    {
+        RtlCopyMemory(DeviceMapInfo, &MapInfo, sizeof(PROCESS_DEVICEMAP_INFORMATION));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
 
