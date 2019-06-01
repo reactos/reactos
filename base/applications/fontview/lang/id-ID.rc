@@ -1,0 +1,22 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "&Pasang"
+    IDS_PRINT "&Cetak"
+    IDS_STRING "Jackdaws love my big sphinx of quartz. 1234567890"
+    IDS_OPEN "Buka Fon..."
+    IDS_ERROR "Kesalahan"
+    IDS_ERROR_NOMEM "Memori tidak cukup untuk menyelesaikan operasi."
+    IDS_ERROR_NOFONT "Berkas %1 bukan berkas fon yang valid."
+    IDS_ERROR_NOCLASS "Tidak bisa memulai window class."
+    IDS_FILTER_LIST "Semua fon yang didukung (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Berkas Fon (*.fon;*.fnt)\0*.fon;*.fnt\0\
+TrueType Fon (*.ttf)\0*.ttf\0\
+Koleksi TrueType Fon (*.ttc)\0*.ttc\0\
+OpenType Fon (*.otf)\0*.otf\0\
+Koleksi OpenType Fon (*.otc)\0*.otc\0\
+Semua Berkas (*.*)\0*.*\0"
+    IDS_PREVIOUS "< &Sebelumnya"
+    IDS_NEXT "S&elanjutnya >"
+END
