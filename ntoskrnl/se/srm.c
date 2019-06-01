@@ -696,6 +696,20 @@ SepRmCommandServerThread(
  */
 NTSTATUS
 NTAPI
+SeGetLogonIdDeviceMap(
+    IN PLUID LogonId,
+    OUT PDEVICE_MAP * DeviceMap
+    )
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
 SeMarkLogonSessionForTerminationNotification(
     IN PLUID LogonId)
 {
