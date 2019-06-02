@@ -636,7 +636,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
     {
         /* Compute fill count */
         BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
-        FillCount = 180 * (InbvProgressState.Bias * BoundedProgress) / 1000000;
+        FillCount = 183 * (InbvProgressState.Bias * BoundedProgress) / 1000000;
 
         /* Acquire the lock */
         InbvAcquireLock();
@@ -1080,7 +1080,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(234, 347);
+            InbvSetProgressBarCoordinates(229, 349);
 
 #ifdef REACTOS_SKUS
             /* Check for non-workstation products */
