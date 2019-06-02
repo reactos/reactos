@@ -216,10 +216,13 @@ static HWND GetNiceRootOwner(HWND hwnd)
 
     for (;;)
     {
+        // A window with WS_EX_APPWINDOW is treated as if it has no owner
         ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
         if (ExStyle & WS_EX_APPWINDOW)
             break;
 
+        // Is the owner visible?
+        // An window with WS_EX_TOOLWINDOW is treated as if it weren't visible
         hwndOwner = GetWindow(hwnd, GW_OWNER);
         OwnerExStyle = GetWindowLong(hwndOwner, GWL_EXSTYLE);
         if (!IsWindowVisible(hwndOwner) || (OwnerExStyle & WS_EX_TOOLWINDOW))
@@ -264,7 +267,7 @@ BOOL IsAltTabWindow(HWND hwnd)
     // get 'nice' root owner
     hwndWalk = GetNiceRootOwner(hwnd);
 
-    // walk back toward hwnd
+    // walk back from hwndWalk toward hwnd
     for (;;)
     {
         hwndTry = GetLastActivePopup(hwndWalk);
@@ -278,7 +281,7 @@ BOOL IsAltTabWindow(HWND hwnd)
         hwndWalk = hwndTry;
     }
 
-    return hwnd == hwndTry;
+    return hwnd == hwndTry;     // Reached?
 }
 
 static BOOL CALLBACK
