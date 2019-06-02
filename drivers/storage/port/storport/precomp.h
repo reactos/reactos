@@ -81,6 +81,12 @@ typedef struct _MINIPORT
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
 } MINIPORT, *PMINIPORT;
 
+typedef struct _UNIT_DATA
+{
+    LIST_ENTRY ListEntry;
+    INQUIRYDATA InquiryData;
+} UNIT_DATA, *PUNIT_DATA;
+
 typedef struct _FDO_DEVICE_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
@@ -105,6 +111,9 @@ typedef struct _FDO_DEVICE_EXTENSION
     PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
     PKINTERRUPT Interrupt;
     ULONG InterruptIrql;
+
+    ULONG UnitCount;
+    LIST_ENTRY UnitListHead;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
