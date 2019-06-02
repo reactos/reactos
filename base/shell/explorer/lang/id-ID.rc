@@ -1,0 +1,201 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Atur Tanggal/Jam", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "Atur &Pemberitahuan...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Urungkan", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "&Manajer Tugas", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Kunci Bilah Tugas", ID_LOCKTASKBAR
+        MENUITEM "P&roperti", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Program", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Kosong)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "F&avorit", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Kosong)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Dokumen", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Kosong)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "P&engaturan", IDM_SETTINGS
+        BEGIN
+            MENUITEM "Panel &Kontrol", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "Ke&amanan...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Sambungan Jaringan", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Printer dan Faks", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Bilah Tugas dan Menu Mulai", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "&Cari", IDM_SEARCH
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "&Bantuan dan Dukungan", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Jalankan...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Selaraskan", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Keluar %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "P&utuskan Sambungan...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Lepaskan Komput&er", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Matikan...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Bilah Tugas"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Tampilan bilah tugas", IDC_STATIC, 6, 6, 240, 104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
+    AUTOCHECKBOX "&Kunci bilah tugas", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "Otomatis sembunyikan bilah tugas", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "Te&mpatkan bilah tugas pada bagian atas jendela lain", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "K&elompokkan tombol bilah tugas yang sama", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "Tampilkan peluncur &cepat", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    GROUPBOX "Area pemberitahuan", IDC_STATIC, 6, 114, 240, 98
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
+    AUTOCHECKBOX "Tampil&kan jam", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
+    AUTOCHECKBOX "Tampilkan detik", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    LTEXT "Area pemberitahuan akan terlihat rapi dengan menyembunyikan ikon yang belum pernah diklik akhir-akhir ini.", IDC_STATIC, 13, 169, 223, 16
+    AUTOCHECKBOX "&Sembunyikan ikon tidak aktif", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
+    PUSHBUTTON "&Sesuaikan...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Menu mulai"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL          "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    AUTORADIOBUTTON  "&Menu mulai", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT            "Pilih opsi ini agar mudah mengakses beberapa folder, email, program favorit, dan pencarian.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    PUSHBUTTON       "&Sesuaikan...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
+    AUTORADIOBUTTON  "Me&nu mulai klasik", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT            "Pilih opsi ini untuk menggunakan gaya menu dari versi Windows sebelumnya", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    PUSHBUTTON       "Ses&uaikan...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
+END
+
+IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Sesuaikan pemberitahuan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT            "ReactOS menampilkan ikon pemberitahuan yang penting, dan menyembunyikan yang lainnya. Perilakunya dapat diubah pada daftar di bawah ini.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Klik satu butir, kemudian pilih perilaku pemberitahuannya:", IDC_STATIC, 6, 40, 220, 10
+    CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    PUSHBUTTON       "&Kembalikan semula", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Batal", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Sesuaikan menu mulai klasik"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Menu mulai", IDC_STATIC, 8, 7, 218, 114
+    ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
+    LTEXT            "Sesuaikan menu mulai dengan menambah atau menghapus beberapa butir.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "Ta&mbah...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "&Hapus...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "Tingkat &Lanjut", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "&Urutkan", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
+    LTEXT            "Untuk menghapus jejak dokumen, program, dan situs web yang telah diakses, klik Bersihkan.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON       "&Bersihkan", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "&Opsi menu mulai tingkat lanjut:", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Batal", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Peringatan tentang Nama Berkas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON    "&Abaikan", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "&Ubah nama", IDC_FILE_RENAME, 159, 60, 50, 14
+    LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
+    AUTOCHECKBOX     "&Jangan lakukan pemeriksaan ini pada saat mulai", IDC_NOTCHECK, 7, 62, 139, 10
+    ICON             32515, IDC_STATIC, 7, 7, 21, 20
+    LTEXT            "Ada berkas atau folder %s yang bisa menyebabkan tidak berfungsinya aplikasi terkait. mengubah nama %s akan menyelesaikan masalah ini. Ubah nama sekarang?", IDC_STATIC, 34, 7, 224, 37
+END
+
+IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+CAPTION "Tingkat Lanjut"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Pengaturan menu mulai", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Buka submenu ketika kursor berhenti pada butir tersebut", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "&Sorot program yang baru terpasang", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT            "Butir &menu mulai:", IDC_STATIC, 7, 53, 238, 8
+    CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    GROUPBOX         "Dokumen terkini ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT            "Pilih opsi ini untuk menyediakan akses cepat ke dokumen yang telah dibuka akhir-akhir ini. Menghapus daftar ini tidak akan menghapus dokumen.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX     "Tampil&kan dokumen yang telah dibuka akhir-akhir ini", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON       "Bersihkan &Daftar", IDC_CLEAR, 182, 168, 55, 14
+END
+
+IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Umum"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Pilih ukuran ikon program ", IDC_STATIC, 7, 7, 238, 37
+    ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
+    ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
+    AUTORADIOBUTTON  "Ikon b&esar", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "Ikon &kecil", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    GROUPBOX         "Program ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT            "Menu mulai memuat jalan pintas dari program yang telah dibuka.  Membersihkan daftar jalan pintas tidak akan menghapus program.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "&Jumlah program di Menu mulai:", IDC_STATIC, 14, 86, 112, 8
+    EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
+    CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
+    PUSHBUTTON       "&Bersihkan daftar", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX         "Tampilkan di Menu mulai ", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
+    COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "Mulai"
+    IDS_PROPERTIES "P&roperti"
+    IDS_OPEN_ALL_USERS "&Buka Semua Pengguna"
+    IDS_EXPLORE_ALL_USERS "&Telusuri Semua Pengguna"
+    IDS_STARTUP_ERROR "Sistem tidak bisa memulai penjelajah karena registri rusak atau tidak tersedia."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bilah Tugas dan Menu Mulai"
+    IDS_RESTORE_ALL "&Tampilkan Semua Jendela"
+END
