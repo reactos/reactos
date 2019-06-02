@@ -1441,7 +1441,8 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Information = IoStatusBlock.Information = 0;
 
     /* Special case for IRP_MN_FILTER_RESOURCE_REQUIREMENTS */
-    if (IoStackLocation->MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+    if ((IoStackLocation->MajorFunction == IRP_MJ_PNP) &&
+        (IoStackLocation->MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS))
     {
         /* Copy the resource requirements list into the IOSB */
         Irp->IoStatus.Information =
