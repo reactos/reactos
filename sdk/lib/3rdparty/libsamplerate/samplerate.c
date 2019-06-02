@@ -6,7 +6,15 @@
 ** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
-#include "precomp.h"
+#include	<stdio.h>
+#include	<stdlib.h>
+#include	<string.h>
+
+#include	"config.h"
+
+#include	"samplerate.h"
+#include	"float_cast.h"
+#include	"common.h"
 
 static int psrc_set_converter (SRC_PRIVATE	*psrc, int converter_type) ;
 
@@ -44,6 +52,34 @@ src_new (int converter_type, int channels, int *error)
 
 	return (SRC_STATE*) psrc ;
 } /* src_new */
+
+SRC_STATE*
+src_clone (SRC_STATE* orig, int *error)
+{
+	SRC_PRIVATE	*psrc ;
+	int copy_error ;
+
+	if (error)
+		*error = SRC_ERR_NO_ERROR ;
+
+	if ((psrc = calloc (1, sizeof (*psrc))) == NULL)
+	{	if (error)
+			*error = SRC_ERR_MALLOC_FAILED ;
+		return NULL ;
+		} ;
+
+	SRC_PRIVATE *orig_priv = (SRC_PRIVATE*) orig ;
+	memcpy (psrc, orig_priv, sizeof (SRC_PRIVATE)) ;
+
+	if ((copy_error = orig_priv->copy (orig_priv, psrc)) != SRC_ERR_NO_ERROR)
+	{	if (error)
+			*error = copy_error ;
+		free (psrc) ;
+		psrc = NULL ;
+		} ;
+
+	return (SRC_STATE*) psrc ;
+}
 
 SRC_STATE*
 src_callback_new (src_callback_t func, int converter_type, int channels, int *error, void* cb_data)
@@ -105,7 +141,8 @@ src_process (SRC_STATE *state, SRC_DATA *data)
 		return SRC_ERR_BAD_DATA ;
 
 	/* And that data_in and data_out are valid. */
-	if (data->data_in == NULL || data->data_out == NULL)
+	if ((data->data_in == NULL && data->input_frames > 0)
+			|| (data->data_out == NULL && data->output_frames > 0))
 		return SRC_ERR_BAD_DATA_PTR ;
 
 	/* Check src_ratio is in range. */
@@ -237,7 +274,7 @@ src_callback_read (SRC_STATE *state, double src_ratio, long frames, float *data)
 
 	if (error != 0)
 	{	psrc->error = error ;
-	 	return 0 ;
+		return 0 ;
 		} ;
 
 	return output_frames_gen ;
@@ -506,7 +543,7 @@ src_float_to_int_array (const float *in, int *out, int len)
 			continue ;
 			} ;
 
-		out [len] = lrint (scaled_value) ;
+		out [len] = (int) lrint (scaled_value) ;
 		} ;
 
 } /* src_float_to_int_array */

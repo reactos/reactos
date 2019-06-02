@@ -17,6 +17,8 @@ typedef	int		int32_t ;
 typedef	long	int32_t ;
 #endif
 
+#include <math.h>
+
 #define	SRC_MAX_RATIO			256
 #define	SRC_MAX_RATIO_STR		"256"
 
@@ -47,7 +49,6 @@ typedef	long	int32_t ;
 #else
 #	define WARN_UNUSED
 #endif
-
 
 #include "samplerate.h"
 
@@ -109,6 +110,9 @@ typedef struct SRC_PRIVATE_tag
 
 	/* State reset. */
 	void	(*reset) (struct SRC_PRIVATE_tag *psrc) ;
+
+	/* State clone. */
+	int		(*copy) (struct SRC_PRIVATE_tag *from, struct SRC_PRIVATE_tag *to) ;
 
 	/* Data specific to SRC_MODE_CALLBACK. */
 	src_callback_t	callback_func ;

@@ -63,6 +63,37 @@
 
 	#include	<math.h>
 
+#elif (defined (__WATCOMC__) && defined(__386__))
+
+	#include	<math.h>
+
+	#undef		HAVE_LRINT_REPLACEMENT
+	#define		HAVE_LRINT_REPLACEMENT	1
+
+	#undef	lrint
+	#undef	lrintf
+
+	#define	lrint	double2int
+	#define	lrintf	float2int
+
+extern __inline long double2int(double);
+#pragma aux double2int = \
+    "push  eax" \
+    "fistp dword ptr [esp]" \
+    "pop   eax" \
+    parm [8087] \
+    value [eax] \
+    modify exact [eax];
+
+extern __inline long float2int(float);
+#pragma aux float2int = \
+    "push  eax" \
+    "fistp dword ptr [esp]" \
+    "pop   eax" \
+    parm [8087] \
+    value [eax] \
+    modify exact [eax];
+
 #elif (defined (__CYGWIN__))
 
 	#include	<math.h>
@@ -149,7 +180,6 @@
 	**	Therefore implement inline versions of these functions here.
 	*/
 
-#ifdef _MSC_VER
 	__inline long int
 	lrint (double flt)
 	{	int intgr ;
@@ -173,7 +203,6 @@
 
 		return intgr ;
 	}
-#endif
 
 #elif (defined (__MWERKS__) && defined (macintosh))
 

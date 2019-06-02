@@ -6,7 +6,13 @@
 ** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
+#include "float_cast.h"
+#include "common.h"
 
 #define	SINC_MAGIC_MARKER	MAKE_MAGIC (' ', 's', 'i', 'n', 'c', ' ')
 
@@ -60,10 +66,11 @@ static int sinc_mono_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
 static int prepare_data (SINC_FILTER *filter, SRC_DATA *data, int half_filter_chan_len) WARN_UNUSED ;
 
 static void sinc_reset (SRC_PRIVATE *psrc) ;
+static int sinc_copy (SRC_PRIVATE *from, SRC_PRIVATE *to) ;
 
 static inline increment_t
 double_to_fp (double x)
-{	return (lrint ((x) * FP_ONE)) ;
+{	return (increment_t) (lrint ((x) * FP_ONE)) ;
 } /* double_to_fp */
 
 static inline increment_t
@@ -175,6 +182,7 @@ sinc_set_converter (SRC_PRIVATE *psrc, int src_enum)
 		psrc->vari_process = sinc_multichan_vari_process ;
 		} ;
 	psrc->reset = sinc_reset ;
+	psrc->copy = sinc_copy ;
 
 	switch (src_enum)
 	{	case SRC_SINC_FASTEST :
@@ -204,7 +212,7 @@ sinc_set_converter (SRC_PRIVATE *psrc, int src_enum)
 	** a better way. Need to look at prepare_data () at the same time.
 	*/
 
-	temp_filter.b_len = lrint (2.5 * temp_filter.coeff_half_len / (temp_filter.index_inc * 1.0) * SRC_MAX_RATIO) ;
+	temp_filter.b_len = (int) lrint (2.5 * temp_filter.coeff_half_len / (temp_filter.index_inc * 1.0) * SRC_MAX_RATIO) ;
 	temp_filter.b_len = MAX (temp_filter.b_len, 4096) ;
 	temp_filter.b_len *= temp_filter.channels ;
 
@@ -246,6 +254,25 @@ sinc_reset (SRC_PRIVATE *psrc)
 	/* Set this for a sanity check */
 	memset (filter->buffer + filter->b_len, 0xAA, filter->channels * sizeof (filter->buffer [0])) ;
 } /* sinc_reset */
+
+static int
+sinc_copy (SRC_PRIVATE *from, SRC_PRIVATE *to)
+{
+	if (from->private_data == NULL)
+		return SRC_ERR_NO_PRIVATE ;
+
+	SINC_FILTER *to_filter = NULL ;
+	SINC_FILTER* from_filter = (SINC_FILTER*) from->private_data ;
+	size_t private_length = sizeof (SINC_FILTER) + sizeof (from_filter->buffer [0]) * (from_filter->b_len + from_filter->channels) ;
+
+	if ((to_filter = calloc (1, private_length)) == NULL)
+		return SRC_ERR_MALLOC_FAILED ;
+
+	memcpy (to_filter, from_filter, private_length) ;
+	to->private_data = to_filter ;
+
+	return SRC_ERR_NO_ERROR ;
+} /* sinc_copy */
 
 /*========================================================================================
 **	Beware all ye who dare pass this point. There be dragons here.
@@ -334,10 +361,9 @@ sinc_mono_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 		count /= MIN (psrc->last_ratio, data->src_ratio) ;
 
 	/* Maximum coefficientson either side of center point. */
-	half_filter_chan_len = filter->channels * (lrint (count) + 1) ;
+	half_filter_chan_len = filter->channels * (int) (lrint (count) + 1) ;
 
 	input_index = psrc->last_position ;
-	float_increment = filter->index_inc ;
 
 	rem = fmod_one (input_index) ;
 	filter->b_current = (filter->b_current + filter->channels * lrint (input_index - rem)) % filter->b_len ;
@@ -483,10 +509,9 @@ sinc_stereo_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 		count /= MIN (psrc->last_ratio, data->src_ratio) ;
 
 	/* Maximum coefficientson either side of center point. */
-	half_filter_chan_len = filter->channels * (lrint (count) + 1) ;
+	half_filter_chan_len = filter->channels * (int) (lrint (count) + 1) ;
 
 	input_index = psrc->last_position ;
-	float_increment = filter->index_inc ;
 
 	rem = fmod_one (input_index) ;
 	filter->b_current = (filter->b_current + filter->channels * lrint (input_index - rem)) % filter->b_len ;
@@ -637,10 +662,9 @@ sinc_quad_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 		count /= MIN (psrc->last_ratio, data->src_ratio) ;
 
 	/* Maximum coefficientson either side of center point. */
-	half_filter_chan_len = filter->channels * (lrint (count) + 1) ;
+	half_filter_chan_len = filter->channels * (int) (lrint (count) + 1) ;
 
 	input_index = psrc->last_position ;
-	float_increment = filter->index_inc ;
 
 	rem = fmod_one (input_index) ;
 	filter->b_current = (filter->b_current + filter->channels * lrint (input_index - rem)) % filter->b_len ;
@@ -797,10 +821,9 @@ sinc_hex_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 		count /= MIN (psrc->last_ratio, data->src_ratio) ;
 
 	/* Maximum coefficientson either side of center point. */
-	half_filter_chan_len = filter->channels * (lrint (count) + 1) ;
+	half_filter_chan_len = filter->channels * (int) (lrint (count) + 1) ;
 
 	input_index = psrc->last_position ;
-	float_increment = filter->index_inc ;
 
 	rem = fmod_one (input_index) ;
 	filter->b_current = (filter->b_current + filter->channels * lrint (input_index - rem)) % filter->b_len ;
@@ -898,24 +921,31 @@ calc_output_multi (SINC_FILTER *filter, increment_t increment, increment_t start
 			{	default :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 7 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 6 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 5 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 4 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 3 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 2 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 1 :
 					ch -- ;
 					left [ch] += icoeff * filter->buffer [data_index + ch] ;
@@ -948,24 +978,31 @@ calc_output_multi (SINC_FILTER *filter, increment_t increment, increment_t start
 			{	default :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 7 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 6 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 5 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 4 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 3 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 2 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
+					/* Falls through. */
 				case 1 :
 					ch -- ;
 					right [ch] += icoeff * filter->buffer [data_index + ch] ;
@@ -985,24 +1022,31 @@ calc_output_multi (SINC_FILTER *filter, increment_t increment, increment_t start
 		{	default :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 7 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 6 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 5 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 4 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 3 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 2 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
+				/* Falls through. */
 			case 1 :
 				ch -- ;
 				output [ch] = scale * (left [ch] + right [ch]) ;
@@ -1044,10 +1088,9 @@ sinc_multichan_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data)
 		count /= MIN (psrc->last_ratio, data->src_ratio) ;
 
 	/* Maximum coefficientson either side of center point. */
-	half_filter_chan_len = filter->channels * (lrint (count) + 1) ;
+	half_filter_chan_len = filter->channels * (int) (lrint (count) + 1) ;
 
 	input_index = psrc->last_position ;
-	float_increment = filter->index_inc ;
 
 	rem = fmod_one (input_index) ;
 	filter->b_current = (filter->b_current + filter->channels * lrint (input_index - rem)) % filter->b_len ;
@@ -1141,7 +1184,7 @@ prepare_data (SINC_FILTER *filter, SRC_DATA *data, int half_filter_chan_len)
 		len = MAX (filter->b_len - filter->b_current - half_filter_chan_len, 0) ;
 		} ;
 
-	len = MIN (filter->in_count - filter->in_used, len) ;
+	len = MIN ((int) (filter->in_count - filter->in_used), len) ;
 	len -= (len % filter->channels) ;
 
 	if (len < 0 || filter->b_end + len > filter->b_len)

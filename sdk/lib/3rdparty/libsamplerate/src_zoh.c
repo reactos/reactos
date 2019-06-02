@@ -6,10 +6,17 @@
 ** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
+#include "float_cast.h"
+#include "common.h"
 
 static int zoh_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
 static void zoh_reset (SRC_PRIVATE *psrc) ;
+static int zoh_copy (SRC_PRIVATE *from, SRC_PRIVATE *to) ;
 
 /*========================================================================================
 */
@@ -168,6 +175,7 @@ zoh_set_converter (SRC_PRIVATE *psrc, int src_enum)
 	psrc->const_process = zoh_vari_process ;
 	psrc->vari_process = zoh_vari_process ;
 	psrc->reset = zoh_reset ;
+	psrc->copy = zoh_copy ;
 
 	zoh_reset (psrc) ;
 
@@ -192,3 +200,21 @@ zoh_reset (SRC_PRIVATE *psrc)
 	return ;
 } /* zoh_reset */
 
+static int
+zoh_copy (SRC_PRIVATE *from, SRC_PRIVATE *to)
+{
+	if (from->private_data == NULL)
+		return SRC_ERR_NO_PRIVATE ;
+
+	ZOH_DATA *to_priv = NULL ;
+	ZOH_DATA* from_priv = (ZOH_DATA*) from->private_data ;
+	size_t private_size = sizeof (*to_priv) + from_priv->channels * sizeof (float) ;
+
+	if ((to_priv = calloc (1, private_size)) == NULL)
+		return SRC_ERR_MALLOC_FAILED ;
+
+	memcpy (to_priv, from_priv, private_size) ;
+	to->private_data = to_priv ;
+
+	return SRC_ERR_NO_ERROR ;
+} /* zoh_copy */

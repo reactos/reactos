@@ -25,7 +25,7 @@ typedef struct SRC_STATE_tag SRC_STATE ;
 /* SRC_DATA is used to pass data to src_simple() and src_process(). */
 typedef struct
 {	const float	*data_in ;
-	float	 *data_out ;
+	float	*data_out ;
 
 	long	input_frames, output_frames ;
 	long	input_frames_used, output_frames_gen ;
@@ -53,6 +53,12 @@ typedef long (*src_callback_t) (void *cb_data, float **data) ;
 */
 
 SRC_STATE* src_new (int converter_type, int channels, int *error) ;
+
+/*
+** Clone a handle : return an anonymous pointer to a new converter
+** containing the same internal state as orig. Error returned in *error.
+*/
+SRC_STATE* src_clone (SRC_STATE* orig, int *error) ;
 
 /*
 **	Initilisation for callback based API : return an anonymous pointer to the

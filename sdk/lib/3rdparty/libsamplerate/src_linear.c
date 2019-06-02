@@ -6,10 +6,17 @@
 ** file at : https://github.com/erikd/libsamplerate/blob/master/COPYING
 */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
+#include "float_cast.h"
+#include "common.h"
 
 static int linear_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
 static void linear_reset (SRC_PRIVATE *psrc) ;
+static int linear_copy (SRC_PRIVATE *from, SRC_PRIVATE *to) ;
 
 /*========================================================================================
 */
@@ -177,6 +184,7 @@ linear_set_converter (SRC_PRIVATE *psrc, int src_enum)
 	psrc->const_process = linear_vari_process ;
 	psrc->vari_process = linear_vari_process ;
 	psrc->reset = linear_reset ;
+	psrc->copy = linear_copy ;
 
 	linear_reset (psrc) ;
 
@@ -201,3 +209,21 @@ linear_reset (SRC_PRIVATE *psrc)
 	return ;
 } /* linear_reset */
 
+static int
+linear_copy (SRC_PRIVATE *from, SRC_PRIVATE *to)
+{
+	if (from->private_data == NULL)
+		return SRC_ERR_NO_PRIVATE ;
+
+	LINEAR_DATA *to_priv = NULL ;
+	LINEAR_DATA* from_priv = (LINEAR_DATA*) from->private_data ;
+	size_t private_size = sizeof (*to_priv) + from_priv->channels * sizeof (float) ;
+
+	if ((to_priv = calloc (1, private_size)) == NULL)
+		return SRC_ERR_MALLOC_FAILED ;
+
+	memcpy (to_priv, from_priv, private_size) ;
+	to->private_data = to_priv ;
+
+	return SRC_ERR_NO_ERROR ;
+} /* linear_copy */
