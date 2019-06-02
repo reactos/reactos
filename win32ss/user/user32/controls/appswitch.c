@@ -209,15 +209,49 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    return TRUE;
 }
 
-static BOOL CALLBACK
-EnumWindowsProc(HWND hwnd, LPARAM lParam)
+static HWND GetNiceRootOwner(HWND hwnd)
 {
     HWND hwndOwner;
-    WCHAR szClass[64];
-    DWORD ExStyle;
+    DWORD ExStyle, OwnerExStyle;
 
+    for (;;)
+    {
+        ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        if (ExStyle & WS_EX_APPWINDOW)
+            break;
+
+        hwndOwner = GetWindow(hwnd, GW_OWNER);
+        OwnerExStyle = GetWindowLong(hwndOwner, GWL_EXSTYLE);
+        if (!IsWindowVisible(hwndOwner) || (OwnerExStyle & WS_EX_TOOLWINDOW))
+            break;
+
+        hwnd = hwndOwner;
+    }
+
+    return hwnd;
+}
+
+// c.f. http://blogs.msdn.com/b/oldnewthing/archive/2007/10/08/5351207.aspx
+BOOL IsAltTabWindow(HWND hwnd)
+{
+    DWORD ExStyle;
+    RECT rc;
+    HWND hwndTry, hwndWalk;
+    WCHAR szClass[64];
+
+    // must be visible
     if (!IsWindowVisible(hwnd))
-        return TRUE;
+        return FALSE;
+
+    // must not be WS_EX_TOOLWINDOW
+    ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if (ExStyle & WS_EX_TOOLWINDOW)
+        return FALSE;
+
+    // must be not empty rect
+    GetWindowRect(hwnd, &rc);
+    if (IsRectEmpty(&rc))
+        return FALSE;
 
     // check special windows
     if (!GetClassNameW(hwnd, szClass, _countof(szClass)) ||
@@ -227,17 +261,34 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
         return TRUE;
     }
 
-    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    if (ExStyle & WS_EX_TOOLWINDOW)
-        return TRUE;
+    // get 'nice' root owner
+    hwndWalk = GetNiceRootOwner(hwnd);
 
-    hwndOwner = GetWindow(hwnd, GW_OWNER);
-    if (!IsWindowVisible(hwndOwner) || (ExStyle & WS_EX_APPWINDOW))
+    // walk back toward hwnd
+    for (;;)
+    {
+        hwndTry = GetLastActivePopup(hwndWalk);
+        if (hwndTry == hwndWalk)
+            break;
+
+        ExStyle = GetWindowLong(hwndTry, GWL_EXSTYLE);
+        if (IsWindowVisible(hwndTry) && !(ExStyle & WS_EX_TOOLWINDOW))
+            break;
+
+        hwndWalk = hwndTry;
+    }
+
+    return hwnd == hwndTry;
+}
+
+static BOOL CALLBACK
+EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    if (IsAltTabWindow(hwnd))
     {
         if (!EnumerateCallback(hwnd, lParam))
             return FALSE;
     }
-
     return TRUE;
 }
 
