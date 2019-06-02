@@ -325,6 +325,14 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                        STANDARD_RIGHTS_ALL |
                                        PROCESS_SET_QUOTA);
         }
+
+        /*
+         * In case LUID device maps are enable, we may not be using
+         * system device map for this process, but a logon LUID based
+         * device map. Because we change primary token, this usage is
+         * no longer valid, so dereference the process device map
+         */
+        if (ObIsLUIDDeviceMapsEnabled()) ObDereferenceDeviceMap(Process);
     }
 
     /* Dereference the token */
