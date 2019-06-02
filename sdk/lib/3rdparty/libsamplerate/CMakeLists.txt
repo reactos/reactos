@@ -9,3 +9,4 @@ list(APPEND SOURCE
 add_library(libsamplerate ${SOURCE})
 add_dependencies(libsamplerate psdk)
 add_pch(libsamplerate precomp.h SOURCE)
+set(CMAKE_C_FLAGS "-std=c99")
