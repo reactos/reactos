@@ -1258,7 +1258,7 @@ interface IXSLProcessor : IDispatch
     [id(DISPID_XMLDOM_PROCESSOR_SETSTARTMODE)]
     HRESULT setStartMode(
         [in] BSTR p, 
-        [in, defaultvalue(L"")] BSTR uri);
+        [in] BSTR uri);
 
     [propget, id(DISPID_XMLDOM_PROCESSOR_STARTMODE)]
     HRESULT startMode([retval, out] BSTR *p);
@@ -1286,7 +1286,11 @@ interface IXSLProcessor : IDispatch
     HRESULT addParameter(
         [in] BSTR p, 
         [in] VARIANT var, 
+#ifndef __REACTOS__
         [in, defaultvalue(L"")] BSTR uri);
+#else
+        [in] BSTR uri);
+#endif
 
     [id(DISPID_XMLDOM_PROCESSOR_ADDOBJECT)]
     HRESULT addObject(
