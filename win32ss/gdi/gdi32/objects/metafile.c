@@ -139,15 +139,21 @@ GdiCreateLocalMetaFilePict(HANDLE hmo)
     {
         static const WCHAR szDisplayW[] = { 'D','I','S','P','L','A','Y','\0' };
         HENHMETAFILE hEMF;
-        PENHMETAHEADER pemh = (PENHMETAHEADER)Buffer;
-
-        pInfo->mm   = MM_ANISOTROPIC;
-        pInfo->xExt = pemh->rclFrame.right   - pemh->rclFrame.left; // Width
-        pInfo->yExt = pemh->rclFrame.bottom  - pemh->rclFrame.top;  // Height
+        ENHMETAHEADER emh;
 
         hEMF = SetEnhMetaFileBits(nSize, Buffer);
         if (hEMF == NULL)
             goto Exit;
+
+        if (!GetEnhMetaFileHeader( hEMF, sizeof(emh), &emh ))
+        {
+            DeleteEnhMetaFile(hEMF);
+            goto Exit;
+        }
+
+        pInfo->mm   = MM_ANISOTROPIC; // wine uses MM_ISOTROPIC.
+        pInfo->xExt = emh.rclFrame.right   - emh.rclFrame.left; // Width
+        pInfo->yExt = emh.rclFrame.bottom  - emh.rclFrame.top;  // Height
 
         hDC = CreateDCW(szDisplayW, NULL, NULL, NULL);
         if (hDC)
