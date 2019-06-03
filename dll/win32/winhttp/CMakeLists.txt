@@ -7,7 +7,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(winhttp.dll winhttp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cookie.c
@@ -24,8 +23,8 @@ add_typelib(winhttp_tlb.idl)
 
 add_library(winhttp MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
+    rsrc.rc)
+spec2def(winhttp winhttp.dll winhttp.spec ADD_IMPORTLIB)
 
 set_module_type(winhttp win32dll)
 target_link_libraries(winhttp uuid wine)

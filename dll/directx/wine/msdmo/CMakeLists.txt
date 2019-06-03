@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msdmo.dll msdmo.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dmoreg.c
@@ -11,8 +10,8 @@ list(APPEND SOURCE
 add_library(msdmo MODULE
     ${SOURCE}
     stubs.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
+    rsrc.rc)
+spec2def(msdmo msdmo.dll msdmo.spec ADD_IMPORTLIB)
 
 set_module_type(msdmo win32dll)
 target_link_libraries(msdmo uuid wine mediaobj_guid)

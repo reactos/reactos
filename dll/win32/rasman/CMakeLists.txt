@@ -1,13 +1,11 @@
 
-spec2def(rasman.dll rasman.spec)
-
 list(APPEND SOURCE
     rasman.c
-    rasman.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rasman_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
+    rasman.rc)
 
 add_library(rasman MODULE ${SOURCE})
+spec2def(rasman rasman.dll rasman.spec)
+
 set_module_type(rasman win32dll)
 target_link_libraries(rasman wine uuid)
 add_importlibs(rasman msvcrt kernel32 ntdll)

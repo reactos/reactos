@@ -7,7 +7,6 @@ include_directories(
 add_rpc_files(server
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dssetup.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/lsa.idl)
-spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     authpackage.c
@@ -28,13 +27,12 @@ list(APPEND SOURCE
     utils.c
     lsasrv.h
     ${CMAKE_CURRENT_BINARY_DIR}/dssetup_s.c
-    ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c
-    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c)
 
 add_library(lsasrv MODULE
     ${SOURCE}
-    lsasrv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def)
+    lsasrv.rc)
+spec2def(lsasrv lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 set_module_type(lsasrv win32dll UNICODE)
 target_link_libraries(lsasrv wine ${PSEH_LIB})

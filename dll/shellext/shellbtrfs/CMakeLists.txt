@@ -9,8 +9,6 @@ endif()
 
 include_directories(${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs)
 
-spec2def(shellbtrfs.dll shellbtrfs.spec)
-
 list(APPEND SOURCE
     balance.cpp
     contextmenu.cpp
@@ -29,8 +27,8 @@ list(APPEND SOURCE
 add_library(shellbtrfs MODULE
     ${SOURCE}
     guid.c
-    shellbtrfs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shellbtrfs.def)
+    shellbtrfs.rc)
+spec2def(shellbtrfs shellbtrfs.dll shellbtrfs.spec)
 
 file(GLOB shellbtrfs_rc_deps *.ico)
 add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})

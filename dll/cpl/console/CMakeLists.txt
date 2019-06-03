@@ -2,8 +2,6 @@
 include_directories(
     ${REACTOS_SOURCE_DIR}/win32ss/user/winsrv/concfg)
 
-spec2def(console.dll console.spec)
-
 list(APPEND SOURCE
     console.c
     options.c
@@ -17,8 +15,8 @@ add_rc_deps(console.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/terminal.ico)
 
 add_library(console MODULE
     ${SOURCE}
-    console.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/console.def)
+    console.rc)
+spec2def(console console.dll console.spec)
 
 set_module_type(console cpl UNICODE)
 set_target_properties(console PROPERTIES SUFFIX ".dll")

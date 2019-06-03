@@ -1,5 +1,6 @@
 
-spec2def(dxg.sys dxg.spec)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     main.c
@@ -12,13 +13,10 @@ list(APPEND SOURCE
     historic.c
     dxg_int.h)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
-
 add_library(dxg MODULE
     ${SOURCE}
-    dxg.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dxg.def)
+    dxg.rc)
+spec2def(dxg dxg.sys dxg.spec)
 
 set_module_type(dxg kernelmodedriver)
 add_importlibs(dxg dxgthk ntoskrnl)

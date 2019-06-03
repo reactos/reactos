@@ -1,17 +1,13 @@
 
-spec2def(hid.dll hid.spec ADD_IMPORTLIB)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/hidparser)
 
 list(APPEND SOURCE
     hid.c
     precomp.h)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/hidparser)
-
-add_library(hid MODULE
-    ${SOURCE}
-    hid.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hid.def)
+add_library(hid MODULE ${SOURCE} hid.rc)
+spec2def(hid hid.dll hid.spec ADD_IMPORTLIB)
 
 set_module_type(hid win32dll UNICODE)
 add_importlibs(hid msvcrt kernel32 ntdll)

@@ -1,19 +1,17 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     reader.c
     writer.c
     xmllite_main.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c)
+    precomp.h)
 
 add_library(xmllite MODULE
     ${SOURCE}
-    guid.c
-    ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)
+    guid.c)
+spec2def(xmllite xmllite.dll xmllite.spec ADD_IMPORTLIB)
 
 set_module_type(xmllite win32dll)
 target_link_libraries(xmllite uuid wine)

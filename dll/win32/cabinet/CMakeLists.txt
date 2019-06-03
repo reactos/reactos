@@ -7,8 +7,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
-spec2def(cabinet.dll cabinet.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     cabinet_main.c
     fci.c
@@ -18,8 +16,8 @@ list(APPEND SOURCE
 add_library(cabinet MODULE
     ${SOURCE}
     stubs.c
-    cabinet.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/cabinet.def)
+    cabinet.rc)
+spec2def(cabinet cabinet.dll cabinet.spec ADD_IMPORTLIB)
 
 set_module_type(cabinet win32dll)
 target_link_libraries(cabinet wine zlib)

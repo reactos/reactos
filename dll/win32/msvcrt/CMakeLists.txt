@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
-spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
@@ -15,11 +14,11 @@ add_definitions(
 list(APPEND SOURCE
     dllmain.c
     stubs.c
-    msvcrt.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
+    msvcrt.rc)
 
 add_library(msvcrt MODULE ${SOURCE})
+spec2def(msvcrt msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
+
 set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 add_dependencies(msvcrt psdk)
 target_link_libraries(msvcrt crt wine ${PSEH_LIB})

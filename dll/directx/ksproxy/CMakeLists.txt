@@ -1,6 +1,5 @@
 
 set_cpp(WITH_STL)
-spec2def(ksproxy.ax ksproxy.spec)
 
 list(APPEND SOURCE
     allocator.cpp
@@ -19,10 +18,11 @@ list(APPEND SOURCE
     node.cpp
     output_pin.cpp
     proxy.cpp
-    qualityforward.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
+    qualityforward.cpp)
 
 add_library(ksproxy MODULE ${SOURCE} ksproxy.rc)
+spec2def(ksproxy ksproxy.ax ksproxy.spec)
+
 set_module_type(ksproxy win32dll)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
 target_link_libraries(ksproxy strmiids)

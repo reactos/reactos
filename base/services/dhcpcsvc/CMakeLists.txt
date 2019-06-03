@@ -1,9 +1,8 @@
 
 add_definitions(-Dtzset=_tzset)
 include_directories(include)
-spec2def(dhcpcsvc.dll dhcpcsvc.spec ADD_IMPORTLIB)
 
-list(APPEND SOURCE 
+list(APPEND SOURCE
     dhcp/adapter.c
     dhcp/alloc.c
     dhcp/api.c
@@ -21,9 +20,8 @@ list(APPEND SOURCE
 
 add_library(dhcpcsvc MODULE
     ${SOURCE}
-    dhcpcsvc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
+    dhcpcsvc.rc)
+spec2def(dhcpcsvc dhcpcsvc.dll dhcpcsvc.spec ADD_IMPORTLIB)
 
 set_module_type(dhcpcsvc win32dll)
 add_importlibs(dhcpcsvc ws2_32 iphlpapi advapi32 msvcrt kernel32 ntdll)

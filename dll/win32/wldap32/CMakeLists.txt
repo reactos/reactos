@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wldap32.dll wldap32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     add.c
@@ -23,14 +22,13 @@ list(APPEND SOURCE
     rename.c
     search.c
     value.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/wldap32_stubs.c)
+    precomp.h)
 
 add_library(wldap32 MODULE
     ${SOURCE}
     ber.c
-    wldap32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def)
+    wldap32.rc)
+spec2def(wldap32 wldap32.dll wldap32.spec ADD_IMPORTLIB)
 
 set_module_type(wldap32 win32dll)
 target_link_libraries(wldap32 wine)

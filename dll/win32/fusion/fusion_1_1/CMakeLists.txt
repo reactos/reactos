@@ -1,10 +1,9 @@
 
 set(fusion_folder "${CMAKE_CURRENT_SOURCE_DIR}/..")
-spec2def(fusion.dll fusion.spec)
 
 add_library(fusion_1_1 MODULE
-    ${fusion_folder}/version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
+    ${fusion_folder}/version.rc)
+spec2def(fusion_1_1 fusion.dll fusion.spec)
 
 set_module_type(fusion_1_1 win32dll)
 target_link_libraries(fusion_1_1 fusion_common uuid wine)

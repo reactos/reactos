@@ -8,7 +8,6 @@ remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     animate.c
@@ -54,8 +53,8 @@ list(APPEND SOURCE
 add_library(comctl32 MODULE
     ${SOURCE}
     stubs.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
+    rsrc.rc)
+spec2def(comctl32 comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 set_module_type(comctl32 win32dll UNICODE)
 target_link_libraries(comctl32 uuid wine ${PSEH_LIB})

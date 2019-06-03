@@ -1,6 +1,4 @@
 
-spec2def(kdcom.dll kdgdb.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     gdb_input.c
     gdb_receive.c
@@ -17,8 +15,8 @@ endif()
 
 add_library(kdcom MODULE
     ${SOURCE}
-    kdgdb.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+    kdgdb.rc)
+spec2def(kdcom kdcom.dll kdgdb.spec ADD_IMPORTLIB)
 
 set_module_type(kdcom module IMAGEBASE 0x00010000)
 set_subsystem(kdcom native)

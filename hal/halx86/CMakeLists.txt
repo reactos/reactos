@@ -10,26 +10,24 @@ include_directories(
 function(add_hal _halname)
     cmake_parse_arguments(_haldata "" "" "SOURCES;COMPONENTS" ${ARGN})
 
-    # Handle the spec file for the dll name
-    spec2def(${_halname}.dll ../hal.spec ADD_IMPORTLIB)
-
     # Create the actual target
     if(NOT MSVC)
         foreach(_component ${_haldata_COMPONENTS})
             list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
         endforeach()
         add_library(${_halname} MODULE
-            ${_haldata_SOURCES}
-            ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
+            ${_haldata_SOURCES})
     else()
         foreach(_component ${_haldata_COMPONENTS})
             list(APPEND _haldata_LIBS "lib_hal_${_component}")
         endforeach()
         add_library(${_halname} MODULE
-            ${_haldata_SOURCES}
-            ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
+            ${_haldata_SOURCES})
         target_link_libraries(${_halname} ${_haldata_LIBS})
     endif()
+
+    # Handle the spec file for the dll name
+    spec2def(${_halname} ${_halname}.dll ../hal.spec ADD_IMPORTLIB)
 
     target_link_libraries(${_halname} libcntpr)
     add_importlibs(${_halname} ntoskrnl)

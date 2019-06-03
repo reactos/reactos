@@ -11,7 +11,6 @@ add_definitions(
     -DWINE_REGISTER_DLL)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(ole32.dll ole32.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 generate_idl_iids(dcom.idl)
 add_idl_headers(ole32idl dcom.idl irot.idl)
 add_rpc_files(client irot.idl)
@@ -74,9 +73,9 @@ add_library(ole32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_objidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_oleidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32_unknwn_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ole32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c)
+
+spec2def(ole32 ole32.dll ole32.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 
 set_module_type(ole32 win32dll)
 target_link_libraries(ole32 wine uuid ${PSEH_LIB})

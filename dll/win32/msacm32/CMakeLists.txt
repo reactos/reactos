@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msacm32.dll msacm32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     driver.c
@@ -11,13 +10,12 @@ list(APPEND SOURCE
     msacm32_main.c
     pcmconverter.c
     stream.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msacm32_stubs.c)
+    precomp.h)
 
 add_library(msacm32 MODULE
     ${SOURCE}
-    msacm.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
+    msacm.rc)
+spec2def(msacm32 msacm32.dll msacm32.spec ADD_IMPORTLIB)
 
 set_module_type(msacm32 win32dll ENTRYPOINT DllMain 12 UNICODE)
 target_link_libraries(msacm32 wine)

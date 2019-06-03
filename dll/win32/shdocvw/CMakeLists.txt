@@ -4,21 +4,19 @@ add_definitions(
     -D_SHDOCVW_)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(shdocvw.dll shdocvw.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     shdocvw_main.c
     shlinstobj.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c)
+    precomp.h)
 
 add_typelib(shdocvw_v1.idl)
 set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
 
 add_library(shdocvw MODULE
     ${SOURCE}
-    shdocvw.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
+    shdocvw.rc)
+spec2def(shdocvw shdocvw.dll shdocvw.spec ADD_IMPORTLIB)
 
 set_module_type(shdocvw win32dll)
 target_link_libraries(shdocvw uuid wine)

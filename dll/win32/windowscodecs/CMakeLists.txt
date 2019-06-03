@@ -24,7 +24,6 @@ if(MSVC)
     add_compile_flags("/FItypeof.h")
 endif()
 
-spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE
@@ -71,13 +70,12 @@ list(APPEND ADDITIONAL_SOURCE
     guid.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_wincodec_p.c)
 
 add_library(windowscodecs MODULE
     ${SOURCE}
     ${ADDITIONAL_SOURCE})
+spec2def(windowscodecs windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})

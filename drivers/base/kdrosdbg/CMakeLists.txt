@@ -1,12 +1,11 @@
 
-spec2def(kdcom.dll kdrosdbg.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     kdrosdbg.c
-    kdrosdbg.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+    kdrosdbg.rc)
 
 add_library(kdcom MODULE ${SOURCE})
+spec2def(kdcom kdcom.dll kdrosdbg.spec ADD_IMPORTLIB)
+
 set_module_type(kdcom kerneldll ENTRYPOINT 0)
 add_importlibs(kdcom ntoskrnl hal)
 target_link_libraries(kdcom cportlib)

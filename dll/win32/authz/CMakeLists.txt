@@ -1,17 +1,14 @@
 
-spec2def(authz.dll authz.spec)
-
 list(APPEND SOURCE
     authz.c
     clictx.c
     resman.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/authz_stubs.c)
+    precomp.h)
 
 add_library(authz MODULE
     ${SOURCE}
-    authz.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/authz.def)
+    authz.rc)
+spec2def(authz authz.dll authz.spec)
 
 set_module_type(authz win32dll UNICODE)
 add_importlibs(authz advapi32 msvcrt kernel32 ntdll)

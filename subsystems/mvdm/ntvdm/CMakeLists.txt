@@ -12,8 +12,6 @@ add_custom_command(
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fast486)
 
-spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     bios/bios32/bios32.c
     bios/bios32/dskbios32.c
@@ -70,8 +68,12 @@ add_rc_deps(ntvdm.rc ${ntvdm_rc_deps})
 
 add_executable(ntvdm
     ${SOURCE}
-    ntvdm.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
+    ntvdm.rc)
+spec2def(ntvdm ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
+set_target_properties(ntvdm
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 add_pch(ntvdm ntvdm.h SOURCE)
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)

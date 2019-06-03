@@ -4,7 +4,6 @@ add_definitions(
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(d3d9.dll d3d9.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     buffer.c
@@ -24,9 +23,8 @@ list(APPEND SOURCE
 add_library(d3d9 MODULE
     ${SOURCE}
     guid.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/d3d9_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
+    version.rc)
+spec2def(d3d9 d3d9.dll d3d9.spec ADD_IMPORTLIB)
 
 set_module_type(d3d9 win32dll UNICODE)
 target_link_libraries(d3d9 wine)

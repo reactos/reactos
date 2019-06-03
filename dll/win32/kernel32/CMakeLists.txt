@@ -1,7 +1,6 @@
 
 add_definitions(-D_KERNEL32_)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
-spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     client/actctx.c
@@ -102,9 +101,8 @@ add_asm_files(kernel32_asm ${ASM_SOURCE})
 add_library(kernel32 MODULE
     ${SOURCE}
     ${kernel32_asm}
-    kernel32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
+    kernel32.rc)
+spec2def(kernel32 kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 #############################################

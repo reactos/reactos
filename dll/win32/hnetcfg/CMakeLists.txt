@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(hnetcfg.dll hnetcfg.spec)
 
 list(APPEND SOURCE
     apps.c
@@ -15,8 +14,8 @@ list(APPEND SOURCE
 
 add_library(hnetcfg MODULE
     ${SOURCE}
-    hnetcfg.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hnetcfg.def)
+    hnetcfg.rc)
+spec2def(hnetcfg hnetcfg.dll hnetcfg.spec)
 
 add_typelib(hnetcfg_tlb.idl)
 

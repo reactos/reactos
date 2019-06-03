@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(dinput.dll dinput.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     config.c
@@ -20,8 +19,8 @@ add_library(dinput MODULE
     ${SOURCE}
     data_formats.c
     dinput.rc
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
+    version.rc)
+spec2def(dinput dinput.dll dinput.spec ADD_IMPORTLIB)
 
 add_library(dinput_data_formats data_formats.c)
 add_dependencies(dinput_data_formats psdk)

@@ -1,12 +1,11 @@
 
-spec2def(hdwwiz.cpl hdwwiz.spec)
 file(GLOB hdwwiz_rc_deps resources/*.*)
 add_rc_deps(hdwwiz.rc ${hdwwiz_rc_deps})
 
 add_library(hdwwiz MODULE
     hdwwiz.c
-    hdwwiz.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)
+    hdwwiz.rc)
+spec2def(hdwwiz hdwwiz.cpl hdwwiz.spec)
 
 set_module_type(hdwwiz cpl UNICODE)
 add_importlibs(hdwwiz setupapi advapi32 comctl32 rpcrt4 user32 gdi32 devmgr msvcrt kernel32 ntdll)

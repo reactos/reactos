@@ -7,11 +7,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libmpg123)
 
-spec2def(winemp3.acm winemp3.acm.spec)
-
-add_library(winemp3.acm MODULE
-    mpegl3.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winemp3.def)
+add_library(winemp3.acm MODULE mpegl3.c)
+spec2def(winemp3.acm winemp3.acm winemp3.acm.spec)
 
 set_module_type(winemp3.acm win32dll)
 set_target_properties(winemp3.acm PROPERTIES SUFFIX "")

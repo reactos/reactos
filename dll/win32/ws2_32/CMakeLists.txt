@@ -1,6 +1,5 @@
 
 add_definitions(-DLE)
-spec2def(ws2_32.dll ws2_32.spec ADD_IMPORTLIB)
 
 include_directories(
     inc
@@ -47,8 +46,8 @@ list(APPEND SOURCE
 
 add_library(ws2_32 MODULE
     ${SOURCE}
-    ws2_32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
+    ws2_32.rc)
+spec2def(ws2_32 ws2_32.dll ws2_32.spec ADD_IMPORTLIB)
 
 set_module_type(ws2_32 win32dll)
 target_link_libraries(ws2_32 ${PSEH_LIB})

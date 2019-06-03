@@ -1,8 +1,6 @@
 
 include_directories(${SHIMLIB_DIR})
 
-spec2def(aclayers.dll layer.spec)
-
 list(APPEND SOURCE
     dispmode.c
     forcedxsetupsuccess.c
@@ -12,9 +10,8 @@ list(APPEND SOURCE
     main.c
     layer.spec)
 
-add_library(aclayers MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/aclayers.def)
+add_library(aclayers MODULE ${SOURCE})
+spec2def(aclayers aclayers.dll layer.spec)
 
 set_module_type(aclayers win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(aclayers shimlib)

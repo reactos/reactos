@@ -5,8 +5,6 @@ remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)
 #add_definitions(-DSDBAPI_DEBUG_ALLOC)
 
-spec2def(apphelp.dll apphelp.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     apphelp.c
     dbgheap.c
@@ -18,8 +16,7 @@ list(APPEND SOURCE
     sdbstringtable.c
     sdbwrite.c
     shimeng.c
-    apphelp.spec
-    ${CMAKE_CURRENT_BINARY_DIR}/apphelp_stubs.c)
+    apphelp.spec)
 
 list(APPEND HEADERS
     apphelp.h
@@ -33,8 +30,8 @@ list(APPEND HEADERS
 add_library(apphelp MODULE
     ${SOURCE}
     ${HEADERS}
-    apphelp.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/apphelp.def)
+    apphelp.rc)
+spec2def(apphelp apphelp.dll apphelp.spec ADD_IMPORTLIB)
 
 set_module_type(apphelp win32dll UNICODE ENTRYPOINT DllMain 12)
 add_delay_importlibs(apphelp version)

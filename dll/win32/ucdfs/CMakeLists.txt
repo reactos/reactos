@@ -1,12 +1,11 @@
 
-spec2def(ucdfs.dll ucdfs.spec)
-
 list(APPEND SOURCE
     ucdfs.c
-    ucdfs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ucdfs.def)
+    ucdfs.rc)
 
 add_library(ucdfs MODULE ${SOURCE})
+spec2def(ucdfs ucdfs.dll ucdfs.spec)
+
 set_module_type(ucdfs nativedll)
 target_link_libraries(ucdfs cdfslib)
 add_importlibs(ucdfs ntdll)

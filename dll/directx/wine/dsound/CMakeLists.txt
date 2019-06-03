@@ -5,7 +5,6 @@ add_definitions(
     -D__WINESRC__)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(dsound.dll dsound.spec ADD_IMPORTLIB)
 
 add_library(dsound MODULE
     buffer.c
@@ -19,8 +18,8 @@ add_library(dsound MODULE
     propset.c
     sound3d.c
     guid.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
+    version.rc)
+spec2def(dsound dsound.dll dsound.spec ADD_IMPORTLIB)
 
 set_module_type(dsound win32dll)
 target_link_libraries(dsound dxguid uuid wine)

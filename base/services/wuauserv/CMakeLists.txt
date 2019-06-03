@@ -1,9 +1,9 @@
-spec2def(wuauserv.dll wuauserv.spec ADD_IMPORTLIB)
 
 add_library(wuauserv MODULE
     wuauserv.c
     wuauserv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wuauserv.def)
+spec2def(wuauserv wuauserv.dll wuauserv.spec ADD_IMPORTLIB)
 
 set_module_type(wuauserv win32dll UNICODE)
 add_importlibs(wuauserv advapi32 msvcrt kernel32 ntdll)

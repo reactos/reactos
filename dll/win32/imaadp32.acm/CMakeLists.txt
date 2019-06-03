@@ -1,13 +1,13 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(imaadp32.acm imaadp32.acm.spec)
 
 list(APPEND SOURCE
-    imaadp32.c
-    ${CMAKE_CURRENT_BINARY_DIR}/imaadp32.def)
+    imaadp32.c)
 
 add_library(imaadp32.acm MODULE ${SOURCE})
+spec2def(imaadp32.acm imaadp32.acm imaadp32.acm.spec)
+
 set_module_type(imaadp32.acm win32dll)
 set_target_properties(imaadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(imaadp32.acm wine)

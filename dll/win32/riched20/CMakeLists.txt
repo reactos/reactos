@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     caret.c
@@ -32,8 +31,8 @@ set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${riched20_rc_
 
 add_library(riched20 MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
+    version.rc)
+spec2def(riched20 riched20.dll riched20.spec ADD_IMPORTLIB)
 
 add_typelib(riched_tom.idl)
 add_dependencies(riched20 stdole2)

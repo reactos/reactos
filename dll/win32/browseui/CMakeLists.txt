@@ -8,7 +8,6 @@ add_definitions(
     -D_ATL_NO_EXCEPTIONS)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
-spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ACLCustomMRU.cpp
@@ -42,8 +41,8 @@ list(APPEND SOURCE
 add_library(browseui MODULE
     ${SOURCE}
     dllinstall.c
-    browseui.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
+    browseui.rc)
+spec2def(browseui browseui.dll browseui.spec ADD_IMPORTLIB)
 
 set_module_type(browseui win32dll UNICODE)
 target_link_libraries(browseui shellbars uuid wine)

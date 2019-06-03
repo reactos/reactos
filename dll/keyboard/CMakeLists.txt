@@ -84,12 +84,10 @@ list(APPEND _keyboard_layouts
     kbdycl)
 
 foreach(_keyboard_layout ${_keyboard_layouts})
-    spec2def(${_keyboard_layout}.dll ${_keyboard_layout}/${_keyboard_layout}.spec)
-
     add_library(${_keyboard_layout} MODULE
         ${_keyboard_layout}/${_keyboard_layout}.c
-        ${_keyboard_layout}/${_keyboard_layout}.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
+        ${_keyboard_layout}/${_keyboard_layout}.rc)
+    spec2def(${_keyboard_layout} ${_keyboard_layout}.dll ${_keyboard_layout}/${_keyboard_layout}.spec)
 
     target_include_directories(${_keyboard_layout} PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
     set_entrypoint(${_keyboard_layout} 0)

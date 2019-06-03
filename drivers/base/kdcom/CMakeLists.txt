@@ -1,6 +1,4 @@
 
-spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     kdcom.c
     kddll.c
@@ -9,8 +7,8 @@ list(APPEND SOURCE
 
 add_library(kdcom MODULE
     ${SOURCE}
-    kdcom.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+    kdcom.rc)
+spec2def(kdcom kdcom.dll kdcom.spec ADD_IMPORTLIB)
 
 set_module_type(kdcom module IMAGEBASE 0x00010000)
 set_subsystem(kdcom native)

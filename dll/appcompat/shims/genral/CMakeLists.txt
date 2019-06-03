@@ -1,8 +1,6 @@
 
 include_directories(${SHIMLIB_DIR})
 
-spec2def(acgenral.dll genral.spec)
-
 list(APPEND SOURCE
     ignoredbgout.c
     ignorefreelib.c
@@ -11,9 +9,8 @@ list(APPEND SOURCE
     themes.c
     genral.spec)
 
-add_library(acgenral MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/acgenral.def)
+add_library(acgenral MODULE ${SOURCE})
+spec2def(acgenral acgenral.dll genral.spec)
 
 set_module_type(acgenral win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(acgenral shimlib)

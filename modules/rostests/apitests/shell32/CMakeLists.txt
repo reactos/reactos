@@ -4,8 +4,6 @@ add_definitions(
 
 set_cpp(WITH_RUNTIME)
 
-spec2def(shell32_apitest.exe shell32_apitest.spec)
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
@@ -31,8 +29,12 @@ list(APPEND SOURCE
 add_executable(shell32_apitest
     ${SOURCE}
     testlist.c
-    resource.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32_apitest.def)
+    resource.rc)
+spec2def(shell32_apitest shell32_apitest.exe shell32_apitest.spec)
+set_target_properties(shell32_apitest
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB})
 set_module_type(shell32_apitest win32cui)

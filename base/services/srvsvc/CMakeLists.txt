@@ -1,14 +1,13 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/srvsvc.idl)
-spec2def(srvsvc.dll srvsvc.spec ADD_IMPORTLIB)
 
 add_library(srvsvc MODULE
     rpcserver.c
     srvsvc.c
     srvsvc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_s.c
-    ${CMAKE_CURRENT_BINARY_DIR}/srvsvc.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_s.c)
+spec2def(srvsvc srvsvc.dll srvsvc.spec ADD_IMPORTLIB)
 
 set_module_type(srvsvc win32dll UNICODE)
 target_link_libraries(srvsvc wine)

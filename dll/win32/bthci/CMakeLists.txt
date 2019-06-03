@@ -1,10 +1,8 @@
 
-spec2def(bthci.dll bthci.spec)
-
 add_library(bthci MODULE
     bthci.c
-    bthci.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/bthci.def)
+    bthci.rc)
+spec2def(bthci bthci.dll bthci.spec)
 
 set_module_type(bthci win32dll UNICODE)
 add_importlibs(bthci msvcrt kernel32 ntdll)

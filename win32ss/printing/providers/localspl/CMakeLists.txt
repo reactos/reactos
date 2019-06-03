@@ -1,6 +1,4 @@
 
-spec2def(localspl.dll localspl.spec ADD_IMPORTLIB)
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/skiplist)
 
 list(APPEND SOURCE
@@ -18,9 +16,8 @@ list(APPEND SOURCE
 
 add_library(localspl MODULE
     ${SOURCE}
-    localspl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/localspl_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/localspl.def)
+    localspl.rc)
+spec2def(localspl localspl.dll localspl.spec ADD_IMPORTLIB)
 
 set_module_type(localspl win32dll UNICODE)
 target_link_libraries(localspl skiplist16 wine)

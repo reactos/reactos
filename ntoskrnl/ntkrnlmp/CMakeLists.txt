@@ -2,7 +2,6 @@
 include(../ntos.cmake)
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl)
-spec2def(ntkrnlmp.exe ../ntoskrnl.spec)
 
 if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
     set_source_files_properties(${NTKRNLMP_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "CONFIG_SMP")
@@ -14,9 +13,12 @@ add_executable(ntkrnlmp
     ${ntkrnlmp_asm}
     ${NTKRNLMP_SOURCE}
     ${REACTOS_SOURCE_DIR}/ntoskrnl/guid.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/ntoskrnl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
-set_property(TARGET ntkrnlmp PROPERTY ENABLE_EXPORTS TRUE)
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ntoskrnl.rc)
+spec2def(ntkrnlmp ntkrnlmp.exe ../ntoskrnl.spec ADD_IMPORTLIB)
+set_target_properties(ntkrnlmp
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
 

@@ -1,14 +1,13 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(cryptnet.dll cryptnet.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    cryptnet_main.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptnet_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptnet.def)
+    cryptnet_main.c)
 
 add_library(cryptnet MODULE ${SOURCE})
+spec2def(cryptnet cryptnet.dll cryptnet.spec ADD_IMPORTLIB)
+
 set_module_type(cryptnet win32dll)
 target_link_libraries(cryptnet wine)
 add_delay_importlibs(cryptnet wininet)

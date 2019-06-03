@@ -1,6 +1,4 @@
 
-spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
-
 add_definitions(
     -D_NTHALDLL_
     -D_NTHAL_)
@@ -15,5 +13,7 @@ list(APPEND SOURCES
 
 add_library(hal MODULE
     ${SOURCES})
+
+spec2def(hal hal.dll ../hal.spec ADD_IMPORTLIB)
 
 set_module_type(hal kerneldll ENTRYPOINT 0)

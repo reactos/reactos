@@ -1,6 +1,4 @@
 
-spec2def(powercfg.cpl powercfg.spec)
-
 list(APPEND SOURCE
     powercfg.c
     powershemes.c
@@ -14,8 +12,8 @@ add_rc_deps(powercfg.rc ${powercfg_rc_deps})
 
 add_library(powercfg MODULE
     ${SOURCE}
-    powercfg.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
+    powercfg.rc)
+spec2def(powercfg powercfg.cpl powercfg.spec)
 
 set_module_type(powercfg cpl UNICODE)
 add_importlibs(powercfg shlwapi user32 powrprof comctl32 shell32 advapi32 msvcrt kernel32 ntdll)

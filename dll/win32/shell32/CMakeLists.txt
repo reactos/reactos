@@ -5,7 +5,6 @@ add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
 set_cpp(WITH_RUNTIME)
-spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 if(NOT MSVC)
     # HACK: this should be enabled globally!
@@ -108,10 +107,8 @@ add_library(shell32 MODULE
     wine/shlmenu.c
     wine/shpolicy.c
     vista.c
-    shell32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
-
+    shell32.rc)
+spec2def(shell32 shell32.dll shell32.spec ADD_IMPORTLIB)
 
 add_typelib(shell32_shldisp.idl)
 set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)

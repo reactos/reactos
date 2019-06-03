@@ -1,8 +1,6 @@
 
 add_subdirectory(ui)
 
-spec2def(localmon.dll localmon.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     main.c
     ports.c
@@ -12,8 +10,8 @@ list(APPEND SOURCE
 
 add_library(localmon MODULE
     ${SOURCE}
-    localmon.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/localmon.def)
+    localmon.rc)
+spec2def(localmon localmon.dll localmon.spec ADD_IMPORTLIB)
 
 set_module_type(localmon win32dll UNICODE)
 target_link_libraries(localmon wine)

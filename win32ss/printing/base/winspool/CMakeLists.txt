@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/winspool.idl)
-spec2def(winspool.drv winspool.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ../marshalling.c
@@ -21,9 +20,8 @@ list(APPEND SOURCE
 
 add_library(winspool MODULE
     ${SOURCE}
-    winspool.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winspool_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winspool.def)
+    winspool.rc)
+spec2def(winspool winspool.drv winspool.spec ADD_IMPORTLIB)
 
 set_target_properties(winspool PROPERTIES SUFFIX ".drv")
 set_module_type(winspool win32dll UNICODE)

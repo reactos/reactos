@@ -1,6 +1,4 @@
 
-spec2def(deskmon.dll deskmon.spec)
-
 list(APPEND SOURCE
     deskmon.c
     shxiface.c
@@ -10,8 +8,8 @@ add_rc_deps(deskmon.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/monitor.ico)
 
 add_library(deskmon MODULE
     ${SOURCE}
-    deskmon.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)
+    deskmon.rc)
+spec2def(deskmon deskmon.dll deskmon.spec)
 
 set_module_type(deskmon win32dll UNICODE)
 target_link_libraries(deskmon uuid)

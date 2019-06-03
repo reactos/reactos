@@ -1,6 +1,5 @@
 
 include_directories(BEFORE include)
-spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DNDIS_WRAPPER
@@ -35,8 +34,8 @@ list(APPEND SOURCE
 
 add_library(ndis MODULE
     ${SOURCE}
-    ndis.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)
+    ndis.rc)
+spec2def(ndis ndis.sys ndis.spec ADD_IMPORTLIB)
 
 set_module_type(ndis kernelmodedriver)
 add_importlibs(ndis ntoskrnl hal)

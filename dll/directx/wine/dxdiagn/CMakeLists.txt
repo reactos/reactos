@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(dxdiagn.dll dxdiagn.spec)
 add_idl_headers(dxdiagn_idlheader fil_data.idl)
 
 list(APPEND SOURCE
@@ -13,8 +12,8 @@ list(APPEND SOURCE
 add_library(dxdiagn MODULE
     ${SOURCE}
     guid.c
-    dxdiagn.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dxdiagn.def)
+    dxdiagn.rc)
+spec2def(dxdiagn dxdiagn.dll dxdiagn.spec)
 
 set_module_type(dxdiagn win32dll)
 target_link_libraries(dxdiagn strmiids dxguid uuid wine)

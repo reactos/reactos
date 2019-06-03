@@ -1,5 +1,4 @@
 
-spec2def(aclui.dll aclui.spec)
 add_definitions(-DSUPPORT_UXTHEME)
 
 list(APPEND SOURCE
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 add_library(aclui MODULE
     ${SOURCE}
     guid.c
-    aclui.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/aclui.def)
+    aclui.rc)
+spec2def(aclui aclui.dll aclui.spec)
 
 set_module_type(aclui win32dll UNICODE)
 add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme msvcrt kernel32 ntdll)

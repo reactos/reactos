@@ -2,8 +2,6 @@
 include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
-spec2def(csrsrv.dll csrsrv.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     api.c
     init.c
@@ -16,8 +14,8 @@ list(APPEND SOURCE
 
 add_library(csrsrv MODULE
     ${SOURCE}
-    csrsrv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
+    csrsrv.rc)
+spec2def(csrsrv csrsrv.dll csrsrv.spec ADD_IMPORTLIB)
 
 set_module_type(csrsrv nativedll)
 target_link_libraries(csrsrv ${PSEH_LIB} smlib)

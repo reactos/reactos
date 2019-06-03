@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/winsock)
-spec2def(ws2help.dll ws2help.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     apc.c
@@ -10,9 +9,8 @@ list(APPEND SOURCE
     notify.c
     precomp.h)
 
-add_library(ws2help MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/ws2help.def)
+add_library(ws2help MODULE ${SOURCE})
+spec2def(ws2help ws2help.dll ws2help.spec ADD_IMPORTLIB)
 
 set_module_type(ws2help win32dll)
 add_importlibs(ws2help advapi32 ws2_32 msvcrt kernel32 ntdll)

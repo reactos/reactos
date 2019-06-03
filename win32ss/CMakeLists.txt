@@ -21,8 +21,6 @@ add_subdirectory(reactx)
 add_subdirectory(user/user32)
 add_subdirectory(user/winsrv)
 
-spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
-
 include_directories(
     .
     include
@@ -229,8 +227,8 @@ add_library(win32k MODULE
     ${SOURCE}
     gdi/ntgdi/brush.cpp
     ${win32k_asm}
-    win32k.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/win32k.def)
+    win32k.rc)
+spec2def(win32k win32k.sys win32k.spec ADD_IMPORTLIB)
 
 set_module_type(win32k kernelmodedriver)
 target_link_libraries(win32k ${PSEH_LIB} dxguid libcntpr)

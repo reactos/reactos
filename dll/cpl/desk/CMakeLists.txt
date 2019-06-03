@@ -1,6 +1,5 @@
 
 add_definitions(-D_WIN32)
-spec2def(desk.cpl desk.spec)
 
 list(APPEND SOURCE
     advmon.c
@@ -29,8 +28,8 @@ add_rc_deps(desk.rc ${desk_rc_deps})
 add_library(desk MODULE
     ${SOURCE}
     guid.c
-    desk.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
+    desk.rc)
+spec2def(desk desk.cpl desk.spec)
 
 set_module_type(desk cpl UNICODE)
 target_link_libraries(desk uuid)

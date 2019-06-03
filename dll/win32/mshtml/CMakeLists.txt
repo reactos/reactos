@@ -8,7 +8,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_idl_headers(mshtml_nsiface_header nsiface.idl)
-spec2def(mshtml.dll mshtml.spec ADD_IMPORTLIB)
 
 if(MSVC)
     # error C4028: formal parameter 3 different from declaration
@@ -98,9 +97,8 @@ add_library(mshtml MODULE
     ${SOURCE}
     ${mshtml_asm}
     guid.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
+    rsrc.rc)
+spec2def(mshtml mshtml.dll mshtml.spec ADD_IMPORTLIB)
 
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm

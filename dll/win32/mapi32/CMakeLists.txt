@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mapi32.dll mapi32.spec)
 
 list(APPEND SOURCE
     imalloc.c
@@ -15,9 +14,8 @@ list(APPEND SOURCE
 add_library(mapi32 MODULE
     ${SOURCE}
     guid.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mapi32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mapi32.def)
+    version.rc)
+spec2def(mapi32 mapi32.dll mapi32.spec)
 
 set_module_type(mapi32 win32dll)
 target_link_libraries(mapi32 uuid wine)

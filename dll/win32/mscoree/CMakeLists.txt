@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mscoree.dll mscoree.spec)
 
 list(APPEND SOURCE
     assembly.c
@@ -19,9 +18,8 @@ list(APPEND SOURCE
 add_library(mscoree MODULE
     ${SOURCE}
     guid.c
-    mscoree.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mscoree_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mscoree.def)
+    mscoree.rc)
+spec2def(mscoree mscoree.dll mscoree.spec)
 
 set_module_type(mscoree win32dll)
 target_link_libraries(mscoree uuid wine)

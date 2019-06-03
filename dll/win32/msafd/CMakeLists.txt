@@ -2,8 +2,6 @@
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
-spec2def(msafd.dll msafd.spec)
-
 list(APPEND SOURCE
     misc/dllmain.c
     misc/event.c
@@ -14,8 +12,8 @@ list(APPEND SOURCE
 
 add_library(msafd MODULE
     ${SOURCE}
-    msafd.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msafd.def)
+    msafd.rc)
+spec2def(msafd msafd.dll msafd.spec)
 
 set_module_type(msafd win32dll UNICODE)
 target_link_libraries(msafd wine)

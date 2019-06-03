@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     imaptransport.c
@@ -17,9 +16,8 @@ list(APPEND SOURCE
 add_library(inetcomm MODULE
     ${SOURCE}
     guid.c
-    inetcomm.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/inetcomm_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
+    inetcomm.rc)
+spec2def(inetcomm inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 set_module_type(inetcomm win32dll)
 target_link_libraries(inetcomm uuid wine)

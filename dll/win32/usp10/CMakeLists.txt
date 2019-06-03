@@ -1,7 +1,6 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(usp10.dll usp10.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bidi.c
@@ -15,12 +14,11 @@ list(APPEND SOURCE
     shape.c
     shaping.c
     usp10.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/usp10_stubs.c)
+    precomp.h)
 
 add_library(usp10 MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/usp10.def)
+    ${SOURCE})
+spec2def(usp10 usp10.dll usp10.spec ADD_IMPORTLIB)
 
 set_module_type(usp10 win32dll)
 target_link_libraries(usp10 wine)

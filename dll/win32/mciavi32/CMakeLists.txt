@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mciavi32.dll mciavi32.spec)
 
 list(APPEND SOURCE
     info.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 
 add_library(mciavi32 MODULE
     ${SOURCE}
-    mciavi_res.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mciavi32.def)
+    mciavi_res.rc)
+spec2def(mciavi32 mciavi32.dll mciavi32.spec)
 
 set_module_type(mciavi32 win32dll)
 target_link_libraries(mciavi32 wine)

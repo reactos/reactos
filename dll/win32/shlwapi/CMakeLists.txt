@@ -9,7 +9,6 @@ add_definitions(
     -D_SHLWAPI_)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     assoc.c
@@ -31,9 +30,8 @@ list(APPEND SOURCE
 add_library(shlwapi MODULE
     ${SOURCE}
     shlwapi.rc
-    wsprintf.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
+    wsprintf.c)
+spec2def(shlwapi shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 set_module_type(shlwapi win32dll)
 target_link_libraries(shlwapi uuid wine)

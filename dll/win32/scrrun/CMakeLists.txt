@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(scrrun.dll scrrun.spec)
 add_idl_headers(scrrun_idlheader scrrun.idl)
 add_typelib(scrrun.idl)
 
@@ -9,8 +8,7 @@ list(APPEND SOURCE
     dictionary.c
     filesystem.c
     scrrun.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/scrrun_stubs.c)
+    precomp.h)
 
 list(APPEND scrrun_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/scrrun.rgs
@@ -22,8 +20,8 @@ set_source_files_properties(scrrun.rc PROPERTIES OBJECT_DEPENDS "${scrrun_rc_dep
 add_library(scrrun MODULE
     ${SOURCE}
     guid.c
-    scrrun.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/scrrun.def)
+    scrrun.rc)
+spec2def(scrrun scrrun.dll scrrun.spec)
 
 add_dependencies(scrrun scrrun_idlheader stdole2)
 set_module_type(scrrun win32dll)

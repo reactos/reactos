@@ -1,6 +1,4 @@
 
-spec2def(userenv.dll userenv.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     desktop.c
     directory.c
@@ -16,9 +14,8 @@ list(APPEND SOURCE
 
 add_library(userenv MODULE
     ${SOURCE}
-    userenv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/userenv_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/userenv.def)
+    userenv.rc)
+spec2def(userenv userenv.dll userenv.spec ADD_IMPORTLIB)
 
 set_module_type(userenv win32dll)
 target_link_libraries(userenv uuid)

@@ -1,10 +1,8 @@
 
-spec2def(usbd.sys usbd.spec ADD_IMPORTLIB)
-
 add_library(usbd MODULE
     usbd.c
-    usbd.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/usbd.def)
+    usbd.rc)
+spec2def(usbd usbd.sys usbd.spec ADD_IMPORTLIB)
 
 set_module_type(usbd kernelmodedriver)
 add_importlibs(usbd ntoskrnl hal)

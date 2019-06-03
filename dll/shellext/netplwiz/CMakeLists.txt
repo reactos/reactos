@@ -1,15 +1,12 @@
 
-spec2def(netplwiz.dll netplwiz.spec)
-
 list(APPEND SOURCE
     netplwiz.c
     SHDisconnectNetDrives.c)
 
-add_library(netplwiz SHARED
+add_library(netplwiz MODULE
     ${SOURCE}
-    netplwiz.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/netplwiz_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/netplwiz.def)
+    netplwiz.rc)
+spec2def(netplwiz netplwiz.dll netplwiz.spec ADD_IMPORTLIB)
 
 set_module_type(netplwiz win32dll UNICODE)
 target_link_libraries(netplwiz wine)

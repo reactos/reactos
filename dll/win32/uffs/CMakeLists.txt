@@ -1,12 +1,11 @@
 
-spec2def(uffs.dll uffs.spec)
-
 list(APPEND SOURCE
     uffs.c
-    uffs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/uffs.def)
+    uffs.rc)
 
 add_library(uffs MODULE ${SOURCE})
+spec2def(uffs uffs.dll uffs.spec)
+
 set_module_type(uffs nativedll)
 target_link_libraries(uffs ffslib)
 add_importlibs(uffs ntdll)

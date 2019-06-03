@@ -2,7 +2,6 @@
 add_subdirectory(load_notifications)
 
 include_directories($<TARGET_FILE_DIR:load_notifications>)
-spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
 list(APPEND SOURCE
     LdrEnumResources.c
@@ -75,12 +74,18 @@ if(ARCH STREQUAL "i386")
 endif()
 
 add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/load_notifications/load_notifications.dll)
+
 add_executable(ntdll_apitest
     ${SOURCE}
     ${ntdll_apitest_asm}
     testdata.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def
     testlist.c)
+spec2def(ntdll_apitest ntdll_apitest.exe ntdll_apitest.spec)
+set_target_properties(ntdll_apitest
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
+
 target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)

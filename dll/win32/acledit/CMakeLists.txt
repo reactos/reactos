@@ -1,6 +1,4 @@
 
-spec2def(acledit.dll acledit.spec)
-
 list(APPEND SOURCE
     acledit.c
     stubs.c
@@ -8,8 +6,8 @@ list(APPEND SOURCE
 
 add_library(acledit MODULE
     ${SOURCE}
-    acledit.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
+    acledit.rc)
+spec2def(acledit acledit.dll acledit.spec)
 
 set_module_type(acledit win32dll UNICODE)
 add_importlibs(acledit msvcrt kernel32 ntdll)

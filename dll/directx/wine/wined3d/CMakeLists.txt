@@ -14,7 +14,6 @@ endif()
 
 # We name this d3dwine.dll, because the Virtualbox additions ship with a custom wined3d.dll
 # and it breaks everything if it is installed.
-spec2def(d3dwine.dll wined3d.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     arb_program_shader.c
@@ -48,8 +47,8 @@ list(APPEND SOURCE
 
 add_library(d3dwine MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/d3dwine.def)
+    version.rc)
+spec2def(d3dwine d3dwine.dll wined3d.spec ADD_IMPORTLIB)
 
 set_module_type(d3dwine win32dll)
 target_link_libraries(d3dwine wine)

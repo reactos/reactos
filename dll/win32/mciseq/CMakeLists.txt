@@ -1,13 +1,13 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mciseq.dll mciseq.spec)
 
 list(APPEND SOURCE
-    mcimidi.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mciseq.def)
+    mcimidi.c)
 
 add_library(mciseq MODULE ${SOURCE})
+spec2def(mciseq mciseq.dll mciseq.spec)
+
 set_module_type(mciseq win32dll)
 target_link_libraries(mciseq wine)
 add_importlibs(mciseq winmm user32 msvcrt kernel32 ntdll)

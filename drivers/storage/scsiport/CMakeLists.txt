@@ -1,6 +1,4 @@
 
-spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     scsiport.c
     stubs.c
@@ -8,8 +6,8 @@ list(APPEND SOURCE
 
 add_library(scsiport MODULE
     ${SOURCE}
-    scsiport.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/scsiport.def)
+    scsiport.rc)
+spec2def(scsiport scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
 add_pch(scsiport precomp.h SOURCE)
 set_module_type(scsiport kernelmodedriver)

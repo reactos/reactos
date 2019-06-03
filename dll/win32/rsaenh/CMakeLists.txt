@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(rsaenh.dll rsaenh.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 
 list(APPEND SOURCE
     aes.c
@@ -19,8 +18,8 @@ list(APPEND SOURCE
 
 add_library(rsaenh MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rsaenh.def)
+    rsrc.rc)
+spec2def(rsaenh rsaenh.dll rsaenh.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 
 set_module_type(rsaenh win32dll)
 target_link_libraries(rsaenh wine)

@@ -12,7 +12,6 @@ add_definitions(
     -DPROXY_CLSID=CLSID_PSFactoryBuffer)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 list(APPEND SOURCE
@@ -40,11 +39,10 @@ add_library(oleaut32 MODULE
     ${SOURCE}
     ${oleaut32_asm}
     oleaut32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_oaidl_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c)
+spec2def(oleaut32 oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)

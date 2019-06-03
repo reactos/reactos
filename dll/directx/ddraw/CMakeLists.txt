@@ -1,6 +1,4 @@
 
-spec2def(ddraw.dll ddraw.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     cleanup.c
     main.c
@@ -40,6 +38,8 @@ list(APPEND SOURCE
     Vtable/DirectDrawSurface7_Vtable.c)
 
 add_library(ddraw MODULE ${SOURCE})
+spec2def(ddraw ddraw.dll ddraw.spec ADD_IMPORTLIB)
+
 set_module_type(ddraw win32dll)
 target_link_libraries(ddraw uuid dxguid ${PSEH_LIB})
 add_importlibs(ddraw advapi32 gdi32 user32 msvcrt kernel32 ntdll)

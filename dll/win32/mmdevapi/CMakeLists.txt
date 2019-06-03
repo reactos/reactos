@@ -4,20 +4,18 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mmdevapi.dll mmdevapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     audiovolume.c
     devenum.c
     main.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/mmdevapi_stubs.c)
+    precomp.h)
 
 add_library(mmdevapi MODULE
     ${SOURCE}
     guid.c
-    mmdevapi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mmdevapi.def)
+    mmdevapi.rc)
+spec2def(mmdevapi mmdevapi.dll mmdevapi.spec ADD_IMPORTLIB)
 
 set_module_type(mmdevapi win32dll)
 target_link_libraries(mmdevapi uuid wine)

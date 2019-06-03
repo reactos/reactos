@@ -1,11 +1,10 @@
 
-spec2def(joy.cpl joy.spec)
 add_rc_deps(joy.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
 add_library(joy MODULE
     joy.c
-    joy.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/joy.def)
+    joy.rc)
+spec2def(joy joy.cpl joy.spec)
 
 set_module_type(joy cpl UNICODE)
 target_link_libraries(joy uuid)

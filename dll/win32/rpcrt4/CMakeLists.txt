@@ -9,7 +9,6 @@ add_definitions(
     -DMSWMSG)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
 
 add_rpc_files(client epm.idl)
 add_idl_headers(ndr_types_header ndr_types.idl)
@@ -52,9 +51,8 @@ add_library(rpcrt4 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/ndr_types_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${rpcrt4_asm}
-    rpcrt4.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
+    rpcrt4.rc)
+spec2def(rpcrt4 rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
 
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})

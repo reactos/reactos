@@ -14,7 +14,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR}/dll/appcompat/apphelp
     ${REACTOS_SOURCE_DIR})
-spec2def(acppage.dll acppage.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ACPPage.cpp
@@ -28,8 +27,8 @@ add_library(acppage MODULE
     ACPPage.rc
     CLayerUIPropPage.hpp
     CLayerStringList.hpp
-    resource.h
-    ${CMAKE_CURRENT_BINARY_DIR}/acppage.def)
+    resource.h)
+spec2def(acppage acppage.dll acppage.spec ADD_IMPORTLIB)
 
 set_module_type(acppage win32dll UNICODE)
 target_link_libraries(acppage wine uuid)

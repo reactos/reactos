@@ -1,6 +1,5 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(usrmgr.cpl usrmgr.spec)
 
 list(APPEND SOURCE
     extra.c
@@ -17,8 +16,8 @@ add_rc_deps(usrmgr.rc ${usrmgr_rc_deps})
 
 add_library(usrmgr MODULE
     ${SOURCE}
-    usrmgr.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)
+    usrmgr.rc)
+spec2def(usrmgr usrmgr.cpl usrmgr.spec)
 
 set_module_type(usrmgr cpl UNICODE)
 add_importlibs(usrmgr advapi32 user32 gdi32 comctl32 netapi32 msvcrt kernel32 ntdll)

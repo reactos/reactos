@@ -1,19 +1,17 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(propsys.dll propsys.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     propstore.c
     propsys_main.c
     propvar.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/propsys_stubs.c)
+    precomp.h)
 
 add_library(propsys MODULE
     ${SOURCE}
-    propsys.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/propsys.def)
+    propsys.rc)
+spec2def(propsys propsys.dll propsys.spec ADD_IMPORTLIB)
 
 set_module_type(propsys win32dll)
 target_link_libraries(propsys uuid wine)

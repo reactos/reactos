@@ -1,7 +1,6 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(twain_32.dll twain_32.spec)
 
 list(APPEND SOURCE
     dsm_ctrl.c
@@ -10,8 +9,8 @@ list(APPEND SOURCE
 
 add_library(twain_32 MODULE
     ${SOURCE}
-    twain_32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/twain_32.def)
+    twain_32.rc)
+spec2def(twain_32 twain_32.dll twain_32.spec)
 
 set_module_type(twain_32 win32dll)
 target_link_libraries(twain_32 wine)

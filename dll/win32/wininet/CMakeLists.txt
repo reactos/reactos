@@ -10,8 +10,6 @@ add_definitions(
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
-spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     cookie.c
     dialogs.c
@@ -26,9 +24,8 @@ list(APPEND SOURCE
 
 add_library(wininet MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wininet_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
+    rsrc.rc)
+spec2def(wininet wininet.dll wininet.spec ADD_IMPORTLIB)
 
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} zlib)

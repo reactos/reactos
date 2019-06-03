@@ -4,7 +4,6 @@ add_definitions(
     -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dpclassfactory.c
@@ -20,8 +19,8 @@ list(APPEND SOURCE
 
 add_library(dplayx MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dplayx.def)
+    version.rc)
+spec2def(dplayx dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 set_module_type(dplayx win32dll)
 target_link_libraries(dplayx dxguid uuid wine)

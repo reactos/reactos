@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wbemprox.dll wbemprox.spec)
 
 list(APPEND SOURCE
     builtin.c
@@ -28,8 +27,8 @@ add_library(wbemprox MODULE
     ${SOURCE}
     wql.tab.c
     guid.c
-    wbemprox.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wbemprox.def)
+    wbemprox.rc)
+spec2def(wbemprox wbemprox.dll wbemprox.spec)
 
 set_source_files_properties(wbemprox.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/wbemprox.rgs)
 set_module_type(wbemprox win32dll)

@@ -1,13 +1,12 @@
 
-spec2def(kdvbox.dll kdvm.spec)
 add_asm_files(kdvbox_asm kdvbox_asm.S)
 
 add_library(kdvbox MODULE
     kdvm.c
     kdvbox.c
     kdvm.rc
-    ${kdvbox_asm}
-    ${CMAKE_CURRENT_BINARY_DIR}/kdvbox.def)
+    ${kdvbox_asm})
+spec2def(kdvbox kdvbox.dll kdvm.spec)
 
 set_module_type(kdvbox module IMAGEBASE 0x00010000)
 set_subsystem(kdvbox native)

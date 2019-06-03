@@ -1,6 +1,4 @@
 
-spec2def(storport.sys storport.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     fdo.c
     miniport.c
@@ -13,8 +11,8 @@ list(APPEND SOURCE
 add_library(storport MODULE
     ${SOURCE}
     guid.c
-    storport.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/storport.def)
+    storport.rc)
+spec2def(storport storport.sys storport.spec ADD_IMPORTLIB)
 
 add_pch(storport precomp.h SOURCE)
 set_module_type(storport kernelmodedriver)

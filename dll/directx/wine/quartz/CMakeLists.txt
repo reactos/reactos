@@ -9,7 +9,6 @@ add_definitions(
     -DPROXY_DELEGATION)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(quartz.dll quartz.spec)
 add_rpcproxy_files(quartz_strmif.idl)
 
 list(APPEND SOURCE
@@ -41,8 +40,8 @@ add_library(quartz MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/quartz.def
     version.rc)
+spec2def(quartz quartz.dll quartz.spec)
 
 add_idl_headers(quartz_idlheader fil_data.idl)
 add_typelib(control_tlb.idl)

@@ -23,5 +23,5 @@ DllMain(HINSTANCE hinstDll,
             break;
     }
 
-   return TRUE;
+    return TRUE;
 }

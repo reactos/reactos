@@ -1,13 +1,13 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msgsm32.acm msgsm32.acm.spec)
 
 list(APPEND SOURCE
-    msgsm32.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msgsm32.def)
+    msgsm32.c)
 
 add_library(msgsm32.acm MODULE ${SOURCE})
+spec2def(msgsm32.acm msgsm32.acm msgsm32.acm.spec)
+
 set_module_type(msgsm32.acm win32dll)
 set_target_properties(msgsm32.acm PROPERTIES SUFFIX "")
 target_link_libraries(msgsm32.acm wine)

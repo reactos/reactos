@@ -1,10 +1,8 @@
 
-spec2def(batt.dll batt.spec)
-
 add_library(batt MODULE
     batt.c
-    batt.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/batt.def)
+    batt.rc)
+spec2def(batt batt.dll batt.spec)
 
 set_module_type(batt win32dll UNICODE)
 add_importlibs(batt msvcrt kernel32 ntdll)

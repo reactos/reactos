@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(dmusic.dll dmusic.spec)
 
 list(APPEND SOURCE
     buffer.c
@@ -17,8 +16,8 @@ list(APPEND SOURCE
 
 add_library(dmusic MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)
+    version.rc)
+spec2def(dmusic dmusic.dll dmusic.spec)
 
 set_module_type(dmusic win32dll)
 target_link_libraries(dmusic dxguid uuid wine)

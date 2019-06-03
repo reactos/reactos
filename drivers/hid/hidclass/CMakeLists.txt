@@ -1,6 +1,4 @@
 
-spec2def(hidclass.sys hidclass.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     fdo.c
     hidclass.c
@@ -10,8 +8,8 @@ list(APPEND SOURCE
 add_library(hidclass MODULE
     ${SOURCE}
     guid.c
-    hidclass.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hidclass.def)
+    hidclass.rc)
+spec2def(hidclass hidclass.sys hidclass.spec ADD_IMPORTLIB)
 
 set_module_type(hidclass kernelmodedriver ENTRYPOINT 0)
 add_importlibs(hidclass ntoskrnl hidparse hal)

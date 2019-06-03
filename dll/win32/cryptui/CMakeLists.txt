@@ -4,14 +4,13 @@ add_definitions(
     -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    main.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptui_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptui.def)
+    main.c)
 
 add_library(cryptui MODULE ${SOURCE} cryptui.rc)
+spec2def(cryptui cryptui.dll cryptui.spec ADD_IMPORTLIB)
+
 set_module_type(cryptui win32dll)
 target_link_libraries(cryptui uuid wine)
 add_delay_importlibs(cryptui urlmon wintrust)

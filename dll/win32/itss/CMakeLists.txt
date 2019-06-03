@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(itss.dll itss.spec)
 
 list(APPEND SOURCE
     chm_lib.c
@@ -15,9 +14,8 @@ list(APPEND SOURCE
 add_library(itss MODULE
     ${SOURCE}
     guid.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
+    rsrc.rc)
+spec2def(itss itss.dll itss.spec)
 
 set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)

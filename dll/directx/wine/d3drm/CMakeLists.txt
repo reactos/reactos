@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(d3drm.dll d3drm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     d3drm.c
@@ -19,9 +18,8 @@ list(APPEND SOURCE
 
 add_library(d3drm MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/d3drm_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/d3drm.def)
+    version.rc)
+spec2def(d3drm d3drm.dll d3drm.spec ADD_IMPORTLIB)
 
 set_module_type(d3drm win32dll UNICODE)
 target_link_libraries(d3drm dxguid uuid wine)

@@ -8,14 +8,12 @@ set_cpp(WITH_RUNTIME)
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
-spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     CQuickLaunchBand.cpp
-    misc.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
+    misc.cpp)
 
 add_library(rshell MODULE ${SOURCE})
+spec2def(rshell rshell.dll rshell.spec ADD_IMPORTLIB)
 
 set_module_type(rshell win32dll UNICODE)
 

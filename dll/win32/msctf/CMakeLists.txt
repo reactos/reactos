@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msctf.dll msctf.spec)
 
 list(APPEND SOURCE
     categorymgr.c
@@ -17,13 +16,12 @@ list(APPEND SOURCE
     msctf.c
     range.c
     threadmgr.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
+    precomp.h)
 
 add_library(msctf MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
+    version.rc)
+spec2def(msctf msctf.dll msctf.spec)
 
 set_module_type(msctf win32dll)
 target_link_libraries(msctf uuid wine)

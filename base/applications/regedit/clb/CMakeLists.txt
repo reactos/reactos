@@ -1,10 +1,8 @@
 
-spec2def(clb.dll clb.spec)
-
 add_library(clb MODULE
     clb.c
-    clb.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/clb.def)
+    clb.rc)
+spec2def(clb clb.dll clb.spec)
 
 set_module_type(clb win32dll UNICODE)
 add_importlibs(clb user32 comctl32 msvcrt kernel32 ntdll)

@@ -16,9 +16,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
 
-spec2def(zipfldr.dll zipfldr.spec ADD_IMPORTLIB)
-
-
 list(APPEND SOURCE
     zipfldr.cpp
     zippidl.cpp
@@ -40,9 +37,8 @@ list(APPEND SOURCE
 add_library(zipfldr MODULE
     ${SOURCE}
     ${ZLIB_SOURCE}
-    zipfldr.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/zipfldr.def)
-
+    zipfldr.rc)
+spec2def(zipfldr zipfldr.dll zipfldr.spec ADD_IMPORTLIB)
 
 set_module_type(zipfldr win32dll UNICODE)
 target_link_libraries(zipfldr minizip zlib uuid)

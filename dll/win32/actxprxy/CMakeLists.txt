@@ -2,7 +2,6 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-DWINE_REGISTER_DLL -DPROXY_DELEGATION)
-spec2def(actxprxy.dll actxprxy.spec)
 
 add_rpcproxy_files(
     actxprxy_activscp.idl
@@ -37,8 +36,8 @@ list(APPEND SOURCE
 
 add_library(actxprxy MODULE
     ${SOURCE}
-    actxprxy.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/actxprxy.def)
+    actxprxy.rc)
+spec2def(actxprxy actxprxy.dll actxprxy.spec)
 
 set_module_type(actxprxy win32dll)
 target_link_libraries(actxprxy uuid wine ${PSEH_LIB})

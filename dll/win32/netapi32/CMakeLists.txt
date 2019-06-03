@@ -4,7 +4,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 add_definitions(-D__WINESRC__)
-spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
+
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/browser.idl
@@ -45,10 +45,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)
 
-add_library(netapi32 MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/netapi32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
+add_library(netapi32 MODULE ${SOURCE})
+spec2def(netapi32 netapi32.dll netapi32.spec ADD_IMPORTLIB)
 
 set_module_type(netapi32 win32dll)
 target_link_libraries(netapi32 wine ${PSEH_LIB})

@@ -4,7 +4,6 @@ add_definitions(
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(d3d8.dll d3d8.spec)
 
 list(APPEND SOURCE
     buffer.c
@@ -22,8 +21,8 @@ list(APPEND SOURCE
 add_library(d3d8 MODULE
     ${SOURCE}
     guid.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
+    version.rc)
+spec2def(d3d8 d3d8.dll d3d8.spec)
 
 set_module_type(d3d8 win32dll UNICODE)
 target_link_libraries(d3d8 uuid wine)

@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(qedit.dll qedit.spec)
 
 list(APPEND SOURCE
     main.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 
 add_library(qedit MODULE
     ${SOURCE}
-    qedit.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/qedit.def)
+    qedit.rc)
+spec2def(qedit qedit.dll qedit.spec)
 
 set_module_type(qedit win32dll)
 target_link_libraries(qedit strmbase strmiids uuid wine)

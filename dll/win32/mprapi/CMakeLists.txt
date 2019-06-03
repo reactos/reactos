@@ -1,14 +1,13 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mprapi.dll mprapi.spec)
 
 list(APPEND SOURCE
-    mprapi.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mprapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mprapi.def)
+    mprapi.c)
 
 add_library(mprapi MODULE ${SOURCE})
+spec2def(mprapi mprapi.dll mprapi.spec)
+
 set_module_type(mprapi win32dll)
 target_link_libraries(mprapi wine)
 add_importlibs(mprapi msvcrt kernel32 ntdll)

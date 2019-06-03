@@ -1,10 +1,8 @@
 
-spec2def(iernonce.dll iernonce.spec)
-
 add_library(iernonce MODULE
     iernonce.c
-    iernonce.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/iernonce.def)
+    iernonce.rc)
+spec2def(iernonce iernonce.dll iernonce.spec)
 
 set_module_type(iernonce win32dll UNICODE)
 add_importlibs(iernonce msvcrt kernel32 ntdll)

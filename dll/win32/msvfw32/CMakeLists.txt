@@ -2,19 +2,17 @@
 add_definitions(-D__WINESRC__)
 add_definitions(-D_WINE)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msvfw32.dll msvfw32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     mciwnd.c
     msvideo_main.c
     drawdib.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msvfw32_stubs.c)
+    precomp.h)
 
 add_library(msvfw32 MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msvfw32.def)
+    rsrc.rc)
+spec2def(msvfw32 msvfw32.dll msvfw32.spec ADD_IMPORTLIB)
 
 set_module_type(msvfw32 win32dll)
 target_link_libraries(msvfw32 wine)

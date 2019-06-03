@@ -4,8 +4,6 @@ set_cpp()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(portcls.sys portcls.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     adapter.cpp
     api.cpp
@@ -52,8 +50,8 @@ list(APPEND SOURCE
 add_library(portcls MODULE
     ${SOURCE}
     guid.cpp
-    portcls.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
+    portcls.rc)
+spec2def(portcls portcls.sys portcls.spec ADD_IMPORTLIB)
 
 if(USE_CLANG_CL)
     add_target_compile_flags(portcls "-Wno-missing-braces")

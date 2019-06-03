@@ -1,12 +1,11 @@
 
-spec2def(ureiserfs.dll ureiserfs.spec)
-
 list(APPEND SOURCE
     ureiserfs.c
-    ureiserfs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ureiserfs.def)
+    ureiserfs.rc)
 
 add_library(ureiserfs MODULE ${SOURCE})
+spec2def(ureiserfs ureiserfs.dll ureiserfs.spec)
+
 set_module_type(ureiserfs nativedll)
 target_link_libraries(ureiserfs reiserfslib)
 add_importlibs(ureiserfs ntdll)

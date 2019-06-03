@@ -1,9 +1,8 @@
-spec2def(wmisvc.dll wmisvc.spec ADD_IMPORTLIB)
 
 add_library(wmisvc MODULE
     wmisvc.c
-    wmisvc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wmisvc.def)
+    wmisvc.rc)
+spec2def(wmisvc wmisvc.dll wmisvc.spec ADD_IMPORTLIB)
 
 set_module_type(wmisvc win32dll UNICODE)
 add_importlibs(wmisvc advapi32 msvcrt kernel32 ntdll)

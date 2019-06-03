@@ -6,7 +6,6 @@ add_definitions(
     -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(oleacc.dll oleacc.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     client.c
@@ -31,9 +30,8 @@ add_library(oleacc MODULE
     ${SOURCE}
     guid.c
     oleacc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/oleacc_classes_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/oleacc_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/oleacc.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/oleacc_classes_p.c)
+spec2def(oleacc oleacc.dll oleacc.spec ADD_IMPORTLIB)
 
 add_dependencies(oleacc oleacc_idlheader stdole2)
 set_module_type(oleacc win32dll)

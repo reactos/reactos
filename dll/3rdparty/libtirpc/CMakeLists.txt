@@ -1,4 +1,3 @@
-spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -95,8 +94,8 @@ list(APPEND SOURCE
 add_library(libtirpc MODULE
     ${SOURCE}
 #    libtirpc/libtirpc.rc
-    libtirpc/libtirpc_ros.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
+    libtirpc/libtirpc_ros.rc)
+spec2def(libtirpc libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 if(MSVC AND (NOT USE_CLANG_CL))
     add_target_compile_flags(libtirpc "/wd4101 /wd4133 /wd4473 /wd4477")

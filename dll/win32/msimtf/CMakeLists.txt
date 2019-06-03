@@ -1,18 +1,16 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msimtf.dll msimtf.spec)
 
 list(APPEND SOURCE
     activeimmapp.c
     main.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msimtf_stubs.c)
+    precomp.h)
 
 add_library(msimtf MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msimtf.def)
+    rsrc.rc)
+spec2def(msimtf msimtf.dll msimtf.spec)
 
 set_module_type(msimtf win32dll)
 target_link_libraries(msimtf uuid wine)

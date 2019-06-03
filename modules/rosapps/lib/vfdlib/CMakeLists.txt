@@ -1,7 +1,5 @@
 set_cpp(WITH_RUNTIME WITH_EXCEPTIONS WITH_STL)
 
-spec2def(vfd.dll vfdlib.spec ADD_IMPORTLIB)
-
 add_message_headers(ANSI vfdmsg_lib.mc)
 
 list(APPEND SOURCE
@@ -25,8 +23,8 @@ endif()
 
 add_library(vfd MODULE
     ${SOURCE}
-    vfdlib.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/vfd.def)
+    vfdlib.rc)
+spec2def(vfd vfd.dll vfdlib.spec ADD_IMPORTLIB)
 
 include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)

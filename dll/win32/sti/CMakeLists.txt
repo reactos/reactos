@@ -6,7 +6,6 @@ add_definitions(
     -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(sti.dll sti.spec)
 add_rpcproxy_files(sti_wia.idl)
 
 list(APPEND SOURCE
@@ -19,8 +18,8 @@ list(APPEND SOURCE
 add_library(sti MODULE
     ${SOURCE}
     guid.c
-    sti.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
+    sti.rc)
+spec2def(sti sti.dll sti.spec)
 
 set_module_type(sti win32dll)
 target_link_libraries(sti wine uuid ${PSEH_LIB})

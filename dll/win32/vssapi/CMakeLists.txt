@@ -1,18 +1,17 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(vssapi.dll vssapi.spec)
 
 list(APPEND SOURCE
-    main.c
-    ${CMAKE_CURRENT_BINARY_DIR}/vssapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/vssapi.def)
+    main.c)
 
 if(MSVC AND ARCH STREQUAL "i386")
     add_asm_files(vssapi_asm msvc.s)
 endif()
 
 add_library(vssapi MODULE ${SOURCE} ${vssapi_asm})
+spec2def(vssapi vssapi.dll vssapi.spec)
+
 set_module_type(vssapi win32dll)
 target_link_libraries(vssapi wine)
 add_importlibs(vssapi msvcrt kernel32 ntdll)

@@ -9,7 +9,6 @@ if(MSVC)
 endif()
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     asmparser.c
@@ -19,8 +18,7 @@ list(APPEND SOURCE
     main.c
     reflection.c
     utils.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43_stubs.c)
+    precomp.h)
 
 add_library(d3dcompiler_43 MODULE
     ${SOURCE}
@@ -28,8 +26,8 @@ add_library(d3dcompiler_43 MODULE
     asmshader.yy.c
     hlsl.tab.c
     hlsl.yy.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43.def)
+    version.rc)
+spec2def(d3dcompiler_43 d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
 # some files have been generated with relative file paths...
 set_source_files_properties(

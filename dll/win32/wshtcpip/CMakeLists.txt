@@ -1,14 +1,14 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/tdilib)
-spec2def(wshtcpip.dll wshtcpip.spec)
 
 list(APPEND SOURCE
     iflist.c
     wshtcpip.c
-    wshtcpip.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wshtcpip.def)
+    wshtcpip.rc)
 
 add_library(wshtcpip MODULE ${SOURCE})
+spec2def(wshtcpip wshtcpip.dll wshtcpip.spec)
+
 set_module_type(wshtcpip win32dll UNICODE)
 target_link_libraries(wshtcpip tdilib)
 add_importlibs(wshtcpip ws2_32 msvcrt kernel32 ntdll)

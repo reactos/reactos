@@ -5,8 +5,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
-spec2def(ddraw.dll ddraw.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     clipper.c
     ddraw.c
@@ -20,8 +18,7 @@ list(APPEND SOURCE
     utils.c
     vertexbuffer.c
     viewport.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c)
+    precomp.h)
 
 if(MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
@@ -31,8 +28,8 @@ endif()
 
 add_library(ddraw MODULE
     ${SOURCE}
-    ddraw.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
+    ddraw.rc)
+spec2def(ddraw ddraw.dll ddraw.spec ADD_IMPORTLIB)
 
 set_module_type(ddraw win32dll)
 target_link_libraries(ddraw wine uuid dxguid ${PSEH_LIB})

@@ -1,12 +1,10 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(fontsub.dll fontsub.spec)
 
 add_library(fontsub MODULE
-    main.c
-    ${CMAKE_CURRENT_BINARY_DIR}/fontsub_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/fontsub.def)
+    main.c)
+spec2def(fontsub fontsub.dll fontsub.spec)
 
 set_module_type(fontsub win32dll)
 target_link_libraries(fontsub wine)

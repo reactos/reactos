@@ -7,18 +7,15 @@ add_definitions(
     -D_ATL_VER=_ATL_VER_100)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(atl100.dll atl100.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/dll/win32/atl/atl.c
     ${REACTOS_SOURCE_DIR}/dll/win32/atl/atl_ax.c
     ${REACTOS_SOURCE_DIR}/dll/win32/atl/registrar.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/atl100_stubs.c)
+    precomp.h)
 
-add_library(atl100 MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/atl100.def)
+add_library(atl100 MODULE ${SOURCE})
+spec2def(atl100 atl100.dll atl100.spec ADD_IMPORTLIB)
 
 set_module_type(atl100 win32dll)
 target_link_libraries(atl100 uuid wine)

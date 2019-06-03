@@ -1,13 +1,10 @@
 
-spec2def(shsvcs.dll shsvcs.spec ADD_IMPORTLIB)
-
 add_library(shsvcs MODULE
     shsvcs.c
     thmsvc.c
     thmserver.c
-    shsvcs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shsvcs_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shsvcs.def)
+    shsvcs.rc)
+spec2def(shsvcs shsvcs.dll shsvcs.spec ADD_IMPORTLIB)
 
 set_module_type(shsvcs win32dll UNICODE)
 target_link_libraries(shsvcs wine)

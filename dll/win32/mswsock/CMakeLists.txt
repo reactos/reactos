@@ -1,7 +1,6 @@
 
 add_definitions(-DLE)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mswsock.dll mswsock.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     extensions.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 
 add_library(mswsock MODULE
     ${SOURCE}
-    mswsock.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
+    mswsock.rc)
+spec2def(mswsock mswsock.dll mswsock.spec ADD_IMPORTLIB)
 
 set_module_type(mswsock win32dll UNICODE)
 add_importlibs(mswsock ws2_32 advapi32 dnsapi msvcrt kernel32 ntdll)

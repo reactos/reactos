@@ -4,7 +4,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cdlg32.c
@@ -16,13 +15,12 @@ list(APPEND SOURCE
     fontdlg.c
     #itemdlg.c /* Win 7 */
     printdlg.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/comdlg32_stubs.c)
+    precomp.h)
 
 add_library(comdlg32 MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
+    rsrc.rc)
+spec2def(comdlg32 comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 set_module_type(comdlg32 win32dll)
 target_link_libraries(comdlg32 uuid wine)

@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(vbscript.dll vbscript.spec)
 
 list(APPEND SOURCE
     compile.c
@@ -35,8 +34,8 @@ add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 add_library(vbscript MODULE
     ${SOURCE}
     parser.tab.c
-    vbscript.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/vbscript.def)
+    vbscript.rc)
+spec2def(vbscript vbscript.dll vbscript.spec)
 
 set_module_type(vbscript win32dll)
 target_link_libraries(vbscript uuid wine)

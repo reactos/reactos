@@ -8,8 +8,6 @@ add_definitions(
     -D_NTDRIVER_
     -D_TDI_)
 
-spec2def(tdi.sys misc/tdi.spec)
-
 list(APPEND SOURCE
     cte/events.c
     cte/string.c
@@ -23,8 +21,8 @@ list(APPEND SOURCE
 
 add_library(tdi MODULE
     ${SOURCE}
-    misc/tdi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/tdi.def)
+    misc/tdi.rc)
+spec2def(tdi tdi.sys misc/tdi.spec)
 
 add_pch(tdi precomp.h SOURCE)
 set_module_type(tdi kernelmodedriver)

@@ -1,8 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
-spec2def(basesrv.dll basesrv.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     appcompat.c
     dosdev.c
@@ -15,8 +13,8 @@ list(APPEND SOURCE
 
 add_library(basesrv MODULE
     ${SOURCE}
-    basesrv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/basesrv.def)
+    basesrv.rc)
+spec2def(basesrv basesrv.dll basesrv.spec ADD_IMPORTLIB)
 
 set_module_type(basesrv win32dll UNICODE ENTRYPOINT DllMain 12)
 #############################################

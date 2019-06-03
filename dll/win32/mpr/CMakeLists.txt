@@ -4,7 +4,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mpr.dll mpr.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     auth.c
@@ -13,13 +12,12 @@ list(APPEND SOURCE
     nps.c
     pwcache.c
     wnet.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/mpr_stubs.c)
+    precomp.h)
 
 add_library(mpr MODULE
     ${SOURCE}
-    mpr.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)
+    mpr.rc)
+spec2def(mpr mpr.dll mpr.spec ADD_IMPORTLIB)
 
 set_module_type(mpr win32dll)
 target_link_libraries(mpr wine)

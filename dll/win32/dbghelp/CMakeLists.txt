@@ -42,8 +42,6 @@ else()
         BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
         ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
-    spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
-
     list(APPEND SOURCE
         coff.c
         cpu_arm.c
@@ -74,9 +72,8 @@ else()
 
     add_library(dbghelp MODULE
         ${SOURCE}
-        version.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
-        ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
+        version.rc)
+    spec2def(dbghelp dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
     set_module_type(dbghelp win32dll)
     target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames zlib)

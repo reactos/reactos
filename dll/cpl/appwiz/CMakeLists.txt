@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(appwiz.cpl appwiz.spec)
 
 list(APPEND SOURCE
     addons.c
@@ -18,8 +17,8 @@ add_rc_deps(appwiz.rc ${appwiz_rc_deps})
 
 add_library(appwiz MODULE
     ${SOURCE}
-    appwiz.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def)
+    appwiz.rc)
+spec2def(appwiz appwiz.cpl appwiz.spec)
 
 set_module_type(appwiz cpl UNICODE)
 target_link_libraries(appwiz uuid wine)

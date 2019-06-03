@@ -1,12 +1,9 @@
 
-spec2def(cfgmgr32.dll cfgmgr32.spec)
-
 list(APPEND SOURCE
-    cfgmgr32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32.def)
+    cfgmgr32.rc)
 
 add_library(cfgmgr32 MODULE ${SOURCE})
+spec2def(cfgmgr32 cfgmgr32.dll cfgmgr32.spec)
 
 set_module_type(cfgmgr32 win32dll)
 add_importlibs(cfgmgr32 setupapi msvcrt kernel32 ntdll)

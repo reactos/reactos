@@ -5,7 +5,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wshom.ocx wshom.ocx.spec)
 add_idl_headers(wshom_idlheader wshom.idl)
 add_typelib(wshom.idl)
 
@@ -17,8 +16,8 @@ list(APPEND SOURCE
 add_library(wshom MODULE
     ${SOURCE}
     guid.c
-    wshom.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wshom.def)
+    wshom.rc)
+spec2def(wshom wshom.ocx wshom.ocx.spec)
 
 list(APPEND wshom_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/wshom.rgs

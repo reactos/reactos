@@ -2,8 +2,6 @@
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/zlib)
 
-spec2def(mbedtls.dll mbedtls.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     _reactos_strsafe_wrapper.c
     aes.c
@@ -81,8 +79,8 @@ list(APPEND SOURCE
 
 add_library(mbedtls MODULE
     ${SOURCE}
-    mbedtls.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mbedtls.def)
+    mbedtls.rc)
+spec2def(mbedtls mbedtls.dll mbedtls.spec ADD_IMPORTLIB)
 
 set_module_type(mbedtls win32dll)
 add_importlibs(mbedtls advapi32 msvcrt kernel32 ntdll)

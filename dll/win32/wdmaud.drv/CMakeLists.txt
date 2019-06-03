@@ -5,8 +5,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sound/mmixer
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libsamplerate)
 
-spec2def(wdmaud.drv wdmaud.spec)
-
 list(APPEND SOURCE
     wdmaud.c
     mixer.c
@@ -16,8 +14,8 @@ list(APPEND SOURCE
 
 add_library(wdmaud.drv MODULE
     ${SOURCE}
-    wdmaud.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wdmaud.def)
+    wdmaud.rc)
+spec2def(wdmaud.drv wdmaud.drv wdmaud.spec)
 
 set_module_type(wdmaud.drv win32dll UNICODE)
 set_target_properties(wdmaud.drv PROPERTIES SUFFIX "")

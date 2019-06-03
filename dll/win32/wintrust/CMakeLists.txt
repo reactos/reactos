@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     asn.c
@@ -9,13 +8,12 @@ list(APPEND SOURCE
     register.c
     softpub.c
     wintrust_main.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/wintrust_stubs.c)
+    precomp.h)
 
 add_library(wintrust MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
+    version.rc)
+spec2def(wintrust wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 set_module_type(wintrust win32dll)
 target_link_libraries(wintrust wine ${PSEH_LIB})

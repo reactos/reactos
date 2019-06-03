@@ -1,11 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(msacm32.drv msacm32.drv.spec)
 
 add_library(msacm32.drv MODULE
     wavemap.c
-    wavemap.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
+    wavemap.rc)
+spec2def(msacm32.drv msacm32.drv msacm32.drv.spec)
 
 set_module_type(msacm32.drv win32dll UNICODE)
 set_target_properties(msacm32.drv PROPERTIES SUFFIX "")

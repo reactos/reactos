@@ -1,18 +1,16 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(winscard.dll winscard.spec)
 
 list(APPEND SOURCE
     winscard.c
     stubs.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/winscard_stubs.c)
+    precomp.h)
 
 add_library(winscard MODULE
     ${SOURCE}
-    winscard.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winscard.def)
+    winscard.rc)
+spec2def(winscard winscard.dll winscard.spec)
 
 set_module_type(winscard win32dll)
 target_link_libraries(winscard wine)

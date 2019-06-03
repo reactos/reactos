@@ -1,5 +1,4 @@
 
-spec2def(advapi32.dll advapi32.spec ADD_IMPORTLIB)
 add_definitions(-D_ADVAPI32_)
 
 include_directories(
@@ -49,12 +48,11 @@ list(APPEND SOURCE
 add_library(advapi32 MODULE
     ${SOURCE}
     advapi32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def
     ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/winreg_c.c)
+spec2def(advapi32 advapi32.dll advapi32.spec ADD_IMPORTLIB)
 
 set_module_type(advapi32 win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(advapi32 cryptlib wine ${PSEH_LIB})

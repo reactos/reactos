@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(fusion.dll fusion.spec)
 
 list(APPEND COMMON_SOURCE
     asmcache.c
@@ -9,15 +8,14 @@ list(APPEND COMMON_SOURCE
     asmname.c
     assembly.c
     fusion.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c)
+    precomp.h)
 
 add_library(fusion_common STATIC ${COMMON_SOURCE})
 add_dependencies(fusion_common psdk)
 
 add_library(fusion MODULE
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
+    version.rc)
+spec2def(fusion fusion.dll fusion.spec)
 
 set_module_type(fusion win32dll)
 target_link_libraries(fusion fusion_common uuid wine)

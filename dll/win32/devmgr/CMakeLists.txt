@@ -1,7 +1,5 @@
 PROJECT(DEVMGR)
 
-spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB)
-
 set_cpp(WITH_RTTI WITH_RUNTIME WITH_EXCEPTIONS)
 
 if(NOT MSVC)
@@ -11,7 +9,7 @@ endif()
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/dll
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl 
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     includes)
 
 list(APPEND SOURCE
@@ -31,8 +29,8 @@ list(APPEND SOURCE
 
 add_library(devmgr MODULE
     ${SOURCE}
-    devmgr.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
+    devmgr.rc)
+spec2def(devmgr devmgr.dll devmgr.spec ADD_IMPORTLIB)
 
 set_module_type(devmgr win32dll UNICODE)
 target_link_libraries(devmgr uuid wine)

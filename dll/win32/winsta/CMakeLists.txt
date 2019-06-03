@@ -1,6 +1,4 @@
 
-spec2def(winsta.dll winsta.spec)
-
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
@@ -15,8 +13,8 @@ list(APPEND SOURCE
 
 add_library(winsta MODULE
     ${SOURCE}
-    winsta.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winsta.def)
+    winsta.rc)
+spec2def(winsta winsta.dll winsta.spec)
 
 set_module_type(winsta win32dll)
 target_link_libraries(winsta wine)

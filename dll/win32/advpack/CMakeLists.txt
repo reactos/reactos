@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(advpack.dll advpack.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     advpack.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 
 add_library(advpack MODULE
     ${SOURCE}
-    advpack.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)
+    advpack.rc)
+spec2def(advpack advpack.dll advpack.spec ADD_IMPORTLIB)
 
 set_module_type(advpack win32dll)
 target_link_libraries(advpack wine)

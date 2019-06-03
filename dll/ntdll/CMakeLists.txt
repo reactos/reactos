@@ -1,6 +1,4 @@
 
-spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
-
 add_definitions(
     -D__NTDLL__
     -D_NTOSKRNL_
@@ -41,9 +39,8 @@ add_asm_files(ntdll_asm ${ASM_SOURCE})
 add_library(ntdll MODULE
     ${SOURCE}
     ${ntdll_asm}
-    def/ntdll.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
+    def/ntdll.rc)
+spec2def(ntdll ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
 set_module_type(ntdll win32dll ENTRYPOINT 0)
 #############################################

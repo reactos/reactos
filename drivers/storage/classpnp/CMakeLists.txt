@@ -1,6 +1,5 @@
 
 include_directories(../inc)
-spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DCLASS_GLOBAL_BREAK_ON_LOST_IRPS=0
@@ -30,8 +29,8 @@ list(APPEND SOURCE
 add_library(classpnp MODULE
     ${SOURCE}
     guid.c
-    class.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
+    class.rc)
+spec2def(classpnp classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 add_pch(classpnp classp.h SOURCE)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)

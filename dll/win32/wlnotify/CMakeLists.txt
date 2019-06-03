@@ -1,6 +1,4 @@
 
-spec2def(wlnotify.dll wlnotify.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     scard.c
     schedsvc.c
@@ -12,8 +10,8 @@ list(APPEND SOURCE
 
 add_library(wlnotify MODULE
     ${SOURCE}
-    wlnotify.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wlnotify.def)
+    wlnotify.rc)
+spec2def(wlnotify wlnotify.dll wlnotify.spec ADD_IMPORTLIB)
 
 set_module_type(wlnotify win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(wlnotify wine)

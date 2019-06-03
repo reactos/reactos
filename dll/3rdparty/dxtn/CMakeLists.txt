@@ -1,10 +1,8 @@
 
-spec2def(dxtn.dll dxtn.spec)
-
 add_library(dxtn MODULE
     txc_compress_dxtn.c
-    txc_fetch_dxtn.c
-    ${CMAKE_CURRENT_BINARY_DIR}/dxtn.def)
+    txc_fetch_dxtn.c)
+spec2def(dxtn dxtn.dll dxtn.spec)
 
 set_module_type(dxtn win32dll ENTRYPOINT 0)
 add_importlibs(dxtn msvcrt kernel32)

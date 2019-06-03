@@ -8,8 +8,6 @@ add_definitions(
     -DNDIS40
     -D_NTDRIVER_)
 
-spec2def(tcpip.sys tcpip.spec)
-
 list(APPEND SOURCE
     datalink/lan.c
     tcpip/ainfo.c
@@ -29,8 +27,8 @@ list(APPEND SOURCE
 
 add_library(tcpip MODULE
     ${SOURCE}
-    tcpip.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)
+    tcpip.rc)
+spec2def(tcpip tcpip.sys tcpip.spec)
 
 target_link_libraries(tcpip ip lwip ${PSEH_LIB} chew)
 set_module_type(tcpip kernelmodedriver)

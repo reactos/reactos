@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 add_definitions(-D_VIDEOPORT_)
-spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     agp.c
@@ -25,8 +24,8 @@ list(APPEND SOURCE
 add_library(videoprt MODULE
     ${SOURCE}
     guid.c
-    videoprt.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def)
+    videoprt.rc)
+spec2def(videoprt videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 set_module_type(videoprt kernelmodedriver)
 add_importlibs(videoprt ntoskrnl hal)

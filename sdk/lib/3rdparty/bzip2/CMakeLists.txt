@@ -1,6 +1,5 @@
 
 add_definitions(-DBZ_NO_STDIO -DBZ_DECOMPRESS_ONLY)
-spec2def(unbzip2.sys unbzip2.spec)
 
 list(APPEND SOURCE
     bzlib.c
@@ -11,9 +10,8 @@ list(APPEND SOURCE
     dllmain.c
     bzlib_private.h)
 
-add_library(bzip2 MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/unbzip2.def)
+add_library(bzip2 MODULE ${SOURCE})
+spec2def(bzip2 unbzip2.sys unbzip2.spec)
 
 set_module_type(bzip2 kernelmodedriver)
 add_importlibs(bzip2 ntoskrnl)

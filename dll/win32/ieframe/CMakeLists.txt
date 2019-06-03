@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(ieframe.dll ieframe.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     classinfo.c
@@ -22,13 +21,12 @@ list(APPEND SOURCE
     urlhist.c
     view.c
     webbrowser.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/ieframe_stubs.c)
+    precomp.h)
 
 add_library(ieframe MODULE
     ${SOURCE}
-    ieframe.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ieframe.def)
+    ieframe.rc)
+spec2def(ieframe ieframe.dll ieframe.spec ADD_IMPORTLIB)
 
 add_typelib(ieframe_v1.idl)
 

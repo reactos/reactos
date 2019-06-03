@@ -2,7 +2,6 @@
 add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(amstream.dll amstream.spec)
 
 list(APPEND SOURCE
     amstream.c
@@ -14,8 +13,8 @@ list(APPEND SOURCE
 
 add_library(amstream MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/amstream.def)
+    version.rc)
+spec2def(amstream amstream.dll amstream.spec)
 
 set_module_type(amstream win32dll)
 target_link_libraries(amstream strmbase strmiids uuid wine)

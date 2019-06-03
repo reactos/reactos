@@ -1,6 +1,4 @@
 
-spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     ../marshalling.c
     context.c
@@ -17,9 +15,8 @@ list(APPEND SOURCE
 
 add_library(spoolss MODULE
     ${SOURCE}
-    spoolss.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/spoolss_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
+    spoolss.rc)
+spec2def(spoolss spoolss.dll spoolss.spec ADD_IMPORTLIB)
 
 set_module_type(spoolss win32dll UNICODE)
 target_link_libraries(spoolss wine)

@@ -1,6 +1,4 @@
 
-spec2def(ksecdd.sys ksecdd.spec)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers/ksecdd
     ${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
@@ -11,10 +9,11 @@ list(APPEND SOURCE
     crypt.c
     random.c
     stubs.c
-    ksecdd.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ksecdd.def)
+    ksecdd.rc)
 
 add_library(ksecdd MODULE ${SOURCE})
+spec2def(ksecdd ksecdd.sys ksecdd.spec)
+
 target_link_libraries(ksecdd cryptlib pseh)
 set_module_type(ksecdd kernelmodedriver)
 add_importlibs(ksecdd ntoskrnl hal)

@@ -1,6 +1,4 @@
 
-spec2def(access.cpl access.spec)
-
 list(APPEND SOURCE
     access.c
     display.c
@@ -14,8 +12,8 @@ add_rc_deps(access.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
 add_library(access MODULE
     ${SOURCE}
-    access.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/access.def)
+    access.rc)
+spec2def(access access.cpl access.spec)
 
 set_module_type(access cpl UNICODE)
 add_importlibs(access user32 gdi32 advapi32 comctl32 msvcrt kernel32)

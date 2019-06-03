@@ -14,9 +14,6 @@ add_definitions(
     -DLIBRARYBUILD
     -DRESOLVE_3D_TEXTURE_SUPPORT)
 
-# we must use our own spec file
-spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     src/libutil/error.c
     src/libutil/glue.c
@@ -114,8 +111,9 @@ add_library(glu32 MODULE
     ${LIBNURBS_SOURCE}
     src/libnurbs/nurbtess/polyDBG.cc
     ${SOURCE}
-    glu32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
+    glu32.rc)
+# We must use our own spec file
+spec2def(glu32 glu32.dll glu32.spec ADD_IMPORTLIB)
 
 set_module_type(glu32 win32dll)
 

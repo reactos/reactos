@@ -1,17 +1,14 @@
 
-spec2def(newdev.dll newdev.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     newdev.c
     stubs.c
     wizard.c
-    newdev_private.h
-    ${CMAKE_CURRENT_BINARY_DIR}/newdev_stubs.c)
+    newdev_private.h)
 
 add_library(newdev MODULE
     ${SOURCE}
-    newdev.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
+    newdev.rc)
+spec2def(newdev newdev.dll newdev.spec ADD_IMPORTLIB)
 
 set_module_type(newdev win32dll UNICODE)
 target_link_libraries(newdev wine)

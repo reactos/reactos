@@ -1,6 +1,4 @@
 
-spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
-
 include_directories(../mesa)
 
 add_definitions(
@@ -20,8 +18,7 @@ list(APPEND SOURCE
     swimpl.c
     wgl.c
     wgl_font.c
-    opengl32.h
-    ${CMAKE_CURRENT_BINARY_DIR}/opengl32_stubs.c)
+    opengl32.h)
 
 # set_source_files_properties(gcrt0.o libgmon.a PROPERTIES EXTERNAL_OBJECT TRUE)
 
@@ -34,14 +31,13 @@ endif()
 
 add_library(opengl32 MODULE
     ${SOURCE}
-    ${opengl32_asm}
-    ${CMAKE_CURRENT_BINARY_DIR}/opengl32.def)
+    ${opengl32_asm})
+spec2def(opengl32 opengl32.dll opengl32.spec ADD_IMPORTLIB)
 
 target_link_libraries(opengl32
     wine
     ${PSEH_LIB}
-    mesa
-)
+    mesa)
 
 set_module_type(opengl32 win32dll)
 add_importlibs(opengl32 gdi32 user32 advapi32 msvcrt kernel32 ntdll)

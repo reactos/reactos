@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(hhctrl.ocx hhctrl.ocx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     chm.c
@@ -20,8 +19,8 @@ list(APPEND SOURCE
 add_library(hhctrl MODULE
     ${SOURCE}
     guid.c
-    hhctrl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
+    hhctrl.rc)
+spec2def(hhctrl hhctrl.ocx hhctrl.ocx.spec ADD_IMPORTLIB)
 
 add_typelib(hhctrl_tlb.idl)
 

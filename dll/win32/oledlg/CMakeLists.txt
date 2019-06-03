@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(oledlg.dll oledlg.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     insobjdlg.c
@@ -11,8 +10,8 @@ list(APPEND SOURCE
 
 add_library(oledlg MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)
+    rsrc.rc)
+spec2def(oledlg oledlg.dll oledlg.spec ADD_IMPORTLIB)
 
 set_module_type(oledlg win32dll)
 target_link_libraries(oledlg wine)

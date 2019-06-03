@@ -1381,10 +1381,9 @@ endif()
 #add_importlibs(static_crt_apitest kernel32 ntdll)
 #add_rostests_file(TARGET static_crt_apitest)
 
-#spec2def(static_crt_dll_startup.dll dll_startup.spec)
 #add_library(static_crt_dll_startup MODULE
-#    dll_startup.cpp
-#    ${CMAKE_CURRENT_BINARY_DIR}/static_crt_dll_startup.def)
+#    dll_startup.cpp)
+#spec2def(static_crt_dll_startup static_crt_dll_startup.dll dll_startup.spec)
 #target_link_libraries(static_crt_dll_startup crt)
 #set_module_type(static_crt_dll_startup win32dll)
 #add_importlibs(static_crt_dll_startup kernel32 ntdll)
@@ -1397,10 +1396,9 @@ set_module_type(msvcrt_crt_apitest win32cui)
 add_importlibs(msvcrt_crt_apitest msvcrt kernel32 ntdll)
 add_rostests_file(TARGET msvcrt_crt_apitest)
 
-spec2def(msvcrt_crt_dll_startup.dll dll_startup.spec)
 add_library(msvcrt_crt_dll_startup MODULE
-    dll_startup.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_crt_dll_startup.def)
+    dll_startup.cpp)
+spec2def(msvcrt_crt_dll_startup msvcrt_crt_dll_startup.dll dll_startup.spec)
 set_module_type(msvcrt_crt_dll_startup win32dll)
 add_importlibs(msvcrt_crt_dll_startup msvcrt kernel32 ntdll)
 add_rostests_file(TARGET msvcrt_crt_dll_startup)

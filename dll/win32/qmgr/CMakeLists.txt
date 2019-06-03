@@ -2,7 +2,6 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 generate_idl_iids(qmgr_local.idl)
-spec2def(qmgr.dll qmgr.spec)
 
 list(APPEND SOURCE
     enum_files.c
@@ -18,8 +17,8 @@ list(APPEND SOURCE
 
 add_library(qmgr MODULE
     ${SOURCE}
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/qmgr.def)
+    rsrc.rc)
+spec2def(qmgr qmgr.dll qmgr.spec)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/qmgr.rgs)
 add_idl_headers(qmgr_idlheader qmgr_local.idl)

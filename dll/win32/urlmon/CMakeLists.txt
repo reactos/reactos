@@ -7,7 +7,6 @@ add_definitions(
     -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
 add_rpcproxy_files(urlmon_urlmon.idl)
 
 set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/urlmon.inf)
@@ -48,9 +47,8 @@ add_library(urlmon MODULE
     ${SOURCE}
     urlmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    ${CMAKE_CURRENT_BINARY_DIR}/urlmon_urlmon_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/urlmon_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/urlmon_urlmon_p.c)
+spec2def(urlmon urlmon.dll urlmon.spec ADD_IMPORTLIB)
 
 set_module_type(urlmon win32dll)
 target_link_libraries(urlmon uuid wine ${PSEH_LIB})

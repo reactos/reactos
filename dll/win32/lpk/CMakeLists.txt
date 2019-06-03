@@ -1,7 +1,6 @@
 
 add_definitions(-DLANGPACK)
 include_directories(include)
-spec2def(lpk.dll lpk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bidi.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 
 add_library(lpk MODULE
     ${SOURCE}
-    lpk.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
+    lpk.rc)
+spec2def(lpk lpk.dll lpk.spec ADD_IMPORTLIB)
 
 set_module_type(lpk win32dll UNICODE)
 

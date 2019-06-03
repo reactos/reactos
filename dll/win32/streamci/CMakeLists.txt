@@ -2,16 +2,14 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(streamci.dll streamci.spec)
-
 list(APPEND SOURCE
     streamci.c
     precomp.h)
 
 add_library(streamci MODULE
     ${SOURCE}
-    streamci.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/streamci.def)
+    streamci.rc)
+spec2def(streamci streamci.dll streamci.spec)
 
 set_module_type(streamci win32dll)
 target_link_libraries(streamci uuid wine)

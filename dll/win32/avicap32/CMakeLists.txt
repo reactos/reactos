@@ -1,12 +1,10 @@
 
-spec2def(avicap32.dll avicap32.spec ADD_IMPORTLIB)
-
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 add_library(avicap32 MODULE
     avicap32.c
-    avicap32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
+    avicap32.rc)
+spec2def(avicap32 avicap32.dll avicap32.spec ADD_IMPORTLIB)
 
 set_module_type(avicap32 win32dll UNICODE)
 target_link_libraries(avicap32 wine)

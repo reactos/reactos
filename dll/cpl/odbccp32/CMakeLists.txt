@@ -1,10 +1,8 @@
 
-spec2def(odbccp32i.cpl odbccp32.spec)
-
 add_library(odbccp32i MODULE
     odbccp32.c
-    odbccp32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/odbccp32i.def)
+    odbccp32.rc)
+spec2def(odbccp32i odbccp32i.cpl odbccp32.spec)
 
 set_module_type(odbccp32i cpl UNICODE)
 add_importlibs(odbccp32i user32 comctl32 msvcrt kernel32)

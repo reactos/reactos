@@ -1,6 +1,4 @@
 
-spec2def(main.cpl main.spec)
-
 list(APPEND SOURCE
     keyboard.c
     main.c
@@ -12,8 +10,8 @@ add_rc_deps(main.rc ${main_rc_deps})
 
 add_library(main MODULE
     ${SOURCE}
-    main.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/main.def)
+    main.rc)
+spec2def(main main.cpl main.spec)
 
 set_module_type(main cpl UNICODE)
 target_link_libraries(main uuid)

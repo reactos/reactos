@@ -1,6 +1,4 @@
 
-spec2def(intl.cpl intl.spec)
-
 list(APPEND SOURCE
     currency.c
     date.c
@@ -20,8 +18,8 @@ add_rc_deps(intl.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
 add_library(intl MODULE
     ${SOURCE}
-    intl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/intl.def)
+    intl.rc)
+spec2def(intl intl.cpl intl.spec)
 
 set_module_type(intl cpl UNICODE)
 add_importlibs(intl user32 comctl32 advapi32 setupapi shell32 msvcrt kernel32 ntdll)

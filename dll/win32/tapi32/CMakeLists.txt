@@ -1,19 +1,16 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(tapi32.dll tapi32.spec)
 
 list(APPEND SOURCE
     assisted.c
     internal.c
     line.c
     phone.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/tapi32_stubs.c)
+    precomp.h)
 
-add_library(tapi32 MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/tapi32.def)
+add_library(tapi32 MODULE ${SOURCE})
+spec2def(tapi32 tapi32.dll tapi32.spec)
 
 set_module_type(tapi32 win32dll)
 target_link_libraries(tapi32 wine)

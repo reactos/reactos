@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(objsel.dll objsel.spec)
 
 list(APPEND SOURCE
     factory.c
@@ -13,8 +12,8 @@ list(APPEND SOURCE
 
 add_library(objsel MODULE
     ${SOURCE}
-    objsel.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
+    objsel.rc)
+spec2def(objsel objsel.dll objsel.spec)
 
 set_module_type(objsel win32dll)
 target_link_libraries(objsel uuid wine)

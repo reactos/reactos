@@ -5,7 +5,6 @@ add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_idl_headers(devenum_fil_data_header fil_data.idl)
-spec2def(devenum.dll devenum.spec)
 
 list(APPEND SOURCE
     createdevenum.c
@@ -17,8 +16,8 @@ list(APPEND SOURCE
 
 add_library(devenum MODULE
     ${SOURCE}
-    devenum.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/devenum.def)
+    devenum.rc)
+spec2def(devenum devenum.dll devenum.spec)
 
 set_source_files_properties(devenum.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/devenum_classes.rgs)
 set_module_type(devenum win32dll UNICODE)

@@ -1,19 +1,16 @@
 
-spec2def(msports.dll msports.spec)
-
 list(APPEND SOURCE
     classinst.c
     comdb.c
     msports.c
     parallel.c
     serial.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msports_stubs.c)
+    precomp.h)
 
 add_library(msports MODULE
     ${SOURCE}
-    msports.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msports.def)
+    msports.rc)
+spec2def(msports msports.dll msports.spec)
 
 set_module_type(msports win32dll UNICODE)
 target_link_libraries(msports wine)

@@ -17,7 +17,6 @@ add_definitions(
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_definitions(-D_NETSHELL_)
-spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
     netshell.cpp
@@ -34,9 +33,8 @@ add_rc_deps(netshell.rc ${netshell_rc_deps})
 
 add_library(netshell MODULE
     ${SOURCE}
-    netshell.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
+    netshell.rc)
+spec2def(netshell netshell.dll netshell.spec)
 
 set_module_type(netshell win32dll UNICODE)
 target_link_libraries(netshell uuid wine)

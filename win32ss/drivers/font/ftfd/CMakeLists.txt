@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/freetype/include)
-spec2def(ftfd.dll ftfd.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     enable.c
@@ -12,8 +11,8 @@ list(APPEND SOURCE
 add_library(ftfd MODULE
     ${SOURCE}
     sprintf.c
-    freetype.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
+    freetype.rc)
+spec2def(ftfd ftfd.dll ftfd.spec ADD_IMPORTLIB)
 
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)
 target_link_libraries(ftfd freetype libcntpr)

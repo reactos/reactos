@@ -1,12 +1,11 @@
 
-spec2def(ufat.dll ufat.spec)
-
 list(APPEND SOURCE
     ufat.c
-    ufat.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ufat.def)
+    ufat.rc)
 
 add_library(ufat MODULE ${SOURCE})
+spec2def(ufat ufat.dll ufat.spec)
+
 set_module_type(ufat nativedll)
 target_link_libraries(ufat vfatlib)
 add_importlibs(ufat ntdll)

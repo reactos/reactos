@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__ -DENTRY_PREFIX=avifil32_)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(avifil32.dll avifil32.spec ADD_IMPORTLIB)
 add_rpcproxy_files(avifil32.idl)
 
 list(APPEND SOURCE
@@ -25,8 +24,8 @@ add_library(avifil32 MODULE
     ${SOURCE}
     guid.c
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/avifil32_p.c
-    ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/avifil32_p.c)
+spec2def(avifil32 avifil32.dll avifil32.spec ADD_IMPORTLIB)
 
 set_module_type(avifil32 win32dll)
 target_link_libraries(avifil32 wine ${PSEH_LIB})

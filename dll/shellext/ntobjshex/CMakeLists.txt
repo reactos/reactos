@@ -15,8 +15,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR})
 
-spec2def(ntobjshex.dll ntobjshex.spec)
-
 file(GLOB_RECURSE ntobjshex_rc_deps resources/*.*)
 add_rc_deps(ntobjshex.rc ${ntobjshex_rc_deps})
 
@@ -29,8 +27,8 @@ list(APPEND SOURCE
 
 add_library(ntobjshex MODULE
     ${SOURCE}
-    ntobjshex.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
+    ntobjshex.rc)
+spec2def(ntobjshex ntobjshex.dll ntobjshex.spec)
 
 set_module_type(ntobjshex win32dll UNICODE)
 target_link_libraries(ntobjshex uuid wine)

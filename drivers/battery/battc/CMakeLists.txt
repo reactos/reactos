@@ -1,11 +1,10 @@
 
 add_definitions(-D_BATTERYCLASS_)
-spec2def(battc.sys battc.spec ADD_IMPORTLIB)
 
 add_library(battc MODULE
             battc.c
-            battc.rc
-            ${CMAKE_CURRENT_BINARY_DIR}/battc.def)
+            battc.rc)
+spec2def(battc battc.sys battc.spec ADD_IMPORTLIB)
 
 set_module_type(battc kernelmodedriver)
 add_importlibs(battc ntoskrnl hal)

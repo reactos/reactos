@@ -1,6 +1,4 @@
 
-spec2def(input.dll input.spec)
-
 list(APPEND SOURCE
     input.c
     input.h
@@ -21,8 +19,8 @@ add_rc_deps(input.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/keyboard-shortcuts.ic
 
 add_library(input MODULE
     ${SOURCE}
-    input.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/input.def)
+    input.rc)
+spec2def(input input.dll input.spec)
 
 set_module_type(input win32dll UNICODE)
 add_importlibs(input advapi32 user32 comctl32 gdi32 msvcrt kernel32 setupapi)

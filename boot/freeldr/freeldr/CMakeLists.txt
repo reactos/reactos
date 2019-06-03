@@ -14,8 +14,6 @@ if(MSVC)
     add_compile_flags("/GF")
 endif()
 
-spec2def(freeldr_pe.exe freeldr.spec)
-
 if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
@@ -228,16 +226,16 @@ list(APPEND FREELDR_BASE_SOURCE
     lib/inffile/inffile.c
     lib/rtl/libsupp.c)
 
-if(ARCH STREQUAL "i386")
-    # Must be included together with disk/scsiport.c
-    list(APPEND FREELDR_BASE_SOURCE
-        ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
-endif()
-
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
-set_target_properties(freeldr_pe freeldr_pe_dbg 
+if(ARCH STREQUAL "i386")
+    # Exports implemented in disk/scsiport.c, that must be included together.
+    spec2def(freeldr_pe freeldr_pe.exe freeldr.spec)
+    spec2def(freeldr_pe_dbg freeldr_pe_dbg.exe freeldr.spec)
+endif()
+
+set_target_properties(freeldr_pe freeldr_pe_dbg
     PROPERTIES
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")

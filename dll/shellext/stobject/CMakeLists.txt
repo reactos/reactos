@@ -15,8 +15,6 @@ include_directories(
 add_definitions(
     -D_ATL_NO_EXCEPTIONS)
 
-spec2def(stobject.dll stobject.spec)
-
 file(GLOB_RECURSE stobject_rc_deps resources/*.*)
 add_rc_deps(stobject.rc ${stobject_rc_deps})
 
@@ -30,8 +28,8 @@ list(APPEND SOURCE
 
 add_library(stobject MODULE
     ${SOURCE}
-    stobject.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
+    stobject.rc)
+spec2def(stobject stobject.dll stobject.spec)
 
 set_module_type(stobject win32dll UNICODE)
 target_link_libraries(stobject uuid wine)

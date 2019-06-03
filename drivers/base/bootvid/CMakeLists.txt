@@ -1,6 +1,4 @@
 
-spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
-
 if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
     list(APPEND SOURCE
         i386/bootvid.c
@@ -16,8 +14,8 @@ list(APPEND SOURCE precomp.h)
 
 add_library(bootvid MODULE
     ${SOURCE}
-    bootvid.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
+    bootvid.rc)
+spec2def(bootvid bootvid.dll bootvid.spec ADD_IMPORTLIB)
 
 set_module_type(bootvid kerneldll ENTRYPOINT 0)
 add_importlibs(bootvid ntoskrnl hal)

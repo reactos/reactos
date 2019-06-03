@@ -13,7 +13,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
-spec2def(msxml3.dll msxml3.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 add_typelib(msxml3_v1.idl)
 
 list(APPEND SOURCE
@@ -47,8 +46,7 @@ list(APPEND SOURCE
     xmlelem.c
     xmlparser.c
     xmlview.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c)
+    precomp.h)
 
 # xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
 set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
@@ -67,8 +65,8 @@ add_library(msxml3 MODULE
     xslpattern.yy.c
     factory.c
     uuid.c
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
+    version.rc)
+spec2def(msxml3 msxml3.dll msxml3.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)

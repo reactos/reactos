@@ -4,7 +4,6 @@ add_definitions(
     -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(jscript.dll jscript.spec)
 
 list(APPEND SOURCE
     activex.c
@@ -48,8 +47,8 @@ add_library(jscript MODULE
     ${SOURCE}
     cc_parser.tab.c
     parser.tab.c
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
+    rsrc.rc)
+spec2def(jscript jscript.dll jscript.spec)
 
 add_idl_headers(jscript_idlheader jscript_classes.idl)
 add_typelib(jsglobal.idl)

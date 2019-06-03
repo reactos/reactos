@@ -1,7 +1,6 @@
 
 add_definitions(-D__SECUR32__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
-spec2def(secur32.dll secur32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c
@@ -21,9 +20,8 @@ list(APPEND SOURCE
 
 add_library(secur32 MODULE
     ${SOURCE}
-    secur32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/secur32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/secur32.def)
+    secur32.rc)
+spec2def(secur32 secur32.dll secur32.spec ADD_IMPORTLIB)
 
 set_module_type(secur32 win32dll UNICODE)
 target_link_libraries(secur32 lsalib wine)

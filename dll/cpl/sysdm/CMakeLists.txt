@@ -1,6 +1,4 @@
 
-spec2def(sysdm.cpl sysdm.spec)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp)
 
@@ -23,8 +21,8 @@ add_rc_deps(sysdm.rc ${sysdm_rc_deps})
 
 add_library(sysdm MODULE
     ${SOURCE}
-    sysdm.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
+    sysdm.rc)
+spec2def(sysdm sysdm.cpl sysdm.spec)
 
 set_module_type(sysdm cpl UNICODE)
 target_link_libraries(sysdm udmihelp)

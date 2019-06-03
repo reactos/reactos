@@ -8,7 +8,6 @@ add_definitions(
     -D_CRYPT32_)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
 if(MSVC)
     # error C4312: 'type cast': conversion from 'unsigned int' to 'void *' of greater size
@@ -44,9 +43,8 @@ list(APPEND SOURCE
 
 add_library(crypt32 MODULE
     ${SOURCE}
-    crypt32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
+    crypt32.rc)
+spec2def(crypt32 crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
 set_module_type(crypt32 win32dll)
 target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)

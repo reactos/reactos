@@ -1,13 +1,11 @@
 
-spec2def(rasdlg.dll rasdlg.spec)
-
 list(APPEND SOURCE
     rasdlg.c
-    rasdlg.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rasdlg_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/rasdlg.def)
+    rasdlg.rc)
 
 add_library(rasdlg MODULE ${SOURCE})
+spec2def(rasdlg rasdlg.dll rasdlg.spec)
+
 set_module_type(rasdlg win32dll)
 target_link_libraries(rasdlg wine uuid)
 add_importlibs(rasdlg msvcrt kernel32 ntdll)

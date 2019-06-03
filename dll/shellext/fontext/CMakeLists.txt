@@ -1,6 +1,4 @@
 
-spec2def(fontext.dll fontext.spec)
-
 list(APPEND SOURCE
     fontext.c
     regsvr.c
@@ -8,8 +6,8 @@ list(APPEND SOURCE
 
 add_library(fontext MODULE
     ${SOURCE}
-    fontext.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
+    fontext.rc)
+spec2def(fontext fontext.dll fontext.spec)
 
 set_module_type(fontext win32dll UNICODE)
 target_link_libraries(fontext uuid)

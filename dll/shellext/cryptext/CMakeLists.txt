@@ -1,6 +1,4 @@
 
-spec2def(cryptext.dll cryptext.spec)
-
 list(APPEND SOURCE
     cryptext.c
     precomp.h)
@@ -8,8 +6,8 @@ list(APPEND SOURCE
 add_library(cryptext MODULE
     ${SOURCE}
     cryptext.spec
-    cryptext.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptext.def)
+    cryptext.rc)
+spec2def(cryptext cryptext.dll cryptext.spec)
 
 set_module_type(cryptext win32dll UNICODE)
 target_link_libraries(cryptext uuid)

@@ -1,12 +1,11 @@
 
-spec2def(testvdd.dll testvdd.spec)
-
 list(APPEND SOURCE
     testvdd.c
-    testvdd.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/testvdd.def)
+    testvdd.rc)
 
 add_library(testvdd MODULE ${SOURCE})
+spec2def(testvdd testvdd.dll testvdd.spec)
+
 #set_module_type(testvdd win32dll UNICODE ENTRYPOINT VDDInitialize)
 set_module_type(testvdd win32dll UNICODE)
 

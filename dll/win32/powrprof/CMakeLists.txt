@@ -1,10 +1,8 @@
 
-spec2def(powrprof.dll powrprof.spec ADD_IMPORTLIB)
-
 add_library(powrprof MODULE
     powrprof.c
-    powrprof.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
+    powrprof.rc)
+spec2def(powrprof powrprof.dll powrprof.spec ADD_IMPORTLIB)
 
 set_module_type(powrprof win32dll UNICODE)
 target_link_libraries(powrprof wine)

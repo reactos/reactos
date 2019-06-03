@@ -1,6 +1,4 @@
 
-spec2def(timedate.cpl timedate.spec)
-
 list(APPEND SOURCE
     clock.c
     dateandtime.c
@@ -15,8 +13,8 @@ add_rc_deps(timedate.rc ${timedate_rc_deps})
 
 add_library(timedate MODULE
     ${SOURCE}
-    timedate.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
+    timedate.rc)
+spec2def(timedate timedate.cpl timedate.spec)
 
 set_module_type(timedate cpl UNICODE)
 add_importlibs(timedate w32time advapi32 user32 gdi32 comctl32 ws2_32 iphlpapi msvcrt kernel32)

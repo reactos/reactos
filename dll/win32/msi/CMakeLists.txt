@@ -4,7 +4,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
-spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
 
 if(MSVC)
@@ -65,9 +64,8 @@ add_library(msi MODULE
     cond.tab.c
     sql.tab.c
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
-    msi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
+    msi.rc)
+spec2def(msi msi.dll msi.spec ADD_IMPORTLIB)
 
 add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msiserver.idl)

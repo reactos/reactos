@@ -4,7 +4,6 @@ add_definitions(
     -D_USE_MATH_DEFINES)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     brush.c
@@ -26,9 +25,8 @@ list(APPEND SOURCE
 add_library(gdiplus MODULE
     ${SOURCE}
     guid.c
-    gdiplus.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
+    gdiplus.rc)
+spec2def(gdiplus gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus wine)

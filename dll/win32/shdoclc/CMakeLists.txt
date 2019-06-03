@@ -1,12 +1,11 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(shdoclc.dll shdoclc.spec)
 
 add_library(shdoclc MODULE
-    rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shdoclc.def)
+    rsrc.rc)
+spec2def(shdoclc shdoclc.dll shdoclc.spec)
 
-set_module_type(shdoclc win32dll ENTRYPOINT 0 )
+set_module_type(shdoclc win32dll ENTRYPOINT 0)
 target_link_libraries(shdoclc wine)
 add_importlibs(shdoclc kernel32 ntdll)
 add_dependencies(shdoclc psdk)

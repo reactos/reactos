@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-spec2def(fltlib.dll fltlib.spec ADD_IMPORTLIB)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers/fltmgr
@@ -10,10 +9,11 @@ include_directories(
 list(APPEND SOURCE
     fltlib.c
     message.c
-    stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/fltlib.def)
+    stubs.c)
 
 add_library(fltlib MODULE ${SOURCE} rsrc.rc)
+spec2def(fltlib fltlib.dll fltlib.spec ADD_IMPORTLIB)
+
 set_module_type(fltlib win32dll)
 target_link_libraries(fltlib wine)
 add_target_compile_definitions(fltlib NTDDI_VERSION=NTDDI_WS03SP1)

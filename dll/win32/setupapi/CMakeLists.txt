@@ -10,7 +10,6 @@ add_definitions(
     -Dwcsnicmp=_wcsnicmp)
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/pnp.idl)
-spec2def(setupapi.dll setupapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cfgmgr.c
@@ -35,9 +34,8 @@ list(APPEND SOURCE
 
 add_library(setupapi MODULE
     ${SOURCE}
-    setupapi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
+    setupapi.rc)
+spec2def(setupapi setupapi.dll setupapi.spec ADD_IMPORTLIB)
 
 set_module_type(setupapi win32dll UNICODE)
 target_link_libraries(setupapi uuid wine ${PSEH_LIB})

@@ -1,6 +1,4 @@
 
-spec2def(syssetup.dll syssetup.spec)
-
 list(APPEND SOURCE
     classinst.c
     dllmain.c
@@ -9,13 +7,12 @@ list(APPEND SOURCE
     proppage.c
     security.c
     wizard.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c)
+    precomp.h)
 
 add_library(syssetup MODULE
     ${SOURCE}
-    syssetup.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
+    syssetup.rc)
+spec2def(syssetup syssetup.dll syssetup.spec)
 
 add_pch(syssetup precomp.h SOURCE)
 set_module_type(syssetup win32dll UNICODE)

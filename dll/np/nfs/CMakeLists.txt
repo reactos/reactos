@@ -1,4 +1,3 @@
-spec2def(nfs41_np.dll nfs41_np.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c
@@ -13,8 +12,8 @@ include_directories(
 
 add_library(nfs41_np MODULE
     ${SOURCE}
-    nfsnp.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/nfs41_np.def)
+    nfsnp.rc)
+spec2def(nfs41_np nfs41_np.dll nfs41_np.spec ADD_IMPORTLIB)
 
 set_module_type(nfs41_np win32dll UNICODE)
 target_link_libraries(nfs41_np ${PSEH_LIB})

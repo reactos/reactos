@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(hlink.dll hlink.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     browse_ctx.c
@@ -12,9 +11,8 @@ list(APPEND SOURCE
 
 add_library(hlink MODULE
     ${SOURCE}
-    hlink.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
+    hlink.rc)
+spec2def(hlink hlink.dll hlink.spec ADD_IMPORTLIB)
 
 set_module_type(hlink win32dll)
 target_link_libraries(hlink uuid wine)

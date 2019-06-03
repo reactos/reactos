@@ -8,7 +8,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 add_definitions(-DLANGPACK)
-spec2def(gdi32.dll gdi32.spec ADD_IMPORTLIB)
 
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE objects/efloat.c)
@@ -47,8 +46,8 @@ list(APPEND SOURCE
 
 add_library(gdi32 MODULE
     ${SOURCE}
-    gdi32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
+    gdi32.rc)
+spec2def(gdi32 gdi32.dll gdi32.spec ADD_IMPORTLIB)
 
 set_module_type(gdi32
     win32dll

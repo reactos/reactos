@@ -3,9 +3,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/mbedtls)
 
-
 add_definitions(-D__WINESRC__ -D_WINE)
-spec2def(schannel.dll schannel.spec)
 
 list(APPEND SOURCE
     lsamode.c
@@ -15,13 +13,12 @@ list(APPEND SOURCE
     secur32_wine.c
     usermode.c
     stubs.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/schannel_stubs.c)
+    precomp.h)
 
 add_library(schannel MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/schannel.def)
+    version.rc)
+spec2def(schannel schannel.dll schannel.spec)
 
 set_module_type(schannel win32dll)
 target_link_libraries(schannel wine)

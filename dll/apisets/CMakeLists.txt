@@ -5,8 +5,6 @@
 project(apisets)
 
 function (add_apiset apiset_name baseaddress)
-    spec2def(${apiset_name}.dll ${apiset_name}.spec ADD_IMPORTLIB)
-
     add_definitions(
         -D_CTYPE_DISABLE_MACROS
         -D_NO_INLINING
@@ -17,9 +15,8 @@ function (add_apiset apiset_name baseaddress)
         -D_WCTYPE_DEFINED
         -D_CRT_ERRNO_DEFINED)
 
-    add_library(${apiset_name} MODULE
-        ${CMAKE_CURRENT_BINARY_DIR}/${apiset_name}_stubs.c
-        ${CMAKE_CURRENT_BINARY_DIR}/${apiset_name}.def)
+    add_library(${apiset_name} MODULE)
+    spec2def(${apiset_name} ${apiset_name}.dll ${apiset_name}.spec ADD_IMPORTLIB)
 
     add_dependencies(${apiset_name} xdk)
     set_module_type(${apiset_name} win32dll ENTRYPOINT 0 UNICODE IMAGEBASE ${baseaddress})

@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wbemdisp.dll wbemdisp.spec)
 
 list(APPEND SOURCE
     locator.c
@@ -21,8 +20,8 @@ set_source_files_properties(wbemdisp.rc PROPERTIES OBJECT_DEPENDS "${wbemdisp_rc
 add_library(wbemdisp MODULE
     ${SOURCE}
     guid.c
-    wbemdisp.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wbemdisp.def)
+    wbemdisp.rc)
+spec2def(wbemdisp wbemdisp.dll wbemdisp.spec)
 
 set_module_type(wbemdisp win32dll)
 target_link_libraries(wbemdisp uuid wine)

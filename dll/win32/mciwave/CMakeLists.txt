@@ -4,13 +4,13 @@ add_definitions(
     -D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(mciwave.dll mciwave.spec)
 
 list(APPEND SOURCE
-    mciwave.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mciwave.def)
+    mciwave.c)
 
 add_library(mciwave MODULE ${SOURCE})
+spec2def(mciwave mciwave.dll mciwave.spec)
+
 set_module_type(mciwave win32dll)
 target_link_libraries(mciwave wine)
 add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)

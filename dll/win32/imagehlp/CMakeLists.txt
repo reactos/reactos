@@ -1,7 +1,6 @@
 
 add_definitions(-D_IMAGEHLP_SOURCE_)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(imagehlp.dll imagehlp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     access.c
@@ -12,9 +11,8 @@ list(APPEND SOURCE
 
 add_library(imagehlp MODULE
     ${SOURCE}
-    imagehlp.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/imagehlp_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/imagehlp.def)
+    imagehlp.rc)
+spec2def(imagehlp imagehlp.dll imagehlp.spec ADD_IMPORTLIB)
 
 set_module_type(imagehlp win32dll)
 target_link_libraries(imagehlp wine ${PSEH_LIB})

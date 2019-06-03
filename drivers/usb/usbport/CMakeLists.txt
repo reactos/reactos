@@ -1,6 +1,4 @@
 
-spec2def(usbport.sys usbport.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     debug.c
     device.c
@@ -21,8 +19,8 @@ list(APPEND SOURCE
 add_library(usbport MODULE
     ${SOURCE}
     guid.c
-    usbport.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/usbport.def)
+    usbport.rc)
+spec2def(usbport usbport.sys usbport.spec ADD_IMPORTLIB)
 
 add_pch(usbport usbport.h SOURCE)
 set_module_type(usbport kernelmodedriver)

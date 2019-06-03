@@ -1,6 +1,4 @@
 
-spec2def(ks.sys ks.spec ADD_IMPORTLIB)
-
 add_definitions(
     -DBUILDING_KS
     -D_COMDDK_)
@@ -37,8 +35,8 @@ endif()
 add_library(ks MODULE
     ${SOURCE}
     ${ks_asm}
-    ks.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
+    ks.rc)
+spec2def(ks ks.sys ks.spec ADD_IMPORTLIB)
 
 set_module_type(ks kernelmodedriver ENTRYPOINT 0)
 

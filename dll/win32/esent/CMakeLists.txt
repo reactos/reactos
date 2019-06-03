@@ -1,12 +1,7 @@
 
-spec2def(esent.dll esent.spec)
-
-list(APPEND SOURCE
-    ${CMAKE_CURRENT_BINARY_DIR}/esent_stubs.c)
-
-add_library(esent MODULE
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/esent.def)
+list(APPEND SOURCE)
+add_library(esent MODULE ${SOURCE})
+spec2def(esent esent.dll esent.spec)
 
 set_module_type(esent win32dll)
 add_importlibs(esent msvcrt kernel32 ntdll)

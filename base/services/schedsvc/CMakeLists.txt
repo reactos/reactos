@@ -1,15 +1,14 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl)
-spec2def(schedsvc.dll schedsvc.spec ADD_IMPORTLIB)
 
 add_library(schedsvc MODULE
     job.c
     rpcserver.c
     schedsvc.c
     schedsvc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/atsvc_s.c
-    ${CMAKE_CURRENT_BINARY_DIR}/schedsvc.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/atsvc_s.c)
+spec2def(schedsvc schedsvc.dll schedsvc.spec ADD_IMPORTLIB)
 
 set_module_type(schedsvc win32dll UNICODE)
 target_link_libraries(schedsvc wine)

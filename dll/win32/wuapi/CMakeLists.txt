@@ -4,7 +4,6 @@ add_definitions(
     -DCOM_NO_WINDOWS_H)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(wuapi.dll wuapi.spec)
 
 list(APPEND SOURCE
     downloader.c
@@ -21,8 +20,8 @@ set_source_files_properties(wuapi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_B
 
 add_library(wuapi MODULE
     ${SOURCE}
-    wuapi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
+    wuapi.rc)
+spec2def(wuapi wuapi.dll wuapi.spec)
 
 set_module_type(wuapi win32dll)
 target_link_libraries(wuapi uuid wine wuguid)

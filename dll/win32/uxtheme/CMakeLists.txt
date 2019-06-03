@@ -1,7 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     buffer.c
@@ -16,13 +15,12 @@ list(APPEND SOURCE
     system.c
     themehooks.c
     uxini.c
-    uxthemep.h
-    ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c)
+    uxthemep.h)
 
 add_library(uxtheme MODULE
     ${SOURCE}
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
+    version.rc)
+spec2def(uxtheme uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
 
 set_module_type(uxtheme win32dll)
 target_link_libraries(uxtheme wine)

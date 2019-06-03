@@ -9,17 +9,18 @@ set(NTOSKRNL_ASM_SOURCE ${ASM_SOURCE})
 set(NTKRNLMP_SOURCE ${SOURCE})
 set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 
-spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
 add_executable(ntoskrnl
     ${ntoskrnl_asm}
     ${NTOSKRNL_SOURCE}
     guid.c
-    ntoskrnl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
-set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
-set_target_properties(ntoskrnl PROPERTIES DEFINE_SYMBOL "")
+    ntoskrnl.rc)
+spec2def(ntoskrnl ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
+set_target_properties(ntoskrnl
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntoskrnl KiSystemStartup 4)

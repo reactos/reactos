@@ -1,12 +1,11 @@
 
-spec2def(ufatx.dll ufatx.spec)
-
 list(APPEND SOURCE
     ufatx.c
-    ufatx.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def)
+    ufatx.rc)
 
 add_library(ufatx MODULE ${SOURCE})
+spec2def(ufatx ufatx.dll ufatx.spec)
+
 set_module_type(ufatx nativedll)
 target_link_libraries(ufatx vfatxlib)
 add_importlibs(ufatx ntdll)

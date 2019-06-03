@@ -1,6 +1,4 @@
 
-spec2def(deskadp.dll deskadp.spec)
-
 list(APPEND SOURCE
     deskadp.c
     shxiface.c
@@ -10,8 +8,8 @@ add_rc_deps(deskadp.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/adapter.ico)
 
 add_library(deskadp MODULE
     ${SOURCE}
-    deskadp.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def)
+    deskadp.rc)
+spec2def(deskadp deskadp.dll deskadp.spec)
 
 set_module_type(deskadp win32dll UNICODE)
 target_link_libraries(deskadp uuid)

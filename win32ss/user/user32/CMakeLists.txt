@@ -1,6 +1,4 @@
 
-spec2def(user32.dll user32.spec ADD_IMPORTLIB)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
@@ -62,7 +60,6 @@ list(APPEND SOURCE
     windows/window.c
     windows/winpos.c
     ${REACTOS_SOURCE_DIR}/win32ss/user/rtl/text.c
-    ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
 
 if(ARCH STREQUAL "i386")
@@ -75,8 +72,8 @@ add_asm_files(user32_asm ${ASM_SOURCE})
 add_library(user32 MODULE
     ${SOURCE}
     ${user32_asm}
-    user32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
+    user32.rc)
+spec2def(user32 user32.dll user32.spec ADD_IMPORTLIB)
 
 set_module_type(user32 win32dll ENTRYPOINT DllMain 12 UNICODE)
 target_link_libraries(user32 user32_wsprintf wine win32ksys ${PSEH_LIB})

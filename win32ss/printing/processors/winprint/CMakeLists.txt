@@ -1,6 +1,4 @@
 
-spec2def(winprint.dll winprint.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     main.c
     raw.c
@@ -8,8 +6,8 @@ list(APPEND SOURCE
 
 add_library(winprint MODULE
     ${SOURCE}
-    winprint.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winprint.def)
+    winprint.rc)
+spec2def(winprint winprint.dll winprint.spec ADD_IMPORTLIB)
 
 set_module_type(winprint win32dll UNICODE)
 target_link_libraries(winprint wine)
