@@ -485,7 +485,7 @@ inline _variant_t::_variant_t(VARIANT &varSrc,bool fCopy) {
     ::VariantInit(this);
     _com_util::CheckError(::VariantCopy(this,&varSrc));
   } else {
-    _COM_MEMCPY_S(this,sizeof(varSrc),&varSrc,sizeof(varSrc));
+    _COM_MEMCPY_S(static_cast<void*>(this),sizeof(varSrc),&varSrc,sizeof(varSrc));
     V_VT(&varSrc) = VT_EMPTY;
   }
 }
@@ -1149,7 +1149,7 @@ inline void _variant_t::Attach(VARIANT &varSrc)
 
   Clear();
 
-  _COM_MEMCPY_S(this,sizeof(varSrc),&varSrc,sizeof(varSrc));
+  _COM_MEMCPY_S(static_cast<void*>(this),sizeof(varSrc),&varSrc,sizeof(varSrc));
   V_VT(&varSrc) = VT_EMPTY;
 }
 

@@ -62,7 +62,7 @@ public:
         {
             // allocate extra capacity for optimization
             const int nNewCapacity = (m_nCount + 1) + c_nGrow;
-            T *pNewData = (T *)realloc(m_pData, nNewCapacity * sizeof(T));
+            T *pNewData = (T *)realloc(static_cast<void *>(m_pData), nNewCapacity * sizeof(T));
             if (pNewData == NULL)
                 return FALSE;   // failure
 
@@ -141,7 +141,7 @@ public:
         // move range [nIndex + 1, m_nCount) to nIndex
         const int nRightCount = m_nCount - (nIndex + 1);
         const int nRightSize = nRightCount * sizeof(T);
-        memmove(&m_pData[nIndex], &m_pData[nIndex + 1], nRightSize);
+        memmove(static_cast<void *>(&m_pData[nIndex]), &m_pData[nIndex + 1], nRightSize);
 
         // decrement
         --m_nCount;
@@ -184,7 +184,7 @@ public:
 
             int nNewCount = src.GetSize();
 
-            T *pNewData = (T *)realloc(m_pData, nNewCount * sizeof(T));
+            T *pNewData = (T *)realloc(static_cast<void *>(m_pData), nNewCount * sizeof(T));
             ATLASSERT(pNewData);
             if (pNewData == NULL)
                 return *this;   // failure
