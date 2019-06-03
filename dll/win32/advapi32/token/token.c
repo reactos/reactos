@@ -100,7 +100,7 @@ CheckTokenMembership(IN HANDLE ExistingTokenHandle,
                                          0,
                                          sizeof(SECURITY_DESCRIPTOR) +
                                              sizeof(ACL) + SidLen +
-                                             sizeof(ACCESS_ALLOWED_ACE));
+                                             FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart));
     if (SecurityDescriptor == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -134,7 +134,7 @@ CheckTokenMembership(IN HANDLE ExistingTokenHandle,
     /* create the DACL */
     Dacl = (PACL)(SecurityDescriptor + 1);
     Status = RtlCreateAcl(Dacl,
-                          sizeof(ACL) + SidLen + sizeof(ACCESS_ALLOWED_ACE),
+                          sizeof(ACL) + SidLen + FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart),
                           ACL_REVISION);
     if (!NT_SUCCESS(Status))
     {
