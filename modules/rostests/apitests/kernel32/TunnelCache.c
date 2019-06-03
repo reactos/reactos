@@ -17,7 +17,7 @@ Test_VeryLongTests(void)
     CHAR OldDir[MAX_PATH];
     FILETIME FileTime, File1Time;
 
-    win_skip("Too long, see: ROSTESTS-177");
+    win_skip("Too long, see: ROSTESTS-177\n");
     return;
 
     /* Create a blank test directory */
