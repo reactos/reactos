@@ -234,7 +234,7 @@ else()
     else()
         get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
     endif()
-    
+
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
@@ -326,7 +326,7 @@ function(set_module_type_toolchain MODULE TYPE)
         #Disabled due to LD bug: ROSBE-154
         #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
     endif()
-    
+
     if(STACK_PROTECTOR)
         target_link_libraries(${MODULE} gcc_ssp)
     endif()
@@ -348,31 +348,33 @@ if(NOT ARCH STREQUAL "i386")
     set(DECO_OPTION "-@")
 endif()
 
-function(generate_import_lib _libname _dllname _spec_file)
-    # Generate the def for the import lib
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
-
-    # Create normal importlib
-    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
-    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
-
-    # Create delayed importlib
-    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
-    set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
-endfunction()
-
 # Cute little hack to produce import libs
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
-function(spec2def _dllname _spec_file)
-    
+function(generate_import_lib _libname _dllname _spec_file)
+    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
+
+    # Generate the def for the import lib
+    add_custom_command(
+        OUTPUT ${_def_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${_def_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+    set_source_files_properties(${_def_file} PROPERTIES EXTERNAL_OBJECT TRUE)
+
+    # Create normal importlib
+    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_def_file})
+    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+
+    # Create delayed importlib
+    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${_def_file})
+    set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+endfunction()
+
+function(spec2def _target _dllname _spec_file)
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
 
     # Get library basename
+    #set(_dllname "$<TARGET_FILE_NAME:${_target}>")
     get_filename_component(_file ${_dllname} NAME_WE)
 
     # Error out on anything else than spec
@@ -394,12 +396,16 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
+    # Add both files to the sources of the target.
+    target_sources(${_target} PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
+        ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+
     if(__spec2def_ADD_IMPORTLIB)
         set(_extraflags)
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set(_extraflags --no-private-warnings)
         endif()
-        
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
     endif()
 endfunction()

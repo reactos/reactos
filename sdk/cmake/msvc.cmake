@@ -150,7 +150,7 @@ if(RUNTIME_CHECKS)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4104 /IGNORE:4039")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039")
 
 # HACK: Remove the /implib argument, implibs are generated separately
@@ -340,7 +340,6 @@ endfunction()
 
 # Define those for having real libraries
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
-
 if(ARCH STREQUAL "arm")
     set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <SOURCE>")
 else()
@@ -365,7 +364,6 @@ function(add_delay_importlibs _module)
 endfunction()
 
 function(generate_import_lib _libname _dllname _spec_file)
-
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
 
@@ -403,7 +401,7 @@ function(generate_import_lib _libname _dllname _spec_file)
         # set correct "link rule"
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
     endif()
-    set_target_properties(${_libname} PROPERTIES STATIC_LIBRARY_FLAGS "/DEF:${_def_file}")
+    set_target_properties(${_libname} PROPERTIES STATIC_LIBRARY_FLAGS "/DEF:${_def_file} ${ARGN}")
 endfunction()
 
 if(ARCH STREQUAL "amd64")
@@ -417,11 +415,11 @@ elseif(ARCH STREQUAL "arm")
 else()
     set(SPEC2DEF_ARCH i386)
 endif()
-function(spec2def _dllname _spec_file)
-
+function(spec2def _target _dllname _spec_file)
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
 
     # Get library basename
+    #set(_dllname "$<TARGET_FILE_NAME:${_target}>")
     get_filename_component(_file ${_dllname} NAME_WE)
 
     # Error out on anything else than spec
@@ -443,11 +441,21 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
+    # Add both files to the sources of the target.
+    target_sources(${_target} PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
+        ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+
+    if(__spec2def_NO_PRIVATE_WARNINGS)
+        add_target_link_flags(${_target} "/IGNORE:4104")
+    endif()
+
     if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        set(_extraflags)
         if(__spec2def_NO_PRIVATE_WARNINGS)
-            add_target_property(lib${_file} STATIC_LIBRARY_FLAGS "/ignore:4104")
+            set(_extraflags "/IGNORE:4104")
         endif()
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
     endif()
 endfunction()
 
