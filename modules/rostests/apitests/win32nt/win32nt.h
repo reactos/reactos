@@ -31,7 +31,6 @@
 
 #define TEST(x) ok(x, "TEST failed: %s\n", #x)
 #define RTEST(x) ok(x, "RTEST failed: %s\n", #x)
-#define TESTX ok
 
 #define GdiHandleTable GdiQueryTable()
 

@@ -398,8 +398,8 @@ Test_MetricKey(PCWSTR pwszVal, INT iVal)
     DWORD cbSize;
 
     cbSize = sizeof(szReg);
-    TESTX(QueryUserRegValueW(KEY_METRIC, pwszVal, &szReg, &cbSize, NULL) == ERROR_SUCCESS, "Value=%S\n", pwszVal);
-    TESTX(_wcsicmp(szReg, L"1") == 0, "Value=%S\n", pwszVal);
+    ok(QueryUserRegValueW(KEY_METRIC, pwszVal, &szReg, &cbSize, NULL) == ERROR_SUCCESS, "Value=%S\n", pwszVal);
+    ok(_wcsicmp(szReg, L"1") == 0, "Value=%S\n", pwszVal);
 
 }
 
