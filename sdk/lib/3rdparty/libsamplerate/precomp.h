@@ -7,5 +7,6 @@
 #include "config.h"
 #include "float_cast.h"
 #include "common.h"
+#include "samplerate.h"
 
 #endif /* _LIBSAMPLERATE_PCH_ */
