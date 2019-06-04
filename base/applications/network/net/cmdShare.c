@@ -95,14 +95,63 @@ cmdShare(
     INT argc,
     WCHAR **argv)
 {
-    PWSTR pShareName = NULL;
+    SHARE_INFO_2 ShareInfo;
+    PWSTR pszShareName = NULL;
+    PWSTR pszSharePath = NULL;
+    PWSTR ptr;
+    BOOL bDelete = FALSE;
+    INT len;
     INT i, result = 0;
     NET_API_STATUS Status;
 
     i = 2;
-    if (argv[i][0] != L'/')
+    if (argc > 2 && argv[i][0] != L'/')
     {
-        pShareName = argv[i];
+        ptr = wcschr(argv[i], L'=');
+        if (ptr != NULL)
+        {
+            if (ptr[1] != UNICODE_NULL)
+            {
+                len = wcslen(&ptr[i]);
+                pszSharePath = HeapAlloc(GetProcessHeap(),
+                                         HEAP_ZERO_MEMORY,
+                                         (len + 1) * sizeof(WCHAR));
+                if (pszSharePath == NULL)
+                {
+                    // FIXME: Proper error code!
+                    return 1;
+                }
+
+                wcscpy(pszSharePath, &ptr[1]);
+            }
+
+            len = ((INT_PTR)ptr - (INT_PTR)argv[i]) / sizeof(WCHAR);
+            pszShareName = HeapAlloc(GetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     (len + 1) * sizeof(WCHAR));
+            if (pszShareName == NULL)
+            {
+                // FIXME: Proper error code!
+                return 1;
+            }
+
+            wcsncpy(pszShareName, argv[i], len);
+        }
+        else
+        {
+            len = wcslen(argv[i]);
+            pszShareName = HeapAlloc(GetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     (len + 1) * sizeof(WCHAR));
+            if (pszShareName == NULL)
+            {
+                // FIXME: Proper error code!
+                return 1;
+            }
+
+            wcscpy(pszShareName, argv[i]);
+        }
+
         i++;
     }
 
@@ -117,18 +166,54 @@ cmdShare(
             PrintNetMessage(MSG_SHARE_HELP);
             return 0;
         }
+        else if (_wcsicmp(argv[i], L"/delete") == 0)
+        {
+            bDelete = TRUE;
+        }
     }
 
-    if (pShareName == NULL)
+    printf("pszShareName: '%S'\n", pszShareName);
+    printf("pszSharePath: '%S'\n", pszSharePath);
+
+    if (pszShareName == NULL && pszSharePath == NULL)
     {
         Status = EnumerateShares();
         ConPrintf(StdOut, L"Status: %lu\n", Status);
     }
-    else
+    else if (pszShareName != NULL && pszSharePath == NULL)
     {
-        Status = DisplayShare(pShareName);
+        if (bDelete == TRUE)
+        {
+            Status = NetShareDel(NULL,
+                                 pszShareName,
+                                 0);
+        }
+        else
+        {
+            Status = DisplayShare(pszShareName);
+        }
+
         ConPrintf(StdOut, L"Status: %lu\n", Status);
     }
+    else if (pszShareName != NULL && pszSharePath != NULL)
+    {
+        ZeroMemory(&ShareInfo, sizeof(SHARE_INFO_2));
+        ShareInfo.shi2_netname = pszShareName;
+        ShareInfo.shi2_path = pszSharePath;
+
+        Status = NetShareAdd(NULL,
+                             2,
+                             (LPBYTE)&ShareInfo,
+                             NULL);
+
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
+    }
+
+    if (pszSharePath != NULL)
+        HeapFree(GetProcessHeap(), 0, pszSharePath);
+
+    if (pszShareName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszShareName);
 
     return result;
 }
