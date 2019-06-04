@@ -71,7 +71,7 @@ GetClipboardFormatNameA(UINT format,
             /* clear result string */
             Length = 0;
         }
-        lpszFormatName[Length] = '\0';
+        lpszFormatName[Length] = ANSI_NULL;
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
@@ -97,7 +97,7 @@ UINT
 WINAPI
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
-    UINT ret = 0;
+    UINT ret;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -106,19 +106,21 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
-    if (*lpszFormat == 0) //NULL
+    if (*lpszFormat == ANSI_NULL)
     {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
-    ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
-    if (ret)
+    if (!RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat))
     {
-        ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
-        RtlFreeUnicodeString(&usFormat);
+        // FIXME: Shouldn't we 'SetLastError(ERROR_NOT_ENOUGH_MEMORY);'?
+        return 0;
     }
+
+    ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
+
+    RtlFreeUnicodeString(&usFormat);
 
     return ret;
 }
@@ -130,7 +132,6 @@ UINT
 WINAPI
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-    UINT ret = 0;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -139,17 +140,14 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
-    if (*lpszFormat == 0) //NULL
+    if (*lpszFormat == UNICODE_NULL)
     {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
     RtlInitUnicodeString(&usFormat, lpszFormat);
-    ret = NtUserRegisterWindowMessage(&usFormat);
-
-    return ret;
+    return NtUserRegisterWindowMessage(&usFormat);
 }
 
 static PVOID WINAPI
