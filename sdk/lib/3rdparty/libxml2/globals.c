@@ -537,7 +537,7 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
     gs->xmlDefaultSAXLocator.getColumnNumber = xmlSAX2GetColumnNumber;
     gs->xmlDoValidityCheckingDefaultValue =
          xmlDoValidityCheckingDefaultValueThrDef;
-#if defined(DEBUG_MEMORY_LOCATION) | defined(DEBUG_MEMORY)
+#if defined(DEBUG_MEMORY_LOCATION) || defined(DEBUG_MEMORY)  /* __REACTOS__: Use logical '||'. */
     gs->xmlFree = (xmlFreeFunc) xmlMemFree;
     gs->xmlMalloc = (xmlMallocFunc) xmlMemMalloc;
     gs->xmlMallocAtomic = (xmlMallocFunc) xmlMemMalloc;
