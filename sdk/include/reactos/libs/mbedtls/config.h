@@ -1897,8 +1897,8 @@
  *
  * This module provides debugging functions.
  */
-#if DBG & 0
- #define MBEDTLS_DEBUG_C /* swyter: we don't even need this level of verboseness, useful only when developing */
+#ifndef __REACTOS__
+#define MBEDTLS_DEBUG_C
 #endif
 
 /**
