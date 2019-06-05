@@ -1157,9 +1157,15 @@ Traverse(FTPCIPtr cip, char *fullpath, struct Stat *st, char *relpath, FileInfoL
 		}
 
 next:
+#ifndef __REACTOS__
 #if _DEBUG
 		memset(&ffd, 0, sizeof(ffd));
 #endif
+#else //  __REACTOS__
+#ifdef _DEBUG
+		memset(&ffd, 0, sizeof(ffd));
+#endif
+#endif //  __REACTOS__
 		if (!FindNextFile(searchHandle, &ffd)) {
 			dwErr = GetLastError();
 			if (dwErr != ERROR_NO_MORE_FILES) {
