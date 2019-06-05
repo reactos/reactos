@@ -1,10 +1,10 @@
-                                                                              #ifndef _DXERR9_H_
+
+#ifndef _DXERR9_H_
 #define _DXERR9_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 const char*  WINAPI DXGetErrorString9A(HRESULT hr);
 const char*  WINAPI DXGetErrorDescription9A(HRESULT hr);
@@ -24,8 +24,7 @@ HRESULT WINAPI DXTraceW( const char* strFile, DWORD dwLine, HRESULT hr, const WC
   #define DXTrace DXTraceA
 #endif
 
-
-#if defined(DEBUG) | defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
   #define DXTRACE_MSG(str)                  DXTrace( __FILE__, (DWORD)__LINE__, 0, str, FALSE )
   #define DXTRACE_ERR(str,hr)               DXTrace( __FILE__, (DWORD)__LINE__, hr, str, FALSE )
   #define DXTRACE_ERR_MSGBOX(str,hr)        DXTrace( __FILE__, (DWORD)__LINE__, hr, str, TRUE )
@@ -35,10 +34,8 @@ HRESULT WINAPI DXTraceW( const char* strFile, DWORD dwLine, HRESULT hr, const WC
   #define DXTRACE_ERR_MSGBOX(str,hr)        (hr)
 #endif
 
-
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
