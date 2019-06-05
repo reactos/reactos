@@ -86,7 +86,7 @@ BlStatusPrint (
 
     /* Check if the boot debugger is enabled */
     if (BlBdDebuggerEnabled()
-#if (defined(DBG))
+#if DBG
         || TRUE
 #endif
     )
@@ -94,7 +94,7 @@ BlStatusPrint (
         /* Print the string out into a buffer */
         if (vswprintf(BlScratchBuffer, Format, va) > 0)
         {
-#if defined(DBG)
+#if DBG
             EfiPrintf(BlScratchBuffer);
             EfiPrintf(L"\r\n");
 #endif
