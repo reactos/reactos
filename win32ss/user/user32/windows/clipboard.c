@@ -114,7 +114,7 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
 
     if (!RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat))
     {
-        // FIXME: Shouldn't we 'SetLastError(ERROR_NOT_ENOUGH_MEMORY);'?
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
