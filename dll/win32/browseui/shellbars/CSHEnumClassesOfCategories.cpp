@@ -337,6 +337,9 @@ extern "C" HRESULT WINAPI SHEnumClassesOfCategories(ULONG cImplemented, CATID *p
 {
     HRESULT hr;
 
+    if (!out)
+        return E_INVALIDARG;
+
     hr = ShellObjectCreatorInit<CSHEnumClassesOfCategories>(
             cImplemented, pImplemented, cRequired, pRequired, IID_PPV_ARG(IEnumGUID, out));
     if (FAILED_UNEXPECTEDLY(hr))
