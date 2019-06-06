@@ -1743,8 +1743,107 @@ PNP_GetClassInstance(
     LPWSTR pszClassInstance,
     PNP_RPC_STRING_LEN ulLength)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    WCHAR szClassGuid[40];
+    WCHAR szClassInstance[5];
+    HKEY hDeviceClassKey = NULL;
+    HKEY hClassInstanceKey;
+    ULONG ulTransferLength, ulDataLength;
+    DWORD dwDataType, dwDisposition, i;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_GetClassInstance(%p %S %p %lu)\n",
+           hBinding, pDeviceId, pszClassInstance, ulLength);
+
+    ulTransferLength = ulLength;
+    ret = PNP_GetDeviceRegProp(hBinding,
+                               pDeviceId,
+                               CM_DRP_DRIVER,
+                               &dwDataType,
+                               (BYTE *)pszClassInstance,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret == CR_SUCCESS)
+        return ret;
+
+    ulTransferLength = sizeof(szClassGuid);
+    ulDataLength = sizeof(szClassGuid);
+    ret = PNP_GetDeviceRegProp(hBinding,
+                               pDeviceId,
+                               CM_DRP_CLASSGUID,
+                               &dwDataType,
+                               (BYTE *)szClassGuid,
+                               &ulTransferLength,
+                               &ulDataLength,
+                               0);
+    if (ret != CR_SUCCESS)
+    {
+        DPRINT1("PNP_GetDeviceRegProp() failed (Error %lu)\n", ret);
+        goto done;
+    }
+
+    dwError = RegOpenKeyExW(hClassKey,
+                            szClassGuid,
+                            0,
+                            KEY_READ,
+                            &hDeviceClassKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+        ret = CR_FAILURE;
+        goto done;
+    }
+
+    for (i = 0; i < 10000; i++)
+    {
+        wsprintf(szClassInstance, L"%04lu", i);
+
+        dwError = RegCreateKeyExW(hDeviceClassKey,
+                                  szClassInstance,
+                                  0,
+                                  NULL,
+                                  REG_OPTION_NON_VOLATILE,
+                                  KEY_ALL_ACCESS,
+                                  NULL,
+                                  &hClassInstanceKey,
+                                  &dwDisposition);
+        if (dwError == ERROR_SUCCESS)
+        {
+            RegCloseKey(hClassInstanceKey);
+
+            if (dwDisposition == REG_CREATED_NEW_KEY)
+            {
+                wsprintf(pszClassInstance,
+                         L"%s\\%s",
+                         szClassGuid,
+                         szClassInstance);
+
+                ulDataLength = (wcslen(pszClassInstance) + 1) * sizeof(WCHAR);
+                ret = PNP_SetDeviceRegProp(hBinding,
+                                           pDeviceId,
+                                           CM_DRP_DRIVER,
+                                           REG_SZ,
+                                           (BYTE *)pszClassInstance,
+                                           ulDataLength,
+                                           0);
+                if (ret != CR_SUCCESS)
+                {
+                    DPRINT1("PNP_SetDeviceRegProp() failed (Error %lu)\n", ret);
+                    RegDeleteKeyW(hDeviceClassKey,
+                                  szClassInstance);
+                }
+
+                break;
+            }
+        }
+    }
+
+done:
+    if (hDeviceClassKey != NULL)
+        RegCloseKey(hDeviceClassKey);
+
+    return ret;
 }
 
 
