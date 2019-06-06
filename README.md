@@ -43,7 +43,9 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 The ReactOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
 
 The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
-***ReactOS is currently an Alpha quality software which means the operating system is under heavy development, things may not work well and it can corrupt the data present on the hard disk. It's recommended to test the operating system on a virtual machine or on a computer with no sensitive and credential data!***
+
+***ReactOS is currently an Alpha quality software. This means that the operating system is under heavy development, things may not work well and it can corrupt the data present on your hard disk. It is recommended to test the operating system on a virtual machine or on a computer with no sensitive and credential data!***
+
 ## Building
 
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
