@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Explorer-New
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/shell/explorer/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for ReactOS Explorer-New
- * TRANSLATOR: Artem Reznikov & Sakara Yevhen
+ * PROJECT:     ReactOS Explorer-New
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/shell/explorer/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Explorer-New
+ * TRANSLATORS: Artem Reznikov & Sakara Yevhen & Yaroslav Kibysh
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -60,7 +60,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Довідка та підтримка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Запуск про&грами...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Виконати...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Син&хронізація", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "Завер&шення сеансу %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
@@ -82,10 +82,10 @@ BEGIN
     AUTOCHECKBOX "&Поверх інших вікон", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Групувати схожі кнопки", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Відображати панель &швидкого запуску", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    GROUPBOX "Notification area", IDC_STATIC, 6, 114, 240, 98
+    GROUPBOX "Область сповіщень", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "&Годинник", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Show seconds", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "Показувати секунди", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Можна уникнути захаращення області повідомлень, приховуючи значки, які давно не використовувалися.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "&Приховувати невживані значки", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
@@ -108,86 +108,86 @@ END
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Customize Notifications"
+CAPTION "Налаштувати сповіщення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS displays icons for active and urgent notifications, and hides inactive ones. You can change this behavior for items in the list below.", IDC_STATIC, 6, 6, 220, 30
-    LTEXT            "Select an item, then choose its notification behavior:", IDC_STATIC, 6, 40, 220, 10
+    LTEXT            "ReactOS відображає іконки для активних і термінових повідомлень і приховує неактивні. Ви можете змінити цю поведінку для елементів у списку нижче.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Виберіть елемент, а потім виберіть поведінку його сповіщення:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
-    PUSHBUTTON       "&Restore Defaults", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
+    PUSHBUTTON       "&За замовчуванням", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
-    PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
+    PUSHBUTTON       "Скасувати", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Customize Classic Start Menu"
+CAPTION "Налаштувати класичне меню ""Пуск"""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Start menu", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "Головне меню", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "You can customize your Start menu by adding or removing items.", IDC_STATIC, 48, 17, 108, 39
-    PUSHBUTTON       "A&dd...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
-    PUSHBUTTON       "&Remove...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
-    PUSHBUTTON       "Ad&vanced", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
-    PUSHBUTTON       "&Sort", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    LTEXT            "Ви можете налаштувати меню ""Пуск"", додаючи або видаляючи елементи.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "&Додати...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "&Видалити...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "Д&одатково", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "&Сортувати", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "To remove records of recently accessed documents, programs, and Web sites, click Clear.", IDC_STATIC, 49, 85, 108, 33
-    PUSHBUTTON       "&Clear", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "Advanced S&tart menu options:", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "Щоб видалити історію недавніх документів, програм і веб-сайтів, натисніть кнопку Очистити.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON       "&Очистити", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "Додаткові налаштування го&ловного меню", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
-    PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
+    PUSHBUTTON       "Скасувати", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "File Name Warning"
+CAPTION "Попередження щодо імені файлу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON    "&Ignore", IDIGNORE, 215, 60, 50, 14
-    PUSHBUTTON       "&Rename", IDC_FILE_RENAME, 159, 60, 50, 14
+    DEFPUSHBUTTON    "&Ігнорувати", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "&Перейменувати", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "&Don't perform this check at startup", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "&Не проводити цю перевірку під час запуску", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "There is a file or folder on your computer called %s which could cause certain applications to not function correctly.  Renaming it to %s would solve this problem.  Would you like to rename it now?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "На вашому комп'ютері є файл, який називається %s що може пошкодити роботу деяких програм. Вирішити проблему можна перейменшувавши його в %s. Зробити це зараз?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
-CAPTION "Advanced"
+CAPTION "Додатково"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Start menu settings ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "&Open submenus when I pause on them with my mouse", IDC_AUTOOPEN, 14, 21, 224, 10
-    AUTOCHECKBOX     "Highlight &newly installed programs", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "Start &menu items:", IDC_STATIC, 7, 53, 238, 8
+    GROUPBOX         "Налаштування головного меню ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Відкрийте підменю, коли я зупиняю курсор на них", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "Виділяти &нещодавно встановлені програми", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT            "Елементи головного м&еню:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
-    GROUPBOX         "Recent documents ", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "Select this option to provide quick access to the documents you opened most recently.  Clearing this list does not delete the documents.", IDC_STATIC, 14, 144, 224, 21
-    AUTOCHECKBOX     "List my most &recently opened documents", IDC_RECENTLY, 14, 168, 147, 10
-    PUSHBUTTON       "&Clear List", IDC_CLEAR, 182, 168, 55, 14
+    GROUPBOX         "Останні документи ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT            "Виберіть цей параметр, щоб забезпечити швидкий доступ до документів, які ви нещодавно відкрили.  Очищення цього списку не видаляє документи.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX     "Список мої&х останніх відкритих документів", IDC_RECENTLY, 14, 168, 147, 10
+    PUSHBUTTON       "&Очистити список", IDC_CLEAR, 182, 168, 55, 14
 END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "General"
+CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Select an icon size for programs ", IDC_STATIC, 7, 7, 238, 37
+    GROUPBOX         "Виберіть розмір значків для програм ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
-    AUTORADIOBUTTON  "&Large icons", IDC_CHOOSELARGE, 43, 25, 53, 10
-    AUTORADIOBUTTON  "&Small icons", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
-    GROUPBOX         "Programs ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "The Start menu contains shortcuts to the programs you use most often.  Clearing the list of shortcuts does not delete the programs.", IDC_STATIC, 14, 63, 224, 20
-    LTEXT            "&Number of programs on Start menu:", IDC_STATIC, 14, 86, 112, 8
+    AUTORADIOBUTTON  "&Великі значки", IDC_CHOOSELARGE, 43, 25, 53, 10
+    AUTORADIOBUTTON  "&Маленькі значки", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
+    GROUPBOX         "Програми ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT            "Меню ""Пуск"" містить ярлики програм, які ви використовуєте найчастіше. Видалення списку ярликів не видаляє програми.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "&Кількість програм в меню ""Пуск"":", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
-    PUSHBUTTON       "&Clear List", IDC_CLEARLIST, 182, 98, 57, 14
-    GROUPBOX         "Show on Start menu ", IDC_STATIC, 7, 126, 238, 63
-    AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    PUSHBUTTON       "&Очистити список", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX         "Показувати в меню ""Пуск"" ", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX     "&Інтернет:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
@@ -199,11 +199,11 @@ BEGIN
     IDS_PROPERTIES "В&ластивості"
     IDS_OPEN_ALL_USERS "&Всі користувачі"
     IDS_EXPLORE_ALL_USERS "&Огляд всіх користувачів"
-    IDS_STARTUP_ERROR "Система не може стартувати explorer, оскільки реєстр пошкоджений або відсутній."
+    IDS_STARTUP_ERROR "Система не може запустити Провідник, оскільки реєстр пошкоджений або відсутній."
 END
 
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Властивості меню Пуск та Панелі завдань"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "&Показати відкриті вікна"
 END
