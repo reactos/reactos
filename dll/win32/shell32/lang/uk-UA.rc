@@ -44,18 +44,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Скасувати\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "&Вирізати\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Копіювати\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "Вс&тавити\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Копіювати до &папки...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Перемістити до п&апки...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "О&брати все\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Обернути виділення", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Вирізати", IDM_CUT
         MENUITEM "&Копіювати", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Вст&авити", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Створити &ярлик", IDM_CREATELINK
         MENUITEM "В&идалити", IDM_DELETE
@@ -80,17 +80,17 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Копіювати сюди", IDM_COPYHERE
+        MENUITEM "&Вставити сюди", IDM_MOVEHERE
+        MENUITEM "Створити &ярлики тут", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Скасувати", 0
     END
 END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Огляд тек"
+CAPTION "Огляд папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -102,15 +102,15 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Огляд тек"
+CAPTION "Огляд папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Тека:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
+    LTEXT "Папка:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Створити &теку", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Створити &папку", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Скасувати", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
@@ -168,7 +168,7 @@ CAPTION "Виконати"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Введіть ім'я програми, теки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
+    LTEXT "Введіть ім'я програми, папки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
     LTEXT "&Відкрити:", 12305, 7, 39, 32, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 43, 37, 177, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
@@ -226,13 +226,13 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
     LTEXT "Тип файлу:", 14004, 8, 40, 55, 10
-    CONTROL "Тека", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
+    CONTROL "Папка", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Розташування:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Розмір:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "На диску:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Містить:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -244,7 +244,7 @@ BEGIN
     AUTOCHECKBOX "Лише &читання", 14021, 58, 151, 70, 10
     AUTOCHECKBOX "При&хована", 14022, 126, 151, 70, 10
     AUTOCHECKBOX "&Архівний", 14023, 181, 151, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Додатково...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -266,7 +266,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Розмір:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "На диску:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Створено:", 14014, 8, 131, 45, 10
@@ -280,7 +280,7 @@ BEGIN
     AUTOCHECKBOX "Лише &читання", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "При&хований", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Архівний", 14023, 181, 188, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "&Додатково...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -382,14 +382,14 @@ END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Властивості Кошика"
+CAPTION "Властивості кошика"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Налаштування для вибраного розташування", -1, 10, 72, 220, 70
     RADIOBUTTON "&Особливий розмір:", 14001, 20, 90, 92, 10, WS_TABSTOP
     EDITTEXT 14002, 120, 100, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "&Максимальний розмір(Мб):", -1, 20, 105, 100, 10
+    LTEXT "&Максимальний розмір (мб):", -1, 20, 105, 100, 10
     RADIOBUTTON "Не переміщ&увати файли до кошика, а видаляти їх остаточно відразу", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 165, 10, WS_TABSTOP
 END
@@ -418,8 +418,8 @@ BEGIN
     GROUPBOX "Завдання", -1, 7, 10, 249, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "&Показувати список типових завдань у теках", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Використовувати зви&чайні теки ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 149, 10
-    GROUPBOX "Огляд тек", -1, 7, 60, 249, 45, WS_TABSTOP
+    AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 149, 10
+    GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 155, 10
@@ -619,10 +619,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Зміна значка"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Значки в цьому файлі:", -1, 7, 7, 179, 10
     PUSHBUTTON "О&гляд...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Виберіть значок зі списку нижче:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 135, 179, 50, 14
@@ -630,87 +630,87 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Увага"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "Цей файл може використувавтись операційною системою або\n\
+іншою програмою. Зміна цього файлу може пошкодити вашу\n\
+систему або зіпсувати її функціонал.\n\n\
+Ви впевнені, що хочете відкрити цей файл?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Так", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Ні", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Створити нове розширення"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Розширення файлу:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< &Додатково", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Пов'язаний тип файлу:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "Редагувати тип файлу"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Змінити &значок...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&Дії:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    PUSHBUTTON "&Новий...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Редагувати...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Видалити", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "&Зробити стандартним", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "Підтвердженн&я відкриття після завантаження", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "З&авжди показувати розширення", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "&Огляд в однаковому вікні", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "Нова дія"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "&Дія:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "П&рограма для виконання дії:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    PUSHBUTTON "&Огляд...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&Використовувати DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Налаштувати"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Який тип папки ви хочете?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "Використовувати цей &тип папки як шаблон:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    AUTOCHECKBOX "&Застосувати цей шаблон до всіх вкладених папок", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Картинки папки", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Для перегляду ескізів ви можете помістити зображення в цю папку, щоб нагадати вам про вміст.", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "Вибрати з&ображення...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "З&а замовчування", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    LTEXT "Перегляд:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Значки папки", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Для всіх видів, окрім мініатюр, можна змінити стандартний ""значок папки"" на інший.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "Змінити &значок...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -746,10 +746,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Адміністрування"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Налаштувати адміністративні параметри для вашого комп'ютера."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Налаштувати відображення файлів і папок і змінюйте асоціації файлів."
+    IDS_FONTS_DESCRIPTION "Додати, змінити або керувати шрифтами на комп'ютері."
+    IDS_PRINTERS_DESCRIPTION "Показує встановлені принтери та принтери факсів і допомагає додавати нові."
 
     /* context menus */
     IDS_VIEW_LARGE "&Великі значки"
@@ -767,11 +767,11 @@ BEGIN
     IDS_FORMATDRIVE "Форматувати..."
     IDS_RENAME "Перейменувати"
     IDS_PASTE "Вставити"
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
+    IDS_EJECT "Витягнути"
+    IDS_DISCONNECT "Відключити"
 
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
+    IDS_CREATEFOLDER_DENIED "Не вдалося створити папку '%1'"
+    IDS_CREATEFOLDER_CAPTION "Не вдалося створити папку"
     IDS_DELETEITEM_CAPTION "Підтвердження вилучення файлу"
     IDS_DELETEFOLDER_CAPTION "Підтвердження вилучення папки"
     IDS_DELETEITEM_TEXT "Ви дійсно бажаєте видалити '%1'?"
@@ -782,39 +782,39 @@ BEGIN
     IDS_TRASHMULTIPLE_TEXT "Ви дійсно бажаєте перемістити ці об'єкти (%1 шт.) до кошика?"
     IDS_CANTTRASH_TEXT "Об'єкт '%1' не можна перемістити до кошика. Бажаєте видалити його?"
     IDS_OVERWRITEFILE_TEXT "Ця папка вже містить файл з ім'ям '%1'.\n\nБажаєте замінити його?"
-    IDS_OVERWRITEFILE_CAPTION "Підтвердження Перезапису Файлу"
+    IDS_OVERWRITEFILE_CAPTION "Підтвердження перезапису файлу"
     IDS_OVERWRITEFOLDER_TEXT "Ця папка вже містить папку з ім'ям '%1'.\n\nЯкщо файли в папці призначення мають ті ж імена, що файли у вибраній папці,\nвони будуть замінені. Ви все ще бажаєте перемістити або\nскопіювати папку?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Копіювання..."
+    IDS_FILEOOP_MOVING "Переміщення..."
+    IDS_FILEOOP_DELETING "Видалення..."
+    IDS_FILEOOP_FROM_TO "З %1 до %2"
+    IDS_FILEOOP_FROM "З %1"
+    IDS_FILEOOP_PREFLIGHT "Попередній перегляд"
 
     /* message box strings */
     IDS_RESTART_TITLE "Перезавантажити"
-    IDS_RESTART_PROMPT "Ви хочете перезавантажити систему?"
+    IDS_RESTART_PROMPT "Ви бажаєте перезавантажити систему?"
     IDS_SHUTDOWN_TITLE "Вимкнути"
-    IDS_SHUTDOWN_PROMPT "Ви хочете вимкнути комп'ютер?"
+    IDS_SHUTDOWN_PROMPT "Ви бажаєте вимкнути комп'ютер?"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Форматування локального диску"
+    IDS_FORMAT_WARNING "УВАГА: Форматування видалить ВСЮ інформацію на диску.\nЩоб розпочати форматування, натисніть OK. Щоб вийти, натисніть СКАСУВАТИ."
+    IDS_FORMAT_COMPLETE "Форматування завершено."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Неможливо відобразити Діалог Запуску Файлу (внутрішня помилка)"
-    IDS_RUNDLG_BROWSE_ERROR "Неможливо відобразити Діалог Огляду (внутрішня помилка)"
+    IDS_RUNDLG_ERROR "Неможливо відобразити діалог запуску файлу (внутрішня помилка)"
+    IDS_RUNDLG_BROWSE_ERROR "Неможливо відобразити діалог огляду (внутрішня помилка)"
     IDS_RUNDLG_BROWSE_CAPTION "Огляд"
-    IDS_RUNDLG_BROWSE_FILTER "Виконувані Файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Виконувані файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PROGRAMS "Головне меню\\Програми"
     IDS_PERSONAL "Мої документи"
     IDS_FAVORITES "Обране"
-    IDS_STARTUP "Start Menu\\Programs\\StartUp"
-    IDS_RECENT "Recent"
+    IDS_STARTUP "Головне меню\\Програми\\Автозапуск"
+    IDS_RECENT "Останні документи"
     IDS_SENDTO "Надіслати"
     IDS_STARTMENU "Головне меню"
     IDS_MYMUSIC "Моя музика"
@@ -832,7 +832,7 @@ BEGIN
     IDS_MYPICTURES "Мої малюнки"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Загальні документи"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools" // "Головне меню\\Програми\\Службові"
+    IDS_ADMINTOOLS "Головне меню\\Програми\\Службові"
     IDS_COMMON_MUSIC "Загальні документи\\Моя музика"
     IDS_COMMON_PICTURES "Загальні документи\\Мої малюнки"
     IDS_COMMON_VIDEO "Загальні документи\\Мої відеозаписи"
@@ -842,36 +842,36 @@ BEGIN
     IDS_NEWFOLDER "Нова папка"
 
     IDS_DRIVE_FIXED "Локальний диск"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Привід компакт-дисків"
     IDS_DRIVE_NETWORK "Мережний диск"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_FLOPPY "Дисковод 3.5"
+    IDS_DRIVE_REMOVABLE "Знімний диск"
+    IDS_FS_UNKNOWN "Невідомо"
 
     /* Open With */
     IDS_OPEN_WITH "Відкрити за допомогою"
     IDS_OPEN_WITH_CHOOSE "Вибрати програму..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED "Рекомендовані програми:"
+    IDS_OPEN_WITH_OTHER "Інші програми:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Автори"
     IDS_SHELL_ABOUT_BACK "< &Назад"
     FCIDM_SHVIEW_NEW "Створити"
     FCIDM_SHVIEW_NEWFOLDER "&Папку"
     FCIDM_SHVIEW_NEWLINK "&Ярлик"
-    IDS_FOLDER_OPTIONS "Властивості теки"
-    IDS_RECYCLEBIN_LOCATION "Розташування Кошика"
+    IDS_FOLDER_OPTIONS "Властивості папки"
+    IDS_RECYCLEBIN_LOCATION "Розташування кошика"
     IDS_RECYCLEBIN_DISKSPACE "Доступний простір"
-    IDS_EMPTY_BITBUCKET "Очистити Кошик"
+    IDS_EMPTY_BITBUCKET "Очистити кошик"
     IDS_PICK_ICON_TITLE "Вибрати значок"
-    IDS_PICK_ICON_FILTER "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Всі Файли (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Файли значків (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Всі файли (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Виконувані файли (*.exe)\0*.exe\0Всі Файли (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
-    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_CANTLOCKVOLUME "Не вдалось заблокувати том (код помилки: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Не вдалось відкючити том (код помилки: %lu)."
+    IDS_CANTEJECTMEDIA "Не вдалось відключити носій (код помилки: %lu)."
+    IDS_CANTSHOWPROPERTIES "Не вдалось відкрити властивості (код помилки: %lu)."
+    IDS_CANTDISCONNECT "Не вдалось відключити (код помилки: %lu)."
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка"
@@ -886,21 +886,21 @@ BEGIN
     IDS_EFI_FILE "Extensible Firmware Interface Executable"
     IDS_EXE_FILE "Додаток"
     IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
+    IDS_OCX_FILE "Елемент ActiveX"
     IDS_TLB_FILE "Type Library"
     IDS_FON_FILE "Файл шрифту"
     IDS_TTF_FILE "Файл шрифту TrueType"
     IDS_OTF_FILE "Файл шрифту OpenType"
     IDS_HLP_FILE "Файл довідки"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "Значок"
     IDS_INI_FILE "Файл налаштувань"
     IDS_LNK_FILE "Ярлик"
-    IDS_NT__FILE "NT DOS32 Configuration File"
-    IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
+    IDS_NT__FILE "Файл конфігурації NT DOS32"
+    IDS_PIF_FILE "Інформація про програму NT VDM"
+    IDS_SCR_FILE "Заставка"
     IDS_SYS_FILE "Системний файл"
     IDS_VXD_FILE "Драйвер віртуального пристрою"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-файл"
 
     IDS_OPEN_VERB "Відкрити"
     IDS_EXPLORE_VERB "Відкрити в дереві"
@@ -917,7 +917,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Розмір кластера за замовчуванням"
     IDS_COPY_OF "Копія"
 
-    IDS_SHLEXEC_NOASSOC "Немає програми ReactOS, сконфігурованої для відкриття цього типу файлів."
+    IDS_SHLEXEC_NOASSOC "Немає програм для відкриття цього типу файлів."
 
     IDS_FILE_DETAILS "Подробиці для розширення '%s'"
     IDS_FILE_DETAILSADV "Файли з розширенням '%s' мають тип '%s'. Щоб змінити параметри, які впливатимуть на всі файли '%s', натисніть кнопку 'Додатково'."
@@ -926,50 +926,50 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "Файл %s"
 
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "байт"
+    IDS_UNKNOWN_APP "Невідома програма"
+    IDS_EXE_DESCRIPTION "Опис:"
 
-    IDS_MENU_EMPTY "(Empty)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_MENU_EMPTY "(Пусто)"
+    IDS_OBJECTS "%d об'єктів"
+    IDS_OBJECTS_SELECTED "Обрано %d об'єктів"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "Файли та папки"
+    IDS_ADVANCED_NET_CRAWLER "Автоматично знаходити мережеві папки і принтери"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Показувати розмір файлу в підказках папки"
+    IDS_ADVANCED_FRIENDLY_TREE "Простий перегляд папок в списку папок провідника"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Показувати вміст системних папок"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Показувати повний шлях в адресному рядку"
+    IDS_ADVANCED_SHOW_FULL_PATH "Показувати повний шлях в заголовку"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Не кешувати ескізи"
+    IDS_ADVANCED_HIDDEN "Приховані файли та папки"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Не показувати приховані файли та папки"
+    IDS_ADVANCED_SHOW_HIDDEN "Показувати приховані файли та папки"
+    IDS_ADVANCED_HIDE_FILE_EXT "Приховувати розширення відомих типів файлів"
+    IDS_ADVANCED_SUPER_HIDDEN "Приховувати захищені файли операційної системи (рекомендовано)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Запускати папки в окремих процесах"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Пам'ятати налаштування кожної папки"
+    IDS_ADVANCED_PERSIST_BROWSERS "Відновлювати відкриті папки після входу в систему"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Показувати панель керування в моєму комп'ютері"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Показувати зашифровані або зжаті файли NTFS іншим кольором"
+    IDS_ADVANCED_SHOW_INFO_TIP "Показувати спливаючий опис для елементів папки та робочого столу"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< &Додатково"
+    IDS_NEWEXT_ADVANCED_RIGHT "&Додатково >>"
+    IDS_NEWEXT_NEW "<Новий>"
+    IDS_NEWEXT_SPECIFY_EXT "Ви повинні обрати розширення."
+    IDS_NEWEXT_ALREADY_ASSOC "Розришення %s вже пов'язано з типом файлу %s. Ви хочете відв'язати %s і %s і створити новий тип файлу?"
+    IDS_NEWEXT_EXT_IN_USE "Розширення використовується"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_REMOVE_EXT "Якщо видалити розширення з зареєстрованим файлом, ви не зможете відкривати файли з цим розширенням, двічі клацнувши їх значки.\n\nВи дійсно хочете видалити це розширення?"
+    IDS_SPECIFY_ACTION "Ви маєте вказати дію."
+    IDS_INVALID_PROGRAM "Не вдалося знайти вказану програму. Переконайтеся, що ім'я файлу та шлях правильні."
+    IDS_REMOVE_ACTION "Ви дійсно хочете видалити цю дію"
+    IDS_ACTION_EXISTS "Дія '%s' вже зареєстрована для цього типу. Введіть інше ім'я та спробуйте ще раз."
+    IDS_EXE_FILTER "Програми\0*.exe\0Всі файли\0*.*\0"
+    IDS_EDITING_ACTION "Редагування дії для типу: "
+    IDS_NO_ICONS "Файл '%s' не містить значків.\n\nВиберіть значок зі списку або відкрийте інший файл."
+    IDS_FILE_NOT_FOUND "Файд '%s' не знайдено."
 END
