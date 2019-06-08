@@ -57,12 +57,12 @@ KSPIN_LOCK MiniportListLock;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
 
+#if DBG
 VOID
 MiniDisplayPacket(
     PNDIS_PACKET Packet,
     PCSTR Reason)
 {
-#if DBG
     ULONG i, Length;
     UCHAR Buffer[64];
     if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
@@ -82,9 +82,9 @@ MiniDisplayPacket(
 
         DbgPrint("\n*** %s PACKET STOP ***\n", Reason);
     }
-#endif /* DBG */
 }
 
+static
 VOID
 MiniDisplayPacket2(
     PVOID  HeaderBuffer,
@@ -92,7 +92,6 @@ MiniDisplayPacket2(
     PVOID  LookaheadBuffer,
     UINT   LookaheadBufferSize)
 {
-#if DBG
     if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
         ULONG i, Length;
         PUCHAR p;
@@ -118,8 +117,8 @@ MiniDisplayPacket2(
 
         DbgPrint("\n*** RECEIVE PACKET STOP ***\n");
     }
-#endif /* DBG */
 }
+#endif /* DBG */
 
 PNDIS_MINIPORT_WORK_ITEM
 MiniGetFirstWorkItem(
@@ -201,7 +200,9 @@ MiniIndicateData(
       "HeaderBufferSize (0x%X)  LookaheadBuffer (0x%X)  LookaheadBufferSize (0x%X).\n",
       Adapter, HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize));
 
+#if DBG
   MiniDisplayPacket2(HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize);
+#endif
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
