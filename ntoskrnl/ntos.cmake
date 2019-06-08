@@ -369,11 +369,12 @@ if(NOT _WINKD_)
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdmemsup.c
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/gdbstub.c)
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdmemsup.c)
         if(KDBG)
             list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/kdb_help.S)
-            list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
+            list(APPEND SOURCE
+                ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/gdbstub.c
+                ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
         endif()
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE
@@ -394,6 +395,11 @@ if(NOT _WINKD_)
 
     if(KDBG)
         list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/bochs.c
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdinit.c
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_cli.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_expr.c
@@ -401,13 +407,6 @@ if(NOT _WINKD_)
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_serial.c
             ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/kdb_symbols.c)
     endif()
-
-    list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/bochs.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdinit.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
 
 else() # _WINKD_
 
