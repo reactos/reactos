@@ -404,7 +404,9 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
       return NDIS_STATUS_PENDING;
    }
 
+#if DBG
    MiniDisplayPacket(Packet, "SEND");
+#endif
 
    if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
    {
