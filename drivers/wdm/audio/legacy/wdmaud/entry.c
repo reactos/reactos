@@ -31,23 +31,16 @@ WdmAudInitWorkerRoutine(
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-
-    if (DeviceExtension->FileObject == NULL)
+    /* find available sysaudio devices */
+    Status = WdmAudOpenSysAudioDevices(DeviceObject, DeviceExtension);
+    if (!NT_SUCCESS(Status))
     {
-        /* find available sysaudio devices */
-        Status = WdmAudOpenSysAudioDevices(DeviceObject, DeviceExtension);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("WdmAudOpenSysAudioDevices failed with %x\n", Status);
-            return;
-        }
+        DPRINT1("WdmAudOpenSysAudioDevices failed with %x\n", Status);
+        return;
     }
-
 
     /* get device count */
     DeviceCount = GetSysAudioDeviceCount(DeviceObject);
-
-    DPRINT("WdmAudInitWorkerRoutine SysAudioDeviceCount %ld\n", DeviceCount);
 
     /* was a device added / removed */
     if (DeviceCount != DeviceExtension->SysAudioDeviceCount)
@@ -222,13 +215,6 @@ WdmAudCreate(
         return Status;
     }
 #endif
-
-    if (DeviceExtension->FileObject == NULL)
-    {
-        /* initialize */
-        WdmAudInitWorkerRoutine(DeviceObject, NULL);
-    }
-
 
     Status = WdmAudOpenSysaudio(DeviceObject, &pClient);
     if (!NT_SUCCESS(Status))

@@ -19,8 +19,6 @@
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-#define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
-
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;
 DWORD OpenCount = 0;
 

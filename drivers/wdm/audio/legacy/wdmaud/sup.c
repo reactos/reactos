@@ -44,8 +44,10 @@ GetSysAudioDeviceCount(
 {
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     KSPROPERTY Pin;
-    ULONG Count, BytesReturned;
+    ULONG Count, BytesReturned, DeviceCount;
     NTSTATUS Status;
+    PLIST_ENTRY Entry;
+    PSYSAUDIO_ENTRY DeviceEntry;
 
     /* setup the query request */
     Pin.Set = KSPROPSETID_Sysaudio;
@@ -54,11 +56,21 @@ GetSysAudioDeviceCount(
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    /* query sysaudio for the device count */
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
-    if (!NT_SUCCESS(Status))
-        return 0;
+    Count = 0;
+    Entry = DeviceExtension->SysAudioDeviceList.Flink;
+    while (Entry != &DeviceExtension->SysAudioDeviceList)
+    {
+        DeviceEntry = (PSYSAUDIO_ENTRY)CONTAINING_RECORD(Entry, SYSAUDIO_ENTRY, Entry);
 
+        /* query sysaudio for the device count */
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&DeviceCount, sizeof(ULONG), &BytesReturned);
+        if (!NT_SUCCESS(Status)) {
+            DPRINT1("KSPROPERTY_SYSAUDIO_DEVICE_COUNT failed with %x\n", Status);
+            return 0;
+        }
+        Count += DeviceCount;
+		Entry = Entry->Flink;
+    }
     return Count;
 }
 
@@ -361,8 +373,9 @@ GetSysAudioDevicePnpName(
 {
     ULONG BytesReturned;
     KSP_PIN Pin;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    PSYSAUDIO_ENTRY DeviceEntry;
 
    /* first check if the device index is within bounds */
    if (DeviceIndex >= GetSysAudioDeviceCount(DeviceObject))
@@ -376,8 +389,11 @@ GetSysAudioDevicePnpName(
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    // FIXME sysaudio contains all ks devices
+    DeviceEntry = (PSYSAUDIO_ENTRY)CONTAINING_RECORD(DeviceExtension->SysAudioDeviceList.Flink, SYSAUDIO_ENTRY, Entry);
+
     /* query sysaudio for the device path */
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), NULL, 0, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), NULL, 0, &BytesReturned);
 
     /* check if the request failed */
     if (Status != STATUS_BUFFER_TOO_SMALL || BytesReturned == 0)
@@ -389,7 +405,7 @@ GetSysAudioDevicePnpName(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* query sysaudio again for the device path */
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), (PVOID)*Device, BytesReturned, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), (PVOID)*Device, BytesReturned, &BytesReturned);
 
     if (!NT_SUCCESS(Status))
     {
@@ -397,7 +413,6 @@ GetSysAudioDevicePnpName(
         FreeItem(*Device);
         return Status;
     }
-
     return Status;
 }
 

@@ -146,7 +146,7 @@ SysAudio_AddDevice(
     /* Create the device */
     Status = IoCreateDevice(DriverObject,
                             sizeof(SYSAUDIODEVEXT),
-                            &DeviceName,
+                            NULL,
                             FILE_DEVICE_KS,
                             0,
                             FALSE,

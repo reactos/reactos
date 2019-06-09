@@ -46,6 +46,8 @@ typedef struct
 {
     LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
 }SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 
 typedef struct
@@ -58,8 +60,6 @@ typedef struct
     KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
-    HANDLE hSysAudio;
-    PFILE_OBJECT FileObject;
     LIST_ENTRY WdmAudClientList;
 
     ULONG SysAudioDeviceCount;
