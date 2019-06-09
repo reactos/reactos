@@ -1596,17 +1596,20 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri2_max_storage ignored
 
-            if (UserInfo2->usri2_units_per_week > USHRT_MAX)
+            if (UserInfo2->usri2_logon_hours != NULL)
             {
-                if (parm_err != NULL)
-                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+                if (UserInfo2->usri2_units_per_week > USHRT_MAX)
+                {
+                    if (parm_err != NULL)
+                        *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                    ApiStatus = ERROR_INVALID_PARAMETER;
+                    break;
+                }
 
-            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo2->usri2_units_per_week;
-            UserAllInfo.LogonHours.LogonHours = UserInfo2->usri2_logon_hours;
-            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+                UserAllInfo.LogonHours.UnitsPerWeek = UserInfo2->usri2_units_per_week;
+                UserAllInfo.LogonHours.LogonHours = UserInfo2->usri2_logon_hours;
+                UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            }
 
             // usri2_bad_pw_count ignored
             // usri2_num_logons ignored
@@ -1707,17 +1710,20 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri3_max_storage ignored
 
-            if (UserInfo3->usri3_units_per_week > USHRT_MAX)
+            if (UserInfo3->usri3_logon_hours != NULL)
             {
-                if (parm_err != NULL)
-                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+                if (UserInfo3->usri3_units_per_week > USHRT_MAX)
+                {
+                    if (parm_err != NULL)
+                        *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                    ApiStatus = ERROR_INVALID_PARAMETER;
+                    break;
+                }
 
-            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo3->usri3_units_per_week;
-            UserAllInfo.LogonHours.LogonHours = UserInfo3->usri3_logon_hours;
-            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+                UserAllInfo.LogonHours.UnitsPerWeek = UserInfo3->usri3_units_per_week;
+                UserAllInfo.LogonHours.LogonHours = UserInfo3->usri3_logon_hours;
+                UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            }
 
             // usri3_bad_pw_count ignored
             // usri3_num_logons ignored
@@ -1840,17 +1846,20 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri4_max_storage ignored
 
-            if (UserInfo4->usri4_units_per_week > USHRT_MAX)
+            if (UserInfo4->usri4_logon_hours != NULL)
             {
-                if (parm_err != NULL)
-                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+                if (UserInfo4->usri4_units_per_week > USHRT_MAX)
+                {
+                    if (parm_err != NULL)
+                        *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                    ApiStatus = ERROR_INVALID_PARAMETER;
+                    break;
+                }
 
-            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo4->usri4_units_per_week;
-            UserAllInfo.LogonHours.LogonHours = UserInfo4->usri4_logon_hours;
-            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+                UserAllInfo.LogonHours.UnitsPerWeek = UserInfo4->usri4_units_per_week;
+                UserAllInfo.LogonHours.LogonHours = UserInfo4->usri4_logon_hours;
+                UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            }
 
             // usri4_bad_pw_count ignored
             // usri4_num_logons ignored
@@ -1970,17 +1979,20 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri22_max_storage ignored
 
-            if (UserInfo22->usri22_units_per_week > USHRT_MAX)
+            if (UserInfo22->usri22_logon_hours != NULL)
             {
-                if (parm_err != NULL)
-                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+                if (UserInfo22->usri22_units_per_week > USHRT_MAX)
+                {
+                    if (parm_err != NULL)
+                        *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                    ApiStatus = ERROR_INVALID_PARAMETER;
+                    break;
+                }
 
-            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo22->usri22_units_per_week;
-            UserAllInfo.LogonHours.LogonHours = UserInfo22->usri22_logon_hours;
-            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+                UserAllInfo.LogonHours.UnitsPerWeek = UserInfo22->usri22_units_per_week;
+                UserAllInfo.LogonHours.LogonHours = UserInfo22->usri22_logon_hours;
+                UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            }
 
             // usri22_bad_pw_count ignored
             // usri22_num_logons ignored
@@ -2117,17 +2129,20 @@ SetUserInfo(SAM_HANDLE UserHandle,
         case 1020:
             UserInfo1020 = (PUSER_INFO_1020)UserInfo;
 
-            if (UserInfo1020->usri1020_units_per_week > USHRT_MAX)
+            if (UserInfo1020->usri1020_logon_hours != NULL)
             {
-                if (parm_err != NULL)
-                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+                if (UserInfo1020->usri1020_units_per_week > USHRT_MAX)
+                {
+                    if (parm_err != NULL)
+                        *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                    ApiStatus = ERROR_INVALID_PARAMETER;
+                    break;
+                }
 
-            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo1020->usri1020_units_per_week;
-            UserAllInfo.LogonHours.LogonHours = UserInfo1020->usri1020_logon_hours;
-            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+                UserAllInfo.LogonHours.UnitsPerWeek = UserInfo1020->usri1020_units_per_week;
+                UserAllInfo.LogonHours.LogonHours = UserInfo1020->usri1020_logon_hours;
+                UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            }
             break;
 
         case 1024:
