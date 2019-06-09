@@ -213,6 +213,10 @@ BEGIN
     IDS_PASSWORDMUSTCHANGE "Jesteś zobowiązany do zmiany hasła przy pierwszym logowaniu."
     IDS_PASSWORDEXPIRED "Twoje hasło wygasło i musi zostać zmienione."
     IDS_ACCOUNTEXPIRED "Twoje konto wygasło. Skontaktuj się z administratorem systemu."
+    IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
+    IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
+    IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
+    IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
 END
 
 /* Shutdown Dialog Strings */
