@@ -3449,13 +3449,16 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
     CComPtr<IShellView> psv;
     HRESULT hRes;
 
-    if (!ppsv || !pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
+    if (!ppsv)
+        return E_INVALIDARG;
+
+    *ppsv = NULL;
+
+    if (!pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
         return E_INVALIDARG;
 
     TRACE("sf=%p outer=%p callback=%p\n",
       pcsfv->pshf, pcsfv->psvOuter, pcsfv->psfvcb);
-
-    *ppsv = NULL;
 
     hRes = CDefView_CreateInstance(pcsfv->pshf, IID_PPV_ARG(IShellView, &psv));
     if (FAILED(hRes))
