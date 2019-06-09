@@ -1434,7 +1434,6 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1013 UserInfo1013;
     PUSER_INFO_1014 UserInfo1014;
     PUSER_INFO_1017 UserInfo1017;
-    PUSER_INFO_1018 UserInfo1018;
     PUSER_INFO_1020 UserInfo1020;
     PUSER_INFO_1024 UserInfo1024;
     PUSER_INFO_1025 UserInfo1025;
@@ -1595,13 +1594,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            if (UserInfo2->usri2_max_storage != USER_MAXSTORAGE_UNLIMITED)
-            {
-                if (parm_err != NULL)
-                    *parm_err = USER_MAX_STORAGE_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+            // usri2_max_storage ignored
 
             if (UserInfo2->usri2_units_per_week > USHRT_MAX)
             {
@@ -1712,13 +1705,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            if (UserInfo3->usri3_max_storage != USER_MAXSTORAGE_UNLIMITED)
-            {
-                if (parm_err != NULL)
-                    *parm_err = USER_MAX_STORAGE_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+            // usri3_max_storage ignored
 
             if (UserInfo3->usri3_units_per_week > USHRT_MAX)
             {
@@ -1851,13 +1838,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            if (UserInfo4->usri4_max_storage != USER_MAXSTORAGE_UNLIMITED)
-            {
-                if (parm_err != NULL)
-                    *parm_err = USER_MAX_STORAGE_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+            // usri4_max_storage ignored
 
             if (UserInfo4->usri4_units_per_week > USHRT_MAX)
             {
@@ -1987,13 +1968,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            if (UserInfo22->usri22_max_storage != USER_MAXSTORAGE_UNLIMITED)
-            {
-                if (parm_err != NULL)
-                    *parm_err = USER_MAX_STORAGE_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-                break;
-            }
+            // usri22_max_storage ignored
 
             if (UserInfo22->usri22_units_per_week > USHRT_MAX)
             {
@@ -2136,14 +2111,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             break;
 
         case 1018:
-            UserInfo1018 = (PUSER_INFO_1018)UserInfo;
-
-            if (UserInfo1018->usri1018_max_storage != USER_MAXSTORAGE_UNLIMITED)
-            {
-                if (parm_err != NULL)
-                    *parm_err = USER_MAX_STORAGE_PARMNUM;
-                ApiStatus = ERROR_INVALID_PARAMETER;
-            }
+            // usri1018_max_storage ignored
             break;
 
         case 1020:
