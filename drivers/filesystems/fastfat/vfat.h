@@ -1148,14 +1148,14 @@ VfatBuildRequest(
 
 PVOID
 VfatGetUserBuffer(
-    IN PIRP,
+    IN PIRP Irp,
     IN BOOLEAN Paging);
 
 NTSTATUS
 VfatLockUserBuffer(
-    IN PIRP,
-    IN ULONG,
-    IN LOCK_OPERATION);
+    IN PIRP Irp,
+    IN ULONG Length,
+    IN LOCK_OPERATION Operation);
 
 BOOLEAN
 VfatCheckForDismount(
@@ -1220,11 +1220,6 @@ vfatSplitPathName(
 BOOLEAN
 vfatIsLongIllegal(
     WCHAR c);
-
-BOOLEAN
-wstrcmpjoki(
-    PWSTR s1,
-    PWSTR s2);
 
 /* volume.c */
 
