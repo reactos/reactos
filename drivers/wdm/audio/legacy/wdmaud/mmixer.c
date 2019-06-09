@@ -182,7 +182,10 @@ Open(
     IN LPWSTR DevicePath,
     OUT PHANDLE hDevice)
 {
-    if (WdmAudOpenSysAudioDevice(DevicePath, hDevice) == STATUS_SUCCESS)
+    UNICODE_STRING Device;
+
+    RtlInitUnicodeString(&Device, DevicePath);
+    if (WdmAudOpenSysAudioDevice(&Device, hDevice) == STATUS_SUCCESS)
         return MM_STATUS_SUCCESS;
     else
         return MM_STATUS_UNSUCCESSFUL;

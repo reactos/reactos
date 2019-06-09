@@ -424,9 +424,12 @@ OpenDevice(
 {
     NTSTATUS Status;
     HANDLE hDevice;
+    UNICODE_STRING DevicePath;
+
+    RtlInitUnicodeString(&DevicePath, Device);
 
     /* now open the device */
-    Status = WdmAudOpenSysAudioDevice(Device, &hDevice);
+    Status = WdmAudOpenSysAudioDevice(&DevicePath, &hDevice);
 
     if (!NT_SUCCESS(Status))
     {

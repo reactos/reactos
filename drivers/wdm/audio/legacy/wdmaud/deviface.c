@@ -18,36 +18,35 @@ const GUID GUID_DEVICE_INTERFACE_REMOVAL       = {0xCB3A4005L, 0x46F0, 0x11D0, {
 BOOLEAN
 IsEntryAlreadyInList(
     IN PWDMAUD_DEVICE_EXTENSION DeviceExtension,
-    IN PSYSAUDIO_ENTRY NewDeviceEntry) {
-
+    IN PUNICODE_STRING NewSymbolicLink)
+{
     PLIST_ENTRY Entry;
     PSYSAUDIO_ENTRY DeviceEntry;
 
     Entry = DeviceExtension->SysAudioDeviceList.Flink;
     while (Entry != &DeviceExtension->SysAudioDeviceList)
     {
-        DeviceEntry = (PSYSAUDIO_ENTRY)CONTAINING_RECORD(Entry, SYSAUDIO_ENTRY, Entry);
+        DeviceEntry = CONTAINING_RECORD(Entry, SYSAUDIO_ENTRY, Entry);
 
-        if (RtlEqualUnicodeString(&DeviceEntry->SymbolicLink, &NewDeviceEntry->SymbolicLink, TRUE)) {
+        if (RtlEqualUnicodeString(&DeviceEntry->SymbolicLink, NewSymbolicLink, TRUE))
+        {
             return TRUE;
         }
         Entry = Entry->Flink;
     }
-	return FALSE;
+    return FALSE;
 }
 
 NTSTATUS
 WdmAudOpenSysAudioDevice(
-    IN LPWSTR DeviceName,
+    IN PUNICODE_STRING DeviceName,
     OUT PHANDLE Handle)
 {
-    UNICODE_STRING SymbolicLink;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&SymbolicLink, DeviceName);
-    InitializeObjectAttributes(&ObjectAttributes, &SymbolicLink, OBJ_OPENIF | OBJ_KERNEL_HANDLE, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, DeviceName, OBJ_OPENIF | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     Status = IoCreateFile(Handle,
                           SYNCHRONIZE | GENERIC_READ | GENERIC_WRITE,
@@ -73,33 +72,26 @@ DeviceInterfaceChangeCallback(
     IN PVOID NotificationStructure,
     IN PVOID Context)
 {
-#if 0
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)Context;
     SYSAUDIO_ENTRY * Entry;
-    ULONG Length;
     NTSTATUS Status;
 
-    DPRINT1("DeviceInterfaceChangeCallback called %p\n", Event);
+    DPRINT("DeviceInterfaceChangeCallback called %p\n", Event);
 
-    if (IsEqualGUIDAligned(&Event->Event,
-                           &GUID_DEVICE_INTERFACE_ARRIVAL))
+    if (IsEqualGUIDAligned(&Event->Event, &GUID_DEVICE_INTERFACE_ARRIVAL))
     {
-        Length = (Event->SymbolicLinkName->Length);
-        Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + (Length + 1)* sizeof(WCHAR));
-        if (!Entry)
+        if (!IsEntryAlreadyInList(DeviceExtension, Event->SymbolicLinkName))
         {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+            Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Event->SymbolicLinkName->Length);
+            if (!Entry)
+            {
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+            RtlInitEmptyUnicodeString(&Entry->SymbolicLink, (PWCHAR)(Entry + 1), Event->SymbolicLinkName->Length);
+            RtlCopyUnicodeString(&Entry->SymbolicLink, Event->SymbolicLinkName);
 
-        Entry->SymbolicLink.Length = Length * sizeof(WCHAR);
-        Entry->SymbolicLink.MaximumLength = Length * sizeof(WCHAR);
-        Entry->SymbolicLink.Buffer = (LPWSTR) (Entry + 1);
-        RtlCopyMemory(Entry->SymbolicLink.Buffer, Event->SymbolicLinkName->Buffer, Length);
-
-        if (!IsEntryAlreadyInList(DeviceExtension, Entry)) {
-
-            Status = WdmAudOpenSysAudioDevice(Entry->SymbolicLink.Buffer, &Entry->hSysAudio);
+            Status = WdmAudOpenSysAudioDevice(&Entry->SymbolicLink, &Entry->hSysAudio);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to open sysaudio %x\n", Status);
@@ -120,11 +112,7 @@ DeviceInterfaceChangeCallback(
             InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
             DeviceExtension->NumSysAudioDevices++;
         }
-        else {
-            FreeItem(Entry);
-        }
     }
-#endif
     return STATUS_SUCCESS;
 }
 
@@ -134,26 +122,23 @@ WdmAudOpenSysAudioDeviceInterfaces(
     IN LPWSTR SymbolicLinkList)
 {
     SYSAUDIO_ENTRY * Entry;
-    ULONG Length;
     NTSTATUS Status;
+    UNICODE_STRING NewEntry;
 
     while(*SymbolicLinkList)
     {
-        Length = wcslen(SymbolicLinkList) + 1;
-        Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
-        if (!Entry)
+        RtlInitUnicodeString(&NewEntry, SymbolicLinkList);
+        if (!IsEntryAlreadyInList(DeviceExtension, &NewEntry))
         {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+            Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + NewEntry.Length);
+            if (!Entry)
+            {
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+            RtlInitEmptyUnicodeString(&Entry->SymbolicLink, (PWCHAR)(Entry + 1), NewEntry.Length);
+            RtlCopyUnicodeString(&Entry->SymbolicLink, &NewEntry);
 
-        Entry->SymbolicLink.Length = Length * sizeof(WCHAR);
-        Entry->SymbolicLink.MaximumLength = Length * sizeof(WCHAR);
-        Entry->SymbolicLink.Buffer = (LPWSTR) (Entry + 1);
-        wcscpy(Entry->SymbolicLink.Buffer, SymbolicLinkList);
-
-        if (!IsEntryAlreadyInList(DeviceExtension, Entry)) {
-
-            Status = WdmAudOpenSysAudioDevice(Entry->SymbolicLink.Buffer, &Entry->hSysAudio);
+            Status = WdmAudOpenSysAudioDevice(&Entry->SymbolicLink, &Entry->hSysAudio);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to open sysaudio %x\n", Status);
@@ -171,15 +156,10 @@ WdmAudOpenSysAudioDeviceInterfaces(
                 return Status;
             }
 
-            DPRINT1("SysaudioDevice %S\n", SymbolicLinkList);
-
             InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
             DeviceExtension->NumSysAudioDevices++;
-
-        } else {
-            FreeItem(Entry);
         }
-        SymbolicLinkList += Length;
+        SymbolicLinkList += wcslen(SymbolicLinkList) + 1;
     }
     return STATUS_SUCCESS;
 }
