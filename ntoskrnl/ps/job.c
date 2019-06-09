@@ -836,7 +836,7 @@ NtSetInformationJobObject (
     }
     KeLeaveGuardedRegionThread(CurrentThread);
 
-    ObfDereferenceObject(Job);
+    ObDereferenceObject(Job);
 
     return Status;
 }
