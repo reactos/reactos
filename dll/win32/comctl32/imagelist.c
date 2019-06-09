@@ -3994,14 +3994,11 @@ static BOOL is_valid(HIMAGELIST himl)
     BOOL valid;
     __TRY
     {
-    #ifdef __REACTOS__
-        valid = himl &&
-                himl->usMagic == IMAGELIST_MAGIC &&
-                himl->IImageList2_iface.lpVtbl;
-    #else
+#ifdef __REACTOS__
         valid = himl && himl->usMagic == IMAGELIST_MAGIC;
-    #endif
-
+#else
+        valid = himl && himl->IImageList2_iface.lpVtbl == &ImageListImpl_Vtbl;
+#endif
     }
     __EXCEPT_PAGE_FAULT
     {
