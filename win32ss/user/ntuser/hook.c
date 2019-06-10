@@ -1037,12 +1037,15 @@ BOOLEAN
 IntRemoveHook(PVOID Object)
 {
     INT HookId;
-    PTHREADINFO ptiHook;
+    PTHREADINFO ptiHook, pti;
     PDESKTOP pdo;
     PHOOK Hook = Object;
+    BOOL bOtherProcess;
 
+    NT_ASSERT(UserIsEnteredExclusive());
 
     HookId = Hook->HookId;
+    pti = PsGetCurrentThreadWin32Thread();
 
     if (Hook->ptiHooked) // Local
     {
@@ -1053,6 +1056,10 @@ IntRemoveHook(PVOID Object)
         if (IsListEmpty(&ptiHook->aphkStart[HOOKID_TO_INDEX(HookId)]))
         {
             ptiHook->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+            bOtherProcess = (ptiHook->ppi != pti->ppi);
+
+            if (bOtherProcess)
+                KeAttachProcess(&ptiHook->ppi->peProcess->Pcb);
 
             _SEH2_TRY
             {
@@ -1064,6 +1071,9 @@ IntRemoveHook(PVOID Object)
                 (void)0;
             }
             _SEH2_END;
+
+            if (bOtherProcess)
+                KeDetachProcess();
        }
     }
     else // Global
