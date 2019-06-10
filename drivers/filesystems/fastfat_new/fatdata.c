@@ -233,7 +233,7 @@ Return Value:
     DebugTrace(0, DEBUG_TRACE_UNWIND, "FatExceptionFilter %X\n", ExceptionCode);
     DebugDump("FatExceptionFilter\n", Dbg, NULL );
 
-#ifdef DBG
+#if DBG  // __REACTOS__: Use '#if'.
 
     if( FatBreakOnInterestingExceptionStatus != 0 && ExceptionCode == FatBreakOnInterestingExceptionStatus ) {
         DbgBreakPoint();
