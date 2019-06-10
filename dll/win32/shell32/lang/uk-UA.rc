@@ -49,7 +49,7 @@ BEGIN
     MENUITEM "&Вирізати\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Копіювати\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "Вс&тавити\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Вставити &ярлик", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Копіювати до &папки...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Перемістити до п&апки...", FCIDM_SHVIEW_MOVETO
@@ -740,7 +740,7 @@ BEGIN
 
     /* special folders */
     IDS_DESKTOP "Робочий стіл"
-    IDS_MYCOMPUTER "Мій Комп'ютер"
+    IDS_MYCOMPUTER "Мій комп'ютер"
     IDS_RECYCLEBIN_FOLDER_NAME "Кошик"
     IDS_CONTROLPANEL "Панель керування"
     IDS_ADMINISTRATIVETOOLS "Адміністрування"
