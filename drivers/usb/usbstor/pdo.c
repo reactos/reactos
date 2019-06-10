@@ -119,6 +119,7 @@ USBSTOR_GetGenericType(
     }
 }
 
+static
 ULONG
 CopyField(
     IN PUCHAR Name,
@@ -144,50 +145,89 @@ CopyField(
     return MaxLength;
 }
 
+static
+ULONG
+CopyFieldTruncate(
+    IN PUCHAR Name,
+    IN PCHAR Buffer,
+    IN ULONG MaxLength)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < MaxLength; Index++)
+    {
+        if (Name[Index] == '\0')
+        {
+            break;
+        }
+        else if (Name[Index] <= ' ' || Name[Index] >= 0x7F /* last printable ascii character */ ||  Name[Index] == ',')
+        {
+            // convert to underscore
+            Buffer[Index] = ' ';
+        }
+        else
+        {
+            // just copy character
+            Buffer[Index] = Name[Index];
+        }
+    }
+
+    return Index;
+}
+
 NTSTATUS
 USBSTOR_PdoHandleQueryDeviceText(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PPDO_DEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION IoStack;
-    LPWSTR Buffer;
-    static WCHAR DeviceText[] = L"USB Mass Storage Device";
+    CHAR LocalBuffer[26];
+    UINT32 Offset = 0;
+    PINQUIRYDATA InquiryData;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING DeviceDescription;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.QueryDeviceText.DeviceTextType == DeviceTextDescription)
-    {
-        DPRINT("USBSTOR_PdoHandleQueryDeviceText DeviceTextDescription\n");
+    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->InquiryData);
+    InquiryData = DeviceExtension->InquiryData;
 
-        Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(DeviceText));
-        if (!Buffer)
+    switch (IoStack->Parameters.QueryDeviceText.DeviceTextType)
+    {
+        case DeviceTextDescription:
+        case DeviceTextLocationInformation:
+        {
+            DPRINT("USBSTOR_PdoHandleQueryDeviceText\n");
+
+            Offset += CopyFieldTruncate(InquiryData->VendorId, &LocalBuffer[Offset], sizeof(InquiryData->VendorId));
+            LocalBuffer[Offset++] = ' ';
+            Offset += CopyFieldTruncate(InquiryData->ProductId, &LocalBuffer[Offset], sizeof(InquiryData->ProductId));
+            LocalBuffer[Offset++] = '\0';
+
+            RtlInitAnsiString(&AnsiString, (PCSZ)&LocalBuffer);
+
+            DeviceDescription.Length = 0;
+            DeviceDescription.MaximumLength = (USHORT)(Offset * sizeof(WCHAR));
+            DeviceDescription.Buffer = (LPWSTR)AllocateItem(PagedPool, DeviceDescription.MaximumLength);
+            if (!DeviceDescription.Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            RtlAnsiStringToUnicodeString(&DeviceDescription, &AnsiString, FALSE);
+
+            Irp->IoStatus.Information = (ULONG_PTR)DeviceDescription.Buffer;
+            return STATUS_SUCCESS;
+        }
+        default:
         {
             Irp->IoStatus.Information = 0;
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return Irp->IoStatus.Status;
         }
-
-        wcscpy(Buffer, DeviceText);
-
-        Irp->IoStatus.Information = (ULONG_PTR)Buffer;
-        return STATUS_SUCCESS;
     }
-    else
-    {
-        DPRINT("USBSTOR_PdoHandleQueryDeviceText DeviceTextLocationInformation\n");
-
-        Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(DeviceText));
-        if (!Buffer)
-        {
-            Irp->IoStatus.Information = 0;
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        wcscpy(Buffer, DeviceText);
-
-        Irp->IoStatus.Information = (ULONG_PTR)Buffer;
-        return STATUS_SUCCESS;
-    }
-
 }
 
 NTSTATUS
