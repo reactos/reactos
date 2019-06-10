@@ -1479,7 +1479,7 @@ Return Value:
             ULONG SectorSize;
 
 
-#if FASTFATDBG
+#ifdef FASTFATDBG  // __REACTOS__: Use '#ifdef'.
             if ( TypeOfOpen == DirectoryFile ) {
                 DebugTrace(0, Dbg, "Type of read is directoryfile\n", 0);                            
             } else if ( TypeOfOpen == EaFile) {
