@@ -5,6 +5,7 @@
  * COPYRIGHT:   2005-2006 James Tabor
  *              2011-2012 Michael Martin (michael.martin@reactos.org)
  *              2011-2013 Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #include "usbstor.h"
@@ -45,46 +46,49 @@ USBSTOR_FdoHandleDeviceRelations(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // check if relation type is BusRelations
-    if (IoStack->Parameters.QueryDeviceRelations.Type != BusRelations)
+    // FDO always only handles bus relations
+    if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)
     {
-        // FDO always only handles bus relations
-        return USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
-    }
-
-    // go through array and count device objects
-    for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
-    {
-        if (DeviceExtension->ChildPDO[Index])
+        // go through array and count device objects
+        for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
         {
-            DeviceCount++;
+            if (DeviceExtension->ChildPDO[Index])
+            {
+                DeviceCount++;
+            }
         }
-    }
 
-    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? (DeviceCount-1) * sizeof(PDEVICE_OBJECT) : 0));
-    if (!DeviceRelations)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    // add device objects
-    for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
-    {
-        if (DeviceExtension->ChildPDO[Index])
+        DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? (DeviceCount-1) * sizeof(PDEVICE_OBJECT) : 0));
+        if (!DeviceRelations)
         {
-            // store child pdo
-            DeviceRelations->Objects[DeviceRelations->Count] = DeviceExtension->ChildPDO[Index];
-
-            // add reference
-            ObReferenceObject(DeviceExtension->ChildPDO[Index]);
-
-            DeviceRelations->Count++;
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        // add device objects
+        for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
+        {
+            if (DeviceExtension->ChildPDO[Index])
+            {
+                // store child pdo
+                DeviceRelations->Objects[DeviceRelations->Count] = DeviceExtension->ChildPDO[Index];
+
+                // add reference
+                ObReferenceObject(DeviceExtension->ChildPDO[Index]);
+
+                DeviceRelations->Count++;
+            }
+        }
+
+        Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
     }
 
-    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+    IoCopyCurrentIrpStackLocationToNext(Irp);
 
-    return STATUS_SUCCESS;
+    return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -291,9 +295,8 @@ USBSTOR_FdoHandlePnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS %p\n", DeviceObject);
-            Status = USBSTOR_FdoHandleDeviceRelations(DeviceExtension, Irp);
-            break;
+            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS %p Type: %u\n", DeviceObject, IoStack->Parameters.QueryDeviceRelations.Type);
+            return USBSTOR_FdoHandleDeviceRelations(DeviceExtension, Irp);
         }
         case IRP_MN_STOP_DEVICE:
         {
