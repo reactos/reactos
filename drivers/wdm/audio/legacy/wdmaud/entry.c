@@ -202,10 +202,6 @@ WdmAudCreate(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PWDMAUD_CLIENT pClient;
-    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-
-    /* get device extension */
-    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject((KSDEVICE_HEADER)DeviceObject->DeviceExtension);
