@@ -1,0 +1,21 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_DISCONNECTDRIVES DIALOGEX 0, 0, 300, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Déconnecter un lecteur réseau"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Sélectionnez le(s) lecteur(s) réseau que vous voulez déconnecter, puis cliquez sur OK.", -1, 7, 7, 286, 8
+    LTEXT "&Lecteurs réseau :", -1, 7, 23, 286, 8
+    CONTROL "", IDC_CONNECTEDDRIVELIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SINGLESEL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 31, 286, 140
+    PUSHBUTTON "OK", ID_OK, 189, 179, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 243, 179, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DIALOG_CAPTION "Déconnecter un lecteur réseau"
+    IDS_DRIVE_LETTER "Lecteur"
+    IDS_NETWORK_PATH "Chemin réseau"
+    IDS_NO_DRIVES "Vous n'avez pas de lecteurs réseau à déconnecter."
+END
