@@ -392,7 +392,7 @@ SepRmReferenceLogonSession(
         if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
         {
             /* Reference the session */
-            CurrentSession->ReferenceCount += 1;
+            ++CurrentSession->ReferenceCount;
             DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
@@ -410,9 +410,20 @@ SepRmReferenceLogonSession(
 
 
 NTSTATUS
+SepCleanupLUIDDeviceMapDirectory(
+    PLUID LogonLuid)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 SepRmDereferenceLogonSession(
     PLUID LogonLuid)
 {
+    ULONG RefCount;
+    PDEVICE_MAP DeviceMap;
     PSEP_LOGON_SESSION_REFERENCES CurrentSession;
 
     DPRINT("SepRmDereferenceLogonSession(%08lx:%08lx)\n",
@@ -430,11 +441,24 @@ SepRmDereferenceLogonSession(
         if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
         {
             /* Dereference the session */
-            CurrentSession->ReferenceCount -= 1;
+            RefCount = --CurrentSession->ReferenceCount;
             DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
             KeReleaseGuardedMutex(&SepRmDbLock);
+
+            /* We're done with the session */
+            if (RefCount == 0)
+            {
+                /* Get rid of the LUID device map */
+                DeviceMap = CurrentSession->pDeviceMap;
+                if (DeviceMap != NULL)
+                {
+                    CurrentSession->pDeviceMap = NULL;
+                    SepCleanupLUIDDeviceMapDirectory(LogonLuid);
+                    ObfDereferenceDeviceMap(DeviceMap);
+                }
+            }
 
             return STATUS_SUCCESS;
         }
