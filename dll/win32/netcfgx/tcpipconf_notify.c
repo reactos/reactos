@@ -2139,10 +2139,11 @@ LaunchAdvancedTcpipSettings(
     pinfo.pfnCallback = PropSheetProc;
 
     StoreTcpipBasicSettings(hwndDlg, This, FALSE);
-    PropertySheetW(&pinfo);
-
-    InitializeTcpipBasicDlgCtrls(hwndDlg, This->pCurrentConfig);
-    PropSheet_Changed(GetParent(hwndDlg), hwndDlg); 
+    if (PropertySheetW(&pinfo) > 0)
+    {
+        InitializeTcpipBasicDlgCtrls(hwndDlg, This->pCurrentConfig);
+        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+    }
 }
 
 INT_PTR
