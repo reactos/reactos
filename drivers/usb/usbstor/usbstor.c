@@ -140,6 +140,25 @@ USBSTOR_DispatchPnp(
 
 NTSTATUS
 NTAPI
+USBSTOR_DispatchSystemControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PUSBSTOR_COMMON_DEVICE_EXTENSION DeviceExtension = (PUSBSTOR_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    if (DeviceExtension->IsFDO)
+    {
+        return IoCallDriver(((PFDO_DEVICE_EXTENSION)DeviceExtension)->LowerDeviceObject, Irp);
+    }
+    else
+    {
+        return IoCallDriver(((PPDO_DEVICE_EXTENSION)DeviceExtension)->LowerDeviceObject, Irp);
+    }
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_DispatchPower(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -183,6 +202,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_WRITE] = USBSTOR_DispatchReadWrite;
     DriverObject->MajorFunction[IRP_MJ_SCSI] = USBSTOR_DispatchScsi;
     DriverObject->MajorFunction[IRP_MJ_PNP] = USBSTOR_DispatchPnp;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = USBSTOR_DispatchSystemControl;
     DriverObject->MajorFunction[IRP_MJ_POWER] = USBSTOR_DispatchPower;
 
     return STATUS_SUCCESS;
