@@ -403,18 +403,18 @@ SET [змiнна[=][значення]]\n\n\
   значення   Рядок символiв, що призначається вказанiй змiннiй.\n\n\
 SET без параметрiв виводить поточнi значення змiнних середовища.\n"
     STRING_START_HELP1 "Запуск команди.\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
-  команда     Команда для запуску.\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+START [""заголовок""] [/D шлях] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [команда/програма] [параметри]\n\n\
+  ""заголовок""   Заголовок вікна.\n\
+  шлях          Вказує папку запуску.\n\
+  I             Використовувати оригінальне оточення cmd.exe,\n\
+                замість теперішнього.\n\
+  B             Запуск без створення вікна.\n\
+  MIN           Запуск зі згорнутим вікном.\n\
+  MAX           Запуск з розгорнутим вікном.\n\
+  WAIT          Чекати завершення програми або команди.\n\
+  команда       Команда або програма для запуску.\n\
+  параметри     Параметри, які будуть передані програмі чи команді.\n"
     STRING_TITLE_HELP "Змiна заголовка вiкна командного рядка.\n\n\
 TITLE [рядок]\n\n\
 рядок       Майбутнiй заголовок вiкна командного рядка.\n"
@@ -554,7 +554,7 @@ title         новий заголовок\n"
     STRING_REPLACE_ERROR5 "Немає доступу - %s\n"
     STRING_REPLACE_ERROR6 "Файли не знайдено - %s\n"
     STRING_REPLACE_ERROR7 "Розширена помилка 32\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_INFOLINE "  Командний рядок ReactOS                              Введіть HELP = Допомога  "
     STRING_REACTOS_VERSION "Операцiйна Система ReactOS [Версiя %s %s]\n"
     STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Запущений на: "
