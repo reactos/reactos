@@ -575,6 +575,10 @@ USBSTOR_PdoHandlePnp(
                bDelete = FALSE;
            }
 
+           // clean up the device extension
+           ASSERT(DeviceExtension->InquiryData);
+           ExFreePoolWithTag(DeviceExtension->InquiryData, USB_STOR_TAG);
+
            Irp->IoStatus.Status = STATUS_SUCCESS;
            IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -658,7 +662,7 @@ USBSTOR_SyncCompletionRoutine(
 
 /*
 * @name USBSTOR_SendInternalCdb
-* 
+*
 * Issues an internal SCSI request to device.
 * The request is sent in a synchronous way.
 */
