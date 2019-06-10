@@ -17,10 +17,30 @@ TODO, if they make sense:
 #include <shlobj.h>
 #include <atlbase.h>
 
+// FIXME: On Windows, CoInitializeEx() call is not needed. Why is it on ReactOS?
+struct CCoInit
+{
+    CCoInit()
+    {
+        hres = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    }
+
+    ~CCoInit()
+    {
+        if (SUCCEEDED(hres))
+        {
+            CoUninitialize();
+        }
+    }
+
+    HRESULT hres;
+};
+
 typedef HRESULT (WINAPI *SHENUMCLASSESOFCATEGORIES)(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired, IEnumGUID **out);
 
 START_TEST(SHEnumClassesOfCategories)
 {
+    CCoInit CoInit;
     HMODULE hBrowseUI;
     SHENUMCLASSESOFCATEGORIES pSHEnumClassesOfCategories;
     HRESULT hr;
@@ -42,6 +62,14 @@ START_TEST(SHEnumClassesOfCategories)
     if (!pSHEnumClassesOfCategories)
     {
         skip("No function, as on NT 6.1+\n");
+        return;
+    }
+
+    ok_hex(CoInit.hres, S_OK);
+    if (FAILED(CoInit.hres))
+    {
+        skip("COM library not initialized\n");
+        ok(FreeLibrary(hBrowseUI) != 0, "FreeLibrary() failed\n");
         return;
     }
 
