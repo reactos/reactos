@@ -178,6 +178,8 @@
 #define TAG_LUID              'uLeS'
 #define TAG_PRIVILEGE_SET     'rPeS'
 #define TAG_TOKEN_DYNAMIC     'dTeS'
+#define TAG_SE_HANDLES_TAB    'aHeS'
+#define TAG_SE_DIR_BUFFER     'bDeS'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE   'McpL'

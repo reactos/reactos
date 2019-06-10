@@ -489,7 +489,9 @@ SepCleanupLUIDDeviceMapDirectory(
      * All handles have been already closed
      */
 AllocateLinksAgain:
-    LinksBuffer = ExAllocatePoolWithTag(PagedPool, LinksSize, 'aHeS');
+    LinksBuffer = ExAllocatePoolWithTag(PagedPool,
+                                        LinksSize,
+                                        TAG_SE_HANDLES_TAB);
     if (LinksBuffer == NULL)
     {
         /*
@@ -504,7 +506,7 @@ AllocateLinksAgain:
          */
         if (DirectoryInfo != NULL)
         {
-            ExFreePoolWithTag(DirectoryInfo, 0);
+            ExFreePoolWithTag(DirectoryInfo, TAG_SE_DIR_BUFFER);
         }
 
         if (!UseCurrentProc)
@@ -551,7 +553,9 @@ AllocateLinksAgain:
             }
 
             /* And reallocate a bigger one */
-            DirectoryInfo = ExAllocatePoolWithTag(PagedPool, DirInfoLength, 'bDeS');
+            DirectoryInfo = ExAllocatePoolWithTag(PagedPool,
+                                                  DirInfoLength,
+                                                  TAG_SE_DIR_BUFFER);
             /* Fail if we cannot allocate */
             if (DirectoryInfo == NULL)
             {
@@ -584,7 +588,7 @@ AllocateLinksAgain:
             /* Allow 20 more HANDLEs */
             LinksCount += 20;
             CurrentLinks = 0;
-            ExFreePoolWithTag(LinksBuffer, 'aHeS');
+            ExFreePoolWithTag(LinksBuffer, TAG_SE_HANDLES_TAB);
             LinksSize = LinksCount * sizeof(HANDLE);
 
             /* And reloop again */
@@ -627,12 +631,12 @@ AllocateLinksAgain:
         ZwClose(LinksBuffer[i]);
     }
     /* And free our links buffer */
-    ExFreePoolWithTag(LinksBuffer, 'aHeS');
+    ExFreePoolWithTag(LinksBuffer, TAG_SE_HANDLES_TAB);
 
     /* Free our directory info buffer - it might be NULL if we failed realloc */
     if (DirectoryInfo != NULL)
     {
-        ExFreePoolWithTag(DirectoryInfo, 'bDeS');
+        ExFreePoolWithTag(DirectoryInfo, TAG_SE_DIR_BUFFER);
     }
 
     /* Close our session directory */
