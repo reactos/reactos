@@ -188,6 +188,8 @@ ObpCreateDosDevicesDirectory(VOID)
      */
     if (ObpProtectionMode == 0 || ObpLUIDDeviceMapsDisabled != 0)
         ObpLUIDDeviceMapsEnabled = 0;
+    else
+        ObpLUIDDeviceMapsEnabled = 1;
 
     /* Create a custom security descriptor for the global DosDevices directory */
     Status = ObpGetDosDevicesProtection(&DosDevicesSD);
