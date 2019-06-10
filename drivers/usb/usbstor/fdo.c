@@ -108,8 +108,27 @@ USBSTOR_FdoHandleRemoveDevice(
         }
     }
 
+    // Freeing everything in DeviceExtension
+    ASSERT(
+        DeviceExtension->DeviceDescriptor &&
+        DeviceExtension->ConfigurationDescriptor &&
+        DeviceExtension->InterfaceInformation &&
+        DeviceExtension->ResetDeviceWorkItem
+    );
+
+    ExFreePoolWithTag(DeviceExtension->DeviceDescriptor, USB_STOR_TAG);
+    ExFreePoolWithTag(DeviceExtension->ConfigurationDescriptor, USB_STOR_TAG);
+    ExFreePoolWithTag(DeviceExtension->InterfaceInformation, USB_STOR_TAG);
+    IoFreeWorkItem(DeviceExtension->ResetDeviceWorkItem);
+
+    if (DeviceExtension->SerialNumber)
+    {
+        ExFreePoolWithTag(DeviceExtension->SerialNumber, USB_STOR_TAG);
+    }
+
     // Send the IRP down the stack
     IoSkipCurrentIrpStackLocation(Irp);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 
     // Detach from the device stack
