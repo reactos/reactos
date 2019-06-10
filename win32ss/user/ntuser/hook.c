@@ -1037,45 +1037,47 @@ BOOLEAN
 IntRemoveHook(PVOID Object)
 {
     INT HookId;
-    PTHREADINFO pti;
+    PTHREADINFO ptiHook;
     PDESKTOP pdo;
     PHOOK Hook = Object;
+
 
     HookId = Hook->HookId;
 
     if (Hook->ptiHooked) // Local
     {
-       pti = Hook->ptiHooked;
+        ptiHook = Hook->ptiHooked;
 
-       IntFreeHook( Hook);
+        IntFreeHook(Hook);
 
-       if ( IsListEmpty(&pti->aphkStart[HOOKID_TO_INDEX(HookId)]) )
-       {
-          pti->fsHooks &= ~HOOKID_TO_FLAG(HookId);
-          _SEH2_TRY
-          {
-             pti->pClientInfo->fsHooks = pti->fsHooks;
-          }
-          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-          {
-              /* Do nothing */
-              (void)0;
-          }
-          _SEH2_END;
+        if (IsListEmpty(&ptiHook->aphkStart[HOOKID_TO_INDEX(HookId)]))
+        {
+            ptiHook->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+
+            _SEH2_TRY
+            {
+                ptiHook->pClientInfo->fsHooks = ptiHook->fsHooks;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Do nothing */
+                (void)0;
+            }
+            _SEH2_END;
        }
     }
     else // Global
     {
-       IntFreeHook( Hook);
+        IntFreeHook(Hook);
 
-       pdo = IntGetActiveDesktop();
+        pdo = IntGetActiveDesktop();
 
-       if ( pdo &&
-            pdo->pDeskInfo &&
-            IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
-       {
-          pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
-       }
+        if (pdo &&
+             pdo->pDeskInfo &&
+             IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]))
+        {
+            pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+        }
     }
 
     return TRUE;
