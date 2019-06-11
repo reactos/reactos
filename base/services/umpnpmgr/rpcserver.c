@@ -3478,7 +3478,6 @@ PNP_SetHwProf(
     DWORD ulHardwareProfile,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
