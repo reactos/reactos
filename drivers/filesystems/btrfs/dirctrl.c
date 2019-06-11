@@ -18,7 +18,7 @@
 #include "btrfs_drv.h"
 
 // not currently in mingw
-#ifndef _MSC_VER
+//#ifndef _MSC_VER
 #define FileIdExtdDirectoryInformation (enum _FILE_INFORMATION_CLASS)60
 #define FileIdExtdBothDirectoryInformation (enum _FILE_INFORMATION_CLASS)63
 
@@ -58,7 +58,7 @@ typedef struct _FILE_ID_EXTD_BOTH_DIR_INFORMATION {
     WCHAR FileName[1];
 } FILE_ID_EXTD_BOTH_DIR_INFORMATION, *PFILE_ID_EXTD_BOTH_DIR_INFORMATION;
 
-#endif
+//#endif
 
 enum DirEntryType {
     DirEntryType_File,
