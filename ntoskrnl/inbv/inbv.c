@@ -176,8 +176,8 @@ typedef struct tagRGBQUAD
 
 static RGBQUAD MainPalette[16];
 
-#define PALETTE_FADE_STEPS  15
-#define PALETTE_FADE_TIME   (20 * 1000) /* 20 ms */
+#define PALETTE_FADE_STEPS  12
+#define PALETTE_FADE_TIME   (15 * 1000) /* 15 ms */
 
 /** From bootvid/precomp.h **/
 //
@@ -1350,14 +1350,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         RotBarSelection = TempRotBarSelection;
         InbvRotBarInit();
         InbvReleaseLock();
-
-        // FIXME: This was added to allow animation start before the processor hangs
-        if (TempRotBarSelection != RB_UNSPECIFIED)
-        {
-            LARGE_INTEGER Delay;
-            Delay.QuadPart = -3000000; // 300 ms
-            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
-        }
     }
 #endif
 }
