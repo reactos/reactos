@@ -1083,7 +1083,7 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
-    PVOID Header = NULL, Footer = NULL, Screen = NULL;
+    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[24 * 9];
@@ -1176,8 +1176,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
          */
         MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
-        /* Load the standard boot screen */
-        Screen = InbvGetResourceAddress(IDB_BOOT_SCREEN);
+        /* Load boot screen logo */
+        BootLogo = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
 
 #ifdef REACTOS_SKUS
         Text = NULL;
@@ -1218,15 +1218,19 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
         /* Make sure we have a logo */
-        if (Screen)
+        if (BootLogo)
         {
             /* Save the main image palette for implementing the fade-in effect */
-            PBITMAPINFOHEADER BitmapInfoHeader = Screen;
-            LPRGBQUAD Palette = (LPRGBQUAD)((PUCHAR)Screen + BitmapInfoHeader->biSize);
+            PBITMAPINFOHEADER BitmapInfoHeader = BootLogo;
+            LPRGBQUAD Palette = (LPRGBQUAD)((PUCHAR)BootLogo + BitmapInfoHeader->biSize);
             RtlCopyMemory(MainPalette, Palette, sizeof(MainPalette));
 
-            /* Blit the background */
-            BitBltPalette(Screen, TRUE, 0, 0);
+            /* Draw the logo at the center of the screen */
+            BitBltAligned(BootLogo,
+                          TRUE,
+                          AL_HORIZONTAL_CENTER,
+                          AL_VERTICAL_CENTER,
+                          0, 0, 0, 34);
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
             /* Choose progress bar */
@@ -1250,6 +1254,22 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             }
 #endif
         }
+
+        /* Load and draw progress bar bitmap */
+        BootProgress = InbvGetResourceAddress(IDB_PROGRESS_BAR);
+        BitBltAligned(BootProgress,
+                      TRUE,
+                      AL_HORIZONTAL_CENTER,
+                      AL_VERTICAL_CENTER,
+                      0, 118, 0, 0);
+
+        /* Load and draw copyright text bitmap */
+        BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
+        BitBltAligned(BootCopy,
+                      TRUE,
+                      AL_HORIZONTAL_LEFT,
+                      AL_VERTICAL_BOTTOM,
+                      22, 0, 0, 20);
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
