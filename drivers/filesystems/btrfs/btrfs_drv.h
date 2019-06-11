@@ -101,6 +101,9 @@
 #define EA_EA "user.EA"
 #define EA_EA_HASH 0x8270dd43
 
+#define EA_CASE_SENSITIVE "user.casesensitive"
+#define EA_CASE_SENSITIVE_HASH 0x1a9d97d4
+
 #define EA_PROP_COMPRESSION "btrfs.compression"
 #define EA_PROP_COMPRESSION_HASH 0x20ccdf69
 
@@ -132,8 +135,18 @@
 #define FILE_SUPPORTS_BLOCK_REFCOUNTING 0x08000000
 #endif
 
+#ifndef FILE_SUPPORTS_POSIX_UNLINK_RENAME
+#define FILE_SUPPORTS_POSIX_UNLINK_RENAME 0x00000400
+#endif
+
 #ifndef FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL
 #define FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL 0x00020000
+#endif
+
+#ifndef _MSC_VER
+typedef struct _FILE_ID_128 {
+    UCHAR Identifier[16];
+} FILE_ID_128, *PFILE_ID_128;
 #endif
 
 typedef struct _DUPLICATE_EXTENTS_DATA {
@@ -280,6 +293,9 @@ typedef struct _fcb {
     BOOL inode_item_changed;
     enum prop_compression_type prop_compression;
     LIST_ENTRY xattrs;
+    BOOL marked_as_orphan;
+    BOOL case_sensitive;
+    BOOL case_sensitive_set;
 
     LIST_ENTRY dir_children_index;
     LIST_ENTRY dir_children_hash;
@@ -317,6 +333,7 @@ typedef struct _file_ref {
     ANSI_STRING oldutf8;
     UINT64 oldindex;
     BOOL delete_on_close;
+    BOOL posix_delete;
     BOOL deleted;
     BOOL created;
     file_ref_nonpaged* nonpaged;
@@ -434,6 +451,7 @@ typedef struct _root {
     UINT64 parent;
     LONG send_ops;
     UINT64 fcbs_version;
+    BOOL checked_for_orphans;
     LIST_ENTRY fcbs;
     LIST_ENTRY* fcbs_ptrs[256];
     LIST_ENTRY list_entry;
@@ -1123,7 +1141,7 @@ WCHAR* file_desc(_In_ PFILE_OBJECT FileObject);
 WCHAR* file_desc_fileref(_In_ file_ref* fileref);
 void mark_fcb_dirty(_In_ fcb* fcb);
 void mark_fileref_dirty(_In_ file_ref* fileref);
-NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback);
+NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_ BOOL make_orphan, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback);
 void chunk_lock_range(_In_ device_extension* Vcb, _In_ chunk* c, _In_ UINT64 start, _In_ UINT64 length);
 void chunk_unlock_range(_In_ device_extension* Vcb, _In_ chunk* c, _In_ UINT64 start, _In_ UINT64 length);
 void init_device(_In_ device_extension* Vcb, _Inout_ device* dev, _In_ BOOL get_nums);
@@ -1142,6 +1160,7 @@ void reap_fcb(fcb* fcb);
 void reap_fcbs(device_extension* Vcb);
 void reap_fileref(device_extension* Vcb, file_ref* fr);
 void reap_filerefs(device_extension* Vcb, file_ref* fr);
+UINT64 chunk_estimate_phys_size(device_extension* Vcb, chunk* c, UINT64 u);
 
 #ifdef _MSC_VER
 #define funcname __FUNCTION__
@@ -1412,7 +1431,7 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
                       _In_ PUNICODE_STRING fnus, _In_opt_ file_ref* related, _In_ BOOL parent, _Out_opt_ USHORT* parsed, _Out_opt_ ULONG* fn_offset, _In_ POOL_TYPE pooltype,
                       _In_ BOOL case_sensitive, _In_opt_ PIRP Irp);
 NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lock_held_(_Curr_->fcb_lock) device_extension* Vcb,
-                  root* subvol, UINT64 inode, UINT8 type, PANSI_STRING utf8, fcb* parent, fcb** pfcb, POOL_TYPE pooltype, PIRP Irp);
+                  root* subvol, UINT64 inode, UINT8 type, PANSI_STRING utf8, BOOL always_add_hl, fcb* parent, fcb** pfcb, POOL_TYPE pooltype, PIRP Irp);
 NTSTATUS load_csum(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, UINT32* csum, UINT64 start, UINT64 length, PIRP Irp);
 NTSTATUS load_dir_children(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, fcb* fcb, BOOL ignore_size, PIRP Irp);
 NTSTATUS add_dir_child(fcb* fcb, UINT64 inode, BOOL subvol, PANSI_STRING utf8, PUNICODE_STRING name, UINT8 type, dir_child** pdc);

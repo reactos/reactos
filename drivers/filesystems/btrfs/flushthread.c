@@ -515,6 +515,9 @@ static NTSTATUS add_parents(device_extension* Vcb, PIRP Irp) {
                     KEY searchkey;
                     traverse_ptr tp;
                     NTSTATUS Status;
+#ifdef __REACTOS__
+                    tree* t2;
+#endif
 
                     searchkey.obj_id = t->root->id;
                     searchkey.obj_type = TYPE_ROOT_ITEM;
@@ -554,6 +557,17 @@ static NTSTATUS add_parents(device_extension* Vcb, PIRP Irp) {
                             ExFreePool(ri);
                             return Status;
                         }
+                    }
+
+#ifndef __REACTOS__
+                    tree* t2 = tp.tree;
+#else
+                    t2 = tp.tree;
+#endif
+                    while (t2) {
+                        t2->write = TRUE;
+
+                        t2 = t2->parent;
                     }
                 }
             }
@@ -2713,6 +2727,9 @@ static NTSTATUS update_chunk_usage(device_extension* Vcb, PIRP Irp, LIST_ENTRY* 
         }
 
         if (c->used != c->oldused) {
+#ifdef __REACTOS__
+            UINT64 old_phys_used, phys_used;
+#endif
             searchkey.obj_id = c->offset;
             searchkey.obj_type = TYPE_BLOCK_GROUP_ITEM;
             searchkey.offset = c->chunk_item->size;
@@ -2767,11 +2784,18 @@ static NTSTATUS update_chunk_usage(device_extension* Vcb, PIRP Irp, LIST_ENTRY* 
                 goto end;
             }
 
-            TRACE("bytes_used = %llx\n", Vcb->superblock.bytes_used);
+#ifndef __REACTOS__
+            UINT64 old_phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
+            UINT64 phys_used = chunk_estimate_phys_size(Vcb, c, c->used);
+#else
+            old_phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
+            phys_used = chunk_estimate_phys_size(Vcb, c, c->used);
+#endif
 
-            Vcb->superblock.bytes_used += c->used - c->oldused;
-
-            TRACE("bytes_used = %llx\n", Vcb->superblock.bytes_used);
+            if (Vcb->superblock.bytes_used + phys_used > old_phys_used)
+                Vcb->superblock.bytes_used += phys_used - old_phys_used;
+            else
+                Vcb->superblock.bytes_used = 0;
 
             c->oldused = c->used;
         }
@@ -4118,6 +4142,8 @@ static NTSTATUS create_chunk(device_extension* Vcb, chunk* c, PIRP Irp) {
     c->created = FALSE;
     c->oldused = c->used;
 
+    Vcb->superblock.bytes_used += chunk_estimate_phys_size(Vcb, c, c->used);
+
     return STATUS_SUCCESS;
 }
 
@@ -4652,6 +4678,15 @@ NTSTATUS flush_fcb(fcb* fcb, BOOL cache, LIST_ENTRY* batchlist, PIRP Irp) {
             }
         }
 
+        if (fcb->marked_as_orphan) {
+            Status = insert_tree_item_batch(batchlist, fcb->Vcb, fcb->subvol, BTRFS_ORPHAN_INODE_OBJID, TYPE_ORPHAN_INODE,
+                                            fcb->inode, NULL, 0, Batch_Delete);
+            if (!NT_SUCCESS(Status)) {
+                ERR("insert_tree_item_batch returned %08x\n", Status);
+                goto end;
+            }
+        }
+
         Status = STATUS_SUCCESS;
         goto end;
     }
@@ -5146,6 +5181,37 @@ NTSTATUS flush_fcb(fcb* fcb, BOOL cache, LIST_ENTRY* batchlist, PIRP Irp) {
         fcb->xattrs_changed = FALSE;
     }
 
+    if ((fcb->case_sensitive_set && !fcb->case_sensitive)) {
+        Status = delete_xattr(fcb->Vcb, batchlist, fcb->subvol, fcb->inode, EA_CASE_SENSITIVE,
+                              sizeof(EA_CASE_SENSITIVE) - 1, EA_CASE_SENSITIVE_HASH);
+        if (!NT_SUCCESS(Status)) {
+            ERR("delete_xattr returned %08x\n", Status);
+            goto end;
+        }
+
+        fcb->case_sensitive_set = FALSE;
+    } else if ((!fcb->case_sensitive_set && fcb->case_sensitive)) {
+        Status = set_xattr(fcb->Vcb, batchlist, fcb->subvol, fcb->inode, EA_CASE_SENSITIVE,
+                           sizeof(EA_CASE_SENSITIVE) - 1, EA_CASE_SENSITIVE_HASH, (UINT8*)"1", 1);
+        if (!NT_SUCCESS(Status)) {
+            ERR("set_xattr returned %08x\n", Status);
+            goto end;
+        }
+
+        fcb->case_sensitive_set = TRUE;
+    }
+
+    if (fcb->inode_item.st_nlink == 0 && !fcb->marked_as_orphan) { // mark as orphan
+        Status = insert_tree_item_batch(batchlist, fcb->Vcb, fcb->subvol, BTRFS_ORPHAN_INODE_OBJID, TYPE_ORPHAN_INODE,
+                                        fcb->inode, NULL, 0, Batch_Insert);
+        if (!NT_SUCCESS(Status)) {
+            ERR("insert_tree_item_batch returned %08x\n", Status);
+            goto end;
+        }
+
+        fcb->marked_as_orphan = TRUE;
+    }
+
     Status = STATUS_SUCCESS;
 
 end:
@@ -5197,6 +5263,9 @@ static NTSTATUS drop_chunk(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlis
     KEY searchkey;
     traverse_ptr tp;
     UINT64 i, factor;
+#ifdef __REACTOS__
+    UINT64 phys_used;
+#endif
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];;
 
     TRACE("dropping chunk %llx\n", c->offset);
@@ -5441,7 +5510,16 @@ static NTSTATUS drop_chunk(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlis
             Vcb->superblock.incompat_flags &= ~BTRFS_INCOMPAT_FLAGS_RAID56;
     }
 
-    Vcb->superblock.bytes_used -= c->oldused;
+#ifndef __REACTOS__
+    UINT64 phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
+#else
+    phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
+#endif
+
+    if (phys_used < Vcb->superblock.bytes_used)
+        Vcb->superblock.bytes_used -= phys_used;
+    else
+        Vcb->superblock.bytes_used = 0;
 
     ExFreePool(c->chunk_item);
     ExFreePool(c->devices);
@@ -6943,6 +7021,108 @@ static NTSTATUS test_not_full(device_extension* Vcb) {
     return STATUS_DISK_FULL;
 }
 
+static NTSTATUS check_for_orphans_root(device_extension* Vcb, root* r, PIRP Irp) {
+    NTSTATUS Status;
+    KEY searchkey;
+    traverse_ptr tp;
+    LIST_ENTRY rollback;
+
+    TRACE("(%p, %p)\n", Vcb, r);
+
+    InitializeListHead(&rollback);
+
+    searchkey.obj_id = BTRFS_ORPHAN_INODE_OBJID;
+    searchkey.obj_type = TYPE_ORPHAN_INODE;
+    searchkey.offset = 0;
+
+    Status = find_item(Vcb, r, &tp, &searchkey, FALSE, Irp);
+    if (!NT_SUCCESS(Status)) {
+        ERR("find_item returned %08x\n", Status);
+        return Status;
+    }
+
+    do {
+        traverse_ptr next_tp;
+
+        if (tp.item->key.obj_id > searchkey.obj_id || (tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type > searchkey.obj_type))
+            break;
+
+        if (tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type == searchkey.obj_type) {
+            fcb* fcb;
+
+            TRACE("removing orphaned inode %llx\n", tp.item->key.offset);
+
+            Status = open_fcb(Vcb, r, tp.item->key.offset, 0, NULL, FALSE, NULL, &fcb, PagedPool, Irp);
+            if (!NT_SUCCESS(Status))
+                ERR("open_fcb returned %08x\n", Status);
+            else {
+                if (fcb->inode_item.st_nlink == 0) {
+                    if (fcb->type != BTRFS_TYPE_DIRECTORY && fcb->inode_item.st_size > 0) {
+                        Status = excise_extents(Vcb, fcb, 0, sector_align(fcb->inode_item.st_size, Vcb->superblock.sector_size), Irp, &rollback);
+                        if (!NT_SUCCESS(Status)) {
+                            ERR("excise_extents returned %08x\n", Status);
+                            goto end;
+                        }
+                    }
+
+                    fcb->deleted = TRUE;
+
+                    mark_fcb_dirty(fcb);
+                }
+
+                free_fcb(fcb);
+
+                Status = delete_tree_item(Vcb, &tp);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("delete_tree_item returned %08x\n", Status);
+                    goto end;
+                }
+            }
+        }
+
+        if (find_next_item(Vcb, &tp, &next_tp, FALSE, Irp))
+            tp = next_tp;
+        else
+            break;
+    } while (TRUE);
+
+    Status = STATUS_SUCCESS;
+
+    clear_rollback(&rollback);
+
+end:
+    do_rollback(Vcb, &rollback);
+
+    return Status;
+}
+
+static NTSTATUS check_for_orphans(device_extension* Vcb, PIRP Irp) {
+    NTSTATUS Status;
+    LIST_ENTRY* le;
+
+    if (IsListEmpty(&Vcb->dirty_filerefs))
+        return STATUS_SUCCESS;
+
+    le = Vcb->dirty_filerefs.Flink;
+    while (le != &Vcb->dirty_filerefs) {
+        file_ref* fr = CONTAINING_RECORD(le, file_ref, list_entry_dirty);
+
+        if (!fr->fcb->subvol->checked_for_orphans) {
+            Status = check_for_orphans_root(Vcb, fr->fcb->subvol, Irp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("check_for_orphans_root returned %08x\n", Status);
+                return Status;
+            }
+
+            fr->fcb->subvol->checked_for_orphans = TRUE;
+        }
+
+        le = le->Flink;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 static NTSTATUS do_write2(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     LIST_ENTRY *le, batchlist;
@@ -6964,6 +7144,12 @@ static NTSTATUS do_write2(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollback)
 #ifdef DEBUG_FLUSH_TIMES
     time1 = KeQueryPerformanceCounter(&freq);
 #endif
+
+    Status = check_for_orphans(Vcb, Irp);
+    if (!NT_SUCCESS(Status)) {
+        ERR("check_for_orphans returned %08x\n", Status);
+        return Status;
+    }
 
     ExAcquireResourceExclusiveLite(&Vcb->dirty_filerefs_lock, TRUE);
 
