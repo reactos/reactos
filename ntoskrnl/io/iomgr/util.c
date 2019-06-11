@@ -319,7 +319,7 @@ IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
     /* Ignore in case the IRP is not associated with any thread */
     if (!Irp->Tail.Overlay.Thread)
     {
-        DPRINT1("IoSetHardErrorOrVerifyDevice(0x%p, 0x%p): IRP has no thread, ignoring.\n"
+        DPRINT1("IoSetHardErrorOrVerifyDevice(0x%p, 0x%p): IRP has no thread, ignoring.\n",
                 Irp, DeviceObject);
         return;
     }
