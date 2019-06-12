@@ -1346,7 +1346,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 //        case PlugPlayControlQueryAndRemoveDevice:
 
         case PlugPlayControlUserResponse:
-            if (Buffer || BufferLength != 0)
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_USER_RESPONSE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
 

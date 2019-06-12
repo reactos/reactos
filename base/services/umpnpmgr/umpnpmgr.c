@@ -50,6 +50,7 @@ HKEY hClassKey = NULL;
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
+    PLUGPLAY_CONTROL_USER_RESPONSE_DATA ResponseData = {0, 0, 0, 0};
     DWORD dwRet = ERROR_SUCCESS;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
@@ -182,7 +183,14 @@ PnpEventThread(LPVOID lpParameter)
         }
 
         /* Dequeue the current PnP event and signal the next one */
-        NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
+        Status = NtPlugPlayControl(PlugPlayControlUserResponse,
+                                   &ResponseData,
+                                   sizeof(ResponseData));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtPlugPlayControl(PlugPlayControlUserResponse) failed (Status 0x%08lx)\n", Status);
+            break;
+        }
     }
 
     HeapFree(GetProcessHeap(), 0, PnpEvent);
