@@ -480,6 +480,7 @@ VOID ShowInfo(BOOL bAll)
     while (pAdapter)
     {
         LPTSTR IntType, myConType;
+        BOOLEAN bConnected = TRUE;
 
         mibEntry.dwIndex = pAdapter->Index;
         GetIfEntry(&mibEntry);
@@ -494,12 +495,13 @@ VOID ShowInfo(BOOL bAll)
         /* check if the adapter is connected to the media */
         if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
+            bConnected = FALSE;
             _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
-            pAdapter = pAdapter->Next;
-            continue;
         }
-
-        _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
+        else
+        {
+            _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
+        }
 
         if (bAll)
         {
@@ -507,11 +509,20 @@ VOID ShowInfo(BOOL bAll)
             _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), lpDesc);
             HeapFree(ProcessHeap, 0, lpDesc);
             _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
-            if (pAdapter->DhcpEnabled)
-                _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
-            _tprintf(_T("\tAutoconfiguration Enabled . . . . : \n"));
+            if (bConnected)
+            {
+                if (pAdapter->DhcpEnabled)
+                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
+                else
+                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
+                _tprintf(_T("\tAutoconfiguration Enabled . . . . : \n"));
+            }
+        }
+
+        if (!bConnected)
+        {
+            pAdapter = pAdapter->Next;
+            continue;
         }
 
         _tprintf(_T("\tIP Address. . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpAddress.String);
