@@ -1517,33 +1517,44 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
 {
     PDEVICE_NODE ParentDeviceNode;
     PDEVICE_NODE ChildDeviceNode;
+    PDEVICE_NODE NextDeviceNode;
     NTSTATUS Status;
 
     /* Copy context data so we don't overwrite it in subsequent calls to this function */
     ParentDeviceNode = Context->DeviceNode;
 
+    ObReferenceObject(ParentDeviceNode->PhysicalDeviceObject);
+
     /* Call the action routine */
     Status = (Context->Action)(ParentDeviceNode, Context->Context);
     if (!NT_SUCCESS(Status))
     {
+        ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
         return Status;
     }
 
     /* Traversal of all children nodes */
     for (ChildDeviceNode = ParentDeviceNode->Child;
          ChildDeviceNode != NULL;
-         ChildDeviceNode = ChildDeviceNode->Sibling)
+         ChildDeviceNode = NextDeviceNode)
     {
+        ObReferenceObject(ChildDeviceNode->PhysicalDeviceObject);
         /* Pass the current device node to the action routine */
         Context->DeviceNode = ChildDeviceNode;
 
         Status = IopTraverseDeviceTreeNode(Context);
         if (!NT_SUCCESS(Status))
         {
+            ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
+            ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
             return Status;
         }
+
+        NextDeviceNode = ChildDeviceNode->Sibling;
+        ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
     }
 
+    ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
     return Status;
 }
 
