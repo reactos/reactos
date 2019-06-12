@@ -1040,7 +1040,6 @@ IntRemoveHook(PVOID Object)
     PTHREADINFO ptiHook, pti;
     PDESKTOP pdo;
     PHOOK Hook = Object;
-    BOOL bOtherProcess;
 
     NT_ASSERT(UserIsEnteredExclusive());
 
@@ -1055,11 +1054,14 @@ IntRemoveHook(PVOID Object)
 
         if (IsListEmpty(&ptiHook->aphkStart[HOOKID_TO_INDEX(HookId)]))
         {
+            BOOL bOtherProcess;
+            KAPC_STATE ApcState;
+
             ptiHook->fsHooks &= ~HOOKID_TO_FLAG(HookId);
             bOtherProcess = (ptiHook->ppi != pti->ppi);
 
             if (bOtherProcess)
-                KeAttachProcess(&ptiHook->ppi->peProcess->Pcb);
+                KeStackAttachProcess(&ptiHook->ppi->peProcess->Pcb, &ApcState);
 
             _SEH2_TRY
             {
@@ -1073,7 +1075,7 @@ IntRemoveHook(PVOID Object)
             _SEH2_END;
 
             if (bOtherProcess)
-                KeDetachProcess();
+                KeUnstackDetachProcess(&ApcState);
        }
     }
     else // Global
@@ -1601,7 +1603,9 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           }
           else
           {
-             KeAttachProcess(&ptiHook->ppi->peProcess->Pcb);
+             KAPC_STATE ApcState;
+
+             KeStackAttachProcess(&ptiHook->ppi->peProcess->Pcb, &ApcState);
              _SEH2_TRY
              {
                 ptiHook->pClientInfo->fsHooks = ptiHook->fsHooks;
@@ -1612,7 +1616,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                 ERR("Problem writing to Remote ClientInfo!\n");
              }
              _SEH2_END;
-             KeDetachProcess();
+             KeUnstackDetachProcess(&ApcState);
           }
        }
     }
