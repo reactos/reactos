@@ -1,4 +1,5 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2013-2016, 2018 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com)
+ * 2013-2016, 2018-2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -32,7 +33,7 @@ BEGIN
         MENUITEM "&Sayfa Yapısı...", CMD_PAGE_SETUP
         MENUITEM "Ya&zdır...\tDenetim+P", CMD_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", CMD_EXIT
+        MENUITEM "Ç&ıkış", CMD_EXIT
     END
     POPUP "Dü&zen"
     BEGIN
@@ -97,7 +98,7 @@ BEGIN
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "Üst &Bilgi:", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Alt Bil&gi:", 0x142, 8, 149, 40, 15
+    LTEXT "Alt B&ilgi:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Yardım", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
@@ -149,7 +150,7 @@ BEGIN
     STRING_DOESNOTEXIST "%s dosyası yok. Yeni bir dosya oluşturmak ister misiniz?"
     STRING_NOTSAVED "%s dosyası değiştirilmiş. Değişiklikleri kaydetmek ister misiniz?"
     STRING_NOTFOUND "%s bulunamadı."
-    STRING_OUT_OF_MEMORY "Bu görevi bitirmek için bellek yetersiz. Kullanılabilen belleği arttırmak için bir ya da daha çok uygulama kapatınız."
+    STRING_OUT_OF_MEMORY "Bu görevi bitirmek için bellek yetersiz. Kullanılabilen bellek miktarını arttırmak için bir ya da daha çok uygulama kapatınız."
     STRING_CANNOTFIND "%s bulunamadı."
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
