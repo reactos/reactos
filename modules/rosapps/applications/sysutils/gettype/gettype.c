@@ -174,7 +174,7 @@ GetBasicInfo(LPOSVERSIONINFOEX osvi, TCHAR * HostName, TCHAR * OSName, TCHAR * V
 	}
 	else if(osvi->dwMajorVersion == 5)
 	{
-		if(osvi->dwMajorVersion == 0)
+		if(osvi->dwMinorVersion == 0)
 		{
 			_tcscpy(OSName, _T("Microsoft Windows 2000 "));
 		}

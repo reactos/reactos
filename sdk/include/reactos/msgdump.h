@@ -2,10 +2,10 @@
  * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0.html)
  * PURPOSE:     Win32API message dumping
- * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2018-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    4   /* Version 4 */
+#define _INC_MSGDUMP    6   /* Version 6 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -61,6 +61,17 @@ MD_rect_text(TCHAR *buf, size_t bufsize, const RECT *prc)
 static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    TCHAR szName[64];
+    if (0xC000 <= uMsg && uMsg <= 0xFFFF &&
+        GlobalGetAtomName(uMsg, szName, ARRAYSIZE(szName)))
+    {
+        /* RegisterWindowMessage'd message */
+        MSGDUMP_TPRINTF(TEXT("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, szName, uMsg, (void *)hwnd, (void *)wParam,
+                        (void *)lParam);
+        return 0;
+    }
+
     MSGDUMP_TPRINTF(TEXT("%sWM_%u(hwnd:%p, wParam:%p, lParam:%p)\n"),
                     MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
@@ -3312,7 +3323,9 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
     DEFINE_RESULT(WM_NCXBUTTONDOWN);
     DEFINE_RESULT(WM_NCXBUTTONUP);
     DEFINE_RESULT(WM_NCXBUTTONDBLCLK);
+#ifdef WM_INPUT_DEVICE_CHANGE
     DEFINE_RESULT(WM_INPUT_DEVICE_CHANGE);
+#endif
     DEFINE_RESULT(WM_INPUT);
     DEFINE_RESULT(WM_KEYDOWN);
     DEFINE_RESULT(WM_KEYUP);
@@ -3462,7 +3475,9 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
     DEFINE_RESULT(WM_PRINTCLIENT);
     DEFINE_RESULT(WM_APPCOMMAND);
     DEFINE_RESULT(WM_THEMECHANGED);
+#ifdef WM_CLIPBOARDUPDATE
     DEFINE_RESULT(WM_CLIPBOARDUPDATE);
+#endif
 #if _WIN32_WINNT >= 0x0600
     DEFINE_RESULT(WM_DWMCOMPOSITIONCHANGED);
     DEFINE_RESULT(WM_DWMNCRENDERINGCHANGED);

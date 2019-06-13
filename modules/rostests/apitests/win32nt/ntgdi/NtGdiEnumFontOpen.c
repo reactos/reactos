@@ -22,7 +22,7 @@ START_TEST(NtGdiEnumFontOpen)
     ok(idEnum != 0, "idEnum was 0.\n");
     if (idEnum == 0)
     {
-        skip("idEnum == 0");
+        skip("idEnum == 0\n");
         return;
     }
 

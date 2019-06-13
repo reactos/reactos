@@ -77,6 +77,9 @@ IDI_VERTSKEW ICON "icons/vertskew.ico"
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif

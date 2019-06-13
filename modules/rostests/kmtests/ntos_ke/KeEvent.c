@@ -214,7 +214,7 @@ TestEventConcurrent(
         Priority = KeQueryPriorityThread(Threads[i].Thread);
         ok_eq_long(Priority, max(min(8L + PriorityIncrement + i, 15L), 8L));
         /* replace the thread with the current thread - which will never signal */
-        if (!skip((Status & 0x3F) < ThreadCount, "Index out of bounds"))
+        if (!skip((Status & 0x3F) < ThreadCount, "Index out of bounds\n"))
             ThreadObjects[Status & 0x3F] = Thread;
         Status = KeWaitForMultipleObjects(ThreadCount, ThreadObjects, WaitAny, Executive, KernelMode, FALSE, &ShortTimeout, WaitBlock);
         ok_eq_hex(Status, STATUS_TIMEOUT);

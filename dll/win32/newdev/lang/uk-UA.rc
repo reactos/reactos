@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/newdev/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for newdev
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Yaroslav Kibysh
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -17,7 +17,7 @@ BEGIN
     LTEXT "Цей майстер встановлює новий драйвер пристрою для:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Натисніть ""Далі"" для продовження.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "НЕВІДОМИЙ ПРИСТРІЙ", IDC_DEVICE, 148, 36, 147, 17
-    LTEXT "ПОПЕРЕДЖЕННЯ! ВСТАНОВЛЕННЯ ПРИСТРОЮ МОЖЕ ЗАМОРОЗИТИ ВАШ КОМП'ЮТЕР АБО ЗРОБИТИ ЙОГО НЕЗДАТНИМ ДО ЗАВАНТАЖЕННЯ!", IDC_STATIC, 120, 59, 195, 16
+    LTEXT "УВАГА! ЦЕ МОЖЕ ЗАМОРОЗИТИ ВАШ КОМП'ЮТЕР АБО ЗРОБИТИ ЙОГО НЕЗДАТНИМ ДО ЗАВАНТАЖЕННЯ!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Встановити драйвер автоматично", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Встановити драйвер з вказаного місця", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
@@ -96,9 +96,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New Hardware Wizard"
-    IDS_UPDATEWIZARDTITLE "Update Driver Wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "Встановлення нового пристрою"
+    IDS_UPDATEWIZARDTITLE "Оновлення драйверу"
+    IDS_CHSOURCE_TITLE "Виберіть налаштування пошуку"
+    IDS_SEARCHDRV_TITLE "Пошук драйверів..."
+    IDS_INSTALLDRV_TITLE "Встановлення драйверу..."
 END

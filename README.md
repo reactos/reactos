@@ -45,6 +45,8 @@ The ReactOS project, although currently focused on Windows Server 2003 compatibi
 
 The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
 
+***ReactOS is currently an Alpha quality operating system. This means that ReactOS is under heavy development, things may not work well and it can corrupt the data present on your hard disk. It is recommended to test ReactOS on a virtual machine or on a computer with no sensitive or critical data!***
+
 ## Building
 
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]

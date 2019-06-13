@@ -239,18 +239,43 @@ GetDeviceInstanceKeyPath(
 
         ulTransferLength = 300 * sizeof(WCHAR);
         ulLength = 300 * sizeof(WCHAR);
-        ret = PNP_GetDeviceRegProp(BindingHandle,
-                                   pszDeviceInst,
-                                   CM_DRP_DRIVER,
-                                   &ulType,
-                                   (PVOID)pszBuffer,
-                                   &ulTransferLength,
-                                   &ulLength,
-                                   0);
+
+        RpcTryExcept
+        {
+            ret = PNP_GetDeviceRegProp(BindingHandle,
+                                       pszDeviceInst,
+                                       CM_DRP_DRIVER,
+                                       &ulType,
+                                       (PVOID)pszBuffer,
+                                       &ulTransferLength,
+                                       &ulLength,
+                                       0);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = RpcStatusToCmStatus(RpcExceptionCode());
+        }
+        RpcEndExcept;
+
         if (ret != CR_SUCCESS)
         {
-            ERR("PNP_GetDeviceRegProp() failed (Error %lu)\n", ret);
-            goto done;
+            RpcTryExcept
+            {
+                ret = PNP_GetClassInstance(BindingHandle,
+                                           pszDeviceInst,
+                                           (PVOID)pszBuffer,
+                                           300);
+            }
+            RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+            {
+                ret = RpcStatusToCmStatus(RpcExceptionCode());
+            }
+            RpcEndExcept;
+
+            if (ret != CR_SUCCESS)
+            {
+                goto done;
+            }
         }
 
         TRACE("szBuffer: %S\n", pszBuffer);
@@ -809,7 +834,8 @@ CM_Add_Empty_Log_Conf(
  * CM_Add_Empty_Log_Conf_Ex [SETUPAPI.@]
  */
 CONFIGRET
-WINAPI CM_Add_Empty_Log_Conf_Ex(
+WINAPI
+CM_Add_Empty_Log_Conf_Ex(
     _Out_ PLOG_CONF plcLogConf,
     _In_ DEVINST dnDevInst,
     _In_ PRIORITY Priority,
@@ -6735,7 +6761,7 @@ CM_Query_Resource_Conflict_List(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    pConflictData = MyMalloc(sizeof(CONFLICT_DATA));
+    pConflictData = MyMalloc(sizeof(PCONFLICT_DATA));
     if (pConflictData == NULL)
     {
         ret = CR_OUT_OF_MEMORY;

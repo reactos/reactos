@@ -30,23 +30,23 @@ HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
 int LoadStringAndOem(HINSTANCE hInst,
-		UINT uID,
-		LPTSTR szNode,
-		int byteSize
-)
+                     UINT uID,
+                     LPTSTR szNode,
+                     int byteSize)
 {
-  TCHAR *szTmp;
-  int res;
+    TCHAR *szTmp;
+    int res;
 
-  szTmp = (LPTSTR)HeapAlloc(ProcessHeap, 0, byteSize);
-  if (szTmp == NULL)
-  {
-    return 0;
-  }
-  res = LoadString(hInst, uID, szTmp, byteSize); 
-  CharToOem(szTmp, szNode);
-  HeapFree(ProcessHeap, 0, szTmp);
-  return res;
+    szTmp = (LPTSTR)HeapAlloc(ProcessHeap, 0, byteSize);
+    if (szTmp == NULL)
+    {
+        return 0;
+    }
+
+    res = LoadString(hInst, uID, szTmp, byteSize); 
+    CharToOem(szTmp, szNode);
+    HeapFree(ProcessHeap, 0, szTmp);
+    return res;
 }
 
 LPTSTR GetNodeTypeName(UINT NodeType)
@@ -197,16 +197,16 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                      KEY_READ,
                      &hKey) == ERROR_SUCCESS)
     {
-        if(RegQueryValueEx(hKey,
-                           _T("Name"),
-                           NULL,
-                           &dwType,
-                           NULL,
-                           &dwDataSize) == ERROR_SUCCESS)
+        if (RegQueryValueEx(hKey,
+                            _T("Name"),
+                            NULL,
+                            &dwType,
+                            NULL,
+                            &dwDataSize) == ERROR_SUCCESS)
         {
             ConTypeTmp = (LPTSTR)HeapAlloc(ProcessHeap,
-                                        0,
-                                        dwDataSize);
+                                           0,
+                                           dwDataSize);
 
             if (ConTypeTmp == NULL)
                 return NULL;
@@ -220,13 +220,13 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                 HeapFree(ProcessHeap, 0, ConTypeTmp);
                 return NULL;
             }
-                                        
-            if(RegQueryValueEx(hKey,
-                               _T("Name"),
-                               NULL,
-                               &dwType,
-                               (PBYTE)ConTypeTmp,
-                               &dwDataSize) != ERROR_SUCCESS)
+
+            if (RegQueryValueEx(hKey,
+                                _T("Name"),
+                                NULL,
+                                &dwType,
+                                (PBYTE)ConTypeTmp,
+                                &dwDataSize) != ERROR_SUCCESS)
             {
                 HeapFree(ProcessHeap,
                          0,
@@ -235,7 +235,8 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                 ConType = NULL;
             }
 
-            if (ConType) CharToOem(ConTypeTmp, ConType);
+            if (ConType)
+                CharToOem(ConTypeTmp, ConType);
             HeapFree(ProcessHeap, 0, ConTypeTmp);
         }
     }
@@ -268,7 +269,7 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
         return NULL;
     }
 
-    for (i=0; ; i++)
+    for (i = 0; ; i++)
     {
         DWORD PathSize;
         LONG Status;
@@ -317,12 +318,12 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
         HeapFree(ProcessHeap, 0, lpPath);
         lpPath = NULL;
 
-        if(RegQueryValueEx(hClassKey,
-                           _T("NetCfgInstanceId"),
-                           NULL,
-                           &dwType,
-                           NULL,
-                           &dwDataSize) == ERROR_SUCCESS)
+        if (RegQueryValueEx(hClassKey,
+                            _T("NetCfgInstanceId"),
+                            NULL,
+                            &dwType,
+                            NULL,
+                            &dwDataSize) == ERROR_SUCCESS)
         {
             lpKeyClass = (LPTSTR)HeapAlloc(ProcessHeap,
                                            0,
@@ -330,12 +331,12 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
             if (lpKeyClass == NULL)
                 goto CLEANUP;
 
-            if(RegQueryValueEx(hClassKey,
-                               _T("NetCfgInstanceId"),
-                               NULL,
-                               &dwType,
-                               (PBYTE)lpKeyClass,
-                               &dwDataSize) != ERROR_SUCCESS)
+            if (RegQueryValueEx(hClassKey,
+                                _T("NetCfgInstanceId"),
+                                NULL,
+                                &dwType,
+                                (PBYTE)lpKeyClass,
+                                &dwDataSize) != ERROR_SUCCESS)
             {
                 HeapFree(ProcessHeap, 0, lpKeyClass);
                 lpKeyClass = NULL;
@@ -350,12 +351,12 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
             HeapFree(ProcessHeap, 0, lpKeyClass);
             lpKeyClass = NULL;
 
-            if(RegQueryValueEx(hClassKey,
-                               _T("DriverDesc"),
-                               NULL,
-                               &dwType,
-                               NULL,
-                               &dwDataSize) == ERROR_SUCCESS)
+            if (RegQueryValueEx(hClassKey,
+                                _T("DriverDesc"),
+                                NULL,
+                                &dwType,
+                                NULL,
+                                &dwDataSize) == ERROR_SUCCESS)
             {
                 lpConDesc = (LPTSTR)HeapAlloc(ProcessHeap,
                                               0,
@@ -363,12 +364,12 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                 if (lpConDesc == NULL)
                     goto CLEANUP;
 
-                if(RegQueryValueEx(hClassKey,
-                                   _T("DriverDesc"),
-                                   NULL,
-                                   &dwType,
-                                   (PBYTE)lpConDesc,
-                                   &dwDataSize) != ERROR_SUCCESS)
+                if (RegQueryValueEx(hClassKey,
+                                    _T("DriverDesc"),
+                                    NULL,
+                                    &dwType,
+                                    (PBYTE)lpConDesc,
+                                    &dwDataSize) != ERROR_SUCCESS)
                 {
                     HeapFree(ProcessHeap, 0, lpConDesc);
                     lpConDesc = NULL;
@@ -376,7 +377,9 @@ LPTSTR GetConnectionDescription(LPTSTR lpClass)
                 }
             }
             else
+            {
                 lpConDesc = NULL;
+            }
 
             break;
         }
@@ -424,7 +427,7 @@ VOID ShowInfo(BOOL bAll)
     }
     else
     {
-        if( ERROR_NO_DATA != ret )
+        if (ret != ERROR_NO_DATA)
         {
             DoFormatMessage(0);
             return;
@@ -432,7 +435,7 @@ VOID ShowInfo(BOOL bAll)
     }
 
     /* call GetNetworkParams to obtain the network info */
-    if(GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW)
+    if (GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW)
     {
         pFixedInfo = (FIXED_INFO *)HeapAlloc(ProcessHeap, 0, netOutBufLen);
         if (pFixedInfo == NULL)
@@ -480,6 +483,7 @@ VOID ShowInfo(BOOL bAll)
     while (pAdapter)
     {
         LPTSTR IntType, myConType;
+        BOOLEAN bConnected = TRUE;
 
         mibEntry.dwIndex = pAdapter->Index;
         GetIfEntry(&mibEntry);
@@ -494,12 +498,13 @@ VOID ShowInfo(BOOL bAll)
         /* check if the adapter is connected to the media */
         if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
+            bConnected = FALSE;
             _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
-            pAdapter = pAdapter->Next;
-            continue;
         }
-
-        _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
+        else
+        {
+            _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
+        }
 
         if (bAll)
         {
@@ -507,11 +512,20 @@ VOID ShowInfo(BOOL bAll)
             _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), lpDesc);
             HeapFree(ProcessHeap, 0, lpDesc);
             _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
-            if (pAdapter->DhcpEnabled)
-                _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
-            _tprintf(_T("\tAutoconfiguration Enabled . . . . : \n"));
+            if (bConnected)
+            {
+                if (pAdapter->DhcpEnabled)
+                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
+                else
+                    _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
+                _tprintf(_T("\tAutoconfiguration Enabled . . . . : \n"));
+            }
+        }
+
+        if (!bConnected)
+        {
+            pAdapter = pAdapter->Next;
+            continue;
         }
 
         _tprintf(_T("\tIP Address. . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpAddress.String);
@@ -543,7 +557,7 @@ VOID ShowInfo(BOOL bAll)
                 _tprintf(_T("\tSecondary WINS Server . . . . . . : %s\n"), pAdapter->SecondaryWinsServer.IpAddress.String);
             }
 
-            if (pAdapter->DhcpEnabled)
+            if (pAdapter->DhcpEnabled && _tcscmp(pAdapter->DhcpServer.IpAddress.String, _T("255.255.255.255")))
             {
                 _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseObtained)));
                 _tprintf(_T("\tLease Expires . . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseExpires)));
@@ -582,15 +596,15 @@ VOID Release(LPTSTR Index)
             {
                 for (i = 0; i < pInfo->NumAdapters; i++)
                 {
-                     CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
-                     _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
+                    CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+                    _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
 
-                     /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-                     if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
-                     {
-                         _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), AdapterInfo.Name);
-                         DoFormatMessage(ret);
-                     }
+                    /* Call IpReleaseAddress to release the IP address on the specified adapter. */
+                    if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
+                    {
+                        _tprintf(_T("\nAn error occured while releasing interface %ls : \n"), AdapterInfo.Name);
+                        DoFormatMessage(ret);
+                    }
                 }
 
                 HeapFree(ProcessHeap, 0, pInfo);
@@ -642,7 +656,7 @@ VOID Renew(LPTSTR Index)
 
         /* Make an initial call to GetInterfaceInfo to get
          * the necessary size into the ulOutBufLen variable */
-        if ( GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
         {
             HeapFree(ProcessHeap, 0, pInfo);
             pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
@@ -654,13 +668,12 @@ VOID Renew(LPTSTR Index)
         }
 
         /* Make a second call to GetInterfaceInfo to get the actual data we want */
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
         {
             for (i = 0; i < pInfo->NumAdapters; i++)
             {
                 CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
                 _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
-
 
                 /* Call IpRenewAddress to renew the IP address on the specified adapter. */
                 if (IpRenewAddress(&AdapterInfo) != NO_ERROR)
@@ -744,41 +757,41 @@ int main(int argc, char *argv[])
     ProcessHeap = GetProcessHeap();
 
     /* Parse command line for options we have been given. */
-    if ( (argc > 1)&&(argv[1][0]=='/' || argv[1][0]=='-') )
+    if ((argc > 1) && (argv[1][0]=='/' || argv[1][0]=='-'))
     {
-        if( !_tcsicmp( &argv[1][1], _T("?") ))
+        if (!_tcsicmp(&argv[1][1], _T("?")))
         {
             DoUsage = TRUE;
         }
-        else if( !_tcsnicmp( &argv[1][1], _T("ALL"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("ALL"), _tcslen(&argv[1][1])))
         {
            DoAll = TRUE;
         }
-        else if( !_tcsnicmp( &argv[1][1], _T("RELEASE"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("RELEASE"), _tcslen(&argv[1][1])))
         {
             DoRelease = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("RENEW"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("RENEW"), _tcslen(&argv[1][1])))
         {
             DoRenew = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("FLUSHDNS"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("FLUSHDNS"), _tcslen(&argv[1][1])))
         {
             DoFlushdns = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("FLUSHREGISTERDNS"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("FLUSHREGISTERDNS"), _tcslen(&argv[1][1])))
         {
             DoRegisterdns = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("DISPLAYDNS"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("DISPLAYDNS"), _tcslen(&argv[1][1])))
         {
             DoDisplaydns = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("SHOWCLASSID"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("SHOWCLASSID"), _tcslen(&argv[1][1])))
         {
             DoShowclassid = TRUE;
         }
-        else if( ! _tcsnicmp( &argv[1][1], _T("SETCLASSID"), _tcslen(&argv[1][1]) ))
+        else if (!_tcsnicmp(&argv[1][1], _T("SETCLASSID"), _tcslen(&argv[1][1])))
         {
             DoSetclassid = TRUE;
         }

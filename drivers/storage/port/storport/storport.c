@@ -223,6 +223,8 @@ PortAddDevice(
 
     DeviceExtension->PnpState = dsStopped;
 
+    InitializeListHead(&DeviceExtension->UnitListHead);
+
     /* Attach the FDO to the device stack */
     Status = IoAttachDeviceToDeviceStackSafe(Fdo,
                                              PhysicalDeviceObject,
@@ -1104,6 +1106,7 @@ StorPortNotification(
     STOR_SPINLOCK SpinLock;
     PVOID LockContext;
     PSTOR_LOCK_HANDLE LockHandle;
+    PSCSI_REQUEST_BLOCK Srb;
 
     DPRINT1("StorPortNotification(%x %p)\n",
             NotificationType, HwDeviceExtension);
@@ -1124,6 +1127,17 @@ StorPortNotification(
 
     switch (NotificationType)
     {
+        case RequestComplete:
+            DPRINT1("RequestComplete\n");
+            Srb = (PSCSI_REQUEST_BLOCK)va_arg(ap, PSCSI_REQUEST_BLOCK);
+            DPRINT1("Srb %p\n", Srb);
+            if (Srb->OriginalRequest != NULL)
+            {
+                DPRINT1("Need to complete the IRP!\n");
+
+            }
+            break;
+
         case GetExtendedFunctionTable:
             DPRINT1("GetExtendedFunctionTable\n");
             ppExtendedFunctions = (PSTORPORT_EXTENDED_FUNCTIONS*)va_arg(ap, PSTORPORT_EXTENDED_FUNCTIONS*);

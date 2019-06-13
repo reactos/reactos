@@ -977,11 +977,11 @@ DoLogon(
         else if (SubStatus == STATUS_ACCOUNT_LOCKED_OUT)
         {
             TRACE("Account locked!\n");
-            pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
-                                                hwndDlg,
-                                                L"Account locked!",
-                                                L"Logon error",
-                                                MB_OK | MB_ICONERROR);
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONERROR,
+                               IDS_LOGONTITLE,
+                               IDS_ACCOUNTLOCKED);
             goto done;
         }
         else if ((SubStatus == STATUS_PASSWORD_MUST_CHANGE) ||
@@ -1024,14 +1024,32 @@ DoLogon(
                                IDS_LOGONTITLE,
                                IDS_ACCOUNTEXPIRED);
         }
+        else if (SubStatus == STATUS_INVALID_LOGON_HOURS)
+        {
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONERROR,
+                               IDS_LOGONTITLE,
+                               IDS_INVALIDLOGONHOURS);
+            goto done;
+        }
+        else if (SubStatus == STATUS_INVALID_WORKSTATION)
+        {
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONERROR,
+                               IDS_LOGONTITLE,
+                               IDS_INVALIDWORKSTATION);
+            goto done;
+        }
         else
         {
             TRACE("Other error!\n");
-            pgContext->pWlxFuncs->WlxMessageBox(pgContext->hWlx,
-                                                hwndDlg,
-                                                L"Other error!",
-                                                L"Logon error",
-                                                MB_OK | MB_ICONERROR);
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONERROR,
+                               IDS_LOGONTITLE,
+                               IDS_ACCOUNTRESTRICTION);
             goto done;
         }
     }
@@ -1040,7 +1058,6 @@ DoLogon(
         TRACE("DoLoginTasks failed! Status 0x%08lx\n", Status);
         goto done;
     }
-
 
     if (!CreateProfile(pgContext, UserName, Domain, Password))
     {

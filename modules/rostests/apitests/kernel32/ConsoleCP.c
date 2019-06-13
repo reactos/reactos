@@ -24,6 +24,20 @@ static const WCHAR ideograph_space = (WCHAR)0x3000;     /* fullwidth space */
 LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
 LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
 
+static BOOL IsCJKCodePage(void)
+{
+    switch (GetOEMCP())
+    {
+    case 936:   // Chinese PRC
+    case 932:   // Japanese
+    case 949:   // Korean
+    case 1361:  // Korean (Johab)
+    case 950:   // Taiwan
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /* Russian Code Page 855 */
 // NOTE that CP 866 can also be used
 static void test_cp855(HANDLE hConOut)
@@ -458,14 +472,28 @@ START_TEST(ConsoleCP)
     ok(hConOut != INVALID_HANDLE_VALUE, "Opening ConOut\n");
 
     if (IsValidLocale(lcidRussian, LCID_INSTALLED))
-        test_cp855(hConOut);
+    {
+        if (!IsCJKCodePage())
+            test_cp855(hConOut);
+        else
+            skip("Russian testcase is skipped because of CJK\n");
+    }
     else
+    {
         skip("Russian locale is not installed\n");
+    }
 
     if (IsValidLocale(lcidJapanese, LCID_INSTALLED))
-        test_cp932(hConOut);
+    {
+        if (IsCJKCodePage())
+            test_cp932(hConOut);
+        else
+            skip("Japanese testcase is skipped because of not CJK\n");
+    }
     else
+    {
         skip("Japanese locale is not installed\n");
+    }
 
     CloseHandle(hConIn);
     CloseHandle(hConOut);

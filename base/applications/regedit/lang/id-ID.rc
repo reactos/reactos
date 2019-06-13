@@ -14,7 +14,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "&Keluar", ID_REGISTRY_EXIT
     END
@@ -26,16 +26,16 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "&Impor ...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ekspor...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ambil Hive...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Muat Hive...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Buang Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Sambung Registri Jaringan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&Putus Registri Jaringan...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Sambungkan Registri Jaringan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Putuskan Registri Jaringan...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Cetak...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -43,7 +43,7 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Modifikasi", ID_EDIT_MODIFY
+        MENUITEM "&Ubah", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Baru"
         BEGIN
@@ -61,14 +61,14 @@ BEGIN
         MENUITEM "&Hapus\tDel", ID_EDIT_DELETE
         MENUITEM "&Ganti nama", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Copy Nama Kunci", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Salin Nama Kunci", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Cari...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Cari Beri&kutnya\tF3", ID_EDIT_FINDNEXT
     END
-    POPUP "&Lihat"
+    POPUP "&Tampilan"
     BEGIN
-        MENUITEM "Status &Bar", ID_VIEW_STATUSBAR
+        MENUITEM "&Bilah Status", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "Sp&lit", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
@@ -91,8 +91,8 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Modifikasi", ID_EDIT_MODIFY
-        MENUITEM "Modifikasi Data Biner", ID_EDIT_MODIFY_BIN
+        MENUITEM "&Ubah", ID_EDIT_MODIFY
+        MENUITEM "Ubah Data Biner", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Hapus\tDel", ID_EDIT_DELETE
         MENUITEM "&Ganti nama", ID_EDIT_RENAME
@@ -106,13 +106,13 @@ BEGIN
             MENUITEM "Nilai &String", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Nilai &Biner", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Nilai &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Nilai &Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Nilai String L&uas", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
     BEGIN
-        MENUITEM "Lebar/Sempit", ID_TREE_EXPANDBRANCH
+        MENUITEM "Perluas/Perempit", ID_TREE_EXPANDBRANCH
         POPUP "&Baru"
         BEGIN
             MENUITEM "&Kunci", ID_EDIT_NEW_KEY
@@ -120,8 +120,8 @@ BEGIN
             MENUITEM "Nilai &String", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Nilai &Biner", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Nilai &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Nilai &Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Nilai String L&uas", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Cari...", ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -131,16 +131,16 @@ BEGIN
         MENUITEM "&Ekspor", ID_TREE_EXPORT
         MENUITEM "&Perijinan...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Copy Nama Kunci", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Salin Nama Kunci", ID_EDIT_COPYKEYNAME
     END
     POPUP ""
     BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "&Gunting", ID_HEXEDIT_CUT
+        MENUITEM "&Salin", ID_HEXEDIT_COPY
+        MENUITEM "&Tempel", ID_HEXEDIT_PASTE
+        MENUITEM "&Hapus", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "&Pilih Semua", ID_HEXEDIT_SELECT_ALL
     END
 END
 
@@ -151,9 +151,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "Edit String"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Nama nilai:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Nama Nilai:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Nilai &Data:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Data Nilai:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
     PUSHBUTTON "Batal", IDCANCEL, 196, 64, 50, 14
@@ -195,7 +195,7 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Data nilai:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
-    GROUPBOX "Basis", IDC_STATIC, 130, 35, 116, 39
+    GROUPBOX "Dasar", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "&Heksadesimal", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
     AUTORADIOBUTTON "&Desimal", IDC_FORMAT_DEC, 141, 59, 60, 10
     DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
@@ -204,47 +204,47 @@ END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Daftar Sumber"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "Tampilkan...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Sumber"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Interupsi:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Memori:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Data spesifik perangkat:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "Penggunaan", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Tidak dapat ditentukan", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Terbagi", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Perangkat eksklusif", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Driver eksklusif", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Jenis Antarmuka:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Nomor Bus:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "Versi:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "Revisi:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
@@ -255,13 +255,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_LIST_COLUMN_NAME "Nama"
-    IDS_LIST_COLUMN_TYPE "Tipe"
+    IDS_LIST_COLUMN_TYPE "Jenis"
     IDS_LIST_COLUMN_DATA "Data"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Editor Registry"
+    IDS_APP_TITLE "Editor Registri"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
@@ -270,7 +270,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Berisi perintah untuk bekerja dengan registri keseluruhan"
     ID_EDIT_MENU "Berisi perintah untuk mengedit nilai atau kunci"
-    ID_VIEW_MENU "Berisi perintah untuk mengkustomisasi jendela registri"
+    ID_VIEW_MENU "Berisi perintah untuk mengatur jendela registri"
     ID_FAVOURITES_MENU "Berisi perintah untuk mengakses kunci yang sering digunakan"
     ID_HELP_MENU "Berisi perintah untuk menampilkan bantuan dan informasi mengenai editor registri"
     ID_EDIT_NEW_MENU "Berisi perintah untuk membuat kunci atau nilai baru"
@@ -278,17 +278,17 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "Memodifikasi data nilail"
+    ID_EDIT_MODIFY "Mengubah data nilai"
     ID_EDIT_NEW_KEY "Menambah kunci baru"
     ID_EDIT_NEW_STRINGVALUE "Menambah nilai string baru"
     ID_EDIT_NEW_BINARYVALUE "Menambah nilai biner baru"
     ID_EDIT_NEW_DWORDVALUE "Menambah nilai double word baru"
     ID_REGISTRY_IMPORTREGISTRYFILE "Mengimpor file teks ke dalam registri"
-    ID_REGISTRY_EXPORTREGISTRYFILE "Mengekspor semua atau sebagian registri le file teks"
-    ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE "Unloads a hive from the registry"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Menyambung ke registri komputer remote"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Memutuskan dari registri komputer remote"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Mengekspor semua atau sebagian registri ke file teks"
+    ID_REGISTRY_LOADHIVE "Memuat berkas hive ke dalam registri"
+    ID_REGISTRY_UNLOADHIVE "Membuang berkas hive dari registri"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Menyambungkan ke registri komputer lain"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Memutuskan dari registri komputer lain"
     ID_REGISTRY_PRINT "Mecetak semua atau sebagian registri"
 /*    ID_HELP_HELPTOPICS "Opens registry editor help" */
     ID_HELP_ABOUT "Menampilkan informasi program, nomor versi, dan hak cipta"
@@ -299,23 +299,23 @@ BEGIN
     ID_REGISTRY_EXIT "Keluar dari editor registri"
     ID_FAVOURITES_ADDTOFAVOURITES "Menambah kunci ke daftar favourit"
     ID_FAVOURITES_REMOVEFAVOURITE "Menghapus kunci dari daftar favourit"
-    ID_VIEW_STATUSBAR "Menampilkan atau menyembunyikan bar status"
-    ID_VIEW_SPLIT "Mengubah posisi pemisahan antara dua panes"
+    ID_VIEW_STATUSBAR "Menampilkan atau menyembunyikan bilah status"
+    ID_VIEW_SPLIT "Mengubah posisi pemisahan antara dua panel"
     ID_VIEW_REFRESH "Menyegarkan jendela"
     ID_EDIT_DELETE "Menghapus pilihan"
     ID_EDIT_RENAME "Mengganti nama pilihan"
-    ID_EDIT_COPYKEYNAME "Mengcopy nama kunci yang dipilih ke clipboard"
+    ID_EDIT_COPYKEYNAME "Menyalin nama kunci yang dipilih ke papan klip"
     ID_EDIT_FIND "Mencari string teks dalam kunci, nilai atau data"
     ID_EDIT_FINDNEXT "Mencari kejadian berikutnya atas teks yang ditetapkan dalam pencarian sebelumnya"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Salah"
+    IDS_ERROR "Kesalahan"
     IDS_WARNING "Peringatan"
     IDS_BAD_KEY "Tidak bisa menanyakan kunci '%s'"
     IDS_BAD_VALUE "Tidak bisa menanyakan nilai '%s'"
-    IDS_UNSUPPORTED_TYPE "Tidak bisa mengedit kunci jenis ini (%ld)"
+    IDS_UNSUPPORTED_TYPE "Tidak bisa mengganti kunci jenis ini (%ld)"
     IDS_TOO_BIG_VALUE "Nilai terlalu besar (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data jenis REG_MULTI_SZ tidak bisa berisi string kosong.\nString kosong sudah dihapus dari daftar."
     IDS_QUERY_DELETE_KEY_ONE "Anda yakin ingin menghapus kunci ini?"
@@ -326,10 +326,10 @@ BEGIN
     IDS_QUERY_DELETE_CONFIRM "Konfirmasi Penghapusan Nilai"
     IDS_ERR_DELVAL_CAPTION "Kesalahan Menghapus Nilai"
     IDS_ERR_DELETEVALUE "Tidak bisa menghapus semua nilai yang ditetapkan!"
-    IDS_ERR_RENVAL_CAPTION "Kesalahan Mengganti nama Nilai"
+    IDS_ERR_RENVAL_CAPTION "Kesalahan Mengganti nama nilai"
     IDS_ERR_RENVAL_TOEMPTY "Tidak bisa mengganti nama %s. Nama nilai yang ditetapkan kosong. Coba nama lain dan coba lagi."
-    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Konfirmasi Pengembalian Kunci"
+    IDS_QUERY_IMPORT_HIVE_MSG "Kunci ini akan dikembalikan di atas kunci yang dipilih saat ini.\nSemua nilai dan subkunci dalam kunci ini akan dihapus.\nLanjutkan operasi ini?"
     IDS_NEW_KEY "Kunci Baru #%d"
     IDS_NEW_VALUE "Nilai Baru #%d"
 END
@@ -340,24 +340,24 @@ BEGIN
     IDS_DEFAULT_VALUE_NAME "(Standar)"
     IDS_VALUE_NOT_SET "(nilai tidak disetel)"
     IDS_UNKNOWN_TYPE "Tipe Tidak dikenal: (0x%lx)"
-    IDS_MY_COMPUTER "My Computer"
-    IDS_IMPORT_REG_FILE "Impor File Registri"
-    IDS_EXPORT_REG_FILE "Ekspor File Registri"
-    IDS_LOAD_HIVE "Load Hive"
-    IDS_UNLOAD_HIVE "Unload Hive"
+    IDS_MY_COMPUTER "Komputer Saya"
+    IDS_IMPORT_REG_FILE "Impor Berkas Registri"
+    IDS_EXPORT_REG_FILE "Ekspor Berkas Registri"
+    IDS_LOAD_HIVE "Muat Hive"
+    IDS_UNLOAD_HIVE "Buang Hive"
     IDS_INVALID_DWORD "(nilai DWORD tidak benar)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "Registration File"
-    IDS_FLT_REGFILES "File Registrasi (*.reg)"
+    IDS_FLT_REGFILE "Berkas Registrasi"
+    IDS_FLT_REGFILES "Berkas Registrasi (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "Berkas Registri Hive (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "File Registrasi Win9x/NT4 (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Berkas Registrasi Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
-    IDS_FLT_ALLFILES "Semua File (*.*)"
+    IDS_FLT_ALLFILES "Semua Berkas (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
 END
 
@@ -366,7 +366,7 @@ BEGIN
     IDS_ACCESS_FULLCONTROL "Kontrol Penuh"
     IDS_ACCESS_READ "Baca"
     IDS_ACCESS_QUERYVALUE "Nilai Query"
-    IDS_ACCESS_SETVALUE "Set Nilai"
+    IDS_ACCESS_SETVALUE "Setel Nilai"
     IDS_ACCESS_CREATESUBKEY "Buat Subkunci"
     IDS_ACCESS_ENUMERATESUBKEYS "Enumerasi Subkunci"
     IDS_ACCESS_NOTIFY "Beritahu"
@@ -386,55 +386,55 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EXPAND "&Lebarkan"
-    IDS_COLLAPSE "&Sempitkan"
+    IDS_EXPAND "Pe&rluas"
+    IDS_COLLAPSE "Per&sempit"
     IDS_GOTO_SUGGESTED_KEY "&Pergi ke '%s'"
-    IDS_FINISHEDFIND "Selesai mencari seluruh registri."
+    IDS_FINISHEDFIND "Selesai mencari di seluruh registri."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
-    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT "Menambahkan informasi tidak sengaja mengganti atau menghapus nilai serta menyebabkan komponen berhenti bekerja semestinya.\nJika informasi ini adalah dari sumber tidak terpercaya dalam '%s', jangan menambahkan ini dalam registri.\n\nYakin ingin melanjutkan?"
+    IDS_IMPORT_OK "Kunci dan nilai yang termuat di '%s' berhasil ditambahkan dalam registry."
+    IDS_IMPORT_ERROR "Tidak bisa mengimpor '%s': Kesalahan membuka berkas. Bisa jadi dari cakram atau berkas sistem atau berkas tidak tersedia."
+    IDS_EXPORT_ERROR "Tidak bisa mengekspor '%s': Kesalahan membuat atau menulis berkas. Bisa jadi dari cakram atau berkas sistem."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
-    IDS_INTERFACE "Interface"
+    IDS_BUSNUMBER "Nomor Bus"
+    IDS_INTERFACE "Antarmuka"
     IDS_DMA_CHANNEL "Channel"
     IDS_DMA_PORT "Port"
-    IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_INTERRUPT_VECTOR "Vektor"
+    IDS_INTERRUPT_LEVEL "Tingkat"
+    IDS_INTERRUPT_AFFINITY "Afinitas"
+    IDS_INTERRUPT_TYPE "Jenis"
+    IDS_MEMORY_ADDRESS "Alamat Fisik"
+    IDS_MEMORY_LENGTH "Panjang"
+    IDS_MEMORY_ACCESS "Akses"
+    IDS_PORT_ADDRESS "Alamat Fisik"
+    IDS_PORT_LENGTH "Panjang"
+    IDS_PORT_ACCESS "Akses"
+    IDS_SPECIFIC_RESERVED1 "Cadangan 1"
+    IDS_SPECIFIC_RESERVED2 "Cadangan 2"
+    IDS_SPECIFIC_DATASIZE "Ukuran Data"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_PORT_MEMORY_IO "Memori"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Ujung Sensitif"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Tingkat Sensitif"
+    IDS_MEMORY_READ_ONLY "Hanya Baca"
+    IDS_MEMORY_WRITE_ONLY "Hanya Tulis"
+    IDS_MEMORY_READ_WRITE "Baca / Tulis"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
+    IDS_BUS_UNDEFINED "Tidak terdefinisi"
     IDS_BUS_INTERNAL "Internal"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
@@ -447,8 +447,8 @@ BEGIN
     IDS_BUS_CBUS "C-Bus"
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
+    IDS_BUS_PROCESSORINTERNAL "Prosesor Internal"
+    IDS_BUS_INTERNALPOWERBUS "Power Bus Internal"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
     IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
@@ -470,18 +470,18 @@ END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "Muat Hive"
 FONT 8, "Ms Shell Dlg"
 BEGIN
-    LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT "&Kunci:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Tamah ke Favorit"
+CAPTION "Tambah ke Favorit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
@@ -518,9 +518,9 @@ BEGIN
             WS_TABSTOP, 14, 48, 36, 8
     CONTROL "&Data", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
-    CONTROL "Hanya sama seluruh &string", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Cocokkan seluruh &string", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "Huru&f sama", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "C&ocokkan huruf", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
 

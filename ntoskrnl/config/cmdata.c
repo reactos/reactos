@@ -157,7 +157,7 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager",
         L"LUIDDeviceMapsDisabled",
-        &DummyData,
+        &ObpLUIDDeviceMapsDisabled,
         NULL,
         NULL
     },

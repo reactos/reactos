@@ -15,7 +15,7 @@
  */
 START_TEST(NtGdiDdQueryDirectDrawObject)
 {
-    HANDLE  hDirectDraw = NULL;
+    HANDLE hDirectDraw;
     DD_HALINFO *pHalInfo = NULL;
     DWORD *pCallBackFlags = NULL;
     LPD3DNTHAL_CALLBACKS puD3dCallbacks = NULL;
@@ -64,20 +64,12 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
     /* Create hdc that we can use */
-    hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
+    hdc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     ASSERT(hdc != NULL);
 
 
-    /* Create ReactX handle */
-    hDirectDraw = (HANDLE) NtGdiDdCreateDirectDrawObject(hdc);
+    hDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
     RTEST(hDirectDraw != NULL);
-    if (hDirectDraw == NULL)
-    {
-        DeleteDC(hdc);
-        return;
-    }
-
-    /* Start Test ReactX NtGdiDdQueryDirectDrawObject function */
 
     /* testing  OsThunkDdQueryDirectDrawObject( NULL, ....  */
     RTEST(NtGdiDdQueryDirectDrawObject( NULL, pHalInfo,
@@ -97,6 +89,13 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     RTEST(puFourCC == NULL);
     RTEST(puNumHeaps == NULL);
     RTEST(puvmList == NULL);
+
+    if (hDirectDraw == NULL)
+    {
+        skip("No DirectDrawObject\n");
+        ok(DeleteDC(hdc) != 0, "DeleteDC() failed\n");
+        return;
+    }
 
     /* testing  NtGdiDdQueryDirectDrawObject( hDirectDrawLocal, NULL, ....  */
     RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
@@ -797,7 +796,8 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     * puFourCC
     */
 
-    /* Cleanup ReactX setup */
-    DeleteDC(hdc);
-    NtGdiDdDeleteDirectDrawObject(hDirectDraw);
+    ok(NtGdiDdDeleteDirectDrawObject(hDirectDraw) == TRUE,
+       "NtGdiDdDeleteDirectDrawObject() failed\n");
+
+    ok(DeleteDC(hdc) != 0, "DeleteDC() failed\n");
 }

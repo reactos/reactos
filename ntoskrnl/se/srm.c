@@ -5,6 +5,7 @@
  * PURPOSE:         Security Reference Monitor Server
  *
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -391,7 +392,7 @@ SepRmReferenceLogonSession(
         if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
         {
             /* Reference the session */
-            CurrentSession->ReferenceCount += 1;
+            ++CurrentSession->ReferenceCount;
             DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
@@ -409,9 +410,254 @@ SepRmReferenceLogonSession(
 
 
 NTSTATUS
+SepCleanupLUIDDeviceMapDirectory(
+    PLUID LogonLuid)
+{
+    BOOLEAN UseCurrentProc;
+    KAPC_STATE ApcState;
+    WCHAR Buffer[63];
+    UNICODE_STRING DirectoryName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE DirectoryHandle, LinkHandle;
+    PHANDLE LinksBuffer;
+    POBJECT_DIRECTORY_INFORMATION DirectoryInfo;
+    ULONG LinksCount, LinksSize, DirInfoLength, ReturnLength, Context, CurrentLinks, i;
+    BOOLEAN RestartScan;
+
+    PAGED_CODE();
+
+    /* We need a logon LUID */
+    if (LogonLuid == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Use current process */
+    UseCurrentProc = ObReferenceObjectSafe(PsGetCurrentProcess());
+    if (UseCurrentProc)
+    {
+        ObDereferenceObject(PsGetCurrentProcess());
+    }
+    /* Unless it's gone, then use system process */
+    else
+    {
+        KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+    }
+
+    /* Initialize our directory name */
+    _snwprintf(Buffer,
+               sizeof(Buffer) / sizeof(WCHAR),
+               L"\\Sessions\\0\\DosDevices\\%08x-%08x",
+               LogonLuid->HighPart,
+               LogonLuid->LowPart);
+    RtlInitUnicodeString(&DirectoryName, Buffer);
+
+    /* And open it */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DirectoryName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenDirectoryObject(&DirectoryHandle,
+                                   DIRECTORY_QUERY,
+                                   &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        if (!UseCurrentProc)
+        {
+            KeUnstackDetachProcess(&ApcState);
+        }
+
+        return Status;
+    }
+
+    /* Some initialization needed for browsing all our links... */
+    Context = 0;
+    DirectoryInfo = NULL;
+    DirInfoLength = 0;
+    /* In our buffer, we'll store at max 100 HANDLE */
+    LinksCount = 100;
+    CurrentLinks = 0;
+    /* Which gives a certain size */
+    LinksSize = LinksCount * sizeof(HANDLE);
+
+    /*
+     * This label is hit if we need to store more than a hundred
+     * of links. In that case, we jump here after having cleaned
+     * and deleted previous buffer.
+     * All handles have been already closed
+     */
+AllocateLinksAgain:
+    LinksBuffer = ExAllocatePoolWithTag(PagedPool,
+                                        LinksSize,
+                                        TAG_SE_HANDLES_TAB);
+    if (LinksBuffer == NULL)
+    {
+        /*
+         * Failure path: no need to clear handles:
+         * already closed and the buffer is already gone
+         */
+        ZwClose(DirectoryHandle);
+
+        /*
+         * On the first round, DirectoryInfo is NULL,
+         * if we grow LinksBuffer, it has been allocated
+         */
+        if (DirectoryInfo != NULL)
+        {
+            ExFreePoolWithTag(DirectoryInfo, TAG_SE_DIR_BUFFER);
+        }
+
+        if (!UseCurrentProc)
+        {
+            KeUnstackDetachProcess(&ApcState);
+        }
+
+        return STATUS_NO_MEMORY;
+    }
+
+    /*
+     * We always restart scan, but on the first loop
+     * if we couldn't fit everything in our buffer,
+     * then, we continue scan.
+     * But we restart if link buffer was too small
+     */
+    for (RestartScan = TRUE; ; RestartScan = FALSE)
+    {
+        /*
+         * Loop until our buffer is big enough to store
+         * one entry
+         */
+        while (TRUE)
+        {
+            Status = ZwQueryDirectoryObject(DirectoryHandle,
+                                            DirectoryInfo,
+                                            DirInfoLength,
+                                            TRUE,
+                                            RestartScan,
+                                            &Context,
+                                            &ReturnLength);
+            /* Only handle buffer growth in that loop */
+            if (Status != STATUS_BUFFER_TOO_SMALL)
+            {
+                break;
+            }
+
+            /* Get output length as new length */
+            DirInfoLength = ReturnLength;
+            /* Delete old buffer if any */
+            if (DirectoryInfo != NULL)
+            {
+                ExFreePoolWithTag(DirectoryInfo, 'bDeS');
+            }
+
+            /* And reallocate a bigger one */
+            DirectoryInfo = ExAllocatePoolWithTag(PagedPool,
+                                                  DirInfoLength,
+                                                  TAG_SE_DIR_BUFFER);
+            /* Fail if we cannot allocate */
+            if (DirectoryInfo == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+        }
+
+        /* If querying the entry failed, quit */
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        /* We only look for symbolic links, the rest, we ignore */
+        if (wcscmp(DirectoryInfo->TypeName.Buffer, L"SymbolicLink"))
+        {
+            continue;
+        }
+
+        /* If our link buffer is out of space, reallocate */
+        if (CurrentLinks >= LinksCount)
+        {
+            /* First, close the links */
+            for (i = 0; i < CurrentLinks; ++i)
+            {
+                ZwClose(LinksBuffer[i]);
+            }
+
+            /* Allow 20 more HANDLEs */
+            LinksCount += 20;
+            CurrentLinks = 0;
+            ExFreePoolWithTag(LinksBuffer, TAG_SE_HANDLES_TAB);
+            LinksSize = LinksCount * sizeof(HANDLE);
+
+            /* And reloop again */
+            goto AllocateLinksAgain;
+        }
+
+        /* Open the found link */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DirectoryInfo->Name,
+                                   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                   DirectoryHandle,
+                                   NULL);
+        if (NT_SUCCESS(ZwOpenSymbolicLinkObject(&LinkHandle,
+                                                SYMBOLIC_LINK_ALL_ACCESS,
+                                                &ObjectAttributes)))
+        {
+            /* If we cannot make it temporary, just close the link handle */
+            if (!NT_SUCCESS(ZwMakeTemporaryObject(LinkHandle)))
+            {
+                ZwClose(LinkHandle);
+            }
+            /* Otherwise, store it to defer deletion */
+            else
+            {
+                LinksBuffer[CurrentLinks] = LinkHandle;
+                ++CurrentLinks;
+            }
+        }
+    }
+
+    /* No more entries means we handled all links, that's not a failure */
+    if (Status == STATUS_NO_MORE_ENTRIES)
+    {
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Close all the links we stored, this will like cause their deletion */
+    for (i = 0; i < CurrentLinks; ++i)
+    {
+        ZwClose(LinksBuffer[i]);
+    }
+    /* And free our links buffer */
+    ExFreePoolWithTag(LinksBuffer, TAG_SE_HANDLES_TAB);
+
+    /* Free our directory info buffer - it might be NULL if we failed realloc */
+    if (DirectoryInfo != NULL)
+    {
+        ExFreePoolWithTag(DirectoryInfo, TAG_SE_DIR_BUFFER);
+    }
+
+    /* Close our session directory */
+    ZwClose(DirectoryHandle);
+
+    /* And detach from system */
+    if (!UseCurrentProc)
+    {
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
 SepRmDereferenceLogonSession(
     PLUID LogonLuid)
 {
+    ULONG RefCount;
+    PDEVICE_MAP DeviceMap;
     PSEP_LOGON_SESSION_REFERENCES CurrentSession;
 
     DPRINT("SepRmDereferenceLogonSession(%08lx:%08lx)\n",
@@ -429,11 +675,24 @@ SepRmDereferenceLogonSession(
         if (RtlEqualLuid(&CurrentSession->LogonId, LogonLuid))
         {
             /* Dereference the session */
-            CurrentSession->ReferenceCount -= 1;
+            RefCount = --CurrentSession->ReferenceCount;
             DPRINT("ReferenceCount: %lu\n", CurrentSession->ReferenceCount);
 
             /* Release the database lock */
             KeReleaseGuardedMutex(&SepRmDbLock);
+
+            /* We're done with the session */
+            if (RefCount == 0)
+            {
+                /* Get rid of the LUID device map */
+                DeviceMap = CurrentSession->pDeviceMap;
+                if (DeviceMap != NULL)
+                {
+                    CurrentSession->pDeviceMap = NULL;
+                    SepCleanupLUIDDeviceMapDirectory(LogonLuid);
+                    ObfDereferenceDeviceMap(DeviceMap);
+                }
+            }
 
             return STATUS_SUCCESS;
         }
@@ -690,6 +949,160 @@ SepRmCommandServerThread(
 
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+SeGetLogonIdDeviceMap(
+    IN PLUID LogonId,
+    OUT PDEVICE_MAP * DeviceMap
+    )
+{
+    NTSTATUS Status;
+    WCHAR Buffer[63];
+    PDEVICE_MAP LocalMap;
+    HANDLE DirectoryHandle, LinkHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PSEP_LOGON_SESSION_REFERENCES CurrentSession;
+    UNICODE_STRING DirectoryName, LinkName, TargetName;
+
+    PAGED_CODE();
+
+    if  (LogonId == NULL ||
+         DeviceMap == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop all existing sessions */
+    for (CurrentSession = SepLogonSessions;
+         CurrentSession != NULL;
+         CurrentSession = CurrentSession->Next)
+    {
+        /* Check if the LUID matches the provided one */
+        if (RtlEqualLuid(&CurrentSession->LogonId, LogonId))
+        {
+            break;
+        }
+    }
+
+    /* No session found, fail */
+    if (CurrentSession == NULL)
+    {
+        /* Release the database lock */
+        KeReleaseGuardedMutex(&SepRmDbLock);
+
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /* The found session has a device map, return it! */
+    if (CurrentSession->pDeviceMap != NULL)
+    {
+        *DeviceMap = CurrentSession->pDeviceMap;
+
+        /* Release the database lock */
+        KeReleaseGuardedMutex(&SepRmDbLock);
+
+        return STATUS_SUCCESS;
+    }
+
+    /* At that point, we'll setup a new device map for the session */
+    LocalMap = NULL;
+
+    /* Reference the session so that it doesn't go away */
+    CurrentSession->ReferenceCount += 1;
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    /* Create our object directory given the LUID */
+    _snwprintf(Buffer,
+               sizeof(Buffer) / sizeof(WCHAR),
+               L"\\Sessions\\0\\DosDevices\\%08x-%08x",
+               LogonId->HighPart,
+               LogonId->LowPart);
+    RtlInitUnicodeString(&DirectoryName, Buffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DirectoryName,
+                               OBJ_KERNEL_HANDLE | OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateDirectoryObject(&DirectoryHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* Create the associated device map */
+        Status = ObSetDirectoryDeviceMap(&LocalMap, DirectoryHandle);
+        if (NT_SUCCESS(Status))
+        {
+            /* Make Global point to \Global?? in the directory */
+            RtlInitUnicodeString(&LinkName, L"Global");
+            RtlInitUnicodeString(&TargetName, L"\\Global??");
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &LinkName,
+                                       OBJ_KERNEL_HANDLE | OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                                       DirectoryHandle,
+                                       NULL);
+            Status = ZwCreateSymbolicLinkObject(&LinkHandle,
+                                                SYMBOLIC_LINK_ALL_ACCESS,
+                                                &ObjectAttributes,
+                                                &TargetName);
+            if (!NT_SUCCESS(Status))
+            {
+                ObfDereferenceDeviceMap(LocalMap);
+            }
+            else
+            {
+                ZwClose(LinkHandle);
+            }
+        }
+
+        ZwClose(DirectoryHandle);
+    }
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* If we succeed... */
+    if (NT_SUCCESS(Status))
+    {
+        /* The session now has a device map? We raced with someone else */
+        if (CurrentSession->pDeviceMap != NULL)
+        {
+            /* Give up on our new device map */
+            ObfDereferenceDeviceMap(LocalMap);
+        }
+        /* Otherwise use our newly allocated device map */
+        else
+        {
+            CurrentSession->pDeviceMap = LocalMap;
+        }
+
+        /* Return the device map */
+        *DeviceMap = CurrentSession->pDeviceMap;
+    }
+    /* Zero output */
+    else
+    {
+        *DeviceMap = NULL;
+    }
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    /* We're done with the session */
+    SepRmDereferenceLogonSession(&CurrentSession->LogonId);
+
+    return Status;
+}
 
 /*
  * @unimplemented

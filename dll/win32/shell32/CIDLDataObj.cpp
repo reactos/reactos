@@ -410,6 +410,8 @@ HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved,
 */
 HRESULT IDataObject_Constructor(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidl, UINT cidl, IDataObject **dataObject)
 {
+    if (!dataObject)
+        return E_INVALIDARG;
     return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_PPV_ARG(IDataObject, dataObject));
 }
 

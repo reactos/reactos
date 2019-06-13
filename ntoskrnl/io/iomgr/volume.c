@@ -123,6 +123,14 @@ IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
             *Status = STATUS_WRONG_VOLUME;
             return NULL;
         }
+        /*
+         * In case IopMountVolume returns a valid VPB
+         * Then, the volume is mounted, return it
+         */
+        else if (Vpb != NULL)
+        {
+            return Vpb;
+        }
 
         /* Re-acquire the lock */
         IoAcquireVpbSpinLock(&OldIrql);

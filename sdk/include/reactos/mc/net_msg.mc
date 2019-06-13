@@ -2184,28 +2184,84 @@ SymbolicName=MSG_SHARE_SYNTAX
 Severity=Success
 Facility=System
 Language=English
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Polish
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Romanian
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Russian
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Spanish
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Turkish
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Chinese
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 Language=Taiwanese
-NET SHARE ...
+NET SHARE sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | None]
+          {sharename | devicename | drive:path} /DELETE
 .
 
 
@@ -2214,36 +2270,268 @@ SymbolicName=MSG_SHARE_HELP
 Severity=Success
 Facility=System
 Language=English
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Russian
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Spanish
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Turkish
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Chinese
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Taiwanese
-SHARE
-...
+NET SHARE makes a server's resources available to network users. When
+used without options, it lists information about all resources being
+shared on the computer. For each resource, Windows reports the
+devicename(s) or pathname(s) and a descriptive comment associated with it.
+
+sharename          Is the network name of the shared resource. Type
+                   NET SHARE with a sharename only to display information
+                   about that share.
+drive:path         Specifies the absolute path of the directory to
+                   be shared.
+/GRANT:user,perm   Creates the share with a security descriptor that gives
+                   the requested permissions to the specified user. This
+                   option may be used more than once to give share permissions
+                   to multiple users.
+/USERS:number      Sets the maximum number of users who can
+                   simultaneously access the shared resource.
+/UNLIMITED         Specifies an unlimited number of users can
+                   simultaneously access the shared resource.
+/REMARK:"text"     Adds a descriptive comment about the resource.
+                   Enclose the text in quotation marks.
+devicename         Is one or more printers (LPT1: through LPT9:)
+                   shared by sharename.
+/DELETE            Stops sharing the resource.
+/CACHE:Manual      Enables manual client caching of programs and documents
+                   from this share.
+/CACHE:Documents   Enables automatic caching of documents from this share.
+/CACHE:Programs    Enables automatic caching of documents and programs
+                   from this share.
+/CACHE:None        Disables caching from this share.
+
+NET HELP command | MORE displays Help one screen at a time.
 .
 
 

@@ -199,10 +199,14 @@ BEGIN
     IDS_PASSWORDCHANGED "Ihr Passwort wurde geändert."
     IDS_LOGONTITLE "Anmeldemeldung"
     IDS_LOGONWRONGUSERORPWD "Sie konnten nicht angemeldet werden. Prüfen Sie Benutzername und Domäne, und geben Sie das Passwort erneut ein. Bei Passworten wird Groß- und Kleinschreibung unterschieden."
-    IDS_LOGONUSERDISABLED "Ihr Konto wurde deaktiviert. Wenden Sie sich an Ihren Systemadministrator."
+    IDS_LOGONUSERDISABLED "Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an Ihren Systemadministrator."
     IDS_PASSWORDMUSTCHANGE "Sie müssen Ihr Passwort bei der ersten Anmeldung ändern."
     IDS_PASSWORDEXPIRED "Ihr Passwort ist abgelaufen und muss geändert werden."
     IDS_ACCOUNTEXPIRED "Ihr Konto ist abgelaufen. Bitte wenden Sie sich an Ihren Systemadministrator."
+    IDS_ACCOUNTLOCKED "Sie können nicht angemeldet werden, da Ihr Konto deaktiviert wurde. Bitte wenden Sie sich an Ihren Systemadministrator."
+    IDS_INVALIDLOGONHOURS "Ihr Konto sieht es nicht vor, dass Sie sich zu dieser Zeit anmelden. Bitte versuchen Sie es später noch einmal."
+    IDS_INVALIDWORKSTATION "Ihr Konto sieht es nicht vor, dass Sie sich an diesem Computer anmelden. Bitte melden Sie sich an einem anderen Computer an."
+    IDS_ACCOUNTRESTRICTION "Wegen einer Kontenbeschränkung dürfen Sie sich nicht anmelden."
 END
 
 /* Shutdown Dialog Strings */

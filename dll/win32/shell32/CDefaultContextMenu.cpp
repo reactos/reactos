@@ -1472,7 +1472,12 @@ HRESULT
 WINAPI
 SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-    HRESULT hr = CDefaultContextMenu_CreateInstance(pdcm, NULL, riid, ppv);
+    HRESULT hr;
+
+    if (!ppv)
+        return E_INVALIDARG;
+
+    hr = CDefaultContextMenu_CreateInstance(pdcm, NULL, riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

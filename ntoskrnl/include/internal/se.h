@@ -604,6 +604,12 @@ NTSTATUS
 SepRmDereferenceLogonSession(
     PLUID LogonLuid);
 
+NTSTATUS
+NTAPI
+SeGetLogonIdDeviceMap(
+    IN PLUID LogonId,
+    OUT PDEVICE_MAP * DeviceMap);
+
 #endif
 
 /* EOF */

@@ -429,7 +429,7 @@ InternalSleep(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
         }
     }
 
-#if _DEBUG
+#ifdef _DEBUG
     /* Clear OwnEntry to aid in detecting bugs. */
     RtlZeroMemory(&OwnEntry, sizeof(OwnEntry));
 #endif

@@ -316,6 +316,14 @@ NTAPI
 IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
                              IN PDEVICE_OBJECT DeviceObject)
 {
+    /* Ignore in case the IRP is not associated with any thread */
+    if (!Irp->Tail.Overlay.Thread)
+    {
+        DPRINT1("IoSetHardErrorOrVerifyDevice(0x%p, 0x%p): IRP has no thread, ignoring.\n",
+                Irp, DeviceObject);
+        return;
+    }
+
     /* Set the pointer in the IRP */
     Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
 }

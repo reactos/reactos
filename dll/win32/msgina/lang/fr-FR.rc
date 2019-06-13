@@ -112,7 +112,7 @@ CAPTION "Déconnexion de ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
-    LTEXT "Êtes-vous sûr de vouloir vous déconnecter?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Êtes-vous sûr de vouloir vous déconnecter ?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Oui", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Non", IDNO, 95, 39, 50, 14
 END
@@ -153,7 +153,7 @@ BEGIN
     AUTOCHECKBOX "&Planifié", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Commentaire:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "&Commentaire :", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "Annuler", IDCANCEL, 211, 276, 55, 14
@@ -202,7 +202,11 @@ BEGIN
     IDS_LOGONUSERDISABLED "Votre compte est désactivé. Voyez votre administrateur système."
     IDS_PASSWORDMUSTCHANGE "Vous devez changer votre mot de passe à la première connexion."
     IDS_PASSWORDEXPIRED "Votre mot de passe a expiré et doit être changé."
-    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
+    IDS_ACCOUNTEXPIRED "Votre compte a expiré. Veuillez contacter votre administrateur système."
+    IDS_ACCOUNTLOCKED "Impossible de vous connecter car votre compte est verrouillé. Veuillez contacter votre administrateur système."
+    IDS_INVALIDLOGONHOURS "Votre compte a des restrictions temporelles qui vous empêchent de vous connecter à cette heure-ci. Veuillez réessayer ultérieurement."
+    IDS_INVALIDWORKSTATION "Votre compte a été configuré pour que vous n'utilisiez pas cet ordinateur. Veuillez réessayer depuis un autre ordinateur."
+    IDS_ACCOUNTRESTRICTION "Impossible de vous connecter en raison d'une restriction sur votre compte."
 END
 
 /* Shutdown Dialog Strings */

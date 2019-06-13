@@ -1,0 +1,251 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "Be&rkas"
+    BEGIN
+        MENUITEM "&Pengaturan", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "K&eluar", ID_EXIT
+    END
+    POPUP "&Program"
+    BEGIN
+        MENUITEM "P&asang\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Bongkar\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Ubah", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Hapus dari Registri", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Segarkan\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Perbarui Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "&Bantuan"
+    BEGIN
+        MENUITEM "Bantuan\tF1", ID_HELP, GRAYED
+        MENUITEM "&Tentang", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Buka tautan pada peramban", ID_OPEN_LINK
+        MENUITEM "&Salin tautan pada papan klip", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Pasang\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Bongkar\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Ubah", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Hapus dari Registri", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Segarkan\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Perbarui Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Pengaturan"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Umum", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Simpan posisi jendela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Perbarui daftar program yang bisa diakses saat mulai", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Log pemasangan dan pembongkaran program", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Mengunduh", -1, 4, 65, 240, 51
+    LTEXT "Folder unduhan:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Pilih", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Hapus pemasang program setelah pemasangan", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "Pengaturan proxy sistem", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Langsung (Tanpa proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Tanpa proxy untuk", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Asli", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Batal", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Pemasangan program"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Pasang dari cakram (CD atau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Unduh dan pasang", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Batal", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "Mengunduh %ls…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Batal", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Tentang"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Manajer Aplikasi ReactOS\nHak cipta (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Tutup", IDOK, 133, 46, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Pasang"
+    IDS_TOOLTIP_UNINSTALL "Bongkar"
+    IDS_TOOLTIP_MODIFY "Ubah"
+    IDS_TOOLTIP_SETTINGS "Pengaturan"
+    IDS_TOOLTIP_REFRESH "Segarkan"
+    IDS_TOOLTIP_UPDATE_DB "Perbarui Database"
+    IDS_TOOLTIP_EXIT "Keluar"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Nama"
+    IDS_APP_INST_VERSION "Versi"
+    IDS_APP_DESCRIPTION "Deskripsi"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVersi: "
+    IDS_INFO_DESCRIPTION "\nDeskripsi: "
+    IDS_INFO_PUBLISHER "\nPenerbit: "
+    IDS_INFO_HELPLINK "\nLink Bantuan: "
+    IDS_INFO_HELPPHONE "\nNo. telp. Bantuan: "
+    IDS_INFO_README "\nReadme: "
+    IDS_INFO_REGOWNER "\nPemilik Terdaftar: "
+    IDS_INFO_PRODUCTID "\nProductID: "
+    IDS_INFO_CONTACT "\nKontak: "
+    IDS_INFO_UPDATEINFO "\nInformasi Pembaruan: "
+    IDS_INFO_INFOABOUT "\nTentang Informasi: "
+    IDS_INFO_COMMENTS "\nKomentar: "
+    IDS_INFO_INSTLOCATION "\nLokasi Pemasangan: "
+    IDS_INFO_INSTALLSRC "\nSumber Pemasangan: "
+    IDS_INFO_UNINSTALLSTR "\nString Pembongkaran: "
+    IDS_INFO_MODIFYPATH "\nJalur Pengubahan: "
+    IDS_INFO_INSTALLDATE "\nTanggal Pemasangan: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVersi: "
+    IDS_AINFO_AVAILABLEVERSION "\nVersi Tersedia: "
+    IDS_AINFO_DESCRIPTION "\nDeskripsi: "
+    IDS_AINFO_SIZE "\nUkuran: "
+    IDS_AINFO_URLSITE "\nHalaman Rumah: "
+    IDS_AINFO_LICENSE "\nLisensi: "
+    IDS_AINFO_URLDOWNLOAD "\nUnduhan: "
+    IDS_AINFO_LANGUAGES "\nBahasa: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Audio"
+    IDS_CAT_DEVEL "Pengembangan"
+    IDS_CAT_DRIVERS "Driver"
+    IDS_CAT_EDU "Pendidikan"
+    IDS_CAT_ENGINEER "Arsitektur"
+    IDS_CAT_FINANCE "Keuangan"
+    IDS_CAT_GAMES "Game & Fun"
+    IDS_CAT_GRAPHICS "Grafik"
+    IDS_CAT_INTERNET "Internet & Jaringan"
+    IDS_CAT_LIBS "Perpustakaan"
+    IDS_CAT_OFFICE "Kantor"
+    IDS_CAT_OTHER "Lainnya"
+    IDS_CAT_SCIENCE "Ilmu Pengetahuan"
+    IDS_CAT_TOOLS "Peralatan"
+    IDS_CAT_VIDEO "Video"
+    IDS_CAT_THEMES "Tema"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Manajer Aplikasi ReactOS"
+    IDS_SEARCH_TEXT "Cari…"
+    IDS_INSTALL "Pasang"
+    IDS_UNINSTALL "Bongkar"
+    IDS_MODIFY "Ubah"
+    IDS_APPS_COUNT "Jumlah aplikasi: %d; Terpilih: %d"
+    IDS_WELCOME_TITLE "Selamat datang di Manajer Aplikasi ReactOS!\n\n"
+    IDS_WELCOME_TEXT "pilih kategori di sisi kiri, kemudian pilih aplikasi untuk dipasang atau dibongkar.\nSitus Web ReactOS: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Terpasang"
+    IDS_AVAILABLEFORINST "Tersedia untuk pemasangan"
+    IDS_UPDATES "Pembaruan"
+    IDS_APPLICATIONS "Aplikasi"
+    IDS_CHOOSE_FOLDER_TEXT "Pilih folder yang akan dipakai unduhan:"
+    IDS_CHOOSE_FOLDER_ERROR "Folder yang ditentukan belum ada. Buat folder?"
+    IDS_APP_REG_REMOVE "Yakin ingin menghapus data program yang terpasang dari registri?"
+    IDS_INFORMATION "Informasi"
+    IDS_UNABLE_TO_DOWNLOAD "Tidak bisa mengunduh paket! Alamat tidak ditemukan!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Tidak bisa mengunduh paket! Cek sambungan internet!"
+    IDS_UNABLE_TO_REMOVE "Tidak bisa menghapus data program dari registri!"
+    IDS_UNABLE_TO_INSTALL "Tidak bisa membuka pemasang!"
+    IDS_UNABLE_TO_QUERY_CERT "Tidak bisa mengambil info terkait sertifikat.\n\nTetap lanjutkan?"
+    IDS_INTEG_CHECK_TITLE "Verifikasi integritas paket…"
+    IDS_INTEG_CHECK_FAIL "Paket tersebut tidak lulus pemeriksaan integritas, bisa jadi rusak atau terkena gangguan ketika mengunduh. Menjalankan perangkat lunak ini tidak disarankan."
+    IDS_INTERRUPTED_DOWNLOAD "Pengunduhan terganggu. Mengecek sambungan ke internet."
+    IDS_UNABLE_TO_WRITE "Tidak bisa menulis ke cakram. Cakram mungkin penuh."
+    IDS_SELECT_ALL "Pilih Semua/Balik"
+    IDS_INSTALL_SELECTED "Pasang terpilih"
+    IDS_SELECTEDFORINST "dipilih untuk pemasangan"
+    IDS_MISMATCH_CERT_INFO "Sertifikat yang dipakai tidak dikenal:\nSubyek: %s\nIssuer: %s\nYakin ingin lanjut?"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Terpasang"
+    IDS_STATUS_NOTINSTALLED "Tidak terpasang"
+    IDS_STATUS_DOWNLOADED "Diunduh"
+    IDS_STATUS_UPDATE_AVAILABLE "Pembaruan tersedia"
+    IDS_STATUS_DOWNLOADING "Mengunduh…"
+    IDS_STATUS_INSTALLING "Memasang…"
+    IDS_STATUS_WAITING "Menunggu pemasangan…"
+    IDS_STATUS_FINISHED "Selesai"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Sumber terbuka"
+    IDS_LICENSE_FREEWARE "Gratis"
+    IDS_LICENSE_TRIAL "Percobaan/Demo"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Mendukung bahasa ini"
+    IDS_LANGUAGE_NO_TRANSLATION "Mendukung bahasa lain"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Mendukung Bahasa Inggris"
+    IDS_LANGUAGE_SINGLE "Satu bahasa"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d lebih)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d tersedia)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Database aplikasi"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Memperbarui database…"
+END

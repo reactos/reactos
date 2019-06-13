@@ -2419,6 +2419,9 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 
     TRACE("(%p)->(uItem=0x%08x,\n\tIID=%s, ppv=%p)\n", this, uItem, debugstr_guid(&riid), ppvOut);
 
+    if (!ppvOut)
+        return E_INVALIDARG;
+
     *ppvOut = NULL;
 
     switch (uItem)
@@ -2426,9 +2429,6 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
         case SVGIO_BACKGROUND:
             if (IsEqualIID(riid, IID_IContextMenu))
             {
-                if (!ppvOut)
-                    hr = E_OUTOFMEMORY;
-
                 hr = CDefViewBckgrndMenu_CreateInstance(m_pSF2Parent, riid, ppvOut);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
@@ -3449,7 +3449,11 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
     CComPtr<IShellView> psv;
     HRESULT hRes;
 
+    if (!ppsv)
+        return E_INVALIDARG;
+
     *ppsv = NULL;
+
     if (!pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
         return E_INVALIDARG;
 

@@ -4498,7 +4498,7 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
             ExFreePool(data);
         } else {
             if (write_irp && Irp->MdlAddress && no_buf) {
-                BOOL locked = Irp->MdlAddress->MdlFlags & MDL_PAGES_LOCKED;
+               BOOL locked = Irp->MdlAddress->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL);
 
                 if (!locked) {
                     Status = STATUS_SUCCESS;

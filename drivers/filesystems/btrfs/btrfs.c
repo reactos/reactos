@@ -795,7 +795,8 @@ static NTSTATUS drv_query_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _
             data->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES | FILE_CASE_SENSITIVE_SEARCH |
                                          FILE_UNICODE_ON_DISK | FILE_NAMED_STREAMS | FILE_SUPPORTS_HARD_LINKS | FILE_PERSISTENT_ACLS |
                                          FILE_SUPPORTS_REPARSE_POINTS | FILE_SUPPORTS_SPARSE_FILES | FILE_SUPPORTS_OBJECT_IDS |
-                                         FILE_SUPPORTS_OPEN_BY_FILE_ID | FILE_SUPPORTS_EXTENDED_ATTRIBUTES | FILE_SUPPORTS_BLOCK_REFCOUNTING;
+                                         FILE_SUPPORTS_OPEN_BY_FILE_ID | FILE_SUPPORTS_EXTENDED_ATTRIBUTES | FILE_SUPPORTS_BLOCK_REFCOUNTING |
+                                         FILE_SUPPORTS_POSIX_UNLINK_RENAME;
             if (Vcb->readonly)
                 data->FileSystemAttributes |= FILE_READ_ONLY_VOLUME;
 
@@ -1068,6 +1069,7 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
     RtlZeroMemory(&r->root_item, sizeof(ROOT_ITEM));
     r->root_item.num_references = 1;
     r->fcbs_version = 0;
+    r->checked_for_orphans = TRUE;
     InitializeListHead(&r->fcbs);
     RtlZeroMemory(r->fcbs_ptrs, sizeof(LIST_ENTRY*) * 256);
 
@@ -1966,7 +1968,63 @@ void uninit(_In_ device_extension* Vcb) {
     ZwClose(Vcb->flush_thread_handle);
 }
 
-NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
+static NTSTATUS delete_fileref_fcb(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
+    NTSTATUS Status;
+    LIST_ENTRY* le;
+
+    // excise extents
+
+    if (fileref->fcb->type != BTRFS_TYPE_DIRECTORY && fileref->fcb->inode_item.st_size > 0) {
+        Status = excise_extents(fileref->fcb->Vcb, fileref->fcb, 0, sector_align(fileref->fcb->inode_item.st_size, fileref->fcb->Vcb->superblock.sector_size), Irp, rollback);
+        if (!NT_SUCCESS(Status)) {
+            ERR("excise_extents returned %08x\n", Status);
+            return Status;
+        }
+    }
+
+    fileref->fcb->Header.AllocationSize.QuadPart = 0;
+    fileref->fcb->Header.FileSize.QuadPart = 0;
+    fileref->fcb->Header.ValidDataLength.QuadPart = 0;
+
+    if (FileObject) {
+        CC_FILE_SIZES ccfs;
+
+        ccfs.AllocationSize = fileref->fcb->Header.AllocationSize;
+        ccfs.FileSize = fileref->fcb->Header.FileSize;
+        ccfs.ValidDataLength = fileref->fcb->Header.ValidDataLength;
+
+        Status = STATUS_SUCCESS;
+
+        _SEH2_TRY {
+            CcSetFileSizes(FileObject, &ccfs);
+        } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+            Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
+
+        if (!NT_SUCCESS(Status)) {
+            ERR("CcSetFileSizes threw exception %08x\n", Status);
+            return Status;
+        }
+    }
+
+    fileref->fcb->deleted = TRUE;
+
+    le = fileref->children.Flink;
+    while (le != &fileref->children) {
+        file_ref* fr2 = CONTAINING_RECORD(le, file_ref, list_entry);
+
+        if (fr2->fcb->ads) {
+            fr2->fcb->deleted = TRUE;
+            mark_fcb_dirty(fr2->fcb);
+        }
+
+        le = le->Flink;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject, _In_ BOOL make_orphan, _In_opt_ PIRP Irp, _In_ LIST_ENTRY* rollback) {
     LARGE_INTEGER newlength, time;
     BTRFS_TIME now;
     NTSTATUS Status;
@@ -2002,61 +2060,17 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject
 
             fileref->fcb->inode_item_changed = TRUE;
 
-            if (fileref->fcb->inode_item.st_nlink > 1) {
+            if (fileref->fcb->inode_item.st_nlink > 1 || make_orphan) {
                 fileref->fcb->inode_item.st_nlink--;
                 fileref->fcb->inode_item.transid = fileref->fcb->Vcb->superblock.generation;
                 fileref->fcb->inode_item.sequence++;
                 fileref->fcb->inode_item.st_ctime = now;
             } else {
-                // excise extents
-
-                if (fileref->fcb->type != BTRFS_TYPE_DIRECTORY && fileref->fcb->inode_item.st_size > 0) {
-                    Status = excise_extents(fileref->fcb->Vcb, fileref->fcb, 0, sector_align(fileref->fcb->inode_item.st_size, fileref->fcb->Vcb->superblock.sector_size), Irp, rollback);
-                    if (!NT_SUCCESS(Status)) {
-                        ERR("excise_extents returned %08x\n", Status);
-                        ExReleaseResourceLite(fileref->fcb->Header.Resource);
-                        return Status;
-                    }
-                }
-
-                fileref->fcb->Header.AllocationSize.QuadPart = 0;
-                fileref->fcb->Header.FileSize.QuadPart = 0;
-                fileref->fcb->Header.ValidDataLength.QuadPart = 0;
-
-                if (FileObject) {
-                    CC_FILE_SIZES ccfs;
-
-                    ccfs.AllocationSize = fileref->fcb->Header.AllocationSize;
-                    ccfs.FileSize = fileref->fcb->Header.FileSize;
-                    ccfs.ValidDataLength = fileref->fcb->Header.ValidDataLength;
-
-                    Status = STATUS_SUCCESS;
-
-                    _SEH2_TRY {
-                        CcSetFileSizes(FileObject, &ccfs);
-                    } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
-                        Status = _SEH2_GetExceptionCode();
-                    } _SEH2_END;
-
-                    if (!NT_SUCCESS(Status)) {
-                        ERR("CcSetFileSizes threw exception %08x\n", Status);
-                        ExReleaseResourceLite(fileref->fcb->Header.Resource);
-                        return Status;
-                    }
-                }
-
-                fileref->fcb->deleted = TRUE;
-
-                le = fileref->children.Flink;
-                while (le != &fileref->children) {
-                    file_ref* fr2 = CONTAINING_RECORD(le, file_ref, list_entry);
-
-                    if (fr2->fcb->ads) {
-                        fr2->fcb->deleted = TRUE;
-                        mark_fcb_dirty(fr2->fcb);
-                    }
-
-                    le = le->Flink;
+                Status = delete_fileref_fcb(fileref, FileObject, Irp, rollback);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("delete_fileref_fcb returned %08x\n", Status);
+                    ExReleaseResourceLite(fileref->fcb->Header.Resource);
+                    return Status;
                 }
             }
 
@@ -2271,9 +2285,26 @@ static NTSTATUS drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
             // FIXME - flush all of subvol's fcbs
         }
 
-        if (fileref && oc == 0) {
+        if (fileref && (oc == 0 || (fileref->delete_on_close && fileref->posix_delete))) {
             if (!fcb->Vcb->removing) {
-                if (fileref && fileref->delete_on_close && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) {
+                if (oc == 0 && fileref->fcb->inode_item.st_nlink == 0 && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) { // last handle closed on POSIX-deleted file
+                    LIST_ENTRY rollback;
+
+                    InitializeListHead(&rollback);
+
+                    Status = delete_fileref_fcb(fileref, FileObject, Irp, &rollback);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("delete_fileref_fcb returned %08x\n", Status);
+                        do_rollback(fcb->Vcb, &rollback);
+                        ExReleaseResourceLite(fileref->fcb->Header.Resource);
+                        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+                        goto exit;
+                    }
+
+                    clear_rollback(&rollback);
+
+                    mark_fcb_dirty(fileref->fcb);
+                } else if (fileref->delete_on_close && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) {
                     LIST_ENTRY rollback;
 
                     InitializeListHead(&rollback);
@@ -2292,7 +2323,7 @@ static NTSTATUS drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
                     // fileref_lock needs to be acquired before fcb->Header.Resource
                     ExAcquireResourceExclusiveLite(&fcb->Vcb->fileref_lock, TRUE);
 
-                    Status = delete_fileref(fileref, FileObject, Irp, &rollback);
+                    Status = delete_fileref(fileref, FileObject, oc > 0 && fileref->posix_delete, Irp, &rollback);
                     if (!NT_SUCCESS(Status)) {
                         ERR("delete_fileref returned %08x\n", Status);
                         do_rollback(fcb->Vcb, &rollback);
@@ -2677,6 +2708,7 @@ static NTSTATUS add_root(_Inout_ device_extension* Vcb, _In_ UINT64 id, _In_ UIN
     r->parent = 0;
     r->send_ops = 0;
     r->fcbs_version = 0;
+    r->checked_for_orphans = FALSE;
     InitializeListHead(&r->fcbs);
     RtlZeroMemory(r->fcbs_ptrs, sizeof(LIST_ENTRY*) * 256);
 
@@ -3530,6 +3562,26 @@ void protect_superblocks(_Inout_ chunk* c) {
     }
 }
 
+UINT64 chunk_estimate_phys_size(device_extension* Vcb, chunk* c, UINT64 u) {
+    UINT64 nfactor, dfactor;
+
+    if (c->chunk_item->type & BLOCK_FLAG_DUPLICATE || c->chunk_item->type & BLOCK_FLAG_RAID1 || c->chunk_item->type & BLOCK_FLAG_RAID10) {
+        nfactor = 1;
+        dfactor = 2;
+    } else if (c->chunk_item->type & BLOCK_FLAG_RAID5) {
+        nfactor = Vcb->superblock.num_devices - 1;
+        dfactor = Vcb->superblock.num_devices;
+    } else if (c->chunk_item->type & BLOCK_FLAG_RAID6) {
+        nfactor = Vcb->superblock.num_devices - 2;
+        dfactor = Vcb->superblock.num_devices;
+    } else {
+        nfactor = 1;
+        dfactor = 1;
+    }
+
+    return u * dfactor / nfactor;
+}
+
 NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp) {
     LIST_ENTRY* le = Vcb->chunks.Flink;
     chunk* c;
@@ -3539,6 +3591,8 @@ NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
     NTSTATUS Status;
 
     searchkey.obj_type = TYPE_BLOCK_GROUP_ITEM;
+
+    Vcb->superblock.bytes_used = 0;
 
     while (le != &Vcb->chunks) {
         c = CONTAINING_RECORD(le, chunk, list_entry);
@@ -3559,6 +3613,8 @@ NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
                 c->used = c->oldused = bgi->used;
 
                 TRACE("chunk %llx has %llx bytes used\n", c->offset, c->used);
+
+                Vcb->superblock.bytes_used += chunk_estimate_phys_size(Vcb, c, bgi->used);
             } else {
                 ERR("(%llx;%llx,%x,%llx) is %u bytes, expected %u\n",
                     Vcb->extent_root->id, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(BLOCK_GROUP_ITEM));

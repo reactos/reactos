@@ -78,11 +78,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
     PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
     PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
-    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     PUNICODE_STRING ImageName;
     ULONG Cookie, ExecuteOptions = 0;
     ULONG_PTR Wow64 = 0;
     PROCESS_VALUES ProcessValues;
+    ULONG Flags;
     PAGED_CODE();
 
     /* Check for user-mode caller */
@@ -564,22 +564,55 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength != RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query))
+            if (ProcessInformationLength < sizeof(PROCESS_DEVICEMAP_INFORMATION))
             {
-                if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
-                {
-                    DPRINT1("PROCESS_DEVICEMAP_INFORMATION_EX not supported!\n");
-                    Status = STATUS_NOT_IMPLEMENTED;
-                }
-                else
-                {
-                    Status = STATUS_INFO_LENGTH_MISMATCH;
-                }
+                Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
+            if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
+            {
+                /* Protect read in SEH */
+                _SEH2_TRY
+                {
+                    PPROCESS_DEVICEMAP_INFORMATION_EX DeviceMapEx = ProcessInformation;
+
+                    Flags = DeviceMapEx->Flags;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* Get the exception code */
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                if (!NT_SUCCESS(Status))
+                {
+                    break;
+                }
+
+                /* Only one flag is supported and it needs LUID mappings */
+                if ((Flags & ~PROCESS_LUID_DOSDEVICES_ONLY) != 0 ||
+                    !ObIsLUIDDeviceMapsEnabled())
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+            }
+            else
+            {
+                if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    break;
+                }
+
+                /* No flags for standard call */
+                Flags = 0;
+            }
+
             /* Set the return length */
-            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+            Length = ProcessInformationLength;
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -591,19 +624,9 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Query the device map information */
-            ObQueryDeviceMapInformation(Process, &DeviceMap);
-
-            /* Enter SEH for writing back data */
-            _SEH2_TRY
-            {
-                *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            Status = ObQueryDeviceMapInformation(Process,
+                                                 ProcessInformation,
+                                                 Flags);
 
             /* Dereference the process */
             ObDereferenceObject(Process);
@@ -911,8 +934,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Protect write in SEH */
             _SEH2_TRY
             {
-                /* Return FALSE -- we don't support this */
-                *(PULONG)ProcessInformation = FALSE;
+                /* Query Ob */
+                *(PULONG)ProcessInformation = ObIsLUIDDeviceMapsEnabled();
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1097,6 +1120,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
+    HANDLE DirectoryHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
     PROCESS_PRIORITY_CLASS PriorityClass = {0};
     PROCESS_FOREGROUND_BACKGROUND Foreground = {0};
@@ -1916,6 +1940,34 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = MmSetExecuteOptions(NoExecute);
             break;
 
+        case ProcessDeviceMap:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Use SEH for capture */
+            _SEH2_TRY
+            {
+                /* Capture the handle */
+                DirectoryHandle = *(PHANDLE)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Call Ob to set the device map */
+            Status = ObSetDeviceMap(Process, DirectoryHandle);
+            break;
+
+
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
@@ -1935,11 +1987,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case ProcessDeviceMap:
-            DPRINT1("Device map not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 

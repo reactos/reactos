@@ -110,6 +110,14 @@ InstallNetDevice(
     DWORD dwShowIcon, dwLength, dwValue;
     WCHAR szBuffer[300];
 
+    /* Install the adapter */
+    if (!SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData))
+    {
+        rc = GetLastError();
+        ERR("SetupDiInstallDevice() failed (Error %lu)\n", rc);
+        goto cleanup;
+    }
+
     /* Get Instance ID */
     if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
     {
@@ -373,6 +381,7 @@ cleanup:
         RegCloseKey(hLinkageKey);
     if (hConnectionKey != NULL)
         RegCloseKey(hConnectionKey);
+
     return rc;
 }
 
@@ -558,8 +567,6 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, BusType);
     HeapFree(GetProcessHeap(), 0, UuidString);
 
-    if (rc == ERROR_SUCCESS)
-        rc = ERROR_DI_DO_DEFAULT;
     TRACE("Returning 0x%lx\n", rc);
     return rc;
 }

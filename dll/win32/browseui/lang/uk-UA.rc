@@ -1,4 +1,10 @@
-/* Translated by Igor Paliychuk */
+/*
+ * PROJECT:     browseui
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/browseui/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File
+ * TRANSLATORS: Igor Paliychuk, Yaroslav Kibysh
+ */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
@@ -8,11 +14,11 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Стандартні Кнопки", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Рядок Адреси", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Стандартні кнопки", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Рядок адреси", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "&Посилання", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Блокування панелей інструментів", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Закріпити панелі", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Налаштувати...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Текстові мітки", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Кнопка Йти", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
@@ -36,8 +42,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Рядок &Стану", IDM_VIEW_STATUSBAR
-        POPUP "&Панель Провідника", IDM_VIEW_EXPLORERBAR
+        MENUITEM "Рядок &стану", IDM_VIEW_STATUSBAR
+        POPUP "&Панель провідника", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Пошук\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Обране\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -47,30 +53,30 @@ BEGIN
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "Й&ти До", FCIDM_MENU_EXPLORE
+        POPUP "Й&ти до", FCIDM_MENU_EXPLORE
         BEGIN
             MENUITEM "&Назад\tAlt+Ліва Стрілка", IDM_GOTO_BACK
             MENUITEM "&Вперед\tAlt+Права Стрілка", IDM_GOTO_FORWARD
             MENUITEM "Вве&рх на один рівень", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Домашня Сторінка\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "&Домашня сторінка\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Оновити", IDM_VIEW_REFRESH
     END
     POPUP "О&бране", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Додати до Обраного...", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "&Організувати Обране...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Додати до обраного...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Організувати обране...", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "(Empty)", IDM_FAVORITES_EMPTY
+        MENUITEM "(Пусто)", IDM_FAVORITES_EMPTY
     END
     POPUP "&Інструменти", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Під'єднати &Мережевий Диск...", IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Від'єднати Мержевий Диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "Під'єднати &мережевий диск...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Від'єднати мержевий диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "&Синхронізувати...", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Опції Папки...", IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&Опції папки...", IDM_TOOLS_FOLDEROPTIONS
     END
     POPUP "&Допомога", FCIDM_MENU_HELP
     BEGIN
@@ -80,32 +86,32 @@ END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-    POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+    POPUP "&Панелі", -1, MFT_STRING, MFS_ENABLED, 0
     BEGIN
-        MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
-        MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
+        MENUITEM "&Робочий стіл", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Швидкий запуск", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
         MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+        MENUITEM "&Нова панель...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
     END
 END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-    MENUITEM "Sho&w Title", IDM_BAND_TITLE
-    MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
+    MENUITEM "Пок&азувати заголовок", IDM_BAND_TITLE
+    MENUITEM "&Закрити панель", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Вигляд", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Великі значки", IDM_LARGE_ICONS
+            MENUITEM "&Маленькі значки", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "В&ідкрити папку", IDM_OPEN_FOLDER
+        MENUITEM "&Показувати текст", IDM_SHOW_TEXT
     END    
 END
 
@@ -121,7 +127,7 @@ BEGIN
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Скасувати", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
@@ -158,13 +164,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "Скасування..."
+    IDS_REMAINING  "Залишається"
 END
 
 STRINGTABLE
 BEGIN
-    800 "Містить команди маніпулювання вибраними об'єктами."
+    800 "Містить команди керування вибраними об'єктами."
 END
 
 STRINGTABLE
@@ -174,7 +180,7 @@ END
 
 STRINGTABLE
 BEGIN
-    928 "Містить команди маніпулювання виглядом."
+    928 "Містить команди керування виглядом."
 END
 
 STRINGTABLE
@@ -201,7 +207,7 @@ END
 
 STRINGTABLE
 BEGIN
-    9250 "Відображає дані про програму, номер версії, та copyright."
+    9250 "Відображає дані про програму, номер версії, та авторські права."
     9252 "Відображає дані для налагодження."
 END
 
@@ -215,14 +221,14 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "Відкриває папку Обране."
-    9363 "Додає поточну сторінку до списку Обраного."
+    9362 "Відкриває папку з обраним."
+    9363 "Додає поточну сторінку до обраних."
 END
 
 STRINGTABLE
 BEGIN
-    9505 "Показує чи приховує панелі інструментів."
-    9506 "Показує чи приховує рядок стану."
+    9505 "Показує або приховує панелі інструментів."
+    9506 "Показує або приховує рядок стану."
     9508 "Показує панель стандартних кнопок."
     9509 "Показує рядок адреси."
     9510 "Показує панель швидких посилань."
@@ -236,12 +242,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9552 "Показує чи приховує панель Провідника."
-    9553 "Показує панель Пошуку."
-    9554 "Показує панель Обраного."
-    9555 "Показує панель Історії."
-    9557 "Показує панель Тек."
-    9559 "Показує панель Медіа."
+    9552 "Показує або приховує панель провідника."
+    9553 "Показує панель пошуку."
+    9554 "Показує панель обраного."
+    9555 "Показує панель історії."
+    9557 "Показує панель папок."
+    9559 "Показує панель медіа."
 END
 
 STRINGTABLE
@@ -286,19 +292,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Back to %s"
-    IDS_FORWARD "Forward to %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_BACK "Назад до %s"
+    IDS_FORWARD "Вперед до %s"
+    IDS_FOLDER_OPTIONS "Налаштування папки"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Назад|Вперед|Вверх|Пошук|Папки|Перемістити в|Копіювати в|Видалити|Скасувати|Вигляд|Зупинити|Оновити|Додому|Підключити диск|Відключити|Обране|Історія|На весь екран|Властивості|Вирізати|Копіювати|Вставити|Налаштування папки||"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "Обрати папку"
+    IDS_TOOLBAR_ERR_TITLE "Панель"
+    IDS_TOOLBAR_ERR_TEXT "Не вдалось створити панель."
 END

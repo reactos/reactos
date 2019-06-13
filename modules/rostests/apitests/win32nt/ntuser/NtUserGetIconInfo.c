@@ -89,7 +89,7 @@ START_TEST(NtUserGetIconInfo)
                            &bpp,
                            FALSE) == TRUE);
 
-    TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+    ok(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
     TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(IDI_ICON));
     TEST(bpp == 32);
 
@@ -101,7 +101,7 @@ START_TEST(NtUserGetIconInfo)
                            &bpp,
                            TRUE) == TRUE);
 
-    TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+    ok(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
     TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(IDI_ICON));
     TEST(bpp == 32);
 

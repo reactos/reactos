@@ -9,6 +9,7 @@
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
+#define USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH 0x10000
 
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
@@ -24,6 +25,10 @@
                   ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
                   ((((unsigned long)(n) & 0xFF000000)) >> 24))
 
+#ifndef BooleanFlagOn
+#define BooleanFlagOn(Flags, SingleFlag) ((BOOLEAN)((((Flags) & (SingleFlag)) != 0)))
+#endif
+
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 
@@ -32,6 +37,9 @@ typedef struct __COMMON_DEVICE_EXTENSION__
     BOOLEAN IsFDO;
 
 }USBSTOR_COMMON_DEVICE_EXTENSION, *PUSBSTOR_COMMON_DEVICE_EXTENSION;
+
+#define USBSTOR_FDO_FLAGS_DEVICE_RESETTING   0x00000001 // hard reset is in progress
+#define USBSTOR_FDO_FLAGS_IRP_LIST_FREEZE    0x00000002 // the irp list is freezed
 
 typedef struct
 {
@@ -52,8 +60,6 @@ typedef struct
     PDEVICE_OBJECT ChildPDO[16];                                                         // max 16 child pdo devices
     KSPIN_LOCK IrpListLock;                                                              // irp list lock
     LIST_ENTRY IrpListHead;                                                              // irp list head
-    BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
-    BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
     PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
     KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
@@ -61,6 +67,9 @@ typedef struct
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
     ULONG InstanceCount;                                                                 // pdo instance count
+    KSPIN_LOCK CommonLock;
+    PIO_WORKITEM ResetDeviceWorkItem;
+    ULONG Flags;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -68,7 +77,7 @@ typedef struct
     USBSTOR_COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
-    PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    PINQUIRYDATA InquiryData;                                                            // USB SCSI inquiry data
     PUCHAR FormatData;                                                                   // USB SCSI Read Format Capacity Data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
@@ -105,6 +114,10 @@ C_ASSERT(sizeof(CBW) == 31);
 
 #define MAX_LUN 0xF
 
+#define CSW_STATUS_COMMAND_PASSED 0x00
+#define CSW_STATUS_COMMAND_FAILED 0x01
+#define CSW_STATUS_PHASE_ERROR    0x02
+
 typedef struct
 {
     ULONG Signature;                                                 // CSW signature
@@ -112,42 +125,6 @@ typedef struct
     ULONG DataResidue;                                               // CSW data transfer diff
     UCHAR Status;                                                    // CSW status
 }CSW, *PCSW;
-
-//--------------------------------------------------------------------------------------------------------------------------------------------
-//
-// UFI INQUIRY command
-//
-typedef struct
-{
-    UCHAR Code;                                                      // operation code 0x12
-    UCHAR LUN;                                                       // lun address
-    UCHAR PageCode;                                                  // product data information, always 0x00
-    UCHAR Reserved;                                                  // reserved 0x00
-    UCHAR AllocationLength;                                          // length of inquiry data to be returned, default 36 bytes
-    UCHAR Reserved1[7];                                              //reserved bytes 0x00
-}UFI_INQUIRY_CMD, *PUFI_INQUIRY_CMD;
-
-C_ASSERT(sizeof(UFI_INQUIRY_CMD) == 12);
-
-#define UFI_INQUIRY_CMD_LEN 0x6
-
-//
-// UFI INQUIRY command response
-//
-typedef struct
-{
-    UCHAR DeviceType;                                                // device type
-    UCHAR RMB;                                                       // removable media bit
-    UCHAR Version;                                                   // contains version 0x00
-    UCHAR Format;                                                    // response format
-    UCHAR Length;                                                    // additional length
-    UCHAR Reserved[3];                                               // reserved
-    UCHAR Vendor[8];                                                 // vendor identification string
-    UCHAR Product[16];                                               // product identification string
-    UCHAR Revision[4];                                               // product revision code
-}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
-
-C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -314,21 +291,18 @@ typedef struct
 
 typedef struct
 {
+    PIRP Irp;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    ULONG ErrorIndex;
+    ULONG StallRetryCount;                                            // the number of retries after receiving USBD_STATUS_STALL_PID status
     union
     {
-        PCBW cbw;
-        PCSW csw;
+        CBW cbw;
+        CSW csw;
     };
     URB Urb;
-    PIRP Irp;
-    ULONG TransferDataLength;
-    PUCHAR TransferData;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PMDL TransferBufferMDL;
-    ULONG ErrorIndex;
-    ULONG RetryCount;
-}IRP_CONTEXT, *PIRP_CONTEXT;
+    SCSI_REQUEST_BLOCK SenseSrb;
+} IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
 {
@@ -440,23 +414,10 @@ USBSTOR_GetPipeHandles(
 NTSTATUS
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN ULONG RetryCount);
+    IN PIRP Irp);
 
 NTSTATUS
-NTAPI
-USBSTOR_CSWCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Ctx);
-
-NTSTATUS
-USBSTOR_SendCBW(
-    PIRP_CONTEXT Context,
-    PIRP Irp);
-
-VOID
-USBSTOR_SendCSW(
+USBSTOR_SendCSWRequest(
     PIRP_CONTEXT Context,
     PIRP Irp);
 
@@ -509,18 +470,6 @@ USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 VOID
-NTAPI
-ErrorHandlerWorkItemRoutine(
-	PVOID Context);
-
-VOID
-NTAPI
-ResetHandlerWorkItemRoutine(
-    PVOID Context);
-
-
-
-VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject);
 
@@ -546,5 +495,16 @@ NTAPI
 USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
      PVOID Context);
+
+VOID
+NTAPI
+USBSTOR_QueueResetPipe(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP_CONTEXT Context);
+
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 #endif /* _USBSTOR_H_ */

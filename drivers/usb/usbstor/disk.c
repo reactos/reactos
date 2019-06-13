@@ -1,18 +1,81 @@
 /*
  * PROJECT:     ReactOS Universal Serial Bus Bulk Storage Driver
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbstor/disk.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     USB block storage device driver.
- * PROGRAMMERS:
- *              James Tabor
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * COPYRIGHT:   2005-2006 James Tabor
+ *              2011-2012 Michael Martin (michael.martin@reactos.org)
+ *              2011-2013 Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              2017 Vadim Galyant
  */
 
 #include "usbstor.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+static
+BOOLEAN
+IsRequestValid(PIRP Irp)
+{
+    ULONG TransferLength;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Srb;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (Srb->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+    {
+        if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_UNSPECIFIED_DIRECTION)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
+            return FALSE;
+        }
+
+        TransferLength = Srb->DataTransferLength;
+
+        if (Irp->MdlAddress == NULL)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
+            return FALSE;
+        }
+
+        if (TransferLength == 0)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength == 0\n");
+            return FALSE;
+        }
+
+        if (TransferLength > USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Srb->DataTransferLength)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
+            return FALSE;
+        }
+
+        if (Srb->DataBuffer)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
+            return FALSE;
+        }
+
+        if (Irp->MdlAddress)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
 
 NTSTATUS
 USBSTOR_HandleInternalDeviceControl(
@@ -24,29 +87,10 @@ USBSTOR_HandleInternalDeviceControl(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     NTSTATUS Status;
 
-    //
-    // get current stack location
-    //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    //
-    // get request block
-    //
     Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
-
-    //
-    // sanity check
-    //
     ASSERT(Request);
-
-    //
-    // get device extension
-    //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    //
-    // sanity check
-    //
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     switch(Request->Function)
@@ -55,69 +99,37 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT("SRB_FUNCTION_EXECUTE_SCSI\n");
 
-            //
-            // check if request is valid
-            //
-            if (Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+            if (!IsRequestValid(Irp))
             {
-                //
-                // data is transferred with this irp
-                //
-                if ((Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) ||
-                    Request->DataTransferLength == 0 ||
-                    Irp->MdlAddress == NULL)
-                {
-                    //
-                    // invalid parameter
-                    //
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
-            }
-            else
-            {
-                //
-                // sense buffer request
-                //
-                if (Request->DataTransferLength ||
-                    Request->DataBuffer ||
-                    Irp->MdlAddress)
-                {
-                    //
-                    // invalid parameter
-                    //
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
+                Status = STATUS_INVALID_PARAMETER;
+                break;
             }
 
-            //
+            if (Request->Cdb[0] == SCSIOP_MODE_SENSE)
+            {
+                DPRINT("USBSTOR_Scsi: SRB_FUNCTION_EXECUTE_SCSI - FIXME SCSIOP_MODE_SENSE\n");
+                // FIXME Get from registry WriteProtect for StorageDevicePolicies;
+                // L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\StorageDevicePolicies"
+                // QueryTable[0].Name = L"WriteProtect"
+            }
+
+            IoMarkIrpPending(Irp);
+            Request->SrbStatus = SRB_STATUS_PENDING;
+
             // add the request
-            //
             if (!USBSTOR_QueueAddIrp(PDODeviceExtension->LowerDeviceObject, Irp))
             {
-                //
-                // irp was not added to the queue
-                //
                 IoStartPacket(PDODeviceExtension->LowerDeviceObject, Irp, &Request->QueueSortKey, USBSTOR_CancelIo);
             }
 
-            //
-            // irp pending
-            //
             return STATUS_PENDING;
         }
         case SRB_FUNCTION_RELEASE_DEVICE:
         {
             DPRINT1("SRB_FUNCTION_RELEASE_DEVICE\n");
-            //
-            // sanity check
-            //
             ASSERT(PDODeviceExtension->Claimed == TRUE);
 
-            //
             // release claim
-            //
             PDODeviceExtension->Claimed = FALSE;
             Status = STATUS_SUCCESS;
             break;
@@ -125,32 +137,22 @@ USBSTOR_HandleInternalDeviceControl(
         case SRB_FUNCTION_CLAIM_DEVICE:
         {
             DPRINT1("SRB_FUNCTION_CLAIM_DEVICE\n");
-            //
+
             // check if the device has been claimed
-            //
             if (PDODeviceExtension->Claimed)
             {
-                //
                 // device has already been claimed
-                //
                 Status = STATUS_DEVICE_BUSY;
                 Request->SrbStatus = SRB_STATUS_BUSY;
                 break;
             }
 
-            //
             // claim device
-            //
             PDODeviceExtension->Claimed = TRUE;
 
-            //
             // output device object
-            //
             Request->DataBuffer = DeviceObject;
 
-            //
-            // completed successfully
-            //
             Status = STATUS_SUCCESS;
             break;
         }
@@ -158,14 +160,8 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT1("SRB_FUNCTION_RELEASE_QUEUE\n");
 
-            //
-            // release queue
-            //
             USBSTOR_QueueRelease(PDODeviceExtension->LowerDeviceObject);
 
-            //
-            // set status success
-            //
             Request->SrbStatus = SRB_STATUS_SUCCESS;
             Status = STATUS_SUCCESS;
             break;
@@ -184,9 +180,7 @@ USBSTOR_HandleInternalDeviceControl(
             //
             USBSTOR_QueueWaitForPendingRequests(PDODeviceExtension->LowerDeviceObject);
 #endif
-            //
-            // set status success
-            //
+
             Request->SrbStatus = SRB_STATUS_SUCCESS;
             Status = STATUS_SUCCESS;
             break;
@@ -201,9 +195,6 @@ USBSTOR_HandleInternalDeviceControl(
         }
     }
 
-    //
-    // complete request
-    //
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
@@ -217,23 +208,17 @@ USBSTOR_GetFieldLength(
     ULONG Index;
     ULONG LastCharacterPosition = 0;
 
-    //
     // scan the field and return last position which contains a valid character
-    //
     for(Index = 0; Index < MaxLength; Index++)
     {
         if (Name[Index] != ' ')
         {
-            //
             // trim white spaces from field
-            //
             LastCharacterPosition = Index;
         }
     }
 
-    //
     // convert from zero based index to length
-    //
     return LastCharacterPosition + 1;
 }
 
@@ -248,7 +233,7 @@ USBSTOR_HandleQueryProperty(
     PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
     ULONG FieldLengthVendor, FieldLengthProduct, FieldLengthRevision, TotalLength, FieldLengthSerialNumber;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PUFI_INQUIRY_RESPONSE InquiryData;
+    PINQUIRYDATA InquiryData;
     PSTORAGE_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUCHAR Buffer;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
@@ -258,125 +243,75 @@ USBSTOR_HandleQueryProperty(
 
     DPRINT("USBSTOR_HandleQueryProperty\n");
 
-    //
-    // get current stack location
-    //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    //
-    // sanity check
-    //
     ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(STORAGE_PROPERTY_QUERY));
     ASSERT(Irp->AssociatedIrp.SystemBuffer);
 
-    //
-    // get property query
-    //
     PropertyQuery = (PSTORAGE_PROPERTY_QUERY)Irp->AssociatedIrp.SystemBuffer;
 
-    //
     // check property type
-    //
     if (PropertyQuery->PropertyId != StorageDeviceProperty &&
         PropertyQuery->PropertyId != StorageAdapterProperty)
     {
-        //
         // only device property / adapter property are supported
-        //
         return STATUS_INVALID_PARAMETER_1;
     }
 
-    //
     // check query type
-    //
     if (PropertyQuery->QueryType == PropertyExistsQuery)
     {
-        //
         // device property / adapter property is supported
-        //
         return STATUS_SUCCESS;
     }
 
     if (PropertyQuery->QueryType != PropertyStandardQuery)
     {
-        //
         // only standard query and exists query are supported
-        //
         return STATUS_INVALID_PARAMETER_2;
     }
 
-    //
     // check if it is a device property
-    //
     if (PropertyQuery->PropertyId == StorageDeviceProperty)
     {
         DPRINT("USBSTOR_HandleQueryProperty StorageDeviceProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
-        //
-        // get device extension
-        //
         PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         ASSERT(PDODeviceExtension);
         ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
-        //
-        // get device extension
-        //
         FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
         ASSERT(FDODeviceExtension);
         ASSERT(FDODeviceExtension->Common.IsFDO);
 
-        //
-        // get inquiry data
-        //
-        InquiryData = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        InquiryData = PDODeviceExtension->InquiryData;
         ASSERT(InquiryData);
 
-        //
         // compute extra parameters length
-        //
-        FieldLengthVendor = USBSTOR_GetFieldLength(InquiryData->Vendor, 8);
-        FieldLengthProduct = USBSTOR_GetFieldLength(InquiryData->Product, 16);
-        FieldLengthRevision = USBSTOR_GetFieldLength(InquiryData->Revision, 4);
+        FieldLengthVendor = USBSTOR_GetFieldLength(InquiryData->VendorId, 8);
+        FieldLengthProduct = USBSTOR_GetFieldLength(InquiryData->ProductId, 16);
+        FieldLengthRevision = USBSTOR_GetFieldLength(InquiryData->ProductRevisionLevel, 4);
 
-        //
-        // is there a serial number
-        //
         if (FDODeviceExtension->SerialNumber)
         {
-            //
-            // get length
-            //
             FieldLengthSerialNumber = wcslen(FDODeviceExtension->SerialNumber->bString);
         }
         else
         {
-            //
-            // no serial number
-            //
             FieldLengthSerialNumber = 0;
         }
 
-        //
         // total length required is sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLength + 4 extra null bytes - 1
         // -1 due STORAGE_DEVICE_DESCRIPTOR contains one byte length of parameter data
-        //
         TotalLength = sizeof(STORAGE_DEVICE_DESCRIPTOR) + FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + FieldLengthSerialNumber + 3;
 
-        //
         // check if output buffer is long enough
-        //
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < TotalLength)
         {
-            //
             // buffer too small
-            //
             DescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)Irp->AssociatedIrp.SystemBuffer;
             ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(STORAGE_DESCRIPTOR_HEADER));
 
-            //
             // return required size
-            //
             DescriptorHeader->Version = TotalLength;
             DescriptorHeader->Size = TotalLength;
 
@@ -384,19 +319,14 @@ USBSTOR_HandleQueryProperty(
             return STATUS_SUCCESS;
         }
 
-        //
-        // get device descriptor
-        //
+        // initialize the device descriptor
         DeviceDescriptor = (PSTORAGE_DEVICE_DESCRIPTOR)Irp->AssociatedIrp.SystemBuffer;
 
-        //
-        // initialize device descriptor
-        //
-        DeviceDescriptor->Version = TotalLength;
+        DeviceDescriptor->Version = sizeof(STORAGE_DEVICE_DESCRIPTOR);
         DeviceDescriptor->Size = TotalLength;
         DeviceDescriptor->DeviceType = InquiryData->DeviceType;
-        DeviceDescriptor->DeviceTypeModifier = (InquiryData->RMB & 0x7F);
-        DeviceDescriptor->RemovableMedia = (InquiryData->RMB & 0x80) ? TRUE : FALSE;
+        DeviceDescriptor->DeviceTypeModifier = InquiryData->DeviceTypeModifier;
+        DeviceDescriptor->RemovableMedia = InquiryData->RemovableMedia;
         DeviceDescriptor->CommandQueueing = FALSE;
         DeviceDescriptor->BusType = BusTypeUsb;
         DeviceDescriptor->VendorIdOffset = sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR);
@@ -405,86 +335,54 @@ USBSTOR_HandleQueryProperty(
         DeviceDescriptor->SerialNumberOffset = (FieldLengthSerialNumber > 0 ? DeviceDescriptor->ProductRevisionOffset + FieldLengthRevision + 1 : 0);
         DeviceDescriptor->RawPropertiesLength = FieldLengthVendor + FieldLengthProduct + FieldLengthRevision + FieldLengthSerialNumber + 3 + (FieldLengthSerialNumber > 0 ? + 1 : 0);
 
-        //
         // copy descriptors
-        //
         Buffer = (PUCHAR)((ULONG_PTR)DeviceDescriptor + sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR));
 
-        //
-        // copy vendor
-        //
-        RtlCopyMemory(Buffer, InquiryData->Vendor, FieldLengthVendor);
+        RtlCopyMemory(Buffer, InquiryData->VendorId, FieldLengthVendor);
         Buffer[FieldLengthVendor] = '\0';
         Buffer += FieldLengthVendor + 1;
 
-        //
-        // copy product
-        //
-        RtlCopyMemory(Buffer, InquiryData->Product, FieldLengthProduct);
+        RtlCopyMemory(Buffer, InquiryData->ProductId, FieldLengthProduct);
         Buffer[FieldLengthProduct] = '\0';
         Buffer += FieldLengthProduct + 1;
 
-        //
-        // copy revision
-        //
-        RtlCopyMemory(Buffer, InquiryData->Revision, FieldLengthRevision);
+        RtlCopyMemory(Buffer, InquiryData->ProductRevisionLevel, FieldLengthRevision);
         Buffer[FieldLengthRevision] = '\0';
         Buffer += FieldLengthRevision + 1;
 
-        //
-        // copy serial number
-        //
         if (FieldLengthSerialNumber)
         {
-            //
-            // init unicode string
-            //
             RtlInitUnicodeString(&SerialNumber, FDODeviceExtension->SerialNumber->bString);
 
-            //
-            // init ansi string
-            //
             AnsiString.Buffer = (PCHAR)Buffer;
             AnsiString.Length = 0;
             AnsiString.MaximumLength = FieldLengthSerialNumber * sizeof(WCHAR);
 
-            //
-            // convert to ansi code
-            //
             Status = RtlUnicodeStringToAnsiString(&AnsiString, &SerialNumber, FALSE);
             ASSERT(Status == STATUS_SUCCESS);
         }
-
 
         DPRINT("Vendor %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->VendorIdOffset));
         DPRINT("Product %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductIdOffset));
         DPRINT("Revision %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->ProductRevisionOffset));
         DPRINT("Serial %s\n", (LPCSTR)((ULONG_PTR)DeviceDescriptor + DeviceDescriptor->SerialNumberOffset));
 
-        //
-        // done
-        //
         Irp->IoStatus.Information = TotalLength;
         return STATUS_SUCCESS;
     }
     else
     {
-        //
         // adapter property query request
-        //
+
         DPRINT("USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR))
         {
-            //
             // buffer too small
-            //
             DescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)Irp->AssociatedIrp.SystemBuffer;
             ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(STORAGE_DESCRIPTOR_HEADER));
 
-            //
             // return required size
-            //
             DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
             DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
 
@@ -492,18 +390,14 @@ USBSTOR_HandleQueryProperty(
             return STATUS_SUCCESS;
         }
 
-        //
         // get adapter descriptor, information is returned in the same buffer
-        //
         AdapterDescriptor = (PSTORAGE_ADAPTER_DESCRIPTOR)Irp->AssociatedIrp.SystemBuffer;
 
-        //
         // fill out descriptor
-        //
         AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
         AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = MAXULONG; //FIXME compute some sane value
-        AdapterDescriptor->MaximumPhysicalPages = 25; //FIXME compute some sane value
+        AdapterDescriptor->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+        AdapterDescriptor->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
         AdapterDescriptor->AlignmentMask = 0;
         AdapterDescriptor->AdapterUsesPio = FALSE;
         AdapterDescriptor->AdapterScansDown = FALSE;
@@ -513,14 +407,9 @@ USBSTOR_HandleQueryProperty(
         AdapterDescriptor->BusMajorVersion = 0x2; //FIXME verify
         AdapterDescriptor->BusMinorVersion = 0x00; //FIXME
 
-        //
         // store returned length
-        //
         Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
 
-        //
-        // done
-        //
         return STATUS_SUCCESS;
     }
 }
@@ -534,157 +423,119 @@ USBSTOR_HandleDeviceControl(
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PSCSI_ADAPTER_BUS_INFO BusInfo;
-    PSCSI_INQUIRY_DATA InquiryData;
-    PINQUIRYDATA ScsiInquiryData;
-    PUFI_INQUIRY_RESPONSE UFIInquiryResponse;
+    PSCSI_INQUIRY_DATA ScsiInquiryData;
+    PINQUIRYDATA InquiryData;
 
-    //
-    // get current stack location
-    //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_STORAGE_QUERY_PROPERTY)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
-        //
-        // query property
-        //
-        Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_PASS_THROUGH)
-    {
-        //
-        // query scsi pass through
-        //
-        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
-        Status = STATUS_NOT_SUPPORTED;
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT)
-    {
-        //
-        // query scsi pass through direct
-        //
-        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
-        Status = STATUS_NOT_SUPPORTED;
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER)
-    {
-        //
-        // query serial number
-        //
-        DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
-        Status = STATUS_NOT_SUPPORTED;
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_CAPABILITIES)
-    {
-        PIO_SCSI_CAPABILITIES Capabilities;
+        case IOCTL_STORAGE_QUERY_PROPERTY:
+            Status = USBSTOR_HandleQueryProperty(DeviceObject, Irp);
+            break;
+        case IOCTL_SCSI_PASS_THROUGH:
+            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH NOT implemented\n");
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        case IOCTL_SCSI_PASS_THROUGH_DIRECT:
+            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_SCSI_PASS_THROUGH_DIRECT NOT implemented\n");
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        case IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER:
+            DPRINT1("USBSTOR_HandleDeviceControl IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER NOT implemented\n");
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        case IOCTL_SCSI_GET_CAPABILITIES:
+        {
+            PIO_SCSI_CAPABILITIES Capabilities;
 
-        /* Legacy port capability query */
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
-        {
-            Capabilities = *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = ExAllocatePoolWithTag(NonPagedPool,
-                                                                                               sizeof(IO_SCSI_CAPABILITIES),
-                                                                                               USB_STOR_TAG);
-            Irp->IoStatus.Information = sizeof(PVOID);
-        }
-        else
-        {
-            Capabilities = Irp->AssociatedIrp.SystemBuffer;
-            Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
-        }
+            // Legacy port capability query
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(PVOID))
+            {
+                Capabilities = *((PVOID *)Irp->AssociatedIrp.SystemBuffer) = ExAllocatePoolWithTag(NonPagedPool,
+                                                                                                   sizeof(IO_SCSI_CAPABILITIES),
+                                                                                                   USB_STOR_TAG);
+                Irp->IoStatus.Information = sizeof(PVOID);
+            }
+            else
+            {
+                Capabilities = Irp->AssociatedIrp.SystemBuffer;
+                Irp->IoStatus.Information = sizeof(IO_SCSI_CAPABILITIES);
+            }
 
-        if (Capabilities)
+            if (Capabilities)
+            {
+                Capabilities->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+                Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
+                Capabilities->SupportedAsynchronousEvents = 0;
+                Capabilities->AlignmentMask = 0;
+                Capabilities->TaggedQueuing = FALSE;
+                Capabilities->AdapterScansDown = FALSE;
+                Capabilities->AdapterUsesPio = FALSE;
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            break;
+        }
+        case IOCTL_SCSI_GET_INQUIRY_DATA:
         {
-            Capabilities->MaximumTransferLength = MAXULONG;
-            Capabilities->MaximumPhysicalPages = 25;
-            Capabilities->SupportedAsynchronousEvents = 0;
-            Capabilities->AlignmentMask = 0;
-            Capabilities->TaggedQueuing = FALSE;
-            Capabilities->AdapterScansDown = FALSE;
-            Capabilities->AdapterUsesPio = FALSE;
+            PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+            ASSERT(PDODeviceExtension);
+            ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+
+            // get parameters
+            BusInfo = Irp->AssociatedIrp.SystemBuffer;
+            ScsiInquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
+            InquiryData = (PINQUIRYDATA)ScsiInquiryData->InquiryData;
+
+
+            BusInfo->NumberOfBuses = 1;
+            BusInfo->BusData[0].NumberOfLogicalUnits = 1; //FIXME
+            BusInfo->BusData[0].InitiatorBusId = 0;
+            BusInfo->BusData[0].InquiryDataOffset = sizeof(SCSI_ADAPTER_BUS_INFO);
+
+            ScsiInquiryData->PathId = 0;
+            ScsiInquiryData->TargetId = 0;
+            ScsiInquiryData->Lun = PDODeviceExtension->LUN & MAX_LUN;
+            ScsiInquiryData->DeviceClaimed = PDODeviceExtension->Claimed;
+            ScsiInquiryData->InquiryDataLength = sizeof(INQUIRYDATA);
+            ScsiInquiryData->NextInquiryDataOffset = 0;
+
+            // Note: INQUIRYDATA structure is larger than INQUIRYDATABUFFERSIZE
+            RtlZeroMemory(InquiryData, sizeof(INQUIRYDATA));
+            RtlCopyMemory(InquiryData, PDODeviceExtension->InquiryData, INQUIRYDATABUFFERSIZE);
+
+            InquiryData->Versions = 0x04;
+            InquiryData->ResponseDataFormat = 0x02; // some devices set this to 1
+
+            Irp->IoStatus.Information = sizeof(SCSI_ADAPTER_BUS_INFO) + sizeof(SCSI_INQUIRY_DATA) + sizeof(INQUIRYDATA) - 1;
             Status = STATUS_SUCCESS;
+
+            break;
         }
-        else
+        case IOCTL_SCSI_GET_ADDRESS:
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            PSCSI_ADDRESS Address = Irp->AssociatedIrp.SystemBuffer;
+
+            Address->Length = sizeof(SCSI_ADDRESS);
+            Address->PortNumber = 0;
+            Address->PathId = 0;
+            Address->TargetId = 0;
+            Address->Lun = (((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LUN & MAX_LUN);
+            Irp->IoStatus.Information = sizeof(SCSI_ADDRESS);
+
+            Status = STATUS_SUCCESS;
+
+            break;
         }
-    } 
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_INQUIRY_DATA)
-    {
-        //
-        // get device extension
-        //
-        PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-        ASSERT(PDODeviceExtension);
-        ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
-
-        //
-        // get parameters
-        //
-        BusInfo = Irp->AssociatedIrp.SystemBuffer;
-        InquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
-        ScsiInquiryData = (PINQUIRYDATA)InquiryData->InquiryData;
-        
-
-        //
-        // get inquiry data
-        //
-        UFIInquiryResponse = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
-        ASSERT(UFIInquiryResponse);
-
-
-        BusInfo->NumberOfBuses = 1;
-        BusInfo->BusData[0].NumberOfLogicalUnits = 1; //FIXME
-        BusInfo->BusData[0].InitiatorBusId = 0;
-        BusInfo->BusData[0].InquiryDataOffset = sizeof(SCSI_ADAPTER_BUS_INFO);
-
-        InquiryData->PathId = 0;
-        InquiryData->TargetId = 0;
-        InquiryData->Lun = PDODeviceExtension->LUN & MAX_LUN;
-        InquiryData->DeviceClaimed = PDODeviceExtension->Claimed;
-        InquiryData->InquiryDataLength = sizeof(INQUIRYDATA);
-        InquiryData->NextInquiryDataOffset = 0;
-
-        RtlZeroMemory(ScsiInquiryData, sizeof(INQUIRYDATA));
-        ScsiInquiryData->DeviceType = UFIInquiryResponse->DeviceType;
-        ScsiInquiryData->DeviceTypeQualifier = (UFIInquiryResponse->RMB & 0x7F);
-
-        /* Hack for IoReadPartitionTable call in disk.sys */
-        ScsiInquiryData->RemovableMedia = ((ScsiInquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ? ((UFIInquiryResponse->RMB & 0x80) ? 1 : 0) : 0);
-
-        ScsiInquiryData->Versions = 0x04;
-        ScsiInquiryData->ResponseDataFormat = 0x02;
-        ScsiInquiryData->AdditionalLength = 31;
-        ScsiInquiryData->SoftReset = 0;
-        ScsiInquiryData->CommandQueue = 0;
-        ScsiInquiryData->LinkedCommands = 0;
-        ScsiInquiryData->RelativeAddressing = 0;
-
-        RtlCopyMemory(&ScsiInquiryData->VendorId, UFIInquiryResponse->Vendor, USBSTOR_GetFieldLength(UFIInquiryResponse->Vendor, 8));
-        RtlCopyMemory(&ScsiInquiryData->ProductId, UFIInquiryResponse->Product, USBSTOR_GetFieldLength(UFIInquiryResponse->Product, 16));
-
-        Irp->IoStatus.Information = sizeof(SCSI_ADAPTER_BUS_INFO) + sizeof(SCSI_INQUIRY_DATA) + sizeof(INQUIRYDATA) - 1;
-        Status = STATUS_SUCCESS;
-    }
-    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SCSI_GET_ADDRESS)
-    {
-        PSCSI_ADDRESS Address = Irp->AssociatedIrp.SystemBuffer;
-
-        Address->Length = sizeof(SCSI_ADDRESS);
-        Address->PortNumber = 0;
-        Address->PathId = 0;
-        Address->TargetId = 0;
-        Address->Lun = (((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LUN & MAX_LUN);
-        Irp->IoStatus.Information = sizeof(SCSI_ADDRESS);
-
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        //
-        // unsupported
-        //
-        DPRINT("USBSTOR_HandleDeviceControl IoControl %x not supported\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
-        Status = STATUS_NOT_SUPPORTED;
+        default:
+            DPRINT("USBSTOR_HandleDeviceControl IoControl %x not supported\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+            Status = STATUS_NOT_SUPPORTED;
+            break;
     }
 
     return Status;

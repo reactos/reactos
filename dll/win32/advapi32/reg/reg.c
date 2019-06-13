@@ -759,8 +759,7 @@ RegCopyTreeW(IN HKEY hKeySrc,
         OBJECT_ATTRIBUTES ObjectAttributes;
         UNICODE_STRING SubKeyName;
 
-        RtlInitUnicodeString(&SubKeyName,
-                             (LPWSTR)lpSubKey);
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &SubKeyName,
@@ -817,8 +816,7 @@ RegCopyTreeA(IN HKEY hKeySrc,
     LONG Ret;
 
     if (lpSubKey != NULL &&
-        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                          (LPSTR)lpSubKey))
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName, lpSubKey))
     {
         return ERROR_NOT_ENOUGH_MEMORY;
     }
@@ -847,8 +845,7 @@ RegConnectRegistryA(IN LPCSTR lpMachineName,
     LONG Ret;
 
     if (lpMachineName != NULL &&
-        !RtlCreateUnicodeStringFromAsciiz(&MachineName,
-                                          (LPSTR)lpMachineName))
+        !RtlCreateUnicodeStringFromAsciiz(&MachineName, lpMachineName))
     {
         return ERROR_NOT_ENOUGH_MEMORY;
     }
@@ -1324,8 +1321,7 @@ RegDeleteKeyExW(
         ERR("Wow64 not yet supported!\n");
 
 
-    RtlInitUnicodeString(&SubKeyName,
-                         (LPWSTR)lpSubKey);
+    RtlInitUnicodeString(&SubKeyName, lpSubKey);
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -1380,8 +1376,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
         OBJECT_ATTRIBUTES ObjectAttributes;
         UNICODE_STRING SubKeyName;
 
-        RtlInitUnicodeString(&SubKeyName,
-                             (LPWSTR)lpSubKey);
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &SubKeyName,
@@ -1402,8 +1397,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
     else
         CurKey = KeyHandle;
 
-    RtlInitUnicodeString(&ValueName,
-                         (LPWSTR)lpValueName);
+    RtlInitUnicodeString(&ValueName, lpValueName);
 
     Status = NtDeleteValueKey(CurKey,
                               &ValueName);
@@ -1439,15 +1433,13 @@ RegDeleteKeyValueA(IN HKEY hKey,
     LONG Ret;
 
     if (lpSubKey != NULL &&
-        !RtlCreateUnicodeStringFromAsciiz(&SubKey,
-                                          (LPSTR)lpSubKey))
+        !RtlCreateUnicodeStringFromAsciiz(&SubKey, lpSubKey))
     {
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     if (lpValueName != NULL &&
-        !RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                          (LPSTR)lpValueName))
+        !RtlCreateUnicodeStringFromAsciiz(&ValueName, lpValueName))
     {
         RtlFreeUnicodeString(&SubKey);
         return ERROR_NOT_ENOUGH_MEMORY;
@@ -1693,8 +1685,7 @@ RegDeleteTreeW(IN HKEY hKey,
         OBJECT_ATTRIBUTES ObjectAttributes;
         UNICODE_STRING SubKeyName;
 
-        RtlInitUnicodeString(&SubKeyName,
-                             (LPWSTR)lpSubKey);
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &SubKeyName,
@@ -1853,8 +1844,7 @@ RegDeleteTreeA(IN HKEY hKey,
     LONG Ret;
 
     if (lpSubKey != NULL &&
-        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                          (LPSTR)lpSubKey))
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName, lpSubKey))
     {
         return ERROR_NOT_ENOUGH_MEMORY;
     }
@@ -2202,8 +2192,7 @@ RegSetKeyValueW(IN HKEY hKey,
         OBJECT_ATTRIBUTES ObjectAttributes;
         UNICODE_STRING SubKeyName;
 
-        RtlInitUnicodeString(&SubKeyName,
-                             (LPWSTR)lpSubKey);
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &SubKeyName,
@@ -2273,8 +2262,7 @@ RegSetKeyValueA(IN HKEY hKey,
         OBJECT_ATTRIBUTES ObjectAttributes;
         UNICODE_STRING SubKeyName;
 
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                              (LPSTR)lpSubKey))
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName, lpSubKey))
         {
             Ret = ERROR_NOT_ENOUGH_MEMORY;
             goto Cleanup;
@@ -2342,8 +2330,7 @@ RegDeleteValueA(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                     (LPSTR)lpValueName);
+    RtlCreateUnicodeStringFromAsciiz(&ValueName, lpValueName);
     Status = NtDeleteValueKey(KeyHandle,
                               &ValueName);
     RtlFreeUnicodeString (&ValueName);
@@ -2379,8 +2366,7 @@ RegDeleteValueW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    RtlInitUnicodeString(&ValueName,
-                         (LPWSTR)lpValueName);
+    RtlInitUnicodeString(&ValueName, lpValueName);
 
     Status = NtDeleteValueKey(KeyHandle,
                               &ValueName);
@@ -2834,7 +2820,7 @@ RegEnumValueA(
 
     /* Convert the name string */
     RtlUnicodeToMultiByteN(lpName, *lpcbName, lpcbName, NameBuffer, NameBufferSize * sizeof(WCHAR));
-    ((PSTR)lpName)[*lpcbName] = '\0';
+    lpName[*lpcbName] = ANSI_NULL;
 
 Exit:
     if (NameBuffer)
@@ -3152,8 +3138,7 @@ RegLoadKeyW(HKEY hKey,
                                NULL,
                                NULL);
 
-    RtlInitUnicodeString(&KeyName,
-                         (LPWSTR)lpSubKey);
+    RtlInitUnicodeString(&KeyName, lpSubKey);
 
     InitializeObjectAttributes(&KeyObjectAttributes,
                                &KeyName,
@@ -3414,10 +3399,7 @@ RegOpenKeyExW(HKEY hKey,
     if (ulOptions & REG_OPTION_OPEN_LINK)
         Attributes |= OBJ_OPENLINK;
 
-    if (lpSubKey != NULL)
-        RtlInitUnicodeString(&SubKeyString, (LPWSTR)lpSubKey);
-    else
-        RtlInitUnicodeString(&SubKeyString, (LPWSTR)L"");
+    RtlInitUnicodeString(&SubKeyString, lpSubKey ? lpSubKey : L"");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
@@ -3884,7 +3866,7 @@ RegQueryMultipleValuesA(HKEY hKey,
 {
     ULONG i;
     DWORD maxBytes = *ldwTotsize;
-    LPSTR bufptr = (LPSTR)lpValueBuf;
+    LPSTR bufptr = lpValueBuf;
     LONG ErrorCode;
 
     if (maxBytes >= (1024*1024))
@@ -4407,8 +4389,7 @@ RegReplaceKeyW(HKEY hKey,
     /* Open the real key */
     if (lpSubKey != NULL && *lpSubKey != (WCHAR)0)
     {
-        RtlInitUnicodeString(&SubKeyName,
-                             (PWSTR)lpSubKey);
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
         InitializeObjectAttributes(&KeyObjectAttributes,
                                    &SubKeyName,
                                    OBJ_CASE_INSENSITIVE,
@@ -4847,10 +4828,7 @@ RegSetValueExA(HKEY hKey,
     /* Convert SubKey name to Unicode */
     if (lpValueName != NULL && lpValueName[0] != '\0')
     {
-        BOOL bConverted;
-        bConverted = RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                                  (PSTR)lpValueName);
-        if(!bConverted)
+        if (!RtlCreateUnicodeStringFromAsciiz(&ValueName, lpValueName))
             return ERROR_NOT_ENOUGH_MEMORY;
     }
     else
@@ -5130,8 +5108,7 @@ RegUnLoadKeyW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    RtlInitUnicodeString(&KeyName,
-                         (LPWSTR)lpSubKey);
+    RtlInitUnicodeString(&KeyName, lpSubKey);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,

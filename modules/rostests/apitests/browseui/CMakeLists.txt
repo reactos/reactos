@@ -12,6 +12,7 @@ include_directories(
 list(APPEND SOURCE
     ACListISF.cpp
     IACLCustomMRU.cpp
+    SHEnumClassesOfCategories.cpp
     SHExplorerParseCmdLine.c
     testlist.c)
 

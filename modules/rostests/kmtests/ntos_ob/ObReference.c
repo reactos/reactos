@@ -212,7 +212,7 @@ START_TEST(ObReference)
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok(DirectoryHandle != NULL, "DirectoryHandle = NULL\n");
 
-        if (!skip(Status == STATUS_SUCCESS && DirectoryHandle, "Cannot proceed without an object"))
+        if (!skip(Status == STATUS_SUCCESS && DirectoryHandle, "Cannot proceed without an object\n"))
         {
             TestReference(DirectoryHandle, pName, pNameUpper, FALSE, Tests[i].AdditionalReferences, (Tests[i].Flags & OBJ_PERMANENT) != 0);
             /* try again for good measure */

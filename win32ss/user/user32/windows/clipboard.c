@@ -15,6 +15,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+HANDLE WINAPI GdiConvertMetaFilePict(HANDLE);
+HANDLE WINAPI GdiConvertEnhMetaFile(HANDLE);
+HANDLE WINAPI GdiCreateLocalEnhMetaFile(HANDLE);
+HANDLE WINAPI GdiCreateLocalMetaFilePict(HANDLE);
+
+
 /*
  * @implemented
  */
@@ -65,7 +71,7 @@ GetClipboardFormatNameA(UINT format,
             /* clear result string */
             Length = 0;
         }
-        lpszFormatName[Length] = '\0';
+        lpszFormatName[Length] = ANSI_NULL;
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
@@ -91,7 +97,7 @@ UINT
 WINAPI
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
-    UINT ret = 0;
+    UINT ret;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -100,19 +106,21 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
-    if (*lpszFormat == 0) //NULL
+    if (*lpszFormat == ANSI_NULL)
     {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
-    ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
-    if (ret)
+    if (!RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat))
     {
-        ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
-        RtlFreeUnicodeString(&usFormat);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
     }
+
+    ret = NtUserRegisterWindowMessage(&usFormat); //(LPCWSTR)
+
+    RtlFreeUnicodeString(&usFormat);
 
     return ret;
 }
@@ -124,7 +132,6 @@ UINT
 WINAPI
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
-    UINT ret = 0;
     UNICODE_STRING usFormat = {0};
 
     if (lpszFormat == NULL)
@@ -133,17 +140,14 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
         return 0;
     }
 
-    /* check for "" */
-    if (*lpszFormat == 0) //NULL
+    if (*lpszFormat == UNICODE_NULL)
     {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
     RtlInitUnicodeString(&usFormat, lpszFormat);
-    ret = NtUserRegisterWindowMessage(&usFormat);
-
-    return ret;
+    return NtUserRegisterWindowMessage(&usFormat);
 }
 
 static PVOID WINAPI
@@ -201,6 +205,16 @@ GetClipboardData(UINT uFormat)
     hData = NtUserGetClipboardData(uFormat, &gcd);
     if (!hData)
         return NULL;
+
+    switch (uFormat)
+    {
+        case CF_DSPMETAFILEPICT:
+        case CF_METAFILEPICT:
+            return GdiCreateLocalMetaFilePict(hData);
+        case CF_DSPENHMETAFILE:
+        case CF_ENHMETAFILE:
+            return GdiCreateLocalEnhMetaFile(hData);
+    }
 
     if (gcd.fGlobalHandle)
     {
@@ -287,7 +301,7 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     DWORD dwSize;
     HANDLE hGlobal;
     LPVOID pMem;
-    HANDLE hRet = NULL;
+    HANDLE hRet = NULL, hTemp;
     SETCLIPBDATA scd = {FALSE, FALSE};
 
     /* Check if this is a delayed rendering */
@@ -300,11 +314,17 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     else if (uFormat == CF_BITMAP || uFormat == CF_DSPBITMAP || uFormat == CF_PALETTE)
         hRet = NtUserSetClipboardData(uFormat, hMem, &scd);
     /* Meta files are probably checked for validity */
-    else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT ||
-             uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+    else if (uFormat == CF_DSPMETAFILEPICT || uFormat == CF_METAFILEPICT )
     {
-        UNIMPLEMENTED;
-        hRet = NULL; // not supported yet
+        hTemp = GdiConvertMetaFilePict( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hTemp, &scd); // Note : LOL, it returns a BOOL not a HANDLE!!!!
+        if (hRet == hTemp) hRet = hMem;                      // If successful "TRUE", return the original handle.
+    }
+    else if (uFormat == CF_DSPENHMETAFILE || uFormat == CF_ENHMETAFILE)
+    {
+        hTemp = GdiConvertEnhMetaFile( hMem );
+        hRet = NtUserSetClipboardData(uFormat, hTemp, &scd);
+        if (hRet == hTemp) hRet = hMem;
     }
     else
     {

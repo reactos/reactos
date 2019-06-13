@@ -65,8 +65,13 @@ IntFreeElementData(PCLIP pElement)
     {
         if (pElement->fGlobalHandle)
             UserDeleteObject(pElement->hData, TYPE_CLIPDATA);
-        else if (pElement->fmt == CF_BITMAP || pElement->fmt == CF_PALETTE ||
-                 pElement->fmt == CF_DSPBITMAP)
+        else if (pElement->fmt == CF_BITMAP          ||
+                 pElement->fmt == CF_PALETTE         ||
+                 pElement->fmt == CF_DSPBITMAP       ||
+                 pElement->fmt == CF_METAFILEPICT    ||
+                 pElement->fmt == CF_DSPMETAFILEPICT ||
+                 pElement->fmt == CF_DSPENHMETAFILE  ||
+                 pElement->fmt == CF_ENHMETAFILE )
         {
             GreSetObjectOwner(pElement->hData, GDI_OBJ_HMGR_POWNED);
             GreDeleteObject(pElement->hData);
@@ -285,7 +290,7 @@ cleanup:
 static VOID NTAPI
 IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
 {
-    BOOL bHaveText, bHaveUniText, bHaveOemText, bHaveLocale, bHaveBm, bHaveDib;
+    BOOL bHaveText, bHaveUniText, bHaveOemText, bHaveLocale, bHaveBm, bHaveDib, bHaveMFP, bHaveEMF;
 
     bHaveText = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
     bHaveOemText = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
@@ -293,6 +298,8 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
     bHaveLocale = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
     bHaveBm = IntIsFormatAvailable(pWinStaObj, CF_BITMAP);
     bHaveDib = IntIsFormatAvailable(pWinStaObj, CF_DIB);
+    bHaveMFP = IntIsFormatAvailable(pWinStaObj, CF_METAFILEPICT);
+    bHaveEMF = IntIsFormatAvailable(pWinStaObj, CF_ENHMETAFILE);
 
     /* Add CF_LOCALE format if we have CF_TEXT, CF_OEMTEXT or CF_UNICODETEXT */
     if (!bHaveLocale && (bHaveText || bHaveOemText || bHaveUniText))
@@ -328,6 +335,14 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
     /* Add CF_BITMAP. Note: it is synthesized on demand */
     if (!bHaveBm && bHaveDib)
         IntAddFormatedData(pWinStaObj, CF_BITMAP, DATA_SYNTH_KRNL, FALSE, TRUE);
+
+    /* Add CF_ENHMETAFILE. Note: it is synthesized in gdi32.dll */
+    if (bHaveMFP && !bHaveEMF)
+        IntAddFormatedData(pWinStaObj, CF_ENHMETAFILE, DATA_SYNTH_USER, FALSE, TRUE);
+
+    /* Add CF_METAFILEPICT. Note: it is synthesized in gdi32.dll */
+    if (bHaveEMF && !bHaveMFP)
+        IntAddFormatedData(pWinStaObj, CF_METAFILEPICT, DATA_SYNTH_USER, FALSE, TRUE);
 
     /* Note: We need to render the DIB or DIBV5 format as soon as possible
        because pallette information may change */
@@ -927,6 +942,16 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
 
             case CF_BITMAP:
                 IntSynthesizeBitmap(pWinStaObj, pElement);
+                break;
+
+            case CF_METAFILEPICT:
+                uSourceFmt = CF_ENHMETAFILE;
+                pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
+                break;
+
+            case CF_ENHMETAFILE:
+                uSourceFmt = CF_METAFILEPICT;
+                pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
                 break;
 
             default:

@@ -283,7 +283,7 @@ BOOLEAN AddToRingBuffer(LPSTR p)
 		}
 		else
 		{
-			if((UCHAR)p[i]<0x20 && (UCHAR)p[i]>0x7f)
+			if((UCHAR)p[i]<0x20 || (UCHAR)p[i]>0x7f)
 				p[i]=0x20;
 
 			aBuffers[ulInPos][j++] = p[i];
@@ -873,7 +873,7 @@ void Print(USHORT Window,LPSTR p)
 			}
 			else
 			{
-				if((UCHAR)p[i]<0x20 && (UCHAR)p[i]>0x7f)
+				if((UCHAR)p[i]<0x20 || (UCHAR)p[i]>0x7f)
 					p[i]=0x20;
 
                 if(bOutput)

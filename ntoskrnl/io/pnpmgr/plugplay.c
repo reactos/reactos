@@ -213,6 +213,39 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
 }
 
 static NTSTATUS
+IopPnpEnumerateDevice(PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA DeviceData)
+{
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceInstance;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &DeviceData->DeviceInstance);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("IopPnpEnumerateDevice(%wZ)\n", &DeviceInstance);
+
+    /* Get the device object */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        ExFreePool(DeviceInstance.Buffer);
+    }
+    if (DeviceObject == NULL)
+    {
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    Status = IopEnumerateDevice(DeviceObject);
+
+    ObDereferenceObject(DeviceObject);
+
+    return Status;
+}
+
+static NTSTATUS
 IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceList)
 {
     NTSTATUS Status;
@@ -1300,7 +1333,11 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 
     switch (PlugPlayControlClass)
     {
-//        case PlugPlayControlEnumerateDevice:
+        case PlugPlayControlEnumerateDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopPnpEnumerateDevice((PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA)Buffer);
+
 //        case PlugPlayControlRegisterNewDevice:
 //        case PlugPlayControlDeregisterDevice:
 //        case PlugPlayControlInitializeDevice:
@@ -1309,7 +1346,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 //        case PlugPlayControlQueryAndRemoveDevice:
 
         case PlugPlayControlUserResponse:
-            if (Buffer || BufferLength != 0)
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_USER_RESPONSE_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
 

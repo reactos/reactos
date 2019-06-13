@@ -254,17 +254,16 @@ HRESULT CSHEnumClassesOfCategories::Initialize(ULONG cImplemented, CATID *pImple
     if (!fDsa)
         return E_FAIL;
 
-    if (cRequired > 0 || cImplemented == (ULONG)-1)
-    {
-        FIXME("Implement required categories class enumeration\n");
-        return E_NOTIMPL;
-    }
+    // Parameter validation:
+    // - We must have at least one category to manage.
+    // - The array pointers must not be NULL if there is a non-zero
+    //   element count specified for them.
+    if (cImplemented == 0 && cRequired == 0)
+        return E_INVALIDARG;
+    if ((cImplemented && !pImplemented) || (cRequired && !pRequired))
+        return E_INVALIDARG;
 
-    // Don't do anything if we have nothing
-    if (cRequired == 0 && cImplemented == (ULONG)-1)
-        return E_FAIL;
-
-    // For each implemented category, create a cache and add it to our local DSA
+    // For each implemented category, create a cache and add it to our local DSA.
     for (i = 0; i < cImplemented; i++)
     {
         CComCatCachedCategory cachedCat;
@@ -273,6 +272,17 @@ HRESULT CSHEnumClassesOfCategories::Initialize(ULONG cImplemented, CATID *pImple
             return hr;
         cachedCat.WriteCacheToDSA(fDsa);
     }
+
+    // TODO: Implement caching of the required categories.
+    if (cRequired > 0)
+    {
+        FIXME("Implement required categories class enumeration\n");
+
+        // Only fail in case we didn't look at the implemented categories.
+        if (cImplemented == 0)
+            return E_NOTIMPL;
+    }
+
     return S_OK;
 }
 
@@ -326,6 +336,9 @@ HRESULT STDMETHODCALLTYPE CSHEnumClassesOfCategories::Skip(ULONG nbElts)
 extern "C" HRESULT WINAPI SHEnumClassesOfCategories(ULONG cImplemented, CATID *pImplemented, ULONG cRequired, CATID *pRequired, IEnumGUID **out)
 {
     HRESULT hr;
+
+    if (!out)
+        return E_INVALIDARG;
 
     hr = ShellObjectCreatorInit<CSHEnumClassesOfCategories>(
             cImplemented, pImplemented, cRequired, pRequired, IID_PPV_ARG(IEnumGUID, out));

@@ -358,19 +358,19 @@ VCD_DESC=Manage virtual CDRom drives
 
 ; Ukrainian
 [Strings.0422]
-ACCESSORIES=Допоміжні програми
+ACCESSORIES=Стандартні
 SYSTOOLS=Службові
 ACCESSIBILITY=Спеціальні можливості
 ENTERTAINMENT=Розваги
-COMMUNICATIONS=Communications
+COMMUNICATIONS=Зв'язок
 GAMES=Ігри
 
 FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
 SCREENSHOT_TITLE=Знімок екрану
 SCREENSHOT_DESC=Зробити знімок екрана
-VCD_TITLE=Virtual CDRom Control Panel
-VCD_DESC=Manage virtual CDRom drives
+VCD_TITLE=Налаштування віртуального CDRom
+VCD_DESC=Керувати носіями віртуального CDRom
 
 ; Simplified Chinese
 [Strings.0804]

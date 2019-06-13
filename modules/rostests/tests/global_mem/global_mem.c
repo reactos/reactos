@@ -248,7 +248,7 @@ TEST_STATUS TestGlobalAllocNFree(UINT allocFlags)
     hTest = GlobalAlloc(allocFlags, MEM_BLOCK_SIZE);
     if (0 != hTest)
     {
-        if (0 == GlobalFree(hTest));
+        if (0 == GlobalFree(hTest))
         {
             status = PASSED;
         }

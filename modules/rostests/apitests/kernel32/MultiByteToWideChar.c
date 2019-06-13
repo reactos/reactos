@@ -254,7 +254,7 @@ START_TEST(MultiByteToWideChar)
         trace("This test is designed for Windows 10+ and ReactOS.\n"
               "It is expected to report some failures on older Windows versions.\n");
 #if 0
-        skip("");
+        skip("\n");
         return;
 #endif
     }
