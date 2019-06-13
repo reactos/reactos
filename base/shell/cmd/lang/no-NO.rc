@@ -402,7 +402,7 @@ START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
   MIN         Starts with a minimized window.\n\
   MAX         Starts with a maximized window.\n\
   WAIT        Starts the command or program and waits for its termination.\n\
-  kommando     Spesifisere kommando for å kjøre.\n\
+  kommando    Spesifisere kommando for å kjøre.\n\
   parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Velg vindustittel for kommandotolkvindu.\n\n\
 TITLE [streng]\n\n\

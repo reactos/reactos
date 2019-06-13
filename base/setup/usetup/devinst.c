@@ -405,6 +405,7 @@ static ULONG NTAPI
 PnpEventThread(IN PVOID Parameter)
 {
     NTSTATUS Status;
+    PLUGPLAY_CONTROL_USER_RESPONSE_DATA ResponseData = {0, 0, 0, 0};
     PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
     ULONG PnpEventSize;
 
@@ -483,7 +484,14 @@ PnpEventThread(IN PVOID Parameter)
         }
 
         /* Dequeue the current PnP event and signal the next one */
-        NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
+        Status = NtPlugPlayControl(PlugPlayControlUserResponse,
+                                   &ResponseData,
+                                   sizeof(ResponseData));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtPlugPlayControl(PlugPlayControlUserResponse) failed (Status 0x%08lx)\n", Status);
+            goto Quit;
+        }
     }
 
     Status = STATUS_SUCCESS;

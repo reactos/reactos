@@ -1120,6 +1120,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
+    HANDLE DirectoryHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
     PROCESS_PRIORITY_CLASS PriorityClass = {0};
     PROCESS_FOREGROUND_BACKGROUND Foreground = {0};
@@ -1939,6 +1940,34 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = MmSetExecuteOptions(NoExecute);
             break;
 
+        case ProcessDeviceMap:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Use SEH for capture */
+            _SEH2_TRY
+            {
+                /* Capture the handle */
+                DirectoryHandle = *(PHANDLE)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Call Ob to set the device map */
+            Status = ObSetDeviceMap(Process, DirectoryHandle);
+            break;
+
+
         /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
@@ -1958,11 +1987,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         case ProcessWorkingSetWatch:
             DPRINT1("WS watch not implemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
-        case ProcessDeviceMap:
-            DPRINT1("Device map not implemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 

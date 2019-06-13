@@ -969,12 +969,14 @@ Return Value:
     // IsFloppyDevice also checks for write cache enabled.
     //
 
+#if 0
     if (IsFloppyDevice(deviceObject) && deviceObject->Characteristics & FILE_REMOVABLE_MEDIA &&
         (((PINQUIRYDATA)LunInfo->InquiryData)->DeviceType == DIRECT_ACCESS_DEVICE)) {
 
         status = STATUS_NO_SUCH_DEVICE;
         goto CreateDiskDeviceObjectsExit;
     }
+#endif
 
     DisableWriteCache(deviceObject,LunInfo);
 

@@ -432,7 +432,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
         goto end;
     }
 
-    Status = open_fcb(Vcb, r, r->root_item.objid, BTRFS_TYPE_DIRECTORY, utf8, fcb, &fr->fcb, PagedPool, Irp);
+    Status = open_fcb(Vcb, r, r->root_item.objid, BTRFS_TYPE_DIRECTORY, utf8, FALSE, fcb, &fr->fcb, PagedPool, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("open_fcb returned %08x\n", Status);
         free_fileref(fr);
@@ -4341,6 +4341,14 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         fcb->ea_changed = TRUE;
         mark_fcb_dirty(fcb);
+
+        Status = STATUS_SUCCESS;
+        goto end;
+    } else if (bsxa->namelen == sizeof(EA_CASE_SENSITIVE) - 1 && RtlCompareMemory(bsxa->data, EA_CASE_SENSITIVE, sizeof(EA_CASE_SENSITIVE) - 1) == sizeof(EA_CASE_SENSITIVE) - 1) {
+        if (bsxa->valuelen > 0 && bsxa->data[bsxa->namelen] == '1') {
+            fcb->case_sensitive = TRUE;
+            mark_fcb_dirty(fcb);
+        }
 
         Status = STATUS_SUCCESS;
         goto end;

@@ -18,7 +18,9 @@ DefaultDestDir = 12
 %GenericMfg% = GenericMfg
 
 [GenericMfg]
-%GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_06&Prot_50
+%GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_06&Prot_50 ; SCSI devices
+; usbstor.sys supports usb-cdroms but cdrom.sys from ReactOS does not like it
+;%GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_02&Prot_50 ; SFF-8020i (ATAPI)
 
 ;-------------------------- USB STORAGE DRIVER --------------------------
 

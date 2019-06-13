@@ -206,6 +206,10 @@ BEGIN
     IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登录的密码。"
     IDS_PASSWORDEXPIRED "您的密码已过期，必须更改。"
     IDS_ACCOUNTEXPIRED "您的帐户已过期。请咨询您的系统管理员。"
+    IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
+    IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
+    IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
+    IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
 END
 
 /* Shutdown Dialog Strings */

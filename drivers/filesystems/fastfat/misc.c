@@ -130,7 +130,7 @@ VfatDispatchRequest(
             break;
 
         case IRP_MJ_WRITE:
-            Status = VfatWrite (IrpContext);
+            Status = VfatWrite(IrpContext);
             break;
 
         case IRP_MJ_FILE_SYSTEM_CONTROL:
@@ -138,11 +138,11 @@ VfatDispatchRequest(
             break;
 
         case IRP_MJ_QUERY_INFORMATION:
-            Status = VfatQueryInformation (IrpContext);
+            Status = VfatQueryInformation(IrpContext);
             break;
 
         case IRP_MJ_SET_INFORMATION:
-            Status = VfatSetInformation (IrpContext);
+            Status = VfatSetInformation(IrpContext);
             break;
 
         case IRP_MJ_DIRECTORY_CONTROL:
@@ -439,9 +439,9 @@ VfatCheckForDismount(
      * It seems to be related to the fact that the volume root directory as
      * well as auxiliary data stream(s) are still opened, and only these are
      * allowed to be opened at that moment. After analysis it appears that for
-     * the ReactOS' fastfat, this number is equal to "3".
+     * the ReactOS' fastfat, this number is equal to "2".
      */
-    UnCleanCount = 3;
+    UnCleanCount = 2;
 
     /* Lock VPB */
     IoAcquireVpbSpinLock(&OldIrql);

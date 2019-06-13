@@ -19,6 +19,7 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define TYPE_INODE_REF         0x0C
 #define TYPE_INODE_EXTREF      0x0D
 #define TYPE_XATTR_ITEM        0x18
+#define TYPE_ORPHAN_INODE      0x30
 #define TYPE_DIR_ITEM          0x54
 #define TYPE_DIR_INDEX         0x60
 #define TYPE_EXTENT_DATA       0x6C
@@ -112,6 +113,8 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define BTRFS_INCOMPAT_FLAGS_NO_HOLES           0x0200
 
 #define BTRFS_SUPERBLOCK_FLAGS_SEEDING   0x100000000
+
+#define BTRFS_ORPHAN_INODE_OBJID         0xFFFFFFFFFFFFFFFB
 
 #pragma pack(push, 1)
 

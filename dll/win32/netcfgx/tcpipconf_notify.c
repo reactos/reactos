@@ -666,38 +666,11 @@ InsertIpAddressToListView(
     }
 }
 
-static
-VOID
-EnableIpButtons(
-    HWND hwndDlg)
-{
-    BOOL bEnable;
-
-    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_IPLIST)) != 0);
-
-    EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), bEnable);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), bEnable);
-}
-
-static
-VOID
-EnableGwButtons(
-    HWND hwndDlg)
-{
-    BOOL bEnable;
-
-    bEnable = (ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_GWLIST)) != 0);
-
-    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), bEnable);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), bEnable);
-}
-
 VOID
 InitializeTcpipAdvancedIpDlg(
     HWND hwndDlg,
     TcpipConfNotifyImpl * This)
 {
- 
     RECT rect;
     LVITEMW li;
     WCHAR szBuffer[100];
@@ -716,24 +689,25 @@ InitializeTcpipAdvancedIpDlg(
             SendDlgItemMessageW(hwndDlg, IDC_IPLIST, LVM_INSERTITEMW, 0, (LPARAM)&li);
         }
         EnableWindow(GetDlgItem(hwndDlg, IDC_IPADD), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), FALSE);
     }
     else
     {
         InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_IPLIST), This->pCurrentConfig->Ip, TRUE);
-        EnableIpButtons(hwndDlg);
     }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), FALSE);
 
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_GATEWAY, 0, 100);
     GetClientRect(GetDlgItem(hwndDlg, IDC_IPLIST), &rect);
     InsertColumnToListView(GetDlgItem(hwndDlg, IDC_GWLIST), IDS_METRIC, 1, (rect.right - rect.left - 100));
 
     InsertIpAddressToListView(GetDlgItem(hwndDlg, IDC_GWLIST), This->pCurrentConfig->Gw, FALSE);
-    EnableGwButtons(hwndDlg);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), FALSE);
 
     SendDlgItemMessageW(hwndDlg, IDC_METRIC, EM_LIMITTEXT, 4, 0);
-
 }
 
 INT_PTR
@@ -1088,7 +1062,6 @@ TcpipAddSuffixDlg(
 }
 
 
-
 INT
 GetSelectedItem(HWND hDlgCtrl)
 {
@@ -1313,7 +1286,30 @@ TcpipAdvancedIpDlg(
             return TRUE;
         case WM_NOTIFY:
             lppsn = (LPPSHNOTIFY) lParam;
-            if (lppsn->hdr.code == PSN_KILLACTIVE)
+            if (lppsn->hdr.code == LVN_ITEMCHANGED)
+            {
+                LPNMLISTVIEW lplv = (LPNMLISTVIEW)lParam;
+                BOOL bEnable;
+
+                if (lplv->hdr.idFrom == IDC_IPLIST)
+                {
+                    This = (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+                    bEnable = ((lplv->uNewState & LVIS_SELECTED) != 0) &&
+                              (!This->pCurrentConfig->DhcpEnabled);
+
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_IPMOD), bEnable);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_IPDEL), bEnable);
+                }
+                else if (lplv->hdr.idFrom == IDC_GWLIST)
+                {
+                    bEnable = ((lplv->uNewState & LVIS_SELECTED) != 0);
+
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), bEnable);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), bEnable);
+                }
+            }
+            else if (lppsn->hdr.code == PSN_KILLACTIVE)
             {
                 This = (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 if (!This->pCurrentConfig->DhcpEnabled && ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_IPLIST)) == 0)
@@ -1342,7 +1338,7 @@ TcpipAdvancedIpDlg(
                 if (SendDlgItemMessageW(hwndDlg, IDC_AUTOMETRIC, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
                 else
-                   EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
             }
             else if (LOWORD(wParam) == IDC_IPADD)
             {
@@ -1363,8 +1359,6 @@ TcpipAdvancedIpDlg(
                         li.pszText = Ip.szMask;
                         SendDlgItemMessageW(hwndDlg, IDC_IPLIST, LVM_SETITEMW, 0, (LPARAM)&li);
                     }
-
-                    EnableIpButtons(hwndDlg);
                 }
             }
             else if (LOWORD(wParam) == IDC_IPMOD)
@@ -1397,7 +1391,6 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_IPDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_IPLIST));
-                EnableIpButtons(hwndDlg);
                 break;
             }
             else if (LOWORD(wParam) == IDC_GWADD)
@@ -1432,8 +1425,6 @@ TcpipAdvancedIpDlg(
                             }
                         }
                     }
-
-                    EnableGwButtons(hwndDlg);
                 }
                 break;
             }
@@ -1482,7 +1473,6 @@ TcpipAdvancedIpDlg(
             else if (LOWORD(wParam) == IDC_GWDEL)
             {
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_GWLIST));
-                EnableGwButtons(hwndDlg);
                 break;
             }
     }
@@ -2139,10 +2129,11 @@ LaunchAdvancedTcpipSettings(
     pinfo.pfnCallback = PropSheetProc;
 
     StoreTcpipBasicSettings(hwndDlg, This, FALSE);
-    PropertySheetW(&pinfo);
-
-    InitializeTcpipBasicDlgCtrls(hwndDlg, This->pCurrentConfig);
-    PropSheet_Changed(GetParent(hwndDlg), hwndDlg); 
+    if (PropertySheetW(&pinfo) > 0)
+    {
+        InitializeTcpipBasicDlgCtrls(hwndDlg, This->pCurrentConfig);
+        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+    }
 }
 
 INT_PTR
@@ -2227,33 +2218,34 @@ StoreTcpipBasicSettings(
         }
         /* store subnetmask */
         This->pCurrentConfig->Ip->u.Subnetmask = dwIpAddr;
-
-        if (SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) == 4)
-        {
-            if (!This->pCurrentConfig->Gw)
-            {
-                This->pCurrentConfig->Gw = (IP_ADDR*)CoTaskMemAlloc(sizeof(IP_ADDR));
-                if (!This->pCurrentConfig->Gw)
-                    return E_OUTOFMEMORY;
-                ZeroMemory(This->pCurrentConfig->Gw, sizeof(IP_ADDR));
-            }
-            /* store default gateway */
-            This->pCurrentConfig->Gw->IpAddress = dwIpAddr;
-       }
-       else
-       {
-           if (This->pCurrentConfig->Gw)
-           {
-               IP_ADDR * pNextGw = This->pCurrentConfig->Gw->Next;
-               CoTaskMemFree(This->pCurrentConfig->Gw);
-               This->pCurrentConfig->Gw = pNextGw;
-           }
-       }
     }
     else
     {
         This->pCurrentConfig->DhcpEnabled = TRUE;
     }
+
+    if (SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) == 4)
+    {
+        if (!This->pCurrentConfig->Gw)
+        {
+            This->pCurrentConfig->Gw = (IP_ADDR*)CoTaskMemAlloc(sizeof(IP_ADDR));
+            if (!This->pCurrentConfig->Gw)
+                return E_OUTOFMEMORY;
+            ZeroMemory(This->pCurrentConfig->Gw, sizeof(IP_ADDR));
+        }
+        /* store default gateway */
+        This->pCurrentConfig->Gw->IpAddress = dwIpAddr;
+    }
+    else
+    {
+        if (This->pCurrentConfig->Gw)
+        {
+            IP_ADDR * pNextGw = This->pCurrentConfig->Gw->Next;
+            CoTaskMemFree(This->pCurrentConfig->Gw);
+            This->pCurrentConfig->Gw = pNextGw;
+        }
+    }
+
     if (SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_GETCHECK, 0, 0) == BST_CHECKED)
     {
         BOOL bSkip = FALSE;
@@ -2327,7 +2319,7 @@ StoreTcpipBasicSettings(
     {
         This->pCurrentConfig->AutoconfigActive = TRUE;
     }
-   return S_OK;
+    return S_OK;
 }
 
 HRESULT
@@ -2379,12 +2371,14 @@ InitializeTcpipBasicDlgCtrls(
             /* set current hostmask */
             SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
         }
-        if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
-        {
-            /* set current gateway */
-            SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
-        }
     }
+
+    if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
+    {
+        /* set current gateway */
+        SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+    }
+
     if (pCurSettings->AutoconfigActive)
     {
         SendDlgItemMessageW(hwndDlg, IDC_AUTODNS, BM_SETCHECK, BST_CHECKED, 0);
@@ -2908,8 +2902,9 @@ Initialize(TcpipConfNotifyImpl * This)
     if (!pCurrentAdapter->DhcpEnabled)
     {
         CopyIpAddrString(&pCurrentAdapter->IpAddressList, &pCurSettings->Ip, SUBMASK, NULL);
-        CopyIpAddrString(&pCurrentAdapter->GatewayList, &pCurSettings->Gw, METRIC, NULL); //FIXME
     }
+
+    CopyIpAddrString(&pCurrentAdapter->GatewayList, &pCurSettings->Gw, METRIC, NULL);
 
     uLength = sizeof(IP_PER_ADAPTER_INFO);
     ZeroMemory(&Info, sizeof(IP_PER_ADAPTER_INFO));
@@ -3261,8 +3256,6 @@ INetCfgComponentControl_fnApplyRegistryChanges(
         {
             RegSetValueExW(hKey, L"IPAddress", 0, REG_MULTI_SZ, (LPBYTE)L"0.0.0.0\0", 9 * sizeof(WCHAR));
             RegSetValueExW(hKey, L"SubnetMask", 0, REG_MULTI_SZ, (LPBYTE)L"0.0.0.0\0", 9 * sizeof(WCHAR));
-            RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"\0", 2 * sizeof(WCHAR));
-            RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", 2 * sizeof(WCHAR));
             if (!pOldConfig->DhcpEnabled)
             {
                 /* Delete this adapter's current IP address */
@@ -3354,41 +3347,41 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                     CoTaskMemFree(pIpForwardTable);
                 }
             }
+        }
 
-            if (pCurrentConfig->Gw)
+        if (pCurrentConfig->Gw)
+        {
+            MIB_IPFORWARDROW RouterMib;
+            ZeroMemory(&RouterMib, sizeof(MIB_IPFORWARDROW));
+
+            RouterMib.dwForwardMetric1 = 1;
+            RouterMib.dwForwardIfIndex = pOldConfig->Index;
+            RouterMib.dwForwardNextHop = htonl(pCurrentConfig->Gw->IpAddress);
+
+            //TODO
+            // add multiple gw addresses when required
+
+            if (CreateIpForwardEntry(&RouterMib) == NO_ERROR)
             {
-                MIB_IPFORWARDROW RouterMib;
-                ZeroMemory(&RouterMib, sizeof(MIB_IPFORWARDROW));
-
-                RouterMib.dwForwardMetric1 = 1;
-                RouterMib.dwForwardIfIndex = pOldConfig->Index;
-                RouterMib.dwForwardNextHop = htonl(pCurrentConfig->Gw->IpAddress);
-
-                //TODO
-                // add multiple gw addresses when required
-
-                if (CreateIpForwardEntry(&RouterMib) == NO_ERROR)
+                pStr = CreateMultiSzString(pCurrentConfig->Gw, IPADDR, &dwSize, FALSE);
+                if(pStr)
                 {
-                    pStr = CreateMultiSzString(pCurrentConfig->Gw, IPADDR, &dwSize, FALSE);
-                    if(pStr)
-                    {
-                        RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                        CoTaskMemFree(pStr);
-                    }
+                    RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                    CoTaskMemFree(pStr);
+                }
 
-                    pStr = CreateMultiSzString(pCurrentConfig->Gw, METRIC, &dwSize, FALSE);
-                    if(pStr)
-                    {
-                        RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                        CoTaskMemFree(pStr);
-                    }
+                pStr = CreateMultiSzString(pCurrentConfig->Gw, METRIC, &dwSize, FALSE);
+                if(pStr)
+                {
+                    RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                    CoTaskMemFree(pStr);
                 }
             }
-            else
-            {
-                RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
-                RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", sizeof(WCHAR) * 2);
-            }
+        }
+        else
+        {
+            RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+            RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", sizeof(WCHAR) * 2);
         }
 
         if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)

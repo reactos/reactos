@@ -20,288 +20,355 @@ POBJECT_TYPE ObpSymbolicLinkObjectType = NULL;
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
-NTAPI
-ObpDeleteSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
+ObpProcessDosDeviceSymbolicLink(IN POBJECT_SYMBOLIC_LINK SymbolicLink,
+                                IN BOOLEAN DeleteLink)
 {
+    PDEVICE_MAP DeviceMap;
+    UNICODE_STRING TargetPath, LocalTarget;
+    POBJECT_DIRECTORY NameDirectory, DirectoryObject;
+    ULONG MaxReparse;
+    OBP_LOOKUP_CONTEXT LookupContext;
+    ULONG DriveType;
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    BOOLEAN DirectoryLocked;
+    PVOID Object;
 
-    /* FIXME: Need to support Device maps */
+    /*
+     * To prevent endless reparsing, setting an upper limit on the 
+     * number of reparses.
+     */
+    MaxReparse = 32;
+    NameDirectory = NULL;
 
     /* Get header data */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymbolicLink);
-    ObjectNameInfo = ObpReferenceNameInfo(ObjectHeader);
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
-    /* Check if we are not actually in a directory with a device map */
-    if (!(ObjectNameInfo) ||
-        !(ObjectNameInfo->Directory) /*||
-        !(ObjectNameInfo->Directory->DeviceMap)*/)
+    /* Check if we have a directory in our symlink to use */
+    if (ObjectNameInfo != NULL)
     {
-        ObpDereferenceNameInfo(ObjectNameInfo);
-        return;
+        NameDirectory = ObjectNameInfo->Directory;
     }
 
-    /* Check if it's a DOS drive letter, and remove the entry from drive map if needed */
-    if (SymbolicLink->DosDeviceDriveIndex != 0 &&
-        ObjectNameInfo->Name.Length == 2 * sizeof(WCHAR) &&
-        ObjectNameInfo->Name.Buffer[1] == L':' &&
-        ( (ObjectNameInfo->Name.Buffer[0] >= L'A' &&
-            ObjectNameInfo->Name.Buffer[0] <= L'Z') ||
-          (ObjectNameInfo->Name.Buffer[0] >= L'a' &&
-            ObjectNameInfo->Name.Buffer[0] <= L'z') ))
+    /* Initialize lookup context */
+    ObpInitializeLookupContext(&LookupContext);
+
+    /*
+     * If we have to create the link, locate the IoDeviceObject if any
+     * this symbolic link points to.
+     */
+    if (SymbolicLink->LinkTargetObject != NULL || !DeleteLink)
     {
-        /* Remove the drive entry */
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-        ObSystemDeviceMap->DriveType[SymbolicLink->DosDeviceDriveIndex-1] =
-            DOSDEVICE_DRIVE_UNKNOWN;
-        ObSystemDeviceMap->DriveMap &=
-            ~(1 << (SymbolicLink->DosDeviceDriveIndex-1));
-        KeReleaseGuardedMutex(&ObpDeviceMapLock);
+        /* Start the search from the root */
+        DirectoryObject = ObpRootDirectoryObject;
 
-        /* Reset the drive index, valid drive index starts from 1 */
-        SymbolicLink->DosDeviceDriveIndex = 0;
-    }
+        /* Keep track of our progress while parsing the name */
+        LocalTarget = SymbolicLink->LinkTarget;
 
-    ObpDereferenceNameInfo(ObjectNameInfo);
-}
-
-NTSTATUS
-NTAPI
-ObpParseSymbolicLinkToIoDeviceObject(IN POBJECT_DIRECTORY SymbolicLinkDirectory,
-                                     IN OUT POBJECT_DIRECTORY *Directory,
-                                     IN OUT PUNICODE_STRING TargetPath,
-                                     IN OUT POBP_LOOKUP_CONTEXT Context,
-                                     OUT PVOID *Object)
-{
-    UNICODE_STRING Name;
-    BOOLEAN ManualUnlock;
-
-    if (! TargetPath || ! Object || ! Context || ! Directory ||
-        ! SymbolicLinkDirectory)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* FIXME: Need to support Device maps */
-
-    /* Try walking the target path and open each part of the path */
-    while (TargetPath->Length)
-    {
-        /* Strip '\' if present at the beginning of the target path */
-        if (TargetPath->Length >= sizeof(OBJ_NAME_PATH_SEPARATOR)&&
-            TargetPath->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+        /* If LUID mappings are enabled, use system map */
+        if (ObpLUIDDeviceMapsEnabled != 0)
         {
-            TargetPath->Buffer++;
-            TargetPath->Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+            DeviceMap = ObSystemDeviceMap;
+        }
+        /* Otherwise, use the one in the process */
+        else
+        {
+            DeviceMap = PsGetCurrentProcess()->DeviceMap;
         }
 
-        /* Remember the current component of the target path */
-        Name = *TargetPath;
-
-        /* Move forward to the next component of the target path */
-        while (TargetPath->Length >= sizeof(OBJ_NAME_PATH_SEPARATOR))
+ReparseTargetPath:
+        /*
+         * If we have a device map active, check whether we have a drive
+         * letter prefixed with ??, if so, chomp it
+         */
+        if (DeviceMap != NULL)
         {
-            if (TargetPath->Buffer[0] != OBJ_NAME_PATH_SEPARATOR)
+            if (!((ULONG_PTR)(LocalTarget.Buffer) & 7))
             {
-                TargetPath->Buffer++;
-                TargetPath->Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+                if (DeviceMap->DosDevicesDirectory != NULL)
+                {
+                    if (LocalTarget.Length >= ObpDosDevicesShortName.Length &&
+                        (*(PULONGLONG)LocalTarget.Buffer ==
+                         ObpDosDevicesShortNamePrefix.Alignment.QuadPart))
+                    {
+                        DirectoryObject = DeviceMap->DosDevicesDirectory;
+
+                        LocalTarget.Length -= ObpDosDevicesShortName.Length;
+                        LocalTarget.Buffer += (ObpDosDevicesShortName.Length / sizeof(WCHAR));
+                    }
+                }
+            }
+        }
+
+        /* Try walking the target path and open each part of the path */
+        while (TRUE)
+        {
+            if (LocalTarget.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+            {
+                ++LocalTarget.Buffer;
+                LocalTarget.Length -= sizeof(WCHAR);
+            }
+
+            /* Remember the current component of the target path */
+            TargetPath = LocalTarget;
+
+            /* Move forward to the next component of the target path */
+            if (LocalTarget.Length != 0)
+            {
+                do
+                {
+                    if (LocalTarget.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+                    {
+                        break;
+                    }
+
+                    ++LocalTarget.Buffer;
+                    LocalTarget.Length -= sizeof(WCHAR);
+                }
+                while (LocalTarget.Length != 0);
+            }
+
+            TargetPath.Length -= LocalTarget.Length;
+
+            /*
+             * Finished processing the entire path, stop
+             * That's a failure case, we quit here
+             */
+            if (TargetPath.Length == 0)
+            {
+                ObpReleaseLookupContext(&LookupContext);
+                return;
+            }
+
+
+            /*
+             * Make sure a deadlock does not occur as an exclusive lock on a pushlock
+             * would have already taken one in ObpLookupObjectName() on the parent
+             * directory where the symlink is being created [ObInsertObject()].
+             * Prevent recursive locking by faking lock state in the lookup context
+             * when the current directory is same as the parent directory where
+             * the symlink is being created. If the lock state is not faked,
+             * ObpLookupEntryDirectory() will try to get a recursive lock on the
+             * pushlock and hang. For e.g. this happens when a substed drive is pointed to
+             * another substed drive.
+             */
+            if (DirectoryObject == NameDirectory)
+            {
+                DirectoryLocked = LookupContext.DirectoryLocked;
+                LookupContext.DirectoryLocked = TRUE;
             }
             else
+            {
+                DirectoryLocked = FALSE;
+            }
+
+            Object = ObpLookupEntryDirectory(DirectoryObject,
+                                             &TargetPath,
+                                             0,
+                                             FALSE,
+                                             &LookupContext);
+
+            /* Locking was faked, undo it now */
+            if (DirectoryObject == NameDirectory)
+            {
+                LookupContext.DirectoryLocked = DirectoryLocked;
+            }
+
+            /* Lookup failed, stop */
+            if (Object == NULL)
+            {
                 break;
-        }
+            }
 
-        Name.Length -= TargetPath->Length;
+            /* If we don't have a directory object, we'll have to handle the object */
+            if (OBJECT_TO_OBJECT_HEADER(Object)->Type != ObpDirectoryObjectType)
+            {
+                /* If that's not a symbolic link, stop here, nothing to do */
+                if (OBJECT_TO_OBJECT_HEADER(Object)->Type != ObpSymbolicLinkObjectType ||
+                    (((POBJECT_SYMBOLIC_LINK)Object)->DosDeviceDriveIndex != 0))
+                {
+                    break;
+                }
 
-        /* Finished processing the entire path, stop */
-        if (! Name.Length)
-            break;
+                /* We're out of reparse attempts */
+                if (MaxReparse == 0)
+                {
+                    Object = NULL;
+                    break;
+                }
 
-        /*
-         * Make sure a deadlock does not occur as an exclusive lock on a pushlock
-         * would have already taken one in ObpLookupObjectName() on the parent
-         * directory where the symlink is being created [ObInsertObject()].
-         * Prevent recursive locking by faking lock state in the lookup context
-         * when the current directory is same as the parent directory where
-         * the symlink is being created. If the lock state is not faked,
-         * ObpLookupEntryDirectory() will try to get a recursive lock on the
-         * pushlock and hang. For e.g. this happens when a substed drive is pointed to
-         * another substed drive.
-         */
-        if (*Directory == SymbolicLinkDirectory && ! Context->DirectoryLocked)
-        {
-            /* Fake lock state so that ObpLookupEntryDirectory() doesn't attempt a lock */
-            ManualUnlock = TRUE;
-            Context->DirectoryLocked = TRUE;
-        }
-        else
-            ManualUnlock = FALSE;
+                --MaxReparse;
 
-        *Object = ObpLookupEntryDirectory(*Directory,
-                                          &Name,
-                                          0,
-                                          FALSE,
-                                          Context);
+                /* Symlink points to another initialized symlink, ask caller to reparse */
+                DirectoryObject = ObpRootDirectoryObject;
 
-        /* Locking was faked, undo it now */
-        if (*Directory == SymbolicLinkDirectory && ManualUnlock)
-            Context->DirectoryLocked = FALSE;
+                LocalTarget = ((POBJECT_SYMBOLIC_LINK)Object)->LinkTarget;
 
-        /* Lookup failed, stop */
-        if (! *Object)
-            break;
+                goto ReparseTargetPath;
+            }
 
-        if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObpDirectoryObjectType)
-        {
             /* Make this current directory, and continue search */
-            *Directory = (POBJECT_DIRECTORY)*Object;
-        }
-        else if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObpSymbolicLinkObjectType &&
-            (((POBJECT_SYMBOLIC_LINK)*Object)->DosDeviceDriveIndex == 0))
-        {
-            /* Symlink points to another initialized symlink, ask caller to reparse */
-            *Directory = ObpRootDirectoryObject;
-            TargetPath = &((POBJECT_SYMBOLIC_LINK)*Object)->LinkTarget;
-            return STATUS_REPARSE_OBJECT;
-        }
-        else
-        {
-            /* Neither directory or symlink, stop */
-            break;
+            DirectoryObject = Object;
         }
     }
 
-    /* Return a valid object, only if object type is IoDeviceObject */
-    if (*Object &&
-        OBJECT_TO_OBJECT_HEADER(*Object)->Type != IoDeviceObjectType)
+    DeviceMap = NULL;
+    /* That's a drive letter, find a suitable device map */
+    if (SymbolicLink->DosDeviceDriveIndex != 0)
     {
-        *Object = NULL;
+        ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymbolicLink);
+        ObjectNameInfo = ObpReferenceNameInfo(ObjectHeader);
+        if (ObjectNameInfo != NULL)
+        {
+            if (ObjectNameInfo->Directory != NULL)
+            {
+                DeviceMap = ObjectNameInfo->Directory->DeviceMap;
+            }
+
+            ObpDereferenceNameInfo(ObjectNameInfo);
+        }
     }
-    return STATUS_SUCCESS;
+
+    /* If we were asked to delete the symlink */
+    if (DeleteLink)
+    {
+        /* Zero its target */
+        RtlInitUnicodeString(&SymbolicLink->LinkTargetRemaining, NULL);
+
+        /* If we had a target objected, dereference it */
+        if (SymbolicLink->LinkTargetObject != NULL)
+        {
+            ObDereferenceObject(SymbolicLink->LinkTargetObject);
+            SymbolicLink->LinkTargetObject = NULL;
+        }
+
+        /* If it was a drive letter */
+        if (DeviceMap != NULL)
+        {
+            /* Acquire the device map lock */
+            KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+            /* Remove the drive entry */
+            DeviceMap->DriveType[SymbolicLink->DosDeviceDriveIndex - 1] =
+                DOSDEVICE_DRIVE_UNKNOWN;
+            DeviceMap->DriveMap &=
+                ~(1 << (SymbolicLink->DosDeviceDriveIndex - 1));
+
+            /* Release the device map lock */
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+            /* Reset the drive index, valid drive index starts from 1 */
+            SymbolicLink->DosDeviceDriveIndex = 0;
+        }
+    }
+    else
+    {
+        DriveType = DOSDEVICE_DRIVE_CALCULATE;
+
+        /* If we have a drive letter and a pointer device object */
+        if (Object != NULL && SymbolicLink->DosDeviceDriveIndex != 0 &&
+            OBJECT_TO_OBJECT_HEADER(Object)->Type == IoDeviceObjectType)
+        {
+            /* Calculate the drive type */
+            switch(((PDEVICE_OBJECT)Object)->DeviceType)
+            {
+                case FILE_DEVICE_VIRTUAL_DISK:
+                    DriveType = DOSDEVICE_DRIVE_RAMDISK;
+                    break;
+                case FILE_DEVICE_CD_ROM:
+                case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+                    DriveType = DOSDEVICE_DRIVE_CDROM;
+                    break;
+                case FILE_DEVICE_DISK:
+                case FILE_DEVICE_DISK_FILE_SYSTEM:
+                case FILE_DEVICE_FILE_SYSTEM:
+                    if (((PDEVICE_OBJECT)Object)->Characteristics & FILE_REMOVABLE_MEDIA)
+                        DriveType = DOSDEVICE_DRIVE_REMOVABLE;
+                    else
+                        DriveType = DOSDEVICE_DRIVE_FIXED;
+                    break;
+                case FILE_DEVICE_NETWORK:
+                case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+                    DriveType = DOSDEVICE_DRIVE_REMOTE;
+                    break;
+                default:
+                    DPRINT1("Device Type %lu for %wZ is not known or unhandled\n",
+                            ((PDEVICE_OBJECT)Object)->DeviceType,
+                            &SymbolicLink->LinkTarget);
+                    DriveType = DOSDEVICE_DRIVE_UNKNOWN;
+            }
+        }
+
+        /* Add a new drive entry */
+        if (DeviceMap != NULL)
+        {
+            /* Acquire the device map lock */
+            KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+            DeviceMap->DriveType[SymbolicLink->DosDeviceDriveIndex - 1] =
+                (UCHAR)DriveType;
+            DeviceMap->DriveMap |=
+                1 << (SymbolicLink->DosDeviceDriveIndex - 1);
+
+            /* Release the device map lock */
+            KeReleaseGuardedMutex(&ObpDeviceMapLock);
+        }
+    }
+
+    /* Cleanup */
+    ObpReleaseLookupContext(&LookupContext);
+}
+
+VOID
+NTAPI
+ObpDeleteSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
+{
+    /* Just call the helper */
+    ObpProcessDosDeviceSymbolicLink(SymbolicLink, TRUE);
 }
 
 VOID
 NTAPI
 ObpCreateSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
 {
+    WCHAR UpperDrive;
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
-    PVOID Object = NULL;
-    POBJECT_DIRECTORY Directory;
-    UNICODE_STRING TargetPath;
-    NTSTATUS Status;
-    ULONG DriveType = DOSDEVICE_DRIVE_CALCULATE;
-    ULONG ReparseCnt;
-    const ULONG MaxReparseAttempts = 20;
-    OBP_LOOKUP_CONTEXT Context;
-
-    /* FIXME: Need to support Device maps */
 
     /* Get header data */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymbolicLink);
     ObjectNameInfo = ObpReferenceNameInfo(ObjectHeader);
 
-    /* Check if we are not actually in a directory with a device map */
-    if (!(ObjectNameInfo) ||
-        !(ObjectNameInfo->Directory) /*||
-        !(ObjectNameInfo->Directory->DeviceMap)*/)
+    /* No name info, nothing to create */
+    if (ObjectNameInfo == NULL)
     {
-        ObpDereferenceNameInfo(ObjectNameInfo);
         return;
     }
 
-    /* Check if it's a DOS drive letter, and set the drive index accordingly */
-    if (ObjectNameInfo->Name.Length == 2 * sizeof(WCHAR) &&
-        ObjectNameInfo->Name.Buffer[1] == L':' &&
-        ( (ObjectNameInfo->Name.Buffer[0] >= L'A' &&
-            ObjectNameInfo->Name.Buffer[0] <= L'Z') ||
-          (ObjectNameInfo->Name.Buffer[0] >= L'a' &&
-            ObjectNameInfo->Name.Buffer[0] <= L'z') ))
+    /* If we have a device map, look for creating a letter based drive */
+    if (ObjectNameInfo->Directory != NULL &&
+        ObjectNameInfo->Directory->DeviceMap != NULL)
     {
-        SymbolicLink->DosDeviceDriveIndex =
-            RtlUpcaseUnicodeChar(ObjectNameInfo->Name.Buffer[0]) - L'A';
-        /* The Drive index start from 1 */
-        SymbolicLink->DosDeviceDriveIndex++;
-
-        /* Initialize lookup context */
-        ObpInitializeLookupContext(&Context);
-
-        /* Start the search from the root */
-        Directory = ObpRootDirectoryObject;
-        TargetPath = SymbolicLink->LinkTarget;
-
-        /*
-         * Locate the IoDeviceObject if any this symbolic link points to.
-         * To prevent endless reparsing, setting an upper limit on the 
-         * number of reparses.
-         */
-        Status = STATUS_REPARSE_OBJECT;
-        ReparseCnt = 0;
-        while (Status == STATUS_REPARSE_OBJECT &&
-               ReparseCnt < MaxReparseAttempts)
+        /* Is it a drive letter based name? */
+        if (ObjectNameInfo->Name.Length == 2 * sizeof(WCHAR))
         {
-            Status =
-                ObpParseSymbolicLinkToIoDeviceObject(ObjectNameInfo->Directory,
-                                                     &Directory,
-                                                     &TargetPath,
-                                                     &Context,
-                                                     &Object);
-            if (Status == STATUS_REPARSE_OBJECT)
-                ReparseCnt++;
-        }
-
-        /* Cleanup lookup context */
-        ObpReleaseLookupContext(&Context);
-
-        /* Error, or max resparse attemtps exceeded */
-        if (! NT_SUCCESS(Status) || ReparseCnt >= MaxReparseAttempts)
-        {
-            /* Cleanup */
-            ObpDereferenceNameInfo(ObjectNameInfo);
-            return;
-        }
-
-        if (Object)
-        {
-            /* Calculate the drive type */
-            switch(((PDEVICE_OBJECT)Object)->DeviceType)
+            if (ObjectNameInfo->Name.Buffer[1] == L':')
             {
-            case FILE_DEVICE_VIRTUAL_DISK:
-                DriveType = DOSDEVICE_DRIVE_RAMDISK;
-                break;
-            case FILE_DEVICE_CD_ROM:
-            case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
-                DriveType = DOSDEVICE_DRIVE_CDROM;
-                break;
-            case FILE_DEVICE_DISK:
-            case FILE_DEVICE_DISK_FILE_SYSTEM:
-            case FILE_DEVICE_FILE_SYSTEM:
-                if (((PDEVICE_OBJECT)Object)->Characteristics & FILE_REMOVABLE_MEDIA)
-                    DriveType = DOSDEVICE_DRIVE_REMOVABLE;
-                else
-                    DriveType = DOSDEVICE_DRIVE_FIXED;
-                break;
-            case FILE_DEVICE_NETWORK:
-            case FILE_DEVICE_NETWORK_FILE_SYSTEM:
-                DriveType = DOSDEVICE_DRIVE_REMOTE;
-                break;
-            default:
-                DPRINT1("Device Type %lu for %wZ is not known or unhandled\n",
-                        ((PDEVICE_OBJECT)Object)->DeviceType,
-                        &SymbolicLink->LinkTarget);
-                DriveType = DOSDEVICE_DRIVE_UNKNOWN;
+                UpperDrive = RtlUpcaseUnicodeChar(ObjectNameInfo->Name.Buffer[0]);
+                if (UpperDrive >= L'A' && UpperDrive <= L'Z')
+                {
+                    /* Compute its index (it's 1 based - 0 means no letter) */
+                    SymbolicLink->DosDeviceDriveIndex = UpperDrive - (L'A' - 1);
+                }
             }
         }
 
-        /* Add a new drive entry */
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-        ObSystemDeviceMap->DriveType[SymbolicLink->DosDeviceDriveIndex-1] =
-            (UCHAR)DriveType;
-        ObSystemDeviceMap->DriveMap |=
-            1 << (SymbolicLink->DosDeviceDriveIndex-1);
-        KeReleaseGuardedMutex(&ObpDeviceMapLock);
+        /* Call the helper */
+        ObpProcessDosDeviceSymbolicLink(SymbolicLink, FALSE);
     }
 
-    /* Cleanup */
+    /* We're done */
     ObpDereferenceNameInfo(ObjectNameInfo);
 }
 

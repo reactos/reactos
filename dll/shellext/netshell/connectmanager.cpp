@@ -290,6 +290,16 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
         CoTaskMemFree(pStr);
     }
 
+    /* Enable 'Rename' and 'Delete' for Adminstrators only */
+    if (IsUserAdmin())
+    {
+        pProperties->dwCharacter |= (NCCF_ALLOW_RENAME | NCCF_ALLOW_REMOVAL);
+    }
+    else
+    {
+        pProperties->dwCharacter &= ~(NCCF_ALLOW_RENAME | NCCF_ALLOW_REMOVAL);
+    }
+
     return S_OK;
 }
 
