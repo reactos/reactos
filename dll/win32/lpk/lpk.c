@@ -57,12 +57,12 @@ static void PSM_PrepareToDraw(LPCWSTR str, INT count, LPWSTR new_str, LPINT new_
         }
     }
 
-    new_str[j] = L'\0';   
+    new_str[j] = L'\0';
     len = wcslen(new_str);
     *new_count = len;
 }
 
-/* Can be used with also LpkDrawTextEx if it will be implemented */
+/* Can be used with also LpkDrawTextEx() if it will be implemented */
 static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, int offset)
 {
     SCRIPT_STRING_ANALYSIS ssa;
@@ -82,7 +82,7 @@ static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, in
     {
         if (GetLayout(hdc) & LAYOUT_RTL || GetTextAlign(hdc) & TA_RTLREADING)
             dwSSAFlags |= SSA_RTL;
-        
+
         hr = ScriptStringAnalyse(hdc, str, count, (3 * count / 2 + 16),
                                  -1, dwSSAFlags, -1, NULL, NULL, NULL, NULL, NULL, &ssa);
     }
@@ -110,16 +110,16 @@ static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, in
     DeleteObject(hpen);
 }
 
-/* Code taken from the GetProcessDefaultLayout function from Wine's user32 
- * Wine version 3.17 
- * 
- * This function should be called from LpkInitialize, 
- * which is in turn called by GdiInitializeLanguagePack (from gdi32).
- * TODO: Move call from LpkDllInitialize to LpkInitialize when latter
+/* Code taken from the GetProcessDefaultLayout() function from Wine's user32
+ * Wine version 3.17
+ *
+ * This function should be called from LpkInitialize(),
+ * which is in turn called by GdiInitializeLanguagePack() (from gdi32).
+ * TODO: Move call from LpkDllInitialize() to LpkInitialize() when latter
  * function is implemented.
  */
 static void LPK_ApplyMirroring()
-{  
+{
     static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
                                           '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
     static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
@@ -195,7 +195,7 @@ LpkDllInitialize(
 
 
 /*
- * @implemented 
+ * @implemented
  */
 BOOL
 WINAPI
@@ -232,15 +232,15 @@ LpkExtTextOut(
     if (ScriptIsComplex(lpString, uCount, dwSICFlags) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
     {
         /* reordered_str is used as fallback in case the glyphs array fails to generate,
-           BIDI_Reorder doesn't attempt to write into reordered_str if memory allocation fails */
+           BIDI_Reorder() doesn't attempt to write into reordered_str if memory allocation fails */
         reordered_str = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
 
         bReorder = BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER,
                                 (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
                                 reordered_str, uCount, NULL, &glyphs, &cGlyphs);
 
-        /* Now display the reordered text if any of the arrays is valid and if BIDI_Reorder succeeded */
-        if ((glyphs || reordered_str) && bReorder) 
+        /* Now display the reordered text if any of the arrays is valid and if BIDI_Reorder() succeeded */
+        if ((glyphs || reordered_str) && bReorder)
         {
             if (glyphs)
             {
@@ -372,19 +372,19 @@ LpkGetCharacterPlacement(
     return ret;
 }
 
-/* Stripped down version of DrawText, can only draw single line text and Prefix underscore
- * (only on the last found amperstand)
- * only flags to be found to be of use in testing:
- * 
+/* Stripped down version of DrawText(), can only draw single line text and Prefix underscore
+ * (only on the last found amperstand).
+ * Only flags to be found to be of use in testing:
+ *
  * DT_NOPREFIX   - Draw the string as is without removal of the amperstands and without underscore
  * DT_HIDEPREFIX - Draw the string without underscore
  * DT_PREFIXONLY - Draw only the underscore
- * 
- * without any of these flags the behavior is the string being drawn without the amperstands and
+ *
+ * Without any of these flags the behavior is the string being drawn without the amperstands and
  * with the underscore.
- * user32 has an equivalent function - UserLpkPSMTextOut
- * 
- * Note: lpString does not need to be null terminated
+ * user32 has an equivalent function - UserLpkPSMTextOut().
+ *
+ * Note: lpString does not need to be null terminated.
  */
 INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags)
 {
@@ -434,18 +434,18 @@ WINAPI
 LpkGetTextExtentExPoint(
     HDC hdc,
     LPCWSTR lpString,
-    INT cString, 
+    INT cString,
     INT nMaxExtent,
     LPINT lpnFit,
-    LPINT lpnDx, 
+    LPINT lpnDx,
     LPSIZE lpSize,
     DWORD dwUnused,
     int unknown)
 {
     SCRIPT_STRING_ANALYSIS ssa;
     HRESULT hr;
-    const SIZE *pSize;
     INT i, extent, *Dx;
+    TEXTMETRICW tm;
 
     UNREFERENCED_PARAMETER(dwUnused);
     UNREFERENCED_PARAMETER(unknown);
@@ -453,7 +453,7 @@ LpkGetTextExtentExPoint(
     if (cString < 0 || !lpSize)
         return FALSE;
 
-    if (cString == 0)
+    if (cString == 0 || !lpString)
     {
         lpSize->cx = 0;
         lpSize->cy = 0;
@@ -462,51 +462,48 @@ LpkGetTextExtentExPoint(
 
     /* Check if any processing is required */
     if (ScriptIsComplex(lpString, cString, SIC_COMPLEX) != S_OK)
-        return GetTextExtentExPointWPri(hdc, lpString, cString, nMaxExtent, lpnFit, lpnDx, lpSize);
-    
+        goto fallback;
+
     hr = ScriptStringAnalyse(hdc, lpString, cString, 3 * cString / 2 + 16, -1,
                              SSA_GLYPHS, 0, NULL, NULL, NULL, NULL, NULL, &ssa);
-
     if (hr != S_OK)
-        return FALSE;
+        goto fallback;
 
-    pSize = ScriptString_pSize(ssa);
-
-    if (pSize)
-        *lpSize = *pSize;
-    else
-        GetTextExtentExPointWPri(hdc, lpString, cString, 0, NULL, NULL, lpSize);
-
-    /* Use logic from TextIntGetTextExtentPoint */
-    if (lpnDx || lpnFit)
-    {    
-        Dx = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(INT));
-
-        if (!Dx)
-        {
-            ScriptStringFree(&ssa);
-            return FALSE;
-        }
-
-        if (lpnFit)
-            *lpnFit = 0;
-
-        ScriptStringGetLogicalWidths(ssa, Dx);
-
-        for (i = 0, extent = 0; i < cString; i++)
-        {
-            extent += Dx[i];
-
-            if (extent <= nMaxExtent && lpnFit)
-                *lpnFit = i + 1;
-
-            if (lpnDx)
-                lpnDx[i] = extent;
-        }
-
-        HeapFree(GetProcessHeap(), 0, Dx);
+    /* Use logic from TextIntGetTextExtentPoint() */
+    Dx = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(INT));
+    if (!Dx)
+    {
+        ScriptStringFree(&ssa);
+        goto fallback;
     }
 
+    if (lpnFit)
+        *lpnFit = 0;
+
+    ScriptStringGetLogicalWidths(ssa, Dx);
+
+    for (i = 0, extent = 0; i < cString; i++)
+    {
+        extent += Dx[i];
+
+        if (extent <= nMaxExtent && lpnFit)
+            *lpnFit = i + 1;
+
+        if (lpnDx)
+            lpnDx[i] = extent;
+    }
+
+    HeapFree(GetProcessHeap(), 0, Dx);
     ScriptStringFree(&ssa);
+
+    if (!GetTextMetricsW(hdc, &tm))
+        return GetTextExtentExPointWPri(hdc, lpString, cString, 0, NULL, NULL, lpSize);
+
+    lpSize->cx = extent;
+    lpSize->cy = tm.tmHeight;
+
     return TRUE;
+
+fallback:
+    return GetTextExtentExPointWPri(hdc, lpString, cString, nMaxExtent, lpnFit, lpnDx, lpSize);
 }
