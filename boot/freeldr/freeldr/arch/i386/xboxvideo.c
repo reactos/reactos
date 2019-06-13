@@ -240,9 +240,10 @@ XboxBeep(VOID)
 }
 
 VOID
-XboxVideoPrepareForReactOS(IN BOOLEAN Setup)
+XboxVideoPrepareForReactOS(VOID)
 {
-  XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
+    XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
+    XboxVideoHideShowTextCursor(FALSE);
 }
 
 /* EOF */

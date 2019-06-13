@@ -832,7 +832,7 @@ LoadAndBootWindowsCommon(
     LoaderBlockVA = PaToVa(LoaderBlock);
 
     /* "Stop all motors", change videomode */
-    MachPrepareForReactOS(Setup);
+    MachPrepareForReactOS();
 
     /* Cleanup ini file */
     IniCleanup();

@@ -1391,10 +1391,10 @@ PcMachInit(const char *CmdLine)
 }
 
 VOID
-PcPrepareForReactOS(IN BOOLEAN Setup)
+PcPrepareForReactOS(VOID)
 {
     /* On PC, prepare video and turn off the floppy motor */
-    PcVideoPrepareForReactOS(Setup);
+    PcVideoPrepareForReactOS();
     DiskStopFloppyMotor();
 }
 

@@ -44,8 +44,8 @@ BOOLEAN PcVideoIsPaletteFixed(VOID);
 VOID PcVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID PcVideoSync(VOID);
-VOID PcVideoPrepareForReactOS(IN BOOLEAN Setup);
-VOID PcPrepareForReactOS(IN BOOLEAN Setup);
+VOID PcVideoPrepareForReactOS(VOID);
+VOID PcPrepareForReactOS(VOID);
 
 PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
 
