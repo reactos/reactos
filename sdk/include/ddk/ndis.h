@@ -4256,6 +4256,7 @@ NdisDprReleaseSpinLock(
  *   OUT PUCHAR Data);
  */
 #define NdisReadRegisterUchar(Register, Data) \
+  *(Data) = *((volatile UCHAR * const) (Register))
 
 /*
  * VOID
