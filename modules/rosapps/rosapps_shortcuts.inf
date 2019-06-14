@@ -182,18 +182,18 @@ VCD_DESC=Manage virtual CDRom drives
 ; Indonesian
 [Strings.0421]
 ACCESSORIES=Aksesoris
-SYSTOOLS=System Tools
-ACCESSIBILITY=Accessibility
-ENTERTAINMENT=Entertainment
-COMMUNICATIONS=Communications
-GAMES=Games
+SYSTOOLS=Alat Sistem
+ACCESSIBILITY=Aksesibilitas
+ENTERTAINMENT=Hiburan
+COMMUNICATIONS=Komunikasi
+GAMES=Permainan
 
 FONTSUB_TITLE=FontSub
-FONTSUB_DESC=Font Substitutes Editor
+FONTSUB_DESC=Pengganti Font Editor
 SCREENSHOT_TITLE=SnapShot
 SCREENSHOT_DESC=Ambil foto layar
-VCD_TITLE=Virtual CDRom Control Panel
-VCD_DESC=Manage virtual CDRom drives
+VCD_TITLE=Panel Kontrol CDRom Maya
+VCD_DESC=Mengatur drive CDRom maya
 
 ; Italian
 [Strings.0410]
