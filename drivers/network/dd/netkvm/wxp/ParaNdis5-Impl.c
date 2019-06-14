@@ -272,7 +272,7 @@ Parameters:
 Return value:
     SUCCESS or failure code
 ***********************************************************/
-NDIS_STATUS ParaNdis_FinishSpecificInitialization(
+NDIS_STATUS NTAPI ParaNdis_FinishSpecificInitialization(
     PARANDIS_ADAPTER *pContext)
 {
     NDIS_STATUS     status;
@@ -1075,7 +1075,7 @@ Parameters:
     context
     IN PNDIS_PACKET Packet      returned packet
 ***********************************************************/
-VOID ParaNdis5_ReturnPacket(IN NDIS_HANDLE  MiniportAdapterContext,IN PNDIS_PACKET Packet)
+VOID NTAPI ParaNdis5_ReturnPacket(IN NDIS_HANDLE  MiniportAdapterContext,IN PNDIS_PACKET Packet)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
     PNDIS_BUFFER pBuffer = NULL;
@@ -1243,7 +1243,7 @@ Parameters:
     IN UINT NumberOfPackets             number of packets
 
 ***********************************************************/
-VOID ParaNdis5_SendPackets(IN NDIS_HANDLE MiniportAdapterContext,
+VOID NTAPI ParaNdis5_SendPackets(IN NDIS_HANDLE MiniportAdapterContext,
                                IN PPNDIS_PACKET PacketArray,
                                IN UINT NumberOfPackets)
 {
@@ -1303,7 +1303,7 @@ Parameters:
     PVOID CancelId              ID to cancel
 
 ***********************************************************/
-VOID ParaNdis5_CancelSendPackets(IN NDIS_HANDLE MiniportAdapterContext,IN PVOID CancelId)
+VOID NTAPI ParaNdis5_CancelSendPackets(IN NDIS_HANDLE MiniportAdapterContext,IN PVOID CancelId)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
     LIST_ENTRY DoneList, KeepList;
@@ -1445,7 +1445,7 @@ NDIS_STATUS ParaNdis5_StopReceive(
 /*************************************************************
 Required NDIS procedure, spawns regular (Common) DPC processing
 *************************************************************/
-VOID ParaNdis5_HandleDPC(IN NDIS_HANDLE MiniportAdapterContext)
+VOID NTAPI ParaNdis5_HandleDPC(IN NDIS_HANDLE MiniportAdapterContext)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
     ULONG requiresProcessing;

@@ -41,7 +41,7 @@ static ULONG            gID = 0;
 Unload handler, only responsibility is cleanup WPP
 *******************************************************/
 DRIVER_UNLOAD ParaVirtualNICUnload;
-static VOID ParaVirtualNICUnload(IN  PDRIVER_OBJECT  pDriverObject)
+static VOID NTAPI ParaVirtualNICUnload(IN  PDRIVER_OBJECT  pDriverObject)
 {
     DEBUG_ENTRY(0);
     ParaNdis_DebugCleanup(pDriverObject);
@@ -53,7 +53,7 @@ Responsible to put the adapter to known (initial) hardware state
 
 Do not call any NDIS functions
 *************************************************************/
-static VOID ParaNdis5_Shutdown(IN NDIS_HANDLE MiniportAdapterContext)
+static VOID NTAPI ParaNdis5_Shutdown(IN NDIS_HANDLE MiniportAdapterContext)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
     ParaNdis_OnShutdown(pContext);
@@ -66,7 +66,7 @@ Finally sets send and receive to Enabled state and reports connect
 Returns:
 NDIS_STATUS SUCCESS or some error code
 *******************************************************/
-static NDIS_STATUS ParaNdis5_Initialize(OUT PNDIS_STATUS OpenErrorStatus,
+static NDIS_STATUS NTAPI ParaNdis5_Initialize(OUT PNDIS_STATUS OpenErrorStatus,
                                     OUT PUINT SelectedMediumIndex,
                                     IN PNDIS_MEDIUM MediumArray,
                                     IN UINT MediumArraySize,
@@ -214,7 +214,7 @@ VOID ParaNdis_Resume(PARANDIS_ADAPTER *pContext)
     DEBUG_EXIT_STATUS(0, 0);
 }
 
-static void OnResetWorkItem(NDIS_WORK_ITEM * pWorkItem, PVOID  Context)
+static void NTAPI OnResetWorkItem(NDIS_WORK_ITEM * pWorkItem, PVOID  Context)
 {
     tGeneralWorkItem *pwi = (tGeneralWorkItem *)pWorkItem;
     PARANDIS_ADAPTER *pContext = pwi->pContext;
@@ -238,7 +238,7 @@ Required NDIS procedure
 Called when some procedure (like OID handler) returns PENDING and
 does not complete or when CheckForHang return TRUE
 *************************************************************/
-static NDIS_STATUS ParaNdis5_Reset(
+static NDIS_STATUS NTAPI ParaNdis5_Reset(
     OUT PBOOLEAN AddressingReset,
     IN NDIS_HANDLE MiniportAdapterContext)
 {
@@ -305,7 +305,7 @@ static void WaitHaltEvent(PARANDIS_ADAPTER *pContext, const char *Reason)
 Required NDIS procedure
 Stops TX and RX path and finished the function of adapter
 *************************************************************/
-static VOID ParaNdis5_Halt(
+static VOID NTAPI ParaNdis5_Halt(
     IN NDIS_HANDLE MiniportAdapterContext)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
@@ -336,7 +336,7 @@ static VOID ParaNdis5_Halt(
 /*************************************************************
 Called periodically (usually each 2 seconds)
 *************************************************************/
-static BOOLEAN ParaNdis5_CheckForHang(IN NDIS_HANDLE MiniportAdapterContext)
+static BOOLEAN NTAPI ParaNdis5_CheckForHang(IN NDIS_HANDLE MiniportAdapterContext)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
     DEBUG_ENTRY(8);
@@ -347,7 +347,7 @@ static BOOLEAN ParaNdis5_CheckForHang(IN NDIS_HANDLE MiniportAdapterContext)
 Required NDIS procedure
 Responsible for hardware interrupt handling
 *************************************************************/
-static VOID ParaNdis5_MiniportISR(OUT PBOOLEAN InterruptRecognized,
+static VOID NTAPI ParaNdis5_MiniportISR(OUT PBOOLEAN InterruptRecognized,
                                OUT PBOOLEAN QueueMiniportHandleInterrupt,
                                IN NDIS_HANDLE  MiniportAdapterContext)
 {
@@ -365,7 +365,7 @@ Parameters:
 Return value:
 
 *************************************************************/
-VOID ParaNdis5_PnPEventNotify(IN NDIS_HANDLE MiniportAdapterContext,
+VOID NTAPI ParaNdis5_PnPEventNotify(IN NDIS_HANDLE MiniportAdapterContext,
                                   IN NDIS_DEVICE_PNP_EVENT PnPEvent,
                                   IN PVOID InformationBuffer,
                                   IN ULONG InformationBufferLength)

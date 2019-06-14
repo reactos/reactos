@@ -32,14 +32,14 @@
 #include "ndis56common.h"
 
 
-NDIS_STATUS ParaNdis5_SetOID(IN NDIS_HANDLE MiniportAdapterContext,
+NDIS_STATUS NTAPI ParaNdis5_SetOID(IN NDIS_HANDLE MiniportAdapterContext,
                                             IN NDIS_OID Oid,
                                             IN PVOID InformationBuffer,
                                             IN ULONG InformationBufferLength,
                                             OUT PULONG BytesRead,
                                             OUT PULONG BytesNeeded);
 
-NDIS_STATUS ParaNdis5_QueryOID(IN NDIS_HANDLE  MiniportAdapterContext,
+NDIS_STATUS NTAPI ParaNdis5_QueryOID(IN NDIS_HANDLE  MiniportAdapterContext,
                                               IN NDIS_OID     Oid,
                                               IN PVOID        InformationBuffer,
                                               IN ULONG        InformationBufferLength,
@@ -47,18 +47,18 @@ NDIS_STATUS ParaNdis5_QueryOID(IN NDIS_HANDLE  MiniportAdapterContext,
                                               OUT PULONG      BytesNeeded);
 
 
-VOID ParaNdis5_SendPackets(IN NDIS_HANDLE MiniportAdapterContext,
+VOID NTAPI ParaNdis5_SendPackets(IN NDIS_HANDLE MiniportAdapterContext,
                                IN PPNDIS_PACKET PacketArray,
                                IN UINT NumberOfPackets);
 
 
-VOID ParaNdis5_ReturnPacket(IN NDIS_HANDLE  MiniportAdapterContext,IN PNDIS_PACKET Packet);
+VOID NTAPI ParaNdis5_ReturnPacket(IN NDIS_HANDLE  MiniportAdapterContext,IN PNDIS_PACKET Packet);
 
 VOID ParaNdis5_IndicateConnect(PARANDIS_ADAPTER *pContext, BOOLEAN bConnected);
 
 
 //NDIS 5.1 related functions
-VOID ParaNdis5_CancelSendPackets(IN NDIS_HANDLE MiniportAdapterContext,IN PVOID CancelId);
+VOID NTAPI ParaNdis5_CancelSendPackets(IN NDIS_HANDLE MiniportAdapterContext,IN PVOID CancelId);
 
 NDIS_STATUS ParaNdis5_StopSend(
     PARANDIS_ADAPTER *pContext,
@@ -69,7 +69,7 @@ NDIS_STATUS ParaNdis5_StopReceive(
     BOOLEAN bStop,
     ONPAUSECOMPLETEPROC Callback
     );
-VOID ParaNdis5_HandleDPC(
+VOID NTAPI ParaNdis5_HandleDPC(
     IN NDIS_HANDLE MiniportAdapterContext);
 
 typedef struct _tagPowerWorkItem

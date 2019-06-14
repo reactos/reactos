@@ -520,7 +520,6 @@ static inline bool VirtIODeviceGetHostFeature(PARANDIS_ADAPTER *pContext, unsign
 
 static inline void VirtIODeviceEnableGuestFeature(PARANDIS_ADAPTER *pContext, unsigned uFeature)
 {
-   ULONG ulValue = 0;
    DPrintf(4, ("%s\n", __FUNCTION__));
 
    virtio_feature_enable(pContext->ullGuestFeatures, uFeature);

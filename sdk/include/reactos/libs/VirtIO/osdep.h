@@ -16,7 +16,16 @@
 
 #include <ntddk.h>
 
+#ifdef __REACTOS__
+#ifdef __GNUC__
+#undef FORCEINLINE
+#define FORCEINLINE __attribute__((__always_inline__))
+#endif
+#endif
+
+#ifndef __REACTOS__
 #define ENOSPC 1
+#endif
 
 #if !defined(__cplusplus) && !defined(bool)
 // Important note: in MSFT C++ bool length is 1 bytes
@@ -27,5 +36,11 @@
 #define true TRUE
 #endif
 
-#define inline __forceinline
+#ifdef __REACTOS__
+#ifdef __GNUC__
+#undef inline
+#define inline __attribute__((__always_inline__))
+#endif
+#endif
+
 #define SMP_CACHE_BYTES 64

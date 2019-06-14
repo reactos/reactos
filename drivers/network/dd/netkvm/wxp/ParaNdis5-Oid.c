@@ -258,7 +258,7 @@ Return value:
     NDIS_STATUS                 as returned from common code
     NDIS_STATUS_NOT_SUPPORTED   if suppressed in the table
 ***********************************************************/
-NDIS_STATUS ParaNdis5_QueryOID(IN NDIS_HANDLE MiniportAdapterContext,
+NDIS_STATUS NTAPI ParaNdis5_QueryOID(IN NDIS_HANDLE MiniportAdapterContext,
                                     IN NDIS_OID Oid,
                                     IN PVOID InformationBuffer,
                                     IN ULONG InformationBufferLength,
@@ -308,7 +308,7 @@ Return value:
     NDIS_STATUS                 as returned from set procedure
     NDIS_STATUS_NOT_SUPPORTED   if support not defined in the table
 ***********************************************************/
-NDIS_STATUS ParaNdis5_SetOID(IN NDIS_HANDLE MiniportAdapterContext,
+NDIS_STATUS NTAPI ParaNdis5_SetOID(IN NDIS_HANDLE MiniportAdapterContext,
                                   IN NDIS_OID Oid,
                                   IN PVOID InformationBuffer,
                                   IN ULONG InformationBufferLength,
@@ -354,7 +354,7 @@ NDIS_STATUS ParaNdis5_SetOID(IN NDIS_HANDLE MiniportAdapterContext,
     return status;
 }
 
-static void OnSetPowerWorkItem(NDIS_WORK_ITEM * pWorkItem, PVOID  Context)
+static void NTAPI OnSetPowerWorkItem(NDIS_WORK_ITEM * pWorkItem, PVOID  Context)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     tPowerWorkItem *pwi = (tPowerWorkItem *)pWorkItem;

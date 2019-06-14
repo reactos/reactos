@@ -29,7 +29,13 @@
 #include <windows.h>
 #include "ntverp.h"
 
+#ifdef __REACTOS__
+#include "vendor.ver"
+#endif
+
+#ifndef __REACTOS__
 #include "..\..\..\Tools\vendor.ver"
+#endif
 
 #undef __BUILDMACHINE__
 
