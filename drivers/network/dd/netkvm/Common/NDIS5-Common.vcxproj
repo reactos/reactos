@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="WinXP Release|Win32">
+      <Configuration>WinXP Release</Configuration>
+      <Platform>Win32</Platform>
+      <PlatformToolset>v141_xp</PlatformToolset>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Win2k3 Release|Win32">
+      <Configuration>Win2k3 Release</Configuration>
+      <Platform>Win32</Platform>
+      <PlatformToolset>v141_xp</PlatformToolset>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="WinXP Release|x64">
+      <Configuration>WinXP Release</Configuration>
+      <Platform>x64</Platform>
+      <PlatformToolset>v141_xp</PlatformToolset>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Win2k3 Release|x64">
+      <Configuration>Win2k3 Release</Configuration>
+      <Platform>x64</Platform>
+      <PlatformToolset>v141_xp</PlatformToolset>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ParaNdis-Common.c" />
+    <ClCompile Include="ParaNdis-Debug.c" />
+    <ClCompile Include="ParaNdis-Oid.c" />
+    <ClCompile Include="ParaNdis-VirtIO.c" />
+    <ClCompile Include="sw-offload.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DebugData.h" />
+    <ClInclude Include="ethernetutils.h" />
+    <ClInclude Include="IONetDescriptor.h" />
+    <ClInclude Include="kdebugprint.h" />
+    <ClInclude Include="ndis56common.h" />
+    <ClInclude Include="ParaNdis-Oid.h" />
+    <ClInclude Include="quverp.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FE1EF04E-D3BA-4E55-A70D-CC569B9EC93E}</ProjectGuid>
+    <Configuration>WinXP Release</Configuration>
+    <Platform Condition="'$(Platform)' == ''">Win32</Platform>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals">
+    <RootNamespace>ndiscommon</RootNamespace>
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VisualStudioVersion)' == '11.0'">$(VCTargetsPath11)</VCTargetsPath>
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="PropertySheets">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <TargetName>ndiscommon</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <DriverType>WDM</DriverType>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <TargetVersion>Windows7</TargetVersion>
+    <UseLegacyDDK>true</UseLegacyDDK>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='WinXP Release|Win32'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='WinXP Release|x64'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|x64'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|Win32'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(MSBuildProjectDirectory)\..\..\..\Tools\Driver.Common.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WinXP Release|Win32'">
+    <OutDir>objfre_wxp_x86\i386\</OutDir>
+    <IntDir>objfre_wxp_x86\i386\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|Win32'">
+    <OutDir>objfre_wnet_x86\i386\</OutDir>
+    <IntDir>objfre_wnet_x86\i386\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='WinXP Release|x64'">
+    <OutDir>objfre_wxp_amd64\amd64\</OutDir>
+    <IntDir>objfre_wxp_amd64\amd64\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|x64'">
+    <OutDir>objfre_wnet_amd64\amd64\</OutDir>
+    <IntDir>objfre_wnet_amd64\amd64\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>NDIS_MINIPORT_DRIVER;NDIS51_MINIPORT=1;BINARY_COMPATIBLE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(ProjectDir);..\..\..\VirtIO;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization Condition="$(Configuration.EndsWith('Release'))">Full</Optimization>
+      <Optimization Condition="$(Configuration.EndsWith('Debug'))">Disabled</Optimization>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

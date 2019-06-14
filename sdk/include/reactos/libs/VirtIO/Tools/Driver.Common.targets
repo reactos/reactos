@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+***********************************************************************************************
+Driver.Common.targets
+Common targets used by all drivers.
+
+Features (all features are false by default):
+  1. $(Feature_UsingWDF) - do we use WDF?
+  2. $(Feature_AdjustInf) and $(Feature_AdjustInfLegacy)
+      executes SubstituteFileContent task
+      to substitute vendor specific strings in .inf/.inx files
+      with @(Substitution) from Driver.$(_VENDOR_).props
+     $(SourceInfFile) is required for Legacy case
+  3. $(Feature_LegacyStampInf) - executes stampinf tool for Legacy DDK
+  4. $(Feature_PackOne) - Import Driver.PackOne.targets
+***********************************************************************************************
+-->
+<Project ToolVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+<!--
+look at https://msdn.microsoft.com/en-us/library/dd722601.aspx#Example for a TokenReplace task example
+look at http://blogs.clariusconsulting.net/kzu/how-to-perform-regular-expression-based-replacements-on-files-with-msbuild/
+        for an example of RegexTransform task
+============================================================
+            SubstituteFileContent
+Replaces text in sources files with multiple substitutions.
+required Items: SourceFiles and Substitutions (with Identity/ReplaceWith metadata)
+
+Example item:
+        <Substitution Include="MACRO_VENDOR">
+            <ReplaceWith>Vendor Corp.</ReplaceWith>
+        </Substitution>
+
+Invoking the task:
+    <SubstituteFileContent SourceFiles="@(SourceFile)" Substitutions="@(Substitution)" />
+============================================================
+-->
+  <UsingTask TaskName="SubstituteFileContent"
+             TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <SourceFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Substitutions ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var substitutions = new Dictionary<string, string>();
+        foreach (var item in Substitutions) {
+            var replaceWhat = item.GetMetadata("Identity");
+            var replaceWith = item.GetMetadata("ReplaceWith") ?? "---";
+            substitutions.Add(replaceWhat, replaceWith);
+            Log.LogMessage(MessageImportance.Low, "Adding {0}=>{1}", replaceWhat, replaceWith);
+        }
+
+        foreach (var item in SourceFiles) {
+            var fileName = item.GetMetadata("FullPath");
+            var fileNameOrig = fileName + ".orig";
+            var fileNameNew = fileName + ".new";
+            Log.LogMessage(MessageImportance.High, "Processing file {0}", fileName);
+
+            if (!File.Exists(fileName)) {
+                Log.LogMessage(MessageImportance.High, "Could not find file: {0}", fileName);
+                continue;
+            }
+
+            Log.LogMessage(MessageImportance.High, "Saving original context to: {0}", fileNameOrig);
+            File.Copy(fileName, fileNameOrig, true);
+            var content = File.ReadAllText(fileName);
+
+            var regex = new Regex(String.Join("|", substitutions.Keys.Select(k => Regex.Escape(k))));
+            content = regex.Replace(content, m => substitutions[m.Value]);
+
+            File.WriteAllText(fileName, content);
+            Log.LogMessage(MessageImportance.High, "Saving replaced context to: {0}", fileNameNew);
+            File.Copy(fileName, fileNameNew, true);
+        }
+
+        return !Log.HasLoggedErrors;
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <!-- Adjust inf (for WDK) -->
+  <Target Condition="'$(Feature_AdjustInf)'=='true' AND '$(UseLegacyDDK)'!='true' AND '@(Inf)' != ''" Name="AdjustInf_WDK" AfterTargets="StampInf" BeforeTargets="InfVerif">
+    <Message Text="AdjustInf_WDK: for %(Inf.FullPath) stamped as %(Inf.CopyOutput)" Importance="high" />
+    <SubstituteFileContent Condition="'%(Inf.ExcludedFromBuild)'!='true'" SourceFiles="%(Inf.CopyOutput)" Substitutions="@(Substitution)" />
+    <Copy Condition="'$(TargetInfFile)' != ''" SourceFiles="%(Inf.CopyOutput)" DestinationFiles="$(OutDir)$(TargetInfFile)"/>
+  </Target>
+
+  <!-- Adjust inf (for Legacy DDK) -->
+  <Target Condition="'$(Feature_AdjustInfLegacy)'=='true' AND '$(UseLegacyDDK)'=='true'" Name="AdjustInf_LegacyDDK" BeforeTargets="PreBuildEvent">
+    <Message Text="AdjustInf_LegacyDDK: for $(SourceInfFile) to $(OutDir)$(TargetName).inf" Importance="high"/>
+    <Copy SourceFiles="$(SourceInfFile)" DestinationFiles="$(OutDir)$(TargetName).inf"/>
+    <SubstituteFileContent SourceFiles="$(OutDir)$(TargetName).inf" Substitutions="@(Substitution)"/>
+  </Target>
+
+  <!-- Stampinf (for Legacy DDK) -->
+  <Target Condition="'$(Feature_LegacyStampInf)'=='true' AND '$(UseLegacyDDK)'=='true'" Name="StampInf_LegacyDDK" AfterTargets="AdjustInf_LegacyDDK" BeforeTargets="PreBuildEvent">
+    <Message Text="StampInf_LegacyDDK: for $(OutDir)$(TargetName).inf with Feature_UsingWDF=$(Feature_UsingWDF) and STAMPINF_VERSION=$(STAMPINF_VERSION)" Importance="high"/>
+    <Exec Condition="'$(Feature_UsingWDF)'=='false'" Command="stampinf -f $(OutDir)$(TargetName).inf -a $(InfArch) -v $(STAMPINF_VERSION) -d *"/>
+    <Exec Condition="'$(Feature_UsingWDF)'=='true'" Command="stampinf -f $(OutDir)$(TargetName).inf -a $(InfArch) -k 1.9 -v $(STAMPINF_VERSION) -d *"/>
+  </Target>
+
+  <!-- Subsystem vendor ID validation -->
+  <Target Condition="'$(SUBSYSTEM_VENDOR_ID.ToUpper())'=='1AF4' AND '$(_VENDOR_)'!='RHEL'" Name="ValidateSubsystemVendor" AfterTargets="AdjustInf_WDK;AdjustInf_LegacyDDK">
+    <Warning Text="Subsystem vendor ID $(SUBSYSTEM_VENDOR_ID) is reserved by Red Hat. Please change it by definining SUBSYSTEM_VENDOR_ID in Driver.$(_VENDOR_).props." />
+  </Target>
+
+  <!-- Imports -->
+  <Import Condition="'$(Feature_PackOne)'=='true'" Project="Driver.PackOne.targets" />
+
+</Project>

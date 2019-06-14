@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="VirtIOPCICommon.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtIOPCILegacy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtIOPCIModern.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtIORing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="linux\types.h">
+      <Filter>Header Files\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="linux\virtio_types.h">
+      <Filter>Header Files\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\virtio_ring_allocation.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="kdebugprint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="osdep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virtio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linux\virtio_config.h">
+      <Filter>Header Files\linux</Filter>
+    </ClInclude>
+    <ClInclude Include="virtio_pci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virtio_pci_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virtio_ring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0663b857-c5cf-46d8-87cf-6a063853d175}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0c19f7ef-49c4-418f-95c1-fd17620f7fc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\linux">
+      <UniqueIdentifier>{6ce4f0db-0521-42df-8916-d5a42631de01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\windows">
+      <UniqueIdentifier>{240d1e8d-7dc9-4917-8188-1f35599bd440}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

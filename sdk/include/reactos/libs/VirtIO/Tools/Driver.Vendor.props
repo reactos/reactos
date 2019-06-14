@@ -1,0 +1,60 @@
+<!--
+***********************************************************************************************
+Driver.Vendor.props
+
+1. Uses RHEL as default vendor.
+Set $(Feature_AlwaysDefaultVendor) to false and set $(_VENDOR_) to override.
+
+2. Vendors' macros for .rc and property definitions for MSBuild used by all drivers:
+    VENDOR_VER <= $(_VENDOR_).ver
+    VER_OS     <= $(TargetOS)
+    VER_ARCH   <= $(TargetArch)
+
+3. Imports inf substitutions and versioning specific to vendor from Driver.$(_VENDOR_).props
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_VENDOR_ Condition="'$(_VENDOR_)'=='' OR '$(Feature_AlwaysDefaultVendor)'!='false'">RHEL</_VENDOR_>
+    <COPYRIGHT_CURRENT_YEAR>2019</COPYRIGHT_CURRENT_YEAR>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetArch)'=='x86'">
+    <VerArch>x86</VerArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetArch)'=='amd64'">
+    <VerArch>x64</VerArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetArch)'=='ARM64'">
+    <VerArch>ARM64</VerArch>
+  </PropertyGroup>
+
+  <Import Project="Driver.$(_VENDOR_).props" />
+
+  <!-- Default subsystem vendor ID -->
+  <PropertyGroup>
+    <SUBSYSTEM_VENDOR_ID Condition="'$(SUBSYSTEM_VENDOR_ID)'==''">1AF4</SUBSYSTEM_VENDOR_ID>
+  </PropertyGroup>
+  <ItemGroup>
+    <Substitution Include="_INX_SUBSYS_VENDOR_ID">
+      <ReplaceWith>$(SUBSYSTEM_VENDOR_ID)</ReplaceWith>
+    </Substitution>
+  </ItemGroup>
+
+  <!-- Version specs for C preprocessor, resource compiler, and stampinf -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>VENDOR_VER=$(_VENDOR_).ver;VER_OS=$(TargetOS);VER_ARCH=$(VerArch);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COPYRIGHT_CURRENT_YEAR=$(COPYRIGHT_CURRENT_YEAR);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>VENDOR_VER=$(_VENDOR_).ver;VER_OS=$(TargetOS);VER_ARCH=$(VerArch);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COPYRIGHT_CURRENT_YEAR=$(COPYRIGHT_CURRENT_YEAR);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Inf>
+      <TimeStamp>$(STAMPINF_VERSION)</TimeStamp>
+    </Inf>
+  </ItemDefinitionGroup>
+
+</Project>

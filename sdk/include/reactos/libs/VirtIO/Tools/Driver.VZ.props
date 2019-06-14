@@ -1,0 +1,101 @@
+<!--
+***********************************************************************************************
+Driver.VZ.props
+VZ inf substitutions and versioning used by all drivers.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
+  <!-- custom variant -->
+  <PropertyGroup Condition="'$(VZ_RELEASE_N)'==''">
+    <VZ_RELEASE_A>1</VZ_RELEASE_A>
+    <VZ_RELEASE_B>1</VZ_RELEASE_B>
+    <VZ_RELEASE_C>0</VZ_RELEASE_C>
+  </PropertyGroup>
+  <!-- experimental variant -->
+  <PropertyGroup Condition="'$(VZ_RELEASE_N)'!='' AND '$(VZ_RELEASE_N)'!='0'">
+    <VZ_RELEASE_A>1</VZ_RELEASE_A>
+    <VZ_RELEASE_B>2</VZ_RELEASE_B>
+    <VZ_RELEASE_C>$(VZ_RELEASE_N)</VZ_RELEASE_C>
+  </PropertyGroup>
+  <!-- build variant -->
+  <PropertyGroup Condition="'$(VZ_RELEASE_N)'=='0'">
+    <VZ_RELEASE_A Condition="'$(VZ_RELEASE_A)'==''">1</VZ_RELEASE_A>
+    <VZ_RELEASE_B Condition="'$(VZ_RELEASE_B)'==''">3</VZ_RELEASE_B>
+    <VZ_RELEASE_C Condition="'$(VZ_RELEASE_C)'==''">0</VZ_RELEASE_C>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <STAMPINF_VERSION>$(VZ_RELEASE_A).$(VZ_RELEASE_B).$(VZ_RELEASE_C).$(_NT_TARGET_MAJ)</STAMPINF_VERSION>
+    <!-- CopyrightStrings should be defined in each project -->
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'BalloonCopyrightStrings'">2009</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'PVPanicCopyrightStrings'">2015</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioInputCopyrightStrings'">2016</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioRNGCopyrightStrings'">2014</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioCryptCopyrightStrings'">2018</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioScsiCopyrightStrings'">2012</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioSerialCopyrightStrings'">2010</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'VioStorCopyrightStrings'">2008</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'IvshmemCopyrightStrings'">2017</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(CopyrightStrings)' == 'NetKVMCopyrightStrings'">2008</RHEL_COPYRIGHT_STARTING_YEAR>
+    <RHEL_COPYRIGHT_STARTING_YEAR Condition="'$(RHEL_COPYRIGHT_STARTING_YEAR)' == ''">20??</RHEL_COPYRIGHT_STARTING_YEAR>
+
+    <VZ_COPYRIGHT_STARTING_YEAR>2016</VZ_COPYRIGHT_STARTING_YEAR>
+    <VZ_COPYRIGHT_STARTING_YEAR  Condition="'$(CopyrightStrings)' == 'IvshmemCopyrightStrings'">2017</VZ_COPYRIGHT_STARTING_YEAR>
+    <VZ_COPYRIGHT_STARTING_YEAR  Condition="'$(CopyrightStrings)' == 'FwCfgCopyrightStrings'">2018</VZ_COPYRIGHT_STARTING_YEAR>
+  </PropertyGroup>
+
+  <!-- Copyright years -->
+  <PropertyGroup>
+    <RHEL_COPYRIGHT_YEARS Condition="'$(RHEL_COPYRIGHT_STARTING_YEAR)'!='$(COPYRIGHT_CURRENT_YEAR)'">$(RHEL_COPYRIGHT_STARTING_YEAR)-$(COPYRIGHT_CURRENT_YEAR)</RHEL_COPYRIGHT_YEARS>
+    <RHEL_COPYRIGHT_YEARS Condition="'$(RHEL_COPYRIGHT_STARTING_YEAR)'=='$(COPYRIGHT_CURRENT_YEAR)'">$(COPYRIGHT_CURRENT_YEAR)</RHEL_COPYRIGHT_YEARS>
+
+    <VZ_COPYRIGHT_YEARS Condition="'$(VZ_COPYRIGHT_STARTING_YEAR)'!='$(COPYRIGHT_CURRENT_YEAR)'">$(VZ_COPYRIGHT_STARTING_YEAR)-$(COPYRIGHT_CURRENT_YEAR)</VZ_COPYRIGHT_YEARS>
+    <VZ_COPYRIGHT_YEARS Condition="'$(VZ_COPYRIGHT_STARTING_YEAR)'=='$(COPYRIGHT_CURRENT_YEAR)'">$(COPYRIGHT_CURRENT_YEAR)</VZ_COPYRIGHT_YEARS>
+  </PropertyGroup>
+
+  <!-- Company name and prefix -->
+  <PropertyGroup>
+    <VZ_VENDOR_NAME>Virtuozzo International GmbH</VZ_VENDOR_NAME>
+    <VZ_VENDOR_PREFIX>Virtuozzo</VZ_VENDOR_PREFIX>
+    <VZ_VENDOR_COPYRIGHT>Copyright (c) $(VZ_COPYRIGHT_YEARS) $(VZ_VENDOR_NAME)</VZ_VENDOR_COPYRIGHT>
+    <SUBSYSTEM_VENDOR_ID>1DF0</SUBSYSTEM_VENDOR_ID>
+  </PropertyGroup>
+
+  <!-- Version specs for C preprocessor, resource compiler, and stampinf -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(VZ_RELEASE_N)'!=''">VZ_RELEASE_N=$(VZ_RELEASE_N);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VZ_RELEASE_A=$(VZ_RELEASE_A);VZ_RELEASE_B=$(VZ_RELEASE_B);VZ_RELEASE_C=$(VZ_RELEASE_C);_NT_TARGET_MAJ=$(_NT_TARGET_MAJ);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RHEL_COPYRIGHT_STARTING_YEAR=$(RHEL_COPYRIGHT_STARTING_YEAR);VZ_COPYRIGHT_STARTING_YEAR=$(VZ_COPYRIGHT_STARTING_YEAR);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VZ_VENDOR_NAME=$(VZ_VENDOR_NAME);VZ_VENDOR_PREFIX=$(VZ_VENDOR_PREFIX);VZ_VENDOR_COPYRIGHT=$(VZ_VENDOR_COPYRIGHT);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions Condition="'$(VZ_RELEASE_N)'!=''">VZ_RELEASE_N=$(VZ_RELEASE_N);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VZ_RELEASE_A=$(VZ_RELEASE_A);VZ_RELEASE_B=$(VZ_RELEASE_B);VZ_RELEASE_C=$(VZ_RELEASE_C);_NT_TARGET_MAJ=$(_NT_TARGET_MAJ);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RHEL_COPYRIGHT_STARTING_YEAR=$(RHEL_COPYRIGHT_STARTING_YEAR);VZ_COPYRIGHT_STARTING_YEAR=$(VZ_COPYRIGHT_STARTING_YEAR);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VZ_VENDOR_NAME=$(VZ_VENDOR_NAME);VZ_VENDOR_PREFIX=$(VZ_VENDOR_PREFIX);VZ_VENDOR_COPYRIGHT=$(VZ_VENDOR_COPYRIGHT);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <Substitution Include="INX_COPYRIGHT_1">
+      <ReplaceWith>Copyright (c) $(RHEL_COPYRIGHT_YEARS) Red Hat Inc.</ReplaceWith>
+    </Substitution>
+    <Substitution Include="INX_COPYRIGHT_2">
+      <ReplaceWith>$(VZ_VENDOR_COPYRIGHT)</ReplaceWith>
+    </Substitution>
+    <Substitution Include="INX_COMPANY">
+      <ReplaceWith>$(VZ_VENDOR_NAME)</ReplaceWith>
+    </Substitution>
+    <Substitution Include="INX_PREFIX_VENDOR">
+      <ReplaceWith>$(VZ_VENDOR_PREFIX) </ReplaceWith>
+    </Substitution>
+    <Substitution Include="INX_PREFIX_VIRTIO">
+      <ReplaceWith>$(VZ_VENDOR_PREFIX) </ReplaceWith>
+    </Substitution>
+    <Substitution Include="INX_PREFIX_QEMU">
+      <ReplaceWith>$(VZ_VENDOR_PREFIX) </ReplaceWith>
+    </Substitution>
+  </ItemGroup>
+</Project>

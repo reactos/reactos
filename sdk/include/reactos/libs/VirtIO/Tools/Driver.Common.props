@@ -1,0 +1,174 @@
+<!--
+***********************************************************************************************
+Driver.Common.props
+Common property definitions used by all drivers:
+    $(_NT_TARGET_MAJ)
+    $(TargetOS)
+    $(TargetArch)
+    $(InfArch)
+    including properties specific to Legacy DDK, when $(UseLegacyDDK) is true
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="Driver.Initial.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <!-- Define the legacy DDK directory required for downlevel targets -->
+    <DDKINSTALLROOT Condition="'$(DDKINSTALLROOT)' == ''">C:\WINDDK\</DDKINSTALLROOT>
+    <DDKVER Condition="'$(DDKVER)' == ''">7600.16385.1</DDKVER>
+    <LegacyDDKDir>$(DDKINSTALLROOT)$(DDKVER)</LegacyDDKDir>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Globals">
+    <Inf2CatUseLocalTime>true</Inf2CatUseLocalTime>
+  </PropertyGroup>
+
+  <!-- $(TargetArch) -->
+  <PropertyGroup Condition="'$(Platform)'=='Win32'">
+    <TargetArch>x86</TargetArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <TargetArch>amd64</TargetArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'=='ARM64'">
+    <TargetArch>ARM64</TargetArch>
+  </PropertyGroup>
+
+  <!-- _NT_TARGET_MAJ is one of the components of driver version (always reflects target OS version) -->
+  <!-- $(TargetOS) -->
+  <!-- InfArch turns into the TargetOS inf file directive -->
+  <PropertyGroup Condition="'$(Configuration)'=='Win10 Release' OR '$(Configuration)'=='Win10 Debug'">
+    <_NT_TARGET_MAJ>100</_NT_TARGET_MAJ>
+    <TargetOS>Win10</TargetOS>
+	<DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <InfArch>$(TargetArch).10.0</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Win8.1 Release' OR '$(Configuration)'=='Win8.1 Debug'">
+    <_NT_TARGET_MAJ>63</_NT_TARGET_MAJ>
+    <TargetOS>Win8.1</TargetOS>
+    <InfArch>$(TargetArch).6.3</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Win8 Release' OR '$(Configuration)'=='Win8 Debug'">
+    <_NT_TARGET_MAJ>62</_NT_TARGET_MAJ>
+    <TargetOS>Win8</TargetOS>
+    <InfArch>$(TargetArch).6.2</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Win7 Release' OR '$(Configuration)'=='Win7 Debug'">
+    <_NT_TARGET_MAJ>61</_NT_TARGET_MAJ>
+    <TargetOS>Win7</TargetOS>
+    <InfArch>$(TargetArch).6.1</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Vista Release' OR '$(Configuration)'=='Vista Debug'">
+    <_NT_TARGET_MAJ>60</_NT_TARGET_MAJ>
+    <TargetOS>Wlh</TargetOS>
+    <InfArch>$(TargetArch).6.0</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Win2k3 Release' OR '$(Configuration)'=='Win2k3 Debug'">
+    <_NT_TARGET_MAJ>52</_NT_TARGET_MAJ>
+    <TargetOS>Wnet</TargetOS>
+    <InfArch>$(TargetArch).5.2</InfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='WinXP Release' OR '$(Configuration)'=='WinXP Debug'">
+    <_NT_TARGET_MAJ>51</_NT_TARGET_MAJ>
+    <TargetOS>Wxp</TargetOS>
+    <InfArch>$(TargetArch).5.1</InfArch>
+  </PropertyGroup>
+
+  <!-- Properties specific to the Legacy DDK -->
+  <PropertyGroup Condition="'$(UseLegacyDDK)'=='true'">
+    <ExecutablePath>$(ExecutablePath);$(LegacyDDKDir)\bin\x86;$(LegacyDDKDir)\bin\selfsign</ExecutablePath>
+  </PropertyGroup>
+
+  <!-- Common options to make the legacy DDK toolset produce a kernel driver -->
+  <ItemDefinitionGroup Condition="'$(UseLegacyDDK)'=='true'">
+    <!-- Common compiler options -->
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(LegacyDDKDir)\inc\ddk;$(LegacyDDKDir)\inc\crt;$(LegacyDDKDir)\inc\api;$(LegacyDDKDir)\inc\wdf\kmdf\1.9;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary />
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <Optimization>Full</Optimization>
+      <StructMemberAlignment>8Bytes</StructMemberAlignment>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <StringPooling>true</StringPooling>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling />
+      <AdditionalOptions>/kernel %(AdditionalOptions)</AdditionalOptions>
+      <CallingConvention>StdCall</CallingConvention>
+    </ClCompile>
+
+    <!-- Compiler options specific to the target platform -->
+    <ClCompile Condition="'$(Platform)'=='Win32'">
+      <PreprocessorDefinitions>_WINNT_;_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Platform)'=='x64'">
+      <PreprocessorDefinitions>_WINNT_;_WIN64;_AMD64_=1;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)'=='Vista Release' OR '$(Configuration)'=='Vista Debug'">
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0600;WINVER=0x0600;NTDDI_VERSION=0x06000100;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)'=='Win2k3 Release' OR '$(Configuration)'=='Win2k3 Debug'">
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;WINVER=0x0502;NTDDI_VERSION=0x05020100;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)'=='WinXP Release' OR '$(Configuration)'=='WinXP Debug'">
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;WINVER=0x0501;NTDDI_VERSION=0x05010200;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+
+    <!-- Common linker options -->
+    <Link>
+      <Driver>Driver</Driver>
+      <Version>6.1</Version>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <AdditionalLibraryDirectories Condition="'$(Platform)'=='Win32'">$(LegacyDDKDir)\lib\wdf\kmdf\i386\1.9;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(Platform)'=='x64'">$(LegacyDDKDir)\lib\wdf\kmdf\amd64\1.9;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <TargetMachine Condition="'$(Platform)'=='Win32'">MachineX86</TargetMachine>
+      <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>
+      <AdditionalDependencies>BufferOverflowK.lib;wdfdriverentry.lib;wdfldr.lib;wdm.lib;wdmsec.lib;ntoskrnl.lib;hal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/kernel /osversion:6.1 %(AdditionalOptions)</AdditionalOptions>
+      <SubSystem>Native</SubSystem>
+
+      <!-- Entry points may need to be overriden for special drivers, e.g. miniports -->
+      <EntryPointSymbol Condition="'$(Platform)'=='Win32'">FxDriverEntry@8</EntryPointSymbol>
+      <EntryPointSymbol Condition="'$(Platform)'=='x64'">FxDriverEntry</EntryPointSymbol>
+    </Link>
+
+    <!-- Linker options specific to the target platform -->
+    <Link Condition="'$(Configuration)|$(Platform)'=='Vista Release|Win32' OR '$(Configuration)|$(Platform)'=='Vista Debug|Win32'">
+      <AdditionalLibraryDirectories>$(LegacyDDKDir)\lib\wlh\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>6.00</MinimumRequiredVersion>
+    </Link>
+    <Link Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|Win32' OR '$(Configuration)|$(Platform)'=='Win2k3 Debug|Win32'">
+      <AdditionalLibraryDirectories>$(LegacyDDKDir)\lib\wnet\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
+    </Link>
+    <Link Condition="'$(Configuration)|$(Platform)'=='WinXP Release|Win32' OR '$(Configuration)|$(Platform)'=='WinXP Debug|Win32'">
+      <AdditionalLibraryDirectories>$(LegacyDDKDir)\lib\wxp\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
+    </Link>
+    <Link Condition="'$(Configuration)|$(Platform)'=='Vista Release|x64' OR '$(Configuration)|$(Platform)'=='Vista Debug|x64'">
+      <AdditionalLibraryDirectories>$(LegacyDDKDir)\lib\wlh\amd64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>6.00</MinimumRequiredVersion>
+    </Link>
+    <Link Condition="'$(Configuration)|$(Platform)'=='Win2k3 Release|x64' OR '$(Configuration)|$(Platform)'=='Win2k3 Debug|x64'">
+      <AdditionalLibraryDirectories>$(LegacyDDKDir)\lib\wnet\amd64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- WPP settings -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WppModuleName>$(TargetFileName)</WppModuleName>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- Import vendor specific properties -->
+  <Import Project="Driver.Vendor.props" />
+
+</Project>

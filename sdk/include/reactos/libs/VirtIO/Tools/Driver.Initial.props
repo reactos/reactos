@@ -1,0 +1,31 @@
+<!--
+***********************************************************************************************
+Driver.Initial.props
+Should be imported just after Microsoft.Cpp.Default.props
+and after target Windows versions defined for configurations
+Common property definitions used by all drivers:
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
+
+  <Target Name="Virtio-Win" BeforeTargets="PrepareForBuild" AfterTargets="DriverBuildNotifications">
+    <!-- Indicate to users what they are building -->
+    <Message Importance="high" Text="Driver.Initial.props: _NT_TARGET_VERSION=$(_NT_TARGET_VERSION) SUBSYSTEM_NATVER=$(SUBSYSTEM_NATVER) mismatch=$(MidlTargetMismatch)" />
+  </Target>
+
+  <PropertyGroup Condition="'$(TargetVersion)'=='Windows10'">
+  <_NT_TARGET_VERSION>0x0A00</_NT_TARGET_VERSION>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetVersion)'=='WindowsV6.3'">
+    <_NT_TARGET_VERSION>0x0603</_NT_TARGET_VERSION>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetVersion)'=='Windows8'">
+    <_NT_TARGET_VERSION>0x0602</_NT_TARGET_VERSION>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetVersion)'=='Windows7'">
+    <_NT_TARGET_VERSION>0x0601</_NT_TARGET_VERSION>
+  </PropertyGroup>
+
+</Project>

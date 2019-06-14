@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+***********************************************************************************************
+Driver.PackOne.targets
+This file replaces packOne.bat
+Enabling feature: set $(Feature_PackOne) to true
+Customizing feature:
+  $(PackOne_FileName) - $(TargetName) by default
+  @(PackOne_UnsupportedOS)
+  $(PackOne_WlhAddWin7Mask) - true by default
+  $(PackOne_DestinationPrefix)
+Related features:
+  $(Feature_UsingWDF) - should we copy wdf coinstaller or not
+***********************************************************************************************
+-->
+<Project ToolVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+                       Contained
+  ============================================================
+  Invoking the task:
+      <Contained Value="$(MyValue)" Item="@(MyItem)">
+        <Output TaskParameter="Result" PropertyName="MyResult"/>
+      </Contained>
+  ============================================================
+  -->
+  <UsingTask TaskName="Contained"
+             TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Value Required="true" />
+      <Item ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Result ParameterType="System.Boolean" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        Result = (null != Item.FirstOrDefault(item => item.GetMetadata("Identity") == Value));
+        return true;
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <!-- checking $(TargetOS) and $(TargetArch) -->
+  <Target Condition="'$(Feature_PackOne)'=='true'" Name="CheckPackOne" BeforeTargets="PackOneTarget">
+    <ItemGroup>
+      <PackOne_ValidOS Include="Wxp;Wnet;Wlh;Win7;Win8;Win8.1;Win10"/>
+      <PackOne_ValidArch Include="x86;amd64;ARM64"/>
+    </ItemGroup>
+    <Message Text="Checking PackOne: TargetOS=$(TargetOS) and TargetArch=$(TargetArch)" Importance="high"/>
+    <Contained Value="$(TargetOS)" Item="@(PackOne_ValidOS)">
+      <Output TaskParameter="Result" PropertyName="PackOne_IsValidOS"/>
+    </Contained>
+    <Contained Value="$(TargetArch)" Item="@(PackOne_ValidArch)">
+      <Output TaskParameter="Result" PropertyName="PackOne_IsValidArch"/>
+    </Contained>
+    <Contained Value="$(TargetOS)" Item="@(PackOne_UnsupportedOS)">
+      <Output TaskParameter="Result" PropertyName="PackOne_IsUnsupportedOS"/>
+    </Contained>
+    <Error Text="PackOne: Wrong OS parameter $(TargetOS)" Condition="'$(PackOne_IsValidOS)'=='false'" />
+    <Error Text="PackOne: Wrong Arch parameter $(TargetArch)" Condition="'$(PackOne_IsValidArch)'=='false'" />
+    <Error Text="PackOne: Unsupported OS parameter $(TargetOS)" Condition="'$(PackOne_IsUnsupportedOS)'=='true'" />
+  </Target>
+
+  <!-- default driver name -->
+  <PropertyGroup Condition="'$(PackOne_FileName)'==''">
+    <PackOne_FileName>$(TargetName)</PackOne_FileName>
+  </PropertyGroup>
+
+  <!-- default mask customization options -->
+  <PropertyGroup Condition="'$(PackOne_WlhAddWin7Mask)'==''">
+    <PackOne_WlhAddWin7Mask>true</PackOne_WlhAddWin7Mask>
+  </PropertyGroup>
+
+  <!-- from packone.bat create_xp variant
+       both Wxp and Wnet drivers have mask for both Windows XP and Server2003 OSes -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Wxp' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>XP_X86,Server2003_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wxp' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>XP_X64,Server2003_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wnet' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>XP_X86,Server2003_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wnet' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>XP_X64,Server2003_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <!-- from packone.bat create_vista variant
+       if $(PackOne_WlhAddWin7Mask) is true has mask for both Vista(Server2008) and Win7(Server2008r2)
+       default true -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Wlh' AND '$(TargetArch)'=='x86' AND '$(PackOne_WlhAddWin7Mask)'=='true'">
+    <PackOne_OsMask>Vista_X86,Server2008_X86,7_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wlh' AND '$(TargetArch)'=='amd64' AND '$(PackOne_WlhAddWin7Mask)'=='true'">
+    <PackOne_OsMask>Vista_X64,Server2008_X64,7_X64,Server2008R2_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wlh' AND '$(TargetArch)'=='x86' AND '$(PackOne_WlhAddWin7Mask)'!='true'">
+    <PackOne_OsMask>Vista_X86,Server2008_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Wlh' AND '$(TargetArch)'=='amd64' AND '$(PackOne_WlhAddWin7Mask)'!='true'">
+    <PackOne_OsMask>Vista_X64,Server2008_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <!-- from packone.bat create_win7 variant -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Win7' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>7_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Win7' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>7_X64,Server2008R2_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <!-- from packone.bat create_win8 variant -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Win8' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>8_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Win8' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>8_X64,Server8_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <!-- variant for win8.1 -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Win8.1' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>6_3_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Win8.1' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>6_3_X64,Server6_3_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <!-- from packone.bat create_win10 variant -->
+  <PropertyGroup Condition="'$(TargetOS)'=='Win10' AND '$(TargetArch)'=='x86'">
+    <PackOne_OsMask>10_X86</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Win10' AND '$(TargetArch)'=='amd64'">
+    <PackOne_OsMask>10_X64,Server10_X64</PackOne_OsMask>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetOS)'=='Win10' AND '$(TargetArch)'=='ARM64'">
+    <PackOne_OsMask>Server10_ARM64</PackOne_OsMask>
+  </PropertyGroup>
+
+  <!-- $(PackOne_LocalTimeStamp) use this option for modern WDK only -->
+  <PropertyGroup Condition="'$(UseLegacyDDK)'!='true'">
+    <PackOne_LocalTimeStamp>/uselocaltime</PackOne_LocalTimeStamp>
+  </PropertyGroup>
+
+  <!-- $(PackOne_SourcePathArch) and $(PackOne_WdfArch) -->
+  <PropertyGroup Condition="'$(TargetArch)'=='x86'">
+    <PackOne_SourcePathArch>i386</PackOne_SourcePathArch>
+    <PackOne_WdfArch>x86</PackOne_WdfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetArch)'=='amd64'">
+    <PackOne_SourcePathArch>amd64</PackOne_SourcePathArch>
+    <PackOne_WdfArch>x64</PackOne_WdfArch>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetArch)'=='ARM64'">
+    <PackOne_SourcePathArch>arm64</PackOne_SourcePathArch>
+    <PackOne_WdfArch>arm64</PackOne_WdfArch>
+  </PropertyGroup>
+
+  <!-- $(PackOne_SourcePath) and $(PackOne_DestinationPath) -->
+  <PropertyGroup Condition="$(Configuration.EndsWith('Debug'))"> 
+    <PackOne_SourcePath Condition="$(PackOne_SourcePath)==''">objchk_$(TargetOS)_$(TargetArch)\$(PackOne_SourcePathArch)</PackOne_SourcePath>
+    <PackOne_DestinationPath Condition="$(PackOne_DestinationPath)==''">$(PackOne_DestinationPrefix)Install_Debug\$(TargetOS)\$(TargetArch)</PackOne_DestinationPath>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="!$(Configuration.EndsWith('Debug'))"> 
+    <PackOne_SourcePath Condition="'$(PackOne_SourcePath)'==''">objfre_$(TargetOS)_$(TargetArch)\$(PackOne_SourcePathArch)</PackOne_SourcePath>
+    <PackOne_DestinationPath Condition="'$(PackOne_DestinationPath)'==''">$(PackOne_DestinationPrefix)Install\$(TargetOS)\$(TargetArch)</PackOne_DestinationPath>
+  </PropertyGroup>
+
+  <!-- $(PackOne_CopyWdf) and $(PackOne_WdfCoinstaller) -->
+  <PropertyGroup Condition="'$(Feature_UsingWDF)'!='false'">
+    <PackOne_CopyWdf>true</PackOne_CopyWdf>
+    <PackOne_WdfCoinstaller Condition="'$(UseLegacyDDK)'=='true'">$(LegacyDDKDir)\redist\wdf\$(TargetArch)\WdfCoInstaller01009.dll</PackOne_WdfCoinstaller>
+    <PackOne_WdfCoinstaller Condition="'$(TargetOS)'=='Win7'">$(WDKContentRoot)\redist\wdf\$(PackOne_WdfArch)\WdfCoInstaller01009.dll</PackOne_WdfCoinstaller>
+    <PackOne_WdfCoinstaller Condition="'$(TargetOS)'=='Win8'">$(WDKContentRoot)\redist\wdf\$(PackOne_WdfArch)\WdfCoInstaller01011.dll</PackOne_WdfCoinstaller>
+    <PackOne_WdfCoinstaller Condition="'$(TargetOS)'=='Win8.1'"></PackOne_WdfCoinstaller>
+    <PackOne_WdfCoinstaller Condition="'$(TargetOS)'=='Win10'"></PackOne_WdfCoinstaller>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Feature_UsingWDF)'=='false' OR '$(PackOne_WdfCoinstaller)'==''">
+    <PackOne_CopyWdf>false</PackOne_CopyWdf>
+  </PropertyGroup>
+
+  <!-- @(PackOne_Files) -->
+  <ItemGroup>
+    <PackOne_Files Include="$(PackOne_SourcePath)\$(PackOne_FileName).sys"/>
+    <PackOne_Files Include="$(PackOne_SourcePath)\$(PackOne_FileName).pdb"/>
+    <PackOne_Files Include="$(PackOne_SourcePath)\$(PackOne_FileName).inf"/>
+    <PackOne_Files Condition="'$(PackOne_CopyWdf)'!='false'" Include="$(PackOne_WdfCoinstaller)"/>
+  </ItemGroup>
+
+  <!-- PackOne target (executing AfterBuild)-->
+  <Target Condition="'$(Feature_PackOne)'=='true'" Name="PackOneTarget" AfterTargets="AfterBuild">
+    <Message Text="PackOneTarget $(TargetOS) $(TargetArch) $(PackOne_FileName)" Importance="high"/>
+    <Message Text="Copying PackOne_Files=%(PackOne_Files.Identity) to $(PackOne_DestinationPath)" Importance="high"/>
+    <MakeDir Directories="$(PackOne_DestinationPath)"/>
+    <Delete Files="$(PackOne_DestinationPath)\*"/>
+    <Copy SourceFiles="@(PackOne_Files)"
+          DestinationFolder="$(PackOne_DestinationPath)"/>
+    <Message Text="Setting OS mask for: $(TargetOS) $(TargetArch) to $(PackOne_OsMask)" Importance="high"/>
+    <Exec Command="inf2cat $(PackOne_LocalTimeStamp) /driver:$(PackOne_DestinationPath) /os:$(PackOne_OsMask)" />
+  </Target>
+
+</Project>
