@@ -706,7 +706,7 @@ PVOID ParaNdis_AllocateMemory(
     PARANDIS_ADAPTER *pContext,
     ULONG ulRequiredSize);
 
-NDIS_STATUS ParaNdis_FinishSpecificInitialization(
+NDIS_STATUS NTAPI ParaNdis_FinishSpecificInitialization(
     PARANDIS_ADAPTER *pContext);
 
 VOID ParaNdis_FinalizeCleanup(

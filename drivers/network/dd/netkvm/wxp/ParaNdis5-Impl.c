@@ -150,7 +150,7 @@ Parameters:
     context (on FunctionContext)
     all the rest are irrelevant
 ***********************************************************/
-static VOID OnConnectTimer(
+static VOID NTAPI OnConnectTimer(
     IN PVOID  SystemSpecific1,
     IN PVOID  FunctionContext,
     IN PVOID  SystemSpecific2,
@@ -190,7 +190,7 @@ Parameters:
     context (on FunctionContext)
     all the rest are irrelevant
 ***********************************************************/
-static VOID OnDPCPostProcessTimer(
+static VOID NTAPI OnDPCPostProcessTimer(
     IN PVOID  SystemSpecific1,
     IN PVOID  FunctionContext,
     IN PVOID  SystemSpecific2,
@@ -469,7 +469,6 @@ tPacketIndicationType ParaNdis_IndicateReceivedPacket(
     BOOLEAN bPrepareOnly,
     pIONetDescriptor pBuffersDesc)
 {
-    BOOLEAN b = FALSE;
     PNDIS_BUFFER    pBuffer = NULL;
     PNDIS_BUFFER    pNoBuffer = NULL;
     PNDIS_PACKET    Packet = pBuffersDesc->pHolder;
@@ -1078,8 +1077,6 @@ Parameters:
 VOID NTAPI ParaNdis5_ReturnPacket(IN NDIS_HANDLE  MiniportAdapterContext,IN PNDIS_PACKET Packet)
 {
     PARANDIS_ADAPTER *pContext = (PARANDIS_ADAPTER *)MiniportAdapterContext;
-    PNDIS_BUFFER pBuffer = NULL;
-    UINT nBuffers = 0;
     pIONetDescriptor pBufferDescriptor;
     pBufferDescriptor = (pIONetDescriptor) *REF_MINIPORT(Packet);
     DPrintf(4, ("[%s] buffer %p", __FUNCTION__, pBufferDescriptor));
