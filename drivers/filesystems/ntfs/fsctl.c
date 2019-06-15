@@ -50,7 +50,7 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
     PBOOT_SECTOR BootSector;
     NTSTATUS Status;
 
-    DPRINT1("NtfsHasFileSystem() called\n");
+    DPRINT("NtfsHasFileSystem() called\n");
 
     Size = sizeof(DISK_GEOMETRY);
     Status = NtfsDeviceIoControl(DeviceToMount,
@@ -425,7 +425,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     BOOLEAN Lookaside = FALSE;
 
-    DPRINT1("NtfsMountVolume() called\n");
+    DPRINT("NtfsMountVolume() called\n");
 
     if (DeviceObject != NtfsGlobalData->DeviceObject)
     {
@@ -737,7 +737,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ToCopy;
     BOOLEAN Overflow = FALSE;
 
-    DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
+    DPRINT("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -904,7 +904,7 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExt;
 
-    DPRINT1("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
+    DPRINT("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExt = DeviceObject->DeviceExtension;
@@ -966,7 +966,7 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext)
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT1("NtfsFileSystemControl() called\n");
+    DPRINT("NtfsFileSystemControl() called\n");
 
     DeviceObject = IrpContext->DeviceObject;
     Irp = IrpContext->Irp;

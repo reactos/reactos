@@ -60,7 +60,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     PCHAR ReadBuffer = (PCHAR)Buffer;
     ULONGLONG StreamSize;
 
-    DPRINT1("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
+    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
     *LengthRead = 0;
 

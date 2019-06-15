@@ -46,7 +46,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
 {
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    DPRINT1("NtfsGetStandardInformation(%p, %p, %p, %p)\n", Fcb, DeviceObject, StandardInfo, BufferLength);
+    DPRINT("NtfsGetStandardInformation(%p, %p, %p, %p)\n", Fcb, DeviceObject, StandardInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
         return STATUS_BUFFER_TOO_SMALL;
@@ -102,7 +102,7 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
 {
     PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
 
-    DPRINT1("NtfsGetBasicInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, BasicInfo, BufferLength);
+    DPRINT("NtfsGetBasicInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, BasicInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_TOO_SMALL;
@@ -136,7 +136,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    DPRINT1("NtfsGetNameInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, NameInfo, BufferLength);
+    DPRINT("NtfsGetNameInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, NameInfo, BufferLength);
 
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
@@ -200,7 +200,7 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
 {
     PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
 
-    DPRINT1("NtfsGetNetworkOpenInformation(%p, %p, %p, %p)\n", Fcb, DeviceExt, NetworkInfo, BufferLength);
+    DPRINT("NtfsGetNetworkOpenInformation(%p, %p, %p, %p)\n", Fcb, DeviceExt, NetworkInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
         return STATUS_BUFFER_TOO_SMALL;
@@ -727,7 +727,7 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 
-    DPRINT1("NtfsSetInformation(%p)\n", IrpContext);
+    DPRINT("NtfsSetInformation(%p)\n", IrpContext);
 
     Irp = IrpContext->Irp;
     Stack = IrpContext->Stack;

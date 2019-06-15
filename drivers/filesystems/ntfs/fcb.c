@@ -389,7 +389,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
     PNTFS_FCB rcFCB;
     ULONGLONG Size, AllocatedSize;
 
-    DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p, %p)\n", Vcb, DirectoryFCB, Name, Stream, Record, fileFCB);
+    DPRINT("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p, %p)\n", Vcb, DirectoryFCB, Name, Stream, Record, fileFCB);
 
     FileName = GetBestFileNameFromRecord(Vcb, Record);
     if (!FileName)
@@ -516,12 +516,12 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     PNTFS_ATTR_CONTEXT DataContext;
     USHORT Length = 0;
 
-    DPRINT1("NtfsDirFindFile(%p, %p, %S, %s, %p)\n",
-            Vcb,
-            DirectoryFcb,
-            FileToFind,
-            CaseSensitive ? "TRUE" : "FALSE",
-            FoundFCB);
+    DPRINT("NtfsDirFindFile(%p, %p, %S, %s, %p)\n",
+           Vcb,
+           DirectoryFcb,
+           FileToFind,
+           CaseSensitive ? "TRUE" : "FALSE",
+           FoundFCB);
 
     *FoundFCB = NULL;
     RtlInitUnicodeString(&File, FileToFind);

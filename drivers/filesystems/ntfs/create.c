@@ -111,7 +111,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     WCHAR FullPath[MAX_PATH];
     ULONG WritePosition = MAX_PATH - 1;
 
-    DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
+    DPRINT("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
 
     RtlZeroMemory(FullPath, sizeof(FullPath));
     MftRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
@@ -181,7 +181,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
     PNTFS_FCB FCB;
     PFILE_RECORD_HEADER MftRecord;
 
-    DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
+    DPRINT("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
 
     ASSERT(MftId < NTFS_FILE_FIRST_USER_FILE);
     if (MftId > 0xb) /* No entries are used yet beyond this */
@@ -250,7 +250,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
+    DPRINT("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
             DeviceExt,
             FileObject,
             FileName,
@@ -339,7 +339,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING FullPath;
     PIRP Irp = IrpContext->Irp;
 
-    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
+    DPRINT("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
@@ -695,7 +695,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG MaxIndexRootSize;
     ULONG RootLength;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+    DPRINT("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
             DeviceExt,
             FileObject,
             CaseSensitive ? "TRUE" : "FALSE",
@@ -820,7 +820,7 @@ NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_RECORD NextAttribute;
 
-    DPRINT1("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
+    DPRINT("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
 
     // allocate memory for file record
     FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
@@ -895,7 +895,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ParentMftIndex;
     ULONGLONG FileMftIndex;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+    DPRINT("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
             DeviceExt,
             FileObject,
             CaseSensitive ? "TRUE" : "FALSE",
