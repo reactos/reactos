@@ -404,8 +404,8 @@ void Draw(HDC aDc)
             DeleteDC(hdcOffscreen);
         }
 
-        sourceWidth  = AppWidth / iZoom;
-        sourceHeight = AppHeight / iZoom;
+        sourceWidth  = AppWidth / uiZoom;
+        sourceHeight = AppHeight / uiZoom;
 
          /* Create a memory DC compatible with client area DC */
         hdcOffscreen = CreateCompatibleDC(desktopHdc);
@@ -882,7 +882,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             break;
         case WM_INITDIALOG:
         {
-            // Add the zoom items...
+            /* Add the zoom items */
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("1"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("2"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("3"));
@@ -891,8 +891,10 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("6"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("7"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("8"));
+            SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("9"));
 
-            SendDlgItemMessage(hDlg, IDC_ZOOM, CB_SETCURSEL, iZoom - 1, 0);
+            if (uiZoom >= 1 && uiZoom <= 9)
+                SendDlgItemMessage(hDlg, IDC_ZOOM, CB_SETCURSEL, uiZoom - 1, 0);
 
             if (bFollowMouse)
                 SendDlgItemMessage(hDlg,IDC_FOLLOWMOUSECHECK,BM_SETCHECK , wParam ,0);
@@ -936,7 +938,10 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                     /* Get index of current selection and the text of that selection */
                     int currentSelectionIndex = ComboBox_GetCurSel(hCombo);  
                     ComboBox_GetLBText(hCombo, currentSelectionIndex, currentZoomValue);
-                    iZoom = _ttoi(currentZoomValue);
+                    uiZoom = (UINT)_ttoi(currentZoomValue);
+                    /* The zoom factor cannot be smaller than 1 (and not zero) or greater than 9 */
+                    if (uiZoom < 1 || uiZoom > 9)
+                        uiZoom = 1;
 
                     /* Trigger the Draw function to rezoom (which will be set false automatically after rezooming) */
                     bRecreateOffscreenDC = TRUE;

@@ -12,7 +12,7 @@
 #include <tchar.h>
 #include <winreg.h>
 
-int iZoom = 3;
+UINT uiZoom = 3;
 
 BOOL bShowWarning = TRUE;
 
@@ -50,38 +50,38 @@ void LoadSettings()
             }
         }
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryMagLevel"),  0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
         {
             if (value >= 0 && value <= 9)
-                iZoom  = value;
+                uiZoom = value;
         }
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("ShowWarning"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bShowWarning = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryInvertColors"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bInvertColors = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryStartMinimized"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bStartMinimized = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryTrackCursor"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bFollowMouse = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryTrackFocus"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bFollowFocus = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryTrackSecondaryFocus"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bFollowFocus = (value == 0 ? FALSE : TRUE);
 
-        len = 4;
+        len = sizeof(value);
         if (RegQueryValueEx(hkey, _T("StationaryTrackText"), 0, 0, (BYTE *)&value, &len) == ERROR_SUCCESS)
             bFollowCaret = (value == 0 ? FALSE : TRUE);
 
@@ -98,7 +98,7 @@ void SaveSettings()
     {
         RegSetValueEx(hkey, _T("AppBar"), 0, REG_BINARY, (BYTE *)&AppBarConfig, sizeof(AppBarConfig));
 
-        value = iZoom;
+        value = uiZoom;
         RegSetValueEx(hkey, _T("StationaryMagLevel"), 0, REG_DWORD, (BYTE *)&value, sizeof(value));
 
         value = bShowWarning;

@@ -24,7 +24,7 @@
 #include <stdarg.h>
 #include <windef.h>
 
-extern int iZoom;
+extern UINT uiZoom;
 
 struct _AppBarConfig_t {
     DWORD cbSize;
