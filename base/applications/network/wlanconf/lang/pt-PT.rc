@@ -1,0 +1,37 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nConfiguração do adaptador WLAN.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tliga ao SSID fornecido,\n\
+\t-w WEP\t\tEspecifica uma chave WEP para uso.\n\
+\t-a\t\tEspecifica se a rede de destino é ad-hoc\n\
+\t-d\t\tDesliga o actual Ponto de acesso.\n\
+\t-s\t\tPreenche e exibe a lista de pontos de acesso\n\
+\t\t\tna faixa.\n\n\
+Sem parâmetros, irá imprimir informações sobre a ligação WLAN actual\n"
+    IDS_NO_NETWORK "Nenhuma rede encontrada no intervalo\n"
+    IDS_NO_WLAN_ADAPTER "Não foi possível encontrar um adaptador WLAN no sistema\n"
+    IDS_SUCCESS "A operação terminada com sucesso.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN desligada\n"
+    IDS_MSG_WEP_ENABLED "WEP habilitada: %s\n"
+    IDS_MSG_NETWORK_MODE "Modo de rede: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformações actuais de configuração sem fios:\n\n"
+    IDS_MSG_ENCRYPTED "Encriptado: %s\n"
+    IDS_MSG_NETWORK_TYPE "Tipo de rede: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Taxas suportadas (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Potência de transmissão: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Contagem de antenas: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antena de transmissão: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena de transmissão: nenhuma\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antena de recepção: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena de recepção: nenhuma\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Limiar de fragmentação: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Limiar RTS: %d bytes\n"
+    IDS_YES "Sim"
+    IDS_NO "Não"
+    IDS_ADHOC "Ad-hoc"
+    IDS_INFRASTRUCTURE "Infra-estrutura"
+END
