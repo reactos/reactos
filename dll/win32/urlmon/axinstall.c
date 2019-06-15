@@ -72,13 +72,142 @@ static inline BOOL file_exists(const WCHAR *file_name)
     return GetFileAttributesW(file_name) != INVALID_FILE_ATTRIBUTES;
 }
 
+#ifdef __REACTOS__
+
+/* The following definitions were copied from dll/win32/advpack32/files.c */
+
+/* SESSION Operation */
+#define EXTRACT_FILLFILELIST  0x00000001
+#define EXTRACT_EXTRACTFILES  0x00000002
+
+struct FILELIST{
+    LPSTR FileName;
+    struct FILELIST *next;
+    BOOL DoExtract;
+};
+
+typedef struct {
+    INT FileSize;
+    ERF Error;
+    struct FILELIST *FileList;
+    INT FileCount;
+    INT Operation;
+    CHAR Destination[MAX_PATH];
+    CHAR CurrentFile[MAX_PATH];
+    CHAR Reserved[MAX_PATH];
+    struct FILELIST *FilterList;
+} SESSION;
+
+static HRESULT (WINAPI *pExtract)(SESSION*, LPCSTR);
+
+
+/* The following functions were copied from dll/win32/advpack32/files.c
+   All unused arguments are removed */
+
+static void free_file_node(struct FILELIST *pNode)
+{
+    HeapFree(GetProcessHeap(), 0, pNode->FileName);
+    HeapFree(GetProcessHeap(), 0, pNode);
+}
+
+static void free_file_list(SESSION* session)
+{
+    struct FILELIST *next, *curr = session->FileList;
+
+    while (curr)
+    {
+        next = curr->next;
+        free_file_node(curr);
+        curr = next;
+    }
+}
+
+HRESULT WINAPI Modified_ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir)
+{   
+    SESSION session;
+    HMODULE hCabinet;
+    HRESULT res = S_OK;
+    LPSTR szConvertedList = NULL;
+
+    TRACE("(%s, %s)\n", debugstr_a(CabName), debugstr_a(ExpandDir));
+
+    if (!CabName || !ExpandDir)
+        return E_INVALIDARG;
+
+    if (GetFileAttributesA(ExpandDir) == INVALID_FILE_ATTRIBUTES)
+        return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+
+    hCabinet = LoadLibraryA("cabinet.dll");
+    if (!hCabinet)
+        return E_FAIL;
+
+    ZeroMemory(&session, sizeof(SESSION));
+
+    pExtract = (void *)GetProcAddress(hCabinet, "Extract");
+    if (!pExtract)
+    {
+        res = E_FAIL;
+        goto done;
+    }
+
+    lstrcpyA(session.Destination, ExpandDir);
+
+    session.Operation |= (EXTRACT_FILLFILELIST | EXTRACT_EXTRACTFILES);
+    res = pExtract(&session, CabName);
+
+done:
+    free_file_list(&session);
+    FreeLibrary(hCabinet);
+    HeapFree(GetProcessHeap(), 0, szConvertedList);
+
+    return res;
+}
+
+
+
+HRESULT WINAPI Modified_ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir)
+{
+    char *cab_name = NULL, *expand_dir = NULL;
+    HRESULT hres = S_OK;
+
+    TRACE("(%s, %s, %d)\n", debugstr_w(CabName), debugstr_w(ExpandDir));
+
+    if(CabName) {
+        cab_name = heap_strdupWtoA(CabName);
+        if(!cab_name)
+            return E_OUTOFMEMORY;
+    }
+
+    if(ExpandDir) {
+        expand_dir = heap_strdupWtoA(ExpandDir);
+        if(!expand_dir)
+            hres = E_OUTOFMEMORY;
+    }
+
+    /* cabinet.dll, which does the real job of extracting files, doesn't have UNICODE API,
+    so we need W->A conversion at some point anyway. */
+    if(SUCCEEDED(hres))
+        hres = Modified_ExtractFilesA(cab_name, expand_dir);
+
+    heap_free(cab_name);
+    heap_free(expand_dir);
+    return hres;
+}
+
+#endif
+
+
 static HRESULT extract_cab_file(install_ctx_t *ctx)
 {
     size_t path_len, file_len;
     WCHAR *ptr;
     HRESULT hres;
 
+#ifdef __REACTOS__
+    hres = Modified_ExtractFilesW(ctx->cache_file, ctx->tmp_dir);
+#else
     hres = ExtractFilesW(ctx->cache_file, ctx->tmp_dir, 0, NULL, NULL, 0);
+#endif
     if(FAILED(hres)) {
         WARN("ExtractFilesW failed: %08x\n", hres);
         return hres;
