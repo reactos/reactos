@@ -44,7 +44,6 @@ typedef struct {
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
 /* function declarations */
-BOOL ParseCmdline(int argc, char* argv[]);
 BOOL DisplayOutput(VOID);
 DWORD DoFormatMessage(DWORD ErrorCode);
 VOID ShowIpStatistics(VOID);
@@ -56,4 +55,3 @@ VOID ShowTcpTable(VOID);
 VOID ShowUdpTable(VOID);
 PCHAR GetPortName(UINT Port, PCSTR Proto, CHAR Name[PORTNAMELEN], INT NameLen);
 PCHAR GetIpHostName(BOOL local, UINT ipaddr, CHAR name[HOSTNAMELEN], int namelen);
-VOID Usage(VOID);

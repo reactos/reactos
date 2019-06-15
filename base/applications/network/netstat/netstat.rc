@@ -1,5 +1,16 @@
-#define REACTOS_STR_FILE_DESCRIPTION   "ReactOS TCP/IPv4 Win32 netstat"
-#define REACTOS_STR_INTERNAL_NAME      "netstat"
-#define REACTOS_STR_ORIGINAL_FILENAME  "netstat.exe"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT "Ged Murphy (gedmurphy@gmail.com)"
+#include <windef.h>
+#include <winuser.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Network Statistics Utility"
+#define REACTOS_STR_INTERNAL_NAME       "netstat"
+#define REACTOS_STR_ORIGINAL_FILENAME   "netstat.exe"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT  "Ged Murphy (gedmurphy@gmail.com)"
 #include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif

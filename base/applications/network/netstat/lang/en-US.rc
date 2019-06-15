@@ -1,0 +1,109 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nDisplays current TCP/IP protocol statistics and network connections.\n\n\
+NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
+  -a            Displays all connections and listening ports.\n\
+  -e            Displays Ethernet statistics. May be combined with -s\n\
+                option\n\
+  -n            Displays address and port numbers in numeric form.\n\
+  -o            Displays the process ID for each connection.\n\
+  -p proto      Shows connections for protocol 'proto' TCP or UDP.\n\
+                If used with the -s option to display\n\
+                per-protocol statistics, 'proto' may be TCP, UDP, or IP.\n\
+  -r            Displays the current routing table.\n\
+  -s            Displays per-protocol statistics. By default, Statistics are\n\
+                shown for IP, ICMP, TCP and UDP;\n\
+                the -p option may be used to specify a subset of the default.\n\
+  interval      Redisplays selected statistics every 'interval' seconds.\n\
+                Press CTRL+C to stop redisplaying. By default netstat will\n\
+                print the current information only once.\n\n"
+    IDS_DISPLAY_THEADER "\n  Proto  Local Address          Foreign Address        State"
+    IDS_DISPLAY_PROCESS "       Process\n"
+    IDS_ACTIVE_CONNECT "\nActive Connections\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IP4_STAT_HEADER "\nIPv4 Statistics\n\n"
+    IDS_IP_PACK_REC            "  Packets Received                  = %lu\n"
+    IDS_IP_HEAD_REC_ERROR      "  Received Header Errors            = %lu\n"
+    IDS_IP_ADDR_REC_ERROR      "  Received Address Errors           = %lu\n"
+    IDS_IP_DATAG_FWD           "  Datagrams Forwarded               = %lu\n"
+    IDS_IP_UNKNOWN_PRO_REC     "  Unknown Protocols Received        = %lu\n"
+    IDS_IP_REC_PACK_DISCARD    "  Received Packets Discarded        = %lu\n"
+    IDS_IP_REC_PACK_DELIVER    "  Received Packets Delivered        = %lu\n"
+    IDS_IP_OUT_REQUEST         "  Output Requests                   = %lu\n"
+    IDS_IP_ROUTE_DISCARD       "  Routing Discards                  = %lu\n"
+    IDS_IP_DISCARD_OUT_PACK    "  Discarded Output Packets          = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packets No Route           = %lu\n"
+    IDS_IP_REASSEMBLE_REQUIRED "  Reassembly Required               = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Succesful              = %lu\n"
+    IDS_IP_REASSEMBLE_FAILURE  "  Reassembly Failures               = %lu\n"
+    IDS_IP_DATAG_FRAG_SUCCESS  "  Datagrams Successfully Fragmented = %lu\n"
+    IDS_IP_DATAG_FRAG_FAILURE  "  Datagrams Failing Fragmentation   = %lu\n"
+    IDS_IP_DATAG_FRAG_CREATE   "  Fragments Created                 = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ICMP4_STAT_HEADER "\nICMPv4 Statistics\n\n"
+    IDS_ICMP_THEADER "                            Received    Sent\n"
+    IDS_ICMP_MSG                 "  Messages                  %-11lu %lu\n"
+    IDS_ICMP_ERROR               "  Errors                    %-11lu %lu\n"
+    IDS_ICMP_DEST_UNREACH        "  Destination Unreachable   %-11lu %lu\n"
+    IDS_ICMP_TIME_EXCEED         "  Time Exceeded             %-11lu %lu\n"
+    IDS_ICMP_PARAM_PROBLEM       "  Parameter Problems        %-11lu %lu\n"
+    IDS_ICMP_SRC_QUENCHES        "  Source Quenches           %-11lu %lu\n"
+    IDS_ICMP_REDIRECT            "  Redirects                 %-11lu %lu\n"
+    IDS_ICMP_ECHO                "  Echos                     %-11lu %lu\n"
+    IDS_ICMP_ECHO_REPLY          "  Echo Replies              %-11lu %lu\n"
+    IDS_ICMP_TIMESTAMP           "  Timestamps                %-11lu %lu\n"
+    IDS_ICMP_TIMESTAMP_REPLY     "  Timestamp Replies         %-11lu %lu\n"
+    IDS_ICMP_ADDRESSS_MASK       "  Address Masks             %-11lu %lu\n"
+    IDS_ICMP_ADDRESSS_MASK_REPLY "  Address Mask Replies      %-11lu %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TCP4_HEADER         "\nTCP Statistics for IPv4\n\n"
+    IDS_TCP_ACTIVE_OPEN     "  Active Opens               = %lu\n"
+    IDS_TCP_PASS_OPEN       "  Passive Opens              = %lu\n"
+    IDS_TCP_FAIL_CONNECT    "  Failed Connection Attempts = %lu\n"
+    IDS_TCP_RESET_CONNECT   "  Reset Connections          = %lu\n"
+    IDS_TCP_CURRENT_CONNECT "  Current Connections        = %lu\n"
+    IDS_TCP_SEG_RECEIVE     "  Segments Received          = %lu\n"
+    IDS_TCP_SEG_SENT        "  Segments Sent              = %lu\n"
+    IDS_TCP_SEG_RETRANSMIT  "  Segments Retransmitted     = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UDP_IP4_HEADER    "\nUDP Statistics for IPv4\n\n"
+    IDS_UDP_DATAG_RECEIVE "  Datagrams Received = %lu\n"
+    IDS_UDP_NO_PORT       "  No Ports           = %lu\n"
+    IDS_UDP_RECEIVE_ERROR "  Receive Errors     = %lu\n"
+    IDS_UDP_DATAG_SEND    "  Datagrams Sent     = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ETHERNET_INTERFACE_STAT     "Interface Statistics\n\n"
+    IDS_ETHERNET_THEADER            "                           Received            Sent\n\n"
+    IDS_ETHERNET_BYTES              "  Bytes               %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "  Unicast packets     %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "  Non-unicast packets %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "  Discards            %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "  Errors              %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "  Unknown Protocols   %14lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_WSA_START "ERROR: WSAStartup() failed : %d\n"
+    IDS_ERROR_ROUTE "ERROR: Cannot find 'route.exe'\n"
+    IDS_ERROR_TCP_SNAPSHOT "ERROR: Failed to snapshot TCP endpoints.\n"
+    IDS_ERROR_UDP_ENDPOINT "ERROR: Failed to snapshot UDP endpoints.\n"
+    IDS_ERROR_UDP_ENDPOINT_TABLE "ERROR: Failed to snapshot UDP endpoints table.\n"
+END

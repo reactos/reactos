@@ -19,31 +19,34 @@
 #include <winbase.h>
 #define _INC_WINDOWS
 #include <winsock2.h>
-#include <tchar.h>
+#include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iphlpapi.h>
 
+#include <conutils.h>
+
 #include "netstat.h"
+#include "resource.h"
 
 enum ProtoType {IP, TCP, UDP, ICMP} Protocol;
 DWORD Interval; /* time to pause between printing output */
 
 /* TCP endpoint states */
-TCHAR TcpState[][32] = {
-    _T("???"),
-    _T("CLOSED"),
-    _T("LISTENING"),
-    _T("SYN_SENT"),
-    _T("SYN_RCVD"),
-    _T("ESTABLISHED"),
-    _T("FIN_WAIT1"),
-    _T("FIN_WAIT2"),
-    _T("CLOSE_WAIT"),
-    _T("CLOSING"),
-    _T("LAST_ACK"),
-    _T("TIME_WAIT"),
-    _T("DELETE_TCB")
+PCWSTR TcpState[] = {
+    L"???",
+    L"CLOSED",
+    L"LISTENING",
+    L"SYN_SENT",
+    L"SYN_RCVD",
+    L"ESTABLISHED",
+    L"FIN_WAIT1",
+    L"FIN_WAIT2",
+    L"CLOSE_WAIT",
+    L"CLOSING",
+    L"LAST_ACK",
+    L"TIME_WAIT",
+    L"DELETE_TCB"
 };
 
 /*
@@ -61,11 +64,11 @@ DWORD DoFormatMessage(DWORD ErrorCode)
             NULL,
             ErrorCode,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-            (LPTSTR) &lpMsgBuf,
+            (LPWSTR) &lpMsgBuf,
             0,
             NULL )))
     {
-        _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
+        wprintf(L"%s", (LPWSTR)lpMsgBuf);
 
         LocalFree(lpMsgBuf);
         /* return number of TCHAR's stored in output buffer
@@ -81,83 +84,84 @@ DWORD DoFormatMessage(DWORD ErrorCode)
  * Parse command line parameters and set any options
  *
  */
-BOOL ParseCmdline(int argc, char* argv[])
+BOOL ParseCmdline(int argc, wchar_t* argv[])
 {
-    LPSTR Proto;
-    CHAR c;
+    LPWSTR Proto;
+    WCHAR c;
     INT i;
 
-    if ((argc == 1) || (_istdigit(*argv[1])))
+    if ((argc == 1) || (iswdigit(*argv[1])))
         bNoOptions = TRUE;
 
     /* Parse command line for options we have been given. */
     for (i = 1; i < argc; i++)
     {
-        if ((argc > 1) && (argv[i][0] == '-' || argv[i][0] == '/'))
+        if ((argc > 1) && (argv[i][0] == L'-' || argv[i][0] == L'/'))
         {
-            while ((c = *++argv[i]) != '\0')
+            while ((c = *++argv[i]) != L'\0')
             {
-                switch (tolower(c))
+                switch (towlower(c))
                 {
-                    case 'a' :
+                    case L'a':
                         bDoShowAllCons = TRUE;
                         break;
-                    case 'b' :
+                    case L'b':
                         bDoShowProcName = TRUE;
                         break;
-                    case 'e' :
+                    case L'e':
                         bDoShowEthStats = TRUE;
                         break;
-                    case 'n' :
+                    case L'n':
                         bDoShowNumbers = TRUE;
                         break;
-                    case 'p' :
+                    case L'p':
                         bDoShowProtoCons = TRUE;
                         Proto = argv[i+1];
-                        if (!_stricmp("IP", Proto))
+                        if (!_wcsicmp(L"IP", Proto))
                             Protocol = IP;
-                        else if (!_stricmp("ICMP", Proto))
+                        else if (!_wcsicmp(L"ICMP", Proto))
                             Protocol = ICMP;
-                        else if (!_stricmp("TCP", Proto))
+                        else if (!_wcsicmp(L"TCP", Proto))
                             Protocol = TCP;
-                        else if (!_stricmp("UDP", Proto))
+                        else if (!_wcsicmp(L"UDP", Proto))
                             Protocol = UDP;
                         else
                         {
-                            Usage();
+                            ConResPuts(StdOut, IDS_USAGE);
                             return EXIT_FAILURE;
                         }
                         break;
-                    case 'r' :
+                    case L'r':
                         bDoShowRouteTable = TRUE;
                         break;
-                    case 's' :
+                    case L's':
                         bDoShowProtoStats = TRUE;
                         break;
-                    case 'o' :
+                    case L'o':
                         bDoShowProcessId = TRUE;
                         break;
-                    case 'v' :
-                        _tprintf(_T("got v\n"));
+                    case L'v':
+                        // FIXME!
+                        ConPuts(StdOut, L"got v\n");
                         bDoDispSeqComp = TRUE;
                         break;
                     default :
-                        Usage();
+                        ConResPuts(StdOut, IDS_USAGE);
                         return EXIT_FAILURE;
                 }
             }
         }
-        else if (_istdigit(*argv[i]))
+        else if (iswdigit(*argv[i]) != 0)
         {
-            if (_stscanf(argv[i], "%lu", &Interval) != EOF)
+            if (swscanf(argv[i], L"%lu", &Interval) != EOF)
                 bLoopOutput = TRUE;
             else
                 return EXIT_FAILURE;
         }
 //        else
 //        {
-//            Usage();
-//            EXIT_FAILURE;
+//            ConResPrintf(StdOut, IDS_USAGE);
+//            return EXIT_FAILURE;
 //        }
     }
 
@@ -169,11 +173,11 @@ BOOL ParseCmdline(int argc, char* argv[])
  */
 VOID DisplayTableHeader()
 {
-    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State"));
+    ConResPuts(StdOut, IDS_DISPLAY_THEADER);
     if (bDoShowProcessId)
-        _tprintf(_T("       Process\n"));
+        ConResPuts(StdOut, IDS_DISPLAY_PROCESS);
     else
-        _tprintf(_T("\n"));
+        ConPuts(StdOut, L"\n");
 }
 
 
@@ -194,7 +198,7 @@ BOOL DisplayOutput()
         /* mingw doesn't have lib for _tsystem */
         if (system("route print") == -1)
         {
-            _tprintf(_T("cannot find 'route.exe'\n"));
+            ConResPuts(StdErr, IDS_ERROR_ROUTE);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -210,31 +214,31 @@ BOOL DisplayOutput()
     {
         switch (Protocol)
         {
-                case IP :
+                case IP:
                     if (bDoShowProtoStats)
                     {
                         ShowIpStatistics();
                         return EXIT_SUCCESS;
                     }
                     break;
-                case ICMP :
+                case ICMP:
                     if (bDoShowProtoStats)
                     {
                         ShowIcmpStatistics();
                         return EXIT_SUCCESS;
                     }
                     break;
-                case TCP :
+                case TCP:
                     if (bDoShowProtoStats)
                         ShowTcpStatistics();
-                    _tprintf(_T("\nActive Connections\n"));
+                    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                     DisplayTableHeader();
                     ShowTcpTable();
                     break;
-                case UDP :
+                case UDP:
                     if (bDoShowProtoStats)
                         ShowUdpStatistics();
-                    _tprintf(_T("\nActive Connections\n"));
+                    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                     DisplayTableHeader();
                     ShowUdpTable();
                     break;
@@ -252,7 +256,7 @@ BOOL DisplayOutput()
     }
     else
     {
-        _tprintf(_T("\nActive Connections\n"));
+        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         ShowTcpTable();
         if (bDoShowAllCons)
@@ -270,27 +274,29 @@ VOID ShowIpStatistics()
 
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
-        _tprintf(_T("\nIPv4 Statistics\n\n"));
-        _tprintf(_T("  %-34s = %lu\n"), _T("Packets Received"), pIpStats->dwInReceives);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Received Header Errors"), pIpStats->dwInHdrErrors);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Received Address Errors"), pIpStats->dwInAddrErrors);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams Forwarded"), pIpStats->dwForwDatagrams);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Unknown Protocols Received"), pIpStats->dwInUnknownProtos);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Received Packets Discarded"), pIpStats->dwInDiscards);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Received Packets Delivered"), pIpStats->dwInDelivers);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Output Requests"), pIpStats->dwOutRequests);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Routing Discards"), pIpStats->dwRoutingDiscards);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Discarded Output Packets"), pIpStats->dwOutDiscards);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Output Packets No Route"), pIpStats->dwOutNoRoutes);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Required"), pIpStats->dwReasmReqds);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Succesful"), pIpStats->dwReasmOks);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Reassembly Failures"), pIpStats->dwReasmFails);
-       // _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams successfully fragmented"), NULL); /* FIXME: what is this one? */
-        _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams Failing Fragmentation"), pIpStats->dwFragFails);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Fragments Created"), pIpStats->dwFragCreates);
+        ConResPuts(StdOut, IDS_IP4_STAT_HEADER);
+        ConResPrintf(StdOut, IDS_IP_PACK_REC, pIpStats->dwInReceives);
+        ConResPrintf(StdOut, IDS_IP_HEAD_REC_ERROR, pIpStats->dwInHdrErrors);
+        ConResPrintf(StdOut, IDS_IP_ADDR_REC_ERROR, pIpStats->dwInAddrErrors);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FWD, pIpStats->dwForwDatagrams);
+        ConResPrintf(StdOut, IDS_IP_UNKNOWN_PRO_REC, pIpStats->dwInUnknownProtos);
+        ConResPrintf(StdOut, IDS_IP_REC_PACK_DISCARD, pIpStats->dwInDiscards);
+        ConResPrintf(StdOut, IDS_IP_REC_PACK_DELIVER, pIpStats->dwInDelivers);
+        ConResPrintf(StdOut, IDS_IP_OUT_REQUEST, pIpStats->dwOutRequests);
+        ConResPrintf(StdOut, IDS_IP_ROUTE_DISCARD, pIpStats->dwRoutingDiscards);
+        ConResPrintf(StdOut, IDS_IP_DISCARD_OUT_PACK, pIpStats->dwOutDiscards);
+        ConResPrintf(StdOut, IDS_IP_OUT_PACKET_NO_ROUTE, pIpStats->dwOutNoRoutes);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_REQUIRED, pIpStats->dwReasmReqds);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_SUCCESS, pIpStats->dwReasmOks);
+        ConResPrintf(StdOut, IDS_IP_REASSEMBLE_FAILURE, pIpStats->dwReasmFails);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_SUCCESS, pIpStats->dwFragOks);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_FAILURE, pIpStats->dwFragFails);
+        ConResPrintf(StdOut, IDS_IP_DATAG_FRAG_CREATE, pIpStats->dwFragCreates);
     }
     else
+    {
         DoFormatMessage(dwRetVal);
+    }
 
     HeapFree(GetProcessHeap(), 0, pIpStats);
 }
@@ -304,37 +310,39 @@ VOID ShowIcmpStatistics()
 
     if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
     {
-        _tprintf(_T("\nICMPv4 Statistics\n\n"));
-        _tprintf(_T("                            Received    Sent\n"));
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Messages"),
+        ConResPuts(StdOut, IDS_ICMP4_STAT_HEADER);
+        ConResPuts(StdOut, IDS_ICMP_THEADER);
+        ConResPrintf(StdOut, IDS_ICMP_MSG,
             pIcmpStats->stats.icmpInStats.dwMsgs, pIcmpStats->stats.icmpOutStats.dwMsgs);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Errors"),
+        ConResPrintf(StdOut, IDS_ICMP_ERROR,
             pIcmpStats->stats.icmpInStats.dwErrors, pIcmpStats->stats.icmpOutStats.dwErrors);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Destination Unreachable"),
+        ConResPrintf(StdOut, IDS_ICMP_DEST_UNREACH,
             pIcmpStats->stats.icmpInStats.dwDestUnreachs, pIcmpStats->stats.icmpOutStats.dwDestUnreachs);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Time Exceeded"),
+        ConResPrintf(StdOut, IDS_ICMP_TIME_EXCEED,
             pIcmpStats->stats.icmpInStats.dwTimeExcds, pIcmpStats->stats.icmpOutStats.dwTimeExcds);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Parameter Problems"),
+        ConResPrintf(StdOut, IDS_ICMP_PARAM_PROBLEM,
             pIcmpStats->stats.icmpInStats.dwParmProbs, pIcmpStats->stats.icmpOutStats.dwParmProbs);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Source Quenches"),
+        ConResPrintf(StdOut, IDS_ICMP_SRC_QUENCHES,
             pIcmpStats->stats.icmpInStats.dwSrcQuenchs, pIcmpStats->stats.icmpOutStats.dwSrcQuenchs);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Redirects"),
+        ConResPrintf(StdOut, IDS_ICMP_REDIRECT,
             pIcmpStats->stats.icmpInStats.dwRedirects, pIcmpStats->stats.icmpOutStats.dwRedirects);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Echos"),
+        ConResPrintf(StdOut, IDS_ICMP_ECHO,
             pIcmpStats->stats.icmpInStats.dwEchos, pIcmpStats->stats.icmpOutStats.dwEchos);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Echo Replies"),
+        ConResPrintf(StdOut, IDS_ICMP_ECHO_REPLY,
             pIcmpStats->stats.icmpInStats.dwEchoReps, pIcmpStats->stats.icmpOutStats.dwEchoReps);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Timestamps"),
+        ConResPrintf(StdOut, IDS_ICMP_TIMESTAMP,
             pIcmpStats->stats.icmpInStats.dwTimestamps, pIcmpStats->stats.icmpOutStats.dwTimestamps);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Timestamp Replies"),
+        ConResPrintf(StdOut, IDS_ICMP_TIMESTAMP_REPLY,
             pIcmpStats->stats.icmpInStats.dwTimestampReps, pIcmpStats->stats.icmpOutStats.dwTimestampReps);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Address Masks"),
+        ConResPrintf(StdOut, IDS_ICMP_ADDRESSS_MASK,
             pIcmpStats->stats.icmpInStats.dwAddrMasks, pIcmpStats->stats.icmpOutStats.dwAddrMasks);
-        _tprintf(_T("  %-25s %-11lu %lu\n"), _T("Address Mask Replies"),
+        ConResPrintf(StdOut, IDS_ICMP_ADDRESSS_MASK_REPLY,
             pIcmpStats->stats.icmpInStats.dwAddrMaskReps, pIcmpStats->stats.icmpOutStats.dwAddrMaskReps);
     }
     else
+    {
         DoFormatMessage(dwRetVal);
+    }
 
     HeapFree(GetProcessHeap(), 0, pIcmpStats);
 
@@ -349,18 +357,20 @@ VOID ShowTcpStatistics()
 
     if ((dwRetVal = GetTcpStatistics(pTcpStats)) == NO_ERROR)
     {
-        _tprintf(_T("\nTCP Statistics for IPv4\n\n"));
-        _tprintf(_T("  %-35s = %lu\n"), _T("Active Opens"), pTcpStats->dwActiveOpens);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Passive Opens"), pTcpStats->dwPassiveOpens);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Failed Connection Attempts"), pTcpStats->dwAttemptFails);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Reset Connections"), pTcpStats->dwEstabResets);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Current Connections"), pTcpStats->dwCurrEstab);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Received"), pTcpStats->dwInSegs);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Sent"), pTcpStats->dwOutSegs);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Retransmitted"), pTcpStats->dwRetransSegs);
+        ConResPuts(StdOut, IDS_TCP4_HEADER);
+        ConResPrintf(StdOut, IDS_TCP_ACTIVE_OPEN, pTcpStats->dwActiveOpens);
+        ConResPrintf(StdOut, IDS_TCP_PASS_OPEN, pTcpStats->dwPassiveOpens);
+        ConResPrintf(StdOut, IDS_TCP_FAIL_CONNECT, pTcpStats->dwAttemptFails);
+        ConResPrintf(StdOut, IDS_TCP_RESET_CONNECT, pTcpStats->dwEstabResets);
+        ConResPrintf(StdOut, IDS_TCP_CURRENT_CONNECT, pTcpStats->dwCurrEstab);
+        ConResPrintf(StdOut, IDS_TCP_SEG_RECEIVE, pTcpStats->dwInSegs);
+        ConResPrintf(StdOut, IDS_TCP_SEG_SENT, pTcpStats->dwOutSegs);
+        ConResPrintf(StdOut, IDS_TCP_SEG_RETRANSMIT, pTcpStats->dwRetransSegs);
     }
     else
+    {
         DoFormatMessage(dwRetVal);
+    }
 
     HeapFree(GetProcessHeap(), 0, pTcpStats);
 }
@@ -374,14 +384,16 @@ VOID ShowUdpStatistics()
 
     if ((dwRetVal = GetUdpStatistics(pUdpStats)) == NO_ERROR)
     {
-        _tprintf(_T("\nUDP Statistics for IPv4\n\n"));
-        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Received"), pUdpStats->dwInDatagrams);
-        _tprintf(_T("  %-21s = %lu\n"), _T("No Ports"), pUdpStats->dwNoPorts);
-        _tprintf(_T("  %-21s = %lu\n"), _T("Receive Errors"), pUdpStats->dwInErrors);
-        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Sent"), pUdpStats->dwOutDatagrams);
+        ConResPuts(StdOut, IDS_UDP_IP4_HEADER);
+        ConResPrintf(StdOut, IDS_UDP_DATAG_RECEIVE, pUdpStats->dwInDatagrams);
+        ConResPrintf(StdOut, IDS_UDP_NO_PORT, pUdpStats->dwNoPorts);
+        ConResPrintf(StdOut, IDS_UDP_RECEIVE_ERROR, pUdpStats->dwInErrors);
+        ConResPrintf(StdOut, IDS_UDP_DATAG_SEND, pUdpStats->dwOutDatagrams);
     }
     else
+    {
         DoFormatMessage(dwRetVal);
+    }
 
     HeapFree(GetProcessHeap(), 0, pUdpStats);
 }
@@ -401,23 +413,25 @@ VOID ShowEthernetStatistics()
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
-            _tprintf(_T("Interface Statistics\n\n"));
-            _tprintf(_T("                           Received            Sent\n\n"));
-            _tprintf(_T("%-20s %14lu %15lu\n"), _T("Bytes"),
+            ConResPuts(StdOut, IDS_ETHERNET_INTERFACE_STAT);
+            ConResPuts(StdOut, IDS_ETHERNET_THEADER);
+            ConResPrintf(StdOut, IDS_ETHERNET_BYTES,
                 pIfTable->table[0].dwInOctets, pIfTable->table[0].dwOutOctets);
-            _tprintf(_T("%-20s %14lu %15lu\n"), _T("Unicast packets"),
+            ConResPrintf(StdOut, IDS_ETHERNET_UNICAST_PACKET,
                 pIfTable->table[0].dwInUcastPkts, pIfTable->table[0].dwOutUcastPkts);
-            _tprintf(_T("%-20s %14lu %15lu\n"), _T("Non-unicast packets"),
+            ConResPrintf(StdOut, IDS_ETHERNET_NON_UNICAST_PACKET,
                 pIfTable->table[0].dwInNUcastPkts, pIfTable->table[0].dwOutNUcastPkts);
-            _tprintf(_T("%-20s %14lu %15lu\n"), _T("Discards"),
+            ConResPrintf(StdOut, IDS_ETHERNET_DISCARD,
                 pIfTable->table[0].dwInDiscards, pIfTable->table[0].dwOutDiscards);
-            _tprintf(_T("%-20s %14lu %15lu\n"), _T("Errors"),
+            ConResPrintf(StdOut, IDS_ETHERNET_ERROR,
                 pIfTable->table[0].dwInErrors, pIfTable->table[0].dwOutErrors);
-            _tprintf(_T("%-20s %14lu\n"), _T("Unknown Protocols"),
+            ConResPrintf(StdOut, IDS_ETHERNET_UNKNOWN,
                 pIfTable->table[0].dwInUnknownProtos);
         }
         else
+        {
             DoFormatMessage(dwRetVal);
+        }
     }
     HeapFree(GetProcessHeap(), 0, pIfTable);
 }
@@ -448,7 +462,7 @@ VOID ShowTcpTable()
 
     if (error != NO_ERROR)
     {
-        printf("Failed to snapshot TCP endpoints.\n");
+        ConResPrintf(StdErr, IDS_ERROR_TCP_SNAPSHOT);
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
@@ -487,8 +501,8 @@ VOID ShowTcpTable()
                 PID[0] = 0;
             }
 
-            _tprintf(_T("  %-6s %-22s %-22s %-11s %s\n"), _T("TCP"),
-            Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
+            ConPuts(StdOut, L"  %-6s %-22s %-22s %-11s %s\n", L"TCP",
+                    Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
     }
     HeapFree(GetProcessHeap(), 0, tcpTable);
@@ -508,7 +522,7 @@ VOID ShowUdpTable()
     error = GetExtendedUdpTable(NULL, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error != ERROR_INSUFFICIENT_BUFFER)
     {
-        printf("Failed to snapshot UDP endpoints.\n");
+        ConResPuts(StdErr, IDS_ERROR_UDP_ENDPOINT);
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
@@ -516,7 +530,7 @@ VOID ShowUdpTable()
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
-        printf("Failed to snapshot UDP endpoints table.\n");
+        ConResPuts(StdErr, IDS_ERROR_UDP_ENDPOINT_TABLE);
         DoFormatMessage(error);
         HeapFree(GetProcessHeap(), 0, udpTable);
         exit(EXIT_FAILURE);
@@ -541,7 +555,7 @@ VOID ShowUdpTable()
             PID[0] = 0;
         }
 
-        _tprintf(_T("  %-6s %-22s %-34s %s\n"), _T("UDP"), Host,  _T("*:*"), PID);
+        ConPuts(StdOut, L"  %-6s %-22s %-34s %s\n", L"UDP", Host, L"*:*", PID);
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
@@ -588,7 +602,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
         return Name;
     }
 
-    Name[0] = _T('\0');
+    Name[0] = '\0';
 
     /* try to resolve the name */
     if (!IpAddr) {
@@ -607,7 +621,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
             if (gethostname(Name, NameLen) != 0)
                 DoFormatMessage(WSAGetLastError());
         } else {
-            _tcsncpy(Name, _T("localhost"), 10);
+            strncpy(Name, "localhost", 10);
         }
 //  } else if (phostent = gethostbyaddr((char*)&ipaddr, sizeof(nipaddr), PF_INET)) {
 //      strcpy(name, phostent->h_name);
@@ -621,40 +635,22 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
     return Name;
 }
 
-VOID Usage()
-{
-    _tprintf(_T("\nDisplays current TCP/IP protocol statistics and network connections.\n\n"
-    "NETSTAT [-a] [-e] [-n] [-p proto] [-r] [-s] [interval]\n\n"
-    "  -a            Displays all connections and listening ports.\n"
-    "  -e            Displays Ethernet statistics. May be combined with -s\n"
-    "                option\n"
-    "  -n            Displays address and port numbers in numeric form.\n"
-    "  -p proto      Shows connections for protocol 'proto' TCP or UDP.\n"
-    "                If used with the -s option to display\n"
-    "                per-protocol statistics, 'proto' may be TCP, UDP, or IP.\n"
-    "  -r            Displays the current routing table.\n"
-    "  -s            Displays per-protocol statistics. By default, Statistics are\n"
-    "                shown for IP, ICMP, TCP and UDP;\n"
-    "                the -p option may be used to specify a subset of the default.\n"
-    " -o             Displays the process ID for each connection.\n"
-    "  interval      Redisplays selected statistics every 'interval' seconds.\n"
-    "                Press CTRL+C to stop redisplaying. By default netstat will\n"
-    "                print the current information only once.\n"));
-}
-
 /*
  *
  * Parse command line parameters and set any options
  * Run display output, looping over set intervals if a number is given
  *
  */
-int main(int argc, char *argv[])
+int wmain(int argc, wchar_t *argv[])
 {
     WSADATA wsaData;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
-        _tprintf(_T("WSAStartup() failed : %d\n"), WSAGetLastError());
+        ConResPrintf(StdErr, IDS_ERROR_WSA_START, WSAGetLastError());
         return -1;
     }
 
