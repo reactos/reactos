@@ -444,8 +444,8 @@ LpkGetTextExtentExPoint(
 {
     SCRIPT_STRING_ANALYSIS ssa;
     HRESULT hr;
-    const SIZE *pSize;
     INT i, extent, *Dx;
+    TEXTMETRICW tm;
 
     UNREFERENCED_PARAMETER(dwUnused);
     UNREFERENCED_PARAMETER(unknown);
@@ -453,7 +453,7 @@ LpkGetTextExtentExPoint(
     if (cString < 0 || !lpSize)
         return FALSE;
 
-    if (cString == 0)
+    if (cString == 0 || !lpString)
     {
         lpSize->cx = 0;
         lpSize->cy = 0;
@@ -462,51 +462,50 @@ LpkGetTextExtentExPoint(
 
     /* Check if any processing is required */
     if (ScriptIsComplex(lpString, cString, SIC_COMPLEX) != S_OK)
-        return GetTextExtentExPointWPri(hdc, lpString, cString, nMaxExtent, lpnFit, lpnDx, lpSize);
+        goto fallback;
     
     hr = ScriptStringAnalyse(hdc, lpString, cString, 3 * cString / 2 + 16, -1,
                              SSA_GLYPHS, 0, NULL, NULL, NULL, NULL, NULL, &ssa);
 
     if (hr != S_OK)
-        return FALSE;
-
-    pSize = ScriptString_pSize(ssa);
-
-    if (pSize)
-        *lpSize = *pSize;
-    else
-        GetTextExtentExPointWPri(hdc, lpString, cString, 0, NULL, NULL, lpSize);
+        goto fallback;
 
     /* Use logic from TextIntGetTextExtentPoint */
-    if (lpnDx || lpnFit)
-    {    
-        Dx = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(INT));
+    Dx = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(INT));
 
-        if (!Dx)
-        {
-            ScriptStringFree(&ssa);
-            return FALSE;
-        }
-
-        if (lpnFit)
-            *lpnFit = 0;
-
-        ScriptStringGetLogicalWidths(ssa, Dx);
-
-        for (i = 0, extent = 0; i < cString; i++)
-        {
-            extent += Dx[i];
-
-            if (extent <= nMaxExtent && lpnFit)
-                *lpnFit = i + 1;
-
-            if (lpnDx)
-                lpnDx[i] = extent;
-        }
-
-        HeapFree(GetProcessHeap(), 0, Dx);
+    if (!Dx)
+    {
+        ScriptStringFree(&ssa);
+        goto fallback;
     }
 
+    if (lpnFit)
+        *lpnFit = 0;
+
+    ScriptStringGetLogicalWidths(ssa, Dx);
+
+    for (i = 0, extent = 0; i < cString; i++)
+    {
+        extent += Dx[i];
+
+        if (extent <= nMaxExtent && lpnFit)
+            *lpnFit = i + 1;
+
+        if (lpnDx)
+            lpnDx[i] = extent;
+    }
+
+    HeapFree(GetProcessHeap(), 0, Dx);
     ScriptStringFree(&ssa);
+
+    if (!GetTextMetricsW(hdc, &tm))
+        return GetTextExtentExPointWPri(hdc, lpString, cString, 0, NULL, NULL, lpSize);
+
+    lpSize->cx = extent;
+    lpSize->cy = tm.tmHeight;
+
     return TRUE;
+
+fallback:
+    return GetTextExtentExPointWPri(hdc, lpString, cString, nMaxExtent, lpnFit, lpnDx, lpSize);
 }
