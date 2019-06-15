@@ -1,11 +1,9 @@
 /*
  * PROJECT:     ReactOS Magnify
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/magnify/magnifier.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Magnification of parts of the screen.
- * AUTHORS:
- *     Marc Piulachs <marc.piulachs@codexchange.net>
- *     David Quintana <gigaherz@gmail.com>
+ * COPYRIGHT:   Copyright 2007-2019 Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Copyright 2015-2019 David Quintana <gigaherz@gmail.com>
  */
 
 /* TODO: Support AppBar types other than ABE_TOP */
@@ -86,11 +84,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-          SetProcessDefaultLayout(LAYOUT_RTL);
-          break;
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
         default:
-          break;
+            break;
     }
 
     /* Initialize global strings */
@@ -158,7 +156,7 @@ void DoAppBarStuff(DWORD mode)
         RECT rcWorkArea;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 
-        if(mode == ABM_NEW)
+        if (mode == ABM_NEW)
         {
             SHAppBarMessage(ABM_NEW, &data);
 
@@ -197,36 +195,35 @@ void DoAppBarStuff(DWORD mode)
 
         data.uEdge = AppBarConfig.uEdge;
         uState = SHAppBarMessage(ABM_QUERYPOS, &data);
-
         uState = SHAppBarMessage(ABM_SETPOS, &data);
 
         rcw = data.rc.right-data.rc.left;
         rch = data.rc.bottom-data.rc.top;
 
         uState = SHAppBarMessage(ABM_GETSTATE, &data);
-        if(uState & ABS_ALWAYSONTOP)
+        if (uState & ABS_ALWAYSONTOP)
             hWndOrder = HWND_TOPMOST;
 
-        SetWindowPos(hMainWnd, hWndOrder, data.rc.left, data.rc.top, rcw, rch, SWP_SHOWWINDOW|SWP_NOCOPYBITS);
+        SetWindowPos(hMainWnd, hWndOrder, data.rc.left, data.rc.top, rcw, rch, SWP_SHOWWINDOW | SWP_NOCOPYBITS);
 
     }
-    else if(mode == ABM_GETSTATE)
+    else if (mode == ABM_GETSTATE)
     {
         HWND hWndOrder = HWND_BOTTOM;
         uState = SHAppBarMessage(ABM_GETSTATE, &data);
-        if(uState & ABS_ALWAYSONTOP)
+        if (uState & ABS_ALWAYSONTOP)
             hWndOrder = HWND_TOPMOST;
         SetWindowPos(hMainWnd, hWndOrder, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
     }
-    else if(mode == ABM_ACTIVATE)
+    else if (mode == ABM_ACTIVATE)
     {
         SHAppBarMessage(ABM_ACTIVATE, &data);
     }
-    else if(mode == ABM_WINDOWPOSCHANGED)
+    else if (mode == ABM_WINDOWPOSCHANGED)
     {
         SHAppBarMessage(ABM_WINDOWPOSCHANGED, &data);
     }
-    else if(mode == ABM_REMOVE)
+    else if (mode == ABM_REMOVE)
     {
         SHAppBarMessage(ABM_REMOVE, &data);
     }
@@ -237,22 +234,22 @@ void AttachAppBar(INT uEdge)
     if (AppBarConfig.uEdge == uEdge)
         return;
 
-    if(AppBarConfig.uEdge < 0 && uEdge >= 0)
+    if (AppBarConfig.uEdge < 0 && uEdge >= 0)
     {
         SetWindowLongPtr(hMainWnd, GWL_STYLE, GetWindowLongPtr(hMainWnd, GWL_STYLE) & (~WS_CAPTION));
     }
-    else if(uEdge < 0 && AppBarConfig.uEdge>=0)
+    else if (uEdge < 0 && AppBarConfig.uEdge >= 0)
     {
         SetWindowLongPtr(hMainWnd, GWL_STYLE, GetWindowLongPtr(hMainWnd, GWL_STYLE) | WS_CAPTION);
         SetWindowPos(hMainWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED);
     }
 
-    if(AppBarConfig.uEdge >= 0)
+    if (AppBarConfig.uEdge >= 0)
     {
         DoAppBarStuff(ABM_REMOVE);
     }
 
-    if (uEdge >=0)
+    if (uEdge >= 0)
     {
         AppBarConfig.uEdge = uEdge;
         DoAppBarStuff(ABM_NEW);
@@ -279,40 +276,37 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hInst = hInstance; // Store instance handle in our global variable
 
-    if (AppBarConfig.uEdge<0)
+    if (AppBarConfig.uEdge <0 )
     {
         dwStyles |= WS_CAPTION;
         exStyles |= WS_EX_TOPMOST;
     }
 
     /* Create the Window */
-    hMainWnd = CreateWindowEx(
-        exStyles,
-        szWindowClass,
-        szTitle,
-        dwStyles,
-        rc.left,
-        rc.top,
-        rc.right-rc.left,
-        rc.bottom-rc.top,
-        NULL,
-        NULL,
-        hInstance,
-        NULL);
-
+    hMainWnd = CreateWindowEx(exStyles,
+                              szWindowClass,
+                              szTitle,
+                              dwStyles,
+                              rc.left,
+                              rc.top,
+                              rc.right-rc.left,
+                              rc.bottom-rc.top,
+                              NULL,
+                              NULL,
+                              hInstance,
+                              NULL);
     if (!hMainWnd)
         return FALSE;
 
-    if (AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_NEW);
-    else SetWindowPos(hMainWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+    if (AppBarConfig.uEdge >= 0)
+        DoAppBarStuff(ABM_NEW);
+    else
+        SetWindowPos(hMainWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
 
     // In Windows 2003's Magnifier, the "Start Minimized" setting
     // refers exclusively to the options dialog, not the main window itself.
     hOptionsDialog = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hMainWnd, OptionsProc);
-    if (bStartMinimized)
-        ShowWindow(hOptionsDialog, SW_HIDE);
-    else
-        ShowWindow(hOptionsDialog, SW_SHOW);
+    ShowWindow(hOptionsDialog, (bStartMinimized ? SW_HIDE : SW_SHOW));
 
     if (bShowWarning)
         DialogBox(hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
@@ -320,7 +314,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-void Refresh()
+void Refresh(void)
 {
     if (!IsIconic(hMainWnd))
     {
@@ -397,7 +391,7 @@ void Draw(HDC aDc)
     {
         bRecreateOffscreenDC = FALSE;
 
-        if(hdcOffscreen)
+        if (hdcOffscreen)
         {
             SelectObject(hdcOffscreen, hbmpOld);
             DeleteObject (hbmpOffscreen);
@@ -411,13 +405,12 @@ void Draw(HDC aDc)
         hdcOffscreen = CreateCompatibleDC(desktopHdc);
 
         /* Create a bitmap compatible with the client area DC */
-        hbmpOffscreen = CreateCompatibleBitmap(
-            desktopHdc,
-            sourceWidth,
-            sourceHeight);
+        hbmpOffscreen = CreateCompatibleBitmap(desktopHdc,
+                                               sourceWidth,
+                                               sourceHeight);
 
         /* Select our bitmap in memory DC and save the old one */
-        hbmpOld = SelectObject(hdcOffscreen , hbmpOffscreen);
+        hbmpOld = SelectObject(hdcOffscreen, hbmpOffscreen);
     }
 
     GetWindowRect(hDesktopWindow, &sourceRect);
@@ -429,16 +422,15 @@ void Draw(HDC aDc)
     GetBestOverlapWithMonitors(&sourceRect);
 
     /* Paint the screen bitmap to our in memory DC */
-    BitBlt(
-        hdcOffscreen,
-        0,
-        0,
-        sourceWidth,
-        sourceHeight,
-        desktopHdc,
-        sourceRect.left,
-        sourceRect.top,
-        rop);
+    BitBlt(hdcOffscreen,
+           0,
+           0,
+           sourceWidth,
+           sourceHeight,
+           desktopHdc,
+           sourceRect.left,
+           sourceRect.top,
+           rop);
 
     if (IntersectRect(&intersectedRect, &sourceRect, &targetRect))
     {
@@ -447,25 +439,23 @@ void Draw(HDC aDc)
     }
 
     /* Draw the mouse pointer in the right position */
-    DrawIcon(
-        hdcOffscreen ,
-        pMouse.x - iinfo.xHotspot - sourceRect.left, // - 10,
-        pMouse.y - iinfo.yHotspot - sourceRect.top, // - 10,
-        cinfo.hCursor);
+    DrawIcon(hdcOffscreen,
+             pMouse.x - iinfo.xHotspot - sourceRect.left, // - 10,
+             pMouse.y - iinfo.yHotspot - sourceRect.top, // - 10,
+             cinfo.hCursor);
 
     /* Blast the stretched image from memory DC to window DC */
-    StretchBlt(
-        aDc,
-        0,
-        0,
-        AppWidth,
-        AppHeight,
-        hdcOffscreen,
-        0,
-        0,
-        sourceWidth,
-        sourceHeight,
-        SRCCOPY | NOMIRRORBITMAP);
+    StretchBlt(aDc,
+               0,
+               0,
+               AppWidth,
+               AppHeight,
+               hdcOffscreen,
+               0,
+               0,
+               sourceWidth,
+               sourceHeight,
+               SRCCOPY | NOMIRRORBITMAP);
 
     /* Cleanup */
     if (iinfo.hbmMask)
@@ -485,7 +475,7 @@ void HandleNotifyIconMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
             PostMessage(hMainWnd, WM_COMMAND, IDM_OPTIONS, 0);
             break;
         case WM_RBUTTONUP:
-            GetCursorPos (&pt);
+            GetCursorPos(&pt);
             TrackPopupMenu(notifyMenu, 0, pt.x, pt.y, 0, hWnd, NULL);
             break;
     }
@@ -525,7 +515,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
 
-            if(guiInfo.hwndActive != hMainWnd)
+            if (guiInfo.hwndActive != hMainWnd)
             {
                 if (bFollowCaret)
                 {
@@ -540,7 +530,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             //Update to new position
                             pCaret = ptCaret;
                             pCaretWnd = guiInfo.hwndCaret;
-                            if(!hasMoved)
+                            if (!hasMoved)
                             {
                                 ClientToScreen (guiInfo.hwndCaret, (LPPOINT) &ptCaret);
                                 cp = ptCaret;
@@ -556,7 +546,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 if (bFollowFocus)
                 {
-                    if(guiInfo.hwndFocus && !guiInfo.hwndCaret)
+                    if (guiInfo.hwndFocus && !guiInfo.hwndCaret)
                     {
                         POINT ptFocus;
                         RECT activeRect;
@@ -566,12 +556,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         ptFocus.x = (activeRect.left + activeRect.right) / 2;
                         ptFocus.y = (activeRect.top + activeRect.bottom) / 2;
 
-                        if((guiInfo.hwndFocus != pFocusWnd) || !PointsAreEqual(pFocus, ptFocus))
+                        if ((guiInfo.hwndFocus != pFocusWnd) || !PointsAreEqual(pFocus, ptFocus))
                         {
                             //Update to new position
                             pFocus = ptFocus;
                             pFocusWnd = guiInfo.hwndFocus;
-                            if(!hasMoved)
+                            if (!hasMoved)
                             {
                                 cp = ptFocus;
                                 hasMoved = TRUE;
@@ -585,17 +575,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
 
-            if(!hasMoved)
+            if (!hasMoved)
             {
                 DWORD newTicks = GetTickCount();
                 DWORD elapsed = (newTicks - lastTicks);
-                if(elapsed > REPAINT_SPEED)
+                if (elapsed > REPAINT_SPEED)
                 {
                     hasMoved = TRUE;
                 }
             }
 
-            if(hasMoved)
+            if (hasMoved)
             {
                 lastTicks = GetTickCount();
                 Refresh();
@@ -611,14 +601,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
                 case IDM_OPTIONS:
-                    if(bOptionsDialog)
-                    {
-                        ShowWindow(hOptionsDialog, SW_HIDE);
-                    }
-                    else
-                    {
-                        ShowWindow(hOptionsDialog, SW_SHOW);
-                    }
+                    ShowWindow(hOptionsDialog, (bOptionsDialog ? SW_HIDE : SW_SHOW));
                     break;
                 case IDM_ABOUT:
                     DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
@@ -661,8 +644,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             break;
         }
+
         case WM_MOUSEMOVE:
-            if(GetCapture() == hWnd)
+            if (GetCapture() == hWnd)
             {
                 RECT rc;
                 POINT pt;
@@ -671,7 +655,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 GetCursorPos(&pt);
                 GetWindowRect(hWnd, &rc);
 
-                if(AppBarConfig.uEdge>=0)
+                if (AppBarConfig.uEdge >= 0)
                 {
                     if (pt.x >= rcWorkArea.left && pt.x <= rcWorkArea.right &&
                         pt.y >= rcWorkArea.top && pt.y <= rcWorkArea.bottom)
@@ -691,22 +675,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 else
                 {
-                    if(pt.x <= rcWorkArea.left+8 && nearEdge != ABE_LEFT)
+                    if (pt.x <= rcWorkArea.left+8 && nearEdge != ABE_LEFT)
                     {
                         AttachAppBar(ABE_LEFT);
                         nearEdge = ABE_LEFT;
                     }
-                    else if(pt.y <= rcWorkArea.top+8 && nearEdge != ABE_TOP)
+                    else if (pt.y <= rcWorkArea.top+8 && nearEdge != ABE_TOP)
                     {
                         AttachAppBar(ABE_TOP);
                         nearEdge = ABE_TOP;
                     }
-                    else if(pt.x >= rcWorkArea.right-8 && nearEdge != ABE_RIGHT)
+                    else if (pt.x >= rcWorkArea.right-8 && nearEdge != ABE_RIGHT)
                     {
                         AttachAppBar(ABE_RIGHT);
                         nearEdge = ABE_RIGHT;
                     }
-                    else if(pt.y >= rcWorkArea.bottom-8 && nearEdge != ABE_BOTTOM)
+                    else if (pt.y >= rcWorkArea.bottom-8 && nearEdge != ABE_BOTTOM)
                     {
                         AttachAppBar(ABE_BOTTOM);
                         nearEdge = ABE_BOTTOM;
@@ -725,10 +709,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Refresh();
             }
             break;
+
         case WM_LBUTTONUP:
-            if(GetCapture() == hWnd)
+            if (GetCapture() == hWnd)
             {
-                if (AppBarConfig.uEdge>=0)
+                if (AppBarConfig.uEdge >= 0)
                     DoAppBarStuff(ABM_GETSTATE);
                 else
                     SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
@@ -737,7 +722,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_SIZE:
-            if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_SETPOS);
+            if (AppBarConfig.uEdge >= 0)
+                DoAppBarStuff(ABM_SETPOS);
             /* fallthrough */
         case WM_DISPLAYCHANGE:
             bRecreateOffscreenDC = TRUE;
@@ -813,7 +799,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 case ABN_FULLSCREENAPP:
                 {
-                    if(!lParam)
+                    if (!lParam)
                     {
                         DoAppBarStuff(ABM_GETSTATE);
                         break;
@@ -823,10 +809,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
                case ABN_WINDOWARRANGE:
-                    if(lParam)
-                        ShowWindow(hMainWnd, SW_HIDE);
-                    else
-                        ShowWindow(hMainWnd, SW_SHOW);
+                    ShowWindow(hMainWnd, (lParam ? SW_HIDE : SW_SHOW));
                     break;
             }
             return 0;
@@ -837,11 +820,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_ACTIVATE:
-            if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_ACTIVATE);
+            if (AppBarConfig.uEdge >= 0)
+                DoAppBarStuff(ABM_ACTIVATE);
             break;
 
         case WM_WINDOWPOSCHANGED:
-            if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_WINDOWPOSCHANGED);
+            if (AppBarConfig.uEdge >= 0)
+                DoAppBarStuff(ABM_WINDOWPOSCHANGED);
             Refresh();
             break;
 
@@ -875,11 +860,9 @@ INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
+
     switch (message)
     {
-        case WM_SHOWWINDOW:
-            bOptionsDialog = wParam;
-            break;
         case WM_INITDIALOG:
         {
             /* Add the zoom items */
@@ -897,27 +880,31 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                 SendDlgItemMessage(hDlg, IDC_ZOOM, CB_SETCURSEL, uiZoom - 1, 0);
 
             if (bFollowMouse)
-                SendDlgItemMessage(hDlg,IDC_FOLLOWMOUSECHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_FOLLOWMOUSECHECK,BM_SETCHECK, wParam, 0);
 
             if (bFollowFocus)
-                SendDlgItemMessage(hDlg,IDC_FOLLOWKEYBOARDCHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_FOLLOWKEYBOARDCHECK,BM_SETCHECK, wParam, 0);
 
             if (bFollowCaret)
-                SendDlgItemMessage(hDlg,IDC_FOLLOWTEXTEDITINGCHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_FOLLOWTEXTEDITINGCHECK,BM_SETCHECK, wParam, 0);
 
             if (bInvertColors)
-                SendDlgItemMessage(hDlg,IDC_INVERTCOLORSCHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_INVERTCOLORSCHECK,BM_SETCHECK, wParam, 0);
 
             if (bStartMinimized)
-                SendDlgItemMessage(hDlg,IDC_STARTMINIMIZEDCHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_STARTMINIMIZEDCHECK,BM_SETCHECK, wParam, 0);
 
             if (bShowMagnifier)
-                SendDlgItemMessage(hDlg,IDC_SHOWMAGNIFIERCHECK,BM_SETCHECK , wParam ,0);
+                SendDlgItemMessage(hDlg,IDC_SHOWMAGNIFIERCHECK,BM_SETCHECK, wParam, 0);
 
             return (INT_PTR)TRUE;
         }
 
-    case WM_COMMAND:
+        case WM_SHOWWINDOW:
+            bOptionsDialog = wParam;
+            break;
+
+        case WM_COMMAND:
         switch (LOWORD(wParam))
         {
             case IDOK:
@@ -927,8 +914,9 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 
             case IDC_BUTTON_HELP:
                 /* Unimplemented */
-                MessageBox(hDlg , TEXT("Magnifier help not available yet!") , TEXT("Help") , MB_OK);
+                MessageBox(hDlg, TEXT("Magnifier help not available yet!"), TEXT("Help"), MB_OK);
                 break;
+
             case IDC_ZOOM:
                 if (HIWORD(wParam) == CBN_SELCHANGE)
                 {
@@ -936,7 +924,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                     TCHAR currentZoomValue[2] = TEXT("");
 
                     /* Get index of current selection and the text of that selection */
-                    int currentSelectionIndex = ComboBox_GetCurSel(hCombo);  
+                    int currentSelectionIndex = ComboBox_GetCurSel(hCombo);
                     ComboBox_GetLBText(hCombo, currentSelectionIndex, currentZoomValue);
                     uiZoom = (UINT)_ttoi(currentZoomValue);
                     /* The zoom factor cannot be smaller than 1 (and not zero) or greater than 9 */
@@ -950,6 +938,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                     Refresh();
                 }
                 break;
+
             case IDC_INVERTCOLORSCHECK:
                 bInvertColors = IsDlgButtonChecked(hDlg, IDC_INVERTCOLORSCHECK);
                 Refresh();
@@ -968,10 +957,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                 break;
             case IDC_SHOWMAGNIFIER:
                 bShowMagnifier = IsDlgButtonChecked(hDlg, IDC_SHOWMAGNIFIERCHECK);
-                if (bShowMagnifier)
-                    ShowWindow (hMainWnd , SW_SHOW);
-                else
-                    ShowWindow (hMainWnd , SW_HIDE);
+                ShowWindow(hMainWnd, (bShowMagnifier ? SW_SHOW : SW_HIDE));
                 break;
         }
     }
