@@ -1,5 +1,6 @@
 @ stub RasAutodialAddressToNetwork
 @ stub RasAutodialEntryToNetwork
+@ stub RasClearConnectionStatistics
 @ stdcall RasConnectionNotificationA(ptr long long)
 @ stdcall RasConnectionNotificationW(ptr long long)
 @ stdcall RasCreatePhonebookEntryA(long str)
