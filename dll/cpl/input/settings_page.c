@@ -226,7 +226,8 @@ OnInitSettingsPage(HWND hwndDlg)
                                             ILC_COLOR8 | ILC_MASK, 0, 0);
         if (hLayoutImageList != NULL)
         {
-            ListView_SetImageList(hwndInputList, hLayoutImageList, LVSIL_SMALL);
+            HIMAGELIST hOldImagelist = ListView_SetImageList(hwndInputList, hLayoutImageList, LVSIL_SMALL);
+            ImageList_Destroy(hOldImagelist);
         }
 
         UpdateInputListView(hwndInputList);
@@ -239,18 +240,9 @@ OnInitSettingsPage(HWND hwndDlg)
 static VOID
 OnDestroySettingsPage(HWND hwndDlg)
 {
-    HIMAGELIST hImageList;
-
     LayoutList_Destroy();
     LocaleList_Destroy();
     InputList_Destroy();
-
-    hImageList = ListView_GetImageList(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST),
-                                       LVSIL_SMALL);
-    if (hImageList != NULL)
-    {
-        ImageList_Destroy(hImageList);
-    }
 }
 
 
