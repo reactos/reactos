@@ -229,7 +229,7 @@ START_TEST(SetComputerNameExW)
     for (i = 0; i < cchValidSymbols; ++i)
     {
         szName[0] = ValidSymbols[i];
-        szName[1] = 0;
+        szName[1] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, TRUE);
     }
 
@@ -237,7 +237,7 @@ START_TEST(SetComputerNameExW)
     {
         szName[0] = L'a';
         szName[1] = ValidSymbols[i];
-        szName[2] = 0;
+        szName[2] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, TRUE);
     }
 
@@ -245,7 +245,7 @@ START_TEST(SetComputerNameExW)
     {
         szName[0] = L'A';
         szName[1] = ValidSymbols[i];
-        szName[2] = 0;
+        szName[2] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, TRUE);
     }
 
@@ -253,7 +253,7 @@ START_TEST(SetComputerNameExW)
     {
         szName[0] = L'1';
         szName[1] = ValidSymbols[i];
-        szName[2] = 0;
+        szName[2] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, TRUE);
     }
 
@@ -261,7 +261,7 @@ START_TEST(SetComputerNameExW)
     {
         szName[0] = L'A';
         szName[1] = InvalidSymbols[i];
-        szName[2] = 0;
+        szName[2] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, FALSE);
     }
 
@@ -269,7 +269,7 @@ START_TEST(SetComputerNameExW)
     {
         szName[0] = L'1';
         szName[1] = InvalidSymbols[i];
-        szName[2] = 0;
+        szName[2] = UNICODE_NULL;
         DoTestComputerName(hKeyHN, hKeyCN, szName, FALSE);
     }
 
