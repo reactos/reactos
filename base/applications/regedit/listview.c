@@ -49,7 +49,7 @@ typedef struct tagSORT_INFO
 static INT g_iSortedColumn = 0;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };
+static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };  /* in percents */
 static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
 LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
