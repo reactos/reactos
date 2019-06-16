@@ -176,7 +176,7 @@ START_TEST(SetComputerNameExW)
     DoTestComputerName(hKeyHN, hKeyCN, L"", FALSE);
     DoTestComputerName(hKeyHN, hKeyCN, L"a", TRUE);
     DoTestComputerName(hKeyHN, hKeyCN, L"A", TRUE);
-    DoTestComputerName(hKeyHN, hKeyCN, L"1", FALSE);
+    DoTestComputerName(hKeyHN, hKeyCN, L"1", FALSE);   // numeric-only
     DoTestComputerName(hKeyHN, hKeyCN, L"@", FALSE);
     DoTestComputerName(hKeyHN, hKeyCN, L".", FALSE);
 
@@ -219,7 +219,7 @@ START_TEST(SetComputerNameExW)
     DoTestComputerName(hKeyHN, hKeyCN, ValidSymbols, TRUE);
     DoTestComputerName(hKeyHN, hKeyCN, InvalidSymbols, FALSE);
 
-    DoTestComputerName(hKeyHN, hKeyCN, L"123456", FALSE);
+    DoTestComputerName(hKeyHN, hKeyCN, L"123456", FALSE);   // numeric-only
     DoTestComputerName(hKeyHN, hKeyCN, L"123.456", FALSE);
     DoTestComputerName(hKeyHN, hKeyCN, L"123X456", TRUE);
     DoTestComputerName(hKeyHN, hKeyCN, L"123X.456", FALSE);
