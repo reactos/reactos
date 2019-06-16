@@ -46,7 +46,7 @@ static void DoTestComputerName(HKEY hKeyHN, HKEY hKeyCN, LPCWSTR pszNewName, BOO
     WCHAR szHostNameOld[MAX_PATH], szHostNameNew[MAX_PATH];
     WCHAR szComputerNameOld[MAX_PATH], szComputerNameNew[MAX_PATH];
 
-    trace("Testing on '%S':\n", pszNewName);
+    trace("Testing '%S':\n", pszNewName);
 
     /* Get Old NV Hostname */
     szNVHostNameOld[0] = UNICODE_NULL;
