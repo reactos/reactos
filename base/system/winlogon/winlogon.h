@@ -223,6 +223,8 @@ typedef struct _WLSESSION
     DWORD SASAction;
     BOOL SuppressStatus;
     BOOL TaskManHotkey;
+    BOOL LockWkStaHotkey;
+    BOOL UtilManHotkey;
     HWND SASWindow;
     HWINSTA InteractiveWindowStation;
     LPWSTR InteractiveWindowStationName;
