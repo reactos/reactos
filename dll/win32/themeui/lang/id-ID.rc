@@ -1,0 +1,35 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Batu Bata"
+    IDS_EGGPLANT "Terong"
+    IDS_GOLIVE "Hijau Zaitun" //Spruce
+    IDS_HCONTRAST_1 "Kontras Tinggi 1"
+    IDS_HCONTRAST_2 "Kontras Tinggi 2"
+    IDS_HCONTRAST_BLACK "Kontras Tinggi Hitam"
+    IDS_HCONTRAST_WHITE "Kontras Tinggi Putih"
+    IDS_LILAC "Lilac"
+    IDS_MAPLE "Maple"
+    IDS_MARINE "Biru Dongker"
+    IDS_PLUM "Plum"
+    IDS_PUMPKIN "Labu"
+    IDS_RAIN "Hari Hujan"
+    IDS_RWB "Merah, Putih, dan Biru"
+    IDS_CLASSIC "ReactOS Klasik"
+    IDS_STANDARD "ReactOS Standar"
+    IDS_ROSE "Mawar"
+    IDS_SAND "Pasir" //Desert
+    IDS_SLATE "Batu Tulis"
+    IDS_SKY "Langit"
+    IDS_STORM "Petir"
+    IDS_TEAL "Teal"
+    IDS_WHEAT "Tepung"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Besar"
+    IDS_SIZE_XLARGE "Ekstra Besar"
+END
