@@ -216,6 +216,7 @@ START_TEST(SetComputerNameExW)
     DoTestComputerName(hKeyHN, hKeyCN, L"123456", FALSE);
     DoTestComputerName(hKeyHN, hKeyCN, L"123.456", FALSE);
     DoTestComputerName(hKeyHN, hKeyCN, L"123X456", TRUE);
+    DoTestComputerName(hKeyHN, hKeyCN, L"123X.456", FALSE);
 
     DoTestComputerName(hKeyHN, hKeyCN, L"ThisIsLongLongComputerName", TRUE);
 
