@@ -70,8 +70,14 @@ static void DoTestComputerName(HKEY hKeyHN, HKEY hKeyCN, LPCWSTR pszNewName, BOO
     ok(szComputerNameOld[0], "szComputerNameOld is empty\n");
 
     /* Change the value */
+    SetLastError(0xDEADFACE);
     ret = SetComputerNameExW(ComputerNamePhysicalDnsHostname, pszNewName);
     ok_int(ret, bValid);
+    Error = GetLastError();
+    if (bValid)
+        ok_long(Error, ERROR_SUCCESS);
+    else
+        ok_long(Error, ERROR_INVALID_PARAMETER);
 
     /* Get New NV Hostname */
     szNVHostNameNew[0] = UNICODE_NULL;
