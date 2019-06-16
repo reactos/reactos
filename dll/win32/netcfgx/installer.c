@@ -100,6 +100,7 @@ InstallNetDevice(
     LPCWSTR BusType)
 {
     LPWSTR InstanceId = NULL;
+    LPWSTR ComponentId = NULL;
     LPWSTR DeviceName = NULL;
     LPWSTR ExportName = NULL;
     LONG rc;
@@ -109,6 +110,7 @@ InstallNetDevice(
     HKEY hConnectionKey = NULL;
     DWORD dwShowIcon, dwLength, dwValue;
     WCHAR szBuffer[300];
+    PWSTR ptr;
 
     /* Install the adapter */
     if (!SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData))
@@ -140,6 +142,19 @@ InstallNetDevice(
         ERR("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
+
+    ComponentId = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+    if (!ComponentId)
+    {
+        ERR("HeapAlloc() failed\n");
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+        goto cleanup;
+    }
+
+    wcscpy(ComponentId, InstanceId);
+    ptr = wcsrchr(ComponentId, L'\\');
+    if (ptr != NULL)
+        *ptr = UNICODE_NULL;
 
     /* Create device name */
     DeviceName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
@@ -250,6 +265,13 @@ InstallNetDevice(
         goto cleanup;
     }
 
+    rc = RegSetValueExW(hKey, L"ComponentId", 0, REG_SZ, (const BYTE*)ComponentId, (wcslen(ComponentId) + 1) * sizeof(WCHAR));
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
     if (BusType)
     {
         rc = RegSetValueExW(hKey, L"BusType", 0, REG_SZ, (const BYTE*)BusType, (wcslen(BusType) + 1) * sizeof(WCHAR));
@@ -326,7 +348,7 @@ InstallNetDevice(
         goto cleanup;
     }
 
-    rc = RegSetValueExW(hConnectionKey, L"PnpInstanceId", 0, REG_SZ, (const BYTE*)InstanceId, (wcslen(InstanceId) + 1) * sizeof(WCHAR));
+    rc = RegSetValueExW(hConnectionKey, L"PnpInstanceID", 0, REG_SZ, (const BYTE*)InstanceId, (wcslen(InstanceId) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
@@ -371,6 +393,7 @@ InstallNetDevice(
 
 cleanup:
     HeapFree(GetProcessHeap(), 0, InstanceId);
+    HeapFree(GetProcessHeap(), 0, ComponentId);
     HeapFree(GetProcessHeap(), 0, DeviceName);
     HeapFree(GetProcessHeap(), 0, ExportName);
     if (hKey != NULL)
