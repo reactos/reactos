@@ -35,6 +35,146 @@ SetBoldText(
     SendDlgItemMessageW(hwndDlg, control, WM_SETFONT, (WPARAM)pSetupData->hBoldFont, MAKELPARAM(TRUE, 0));
 }
 
+
+static
+HRESULT
+InstallTypicalNetworkSettings(VOID)
+{
+    INetCfg *pNetCfg = NULL;
+    INetCfgLock *pNetCfgLock = NULL;
+    INetCfgComponent *pTcpipComponent = NULL;
+    INetCfgComponent *pNicComponent = NULL;
+    IEnumNetCfgComponent *pEnumNicComponents = NULL;
+    WCHAR *pszNicName;
+    BOOL fWriteLocked = FALSE, fInitialized = FALSE;
+    HRESULT hr;
+
+    TRACE("InstallTypicalNetworkSettings()\n");
+
+    hr = CoInitialize(NULL);
+    if (hr != S_OK)
+    {
+        ERR("CoInitialize failed\n");
+        goto exit;
+    }
+
+    hr = CoCreateInstance(CLSID_CNetCfg,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          IID_INetCfg,
+                          (PVOID*)&pNetCfg);
+    if (hr != S_OK)
+    {
+        ERR("CoCreateInstance failed\n");
+        goto exit;
+    }
+
+    /* Acquire the write-lock */
+    hr = pNetCfg->QueryInterface(IID_INetCfgLock,
+                                 (PVOID*)&pNetCfgLock);
+    if (hr != S_OK)
+    {
+        ERR("QueryInterface failed\n");
+        goto exit;
+    }
+
+    hr = pNetCfgLock->AcquireWriteLock(5000,
+                                       L"SysSetup",
+                                       NULL);
+    if (hr != S_OK)
+    {
+        ERR("AcquireWriteLock failed\n");
+        goto exit;
+    }
+
+    fWriteLocked = TRUE;
+
+    /* Initialize the network configuration */
+    hr = pNetCfg->Initialize(NULL);
+    if (hr != S_OK)
+    {
+        ERR("Initialize failed\n");
+        goto exit;
+    }
+
+    fInitialized = TRUE;
+
+    /* Find the TCP/IP driver */
+    hr = pNetCfg->FindComponent(L"ms_tcpip",
+                                &pTcpipComponent);
+    if (hr == S_OK)
+    {
+        FIXME("Found the TCP/IP driver!\n");
+    }
+    else
+    {
+        ERR("Initialize failed\n");
+        goto exit;
+    }
+
+    hr = pNetCfg->EnumComponents(&GUID_DEVCLASS_NET,
+                                 &pEnumNicComponents);
+    if (hr != S_OK)
+    {
+        ERR("EnumComponents failed\n");
+        goto exit;
+    }
+
+    for (;;)
+    {
+        hr = pEnumNicComponents->Next(1,
+                                      &pNicComponent,
+                                      NULL);
+        if (hr != S_OK)
+        {
+            TRACE("EnumNicComponents done!\n");
+            break;
+        }
+
+        hr = pNicComponent->GetDisplayName(&pszNicName);
+        if (hr == S_OK)
+        {
+            FIXME("NIC name: %S\n", pszNicName);
+            CoTaskMemFree(pszNicName);
+        }
+
+        // FIXME Bind Tcpip to the NIC
+
+        pNicComponent->Release();
+        pNicComponent = NULL;
+    }
+
+    TRACE("Done!\n");
+exit:
+    if (pNicComponent != NULL)
+        pNicComponent->Release();
+
+    if (pEnumNicComponents != NULL)
+        pEnumNicComponents->Release();
+
+    if (pTcpipComponent != NULL)
+        pTcpipComponent->Release();
+
+    if (fInitialized)
+        pNetCfg->Uninitialize();
+
+    if (fWriteLocked)
+        pNetCfgLock->ReleaseWriteLock();
+
+    if (pNetCfgLock != NULL)
+        pNetCfgLock->Release();
+
+    if (pNetCfg != NULL)
+        pNetCfg->Release();
+
+    CoUninitialize();
+
+    TRACE("InstallTypicalNetworkSettings() done!\n");
+
+    return hr;
+}
+
+
 static
 INT_PTR
 CALLBACK
@@ -102,6 +242,9 @@ NetworkSettingsPageDlgProc(
                     if (IsDlgButtonChecked(hwndDlg, IDC_NETWORK_TYPICAL) == BST_CHECKED)
                     {
                         pNetworkSetupData->bTypicalNetworkSetup = TRUE;
+
+                        InstallTypicalNetworkSettings();
+
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
                     }
