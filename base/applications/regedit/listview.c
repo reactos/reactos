@@ -255,7 +255,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
     }
 }
 
-static BOOL CreateListColumns(HWND hWndListView, INT cx)
+static BOOL CreateListColumns(HWND hWndListView, INT cxTotal)
 {
     WCHAR szText[50];
     int index;
@@ -269,7 +269,7 @@ static BOOL CreateListColumns(HWND hWndListView, INT cx)
     for (index = 0; index < MAX_LIST_COLUMNS; index++)
     {
         lvC.iSubItem = index;
-        lvC.cx = (default_column_widths[index] * cx) / 100;
+        lvC.cx = (cxTotal * default_column_widths[index]) / 100;
         lvC.fmt = column_alignment[index];
         LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
