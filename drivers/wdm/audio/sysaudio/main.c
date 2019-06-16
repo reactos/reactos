@@ -155,7 +155,7 @@ SysAudio_AddDevice(
     /* Check for success */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create \\Device\\sysaudio !\n");
+        DPRINT("Failed to create device %x\n", Status);
         return Status;
     }
 
@@ -203,13 +203,14 @@ SysAudio_AddDevice(
     }
 
     /* Load kmixer */
+#if 0
     Status = SysAudioOpenKMixer(DeviceExtension);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SysAudioOpenKMixer failed with %x\n", Status);
-        goto cleanup;
+        //goto cleanup;
     }
-
+#endif
      /* set io flags */
      DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
      /* clear initializing flag */

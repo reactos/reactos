@@ -519,12 +519,6 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
                                          NULL,
                                          NULL);
 
-    if (Result)
-    {
-        Result = SetupInstallServicesFromInfSectionW(hInf,
-                                                     L"Audio_Inst.NT.Services",
-                                                     0);
-    }
 
     SetupTermDefaultQueueCallback(Context);
     SetupCloseInfFile(hInf);
@@ -546,23 +540,6 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         wcscpy(pBuffer, L"inf\\machine.inf");
         InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM\0");
     }
-
-    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-    if (!hSCManager)
-    {
-        return ERROR_DI_DO_DEFAULT;
-    }
-
-    hService = OpenService(hSCManager, L"RosAudioSrv", SERVICE_ALL_ACCESS);
-    if (hService)
-    {
-        /* Make RosAudioSrv start automatically */
-        ChangeServiceConfig(hService, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-
-        StartService(hService, 0, NULL);
-        CloseServiceHandle(hService);
-    }
-    CloseServiceHandle(hSCManager);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32", 0, GENERIC_READ | GENERIC_WRITE, &hKey) == ERROR_SUCCESS)
     {
