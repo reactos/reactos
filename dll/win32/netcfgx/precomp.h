@@ -21,6 +21,7 @@
 #include <netcfgn.h>
 #include <devguid.h>
 #include <commctrl.h>
+#include <cfgmgr32.h>
 
 #include <wine/debug.h>
 

@@ -372,7 +372,7 @@ EnumerateNetworkAdapter(NetCfgComponentItem ** pHead)
     SP_DEVINFO_DATA DevInfo;
     HKEY hKey;
     WCHAR szNetCfg[50];
-    WCHAR szAdapterNetCfg[50];
+    WCHAR szAdapterNetCfg[MAX_DEVICE_ID_LEN];
     WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
     WCHAR szName[130] = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
     NetCfgComponentItem * pLast = NULL, *pCurrent;
