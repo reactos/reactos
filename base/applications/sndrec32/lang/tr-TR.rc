@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2014, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -10,56 +10,56 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ses Kaydedicisi Üzerine"
+CAPTION "ReactOS Ses Kaydedicisi Hakkında Bilgi"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "Ses Kaydedicisi: Sürüm 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "ReactOS Ses Kaydedicisi, sürüm 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Tekif Hakkı - 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Tamam", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Yeni", ID_FILE_NEW
         MENUITEM "&Aç...", ID_FILE_OPEN
-        MENUITEM "&Sakla", ID_FILE_SAVE, GRAYED
-        MENUITEM "Ay&rı Sakla...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "&Kaydet", ID_FILE_SAVE, GRAYED
+        MENUITEM "&Farklı Kaydet...", ID_FILE_SAVEAS, GRAYED
         MENUITEM "Y&eniden Yükle...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "&Husûsiyetler", ID_FILE_PROPERTIES
+        MENUITEM "&Özellikler", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", ID_FILE_EXIT
+        MENUITEM "Ç&ıkış", ID_FILE_EXIT
     END
-    POPUP "&Düzen"
+    POPUP "D&üzen"
     BEGIN
-        MENUITEM "&Çoğalt", ID_EDIT_COPY
+        MENUITEM "&Kopyala", ID_EDIT_COPY
         MENUITEM "&Ekleyerek Yapıştır", ID_EDIT_PASTE, GRAYED
-        MENUITEM "&Karıştırarak Yapıştır", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "K&arıştırarak Yapıştır", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "K&ütük Ekle...", ID_EDIT_INSERTFILE
-        MENUITEM "Kü&tükle Karıştır...", ID_EDIT_MIXFILE
+        MENUITEM "&Dosya Ekle...", ID_EDIT_INSERTFILE
+        MENUITEM "D&osyayla Karıştır...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
         MENUITEM "&Şimdiki Konumun Öncesini Sil",ID_EDIT_DELETEBEFORE, GRAYED
         MENUITEM "Ş&imdiki Konumun Sonrasını Sil",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Ses Husûsiyetleri", ID_EDIT_AUDIOPROPS
+        MENUITEM "&Ses Özellikleri", ID_EDIT_AUDIOPROPS
     END
     POPUP "&Etkiler"
     BEGIN
-        MENUITEM "&Sesi %25 Arttır", ID_EFFECTS_INCVOL
-        MENUITEM "S&esi Düşür", ID_EFFECTS_DECVOL
+        MENUITEM "&Sesi Arttır (%25)", ID_EFFECTS_INCVOL
+        MENUITEM "S&esi Kıs", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Hızı %100 Arttır", ID_EFFECTS_INCSPD
+        MENUITEM "&Hızı Arttır (%100)", ID_EFFECTS_INCSPD
         MENUITEM "H&ızı Düşür", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
         MENUITEM "&Yankı Ekle", ID_EFFECTS_ECHO
-        MENUITEM "&Evir", ID_EFFECTS_REVERSE
+        MENUITEM "&Tersine Çevir", ID_EFFECTS_REVERSE
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine", ID_ABOUT
+        MENUITEM "&Hakkında", ID_ABOUT
     END
 END
 
@@ -75,7 +75,7 @@ BEGIN
     IDS_STRDUR "Uzunluk: %.2f s"
     IDS_STRBUF "Ara Bellek: %.2f KB"
     IDS_STRFMT "%.1f kHz, %u bitlik"
-    IDS_STRMONO "Tek Yollu"
-    IDS_STRSTEREO "Çok Yollu"
+    IDS_STRMONO "tek yollu"
+    IDS_STRSTEREO "çok yollu"
     IDS_STRCHAN "%s"
 END
