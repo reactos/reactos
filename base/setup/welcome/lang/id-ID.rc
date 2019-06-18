@@ -1,4 +1,4 @@
-/* Indonesian resources by Zaenal Mutaqin (ade999 at gmail dot com) */
+/* Indonesian resources by Zaenal Mutaqin (ade999 at gmail dot com) and Mas Ahmad Muhammad */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
@@ -9,16 +9,16 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Selamat Datang"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Selamat datang di ReactOS Operating System.\n\nKlik topik di sisi kiri."
+    IDS_DEFAULT_TOPIC_DESC "Selamat datang di Sistem Operasi ReactOS.\n\nKlik topik di sisi kiri."
     IDS_FONTNAME "Tahoma"
-    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CHECKTEXT "&Tunjukkan dialog ini lagi"
     IDS_CLOSETEXT "&Keluar"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Instalasi ReactOS"
+    IDS_TOPIC_BUTTON0 "&Memasang ReactOS"
     IDS_TOPIC_BUTTON1 "Lihat &CD ini"
     IDS_TOPIC_BUTTON2 "&Keluar"
 END
@@ -26,7 +26,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Instalasi ReactOS"
+    IDS_TOPIC_TITLE0 "Memasang ReactOS"
     IDS_TOPIC_TITLE1 "Lihat CD ini"
     IDS_TOPIC_TITLE2 "Keluar"
 END
@@ -34,7 +34,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Buat instalasi baru ReactOS pada komputer anda atau tingkatkan instalasi yang sudah ada."
+    IDS_TOPIC_DESC0 "Buat pemasangan baru ReactOS pada komputer anda atau tingkatkan pemasangan yang sudah ada."
     IDS_TOPIC_DESC1 "Lihat CD."
-    IDS_TOPIC_DESC2 "Klik untuk keluar aplikasi ini."
+    IDS_TOPIC_DESC2 "Klik untuk keluar dari aplikasi ini."
 END
