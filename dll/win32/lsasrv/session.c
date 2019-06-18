@@ -71,6 +71,7 @@ LsapSetLogonSessionData(
     _In_ PUNICODE_STRING LogonDomain,
     _In_ PSID Sid)
 {
+    NTSTATUS Status;
     PLSAP_LOGON_SESSION Session;
     ULONG Length;
 
@@ -83,8 +84,15 @@ LsapSetLogonSessionData(
     TRACE("LogonType %lu\n", LogonType);
     Session->LogonType = LogonType;
 
+    Status = RtlValidateUnicodeString(0, UserName);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
+
+    /* UserName is mandatory and cannot be an empty string */
     TRACE("UserName %wZ\n", UserName);
-    Session->UserName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, UserName->MaximumLength);
+    Session->UserName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                               HEAP_ZERO_MEMORY,
+                                               UserName->MaximumLength);
     if (Session->UserName.Buffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -92,19 +100,53 @@ LsapSetLogonSessionData(
     Session->UserName.MaximumLength = UserName->MaximumLength;
     RtlCopyMemory(Session->UserName.Buffer, UserName->Buffer, UserName->MaximumLength);
 
-    TRACE("LogonDomain %wZ\n", LogonDomain);
-    Session->LogonDomain.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, LogonDomain->MaximumLength);
-    if (Session->LogonDomain.Buffer == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    Status = RtlValidateUnicodeString(0, LogonDomain);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and fail */
+        if (Session->UserName.Buffer != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName.Buffer);
 
-    Session->LogonDomain.Length = LogonDomain->Length;
-    Session->LogonDomain.MaximumLength = LogonDomain->MaximumLength;
-    RtlCopyMemory(Session->LogonDomain.Buffer, LogonDomain->Buffer, LogonDomain->MaximumLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* LogonDomain is optional and can be an empty string */
+    TRACE("LogonDomain %wZ\n", LogonDomain);
+    if (LogonDomain->Length)
+    {
+        Session->LogonDomain.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                      HEAP_ZERO_MEMORY,
+                                                      LogonDomain->MaximumLength);
+        if (Session->LogonDomain.Buffer == NULL)
+        {
+            /* Cleanup and fail */
+            if (Session->UserName.Buffer != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName.Buffer);
+
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Session->LogonDomain.Length = LogonDomain->Length;
+        Session->LogonDomain.MaximumLength = LogonDomain->MaximumLength;
+        RtlCopyMemory(Session->LogonDomain.Buffer, LogonDomain->Buffer, LogonDomain->MaximumLength);
+    }
+    else
+    {
+        RtlInitEmptyUnicodeString(&Session->LogonDomain, NULL, 0);
+    }
 
     Length = RtlLengthSid(Sid);
     Session->Sid = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
-    if (Session->UserName.Buffer == NULL)
+    if (Session->Sid == NULL)
+    {
+        /* Cleanup and fail */
+        if (Session->LogonDomain.Buffer != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Session->LogonDomain.Buffer);
+        if (Session->UserName.Buffer != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName.Buffer);
+
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     RtlCopyMemory(Session->Sid, Sid, Length);
 
@@ -397,10 +439,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     RtlCopyLuid(&LocalSessionData->LogonId,
                 &RequestMsg->GetLogonSessionData.Request.LogonId);
 
-    /* Copy the UserName string*/
+    /* Copy the UserName string */
     LocalSessionData->UserName.Length = Session->UserName.Length;
     LocalSessionData->UserName.MaximumLength = Session->UserName.MaximumLength;
-
     if (Session->UserName.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->UserName.Buffer, Session->UserName.MaximumLength);
@@ -478,7 +519,6 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
 
         Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->Upn.MaximumLength);
     }
-
 
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
