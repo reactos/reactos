@@ -1,0 +1,88 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, 380, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Buat tautan"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, 380, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Buat tautan"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Buat Pintasan"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Penuntun ini membantu membuat pintasan pada lokal atau\njaringan berupa program, berkas, folder, Komputer, atau Internet\nalamat.", -1, 120, 15, 200, 30
+    LTEXT "Ketik lokasi butir:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Cari...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Klik Lanjut untuk meneruskan.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Pilih Judul untuk Program"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "&Ketik nama untuk pintasan ini:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Klik Selesai untuk membuat pintasan.", -1, 118, 97, 178, 17
+END
+
+IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Hapus Pintasan/Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Untuk menghapus butir dari menu Mulai , pilih butir dan klik Hapus .", -1, 10, 10, 192, 16
+    CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
+    PUSHBUTTON "&Hapus", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Tutup", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Pemasang Wine Gecko"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS tidak bisa menemukan paket Wine Gecko yang dibutuhkan untuk aplikasi pengimplementasi HTML bekerja dengan baik. ReactOS bisa secara otomatis mengunduh dan memasang unduk anda.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Pasang", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Batal", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Tambah/Hapus Program"
+    IDS_CPLSYSTEMDESCRIPTION "Setel program dan buat pintasan."
+    IDS_CREATE_SHORTCUT "Buat pintasan"
+    IDS_ERROR_NOT_FOUND "Berkas %s tidak ditemukan."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING "Mengunduh..."
+    IDS_INSTALLING "Memasang..."
+    IDS_INVALID_SHA "checksum berkas unduhan tidak terduga. Membatalkan pemasangan dari berkas yang rusak."
+    IDS_NEW_INTERNET_SHORTCUT "Pintasan Internet Baru"
+    IDS_DWL_FAILED "Gagal mengunduh paket Gecko. Pastikan anda mempunyai sambungan internet untuk mengunduh paket. penyetelan akan dilanjutkan tanpa memasang Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Gagal membuat pintasan internet."
+    IDS_CANTMAKESHORTCUT "Gagal membuat pintasan."
+    IDS_NO_MEMORY "Tidak ada memori yang bisa dialokasikan!"
+    IDS_NO_DIRECTORY "Direktori belum diberi!"
+    IDS_INVALID_PATH "Jalur yang diberikan tidak sah!"
+END
