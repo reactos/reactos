@@ -111,7 +111,7 @@ INetCfgComponentBindings_fnEnumBindingPaths(
     DWORD dwFlags,
     IEnumNetCfgBindingPath **ppIEnum)
 {
-    return E_NOTIMPL;
+    return IEnumNetCfgBindingPath_Constructor(NULL, &IID_IEnumNetCfgBindingPath, (LPVOID *)ppIEnum, dwFlags);
 }
 
 HRESULT
