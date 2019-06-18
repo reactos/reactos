@@ -1,4 +1,4 @@
-/* Indonesian translation by Zaenal Mutaqin, 2007-02-16 */
+/* Indonesian translation by Zaenal Mutaqin, 2007-02-16 and Mas Ahmad Muhammad 2019-06-18 */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
@@ -6,137 +6,137 @@ STRINGTABLE
 BEGIN
     IDS_NAME "Nama"
     IDS_TYPE "Tipe"
-    IDS_MANUFACTURER "Manufakturer: %1"
+    IDS_MANUFACTURER "Manufaktur: %1"
     IDS_LOCATION "Lokasi: %1"
-    IDS_STATUS "Device Status: %1"
+    IDS_STATUS "Status Perangkat: %1"
     IDS_UNKNOWN "Tidak dikenal"
     IDS_LOCATIONSTR "Lokasi %1!u! (%2)"
     IDS_DEVCODE " (Kode %1!u!)"
     IDS_DEVCODE2 " (Kode %2!u!)"
-    IDS_ENABLEDEVICE "Gunakan device ini (hidupkan)"
-    IDS_DISABLEDEVICE "Jangan gunakan device ini (matikan)"
-    IDS_UNKNOWNDEVICE "Device tidak dikenal"
-    IDS_NODRIVERLOADED "Driver tidak diinstalasi untuk device ini."
+    IDS_ENABLEDEVICE "Gunakan perangkat ini (hidupkan)"
+    IDS_DISABLEDEVICE "Jangan gunakan perangkat ini (matikan)"
+    IDS_UNKNOWNDEVICE "Perangkat tidak dikenal"
+    IDS_NODRIVERLOADED "Driver untuk perangkat ini belum dipasang."
     IDS_DEVONPARENT "pada %1"
     IDS_TROUBLESHOOTDEV "&Pecahkan Masalah..."
-    IDS_ENABLEDEV "Hidupka&n Device"
-    IDS_REINSTALLDRV "Re&instalasi Driver"
+    IDS_ENABLEDEV "Hidupka&n Perangkat"
+    IDS_REINSTALLDRV "Pasang Ulang Dr&iver"
     IDS_PROPERTIES "P&roperti"
     IDS_UPDATEDRV "&Mutakhirkan Driver..."
     IDS_REBOOT "Mulai lagi &Komputer..."
     IDS_NOTAVAILABLE "Tidak tersedia"
     IDS_NOTDIGITALLYSIGNED "Tidak ditandatangan secara digital"
-    IDS_NODRIVERS "File driver tidak diperlukan atau sudah diambil untuk device ini."
-    IDS_RESOURCE_COLUMN "Resource type"
-    IDS_SETTING_COLUMN "Setting"
-    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_NODRIVERS "File driver tidak diperlukan atau sudah diambil untuk perangkat ini."
+    IDS_RESOURCE_COLUMN "Jenis sumber daya"
+    IDS_SETTING_COLUMN "Pengaturan"
+    IDS_RESOURCE_MEMORY_RANGE "Rentang memori"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "I/O range"
+    IDS_RESOURCE_PORT "Rentang I/O"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Device ini bekerja dengan baik."
-    IDS_DEV_NOT_CONFIGURED "Device ini tidak dikonfigurasi dengan baik."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS tidak bisa mengambil driver untuk device ini karena komputer melaporkan dua %1 tipe bus."
-    IDS_DEV_DEVLOADER_FAILED2 "Pengambil device %1 untuk device ini tidak mengambil device driver."
-    IDS_DEV_OUT_OF_MEMORY "Driver untuk device ini mungkin rusak, sistem anda bisa berjalan lambat pada memori atau sumber daya lain."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Device ini tidak bekerja dengan baik karena salah satu driver-nya mungkin rusak, atau registri anda mungkin rusak."
-    IDS_DEV_LACKED_ARBITRATOR "Driver untuk device ini meminta resource dimana ReactOS tidak mengetahui bagaimana menanganinya."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Device lain sedang menggunakan resources yang dibutuhkan device ini."
-    IDS_DEV_FAILED_FILTER "Drivers untuk device ini perlu diinstalasi ulang."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Device ini tidak bekerja dengan baik karena ReactOS tida dapat mengambil file %1 yang mengambil driver untuk device ini."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Device ini tidak bekerja dengan baik karena file %1 yang mengambil driver untuk device ini rusak."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Kegagalan device: Coba mengubah driver untuk device ini. Jika itu tidak bekerja, lihat dokumentasi hardware anda."
-    IDS_DEV_INVALID_DATA "Device ini tidak bekerja dengan baik karena BIOS dalam komputer anda melaporkan resources untuk device secara tidak benar."
-    IDS_DEV_INVALID_DATA2 "Device ini tidak bekerja dengan baik karena BIOS dalam komputer anda melaporkan resources untuk device secara tidak benar."
-    IDS_DEV_FAILED_START "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
-    IDS_DEV_LIAR "ReactOS berhenti merespon ketika mencoba untuk memulai device ini, dan karenanya tidak akan pernah mecoba untuk memulai lagi device ini."
-    IDS_DEV_NORMAL_CONFLICT "Device ini tidak menemukan %1 resources bebas untuk digunakan."
-    IDS_DEV_NOT_VERIFIED "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
-    IDS_DEV_NEED_RESTART "Device ini tidak akan bekerja denganbaik sampai anda memulai lagi komputer anda."
-    IDS_DEV_REENUMERATION "Device ini menyebabkan konflik resource."
-    IDS_DEV_PARTIAL_LOG_CONF "ReactOS tidak mengenali semua resources yang dipakai device ini."
-    IDS_DEV_UNKNOWN_RESOURCE "File informasi driver %1 memberitahu device anak ini untuk memakai resource yang tidak dimiliki atau dikenal device leluhurnya."
-    IDS_DEV_REINSTALL "Driver untuk device ini perlu diinstalasi ulang."
+    IDS_DEV_NO_PROBLEM "Perangkat ini bekerja dengan baik."
+    IDS_DEV_NOT_CONFIGURED "Perangkat ini tidak dikonfigurasi dengan baik."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS tidak bisa mengambil driver untuk perangkat ini karena komputer melaporkan dua %1 tipe bus."
+    IDS_DEV_DEVLOADER_FAILED2 "Pengambil perangkat %1 untuk perangkat ini tidak mengambil driver perangkat."
+    IDS_DEV_OUT_OF_MEMORY "Driver untuk perangkat ini mungkin rusak, sistem anda bisa berjalan lambat pada memori atau sumber daya lain."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Perangkat ini tidak bekerja dengan baik karena salah satu driver-nya mungkin rusak, atau registri anda mungkin rusak."
+    IDS_DEV_LACKED_ARBITRATOR "Driver untuk perangkat ini meminta sumber daya dimana ReactOS tidak mengetahui bagaimana menanganinya."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Perangkat lain sedang menggunakan sumber daya yang dibutuhkan perangkat ini."
+    IDS_DEV_FAILED_FILTER "Driver untuk perangkat ini perlu dipasang ulang."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Perangkat ini tidak bekerja dengan baik karena ReactOS tidak dapat mengambil berkas %1 yang berisi driver untuk perangkat ini."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Perangkat ini tidak bekerja dengan baik karena berkas %1 yang mengambil driver untuk perangkat ini rusak."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Kegagalan perangkat: Coba ubah driver untuk perangkat ini. Jika tidak bekerja, lihat dokumentasi perangkat keras tersebut."
+    IDS_DEV_INVALID_DATA "Perangkat ini tidak bekerja dengan baik karena BIOS dalam komputer melaporkan sumber daya untuk perangkat ini tidak sah."
+    IDS_DEV_INVALID_DATA2 "Perangkat ini tidak bekerja dengan baik karena BIOS dalam komputer melaporkan sumber daya untuk perangkat ini tidak sah."
+    IDS_DEV_FAILED_START "Perangkat ini tidak ada, tidak bekerja dengan baik, atau drivernya tidak semua terpasang."
+    IDS_DEV_LIAR "ReactOS berhenti merespon ketika mencoba untuk memulai perangkat ini, karena itu perangkat tidak akan diaktifkan lagi."
+    IDS_DEV_NORMAL_CONFLICT "Perangkat ini tidak menemukan %1 sumber daya bebas untuk digunakan."
+    IDS_DEV_NOT_VERIFIED "Perangkat ini tidak ada, tidak bekerja dengan baik, atau drivernya tidak semua terpasang."
+    IDS_DEV_NEED_RESTART "Perangkat ini tidak akan bekerja dengan baik sampai anda memulai ulang komputer ini."
+    IDS_DEV_REENUMERATION "Perangkat ini menyebabkan konflik sumber daya."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS tidak mengenali semua sumber daya yang dipakai perangkat ini."
+    IDS_DEV_UNKNOWN_RESOURCE "Berkas informasi driver %1 memberitahu perangkat anak untuk memakai sumber daya yang tidak dimiliki atau dikenal perangkat leluhur."
+    IDS_DEV_REINSTALL "Driver untuk perangkat ini perlu dipasang ulang."
     IDS_DEV_REGISTRY "Registri anda mungkin rusak."
-    IDS_DEV_WILL_BE_REMOVED "ReactOS menghapus device ini."
-    IDS_DEV_DISABLED "Device ini tidak dimulai."
-    IDS_DEV_DISABLED2 "Device ini dimatikan."
-    IDS_DEV_DEVLOADER_NOT_READY "Pengambil device ini tidak bisa mengambil driver yang dibutuhkan."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS menghapus perangkat ini."
+    IDS_DEV_DISABLED "Perangkat ini tidak dimulai."
+    IDS_DEV_DISABLED2 "Perangkat ini dimatikan."
+    IDS_DEV_DEVLOADER_NOT_READY "Pengambil perangkat ini tidak bisa mengambil driver yang dibutuhkan."
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
-    IDS_DEV_DEVICE_NOT_THERE "Device ini baik tidak ada, tidak bekerja dengan baik, ataupun drivernya tidak semua terinstalasi."
-    IDS_DEV_MOVED "ReactOS sedang dalam proses menyiapkan device ini."
-    IDS_DEV_TOO_EARLY "ReactOS sedang dalam proses menyiapkan device ini."
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS tidak bisa menetapkan resources untuk device ini."
-    IDS_DEV_FAILED_INSTALL "Driver untuk device ini tidak diinstalasi."
-    IDS_DEV_HARDWARE_DISABLED "Device ini dimatikan karena BIOS untuk device ini tidak memberikan resource-nya."
-    IDS_DEV_CANT_SHARE_IRQ "Device ini menggunakan Interrupt Request (IRQ) resource yang dipakai oleh device lain dan tidak bisa berbagi.\nAnda harus mengubah setelan yang konflik atau menghapus real-mode driver penyebab konflik."
-    IDS_DEV_FAILED_ADD "Device ini tidak bekerja dengan benar karena %1 tidak bekerja dengan baik."
-    IDS_DEV_DISABLED_SERVICE "ReactOS tidak bisa menginstalasi driver untuk device ini karena ia tidak bisa mengakses drive atau lokasi jaringan dimana file setup berada di dalamnya."
-    IDS_DEV_TRANSLATION_FAILED "Device ini tidak merespon terhadap driver-nya."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS tidak bisa memeriksa setelan untuk device ini. Lihat dokumentasi yang datang dengan device ini dan gunakan tab Resource untuk menyetel konfigurasi."
-    IDS_DEV_BIOS_TABLE "Firmware sistem komputer anda tidak menyertakan informasi cukup untuk dikonfigurasi dengan benar dan memakai device ini. \nUntuk menggunakan device ini, lihat manufakturer komputer anda guna mendapatkan pemutakhiran firmware atau BIOS."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Device ini meminta interupsi PCI tapi dikonfigurasi untuk interupsi ISA (atau sebaliknya). \nSilahkan gunakan program setup sistem komputer anda untuk mengkonfigurasi ulang pada device ini."
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS tidak bisa menginisialisasi device driver untuk hardware ini."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS tidak bisa mengambil device driver untuk hardware ini karena instan sebelumnya pada device driver masih dalam memori."
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS tidak bisa mengambil device driver untuk hardware ini. Driver mungkin rusak atau hilang."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS tidak bisa mengakses hardware ini karena informasi kunci layanan dalam registri hilang atau direkam secara tidak benar."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS mengambil device driver untuk hardware dengan sukses tapi tidak bisa menemukan hardware device."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS tidak bisa mengambil device driver untuk hardware ini karena ada duplikasi device yang sudah berjalan dalam sistem."
-    IDS_DEV_FAILED_POST_START "ReactOS telah menghentikan device ini karena dilaporkan bermasalah."
-    IDS_DEV_HALTED "Aplikasi atau layanan telah mematikan hardware device ini."
-    IDS_DEV_PHANTOM "Saat ini, hardware device ini tidak disambungkan ke komputer."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS tidak mendapatkan akses terhadap hardware device ini karena sistem operasi masih dalam proses dimatikan."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS tidak bisa memakai hardware device ini karena ia disiapkan untuk penghapusan aman, tapi ia tidak dihapus dari komputer"
-    IDS_DEV_DRIVER_BLOCKED "Software untuk device ini telah diblok dari awal karena ia dikenal mempunyai masalah dengan ReactOS. Hubungi vendor hardware untuk meminta driver baru."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS tidak bisa memulai hardware devices baru karena hive sistem terlalu besar (melebihi Batas Ukuran Registri)."
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS tidak bisa mengubah setelan device ini."
+    IDS_DEV_DEVICE_NOT_THERE "Perangkat ini tidak ada, tidak bekerja dengan baik, atau drivernya tidak semua terpasang."
+    IDS_DEV_MOVED "ReactOS sedang dalam proses menyiapkan perangkat ini."
+    IDS_DEV_TOO_EARLY "ReactOS sedang dalam proses menyiapkan perangkat ini."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS tidak bisa menetapkan sumber daya untuk perangkat ini."
+    IDS_DEV_FAILED_INSTALL "Driver untuk perangkat ini tidak dipasang."
+    IDS_DEV_HARDWARE_DISABLED "Perangkat ini dimatikan karena BIOS untuk perangkat ini tidak memberikan sumber dayanya."
+    IDS_DEV_CANT_SHARE_IRQ "Perangkat ini menggunakan sumber daya Interrupt Request (IRQ) yang dipakai oleh perangkat lain dan tidak bisa berbagi.\nAnda harus mengubah setelan yang konflik atau menghapus real-mode driver penyebab konflik."
+    IDS_DEV_FAILED_ADD "Perangkat ini tidak bekerja dengan benar karena %1 tidak bekerja dengan baik."
+    IDS_DEV_DISABLED_SERVICE "ReactOS tidak bisa memasang driver untuk perangkat ini karena ia tidak bisa mengakses drive atau lokasi jaringan di mana berkas setelannya berada di dalamnya."
+    IDS_DEV_TRANSLATION_FAILED "Perangkat ini tidak merespon terhadap driver-nya."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS tidak bisa memeriksa setelan untuk perangkat ini. Lihat dokumentasi yang terdapat pada perangkat ini dan gunakan tab Sumber Daya untuk menyetel konfigurasi."
+    IDS_DEV_BIOS_TABLE "Firmware sistem komputer anda tidak menyertakan informasi yang cukup untuk dikonfigurasi dengan benar dan menggunakan perangkat ini. \nUntuk menggunakannya, lihat manufaktur komputer anda guna mendapatkan pemutakhiran firmware atau BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Perangkat ini meminta interupsi PCI tapi dikonfigurasi untuk interupsi ISA (atau sebaliknya). \nSilahkan gunakan program setelan sistem komputer anda untuk mengkonfigurasi ulang pada perangkat ini."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS tidak bisa menmulai driver perangkat untuk perangkat keras ini."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS tidak bisa mengambil driver perangkat untuk perangkat keras ini karena instansi sebelumnya masih terdapat di memori."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS tidak bisa mengambil driver perangkat untuk perangkat keras ini. Driver mungkin rusak atau hilang."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS tidak bisa mengakses perangkat keras ini karena informasi kunci layanan dalam registri hilang atau terekam secara tidak sah."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS mengambil driver perangkat untuk perangkat keras dengan sukses tapi tidak bisa menemukan perangkatnya."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS tidak bisa mengambil driver perangkat untuk perangkat keras ini karena adanya perangkat duplikat yang sudah berjalan dalam sistem."
+    IDS_DEV_FAILED_POST_START "ReactOS telah menghentikan perangkat ini karena dilaporkan bermasalah."
+    IDS_DEV_HALTED "Aplikasi atau layanan telah mematikan perangkat keras ini."
+    IDS_DEV_PHANTOM "Saat ini, perangkat keras ini tidak disambungkan ke komputer."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS tidak mendapatkan akses terhadap perangkat keras ini karena sistem operasi masih dalam proses penonaktifan."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS tidak bisa memakai perangkat keras ini karena telah disiapkan untuk pencabutan secara aman, tapi masih terpasang di komputer"
+    IDS_DEV_DRIVER_BLOCKED "Perangkat lunak untuk perangkat ini telah diblokir dari awal karena ia diketahui mempunyai masalah dengan ReactOS. Hubungi vendor perangkat keras untuk meminta driver baru."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS tidak bisa memulai perangkat keras baru karena hive sistem terlalu besar (melebihi Batas Ukuran Registri)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS tidak bisa mengubah setelan perangkat ini."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
+    IDS_PROP_DEVICEID "ID Instansi Perangkat"
+    IDS_PROP_HARDWAREIDS "ID Perangkat Keras"
+    IDS_PROP_COMPATIBLEIDS "ID yang Kompatibel"
+    IDS_PROP_MATCHINGDEVICEID "ID Perangkat yang Cocok"
+    IDS_PROP_SERVICE "Layanan"
     IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_CAPABILITIES "Kapabilitas"
+    IDS_PROP_DEVNODEFLAGS "Bendera Devnode"
+    IDS_PROP_CONFIGFLAGS "Bendera Config"
+    IDS_PROP_CSCONFIGFLAGS "Bendera CSConfig"
+    IDS_PROP_EJECTIONRELATIONS "Hubungan Pengeluaran"
+    IDS_PROP_REMOVALRELATIONS "Hubungan Pencabutan"
+    IDS_PROP_BUSRELATIONS "Hubungan Bus"
+    IDS_PROP_DEVUPPERFILTERS "Filter Atas Perangkat"
+    IDS_PROP_DEVLOWERFILTERS "Filter Bawah Perangkat"
+    IDS_PROP_CLASSUPPERFILTERS "Filter Atas Class"
+    IDS_PROP_CLASSLOWERFILTERS "Filter Bawah Class"
+    IDS_PROP_CLASSINSTALLER "Pemasang Class"
+    IDS_PROP_CLASSCOINSTALLER "Sub-pemasang Class"
+    IDS_PROP_DEVICECOINSTALLER "Sub-pemasang perangkat"
+    IDS_PROP_FIRMWAREREVISION "Revision Firmware"
+    IDS_PROP_CURRENTPOWERSTATE "Status Daya Saat Ini"
+    IDS_PROP_POWERCAPABILITIES "Kapabilitas Daya"
+    IDS_PROP_POWERSTATEMAPPINGS "Pemetaan Status Daya"
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Device:", IDC_DEVICES, 7, 6, 196, 10
+    LTEXT "&Perangkat:", IDC_DEVICES, 7, 6, 196, 10
     CONTROL "", IDC_LV_DEVICES, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 16, 196, 50
-    GROUPBOX "Properti Device", IDC_PROPERTIESGROUP, 7, 76, 196, 105
+    GROUPBOX "Properti Perangkat", IDC_PROPERTIESGROUP, 7, 76, 196, 105
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "Pecahkan &Maslah...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Pecahkan &Masalah...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "P&roperti", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
@@ -147,16 +147,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Tipe Device:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Jenis Perangkat:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Manufakturer:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Manufaktur:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Lokasi:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    GROUPBOX "Status Device", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    GROUPBOX "Status Perangkat", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
     PUSHBUTTON "Pecahkan &Masalah...", IDC_DEVPROBLEM, 148, 163, 90, 15
-    LTEXT "Penggunaan &Device:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    LTEXT "Penggunaan &Perangkat:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
@@ -176,23 +176,23 @@ BEGIN
     LTEXT "Penanda tangan Digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "Rincian &Driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Untuk melihat rincian tetang file driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Untuk melihat rincian tentang berkas driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Perbarui Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
     LTEXT "Update the device driver.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "P&utar kembali Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "Jika terjadi kegagalan perangkat setelah diperbarui, putar ulang ke driver yang telah dipasang sebelumnya.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Bongkar", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "Untuk membongkar driver (Tingkat lanjut).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Rincian File Driver"
+CAPTION "Rincian Berkas Driver"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "File &Driver:", -1, 7, 36, 204, 8
+    LTEXT "Berkas &Driver:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
@@ -209,7 +209,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Rincian"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -222,12 +222,12 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Sumber Daya"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    LTEXT "Pengaturan sumber daya:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
@@ -235,7 +235,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Daya"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -250,23 +250,23 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "Be&rkas"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "K&eluar",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Ak&si",                        IDC_ACTIONMENU
+  POPUP "Ta&mpilan"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Jenis perangkat",             IDC_DEVBYTYPE
+    MENUITEM "Sambungan perangkat",       IDC_DEVBYCONN
+    MENUITEM "Jenis sumber daya",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Sambungan sumber daya",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Tunjukkan perangkat tersembunyi",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "&Bantuan"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "Tentang",                       IDC_ABOUT
   END
 END
 
@@ -279,50 +279,50 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Perbarui perangkat lunak driver..."
+  IDS_MENU_ENABLE           "Hidupkan"
+  IDS_MENU_DISABLE          "Matikan"
+  IDS_MENU_UNINSTALL        "Bongkar"
+  IDS_MENU_SCAN             "Pindai perubahan perangkat keras"
+  IDS_MENU_ADD              "Tambah perangkat keras"
+  IDS_MENU_PROPERTIES       "Properti"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Properti"
+  IDS_TOOLTIP_SCAN          "Pindai perubahan perangkat keras"
+  IDS_TOOLTIP_ENABLE        "Hidupkan"
+  IDS_TOOLTIP_DISABLE       "Matikan"
+  IDS_TOOLTIP_UPDATE        "Perbarui Perangkat Lunak Driver"
+  IDS_TOOLTIP_UNINSTALL     "Bongkar"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Buka dialog properti untuk pilihan saat ini."
+  IDS_HINT_SCAN         " Pindai peruahan perangkat PnP."
+  IDS_HINT_ENABLE       " Menghidupkan perangkat terpilih."
+  IDS_HINT_DISABLE      " Mematikan perangkat terpilih."
+  IDS_HINT_UPDATE       " Meluncurkan penuntun Pembaruan Perangkat Lunak Driver untuk perangkat terpilih."
+  IDS_HINT_UNINSTALL    " Membongkar driver untuk perangkat terpilih."
+  IDS_HINT_ADD          " Tambahkan perangkat lawas (non-PnP) ke komputer." 
+  IDS_HINT_ABOUT        " Tentang Manajer Perangkat ReactOS."
+  IDS_HINT_EXIT         " Keluar program."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Menampilkan jenis perangkat."
+  IDS_HINT_DEV_BY_CONN  " Menampilkan sambungan perangkat."
+  IDS_HINT_RES_BY_TYPE  " Menampilkan jenis sumber daya."
+  IDS_HINT_RES_BY_CONN  " Menampilkan sambungan sumber daya."
+  IDS_HINT_SHOW_HIDDEN  " Menampilkan beberapa perangkat lawas serta perangkat yang tidak lagi terpasang."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Kembalikan jendela ini ke ukuran semula."
+  IDS_HINT_SYS_MOVE     " Pindahkan jendela."
+  IDS_HINT_SYS_SIZE     " Ubah ukuran jendela."
+  IDS_HINT_SYS_MINIMIZE " Menyembunyikan jendela ini ke dalam ikon."
+  IDS_HINT_SYS_MAXIMIZE " Perluas jendela sehingga memenuhi layar."
+  IDS_HINT_SYS_CLOSE    " Tutup jendela."
 END
 
