@@ -742,6 +742,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     tbBtn.dwData = (DWORD_PTR)notifyItem;
     tbBtn.iString = (INT_PTR) text;
     tbBtn.idCommand = GetButtonCount();
+    tbBtn.iBitmap = -1;
 
     if (iconData->uFlags & NIF_STATE)
     {
