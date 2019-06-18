@@ -1,10 +1,10 @@
-/* Indonesian translation by Zaenal Mutaqin (ade999 at gmail dot com) */
+/* Indonesian translation by Zaenal Mutaqin (ade999 at gmail dot com) and Mas Ahmad Muhammad */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Keyboard"
+CAPTION "Papan Ketik"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "StickyKeys", -1, 6, 11, 234, 62
@@ -13,16 +13,16 @@ BEGIN
     AUTOCHECKBOX "&Gunakan StickyKeys", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Setelan", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "FilterKeys", -1, 6, 79, 234, 67
-    LTEXT "Gunakan FilterKeys jika anda ingin ReactOS untuk mengabaikan atau tombol berulang, atau rata-rata ulangan lambat.",
+    LTEXT "Gunakan FilterKeys jika anda ingin ReactOS untuk mengabaikan tombol berulang, atau rata-rata ulangan lambat.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Gunakan &FilterKeys", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "S&etelan", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "ToggleKeys", -1, 6, 148, 234, 62
-    LTEXT "Gunakan ToggleKeys jika anda ingin mendengan nada ketika menekan Caps Lock, Num Lock, dan Scroll Lock.",
+    LTEXT "Gunakan ToggleKeys jika anda ingin mendengar nada ketika menekan Caps Lock, Num Lock, dan Scroll Lock.",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "Gunakan &ToggleKeys", IDC_TOGGLE_BOX, 12, 184, 126, 14
-    PUSHBUTTON "Setelan&n", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
-    AUTOCHECKBOX "Sho&w extra keyboard help in programs", IDC_KEYBOARD_EXTRA,
+    PUSHBUTTON "Setela&n", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
+    AUTOCHECKBOX "Tunjukkan &bantuan papan ketik ekstra dalam program", IDC_KEYBOARD_EXTRA,
                  6, 212, 234, 14
 END
 
@@ -35,7 +35,7 @@ BEGIN
     LTEXT "Gunakan SoundSentry jika anda ingin ReactOS untuk membuat peringatan visual ketika sistem anda membuat suara.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Gunakan &SoundSentry", IDC_SENTRY_BOX, 12, 49, 90, 14
-    LTEXT "User the following warning:", IDC_SENTRY_TEXT, 12, 72, 222, 11
+    LTEXT "Peringatan pengguna berikut:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "ShowSounds", -1, 6, 115, 234, 67
@@ -54,17 +54,17 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Gunakan Kontras Tinggi", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Setelan", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Cursor options", -1, 6, 79, 234, 115
-    LTEXT "Use the track bars to modify the blinking speed of the cursor and its width.",
+    GROUPBOX "Pilihan penunjuk", -1, 6, 79, 234, 115
+    LTEXT "Gunakan bilah jalur untuk mengubah kecepatan kedipan dan ketebalan penunjuk.",
           -1, 12, 88, 222, 20
-    CTEXT "Blinking speed:", -1, 12, 115, 222, 11
-    LTEXT "None", -1, 18, 130, 36, 11
-    LTEXT "Fast", -1, 192, 130, 36, 11
+    CTEXT "Kecepatan kedipan:", -1, 12, 115, 222, 11
+    LTEXT "Tidak ada", -1, 18, 130, 36, 11
+    LTEXT "Cepat", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
-    CTEXT "Cursor width:", -1, 12, 151, 222, 11
-    LTEXT "Narrow", -1, 18, 171, 36, 11
-    LTEXT "Wide", -1, 192, 171, 36, 11
+    CTEXT "Ketebalan penunjuk:", -1, 12, 151, 222, 11
+    LTEXT "Sempit", -1, 18, 171, 36, 11
+    LTEXT "Lebar", -1, 192, 171, 36, 11
     CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 169, 126, 20
     LTEXT "", IDC_CURSOR_WIDTH_TEXT, 18, 142, 24, 16
@@ -72,11 +72,11 @@ END
 
 IDD_PROPPAGEMOUSE DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Mouse"
+CAPTION "Tetikus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "MouseKeys", -1, 6, 11, 234, 62
-    LTEXT "Gunakan opsi ini jika anda ingin mengontrol pointer dengan keypad numerik pada keyboard anda.",
+    LTEXT "Gunakan opsi ini jika anda ingin mengontrol pointer dengan keypad numerik pada keyboard.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Gunakan &MouseKeys", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Setelan", IDC_MOUSE_BUTTON, 144, 49, 90, 14
@@ -97,13 +97,13 @@ BEGIN
                  12, 72, 222, 14
     AUTOCHECKBOX "Buat suara ketika menghidupkan/mematikan fitur ini", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
-    GROUPBOX "SerialKey Devices", -1, 6, 115, 234, 47
-    LTEXT "SerialKey devices membolehkan akses alternatif pada fitur keyboard dan mouse.",
+    GROUPBOX "Perangkat SerialKey", -1, 6, 115, 234, 47
+    LTEXT "Perangkat SerialKey membolehkan akses alternatif pada fitur papan ketik dan tetikus.",
           -1, 12, 124, 222, 20
-    AUTOCHECKBOX "Dukung &SerialKey devices", IDC_SERIAL_BOX, 12, 142, 126, 14
+    AUTOCHECKBOX "Dukung perangkat &SerialKey", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "S&etelan", IDC_SERIAL_BUTTON, 144, 142, 90, 14
-    GROUPBOX "Opsi Administratif", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "Terapkan semua setelan ke l&ogon desktop", IDC_ADMIN_LOGON_BOX,
+    GROUPBOX "Pilihan Administratif", -1, 6, 169, 234, 47
+    AUTOCHECKBOX "Terapkan semua setelan ke desktop &masuk", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
     AUTOCHECKBOX "Terapkan semua setelan ke &standar bagi pengguna baru", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
@@ -111,183 +111,183 @@ END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Sticky Keys Settings"
+CAPTION "Pengaturan StickyKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Keys", -1, 6, 11, 234, 62
-    LTEXT "Press the SHIFT-Key 5 times in order to activate the Sticky Keys feature.",
+    GROUPBOX "Tombol", -1, 6, 11, 234, 62
+    LTEXT "Tekan tombol SHIFT 5 kali berturut-turut untuk mengaktifkan fitur Sticky Keys.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "A&ctivate sticky keys", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "Options", -1, 6, 83, 234, 44
-    AUTOCHECKBOX "&Press modifier key twice to lock", IDC_STICKY_LOCK_CHECK,
+    AUTOCHECKBOX "A&ktifkan StickyKeys", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Pilihan", -1, 6, 83, 234, 44
+    AUTOCHECKBOX "&Tekan tombol pengubah dua kali untuk mengunci", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "&Turn StickyKeys off if two keys are pressed at once", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "&Matikan StickyKeys jika dua tombol ditekan sekaligus", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
-    GROUPBOX "Notifications", -1, 6, 133, 234, 44
-    AUTOCHECKBOX "&Make sounds when the modifier key is pressed", IDC_STICKY_SOUND_CHECK,
+    GROUPBOX "Pemberitahuan", -1, 6, 133, 234, 44
+    AUTOCHECKBOX "&Keluarkan bunyi bila tombol pengubah ditekan", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "&Show StickyKeys status on screen", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "T&ampilkan status StickyKeys pada layar", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Filter Keys Settings"
+CAPTION "Pengaturan FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for FilterKeys is:  \nHold down <Right Shift> for eight seconds.",
+    GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
+    LTEXT "Pintasan untuk FilterKeys adalah:  \nTekan dan tahan <Right Shift> selama delapan detik.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Use shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
-    GROUPBOX "Filter options", -1, 6, 79, 234, 79
-    AUTORADIOBUTTON "Ign&ore repeated keystrokes", IDC_FILTER_BOUNCE_RADIO,
+    AUTOCHECKBOX "&Gunakan pintasan", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
+    GROUPBOX "Pilihan filter", -1, 6, 79, 234, 79
+    AUTORADIOBUTTON "Abaikan ketukan tombol ber&ulang", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 120, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Ig&nore quick keystrokes and slow down the repeat rate", IDC_FILTER_REPEAT_RADIO,
+    AUTORADIOBUTTON "&Abaikan ketukan tombol cepat dan perlambat laju pengulangan", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Settings", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
-    PUSHBUTTON "S&ettings", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "&Click here and type here to test the settings:", -1, 12, 129, 222, 11
+    PUSHBUTTON "&Setelan", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
+    PUSHBUTTON "S&etelan", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
+    LTEXT "&Klik dan ketik di sini untuk menguji setelan FilterKey:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
-    GROUPBOX "Notifications", -1, 6, 161, 234, 41
-    AUTOCHECKBOX "&Beep when keys pressed or accepted", IDC_FILTER_SOUND_CHECK,
+    GROUPBOX "Pemberitahuan", -1, 6, 161, 234, 41
+    AUTOCHECKBOX "&Bunyikan bip ketika tombol ditekan atau diterima", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
-    AUTOCHECKBOX "S&how FilterKey status on screen", IDC_FILTER_STATUS_CHECK,
+    AUTOCHECKBOX "T&ampilkan status FilterKey pada layar", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_TOGGLEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Toggle Keys Settings"
+CAPTION "Pengaturan ToggleKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for ToggleKeys is: \nHold down <Num Lock> for five seconds.",
+    GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
+    LTEXT "Pintasan untuk ToggleKeys is: \nTekan dan tahan <Num Lock> selama lima detik.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Use &shortcut", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
+    AUTOCHECKBOX "Gunakan pintasan", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_CONTRASTOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "High Contrast Settings"
+CAPTION "Pengaturan Kontras Tinggi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for High Contrast is:  \nPress <Left Alt+Left Shift+Print Screen>.",
+    GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
+    LTEXT "Pintasan untuk Kontras Tinggi:  \nTekan <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Use shortcut", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "High Contrast Color Scheme", -1, 6, 83, 234, 44
-    LTEXT "Current Color Scheme:", -1, 12, 94, 222, 11
+    AUTOCHECKBOX "&Gunakan pintasan", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Warna skema kontras tinggi", -1, 6, 83, 234, 44
+    LTEXT "Skema warna saat ini:", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_MOUSEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Mouse Keys Settings"
+CAPTION "Pengaturan MouseKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for Mouse Keys is:  \nPress <Left Alt+Left Shift+Num Lock>.",
+    GROUPBOX "Pintasan papan ketik", -1, 6, 11, 234, 62
+    LTEXT "Pintasan MouseKeys:  \nTekan <Left Alt+Left Shift+Num Lock>.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Use shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
+    AUTOCHECKBOX "&Gunakan pintasan", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
-    GROUPBOX "Pointer speed", -1, 6, 83, 234, 83
-    LTEXT "&Top speed:", -1, 12, 96, 48, 11
-    LTEXT "Low", -1, 66, 96, 18, 11
+    GROUPBOX "Kecepatan penunjuk", -1, 6, 83, 234, 83
+    LTEXT "Kecepatan &puncak:", -1, 12, 96, 48, 11
+    LTEXT "Rendah", -1, 66, 96, 18, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
-    LTEXT "High", -1, 204, 96, 18, 11
-    LTEXT "&Acceleration:", -1, 12, 123, 48, 11
-    LTEXT "Slow", -1, 66, 123, 18, 11
+    LTEXT "Tinggi", -1, 204, 96, 18, 11
+    LTEXT "&Akselerasi:", -1, 12, 123, 48, 11
+    LTEXT "Lambat", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Fast", -1, 204, 123, 18, 11
-    AUTOCHECKBOX "&Hold down Ctrl to speed up and Shift to slow down", IDC_MOUSEKEYS_SPEED_CHECK,
+    LTEXT "Cepat", -1, 204, 123, 18, 11
+    AUTOCHECKBOX "&Tekan dan tahan Ctrl untuk mempercepat dan Shift untuk memperlambat", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Use MouseKeys when NumLock is:", -1, 6, 171, 120, 11
-    AUTORADIOBUTTON "O&n", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
-    AUTORADIOBUTTON "Of&f", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
-    AUTOCHECKBOX "&Show MouseKey status on screen", IDC_MOUSEKEYS_STATUS_CHECK,
+    LTEXT "Gunakan MouseKeys ketika NumLock:", -1, 6, 171, 120, 11
+    AUTORADIOBUTTON "&Nyala", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
+    AUTORADIOBUTTON "&Mati", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
+    AUTOCHECKBOX "Tampi&lkan status MouseKeys pada layar", IDC_MOUSEKEYS_STATUS_CHECK,
                  6, 184, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced FilterKeys Settings"
+CAPTION "Pengaturan FilterKeys Tingkat Lanjut"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Bounce Keys", -1, 6, 11, 234, 47
-    LTEXT "&Ignore keystrokes repeated faster than:", -1, 12, 21, 222, 20
+    GROUPBOX "BounceKeys", -1, 6, 11, 234, 47
+    LTEXT "Abai&kan pengulangan keystrokes lebih cepat dari:", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Test area:", -1, 6, 68, 48, 11
+    LTEXT "&Area Uji:", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced FilterKeys Settings"
+CAPTION "Pengaturan Tingkat Lanjut FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Repeat Keys", -1, 6, 11, 234, 106
-    LTEXT "Override settings on the Keyboard control panel:",
+    GROUPBOX "RepeatKeys", -1, 6, 11, 234, 106
+    LTEXT "Menimpa setelan panel kontrol Papan Ketik:",
           -1, 12, 20, 222, 20
-    AUTORADIOBUTTON "&No keyboard repeat", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
-    AUTORADIOBUTTON "&Slow down keyboard repeat rates", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
-    LTEXT "Repeat &delay:", -1, 24, 60, 60, 11
+    AUTORADIOBUTTON "&Tidak ada RepeatKeys", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
+    AUTORADIOBUTTON "&Perlambat laju RepeatKeys", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
+    LTEXT "Je&da pengulangan:", -1, 24, 60, 60, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Repeat &rate:", -1, 24, 89, 60, 11
+    LTEXT "&Laju ulang:", -1, 24, 89, 60, 11
     COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Slow Keys", -1, 6, 124, 234, 42
-    LTEXT "&Keys must be held down for:", -1, 12, 133, 222, 11
+    GROUPBOX "SlowKeys", -1, 6, 124, 234, 42
+    LTEXT "&Tombol harus ditekan selama:", -1, 12, 133, 222, 11
     COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 150, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Test area:", -1, 6, 178, 48, 11
+    LTEXT "Area &uji:", -1, 6, 178, 48, 11
     EDITTEXT IDC_REPEAT_TEST_EDIT, 60, 180, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "SerialKeys Settings"
+CAPTION "Pengaturan SerialKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Serial Keys", -1, 6, 11, 234, 92
-    LTEXT "Choose the port where you connect an alternative input device.",
+    GROUPBOX "SerialKeys", -1, 6, 11, 234, 92
+    LTEXT "Pilih port mana anda menghubungkan perangkat input alternatif.",
           -1, 12, 20, 222, 20
-    LTEXT "&Serial port:", -1, 12, 34, 222, 20
+    LTEXT "Port &Serial:", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Baud rate:", -1, 12, 65, 222, 20
+    LTEXT "Tingkat &Baud:", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 189, 207, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 189, 207, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Aksesibilitas"
-    IDS_CPLSYSTEMDESCRIPTION "Mengkustomisasi fitur aksesibilitas untuk komputer anda."
-    IDS_SENTRY_NONE "[None]"
-    IDS_SENTRY_TITLE "Flash the titlebar"
-    IDS_SENTRY_WINDOW "Flash the active window"
-    IDS_SENTRY_DISPLAY "Flash the desktop"
-    IDS_SECONDS "Seconds"
-    IDS_MINUTES "Minutes"
+    IDS_CPLSYSTEMDESCRIPTION "Menyesuaikan fitur aksesibilitas untuk komputer anda."
+    IDS_SENTRY_NONE "[Tidak ada]"
+    IDS_SENTRY_TITLE "Kedipkan bilah judul"
+    IDS_SENTRY_WINDOW "Kedipkan jendela yang aktif"
+    IDS_SENTRY_DISPLAY "Kedipkan desktop"
+    IDS_SECONDS "Detik"
+    IDS_MINUTES "Menit"
 END
