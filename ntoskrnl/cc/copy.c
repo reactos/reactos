@@ -178,7 +178,6 @@ CcWriteVirtualAddress (
         } while (++i < (Size >> PAGE_SHIFT));
     }
 
-    Size = ROUND_TO_PAGES(Size);
     ASSERT(Size <= VACB_MAPPING_GRANULARITY);
     ASSERT(Size > 0);
 
