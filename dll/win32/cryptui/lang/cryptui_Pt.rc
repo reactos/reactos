@@ -20,7 +20,7 @@
 
 #include "cryptuires.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
@@ -127,31 +127,31 @@ STRINGTABLE
     IDS_PURPOSE_CTL_USAGE_SIGNING "Permite que assine digitalmente uma lista de certificados confiáveis"
     IDS_PURPOSE_EFS "Permite que os dados em disco sejam cifrados"
     IDS_PURPOSE_EFS_RECOVERY "Recuperação de Ficheiros"
-    IDS_PURPOSE_WHQL "Windows Hardware Driver Verification"
-    IDS_PURPOSE_NT5 "Windows System Component Verification"
-    IDS_PURPOSE_OEM_WHQL "OEM Windows System Component Verification"
-    IDS_PURPOSE_EMBEDDED_NT "Embedded Windows System Component Verification"
-    IDS_PURPOSE_ROOT_LIST_SIGNER "Root List Signer"
-    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Qualified Subordination"
-    IDS_PURPOSE_KEY_RECOVERY "Key Recovery"
-    IDS_PURPOSE_DOCUMENT_SIGNING "Document Signing"
-    IDS_PURPOSE_LIFETIME_SIGNING "Lifetime Signing"
-    IDS_PURPOSE_DRM "Digital Rights"
-    IDS_PURPOSE_LICENSES "Key Pack Licenses"
-    IDS_PURPOSE_LICENSE_SERVER "License Server Verification"
-    IDS_PURPOSE_ENROLLMENT_AGENT "Certificate Request Agent"
-    IDS_PURPOSE_SMARTCARD_LOGON "Smart Card Logon"
-    IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
-    IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
+    IDS_PURPOSE_WHQL "Verificação de driver de hardware do Windows"
+    IDS_PURPOSE_NT5 "Verificação de componentes do sistema Windows"
+    IDS_PURPOSE_OEM_WHQL "Verificação do componente do sistema Windows OEM"
+    IDS_PURPOSE_EMBEDDED_NT "Verificação de componentes do sistema embarcado do Windows"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Signatário da Lista Raiz"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Subordinação Qualificada"
+    IDS_PURPOSE_KEY_RECOVERY "Recuperação de Chave"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Assinatura de documento"
+    IDS_PURPOSE_LIFETIME_SIGNING "Assinatura vitalícia"
+    IDS_PURPOSE_DRM "Direitos digitais"
+    IDS_PURPOSE_LICENSES "Licenças do Pacote de Chaves"
+    IDS_PURPOSE_LICENSE_SERVER "Verificação do servidor de licenças"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Agente de solicitação de certificado"
+    IDS_PURPOSE_SMARTCARD_LOGON "Início de sessão de cartão inteligente"
+    IDS_PURPOSE_CA_EXCHANGE "Arquivamento de chave privada"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Agente de recuperação de chaves"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Replicação de e-mail do serviço de diretório"
     IDS_EXPORT_WIZARD "Assistente de Exportação de Certificados"
     IDS_EXPORT_FORMAT_TITLE "Formato de Exportação"
-    IDS_EXPORT_FORMAT_SUBTITLE "Escolha o formato em que o conteúdo será guardado."
-    IDS_EXPORT_FILE_TITLE "Exportar Ficheiro"
-    IDS_EXPORT_FILE_SUBTITLE "Especifique o nome do ficheiro em que o conteúdo será guardado."
-    IDS_EXPORT_FILE_EXISTS "O ficheiro especificado já existe. Deseja substituí-lo?"
-    IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
-    IDS_EXPORT_FILTER_BASE64_CERT "Base64-Encoded X.509 (*.cer)"
+    IDS_EXPORT_FORMAT_SUBTITLE "Escolha o formato em que o conteúdo será armazenado."
+    IDS_EXPORT_FILE_TITLE "Exportar arquivo"
+    IDS_EXPORT_FILE_SUBTITLE "Especifique o nome do arquivo que deve ser guardado."
+    IDS_EXPORT_FILE_EXISTS "O documento especificado já existe. Deseja substituí-lo?"
+    IDS_EXPORT_FILTER_CERT "X.509 binário codificado por DER (* .cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "X.509 codificado em Base64 (* .cer)"
     IDS_EXPORT_FILTER_CRL "Lista de Revogação de Certificados (*.crl)"
     IDS_EXPORT_FILTER_CTL "Lista de Certificados Confiáveis (*.stl)"
     IDS_EXPORT_FILTER_CMS "Mensagens CMS/PKCS #7 (*.p7b)"
@@ -171,12 +171,11 @@ STRINGTABLE
     IDS_EXPORT_PASSWORD_MISMATCH "As palavras chave não coincidem."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Nota: A chave privada para este certificado não conseguiu ser aberta."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Nota: A chave privada para este certificado não é exportável."
-    IDS_INTENDED_USE_COLUMN "Intended Use"
-    IDS_LOCATION_COLUMN "Location"
-    IDS_SELECT_CERT_TITLE "Select Certificate"
-    IDS_SELECT_CERT "Select a certificate"
-    IDS_NO_IMPL "Not yet implemented"
-}
+    IDS_INTENDED_USE_COLUMN "Uso pretendido"
+     IDS_LOCATION_COLUMN "Localização"
+     IDS_SELECT_CERT_TITLE "Seleccionar certificado"
+     IDS_SELECT_CERT "Seleccione um certificado"
+     IDS_NO_IMPL "Ainda não implementado"}
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
 CAPTION "Geral"
@@ -460,13 +459,13 @@ BEGIN
 END
 
 IDD_SELECT_CERT DIALOG 0,0,278,157
-CAPTION "Select Certificate"
+CAPTION "Selecção de Certificado"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Select a certificate you want to use", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
+  LTEXT "Seleccione o certificado que pretende utilizar", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
   CONTROL "", IDC_SELECT_CERTS, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 7,40,264,89
   PUSHBUTTON "OK", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 149,136,51,14
-  PUSHBUTTON "&View Certificate", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
+  PUSHBUTTON "Cancelar", IDCANCEL, 149,136,51,14
+  PUSHBUTTON "&Ver Certificado", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
 END

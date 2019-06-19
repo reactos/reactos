@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
@@ -35,6 +35,7 @@ Gostaria de o substituir?"
     IDS_PATHNOTEXISTING     "A localização não existe"
     IDS_FILENOTEXISTING     "O ficheiro não existe"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "A selecção não é uma pasta"
 }
 
 STRINGTABLE
@@ -89,7 +90,7 @@ Por favor indique um valor entre 1 e %d."
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Não disponível; "
     PD32_PRINTER_STATUS_WAITING           "A esperar; "
     PD32_PRINTER_STATUS_PROCESSING        "A processar; "
-    PD32_PRINTER_STATUS_INITIALIZING      "A inicializar; "
+    PD32_PRINTER_STATUS_INITIALIZING      "A iniciar; "
     PD32_PRINTER_STATUS_WARMING_UP        "A aquecer; "
     PD32_PRINTER_STATUS_TONER_LOW         "Pouco toner; "
     PD32_PRINTER_STATUS_NO_TONER          "Sem toner; "
@@ -137,8 +138,8 @@ STRINGTABLE
     IDS_SAVE        "Gravar"
     IDS_SAVE_AS     "Gravar Como"
     IDS_OPEN_FILE   "Abrir Ficheiro"
-    IDS_SELECT_FOLDER "Select Folder"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_SELECT_FOLDER "Seleccione uma pasta"
+    IDS_FONT_SIZE_INPUT "Tamanho da Fonte terá de ser um numero."
 }
 
 /*
@@ -313,7 +314,7 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Palavra &Inteira", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Maiúsculas/minúsculas", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Direção", grp1, 147, 21, 58, 38
+ GROUPBOX "Direcção", grp1, 147, 21, 58, 38
  CONTROL "&Acima", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
  CONTROL "A&baixo", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
