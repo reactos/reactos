@@ -23,18 +23,18 @@ BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
     GROUPBOX "&Screensaver", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Se&ttings", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "Pre&view", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "&Wait", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON "Se&telan", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
+    PUSHBUTTON "P&ratinjau", IDC_SCREENS_TESTSC, 175, 102, 50, 15
+    LTEXT "Tun&ggu", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Ask for &password on resume", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT "menit", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL "Pintai &kata sandi saat melanjutkan", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "To adjust the power settings for your monitor, click on Power Settings.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "P&ower...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
+    GROUPBOX "Fitur pen&yimpan Daya monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "Untuk mengatur setelan daya monitor, klik Daya.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "&Daya...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
@@ -43,16 +43,16 @@ CAPTION "Penampilan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "Gaya Tampilan", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "SkemaWarna", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "Skema Warna", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Ukuran", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "&Efek...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON "Lanjutan", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
@@ -74,10 +74,10 @@ BEGIN
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "Warna ke-&2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Font", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "Fon", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Besar Font", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Besar Fon", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "Warna", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
@@ -90,28 +90,28 @@ END
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
+CAPTION "Efek"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Use the following transition effect for menus and tooltips",
+    CONTROL "G&unakan efek transisi berikut untuk menu dan alat bantuan",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&se the following method to smooth edges of screen fonts", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Gu&nakan cara berikut untuk menghaluskan tepi fon pada layar", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Us&e large icons", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "&Gunakan ikon besar", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Show sh&adows under menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "Tampilkan &bayangan di bawah menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Show &window contents while dragging", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "&Tampilkan konten jendela ketika digeser", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Hide underlined letters for keyboard navigation until I press the Alt key",
+    CONTROL "&Sembunyikan huruf yang digarisbawahi untuk navigasi papan ketik sampai tombol Alt  tertekan",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Gunakan menu &datar", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -120,15 +120,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Setelan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Drag the monitor icons to match the physical arrangement of your monitors.", -1, 3, 3, 240, 20
+    LTEXT "Geser ikon monitor untuk mencocokkan penyesuaian fisik monitor.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Tampilan", 1820, 3, 107, 70, 9
     LTEXT "<tidak ada>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "Area &Layar", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Kurang", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Lebih", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "Kurangi", 1815, 9, 137, 25, 9, NOT WS_GROUP
+    LTEXT "Lebihkan", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "&Warna", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -138,29 +138,29 @@ END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Umum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Size", -1, 14, 20, 222, 9
+    GROUPBOX "Tampilan", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "Ukuran Fon", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibility", -1, 7, 67, 237, 97
-    LTEXT "Some programs operate improperly if you do not restart your computer after you change color settings.\n\nAfter I change color settings", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Restart the computer before applying the new color settings.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Apply the new color settings without restarting.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Ask me before applying the new color settings.", IDC_ASKME_RB, 14, 146, 228, 10
+    GROUPBOX "Kompatibilitas", -1, 7, 67, 237, 97
+    LTEXT "Berapa program berjalan tidak semestimnya jika anda tidak memulai ulang komputer setelah mengubah pengaturan warna.\n\nSetelah saya mengubah pengaturan warna", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Mulai ulang komputer sebelum menerapkan pengaturan warna baru.", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Me&nerapkan pengaturan warna baru tanpa memulai ulang.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "&Tanya saya sebelum menerapkan pengaturan warna baru.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Pengaturan Tampilan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Ingin menetapkan setelan tampilan ini?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Ya", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Tidak", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
@@ -174,18 +174,18 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached", ID_MENU_ATTACHED
-        MENUITEM "&Primary", ID_MENU_PRIMARY
+        MENUITEM "&Terpasang", ID_MENU_ATTACHED
+        MENUITEM "&Utama", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify", ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "&Identifikasikan", ID_MENU_IDENTIFY
+        MENUITEM "P&roperti", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT "Fade effect"
+    IDS_SLIDEEFFECT "Efek luncur"
+    IDS_FADEEFFECT "Efek pudar"
 END
 
 STRINGTABLE
@@ -196,9 +196,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(Monitor Banyak)"
+    IDS_UNKNOWNMONITOR "(Monitor tidak dikenal)"
+    IDS_ADVANCEDTITLEFMT "%s dan %s"
 END
 
 STRINGTABLE
@@ -207,10 +207,10 @@ BEGIN
     IDS_CPLDESCRIPTION "Mengkustomisasi tampilan desktop dan screen saver."
     IDS_NONE "(Tidak ada)"
     IDS_CENTER "Tengah"
-    IDS_STRETCH "Tarik"
-    IDS_TILE "Tile"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_STRETCH "Luas"
+    IDS_TILE "Ubin"
+    IDS_FIT "Pas"
+    IDS_FILL "Terisi"
 END
 
 STRINGTABLE
@@ -220,7 +220,7 @@ BEGIN
     IDS_COLOR_16BIT "Warna Tinggi (16 Bit)"
     IDS_COLOR_24BIT "Warna Asli (24 Bit)"
     IDS_COLOR_32BIT "Warna Asli (32 Bit)"
-    IDS_PIXEL "%lux%lu pixels"
+    IDS_PIXEL "%lux%lu piksel"
 END
 
 STRINGTABLE
@@ -236,7 +236,7 @@ BEGIN
     IDS_MESSBOX "Kotak Pesan"
     IDS_MESSTEXT "Teks Pesan"
     IDS_BUTTEXT "OK"
-    IDS_CLASSIC_THEME "Classic Theme"
+    IDS_CLASSIC_THEME "Tema Klasik"
 END
 
 STRINGTABLE
@@ -249,7 +249,7 @@ BEGIN
     IDS_ELEMENT_5 "Menu"
     IDS_ELEMENT_6 "Elemen diterangi"
     IDS_ELEMENT_7 "Jendela"
-    IDS_ELEMENT_8 "Scrollbars"
+    IDS_ELEMENT_8 "Bilah gulir"
     IDS_ELEMENT_9 "Obyek 3D"
     IDS_ELEMENT_10 "Judul Palet"
     IDS_ELEMENT_11 "Bar judul"
@@ -257,15 +257,15 @@ BEGIN
     IDS_ELEMENT_13 "Latar belakang aplikasi"
     IDS_ELEMENT_14 "Jarak Simbol (horisontal)"
     IDS_ELEMENT_15 "Jarak Simbol (vertikal)"
-    IDS_ELEMENT_16 "InfoCepat"
+    IDS_ELEMENT_16 "Info Cepat"
     IDS_ELEMENT_17 "Simbol"
 //  IDS_ELEMENT_18 "Elemen menu Deaktivasi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
+    IDS_DISPLAY_SETTINGS "Pengaturan Tampilan"
+    IDS_APPLY_FAILED "Gagal menerapkan setelan baru..."
     IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "Mengembalikan setelan sebelumnya dalam %d detik."
 END
