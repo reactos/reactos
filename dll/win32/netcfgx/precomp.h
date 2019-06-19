@@ -64,6 +64,10 @@ extern HINSTANCE netcfgx_hInstance;
 HRESULT WINAPI INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem,INetCfg * iface);
 HRESULT WINAPI IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * iface);
 
+/* netcfgbindinginterface_iface.c */
+HRESULT WINAPI INetCfgBindingInterface_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
+HRESULT WINAPI IEnumNetCfgBindingInterface_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
+
 /* netcfgbindingpath_iface.c */
 HRESULT WINAPI INetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI IEnumNetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, DWORD dwFlags);

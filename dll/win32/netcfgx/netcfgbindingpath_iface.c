@@ -131,7 +131,7 @@ INetCfgBindingPath_fnEnumBindingInterfaces(
     INetCfgBindingPath *iface,
     IEnumNetCfgBindingInterface **ppenumInterface)
 {
-    return E_NOTIMPL;
+    return IEnumNetCfgBindingInterface_Constructor(NULL, &IID_IEnumNetCfgBindingInterface, (LPVOID *)ppenumInterface);
 }
 
 static const INetCfgBindingPathVtbl vt_NetCfgBindingPath =
