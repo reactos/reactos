@@ -3279,7 +3279,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
          *
          * > usWinDescent is "usually" a positive value ...
          *
-         * We can read it as "not always".
+         * We can read it as "not always". See CORE-14994.
          */
 
         /* case (A): lfHeight is positive */
