@@ -1,25 +1,25 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2014, 2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_TASKMANAGER MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Yeni Görev (Çalıştır...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", ID_FILE_EXIT
+        MENUITEM "Ç&ıkış", ID_FILE_EXIT
     END
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Sürekli Üstte", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "&Her Zaman Üstte", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "&Kullanımda Simge Durumuna Küçült", ID_OPTIONS_MINIMIZEONUSE, CHECKED
-        MENUITEM "S&imge Durumuna Küçültüldüğünde Gizle", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
-        MENUITEM "&16 Bitlik Görevleri Göster", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+        MENUITEM "&Simge Durumuna Küçültüldüğünde Gizle", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "16 &Bitlik Görevleri Göster", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Şimdi Yenile", ID_VIEW_REFRESH
+        MENUITEM "Ş&imdi Yenile", ID_VIEW_REFRESH
         POPUP "&Yenilenme Hızı"
         BEGIN
             MENUITEM "&Yüksek", ID_VIEW_UPDATESPEED_HIGH
@@ -31,40 +31,40 @@ BEGIN
         MENUITEM "&Büyük Simgeler", ID_VIEW_LARGE
         MENUITEM "&Küçük Simgeler", ID_VIEW_SMALL
         MENUITEM "&Ayrıntılar", ID_VIEW_DETAILS, CHECKED
-        MENUITEM "&Dikeçleri Seç...", ID_VIEW_SELECTCOLUMNS
+        MENUITEM "&Sütunları Seç...", ID_VIEW_SELECTCOLUMNS
         POPUP "&CPU Geçmişi"
         BEGIN
-            MENUITEM "&Tek Çizge, Tüm CPU'lar", ID_VIEW_CPUHISTORY_ONEGRAPHALL
-            MENUITEM "&CPU Başına Bir Çizge", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+            MENUITEM "&Tek Grafik, Tüm CPU'lar", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&CPU Başına Bir Grafik", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Çekirdek Sürelerini Göster", ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "Ç&ekirdek Sürelerini Göster", ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Pencereler"
     BEGIN
         MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
-        MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-        MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
+        MENUITEM "&Ekranı Kaplat", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Basamaklandır", ID_WINDOWS_CASCADE
         MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&Bilgisayarı Kapat"
     BEGIN
         MENUITEM "&Uykuya Geçir",              ID_SHUTDOWN_STANDBY
-        MENUITEM "&Anıkta Beklet",             ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Hazırda Beklet",            ID_SHUTDOWN_HIBERNATE
         MENUITEM "&Kapat",                     ID_SHUTDOWN_POWEROFF
         MENUITEM "&Yeniden Başlat",            ID_SHUTDOWN_REBOOT
         MENUITEM """%s"" &Oturumunu Kapat",    ID_SHUTDOWN_LOGOFF
         MENUITEM "Ku&llanıcı Değiştir\tROS+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "&Bilgisayarı Kilitle\tROS+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "Ba&ğlantıyı Kes",            ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "B&ağlantıyı Kes",            ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "B&ilgisayarı Çıkar",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", ID_HELP_TOPICS
+        MENUITEM "&Görev Yöneticisi Yardım Konuları", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Görev Yöneticisi Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Görev Yöneticisi Hakkında", ID_HELP_ABOUT
     END
 END
 
@@ -73,8 +73,8 @@ BEGIN
     MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
     MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
-    MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-    MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
+    MENUITEM "&Ekranı Kaplat", ID_WINDOWS_MAXIMIZE
+    MENUITEM "&Basamaklandır", ID_WINDOWS_CASCADE
     MENUITEM "&Öne Getir", ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -100,8 +100,8 @@ BEGIN
         MENUITEM "&Yatay Olarak Döşe", ID_WINDOWS_TILEHORIZONTALLY
         MENUITEM "&Dikey Olarak Döşe", ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Simge Durumuna Küçült", ID_WINDOWS_MINIMIZE
-        MENUITEM "&Büyüt", ID_WINDOWS_MAXIMIZE
-        MENUITEM "B&asamaklandır", ID_WINDOWS_CASCADE
+        MENUITEM "&Ekranı Kaplat", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Basamaklandır", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "Gö&revi Sonlandır", ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&İşleme Git", ID_APPLICATION_PAGE_GOTOPROCESS
@@ -115,7 +115,7 @@ BEGIN
         MENUITEM "&Eski Durumuna Getir", ID_RESTORE
         MENUITEM "&Kapat", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Sürekli Üstte", ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Her Zaman Üstte", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -125,19 +125,19 @@ BEGIN
     BEGIN
         MENUITEM "&İşlemi Sonlandır", ID_PROCESS_PAGE_ENDPROCESS
         MENUITEM "İ&şlem Ağacını Sonlandır", ID_PROCESS_PAGE_ENDPROCESSTREE
-        MENUITEM "&Yanlışlık Ayıkla", ID_PROCESS_PAGE_DEBUG
+        MENUITEM "&Hata Ayıkla", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "&Önceliği Aayarla"
         BEGIN
             MENUITEM "&Eş Zamanlı", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
             MENUITEM "&Yüksek", ID_PROCESS_PAGE_SETPRIORITY_HIGH
-            MENUITEM "&Düzgülü Üstü", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-            MENUITEM "D&üzgülü", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-            MENUITEM "Dü&zgülü Altı", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-            MENUITEM "Dü&şük", ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&Normalin Üstü", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "N&ormal", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "No&rmalin Altı", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&Düşük", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "İ&lişkiyi Ayarla...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Y&anlışlık Ayıklama Yollarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "H&ata Ayıklama Kanallarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
