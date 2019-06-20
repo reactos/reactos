@@ -3273,6 +3273,15 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 #define FM_SEL_USE_TYPO_METRICS 0x80
     if (lfHeight > 0)
     {
+        /*
+         * We cast TT_OS2.usWinAscent and TT_OS2.usWinDescent to signed FT_Short.
+         * Why? See: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswindescent
+         *
+         * > usWinDescent is "usually" a positive value ...
+         *
+         * We can read it as "not always".
+         */
+
         /* case (A): lfHeight is positive */
         Sum = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
         if (Sum == 0 || (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS))
