@@ -3270,7 +3270,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     }
 
     /*
-     * We cast TT_OS2.usWinAscent and TT_OS2.usWinDescent to signed FT_Short.
+     * NOTE: We cast TT_OS2.usWinAscent and TT_OS2.usWinDescent to signed FT_Short.
      * Why? See: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswindescent
      *
      * > usWinDescent is "usually" a positive value ...
