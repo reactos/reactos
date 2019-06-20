@@ -443,6 +443,12 @@ ObIsLUIDDeviceMapsEnabled(
     VOID
 );
 
+PDEVICE_MAP
+NTAPI
+ObpReferenceDeviceMap(
+    VOID
+);
+
 //
 // Security descriptor cache functions
 //
