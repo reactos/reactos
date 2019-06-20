@@ -196,7 +196,7 @@ KSPropertySetImpl_Get(
     }
 
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return E_PROP_ID_UNSUPPORTED;
 }
 
@@ -211,7 +211,7 @@ KSPropertySetImpl_Set(
     LPVOID pPropData,
     ULONG cbPropData )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return E_PROP_ID_UNSUPPORTED;
 }
 
@@ -223,7 +223,7 @@ KSPropertySetImpl_QuerySupport(
     ULONG dwPropID,
     PULONG pTypeSupport )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return E_PROP_ID_UNSUPPORTED;
 }
 

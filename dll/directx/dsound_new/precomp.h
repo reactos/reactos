@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PRECOMP_H
+#define PRECOMP_H
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -266,3 +267,5 @@ NewDirectSoundNotify(
     BOOL bMix,
     HANDLE hPin,
     DWORD BufferSize);
+
+#endif

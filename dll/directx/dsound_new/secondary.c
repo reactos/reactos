@@ -316,7 +316,7 @@ SecondaryDirectSoundBuffer8Impl_fnLock(
     }
     else if (dwFlags == DSBLOCK_FROMWRITECURSOR)
     {
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         return DSERR_UNSUPPORTED;
     }
     else
@@ -534,7 +534,7 @@ WINAPI
 SecondaryDirectSoundBuffer8Impl_fnRestore(
     LPDIRECTSOUNDBUFFER8 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -547,7 +547,7 @@ SecondaryDirectSoundBuffer8Impl_fnSetFX(
     LPDSEFFECTDESC pDSFXDesc,
     LPDWORD pdwResultCodes)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -559,7 +559,7 @@ SecondaryDirectSoundBuffer8Impl_fnAcquireResources(
     DWORD dwEffectsCount, 
     LPDWORD pdwResultCodes)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -572,7 +572,7 @@ SecondaryDirectSoundBuffer8Impl_fnGetObjectInPath(
     REFGUID rguidInterface,
     LPVOID *ppObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 

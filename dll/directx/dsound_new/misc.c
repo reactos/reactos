@@ -26,15 +26,12 @@ PerformChannelConversion(
     ULONG ResultLength,
     PULONG BytesWritten)
 {
-    DWORD Samples;
     DWORD NewIndex, OldIndex;
     DWORD NewLength, Skip;
 
-    Samples = BufferLength / (BitsPerSample / 8) / OldChannels;
-
     if (NewChannels > OldChannels)
     {
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         ASSERT(0);
     }
 
@@ -546,7 +543,7 @@ CreateCompatiblePin(
     {
         if (AudioRange->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
         {
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
             continue;
         }
