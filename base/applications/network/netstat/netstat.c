@@ -52,31 +52,13 @@ PCWSTR TcpState[] = {
 /*
  * format message string and display output
  */
-DWORD DoFormatMessage(DWORD ErrorCode)
+VOID DoFormatMessage(DWORD ErrorCode)
 {
-    LPVOID lpMsgBuf;
-    DWORD RetVal;
+    if (dwError == ERROR_SUCCESS)
+        return;
 
-    if ((RetVal = FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            ErrorCode,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-            (LPWSTR) &lpMsgBuf,
-            0,
-            NULL )))
-    {
-        wprintf(L"%s", (LPWSTR)lpMsgBuf);
-
-        LocalFree(lpMsgBuf);
-        /* return number of TCHAR's stored in output buffer
-         * excluding '\0' - as FormatMessage does*/
-        return RetVal;
-    }
-    else
-        return 0;
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
 }
 
 /*
@@ -501,8 +483,8 @@ VOID ShowTcpTable()
                 PID[0] = 0;
             }
 
-            ConPuts(StdOut, L"  %-6s %-22s %-22s %-11s %s\n", L"TCP",
-                    Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
+            ConPrintf(StdOut, L"  %-6s %-22s %-22s %-11s %s\n", L"TCP",
+                      Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
     }
     HeapFree(GetProcessHeap(), 0, tcpTable);
@@ -555,7 +537,7 @@ VOID ShowUdpTable()
             PID[0] = 0;
         }
 
-        ConPuts(StdOut, L"  %-6s %-22s %-34s %s\n", L"UDP", Host, L"*:*", PID);
+        ConPrintf(StdOut, L"  %-6s %-22s %-34s %s\n", L"UDP", Host, L"*:*", PID);
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
