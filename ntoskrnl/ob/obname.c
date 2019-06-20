@@ -214,26 +214,6 @@ ObpCreateDosDevicesDirectory(VOID)
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /*********************************************\
-    |*** HACK until we support device mappings ***|
-    |*** Add a symlink \??\ <--> \GLOBAL??\    ***|
-    \*********************************************/
-    RtlInitUnicodeString(&LinkName, L"\\??");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_PERMANENT,
-                               NULL,
-                               &DosDevicesSD);
-    Status = NtCreateSymbolicLinkObject(&SymHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &RootName);
-    if (NT_SUCCESS(Status)) NtClose(SymHandle);
-    /*********************************************\
-    \*********************************************/
-
-    // FIXME: Create a device mapping for the global \?? directory
-
     /*
      * Initialize the \??\GLOBALROOT symbolic link
      * pointing to the root directory \ .
@@ -490,6 +470,8 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     PWCHAR NewName;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     ULONG MaxReparse = 30;
+    PDEVICE_MAP DeviceMap = NULL;
+    UNICODE_STRING LocalName;
     PAGED_CODE();
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Finding Object: %wZ. Expecting: %p\n",
@@ -642,6 +624,8 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
             *FoundObject = Object;
             return Status;
         }
+
+        LocalName = *ObjectName;
     }
     else
     {
@@ -695,7 +679,14 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         else
         {
 ParseFromRoot:
-            /* FIXME: Check if we have a device map */
+            LocalName = *ObjectName;
+
+            /* Deference the device map if we already have one */
+            if (DeviceMap != NULL)
+            {
+                ObfDereferenceDeviceMap(DeviceMap);
+                DeviceMap = NULL;
+            }
 
             /* Check if this is a possible DOS name */
             if (!((ULONG_PTR)(ObjectName->Buffer) & 7))
@@ -713,7 +704,17 @@ ParseFromRoot:
                     (*(PULONGLONG)(ObjectName->Buffer) ==
                      ObpDosDevicesShortNamePrefix.Alignment.QuadPart))
                 {
-                    /* FIXME! */
+                    DeviceMap = ObpReferenceDeviceMap();
+                    /* We have a local mapping, drop the ?? prefix */
+                    if (DeviceMap != NULL && DeviceMap->DosDevicesDirectory != NULL)
+                    {
+                        LocalName.Length -= ObpDosDevicesShortName.Length;
+                        LocalName.MaximumLength -= ObpDosDevicesShortName.Length;
+                        LocalName.Buffer += (ObpDosDevicesShortName.Length / sizeof(WCHAR));
+
+                        /* We'll browse that local directory */
+                        Directory = DeviceMap->DosDevicesDirectory;
+                    }
                 }
                 else if ((ObjectName->Length == ObpDosDevicesShortName.Length -
                                                 sizeof(WCHAR)) &&
@@ -722,7 +723,23 @@ ParseFromRoot:
                          (*((PWCHAR)(ObjectName->Buffer) + 2) ==
                           (WCHAR)(ObpDosDevicesShortNameRoot.Alignment.HighPart)))
                 {
-                    /* FIXME! */
+                    DeviceMap = ObpReferenceDeviceMap();
+
+                    /* Caller is looking for the directory itself */
+                    if (DeviceMap != NULL && DeviceMap->DosDevicesDirectory != NULL)
+                    {
+                        Status = ObReferenceObjectByPointer(DeviceMap->DosDevicesDirectory,
+                                                            0,
+                                                            ObjectType,
+                                                            AccessMode);
+                        if (NT_SUCCESS(Status))
+                        {
+                            *FoundObject = DeviceMap->DosDevicesDirectory;
+                        }
+
+                        ObfDereferenceDeviceMap(DeviceMap);
+                        return Status;
+                    }
                 }
             }
         }
@@ -740,7 +757,7 @@ ParseFromRoot:
     while (Reparse && MaxReparse)
     {
         /* Get the name */
-        RemainingName = *ObjectName;
+        RemainingName = LocalName;
 
         /* Disable reparsing again */
         Reparse = FALSE;
@@ -1149,7 +1166,7 @@ ReparseObject:
     }
 
     /* Check if we have a device map and dereference it if so */
-    //if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
+    if (DeviceMap) ObfDereferenceDeviceMap(DeviceMap);
 
     /* Check if we have a referenced directory and dereference it if so */
     if (ReferencedDirectory) ObDereferenceObject(ReferencedDirectory);
