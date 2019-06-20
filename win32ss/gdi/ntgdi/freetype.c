@@ -3276,8 +3276,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
      * > usWinDescent is "usually" a positive value ...
      *
      * We can read it as "not always". See CORE-14994.
+     * See also: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fsselection
      */
-    /* See also: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fsselection */
 #define FM_SEL_USE_TYPO_METRICS 0x80
     if (lfHeight > 0)
     {
