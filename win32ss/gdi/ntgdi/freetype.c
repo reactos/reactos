@@ -1879,10 +1879,6 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-    //if (FontGDI->Magic != FONTGDI_MAGIC)
-    //{
-    //    IntRequestFontSize(NULL, FontGDI, 0, 0);
-    //}
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
