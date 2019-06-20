@@ -51,16 +51,16 @@ BEGIN
     PUSHBUTTON      "Cancelar",IDCANCEL,156,128,50,14
 END
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
     IDS_TITLEFORMAT     "Ligar a %s"
     IDS_MESSAGEFORMAT   "A ligar a %s"
-    IDS_INCORRECTPASSWORDTITLE  "Logon mal sucedido"
-    IDS_INCORRECTPASSWORD       "Verifique que o seu nome de utilizador\ne password estão correctos."
+    IDS_INCORRECTPASSWORDTITLE  "Início de sessão mal sucedido"
+    IDS_INCORRECTPASSWORD       "Verifique se o nome de utilizador\ne password estão correctos."
     IDS_CAPSLOCKONTITLE "Caps Lock ligado"
-    IDS_CAPSLOCKON      "Tendo o Caps Lock ligado pode provocar que introduza a sua password incorrectamente.\n\nPressione a tecla Caps Lock no seu teclado para desligar o Caps Lock antes\nde introduzir a password."
+    IDS_CAPSLOCKON      "Tendo o Caps Lock ligado, pode provocar a introdução da password incorrecta.\n\nPressione a tecla Caps Lock no teclado para desligar o Caps Lock antes\nde introduzir a password."
 }
 
 IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
@@ -70,7 +70,7 @@ BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "&User name:",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "&Nome de utilizador:",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
     LTEXT           "&Password:",-1,8,80,72,12,SS_CENTERIMAGE
