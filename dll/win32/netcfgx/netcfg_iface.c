@@ -227,6 +227,41 @@ static const INetCfgPnpReconfigCallbackVtbl vt_NetCfgPnpReconfigCallback =
  */
 
 HRESULT
+ReadBindingString(
+    NetCfgComponentItem *Item)
+{
+    WCHAR szBuffer[200];
+    HKEY hKey;
+    DWORD dwType, dwSize;
+
+    if (Item == NULL || Item->szBindName == NULL)
+        return S_OK;
+
+    wcscpy(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\");
+    wcscat(szBuffer, Item->szBindName);
+    wcscat(szBuffer, L"\\Linkage");
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = 0;
+        RegQueryValueExW(hKey, L"Bind", NULL, &dwType, NULL, &dwSize);
+
+        if (dwSize != 0)
+        {
+            Item->pszBinding = CoTaskMemAlloc(dwSize);
+            if (Item->pszBinding == NULL)
+                return E_OUTOFMEMORY;
+
+            RegQueryValueExW(hKey, L"Bind", NULL, &dwType, (LPBYTE)Item->pszBinding, &dwSize);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return S_OK;
+}
+
+HRESULT
 EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** pHead)
 {
     DWORD dwIndex = 0;
@@ -323,6 +358,8 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                     RegCloseKey(hNDIKey);
                 }
                 RegCloseKey(hSubKey);
+
+                ReadBindingString(pCurrent);
 
                 if (!pLast)
                     *pHead = pCurrent;

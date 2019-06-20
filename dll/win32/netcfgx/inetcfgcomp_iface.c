@@ -92,7 +92,35 @@ INetCfgComponentBindings_fnIsBoundTo(
     INetCfgComponentBindings *iface,
     INetCfgComponent *pnccItem)
 {
-    return E_NOTIMPL;
+    INetCfgComponentImpl *pComponent;
+    PWSTR pszBindName, ptr;
+    INT len;
+
+    pComponent = impl_from_INetCfgComponentBindings(iface);
+    if (pComponent == NULL ||
+        pComponent->pItem == NULL ||
+        pComponent->pItem->pszBinding == NULL)
+        return E_POINTER;
+
+    if (pnccItem == NULL ||
+        ((INetCfgComponentImpl*)pnccItem)->pItem == NULL ||
+        ((INetCfgComponentImpl*)pnccItem)->pItem->szBindName == NULL)
+        return E_POINTER;
+
+    pszBindName = ((INetCfgComponentImpl*)pnccItem)->pItem->szBindName;
+
+    ptr = pComponent->pItem->pszBinding;
+    while (*ptr != UNICODE_NULL)
+    {
+        len = wcslen(ptr);
+
+        if (len > 8 && _wcsicmp(&ptr[8], pszBindName) == 0)
+            return S_OK;
+
+        ptr = ptr + len + 1;
+    }
+
+    return S_FALSE;
 }
 
 HRESULT
