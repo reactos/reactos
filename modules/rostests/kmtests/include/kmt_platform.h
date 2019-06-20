@@ -24,6 +24,7 @@
 #include <ndk/kefuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ndk/sefuncs.h>
 #include <ntstrsafe.h>
 #if defined KMT_FILTER_DRIVER
