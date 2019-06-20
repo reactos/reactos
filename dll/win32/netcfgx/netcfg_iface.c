@@ -293,7 +293,7 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                     }
                 }
 
-                if (RegOpenKeyExW(hKey, L"NDI", 0, KEY_READ, &hNDIKey) == ERROR_SUCCESS)
+                if (RegOpenKeyExW(hSubKey, L"NDI", 0, KEY_READ, &hNDIKey) == ERROR_SUCCESS)
                 {
                     /* retrieve HelpText */
                     dwSize = sizeof(szText);
