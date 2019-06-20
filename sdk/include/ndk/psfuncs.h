@@ -759,7 +759,6 @@ ZwQueryInformationJobObject(
     _Out_ PULONG ReturnLength
 );
 
-#ifndef _NTDDK_
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -770,7 +769,6 @@ ZwQueryInformationProcess(
     _In_ ULONG ProcessInformationLength,
     _Out_opt_ PULONG ReturnLength
 );
-#endif
 
 NTSYSAPI
 NTSTATUS
