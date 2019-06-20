@@ -101,7 +101,7 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
         pHelpText = NULL;
         hr = pNCfgComp->GetDisplayName(&pDisplayName);
         hr = pNCfgComp->GetHelpText(&pHelpText);
-        bChecked = TRUE; //ReactOS hack
+        bChecked = FALSE;
         hr = pNCfgComp->QueryInterface(IID_PPV_ARG(INetCfgComponentBindings, &pCompBind));
         if (SUCCEEDED(hr))
         {
@@ -110,8 +110,6 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
                 hr = pCompBind->IsBoundTo(pAdapterCfgComp);
                 if (hr == S_OK)
                     bChecked = TRUE;
-                else
-                    bChecked = FALSE;
             }
         }
 
