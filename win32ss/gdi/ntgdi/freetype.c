@@ -1868,15 +1868,15 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         return;
     }
 
-    if (pOS2->usWinAscent + pOS2->usWinDescent == 0)
+    if ((FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent == 0)
     {
         Ascent = pHori->Ascender;
         Descent = -pHori->Descender;
     }
     else
     {
-        Ascent = pOS2->usWinAscent;
-        Descent = pOS2->usWinDescent;
+        Ascent = (FT_Short)pOS2->usWinAscent;
+        Descent = (FT_Short)pOS2->usWinDescent;
     }
 
     TM->tmAscent = FontGDI->tmAscent;
@@ -2645,7 +2645,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     }
 
     Ntm->ntmSizeEM = Otm->otmEMSquare;
-    Ntm->ntmCellHeight = pOS2->usWinAscent + pOS2->usWinDescent;
+    Ntm->ntmCellHeight = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
     Ntm->ntmAvgWidth = 0;
 
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
