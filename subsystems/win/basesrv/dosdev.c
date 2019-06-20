@@ -13,9 +13,21 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _BSM_REQUEST
+{
+    struct _BSM_REQUEST * Next;
+    LUID BroadcastLuid;
+    LONG DriveLetter;
+    LONG RemoveDefinition;
+} BSM_REQUEST, *PBSM_REQUEST;
+
 /* GLOBALS ********************************************************************/
 
 static RTL_CRITICAL_SECTION BaseDefineDosDeviceCritSec;
+RTL_CRITICAL_SECTION BaseSrvDDDBSMCritSec;
+PBSM_REQUEST BSM_Request_Queue = NULL, BSM_Request_Queue_End = NULL;
+ULONG BaseSrvpBSMThreadCount = 0;
+LONG (WINAPI *PBROADCASTSYSTEMMESSAGEEXW)(DWORD, LPDWORD, UINT, WPARAM, LPARAM, PBSMINFO) = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -146,6 +158,317 @@ IsGlobalSymbolicLink(HANDLE LinkHandle,
     return Status;
 }
 
+BOOLEAN
+CheckForGlobalDriveLetter(SHORT DriveLetter)
+{
+    WCHAR Path[8];
+    NTSTATUS Status;
+    BOOLEAN IsGlobal;
+    UNICODE_STRING PathU;
+    HANDLE SymbolicLinkHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* Setup our drive path */
+    wcsncpy(Path, L"\\??\\X:", (sizeof(L"\\??\\X:") / sizeof(WCHAR)));
+    Path[4] = DriveLetter + L'A';
+    Path[6] = UNICODE_NULL;
+
+    /* Prepare everything to open the link */
+    RtlInitUnicodeString(&PathU, Path);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Impersonate the caller */
+    if (!CsrImpersonateClient(NULL))
+    {
+        return FALSE;
+    }
+
+    /* Open our drive letter */
+    Status = NtOpenSymbolicLinkObject(&SymbolicLinkHandle,
+                                      SYMBOLIC_LINK_QUERY,
+                                      &ObjectAttributes);
+
+    CsrRevertToSelf();
+
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Check whether it's global */
+    Status = IsGlobalSymbolicLink(SymbolicLinkHandle, &IsGlobal);
+    NtClose(SymbolicLinkHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    return IsGlobal;
+}
+
+NTSTATUS
+SendWinStationBSM(DWORD Flags,
+                  LPDWORD Recipients,
+                  UINT Message,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+BroadcastDriveLetterChange(LONG DriveLetter,
+                           BOOLEAN RemoveDefinition,
+                           PLUID BroadcastLuid)
+{
+    HANDLE hUser32;
+    NTSTATUS Status;
+    UNICODE_STRING User32U;
+    ANSI_STRING ProcedureName;
+    DWORD Recipients, Flags, wParam;
+    LUID SystemLuid = SYSTEM_LUID;
+    BSMINFO Info;
+    DEV_BROADCAST_VOLUME Volume;
+
+    /* We need a broadcast LUID */
+    if (BroadcastLuid == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the Csr procedure, and keep it forever */
+    if (PBROADCASTSYSTEMMESSAGEEXW == NULL)
+    {
+        hUser32 = NULL;
+        RtlInitUnicodeString(&User32U, L"user32");
+        Status = LdrGetDllHandle(NULL, NULL, &User32U, &hUser32);
+        if (hUser32 != NULL && NT_SUCCESS(Status))
+        {
+            RtlInitString(&ProcedureName, "CsrBroadcastSystemMessageExW");
+            Status = LdrGetProcedureAddress(hUser32,
+                                            &ProcedureName,
+                                            0,
+                                            (PVOID *)&PBROADCASTSYSTEMMESSAGEEXW);
+            if (!NT_SUCCESS(Status))
+            {
+                PBROADCASTSYSTEMMESSAGEEXW = NULL;
+            }
+        }
+
+        /* If we failed to get broadcast procedure, no more actions left */
+        if (PBROADCASTSYSTEMMESSAGEEXW == NULL)
+        {
+            return Status;
+        }
+    }
+
+    /* Initialize broadcast info */
+    Info.cbSize = sizeof(BSMINFO);
+    Info.hdesk = 0;
+    Info.hwnd = 0;
+    RtlCopyLuid(&Info.luid, BroadcastLuid);
+
+    /* Initialize volume information */
+    Volume.dbcv_size = sizeof(DEV_BROADCAST_VOLUME);
+    Volume.dbcv_devicetype = DBT_DEVTYP_VOLUME;
+    Volume.dbcv_reserved = 0;
+    Volume.dbcv_unitmask = 1 << DriveLetter;
+    Volume.dbcv_flags = DBTF_NET;
+
+    /* Wide broadcast */
+    Recipients = BSM_APPLICATIONS | BSM_ALLDESKTOPS;
+    Flags = BSF_NOHANG | BSF_NOTIMEOUTIFNOTHUNG | BSF_FORCEIFHUNG;
+
+    /*
+     * If we don't broadcast as system, it's not a global drive
+     * notification, then mark it as LUID mapped drive
+     */
+    if (!RtlEqualLuid(&Info.luid, &SystemLuid))
+    {
+        Flags |= BSF_LUID;
+    }
+
+    /* Set event type */
+    wParam = RemoveDefinition ? DBT_DEVICEREMOVECOMPLETE : DBT_DEVICEARRIVAL;
+
+    /* And broadcast! */
+    Status = PBROADCASTSYSTEMMESSAGEEXW(Flags, &Recipients, WM_DEVICECHANGE, wParam, (LPARAM)&Volume, &Info);
+
+    /* If the drive is global, notify Winsta */
+    if (!(Flags & BSF_LUID))
+    {
+        Status = SendWinStationBSM(Flags, &Recipients, WM_DEVICECHANGE, wParam, (LPARAM)&Volume);
+    }
+
+    return Status;
+}
+
+ULONG
+NTAPI
+BaseSrvBSMThread(PVOID StartupContext)
+{
+    ULONG ExitStatus;
+    NTSTATUS Status;
+    PBSM_REQUEST CurrentRequest;
+
+    /* We have a thread */
+    ExitStatus = 0;
+    RtlEnterCriticalSection(&BaseSrvDDDBSMCritSec);
+    ++BaseSrvpBSMThreadCount;
+
+    while (TRUE)
+    {
+        /* If we flushed the queue, job done */
+        if (BSM_Request_Queue == NULL)
+        {
+            break;
+        }
+
+        /* Queue current request, and remove it from the queue */
+        CurrentRequest = BSM_Request_Queue;
+        BSM_Request_Queue = BSM_Request_Queue->Next;
+
+        /* If that was the last request, NULLify queue end */
+        if (BSM_Request_Queue == NULL)
+        {
+            BSM_Request_Queue_End = NULL;
+        }
+
+        RtlLeaveCriticalSection(&BaseSrvDDDBSMCritSec);
+
+        /* Broadcast the message */
+        Status = BroadcastDriveLetterChange(CurrentRequest->DriveLetter,
+                                            CurrentRequest->RemoveDefinition,
+                                            &CurrentRequest->BroadcastLuid);
+
+        /* Reflect the last entry status on stop */
+        CurrentRequest->Next = NULL;
+        ExitStatus = Status;
+
+        RtlFreeHeap(BaseSrvHeap, 0, CurrentRequest);
+        RtlEnterCriticalSection(&BaseSrvDDDBSMCritSec);
+    }
+
+    /* Here, we've flushed the queue, quit the user thread */
+    --BaseSrvpBSMThreadCount;
+    RtlLeaveCriticalSection(&BaseSrvDDDBSMCritSec);
+
+    NtCurrentTeb()->FreeStackOnTermination = TRUE;
+    NtTerminateThread(NtCurrentThread(), ExitStatus);
+
+    return ExitStatus;
+}
+
+NTSTATUS
+CreateBSMThread(VOID)
+{
+    /* This can only be true for LUID mappings */
+    if (BaseStaticServerData->LUIDDeviceMapsEnabled == 0)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Create our user thread */
+    return RtlCreateUserThread(NtCurrentProcess(),
+                               NULL,
+                               FALSE,
+                               0,
+                               0,
+                               0,
+                               BaseSrvBSMThread,
+                               NULL,
+                               NULL,
+                               NULL);
+}
+
+NTSTATUS
+AddBSMRequest(LONG DriveLetter,
+              BOOLEAN RemoveDefinition,
+              PLUID BroadcastLuid)
+{
+    LUID CallerLuid;
+    NTSTATUS Status;
+    LUID SystemLuid = SYSTEM_LUID;
+    PBSM_REQUEST Request;
+
+    /* We need a broadcast LUID */
+    if (BroadcastLuid == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /*
+     * If LUID mappings are not enabled, this call makes no sense
+     * It should not happen though
+     */
+    if (BaseStaticServerData->LUIDDeviceMapsEnabled == 0)
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Get our caller LUID (not the broadcaster!) */
+    Status = GetCallerLuid(&CallerLuid);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* System cannot create LUID mapped drives - thus broadcast makes no sense */
+    if (!RtlEqualLuid(&CallerLuid, &SystemLuid))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Allocate our request */
+    Request = RtlAllocateHeap(BaseSrvHeap, 0, sizeof(BSM_REQUEST));
+    if (Request == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize it */
+    Request->DriveLetter = DriveLetter;
+    Request->RemoveDefinition = RemoveDefinition;
+    RtlCopyLuid(&Request->BroadcastLuid, BroadcastLuid);
+    Request->Next = NULL;
+
+    /* And queue it */
+    RtlEnterCriticalSection(&BaseSrvDDDBSMCritSec);
+
+    /* At the end of the queue if not empty */
+    if (BSM_Request_Queue_End != NULL)
+    {
+        BSM_Request_Queue_End->Next = Request;
+    }
+    /* Otherwise, initialize the queue */
+    else
+    {
+        BSM_Request_Queue = Request;
+    }
+
+    /* We're in FIFO mode */
+    BSM_Request_Queue_End = Request;
+
+    /* If we don't have a messaging thread running, then start one */
+    if (BaseSrvpBSMThreadCount >= 1)
+    {
+        RtlLeaveCriticalSection(&BaseSrvDDDBSMCritSec);
+    }
+    else
+    {
+        RtlLeaveCriticalSection(&BaseSrvDDDBSMCritSec);
+        Status = CreateBSMThread();
+    }
+
+    return Status;
+}
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(BaseSrvDefineDosDevice)
@@ -167,7 +490,7 @@ CSR_API(BaseSrvDefineDosDevice)
     BOOLEAN DriveLetter = FALSE;
     BOOLEAN RemoveDefinition;
     BOOLEAN HandleTarget;
-    BOOLEAN HandleSMB = FALSE;
+    BOOLEAN Broadcast = FALSE;
     BOOLEAN IsGlobal = FALSE;
     ULONG CchLengthLeft;
     ULONG CchLength;
@@ -297,13 +620,19 @@ CSR_API(BaseSrvDefineDosDevice)
             _SEH2_LEAVE;
         }
 
-        /* While impersonating the caller, also get its LUID */
+        /*
+         * While impersonating the caller, also get its LUID.
+         * This is mandatory in case we have a driver letter,
+         * Because we're in the case we've got LUID mapping
+         * enabled and broadcasting enabled. LUID will be required
+         * for the latter
+         */
         if (DriveLetter)
         {
             Status = GetCallerLuid(&CallerLuid);
             if (NT_SUCCESS(Status))
             {
-                HandleSMB = TRUE;
+                Broadcast = TRUE;
             }
         }
 
@@ -744,10 +1073,31 @@ CSR_API(BaseSrvDefineDosDevice)
         /* Free our internal buffer */
         RtlFreeHeap(BaseSrvHeap, 0, lpBuffer);
 
-        /* Handle SMB */
-        if (DriveLetter && Status == STATUS_SUCCESS && HandleSMB)
+        /* Broadcast drive letter creation */
+        if (DriveLetter && Status == STATUS_SUCCESS && Broadcast)
         {
-            UNIMPLEMENTED;
+            LUID SystemLuid = SYSTEM_LUID;
+
+            /* If that's a global drive, broadcast as system */
+            if (IsGlobal)
+            {
+                RtlCopyLuid(&CallerLuid, &SystemLuid);
+            }
+
+            /* Broadcast the event */
+            AddBSMRequest(AbsLetter, RemoveDefinition, &CallerLuid);
+
+            /*
+             * If we removed drive, and the drive was shadowing a global one
+             * broadcast the arrival of the global drive (as system - global)
+             */
+            if (RemoveDefinition && !RtlEqualLuid(&CallerLuid, &SystemLuid))
+            {
+                if (CheckForGlobalDriveLetter(AbsLetter))
+                {
+                    AddBSMRequest(AbsLetter, FALSE, &CallerLuid);
+                }
+            }
         }
 
         /* Done! */
