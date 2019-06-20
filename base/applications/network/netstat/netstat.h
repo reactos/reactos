@@ -44,8 +44,6 @@ typedef struct {
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
 /* function declarations */
-BOOL DisplayOutput(VOID);
-DWORD DoFormatMessage(DWORD ErrorCode);
 VOID ShowIpStatistics(VOID);
 VOID ShowIcmpStatistics(VOID);
 VOID ShowTcpStatistics(VOID);

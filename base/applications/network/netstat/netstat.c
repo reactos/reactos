@@ -54,11 +54,11 @@ PCWSTR TcpState[] = {
  */
 VOID DoFormatMessage(DWORD ErrorCode)
 {
-    if (dwError == ERROR_SUCCESS)
+    if (ErrorCode == ERROR_SUCCESS)
         return;
 
     ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
-               NULL, dwError, LANG_USER_DEFAULT);
+               NULL, ErrorCode, LANG_USER_DEFAULT);
 }
 
 /*
@@ -153,7 +153,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
 /*
  * Display table header
  */
-VOID DisplayTableHeader()
+VOID DisplayTableHeader(VOID)
 {
     ConResPuts(StdOut, IDS_DISPLAY_THEADER);
     if (bDoShowProcessId)
@@ -162,11 +162,10 @@ VOID DisplayTableHeader()
         ConPuts(StdOut, L"\n");
 }
 
-
 /*
  * Simulate Microsofts netstat utility output
  */
-BOOL DisplayOutput()
+BOOL DisplayOutput(VOID)
 {
     if (bNoOptions)
     {
@@ -247,7 +246,7 @@ BOOL DisplayOutput()
     return EXIT_SUCCESS;
 }
 
-VOID ShowIpStatistics()
+VOID ShowIpStatistics(VOID)
 {
     PMIB_IPSTATS pIpStats;
     DWORD dwRetVal;
@@ -283,7 +282,7 @@ VOID ShowIpStatistics()
     HeapFree(GetProcessHeap(), 0, pIpStats);
 }
 
-VOID ShowIcmpStatistics()
+VOID ShowIcmpStatistics(VOID)
 {
     PMIB_ICMP pIcmpStats;
     DWORD dwRetVal;
@@ -330,7 +329,7 @@ VOID ShowIcmpStatistics()
 
 }
 
-VOID ShowTcpStatistics()
+VOID ShowTcpStatistics(VOID)
 {
     PMIB_TCPSTATS pTcpStats;
     DWORD dwRetVal;
@@ -357,7 +356,7 @@ VOID ShowTcpStatistics()
     HeapFree(GetProcessHeap(), 0, pTcpStats);
 }
 
-VOID ShowUdpStatistics()
+VOID ShowUdpStatistics(VOID)
 {
     PMIB_UDPSTATS pUdpStats;
     DWORD dwRetVal;
@@ -380,7 +379,7 @@ VOID ShowUdpStatistics()
     HeapFree(GetProcessHeap(), 0, pUdpStats);
 }
 
-VOID ShowEthernetStatistics()
+VOID ShowEthernetStatistics(VOID)
 {
     PMIB_IFTABLE pIfTable;
     DWORD dwSize = 0;
@@ -418,7 +417,7 @@ VOID ShowEthernetStatistics()
     HeapFree(GetProcessHeap(), 0, pIfTable);
 }
 
-VOID ShowTcpTable()
+VOID ShowTcpTable(VOID)
 {
     PMIB_TCPTABLE_OWNER_PID tcpTable;
     DWORD error, dwSize;
@@ -490,7 +489,7 @@ VOID ShowTcpTable()
     HeapFree(GetProcessHeap(), 0, tcpTable);
 }
 
-VOID ShowUdpTable()
+VOID ShowUdpTable(VOID)
 {
     PMIB_UDPTABLE_OWNER_PID udpTable;
     DWORD error, dwSize;
