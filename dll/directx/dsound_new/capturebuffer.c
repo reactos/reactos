@@ -641,7 +641,7 @@ IDirectSoundCaptureBufferImpl_GetObjectInPath(
     REFGUID rguidInterface,
     LPVOID* ppObject )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -652,7 +652,7 @@ IDirectSoundCaptureBufferImpl_GetFXStatus(
     DWORD dwFXCount,
     LPDWORD pdwFXStatus )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 

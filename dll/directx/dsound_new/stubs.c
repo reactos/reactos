@@ -23,7 +23,7 @@ DirectSoundFullDuplexCreate(
     LPDIRECTSOUNDBUFFER8 *ppDSBuffer8,
     LPUNKNOWN pUnkOuter)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
