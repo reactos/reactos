@@ -1879,10 +1879,10 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-    if (FontGDI->Magic != FONTGDI_MAGIC)
-    {
-        IntRequestFontSize(NULL, FontGDI, 0, 0);
-    }
+    //if (FontGDI->Magic != FONTGDI_MAGIC)
+    //{
+    //    IntRequestFontSize(NULL, FontGDI, 0, 0);
+    //}
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
@@ -3278,7 +3278,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     if (lfHeight > 0)
     {
         /* case (A): lfHeight is positive */
-        Sum = pOS2->usWinAscent + pOS2->usWinDescent;
+        Sum = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
         if (Sum == 0 || (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS))
         {
             Ascent = pHori->Ascender;
@@ -3287,8 +3287,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         }
         else
         {
-            Ascent = pOS2->usWinAscent;
-            Descent = pOS2->usWinDescent;
+            Ascent = (FT_Short)pOS2->usWinAscent;
+            Descent = (FT_Short)pOS2->usWinDescent;
         }
 
         FontGDI->tmAscent = FT_MulDiv(lfHeight, Ascent, Sum);
@@ -3306,8 +3306,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         }
         else
         {
-            FontGDI->tmAscent = FT_MulDiv(-lfHeight, pOS2->usWinAscent, face->units_per_EM);
-            FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
+            FontGDI->tmAscent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinAscent, face->units_per_EM);
+            FontGDI->tmDescent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinDescent, face->units_per_EM);
         }
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
