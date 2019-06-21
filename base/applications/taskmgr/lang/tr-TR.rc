@@ -184,7 +184,7 @@ BEGIN
     GROUPBOX "Bellek Kullanımı", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Toplam", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Ayrılmış Bellek (KB)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Fizîkî Bellek (KB)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Fiziksel Bellek (KB)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Çekirdek Belleği (KB)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
     LTEXT "İşleçler", IDS_TOTALS_HANDLE_COUNT, 12, 131, 45, 8
     LTEXT "İş Parçacıkları", IDS_TOTALS_THREAD_COUNT, 12, 140, 45, 8
@@ -196,7 +196,7 @@ BEGIN
     EDITTEXT IDC_TOTALS_PROCESS_COUNT, 65, 149, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Toplam", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 45, 8
-    LTEXT "Hudut", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 45, 8, NOT WS_BORDER
+    LTEXT "Sınır", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 45, 8, NOT WS_BORDER
     LTEXT "En Yüksek", IDS_COMMIT_CHARGE_PEAK, 12, 193, 45, 8
     EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -206,7 +206,7 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Toplam", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 45, 8
     LTEXT "Kullanılabilir", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 45, 8
-    LTEXT "Dizge Ön Belleği", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 51, 8
+    LTEXT "Sistem Ön Belleği", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 51, 8
     EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
@@ -224,15 +224,15 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX "CPU Kullanım Geçmişi", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Bellek Kullanım Geçmişi", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
-    PUSHBUTTON "CPU Kullanım Çizgesi", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Bellek Kullanım Çizgesi", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "CPU Kullanım Geçmişi Çizgesi", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Bellek Kullanım Geçmişi Çizgesi", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "CPU Kullanım Grafiği", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Bellek Kullanım Grafiği", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "CPU Kullanım Geçmişi Grafiği", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Bellek Kullanım Geçmişi Grafiği", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Yanlışlık Ayıklama Yolları"
+CAPTION "Hata Ayıklama Kanalları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -247,7 +247,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 120, 133, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 174, 133, 50, 14
-    LTEXT "İşlemci İlişkisi ayârı, işleme hangi CPU'ların üzerinde çalışmasına izin verileceğini denetler.", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "İşlemci İlişkisi ayarı, işleme hangi CPU'ların üzerinde çalışmasına izin verileceğini düzenler.", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -284,12 +284,12 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dikeçleri Seç"
+CAPTION "Sütunları Seç"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 84, 178, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 138, 178, 50, 14
-    LTEXT "Görev Yöneticisi'nin İşlemler sayfasında gözükecek dikeçleri seçiniz.", IDC_STATIC, 7, 7, 181, 17
+    LTEXT "Görev Yöneticisi'nin İşlemler sayfasında gözükecek sütunları seçiniz.", IDC_STATIC, 7, 7, 181, 17
     CONTROL "Yansıma Adı", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
     CONTROL "PID (İşlem Tanımlayıcı)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 100, 10
     CONTROL "CPU Kullanımı", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 100, 10
@@ -297,14 +297,14 @@ BEGIN
     CONTROL "Bellek Kullanımı", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 100, 10
     CONTROL "Bellek Kullanım Aralığı", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 100, 10
     CONTROL "En Yüksek Bellek Kullanımı", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 100, 10
-    CONTROL "Sayfa Yanlışlıkları", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 100, 10
-    CONTROL "Kullanıcı Nesneleri", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 100, 10
+    CONTROL "Sayfa Hataları", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 100, 10
+    CONTROL "KULLANICI Nesneleri", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 100, 10
     CONTROL "G/Ç Okuma", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 100, 10
-    CONTROL "G/Ç Okuma Çokluları", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 100, 10
+    CONTROL "G/Ç Okuma Baytları", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 100, 10
     CONTROL "Oturum Kimliği", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 100, 10
     CONTROL "Kullanıcı Adı", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 100, 10
-    CONTROL "Sayfa Yanlışlıkları Aralığı", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 85, 10
-    CONTROL "Farazî Bellek Boyutu", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 85, 10
+    CONTROL "Sayfa Hataları Aralığı", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 85, 10
+    CONTROL "Sanal Bellek Boyutu", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 85, 10
     CONTROL "Sayfalanmış Havuz", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 85, 10
     CONTROL "Sayfalanmamış Havuz", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 85, 10
     CONTROL "Birinci Öncelik", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 85, 10
@@ -312,10 +312,10 @@ BEGIN
     CONTROL "İş Parçacıkları", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 85, 10
     CONTROL "GDI Nesneleri", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 85, 10
     CONTROL "G/Ç Yazma", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 85, 10
-    CONTROL "G/Ç Yazma Çokluları", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 85, 10
+    CONTROL "G/Ç Yazma Baytları", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 85, 10
     CONTROL "G/Ç Başka", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 85, 10
-    CONTROL "G/Ç Başka Çoklular", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 85, 10
-    CONTROL "Komut Yatacı", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "G/Ç Başka Baytları", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 85, 10
+    CONTROL "Komut Satırı", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -324,22 +324,22 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Görev Yöneticisi"
     IDC_TASKMGR "Görev Yöneticisi"
-    IDS_IDLE_PROCESS "Boş Dizge İşlemi"
+    IDS_IDLE_PROCESS "Boş Sistem İşlemi"
 END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "Yeni bir izlence çalıştırır."
-    ID_OPTIONS_ALWAYSONTOP "Simge durumuna küçültülmeden Görev Yöneticisi başka tüm pencerelerin önünde durur."
-    ID_OPTIONS_MINIMIZEONUSE "Geçme işlemi uygulanırken Görev Yöneticisi simge durumuna küçültülür."
+    ID_FILE_NEW "Yeni bir program çalıştırır."
+    ID_OPTIONS_ALWAYSONTOP "Görev Yöneticisi, simge durumuna küçültülmeden diğer tüm pencerelerin önünde durur."
+    ID_OPTIONS_MINIMIZEONUSE "Görev Yöneticisi bir geçme işlemi uygulanırken simge durumuna küçültülür."
     ID_OPTIONS_HIDEWHENMINIMIZED "Görev Yöneticisi simge durumuna küçültüldüğünde Görev Yöneticisi'ni gizler."
-    ID_VIEW_REFRESH "Yenileme Hızı ayârını önemsemeden Görev Yöneticisi'ni şimdi yenilemeye zorlar."
+    ID_VIEW_REFRESH "Yenileme Hızı ayarını önemsemeden Görev Yöneticisi'ni şimdi yenilemeye zorlar."
     ID_VIEW_LARGE "Görevleri büyük simgeler kullanarak gösterir."
     ID_VIEW_SMALL "Görevleri küçük simgeler kullanarak gösterir."
-    ID_VIEW_DETAILS "Her bir görev üzerine bilgi görüntüler."
-    ID_VIEW_UPDATESPEED_HIGH "Sâniyede iki kez görünümü yeniler."
-    ID_VIEW_UPDATESPEED_NORMAL "İki sâniyede bir görünümü yeniler."
-    ID_VIEW_UPDATESPEED_LOW "Dört sâniyede bir görünümü yeniler."
+    ID_VIEW_DETAILS "Her bir görev hakkında bilgi görüntüler."
+    ID_VIEW_UPDATESPEED_HIGH "Saniyede iki kez görünümü yeniler."
+    ID_VIEW_UPDATESPEED_NORMAL "İki saniyede bir görünümü yeniler."
+    ID_VIEW_UPDATESPEED_LOW "Dört saniyede bir görünümü yeniler."
 END
 
 STRINGTABLE
