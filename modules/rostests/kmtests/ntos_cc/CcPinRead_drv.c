@@ -10,6 +10,17 @@
 #define NDEBUG
 #include <debug.h>
 
+// Copied from 'ntoskrnl/include/internal/*/mm.h'.
+#ifdef _X86_
+    #define MI_SYSTEM_CACHE_START  (PVOID)0xC1000000
+    #define MI_PAGED_POOL_START    (PVOID)0xE1000000
+#elif defined(_M_AMD64)
+    #define MI_SYSTEM_CACHE_START         0xFFFFF98000000000ULL
+    #define MI_SYSTEM_CACHE_END           0xFFFFFA7FFFFFFFFFULL
+#else
+    // Related check will be skipped.
+#endif
+
 #define IOCTL_START_TEST  1
 #define IOCTL_FINISH_TEST 2
 
@@ -454,17 +465,15 @@ PerformTest(
                             ok_bcb(TestContext->Bcb, 12288, Offset.QuadPart);
 
 #ifdef _X86_
-                            /* FIXME: Should be fixed, will fail under certains conditions */
-                            ok(TestContext->Buffer > (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
-                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
+                            ok(TestContext->Buffer >= MI_SYSTEM_CACHE_START && TestContext->Buffer < MI_PAGED_POOL_START,
+                               "Buffer %p not mapped in system cache\n", TestContext->Buffer);
+#elif defined(_M_AMD64)
+                            ok(TestContext->Buffer >= (PVOID)MI_SYSTEM_CACHE_START && TestContext->Buffer <= (PVOID)MI_SYSTEM_CACHE_END,
+                               "Buffer %p not mapped in system cache\n", TestContext->Buffer);
 #else
-#ifdef _M_AMD64
-                            ok(TestContext->Buffer > (PVOID)0xFFFFF98000000000 && TestContext->Buffer < (PVOID)0xFFFFFA8000000000,
-                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
-#else
-                            skip(FALSE, "System space mapping not defined\n");
+                            skip(FALSE, "System cache mapping not defined\n");
 #endif
-#endif
+
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
