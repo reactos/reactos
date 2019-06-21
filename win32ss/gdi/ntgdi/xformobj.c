@@ -152,7 +152,7 @@ XFORMOBJ_iSetXform(
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
     ULONG Hint;
-    FLOATOBJ efTemp, ef1, ef2;
+    FLOATOBJ ef1, ef2, ef3, ef4;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
@@ -174,10 +174,10 @@ XFORMOBJ_iSetXform(
     if (Hint == GX_SCALE || Hint == GX_GENERAL)
     {
         /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
-        FLOATOBJ_SetFloat(&efTemp, pxform->eM22);
-        FLOATOBJ_Mul(&ef1, &efTemp);
-        FLOATOBJ_SetFloat(&efTemp, pxform->eM21);
-        FLOATOBJ_Mul(&ef2, &efTemp);
+        FLOATOBJ_SetFloat(&ef3, pxform->eM22);
+        FLOATOBJ_Mul(&ef1, &ef3);
+        FLOATOBJ_SetFloat(&ef4, pxform->eM21);
+        FLOATOBJ_Mul(&ef2, &ef4);
         if (FLOATOBJ_Equal(&ef1, &ef2))
         {
             return DDI_ERROR;
