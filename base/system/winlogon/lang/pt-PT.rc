@@ -1,0 +1,61 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Desligar Computador"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "O computador pode ser desligado em segurança.", IDC_SHUTDOWNCOMPUTER, 31, 6, 132, 18
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Reiniciar", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Falha Interface do utilizador"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "A DLL de Logon de Interface do utilizador %s falhou ao carregar.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Contacte o administrador do seu sistema para substituir a DLL, ou recuperar a DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Reiniciar", 1, 80, 91, 68, 14
+END
+
+IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
+CAPTION "Desligar o sistema"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
+    LTEXT "O sistema iniciou o encerramento. Por favor guarde o seu trabalho e termine a sessão. Todos os dados não guardados serão perdidos quando o sistema encerrar.", -1, 38, 7, 135, 40
+    LTEXT "O sistema encerrará em:", -1, 38, 50, 90, 8
+    LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
+    LTEXT "Mensagem:", -1, 38, 65, 135, 8
+    EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "A preparar ligações de rede..."
+    IDS_APPLYINGCOMPUTERSETTINGS "A guardar as configurações do computador..."
+    IDS_RUNNINGSTARTUPSCRIPTS "A executar scripts de inicialização..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "A executar scripts de desligamento..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "A aplicar as suas configurações pessoais..."
+    IDS_RUNNINGLOGOFFSCRIPTS "A executar scripts de logoff..."
+    IDS_RUNNINGLOGONSCRIPTS "A executar scripts de logon..."
+    IDS_LOADINGYOURPERSONALSETTINGS "A carregar configurações pessoais..."
+    IDS_CLOSINGNETWORKCONNECTIONS "A terminar as ligações de rede..."
+    IDS_REACTOSISSHUTTINGDOWN "A desligar o ReactOS "
+    IDS_PREPARETOSTANDBY "Preparando para entrar em Modo de Espera..."
+    IDS_PREPARETOHIBERNATE "Preparando para Hibernar..."
+    IDS_SAVEYOURSETTINGS "A guardar as suas configurações..."
+    IDS_REACTOSISSTARTINGUP "ReactOS está a iniciar..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon falhou ao activar user shell!"
+END

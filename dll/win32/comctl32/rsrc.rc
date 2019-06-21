@@ -129,6 +129,9 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_HU_HU
     #include "lang/comctl_Hu.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/comctl_Id.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/comctl_It.rc"
 #endif

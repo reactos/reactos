@@ -37,6 +37,7 @@ RegisterDlls = EarlyRegisterDlls
 [EarlyRegisterDlls]
 11,,comctl32.dll,2
 11,,ole32.dll,1
+11,,netcfgx.dll,1
 
 [RegistrationPhase2]
 RegisterDlls = OleControlDlls
@@ -84,7 +85,6 @@ AddReg=Classes
 11,,msxml3.dll,1
 11,,msxml4.dll,1
 11,,msxml6.dll,1
-11,,netcfgx.dll,1
 11,,netshell.dll,1
 11,,ntobjshex.dll,1
 11,,objsel.dll,1

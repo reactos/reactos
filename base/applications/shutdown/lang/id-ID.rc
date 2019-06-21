@@ -1,0 +1,103 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+/* Dialog */
+IDD_GUI DIALOGEX 0, 0, 240, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remote Shutdown"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "&Batal", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "Ko&mputer:", IDC_STATIC, 9, 9, 35, 36
+    LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
+    PUSHBUTTON "T&ambah...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "Ha&pus", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Cari...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "Aksi", IDC_ACTION, 11, 81, 20, 14
+    COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX "Peringatkan pengguna", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Menampilkan peringatan untuk", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
+    LTEXT "detik", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "Alasan:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "Terencana", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
+    LTEXT "Ko&mentar:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Utilitas Penonaktifan ReactOS\n\
+\n\
+Penggunaan: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""komentar""]]\n\
+\n\
+    Tidak ada argumen atau /?    Menampilkan bantuan.\n\
+    /i      Menampilkan antarmuka grafis (GUI). Pilihan ini harus menjadi\n\
+            pilihan pertama.\n\
+    /l      Keluar hanya untuk sistem lokal. tidak bisa menggunakan /m atau /d.\n\
+    /s      Nonaktifkan komputer.\n\
+    /r      Mulai ulang komputer.\n\
+    /g      Mulai ulang komputer dan beberapa aplikasi yang teregistrasi.\n\
+    /a      Membatalkan waktu menonaktifkan. Hanya bisa digunakan ketika waktu\n\
+            tunda penonaktifan berjalan.\n\
+    /p      Menonaktifkan koputer lokal tanpa waktu habis dan tanpa peringatan.\n\
+            Bisa menggunakan /d atau /f.\n\
+    /h      Menidurkan komputer lokal. Bisa menggunakan /f.\n\
+    /e      Dokumentasikan alasan penonaktifan komputer yang tidak terduga.\n\
+    /m \\\\computer  Tentukan komputer target (alamat UNC/IP).\n\
+    /t xxx  Setel waktu habis ke xxx detik sebelum penonaktifan.\n\
+            rentang waktu dimulai dari 0 sampai 315360000 (10 tahun),\n\
+            30 adalah nilai asli.\n\
+    /c ""komentar""  Beri kalimat mengapa harus menonaktifkan atau memulai ulang komputer.\n\
+            512 karakter adalah batas maksimal.\n\
+    /f      Memulai paksa aplikasi untuk tutup tanpa peringatan ke pengguna. Jika\n\
+            parameter lain tidak ditentukan, opsi ini juga akan mengeluarkan sistem.\n\
+    /d [p|u:]xx:yy  Memberikan kode alasan untuk penonaktifan dan memulai ulang sistem.\n\
+            p mengindikasikan bahwa penonaktifan atau memulai ulang telah direncanakan.\n\
+            u mengindikasikan bahwa alasannya telah ditentukan pengguna.\n\
+            Jika tidak terdapat p atau u, penonaktifan atau memulai ulang tidak\n\
+            direncanakan.\n\
+            xx adalah kode alasan mayor (bilangan bulat positif lebih kecil dari 256).\n\
+            yy adalah kode alasan minor (bilangan bulat positif lebih kecil dari 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT "KESALAHAN: Tidak bisa menonaktifkan dan memulai ulang dalam waktu yang sama.\n"
+    IDS_ERROR_TIMEOUT "KESALAHAN: Nilai waktu habis %u keluar dari jangkauan (0-315360000).\n"
+    IDS_ERROR_ABORT "KESALAHAN: Tidak bisa membatalkan penonaktifan sistem.\n"
+    IDS_ERROR_LOGOFF "KESALAHAN: Tidak bisa keluar dari sistem.\n"
+    IDS_ERROR_SHUTDOWN "KESALAHAN: Tidak bisa menonaktifkan sistem.\n"
+    IDS_ERROR_RESTART "KESALAHAN: Tidak bisa memulai ulang sistem.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "KESALAHAN: Panjang komentar melebihi batas maksimum karakter yang ditentukan.\n"
+    IDS_ERROR_HIBERNATE "KESALAHAN: Tidak bisa memberitahukan sistem mode tidur.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "KESALAHAN: Mode tidur tidak bisa dimulai jarak jauh.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "KESALAHAN: Mode tidur belum diaktifkan.\n"
+    IDS_ERROR_DIALOG_CAPTION "Penonaktifan Jarak Jauh"
+    IDS_ERROR_DIALOG_INIT "Tidak bisa menampilkan antarmuka grafis."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN "Menonaktifkan sistem"
+    IDS_ACTION_RESTART "Memulai ulang sistem"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN " penonaktifan tidak terduga"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE
+BEGIN
+    IDS_REASON_OTHER "Lainnya"
+    IDS_REASON_HARDWARE_MAINTENANCE "Perangkat keras: Perbaikan"
+    IDS_REASON_HARDWARE_INSTALL "Perangkat keras: Pemasangan"
+    IDS_REASON_OS_RECOVER "Sistem operasi: Recovery"
+    IDS_REASON_OS_RECONFIGURE "Sistem operasi: Mengonfigurasikan ulang"
+    IDS_REASON_APP_MAINTENANCE "Aplikasi: Perbaikan"
+    IDS_REASON_APP_INSTALL "Aplikasi: Pemasangan"
+    IDS_REASON_APP_UNRESPONSIVE "Aplikasi: Tidak merespon"
+    IDS_REASON_APP_UNSTABLE "Aplikasi: Tidak stabil"
+    IDS_REASON_SECURITY "Alasan keamanan"
+    IDS_REASON_NETWORK "Kehilangan sambungan jaringan"
+END

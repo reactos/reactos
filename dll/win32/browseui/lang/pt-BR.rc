@@ -1,6 +1,6 @@
 /* Brazilian Portuguese translation by Edison Henrique Andreassy (ehasis@hotmail.com) */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 /* Menus */
 
@@ -106,7 +106,7 @@ BEGIN
         END
         MENUITEM "&Open Folder", IDM_OPEN_FOLDER
         MENUITEM "&Show Text", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

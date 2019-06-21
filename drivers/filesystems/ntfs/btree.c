@@ -694,7 +694,7 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
     PNTFS_ATTR_CONTEXT IndexAllocationContext = NULL;
     NTSTATUS Status;
 
-    DPRINT1("CreateBTreeFromIndex(%p, %p)\n", IndexRoot, NewTree);
+    DPRINT("CreateBTreeFromIndex(%p, %p)\n", IndexRoot, NewTree);
 
     if (!Tree || !RootNode || !CurrentKey)
     {
@@ -920,7 +920,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
                                                                DeviceExt->NtfsInfo.BytesPerFileRecord,
                                                                TAG_NTFS);
 
-    DPRINT1("CreateIndexRootFromBTree(%p, %p, 0x%lx, %p, %p)\n", DeviceExt, Tree, MaxIndexSize, IndexRoot, Length);
+    DPRINT("CreateIndexRootFromBTree(%p, %p, 0x%lx, %p, %p)\n", DeviceExt, Tree, MaxIndexSize, IndexRoot, Length);
 
 #ifndef NDEBUG
     DumpBTree(Tree);
@@ -1091,7 +1091,7 @@ DemoteBTreeRoot(PB_TREE Tree)
     PB_TREE_FILENAME_NODE NewSubNode, NewIndexRoot;
     PB_TREE_KEY DummyKey;
 
-    DPRINT1("Collapsing Index Root into sub-node.\n");
+    DPRINT("Collapsing Index Root into sub-node.\n");
 
 #ifndef NDEBUG
     DumpBTree(Tree);
@@ -1192,7 +1192,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
     ULONG i;
     ULONG IndexAllocationOffset;
 
-    DPRINT1("UpdateIndexAllocation() called.\n");
+    DPRINT("UpdateIndexAllocation() called.\n");
 
     Status = FindAttribute(DeviceExt, FileRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationContext, &IndexAllocationOffset);
     if (NT_SUCCESS(Status))
@@ -1708,16 +1708,16 @@ NtfsInsertKey(PB_TREE Tree,
     *MedianKey = NULL;
     *NewRightHandSibling = NULL;
 
-    DPRINT1("NtfsInsertKey(%p, 0x%I64x, %p, %p, %s, %lu, %lu, %p, %p)\n",
-            Tree,
-            FileReference,
-            FileNameAttribute,
-            Node,
-            CaseSensitive ? "TRUE" : "FALSE",
-            MaxIndexRootSize,
-            IndexRecordSize,
-            MedianKey,
-            NewRightHandSibling);
+    DPRINT("NtfsInsertKey(%p, 0x%I64x, %p, %p, %s, %lu, %lu, %p, %p)\n",
+           Tree,
+           FileReference,
+           FileNameAttribute,
+           Node,
+           CaseSensitive ? "TRUE" : "FALSE",
+           MaxIndexRootSize,
+           IndexRecordSize,
+           MedianKey,
+           NewRightHandSibling);
 
     // Create the key for the filename attribute
     NewKey = CreateBTreeKeyFromFilename(FileReference, FileNameAttribute);
@@ -1893,7 +1893,7 @@ SplitBTreeNode(PB_TREE Tree,
     ULONG SizeSum;
     ULONG i;
 
-    DPRINT1("SplitBTreeNode(%p, %p, %p, %p, %s) called\n",
+    DPRINT("SplitBTreeNode(%p, %p, %p, %p, %s) called\n",
             Tree,
             Node,
             MedianKey,

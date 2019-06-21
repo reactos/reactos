@@ -1,0 +1,90 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, 380, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Criar link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, 380, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Criar link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Criar Atalho"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Este assitente irá ajudá-lo a criar atalhos para\nprogramas, arquivos, pastas, computadores ou endereços\nde Internet, ambos locais ou de rede.", -1, 120, 15, 200, 30
+    LTEXT "Digite a localização do item:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Procurar...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Pressione Próximo para prosseguir.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Seleccione um Título para o Programa"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "&Digite um nome para este atalho:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Pressione Terminar para criar o atalho.", -1, 118, 97, 178, 17
+END
+
+IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Atalho/Pastas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Para remover um item do Menu Iniciar, seleccione o item e clique em Remover.", -1, 10, 10, 192, 16
+    CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
+    PUSHBUTTON "&Remover", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Fechar", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalador Wine Gecko "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "O ReactOS não consegue encontrar o pacote Wine Gecko que é necessário para que os aplicativos HTML funcionem correctamente. O ReactOS pode fazer o download automático e instalar por si.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Adicionar/Remover Programas"
+    IDS_CPLSYSTEMDESCRIPTION "Configura programas e cria atalhos."
+    IDS_CREATE_SHORTCUT "Criar Atalho"
+    IDS_ERROR_NOT_FOUND "O arquivo %s não foi encontrado."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING "A carregar..."
+    IDS_INSTALLING "A Instalar..."
+    IDS_INVALID_SHA "Inesperado checksum do ficheiro carregado . Abortar instalação. Ficheiro corrompido."
+    IDS_NEW_INTERNET_SHORTCUT "Novo atalho de Internet"
+    IDS_DWL_FAILED "Falha ao carregar o pacote Gecko. Verifique a ligação à Internet. O setup irá continuar sem instalar o Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Falha ao criar o atalho de internete."
+    IDS_CANTMAKESHORTCUT "Falha ao criar o atalho."
+    IDS_NO_MEMORY "A memória não pode ser alocada!"
+    IDS_NO_DIRECTORY "Sem directoria!"
+    IDS_INVALID_PATH "O caminho é invalido!"
+END

@@ -385,6 +385,7 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     BOOL Result;
+    RECT rc;
 
     switch (message)
     {
@@ -401,7 +402,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         if (!g_pChildWnd) return 0;
 
         wcsncpy(g_pChildWnd->szPath, buffer, MAX_PATH);
-        g_pChildWnd->nSplitPos = 250;
+        g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -409,8 +410,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
+        GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
-        g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, g_pChildWnd->szPath*/);
+        g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW, rc.right - g_pChildWnd->nSplitPos);
         SetFocus(g_pChildWnd->hTreeWnd);
 
         /* set the address bar and button font */

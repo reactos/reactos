@@ -43,14 +43,14 @@
  */
  
 #include "ros_lpk.h"
-//#include "config.h"
-//#include "gdi_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
 /* HELPER FUNCTIONS AND DECLARATIONS */
 
 #define odd(x) ((x) & 1)
+
+extern const unsigned short bidi_direction_table[] DECLSPEC_HIDDEN;
 
 /*------------------------------------------------------------------------
     Bidirectional Character Types
@@ -93,52 +93,29 @@ enum directions
     LRE,
     PDF,
 
+    LRI, /* Isolate formatting characters new with 6.3 */
+    RLI,
+    FSI,
+    PDI,
+
     /* resolved types, also resolved directions */
-    N = ON,  /* alias, where ON, WS and S are treated the same */
+    NI = ON,  /* alias, where ON, WS and S are treated the same */
 };
 
 /* HELPER FUNCTIONS */
 
+static inline unsigned short get_table_entry(const unsigned short *table, WCHAR ch)
+{
+    return table[table[table[ch >> 8] + ((ch >> 4) & 0x0f)] + (ch & 0xf)];
+}
+
 /* Convert the libwine information to the direction enum */
 static void classify(LPCWSTR lpString, WORD *chartype, DWORD uCount)
 {
-    static const enum directions dir_map[16] =
-    {
-        L,  /* unassigned defaults to L */
-        L,
-        R,
-        EN,
-        ES,
-        ET,
-        AN,
-        CS,
-        B,
-        S,
-        WS,
-        ON,
-        AL,
-        NSM,
-        BN,
-        PDF  /* also LRE, LRO, RLE, RLO */
-    };
-
     unsigned i;
 
     for (i = 0; i < uCount; ++i)
-    {
-        chartype[i] = dir_map[get_char_typeW(lpString[i]) >> 12];
-        if (chartype[i] == PDF)
-        {
-            switch (lpString[i])
-            {
-            case 0x202A: chartype[i] = LRE; break;
-            case 0x202B: chartype[i] = RLE; break;
-            case 0x202C: chartype[i] = PDF; break;
-            case 0x202D: chartype[i] = LRO; break;
-            case 0x202E: chartype[i] = RLO; break;
-            }
-        }
-    }
+        chartype[i] = get_table_entry( bidi_direction_table, lpString[i] );
 }
 
 /* Set a run of cval values at locations all prior to, but not including */
@@ -257,6 +234,10 @@ static void resolveWhitespace(int baselevel, const WORD *pcls, BYTE *plevel, int
         case LRO:
         case RLO:
         case PDF:
+        case LRI:
+        case RLI:
+        case FSI:
+        case PDI:
         case BN:
             plevel[ich] = oldlevel;
             cchrun++;
@@ -510,7 +491,7 @@ BOOL BIDI_Reorder(
                 case B:
                 case S:
                 case WS:
-                case ON: chartype[j] = N;
+                case ON: chartype[j] = NI;
                 default: continue;
             }
 

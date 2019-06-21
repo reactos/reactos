@@ -1303,14 +1303,16 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    RECT rc;
     switch (message)
     {
     case WM_CREATE:
         // For now, the Help dialog item is disabled because of lacking of HTML Help support
         EnableMenuItem(GetMenu(hWnd), ID_HELP_HELPTOPICS, MF_BYCOMMAND | MF_GRAYED);
+        GetClientRect(hWnd, &rc);
         CreateWindowExW(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
-                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                       hWnd, (HMENU)0, hInst, 0);
+                        rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+                        hWnd, (HMENU)0, hInst, 0);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam))

@@ -222,7 +222,7 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Parameter3)
 {
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Enable interrupts if the trap came from user-mode */
     if (KiUserTrap(TrapFrame)) _enable();
@@ -248,7 +248,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     ULONG Cr0, Mask, Error, ErrorOffset, DataOffset;
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Check for kernel trap */
     if (!KiUserTrap(TrapFrame))
@@ -410,7 +410,7 @@ KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /*  Enable interrupts */
     _enable();
@@ -430,7 +430,7 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Check if this was a single step after sysenter */
     if (TrapFrame->Eip == (ULONG)KiFastCallEntry)
@@ -455,10 +455,9 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
-DECLSPEC_NORETURN
 VOID
 __cdecl
-KiTrap02(VOID)
+KiTrap02Handler(VOID)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
@@ -467,58 +466,52 @@ KiTrap02(VOID)
     KTRAP_FRAME TrapFrame;
     KIRQL OldIrql;
 
-    //
-    // In some sort of strange recursion case, we might end up here with the IF
-    // flag incorrectly on the interrupt frame -- during a normal NMI this would
-    // normally already be set.
-    //
-    // For sanity's sake, make sure interrupts are disabled for sure.
-    // NMIs will already be since the CPU does it for us.
-    //
+    /*
+     * In some sort of strange recursion case, we might end up here with the IF
+     * flag incorrectly on the interrupt frame -- during a normal NMI this would
+     * normally already be set.
+     *
+     * For sanity's sake, make sure interrupts are disabled for sure.
+     * NMIs will already be since the CPU does it for us.
+     */
     _disable();
 
-    //
-    // Get the current TSS, thread, and process
-    //
-    Tss = PCR->TSS;
-    Thread = ((PKIPCR)PCR)->PrcbData.CurrentThread;
+    /* Get the current TSS, thread, and process */
+    Tss = KeGetPcr()->TSS;
+    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
     Process = Thread->ApcState.Process;
 
-    //
-    // Save data usually not in the TSS
-    //
+    /* Save data usually not present in the TSS */
     Tss->CR3 = Process->DirectoryTableBase[0];
     Tss->IoMapBase = Process->IopmOffset;
     Tss->LDT = Process->LdtDescriptor.LimitLow ? KGDT_LDT : 0;
 
-    //
-    // Now get the base address of the NMI TSS
-    //
+    /* Now get the base address of the NMI TSS */
     TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
     NmiTss = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
                                 TssGdt->HighWord.Bytes.BaseMid << 16 |
                                 TssGdt->HighWord.Bytes.BaseHi << 24);
 
-    //
-    // Switch to it and activate it, masking off the nested flag
-    //
-    // Note that in reality, we are already on the NMI tss -- we just need to
-    // update the PCR to reflect this
-    //
-    PCR->TSS = NmiTss;
+    /*
+     * Switch to it and activate it, masking off the nested flag.
+     *
+     * Note that in reality, we are already on the NMI TSS -- we just
+     * need to update the PCR to reflect this.
+     */
+    KeGetPcr()->TSS = NmiTss;
     __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
     TssGdt->HighWord.Bits.Dpl = 0;
     TssGdt->HighWord.Bits.Pres = 1;
     TssGdt->HighWord.Bits.Type = I386_TSS;
 
-    //
-    // Now build the trap frame based on the original TSS
-    //
-    // The CPU does a hardware "Context switch" / task switch of sorts and so it
-    // takes care of saving our context in the normal TSS.
-    //
-    // We just have to go get the values...
-    //
+    /*
+     * Now build the trap frame based on the original TSS.
+     *
+     * The CPU does a hardware "Context switch" / task switch of sorts
+     * and so it takes care of saving our context in the normal TSS.
+     *
+     * We just have to go get the values...
+     */
     RtlZeroMemory(&TrapFrame, sizeof(KTRAP_FRAME));
     TrapFrame.HardwareSegSs = Tss->Ss0;
     TrapFrame.HardwareEsp = Tss->Esp0;
@@ -530,7 +523,7 @@ KiTrap02(VOID)
     TrapFrame.Esi = Tss->Esi;
     TrapFrame.Edi = Tss->Edi;
     TrapFrame.SegFs = Tss->Fs;
-    TrapFrame.ExceptionList = PCR->NtTib.ExceptionList;
+    TrapFrame.ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     TrapFrame.PreviousPreviousMode = (ULONG)-1;
     TrapFrame.Eax = Tss->Eax;
     TrapFrame.Ecx = Tss->Ecx;
@@ -541,65 +534,50 @@ KiTrap02(VOID)
     TrapFrame.DbgEip = Tss->Eip;
     TrapFrame.DbgEbp = Tss->Ebp;
 
-    //
-    // Store the trap frame in the KPRCB
-    //
+    /* Store the trap frame in the KPRCB */
     KiSaveProcessorState(&TrapFrame, NULL);
 
-    //
-    // Call any registered NMI handlers and see if they handled it or not
-    //
+    /* Call any registered NMI handlers and see if they handled it or not */
     if (!KiHandleNmi())
     {
-        //
-        // They did not, so call the platform HAL routine to bugcheck the system
-        //
-        // Make sure the HAL believes it's running at HIGH IRQL... we can't use
-        // the normal APIs here as playing with the IRQL could change the system
-        // state
-        //
-        OldIrql = PCR->Irql;
-        PCR->Irql = HIGH_LEVEL;
+        /*
+         * They did not, so call the platform HAL routine to bugcheck the system
+         *
+         * Make sure the HAL believes it's running at HIGH IRQL... we can't use
+         * the normal APIs here as playing with the IRQL could change the system
+         * state.
+         */
+        OldIrql = KeGetPcr()->Irql;
+        KeGetPcr()->Irql = HIGH_LEVEL;
         HalHandleNMI(NULL);
-        PCR->Irql = OldIrql;
+        KeGetPcr()->Irql = OldIrql;
     }
 
-    //
-    // Although the CPU disabled NMIs, we just did a BIOS Call, which could've
-    // totally changed things.
-    //
-    // We have to make sure we're still in our original NMI -- a nested NMI
-    // will point back to the NMI TSS, and in that case we're hosed.
-    //
-    if (PCR->TSS->Backlink != KGDT_NMI_TSS)
+    /*
+     * Although the CPU disabled NMIs, we just did a BIOS call, which could've
+     * totally changed things.
+     *
+     * We have to make sure we're still in our original NMI -- a nested NMI
+     * will point back to the NMI TSS, and in that case we're hosed.
+     */
+    if (KeGetPcr()->TSS->Backlink == KGDT_NMI_TSS)
     {
-        //
-        // Restore original TSS
-        //
-        PCR->TSS = Tss;
-
-        //
-        // Set it back to busy
-        //
-        TssGdt->HighWord.Bits.Dpl = 0;
-        TssGdt->HighWord.Bits.Pres = 1;
-        TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
-
-        //
-        // Restore nested flag
-        //
-        __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
-
-        //
-        // Handled, return from interrupt
-        //
-        KiIret();
+        /* Unhandled: crash the system */
+        KiSystemFatalException(EXCEPTION_NMI, NULL);
     }
 
-    //
-    // Unhandled: crash the system
-    //
-    KiSystemFatalException(EXCEPTION_NMI, NULL);
+    /* Restore original TSS */
+    KeGetPcr()->TSS = Tss;
+
+    /* Set it back to busy */
+    TssGdt->HighWord.Bits.Dpl = 0;
+    TssGdt->HighWord.Bits.Pres = 1;
+    TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
+
+    /* Restore nested flag */
+    __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
+
+    /* Handled, return from interrupt */
 }
 
 DECLSPEC_NORETURN
@@ -623,7 +601,7 @@ KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
      /* Enable interrupts */
     _enable();
@@ -643,7 +621,7 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Check for kernel-mode fault */
     if (!KiUserTrap(TrapFrame)) KiSystemFatalException(EXCEPTION_BOUND_CHECK, TrapFrame);
@@ -849,11 +827,53 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 
 DECLSPEC_NORETURN
 VOID
-FASTCALL
-KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
+__cdecl
+KiTrap08Handler(VOID)
 {
-    /* FIXME: Not handled */
-    KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
+    PKTSS Tss, DfTss;
+    PKTHREAD Thread;
+    PKPROCESS Process;
+    PKGDTENTRY TssGdt;
+
+    /* For sanity's sake, make sure interrupts are disabled */
+    _disable();
+
+    /* Get the current TSS, thread, and process */
+    Tss = KeGetPcr()->TSS;
+    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+    Process = Thread->ApcState.Process;
+
+    /* Save data usually not present in the TSS */
+    Tss->CR3 = Process->DirectoryTableBase[0];
+    Tss->IoMapBase = Process->IopmOffset;
+    Tss->LDT = Process->LdtDescriptor.LimitLow ? KGDT_LDT : 0;
+
+    /* Now get the base address of the double-fault TSS */
+    TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    DfTss  = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
+                                TssGdt->HighWord.Bytes.BaseMid << 16 |
+                                TssGdt->HighWord.Bytes.BaseHi << 24);
+
+    /*
+     * Switch to it and activate it, masking off the nested flag.
+     *
+     * Note that in reality, we are already on the double-fault TSS
+     * -- we just need to update the PCR to reflect this.
+     */
+    KeGetPcr()->TSS = DfTss;
+    __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
+    TssGdt->HighWord.Bits.Dpl = 0;
+    TssGdt->HighWord.Bits.Pres = 1;
+    // TssGdt->HighWord.Bits.Type &= ~0x2; /* I386_ACTIVE_TSS --> I386_TSS */
+    TssGdt->HighWord.Bits.Type = I386_TSS; // Busy bit cleared in the TSS selector.
+
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     EXCEPTION_DOUBLE_FAULT,
+                     (ULONG_PTR)Tss,
+                     0,
+                     0,
+                     NULL);
 }
 
 DECLSPEC_NORETURN
@@ -878,7 +898,7 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterTrap(TrapFrame);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Kill the system */
     KiSystemFatalException(EXCEPTION_INVALID_TSS, TrapFrame);
@@ -1485,7 +1505,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
     SaveArea = KiGetThreadNpxArea(Thread);
 
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    ASSERT(KiVdmTrap(TrapFrame) == FALSE);
 
     /* Check for user trap */
     if (!KiUserTrap(TrapFrame))

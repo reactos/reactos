@@ -89,6 +89,9 @@
 #ifdef LANGUAGE_HU_HU
     #include "lang/cdlg_Hu.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/cdlg_Id.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/cdlg_It.rc"
 #endif

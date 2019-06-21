@@ -9,8 +9,10 @@
 #ifndef __ASM_INC__
 #define __ASM_INC__
 
-/* Common definitions for FPO macro
-   see http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+/*
+ * Common definitions for the FPO macro.
+ * See https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_fpo_data
+ */
 #define FRAME_FPO    0
 #define FRAME_TRAP   1
 #define FRAME_TSS    2
@@ -65,8 +67,10 @@ GLOBAL_LABEL MACRO label
     %label::
 ENDM
 
-/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
-   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+/*
+ * See https://docs.microsoft.com/en-us/cpp/assembler/masm/dot-fpo
+ * and https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_fpo_data
+ */
 FPO MACRO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
     .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
 ENDM
@@ -317,8 +321,10 @@ ENDM
     .section .rdata
 .endm
 
-/* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
-   and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
+/*
+ * See https://docs.microsoft.com/en-us/cpp/assembler/masm/dot-fpo
+ * and https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_fpo_data
+ */
 .macro FPO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
     .if (cbFrame == FRAME_TRAP)
         .cfi_signal_frame

@@ -2,12 +2,13 @@
 
 typedef struct
 {
-    const INetCfgComponent * lpVtbl;
+    const INetCfgComponent *lpVtbl;
+    const INetCfgComponentBindings *lpVtblComponentBindings;
     LONG  ref;
     NetCfgComponentItem * pItem;
     INetCfgComponentPropertyUi * pProperty;
     INetCfg * pNCfg;
-}INetCfgComponentImpl;
+} INetCfgComponentImpl;
 
 typedef struct
 {
@@ -16,7 +17,171 @@ typedef struct
     NetCfgComponentItem * pCurrent;
     NetCfgComponentItem * pHead;
     INetCfg * pNCfg;
-}IEnumNetCfgComponentImpl;
+} IEnumNetCfgComponentImpl;
+
+static __inline INetCfgComponentImpl* impl_from_INetCfgComponentBindings(INetCfgComponentBindings *iface)
+{
+    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblComponentBindings));
+}
+
+
+/***************************************************************
+ * INetCfgComponentBindings
+ */
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnQueryInterface(
+    INetCfgComponentBindings *iface,
+    REFIID iid,
+    LPVOID *ppvObj)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentBindings(iface);
+    return INetCfgComponent_QueryInterface((INetCfgComponent*)This, iid, ppvObj);
+}
+
+ULONG
+WINAPI
+INetCfgComponentBindings_fnAddRef(
+    INetCfgComponentBindings *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentBindings(iface);
+    return INetCfgComponent_AddRef((INetCfgComponent*)This);
+}
+
+ULONG
+WINAPI
+INetCfgComponentBindings_fnRelease(
+    INetCfgComponentBindings *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentBindings(iface);
+    return INetCfgComponent_Release((INetCfgComponent*)This);
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnBindTo(
+    INetCfgComponentBindings *iface,
+    INetCfgComponent *pnccItem)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnUnbindFrom(
+    INetCfgComponentBindings *iface,
+    INetCfgComponent *pnccItem)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnSupportsBindingInterface(
+    INetCfgComponentBindings *iface,
+    DWORD dwFlags,
+    LPCWSTR pszwInterfaceName)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnIsBoundTo(
+    INetCfgComponentBindings *iface,
+    INetCfgComponent *pnccItem)
+{
+    INetCfgComponentImpl *pComponent;
+    PWSTR pszBindName, ptr;
+    INT len;
+
+    pComponent = impl_from_INetCfgComponentBindings(iface);
+    if (pComponent == NULL ||
+        pComponent->pItem == NULL ||
+        pComponent->pItem->pszBinding == NULL)
+        return E_POINTER;
+
+    if (pnccItem == NULL ||
+        ((INetCfgComponentImpl*)pnccItem)->pItem == NULL ||
+        ((INetCfgComponentImpl*)pnccItem)->pItem->szBindName == NULL)
+        return E_POINTER;
+
+    pszBindName = ((INetCfgComponentImpl*)pnccItem)->pItem->szBindName;
+
+    ptr = pComponent->pItem->pszBinding;
+    while (*ptr != UNICODE_NULL)
+    {
+        len = wcslen(ptr);
+
+        if (len > 8 && _wcsicmp(&ptr[8], pszBindName) == 0)
+            return S_OK;
+
+        ptr = ptr + len + 1;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnIsBindableTo(
+    INetCfgComponentBindings *iface,
+    INetCfgComponent *pnccItem)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnEnumBindingPaths(
+    INetCfgComponentBindings *iface,
+    DWORD dwFlags,
+    IEnumNetCfgBindingPath **ppIEnum)
+{
+    return IEnumNetCfgBindingPath_Constructor(NULL, &IID_IEnumNetCfgBindingPath, (LPVOID *)ppIEnum, dwFlags);
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnMoveBefore(
+    INetCfgComponentBindings *iface,
+    DWORD dwFlags,
+    INetCfgBindingPath *pncbItemSrc,
+    INetCfgBindingPath *pncbItemDest)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+INetCfgComponentBindings_fnMoveAfter(
+    INetCfgComponentBindings *iface,
+    DWORD dwFlags,
+    INetCfgBindingPath *pncbItemSrc,
+    INetCfgBindingPath *pncbItemDest)
+{
+    return E_NOTIMPL;
+}
+
+static const INetCfgComponentBindingsVtbl vt_NetCfgComponentBindings =
+{
+    INetCfgComponentBindings_fnQueryInterface,
+    INetCfgComponentBindings_fnAddRef,
+    INetCfgComponentBindings_fnRelease,
+    INetCfgComponentBindings_fnBindTo,
+    INetCfgComponentBindings_fnUnbindFrom,
+    INetCfgComponentBindings_fnSupportsBindingInterface,
+    INetCfgComponentBindings_fnIsBoundTo,
+    INetCfgComponentBindings_fnIsBindableTo,
+    INetCfgComponentBindings_fnEnumBindingPaths,
+    INetCfgComponentBindings_fnMoveBefore,
+    INetCfgComponentBindings_fnMoveAfter,
+};
+
+/***************************************************************
+ * INetCfgComponent
+ */
 
 HRESULT
 WINAPI
@@ -33,6 +198,12 @@ INetCfgComponent_fnQueryInterface(
     {
         *ppvObj = This;
         INetCfg_AddRef(iface);
+        return S_OK;
+    }
+    else if (IsEqualIID (iid, &IID_INetCfgComponentBindings))
+    {
+        *ppvObj = (LPVOID)&This->lpVtblComponentBindings;
+        INetCfgComponentBindings_AddRef(iface);
         return S_OK;
     }
 
@@ -527,6 +698,7 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
 
     This->ref = 1;
     This->lpVtbl = (const INetCfgComponent*)&vt_NetCfgComponent;
+    This->lpVtblComponentBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
     This->pProperty = NULL;
     This->pItem = pItem;
     This->pNCfg = pNCfg;

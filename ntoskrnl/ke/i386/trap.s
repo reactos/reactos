@@ -18,7 +18,7 @@ idt _KiUnexpectedInterrupt&Vector, INT_32_DPL0
 ENDM
 
 MACRO(GENERATE_INT_HANDLER, Vector)
-//.func KiUnexpectedInterrupt&Number
+//.func KiUnexpectedInterrupt&Vector
 _KiUnexpectedInterrupt&Vector:
     /* This is a push instruction with 8bit operand. Since the instruction
        sign extends the value to 32 bits, we need to offset it */
@@ -26,8 +26,6 @@ _KiUnexpectedInterrupt&Vector:
     jmp _KiEndUnexpectedRange@0
 //.endfunc
 ENDM
-
-EXTERN _KiTrap02:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -99,12 +97,13 @@ ENDR
 
 TRAP_ENTRY KiTrap00, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap01, KI_PUSH_FAKE_ERROR_CODE
+TASK_ENTRY KiTrap02, KI_NMI
 TRAP_ENTRY KiTrap03, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap04, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap05, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap06, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap07, KI_PUSH_FAKE_ERROR_CODE
-TRAP_ENTRY KiTrap08, 0
+TASK_ENTRY KiTrap08, 0
 TRAP_ENTRY KiTrap09, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap0A, 0
 TRAP_ENTRY KiTrap0B, 0

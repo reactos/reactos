@@ -20,49 +20,49 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "Bar&u\tCtrl+N", CMD_NEW
         MENUITEM "&Buka\tCtrl+O", CMD_OPEN
         MENUITEM "&Simpan\tCtrl+S", CMD_SAVE
         MENUITEM "Simpan seb&agai...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Se&tup Halaman...", CMD_PAGE_SETUP
+        MENUITEM "&Penyetelan Halaman...", CMD_PAGE_SETUP
         MENUITEM "&Cetak...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Keluar", CMD_EXIT
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Undo\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Urungkan\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "Cu&t\tCtrl+X", CMD_CUT
-        MENUITEM "&Copy\tCtrl+C", CMD_COPY
-        MENUITEM "&Paste\tCtrl+V", CMD_PASTE
+        MENUITEM "Gu&nting\tCtrl+X", CMD_CUT
+        MENUITEM "&Salin\tCtrl+C", CMD_COPY
+        MENUITEM "&Tempel\tCtrl+V", CMD_PASTE
         MENUITEM "&Hapus\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Ca&ri...\tCtrl+F", CMD_SEARCH
-        MENUITEM "Cari berikut&nya\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Ganti...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Pergi Ke...\tCtrl+G", CMD_GOTO
+        MENUITEM "Cari B&erikutnya\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Ganti...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Pergi Ke...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Pilih semu&a\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Jam/Tanggal\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Gulung baris panjang", CMD_WRAP
-        MENUITEM "&Font...", CMD_FONT
+        MENUITEM "&Kemas Kata", CMD_WRAP
+        MENUITEM "&Fon...", CMD_FONT
     END
-    POPUP "&Lihat"
+    POPUP "&Tampilan"
     BEGIN
-        MENUITEM "Status&bar", CMD_STATUSBAR
+        MENUITEM "Bilah &Status", CMD_STATUSBAR
     END
     POPUP "&Bantuan"
     BEGIN
-        MENUITEM "&Daftar Isi", CMD_HELP_CONTENTS
+        MENUITEM "Topik &Bantuan", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Tentang Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -70,59 +70,59 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Page Setup"
+CAPTION "Penyetelan Halaman"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Pratinjau", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    GROUPBOX "Kertas", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Ukuran:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Sumber:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    GROUPBOX "Orientasi", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Tegak", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "Bentan&g", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Tepi", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "Ki&ri:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    LTEXT "&Kanan:", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    LTEXT "Atas:", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    LTEXT "Ba&wah:", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "&Header:", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Footer:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "Bantuan", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "&Pencetak...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Enkoding"
+CAPTION "Pengkodean"
 BEGIN
     COMBOBOX ID_ENCODING, 124, 0, 125, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Enkoding:", 0x155, 65, 2, 41, 12
+    LTEXT "Pengkodean:", 0x155, 65, 2, 41, 12
     COMBOBOX ID_EOLN, 124, 18, 125, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Akhirbaris:", 0x156, 65, 20, 41, 12
+    LTEXT "Akhir baris:", 0x156, 65, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Pergi ke baris"
+CAPTION "Pergi ke Baris"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "Nomor baris:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    LTEXT "Nomor Baris:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
     PUSHBUTTON "Batal", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -136,20 +136,20 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Notepad"
-    STRING_ERROR "SALAH"
-    STRING_WARNING "PERINGATAN"
+    STRING_ERROR "Kesalahan"
+    STRING_WARNING "Peringatan"
     STRING_INFO "Informasi"
     STRING_UNTITLED "Tanpa judul"
-    STRING_ALL_FILES "Semua file (*.*)"
-    STRING_TEXT_FILES_TXT "File teks (*.txt)"
-    STRING_TOOLARGE "File '%s' terlalu besar untuk notepad.\n \
-Please use a different editor."
-    STRING_NOTEXT "Anda tidak memasukkan teks apapun. \
-\nPlease type something and try again"
-    STRING_DOESNOTEXIST "File '%s'\ntidak ada\n\n \
-Do you want to create a new file ?"
-    STRING_NOTSAVED "File '%s'\nsudah diubah\n\n \
-Would you like to save the changes ?"
+    STRING_ALL_FILES "Semua berkas (*.*)"
+    STRING_TEXT_FILES_TXT "Berkas teks (*.txt)"
+    STRING_TOOLARGE "Berkas '%s' terlalu besar untuk notepad.\n \
+Mohon gunakan editor teks yang berbeda."
+    STRING_NOTEXT "Anda belum memasukkan teks apapun. \
+\nMohon ketik sesuatu dan coba lagi."
+    STRING_DOESNOTEXIST "Berkas '%s'\ntidak ada\n\n \
+Ingin membuat berkas baru?"
+    STRING_NOTSAVED "Berkas '%s'\ntelah diubah\n\n \
+Ingin menyimpan perubahan?"
     STRING_NOTFOUND "'%s' tidak bisa ditemukan."
     STRING_OUT_OF_MEMORY "Memori tidak cukup untuk menyelesaikan tugas \
 ini. \nTutup satu atau lebih aplikasi untuk meningkatkan jumlah \nmemori \
@@ -162,9 +162,9 @@ bebas."
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
-    STRING_LINE_COLUMN "Line %d, column %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_LINE_COLUMN "Baris %d, kolom %d"
+    STRING_PRINTERROR "Tidak bisa mencetak '%s'.\n\nPastikan pencetak telah menyala dan bisa digunakan dengan benar."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Teks Dokumen"
     STRING_NOTEPAD_AUTHORS "Hak Cipta 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

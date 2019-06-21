@@ -66,16 +66,15 @@ MACRO(idt, Handler, Bits)
 ENDM
 
 
-KI_PUSH_FAKE_ERROR_CODE = HEX(0001)
-KI_UNUSED               = HEX(0002)
-KI_NONVOLATILES_ONLY    = HEX(0004)
-KI_FAST_SYSTEM_CALL     = HEX(0008)
-KI_SOFTWARE_TRAP        = HEX(0010)
-KI_HARDWARE_INT         = HEX(0020)
-KI_DONT_SAVE_SEGS       = HEX(0100)
+#define KI_PUSH_FAKE_ERROR_CODE HEX(0001)
+#define KI_UNUSED               HEX(0002)
+#define KI_NONVOLATILES_ONLY    HEX(0004)
+#define KI_FAST_SYSTEM_CALL     HEX(0008)
+#define KI_SOFTWARE_TRAP        HEX(0010)
+#define KI_HARDWARE_INT         HEX(0020)
+#define KI_DONT_SAVE_SEGS       HEX(0100)
 
 MACRO(KiEnterTrap, Flags)
-    LOCAL kernel_trap
     LOCAL not_v86_trap
     LOCAL set_sane_segs
 
@@ -145,7 +144,7 @@ MACRO(KiEnterTrap, Flags)
     if (Flags AND KI_DONT_SAVE_SEGS)
 
         /* Initialize TrapFrame segment registers with sane values */
-        mov eax, KGDT_R3_DATA OR 3
+        mov eax, KGDT_R3_DATA OR RPL_MASK
         mov ecx, fs
         mov [esp + KTRAP_FRAME_DS], eax
         mov [esp + KTRAP_FRAME_ES], eax
@@ -250,17 +249,38 @@ MACRO(TRAP_ENTRY, Trap, Flags)
     .ENDP
 ENDM
 
-#define KI_RESTORE_EAX        HEX(001)
-#define KI_RESTORE_ECX_EDX    HEX(002)
-#define KI_RESTORE_FS         HEX(004)
-#define KI_RESTORE_SEGMENTS   HEX(008)
-#define KI_RESTORE_EFLAGS     HEX(010)
-#define KI_EXIT_SYSCALL       HEX(020)
-#define KI_EXIT_JMP           HEX(040)
-#define KI_EXIT_RET           HEX(080)
-#define KI_EXIT_IRET          HEX(100)
-#define KI_EDITED_FRAME       HEX(200)
-#define KI_EXIT_RET8          HEX(400)
+#define KI_NMI  HEX(0001)
+
+MACRO(TASK_ENTRY, Trap, Flags)
+    EXTERN _&Trap&Handler :PROC
+    PUBLIC _&Trap
+    .PROC _&Trap
+        /* Generate proper debugging symbols */
+        FPO 0, 0, 0, 0, 0, FRAME_TSS
+
+        /* Call the C handler */
+        call _&Trap&Handler
+
+        if (Flags AND KI_NMI)
+            /* Return from NMI: return with iret and handle NMI recursion */
+            iretd
+            jmp _&Trap
+        endif
+
+    .ENDP
+ENDM
+
+#define KI_RESTORE_EAX        HEX(0001)
+#define KI_RESTORE_ECX_EDX    HEX(0002)
+#define KI_RESTORE_FS         HEX(0004)
+#define KI_RESTORE_SEGMENTS   HEX(0008)
+#define KI_RESTORE_EFLAGS     HEX(0010)
+#define KI_EXIT_SYSCALL       HEX(0020)
+#define KI_EXIT_JMP           HEX(0040)
+#define KI_EXIT_RET           HEX(0080)
+#define KI_EXIT_IRET          HEX(0100)
+#define KI_EDITED_FRAME       HEX(0200)
+#define KI_EXIT_RET8          HEX(0400)
 #define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
 
 MACRO(KiTrapExitStub, Name, Flags)

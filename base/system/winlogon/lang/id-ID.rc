@@ -1,43 +1,43 @@
-/* Indonesian translation by Zaenal Mutaqin <adezm>. */
+/* Indonesian translation by Zaenal Mutaqin <adezm> and Mas Ahmad Muhammad */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Matikan Komputer"
+CAPTION "Menonaktifkan Komputer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sekarang aman untuk mematikan komputer anda.", IDC_SHUTDOWNCOMPUTER, 31, 6, 132, 18
+    LTEXT "Sekarang aman untuk menonaktifkan komputer anda.", IDC_SHUTDOWNCOMPUTER, 31, 6, 132, 18
     ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON "&Mulai Lagi", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&Mulai Ulang", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kegagalan Interface Pengguna"
+CAPTION "Kegagalan Antarmuka Pengguna"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Logon User Interface DLL %s gagal diambil.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "DLL Antarmuka Masuk Pengguna %s gagal diambil.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Hubungi administrator sistem anda untuk mengganti DLL, atau mengembalikan DLL aslinya.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Mulai Lagi", 1, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
-CAPTION "System Shutdown"
+CAPTION "Menonaktifkan Sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "Menonaktifkan sistem telah dimulai. Mohon simpan semua pekerjaan dan menghentikan sesi. Semua pekerjaan yang belum tersimpan akan hilang ketika sistem dinonaktifkan.", -1, 38, 7, 135, 40
+    LTEXT "Menonaktifkan sistem dalam waktu:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "Pesan:", -1, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Menyiapkan koneksi jaringan..."
+    IDS_PREPARENETWORKCONNECTIONS "Menyiapkan sambungan jaringan..."
     IDS_APPLYINGCOMPUTERSETTINGS "Menerapkan setelan komputer..."
     IDS_RUNNINGSTARTUPSCRIPTS "Menjalankan naskah startup..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Menjalankan naskah shutdown..."
@@ -46,13 +46,13 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Menjalankan naskah logon..."
     IDS_LOADINGYOURPERSONALSETTINGS "Mengambil setelan personal anda..."
     IDS_CLOSINGNETWORKCONNECTIONS "Menutup koneksi jaringan..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS sedang dimatikan..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS sedang dinonaktifkan..."
     IDS_PREPARETOSTANDBY "Menyiapkan untuk Standby..."
-    IDS_PREPARETOHIBERNATE "Menyiapkan untuk Hibernasi..."
+    IDS_PREPARETOHIBERNATE "Menyiapkan untuk Tidur..."
     IDS_SAVEYOURSETTINGS "Menyimpan setelan anda..."
     IDS_REACTOSISSTARTINGUP "ReactOS dimulai..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d hari"
 END
 
 STRINGTABLE

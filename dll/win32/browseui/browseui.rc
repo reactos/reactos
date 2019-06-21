@@ -83,6 +83,9 @@ IDR_TASKBARLIST REGISTRY "res/taskbarlist.rgs"
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
@@ -94,6 +97,9 @@ IDR_TASKBARLIST REGISTRY "res/taskbarlist.rgs"
 #endif
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"

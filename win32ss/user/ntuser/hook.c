@@ -1037,45 +1037,59 @@ BOOLEAN
 IntRemoveHook(PVOID Object)
 {
     INT HookId;
-    PTHREADINFO pti;
+    PTHREADINFO ptiHook, pti;
     PDESKTOP pdo;
     PHOOK Hook = Object;
 
+    NT_ASSERT(UserIsEnteredExclusive());
+
     HookId = Hook->HookId;
+    pti = PsGetCurrentThreadWin32Thread();
 
     if (Hook->ptiHooked) // Local
     {
-       pti = Hook->ptiHooked;
+        ptiHook = Hook->ptiHooked;
 
-       IntFreeHook( Hook);
+        IntFreeHook(Hook);
 
-       if ( IsListEmpty(&pti->aphkStart[HOOKID_TO_INDEX(HookId)]) )
-       {
-          pti->fsHooks &= ~HOOKID_TO_FLAG(HookId);
-          _SEH2_TRY
-          {
-             pti->pClientInfo->fsHooks = pti->fsHooks;
-          }
-          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-          {
-              /* Do nothing */
-              (void)0;
-          }
-          _SEH2_END;
+        if (IsListEmpty(&ptiHook->aphkStart[HOOKID_TO_INDEX(HookId)]))
+        {
+            BOOL bOtherProcess;
+            KAPC_STATE ApcState;
+
+            ptiHook->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+            bOtherProcess = (ptiHook->ppi != pti->ppi);
+
+            if (bOtherProcess)
+                KeStackAttachProcess(&ptiHook->ppi->peProcess->Pcb, &ApcState);
+
+            _SEH2_TRY
+            {
+                ptiHook->pClientInfo->fsHooks = ptiHook->fsHooks;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Do nothing */
+                (void)0;
+            }
+            _SEH2_END;
+
+            if (bOtherProcess)
+                KeUnstackDetachProcess(&ApcState);
        }
     }
     else // Global
     {
-       IntFreeHook( Hook);
+        IntFreeHook(Hook);
 
-       pdo = IntGetActiveDesktop();
+        pdo = IntGetActiveDesktop();
 
-       if ( pdo &&
-            pdo->pDeskInfo &&
-            IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
-       {
-          pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
-       }
+        if (pdo &&
+             pdo->pDeskInfo &&
+             IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]))
+        {
+            pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+        }
     }
 
     return TRUE;
@@ -1589,7 +1603,9 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           }
           else
           {
-             KeAttachProcess(&ptiHook->ppi->peProcess->Pcb);
+             KAPC_STATE ApcState;
+
+             KeStackAttachProcess(&ptiHook->ppi->peProcess->Pcb, &ApcState);
              _SEH2_TRY
              {
                 ptiHook->pClientInfo->fsHooks = ptiHook->fsHooks;
@@ -1600,7 +1616,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                 ERR("Problem writing to Remote ClientInfo!\n");
              }
              _SEH2_END;
-             KeDetachProcess();
+             KeUnstackDetachProcess(&ApcState);
           }
        }
     }

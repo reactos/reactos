@@ -1,0 +1,175 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Selamat datang di Penuntun Penyetelan ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS belum bisa dipasang dari CD secara langsung! Mohon mulai ulang komputer inidari CD secara berurutan untuk memasang ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klik selesai untuk keluar dari penyetelan.", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Pasang ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    AUTORADIOBUTTON "Perbarui atau perbaiki ReactOS", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Perbarui atau perbaiki salinan terpasang dari ReactOS. Pilihan ini tetap menyimpan berkas, Pengaturan dan program. Pilihan ini hanya tersedia jika ReactOS telah terpasang di komputer ini.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "Klik lanjut untuk meneruskan.", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT       "Penyetelan ReactOS bisa meningkatkan pemasangan ReactOS yang tersedia di daftar berikut, atau jika pemasangan ReactOS gagal atau rusak, program penyetelan bisa mencoba memperbaikinya.", IDC_STATIC, 6, 6, 300, 18
+    CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
+    PUSHBUTTON  "&Jangan tingkatkan", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "Klik lanjut meningkatkan pemasangan OS terplih, atau 'Jangan tingkatkan' untuk melanjutkan pemasangan tanpa meningkatkan.", IDC_STATIC, 7, 124, 222, 16
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    LTEXT "Tampilan:", IDC_STATIC, 20, 35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    LTEXT "Papan Ketik:", IDC_STATIC, 20, 55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    LTEXT "Klik Lanjut untuk meneruskan penyetelan pada pemasangan perangkat.", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&Buat", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Hapus", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "&Perangkat", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "Pilihan &Tingkat Lanjut...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 145, 90
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "Buat Partisi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
+    CONTROL "Buat dan format partisi", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    LTEXT "Ukuran:", IDC_STATIC, 13, 24, 27, 9
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
+    LTEXT "Sistem Berkas:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Batal", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "Pengaturan Partisi Tingkat Lanjut"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Folder pemasangan", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
+    CONTROL "Pemasangan bootloader", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "Pasang bootloader pada hard disk (MBR dan VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Pasang bootloader pada hard disk (hanya VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Tidak ada pemasangan bootloader", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Batal", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Jenis pemasangan:", IDC_STATIC, 18, 5, 74, 11
+    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Sumber pemasangan:", IDC_STATIC, 18, 17, 74, 11
+    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Arsitektur:", IDC_STATIC, 18, 29, 74, 11
+    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Komputer:", IDC_STATIC, 18, 41, 74, 11
+    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Tampilan:", IDC_STATIC, 18, 53, 74, 11
+    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Papan Ketik:", IDC_STATIC, 18, 65, 74, 11
+    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Volume tujuan:", IDC_STATIC, 18, 77, 74, 11
+    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Direktori tujuan:", IDC_STATIC, 18, 89, 74, 11
+    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    AUTOCHECKBOX "Saya mengonfirmasikan bahwa seluruh penyetelan pemasangan ini adalah benar. Saya juga mengerti bahwa\nReactOS adalah perangkat lunak alpha-quality dan mungkin saja merusak komputer saya serta data saya.",
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+    LTEXT "Mohon konfirmasi bahwa seluruh penyetelan pemasangan adalah benar,\nkemudian klik Pasang untuk memulai proses pemasangan.", IDC_STATIC, 7, 124, 303, 18
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Memasang berkas...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "tes.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
+END
+
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Menyelesaikan Penyetelan ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Anda menyelesaikan babak pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 10
+    LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TYPETITLE "Selamat datang di Penyetelan ReactOS"
+    IDS_TYPESUBTITLE "Pilih jenis penyetelan"
+    IDS_DEVICETITLE "Menyetel perangkat dasar"
+    IDS_DEVICESUBTITLE "Setel pengaturan tampilan dan papan ketik"
+    IDS_DRIVETITLE "Penyetelan pemasangan partisi dan folder sistem"
+    IDS_DRIVESUBTITLE "Menyiapkan pemasangan partisi, folder sistem dan bootloader"
+    IDS_PROCESSTITLE "Penyetelan partisi, penyalinan berkas dan sistem"
+    IDS_PROCESSSUBTITLE "Buat dan format partisi, salin berkas, pasang dan setel bootloader"
+    IDS_RESTARTTITLE "Penyetelan babak pertama selesai"
+    IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke babak kedua"
+    IDS_SUMMARYTITLE "Ringkasan Pemasangan"
+    IDS_SUMMARYSUBTITLE "Cek daftar properti pemasangan sebelum menerapkan pemasangan perangkat"
+    IDS_ABORTSETUP "ReactOS tidak sepenuhnya terpasang pada komputer ini. Jika kamu keluar dari penyetelan ini, kamu harus menjalankan lagi penyetelan ini untuk memasang ReactOS. Yakin ingin keluar?"
+    IDS_ABORTSETUP2 "Gugurkan pemasangan?"
+    IDS_NO_TXTSETUP_SIF "Tidak bisa menemukan 'txtsetup.sif'.\nPenyetelan tidak bisa dilanjutkan."
+    IDS_CAPTION "Penyetelan ReactOS"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLATION_NAME "Nama"
+    IDS_INSTALLATION_PATH "Jalur Pemasangan"
+    IDS_INSTALLATION_VENDOR "Nama Vendor"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "Nama"
+    IDS_PARTITION_TYPE "Jenis"
+    IDS_PARTITION_SIZE "Ukuran"
+    IDS_PARTITION_STATUS "Status"
+END
