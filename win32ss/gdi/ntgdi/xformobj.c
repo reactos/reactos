@@ -151,12 +151,11 @@ XFORMOBJ_iSetXform(
     IN const XFORML *pxform)
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
+    ULONG Hint;
+    FLOATOBJ ef1, ef2;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
-
-    /* Check if the xform is valid */
-    if ((pxform->eM11 == 0) || (pxform->eM22 == 0)) return DDI_ERROR;
 
     /* Copy members */
     FLOATOBJ_SetFloat(&pmx->efM11, pxform->eM11);
@@ -167,7 +166,22 @@ XFORMOBJ_iSetXform(
     FLOATOBJ_SetFloat(&pmx->efDy, pxform->eDy);
 
     /* Update accelerators and return complexity */
-    return XFORMOBJ_UpdateAccel(pxo);
+    Hint = XFORMOBJ_UpdateAccel(pxo);
+
+    if (Hint == GX_SCALE || Hint == GX_GENERAL)
+    {
+        /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
+        FLOATOBJ_SetFloat(&ef1, pxform->eM11);
+        FLOATOBJ_Mul(&ef1, &pmx->efM22);
+        FLOATOBJ_SetFloat(&ef2, pxform->eM12);
+        FLOATOBJ_Mul(&ef2, &pmx->efM21);
+        if (FLOATOBJ_Equal(&ef1, &ef2))
+        {
+            return DDI_ERROR;
+        }
+    }
+
+    return Hint;
 }
 
 
