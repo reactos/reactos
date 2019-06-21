@@ -151,11 +151,15 @@ XFORMOBJ_iSetXform(
     IN const XFORML *pxform)
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
+    MATRIX mxSave;
     ULONG Hint;
     FLOATOBJ ef1, ef2, ef3, ef4;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
+
+    /* Save */
+    mxSave = *pmx;
 
     /* Copy members */
     FLOATOBJ_SetFloat(&pmx->efM11, pxform->eM11);
@@ -180,6 +184,7 @@ XFORMOBJ_iSetXform(
         FLOATOBJ_Mul(&ef3, &ef4);
         if (FLOATOBJ_Equal(&ef1, &ef3))
         {
+            *pmx = mxSave;  /* Restore */
             return DDI_ERROR;
         }
     }
