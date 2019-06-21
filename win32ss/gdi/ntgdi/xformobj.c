@@ -152,7 +152,7 @@ XFORMOBJ_iSetXform(
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
     ULONG Hint;
-    FLOATOBJ ef1, ef2;
+    FLOATOBJ efTemp, ef1, ef2;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
@@ -165,16 +165,19 @@ XFORMOBJ_iSetXform(
     FLOATOBJ_SetFloat(&pmx->efDx, pxform->eDx);
     FLOATOBJ_SetFloat(&pmx->efDy, pxform->eDy);
 
+    ef1 = pmx->efM11;
+    ef2 = pmx->efM12;
+
     /* Update accelerators and return complexity */
     Hint = XFORMOBJ_UpdateAccel(pxo);
 
     if (Hint == GX_SCALE || Hint == GX_GENERAL)
     {
         /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
-        FLOATOBJ_SetFloat(&ef1, pxform->eM11);
-        FLOATOBJ_Mul(&ef1, &pmx->efM22);
-        FLOATOBJ_SetFloat(&ef2, pxform->eM12);
-        FLOATOBJ_Mul(&ef2, &pmx->efM21);
+        FLOATOBJ_SetFloat(&efTemp, pxform->eM22);
+        FLOATOBJ_Mul(&ef1, &efTemp);
+        FLOATOBJ_SetFloat(&efTemp, pxform->eM21);
+        FLOATOBJ_Mul(&ef2, &efTemp);
         if (FLOATOBJ_Equal(&ef1, &ef2))
         {
             return DDI_ERROR;
