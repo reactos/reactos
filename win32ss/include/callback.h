@@ -18,7 +18,8 @@
 #define USER32_CALLBACK_DDEGET                (14)
 #define USER32_CALLBACK_SETOBM                (15)
 #define USER32_CALLBACK_LPK                   (16)
-#define USER32_CALLBACK_MAXIMUM               (16)
+#define USER32_CALLBACK_UMPD                  (17)
+#define USER32_CALLBACK_MAXIMUM               (17)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -186,4 +187,6 @@ NTSTATUS WINAPI
 User32CallOBMFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallUMPDFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */

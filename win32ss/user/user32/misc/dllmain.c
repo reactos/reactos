@@ -206,6 +206,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallDDEGetFromKernel,
     User32CallOBMFromKernel,
     User32CallLPKFromKernel,
+    User32CallUMPDFromKernel,
 };
 
 
@@ -662,4 +663,10 @@ NTSTATUS WINAPI User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength)
                           NULL);
 
     return ZwCallbackReturn(&bResult, sizeof(BOOL), STATUS_SUCCESS);
+}
+
+NTSTATUS WINAPI User32CallUMPDFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    // = GdiPrinterThunk( , , );
+    return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }
