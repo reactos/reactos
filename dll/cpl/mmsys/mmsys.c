@@ -465,8 +465,6 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     WCHAR szBuffer[MAX_PATH];
     HINF hInf;
     PVOID Context;
-    BOOL Result;
-    SC_HANDLE hSCManager, hService;
     WCHAR WaveName[20];
     HKEY hKey;
     DWORD BufferSize;
@@ -507,17 +505,17 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         return ERROR_GEN_FAILURE;
     }
 
-    Result = SetupInstallFromInfSectionW(NULL,
-                                         hInf,
-                                         L"AUDIO_Inst.NT",
-                                         SPINST_ALL,
-                                         NULL,
-                                         NULL,
-                                         SP_COPY_NEWER,
-                                         SetupDefaultQueueCallbackW,
-                                         Context,
-                                         NULL,
-                                         NULL);
+    SetupInstallFromInfSectionW(NULL,
+                                hInf,
+                                L"AUDIO_Inst.NT",
+                                SPINST_ALL,
+                                NULL,
+	                            NULL,
+                                SP_COPY_NEWER,
+                                SetupDefaultQueueCallbackW,
+                                Context,
+                                NULL,
+                                NULL);
 
 
     SetupTermDefaultQueueCallback(Context);
