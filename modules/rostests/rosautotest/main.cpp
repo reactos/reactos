@@ -102,11 +102,11 @@ wmain(int argc, wchar_t* argv[])
         stringstream ss;
 
         // e.GetMessage() must include ending '\n'.
-        ss << "An exception occured in rosautotest." << endl
-           << "Message: " << e.GetMessage()
-           << "File: " << e.GetFile() << endl
-           << "Line: " << e.GetLine() << endl
-           << "Last Win32 Error: " << GetLastError() << endl;
+        ss << "[ROSAUTOTEST] An exception occured in rosautotest." << endl
+           << "[ROSAUTOTEST] Message: " << e.GetMessage()
+           << "[ROSAUTOTEST] File: " << e.GetFile() << endl
+           << "[ROSAUTOTEST] Line: " << e.GetLine() << endl
+           << "[ROSAUTOTEST] Last Win32 Error: " << GetLastError() << endl;
         StringOut(ss.str());
     }
 

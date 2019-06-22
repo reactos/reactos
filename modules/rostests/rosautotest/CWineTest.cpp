@@ -255,10 +255,12 @@ CWineTest::GetNextTestInfo()
         {
             stringstream ss;
 
-            ss << "An exception occurred trying to list tests for: " << UnicodeToAscii(m_CurrentFile) << endl;
+            // e.GetMessage() must include ending '\n'.
+            ss << "[ROSAUTOTEST] An exception occurred trying to list tests for: " << UnicodeToAscii(m_CurrentFile) << endl
+               << "[ROSAUTOTEST] " << e.GetMessage()
+               << endl;
             StringOut(ss.str());
-            StringOut(e.GetMessage());
-            StringOut("\n");
+
             m_CurrentFile.clear();
             delete[] m_ListBuffer;
         }
@@ -327,6 +329,8 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     }
     catch(CTestException& e)
     {
+        stringstream ss;
+
         /* Print what's left */
         if(!tailString.empty())
         {
@@ -334,10 +338,12 @@ CWineTest::RunTest(CTestInfo* TestInfo)
             tailString.clear();
         }
 
-        StringOut(e.GetMessage());
+        // e.GetMessage() must include ending '\n'.
+        ss << "[ROSAUTOTEST] " << e.GetMessage();
+        StringOut(ss.str());
 
         if (Configuration.DoSubmit())
-            TestInfo->Log += e.GetMessage();
+            TestInfo->Log += ss.str();
     }
 
     /* Print what's left */
