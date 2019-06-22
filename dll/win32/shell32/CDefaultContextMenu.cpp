@@ -289,11 +289,11 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
 	
     lres = RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hShellKey);
 	
-    if(lres == STATUS_SUCCESS)
+    if(lres == ERROR_SUCCESS)
         lres = RegQueryValueEx(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
 	
-    if((!wcsicmp(szVerb, wszDefault) && lres == STATUS_SUCCESS) ||
-       (!wcsicmp(szVerb, L"open") && lres != STATUS_SUCCESS))
+    if((!wcsicmp(szVerb, wszDefault) && lres == ERROR_SUCCESS) ||
+       (!wcsicmp(szVerb, L"open") && lres != ERROR_SUCCESS))
     {
         /* open verb is always inserted in front, unless the default value of shell entry is set */
         pEntry->pNext = m_pStaticEntries;
@@ -314,13 +314,13 @@ void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
     HKEY hShellKey;
     LRESULT lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
 	
-    if (lres != STATUS_SUCCESS)
+    if (lres != ERROR_SUCCESS)
         return;
 
     while(TRUE)
     {
         cchName = _countof(wszName);
-        if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != STATUS_SUCCESS)
+        if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
 
         AddStaticEntry(hKey, wszName);
