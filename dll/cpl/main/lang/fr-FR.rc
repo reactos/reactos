@@ -55,10 +55,10 @@ BEGIN
     CHECKBOX "&Inverser les boutons gauche et droite", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
     LTEXT "Cochez cette case pour faire du bouton droit le bouton principal pour les fonctions telles que la sélection et le déplacement.", -1, 10, 30, 150, 30
-    GROUPBOX "Vitesse du double-click ", -1, 5, 75, 230, 70
+    GROUPBOX "Vitesse du double-click ", -1, 5, 77, 230, 70
     LTEXT "Double-cliquer le dossier pour tester le paramètre. Si le dossier ne s'ouvre pas ou se ferme, essayez un réglage plus lent.", -1, 10, 85, 150, 30
-    LTEXT "Vite&sse :   Lente", -1, 10, 120, 90, 8
-    LTEXT "Rapide", -1, 140, 120, 30, 8
+    LTEXT "Vite&sse :  Lente", -1, 10, 120, 90, 8
+    LTEXT "Rapide", -1, 133, 120, 30, 8
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
     GROUPBOX "Verrouillage clic", -1, 5, 150, 230, 70
