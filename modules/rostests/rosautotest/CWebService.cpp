@@ -105,7 +105,6 @@ CWebService::Finish(const char* TestType)
 {
     auto_array_ptr<char> Response;
     string Data;
-    stringstream ss;
 
     if (!m_TestID)
         EXCEPTION("CWebService::Finish was called, but not a single result had been submitted!\n");
@@ -121,7 +120,10 @@ CWebService::Finish(const char* TestType)
 
     if (strcmp(Response, "OK"))
     {
-        ss << "When finishing the test run, the server responded:" << endl << Response << endl;
+        stringstream ss;
+
+        ss << "[ROSAUTOTEST] When finishing the test run, the server responded:" << endl
+           << "[ROSAUTOTEST] " << Response << endl;
         SSEXCEPTION;
     }
 }
@@ -156,7 +158,8 @@ CWebService::GetTestID(const char* TestType)
     {
         stringstream ss;
 
-        ss << "Expected Test ID, but received:" << endl << m_TestID << endl;
+        ss << "[ROSAUTOTEST] Expected Test ID, but received:" << endl
+           << "[ROSAUTOTEST] " << m_TestID << endl;
         SSEXCEPTION;
     }
 }
@@ -196,7 +199,8 @@ CWebService::GetSuiteID(const char* TestType, CTestInfo* TestInfo)
     {
         stringstream ss;
 
-        ss << "Expected Suite ID, but received:" << endl << SuiteID << endl;
+        ss << "[ROSAUTOTEST] Expected Suite ID, but received:" << endl
+           << "[ROSAUTOTEST] " << SuiteID << endl;
         SSEXCEPTION;
     }
 
@@ -240,7 +244,8 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
 
     if (strcmp(Response, "OK"))
     {
-        ss << "When submitting the result, the server responded:" << endl << Response << endl;
+        ss << "[ROSAUTOTEST] When submitting the result, the server responded:" << endl
+           << "[ROSAUTOTEST] " << Response << endl;
         SSEXCEPTION;
     }
 }

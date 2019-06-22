@@ -238,7 +238,7 @@ CWineTest::GetNextTestInfo()
                     {
                         stringstream ss;
 
-                        ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
+                        ss << "[ROSAUTOTEST] Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
                         SSEXCEPTION;
                     }
 
@@ -287,7 +287,8 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     CPipe Pipe;
     char Buffer[1024];
 
-    ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
+    ss << "[ROSAUTOTEST] Running Wine Test, Module: " << TestInfo->Module
+         << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
 
     StartTime = GetTickCount();
@@ -351,8 +352,8 @@ CWineTest::RunTest(CTestInfo* TestInfo)
         StringOut(tailString);
 
     TotalTime = ((float)GetTickCount() - StartTime)/1000;
-    ssFinish << "Test " << TestInfo->Test << " completed in ";
-    ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
+    ssFinish << "[ROSAUTOTEST] Test " << TestInfo->Test << " completed in "
+               << setprecision(2) << fixed << TotalTime << " seconds." << endl;
     StringOut(ssFinish.str());
 
     if (Configuration.DoSubmit())

@@ -61,8 +61,8 @@ wmain(int argc, wchar_t* argv[])
 
         ss << endl
            << endl
-           << "[ROSAUTOTEST] System uptime " << setprecision(2) << fixed;
-        ss << ((float)GetTickCount()/1000) << " seconds" << endl;
+           << "[ROSAUTOTEST] System uptime " << setprecision(2) << fixed
+             << ((float)GetTickCount() / 1000) << " seconds" << endl;
         StringOut(ss.str());
         
         /* Report tests startup */
