@@ -256,9 +256,14 @@ HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam
     return E_FAIL;
 }
 
+
 void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb)
 {
     PStaticShellEntry pEntry = m_pStaticEntries, pLastEntry = NULL;
+    WCHAR wszDefault[40];
+    DWORD pdwType, dwSize = _countof(wszDefault);
+    HKEY hShellKey = 0;
+    LRESULT lres = RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hShellKey);
     while(pEntry)
     {
         if (!wcsicmp(pEntry->szVerb, szVerb))
@@ -282,9 +287,11 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
         pEntry->hkClass = hkeyClass;
     }
 
-    if (!wcsicmp(szVerb, L"open"))
+    lres = RegQueryValueEx(hShellKey, NULL, 0, &pdwType, (LPBYTE)wszDefault, &dwSize);
+	
+    if((!wcsicmp(szVerb, wszDefault) && lres == ERROR_SUCCESS) || (!wcsicmp(szVerb, L"open") && lres != ERROR_SUCCESS))
     {
-        /* open verb is always inserted in front */
+        /* open verb is always inserted in front, unless the default value of shell entry is set*/
         pEntry->pNext = m_pStaticEntries;
         m_pStaticEntries = pEntry;
     }
@@ -292,6 +299,8 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
         pLastEntry->pNext = pEntry;
     else
         m_pStaticEntries = pEntry;
+	
+    RegCloseKey(hShellKey);
 }
 
 void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
@@ -299,9 +308,8 @@ void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
     WCHAR wszName[40];
     DWORD cchName, dwIndex = 0;
     HKEY hShellKey;
-
-    LRESULT lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
-    if (lres != STATUS_SUCCESS)
+	
+    if (RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey) != STATUS_SUCCESS)
         return;
 
     while(TRUE)
@@ -310,7 +318,10 @@ void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
         if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
 
+        RegCloseKey(hShellKey);
         AddStaticEntry(hKey, wszName);
+        if(RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
+            return;
     }
 
     RegCloseKey(hShellKey);
