@@ -1,0 +1,25 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Embutido"
+    IDS_GROUP_NONE_NAME "Nenhum"
+    IDS_GROUP_NONE_COMMENT "Utilizador comum"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Administrador"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Os administradores têm acesso irrestrito ao computador ou domínio."
+    IDS_ALIAS_GUESTS_NAME "Convidado"
+    IDS_ALIAS_GUESTS_COMMENT "Os convidados têm os mesmos direitos que os membros do grupo Utilizadores por padrão."
+    IDS_ALIAS_POWER_USERS_NAME "Utilizadores avançados"
+    IDS_ALIAS_POWER_USERS_COMMENT "Utilizadores avançados têm a maioria dos direitos administrativos com algumas restrições."
+    IDS_ALIAS_USERS_NAME "Utilizadores"
+    IDS_ALIAS_USERS_COMMENT "Os utilizadores são impedidos de fazer alterações em todo o sistema."
+    /*
+     * ATTENTION: 
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrator"
+    IDS_USER_ADMINISTRATOR_COMMENT "Conta interna usada para administrar o computador ou domínio."
+    IDS_USER_GUEST_NAME "Convidado"
+    IDS_USER_GUEST_COMMENT "Conta interna para acesso de convidado ao computador ou domínio."
+END

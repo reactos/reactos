@@ -1,16 +1,16 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
+    IDS_PROFILEPATH "%SystemDrive%\\Documentos e definições"
     IDS_APPDATA "Dados de aplicativos"
-    IDS_DESKTOP "Desktop"
+    IDS_DESKTOP "Ambiente de trabalho"
     IDS_FAVORITES "Favoritos"
     IDS_MYDOCUMENTS "Meus Documentos"
     IDS_NETHOOD "Ambiente de rede"
     IDS_PRINTHOOD "Ambiente de impressão"
     IDS_RECENT "Documentos recentes"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Enviar para"
     IDS_TEMPLATES "Modelos"
     IDS_STARTMENU "Menu Iniciar"
     IDS_PROGRAMS "Menu Iniciar\\Programas"

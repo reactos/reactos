@@ -1,6 +1,5 @@
-/* Translated by: Mateus de Lima (aka wavemaster) <mateusloliveira [@] hotmail.com> */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_MSCONFIG_DIALOG DIALOGEX 0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
@@ -21,8 +20,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List3", IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
-    PUSHBUTTON "A&tivar tudo", IDC_BTN_STARTUP_ACTIVATE, 223, 155, 66, 14
-    PUSHBUTTON "De&sativar tudo", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
+    PUSHBUTTON "Ac&tivar tudo", IDC_BTN_STARTUP_ACTIVATE, 223, 155, 66, 14
+    PUSHBUTTON "De&sactivar tudo", IDC_BTN_STARTUP_DEACTIVATE, 295, 155, 66, 14
 END
 
 IDD_SYSTEM_PAGE DIALOGEX 0, 0, 362, 175
@@ -34,13 +33,13 @@ BEGIN
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 2, 1, 280, 148
     PUSHBUTTON "&Mover p/ cima", IDC_BTN_SYSTEM_UP, 290, 5, 66, 14
     PUSHBUTTON "M&over p/ baixo", IDC_BTN_SYSTEM_DOWN, 290, 25, 66, 14
-    PUSHBUTTON "Ati&var", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
-    PUSHBUTTON "&Desativar", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
+    PUSHBUTTON "Acti&var", IDC_BTN_SYSTEM_ENABLE, 290, 50, 66, 14
+    PUSHBUTTON "&Desactivar", IDC_BTN_SYSTEM_DISABLE, 290, 70, 66, 14
     PUSHBUTTON "Locali&zar", IDC_BTN_SYSTEM_FIND, 290, 95, 66, 14
     PUSHBUTTON "&Novo", IDC_BTN_SYSTEM_NEW, 290, 115, 66, 14
     PUSHBUTTON "&Editar", IDC_BTN_SYSTEM_EDIT, 290, 135, 66, 14
-    PUSHBUTTON "Ativar t&udo", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
-    PUSHBUTTON "Desa&tivar tudo", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
+    PUSHBUTTON "Activar t&udo", IDC_BTN_SYSTEM_ACTIVATE, 123, 155, 66, 14
+    PUSHBUTTON "Desac&tivar tudo", IDC_BTN_SYSTEM_DEACTIVATE, 195, 155, 66, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX 0, 0, 362, 175
@@ -59,18 +58,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
-    PUSHBUTTON "A&tivar tudo", IDC_BTN_SERVICES_ACTIVATE, 223, 155, 66, 14
-    PUSHBUTTON "D&esativar tudo", IDC_BTN_SERVICES_DEACTIVATE, 295, 155, 66, 14
+    PUSHBUTTON "Ac&tivar tudo", IDC_BTN_SERVICES_ACTIVATE, 223, 155, 66, 14
+    PUSHBUTTON "D&esactivar tudo", IDC_BTN_SERVICES_DEACTIVATE, 295, 155, 66, 14
 END
 
 IDD_GENERAL_PAGE DIALOGEX 0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Seleção de inicialização", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Inicialização normal - carregar todos os drivers de dispositivo e serviços", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    GROUPBOX "Selecção de inicialização", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
+    CONTROL "&Inicialização normal - carregar todos os controladores de dispositivo e serviços", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
     CONTROL "I&nicialização de diagnóstico - carregar apenas dispositivos e serviços básicos", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
-    CONTROL "Ini&cialização seletiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
+    CONTROL "Ini&cialização selectiva", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
     AUTOCHECKBOX "&Processar o arquivo SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
     AUTOCHECKBOX "Carr&egar serviços do sistema", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
     AUTOCHECKBOX "Carregar i&tens de inicialização", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
@@ -146,14 +145,14 @@ STRINGTABLE
 BEGIN
     IDS_TOOLS_COLUMN_NAME "Nome"
     IDS_TOOLS_COLUMN_DESCR "Descrição"
-    IDS_TOOLS_CMD_NAME "Console"
+    IDS_TOOLS_CMD_NAME "Consola"
     IDS_TOOLS_CMD_DESCR ""
     IDS_TOOLS_CMD_CMD "cmd.exe"
     IDS_TOOLS_INFO_NAME "Versão"
     IDS_TOOLS_INFO_DESCR "Mostra informação sobre a versão."
     IDS_TOOLS_INFO_CMD "winver.exe"
-    IDS_TOOLS_REGEDIT_NAME "Editor do Registro"
-    IDS_TOOLS_REGEDIT_DESCR "Abre o Editor do Registro."
+    IDS_TOOLS_REGEDIT_NAME "Editor do Registo"
+    IDS_TOOLS_REGEDIT_DESCR "Abre o Editor do Registo."
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "Propriedades do sistema"
     IDS_TOOLS_SYSDM_DESCR "Mostra informações sobre este computador."

@@ -1,8 +1,8 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Copiando ficheiros..."
+CAPTION "A copiar ficheiros..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -31,13 +31,13 @@ STRINGTABLE
 BEGIN
     IDS_PROMPTDISK   "O arquivo '%1' em %2 é necessário"
     IDS_UNKNOWN      "Desconhecido"
-    IDS_COPYFROM     "Copiando ficheiros de:"
+    IDS_COPYFROM     "Copiar arquivos de:"
     IDS_INFO         "Digite o caminho de origem dos arquivos, em seguida clique em OK."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Para terminar a instalação, precisa de reiniciar o computador. Deseja continuar?"
+    IDS_QUERY_REBOOT_TEXT "Para terminar a instalação, tem de reiniciar o computador. Deseja continuar?"
     IDS_QUERY_REBOOT_CAPTION "Reiniciar"
     IDS_INF_FILE "Informações de configuração"
 END
