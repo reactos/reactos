@@ -130,7 +130,7 @@ ObSetDeviceMap(IN PEPROCESS Process,
     /* Release useless device map if required */
     if (NewDeviceMap != NULL)
     {
-        ObfDereferenceObject(DirectoryObject);
+        ObDereferenceObject(DirectoryObject);
         ExFreePoolWithTag(NewDeviceMap, 'mDbO');
     }
 
@@ -235,7 +235,7 @@ ObSetDirectoryDeviceMap(OUT PDEVICE_MAP * DeviceMap,
     /* Release useless device map if required */
     if (NewDeviceMap != NULL)
     {
-        ObfDereferenceObject(DirectoryObject);
+        ObDereferenceObject(DirectoryObject);
         ExFreePoolWithTag(NewDeviceMap, 'mDbO');
     }
 

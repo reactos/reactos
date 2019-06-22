@@ -2005,7 +2005,7 @@ FltpDetachFromFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject)
         NextDevice = IoGetLowerDeviceObject(AttachedDevice);
 
         /* Remove the reference we added */
-        Count = ObfDereferenceObject(AttachedDevice);
+        Count = ObDereferenceObject(AttachedDevice);
 
         /* Bail if this is the last one */
         if (NextDevice == NULL) return Count;
@@ -2028,7 +2028,7 @@ FltpDetachFromFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject)
     IoDeleteDevice(AttachedDevice);
 
     /* Remove the reference we added so the delete can complete */
-    return ObfDereferenceObject(AttachedDevice);
+    return ObDereferenceObject(AttachedDevice);
 }
 
 DRIVER_FS_NOTIFICATION FltpFsNotification;
@@ -2143,7 +2143,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     if (NT_SUCCESS(Status))
     {
         FltpFsNotification(RawDeviceObject, TRUE);
-        ObfDereferenceObject(RawFileObject);
+        ObDereferenceObject(RawFileObject);
     }
 
     RtlInitUnicodeString(&ObjectName, L"\\Device\\RawCdRom");
@@ -2154,7 +2154,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     if (NT_SUCCESS(Status))
     {
         FltpFsNotification(RawDeviceObject, TRUE);
-        ObfDereferenceObject(RawFileObject);
+        ObDereferenceObject(RawFileObject);
     }
 
     /* We're done, clear the initializing flag */

@@ -148,7 +148,7 @@ RawCheckForDismount(IN PVCB Vcb,
         }
 
         /* Dismount our device if possible */
-        ObfDereferenceObject(Vcb->TargetDeviceObject);
+        ObDereferenceObject(Vcb->TargetDeviceObject);
         IoDeleteDevice((PDEVICE_OBJECT)CONTAINING_RECORD(Vcb,
                                                          VOLUME_DEVICE_OBJECT,
                                                          Vcb));

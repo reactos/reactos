@@ -454,7 +454,7 @@ FsRtlAcknowledgeOplockBreak(IN PINTERNAL_OPLOCK Oplock,
     /* If we dropped oplock, remove our extra ref */
     if (Deref)
     {
-        ObfDereferenceObject(Oplock->FileObject);
+        ObDereferenceObject(Oplock->FileObject);
     }
     /* And unset FO: no oplock left or shared */
     Oplock->FileObject = NULL;
