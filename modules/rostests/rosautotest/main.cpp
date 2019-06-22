@@ -81,7 +81,7 @@ wmain(int argc, wchar_t* argv[])
         WineTest.Run();
 
         /* For sysreg2 */
-        DbgPrint("SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
+        DbgPrint("[ROSAUTOTEST] SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
 
         ReturnValue = 0;
     }
@@ -112,7 +112,7 @@ wmain(int argc, wchar_t* argv[])
 
     /* For sysreg2 to notice if rosautotest itself failed */
     if(ReturnValue == 1)
-        DbgPrint("SYSREG_ROSAUTOTEST_FAILURE\n");
+        DbgPrint("[ROSAUTOTEST] SYSREG_ROSAUTOTEST_FAILURE\n");
 
     /* Report successful end of tests */
     ReportEventW(hLog,
