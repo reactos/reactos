@@ -1,0 +1,101 @@
+/* Portuguese Language resource file
+ *
+ * Traduzido por: Jose Carlos Jesus 20-06-2019 zecarlos1957@hotmail.com
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação de dispositivos"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Bem-vindo", IDC_WELCOMETITLE, 120, 8, 195, 16
+    LTEXT "Este assistente auxilia-o a instalar um novo controlador de dispositivo para:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "Clique em seguinte para continuar.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "DISPOSITIVO DESCONHECIDO", IDC_DEVICE, 148, 36, 147, 17
+    LTEXT "AVISO! INSTALAR UM DISPOSITIVO PODE CONGELAR O SEU COMPUTADOR, OU TORNA-LO INSTÁVEL!", IDC_STATIC, 120, 59, 195, 16
+    CONTROL "Instalar o controlador automáticamente", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Instalar um controlador específico", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
+END
+
+IDD_NODRIVER DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Falha na instalação", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "O dispositivo não pôde ser instalado porque o controlador não foi encontrado.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Clique em 'Anterior' se tiver um disco do fabricante ou souber o caminho para o controlador.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Não mostrar mais esta caixa de diálogo", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
+END
+
+IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Falha na instalação", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "O dispositivo não pôde ser instalado porque ocorreu um erro inesperado.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "DISPOSITIVO DESCONHECIDO", IDC_DEVICE, 148, 53, 147, 17
+END
+
+IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Pesquise nestes locais", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
+    CONTROL "Escolha o driver manualmente", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
+    CONTROL "Pesquisar mídia removível", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Incluir este caminho", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Procurar", IDC_BROWSE, 248, 70, 50, 14
+    COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "CONTROLADOR DESCONHECIDO", IDC_DEVICE, 51, 20, 169, 16
+END
+
+IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "DISPOSITIVO DESCONHECIDO", IDC_DEVICE, 51, 20, 169, 16
+END
+
+IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Instalação concluída", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Precisa reiniciar o computador para concluir a instalação do:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Clique em Concluir para fechar o assistente.", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "DISPOSITIVO DESCONHECIDO", IDC_DEVICE, 148, 53, 147, 17
+END
+
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalação do dispositivo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Instalação concluída", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "O assistente concluiu a instalação do controlador para:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Clique em Concluir para fechar o assistente.", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "DISPOSITIVO DESCONHECIDO", IDC_DEVICE, 148, 53, 147, 17
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLWIZARDTITLE "Assistente de novo hardware"
+    IDS_UPDATEWIZARDTITLE "Assistente para actualizar o controlador"
+    IDS_CHSOURCE_TITLE "Escolha as opções de pesquisa e instalação"
+    IDS_SEARCHDRV_TITLE "A procurar..."
+    IDS_INSTALLDRV_TITLE "A instalar..."
+END
