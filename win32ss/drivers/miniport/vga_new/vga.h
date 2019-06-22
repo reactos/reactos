@@ -114,7 +114,6 @@
 #define CRTC_ADDRESS_COLOR_OFFSET     0x24
 #define FEAT_CTRL_WRITE_COLOR_OFFSET  0x2A
 
-                                            // toggle in color mode
 //
 // VGA indexed register indexes.
 //
