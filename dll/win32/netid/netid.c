@@ -232,7 +232,7 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                     SetFocus(GetDlgItem(hDlg, 1002));
                                     break;
                                 }
-                                else if (!SetComputerName(NewComputerName))
+                                else if (!SetComputerNameExW(ComputerNamePhysicalDnsHostname, NewComputerName))
                                 {
                                     TCHAR szMsgText[MAX_PATH];
 
@@ -308,7 +308,7 @@ NetIDPage_OnInitDialog(
         RegCloseKey(KeyHandle);
     }
 
-    if (GetComputerName(ComputerName,&Size))
+    if (GetComputerName(ComputerName, &Size))
     {
         SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
     }

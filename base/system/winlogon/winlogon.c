@@ -148,6 +148,139 @@ WaitForLsass(VOID)
 
 
 static
+VOID
+UpdateTcpIpInformation(VOID)
+{
+    LONG lError;
+    HKEY hKey = NULL;
+    DWORD dwType, dwSize;
+    PWSTR pszBuffer;
+    WCHAR szBuffer[128] = L"";
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                           0,
+                           KEY_QUERY_VALUE | KEY_SET_VALUE,
+                           &hKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ERR("WL: RegOpenKeyExW(\"HKLM\\System\\CurrentControlSet\\Services\\Tcpip\\Parameters\") failed (error %lu)\n", lError);
+        return;
+    }
+
+    /*
+     * Read the "NV Hostname" value and copy it into the "Hostname" value.
+     */
+
+    pszBuffer = szBuffer;
+    dwSize = ARRAYSIZE(szBuffer);
+
+    lError = RegQueryValueExW(hKey,
+                              L"NV Hostname",
+                              NULL,
+                              &dwType,
+                              (LPBYTE)pszBuffer,
+                              &dwSize);
+    if (((lError == ERROR_INSUFFICIENT_BUFFER) || (lError == ERROR_MORE_DATA)) && (dwType == REG_SZ))
+    {
+        pszBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+        if (pszBuffer)
+        {
+            lError = RegQueryValueExW(hKey,
+                                      L"NV Hostname",
+                                      NULL,
+                                      &dwType,
+                                      (LPBYTE)pszBuffer,
+                                      &dwSize);
+        }
+        else
+        {
+            ERR("WL: Could not reallocate memory for pszBuffer\n");
+        }
+    }
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
+    {
+        TRACE("NV Hostname is '%S'.\n", pszBuffer);
+
+        lError = RegSetValueExW(hKey,
+                                L"Hostname",
+                                0,
+                                REG_SZ,
+                                (LPBYTE)pszBuffer,
+                                dwSize);
+        if (lError != ERROR_SUCCESS)
+            ERR("WL: RegSetValueExW(\"Hostname\") failed (error %lu)\n", lError);
+    }
+
+    /*
+     * Read the "NV Domain" value and copy it into the "Domain" value.
+     */
+
+    // pszBuffer = szBuffer;
+    // dwSize = ARRAYSIZE(szBuffer);
+
+    lError = RegQueryValueExW(hKey,
+                              L"NV Domain",
+                              NULL,
+                              &dwType,
+                              (LPBYTE)pszBuffer,
+                              &dwSize);
+    if (((lError == ERROR_INSUFFICIENT_BUFFER) || (lError == ERROR_MORE_DATA)) && (dwType == REG_SZ))
+    {
+        if (pszBuffer != szBuffer)
+        {
+            PWSTR pszNewBuffer;
+            pszNewBuffer = HeapReAlloc(GetProcessHeap(), 0, pszBuffer, dwSize);
+            if (pszNewBuffer)
+            {
+                pszBuffer = pszNewBuffer;
+            }
+            else
+            {
+                HeapFree(GetProcessHeap(), 0, pszBuffer);
+                pszBuffer = NULL;
+            }
+        }
+        else
+        {
+            pszBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+        }
+        if (pszBuffer)
+        {
+            lError = RegQueryValueExW(hKey,
+                                      L"NV Domain",
+                                      NULL,
+                                      &dwType,
+                                      (LPBYTE)pszBuffer,
+                                      &dwSize);
+        }
+        else
+        {
+            ERR("WL: Could not reallocate memory for pszBuffer\n");
+        }
+    }
+    if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
+    {
+        TRACE("NV Domain is '%S'.\n", pszBuffer);
+
+        lError = RegSetValueExW(hKey,
+                                L"Domain",
+                                0,
+                                REG_SZ,
+                                (LPBYTE)pszBuffer,
+                                dwSize);
+        if (lError != ERROR_SUCCESS)
+            ERR("WL: RegSetValueExW(\"Domain\") failed (error %lu)\n", lError);
+    }
+
+    if (pszBuffer != szBuffer)
+        HeapFree(GetProcessHeap(), 0, pszBuffer);
+
+    RegCloseKey(hKey);
+}
+
+
+static
 BOOL
 InitKeyboardLayouts(VOID)
 {
@@ -321,6 +454,9 @@ WinMain(
     /* Make us critical */
     RtlSetProcessIsCritical(TRUE, NULL, FALSE);
     RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
+    /* Update the cached TCP/IP Information in the registry */
+    UpdateTcpIpInformation();
 
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
