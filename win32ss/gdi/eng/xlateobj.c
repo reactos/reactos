@@ -387,7 +387,7 @@ EXLATEOBJ_vInitialize(
         return;
     }
 
-    /* Check if both of the pallettes are indexed */
+    /* Check if both of the palettes are indexed */
     if (!(ppalSrc->flFlags & PAL_INDEXED) || !(ppalDst->flFlags & PAL_INDEXED))
     {
         /* At least one palette is not indexed, calculate shifts/masks */
