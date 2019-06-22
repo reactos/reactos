@@ -327,11 +327,17 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     }
     catch(CTestException& e)
     {
+        /* Print what's left */
         if(!tailString.empty())
+        {
             StringOut(tailString);
-        tailString.clear();
+            tailString.clear();
+        }
+
         StringOut(e.GetMessage());
-        TestInfo->Log += e.GetMessage();
+
+        if (Configuration.DoSubmit())
+            TestInfo->Log += e.GetMessage();
     }
 
     /* Print what's left */
@@ -342,7 +348,9 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     ssFinish << "Test " << TestInfo->Test << " completed in ";
     ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
     StringOut(ssFinish.str());
-    TestInfo->Log += ssFinish.str();
+
+    if (Configuration.DoSubmit())
+        TestInfo->Log += ssFinish.str();
 }
 
 /**
