@@ -70,12 +70,6 @@ ULONG curr_y = 0;
 static ULONG VidTextColor = 0xF;
 static BOOLEAN CarriageReturn = FALSE;
 
-#define __outpb(Port, Value) \
-    WRITE_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)), (UCHAR)(Value))
-
-#define __outpw(Port, Value) \
-    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)), (USHORT)(Value))
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static VOID
@@ -88,7 +82,7 @@ ReadWriteMode(IN UCHAR Mode)
     __outpb(0x3CE, 5);
 
     /* Get the current register value, minus the current mode */
-    Value = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) & 0xF4;
+    Value = __inpb(0x3CF) & 0xF4;
 
     /* Set the new mode */
     __outpb(0x3CF, Mode | Value);
@@ -750,10 +744,10 @@ NTAPI
 VidCleanUp(VOID)
 {
     /* Select bit mask register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+    __outpb(0x3CE, 8);
 
     /* Clear it */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 255);
+    __outpb(0x3CF, 255);
 }
 
 /*

@@ -1,8 +1,5 @@
 #include "precomp.h"
 
-#include <ntifs.h>
-#include <ndk/halfuncs.h>
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static BOOLEAN
@@ -227,9 +224,6 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
             /* Unknown major function, fail */
             return FALSE;
         }
-
-        /* Get the next command */
-        Cmd = *CmdStream;
     }
 
     /* If we got here, return success */
@@ -245,114 +239,115 @@ VgaIsPresent(VOID)
     UCHAR i;
 
     /* Read the VGA Address Register */
-    VgaReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE);
+    VgaReg = __inpb(0x3CE);
 
     /* Select Read Map Select Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+    __outpb(0x3CE, 4);
 
-    /* Read it back...it should be 4 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 4) return FALSE;
+    /* Read it back... it should be 4 */
+    if ((__inpb(0x3CE) & 0xF) != 4)
+        return FALSE;
 
     /* Read the VGA Data Register */
-    VgaReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
+    VgaReg2 = __inpb(0x3CF);
 
     /* Enable all planes */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 3);
+    __outpb(0x3CF, 3);
 
-    /* Read it back...it should be 3 */
-    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 0x3)
+    /* Read it back... it should be 3 */
+    if (__inpb(0x3CF) != 0x3)
     {
         /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        __outpb(0x3CF, 0);
         return FALSE;
     }
 
     /* Select Bit Mask Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+    __outpb(0x3CE, 8);
 
-    /* Read it back...it should be 8 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 8)
+    /* Read it back... it should be 8 */
+    if ((__inpb(0x3CE) & 0xF) != 8)
     {
         /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        __outpb(0x3CE, 4);
+        __outpb(0x3CF, 0);
         return FALSE;
     }
 
     /* Read the VGA Data Register */
-    VgaReg3 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
+    VgaReg3 = __inpb(0x3CF);
 
     /* Loop bitmasks */
     for (i = 0xBB; i; i >>= 1)
     {
         /*  Set bitmask */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, i);
+        __outpb(0x3CF, i);
 
-        /* Read it back...it should be the same */
-        if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != i)
+        /* Read it back... it should be the same */
+        if (__inpb(0x3CF) != i)
         {
             /* Reset the registers and fail */
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+            __outpb(0x3CF, 0xFF);
+            __outpb(0x3CE, 4);
+            __outpb(0x3CF, 0);
             return FALSE;
         }
     }
 
     /* Select Read Map Select Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+    __outpb(0x3CE, 4);
 
-    /* Read it back...it should be 3 */
-    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 3)
+    /* Read it back... it should be 3 */
+    if (__inpb(0x3CF) != 3)
     {
         /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
+        __outpb(0x3CF, 0);
+        __outpb(0x3CE, 8);
+        __outpb(0x3CF, 0xFF);
         return FALSE;
     }
 
     /* Write the registers we read earlier */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg2);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg3);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, VgaReg);
+    __outpb(0x3CF, VgaReg2);
+    __outpb(0x3CE, 8);
+    __outpb(0x3CF, VgaReg3);
+    __outpb(0x3CE, VgaReg);
 
     /* Read sequencer address */
-    SeqReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4);
+    SeqReg = __inpb(0x3C4);
 
     /* Select memory mode register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, 4);
+    __outpb(0x3C4, 4);
 
-    /* Read it back...it should still be 4 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4)) & 7) != 4)
+    /* Read it back... it should still be 4 */
+    if ((__inpb(0x3C4) & 7) != 4)
     {
-        /*  Fail */
+        /* Fail */
         return FALSE;
     }
 
     /* Read sequencer Data */
-    SeqReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5);
+    SeqReg2 = __inpb(0x3C5);
 
     /* Write null plane */
-    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x100);
+    __outpw(0x3C4, 0x100);
 
     /* Write sequencer flag */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2 ^ 8);
+    __outpb(0x3C5, SeqReg2 ^ 8);
 
     /* Read it back */
-    if ((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5)) != (SeqReg2 ^ 8))
+    if (__inpb(0x3C5) != (SeqReg2 ^ 8))
     {
-        /* Not the same value...restore registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, 2);
-        WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
+        /* Not the same value... restore registers and fail */
+        __outpb(0x3C5, 2);
+        __outpw(0x3C4, 0x300);
         return FALSE;
     }
 
     /* Now write the registers we read */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2);
-    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, SeqReg);
+    __outpb(0x3C5, SeqReg2);
+    __outpw(0x3C4, 0x300);
+    __outpb(0x3C4, SeqReg);
 
     /* VGA is present! */
     return TRUE;
@@ -458,7 +453,7 @@ VidInitialize(IN BOOLEAN SetMode)
         /* Initialize it */
         VgaInterpretCmdStream(AT_Initialization);
     }
-    
+
     /* VGA is ready */
     return TRUE;
 }
