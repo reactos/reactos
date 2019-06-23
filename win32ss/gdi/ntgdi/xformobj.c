@@ -153,7 +153,6 @@ XFORMOBJ_iSetXform(
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
     MATRIX mxSave;
     ULONG Hint;
-    FLOATOBJ ef1, ef2, ef3, ef4;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
@@ -169,20 +168,21 @@ XFORMOBJ_iSetXform(
     FLOATOBJ_SetFloat(&pmx->efDx, pxform->eDx);
     FLOATOBJ_SetFloat(&pmx->efDy, pxform->eDy);
 
-    ef1 = pmx->efM11;
-    ef2 = pmx->efM22;
-    ef3 = pmx->efM12;
-    ef4 = pmx->efM21;
-
     /* Update accelerators and return complexity */
     Hint = XFORMOBJ_UpdateAccel(pxo);
 
-    if (Hint == GX_SCALE || Hint == GX_GENERAL)
+    /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
+    if (Hint == GX_SCALE)
     {
-        /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
-        FLOATOBJ_Mul(&ef1, &ef2);
-        FLOATOBJ_Mul(&ef3, &ef4);
-        if (FLOATOBJ_Equal(&ef1, &ef3))
+        if (FLOATOBJ_Equal0(&pmx->efM11) || FLOATOBJ_Equal0(&pmx->efM22))
+        {
+            *pmx = mxSave;  /* Restore */
+            return DDI_ERROR;
+        }
+    }
+    else if (Hint == GX_GENERAL)
+    {
+        if (!MX_IsInvertible(pmx))
         {
             *pmx = mxSave;  /* Restore */
             return DDI_ERROR;
