@@ -202,8 +202,8 @@ InfpFindOrAddSection(PINFCACHE Cache,
     }
 
   (*Context)->Inf = Cache;
-  CacheSection = InfpFindSection(Cache, Section);
   (*Context)->Line = 0;
+  CacheSection = InfpFindSection(Cache, Section);
   if (NULL == CacheSection)
     {
       DPRINT("Section not found, creating it\n");

@@ -256,14 +256,14 @@ InfpFindSectionById(PINFCACHE Cache, UINT Id)
 {
     PINFCACHESECTION Section;
 
-    Section = Cache->FirstSection;
-    while (Section != NULL)
+    for (Section = Cache->FirstSection;
+         Section != NULL;
+         Section = Section->Next)
     {
         if (Section->Id == Id)
         {
             return Section;
         }
-        Section = Section->Next;
     }
 
     return NULL;
@@ -293,14 +293,14 @@ InfpFindLineById(PINFCACHESECTION Section, UINT Id)
 {
     PINFCACHELINE Line;
 
-    Line = Section->FirstLine;
-    while (Line != NULL)
+    for (Line = Section->FirstLine;
+         Line != NULL;
+         Line = Line->Next)
     {
         if (Line->Id == Id)
         {
             return Line;
         }
-        Line = Line->Next;
     }
 
     return NULL;
