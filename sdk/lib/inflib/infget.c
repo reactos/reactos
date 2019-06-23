@@ -213,8 +213,8 @@ InfpFindFirstLine(PINFCACHE Cache,
       return INF_STATUS_NO_MEMORY;
     }
   (*Context)->Inf = (PVOID)Cache;
-  (*Context)->Section = (PVOID)CacheSection;
-  (*Context)->Line = (PVOID)CacheLine;
+  (*Context)->Section = CacheSection->Id;
+  (*Context)->Line = CacheLine->Id;
 
   return INF_STATUS_SUCCESS;
 }
@@ -229,10 +229,10 @@ InfpFindNextLine(PINFCONTEXT ContextIn,
   if (ContextIn == NULL || ContextOut == NULL)
     return INF_STATUS_INVALID_PARAMETER;
 
-  if (ContextIn->Line == NULL)
+  CacheLine = InfpGetLineForContext(ContextIn);
+  if (CacheLine == NULL)
     return INF_STATUS_INVALID_PARAMETER;
 
-  CacheLine = (PINFCACHELINE)ContextIn->Line;
   if (CacheLine->Next == NULL)
     return INF_STATUS_NOT_FOUND;
 
@@ -241,7 +241,7 @@ InfpFindNextLine(PINFCONTEXT ContextIn,
       ContextOut->Inf = ContextIn->Inf;
       ContextOut->Section = ContextIn->Section;
     }
-  ContextOut->Line = (PVOID)(CacheLine->Next);
+  ContextOut->Line = CacheLine->Next->Id;
 
   return INF_STATUS_SUCCESS;
 }
@@ -252,15 +252,17 @@ InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
                        PCWSTR Key,
                        PINFCONTEXT ContextOut)
 {
+  PINFCACHESECTION Section;
   PINFCACHELINE CacheLine;
 
   if (ContextIn == NULL || ContextOut == NULL || Key == NULL || *Key == 0)
     return INF_STATUS_INVALID_PARAMETER;
 
-  if (ContextIn->Inf == NULL || ContextIn->Section == NULL)
-    return INF_STATUS_INVALID_PARAMETER;
+  Section = InfpGetSectionForContext(ContextIn);
+  if (Section == NULL)
+      return INF_STATUS_INVALID_PARAMETER;
 
-  CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
+  CacheLine = Section->FirstLine;
   while (CacheLine != NULL)
     {
       if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
@@ -271,7 +273,7 @@ InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
               ContextOut->Inf = ContextIn->Inf;
               ContextOut->Section = ContextIn->Section;
             }
-          ContextOut->Line = (PVOID)CacheLine;
+          ContextOut->Line = CacheLine->Id;
 
           return INF_STATUS_SUCCESS;
         }
@@ -288,15 +290,17 @@ InfpFindNextMatchLine(PINFCONTEXT ContextIn,
                       PCWSTR Key,
                       PINFCONTEXT ContextOut)
 {
+  PINFCACHESECTION Section;
   PINFCACHELINE CacheLine;
 
   if (ContextIn == NULL || ContextOut == NULL || Key == NULL || *Key == 0)
     return INF_STATUS_INVALID_PARAMETER;
 
-  if (ContextIn->Inf == NULL || ContextIn->Section == NULL || ContextIn->Line == NULL)
-    return INF_STATUS_INVALID_PARAMETER;
+  Section = InfpGetSectionForContext(ContextIn);
+  if (Section == NULL)
+      return INF_STATUS_INVALID_PARAMETER;
 
-  CacheLine = (PINFCACHELINE)ContextIn->Line;
+  CacheLine = InfpGetLineForContext(ContextIn);
   while (CacheLine != NULL)
     {
       if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
@@ -307,7 +311,7 @@ InfpFindNextMatchLine(PINFCONTEXT ContextIn,
               ContextOut->Inf = ContextIn->Inf;
               ContextOut->Section = ContextIn->Section;
             }
-          ContextOut->Line = (PVOID)CacheLine;
+          ContextOut->Line = CacheLine->Id;
 
           return INF_STATUS_SUCCESS;
         }
@@ -360,10 +364,12 @@ InfpGetLineCount(HINF InfHandle,
 LONG
 InfpGetFieldCount(PINFCONTEXT Context)
 {
-  if (Context == NULL || Context->Line == NULL)
-    return 0;
+  PINFCACHELINE Line;
 
-  return ((PINFCACHELINE)Context->Line)->FieldCount;
+  Line = InfpGetLineForContext(Context);
+  if (Line == NULL)
+    return 0;
+  return Line->FieldCount;
 }
 
 
@@ -380,7 +386,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
   ULONG Size;
   PUCHAR Ptr;
 
-  if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
+  if (Context == NULL || FieldIndex == 0)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
@@ -389,7 +395,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
   if (RequiredSize != NULL)
     *RequiredSize = 0;
 
-  CacheLine = (PINFCACHELINE)Context->Line;
+  CacheLine = InfpGetLineForContext(Context);
 
   if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return INF_STATUS_NOT_FOUND;
@@ -433,13 +439,13 @@ InfpGetIntField(PINFCONTEXT Context,
   ULONG Index;
   PWCHAR Ptr;
 
-  if (Context == NULL || Context->Line == NULL || IntegerValue == NULL)
+  if (Context == NULL || IntegerValue == NULL)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
     }
 
-  CacheLine = (PINFCACHELINE)Context->Line;
+  CacheLine = InfpGetLineForContext(Context);
 
   if (FieldIndex > (ULONG)CacheLine->FieldCount)
     {
@@ -480,7 +486,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   ULONG Size;
   PWCHAR Ptr;
 
-  if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
+  if (Context == NULL || FieldIndex == 0)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
@@ -489,7 +495,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   if (RequiredSize != NULL)
     *RequiredSize = 0;
 
-  CacheLine = (PINFCACHELINE)Context->Line;
+  CacheLine = InfpGetLineForContext(Context);
 
   if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return INF_STATUS_INVALID_PARAMETER;
@@ -548,7 +554,7 @@ InfpGetStringField(PINFCONTEXT Context,
   PWCHAR Ptr;
   SIZE_T Size;
 
-  if (Context == NULL || Context->Line == NULL)
+  if (Context == NULL)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
@@ -557,7 +563,7 @@ InfpGetStringField(PINFCONTEXT Context,
   if (RequiredSize != NULL)
     *RequiredSize = 0;
 
-  CacheLine = (PINFCACHELINE)Context->Line;
+  CacheLine = InfpGetLineForContext(Context);
 
   if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return INF_STATUS_INVALID_PARAMETER;
@@ -607,13 +613,13 @@ InfpGetData(PINFCONTEXT Context,
 {
   PINFCACHELINE CacheKey;
 
-  if (Context == NULL || Context->Line == NULL || Data == NULL)
+  if (Context == NULL || Data == NULL)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
     }
 
-  CacheKey = (PINFCACHELINE)Context->Line;
+  CacheKey = InfpGetLineForContext(Context);
   if (Key != NULL)
     *Key = CacheKey->Key;
 
@@ -642,13 +648,13 @@ InfpGetDataField(PINFCONTEXT Context,
   PINFCACHEFIELD CacheField;
   ULONG Index;
 
-  if (Context == NULL || Context->Line == NULL || Data == NULL)
+  if (Context == NULL || Data == NULL)
     {
       DPRINT("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
     }
 
-  CacheLine = (PINFCACHELINE)Context->Line;
+  CacheLine = InfpGetLineForContext(Context);
 
   if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return INF_STATUS_INVALID_PARAMETER;

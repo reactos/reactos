@@ -30,6 +30,7 @@ typedef struct _INFCACHELINE
 {
   struct _INFCACHELINE *Next;
   struct _INFCACHELINE *Prev;
+  UINT Id;
 
   LONG FieldCount;
 
@@ -47,8 +48,10 @@ typedef struct _INFCACHESECTION
 
   PINFCACHELINE FirstLine;
   PINFCACHELINE LastLine;
+  UINT Id;
 
   LONG LineCount;
+  UINT NextLineId;
 
   WCHAR Name[1];
 } INFCACHESECTION, *PINFCACHESECTION;
@@ -58,6 +61,7 @@ typedef struct _INFCACHE
   LANGID LanguageId;
   PINFCACHESECTION FirstSection;
   PINFCACHESECTION LastSection;
+  UINT NextSectionId;
 
   PINFCACHESECTION StringsSection;
 } INFCACHE, *PINFCACHE;
@@ -66,8 +70,8 @@ typedef struct _INFCONTEXT
 {
   PINFCACHE Inf;
   PINFCACHE CurrentInf;
-  PINFCACHESECTION Section;
-  PINFCACHELINE Line;
+  UINT Section;
+  UINT Line;
 } INFCONTEXT;
 
 typedef int INFSTATUS;
@@ -142,5 +146,11 @@ extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCWSTR Key);
 extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCWSTR Data);
 
 extern VOID InfpFreeContext(PINFCONTEXT Context);
+PINFCACHELINE
+InfpFindLineById(PINFCACHESECTION Section, UINT Id);
+PINFCACHESECTION
+InfpGetSectionForContext(PINFCONTEXT Context);
+PINFCACHELINE
+InfpGetLineForContext(PINFCONTEXT Context);
 
 /* EOF */
