@@ -332,6 +332,9 @@ VgaIsPresent(VOID)
     /* Write null plane */
     __outpw(0x3C4, 0x100);
 
+    /* Select memory mode register */
+    __outpb(0x3C4, 4);
+
     /* Write sequencer flag */
     __outpb(0x3C5, SeqReg2 ^ 8);
 
@@ -365,24 +368,25 @@ VidInitialize(IN BOOLEAN SetMode)
     ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
     PHYSICAL_ADDRESS NullAddress = {{0, 0}}, VgaAddress;
-    ULONG AddressSpace = 1;
+    ULONG AddressSpace;
     BOOLEAN Result;
     ULONG_PTR Base;
 
     /* Make sure that we have a bus translation function */
     if (!HalFindBusAddressTranslation) return FALSE;
 
-    /* Get the VGA Register address */
-    Result = HalFindBusAddressTranslation(NullAddress,
-                                          &AddressSpace,
-                                          &TranslatedAddress,
-                                          &Context,
-                                          TRUE);
-    if (!Result) return FALSE;
-
     /* Loop trying to find possible VGA base addresses */
     while (TRUE)
     {
+        /* Get the VGA Register address */
+        AddressSpace = 1;
+        Result = HalFindBusAddressTranslation(NullAddress,
+                                              &AddressSpace,
+                                              &TranslatedAddress,
+                                              &Context,
+                                              TRUE);
+        if (!Result) return FALSE;
+
         /* See if this is I/O Space, which we need to map */
         if (!AddressSpace)
         {
@@ -409,20 +413,14 @@ VidInitialize(IN BOOLEAN SetMode)
                                                   &Context,
                                                   FALSE);
             if (Result) break;
-            
-            /* Try to see if there's any other address */
-            Result = HalFindBusAddressTranslation(NullAddress,
-                                                  &AddressSpace,
-                                                  &TranslatedAddress,
-                                                  &Context,
-                                                  TRUE);
-            if (!Result) return FALSE;
         }
         else
         {
             /* It's not, so unmap the I/O space if we mapped it */
             if (!AddressSpace) MmUnmapIoSpace((PVOID)VgaRegisterBase, 0x400);
         }
+
+        /* Continue trying to see if there's any other address */
     }
 
     /* Success! See if this is I/O Space, which we need to map */
