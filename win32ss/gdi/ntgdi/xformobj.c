@@ -191,6 +191,7 @@ XFORMOBJ_iSetXform(
         }
     }
 
+    /* Store */
     *pmx = mxTemp;
 
     return Hint;
