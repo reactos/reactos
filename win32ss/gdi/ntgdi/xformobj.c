@@ -157,7 +157,7 @@ XFORMOBJ_iSetXform(
     IN OUT XFORMOBJ *pxo,
     IN const XFORML *pxform)
 {
-    PMATRIX pmx = XFORMOBJ_pmx(pxo);
+    PMATRIX pmx;
     MATRIX mxTemp;
     ULONG Hint;
 
@@ -192,6 +192,7 @@ XFORMOBJ_iSetXform(
     }
 
     /* Store */
+    pmx = XFORMOBJ_pmx(pxo);
     *pmx = mxTemp;
 
     return Hint;
