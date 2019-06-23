@@ -1,7 +1,6 @@
 #ifndef _BOOTVID_PCH_
 #define _BOOTVID_PCH_
 
-#include <ntddk.h>
 #include <ntifs.h>
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
@@ -11,11 +10,9 @@
 
 #define BOOTCHAR_HEIGHT     13
 
-/* Command Stream Definitions */
-#define CMD_STREAM_WRITE            0x0
-#define CMD_STREAM_WRITE_ARRAY      0x2
-#define CMD_STREAM_USHORT           0x4
-#define CMD_STREAM_READ             0x8
+#ifndef _M_ARM
+#include "vga.h"
+#endif /* _M_ARM */
 
 /* Bitmap Header */
 typedef struct tagBITMAPINFOHEADER
@@ -42,11 +39,14 @@ NTAPI
 InitializePalette(VOID);
 
 /* Globals */
+#ifndef _M_ARM
 extern ULONG curr_x;
 extern ULONG curr_y;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
 extern USHORT AT_Initialization[];
+extern USHORT VGA_640x480[];
+#endif /* _M_ARM */
 extern UCHAR FontData[256 * BOOTCHAR_HEIGHT];
 
 #define __inpb(Port) \
