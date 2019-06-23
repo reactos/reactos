@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS PSDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Standard Annotation Language (SAL) definitions
+ * COPYRIGHT:   Microsoft Corporation.
+ * SOURCE:      https://github.com/microsoft/service-fabric/blob/master/src/prod/src/pal/src/internal/rt/sal.h
+ */
 // ------------------------------------------------------------
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
@@ -2655,10 +2662,10 @@ buffer, use the table in the buffer annotations section.
 */
 
 // These macros conflict with c++ headers.
-//#ifndef PAL_STDCPP_COMPAT
+#ifndef PAL_STDCPP_COMPAT
 #define __in                                                     _SAL1_Source_(__in, (), _In_)
 #define __out                                                    _SAL1_Source_(__out, (), _Out_)
-//#endif // !PAL_STDCPP_COMPAT
+#endif // !PAL_STDCPP_COMPAT
 
 #define __ecount(size)                                           _SAL1_Source_(__ecount, (size), __notnull __elem_writableTo(size))
 #define __bcount(size)                                           _SAL1_Source_(__bcount, (size), __notnull __byte_writableTo(size))
@@ -2941,7 +2948,7 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 /*
  * interlocked operand used in interlocked instructions
  */
-//#define _Interlocked_operand_ _Pre_ _SA_annotes0(SAL_interlocked)
+#define _Interlocked_operand_ _Pre_ _SA_annotes0(SAL_interlocked)
 
 #define _Enum_is_bitflag_    _SA_annotes0(SAL_enumIsBitflag)
 #define _Strict_type_match_  _SA_annotes0(SAL_strictType2)
