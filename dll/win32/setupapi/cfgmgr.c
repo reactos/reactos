@@ -634,6 +634,8 @@ CMP_RegisterNotification(
     RpcTryExcept
     {
         ret = PNP_RegisterNotification(BindingHandle,
+                                       (BYTE*)lpvNotificationFilter,
+                                       ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
                                        &pNotifyData->ulNotifyData);
     }
