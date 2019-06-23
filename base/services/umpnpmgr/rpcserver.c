@@ -3530,6 +3530,8 @@ DWORD
 WINAPI
 PNP_RegisterNotification(
     handle_t hBinding,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
     BYTE *pNotificationFilter,
     DWORD ulNotificationFilterSize,
     DWORD ulFlags,
@@ -3539,8 +3541,9 @@ PNP_RegisterNotification(
     PNOTIFY_DATA pNotifyData;
 #endif
 
-    DPRINT1("PNP_RegisterNotification(%p %p %lu 0x%lx %p)\n",
-           hBinding, pNotificationFilter, ulNotificationFilterSize, ulFlags, pulNotify);
+    DPRINT1("PNP_RegisterNotification(%p %lx %lx %p %lu 0x%lx %p)\n",
+           hBinding, dwUnknown2, dwUnknown3, pNotificationFilter,
+           ulNotificationFilterSize, ulFlags, pulNotify);
 
 #if 0
     pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));
