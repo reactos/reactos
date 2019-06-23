@@ -29,15 +29,69 @@ void Test_SetWorldTransform()
     xform.eDx = 0;
     xform.eDy = 0;
     result = SetWorldTransform(hdc, &xform);
-    ok(result == 1, "\n");
+    ok(result == 1, "SetWorldTransform should succeed\n");
 
-    /* Something invalid */
+    /* Set eM11 to 0 */
+    xform.eM11 = 0;
+    result = SetWorldTransform(hdc, &xform);
+    ok(result == 0, "SetWorldTransform should fail\n");
+
+    /* Set eM22 to 0 */
+    xform.eM11 = 1;
     xform.eM22 = 0;
     result = SetWorldTransform(hdc, &xform);
-    ok(result == 0, "\n");
+    ok(result == 0, "SetWorldTransform should fail\n");
 
-	//pEntry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hdc);
-	//pdcattr = pEntry->UserData;
+    /* Set values that result in the determinant being 0 */
+    xform.eM11 = 2;
+    xform.eM12 = 3;
+    xform.eM21 = 4;
+    xform.eM22 = 6;
+    result = SetWorldTransform(hdc, &xform);
+    ok(result == 0, "SetWorldTransform should fail\n");
+
+    /* Small modification to make the determinant != 0 */
+    xform.eM12 = (FLOAT)3.0001;
+    result = SetWorldTransform(hdc, &xform);
+    ok(result == 1, "SetWorldTransform should succeed\n");
+
+    /* Set values that result in the determinant being 0 due to rounding */
+    xform.eM11 = 1;
+    xform.eM12 = (FLOAT)0.9999999;
+    xform.eM21 = (FLOAT)1.0000001;
+    xform.eM22 = 1;
+    ok(xform.eM12 != (FLOAT)1.0, "xform.eM12 shouldn't be 1.0\n");
+    ok(xform.eM21 != (FLOAT)1.0, "xform.eM21 shouldn't be 1.0\n");
+    ok(xform.eM12 * xform.eM21 != (FLOAT)1.0, "xform.eM12 * xform.eM21 shouldn't be 1.0\n");
+    result = SetWorldTransform(hdc, &xform);
+    ok(result == 0, "SetWorldTransform should fail\n");
+
+    /* Test world trnsform (should be unchanged by previous failure) */
+    result = GetWorldTransform(hdc, &xform);
+    ok(result == 1, "GetWorldTransform should succeed\n");
+    ok(xform.eM11 == 2, "xform.eM11 should be 2\n");
+    ok(xform.eM12 == (FLOAT)3.0001, "xform.eM11 should be 3.0001\n");
+    ok(xform.eM21 == 4, "xform.eM11 should be 4\n");
+    ok(xform.eM22 == 6, "xform.eM11 should be 6\n");
+
+    /* Set smalles possible values */
+    xform.eM11 = (FLOAT)1.4e-45;
+    xform.eM12 = 0;
+    xform.eM21 = 0;
+    xform.eM22 = (FLOAT)1.4e-45;
+    ok(xform.eM11 != (FLOAT)0.0, "xform.eM11 shouldn't be 0.0\n");
+    ok(xform.eM22 != (FLOAT)0.0, "xform.eM22 shouldn't be 0.0\n");
+    ok(xform.eM11 * xform.eM22 != (FLOAT)0.0, "xform.eM12 * xform.eM21 shouldn't be 0.0\n");
+    result = SetWorldTransform(hdc, &xform);
+    ok(result == 1, "SetWorldTransform should succeed\n");
+
+    /* Test world trnsform */
+    result = GetWorldTransform(hdc, &xform);
+    ok(result == 1, "GetWorldTransform should succeed\n");
+    ok(xform.eM11 > 0, "xform.eM11 should not be 0\n");
+    ok(xform.eM12 == 0, "xform.eM11 should be 0\n");
+    ok(xform.eM21 == 0, "xform.eM11 should be 0\n");
+    ok(xform.eM22 > 0, "xform.eM11 should not be 0\n");
 
 	DeleteDC(hdc);
 }
