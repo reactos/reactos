@@ -25,6 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CRecycleBin);
 
 typedef struct
 {
+    ULARGE_INTEGER FreeBytesAvailable;
     DWORD dwSerial;
     DWORD dwMaxCapacity;
     DWORD dwNukeOnDelete;
@@ -122,12 +123,21 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                         pItem = (DRIVE_ITEM_CONTEXT *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
                         if (pItem)
                         {
+                            pItem->FreeBytesAvailable = FreeBytesAvailable;
+                            pItem->dwSerial = dwSerial;
+
                             swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\BitBucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
+
                             dwSize = sizeof(DWORD);
                             RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
+
+                            /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
+                            FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
+                            pItem->dwMaxCapacity = min(pItem->dwMaxCapacity, FreeBytesAvailable.LowPart);
+
                             dwSize = sizeof(DWORD);
                             RegGetValueW(HKEY_CURRENT_USER, szName, L"NukeOnDelete", RRF_RT_DWORD, NULL, &pItem->dwNukeOnDelete, &dwSize);
-                            pItem->dwSerial = dwSerial;
+
                             li.mask = LVIF_PARAM;
                             li.lParam = (LPARAM)pItem;
                             (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -163,7 +173,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
     }
     ZeroMemory(&li, sizeof(li));
     li.mask = LVIF_STATE;
-    li.stateMask = (UINT) - 1;
+    li.stateMask = (UINT)-1;
     li.state = LVIS_FOCUSED | LVIS_SELECTED;
     li.iItem = defIndex;
     (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -273,6 +283,7 @@ RecycleBinDlg(
     UINT uResult;
     PROPSHEETPAGE * page;
     DWORD dwStyle;
+    ULARGE_INTEGER FreeBytesAvailable;
 
     switch(uMsg)
     {
@@ -320,7 +331,13 @@ RecycleBinDlg(
                     {
                         uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
                         if (bSuccess)
-                            pItem->dwMaxCapacity = uResult;
+                        {
+                            /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
+                            FreeBytesAvailable = pItem->FreeBytesAvailable;
+                            FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
+                            pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
+                            SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                        }
                         if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
                             pItem->dwNukeOnDelete = TRUE;
                         else
@@ -356,7 +373,13 @@ RecycleBinDlg(
                     /* kill focus */
                     uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
                     if (bSuccess)
-                        pItem->dwMaxCapacity = uResult;
+                    {
+                        /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
+                        FreeBytesAvailable = pItem->FreeBytesAvailable;
+                        FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
+                        pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
+                        SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                    }
                     if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         pItem->dwNukeOnDelete = TRUE;
                     else
