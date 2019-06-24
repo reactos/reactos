@@ -74,7 +74,7 @@ void Test_SetWorldTransform()
     ok(xform.eM21 == 4, "xform.eM11 should be 4\n");
     ok(xform.eM22 == 6, "xform.eM11 should be 6\n");
 
-    /* Set smalles possible values */
+    /* Set smallest possible values */
     xform.eM11 = (FLOAT)1.4e-45;
     xform.eM12 = 0;
     xform.eM21 = 0;
