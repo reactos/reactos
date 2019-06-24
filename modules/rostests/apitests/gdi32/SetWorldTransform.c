@@ -85,7 +85,7 @@ void Test_SetWorldTransform()
     result = SetWorldTransform(hdc, &xform);
     ok(result == 1, "SetWorldTransform should succeed\n");
 
-    /* Test world trnsform */
+    /* Test world transform */
     result = GetWorldTransform(hdc, &xform);
     ok(result == 1, "GetWorldTransform should succeed\n");
     ok(xform.eM11 > 0, "xform.eM11 should not be 0\n");
