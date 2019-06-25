@@ -1445,7 +1445,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00
  "\Windows", \
  "\RPC Control"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ProtectionMode", 0x00010003, 0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","LUIDDeviceMapsDisabled", 0x00010003, 0x00000001
 
 ; DOS devices
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000002,"\DosDevices\COM1"
