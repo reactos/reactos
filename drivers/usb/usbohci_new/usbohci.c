@@ -34,7 +34,7 @@ static const UCHAR Balance[OHCI_NUMBER_OF_INTERRUPTS] =
 };
 
 VOID
-NTAPI 
+NTAPI
 OHCI_DumpHcdED(POHCI_HCD_ED ED)
 {
     DPRINT("ED                - %p\n", ED);
@@ -45,7 +45,7 @@ OHCI_DumpHcdED(POHCI_HCD_ED ED)
 }
 
 VOID
-NTAPI 
+NTAPI
 OHCI_DumpHcdTD(POHCI_HCD_TD TD)
 {
     DPRINT("TD                - %p\n", TD);
@@ -235,7 +235,7 @@ OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
 
     ASSERT(EndpointProperties->BufferLength > sizeof(OHCI_HCD_ED));
 
-    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) / 
+    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) /
               sizeof(OHCI_HCD_TD);
 
     OhciEndpoint->MaxTransferDescriptors = TdCount;
@@ -689,7 +689,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     /* 5.2.7.2 Interrupt */
 
     /* Build structure of interrupt static EDs */
-    for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++) 
+    for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++)
     {
         IntED = &OhciExtension->HcResourcesVA->InterrruptHeadED[ix];
         IntEdPA = OhciExtension->HcResourcesPA + FIELD_OFFSET(OHCI_HC_RESOURCES, InterrruptHeadED[ix]);
@@ -770,7 +770,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     FrameInterval.FrameIntervalToggle = 1;
 
     /* OHCI_MAXIMUM_OVERHEAD is the maximum overhead per frame */
-    FrameInterval.FSLargestDataPacket = 
+    FrameInterval.FSLargestDataPacket =
         ((FrameInterval.FrameInterval - OHCI_MAXIMUM_OVERHEAD) * 6) / 7;
 
     OhciExtension->FrameInterval = FrameInterval;
@@ -1141,23 +1141,28 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     }
 }
 
+/**
+ * @brief      Forms the next General Transfer Descriptor for the current transfer
+ *
+ * @param[in]  OhciExtension  The ohci extension
+ * @param[in]  TransferedLen  The consolidated length of all previous descriptors' buffers
+ * @param[in]  OhciTransfer   The ohci transfer
+ * @param[out] TD             The transfer descriptor we are forming
+ * @param[in]  SGList         The scatter/gather list
+ *
+ * @return     The length of all previous buffers summed with the length of the current buffer
+ */
+static
 ULONG
-NTAPI 
 OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
-                     IN ULONG MaxPacketSize,
-                     IN OUT ULONG TransferedLen,
+                     IN ULONG TransferedLen,
                      IN POHCI_TRANSFER OhciTransfer,
-                     IN POHCI_HCD_TD TD,
+                     OUT POHCI_HCD_TD TD,
                      IN PUSBPORT_SCATTER_GATHER_LIST SGList)
 {
     PUSBPORT_SCATTER_GATHER_ELEMENT SgElement;
-    ULONG SgIdx;
-    ULONG SgRemain;
-    ULONG LengthThisTd;
-    ULONG BufferEnd;
-    ULONG Offset;
-    ULONG TransferLength;
-    ULONG Buffer;
+    ULONG SgIdx, CurrentTransferLen, BufferEnd, CurrentBuffer;
+    ULONG TransferDataLeft = OhciTransfer->TransferParameters->TransferBufferLength - TransferedLen;
 
     DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
 
@@ -1177,53 +1182,54 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
                 SGList->SgElementCount);
 
     ASSERT(SgIdx < SGList->SgElementCount);
+    ASSERT(TransferedLen == SgElement->SgOffset);
 
-    Offset = TransferedLen - SGList->SgElement[SgIdx].SgOffset;
-    Buffer = SGList->SgElement[SgIdx].SgPhysicalAddress.LowPart + Offset;
+    /* The buffer for a TD can be 0 to 8192 bytes long,
+     * and can span within mo more than two 4k pages (see OpenHCI spec 3.3.2)
+     * CurrentBuffer - the (physical) address of the first byte in the buffer
+     * BufferEnd - the address of the last byte in the buffer. It can be on a different physical 4k page
+     * when a controller will reach the end of a page from CurrentBuffer, it will take the first 20 bits
+     * of the BufferEnd as a next address (OpenHCI spec, 4.3.1.3.1)
+     */
 
-    SgRemain = SGList->SgElementCount - SgIdx;
+    CurrentBuffer = SgElement->SgPhysicalAddress.LowPart;
 
-    if (SgRemain == 1)
+    if (TransferDataLeft <= SgElement->SgTransferLength)
     {
-        LengthThisTd = OhciTransfer->TransferParameters->TransferBufferLength -
-                       TransferedLen -
-                       Offset;
-
-        BufferEnd = SGList->SgElement[SgIdx].SgPhysicalAddress.LowPart +
-                    LengthThisTd;
-    }
-    else if (SgRemain == 2)
-    {
-        LengthThisTd = OhciTransfer->TransferParameters->TransferBufferLength - 
-                       TransferedLen;
-
-        BufferEnd = SGList->SgElement[SgIdx + 1].SgPhysicalAddress.LowPart +
-                    SGList->SgElement[SgIdx + 1].SgTransferLength;
+        CurrentTransferLen = TransferDataLeft;
+        BufferEnd = SgElement->SgPhysicalAddress.LowPart + CurrentTransferLen - 1;
     }
     else
     {
-        TransferLength = SGList->SgElement[SgIdx].SgTransferLength +
-                         SGList->SgElement[SgIdx+1].SgTransferLength -
-                         Offset;
+        PUSBPORT_SCATTER_GATHER_ELEMENT SgNextElement;
+        ASSERT(SGList->SgElementCount - SgIdx > 1);
 
-        BufferEnd = SGList->SgElement[SgIdx + 1].SgPhysicalAddress.LowPart +
-                    SGList->SgElement[SgIdx + 1].SgTransferLength;
+        SgNextElement = &SGList->SgElement[SgIdx + 1];
 
-        LengthThisTd = MaxPacketSize * (TransferLength / MaxPacketSize);
+        TransferDataLeft -= SgElement->SgTransferLength;
+        CurrentTransferLen = SgElement->SgTransferLength;
 
-        if (TransferLength > LengthThisTd)
-            BufferEnd -= (TransferLength - LengthThisTd);
+        if (TransferDataLeft <= SgNextElement->SgTransferLength)
+        {
+            CurrentTransferLen += TransferDataLeft;
+            BufferEnd = SgNextElement->SgPhysicalAddress.LowPart + TransferDataLeft - 1;
+        }
+        else
+        {
+            CurrentTransferLen += SgNextElement->SgTransferLength;
+            BufferEnd = SgNextElement->SgPhysicalAddress.LowPart + SgNextElement->SgTransferLength - 1;
+        }
     }
 
-    TD->HwTD.gTD.CurrentBuffer = Buffer;
-    TD->HwTD.gTD.BufferEnd = BufferEnd - 1;
-    TD->TransferLen = LengthThisTd;
+    TD->HwTD.gTD.CurrentBuffer = CurrentBuffer;
+    TD->HwTD.gTD.BufferEnd = BufferEnd;
+    TD->TransferLen = CurrentTransferLen;
 
-    return TransferedLen + LengthThisTd;
+    return TransferedLen + CurrentTransferLen;
 }
 
 POHCI_HCD_TD
-NTAPI 
+NTAPI
 OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
 {
@@ -1244,7 +1250,7 @@ OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
 }
 
 ULONG
-NTAPI 
+NTAPI
 OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
                IN POHCI_ENDPOINT OhciEndpoint)
 {
@@ -1287,7 +1293,6 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD NextTD;
     ULONG MaxTDs;
     ULONG TransferedLen;
-    ULONG MaxPacketSize;
     ULONG BufferEnd;
     UCHAR DataToggle;
 
@@ -1357,8 +1362,6 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     PrevTD->HwTD.gTD.NextTD = TD2->PhysicalAddress;
     PrevTD->NextHcdTD = TD2;
 
-    MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
-
     TransferedLen = 0;
     DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
 
@@ -1378,7 +1381,6 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         DataToggle = OHCI_TD_DATA_TOGGLE_FROM_ED;
 
         TransferedLen = OHCI_MapTransferToTD(OhciExtension,
-                                             MaxPacketSize,
                                              TransferedLen,
                                              OhciTransfer,
                                              TD,
@@ -1457,8 +1459,20 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     return MP_STATUS_SUCCESS;
 }
 
+/**
+ * @brief      Creates the transfer descriptor chain for the given transfer's buffer
+ *             and attaches it to a given endpoint (for bulk or interrupt transfers)
+ *
+ * @param[in]  OhciExtension       The ohci extension
+ * @param[in]  OhciEndpoint        The ohci endpoint
+ * @param[in]  TransferParameters  The transfer parameters
+ * @param[in]  OhciTransfer        The ohci transfer
+ * @param[in]  SGList              The scatter/gather list
+ *
+ * @return     MP_STATUS_SUCCESS or MP_STATUS_FAILURE if there are not enough TDs left
+ */
 MPSTATUS
-NTAPI 
+NTAPI
 OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
                              IN POHCI_ENDPOINT OhciEndpoint,
                              IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
@@ -1469,7 +1483,6 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD PrevTD;
     ULONG TransferedLen;
     ULONG MaxTDs;
-    ULONG MaxPacketSize;
 
     DPRINT_OHCI("OHCI_BulkOrInterruptTransfer: ... \n");
 
@@ -1515,10 +1528,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
 
         if (TransferParameters->TransferBufferLength)
         {
-            MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
-
             TransferedLen = OHCI_MapTransferToTD(OhciExtension,
-                                                 MaxPacketSize,
                                                  TransferedLen,
                                                  OhciTransfer,
                                                  TD,
@@ -1554,6 +1564,9 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
     PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
     PrevTD->NextHcdTD = TD;
 
+    /* The last TD in a chain is not used in a transfer. The controller does not access it
+     * so it will be used for chaining a next transfer to it (OpenHCI spec, 4.6)
+     */
     TD->HwTD.gTD.NextTD = 0;
     TD->NextHcdTD = 0;
 
@@ -1956,7 +1969,7 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
 }
 
 VOID
-NTAPI 
+NTAPI
 OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
                        IN POHCI_ENDPOINT OhciEndpoint)
 {
@@ -2151,7 +2164,7 @@ HandleDoneList:
 }
 
 VOID
-NTAPI 
+NTAPI
 OHCI_PollIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
                      IN POHCI_ENDPOINT OhciEndpoint)
 {
@@ -2371,7 +2384,7 @@ OHCI_GetEndpointStatus(IN PVOID ohciExtension,
     ED = OhciEndpoint->HcdED;
 
     if ((ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_HALT) &&
-        !(ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT)) 
+        !(ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT))
     {
         EndpointStatus = USBPORT_ENDPOINT_HALT;
     }
