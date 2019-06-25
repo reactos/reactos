@@ -36,7 +36,6 @@ static VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
 {
     INFCONTEXT InfContext;
-    BOOLEAN Success;
     LPCSTR AnsiName, OemName, LangName;
 
     /* Get ANSI codepage file */
@@ -76,8 +75,14 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
 
     TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
 
-    Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-    TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+#if DBG
+    {
+        BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+        TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+    }    
+#else
+    WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+#endif
 
     /* TODO: Load OEM HAL font */
     // Value "OemHalFont"
