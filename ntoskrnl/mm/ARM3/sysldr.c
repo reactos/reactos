@@ -320,8 +320,9 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                                                      "DllInitialize");
     if (!DllInit) return STATUS_SUCCESS;
 
-    /* Do a temporary copy of BaseDllName called ImportName
-     * because we'll alter the length of the string
+    /*
+     * Do a temporary copy of BaseDllName called ImportName
+     * because we'll alter the length of the string.
      */
     ImportName.Length = LdrEntry->BaseDllName.Length;
     ImportName.MaximumLength = LdrEntry->BaseDllName.MaximumLength;
@@ -1077,7 +1078,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         GdiLink = GdiLink |
                   !(_strnicmp(ImportName, "win32k", sizeof("win32k") - 1));
 
-        /* We can also allow dxapi (for Windows compat, allow IRT and coverage )*/
+        /* We can also allow dxapi (for Windows compat, allow IRT and coverage) */
         NormalLink = NormalLink |
                      ((_strnicmp(ImportName, "win32k", sizeof("win32k") - 1)) &&
                       (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)) &&
@@ -2149,8 +2150,8 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
 
     /* Loop all the sections */
-    Sections = NtHeaders->FileHeader.NumberOfSections;
-    while (Sections)
+    for (Sections = NtHeaders->FileHeader.NumberOfSections;
+         Sections > 0; --Sections, ++SectionHeader)
     {
         /* Grab the size of the section */
         Size = max(SectionHeader->SizeOfRawData, SectionHeader->Misc.VirtualSize);
@@ -2161,8 +2162,8 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             /* Remember the PTEs so we can modify them later */
             MiKernelResourceStartPte = MiAddressToPte(DllBase +
                                                       SectionHeader->VirtualAddress);
-            MiKernelResourceEndPte = MiKernelResourceStartPte +
-                                     BYTES_TO_PAGES(SectionHeader->VirtualAddress + Size);
+            MiKernelResourceEndPte = MiAddressToPte(ROUND_TO_PAGES(DllBase +
+                                                    SectionHeader->VirtualAddress + Size));
         }
         else if (*(PULONG)SectionHeader->Name == 'LOOP')
         {
@@ -2177,20 +2178,16 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             {
                 /* Found Mm* Pool code */
                 MmPoolCodeStart = DllBase + SectionHeader->VirtualAddress;
-                MmPoolCodeEnd = ExPoolCodeStart + Size;
+                MmPoolCodeEnd = MmPoolCodeStart + Size;
             }
         }
         else if ((*(PULONG)SectionHeader->Name == 'YSIM') &&
                  (*(PULONG)&SectionHeader->Name[4] == 'ETPS'))
         {
-            /* Found MISYSPTE (Mm System PTE code)*/
+            /* Found MISYSPTE (Mm System PTE code) */
             MmPteCodeStart = DllBase + SectionHeader->VirtualAddress;
-            MmPteCodeEnd = ExPoolCodeStart + Size;
+            MmPteCodeEnd = MmPteCodeStart + Size;
         }
-
-        /* Keep going */
-        Sections--;
-        SectionHeader++;
     }
 }
 
@@ -2300,16 +2297,13 @@ MmMakeKernelResourceSectionWritable(VOID)
         return;
 
     /* Loop the PTEs */
-    for (PointerPte = MiKernelResourceStartPte; PointerPte <= MiKernelResourceEndPte; PointerPte++)
+    for (PointerPte = MiKernelResourceStartPte; PointerPte < MiKernelResourceEndPte; ++PointerPte)
     {
         /* Read the PTE */
         TempPte = *PointerPte;
 
-        /* Make sure it's valid */
-        ASSERT(TempPte.u.Hard.Valid == 1);
-
         /* Update the protection */
-        MI_MAKE_WRITE_PAGE(&TempPte);
+        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, MM_READWRITE, TempPte.u.Hard.PageFrameNumber);
         MI_UPDATE_VALID_PTE(PointerPte, TempPte);
     }
 
@@ -2620,8 +2614,7 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             {
                 /* Nope, setup the first PTE address */
                 PointerPte = MiAddressToPte(ROUND_TO_PAGES(ImageBase +
-                                                           Section->
-                                                           VirtualAddress));
+                                                           Section->VirtualAddress));
             }
 
             /* Compute the size */
@@ -2630,9 +2623,7 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
             /* Find the last PTE that maps this section */
             LastPte = MiAddressToPte(ImageBase +
                                      Section->VirtualAddress +
-                                     Alignment +
-                                     Size -
-                                     PAGE_SIZE);
+                                     Alignment + Size - PAGE_SIZE);
         }
         else
         {
