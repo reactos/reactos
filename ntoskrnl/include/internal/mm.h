@@ -794,7 +794,7 @@ NTAPI
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
 
-/* balace.c ******************************************************************/
+/* balance.c *****************************************************************/
 
 INIT_FUNCTION
 VOID
@@ -1369,6 +1369,10 @@ NTAPI
 MiInitializeLoadedModuleList(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
+
+VOID
+NTAPI
+MmMakeKernelResourceSectionWritable(VOID);
 
 NTSTATUS
 NTAPI

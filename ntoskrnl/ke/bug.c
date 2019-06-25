@@ -406,47 +406,65 @@ NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
                     OUT PANSI_STRING OutputString OPTIONAL)
 {
-    ULONG i, j;
+    ULONG i;
     ULONG IdOffset;
-    ULONG_PTR MessageEntry;
+    PMESSAGE_RESOURCE_ENTRY MessageEntry;
     PCHAR BugCode;
-    BOOLEAN Result = FALSE;
     USHORT Length;
+    BOOLEAN Result = FALSE;
 
     /* Make sure we're not bugchecking too early */
     if (!KiBugCodeMessages) return Result;
 
+    /*
+     * Globally protect in SEH as we are trying to access data in
+     * dire situations, and potentially going to patch it (see below).
+     */
+    _SEH2_TRY
+    {
+
+    /*
+     * Make the kernel resource section writable, as we are going to manually
+     * trim the trailing newlines in the bugcheck resource message in place,
+     * when OutputString is NULL and before displaying it on screen.
+     */
+    MmMakeKernelResourceSectionWritable();
+
     /* Find the message. This code is based on RtlFindMesssage */
     for (i = 0; i < KiBugCodeMessages->NumberOfBlocks; i++)
     {
-        /* Check if the ID Matches */
+        /* Check if the ID matches */
         if ((BugCheckCode >= KiBugCodeMessages->Blocks[i].LowId) &&
             (BugCheckCode <= KiBugCodeMessages->Blocks[i].HighId))
         {
-            /* Get Offset to Entry */
-            MessageEntry = KiBugCodeMessages->Blocks[i].OffsetToEntries +
-                           (ULONG_PTR)KiBugCodeMessages;
+            /* Get offset to entry */
+            MessageEntry = (PMESSAGE_RESOURCE_ENTRY)
+                ((ULONG_PTR)KiBugCodeMessages + KiBugCodeMessages->Blocks[i].OffsetToEntries);
             IdOffset = BugCheckCode - KiBugCodeMessages->Blocks[i].LowId;
 
-            /* Get offset to ID */
-            for (j = 0; j < IdOffset; j++)
+            /* Advance in the entries until finding it */
+            while (IdOffset--)
             {
-                /* Advance in the Entries */
-                MessageEntry += ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->
-                                Length;
+                MessageEntry = (PMESSAGE_RESOURCE_ENTRY)
+                    ((ULONG_PTR)MessageEntry + MessageEntry->Length);
             }
 
-            /* Get the final Code */
-            BugCode = (PCHAR)((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
+            /* Make sure it's not Unicode */
+            ASSERT(!(MessageEntry->Flags & MESSAGE_RESOURCE_UNICODE));
+
+            /* Get the final code */
+            BugCode = (PCHAR)MessageEntry->Text;
             Length = (USHORT)strlen(BugCode);
 
             /* Handle trailing newlines */
-            while ((Length > 0) && ((BugCode[Length] == '\n') ||
-                                    (BugCode[Length] == '\r') ||
-                                    (BugCode[Length] == ANSI_NULL)))
+            while ((Length > 0) && ((BugCode[Length - 1] == '\n') ||
+                                    (BugCode[Length - 1] == '\r') ||
+                                    (BugCode[Length - 1] == ANSI_NULL)))
             {
-                /* Check if we have a string to return */
-                if (!OutputString) BugCode[Length] = ANSI_NULL;
+                /* Directly trim the newline in place if we don't return the string */
+                if (!OutputString) BugCode[Length - 1] = ANSI_NULL;
+
+                /* Skip the trailing newline */
                 Length--;
             }
 
@@ -455,12 +473,12 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             {
                 /* Return it in the OutputString */
                 OutputString->Buffer = BugCode;
-                OutputString->Length = Length + 1;
-                OutputString->MaximumLength = Length + 1;
+                OutputString->Length = Length;
+                OutputString->MaximumLength = Length;
             }
             else
             {
-                /* Direct Output to Screen */
+                /* Direct output to screen */
                 InbvDisplayString(BugCode);
                 InbvDisplayString("\r");
             }
@@ -470,6 +488,12 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             break;
         }
     }
+
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END;
 
     /* Return the result */
     return Result;
@@ -499,6 +523,8 @@ KiDoBugCheckCallbacks(VOID)
                                           Entry);
 
         /* Validate it */
+        // TODO/FIXME: Check whether the memory CurrentRecord points to
+        // is still accessible and valid!
         if (CurrentRecord->Entry.Blink != LastEntry) return;
         Checksum = (ULONG_PTR)CurrentRecord->CallbackRoutine;
         Checksum += (ULONG_PTR)CurrentRecord->Buffer;
@@ -511,9 +537,17 @@ KiDoBugCheckCallbacks(VOID)
         {
             /* Call the routine */
             CurrentRecord->State = BufferStarted;
-            (CurrentRecord->CallbackRoutine)(CurrentRecord->Buffer,
-                                             CurrentRecord->Length);
-            CurrentRecord->State = BufferFinished;
+            _SEH2_TRY
+            {
+                (CurrentRecord->CallbackRoutine)(CurrentRecord->Buffer,
+                                                 CurrentRecord->Length);
+                CurrentRecord->State = BufferFinished;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                CurrentRecord->State = BufferIncomplete;
+            }
+            _SEH2_END;
         }
 
         /* Go to the next entry */
@@ -1144,6 +1178,10 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                             HardErrCaption,
                             HardErrMessage,
                             AnsiName);
+
+        // TODO/FIXME: Run the registered reason-callbacks from
+        // the KeBugcheckReasonCallbackListHead list with the
+        // KbCallbackReserved1 reason.
 
         /* Check if the debugger is disabled but we can enable it */
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))

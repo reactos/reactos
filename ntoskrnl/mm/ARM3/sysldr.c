@@ -2284,6 +2284,46 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+VOID
+NTAPI
+MmMakeKernelResourceSectionWritable(VOID)
+{
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    /* Don't do anything if the resource section is already writable */
+    if (MiKernelResourceStartPte == NULL || MiKernelResourceEndPte == NULL)
+        return;
+
+    /* If the resource section is physical, we cannot change its protection */
+    if (MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(MiKernelResourceStartPte)))
+        return;
+
+    /* Loop the PTEs */
+    for (PointerPte = MiKernelResourceStartPte; PointerPte <= MiKernelResourceEndPte; PointerPte++)
+    {
+        /* Read the PTE */
+        TempPte = *PointerPte;
+
+        /* Make sure it's valid */
+        ASSERT(TempPte.u.Hard.Valid == 1);
+
+        /* Update the protection */
+        MI_MAKE_WRITE_PAGE(&TempPte);
+        MI_UPDATE_VALID_PTE(PointerPte, TempPte);
+    }
+
+    /*
+     * Invalidate the cached resource section PTEs
+     * so as to not change its protection again later.
+     */
+    MiKernelResourceStartPte = NULL;
+    MiKernelResourceEndPte = NULL;
+
+    /* Only flush the current processor's TLB */
+    KeFlushCurrentTb();
+}
+
 LOGICAL
 NTAPI
 MiUseLargeDriverPage(IN ULONG NumberOfPtes,
