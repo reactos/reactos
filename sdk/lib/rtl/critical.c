@@ -80,7 +80,7 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
                                                NULL) != NULL)
         {
             /* Someone else just created an event */
-            if (hEvent != INVALID_HANDLE_VALUE)
+            if (hNewEvent != INVALID_HANDLE_VALUE)
             {
                 DPRINT("Closing already created event: %p\n", hNewEvent);
                 NtClose(hNewEvent);
