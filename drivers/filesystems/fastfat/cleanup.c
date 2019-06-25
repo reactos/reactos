@@ -18,9 +18,10 @@
 
 /*
  * FUNCTION: Cleans up after a file has been closed.
+ * Returns whether the device was deleted
  */
 static
-NTSTATUS
+BOOLEAN
 VfatCleanupFile(
     PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -29,6 +30,7 @@ VfatCleanupFile(
     BOOLEAN IsVolume;
     PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
     PFILE_OBJECT FileObject = IrpContext->FileObject;
+    BOOLEAN Deleted = FALSE;
 
     DPRINT("VfatCleanupFile(DeviceExt %p, FileObject %p)\n",
            IrpContext->DeviceExt, FileObject);
@@ -36,7 +38,7 @@ VfatCleanupFile(
     /* FIXME: handle file/directory deletion here */
     pFcb = (PVFATFCB)FileObject->FsContext;
     if (!pFcb)
-        return STATUS_SUCCESS;
+        return FALSE;
 
     IsVolume = BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME);
     if (IsVolume)
@@ -161,11 +163,11 @@ VfatCleanupFile(
 #ifdef ENABLE_SWAPOUT
     if (IsVolume && BooleanFlagOn(DeviceExt->Flags, VCB_DISMOUNT_PENDING))
     {
-        VfatCheckForDismount(DeviceExt, TRUE);
+        Deleted = VfatCheckForDismount(DeviceExt, TRUE);
     }
 #endif
 
-    return STATUS_SUCCESS;
+    return Deleted;
 }
 
 /*
@@ -175,7 +177,7 @@ NTSTATUS
 VfatCleanup(
     PVFAT_IRP_CONTEXT IrpContext)
 {
-    NTSTATUS Status;
+    BOOLEAN Deleted;
 
     DPRINT("VfatCleanup(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
 
@@ -186,11 +188,11 @@ VfatCleanup(
     }
 
     ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE);
-    Status = VfatCleanupFile(IrpContext);
-    ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
+    Deleted = VfatCleanupFile(IrpContext);
+    if (!Deleted) ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
 
     IrpContext->Irp->IoStatus.Information = 0;
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
