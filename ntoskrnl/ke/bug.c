@@ -483,42 +483,42 @@ KiDoBugCheckCallbacks(VOID)
     PLIST_ENTRY ListHead, NextEntry, LastEntry;
     ULONG_PTR Checksum;
 
-    /* First make sure that the list is Initialized... it might not be */
+    /* First make sure that the list is initialized... it might not be */
     ListHead = &KeBugcheckCallbackListHead;
-    if ((ListHead->Flink) && (ListHead->Blink))
+    if ((!ListHead->Flink) || (!ListHead->Blink))
+        return;
+
+    /* Loop the list */
+    LastEntry = ListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
     {
-        /* Loop the list */
-        LastEntry = ListHead;
-        NextEntry = ListHead->Flink;
-        while (NextEntry != ListHead)
+        /* Get the reord */
+        CurrentRecord = CONTAINING_RECORD(NextEntry,
+                                          KBUGCHECK_CALLBACK_RECORD,
+                                          Entry);
+
+        /* Validate it */
+        if (CurrentRecord->Entry.Blink != LastEntry) return;
+        Checksum = (ULONG_PTR)CurrentRecord->CallbackRoutine;
+        Checksum += (ULONG_PTR)CurrentRecord->Buffer;
+        Checksum += (ULONG_PTR)CurrentRecord->Length;
+        Checksum += (ULONG_PTR)CurrentRecord->Component;
+
+        /* Make sure it's inserted and validated */
+        if ((CurrentRecord->State == BufferInserted) &&
+            (CurrentRecord->Checksum == Checksum))
         {
-            /* Get the reord */
-            CurrentRecord = CONTAINING_RECORD(NextEntry,
-                                              KBUGCHECK_CALLBACK_RECORD,
-                                              Entry);
-
-            /* Validate it */
-            if (CurrentRecord->Entry.Blink != LastEntry) return;
-            Checksum = (ULONG_PTR)CurrentRecord->CallbackRoutine;
-            Checksum += (ULONG_PTR)CurrentRecord->Buffer;
-            Checksum += (ULONG_PTR)CurrentRecord->Length;
-            Checksum += (ULONG_PTR)CurrentRecord->Component;
-
-            /* Make sure it's inserted and valitdated */
-            if ((CurrentRecord->State == BufferInserted) &&
-                (CurrentRecord->Checksum == Checksum))
-            {
-                /* Call the routine */
-                CurrentRecord->State = BufferStarted;
-                (CurrentRecord->CallbackRoutine)(CurrentRecord->Buffer,
-                                                 CurrentRecord->Length);
-                CurrentRecord->State = BufferFinished;
-            }
-
-            /* Go to the next entry */
-            LastEntry = NextEntry;
-            NextEntry = NextEntry->Flink;
+            /* Call the routine */
+            CurrentRecord->State = BufferStarted;
+            (CurrentRecord->CallbackRoutine)(CurrentRecord->Buffer,
+                                             CurrentRecord->Length);
+            CurrentRecord->State = BufferFinished;
         }
+
+        /* Go to the next entry */
+        LastEntry = NextEntry;
+        NextEntry = NextEntry->Flink;
     }
 }
 
@@ -856,7 +856,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         case KERNEL_MODE_EXCEPTION_NOT_HANDLED:
         case ATTEMPTED_WRITE_TO_READONLY_MEMORY:
         case ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY:
-
+        {
             /* Check if we have a trap frame */
             if (!TrapFrame)
             {
@@ -872,10 +872,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                 Pc = (PVOID)KeGetTrapFramePc(TrapFrame);
             }
             break;
+        }
 
         /* Wrong IRQL */
         case IRQL_NOT_LESS_OR_EQUAL:
-
+        {
             /*
              * The NT kernel has 3 special sections:
              * MISYSPTE, POOLMI and POOLCODE. The bug check code can
@@ -933,10 +934,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             /* Clear Pc so we don't look it up later */
             Pc = NULL;
             break;
+        }
 
         /* Hard error */
         case FATAL_UNHANDLED_HARD_ERROR:
-
+        {
             /* Copy bug check data from hard error */
             HardErrorParameters = (PULONG_PTR)BugCheckParameter2;
             KiBugCheckData[0] = BugCheckParameter1;
@@ -950,10 +952,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             HardErrCaption = (PCHAR)BugCheckParameter3;
             HardErrMessage = (PCHAR)BugCheckParameter4;
             break;
+        }
 
         /* Page fault */
         case PAGE_FAULT_IN_NONPAGED_AREA:
-
+        {
             /* Assume no driver */
             DriverBase = NULL;
 
@@ -1014,6 +1017,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                 }
             }
             break;
+        }
 
         /* Check if the driver forgot to unlock pages */
         case DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS:
