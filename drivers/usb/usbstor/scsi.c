@@ -81,17 +81,17 @@ USBSTOR_IssueBulkOrInterruptRequest(
     Context->Urb.UrbBulkOrInterruptTransfer.TransferBuffer = TransferBuffer;
     Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL = TransferBufferMDL;
 
-    NextStack = IoGetNextIrpStackLocation(Irp); 
-    NextStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL; 
-    NextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB; 
-    NextStack->Parameters.Others.Argument1 = &Context->Urb; 
+    NextStack = IoGetNextIrpStackLocation(Irp);
+    NextStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    NextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+    NextStack->Parameters.Others.Argument1 = &Context->Urb;
 
     IoSetCompletionRoutine(Irp,
                            CompletionRoutine,
                            Context,
                            TRUE,
                            TRUE,
-                           TRUE); 
+                           TRUE);
 
     return IoCallDriver(FDODeviceExtension->LowerDeviceObject, Irp);
 }
@@ -210,7 +210,7 @@ USBSTOR_CSWCompletionRoutine(
         DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
 
         ASSERT(FDODeviceExtension->ActiveSrb == Request);
-        
+
         // setting a generic error status, additional information
         // should be read by higher-level driver from SenseInfoBuffer
         Request->SrbStatus = SRB_STATUS_ERROR;
@@ -410,7 +410,7 @@ USBSTOR_CBWCompletionRoutine(
                                 FALSE,
                                 FALSE,
                                 NULL);
-    
+
             if (Mdl)
             {
                 IoBuildPartialMdl(Irp->MdlAddress,
@@ -526,7 +526,6 @@ USBSTOR_IssueRequestSense(
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK CurrentSrb;
     PSCSI_REQUEST_BLOCK SenseSrb;
-    PCDB pCDB;
 
     DPRINT("USBSTOR_IssueRequestSense: \n");
 
@@ -551,9 +550,8 @@ USBSTOR_IssueRequestSense(
     SenseSrb->DataTransferLength = CurrentSrb->SenseInfoBufferLength;
     SenseSrb->DataBuffer = CurrentSrb->SenseInfoBuffer;
 
-    pCDB = (PCDB)SenseSrb->Cdb;
-    pCDB->CDB6GENERIC.OperationCode = SCSIOP_REQUEST_SENSE;
-    pCDB->AsByte[4] = CurrentSrb->SenseInfoBufferLength;
+    SrbGetCdb(SenseSrb)->CDB6GENERIC.OperationCode = SCSIOP_REQUEST_SENSE;
+    SrbGetCdb(SenseSrb)->AsByte[4] = CurrentSrb->SenseInfoBufferLength;
 
     return USBSTOR_SendCBWRequest(FDODeviceExtension, Irp, Context);
 }
@@ -563,7 +561,6 @@ USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PCDB pCDB;
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
@@ -575,12 +572,11 @@ USBSTOR_HandleExecuteSCSI(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Request = IoStack->Parameters.Scsi.Srb;
-    pCDB = (PCDB)Request->Cdb;
 
-    DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x, Length %lu\n", pCDB->CDB10.OperationCode, Request->DataTransferLength);
+    DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x, Length %lu\n", SrbGetCdb(Request)->CDB10.OperationCode, Request->DataTransferLength);
 
     // check that we're sending to the right LUN
-    ASSERT(pCDB->CDB10.LogicalUnitNumber == (PDODeviceExtension->LUN & MAX_LUN));
+    ASSERT(SrbGetCdb(Request)->CDB10.LogicalUnitNumber == (PDODeviceExtension->LUN & MAX_LUN));
     Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(IRP_CONTEXT), USB_STOR_TAG);
 
     if (!Context)
