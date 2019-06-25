@@ -211,6 +211,9 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
     DeviceExtension->Rows = 30;
 #endif
 
+    /* Upload a default font for the default codepage 437 */
+    ScrLoadFontTable(437);
+
     DPRINT ("%d Columns  %d Rows %d Scanlines\n",
             DeviceExtension->Columns,
             DeviceExtension->Rows,
@@ -864,7 +867,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
               if (!InbvCheckDisplayOwnership())
               {
-                // Upload a font for the codepage if needed
+                /* Upload a font for the codepage if needed */
                 ScrLoadFontTable(CodePage);
               }
 
