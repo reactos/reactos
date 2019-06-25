@@ -132,14 +132,6 @@ AcpiEvEnableGpe (
     ACPI_FUNCTION_TRACE (EvEnableGpe);
 
 
-    /* Clear the GPE (of stale events) */
-
-    Status = AcpiHwClearGpe(GpeEventInfo);
-    if (ACPI_FAILURE(Status))
-    {
-        return_ACPI_STATUS(Status);
-    }
-
     /* Enable the requested GPE */
 
     Status = AcpiHwLowSetGpe (GpeEventInfo, ACPI_GPE_ENABLE);
