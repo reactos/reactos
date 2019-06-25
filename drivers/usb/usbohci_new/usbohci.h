@@ -66,7 +66,7 @@ typedef struct _OHCI_HCD_TD {
   ULONG PhysicalAddress;
   ULONG Flags;
   POHCI_TRANSFER OhciTransfer;
-  struct _OHCI_HCD_TD *NextHcdTD;
+  struct _OHCI_HCD_TD *NextTDVa;
   ULONG TransferLen;
   LIST_ENTRY DoneLink;
   ULONG Pad[1];

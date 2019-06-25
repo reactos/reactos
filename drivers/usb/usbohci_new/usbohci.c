@@ -71,7 +71,7 @@ if (TD->HwTD.SetupPacket.wLength)
     DPRINT("PhysicalAddress   - %p\n", TD->PhysicalAddress);
     DPRINT("Flags             - %X\n", TD->Flags);
     DPRINT("OhciTransfer      - %08X\n", TD->OhciTransfer);
-    DPRINT("NextHcdTD         - %08X\n", TD->NextHcdTD);
+    DPRINT("NextTDVa          - %08X\n", TD->NextTDVa);
 if (TD->TransferLen)
     DPRINT("TransferLen       - %X\n", TD->TransferLen);
 }
@@ -1331,7 +1331,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TD->OhciTransfer = OhciTransfer;
 
     PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-    PrevTD->NextHcdTD = TD;
+    PrevTD->NextTDVa = TD;
 
     /* The first data packet should use DATA1, subsequent ones use DATA0 (OpenHCI spec, 4.3.1.3.4) */
     DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
@@ -1364,7 +1364,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->OhciTransfer = OhciTransfer;
 
         PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-        PrevTD->NextHcdTD = TD;
+        PrevTD->NextTDVa = TD;
 
         DataToggle = OHCI_TD_DATA_TOGGLE_DATA0;
     }
@@ -1405,9 +1405,9 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
 
     PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-    PrevTD->NextHcdTD = TD;
+    PrevTD->NextTDVa = TD;
 
-    TD->NextHcdTD = 0;
+    TD->NextTDVa = NULL;
     /* TD->HwTD.gTD.NextTD = 0; */
 
     OhciTransfer->NextTD = TD;
@@ -1483,7 +1483,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         OhciTransfer->PendingTDs++;
 
         PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-        PrevTD->NextHcdTD = TD;
+        PrevTD->NextTDVa = TD;
     }
     while (TransferedLen < TransferParameters->TransferBufferLength);
 
@@ -1499,7 +1499,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
      * so it will be used for chaining a next transfer to it (OpenHCI spec, 4.6)
      */
     /* TD->HwTD.gTD.NextTD = 0; */
-    TD->NextHcdTD = 0;
+    TD->NextTDVa = NULL;
 
     OhciTransfer->NextTD = TD;
     OhciEndpoint->HcdTailP = TD;
@@ -1735,7 +1735,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         if (TD->OhciTransfer == ohciTransfer)
         {
             PrevTD = TD;
-            TD = TD->NextHcdTD;
+            TD = TD->NextTDVa;
 
             if (PrevTD == OhciEndpoint->HcdHeadP)
                 OhciEndpoint->HcdHeadP = TD;
@@ -1749,7 +1749,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         }
         else
         {
-            TD = TD->NextHcdTD;
+            TD = TD->NextTDVa;
         }
     }
     while (TD != NextTD);
@@ -1771,7 +1771,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
             LastTD = TD;
 
-            TD = TD->NextHcdTD;
+            TD = TD->NextTDVa;
         }
 
         TD = td;
@@ -1782,7 +1782,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
                 break;
 
             PrevTD = TD;
-            TD = TD->NextHcdTD;
+            TD = TD->NextTDVa;
 
             if (IsIsoEndpoint)
                 OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
@@ -1794,7 +1794,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         TmpTransfer = LastTD->OhciTransfer;
         TmpTransfer->NextTD = TD;
 
-        LastTD->NextHcdTD = TD;
+        LastTD->NextTDVa = TD;
         LastTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
     }
 
@@ -1955,7 +1955,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     IsResetOnHalt = (ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT) != 0;
     DPRINT1("PollAsyncEndpoint: IsResetOnHalt %x\n", IsResetOnHalt);
 
-    for (TD = OhciEndpoint->HcdHeadP; ; TD = TD->NextHcdTD)
+    for (TD = OhciEndpoint->HcdHeadP; ; TD = TD->NextTDVa)
     {
         if (!TD)
         {
@@ -2075,7 +2075,7 @@ ProcessListTDs:
         OHCI_DumpHcdTD(TD);
         TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
         InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
-        TD = TD->NextHcdTD;
+        TD = TD->NextTDVa;
     }
 
 HandleDoneList:
