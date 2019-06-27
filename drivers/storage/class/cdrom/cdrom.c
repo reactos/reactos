@@ -6533,6 +6533,10 @@ Return Value:
     PSCSI_INQUIRY_DATA     lunInfo;
 
     inquiryBuffer = ExAllocatePoolWithTag(NonPagedPool, 2048, CDROM_ALLOC_TAG);
+    if (!inquiryBuffer) {
+        return FALSE;
+    }
+
     KeInitializeEvent(&event, NotificationEvent, FALSE);
     irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_GET_INQUIRY_DATA,
                                         DeviceObject,
@@ -6544,7 +6548,7 @@ Return Value:
                                         &event,
                                         &ioStatus);
     if (!irp) {
-        return FALSE;
+        goto ExitIsThisASanyo;
     }
 
     status = IoCallDriver(DeviceObject, irp);
@@ -6555,7 +6559,7 @@ Return Value:
     }
 
     if (!NT_SUCCESS(status)) {
-        return FALSE;
+        goto ExitIsThisASanyo;
     }
 
     adapterInfo = (PVOID) inquiryBuffer;
@@ -6579,8 +6583,7 @@ Return Value:
                     return TRUE;
                 }
 
-                ExFreePool(inquiryBuffer);
-                return FALSE;
+                goto ExitIsThisASanyo;
             }
 
             if (!lunInfo->NextInquiryDataOffset) {
@@ -6591,6 +6594,7 @@ Return Value:
         }
     }
 
+ExitIsThisASanyo:
     ExFreePool(inquiryBuffer);
     return FALSE;
 }
