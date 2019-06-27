@@ -224,13 +224,7 @@ typedef struct _CDROM_DATA {
 #define FORM2_MODE1_SECTOR        4
 #define FORM2_MODE2_SECTOR        5
 
-
-#ifdef POOL_TAGGING
-#ifdef ExAllocatePool
-#undef ExAllocatePool
-#endif
-#define ExAllocatePool(a,b) ExAllocatePoolWithTag(a,b,'CscS')
-#endif
+#define CDROM_ALLOC_TAG 'CscS'
 
 NTSTATUS
 NTAPI
@@ -889,8 +883,9 @@ Return Value:
     // Allocate request sense buffer.
     //
 
-    senseData = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
+    senseData = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                      SENSE_BUFFER_SIZE,
+                                      CDROM_ALLOC_TAG);
     if (senseData == NULL) {
 
         //
@@ -956,8 +951,9 @@ Return Value:
     //
 
     deviceExtension->DiskGeometry =
-        ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY_EX));
-
+      ExAllocatePoolWithTag(NonPagedPool,
+                            sizeof(DISK_GEOMETRY_EX),
+                            CDROM_ALLOC_TAG);
     if (deviceExtension->DiskGeometry == NULL) {
 
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1113,9 +1109,12 @@ Return Value:
                 if (irp) {
                     PVOID buffer;
 
-                    srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
-                    buffer = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
+                    srb = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(SCSI_REQUEST_BLOCK),
+                                                CDROM_ALLOC_TAG);
+                    buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                   SENSE_BUFFER_SIZE,
+                                                   CDROM_ALLOC_TAG);
                     if (srb && buffer) {
                         PCDB cdb;
 
@@ -1221,7 +1220,10 @@ Return Value:
     cdb->MODE_SENSE.PageCode = 0x1;
     cdb->MODE_SENSE.AllocationLength = (UCHAR)length;
 
-    buffer = ExAllocatePool(NonPagedPoolCacheAligned, (sizeof(MODE_READ_RECOVERY_PAGE) + MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH10));
+    buffer = ExAllocatePoolWithTag(
+      NonPagedPoolCacheAligned,
+      sizeof(MODE_READ_RECOVERY_PAGE) + MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH10,
+      CDROM_ALLOC_TAG);
     if (!buffer) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto CreateCdRomDeviceObjectExit;
@@ -1475,7 +1477,9 @@ ScsiCdRomStartIo(
                 return;
             }
 
-            srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+            srb = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(SCSI_REQUEST_BLOCK),
+                                        CDROM_ALLOC_TAG);
             if (!srb) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1493,8 +1497,9 @@ ScsiCdRomStartIo(
             // Allocate sense buffer.
             //
 
-            senseBuffer = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
+            senseBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                SENSE_BUFFER_SIZE,
+                                                CDROM_ALLOC_TAG);
             if (!senseBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1561,7 +1566,9 @@ ScsiCdRomStartIo(
             srb->SenseInfoBuffer = senseBuffer;
 
             transferByteCount = (use6Byte) ? sizeof(ERROR_RECOVERY_DATA) : sizeof(ERROR_RECOVERY_DATA10);
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, transferByteCount );
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               transferByteCount,
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1709,7 +1716,9 @@ ScsiCdRomStartIo(
             return;
         }
 
-        srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+        srb = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(SCSI_REQUEST_BLOCK),
+                                    CDROM_ALLOC_TAG);
         if (!srb) {
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1728,8 +1737,9 @@ ScsiCdRomStartIo(
         // Allocate sense buffer.
         //
 
-        senseBuffer = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
+        senseBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                            SENSE_BUFFER_SIZE,
+                                            CDROM_ALLOC_TAG);
         if (!senseBuffer) {
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1956,7 +1966,9 @@ ScsiCdRomStartIo(
                 } else {
 
                     transferByteCount = (use6Byte) ? sizeof(ERROR_RECOVERY_DATA) : sizeof(ERROR_RECOVERY_DATA10);
-                    dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, transferByteCount );
+                    dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                       transferByteCount,
+                                                       CDROM_ALLOC_TAG);
                     if (!dataBuffer) {
                         Irp->IoStatus.Information = 0;
                         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2204,7 +2216,9 @@ ScsiCdRomStartIo(
             srb->CdbLength = 10;
             srb->TimeOutValue = deviceExtension->TimeOutValue;
 
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, sizeof(READ_CAPACITY_DATA));
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               sizeof(READ_CAPACITY_DATA),
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2328,7 +2342,9 @@ ScsiCdRomStartIo(
             srb->CdbLength = 10;
             srb->TimeOutValue = deviceExtension->TimeOutValue;
 
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, transferByteCount);
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               transferByteCount,
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2410,9 +2426,9 @@ ScsiCdRomStartIo(
             // Allocate buffer for subq channel information.
             //
 
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned,
-                                     sizeof(SUB_Q_CHANNEL_DATA));
-
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               sizeof(SUB_Q_CHANNEL_DATA),
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2586,9 +2602,9 @@ ScsiCdRomStartIo(
             // Allocate buffer for volume control information.
             //
 
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned,
-                                         MODE_DATA_SIZE);
-
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               MODE_DATA_SIZE,
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2674,9 +2690,9 @@ ScsiCdRomStartIo(
         case IOCTL_CDROM_GET_VOLUME:
         case IOCTL_CDROM_SET_VOLUME: {
 
-            dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned,
-                                         MODE_DATA_SIZE);
-
+            dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                               MODE_DATA_SIZE,
+                                               CDROM_ALLOC_TAG);
             if (!dataBuffer) {
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3863,8 +3879,9 @@ CdRomSetVolumeIntermediateCompletion(
         // Allocate a new buffer for the mode select.
         //
 
-        dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, bytesTransferred);
-
+        dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                           bytesTransferred,
+                                           CDROM_ALLOC_TAG);
         if (!dataBuffer) {
             realIrp->IoStatus.Information = 0;
             realIrp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -5013,8 +5030,9 @@ RetryControl:
         // allocate an event and stuff it into our stack location.
         //
 
-        deviceControlEvent = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-
+        deviceControlEvent = ExAllocatePoolWithTag(NonPagedPool,
+                                                   sizeof(KEVENT),
+                                                   CDROM_ALLOC_TAG);
         if(!deviceControlEvent) {
 
             status = STATUS_INSUFFICIENT_RESOURCES;
@@ -5236,7 +5254,10 @@ Return Value:
         cdb->MODE_SENSE.PageCode = 0x1;
         cdb->MODE_SENSE.AllocationLength = (UCHAR)length;
 
-        buffer = ExAllocatePool(NonPagedPoolCacheAligned, (sizeof(MODE_READ_RECOVERY_PAGE) + MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH));
+        buffer = ExAllocatePoolWithTag(
+          NonPagedPoolCacheAligned,
+          sizeof(MODE_READ_RECOVERY_PAGE) + MODE_BLOCK_DESC_LENGTH + MODE_HEADER_LENGTH,
+          CDROM_ALLOC_TAG);
         if (!buffer) {
             return;
         }
@@ -5385,11 +5406,10 @@ Return Value:
         alignment = DeviceObject->AlignmentRequirement ?
             DeviceObject->AlignmentRequirement : 1;
 
-        context = ExAllocatePool(
-            NonPagedPool,
-            sizeof(COMPLETION_CONTEXT) +  HITACHI_MODE_DATA_SIZE + alignment
-            );
-
+        context = ExAllocatePoolWithTag(
+          NonPagedPool,
+          sizeof(COMPLETION_CONTEXT) +  HITACHI_MODE_DATA_SIZE + alignment,
+          CDROM_ALLOC_TAG);
         if (context == NULL) {
 
             //
@@ -5626,7 +5646,9 @@ Return Value:
             return;
         }
 
-        srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+        srb = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(SCSI_REQUEST_BLOCK),
+                                    CDROM_ALLOC_TAG);
         if (!srb) {
             IoFreeIrp(irp);
             return;
@@ -5634,7 +5656,9 @@ Return Value:
 
 
         length = sizeof(ERROR_RECOVERY_DATA);
-        dataBuffer = ExAllocatePool(NonPagedPoolCacheAligned, length);
+        dataBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                           length,
+                                           CDROM_ALLOC_TAG);
         if (!dataBuffer) {
             ExFreePool(srb);
             IoFreeIrp(irp);
@@ -5771,8 +5795,9 @@ Return Value:
         return(FALSE);
     }
 
-    currentBuffer = ExAllocatePool(NonPagedPoolCacheAligned, sizeof(SUB_Q_CURRENT_POSITION));
-
+    currentBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                          sizeof(SUB_Q_CURRENT_POSITION),
+                                          CDROM_ALLOC_TAG);
     if (currentBuffer == NULL) {
         return(FALSE);
     }
@@ -6321,8 +6346,9 @@ Return Value:
                               paramStr.Length +
                               sizeof(WCHAR);
 
-    paramPath.Buffer = ExAllocatePool(PagedPool, paramPath.MaximumLength);
-
+    paramPath.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                             paramPath.MaximumLength,
+                                             CDROM_ALLOC_TAG);
     if(!paramPath.Buffer) {
 
         DebugPrint((1,"CdRomCheckRegAP: couldn't allocate paramPath\n"));
@@ -6367,8 +6393,9 @@ Return Value:
     paramDevPath.MaximumLength = paramPath.Length +
                                  paramSuffix.Length +
                                  sizeof(WCHAR);
-    paramDevPath.Buffer = ExAllocatePool(PagedPool, paramDevPath.MaximumLength);
-
+    paramDevPath.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                paramDevPath.MaximumLength,
+                                                CDROM_ALLOC_TAG);
     if(!paramDevPath.Buffer) {
         RtlFreeUnicodeString(&paramSuffix);
         ExFreePool(paramPath.Buffer);
@@ -6383,9 +6410,10 @@ Return Value:
                 paramPath.Length,
                 paramPath.Buffer));
 
-    parameters = ExAllocatePool(NonPagedPool,
-                                sizeof(RTL_QUERY_REGISTRY_TABLE)*ITEMS_TO_QUERY);
-
+    parameters = ExAllocatePoolWithTag(
+      NonPagedPool,
+      sizeof(RTL_QUERY_REGISTRY_TABLE) * ITEMS_TO_QUERY,
+      CDROM_ALLOC_TAG);
     if (parameters) {
 
         //
@@ -6504,7 +6532,7 @@ Return Value:
     PINQUIRYDATA           inquiryData;
     PSCSI_INQUIRY_DATA     lunInfo;
 
-    inquiryBuffer = ExAllocatePool(NonPagedPool, 2048);
+    inquiryBuffer = ExAllocatePoolWithTag(NonPagedPool, 2048, CDROM_ALLOC_TAG);
     KeInitializeEvent(&event, NotificationEvent, FALSE);
     irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_GET_INQUIRY_DATA,
                                         DeviceObject,
@@ -6617,9 +6645,10 @@ Return Value:
     // Build and issue the mechanical status command.
     //
 
-    mechanicalStatusBuffer = ExAllocatePool(NonPagedPoolCacheAligned,
-                                            sizeof(MECHANICAL_STATUS_INFORMATION_HEADER));
-
+    mechanicalStatusBuffer = ExAllocatePoolWithTag(
+      NonPagedPoolCacheAligned,
+      sizeof(MECHANICAL_STATUS_INFORMATION_HEADER),
+      CDROM_ALLOC_TAG);
     if (!mechanicalStatusBuffer) {
         retVal = FALSE;
     } else {
@@ -7061,16 +7090,19 @@ Return Value:
 
     if (irp) {
 
-        srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+        srb = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(SCSI_REQUEST_BLOCK),
+                                    CDROM_ALLOC_TAG);
         if (srb) {
-            capacityBuffer = ExAllocatePool(NonPagedPoolCacheAligned,
-                                            sizeof(READ_CAPACITY_DATA));
 
+           capacityBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                  sizeof(READ_CAPACITY_DATA),
+                                                  CDROM_ALLOC_TAG);
             if (capacityBuffer) {
 
-
-                senseBuffer = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
+                senseBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                    SENSE_BUFFER_SIZE,
+                                                    CDROM_ALLOC_TAG);
                 if (senseBuffer) {
 
                     irp->MdlAddress = IoAllocateMdl(capacityBuffer,
