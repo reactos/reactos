@@ -526,10 +526,6 @@ ExAllocatePoolWithQuotaTag(
   _In_ SIZE_T NumberOfBytes,
   _In_ ULONG Tag);
 
-#ifndef POOL_TAGGING
-#define ExAllocatePoolWithQuotaTag(a,b,c) ExAllocatePoolWithQuota(a,b)
-#endif
-
 __drv_allocatesMem(Mem)
 _When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
 _When_((PoolType & PagedPool) == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
@@ -549,10 +545,6 @@ ExAllocatePoolWithTag(
   _In_ __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType,
   _In_ SIZE_T NumberOfBytes,
   _In_ ULONG Tag);
-
-#ifndef POOL_TAGGING
-#define ExAllocatePoolWithTag(a,b,c) ExAllocatePool(a,b)
-#endif
 
 __drv_allocatesMem(Mem)
 _When_((PoolType & PagedPool) != 0, _IRQL_requires_max_(APC_LEVEL))
