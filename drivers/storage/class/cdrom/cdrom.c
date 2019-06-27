@@ -656,7 +656,8 @@ Return Value:
         }
     }
 
-    ExFreePool(buffer);
+    // Allocated by ScsiClassGetInquiryData(), without a tag.
+    ExFreePoolWithTag(buffer, 'enoN');
 
 
     return foundDevice;
@@ -1167,14 +1168,12 @@ Return Value:
 
                         cddata->MediaChangeSupported = TRUE;
                         cddata->MediaChange = TRUE;
-
                     } else {
-
                         if (McSrb) {
-                            ExFreePool(McSrb);
+                            ExFreePoolWithTag(McSrb, CDROM_ALLOC_TAG);
                         }
                         else if (McSrbBuffer) {
-                            ExFreePool(McSrbBuffer);
+                            ExFreePoolWithTag(McSrbBuffer, CDROM_ALLOC_TAG);
                         }
                         IoFreeIrp(irp);
                     }
@@ -1323,7 +1322,7 @@ Return Value:
         cddata->u1.Header.ModeDataLength = 0;
     }
 
-    ExFreePool(buffer);
+    ExFreePoolWithTag(buffer, CDROM_ALLOC_TAG);
 
     //
     // Start the timer now regardless of if Autorun is enabled.
@@ -1347,11 +1346,11 @@ CreateCdRomDeviceObjectExit:
                          NULL);
 
     if (senseData != NULL) {
-        ExFreePool(senseData);
+        ExFreePoolWithTag(senseData, CDROM_ALLOC_TAG);
     }
 
     if (deviceExtension->DiskGeometry != NULL) {
-        ExFreePool(deviceExtension->DiskGeometry);
+        ExFreePoolWithTag(deviceExtension->DiskGeometry, CDROM_ALLOC_TAG);
     }
 
     if (deviceObject != NULL) {
@@ -1504,7 +1503,7 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(srb);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -1573,8 +1572,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -1591,9 +1590,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -1744,7 +1743,7 @@ ScsiCdRomStartIo(
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
             IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-            ExFreePool(srb);
+            ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
             IoFreeIrp(irp2);
             IoStartNextPacket(DeviceObject, FALSE);
             DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
@@ -1872,8 +1871,8 @@ ScsiCdRomStartIo(
                         Irp->IoStatus.Information = 0;
                         Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
                         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                        ExFreePool(senseBuffer);
-                        ExFreePool(srb);
+                        ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                         IoStartNextPacket(DeviceObject, FALSE);
                         return;
 
@@ -1973,8 +1972,8 @@ ScsiCdRomStartIo(
                         Irp->IoStatus.Information = 0;
                         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                        ExFreePool(senseBuffer);
-                        ExFreePool(srb);
+                        ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                         IoFreeIrp(irp2);
                         IoStartNextPacket(DeviceObject, FALSE);
                         return;
@@ -1991,9 +1990,9 @@ ScsiCdRomStartIo(
                         Irp->IoStatus.Information = 0;
                         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                        ExFreePool(senseBuffer);
-                        ExFreePool(srb);
-                        ExFreePool(dataBuffer);
+                        ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                         IoFreeIrp(irp2);
                         IoStartNextPacket(DeviceObject, FALSE);
                         return;
@@ -2149,8 +2148,8 @@ ScsiCdRomStartIo(
                     Irp->IoStatus.Information = 0;
                     Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
                     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                    ExFreePool(senseBuffer);
-                    ExFreePool(srb);
+                    ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                    ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                     IoStartNextPacket(DeviceObject, FALSE);
                     DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
                     return;
@@ -2223,8 +2222,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
@@ -2242,9 +2241,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 DebugPrint((2, "ScsiCdRomStartIo: [%lx] bailing with status %lx at line %s\n", Irp, Irp->IoStatus.Status, __LINE__));
@@ -2349,8 +2348,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2367,9 +2366,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2433,8 +2432,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2451,9 +2450,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2589,7 +2588,6 @@ ScsiCdRomStartIo(
 
             srb->CdbLength = 6;
             srb->TimeOutValue = deviceExtension->TimeOutValue;
-
             srb->SrbFlags = deviceExtension->SrbFlags;
             srb->SrbFlags |= (SRB_FLAGS_DISABLE_SYNCH_TRANSFER | SRB_FLAGS_NO_DATA_TRANSFER);
 
@@ -2609,8 +2607,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2627,9 +2625,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2697,8 +2695,8 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2714,9 +2712,9 @@ ScsiCdRomStartIo(
                 Irp->IoStatus.Information = 0;
                 Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-                ExFreePool(senseBuffer);
-                ExFreePool(srb);
-                ExFreePool(dataBuffer);
+                ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
+                ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp2);
                 IoStartNextPacket(DeviceObject, FALSE);
                 return;
@@ -2783,8 +2781,8 @@ ScsiCdRomStartIo(
             //
 
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            ExFreePool(senseBuffer);
-            ExFreePool(srb);
+            ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+            ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
             IoFreeIrp(irp2);
             return;
 
@@ -5091,7 +5089,7 @@ RetryControl:
                 FALSE,
                 NULL);
 
-            ExFreePool(deviceControlEvent);
+            ExFreePoolWithTag(deviceControlEvent, CDROM_ALLOC_TAG);
 
             DebugPrint((2, "CdRomDeviceControl: irp %#08lx synchronized\n", Irp));
 
@@ -5306,7 +5304,7 @@ Return Value:
 
         deviceExtension->ClassError = ToshibaProcessError;
 
-        ExFreePool(buffer);
+        ExFreePoolWithTag(buffer, CDROM_ALLOC_TAG);
 
     }
 
@@ -5673,7 +5671,7 @@ Return Value:
 
         if (!irp->MdlAddress) {
             ExFreePool(srb);
-            ExFreePool(dataBuffer);
+            ExFreePoolWithTag(dataBuffer, CDROM_ALLOC_TAG);
             IoFreeIrp(irp);
             return;
         }
@@ -5828,7 +5826,7 @@ Return Value:
                                         &ioStatus);
 
     if (irp == NULL) {
-        ExFreePool(currentBuffer);
+        ExFreePoolWithTag(currentBuffer, CDROM_ALLOC_TAG);
         return FALSE;
     }
 
@@ -5844,11 +5842,11 @@ Return Value:
     }
 
     if (!NT_SUCCESS(status)) {
-        ExFreePool(currentBuffer);
+        ExFreePoolWithTag(currentBuffer, CDROM_ALLOC_TAG);
         return FALSE;
     }
 
-    ExFreePool(currentBuffer);
+    ExFreePoolWithTag(currentBuffer, CDROM_ALLOC_TAG);
 
     return(PLAY_ACTIVE(deviceExtension));
 
@@ -6380,7 +6378,7 @@ Return Value:
 
     if(!NT_SUCCESS(status)) {
         DebugPrint((1,"CdRomCheckRegAP: couldn't convert paramNum to paramSuffix\n"));
-        ExFreePool(paramPath.Buffer);
+        ExFreePoolWithTag(paramPath.Buffer, CDROM_ALLOC_TAG);
         return FALSE;
     }
 
@@ -6398,7 +6396,7 @@ Return Value:
                                                 CDROM_ALLOC_TAG);
     if(!paramDevPath.Buffer) {
         RtlFreeUnicodeString(&paramSuffix);
-        ExFreePool(paramPath.Buffer);
+        ExFreePoolWithTag(paramPath.Buffer, CDROM_ALLOC_TAG);
         return FALSE;
     }
 
@@ -6474,12 +6472,12 @@ Return Value:
 
         DebugPrint((1, "CdRomCheckRegAP: cdrom/parameters/device%d/autorun flag = %d\n", DeviceNumber, doRun));
 
-        ExFreePool(parameters);
+        ExFreePoolWithTag(parameters, CDROM_ALLOC_TAG);
 
     }
 
-    ExFreePool(paramPath.Buffer);
-    ExFreePool(paramDevPath.Buffer);
+    ExFreePoolWithTag(paramPath.Buffer, CDROM_ALLOC_TAG);
+    ExFreePoolWithTag(paramDevPath.Buffer, CDROM_ALLOC_TAG);
     RtlFreeUnicodeString(&paramSuffix);
 
     DebugPrint((1, "CdRomCheckRegAP: Autoplay for device %d is %s\n",
@@ -6579,7 +6577,7 @@ Return Value:
                 inquiryData = (PVOID) lunInfo->InquiryData;
 
                 if (RtlCompareMemory(inquiryData->VendorId, "TORiSAN CD-ROM CDR-C", 20) == 20) {
-                    ExFreePool(inquiryBuffer);
+                    ExFreePoolWithTag(inquiryBuffer, CDROM_ALLOC_TAG);
                     return TRUE;
                 }
 
@@ -6595,7 +6593,7 @@ Return Value:
     }
 
 ExitIsThisASanyo:
-    ExFreePool(inquiryBuffer);
+    ExFreePoolWithTag(inquiryBuffer, CDROM_ALLOC_TAG);
     return FALSE;
 }
 
@@ -6702,7 +6700,7 @@ Return Value:
             retVal = FALSE;
         }
 
-        ExFreePool(mechanicalStatusBuffer);
+        ExFreePoolWithTag(mechanicalStatusBuffer, CDROM_ALLOC_TAG);
     }
 
     return retVal;
@@ -6778,7 +6776,8 @@ Return Value:
                 //
 
                 if (lunCount++) {
-                    ExFreePool(buffer);
+                    // Allocated by ScsiClassGetInquiryData(), without a tag.
+                    ExFreePoolWithTag(buffer, 'enoN');
                     return TRUE;
                 }
             }
@@ -6795,7 +6794,8 @@ Return Value:
         }
     }
 
-    ExFreePool(buffer);
+    // Allocated by ScsiClassGetInquiryData(), without a tag.
+    ExFreePoolWithTag(buffer, 'enoN');
     return FALSE;
 
 }
@@ -7205,18 +7205,18 @@ Return Value:
                         return STATUS_PENDING;
 
                     } else {
-                        ExFreePool(senseBuffer);
-                        ExFreePool(capacityBuffer);
-                        ExFreePool(srb);
+                        ExFreePoolWithTag(senseBuffer, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(capacityBuffer, CDROM_ALLOC_TAG);
+                        ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                         IoFreeIrp(irp);
                     }
                 } else {
-                    ExFreePool(capacityBuffer);
-                    ExFreePool(srb);
+                    ExFreePoolWithTag(capacityBuffer, CDROM_ALLOC_TAG);
+                    ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                     IoFreeIrp(irp);
                 }
             } else {
-                ExFreePool(srb);
+                ExFreePoolWithTag(srb, CDROM_ALLOC_TAG);
                 IoFreeIrp(irp);
             }
         } else {
