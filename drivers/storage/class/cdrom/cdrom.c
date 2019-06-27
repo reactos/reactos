@@ -1097,7 +1097,7 @@ Return Value:
 
             if (CdRomCheckRegistryForMediaChangeValue(RegistryPath, *DeviceCount)) {
                 PIO_STACK_LOCATION irpStack;
-                PSCSI_REQUEST_BLOCK srb;
+                PSCSI_REQUEST_BLOCK McSrb;
                 PIRP irp;
 
                 //
@@ -1107,15 +1107,15 @@ Return Value:
                 irp = IoAllocateIrp((CCHAR)(deviceObject->StackSize+1),
                                     FALSE);
                 if (irp) {
-                    PVOID buffer;
+                    PVOID McSrbBuffer;
 
-                    srb = ExAllocatePoolWithTag(NonPagedPool,
-                                                sizeof(SCSI_REQUEST_BLOCK),
-                                                CDROM_ALLOC_TAG);
-                    buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
-                                                   SENSE_BUFFER_SIZE,
-                                                   CDROM_ALLOC_TAG);
-                    if (srb && buffer) {
+                    McSrb = ExAllocatePoolWithTag(NonPagedPool,
+                                                  sizeof(SCSI_REQUEST_BLOCK),
+                                                  CDROM_ALLOC_TAG);
+                    McSrbBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
+                                                        SENSE_BUFFER_SIZE,
+                                                        CDROM_ALLOC_TAG);
+                    if (McSrb && McSrbBuffer) {
                         PCDB cdb;
 
                         //
@@ -1127,37 +1127,37 @@ Return Value:
                         irpStack->DeviceObject = deviceObject;
                         irpStack = IoGetNextIrpStackLocation(irp);
                         cddata->MediaChangeIrp = irp;
-                        irpStack->Parameters.Scsi.Srb = srb;
+                        irpStack->Parameters.Scsi.Srb = McSrb;
 
                         //
                         // Initialize the SRB
                         //
 
-                        RtlZeroMemory(srb, sizeof(SCSI_REQUEST_BLOCK));
+                        RtlZeroMemory(McSrb, sizeof(SCSI_REQUEST_BLOCK));
 
-                        srb->CdbLength = 6;
-                        srb->TimeOutValue = deviceExtension->TimeOutValue * 2;
-                        srb->QueueTag = SP_UNTAGGED;
-                        srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
-                        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
-                        srb->PathId = deviceExtension->PathId;
-                        srb->TargetId = deviceExtension->TargetId;
-                        srb->Lun = deviceExtension->Lun;
-                        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+                        McSrb->CdbLength = 6;
+                        McSrb->TimeOutValue = deviceExtension->TimeOutValue * 2;
+                        McSrb->QueueTag = SP_UNTAGGED;
+                        McSrb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
+                        McSrb->Length = SCSI_REQUEST_BLOCK_SIZE;
+                        McSrb->PathId = deviceExtension->PathId;
+                        McSrb->TargetId = deviceExtension->TargetId;
+                        McSrb->Lun = deviceExtension->Lun;
+                        McSrb->Function = SRB_FUNCTION_EXECUTE_SCSI;
 
                         //
                         // Initialize and set up the sense information buffer
                         //
 
-                        RtlZeroMemory(buffer, SENSE_BUFFER_SIZE);
-                        srb->SenseInfoBuffer = buffer;
-                        srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+                        RtlZeroMemory(McSrbBuffer, SENSE_BUFFER_SIZE);
+                        McSrb->SenseInfoBuffer = McSrbBuffer;
+                        McSrb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
 
                         //
                         // Initialize the CDB
                         //
 
-                        cdb = (PCDB)&srb->Cdb[0];
+                        cdb = (PCDB)&McSrb->Cdb[0];
                         cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
                         cdb->CDB6GENERIC.LogicalUnitNumber = deviceExtension->Lun;
 
@@ -1170,11 +1170,11 @@ Return Value:
 
                     } else {
 
-                        if (srb) {
-                            ExFreePool(srb);
+                        if (McSrb) {
+                            ExFreePool(McSrb);
                         }
-                        if (buffer) {
-                            ExFreePool(buffer);
+                        else if (McSrbBuffer) {
+                            ExFreePool(McSrbBuffer);
                         }
                         IoFreeIrp(irp);
                     }
