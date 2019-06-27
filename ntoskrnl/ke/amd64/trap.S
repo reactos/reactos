@@ -806,6 +806,13 @@ PUBLIC KiSystemServiceExit
 IntsEnabled:
 #endif
 
+    /* Check for pending user APC */
+    mov rcx, gs:qword ptr [PcCurrentThread]
+    cmp byte ptr [rcx + ThApcState + AsUserApcPending], 0
+    jz no_user_apc_pending
+    call KiInitiateUserApc
+no_user_apc_pending:
+
     /* Disable interrupts for return */
     cli
 
