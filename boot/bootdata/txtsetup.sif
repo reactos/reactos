@@ -19,7 +19,8 @@ _1 = %cdname%,%cdtagfile%,,""
 1 = %cdname%,%cdtagfilei%,,\reactos
 
 [SourceDisksNames.amd64]
-1 = %cdname%,%cdtagfilea%,,\amd64
+;1 = %cdname%,%cdtagfilea%,,\amd64
+1 = %cdname%,%cdtagfilei%,,\reactos
 
 ;
 ; The directories listed in the [Directories] or [WinntDirectories] sections
