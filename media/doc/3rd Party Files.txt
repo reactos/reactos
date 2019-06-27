@@ -91,7 +91,7 @@ Used Version: 2.7.11
 Website: https://tls.mbed.org/
 
 Title: libpng
-Used Version: 1.6.36
+Used Version: 1.6.37
 Website: http://libpng.sourceforge.net/
 
 Title: ACPICA
