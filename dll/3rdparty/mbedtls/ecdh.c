@@ -181,8 +181,20 @@ int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx, const mbedtls_ecp_keypai
 {
     int ret;
 
-    if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 )
-        return( ret );
+    if( ctx->grp.id == MBEDTLS_ECP_DP_NONE )
+    {
+        /* This is the first call to get_params(). Copy the group information
+         * into the context. */
+        if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 )
+            return( ret );
+    }
+    else
+    {
+        /* This is not the first call to get_params(). Check that the group
+         * is the same as the first time. */
+        if( ctx->grp.id != key->grp.id )
+            return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+    }
 
     /* If it's not our key, just import the public part as Qp */
     if( side == MBEDTLS_ECDH_THEIRS )
