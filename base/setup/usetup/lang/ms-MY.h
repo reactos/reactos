@@ -1299,7 +1299,7 @@ static MUI_ENTRY msMYDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tekan D untuk menghapuskan partition itu.",
+        "\x07  Tekan L untuk menghapuskan partition itu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1317,7 +1317,7 @@ static MUI_ENTRY msMYDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Menghapuskan partition   ESC = Batal   F3 = Keluar",
+        "L = Menghapuskan partition   ESC = Batal   F3 = Keluar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

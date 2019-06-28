@@ -1407,7 +1407,7 @@ static MUI_ENTRY sqALDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Kliko D p\211r t\211 fshir\211 particionin.",
+        "\x07  Kliko L p\211r t\211 fshir\211 particionin.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1425,7 +1425,7 @@ static MUI_ENTRY sqALDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Fshi Particionin   ESC = Anulo   F3 = Dil",
+        "L = Fshi Particionin   ESC = Anulo   F3 = Dil",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

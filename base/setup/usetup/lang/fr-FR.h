@@ -1420,7 +1420,7 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Appuyez sur D pour supprimer la partition.",
+        "\x07  Appuyez sur L pour supprimer la partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1438,7 +1438,7 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Supprimer la Partition   \220CHAP = Annuler   F3 = Quitter",
+        "L = Supprimer la Partition   \220CHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

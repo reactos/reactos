@@ -1381,7 +1381,7 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  B\224l\201m\201 silmek i\207in D'ye bas\215n\215z.",
+        "\x07  B\224l\201m\201 silmek i\207in L'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1399,7 +1399,7 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = B\224l\201m Sil   ESC = \230ptal   F3 = \200\215k",
+        "L = B\224l\201m Sil   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

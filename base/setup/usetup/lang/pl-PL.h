@@ -1411,7 +1411,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Naci\230nij D, by usun\245\206 partycj\251.",
+        "\x07  Naci\230nij L, by usun\245\206 partycj\251.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1429,7 +1429,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Usuni\251cie partycji   ESC = Anulowanie   F3 = Wyj\230cie",
+        "L = Usuni\251cie partycji   ESC = Anulowanie   F3 = Wyj\230cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

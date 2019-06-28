@@ -1409,7 +1409,7 @@ static MUI_ENTRY svSEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tryck D f\224r att ta bort partitionen.",
+        "\x07  Tryck L f\224r att ta bort partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1427,7 +1427,7 @@ static MUI_ENTRY svSEDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Tar bort Partitionen   ESC = Avbryt   F3 = Avsluta",
+        "   L = Tar bort Partitionen   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
     {

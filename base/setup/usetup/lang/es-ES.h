@@ -1405,7 +1405,7 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Presione D para borrar la partici\242n.",
+        "\x07  Presione L para borrar la partici\242n.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1423,7 +1423,7 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Borrar partici\242n   ESC = Cancelar   F3 = Salir",
+        "   L = Borrar partici\242n   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

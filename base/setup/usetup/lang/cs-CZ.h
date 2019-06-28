@@ -1408,7 +1408,7 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Stisknut\241m D odstran\241te odd\241l.",
+        "\x07  Stisknut\241m L odstran\241te odd\241l.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1426,7 +1426,7 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Odstranit odd\241l   ESC = Zru\347it   F3 = Ukon\237it",
+        "L = Odstranit odd\241l   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

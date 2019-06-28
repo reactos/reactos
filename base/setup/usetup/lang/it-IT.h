@@ -1405,7 +1405,7 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Premere D per cancellare la partizione.",
+        "\x07  Premere L per cancellare la partizione.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1423,7 +1423,7 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Cancella la partizione   ESC = Annulla   F3 = Termina",
+        "   L = Cancella la partizione   ESC = Annulla   F3 = Termina",
         TEXT_TYPE_STATUS
     },
     {
