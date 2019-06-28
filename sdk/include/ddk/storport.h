@@ -404,6 +404,23 @@ extern "C" {
 #define VPD_MODE_PAGE_POLICY                0x87
 #define VPD_SCSI_PORTS                      0x88
 
+#define SCSI_SENSE_NO_SENSE                 0x00
+#define SCSI_SENSE_RECOVERED_ERROR          0x01
+#define SCSI_SENSE_NOT_READY                0x02
+#define SCSI_SENSE_MEDIUM_ERROR             0x03
+#define SCSI_SENSE_HARDWARE_ERROR           0x04
+#define SCSI_SENSE_ILLEGAL_REQUEST          0x05
+#define SCSI_SENSE_UNIT_ATTENTION           0x06
+#define SCSI_SENSE_DATA_PROTECT             0x07
+#define SCSI_SENSE_BLANK_CHECK              0x08
+#define SCSI_SENSE_UNIQUE                   0x09
+#define SCSI_SENSE_COPY_ABORTED             0x0A
+#define SCSI_SENSE_ABORTED_COMMAND          0x0B
+#define SCSI_SENSE_EQUAL                    0x0C
+#define SCSI_SENSE_VOL_OVERFLOW             0x0D
+#define SCSI_SENSE_MISCOMPARE               0x0E
+#define SCSI_SENSE_RESERVED                 0x0F
+
 typedef enum _STOR_SYNCHRONIZATION_MODEL
 {
     StorSynchronizeHalfDuplex,
@@ -1931,6 +1948,26 @@ typedef struct _LUN_LIST
     UCHAR Lun[0][8];
 #endif
 } LUN_LIST, *PLUN_LIST;
+
+typedef struct _SENSE_DATA
+{
+    UCHAR ErrorCode:7;
+    UCHAR Valid:1;
+    UCHAR SegmentNumber;
+    UCHAR SenseKey:4;
+    UCHAR Reserved:1;
+    UCHAR IncorrectLength:1;
+    UCHAR EndOfMedia:1;
+    UCHAR FileMark:1;
+    UCHAR Information[4];
+    UCHAR AdditionalSenseLength;
+    UCHAR CommandSpecificInformation[4];
+    UCHAR AdditionalSenseCode;
+    UCHAR AdditionalSenseCodeQualifier;
+    UCHAR FieldReplaceableUnitCode;
+    UCHAR SenseKeySpecific[3];
+} SENSE_DATA, *PSENSE_DATA;
+
 #include <poppack.h>
 
 typedef PHYSICAL_ADDRESS STOR_PHYSICAL_ADDRESS;
