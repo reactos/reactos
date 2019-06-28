@@ -399,7 +399,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MATH_ERROR "Yanlışlık"
+    IDS_MATH_ERROR "Hata"
     IDS_QUICKHELP "Hızlı Yardım"
 END
 
@@ -407,7 +407,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CALC_NAME "Hesap Makinesi"
-    IDS_AUTHOR "Carlo Bramini eliyle yapılmıştır."
+    IDS_AUTHOR "Carlo Bramini tarafından yazılmıştır."
 END
 
 /* Types of conversion */
@@ -415,24 +415,24 @@ STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE "Açı"
     IDS_CONV_AREA "Alan"
-    IDS_CONV_CONSUMPTION "Makine Tüketimi"
-    IDS_CONV_CURRENCY "Nakit Birimi"
-    IDS_CONV_ENERGY "Erke"
+    IDS_CONV_CONSUMPTION "Tüketim (motor)"
+    IDS_CONV_CURRENCY "Para Birimleri"
+    IDS_CONV_ENERGY "Enerji"
     IDS_CONV_LENGTH "Uzunluk"
     IDS_CONV_POWER "Güç"
     IDS_CONV_PRESSURE "Basınç"
     IDS_CONV_TEMPERATURE "Sıcaklık"
     IDS_CONV_TIME "Zaman"
     IDS_CONV_VELOCITY "Hız"
-    IDS_CONV_VOLUME "Oylum"
+    IDS_CONV_VOLUME "Hacim"
     IDS_CONV_WEIGHT "Ağırlık"
 END
 
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute of arc"
-    IDS_ANGLE_ARCSECONDS "Second of arc"
+    IDS_ANGLE_ARCMINUTES "Yay Dakikası"
+    IDS_ANGLE_ARCSECONDS "Yay Saniyesi"
     IDS_ANGLE_DEGREES "Derece"
     IDS_ANGLE_GRADIANS "Gradyan"
     IDS_ANGLE_RADIANS "Radyan"
@@ -495,15 +495,15 @@ BEGIN
     IDS_CURRENCY_CZECH_KORUNA "Çek Korunası"
     IDS_CURRENCY_DEUTSCHE_MARK "Alman Markı"
     IDS_CURRENCY_DUTCH_GUILDER "Hollanda Guilderi"
-    IDS_CURRENCY_ESTONIAN_KROON "Estonian kroon"
+    IDS_CURRENCY_ESTONIAN_KROON "Estonya Kronu"
     IDS_CURRENCY_EURO "Avro"
     IDS_CURRENCY_FINNISH_MARKKA "Fin Markkası"
     IDS_CURRENCY_FRENCH_FRANC "Fransız Frangı"
     IDS_CURRENCY_GREEK_DRACHMA "Yunan Drahmisi"
     IDS_CURRENCY_IRISH_POUND "İrlanda Pondu"
     IDS_CURRENCY_ITALIAN_LIRA "İtalyan Lirası"
-    IDS_CURRENCY_LATVIAN_LATS "Latvian lats"
-    IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
+    IDS_CURRENCY_LATVIAN_LATS "Letonya Latı"
+    IDS_CURRENCY_LITHUANIAN_LITAS "Litvanya litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Lüksemburg Frangı"
     IDS_CURRENCY_MALTESE_LIRA "Malta Lirası"
     IDS_CURRENCY_PORTOGUESE_ESCUDO "Portekiz Esküdosu"
