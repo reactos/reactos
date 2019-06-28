@@ -482,7 +482,7 @@ VOID ShowTcpTable(VOID)
                 PID[0] = 0;
             }
 
-            ConPrintf(StdOut, L"  %-6s %-22s %-22s %-11s %s\n", L"TCP",
+            ConPrintf(StdOut, L"  %-6s %-22S %-22S %-11s %S\n", L"TCP",
                       Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
     }
@@ -536,7 +536,7 @@ VOID ShowUdpTable(VOID)
             PID[0] = 0;
         }
 
-        ConPrintf(StdOut, L"  %-6s %-22s %-34s %s\n", L"UDP", Host, L"*:*", PID);
+        ConPrintf(StdOut, L"  %-6s %-22S %-34s %S\n", L"UDP", Host, L"*:*", PID);
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
