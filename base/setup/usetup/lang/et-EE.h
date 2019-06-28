@@ -1403,7 +1403,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Vajuta D partitsiooni kustutamiseks.",
+        "\x07  Vajuta L partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1421,7 +1421,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Kustuta partitsioon   ESC = Katkesta   F3 = V\204lju",
+        "L = Kustuta partitsioon   ESC = Katkesta   F3 = V\204lju",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

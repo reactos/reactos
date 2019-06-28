@@ -2653,7 +2653,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         {
             return SELECT_PARTITION_PAGE;
         }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L') /* L */
         {
             DeletePartition(PartitionList,
                             CurrentPartition,

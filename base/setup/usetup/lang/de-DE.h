@@ -1402,7 +1402,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Dr\201cken Sie D, um die Partition zu l\224schen.",
+        "\x07  Dr\201cken Sie L, um die Partition zu l\224schen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1420,7 +1420,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = L\224sche Partition   ESC = Abbrechen   F3 = Installation abbrechen",
+        "L = L\224sche Partition   ESC = Abbrechen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

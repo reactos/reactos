@@ -1411,7 +1411,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Press L to delete the partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1429,7 +1429,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Delete Partition   ESC = At\325aukti   F3 = Baigti",
+        "L = Delete Partition   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS
     },
     {

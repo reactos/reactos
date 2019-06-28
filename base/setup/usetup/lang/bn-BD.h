@@ -1399,7 +1399,7 @@ static MUI_ENTRY bnBDDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Press L to delete the partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1417,7 +1417,7 @@ static MUI_ENTRY bnBDDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "L = Delete Partition   ESC = Cancel   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

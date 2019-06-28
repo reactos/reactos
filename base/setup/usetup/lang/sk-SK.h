@@ -1409,7 +1409,7 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Stla\237te D pre odstr\240nenie oblasti.",
+        "\x07  Stla\237te L pre odstr\240nenie oblasti.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1427,7 +1427,7 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Odstr\240ni\234 oblas\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
+        "L = Odstr\240ni\234 oblas\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

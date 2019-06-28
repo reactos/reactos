@@ -1434,7 +1434,7 @@ static MUI_ENTRY roRODeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tasta\376i D pentru a \272terge parti\376ia.",
+        "\x07  Tasta\376i L pentru a \272terge parti\376ia.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1452,7 +1452,7 @@ static MUI_ENTRY roRODeletePartitionEntries[] =
     {
         0,
         0,
-        "D = \252tergere parti\376ie   ESC = Anulare   F3 = Ie\272ire",
+        "L = \252tergere parti\376ie   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
