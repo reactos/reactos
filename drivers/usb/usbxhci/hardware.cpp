@@ -1494,7 +1494,6 @@ NTSTATUS
 NTAPI
 InitializeDeviceSlot(IN ULONG PortId, IN PVOID Context)
 {
-    PLIST_ENTRY Entry;
     PDEVICE_INFORMATION DeviceInformation = NULL;
     KIRQL               OldIrql;
     TRB                 CompletedTrb;

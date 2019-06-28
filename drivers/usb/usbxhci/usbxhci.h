@@ -22,6 +22,7 @@
 // hardware.cpp
 //
 NTSTATUS NTAPI CreateUSBHardware(PUSBHARDWAREDEVICE *OutHardware);
+NTSTATUS NTAPI SearchDeviceInformation(IN ULONG SearchValue, IN ULONG SearchType, OUT PDEVICE_INFORMATION *OutDeviceInformation, IN PVOID Context);
 
 //
 // usb_queue.cpp
