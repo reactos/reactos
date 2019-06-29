@@ -320,6 +320,14 @@ extern const ULONG MmProtectToValue[32];
 #define POOL_BILLED_PROCESS_INVALID 13
 #define POOL_HEADER_SIZE_INVALID 32
 
+// Use same fillers as MS debug runtime
+//                 Uninit   Freed  No man's land
+// Debug Heap:    BAADF00D FEEEFEEE ABABABAB
+// Debug Runtime: CDCDCDCD DDDDDDDD FDFDFDFD
+#define POOL_UNINIT_FILLER 0xCDCDCDCD
+#define POOL_FREED_FILLER  0xDDDDDDDD
+#define POOL_PAGE_FILLER   0xFDFDFDFD
+
 typedef struct _POOL_DESCRIPTOR
 {
     POOL_TYPE PoolType;
