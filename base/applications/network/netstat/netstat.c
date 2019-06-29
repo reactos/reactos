@@ -508,7 +508,7 @@ BOOL ShowUdpTable(VOID)
 
         /* I've split this up so it's easier to follow */
         GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
-        GetPortName(udpTable->table[i].dwLocalPort, "tcp", HostPort, sizeof(HostPort));
+        GetPortName(udpTable->table[i].dwLocalPort, "udp", HostPort, sizeof(HostPort));
 
         sprintf(Host, "%s:%s", HostIp, HostPort);
 
