@@ -1867,6 +1867,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ULONG OriginalType;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PGENERAL_LOOKASIDE LookasideList;
+    PVOID Allocation;
 
     //
     // Some sanity checks
@@ -1906,10 +1907,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             if (MmUseSpecialPool(NumberOfBytes, Tag))
             {
                 //
-                // Try to allocate using special pool
+                // Try to allocate using special pool (initialized with random byte)
                 //
-                Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
-                if (Entry) return Entry;
+                Allocation = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
+                if (Allocation != NULL)
+                {
+                    return Allocation;
+                }
             }
         }
     }
@@ -1930,8 +1934,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Allocate pages for it
         //
-        Entry = MiAllocatePoolPages(OriginalType, NumberOfBytes);
-        if (!Entry)
+        Allocation = MiAllocatePoolPages(OriginalType, NumberOfBytes);
+        if (Allocation == NULL)
         {
 #if DBG
             //
@@ -2003,7 +2007,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         // Add a tag for the big page allocation and switch to the generic "BIG"
         // tag if we failed to do so, then insert a tracker for this alloation.
         //
-        if (!ExpAddTagForBigPages(Entry,
+        if (!ExpAddTagForBigPages(Allocation,
                                   Tag,
                                   (ULONG)BYTES_TO_PAGES(NumberOfBytes),
                                   OriginalType))
@@ -2011,7 +2015,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             Tag = ' GIB';
         }
         ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), OriginalType);
-        return Entry;
+        return Allocation;
     }
 
     //
@@ -2081,7 +2085,11 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             Entry->PoolTag = Tag;
             (POOL_FREE_BLOCK(Entry))->Flink = NULL;
             (POOL_FREE_BLOCK(Entry))->Blink = NULL;
-            return POOL_FREE_BLOCK(Entry);
+            Allocation = POOL_FREE_BLOCK(Entry);
+#if DBG
+            RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
+#endif
+            return Allocation;
         }
     }
 
@@ -2265,7 +2273,11 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             Entry->PoolTag = Tag;
             (POOL_FREE_BLOCK(Entry))->Flink = NULL;
             (POOL_FREE_BLOCK(Entry))->Blink = NULL;
-            return POOL_FREE_BLOCK(Entry);
+            Allocation = POOL_FREE_BLOCK(Entry);
+#if DBG
+            RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
+#endif
+            return Allocation;
         }
     } while (++ListHead != &PoolDesc->ListHeads[POOL_LISTS_PER_PAGE]);
 
@@ -2408,7 +2420,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     ExpCheckPoolBlocks(Entry);
     Entry->PoolTag = Tag;
-    return POOL_FREE_BLOCK(Entry);
+    Allocation = POOL_FREE_BLOCK(Entry);
+
+    return Allocation;
 }
 
 /*
@@ -2552,6 +2566,10 @@ ExFreePoolWithTag(IN PVOID P,
             Tag &= ~PROTECTED_POOL;
         }
 
+#if DBG
+        RtlFillMemory(P, PageCount * PAGE_SIZE, 0xDD);
+#endif
+
         //
         // Check block tag
         //
@@ -2676,6 +2694,10 @@ ExFreePoolWithTag(IN PVOID P,
             ObDereferenceObject(Process);
         }
     }
+
+#if DBG
+    RtlFillMemory(P, BlockSize * POOL_BLOCK_SIZE - sizeof(*Entry), 0xDD);
+#endif
 
     //
     // Is this allocation small enough to have come from a lookaside list?
