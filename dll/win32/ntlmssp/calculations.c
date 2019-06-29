@@ -51,9 +51,15 @@ NTOWFv2(LPCWSTR password,
     ULONG len_domain = domain ? wcslen(domain) : 0;
     ULONG len_user_u = len_user * sizeof(WCHAR);
     ULONG len_domain_u = len_domain * sizeof(WCHAR);
-    WCHAR user_upper[len_user + 1];
-    WCHAR buff[len_user + len_domain + 1];
+    WCHAR *user_upper = NULL;
+    WCHAR *buff = NULL;
     ULONG i;
+    BOOLEAN res = FALSE;
+
+    user_upper = NtlmAllocate(len_user + 1);
+    buff = NtlmAllocate(len_user + len_domain + 1);
+    if (!user_upper || !buff)
+        goto done;
 
     /* Uppercase user */
     for (i = 0; i < len_user; i++) {
@@ -66,7 +72,13 @@ NTOWFv2(LPCWSTR password,
     NTOWFv1(password, response_key_nt_v1);
     HMAC_MD5(response_key_nt_v1, 16, (PUCHAR)buff, len_user_u + len_domain_u, result);
 
-    return TRUE;
+    res = TRUE;
+done:
+    if (user_upper)
+        NtlmFree(user_upper);
+    if (buff)
+        NtlmFree(buff);
+    return res;
 }
 
 VOID
@@ -134,11 +146,17 @@ SIGNKEY(const PUCHAR RandomSessionKey, BOOLEAN IsClient, PUCHAR Result)
         ? "session key to client-to-server signing key magic constant"
         : "session key to server-to-client signing key magic constant";
     ULONG len = strlen(magic);
-    UCHAR md5_input[16 + len];
+    UCHAR *md5_input = NULL;
+
+    md5_input = NtlmAllocate(16 + len);
+    if (!md5_input)
+        return FALSE;
 
     memcpy(md5_input, RandomSessionKey, 16);
     memcpy(md5_input + 16, magic, len);
     MD5(md5_input, len + 16, Result);
+
+    NtlmFree(md5_input);
 
     return TRUE;
 }
@@ -219,7 +237,7 @@ MAC(ULONG flags,
     {
         UCHAR seal_key_ [16];
         UCHAR hmac[16];
-        UCHAR tmp[4 + buf_len];
+        UCHAR *tmp;
 
         /* SealingKey' = MD5(ConcatenationOf(SealingKey, SequenceNumber))
         RC4Init(Handle, SealingKey')
@@ -241,11 +259,14 @@ MAC(ULONG flags,
         res_ptr[0] = 0x00000001L;
         res_ptr[3] = sequence;
 
+        tmp = NtlmAllocate(4 + buf_len);
         res_ptr = (ULONG *)tmp;
         res_ptr[0] = sequence;
         memcpy(tmp+4, buf, buf_len);
 
         HMAC_MD5(sign_key, sign_key_len, tmp, 4 + buf_len, hmac);
+
+        NtlmFree(tmp);
 
         if (flags & NTLMSSP_NEGOTIATE_KEY_EXCH)
         {
