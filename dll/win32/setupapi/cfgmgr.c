@@ -593,9 +593,10 @@ CMP_RegisterNotification(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNOTIFY_DATA pNotifyData = NULL;
+    DWORD ulUnknown9 = 0;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("CMP_RegisterNotification(%p %p %lu %p)\n",
+    FIXME("CMP_RegisterNotification(%p %p %lu %p)\n",
           hRecipient, lpvNotificationFilter, ulFlags, phDevNotify);
 
     if ((hRecipient == NULL) ||
@@ -639,7 +640,9 @@ CMP_RegisterNotification(
                                        (BYTE*)lpvNotificationFilter,
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
-                                       &pNotifyData->ulNotifyData);
+                                       &pNotifyData->ulNotifyData,
+                                       0,
+                                       &ulUnknown9);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
