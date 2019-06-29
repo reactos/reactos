@@ -3539,6 +3539,8 @@ PNP_RegisterNotification(
     DWORD ulUnknown8,
     DWORD *pulUnknown9)
 {
+    PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
+    PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
 #if 0
     PNOTIFY_DATA pNotifyData;
 #endif
@@ -3554,6 +3556,38 @@ PNP_RegisterNotification(
 
     if (ulFlags & ~0x7)
         return CR_INVALID_FLAG;
+
+    if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_HDR)) ||
+        (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_size < sizeof(DEV_BROADCAST_HDR)))
+        return CR_INVALID_DATA;
+
+    if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+    {
+        DPRINT1("DBT_DEVTYP_DEVICEINTERFACE\n");
+        pBroadcastDeviceInterface = (PDEV_BROADCAST_DEVICEINTERFACE_W)pNotificationFilter;
+
+        if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) ||
+            (pBroadcastDeviceInterface->dbcc_size < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)))
+            return CR_INVALID_DATA;
+    }
+    else if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_HANDLE)
+    {
+        DPRINT1("DBT_DEVTYP_HANDLE\n");
+        pBroadcastDeviceHandle = (PDEV_BROADCAST_HANDLE)pNotificationFilter;
+
+        if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_HANDLE)) ||
+            (pBroadcastDeviceHandle->dbch_size < sizeof(DEV_BROADCAST_HANDLE)))
+            return CR_INVALID_DATA;
+
+        if (ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES)
+            return CR_INVALID_FLAG;
+    }
+    else
+    {
+        DPRINT1("Invalid device type %lu\n", ((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype);
+        return CR_INVALID_DATA;
+    }
+
 
 #if 0
     pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));
