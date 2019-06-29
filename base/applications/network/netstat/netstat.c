@@ -13,15 +13,15 @@
  * command line parser needs more work
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <wchar.h>
+
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
 #define _INC_WINDOWS
 #include <winsock2.h>
-#include <wchar.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <iphlpapi.h>
 
 #include <conutils.h>
@@ -110,7 +110,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         else
                         {
                             ConResPuts(StdOut, IDS_USAGE);
-                            return EXIT_FAILURE;
+                            return FALSE;
                         }
                         break;
                     case L'r':
@@ -129,7 +129,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     default :
                         ConResPuts(StdOut, IDS_USAGE);
-                        return EXIT_FAILURE;
+                        return FALSE;
                 }
             }
         }
@@ -138,16 +138,16 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
             if (swscanf(argv[i], L"%lu", &Interval) != EOF)
                 bLoopOutput = TRUE;
             else
-                return EXIT_FAILURE;
+                return FALSE;
         }
 //        else
 //        {
 //            ConResPrintf(StdOut, IDS_USAGE);
-//            return EXIT_FAILURE;
+//            return FALSE;
 //        }
     }
 
-    return EXIT_SUCCESS;
+    return TRUE;
 }
 
 /*
@@ -170,8 +170,7 @@ BOOL DisplayOutput(VOID)
     if (bNoOptions)
     {
         DisplayTableHeader();
-        ShowTcpTable();
-        return EXIT_SUCCESS;
+        return ShowTcpTable();
     }
 
     if (bDoShowRouteTable)
@@ -179,15 +178,15 @@ BOOL DisplayOutput(VOID)
         if (_wsystem(L"route print") == -1)
         {
             ConResPuts(StdErr, IDS_ERROR_ROUTE);
-            return EXIT_FAILURE;
+            return FALSE;
         }
-        return EXIT_SUCCESS;
+        return TRUE;
     }
 
     if (bDoShowEthStats)
     {
         ShowEthernetStatistics();
-        return EXIT_SUCCESS;
+        return TRUE;
     }
 
     if (bDoShowProtoCons)
@@ -196,32 +195,24 @@ BOOL DisplayOutput(VOID)
         {
             case IP:
                 if (bDoShowProtoStats)
-                {
                     ShowIpStatistics();
-                    return EXIT_SUCCESS;
-                }
-                break;
+                return TRUE;
             case ICMP:
                 if (bDoShowProtoStats)
-                {
                     ShowIcmpStatistics();
-                    return EXIT_SUCCESS;
-                }
-                break;
+                return TRUE;
             case TCP:
                 if (bDoShowProtoStats)
                     ShowTcpStatistics();
                 ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
-                ShowTcpTable();
-                break;
+                return ShowTcpTable();
             case UDP:
                 if (bDoShowProtoStats)
                     ShowUdpStatistics();
                 ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
-                ShowUdpTable();
-                break;
+                return ShowUdpTable();
             default:
                 break;
         }
@@ -232,17 +223,17 @@ BOOL DisplayOutput(VOID)
         ShowIcmpStatistics();
         ShowTcpStatistics();
         ShowUdpStatistics();
-        return EXIT_SUCCESS;
+        return TRUE;
     }
     else
     {
         ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
-        ShowTcpTable();
-        if (bDoShowAllCons)
+        if (ShowTcpTable() && bDoShowAllCons)
             ShowUdpTable();
     }
-    return EXIT_SUCCESS;
+
+    return TRUE;
 }
 
 VOID ShowIpStatistics(VOID)
@@ -330,52 +321,44 @@ VOID ShowIcmpStatistics(VOID)
 
 VOID ShowTcpStatistics(VOID)
 {
-    PMIB_TCPSTATS pTcpStats;
+    MIB_TCPSTATS tcpStats;
     DWORD dwRetVal;
 
-    pTcpStats = (MIB_TCPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_TCPSTATS));
-
-    if ((dwRetVal = GetTcpStatistics(pTcpStats)) == NO_ERROR)
+    if ((dwRetVal = GetTcpStatistics(&tcpStats)) == NO_ERROR)
     {
         ConResPuts(StdOut, IDS_TCP4_HEADER);
-        ConResPrintf(StdOut, IDS_TCP_ACTIVE_OPEN, pTcpStats->dwActiveOpens);
-        ConResPrintf(StdOut, IDS_TCP_PASS_OPEN, pTcpStats->dwPassiveOpens);
-        ConResPrintf(StdOut, IDS_TCP_FAIL_CONNECT, pTcpStats->dwAttemptFails);
-        ConResPrintf(StdOut, IDS_TCP_RESET_CONNECT, pTcpStats->dwEstabResets);
-        ConResPrintf(StdOut, IDS_TCP_CURRENT_CONNECT, pTcpStats->dwCurrEstab);
-        ConResPrintf(StdOut, IDS_TCP_SEG_RECEIVE, pTcpStats->dwInSegs);
-        ConResPrintf(StdOut, IDS_TCP_SEG_SENT, pTcpStats->dwOutSegs);
-        ConResPrintf(StdOut, IDS_TCP_SEG_RETRANSMIT, pTcpStats->dwRetransSegs);
+        ConResPrintf(StdOut, IDS_TCP_ACTIVE_OPEN, tcpStats.dwActiveOpens);
+        ConResPrintf(StdOut, IDS_TCP_PASS_OPEN, tcpStats.dwPassiveOpens);
+        ConResPrintf(StdOut, IDS_TCP_FAIL_CONNECT, tcpStats.dwAttemptFails);
+        ConResPrintf(StdOut, IDS_TCP_RESET_CONNECT, tcpStats.dwEstabResets);
+        ConResPrintf(StdOut, IDS_TCP_CURRENT_CONNECT, tcpStats.dwCurrEstab);
+        ConResPrintf(StdOut, IDS_TCP_SEG_RECEIVE, tcpStats.dwInSegs);
+        ConResPrintf(StdOut, IDS_TCP_SEG_SENT, tcpStats.dwOutSegs);
+        ConResPrintf(StdOut, IDS_TCP_SEG_RETRANSMIT, tcpStats.dwRetransSegs);
     }
     else
     {
         DoFormatMessage(dwRetVal);
     }
-
-    HeapFree(GetProcessHeap(), 0, pTcpStats);
 }
 
 VOID ShowUdpStatistics(VOID)
 {
-    PMIB_UDPSTATS pUdpStats;
+    MIB_UDPSTATS udpStats;
     DWORD dwRetVal;
 
-    pUdpStats = (MIB_UDPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_UDPSTATS));
-
-    if ((dwRetVal = GetUdpStatistics(pUdpStats)) == NO_ERROR)
+    if ((dwRetVal = GetUdpStatistics(&udpStats)) == NO_ERROR)
     {
         ConResPuts(StdOut, IDS_UDP_IP4_HEADER);
-        ConResPrintf(StdOut, IDS_UDP_DATAG_RECEIVE, pUdpStats->dwInDatagrams);
-        ConResPrintf(StdOut, IDS_UDP_NO_PORT, pUdpStats->dwNoPorts);
-        ConResPrintf(StdOut, IDS_UDP_RECEIVE_ERROR, pUdpStats->dwInErrors);
-        ConResPrintf(StdOut, IDS_UDP_DATAG_SEND, pUdpStats->dwOutDatagrams);
+        ConResPrintf(StdOut, IDS_UDP_DATAG_RECEIVE, udpStats.dwInDatagrams);
+        ConResPrintf(StdOut, IDS_UDP_NO_PORT, udpStats.dwNoPorts);
+        ConResPrintf(StdOut, IDS_UDP_RECEIVE_ERROR, udpStats.dwInErrors);
+        ConResPrintf(StdOut, IDS_UDP_DATAG_SEND, udpStats.dwOutDatagrams);
     }
     else
     {
         DoFormatMessage(dwRetVal);
     }
-
-    HeapFree(GetProcessHeap(), 0, pUdpStats);
 }
 
 VOID ShowEthernetStatistics(VOID)
@@ -416,7 +399,7 @@ VOID ShowEthernetStatistics(VOID)
     HeapFree(GetProcessHeap(), 0, pIfTable);
 }
 
-VOID ShowTcpTable(VOID)
+BOOL ShowTcpTable(VOID)
 {
     PMIB_TCPTABLE_OWNER_PID tcpTable;
     DWORD error, dwSize;
@@ -444,7 +427,8 @@ VOID ShowTcpTable(VOID)
     {
         ConResPrintf(StdErr, IDS_ERROR_TCP_SNAPSHOT);
         DoFormatMessage(error);
-        exit(EXIT_FAILURE);
+        HeapFree(GetProcessHeap(), 0, tcpTable);
+        return FALSE;
     }
 
     /* Dump the TCP table */
@@ -485,10 +469,12 @@ VOID ShowTcpTable(VOID)
                       Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
     }
+
     HeapFree(GetProcessHeap(), 0, tcpTable);
+    return TRUE;
 }
 
-VOID ShowUdpTable(VOID)
+BOOL ShowUdpTable(VOID)
 {
     PMIB_UDPTABLE_OWNER_PID udpTable;
     DWORD error, dwSize;
@@ -504,7 +490,7 @@ VOID ShowUdpTable(VOID)
     {
         ConResPuts(StdErr, IDS_ERROR_UDP_ENDPOINT);
         DoFormatMessage(error);
-        exit(EXIT_FAILURE);
+        return FALSE;
     }
     udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
@@ -513,7 +499,7 @@ VOID ShowUdpTable(VOID)
         ConResPuts(StdErr, IDS_ERROR_UDP_ENDPOINT_TABLE);
         DoFormatMessage(error);
         HeapFree(GetProcessHeap(), 0, udpTable);
-        exit(EXIT_FAILURE);
+        return FALSE;
     }
 
     /* Dump the UDP table */
@@ -539,6 +525,7 @@ VOID ShowUdpTable(VOID)
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
+    return TRUE;
 }
 
 /*
@@ -623,32 +610,28 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], INT NameLen)
  */
 int wmain(int argc, wchar_t *argv[])
 {
+    BOOL Success;
     WSADATA wsaData;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
+    if (!ParseCmdline(argc, argv))
+        return EXIT_FAILURE;
+
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
         ConResPrintf(StdErr, IDS_ERROR_WSA_START, WSAGetLastError());
-        return -1;
+        return EXIT_FAILURE;
     }
 
-    if (ParseCmdline(argc, argv))
-        return -1;
-
-    if (bLoopOutput)
+    Success = DisplayOutput();
+    while (bLoopOutput && Success)
     {
-        while (1)
-        {
-            if (DisplayOutput())
-                return -1;
-            Sleep(Interval*1000);
-        }
+        Sleep(Interval*1000);
+        Success = DisplayOutput();
     }
 
-    if (DisplayOutput())
-        return -1;
-    else
-        return 0;
+    WSACleanup();
+    return (Success ? EXIT_SUCCESS : EXIT_FAILURE);
 }
