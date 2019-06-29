@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -6,13 +6,13 @@ CAPTION "Opções regionais"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Padrões e formatos", -1, 5, 5, 234, 162
-    LTEXT "Esta opção afeta a maneira como alguns programas formatam números, unidades monetárias, horários e datas.", -1, 14, 17, 220, 25
-    LTEXT "Seleci&one um item correspondente a suas preferências ou clique em 'Personalizar' para escolher seus próprios formatos:", -1, 14, 37, 220, 22
+    LTEXT "Esta opção influencia a forma como alguns programas formatam números, unidades monetárias, horários e datas.", -1, 14, 17, 220, 25
+    LTEXT "Selecci&one um item para definir as suas preferências ou clique em 'Personalizar' para escolher seus próprios formatos:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Personalizar...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Exemplos", -1, 14, 73, 70, 10
     LTEXT "Número:", -1, 16, 86, 48, 10
-    LTEXT "Unidade monetária:", -1, 16, 101, 48, 10
+    LTEXT "Moeda:", -1, 16, 101, 48, 10
     LTEXT "Hora:", -1, 16, 116, 48, 10
     LTEXT "Data abreviada:", -1, 16, 131, 48, 10
     LTEXT "Data por extenso:", -1, 16, 146, 48, 10
@@ -21,8 +21,8 @@ BEGIN
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX "Local", -1, 5, 172, 234, 55
-    LTEXT "Para aj&udar os serviços a fornecer-lhe informações locais, como notícias e meteorologia, selecione seu local atual:", -1, 14, 184, 210, 24
+    GROUPBOX "Localização", -1, 5, 172, 234, 55
+    LTEXT "Para aj&udar os serviços a fornecer-lhe informações locais, tal como notícias e meteorologia, seleccione a sua localização actual:", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -31,12 +31,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Idiomas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Serviços de texto e idiomas de entrada", -1, 5, 5, 234, 52
-    LTEXT "Para ver ou alterar os idiomas e métodos para digitar texto, clique em 'Detalhes'.", -1, 12, 15, 220, 18
+    GROUPBOX "Serviços de texto e idiomas de teclado", -1, 5, 5, 234, 52
+    LTEXT "Para ver ou modificar os idiomas ou métodos que pode utilizar para introduzir texto, clique em 'Detalhes'.", -1, 12, 15, 220, 18
     PUSHBUTTON "&Detalhes...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Suporte a idioma suplementar", -1, 5, 62, 234, 82
-    LTEXT "A maioria dos idiomas é instalada por padrão. Para instalar idiomas adicionais, marque a caixa de seleção adequada abaixo.", -1, 12, 72, 220, 18
-    AUTOCHECKBOX "I&nstalar arquivos para idiomas de escrita complexa ou direcionada da direita para a esquerda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    GROUPBOX "Suporte a idiomas adicionais", -1, 5, 62, 234, 82
+    LTEXT "A maioria dos idiomas são instalados por predefinição. Para instalar idiomas adicionais, seleccione abaixo, a caixa de verificação adequada.", -1, 12, 72, 220, 18
+    AUTOCHECKBOX "I&nstalar arquivos para idiomas de escrita complexa e da direita para a esquerda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
     AUTOCHECKBOX "In&stalar arquivos para idiomas do Leste Asiático", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
@@ -47,12 +47,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Idioma para programas não-Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Este sistema permite que programas não-Unicode exibam menus e caixas de diálogo em seus idiomas de origem. Ele não afeta programas Unicode, mas se aplica a todos os usuários do computador.", -1, 14, 18, 223, 33
-    LTEXT "&Selecione um idioma correspondente à versão de idioma dos programas não-Unicode que você deseja usar:", -1, 14, 55, 223, 18
+    LTEXT "Esta definição de sistema permite aos programas não-Unicode apresentar menus e diálogos no seu idioma de origem. Não afecta os programas Unicode, mas se aplica a todos os utilizadores deste computador.", -1, 14, 18, 223, 33
+    LTEXT "&Seleccione um idioma que corresponda à versão dos programas traduzidos não-Unicode que deseja usar:", -1, 14, 55, 223, 18
     GROUPBOX "&Tabelas de conversão de páginas de código", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Configurações padrão de conta de usuário", -1, 5, 193, 234, 32
-    AUTOCHECKBOX "Aplicar todas as configurações à conta de usuário atual e ao perfil de usuário &padrão", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    GROUPBOX "Predefinições de conta de utilizador", -1, 5, 193, 234, 32
+    AUTOCHECKBOX "Aplicar todas as definições à conta de utilizador actual e ao perfil de utilizador &predefinido", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -211,3 +211,4 @@ BEGIN
     IDS_ERROR_NLS_CODE_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Não foi possível iniciar input.dll"
 END
+
