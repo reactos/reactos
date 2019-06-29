@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ NTOWFv2(LPCWSTR password,
     ULONG len_user_u = len_user * sizeof(WCHAR);
     ULONG len_domain_u = len_domain * sizeof(WCHAR);
     WCHAR user_upper[len_user + 1];
-    WCHAR buff[len_user + len_domain];
+    WCHAR buff[len_user + len_domain + 1];
     ULONG i;
 
     /* Uppercase user */
