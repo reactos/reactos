@@ -212,7 +212,7 @@ BOOL DisplayOutput(VOID)
                     ShowUdpStatistics();
                 ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
                 DisplayTableHeader();
-                return ShowUdpTable();
+                return (bDoShowAllCons ? ShowUdpTable() : TRUE);
             default:
                 break;
         }
