@@ -176,8 +176,7 @@ BOOL DisplayOutput(VOID)
 
     if (bDoShowRouteTable)
     {
-        /* mingw doesn't have lib for _tsystem */
-        if (system("route print") == -1)
+        if (_wsystem(L"route print") == -1)
         {
             ConResPuts(StdErr, IDS_ERROR_ROUTE);
             return EXIT_FAILURE;
@@ -195,36 +194,36 @@ BOOL DisplayOutput(VOID)
     {
         switch (Protocol)
         {
-                case IP:
-                    if (bDoShowProtoStats)
-                    {
-                        ShowIpStatistics();
-                        return EXIT_SUCCESS;
-                    }
-                    break;
-                case ICMP:
-                    if (bDoShowProtoStats)
-                    {
-                        ShowIcmpStatistics();
-                        return EXIT_SUCCESS;
-                    }
-                    break;
-                case TCP:
-                    if (bDoShowProtoStats)
-                        ShowTcpStatistics();
-                    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
-                    DisplayTableHeader();
-                    ShowTcpTable();
-                    break;
-                case UDP:
-                    if (bDoShowProtoStats)
-                        ShowUdpStatistics();
-                    ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
-                    DisplayTableHeader();
-                    ShowUdpTable();
-                    break;
-                default :
-                    break;
+            case IP:
+                if (bDoShowProtoStats)
+                {
+                    ShowIpStatistics();
+                    return EXIT_SUCCESS;
+                }
+                break;
+            case ICMP:
+                if (bDoShowProtoStats)
+                {
+                    ShowIcmpStatistics();
+                    return EXIT_SUCCESS;
+                }
+                break;
+            case TCP:
+                if (bDoShowProtoStats)
+                    ShowTcpStatistics();
+                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
+                DisplayTableHeader();
+                ShowTcpTable();
+                break;
+            case UDP:
+                if (bDoShowProtoStats)
+                    ShowUdpStatistics();
+                ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
+                DisplayTableHeader();
+                ShowUdpTable();
+                break;
+            default:
+                break;
         }
     }
     else if (bDoShowProtoStats)
@@ -458,8 +457,8 @@ VOID ShowTcpTable(VOID)
             || (tcpTable->table[i].dwState ==  MIB_TCP_STATE_TIME_WAIT))
         {
             /* I've split this up so it's easier to follow */
-            GetIpHostName(TRUE, tcpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
-            GetPortName(tcpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
+            GetIpHostName(TRUE, tcpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
+            GetPortName(tcpTable->table[i].dwLocalPort, "tcp", HostPort, sizeof(HostPort));
             sprintf(Host, "%s:%s", HostIp, HostPort);
 
             if (tcpTable->table[i].dwState ==  MIB_TCP_STATE_LISTEN)
@@ -468,8 +467,8 @@ VOID ShowTcpTable(VOID)
             }
             else
             {
-                GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, RemoteIp, HOSTNAMELEN);
-                GetPortName(tcpTable->table[i].dwRemotePort, "tcp", RemotePort, PORTNAMELEN);
+                GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, RemoteIp, sizeof(RemoteIp));
+                GetPortName(tcpTable->table[i].dwRemotePort, "tcp", RemotePort, sizeof(RemotePort));
                 sprintf(Remote, "%s:%s", RemoteIp, RemotePort);
             }
 
@@ -522,8 +521,8 @@ VOID ShowUdpTable(VOID)
     {
 
         /* I've split this up so it's easier to follow */
-        GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
-        GetPortName(udpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
+        GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, sizeof(HostIp));
+        GetPortName(udpTable->table[i].dwLocalPort, "tcp", HostPort, sizeof(HostPort));
 
         sprintf(Host, "%s:%s", HostIp, HostPort);
 
@@ -567,7 +566,7 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
  * convert addresses into dotted decimal or hostname
  */
 PCHAR
-GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
+GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], INT NameLen)
 {
 //  struct hostent *phostent;
     UINT nIpAddr;
