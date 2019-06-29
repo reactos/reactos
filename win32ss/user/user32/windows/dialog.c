@@ -41,6 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
+#define GET_LONG(ptr) (*(const LONG *)(ptr))
 #define DLG_ISANSI 2
 
 /* INTERNAL STRUCTS **********************************************************/
@@ -196,8 +197,8 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (dialogEx)
     {
-        /* id is a DWORD for DIALOGEX */
-        info->id = GET_DWORD(p);
+        /* id is 4 bytes for DIALOGEX */
+        info->id = GET_LONG(p);
         p += 2;
     }
     else
@@ -1036,6 +1037,11 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                         SendMessageW( focus, EM_SETSEL, 0, MAXLONG );
                     SetFocus( focus );
                 }
+                else
+                {
+                    if (!(template.style & WS_CHILD))
+                        SetFocus( hwnd );
+                }
             }
 //// ReactOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
 //// This now breaks test_SaveRestoreFocus.
@@ -1379,6 +1385,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     HWND hwnd;
     LPWSTR orig_spec = spec;
     WCHAR any[] = {'*','.','*',0};
+    WCHAR star[] = {'*',0};
 
 #define SENDMSG(msg,wparam,lparam) \
     ((attrib & DDL_POSTMSGS) ? PostMessageW( hwnd, msg, wparam, lparam ) \
@@ -1387,10 +1394,16 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     TRACE("%p %s %d %d %04x\n", hDlg, debugstr_w(spec), idLBox, idStatic, attrib );
 
     /* If the path exists and is a directory, chdir to it */
-    if (!spec || !spec[0] || SetCurrentDirectoryW( spec )) spec = any;
+    if (!spec || !spec[0] || SetCurrentDirectoryW( spec )) spec = star;
     else
     {
         WCHAR *p, *p2;
+
+        if (!strchrW(spec, '*') && !strchrW(spec, '?'))
+        {
+            SetLastError(ERROR_NO_WILDCARD_CHARACTERS);
+            return FALSE;
+        }
         p = spec;
         if ((p2 = strchrW( p, ':' ))) p = p2 + 1;
         if ((p2 = strrchrW( p, '\\' ))) p = p2;
@@ -2254,9 +2267,9 @@ GetNextDlgGroupItem(
      */
     retvalue = hCtl;
     hwnd = hCtl;
-    while (hwndNext = GetWindow (hwnd, GW_HWNDNEXT),
-           1)
+    while (1)
     {
+        hwndNext = GetWindow (hwnd, GW_HWNDNEXT);
         while (!hwndNext)
         {
             /* Climb out until there is a next sibling of the ancestor or we
@@ -2579,10 +2592,11 @@ IsDialogMessageW(
          case VK_RETURN:
               {
                  DWORD dw;
-                 if ((GetFocus() == lpMsg->hwnd) &&
-                     (SendMessageW (lpMsg->hwnd, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+                 HWND hwndFocus = GetFocus();
+                 if (IsChild( hDlg, hwndFocus ) &&
+                     (SendMessageW (hwndFocus, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
                  {
-                     SendMessageW (hDlg, WM_COMMAND, MAKEWPARAM (GetDlgCtrlID(lpMsg->hwnd),BN_CLICKED), (LPARAM)lpMsg->hwnd);
+                     SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( GetDlgCtrlID( hwndFocus ), BN_CLICKED ), (LPARAM)hwndFocus );
                  }
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
@@ -2593,7 +2607,6 @@ IsDialogMessageW(
                  else
                  {
                      SendMessageW( hDlg, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hDlg, IDOK ) );
-
                  }
              }
              return TRUE;
