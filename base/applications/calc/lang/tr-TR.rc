@@ -515,7 +515,7 @@ END
 /* Energies */
 STRINGTABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES "Kalori (15°C'luk)"
+    IDS_ENERGY_15_C_CALORIES "15°C'luk Kalori"
     IDS_ENERGY_BTUS "İngiliz Isı Birimi"
     IDS_ENERGY_ERGS "Erg"
     IDS_ENERGY_EVS "Elektronvolt"
@@ -526,7 +526,7 @@ BEGIN
     IDS_ENERGY_KILOJOULES "Kilojul"
     IDS_ENERGY_KILOWATT_HOURS "Kilovat-saat"
     IDS_ENERGY_NUTRITION_CALORIES "Besin kalorisi"
-    IDS_ENERGY_TH_CALORIES "Termokimyevî kalori"
+    IDS_ENERGY_TH_CALORIES "Termokimyasal kalori"
 END
 
 /* Lengths */
@@ -534,7 +534,7 @@ STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS "Angström"
     IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomi birimi"
-    IDS_LENGTH_BARLEYCORNS "Arpa tânesi"
+    IDS_LENGTH_BARLEYCORNS "Arpa tanesi"
     IDS_LENGTH_CENTIMETERS "Santimetre"
     IDS_LENGTH_CHAINS_UK "Zincir (BK)"
     IDS_LENGTH_CHI "Çi"
@@ -561,7 +561,7 @@ BEGIN
     IDS_LENGTH_METERS "Metre"
     IDS_LENGTH_MICRONS "Mikron"
     IDS_LENGTH_MILES "Mil"
-    IDS_LENGTH_MILLIMETERS "Millimetre"
+    IDS_LENGTH_MILLIMETERS "Milimetre"
     IDS_LENGTH_NAUTICAL_MILES "Deniz mili"
     IDS_LENGTH_NIEU "Niu"
     IDS_LENGTH_PARSECS "Parsek"
@@ -584,8 +584,8 @@ END
 /* Powers */
 STRINGTABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE "Dakîkadaki İngiliz Isı Birimi"
-    IDS_POWER_FPS_PER_MINUTE "Dakîkadaki ayak pond kuvveti"
+    IDS_POWER_BTUS_PER_MINUTE "Dakikadaki İngiliz Isı Birimi"
+    IDS_POWER_FPS_PER_MINUTE "Dakikadaki ayak pond kuvveti"
     IDS_POWER_HORSEPOWER "At gücü"
     IDS_POWER_KILOWATTS "Kilovat"
     IDS_POWER_MEGAWATTS "Megavat"
@@ -595,7 +595,7 @@ END
 /* Pressures */
 STRINGTABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES "Hava yuvarı"
+    IDS_PRESSURE_ATMOSPHERES "Atmosfer"
     IDS_PRESSURE_BARS "Bar"
     IDS_PRESSURE_HECTOPASCALS "Hektopaskal"
     IDS_PRESSURE_KILOPASCALS "Kilopaskal"
@@ -618,11 +618,11 @@ STRINGTABLE
 BEGIN
     IDS_TIME_DAYS "Gün"
     IDS_TIME_HOURS "Saat"
-    IDS_TIME_NANOSECONDS "Nanosâniye"
-    IDS_TIME_MICROSECONDS "Mikrosâniye"
-    IDS_TIME_MILLISECONDS "Milisâniye"
-    IDS_TIME_MINUTES "Dakîka"
-    IDS_TIME_SECONDS "Sâniye"
+    IDS_TIME_NANOSECONDS "Nanosaniye"
+    IDS_TIME_MICROSECONDS "Mikrosaniye"
+    IDS_TIME_MILLISECONDS "Milisaniye"
+    IDS_TIME_MINUTES "Dakika"
+    IDS_TIME_SECONDS "Saniye"
     IDS_TIME_WEEKS "Hafta"
     IDS_TIME_YEARS "Yıl"
 END
@@ -632,7 +632,7 @@ STRINGTABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND "Santimetre/Saat"
     IDS_VELOCITY_FEET_HOUR "Ayak/Saat"
-    IDS_VELOCITY_FEET_SECOND "Ayak/Sâniye"
+    IDS_VELOCITY_FEET_SECOND "Ayak/Saniye"
     IDS_VELOCITY_KILOMETERS_HOUR "Kilometre/Saat"
     IDS_VELOCITY_KNOTS "Deniz mili"
     IDS_VELOCITY_MACH "Maç"
