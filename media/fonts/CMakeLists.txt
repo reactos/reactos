@@ -126,7 +126,7 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     SourceCodePro-Semibold.ttf
     SourceCodePro-SemiboldIt.ttf
-    sserife.fon
+    #sserife.fon
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
