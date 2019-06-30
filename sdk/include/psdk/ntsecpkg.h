@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#define SECPKG_USERMODEINIT_NAME "SpUserModeInitialize"
+
 /* Flags for the MachineState field in SECPKG_PARAMETERS */
 #define SECPKG_STATE_ENCRYPTION_PERMITTED               0x01
 #define SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED        0x02
