@@ -36,6 +36,7 @@ list(APPEND FONT_FILES
     FreeSerifItalic.ttf
     FSEX301.ttf
     FSEX301-L2.ttf
+    khmzsser.fon
     LiberationMono-Bold.ttf
     LiberationMono-BoldItalic.ttf
     LiberationMono-Italic.ttf
