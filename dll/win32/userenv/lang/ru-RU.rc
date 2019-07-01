@@ -14,7 +14,7 @@ BEGIN
     IDS_TEMPLATES "Шаблоны"
     IDS_STARTMENU "Главное меню"
     IDS_PROGRAMS "Главное меню\\Программы"
-    IDS_STARTUP "Главное меню\\Программы\\Автозапуск"
+    IDS_STARTUP "Главное меню\\Программы\\Автозагрузка"
     IDS_LOCALSETTINGS "Local Settings"
     IDS_LOCALAPPDATA "Local Settings\\Application Data"
     IDS_TEMP "Local Settings\\Temp"
