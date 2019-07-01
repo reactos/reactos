@@ -740,33 +740,16 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
     pmat->yy = FLOATOBJ_GetLong(&ef);
 }
 
-VOID
+VOID FASTCALL
 FtSetCoordinateTransform(
     FT_Face face,
     PMATRIX pmx)
 {
-    FT_Matrix ftmatrix;
-    FLOATOBJ efTemp;
-
-    /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-    efTemp = pmx->efM11;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM12;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM21;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM22;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+    FT_Matrix mat;
+    FtMatrixFromMx(&mat, pmx);
 
     /* Set the transformation matrix */
-    FT_Set_Transform(face, &ftmatrix, 0);
+    FT_Set_Transform(face, &mat, 0);
 }
 
 static BOOL
