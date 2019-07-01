@@ -18,7 +18,7 @@ NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
                 the -p option may be used to specify a subset of the default.\n\
   interval      Redisplays selected statistics every 'interval' seconds.\n\
                 Press CTRL+C to stop redisplaying. By default netstat will\n\
-                print the current information only once.\n\n"
+                print the current information only once.\n"
     IDS_DISPLAY_THEADER "\n  Proto  Local Address          Foreign Address        State"
     IDS_DISPLAY_PROCESS "       Process\n"
     IDS_ACTIVE_CONNECT "\nActive Connections\n"
@@ -27,23 +27,23 @@ END
 STRINGTABLE
 BEGIN
     IDS_IP4_STAT_HEADER "\nIPv4 Statistics\n\n"
-    IDS_IP_PACK_REC            "  Packets Received                  = %lu\n"
-    IDS_IP_HEAD_REC_ERROR      "  Received Header Errors            = %lu\n"
-    IDS_IP_ADDR_REC_ERROR      "  Received Address Errors           = %lu\n"
-    IDS_IP_DATAG_FWD           "  Datagrams Forwarded               = %lu\n"
-    IDS_IP_UNKNOWN_PRO_REC     "  Unknown Protocols Received        = %lu\n"
-    IDS_IP_REC_PACK_DISCARD    "  Received Packets Discarded        = %lu\n"
-    IDS_IP_REC_PACK_DELIVER    "  Received Packets Delivered        = %lu\n"
-    IDS_IP_OUT_REQUEST         "  Output Requests                   = %lu\n"
-    IDS_IP_ROUTE_DISCARD       "  Routing Discards                  = %lu\n"
-    IDS_IP_DISCARD_OUT_PACK    "  Discarded Output Packets          = %lu\n"
-    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packets No Route           = %lu\n"
-    IDS_IP_REASSEMBLE_REQUIRED "  Reassembly Required               = %lu\n"
-    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Succesful              = %lu\n"
-    IDS_IP_REASSEMBLE_FAILURE  "  Reassembly Failures               = %lu\n"
-    IDS_IP_DATAG_FRAG_SUCCESS  "  Datagrams Successfully Fragmented = %lu\n"
-    IDS_IP_DATAG_FRAG_FAILURE  "  Datagrams Failing Fragmentation   = %lu\n"
-    IDS_IP_DATAG_FRAG_CREATE   "  Fragments Created                 = %lu\n"
+    IDS_IP_PACK_REC            "  Packets Received                   = %lu\n"
+    IDS_IP_HEAD_REC_ERROR      "  Received Header Errors             = %lu\n"
+    IDS_IP_ADDR_REC_ERROR      "  Received Address Errors            = %lu\n"
+    IDS_IP_DATAG_FWD           "  Datagrams Forwarded                = %lu\n"
+    IDS_IP_UNKNOWN_PRO_REC     "  Unknown Protocols Received         = %lu\n"
+    IDS_IP_REC_PACK_DISCARD    "  Received Packets Discarded         = %lu\n"
+    IDS_IP_REC_PACK_DELIVER    "  Received Packets Delivered         = %lu\n"
+    IDS_IP_OUT_REQUEST         "  Output Requests                    = %lu\n"
+    IDS_IP_ROUTE_DISCARD       "  Routing Discards                   = %lu\n"
+    IDS_IP_DISCARD_OUT_PACK    "  Discarded Output Packets           = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packets No Route            = %lu\n"
+    IDS_IP_REASSEMBLE_REQUIRED "  Reassembly Required                = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Succesful               = %lu\n"
+    IDS_IP_REASSEMBLE_FAILURE  "  Reassembly Failures                = %lu\n"
+    IDS_IP_DATAG_FRAG_SUCCESS  "  Datagrams Successfully Fragmented  = %lu\n"
+    IDS_IP_DATAG_FRAG_FAILURE  "  Datagrams Failing Fragmentation    = %lu\n"
+    IDS_IP_DATAG_FRAG_CREATE   "  Fragments Created                  = %lu\n"
 END
 
 STRINGTABLE
@@ -68,35 +68,35 @@ END
 STRINGTABLE
 BEGIN
     IDS_TCP4_HEADER         "\nTCP Statistics for IPv4\n\n"
-    IDS_TCP_ACTIVE_OPEN     "  Active Opens               = %lu\n"
-    IDS_TCP_PASS_OPEN       "  Passive Opens              = %lu\n"
-    IDS_TCP_FAIL_CONNECT    "  Failed Connection Attempts = %lu\n"
-    IDS_TCP_RESET_CONNECT   "  Reset Connections          = %lu\n"
-    IDS_TCP_CURRENT_CONNECT "  Current Connections        = %lu\n"
-    IDS_TCP_SEG_RECEIVE     "  Segments Received          = %lu\n"
-    IDS_TCP_SEG_SENT        "  Segments Sent              = %lu\n"
-    IDS_TCP_SEG_RETRANSMIT  "  Segments Retransmitted     = %lu\n"
+    IDS_TCP_ACTIVE_OPEN     "  Active Opens                        = %lu\n"
+    IDS_TCP_PASS_OPEN       "  Passive Opens                       = %lu\n"
+    IDS_TCP_FAIL_CONNECT    "  Failed Connection Attempts          = %lu\n"
+    IDS_TCP_RESET_CONNECT   "  Reset Connections                   = %lu\n"
+    IDS_TCP_CURRENT_CONNECT "  Current Connections                 = %lu\n"
+    IDS_TCP_SEG_RECEIVE     "  Segments Received                   = %lu\n"
+    IDS_TCP_SEG_SENT        "  Segments Sent                       = %lu\n"
+    IDS_TCP_SEG_RETRANSMIT  "  Segments Retransmitted              = %lu\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_UDP_IP4_HEADER    "\nUDP Statistics for IPv4\n\n"
-    IDS_UDP_DATAG_RECEIVE "  Datagrams Received = %lu\n"
-    IDS_UDP_NO_PORT       "  No Ports           = %lu\n"
-    IDS_UDP_RECEIVE_ERROR "  Receive Errors     = %lu\n"
-    IDS_UDP_DATAG_SEND    "  Datagrams Sent     = %lu\n"
+    IDS_UDP_DATAG_RECEIVE "  Datagrams Received    = %lu\n"
+    IDS_UDP_NO_PORT       "  No Ports              = %lu\n"
+    IDS_UDP_RECEIVE_ERROR "  Receive Errors        = %lu\n"
+    IDS_UDP_DATAG_SEND    "  Datagrams Sent        = %lu\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ETHERNET_INTERFACE_STAT     "Interface Statistics\n\n"
     IDS_ETHERNET_THEADER            "                           Received            Sent\n\n"
-    IDS_ETHERNET_BYTES              "  Bytes               %14lu %15lu\n"
-    IDS_ETHERNET_UNICAST_PACKET     "  Unicast packets     %14lu %15lu\n"
-    IDS_ETHERNET_NON_UNICAST_PACKET "  Non-unicast packets %14lu %15lu\n"
-    IDS_ETHERNET_DISCARD            "  Discards            %14lu %15lu\n"
-    IDS_ETHERNET_ERROR              "  Errors              %14lu %15lu\n"
-    IDS_ETHERNET_UNKNOWN            "  Unknown Protocols   %14lu\n"
+    IDS_ETHERNET_BYTES              "Bytes                %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "Unicast packets      %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "Non-unicast packets  %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "Discards             %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "Errors               %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "Unknown Protocols    %14lu\n"
 END
 
 STRINGTABLE
