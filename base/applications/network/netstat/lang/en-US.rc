@@ -3,8 +3,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nDisplays current TCP/IP protocol statistics and network connections.\n\n\
-NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
+NETSTAT [-a] [-b] [-e] [-n] [-o] [-p proto] [-r] [-s] [-t] [-v] [interval]\n\n\
   -a            Displays all connections and listening ports.\n\
+  -b            FIXME (Accepted option though unimplemented feature).\n\
   -e            Displays Ethernet statistics. May be combined with -s\n\
                 option.\n\
   -n            Displays address and port numbers in numeric form.\n\
@@ -16,6 +17,8 @@ NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
   -s            Displays per-protocol statistics. By default, Statistics are\n\
                 shown for IP, ICMP, TCP and UDP;\n\
                 the -p option may be used to specify a subset of the default.\n\
+  -t            FIXME (Accepted option though unimplemented feature).\n\
+  -v            FIXME (Accepted option though unimplemented feature).\n\
   interval      Redisplays selected statistics every 'interval' seconds.\n\
                 Press CTRL+C to stop redisplaying. By default netstat will\n\
                 print the current information only once.\n"

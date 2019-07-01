@@ -8,7 +8,7 @@
 /*
  * TODO:
  * sort function return values.
- * implement -b, -o and -v
+ * implement -b, -t and -v
  * clean up GetIpHostName
  * command line parser needs more work
  */
@@ -88,6 +88,8 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         bDoShowAllCons = TRUE;
                         break;
                     case L'b':
+                        // UNIMPLEMENTED.
+                        ConPuts(StdErr, L"'b' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoShowProcName = TRUE;
                         break;
                     case L'e':
@@ -95,6 +97,9 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         break;
                     case L'n':
                         bDoShowNumbers = TRUE;
+                        break;
+                    case L'o':
+                        bDoShowProcessId = TRUE;
                         break;
                     case L'p':
                         bDoShowProtoCons = TRUE;
@@ -119,12 +124,13 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                     case L's':
                         bDoShowProtoStats = TRUE;
                         break;
-                    case L'o':
-                        bDoShowProcessId = TRUE;
+                    case L't':
+                        // UNIMPLEMENTED.
+                        ConPuts(StdErr, L"'t' option is FIXME (Accepted option though unimplemented feature).\n");
                         break;
                     case L'v':
-                        // FIXME!
-                        ConPuts(StdOut, L"got v\n");
+                        // UNIMPLEMENTED.
+                        ConPuts(StdErr, L"'v' option is FIXME (Accepted option though unimplemented feature).\n");
                         bDoDispSeqComp = TRUE;
                         break;
                     default :
