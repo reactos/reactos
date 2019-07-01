@@ -169,6 +169,7 @@ BOOL DisplayOutput(VOID)
 {
     if (bNoOptions)
     {
+        ConResPuts(StdOut, IDS_ACTIVE_CONNECT);
         DisplayTableHeader();
         return ShowTcpTable();
     }
