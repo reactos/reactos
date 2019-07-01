@@ -6,7 +6,7 @@ BEGIN
 NETSTAT [-a] [-e] [-n] [-o] [-p proto] [-r] [-s] [interval]\n\n\
   -a            Displays all connections and listening ports.\n\
   -e            Displays Ethernet statistics. May be combined with -s\n\
-                option\n\
+                option.\n\
   -n            Displays address and port numbers in numeric form.\n\
   -o            Displays the process ID for each connection.\n\
   -p proto      Shows connections for protocol 'proto' TCP or UDP.\n\
@@ -37,9 +37,9 @@ BEGIN
     IDS_IP_OUT_REQUEST         "  Output Requests                    = %lu\n"
     IDS_IP_ROUTE_DISCARD       "  Routing Discards                   = %lu\n"
     IDS_IP_DISCARD_OUT_PACK    "  Discarded Output Packets           = %lu\n"
-    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packets No Route            = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Output Packet No Route             = %lu\n"
     IDS_IP_REASSEMBLE_REQUIRED "  Reassembly Required                = %lu\n"
-    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Succesful               = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Reassembly Successful              = %lu\n"
     IDS_IP_REASSEMBLE_FAILURE  "  Reassembly Failures                = %lu\n"
     IDS_IP_DATAG_FRAG_SUCCESS  "  Datagrams Successfully Fragmented  = %lu\n"
     IDS_IP_DATAG_FRAG_FAILURE  "  Datagrams Failing Fragmentation    = %lu\n"
@@ -96,7 +96,7 @@ BEGIN
     IDS_ETHERNET_NON_UNICAST_PACKET "Non-unicast packets  %14lu %15lu\n"
     IDS_ETHERNET_DISCARD            "Discards             %14lu %15lu\n"
     IDS_ETHERNET_ERROR              "Errors               %14lu %15lu\n"
-    IDS_ETHERNET_UNKNOWN            "Unknown Protocols    %14lu\n"
+    IDS_ETHERNET_UNKNOWN            "Unknown protocols    %14lu\n"
 END
 
 STRINGTABLE
