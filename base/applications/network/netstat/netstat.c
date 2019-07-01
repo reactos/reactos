@@ -109,7 +109,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                             Protocol = UDP;
                         else
                         {
-                            ConResPuts(StdOut, IDS_USAGE);
+                            ConResPuts(StdErr, IDS_USAGE);
                             return FALSE;
                         }
                         break;
@@ -128,7 +128,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
                         bDoDispSeqComp = TRUE;
                         break;
                     default :
-                        ConResPuts(StdOut, IDS_USAGE);
+                        ConResPuts(StdErr, IDS_USAGE);
                         return FALSE;
                 }
             }
@@ -142,7 +142,7 @@ BOOL ParseCmdline(int argc, wchar_t* argv[])
         }
 //        else
 //        {
-//            ConResPrintf(StdOut, IDS_USAGE);
+//            ConResPrintf(StdErr, IDS_USAGE);
 //            return FALSE;
 //        }
     }
