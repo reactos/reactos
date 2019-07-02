@@ -674,7 +674,6 @@ CcRosMapVacbInKernelSpace(
         }
 
         ASSERT(BaseAddress == Vacb->BaseAddress);
-        ASSERT(i * PAGE_SIZE < VACB_MAPPING_GRANULARITY);
         ASSERT((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE) >= (ULONG_PTR)BaseAddress);
         ASSERT((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE) > (ULONG_PTR)MmSystemRangeStart);
 

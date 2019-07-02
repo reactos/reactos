@@ -93,10 +93,8 @@ CcReadVirtualAddress (
     {
         LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
-    Size = LargeSize.LowPart;
-
-    Size = ROUND_TO_PAGES(Size);
-    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
+    // Read: with ROUND_TO_PAGES().
+    Size = ROUND_TO_PAGES(LargeSize.LowPart);
     ASSERT(Size > 0);
 
     Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
@@ -165,7 +163,10 @@ CcWriteVirtualAddress (
     {
         LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
+    // Write: without ROUND_TO_PAGES().
     Size = LargeSize.LowPart;
+    ASSERT(Size > 0);
+
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
     // MmGlobalPageDirectory and the real system PDE directory. What a mess...
@@ -177,9 +178,6 @@ CcWriteVirtualAddress (
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
-
-    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
-    ASSERT(Size > 0);
 
     Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
