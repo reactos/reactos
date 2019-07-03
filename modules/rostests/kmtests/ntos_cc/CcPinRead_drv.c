@@ -33,6 +33,8 @@ static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static KMT_MESSAGE_HANDLER TestMessageHandler;
 static BOOLEAN TestWriteCalled = FALSE;
+static ULONGLONG Memory = 0;
+static BOOLEAN TS = FALSE;
 
 NTSTATUS
 TestEntry(
@@ -41,7 +43,10 @@ TestEntry(
     _Out_ PCWSTR *DeviceName,
     _Inout_ INT *Flags)
 {
+    ULONG Length;
+    SYSTEM_BASIC_INFORMATION SBI;
     NTSTATUS Status = STATUS_SUCCESS;
+    RTL_OSVERSIONINFOEXW VersionInfo;
 
     PAGED_CODE();
 
@@ -56,6 +61,32 @@ TestEntry(
     KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
     KmtRegisterMessageHandler(0, NULL, TestMessageHandler);
 
+    Status = ZwQuerySystemInformation(SystemBasicInformation,
+                                      &SBI,
+                                      sizeof(SBI),
+                                      &Length);
+    if (NT_SUCCESS(Status))
+    {
+        Memory = (SBI.NumberOfPhysicalPages * SBI.PageSize) / 1024 / 1024;
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+    }
+
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&VersionInfo);
+    if (NT_SUCCESS(Status))
+    {
+        TS = BooleanFlagOn(VersionInfo.wSuiteMask, VER_SUITE_TERMINAL) &&
+             !BooleanFlagOn(VersionInfo.wSuiteMask, VER_SUITE_SINGLEUSERTS);
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+    }
+
+    trace("System with %I64dMb RAM and terminal services %S\n",  Memory, (TS ? L"enabled" : L"disabled"));
 
     return Status;
 }
@@ -453,18 +484,31 @@ PerformTest(
 
                             ok_bcb(TestContext->Bcb, 12288, Offset.QuadPart);
 
+                            /* That's a bit rough but should do the job */
 #ifdef _X86_
-                            /* FIXME: Should be fixed, will fail under certains conditions */
-                            ok(TestContext->Buffer > (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
-                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
-#else
-#ifdef _M_AMD64
-                            ok(TestContext->Buffer > (PVOID)0xFFFFF98000000000 && TestContext->Buffer < (PVOID)0xFFFFFA8000000000,
+                            if (Memory >= 2 * 1024)
+                            {
+                                ok((TestContext->Buffer >= (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xE0FFFFFF) ||
+                                   (TestContext->Buffer >= (PVOID)0xA4000000 && TestContext->Buffer < (PVOID)0xBFFFFFFF),
+                                   "Buffer %p not mapped in system space\n", TestContext->Buffer);
+                            }
+                            else if (TS)
+                            {
+                                ok(TestContext->Buffer >= (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
+                                   "Buffer %p not mapped in system space\n", TestContext->Buffer);
+                            }
+                            else
+                            {
+                                ok(TestContext->Buffer >= (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDBFFFFFF,
+                                   "Buffer %p not mapped in system space\n", TestContext->Buffer);
+                            }
+#elif defined(_M_AMD64)
+                            ok(TestContext->Buffer >= (PVOID)0xFFFFF98000000000 && TestContext->Buffer < (PVOID)0xFFFFFA8000000000,
                                "Buffer %p not mapped in system space\n", TestContext->Buffer);
 #else
                             skip(FALSE, "System space mapping not defined\n");
 #endif
-#endif
+
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
