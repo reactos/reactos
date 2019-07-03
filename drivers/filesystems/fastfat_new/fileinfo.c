@@ -1962,7 +1962,7 @@ Return Value:
 #else
     FAT_TIME_STAMP LastWriteTime = {{0}};
     FAT_TIME_STAMP LastAccessTime = {{0}};
-    FAT_DATE LastAccessDate = {.Day = 0, .Month = 0, .Year = 0};
+    FAT_DATE LastAccessDate = {0, 0, 0};
 #endif
     UCHAR Attributes;
 

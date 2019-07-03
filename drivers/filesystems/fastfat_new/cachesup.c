@@ -1675,8 +1675,8 @@ FatZeroData (
     LARGE_INTEGER ZeroStart = {0,0};
     LARGE_INTEGER BeyondZeroEnd = {0,0};
 #else
-    LARGE_INTEGER ZeroStart = {.LowPart = 0, .HighPart = 0};
-    LARGE_INTEGER BeyondZeroEnd = {.LowPart = 0, .HighPart = 0};
+    LARGE_INTEGER ZeroStart = {{0,0}};
+    LARGE_INTEGER BeyondZeroEnd = {{0,0}};
 #endif
 
     ULONG SectorSize;

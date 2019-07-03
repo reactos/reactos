@@ -2643,7 +2643,7 @@ Return Value:
 #ifndef __REACTOS__
     LARGE_INTEGER CurrentDay = {0};
 #else
-    LARGE_INTEGER CurrentDay = {.LowPart = 0, .HighPart = 0};
+    LARGE_INTEGER CurrentDay = {{0}};
 #endif
     LARGE_INTEGER LastAccessDay;
 
