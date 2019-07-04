@@ -19,6 +19,9 @@ Abstract:
 
 typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 
+#ifdef __REACTOS__
+#define __volatile volatile
+#endif
 
 //
 //  The FAT_DATA record is the top record in the Fat file system in-memory

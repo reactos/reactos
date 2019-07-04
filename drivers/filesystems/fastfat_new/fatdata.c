@@ -62,8 +62,8 @@ PDEVICE_OBJECT FatCdromFileSystemDeviceObject;
 LARGE_INTEGER FatLargeZero = {0,0};
 LARGE_INTEGER FatMaxLarge = {MAXULONG,MAXLONG};
 #else
-LARGE_INTEGER FatLargeZero = {.LowPart = 0, .HighPart = 0};
-LARGE_INTEGER FatMaxLarge = {.LowPart = MAXULONG, .HighPart = MAXLONG};
+LARGE_INTEGER FatLargeZero = {{0,0}};
+LARGE_INTEGER FatMaxLarge = {{MAXULONG,MAXLONG}};
 #endif
 
 #ifndef __REACTOS__
@@ -73,11 +73,11 @@ LARGE_INTEGER FatOneDay = {0x2a69c000, 0xc9};
 LARGE_INTEGER FatJanOne1980 = {0xe1d58000,0x01a8e79f};
 LARGE_INTEGER FatDecThirtyOne1979 = {0xb76bc000,0x01a8e6d6};
 #else
-LARGE_INTEGER Fat30Milliseconds = {.LowPart = (ULONG)(-30 * 1000 * 10), .HighPart = -1};
-LARGE_INTEGER Fat100Milliseconds = {.LowPart = (ULONG)(-30 * 1000 * 10), .HighPart = -1};
-LARGE_INTEGER FatOneDay = {.LowPart = 0x2a69c000, .HighPart = 0xc9};
-LARGE_INTEGER FatJanOne1980 = {.LowPart = 0xe1d58000, .HighPart = 0x01a8e79f};
-LARGE_INTEGER FatDecThirtyOne1979 = {.LowPart = 0xb76bc000, .HighPart = 0x01a8e6d6};
+LARGE_INTEGER Fat30Milliseconds = {{(ULONG)(-30 * 1000 * 10), -1}};
+LARGE_INTEGER Fat100Milliseconds = {{(ULONG)(-30 * 1000 * 10), -1}};
+LARGE_INTEGER FatOneDay = {{0x2a69c000, 0xc9}};
+LARGE_INTEGER FatJanOne1980 = {{0xe1d58000,0x01a8e79f}};
+LARGE_INTEGER FatDecThirtyOne1979 = {{0xb76bc000,0x01a8e6d6}};
 #endif
 
 FAT_TIME_STAMP FatTimeJanOne1980 = {{0,0,0},{1,1,0}};
@@ -86,8 +86,8 @@ FAT_TIME_STAMP FatTimeJanOne1980 = {{0,0,0},{1,1,0}};
 LARGE_INTEGER FatMagic10000    = {0xe219652c, 0xd1b71758};
 LARGE_INTEGER FatMagic86400000 = {0xfa67b90e, 0xc6d750eb};
 #else
-LARGE_INTEGER FatMagic10000    = {.LowPart = 0xe219652c, .HighPart = 0xd1b71758};
-LARGE_INTEGER FatMagic86400000 = {.LowPart = 0xfa67b90e, .HighPart = 0xc6d750eb};
+LARGE_INTEGER FatMagic10000    = {{0xe219652c, 0xd1b71758}};
+LARGE_INTEGER FatMagic86400000 = {{0xfa67b90e, 0xc6d750eb}};
 #endif
 
 #ifdef _MSC_VER

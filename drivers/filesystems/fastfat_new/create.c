@@ -6448,7 +6448,7 @@ Return Value:
 #ifndef __REACTOS__
     LARGE_INTEGER AllocSize = {0};
 #else
-    LARGE_INTEGER AllocSize = {.LowPart = 0, .HighPart = 0};
+    LARGE_INTEGER AllocSize = {{0}};
 #endif
 
     //
