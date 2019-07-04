@@ -42,5 +42,7 @@
 #define IDB_ROTATING_LINE   19
 #define IDB_PROGRESS_BAR    20
 #define IDB_COPYRIGHT       21
+#define IDB_BUGCHECK        22
 
-#define IDB_MAX_RESOURCE    IDB_COPYRIGHT
+#define IDB_MAX_RESOURCE    IDB_BUGCHECK
+

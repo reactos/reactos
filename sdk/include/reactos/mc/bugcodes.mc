@@ -79,8 +79,7 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCHECK_MESSAGE_INTRO
 Language=English
-A problem has been detected and ReactOS has been shut down to prevent damage
-to your computer.
+Unfortunately, a problem has beed detected and ReactOS has been shut down.
 .
 
 MessageId=0x80
@@ -108,15 +107,18 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCODE_PSS_MESSAGE
 Language=English
-Check to make sure any new hardware or software is properly installed.
-If this is a new installation, ask your hardware or software manufacturer
-for any ReactOS updates you might need.
-
-If problems continue, disable or remove any newly installed hardware
-or software. Disable BIOS memory options such as caching or shadowing.
-If you need to use Safe Mode to remove or disable components, restart
-your computer, press F8 to select Advanced Startup Options, and then
-select Safe Mode.
+Possible fixes:
+ - Reboot your computer;
+   - Use additional boot options to diagnose your ReactOS installation:
+     - Exclude third party drivers - run ReactOS in a safe mode:
+       FreeLoader menu -> Boot Options (F8) -> Safe Mode;
+     - Use last known good configuration:
+       FreeLoader menu -> Boot Options (F8) -> Last Known Good Configuration;
+ - Search for similar issues or ask for the help on our community websites:
+   - ReactOS Forum: https://reactos.org/forum
+   - Mattermost Chat: https://chat.reactos.org
+   - Jira Bug Tracker: https://jira.reactos.org
+ - Report a bug to help in the development (reactos.org -> Report a Bug).
 .
 
 MessageId=0x83

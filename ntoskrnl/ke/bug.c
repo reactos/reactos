@@ -217,7 +217,7 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
         Addr = Frames[i];
         if (!Addr)
         {
-        	break;
+            break;
         }
 
         /* Get the base for this file */
@@ -331,6 +331,420 @@ KiInitializeBugCheck(VOID)
                                    (PVOID*)&BugCheckData,
                                    NULL);
         if (NT_SUCCESS(Status)) KiBugCodeMessages = BugCheckData;
+    }
+}
+
+PCHAR
+NTAPI
+KeGetBugMessageName(IN ULONG MessageId)
+{
+    /* Generated with https://github.com/feel-the-dz3n/kebughtoc */
+
+    switch (MessageId)
+    {
+        case        WINDOWS_NT_BANNER: // 0x4000007e
+            return "WINDOWS NT BANNER";
+        case        WINDOWS_NT_CSD_STRING: // 0x40000087
+            return "WINDOWS NT CSD STRING";
+        case        WINDOWS_NT_INFO_STRING: // 0x40000088
+            return "WINDOWS NT INFO STRING";
+        case        WINDOWS_NT_MP_STRING: // 0x40000089
+            return "WINDOWS NT MP STRING";
+        case        THREAD_TERMINATE_HELD_MUTEX: // 0x4000008a
+            return "THREAD TERMINATE HELD MUTEX";
+        case        WINDOWS_NT_INFO_STRING_PLURAL: // 0x4000009d
+            return "WINDOWS NT INFO STRING PLURAL";
+        case        REACTOS_COPYRIGHT_NOTICE: // 0x4000009f
+            return "REACTOS COPYRIGHT NOTICE";
+        case        BUGCHECK_MESSAGE_INTRO: // 0x8000007f
+            return "BUGCHECK MESSAGE INTRO";
+        case        BUGCODE_ID_DRIVER: // 0x80000080
+            return "BUGCODE ID DRIVER";
+        case        PSS_MESSAGE_INTRO: // 0x80000081
+            return "PSS MESSAGE INTRO";
+        case        BUGCODE_PSS_MESSAGE: // 0x80000082
+            return "BUGCODE PSS MESSAGE";
+        case        BUGCHECK_TECH_INFO: // 0x80000083
+            return "BUGCHECK TECH INFO";
+        case        UNDEFINED_BUG_CODE: // 0x0
+            return "UNDEFINED BUG CODE";
+        case        APC_INDEX_MISMATCH: // 0x1
+            return "APC INDEX MISMATCH";
+        case        DEVICE_QUEUE_NOT_BUSY: // 0x2
+            return "DEVICE QUEUE NOT BUSY";
+        case        INVALID_AFFINITY_SET: // 0x3
+            return "INVALID AFFINITY SET";
+        case        INVALID_DATA_ACCESS_TRAP: // 0x4
+            return "INVALID DATA ACCESS TRAP";
+        case        INVALID_PROCESS_ATTACH_ATTEMPT: // 0x5
+            return "INVALID PROCESS ATTACH ATTEMPT";
+        case        INVALID_PROCESS_DETACH_ATTEMPT: // 0x6
+            return "INVALID PROCESS DETACH ATTEMPT";
+        case        INVALID_SOFTWARE_INTERRUPT: // 0x7
+            return "INVALID SOFTWARE INTERRUPT";
+        case        IRQL_NOT_DISPATCH_LEVEL: // 0x8
+            return "IRQL NOT DISPATCH LEVEL";
+        case        IRQL_NOT_GREATER_OR_EQUAL: // 0x9
+            return "IRQL NOT GREATER OR EQUAL";
+        case        IRQL_NOT_LESS_OR_EQUAL: // 0xa
+            return "IRQL NOT LESS OR EQUAL";
+        case        NO_EXCEPTION_HANDLING_SUPPORT: // 0xb
+            return "NO EXCEPTION HANDLING SUPPORT";
+        case        MAXIMUM_WAIT_OBJECTS_EXCEEDED: // 0xc
+            return "MAXIMUM WAIT OBJECTS EXCEEDED";
+        case        MUTEX_LEVEL_NUMBER_VIOLATION: // 0xd
+            return "MUTEX LEVEL NUMBER VIOLATION";
+        case        NO_USER_MODE_CONTEXT: // 0xe
+            return "NO USER MODE CONTEXT";
+        case        SPIN_LOCK_ALREADY_OWNED: // 0xf
+            return "SPIN LOCK ALREADY OWNED";
+        case        SPIN_LOCK_NOT_OWNED: // 0x10
+            return "SPIN LOCK NOT OWNED";
+        case        THREAD_NOT_MUTEX_OWNER: // 0x11
+            return "THREAD NOT MUTEX OWNER";
+        case        TRAP_CAUSE_UNKNOWN: // 0x12
+            return "TRAP CAUSE UNKNOWN";
+        case        EMPTY_THREAD_REAPER_LIST: // 0x13
+            return "EMPTY THREAD REAPER LIST";
+        case        CREATE_DELETE_LOCK_NOT_LOCKED: // 0x14
+            return "CREATE DELETE LOCK NOT LOCKED";
+        case        LAST_CHANCE_CALLED_FROM_KMODE: // 0x15
+            return "LAST CHANCE CALLED FROM KMODE";
+        case        CID_HANDLE_CREATION: // 0x16
+            return "CID HANDLE CREATION";
+        case        CID_HANDLE_DELETION: // 0x17
+            return "CID HANDLE DELETION";
+        case        REFERENCE_BY_POINTER: // 0x18
+            return "REFERENCE BY POINTER";
+        case        BAD_POOL_HEADER: // 0x19
+            return "BAD POOL HEADER";
+        case        MEMORY_MANAGEMENT: // 0x1a
+            return "MEMORY MANAGEMENT";
+        case        PFN_SHARE_COUNT: // 0x1b
+            return "PFN SHARE COUNT";
+        case        PFN_REFERENCE_COUNT: // 0x1c
+            return "PFN REFERENCE COUNT";
+        case        NO_SPINLOCK_AVAILABLE: // 0x1d
+            return "NO SPINLOCK AVAILABLE";
+        case        KMODE_EXCEPTION_NOT_HANDLED: // 0x1e
+            return "KMODE EXCEPTION NOT HANDLED";
+        case        SHARED_RESOURCE_CONV_ERROR: // 0x1f
+            return "SHARED RESOURCE CONV ERROR";
+        case        KERNEL_APC_PENDING_DURING_EXIT: // 0x20
+            return "KERNEL APC PENDING DURING EXIT";
+        case        QUOTA_UNDERFLOW: // 0x21
+            return "QUOTA UNDERFLOW";
+        case        FILE_SYSTEM: // 0x22
+            return "FILE SYSTEM";
+        case        FAT_FILE_SYSTEM: // 0x23
+            return "FAT FILE SYSTEM";
+        case        NTFS_FILE_SYSTEM: // 0x24
+            return "NTFS FILE SYSTEM";
+        case        NPFS_FILE_SYSTEM: // 0x25
+            return "NPFS FILE SYSTEM";
+        case        CDFS_FILE_SYSTEM: // 0x26
+            return "CDFS FILE SYSTEM";
+        case        RDR_FILE_SYSTEM: // 0x27
+            return "RDR FILE SYSTEM";
+        case        CORRUPT_ACCESS_TOKEN: // 0x28
+            return "CORRUPT ACCESS TOKEN";
+        case        SECURITY_SYSTEM: // 0x29
+            return "SECURITY SYSTEM";
+        case        INCONSISTENT_IRP: // 0x2a
+            return "INCONSISTENT IRP";
+        case        PANIC_STACK_SWITCH: // 0x2b
+            return "PANIC STACK SWITCH";
+        case        PORT_DRIVER_INTERNAL: // 0x2c
+            return "PORT DRIVER INTERNAL";
+        case        SCSI_DISK_DRIVER_INTERNAL: // 0x2d
+            return "SCSI DISK DRIVER INTERNAL";
+        case        DATA_BUS_ERROR: // 0x2e
+            return "DATA BUS ERROR";
+        case        INSTRUCTION_BUS_ERROR: // 0x2f
+            return "INSTRUCTION BUS ERROR";
+        case        SET_OF_INVALID_CONTEXT: // 0x30
+            return "SET OF INVALID CONTEXT";
+        case        PHASE0_INITIALIZATION_FAILED: // 0x31
+            return "PHASE0 INITIALIZATION FAILED";
+        case        PHASE1_INITIALIZATION_FAILED: // 0x32
+            return "PHASE1 INITIALIZATION FAILED";
+        case        UNEXPECTED_INITIALIZATION_CALL: // 0x33
+            return "UNEXPECTED INITIALIZATION CALL";
+        case        CACHE_MANAGER: // 0x34
+            return "CACHE MANAGER";
+        case        NO_MORE_IRP_STACK_LOCATIONS: // 0x35
+            return "NO MORE IRP STACK LOCATIONS";
+        case        DEVICE_REFERENCE_COUNT_NOT_ZERO: // 0x36
+            return "DEVICE REFERENCE COUNT NOT ZERO";
+        case        FLOPPY_INTERNAL_ERROR: // 0x37
+            return "FLOPPY INTERNAL ERROR";
+        case        SERIAL_DRIVER_INTERNAL: // 0x38
+            return "SERIAL DRIVER INTERNAL";
+        case        SYSTEM_EXIT_OWNED_MUTEX: // 0x39
+            return "SYSTEM EXIT OWNED MUTEX";
+        case        MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED: // 0x3e
+            return "MULTIPROCESSOR CONFIGURATION NOT SUPPORTED";
+        case        NO_MORE_SYSTEM_PTES: // 0x3f
+            return "NO MORE SYSTEM PTES";
+        case        TARGET_MDL_TOO_SMALL: // 0x40
+            return "TARGET MDL TOO SMALL";
+        case        MUST_SUCCEED_POOL_EMPTY: // 0x41
+            return "MUST SUCCEED POOL EMPTY";
+        case        ATDISK_DRIVER_INTERNAL: // 0x42
+            return "ATDISK DRIVER INTERNAL";
+        case        MULTIPLE_IRP_COMPLETE_REQUESTS: // 0x44
+            return "MULTIPLE IRP COMPLETE REQUESTS";
+        case        INSUFFICIENT_SYSTEM_MAP_REGS: // 0x45
+            return "INSUFFICIENT SYSTEM MAP REGS";
+        case        CANCEL_STATE_IN_COMPLETED_IRP: // 0x48
+            return "CANCEL STATE IN COMPLETED IRP";
+        case        PAGE_FAULT_WITH_INTERRUPTS_OFF: // 0x49
+            return "PAGE FAULT WITH INTERRUPTS OFF";
+        case        IRQL_GT_ZERO_AT_SYSTEM_SERVICE: // 0x4a
+            return "IRQL GT ZERO AT SYSTEM SERVICE";
+        case        STREAMS_INTERNAL_ERROR: // 0x4b
+            return "STREAMS INTERNAL ERROR";
+        case        FATAL_UNHANDLED_HARD_ERROR: // 0x4c
+            return "FATAL UNHANDLED HARD ERROR";
+        case        NO_PAGES_AVAILABLE: // 0x4d
+            return "NO PAGES AVAILABLE";
+        case        PFN_LIST_CORRUPT: // 0x4e
+            return "PFN LIST CORRUPT";
+        case        NDIS_INTERNAL_ERROR: // 0x4f
+            return "NDIS INTERNAL ERROR";
+        case        PAGE_FAULT_IN_NONPAGED_AREA: // 0x50
+            return "PAGE FAULT IN NONPAGED AREA";
+        case        REGISTRY_ERROR: // 0x51
+            return "REGISTRY ERROR";
+        case        MAILSLOT_FILE_SYSTEM: // 0x52
+            return "MAILSLOT FILE SYSTEM";
+        case        NO_BOOT_DEVICE: // 0x53
+            return "NO BOOT DEVICE";
+        case        LM_SERVER_INTERNAL_ERROR: // 0x54
+            return "LM SERVER INTERNAL ERROR";
+        case        DATA_COHERENCY_EXCEPTION: // 0x55
+            return "DATA COHERENCY EXCEPTION";
+        case        INSTRUCTION_COHERENCY_EXCEPTION: // 0x56
+            return "INSTRUCTION COHERENCY EXCEPTION";
+        case        XNS_INTERNAL_ERROR: // 0x57
+            return "XNS INTERNAL ERROR";
+        case        FTDISK_INTERNAL_ERROR: // 0x58
+            return "FTDISK INTERNAL ERROR";
+        case        PINBALL_FILE_SYSTEM: // 0x59
+            return "PINBALL FILE SYSTEM";
+        case        CRITICAL_SERVICE_FAILED: // 0x5a
+            return "CRITICAL SERVICE FAILED";
+        case        SET_ENV_VAR_FAILED: // 0x5b
+            return "SET ENV VAR FAILED";
+        case        HAL_INITIALIZATION_FAILED: // 0x5c
+            return "HAL INITIALIZATION FAILED";
+        case        UNSUPPORTED_PROCESSOR: // 0x5d
+            return "UNSUPPORTED PROCESSOR";
+        case        OBJECT_INITIALIZATION_FAILED: // 0x5e
+            return "OBJECT INITIALIZATION FAILED";
+        case        SECURITY_INITIALIZATION_FAILED: // 0x5f
+            return "SECURITY INITIALIZATION FAILED";
+        case        PROCESS_INITIALIZATION_FAILED: // 0x60
+            return "PROCESS INITIALIZATION FAILED";
+        case        HAL1_INITIALIZATION_FAILED: // 0x61
+            return "HAL1 INITIALIZATION FAILED";
+        case        OBJECT1_INITIALIZATION_FAILED: // 0x62
+            return "OBJECT1 INITIALIZATION FAILED";
+        case        SECURITY1_INITIALIZATION_FAILED: // 0x63
+            return "SECURITY1 INITIALIZATION FAILED";
+        case        SYMBOLIC_INITIALIZATION_FAILED: // 0x64
+            return "SYMBOLIC INITIALIZATION FAILED";
+        case        MEMORY1_INITIALIZATION_FAILED: // 0x65
+            return "MEMORY1 INITIALIZATION FAILED";
+        case        CACHE_INITIALIZATION_FAILED: // 0x66
+            return "CACHE INITIALIZATION FAILED";
+        case        CONFIG_INITIALIZATION_FAILED: // 0x67
+            return "CONFIG INITIALIZATION FAILED";
+        case        FILE_INITIALIZATION_FAILED: // 0x68
+            return "FILE INITIALIZATION FAILED";
+        case        IO1_INITIALIZATION_FAILED: // 0x69
+            return "IO1 INITIALIZATION FAILED";
+        case        LPC_INITIALIZATION_FAILED: // 0x6a
+            return "LPC INITIALIZATION FAILED";
+        case        PROCESS1_INITIALIZATION_FAILED: // 0x6b
+            return "PROCESS1 INITIALIZATION FAILED";
+        case        REFMON_INITIALIZATION_FAILED: // 0x6c
+            return "REFMON INITIALIZATION FAILED";
+        case        SESSION1_INITIALIZATION_FAILED: // 0x6d
+            return "SESSION1 INITIALIZATION FAILED";
+        case        SESSION2_INITIALIZATION_FAILED: // 0x6e
+            return "SESSION2 INITIALIZATION FAILED";
+        case        SESSION3_INITIALIZATION_FAILED: // 0x6f
+            return "SESSION3 INITIALIZATION FAILED";
+        case        SESSION4_INITIALIZATION_FAILED: // 0x70
+            return "SESSION4 INITIALIZATION FAILED";
+        case        SESSION5_INITIALIZATION_FAILED: // 0x71
+            return "SESSION5 INITIALIZATION FAILED";
+        case        ASSIGN_DRIVE_LETTERS_FAILED: // 0x72
+            return "ASSIGN DRIVE LETTERS FAILED";
+        case        CONFIG_LIST_FAILED: // 0x73
+            return "CONFIG LIST FAILED";
+        case        BAD_SYSTEM_CONFIG_INFO: // 0x74
+            return "BAD SYSTEM CONFIG INFO";
+        case        CANNOT_WRITE_CONFIGURATION: // 0x75
+            return "CANNOT WRITE CONFIGURATION";
+        case        PROCESS_HAS_LOCKED_PAGES: // 0x76
+            return "PROCESS HAS LOCKED PAGES";
+        case        KERNEL_STACK_INPAGE_ERROR: // 0x77
+            return "KERNEL STACK INPAGE ERROR";
+        case        PHASE0_EXCEPTION: // 0x78
+            return "PHASE0 EXCEPTION";
+        case        MISMATCHED_HAL: // 0x79
+            return "MISMATCHED HAL";
+        case        KERNEL_DATA_INPAGE_ERROR: // 0x7a
+            return "KERNEL DATA INPAGE ERROR";
+        case        INACCESSIBLE_BOOT_DEVICE: // 0x7b
+            return "INACCESSIBLE BOOT DEVICE";
+        case        BUGCODE_NDIS_DRIVER: // 0x7c
+            return "BUGCODE NDIS DRIVER";
+        case        INSTALL_MORE_MEMORY: // 0x7d
+            return "INSTALL MORE MEMORY";
+        case        SYSTEM_THREAD_EXCEPTION_NOT_HANDLED: // 0x7e
+            return "SYSTEM THREAD EXCEPTION NOT HANDLED";
+        case        UNEXPECTED_KERNEL_MODE_TRAP: // 0x7f
+            return "UNEXPECTED KERNEL MODE TRAP";
+        case        NMI_HARDWARE_FAILURE: // 0x80
+            return "NMI HARDWARE FAILURE";
+        case        SPIN_LOCK_INIT_FAILURE: // 0x81
+            return "SPIN LOCK INIT FAILURE";
+        case        KERNEL_MODE_EXCEPTION_NOT_HANDLED: // 0x8e
+            return "KERNEL MODE EXCEPTION NOT HANDLED";
+        case        PP0_INITIALIZATION_FAILED: // 0x8f
+            return "PP0 INITIALIZATION FAILED";
+        case        PP1_INITIALIZATION_FAILED: // 0x90
+            return "PP1 INITIALIZATION FAILED";
+        case        WIN32K_INIT_OR_RIT_FAILURE: // 0x91
+            return "WIN32K INIT OR RIT FAILURE";
+        case        INVALID_KERNEL_HANDLE: // 0x93
+            return "INVALID KERNEL HANDLE";
+        case        KERNEL_STACK_LOCKED_AT_EXIT: // 0x94
+            return "KERNEL STACK LOCKED AT EXIT";
+        case        INVALID_WORK_QUEUE_ITEM: // 0x96
+            return "INVALID WORK QUEUE ITEM";
+        case        MORAL_EXCEPTION_ERROR: // 0x9a
+            return "MORAL EXCEPTION ERROR";
+        case        INTERNAL_POWER_ERROR: // 0xa0
+            return "INTERNAL POWER ERROR";
+        case        PCI_BUS_DRIVER_INTERNAL: // 0xa1
+            return "PCI BUS DRIVER INTERNAL";
+        case        ACPI_BIOS_ERROR: // 0xa5
+            return "ACPI BIOS ERROR";
+        case        BOOTING_IN_SAFEMODE_MINIMAL: // 0x400000a8
+            return "BOOTING IN SAFEMODE MINIMAL";
+        case        BOOTING_IN_SAFEMODE_NETWORK: // 0x400000a9
+            return "BOOTING IN SAFEMODE NETWORK";
+        case        BOOTING_IN_SAFEMODE_DSREPAIR: // 0x400000aa
+            return "BOOTING IN SAFEMODE DSREPAIR";
+        case        HAL_MEMORY_ALLOCATION: // 0xac
+            return "HAL MEMORY ALLOCATION";
+        case        VIDEO_DRIVER_INIT_FAILURE: // 0xb4
+            return "VIDEO DRIVER INIT FAILURE";
+        case        BOOTLOG_ENABLED: // 0x400000b7
+            return "BOOTLOG ENABLED";
+        case        ATTEMPTED_SWITCH_FROM_DPC: // 0xb8
+            return "ATTEMPTED SWITCH FROM DPC";
+        case        ATTEMPTED_WRITE_TO_READONLY_MEMORY: // 0xbe
+            return "ATTEMPTED WRITE TO READONLY MEMORY";
+        case        SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION: // 0xc1
+            return "SPECIAL POOL DETECTED MEMORY CORRUPTION";
+        case        BAD_POOL_CALLER: // 0xc2
+            return "BAD POOL CALLER";
+        case        BUGCODE_PSS_MESSAGE_SIGNATURE: // 0xc3
+            return "BUGCODE PSS MESSAGE SIGNATURE";
+        case        DRIVER_VERIFIER_DETECTED_VIOLATION: // 0xc4
+            return "DRIVER VERIFIER DETECTED VIOLATION";
+        case        DRIVER_CORRUPTED_EXPOOL: // 0xc5
+            return "DRIVER CORRUPTED EXPOOL";
+        case        DRIVER_CAUGHT_MODIFYING_FREED_POOL: // 0xc6
+            return "DRIVER CAUGHT MODIFYING FREED POOL";
+        case        IRQL_UNEXPECTED_VALUE: // 0xc8
+            return "IRQL UNEXPECTED VALUE";
+        case        PNP_DETECTED_FATAL_ERROR: // 0xca
+            return "PNP DETECTED FATAL ERROR";
+        case        DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS: // 0xcb
+            return "DRIVER LEFT LOCKED PAGES IN PROCESS";
+        case        PAGE_FAULT_IN_FREED_SPECIAL_POOL: // 0xcc
+            return "PAGE FAULT IN FREED SPECIAL POOL";
+        case        PAGE_FAULT_BEYOND_END_OF_ALLOCATION: // 0xcd
+            return "PAGE FAULT BEYOND END OF ALLOCATION";
+        case        DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS: // 0xce
+            return "DRIVER UNLOADED WITHOUT CANCELLING PENDING OPERATIONS";
+        case        DRIVER_CORRUPTED_MMPOOL: // 0xd0
+            return "DRIVER CORRUPTED MMPOOL";
+        case        DRIVER_IRQL_NOT_LESS_OR_EQUAL: // 0xd1
+            return "DRIVER IRQL NOT LESS OR EQUAL";
+        case        DRIVER_PORTION_MUST_BE_NONPAGED: // 0xd3
+            return "DRIVER PORTION MUST BE NONPAGED";
+        case        SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD: // 0xd4
+            return "SYSTEM SCAN AT RAISED IRQL CAUGHT IMPROPER DRIVER UNLOAD";
+        case        DRIVER_PAGE_FAULT_IN_FREED_SPECIAL_POOL: // 0xd5
+            return "DRIVER PAGE FAULT IN FREED SPECIAL POOL";
+        case        DRIVER_PAGE_FAULT_BEYOND_END_OF_ALLOCATION: // 0xd6
+            return "DRIVER PAGE FAULT BEYOND END OF ALLOCATION";
+        case        DRIVER_UNMAPPING_INVALID_VIEW: // 0xd7
+            return "DRIVER UNMAPPING INVALID VIEW";
+        case        DRIVER_USED_EXCESSIVE_PTES: // 0xd8
+            return "DRIVER USED EXCESSIVE PTES";
+        case        LOCKED_PAGES_TRACKER_CORRUPTION: // 0xd9
+            return "LOCKED PAGES TRACKER CORRUPTION";
+        case        SYSTEM_PTE_MISUSE: // 0xda
+            return "SYSTEM PTE MISUSE";
+        case        DRIVER_CORRUPTED_SYSPTES: // 0xdb
+            return "DRIVER CORRUPTED SYSPTES";
+        case        DRIVER_INVALID_STACK_ACCESS: // 0xdc
+            return "DRIVER INVALID STACK ACCESS";
+        case        POOL_CORRUPTION_IN_FILE_AREA: // 0xde
+            return "POOL CORRUPTION IN FILE AREA";
+        case        IMPERSONATING_WORKER_THREAD: // 0xdf
+            return "IMPERSONATING WORKER THREAD";
+        case        ACPI_BIOS_FATAL_ERROR: // 0xe0
+            return "ACPI BIOS FATAL ERROR";
+        case        WORKER_THREAD_RETURNED_AT_BAD_IRQL: // 0xe1
+            return "WORKER THREAD RETURNED AT BAD IRQL";
+        case        MANUALLY_INITIATED_CRASH: // 0xe2
+            return "MANUALLY INITIATED CRASH";
+        case        RESOURCE_NOT_OWNED: // 0xe3
+            return "RESOURCE NOT OWNED";
+        case        WORKER_INVALID: // 0xe4
+            return "WORKER INVALID";
+        case        POWER_FAILURE_SIMULATE: // 0xe5
+            return "POWER FAILURE SIMULATE";
+        case        INVALID_CANCEL_OF_FILE_OPEN: // 0xe8
+            return "INVALID CANCEL OF FILE OPEN";
+        case        ACTIVE_EX_WORKER_THREAD_TERMINATION: // 0xe9
+            return "ACTIVE EX WORKER THREAD TERMINATION";
+        case        THREAD_STUCK_IN_DEVICE_DRIVER: // 0xea
+            return "THREAD STUCK IN DEVICE DRIVER";
+        case        CRITICAL_PROCESS_DIED: // 0xef
+            return "CRITICAL PROCESS DIED";
+        case        CRITICAL_OBJECT_TERMINATION: // 0xf4
+            return "CRITICAL OBJECT TERMINATION";
+        case        PCI_VERIFIER_DETECTED_VIOLATION: // 0xf6
+            return "PCI VERIFIER DETECTED VIOLATION";
+        case        DRIVER_OVERRAN_STACK_BUFFER: // 0xf7
+            return "DRIVER OVERRAN STACK BUFFER";
+        case        RAMDISK_BOOT_INITIALIZATION_FAILED: // 0xf8
+            return "RAMDISK BOOT INITIALIZATION FAILED";
+        case        DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN: // 0xf9
+            return "DRIVER RETURNED STATUS REPARSE FOR VOLUME OPEN";
+        case        HTTP_DRIVER_CORRUPTED: // 0xfa
+            return "HTTP DRIVER CORRUPTED";
+        case        ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY: // 0xfc
+            return "ATTEMPTED EXECUTE OF NOEXECUTE MEMORY";
+        case        DIRTY_NOWRITE_PAGES_CONGESTION: // 0xfd
+            return "DIRTY NOWRITE PAGES CONGESTION";
+        case        BUGCODE_USB_DRIVER: // 0xfe
+            return "BUGCODE USB DRIVER";
+        case        KERNEL_SECURITY_CHECK_FAILURE: // 0x139
+            return "KERNEL SECURITY CHECK FAILURE";
+
+        default:
+            return "UNKNOWN CODE NAME";
     }
 }
 
@@ -610,13 +1024,9 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-KiDisplayBlueScreen(IN ULONG MessageId,
-                    IN BOOLEAN IsHardError,
-                    IN PCHAR HardErrCaption OPTIONAL,
-                    IN PCHAR HardErrMessage OPTIONAL,
-                    IN PCHAR Message)
+KiInitializeBlueScreen()
 {
-    CHAR AnsiName[75];
+    PVOID bmpBugcheck = NULL;
 
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
@@ -624,14 +1034,46 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         /* Acquire ownership and reset the display */
         InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-
-        /* Display blue screen */
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLUE);
-        InbvSetTextColor(BV_COLOR_WHITE);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
     }
+
+    /* Load bugcheck bitmap */
+    bmpBugcheck = InbvGetResourceAddress(IDB_BUGCHECK);
+
+    /* If loaded */
+    if (bmpBugcheck)
+    {
+        /* Display it */
+        InbvBitBlt(bmpBugcheck, 0, 0);
+    }
+
+    /* Display blue screen */
+    InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 1);
+
+    /* Set up text printing */
+    InbvSetTextColor(BV_COLOR_WHITE);
+    InbvInstallDisplayStringFilter(NULL);
+    InbvEnableDisplayString(TRUE);
+    InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
+}
+
+VOID
+NTAPI
+KiDisplayBlueScreen(IN ULONG MessageId,
+                    IN BOOLEAN IsHardError,
+                    IN PCHAR HardErrCaption OPTIONAL,
+                    IN PCHAR HardErrMessage OPTIONAL,
+                    IN PCHAR Message)
+{
+    CHAR AnsiName[75];
+    ANSI_STRING GenericMsgStr;
+
+    /* If MessageId is generic message, then bugcode is in data */
+    ULONG ActualBugcode = MessageId == BUGCODE_PSS_MESSAGE
+                          ? KiBugCheckData[0]
+                          : MessageId;
+
+    /* Initialize graphical part */
+    KiInitializeBlueScreen();
 
     /* Check if this is a hard error */
     if (IsHardError)
@@ -641,25 +1083,34 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         if (HardErrMessage) InbvDisplayString(HardErrMessage);
     }
 
-    /* Begin the display */
-    InbvDisplayString("\r\n");
-
     /* Print out initial message */
     KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
     InbvDisplayString("\r\n\r\n");
 
+    /* Print stop code */
+    InbvSetTextColor(8);
+    InbvDisplayString("Stop code: ");
+    InbvSetTextColor(15);
+    InbvDisplayString(KeGetBugMessageName(ActualBugcode));
+
+    /* Print additional information */
+    InbvSetTextColor(8);
+    InbvDisplayString(" (");
+    sprintf(AnsiName, "0x%08lX", MessageId);
+    InbvDisplayString(AnsiName);
+
     /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
-        /* Print out into to driver name */
-        KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
-
         /* Convert and print out driver name */
         KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiName, sizeof(AnsiName));
-        InbvDisplayString(" ");
+        InbvDisplayString(", ");
         InbvDisplayString(AnsiName);
-        InbvDisplayString("\r\n\r\n");
     }
+
+    /* Finish printing basic technical information */
+    InbvDisplayString(")\r\n\r\n");
+    InbvSetTextColor(15);
 
     /* Check if this is the generic message */
     if (MessageId == BUGCODE_PSS_MESSAGE)
@@ -668,16 +1119,28 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
         InbvDisplayString("\r\n\r\n");
     }
+    else
+    {
+        /* If message is not generic print bug code message */
+        KeGetBugMessageText(MessageId, NULL);
+        InbvDisplayString("\r\n\r\n");
+    }
 
-    /* Print second introduction message */
-    KeGetBugMessageText(PSS_MESSAGE_INTRO, NULL);
-    InbvDisplayString("\r\n\r\n");
+    /* Let's print generic message. Initialize GenericMsgStr */
+    RtlInitAnsiString(&GenericMsgStr, "");
 
-    /* Get the bug code string */
-    KeGetBugMessageText(MessageId, NULL);
+    /* Put generic message there */
+    KeGetBugMessageText(BUGCODE_PSS_MESSAGE, &GenericMsgStr);
+
+    /* Format it */
+    sprintf(GenericMsgStr.Buffer, GenericMsgStr.Buffer, ActualBugcode);
+
+    /* Display */
+    InbvDisplayString(GenericMsgStr.Buffer);
     InbvDisplayString("\r\n\r\n");
 
     /* Print message for technical information */
+    InbvSetTextColor(8);
     KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
 
     /* Show the technical Data */
@@ -704,6 +1167,9 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
+
+    /* Print ReactOS version at the end */
+    InbvDisplayString(NtBuildLab);
 }
 
 DECLSPEC_NORETURN
