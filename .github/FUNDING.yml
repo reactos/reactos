@@ -1,3 +1,2 @@
-custom: https://reactos.org/donating
-custom: https://paypal.me/ReactOS
+custom: ['https://reactos.org/donating', 'https://paypal.me/ReactOS']
 liberapay: ReactOS
