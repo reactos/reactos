@@ -2516,10 +2516,11 @@ Return Value:
 
 #ifndef __REACTOS__
             context = ExAllocatePool(NonPagedPoolNx,
+                                     sizeof(COMPLETION_CONTEXT));
 #else
             context = ExAllocatePool(NonPagedPool,
-#endif
                                      sizeof(COMPLETION_CONTEXT));
+#endif
 
             if (context == NULL) {
 
@@ -3439,10 +3440,11 @@ Return Value:
     //
 #ifndef __REACTOS__
     parameterList = ExAllocatePool(NonPagedPoolNx,
+                                   sizeof(FORMAT_UNIT_PARAMETER_LIST));
 #else
     parameterList = ExAllocatePool(NonPagedPool,
-#endif
                                    sizeof(FORMAT_UNIT_PARAMETER_LIST));
+#endif
 
     if (parameterList == NULL)
     {
