@@ -10,17 +10,17 @@
 
 void Test_SetWorldTransform()
 {
-	HDC hdcScreen, hdc;
-	XFORM xform;
-	BOOL result;
-	//PGDI_TABLE_ENTRY pEntry;
-	//DC_ATTR* pdcattr;
+    HDC hdcScreen, hdc;
+    XFORM xform;
+    BOOL result;
+    //PGDI_TABLE_ENTRY pEntry;
+    //DC_ATTR* pdcattr;
 
-	/* Create a DC */
-	hdcScreen = GetDC(NULL);
-	hdc = CreateCompatibleDC(hdcScreen);
-	ReleaseDC(NULL, hdcScreen);
-	SetGraphicsMode(hdc, GM_ADVANCED);
+    /* Create a DC */
+    hdcScreen = GetDC(NULL);
+    hdc = CreateCompatibleDC(hdcScreen);
+    ReleaseDC(NULL, hdcScreen);
+    SetGraphicsMode(hdc, GM_ADVANCED);
 
     /* Set identity transform */
     xform.eM11 = 1;
@@ -115,7 +115,7 @@ void Test_SetWorldTransform()
     ok(xform.eM21 == 1, "xform.eM21 should be 1\n");
     ok(xform.eM22 == 0, "xform.eM22 should be 0\n");
 
-	DeleteDC(hdc);
+    DeleteDC(hdc);
 }
 
 START_TEST(SetWorldTransform)
