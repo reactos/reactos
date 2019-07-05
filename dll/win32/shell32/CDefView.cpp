@@ -135,7 +135,7 @@ class CDefView :
         PCUITEMID_CHILD _PidlByItem(int i);
         PCUITEMID_CHILD _PidlByItem(LVITEM& lvItem);
         int LV_FindItemByPidl(PCUITEMID_CHILD pidl);
-        BOOLEAN LV_AddItem(PCUITEMID_CHILD pidl);
+        int LV_AddItem(PCUITEMID_CHILD pidl);
         BOOLEAN LV_DeleteItem(PCUITEMID_CHILD pidl);
         BOOLEAN LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew);
         BOOLEAN LV_ProdItem(PCUITEMID_CHILD pidl);
@@ -791,7 +791,7 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 /**********************************************************
 * LV_AddItem()
 */
-BOOLEAN CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
+int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
 {
     LVITEMW lvItem;
 
@@ -805,10 +805,7 @@ BOOLEAN CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     lvItem.iImage = I_IMAGECALLBACK;                      /*get the image on a callback basis*/
     lvItem.stateMask = LVIS_CUT;
 
-    if (m_ListView.InsertItem(&lvItem) == -1)
-        return FALSE;
-    else
-        return TRUE;
+    return m_ListView.InsertItem(&lvItem);
 }
 
 /**********************************************************
@@ -2807,8 +2804,9 @@ HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
 
 HRESULT STDMETHODCALLTYPE CDefView::AddObject(PITEMID_CHILD pidl, UINT *item)
 {
-    FIXME("(%p)->(%p %p) stub\n", this, pidl, item);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %p)\n", this, pidl, item);
+    *item = LV_AddItem(pidl);
+    return (int)*item >= 0 ? S_OK : E_OUTOFMEMORY;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetObject(PITEMID_CHILD *pidl, UINT item)
