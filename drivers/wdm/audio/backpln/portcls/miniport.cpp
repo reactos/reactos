@@ -21,7 +21,10 @@ operator new(
     POOL_TYPE PoolType,
     ULONG Tag)
 {
-    return ExAllocatePoolWithTag(PoolType, Size, Tag);
+    PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
+    if (P)
+        RtlZeroMemory(P, Size);
+    return P;
 }
 
 void

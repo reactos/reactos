@@ -24,7 +24,10 @@ public:
         POOL_TYPE PoolType,
         ULONG Tag)
     {
-        return ExAllocatePoolWithTag(PoolType, Size, Tag);
+        PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
+        if (P)
+            RtlZeroMemory(P, Size);
+        return P;
     }
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
