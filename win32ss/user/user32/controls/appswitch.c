@@ -642,8 +642,8 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
    switch (lParam)
    {
       case VK_TAB:
-         if( !GetDialogFont() ) goto Exit;
-         if( !ProcessHotKey() ) goto Exit;
+         if (!GetDialogFont() || !ProcessHotKey())
+             goto Exit;
          break;
 
       case VK_ESCAPE:
