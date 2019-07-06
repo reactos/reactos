@@ -247,44 +247,50 @@ typedef struct _I8042_HOOK_WORKITEM
  * Controller status register bits
  * --------------------------------------------------*/
 
-#define KBD_OBF            0x01
-#define KBD_IBF            0x02
-#define MOU_OBF            0x20
-#define KBD_PERR           0x80
+#define KBD_OBF                    0x01
+#define KBD_IBF                    0x02
+#define MOU_OBF                    0x20
+#define KBD_PERR                   0x80
 
 /*-----------------------------------------------------
  * Controller command byte bits
  * --------------------------------------------------*/
 
-#define CCB_KBD_INT_ENAB   0x01
-#define CCB_MOUSE_INT_ENAB 0x02
-#define CCB_SYSTEM_FLAG    0x04
-#define CCB_KBD_DISAB      0x10
-#define CCB_MOUSE_DISAB    0x20
-#define CCB_TRANSLATE      0x40
+#define CCB_KBD_INT_ENAB           0x01
+#define CCB_MOUSE_INT_ENAB         0x02
+#define CCB_SYSTEM_FLAG            0x04
+#define CCB_KBD_DISAB              0x10
+#define CCB_MOUSE_DISAB            0x20
+#define CCB_TRANSLATE              0x40
 
 /*-----------------------------------------------------
  * LED bits
  * --------------------------------------------------*/
 
-#define KBD_LED_SCROLL     0x01
-#define KBD_LED_NUM        0x02
-#define KBD_LED_CAPS       0x04
+#define KBD_LED_SCROLL             0x01
+#define KBD_LED_NUM                0x02
+#define KBD_LED_CAPS               0x04
 
 /*-----------------------------------------------------
  * Mouse commands
  * --------------------------------------------------*/
 
-#define MOU_ENAB           0xF4
-#define MOU_CMD_RESET      0xFF
+#define MOU_READ_DEV_TYPE          0xF2
+#define MOU_DEF_SAMPLE_RATE        0xF3
+#define MOU_ENAB                   0xF4
+#define MOU_NO_ERROR_REPORT        0xF5 /* Apparently this should be sent before doing anything else when in stream mode */
+#define MOU_CMD_RESET_NO_TEST      0xF6 /* Reset to default settings */
+#define MOU_CMD_RESET              0xFF /* Reset with a self test */
+#define MOU_SET_STREAM_MODE        0xEA /* Configure for stream mode */
+#define MOU_ENAB_RESEND            0xEB /* Resend last movement data, used whenever an invalid response was received */
 
 /*-----------------------------------------------------
  * Mouse responses
  * --------------------------------------------------*/
 
-#define MOUSE_ACK          0xFA
-#define MOUSE_ERROR        0xFC
-#define MOUSE_NACK         0xFE
+#define MOUSE_ACK                 0xFA
+#define MOUSE_ERROR               0xFC
+#define MOUSE_NACK                0xFE
 
 /*-----------------------------------------------------
  * Prototypes

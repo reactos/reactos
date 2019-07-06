@@ -263,6 +263,47 @@ failure:
     INFO_(I8042PRT, "Mouse not detected\n");
 }
 
+static void
+i8042DetectMouseType(
+    IN PPORT_DEVICE_EXTENSION DeviceExtension)
+{
+    int chkcnt = 0;
+    UCHAR Value;
+    /* Set the mouse to streaming mode, and disable error reporting (as per https://isdaman.com/alsos/hardware/mouse/ps2interface.htm) CORE-6901, CORE-12663, CORE-12434 */
+    i8042IsrWritePort(DeviceExtension, MOU_SET_STREAM_MODE, CTRL_WRITE_MOUSE);
+    i8042IsrWritePort(DeviceExtension, MOU_NO_ERROR_REPORT, CTRL_WRITE_MOUSE);
+	
+    /* Initialize Intellimouse or Intellimouse Explorer compatible mice (This fixes wheels) */
+    i8042IsrWritePort(DeviceExtension, MOU_DEF_SAMPLE_RATE, CTRL_WRITE_MOUSE);
+    i8042IsrWritePort(DeviceExtension, 0xC8, CTRL_WRITE_MOUSE);
+
+    i8042IsrWritePort(DeviceExtension, MOU_DEF_SAMPLE_RATE, CTRL_WRITE_MOUSE);
+    i8042IsrWritePort(DeviceExtension, 0x64, CTRL_WRITE_MOUSE);
+	
+    i8042IsrWritePort(DeviceExtension, MOU_DEF_SAMPLE_RATE, CTRL_WRITE_MOUSE);
+    i8042IsrWritePort(DeviceExtension, 0x50, CTRL_WRITE_MOUSE);
+
+    i8042IsrWritePort(DeviceExtension, MOU_READ_DEV_TYPE, CTRL_WRITE_MOUSE);
+    while(chkcnt < 10) {
+        i8042ReadDataWait(DeviceExtension, &Value);
+        if(Value == 0x03)
+        {
+            DeviceExtension->MouseExtension->MouseType = Intellimouse;
+            break;
+        }
+		else if(Value == 0x02)
+		{
+            DeviceExtension->MouseExtension->MouseType = GenericPS2;
+            break;
+		}
+        chkcnt++;
+    }
+	
+    /* Set the polling rate back to 100 */
+    i8042IsrWritePort(DeviceExtension, MOU_DEF_SAMPLE_RATE, CTRL_WRITE_MOUSE);
+    i8042IsrWritePort(DeviceExtension, 0x64, CTRL_WRITE_MOUSE);	
+}
+
 static NTSTATUS
 i8042ConnectKeyboardInterrupt(
     IN PI8042_KEYBOARD_EXTENSION DeviceExtension)
@@ -470,6 +511,9 @@ StartProcedure(
         DeviceExtension->Flags & MOUSE_STARTED &&
         !(DeviceExtension->Flags & MOUSE_INITIALIZED))
     {
+        /* Detect the mouse type here, rather than in i8042DetectMouse, fixes lockup on BootCD */
+        i8042DetectMouseType(DeviceExtension);
+
         /* Mouse is ready to be initialized */
         Status = i8042ConnectMouseInterrupt(DeviceExtension->MouseExtension);
         if (NT_SUCCESS(Status))
@@ -483,13 +527,6 @@ StartProcedure(
 
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-        /* HACK: the mouse has already been reset in i8042DetectMouse. This second
-           reset prevents some touchpads/mice from working (Dell D531, D600).
-           See CORE-6901 */
-        if (!(i8042HwFlags & FL_INITHACK))
-        {
-            i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
-        }
         KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
     }
 
