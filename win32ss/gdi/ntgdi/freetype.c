@@ -5601,7 +5601,21 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-FORCEINLINE
+static __inline
+FT_Fixed FASTCALL FT_FixedFromFLOATOBJ(PFLOATOBJ pef)
+{
+    FLOATOBJ efTemp;
+    if (FLOATOBJ_Equal1(pef))
+    {
+        return INT_TO_FIXED(1);
+    }
+
+    efTemp = *pef;
+    FLOATOBJ_MulLong(&efTemp, INT_TO_FIXED(1));
+    return FLOATOBJ_GetLong(&efTemp);
+}
+
+static __inline
 BOOL
 APIENTRY
 IntExtTextOutZeroAngleW(
@@ -5654,6 +5668,8 @@ IntExtTextOutZeroAngleW(
     int thickness;
     BOOL bResult;
     ULONGLONG TextWidth;
+    LONG lfWidth;
+    FT_Matrix mat;
 
     Render = IntIsFontRenderingEnabled();
 
@@ -5759,31 +5775,38 @@ IntExtTextOutZeroAngleW(
     else
         RenderMode = FT_RENDER_MODE_MONO;
 
+    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
-        FLOATOBJ efTemp;
-        LONG lfWidth = plf->lfWidth, lfHeight = plf->lfHeight;
-        pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-
-        if (!lfWidth)
-            lfWidth = IntGetAveCharWidth(face);
-
-        if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
-        {
-            efTemp = pmxWorldToDevice->efM11;
-            FLOATOBJ_MulLong(&efTemp, lfWidth);
-            lfWidth = FLOATOBJ_GetLong(&efTemp);
-
-            efTemp = pmxWorldToDevice->efM22;
-            FLOATOBJ_MulLong(&efTemp, lfHeight);
-            lfHeight = FLOATOBJ_GetLong(&efTemp);
-        }
-        IntRequestFontSize(dc, FontGDI, lfWidth, lfHeight);
+        IntUnLockFreeType();
+        bResult = FALSE;
+        goto Cleanup;
     }
 
-    FT_Set_Transform(face, NULL, NULL);
+    lfWidth = plf->lfWidth;
+    if (lfWidth)
+    {
+        IntWidthMatrix(face, &mat, lfWidth);
+    }
+    else
+    {
+        mat = identityMat;
+    }
 
-    fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
-    fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
+    if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
+    {
+        pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+        mat.xx = FT_MulFix(mat.xx, FT_FixedFromFLOATOBJ(&pmxWorldToDevice->efM11));
+        mat.yy = FT_FixedFromFLOATOBJ(&pmxWorldToDevice->efM22);
+    }
+    else
+    {
+        pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
+    }
+
+    FT_Set_Transform(face, &mat, NULL);
+
+    fixAscender = (FontGDI->tmAscent * mat.yy) >> 10;
+    fixDescender = (FontGDI->tmDescent * mat.yy) >> 10;
 
     /*
      * Process the vertical alignment and determine the yoff.
