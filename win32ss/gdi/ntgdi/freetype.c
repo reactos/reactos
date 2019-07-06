@@ -60,7 +60,7 @@ static UNICODE_STRING g_FontRegPath =
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
-static PFAST_MUTEX      g_FreeTypeLock;
+PFAST_MUTEX      g_FreeTypeLock;
 
 static LIST_ENTRY       g_FontListHead;
 static PFAST_MUTEX      g_FontListLock;
@@ -672,21 +672,17 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+
+LONG FASTCALL IntGetAveCharWidth(FT_Face face)
 {
-    LONG tmAveCharWidth;
     TT_OS2 *pOS2;
+    LONG tmAveCharWidth;
     FT_Fixed XScale;
-
-    *pmat = identityMat;
-
-    if (lfWidth == 0)
-        return 0;
 
     ASSERT_FREETYPE_LOCK_HELD();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
     if (!pOS2)
-        return 0;
+        return 1;
 
     XScale = face->size->metrics.x_scale;
     tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
@@ -694,6 +690,20 @@ LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
     {
         tmAveCharWidth = 1;
     }
+
+    return tmAveCharWidth;
+}
+
+LONG FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+{
+    LONG tmAveCharWidth;
+
+    *pmat = identityMat;
+
+    if (lfWidth == 0)
+        return 0;
+
+    tmAveCharWidth = IntGetAveCharWidth(face);
 
     if (lfWidth == tmAveCharWidth)
         return 0;
@@ -1045,7 +1055,7 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
-static FT_Error
+FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
 static INT FASTCALL
@@ -3210,7 +3220,7 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
     return needed;
 }
 
-static FT_Error
+FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 {
     FT_Error error;
@@ -3407,7 +3417,7 @@ TextIntUpdateSize(PDC dc,
     return TRUE;
 }
 
-static inline FT_UInt FASTCALL
+inline FT_UInt FASTCALL
 get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
 {
     FT_UInt ret;
@@ -3421,7 +3431,7 @@ get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
     return ret;
 }
 
-static inline FT_UInt FASTCALL
+inline FT_UInt FASTCALL
 get_glyph_index(FT_Face ft_face, UINT glyph)
 {
     FT_UInt ret;
@@ -3436,7 +3446,7 @@ get_glyph_index(FT_Face ft_face, UINT glyph)
     return FT_Get_Char_Index(ft_face, glyph);
 }
 
-static inline FT_UInt FASTCALL
+inline FT_UInt FASTCALL
 get_glyph_index_flagged(FT_Face face, FT_ULong code, DWORD indexed_flag, DWORD flags)
 {
     FT_UInt glyph_index;
@@ -5749,30 +5759,31 @@ IntExtTextOutZeroAngleW(
     else
         RenderMode = FT_RENDER_MODE_MONO;
 
-    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
     {
-        IntUnLockFreeType();
-        bResult = FALSE;
-        goto Cleanup;
-    }
-
-    /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
-    if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
-    {
+        FLOATOBJ efTemp;
+        LONG lfWidth = plf->lfWidth, lfHeight = plf->lfHeight;
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
 
-        fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
-        fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
-    }
-    else
-    {
-        pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
+        if (!lfWidth)
+            lfWidth = IntGetAveCharWidth(face);
 
-        fixAscender = FontGDI->tmAscent << 6;
-        fixDescender = FontGDI->tmDescent << 6;
+        if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
+        {
+            efTemp = pmxWorldToDevice->efM11;
+            FLOATOBJ_MulLong(&efTemp, lfWidth);
+            lfWidth = FLOATOBJ_GetLong(&efTemp);
+
+            efTemp = pmxWorldToDevice->efM22;
+            FLOATOBJ_MulLong(&efTemp, lfHeight);
+            lfHeight = FLOATOBJ_GetLong(&efTemp);
+        }
+        IntRequestFontSize(dc, FontGDI, lfWidth, lfHeight);
     }
+
+    FT_Set_Transform(face, NULL, NULL);
+
+    fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
+    fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
 
     /*
      * Process the vertical alignment and determine the yoff.
@@ -6871,6 +6882,7 @@ IntExtTextOutAnyAngleW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
+
     DC_vFinishBlit(dc, NULL);
 
     return bResult;
@@ -6890,8 +6902,6 @@ IntExtTextOutW(
     IN DWORD dwCodePage)
 {
     PDC_ATTR pdcattr;
-    FONTOBJ *FontObj;
-    PFONTGDI FontGDI;
     LOGFONTW *plf;
     LONG lfEscapement;
     PTEXTOBJ TextObj;
