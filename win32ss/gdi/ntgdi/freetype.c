@@ -60,7 +60,7 @@ static UNICODE_STRING g_FontRegPath =
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
-PFAST_MUTEX      g_FreeTypeLock;
+static PFAST_MUTEX      g_FreeTypeLock;
 
 static LIST_ENTRY       g_FontListHead;
 static PFAST_MUTEX      g_FontListLock;
@@ -1055,7 +1055,7 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
-FT_Error
+static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
 static INT FASTCALL
@@ -3220,7 +3220,7 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
     return needed;
 }
 
-FT_Error
+static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 {
     FT_Error error;
