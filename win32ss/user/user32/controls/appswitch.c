@@ -473,7 +473,6 @@ BOOL ProcessHotKey(VOID)
 {
    if (!isOpen)
    {
-
       windowCount = 0;
       EnumWindows(EnumWindowsProc, 0);
 
