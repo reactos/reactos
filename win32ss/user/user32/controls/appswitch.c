@@ -612,8 +612,6 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
    // Already in the loop.
    if (switchdialog || Esc) return 0;
 
-   hwndActive = GetActiveWindow();
-
    if (lParam == VK_ESCAPE)
    {
       Esc = TRUE;
@@ -636,6 +634,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
    }
 
    // Capture current active window.
+   hwndActive = GetActiveWindow();
    if (hwndActive)
        SetCapture(hwndActive);
 
