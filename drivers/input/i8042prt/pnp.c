@@ -267,7 +267,7 @@ static void
 i8042DetectMouseType(
     IN PPORT_DEVICE_EXTENSION DeviceExtension)
 {
-    int chkcnt = 0;
+    int chkcnt = 10;
     UCHAR Value;
     /* Set the mouse to streaming mode, and disable error reporting (as per https://isdaman.com/alsos/hardware/mouse/ps2interface.htm) CORE-6901, CORE-12663, CORE-12434 */
     i8042IsrWritePort(DeviceExtension, MOU_SET_STREAM_MODE, CTRL_WRITE_MOUSE);
@@ -284,19 +284,19 @@ i8042DetectMouseType(
     i8042IsrWritePort(DeviceExtension, 0x50, CTRL_WRITE_MOUSE);
 
     i8042IsrWritePort(DeviceExtension, MOU_READ_DEV_TYPE, CTRL_WRITE_MOUSE);
-    while(chkcnt < 10) {
+    while(chkcnt--) 
+	{
         i8042ReadDataWait(DeviceExtension, &Value);
         if(Value == 0x03)
         {
             DeviceExtension->MouseExtension->MouseType = Intellimouse;
             break;
         }
-		else if(Value == 0x02)
+        else if(Value == 0x00)
 		{
             DeviceExtension->MouseExtension->MouseType = GenericPS2;
             break;
 		}
-        chkcnt++;
     }
 	
     /* Set the polling rate back to 100 */
