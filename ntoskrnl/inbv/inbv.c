@@ -32,6 +32,27 @@
  */
 // #define REACTOS_SKUS
 
+typedef struct _INBV_PROGRESS_STATE
+{
+    ULONG Floor;
+    ULONG Ceiling;
+    ULONG Bias;
+} INBV_PROGRESS_STATE;
+
+typedef struct _BT_PROGRESS_INDICATOR
+{
+    ULONG Count;
+    ULONG Expected;
+    ULONG Percentage;
+} BT_PROGRESS_INDICATOR, *PBT_PROGRESS_INDICATOR;
+
+typedef enum _ROT_BAR_TYPE
+{
+    RB_UNSPECIFIED,
+    RB_SQUARE_CELLS,
+    RB_PROGRESS_BAR
+} ROT_BAR_TYPE;
+
 /*
  * Screen resolution (for default VGA)
  */
