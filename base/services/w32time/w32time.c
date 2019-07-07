@@ -1,107 +1,20 @@
 /*
- * PROJECT:     ReactOS Timedate Control Panel
+ * PROJECT:     ReactOS W32Time Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create W32Time Service that reqularly syncs clock to Internet Time
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *              Copyright 2018 Doug Lyons
  */
 
 #include "w32time.h"
+#include <debug.h>
+#include <strsafe.h>
 
-/* Get the domain name from the registry */
-static DWORD
-GetNTPServerAddress(LPWSTR *lpAddress)
-{
-    HKEY hKey;
-    WCHAR szSel[4];
-    DWORD dwSize;
-    LONG lRet;
+SERVICE_STATUS ServiceStatus;
+SERVICE_STATUS_HANDLE hStatus;
+static WCHAR ServiceName[] = L"W32Time";
 
-    *lpAddress = NULL;
-    hKey = NULL;
-
-    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-                         0,
-                         KEY_QUERY_VALUE,
-                         &hKey);
-    if (lRet != ERROR_SUCCESS)
-        goto Exit;
-
-    /* Get data from default value */
-    dwSize = 4 * sizeof(WCHAR);
-    lRet = RegQueryValueExW(hKey,
-                            NULL,
-                            NULL,
-                            NULL,
-                            (LPBYTE)szSel,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto Exit;
-
-    dwSize = 0;
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            NULL,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto Exit;
-
-    (*lpAddress) = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                     0,
-                                     dwSize);
-    if ((*lpAddress) == NULL)
-    {
-        lRet = ERROR_NOT_ENOUGH_MEMORY;
-        goto Exit;
-    }
-
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            (LPBYTE)*lpAddress,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto Exit;
-
-Exit:
-    if (hKey)
-        RegCloseKey(hKey);
-    if (lRet != ERROR_SUCCESS)
-        HeapFree(GetProcessHeap(), 0, *lpAddress);
-
-    return lRet;
-}
-
-
-/* Request the time from the current NTP server */
-static DWORD
-GetTimeFromServer(PULONG pulTime)
-{
-    LPWSTR lpAddress;
-    DWORD dwError;
-
-    dwError = GetNTPServerAddress(&lpAddress);
-    if (dwError != ERROR_SUCCESS)
-    {
-        return dwError;
-    }
-
-    *pulTime = GetServerTime(lpAddress);
-    if (*pulTime == 0)
-    {
-        dwError = ERROR_GEN_FAILURE;
-    }
-
-    HeapFree(GetProcessHeap(),
-             0,
-             lpAddress);
-
-    return dwError;
-}
-
+int InitService(VOID);
 
 BOOL
 SystemSetTime(LPSYSTEMTIME lpSystemTime)
@@ -207,25 +120,214 @@ UpdateSystemTime(ULONG ulTime)
 }
 
 
+static DWORD
+GetIntervalSetting(VOID)
+{
+    HKEY hKey;
+    DWORD dwData;
+    DWORD dwSize = sizeof(dwData);
+    LONG lRet;
+
+    dwData = 0;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) == ERROR_SUCCESS)
+    {
+        /* This key holds the update interval in seconds
+         * It is useful for testing to set it to a value of 10 (Decimal)
+         * This will cause the clock to try and update every 10 seconds
+         * So you can change the time and expect it to be set back correctly in 10-20 seconds
+         */
+        lRet = RegQueryValueExW(hKey,
+                                L"SpecialPollInterval",
+                                NULL,
+                                NULL,
+                                (LPBYTE)&dwData,
+                                &dwSize);
+        RegCloseKey(hKey);
+    }
+
+    if (lRet != ERROR_SUCCESS)
+        return 0;
+    else
+        return dwData;
+}
+
+
+DWORD
+SetTime(VOID)
+{
+    ULONG ulTime;
+    LONG lRet;
+    HKEY hKey;
+    WCHAR szData[MAX_VALUE_NAME] = L"";
+    DWORD cbName = sizeof(szData);
+
+    DPRINT("Entered SetTime.\n");
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+    {
+        return lRet;
+    }
+
+    lRet = RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szData, &cbName);
+    if (lRet == ERROR_SUCCESS)
+    {
+        cbName = sizeof(szData);
+        lRet = RegQueryValueExW(hKey, szData, NULL, NULL, (LPBYTE)szData, &cbName);
+    }
+
+    RegCloseKey(hKey);
+
+    DPRINT("Time Server is '%S'.\n", szData);
+
+    ulTime = GetServerTime(szData);
+
+    if (ulTime != 0)
+    {
+        return UpdateSystemTime(ulTime);
+    }
+    else
+        return ERROR_GEN_FAILURE;
+}
+
+
+/* Control handler function */
+VOID WINAPI
+ControlHandler(DWORD request)
+{
+    switch (request)
+    {
+        case SERVICE_CONTROL_STOP:
+            DPRINT("W32Time Service stopped.\n");
+
+            ServiceStatus.dwWin32ExitCode = 0;
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+            SetServiceStatus(hStatus, &ServiceStatus);
+            return;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            DPRINT("W32Time Service stopped.\n");
+
+            ServiceStatus.dwWin32ExitCode = 0;
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+            SetServiceStatus(hStatus, &ServiceStatus);
+            return;
+
+        default:
+            break;
+    }
+
+    /* Report current status */
+    SetServiceStatus(hStatus, &ServiceStatus);
+
+    return;
+}
+
+
+VOID
+WINAPI
+ServiceMain(DWORD argc, LPWSTR *argv)
+{
+    int   result;
+    DWORD dwPollInterval;
+
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    ServiceStatus.dwServiceType             = SERVICE_WIN32;
+    ServiceStatus.dwCurrentState            = SERVICE_START_PENDING;
+    ServiceStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    ServiceStatus.dwWin32ExitCode           = 0;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint              = 0;
+    ServiceStatus.dwWaitHint                = 0;
+
+    hStatus = RegisterServiceCtrlHandlerW(ServiceName,
+                                          ControlHandler);
+    if (!hStatus)
+    {
+        /* Registering Control Handler failed */
+        return;
+    }
+
+    /* We report the running status to SCM. */
+    ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    SetServiceStatus(hStatus, &ServiceStatus);
+
+    /* The worker loop of a service */
+    while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+    {
+        dwPollInterval = GetIntervalSetting();
+        result = SetTime();
+
+        if (result)
+            DPRINT("W32Time Service failed to set clock.\n");
+        else
+            DPRINT("W32Time Service successfully set clock.\n");
+
+        if (result)
+        {
+            /* In general we do not want to stop this service for a single
+             * Internet read failure but there may be other reasons for which
+             * we really might want to stop it.
+             * Therefore this code is left here to make it easy to stop this
+             * service when the correct conditions can be determined, but it
+             * is left commented out.
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = -1;
+            SetServiceStatus(hStatus, &ServiceStatus);
+            return;
+            */
+        }
+
+        Sleep(dwPollInterval * 1000);
+    }
+    return;
+}
+
+
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            break;
+
+        case DLL_PROCESS_DETACH:
+            break;
+    }
+
+    return TRUE;
+}
+
+
 DWORD WINAPI
 W32TimeSyncNow(LPCWSTR cmdline,
                UINT blocking,
                UINT flags)
 {
-    DWORD dwError;
-    ULONG ulTime;
-
-    dwError = GetTimeFromServer(&ulTime);
-    if (dwError != ERROR_SUCCESS)
+    DWORD result;
+    result = SetTime();
+    if (result)
     {
-        return dwError;
+        DPRINT("W32TimeSyncNow failed and clock not set.\n");
     }
-
-    if (ulTime != 0)
+    else
     {
-        dwError = UpdateSystemTime(ulTime);
+        DPRINT("W32TimeSyncNow succeeded and clock set.\n");
     }
-
-    return dwError;
+    return result;
 }
-
