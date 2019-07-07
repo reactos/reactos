@@ -1,22 +1,22 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 /* String Tables */
 
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Bem vindo"
+    IDS_APPTITLE "ReactOS - Bem-vindo"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Bem vindo ao Sistema Operacional ReactOS.\n\nClique em um tópico à esquerda."
+    IDS_DEFAULT_TOPIC_DESC "Bem-vindo ao Sistema Operativo ReactOS.\n\nClique num tópico à esquerda."
     IDS_FONTNAME "Tahoma"
-    IDS_CHECKTEXT "&Exibir este diálogo novamente"
+    IDS_CHECKTEXT "&Mostrar este diálogo novamente"
     IDS_CLOSETEXT "&Sair"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Instalar ReactOS"
+    IDS_TOPIC_BUTTON0 "&Instalar o ReactOS"
     IDS_TOPIC_BUTTON1 "Examinar este &CD"
     IDS_TOPIC_BUTTON2 "&Sair"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Cria uma nova instalação do ReactOS em seu computador ou atualiza uma instalação já existente."
+    IDS_TOPIC_DESC0 "Cria uma nova instalação do ReactOS no seu computador ou actualizar uma instalação já existente."
     IDS_TOPIC_DESC1 "Exibe os arquivos contidos no CD."
     IDS_TOPIC_DESC2 "Clique para fechar este aplicativo."
 END
