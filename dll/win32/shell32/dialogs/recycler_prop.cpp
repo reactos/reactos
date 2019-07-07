@@ -304,6 +304,10 @@ RecycleBinDlg(
                     toggleNukeOnDeleteOption(hwndDlg, FALSE);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
+                case 14002:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
                 case 14003:
                     toggleNukeOnDeleteOption(hwndDlg, TRUE);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
