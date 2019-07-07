@@ -1567,14 +1567,14 @@ CM_Delete_Class_Key_Ex(
 CONFIGRET
 WINAPI
 CM_Delete_DevNode_Key(
-    _In_ DEVNODE dnDevNode,
+    _In_ DEVINST dnDevInst,
     _In_ ULONG ulHardwareProfile,
     _In_ ULONG ulFlags)
 {
     TRACE("CM_Delete_DevNode_Key(%p %lu %lx)\n",
-          dnDevNode, ulHardwareProfile, ulFlags);
+          dnDevInst, ulHardwareProfile, ulFlags);
 
-    return CM_Delete_DevNode_Key_Ex(dnDevNode, ulHardwareProfile, ulFlags,
+    return CM_Delete_DevNode_Key_Ex(dnDevInst, ulHardwareProfile, ulFlags,
                                     NULL);
 }
 
@@ -1585,13 +1585,13 @@ CM_Delete_DevNode_Key(
 CONFIGRET
 WINAPI
 CM_Delete_DevNode_Key_Ex(
-    _In_ DEVNODE dnDevNode,
+    _In_ DEVINST dnDevInst,
     _In_ ULONG ulHardwareProfile,
     _In_ ULONG ulFlags,
     _In_opt_ HANDLE hMachine)
 {
     FIXME("CM_Delete_DevNode_Key_Ex(%p %lu %lx %p)\n",
-          dnDevNode, ulHardwareProfile, ulFlags, hMachine);
+          dnDevInst, ulHardwareProfile, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
 }
