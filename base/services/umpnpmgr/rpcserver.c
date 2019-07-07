@@ -3531,7 +3531,7 @@ WINAPI
 PNP_RegisterNotification(
     handle_t hBinding,
     DWORD ulUnknown2,
-    DWORD ulUnknown3,
+    LPWSTR pszName,
     BYTE *pNotificationFilter,
     DWORD ulNotificationFilterSize,
     DWORD ulFlags,
@@ -3545,8 +3545,8 @@ PNP_RegisterNotification(
     PNOTIFY_DATA pNotifyData;
 #endif
 
-    DPRINT1("PNP_RegisterNotification(%p %lx %lx %p %lu 0x%lx %p %lx %p)\n",
-           hBinding, ulUnknown2, ulUnknown3, pNotificationFilter,
+    DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
+           hBinding, ulUnknown2, pszName, pNotificationFilter,
            ulNotificationFilterSize, ulFlags, pulNotify, ulUnknown8, pulUnknown9);
 
     if (pNotificationFilter == NULL ||

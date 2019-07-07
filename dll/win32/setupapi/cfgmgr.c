@@ -23,8 +23,16 @@
 
 #include <dbt.h>
 #include <pnp_c.h>
+#include <winsvc.h>
 
 #include "rpc_private.h"
+
+DWORD
+WINAPI
+I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
+                      OUT LPWSTR lpServiceName,
+                      IN DWORD cchServiceName);
+
 
 /* Registry key and value names */
 static const WCHAR Backslash[] = {'\\', 0};
@@ -593,6 +601,8 @@ CMP_RegisterNotification(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNOTIFY_DATA pNotifyData = NULL;
+    WCHAR szNameBuffer[256];
+    DWORD dwError;
     DWORD ulUnknown9 = 0;
     CONFIGRET ret = CR_SUCCESS;
 
@@ -621,28 +631,40 @@ CMP_RegisterNotification(
 
     pNotifyData->ulMagic = NOTIFY_MAGIC;
 
-/*
-    if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_WINDOW_HANDLE)
+    if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
     {
+        FIXME("Register a window\n");
 
+        /* FIXME */
+        szNameBuffer[0] = UNICODE_NULL;
     }
-    else if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_SERVICE_HANDLE)
+    else if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_SERVICE_HANDLE)
     {
+        FIXME("Register a service\n");
 
+        dwError = I_ScPnPGetServiceName((SERVICE_STATUS_HANDLE)hRecipient,
+                                        szNameBuffer,
+                                        ARRAYSIZE(szNameBuffer));
+        if (dwError != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, pNotifyData);
+            return CR_INVALID_DATA;
+        }
+
+        FIXME("Register service: %S\n", szNameBuffer);
     }
-*/
 
     RpcTryExcept
     {
         ret = PNP_RegisterNotification(BindingHandle,
-                                       0,
-                                       0,
+                                       0,            /* ??? */
+                                       szNameBuffer,
                                        (BYTE*)lpvNotificationFilter,
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
                                        &pNotifyData->ulNotifyData,
-                                       0,
-                                       &ulUnknown9);
+                                       0,            /* ??? */
+                                       &ulUnknown9); /* ??? */
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
