@@ -99,7 +99,7 @@ static BOOLEAN RotBarThreadActive = FALSE;
 static ROT_BAR_TYPE RotBarSelection = RB_UNSPECIFIED;
 static ROT_BAR_STATUS PltRotBarStatus = 0;
 static UCHAR RotBarBuffer[24 * 9];
-static UCHAR RotLineBuffer[640 * 6];
+static UCHAR RotLineBuffer[SCREEN_WIDTH * 6];
 #endif
 
 
@@ -193,7 +193,7 @@ BootLogoFadeIn(VOID)
     ULONG Iteration, Index, ClrUsed;
 
     LARGE_INTEGER Delay;
-    Delay.QuadPart = - (PALETTE_FADE_TIME * 10);
+    Delay.QuadPart = -(PALETTE_FADE_TIME * 10);
 
     /* Check if we are installed and we own the display */
     if (!InbvBootDriverInstalled ||
@@ -1028,15 +1028,15 @@ InbvRotationThread(
         else if (RotBarSelection == RB_PROGRESS_BAR)
         {
             Delay.QuadPart = -600000; // 60 ms
-            Total = 640;
+            Total = SCREEN_WIDTH;
             Index %= Total;
 
             /* Right part */
-            VidBufferToScreenBlt(RotLineBuffer, Index, 474, 640 - Index, 6, 640);
+            VidBufferToScreenBlt(RotLineBuffer, Index, SCREEN_HEIGHT-6, SCREEN_WIDTH - Index, 6, SCREEN_WIDTH);
             if (Index > 0)
             {
                 /* Left part */
-                VidBufferToScreenBlt(RotLineBuffer + (640 - Index) / 2, 0, 474, Index - 2, 6, 640);
+                VidBufferToScreenBlt(RotLineBuffer + (SCREEN_WIDTH - Index) / 2, 0, SCREEN_HEIGHT-6, Index - 2, 6, SCREEN_WIDTH);
             }
             Index += 32;
         }
@@ -1103,8 +1103,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         {
             /* Workstation; set colors */
             InbvSetTextColor(15);
-            InbvSolidColorFill(0, 0, 639, 479, 7);
-            InbvSolidColorFill(0, 421, 639, 479, 1);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 7);
+            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
@@ -1114,8 +1114,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         {
             /* Server; set colors */
             InbvSetTextColor(14);
-            InbvSolidColorFill(0, 0, 639, 479, 6);
-            InbvSolidColorFill(0, 421, 639, 479, 1);
+            InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 6);
+            InbvSolidColorFill(0, 421, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 1);
 
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
@@ -1259,8 +1259,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             if (LineBmp)
             {
                 /* Draw the line and store it in global buffer */
-                BitBltPalette(LineBmp, TRUE, 0, 474);
-                InbvScreenToBufferBlt(RotLineBuffer, 0, 474, 640, 6, 640);
+                BitBltPalette(LineBmp, TRUE, 0, SCREEN_HEIGHT-6);
+                InbvScreenToBufferBlt(RotLineBuffer, 0, SCREEN_HEIGHT-6, SCREEN_WIDTH, 6, SCREEN_WIDTH);
             }
         }
         else
@@ -1355,7 +1355,7 @@ FinalizeBootLogo(VOID)
     if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
     {
         /* Clear the screen */
-        VidSolidColorFill(0, 0, 639, 479, 0);
+        VidSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, 0);
     }
 
     /* Reset progress bar and lock */
