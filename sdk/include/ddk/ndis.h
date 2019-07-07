@@ -4482,14 +4482,14 @@ NdisGetCurrentProcessorCpuUsage(
  * NDIS_INIT_FUNCTION(FunctionName)
  */
 #define NDIS_INIT_FUNCTION(FunctionName)    \
-  alloc_text(init, FunctionName)
+  alloc_text(INIT, FunctionName)
 
 /*
  * VOID
  * NDIS_PAGABLE_FUNCTION(FunctionName)
  */
 #define NDIS_PAGEABLE_FUNCTION(FunctionName) \
-  alloc_text(page, FunctionName)
+  alloc_text(PAGE, FunctionName)
 
 #define NDIS_PAGABLE_FUNCTION NDIS_PAGEABLE_FUNCTION
 
