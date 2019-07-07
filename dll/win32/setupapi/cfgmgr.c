@@ -602,8 +602,9 @@ CMP_RegisterNotification(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNOTIFY_DATA pNotifyData = NULL;
     WCHAR szNameBuffer[256];
-    DWORD dwError;
+    INT nLength;
     DWORD ulUnknown9 = 0;
+    DWORD dwError;
     CONFIGRET ret = CR_SUCCESS;
 
     FIXME("CMP_RegisterNotification(%p %p %lu %p)\n",
@@ -635,8 +636,16 @@ CMP_RegisterNotification(
     {
         FIXME("Register a window\n");
 
-        /* FIXME */
-        szNameBuffer[0] = UNICODE_NULL;
+        nLength = GetWindowTextW((HWND)hRecipient,
+                                 szNameBuffer,
+                                 ARRAYSIZE(szNameBuffer));
+        if (nLength == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, pNotifyData);
+            return CR_INVALID_DATA;
+        }
+
+        FIXME("Register window: %S\n", szNameBuffer);
     }
     else if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_SERVICE_HANDLE)
     {
