@@ -39,21 +39,27 @@ BOOLEAN    FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULO
 #define TAG_FAT_FILE 'FtaF'
 #define TAG_FAT_VOLUME 'VtaF'
 #define TAG_FAT_BUFFER 'BtaF'
+#define TAG_FAT_CACHE 'HtaF'
+
+#define FAT_MAX_CACHE_SIZE (256 * 1024) // 256 KiB, note: it should fit maximum FAT12 FAT size (6144 bytes)
 
 typedef struct _FAT_VOLUME_INFO
 {
-    ULONG BytesPerSector; /* Number of bytes per sector */
-    ULONG SectorsPerCluster; /* Number of sectors per cluster */
+    PUCHAR FatCache; /* A part of 1st FAT cached in memory */
+    PULONG FatCacheIndex; /* Cached sector's indexes */
+    ULONG FatCacheSize; /* Size of the cache in sectors */
     ULONG FatSectorStart; /* Starting sector of 1st FAT table */
     ULONG ActiveFatSectorStart; /* Starting sector of active FAT table */
-    ULONG NumberOfFats; /* Number of FAT tables */
     ULONG SectorsPerFat; /* Sectors per FAT table */
     ULONG RootDirSectorStart; /* Starting sector of the root directory (non-fat32) */
     ULONG RootDirSectors; /* Number of sectors of the root directory (non-fat32) */
     ULONG RootDirStartCluster; /* Starting cluster number of the root directory (fat32 only) */
     ULONG DataSectorStart; /* Starting sector of the data area */
-    ULONG FatType; /* FAT12, FAT16, FAT32, FATX16 or FATX32 */
     ULONG DeviceId;
+    UINT16 BytesPerSector; /* Number of bytes per sector */
+    UINT8 FatType; /* FAT12, FAT16, FAT32, FATX16 or FATX32 */
+    UINT8 NumberOfFats; /* Number of FAT tables */
+    UINT8 SectorsPerCluster; /* Number of sectors per cluster */
 } FAT_VOLUME_INFO;
 
 PFAT_VOLUME_INFO FatVolumes[MAX_FDS];
@@ -139,7 +145,7 @@ VOID FatSwapFatXDirEntry(PFATX_DIRENTRY Obj)
 BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONGLONG PartitionSectorCount)
 {
     char ErrMsg[80];
-    ULONG FatSize;
+    ULONG FatSize, i;
     PFAT_BOOTSECTOR    FatVolumeBootSector;
     PFAT32_BOOTSECTOR Fat32VolumeBootSector;
     PFATX_BOOTSECTOR FatXVolumeBootSector;
@@ -313,6 +319,39 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
             FileSystemError("FreeLoader is too old to work with this FAT32 filesystem.\nPlease update FreeLoader.");
             return FALSE;
         }
+    }
+
+    Volume->FatCacheSize = min(Volume->SectorsPerFat, FAT_MAX_CACHE_SIZE / Volume->BytesPerSector);
+    TRACE("FAT cache is %d sectors, %d bytes\n", Volume->FatCacheSize, Volume->FatCacheSize * Volume->BytesPerSector);
+
+    Volume->FatCache = FrLdrTempAlloc(Volume->FatCacheSize * Volume->BytesPerSector, TAG_FAT_CACHE);
+    if (!Volume->FatCache)
+    {
+        FileSystemError("Cannot allocate memory for FAT cache");
+        return FALSE;
+    }
+
+    Volume->FatCacheIndex = FrLdrTempAlloc(Volume->FatCacheSize * sizeof(*Volume->FatCacheIndex), TAG_FAT_VOLUME);
+    if (!Volume->FatCacheIndex)
+    {
+        FileSystemError("Cannot allocate memory for FAT cache index");
+        FrLdrTempFree(Volume->FatCache, TAG_FAT_CACHE);
+        return FALSE;
+    }
+
+    // read the beginning of the FAT (or the whole one) to cache
+    if (!FatReadVolumeSectors(Volume, Volume->ActiveFatSectorStart, Volume->FatCacheSize, Volume->FatCache))
+    {
+        FileSystemError("Error when reading FAT cache");
+        FrLdrTempFree(Volume->FatCache, TAG_FAT_CACHE);
+        FrLdrTempFree(Volume->FatCacheIndex, TAG_FAT_VOLUME);
+        return FALSE;
+    }
+
+    // fill the index with sector numbers
+    for (i = 0; i < Volume->FatCacheSize; i++)
+    {
+        Volume->FatCacheIndex[i] = Volume->ActiveFatSectorStart + i;
     }
 
     return TRUE;
@@ -899,54 +938,76 @@ void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
     //TRACE("FatParseShortFileName() ShortName = %s\n", Buffer);
 }
 
+/**
+ * @brief Reads 1-4 sectors from FAT using the cache
+ */
+static
+PUCHAR FatGetFatSector(PFAT_VOLUME_INFO Volume, UINT32 FatSectorNumber)
+{
+    UINT32 SectorNumAbsolute = Volume->ActiveFatSectorStart + FatSectorNumber;
+    UINT32 CacheIndex = FatSectorNumber % Volume->FatCacheSize;
+
+    ASSERT(FatSectorNumber < Volume->SectorsPerFat);
+
+    // cache miss
+    if (Volume->FatCacheIndex[CacheIndex] != SectorNumAbsolute)
+    {
+        UINT32 SectorsToRead = min(Volume->FatCacheSize - CacheIndex, min(Volume->SectorsPerFat - SectorNumAbsolute, 4));
+        UINT8 i;
+
+        if (!FatReadVolumeSectors(Volume, SectorNumAbsolute, SectorsToRead, &Volume->FatCache[CacheIndex * Volume->BytesPerSector]))
+        {
+            return NULL;
+        }
+
+        for (i = 0; i < SectorsToRead; i++)
+        {
+            Volume->FatCacheIndex[CacheIndex + i] = SectorNumAbsolute + i; 
+        }
+
+        TRACE("FAT cache miss: read sector 0x%x from disk\n", SectorNumAbsolute);
+    }
+    else
+    {
+        TRACE("FAT cache hit: sector 0x%x present\n", SectorNumAbsolute);
+    }
+
+    return &Volume->FatCache[CacheIndex * Volume->BytesPerSector];
+}
+
 /*
  * FatGetFatEntry()
  * returns the Fat entry for a given cluster number
  */
 BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPointer)
 {
-    ULONG        fat = 0;
-    UINT32        FatOffset;
-    UINT32        ThisFatSecNum;
-    UINT32        ThisFatEntOffset;
-    ULONG SectorCount;
+    UINT32 FatOffset, ThisFatSecNum, ThisFatEntOffset, fat;
     PUCHAR ReadBuffer;
-    BOOLEAN Success = TRUE;
 
-    //TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
-
-    // We need a buffer for 2 sectors
-    ReadBuffer = FrLdrTempAlloc(2 * Volume->BytesPerSector, TAG_FAT_BUFFER);
-    if (!ReadBuffer)
-    {
-        return FALSE;
-    }
+    TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
     switch(Volume->FatType)
     {
     case FAT12:
 
         FatOffset = Cluster + (Cluster / 2);
-        ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+        ThisFatSecNum = FatOffset / Volume->BytesPerSector;
         ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
         TRACE("FatOffset: %d\n", FatOffset);
         TRACE("ThisFatSecNum: %d\n", ThisFatSecNum);
         TRACE("ThisFatEntOffset: %d\n", ThisFatEntOffset);
 
-        if (ThisFatEntOffset == (Volume->BytesPerSector - 1))
-        {
-            SectorCount = 2;
-        }
-        else
-        {
-            SectorCount = 1;
-        }
+        // The cluster pointer can span within two sectors, but the FatGetFatSector function
+        // reads 4 sectors most times, except when we are at the edge of FAT cache
+        // and/or FAT region on the disk. For FAT12 the whole FAT would be cached so
+        // there will be no situation when the first sector is at the end of the cache
+        // and the next one is in the beginning
 
-        if (!FatReadVolumeSectors(Volume, ThisFatSecNum, SectorCount, ReadBuffer))
+        ReadBuffer = FatGetFatSector(Volume, ThisFatSecNum);
+        if (!ReadBuffer)
         {
-            Success = FALSE;
-            break;
+            return FALSE;
         }
 
         fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
@@ -962,13 +1023,13 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
     case FATX16:
 
         FatOffset = (Cluster * 2);
-        ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+        ThisFatSecNum = FatOffset / Volume->BytesPerSector;
         ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-        if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
+        ReadBuffer = FatGetFatSector(Volume, ThisFatSecNum);
+        if (!ReadBuffer)
         {
-            Success = FALSE;
-            break;
+            return FALSE;
         }
 
         fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
@@ -980,10 +1041,11 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
     case FATX32:
 
         FatOffset = (Cluster * 4);
-        ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+        ThisFatSecNum = FatOffset / Volume->BytesPerSector;
         ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-        if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
+        ReadBuffer = FatGetFatSector(Volume, ThisFatSecNum);
+        if (!ReadBuffer)
         {
             Success = FALSE;
             break;
@@ -997,17 +1059,14 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
     default:
         ERR("Unknown FAT type %d\n", Volume->FatType);
-        Success = FALSE;
-        break;
+        return FALSE;
     }
 
-    //TRACE("FAT entry is 0x%x.\n", fat);
-
-    FrLdrTempFree(ReadBuffer, TAG_FAT_BUFFER);
+    TRACE("FAT entry is 0x%x.\n", fat);
 
     *ClusterPointer = fat;
 
-    return Success;
+    return TRUE;
 }
 
 ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
