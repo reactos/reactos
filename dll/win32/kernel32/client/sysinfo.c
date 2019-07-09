@@ -381,7 +381,7 @@ GetNumaProcessorNode(IN UCHAR Processor,
 }
 
 /**
- * 
+ *
  * @name GetNumaAvailableMemoryNode
  * @implemented NT 5.2
  *
@@ -393,17 +393,8 @@ GetNumaProcessorNode(IN UCHAR Processor,
  * @param AvailableBytes
  *        The amount of available memory for the node, in bytes.
  *
- * @return If the function succeeds, the return value is non zero.
- *         If the function fails, the return value is zero. To get
- *         extended error information, call GetLastError.
+ * @return TRUE or FALSE on error.You can get extended information using the GetLastError function.
  *
- * @remarks The GetNumaAvailableMemoryNode function returns the amount of memory consumed
- *          by free and zeroed pages on the specified node. On systems with more than one
- *          node, this memory does not include standby pages. Therefore, the sum of the
- *          available memory values for all nodes in the system is equal to the value of
- *          the Free & Zero Page List Bytes memory performance counter. On systems with
- *          only one node, the value returned by GetNumaAvailableMemoryNode includes standby
- *          pages and is equal to the value of the Available Bytes memory performance counter.
  **/
 BOOL
 WINAPI
