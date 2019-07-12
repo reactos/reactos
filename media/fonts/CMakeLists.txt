@@ -129,6 +129,7 @@ list(APPEND FONT_FILES
     #sserife.fon
     #sserifeg.fon
     #sserifer.fon
+    #sserifet.fon
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
