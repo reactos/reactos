@@ -2281,20 +2281,20 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-VOID
+BOOLEAN
 NTAPI
-MmMakeKernelResourceSectionWritable(VOID)
+MmChangeKernelResourceSectionProtection(IN ULONG_PTR ProtectionMask)
 {
     PMMPTE PointerPte;
     MMPTE TempPte;
 
     /* Don't do anything if the resource section is already writable */
     if (MiKernelResourceStartPte == NULL || MiKernelResourceEndPte == NULL)
-        return;
+        return FALSE;
 
     /* If the resource section is physical, we cannot change its protection */
     if (MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(MiKernelResourceStartPte)))
-        return;
+        return FALSE;
 
     /* Loop the PTEs */
     for (PointerPte = MiKernelResourceStartPte; PointerPte < MiKernelResourceEndPte; ++PointerPte)
@@ -2303,19 +2303,36 @@ MmMakeKernelResourceSectionWritable(VOID)
         TempPte = *PointerPte;
 
         /* Update the protection */
-        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, MM_READWRITE, TempPte.u.Hard.PageFrameNumber);
+        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, ProtectionMask, TempPte.u.Hard.PageFrameNumber);
         MI_UPDATE_VALID_PTE(PointerPte, TempPte);
     }
 
-    /*
-     * Invalidate the cached resource section PTEs
-     * so as to not change its protection again later.
-     */
-    MiKernelResourceStartPte = NULL;
-    MiKernelResourceEndPte = NULL;
-
     /* Only flush the current processor's TLB */
     KeFlushCurrentTb();
+    return TRUE;
+}
+
+VOID
+NTAPI
+MmMakeKernelResourceSectionWritable(VOID)
+{
+    /* Don't do anything if the resource section is already writable */
+    if (MiKernelResourceStartPte == NULL || MiKernelResourceEndPte == NULL)
+        return;
+
+    /* If the resource section is physical, we cannot change its protection */
+    if (MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(MiKernelResourceStartPte)))
+        return;
+
+    if (MmChangeKernelResourceSectionProtection(MM_READWRITE))
+    {
+        /*
+         * Invalidate the cached resource section PTEs
+         * so as to not change its protection again later.
+         */
+        MiKernelResourceStartPte = NULL;
+        MiKernelResourceEndPte = NULL;
+    }
 }
 
 LOGICAL
