@@ -1897,7 +1897,6 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     NTSTATUS Status;
-    WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
     UNICODE_STRING ModuleFileName;
     PMEMORY_SECTION_NAME SectionName = NULL;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -1915,7 +1914,6 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
         return Status;
     }
 
-    RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
     Status = MmGetFileNameForAddress(BaseAddress, &ModuleFileName);
 
     if (NT_SUCCESS(Status))
@@ -1947,6 +1945,8 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
             if (ReturnLength) *ReturnLength = ModuleFileName.Length;
 
         }
+
+        RtlFreeUnicodeString(&ModuleFileName);
     }
     ObDereferenceObject(Process);
     return Status;
