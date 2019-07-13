@@ -1,6 +1,6 @@
 ##   List of maintainers for the ReactOS project
 
-## This file purpose is to give newcomers to the projet the responsible
+## This file purpose is to give newcomers to the project the responsible
 ## developers when submitting a pull request on GitHub, or opening a bug
 ## report on Jira.
 
@@ -149,8 +149,9 @@ CMakeLists.txt  @learn-more @ThFabba
 # Freeloader
 #   M:
 #   R: tkreuzer. ThePhysicist, Timo Kreuzer
+#   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
-/boot/freeldr/freeldr/  @tkreuzer
+/boot/freeldr/freeldr/  @tkreuzer @Extravert-ir
 
 # HAL / APIC
 #   M: tkreuzer. ThePhysicist, Timo Kreuzer
@@ -183,6 +184,13 @@ CMakeLists.txt  @learn-more @ThFabba
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
 /drivers/network/   @ThFabba
+
+# Intel PRO/1000 NIC family driver
+#   M:
+#   R: ThFabba, Thomas Faber
+#   R: Extravert-ir, extravert34, Victor Perevertkin
+#   S: Maintained
+/drivers/network/dd/e1000/   @ThFabba @Extravert-ir
 
 # Network File Systems kernel libraries
 #   M: HeisSpiter, Pierre Schweitzer
@@ -251,10 +259,11 @@ CMakeLists.txt  @learn-more @ThFabba
 
 # USB Drivers
 #   M: ThFabba, Thomas Faber
+#   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
-/drivers/usb/                           @ThFabba
-/sdk/lib/drivers/libusb/                @ThFabba
-/sdk/include/reactos/drivers/usbport/   @ThFabba
+/drivers/usb/                           @ThFabba @Extravert-ir
+/sdk/lib/drivers/libusb/                @ThFabba @Extravert-ir
+/sdk/include/reactos/drivers/usbport/   @ThFabba @Extravert-ir
 
 # Virtual CD-ROM
 #   M: HeisSpiter, Pierre Schweitzer
