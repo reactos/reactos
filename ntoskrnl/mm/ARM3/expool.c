@@ -2016,6 +2016,9 @@ ExAllocatePoolWithTag(
             Tag = ' GIB';
         }
         ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), OriginalType);
+#if DBG
+        RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
+#endif
         return Allocation;
     }
 
