@@ -129,16 +129,18 @@ GetIntervalSetting(VOID)
     LONG lRet;
 
     dwData = 0;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient",
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hKey) == ERROR_SUCCESS)
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
     {
-        /* This key holds the update interval in seconds
-         * It is useful for testing to set it to a value of 10 (Decimal)
-         * This will cause the clock to try and update every 10 seconds
-         * So you can change the time and expect it to be set back correctly in 10-20 seconds
+        /*
+         * This key holds the update interval in seconds.
+         * It is useful for testing to set it to a value of 10 (Decimal).
+         * This will cause the clock to try and update every 10 seconds.
+         * So you can change the time and expect it to be set back correctly in 10-20 seconds.
          */
         lRet = RegQueryValueExW(hKey,
                                 L"SpecialPollInterval",
@@ -149,8 +151,8 @@ GetIntervalSetting(VOID)
         RegCloseKey(hKey);
     }
 
-    if (lRet != ERROR_SUCCESS)
-        return 0;
+    if (lRet != ERROR_SUCCESS || dwData < 120)
+        return 9 * 60 * 60; // 9 hours, because Windows uses 9 hrs, 6 mins and 8 seconds by default.
     else
         return dwData;
 }
