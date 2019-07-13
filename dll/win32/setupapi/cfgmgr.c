@@ -1590,10 +1590,111 @@ CM_Delete_DevNode_Key_Ex(
     _In_ ULONG ulFlags,
     _In_opt_ HANDLE hMachine)
 {
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    PWSTR pszDevInst, pszKeyPath = NULL, pszInstancePath = NULL;
+    CONFIGRET ret;
+
     FIXME("CM_Delete_DevNode_Key_Ex(%p %lu %lx %p)\n",
           dnDevInst, ulHardwareProfile, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags & ~CM_REGISTRY_BITS)
+        return CR_INVALID_FLAG;
+
+    if ((ulFlags & CM_REGISTRY_USER) && (ulFlags & CM_REGISTRY_CONFIG))
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    pszDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (pszDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    TRACE("pszDevInst: %S\n", pszDevInst);
+
+    pszKeyPath = MyMalloc(512 * sizeof(WCHAR));
+    if (pszKeyPath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    pszInstancePath = MyMalloc(512 * sizeof(WCHAR));
+    if (pszInstancePath == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    ret = GetDeviceInstanceKeyPath(BindingHandle,
+                                   pszDevInst,
+                                   pszKeyPath,
+                                   pszInstancePath,
+                                   ulHardwareProfile,
+                                   ulFlags);
+    if (ret != CR_SUCCESS)
+        goto done;
+
+    TRACE("pszKeyPath: %S\n", pszKeyPath);
+    TRACE("pszInstancePath: %S\n", pszInstancePath);
+
+    if (ulFlags & CM_REGISTRY_USER)
+    {
+        FIXME("The CM_REGISTRY_USER flag is not supported yet!\n");
+    }
+    else
+    {
+#if 0
+        if (!pSetupIsUserAdmin())
+        {
+            ret = CR_ACCESS_DENIED;
+            goto done;
+        }
+#endif
+
+        if (!(ulFlags & CM_REGISTRY_CONFIG))
+            ulHardwareProfile = 0;
+
+        RpcTryExcept
+        {
+            ret = PNP_DeleteRegistryKey(BindingHandle,
+                                        pszDevInst,
+                                        pszKeyPath,
+                                        pszInstancePath,
+                                        ulHardwareProfile);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = RpcStatusToCmStatus(RpcExceptionCode());
+        }
+        RpcEndExcept;
+    }
+
+done:
+    if (pszInstancePath != NULL)
+        MyFree(pszInstancePath);
+
+    if (pszKeyPath != NULL)
+        MyFree(pszKeyPath);
+
+    return ret;
 }
 
 
