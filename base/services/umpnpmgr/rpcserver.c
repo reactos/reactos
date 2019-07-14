@@ -2723,17 +2723,13 @@ PNP_GetDeviceStatus(
     DWORD *pulProblem,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
-
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
-    return GetDeviceStatus(pDeviceId, pulStatus, pulProblem);
+    return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
 }
 
 
