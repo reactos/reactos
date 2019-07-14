@@ -1083,19 +1083,6 @@ AcpiTbLoadTable (
     Status = AcpiNsLoadTable (TableIndex, ParentNode);
 
     /*
-     * This case handles the legacy option that groups all module-level
-     * code blocks together and defers execution until all of the tables
-     * are loaded. Execute all of these blocks at this time.
-     * Execute any module-level code that was detected during the table
-     * load phase.
-     *
-     * Note: this option is deprecated and will be eliminated in the
-     * future. Use of this option can cause problems with AML code that
-     * depends upon in-order immediate execution of module-level code.
-     */
-    AcpiNsExecModuleCodeList ();
-
-    /*
      * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is
      * responsible for discovering any new wake GPEs by running _PRW methods
      * that may have been loaded by this table.

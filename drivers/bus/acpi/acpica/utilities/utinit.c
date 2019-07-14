@@ -234,7 +234,6 @@ AcpiUtInitGlobals (
 
     /* Namespace */
 
-    AcpiGbl_ModuleCodeList              = NULL;
     AcpiGbl_RootNode                    = NULL;
     AcpiGbl_RootNodeStruct.Name.Integer = ACPI_ROOT_NAME;
     AcpiGbl_RootNodeStruct.DescriptorType = ACPI_DESC_TYPE_NAMED;

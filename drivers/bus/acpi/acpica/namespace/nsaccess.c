@@ -76,6 +76,7 @@ AcpiNsRootInitialize (
     ACPI_STATUS                 Status;
     const ACPI_PREDEFINED_NAMES *InitVal = NULL;
     ACPI_NAMESPACE_NODE         *NewNode;
+    ACPI_NAMESPACE_NODE         *PrevNode = NULL;
     ACPI_OPERAND_OBJECT         *ObjDesc;
     ACPI_STRING                 Val = NULL;
 
@@ -105,13 +106,30 @@ AcpiNsRootInitialize (
      */
     AcpiGbl_RootNode = &AcpiGbl_RootNodeStruct;
 
-    /* Enter the pre-defined names in the name table */
+    /* Enter the predefined names in the name table */
 
     ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
         "Entering predefined entries into namespace\n"));
 
+    /*
+     * Create the initial (default) namespace.
+     * This namespace looks like something similar to this:
+     *
+     *   ACPI Namespace (from Namespace Root):
+     *    0  _GPE Scope        00203160 00
+     *    0  _PR_ Scope        002031D0 00
+     *    0  _SB_ Device       00203240 00 Notify Object: 0020ADD8
+     *    0  _SI_ Scope        002032B0 00
+     *    0  _TZ_ Device       00203320 00
+     *    0  _REV Integer      00203390 00 = 0000000000000002
+     *    0  _OS_ String       00203488 00 Len 14 "Microsoft Windows NT"
+     *    0  _GL_ Mutex        00203580 00 Object 002035F0
+     *    0  _OSI Method       00203678 00 Args 1 Len 0000 Aml 00000000
+     */
     for (InitVal = AcpiGbl_PreDefinedNames; InitVal->Name; InitVal++)
     {
+        Status = AE_OK;
+
         /* _OSI is optional for now, will be permanent later */
 
         if (!strcmp (InitVal->Name, "_OSI") && !AcpiGbl_CreateOsiMethod)
@@ -119,16 +137,34 @@ AcpiNsRootInitialize (
             continue;
         }
 
-        Status = AcpiNsLookup (NULL, ACPI_CAST_PTR (char, InitVal->Name),
-            InitVal->Type, ACPI_IMODE_LOAD_PASS2, ACPI_NS_NO_UPSEARCH,
-            NULL, &NewNode);
-        if (ACPI_FAILURE (Status))
+        /*
+         * Create, init, and link the new predefined name
+         * Note: No need to use AcpiNsLookup here because all the
+         * predefined names are at the root level. It is much easier to
+         * just create and link the new node(s) here.
+         */
+        NewNode = ACPI_ALLOCATE_ZEROED (sizeof (ACPI_NAMESPACE_NODE));
+        if (!NewNode)
         {
-            ACPI_EXCEPTION ((AE_INFO, Status,
-                "Could not create predefined name %s",
-                InitVal->Name));
-            continue;
+            Status = AE_NO_MEMORY;
+            goto UnlockAndExit;
         }
+
+        ACPI_COPY_NAMESEG (NewNode->Name.Ascii, InitVal->Name);
+        NewNode->DescriptorType = ACPI_DESC_TYPE_NAMED;
+        NewNode->Type = InitVal->Type;
+
+        if (!PrevNode)
+        {
+            AcpiGbl_RootNodeStruct.Child = NewNode;
+        }
+        else
+        {
+            PrevNode->Peer = NewNode;
+        }
+
+        NewNode->Parent = &AcpiGbl_RootNodeStruct;
+        PrevNode = NewNode;
 
         /*
          * Name entered successfully. If entry in PreDefinedNames[] specifies
@@ -178,7 +214,7 @@ AcpiNsRootInitialize (
 
                 NewNode->Value = ObjDesc->Method.ParamCount;
 #else
-                /* Mark this as a very SPECIAL method */
+                /* Mark this as a very SPECIAL method (_OSI) */
 
                 ObjDesc->Method.InfoFlags = ACPI_METHOD_INTERNAL_ONLY;
                 ObjDesc->Method.Dispatch.Implementation = AcpiUtOsiImplementation;
@@ -250,7 +286,6 @@ AcpiNsRootInitialize (
             AcpiUtRemoveReference (ObjDesc);
         }
     }
-
 
 UnlockAndExit:
     (void) AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);

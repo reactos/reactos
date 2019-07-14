@@ -1148,7 +1148,7 @@ AcpiRemoveGpeHandler (
             ACPI_GPE_DISPATCH_NOTIFY)) &&
         Handler->OriginallyEnabled)
     {
-        (void) AcpiEvAddGpeReference (GpeEventInfo);
+        (void) AcpiEvAddGpeReference (GpeEventInfo, FALSE);
         if (ACPI_GPE_IS_POLLING_NEEDED (GpeEventInfo))
         {
             /* Poll edge triggered GPEs to handle existing events */
