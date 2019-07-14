@@ -191,6 +191,41 @@ SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
 }
 
 
+static
+CONFIGRET
+GetDeviceStatus(
+    _In_ LPWSTR pDeviceID,
+    _Out_ DWORD *pulStatus,
+    _Out_ DWORD *pulProblem)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT("GetDeviceStatus(%S %p %p)\n",
+           pDeviceID, pulStatus, pulProblem);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pDeviceID);
+    PlugPlayData.Operation = 0; /* Get status */
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulStatus = PlugPlayData.DeviceStatus;
+        *pulProblem = PlugPlayData.DeviceProblem;
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /* Function 0 */
@@ -2695,28 +2730,10 @@ PNP_GetDeviceStatus(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDeviceStatus() called\n");
+    DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
+           hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
-    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         pDeviceID);
-    PlugPlayData.Operation = 0; /* Get status */
-
-    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
-                               (PVOID)&PlugPlayData,
-                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
-    if (NT_SUCCESS(Status))
-    {
-        *pulStatus = PlugPlayData.DeviceStatus;
-        *pulProblem = PlugPlayData.DeviceProblem;
-    }
-    else
-    {
-        ret = NtStatusToCrError(Status);
-    }
-
-    DPRINT("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
-
-    return ret;
+    return GetDeviceStatus(pDeviceId, pulStatus, pulProblem);
 }
 
 
