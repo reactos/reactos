@@ -433,21 +433,21 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
     ULONG StartSector;
     UCHAR Count;
 
-    if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
+    if (DriveNumber < 0x80 || (DriveNumber & 0x0f) >= 2)
     {
         /* Xbox has only 1 IDE controller and no floppy */
         WARN("Invalid drive number\n");
         return FALSE;
     }
 
-    if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
+    if (((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)) != UINT64_C(0))
     {
         FIXME("48bit LBA required but not implemented\n");
         return FALSE;
     }
 
     StartSector = (ULONG) SectorNumber;
-    while (0 < SectorCount)
+    while (SectorCount > 0)
     {
         Count = (SectorCount <= 255 ? (UCHAR)SectorCount : 255);
         if (!XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
@@ -457,7 +457,7 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
                                 (StartSector >> 8) & 0xff,
                                 (StartSector >> 16) & 0xff,
                                 ((StartSector >> 24) & 0x0f) | IDE_DH_LBA |
-                                (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                                ((DriveNumber & 0x0f) == 0 ? IDE_DH_DRV0 : IDE_DH_DRV1),
                                 IDE_CMD_READ,
                                 Buffer))
         {
@@ -512,7 +512,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
                             0,
                             0,
                             0,
-                            (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                            ((DriveNumber & 0x0f) == 0 ? IDE_DH_DRV0 : IDE_DH_DRV1),
                             (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
                             (PUCHAR) &DrvParms))
     {
@@ -524,7 +524,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
     Geometry->Heads = DrvParms.LogicalHeads;
     Geometry->Sectors = DrvParms.SectorsPerTrack;
 
-    if (! Atapi && 0 != (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED))
+    if (!Atapi && (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED) != 0)
     {
         /* LBA ATA drives always have a sector size of 512 */
         Geometry->BytesPerSector = 512;
