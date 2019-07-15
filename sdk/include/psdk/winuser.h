@@ -1687,6 +1687,16 @@ extern "C" {
 #define WM_NCXBUTTONDBLCLK 173
 #endif /* (_WIN32_WINNT >= 0x0500) */
 
+#define GIDC_ARRIVAL 1
+#define GIDC_REMOVAL 2
+
+#define WM_INPUT_DEVICE_CHANGE 0x00FE
+
+#define RIM_INPUT 0
+#define RIM_INPUTSINK 1
+
+#define WM_INPUT 0x00FF
+
 #define WM_KEYFIRST 256
 #define WM_KEYDOWN 256
 #define WM_KEYUP 257
