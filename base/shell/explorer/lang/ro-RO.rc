@@ -49,10 +49,7 @@ BEGIN
             MENUITEM "I&mprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Bara de activități și Meniul „Pornire”", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "Căut&are", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "Căut&are", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Manuale de utilizare", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "E&xecutare…", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

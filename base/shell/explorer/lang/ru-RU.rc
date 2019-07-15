@@ -49,10 +49,7 @@ BEGIN
             MENUITEM "Пр&интеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Панель &задач и меню ""Пуск""", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "П&оиск", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "П&оиск", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "Сп&равка и поддержка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Выполнить...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
