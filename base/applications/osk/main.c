@@ -213,8 +213,20 @@ int OSK_DlgInitDialog(HWND hDlg)
         }
     }
 
-    /* Move the dialog according to the placement coordination */
-    SetWindowPos(hDlg, HWND_TOP, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+    /*
+        Place the window (with respective placement coordinates) as topmost, above
+        every window which are not on top or are at the bottom of the Z order.
+    */
+    if (Globals.bAlwaysOnTop)
+    {
+        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
+        SetWindowPos(hDlg, HWND_TOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+    }
+    else
+    {
+        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
+        SetWindowPos(hDlg, HWND_NOTOPMOST, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+    }
 
     /* Set icon on visual buttons */
     OSK_SetImage(SCAN_CODE_15, IDI_BACK);
@@ -632,6 +644,28 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     {
                         Globals.bSoundClick = FALSE;
                         CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_UNCHECKED);
+                    }
+
+                    break;
+                }
+
+                case IDM_ON_TOP:
+                {
+                    /*
+                        Check the condition state before disabling/enabling the menu
+                        item and change the topmost order.
+                    */
+                    if (!Globals.bAlwaysOnTop)
+                    {
+                        Globals.bAlwaysOnTop = TRUE;
+                        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_CHECKED);
+                        SetWindowPos(hDlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                    }
+                    else
+                    {
+                        Globals.bAlwaysOnTop = FALSE;
+                        CheckMenuItem(GetMenu(hDlg), IDM_ON_TOP, MF_BYCOMMAND | MF_UNCHECKED);
+                        SetWindowPos(hDlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
                     }
 
                     break;

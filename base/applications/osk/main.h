@@ -26,6 +26,7 @@ typedef struct
     BOOL       bShowWarning;
     BOOL       bIsEnhancedKeyboard;
     BOOL       bSoundClick;
+    BOOL       bAlwaysOnTop;
     INT        PosX;
     INT        PosY;
 } OSK_GLOBALS;

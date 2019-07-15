@@ -269,7 +269,7 @@ BEGIN
 
     POPUP "Setări"
     BEGIN
-        MENUITEM "Întotdeauna în sus", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "Întotdeauna în sus", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Folosește sunetul de clic", IDM_CLICK_SOUND
         MENUITEM SEPARATOR

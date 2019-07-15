@@ -16,13 +16,14 @@ BOOL LoadDataFromRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop, dwAlwaysOnTop;
     DWORD cbData = sizeof(DWORD);
 
-    /* Set the structure members to TRUE (and the bSoundClick member to FALSE) */
+    /* Initialize the registry application settings */
     Globals.bShowWarning = TRUE;
     Globals.bIsEnhancedKeyboard = TRUE;
     Globals.bSoundClick = FALSE;
+    Globals.bAlwaysOnTop = TRUE;
 
     /* Set the coordinate values to default */
     Globals.PosX = CW_USEDEFAULT;
@@ -129,6 +130,23 @@ BOOL LoadDataFromRegistry()
 
     /* Load the Y value data of the dialog's coordinate */
     Globals.PosY = dwPositionTop;
+
+    lResult = RegQueryValueExW(hKey,
+                               L"AlwaysOnTop",
+                               0,
+                               0,
+                               (BYTE *)&dwAlwaysOnTop,
+                               &cbData);
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Load the window state value data */
+    Globals.bAlwaysOnTop = (dwAlwaysOnTop != 0);
     
     /* If we're here then we succeed, close the key and return TRUE */
     RegCloseKey(hKey);
@@ -139,7 +157,7 @@ BOOL SaveDataToRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop, dwAlwaysOnTop;
     WINDOWPLACEMENT wp;
 
     /* Set the structure length and retrieve the dialog's placement */
@@ -245,6 +263,24 @@ BOOL SaveDataToRegistry()
                              REG_DWORD,
                              (BYTE *)&dwPositionTop,
                              sizeof(dwPositionTop));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Window top state value */
+    dwAlwaysOnTop = Globals.bAlwaysOnTop;
+
+    /* "Always on Top" state value key */
+    lResult = RegSetValueExW(hKey,
+                             L"AlwaysOnTop",
+                             0,
+                             REG_DWORD,
+                             (BYTE *)&dwAlwaysOnTop,
+                             sizeof(dwAlwaysOnTop));
 
     if (lResult != ERROR_SUCCESS)
     {

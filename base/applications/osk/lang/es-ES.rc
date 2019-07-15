@@ -270,7 +270,7 @@ BEGIN
 
     POPUP "Settings"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
