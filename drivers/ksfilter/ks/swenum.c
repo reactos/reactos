@@ -2038,7 +2038,6 @@ KsServiceBusEnumPnpRequest(
     LARGE_INTEGER Time;
     PDEVICE_RELATIONS DeviceRelation;
     PBUS_DEVICE_ENTRY DeviceEntry;
-	KIRQL OldLevel;
 
     /* get device extension */
     DeviceExtension = (PDEV_EXTENSION)DeviceObject->DeviceExtension;
