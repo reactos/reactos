@@ -1690,12 +1690,8 @@ extern "C" {
 #define GIDC_ARRIVAL 1
 #define GIDC_REMOVAL 2
 
-#define WM_INPUT_DEVICE_CHANGE 0x00FE
-
-#define RIM_INPUT 0
-#define RIM_INPUTSINK 1
-
-#define WM_INPUT 0x00FF
+#define WM_INPUT_DEVICE_CHANGE 254
+#define WM_INPUT 255
 
 #define WM_KEYFIRST 256
 #define WM_KEYDOWN 256
