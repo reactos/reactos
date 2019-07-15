@@ -1825,6 +1825,7 @@ extern "C" {
 #define WM_MOUSEHOVER               0x02A1
 #define WM_MOUSELEAVE               0x02A3
 
+#if (WINVER >= 0x0600)
 #define WTS_CONSOLE_CONNECT 0x1
 #define WTS_CONSOLE_DISCONNECT 0x2
 #define WTS_REMOTE_CONNECT 0x3
@@ -1837,6 +1838,7 @@ extern "C" {
 #define WTS_SESSION_CREATE 0xA
 #define WTS_SESSION_TERMINATE 0xB
 #define WM_WTSSESSION_CHANGE 0x02B1
+#endif
 
 #define WM_CUT 768
 #define WM_COPY 769
