@@ -268,7 +268,7 @@ BEGIN
 
     POPUP "&Pengaturan"
     BEGIN
-        MENUITEM "&Selalu di Atas", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "&Selalu di Atas", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Gunakan Suara", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
