@@ -580,7 +580,10 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
                                        NULL);
     ASSERT(NT_SUCCESS(Status));
     BaseStaticServerData->LUIDDeviceMapsEnabled = (BOOLEAN)LuidEnabled;
-    if (!BaseStaticServerData->LUIDDeviceMapsEnabled)
+
+    /* Initialize Global */
+    if (!BaseStaticServerData->LUIDDeviceMapsEnabled ||
+        NT_SUCCESS(RtlInitializeCriticalSectionAndSpinCount(&BaseSrvDDDBSMCritSec, 0x80000000)))
     {
         /* Make Global point back to BNO */
         RtlInitUnicodeString(&DirectoryName, L"Global");
@@ -637,6 +640,11 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
                                          DIRECTORY_ALL_ACCESS,
                                          &ObjectAttributes);
         ASSERT(NT_SUCCESS(Status));
+    }
+    else
+    {
+        /* That should never happen */
+        ASSERT(FALSE);
     }
 
     /* Initialize NLS */

@@ -83,6 +83,7 @@
 
 /*! [Begin] no source code translation  */
 
+#ifndef __REACTOS__
 #define ACPI_FLUSH_CPU_CACHE()
 
 /*
@@ -98,6 +99,46 @@
 #define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Pnd)
 
 #endif
+
+#else /* __REACTOS__ */
+
+#ifdef ACPI_APPLICATION
+#define ACPI_FLUSH_CPU_CACHE()
+#else
+#define ACPI_FLUSH_CPU_CACHE()  __wbinvd()
+#endif
+
+#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq) \
+{ \
+    BOOLEAN acquired = 0xFF; \
+\
+    if ((FacsPtr) != 0) \
+    { \
+        UINT32 compare, prev, newval; \
+        UINT32* lock = &((FacsPtr)->GlobalLock); \
+        do \
+        { \
+            compare = *lock; \
+            newval = (compare & ~1) | ((compare >> 1) & 1) | 2; \
+            prev = InterlockedCompareExchange(lock, newval, compare); \
+        } while (prev != compare); \
+        acquired = ((newval & 0xFF) < 3) ? 0xFF : 0x00; \
+    } \
+    (Acq) = acquired; \
+}
+
+#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) \
+{ \
+    BOOLEAN pending = 0; \
+\
+    if ((FacsPtr) != 0) \
+    { \
+        pending = InterlockedAnd(&(FacsPtr)->GlobalLock, ~3) & 1; \
+    } \
+    (Pnd) = pending; \
+}
+
+#endif /* __REACTOS__ */
 
 /*! [End] no source code translation !*/
 

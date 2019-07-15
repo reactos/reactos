@@ -99,6 +99,7 @@ InstallNetDevice(
     DWORD Characteristics,
     LPCWSTR BusType)
 {
+    SP_DEVINSTALL_PARAMS_W DeviceInstallParams;
     LPWSTR InstanceId = NULL;
     LPWSTR ComponentId = NULL;
     LPWSTR DeviceName = NULL;
@@ -111,6 +112,28 @@ InstallNetDevice(
     DWORD dwShowIcon, dwLength, dwValue;
     WCHAR szBuffer[300];
     PWSTR ptr;
+
+    DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
+    if (!SetupDiGetDeviceInstallParamsW(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        &DeviceInstallParams))
+    {
+        rc = GetLastError();
+        ERR("SetupDiGetDeviceInstallParamsW() failed (Error %lu)\n", rc);
+        goto cleanup;
+    }
+
+    /* Do not start the adapter in the call to SetupDiInstallDevice */
+    DeviceInstallParams.Flags |= DI_DONOTCALLCONFIGMG;
+
+    if (!SetupDiSetDeviceInstallParamsW(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        &DeviceInstallParams))
+    {
+        rc = GetLastError();
+        ERR("SetupDiSetDeviceInstallParamsW() failed (Error %lu)\n", rc);
+        goto cleanup;
+    }
 
     /* Install the adapter */
     if (!SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData))
@@ -386,6 +409,14 @@ InstallNetDevice(
     if (rc != ERROR_SUCCESS)
     {
         ERR("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
+    /* Start the device */
+    if (!SetupDiRestartDevices(DeviceInfoSet, DeviceInfoData))
+    {
+        rc = GetLastError();
+        ERR("SetupDiRestartDevices() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 

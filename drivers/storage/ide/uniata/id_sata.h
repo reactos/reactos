@@ -292,7 +292,7 @@ UniataAhciReadChannelPort4(
     IN ULONG io_port_ndx
     )
 {
-    ULONG v = AtapiReadPortEx4(NULL, (ULONGIO_PTR)&((chan)->BaseIoAHCI_Port), io_port_ndx);
+    volatile ULONG v = AtapiReadPortEx4(NULL, (ULONGIO_PTR)&((chan)->BaseIoAHCI_Port), io_port_ndx);
     KdPrint3((PRINT_PREFIX "ReadChannelPort4 ch%d[%x] = %x\n", chan->lChannel, io_port_ndx, v));
     return v;
 } // end UniataAhciReadChannelPort4()

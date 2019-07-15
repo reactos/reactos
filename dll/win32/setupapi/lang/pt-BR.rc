@@ -2,22 +2,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Copiando arquivos..."
-FONT 8, "MS Shell Dlg"
-BEGIN
-    PUSHBUTTON "Cancelar", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Origem:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Destino:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
-    CONTROL "", PROGRESSORD, "setupx_progress", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 63, 194, 13
-END
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
-
-COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
-STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "A copiar ficheiros..."
+CAPTION "Copiando ficheiros..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -30,29 +15,29 @@ END
 
 IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Files Needed"
+CAPTION "Arquivos necessários"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Insert the manufacturer's installation disk, and then\nmake sure the correct drive is selected below", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Insira o disco de instalação do fabricante, em seguida,seleccione o controlador na lista abaixo", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Copy manufacturer's files from:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Copiar de:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
     DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Browse...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Procurar...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "The file '%1' on %2 is needed"
-    IDS_UNKNOWN      "Unknown"
-    IDS_COPYFROM     "Copy files from:"
-    IDS_INFO         "Type the path where the file is located, and then click OK."
+    IDS_PROMPTDISK   "O arquivo '%1' em %2 é necessário"
+    IDS_UNKNOWN      "Desconhecido"
+    IDS_COPYFROM     "Copiando ficheiros de:"
+    IDS_INFO         "Digite o caminho de origem dos arquivos, em seguida clique em OK."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Your computer needs to be rebooted to finish installation. Do you want to proceed?"
-    IDS_QUERY_REBOOT_CAPTION "Reboot"
-    IDS_INF_FILE "Setup Information"
+    IDS_QUERY_REBOOT_TEXT "Para terminar a instalação, precisa de reiniciar o computador. Deseja continuar?"
+    IDS_QUERY_REBOOT_CAPTION "Reiniciar"
+    IDS_INF_FILE "Informações de configuração"
 END

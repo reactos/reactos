@@ -1832,7 +1832,7 @@ co_WinPosSetWindowPos(
          }
 
          /* Calculate the non client area for resizes, as this is used in the copy region */
-         if (!(WinPos.flags & SWP_NOSIZE))
+         if ((WinPos.flags & (SWP_NOSIZE | SWP_FRAMECHANGED)) != SWP_NOSIZE)
          {
              VisBeforeJustClient = VIS_ComputeVisibleRegion(Window, TRUE, FALSE,
                  (Window->style & WS_CLIPSIBLINGS) ? TRUE : FALSE);
@@ -1973,12 +1973,16 @@ co_WinPosSetWindowPos(
           */
 
          CopyRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
-         if (WinPos.flags & SWP_NOSIZE)
+         if ((WinPos.flags & SWP_NOSIZE) && (WinPos.flags & SWP_NOCLIENTSIZE))
             RgnType = IntGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
          else if (VisBeforeJustClient != NULL)
          {
             RgnType = IntGdiCombineRgn(CopyRgn, VisAfter, VisBeforeJustClient, RGN_AND);
-            REGION_Delete(VisBeforeJustClient);
+         }
+
+         if (VisBeforeJustClient != NULL)
+         {
+             REGION_Delete(VisBeforeJustClient);
          }
 
          /* Now use in copying bits which are in the update region. */

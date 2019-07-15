@@ -29,6 +29,10 @@
 #define BooleanFlagOn(Flags, SingleFlag) ((BOOLEAN)((((Flags) & (SingleFlag)) != 0)))
 #endif
 
+#ifndef SrbGetCdb
+#define SrbGetCdb(srb) ((PCDB)(srb->Cdb))
+#endif
+
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 

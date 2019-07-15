@@ -875,8 +875,14 @@ interface pnp
     __stdcall
     PNP_RegisterNotification(
         [in] handle_t hBinding,
+        [in] DWORD ulUnknown2,
+        [in, string, ref] LPWSTR pszName,
+        [in, size_is(ulNotificationFilterSize)] BYTE *pNotificationFilter,
+        [in] DWORD ulNotificationFilterSize,
         [in] DWORD ulFlags,
-        [out] DWORD *pulNotifyData);
+        [out] DWORD *pulNotifyData,
+        [in] DWORD ulUnknown8,
+        [out] DWORD *pulUnknown9);
 
     /* Function 60 */
     DWORD

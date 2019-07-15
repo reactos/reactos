@@ -184,7 +184,8 @@ FrLdrHeapRelease(
     PHEAP Heap = HeapHandle;
     PHEAP_BLOCK Block;
     PUCHAR StartAddress, EndAddress;
-    PFN_COUNT FreePages, AllPages, AllFreePages = 0;
+    PFN_COUNT FreePages, AllFreePages = 0;
+
     TRACE("HeapRelease(%p)\n", HeapHandle);
 
     /* Loop all heap chunks */
@@ -240,13 +241,13 @@ FrLdrHeapRelease(
         if (Block->Size == 0) break;
     }
 
-    AllPages = Heap->MaximumSize / MM_PAGE_SIZE;
-    TRACE("HeapRelease() done, freed %lu of %lu pages\n", AllFreePages, AllPages);
+    TRACE("HeapRelease() done, freed %lu of %lu pages\n", AllFreePages, Heap->MaximumSize / MM_PAGE_SIZE);
 }
 
 VOID
 FrLdrHeapCleanupAll(VOID)
 {
+#if DBG
     PHEAP Heap;
 
     Heap = FrLdrDefaultHeap;
@@ -257,17 +258,19 @@ FrLdrHeapCleanupAll(VOID)
           Heap->NumAllocs, Heap->NumFrees);
     TRACE("AllocTime = %I64d, FreeTime = %I64d, sum = %I64d\n",
         Heap->AllocationTime, Heap->FreeTime, Heap->AllocationTime + Heap->FreeTime);
-
+#endif
 
     /* Release free pages from the default heap */
     FrLdrHeapRelease(FrLdrDefaultHeap);
 
+#if DBG
     Heap = FrLdrTempHeap;
     TRACE("Heap statistics for temp heap:\n"
           "CurrentAlloc=0x%lx, MaxAlloc=0x%lx, LargestAllocation=0x%lx\n"
           "NumAllocs=%ld, NumFrees=%ld\n",
           Heap->CurrentAllocBytes, Heap->MaxAllocBytes, Heap->LargestAllocation,
           Heap->NumAllocs, Heap->NumFrees);
+#endif
 
     /* Destroy the temp heap */
     FrLdrHeapDestroy(FrLdrTempHeap);

@@ -191,6 +191,7 @@ InfpFindOrAddSection(PINFCACHE Cache,
                      PCWSTR Section,
                      PINFCONTEXT *Context)
 {
+  PINFCACHESECTION CacheSection;
   DPRINT("InfpFindOrAddSection section %S\n", Section);
 
   *Context = MALLOC(sizeof(INFCONTEXT));
@@ -201,13 +202,13 @@ InfpFindOrAddSection(PINFCACHE Cache,
     }
 
   (*Context)->Inf = Cache;
-  (*Context)->Section = InfpFindSection(Cache, Section);
-  (*Context)->Line = NULL;
-  if (NULL == (*Context)->Section)
+  (*Context)->Line = 0;
+  CacheSection = InfpFindSection(Cache, Section);
+  if (NULL == CacheSection)
     {
       DPRINT("Section not found, creating it\n");
-      (*Context)->Section = InfpAddSection(Cache, Section);
-      if (NULL == (*Context)->Section)
+      CacheSection = InfpAddSection(Cache, Section);
+      if (NULL == CacheSection)
         {
           DPRINT("Failed to create section\n");
           FREE(*Context);
@@ -215,26 +216,32 @@ InfpFindOrAddSection(PINFCACHE Cache,
         }
     }
 
+  (*Context)->Section = CacheSection->Id;
   return INF_STATUS_SUCCESS;
 }
 
 INFSTATUS
 InfpAddLineWithKey(PINFCONTEXT Context, PCWSTR Key)
 {
+  PINFCACHESECTION Section;
+  PINFCACHELINE Line;
+
   if (NULL == Context)
     {
       DPRINT1("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
     }
 
-  Context->Line = InfpAddLine(Context->Section);
-  if (NULL == Context->Line)
+  Section = InfpGetSectionForContext(Context);
+  Line = InfpAddLine(Section);
+  if (NULL == Line)
     {
       DPRINT("Failed to create line\n");
       return INF_STATUS_NO_MEMORY;
     }
+  Context->Line = Line->Id;
 
-  if (NULL != Key && NULL == InfpAddKeyToLine(Context->Line, Key))
+  if (NULL != Key && NULL == InfpAddKeyToLine(Line, Key))
     {
       DPRINT("Failed to add key\n");
       return INF_STATUS_NO_MEMORY;
@@ -246,13 +253,16 @@ InfpAddLineWithKey(PINFCONTEXT Context, PCWSTR Key)
 INFSTATUS
 InfpAddField(PINFCONTEXT Context, PCWSTR Data)
 {
-  if (NULL == Context || NULL == Context->Line)
+  PINFCACHELINE Line;
+
+  if (NULL == Context)
     {
       DPRINT1("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
     }
 
-  if (NULL == InfpAddFieldToLine(Context->Line, Data))
+  Line = InfpGetLineForContext(Context);
+  if (NULL == InfpAddFieldToLine(Line, Data))
     {
       DPRINT("Failed to add field\n");
       return INF_STATUS_NO_MEMORY;

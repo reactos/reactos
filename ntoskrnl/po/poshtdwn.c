@@ -135,7 +135,7 @@ PopProcessShutDownLists(VOID)
 
         /* Wait for the thread to finish and dereference it */
         KeWaitForSingleObject(ShutDownWaitEntry->Thread, 0, 0, 0, 0);
-        ObfDereferenceObject(ShutDownWaitEntry->Thread);
+        ObDereferenceObject(ShutDownWaitEntry->Thread);
 
         /* Finally free the entry */
         ExFreePoolWithTag(ShutDownWaitEntry, 'LSoP');
@@ -165,7 +165,7 @@ PopShutdownHandler(VOID)
 
         /* Display shutdown logo and message */
         Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
-        Logo2 = InbvGetResourceAddress(IDB_DEFAULT_LOGO);
+        Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
         if ((Logo1) && (Logo2))
         {
             InbvBitBlt(Logo1, 220, 352);

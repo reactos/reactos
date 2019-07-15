@@ -385,7 +385,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propriedades da Lixeira"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Configurações para local selecionado", -1, 10, 72, 220, 70
     RADIOBUTTON "&Tamanho personalizado:", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
@@ -513,9 +513,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "AutoPlay"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+    LTEXT "&Selecione um tipo de conteúdo e escolha uma ação para o ReactOS executar automaticamente, quando esse tipo for usado neste dispositivo:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Ações", -1, 7, 45, 212, 146
+    GROUPBOX "Acções", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Selecione uma ação &para efetuar:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "Sempre avisar-me ao e&fetuar uma ação", 1006, 14, 177, 202, 10
@@ -797,7 +797,7 @@ BEGIN
     IDS_RESTART_PROMPT "Você quer simular a reinicialização do ReactOS?"
     IDS_SHUTDOWN_TITLE "Desligar"
     IDS_SHUTDOWN_PROMPT "Você quer finalizar a sessão?"
-    
+
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
     IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."

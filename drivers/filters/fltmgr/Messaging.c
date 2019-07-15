@@ -369,7 +369,7 @@ NTAPI
 FltpClientPortDelete(PVOID Object)
 {
     PFLT_PORT_OBJECT PortObject = (PFLT_PORT_OBJECT)Object;
-    ObfDereferenceObject(PortObject->ServerPort);
+    ObDereferenceObject(PortObject->ServerPort);
 }
 
 
@@ -447,14 +447,14 @@ Quit:
         if (ClientPortObjectType)
         {
             ObMakeTemporaryObject(ClientPortObjectType);
-            ObfDereferenceObject(ClientPortObjectType);
+            ObDereferenceObject(ClientPortObjectType);
             ClientPortObjectType = NULL;
         }
 
         if (ServerPortObjectType)
         {
             ObMakeTemporaryObject(ServerPortObjectType);
-            ObfDereferenceObject(ServerPortObjectType);
+            ObDereferenceObject(ServerPortObjectType);
             ServerPortObjectType = NULL;
         }
     }
@@ -737,7 +737,7 @@ Quit:
     {
         if (ClientPortObject)
         {
-            ObfDereferenceObject(ClientPortObject);
+            ObDereferenceObject(ClientPortObject);
         }
 
         if (PortHandle)
@@ -747,7 +747,7 @@ Quit:
         else if (ServerPortObject)
         {
             InterlockedDecrement(&ServerPortObject->NumberOfConnections);
-            ObfDereferenceObject(ServerPortObject);
+            ObDereferenceObject(ServerPortObject);
         }
 
         if (PortCCB)

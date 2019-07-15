@@ -1,13 +1,11 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/ntpclient.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Queries the NTP server
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *
  */
 
-#include "timedate.h"
+#include "w32time.h"
 
 #include <winsock2.h>
 
@@ -81,7 +79,7 @@ SendData(PINFO pInfo)
     INT Ret;
 
     ZeroMemory(&pInfo->SendPacket, sizeof(pInfo->SendPacket));
-    pInfo->SendPacket.LiVnMode = 27;
+    pInfo->SendPacket.LiVnMode = 0x1b;        /* 0x1b = 011 011 - version 3 , mode 3 (client) */
     if (!GetTransmitTime(&tp))
         return FALSE;
     pInfo->SendPacket.TransmitTimestamp = tp;

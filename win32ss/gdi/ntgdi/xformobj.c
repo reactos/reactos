@@ -104,12 +104,9 @@ HintFromAccel(ULONG flAccel)
 /** Internal functions ********************************************************/
 
 ULONG
-NTAPI
-XFORMOBJ_UpdateAccel(
-    IN OUT XFORMOBJ *pxo)
+FASTCALL
+MX_UpdateAccel(IN OUT PMATRIX pmx)
 {
-    PMATRIX pmx = XFORMOBJ_pmx(pxo);
-
     /* Copy Dx and Dy to FIX format */
     pmx->fxDx = FLOATOBJ_GetFix(&pmx->efDx);
     pmx->fxDy = FLOATOBJ_GetFix(&pmx->efDy);
@@ -143,6 +140,16 @@ XFORMOBJ_UpdateAccel(
     return HintFromAccel(pmx->flAccel);
 }
 
+ULONG
+NTAPI
+XFORMOBJ_UpdateAccel(
+    IN OUT XFORMOBJ *pxo)
+{
+    PMATRIX pmx = XFORMOBJ_pmx(pxo);
+
+    return MX_UpdateAccel(pmx);
+}
+
 
 ULONG
 NTAPI
@@ -150,24 +157,45 @@ XFORMOBJ_iSetXform(
     IN OUT XFORMOBJ *pxo,
     IN const XFORML *pxform)
 {
-    PMATRIX pmx = XFORMOBJ_pmx(pxo);
+    PMATRIX pmx;
+    MATRIX mxTemp;
+    ULONG Hint;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
 
-    /* Check if the xform is valid */
-    if ((pxform->eM11 == 0) || (pxform->eM22 == 0)) return DDI_ERROR;
-
     /* Copy members */
-    FLOATOBJ_SetFloat(&pmx->efM11, pxform->eM11);
-    FLOATOBJ_SetFloat(&pmx->efM12, pxform->eM12);
-    FLOATOBJ_SetFloat(&pmx->efM21, pxform->eM21);
-    FLOATOBJ_SetFloat(&pmx->efM22, pxform->eM22);
-    FLOATOBJ_SetFloat(&pmx->efDx, pxform->eDx);
-    FLOATOBJ_SetFloat(&pmx->efDy, pxform->eDy);
+    FLOATOBJ_SetFloat(&mxTemp.efM11, pxform->eM11);
+    FLOATOBJ_SetFloat(&mxTemp.efM12, pxform->eM12);
+    FLOATOBJ_SetFloat(&mxTemp.efM21, pxform->eM21);
+    FLOATOBJ_SetFloat(&mxTemp.efM22, pxform->eM22);
+    FLOATOBJ_SetFloat(&mxTemp.efDx, pxform->eDx);
+    FLOATOBJ_SetFloat(&mxTemp.efDy, pxform->eDy);
 
     /* Update accelerators and return complexity */
-    return XFORMOBJ_UpdateAccel(pxo);
+    Hint = MX_UpdateAccel(&mxTemp);
+
+    /* Check whether det = (M11 * M22 - M12 * M21) is non-zero */
+    if (Hint == GX_SCALE)
+    {
+        if (FLOATOBJ_Equal0(&mxTemp.efM11) || FLOATOBJ_Equal0(&mxTemp.efM22))
+        {
+            return DDI_ERROR;
+        }
+    }
+    else if (Hint == GX_GENERAL)
+    {
+        if (!MX_IsInvertible(&mxTemp))
+        {
+            return DDI_ERROR;
+        }
+    }
+
+    /* Store */
+    pmx = XFORMOBJ_pmx(pxo);
+    *pmx = mxTemp;
+
+    return Hint;
 }
 
 

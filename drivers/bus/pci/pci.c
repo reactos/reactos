@@ -32,7 +32,7 @@ static NTSTATUS NTAPI PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 // Make the initialization routines discardable, so that they
 // don't waste space
 
-#pragma  alloc_text(init, DriverEntry)
+#pragma  alloc_text(INIT, DriverEntry)
 
 #endif  /*  ALLOC_PRAGMA  */
 

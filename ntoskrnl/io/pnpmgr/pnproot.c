@@ -450,7 +450,7 @@ EnumerateDevices(
     HANDLE KeyHandle = NULL;
     HANDLE SubKeyHandle = NULL;
     HANDLE DeviceKeyHandle = NULL;
-    ULONG BufferSize;
+    ULONG KeyInfoSize, SubKeyInfoSize;
     ULONG ResultSize;
     ULONG Index1, Index2;
     BUFFER Buffer1, Buffer2;
@@ -461,15 +461,21 @@ EnumerateDevices(
     DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
-    BufferSize = sizeof(KEY_BASIC_INFORMATION) + (MAX_PATH + 1) * sizeof(WCHAR);
-    KeyInfo = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_PNP_ROOT);
+    /* Should hold most key names, but we reallocate below if it's too small */
+    KeyInfoSize = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name) + 64 * sizeof(WCHAR);
+    KeyInfo = ExAllocatePoolWithTag(PagedPool,
+                                    KeyInfoSize + sizeof(UNICODE_NULL),
+                                    TAG_PNP_ROOT);
     if (!KeyInfo)
     {
         DPRINT("ExAllocatePoolWithTag() failed\n");
         Status = STATUS_NO_MEMORY;
         goto cleanup;
     }
-    SubKeyInfo = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_PNP_ROOT);
+    SubKeyInfoSize = KeyInfoSize;
+    SubKeyInfo = ExAllocatePoolWithTag(PagedPool,
+                                       SubKeyInfoSize + sizeof(UNICODE_NULL),
+                                       TAG_PNP_ROOT);
     if (!SubKeyInfo)
     {
         DPRINT("ExAllocatePoolWithTag() failed\n");
@@ -496,12 +502,29 @@ EnumerateDevices(
             Index1,
             KeyBasicInformation,
             KeyInfo,
-            BufferSize,
+            KeyInfoSize,
             &ResultSize);
         if (Status == STATUS_NO_MORE_ENTRIES)
         {
             Status = STATUS_SUCCESS;
             break;
+        }
+        else if (Status == STATUS_BUFFER_OVERFLOW ||
+                 Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            ASSERT(KeyInfoSize < ResultSize);
+            KeyInfoSize = ResultSize;
+            ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+            KeyInfo = ExAllocatePoolWithTag(PagedPool,
+                                            KeyInfoSize + sizeof(UNICODE_NULL),
+                                            TAG_PNP_ROOT);
+            if (!KeyInfo)
+            {
+                DPRINT1("ExAllocatePoolWithTag(%lu) failed\n", KeyInfoSize);
+                Status = STATUS_NO_MEMORY;
+                goto cleanup;
+            }
+            continue;
         }
         else if (!NT_SUCCESS(Status))
         {
@@ -539,10 +562,29 @@ EnumerateDevices(
                 Index2,
                 KeyBasicInformation,
                 SubKeyInfo,
-                BufferSize,
+                SubKeyInfoSize,
                 &ResultSize);
             if (Status == STATUS_NO_MORE_ENTRIES)
+            {
                 break;
+            }
+            else if (Status == STATUS_BUFFER_OVERFLOW ||
+                     Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                ASSERT(SubKeyInfoSize < ResultSize);
+                SubKeyInfoSize = ResultSize;
+                ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
+                SubKeyInfo = ExAllocatePoolWithTag(PagedPool,
+                                                   SubKeyInfoSize + sizeof(UNICODE_NULL),
+                                                   TAG_PNP_ROOT);
+                if (!SubKeyInfo)
+                {
+                    DPRINT1("ExAllocatePoolWithTag(%lu) failed\n", SubKeyInfoSize);
+                    Status = STATUS_NO_MEMORY;
+                    goto cleanup;
+                }
+                continue;
+            }
             else if (!NT_SUCCESS(Status))
             {
                 DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);

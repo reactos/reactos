@@ -8,6 +8,9 @@
  */
 
 #include "timedate.h"
+#include <stdlib.h>
+
+DWORD WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags);
 
 static VOID
 CreateNTPServerList(HWND hwnd)
@@ -93,11 +96,39 @@ SetNTPServer(HWND hwnd)
     UINT uSel;
     WCHAR szSel[4];
     LONG lRet;
+    WCHAR buffer[256];
 
     hList = GetDlgItem(hwnd,
                        IDC_SERVERLIST);
 
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
+
+    SendDlgItemMessageW(hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM)buffer);
+
+    /* If there is new data entered then save it in the registry 
+       The same key name of "0" is used to store all user entered values
+    */
+    if (uSel == -1)
+    {
+        lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                             0,
+                             KEY_SET_VALUE,
+                             &hKey);
+        if (lRet != ERROR_SUCCESS)
+        {
+            DisplayWin32Error(lRet);
+            return;
+        }
+        lRet = RegSetValueExW(hKey,
+                              L"0",
+                              0,
+                              REG_SZ,
+                              (LPBYTE)buffer,
+                              (wcslen(buffer) + 1) * sizeof(WCHAR));
+        if (lRet != ERROR_SUCCESS)
+            DisplayWin32Error(lRet);
+    }
 
     /* Server reg entries count from 1,
      * Combo boxes count from 0 */
@@ -130,140 +161,6 @@ SetNTPServer(HWND hwnd)
 }
 
 
-/* Get the domain name from the registry */
-static BOOL
-GetNTPServerAddress(LPWSTR *lpAddress)
-{
-    HKEY hKey;
-    WCHAR szSel[4];
-    DWORD dwSize;
-    LONG lRet;
-
-    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-                         0,
-                         KEY_QUERY_VALUE,
-                         &hKey);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    /* Get data from default value */
-    dwSize = 4 * sizeof(WCHAR);
-    lRet = RegQueryValueExW(hKey,
-                            NULL,
-                            NULL,
-                            NULL,
-                            (LPBYTE)szSel,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    dwSize = 0;
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            NULL,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    (*lpAddress) = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                     0,
-                                     dwSize);
-    if ((*lpAddress) == NULL)
-    {
-        lRet = ERROR_NOT_ENOUGH_MEMORY;
-        goto fail;
-    }
-
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            (LPBYTE)*lpAddress,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    RegCloseKey(hKey);
-
-    return TRUE;
-
-fail:
-    DisplayWin32Error(lRet);
-    if (hKey)
-        RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, *lpAddress);
-    return FALSE;
-}
-
-
-/* Request the time from the current NTP server */
-static ULONG
-GetTimeFromServer(VOID)
-{
-    LPWSTR lpAddress = NULL;
-    ULONG ulTime = 0;
-
-    if (GetNTPServerAddress(&lpAddress))
-    {
-        ulTime = GetServerTime(lpAddress);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpAddress);
-    }
-
-    return ulTime;
-}
-
-/*
- * NTP servers state the number of seconds passed since
- * 1st Jan, 1900. The time returned from the server
- * needs adding to that date to get the current Gregorian time
- */
-static VOID
-UpdateSystemTime(ULONG ulTime)
-{
-    FILETIME ftNew;
-    LARGE_INTEGER li;
-    SYSTEMTIME stNew;
-
-    /* Time at 1st Jan 1900 */
-    stNew.wYear = 1900;
-    stNew.wMonth = 1;
-    stNew.wDay = 1;
-    stNew.wHour = 0;
-    stNew.wMinute = 0;
-    stNew.wSecond = 0;
-    stNew.wMilliseconds = 0;
-
-    /* Convert to a file time */
-    if (!SystemTimeToFileTime(&stNew, &ftNew))
-    {
-        DisplayWin32Error(GetLastError());
-        return;
-    }
-
-    /* Add on the time passed since 1st Jan 1900 */
-    li = *(LARGE_INTEGER *)&ftNew;
-    li.QuadPart += (LONGLONG)10000000 * ulTime;
-    ftNew = * (FILETIME *)&li;
-
-    /* Convert back to a system time */
-    if (!FileTimeToSystemTime(&ftNew, &stNew))
-    {
-        DisplayWin32Error(GetLastError());
-        return;
-    }
-
-    /* Use SystemSetTime with SystemTime = TRUE to set System Time */
-    if (!SystemSetTime(&stNew, TRUE))
-         DisplayWin32Error(GetLastError());
-}
-
-
 static VOID
 EnableDialogText(HWND hwnd)
 {
@@ -289,7 +186,7 @@ GetSyncSetting(HWND hwnd)
     DWORD dwSize;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Parameters",
+                      L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
                       0,
                       KEY_QUERY_VALUE,
                       &hKey) == ERROR_SUCCESS)
@@ -303,7 +200,9 @@ GetSyncSetting(HWND hwnd)
                              &dwSize) == ERROR_SUCCESS)
         {
             if (wcscmp(szData, L"NTP") == 0)
-                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, 0, 0);
+                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, BST_CHECKED, 0);
+            else
+                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, BST_UNCHECKED, 0);
         }
 
         RegCloseKey(hKey);
@@ -319,6 +218,40 @@ OnInitDialog(HWND hwnd)
     CreateNTPServerList(hwnd);
 }
 
+static VOID
+OnAutoSync(BOOL Sync)
+{
+    HKEY hKey;
+    LONG lRet;
+    LPCWSTR szAuto;
+
+    if (Sync)
+        szAuto = L"NTP";
+    else
+        szAuto = L"NoSync";
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
+                         0,
+                         KEY_SET_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+    {
+        DisplayWin32Error(lRet);
+        return;
+    }
+
+    lRet = RegSetValueExW(hKey,
+                          L"Type",
+                          0,
+                          REG_SZ,
+                          (LPBYTE)szAuto,
+                          (wcslen(szAuto) + 1) * sizeof(WCHAR));
+    if (lRet != ERROR_SUCCESS)
+        DisplayWin32Error(lRet);
+
+    RegCloseKey(hKey);
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -338,18 +271,20 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case IDC_UPDATEBUTTON:
                 {
-                    ULONG ulTime;
+                    DWORD dwError;
 
                     SetNTPServer(hwndDlg);
 
-                    ulTime = GetTimeFromServer();
-                    if (ulTime != 0)
-                        UpdateSystemTime(ulTime);
+                    dwError = W32TimeSyncNow(L"localhost", 0, 0);
+                    if (dwError != ERROR_SUCCESS)
+                    {
+                        DisplayWin32Error(dwError);
+                    }
                 }
                 break;
 
                 case IDC_SERVERLIST:
-                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    if ((HIWORD(wParam) == CBN_SELCHANGE) || (HIWORD(wParam) == CBN_EDITCHANGE))
                     {
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -379,6 +314,12 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                     SetNTPServer(hwndDlg);
+
+                    if (SendDlgItemMessageW(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        OnAutoSync(TRUE);
+                    else
+                        OnAutoSync(FALSE);
+
                     return TRUE;
 
                 default:

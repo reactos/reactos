@@ -191,6 +191,41 @@ SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
 }
 
 
+static
+CONFIGRET
+GetDeviceStatus(
+    _In_ LPWSTR pDeviceID,
+    _Out_ DWORD *pulStatus,
+    _Out_ DWORD *pulProblem)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT("GetDeviceStatus(%S %p %p)\n",
+           pDeviceID, pulStatus, pulProblem);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pDeviceID);
+    PlugPlayData.Operation = 0; /* Get status */
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulStatus = PlugPlayData.DeviceStatus;
+        *pulProblem = PlugPlayData.DeviceProblem;
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /* Function 0 */
@@ -2688,35 +2723,13 @@ PNP_GetDeviceStatus(
     DWORD *pulProblem,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
-
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDeviceStatus() called\n");
+    DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
+           hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
-    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                         pDeviceID);
-    PlugPlayData.Operation = 0; /* Get status */
-
-    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
-                               (PVOID)&PlugPlayData,
-                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
-    if (NT_SUCCESS(Status))
-    {
-        *pulStatus = PlugPlayData.DeviceStatus;
-        *pulProblem = PlugPlayData.DeviceProblem;
-    }
-    else
-    {
-        ret = NtStatusToCrError(Status);
-    }
-
-    DPRINT("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
-
-    return ret;
+    return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
 }
 
 
@@ -3530,15 +3543,64 @@ DWORD
 WINAPI
 PNP_RegisterNotification(
     handle_t hBinding,
+    DWORD ulUnknown2,
+    LPWSTR pszName,
+    BYTE *pNotificationFilter,
+    DWORD ulNotificationFilterSize,
     DWORD ulFlags,
-    DWORD *pulNotify)
+    DWORD *pulNotify,
+    DWORD ulUnknown8,
+    DWORD *pulUnknown9)
 {
+    PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
+    PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
 #if 0
     PNOTIFY_DATA pNotifyData;
 #endif
 
-    DPRINT1("PNP_RegisterNotification(%p 0x%lx %p)\n",
-           hBinding, ulFlags, pulNotify);
+    DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
+           hBinding, ulUnknown2, pszName, pNotificationFilter,
+           ulNotificationFilterSize, ulFlags, pulNotify, ulUnknown8, pulUnknown9);
+
+    if (pNotificationFilter == NULL ||
+        pulNotify == NULL ||
+        pulUnknown9 == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~0x7)
+        return CR_INVALID_FLAG;
+
+    if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_HDR)) ||
+        (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_size < sizeof(DEV_BROADCAST_HDR)))
+        return CR_INVALID_DATA;
+
+    if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+    {
+        DPRINT1("DBT_DEVTYP_DEVICEINTERFACE\n");
+        pBroadcastDeviceInterface = (PDEV_BROADCAST_DEVICEINTERFACE_W)pNotificationFilter;
+
+        if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) ||
+            (pBroadcastDeviceInterface->dbcc_size < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)))
+            return CR_INVALID_DATA;
+    }
+    else if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_HANDLE)
+    {
+        DPRINT1("DBT_DEVTYP_HANDLE\n");
+        pBroadcastDeviceHandle = (PDEV_BROADCAST_HANDLE)pNotificationFilter;
+
+        if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_HANDLE)) ||
+            (pBroadcastDeviceHandle->dbch_size < sizeof(DEV_BROADCAST_HANDLE)))
+            return CR_INVALID_DATA;
+
+        if (ulFlags & DEVICE_NOTIFY_ALL_INTERFACE_CLASSES)
+            return CR_INVALID_FLAG;
+    }
+    else
+    {
+        DPRINT1("Invalid device type %lu\n", ((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype);
+        return CR_INVALID_DATA;
+    }
+
 
 #if 0
     pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));

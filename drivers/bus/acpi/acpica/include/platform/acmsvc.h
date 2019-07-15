@@ -149,7 +149,7 @@
 #endif
 
 #ifdef __REACTOS__
-
+#ifdef _M_IX86
 /* Flush CPU cache - used when going to sleep. Wbinvd or similar. */
 
 #ifdef ACPI_APPLICATION
@@ -208,7 +208,7 @@
         __asm exit_rel:                             \
         __asm mov           Pnd, al                 \
 }
-
+#endif /* _M_IX86 */
 #endif /* __REACTOS__ */
 
 /* warn C4100: unreferenced formal parameter */

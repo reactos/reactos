@@ -211,10 +211,10 @@ XboxMachInit(const char *CmdLine)
 }
 
 VOID
-XboxPrepareForReactOS(IN BOOLEAN Setup)
+XboxPrepareForReactOS(VOID)
 {
     /* On XBOX, prepare video and turn off the floppy motor */
-    XboxVideoPrepareForReactOS(Setup);
+    XboxVideoPrepareForReactOS();
     DiskStopFloppyMotor();
 }
 

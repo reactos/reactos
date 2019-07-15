@@ -191,6 +191,7 @@ InfpAddSection(PINFCACHE Cache,
     }
   ZEROMEMORY (Section,
               Size);
+  Section->Id = ++Cache->NextSectionId;
 
   /* Copy section name */
   strcpyW(Section->Name, Name);
@@ -231,6 +232,7 @@ InfpAddLine(PINFCACHESECTION Section)
     }
   ZEROMEMORY(Line,
              sizeof(INFCACHELINE));
+  Line->Id = ++Section->NextLineId;
 
   /* Append line */
   if (Section->FirstLine == NULL)
@@ -249,6 +251,74 @@ InfpAddLine(PINFCACHESECTION Section)
   return Line;
 }
 
+PINFCACHESECTION
+InfpFindSectionById(PINFCACHE Cache, UINT Id)
+{
+    PINFCACHESECTION Section;
+
+    for (Section = Cache->FirstSection;
+         Section != NULL;
+         Section = Section->Next)
+    {
+        if (Section->Id == Id)
+        {
+            return Section;
+        }
+    }
+
+    return NULL;
+}
+
+PINFCACHESECTION
+InfpGetSectionForContext(PINFCONTEXT Context)
+{
+    PINFCACHE Cache;
+
+    if (Context == NULL)
+    {
+        return NULL;
+    }
+
+    Cache = (PINFCACHE)Context->Inf;
+    if (Cache == NULL)
+    {
+        return NULL;
+    }
+
+    return InfpFindSectionById(Cache, Context->Section);
+}
+
+PINFCACHELINE
+InfpFindLineById(PINFCACHESECTION Section, UINT Id)
+{
+    PINFCACHELINE Line;
+
+    for (Line = Section->FirstLine;
+         Line != NULL;
+         Line = Line->Next)
+    {
+        if (Line->Id == Id)
+        {
+            return Line;
+        }
+    }
+
+    return NULL;
+}
+
+PINFCACHELINE
+InfpGetLineForContext(PINFCONTEXT Context)
+{
+    PINFCACHESECTION Section;
+
+    Section = InfpGetSectionForContext(Context);
+    if (Section == NULL)
+    {
+        return NULL;
+    }
+
+    return InfpFindLineById(Section, Context->Line);
+}
 
 PVOID
 InfpAddKeyToLine(PINFCACHELINE Line,

@@ -17,21 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTES
- *
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- *
  * Notes:
- *   - Windows XP introduced new behavior: The background of centered
- *     icons and bitmaps is painted differently. This is only done if
- *     a manifest is present.
- *     Because it has not yet been decided how to implement the two
- *     different modes in Wine, only the Windows XP mode is implemented.
  *   - Controls with SS_SIMPLE but without SS_NOPREFIX:
  *     The text should not be changed. Windows doesn't clear the
  *     client rectangle, so the new text must be larger than the old one.
@@ -809,10 +795,9 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
 {
     HDC hMemDC;
     HBITMAP hBitmap, oldbitmap;
-    HBRUSH hbrush;
 
     /* message is still sent, even if the returned brush is not used */
-    hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
+    STATIC_SendWmCtlColorStatic(hwnd, hdc);
 
     if ((hBitmap = (HBITMAP)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET ))
          && (GetObjectType(hBitmap) == OBJ_BITMAP)
@@ -820,26 +805,23 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
     {
         BITMAP bm;
         RECT rcClient;
-        LOGBRUSH brush;
 
         GetObjectW(hBitmap, sizeof(bm), &bm);
         oldbitmap = SelectObject(hMemDC, hBitmap);
 
-        /* Set the background color for monochrome bitmaps
-           to the color of the background brush */
-        if (GetObjectW( hbrush, sizeof(brush), &brush ))
-        {
-            if (brush.lbStyle == BS_SOLID)
-                SetBkColor(hdc, brush.lbColor);
-        }
         GetClientRect(hwnd, &rcClient);
         if (style & SS_CENTERIMAGE)
         {
+            HBRUSH hbrush = CreateSolidBrush(GetPixel(hMemDC, 0, 0));
+
             FillRect( hdc, &rcClient, hbrush );
+
             rcClient.left = (rcClient.right - rcClient.left)/2 - bm.bmWidth/2;
             rcClient.top = (rcClient.bottom - rcClient.top)/2 - bm.bmHeight/2;
             rcClient.right = rcClient.left + bm.bmWidth;
             rcClient.bottom = rcClient.top + bm.bmHeight;
+
+            DeleteObject(hbrush);
         }
         StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right - rcClient.left,
                    rcClient.bottom - rcClient.top, hMemDC,

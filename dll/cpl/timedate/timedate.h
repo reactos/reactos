@@ -23,7 +23,6 @@
 #define MAX_VALUE_NAME 16383
 #define SERVERLISTSIZE 6
 #define BUFSIZE 1024
-#define NTPPORT 123
 #define ID_TIMER 1
 
 typedef struct
@@ -39,7 +38,7 @@ extern HINSTANCE hApplet;
 
 /* dateandtime.c */
 INT_PTR CALLBACK DateTimePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL SystemSetTime(LPSYSTEMTIME lpSystemTime, BOOL SystemTime);
+BOOL SystemSetLocalTime(LPSYSTEMTIME lpSystemTime);
 
 
 /* timezone.c */
@@ -65,33 +64,6 @@ VOID DisplayWin32Error(DWORD dwErrorCode);
 
 BOOL RegisterClockControl(VOID);
 VOID UnregisterClockControl(VOID);
-
-
-/* ntpclient.c */
-// NTP timestamp
-typedef struct _TIMEPACKET
-{
-  DWORD dwInteger;
-  DWORD dwFractional;
-} TIMEPACKET, *PTIMEPACKET;
-
-// NTP packet
-typedef struct _NTPPACKET
-{
-  BYTE LiVnMode;
-  BYTE Stratum;
-  char Poll;
-  char Precision;
-  long RootDelay;
-  long RootDispersion;
-  char ReferenceID[4];
-  TIMEPACKET ReferenceTimestamp;
-  TIMEPACKET OriginateTimestamp;
-  TIMEPACKET ReceiveTimestamp;
-  TIMEPACKET TransmitTimestamp;
-}NTPPACKET, *PNTPPACKET;
-
-ULONG GetServerTime(LPWSTR lpAddress);
 
 
 /* monthcal.c */

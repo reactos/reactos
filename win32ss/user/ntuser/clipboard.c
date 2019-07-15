@@ -345,7 +345,7 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
         IntAddFormatedData(pWinStaObj, CF_METAFILEPICT, DATA_SYNTH_USER, FALSE, TRUE);
 
     /* Note: We need to render the DIB or DIBV5 format as soon as possible
-       because pallette information may change */
+       because palette information may change */
     if (!bHaveDib && bHaveBm)
         IntSynthesizeDib(pWinStaObj, IntGetFormatElement(pWinStaObj, CF_BITMAP)->hData);
 }

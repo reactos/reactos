@@ -15,6 +15,10 @@ Abstract:
 
 #include "fatprocs.h"
 
+#ifdef __REACTOS__
+#define _Unreferenced_parameter_
+#endif
+
 DRIVER_INITIALIZE DriverEntry;
 
 NTSTATUS
@@ -28,11 +32,7 @@ _Function_class_(DRIVER_UNLOAD)
 VOID
 NTAPI
 FatUnload(
-#ifndef __REACTOS__
     _In_ _Unreferenced_parameter_ PDRIVER_OBJECT DriverObject
-#else
-    _In_ PDRIVER_OBJECT DriverObject
-#endif
     );
 
 NTSTATUS
@@ -462,11 +462,7 @@ _Function_class_(DRIVER_UNLOAD)
 VOID
 NTAPI
 FatUnload(
-#ifndef __REACTOS__
     _In_ _Unreferenced_parameter_ PDRIVER_OBJECT DriverObject
-#else
-    _In_ PDRIVER_OBJECT DriverObject
-#endif
     )
 
 /*++

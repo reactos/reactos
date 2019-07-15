@@ -481,10 +481,12 @@ BOOL ProcessHotKey(VOID)
 
       if (windowCount == 1)
       {
-         selectedWindow = 0;
-         CompleteSwitch(TRUE);
-         return TRUE;
+         MakeWindowActive(windowList[0]);
+         return FALSE;
       }
+
+      if (!CreateSwitcherWindow(User32Instance))
+         return FALSE;
 
       selectedWindow = 1;
 
@@ -610,10 +612,6 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
    // Already in the loop.
    if (switchdialog || Esc) return 0;
 
-   hwndActive = GetActiveWindow();
-   // Nothing is active so exit.
-   if (!hwndActive) return 0;
-
    if (lParam == VK_ESCAPE)
    {
       Esc = TRUE;
@@ -636,14 +634,15 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
    }
 
    // Capture current active window.
-   SetCapture( hwndActive );
+   hwndActive = GetActiveWindow();
+   if (hwndActive)
+       SetCapture(hwndActive);
 
    switch (lParam)
    {
       case VK_TAB:
-         if( !CreateSwitcherWindow(User32Instance) ) goto Exit;
-         if( !GetDialogFont() ) goto Exit;
-         if( !ProcessHotKey() ) goto Exit;
+         if (!GetDialogFont() || !ProcessHotKey())
+             goto Exit;
          break;
 
       case VK_ESCAPE:
@@ -652,6 +651,10 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
       default:
          goto Exit;
    }
+
+   if (!hwndActive)
+       goto Exit;
+
    // Main message loop:
    while (1)
    {

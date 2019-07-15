@@ -1,22 +1,16 @@
 #include "precomp.h"
 
-#include <ntifs.h>
-#include <ndk/halfuncs.h>
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static BOOLEAN
 NTAPI
 VgaInterpretCmdStream(IN PUSHORT CmdStream)
 {
-    PUCHAR Base = (PUCHAR)VgaRegisterBase;
     USHORT Cmd;
     UCHAR Major, Minor;
+    USHORT Port;
     USHORT Count;
     UCHAR Index;
-    PUSHORT Buffer;
-    PUSHORT ShortPort;
-    PUCHAR Port;
     UCHAR Value;
     USHORT ShortValue;
 
@@ -24,196 +18,136 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
     if (!CmdStream) return TRUE;
 
     /* Loop as long as we have commands */
-    while (*CmdStream)
+    while (*CmdStream != EOD)
     {
-        /* Get the Major and Minor Function */
-        Cmd = *CmdStream;
+        /* Get the next command and its Major and Minor functions */
+        Cmd = *CmdStream++;
         Major = Cmd & 0xF0;
         Minor = Cmd & 0x0F;
 
-        /* Move to the next command */
-        CmdStream++;
-
-        /* Check which major function this was */
-        if (Major == 0x10)
+        /* Check which major function this is */
+        if (Major == INOUT)
         {
-            /* Now let's see the minor function */
-            if (Minor & CMD_STREAM_READ)
+            /* Check the minor function */
+            if (Minor & IO /* CMD_STREAM_READ */)
             {
-                /* Now check the sub-type */
-                if (Minor & CMD_STREAM_USHORT)
+                /* Check the sub-type */
+                if (Minor & BW /* CMD_STREAM_USHORT */)
                 {
-                    /* The port is what is in the stream right now */
-                    ShortPort = UlongToPtr((ULONG)*CmdStream);
-
-                    /* Move to the next command */
-                    CmdStream++;
-
-                    /* Read USHORT from the port */
-                    READ_PORT_USHORT(PtrToUlong(Base) + ShortPort);
+                    /* Get the port and read an USHORT from it */
+                    Port = *CmdStream++;
+                    ShortValue = __inpw(Port);
                 }
-                else
+                else // if (Minor & CMD_STREAM_WRITE)
                 {
-                    /* The port is what is in the stream right now */
-                    Port = UlongToPtr((ULONG)*CmdStream);
-
-                    /* Move to the next command */
-                    CmdStream++;
-
-                    /* Read UCHAR from the port */
-                    READ_PORT_UCHAR(PtrToUlong(Base) + Port);
+                    /* Get the port and read an UCHAR from it */
+                    Port = *CmdStream++;
+                    Value = __inpb(Port);
                 }
             }
-            else if (Minor & CMD_STREAM_WRITE_ARRAY)
+            else if (Minor & MULTI /* CMD_STREAM_WRITE_ARRAY */)
             {
-                /* Now check the sub-type */
-                if (Minor & CMD_STREAM_USHORT)
+                /* Check the sub-type */
+                if (Minor & BW /* CMD_STREAM_USHORT */)
                 {
-                    /* The port is what is in the stream right now */
-                    ShortPort = UlongToPtr(Cmd);
+                    /* Get the port and the count of elements */
+                    Port = *CmdStream++;
+                    Count = *CmdStream++;
 
-                    /* Move to the next command and get the count */
-                    Count = *(CmdStream++);
-
-                    /* The buffer is what's next in the command stream */
-                    Buffer = CmdStream++;
-
-                    /* Write USHORT to the port */
-                    WRITE_PORT_BUFFER_USHORT(PtrToUshort(Base) + ShortPort, Buffer, Count);
+                    /* Write the USHORT to the port; the buffer is what's in the command stream */
+                    WRITE_PORT_BUFFER_USHORT((PUSHORT)(VgaRegisterBase + Port), CmdStream, Count);
 
                     /* Move past the buffer in the command stream */
                     CmdStream += Count;
                 }
-                else
+                else // if (Minor & CMD_STREAM_WRITE)
                 {
-                    /* The port is what is in the stream right now */
-                    Port = UlongToPtr(Cmd);
+                    /* Get the port and the count of elements */
+                    Port = *CmdStream++;
+                    Count = *CmdStream++;
 
-                    /* Move to the next command and get the count */
-                    Count = *(CmdStream++);
-
-                    /* Add the base to the port */
-                    Port = PtrToUlong(Port) + Base;
-
-                    /* Move to next command */
-                    CmdStream++;
-
-                    /* Loop the cmd array */
-                    for (; Count; Count--, CmdStream++)
+                    /* Loop the command array */
+                    for (; Count; --Count, ++CmdStream)
                     {
-                        /* Get the byte we're writing */
+                        /* Get the UCHAR and write it to the port */
                         Value = (UCHAR)*CmdStream;
-
-                        /* Write UCHAR to the port */
-                        WRITE_PORT_UCHAR(Port, Value);
+                        __outpb(Port, Value);
                     }
                 }
             }
-            else if (Minor & CMD_STREAM_USHORT)
+            else if (Minor & BW /* CMD_STREAM_USHORT */)
             {
-                /* Get the ushort we're writing and advance in the stream */
-                ShortValue = *CmdStream;
-                CmdStream++;
+                /* Get the port */
+                Port = *CmdStream++;
 
-                /* Write USHORT to the port (which is in cmd) */
-                WRITE_PORT_USHORT((PUSHORT)Base + Cmd, ShortValue);
+                /* Get the USHORT and write it to the port */
+                ShortValue = *CmdStream++;
+                __outpw(Port, ShortValue);
             }
-            else
+            else // if (Minor & CMD_STREAM_WRITE)
             {
-                /* The port is what is in the stream right now */
-                Port = UlongToPtr((ULONG)*CmdStream);
+                /* Get the port */
+                Port = *CmdStream++;
 
-                /* Get the uchar we're writing */
-                Value = (UCHAR)*++CmdStream;
-
-                /* Move to the next command */
-                CmdStream++;
-
-                /* Write UCHAR to the port (which is in cmd) */
-                WRITE_PORT_UCHAR(PtrToUlong(Base) + Port, Value);
+                /* Get the UCHAR and write it to the port */
+                Value = (UCHAR)*CmdStream++;
+                __outpb(Port, Value);
             }
         }
-        else if (Major == 0x20)
+        else if (Major == METAOUT)
         {
-            /* Check the minor function. Note these are not flags anymore. */
+            /* Check the minor function. Note these are not flags. */
             switch (Minor)
             {
-                case 0:
+                case INDXOUT:
                 {
-                    /* The port is what is in the stream right now */
-                    ShortPort = UlongToPtr(*CmdStream);
+                    /* Get the port, the count of elements and the start index */
+                    Port = *CmdStream++;
+                    Count = *CmdStream++;
+                    Index = (UCHAR)*CmdStream++;
 
-                    /* Move to the next command and get the count */
-                    Count = *(CmdStream++);
-
-                    /* Move to the next command and get the value to write */
-                    ShortValue = *(CmdStream++);
-
-                    /* Add the base to the port */
-                    ShortPort = PtrToUlong(ShortPort) + (PUSHORT)Base;
-
-                    /* Move to next command */
-                    CmdStream++;
-
-                    /* Make sure we have data */
-                    if (!ShortValue) continue;
-
-                    /* Loop the cmd array */
-                    for (; Count; Count--, CmdStream++)
+                    /* Loop the command array */
+                    for (; Count; --Count, ++Index, ++CmdStream)
                     {
-                        /* Get the byte we're writing */
-                        ShortValue += (*CmdStream) << 8;
-
-                        /* Write USHORT to the port */
-                        WRITE_PORT_USHORT(ShortPort, ShortValue);
+                        /* Get the USHORT and write it to the port */
+                        ShortValue = (USHORT)Index + ((*CmdStream) << 8);
+                        __outpw(Port, ShortValue);
                     }
                     break;
                 }
 
-                case 1:
+                case ATCOUT:
                 {
-                    /* The port is what is in the stream right now. Add the base too */
-                    Port = *CmdStream + Base;
+                    /* Get the port, the count of elements and the start index */
+                    Port = *CmdStream++;
+                    Count = *CmdStream++;
+                    Index = (UCHAR)*CmdStream++;
 
-                    /* Move to the next command and get the count */
-                    Count = *++CmdStream;
-
-                    /* Move to the next command and get the index to write */
-                    Index = (UCHAR)*++CmdStream;
-
-                    /* Move to next command */
-                    CmdStream++;
-
-                    /* Loop the cmd array */
-                    for (; Count; Count--, Index++)
+                    /* Loop the command array */
+                    for (; Count; --Count, ++Index, ++CmdStream)
                     {
                         /* Write the index */
-                        WRITE_PORT_UCHAR(Port, Index);
+                        __outpb(Port, Index);
 
-                        /* Get the byte we're writing */
+                        /* Get the UCHAR and write it to the port */
                         Value = (UCHAR)*CmdStream;
-
-                        /* Move to next command */
-                        CmdStream++;
-
-                        /* Write UCHAR value to the port */
-                        WRITE_PORT_UCHAR(Port, Value);
+                        __outpb(Port, Value);
                     }
                     break;
                 }
 
-                case 2:
+                case MASKOUT:
                 {
-                    /* The port is what is in the stream right now. Add the base too */
-                    Port = *CmdStream + Base;
+                    /* Get the port */
+                    Port = *CmdStream++;
 
                     /* Read the current value and add the stream data */
-                    Value = READ_PORT_UCHAR(Port);
+                    Value = __inpb(Port);
                     Value &= *CmdStream++;
                     Value ^= *CmdStream++;
 
                     /* Write the value */
-                    WRITE_PORT_UCHAR(Port, Value);
+                    __outpb(Port, Value);
                     break;
                 }
 
@@ -222,14 +156,11 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
                     return FALSE;
             }
         }
-        else if (Major != 0xF0)
+        else if (Major != NCMD)
         {
             /* Unknown major function, fail */
             return FALSE;
         }
-
-        /* Get the next command */
-        Cmd = *CmdStream;
     }
 
     /* If we got here, return success */
@@ -240,119 +171,181 @@ static BOOLEAN
 NTAPI
 VgaIsPresent(VOID)
 {
-    UCHAR VgaReg, VgaReg2, VgaReg3;
-    UCHAR SeqReg, SeqReg2;
+    UCHAR OrgGCAddr, OrgReadMap, OrgBitMask;
+    UCHAR OrgSCAddr, OrgMemMode;
     UCHAR i;
 
-    /* Read the VGA Address Register */
-    VgaReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE);
+    /* Remember the original state of the Graphics Controller Address register */
+    OrgGCAddr = __inpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT);
 
-    /* Select Read Map Select Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+    /*
+     * Write the Read Map register with a known state so we can verify
+     * that it isn't changed after we fool with the Bit Mask. This ensures
+     * that we're dealing with indexed registers, since both the Read Map and
+     * the Bit Mask are addressed at GRAPH_DATA_PORT.
+     */
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_READ_MAP);
 
-    /* Read it back...it should be 4 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 4) return FALSE;
+    /*
+     * If we can't read back the Graphics Address register setting we just
+     * performed, it's not readable and this isn't a VGA.
+     */
+    if ((__inpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT) & GRAPH_ADDR_MASK) != IND_READ_MAP)
+        return FALSE;
 
-    /* Read the VGA Data Register */
-    VgaReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
+    /*
+     * Set the Read Map register to a known state.
+     */
+    OrgReadMap = __inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, READ_MAP_TEST_SETTING);
 
-    /* Enable all planes */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 3);
-
-    /* Read it back...it should be 3 */
-    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 0x3)
+    /* Read it back... it should be the same */
+    if (__inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT) != READ_MAP_TEST_SETTING)
     {
-        /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        /*
+         * The Read Map setting we just performed can't be read back; not a
+         * VGA. Restore the default Read Map state and fail.
+         */
+        __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, READ_MAP_DEFAULT);
         return FALSE;
     }
 
-    /* Select Bit Mask Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+    /* Remember the original setting of the Bit Mask register */
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
 
-    /* Read it back...it should be 8 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 8)
+    /* Read it back... it should be the same */
+    if ((__inpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT) & GRAPH_ADDR_MASK) != IND_BIT_MASK)
     {
-        /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        /*
+         * The Graphics Address register setting we just made can't be read
+         * back; not a VGA. Restore the default Read Map state and fail.
+         */
+        __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_READ_MAP);
+        __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, READ_MAP_DEFAULT);
         return FALSE;
     }
 
     /* Read the VGA Data Register */
-    VgaReg3 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
+    OrgBitMask = __inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT);
 
-    /* Loop bitmasks */
+    /*
+     * Set up the initial test mask we'll write to and read from the Bit Mask,
+     * and loop on the bitmasks.
+     */
     for (i = 0xBB; i; i >>= 1)
     {
-        /*  Set bitmask */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, i);
+        /* Write the test mask to the Bit Mask */
+        __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, i);
 
-        /* Read it back...it should be the same */
-        if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != i)
+        /* Read it back... it should be the same */
+        if (__inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT) != i)
         {
-            /* Reset the registers and fail */
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
-            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+            /*
+             * The Bit Mask is not properly writable and readable; not a VGA.
+             * Restore the Bit Mask and Read Map to their default states and fail.
+             */
+            __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
+            __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_READ_MAP);
+            __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, READ_MAP_DEFAULT);
             return FALSE;
         }
     }
 
-    /* Select Read Map Select Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+    /*
+     * There's something readable at GRAPH_DATA_PORT; now switch back and
+     * make sure that the Read Map register hasn't changed, to verify that
+     * we're dealing with indexed registers.
+     */
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_READ_MAP);
 
-    /* Read it back...it should be 3 */
-    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 3)
+    /* Read it back */
+    if (__inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT) != READ_MAP_TEST_SETTING)
     {
-        /* Reset the registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
+        /*
+         * The Read Map is not properly writable and readable; not a VGA.
+         * Restore the Bit Mask and Read Map to their default states, in case
+         * this is an EGA, so subsequent writes to the screen aren't garbled.
+         * Then fail.
+         */
+        __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, READ_MAP_DEFAULT);
+        __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
+        __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
         return FALSE;
     }
 
-    /* Write the registers we read earlier */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg2);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg3);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, VgaReg);
+    /*
+     * We've pretty surely verified the existence of the Bit Mask register.
+     * Put the Graphics Controller back to the original state.
+     */
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, OrgReadMap);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, OrgBitMask);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, OrgGCAddr);
 
-    /* Read sequencer address */
-    SeqReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4);
+    /*
+     * Now, check for the existence of the Chain4 bit.
+     */
 
-    /* Select memory mode register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, 4);
+    /*
+     * Remember the original states of the Sequencer Address and Memory Mode
+     * registers.
+     */
+    OrgSCAddr = __inpb(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT);
+    __outpb(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, IND_MEMORY_MODE);
 
-    /* Read it back...it should still be 4 */
-    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4)) & 7) != 4)
+    /* Read it back... it should be the same */
+    if ((__inpb(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT) & SEQ_ADDR_MASK) != IND_MEMORY_MODE)
     {
-        /*  Fail */
+        /*
+         * Couldn't read back the Sequencer Address register setting
+         * we just performed, fail.
+         */
         return FALSE;
     }
 
     /* Read sequencer Data */
-    SeqReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5);
+    OrgMemMode = __inpb(VGA_BASE_IO_PORT + SEQ_DATA_PORT);
 
-    /* Write null plane */
-    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x100);
+    /*
+     * Toggle the Chain4 bit and read back the result. This must be done during
+     * sync reset, since we're changing the chaining state.
+     */
 
-    /* Write sequencer flag */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2 ^ 8);
+    /* Begin sync reset */
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (IND_SYNC_RESET + (START_SYNC_RESET_VALUE << 8)));
 
-    /* Read it back */
-    if ((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5)) != (SeqReg2 ^ 8))
+    /* Toggle the Chain4 bit */
+    __outpb(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, IND_MEMORY_MODE);
+    __outpb(VGA_BASE_IO_PORT + SEQ_DATA_PORT, OrgMemMode ^ CHAIN4_MASK);
+
+    /* Read it back... it should be the same */
+    if (__inpb(VGA_BASE_IO_PORT + SEQ_DATA_PORT) != (OrgMemMode ^ CHAIN4_MASK))
     {
-        /* Not the same value...restore registers and fail */
-        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, 2);
-        WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
+        /*
+         * Chain4 bit is not there, not a VGA.
+         * Set text mode default for Memory Mode register.
+         */
+        __outpb(VGA_BASE_IO_PORT + SEQ_DATA_PORT, MEMORY_MODE_TEXT_DEFAULT);
+
+        /* End sync reset */
+        __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (IND_SYNC_RESET + (END_SYNC_RESET_VALUE << 8)));
+
+        /* Fail */
         return FALSE;
     }
 
-    /* Now write the registers we read */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2);
-    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, SeqReg);
+    /*
+     * It's a VGA.
+     */
+
+    /* Restore the original Memory Mode setting */
+    __outpb(VGA_BASE_IO_PORT + SEQ_DATA_PORT, OrgMemMode);
+
+    /* End sync reset */
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (IND_SYNC_RESET + (END_SYNC_RESET_VALUE << 8)));
+
+    /* Restore the original Sequencer Address setting */
+    __outpb(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, OrgSCAddr);
 
     /* VGA is present! */
     return TRUE;
@@ -370,24 +363,25 @@ VidInitialize(IN BOOLEAN SetMode)
     ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
     PHYSICAL_ADDRESS NullAddress = {{0, 0}}, VgaAddress;
-    ULONG AddressSpace = 1;
+    ULONG AddressSpace;
     BOOLEAN Result;
     ULONG_PTR Base;
 
     /* Make sure that we have a bus translation function */
     if (!HalFindBusAddressTranslation) return FALSE;
 
-    /* Get the VGA Register address */
-    Result = HalFindBusAddressTranslation(NullAddress,
-                                          &AddressSpace,
-                                          &TranslatedAddress,
-                                          &Context,
-                                          TRUE);
-    if (!Result) return FALSE;
-
     /* Loop trying to find possible VGA base addresses */
     while (TRUE)
     {
+        /* Get the VGA Register address */
+        AddressSpace = 1;
+        Result = HalFindBusAddressTranslation(NullAddress,
+                                              &AddressSpace,
+                                              &TranslatedAddress,
+                                              &Context,
+                                              TRUE);
+        if (!Result) return FALSE;
+
         /* See if this is I/O Space, which we need to map */
         if (!AddressSpace)
         {
@@ -405,7 +399,7 @@ VidInitialize(IN BOOLEAN SetMode)
         if (VgaIsPresent())
         {
             /* Translate the VGA Memory Address */
-            VgaAddress.LowPart = 0xA0000;
+            VgaAddress.LowPart = MEM_VGA;
             VgaAddress.HighPart = 0;
             AddressSpace = 0;
             Result = HalFindBusAddressTranslation(VgaAddress,
@@ -414,20 +408,14 @@ VidInitialize(IN BOOLEAN SetMode)
                                                   &Context,
                                                   FALSE);
             if (Result) break;
-            
-            /* Try to see if there's any other address */
-            Result = HalFindBusAddressTranslation(NullAddress,
-                                                  &AddressSpace,
-                                                  &TranslatedAddress,
-                                                  &Context,
-                                                  TRUE);
-            if (!Result) return FALSE;
         }
         else
         {
             /* It's not, so unmap the I/O space if we mapped it */
             if (!AddressSpace) MmUnmapIoSpace((PVOID)VgaRegisterBase, 0x400);
         }
+
+        /* Continue trying to see if there's any other address */
     }
 
     /* Success! See if this is I/O Space, which we need to map */
@@ -435,7 +423,7 @@ VidInitialize(IN BOOLEAN SetMode)
     {
         /* Map it */
         Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress,
-                                       0x20000,
+                                       MEM_VGA_SIZE,
                                        MmNonCached);
     }
     else
@@ -450,15 +438,23 @@ VidInitialize(IN BOOLEAN SetMode)
     /* Now check if we have to set the mode */
     if (SetMode)
     {
-        /* Reset the display */
-        HalResetDisplay();
+        /* Clear the current position */
         curr_x = 0;
         curr_y = 0;
 
-        /* Initialize it */
-        VgaInterpretCmdStream(AT_Initialization);
+        /* Reset the display and initialize it */
+        if (HalResetDisplay())
+        {
+            /* The HAL handled the display, re-initialize only the AC registers */
+            VgaInterpretCmdStream(AT_Initialization);
+        }
+        else
+        {
+            /* The HAL didn't handle the display, fully re-initialize the VGA */
+            VgaInterpretCmdStream(VGA_640x480);
+        }
     }
-    
+
     /* VGA is ready */
     return TRUE;
 }
@@ -475,9 +471,16 @@ VidResetDisplay(IN BOOLEAN HalReset)
     curr_y = 0;
 
     /* Clear the screen with HAL if we were asked to */
-    if (HalReset) HalResetDisplay();
+    if (HalReset)
+    {
+        if (!HalResetDisplay())
+        {
+            /* The HAL didn't handle the display, fully re-initialize the VGA */
+            VgaInterpretCmdStream(VGA_640x480);
+        }
+    }
 
-    /* Re-initialize the VGA Display */
+    /* Always re-initialize the AC registers */
     VgaInterpretCmdStream(AT_Initialization);
 
     /* Re-initialize the palette and fill the screen black */

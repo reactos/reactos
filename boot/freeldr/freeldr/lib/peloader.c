@@ -112,6 +112,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
     ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(ScanDTE->DllBase),
         TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ImportTableSize);
 
+#if DBG
     {
         UNICODE_STRING BaseName;
         BaseName.Buffer = VaToPa(ScanDTE->BaseDllName.Buffer);
@@ -120,6 +121,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
         TRACE("WinLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
             &BaseName, ImportTable);
     }
+#endif
 
     /* If image doesn't have any import directory - just return success */
     if (ImportTable == NULL)
@@ -456,17 +458,21 @@ WinLdrpCompareDllName(IN PCH DllName,
                       IN PUNICODE_STRING UnicodeName)
 {
     PWSTR Buffer;
-    UNICODE_STRING UnicodeNamePA;
     SIZE_T i, Length;
 
     /* First obvious check: for length of two names */
     Length = strlen(DllName);
 
-    UnicodeNamePA.Length = UnicodeName->Length;
-    UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
-    UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
-    TRACE("WinLdrpCompareDllName: %s and %wZ, Length = %d "
-        "UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
+#if DBG
+    {
+        UNICODE_STRING UnicodeNamePA;
+        UnicodeNamePA.Length = UnicodeName->Length;
+        UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
+        UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
+        TRACE("WinLdrpCompareDllName: %s and %wZ, Length = %d "
+            "UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
+    }
+#endif
 
     if ((Length * sizeof(WCHAR)) > UnicodeName->Length)
         return FALSE;

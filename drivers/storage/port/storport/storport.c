@@ -223,7 +223,8 @@ PortAddDevice(
 
     DeviceExtension->PnpState = dsStopped;
 
-    InitializeListHead(&DeviceExtension->UnitListHead);
+    KeInitializeSpinLock(&DeviceExtension->PdoListLock);
+    InitializeListHead(&DeviceExtension->PdoListHead);
 
     /* Attach the FDO to the device stack */
     Status = IoAttachDeviceToDeviceStackSafe(Fdo,

@@ -1,0 +1,249 @@
+/* Portuguese Language resource file
+ *
+ * Traduzido por: Jose Carlos Jesus 22-06-2019 zecarlos1957@hotmail.com
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Geral"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Pode obter as configurações de IP atribuídas automaticamente se a sua rede suportar esse recurso. Caso contrário, precisará solicitar ao administrador da rede as configurações de IP apropriadas.", -1, 9, 9, 235, 27
+    CONTROL "Obter o endereço IP automaticamente", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+    GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+    CONTROL "&Usar o endereço IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    LTEXT "Endereço IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
+    LTEXT "Mascara Sub-rede:", -1, 14, 90, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 90 - 2, 85, 12
+    LTEXT "Gateway padrão:", -1, 14, 105, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 105 - 2, 85, 12
+    CONTROL "Obter o endereço  DNS automaticamente", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+    GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+    CONTROL "&Usar o endereço DNS :", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
+    LTEXT "Servidor DNS perferido:", -1, 14, 171, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
+    LTEXT "Alternar servidor DNS:", -1, 14, 186, 135, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
+    PUSHBUTTON "&Avançado", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Configuração alternativa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Se este computador for usado em mais de uma rede, insira as configurações de IP alternativas abaixo.", -1, 9, 9, 220, 20
+    CONTROL "IP privado &automático", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
+    CONTROL "&Config. do utilizador", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    LTEXT "Endereço &IP:", -1, 14, 75, 135, 8
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
+    LTEXT "Mascara S&ubnet:", -1, 14, 95, 135, 8
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
+    LTEXT "&Gateway padrão:", -1, 14, 115, 135, 8
+    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
+    LTEXT "&Servidor DNS perferido:", -1, 14, 150, 135, 8
+    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
+    LTEXT "&Servidor DNS alternativo:", -1, 14, 165, 180, 8
+    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
+END
+
+IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 247
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Definições de IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Endereço IP", -1, 5, 5, 240, 90
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
+    PUSHBUTTON "Adicionar", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Editar", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Remover", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
+    GROUPBOX "Gateway padrão:", -1, 5, 100, 240, 90
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
+    PUSHBUTTON "Adicionar", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Editar", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Remover", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 5, 200, 240, 30
+    CHECKBOX "Métrica automática", IDC_AUTOMETRIC, 9, 200, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Interface métrica:", -1, 15, 215, 90, 12
+    EDITTEXT IDC_METRIC, 110, 212, 50, 12, WS_TABSTOP | ES_NUMBER
+END
+
+IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 270
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "DNS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
+    LTEXT "Endereços do servidor &DNS, em uso:", -1, 5, 5, 180, 12
+    PUSHBUTTON "A&cima", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "A&baixo", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Adicionar", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Editar", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Remover", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
+    LTEXT "As três configurações seguintes, são aplicaveis a todas as ligações com o TCP / IP activo. Para resolução de nomes não qualificados:", -1, 5, 90, 220, 24
+    CONTROL "Anexar sufixos DNS específicos e primários à ligação", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Anexar sufixo pai ao sufixo DNS principal", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Anexar estes sufixos DNS (pela ordem):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
+    LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
+    PUSHBUTTON "Cima", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "baixo", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Adicionar", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Editar.", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Remo&ver", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "DNS e &sufixo para esta ligação:", -1, 5, 228, 110, 14
+    EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
+    CHECKBOX "&Registe os endereços desta ligação no DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Use o sufixo DNS desta ligação no registo DNS", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Opções"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_OPTLIST, 5, 30, 230, 70
+    LTEXT "&Definições opcionais", -1, 5, 15, 130, 12
+    PUSHBUTTON "&Proppriedades", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
+    GROUPBOX "Descrição:", -1, 5, 120, 240, 70
+    LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
+END
+
+IDD_TCPIPADDIP_DLG DIALOGEX 0, 0, 200, 70
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Endereço TCP/IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
+    LTEXT "Endereço IP:", -1, 5, 15, 70, 12
+    LTEXT "Mascara Sub-rede:", -1, 5, 30, 70, 12
+    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 96, 30, 85, 12
+    DEFPUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPGW_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Endereço TCP/IP Gateway"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
+    LTEXT "Gateway:", -1, 5, 15, 70, 12
+    CHECKBOX "Métrica Automatica", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&Métrica:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
+    EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
+    DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 110, 60, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPDNS_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Servidor TCP/IP DNS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 5, 25, 85, 12
+    LTEXT "Servidor DNS:", -1, 5, 10, 120, 12
+    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIPSUFFIX_DLG DIALOGEX 0, 0, 200, 80
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sufixo domínio TCP/IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_SUFFIX, 5, 25, 190, 12, WS_TABSTOP
+    LTEXT "Sufixo Domínio:", -1, 5, 10, 120, 12
+    PUSHBUTTON "", IDC_OK, 50, 50, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 110, 50, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_FILTER_DLG DIALOGEX 0, 0, 305, 220
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Filtros TCP/IP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CHECKBOX "Habilitar filtros TCP/IP (Todos os adaptadores)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    GROUPBOX "", -1, 5, 30, 90, 150
+    CONTROL "Permitir todos", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "Permitir só", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
+    CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
+    PUSHBUTTON "Adicionar", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Remover", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 105, 30, 90, 150
+    CONTROL "Permiirt todosl", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Permitir só", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
+    CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
+    PUSHBUTTON "Adicionar", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Removre", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
+    GROUPBOX "", -1, 205, 30, 90, 150
+    CONTROL "Permitir todos", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "Permitir só", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
+    CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
+    PUSHBUTTON "Adicionar", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Remover", IDC_IP_DEL, 215, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "OK", IDC_OK, 150, 190, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 210, 190, 50, 14, WS_TABSTOP
+END
+
+IDD_TCPIP_PORT_DLG DIALOGEX 0, 0, 200, 60
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Adicionar Filtros"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_PORT_VAL, 5, 30, 70, 12, WS_TABSTOP | ES_NUMBER
+    LTEXT "", IDC_PORT_DESC, 5, 15, 40, 12
+    PUSHBUTTON "OK", IDC_OK, 120, 15, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 120, 30, 50, 14, WS_TABSTOP
+END
+
+IDD_NET_PROPERTY_DLG DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Avançado"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "As seguintes propriedades estão disponíveis para este adaptador de rede. Clique na propriedade que deseja alterar à esquerda e, em seguida, seleccione o seu valor à direita.", -1, 7, 7, 218, 24, WS_GROUP
+    LTEXT "&Propriedade:", -1, 7, 37, 60, 8, WS_GROUP
+    LISTBOX IDC_PROPERTY_NAME, 7, 48, 124, 124, LBS_STANDARD | WS_TABSTOP
+    LTEXT "&Valor:", -1, 151, 37, 60, 8, WS_GROUP
+    EDITTEXT IDC_PROPERTY_VALUE_EDIT, 153, 48, 92, 14, ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+    CONTROL "", IDC_PROPERTY_VALUE_UPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_BORDER, 232, 48, 12, 12
+    COMBOBOX IDC_PROPERTY_VALUE_LIST, 153, 48, 92, 64, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    AUTORADIOBUTTON "", IDC_PROPERTY_PRESENT, 141, 50, 8, 10, BS_TOP | WS_GROUP
+    AUTORADIOBUTTON "&Não presente", IDC_PROPERTY_NOT_PRESENT, 141, 68, 103, 10, BS_TOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NET_CONNECT "Ligação de rede"
+    IDS_NO_IPADDR_SET "O adaptador requer pelo menos um endereço IP. Por favor, insira um."
+    IDS_NO_SUBMASK_SET "Inseriu um endereço sem máscara de sub-rede. Por favor, adicione uma máscara de sub-rede."
+    IDS_TCPFILTERDESC "A filtragem TCP / IP permite controlar o tipo de tráfego de rede TCP / IP que chega ao seu computador."
+    IDS_TCPFILTER "Filtros TCP/IP"
+    IDS_IPADDR "Endereço IP"
+    IDS_SUBMASK "Mascara de Sub-rede"
+    IDS_GATEWAY "Gateway"
+    IDS_METRIC "Métrica"
+    IDS_DHCPACTIVE "DHCP habilitado"
+    IDS_AUTOMATIC "Automatico"
+    IDS_NOITEMSEL "Você não seleccionou um item. Seleccione um primeiro."
+    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_ADD "Adicionar"
+    IDS_MOD "OK"
+    IDS_TCP_PORTS "Portas TCP"
+    IDS_UDP_PORTS "Portas UDP"
+    IDS_IP_PROTO "Protocolos IP"
+    IDS_PORT_RANGE "Os números de porta devem ser maiores que 0 e menores que 65536. Digite um número dentro desse intervalo."
+    IDS_PROT_RANGE "Os números de protocolo devem ser maiores que 0 e menores que 256. Digite um número dentro desse intervalo."
+    IDS_DUP_NUMBER "O número que está a adicionar já existe na lista. Por favor, insira um número diferente."
+    IDS_DISABLE_FILTER "Desactivar essa configuração TCP / IP global afectará todos os adaptadores."
+    IDS_NO_SUFFIX "A configuração actual do método de pesquisa requer pelo menos um sufixo DNS. Por favor, insira um ou altere a configuração."
+    IDS_DOMAIN_SUFFIX "O sufixo de domínio não é um sufixo válido."
+    IDS_DNS_SUFFIX "O nome de domínio DNS ""%s"" não é um nome DNS válido."
+    IDS_DUP_SUFFIX "O sufixo DNS já existe na lista."
+    IDS_DUP_IPADDR "O endereço IP já existe na lista."
+    IDS_DUP_GW "O gateway padrão já existe na lista."
+END

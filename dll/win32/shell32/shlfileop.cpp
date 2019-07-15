@@ -880,7 +880,7 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
             }
         }
 
-        if (ret && hWnd && (ERROR_CANCELLED != ret))
+        if (ret && hWnd && (ERROR_CANCELLED != ret && ERROR_ALREADY_EXISTS != ret))
         {
             ShellMessageBoxW(shell32_hInstance, hWnd, MAKEINTRESOURCEW(IDS_CREATEFOLDER_DENIED), MAKEINTRESOURCEW(IDS_CREATEFOLDER_CAPTION),
                                     MB_ICONEXCLAMATION | MB_OK, path);

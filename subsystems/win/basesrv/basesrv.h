@@ -16,6 +16,7 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
+#include <dbt.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
@@ -67,6 +68,7 @@ extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 extern ULONG SessionId;
 extern ULONG ProtectionMode;
+extern RTL_CRITICAL_SECTION BaseSrvDDDBSMCritSec;
 
 #define SM_REG_KEY \
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager"

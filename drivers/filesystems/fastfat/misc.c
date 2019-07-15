@@ -582,7 +582,7 @@ VfatCheckForDismount(
         ExDeleteResourceLite(&DeviceExt->FatResource);
 
         /* Dismount our device if possible */
-        ObfDereferenceObject(DeviceExt->StorageDevice);
+        ObDereferenceObject(DeviceExt->StorageDevice);
         IoDeleteDevice(DeviceExt->VolumeDevice);
     }
 

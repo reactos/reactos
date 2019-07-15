@@ -214,11 +214,11 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     Context->HashValue = HashValue;
     Context->HashIndex = (USHORT)HashIndex;
 
+DoItAgain:
     /* Get the root entry and set it as our lookup bucket */
     AllocatedEntry = &Directory->HashBuckets[HashIndex];
     LookupBucket = AllocatedEntry;
 
-DoItAgain:
     /* Check if the directory is already locked */
     if (!Context->DirectoryLocked)
     {

@@ -30,6 +30,13 @@
 #define PC_ASSERT_IRQL(x) PC_ASSERT(KeGetCurrentIrql() <= (x))
 #define PC_ASSERT_IRQL_EQUAL(x) PC_ASSERT(KeGetCurrentIrql()==(x))
 
+PVOID
+__cdecl
+operator new(
+    size_t Size,
+    POOL_TYPE PoolType,
+    ULONG Tag);
+
 extern
 "C"
 NTSTATUS

@@ -87,13 +87,13 @@ Used Version: 4.0.10
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS
-Used Version: 2.7.10
+Used Version: 2.7.11
 Website: https://tls.mbed.org/
 
 Title: libpng
-Used Version: 1.6.36
+Used Version: 1.6.37
 Website: http://libpng.sourceforge.net/
 
 Title: ACPICA
-Used Version: 20190329
+Used Version: 20190509
 Website: https://acpica.org/

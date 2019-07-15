@@ -312,7 +312,7 @@ PrimaryDirectSoundBuffer8Impl_fnLock(
     LPDWORD pdwAudioBytes2,
     DWORD dwFlags)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -500,7 +500,7 @@ PrimaryDirectSoundBuffer8Impl_fnUnlock(
     LPVOID pvAudioPtr2,
     DWORD dwAudioBytes2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -510,7 +510,7 @@ WINAPI
 PrimaryDirectSoundBuffer8Impl_fnRestore(
     LPDIRECTSOUNDBUFFER8 iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -523,7 +523,7 @@ PrimaryDirectSoundBuffer8Impl_fnSetFX(
     LPDSEFFECTDESC pDSFXDesc,
     LPDWORD pdwResultCodes)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -535,7 +535,7 @@ PrimaryDirectSoundBuffer8Impl_fnAcquireResources(
     DWORD dwEffectsCount, 
     LPDWORD pdwResultCodes)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 
@@ -548,7 +548,7 @@ PrimaryDirectSoundBuffer8Impl_fnGetObjectInPath(
     REFGUID rguidInterface,
     LPVOID *ppObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return DSERR_INVALIDPARAM;
 }
 

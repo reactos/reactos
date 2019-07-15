@@ -97,6 +97,11 @@
 
 #define ACPI_INIT_FUNCTION __init
 
+/* Use a specific bugging default separate from ACPICA */
+
+#undef ACPI_DEBUG_DEFAULT
+#define ACPI_DEBUG_DEFAULT          (ACPI_LV_INFO | ACPI_LV_REPAIR)
+
 #ifndef CONFIG_ACPI
 
 /* External globals for __KERNEL__, stubs is needed */
@@ -112,11 +117,6 @@
 
 #define ACPI_NO_ERROR_MESSAGES
 #undef ACPI_DEBUG_OUTPUT
-
-/* Use a specific bugging default separate from ACPICA */
-
-#undef ACPI_DEBUG_DEFAULT
-#define ACPI_DEBUG_DEFAULT          (ACPI_LV_INFO | ACPI_LV_REPAIR)
 
 /* External interface for __KERNEL__, stub is needed */
 

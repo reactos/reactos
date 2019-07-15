@@ -90,7 +90,7 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 }
 
 VOID
-ArmPrepareForReactOS(IN BOOLEAN Setup)
+ArmPrepareForReactOS(VOID)
 {
     return;
 }

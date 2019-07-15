@@ -70,12 +70,6 @@ ULONG curr_y = 0;
 static ULONG VidTextColor = 0xF;
 static BOOLEAN CarriageReturn = FALSE;
 
-#define __outpb(Port, Value) \
-    WRITE_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)), (UCHAR)(Value))
-
-#define __outpw(Port, Value) \
-    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)), (USHORT)(Value))
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static VOID
@@ -85,13 +79,13 @@ ReadWriteMode(IN UCHAR Mode)
     UCHAR Value;
 
     /* Switch to graphics mode register */
-    __outpb(0x3CE, 5);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_GRAPH_MODE);
 
     /* Get the current register value, minus the current mode */
-    Value = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) & 0xF4;
+    Value = __inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT) & 0xF4;
 
     /* Set the new mode */
-    __outpb(0x3CF, Mode | Value);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, Mode | Value);
 }
 
 FORCEINLINE
@@ -106,7 +100,7 @@ SetPixel(IN ULONG Left,
     PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
 
     /* Select the bitmask register and write the mask */
-    __outpw(0x3CE, (PixelMask[Left & 7] << 8) | 8);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (PixelMask[Left & 7] << 8) | IND_BIT_MASK);
 
     /* Read the current pixel value and add our color */
     WRITE_REGISTER_UCHAR(PixelPosition,
@@ -116,7 +110,7 @@ SetPixel(IN ULONG Left,
 #define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor)       \
 do {                                                        \
     /* Select the bitmask register and write the mask */    \
-    __outpw(0x3CE, ((_PixelMask) << 8) | 8);                \
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, ((_PixelMask) << 8) | IND_BIT_MASK); \
     /* Set the new color */                                 \
     WRITE_REGISTER_UCHAR((_PixelPtr), (UCHAR)(_TextColor)); \
 } while (0);
@@ -145,10 +139,10 @@ DisplayCharacter(IN CHAR Character,
     ReadWriteMode(10);
 
     /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Select the color don't care register */
-    __outpw(0x3CE, 7);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* Calculate shift */
     Shift = Left & 7;
@@ -258,12 +252,12 @@ SetPaletteEntryRGB(IN ULONG Id,
     PCHAR Colors = (PCHAR)&Rgb;
 
     /* Set the palette index */
-    __outpb(0x3C8, (UCHAR)Id);
+    __outpb(VGA_BASE_IO_PORT + DAC_ADDRESS_WRITE_PORT, (UCHAR)Id);
 
     /* Set RGB colors */
-    __outpb(0x3C9, Colors[2] >> 2);
-    __outpb(0x3C9, Colors[1] >> 2);
-    __outpb(0x3C9, Colors[0] >> 2);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, Colors[2] >> 2);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, Colors[1] >> 2);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, Colors[0] >> 2);
 }
 
 static VOID
@@ -288,12 +282,12 @@ SetPaletteEntry(IN ULONG Id,
                 IN ULONG PaletteEntry)
 {
     /* Set the palette index */
-    __outpb(0x3C8, (UCHAR)Id);
+    __outpb(VGA_BASE_IO_PORT + DAC_ADDRESS_WRITE_PORT, (UCHAR)Id);
 
     /* Set RGB colors */
-    __outpb(0x3C9, PaletteEntry & 0xFF);
-    __outpb(0x3C9, (PaletteEntry >>= 8) & 0xFF);
-    __outpb(0x3C9, (PaletteEntry >> 8) & 0xFF);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, PaletteEntry & 0xFF);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, (PaletteEntry >>= 8) & 0xFF);
+    __outpb(VGA_BASE_IO_PORT + DAC_DATA_REG_PORT, (PaletteEntry >> 8) & 0xFF);
 }
 
 VOID
@@ -330,10 +324,10 @@ VgaScroll(IN ULONG Scroll)
     PUCHAR OldPosition, NewPosition;
 
     /* Clear the 4 planes */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Set the bitmask to 0xFF for all 4 planes */
-    __outpw(0x3CE, 0xFF08);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
 
     /* Set Mode 1 */
     ReadWriteMode(1);
@@ -371,10 +365,10 @@ PreserveRow(IN ULONG CurrentTop,
     ULONG Count;
 
     /* Clear the 4 planes */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Set the bitmask to 0xFF for all 4 planes */
-    __outpw(0x3CE, 0xFF08);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
 
     /* Set Mode 1 */
     ReadWriteMode(1);
@@ -449,10 +443,10 @@ BitBlt(IN ULONG Left,
     ReadWriteMode(10);
 
     /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Select the color don't care register */
-    __outpw(0x3CE, 7);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* 4bpp blitting */
     dy = Top;
@@ -497,10 +491,10 @@ RleBitBlt(IN ULONG Left,
     ReadWriteMode(10);
 
     /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Select the color don't care register */
-    __outpw(0x3CE, 7);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* Set Y height and current X value and start loop */
     YDelta = Top + Height - 1;
@@ -749,11 +743,9 @@ VOID
 NTAPI
 VidCleanUp(VOID)
 {
-    /* Select bit mask register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
-
-    /* Clear it */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 255);
+    /* Select bit mask register and clear it */
+    __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
 }
 
 /*
@@ -988,7 +980,7 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
         ReadWriteMode(0);
 
         /* Set the current plane */
-        __outpw(0x3CE, (Plane << 8) | 4);
+        __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
 
         /* Make sure we have a height */
         if (Height > 0)
@@ -1062,9 +1054,9 @@ VidSolidColorFill(IN ULONG Left,
 
     /* Get the left and right masks, shifts, and delta */
     LeftOffset = Left >> 3;
-    lMask = (lMaskTable[Left & 0x7] << 8) | 8;
+    lMask = (lMaskTable[Left & 0x7] << 8) | IND_BIT_MASK;
     RightOffset = Right >> 3;
-    rMask = (rMaskTable[Right & 0x7] << 8) | 8;
+    rMask = (rMaskTable[Right & 0x7] << 8) | IND_BIT_MASK;
     Distance = RightOffset - LeftOffset;
 
     /* If there is no distance, then combine the right and left masks */
@@ -1074,16 +1066,16 @@ VidSolidColorFill(IN ULONG Left,
     ReadWriteMode(10);
 
     /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(0x3C4, 0xF02);
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
 
     /* Select the color don't care register */
-    __outpw(0x3CE, 7);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* Calculate pixel position for the read */
     Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset);
 
     /* Select the bitmask register and write the mask */
-    __outpw(0x3CE, (USHORT)lMask);
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)lMask);
 
     /* Check if the top coord is below the bottom one */
     if (Top <= Bottom)
@@ -1108,7 +1100,7 @@ VidSolidColorFill(IN ULONG Left,
         Distance--;
 
         /* Select the bitmask register and write the mask */
-        __outpw(0x3CE, (USHORT)rMask);
+        __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)rMask);
 
         /* Check if the top coord is below the bottom one */
         if (Top <= Bottom)
@@ -1133,7 +1125,7 @@ VidSolidColorFill(IN ULONG Left,
             Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset + 1);
 
             /* Set the bitmask to 0xFF for all 4 planes */
-            __outpw(0x3CE, 0xFF08);
+            __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
 
             /* Check if the top coord is below the bottom one */
             if (Top <= Bottom)

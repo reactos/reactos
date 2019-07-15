@@ -1077,7 +1077,7 @@ UniataAhciDetect(
     v_Mj = ((version >> 20) & 0xf0) + ((version >> 16) & 0x0f);
     v_Mn = ((version >> 4) & 0xf0) + (version & 0x0f);
 
-    KdPrint2((PRINT_PREFIX "  AHCI version %#x.%02x controller with %d ports (mask %#x) detected\n",
+    KdPrint2((PRINT_PREFIX "  AHCI version %x.%02x controller with %d ports (mask %#x) detected\n",
 		  v_Mj, v_Mn,
 		  NumberChannels, PI));
     KdPrint(("  AHCI SATA Gen %d\n", (((CAP & AHCI_CAP_ISS_MASK) >> 20)) ));
@@ -2237,22 +2237,22 @@ UniataAhciBeginTransaction(
     if(CMD0 != CMD) {
         KdPrint2(("  send CMD %#x, entries %#x\n", CMD, AHCI_CL->prd_length));
         UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD);
-        UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
+        CMD0 = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
     }
 
     /* issue command to controller */
-    //UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_ACT, 0x01 << tag);
+    //UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_ACT, 0x01 << tag); // Used for NCQ
     KdPrint2(("  Set CI\n"));
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, 0x01 << tag);
     chan->AhciPrevCI |= 0x01 << tag;
 
-    CMD0 = CMD;
+    //CMD0 = CMD;
     CMD |= ATA_AHCI_P_CMD_ST |
           ((chan->ChannelCtrlFlags & CTRFLAGS_AHCI_PM) ? ATA_AHCI_P_CMD_PMA : 0);
     if(CMD != CMD0) {
-      KdPrint2(("  Send CMD START\n"));
+      KdPrint2(("  Send CMD START (%#x != %#x)\n", CMD, CMD0));
       UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD);
-      UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
+      CMD0 = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD); /* flush */
     } else {
       KdPrint2(("  No CMD START, already active\n"));
     }

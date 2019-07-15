@@ -2204,6 +2204,22 @@ RtlHashUnicodeString(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
 _When_(SourceString != NULL,
+_At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(CHAR))))
+_When_(SourceString == NULL,
+_At_(DestinationString->Length, _Post_equal_to_(0))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(0)))
+NTSYSAPI
+VOID
+NTAPI
+RtlInitString(
+    _Out_ PSTRING DestinationString,
+    _In_opt_z_ __drv_aliasesMem PCSTR SourceString
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
+_When_(SourceString != NULL,
 _At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
 _At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR))))
 _When_(SourceString == NULL,

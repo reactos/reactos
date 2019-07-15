@@ -1,53 +1,5 @@
 #include "precomp.h"
 
-USHORT AT_Initialization[] =
-{
-    0x10 | CMD_STREAM_READ,     // Major Command = 0x10. Minor Command = 0x08.
-    0x3DA,                      // Index Status 1 Register Port Address
-
-    //
-    // This Stream performs a USHORT Array Indexed Write at port 0x3C0
-    //
-    0x20 | 0x01,                // Major Command = 0x20. Minor Command = 0x01.
-    0x3C0,                      // Attribute Controller Data Register
-    0x10,                       // Loop Count = 16 (Number of Pallette Entries)
-    0x0,                        // Index to select (Index = 0, palettes)
-    0x00,                       // Palette 0
-    0x01,                       // Palette 1
-    0x02,                       // Palette 2
-    0x03,                       // Palette 3
-    0x04,                       // Palette 4
-    0x05,                       // Palette 5
-    0x06,                       // Palette 6
-    0x07,                       // Palette 7
-    0x08,                       // Palette 8
-    0x09,                       // Palette 9
-    0x0A,                       // Palette 10
-    0x0B,                       // Palette 11
-    0x0C,                       // Palette 12
-    0x0D,                       // Palette 13
-    0x0E,                       // Palette 14
-    0x0F,                       // Palette 15
-
-    //
-    // This Stream performs a UCHAR READ of port 0x3DA
-    //
-    0x10 | CMD_STREAM_READ,     // Major Command = 0x10. Minor Command = 0x08.
-    0x3DA,                      // Index Status 1 Register Port Address
-
-    //
-    // This Stream performs a UCHAR WRITE of value 0x20 at port 0x3C0
-    //
-    0x10 | CMD_STREAM_WRITE,    // Major Command = 0x10. Minor Command = 0x00.
-    0x3C0,                      // Attribute Controller Data Register
-    0x20,                       // Set Palette Address Source
-
-    //
-    // End of Stream Marker
-    //
-    0x0                         // End of command stream
-};
-
 //
 // The character generator is in natural order, top of char is first element.
 // The used font is 8x13 from plan 9, copyright Markus Kuhn.

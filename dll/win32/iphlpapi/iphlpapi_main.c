@@ -3200,10 +3200,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
 
             /* Friendly name */
             if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
-                requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1; //FIXME
+                requiredSize += ifInfo.if_info.ent.if_descrlen + 1; //FIXME
 
             /* Adapter name */
-            requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+            requiredSize += ifInfo.if_info.ent.if_descrlen + 1;
 
             /* Unicast address */
             if (!(Flags & GAA_FLAG_SKIP_UNICAST))
@@ -3248,7 +3248,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
 
             /* Adapter name */
             currentAddress->AdapterName = (PVOID)currentLocation;
-            currentLocation += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+            currentLocation += ifInfo.if_info.ent.if_descrlen + 1;
 
             /* Unicast address */
             if (!(Flags & GAA_FLAG_SKIP_UNICAST))
@@ -3297,7 +3297,8 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
             currentAddress->IfIndex = indexTable->indexes[i];
 
             /* Adapter name */
-            strcpy(currentAddress->AdapterName, (char *)ifInfo.if_info.ent.if_descr);
+            memcpy(currentAddress->AdapterName, ifInfo.if_info.ent.if_descr, ifInfo.if_info.ent.if_descrlen);
+            currentAddress->AdapterName[ifInfo.if_info.ent.if_descrlen] = '\0';
 
             if (!(Flags & GAA_FLAG_SKIP_UNICAST))
             {

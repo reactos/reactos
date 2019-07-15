@@ -268,7 +268,7 @@ BEGIN
 
     POPUP "Ust&awienia"
     BEGIN
-        MENUITEM "&Zawsze na wierzchu", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "&Zawsze na wierzchu", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Użyj dźwięku kliknięcia", IDM_CLICK_SOUND
         MENUITEM SEPARATOR

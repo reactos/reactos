@@ -1,0 +1,43 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "A copiar ficheiros..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON "Cancelar", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Origem:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Destino:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
+    CONTROL "", PROGRESSORD, "setupx_progress", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 63, 194, 13
+END
+
+IDPROMPTFORDISK DIALOG 0, 0, 260, 120
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Arquivos necessários"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Insira o disco de instalação do fabricante, em seguida,seleccione o controlador na lista abaixo", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Copiar de:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
+    DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Procurar...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROMPTDISK   "O arquivo '%1' em %2 é necessário"
+    IDS_UNKNOWN      "Desconhecido"
+    IDS_COPYFROM     "Copiar arquivos de:"
+    IDS_INFO         "Digite o caminho de origem dos arquivos, em seguida clique em OK."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_QUERY_REBOOT_TEXT "Para terminar a instalação, tem de reiniciar o computador. Deseja continuar?"
+    IDS_QUERY_REBOOT_CAPTION "Reiniciar"
+    IDS_INF_FILE "Informações de configuração"
+END

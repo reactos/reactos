@@ -11,6 +11,58 @@
 
 #include <stdunk.h>
 
+inline
+PVOID
+KCOM_New(
+    size_t size,
+    POOL_TYPE pool_type,
+    ULONG tag)
+{
+    PVOID result;
+
+    result = ExAllocatePoolWithTag(pool_type, size, tag);
+
+    if (result)
+        RtlZeroMemory(result, size);
+
+    return result;
+}
+
+PVOID
+__cdecl
+operator new(
+    size_t size,
+    POOL_TYPE pool_type)
+{
+    return KCOM_New(size, pool_type, 'wNcP');
+}
+
+PVOID
+__cdecl
+operator new(
+    size_t size,
+    POOL_TYPE pool_type,
+    ULONG tag)
+{
+    return KCOM_New(size, pool_type, tag);
+}
+
+void
+__cdecl
+operator delete(
+    PVOID ptr)
+{
+    ExFreePool(ptr);
+}
+
+void
+__cdecl
+operator delete(
+    PVOID ptr, UINT_PTR)
+{
+    ExFreePool(ptr);
+}
+
 CUnknown::CUnknown(PUNKNOWN outer_unknown)
 {
     m_ref_count = 0;

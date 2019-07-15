@@ -74,6 +74,7 @@ macro(set_cpp)
             include_directories(${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
         else()
             replace_compile_flags("-nostdinc" " ")
+            add_definitions(-DPAL_STDCPP_COMPAT)
         endif()
     endif()
 

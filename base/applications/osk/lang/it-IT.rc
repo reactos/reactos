@@ -270,7 +270,7 @@ BEGIN
 
     POPUP "Impostazioni"
     BEGIN
-        MENUITEM "Sempre in primo piano", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "Sempre in primo piano", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Usa suono al click", IDM_CLICK_SOUND
         MENUITEM SEPARATOR

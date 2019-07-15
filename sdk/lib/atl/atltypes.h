@@ -380,7 +380,10 @@ public:
         ::OffsetRect(this, size.cx, size.cy);
     }
 
-    //BOOL PtInRect(POINT point) const throw()
+    BOOL PtInRect(POINT point) const throw()
+    {
+        return ::PtInRect(this, point);
+    }
     //void SetRect(int x1, int y1, int x2, int y2) throw()
     //void SetRectEmpty() throw()
     //CSize Size() const throw()

@@ -276,16 +276,16 @@ DISK_GEOMETRY FloppyGeometries[] =
     {{890,0},   F3_200Mb_512,   13,     34,     512},
     {{262,0},   F3_240M_512,    32,     56,     512}
 #else
-    {{.LowPart = 80, .HighPart = 0},    F3_640_512,     2,      8,      512},
-    {{.LowPart = 80, .HighPart = 0},    F3_720_512,     2,      9,      512},
-    {{.LowPart = 80, .HighPart = 0},    F3_1Pt2_512,    2,      15,     512},
-    {{.LowPart = 77, .HighPart = 0},    F3_1Pt23_1024,  2,      8,      1024},
-    {{.LowPart = 80, .HighPart = 0},    F3_1Pt44_512,   2,      18,     512},
-    {{.LowPart = 80, .HighPart = 0},    F3_1Pt44_512,   2,      21,     512},   // DMF -> F3_1Pt44_512
-    {{.LowPart = 1024, .HighPart = 0},  F3_32M_512,     2,      32,     512},
-    {{.LowPart = 963, .HighPart = 0},   F3_120M_512,    8,      32,     512},
-    {{.LowPart = 890, .HighPart = 0},   F3_200Mb_512,   13,     34,     512},
-    {{.LowPart = 262, .HighPart = 0},   F3_240M_512,    32,     56,     512}
+    {{{80,0}},    F3_640_512,     2,      8,      512},
+    {{{80,0}},    F3_720_512,     2,      9,      512},
+    {{{80,0}},    F3_1Pt2_512,    2,      15,     512},
+    {{{77,0}},    F3_1Pt23_1024,  2,      8,      1024},
+    {{{80,0}},    F3_1Pt44_512,   2,      18,     512},
+    {{{80,0}},    F3_1Pt44_512,   2,      21,     512},   // DMF -> F3_1Pt44_512
+    {{{1024,0}},  F3_32M_512,     2,      32,     512},
+    {{{963,0}},   F3_120M_512,    8,      32,     512},
+    {{{890,0}},   F3_200Mb_512,   13,     34,     512},
+    {{{262,0}},   F3_240M_512,    32,     56,     512}
 #endif
 };
 
@@ -2516,10 +2516,11 @@ Return Value:
 
 #ifndef __REACTOS__
             context = ExAllocatePool(NonPagedPoolNx,
+                                     sizeof(COMPLETION_CONTEXT));
 #else
             context = ExAllocatePool(NonPagedPool,
-#endif
                                      sizeof(COMPLETION_CONTEXT));
+#endif
 
             if (context == NULL) {
 
@@ -3439,10 +3440,11 @@ Return Value:
     //
 #ifndef __REACTOS__
     parameterList = ExAllocatePool(NonPagedPoolNx,
+                                   sizeof(FORMAT_UNIT_PARAMETER_LIST));
 #else
     parameterList = ExAllocatePool(NonPagedPool,
-#endif
                                    sizeof(FORMAT_UNIT_PARAMETER_LIST));
+#endif
 
     if (parameterList == NULL)
     {

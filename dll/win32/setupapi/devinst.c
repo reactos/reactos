@@ -6090,3 +6090,48 @@ BOOL WINAPI SetupDiDeleteDevRegKey(
         RegCloseKey(RootKey);
     return ret;
 }
+
+/***********************************************************************
+ *		SetupDiRestartDevices (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiRestartDevices(
+    HDEVINFO DeviceInfoSet,
+    PSP_DEVINFO_DATA DeviceInfoData)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *devInfo;
+    CONFIGRET cr;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+
+    cr = CM_Enable_DevNode_Ex(devInfo->dnDevInst, 0, set->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+}

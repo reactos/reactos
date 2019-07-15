@@ -38,6 +38,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "debug.hpp"
 #include "cmireg.hpp"
 
+
+PVOID
+__cdecl
+operator new(
+    size_t size,
+    POOL_TYPE pool_type,
+    ULONG tag);
+
 class CCMIAdapter : public ICMIAdapter,
                     public IAdapterPowerManagement,
                     public CUnknown
