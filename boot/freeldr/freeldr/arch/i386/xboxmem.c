@@ -20,6 +20,9 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
+
+DBG_DEFAULT_CHANNEL(MEMORY);
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
@@ -27,6 +30,17 @@ static ULONG AvailableMemoryMb = 0;
 #define TEST_SIZE     0x200
 #define TEST_PATTERN1 0xAA
 #define TEST_PATTERN2 0x55
+
+extern VOID
+SetMemory(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
+    ULONG_PTR BaseAddress,
+    SIZE_T Size,
+    TYPE_OF_MEMORY MemoryType);
+
+extern ULONG
+PcMemFinalizeMemoryMap(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap);
 
 VOID
 XboxMemInit(VOID)
@@ -71,6 +85,7 @@ XboxMemInit(VOID)
     WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
     WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
 
+    /* 4 MB video framebuffer is reserved later using XboxMemReserveMemory() */
     AvailableMemoryMb = InstalledMemoryMb;
 }
 
@@ -79,25 +94,31 @@ FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[2];
 PFREELDR_MEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
+    TRACE("XboxMemGetMemoryMap()\n");
+
     /* Synthesize memory map */
 
     /* Available RAM block */
-    XboxMemoryMap[0].BasePage = 0;
-    XboxMemoryMap[0].PageCount = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
-    XboxMemoryMap[0].MemoryType = LoaderFree;
+    SetMemory(XboxMemoryMap,
+              0,
+              AvailableMemoryMb * 1024 * 1024,
+              LoaderFree);
 
     /* Video memory */
-    XboxMemoryMap[1].BasePage = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
-    XboxMemoryMap[1].PageCount = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024 / MM_PAGE_SIZE;
-    XboxMemoryMap[1].MemoryType = LoaderFirmwarePermanent;
+    SetMemory(XboxMemoryMap,
+              AvailableMemoryMb * 1024 * 1024,
+              (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024,
+              LoaderFirmwarePermanent);
 
-    *MemoryMapSize = 2;
+    *MemoryMapSize = PcMemFinalizeMemoryMap(XboxMemoryMap);
     return XboxMemoryMap;
 }
 
 PVOID
 XboxMemReserveMemory(ULONG MbToReserve)
 {
+    /* This function is used to reserve video framebuffer in XboxVideoInit() */
+
     if (InstalledMemoryMb == 0)
     {
         /* Hmm, seems we're not initialized yet */

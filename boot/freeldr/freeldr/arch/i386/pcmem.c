@@ -480,6 +480,7 @@ nextRange:
 
 VOID
 ReserveMemory(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
     ULONG_PTR BaseAddress,
     SIZE_T Size,
     TYPE_OF_MEMORY MemoryType,
@@ -494,11 +495,11 @@ ReserveMemory(
     for (i = 0; i < PcMapCount; i++)
     {
         /* Check for conflicting descriptor */
-        if ((PcMemoryMap[i].BasePage < BasePage + PageCount) &&
-            (PcMemoryMap[i].BasePage + PcMemoryMap[i].PageCount > BasePage))
+        if ((MemoryMap[i].BasePage < BasePage + PageCount) &&
+            (MemoryMap[i].BasePage + MemoryMap[i].PageCount > BasePage))
         {
             /* Check if the memory is free */
-            if (PcMemoryMap[i].MemoryType != LoaderFree)
+            if (MemoryMap[i].MemoryType != LoaderFree)
             {
                 FrLdrBugCheckWithMessage(
                     MEMORY_INIT_FAILURE,
@@ -513,7 +514,7 @@ ReserveMemory(
     }
 
     /* Add the memory descriptor */
-    PcMapCount = AddMemoryDescriptor(PcMemoryMap,
+    PcMapCount = AddMemoryDescriptor(MemoryMap,
                                      MAX_BIOS_DESCRIPTORS,
                                      BasePage,
                                      PageCount,
@@ -522,6 +523,7 @@ ReserveMemory(
 
 VOID
 SetMemory(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
     ULONG_PTR BaseAddress,
     SIZE_T Size,
     TYPE_OF_MEMORY MemoryType)
@@ -532,17 +534,67 @@ SetMemory(
     PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(BaseAddress, Size);
 
     /* Add the memory descriptor */
-    PcMapCount = AddMemoryDescriptor(PcMemoryMap,
+    PcMapCount = AddMemoryDescriptor(MemoryMap,
                                      MAX_BIOS_DESCRIPTORS,
                                      BasePage,
                                      PageCount,
                                      MemoryType);
 }
 
+ULONG
+PcMemFinalizeMemoryMap(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap)
+{
+    ULONG i;
+
+    /* Reserve some static ranges for freeldr */
+    ReserveMemory(MemoryMap, 0x1000, STACKLOW - 0x1000, LoaderFirmwareTemporary, "BIOS area");
+    ReserveMemory(MemoryMap, STACKLOW, STACKADDR - STACKLOW, LoaderOsloaderStack, "FreeLdr stack");
+    ReserveMemory(MemoryMap, FREELDR_BASE, FrLdrImageSize, LoaderLoadedProgram, "FreeLdr image");
+
+    /* Default to 1 page above freeldr for the disk read buffer */
+    DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
+    DiskReadBufferSize = PAGE_SIZE;
+
+    /* Scan for free range above freeldr image */
+    for (i = 0; i < PcMapCount; i++)
+    {
+        if ((MemoryMap[i].BasePage > (FREELDR_BASE / PAGE_SIZE)) &&
+            (MemoryMap[i].MemoryType == LoaderFree))
+        {
+            /* Use this range for the disk read buffer */
+            DiskReadBuffer = (PVOID)(MemoryMap[i].BasePage * PAGE_SIZE);
+            DiskReadBufferSize = min(MemoryMap[i].PageCount * PAGE_SIZE,
+                                     MAX_DISKREADBUFFER_SIZE);
+            break;
+        }
+    }
+
+    TRACE("DiskReadBuffer=0x%p, DiskReadBufferSize=0x%lx\n",
+          DiskReadBuffer, DiskReadBufferSize);
+
+    /* Now reserve the range for the disk read buffer */
+    ReserveMemory(MemoryMap,
+                  (ULONG_PTR)DiskReadBuffer,
+                  DiskReadBufferSize,
+                  LoaderFirmwareTemporary,
+                  "Disk read buffer");
+
+    TRACE("Dumping resulting memory map:\n");
+    for (i = 0; i < PcMapCount; i++)
+    {
+        TRACE("BasePage=0x%lx, PageCount=0x%lx, Type=%s\n",
+              MemoryMap[i].BasePage,
+              MemoryMap[i].PageCount,
+              MmGetSystemMemoryMapTypeString(MemoryMap[i].MemoryType));
+    }
+    return PcMapCount;
+}
+
 PFREELDR_MEMORY_DESCRIPTOR
 PcMemGetMemoryMap(ULONG *MemoryMapSize)
 {
-    ULONG i, EntryCount;
+    ULONG EntryCount;
     ULONG ExtendedMemorySizeAtOneMB;
     ULONG ExtendedMemorySizeAtSixteenMB;
     ULONG EbdaBase, EbdaSize;
@@ -596,53 +648,12 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
     }
 
     /* Setup some protected ranges */
-    SetMemory(0x000000, 0x01000, LoaderFirmwarePermanent); // Realmode IVT / BDA
-    SetMemory(0x0A0000, 0x50000, LoaderFirmwarePermanent); // Video memory
-    SetMemory(0x0F0000, 0x10000, LoaderSpecialMemory); // ROM
-    SetMemory(0xFFF000, 0x01000, LoaderSpecialMemory); // unusable memory (do we really need this?)
+    SetMemory(PcMemoryMap, 0x000000, 0x01000, LoaderFirmwarePermanent); // Realmode IVT / BDA
+    SetMemory(PcMemoryMap, 0x0A0000, 0x50000, LoaderFirmwarePermanent); // Video memory
+    SetMemory(PcMemoryMap, 0x0F0000, 0x10000, LoaderSpecialMemory); // ROM
+    SetMemory(PcMemoryMap, 0xFFF000, 0x01000, LoaderSpecialMemory); // unusable memory (do we really need this?)
 
-    /* Reserve some static ranges for freeldr */
-    ReserveMemory(0x1000, STACKLOW - 0x1000, LoaderFirmwareTemporary, "BIOS area");
-    ReserveMemory(STACKLOW, STACKADDR - STACKLOW, LoaderOsloaderStack, "FreeLdr stack");
-    ReserveMemory(FREELDR_BASE, FrLdrImageSize, LoaderLoadedProgram, "FreeLdr image");
-
-    /* Default to 1 page above freeldr for the disk read buffer */
-    DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
-    DiskReadBufferSize = PAGE_SIZE;
-
-    /* Scan for free range above freeldr image */
-    for (i = 0; i < PcMapCount; i++)
-    {
-        if ((PcMemoryMap[i].BasePage > (FREELDR_BASE / PAGE_SIZE)) &&
-            (PcMemoryMap[i].MemoryType == LoaderFree))
-        {
-            /* Use this range for the disk read buffer */
-            DiskReadBuffer = (PVOID)(PcMemoryMap[i].BasePage * PAGE_SIZE);
-            DiskReadBufferSize = min(PcMemoryMap[i].PageCount * PAGE_SIZE,
-                                     MAX_DISKREADBUFFER_SIZE);
-            break;
-        }
-    }
-
-    TRACE("DiskReadBuffer=0x%p, DiskReadBufferSize=0x%lx\n",
-          DiskReadBuffer, DiskReadBufferSize);
-
-    /* Now reserve the range for the disk read buffer */
-    ReserveMemory((ULONG_PTR)DiskReadBuffer,
-                  DiskReadBufferSize,
-                  LoaderFirmwareTemporary,
-                  "Disk read buffer");
-
-    TRACE("Dumping resulting memory map:\n");
-    for (i = 0; i < PcMapCount; i++)
-    {
-        TRACE("BasePage=0x%lx, PageCount=0x%lx, Type=%s\n",
-              PcMemoryMap[i].BasePage,
-              PcMemoryMap[i].PageCount,
-              MmGetSystemMemoryMapTypeString(PcMemoryMap[i].MemoryType));
-    }
-
-    *MemoryMapSize = PcMapCount;
+    *MemoryMapSize = PcMemFinalizeMemoryMap(PcMemoryMap);
     return PcMemoryMap;
 }
 
