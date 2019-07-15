@@ -47,10 +47,7 @@ BEGIN
             MENUITEM "Im&primantes et fax", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Barre des &tâches et Menu Démarrer", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Rechercher", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "&Rechercher", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Aide et support", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "E&xécuter...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

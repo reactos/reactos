@@ -49,10 +49,7 @@ BEGIN
             MENUITEM "Spausdintuvai ir &faxai", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Užduočių juosta ir pradžios meniu", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "Paieš&ka", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "Paieš&ka", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "Pa&galba ir palaikymas", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Vykdyti...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

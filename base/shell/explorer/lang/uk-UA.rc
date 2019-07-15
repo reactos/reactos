@@ -55,10 +55,7 @@ BEGIN
             MENUITEM "Пр&интери й факси", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Панель &завдань і меню ""Пуск""", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "З&найти", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "З&найти", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Довідка та підтримка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Виконати...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

@@ -47,10 +47,7 @@ BEGIN
             MENUITEM "&Печатачи и факсове", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Задачна лента и изборник „Пуск“", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Търсене", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "&Търсене", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Помощ и поддръжка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Изпълнение...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

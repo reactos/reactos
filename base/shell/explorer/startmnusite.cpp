@@ -208,13 +208,12 @@ public:
         }
 
         /* Search */
-        /* FIXME: Enable after implementing */
-        /* if (SHRestricted(REST_NOFIND)) */
-    {
-        DeleteMenu(hMenu,
-                   IDM_SEARCH,
-                   MF_BYCOMMAND);
-    }
+        if (SHRestricted(REST_NOFIND))
+        {
+            DeleteMenu(hMenu,
+                       IDM_SEARCH,
+                       MF_BYCOMMAND);
+        }
 
         /* FIXME: Help */
 
