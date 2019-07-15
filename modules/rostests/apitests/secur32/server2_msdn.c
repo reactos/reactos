@@ -42,12 +42,12 @@ BOOL AcceptAuthSocket(
     sockListen = socket(PF_INET, SOCK_STREAM, 0);
     if (sockListen == INVALID_SOCKET)
     {
-        err("Failed to create socket: %u\n", GetLastError());
+        sync_err("Failed to create socket: %lu\n", (int)GetLastError());
         return FALSE;
     }
     else
     {
-        trace("server socket created.\n",sockListen);
+        sync_trace("server socket created.\n");//,sockListen);
     }
 
     /* Bind to local port */
@@ -59,7 +59,7 @@ BOOL AcceptAuthSocket(
                              (LPSOCKADDR)&sockIn,
                              sizeof(sockIn)))
     {
-        err("bind failed: %u\n", GetLastError());
+        sync_err("bind failed: %lu\n", GetLastError());
         return FALSE;
     }
 
@@ -68,28 +68,29 @@ BOOL AcceptAuthSocket(
 
     if (SOCKET_ERROR == listen(sockListen, 1))
     {
-        err("Listen failed: %u\n", GetLastError());
+        sync_err("Listen failed: %lu\n", GetLastError());
         return FALSE;
     }
     else
     {
-        trace("Listening !\n");
+        sync_trace("Listening !\n");
     }
 
     /* Accept client */
     sockClient = accept(sockListen,
                         NULL,
                         NULL);
+
     if (sockClient == INVALID_SOCKET)
     {
-        err("accept failed: %u\n", GetLastError());
+        sync_err("accept failed: %lu\n", GetLastError());
         return FALSE;
     }
 
     /* Stop listening */
     closesocket(sockListen);
 
-    trace("connection accepted on socket %x!\n",sockClient);
+    sync_trace("connection accepted on socket %x!\n",sockClient);
     *ServerSocket = sockClient;
 
     return server2_DoAuthentication(sockClient, PackageName);
@@ -114,10 +115,10 @@ BOOL server2_DoAuthentication(
                                   NULL,
                                   &hcred,
                                   &Lifetime);
-    ok(SEC_SUCCESS(ss), "AcquireCredentialsHandle failed with error 0x%08x\n", ss);
+    sync_ok(SEC_SUCCESS(ss), "AcquireCredentialsHandle failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
-        err("AcquireCreds failed: 0x%08x\n", ss);
+        sync_err("AcquireCreds failed: 0x%08lx\n", ss);
         printerr(ss);
         return FALSE;
     }
@@ -142,14 +143,14 @@ BOOL server2_DoAuthentication(
                               &done,
                               fNewConversation))
         {
-            err("GenServerContext failed.\n");
+            sync_err("GenServerContext failed.\n");
             return FALSE;
         }
 
         fNewConversation = FALSE;
         if (!SendMsg(AuthSocket, g_pOutBuf, cbOut))
         {
-            err("Sending message failed.\n");
+            sync_err("Sending message failed.\n");
             return FALSE;
         }
     }
@@ -197,7 +198,7 @@ GenServerContext(
     InSecBuff.BufferType = SECBUFFER_TOKEN;
     InSecBuff.pvBuffer = pIn;
 
-    trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
+    sync_trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
     PrintHexDump(InSecBuff.cbBuffer, (PBYTE)InSecBuff.pvBuffer);
 
     ss = AcceptSecurityContext(&hcred,
@@ -209,10 +210,10 @@ GenServerContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
-    ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08x\n", ss);
+    sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
-        err("AcceptSecurityContext failed: 0x%08x\n", ss);
+        sync_err("AcceptSecurityContext failed: 0x%08lx\n", ss);
         printerr(ss);
         return FALSE;
     }
@@ -222,10 +223,10 @@ GenServerContext(
         (ss == SEC_I_COMPLETE_AND_CONTINUE))
     {
         ss = CompleteAuthToken(&hctxt, &OutBuffDesc);
-        ok(SEC_SUCCESS(ss), "CompleteAuthToken failed with error 0x%08x\n", ss);
+        sync_ok(SEC_SUCCESS(ss), "CompleteAuthToken failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
-            err("complete failed: 0x%08x\n", ss);
+            sync_err("complete failed: 0x%08lx\n", ss);
             printerr(ss);
             return FALSE;
         }
@@ -235,7 +236,7 @@ GenServerContext(
 
     //  fNewConversation equals FALSE.
 
-    trace("Token buffer generated (%lu bytes):\n",
+    sync_trace("Token buffer generated (%lu bytes):\n",
         OutSecBuff.cbBuffer);
     PrintHexDump(OutSecBuff.cbBuffer,
                  (PBYTE)OutSecBuff.pvBuffer);
@@ -266,8 +267,8 @@ EncryptThis(
      */
     SigBufferSize = cbSecurityTrailer;
 
-    trace("Data before encryption: %.*S\n", cbMessage/sizeof(TCHAR), pMessage);
-    trace("Length of data before encryption: %d\n", cbMessage);
+    sync_trace("Data before encryption: %.*s\n", (int)cbMessage/sizeof(TCHAR), pMessage);
+    sync_trace("Length of data before encryption: %ld\n", cbMessage);
 
     /*
      * Allocate a buffer to hold the signature,
@@ -290,15 +291,15 @@ EncryptThis(
     SecBuff[1].pvBuffer = pMessage;
 
     ss = EncryptMessage(&hctxt, ulQop, &BuffDesc, 0);
-    ok(SEC_SUCCESS(ss), "EncryptMessage failed with error 0x%08x\n", ss);
+    sync_ok(SEC_SUCCESS(ss), "EncryptMessage failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
-        err("EncryptMessage failed: 0x%08x\n", ss);
+        sync_err("EncryptMessage failed: 0x%08lx\n", ss);
         return FALSE;
     }
     else
     {
-        trace("The message has been encrypted.\n");
+        sync_trace("The message has been encrypted.\n");
     }
 
     /* Indicate the size of the buffer in the first DWORD */
@@ -314,7 +315,7 @@ EncryptThis(
 
     *pcbOutput = cbMessage + SecBuff[0].cbBuffer + sizeof(DWORD);
 
-    trace("data after encryption including trailer (%lu bytes):\n", *pcbOutput);
+    sync_trace("data after encryption including trailer (%lu bytes):\n", *pcbOutput);
     PrintHexDump(*pcbOutput, *ppOutput);
 
     return TRUE;
@@ -322,7 +323,7 @@ EncryptThis(
 
 void server2_cleanup(void)
 {
-    trace("called server2_cleanup!\n");
+    sync_trace("called server2_cleanup!\n");
 
     if (g_pInBuf)
         free(g_pInBuf);
@@ -347,17 +348,16 @@ server2_start(
     PSecPkgInfo pkgInfo;
     SecPkgContext_Sizes SecPkgContextSizes;
     SecPkgContext_NegotiationInfo SecPkgNegInfo;
-    ULONG cbMaxSignature;
     ULONG cbSecurityTrailer;
 
     /*
      * Initialize the security package
      */
     ss = QuerySecurityPackageInfo((LPTSTR)PackageName, &pkgInfo);
-    ok(SEC_SUCCESS(ss), "QuerySecurityPackageInfo failed with error 0x%08x\n", ss);
+    sync_ok(SEC_SUCCESS(ss), "QuerySecurityPackageInfo failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
-        skip("Could not query package info for %S, error 0x%08x\n",
+        skip("Could not query package info for %S, error 0x%08lx\n",
              PackageName, ss);
         printerr(ss);
         server2_cleanup();
@@ -365,7 +365,7 @@ server2_start(
     }
 
     g_cbMaxMessage = pkgInfo->cbMaxToken;
-    trace("max token = %d\n", g_cbMaxMessage);
+    sync_trace("max token = %ld\n", g_cbMaxMessage);
 
     FreeContextBuffer(pkgInfo);
 
@@ -375,52 +375,55 @@ server2_start(
     if (!g_pInBuf || !g_pOutBuf)
     {
         server2_cleanup();
-        fatal_error("Memory allocation error.\n");
+        sync_err("Memory allocation error.\n");
+        return 0;
     }
 
     /* Start looping for clients */
 
     //while (TRUE)
     {
-        trace("Waiting for client to connect...\n");
+        sync_trace("Waiting for client to connect...\n");
 
         /* Make an authenticated connection with client */
         Success = AcceptAuthSocket(&Server_Socket, PackageName);
-        ok(Success, "AcceptAuthSocket failed\n");
+        sync_ok(Success, "AcceptAuthSocket failed\n");
         if (!Success)
         {
             server2_cleanup();
-            fatal_error("Could not authenticate the socket.\n");
+            sync_err("Could not authenticate the socket.\n");
+            return 0;
         }
 
         ss = QueryContextAttributes(&hctxt,
                                     SECPKG_ATTR_SIZES,
                                     &SecPkgContextSizes);
-        ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08x\n", ss);
+        sync_ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
             server2_cleanup();
-            fatal_error("QueryContextAttributes failed: 0x%08x\n", ss);
+            sync_err("QueryContextAttributes failed: 0x%08lx\n", ss);
+            return 0;
         }
 
         /* The following values are used for encryption and signing */
-        cbMaxSignature = SecPkgContextSizes.cbMaxSignature;
         cbSecurityTrailer = SecPkgContextSizes.cbSecurityTrailer;
 
         ss = QueryContextAttributes(&hctxt,
                                     SECPKG_ATTR_NEGOTIATION_INFO,
                                     &SecPkgNegInfo);
-        ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08x\n", ss);
+        sync_ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
-            err("QueryContextAttributes failed: 0x%08x\n", ss);
+            sync_err("QueryContextAttributes failed: 0x%08lx\n", ss);
             printerr(ss);
             server2_cleanup();
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
         else
         {
-            trace("Package Name: %S\n", SecPkgNegInfo.PackageInfo->Name);
+            sync_trace("Package Name: %S\n", SecPkgNegInfo.PackageInfo->Name);
         }
 
         /* Free the allocated buffer */
@@ -428,53 +431,57 @@ server2_start(
 
         /* Impersonate the client */
         ss = ImpersonateSecurityContext(&hctxt);
-        ok(SEC_SUCCESS(ss), "ImpersonateSecurityContext failed with error 0x%08x\n", ss);
+        sync_ok(SEC_SUCCESS(ss), "ImpersonateSecurityContext failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
-            err("Impersonate failed: 0x%08x\n", ss);
+            sync_err("Impersonate failed: 0x%08lx\n", ss);
             server2_cleanup();
             printerr(ss);
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
         else
         {
-            trace("Impersonation worked.\n");
+            sync_trace("Impersonation worked.\n");
         }
 
         GetUserName(NULL, &cchUserName);
         pUserName = (TCHAR*)malloc(cchUserName*sizeof(TCHAR));
         if (!pUserName)
         {
-            err("Memory allocation error.\n");
+            sync_err("Memory allocation error.\n");
             server2_cleanup();
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
 
         if (!GetUserName(pUserName, &cchUserName))
         {
-            err("Could not get the client name.\n");
+            sync_err("Could not get the client name.\n");
             server2_cleanup();
             printerr(GetLastError());
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
         else
         {
-            trace("Client connected as :  %S\n", pUserName);
+            sync_trace("Client connected as :  %S\n", pUserName);
         }
 
         /* Revert to self */
         ss = RevertSecurityContext(&hctxt);
-        ok(SEC_SUCCESS(ss), "RevertSecurityContext failed with error 0x%08x\n", ss);
+        sync_ok(SEC_SUCCESS(ss), "RevertSecurityContext failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
-            err("Revert failed: 0x%08x\n", ss);
+            sync_err("Revert failed: 0x%08lx\n", ss);
             server2_cleanup();
             printerr(GetLastError());
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
         else
         {
-            trace("Reverted to self.\n");
+            sync_trace("Reverted to self.\n");
         }
 
         /*
@@ -496,13 +503,14 @@ server2_start(
                        pDataToClient,
                        cbDataToClient))
         {
-            err("send message failed.\n");
+            sync_err("send message failed.\n");
             server2_cleanup();
             printerr(GetLastError());
-            fatal_error("aborting\n");
+            sync_err("aborting\n");
+            return 0;
         }
 
-        trace(" %d encrypted bytes sent.\n", cbDataToClient);
+        sync_trace(" %ld encrypted bytes sent.\n", cbDataToClient);
 
         if (Server_Socket)
         {
@@ -527,21 +535,31 @@ server2_start(
         }
     }
 
-    trace("Server ran to completion without error.\n");
+    sync_trace("Server ran to completion without error.\n");
     server2_cleanup();
     return 0;
 }
 
-DWORD
-server2_main(
-    IN LPCTSTR PackageName)  // Example: _T("NTLM"), or _T("Negotiate")
+int server2_main(int argc, WCHAR** argv)
 {
     DWORD dwRet;
     WSADATA wsaData;
+    LPCTSTR PackageName;
+
+    if (argc != 1)
+    {
+        sync_err("arg != 1\n");
+        return -1;
+    }
+
+    PackageName = argv[0];
 
     /* Startup WSA */
     if (WSAStartup(0x0101, &wsaData))
-        fatal_error("Could not initialize winsock.\n");
+    {
+        sync_err("Could not initialize winsock.\n");
+        return 0;
+    }
 
     /* Start the server */
     dwRet = server2_start(PackageName);

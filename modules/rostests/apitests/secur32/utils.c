@@ -49,36 +49,36 @@ void initSecLib(
     pInitSecurityInterfaceW = (PSecurityFunctionTable(*)(void))GetProcAddress(*phSec, "InitSecurityInterfaceW");
     if (pInitSecurityInterfaceW == NULL)
     {
-        wprintf(L"security.dll loading failed...");
+        sync_err("security.dll loading failed...");
         exit(1);
     }
 
     *pSecFuncTable = pInitSecurityInterfaceW();
     if (*pSecFuncTable == NULL)
     {
-        wprintf(L"no function table?!?");
+        sync_err("no function table?!?");
         exit(1);
     }
 
     rc = ((*pSecFuncTable)->EnumerateSecurityPackages)(&numPacks, &pPacks);
     if (rc != 0)
     {
-        printf("ESP() returned %ld\n", rc);
+        sync_err("ESP() returned %ld\n", rc);
         exit(1);
     }
 
     for (i = 0; i < numPacks; ++ i)
     {
-        printf("\nPackage: %S\n", pPacks[i].Name);
-        printf("  Version:      %hu\n", pPacks[i].wVersion);
-        printf("  RPCID:        %hu%S\n", pPacks[i].wRPCID,
-            pPacks[i].wRPCID == SECPKG_ID_NONE? " [none]": "");
-        printf("  Comment:      \"%S\"\n", pPacks[i].Comment);
-        printf("  Capabilities: %08lxh\n", pPacks[i].fCapabilities);
+        sync_trace("\nPackage: %S\n", pPacks[i].Name);
+        sync_trace("  Version:      %hu\n", pPacks[i].wVersion);
+        sync_trace("  RPCID:        %hu%s\n", pPacks[i].wRPCID,
+              pPacks[i].wRPCID == SECPKG_ID_NONE? " [none]": "");
+        sync_trace("  Comment:      \"%S\"\n", pPacks[i].Comment);
+        sync_trace("  Capabilities: %08lxh\n", pPacks[i].fCapabilities);
         for (j = 0; capNames[j].bits != 0xffffffffL; ++j)
         {
             if ((capNames[j].bits & pPacks[i].fCapabilities) == capNames[j].bits)
-                printf("    %s (%s)\n", capNames[j].name, capNames[j].comment);
+                sync_msg("    %s (%s)\n", capNames[j].name, capNames[j].comment);
         }
     }
 
@@ -104,9 +104,8 @@ void wserr(int rc, LPCWSTR const funcname)
                    0,
                    NULL);
 
-    fwprintf(stderr, L"\nWinsock error %d [gle %d] returned by %s().\n",
-             rc, errnum);
-    fwprintf(stderr, L"\nError string: %s.\n",errbuffer);
+    sync_err("\nWinsock error %d [gle %ld] returned by %s().\n", rc, errnum, (char*)funcname);
+    sync_err("\nError string: %s.\n", (char*)errbuffer);
 
     LocalFree(errbuffer);
     WSACleanup();
@@ -165,7 +164,7 @@ void PrintHexDump(
         }
 
         rgbLine[cbLine++] = 0;
-        printf("%s\n", rgbLine);
+        sync_trace("%s\n", rgbLine);
     }
 }
 
@@ -204,11 +203,11 @@ BOOL SendBytes(
     PBYTE pTemp = pBuf;
     int cbSent, cbRemaining = cbBuf;
 
-    trace("sending %d bytes from buffer %p to socket %x\n", cbBuf, pBuf, s);
+    sync_trace("sending %lu bytes from buffer %p to socket %x\n", cbBuf, pBuf, s);
 
     if (!pBuf)
     {
-        err("received null buffer!\n");
+        sync_err("received null buffer!\n");
         return FALSE;
     }
 
@@ -224,7 +223,7 @@ BOOL SendBytes(
 
         if (SOCKET_ERROR == cbSent)
         {
-            err("send failed: %u\n", GetLastError());
+            sync_err("send failed: %lu\n", GetLastError());
             printerr(GetLastError());
             return FALSE;
         }
@@ -254,7 +253,7 @@ BOOL ReceiveMsg(
         return FALSE;
     }
 
-    trace("message size = %d\n", cbData);
+    sync_trace("message size = %lu\n", cbData);
 
     if (sizeof(cbData) != cbRead)
         return FALSE;
@@ -270,7 +269,7 @@ BOOL ReceiveMsg(
 
     if (cbRead != cbData)
     {
-        err("cbRead != cbData, was %d %d\n",cbRead, cbData);
+        sync_err("cbRead != cbData, was %lu %lu\n",cbRead, cbData);
         return FALSE;
     }
 
@@ -287,11 +286,11 @@ BOOL ReceiveBytes(
     PBYTE pTemp = pBuf;
     int cbRead, cbRemaining = cbBuf;
 
-    trace("reading %d bytes from socket %x to buffer %p\n", cbBuf, s, pBuf);
+    sync_trace("reading %lu bytes from socket %x to buffer %p\n", cbBuf, s, pBuf);
 
     if (!pBuf)
     {
-        err("received null buffer!\n");
+        sync_err("received null buffer!\n");
         return FALSE;
     }
 
@@ -300,12 +299,12 @@ BOOL ReceiveBytes(
         cbRead = recv(s, (char*)pTemp, cbBuf, 0);
         if (cbRead < 0 || cbRead == SOCKET_ERROR)
         {
-            err("recv failed: %d\n", WSAGetLastError());
+            sync_err("recv failed: %d\n", WSAGetLastError());
             printerr(WSAGetLastError());
-            fatal_error("abort");
-            break;
+            sync_err("abort");
+            return FALSE;
         }
-        trace("received %d bytes, %d remain in buffer\n", cbRead, cbRemaining);
+        sync_trace("received %d bytes, %d remain in buffer\n", cbRead, cbRemaining);
 
         if (cbRead == 0)
             break;

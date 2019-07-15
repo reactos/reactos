@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <strsafe.h>
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -42,21 +43,6 @@
 
 #define SEC_SUCCESS(Status) ((Status) >= 0)
 
-
-#define fatal_error_0(fmt, ...) \
-do { \
-    printf("(%s:%d) fatal error: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-    return; /* exit(0); */ \
-} while (0)
-
-#define fatal_error(fmt, ...) \
-do { \
-    printf("(%s:%d) fatal error: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-    return 0; /* exit(0); */ \
-} while (0)
-
-#define err(fmt, ...) printf("(%s:%d) " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
-
 #define printerr(errnum)    \
 do { \
     LPWSTR buffer;  \
@@ -67,10 +53,88 @@ do { \
                    (LPWSTR)&buffer,     \
                    0,       \
                    NULL);   \
-    err("%S",buffer );      \
+    sync_err("%S",buffer );      \
     LocalFree(buffer);      \
 } while (0)
 
+void sync_msg(char* msg, ...);
+
+#ifdef __MSVC__
+#define sync_ok(cond, msg, ...) \
+do {   \
+    char buf[512];  \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__); \
+    sync_msg_enter();   \
+    ok(cond, "[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+} while (0)
+#else
+#define sync_ok(cond, msg, ...) \
+do {   \
+    char buf[512];  \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__); \
+    sync_msg_enter();   \
+    ok(cond, "[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+} while (0)
+#endif
+
+#ifdef __MSVC__
+#define sync_trace(msg, ...)  \
+do {   \
+    char buf[512]; \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__);   \
+    sync_msg_enter();   \
+    trace("[%.4ld] %s", GetCurrentThreadId(), buf);    \
+    sync_msg_leave();   \
+} while (0)
+#else
+#define sync_trace(msg, ...)  \
+do {   \
+    char buf[512]; \
+    \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__);   \
+    sync_msg_enter();   \
+    trace("[%.4ld] %s", GetCurrentThreadId(), buf);    \
+    sync_msg_leave();   \
+} while (0)
+#endif
+
+#ifdef __MSVC__
+#define sync_msg(msg, ...) \
+{ \
+    char buf[512]; \
+ \
+    StringCbPrintfA(buf, sizeof(buf), msg, __VA_ARGS__); \
+    sync_msg_enter();   \
+    printf("[%.4ld] %s", GetCurrentThreadId(), buf);  \
+    sync_msg_leave();   \
+}
+#else
+#define sync_msg(msg, ...) \
+{ \
+    char buf[512]; \
+ \
+    StringCbPrintfA(buf, sizeof(buf), msg, ##__VA_ARGS__); \
+    \
+    sync_msg_enter();   \
+    printf("[%.4ld] %s", GetCurrentThreadId(), buf); \
+    sync_msg_leave();   \
+}
+#endif
+
+
+#ifdef __MSVC__
+#define sync_err(msg, ...) sync_ok(FALSE, msg, __VA_ARGS__)
+#else
+#define sync_err(msg, ...) sync_ok(FALSE, msg, ##__VA_ARGS__)
+#endif
+
+void sync_msg_enter();
+void sync_msg_leave();
 
 extern PSecurityFunctionTable client1_SecFuncTable;
 extern PSecurityFunctionTable server1_SecFuncTable;
