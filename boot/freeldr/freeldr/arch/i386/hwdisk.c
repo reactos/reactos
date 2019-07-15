@@ -82,6 +82,13 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     CHAR FileName[1];
 
+    if (DiskReadBufferSize == 0)
+    {
+        ERR("DiskOpen(): DiskReadBufferSize is 0, something is wrong.\n");
+        ASSERT(FALSE);
+        return ENOMEM;
+    }
+
     if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
         return EINVAL;
 
@@ -139,9 +146,15 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     BOOLEAN ret;
     ULONGLONG SectorOffset;
 
+    ASSERT(DiskReadBufferSize > 0);
+
     TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
+
+    // If MaxSectors is 0, this will lead to infinite loop
+    // In release builds assertions are disabled, however we also have sanity checks in DiskOpen()
+    ASSERT(MaxSectors > 0);
 
     ret = TRUE;
 
