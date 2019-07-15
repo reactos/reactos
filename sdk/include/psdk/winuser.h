@@ -1825,7 +1825,7 @@ extern "C" {
 #define WM_MOUSEHOVER               0x02A1
 #define WM_MOUSELEAVE               0x02A3
 
-#if(_WIN32_WINNT >= 0x0501)
+#if (_WIN32_WINNT >= 0x0501)
 #define WTS_CONSOLE_CONNECT 0x1
 #define WTS_CONSOLE_DISCONNECT 0x2
 #define WTS_REMOTE_CONNECT 0x3
