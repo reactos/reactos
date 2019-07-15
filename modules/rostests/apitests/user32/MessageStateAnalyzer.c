@@ -285,7 +285,7 @@ InnerGeneralWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_TIMER:
-            KillTimer(hwnd, 999);
+            KillTimer(hwnd, (UINT)wParam);
             if (wParam == 999)
             {
                 DestroyWindow(hwnd);
