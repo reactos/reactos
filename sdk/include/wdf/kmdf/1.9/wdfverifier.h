@@ -1,0 +1,80 @@
+/*
+ * wdfverifier.h
+ *
+ * Windows Driver Framework - Driver Framework Verifier definitioons
+ *
+ * This file is part of the ReactOS wdf package.
+ *
+ * Contributors:
+ *   Created by Benjamin Aerni <admin@bennottelling.com>
+ *
+ * Intended Usecase:
+ *   Kernel mode drivers
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
+#ifndef _WDFVERIFIER_H_
+#define _WDFVERIFIER_H_
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+/* 
+WDF Function: WdfVerifierDbgBreakPoint
+*/
+typedef
+WDFAPI
+VOID
+(*PFN_WDFVERIFIERDBGBREAKPOINT)
+(
+    __in PWDF_DRIVER_GLOBALS DriverGlobals
+);
+
+VOID
+FORCEINLINE
+WdfVerifierDbgBreakPoint
+(    )
+{
+    ((PFN_WDFVERIFIERDBGBREAKPOINT)WdfFunctions[WdfVerifierDbgBreakPointTableIndex])(WdfDriverGlobals);
+}
+
+/* 
+WDF Function: WdfVerifierKeBugCheck
+*/
+typedef
+WDFAPI
+VOID
+(*PFN_WDFVERIFIERKEBUGCHECK)
+(
+    __in PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in ULONG BugCheckCode,
+    __in ULONG_PTR BugCheckParameter1,
+    __in ULONG_PTR BugCheckParameter2,
+    __in ULONG_PTR BugCheckParameter3,
+    __in ULONG_PTR BugCheckParameter4
+);
+
+VOID
+FORCEINLINE
+WdfVerifierKeBugCheck
+(
+    __in ULONG BugCheckCode,
+    __in ULONG_PTR BugCheckParameter1,
+    __in ULONG_PTR BugCheckParameter2,
+    __in ULONG_PTR BugCheckParameter3,
+    __in ULONG_PTR BugCheckParameter4
+)
+{
+    ((PFN_WDFVERIFIERKEBUGCHECK)WdfFunctions[WdfVerifierKeBugCheckTableIndex])(WdfDriverGlobals, BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
+}
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* _WDFVERIFIER_H_ */
