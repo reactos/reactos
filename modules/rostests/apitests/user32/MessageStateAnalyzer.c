@@ -28,41 +28,41 @@ typedef INT STAGE, ACTION;
 
 typedef struct STATE
 {
-    STAGE m_nStage;
-    UINT m_nPrevMsg;
-    UINT m_msgStack[32];
-    INT m_nLevel;
-    BOOL s_bNewStage;
+    STAGE nStage;
+    UINT nPrevMsg;
+    UINT msgStack[32];
+    INT nLevel;
+    BOOL bNewStage;
 
     /* counters */
-    INT m_nWM_GETMINMAXINFO;
-    INT m_nWM_NCCREATE;
-    INT m_nWM_NCCALCSIZE;
-    INT m_nWM_CREATE;
-    INT m_nWM_SHOWWINDOW;
-    INT m_nWM_WINDOWPOSCHANGING;
-    INT m_nWM_ACTIVATEAPP;
-    INT m_nWM_NCACTIVATE;
-    INT m_nWM_ACTIVATE;
-    INT m_nWM_IME_SETCONTEXT;
-    INT m_nWM_IME_NOTIFY;
-    INT m_nWM_SETFOCUS;
-    INT m_nWM_NCPAINT;
-    INT m_nWM_ERASEBKGND;
-    INT m_nWM_WINDOWPOSCHANGED;
-    INT m_nWM_DESTROY;
-    INT m_nWM_NCDESTROY;
+    INT nWM_GETMINMAXINFO;
+    INT nWM_NCCREATE;
+    INT nWM_NCCALCSIZE;
+    INT nWM_CREATE;
+    INT nWM_SHOWWINDOW;
+    INT nWM_WINDOWPOSCHANGING;
+    INT nWM_ACTIVATEAPP;
+    INT nWM_NCACTIVATE;
+    INT nWM_ACTIVATE;
+    INT nWM_IME_SETCONTEXT;
+    INT nWM_IME_NOTIFY;
+    INT nWM_SETFOCUS;
+    INT nWM_NCPAINT;
+    INT nWM_ERASEBKGND;
+    INT nWM_WINDOWPOSCHANGED;
+    INT nWM_DESTROY;
+    INT nWM_NCDESTROY;
 } STATE;
 
 static STATE s_state;
 
 /* macros */
-#define THE_STAGE       s_state.m_nStage
-#define THE_LEVEL       s_state.m_nLevel
-#define THE_STACK       s_state.m_msgStack
-#define PREV_MSG        s_state.m_nPrevMsg
-#define NEW_STAGE       s_state.s_bNewStage
-#define COUNTER(WM_)    s_state.m_n##WM_
+#define THE_STAGE       s_state.nStage
+#define THE_LEVEL       s_state.nLevel
+#define THE_STACK       s_state.msgStack
+#define PREV_MSG        s_state.nPrevMsg
+#define NEW_STAGE       s_state.bNewStage
+#define COUNTER(WM_)    s_state.n##WM_
 #define PARENT_MSG      THE_STACK[THE_LEVEL - 1]
 #define TIMEOUT_TIMER   999
 #define TOTAL_TIMEOUT   (10 * 1000)
