@@ -167,18 +167,6 @@ HalpCalibrateStallExecution(VOID)
 
 static
 UCHAR
-GetFloppyCount(VOID)
-{
-    UCHAR Data;
-
-    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
-    Data = READ_PORT_UCHAR((PUCHAR)0x71);
-
-    return ((Data & 0xF0) ? 1 : 0) + ((Data & 0x0F) ? 1 : 0);
-}
-
-static
-UCHAR
 GetFloppyType(UCHAR DriveNumber)
 {
     UCHAR Data;
@@ -285,7 +273,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     ULONG Size;
     ULONG FloppyCount;
 
-    FloppyCount = GetFloppyCount();
+    FloppyCount = MachGetFloppyCount();
     TRACE("Floppy count: %u\n", FloppyCount);
 
     /* Always create a BIOS disk controller, no matter if we have floppy drives or not */
