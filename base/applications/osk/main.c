@@ -8,25 +8,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "osk.h"
-#include "settings.h"
+#include "precomp.h"
 
 /* GLOBALS ********************************************************************/
 
 OSK_GLOBALS Globals;
-
-/* Functions */
-int OSK_SetImage(int IdDlgItem, int IdResource);
-int OSK_DlgInitDialog(HWND hDlg);
-int OSK_DlgClose(void);
-int OSK_DlgTimer(void);
-BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
-BOOL OSK_ReleaseKey(WORD ScanCode);
-VOID OSK_RestoreDlgPlacement(HWND hDlg);
-
-INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
 /* FUNCTIONS ******************************************************************/
 

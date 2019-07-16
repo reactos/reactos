@@ -1,9 +1,8 @@
 /*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/osk_res.h
- * PURPOSE:         On screen keyboard.
- * PROGRAMMERS:     Denis ROBERT
+ * PURPOSE:         On-Screen Keyboard resource identifiers
+ * COPYRIGHT:       Denis ROBERT
  */
 
 #define MAIN_DIALOG_ENHANCED_KB             2000
