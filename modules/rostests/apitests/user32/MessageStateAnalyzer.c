@@ -60,7 +60,7 @@ typedef struct STAGE
     INT nLine;
     UINT uParentMsg;
     INT nLevel;
-    INT nAction;
+    INT nFirstAction;
     STAGE_TYPE nType;
     INT nCount;
     UINT Messages[16];
@@ -203,13 +203,15 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
         }
+
         ++s_nStage;
         if (s_nStage == ARRAYSIZE(s_GeneralStages))
         {
             DestroyWindow(hwnd);
             return;
         }
-        PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nAction, 0);
+
+        PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nFirstAction, 0);
         trace("Stage %d (Line %d)\n", s_nStage, s_GeneralStages[s_nStage].nLine);
 
         s_nSeqIndex = 0;
