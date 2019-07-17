@@ -24,6 +24,7 @@ static char s_prefix[16] = "";
 #define MSGDUMP_PREFIX s_prefix
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
+/* variables */
 INT s_nStage;
 INT s_nSeqIndex;
 UINT s_msgStack[32];
@@ -37,11 +38,7 @@ INT s_nCounters[8];
 #define WIDTH           300
 #define HEIGHT          200
 #define PARENT_MSG      s_msgStack[s_nLevel - 1]
-
-static __inline void NextStage(HWND hwnd)
-{
-    s_bNextStage = TRUE;
-}
+#define NEXT_STAGE()    s_bNextStage = TRUE
 
 static void General_Initialize(void)
 {
@@ -50,43 +47,6 @@ static void General_Initialize(void)
     s_nLevel = 0;
     s_bNextStage = FALSE;
     ZeroMemory(s_nCounters, sizeof(s_nCounters));
-}
-
-static void General_DoAction(HWND hwnd, INT nAction)
-{
-    RECT rc;
-    switch (nAction)
-    {
-        case 1:
-            ok_int(s_nStage, 0);
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, 0);
-            ok_long(rc.bottom - rc.top, 0);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case 2:
-            ok_int(s_nStage, 0);
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, WIDTH);
-            ok_long(rc.bottom - rc.top, HEIGHT);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case 3:
-            ok_int(s_nStage, 1);
-            ShowWindow(hwnd, SW_SHOWNORMAL);
-            break;
-        case 4:
-            ok(s_nStage == 2 || s_nStage == 3, "\n");
-            NextStage(hwnd);
-            break;
-        case 5:
-            ok_int(s_nStage, 4);
-            DestroyWindow(hwnd);
-            break;
-        case TIMEOUT_TIMER:
-            DestroyWindow(hwnd);
-            break;
-    }
 }
 
 typedef enum STAGE_TYPE
@@ -108,7 +68,7 @@ typedef struct STAGE
     INT Counters[16];
 } STAGE;
 
-static const STAGE s_Stages[] =
+static const STAGE s_GeneralStages[] =
 {
     {
         __LINE__, WM_NULL, 1, 0, STAGE_TYPE_SEQUENCE,
@@ -143,6 +103,43 @@ static const STAGE s_Stages[] =
     },
 };
 
+static void General_DoAction(HWND hwnd, INT nAction)
+{
+    RECT rc;
+    switch (nAction)
+    {
+        case 1:
+            ok_int(s_nStage, 0);
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, 0);
+            ok_long(rc.bottom - rc.top, 0);
+            ok_int(IsWindowVisible(hwnd), FALSE);
+            break;
+        case 2:
+            ok_int(s_nStage, 0);
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, WIDTH);
+            ok_long(rc.bottom - rc.top, HEIGHT);
+            ok_int(IsWindowVisible(hwnd), FALSE);
+            break;
+        case 3:
+            ok_int(s_nStage, 1);
+            ShowWindow(hwnd, SW_SHOWNORMAL);
+            break;
+        case 4:
+            ok(s_nStage == 2 || s_nStage == 3, "\n");
+            NEXT_STAGE();
+            break;
+        case 5:
+            ok_int(s_nStage, 4);
+            DestroyWindow(hwnd);
+            break;
+        case TIMEOUT_TIMER:
+            DestroyWindow(hwnd);
+            break;
+    }
+}
+
 static void
 General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -150,10 +147,10 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     const STAGE *pStage;
     s_bNextStage = FALSE;
 
-    if (s_nStage >= ARRAYSIZE(s_Stages))
+    if (s_nStage >= ARRAYSIZE(s_GeneralStages))
         return;
 
-    pStage = &s_Stages[s_nStage];
+    pStage = &s_GeneralStages[s_nStage];
     switch (pStage->nType)
     {
         case STAGE_TYPE_SEQUENCE:
@@ -169,7 +166,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 General_DoAction(hwnd, pStage->Actions[s_nSeqIndex]);
                 ++s_nSeqIndex;
                 if (s_nSeqIndex == pStage->nCount)
-                    NextStage(hwnd);
+                    NEXT_STAGE();
             }
             break;
         case STAGE_TYPE_COUNTING:
@@ -207,13 +204,13 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
         }
         ++s_nStage;
-        if (s_nStage == ARRAYSIZE(s_Stages))
+        if (s_nStage == ARRAYSIZE(s_GeneralStages))
         {
             DestroyWindow(hwnd);
             return;
         }
-        PostMessage(hwnd, WM_COMMAND, s_Stages[s_nStage].nAction, 0);
-        trace("Stage %d (Line %d)\n", s_nStage, s_Stages[s_nStage].nLine);
+        PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nAction, 0);
+        trace("Stage %d (Line %d)\n", s_nStage, s_GeneralStages[s_nStage].nLine);
 
         s_nSeqIndex = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
@@ -287,8 +284,8 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static void General_Finish(void)
 {
-    ok_int(s_nStage, ARRAYSIZE(s_Stages));
-    if (s_nStage != ARRAYSIZE(s_Stages))
+    ok_int(s_nStage, ARRAYSIZE(s_GeneralStages));
+    if (s_nStage != ARRAYSIZE(s_GeneralStages))
     {
         skip("Some stage(s) skipped.\n");
     }
