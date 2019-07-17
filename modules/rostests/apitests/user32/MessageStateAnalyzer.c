@@ -30,7 +30,7 @@ static INT s_iStep;
 static UINT s_msgStack[32];
 static INT s_nLevel;
 static BOOL s_bNextStage;
-static INT s_nCounters[8];
+static INT s_nCounters[10];
 
 /* macros */
 #define TIMEOUT_TIMER   999
@@ -63,9 +63,9 @@ typedef struct STAGE
     STAGE_TYPE nType;
     INT iFirstAction;
     INT nCount;
-    UINT uMessages[16];
-    INT iActions[16];
-    INT nCounters[16];
+    UINT uMessages[10];
+    INT iActions[10];
+    INT nCounters[10];
 } STAGE;
 
 static const STAGE s_GeneralStages[] =
