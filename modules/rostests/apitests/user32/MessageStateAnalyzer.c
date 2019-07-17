@@ -26,7 +26,7 @@ static char s_prefix[16] = "";
 
 /* variables */
 INT s_nStage;
-INT s_nSeqIndex;
+INT s_nStep;
 UINT s_msgStack[32];
 INT s_nLevel;
 BOOL s_bNextStage;
@@ -42,7 +42,7 @@ INT s_nCounters[8];
 
 static void General_Initialize(void)
 {
-    s_nStage = s_nSeqIndex = 0;
+    s_nStage = s_nStep = 0;
     ZeroMemory(s_msgStack, sizeof(s_msgStack));
     s_nLevel = 0;
     s_bNextStage = FALSE;
@@ -154,7 +154,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (pStage->nType)
     {
         case STAGE_TYPE_SEQUENCE:
-            if (pStage->Messages[s_nSeqIndex] == uMsg)
+            if (pStage->Messages[s_nStep] == uMsg)
             {
                 ok_int(1, 1);
                 ok(s_nLevel == pStage->nLevel,
@@ -163,9 +163,11 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ok(PARENT_MSG == pStage->uParentMsg,
                    "Line %d: PARENT_MSG expected %u but %u.\n",
                    pStage->nLine, pStage->uParentMsg, PARENT_MSG);
-                General_DoAction(hwnd, pStage->Actions[s_nSeqIndex]);
-                ++s_nSeqIndex;
-                if (s_nSeqIndex == pStage->nCount)
+
+                General_DoAction(hwnd, pStage->Actions[s_nStep]);
+
+                ++s_nStep;
+                if (s_nStep == pStage->nCount)
                     NEXT_STAGE();
             }
             break;
@@ -181,6 +183,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     ok(PARENT_MSG == pStage->uParentMsg,
                        "Line %d: PARENT_MSG expected %u but %u.\n",
                        pStage->nLine, pStage->uParentMsg, PARENT_MSG);
+
                     General_DoAction(hwnd, pStage->Actions[i]);
                     ++s_nCounters[i];
                     break;
@@ -211,11 +214,12 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return;
         }
 
-        PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nFirstAction, 0);
         trace("Stage %d (Line %d)\n", s_nStage, s_GeneralStages[s_nStage].nLine);
 
-        s_nSeqIndex = 0;
+        s_nStep = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
+        if (s_GeneralStages[s_nStage].nFirstAction)
+            PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nFirstAction, 0);
     }
 }
 
