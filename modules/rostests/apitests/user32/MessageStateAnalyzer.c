@@ -123,6 +123,9 @@ DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
     RECT rc;
     switch (iAction)
     {
+        case 0:
+            /* does nothing */
+            break;
         case 1:
             ok_int(s_iStage, 0);
             GetWindowRect(hwnd, &rc);
