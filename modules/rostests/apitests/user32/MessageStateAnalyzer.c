@@ -382,7 +382,6 @@ static void General_DoTest(void)
         DispatchMessageA(&msg);
     }
 
-    ok_int(IsWindow(hwnd), FALSE);
     ok_int(UnregisterClassA(s_szName, GetModuleHandleA(NULL)), TRUE);
 
     DoFinish();
