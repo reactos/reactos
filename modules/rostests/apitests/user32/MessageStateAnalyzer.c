@@ -155,9 +155,8 @@ static void NextStage(HWND hwnd)
 
 static void DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    INT i;
+    INT i, iAction;
     const STAGE *pStage;
-    INT iAction;
     s_bNextStage = FALSE;
 
     if (s_iStage >= s_cStages)
