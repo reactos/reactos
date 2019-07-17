@@ -69,6 +69,15 @@ static void DoInitialize(const STAGE *pStages, INT cStages)
     s_cStages = cStages;
 }
 
+static void DoFinish(void)
+{
+    ok_int(s_iStage, s_cStages);
+    if (s_iStage != s_cStages)
+    {
+        skip("Some stage(s) skipped (Step: %d)\n", s_iStep);
+    }
+}
+
 static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
@@ -333,15 +342,6 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return lResult;
 }
 
-static void General_Finish(void)
-{
-    ok_int(s_iStage, ARRAYSIZE(s_GeneralStages));
-    if (s_iStage != ARRAYSIZE(s_GeneralStages))
-    {
-        skip("Some stage(s) skipped (Step: %d)\n", s_iStep);
-    }
-}
-
 static void General_DoTest(void)
 {
     WNDCLASSA wc;
@@ -386,7 +386,7 @@ static void General_DoTest(void)
     ok_int(IsWindow(hwnd), FALSE);
     ok_int(UnregisterClassA(s_szName, GetModuleHandleA(NULL)), TRUE);
 
-    General_Finish();
+    DoFinish();
 }
 
 START_TEST(MessageStateAnalyzer)
