@@ -37,14 +37,6 @@ static UINT s_msgStack[32];
 #define HEIGHT          200
 #define PARENT_MSG      s_msgStack[s_nLevel - 1]
 
-static void DoInitialize(void)
-{
-    s_iStage = s_iStep = s_nLevel = 0;
-    s_bNextStage = FALSE;
-    ZeroMemory(s_nCounters, sizeof(s_nCounters));
-    ZeroMemory(s_msgStack, sizeof(s_msgStack));
-}
-
 typedef enum STAGE_TYPE
 {
     STAGE_TYPE_SEQUENCE,
@@ -63,6 +55,204 @@ typedef struct STAGE
     INT iActions[10];
     INT nCounters[10];
 } STAGE;
+
+static const STAGE *s_pStages;
+static INT s_cStages;
+
+static void DoInitialize(const STAGE *pStages, INT cStages)
+{
+    s_iStage = s_iStep = s_nLevel = 0;
+    s_bNextStage = FALSE;
+    ZeroMemory(s_nCounters, sizeof(s_nCounters));
+    ZeroMemory(s_msgStack, sizeof(s_msgStack));
+    s_pStages = pStages;
+    s_cStages = cStages;
+}
+
+static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
+{
+    RECT rc;
+    switch (iAction)
+    {
+        case 0:
+            /* does nothing */
+            break;
+        case 1:
+            ok_int(s_iStage, 0);
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, 0);
+            ok_long(rc.bottom - rc.top, 0);
+            ok_int(IsWindowVisible(hwnd), FALSE);
+            break;
+        case 2:
+            ok_int(s_iStage, 0);
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, WIDTH);
+            ok_long(rc.bottom - rc.top, HEIGHT);
+            ok_int(IsWindowVisible(hwnd), FALSE);
+            break;
+        case 3:
+            ok_int(s_iStage, 1);
+            ShowWindow(hwnd, SW_SHOWNORMAL);
+            break;
+        case 4:
+            ok(s_iStage == 2 || s_iStage == 3, "\n");
+            s_bNextStage = TRUE;
+            break;
+        case 5:
+            ok_int(s_iStage, 4);
+            DestroyWindow(hwnd);
+            break;
+        case TIMEOUT_TIMER:
+            DestroyWindow(hwnd);
+            break;
+    }
+}
+
+static void NextStage(HWND hwnd)
+{
+    INT i, iAction;
+    const STAGE *pStage = &s_pStages[s_iStage];
+
+    if (pStage->nType == STAGE_TYPE_COUNTING)
+    {
+        /* check counters */
+        for (i = 0; i < pStage->nCount; ++i)
+        {
+            if (pStage->nCounters[i])
+            {
+                ok(pStage->nCounters[i] == s_nCounters[i],
+                   "Line %d: s_nCounters[%d] expected %d but %d.\n",
+                   pStage->nLine, i, pStage->nCounters[i], s_nCounters[i]);
+            }
+        }
+    }
+
+    /* go to next stage */
+    ++s_iStage;
+    if (s_iStage == s_cStages)
+    {
+        DestroyWindow(hwnd);
+        return;
+    }
+    trace("Stage %d (Line %d)\n", s_iStage, s_pStages[s_iStage].nLine);
+
+    s_iStep = 0;
+    ZeroMemory(s_nCounters, sizeof(s_nCounters));
+
+    iAction = s_pStages[s_iStage].iFirstAction;
+    if (iAction)
+        PostMessage(hwnd, WM_COMMAND, iAction, 0);
+}
+
+static void DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    INT i;
+    const STAGE *pStage;
+    INT iAction;
+    s_bNextStage = FALSE;
+
+    if (s_iStage >= s_cStages)
+        return;
+
+    pStage = &s_pStages[s_iStage];
+    switch (pStage->nType)
+    {
+        case STAGE_TYPE_SEQUENCE:
+            if (pStage->uMessages[s_iStep] == uMsg)
+            {
+                ok_int(1, 1);
+                ok(s_nLevel == pStage->nLevel,
+                   "Line %d, Step %d: Level expected %d but %d.\n",
+                   pStage->nLine, s_iStep, pStage->nLevel, s_nLevel);
+                ok(PARENT_MSG == pStage->uParentMsg,
+                   "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
+                   pStage->nLine, s_iStep, pStage->uParentMsg, PARENT_MSG);
+
+                iAction = pStage->iActions[s_iStep];
+                if (iAction)
+                    DoAction(hwnd, iAction, wParam, lParam);
+
+                ++s_iStep;
+                if (s_iStep == pStage->nCount)
+                    s_bNextStage = TRUE;
+            }
+            break;
+        case STAGE_TYPE_COUNTING:
+            for (i = 0; i < pStage->nCount; ++i)
+            {
+                if (pStage->uMessages[i] == uMsg)
+                {
+                    ok_int(1, 1);
+                    ok(s_nLevel == pStage->nLevel,
+                       "Line %d: Level expected %d but %d.\n",
+                       pStage->nLine, pStage->nLevel, s_nLevel);
+                    ok(PARENT_MSG == pStage->uParentMsg,
+                       "Line %d: PARENT_MSG expected %u but %u.\n",
+                       pStage->nLine, pStage->uParentMsg, PARENT_MSG);
+
+                    iAction = pStage->iActions[i];
+                    if (iAction)
+                        DoAction(hwnd, iAction, wParam, lParam);
+
+                    ++s_nCounters[i];
+                    break;
+                }
+            }
+            break;
+    }
+
+    if (s_bNextStage)
+    {
+        NextStage(hwnd);
+    }
+}
+
+static LRESULT CALLBACK
+InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+            DoAction(hwnd, LOWORD(wParam), 0, 0);
+            break;
+        case WM_TIMER:
+            KillTimer(hwnd, (UINT)wParam);
+            if (wParam == TIMEOUT_TIMER)
+                DestroyWindow(hwnd);
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        case WM_NCCREATE:
+            SetTimer(hwnd, TIMEOUT_TIMER, TOTAL_TIMEOUT, NULL);
+            /* FALL THROUGH */
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+    return 0;
+}
+
+static void DoBuildPrefix(void)
+{
+    DWORD Flags = InSendMessageEx(NULL);
+    INT i = 0;
+
+    if (Flags & ISMEX_CALLBACK)
+        s_prefix[i++] = 'C';
+    if (Flags & ISMEX_NOTIFY)
+        s_prefix[i++] = 'N';
+    if (Flags & ISMEX_REPLIED)
+        s_prefix[i++] = 'R';
+    if (Flags & ISMEX_SEND)
+        s_prefix[i++] = 'S';
+    if (i == 0)
+        s_prefix[i++] = 'P';
+
+    s_prefix[i++] = ':';
+    s_prefix[i++] = ' ';
+    s_prefix[i] = 0;
+}
 
 static const STAGE s_GeneralStages[] =
 {
@@ -117,186 +307,6 @@ static const STAGE s_GeneralStages[] =
     },
 };
 
-static void
-DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
-{
-    RECT rc;
-    switch (iAction)
-    {
-        case 0:
-            /* does nothing */
-            break;
-        case 1:
-            ok_int(s_iStage, 0);
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, 0);
-            ok_long(rc.bottom - rc.top, 0);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case 2:
-            ok_int(s_iStage, 0);
-            GetWindowRect(hwnd, &rc);
-            ok_long(rc.right - rc.left, WIDTH);
-            ok_long(rc.bottom - rc.top, HEIGHT);
-            ok_int(IsWindowVisible(hwnd), FALSE);
-            break;
-        case 3:
-            ok_int(s_iStage, 1);
-            ShowWindow(hwnd, SW_SHOWNORMAL);
-            break;
-        case 4:
-            ok(s_iStage == 2 || s_iStage == 3, "\n");
-            s_bNextStage = TRUE;
-            break;
-        case 5:
-            ok_int(s_iStage, 4);
-            DestroyWindow(hwnd);
-            break;
-        case TIMEOUT_TIMER:
-            DestroyWindow(hwnd);
-            break;
-    }
-}
-
-static void
-DoStage(const STAGE *pStages, INT cStages,
-        HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    INT i;
-    const STAGE *pStage;
-    INT iAction;
-    s_bNextStage = FALSE;
-
-    if (s_iStage >= cStages)
-        return;
-
-    pStage = &pStages[s_iStage];
-    switch (pStage->nType)
-    {
-        case STAGE_TYPE_SEQUENCE:
-            if (pStage->uMessages[s_iStep] == uMsg)
-            {
-                ok_int(1, 1);
-                ok(s_nLevel == pStage->nLevel,
-                   "Line %d, Step %d: Level expected %d but %d.\n",
-                   pStage->nLine, s_iStep, pStage->nLevel, s_nLevel);
-                ok(PARENT_MSG == pStage->uParentMsg,
-                   "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
-                   pStage->nLine, s_iStep, pStage->uParentMsg, PARENT_MSG);
-
-                iAction = pStage->iActions[s_iStep];
-                if (iAction)
-                    DoAction(hwnd, iAction, wParam, lParam);
-
-                ++s_iStep;
-                if (s_iStep == pStage->nCount)
-                    s_bNextStage = TRUE;
-            }
-            break;
-        case STAGE_TYPE_COUNTING:
-            for (i = 0; i < pStage->nCount; ++i)
-            {
-                if (pStage->uMessages[i] == uMsg)
-                {
-                    ok_int(1, 1);
-                    ok(s_nLevel == pStage->nLevel,
-                       "Line %d: Level expected %d but %d.\n",
-                       pStage->nLine, pStage->nLevel, s_nLevel);
-                    ok(PARENT_MSG == pStage->uParentMsg,
-                       "Line %d: PARENT_MSG expected %u but %u.\n",
-                       pStage->nLine, pStage->uParentMsg, PARENT_MSG);
-
-                    iAction = pStage->iActions[i];
-                    if (iAction)
-                        DoAction(hwnd, iAction, wParam, lParam);
-
-                    ++s_nCounters[i];
-                    break;
-                }
-            }
-            break;
-    }
-
-    if (s_bNextStage)
-    {
-        if (pStage->nType == STAGE_TYPE_COUNTING)
-        {
-            /* check counters */
-            for (i = 0; i < pStage->nCount; ++i)
-            {
-                if (pStage->nCounters[i])
-                {
-                    ok(pStage->nCounters[i] == s_nCounters[i],
-                       "Line %d: s_nCounters[%d] expected %d but %d.\n",
-                       pStage->nLine, i, pStage->nCounters[i], s_nCounters[i]);
-                }
-            }
-        }
-
-        /* go to next stage */
-        ++s_iStage;
-        if (s_iStage == cStages)
-        {
-            DestroyWindow(hwnd);
-            return;
-        }
-        trace("Stage %d (Line %d)\n", s_iStage, pStages[s_iStage].nLine);
-
-        s_iStep = 0;
-        ZeroMemory(s_nCounters, sizeof(s_nCounters));
-
-        iAction = pStages[s_iStage].iFirstAction;
-        if (iAction)
-            PostMessage(hwnd, WM_COMMAND, iAction, 0);
-    }
-}
-
-static LRESULT CALLBACK
-InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_COMMAND:
-            DoAction(hwnd, LOWORD(wParam), 0, 0);
-            break;
-        case WM_TIMER:
-            KillTimer(hwnd, (UINT)wParam);
-            if (wParam == TIMEOUT_TIMER)
-                DestroyWindow(hwnd);
-            break;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
-        case WM_NCCREATE:
-            SetTimer(hwnd, TIMEOUT_TIMER, TOTAL_TIMEOUT, NULL);
-            /* FALL THROUGH */
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-    return 0;
-}
-
-static void DoBuildPrefix(void)
-{
-    DWORD Flags = InSendMessageEx(NULL);
-    INT i = 0;
-
-    if (Flags & ISMEX_CALLBACK)
-        s_prefix[i++] = 'C';
-    if (Flags & ISMEX_NOTIFY)
-        s_prefix[i++] = 'N';
-    if (Flags & ISMEX_REPLIED)
-        s_prefix[i++] = 'R';
-    if (Flags & ISMEX_SEND)
-        s_prefix[i++] = 'S';
-    if (i == 0)
-        s_prefix[i++] = 'P';
-
-    s_prefix[i++] = ':';
-    s_prefix[i++] = ' ';
-    s_prefix[i] = 0;
-}
-
 static LRESULT CALLBACK
 General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -312,8 +322,7 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     s_msgStack[s_nLevel] = uMsg;
     {
         /* do inner task */
-        DoStage(s_GeneralStages, ARRAYSIZE(s_GeneralStages),
-                hwnd, uMsg, wParam, lParam);
+        DoStage(hwnd, uMsg, wParam, lParam);
         lResult = InnerWindowProc(hwnd, uMsg, wParam, lParam);
     }
     --s_nLevel;
@@ -340,7 +349,7 @@ static void General_DoTest(void)
     MSG msg;
     static const char s_szName[] = "MessageStateAnalyzerGeneral";
 
-    DoInitialize();
+    DoInitialize(s_GeneralStages, ARRAYSIZE(s_GeneralStages));
 
     /* register window class */
     ZeroMemory(&wc, sizeof(wc));
