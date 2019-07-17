@@ -145,6 +145,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     INT i;
     const STAGE *pStage;
+    INT nFirstAction;
     s_bNextStage = FALSE;
 
     if (s_nStage >= ARRAYSIZE(s_GeneralStages))
@@ -218,8 +219,10 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         s_nStep = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
-        if (s_GeneralStages[s_nStage].nFirstAction)
-            PostMessage(hwnd, WM_COMMAND, s_GeneralStages[s_nStage].nFirstAction, 0);
+
+        nFirstAction = s_GeneralStages[s_nStage].nFirstAction;
+        if (nFirstAction)
+            PostMessage(hwnd, WM_COMMAND, nFirstAction, 0);
     }
 }
 
