@@ -25,8 +25,8 @@ static char s_prefix[16] = "";
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
 /* variables */
-static INT s_nStage;
-static INT s_nStep;
+static INT s_iStage;
+static INT s_iStep;
 static UINT s_msgStack[32];
 static INT s_nLevel;
 static BOOL s_bNextStage;
@@ -41,8 +41,8 @@ static INT s_nCounters[8];
 
 static void General_Initialize(void)
 {
-    s_nStage = 0;
-    s_nStep = 0;
+    s_iStage = 0;
+    s_iStep = 0;
     ZeroMemory(s_msgStack, sizeof(s_msgStack));
     s_nLevel = 0;
     s_bNextStage = FALSE;
@@ -121,35 +121,36 @@ static const STAGE s_GeneralStages[] =
     },
 };
 
-static void General_DoAction(HWND hwnd, INT nAction)
+static void
+DoAction(HWND hwnd, INT nAction, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
     switch (nAction)
     {
         case 1:
-            ok_int(s_nStage, 0);
+            ok_int(s_iStage, 0);
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, 0);
             ok_long(rc.bottom - rc.top, 0);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
         case 2:
-            ok_int(s_nStage, 0);
+            ok_int(s_iStage, 0);
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, WIDTH);
             ok_long(rc.bottom - rc.top, HEIGHT);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
         case 3:
-            ok_int(s_nStage, 1);
+            ok_int(s_iStage, 1);
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
         case 4:
-            ok(s_nStage == 2 || s_nStage == 3, "\n");
+            ok(s_iStage == 2 || s_iStage == 3, "\n");
             s_bNextStage = TRUE;
             break;
         case 5:
-            ok_int(s_nStage, 4);
+            ok_int(s_iStage, 4);
             DestroyWindow(hwnd);
             break;
         case TIMEOUT_TIMER:
@@ -159,36 +160,37 @@ static void General_DoAction(HWND hwnd, INT nAction)
 }
 
 static void
-General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+DoStage(const STAGE *pStages, INT cStages,
+        HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     INT i;
     const STAGE *pStage;
     INT nAction;
     s_bNextStage = FALSE;
 
-    if (s_nStage >= ARRAYSIZE(s_GeneralStages))
+    if (s_iStage >= cStages)
         return;
 
-    pStage = &s_GeneralStages[s_nStage];
+    pStage = &pStages[s_iStage];
     switch (pStage->nType)
     {
         case STAGE_TYPE_SEQUENCE:
-            if (pStage->Messages[s_nStep] == uMsg)
+            if (pStage->Messages[s_iStep] == uMsg)
             {
                 ok_int(1, 1);
                 ok(s_nLevel == pStage->nLevel,
                    "Line %d, Step %d: Level expected %d but %d.\n",
-                   pStage->nLine, s_nStep, pStage->nLevel, s_nLevel);
+                   pStage->nLine, s_iStep, pStage->nLevel, s_nLevel);
                 ok(PARENT_MSG == pStage->uParentMsg,
                    "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
-                   pStage->nLine, s_nStep, pStage->uParentMsg, PARENT_MSG);
+                   pStage->nLine, s_iStep, pStage->uParentMsg, PARENT_MSG);
 
-                nAction = pStage->Actions[s_nStep];
+                nAction = pStage->Actions[s_iStep];
                 if (nAction)
-                    General_DoAction(hwnd, nAction);
+                    DoAction(hwnd, nAction, wParam, lParam);
 
-                ++s_nStep;
-                if (s_nStep == pStage->nCount)
+                ++s_iStep;
+                if (s_iStep == pStage->nCount)
                     s_bNextStage = TRUE;
             }
             break;
@@ -207,7 +209,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                     nAction = pStage->Actions[i];
                     if (nAction)
-                        General_DoAction(hwnd, nAction);
+                        DoAction(hwnd, nAction, wParam, lParam);
 
                     ++s_nCounters[i];
                     break;
@@ -233,31 +235,30 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         /* go to next stage */
-        ++s_nStage;
-        if (s_nStage == ARRAYSIZE(s_GeneralStages))
+        ++s_iStage;
+        if (s_iStage == cStages)
         {
             DestroyWindow(hwnd);
             return;
         }
+        trace("Stage %d (Line %d)\n", s_iStage, pStages[s_iStage].nLine);
 
-        trace("Stage %d (Line %d)\n", s_nStage, s_GeneralStages[s_nStage].nLine);
-
-        s_nStep = 0;
+        s_iStep = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
 
-        nAction = s_GeneralStages[s_nStage].nFirstAction;
+        nAction = pStages[s_iStage].nFirstAction;
         if (nAction)
             PostMessage(hwnd, WM_COMMAND, nAction, 0);
     }
 }
 
 static LRESULT CALLBACK
-General_InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         case WM_COMMAND:
-            General_DoAction(hwnd, LOWORD(wParam));
+            DoAction(hwnd, LOWORD(wParam), 0, 0);
             break;
         case WM_TIMER:
             KillTimer(hwnd, (UINT)wParam);
@@ -305,8 +306,9 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     s_msgStack[s_nLevel] = uMsg;
     {
         /* do inner task */
-        General_DoStage(hwnd, uMsg, wParam, lParam);
-        lResult = General_InnerWindowProc(hwnd, uMsg, wParam, lParam);
+        DoStage(s_GeneralStages, ARRAYSIZE(s_GeneralStages),
+                hwnd, uMsg, wParam, lParam);
+        lResult = InnerWindowProc(hwnd, uMsg, wParam, lParam);
     }
     --s_nLevel;
 
@@ -318,10 +320,10 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static void General_Finish(void)
 {
-    ok_int(s_nStage, ARRAYSIZE(s_GeneralStages));
-    if (s_nStage != ARRAYSIZE(s_GeneralStages))
+    ok_int(s_iStage, ARRAYSIZE(s_GeneralStages));
+    if (s_iStage != ARRAYSIZE(s_GeneralStages))
     {
-        skip("Some stage(s) skipped (Step: %d)\n", s_nStep);
+        skip("Some stage(s) skipped (Step: %d)\n", s_iStep);
     }
 }
 
