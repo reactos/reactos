@@ -85,13 +85,13 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
         case 0:
             /* does nothing */
             break;
-        case 1:
+        case 1: // first WM_GETMINMAXINFO
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, 0);
             ok_long(rc.bottom - rc.top, 0);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
-        case 2:
+        case 2: // WM_NCCREATE
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, WIDTH);
             ok_long(rc.bottom - rc.top, HEIGHT);
@@ -100,22 +100,22 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
         case 3:
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
-        case 4:
+        case 4: // opening WM_IME_SETCONTEXT
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
-        case 5:
+        case 5: // opening WM_IME_NOTIFY
             ok(wParam == 2, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
-        case 6:
+        case 6: // closing WM_IME_SETCONTEXT
             ok(wParam == 0, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
-        case 7:
+        case 7: // closing WM_IME_NOTIFY
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
