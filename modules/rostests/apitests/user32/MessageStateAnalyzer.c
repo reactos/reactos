@@ -321,7 +321,7 @@ static void General_Finish(void)
     ok_int(s_nStage, ARRAYSIZE(s_GeneralStages));
     if (s_nStage != ARRAYSIZE(s_GeneralStages))
     {
-        skip("Some stage(s) skipped.\n");
+        skip("Some stage(s) skipped (Step: %d)\n", s_nStep);
     }
 }
 
