@@ -145,7 +145,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     INT i;
     const STAGE *pStage;
-    INT nFirstAction;
+    INT nAction;
     s_bNextStage = FALSE;
 
     if (s_nStage >= ARRAYSIZE(s_GeneralStages))
@@ -165,7 +165,9 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                    "Line %d: PARENT_MSG expected %u but %u.\n",
                    pStage->nLine, pStage->uParentMsg, PARENT_MSG);
 
-                General_DoAction(hwnd, pStage->Actions[s_nStep]);
+                nAction = pStage->Actions[s_nStep];
+                if (nAction)
+                    General_DoAction(hwnd, nAction);
 
                 ++s_nStep;
                 if (s_nStep == pStage->nCount)
@@ -185,7 +187,10 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                        "Line %d: PARENT_MSG expected %u but %u.\n",
                        pStage->nLine, pStage->uParentMsg, PARENT_MSG);
 
-                    General_DoAction(hwnd, pStage->Actions[i]);
+                    nAction = pStage->Actions[i];
+                    if (nAction)
+                        General_DoAction(hwnd, nAction);
+
                     ++s_nCounters[i];
                     break;
                 }
@@ -197,6 +202,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         if (pStage->nType == STAGE_TYPE_COUNTING)
         {
+            /* check counters */
             for (i = 0; i < pStage->nCount; ++i)
             {
                 if (pStage->Counters[i])
@@ -208,6 +214,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        /* go to next stage */
         ++s_nStage;
         if (s_nStage == ARRAYSIZE(s_GeneralStages))
         {
@@ -220,9 +227,9 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         s_nStep = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
 
-        nFirstAction = s_GeneralStages[s_nStage].nFirstAction;
-        if (nFirstAction)
-            PostMessage(hwnd, WM_COMMAND, nFirstAction, 0);
+        nAction = s_GeneralStages[s_nStage].nFirstAction;
+        if (nAction)
+            PostMessage(hwnd, WM_COMMAND, nAction, 0);
     }
 }
 
