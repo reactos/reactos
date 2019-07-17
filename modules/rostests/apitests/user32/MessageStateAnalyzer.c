@@ -58,24 +58,29 @@ static void General_DoAction(HWND hwnd, INT nAction)
     switch (nAction)
     {
         case 1:
+            ok_int(s_nStage, 0);
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, 0);
             ok_long(rc.bottom - rc.top, 0);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
         case 2:
+            ok_int(s_nStage, 0);
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, WIDTH);
             ok_long(rc.bottom - rc.top, HEIGHT);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
         case 3:
+            ok_int(s_nStage, 1);
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
         case 4:
+            ok(s_nStage == 2 || s_nStage == 3, "\n");
             NextStage(hwnd);
             break;
         case 5:
+            ok_int(s_nStage, 4);
             DestroyWindow(hwnd);
             break;
         case TIMEOUT_TIMER:
