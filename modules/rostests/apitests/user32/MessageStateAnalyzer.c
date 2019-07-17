@@ -38,11 +38,11 @@ static INT s_nCounters[8];
 #define WIDTH           300
 #define HEIGHT          200
 #define PARENT_MSG      s_msgStack[s_nLevel - 1]
-#define NEXT_STAGE()    s_bNextStage = TRUE
 
 static void General_Initialize(void)
 {
-    s_nStage = s_nStep = 0;
+    s_nStage = 0;
+    s_nStep = 0;
     ZeroMemory(s_msgStack, sizeof(s_msgStack));
     s_nLevel = 0;
     s_bNextStage = FALSE;
@@ -128,7 +128,7 @@ static void General_DoAction(HWND hwnd, INT nAction)
             break;
         case 4:
             ok(s_nStage == 2 || s_nStage == 3, "\n");
-            NEXT_STAGE();
+            s_bNextStage = TRUE;
             break;
         case 5:
             ok_int(s_nStage, 4);
@@ -171,7 +171,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 ++s_nStep;
                 if (s_nStep == pStage->nCount)
-                    NEXT_STAGE();
+                    s_bNextStage = TRUE;
             }
             break;
         case STAGE_TYPE_COUNTING:
