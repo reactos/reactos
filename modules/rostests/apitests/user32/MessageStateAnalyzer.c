@@ -113,7 +113,7 @@ static const STAGE s_Stages[] =
     {
         __LINE__, WM_COMMAND, 2, 3, STAGE_TYPE_SEQUENCE,
         6, { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
-          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
+             WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
     },
     {
         __LINE__, WM_ACTIVATE, 3, 0, STAGE_TYPE_COUNTING, 
@@ -191,9 +191,11 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             for (i = 0; i < pStage->nCount; ++i)
             {
-                if (pStage->Counters[i] != -1)
+                if (pStage->Counters[i])
                 {
-                    ok_int(pStage->Counters[i], s_nCounters[i]);
+                    ok(pStage->Counters[i] == s_nCounters[i],
+                       "Line %d: s_nCounters[%d] expected %d but %d.\n",
+                       pStage->nLine, i, pStage->Counters[i], s_nCounters[i]);
                 }
             }
         }
@@ -278,9 +280,9 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static void General_Finish(void)
 {
+    ok_int(s_nStage, ARRAYSIZE(s_Stages));
     if (s_nStage != ARRAYSIZE(s_Stages))
     {
-        ok_int(0, 1);
         skip("Some stage(s) skipped.\n");
     }
 }
