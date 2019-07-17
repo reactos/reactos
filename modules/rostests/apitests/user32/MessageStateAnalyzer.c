@@ -61,11 +61,11 @@ typedef struct STAGE
     UINT uParentMsg;
     INT nLevel;
     STAGE_TYPE nType;
-    INT nFirstAction;
+    INT iFirstAction;
     INT nCount;
-    UINT Messages[16];
-    INT Actions[16];
-    INT Counters[16];
+    UINT uMessages[16];
+    INT iActions[16];
+    INT nCounters[16];
 } STAGE;
 
 static const STAGE s_GeneralStages[] =
@@ -122,10 +122,10 @@ static const STAGE s_GeneralStages[] =
 };
 
 static void
-DoAction(HWND hwnd, INT nAction, WPARAM wParam, LPARAM lParam)
+DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
-    switch (nAction)
+    switch (iAction)
     {
         case 1:
             ok_int(s_iStage, 0);
@@ -165,7 +165,7 @@ DoStage(const STAGE *pStages, INT cStages,
 {
     INT i;
     const STAGE *pStage;
-    INT nAction;
+    INT iAction;
     s_bNextStage = FALSE;
 
     if (s_iStage >= cStages)
@@ -175,7 +175,7 @@ DoStage(const STAGE *pStages, INT cStages,
     switch (pStage->nType)
     {
         case STAGE_TYPE_SEQUENCE:
-            if (pStage->Messages[s_iStep] == uMsg)
+            if (pStage->uMessages[s_iStep] == uMsg)
             {
                 ok_int(1, 1);
                 ok(s_nLevel == pStage->nLevel,
@@ -185,9 +185,9 @@ DoStage(const STAGE *pStages, INT cStages,
                    "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
                    pStage->nLine, s_iStep, pStage->uParentMsg, PARENT_MSG);
 
-                nAction = pStage->Actions[s_iStep];
-                if (nAction)
-                    DoAction(hwnd, nAction, wParam, lParam);
+                iAction = pStage->iActions[s_iStep];
+                if (iAction)
+                    DoAction(hwnd, iAction, wParam, lParam);
 
                 ++s_iStep;
                 if (s_iStep == pStage->nCount)
@@ -197,7 +197,7 @@ DoStage(const STAGE *pStages, INT cStages,
         case STAGE_TYPE_COUNTING:
             for (i = 0; i < pStage->nCount; ++i)
             {
-                if (pStage->Messages[i] == uMsg)
+                if (pStage->uMessages[i] == uMsg)
                 {
                     ok_int(1, 1);
                     ok(s_nLevel == pStage->nLevel,
@@ -207,9 +207,9 @@ DoStage(const STAGE *pStages, INT cStages,
                        "Line %d: PARENT_MSG expected %u but %u.\n",
                        pStage->nLine, pStage->uParentMsg, PARENT_MSG);
 
-                    nAction = pStage->Actions[i];
-                    if (nAction)
-                        DoAction(hwnd, nAction, wParam, lParam);
+                    iAction = pStage->iActions[i];
+                    if (iAction)
+                        DoAction(hwnd, iAction, wParam, lParam);
 
                     ++s_nCounters[i];
                     break;
@@ -225,11 +225,11 @@ DoStage(const STAGE *pStages, INT cStages,
             /* check counters */
             for (i = 0; i < pStage->nCount; ++i)
             {
-                if (pStage->Counters[i])
+                if (pStage->nCounters[i])
                 {
-                    ok(pStage->Counters[i] == s_nCounters[i],
+                    ok(pStage->nCounters[i] == s_nCounters[i],
                        "Line %d: s_nCounters[%d] expected %d but %d.\n",
-                       pStage->nLine, i, pStage->Counters[i], s_nCounters[i]);
+                       pStage->nLine, i, pStage->nCounters[i], s_nCounters[i]);
                 }
             }
         }
@@ -246,9 +246,9 @@ DoStage(const STAGE *pStages, INT cStages,
         s_iStep = 0;
         ZeroMemory(s_nCounters, sizeof(s_nCounters));
 
-        nAction = pStages[s_iStage].nFirstAction;
-        if (nAction)
-            PostMessage(hwnd, WM_COMMAND, nAction, 0);
+        iAction = pStages[s_iStage].iFirstAction;
+        if (iAction)
+            PostMessage(hwnd, WM_COMMAND, iAction, 0);
     }
 }
 
