@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    10   /* Version 10 */
+#define _INC_MSGDUMP    11   /* Version 11 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -16,6 +16,9 @@
 
 #ifndef _INC_WINXX
     #include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
+#endif
+#ifndef _INC_SHELLAPI
+    #include <shellapi.h>
 #endif
 #include <strsafe.h>
 
