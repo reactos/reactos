@@ -127,7 +127,7 @@ static void NextStage(HWND hwnd)
         /* check counters */
         for (i = 0; i < pStage->nCount; ++i)
         {
-            if (pStage->nCounters[i])
+            if (pStage->nCounters[i] > 0)
             {
                 ok(pStage->nCounters[i] == s_nCounters[i],
                    "Line %d: s_nCounters[%d] expected %d but %d.\n",
@@ -138,7 +138,7 @@ static void NextStage(HWND hwnd)
 
     /* go to next stage */
     ++s_iStage;
-    if (s_iStage == s_cStages)
+    if (s_iStage >= s_cStages)
     {
         DestroyWindow(hwnd);
         return;
@@ -181,7 +181,7 @@ static void DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     DoAction(hwnd, iAction, wParam, lParam);
 
                 ++s_iStep;
-                if (s_iStep == pStage->nCount)
+                if (s_iStep >= pStage->nCount)
                     s_bNextStage = TRUE;
             }
             break;
