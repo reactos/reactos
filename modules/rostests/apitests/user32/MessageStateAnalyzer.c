@@ -101,6 +101,8 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
         case 4:
+            ok(wParam == 1, "wParam was %p\n", (void *)wParam);
+            ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
         case 5:
@@ -285,7 +287,6 @@ static const STAGE s_GeneralStages[] =
         { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
           WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
     },
-    /* Stage 2 */
     {
         __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_COUNTING, 0,
         1,
@@ -293,7 +294,6 @@ static const STAGE s_GeneralStages[] =
         { 4 },
         { 1 }
     },
-    /* Stage 3 */
     {
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_COUNTING, 0,
         1,
@@ -301,7 +301,6 @@ static const STAGE s_GeneralStages[] =
         { 5 },
         { 1 }
     },
-    /* Stage 4 */
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 8,
         7,
@@ -309,14 +308,12 @@ static const STAGE s_GeneralStages[] =
           WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
         { 0, 0, 0, 0, 0, 0, 6 }
     },
-    /* Stage 5 */
     {
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
         { 7 }
     },
-    /* Stage 6 */
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
         2,
