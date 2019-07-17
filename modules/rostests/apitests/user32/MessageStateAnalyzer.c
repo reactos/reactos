@@ -60,8 +60,8 @@ typedef struct STAGE
     INT nLine;
     UINT uParentMsg;
     INT nLevel;
-    INT nFirstAction;
     STAGE_TYPE nType;
+    INT nFirstAction;
     INT nCount;
     UINT Messages[16];
     INT Actions[16];
@@ -70,36 +70,54 @@ typedef struct STAGE
 
 static const STAGE s_GeneralStages[] =
 {
+    /* Stage 0 */
     {
-        __LINE__, WM_NULL, 1, 0, STAGE_TYPE_SEQUENCE,
-        4, { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
-           { 1, 2, 0, 0 },
+        __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
+        4,
+        { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
+        { 1, 2, 0, 0 },
     },
+    /* Stage 1 */
     {
-        __LINE__, WM_COMMAND, 2, 3, STAGE_TYPE_SEQUENCE,
-        6, { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
-             WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
+        6,
+        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
+          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
     },
+    /* Stage 2 */
     {
-        __LINE__, WM_ACTIVATE, 3, 0, STAGE_TYPE_COUNTING, 
-        1, { WM_IME_SETCONTEXT }, { 4 }, { 1 }
+        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_COUNTING, 0,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 4 },
+        { 1 }
     },
+    /* Stage 3 */
     {
-        __LINE__, WM_IME_SETCONTEXT, 4, 0, STAGE_TYPE_COUNTING,
-        1, { WM_IME_NOTIFY }, { 4 }, { 1 }
+        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_COUNTING, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 4 },
+        { 1 }
     },
+    /* Stage 4 */
     {
-        __LINE__, WM_COMMAND, 2, 5, STAGE_TYPE_SEQUENCE,
-        7, { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
-             WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 5,
+        7,
+        { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
+          WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
     },
+    /* Stage 5 */
     {
-        __LINE__, WM_IME_SETCONTEXT, 3, 0, STAGE_TYPE_SEQUENCE,
-        1, { WM_IME_NOTIFY },
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_NOTIFY },
     },
+    /* Stage 6 */
     {
-        __LINE__, WM_COMMAND, 2, 0, STAGE_TYPE_SEQUENCE,
-        2, { WM_DESTROY, WM_NCDESTROY },
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
+        2,
+        { WM_DESTROY, WM_NCDESTROY },
     },
 };
 
@@ -159,11 +177,11 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 ok_int(1, 1);
                 ok(s_nLevel == pStage->nLevel,
-                   "Line %d: Level expected %d but %d.\n",
-                   pStage->nLine, pStage->nLevel, s_nLevel);
+                   "Line %d, Step %d: Level expected %d but %d.\n",
+                   pStage->nLine, s_nStep, pStage->nLevel, s_nLevel);
                 ok(PARENT_MSG == pStage->uParentMsg,
-                   "Line %d: PARENT_MSG expected %u but %u.\n",
-                   pStage->nLine, pStage->uParentMsg, PARENT_MSG);
+                   "Line %d, Step %d: PARENT_MSG expected %u but %u.\n",
+                   pStage->nLine, s_nStep, pStage->uParentMsg, PARENT_MSG);
 
                 nAction = pStage->Actions[s_nStep];
                 if (nAction)
