@@ -154,6 +154,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case STAGE_TYPE_SEQUENCE:
             if (pStage->Messages[s_nSeqIndex] == uMsg)
             {
+                ok_int(1, 1);
                 ok(s_nLevel == pStage->nLevel,
                    "Line %d: Level expected %d but %d.\n",
                    pStage->nLine, pStage->nLevel, s_nLevel);
@@ -171,6 +172,7 @@ General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 if (pStage->Messages[i] == uMsg)
                 {
+                    ok_int(1, 1);
                     ok(s_nLevel == pStage->nLevel,
                        "Line %d: Level expected %d but %d.\n",
                        pStage->nLine, pStage->nLevel, s_nLevel);
