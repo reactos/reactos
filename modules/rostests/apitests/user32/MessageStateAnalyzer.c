@@ -22,21 +22,6 @@ static char s_prefix[16] = "";
 #define MSGDUMP_PREFIX s_prefix
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
-/* variables */
-static INT s_iStage;
-static INT s_iStep;
-static INT s_nLevel;
-static BOOL s_bNextStage;
-static INT s_nCounters[10];
-static UINT s_msgStack[32];
-
-/* macros */
-#define TIMEOUT_TIMER   999
-#define TOTAL_TIMEOUT   (5 * 1000)
-#define WIDTH           300
-#define HEIGHT          200
-#define PARENT_MSG      s_msgStack[s_nLevel - 1]
-
 typedef enum STAGE_TYPE
 {
     STAGE_TYPE_SEQUENCE,
@@ -56,8 +41,22 @@ typedef struct STAGE
     INT nCounters[10];
 } STAGE;
 
+/* variables */
+static INT s_iStage;
+static INT s_iStep;
+static INT s_nLevel;
+static BOOL s_bNextStage;
+static INT s_nCounters[10];
+static UINT s_msgStack[32];
 static const STAGE *s_pStages;
 static INT s_cStages;
+
+/* macros */
+#define TIMEOUT_TIMER   999
+#define TOTAL_TIMEOUT   (5 * 1000)
+#define WIDTH           300
+#define HEIGHT          200
+#define PARENT_MSG      s_msgStack[s_nLevel - 1]
 
 static void DoInitialize(const STAGE *pStages, INT cStages)
 {
