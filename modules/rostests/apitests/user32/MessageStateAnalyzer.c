@@ -347,6 +347,7 @@ static void General_DoTest(void)
     MSG msg;
     static const char s_szName[] = "MessageStateAnalyzerGeneral";
 
+    trace("General_DoTest\n");
     DoInitialize(s_GeneralStages, ARRAYSIZE(s_GeneralStages));
 
     /* register window class */
