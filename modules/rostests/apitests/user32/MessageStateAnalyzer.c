@@ -107,8 +107,8 @@ static const STAGE s_Stages[] =
 {
     {
         __LINE__, WM_NULL, 1, 0, STAGE_TYPE_SEQUENCE,
-        4, { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE, 799 },
-        { 1, 2, 0, 0, 0 },
+        4, { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
+           { 1, 2, 0, 0 },
     },
     {
         __LINE__, WM_COMMAND, 2, 3, STAGE_TYPE_SEQUENCE,
