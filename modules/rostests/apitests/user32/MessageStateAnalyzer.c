@@ -25,12 +25,12 @@ static char s_prefix[16] = "";
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
 /* variables */
-INT s_nStage;
-INT s_nStep;
-UINT s_msgStack[32];
-INT s_nLevel;
-BOOL s_bNextStage;
-INT s_nCounters[8];
+static INT s_nStage;
+static INT s_nStep;
+static UINT s_msgStack[32];
+static INT s_nLevel;
+static BOOL s_bNextStage;
+static INT s_nCounters[8];
 
 /* macros */
 #define TIMEOUT_TIMER   999
