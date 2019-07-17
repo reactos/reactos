@@ -24,77 +24,58 @@ static char s_prefix[16] = "";
 #define MSGDUMP_PREFIX s_prefix
 #include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
 
-typedef INT STAGE, ACTION;
-
-typedef struct STATE
-{
-    STAGE nStage;
-    UINT nPrevMsg;
-    UINT msgStack[32];
-    INT nLevel;
-    BOOL bNewStage;
-
-    /* counters */
-    INT nWM_GETMINMAXINFO;
-    INT nWM_NCCREATE;
-    INT nWM_NCCALCSIZE;
-    INT nWM_CREATE;
-    INT nWM_SHOWWINDOW;
-    INT nWM_WINDOWPOSCHANGING;
-    INT nWM_ACTIVATEAPP;
-    INT nWM_NCACTIVATE;
-    INT nWM_ACTIVATE;
-    INT nWM_IME_SETCONTEXT;
-    INT nWM_IME_NOTIFY;
-    INT nWM_SETFOCUS;
-    INT nWM_NCPAINT;
-    INT nWM_ERASEBKGND;
-    INT nWM_WINDOWPOSCHANGED;
-    INT nWM_DESTROY;
-    INT nWM_NCDESTROY;
-} STATE;
-
-static STATE s_state;
+INT s_nStage;
+INT s_nSeqIndex;
+UINT s_msgStack[32];
+INT s_nLevel;
+BOOL s_bNextStage;
+INT s_nCounters[8];
 
 /* macros */
-#define THE_STAGE       s_state.nStage
-#define THE_LEVEL       s_state.nLevel
-#define THE_STACK       s_state.msgStack
-#define PREV_MSG        s_state.nPrevMsg
-#define NEW_STAGE       s_state.bNewStage
-#define COUNTER(WM_)    s_state.n##WM_
-#define PARENT_MSG      THE_STACK[THE_LEVEL - 1]
 #define TIMEOUT_TIMER   999
-#define TOTAL_TIMEOUT   (10 * 1000)
+#define TOTAL_TIMEOUT   (5 * 1000)
 #define WIDTH           300
 #define HEIGHT          200
+#define PARENT_MSG      s_msgStack[s_nLevel - 1]
 
-static __inline void NewStage(HWND hwnd)
+static __inline void NextStage(HWND hwnd)
 {
-    NEW_STAGE = TRUE;
-}
-
-static __inline void NewStageDoAction(HWND hwnd, ACTION nAction)
-{
-#define INTERVAL 500
-    NEW_STAGE = TRUE;
-    SetTimer(hwnd, nAction, INTERVAL, NULL);
-#undef INTERVAL
+    s_bNextStage = TRUE;
 }
 
 static void General_Initialize(void)
 {
-    ZeroMemory(&s_state, sizeof(s_state));
+    s_nStage = s_nSeqIndex = 0;
+    ZeroMemory(s_msgStack, sizeof(s_msgStack));
+    s_nLevel = 0;
+    s_bNextStage = FALSE;
+    ZeroMemory(s_nCounters, sizeof(s_nCounters));
 }
 
-static void General_DoAction(HWND hwnd, ACTION nAction)
+static void General_DoAction(HWND hwnd, INT nAction)
 {
+    RECT rc;
     switch (nAction)
     {
         case 1:
-            ShowWindow(hwnd, SW_SHOWNORMAL);
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, 0);
+            ok_long(rc.bottom - rc.top, 0);
+            ok_int(IsWindowVisible(hwnd), FALSE);
             break;
         case 2:
+            GetWindowRect(hwnd, &rc);
+            ok_long(rc.right - rc.left, WIDTH);
+            ok_long(rc.bottom - rc.top, HEIGHT);
+            ok_int(IsWindowVisible(hwnd), FALSE);
+            break;
+        case 3:
+            ShowWindow(hwnd, SW_SHOWNORMAL);
+            break;
+        case 4:
+            NextStage(hwnd);
+            break;
+        case 5:
             DestroyWindow(hwnd);
             break;
         case TIMEOUT_TIMER:
@@ -103,199 +84,130 @@ static void General_DoAction(HWND hwnd, ACTION nAction)
     }
 }
 
+typedef enum STAGE_TYPE
+{
+    STAGE_TYPE_SEQUENCE,
+    STAGE_TYPE_COUNTING
+} STAGE_TYPE;
+
+typedef struct STAGE
+{
+    INT nLine;
+    UINT uParentMsg;
+    INT nLevel;
+    INT nAction;
+    STAGE_TYPE nType;
+    INT nCount;
+    UINT Messages[16];
+    INT Actions[16];
+    INT Counters[16];
+} STAGE;
+
+static const STAGE s_Stages[] =
+{
+    {
+        __LINE__, WM_NULL, 1, 0, STAGE_TYPE_SEQUENCE,
+        4, { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE, 799 },
+        { 1, 2, 0, 0, 0 },
+    },
+    {
+        __LINE__, WM_COMMAND, 2, 3, STAGE_TYPE_SEQUENCE,
+        6, { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
+          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
+    },
+    {
+        __LINE__, WM_ACTIVATE, 3, 0, STAGE_TYPE_COUNTING, 
+        1, { WM_IME_SETCONTEXT }, { 4 }, { 1 }
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 4, 0, STAGE_TYPE_COUNTING,
+        1, { WM_IME_NOTIFY }, { 4 }, { 1 }
+    },
+    {
+        __LINE__, WM_COMMAND, 2, 5, STAGE_TYPE_SEQUENCE,
+        7, { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
+             WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 3, 0, STAGE_TYPE_SEQUENCE,
+        1, { WM_IME_NOTIFY },
+    },
+    {
+        __LINE__, WM_COMMAND, 2, 0, STAGE_TYPE_SEQUENCE,
+        2, { WM_DESTROY, WM_NCDESTROY },
+    },
+};
+
 static void
 General_DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    RECT rc;
-    NEW_STAGE = FALSE;
-    switch (THE_STAGE)
+    INT i;
+    const STAGE *pStage;
+    s_bNextStage = FALSE;
+
+    if (s_nStage >= ARRAYSIZE(s_Stages))
+        return;
+
+    pStage = &s_Stages[s_nStage];
+    switch (pStage->nType)
     {
-        case 0:
-            SetTimer(hwnd, TIMEOUT_TIMER, TOTAL_TIMEOUT, NULL);
-            switch (uMsg)
+        case STAGE_TYPE_SEQUENCE:
+            if (pStage->Messages[s_nSeqIndex] == uMsg)
             {
-                case WM_GETMINMAXINFO:
-                    ++COUNTER(WM_GETMINMAXINFO);
-                    ok_int(THE_LEVEL, 1);
-                    ok_int(PARENT_MSG, WM_NULL);
-                    ok_int(PREV_MSG, WM_NULL);
-                    ok_str(s_prefix, "P: ");
-                    NewStage(hwnd);
-                    break;
+                ok(s_nLevel == pStage->nLevel,
+                   "Line %d: Level expected %d but %d.\n",
+                   pStage->nLine, pStage->nLevel, s_nLevel);
+                ok(PARENT_MSG == pStage->uParentMsg,
+                   "Line %d: PARENT_MSG expected %u but %u.\n",
+                   pStage->nLine, pStage->uParentMsg, PARENT_MSG);
+                General_DoAction(hwnd, pStage->Actions[s_nSeqIndex]);
+                ++s_nSeqIndex;
+                if (s_nSeqIndex == pStage->nCount)
+                    NextStage(hwnd);
             }
             break;
-        case 1:
-            switch (uMsg)
+        case STAGE_TYPE_COUNTING:
+            for (i = 0; i < pStage->nCount; ++i)
             {
-                case WM_NCCREATE:
-                    ++COUNTER(WM_NCCREATE);
-                    ok_int(THE_LEVEL, 1);
-                    ok_int(PARENT_MSG, WM_NULL);
-                    ok_int(PREV_MSG, WM_GETMINMAXINFO);
-                    ok_str(s_prefix, "P: ");
-                    ok_int(GetWindowRect(hwnd, &rc), TRUE);
-                    ok_long(rc.right - rc.left, WIDTH);
-                    ok_long(rc.bottom - rc.top, HEIGHT);
-                    ok_int(IsWindowVisible(hwnd), FALSE);
-                    NewStage(hwnd);
+                if (pStage->Messages[i] == uMsg)
+                {
+                    ok(s_nLevel == pStage->nLevel,
+                       "Line %d: Level expected %d but %d.\n",
+                       pStage->nLine, pStage->nLevel, s_nLevel);
+                    ok(PARENT_MSG == pStage->uParentMsg,
+                       "Line %d: PARENT_MSG expected %u but %u.\n",
+                       pStage->nLine, pStage->uParentMsg, PARENT_MSG);
+                    General_DoAction(hwnd, pStage->Actions[i]);
+                    ++s_nCounters[i];
                     break;
+                }
             }
-            break;
-        case 2:
-            switch (uMsg)
-            {
-                case WM_NCCALCSIZE:
-                    ++COUNTER(WM_NCCALCSIZE);
-                    ok_int(THE_LEVEL, 1);
-                    ok_int(PARENT_MSG, WM_NULL);
-                    ok_int(PREV_MSG, WM_NCCREATE);
-                    ok_str(s_prefix, "P: ");
-                    NewStage(hwnd);
-                    break;
-            }
-            break;
-        case 3:
-            switch (uMsg)
-            {
-                case WM_CREATE:
-                    ++COUNTER(WM_CREATE);
-                    ok_int(THE_LEVEL, 1);
-                    ok_int(PARENT_MSG, WM_NULL);
-                    ok_int(PREV_MSG, WM_NCCALCSIZE);
-                    ok_str(s_prefix, "P: ");
-                    NewStageDoAction(hwnd, 1);
-                    break;
-            }
-            break;
-        case 4:
-            switch (uMsg)
-            {
-                case WM_SHOWWINDOW:
-                    ++COUNTER(WM_SHOWWINDOW);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_WINDOWPOSCHANGING:
-                    ++COUNTER(WM_WINDOWPOSCHANGING);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok(PREV_MSG == WM_SHOWWINDOW || PREV_MSG == WM_WINDOWPOSCHANGING,
-                       "PREV_MSG was %u\n.", PREV_MSG);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_ACTIVATEAPP:
-                    ++COUNTER(WM_ACTIVATEAPP);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_WINDOWPOSCHANGING);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_NCACTIVATE:
-                    ++COUNTER(WM_NCACTIVATE);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_ACTIVATEAPP);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_ACTIVATE:
-                    ++COUNTER(WM_ACTIVATE);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_NCACTIVATE);
-                    ok_str(s_prefix, "P: ");
-                    NewStageDoAction(hwnd, 2);
-                    break;
-            }
-            break;
-        case 5:
-            switch (uMsg)
-            {
-                case WM_IME_SETCONTEXT:
-                    ++COUNTER(WM_IME_SETCONTEXT);
-                    ok_int(THE_LEVEL, 3);
-                    ok_int(PARENT_MSG, WM_ACTIVATE);
-                    ok_int(PREV_MSG, WM_NCACTIVATE);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_IME_NOTIFY:
-                    ++COUNTER(WM_IME_NOTIFY);
-                    ok_int(THE_LEVEL, 4);
-                    ok_int(PARENT_MSG, WM_IME_SETCONTEXT);
-                    ok_int(PREV_MSG, WM_NCACTIVATE);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_SETFOCUS:
-                    ++COUNTER(WM_SETFOCUS);
-                    ok_int(THE_LEVEL, 3);
-                    ok_int(PARENT_MSG, WM_ACTIVATE);
-                    ok_int(PREV_MSG, WM_IME_SETCONTEXT);
-                    ok_str(s_prefix, "P: ");
-                    NewStage(hwnd);
-                    break;
-            }
-        case 6:
-            switch (uMsg)
-            {
-                case WM_NCPAINT:
-                    ++COUNTER(WM_NCPAINT);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_ACTIVATE);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_ERASEBKGND:
-                    ++COUNTER(WM_ERASEBKGND);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_NCPAINT);
-                    ok_str(s_prefix, "P: ");
-                    break;
-                case WM_WINDOWPOSCHANGED:
-                    ++COUNTER(WM_WINDOWPOSCHANGED);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_ERASEBKGND);
-                    ok_str(s_prefix, "P: ");
-                    NewStageDoAction(hwnd, 2);
-                    break;
-            }
-            break;
-        case 7:
-            switch (uMsg)
-            {
-                case WM_DESTROY:
-                    ++COUNTER(WM_DESTROY);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_IME_SETCONTEXT);
-                    ok_str(s_prefix, "P: ");
-                    NewStage(hwnd);
-                    break;
-            }
-            break;
-        case 8:
-            switch (uMsg)
-            {
-                case WM_NCDESTROY:
-                    ++COUNTER(WM_NCDESTROY);
-                    ok_int(THE_LEVEL, 2);
-                    ok_int(PARENT_MSG, WM_TIMER);
-                    ok_int(PREV_MSG, WM_DESTROY);
-                    ok_str(s_prefix, "P: ");
-                    NewStage(hwnd);
-                    break;
-            }
-            break;
-#define LAST_STAGE 9
-        case LAST_STAGE:
             break;
     }
 
-    if (NEW_STAGE)
+    if (s_bNextStage)
     {
-        ++THE_STAGE;
-        trace("Stage %d\n", THE_STAGE);
+        if (pStage->nType == STAGE_TYPE_COUNTING)
+        {
+            for (i = 0; i < pStage->nCount; ++i)
+            {
+                if (pStage->Counters[i] != -1)
+                {
+                    ok_int(pStage->Counters[i], s_nCounters[i]);
+                }
+            }
+        }
+        ++s_nStage;
+        if (s_nStage == ARRAYSIZE(s_Stages))
+        {
+            DestroyWindow(hwnd);
+            return;
+        }
+        PostMessage(hwnd, WM_COMMAND, s_Stages[s_nStage].nAction, 0);
+        trace("Stage %d (Line %d)\n", s_nStage, s_Stages[s_nStage].nLine);
+
+        s_nSeqIndex = 0;
+        ZeroMemory(s_nCounters, sizeof(s_nCounters));
     }
 }
 
@@ -304,13 +216,20 @@ General_InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+        case WM_COMMAND:
+            General_DoAction(hwnd, LOWORD(wParam));
+            break;
         case WM_TIMER:
             KillTimer(hwnd, (UINT)wParam);
-            General_DoAction(hwnd, (ACTION)wParam);
+            if (wParam == TIMEOUT_TIMER)
+                DestroyWindow(hwnd);
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
+        case WM_NCCREATE:
+            SetTimer(hwnd, TIMEOUT_TIMER, TOTAL_TIMEOUT, NULL);
+            /* FALL THROUGH */
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
@@ -342,15 +261,14 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     /* message dump */
     MD_msgdump(hwnd, uMsg, wParam, lParam);
 
-    ++THE_LEVEL;
-    THE_STACK[THE_LEVEL] = uMsg;
+    ++s_nLevel;
+    s_msgStack[s_nLevel] = uMsg;
     {
         /* do inner task */
         General_DoStage(hwnd, uMsg, wParam, lParam);
         lResult = General_InnerWindowProc(hwnd, uMsg, wParam, lParam);
     }
-    --THE_LEVEL;
-    PREV_MSG = uMsg;
+    --s_nLevel;
 
     /* message return */
     StringCbCopyA(s_prefix, sizeof(s_prefix), "R: ");
@@ -360,27 +278,9 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static void General_Finish(void)
 {
-    ok_int(THE_STAGE, LAST_STAGE);
-
-    ok_int(COUNTER(WM_GETMINMAXINFO), 1);
-    ok_int(COUNTER(WM_NCCREATE), 1);
-    ok_int(COUNTER(WM_CREATE), 1);
-    ok_int(COUNTER(WM_SHOWWINDOW), 1);
-    ok_int(COUNTER(WM_WINDOWPOSCHANGING), 2);
-    ok_int(COUNTER(WM_ACTIVATEAPP), 1);
-    ok_int(COUNTER(WM_NCACTIVATE), 1);
-    ok_int(COUNTER(WM_ACTIVATE), 1);
-    ok_int(COUNTER(WM_IME_SETCONTEXT), 1);
-    ok_int(COUNTER(WM_IME_NOTIFY), 1);
-    ok_int(COUNTER(WM_SETFOCUS), 1);
-    ok_int(COUNTER(WM_NCPAINT), 1);
-    ok_int(COUNTER(WM_ERASEBKGND), 1);
-    ok_int(COUNTER(WM_WINDOWPOSCHANGED), 1);
-    ok_int(COUNTER(WM_DESTROY), 1);
-    ok_int(COUNTER(WM_NCDESTROY), 1);
-
-    if (THE_STAGE != LAST_STAGE)
+    if (s_nStage != ARRAYSIZE(s_Stages))
     {
+        ok_int(0, 1);
         skip("Some stage(s) skipped.\n");
     }
 }
