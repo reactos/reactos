@@ -1379,6 +1379,7 @@ PcMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = PcVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PcVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = PcVideoGetBufferSize;
+    MachVtbl.VideoGetFontsFromFirmware = PcVideoGetFontsFromFirmware;
     MachVtbl.VideoSetTextCursorPosition = PcVideoSetTextCursorPosition;
     MachVtbl.VideoHideShowTextCursor = PcVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = PcVideoPutChar;

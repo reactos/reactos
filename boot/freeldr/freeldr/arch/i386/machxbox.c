@@ -201,6 +201,7 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = XboxVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = XboxVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = XboxVideoGetBufferSize;
+    MachVtbl.VideoGetFontsFromFirmware = XboxVideoGetFontsFromFirmware;
     MachVtbl.VideoHideShowTextCursor = XboxVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = XboxVideoPutChar;
     MachVtbl.VideoCopyOffScreenBufferToVRAM = XboxVideoCopyOffScreenBufferToVRAM;

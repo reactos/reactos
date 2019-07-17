@@ -36,6 +36,7 @@ VOID PcVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG PcVideoGetBufferSize(VOID);
+VOID PcVideoGetFontsFromFirmware(PULONG RomFontPointers);
 VOID PcVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 VOID PcVideoHideShowTextCursor(BOOLEAN Show);
 VOID PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);

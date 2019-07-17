@@ -46,6 +46,7 @@ typedef struct tagMACHVTBL
     VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOLEAN Init);
     VOID (*VideoGetDisplaySize)(PULONG Width, PULONG Height, PULONG Depth);
     ULONG (*VideoGetBufferSize)(VOID);
+    VOID (*VideoGetFontsFromFirmware)(PULONG RomFontPointers);
     VOID (*VideoSetTextCursorPosition)(UCHAR X, UCHAR Y);
     VOID (*VideoHideShowTextCursor)(BOOLEAN Show);
     VOID (*VideoPutChar)(int Ch, UCHAR Attr, unsigned X, unsigned Y);
@@ -96,6 +97,8 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.VideoGetDisplaySize((W), (H), (D))
 #define MachVideoGetBufferSize()    \
     MachVtbl.VideoGetBufferSize()
+#define MachVideoGetFontsFromFirmware(RomFontPointers) \
+    MachVtbl.VideoGetFontsFromFirmware((RomFontPointers))
 #define MachVideoSetTextCursorPosition(X, Y)    \
     MachVtbl.VideoSetTextCursorPosition((X), (Y))
 #define MachVideoHideShowTextCursor(Show)   \
