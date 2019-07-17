@@ -110,19 +110,19 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
-        case 6: // closing WM_IME_SETCONTEXT
+        case 6:
+            ok_int(s_iStage, 4);
+            DestroyWindow(hwnd);
+            break;
+        case 7: // closing WM_IME_SETCONTEXT
             ok(wParam == 0, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
             break;
-        case 7: // closing WM_IME_NOTIFY
+        case 8: // closing WM_IME_NOTIFY
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             s_bNextStage = TRUE;
-            break;
-        case 8:
-            ok_int(s_iStage, 4);
-            DestroyWindow(hwnd);
             break;
     }
 }
@@ -302,17 +302,17 @@ static const STAGE s_GeneralStages[] =
         { 1 }
     },
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 8,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 6,
         7,
         { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
           WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
-        { 0, 0, 0, 0, 0, 0, 6 }
+        { 0, 0, 0, 0, 0, 0, 7 }
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { 7 }
+        { 8 }
     },
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
