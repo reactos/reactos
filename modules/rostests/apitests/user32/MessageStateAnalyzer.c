@@ -277,14 +277,11 @@ InnerWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-static LRESULT CALLBACK
-General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static void DoBuildPrefix(void)
 {
-    LRESULT lResult;
     DWORD Flags = InSendMessageEx(NULL);
     INT i = 0;
 
-    /* build s_prefix */
     if (Flags & ISMEX_CALLBACK)
         s_prefix[i++] = 'C';
     if (Flags & ISMEX_NOTIFY)
@@ -295,9 +292,19 @@ General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         s_prefix[i++] = 'S';
     if (i == 0)
         s_prefix[i++] = 'P';
+
     s_prefix[i++] = ':';
     s_prefix[i++] = ' ';
     s_prefix[i] = 0;
+}
+
+static LRESULT CALLBACK
+General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT lResult;
+
+    /* build s_prefix */
+    DoBuildPrefix();
 
     /* message dump */
     MD_msgdump(hwnd, uMsg, wParam, lParam);
