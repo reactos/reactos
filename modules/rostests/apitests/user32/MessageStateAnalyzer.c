@@ -25,10 +25,10 @@ static char s_prefix[16] = "";
 /* variables */
 static INT s_iStage;
 static INT s_iStep;
-static UINT s_msgStack[32];
 static INT s_nLevel;
 static BOOL s_bNextStage;
 static INT s_nCounters[10];
+static UINT s_msgStack[32];
 
 /* macros */
 #define TIMEOUT_TIMER   999
@@ -37,14 +37,12 @@ static INT s_nCounters[10];
 #define HEIGHT          200
 #define PARENT_MSG      s_msgStack[s_nLevel - 1]
 
-static void General_Initialize(void)
+static void DoInitialize(void)
 {
-    s_iStage = 0;
-    s_iStep = 0;
-    ZeroMemory(s_msgStack, sizeof(s_msgStack));
-    s_nLevel = 0;
+    s_iStage = s_iStep = s_nLevel = 0;
     s_bNextStage = FALSE;
     ZeroMemory(s_nCounters, sizeof(s_nCounters));
+    ZeroMemory(s_msgStack, sizeof(s_msgStack));
 }
 
 typedef enum STAGE_TYPE
@@ -339,7 +337,7 @@ static void General_DoTest(void)
     MSG msg;
     static const char s_szName[] = "MessageStateAnalyzerGeneral";
 
-    General_Initialize();
+    DoInitialize();
 
     /* register window class */
     ZeroMemory(&wc, sizeof(wc));
