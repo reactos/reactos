@@ -111,9 +111,6 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ok_int(s_iStage, 4);
             DestroyWindow(hwnd);
             break;
-        case TIMEOUT_TIMER:
-            DestroyWindow(hwnd);
-            break;
     }
 }
 
