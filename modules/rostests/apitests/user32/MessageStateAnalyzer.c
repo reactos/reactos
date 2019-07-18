@@ -77,55 +77,71 @@ static void DoFinish(void)
     }
 }
 
+typedef enum ACTION
+{
+    ACTION_ZERO = 0,
+    ACTION_FIRSTMINMAX,
+    ACTION_NCCREATE,
+    ACTION_SHOW,
+    ACTION_IME_SETCONTEXT_OPEN,
+    ACTION_IME_NOITFY_OPEN,
+    ACTION_DESTROY,
+    ACTION_IME_SETCONTEXT_CLOSE,
+    ACTION_IME_NOITFY_CLOSE,
+    ACTION_HIDE,
+    ACTION_DEACTIVATE,
+    ACTION_ACTIVATE
+} ACTION;
+
 static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
     switch (iAction)
     {
-        case 0:
+        case ACTION_ZERO:
             /* does nothing */
             break;
-        case 1: // first WM_GETMINMAXINFO
+        case ACTION_FIRSTMINMAX:
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, 0);
             ok_long(rc.bottom - rc.top, 0);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
-        case 2: // WM_NCCREATE
+        case ACTION_NCCREATE:
             GetWindowRect(hwnd, &rc);
             ok_long(rc.right - rc.left, WIDTH);
             ok_long(rc.bottom - rc.top, HEIGHT);
             ok_int(IsWindowVisible(hwnd), FALSE);
             break;
-        case 3:
+        case ACTION_SHOW:
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
-        case 4: // opening WM_IME_SETCONTEXT
+        case ACTION_IME_SETCONTEXT_OPEN:
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             break;
-        case 5: // opening WM_IME_NOTIFY
+        case ACTION_IME_NOITFY_OPEN:
             ok(wParam == 2, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             break;
-        case 6:
+        case ACTION_DESTROY:
             DestroyWindow(hwnd);
             break;
-        case 7: // closing WM_IME_SETCONTEXT
+        case ACTION_IME_SETCONTEXT_CLOSE:
             ok(wParam == 0, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             break;
-        case 8: // closing WM_IME_NOTIFY
+        case ACTION_IME_NOITFY_CLOSE:
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             break;
-        case 9:
+        case ACTION_HIDE:
             ShowWindow(hwnd, SW_HIDE);
             break;
-        case 10:
+        case ACTION_DEACTIVATE:
             SetForegroundWindow(GetDesktopWindow());
             break;
-        case 11:
+        case ACTION_ACTIVATE:
             SetForegroundWindow(hwnd);
             break;
     }
@@ -285,17 +301,17 @@ static const STAGE s_GeneralStages[] =
         __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
         4,
         { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
-        { 1, 2, 0, 0 },
+        { ACTION_FIRSTMINMAX, ACTION_NCCREATE, 0, 0 },
     },
     /* Stage 1 */
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_SHOW,
         6,
         { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
           WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
     },
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 6,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DESTROY,
         6,
         { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
           WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
@@ -387,43 +403,42 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
         4,
         { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
-        { 1, 2, 0, 0 },
+        { ACTION_FIRSTMINMAX, ACTION_NCCREATE, 0, 0 },
     },
     /* Stage 1 */
     // show
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_SHOW,
         6,
         { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
           WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
-        { 0, 0, 0, 0, 0, 0 },
     },
     {
         __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_SETCONTEXT },
-        { 4 },
+        { ACTION_IME_SETCONTEXT_OPEN },
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { 5 },
+        { ACTION_IME_NOITFY_OPEN },
     },
     // hide
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 9,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_HIDE,
         8,
         { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED,
           WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS,
           WM_IME_SETCONTEXT },
-        { 0, 0, 0, 0, 0, 0, 0, 7 }
+        { 0, 0, 0, 0, 0, 0, 0, ACTION_IME_SETCONTEXT_CLOSE }
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { 8 }
+        { ACTION_IME_NOITFY_CLOSE }
     },
     // show again
     {
@@ -431,23 +446,22 @@ static const STAGE s_IMEStages[] =
         6,
         { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
           WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
-        { 0, 0, 0, 0, 0, 0 },
     },
     {
         __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_SETCONTEXT },
-        { 4 },
+        { ACTION_IME_SETCONTEXT_OPEN },
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { 5 },
+        { ACTION_IME_NOITFY_OPEN },
     },
     // deactivate
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 10,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DEACTIVATE,
         4,
         { WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
     },
@@ -455,30 +469,30 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_SETCONTEXT },
-        { 7 }
+        { ACTION_IME_SETCONTEXT_CLOSE }
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
         1,
         { WM_IME_NOTIFY },
-        { 8 }
+        { ACTION_IME_NOITFY_CLOSE }
     },
     // activate
     {
-        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 11,
+        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, ACTION_ACTIVATE,
         1,
         { WM_IME_SETCONTEXT },
-        { 4 }
+        { ACTION_IME_SETCONTEXT_OPEN }
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { 5 },
+        { ACTION_IME_NOITFY_OPEN },
     },
     // destroy
     {
-        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 6,
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, ACTION_DESTROY,
         2,
         { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED },
     },
@@ -486,13 +500,13 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_SETCONTEXT },
-        { 7 }
+        { ACTION_IME_SETCONTEXT_CLOSE }
     },
     {
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
         1,
         { WM_IME_NOTIFY },
-        { 8 }
+        { ACTION_IME_NOITFY_CLOSE }
     },
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
