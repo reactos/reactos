@@ -18,6 +18,7 @@
 #include <winreg.h>
 #include <commctrl.h>
 #include <shellapi.h>
+#include <tlhelp32.h>
 
 #include "column.h"
 #include "taskmgr.h"

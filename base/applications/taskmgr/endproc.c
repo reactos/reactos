@@ -107,6 +107,41 @@ BOOL IsCriticalProcess(HANDLE hProcess)
     return FALSE;
 }
 
+BOOL ShutdownProcessTree(HANDLE hParentProcess, DWORD dwParentPID)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    HANDLE hChildHandle;
+    PROCESSENTRY32 ProcessEntry = {0};
+
+    ProcessEntry.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!hSnapshot)
+    {
+        return FALSE;
+    }
+
+    if (Process32First(hSnapshot, &ProcessEntry))
+    {
+        do
+        {
+            if (ProcessEntry.th32ParentProcessID == dwParentPID)
+            {
+                hChildHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                                                  FALSE,
+                                                  ProcessEntry.th32ProcessID);
+                if (!ShutdownProcessTree(hChildHandle, ProcessEntry.th32ProcessID))
+                {
+                    return FALSE;
+                }
+                CloseHandle(hChildHandle);
+            }
+        } while (Process32Next(hSnapshot, &ProcessEntry));
+    }
+
+    TerminateProcess(hParentProcess, 0);
+    return TRUE;
+}
+
 void ProcessPage_OnEndProcessTree(void)
 {
     DWORD   dwProcessId;
@@ -130,7 +165,7 @@ void ProcessPage_OnEndProcessTree(void)
         CloseHandle(hProcess);
         return;
     }
-
+ 
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
     if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
@@ -146,8 +181,8 @@ void ProcessPage_OnEndProcessTree(void)
         MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONSTOP);
         return;
     }
-
-    if (!TerminateProcess(hProcess, 0))
+    
+    if (!ShutdownProcessTree(hProcess, dwProcessId))
     {
         GetLastErrorText(strErrorText, 260);
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
