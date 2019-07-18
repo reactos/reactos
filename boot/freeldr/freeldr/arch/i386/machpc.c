@@ -77,6 +77,27 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 #define CONTROLLER_TIMEOUT                              250
 
 
+VOID
+PcGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
+{
+    REGS BiosRegs;
+
+    /* Get address and size of the extended BIOS data area */
+    BiosRegs.d.eax = 0xC100;
+    Int386(0x15, &BiosRegs, &BiosRegs);
+    if (INT386_SUCCESS(BiosRegs))
+    {
+        *ExtendedBIOSDataArea = BiosRegs.w.es << 4;
+        *ExtendedBIOSDataSize = 1024;
+    }
+    else
+    {
+        WARN("Int 15h AH=C1h call failed\n");
+        *ExtendedBIOSDataArea = 0;
+        *ExtendedBIOSDataSize = 0;
+    }
+}
+
 // NOTE: Similar to machxbox.c!XboxGetHarddiskConfigurationData(),
 // but with extended geometry support.
 static
@@ -1391,6 +1412,7 @@ PcMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = PcPrepareForReactOS;
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
+    MachVtbl.GetExtendedBIOSData = PcGetExtendedBIOSData;
     MachVtbl.GetFloppyCount = PcGetFloppyCount;
     MachVtbl.DiskGetBootPath = PcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;

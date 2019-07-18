@@ -61,6 +61,7 @@ typedef struct tagMACHVTBL
     // NOTE: Not in the machine.c ...
     FREELDR_MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(FREELDR_MEMORY_DESCRIPTOR* Current);
     PFREELDR_MEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
+    VOID (*GetExtendedBIOSData)(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize);
 
     UCHAR (*GetFloppyCount)(VOID);
     BOOLEAN (*DiskGetBootPath)(PCHAR BootPath, ULONG Size);
@@ -119,6 +120,8 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.Beep()
 #define MachPrepareForReactOS() \
     MachVtbl.PrepareForReactOS()
+#define MachGetExtendedBIOSData(ExtendedBIOSDataArea, ExtendedBIOSDataSize) \
+    MachVtbl.GetExtendedBIOSData((ExtendedBIOSDataArea), (ExtendedBIOSDataSize))
 #define MachGetFloppyCount() \
     MachVtbl.GetFloppyCount()
 #define MachDiskGetBootPath(Path, Size) \
