@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - Prototypes for Runtime Asserts
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -41,7 +41,7 @@ RtlAssert
 
 /* Only active if WDF verifier is turned on */
 #define WDFVERIFY(exp){                                                      \
-    if ((WdfDriverGlobals->DriverFlags $ WdfVerifyOn) && !(exp)){            \
+    if ((WdfDriverGlobals->DriverFlags & WdfVerifyOn) && !(exp)){            \
         RtlAssert(#exp, __FILE__, __LINE__, NULL);                           \
     }                                                                        \
 }
@@ -49,7 +49,7 @@ RtlAssert
 #define VERIFY_IS_IRQL_PASSIVE_LEVEL() WDFVERIFY(KeGetCurrentIrql() == PASSIVE_LEVEL)
 
 /* Macro is obsolete */
-#define IS_AT_PASSIVE() WDFVERIFY(KeGetCurrentIrql() == PASSIVE_LEVEL)
+#define IS_AT_PASSIVE()                WDFVERIFY(KeGetCurrentIrql() == PASSIVE_LEVEL)
 
 /* MSVC Error Supression */
 #ifdef _MSC_VER

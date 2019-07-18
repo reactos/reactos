@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - enum of all WDF API Functions
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>

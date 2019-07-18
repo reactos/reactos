@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - C Driver Frameworks Basic Types
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -36,9 +36,16 @@
 typedef UCHAR BYTE;
 #endif
 
+/* Inline Definitions, from sdk/include/xdx/ntbasedef.h */
 #ifndef FORCEINLINE
-#define FORCEINLINE __forceinline
-#endif
+ #if defined(_MSC_VER)
+  #define FORCEINLINE __forceinline
+ #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+ #else
+  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+ #endif
+#endif /* FORCEINLINE */
 
 /* This definiton is used by WPP trace template file */
 #ifndef WDF_WPP_KMDF_DRIVER
@@ -55,7 +62,7 @@ typedef PVOID WDFCONTEXT;
 
 /* Declare structures needed by other headers */
 typedef struct WDFDEVICE_INIT *PWDFDEVICE_INIT;
-typedef struct _WDF_OBJECT_ATTRIBUTES PWDF_OBJECT_ATTRIBUTES;
+typedef struct _WDF_OBJECT_ATTRIBUTES *PWDF_OBJECT_ATTRIBUTES;
 
 #define WDF_NO_OBJECT_ATTRIBUTES (NULL)
 #define WDF_NO_EVENT_CALLBACK (NULL)
@@ -64,7 +71,7 @@ typedef struct _WDF_OBJECT_ATTRIBUTES PWDF_OBJECT_ATTRIBUTES;
 #define WDF_NO_SEND_OPTIONS (NULL) 
 
 /* This is a generalized handle, should always be typeless */
-typedef HANDLE WDFOBJECT, *WDFOBJECT;
+typedef HANDLE WDFOBJECT, *PWDFOBJECT;
 
 /* Core Handles */
 DECLARE_HANDLE(WDFDRIVER);

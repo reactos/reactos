@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - Pool API's
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -26,10 +26,6 @@
 #define _WDFPOOL_H_
 
 
-#if ((NTDDI_VERSION >= NTDDI_WIN2K)
-	
 
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #endif /* _WDFPOOL_H_ */ 

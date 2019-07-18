@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - Driver Framework Verifier definitioons
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -31,6 +31,7 @@
 WDF Function: WdfVerifierDbgBreakPoint
 */
 typedef
+NTAPI
 WDFAPI
 VOID
 (*PFN_WDFVERIFIERDBGBREAKPOINT)
@@ -50,6 +51,7 @@ WdfVerifierDbgBreakPoint
 WDF Function: WdfVerifierKeBugCheck
 */
 typedef
+NTAPI
 WDFAPI
 VOID
 (*PFN_WDFVERIFIERKEBUGCHECK)
@@ -62,6 +64,7 @@ VOID
     __in ULONG_PTR BugCheckParameter4
 );
 
+NTAPI
 VOID
 FORCEINLINE
 WdfVerifierKeBugCheck

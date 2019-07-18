@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - Global Framework Definitions
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -41,7 +41,7 @@ typedef struct _WDF_DRIVER_GLOBALS
     CHAR DriverName[WDF_DRIVER_GLOBALS_NAME_LEN];
 	
     /* When true, stub code will capture DriverObject->DriverUnload and insert
-	itself in the unload chain. */
+	itself into the unload chain. */
     BOOLEAN DisplaceDriverUnload;
 } WDF_DRIVER_GLOBALS, *PWDF_DRIVER_GLOBALS;
 

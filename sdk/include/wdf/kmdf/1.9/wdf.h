@@ -3,7 +3,7 @@
  *
  * Windows Driver Framework - Primary Header File
  *
- * This file is part of the ReactOS wdf package.
+ * This file is part of the ReactOS WDF package.
  *
  * Contributors:
  *   Created by Benjamin Aerni <admin@bennottelling.com>
@@ -26,20 +26,20 @@
 #define _WDF_H_
 
 
-typedef VOID (*WDFFUNC) (VOID);
-extern WDFFUNC WdfFunctions[];
+typedef NTAPI VOID (*WDFFUNC) (VOID);
+extern const NTAPI WDFFUNC WdfFunctions[];
 
-#ifndef _drv_dispatchType
+#ifndef _Dispatch_type_
 #include <driverspecs.h>
 #endif
 
 /* Basic Deffintions */
-#include "wdftypes.h"
-#include "wdfglobals.h"
-#include "wdffuncenum.h"
-#include "wdfstatus.h"
 #include "wdfassert.h"
-#include "wdfverifier.h"
+#include "wdffuncenum.h"
+#include "wdfglobals.h"
 #include "wdfpool.h"
+#include "wdfstatus.h"
+#include "wdftypes.h"
+#include "wdfverifier.h"
 
 #endif /* _WDF_H_ */
