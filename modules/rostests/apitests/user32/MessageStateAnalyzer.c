@@ -103,26 +103,30 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
         case 4: // opening WM_IME_SETCONTEXT
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
-            s_bNextStage = TRUE;
             break;
         case 5: // opening WM_IME_NOTIFY
             ok(wParam == 2, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
-            s_bNextStage = TRUE;
             break;
         case 6:
-            ok_int(s_iStage, 4);
             DestroyWindow(hwnd);
             break;
         case 7: // closing WM_IME_SETCONTEXT
             ok(wParam == 0, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
-            s_bNextStage = TRUE;
             break;
         case 8: // closing WM_IME_NOTIFY
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
-            s_bNextStage = TRUE;
+            break;
+        case 9:
+            ShowWindow(hwnd, SW_HIDE);
+            break;
+        case 10:
+            SetForegroundWindow(GetDesktopWindow());
+            break;
+        case 11:
+            SetForegroundWindow(hwnd);
             break;
     }
 }
@@ -213,6 +217,9 @@ static void DoStage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         DoAction(hwnd, iAction, wParam, lParam);
 
                     ++s_nCounters[i];
+
+                    if (i == pStage->nCount - 1)
+                        s_bNextStage = TRUE;
                     break;
                 }
             }
@@ -288,31 +295,10 @@ static const STAGE s_GeneralStages[] =
           WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
     },
     {
-        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_COUNTING, 0,
-        1,
-        { WM_IME_SETCONTEXT },
-        { 4 },
-        { 1 }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_COUNTING, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { 5 },
-        { 1 }
-    },
-    {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 6,
-        7,
+        6,
         { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_NCACTIVATE,
-          WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS, WM_IME_SETCONTEXT },
-        { 0, 0, 0, 0, 0, 0, 7 }
-    },
-    {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
-        1,
-        { WM_IME_NOTIFY },
-        { 8 }
+          WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
     },
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
@@ -322,7 +308,7 @@ static const STAGE s_GeneralStages[] =
 };
 
 static LRESULT CALLBACK
-General_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lResult;
 
@@ -360,7 +346,175 @@ static void General_DoTest(void)
     /* register window class */
     ZeroMemory(&wc, sizeof(wc));
     wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    wc.lpfnWndProc = General_WindowProc;
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandleA(NULL);
+    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wc.lpszClassName = s_szName;
+    if (!RegisterClassA(&wc))
+    {
+        skip("RegisterClassW failed.\n");
+        return;
+    }
+
+    /* create a window */
+    hwnd = CreateWindowA(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
+                         0, 0, WIDTH, HEIGHT, NULL, NULL,
+                         GetModuleHandleW(NULL), NULL);
+    if (!hwnd)
+    {
+        skip("CreateWindowW failed.\n");
+        return;
+    }
+
+    /* message loop */
+    while (GetMessageA(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    ok_int(UnregisterClassA(s_szName, GetModuleHandleA(NULL)), TRUE);
+
+    DoFinish();
+}
+
+static const STAGE s_IMEStages[] =
+{
+    /* Stage 0 */
+    {
+        __LINE__, WM_NULL, 1, STAGE_TYPE_SEQUENCE, 0,
+        4,
+        { WM_GETMINMAXINFO, WM_NCCREATE, WM_NCCALCSIZE, WM_CREATE },
+        { 1, 2, 0, 0 },
+    },
+    /* Stage 1 */
+    // show
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
+        6,
+        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
+          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
+        { 0, 0, 0, 0, 0, 0 },
+    },
+    {
+        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 4 },
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 5 },
+    },
+    // hide
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 9,
+        8,
+        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED,
+          WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS,
+          WM_IME_SETCONTEXT },
+        { 0, 0, 0, 0, 0, 0, 0, 7 }
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 8 }
+    },
+    // show again
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 3,
+        6,
+        { WM_SHOWWINDOW, WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGING,
+          WM_ACTIVATEAPP, WM_NCACTIVATE, WM_ACTIVATE },
+        { 0, 0, 0, 0, 0, 0 },
+    },
+    {
+        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 4 },
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 5 },
+    },
+    // deactivate
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 10,
+        4,
+        { WM_NCACTIVATE, WM_ACTIVATE, WM_ACTIVATEAPP, WM_KILLFOCUS },
+    },
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 7 }
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 8 }
+    },
+    // activate
+    {
+        __LINE__, WM_ACTIVATE, 3, STAGE_TYPE_SEQUENCE, 11,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 4 }
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 5 },
+    },
+    // destroy
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 6,
+        2,
+        { WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED },
+    },
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
+        1,
+        { WM_IME_SETCONTEXT },
+        { 7 }
+    },
+    {
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
+        1,
+        { WM_IME_NOTIFY },
+        { 8 }
+    },
+    {
+        __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
+        2,
+        { WM_DESTROY, WM_NCDESTROY },
+    },
+};
+
+static void IME_DoTest(void)
+{
+    WNDCLASSA wc;
+    HWND hwnd;
+    MSG msg;
+    static const char s_szName[] = "MessageStateAnalyzerIME";
+
+    trace("IME_DoTest\n");
+    DoInitialize(s_IMEStages, ARRAYSIZE(s_IMEStages));
+
+    /* register window class */
+    ZeroMemory(&wc, sizeof(wc));
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -397,4 +551,5 @@ static void General_DoTest(void)
 START_TEST(MessageStateAnalyzer)
 {
     General_DoTest();
+    IME_DoTest();
 }
