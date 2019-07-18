@@ -117,23 +117,23 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ShowWindow(hwnd, SW_SHOWNORMAL);
             break;
         case ACTION_IME_SETCONTEXT_OPEN:
-            ok(wParam == 1, "wParam was %p\n", (void *)wParam);
-            ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
+            ok(wParam == 1, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
+            ok(lParam == 0xC000000F, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
             break;
         case ACTION_IME_NOTIFY_OPEN:
-            ok(wParam == 2, "wParam was %p\n", (void *)wParam);
-            ok(lParam == 0, "lParam was %p\n", (void *)lParam);
+            ok(wParam == 2, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
+            ok(lParam == 0, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
             break;
         case ACTION_DESTROY:
             DestroyWindow(hwnd);
             break;
         case ACTION_IME_SETCONTEXT_CLOSE:
-            ok(wParam == 0, "wParam was %p\n", (void *)wParam);
-            ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
+            ok(wParam == 0, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
+            ok(lParam == 0xC000000F, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
             break;
         case ACTION_IME_NOTIFY_CLOSE:
-            ok(wParam == 1, "wParam was %p\n", (void *)wParam);
-            ok(lParam == 0, "lParam was %p\n", (void *)lParam);
+            ok(wParam == 1, "Step %d: wParam was %p\n", s_iStep, (void *)wParam);
+            ok(lParam == 0, "Step %d: lParam was %p\n", s_iStep, (void *)lParam);
             break;
         case ACTION_HIDE:
             ShowWindow(hwnd, SW_HIDE);
