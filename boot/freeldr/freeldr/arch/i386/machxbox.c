@@ -23,6 +23,14 @@
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 
+VOID
+XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
+{
+    TRACE("XboxGetExtendedBIOSData(): UNIMPLEMENTED\n");
+    *ExtendedBIOSDataArea = 0;
+    *ExtendedBIOSDataSize = 0;
+}
+
 // NOTE: Similar to machpc.c!PcGetHarddiskConfigurationData(),
 // but without extended geometry support.
 static
@@ -201,6 +209,7 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = XboxVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = XboxVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = XboxVideoGetBufferSize;
+    MachVtbl.VideoGetFontsFromFirmware = XboxVideoGetFontsFromFirmware;
     MachVtbl.VideoHideShowTextCursor = XboxVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = XboxVideoPutChar;
     MachVtbl.VideoCopyOffScreenBufferToVRAM = XboxVideoCopyOffScreenBufferToVRAM;
@@ -211,6 +220,7 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
     MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
+    MachVtbl.GetExtendedBIOSData = XboxGetExtendedBIOSData;
     MachVtbl.GetFloppyCount = XboxGetFloppyCount;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;

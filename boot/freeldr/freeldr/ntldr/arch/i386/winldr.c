@@ -287,69 +287,24 @@ WinLdrMapSpecialPages(void)
 #define ExtendedBIOSDataSize ((PULONG)0x744)
 #define RomFontPointers ((PULONG)0x700)
 
-enum
-{
-    INT1FhFont = 0x00,
-    INT43hFont = 0x01,
-    ROM_8x14CharacterFont = 0x02,
-    ROM_8x8DoubleDotFontLo = 0x03,
-    ROM_8x8DoubleDotFontHi = 0x04,
-    ROM_AlphaAlternate = 0x05,
-    ROM_8x16Font = 0x06,
-    ROM_Alternate9x16Font = 0x07,
-    UltraVision_8x20Font = 0x11,
-    UltraVision_8x10Font = 0x12,
-};
-
 static
 void WinLdrSetupSpecialDataPointers(VOID)
 {
-    REGS BiosRegs;
-
-    /* Get the address of the bios rom fonts. Win 2003 videoprt reads these
+    /* Get the address of the BIOS ROM fonts. Win 2003 videoprt reads these
        values from address 0x700 .. 0x718 and store them in the registry
-       in HKLM\System\CurrentControlSet\Control\Wow\RomFontPointers
-       Int 10h, AX=1130h, BH = pointer specifier
-       returns: es:bp = address */
-    BiosRegs.d.eax = 0x1130;
-    BiosRegs.b.bh = ROM_8x14CharacterFont;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[0] = BiosRegs.w.es << 4 | BiosRegs.w.bp;
+       in HKLM\System\CurrentControlSet\Control\Wow\RomFontPointers */
+    MachVideoGetFontsFromFirmware(RomFontPointers);
 
-    BiosRegs.b.bh = ROM_8x8DoubleDotFontLo;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[1] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
+    /* Store address of the extended BIOS data area in 0x740 */
+    MachGetExtendedBIOSData(ExtendedBIOSDataArea, ExtendedBIOSDataSize);
 
-    BiosRegs.b.bh = ROM_8x8DoubleDotFontHi;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[2] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
-
-    BiosRegs.b.bh = ROM_AlphaAlternate;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[3] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
-
-    BiosRegs.b.bh = ROM_8x16Font;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[4] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
-
-    BiosRegs.b.bh = ROM_Alternate9x16Font;
-    Int386(0x10, &BiosRegs, &BiosRegs);
-    RomFontPointers[5] = BiosRegs.w.es << 16 | BiosRegs.w.bp;
-
-    /* Store address of the extended bios data area in 0x740 */
-    BiosRegs.d.eax = 0xC100;
-    Int386(0x15, &BiosRegs, &BiosRegs);
-    if (INT386_SUCCESS(BiosRegs))
+    if (*ExtendedBIOSDataArea == 0 && *ExtendedBIOSDataSize == 0)
     {
-        *ExtendedBIOSDataArea = BiosRegs.w.es << 4;
-        *ExtendedBIOSDataSize = 1024;
-        TRACE("*ExtendedBIOSDataArea = 0x%lx\n", *ExtendedBIOSDataArea);
+        WARN("Couldn't get address of extended BIOS data area\n");
     }
     else
     {
-        WARN("Couldn't get address of extended BIOS data area\n");
-        *ExtendedBIOSDataArea = 0;
-        *ExtendedBIOSDataSize = 0;
+        TRACE("*ExtendedBIOSDataArea = 0x%lx\n", *ExtendedBIOSDataArea);
     }
 }
 

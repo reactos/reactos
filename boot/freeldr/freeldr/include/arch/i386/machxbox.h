@@ -35,6 +35,7 @@ VOID XboxVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE XboxVideoSetDisplayMode(char *DisplayModem, BOOLEAN Init);
 VOID XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG XboxVideoGetBufferSize(VOID);
+VOID XboxVideoGetFontsFromFirmware(PULONG RomFontPointers);
 VOID XboxVideoSetTextCursorPosition(UCHAR X, UCHAR Y);
 VOID XboxVideoHideShowTextCursor(BOOLEAN Show);
 VOID XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
