@@ -61,6 +61,7 @@ typedef struct tagMACHVTBL
     FREELDR_MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(FREELDR_MEMORY_DESCRIPTOR* Current);
     PFREELDR_MEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
 
+    UCHAR (*GetFloppyCount)(VOID);
     BOOLEAN (*DiskGetBootPath)(PCHAR BootPath, ULONG Size);
     BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
     BOOLEAN (*DiskGetDriveGeometry)(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
@@ -115,6 +116,8 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.Beep()
 #define MachPrepareForReactOS() \
     MachVtbl.PrepareForReactOS()
+#define MachGetFloppyCount() \
+    MachVtbl.GetFloppyCount()
 #define MachDiskGetBootPath(Path, Size) \
     MachVtbl.DiskGetBootPath((Path), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)    \

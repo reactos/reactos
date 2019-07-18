@@ -1301,6 +1301,18 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more ISA devices */
 }
 
+static
+UCHAR
+PcGetFloppyCount(VOID)
+{
+    UCHAR Data;
+
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
+    Data = READ_PORT_UCHAR((PUCHAR)0x71);
+
+    return ((Data & 0xF0) ? 1 : 0) + ((Data & 0x0F) ? 1 : 0);
+}
+
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(VOID)
 {
@@ -1378,6 +1390,7 @@ PcMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = PcPrepareForReactOS;
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
+    MachVtbl.GetFloppyCount = PcGetFloppyCount;
     MachVtbl.DiskGetBootPath = PcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;

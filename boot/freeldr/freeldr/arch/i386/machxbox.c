@@ -139,6 +139,22 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more ISA devices */
 }
 
+static
+UCHAR
+XboxGetFloppyCount(VOID)
+{
+    /* On a PC we use CMOS/RTC I/O ports 0x70 and 0x71 to detect floppies.
+     * However an Xbox CMOS memory range [0x10, 0x70) and [0x80, 0x100)
+     * is filled with 0x55 0xAA 0x55 0xAA ... byte pattern which is used
+     * to validate the date/time settings by Xbox OS.
+     *
+     * Technically it's possible to connect a floppy drive to Xbox, but
+     * CMOS detection method should not be used here. */
+
+    WARN("XboxGetFloppyCount() is UNIMPLEMENTED, returning 0\n");
+    return 0;
+}
+
 PCONFIGURATION_COMPONENT_DATA
 XboxHwDetect(VOID)
 {
@@ -195,6 +211,7 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
     MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
+    MachVtbl.GetFloppyCount = XboxGetFloppyCount;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
