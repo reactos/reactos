@@ -472,7 +472,7 @@ static const STAGE s_IMEStages[] =
         { ACTION_IME_SETCONTEXT_CLOSE }
     },
     {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
         { ACTION_IME_NOITFY_CLOSE }
@@ -503,7 +503,7 @@ static const STAGE s_IMEStages[] =
         { ACTION_IME_SETCONTEXT_CLOSE }
     },
     {
-        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_COUNTING, 0,
+        __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
         { ACTION_IME_NOITFY_CLOSE }
