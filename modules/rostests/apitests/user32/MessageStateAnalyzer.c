@@ -84,10 +84,10 @@ typedef enum ACTION
     ACTION_NCCREATE,
     ACTION_SHOW,
     ACTION_IME_SETCONTEXT_OPEN,
-    ACTION_IME_NOITFY_OPEN,
+    ACTION_IME_NOTIFY_OPEN,
     ACTION_DESTROY,
     ACTION_IME_SETCONTEXT_CLOSE,
-    ACTION_IME_NOITFY_CLOSE,
+    ACTION_IME_NOTIFY_CLOSE,
     ACTION_HIDE,
     ACTION_DEACTIVATE,
     ACTION_ACTIVATE
@@ -120,7 +120,7 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             break;
-        case ACTION_IME_NOITFY_OPEN:
+        case ACTION_IME_NOTIFY_OPEN:
             ok(wParam == 2, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             break;
@@ -131,7 +131,7 @@ static void DoAction(HWND hwnd, INT iAction, WPARAM wParam, LPARAM lParam)
             ok(wParam == 0, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0xC000000F, "lParam was %p\n", (void *)lParam);
             break;
-        case ACTION_IME_NOITFY_CLOSE:
+        case ACTION_IME_NOTIFY_CLOSE:
             ok(wParam == 1, "wParam was %p\n", (void *)wParam);
             ok(lParam == 0, "lParam was %p\n", (void *)lParam);
             break;
@@ -423,7 +423,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_OPEN },
+        { ACTION_IME_NOTIFY_OPEN },
     },
     // hide
     {
@@ -438,7 +438,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_CLOSE }
+        { ACTION_IME_NOTIFY_CLOSE }
     },
     // show again
     {
@@ -457,7 +457,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_OPEN },
+        { ACTION_IME_NOTIFY_OPEN },
     },
     // deactivate
     {
@@ -475,7 +475,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_CLOSE }
+        { ACTION_IME_NOTIFY_CLOSE }
     },
     // activate
     {
@@ -488,7 +488,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 4, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_OPEN },
+        { ACTION_IME_NOTIFY_OPEN },
     },
     // destroy
     {
@@ -506,7 +506,7 @@ static const STAGE s_IMEStages[] =
         __LINE__, WM_IME_SETCONTEXT, 3, STAGE_TYPE_SEQUENCE, 0,
         1,
         { WM_IME_NOTIFY },
-        { ACTION_IME_NOITFY_CLOSE }
+        { ACTION_IME_NOTIFY_CLOSE }
     },
     {
         __LINE__, WM_COMMAND, 2, STAGE_TYPE_SEQUENCE, 0,
