@@ -4335,7 +4335,19 @@ ftGdiGetTextMetricsW(
 
             IntLockFreeType();
             pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+ 
+            if (NULL == pOS2)
+            {
+                DPRINT1("Can't find OS/2 table - not TT font?\n");
+                Status = STATUS_INTERNAL_ERROR;
+            }
             pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
+ 
+            if (NULL == pHori)
+            {
+                DPRINT1("Can't find HHEA table - not TT font?\n");
+                Status = STATUS_INTERNAL_ERROR;
+            }
             Error = FT_Get_WinFNT_Header(Face, &Win);
 
             if (NT_SUCCESS(Status) || !Error)
@@ -4344,12 +4356,6 @@ ftGdiGetTextMetricsW(
 
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
-            }
-            else
-            {
-                DPRINT1("Can't find HHEA table - not TT font?\n");
-                DPRINT1("Can't find OS/2 table - not TT font?\n");
-                Status = STATUS_INTERNAL_ERROR;
             }
 
             IntUnLockFreeType();
