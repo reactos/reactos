@@ -1048,6 +1048,7 @@ WeightFromStyle(const char *style_name)
 static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
+/* NOTE: If nIndex < 0 then return the number of charsets. */
 UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
 {
     UINT BitIndex, CharSet;
@@ -1055,9 +1056,7 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
 
     if (CodePageRange1 == 0)
     {
-        if (nIndex < 0)
-            return 1;
-        return DEFAULT_CHARSET;
+        return (nIndex < 0) ? 1 : DEFAULT_CHARSET;
     }
 
     for (BitIndex = 0; BitIndex < MAXTCIINDEX; ++BitIndex)
@@ -1073,16 +1072,11 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
         }
     }
 
-    if (nIndex < 0)
-        return nCount;
-    return 0;
+    return (nIndex < 0) ? nCount : 0;
 }
 
-static __inline LONG FASTCALL
-px2pt(LONG pixels)
-{
-    return FT_MulDiv(pixels, 72, 96);
-}
+/* pixels to points */
+#define PX2PT(pixels) FT_MulDiv((pixels), 72, 96)
 
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
@@ -1336,7 +1330,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             else
             {
                 szSize[0] = L' ';
-                _itow(px2pt(FontGDI->EmHeight), szSize + 1, 10);
+                _itow(PX2PT(FontGDI->EmHeight), &szSize[1], 10);
 
                 Length = NameLength + wcslen(szSize) * sizeof(WCHAR);
                 pValueName->Length = 0;
@@ -1368,7 +1362,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             {
                 szSize[0] = L',';
                 szSize[1] = L' ';
-                _itow(px2pt(FontGDI->EmHeight), &szSize[2], 10);
+                _itow(PX2PT(FontGDI->EmHeight), &szSize[2], 10);
 
                 Length = pValueName->Length + wcslen(szSize) * sizeof(WCHAR);
                 NewString.Length = 0;
