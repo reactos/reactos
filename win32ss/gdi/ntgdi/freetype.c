@@ -1315,11 +1315,11 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 IntUnLockGlobalFonts();
             }
 
-            DPRINT1("Font loaded: %s (%s)\n",
-                    Face->family_name ? Face->family_name : "<NULL>",
-                    Face->style_name ? Face->style_name : "<NULL>");
-            DPRINT1("Num glyphs: %d\n", Face->num_glyphs);
-            DPRINT1("CharSet: %d\n", FontGDI->CharSet);
+            DPRINT("Font loaded: %s (%s)\n",
+                   Face->family_name ? Face->family_name : "<NULL>",
+                   Face->style_name ? Face->style_name : "<NULL>");
+            DPRINT("Num glyphs: %d\n", Face->num_glyphs);
+            DPRINT("CharSet: %d\n", FontGDI->CharSet);
         }
 
         IntLockFreeType();
@@ -4335,7 +4335,7 @@ ftGdiGetTextMetricsW(
                 Status = STATUS_INTERNAL_ERROR;
             }
 
-            pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea); 
+            pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
             if (NULL == pHori)
             {
                 DPRINT1("Can't find HHEA table - not TT font?\n");
