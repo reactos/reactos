@@ -106,6 +106,7 @@
 #define IDR_ACLCUSTOMMRU         144
 #define IDR_TASKBARLIST          145
 #define IDR_FILESEARCHBAND       146
+#define IDR_FINDFOLDER           147
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
