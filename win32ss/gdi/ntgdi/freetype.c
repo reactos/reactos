@@ -2222,6 +2222,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         IntFreeFontNames(&FontNames);
         return 0;
     }
+
     if (pHori == NULL && Error)
     {
         IntUnLockFreeType();
@@ -2561,7 +2562,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
     RtlInitUnicodeString(&NameW, NULL);
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
-
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
     Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!Otm)
@@ -4329,19 +4329,19 @@ ftGdiGetTextMetricsW(
 
             IntLockFreeType();
             pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
- 
             if (NULL == pOS2)
             {
                 DPRINT1("Can't find OS/2 table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
-            pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
- 
+
+            pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea); 
             if (NULL == pHori)
             {
                 DPRINT1("Can't find HHEA table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
+
             Error = FT_Get_WinFNT_Header(Face, &Win);
 
             if (NT_SUCCESS(Status) || !Error)
