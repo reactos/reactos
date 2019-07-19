@@ -122,7 +122,7 @@ BOOL ShutdownProcessTreeHelper(HANDLE hSnapshot, HANDLE hParentProcess, DWORD dw
                 hChildHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
                                            FALSE,
                                            ProcessEntry.th32ProcessID);
-                if (!hChildHandle || (hChildHandle && IsCriticalProcess(hChildHandle)))
+                if (!hChildHandle || IsCriticalProcess(hChildHandle))
                 {
                     if (hChildHandle)
                     {
@@ -132,6 +132,7 @@ BOOL ShutdownProcessTreeHelper(HANDLE hSnapshot, HANDLE hParentProcess, DWORD dw
                 }
                 if (!ShutdownProcessTreeHelper(hSnapshot, hChildHandle, ProcessEntry.th32ProcessID))
                 {
+                    CloseHandle(hChildHandle);
                     return FALSE;
                 }
                 CloseHandle(hChildHandle);
