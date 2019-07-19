@@ -134,6 +134,29 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     return pShellBrowser->BrowseObject(findFolderPidl, 0);
 }
 
+LRESULT CSearchBar::OnClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HRESULT hr;
+    CComPtr<IShellBrowser> pShellBrowser;
+    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    CComPtr<IShellView> pShellView;
+    hr = pShellBrowser->QueryActiveShellView(&pShellView);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    HWND hwnd;
+    hr = pShellView->GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPWSTR path = (LPWSTR) L"C:\\readme.txt";
+
+    // TODO: Use message ID in header file
+    ::PostMessageW(hwnd, WM_USER, 0, (LPARAM) StrDupW(path));
+    return 0;
+}
+
 
 // *** IOleWindow methods ***
 HRESULT STDMETHODCALLTYPE CSearchBar::GetWindow(HWND *lphwnd)
