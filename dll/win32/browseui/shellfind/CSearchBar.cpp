@@ -112,6 +112,28 @@ LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return TRUE;
 }
 
+LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CComPtr<IShellBrowser> pShellBrowser;
+    HRESULT hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    WCHAR szShellGuid[MAX_PATH];
+    const WCHAR shellGuidPrefix[] = L"shell:::";
+    memcpy(szShellGuid, shellGuidPrefix, sizeof(shellGuidPrefix));
+    hr = StringFromGUID2(CLSID_FindFolder, szShellGuid + _countof(shellGuidPrefix) - 1, _countof(szShellGuid) - _countof(shellGuidPrefix));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPITEMIDLIST findFolderPidl;
+    hr = SHParseDisplayName(szShellGuid, NULL, &findFolderPidl, 0, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return pShellBrowser->BrowseObject(findFolderPidl, 0);
+}
+
 
 // *** IOleWindow methods ***
 HRESULT STDMETHODCALLTYPE CSearchBar::GetWindow(HWND *lphwnd)
