@@ -57,6 +57,15 @@ HRESULT CBrandBand_CreateInstance(REFIID riid, void **ppv)
 #endif
 }
 
+HRESULT CSearchBar_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+#if USE_CUSTOM_SEARCHBAND
+    return ShellObjectCreator<CSearchBar>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_FileSearchBand, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
+#endif
+}
+
 HRESULT CExplorerBand_CreateInstance(REFIID riid, LPVOID *ppv)
 {
 #if USE_CUSTOM_EXPLORERBAND
@@ -143,6 +152,7 @@ OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
 OBJECT_ENTRY(CLSID_TaskbarList, CTaskbarList)
 OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+OBJECT_ENTRY(CLSID_FileSearchBand, CSearchBar)
 OBJECT_ENTRY(CLSID_ProgressDialog, CProgressDialog)
 OBJECT_ENTRY(CLSID_ISFBand, CISFBand)
 END_OBJECT_MAP()

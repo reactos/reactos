@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {C4EE31F3-4768-11D2-BE5C-00A0C9A83DA1} = s 'File Search Explorer Band'
+		{
+			DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,-135'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}
