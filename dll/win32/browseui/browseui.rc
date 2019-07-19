@@ -48,6 +48,7 @@ IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 IDR_ISFBAND REGISTRY "res/isfband.rgs"
 IDR_ACLCUSTOMMRU REGISTRY "res/custommru.rgs"
 IDR_TASKBARLIST REGISTRY "res/taskbarlist.rgs"
+IDR_FILESEARCHBAND REGISTRY "res/filesearchband.rgs"
 
 #include <reactos/manifest_dll.rc>
 
