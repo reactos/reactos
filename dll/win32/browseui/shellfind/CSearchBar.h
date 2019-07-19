@@ -47,6 +47,7 @@ private:
 
     // *** ATL event handlers ***
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 public:
     CSearchBar();
@@ -134,5 +135,6 @@ public:
 
     BEGIN_MSG_MAP(CSearchBar)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        COMMAND_CODE_HANDLER(BN_CLICKED, OnSearchButtonClicked)
     END_MSG_MAP()
 };
