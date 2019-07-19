@@ -273,6 +273,11 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
             *pViewMode = FVM_DETAILS;
             return S_OK;
         }
+        case SFVM_WINDOWCREATED:
+        {
+            SubclassWindow((HWND) wParam);
+            return S_OK;
+        }
     }
     return E_NOTIMPL;
 }

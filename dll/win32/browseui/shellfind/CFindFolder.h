@@ -3,9 +3,9 @@
 #include "shellfind.h"
 
 #define SWM_ADD_ITEM (WM_USER + 0)
-#define SWM_UPDATE_STATUS (WM_USER + 1)
 
 class CFindFolder :
+        public CWindowImpl<CFindFolder>,
         public CComCoClass<CFindFolder, &CLSID_FindFolder>,
         public CComObjectRootEx<CComMultiThreadModelNoCS>,
         public IShellFolder2,
@@ -79,6 +79,10 @@ public:
     DECLARE_NOT_AGGREGATABLE(CFindFolder)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+    BEGIN_MSG_MAP(CFindFolder)
+        MESSAGE_HANDLER(SWM_ADD_ITEM, AddItem)
+    END_MSG_MAP()
 
     BEGIN_COM_MAP(CFindFolder)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
