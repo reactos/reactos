@@ -1224,7 +1224,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             {
                 FontGDI->CharSet = IntGetCharSet(iCharSet, os2_ulCodePageRange1);
 
-                /* FIXME: CharSet is invalid on Marlett */
+                /* FIXME: CharSet is invalid on our Marlett */
                 if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
                 {
                     FontGDI->CharSet = SYMBOL_CHARSET;
