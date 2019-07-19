@@ -1072,7 +1072,7 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
         }
     }
 
-    return (nIndex < 0) ? nCount : 0;
+    return (nIndex < 0) ? nCount : ANSI_CHARSET;
 }
 
 /* pixels to points */
