@@ -2229,44 +2229,44 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &WinFNT : 0);
 
-    if (pOS2)
-    {
-        Otm->otmFiller = 0;
-        RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
-        Otm->otmfsSelection = pOS2->fsSelection;
-        Otm->otmfsType = pOS2->fsType;
-        Otm->otmsCharSlopeRise = pHori->caret_Slope_Rise;
-        Otm->otmsCharSlopeRun = pHori->caret_Slope_Run;
-        Otm->otmItalicAngle = 0; /* POST table */
-        Otm->otmEMSquare = Face->units_per_EM;
+    if (!pOS2)
+        goto skip_os2;
+
+    Otm->otmFiller = 0;
+    RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
+    Otm->otmfsSelection = pOS2->fsSelection;
+    Otm->otmfsType = pOS2->fsType;
+    Otm->otmsCharSlopeRise = pHori->caret_Slope_Rise;
+    Otm->otmsCharSlopeRun = pHori->caret_Slope_Run;
+    Otm->otmItalicAngle = 0; /* POST table */
+    Otm->otmEMSquare = Face->units_per_EM;
 
 #define SCALE_X(value)  ((FT_MulFix((value), XScale) + 32) >> 6)
 #define SCALE_Y(value)  ((FT_MulFix((value), YScale) + 32) >> 6)
 
-        Otm->otmAscent = SCALE_Y(pOS2->sTypoAscender);
-        Otm->otmDescent = SCALE_Y(pOS2->sTypoDescender);
-        Otm->otmLineGap = SCALE_Y(pOS2->sTypoLineGap);
-        Otm->otmsCapEmHeight = SCALE_Y(pOS2->sCapHeight);
-        Otm->otmsXHeight = SCALE_Y(pOS2->sxHeight);
-        Otm->otmrcFontBox.left = SCALE_X(Face->bbox.xMin);
-        Otm->otmrcFontBox.right = SCALE_X(Face->bbox.xMax);
-        Otm->otmrcFontBox.top = SCALE_Y(Face->bbox.yMax);
-        Otm->otmrcFontBox.bottom = SCALE_Y(Face->bbox.yMin);
-        Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
-        Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
-        Otm->otmMacLineGap = Otm->otmLineGap;
-        Otm->otmusMinimumPPEM = 0; /* TT Header */
-        Otm->otmptSubscriptSize.x = SCALE_X(pOS2->ySubscriptXSize);
-        Otm->otmptSubscriptSize.y = SCALE_Y(pOS2->ySubscriptYSize);
-        Otm->otmptSubscriptOffset.x = SCALE_X(pOS2->ySubscriptXOffset);
-        Otm->otmptSubscriptOffset.y = SCALE_Y(pOS2->ySubscriptYOffset);
-        Otm->otmptSuperscriptSize.x = SCALE_X(pOS2->ySuperscriptXSize);
-        Otm->otmptSuperscriptSize.y = SCALE_Y(pOS2->ySuperscriptYSize);
-        Otm->otmptSuperscriptOffset.x = SCALE_X(pOS2->ySuperscriptXOffset);
-        Otm->otmptSuperscriptOffset.y = SCALE_Y(pOS2->ySuperscriptYOffset);
-        Otm->otmsStrikeoutSize = SCALE_Y(pOS2->yStrikeoutSize);
-        Otm->otmsStrikeoutPosition = SCALE_Y(pOS2->yStrikeoutPosition);
-    }
+    Otm->otmAscent = SCALE_Y(pOS2->sTypoAscender);
+    Otm->otmDescent = SCALE_Y(pOS2->sTypoDescender);
+    Otm->otmLineGap = SCALE_Y(pOS2->sTypoLineGap);
+    Otm->otmsCapEmHeight = SCALE_Y(pOS2->sCapHeight);
+    Otm->otmsXHeight = SCALE_Y(pOS2->sxHeight);
+    Otm->otmrcFontBox.left = SCALE_X(Face->bbox.xMin);
+    Otm->otmrcFontBox.right = SCALE_X(Face->bbox.xMax);
+    Otm->otmrcFontBox.top = SCALE_Y(Face->bbox.yMax);
+    Otm->otmrcFontBox.bottom = SCALE_Y(Face->bbox.yMin);
+    Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
+    Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
+    Otm->otmMacLineGap = Otm->otmLineGap;
+    Otm->otmusMinimumPPEM = 0; /* TT Header */
+    Otm->otmptSubscriptSize.x = SCALE_X(pOS2->ySubscriptXSize);
+    Otm->otmptSubscriptSize.y = SCALE_Y(pOS2->ySubscriptYSize);
+    Otm->otmptSubscriptOffset.x = SCALE_X(pOS2->ySubscriptXOffset);
+    Otm->otmptSubscriptOffset.y = SCALE_Y(pOS2->ySubscriptYOffset);
+    Otm->otmptSuperscriptSize.x = SCALE_X(pOS2->ySuperscriptXSize);
+    Otm->otmptSuperscriptSize.y = SCALE_Y(pOS2->ySuperscriptYSize);
+    Otm->otmptSuperscriptOffset.x = SCALE_X(pOS2->ySuperscriptXOffset);
+    Otm->otmptSuperscriptOffset.y = SCALE_Y(pOS2->ySuperscriptYOffset);
+    Otm->otmsStrikeoutSize = SCALE_Y(pOS2->yStrikeoutSize);
+    Otm->otmsStrikeoutPosition = SCALE_Y(pOS2->yStrikeoutPosition);
 
     if (!pPost)
     {
@@ -2282,6 +2282,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 #undef SCALE_X
 #undef SCALE_Y
 
+skip_os2:
     IntUnLockFreeType();
 
     pb = IntStoreFontNames(&FontNames, Otm);
