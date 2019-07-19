@@ -3362,16 +3362,13 @@ TextIntUpdateSize(PDC dc,
         DPRINT("This font face has %d charmaps\n", face->num_charmaps);
 
         found = NULL;
-        if (!found)
+        for (n = 0; n < face->num_charmaps; n++)
         {
-            for (n = 0; n < face->num_charmaps; n++)
+            charmap = face->charmaps[n];
+            if (charmap->encoding == FT_ENCODING_UNICODE)
             {
-                charmap = face->charmaps[n];
-                if (charmap->encoding == FT_ENCODING_UNICODE)
-                {
-                    found = charmap;
-                    break;
-                }
+                found = charmap;
+                break;
             }
         }
         if (!found)
@@ -3398,16 +3395,13 @@ TextIntUpdateSize(PDC dc,
                 }
             }
         }
-        if (!found)
+        if (!found && face->num_charmaps > 0)
         {
-            if (face->num_charmaps > 0)
-            {
-                found = face->charmaps[0];
-            }
+            found = face->charmaps[0];
         }
         if (!found)
         {
-            DPRINT1("WARNING: Could not find the charmap!\n");
+            DPRINT1("WARNING: Could not find desired charmap!\n");
         }
         else
         {
