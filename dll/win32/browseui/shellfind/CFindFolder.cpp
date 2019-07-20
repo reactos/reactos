@@ -119,6 +119,7 @@ STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *
         SFV_CREATE sfvparams = {};
         sfvparams.cbSize = sizeof(SFV_CREATE);
         sfvparams.pshf = this;
+        sfvparams.psfvcb = this;
         return SHCreateShellFolderView(&sfvparams, (IShellView **) ppvOut);
     }
     return E_NOINTERFACE;
@@ -146,6 +147,22 @@ STDMETHODIMP CFindFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLE
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
+
+//// *** IShellFolderViewCB method ***
+STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case SFVM_DEFVIEWMODE:
+        {
+            FOLDERVIEWMODE *pViewMode = (FOLDERVIEWMODE *) lParam;
+            *pViewMode = FVM_DETAILS;
+            return S_OK;
+        }
+    }
+    return E_NOTIMPL;
+}
+
 //// *** IPersistFolder2 methods ***
 STDMETHODIMP CFindFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
