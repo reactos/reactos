@@ -7,6 +7,11 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs
     ${REACTOS_SOURCE_DIR}/dll/np/nfs)
 
+if (MSVC)
+    # Disable warning C4477 (printf format warnings)
+    add_compile_flags("/wd4477")
+endif()
+
 list(APPEND SOURCE 
     acl.c
     callback_server.c

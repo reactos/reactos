@@ -4,6 +4,11 @@ add_definitions(
     -D_CRT_NONSTDC_NO_DEPRECATE
     -D__msvcrt_ulong=ULONG)
 
+if(MSVC)
+    # Disable warning C4477 (printf format warnings)
+    add_compile_flags("/wd4477")
+endif()
+
 list(APPEND SOURCE
     cpp.c
     data.c
