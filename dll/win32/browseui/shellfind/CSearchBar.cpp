@@ -112,6 +112,53 @@ LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return TRUE;
 }
 
+HRESULT CSearchBar::GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder)
+{
+    HRESULT hr;
+    CComPtr<IShellBrowser> pShellBrowser;
+    if (!ppShellBrowser)
+        ppShellBrowser = &pShellBrowser;
+    if (!*ppShellBrowser)
+    {
+        hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, ppShellBrowser));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    CComPtr<IShellView> pShellView;
+    hr = (*ppShellBrowser)->QueryActiveShellView(&pShellView);
+    if (FAILED(hr) || !pShellView)
+        return hr;
+
+    CComPtr<IFolderView> pFolderView;
+    hr = pShellView->QueryInterface(IID_PPV_ARG(IFolderView, &pFolderView));
+    if (FAILED(hr) || !pFolderView)
+        return hr;
+
+    CComPtr<IShellFolder> pShellFolder;
+    if (!ppShellFolder)
+        ppShellFolder = &pShellFolder;
+    hr = pFolderView->GetFolder(IID_PPV_ARG(IShellFolder, ppShellFolder));
+    if (FAILED(hr) || !pShellFolder)
+        return hr;
+
+    CLSID clsid;
+    hr = IUnknown_GetClassID(*ppShellFolder, &clsid);
+    if (FAILED(hr))
+        return hr;
+    if (clsid != CLSID_FindFolder)
+        return E_FAIL;
+
+    if (pHwnd)
+    {
+        hr = pShellView->GetWindow(pHwnd);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    return S_OK;
+}
+
 LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CComPtr<IShellBrowser> pShellBrowser;
@@ -119,41 +166,46 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    WCHAR szShellGuid[MAX_PATH];
-    const WCHAR shellGuidPrefix[] = L"shell:::";
-    memcpy(szShellGuid, shellGuidPrefix, sizeof(shellGuidPrefix));
-    hr = StringFromGUID2(CLSID_FindFolder, szShellGuid + _countof(shellGuidPrefix) - 1, _countof(szShellGuid) - _countof(shellGuidPrefix));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    HWND hwnd;
+    if (FAILED(GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL)))
+    {
+        WCHAR szShellGuid[MAX_PATH];
+        const WCHAR shellGuidPrefix[] = L"shell:::";
+        memcpy(szShellGuid, shellGuidPrefix, sizeof(shellGuidPrefix));
+        hr = StringFromGUID2(CLSID_FindFolder, szShellGuid + _countof(shellGuidPrefix) - 1,
+                             _countof(szShellGuid) - _countof(shellGuidPrefix));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-    LPITEMIDLIST findFolderPidl;
-    hr = SHParseDisplayName(szShellGuid, NULL, &findFolderPidl, 0, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+        LPITEMIDLIST findFolderPidl;
+        hr = SHParseDisplayName(szShellGuid, NULL, &findFolderPidl, 0, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-    return pShellBrowser->BrowseObject(findFolderPidl, 0);
+        hr = pShellBrowser->BrowseObject(findFolderPidl, 0);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL);
+    if (hwnd)
+        // TODO: Use message ID in header file
+        ::PostMessageW(hwnd, WM_USER + 1, 0, (LPARAM) StrDupW(L"Starting search..."));
+
+    return S_OK;
 }
 
 LRESULT CSearchBar::OnClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    HRESULT hr;
-    CComPtr<IShellBrowser> pShellBrowser;
-    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-    CComPtr<IShellView> pShellView;
-    hr = pShellBrowser->QueryActiveShellView(&pShellView);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
     HWND hwnd;
-    hr = pShellView->GetWindow(&hwnd);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    HRESULT hr = GetSearchResultsFolder(NULL, &hwnd, NULL);
+    if (SUCCEEDED(hr))
+    {
+        LPCWSTR path = L"C:\\readme.txt";
+        // TODO: Use message ID in header file
+        ::PostMessageW(hwnd, WM_USER, 0, (LPARAM) StrDupW(path));
+    }
 
-    LPWSTR path = (LPWSTR) L"C:\\readme.txt";
-
-    // TODO: Use message ID in header file
-    ::PostMessageW(hwnd, WM_USER, 0, (LPARAM) StrDupW(path));
     return 0;
 }
 
