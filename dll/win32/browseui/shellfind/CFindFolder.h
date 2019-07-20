@@ -3,6 +3,7 @@
 #include "shellfind.h"
 
 #define SWM_ADD_ITEM (WM_USER + 0)
+#define SWM_UPDATE_STATUS (WM_USER + 1)
 
 class CFindFolder :
         public CWindowImpl<CFindFolder>,
@@ -64,6 +65,7 @@ private:
     LPITEMIDLIST m_pidl;
     CComPtr<IShellFolder2> m_pisfInner;
     CComPtr<IShellFolderView> m_shellFolderView;
+    CComPtr<IShellBrowser> m_shellBrowser;
 
     //// *** IPersistFolder2 methods ***
     STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
@@ -78,6 +80,8 @@ private:
 
     LRESULT AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
+    LRESULT UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
 public:
     DECLARE_REGISTRY_RESOURCEID(IDR_FINDFOLDER)
 
@@ -87,6 +91,7 @@ public:
 
     BEGIN_MSG_MAP(CFindFolder)
         MESSAGE_HANDLER(SWM_ADD_ITEM, AddItem)
+        MESSAGE_HANDLER(SWM_UPDATE_STATUS, UpdateStatus)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CFindFolder)
