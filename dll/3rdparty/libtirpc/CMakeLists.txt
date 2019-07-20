@@ -9,6 +9,9 @@ include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 if(MSVC)
     # error C4133: '=': incompatible types - from 'char *' to 'int32_t *'
     replace_compile_flags("/we4133" " ")
+
+    # Disable warning C4477 (printf format warnings)
+    add_compile_flags("/wd4313")
 endif()
 
 list(APPEND SOURCE

@@ -10,6 +10,11 @@ add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
+if(MSVC)
+    # Disable warning C4477 (printf format warnings)
+    add_compile_flags("/wd4477")
+endif()
+
 list(APPEND SOURCE
     animate.c
     button.c
