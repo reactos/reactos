@@ -48,22 +48,23 @@ STDMETHODIMP CFindFolder::GetDefaultColumn(DWORD, ULONG *pSort, ULONG *pDisplay)
 
 STDMETHODIMP CFindFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
-    if (!pcsFlags || iColumn >= _countof(g_ColumnDefs))
+    if (!pcsFlags)
         return E_INVALIDARG;
+    if (iColumn >= _countof(g_ColumnDefs))
+        return m_pisfInner->GetDefaultColumnState(iColumn - _countof(g_ColumnDefs) + 1, pcsFlags);
     *pcsFlags = g_ColumnDefs[iColumn].dwDefaultState;
     return S_OK;
 }
 
 STDMETHODIMP CFindFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return m_pisfInner->GetDetailsEx(pidl, pscid, pv);
 }
 
 STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *pDetails)
 {
     if (iColumn >= _countof(g_ColumnDefs))
-        return E_FAIL;
+        return m_pisfInner->GetDetailsOf(pidl, iColumn - _countof(g_ColumnDefs) + 1, pDetails);
 
     pDetails->cxChar = g_ColumnDefs[iColumn].cxChar;
     pDetails->fmt = g_ColumnDefs[iColumn].fmt;
@@ -108,8 +109,7 @@ STDMETHODIMP CFindFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
 
 STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return m_pisfInner->CompareIDs(lParam, pidl1, pidl2);
 }
 
 STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
@@ -119,27 +119,25 @@ STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *
         SFV_CREATE sfvparams = {};
         sfvparams.cbSize = sizeof(SFV_CREATE);
         sfvparams.pshf = this;
-        HRESULT hr = SHCreateShellFolderView(&sfvparams, (IShellView **) ppvOut);
-        return hr;
+        return SHCreateShellFolderView(&sfvparams, (IShellView **) ppvOut);
     }
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP CFindFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
-    *rgfInOut = SFGAO_NONENUMERATED;
-    return S_OK;
+    return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
 }
 
 STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
                                         UINT *prgfInOut, LPVOID *ppvOut)
 {
-    return E_NOINTERFACE;
+    return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
 }
 
 STDMETHODIMP CFindFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET pName)
 {
-    return SHSetStrRet(pName, "search result");
+    return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, pName);
 }
 
 STDMETHODIMP CFindFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags,
@@ -162,7 +160,11 @@ STDMETHODIMP CFindFolder::Initialize(LPCITEMIDLIST pidl)
     if (!m_pidl)
         return E_OUTOFMEMORY;
 
-    return S_OK;
+    return SHELL32_CoCreateInitSF(m_pidl,
+                                  NULL,
+                                  NULL,
+                                  &CLSID_ShellFSFolder,
+                                  IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
 // *** IPersist methods ***
