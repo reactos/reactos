@@ -58,6 +58,7 @@ class CFindFolder :
 private:
     LPITEMIDLIST m_pidl;
     CComPtr<IShellFolder2> m_pisfInner;
+    CComPtr<IShellFolderView> m_shellFolderView;
 
     //// *** IPersistFolder2 methods ***
     STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
@@ -69,6 +70,8 @@ private:
 
     // *** IPersist methods ***
     STDMETHODIMP GetClassID(CLSID *pClassId);
+
+    LRESULT AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 public:
     DECLARE_REGISTRY_RESOURCEID(IDR_FINDFOLDER)
