@@ -111,6 +111,18 @@ LRESULT CFindFolder::AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     return hr;
 }
 
+LRESULT CFindFolder::UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LPWSTR status = (LPWSTR) lParam;
+    if (m_shellBrowser)
+    {
+        m_shellBrowser->SetStatusTextSB(status);
+    }
+    LocalFree(status);
+
+    return S_OK;
+}
+
 // *** IShellFolder2 methods ***
 STDMETHODIMP CFindFolder::GetDefaultSearchGUID(GUID *pguid)
 {
@@ -319,7 +331,14 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         case SFVM_WINDOWCREATED:
         {
             SubclassWindow((HWND) wParam);
-            return S_OK;
+
+            CComPtr<IServiceProvider> pServiceProvider;
+            HRESULT hr = m_shellFolderView->QueryInterface(IID_PPV_ARG(IServiceProvider, &pServiceProvider));
+            if (FAILED_UNEXPECTEDLY(hr))
+            {
+                return hr;
+            }
+            return pServiceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &m_shellBrowser));
         }
     }
     return E_NOTIMPL;
