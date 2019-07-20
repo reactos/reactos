@@ -43,6 +43,7 @@ private:
     BOOL bFocused;
 
     void InitializeSearchBar();
+    HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
     HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
 
     // *** ATL event handlers ***
