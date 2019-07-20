@@ -53,6 +53,7 @@ class CFindFolder :
 
 private:
     LPITEMIDLIST m_pidl;
+    CComPtr<IShellFolder2> m_pisfInner;
 
     //// *** IPersistFolder2 methods ***
     STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
