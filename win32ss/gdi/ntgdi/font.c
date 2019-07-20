@@ -907,6 +907,11 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      return 0;
   }
   FontGDI = ObjToGDI(TextObj->Font, FONT);
+  if (!(FontGDI->flType & FO_TYPE_TRUETYPE))
+  {
+     TEXTOBJ_UnlockText(TextObj);
+     return 0;
+  }
   TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
   TEXTOBJ_UnlockText(TextObj);
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
