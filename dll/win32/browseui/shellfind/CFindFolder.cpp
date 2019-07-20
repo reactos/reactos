@@ -9,6 +9,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
+// FIXME: Remove this declaration after the function has been fully implemented
+EXTERN_C HRESULT
+WINAPI
+SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
+                           UINT cidl,
+                           PCUITEMID_CHILD_ARRAY apidl,
+                           DWORD dwFlags);
+
 struct FolderViewColumns
 {
     LPCWSTR wzColumnName;
@@ -233,6 +241,19 @@ STDMETHODIMP CFindFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl
 STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
                                         UINT *prgfInOut, LPVOID *ppvOut)
 {
+    if (riid == IID_IDataObject && cidl == 1)
+    {
+        WCHAR path[MAX_PATH];
+        wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
+        PathRemoveFileSpecW(path);
+        LPITEMIDLIST rootPidl = ILCreateFromPathW(path);
+        if (!rootPidl)
+            return E_OUTOFMEMORY;
+        PCITEMID_CHILD aFSPidl[1];
+        aFSPidl[0] = _ILGetFSPidl(apidl[0]);
+        return IDataObject_Constructor(hwndOwner, rootPidl, aFSPidl, cidl, (IDataObject **) ppvOut);
+    }
+
     if (cidl <= 0)
     {
         return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
@@ -242,6 +263,28 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
     for (UINT i = 0; i < cidl; i++)
     {
         aFSPidl[i] = _ILGetFSPidl(apidl[i]);
+    }
+
+    if (riid == IID_IContextMenu)
+    {
+        HKEY hKeys[16];
+        UINT cKeys = 0;
+        AddFSClassKeysToArray(aFSPidl[0], hKeys, &cKeys);
+
+        DEFCONTEXTMENU dcm;
+        dcm.hwnd = hwndOwner;
+        dcm.pcmcb = this;
+        dcm.pidlFolder = m_pidl;
+        dcm.psf = this;
+        dcm.cidl = cidl;
+        dcm.apidl = apidl;
+        dcm.cKeys = cKeys;
+        dcm.aKeys = hKeys;
+        dcm.punkAssociationInfo = NULL;
+        HRESULT hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
+        delete[] aFSPidl;
+
+        return hr;
     }
 
     HRESULT hr = m_pisfInner->GetUIObjectOf(hwndOwner, cidl, aFSPidl, riid, prgfInOut, ppvOut);
@@ -280,6 +323,50 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
     return E_NOTIMPL;
+}
+
+//// *** IContextMenuCB method ***
+STDMETHODIMP CFindFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case DFM_MERGECONTEXTMENU:
+        {
+            QCMINFO *pqcminfo = (QCMINFO *) lParam;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, L"Open Containing Folder", MFS_ENABLED);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
+            return S_OK;
+        }
+        case DFM_INVOKECOMMAND:
+        case DFM_INVOKECOMMANDEX:
+        {
+            if (wParam != 1)
+                break;
+
+            PCUITEMID_CHILD *apidl;
+            UINT cidl;
+            HRESULT hr = m_shellFolderView->GetSelectedObjects(&apidl, &cidl);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            for (UINT i = 0; i < cidl; i++)
+            {
+                LPITEMIDLIST pidl;
+                DWORD attrs = 0;
+                hr = SHILCreateFromPathW((LPCWSTR) apidl[i]->mkid.abID, &pidl, &attrs);
+                if (SUCCEEDED(hr))
+                {
+                    SHOpenFolderAndSelectItems(NULL, 1, &pidl, 0);
+                }
+            }
+
+            return S_OK;
+        }
+        case DFM_GETDEFSTATICID:
+            return S_FALSE;
+    }
+    return Shell_DefaultContextMenuCallBack(m_pisfInner, pdtobj);
 }
 
 //// *** IPersistFolder2 methods ***
