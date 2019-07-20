@@ -8,7 +8,6 @@
     - Resolve forwarders
 
 */
-#define MINGW_HAS_SECURE_API
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
