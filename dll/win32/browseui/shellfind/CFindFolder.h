@@ -9,8 +9,9 @@ class CFindFolder :
         public CComCoClass<CFindFolder, &CLSID_FindFolder>,
         public CComObjectRootEx<CComMultiThreadModelNoCS>,
         public IShellFolder2,
+        public IPersistFolder2,
         public IShellFolderViewCB,
-        public IPersistFolder2
+        public IContextMenuCB
 {
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *pguid);
@@ -47,13 +48,17 @@ class CFindFolder :
     STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT *prgfInOut,
                                LPVOID *ppvOut);
 
-    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET pName);
 
+    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET pName);
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags,
                            PITEMID_CHILD *pPidlOut);
 
     //// *** IShellFolderViewCB methods ***
     STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    //// *** IContextMenuCB method ***
+    STDMETHODIMP CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam,
+                          LPARAM lParam);
 
 private:
     LPITEMIDLIST m_pidl;
@@ -91,6 +96,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenuCB, IContextMenuCB)
     END_COM_MAP()
 };
 
