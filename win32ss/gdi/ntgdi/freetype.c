@@ -1052,7 +1052,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
 {
     UINT BitIndex, CharSet;
-    INT nCount = 0;
+    UINT nCount = 0;
 
     if (CodePageRange1 == 0)
     {
@@ -1064,7 +1064,7 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
         if (CodePageRange1 & (1 << BitIndex))
         {
             CharSet = g_FontTci[BitIndex].ciCharset;
-            if (nCount == nIndex)
+            if ((nIndex >= 0) && (nCount == (UINT)nIndex))
             {
                 return CharSet;
             }
