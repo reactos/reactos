@@ -9,6 +9,7 @@ class CFindFolder :
         public CComCoClass<CFindFolder, &CLSID_FindFolder>,
         public CComObjectRootEx<CComMultiThreadModelNoCS>,
         public IShellFolder2,
+        public IShellFolderViewCB,
         public IPersistFolder2
 {
     // *** IShellFolder2 methods ***
@@ -51,6 +52,9 @@ class CFindFolder :
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags,
                            PITEMID_CHILD *pPidlOut);
 
+    //// *** IShellFolderViewCB methods ***
+    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 private:
     LPITEMIDLIST m_pidl;
     CComPtr<IShellFolder2> m_pisfInner;
@@ -76,6 +80,7 @@ public:
     BEGIN_COM_MAP(CFindFolder)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
