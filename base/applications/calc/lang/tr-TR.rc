@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2014, 2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,7 +6,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hesap Makinesi"
+CAPTION "ReactOS Hesap Makinesi"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -20,13 +20,13 @@ BEGIN
     CONTROL "Aşırı", IDC_CHECK_HYP, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 49, 41, 29, 10
     CTEXT "", IDC_TEXT_PARENT, 93, 38, 18, 16, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     CTEXT "", IDC_TEXT_MEMORY, 126, 38, 18, 16, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Say", IDC_BUTTON_STA, 5, 60, 24, 18, BS_CENTER | BS_VCENTER |
+    PUSHBUTTON "İst", IDC_BUTTON_STA, 5, 60, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "Ort", IDC_BUTTON_AVE, 5, 80, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "Top", IDC_BUTTON_SUM, 5, 100, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON "ÖS", IDC_BUTTON_S, 5, 120, 24, 18, BS_CENTER | BS_VCENTER |
+    PUSHBUTTON "s", IDC_BUTTON_S, 5, 120, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "Ekle", IDC_BUTTON_DAT, 5, 140, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
@@ -112,7 +112,7 @@ BEGIN
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "Mod", IDC_BUTTON_MOD, 260, 60, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON "Veyâ", IDC_BUTTON_OR, 260, 80, 24, 18, BS_CENTER | BS_VCENTER |
+    PUSHBUTTON "Veya", IDC_BUTTON_OR, 260, 80, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "Sola", IDC_BUTTON_LSH, 260, 100, 24, 18, BS_CENTER |
                BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -137,7 +137,7 @@ BEGIN
             NOT WS_VISIBLE, 190, 21, 38, 10
     CONTROL "Sözcük", IDC_RADIO_WORD, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 230, 21, 38, 10
-    CONTROL "Çoklu", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "Bayt", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 270, 21, 38, 10
     CONTROL "Derece", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
     CONTROL "Radyan", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
@@ -154,7 +154,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hesap Makinesi"
+CAPTION "ReactOS Hesap Makinesi"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -219,14 +219,14 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hesap Makinesi"
+CAPTION "ReactOS Hesap Makinesi"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Dönüştür:", IDC_BUTTON_CONVERT, 35, 105, 76, 17
+    PUSHBUTTON "Dönüştür", IDC_BUTTON_CONVERT, 35, 105, 76, 17
     COMBOBOX IDC_COMBO_CATEGORY, 5, 31, 140, 168, CBS_DROPDOWNLIST | WS_VSCROLL |
              WS_TABSTOP | CBS_SORT
-    LTEXT "Ulam:", IDC_STATIC, 5, 20, 56, 8
+    LTEXT "Kategori:", IDC_STATIC, 5, 20, 56, 8
     COMBOBOX IDC_COMBO_FROM, 5, 60, 140, 168, CBS_DROPDOWNLIST | WS_VSCROLL |
              WS_TABSTOP | CBS_SORT
     LTEXT "Şundan Dönüştür:", IDC_STATIC, 5, 49, 56, 8
@@ -294,7 +294,7 @@ END
 
 IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Sayımlama Penceresi"
+CAPTION "İstatistik Kutusu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_LIST_STAT, 4, 4, 156, 40, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
@@ -311,31 +311,31 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopyala\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Standart", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimsel", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "S&ekizlik\tF7", IDM_VIEW_OCT, CHECKED
         MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "D&erece\tF2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "&Radyan\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "De&rece\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "R&adyan\tF3", IDM_VIEW_RAD, CHECKED
         MENUITEM "&Gradyan\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Basa&makları Grupla", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Hakkında", IDM_HELP_ABOUT
     END
 END
 
@@ -343,32 +343,32 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopyala\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Standart", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimsel", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "S&ekizlik\tF7", IDM_VIEW_OCT, CHECKED
         MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Dö&rtlü Sözcük\tF12", IDM_VIEW_QWORD, CHECKED
         MENUITEM "İ&kili Sözcük\tF2", IDM_VIEW_DWORD, CHECKED
         MENUITEM "Sö&zcük\tF3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "&Çoklu\tF4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "Çok&lu\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "B&asamakları Grupla", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Hakkında", IDM_HELP_ABOUT
     END
 END
 
@@ -376,22 +376,22 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "&Çoğalt\tDenetim+C", IDM_EDIT_COPY
-        MENUITEM "&Yapıştır\tDenetim+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopyala\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDIT_PASTE
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Standart", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimsel", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "B&asamakları Grupla", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hesap Makinesi Hakkında", IDM_HELP_ABOUT
     END
 END
 
@@ -399,7 +399,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MATH_ERROR "Yanlışlık"
+    IDS_MATH_ERROR "Hata"
     IDS_QUICKHELP "Hızlı Yardım"
 END
 
@@ -407,7 +407,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CALC_NAME "Hesap Makinesi"
-    IDS_AUTHOR "Carlo Bramini eliyle yapılmıştır."
+    IDS_AUTHOR "Carlo Bramini tarafından yazılmıştır."
 END
 
 /* Types of conversion */
@@ -415,24 +415,24 @@ STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE "Açı"
     IDS_CONV_AREA "Alan"
-    IDS_CONV_CONSUMPTION "Makine Tüketimi"
-    IDS_CONV_CURRENCY "Nakit Birimi"
-    IDS_CONV_ENERGY "Erke"
+    IDS_CONV_CONSUMPTION "Tüketim (motor)"
+    IDS_CONV_CURRENCY "Para Birimleri"
+    IDS_CONV_ENERGY "Enerji"
     IDS_CONV_LENGTH "Uzunluk"
     IDS_CONV_POWER "Güç"
     IDS_CONV_PRESSURE "Basınç"
     IDS_CONV_TEMPERATURE "Sıcaklık"
     IDS_CONV_TIME "Zaman"
     IDS_CONV_VELOCITY "Hız"
-    IDS_CONV_VOLUME "Oylum"
+    IDS_CONV_VOLUME "Hacim"
     IDS_CONV_WEIGHT "Ağırlık"
 END
 
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute of arc"
-    IDS_ANGLE_ARCSECONDS "Second of arc"
+    IDS_ANGLE_ARCMINUTES "Yay Dakikası"
+    IDS_ANGLE_ARCSECONDS "Yay Saniyesi"
     IDS_ANGLE_DEGREES "Derece"
     IDS_ANGLE_GRADIANS "Gradyan"
     IDS_ANGLE_RADIANS "Radyan"
@@ -495,15 +495,15 @@ BEGIN
     IDS_CURRENCY_CZECH_KORUNA "Çek Korunası"
     IDS_CURRENCY_DEUTSCHE_MARK "Alman Markı"
     IDS_CURRENCY_DUTCH_GUILDER "Hollanda Guilderi"
-    IDS_CURRENCY_ESTONIAN_KROON "Estonian kroon"
+    IDS_CURRENCY_ESTONIAN_KROON "Estonya Kronu"
     IDS_CURRENCY_EURO "Avro"
     IDS_CURRENCY_FINNISH_MARKKA "Fin Markkası"
     IDS_CURRENCY_FRENCH_FRANC "Fransız Frangı"
     IDS_CURRENCY_GREEK_DRACHMA "Yunan Drahmisi"
     IDS_CURRENCY_IRISH_POUND "İrlanda Pondu"
     IDS_CURRENCY_ITALIAN_LIRA "İtalyan Lirası"
-    IDS_CURRENCY_LATVIAN_LATS "Latvian lats"
-    IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
+    IDS_CURRENCY_LATVIAN_LATS "Letonya Latı"
+    IDS_CURRENCY_LITHUANIAN_LITAS "Litvanya litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Lüksemburg Frangı"
     IDS_CURRENCY_MALTESE_LIRA "Malta Lirası"
     IDS_CURRENCY_PORTOGUESE_ESCUDO "Portekiz Esküdosu"
@@ -515,7 +515,7 @@ END
 /* Energies */
 STRINGTABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES "Kalori (15°C'luk)"
+    IDS_ENERGY_15_C_CALORIES "15°C'luk Kalori"
     IDS_ENERGY_BTUS "İngiliz Isı Birimi"
     IDS_ENERGY_ERGS "Erg"
     IDS_ENERGY_EVS "Elektronvolt"
@@ -526,7 +526,7 @@ BEGIN
     IDS_ENERGY_KILOJOULES "Kilojul"
     IDS_ENERGY_KILOWATT_HOURS "Kilovat-saat"
     IDS_ENERGY_NUTRITION_CALORIES "Besin kalorisi"
-    IDS_ENERGY_TH_CALORIES "Termokimyevî kalori"
+    IDS_ENERGY_TH_CALORIES "Termokimyasal kalori"
 END
 
 /* Lengths */
@@ -534,7 +534,7 @@ STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS "Angström"
     IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomi birimi"
-    IDS_LENGTH_BARLEYCORNS "Arpa tânesi"
+    IDS_LENGTH_BARLEYCORNS "Arpa tanesi"
     IDS_LENGTH_CENTIMETERS "Santimetre"
     IDS_LENGTH_CHAINS_UK "Zincir (BK)"
     IDS_LENGTH_CHI "Çi"
@@ -561,7 +561,7 @@ BEGIN
     IDS_LENGTH_METERS "Metre"
     IDS_LENGTH_MICRONS "Mikron"
     IDS_LENGTH_MILES "Mil"
-    IDS_LENGTH_MILLIMETERS "Millimetre"
+    IDS_LENGTH_MILLIMETERS "Milimetre"
     IDS_LENGTH_NAUTICAL_MILES "Deniz mili"
     IDS_LENGTH_NIEU "Niu"
     IDS_LENGTH_PARSECS "Parsek"
@@ -584,8 +584,8 @@ END
 /* Powers */
 STRINGTABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE "Dakîkadaki İngiliz Isı Birimi"
-    IDS_POWER_FPS_PER_MINUTE "Dakîkadaki ayak pond kuvveti"
+    IDS_POWER_BTUS_PER_MINUTE "Dakikadaki İngiliz Isı Birimi"
+    IDS_POWER_FPS_PER_MINUTE "Dakikadaki ayak pond kuvveti"
     IDS_POWER_HORSEPOWER "At gücü"
     IDS_POWER_KILOWATTS "Kilovat"
     IDS_POWER_MEGAWATTS "Megavat"
@@ -595,7 +595,7 @@ END
 /* Pressures */
 STRINGTABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES "Hava yuvarı"
+    IDS_PRESSURE_ATMOSPHERES "Atmosfer"
     IDS_PRESSURE_BARS "Bar"
     IDS_PRESSURE_HECTOPASCALS "Hektopaskal"
     IDS_PRESSURE_KILOPASCALS "Kilopaskal"
@@ -618,11 +618,11 @@ STRINGTABLE
 BEGIN
     IDS_TIME_DAYS "Gün"
     IDS_TIME_HOURS "Saat"
-    IDS_TIME_NANOSECONDS "Nanosâniye"
-    IDS_TIME_MICROSECONDS "Mikrosâniye"
-    IDS_TIME_MILLISECONDS "Milisâniye"
-    IDS_TIME_MINUTES "Dakîka"
-    IDS_TIME_SECONDS "Sâniye"
+    IDS_TIME_NANOSECONDS "Nanosaniye"
+    IDS_TIME_MICROSECONDS "Mikrosaniye"
+    IDS_TIME_MILLISECONDS "Milisaniye"
+    IDS_TIME_MINUTES "Dakika"
+    IDS_TIME_SECONDS "Saniye"
     IDS_TIME_WEEKS "Hafta"
     IDS_TIME_YEARS "Yıl"
 END
@@ -632,7 +632,7 @@ STRINGTABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND "Santimetre/Saat"
     IDS_VELOCITY_FEET_HOUR "Ayak/Saat"
-    IDS_VELOCITY_FEET_SECOND "Ayak/Sâniye"
+    IDS_VELOCITY_FEET_SECOND "Ayak/Saniye"
     IDS_VELOCITY_KILOMETERS_HOUR "Kilometre/Saat"
     IDS_VELOCITY_KNOTS "Deniz mili"
     IDS_VELOCITY_MACH "Maç"

@@ -1,3 +1,0 @@
-ReactOS isn't translated to pure Turkish anymore by me but I may translate ReactOS to normal Turkish. For pure Turkish words, prefixes, suffixes etc. See for my pure Turkish dictionary: https://github.com/eersoy93/sozluklerim/blob/master/%C3%96z_T%C3%BCrk%C3%A7e_S%C3%B6zl%C3%BCk.md
-
-Erdem ERSOY (eersoy93) (erdemersoy [at] erdemersoy [dot] net)

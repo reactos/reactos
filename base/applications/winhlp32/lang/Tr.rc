@@ -1,7 +1,9 @@
 /*
  * Turkish Resources for ReactOS Winhlp32
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
+ * Copyrights: 2006 Fatih Aşıcı (fasici [at] linux-sevenler [dot] org)
+ * 2013-2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,18 +30,18 @@ MAIN_MENU MENU
   MENUITEM "&Yazdır...", MNID_FILE_PRINT
   MENUITEM "Ya&zıcı Ayarla...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Çıkış", MNID_FILE_EXIT
+  MENUITEM "Ç&ıkış", MNID_FILE_EXIT
  }
- POPUP "&Düzen" {
-   MENUITEM "&Çoğalt", MNID_EDIT_COPYDLG
+ POPUP "D&üzen" {
+   MENUITEM "&Kopyala", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Not Ekle...", MNID_EDIT_ANNOTATE
  }
  POPUP "Y&er İmleri" {
-   MENUITEM "&Belirle...", MNID_BKMK_DEFINE
+   MENUITEM "&Tanımla...", MNID_BKMK_DEFINE
  }
  POPUP "&Seçenekler" {
-  MENUITEM "&Sürekli Üstte", MNID_HELP_HELPTOP
+  MENUITEM "&Her Zaman Üstte", MNID_HELP_HELPTOP
   MENUITEM "&Geçmiş",		MNID_OPTS_HISTORY
   POPUP    "&Yazı Tipi"
   BEGIN
@@ -49,8 +51,8 @@ MAIN_MENU MENU
   END
  }
  POPUP "&Yardım" {
-   MENUITEM "&Yardım İçin Yardım", MNID_HELP_HELPON
-   MENUITEM "&ReactOS Yardım Hakkında...", MNID_HELP_ABOUT
+   MENUITEM "&Yardım Üzerine Yardım", MNID_HELP_HELPON
+   MENUITEM "&Wine Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }
 
@@ -73,18 +75,18 @@ END
 STRINGTABLE
 {
 STID_WINE_HELP, 	"ReactOS Yardım"
-STID_WHERROR, 		"YANLIŞLIK"
+STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
 STID_INFO,  		"Bilgi"
 STID_NOT_IMPLEMENTED, 	"Daha tamamlanmamıştır."
-STID_HLPFILE_ERROR_s, 	"""%s"" dosyayı okunurken bir yanlışlık oldu."
-STID_INDEX, 		"D&izin"
-STID_CONTENTS,		"İ&çindekiler"
+STID_HLPFILE_ERROR_s, 	"""%s""  yardım dosyası okunurken hata"
+STID_INDEX, 		"&Dizin"
+STID_CONTENTS,		"&İçindekiler"
 STID_BACK, 		"&Geri"
 STID_ALL_FILES, 	"Tüm Dosyalar (*.*)"
 STID_HELP_FILES_HLP, 	"Yardım Dosyaları (*.hlp)"
-STID_FILE_NOT_FOUND_s	"""%s"" bulunamıyor. Bu kütüğü kendiniz bulmak istiyor musunuz?"
-STID_NO_RICHEDIT	"Zengin metin kitaplığı bulunamıyor. Çıkılacaktır."
+STID_FILE_NOT_FOUND_s	"""%s"" bulunamıyor. Bu dosyayı kendiniz bulmak istiyor musunuz?"
+STID_NO_RICHEDIT	"Zengin metin gerçekleştirmesi bulunamıyor. Çıkılacaktır."
 STID_PSH_INDEX,		"Yardım Konuları: "
 }
 
