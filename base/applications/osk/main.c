@@ -22,6 +22,7 @@ int OSK_DlgClose(void);
 int OSK_DlgTimer(void);
 BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
 BOOL OSK_ReleaseKey(WORD ScanCode);
+VOID OSK_RestoreDlgPlacement(HWND hDlg);
 
 INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
@@ -253,6 +254,18 @@ int OSK_DlgInitDialog(HWND hDlg)
     Globals.iTimer = SetTimer(hDlg, 0, 200, NULL);
 
     return TRUE;
+}
+
+/***********************************************************************
+ *
+ *           OSK_RestoreDlgPlacement
+ *
+ *  Restores the dialog placement
+ */
+VOID OSK_RestoreDlgPlacement(HWND hDlg)
+{
+    LoadDataFromRegistry();
+    SetWindowPos(hDlg, (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST), Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
 }
 
 /***********************************************************************
@@ -593,6 +606,13 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
                         CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
 
+                        /*
+                            Before creating the dialog box restore the coordinates. The user can
+                            move the dialog around before choosing a different dialog layout therefore
+                            we must create the dialog with the new coordinates.
+                        */
+                        OSK_RestoreDlgPlacement(hDlg);
+
                         /* Finally, display the dialog modal box with the enhanced keyboard dialog */
                         DialogBoxW(Globals.hInstance,
                                    MAKEINTRESOURCEW(MAIN_DIALOG_ENHANCED_KB),
@@ -618,6 +638,13 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         /* Change the condition of standard keyboard item menu to checked */
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
                         CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+
+                        /*
+                            Before creating the dialog box restore the coordinates. The user can
+                            move the dialog around before choosing a different dialog layout therefore
+                            we must create the dialog with the new coordinates.
+                        */
+                        OSK_RestoreDlgPlacement(hDlg);
 
                         /* Finally, display the dialog modal box with the standard keyboard dialog */
                         DialogBoxW(Globals.hInstance,
