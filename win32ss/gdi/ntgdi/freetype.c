@@ -50,10 +50,6 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
 FT_Library  g_FreeTypeLibrary;
 
-/* special font names */
-static const UNICODE_STRING g_MarlettW = RTL_CONSTANT_STRING(L"Marlett");
-#define MARLETT_HACK_CHARSET
-
 /* registry */
 static UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
@@ -1307,14 +1303,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             if (FT_IS_SFNT(Face))
             {
                 FontGDI->CharSet = IntGetCharSet(iCharSet, os2_ulCodePageRange1);
-
-#ifdef MARLETT_HACK_CHARSET
-                /* FIXME: CharSet is invalid on our Marlett */
-                if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
-                {
-                    FontGDI->CharSet = SYMBOL_CHARSET;
-                }
-#endif
             }
             else
             {
@@ -4548,21 +4536,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     /* FIXME: FaceNameSubst Penalty 500 */
 
     Byte = LogFont->lfCharSet;
-
-#ifdef MARLETT_HACK_CHARSET
-    if (Byte == DEFAULT_CHARSET)
-    {
-        if (_wcsicmp(LogFont->lfFaceName, L"Marlett") == 0)
-        {
-            if (Byte == ANSI_CHARSET)
-            {
-                DPRINT("Warning: FIXME: It's Marlett but ANSI_CHARSET.\n");
-            }
-            /* We assume SYMBOL_CHARSET for "Marlett" font */
-            Byte = SYMBOL_CHARSET;
-        }
-    }
-#endif
 
     if (Byte != TM->tmCharSet)
     {
