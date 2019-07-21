@@ -58,7 +58,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
 
   if (UsesSource)
   {
-    SourceCy = abs(SourceSurf->sizlBitmap.cy);
+    SourceCy = SourceSurf->sizlBitmap.cy;
     fnSource_GetPixel = DibFunctionsForBitmapFormat[SourceSurf->iBitmapFormat].DIB_GetPixel;
     DPRINT("Source BPP: %u, srcRect: (%d,%d)-(%d,%d)\n",
       BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
@@ -67,7 +67,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   if (MaskSurf)
   {
     fnMask_GetPixel = DibFunctionsForBitmapFormat[MaskSurf->iBitmapFormat].DIB_GetPixel;
-    MaskCy = abs(MaskSurf->sizlBitmap.cy);
+    MaskCy = MaskSurf->sizlBitmap.cy;
   }
 
   DstHeight = DestRect->bottom - DestRect->top;
