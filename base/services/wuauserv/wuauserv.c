@@ -15,7 +15,7 @@ static WCHAR ServiceName[] = L"wuauserv";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
-static HANDLE exitEvent = NULL;
+static HANDLE hStopEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -55,7 +55,7 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_STOP received\n");
-            SetEvent(exitEvent);
+            SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
@@ -77,7 +77,7 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_SHUTDOWN received\n");
-            SetEvent(exitEvent);
+            SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
@@ -104,13 +104,19 @@ ServiceMain(DWORD argc, LPTSTR *argv)
         return;
     }
 
-    exitEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    hStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (hStopEvent == NULL)
+    {
+        DPRINT1("CreateEvent() failed! (Error %lu)\n", GetLastError());
+        goto done;
+    }
 
     UpdateServiceStatus(SERVICE_RUNNING);
 
-    WaitForSingleObject(exitEvent, INFINITE);
-    CloseHandle(exitEvent);
+    WaitForSingleObject(hStopEvent, INFINITE);
+    CloseHandle(hStopEvent);
 
+done:
     UpdateServiceStatus(SERVICE_STOPPED);
 }
 
