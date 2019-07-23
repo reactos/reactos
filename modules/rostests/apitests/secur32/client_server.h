@@ -53,7 +53,7 @@ do { \
                    (LPWSTR)&buffer,     \
                    0,       \
                    NULL);   \
-    sync_err("%S",buffer );      \
+    sync_err("%S", buffer); \
     LocalFree(buffer);      \
 } while (0)
 
