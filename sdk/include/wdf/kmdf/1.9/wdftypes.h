@@ -25,8 +25,6 @@
  #ifndef _WDFTYPES_H_
  #define _WDFTYPES_H_
 
-
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 #define WDFAPI

@@ -37,7 +37,7 @@
     Sev is the severity level
 	    00 - Success / Good
 	    01 - Informational Code
-	    10 - Warnign
+	    10 - Warning
 	    11 - Error
 		
     C - Customer code flag

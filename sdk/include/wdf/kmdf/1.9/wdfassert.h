@@ -29,6 +29,7 @@
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 /* RtlAssert isn't defined in XP and Win2k headers so we do so here */
+#ifndef _RTLFUNCS_H
 NTSYSAPI
 VOID
 RtlAssert
@@ -38,6 +39,7 @@ RtlAssert
     __in ULONG LineNumber,
     __in_opt PSTR Message
 );
+#endif
 
 /* Only active if WDF verifier is turned on */
 #define WDFVERIFY(exp){                                                      \

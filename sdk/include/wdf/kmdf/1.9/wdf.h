@@ -26,14 +26,14 @@
 #define _WDF_H_
 
 
-typedef NTAPI VOID (*WDFFUNC) (VOID);
-extern const NTAPI WDFFUNC WdfFunctions[];
+typedef VOID (NTAPI *WDFFUNC) (VOID);
+extern const WDFFUNC WdfFunctions[];
 
 #ifndef _Dispatch_type_
 #include <driverspecs.h>
 #endif
 
-/* Basic Deffintions */
+/* Basic Defintions */
 #include "wdfassert.h"
 #include "wdffuncenum.h"
 #include "wdfglobals.h"
@@ -42,4 +42,6 @@ extern const NTAPI WDFFUNC WdfFunctions[];
 #include "wdftypes.h"
 #include "wdfverifier.h"
 
+/* Generic Objects */
+/* #include "wdfobject.h" */
 #endif /* _WDF_H_ */
