@@ -949,7 +949,6 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     WCHAR Symbol;
     RECT myr;
     INT cxy, nBkMode;
-    FillRect(dc, r, (HBRUSH)(COLOR_MENU + 1));
     cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0xff)
     {
