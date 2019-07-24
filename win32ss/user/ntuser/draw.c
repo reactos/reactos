@@ -947,6 +947,10 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     WCHAR Symbol;
+    RECT myr;
+    INT cxy, nBkMode;
+    FillRect(dc, r, (HBRUSH)(COLOR_MENU + 1));
+    cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0xff)
     {
         case DFCS_MENUARROWUP:
@@ -981,7 +985,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     }
     /* acquire ressources only if valid menu */
     RtlZeroMemory(&lf, sizeof(LOGFONTW));
-    lf.lfHeight = r->bottom - r->top;
+    lf.lfHeight = cxy;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
@@ -998,13 +1002,15 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
        {
            /* draw shadow */
            IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
-           GreTextOutW(dc, r->left + 1, r->top + 1, &Symbol, 1);
+           GreTextOutW(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
        }
 #endif
        IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     }
     /* draw selected symbol */
-    GreTextOutW(dc, r->left, r->top, &Symbol, 1);
+    nBkMode = IntGdiSetBkMode(dc, TRANSPARENT);
+    GreTextOutW(dc, myr.left, myr.top, &Symbol, 1);
+    IntGdiSetBkMode(dc, nBkMode);
     /* restore previous settings */
     NtGdiSelectFont(dc, hOldFont);
     GreDeleteObject(hFont);
