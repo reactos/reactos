@@ -972,9 +972,13 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
+    // TODO: DFCS_TRANSPARENT upon DFCS_MENUARROWUP or DFCS_MENUARROWDOWN
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     TCHAR Symbol;
+    RECT myr;
+    INT cxy, nBkMode;
+    cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0xff)
     {
         case DFCS_MENUARROWUP:
@@ -1007,7 +1011,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     }
     /* acquire ressources only if valid menu */
     ZeroMemory(&lf, sizeof(LOGFONTW));
-    lf.lfHeight = r->bottom - r->top;
+    lf.lfHeight = cxy;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
@@ -1024,13 +1028,15 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
        {
            /* draw shadow */
            SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-           TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
+           TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
        }
 #endif
        SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     }
     /* draw selected symbol */
-    TextOut(dc, r->left, r->top, &Symbol, 1);
+    nBkMode = SetBkMode(dc, TRANSPARENT);
+    TextOut(dc, myr.left, myr.top, &Symbol, 1);
+    SetBkMode(dc, nBkMode);
     /* restore previous settings */
     SelectObject(dc, hOldFont);
     DeleteObject(hFont);
