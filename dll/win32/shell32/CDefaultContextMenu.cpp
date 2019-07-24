@@ -248,7 +248,7 @@ HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam
     {
         return m_pmcb->CallBack(m_psf, NULL, m_pDataObj, uMsg, wParam, (LPARAM)lParam);
     }
-    else if(m_pfnmcb)
+    else if (m_pfnmcb)
     {
         return m_pfnmcb(m_psf, NULL, m_pDataObj, uMsg, wParam, (LPARAM)lParam);
     }
@@ -256,15 +256,15 @@ HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam
     return E_FAIL;
 }
 
-
 void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb)
 {
     PStaticShellEntry pEntry = m_pStaticEntries, pLastEntry = NULL;
+    LRESULT lres;
+    HKEY hShellKey = NULL;
     WCHAR wszDefault[40];
     DWORD dwType, dwSize = sizeof(wszDefault);
-    HKEY hShellKey = NULL;
-    LRESULT lres;
-    while(pEntry)
+
+    while (pEntry)
     {
         if (!wcsicmp(pEntry->szVerb, szVerb))
         {
@@ -288,36 +288,41 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
     }
 	
     lres = RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hShellKey);
+    if (lres == ERROR_SUCCESS)
+    {
+        lres = RegQueryValueExW(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
+        RegCloseKey(hShellKey);
+    }
 	
-    if(lres == ERROR_SUCCESS)
-        lres = RegQueryValueEx(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
-	
-    if((!wcsicmp(szVerb, wszDefault) && lres == ERROR_SUCCESS) ||
-       (!wcsicmp(szVerb, L"open") && lres != ERROR_SUCCESS))
+    if (((lres == ERROR_SUCCESS) && !wcsicmp(szVerb, wszDefault)) ||
+        ((lres != ERROR_SUCCESS) && !wcsicmp(szVerb, L"open")))
     {
         /* open verb is always inserted in front, unless the default value of shell entry is set */
         pEntry->pNext = m_pStaticEntries;
         m_pStaticEntries = pEntry;
     }
     else if (pLastEntry)
+    {
         pLastEntry->pNext = pEntry;
+    }
     else
+    {
         m_pStaticEntries = pEntry;
-	
-    RegCloseKey(hShellKey);
+    }
 }
 
 void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
 {
-    WCHAR wszName[40];
-    DWORD cchName, dwIndex = 0;
+    LRESULT lres;
     HKEY hShellKey;
-    LRESULT lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
-	
+    DWORD cchName, dwIndex = 0;
+    WCHAR wszName[40];
+
+    lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
     if (lres != ERROR_SUCCESS)
         return;
 
-    while(TRUE)
+    while (TRUE)
     {
         cchName = _countof(wszName);
         if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
