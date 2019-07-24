@@ -239,6 +239,11 @@ CMakeLists.txt  @learn-more @ThFabba
 #   S: Maintained
 /dll/shellext   @learn-more
 
+# UniATA
+#   M: ThFabba, Thomas Faber
+#   S: Upstream
+/drivers/storage/ide/uniata/   @ThFabba
+
 # Upstream File Systems
 #   M: HeisSpiter, Pierre Schweitzer
 #   S: Upstream
