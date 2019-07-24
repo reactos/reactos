@@ -290,8 +290,10 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const HKEY hShell
     pEntry->hkClass = hkeyClass;
 
     lres = RegQueryValueExW(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
+    if ((lres == ERROR_SUCCESS) && (dwType != REG_SZ))
+        lres = ERROR_INVALID_DATA;
 
-    if (((lres == ERROR_SUCCESS && dwType == REG_SZ) && !wcsicmp(szVerb, wszDefault)) ||
+    if (((lres == ERROR_SUCCESS) && !wcsicmp(szVerb, wszDefault)) ||
         ((lres != ERROR_SUCCESS) && !wcsicmp(szVerb, L"open")))
     {
         /* open verb is always inserted in front, unless the default value of shell entry is set */
