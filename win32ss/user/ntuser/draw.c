@@ -666,7 +666,10 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
     HFONT hFont, hOldFont;
     int i;
     WCHAR OutRight, OutLeft, InRight, InLeft, Center;
+    RECT myr;
+    INT cxy, nBkMode;
 
+    cxy = UITOOLS_MakeSquareRect(r, &myr);
     if (Radio)
     {
         OutRight = 'j'; // Outer right
@@ -684,7 +687,7 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
     }
 
     RtlZeroMemory(&lf, sizeof(LOGFONTW));
-    lf.lfHeight = r->top - r->bottom;
+    lf.lfHeight = cxy;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
@@ -692,16 +695,18 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
     hFont = GreCreateFontIndirectW(&lf);
     hOldFont = NtGdiSelectFont(dc, hFont);
 
+    nBkMode = GreGetBkMode(dc);
+
     if(Radio && ((uFlags & 0xff) == DFCS_BUTTONRADIOMASK))
     {
         IntGdiSetBkMode(dc, OPAQUE);
         IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWFRAME));
-        GreTextOutW(dc, r->left, r->top, &Center, 1);
+        GreTextOutW(dc, myr.left, myr.top, &Center, 1);
         IntGdiSetBkMode(dc, TRANSPARENT);
         IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWFRAME));
-        GreTextOutW(dc, r->left, r->top, &OutRight, 1);
+        GreTextOutW(dc, myr.left, myr.top, &OutRight, 1);
         IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWFRAME));
-        GreTextOutW(dc, r->left, r->top, &OutLeft, 1);
+        GreTextOutW(dc, myr.left, myr.top, &OutLeft, 1);
     }
     else
     {
@@ -710,26 +715,26 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
         /* Center section, white for active, grey for inactive */
         i= !(uFlags & (DFCS_INACTIVE|DFCS_PUSHED)) ? COLOR_WINDOW : COLOR_BTNFACE;
         IntGdiSetTextColor(dc, IntGetSysColor(i));
-        GreTextOutW(dc, r->left, r->top, &Center, 1);
+        GreTextOutW(dc, myr.left, myr.top, &Center, 1);
 
         if(uFlags & (DFCS_FLAT | DFCS_MONO))
         {
             IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWFRAME));
-            GreTextOutW(dc, r->left, r->top, &OutRight, 1);
-            GreTextOutW(dc, r->left, r->top, &OutLeft, 1);
-            GreTextOutW(dc, r->left, r->top, &InRight, 1);
-            GreTextOutW(dc, r->left, r->top, &InLeft, 1);
+            GreTextOutW(dc, myr.left, myr.top, &OutRight, 1);
+            GreTextOutW(dc, myr.left, myr.top, &OutLeft, 1);
+            GreTextOutW(dc, myr.left, myr.top, &InRight, 1);
+            GreTextOutW(dc, myr.left, myr.top, &InLeft, 1);
         }
         else
         {
             IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNSHADOW));
-            GreTextOutW(dc, r->left, r->top, &OutRight, 1);
+            GreTextOutW(dc, myr.left, myr.top, &OutRight, 1);
             IntGdiSetTextColor(dc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
-            GreTextOutW(dc, r->left, r->top, &OutLeft, 1);
+            GreTextOutW(dc, myr.left, myr.top, &OutLeft, 1);
             IntGdiSetTextColor(dc, IntGetSysColor(COLOR_3DDKSHADOW));
-            GreTextOutW(dc, r->left, r->top, &InRight, 1);
+            GreTextOutW(dc, myr.left, myr.top, &InRight, 1);
             IntGdiSetTextColor(dc, IntGetSysColor(COLOR_3DLIGHT));
-            GreTextOutW(dc, r->left, r->top, &InLeft, 1);
+            GreTextOutW(dc, myr.left, myr.top, &InLeft, 1);
         }
     }
 
@@ -738,12 +743,13 @@ BOOL FASTCALL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL
         WCHAR Check = (Radio) ? 'i' : 'b';
 
         IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWTEXT));
-        GreTextOutW(dc, r->left, r->top, &Check, 1);
+        GreTextOutW(dc, myr.left, myr.top, &Check, 1);
     }
 
     IntGdiSetTextColor(dc, IntGetSysColor(COLOR_WINDOWTEXT));
     NtGdiSelectFont(dc, hOldFont);
     GreDeleteObject(hFont);
+    IntGdiSetBkMode(dc, nBkMode);
 
     return TRUE;
 }
