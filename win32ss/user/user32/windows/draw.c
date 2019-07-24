@@ -972,6 +972,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
+    // TODO: DFCS_TRANSPARENT upon DFCS_MENUARROWUP or DFCS_MENUARROWDOWN
     LOGFONTW lf;
     HFONT hFont, hOldFont;
     TCHAR Symbol;
