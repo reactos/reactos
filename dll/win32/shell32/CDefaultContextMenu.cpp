@@ -88,7 +88,7 @@ class CDefaultContextMenu :
         UINT m_iIdDfltLast; /* last default part id */
 
         HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
-        void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb);
+        void AddStaticEntry(const HKEY hkeyClass, const HKEY hShellKey, const WCHAR *szVerb);
         void AddStaticEntriesForKey(HKEY hKey);
         BOOL IsShellExtensionAlreadyLoaded(const CLSID *pclsid);
         HRESULT LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid);
@@ -256,11 +256,10 @@ HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam
     return E_FAIL;
 }
 
-void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb)
+void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const HKEY hShellKey, const WCHAR *szVerb)
 {
     PStaticShellEntry pEntry = m_pStaticEntries, pLastEntry = NULL;
     LRESULT lres;
-    HKEY hShellKey = NULL;
     WCHAR wszDefault[40];
     DWORD dwType, dwSize = sizeof(wszDefault);
 
@@ -278,23 +277,21 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
     TRACE("adding verb %s\n", debugstr_w(szVerb));
 
     pEntry = (StaticShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(StaticShellEntry));
-    if (pEntry)
+    if (!pEntry)
     {
-        pEntry->pNext = NULL;
-        pEntry->szVerb = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(szVerb) + 1) * sizeof(WCHAR));
-        if (pEntry->szVerb)
-            wcscpy(pEntry->szVerb, szVerb);
-        pEntry->hkClass = hkeyClass;
+        ERR("Could not allocate shell entry.\n");
+        return;
     }
-	
-    lres = RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hShellKey);
-    if (lres == ERROR_SUCCESS)
-    {
-        lres = RegQueryValueExW(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
-        RegCloseKey(hShellKey);
-    }
-	
-    if (((lres == ERROR_SUCCESS) && !wcsicmp(szVerb, wszDefault)) ||
+
+    pEntry->pNext = NULL;
+    pEntry->szVerb = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(szVerb) + 1) * sizeof(WCHAR));
+    if (pEntry->szVerb)
+        wcscpy(pEntry->szVerb, szVerb);
+    pEntry->hkClass = hkeyClass;
+
+    lres = RegQueryValueExW(hShellKey, NULL, 0, &dwType, (LPBYTE)wszDefault, &dwSize);
+
+    if (((lres == ERROR_SUCCESS && dwType == REG_SZ) && !wcsicmp(szVerb, wszDefault)) ||
         ((lres != ERROR_SUCCESS) && !wcsicmp(szVerb, L"open")))
     {
         /* open verb is always inserted in front, unless the default value of shell entry is set */
@@ -328,7 +325,7 @@ void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
         if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
 
-        AddStaticEntry(hKey, wszName);
+        AddStaticEntry(hKey, hShellKey, wszName);
     }
 
     RegCloseKey(hShellKey);
