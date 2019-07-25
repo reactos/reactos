@@ -251,7 +251,7 @@ TypeDlgProc(
                          * Display the existing NT installations page only
                          * if we have more than one available NT installations.
                          */
-                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
+                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) >= 1)
                         {
                             /* pSetupData->CurrentInstallation will be set from within IDD_UPDATEREPAIRPAGE */
 
@@ -693,6 +693,10 @@ UpgradeRepairDlgProc(
 
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
+
+                    /* Go to the summary page */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
+
                     return TRUE;
                 }
 
@@ -775,6 +779,12 @@ DeviceDlgProc(
 
                     /* Do not close the wizard too soon */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+
+                case PSN_WIZBACK:
+                {
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
                     return TRUE;
                 }
 
@@ -955,6 +965,17 @@ SummaryDlgProc(
 
                     /* Do not close the wizard too soon */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+
+                case PSN_WIZBACK:
+                {
+                    /* If it's upgrade, then go back to the upgrade page */
+                    if (pSetupData->RepairUpdateFlag)
+                    {
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
+                    }
+
                     return TRUE;
                 }
 
