@@ -589,7 +589,52 @@ DrawPartitionList(
     }
 }
 
+static NTSTATUS
+BuildInstallPaths(
+    IN PSETUPDATA pSetupData,
+    IN PCWSTR InstallDir,
+    IN PPARTENTRY PartEntry)
+{
+    NTSTATUS Status;
 
+    Status = InitDestinationPaths(&pSetupData->USetupData, InstallDir, PartEntry);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("InitDestinationPaths() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Initialize DestinationDriveLetter */
+    pSetupData->DestinationDriveLetter = PartEntry->DriveLetter;
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+SetInstallPartition(IN PSETUPDATA pSetupData)
+{
+    NTSTATUS Status;
+
+    pSetupData->InstallPartition = SelectPartition(pSetupData->PartitionList,
+                                                   pSetupData->CurrentInstallation->DiskNumber,
+                                                   pSetupData->CurrentInstallation->PartitionNumber);
+
+    if (!pSetupData->InstallPartition)
+    {
+        DPRINT1("SelectPartition() returned FALSE, assert!\n");
+        ASSERT(FALSE);
+    }
+
+    Status = BuildInstallPaths(pSetupData,
+                               pSetupData->USetupData.InstallationDirectory,
+                               pSetupData->InstallPartition);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
+    }
+}
 
 INT_PTR
 CALLBACK
@@ -720,6 +765,9 @@ DriveDlgProc(
                                 // !PartEntry->New &&
                                 (PartEntry->FormatState == Preformatted /* || PartEntry->FormatState == Formatted */))
                             {
+                                // pSetupData->CurrentInstallation->DiskNumber      = PartEntry->DiskEntry->DiskNumber;
+                                // pSetupData->CurrentInstallation->PartitionNumber = PartEntry->PartitionNumber;
+
                                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                             }
                             else
@@ -784,28 +832,7 @@ DisableWizNext:
 
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
-                    NTSTATUS Status;
-
-                    /****/
-                    // FIXME: This is my test disk encoding!
-                    DISKENTRY DiskEntry;
-                    PARTENTRY PartEntry;
-                    DiskEntry.DiskNumber = 0;
-                    DiskEntry.HwDiskNumber = 0;
-                    DiskEntry.HwFixedDiskNumber = 0;
-                    PartEntry.DiskEntry = &DiskEntry;
-                    PartEntry.PartitionNumber = 1; // 4;
-                    /****/
-
-                    Status = InitDestinationPaths(&pSetupData->USetupData,
-                                                  NULL, // pSetupData->USetupData.InstallationDirectory,
-                                                  &PartEntry);
-
-                    if (!NT_SUCCESS(Status))
-                    {
-                        DPRINT1("InitDestinationPaths() failed with status 0x%08lx\n", Status);
-                    }
-
+                    SetInstallPartition(pSetupData);
                     break;
                 }
 

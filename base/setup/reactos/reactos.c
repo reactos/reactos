@@ -691,10 +691,12 @@ UpgradeRepairDlgProc(
                     pSetupData->CurrentInstallation =
                         (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
 
+                    SetInstallPartition(pSetupData);
+
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
 
-                    /* Go to the summary page */
+                    /* Go to the Summary page */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
 
                     return TRUE;
@@ -885,7 +887,10 @@ SummaryDlgProc(
                     }
                     SetDlgItemTextW(hwndDlg, IDC_INSTALLTYPE, CurrentItemText);
 
-                    SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, L"n/a");
+                    /* FIXME: Use drive letter here instead */
+                    StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText), L"%wZ", &pSetupData->USetupData.SourcePath);
+                    SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, CurrentItemText);
+
                     SetDlgItemTextW(hwndDlg, IDC_ARCHITECTURE, L"n/a");
 
                     GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.ComputerList),
@@ -903,19 +908,10 @@ SummaryDlgProc(
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
 
-                    if (L'C') // FIXME!
-                    {
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%c: \x2014 %wZ",
-                                         L'C', // FIXME!
-                                         &pSetupData->USetupData.DestinationRootPath);
-                    }
-                    else
-                    {
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%wZ",
-                                         &pSetupData->USetupData.DestinationRootPath);
-                    }
+                    StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
+                                     L"%s: (%wZ)",
+                                     &pSetupData->InstallPartition->DriveLetter,
+                                     &pSetupData->USetupData.DestinationRootPath);
                     SetDlgItemTextW(hwndDlg, IDC_DESTDRIVE, CurrentItemText);
 
                     SetDlgItemTextW(hwndDlg, IDC_PATH,
@@ -1033,6 +1029,33 @@ FileCopyCallback(PVOID Context,
             break;
         }
 
+        case SPFILENOTIFY_DELETEERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to delete %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            break;
+        }
+        case SPFILENOTIFY_COPYERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            // StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to copy %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            // MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            return FILEOP_SKIP;
+        }
+        case SPFILENOTIFY_RENAMEERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            StringCchPrintfW(Status, ARRAYSIZE(Status), L"Unable to rename %s: %d", FilePathInfo->Target, FilePathInfo->Win32Error);
+            MessageBoxW(0, Status, L"ReactOS Setup", 0);
+
+            break;
+        }
         case SPFILENOTIFY_STARTDELETE:
         case SPFILENOTIFY_STARTRENAME:
         case SPFILENOTIFY_STARTCOPY:
