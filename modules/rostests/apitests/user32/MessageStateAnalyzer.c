@@ -4,6 +4,8 @@
  * PURPOSE:     debugging and analysis of message states
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
+#include "precomp.h"
 #include "undocuser.h"
 #include "winxx.h"
 #include <strsafe.h>
