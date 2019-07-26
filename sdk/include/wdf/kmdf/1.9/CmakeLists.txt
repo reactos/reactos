@@ -1,1 +1,1 @@
-add_message_headers(${REACTOS_SOURCE_DIR}/sdk/include/reactos/mc/wdfstaus.mc)
+add_message_headers(UNICODE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/mc/wdfstaus.mc)

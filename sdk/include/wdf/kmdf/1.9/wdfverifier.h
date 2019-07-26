@@ -42,7 +42,7 @@ VOID
 VOID
 FORCEINLINE
 WdfVerifierDbgBreakPoint
-(    )
+(VOID)
 {
     ((PFN_WDFVERIFIERDBGBREAKPOINT)WdfFunctions[WdfVerifierDbgBreakPointTableIndex])(WdfDriverGlobals);
 }
