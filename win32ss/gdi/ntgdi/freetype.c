@@ -5916,9 +5916,9 @@ IntExtTextOutW(
      * Process the vertical alignment and determine the yoff.
      */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
-    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
+    if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
         yoff = 0;
-    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
+    else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
         yoff = -(fixDescender >> 6);
     else /* TA_TOP */
         yoff = fixAscender >> 6;
