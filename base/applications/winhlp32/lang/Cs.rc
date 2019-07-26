@@ -1,5 +1,4 @@
-/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
- *
+/*
  * Help Viewer Czech resources
  *
  * Copyright 1996 Ulrich Schmid
@@ -22,8 +21,6 @@
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-
-/* Czech strings in CP1250 */
 
 MAIN_MENU MENU
 {
