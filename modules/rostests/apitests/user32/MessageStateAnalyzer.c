@@ -4,9 +4,9 @@
  * PURPOSE:     debugging and analysis of message states
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-#include <strsafe.h>
 #include "undocuser.h"
 #include "winxx.h"
+#include <strsafe.h>
 
 static void MsgDumpPrintf(LPCSTR fmt, ...)
 {
