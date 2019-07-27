@@ -287,7 +287,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
+        ERR("ArcOpen(FileName: \"%s\", OpenReadOnly: %u) failed. Status %u\n", FileName, OpenReadOnly, Status);
         return FALSE;
     }
 
@@ -295,7 +295,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
-        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
+        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
         UiMessageBox("Error reading from file.");
         ArcClose(FileId);
         return FALSE;
@@ -305,7 +305,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     NtHeaders = RtlImageNtHeader(HeadersBuffer);
     if (!NtHeaders)
     {
-        // Print(L"Error - no NT header found in %s\n", FileName);
+        ERR("No NT header found in \"%s\"\n", FileName);
         UiMessageBox("Error - no NT header found.");
         ArcClose(FileId);
         return FALSE;
@@ -314,7 +314,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     /* Ensure this is executable image */
     if (((NtHeaders->FileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == 0))
     {
-        // Print(L"Not an executable image %s\n", FileName);
+        ERR("Not an executable image \"%s\"\n", FileName);
         UiMessageBox("Not an executable image.");
         ArcClose(FileId);
         return FALSE;
@@ -336,7 +336,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 
         if (PhysicalBase == NULL)
         {
-            // Print(L"Failed to alloc pages for image %s\n", FileName);
+            ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FileName);
             UiMessageBox("Failed to alloc pages for image.");
             ArcClose(FileId);
             return FALSE;
@@ -353,7 +353,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcSeek(FileId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
-        WARN("Error while seeking '%s', Status: %u\n", FileName, Status);
+        ERR("ArcSeek(File: '%s') failed. Status: 0x%lx\n", FileName, Status);
         UiMessageBox("Error seeking the start of a file.");
         ArcClose(FileId);
         return FALSE;
@@ -362,7 +362,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, PhysicalBase, NtHeaders->OptionalHeader.SizeOfHeaders, &BytesRead);
     if (Status != ESUCCESS)
     {
-        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
+        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
         UiMessageBox("Error reading headers.");
         ArcClose(FileId);
         return FALSE;
