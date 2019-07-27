@@ -740,4 +740,6 @@ METADC_GetAndSetDCDWord(
     _In_ USHORT usMF16Id,
     _In_ DWORD dwError);
 
+HDC WINAPI GdiConvertAndCheckDC(HDC hdc);
+
 /* EOF */
