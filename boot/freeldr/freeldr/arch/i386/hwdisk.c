@@ -231,6 +231,9 @@ GetHarddiskInformation(UCHAR DriveNumber)
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     PCHAR Identifier = PcDiskIdentifier[DriveNumber - 0x80];
 
+    /* Detect disk partition type */
+    DiskDetectPartitionType(DriveNumber);
+
     /* Read the MBR */
     if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
     {

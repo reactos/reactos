@@ -1422,8 +1422,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.InitializeBootDevices = PcInitializeBootDevices;
     MachVtbl.HwDetect = PcHwDetect;
     MachVtbl.HwIdle = PcHwIdle;
-
-    // DiskGetPartitionEntry = DiskGetMbrPartitionEntry; // Default
 }
 
 VOID

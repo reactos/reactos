@@ -102,6 +102,7 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_UNIX                  0x63      // Unix
 #define VALID_NTFT                      0xC0      // NTFT uses high order bits
 #define PARTITION_NTFT                  0x80      // NTFT partition
+#define PARTITION_GPT                   0xEE      // GPT protective partition
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX             0x43
 #define PARTITION_LINUX                 0x83
@@ -144,18 +145,9 @@ extern SIZE_T DiskReadBufferSize;
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-/* Signature of DiskGetPartitionEntry(...) */
-typedef
-BOOLEAN
-(*DISK_GET_PARTITION_ENTRY)(UCHAR DriveNumber,
-                            ULONG PartitionNumber,
-                            PPARTITION_TABLE_ENTRY PartitionTableEntry);
-
-/* This function serves to retrieve a partition entry for devices that handle partitions differently */
-extern DISK_GET_PARTITION_ENTRY DiskGetPartitionEntry;
-
-BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
-BOOLEAN DiskGetMbrPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+VOID DiskDetectPartitionType(UCHAR DriveNumber);
+BOOLEAN DiskGetBootPartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *BootPartition);
+BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);

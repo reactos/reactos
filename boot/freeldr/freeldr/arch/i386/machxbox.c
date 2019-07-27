@@ -231,8 +231,6 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
 
-    DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
-
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
 }

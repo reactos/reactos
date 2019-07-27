@@ -410,7 +410,11 @@ typedef struct _PARTITION_INFORMATION_GPT {
 typedef enum _PARTITION_STYLE {
   PARTITION_STYLE_MBR,
   PARTITION_STYLE_GPT,
-  PARTITION_STYLE_RAW
+  PARTITION_STYLE_RAW,
+#ifdef __REACTOS__
+  /* ReactOS custom partition handlers */
+  PARTITION_STYLE_BRFR = 128 /* Xbox-BRFR partitioning scheme */
+#endif
 } PARTITION_STYLE;
 
 typedef struct _DISK_PARTITION_INFO {
