@@ -1,5 +1,7 @@
 
 list(APPEND FONT_FILES
+    comic.ttf
+    comicbd.ttf
     DejaVuMathTeXGyre.ttf
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
