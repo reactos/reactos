@@ -320,6 +320,8 @@ alloc_dc_ptr(WORD magic)
             return NULL;
         }
 
+        pWineDc->iType = LDC_EMFLDC;
+
         /* Set the Wine DC as LDC */
         GdiSetLDC(pWineDc->hdc, pWineDc);
     }
@@ -1130,6 +1132,17 @@ METADC_Dispatch(
     {
         /* Let the caller handle it */
         return FALSE;
+    }
+
+    // See if this is other than a METADATA issue.
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_ALTDC_TYPE)
+    {
+       WINEDC* pwdc = (WINEDC*)GdiGetLDC(hdc);
+       if (pwdc && pwdc->iType != LDC_EMFLDC)
+       {
+          /* Let the caller handle it */
+          return FALSE;
+       }
     }
 
     physdev = GetPhysDev(hdc);
