@@ -13,7 +13,7 @@
 static HANDLE audio_device_list_lock = NULL;
 
 BOOL
-InitializeAudioDeviceListLock()
+InitializeAudioDeviceListLock(VOID)
 {
     /* The security stuff is to make sure the mutex can be grabbed by
        other processes - is this the best idea though ??? */
@@ -32,27 +32,26 @@ InitializeAudioDeviceListLock()
                                          FALSE,
                                          AUDIO_LIST_LOCK_NAME);
 
-    return ( audio_device_list_lock != NULL );
+    return (audio_device_list_lock != NULL);
 }
 
 VOID
-KillAudioDeviceListLock()
+KillAudioDeviceListLock(VOID)
 {
     CloseHandle(audio_device_list_lock);
     audio_device_list_lock = NULL;
 }
 
 VOID
-LockAudioDeviceList()
+LockAudioDeviceList(VOID)
 {
-    assert( audio_device_list_lock != NULL );
+    assert(audio_device_list_lock != NULL);
     WaitForSingleObject(audio_device_list_lock, INFINITE);
 }
 
 VOID
-UnlockAudioDeviceList()
+UnlockAudioDeviceList(VOID)
 {
-    assert( audio_device_list_lock != NULL );
+    assert(audio_device_list_lock != NULL);
     ReleaseMutex(audio_device_list_lock);
 }
-

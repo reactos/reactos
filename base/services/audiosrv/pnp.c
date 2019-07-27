@@ -23,7 +23,7 @@ static HDEVNOTIFY device_notification_handle = NULL;
 */
 
 BOOL
-ProcessExistingDevices()
+ProcessExistingDevices(VOID)
 {
     SP_DEVICE_INTERFACE_DATA interface_data;
     SP_DEVINFO_DATA device_data;
@@ -124,7 +124,7 @@ ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device)
 */
 
 BOOL
-RegisterForDeviceNotifications()
+RegisterForDeviceNotifications(VOID)
 {
     DEV_BROADCAST_DEVICEINTERFACE notification_filter;
 
@@ -141,8 +141,7 @@ RegisterForDeviceNotifications()
                                     DEVICE_NOTIFY_SERVICE_HANDLE
 /* |
                                    DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
-
-    if ( ! device_notification_handle )
+    if (!device_notification_handle)
     {
         logmsg("RegisterDeviceNotification() failed with error %d\n", GetLastError());
     }
@@ -156,11 +155,12 @@ RegisterForDeviceNotifications()
     called.
 */
 
-VOID UnregisterDeviceNotifications()
+VOID
+UnregisterDeviceNotifications(VOID)
 {
     /* TODO -- NOT IMPLEMENTED! */
 
-    if ( device_notification_handle )
+    if (device_notification_handle)
     {
         /* TODO */
         device_notification_handle = NULL;
@@ -177,12 +177,12 @@ HandleDeviceEvent(
     DWORD dwEventType,
     LPVOID lpEventData)
 {
-    switch ( dwEventType )
+    switch (dwEventType)
     {
-        case DBT_DEVICEARRIVAL :
+        case DBT_DEVICEARRIVAL:
         {
             DEV_BROADCAST_DEVICEINTERFACE* incoming_device =
-                (DEV_BROADCAST_DEVICEINTERFACE*) lpEventData;
+                (DEV_BROADCAST_DEVICEINTERFACE*)lpEventData;
 
             return ProcessDeviceArrival(incoming_device);
         }

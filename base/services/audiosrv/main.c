@@ -14,7 +14,7 @@ SERVICE_STATUS service_status;
 
 /* This is for testing only! */
 VOID
-InitializeFakeDevice()
+InitializeFakeDevice(VOID)
 {
     PnP_AudioDevice* list_node;
 
@@ -30,7 +30,7 @@ ServiceControlHandler(
     LPVOID lpEventData,
     LPVOID lpContext)
 {
-    switch ( dwControl )
+    switch (dwControl)
     {
         case SERVICE_CONTROL_INTERROGATE :
         {
@@ -85,7 +85,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
                                                           NULL);
 
     logmsg("Service status handle %d\n", service_status_handle);
-    if ( ! service_status_handle )
+    if (!service_status_handle)
     {
         logmsg("Failed to register service control handler\n");
         /* FIXME - we should fail */
@@ -105,7 +105,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
 
     logmsg("Creating audio device list\n");
     /* This creates the audio device list and mutex */
-    if ( ! CreateAudioDeviceList(AUDIO_LIST_MAX_SIZE) )
+    if (!CreateAudioDeviceList(AUDIO_LIST_MAX_SIZE))
     {
         logmsg("Failed to create audio device list\n");
         service_status.dwCurrentState = SERVICE_STOPPED;
@@ -116,7 +116,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
 
     logmsg("Registering for device notifications\n");
     /* We want to know when devices are added/removed */
-    if ( ! RegisterForDeviceNotifications() )
+    if (!RegisterForDeviceNotifications())
     {
         /* FIXME: This is not fatal at present as ROS does not support this */
         logmsg("Failed to register for device notifications\n");
@@ -132,12 +132,11 @@ ServiceMain(DWORD argc, LPWSTR argv)
     /* start system audio services */
     StartSystemAudioServices();
 
-
     InitializeFakeDevice();
 
     logmsg("Processing existing devices\n");
     /* Now find any devices that already exist on the system */
-    if ( ! ProcessExistingDevices() )
+    if (!ProcessExistingDevices())
     {
         logmsg("Could not process existing devices\n");
         UnregisterDeviceNotifications();
@@ -156,7 +155,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
     SetServiceStatus(service_status_handle, &service_status);
 }
 
-int wmain()
+int wmain(VOID)
 {
     SERVICE_TABLE_ENTRYW service_table[] =
     {

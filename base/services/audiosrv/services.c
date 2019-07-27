@@ -30,7 +30,7 @@ WaitForService(
 
         Sleep(1000);
 
-    }while(Index++ < RetryCount);
+    } while (Index++ < RetryCount);
 
     logmsg("Timeout while waiting for service to become ready %p\n", hService);
 
@@ -47,7 +47,6 @@ StartAudioService(
     BOOL ret;
 
     hService = OpenService(hSCManager, ServiceName, SERVICE_ALL_ACCESS);
-
     if (!hService)
     {
         logmsg("Failed to open service %S %x\n", ServiceName, GetLastError());
@@ -67,11 +66,8 @@ StartAudioService(
     return ret;
 }
 
-
-
-
 BOOL
-StartSystemAudioServices()
+StartSystemAudioServices(VOID)
 {
     SC_HANDLE hSCManager;
 
@@ -92,14 +88,3 @@ StartSystemAudioServices()
     CloseServiceHandle(hSCManager);
     return TRUE;
 }
-
-
-
-
-
-
-
-
-
-
-
