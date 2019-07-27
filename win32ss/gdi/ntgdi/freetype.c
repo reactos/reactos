@@ -5794,7 +5794,7 @@ IntExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP)
+    if (pdcattr->flTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
@@ -5931,7 +5931,7 @@ IntExtTextOutW(
      * Process the horizontal alignment and modify XStart accordingly.
      */
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
-    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
+    if (pdcattr->flTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
@@ -6017,7 +6017,7 @@ IntExtTextOutW(
 
         previous = 0;
 
-        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+        if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
         {
             RealXStart -= TextWidth / 2;
         }
@@ -6417,7 +6417,7 @@ IntExtTextOutW(
         }
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP) {
+    if (pdcattr->flTextAlign & TA_UPDATECP) {
         pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
     }
 
