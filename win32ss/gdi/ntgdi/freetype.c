@@ -5678,7 +5678,7 @@ IntExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP)
+    if (pdcattr->flTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
@@ -5800,9 +5800,9 @@ IntExtTextOutW(
      * Process the vertical alignment and determine the yoff.
      */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
-    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
+    if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
         yoff = 0;
-    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
+    else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
         yoff = -(fixDescender >> 6);
     else /* TA_TOP */
         yoff = fixAscender >> 6;
@@ -5815,7 +5815,7 @@ IntExtTextOutW(
      * Process the horizontal alignment and modify XStart accordingly.
      */
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
-    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
+    if (pdcattr->flTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
@@ -5901,7 +5901,7 @@ IntExtTextOutW(
 
         previous = 0;
 
-        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+        if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
         {
             RealXStart -= TextWidth / 2;
         }
@@ -6301,7 +6301,7 @@ IntExtTextOutW(
         }
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP) {
+    if (pdcattr->flTextAlign & TA_UPDATECP) {
         pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
     }
 
