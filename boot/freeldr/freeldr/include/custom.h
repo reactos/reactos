@@ -19,19 +19,25 @@
 
 #pragma once
 
-#ifdef _M_IX86
-
+#define HAS_OPTION_MENU_EDIT_CMDLINE
 #define HAS_OPTION_MENU_CUSTOM_BOOT
 #define HAS_OPTION_MENU_REBOOT
 
-VOID    OptionMenuReboot(VOID);
+#ifdef _M_IX86
 
-VOID    OptionMenuCustomBoot(VOID);
-VOID    OptionMenuCustomBootDisk(VOID);
-VOID    OptionMenuCustomBootPartition(VOID);
-VOID    OptionMenuCustomBootBootSectorFile(VOID);
-VOID    OptionMenuCustomBootLinux(VOID);
+VOID EditCustomBootDisk(IN ULONG_PTR SectionId OPTIONAL);
+VOID EditCustomBootPartition(IN ULONG_PTR SectionId OPTIONAL);
+VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL);
+VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL);
 
 #endif // _M_IX86
 
-VOID    OptionMenuCustomBootReactOS(VOID);
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
+VOID OptionMenuCustomBoot(VOID);
+#endif
+
+VOID EditCustomBootReactOS(IN ULONG_PTR SectionId OPTIONAL);
+
+#ifdef HAS_OPTION_MENU_REBOOT
+VOID OptionMenuReboot(VOID);
+#endif

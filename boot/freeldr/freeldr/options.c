@@ -42,6 +42,9 @@ PCSTR OptionsMenuList[] =
     NULL,
 
     "Start ReactOS normally",
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+    "Edit Boot Command Line (F10)",
+#endif
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
     "Custom Boot",
 #endif
@@ -86,7 +89,7 @@ static BOOLEAN DebuggingMode = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DoOptionsMenu(VOID)
+VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
 {
     ULONG SelectedMenuItem;
     CHAR  DebugChannelString[100];
@@ -157,13 +160,18 @@ VOID DoOptionsMenu(VOID)
             VgaMode = FALSE;
             DebuggingMode = FALSE;
             break;
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+        case 12: // Edit command line
+            EditOperatingSystemEntry(OperatingSystem);
+            break;
+#endif
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
-        case 12: // Custom Boot
+        case 13: // Custom Boot
             OptionMenuCustomBoot();
             break;
 #endif
 #ifdef HAS_OPTION_MENU_REBOOT
-        case 13: // Reboot
+        case 14: // Reboot
             OptionMenuReboot();
             break;
 #endif

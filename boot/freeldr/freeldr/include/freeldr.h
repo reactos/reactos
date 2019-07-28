@@ -126,6 +126,9 @@
 
 VOID __cdecl BootMain(IN PCCH CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+VOID EditOperatingSystemEntry(IN OperatingSystemItem* OperatingSystem);
+#endif
 VOID RunLoader(VOID);
 VOID FrLdrCheckCpuCompatibility(VOID);
 

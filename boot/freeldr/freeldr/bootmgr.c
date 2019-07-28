@@ -26,25 +26,30 @@ DBG_DEFAULT_CHANNEL(INIFILE);
 
 /* GLOBALS ********************************************************************/
 
+typedef
+VOID
+(*EDIT_OS_ENTRY_PROC)(
+    IN ULONG_PTR SectionId OPTIONAL);
+
 static const struct
 {
     PCSTR BootType;
+    EDIT_OS_ENTRY_PROC EditOsEntry;
     ARC_ENTRY_POINT OsLoader;
 } OSLoadingMethods[] =
 {
-    {"ReactOSSetup", LoadReactOSSetup     },
+    {"ReactOSSetup", EditCustomBootReactOS, LoadReactOSSetup},
 
 #ifdef _M_IX86
-    {"BootSector"  , LoadAndBootBootSector},
-    {"Drive"       , LoadAndBootDrive     },
-    {"Partition"   , LoadAndBootPartition },
+    {"Drive"       , EditCustomBootDisk      , LoadAndBootDrive     },
+    {"Partition"   , EditCustomBootPartition , LoadAndBootPartition },
+    {"BootSector"  , EditCustomBootSectorFile, LoadAndBootBootSector},
 
-    {"Linux"       , LoadAndBootLinux     },
-
-    {"Windows"     , LoadAndBootWindows   },
-    {"WindowsNT40" , LoadAndBootWindows   },
+    {"Linux"       , EditCustomBootLinux  , LoadAndBootLinux  },
+    {"WindowsNT40" , EditCustomBootReactOS, LoadAndBootWindows},
 #endif
-    {"Windows2003" , LoadAndBootWindows   },
+    {"Windows"     , EditCustomBootReactOS, LoadAndBootWindows},
+    {"Windows2003" , EditCustomBootReactOS, LoadAndBootWindows},
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -185,6 +190,42 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
     }
 }
 
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+
+VOID EditOperatingSystemEntry(IN OperatingSystemItem* OperatingSystem)
+{
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SectionName;
+    ULONG i;
+    CHAR BootType[80];
+
+    /* Try to open the operating system section in the .ini file */
+    if (!IniOpenSection(SectionName, &SectionId))
+    {
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
+        return;
+    }
+
+    /* Try to read the boot type */
+    *BootType = ANSI_NULL;
+    IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
+
+    /* We must have the "BootType" value (it has been possibly added by InitOperatingSystemList()) */
+    ASSERT(*BootType);
+
+    /* Loop through the OS loading method table and find a suitable OS entry editor */
+    for (i = 0; i < sizeof(OSLoadingMethods) / sizeof(OSLoadingMethods[0]); ++i)
+    {
+        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
+        {
+            OSLoadingMethods[i].EditOsEntry(SectionId);
+            return;
+        }
+    }
+}
+
+#endif // HAS_OPTION_MENU_EDIT_CMDLINE
+
 LONG GetTimeOut(VOID)
 {
     CHAR    TimeOutText[20];
@@ -212,14 +253,22 @@ MainBootMenuKeyPressFilter(
     IN ULONG SelectedMenuItem,
     IN PVOID Context OPTIONAL)
 {
-    if (KeyPress == KEY_F8)
+    switch (KeyPress)
     {
-        DoOptionsMenu();
+    case KEY_F8:
+        DoOptionsMenu(&((OperatingSystemItem*)Context)[SelectedMenuItem]);
         return TRUE;
-    }
 
-    /* We didn't handle the key */
-    return FALSE;
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+    case KEY_F10:
+        EditOperatingSystemEntry(&((OperatingSystemItem*)Context)[SelectedMenuItem]);
+        return TRUE;
+#endif
+
+    default:
+        /* We didn't handle the key */
+        return FALSE;
+    }
 }
 
 VOID RunLoader(VOID)
