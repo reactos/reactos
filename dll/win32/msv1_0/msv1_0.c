@@ -940,10 +940,13 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
     {
         case MsV1_0Lm20ChallengeRequest:
         case MsV1_0Lm20GetChallengeResponse:
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case MsV1_0EnumerateUsers:
         case MsV1_0GetUserInfo:
         case MsV1_0ReLogonUsers:
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_PARAMETER;
             break;
 
         case MsV1_0ChangePassword:
