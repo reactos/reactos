@@ -765,8 +765,14 @@ DriveDlgProc(
                                 // !PartEntry->New &&
                                 (PartEntry->FormatState == Preformatted /* || PartEntry->FormatState == Formatted */))
                             {
-                                // pSetupData->CurrentInstallation->DiskNumber      = PartEntry->DiskEntry->DiskNumber;
-                                // pSetupData->CurrentInstallation->PartitionNumber = PartEntry->PartitionNumber;
+                                if (!pSetupData->CurrentInstallation)
+                                {
+                                    NTOS_INSTALLATION NewInstallation;
+                                    pSetupData->CurrentInstallation = &NewInstallation;
+                                }
+
+                                pSetupData->CurrentInstallation->DiskNumber      = PartEntry->DiskEntry->DiskNumber;
+                                pSetupData->CurrentInstallation->PartitionNumber = PartEntry->PartitionNumber;
 
                                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                             }

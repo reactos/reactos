@@ -870,6 +870,8 @@ SummaryDlgProc(
                 {
                     WCHAR CurrentItemText[256];
 
+                    ASSERT(pSetupData->CurrentInstallation != NULL);
+
                     /* Show the current selected settings */
 
                     // FIXME! Localize
