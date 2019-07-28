@@ -30,6 +30,7 @@ DBG_DEFAULT_CHANNEL(DISK);
 #define XBOX_IDE_COMMAND_PORT 0x1f0
 #define XBOX_IDE_CONTROL_PORT 0x170
 
+/* BRFR signature at disk offset 0x600 */
 #define XBOX_SIGNATURE_SECTOR 3
 #define XBOX_SIGNATURE        ('B' | ('R' << 8) | ('F' << 16) | ('R' << 24))
 
@@ -479,7 +480,7 @@ XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_T
      * This is the Xbox, chances are that there is a Xbox-standard
      * partitionless disk in it so let's check that first.
      */
-    if (1 <= PartitionNumber && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
+    if (PartitionNumber >= 1 && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
         MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
     {
         if (*((PULONG) SectorData) == XBOX_SIGNATURE)

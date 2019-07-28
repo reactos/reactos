@@ -104,6 +104,9 @@ BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
     if (*FrldrBootPath)
         goto Done;
 
+    if (Size)
+        BootPath[0] = ANSI_NULL;
+
     /* 0x49 is our magic ramdisk drive, so try to detect it first */
     if (FrldrBootDrive == 0x49)
     {
