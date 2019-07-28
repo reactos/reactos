@@ -6,7 +6,7 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bem-vindo ao assistente de instalação do ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este assistente instala o ReactOS no seu computador. Precisamos reunir algumas informações para instalar o ReactOS devidamente.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Este assistente ajuda-o a instalar o ReactOS no seu computador. Precisamos reunir algumas informações para instalar o ReactOS devidamente.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Clique Avançar para continuar a instalação.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -15,10 +15,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Os desenvolvedores do ReactOS gostariam de agradecer aos seguintes projectos Open Source, cujas partes foram utilizadas para criar o ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Os programadores do ReactOS gostariam de agradecer aos seguintes projectos Open Source, cujas partes foram utilizadas para criar o ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS está licenciado sob a GPL, se deseja reutilizar ou redistribuir (partes) (d)ele deve respeitar a GPL.", IDC_STATIC, 15, 110, 227, 19
-    PUSHBUTTON "&Visualizar GPL...", IDC_VIEWGPL, 251, 110, 50, 19
+    PUSHBUTTON "&Visualizar GPL...", IDC_VIEWGPL, 240, 110, 61, 19
     LTEXT "Clique Avançar para continuar com a instalação.", IDC_STATIC, 15, 136, 195, 17
 END
 
@@ -59,14 +59,14 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Para alterar a localização do sistema, clique em Personalizar.", IDC_STATIC, 53, 60, 196, 8
-    PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "O tipo de teclado controla os caracteres que aparecem quando digita.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Para alterar o tipo do teclado, clique em Personalizar.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
+    LTEXT "A localização do sistema deve coincidir com o idioma das aplicações que quer utilizar. As informações regionais controlam o formato dos números, unidade monetária, data e hora.", IDC_STATIC, 50, 7, 253, 35
+    LTEXT "", IDC_LOCALETEXT, 50, 29, 250, 16
+    LTEXT "Para alterar a localização do sistema, clique em Personalizar.", IDC_STATIC, 50, 60, 196, 8
+    PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "O tipo de teclado controla os caracteres que aparecem quando digita.", IDC_STATIC, 50, 86, 253, 8
+    LTEXT "", IDC_LAYOUTTEXT, 50, 100, 250, 16
+    LTEXT "Para alterar o tipo do teclado, clique em Personalizar.", IDC_STATIC, 50, 126, 184, 8
+    PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
@@ -162,7 +162,7 @@ BEGIN
     IDS_DATETIMESUBTITLE "Definir a data e a hora correctas para o seu computador."
     IDS_PROCESSTITLE "A registar componentes"
     IDS_PROCESSSUBTITLE "Por favor aguarde..."
-    IDS_THEMESELECTIONTITLE "Aparencia"
+    IDS_THEMESELECTIONTITLE "Aparência"
     IDS_THEMESELECTIONSUBTITLE "Seleccione o tema perferido."
 END
 
