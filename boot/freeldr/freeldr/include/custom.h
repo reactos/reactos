@@ -36,7 +36,10 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL);
 VOID OptionMenuCustomBoot(VOID);
 #endif
 
-VOID EditCustomBootReactOS(IN ULONG_PTR SectionId OPTIONAL);
+VOID
+EditCustomBootReactOS(
+    IN ULONG_PTR SectionId OPTIONAL,
+    IN BOOLEAN IsSetup);
 
 #ifdef HAS_OPTION_MENU_REBOOT
 VOID OptionMenuReboot(VOID);

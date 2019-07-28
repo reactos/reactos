@@ -51,7 +51,8 @@ VOID OptionMenuCustomBoot(VOID)
         "Boot Sector File",
         "Linux",
 #endif
-        "ReactOS"
+        "ReactOS",
+        "ReactOS Setup"
         };
     ULONG SelectedMenuItem;
 
@@ -84,11 +85,19 @@ VOID OptionMenuCustomBoot(VOID)
             EditCustomBootLinux(0);
             break;
         case 4: // ReactOS
-#else
-        case 0:
-#endif
-            EditCustomBootReactOS(0);
+            EditCustomBootReactOS(0, FALSE);
             break;
+        case 5: // ReactOS Setup
+            EditCustomBootReactOS(0, TRUE);
+            break;
+#else
+        case 0: // ReactOS
+            EditCustomBootReactOS(0, FALSE);
+            break;
+        case 1: // ReactOS Setup
+            EditCustomBootReactOS(0, TRUE);
+            break;
+#endif
     }
 }
 
@@ -386,7 +395,10 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
 
 #endif // _M_IX86
 
-VOID EditCustomBootReactOS(IN ULONG_PTR SectionId OPTIONAL)
+VOID
+EditCustomBootReactOS(
+    IN ULONG_PTR SectionId OPTIONAL,
+    IN BOOLEAN IsSetup)
 {
     TIMEINFO* TimeInfo;
     OperatingSystemItem OperatingSystem;
@@ -452,7 +464,7 @@ VOID EditCustomBootReactOS(IN ULONG_PTR SectionId OPTIONAL)
         return;
 
     /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", "Windows2003"))
+    if (!IniAddSettingValueToSection(SectionId, "BootType", IsSetup ? "ReactOSSetup" : "Windows2003"))
         return;
 
     /* Construct the ReactOS ARC system path */

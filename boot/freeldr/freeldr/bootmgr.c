@@ -31,6 +31,20 @@ VOID
 (*EDIT_OS_ENTRY_PROC)(
     IN ULONG_PTR SectionId OPTIONAL);
 
+static VOID
+EditCustomBootReactOSSetup(
+    IN ULONG_PTR SectionId OPTIONAL)
+{
+    EditCustomBootReactOS(SectionId, TRUE);
+}
+
+static VOID
+EditCustomBootNTOS(
+    IN ULONG_PTR SectionId OPTIONAL)
+{
+    EditCustomBootReactOS(SectionId, FALSE);
+}
+
 static const struct
 {
     PCSTR BootType;
@@ -38,18 +52,18 @@ static const struct
     ARC_ENTRY_POINT OsLoader;
 } OSLoadingMethods[] =
 {
-    {"ReactOSSetup", EditCustomBootReactOS, LoadReactOSSetup},
+    {"ReactOSSetup", EditCustomBootReactOSSetup, LoadReactOSSetup},
 
 #ifdef _M_IX86
     {"Drive"       , EditCustomBootDisk      , LoadAndBootDrive     },
     {"Partition"   , EditCustomBootPartition , LoadAndBootPartition },
     {"BootSector"  , EditCustomBootSectorFile, LoadAndBootBootSector},
 
-    {"Linux"       , EditCustomBootLinux  , LoadAndBootLinux  },
-    {"WindowsNT40" , EditCustomBootReactOS, LoadAndBootWindows},
+    {"Linux"       , EditCustomBootLinux, LoadAndBootLinux  },
+    {"WindowsNT40" , EditCustomBootNTOS , LoadAndBootWindows},
 #endif
-    {"Windows"     , EditCustomBootReactOS, LoadAndBootWindows},
-    {"Windows2003" , EditCustomBootReactOS, LoadAndBootWindows},
+    {"Windows"     , EditCustomBootNTOS , LoadAndBootWindows},
+    {"Windows2003" , EditCustomBootNTOS , LoadAndBootWindows},
 };
 
 /* FUNCTIONS ******************************************************************/
