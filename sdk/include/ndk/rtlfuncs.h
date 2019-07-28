@@ -3379,7 +3379,7 @@ RtlFindSetBitsAndClear(
     _In_ ULONG HintIndex
 );
 
-#ifdef _REACTOS_ // ReactOS improvement
+#ifdef __REACTOS__ // ReactOS improvement
 _At_(BitMapHeader->SizeOfBitMap, _Post_equal_to_(SizeOfBitMap))
 _At_(BitMapHeader->Buffer, _Post_equal_to_(BitMapBuffer))
 #endif
