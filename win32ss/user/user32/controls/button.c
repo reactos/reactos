@@ -390,6 +390,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 	/* fall through */
     case WM_LBUTTONUP:
 #ifdef __REACTOS__
+    {
         BOOL TellParent = FALSE; //// ReactOS see note below.
 #endif
         state = get_button_state( hWnd );
@@ -426,14 +427,15 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
 #endif
         }
-#ifdef __REACTOS__
-        ReleaseCapture();
-        if (TellParent) BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
-#else
+#ifndef __REACTOS__
         else
         {
             ReleaseCapture();
         }
+#else
+        ReleaseCapture();
+        if (TellParent) BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+    }
 #endif
         break;
 
