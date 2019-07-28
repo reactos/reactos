@@ -149,7 +149,13 @@ typedef ULONG_PTR SWAPENTRY;
 //
 // Wait entry for marking pages that are being serviced
 //
+#ifdef _M_IX86
 #define MM_WAIT_ENTRY            0x7ffffc00
+#elif defined(_M_AMD64)
+#define MM_WAIT_ENTRY            0x7FFFFFFFFFFFFC00ULL
+#else
+#error Unsupported architecture!
+#endif
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
