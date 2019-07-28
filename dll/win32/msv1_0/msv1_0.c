@@ -849,24 +849,35 @@ MsvpCheckLogonHours(
     _In_ PSAMPR_LOGON_HOURS LogonHours,
     _In_ PLARGE_INTEGER LogonTime)
 {
+#if 0
     LARGE_INTEGER LocalLogonTime;
     TIME_FIELDS TimeFields;
     USHORT MinutesPerUnit, Offset;
+    BOOL bFound;
 
-    TRACE("MsvpCheckLogonHours(%p %p)\n", LogonHours, LogonTime);
+    FIXME("MsvpCheckLogonHours(%p %p)\n", LogonHours, LogonTime);
 
     if (LogonHours->UnitsPerWeek == 0 || LogonHours->LogonHours == NULL)
+    {
+        FIXME("No logon hours!\n");
         return TRUE;
+    }
 
     RtlSystemTimeToLocalTime(LogonTime, &LocalLogonTime);
     RtlTimeToTimeFields(&LocalLogonTime, &TimeFields);
 
-    TRACE("UnitsPerWeek: %u\n", LogonHours->UnitsPerWeek);
+    FIXME("UnitsPerWeek: %u\n", LogonHours->UnitsPerWeek);
     MinutesPerUnit = 10080 / LogonHours->UnitsPerWeek;
 
     Offset = ((TimeFields.Weekday * 24 + TimeFields.Hour) * 60 + TimeFields.Minute) / MinutesPerUnit;
+    FIXME("Offset: %us\n", Offset);
 
-    return (BOOL)(LogonHours->LogonHours[Offset / 8] & (1 << (Offset % 8)));
+    bFound = (BOOL)(LogonHours->LogonHours[Offset / 8] & (1 << (Offset % 8)));
+    FIXME("Logon permitted: %s\n", bFound ? "Yes" : "No");
+
+    return bFound;
+#endif
+    return TRUE;
 }
 
 
@@ -879,10 +890,15 @@ MsvpCheckWorkstations(
     PWSTR pStart, pEnd;
     BOOL bFound = FALSE;
 
-    TRACE("MsvpCheckWorkstations(%wZ %S)\n", WorkStations, ComputerName);
+    TRACE("MsvpCheckWorkstations(%p %S)\n", WorkStations, ComputerName);
 
     if (WorkStations->Length == 0 || WorkStations->Buffer == NULL)
+    {
+        TRACE("No workstations!\n");
         return TRUE;
+    }
+
+    TRACE("Workstations: %wZ\n", WorkStations);
 
     pStart = WorkStations->Buffer;
     for (;;)
@@ -891,6 +907,7 @@ MsvpCheckWorkstations(
         if (pEnd != NULL)
             *pEnd = UNICODE_NULL;
 
+        TRACE("Comparing '%S' and '%S'\n", ComputerName, pStart);
         if (_wcsicmp(ComputerName, pStart) == 0)
         {
             bFound = TRUE;
@@ -905,6 +922,8 @@ MsvpCheckWorkstations(
         *pEnd = L',';
         pStart = pEnd + 1;
     }
+
+    TRACE("Found allowed workstation: %s\n", (bFound) ? "Yes" : "No");
 
     return bFound;
 }
