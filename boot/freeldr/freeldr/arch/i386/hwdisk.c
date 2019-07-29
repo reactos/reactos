@@ -65,8 +65,8 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
     RtlZeroMemory(Information, sizeof(FILEINFORMATION));
-    Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
-    Information->CurrentAddress.QuadPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+    Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
+    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
