@@ -1,7 +1,8 @@
 /*
  * ReactOS Hungarian keyboard layout
- * Copyright (C) 2003 ReactOS
+ * Copyright (C) 2003 - 2019 ReactOS
  * License: LGPL, see: LGPL.txt
+ * Author: Tibor Lajos Füzi
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
@@ -35,12 +36,12 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
-  '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
+  '7',          '8',          '9',          VK_OEM_3,
+  VK_OEM_2,     VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
-  'R',          'T',          'Y',          'U',
+  'R',          'T',          'Z',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
@@ -48,13 +49,13 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
+  'L',          VK_OEM_1,     VK_OEM_7,     '0',
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
-  'Z',          'X',          'C',          'V',
+  'Y',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT,
+  VK_OEM_PERIOD,VK_OEM_MINUS, VK_RSHIFT,
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
@@ -78,7 +79,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_SNAPSHOT,
   /* - 55 - */
   /* Oddities, and the remaining standard F-Keys */
-  VK_EMPTY,     VK_EMPTY,     VK_F11,       VK_F12,
+  VK_EMPTY,     VK_OEM_102,   VK_F11,       VK_F12,
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
@@ -159,63 +160,23 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
-  3,
-  { 0, 1, 2, 3 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT */
+  6,
+  { 0, 1, 3, 4, SHFT_INVALID, SHFT_INVALID, 2 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT, MENU, SHIFT + MENU, CTRL + MENU */
 };
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
   /* The numbers */
-  { '1',         0, {'1', '\''} },
-  /* Ctrl-2 generates NUL */
-  { '3',         0, {'3', '+'} },
-  { '4',         0, {'4', '!'} },
-  { '5',         0, {'5', '%'} },
-  /* Ctrl-6 generates RS */
-  { '7',         0, {'7', '='} },
-  { '8',         0, {'8', '('} },
-  { '9',         0, {'9', ')'} },
-  { '0',         0, {0xf6, 0xd6} },
+  { '0',         0,        {'0', 0xa7} },
   /* First letter row */
-  { 'Q',         CAPLOK,   {'q', 'Q'} },
-  { 'W',         CAPLOK,   {'w', 'W'} },
-  { 'E',         CAPLOK,   {'e', 'E'} },
   { 'R',         CAPLOK,   {'r', 'R'} },
   { 'T',         CAPLOK,   {'t', 'T'} },
-  { 'Y',         CAPLOK,   {'y', 'Y'} },
-  { 'U',         CAPLOK,   {'u', 'U'} },
-  { 'I',         CAPLOK,   {'i', 'I'} },
+  { 'Z',         CAPLOK,   {'z', 'Z'} },
   { 'O',         CAPLOK,   {'o', 'O'} },
   { 'P',         CAPLOK,   {'p', 'P'} },
   /* Second letter row */
-  { 'A',         CAPLOK,   {'a', 'A'} },
-  { 'S',         CAPLOK,   {'s', 'S'} },
-  { 'D',         CAPLOK,   {'d', 'D'} },
-  { 'F',         CAPLOK,   {'f', 'F'} },
-  { 'G',         CAPLOK,   {'g', 'G'} },
   { 'H',         CAPLOK,   {'h', 'H'} },
-  { 'J',         CAPLOK,   {'j', 'J'} },
-  { 'K',         CAPLOK,   {'k', 'K'} },
-  { 'L',         CAPLOK,   {'l', 'L'} },
-  /* Third letter row */
-  { 'Z',         CAPLOK,   {'z', 'Z'} },
-  { 'X',         CAPLOK,   {'x', 'X'} },
-  { 'C',         CAPLOK,   {'c', 'C'} },
-  { 'V',         CAPLOK,   {'v', 'V'} },
-  { 'B',         CAPLOK,   {'b', 'B'} },
-  { 'N',         CAPLOK,   {'n', 'N'} },
-  { 'M',         CAPLOK,   {'m', 'M'} },
-
   /* Specials */
-  /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,0, {0xf3, 0xd3} },
-  { VK_OEM_1       ,0, {0xe9, 0xc9} },
-  { VK_OEM_7       ,0, {0xfb, 0xdb} },
-  { VK_OEM_3       ,0, {'0', 0xa7} },
-  { VK_OEM_COMMA   ,0, {',', '?'} },
-  { VK_OEM_PERIOD  ,0, {'.', ':'} },
-  { VK_OEM_2       ,0, {'-', '_'} },
-  /* Keys that do not have shift states */
   { VK_TAB     ,0, {'\t','\t'} },
   { VK_ADD     ,0, {'+', '+'} },
   { VK_SUBTRACT,0, {'-', '-'} },
@@ -227,12 +188,57 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  /* Normal, Shifted, Ctrl */
+  /* Normal, Shifted, AltGr */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, {0xf5, 0xd5, 0x1b /* ESC */} },
-  { VK_OEM_6, 0, {0xfa, 0xda, 0x1d /* GS */} },
-  { VK_OEM_5, 0, {0xfb, 0xdb, 0x1c /* FS */} },
-  { VK_RETURN,0, {'\r', '\r', '\n'} },
+  /* The numbers */
+  { '1',           0,      {'1', '\'', '~'} },
+  { '2',           0,      {'2', '\"', 0x2c7} },
+  { '3',           0,      {'3', '+', '^'} },
+  { '4',           0,      {'4', '!', 0x2d8} },
+  { '5',           0,      {'5', '%', 0xb0} },
+  { '6',           0,      {'6', '/', 0x2db} },
+  { '7',           0,      {'7', '=', '`'} },
+  { '8',           0,      {'8', '(', 0x2d9} },
+  { '9',           0,      {'9', ')', 0xb4} },
+
+  { VK_OEM_3,      CAPLOK, {0xf6, 0xd6, 0X2DD} },
+  { VK_OEM_2,      CAPLOK, {0xfc, 0xdc, 0xa8} },
+  { VK_OEM_PLUS,   CAPLOK, {0xf3, 0xd3, 0xb8} },
+
+  /* First letter row */
+  { 'Q',           CAPLOK, {'q', 'Q', '\\'} },
+  { 'W',           CAPLOK, {'w', 'W', '|'} },
+  { 'E',           CAPLOK, {'e', 'E', 0xc4} },
+  { 'U',           CAPLOK, {'u', 'U', 0x20ac} },
+  { 'I',           CAPLOK, {'i', 'I', 0xcd} },
+  { VK_OEM_4,      CAPLOK, {0x151, 0x150, 0xf7} },
+  { VK_OEM_6,      CAPLOK, {0xfa, 0xda, 0xd7} },
+  /* Second letter row */
+  { 'A',           CAPLOK, {'a', 'A', 0xe4} },
+  { 'S',           CAPLOK, {'s', 'S', 0x111} },
+  { 'D',           CAPLOK, {'d', 'D', 0x110} },
+  { 'F',           CAPLOK, {'f', 'F', '['} },
+  { 'G',           CAPLOK, {'g', 'G', ']'} },
+  { 'J',           CAPLOK, {'j', 'J', 0xed} },
+  { 'K',           CAPLOK, {'k', 'K', 0x142} },
+  { 'L',           CAPLOK, {'l', 'L', 0x141} },
+  { VK_OEM_1,      CAPLOK, {0xe9, 0xc9, '$'} },
+  { VK_OEM_7,      CAPLOK, {0xe1, 0xc1, 0xdf} },
+  { VK_OEM_5,      CAPLOK, {0x171, 0x170, 0xa4} },
+  /* Third letter row */
+  { VK_OEM_102,    CAPLOK, {0xed, 0xcd, '<'} },
+  { 'Y',           CAPLOK, {'y', 'Y', '>'} },
+  { 'X',           CAPLOK, {'x', 'X', '#'} },
+  { 'C',           CAPLOK, {'c', 'C', '&'} },
+  { 'V',           CAPLOK, {'v', 'V', '@'} },
+  { 'B',           CAPLOK, {'b', 'B', '{'} },
+  { 'N',           CAPLOK, {'n', 'N', '}'} },
+  { 'M',           CAPLOK, {'m', 'M', '<'} },
+  { VK_OEM_COMMA,  0,      {',', '?', ';'} },
+  { VK_OEM_PERIOD, 0,      {'.', ':', '>'} },
+  { VK_OEM_MINUS,  0,      {'-', '_', '*'} },
+  /* Special */
+  { VK_RETURN,     0,      {'\r', '\r', '\n'} },
   { 0,0 }
 };
 
@@ -375,7 +381,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0, 1), /* Version 1.0 */
+  MAKELONG(KLLF_ALTGR, 1), /* Version 1.0 */
 
   /* Ligatures -- Hungarian doesn't have any */
   0,
