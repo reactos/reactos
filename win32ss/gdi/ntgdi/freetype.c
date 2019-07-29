@@ -382,11 +382,12 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 
 
 #if DBG
-VOID DumpFontGDI(PFONTGDI FontGDI)
+VOID DumpFontEntry(PFONT_ENTRY FontEntry)
 {
     const char *family_name;
     const char *style_name;
     FT_Face Face;
+    FONTGDI *FontGDI = FontEntry->Font;
 
     if (!FontGDI)
     {
@@ -398,12 +399,7 @@ VOID DumpFontGDI(PFONTGDI FontGDI)
     if (Face)
     {
         family_name = Face->family_name;
-        if (!family_name)
-            family_name = "<NULL>";
-
         style_name = Face->style_name;
-        if (!style_name)
-            style_name = "<NULL>";
     }
     else
     {
@@ -411,11 +407,14 @@ VOID DumpFontGDI(PFONTGDI FontGDI)
         style_name = "<invalid>";
     }
 
-    DPRINT("family_name '%s', style_name '%s', FontGDI %p, FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
+    DPRINT("family_name '%s', style_name '%s', FaceName '%wZ', StyleName '%wZ', FontGDI %p, "
+           "FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
         family_name,
         style_name,
+        &FontEntry->FaceName,
+        &FontEntry->StyleName,
         FontGDI,
-        FontGDI->FontObj,
+        &FontGDI->FontObj,
         FontGDI->iUnique,
         FontGDI->SharedFace,
         Face,
@@ -427,16 +426,13 @@ VOID DumpFontList(PLIST_ENTRY Head)
 {
     PLIST_ENTRY Entry;
     PFONT_ENTRY CurrentEntry;
-    PFONTGDI FontGDI;
 
     DPRINT("## DumpFontList(%p)\n", Head);
 
     for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        FontGDI = CurrentEntry->Font;
-
-        DumpFontGDI(FontGDI);
+        DumpFontEntry(CurrentEntry);
     }
 }
 
@@ -1365,11 +1361,9 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
             InsertTailList(&LoadedFontList, &Entry->ListEntry);
 
-            DPRINT("Font loaded: %s (%s)\n",
-                   Face->family_name ? Face->family_name : "<NULL>",
-                   Face->style_name ? Face->style_name : "<NULL>");
+            DPRINT("Font loaded: %s (%s), CharSet %u\n", Face->family_name, Face->style_name,
+                   FontGDI->CharSet);
             DPRINT("Num glyphs: %d\n", Face->num_glyphs);
-            DPRINT("CharSet: %d\n", FontGDI->CharSet);
         }
 
         IntLockFreeType();
