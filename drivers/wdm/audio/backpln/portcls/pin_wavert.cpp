@@ -309,7 +309,6 @@ CPortPinWaveRT::DeviceIoControl(
     {
         case IOCTL_KS_PROPERTY:
             return HandleKsProperty(Irp);
-            break;
 		
         case IOCTL_KS_ENABLE_EVENT:
             /* FIXME UNIMPLEMENTED */
@@ -329,7 +328,7 @@ CPortPinWaveRT::DeviceIoControl(
         case IOCTL_KS_METHOD:
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
-            break;
+            return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
 
         case IOCTL_KS_RESET_STATE:
             /* FIXME UNIMPLEMENTED */
@@ -339,11 +338,9 @@ CPortPinWaveRT::DeviceIoControl(
         case IOCTL_KS_WRITE_STREAM:
         case IOCTL_KS_READ_STREAM:
             return HandleKsStream(Irp);
-            break;
 			
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
-            break;
     }
 
     Irp->IoStatus.Information = 0;
