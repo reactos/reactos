@@ -369,6 +369,7 @@ WinLdrLoadModule(PCSTR ModuleName,
     if (Status != ESUCCESS)
     {
         /* In case of errors, we just return, without complaining to the user */
+        WARN("Error while opening '%s', Status: %u\n", ModuleName, Status);
         return NULL;
     }
 
@@ -395,6 +396,7 @@ WinLdrLoadModule(PCSTR ModuleName,
     ArcClose(FileId);
     if (Status != ESUCCESS)
     {
+        WARN("Error while reading '%s', Status: %u\n", ModuleName, Status);
         return NULL;
     }
 

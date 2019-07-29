@@ -49,10 +49,11 @@ WinLdrLoadSystemHive(
     /* Concatenate path and filename to get the full name */
     strcpy(FullHiveName, DirectoryPath);
     strcat(FullHiveName, HiveName);
-    //Print(L"Loading %s...\n", FullHiveName);
+
     Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
+        WARN("Error while opening '%s', Status: %u\n", FullHiveName, Status);
         UiMessageBox("Opening hive file failed!");
         return FALSE;
     }
@@ -91,6 +92,7 @@ WinLdrLoadSystemHive(
     if (Status != ESUCCESS)
     {
         ArcClose(FileId);
+        WARN("Error while reading '%s', Status: %u\n", FullHiveName, Status);
         UiMessageBox("Unable to read from hive file!");
         return FALSE;
     }
@@ -320,12 +322,14 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         AnsiEqualsOem = TRUE;
 
     /* Open file with ANSI and store its size */
-    //Print(L"Loading %s...\n", Filename);
     strcpy(FileName, DirectoryPath);
     strcat(FileName, AnsiFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     Status = ArcGetFileInformation(AnsiFileId, &FileInfo);
     if (Status != ESUCCESS)
@@ -346,7 +350,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         strcat(FileName, OemFileName);
         Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
+        }
 
         Status = ArcGetFileInformation(OemFileId, &FileInfo);
         if (Status != ESUCCESS)
@@ -362,7 +369,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcat(FileName, LanguageFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     Status = ArcGetFileInformation(LanguageFileId, &FileInfo);
     if (Status != ESUCCESS)
@@ -403,11 +413,17 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcat(FileName, AnsiFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     Status = ArcRead(AnsiFileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     ArcClose(AnsiFileId);
 
@@ -418,11 +434,17 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         strcat(FileName, OemFileName);
         Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
+        }
 
         Status = ArcRead(OemFileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while reading '%s', Status: %u\n", FileName, Status);
             goto Failure;
+        }
 
         ArcClose(OemFileId);
     }
@@ -432,11 +454,17 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcat(FileName, LanguageFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     Status = ArcRead(LanguageFileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
     ArcClose(LanguageFileId);
 
@@ -841,7 +869,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    // Insert entry into the list 
+    // Insert entry into the list
     if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
     {
         // It was already there, so delete our entry

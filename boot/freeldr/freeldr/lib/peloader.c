@@ -287,7 +287,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        // UiMessageBox("Can not open the file.");
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         return FALSE;
     }
 
@@ -295,6 +295,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         UiMessageBox("Error reading from file.");
         ArcClose(FileId);
         return FALSE;
@@ -348,11 +349,12 @@ WinLdrLoadImage(IN PCHAR FileName,
     TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
 
     /* Set to 0 position and fully load the file image */
-    Position.HighPart = Position.LowPart = 0;
+    Position.QuadPart = 0;
     Status = ArcSeek(FileId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
-        UiMessageBox("Error seeking to start of file.");
+        WARN("Error while seeking '%s', Status: %u\n", FileName, Status);
+        UiMessageBox("Error seeking the start of a file.");
         ArcClose(FileId);
         return FALSE;
     }
@@ -360,7 +362,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, PhysicalBase, NtHeaders->OptionalHeader.SizeOfHeaders, &BytesRead);
     if (Status != ESUCCESS)
     {
-        // Print(L"Error reading headers %s\n", FileName);
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         UiMessageBox("Error reading headers.");
         ArcClose(FileId);
         return FALSE;
