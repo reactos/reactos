@@ -246,15 +246,15 @@ VOID AppendBootTimeOptions(PCHAR BootOptions)
     switch (BootOptionChoice)
     {
         case SAFE_MODE:
-            strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); // FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS /NOGUIBOOT");
             break;
 
         case SAFE_MODE_WITH_NETWORKING:
-            strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); // FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS /NOGUIBOOT");
             break;
 
         case SAFE_MODE_WITH_COMMAND_PROMPT:
-            strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); // FIXME: NOGUIBOOT should also be specified
+            strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS /NOGUIBOOT");
             break;
 
         case LAST_KNOWN_GOOD_CONFIGURATION:
