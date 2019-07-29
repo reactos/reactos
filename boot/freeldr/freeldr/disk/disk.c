@@ -130,9 +130,9 @@ BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
         PARTITION_TABLE_ENTRY PartitionEntry;
 
         /* This is a hard disk */
-        if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
+        if (!DiskGetBootPartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
         {
-            ERR("Invalid active partition information\n");
+            ERR("Failed to get boot partition entry\n");
             return FALSE;
         }
 

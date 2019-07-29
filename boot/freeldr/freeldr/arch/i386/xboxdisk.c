@@ -30,25 +30,6 @@ DBG_DEFAULT_CHANNEL(DISK);
 #define XBOX_IDE_COMMAND_PORT 0x1f0
 #define XBOX_IDE_CONTROL_PORT 0x170
 
-/* BRFR signature at disk offset 0x600 */
-#define XBOX_SIGNATURE_SECTOR 3
-#define XBOX_SIGNATURE        ('B' | ('R' << 8) | ('F' << 16) | ('R' << 24))
-
-static struct
-{
-    ULONG SectorCountBeforePartition;
-    ULONG PartitionSectorCount;
-    UCHAR SystemIndicator;
-} XboxPartitions[] =
-{
-    /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
-    { 0x0055F400, 0x0098f800, PARTITION_FAT32  }, /* Store , E: */
-    { 0x00465400, 0x000FA000, PARTITION_FAT_16 }, /* System, C: */
-    { 0x00000400, 0x00177000, PARTITION_FAT_16 }, /* Cache1, X: */
-    { 0x00177400, 0x00177000, PARTITION_FAT_16 }, /* Cache2, Y: */
-    { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
-};
-
 #define  IDE_SECTOR_BUF_SZ      512
 #define  IDE_MAX_POLL_RETRIES   100000
 #define  IDE_MAX_BUSY_RETRIES   50000
@@ -469,32 +450,6 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
     }
 
     return TRUE;
-}
-
-BOOLEAN
-XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-    UCHAR SectorData[IDE_SECTOR_BUF_SZ];
-
-    /*
-     * This is the Xbox, chances are that there is a Xbox-standard
-     * partitionless disk in it so let's check that first.
-     */
-    if (PartitionNumber >= 1 && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
-        MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
-    {
-        if (*((PULONG) SectorData) == XBOX_SIGNATURE)
-        {
-            memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
-            PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
-            PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
-            PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
-            return TRUE;
-        }
-    }
-
-    /* No magic Xbox partitions, maybe there's a MBR */
-    return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN
