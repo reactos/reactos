@@ -1123,16 +1123,12 @@ ARC_STATUS BtrFsGetFileInformation(ULONG FileId, FILEINFORMATION *Information)
 {
     pbtrfs_file_info phandle = FsGetDeviceSpecific(FileId);
 
-    TRACE("BtrFsGetFileInformation %lu\n", FileId);
-
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = phandle->inode.size;
     Information->CurrentAddress.QuadPart = phandle->position;
 
-    TRACE("BtrFsGetFileInformation() FileSize = %llu\n",
-          Information->EndingAddress.QuadPart);
-    TRACE("BtrFsGetFileInformation() FilePointer = %llu\n",
-          Information->CurrentAddress.QuadPart);
+    TRACE("BtrFsGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
+          FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
     return ESUCCESS;
 }

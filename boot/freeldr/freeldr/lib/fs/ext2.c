@@ -1207,14 +1207,12 @@ ARC_STATUS Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = FileHandle->FileSize;
     Information->CurrentAddress.QuadPart = FileHandle->FilePointer;
 
-    TRACE("Ext2GetFileInformation() FileSize = %d\n",
-        Information->EndingAddress.LowPart);
-    TRACE("Ext2GetFileInformation() FilePointer = %d\n",
-        Information->CurrentAddress.LowPart);
+    TRACE("Ext2GetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
+          FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
     return ESUCCESS;
 }

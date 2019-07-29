@@ -253,12 +253,12 @@ ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-    TRACE("IsoGetFileInformation() FileSize = %d\n", FileHandle->FileSize);
-    TRACE("IsoGetFileInformation() FilePointer = %d\n", FileHandle->FilePointer);
-
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = FileHandle->FileSize;
     Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+
+    TRACE("IsoGetFileInformation(%lu) -> FileSize = %lu, FilePointer = 0x%lx\n",
+          FileId, Information->EndingAddress.LowPart, Information->CurrentAddress.LowPart);
 
     return ESUCCESS;
 }

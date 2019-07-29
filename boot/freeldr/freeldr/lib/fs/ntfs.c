@@ -766,14 +766,12 @@ ARC_STATUS NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = NtfsGetAttributeSize(&FileHandle->DataContext->Record);
     Information->CurrentAddress.QuadPart = FileHandle->Offset;
 
-    TRACE("NtfsGetFileInformation() FileSize = %d\n",
-        Information->EndingAddress.LowPart);
-    TRACE("NtfsGetFileInformation() FilePointer = %d\n",
-        Information->CurrentAddress.LowPart);
+    TRACE("NtfsGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
+          FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
     return ESUCCESS;
 }

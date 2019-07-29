@@ -179,7 +179,7 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
     Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
 

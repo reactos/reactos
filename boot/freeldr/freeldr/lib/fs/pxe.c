@@ -145,6 +145,9 @@ static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Informati
     Information->EndingAddress.LowPart = _FileSize;
     Information->CurrentAddress.LowPart = _FilePosition;
 
+    TRACE("PxeGetFileInformation(%lu) -> FileSize = %lu, FilePointer = 0x%lx\n",
+          FileId, Information->EndingAddress.LowPart, Information->CurrentAddress.LowPart);
+
     return ESUCCESS;
 }
 

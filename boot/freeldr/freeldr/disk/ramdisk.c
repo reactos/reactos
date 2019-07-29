@@ -34,7 +34,7 @@ static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Infor
     //
     // Give current seek offset and ram disk size to caller
     //
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = gRamDiskSize;
     Information->CurrentAddress.LowPart = gRamDiskOffset;
 

@@ -1411,14 +1411,12 @@ ARC_STATUS FatGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = FileHandle->FileSize;
     Information->CurrentAddress.LowPart = FileHandle->FilePointer;
 
-    TRACE("FatGetFileInformation() FileSize = %d\n",
-        Information->EndingAddress.LowPart);
-    TRACE("FatGetFileInformation() FilePointer = %d\n",
-        Information->CurrentAddress.LowPart);
+    TRACE("FatGetFileInformation(%lu) -> FileSize = %lu, FilePointer = 0x%lx\n",
+          FileId, Information->EndingAddress.LowPart, Information->CurrentAddress.LowPart);
 
     return ESUCCESS;
 }
