@@ -29,40 +29,33 @@
 
 BOOL
 WINAPI
-SRSetRestorePointA(PRESTOREPOINTINFOA pRestorePtSpec, PSTATEMGRSTATUS pStateMgrStatus)
+SRSetRestorePointA(PRESTOREPOINTINFOA pRestorePtSpec, PSTATEMGRSTATUS pSMgrStatus)
 {
-    RESTOREPOINTINFOW RPInfoW;
-
     DPRINT1("SRSetRestorePointA is unimplemented\n");
 
-    if (!pRestorePtSpec)
+    if (!pSMgrStatus)
         return FALSE;
 
-    RPInfoW.dwEventType = pRestorePtSpec->dwEventType;
-    RPInfoW.dwRestorePtType = pRestorePtSpec->dwRestorePtType;
-    RPInfoW.llSequenceNumber = pRestorePtSpec->llSequenceNumber;
+    pSMgrStatus->nStatus = ERROR_SUCCESS;
+    pSMgrStatus->llSequenceNumber = pRestorePtSpec->llSequenceNumber + 1;
 
-    if (!MultiByteToWideChar( CP_ACP, 0, pRestorePtSpec->szDescription, -1, RPInfoW.szDescription, MAX_DESC_W))
-        return FALSE;
-
-    return SRSetRestorePointW(&RPInfoW, pStateMgrStatus);
+    return TRUE;
 }
 
 
 BOOL
 WINAPI
-SRSetRestorePointW(PRESTOREPOINTINFOW pRestorePtSpec, PSTATEMGRSTATUS pStateMgrStatus)
+SRSetRestorePointW(PRESTOREPOINTINFOW pRestorePtSpec, PSTATEMGRSTATUS pSMgrStatus)
 {
-
     DPRINT1("SRSetRestorePointW is unimplemented\n");
 
-    if (!pStateMgrStatus)
+    if (!pSMgrStatus)
         return FALSE;
 
-    memset(pStateMgrStatus, 0, sizeof(STATEMGRSTATUS));
-    pStateMgrStatus->nStatus = ERROR_SERVICE_DISABLED;
+    pSMgrStatus->nStatus = ERROR_SUCCESS;
+    pSMgrStatus->llSequenceNumber = pRestorePtSpec->llSequenceNumber + 1;
 
-    return FALSE;
+    return TRUE;
 }
 
 
