@@ -13,7 +13,7 @@ BEGIN
     GROUPBOX "Štandardy a formáty", -1, 5, 5, 234, 159
     LTEXT "Táto možnosť ovplyvňuje spôsob, ktorým niektoré programy formátujú čísla, meny, dátumy a čas.", -1, 14, 17, 220, 17
     LTEXT "Vyb&erte položku vyhovujúcu svojim požiadavkám, alebo kliknite na tlačidlo Prispôsobiť a vyberte svoj vlastný formát:", -1, 14, 37, 220, 18
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Prispôsobiť...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Ukážky", -1, 14, 73, 70, 10
     LTEXT "Číslo:", -1, 16, 86, 48, 10
@@ -28,7 +28,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Umiestnenie", -1, 5, 168, 234, 59
     LTEXT "&Vyberte svoje aktuálne umiestnenie, aby vám rôzne služby mohli poskytovať miestne informácie, napríklad správy alebo predpovede počasia.", -1, 14, 179, 210, 26
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -51,7 +51,7 @@ CAPTION "Rozšírené nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Jazyk pre programy bez podpory kódovania Unicode", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Toto systémové nastavenie umožňuje, aby mohli programy bez podpory kódovania Unicode zobrazovať ponuky a dialógové okná v rodnom jazyku. Neovplyvňuje programy s kódovaním Unicode, ale vzťahuje sa na všetkých používateľov tohto počítača.", -1, 14, 18, 223, 33
     LTEXT "Vyberte jazyk zodpovedajúci jazykovej verzii príslušných programov bez podpory kódovania &Unicode:", -1, 14, 55, 223, 18
     GROUPBOX "&Tabuľky na konverziu kódových stránok", -1, 5, 101, 234, 88

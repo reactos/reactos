@@ -8,7 +8,7 @@ BEGIN
     GROUPBOX "Языковые стандарты и форматы", -1, 5, 5, 234, 162
     LTEXT "Этот параметр влияет на способ отображения некоторыми программами чисел, денежных сумм, дат и времени.", -1, 14, 17, 220, 25
     LTEXT "Выберите элемент из списка или нажмите кнопку ""Настройка"" для того, чтобы задать форматы самостоятельно:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Настро&йка...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Образцы", -1, 14, 73, 70, 10
     LTEXT "Число:", -1, 16, 86, 48, 10
@@ -23,7 +23,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Расположение", -1, 5, 171, 234, 55
     LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 180, 217, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -46,7 +46,7 @@ CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Язык программ, не поддерживающих Юникод", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Этот параметр позволяет программам, не поддерживающим Юникод, отображать меню и диалоги на своем языке. Он не влияет на Юникод-совместимые программы, но применяется для всех пользователей этого компьютера.", -1, 14, 18, 223, 33
     LTEXT "Выберите язык, соответствующий языку используемых программ, которые не поддерживают Юникод:", -1, 14, 55, 223, 18
     GROUPBOX "Кодовые страницы таблиц преобразования", -1, 5, 101, 234, 88

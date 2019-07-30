@@ -16,7 +16,7 @@ BEGIN
     GROUPBOX "Мовні стандарти й формати", -1, 5, 5, 234, 162
     LTEXT "Цей параметр впливає на відображення чисел, грошових сум, дати й часу в деяких програмах.", -1, 14, 17, 220, 25
     LTEXT "&Виберіть зі списку найбільш прийнятний елемент або натисніть кнопку ""Налаштування"", щоб указати формати самостійно:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Налашту&вання...", IDC_SETUP_BUTTON, 175, 56, 60, 13
     LTEXT "Зразки", -1, 14, 73, 70, 10
     LTEXT "Число:", -1, 16, 86, 48, 10
@@ -31,7 +31,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Географічне розташування", -1, 5, 171, 234, 55
     LTEXT "Укажіть ваше поточне розташування, щоб служби могли надавати вам місцеву інформацію, наприклад, новини та прогноз погоди", -1, 14, 180, 215, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -54,7 +54,7 @@ CAPTION "Додатково"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Мова програм, які не підтримують Юнікод", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Цей системний параметр дає змогу програмам, які не підтримують Юнікод, показувати меню та діалоги рідною мовою. Він не впливає на програми з підтримкою Юнікоду, але застосовується до всіх користувачів цього комп'ютера.", -1, 14, 18, 223, 33
     LTEXT "Виберіть мову, яка відповідає мовній версії бажаних програм без підтримки Юнікоду.", -1, 14, 55, 223, 18
     GROUPBOX "Таблиці перетворення кодових сторінок", -1, 5, 101, 234, 88

@@ -8,7 +8,7 @@ BEGIN
     GROUPBOX "Standarder og format", -1, 5, 5, 234, 162
     LTEXT "Dette valget påvirker hvordan programmer formater tall, valuta, dato, og tid.", -1, 14, 17, 220, 25
     LTEXT "Velg en enhet for å tilpasse til egenskaper, eller klikk tilpasning for å velge dine egne formater:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Tilpasni&ng...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Utvalg", -1, 14, 73, 70, 10
     LTEXT "Tall:", -1, 16, 86, 48, 10
@@ -23,7 +23,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geografisk plassering", -1, 5, 172, 234, 55
     LTEXT "Still din lokalisering så at noen tjenester kan skaffe deg lokal informasjon; som for eksempel, nyheter og vær rapporter.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -46,7 +46,7 @@ CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Språk for ikke-Unicode programmer", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Denne systeminnstillingen gjør at programmet som ikke støtter Unicode, viser menyer og dialogbokser på det opprinnlige språket. Det påvirker ikke Unicode-programmer, men det gjelder for alle brukere på denne datamaskinen.", -1, 14, 18, 223, 33
     LTEXT "Velg et språk som tilsvarer språkversjonen av programmet du vil bruke, som ikke er Unicode-programmer:", -1, 14, 55, 223, 18
     GROUPBOX "Konverteringstabeller for tegntabell", -1, 5, 101, 234, 88
