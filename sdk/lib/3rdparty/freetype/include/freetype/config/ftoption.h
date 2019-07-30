@@ -118,7 +118,7 @@ FT_BEGIN_HEADER
   /* rendering technology that produces excellent output without LCD       */
   /* filtering.                                                            */
   /*                                                                       */
-/* #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
+#define FT_CONFIG_OPTION_SUBPIXEL_RENDERING
 
 
   /*************************************************************************/
@@ -654,7 +654,7 @@ FT_BEGIN_HEADER
   /* [1] https://www.microsoft.com/typography/cleartype/truetypecleartype.aspx */
   /*                                                                       */
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  1         */
-#define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2
+/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2 */
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  ( 1 | 2 ) */
 
 
