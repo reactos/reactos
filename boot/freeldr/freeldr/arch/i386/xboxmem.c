@@ -89,12 +89,13 @@ XboxMemInit(VOID)
     AvailableMemoryMb = InstalledMemoryMb;
 }
 
-FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[2];
+FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[MAX_BIOS_DESCRIPTORS + 1];
 
 PFREELDR_MEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
     TRACE("XboxMemGetMemoryMap()\n");
+    /* FIXME: Obtain memory map via multiboot spec */
 
     /* Synthesize memory map */
 
