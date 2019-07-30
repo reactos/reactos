@@ -280,5 +280,6 @@ VOID RunLoader(VOID)
 
 Reboot:
     UiUnInitialize("Rebooting...");
+    IniCleanup();
     return;
 }

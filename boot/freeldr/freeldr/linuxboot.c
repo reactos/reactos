@@ -164,6 +164,7 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     RtlCopyMemory((PVOID)0x99000, LinuxCommandLine, LinuxCommandLineSize);
 
     UiUnInitialize("Booting Linux...");
+    IniCleanup();
 
     DiskStopFloppyMotor();
 

@@ -103,12 +103,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("SystemRoot: %s\n", SystemRoot);
     TRACE("Options: %s\n", Options);
 
-    /* Fill Arc BootDevice */
+    /* Fill ARC BootDevice */
     LoaderBlock->ArcBootDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
     strncpy(LoaderBlock->ArcBootDeviceName, ArcBoot, MAX_PATH);
     LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
 
-    /* Fill Arc HalDevice, it matches ArcBoot path */
+    /* Fill ARC HalDevice, it matches ArcBoot path */
     LoaderBlock->ArcHalDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
     LoaderBlock->ArcHalDeviceName = PaToVa(LoaderBlock->ArcHalDeviceName);
 
@@ -136,7 +136,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     LoaderBlock->LoadOptions = PaToVa(LoaderBlock->LoadOptions);
 
-    /* Arc devices */
+    /* ARC devices */
     LoaderBlock->ArcDiskInformation = &WinLdrSystemBlock->ArcDiskInformation;
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
@@ -784,6 +784,7 @@ LoadAndBootWindowsCommon(
     PLDR_DATA_TABLE_ENTRY KernelDTE;
     KERNEL_ENTRY_POINT KiSystemStartup;
     LPCSTR SystemRoot;
+
     TRACE("LoadAndBootWindowsCommon()\n");
 
 #ifdef _M_IX86
@@ -820,6 +821,9 @@ LoadAndBootWindowsCommon(
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
 
+    /* Cleanup ini file */
+    IniCleanup();
+
     /* Initialize Phase 1 - no drivers loading anymore */
     WinLdrInitializePhase1(LoaderBlock,
                            BootOptions,
@@ -833,9 +837,6 @@ LoadAndBootWindowsCommon(
 
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS();
-
-    /* Cleanup ini file */
-    IniCleanup();
 
     /* Debugging... */
     //DumpMemoryAllocMap();

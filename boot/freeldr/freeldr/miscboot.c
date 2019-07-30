@@ -73,6 +73,7 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
+    IniCleanup();
 
     /*
      * Don't stop the floppy drive motor when we
@@ -148,6 +149,7 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
+    IniCleanup();
 
     /*
      * Don't stop the floppy drive motor when we
@@ -206,6 +208,7 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
+    IniCleanup();
 
     /*
      * Don't stop the floppy drive motor when we
