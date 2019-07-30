@@ -193,6 +193,9 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     OEM_STRING OemDomainName, OemWorkstationName;
     ULONG negotiateFlags = 0;
 
+    memset(&OemDomainName, 0, sizeof(OemDomainName));
+    memset(&OemWorkstationName, 0, sizeof(OemWorkstationName));
+
     TRACE("NtlmHandleNegotiateMessage hContext %lx\n", hContext);
     if(!(context = NtlmAllocateContext()))
     {
