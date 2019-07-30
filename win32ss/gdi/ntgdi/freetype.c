@@ -387,7 +387,7 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
     const char *family_name;
     const char *style_name;
     FT_Face Face;
-    FONTGDI *FontGDI = FontEntry->Font;
+    PFONTGDI FontGDI = FontEntry->Font;
 
     if (!FontGDI)
     {
