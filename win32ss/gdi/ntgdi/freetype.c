@@ -1361,9 +1361,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
             InsertTailList(&LoadedFontList, &Entry->ListEntry);
 
-            DPRINT("Font loaded: %s (%s), CharSet %u\n", Face->family_name, Face->style_name,
-                   FontGDI->CharSet);
-            DPRINT("Num glyphs: %d\n", Face->num_glyphs);
+            DPRINT("Font loaded: %s (%s), CharSet %u, Num glyphs %d\n",
+                   Face->family_name, Face->style_name, FontGDI->CharSet, Face->num_glyphs);
         }
 
         IntLockFreeType();
