@@ -149,7 +149,7 @@ client2_DoAuthentication(
         return FALSE;
     }
 
-    cbOut = cbMaxMessage;
+    cbOut = 500;//cbMaxMessage;
     Success = GenClientContext(NULL,
                                0,
                                pOutBuf,
