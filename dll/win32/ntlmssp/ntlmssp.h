@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@
 #include <sspi.h>
 #include <ntsecapi.h>
 #include <ntsecpkg.h>
+#include <ntstrsafe.h>
 #include <ntmsv1_0.h>
 #include <lm.h>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -391,10 +391,10 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
         ret = NtlmGenerateNegotiateMessage(newContext,
                                            fContextReq,
                                            OutputToken1);
-
         /* set result */
         phNewContext->dwUpper = NegotiateFlags;
         phNewContext->dwLower = newContext;
+
     }
     else if(phContext)       /* challenge! */
     {

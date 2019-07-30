@@ -47,17 +47,26 @@ NTOWFv2(LPCWSTR password,
         PUCHAR result)
 {
     UCHAR response_key_nt_v1 [16];
-    ULONG len_user = user ? wcslen(user) : 0;
-    ULONG len_domain = domain ? wcslen(domain) : 0;
-    ULONG len_user_u = len_user * sizeof(WCHAR);
-    ULONG len_domain_u = len_domain * sizeof(WCHAR);
+    size_t len_user = 0;
+    size_t len_domain = 0;
+    size_t len_buff, len_remain;
     WCHAR *user_upper = NULL;
-    WCHAR *buff = NULL;
+    WCHAR *buff = NULL, *buffptr;
     ULONG i;
     BOOLEAN res = FALSE;
 
-    user_upper = NtlmAllocate(len_user + 1);
-    buff = NtlmAllocate(len_user + len_domain + 1);
+    if ((user) &&
+        (FAILED(RtlStringCchLengthW(user, UNLEN, &len_user))))
+        goto done;
+
+    if ((domain) &&
+        (FAILED(RtlStringCchLengthW(domain, 255, &len_domain))))
+        goto done;
+
+    len_buff = len_user + len_domain;
+
+    user_upper = NtlmAllocate((len_user + 1) * sizeof(WCHAR));
+    buff = NtlmAllocate((len_buff + 1) * sizeof(WCHAR));
     if (!user_upper || !buff)
         goto done;
 
@@ -66,11 +75,16 @@ NTOWFv2(LPCWSTR password,
         user_upper[i] = toupper(user[i]);
     }
     user_upper[len_user] = 0;
-    len_user_u = swprintf(buff, user_upper, len_user_u) * sizeof(WCHAR);
-    len_domain_u = swprintf(buff+len_user_u, domain ? domain : L"", len_domain_u) * sizeof(WCHAR);
+
+    len_remain = len_buff + 1;
+    buffptr = buff;
+    if (FAILED(RtlStringCchCopyExW(buffptr, len_remain, user_upper, &buffptr, &len_remain, STRSAFE_IGNORE_NULLS)))
+        goto done;
+    if (FAILED(RtlStringCchCopyExW(buffptr, len_remain, domain, NULL, NULL, STRSAFE_IGNORE_NULLS)))
+        goto done;
 
     NTOWFv1(password, response_key_nt_v1);
-    HMAC_MD5(response_key_nt_v1, 16, (PUCHAR)buff, len_user_u + len_domain_u, result);
+    HMAC_MD5(response_key_nt_v1, 16, (PUCHAR)buff, len_user + len_domain, result);
 
     res = TRUE;
 done:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -350,6 +350,5 @@ CompleteAuthToken(PCtxtHandle phContext,
     TRACE("%p %p\n", phContext, pToken);
     if (!phContext)
         return SEC_E_INVALID_HANDLE;
-    
     return SEC_E_OK;
 }
