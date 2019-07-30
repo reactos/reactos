@@ -183,7 +183,6 @@ BOOL SendMsg(
     {
         return FALSE;
     }
-
     /* Send the body of the message */
     if (!SendBytes(s,
                    pBuf,
@@ -296,7 +295,7 @@ BOOL ReceiveBytes(
 
     while (cbRemaining)
     {
-        cbRead = recv(s, (char*)pTemp, cbBuf, 0);
+        cbRead = recv(s, (char*)pTemp, cbRemaining, 0);
         if (cbRead < 0 || cbRead == SOCKET_ERROR)
         {
             sync_err("recv failed: %d\n", WSAGetLastError());
