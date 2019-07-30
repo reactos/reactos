@@ -126,9 +126,9 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
     ULONG messageSize, offset;
 
     /* compute message size */
-    messageSize = sizeof(CHALLENGE_MESSAGE) + NtlmAvTargetInfo.Length;
-    if(TargetName.Length > 0)
-        messageSize += TargetName.Length;
+    messageSize = sizeof(CHALLENGE_MESSAGE) +
+                  NtlmAvTargetInfo.Length +
+                  TargetName.Length;
 
     ERR("generating chaMessage of size %lu\n", messageSize);
 
@@ -157,7 +157,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
     memcpy(Context->Challenge, chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
 
     /* point to the end of chaMessage */
-    offset = (ULONG_PTR)(chaMessage+messageSize);
+    offset = (ULONG_PTR)(chaMessage + sizeof(CHALLENGE_MESSAGE));
 
     /* set target information */
     ERR("set target information chaMessage %p to %S, len %d, offset %d\n", chaMessage, TargetName.Buffer, TargetName.Length, &offset);
