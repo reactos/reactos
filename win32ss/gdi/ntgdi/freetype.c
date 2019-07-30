@@ -409,17 +409,17 @@ VOID DumpFontEntry(PFONT_ENTRY FontEntry)
 
     DPRINT("family_name '%s', style_name '%s', FaceName '%wZ', StyleName '%wZ', FontGDI %p, "
            "FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
-        family_name,
-        style_name,
-        &FontEntry->FaceName,
-        &FontEntry->StyleName,
-        FontGDI,
-        &FontGDI->FontObj,
-        FontGDI->iUnique,
-        FontGDI->SharedFace,
-        Face,
-        FontGDI->CharSet,
-        FontGDI->Filename);
+           family_name,
+           style_name,
+           &FontEntry->FaceName,
+           &FontEntry->StyleName,
+           FontGDI,
+           &FontGDI->FontObj,
+           FontGDI->iUnique,
+           FontGDI->SharedFace,
+           Face,
+           FontGDI->CharSet,
+           FontGDI->Filename);
 }
 
 VOID DumpFontList(PLIST_ENTRY Head)
