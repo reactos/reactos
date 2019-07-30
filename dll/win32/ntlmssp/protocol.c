@@ -157,12 +157,13 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
     memcpy(Context->Challenge, chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
 
     /* point to the end of chaMessage */
-    offset = (ULONG_PTR)(chaMessage + sizeof(CHALLENGE_MESSAGE));
+    offset = ((ULONG_PTR)chaMessage) + sizeof(CHALLENGE_MESSAGE);
 
     /* set target information */
-    ERR("set target information chaMessage %p to %S, len %d, offset %d\n", chaMessage, TargetName.Buffer, TargetName.Length, &offset);
+    ERR("set target information chaMessage %p to %S, len %d, offset %x\n", chaMessage, TargetName.Buffer, TargetName.Length, &offset);
     NtlmUnicodeStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
 
+    FIXME("TODO Copy NtlmAvTargetInfo\n");
     //ERR("set target information %p to avl %S, %d, %d\n", chaMessage, NtlmAvTargetInfo.Buffer, NtlmAvTargetInfo.Length, offset);
     //NtlmPrintAvPairs(&NtlmAvTargetInfo);
     //NtlmUnicodeStringToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
