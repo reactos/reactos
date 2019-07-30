@@ -13,7 +13,7 @@ BEGIN
     GROUPBOX "Standardy a formáty", -1, 5, 5, 234, 162
     LTEXT "Toto nastavení ovlivní, jak některé programy formátují čísla, měny, data a čas.", -1, 14, 17, 220, 25
     LTEXT "Zvolte položku odpovídající požadovaným vlastnostem, nebo klepnutím na Vlastní vyberte vlastní formáty:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Vlastní...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Ukázky", -1, 14, 73, 70, 10
     LTEXT "Číslo:", -1, 16, 86, 48, 10
@@ -28,7 +28,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Zeměpisné umístění", -1, 5, 172, 234, 55
     LTEXT "Zvolením svého umístění umožníte některým službám dodávat místní informace, například zprávy nebo předpověď počasí.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -51,7 +51,7 @@ CAPTION "Rozšířené"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Jazyky ne-Unicode programů", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Toto nastavení systému umožní ne-Unicode programům zobrazovat nabídky a dialogy v jejich původním jazyce. Unicode programy nebudou ovlivněny, ale nastaveni bude použit pro všechny uživatele na tomto počítači.", -1, 14, 18, 223, 33
     LTEXT "Zvolte jazyk odpovídající jazykové verzi ne-Unicode programů, které chcete používat:", -1, 14, 55, 223, 18
     GROUPBOX "Převodní tabulky znakových stránek", -1, 5, 101, 234, 88

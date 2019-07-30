@@ -12,7 +12,7 @@ BEGIN
     GROUPBOX "Standarte dhe formatet", -1, 5, 5, 234, 162
     LTEXT "Ky opsion ndikon se si disa programe format numrash, monedhat, datat, dhe koha.", -1, 14, 17, 220, 25
     LTEXT "Përzgjidhni një objekt që të shkojë me pronat e saj, ose kliko modifiko për të zgjedhur vetë formatet tuaja:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Modifik&o...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Shembuj", -1, 14, 73, 70, 10
     LTEXT "Numer:", -1, 16, 86, 48, 10
@@ -27,7 +27,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Pozita gjeografike", -1, 5, 172, 234, 55
     LTEXT "Vendosni vendndodhjen tuaj në mënyrë që disa shërbime mund të furnizojnë me informacione lokale, për shembull, raportet lajme dhe moti.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -50,7 +50,7 @@ CAPTION "Avancuar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gjuhë për programe jo-Unicode", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Ky sistem mundëson vendosjen programet jo-Unicode për të shfaqur menutë dhe dialogun në gjuhën e tyre amtare. Kjo nuk ndikon programe Unicode, por kjo vlen për të gjithë përdoruesit e këtij kompjuteri.", -1, 14, 18, 223, 33
     LTEXT "Zgjidhni një gjuhë që të përputhet me Versionin e gjuhës së programeve jo-Unicode që ju doni të përdorni përdorni:", -1, 14, 55, 223, 18
     GROUPBOX "Tabela konvertimit dhe kodet e faqeve ", -1, 5, 101, 234, 88

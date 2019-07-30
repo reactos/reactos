@@ -10,7 +10,7 @@ BEGIN
     GROUPBOX "Standarde și formate", -1, 5, 5, 234, 162
     LTEXT "Această opțiune afectează modul în care numerele, valutele, data și ora sunt reprezentare în anumite aplicații.", -1, 14, 17, 220, 25
     LTEXT "Alegeți o configurație prestabilită sau specificați una particularizată pentru formatele de afișare:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 150, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 150, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Particularizare…", IDC_SETUP_BUTTON, 168, 56, 62, 13
     LTEXT "Exemple", -1, 14, 73, 70, 10
     LTEXT "Număr:", -1, 16, 86, 68, 10
@@ -25,7 +25,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Amplasare geografică", -1, 5, 172, 234, 55
     LTEXT "Specificați poziția geografică pentru a permite servicii localizate, cum ar fi știri locale sau informații meteo.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -48,7 +48,7 @@ CAPTION "Avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Limba pentru programe ne-Unicode", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Această opțiune specifică limba de afișare pentru programele care nu utilizează Unicode în textele din meniuri și ferestrele de dialog. Opțiunea nu afectează aplicațiile Unicode, dar va afecta toți utilizatorii din sistem.", -1, 14, 18, 223, 33
     LTEXT "Alegeți limba ce corespunde cu limba aplicațiilor ne-Unicode pe care doriți să le utilizați:", -1, 14, 55, 223, 18
     GROUPBOX "Tabele de conversie cod-pagină", -1, 5, 101, 234, 88

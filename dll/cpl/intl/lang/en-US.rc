@@ -8,7 +8,7 @@ BEGIN
     GROUPBOX "Standards and formats", -1, 5, 5, 234, 162
     LTEXT "This option affects how some programs format numbers, currencies, dates, and time.", -1, 14, 17, 220, 25
     LTEXT "&Select an item to match its properties, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Customi&ze...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Samples", -1, 14, 73, 70, 10
     LTEXT "Number:", -1, 16, 86, 48, 10
@@ -23,7 +23,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geographic location", -1, 5, 172, 234, 55
     LTEXT "Se&t up your location so that some services can supply you with local information; for example, news and weather reports.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -46,7 +46,7 @@ CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Language for non-Unicode programs", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "This system setting enables non-Unicode programs to display menus and dialogs in their native language. It does not affect Unicode programs, but it does apply to all users of this computer.", -1, 14, 18, 223, 33
     LTEXT "&Select a language to match the language version of the non-Unicode programs you want to use:", -1, 14, 55, 223, 18
     GROUPBOX "&Code page conversion tables", -1, 5, 101, 234, 88
