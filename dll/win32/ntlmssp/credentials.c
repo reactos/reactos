@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -91,7 +91,9 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
             NtlmFree(cred->UserName.Buffer);
         if (cred->Password.Buffer)
             NtlmFree(cred->Password.Buffer);
-        if (cred->SecToken)
+        if ((cred->SecToken) &&
+            /* Do not close globals! FIXME */
+            (cred->SecToken != NtlmSystemSecurityToken))
             NtClose(cred->SecToken);
 
         /* remove from list */
