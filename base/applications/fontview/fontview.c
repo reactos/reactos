@@ -447,8 +447,6 @@ MainWnd_OnInstall(HWND hwnd)
     WCHAR szSrcPath[MAX_PATH];
     WCHAR szDestPath[MAX_PATH];
     PWSTR pszFileName;
-    LONG res;
-    HKEY hKey;
 
     SendDlgItemMessage(hwnd, IDC_DISPLAY, FVM_GETFULLNAME, 64, (LPARAM)szFullName);
 //    MessageBoxW(hwnd, szFullName, L"Debug", MB_OK);
@@ -485,35 +483,6 @@ MainWnd_OnInstall(HWND hwnd)
         MessageBoxW(hwnd,L"Failed to copy the font file!", L"File Error", MB_OK);
         return -1;
     }
-
-    /* Open the fonts key */
-    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts",
-                        0,
-                        KEY_ALL_ACCESS,
-                        &hKey);
-    if (res != ERROR_SUCCESS)
-    {
-        MessageBoxW(hwnd, L"Failed top open the fonts key!", L"Debug1", MB_OK);
-        return -1;
-    }
-
-    /* Register the font */
-    res = RegSetValueExW(hKey,
-                         szFullName,
-                         0,
-                         REG_SZ,
-                         (LPBYTE)pszFileName,
-                         (wcslen(pszFileName) + 1) * sizeof(WCHAR));
-    if (res != ERROR_SUCCESS)
-    {
-        MessageBoxW(hwnd, L"Failed to register the new font!", L"Debug2", MB_OK);
-        RegCloseKey(hKey);
-        return -1;
-    }
-
-    /* Close the fonts key */
-    RegCloseKey(hKey);
 
     /* if all of this goes correctly, message the user about success */
     MessageBoxW(hwnd, L"Font Installation Completed.", L"Success", MB_OK);
