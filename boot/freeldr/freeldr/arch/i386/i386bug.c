@@ -49,21 +49,26 @@ i386PrintChar(CHAR chr, ULONG x, ULONG y)
 static void
 i386PrintText(CHAR *pszText)
 {
-    char chr;
-    while (1)
-    {
-        chr = *pszText++;
+    ULONG Width, Unused;
 
-        if (chr == 0) break;
-        if (chr == '\n')
+    MachVideoGetDisplaySize(&Width, &Unused, &Unused);
+
+    for (; *pszText != ANSI_NULL; ++pszText)
+    {
+        if (*pszText == '\n')
         {
-            i386_ScreenPosY++;
             i386_ScreenPosX = 0;
+            ++i386_ScreenPosY;
             continue;
         }
 
-        MachVideoPutChar(chr, SCREEN_ATTR, i386_ScreenPosX, i386_ScreenPosY);
-        i386_ScreenPosX++;
+        MachVideoPutChar(*pszText, SCREEN_ATTR, i386_ScreenPosX, i386_ScreenPosY);
+        if (++i386_ScreenPosX >= Width)
+        {
+            i386_ScreenPosX = 0;
+            ++i386_ScreenPosY;
+        }
+    // FIXME: Implement vertical screen scrolling if we are at the end of the screen.
     }
 }
 
