@@ -25,53 +25,50 @@ static unsigned CurrentAttr = 0x0f;
 VOID
 XboxConsPutChar(int c)
 {
-  ULONG Width;
-  ULONG Height;
-  ULONG Depth;
+    ULONG Width, Unused;
 
-  if ('\r' == c)
+    if (c == '\r')
     {
-      CurrentCursorX = 0;
+        CurrentCursorX = 0;
     }
-  else if ('\n' == c)
+    else if (c == '\n')
     {
-      CurrentCursorX = 0;
-      CurrentCursorY++;
+        CurrentCursorX = 0;
+        CurrentCursorY++;
     }
-  else if ('\t' == c)
+    else if (c == '\t')
     {
-      CurrentCursorX = (CurrentCursorX + 8) & ~ 7;
+        CurrentCursorX = (CurrentCursorX + 8) & ~ 7;
     }
-  else
+    else
     {
-      XboxVideoPutChar(c, CurrentAttr, CurrentCursorX, CurrentCursorY);
-      CurrentCursorX++;
+        XboxVideoPutChar(c, CurrentAttr, CurrentCursorX, CurrentCursorY);
+        CurrentCursorX++;
     }
-  XboxVideoGetDisplaySize(&Width, &Height, &Depth);
-  if (Width <= CurrentCursorX)
+
+    XboxVideoGetDisplaySize(&Width, &Unused, &Unused);
+    if (CurrentCursorX >= Width)
     {
-      CurrentCursorX = 0;
-      CurrentCursorY++;
+        CurrentCursorX = 0;
+        CurrentCursorY++;
     }
+    // FIXME: Implement vertical screen scrolling if we are at the end of the screen.
 }
 
 BOOLEAN
 XboxConsKbHit(VOID)
 {
-  /* No keyboard support yet */
-  return FALSE;
+    /* No keyboard support yet */
+    return FALSE;
 }
 
 int
 XboxConsGetCh(void)
 {
-  /* No keyboard support yet */
-  while (1)
-    {
-      ;
-    }
+    /* No keyboard support yet */
+    while (1) ;
 
-  return 0;
+    return 0;
 }
 
 /* EOF */

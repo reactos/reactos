@@ -9,7 +9,7 @@ typedef struct _FRAME
     void *Address;
 } FRAME;
 
-static const char *i386ExceptionDescriptionText[] =
+static const CHAR *i386ExceptionDescriptionText[] =
 {
     "Exception 00: DIVIDE BY ZERO\n\n",
     "Exception 01: DEBUG EXCEPTION\n\n",
@@ -34,20 +34,20 @@ static const char *i386ExceptionDescriptionText[] =
 
 #define SCREEN_ATTR 0x1F    // Bright white on blue background
 
+/* Used to store the current X and Y position on the screen */
+static ULONG i386_ScreenPosX = 0;
+static ULONG i386_ScreenPosY = 0;
+
 #if 0
 static void
-i386PrintChar(char chr, ULONG x, ULONG y)
+i386PrintChar(CHAR chr, ULONG x, ULONG y)
 {
     MachVideoPutChar(chr, SCREEN_ATTR, x, y);
 }
 #endif
 
-/* Used to store the current X and Y position on the screen */
-ULONG i386_ScreenPosX = 0;
-ULONG i386_ScreenPosY = 0;
-
 static void
-i386PrintText(char *pszText)
+i386PrintText(CHAR *pszText)
 {
     char chr;
     while (1)
@@ -68,15 +68,16 @@ i386PrintText(char *pszText)
 }
 
 static void
-PrintText(const char *format, ...)
+PrintText(const CHAR *format, ...)
 {
     va_list argptr;
-    char buffer[256];
+    CHAR buffer[256];
 
     va_start(argptr, format);
     _vsnprintf(buffer, sizeof(buffer), format, argptr);
-    buffer[sizeof(buffer) - 1] = 0;
+    buffer[sizeof(buffer) - 1] = ANSI_NULL;
     va_end(argptr);
+
     i386PrintText(buffer);
 }
 
