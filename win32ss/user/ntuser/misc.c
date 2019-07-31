@@ -91,7 +91,7 @@ UserGetLanguageToggle(VOID)
     return dwValue;
 }
 
-SHORT
+USHORT
 FASTCALL
 UserGetLanguageID(VOID)
 {
@@ -137,7 +137,7 @@ UserGetLanguageID(VOID)
     ZwClose(KeyHandle);
   }
   TRACE("Language ID = %x\n",Ret);
-  return (SHORT) Ret;
+  return (USHORT) Ret;
 }
 
 HBRUSH
