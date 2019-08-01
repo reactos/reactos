@@ -128,6 +128,7 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     SourceCodePro-Semibold.ttf
     SourceCodePro-SemiboldIt.ttf
+    #ssee1255.fon
     #sserife.fon
     #sserifeg.fon
     #sserifer.fon
