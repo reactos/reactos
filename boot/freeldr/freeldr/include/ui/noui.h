@@ -42,5 +42,18 @@ VOID NoUiFadeOut(VOID);
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN
+NoUiDisplayMenu(
+    IN PCSTR MenuHeader,
+    IN PCSTR MenuFooter OPTIONAL,
+    IN BOOLEAN ShowBootOptions,
+    IN PCSTR MenuItemList[],
+    IN ULONG MenuItemCount,
+    IN ULONG DefaultMenuItem,
+    IN LONG MenuTimeOut,
+    OUT PULONG SelectedMenuItem,
+    IN BOOLEAN CanEscape,
+    IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
+    IN PVOID Context OPTIONAL);
+
 VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);

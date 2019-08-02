@@ -59,12 +59,25 @@ VOID    TuiFadeOut(VOID);                                        // Fades the sc
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-VOID    NTAPI TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
-VOID    TuiDrawMenu(PUI_MENU_INFO MenuInfo);
-VOID    NTAPI TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
-VOID    NTAPI TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG    NTAPI TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOLEAN    TuiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID  TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
+VOID  TuiDrawMenu(PUI_MENU_INFO MenuInfo);
+VOID  TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
+VOID  TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
+ULONG TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+
+BOOLEAN
+TuiDisplayMenu(
+    IN PCSTR MenuHeader,
+    IN PCSTR MenuFooter OPTIONAL,
+    IN BOOLEAN ShowBootOptions,
+    IN PCSTR MenuItemList[],
+    IN ULONG MenuItemCount,
+    IN ULONG DefaultMenuItem,
+    IN LONG MenuTimeOut,
+    OUT PULONG SelectedMenuItem,
+    IN BOOLEAN CanEscape,
+    IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
+    IN PVOID Context OPTIONAL);
 
 /* Definitions for corners, depending on HORIZ and VERT */
 #define UL        (0xda)

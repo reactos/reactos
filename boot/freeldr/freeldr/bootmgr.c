@@ -206,7 +206,11 @@ LONG GetTimeOut(VOID)
     return TimeOut;
 }
 
-BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
+BOOLEAN
+MainBootMenuKeyPressFilter(
+    IN ULONG KeyPress,
+    IN ULONG SelectedMenuItem,
+    IN PVOID Context OPTIONAL)
 {
     if (KeyPress == KEY_F8)
     {
@@ -309,7 +313,8 @@ VOID RunLoader(VOID)
                            TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
-                           MainBootMenuKeyPressFilter))
+                           MainBootMenuKeyPressFilter,
+                           OperatingSystemList))
         {
             UiMessageBox("Press ENTER to reboot.");
             goto Reboot;

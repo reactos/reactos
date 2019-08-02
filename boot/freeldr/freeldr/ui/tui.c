@@ -628,14 +628,10 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
         if (MachConsKbHit())
         {
             key = MachConsGetCh();
-            if(key == KEY_EXTENDED)
+            if (key == KEY_EXTENDED)
                 key = MachConsGetCh();
 
-            if(key == KEY_ENTER)
-                break;
-            else if(key == KEY_SPACE)
-                break;
-            else if(key == KEY_ESC)
+            if ((key == KEY_ENTER) || (key == KEY_SPACE) || (key == KEY_ESC))
                 break;
         }
 
@@ -645,7 +641,6 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
 
         MachHwIdle();
     }
-
 }
 
 VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
@@ -882,12 +877,16 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
             temp[j++] = MessageText[i];
     }
 
-    EditBoxTextLength = 0;
+    EditBoxTextLength = (ULONG)strlen(EditTextBuffer) + 1;
+    EditBoxTextLength = min(EditBoxTextLength, Length);
     EditBoxTextPosition = 0;
     EditBoxLine = y2 - 2;
     EditBoxStartX = x1 + 3;
     EditBoxEndX = x2 - 3;
+
+    // Draw the edit box background and the text
     UiFillArea(EditBoxStartX, EditBoxLine, EditBoxEndX, EditBoxLine, ' ', ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
+    UiDrawText2(EditBoxStartX, EditBoxLine, EditBoxEndX - EditBoxStartX + 1, EditTextBuffer, ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
 
     // Show the cursor
     EditBoxCursorX = EditBoxStartX;
@@ -910,18 +909,18 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
         {
             Extended = FALSE;
             key = MachConsGetCh();
-            if(key == KEY_EXTENDED)
+            if (key == KEY_EXTENDED)
             {
                 Extended = TRUE;
                 key = MachConsGetCh();
             }
 
-            if(key == KEY_ENTER)
+            if (key == KEY_ENTER)
             {
                 ReturnCode = TRUE;
                 break;
             }
-            else if(key == KEY_ESC)
+            else if (key == KEY_ESC)
             {
                 ReturnCode = FALSE;
                 break;

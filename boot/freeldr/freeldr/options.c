@@ -91,7 +91,7 @@ VOID DoOptionsMenu(VOID)
     ULONG SelectedMenuItem;
     CHAR  DebugChannelString[100];
 
-    if (!UiDisplayMenu("Select an option:", "",
+    if (!UiDisplayMenu("Select an option:", NULL,
                        TRUE,
                        OptionsMenuList,
                        sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]),
@@ -99,7 +99,7 @@ VOID DoOptionsMenu(VOID)
                        -1,
                        &SelectedMenuItem,
                        TRUE,
-                       NULL))
+                       NULL, NULL))
     {
         /* The user pressed ESC */
         return;

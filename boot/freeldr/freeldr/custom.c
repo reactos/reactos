@@ -53,14 +53,14 @@ VOID OptionMenuCustomBoot(VOID)
         };
     ULONG SelectedMenuItem;
 
-    if (!UiDisplayMenu("Please choose a boot method:", "",
+    if (!UiDisplayMenu("Please choose a boot method:", NULL,
                        FALSE,
                        CustomBootMenuList,
                        sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,
-                       NULL))
+                       NULL, NULL))
     {
         /* The user pressed ESC */
         return;

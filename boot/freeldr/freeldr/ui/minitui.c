@@ -85,10 +85,13 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // No GUI status bar text, just minimal text. Show the menu header.
     //
-    UiVtbl.DrawText(0,
-                    MenuInfo->Top - 2,
-                    MenuInfo->MenuHeader,
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
+    if (MenuInfo->MenuHeader)
+    {
+        UiVtbl.DrawText(0,
+                        MenuInfo->Top - 2,
+                        MenuInfo->MenuHeader,
+                        ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
 
     //
     // Now tell the user how to choose
@@ -105,10 +108,13 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // And show the menu footer
     //
-    UiVtbl.DrawText(0,
-                    UiScreenHeight - 4,
-                    MenuInfo->MenuFooter,
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
+    if (MenuInfo->MenuFooter)
+    {
+        UiVtbl.DrawText(0,
+                        UiScreenHeight - 4,
+                        MenuInfo->MenuFooter,
+                        ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
 
     //
     // Draw the menu box
