@@ -199,7 +199,7 @@ GenServerContext(
     InSecBuff.pvBuffer = pIn;
 
     sync_trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
-    PrintHexDump(InSecBuff.cbBuffer, (PBYTE)InSecBuff.pvBuffer);
+    //PrintHexDump(InSecBuff.cbBuffer, (PBYTE)InSecBuff.pvBuffer);
 
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &hctxt,
@@ -238,8 +238,8 @@ GenServerContext(
 
     sync_trace("Token buffer generated (%lu bytes):\n",
         OutSecBuff.cbBuffer);
-    PrintHexDump(OutSecBuff.cbBuffer,
-                 (PBYTE)OutSecBuff.pvBuffer);
+    //PrintHexDump(OutSecBuff.cbBuffer,
+    //             (PBYTE)OutSecBuff.pvBuffer);
 
     *pfDone = !((ss == SEC_I_CONTINUE_NEEDED) ||
                 (ss == SEC_I_COMPLETE_AND_CONTINUE));
@@ -316,7 +316,7 @@ EncryptThis(
     *pcbOutput = cbMessage + SecBuff[0].cbBuffer + sizeof(DWORD);
 
     sync_trace("data after encryption including trailer (%lu bytes):\n", *pcbOutput);
-    PrintHexDump(*pcbOutput, *ppOutput);
+    //PrintHexDump(*pcbOutput, *ppOutput);
 
     return TRUE;
 }
