@@ -2304,22 +2304,30 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         Cache = &SharedFace->UserLanguage;
     }
 
-    if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
+    if (Size == 0 && Cache->OutlineRequiredSize > 0)
     {
+        ASSERT(Otm == NULL);
         return Cache->OutlineRequiredSize;
     }
 
     IntInitFontNames(&FontNames, SharedFace);
+    Cache->OutlineRequiredSize = FontNames.OtmSize;
 
-    if (!Cache->OutlineRequiredSize)
+    if (Size == 0)
     {
-        Cache->OutlineRequiredSize = FontNames.OtmSize;
+        ASSERT(Otm == NULL);
+        IntFreeFontNames(&FontNames);
+        return Cache->OutlineRequiredSize;
     }
+
+    ASSERT(Otm != NULL);
 
     if (Size < Cache->OutlineRequiredSize)
     {
+        DPRINT1("Size %u < OutlineRequiredSize %u\n", Size,
+                Cache->OutlineRequiredSize);
         IntFreeFontNames(&FontNames);
-        return Cache->OutlineRequiredSize;
+        return 0;   /* failure */
     }
 
     XScale = Face->size->metrics.x_scale;
