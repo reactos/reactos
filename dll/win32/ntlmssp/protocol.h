@@ -1,5 +1,5 @@
 /*
-* Copyright 2011 Samuel Serapión
+* Copyright 2011 Samuel SerapiÃ³n
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 */
 
 /* see "NT LAN Manager (NTLM) Authentication Protocol Specification"
-* [MS-NLMP] — v20110504 for more details */
+* [MS-NLMP] Â— v20110504 for more details */
 
 /* signature */
 #define NTLMSSP_SIGNATURE "NTLMSSP\0"
@@ -303,7 +303,7 @@ SECURITY_STATUS
 NtlmGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
-    IN UNICODE_STRING TargetName,
+    IN RAW_STRING TargetName,
     IN ULONG MessageFlags,
     OUT PSecBuffer OutputToken);
 
@@ -332,16 +332,20 @@ NtlmHandleAuthenticateMessage(
 
 /* helper functions */
 
+/* makes only a reference to blob - do not free! */
 SECURITY_STATUS
-NtlmBlobToUnicodeString(
+NtlmBlobToRawStringRef(
     IN PSecBuffer InputBuffer,
     IN NTLM_BLOB Blob,
-    IN OUT PUNICODE_STRING OutputStr);
+    IN OUT PRAW_STRING OutputStr);
+#define NtlmBlobToUnicodeStringRef(buf, blob, out) NtlmBlobToRawStringRef(buf, blob, (PRAW_STRING)out)
+#define NtlmBlobToStringRef(buf, blob, out) NtlmBlobToRawStringRef(buf, blob, (PRAW_STRING)out)
 
 VOID
-NtlmUnicodeStringToBlob(
+NtlmRawStringToBlob(
     IN PVOID OutputBuffer,
-    IN PUNICODE_STRING InStr,
+    IN PRAW_STRING InStr,
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet);
+#define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmRawStringToBlob(buf, (PRAW_STRING)str, out, ofs)
 

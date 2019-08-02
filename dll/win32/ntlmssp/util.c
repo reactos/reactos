@@ -179,42 +179,40 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
 }
 
 SECURITY_STATUS
-NtlmBlobToUnicodeString(IN PSecBuffer InputBuffer,
-                        IN NTLM_BLOB Blob,
-                        IN OUT PUNICODE_STRING OutputStr)
+NtlmBlobToRawStringRef(IN PSecBuffer InputBuffer,
+                       IN NTLM_BLOB Blob,
+                       IN OUT PRAW_STRING OutputStr)
 {
-    ULONG offset = Blob.Offset;
-
     /* check blob is not beyond the bounds of the input buffer */
-    if(offset >= InputBuffer->cbBuffer ||
-        offset + Blob.Length > InputBuffer->cbBuffer)
+    if(Blob.Offset >= InputBuffer->cbBuffer ||
+       Blob.Offset + Blob.Length > InputBuffer->cbBuffer)
     {
         ERR("blob points beyond buffer bounds!\n");
         return SEC_E_INVALID_TOKEN;
     }
 
     /* convert blob into a string */
-    OutputStr->MaximumLength = Blob.Length;
-    OutputStr->Buffer = (PWSTR)((PCHAR)InputBuffer->pvBuffer) + offset;
-    OutputStr->Length = wcslen(OutputStr->Buffer) * sizeof(WCHAR);
+    OutputStr->bAllocated = Blob.MaxLength;
+    OutputStr->Buffer = ((PBYTE)InputBuffer->pvBuffer) + Blob.Offset;
+    OutputStr->bUsed = Blob.Length;
 
     return SEC_E_OK;
 }
 
 VOID
-NtlmUnicodeStringToBlob(IN PVOID OutputBuffer,
-                        IN PUNICODE_STRING InStr,
-                        IN OUT PNTLM_BLOB OutputBlob,
-                        IN OUT PULONG_PTR OffSet)
+NtlmRawStringToBlob(IN PVOID OutputBuffer,
+                    IN PRAW_STRING InStr,
+                    IN OUT PNTLM_BLOB OutputBlob,
+                    IN OUT PULONG_PTR OffSet)
 {
     /* copy string to target location */
     if(InStr->Buffer)
-        memcpy((PVOID)*OffSet, InStr->Buffer, InStr->Length);
+        memcpy((PVOID)*OffSet, InStr->Buffer, InStr->bUsed);
 
     /* set blob fields */
-    OutputBlob->Length = OutputBlob->MaxLength = InStr->Length;
+    OutputBlob->Length = OutputBlob->MaxLength = InStr->bUsed;
     OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)OutputBuffer);
 
     /* move the offset to the end of the string we just copied */
-    *OffSet += InStr->Length;
+    *OffSet += InStr->bUsed;
 }

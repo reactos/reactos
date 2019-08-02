@@ -86,6 +86,14 @@ extern NTLM_MODE NtlmMode;
 #define NTLM_MAX_BUF 1904
 #define NTLM_CRED_NULLSESSION SECPKG_CRED_RESERVED
 
+/* String of any/unknown type */
+typedef struct _RAW_STRING
+{
+    USHORT bUsed;
+    USHORT bAllocated;
+    PBYTE  Buffer;
+} RAW_STRING, *PRAW_STRING;
+
 typedef struct _NTLMSSP_CREDENTIAL
 {
     LIST_ENTRY Entry;
