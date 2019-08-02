@@ -79,6 +79,11 @@ add_compile_flags("/wd4244 /wd4290 /wd4800 /wd4200 /wd4214")
 # FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
 add_compile_flags("/wd4018")
 
+if (ARCH STREQUAL "amd64")
+    # FIXME: Temporarily disable (tons of) C4267 warning "'var' : conversion from 'size_t' to 'type', possible loss of data", until we fix more of the others.
+    add_compile_flags("/wd4267")
+endif()
+
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
 # - C4020: too many actual parameters
