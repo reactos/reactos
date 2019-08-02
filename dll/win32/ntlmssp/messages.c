@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,6 +50,12 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 
     /* get context, need to free it later! */
     context = NtlmReferenceContext(phContext->dwLower);
+
+    if (!context->SendSealKey)
+    {
+        TRACE("context->SendSealKey is NULL\n");
+        return SEC_E_INVALID_TOKEN;
+    }
 
     TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
     /* extract data and signature buffers */
