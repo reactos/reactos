@@ -17,6 +17,7 @@
 - Renamed filename "LiberationSans-Bold.ttf" as "arialbd.ttf".
 - Renamed filename "LiberationSans-BoldItalic.ttf" as "arialbi.ttf".
 - Renamed filename "LiberationSans-Italic.ttf" as "ariali.ttf".
+- Renamed family name "Liberation Sans" as "Arial".
 - Renamed display name "Liberation Sans" as "Arial".
 - Renamed display name "Liberation Sans Bold" as "Arial Bold".
 - Renamed display name "Liberation Sans Bold Italic" as "Arial Bold Italic".
