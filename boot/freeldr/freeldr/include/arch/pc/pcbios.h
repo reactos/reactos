@@ -46,13 +46,19 @@ typedef struct
 
         struct
         {
-            // Bit 0. ACPI 3.0. As of ACPI 4.0, became "Reserved -> must be 1".
+            // Bit 0. ACPI 3.0.
+            // As of ACPI 4.0, became "Reserved -> must be 1".
             ULONG Enabled_Reserved : 1;
-            // Bit 1. ACPI 3.0. As of ACPI 6.1, became "Unimplemented -> Deprecated".
-            ULONG NonVolatile_Deprecated : 1;
-            // Bit 2. ACPI 4.0. As of ACPI 6.1, became "Unimplemented -> Deprecated".
-            ULONG SlowAccess_Deprecated : 1;
-            // Bit 3. ACPI 4.0. ACPI 5.0-A added "Used only on PC-AT BIOS" (not UEFI).
+            // Bit 1. ACPI 3.0.
+            // As of ACPI 6.1, became "Unimplemented -> Deprecated".
+            // As of ACPI 6.3, became "Reserved -> must be 0".
+            ULONG NonVolatile_Deprecated_Reserved : 1;
+            // Bit 2. ACPI 4.0.
+            // As of ACPI 6.1, became "Unimplemented -> Deprecated".
+            // As of ACPI 6.3, became "Reserved -> must be 0".
+            ULONG SlowAccess_Deprecated_Reserved : 1;
+            // Bit 3. ACPI 4.0.
+            // ACPI 5.0-A added "Used only on PC-AT BIOS" (not UEFI).
             ULONG ErrorLog : 1;
             // Bits 4-31. ACPI 3.0.
             ULONG Reserved : 28;
