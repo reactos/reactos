@@ -3,7 +3,7 @@
 MUI_SUBFONT LatinFonts[] =
 {
     /*Font                       Substitute  */
-    { L"Arial",                  L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -83,7 +83,7 @@ MUI_SUBFONT CyrillicFonts[] =
 
 MUI_SUBFONT GreekFonts[] =
 {
-    { L"Arial",                  L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -169,7 +169,7 @@ WCHAR CSF_LocalName3[] = {0xFC4B, 0x91CC, 0};                   /* SimHei */
 WCHAR CSF_LocalName4[] = {'M', 'S', 0x5B8B, 0x4F53, 0};         /* MS Song */
 MUI_SUBFONT ChineseSimplifiedFonts[] =
 {
-    { L"Arial",                  L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -226,7 +226,7 @@ WCHAR CTF_LocalName2[] = {0x83EF, 0x5EB7, 0x4E2D, 0x660E, 0x9AD4, 0};       /* D
 WCHAR CTF_LocalName3[] = {0x83EF, 0x5EB7, 0x7C97, 0x660E, 0x9AD4, 0};       /* DLCMingBold */
 MUI_SUBFONT ChineseTraditionalFonts[] =
 {
-    { L"Arial",           L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -283,7 +283,7 @@ WCHAR JF_LocalName2[] = {0xFF2D, 0xFF33, ' ', 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0}
 WCHAR JF_LocalName3[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};   /* MS PGothic */
 MUI_SUBFONT JapaneseFonts[] =
 {
-    { L"Arial",           L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -341,7 +341,7 @@ WCHAR KF_LocalName4[] = {0xAD74, 0xB9BC, 0};            /* Gulim */
 WCHAR KF_LocalName5[] = {0xAD74, 0xB9BC, 0xCCB4, 0};    /* GulimChe */
 MUI_SUBFONT KoreanFonts[] =
 {
-    { L"Arial",           L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
@@ -438,7 +438,7 @@ MUI_SUBFONT UnicodeFonts[] =
 MUI_SUBFONT HindiFonts[] =
 {
     /*Font                       Substitute  */
-    { L"Arial",                  L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
