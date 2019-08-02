@@ -1,5 +1,9 @@
 
 list(APPEND FONT_FILES
+    arial.ttf
+    arialbd.ttf
+    arialbi.ttf
+    ariali.ttf
     comic.ttf
     comicbd.ttf
     DejaVuMathTeXGyre.ttf
