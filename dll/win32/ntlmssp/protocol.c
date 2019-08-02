@@ -582,6 +582,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
         ERR("NTLMSSP_NEGOTIATE_TARGET_INFO\n");
+        RtlInitUnicodeString(&ServerName, L"fixme");
         //PMSV1_0_AV_PAIR pAvPair;
         //pAvPair = (PMSV1_0_AV_PAIR)challenge->TargetInfo;
         
