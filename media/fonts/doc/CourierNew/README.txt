@@ -1,5 +1,5 @@
 ReactOS Courier New fonts are based on FreeMono fonts of GNU FreeFont, released
-under the terms of GNU GENERAL PUBLIC LICENSE Version 3.
+under the terms of GNU GENERAL PUBLIC LICENSE Version 3 with a special exception.
 
 Copyright 2002, 2003, 2005, 2008, 2009, 2010, 2012 GNU Freefont contributors.
 Copyright (c) 2019 Katayama Hirofumi MZ.
