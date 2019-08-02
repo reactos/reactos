@@ -43,7 +43,7 @@ MUI_SUBFONT LatinFonts[] =
 
 MUI_SUBFONT CyrillicFonts[] =
 {
-    { L"Arial",                  L"Liberation Sans" },
+    { L"Arial",                  L"Arial" },
     { L"Arial Baltic,186",       L"Arial,186" },
     { L"Arial CE,238",           L"Arial,238" },
     { L"Arial CYR,204",          L"Arial,204" },
