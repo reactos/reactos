@@ -2441,7 +2441,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
 
     /* Create the SM API Port */
     RtlInitUnicodeString(&PortName, L"\\SmApiPort");
-    InitializeObjectAttributes(&ObjectAttributes, &PortName, 0, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &PortName, 0, NULL, SmpApiPortSecurityDescriptor);
     Status = NtCreatePort(&PortHandle,
                           &ObjectAttributes,
                           sizeof(SB_CONNECTION_INFO),
