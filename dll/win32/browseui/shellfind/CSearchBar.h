@@ -41,6 +41,9 @@ private:
     CComPtr<IUnknown> pSite;
     BOOL fVisible;
     BOOL bFocused;
+    HWND m_fileName;
+    HWND m_query;
+    HWND m_path;
 
     void InitializeSearchBar();
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);

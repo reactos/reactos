@@ -66,6 +66,7 @@ private:
     CComPtr<IShellFolder2> m_pisfInner;
     CComPtr<IShellFolderView> m_shellFolderView;
     CComPtr<IShellBrowser> m_shellBrowser;
+    HANDLE m_hStopEvent;
 
     //// *** IPersistFolder2 methods ***
     STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
@@ -78,11 +79,16 @@ private:
     // *** IPersist methods ***
     STDMETHODIMP GetClassID(CLSID *pClassId);
 
-    LRESULT AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    // *** Message handlers ***
+    LRESULT StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+    LRESULT AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     LRESULT UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 public:
+    CFindFolder();
+
     DECLARE_REGISTRY_RESOURCEID(IDR_FINDFOLDER)
 
     DECLARE_NOT_AGGREGATABLE(CFindFolder)
@@ -90,8 +96,9 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_MSG_MAP(CFindFolder)
-        MESSAGE_HANDLER(SWM_ADD_ITEM, AddItem)
-        MESSAGE_HANDLER(SWM_UPDATE_STATUS, UpdateStatus)
+        MESSAGE_HANDLER(WM_SEARCH_START, StartSearch)
+        MESSAGE_HANDLER(WM_SEARCH_ADD_RESULT, AddResult)
+        MESSAGE_HANDLER(WM_SEARCH_UPDATE_STATUS, UpdateStatus)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CFindFolder)
