@@ -32,6 +32,11 @@ static FolderViewColumns g_ColumnDefs[] =
     {L"Relevance", SHCOLSTATE_TYPE_STR,                          LVCFMT_LEFT, 0}
 };
 
+CFindFolder::CFindFolder() :
+    m_hStopEvent(NULL)
+{
+}
+
 static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath, LPCITEMIDLIST lpcFindDataPidl)
 {
     int pathLen = (wcslen(lpszPath) + 1) * sizeof(WCHAR);
@@ -86,7 +91,7 @@ LRESULT CFindFolder::AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
         return hr;
     }
 
-    LPITEMIDLIST lpFSPidl;
+    CComHeapPtr<ITEMIDLIST> lpFSPidl;
     DWORD pchEaten;
     hr = pShellFolder->ParseDisplayName(NULL, NULL, path, &pchEaten, &lpFSPidl, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -96,8 +101,7 @@ LRESULT CFindFolder::AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
     }
 
     LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
-    LPITEMIDLIST lpSearchPidl = _ILCreate(path, lpLastFSPidl);
-    ILFree(lpFSPidl);
+    CComHeapPtr<ITEMIDLIST> lpSearchPidl(_ILCreate(path, lpLastFSPidl));
     LocalFree(path);
     if (!lpSearchPidl)
     {
@@ -106,7 +110,6 @@ LRESULT CFindFolder::AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHan
 
     UINT uItemIndex;
     hr = m_shellFolderView->AddObject(lpSearchPidl, &uItemIndex);
-    ILFree(lpSearchPidl);
 
     return hr;
 }
@@ -258,7 +261,7 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
         WCHAR path[MAX_PATH];
         wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
         PathRemoveFileSpecW(path);
-        LPITEMIDLIST rootPidl = ILCreateFromPathW(path);
+        CComHeapPtr<ITEMIDLIST> rootPidl(ILCreateFromPathW(path));
         if (!rootPidl)
             return E_OUTOFMEMORY;
         PCITEMID_CHILD aFSPidl[1];
@@ -371,7 +374,7 @@ STDMETHODIMP CFindFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
 
             for (UINT i = 0; i < cidl; i++)
             {
-                LPITEMIDLIST pidl;
+                CComHeapPtr<ITEMIDLIST> pidl;
                 DWORD attrs = 0;
                 hr = SHILCreateFromPathW((LPCWSTR) apidl[i]->mkid.abID, &pidl, &attrs);
                 if (SUCCEEDED(hr))

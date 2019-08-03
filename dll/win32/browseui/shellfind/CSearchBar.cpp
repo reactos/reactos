@@ -188,7 +188,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        LPITEMIDLIST findFolderPidl;
+        CComHeapPtr<ITEMIDLIST> findFolderPidl;
         hr = SHParseDisplayName(szShellGuid, NULL, &findFolderPidl, 0, NULL);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
