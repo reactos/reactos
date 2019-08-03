@@ -1,5 +1,5 @@
 ReactOS "Franklin Gothic Medium" fonts are based on
-Alexei Vanyashin's "Libre Franklin Bold" fonts.
+Alexei Vanyashin's "Libre Franklin" fonts.
 
 These font files are released under the terms of
 SIL Open Font License Version 1.1. See File "SIL Open Font License.txt".
