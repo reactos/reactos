@@ -37,10 +37,18 @@ CFindFolder::CFindFolder() :
 {
 }
 
-static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath, LPCITEMIDLIST lpcFindDataPidl)
+static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
 {
+    CComHeapPtr<ITEMIDLIST> lpFSPidl(ILCreateFromPathW(lpszPath));
+    if (!(LPITEMIDLIST)lpFSPidl)
+    {
+        ERR("Failed to create pidl from path\n");
+        return 0;
+    }
+    LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
+
     int pathLen = (wcslen(lpszPath) + 1) * sizeof(WCHAR);
-    int cbData = sizeof(WORD) + pathLen + lpcFindDataPidl->mkid.cb;
+    int cbData = sizeof(WORD) + pathLen + lpLastFSPidl->mkid.cb;
     LPITEMIDLIST pidl = (LPITEMIDLIST) SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
         return NULL;
@@ -52,8 +60,8 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath, LPCITEMIDLIST lpcFindDataPidl)
     memcpy(p, lpszPath, pathLen);
     p += pathLen;
 
-    memcpy(p, lpcFindDataPidl, lpcFindDataPidl->mkid.cb);
-    p += lpcFindDataPidl->mkid.cb;
+    memcpy(p, lpLastFSPidl, lpLastFSPidl->mkid.cb);
+    p += lpLastFSPidl->mkid.cb;
 
     *((WORD *) p) = 0;
 
@@ -75,53 +83,199 @@ static LPCITEMIDLIST _ILGetFSPidl(LPCITEMIDLIST pidl)
                             + ((wcslen((LPCWSTR) pidl->mkid.abID) + 1) * sizeof(WCHAR)));
 }
 
-LRESULT CFindFolder::AddItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+struct _SearchData
+{
+    HWND hwnd;
+    HANDLE hStopEvent;
+    SearchStart *pSearchParams;
+};
+
+static LPCSTR WINAPI StrStrNA(LPCSTR lpFirst, LPCSTR lpSrch, UINT cchMax)
+{
+    UINT i;
+    int len;
+
+    if (!lpFirst || !lpSrch || !*lpSrch || !cchMax)
+        return NULL;
+
+    len = strlen(lpSrch);
+
+    for (i = cchMax; *lpFirst && (i > 0); i--, lpFirst++)
+    {
+        if (!strncmp(lpFirst, lpSrch, len))
+            return (LPCSTR)lpFirst;
+    }
+
+    return NULL;
+}
+
+static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
+{
+    HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return 0;
+
+    DWORD size = GetFileSize(hFile, NULL);
+    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    CloseHandle(hFile);
+    if (hFileMap == INVALID_HANDLE_VALUE)
+        return 0;
+
+    LPBYTE lpFileContent = (LPBYTE) MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(hFileMap);
+    if (!lpFileContent)
+        return 0;
+
+    UINT uMatches = 0;
+    if ((size >= 2) && (lpFileContent[0] == 0xFF) && (lpFileContent[1] == 0xFE))
+    {
+        // UTF16 LE
+        LPCWSTR lpSearchPos = (LPCWSTR) lpFileContent;
+        DWORD dwCharsRemaining = size / sizeof(WCHAR);
+        const LPCWSTR lpSearchEnd = (LPCWSTR) lpFileContent + dwCharsRemaining;
+        const LPCWSTR lpszQuery = pSearchData->pSearchParams->szQuery;
+        const size_t queryLen = wcslen(lpszQuery);
+        while ((lpSearchPos = StrStrNW(lpSearchPos, lpszQuery, dwCharsRemaining))
+                && lpSearchPos < lpSearchEnd)
+        {
+            uMatches++;
+            lpSearchPos += queryLen;
+            dwCharsRemaining -= queryLen;
+        }
+    }
+    else
+    {
+        DWORD len = WideCharToMultiByte(CP_ACP, 0, pSearchData->pSearchParams->szQuery, -1, NULL, 0, NULL, NULL);
+        const LPSTR lpszQuery = new CHAR[len];
+        WideCharToMultiByte(CP_ACP, 0, pSearchData->pSearchParams->szQuery, -1, lpszQuery, len, NULL, NULL);
+        LPCSTR lpSearchPos = (LPCSTR) lpFileContent;
+        DWORD dwCharsRemaining = size;
+        const LPCSTR lpSearchEnd = (LPCSTR) lpFileContent + dwCharsRemaining;
+        const size_t queryLen = len;
+        while ((lpSearchPos = StrStrNA(lpSearchPos, lpszQuery, dwCharsRemaining))
+                && lpSearchPos < lpSearchEnd)
+        {
+            uMatches++;
+            lpSearchPos += queryLen;
+            dwCharsRemaining -= queryLen;
+        }
+    }
+
+    UnmapViewOfFile(lpFileContent);
+
+    return uMatches;
+}
+
+static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
+{
+    if (WaitForSingleObject(pSearchData->hStopEvent, 0) != WAIT_TIMEOUT)
+        return;
+
+    WCHAR szPath[MAX_PATH];
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFindFile;
+    BOOL bMoreFiles = TRUE;
+
+    PathCombineW(szPath, lpPath, L"*.*");
+
+    for (hFindFile = FindFirstFileW(szPath, &FindData);
+        bMoreFiles && hFindFile != INVALID_HANDLE_VALUE;
+        bMoreFiles = FindNextFileW(hFindFile, &FindData))
+    {
+        if (!wcscmp(FindData.cFileName, L".") || !wcscmp(FindData.cFileName, L".."))
+            continue;
+
+        PathCombineW(szPath, lpPath, FindData.cFileName);
+
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            CStringW* status = new CStringW();
+            status->Format(L"Searching '%s'", FindData.cFileName);
+            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) status);
+
+            RecursiveFind(szPath, pSearchData);
+        }
+        else if (pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
+        {
+            DbgPrint("Searching file: '%S'\n", szPath);
+            UINT uMatches = SearchFile(szPath, pSearchData);
+            if (uMatches)
+            {
+                ::PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
+            }
+        }
+    }
+
+    if (hFindFile != INVALID_HANDLE_VALUE)
+        FindClose(hFindFile);
+}
+
+static DWORD WINAPI _SearchThreadProc(LPVOID lpParameter)
+{
+    _SearchData *data = static_cast<_SearchData*>(lpParameter);
+
+    SearchStart* params = (SearchStart *) data->pSearchParams;
+
+    RecursiveFind(params->szPath, data);
+
+    SHFree(params);
+    SHFree(lpParameter);
+
+    return 0;
+}
+
+LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (!lParam)
         return 0;
 
-    HRESULT hr;
-    LPWSTR path = (LPWSTR) lParam;
-
-    CComPtr<IShellFolder> pShellFolder;
-    hr = SHGetDesktopFolder(&pShellFolder);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        LocalFree(path);
-        return hr;
-    }
-
-    CComHeapPtr<ITEMIDLIST> lpFSPidl;
-    DWORD pchEaten;
-    hr = pShellFolder->ParseDisplayName(NULL, NULL, path, &pchEaten, &lpFSPidl, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        LocalFree(path);
-        return hr;
-    }
-
-    LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
-    CComHeapPtr<ITEMIDLIST> lpSearchPidl(_ILCreate(path, lpLastFSPidl));
-    LocalFree(path);
-    if (!lpSearchPidl)
-    {
-        return E_OUTOFMEMORY;
-    }
-
+    // Clear all previous search results
     UINT uItemIndex;
-    hr = m_shellFolderView->AddObject(lpSearchPidl, &uItemIndex);
+    m_shellFolderView->RemoveObject(NULL, &uItemIndex);
 
-    return hr;
+    _SearchData* pSearchData = new _SearchData();
+    pSearchData->pFindFolder = this;
+    pSearchData->hwnd = m_hWnd;
+    if (m_hStopEvent)
+        SetEvent(m_hStopEvent);
+    pSearchData->hStopEvent = m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    pSearchData->pSearchParams = (SearchStart *) lParam;
+
+    if (!SHCreateThread(_SearchThreadProc, pSearchData, NULL, NULL))
+    {
+        SHFree(pSearchData->pSearchParams);
+        SHFree(pSearchData);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    return S_OK;
+}
+
+LRESULT CFindFolder::AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (!lParam)
+        return 0;
+
+    CComHeapPtr<WCHAR> lpPath((LPWSTR) lParam);
+
+    CComHeapPtr<ITEMIDLIST> lpSearchPidl(_ILCreate(lpPath));
+    if (lpSearchPidl)
+    {
+        UINT uItemIndex;
+        m_shellFolderView->AddObject(lpSearchPidl, &uItemIndex);
+    }
+
+    return 0;
 }
 
 LRESULT CFindFolder::UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LPWSTR status = (LPWSTR) lParam;
+    CStringW *status = (CStringW *) lParam;
     if (m_shellBrowser)
     {
-        m_shellBrowser->SetStatusTextSB(status);
+        m_shellBrowser->SetStatusTextSB(status->GetBuffer());
     }
-    LocalFree(status);
+    delete status;
 
     return S_OK;
 }

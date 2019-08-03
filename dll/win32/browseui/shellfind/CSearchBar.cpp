@@ -46,34 +46,35 @@ void CSearchBar::InitializeSearchBar()
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
 
-    CreateWindowExW(0, WC_STATIC, L"A &word or phrase in the file:",
+    CreateWindowExW(0, WC_STATIC, L"All or part &of the file name:",
         WS_CHILD | WS_VISIBLE,
         10, 50, 500, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
-    CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
+    m_fileName = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
         WS_BORDER | WS_CHILD | WS_VISIBLE,
         10, 70, 100, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
 
-    CreateWindowExW(0, WC_STATIC, L"&Look in:",
+    CreateWindowExW(0, WC_STATIC, L"A &word or phrase in the file:",
         WS_CHILD | WS_VISIBLE,
         10, 100, 500, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
-    CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
+    m_query = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
         WS_BORDER | WS_CHILD | WS_VISIBLE,
         10, 120, 100, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
+    Edit_LimitText(m_query, MAX_PATH);
 
     CreateWindowExW(0, WC_STATIC, L"&Look in:",
         WS_CHILD | WS_VISIBLE,
         10, 150, 500, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
-    CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
+    m_path = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
         WS_BORDER | WS_CHILD | WS_VISIBLE,
         10, 180, 100, 20,
         m_hWnd, NULL,
@@ -198,8 +199,10 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
             return hr;
     }
 
-    GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL);
-    if (hwnd)
+    hr = GetSearchResultsFolder(*pShellBrowser, &hwnd, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) StrDupW(L"Starting search..."));
 
     return S_OK;
