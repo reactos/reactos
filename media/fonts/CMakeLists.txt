@@ -6,6 +6,10 @@ list(APPEND FONT_FILES
     ariali.ttf
     comic.ttf
     comicbd.ttf
+    cour.ttf
+    courbd.ttf
+    courbi.ttf
+    couri.ttf
     DejaVuMathTeXGyre.ttf
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
