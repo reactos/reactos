@@ -257,28 +257,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Archivo"
-  BEGIN
-    MENUITEM "&Salir",                       IDC_EXIT
-  END
-  POPUP "Acción"
-  BEGIN
-    MENUITEM "Buscar cambios de hardware",   IDC_SCAN_HARDWARE
-    MENUITEM "Añadir dispositivos",          IDC_ADD_HARDWARE
-  END
-  POPUP "Ver"
-  BEGIN
-    MENUITEM "Dispositivos por tipo",        IDC_DEVBYTYPE
-    MENUITEM "Dispositivos por conexión",    IDC_DEVBYCONN
-    MENUITEM "Recursos por tipo",            IDC_RESBYTYPE, GRAYED
-    MENUITEM "Recursos por conexión",        IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Mostrar dispositivos ocultos", IDC_SHOWHIDDEN
-  END
-  POPUP "Ayuda"
-  BEGIN
-    MENUITEM "Acerca de",                    IDC_ABOUT
-  END
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Salir",                       IDC_EXIT
+    END
+    POPUP "Acción"
+    BEGIN
+        MENUITEM "Buscar cambios de hardware",   IDC_SCAN_HARDWARE
+        MENUITEM "Añadir dispositivos",          IDC_ADD_HARDWARE
+    END
+    POPUP "Ver"
+    BEGIN
+        MENUITEM "Dispositivos por tipo",        IDC_DEVBYTYPE
+        MENUITEM "Dispositivos por conexión",    IDC_DEVBYCONN
+        MENUITEM "Recursos por tipo",            IDC_RESBYTYPE, GRAYED
+        MENUITEM "Recursos por conexión",        IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Mostrar dispositivos ocultos", IDC_SHOWHIDDEN
+    END
+    POPUP "Ayuda"
+    BEGIN
+        MENUITEM "Acerca de",                    IDC_ABOUT
+    END
 END
 
 

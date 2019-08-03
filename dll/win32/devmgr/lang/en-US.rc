@@ -247,28 +247,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
-  BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
-  END
-  POPUP "&Action"
-  BEGIN
-    MENUITEM "Scan for hardware changes",   IDC_SCAN_HARDWARE
-    MENUITEM "Add hardware",                IDC_ADD_HARDWARE
-  END
-  POPUP "&View"
-  BEGIN
-    MENUITEM "D&evices by type",             IDC_DEVBYTYPE
-    MENUITEM "De&vices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by t&ype",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by co&nnection",     IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Sho&w hidden devices",         IDC_SHOWHIDDEN
-  END
-  POPUP "&Help"
-  BEGIN
-    MENUITEM "&About",                       IDC_ABOUT
-  END
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       IDC_EXIT
+    END
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "Scan for hardware changes",   IDC_SCAN_HARDWARE
+        MENUITEM "Add hardware",                IDC_ADD_HARDWARE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "D&evices by type",             IDC_DEVBYTYPE
+        MENUITEM "De&vices by connection",       IDC_DEVBYCONN
+        MENUITEM "Resources by t&ype",           IDC_RESBYTYPE, GRAYED
+        MENUITEM "Resources by co&nnection",     IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Sho&w hidden devices",         IDC_SHOWHIDDEN
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About",                       IDC_ABOUT
+    END
 END
 
 

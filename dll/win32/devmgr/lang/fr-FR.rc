@@ -249,28 +249,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Fichier"
-  BEGIN
-    MENUITEM "&Quitter",                          IDC_EXIT
-  END
-  POPUP "Action"
-  BEGIN
-    MENUITEM "Vérifier les changements de matériel", IDC_SCAN_HARDWARE
-    MENUITEM "Ajouter un matériel",                  IDC_ADD_HARDWARE
-  END
-  POPUP "Vue"
-  BEGIN
-    MENUITEM "Périphériques par type",            IDC_DEVBYTYPE
-    MENUITEM "Périphériques par connexion",       IDC_DEVBYCONN
-    MENUITEM "Ressources par type",               IDC_RESBYTYPE, GRAYED
-    MENUITEM "Ressources par connexion",          IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Afficher les périphériques cachés", IDC_SHOWHIDDEN
-  END
-  POPUP "Aide"
-  BEGIN
-    MENUITEM "À propos",                          IDC_ABOUT
-  END
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Quitter",                          IDC_EXIT
+    END
+    POPUP "Action"
+    BEGIN
+        MENUITEM "Vérifier les changements de matériel", IDC_SCAN_HARDWARE
+        MENUITEM "Ajouter un matériel",                  IDC_ADD_HARDWARE
+    END
+    POPUP "Vue"
+    BEGIN
+        MENUITEM "Périphériques par type",            IDC_DEVBYTYPE
+        MENUITEM "Périphériques par connexion",       IDC_DEVBYCONN
+        MENUITEM "Ressources par type",               IDC_RESBYTYPE, GRAYED
+        MENUITEM "Ressources par connexion",          IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Afficher les périphériques cachés", IDC_SHOWHIDDEN
+    END
+    POPUP "Aide"
+    BEGIN
+        MENUITEM "À propos",                          IDC_ABOUT
+    END
 END
 
 

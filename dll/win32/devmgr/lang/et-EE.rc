@@ -254,28 +254,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Fail"
-  BEGIN
-    MENUITEM "&Välju",                       IDC_EXIT
-  END
-  POPUP "&Toiming"
-  BEGIN
-    MENUITEM "Otsi riistvaramuudatusi",      IDC_SCAN_HARDWARE
-    MENUITEM "Lisa riistvara",               IDC_ADD_HARDWARE
-  END
-  POPUP "&Vaade"
-  BEGIN
-    MENUITEM "Seadmed &tüübi järgi",         IDC_DEVBYTYPE
-    MENUITEM "Seadmed &ühenduse järgi",      IDC_DEVBYCONN
-    MENUITEM "R&essursid tüübi järgi",       IDC_RESBYTYPE, GRAYED
-    MENUITEM "&Ressursid ühenduse järgi",    IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "&Näita peidetud seadmeid",     IDC_SHOWHIDDEN
-  END
-  POPUP "&Spikker"
-  BEGIN
-    MENUITEM "&Teave",                       IDC_ABOUT
-  END
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "&Välju",                       IDC_EXIT
+    END
+    POPUP "&Toiming"
+    BEGIN
+        MENUITEM "Otsi riistvaramuudatusi",      IDC_SCAN_HARDWARE
+        MENUITEM "Lisa riistvara",               IDC_ADD_HARDWARE
+    END
+    POPUP "&Vaade"
+    BEGIN
+        MENUITEM "Seadmed &tüübi järgi",         IDC_DEVBYTYPE
+        MENUITEM "Seadmed &ühenduse järgi",      IDC_DEVBYCONN
+        MENUITEM "R&essursid tüübi järgi",       IDC_RESBYTYPE, GRAYED
+        MENUITEM "&Ressursid ühenduse järgi",    IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Näita peidetud seadmeid",     IDC_SHOWHIDDEN
+    END
+    POPUP "&Spikker"
+    BEGIN
+        MENUITEM "&Teave",                       IDC_ABOUT
+    END
 END
 
 

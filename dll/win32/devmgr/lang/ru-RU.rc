@@ -250,28 +250,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Файл"
-  BEGIN
-    MENUITEM "В&ыход",                       IDC_EXIT
-  END
-  POPUP "&Действие"
-  BEGIN
-    MENUITEM "О&бновить конфигурацию оборудования", IDC_SCAN_HARDWARE
-    MENUITEM "&Добавить устройство",                IDC_ADD_HARDWARE
-  END
-  POPUP "&Вид"
-  BEGIN
-    MENUITEM "&Устройства по типу",          IDC_DEVBYTYPE
-    MENUITEM "Устройства по под&ключению",   IDC_DEVBYCONN
-    MENUITEM "&Ресурсы по типу",             IDC_RESBYTYPE, GRAYED
-    MENUITEM "Ресурсы по подк&лючению",      IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Показать &скрытые устройства", IDC_SHOWHIDDEN
-  END
-  POPUP "&Справка"
-  BEGIN
-    MENUITEM "О &программе...",              IDC_ABOUT
-  END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ыход",                       IDC_EXIT
+    END
+    POPUP "&Действие"
+    BEGIN
+        MENUITEM "О&бновить конфигурацию оборудования", IDC_SCAN_HARDWARE
+        MENUITEM "&Добавить устройство",                IDC_ADD_HARDWARE
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "&Устройства по типу",          IDC_DEVBYTYPE
+        MENUITEM "Устройства по под&ключению",   IDC_DEVBYCONN
+        MENUITEM "&Ресурсы по типу",             IDC_RESBYTYPE, GRAYED
+        MENUITEM "Ресурсы по подк&лючению",      IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Показать &скрытые устройства", IDC_SHOWHIDDEN
+    END
+    POPUP "&Справка"
+    BEGIN
+        MENUITEM "О &программе...",              IDC_ABOUT
+    END
 END
 
 

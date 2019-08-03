@@ -250,28 +250,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Datei"
-  BEGIN
-    MENUITEM "&Beenden",                       IDC_EXIT
-  END
-  POPUP "Ak&tion"
-  BEGIN
-    MENUITEM "Nach geänderter Hardware suchen", IDC_SCAN_HARDWARE
-    MENUITEM "Hardware hinzufügen",             IDC_ADD_HARDWARE
-  END
-  POPUP "&Ansicht"
-  BEGIN
-    MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
-    MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
-    MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
-  END
-  POPUP "&Hilfe"
-  BEGIN
-    MENUITEM "Ü&ber",                          IDC_ABOUT
-  END
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Beenden",                       IDC_EXIT
+    END
+    POPUP "Ak&tion"
+    BEGIN
+        MENUITEM "Nach geänderter Hardware suchen", IDC_SCAN_HARDWARE
+        MENUITEM "Hardware hinzufügen",             IDC_ADD_HARDWARE
+    END
+    POPUP "&Ansicht"
+    BEGIN
+        MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
+        MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
+        MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
+        MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
+    END
+    POPUP "&Hilfe"
+    BEGIN
+        MENUITEM "Ü&ber",                          IDC_ABOUT
+    END
 END
 
 

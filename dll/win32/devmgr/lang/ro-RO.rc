@@ -254,28 +254,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Fișier"
-  BEGIN
-    MENUITEM "I&eșire",                     IDC_EXIT
-  END
-  POPUP "A&cțiune"
-  BEGIN
-    MENUITEM "Scanează configurația fizică",   IDC_SCAN_HARDWARE
-    MENUITEM "Adăugare dispozitiv…",                IDC_ADD_HARDWARE
-  END
-  POPUP "&Afișare"
-  BEGIN
-    MENUITEM "Dispozitive după tip",        IDC_DEVBYTYPE
-    MENUITEM "Dispozitive după conexiune",  IDC_DEVBYCONN
-    MENUITEM "Resurse după tip",            IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resurse după conexiune",      IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Dispozitive ascunse",         IDC_SHOWHIDDEN
-  END
-  POPUP "Aj&utor"
-  BEGIN
-    MENUITEM "&Despre",                     IDC_ABOUT
-  END
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "I&eșire",                     IDC_EXIT
+    END
+    POPUP "A&cțiune"
+    BEGIN
+        MENUITEM "Scanează configurația fizică",   IDC_SCAN_HARDWARE
+        MENUITEM "Adăugare dispozitiv…",                IDC_ADD_HARDWARE
+    END
+    POPUP "&Afișare"
+    BEGIN
+        MENUITEM "Dispozitive după tip",        IDC_DEVBYTYPE
+        MENUITEM "Dispozitive după conexiune",  IDC_DEVBYCONN
+        MENUITEM "Resurse după tip",            IDC_RESBYTYPE, GRAYED
+        MENUITEM "Resurse după conexiune",      IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Dispozitive ascunse",         IDC_SHOWHIDDEN
+    END
+    POPUP "Aj&utor"
+    BEGIN
+        MENUITEM "&Despre",                     IDC_ABOUT
+    END
 END
 
 

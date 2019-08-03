@@ -250,28 +250,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Kütük"
-  BEGIN
-    MENUITEM "&Çıkış",                      IDC_EXIT
-  END
-  POPUP "&Eylem"
-  BEGIN
-    MENUITEM "Donanım Değişiklikleri İçin Tara",  IDC_SCAN_HARDWARE
-    MENUITEM "Donanım Ekle",                      IDC_ADD_HARDWARE
-  END
-  POPUP "&Görünüm"
-  BEGIN
-    MENUITEM "&Türe Göre Aygıtlar",         IDC_DEVBYTYPE
-    MENUITEM "&Bağlantıya Göre Aygıtlar",   IDC_DEVBYCONN
-    MENUITEM "T&üre Göre Kaynaklar",        IDC_RESBYTYPE, GRAYED
-    MENUITEM "B&ağlantıya Göre Kaynaklar",  IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "&Gizli Aygıtları Göster",     IDC_SHOWHIDDEN
-  END
-  POPUP "&Yardım"
-  BEGIN
-    MENUITEM "&Üzerine",                    IDC_ABOUT
-  END
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Çıkış",                      IDC_EXIT
+    END
+    POPUP "&Eylem"
+    BEGIN
+        MENUITEM "Donanım Değişiklikleri İçin Tara",  IDC_SCAN_HARDWARE
+        MENUITEM "Donanım Ekle",                      IDC_ADD_HARDWARE
+    END
+    POPUP "&Görünüm"
+    BEGIN
+        MENUITEM "&Türe Göre Aygıtlar",         IDC_DEVBYTYPE
+        MENUITEM "&Bağlantıya Göre Aygıtlar",   IDC_DEVBYCONN
+        MENUITEM "T&üre Göre Kaynaklar",        IDC_RESBYTYPE, GRAYED
+        MENUITEM "B&ağlantıya Göre Kaynaklar",  IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Gizli Aygıtları Göster",     IDC_SHOWHIDDEN
+    END
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&Üzerine",                    IDC_ABOUT
+    END
 END
 
 
@@ -281,6 +281,7 @@ BEGIN
   IDS_CONFIRM_DISABLE       "Bu aygıtı edilginleştirmek işleyiş durmasına neden olacaktır.\r\nOnu edilginleştirmeyi gerçekten istiyor musunuz?"
   IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı dizgenizden kaldırmak üzeresiniz.\r\nSürdürmek istiyor musunuz?"
 END
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_MENU_UPDATE           "Sürücü Yazılımını Şimdikileştir..."

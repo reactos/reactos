@@ -253,28 +253,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Soubor"
-  BEGIN
-    MENUITEM "U&končit",                       IDC_EXIT
-  END
-  POPUP "Akce"
-  BEGIN
-    MENUITEM "Vyhledat změny hardwaru",        IDC_SCAN_HARDWARE
-    MENUITEM "Přidat hardware",                IDC_ADD_HARDWARE
-  END
-  POPUP "Zobrazit"
-  BEGIN
-    MENUITEM "Zařízení podle typu",             IDC_DEVBYTYPE
-    MENUITEM "Zařízení podle připojení",       IDC_DEVBYCONN
-    MENUITEM "Prostředky podle typu",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Prostředky podle připojení",     IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "SZobrazit skrytá zařízení",         IDC_SHOWHIDDEN
-  END
-  POPUP "Nápověda"
-  BEGIN
-    MENUITEM "O programu",                       IDC_ABOUT
-  END
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "U&končit",                       IDC_EXIT
+    END
+    POPUP "Akce"
+    BEGIN
+        MENUITEM "Vyhledat změny hardwaru",        IDC_SCAN_HARDWARE
+        MENUITEM "Přidat hardware",                IDC_ADD_HARDWARE
+    END
+    POPUP "Zobrazit"
+    BEGIN
+        MENUITEM "Zařízení podle typu",             IDC_DEVBYTYPE
+        MENUITEM "Zařízení podle připojení",       IDC_DEVBYCONN
+        MENUITEM "Prostředky podle typu",           IDC_RESBYTYPE, GRAYED
+        MENUITEM "Prostředky podle připojení",     IDC_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "SZobrazit skrytá zařízení",         IDC_SHOWHIDDEN
+    END
+    POPUP "Nápověda"
+    BEGIN
+        MENUITEM "O programu",                       IDC_ABOUT
+    END
 END
 
 
