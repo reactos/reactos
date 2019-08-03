@@ -46,6 +46,10 @@ list(APPEND FONT_FILES
     FreeSerifItalic.ttf
     FSEX301.ttf
     FSEX301-L2.ttf
+    georgia.ttf
+    georgiab.ttf
+    georgiai.ttf
+    georgiaz.ttf
     LiberationMono-Bold.ttf
     LiberationMono-BoldItalic.ttf
     LiberationMono-Italic.ttf
