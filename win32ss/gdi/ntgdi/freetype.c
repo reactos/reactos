@@ -1154,8 +1154,11 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                                pLoadFont->Memory->BufferSize,
                                -1,
                                &Face);
-    FaceCount = Face->num_faces;
-    FT_Done_Face(Face);
+    if (!Error)
+    {
+        FaceCount = Face->num_faces;
+        FT_Done_Face(Face);
+    }
     IntUnLockFreeType();
 
     if (Error)
