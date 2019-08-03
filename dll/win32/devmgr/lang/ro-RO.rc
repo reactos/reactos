@@ -252,29 +252,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "I&eșire",                     IDC_EXIT
+        MENUITEM "I&eșire",                     IDM_EXIT
     END
     POPUP "A&cțiune"
     BEGIN
-        MENUITEM "Scanează configurația fizică",   IDC_SCAN_HARDWARE
-        MENUITEM "Adăugare dispozitiv…",                IDC_ADD_HARDWARE
+        MENUITEM "Scanează configurația fizică",   IDM_SCAN_HARDWARE
+        MENUITEM "Adăugare dispozitiv…",                IDM_ADD_HARDWARE
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Dispozitive după tip",        IDC_DEVBYTYPE
-        MENUITEM "Dispozitive după conexiune",  IDC_DEVBYCONN
-        MENUITEM "Resurse după tip",            IDC_RESBYTYPE, GRAYED
-        MENUITEM "Resurse după conexiune",      IDC_RESBYCONN, GRAYED
+        MENUITEM "Dispozitive după tip",        IDM_DEVBYTYPE
+        MENUITEM "Dispozitive după conexiune",  IDM_DEVBYCONN
+        MENUITEM "Resurse după tip",            IDM_RESBYTYPE, GRAYED
+        MENUITEM "Resurse după conexiune",      IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Dispozitive ascunse",         IDC_SHOWHIDDEN
+        MENUITEM "Dispozitive ascunse",         IDM_SHOWHIDDEN
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Despre",                     IDC_ABOUT
+        MENUITEM "&Despre",                     IDM_ABOUT
     END
 END
 

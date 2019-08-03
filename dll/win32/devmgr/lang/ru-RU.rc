@@ -248,29 +248,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "В&ыход",                       IDC_EXIT
+        MENUITEM "В&ыход",                       IDM_EXIT
     END
     POPUP "&Действие"
     BEGIN
-        MENUITEM "О&бновить конфигурацию оборудования", IDC_SCAN_HARDWARE
-        MENUITEM "&Добавить устройство",                IDC_ADD_HARDWARE
+        MENUITEM "О&бновить конфигурацию оборудования", IDM_SCAN_HARDWARE
+        MENUITEM "&Добавить устройство",                IDM_ADD_HARDWARE
     END
     POPUP "&Вид"
     BEGIN
-        MENUITEM "&Устройства по типу",          IDC_DEVBYTYPE
-        MENUITEM "Устройства по под&ключению",   IDC_DEVBYCONN
-        MENUITEM "&Ресурсы по типу",             IDC_RESBYTYPE, GRAYED
-        MENUITEM "Ресурсы по подк&лючению",      IDC_RESBYCONN, GRAYED
+        MENUITEM "&Устройства по типу",          IDM_DEVBYTYPE
+        MENUITEM "Устройства по под&ключению",   IDM_DEVBYCONN
+        MENUITEM "&Ресурсы по типу",             IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ресурсы по подк&лючению",      IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Показать &скрытые устройства", IDC_SHOWHIDDEN
+        MENUITEM "Показать &скрытые устройства", IDM_SHOWHIDDEN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "О &программе...",              IDC_ABOUT
+        MENUITEM "О &программе...",              IDM_ABOUT
     END
 END
 

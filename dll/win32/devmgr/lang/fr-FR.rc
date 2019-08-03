@@ -247,29 +247,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Quitter",                          IDC_EXIT
+        MENUITEM "&Quitter",                          IDM_EXIT
     END
     POPUP "Action"
     BEGIN
-        MENUITEM "Vérifier les changements de matériel", IDC_SCAN_HARDWARE
-        MENUITEM "Ajouter un matériel",                  IDC_ADD_HARDWARE
+        MENUITEM "Vérifier les changements de matériel", IDM_SCAN_HARDWARE
+        MENUITEM "Ajouter un matériel",                  IDM_ADD_HARDWARE
     END
     POPUP "Vue"
     BEGIN
-        MENUITEM "Périphériques par type",            IDC_DEVBYTYPE
-        MENUITEM "Périphériques par connexion",       IDC_DEVBYCONN
-        MENUITEM "Ressources par type",               IDC_RESBYTYPE, GRAYED
-        MENUITEM "Ressources par connexion",          IDC_RESBYCONN, GRAYED
+        MENUITEM "Périphériques par type",            IDM_DEVBYTYPE
+        MENUITEM "Périphériques par connexion",       IDM_DEVBYCONN
+        MENUITEM "Ressources par type",               IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ressources par connexion",          IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Afficher les périphériques cachés", IDC_SHOWHIDDEN
+        MENUITEM "Afficher les périphériques cachés", IDM_SHOWHIDDEN
     END
     POPUP "Aide"
     BEGIN
-        MENUITEM "À propos",                          IDC_ABOUT
+        MENUITEM "À propos",                          IDM_ABOUT
     END
 END
 

@@ -245,29 +245,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
-        MENUITEM "終了(&X)",                     IDC_EXIT
+        MENUITEM "終了(&X)",                     IDM_EXIT
     END
     POPUP "アクション(&A)"
     BEGIN
-        MENUITEM "ハードウェアの変更をスキャン",        IDC_SCAN_HARDWARE
-        MENUITEM "ハードウェアを追加",             IDC_ADD_HARDWARE
+        MENUITEM "ハードウェアの変更をスキャン",        IDM_SCAN_HARDWARE
+        MENUITEM "ハードウェアを追加",             IDM_ADD_HARDWARE
     END
     POPUP "表示(&V)"
     BEGIN
-        MENUITEM "種類別デバイス(&E)",           IDC_DEVBYTYPE
-        MENUITEM "接続別デバイス(&V)",           IDC_DEVBYCONN
-        MENUITEM "種類別リソース(&Y)",           IDC_RESBYTYPE, GRAYED
-        MENUITEM "接続別リソース(&N)",           IDC_RESBYCONN, GRAYED
+        MENUITEM "種類別デバイス(&E)",           IDM_DEVBYTYPE
+        MENUITEM "接続別デバイス(&V)",           IDM_DEVBYCONN
+        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "接続別リソース(&N)",           IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "隠しデバイスを表示(&W)",       IDC_SHOWHIDDEN
+        MENUITEM "隠しデバイスを表示(&W)",       IDM_SHOWHIDDEN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "バージョン情報(&A)",           IDC_ABOUT
+        MENUITEM "バージョン情報(&A)",           IDM_ABOUT
     END
 END
 

@@ -252,29 +252,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fail"
     BEGIN
-        MENUITEM "&Välju",                       IDC_EXIT
+        MENUITEM "&Välju",                       IDM_EXIT
     END
     POPUP "&Toiming"
     BEGIN
-        MENUITEM "Otsi riistvaramuudatusi",      IDC_SCAN_HARDWARE
-        MENUITEM "Lisa riistvara",               IDC_ADD_HARDWARE
+        MENUITEM "Otsi riistvaramuudatusi",      IDM_SCAN_HARDWARE
+        MENUITEM "Lisa riistvara",               IDM_ADD_HARDWARE
     END
     POPUP "&Vaade"
     BEGIN
-        MENUITEM "Seadmed &tüübi järgi",         IDC_DEVBYTYPE
-        MENUITEM "Seadmed &ühenduse järgi",      IDC_DEVBYCONN
-        MENUITEM "R&essursid tüübi järgi",       IDC_RESBYTYPE, GRAYED
-        MENUITEM "&Ressursid ühenduse järgi",    IDC_RESBYCONN, GRAYED
+        MENUITEM "Seadmed &tüübi järgi",         IDM_DEVBYTYPE
+        MENUITEM "Seadmed &ühenduse järgi",      IDM_DEVBYCONN
+        MENUITEM "R&essursid tüübi järgi",       IDM_RESBYTYPE, GRAYED
+        MENUITEM "&Ressursid ühenduse järgi",    IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Näita peidetud seadmeid",     IDC_SHOWHIDDEN
+        MENUITEM "&Näita peidetud seadmeid",     IDM_SHOWHIDDEN
     END
     POPUP "&Spikker"
     BEGIN
-        MENUITEM "&Teave",                       IDC_ABOUT
+        MENUITEM "&Teave",                       IDM_ABOUT
     END
 END
 

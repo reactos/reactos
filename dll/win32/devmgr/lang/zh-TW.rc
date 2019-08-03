@@ -247,29 +247,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "關閉(&X)",                       IDC_EXIT
+        MENUITEM "關閉(&X)",                       IDM_EXIT
     END
     POPUP "行動"
     BEGIN
-        MENUITEM "掃描檢測硬體改動",                 IDC_SCAN_HARDWARE
-        MENUITEM "添加硬體",                     IDC_ADD_HARDWARE
+        MENUITEM "掃描檢測硬體改動",                 IDM_SCAN_HARDWARE
+        MENUITEM "添加硬體",                     IDM_ADD_HARDWARE
     END
     POPUP "檢視"
     BEGIN
-        MENUITEM "按類型裝置",             IDC_DEVBYTYPE
-        MENUITEM "依連線排序裝置",       IDC_DEVBYCONN
-        MENUITEM "依類型排序資源",           IDC_RESBYTYPE, GRAYED
-        MENUITEM "依連線排序資源",     IDC_RESBYCONN, GRAYED
+        MENUITEM "按類型裝置",             IDM_DEVBYTYPE
+        MENUITEM "依連線排序裝置",       IDM_DEVBYCONN
+        MENUITEM "依類型排序資源",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "依連線排序資源",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "顯示隱藏的裝置",         IDC_SHOWHIDDEN
+        MENUITEM "顯示隱藏的裝置",         IDM_SHOWHIDDEN
     END
     POPUP "說明"
     BEGIN
-        MENUITEM "關於",                       IDC_ABOUT
+        MENUITEM "關於",                       IDM_ABOUT
     END
 END
 

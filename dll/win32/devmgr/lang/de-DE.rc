@@ -248,29 +248,29 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Beenden",                       IDC_EXIT
+        MENUITEM "&Beenden",                       IDM_EXIT
     END
     POPUP "Ak&tion"
     BEGIN
-        MENUITEM "Nach geänderter Hardware suchen", IDC_SCAN_HARDWARE
-        MENUITEM "Hardware hinzufügen",             IDC_ADD_HARDWARE
+        MENUITEM "Nach geänderter Hardware suchen", IDM_SCAN_HARDWARE
+        MENUITEM "Hardware hinzufügen",             IDM_ADD_HARDWARE
     END
     POPUP "&Ansicht"
     BEGIN
-        MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
-        MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
-        MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
-        MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
+        MENUITEM "Geräte nach &Typ",               IDM_DEVBYTYPE
+        MENUITEM "Garäte nach &Verbindung",        IDM_DEVBYCONN
+        MENUITEM "Ressourcen nac&h Typ",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ressourcen nach V&erbindung",    IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
+        MENUITEM "Ausgeblendete &Geräte anzeigen", IDM_SHOWHIDDEN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "Ü&ber",                          IDC_ABOUT
+        MENUITEM "Ü&ber",                          IDM_ABOUT
     END
 END
 
