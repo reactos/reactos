@@ -7,9 +7,6 @@
  */
 
 #include "client_server.h"
-// ntlmssp-protocol.h
-#include "ntlmssp.h"
-#include "protocol.h"
 
 struct CapName
 {
@@ -211,6 +208,19 @@ void PrintNtlmWindowsVersion(const char* name, PNTLM_WINDOWS_VERSION pver)
     sync_trace("->NtlmRevisionCurrent %d\n", pver->NtlmRevisionCurrent);
 }
 
+void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg)
+{
+    sync_trace("NEGOTIATE_MESSAGE 0x%p\n", pmsg);
+    if (pmsg == NULL)
+        return;
+    sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
+    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
+    PrintNtlmBlob("OemDomainName", pmsg, &pmsg->OemDomainName);
+    PrintNtlmBlob("OemWorkstationName", pmsg, &pmsg->OemWorkstationName);
+    PrintNtlmWindowsVersion("Version", &pmsg->Version);
+}
+
 void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg)
 {
     sync_trace("CHALLENGE_MESSAGE 0x%p\n", pmsg);
@@ -227,24 +237,23 @@ void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg)
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
 }
 
-void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg)
+void PrintAuthenticateMessage(PAUTHENTICATE_MESSAGE pmsg)
 {
-    sync_trace("NEGOTIATE_MESSAGE 0x%p\n", pmsg);
+    sync_trace("AUTHENTICATE_MESSAGE 0x%p\n", pmsg);
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
     sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    PrintNtlmBlob("LmChallengeResponse", pmsg, &pmsg->LmChallengeResponse);
+    PrintNtlmBlob("NtChallengeResponse", pmsg, &pmsg->NtChallengeResponse);
+    PrintNtlmBlob("DomainName", pmsg, &pmsg->DomainName);
+    PrintNtlmBlob("UserName", pmsg, &pmsg->UserName);
+    PrintNtlmBlob("WorkstationName", pmsg, &pmsg->WorkstationName);
+    PrintNtlmBlob("EncryptedRandomSessionKey", pmsg, &pmsg->EncryptedRandomSessionKey);
     sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
-    PrintNtlmBlob("OemDomainName", pmsg, &pmsg->OemDomainName);
-    PrintNtlmBlob("OemWorkstationName", pmsg, &pmsg->OemWorkstationName);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
+    PrintHexDump(sizeof(pmsg->MIC), (PBYTE)&pmsg->MIC);
 }
-
-typedef struct _NTLM_MESSAGE_HEAD
-{
-    CHAR Signature[8];
-    ULONG MsgType;
-} *PNTLM_MESSAGE_HEAD;
 
 void PrintSecBuffer(PSecBuffer buf)
 {
@@ -267,6 +276,10 @@ void PrintSecBuffer(PSecBuffer buf)
         else if (pHead->MsgType == NtlmChallenge)
         {
             PrintChallengeMessage((PCHALLENGE_MESSAGE)buf->pvBuffer);
+        }
+        else if (pHead->MsgType == NtlmAuthenticate)
+        {
+            PrintAuthenticateMessage((PAUTHENTICATE_MESSAGE)buf->pvBuffer);
         }
         else
         {

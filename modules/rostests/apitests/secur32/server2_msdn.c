@@ -146,6 +146,7 @@ BOOL server2_DoAuthentication(
             sync_err("GenServerContext failed.\n");
             return FALSE;
         }
+        NtlmCheckSecBuffer(TESTSEC_SVR_AUTH, g_pOutBuf);
 
         fNewConversation = FALSE;
         if (!SendMsg(AuthSocket, g_pOutBuf, cbOut))
@@ -200,7 +201,7 @@ GenServerContext(
 
     sync_trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
     PrintSecBuffer(&InSecBuff);
-    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
+    sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &hctxt,
@@ -211,7 +212,7 @@ GenServerContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
-    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
+    sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
@@ -241,7 +242,7 @@ GenServerContext(
     sync_trace("Token buffer generated (%lu bytes):\n",
         OutSecBuff.cbBuffer);
     PrintSecBuffer(&OutSecBuff);
-    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
+    sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     *pfDone = !((ss == SEC_I_CONTINUE_NEEDED) ||
                 (ss == SEC_I_COMPLETE_AND_CONTINUE));

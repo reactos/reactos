@@ -165,6 +165,7 @@ client2_DoAuthentication(
         sync_err("GenClientContext failed!\n");
         return FALSE;
     }
+    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf);
 
     if (!SendMsg(s, pOutBuf, cbOut))
     {
@@ -196,6 +197,8 @@ client2_DoAuthentication(
             sync_err("GenClientContext failed.\n");
             return FALSE;
         }
+        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf);
+
         if (!SendMsg(s, pOutBuf, cbOut))
         {
             sync_err("Send message 2 failed.\n");
@@ -339,6 +342,7 @@ GenClientContext(
     sync_trace("Token buffer generated (%lu bytes):\n", OutSecBuff.cbBuffer);
     printf("===OUTPUT===\n");
     PrintSecBuffer(&OutSecBuff);
+
     return TRUE;
 
 }

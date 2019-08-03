@@ -37,6 +37,16 @@
 #define SECPKG_ID_NONE 0xFFFF
 #endif
 
+// ntlmssp-protocol.h
+#include "ntlmssp.h"
+#include "protocol.h"
+
+typedef struct _NTLM_MESSAGE_HEAD
+{
+    CHAR Signature[8];
+    ULONG MsgType;
+} *PNTLM_MESSAGE_HEAD;
+
 #include <ntsecapi.h>
 #include <security.h>   // Security.h must come *before* secext.h
 #include <secext.h>
@@ -155,5 +165,15 @@ DWORD inet_addr_w(const WCHAR *pszAddr);
 void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
 void PrintHexDump(DWORD length, PBYTE buffer);
 void PrintSecBuffer(PSecBuffer buf);
+
+#define TESTSEC_CLI_AUTH_INIT  1
+#define TESTSEC_SVR_AUTH       2
+#define TESTSEC_CLI_AUTH_FINI  3
+
+void NtlmCheckInit();
+void NtlmCheckFini();
+void NtlmCheckSecBuffer(
+    IN int TESTSEC_idx,
+    IN PBYTE buffer);
 
 #endif // __CLIENT_SERVER_H__

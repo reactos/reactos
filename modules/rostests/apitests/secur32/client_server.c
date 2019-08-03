@@ -111,8 +111,10 @@ Quit:
 START_TEST(ClientServer)
 {
     InitializeCriticalSection(&sync_msg_cs);
+    NtlmCheckInit();
 
     test_runner(0);
 
+    NtlmCheckFini();
     DeleteCriticalSection(&sync_msg_cs);
 }
