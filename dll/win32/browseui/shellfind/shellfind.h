@@ -26,4 +26,15 @@
 
 #include "../resource.h"
 
+#define WM_SEARCH_START          WM_USER + 0
+#define WM_SEARCH_ADD_RESULT     WM_USER + 1
+#define WM_SEARCH_UPDATE_STATUS  WM_USER + 2
+
+struct SearchStart
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szFileName[MAX_PATH];
+    WCHAR szQuery[MAX_PATH];
+};
+
 #endif /* _SHELLFIND_PCH_ */

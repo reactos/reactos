@@ -200,8 +200,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
 
     GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL);
     if (hwnd)
-        // TODO: Use message ID in header file
-        ::PostMessageW(hwnd, WM_USER + 1, 0, (LPARAM) StrDupW(L"Starting search..."));
+    ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) StrDupW(L"Starting search..."));
 
     return S_OK;
 }
@@ -213,8 +212,7 @@ LRESULT CSearchBar::OnClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     if (SUCCEEDED(hr))
     {
         LPCWSTR path = L"C:\\readme.txt";
-        // TODO: Use message ID in header file
-        ::PostMessageW(hwnd, WM_USER, 0, (LPARAM) StrDupW(path));
+        ::PostMessageW(hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(path));
     }
 
     return 0;
