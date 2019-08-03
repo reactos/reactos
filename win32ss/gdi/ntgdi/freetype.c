@@ -1163,10 +1163,12 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
 
     if (Error)
     {
+        UNICODE_STRING MemoryFont = RTL_CONSTANT_STRING(L"MemoryFont");
+        PUNICODE_STRING PrintFile = pFileName ? pFileName : &MemoryFont;
         if (Error == FT_Err_Unknown_File_Format)
-            DPRINT1("Unknown font file format\n");
+            DPRINT1("Unknown font file format (%wZ)\n", PrintFile);
         else
-            DPRINT1("Error reading font (FT_Error: %d)\n", Error);
+            DPRINT1("Error reading font (FT_Error: %d, %wZ)\n", Error, PrintFile);
         return 0;   /* failure */
     }
 
