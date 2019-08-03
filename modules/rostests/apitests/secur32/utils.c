@@ -118,15 +118,15 @@ void PrintHexDump(
 {
     DWORD i,count,index;
     CHAR rgbDigits[]="0123456789abcdef";
-    CHAR rgbLine[100];
-    char cbLine;
+    CHAR rgbLine[512];
+    int cbLine;
 
     for (index = 0; length;
          length -= count, buffer += count, index += count)
     {
         count = (length > 16) ? 16:length;
 
-        snprintf(rgbLine, 100, "%4.4x  ",index);
+        snprintf(rgbLine, 512, "%4.4x  ",index);
         cbLine = 6;
 
         for (i = 0; i < count; i++)
