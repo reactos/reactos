@@ -505,6 +505,12 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
     {
         case TVN_SELCHANGED:
         {
+            HMENU hMenu = GetSubMenu(m_hMenu, 1);
+            for (INT i = GetMenuItemCount(hMenu) - 1; i >= 0; i--)
+            {
+                DeleteMenu(hMenu, i, MF_BYPOSITION);
+            }
+            m_DeviceView->CreateActionMenu(hMenu, true);
             UpdateToolbar();
             break;
         }

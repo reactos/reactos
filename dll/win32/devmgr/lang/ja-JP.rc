@@ -251,7 +251,11 @@ BEGIN
   BEGIN
     MENUITEM "終了(&X)",                     IDC_EXIT
   END
-  MENUITEM "アクション(&A)",                 IDC_ACTIONMENU
+  POPUP "アクション(&A)"
+  BEGIN
+    MENUITEM "ハードウェアの変更をスキャン",        IDC_SCAN_HARDWARE
+    MENUITEM "ハードウェアを追加",             IDC_ADD_HARDWARE
+  END
   POPUP "表示(&V)"
   BEGIN
     MENUITEM "種類別デバイス(&E)",           IDC_DEVBYTYPE

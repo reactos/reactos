@@ -254,7 +254,11 @@ BEGIN
   BEGIN
     MENUITEM "&Çıkış",                      IDC_EXIT
   END
-  MENUITEM "&Eylem",                        IDC_ACTIONMENU
+  POPUP "&Eylem"
+  BEGIN
+    MENUITEM "Donanım Değişiklikleri İçin Tara",  IDC_SCAN_HARDWARE
+    MENUITEM "Donanım Ekle",                      IDC_ADD_HARDWARE
+  END
   POPUP "&Görünüm"
   BEGIN
     MENUITEM "&Türe Göre Aygıtlar",         IDC_DEVBYTYPE

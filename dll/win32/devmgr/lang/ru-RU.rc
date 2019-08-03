@@ -254,7 +254,11 @@ BEGIN
   BEGIN
     MENUITEM "В&ыход",                       IDC_EXIT
   END
-  MENUITEM "&Действие",                      IDC_ACTIONMENU
+  POPUP "&Действие"
+  BEGIN
+    MENUITEM "О&бновить конфигурацию оборудования", IDC_SCAN_HARDWARE
+    MENUITEM "&Добавить устройство",                IDC_ADD_HARDWARE
+  END
   POPUP "&Вид"
   BEGIN
     MENUITEM "&Устройства по типу",          IDC_DEVBYTYPE

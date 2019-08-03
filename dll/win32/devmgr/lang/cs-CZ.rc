@@ -257,7 +257,11 @@ BEGIN
   BEGIN
     MENUITEM "U&končit",                       IDC_EXIT
   END
-  MENUITEM "Akce",                        IDC_ACTIONMENU
+  POPUP "Akce"
+  BEGIN
+    MENUITEM "Vyhledat změny hardwaru",        IDC_SCAN_HARDWARE
+    MENUITEM "Přidat hardware",                IDC_ADD_HARDWARE
+  END
   POPUP "Zobrazit"
   BEGIN
     MENUITEM "Zařízení podle typu",             IDC_DEVBYTYPE

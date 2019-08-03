@@ -253,7 +253,11 @@ BEGIN
   BEGIN
     MENUITEM "關閉(&X)",                       IDC_EXIT
   END
-  MENUITEM "行動",                        IDC_ACTIONMENU
+  POPUP "行動"
+  BEGIN
+    MENUITEM "掃描檢測硬體改動",                 IDC_SCAN_HARDWARE
+    MENUITEM "添加硬體",                     IDC_ADD_HARDWARE
+  END
   POPUP "檢視"
   BEGIN
     MENUITEM "按類型裝置",             IDC_DEVBYTYPE

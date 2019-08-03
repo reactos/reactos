@@ -255,7 +255,11 @@ BEGIN
   BEGIN
     MENUITEM "&Sair",                       IDC_EXIT
   END
-  MENUITEM "Acção",                        IDC_ACTIONMENU
+  POPUP "Acção"
+  BEGIN
+    MENUITEM "Verificar alterações de hardware",  IDC_SCAN_HARDWARE
+    MENUITEM "Adicionar hardware",                IDC_ADD_HARDWARE
+  END
   POPUP "Vista"
   BEGIN
     MENUITEM "Dispositivos por tipo",             IDC_DEVBYTYPE

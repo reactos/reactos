@@ -257,7 +257,11 @@ BEGIN
   BEGIN
     MENUITEM "E&xit",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
+  POPUP "Action"
+  BEGIN
+    MENUITEM "Scan for hardware changes",   IDC_SCAN_HARDWARE
+    MENUITEM "Add hardware",                IDC_ADD_HARDWARE
+  END
   POPUP "View"
   BEGIN
     MENUITEM "Devices by type",             IDC_DEVBYTYPE

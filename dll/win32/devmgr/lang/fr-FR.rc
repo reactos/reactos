@@ -253,7 +253,11 @@ BEGIN
   BEGIN
     MENUITEM "&Quitter",                          IDC_EXIT
   END
-  MENUITEM "Action",                              IDC_ACTIONMENU
+  POPUP "Action"
+  BEGIN
+    MENUITEM "Vérifier les changements de matériel", IDC_SCAN_HARDWARE
+    MENUITEM "Ajouter un matériel",                  IDC_ADD_HARDWARE
+  END
   POPUP "Vue"
   BEGIN
     MENUITEM "Périphériques par type",            IDC_DEVBYTYPE

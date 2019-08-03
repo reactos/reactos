@@ -258,7 +258,11 @@ BEGIN
   BEGIN
     MENUITEM "I&eșire",                     IDC_EXIT
   END
-  MENUITEM "A&cțiune",                       IDC_ACTIONMENU
+  POPUP "A&cțiune"
+  BEGIN
+    MENUITEM "Scanează configurația fizică",   IDC_SCAN_HARDWARE
+    MENUITEM "Adăugare dispozitiv…",                IDC_ADD_HARDWARE
+  END
   POPUP "&Afișare"
   BEGIN
     MENUITEM "Dispozitive după tip",        IDC_DEVBYTYPE

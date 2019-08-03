@@ -253,7 +253,11 @@ BEGIN
   BEGIN
     MENUITEM "关闭(&X)",                       IDC_EXIT
   END
-  MENUITEM "操作",                        IDC_ACTIONMENU
+  POPUP "行动"
+  BEGIN
+    MENUITEM "扫描检测硬件改动",      IDC_SCAN_HARDWARE
+    MENUITEM "添加硬件",             IDC_ADD_HARDWARE
+  END
   POPUP "视图"
   BEGIN
     MENUITEM "按类型设备",             IDC_DEVBYTYPE

@@ -258,7 +258,11 @@ BEGIN
   BEGIN
     MENUITEM "&Välju",                       IDC_EXIT
   END
-  MENUITEM "&Toiming",                       IDC_ACTIONMENU
+  POPUP "&Toiming"
+  BEGIN
+    MENUITEM "Otsi riistvaramuudatusi",      IDC_SCAN_HARDWARE
+    MENUITEM "Lisa riistvara",               IDC_ADD_HARDWARE
+  END
   POPUP "&Vaade"
   BEGIN
     MENUITEM "Seadmed &tüübi järgi",         IDC_DEVBYTYPE

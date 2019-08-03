@@ -254,7 +254,11 @@ BEGIN
   BEGIN
     MENUITEM "&Beenden",                       IDC_EXIT
   END
-  MENUITEM "Ak&tion",                          IDC_ACTIONMENU
+  POPUP "Ak&tion"
+  BEGIN
+    MENUITEM "Nach geänderter Hardware suchen", IDC_SCAN_HARDWARE
+    MENUITEM "Hardware hinzufügen",             IDC_ADD_HARDWARE
+  END
   POPUP "&Ansicht"
   BEGIN
     MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE

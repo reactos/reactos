@@ -254,7 +254,11 @@ BEGIN
   BEGIN
     MENUITEM "K&eluar",                       IDC_EXIT
   END
-  MENUITEM "Ak&si",                        IDC_ACTIONMENU
+  POPUP "Ak&si"
+  BEGIN
+    MENUITEM "Pindai perubahan perangkat keras", IDC_SCAN_HARDWARE
+    MENUITEM "Tambah perangkat keras",           IDC_ADD_HARDWARE
+  END
   POPUP "Ta&mpilan"
   BEGIN
     MENUITEM "Jenis perangkat",             IDC_DEVBYTYPE
