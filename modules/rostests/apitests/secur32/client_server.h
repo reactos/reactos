@@ -152,6 +152,7 @@ BOOL SendBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf);
 BOOL ReceiveBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf, DWORD *pcbRead);
 DWORD inet_addr_w(const WCHAR *pszAddr);
 
+void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
 void PrintHexDump(DWORD length, PBYTE buffer);
 void PrintSecBuffer(PSecBuffer buf);
 

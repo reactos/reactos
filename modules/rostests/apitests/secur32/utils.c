@@ -115,17 +115,18 @@ void wserr(int rc, LPCWSTR const funcname)
     // exit(rc);
 }
 
-void PrintHexDump(
-    DWORD length,
-    PBYTE buffer)
+void PrintHexDumpMax(
+    IN DWORD length,
+    IN PBYTE buffer,
+    IN int printmax)
 {
     DWORD i,count,index;
     CHAR rgbDigits[]="0123456789abcdef";
     CHAR rgbLine[512];
     int cbLine;
 
-    if (length > 32)
-        length = 32;
+    if (length > printmax)
+        length = printmax;
 
     for (index = 0; length;
          length -= count, buffer += count, index += count)
@@ -174,6 +175,13 @@ void PrintHexDump(
     }
 }
 
+void PrintHexDump(
+    IN DWORD length,
+    IN PBYTE buffer)
+{
+    PrintHexDumpMax(length, buffer, 32);
+}
+
 //TODO void PrintNegtiaonMessage(PCHALLENGE_MESSAGE pmsg)
 void PrintNtlmBlob(const char* name, void* pmsg, PNTLM_BLOB pblob)
 {
@@ -187,7 +195,7 @@ void PrintNtlmBlob(const char* name, void* pmsg, PNTLM_BLOB pblob)
     sync_trace("->MaxLength %d\n", pblob->MaxLength);
     sync_trace("->Offset    %d\n", pblob->Offset);
     pData = ((PBYTE)pmsg + pblob->Offset);
-    PrintHexDump(pblob->Length, pData);
+    PrintHexDumpMax(pblob->Length, pData, 265);
 }
 
 void PrintNtlmWindowsVersion(const char* name, PNTLM_WINDOWS_VERSION pver)
