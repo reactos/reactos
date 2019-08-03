@@ -7,6 +7,9 @@
  */
 
 #include "client_server.h"
+// ntlmssp-protocol.h
+#include "ntlmssp.h"
+#include "protocol.h"
 
 struct CapName
 {
@@ -121,10 +124,13 @@ void PrintHexDump(
     CHAR rgbLine[512];
     int cbLine;
 
+    if (length > 32)
+        length = 32;
+
     for (index = 0; length;
          length -= count, buffer += count, index += count)
     {
-        count = (length > 16) ? 16:length;
+        count = (length > 32) ? 32:length;
 
         snprintf(rgbLine, 512, "%4.4x  ",index);
         cbLine = 6;
@@ -165,6 +171,105 @@ void PrintHexDump(
 
         rgbLine[cbLine++] = 0;
         sync_trace("%s\n", rgbLine);
+    }
+}
+
+//TODO void PrintNegtiaonMessage(PCHALLENGE_MESSAGE pmsg)
+void PrintNtlmBlob(const char* name, void* pmsg, PNTLM_BLOB pblob)
+{
+    PBYTE pData;
+
+    sync_trace("%s (PNTLM_BLOB %p)\n", name, pblob);
+    if (pblob == NULL)
+        return;
+
+    sync_trace("->Length    %d\n", pblob->Length);
+    sync_trace("->MaxLength %d\n", pblob->MaxLength);
+    sync_trace("->Offset    %d\n", pblob->Offset);
+    pData = ((PBYTE)pmsg + pblob->Offset);
+    PrintHexDump(pblob->Length, pData);
+}
+
+void PrintNtlmWindowsVersion(const char* name, PNTLM_WINDOWS_VERSION pver)
+{
+    sync_trace("%s (PNTLM_WINDOWS_VERSION %p)\n", name, pver);
+    if (pver == NULL)
+        return;
+
+    sync_trace("->Major.Minor.Build %d.%d.%d\n",
+              pver->ProductMajor, pver->ProductMinor,
+              pver->ProductBuild);
+    PrintHexDump(3, (PBYTE)&pver->Reserved);
+    sync_trace("->NtlmRevisionCurrent %d\n", pver->NtlmRevisionCurrent);
+}
+
+void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg)
+{
+    sync_trace("CHALLENGE_MESSAGE 0x%p\n", pmsg);
+    if (pmsg == NULL)
+        return;
+    sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
+    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    PrintNtlmBlob("TargetName", pmsg, &pmsg->TargetName);
+    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
+    //sys_trace("ServerChallenge %.*s\n", 8, pmsg->ServerChallenge);
+    PrintHexDump(MSV1_0_CHALLENGE_LENGTH, (PBYTE)&pmsg->ServerChallenge);
+    PrintHexDump(8, (PBYTE)&pmsg->Reserved);
+    PrintNtlmBlob("TargetInfo", pmsg, &pmsg->TargetInfo);
+    PrintNtlmWindowsVersion("Version", &pmsg->Version);
+}
+
+void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg)
+{
+    sync_trace("NEGOTIATE_MESSAGE 0x%p\n", pmsg);
+    if (pmsg == NULL)
+        return;
+    sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
+    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
+    PrintNtlmBlob("OemDomainName", pmsg, &pmsg->OemDomainName);
+    PrintNtlmBlob("OemWorkstationName", pmsg, &pmsg->OemWorkstationName);
+    PrintNtlmWindowsVersion("Version", &pmsg->Version);
+}
+
+typedef struct _NTLM_MESSAGE_HEAD
+{
+    CHAR Signature[8];
+    ULONG MsgType;
+} *PNTLM_MESSAGE_HEAD;
+
+void PrintSecBuffer(PSecBuffer buf)
+{
+    PNTLM_MESSAGE_HEAD pHead;
+
+    //sync_trace("buf->BufferType 0x%x\n", buf->BufferType);
+    if (buf->BufferType == SECBUFFER_TOKEN)
+    {
+        pHead = (PNTLM_MESSAGE_HEAD)buf->pvBuffer;
+        if (memcmp(pHead->Signature, NTLMSSP_SIGNATURE, 8) != 0)
+        {
+            sync_err("**** wrong signature DUMPING ...\n");
+            PrintHexDump(buf->cbBuffer, buf->pvBuffer);
+            return;
+        }
+        if (pHead->MsgType == NtlmNegotiate)
+        {
+            PrintNegotiateMessage((PNEGOTIATE_MESSAGE)buf->pvBuffer);
+        }
+        else if (pHead->MsgType == NtlmChallenge)
+        {
+            PrintChallengeMessage((PCHALLENGE_MESSAGE)buf->pvBuffer);
+        }
+        else
+        {
+            sync_trace("unknown message type %x\n", pHead->MsgType);
+            PrintHexDump(buf->cbBuffer, buf->pvBuffer);
+        }
+    }
+    else
+    {
+        sync_trace("unknown buffer type\n");
+        PrintHexDump(buf->cbBuffer, buf->pvBuffer);
     }
 }
 
@@ -311,8 +416,8 @@ BOOL ReceiveBytes(
         cbRemaining -= cbRead;
         pTemp += cbRead;
     }
-
     *pcbRead = cbBuf - cbRemaining;
+
     return TRUE;
 }
 

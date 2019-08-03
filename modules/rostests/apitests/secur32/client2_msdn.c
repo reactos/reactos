@@ -229,6 +229,15 @@ GenClientContext(
     SecBuffer       InSecBuff;
     ULONG           ContextAttributes;
 
+    if (pIn)
+    {
+        printf("===INPUT===\n");
+        PrintHexDump(cbIn, (PBYTE)pIn);
+    } else
+    {
+        printf("===INPUT (EMPTY)===\n");
+    }
+
     if (!pIn)
     {
         ss = AcquireCredentialsHandle(NULL,
@@ -328,7 +337,8 @@ GenClientContext(
                 (ss == SEC_I_COMPLETE_AND_CONTINUE));
 
     sync_trace("Token buffer generated (%lu bytes):\n", OutSecBuff.cbBuffer);
-    PrintHexDump(OutSecBuff.cbBuffer, (PBYTE)OutSecBuff.pvBuffer);
+    printf("===OUTPUT===\n");
+    PrintSecBuffer(&OutSecBuff);
     return TRUE;
 
 }

@@ -199,7 +199,8 @@ GenServerContext(
     InSecBuff.pvBuffer = pIn;
 
     sync_trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
-    //PrintHexDump(InSecBuff.cbBuffer, (PBYTE)InSecBuff.pvBuffer);
+    PrintSecBuffer(&InSecBuff);
+    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &hctxt,
@@ -210,6 +211,7 @@ GenServerContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
+    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
@@ -238,8 +240,8 @@ GenServerContext(
 
     sync_trace("Token buffer generated (%lu bytes):\n",
         OutSecBuff.cbBuffer);
-    //PrintHexDump(OutSecBuff.cbBuffer,
-    //             (PBYTE)OutSecBuff.pvBuffer);
+    PrintSecBuffer(&OutSecBuff);
+    sync_err(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     *pfDone = !((ss == SEC_I_CONTINUE_NEEDED) ||
                 (ss == SEC_I_COMPLETE_AND_CONTINUE));
