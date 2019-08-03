@@ -68,9 +68,20 @@ void CSearchBar::InitializeSearchBar()
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
 
+    CreateWindowExW(0, WC_STATIC, L"&Look in:",
+        WS_CHILD | WS_VISIBLE,
+        10, 150, 500, 20,
+        m_hWnd, NULL,
+        _AtlBaseModule.GetModuleInstance(), NULL);
+    CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
+        WS_BORDER | WS_CHILD | WS_VISIBLE,
+        10, 180, 100, 20,
+        m_hWnd, NULL,
+        _AtlBaseModule.GetModuleInstance(), NULL);
+
     CreateWindowExW(0, WC_BUTTON, L"Sea&rch",
         WS_BORDER | WS_CHILD | WS_VISIBLE,
-        10, 150, 100, 20,
+        10, 210, 100, 20,
         m_hWnd, NULL,
         _AtlBaseModule.GetModuleInstance(), NULL);
 }
