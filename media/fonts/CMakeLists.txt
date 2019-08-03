@@ -32,6 +32,8 @@ list(APPEND FONT_FILES
     DejaVuSerifCondensed-BoldItalic.ttf
     DejaVuSerifCondensed-Italic.ttf
     DejaVuSerifCondensed.ttf
+    framd.ttf
+    framdit.ttf
     FreeMono.ttf
     FreeMonoBold.ttf
     FreeMonoBoldOblique.ttf
