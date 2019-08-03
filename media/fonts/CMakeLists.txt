@@ -98,6 +98,10 @@ list(APPEND FONT_FILES
     OpenSans-Regular.ttf
     OpenSans-Semibold.ttf
     OpenSans-SemiboldItalic.ttf
+    pala.ttf
+    palab.ttf
+    palabi.ttf
+    palai.ttf
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
