@@ -41,6 +41,10 @@
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
 #endif
 
+/* Is bold emulation necessary? */
+#define EMUBOLD_NEEDED(original, request) \
+    ((request) != FW_DONTCARE) && ((request) - (original) >= FW_BOLD - FW_MEDIUM)
+
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
@@ -4100,7 +4104,7 @@ TextIntGetTextExtentPoint(PDC dc,
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
+    EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
     Render = IntIsFontRenderingEnabled();
@@ -5885,7 +5889,7 @@ IntExtTextOutW(
     face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
+    EmuBold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
     if (Render)
