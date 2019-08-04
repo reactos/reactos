@@ -73,7 +73,7 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
         return;
     }
 
-    TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
+    TRACE("NLS data '%s' '%s' '%s'\n", AnsiName, OemName, LangName);
 
 #if DBG
     {
@@ -130,7 +130,7 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
                                                 ServiceName);
                 if (!Success)
                 {
-                    ERR("could not add boot driver %s, %s\n", SearchPath, DriverName);
+                    ERR("Could not add boot driver '%s', '%s'\n", SearchPath, DriverName);
                     return;
                 }
             }
@@ -191,8 +191,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     UiDrawProgressBarCenter(1, 100, "Loading ReactOS Setup...");
 
     /* Read the system path is set in the .ini file */
-    if (!HasSection ||
-        !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
+    if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
     {
         /*
          * IMPROVE: I don't want to call MachDiskGetBootPath here as a
@@ -203,7 +202,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
          */
         // MachDiskGetBootPath(BootPath, sizeof(BootPath));
         // strcpy(BootPath, SectionName);
-        BootPath[0] = '\0';
+        BootPath[0] = ANSI_NULL;
     }
 
     /*

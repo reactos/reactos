@@ -99,9 +99,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     strncpy(ArcBoot, BootPath, PathSeparator);
     ArcBoot[PathSeparator] = ANSI_NULL;
 
-    TRACE("ArcBoot: %s\n", ArcBoot);
-    TRACE("SystemRoot: %s\n", SystemRoot);
-    TRACE("Options: %s\n", Options);
+    TRACE("ArcBoot: '%s'\n", ArcBoot);
+    TRACE("SystemRoot: '%s'\n", SystemRoot);
+    TRACE("Options: '%s'\n", Options);
 
     /* Fill ARC BootDevice */
     LoaderBlock->ArcBootDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
@@ -122,7 +122,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     strncpy(LoaderBlock->NtHalPathName, HalPath, MAX_PATH);
     LoaderBlock->NtHalPathName = PaToVa(LoaderBlock->NtHalPathName);
 
-    /* Fill LoadOptions and strip the '/' commutator symbol in front of each option */
+    /* Fill LoadOptions and strip the '/' switch symbol in front of each option */
     NewLoadOptions = LoadOptions = LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
     strncpy(LoaderBlock->LoadOptions, Options, MAX_OPTIONS_LENGTH);
 
@@ -252,7 +252,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
         DriverPath[0] = ANSI_NULL;
     }
 
-    TRACE("DriverPath: %s, DllName: %s, LPB\n", DriverPath, DllName);
+    TRACE("DriverPath: '%s', DllName: '%s', LPB\n", DriverPath, DllName);
 
     // Check if driver is already loaded
     Success = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
@@ -506,7 +506,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* Skip possible initial whitespace */
         Options += strspn(Options, " \t");
 
-        /* Check whether a new commutator starts and it is either KERNEL or HAL */
+        /* Check whether a new option starts and it is either KERNEL or HAL */
         if (*Options != '/' || (++Options,
             !(_strnicmp(Options, "KERNEL=", 7) == 0 ||
               _strnicmp(Options, "HAL=",    4) == 0)) )
@@ -524,7 +524,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 break;
             }
 
-            /* We have found either KERNEL or HAL commutator */
+            /* We have found either KERNEL or HAL options */
             if (_strnicmp(Options, "KERNEL=", 7) == 0)
             {
                 Options += 7; i -= 7;
@@ -589,7 +589,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             /* Skip possible initial whitespace */
             Options += strspn(Options, " \t");
 
-            /* Check whether a new commutator starts and it is the DEBUGPORT one */
+            /* Check whether a new option starts and it is the DEBUGPORT one */
             if (*Options != '/' || _strnicmp(++Options, "DEBUGPORT=", 10) != 0)
             {
                 /* Search for another whitespace */
@@ -598,7 +598,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             }
             else
             {
-                /* We found the DEBUGPORT commutator. Move to the port name. */
+                /* We found the DEBUGPORT option. Move to the port name. */
                 Options += 10;
                 break;
             }
@@ -607,7 +607,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         if (Options)
         {
             /*
-             * We have found the DEBUGPORT commutator. Parse the port name.
+             * We have found the DEBUGPORT option. Parse the port name.
              * Format: /DEBUGPORT=COM1 or /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log or /DEBUGPORT=FOO
              * If we only have /DEBUGPORT= (i.e. without any port name), defaults it to "COM".
              */
@@ -673,8 +673,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
     /* Read the system path is set in the .ini file */
-    if (!HasSection ||
-        !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
+    if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
     {
         strcpy(BootPath, SectionName);
     }
