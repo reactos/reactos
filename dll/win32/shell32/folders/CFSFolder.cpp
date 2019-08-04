@@ -490,22 +490,23 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
     return pidl;
 }
 
-void SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, CLSID* pclsidFolder)
+static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder)
 {
     WCHAR wszCLSIDValue[CHARS_IN_GUID];
     WCHAR wszDesktopIni[MAX_PATH];
     StringCchCopyW(wszDesktopIni, MAX_PATH, pwszDir);
     StringCchCatW(wszDesktopIni, MAX_PATH, L"\\desktop.ini");
 
-    if (GetPrivateProfileStringW(L".ShellClassInfo", 
-                                 L"CLSID", 
+    if (GetPrivateProfileStringW(L".ShellClassInfo",
+                                 KeyName,
                                  L"",
-                                 wszCLSIDValue, 
-                                 CHARS_IN_GUID, 
+                                 wszCLSIDValue,
+                                 CHARS_IN_GUID,
                                  wszDesktopIni))
     {
-        CLSIDFromString (wszCLSIDValue, pclsidFolder);
+        return CLSIDFromString(wszCLSIDValue, pclsidFolder);
     }
+    return E_FAIL;
 }
 
 HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
@@ -742,7 +743,7 @@ HRESULT WINAPI CFSFolder::BindToObject(
         clsidFolder = CLSID_ShellFSFolder;
 
         if ((pData->uFileAttribs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
-            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, &clsidFolder);
+            SHELL32_GetCLSIDForDirectory(pfti.szTargetParsingName, L"CLSID", &clsidFolder);
     }
     else
     {
@@ -857,30 +858,73 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
     {
         *ppvOut = NULL;
 
-        if (IsEqualIID (riid, IID_IDropTarget))
-            hr = CFSDropTarget_CreateInstance(sPathTarget, riid, ppvOut);
-        else if (IsEqualIID (riid, IID_IContextMenu))
-        {
-            HKEY hKeys[16];
-            UINT cKeys = 0;
-            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+        BOOL bIsDropTarget = IsEqualIID (riid, IID_IDropTarget);
+        BOOL bIsShellView = !bIsDropTarget && IsEqualIID (riid, IID_IShellView);
 
-            DEFCONTEXTMENU dcm;
-            dcm.hwnd = hwndOwner;
-            dcm.pcmcb = this;
-            dcm.pidlFolder = pidlRoot;
-            dcm.psf = this;
-            dcm.cidl = 0;
-            dcm.apidl = NULL;
-            dcm.cKeys = cKeys;
-            dcm.aKeys = hKeys;
-            dcm.punkAssociationInfo = NULL;
-            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
-        }
-        else if (IsEqualIID (riid, IID_IShellView))
+        if (bIsDropTarget || bIsShellView)
         {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
-            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            DWORD dwDirAttributes = _ILGetFileAttributes(ILFindLastID(pidlRoot), NULL, 0);
+
+            if ((dwDirAttributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
+            {
+                CLSID clsidFolder;
+                hr = SHELL32_GetCLSIDForDirectory(sPathTarget, L"UICLSID", &clsidFolder);
+                if (SUCCEEDED(hr))
+                {
+                    CComPtr<IPersistFolder> spFolder;
+                    hr = SHCoCreateInstance(NULL, &clsidFolder, NULL, IID_PPV_ARG(IPersistFolder, &spFolder));
+                    if (!FAILED_UNEXPECTEDLY(hr))
+                    {
+                        hr = spFolder->Initialize(pidlRoot);
+
+                        if (!FAILED_UNEXPECTEDLY(hr))
+                        {
+                            hr = spFolder->QueryInterface(riid, ppvOut);
+                        }
+                    }
+                }
+                else
+                {
+                    // No desktop.ini, or no UICLSID present, continue as if nothing happened
+                    hr = E_INVALIDARG;
+                }
+            }
+        }
+
+        if (!SUCCEEDED(hr))
+        {
+            // No UICLSID handler found, continue to the default handlers
+            if (bIsDropTarget)
+            {
+                hr = CFSDropTarget_CreateInstance(sPathTarget, riid, ppvOut);
+            }
+            else if (IsEqualIID (riid, IID_IContextMenu))
+            {
+                HKEY hKeys[16];
+                UINT cKeys = 0;
+                AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+                DEFCONTEXTMENU dcm;
+                dcm.hwnd = hwndOwner;
+                dcm.pcmcb = this;
+                dcm.pidlFolder = pidlRoot;
+                dcm.psf = this;
+                dcm.cidl = 0;
+                dcm.apidl = NULL;
+                dcm.cKeys = cKeys;
+                dcm.aKeys = hKeys;
+                dcm.punkAssociationInfo = NULL;
+                hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
+            }
+            else if (bIsShellView)
+            {
+                SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
+                hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            }
+            else
+            {
+                hr = E_INVALIDARG;
+            }
         }
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
