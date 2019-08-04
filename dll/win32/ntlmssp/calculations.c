@@ -30,8 +30,17 @@ VOID
 NTOWFv1(LPCWSTR password,
         PUCHAR result)
 {
-    ULONG i, len = wcslen(password);
+    ULONG i;
+    size_t len;
     WCHAR pass[14];
+
+    if ((password == NULL) ||
+        (FAILED(RtlStringCchLengthW(password, MAX_PASSWD_LEN, &len))))
+    {
+        *result = 0;
+        return;
+    }
+
     memcpy(pass, password, len * sizeof(WCHAR));
     for(i = len; i<14; i++)
     {

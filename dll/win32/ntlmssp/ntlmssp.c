@@ -29,7 +29,7 @@ NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
 UNICODE_STRING NtlmComputerNameString;
 UNICODE_STRING NtlmDomainNameString;
 UNICODE_STRING NtlmDnsNameString;
-UNICODE_STRING NtlmAvTargetInfo;
+NTLM_AVDATA NtlmAvTargetInfo;
 OEM_STRING NtlmOemComputerNameString;
 OEM_STRING NtlmOemDomainNameString;
 OEM_STRING NtlmOemDnsNameString;
@@ -44,7 +44,6 @@ NtlmInitializeGlobals(VOID)
     LPWKSTA_USER_INFO_1 pBuf = NULL;
     WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
-    PMSV1_0_AV_PAIR pAvPairs;
     ULONG AvPairsLen;
     InitializeCriticalSection(&GlobalCritSect);
 
@@ -103,30 +102,35 @@ NtlmInitializeGlobals(VOID)
     }
     //FIX ME: This is broken
     /* init global target AV pairs */
-    RtlInitUnicodeString(&NtlmAvTargetInfo, NULL);
     AvPairsLen = NtlmDomainNameString.Length + //fix me: domain controller name
            NtlmComputerNameString.Length + //computer name
            NtlmDnsNameString.Length + //dns computer name
            NtlmDnsNameString.Length + //fix me: dns domain name
            sizeof(MSV1_0_AV_PAIR)*4;
 
-    NtlmAvTargetInfo.Buffer = (PWSTR)NtlmAllocate(AvPairsLen);
-
-    if(!NtlmAvTargetInfo.Buffer)
+    if (!NtlmAvlAlloc(&NtlmAvTargetInfo, AvPairsLen))
     {
         ERR("failed to allocate NtlmAvTargetInfo\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    pAvPairs = NtlmAvlInit(NtlmAvTargetInfo.Buffer);
-    NtlmAvlAdd(pAvPairs, MsvAvNbDomainName, &NtlmDomainNameString, AvPairsLen);
-    NtlmAvlAdd(pAvPairs, MsvAvNbComputerName, &NtlmComputerNameString, AvPairsLen);
-    NtlmAvlAdd(pAvPairs, MsvAvDnsDomainName, &NtlmDnsNameString, AvPairsLen);
-    NtlmAvlAdd(pAvPairs, MsvAvDnsComputerName, &NtlmDnsNameString, AvPairsLen);
-    NtlmAvTargetInfo.Length = (USHORT)NtlmAvlLen(pAvPairs, AvPairsLen);
+    if (NtlmComputerNameString.Length > 0)
+        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvNbComputerName,
+                   NtlmComputerNameString.Buffer, NtlmComputerNameString.Length);
+    if (NtlmDomainNameString.Length > 0)
+        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvNbDomainName,
+                   NtlmDomainNameString.Buffer, NtlmDomainNameString.Length);
+    if (NtlmDnsNameString.Length > 0)
+        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvDnsComputerName,
+                   NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
+    if (NtlmDnsNameString.Length > 0)
+        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvDnsDomainName,
+                   NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
+    //TODO: MsvAvDnsTreeName
+    NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvEOL, NULL, 0);
 
-    ERR("NtlmAvTargetInfo %S\n", NtlmAvTargetInfo.Buffer);
-    NtlmPrintAvPairs(pAvPairs);
+    ERR("NtlmAvTargetInfo len 0x%x\n", NtlmAvTargetInfo.bUsed);
+    NtlmPrintAvPairs(&NtlmAvTargetInfo);
     return status;
 }
 
@@ -139,7 +143,7 @@ NtlmTerminateGlobals(VOID)
     NtlmFree(NtlmOemComputerNameString.Buffer);
     NtlmFree(NtlmOemDomainNameString.Buffer);
     NtlmFree(NtlmOemDnsNameString.Buffer);
-    NtlmFree(NtlmAvTargetInfo.Buffer);
+    NtlmAvFree(&NtlmAvTargetInfo);
     NtClose(NtlmSystemSecurityToken);
 }
 

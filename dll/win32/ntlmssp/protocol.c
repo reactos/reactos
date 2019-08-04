@@ -118,6 +118,7 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
 SECURITY_STATUS
 NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
                              IN PNTLMSSP_CREDENTIAL Credentials,
+                             IN ULONG ContextReq,
                              IN RAW_STRING TargetName,
                              IN ULONG MessageFlags,
                              OUT PSecBuffer OutputToken)
@@ -127,17 +128,27 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
 
     /* compute message size */
     messageSize = sizeof(CHALLENGE_MESSAGE) +
-                  NtlmAvTargetInfo.Length +
+                  NtlmAvTargetInfo.bUsed +
                   TargetName.bUsed;
 
     ERR("generating chaMessage of size %lu\n", messageSize);
 
-    /*
-     * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
-     * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
-     */
-    OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
-    OutputToken->cbBuffer = messageSize;
+    if (ContextReq & ASC_REQ_ALLOCATE_MEMORY)
+    {
+        if (messageSize > NTLM_MAX_BUF)
+            return SEC_E_INSUFFICIENT_MEMORY;
+        /*
+         * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
+         * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
+         */
+        OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
+        OutputToken->cbBuffer = NTLM_MAX_BUF;
+    }
+    else
+    {
+        if (OutputToken->cbBuffer < messageSize)
+            return SEC_E_BUFFER_TOO_SMALL;
+    }
 
     /* check allocation */
     if(!OutputToken->pvBuffer)
@@ -164,10 +175,8 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
         chaMessage, TargetName.bUsed, offset);
     NtlmRawStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
 
-    FIXME("TODO Copy NtlmAvTargetInfo\n");
-    //ERR("set target information %p to avl %S, %d, %d\n", chaMessage, NtlmAvTargetInfo.Buffer, NtlmAvTargetInfo.Length, offset);
-    //NtlmPrintAvPairs(&NtlmAvTargetInfo);
-    //NtlmUnicodeStringToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
+    ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage, NtlmAvTargetInfo.bUsed, offset);
+    NtlmWriteAvDataToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
     chaMessage->NegotiateFlags |= MessageFlags;
 
     /* set state */
@@ -391,6 +400,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 
     ret = NtlmGenerateChallengeMessage(context,
                                        cred,
+                                       ContextReq,
                                        *pRawTargetNameRef,
                                        negotiateFlags,
                                        OutputToken);
@@ -417,12 +427,14 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     PNTLMSSP_CONTEXT context = NULL;
     PCHALLENGE_MESSAGE challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
-    BOOLEAN isUnicode;
-    UNICODE_STRING ServerName;
+    //BOOLEAN isUnicode;
+    UNICODE_STRING ServerNameRef;
     MSV1_0_NTLM3_RESPONSE NtResponse;
     LM2_RESPONSE Lm2Response;
     USER_SESSION_KEY UserSessionKey;
     LM_SESSION_KEY LmSessionKey;
+    RAW_STRING AvDataTmp;
+    NTLM_AVDATA AvDataRef;
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
@@ -511,13 +523,13 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     {
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_OEM;
-        isUnicode = TRUE;
+        //isUnicode = TRUE;
     }
     else if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
     {
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_UNICODE;
-        isUnicode = FALSE;
+        //isUnicode = FALSE;
     }
     else
     {
@@ -581,29 +593,46 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     /* extract target info */
     if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
+        PVOID data;
+        ULONG len;
+
         ERR("NTLMSSP_NEGOTIATE_TARGET_INFO\n");
-        RtlInitUnicodeString(&ServerName, L"fixme");
-        //PMSV1_0_AV_PAIR pAvPair;
-        //pAvPair = (PMSV1_0_AV_PAIR)challenge->TargetInfo;
-        
-        //PVOID ptr = ((PUCHAR)InputToken1->pvBuffer + challenge->TargetInfo.Offset);
+        ret = NtlmBlobToRawStringRef(InputToken1, challenge->TargetInfo, &AvDataTmp);
+        if (!NT_SUCCESS(ret))
+        {
+            ERR("could not get target info!\n");
+            goto fail;
+        }
+
+        /* Copy to AvData */
+        AvDataRef.pData = AvDataTmp.Buffer;
+        AvDataRef.bAllocated = AvDataTmp.bAllocated;
+        AvDataRef.bUsed = AvDataTmp.bUsed;
+
+        //FIXME...
         //NtlmPrintAvPairs(ptr);
         //NtlmPrintHexDump(InputToken1->pvBuffer, InputToken1->cbBuffer);
 
-        //NtlmAvlGet(pAvPair, MsvAvNbDomainName, GetRespRequest->ServerName.Length)
+        if (!NtlmAvlGet(&AvDataRef, MsvAvNbDomainName, &data, &len))
+        {
+            ERR("could not get domainname from target info!\n");
+            goto fail;
+        }
 
-        //if(!NT_SUCCESS(ret))
-        //{
-        //    ERR("could not get target info!\n");
-        //    goto fail;
-        //}
+        ServerNameRef.Length = len;
+        ServerNameRef.MaximumLength = len;
+        ServerNameRef.Buffer = data;
     }
-    //else
+    else
     {
+        //FIXME: Free Severname ... but
+        //       do not free if above assigned!
+        RtlInitUnicodeString(&ServerNameRef, L"fixme");
+        /* SEEMS WRONG ... */
         /* spec: "A server that is a member of a domain returns the domain of which it
          * is a member, and a server that is not a member of a domain returns
          * the server name." how to tell?? */
-        ret = NtlmBlobToUnicodeStringRef(InputToken1,
+        /*ret = NtlmBlobToUnicodeStringRef(InputToken1,
                                          challenge->TargetInfo,
                                          //challenge->TargetName,
                                          &ServerName);
@@ -613,7 +642,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
             goto fail;
         }
         if(isUnicode)
-            FIXME("convert to unicode!\n");
+            FIXME("convert to unicode!\n");*/
     }
 
     if(!(cred = NtlmReferenceCredential((ULONG_PTR)context->Credential)))
@@ -624,12 +653,12 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
 
     TRACE("cred: %s %s %s %s\n", debugstr_w(cred->UserName.Buffer),
         debugstr_w(cred->Password.Buffer), debugstr_w(cred->DomainName.Buffer),
-        debugstr_w(ServerName.Buffer));
+        debugstr_w(ServerNameRef.Buffer));
 
     NtlmChallengeResponse(&cred->UserName,
                           &cred->Password,
                           &cred->DomainName,
-                          &ServerName,
+                          &ServerNameRef,
                           challenge->ServerChallenge,
                           &NtResponse,
                           &Lm2Response,
@@ -642,7 +671,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     InitString(UserSessionKeyString, UserSessionKey);
     InitString(LmSessionKeyString, LmSessionKey);
 
-    messageSize = sizeof(AUTHENTICATE_MESSAGE) + ServerName.Length +
+    messageSize = sizeof(AUTHENTICATE_MESSAGE) + ServerNameRef.Length +
         cred->UserName.Length + cred->DomainName.Length + NtResponseString.Length +
         UserSessionKeyString.Length + LmSessionKeyString.Length + LmResponseString.Length;
 
@@ -668,7 +697,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                             &offset);
 
     NtlmUnicodeStringToBlob((PVOID)authmessage,
-                            &ServerName,
+                            &ServerNameRef,
                             &authmessage->WorkstationName,
                             &offset);
 

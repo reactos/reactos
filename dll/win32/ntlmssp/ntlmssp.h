@@ -39,6 +39,14 @@
 
 #include "wine/unicode.h"
 
+/* forward */
+typedef struct _NTLM_AVDATA
+{
+    ULONG bAllocated;
+    ULONG bUsed;
+    BYTE* pData;
+} NTLM_AVDATA, *PNTLM_AVDATA;
+
 /* globals */
 extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
 extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
@@ -52,7 +60,7 @@ extern OEM_STRING NtlmOemComputerNameString;
 extern OEM_STRING NtlmOemDomainNameString;
 extern OEM_STRING NtlmOemDnsNameString;
 extern HANDLE NtlmSystemSecurityToken;
-extern UNICODE_STRING NtlmAvTargetInfo; // contains AV pairs with local info
+extern NTLM_AVDATA NtlmAvTargetInfo; // contains AV pairs with local info
 
 typedef enum _NTLM_MODE {
     NtlmLsaMode = 1,
@@ -241,6 +249,7 @@ void
 NtlmPrintHexDump(PBYTE buffer, DWORD length);
 
 void
-NtlmPrintAvPairs(const PVOID av);
+NtlmPrintAvPairs(
+    IN PNTLM_AVDATA pAvData);
 
 #endif

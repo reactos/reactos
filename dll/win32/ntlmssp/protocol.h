@@ -253,27 +253,32 @@ NtlmChallengeResponse(
 
 /* avl functions */
 
-PMSV1_0_AV_PAIR
-NtlmAvlInit(
-    IN void * pAvList);
+BOOL
+NtlmAvlAlloc(
+    IN PNTLM_AVDATA pAvData,
+    IN ULONG initlen);
 
-PMSV1_0_AV_PAIR
+void
+NtlmAvFree(
+    IN OUT PNTLM_AVDATA pAvData);
+
+BOOL
 NtlmAvlGet(
-    IN PMSV1_0_AV_PAIR pAvList,
+    IN PNTLM_AVDATA pAvData,
     IN MSV1_0_AVID AvId,
-    IN LONG cAvList);
+    OUT PVOID* pData,
+    OUT PULONG plen);
+//ULONG
+//NtlmAvlLen(
+//    IN PMSV1_0_AV_PAIR pAvList,
+//    IN LONG cAvList);
 
-ULONG
-NtlmAvlLen(
-    IN PMSV1_0_AV_PAIR pAvList,
-    IN LONG cAvList);
-
-PMSV1_0_AV_PAIR
+BOOL
 NtlmAvlAdd(
-    IN PMSV1_0_AV_PAIR pAvList,
+    IN PNTLM_AVDATA pAvData,
     IN MSV1_0_AVID AvId,
-    IN PUNICODE_STRING pString,
-    IN LONG cAvList);
+    IN void* data,
+    IN ULONG len);
 
 ULONG
 NtlmAvlSize(
@@ -303,6 +308,7 @@ SECURITY_STATUS
 NtlmGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
+    IN ULONG ContextReq,
     IN RAW_STRING TargetName,
     IN ULONG MessageFlags,
     OUT PSecBuffer OutputToken);
@@ -348,4 +354,9 @@ NtlmRawStringToBlob(
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet);
 #define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmRawStringToBlob(buf, (PRAW_STRING)str, out, ofs)
+VOID
+NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
+                      IN PNTLM_AVDATA pAvData,
+                      IN OUT PNTLM_BLOB OutputBlob,
+                      IN OUT PULONG_PTR OffSet);
 

@@ -121,9 +121,10 @@ void NtlmPrintHexDump(PBYTE buffer, DWORD length)
 }
 
 void
-NtlmPrintAvPairs(const PVOID Buffer)
+NtlmPrintAvPairs(
+    IN PNTLM_AVDATA pAvData)
 {
-    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)Buffer;
+    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvData;
 
     /* warning: the string buffers are not null terminated! */
 #define AV_DESC(av_name) TRACE("%s: len: %xl value: %S\n", av_name, pAvPair->AvLen, av_value);

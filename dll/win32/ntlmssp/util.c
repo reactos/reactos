@@ -200,6 +200,24 @@ NtlmBlobToRawStringRef(IN PSecBuffer InputBuffer,
 }
 
 VOID
+NtlmWriteToBlob(IN PVOID pOutputBuffer,
+                IN void* buffer,
+                IN ULONG len,
+                IN OUT PNTLM_BLOB OutputBlob,
+                IN OUT PULONG_PTR OffSet)
+{
+    /* copy string to target location */
+    memcpy((PVOID)*OffSet, buffer, len);
+
+    /* set blob fields */
+    OutputBlob->Length = OutputBlob->MaxLength = len;
+    OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)pOutputBuffer);
+
+    /* move the offset to the end of the string we just copied */
+    *OffSet += len;
+}
+
+VOID
 NtlmRawStringToBlob(IN PVOID OutputBuffer,
                     IN PRAW_STRING InStr,
                     IN OUT PNTLM_BLOB OutputBlob,
@@ -215,4 +233,13 @@ NtlmRawStringToBlob(IN PVOID OutputBuffer,
 
     /* move the offset to the end of the string we just copied */
     *OffSet += InStr->bUsed;
+}
+
+VOID
+NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
+                      IN PNTLM_AVDATA pAvData,
+                      IN OUT PNTLM_BLOB OutputBlob,
+                      IN OUT PULONG_PTR OffSet)
+{
+    NtlmWriteToBlob(OutputBuffer, pAvData->pData, pAvData->bUsed, OutputBlob, OffSet);
 }

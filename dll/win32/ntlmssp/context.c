@@ -540,6 +540,7 @@ QueryContextAttributesW(PCtxtHandle phContext,
             break;
         }
     default:
+        DebugBreak();
         FIXME("ulAttribute %lx unsupported\n", ulAttribute);
         ret = SEC_E_UNSUPPORTED_FUNCTION;
     }

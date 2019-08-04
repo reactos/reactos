@@ -23,38 +23,66 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-PMSV1_0_AV_PAIR
-NtlmAvlInit(IN void * pAvList)
+BOOL
+NtlmAvlAlloc(
+    IN PNTLM_AVDATA pAvData,
+    IN ULONG initlen)
 {
-    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvList;
-    pAvPair->AvId = MsvAvEOL;
-    pAvPair->AvLen = 0;
-    return pAvPair;
+    pAvData->pData = NtlmAllocate(initlen);
+    if (pAvData == NULL)
+        return FALSE;
+    pAvData->bUsed = 0;
+    pAvData->bAllocated = initlen;
+    return TRUE;
 }
 
-PMSV1_0_AV_PAIR
-NtlmAvlGet(IN PMSV1_0_AV_PAIR pAvList,
-           IN MSV1_0_AVID AvId,
-           IN LONG cAvList)
+void
+NtlmAvFree(
+    IN OUT PNTLM_AVDATA pAvData)
 {
-    PMSV1_0_AV_PAIR pAvPair = pAvList;
+    if ((pAvData->pData == NULL) ||
+        (pAvData->bAllocated == 0))
+        return;
+    NtlmFree(pAvData->pData);
+    pAvData->pData = NULL;
+    pAvData->bAllocated = 0;
+    pAvData->bUsed = 0;
+}
+
+BOOL
+NtlmAvlGet(IN PNTLM_AVDATA pAvData,
+           IN MSV1_0_AVID AvId,
+           OUT PVOID* pData,
+           OUT PULONG pLen)
+{
+    PMSV1_0_AV_PAIR pAvPair;
+    PBYTE ptr = pAvData->pData;
+    PBYTE ptrend = ptr + pAvData->bUsed;
 
     do
     {
+        pAvPair = (PMSV1_0_AV_PAIR)ptr;
+        ptr += sizeof(MSV1_0_AV_PAIR) + pAvPair->AvLen;
+
+        /* check data end bound ... */
+        if (ptr > ptrend)
+            return FALSE;
+
         if (pAvPair->AvId == AvId)
-            return pAvPair;
+        {
+            *pLen = pAvPair->AvLen;
+            *pData = (*pLen > 0) ? (PBYTE)pAvPair+1 : 0;
+            return TRUE;
+        }
         if (pAvPair->AvId == MsvAvEOL)
-            return NULL;
-        cAvList -= (pAvPair->AvLen + sizeof(MSV1_0_AV_PAIR));
-        if (cAvList <= 0)
-            return NULL;
-        pAvPair = (PMSV1_0_AV_PAIR)((PUCHAR)pAvPair + pAvPair->AvLen +
-            sizeof(MSV1_0_AV_PAIR));
-    }while(pAvPair);
-    return NULL;
+            return FALSE;
+
+    } while (ptr < ptrend);
+
+    return FALSE;
 }
 
-ULONG
+/*ULONG
 NtlmAvlLen(IN PMSV1_0_AV_PAIR pAvList,
            IN LONG cAvList)
 {
@@ -63,28 +91,29 @@ NtlmAvlLen(IN PMSV1_0_AV_PAIR pAvList,
     if(!pCurPair)
         return 0;
     return (ULONG)(((PUCHAR)pCurPair - (PUCHAR)pAvList) + sizeof(MSV1_0_AV_PAIR));
-}
+}*/
 
-PMSV1_0_AV_PAIR
-NtlmAvlAdd(IN PMSV1_0_AV_PAIR pAvList,
+BOOL
+NtlmAvlAdd(IN PNTLM_AVDATA pAvData,
            IN MSV1_0_AVID AvId,
-           IN PUNICODE_STRING pString,
-           IN LONG cAvList)
+           IN void* data,
+           IN ULONG len)
 {
-    PMSV1_0_AV_PAIR pCurPair = NtlmAvlGet(pAvList, MsvAvEOL, cAvList);
+    PMSV1_0_AV_PAIR pNewPair;
 
-    if(!pCurPair)
-        return NULL;
+    /* realloc not implemented ... */
+    if (pAvData->bUsed + len + sizeof(MSV1_0_AV_PAIR) > pAvData->bAllocated)
+        return FALSE;
 
-    pCurPair->AvId = (USHORT)AvId;
-    pCurPair->AvLen = (USHORT)pString->Length;
-    memcpy(pCurPair+1, pString->Buffer, pCurPair->AvLen);
+    pNewPair = (PMSV1_0_AV_PAIR)(pAvData->pData + pAvData->bUsed);
+    pNewPair->AvId = (USHORT)AvId;
+    pNewPair->AvLen = (USHORT)len;
+    pAvData->bUsed += sizeof(MSV1_0_AV_PAIR);
 
-    pCurPair = (PMSV1_0_AV_PAIR)((PUCHAR)pCurPair + sizeof(MSV1_0_AV_PAIR) + pCurPair->AvLen);
-    pCurPair->AvId = MsvAvEOL;
-    pCurPair->AvLen = 0;
+    memcpy(pAvData->pData + pAvData->bUsed, data, len);
+    pAvData->bUsed += len;
 
-    return pCurPair;
+    return TRUE;
 }
 
 ULONG
