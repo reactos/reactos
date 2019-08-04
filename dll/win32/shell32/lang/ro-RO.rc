@@ -170,7 +170,7 @@ CAPTION "Executare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS.", 12289, 36, 4, 182, 26
+    LTEXT "Tastați numele unui program, dosar, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS.", 12289, 36, 4, 185, 26
     LTEXT "&Deschide:", 12305, 7, 39, 33, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 41, 37, 179, 100
     DEFPUSHBUTTON "Con&firmă", IDOK, 36, 70, 59, 14, WS_TABSTOP
