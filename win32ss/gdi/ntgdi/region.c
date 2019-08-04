@@ -2084,7 +2084,7 @@ REGION_bXformRgn(
     _In_ PMATRIX pmx)
 {
     XFORMOBJ xo;
-    ULONG i, j, cjSize;
+    ULONG i, cjSize;
     PPOINT ppt;
     PULONG pcPoints;
     RECT rect;
@@ -2149,11 +2149,8 @@ REGION_bXformRgn(
             /* Loop all rects in the region */
             for (i = 0; i < prgn->rdh.nCount - 1; i++)
             {
-                for (j = i; i < prgn->rdh.nCount; i++)
-                {
-                    NT_ASSERT(prgn->Buffer[i].top < prgn->Buffer[i].bottom);
-                    NT_ASSERT(prgn->Buffer[j].top >= prgn->Buffer[i].top);
-                }
+                NT_ASSERT(prgn->Buffer[i].top <= prgn->Buffer[i].bottom);
+                NT_ASSERT(prgn->Buffer[i + 1].top >= prgn->Buffer[i].top);
             }
 
             return TRUE;
