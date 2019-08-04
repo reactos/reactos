@@ -217,6 +217,7 @@
 #define IDD_DRIVERDETAILS   0x404
 #define IDD_DEVICEDETAILS   0x405
 #define IDD_DEVICEPOWER     0x406
+#define IDD_UNINSTALLDRIVER 0x407
 
 #define IDC_DEVICON          0x57B
 #define IDC_DEVNAME          0x57C
