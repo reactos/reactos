@@ -747,7 +747,8 @@ ScreenSaverPageProc(HWND hwndDlg,
 
                 case IDC_SCREENS_TIMEDELAY:
                 {
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    if (command == EN_CHANGE)
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
 
