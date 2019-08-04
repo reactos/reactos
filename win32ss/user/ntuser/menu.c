@@ -2901,6 +2901,52 @@ static BOOL RECTL_Intersect(const RECT* pRect, INT x, INT y, UINT width, UINT he
     return RECTL_bIntersectRect(&dum, pRect, &other);
 }
 
+static BOOL MENU_MoveRect(UINT flags, INT* x, INT* y, INT width, INT height, const RECT* pExclude, PMONITOR monitor)
+{
+    /* Figure out if we should move vertical or horizontal */
+    if (flags & TPM_VERTICAL)
+    {
+        /* Move in the vertical direction: TPM_BOTTOMALIGN means drop it above, otherways drop it below */
+        if (flags & TPM_BOTTOMALIGN)
+        {
+            if (pExclude->top - height >= monitor->rcMonitor.top)
+            {
+                *y = pExclude->top - height;
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (pExclude->bottom + height < monitor->rcMonitor.bottom)
+            {
+                *y = pExclude->bottom;
+                return TRUE;
+            }
+        }
+    }
+    else
+    {
+        /* Move in the horizontal direction: TPM_RIGHTALIGN means drop it to the left, otherways go right */
+        if (flags & TPM_RIGHTALIGN)
+        {
+            if (pExclude->left - width >= monitor->rcMonitor.left)
+            {
+                *x = pExclude->left - width;
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (pExclude->right + width < monitor->rcMonitor.right)
+            {
+                *x = pExclude->right;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 /***********************************************************************
  *           MenuShowPopup
  *
@@ -2962,7 +3008,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     /* We are off the right side of the screen */
     if (x + width > monitor->rcMonitor.right)
     {
-        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right || bIsPopup)
+        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right)
             x = monitor->rcMonitor.right - width;
         else
             x -= width;
@@ -2996,39 +3042,35 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
             y -= height;
     }
 
-    if (pExclude || bIsPopup)
+    if (pExclude)
     {
-        RECT PopupOrigin = {x-1, y-1, x+1, y+1};
         RECT Cleaned;
 
-        if (RECTL_bIntersectRect(&Cleaned, pExclude ? pExclude : &PopupOrigin, &monitor->rcMonitor) &&
+        if (RECTL_bIntersectRect(&Cleaned, pExclude, &monitor->rcMonitor) &&
             RECTL_Intersect(&Cleaned, x, y, width, height))
         {
-            /* Figure out if we should move vertical or horizontal */
-            if (flags & TPM_VERTICAL)
+            UINT flag_mods[] = {
+                0,                                                  /* First try the 'normal' way */
+                TPM_BOTTOMALIGN | TPM_RIGHTALIGN,                   /* Then try the opposite side */
+                TPM_VERTICAL,                                       /* Then swap horizontal / vertical */
+                TPM_BOTTOMALIGN | TPM_RIGHTALIGN | TPM_VERTICAL,    /* Then the other side again (still swapped hor/ver) */
+            };
+            UINT n;
+            for (n = 0; n < RTL_NUMBER_OF(flag_mods); ++n)
             {
-                /* Move in the vertical direction: TPM_BOTTOMALIGN means drop it above, otherways drop it below */
-                if (flags & TPM_BOTTOMALIGN)
+                INT tx = x;
+                INT ty = y;
+
+                /* Try to move a bit around */
+                if (MENU_MoveRect(flags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
+                    !RECTL_Intersect(&Cleaned, tx, ty, width, height))
                 {
-                    y = Cleaned.top - height;
-                }
-                else
-                {
-                    y = Cleaned.bottom;
+                    x = tx;
+                    y = ty;
+                    break;
                 }
             }
-            else
-            {
-                /* Move in the horizontal direction: TPM_RIGHTALIGN means drop it to the left, otherways go right */
-                if (flags & TPM_RIGHTALIGN)
-                {
-                    x = Cleaned.left - width;
-                }
-                else
-                {
-                    x = Cleaned.right;
-                }
-            }
+            /* If none worked, we go with the original x/y */
         }
     }
 
