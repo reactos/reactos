@@ -4,6 +4,7 @@ list(APPEND FONT_FILES
     arialbd.ttf
     arialbi.ttf
     ariali.ttf
+    ariblk.ttf
     comic.ttf
     comicbd.ttf
     cour.ttf
