@@ -123,7 +123,6 @@
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
 /sdk/cmake/     @learn-more @ThFabba
-CMakeLists.txt  @learn-more @ThFabba
 *.cmake         @learn-more @ThFabba
 
 # File Patch API
