@@ -191,6 +191,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     UiDrawProgressBarCenter(1, 100, "Loading ReactOS Setup...");
 
     /* Read the system path is set in the .ini file */
+    BootPath[0] = ANSI_NULL;
     if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
     {
         /*
@@ -231,15 +232,23 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
         strcat(BootPath, "\\");
 
-    /* Read booting options */
+    /* Read boot options */
+    BootOptions2[0] = ANSI_NULL;
     if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions2, sizeof(BootOptions2)))
     {
-        /* Get options after the title */
+        /* Retrieve the options after the quoted title */
         PCSTR p = SettingsValue;
-        while (*p == ' ' || *p == '"')
-            p++;
-        while (*p != '\0' && *p != '"')
-            p++;
+
+        /* Trim any leading whitespace and quotes */
+        while (*p == ' ' || *p == '\t' || *p == '"')
+            ++p;
+        /* Skip all the text up to the first last quote */
+        while (*p != ANSI_NULL && *p != '"')
+            ++p;
+        /* Trim any trailing whitespace and quotes */
+        while (*p == ' ' || *p == '\t' || *p == '"')
+            ++p;
+
         strcpy(BootOptions2, p);
         TRACE("BootOptions: '%s'\n", BootOptions2);
     }
