@@ -155,6 +155,10 @@ list(APPEND FONT_FILES
     timesbd.ttf
     timesbi.ttf
     timesi.ttf
+    trebuc.ttf
+    trebucbd.ttf
+    trebucbi.ttf
+    trebucit.ttf
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
