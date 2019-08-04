@@ -87,6 +87,7 @@ list(APPEND FONT_FILES
     LibreFranklin-SemiBoldItalic.ttf
     LibreFranklin-Thin.ttf
     LibreFranklin-ThinItalic.ttf
+    lucon.ttf
     Marlett.ttf
     OpenSans-Bold.ttf
     OpenSans-BoldItalic.ttf
