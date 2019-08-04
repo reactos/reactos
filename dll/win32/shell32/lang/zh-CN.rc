@@ -178,7 +178,7 @@ CAPTION "运行"
 FONT 9, "宋体"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "请输入程序、目录、文件或 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
+    LTEXT "请输入程序、目录、文件或 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 185, 18
     LTEXT "打开(&O):", 12305, 7, 39, 32, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 42, 37, 178, 100
     DEFPUSHBUTTON "确定", IDOK, 62, 70, 50, 14, WS_TABSTOP

@@ -168,7 +168,7 @@ CAPTION "रन"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "किसी भी प्रोग्राम, फ़ोल्डर, दस्तावेज़ या इंटरनेट संसाधन का नाम टाइप करें, और रिऐक्ट ओएस इसे आपके लिए खोल देगा।", 12289, 36, 11, 182, 18
+    LTEXT "किसी भी प्रोग्राम, फ़ोल्डर, दस्तावेज़ या इंटरनेट संसाधन का नाम टाइप करें, और रिऐक्ट ओएस इसे आपके लिए खोल देगा।", 12289, 36, 11, 185, 18
     LTEXT "&खोलो:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "ओके", IDOK, 36, 70, 59, 14, WS_TABSTOP
