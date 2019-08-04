@@ -20,6 +20,7 @@ extern LUID SeAnonymousAuthenticationId;
 /* PRIVATE DEFINITIONS ********************************************************/
 
 #define SEP_LOGON_SESSION_TAG 'sLeS'
+#define SEP_LOGON_NOTIFICATION_TAG 'nLeS'
 
 typedef struct _SEP_LOGON_SESSION_REFERENCES
 {
@@ -30,6 +31,12 @@ typedef struct _SEP_LOGON_SESSION_REFERENCES
     PDEVICE_MAP pDeviceMap;
     LIST_ENTRY TokenList;
 } SEP_LOGON_SESSION_REFERENCES, *PSEP_LOGON_SESSION_REFERENCES;
+
+typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
+{
+    struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION *Next;
+    PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine;
+} SEP_LOGON_SESSION_TERMINATED_NOTIFICATION, *PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION;
 
 VOID
 NTAPI
@@ -61,7 +68,8 @@ ULONG SepAdtMaxListLength = 0x3000;
 UCHAR SeAuditingState[POLICY_AUDIT_EVENT_TYPE_COUNT];
 
 KGUARDED_MUTEX SepRmDbLock;
-PSEP_LOGON_SESSION_REFERENCES SepLogonSessions;
+PSEP_LOGON_SESSION_REFERENCES SepLogonSessions = NULL;
+PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1118,26 +1126,96 @@ SeMarkLogonSessionForTerminationNotification(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine(
     IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Notification;
+    PAGED_CODE();
+
+    /* Fail, if we don not have a callback routine */
+    if (CallbackRoutine == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Allocate a new notification item */
+    Notification = ExAllocatePoolWithTag(PagedPool,
+                                         sizeof(SEP_LOGON_SESSION_TERMINATED_NOTIFICATION),
+                                         SEP_LOGON_NOTIFICATION_TAG);
+    if (Notification == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Set the callback routine */
+    Notification->CallbackRoutine = CallbackRoutine;
+
+    /* Insert the new notification item into the list */
+    Notification->Next = SepLogonNotifications;
+    SepLogonNotifications = Notification;
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    return STATUS_SUCCESS;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(
     IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Current, Previous = NULL;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Fail, if we don not have a callback routine */
+    if (CallbackRoutine == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop all registered notification items */
+    for (Current = SepLogonNotifications;
+         Current != NULL;
+         Current = Current->Next)
+    {
+        /* Check if the callback routine matches the provided one */
+        if (Current->CallbackRoutine == CallbackRoutine)
+            break;
+
+        Previous = Current;
+    }
+
+    if (Current == NULL)
+    {
+        Status = STATUS_NOT_FOUND;
+    }
+    else
+    {
+        /* Remove the current notification item from the list */
+        if (Previous == NULL)
+            SepLogonNotifications = Current->Next;
+        else
+            Previous->Next = Current->Next;
+
+        /* Free the current notification item */
+        ExFreePoolWithTag(Current,
+                          SEP_LOGON_NOTIFICATION_TAG);
+
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+
+    return Status;
 }
