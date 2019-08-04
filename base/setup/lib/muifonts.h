@@ -31,7 +31,6 @@ MUI_SUBFONT LatinFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Trebuchet MS",           L"Open Sans" },
     { NULL, NULL }
 };
 
@@ -65,7 +64,6 @@ MUI_SUBFONT CyrillicFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Trebuchet MS",           L"Open Sans" },
     { NULL, NULL }
 };
 
@@ -99,7 +97,6 @@ MUI_SUBFONT GreekFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Trebuchet MS",           L"Open Sans" },
     { NULL, NULL }
 };
 
@@ -135,7 +132,6 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Trebuchet MS",           L"Open Sans" },
     { L"Ubuntu",                 L"Tahoma" },
     { NULL, NULL }
 };
@@ -386,7 +382,6 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    { L"Trebuchet MS",           L"Open Sans" },
     { NULL, NULL }
 };
 
@@ -421,7 +416,6 @@ MUI_SUBFONT HindiFonts[] =
     { L"Times New Roman CYR,204",      L"Times New Roman,204" },
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
-    { L"Tms Rmn",                L"Liberation Serif" },
-    { L"Trebuchet MS",           L"Open Sans" },
+    { L"Tms Rmn",                L"Times New Roman" },
     { NULL, NULL }
 };
