@@ -401,6 +401,7 @@ MUI_SUBFONT HindiFonts[] =
     { L"Tahoma",                 L"FreeSans" },
     { L"Terminal",               L"DejaVu Sans Mono" },
     { L"Times",                  L"Times New Roman" },
+    { L"Times New Roman",        L"DejaVu Serif" },
     { L"Times New Roman Baltic,186",   L"Times New Roman,186" },
     { L"Times New Roman CE,238",       L"Times New Roman,238" },
     { L"Times New Roman CYR,204",      L"Times New Roman,204" },
