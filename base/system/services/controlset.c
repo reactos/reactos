@@ -27,7 +27,6 @@ ScmCopyTree(
     HKEY hSrcKey,
     HKEY hDstKey)
 {
-    FILETIME LastWrite;
     DWORD dwSubKeys;
     DWORD dwValues;
     DWORD dwType;
@@ -90,13 +89,13 @@ ScmCopyTree(
         {
             dwSubKeyNameLength = dwMaxSubKeyNameLength;
             dwError = RegEnumKeyExW(hSrcKey,
-                                   i,
-                                   lpNameBuffer,
-                                   &dwSubKeyNameLength,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &LastWrite);
+                                    i,
+                                    lpNameBuffer,
+                                    &dwSubKeyNameLength,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Subkey enumeration failed (Error %lu)\n", dwError);
@@ -107,14 +106,14 @@ ScmCopyTree(
             }
 
             dwError = RegCreateKeyExW(hDstKey,
-                                     lpNameBuffer,
-                                     0,
-                                     NULL,
-                                     REG_OPTION_NON_VOLATILE,
-                                     KEY_WRITE,
-                                     NULL,
-                                     &hDstSubKey,
-                                     &dwDisposition);
+                                      lpNameBuffer,
+                                      0,
+                                      NULL,
+                                      REG_OPTION_NON_VOLATILE,
+                                      KEY_WRITE,
+                                      NULL,
+                                      &hDstSubKey,
+                                      &dwDisposition);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Subkey creation failed (Error %lu)\n", dwError);
@@ -125,10 +124,10 @@ ScmCopyTree(
             }
 
             dwError = RegOpenKeyExW(hSrcKey,
-                                   lpNameBuffer,
-                                   0,
-                                   KEY_READ,
-                                   &hSrcSubKey);
+                                    lpNameBuffer,
+                                    0,
+                                    KEY_READ,
+                                    &hSrcSubKey);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Error: %lu\n", dwError);
@@ -190,13 +189,13 @@ ScmCopyTree(
             dwValueNameLength = dwMaxValueNameLength;
             dwValueLength = dwMaxValueLength;
             dwError = RegEnumValueW(hSrcKey,
-                                   i,
-                                   lpNameBuffer,
-                                   &dwValueNameLength,
-                                   NULL,
-                                   &dwType,
-                                   lpDataBuffer,
-                                   &dwValueLength);
+                                    i,
+                                    lpNameBuffer,
+                                    &dwValueNameLength,
+                                    NULL,
+                                    &dwType,
+                                    lpDataBuffer,
+                                    &dwValueLength);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Error: %lu\n", dwError);
@@ -210,11 +209,11 @@ ScmCopyTree(
             }
 
             dwError = RegSetValueExW(hDstKey,
-                                    lpNameBuffer,
-                                    0,
-                                    dwType,
-                                    lpDataBuffer,
-                                    dwValueLength);
+                                     lpNameBuffer,
+                                     0,
+                                     dwType,
+                                     lpDataBuffer,
+                                     dwValueLength);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Error: %lu\n", dwError);
