@@ -1852,18 +1852,26 @@ ScmStartUserModeService(PSERVICE Service,
             StartupInfo.lpDesktop = L"WinSta0\\Default";
         }
 
-        Result = CreateProcessW(NULL,
-                                Service->lpImage->pszImagePath,
-                                NULL,
-                                NULL,
-                                FALSE,
-                                CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
-                                lpEnvironment,
-                                NULL,
-                                &StartupInfo,
-                                &ProcessInformation);
-        if (!Result)
-            dwError = GetLastError();
+        if (wcsstr(Service->lpImage->pszImagePath, L"\\system32\\lsass.exe") == NULL)
+        {
+            Result = CreateProcessW(NULL,
+                                    Service->lpImage->pszImagePath,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                    lpEnvironment,
+                                    NULL,
+                                    &StartupInfo,
+                                    &ProcessInformation);
+            if (!Result)
+                dwError = GetLastError();
+        }
+        else
+        {
+            Result = TRUE;
+            dwError = ERROR_SUCCESS;
+        }
     }
 
     if (lpEnvironment)
