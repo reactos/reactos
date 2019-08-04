@@ -360,3 +360,18 @@ NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
                       IN OUT PNTLM_BLOB OutputBlob,
                       IN OUT PULONG_PTR OffSet);
 
+VOID
+NtlmStructWriteStrA(
+    IN void* dataStart,
+    IN ULONG dataSize,
+    OUT PCHAR* pDataFieldA,
+    IN const char* dataA,
+    IN OUT PBYTE* pOffset);
+VOID
+NtlmStructWriteStrW(
+    IN void* dataStart,
+    IN ULONG dataSize,
+    OUT PWCHAR* pDataFieldW,
+    IN const WCHAR* dataW,
+    IN OUT PBYTE* pOffset);
+

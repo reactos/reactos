@@ -243,3 +243,53 @@ NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
 {
     NtlmWriteToBlob(OutputBuffer, pAvData->pData, pAvData->bUsed, OutputBlob, OffSet);
 }
+
+VOID
+NtlmStructWriteStrA(
+    IN void* dataStart,
+    IN ULONG dataSize,
+    OUT PCHAR* pDataFieldA,
+    IN const char* dataA,
+    IN OUT PBYTE* pOffset)
+{
+    int datalen = (strlen(dataA) + 1) * sizeof(char);
+    if (*pOffset < (PBYTE)dataStart)
+    {
+        ERR("Invalid offset\n");
+        return;
+    }
+    if (*pOffset + datalen > (PBYTE)dataStart + dataSize)
+    {
+        ERR("Out of bounds!\n");
+        return;
+    }
+
+    memcpy(*pOffset, dataA, datalen);
+    *pDataFieldA = (char*)*pOffset;
+    *pOffset += datalen;
+}
+
+VOID
+NtlmStructWriteStrW(
+    IN void* dataStart,
+    IN ULONG dataSize,
+    OUT PWCHAR* pDataFieldW,
+    IN const WCHAR* dataW,
+    IN OUT PBYTE* pOffset)
+{
+    int datalen = (wcslen(dataW) + 1) * sizeof(WCHAR);
+    if (*pOffset < (PBYTE)dataStart)
+    {
+        ERR("Invalid offset\n");
+        return;
+    }
+    if (*pOffset + datalen > (PBYTE)dataStart + dataSize)
+    {
+        ERR("Out of bounds!\n");
+        return;
+    }
+
+    memcpy(*pOffset, dataW, datalen);
+    *pDataFieldW = (WCHAR*)*pOffset;
+    *pOffset += datalen;
+}

@@ -506,10 +506,17 @@ InitializeSecurityContextA(IN OPTIONAL PCredHandle phCredential,
 
 SECURITY_STATUS
 SEC_ENTRY
-QueryContextAttributesW(PCtxtHandle phContext,
-                        ULONG ulAttribute,
-                        void *pBuffer)
+QueryContextAttributesAW(
+    IN PCtxtHandle phContext,
+    IN ULONG ulAttribute,
+    OUT void *pBuffer,
+    IN BOOL isUnicode)
 {
+    const WCHAR* PKG_NAME_W = L"NTLM";
+    const WCHAR* PKG_COMMENT_W = L"NTLM Security Package";
+    const char* PKG_NAME_A = "NTLM";
+    const char* PKG_COMMENT_A = "NTLM Security Package";
+
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT context = NtlmReferenceContext(phContext->dwLower);
 
@@ -539,8 +546,65 @@ QueryContextAttributesW(PCtxtHandle phContext,
                 spcf->Flags |= ISC_RET_CONFIDENTIALITY;
             break;
         }
+        case SECPKG_ATTR_NEGOTIATION_INFO:
+        {
+            PBYTE pOffset;
+            ULONG spiSize;
+            /* windows reports the same */
+            /* I did some test, data of name and comment
+             * point to data after the struct. So i assume
+             * its one memory block. */
+            if (isUnicode)
+            {
+                PSecPkgContext_NegotiationInfoW spcniW = (PSecPkgContext_NegotiationInfoW)pBuffer;
+                PSecPkgInfoW spiW = (PSecPkgInfoW)pBuffer;
+                PBYTE pOffset;
+
+                spiSize = sizeof(SecPkgInfoW) +
+                          (wcslen(PKG_NAME_W) + 1) * sizeof(WCHAR) +
+                          (wcslen(PKG_COMMENT_W) + 1) * sizeof(WCHAR);
+
+                spiW = (PSecPkgInfoW)NtlmAllocate(spiSize);
+                spiW->fCapabilities = 0x82b37;
+                spiW->cbMaxToken = 2888;
+                spiW->wVersion = 1;
+                spiW->wRPCID = 10;
+
+                pOffset = (PBYTE)spiW + sizeof(SecPkgInfoW);
+                NtlmStructWriteStrW(spiW, spiSize, &spiW->Name, PKG_NAME_W, &pOffset);
+                NtlmStructWriteStrW(spiW, spiSize, &spiW->Comment, PKG_COMMENT_W, &pOffset);
+
+                spcniW->NegotiationState = 0;
+                spcniW->PackageInfo = spiW;
+            }
+            else
+            {
+                PSecPkgContext_NegotiationInfoA spcniA = (PSecPkgContext_NegotiationInfoA)pBuffer;
+                PSecPkgInfoA spiA = (PSecPkgInfoA)pBuffer;
+
+                spiSize = sizeof(SecPkgInfoA) +
+                          (strlen(PKG_NAME_A) + 1) * sizeof(char) +
+                          (strlen(PKG_COMMENT_A) + 1) * sizeof(char);
+
+                spiA = (PSecPkgInfoA)NtlmAllocate(spiSize);
+                spiA->fCapabilities = 0x82b37;
+                spiA->cbMaxToken = 2888;
+                spiA->wVersion = 1;
+                spiA->wRPCID = 10;
+
+                pOffset = (PBYTE)spiA + sizeof(SecPkgInfoA);
+                NtlmStructWriteStrA(spiA, spiSize, &spiA->Name, PKG_NAME_A, &pOffset);
+                NtlmStructWriteStrA(spiA, spiSize, &spiA->Comment, PKG_COMMENT_A, &pOffset);
+
+                spcniA->NegotiationState = 0;
+                spcniA->PackageInfo = spiA;
+            }
+            break;
+        }
+        case SECPKG_ATTR_PACKAGE_INFO:
+        {
+        }
     default:
-        DebugBreak();
         FIXME("ulAttribute %lx unsupported\n", ulAttribute);
         ret = SEC_E_UNSUPPORTED_FUNCTION;
     }
@@ -551,11 +615,22 @@ QueryContextAttributesW(PCtxtHandle phContext,
 
 SECURITY_STATUS
 SEC_ENTRY
-QueryContextAttributesA(PCtxtHandle phContext,
-                        ULONG ulAttribute,
-                        void *pBuffer)
+QueryContextAttributesW(
+    IN PCtxtHandle phContext,
+    IN ULONG ulAttribute,
+    OUT void *pBuffer)
 {
-    return QueryContextAttributesW(phContext, ulAttribute, pBuffer);
+    return QueryContextAttributesAW(phContext, ulAttribute, pBuffer, TRUE);
+}
+
+SECURITY_STATUS
+SEC_ENTRY
+QueryContextAttributesA(
+    IN PCtxtHandle phContext,
+    IN ULONG ulAttribute,
+    OUT void *pBuffer)
+{
+    return QueryContextAttributesAW(phContext, ulAttribute, pBuffer, FALSE);
 }
 
 SECURITY_STATUS
