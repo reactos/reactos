@@ -44,6 +44,7 @@ static DWORD
 ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
 {
     WCHAR szControlPipeName[MAX_PATH + 1];
+    SECURITY_ATTRIBUTES SecurityAttributes;
     HKEY hServiceCurrentKey = INVALID_HANDLE_VALUE;
     DWORD ServiceCurrent = 0;
     DWORD KeyDisposition;
@@ -97,6 +98,10 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
 
     DPRINT("PipeName: %S\n", szControlPipeName);
 
+    SecurityAttributes.nLength = sizeof(SecurityAttributes);
+    SecurityAttributes.lpSecurityDescriptor = pPipeSD;
+    SecurityAttributes.bInheritHandle = FALSE;
+
     pServiceImage->hControlPipe = CreateNamedPipeW(szControlPipeName,
                                                    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                                                    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -104,7 +109,7 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
                                                    8000,
                                                    4,
                                                    PipeTimeout,
-                                                   NULL);
+                                                   &SecurityAttributes);
     DPRINT("CreateNamedPipeW(%S) done\n", szControlPipeName);
     if (pServiceImage->hControlPipe == INVALID_HANDLE_VALUE)
     {

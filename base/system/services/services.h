@@ -100,6 +100,7 @@ extern LIST_ENTRY GroupListHead;
 extern LIST_ENTRY ImageListHead;
 extern BOOL ScmInitialize;
 extern BOOL ScmShutdown;
+extern PSECURITY_DESCRIPTOR pPipeSD;
 
 
 /* FUNCTIONS ***************************************************************/
