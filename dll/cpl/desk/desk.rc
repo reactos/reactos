@@ -80,6 +80,9 @@ IDB_SPECTRUM_16 BITMAP "resources/spectrum_16.bmp"
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.rc"
 #endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
@@ -107,3 +110,4 @@ IDB_SPECTRUM_16 BITMAP "resources/spectrum_16.bmp"
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
+
