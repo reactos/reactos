@@ -380,7 +380,7 @@ MenuInit(VOID)
       ERR("MenuInit(): CreateFontIndirectW(hMenuFont) failed!\n");
       return FALSE;
     }
-    ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
+    ncm.lfMenuFont.lfWeight = min(ncm.lfMenuFont.lfWeight + (FW_BOLD - FW_NORMAL), FW_HEAVY);
     ghMenuFontBold = GreCreateFontIndirectW(&ncm.lfMenuFont);
     if (ghMenuFontBold == NULL)
     {
