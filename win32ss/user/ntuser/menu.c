@@ -3362,12 +3362,11 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
 
   pWnd = ValidateHwndNoErr(Menu->hWnd);
 
-  ParentRect = Rect;
-  if (pWnd)
+  /* Grab the rect of our (entire) parent menu, so we can try to not overlap it */
+  if (!IntGetWindowRect(pWnd, &ParentRect))
   {
-      POINT pt = {0, 0};
-      IntClientToScreen(pWnd, &pt);
-      RECTL_vOffsetRect(&ParentRect, pt.x, pt.y);
+      ERR("No pWnd\n");
+      ParentRect = Rect;
   }
 
   /* correct item if modified as a reaction to WM_INITMENUPOPUP message */
