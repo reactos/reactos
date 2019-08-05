@@ -280,17 +280,64 @@ ScmIsLocalSystemAccount(
 
 
 static
+BOOL
+ScmEnableBackupRestorePrivileges(
+    _In_ HANDLE hToken,
+    _In_ BOOL bEnable)
+{
+    PTOKEN_PRIVILEGES pTokenPrivileges = NULL;
+    DWORD dwSize;
+    BOOL bRet = FALSE;
+
+    DPRINT("ScmEnableBackupRestorePrivileges(%p %d)\n", hToken, bEnable);
+
+    dwSize = sizeof(TOKEN_PRIVILEGES) + 2 * sizeof(LUID_AND_ATTRIBUTES);
+    pTokenPrivileges = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+    if (pTokenPrivileges == NULL)
+    {
+        DPRINT1("Failed to allocate the privilege buffer!\n");
+        goto done;
+    }
+
+    pTokenPrivileges->PrivilegeCount = 2;
+    pTokenPrivileges->Privileges[0].Luid.LowPart = SE_BACKUP_PRIVILEGE;
+    pTokenPrivileges->Privileges[0].Luid.HighPart = 0;
+    pTokenPrivileges->Privileges[0].Attributes = (bEnable ? SE_PRIVILEGE_ENABLED : 0);
+    pTokenPrivileges->Privileges[1].Luid.LowPart = SE_RESTORE_PRIVILEGE;
+    pTokenPrivileges->Privileges[1].Luid.HighPart = 0;
+    pTokenPrivileges->Privileges[1].Attributes = (bEnable ? SE_PRIVILEGE_ENABLED : 0);
+
+    bRet = AdjustTokenPrivileges(hToken, FALSE, pTokenPrivileges, 0, NULL, NULL);
+    if (!bRet)
+    {
+        DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
+    }
+    else if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+    {
+        DPRINT1("AdjustTokenPrivileges() succeeded, but with not all privileges assigned\n");
+        bRet = FALSE;
+    }
+
+done:
+    if (pTokenPrivileges != NULL)
+        HeapFree(GetProcessHeap(), 0, pTokenPrivileges);
+
+    return bRet;
+}
+
+
+static
 DWORD
 ScmLogonService(
     IN PSERVICE pService,
     IN PSERVICE_IMAGE pImage)
 {
-    DWORD dwError = ERROR_SUCCESS;
     PROFILEINFOW ProfileInfo;
     PWSTR pszUserName = NULL;
     PWSTR pszDomainName = NULL;
     PWSTR pszPassword = NULL;
     PWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
     DPRINT("Service %S\n", pService->lpServiceName);
@@ -355,9 +402,13 @@ ScmLogonService(
     // ProfileInfo.lpPolicyPath = NULL;
     // ProfileInfo.hProfile = NULL;
 
+    ScmEnableBackupRestorePrivileges(pImage->hToken, TRUE);
     if (!LoadUserProfileW(pImage->hToken, &ProfileInfo))
-    {
         dwError = GetLastError();
+    ScmEnableBackupRestorePrivileges(pImage->hToken, FALSE);
+
+    if (dwError != ERROR_SUCCESS)
+    {
         DPRINT1("LoadUserProfileW() failed (Error %lu)\n", dwError);
         goto done;
     }
@@ -475,7 +526,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
             /* Unload the user profile */
             if (pServiceImage->hProfile != NULL)
+            {
+                ScmEnableBackupRestorePrivileges(pServiceImage->hToken, TRUE);
                 UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+                ScmEnableBackupRestorePrivileges(pServiceImage->hToken, FALSE);
+            }
 
             /* Close the logon token */
             if (pServiceImage->hToken != NULL)
@@ -546,7 +601,11 @@ ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
 
     /* Unload the user profile */
     if (pServiceImage->hProfile != NULL)
+    {
+        ScmEnableBackupRestorePrivileges(pServiceImage->hToken, TRUE);
         UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+        ScmEnableBackupRestorePrivileges(pServiceImage->hToken, FALSE);
+    }
 
     /* Close the logon token */
     if (pServiceImage->hToken != NULL)

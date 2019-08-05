@@ -19,6 +19,7 @@
 #include <winuser.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
+#include <ndk/setypes.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <services/services.h>
