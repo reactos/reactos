@@ -186,7 +186,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
 
 SECURITY_STATUS
 NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
-                           IN OUT ULONG_PTR hContext,
+                           IN OUT PULONG_PTR phContext,
                            IN ULONG ContextReq,
                            IN PSecBuffer InputToken,
                            IN PSecBuffer InputToken2,
@@ -206,15 +206,21 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     memset(&OemDomainNameRef, 0, sizeof(OemDomainNameRef));
     memset(&OemWorkstationNameRef, 0, sizeof(OemWorkstationNameRef));
 
-    TRACE("NtlmHandleNegotiateMessage hContext %lx\n", hContext);
-    if(!(context = NtlmAllocateContext()))
+    if (*phContext == 0)
     {
-        ret = SEC_E_INSUFFICIENT_MEMORY;
-        ERR("SEC_E_INSUFFICIENT_MEMORY!\n");
-        goto exit;
+        if(!(context = NtlmAllocateContext()))
+        {
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            ERR("SEC_E_INSUFFICIENT_MEMORY!\n");
+            goto exit;
+        }
+
+        *phContext = (ULONG_PTR)context;
+
+        TRACE("NtlmHandleNegotiateMessage NEW hContext %lx\n", *phContext);
     }
 
-    hContext = (ULONG_PTR)context;
+    context = NtlmReferenceContext(*phContext);
 
     /* InputToken should contain a negotiate message */
     if(InputToken->cbBuffer > NTLM_MAX_BUF ||
@@ -408,6 +414,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 exit:
     if(negoMessage) NtlmFree(negoMessage);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
+    if (context) NtlmDereferenceContext((ULONG_PTR)context);
 
     return ret;
 }

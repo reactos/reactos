@@ -696,9 +696,11 @@ AcceptSecurityContext(IN PCredHandle phCredential,
             ret = SEC_E_INVALID_HANDLE;
             goto fail;
         }
+        /* initialize with 0 to create a new context */
+        phNewContext->dwLower = 0;
         TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
         ret = NtlmHandleNegotiateMessage(phCredential->dwLower,
-                                         phNewContext->dwLower,
+                                         &phNewContext->dwLower,
                                          fContextReq,
                                          InputToken1,
                                          InputToken2,

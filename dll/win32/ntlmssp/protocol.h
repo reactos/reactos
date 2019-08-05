@@ -295,7 +295,7 @@ NtlmGenerateNegotiateMessage(
 SECURITY_STATUS
 NtlmHandleNegotiateMessage(
     IN ULONG_PTR hCredential,
-    IN OUT ULONG_PTR hContext,
+    IN OUT PULONG_PTR phContext,
     IN ULONG fContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
