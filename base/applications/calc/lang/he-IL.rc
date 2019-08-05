@@ -164,7 +164,7 @@ BEGIN
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 80, 23, 41, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON "חזרה", IDC_BUTTON_BACK, 36, 23, 42, 18, BS_CENTER | BS_VCENTER |
+    PUSHBUTTON "מחק", IDC_BUTTON_BACK, 36, 23, 42, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 159, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     PUSHBUTTON "9", IDC_BUTTON_9, 36, 45, 24, 18, BS_CENTER | BS_VCENTER |
@@ -339,7 +339,7 @@ BEGIN
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
+        MENUITEM "אודות מחשבון ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -411,7 +411,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CALC_NAME "מחשבון ReactOS"
-    IDS_AUTHOR "נכתבה על ידי Carlo Bramini"
+    IDS_AUTHOR "נכתב על ידי Carlo Bramini"
 END
 
 /* Types of conversion */
@@ -710,6 +710,6 @@ BEGIN
     IDS_WEIGHT_STONES "Stones"
     IDS_WEIGHT_TAMLUNG "Tamlung"
     IDS_WEIGHT_TONNES "טונות"
-    IDS_WEIGHT_TONS_UK "טון (ארצות הברית)"
-    IDS_WEIGHT_TONS_US "טון (בריטניה)"
+    IDS_WEIGHT_TONS_UK "טון (בריטניה)"
+    IDS_WEIGHT_TONS_US "טון (ארצות הברית)"
 END

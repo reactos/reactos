@@ -1,4 +1,4 @@
-/* Hebrew translation by Baruch Rutman (peterooch) */
+/* Hebrew translations by Baruch Rutman (peterooch) and Shy Zedaka */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -48,7 +48,7 @@ BEGIN
         MENUITEM "מדורג", ID_WINDOWS_CASCADE
         MENUITEM "ה&בא לפנים", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "&כיבוי"
     BEGIN
         MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
         MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
@@ -162,7 +162,7 @@ BEGIN
     CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&משימה חדשה", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&עבוד אל", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&עבור אל", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
     PUSHBUTTON "&סיים משימה", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
 END
 
@@ -198,7 +198,7 @@ BEGIN
     EDITTEXT IDC_TOTALS_PROCESS_COUNT, 65, 149, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "סה""כ", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
-    LTEXT "הגבלה", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
+    LTEXT "הגבלה", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 27, 8, NOT WS_BORDER
     LTEXT "שיא", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
     EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -331,7 +331,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "מפעיל תכנית חדשה"
+    ID_FILE_NEW "הפעלת תוכנית חדשה"
     ID_OPTIONS_ALWAYSONTOP "Task Manager remains in front of all other windows unless minimized"
     ID_OPTIONS_MINIMIZEONUSE "Task Manager is minimized when a SwitchTo operation is performed"
     ID_OPTIONS_HIDEWHENMINIMIZED "Hide the Task Manager when it is minimized"
@@ -339,9 +339,9 @@ BEGIN
     ID_VIEW_LARGE "Displays tasks by using large icons"
     ID_VIEW_SMALL "Displays tasks by using small icons"
     ID_VIEW_DETAILS "Displays information about each task"
-    ID_VIEW_UPDATESPEED_HIGH "Updates the display twice per second"
-    ID_VIEW_UPDATESPEED_NORMAL "Updates the display every two seconds"
-    ID_VIEW_UPDATESPEED_LOW "Updates the display every four seconds"
+    ID_VIEW_UPDATESPEED_HIGH "מעדכן את התצוגה פעמיים בכל שניה"
+    ID_VIEW_UPDATESPEED_NORMAL "מעדכן את התצוגה כל 2 שניות"
+    ID_VIEW_UPDATESPEED_LOW "מעדכן את התצוגה כל 4 שניות"
 END
 
 STRINGTABLE
@@ -383,18 +383,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_APPS "Applications"
-    IDS_TAB_PROCESSES "Processes"
-    IDS_TAB_PERFORMANCE "Performance"
-    IDS_TAB_TASK "Task"
-    IDS_TAB_STATUS "Status"
-    IDS_TAB_IMAGENAME "Image Name"
+    IDS_TAB_APPS "יישומים"
+    IDS_TAB_PROCESSES "תהליכים"
+    IDS_TAB_PERFORMANCE "ביצועים"
+    IDS_TAB_TASK "משימה"
+    IDS_TAB_STATUS "מצב"
+    IDS_TAB_IMAGENAME "שם תהליך"
     IDS_TAB_PID "PID"
-    IDS_TAB_USERNAME "Username"
+    IDS_TAB_USERNAME "שם משתמש"
     IDS_TAB_SESSIONID "Session ID"
     IDS_TAB_CPU "CPU"
-    IDS_TAB_CPUTIME "CPU Time"
-    IDS_TAB_MEMUSAGE "Mem Usage"
+    IDS_TAB_CPUTIME "זמן מעבד"
+    IDS_TAB_MEMUSAGE "זיכרון בשימוש"
     IDS_TAB_PEAKMEMUSAGE "Peak Mem Usage"
     IDS_TAB_MEMDELTA "Mem Delta"
     IDS_TAB_PAGEFAULT "Page Faults"
@@ -416,7 +416,7 @@ BEGIN
     IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Select Columns..."
     IDS_MENU_16BITTASK "&Show 16-bit tasks"
-    IDS_MENU_WINDOWS "&Windows"
+    IDS_MENU_WINDOWS "&חלונות"
     IDS_MENU_LARGEICONS "Lar&ge Icons"
     IDS_MENU_SMALLICONS "S&mall Icons"
     IDS_MENU_DETAILS "&Details"
@@ -424,8 +424,8 @@ BEGIN
     IDS_MENU_ONEGRAPHPERCPU "One Graph &Per CPU"
     IDS_MENU_CPUHISTORY "&CPU History"
     IDS_MENU_SHOWKERNELTIMES "&Show Kernel Times"
-    IDS_CREATENEWTASK "Create New Task"
-    IDS_CREATENEWTASK_DESC "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you."
+    IDS_CREATENEWTASK "יצירת משימה חדשה"
+    IDS_CREATENEWTASK_DESC "הקלד את שם התוכנית, תקיה, מסמך, משאב אינטרנטי ו- מנהל המשימות יפתח אותם עבורך."
     IDS_MSG_ACCESSPROCESSAFF "Unable to Access or Set Process Affinity"
     IDS_MSG_PROCESSONEPRO "The process must have affinity with at least one processor."
     IDS_MSG_INVALIDOPTION "Invalid Option"
@@ -437,10 +437,10 @@ BEGIN
     IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
-    IDS_MSG_TRAYICONCPUUSAGE "CPU Usage: %d%%"
+    IDS_MSG_TRAYICONCPUUSAGE "%3d%% :שימוש במעבד"
     IDS_STATUS_MEMUSAGE "Commit Charge: %s / %s (%d%%)"
-    IDS_STATUS_CPUUSAGE "CPU Usage: %3d%%"
-    IDS_STATUS_PROCESSES "Processes: %d"
-    IDS_NOT_RESPONDING "Not Responding"
-    IDS_RUNNING "Running"
+    IDS_STATUS_CPUUSAGE "%3d%% :שימוש במעבד "
+    IDS_STATUS_PROCESSES "%d :תהליכים"
+    IDS_NOT_RESPONDING "לא מגיב"
+    IDS_RUNNING "פועל"
 END

@@ -1,4 +1,5 @@
-/* Translated by Baruch Rutman */
+/* Translated by Baruch Rutman, additional translations by Shy Zedaka */
+
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -10,7 +11,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&יציאה", ID_EXIT
     END
-    POPUP "&תכניות"
+    POPUP "&תוכניות"
     BEGIN
         MENUITEM "התקנה\tCtrl+Enter", ID_INSTALL
         MENUITEM "הסרה\tCtrl+Del", ID_UNINSTALL
@@ -33,8 +34,8 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "פתיחת הקישור בדפדפן", ID_OPEN_LINK
-        MENUITEM "העתקת הקישור", ID_COPY_LINK
+        MENUITEM "פתח קישור בדפדפן", ID_OPEN_LINK
+        MENUITEM "העתק קישור", ID_COPY_LINK
     END
 END
 
@@ -63,7 +64,7 @@ BEGIN
     GROUPBOX "כללי", -1, 4, 2, 240, 61
     AUTOCHECKBOX "שמור מיקום חלון", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "עדכן את רשימת התוכניות האפשרויות בהפעלה", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "תעד התקנה והסרה של תכניות", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "תעד התקנה והסרה של תוכניות", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "הורדה", -1, 4, 65, 240, 51
     LTEXT "תיקיית הורדות:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -139,7 +140,7 @@ BEGIN
     IDS_INFO_VERSION "\nגרסה: "
     IDS_INFO_DESCRIPTION "\nתאור: "
     IDS_INFO_PUBLISHER "\nמפרסם: "
-    IDS_INFO_HELPLINK "\nקקישור תמיכה: "
+    IDS_INFO_HELPLINK "\nקישור תמיכה: "
     IDS_INFO_HELPPHONE "\nטלפון תמיכה: "
     IDS_INFO_README "\nקרא אותי: "
     IDS_INFO_REGOWNER "\nבעלים רשומים: "
@@ -163,24 +164,24 @@ BEGIN
     IDS_AINFO_SIZE "\nגודל: "
     IDS_AINFO_URLSITE "\nדף בית: "
     IDS_AINFO_LICENSE "\nרישיון: "
-    IDS_AINFO_URLDOWNLOAD "\nהורד: "
+    IDS_AINFO_URLDOWNLOAD "\nמקור ההורדה: "
     IDS_AINFO_LANGUAGES "\nשפות: "
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CAT_AUDIO "צלילים"
+    IDS_CAT_AUDIO "שמע"
     IDS_CAT_DEVEL "פיתוח"
     IDS_CAT_DRIVERS "מנהלי התקנים"
-    IDS_CAT_EDU "בידור"
+    IDS_CAT_EDU "חינוך"
     IDS_CAT_ENGINEER "הנדסה"
-    IDS_CAT_FINANCE "כלכלי"
+    IDS_CAT_FINANCE "כלכלה"
     IDS_CAT_GAMES "משחקים וכיף"
     IDS_CAT_GRAPHICS "גרפיקה"
     IDS_CAT_INTERNET "אינטרנט ורשת"
     IDS_CAT_LIBS "ספריות"
     IDS_CAT_OFFICE "משרד"
-    IDS_CAT_OTHER "אחרים"
+    IDS_CAT_OTHER "אחר"
     IDS_CAT_SCIENCE "מדע"
     IDS_CAT_TOOLS "כלים"
     IDS_CAT_VIDEO "וידאו"
@@ -202,8 +203,8 @@ BEGIN
     IDS_AVAILABLEFORINST "זמין להתקנה"
     IDS_UPDATES "עדכונים"
     IDS_APPLICATIONS "יישומים"
-    IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will store Downloads:"
-    IDS_CHOOSE_FOLDER_ERROR "The folder you have specified does not exist. Create it?"
+    IDS_CHOOSE_FOLDER_TEXT "בחר תקייה שתשמור הורדות:"
+    IDS_CHOOSE_FOLDER_ERROR "התקייה שהזנת לא קיימת, ליצור אותה?"
     IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
     IDS_INFORMATION "מידע"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
@@ -230,7 +231,7 @@ BEGIN
     IDS_STATUS_DOWNLOADING "מוריד..."
     IDS_STATUS_INSTALLING "מתקין..."
     IDS_STATUS_WAITING "מחכה להתקנה..."
-    IDS_STATUS_FINISHED "הסתיים"
+    IDS_STATUS_FINISHED "סיים"
 END
 
 STRINGTABLE
@@ -252,6 +253,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
+    IDS_DL_DIALOG_DB_DISP "מסד נתונים של היישומים"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "מעדכן את מסד הנתונים..."
 END
