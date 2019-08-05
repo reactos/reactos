@@ -434,7 +434,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     PNTLMSSP_CONTEXT context = NULL;
     PCHALLENGE_MESSAGE challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
-    //BOOLEAN isUnicode;
+    BOOLEAN isUnicode;
     UNICODE_STRING ServerNameRef;
     MSV1_0_NTLM3_RESPONSE NtResponse;
     LM2_RESPONSE Lm2Response;
@@ -530,13 +530,13 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     {
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_OEM;
-        //isUnicode = TRUE;
+        isUnicode = TRUE;
     }
     else if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
     {
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_UNICODE;
-        //isUnicode = FALSE;
+        isUnicode = FALSE;
     }
     else
     {
@@ -626,6 +626,10 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
             goto fail;
         }
 
+        /* FIXME: Convert to unicode or do we need it as it is? */
+        if(!isUnicode)
+            FIXME("convert to unicode!\n");
+
         ServerNameRef.Length = len;
         ServerNameRef.MaximumLength = len;
         ServerNameRef.Buffer = data;
@@ -648,7 +652,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
             ERR("could not get target info!\n");
             goto fail;
         }
-        if(isUnicode)
+        if(!isUnicode)
             FIXME("convert to unicode!\n");*/
     }
 
