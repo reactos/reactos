@@ -30,6 +30,10 @@ UnknownClassName = "Andere Geräte"
 ReactOS = "Equipo de ReactOS"
 UnknownClassName = "Otros dispositivos"
 
+[Strings.040D]
+ReactOS = "צוות ReactOS"
+UnknownClassName = "התקנים אחרים"
+
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
 UnknownClassName = "Nieznane urządzenie"
