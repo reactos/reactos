@@ -180,7 +180,7 @@ void PrintHexDump(
 }
 
 //TODO void PrintNegtiaonMessage(PCHALLENGE_MESSAGE pmsg)
-void PrintNtlmBlob(const char* name, void* pmsg, PNTLM_BLOB pblob)
+void PrintNtlmBlob(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob)
 {
     PBYTE pData;
 
@@ -191,7 +191,13 @@ void PrintNtlmBlob(const char* name, void* pmsg, PNTLM_BLOB pblob)
     sync_trace("->Length    %d\n", pblob->Length);
     sync_trace("->MaxLength %d\n", pblob->MaxLength);
     sync_trace("->Offset    %d\n", pblob->Offset);
+
     pData = ((PBYTE)pmsg + pblob->Offset);
+    if ((pblob->Offset + pblob->Length) > msgsize)
+    {
+        sync_err("blob points beyond buffer bounds.\n");
+        return;
+    }
     PrintHexDumpMax(pblob->Length, pData, 265);
 }
 
@@ -208,7 +214,7 @@ void PrintNtlmWindowsVersion(const char* name, PNTLM_WINDOWS_VERSION pver)
     sync_trace("->NtlmRevisionCurrent %d\n", pver->NtlmRevisionCurrent);
 }
 
-void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg)
+void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg, ULONG msgsize)
 {
     sync_trace("NEGOTIATE_MESSAGE 0x%p\n", pmsg);
     if (pmsg == NULL)
@@ -216,40 +222,40 @@ void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg)
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
     sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
     sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
-    PrintNtlmBlob("OemDomainName", pmsg, &pmsg->OemDomainName);
-    PrintNtlmBlob("OemWorkstationName", pmsg, &pmsg->OemWorkstationName);
+    PrintNtlmBlob("OemDomainName", pmsg, msgsize, &pmsg->OemDomainName);
+    PrintNtlmBlob("OemWorkstationName", pmsg, msgsize, &pmsg->OemWorkstationName);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
 }
 
-void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg)
+void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg, ULONG msgsize)
 {
     sync_trace("CHALLENGE_MESSAGE 0x%p\n", pmsg);
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
     sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
-    PrintNtlmBlob("TargetName", pmsg, &pmsg->TargetName);
+    PrintNtlmBlob("TargetName", pmsg, msgsize, &pmsg->TargetName);
     sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
     //sys_trace("ServerChallenge %.*s\n", 8, pmsg->ServerChallenge);
     PrintHexDump(MSV1_0_CHALLENGE_LENGTH, (PBYTE)&pmsg->ServerChallenge);
     PrintHexDump(8, (PBYTE)&pmsg->Reserved);
-    PrintNtlmBlob("TargetInfo", pmsg, &pmsg->TargetInfo);
+    PrintNtlmBlob("TargetInfo", pmsg, msgsize, &pmsg->TargetInfo);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
 }
 
-void PrintAuthenticateMessage(PAUTHENTICATE_MESSAGE pmsg)
+void PrintAuthenticateMessage(PAUTHENTICATE_MESSAGE pmsg, ULONG msgsize)
 {
     sync_trace("AUTHENTICATE_MESSAGE 0x%p\n", pmsg);
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
     sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
-    PrintNtlmBlob("LmChallengeResponse", pmsg, &pmsg->LmChallengeResponse);
-    PrintNtlmBlob("NtChallengeResponse", pmsg, &pmsg->NtChallengeResponse);
-    PrintNtlmBlob("DomainName", pmsg, &pmsg->DomainName);
-    PrintNtlmBlob("UserName", pmsg, &pmsg->UserName);
-    PrintNtlmBlob("WorkstationName", pmsg, &pmsg->WorkstationName);
-    PrintNtlmBlob("EncryptedRandomSessionKey", pmsg, &pmsg->EncryptedRandomSessionKey);
+    PrintNtlmBlob("LmChallengeResponse", pmsg, msgsize, &pmsg->LmChallengeResponse);
+    PrintNtlmBlob("NtChallengeResponse", pmsg, msgsize, &pmsg->NtChallengeResponse);
+    PrintNtlmBlob("DomainName", pmsg, msgsize, &pmsg->DomainName);
+    PrintNtlmBlob("UserName", pmsg, msgsize, &pmsg->UserName);
+    PrintNtlmBlob("WorkstationName", pmsg, msgsize, &pmsg->WorkstationName);
+    PrintNtlmBlob("EncryptedRandomSessionKey", pmsg, msgsize, &pmsg->EncryptedRandomSessionKey);
     sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
     PrintHexDump(sizeof(pmsg->MIC), (PBYTE)&pmsg->MIC);
@@ -271,15 +277,15 @@ void PrintSecBuffer(PSecBuffer buf)
         }
         if (pHead->MsgType == NtlmNegotiate)
         {
-            PrintNegotiateMessage((PNEGOTIATE_MESSAGE)buf->pvBuffer);
+            PrintNegotiateMessage((PNEGOTIATE_MESSAGE)buf->pvBuffer, buf->cbBuffer);
         }
         else if (pHead->MsgType == NtlmChallenge)
         {
-            PrintChallengeMessage((PCHALLENGE_MESSAGE)buf->pvBuffer);
+            PrintChallengeMessage((PCHALLENGE_MESSAGE)buf->pvBuffer, buf->cbBuffer);
         }
         else if (pHead->MsgType == NtlmAuthenticate)
         {
-            PrintAuthenticateMessage((PAUTHENTICATE_MESSAGE)buf->pvBuffer);
+            PrintAuthenticateMessage((PAUTHENTICATE_MESSAGE)buf->pvBuffer, buf->cbBuffer);
         }
         else
         {

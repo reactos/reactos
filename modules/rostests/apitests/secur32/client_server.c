@@ -68,7 +68,6 @@ void test_runner(USHORT testidx)
 {
     HANDLE hThreadServer;
     WCHAR FileName[MAX_PATH];
-    HANDLE hClientServer[1];
     PTESTDATA td = &testdata[testidx];
 
     /* Retrieve our full path */
@@ -90,10 +89,6 @@ void test_runner(USHORT testidx)
      * Run client
      */
     td->client_main(td->cli_argc, td->cli_argv);
-
-    /* Wait on client & server */
-    // FIXME: Server can wait forever?! WTF
-    WaitForSingleObject(hClientServer[0], INFINITE);
 
     ok(WaitForSingleObject(hThreadServer, 10000) == WAIT_OBJECT_0, "Timeout waiting for thread\n");
 

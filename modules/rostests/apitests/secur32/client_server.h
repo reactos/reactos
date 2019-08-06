@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <strsafe.h>
+#include <sspi.h>
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -56,15 +57,23 @@ typedef struct _NTLM_MESSAGE_HEAD
 #define printerr(errnum)    \
 do { \
     LPWSTR buffer;  \
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
-                   NULL,    \
-                   errnum,  \
-                   LANG_USER_DEFAULT,   \
-                   (LPWSTR)&buffer,     \
-                   0,       \
-                   NULL);   \
-    sync_err("%S", buffer); \
-    LocalFree(buffer);      \
+    DWORD res;  \
+    res = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, \
+                         NULL,    \
+                         errnum,  \
+                         LANG_USER_DEFAULT,   \
+                         (LPWSTR)&buffer,     \
+                         0,       \
+                         NULL);   \
+    if (res)    \
+    {   \
+        sync_err("%S\n", buffer); \
+        LocalFree(buffer);      \
+    }   \
+    else    \
+    {   \
+        sync_err("FormatMessageW for error 0x%x failed with error 0x%x\n", errnum, GetLastError()); \
+    }   \
 } while (0)
 
 void sync_msg(char* msg, ...);

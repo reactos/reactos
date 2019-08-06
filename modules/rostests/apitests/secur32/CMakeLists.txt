@@ -9,7 +9,8 @@ list(APPEND SOURCE
     utils.c
     testlist.c)
 
-include_directories(${REACTOS_SOURCE_DIR}/dll/win32/ntlmssp)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/dll/win32/ntlmssp)
 
 add_executable(secur32_apitest ${SOURCE})
 set_module_type(secur32_apitest win32cui)

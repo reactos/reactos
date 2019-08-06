@@ -144,14 +144,15 @@ void NtlmCheckBlobA(
     PNTLM_BLOB pblob)
 {
     PBYTE pData;
+    BOOL isEqual = FALSE;
+    int blobChLen = pblob->Length / sizeof(char);
 
     pData = (PBYTE)msg + pblob->Offset;
+    if (blobChLen == strlen(expected))
+        isEqual = (strncmp((char*)pData, expected, blobChLen) == 0);
 
-    sync_ok(strncmp((char*)pData, expected,
-            pblob->Length / sizeof(char)) == 0,
-            "%s: blob \"%s\" is %.*s, expected %s\n",
-            testName, blobName,
-            pblob->Length / sizeof(char),
+    sync_ok(isEqual, "%s: blob \"%s\" is %.*s, expected %s\n",
+            testName, blobName, blobChLen,
             pData, expected);
 }
 
@@ -163,14 +164,15 @@ void NtlmCheckBlobW(
     PNTLM_BLOB pblob)
 {
     PBYTE pData;
+    BOOL isEqual = FALSE;
+    int blobChLen = pblob->Length / sizeof(WCHAR);
 
     pData = (PBYTE)msg + pblob->Offset;
+    if (blobChLen == wcslen(expected))
+        isEqual = (wcsncmp((WCHAR*)pData, expected, blobChLen) == 0);
 
-    sync_ok(wcsncmp((WCHAR*)pData, expected,
-            pblob->Length / sizeof(WCHAR)) == 0,
-            "%s: blob \"%s\" is %.*S, expected %S\n",
-            testName, blobName,
-            pblob->Length / sizeof(WCHAR),
+    sync_ok(isEqual, "%s: blob \"%s\" is %.*S, expected %S\n",
+            testName, blobName, blobChLen,
             pData, expected);
 }
 
@@ -191,8 +193,6 @@ void NtlmCheckBlobB(
             "%s: blob \"%s\" len is %d, expected %d\n",
             testName, blobName,
             pblob->Length, len);
-
-
     if (pblob->Length == len)
         isEqual = memcmp(pData, expected, len);
 
@@ -221,7 +221,7 @@ void NtlmCheckWinVer(
             testName, pVer->ProductMajor, expMajor);
     sync_ok(pVer->ProductMinor == expMinor,
             "%s: WinVer.ProductMinor is %d, expected %d.\n",
-            testName, pVer->ProductMinor, expBuild);
+            testName, pVer->ProductMinor, expMinor);
     sync_ok(pVer->ProductBuild == expBuild,
             "%s: WinVer.ProductBuild is %d, expected %d.\n",
             testName, pVer->ProductBuild, expBuild);
@@ -301,22 +301,22 @@ void NtlmCheckSecBuffer_CliAuth(char* testName, PBYTE buffer)
         "invalid signature (%.8s)", pAuth->Signature);
 
     NtlmCheckBlobW(testName, "LmChallengeResponse",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->LmChallengeResponse);
     NtlmCheckBlobW(testName, "NtChallengeResponse",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->NtChallengeResponse);
     NtlmCheckBlobW(testName, "DomainName",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->DomainName);
     NtlmCheckBlobW(testName, "UserName",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->UserName);
     NtlmCheckBlobW(testName, "WorkstationName",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->WorkstationName);
     NtlmCheckBlobW(testName, "EncryptedRandomSessionKey",
-        L"FIXME", //g.NetBIOSNameW,
+        L"",
         pAuth, &pAuth->EncryptedRandomSessionKey);
     sync_ok(pAuth->NegotiateFlags == 0xe288c235,
             "%s: pAuth->NegotiateFlags is %x, expected %x!\n",

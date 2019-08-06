@@ -149,7 +149,9 @@ client2_DoAuthentication(
         return FALSE;
     }
 
-    cbOut = 500;//cbMaxMessage;
+    //cbOut = 500;
+    //cbOut = cbMaxMessage;
+    cbOut = 1024;
     Success = GenClientContext(NULL,
                                0,
                                pOutBuf,
@@ -492,8 +494,8 @@ client2_start(
                                    &Client_Socket, &hCred, &hCtxt))
     {
         /* do not free garbage (in done) */
-        memset(&hCred, 0, sizeof(hCred));
-        memset(&hCtxt, 0, sizeof(hCtxt));
+        hCtxt.dwLower = 0;
+        hCred.dwLower = 0;
         sync_err("Unable to authenticate server connection.\n");
         goto done;
     }
@@ -515,7 +517,17 @@ client2_start(
         goto done;
     }
     else
+    {
+        sync_trace("Negotiation State: 0x%x\n", SecPkgNegInfo.NegotiationState);
+        sync_trace("fCapabilities: 0x%x\n", SecPkgNegInfo.PackageInfo->fCapabilities);
+        sync_trace("wVersion/wRPCID: %d/%d\n",
+                    SecPkgNegInfo.PackageInfo->wVersion,
+                    SecPkgNegInfo.PackageInfo->wRPCID);
+        sync_trace("cbMaxToken: %d\n", SecPkgNegInfo.PackageInfo->cbMaxToken);
         sync_trace("Package Name: %S\n", SecPkgNegInfo.PackageInfo->Name);
+        sync_trace("Package Comment: %S\n", SecPkgNegInfo.PackageInfo->Comment);
+        FreeContextBuffer(SecPkgNegInfo.PackageInfo);
+    }
 
     ss = QueryContextAttributes(&hCtxt,
                                 SECPKG_ATTR_SIZES,

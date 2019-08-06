@@ -10,11 +10,16 @@
 
 #define g_usPort 2000
 
-CredHandle hcred;
-SecHandle hctxt;
-PBYTE g_pInBuf;
-PBYTE g_pOutBuf;
-DWORD g_cbMaxMessage;
+typedef struct _SERVER_DATA
+{
+    CredHandle hcred;
+    SecHandle hctxt;
+    PBYTE pInBuf;
+    PBYTE pOutBuf;
+    DWORD cbMaxMessage;
+} SERVER_DATA;
+
+SERVER_DATA g_sd;
 
 BOOL
 GenServerContext(
@@ -113,7 +118,7 @@ BOOL server2_DoAuthentication(
                                   NULL,
                                   NULL,
                                   NULL,
-                                  &hcred,
+                                  &g_sd.hcred,
                                   &Lifetime);
     sync_ok(SEC_SUCCESS(ss), "AcquireCredentialsHandle failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
@@ -126,19 +131,19 @@ BOOL server2_DoAuthentication(
     while (!done)
     {
         if (!ReceiveMsg(AuthSocket,
-                        g_pInBuf,
-                        g_cbMaxMessage,
+                        g_sd.pInBuf,
+                        g_sd.cbMaxMessage,
                         &cbIn))
         {
             return FALSE;
         }
 
-        cbOut = g_cbMaxMessage;
+        cbOut = g_sd.cbMaxMessage;
 
-        if (!GenServerContext(hcred,
-                              g_pInBuf,
+        if (!GenServerContext(g_sd.hcred,
+                              g_sd.pInBuf,
                               cbIn,
-                              g_pOutBuf,
+                              g_sd.pOutBuf,
                               &cbOut,
                               &done,
                               fNewConversation))
@@ -146,10 +151,10 @@ BOOL server2_DoAuthentication(
             sync_err("GenServerContext failed.\n");
             return FALSE;
         }
-        NtlmCheckSecBuffer(TESTSEC_SVR_AUTH, g_pOutBuf);
+        NtlmCheckSecBuffer(TESTSEC_SVR_AUTH, g_sd.pOutBuf);
 
         fNewConversation = FALSE;
-        if (!SendMsg(AuthSocket, g_pOutBuf, cbOut))
+        if (!SendMsg(AuthSocket, g_sd.pOutBuf, cbOut))
         {
             sync_err("Sending message failed.\n");
             return FALSE;
@@ -204,11 +209,11 @@ GenServerContext(
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     ss = AcceptSecurityContext(&hcred,
-                               fNewConversation ? NULL : &hctxt,
+                               fNewConversation ? NULL : &g_sd.hctxt,
                                &InBuffDesc,
                                Attribs,
                                SECURITY_NATIVE_DREP,
-                               &hctxt,
+                               &g_sd.hctxt,
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
@@ -225,7 +230,7 @@ GenServerContext(
     if ((ss == SEC_I_COMPLETE_NEEDED) ||
         (ss == SEC_I_COMPLETE_AND_CONTINUE))
     {
-        ss = CompleteAuthToken(&hctxt, &OutBuffDesc);
+        ss = CompleteAuthToken(&g_sd.hctxt, &OutBuffDesc);
         sync_ok(SEC_SUCCESS(ss), "CompleteAuthToken failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
@@ -241,6 +246,7 @@ GenServerContext(
 
     sync_trace("Token buffer generated (%lu bytes):\n",
         OutSecBuff.cbBuffer);
+
     PrintSecBuffer(&OutSecBuff);
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
@@ -293,7 +299,7 @@ EncryptThis(
     SecBuff[1].BufferType = SECBUFFER_DATA;
     SecBuff[1].pvBuffer = pMessage;
 
-    ss = EncryptMessage(&hctxt, ulQop, &BuffDesc, 0);
+    ss = EncryptMessage(&g_sd.hctxt, ulQop, &BuffDesc, 0);
     sync_ok(SEC_SUCCESS(ss), "EncryptMessage failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
@@ -328,30 +334,33 @@ void server2_cleanup(void)
 {
     sync_trace("called server2_cleanup!\n");
 
-    if (g_pInBuf)
-        free(g_pInBuf);
+    if (g_sd.pInBuf)
+        free(g_sd.pInBuf);
 
-    if (g_pOutBuf)
-        free(g_pOutBuf);
+    if (g_sd.pOutBuf)
+        free(g_sd.pOutBuf);
 
     WSACleanup();
 }
 
-DWORD WINAPI
+BOOL WINAPI
 server2_start(
     IN LPCTSTR PackageName)
 {
-    BOOL Success;
+    BOOL Success, res = FALSE;
     PBYTE pDataToClient = NULL;
     DWORD cbDataToClient = 0;
     TCHAR* pUserName = NULL;
     DWORD cchUserName = 0;
-    SOCKET Server_Socket;
+    SOCKET Server_Socket = INVALID_SOCKET;
     SECURITY_STATUS ss;
     PSecPkgInfo pkgInfo;
     SecPkgContext_Sizes SecPkgContextSizes;
     SecPkgContext_NegotiationInfo SecPkgNegInfo;
     ULONG cbSecurityTrailer;
+
+    // server2_init
+    RtlZeroMemory(&g_sd, sizeof(g_sd));
 
     /*
      * Initialize the security package
@@ -363,23 +372,21 @@ server2_start(
         skip("Could not query package info for %S, error 0x%08lx\n",
              PackageName, ss);
         printerr(ss);
-        server2_cleanup();
-        return 0;
+        goto done;
     }
 
-    g_cbMaxMessage = pkgInfo->cbMaxToken;
-    sync_trace("max token = %ld\n", g_cbMaxMessage);
+    g_sd.cbMaxMessage = pkgInfo->cbMaxToken;
+    sync_trace("max token = %ld\n", g_sd.cbMaxMessage);
 
     FreeContextBuffer(pkgInfo);
 
-    g_pInBuf = (PBYTE)malloc(g_cbMaxMessage);
-    g_pOutBuf = (PBYTE)malloc(g_cbMaxMessage);
+    g_sd.pInBuf = (PBYTE)malloc(g_sd.cbMaxMessage);
+    g_sd.pOutBuf = (PBYTE)malloc(g_sd.cbMaxMessage);
 
-    if (!g_pInBuf || !g_pOutBuf)
+    if (!g_sd.pInBuf || !g_sd.pOutBuf)
     {
-        server2_cleanup();
         sync_err("Memory allocation error.\n");
-        return 0;
+        goto done;
     }
 
     /* Start looping for clients */
@@ -393,26 +400,24 @@ server2_start(
         sync_ok(Success, "AcceptAuthSocket failed\n");
         if (!Success)
         {
-            server2_cleanup();
             sync_err("Could not authenticate the socket.\n");
-            return 0;
+            goto done;
         }
 
-        ss = QueryContextAttributes(&hctxt,
+        ss = QueryContextAttributes(&g_sd.hctxt,
                                     SECPKG_ATTR_SIZES,
                                     &SecPkgContextSizes);
         sync_ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
-            server2_cleanup();
             sync_err("QueryContextAttributes failed: 0x%08lx\n", ss);
-            return 0;
+            goto done;
         }
 
         /* The following values are used for encryption and signing */
         cbSecurityTrailer = SecPkgContextSizes.cbSecurityTrailer;
 
-        ss = QueryContextAttributes(&hctxt,
+        ss = QueryContextAttributes(&g_sd.hctxt,
                                     SECPKG_ATTR_NEGOTIATION_INFO,
                                     &SecPkgNegInfo);
         sync_ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08lx\n", ss);
@@ -420,28 +425,33 @@ server2_start(
         {
             sync_err("QueryContextAttributes failed: 0x%08lx\n", ss);
             printerr(ss);
-            server2_cleanup();
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
         else
         {
+            sync_trace("Negotiation State: 0x%x\n", SecPkgNegInfo.NegotiationState);
+            sync_trace("fCapabilities: 0x%x\n", SecPkgNegInfo.PackageInfo->fCapabilities);
+            sync_trace("wVersion/wRPCID: %d/%d\n",
+                        SecPkgNegInfo.PackageInfo->wVersion,
+                        SecPkgNegInfo.PackageInfo->wRPCID);
+            sync_trace("cbMaxToken: %d\n", SecPkgNegInfo.PackageInfo->cbMaxToken);
             sync_trace("Package Name: %S\n", SecPkgNegInfo.PackageInfo->Name);
+            sync_trace("Package Comment: %S\n", SecPkgNegInfo.PackageInfo->Comment);
         }
 
         /* Free the allocated buffer */
         FreeContextBuffer(SecPkgNegInfo.PackageInfo);
 
         /* Impersonate the client */
-        ss = ImpersonateSecurityContext(&hctxt);
+        ss = ImpersonateSecurityContext(&g_sd.hctxt);
         sync_ok(SEC_SUCCESS(ss), "ImpersonateSecurityContext failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
             sync_err("Impersonate failed: 0x%08lx\n", ss);
-            server2_cleanup();
             printerr(ss);
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
         else
         {
@@ -453,18 +463,16 @@ server2_start(
         if (!pUserName)
         {
             sync_err("Memory allocation error.\n");
-            server2_cleanup();
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
 
         if (!GetUserName(pUserName, &cchUserName))
         {
             sync_err("Could not get the client name.\n");
-            server2_cleanup();
             printerr(GetLastError());
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
         else
         {
@@ -472,15 +480,14 @@ server2_start(
         }
 
         /* Revert to self */
-        ss = RevertSecurityContext(&hctxt);
+        ss = RevertSecurityContext(&g_sd.hctxt);
         sync_ok(SEC_SUCCESS(ss), "RevertSecurityContext failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
             sync_err("Revert failed: 0x%08lx\n", ss);
-            server2_cleanup();
             printerr(GetLastError());
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
         else
         {
@@ -507,22 +514,12 @@ server2_start(
                        cbDataToClient))
         {
             sync_err("send message failed.\n");
-            server2_cleanup();
             printerr(GetLastError());
             sync_err("aborting\n");
-            return 0;
+            goto done;
         }
 
         sync_trace(" %ld encrypted bytes sent.\n", cbDataToClient);
-
-        if (Server_Socket)
-        {
-            DeleteSecurityContext(&hctxt);
-            FreeCredentialHandle(&hcred);
-            shutdown(Server_Socket, 2);
-            closesocket(Server_Socket);
-            Server_Socket = 0;
-        }
 
         if (pUserName)
         {
@@ -539,8 +536,21 @@ server2_start(
     }
 
     sync_trace("Server ran to completion without error.\n");
+    res = TRUE;
+done:
+    if (g_sd.hcred.dwLower != 0)
+        DeleteSecurityContext(&g_sd.hctxt);
+    if (g_sd.hctxt.dwLower != 0)
+        FreeCredentialHandle(&g_sd.hcred);
+    if (Server_Socket != INVALID_SOCKET)
+    {
+        shutdown(Server_Socket, 2);
+        closesocket(Server_Socket);
+        Server_Socket = 0;
+    }
+
     server2_cleanup();
-    return 0;
+    return res;
 }
 
 int server2_main(int argc, WCHAR** argv)
