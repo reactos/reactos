@@ -8,7 +8,7 @@
 #include "client_server.h"
 
 /* Test-Data */
-typedef struct _GLOBAL_INFO
+typedef struct _GLOBAL_INFO_SEC_BUFFER
 {
     /* its used by server / client - so we have to protect it! */
     CRITICAL_SECTION cs;
@@ -17,35 +17,30 @@ typedef struct _GLOBAL_INFO
     WCHAR NetBIOSNameW[MAX_COMPUTERNAME_LENGTH];
     CHAR NetBIOSNameA[128];
     CHAR DomainNameA[256];
-    int Auth_TargetInfoDataLen;
-    BYTE Auth_TargetInfoData[500];
-} GLOBAL_INFO;
-GLOBAL_INFO g;
+} GLOBAL_INFO_SEC_BUFFER;
+GLOBAL_INFO_SEC_BUFFER g_sb;
 
 void NtlmCheckInit()
 {
-    int i;
-    DWORD cbHNLen, cchHNLen = MAX_COMPUTERNAME_LENGTH + 1;
-    DWORD cbNBLen, cchNBLen = MAX_COMPUTERNAME_LENGTH + 1;
+    DWORD cchHNLen = MAX_COMPUTERNAME_LENGTH + 1;
+    DWORD cchNBLen = MAX_COMPUTERNAME_LENGTH + 1;
     LPWKSTA_INFO_100 pWksInfo = NULL;
     WCHAR DomainNameW[256];
 
-    InitializeCriticalSection(&g.cs);
+    InitializeCriticalSection(&g_sb.cs);
 
-    memset(&g.osVerInfo, 0, sizeof(g.osVerInfo));
-    g.osVerInfo.dwOSVersionInfoSize = sizeof(g.osVerInfo);
-    if (!GetVersionEx(&g.osVerInfo))
+    memset(&g_sb.osVerInfo, 0, sizeof(g_sb.osVerInfo));
+    g_sb.osVerInfo.dwOSVersionInfoSize = sizeof(g_sb.osVerInfo);
+    if (!GetVersionEx(&g_sb.osVerInfo))
     {
         sync_err("failed to get osversionsinfo!\n");
-        memset(&g.osVerInfo, 0, sizeof(g.osVerInfo));
+        memset(&g_sb.osVerInfo, 0, sizeof(g_sb.osVerInfo));
     }
 
-    if (!GetComputerNameExW(ComputerNameDnsHostname, g.DnsHostNameW, &cchHNLen))
-        g.DnsHostNameW[0] = 0;
-    if (!GetComputerNameExW(ComputerNameNetBIOS, g.NetBIOSNameW, &cchNBLen))
-        g.NetBIOSNameW[0] = 0;
-    cbHNLen = sizeof(WCHAR) * cchHNLen;
-    cbNBLen = sizeof(WCHAR) * cchNBLen;
+    if (!GetComputerNameExW(ComputerNameDnsHostname, g_sb.DnsHostNameW, &cchHNLen))
+        g_sb.DnsHostNameW[0] = 0;
+    if (!GetComputerNameExW(ComputerNameNetBIOS, g_sb.NetBIOSNameW, &cchNBLen))
+        g_sb.NetBIOSNameW[0] = 0;
 
     DomainNameW[0] = 0;
     if (NERR_Success == NetWkstaGetInfo(NULL, 100, (LPBYTE*)&pWksInfo))
@@ -63,79 +58,23 @@ void NtlmCheckInit()
 
     /* Convert W -> A */
     if (!WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             DomainNameW, -1, g.DomainNameA, 256, NULL, NULL))
+                             DomainNameW, -1, g_sb.DomainNameA, 256, NULL, NULL))
     {
         sync_err("could not convert domainname (W->A)!\n");
-        g.DomainNameA[0] = 0;
+        g_sb.DomainNameA[0] = 0;
     }
 
     if (!WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             g.NetBIOSNameW, -1, g.NetBIOSNameA, 128, NULL, NULL))
+                             g_sb.NetBIOSNameW, -1, g_sb.NetBIOSNameA, 128, NULL, NULL))
     {
         sync_err("could not convert NetBIOSName (W->A)!\n");
-        g.NetBIOSNameA[0] = 0;
+        g_sb.NetBIOSNameA[0] = 0;
     }
-
-    /* this is not elegant, but anyway ... */
-    i = 0;
-    g.Auth_TargetInfoData[i++] = MsvAvNbDomainName;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = cbNBLen;
-    g.Auth_TargetInfoData[i++] = 0;
-    memcpy(g.Auth_TargetInfoData + i, g.NetBIOSNameW, cbNBLen);
-    i += cbNBLen;
-
-    g.Auth_TargetInfoData[i++] = MsvAvNbComputerName;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = cbNBLen;
-    g.Auth_TargetInfoData[i++] = 0;
-    memcpy(g.Auth_TargetInfoData + i, g.NetBIOSNameW, cbNBLen);
-    i += cbNBLen;
-
-    g.Auth_TargetInfoData[i++] = MsvAvDnsDomainName;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = cbHNLen;
-    g.Auth_TargetInfoData[i++] = 0;
-    memcpy(g.Auth_TargetInfoData + i, g.DnsHostNameW, cbHNLen);
-    i += cbHNLen;
-
-    g.Auth_TargetInfoData[i++] = MsvAvDnsComputerName;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = cbHNLen;
-    g.Auth_TargetInfoData[i++] = 0;
-    memcpy(g.Auth_TargetInfoData + i, g.DnsHostNameW, cbHNLen);
-    i += cbHNLen;
-
-    // ???
-    //07 00 08 00 ab b3 a8 2b
-    //fa 49 d5 01 00 00 00 00
-    g.Auth_TargetInfoData[i++] = MsvAvTimestamp;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = 8;
-    g.Auth_TargetInfoData[i++] = 0;
-
-    g.Auth_TargetInfoData[i++] = 0xab;
-    g.Auth_TargetInfoData[i++] = 0xb3;
-    g.Auth_TargetInfoData[i++] = 0xa8;
-    g.Auth_TargetInfoData[i++] = 0x2b;
-
-    g.Auth_TargetInfoData[i++] = 0xfa;
-    g.Auth_TargetInfoData[i++] = 0x49;
-    g.Auth_TargetInfoData[i++] = 0xd5;
-    g.Auth_TargetInfoData[i++] = 0x01;
-
-    /* end of list */
-    g.Auth_TargetInfoData[i++] = MsvAvEOL;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = 0;
-    g.Auth_TargetInfoData[i++] = 0;
-
-    g.Auth_TargetInfoDataLen = i;
 }
 
 void NtlmCheckFini()
 {
-    DeleteCriticalSection(&g.cs);
+    DeleteCriticalSection(&g_sb.cs);
 }
 
 void NtlmCheckBlobA(
@@ -178,34 +117,111 @@ void NtlmCheckBlobW(
             pData, expected);
 }
 
-void NtlmCheckBlobB(
+void NtlmCheckTargetInfoAvl(
     char* testName,
     char* blobName,
-    byte* expected,
-    int len,
     void* msg,
     PNTLM_BLOB pblob)
 {
     PBYTE pData;
-    BOOL isEqual = FALSE;
+    PMSV1_0_AV_PAIR pAvp;
+    PBYTE pEnd;
+    int entryCount = 0;
+    WCHAR* avpCmpStr;
+    WCHAR* avpCmpName;
+
+    BOOL hasMsvAvNbDomainName = FALSE;
+    BOOL hasMsvAvNbComputerName = FALSE;
+    BOOL hasMsvAvDnsDomainName = FALSE;
+    BOOL hasMsvAvDnsComputerName = FALSE;
+    BOOL hasMsvAvTimestamp = FALSE;
+    BOOL hasMsvAvEOL = FALSE;
 
     pData = (PBYTE)msg + pblob->Offset;
+    pEnd  = pData + pblob->Length;
 
-    sync_ok(pblob->Length == len,
-            "%s: blob \"%s\" len is %d, expected %d\n",
-            testName, blobName,
-            pblob->Length, len);
-    if (pblob->Length == len)
-        isEqual = memcmp(pData, expected, len);
-
-    if (!isEqual)
+    while (pData < pEnd)
     {
-        sync_ok(FALSE, "%s: blob \"%s\" is\n",
-                testName, blobName);
-        PrintHexDumpMax(pblob->Length, pData, 256);
-        sync_msg("expected\n");
-        PrintHexDumpMax(len, expected, 256);
+        pAvp = (PMSV1_0_AV_PAIR)pData;
+        pData += sizeof(MSV1_0_AV_PAIR);
+
+        if (hasMsvAvEOL)
+            sync_err("avl %s: data after eol!\n", blobName);
+
+        avpCmpStr = NULL;
+        avpCmpName = NULL;
+
+        switch (pAvp->AvId)
+        {
+            case MsvAvEOL:
+            {
+                hasMsvAvEOL = TRUE;
+                break;
+            }
+            case MsvAvNbComputerName:
+            {
+                avpCmpName = L"MsvAvNbComputerName";
+                avpCmpStr = g_sb.NetBIOSNameW;
+                sync_ok(!hasMsvAvNbComputerName, "avl %s: duplicate!\n", blobName);
+                hasMsvAvNbComputerName = TRUE;
+                break;
+            }
+            case MsvAvNbDomainName:
+            {
+                avpCmpName = L"MsvAvNbDomainName";
+                avpCmpStr = g_sb.NetBIOSNameW;
+                sync_ok(!hasMsvAvNbDomainName, "avl %s: duplicate!\n", blobName);
+                hasMsvAvNbDomainName = TRUE;
+                break;
+            }
+            case MsvAvDnsComputerName:
+            {
+                avpCmpName = L"MsvAvDnsComputerName";
+                avpCmpStr = g_sb.DnsHostNameW;
+                sync_ok(!hasMsvAvDnsComputerName, "avl %s: duplicate!\n", blobName);
+                hasMsvAvDnsComputerName = TRUE;
+                break;
+            }
+            case MsvAvDnsDomainName:
+            {
+                avpCmpName = L"MsvAvDnsDomainName";
+                avpCmpStr = g_sb.DnsHostNameW;
+                sync_ok(!hasMsvAvDnsDomainName, "avl %s: duplicate!\n", blobName);
+                hasMsvAvDnsDomainName = TRUE;
+                break;
+            }
+            case MsvAvTimestamp:
+            {
+                sync_ok(!hasMsvAvTimestamp, "avl %s: duplicate!\n", blobName);
+                hasMsvAvTimestamp = TRUE;
+                break;
+            }
+            default:
+            {
+                sync_err("avl %s: unexpected entry. (AvId %d)\n", blobName, pAvp->AvId);
+                break;
+            }
+        }
+
+        if (avpCmpStr != NULL)
+        {
+            sync_ok(wcsncmp(avpCmpStr, (WCHAR*)pData, pAvp->AvLen / sizeof(WCHAR)) == 0,
+                    "avl %s: %S: expected %S, got %.*S.\n",
+                    blobName, avpCmpName, avpCmpStr,
+                    pAvp->AvLen / sizeof(WCHAR), (WCHAR*)pData);
+        }
+        pData += pAvp->AvLen;
+        entryCount++;
     }
+
+    sync_ok(hasMsvAvNbComputerName, "avl %s: missing entry MsvAvNbComputerName!\n", blobName);
+    sync_ok(hasMsvAvNbDomainName, "avl %s: missing entry MsvAvNbDomainName!\n", blobName);
+    sync_ok(hasMsvAvDnsComputerName, "avl %s: missing entry MsvAvDnsComputerName!\n", blobName);
+    sync_ok(hasMsvAvDnsDomainName, "avl %s: missing entry MsvAvDnsDomainName!\n", blobName);
+    sync_ok(hasMsvAvTimestamp, "avl %s: missing entry MsvAvTimestamp!\n", blobName);
+    sync_ok(hasMsvAvEOL, "avl %s: missing entry MsvAvEOL!\n", blobName);
+
+    PrintHexDumpMax(pblob->Length, (PBYTE)msg + pblob->Offset, 1024);
 }
 
 void NtlmCheckWinVer(
@@ -250,12 +266,12 @@ void NtlmCheckSecBuffer_CliAuthInit(char* testName, PBYTE buffer)
             "%s: pChallenge->NegotiateFlags is %x, expected %x!\n",
             testName, pNego->NegotiateFlags, 0xe208b2b7);
     NtlmCheckBlobA(testName, "OemDomainName",
-        g.DomainNameA,
+        g_sb.DomainNameA,
         pNego, &pNego->OemDomainName);
     NtlmCheckBlobA(testName, "OemWorkstationName",
-        g.NetBIOSNameA,
+        g_sb.NetBIOSNameA,
         pNego, &pNego->OemWorkstationName);
-    NtlmCheckWinVer(testName, &pNego->Version, &g.osVerInfo);
+    NtlmCheckWinVer(testName, &pNego->Version, &g_sb.osVerInfo);
 }
 
 void NtlmCheckSecBuffer_SvrAuth(char* testName, PBYTE buffer)
@@ -273,18 +289,17 @@ void NtlmCheckSecBuffer_SvrAuth(char* testName, PBYTE buffer)
     sync_ok(strncmp(pChallenge->Signature, NTLMSSP_SIGNATURE, 8) == 0,
         "invalid signature (%.8s)", pChallenge->Signature);
     NtlmCheckBlobW(testName, "TargetName",
-        g.NetBIOSNameW,
+        g_sb.NetBIOSNameW,
         pChallenge, &pChallenge->TargetName);
     sync_ok(pChallenge->NegotiateFlags == 0xe28ac235,
             "%s: pChallenge->NegotiateFlags is %x, expected %x!\n",
             testName, pChallenge->NegotiateFlags, 0xe28ac235);
     //TODO ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
     //TODO Reserved[8];
-    NtlmCheckBlobB(testName, "TargetInfo",
-        g.Auth_TargetInfoData, g.Auth_TargetInfoDataLen,
+    NtlmCheckTargetInfoAvl(testName, "TargetInfo",
         pChallenge, &pChallenge->TargetInfo);
     //FIXME: This is win 7!
-    NtlmCheckWinVer(testName, &pChallenge->Version, &g.osVerInfo);
+    NtlmCheckWinVer(testName, &pChallenge->Version, &g_sb.osVerInfo);
 }
 
 void NtlmCheckSecBuffer_CliAuth(char* testName, PBYTE buffer)
@@ -323,7 +338,7 @@ void NtlmCheckSecBuffer_CliAuth(char* testName, PBYTE buffer)
     sync_ok(pAuth->NegotiateFlags == 0xe288c235,
             "%s: pAuth->NegotiateFlags is %x, expected %x!\n",
             testName, pAuth->NegotiateFlags, 0xe288c235);
-    NtlmCheckWinVer(testName, &pAuth->Version, &g.osVerInfo);
+    NtlmCheckWinVer(testName, &pAuth->Version, &g_sb.osVerInfo);
     // MIC[16]; //doc says its ommited in nt,2k,xp,2k3
 }
 
@@ -337,7 +352,7 @@ void NtlmCheckSecBuffer(
     if (!buffer)
         return;
 
-    EnterCriticalSection(&g.cs);
+    EnterCriticalSection(&g_sb.cs);
 
     switch (TESTSEC_idx)
     {
@@ -358,7 +373,7 @@ void NtlmCheckSecBuffer(
         }
     }
 
-    LeaveCriticalSection(&g.cs);
+    LeaveCriticalSection(&g_sb.cs);
 
     sync_trace("*** *** ***<<\n");
 }

@@ -192,12 +192,13 @@ void PrintNtlmBlob(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob
     sync_trace("->MaxLength %d\n", pblob->MaxLength);
     sync_trace("->Offset    %d\n", pblob->Offset);
 
-    pData = ((PBYTE)pmsg + pblob->Offset);
     if ((pblob->Offset + pblob->Length) > msgsize)
     {
         sync_err("blob points beyond buffer bounds.\n");
         return;
     }
+
+    pData = ((PBYTE)pmsg + pblob->Offset);
     PrintHexDumpMax(pblob->Length, pData, 265);
 }
 
@@ -205,7 +206,7 @@ void PrintNtlmAvl(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob)
 {
     PBYTE pData;
     PMSV1_0_AV_PAIR pAvp;
-    PBYTE pEnd = (PBYTE)pmsg + msgsize;
+    PBYTE pEnd;
     WCHAR* avpStrName;
     int avlNr;
 
@@ -217,7 +218,14 @@ void PrintNtlmAvl(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob)
     sync_trace("->MaxLength %d\n", pblob->MaxLength);
     sync_trace("->Offset    %d\n", pblob->Offset);
 
+    if ((pblob->Offset + pblob->Length) > msgsize)
+    {
+        sync_err("blob points beyond buffer bounds.\n");
+        return;
+    }
+
     pData = (PBYTE)pmsg + pblob->Offset;
+    pEnd  = pData + pblob->Length;
 
     avlNr = 0;
     while (pData < pEnd)
