@@ -41,7 +41,7 @@ NTSTATUS
 NtlmInitializeGlobals(VOID)
 {
     NTSTATUS status = STATUS_SUCCESS;
-    LPWKSTA_USER_INFO_1 pBuf = NULL;
+    LPWKSTA_INFO_100 pBuf = NULL;
     WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
     ULONG AvPairsLen;
@@ -61,20 +61,18 @@ NtlmInitializeGlobals(VOID)
     }
     TRACE("%s\n",debugstr_w(dnsName));
 
-	/* FIXME: this still does not match what msv1_0 returns */
-    if (!(NERR_Success == NetWkstaUserGetInfo(0, 1, (LPBYTE*)&pBuf)))
+    if (NERR_Success == NetWkstaGetInfo(0, 100, (LPBYTE*)&pBuf))
+    {
+        wcscpy(domName, pBuf->wki100_langroup);
+        NetApiBufferFree(pBuf);
+    }
+    else
     {
         wcscpy(domName, L"WORKGROUP");
         ERR("could not get domain name!\n");
     }
-    else
-    {
-        wcscpy(domName, pBuf->wkui1_logon_domain);
-    }
 
-    if (pBuf != NULL)
-        NetApiBufferFree(pBuf);
-        ERR("%s\n",debugstr_w(domName));
+    ERR("%s\n", debugstr_w(domName));
 
     RtlCreateUnicodeString(&NtlmComputerNameString, compName);
     RtlCreateUnicodeString(&NtlmDnsNameString, dnsName);
@@ -114,7 +112,7 @@ NtlmInitializeGlobals(VOID)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Fill NtlmAvTargetInfoPart. It contains not all data we need
+    /* Fill NtlmAvTargetInfoPart. It contains not all data we need.
      * Timestamp and EOL is appended when challange message is
      * generated. */
     if (NtlmComputerNameString.Length > 0)
