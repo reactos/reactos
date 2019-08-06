@@ -76,29 +76,30 @@ void NtlmCheckInit()
         g.NetBIOSNameA[0] = 0;
     }
 
+    /* this is not elegant, but anyway ... */
     i = 0;
-    g.Auth_TargetInfoData[i++] = 2;
+    g.Auth_TargetInfoData[i++] = MsvAvNbDomainName;
     g.Auth_TargetInfoData[i++] = 0;
     g.Auth_TargetInfoData[i++] = cbNBLen;
     g.Auth_TargetInfoData[i++] = 0;
     memcpy(g.Auth_TargetInfoData + i, g.NetBIOSNameW, cbNBLen);
     i += cbNBLen;
 
-    g.Auth_TargetInfoData[i++] = 1;
+    g.Auth_TargetInfoData[i++] = MsvAvNbComputerName;
     g.Auth_TargetInfoData[i++] = 0;
     g.Auth_TargetInfoData[i++] = cbNBLen;
     g.Auth_TargetInfoData[i++] = 0;
     memcpy(g.Auth_TargetInfoData + i, g.NetBIOSNameW, cbNBLen);
     i += cbNBLen;
 
-    g.Auth_TargetInfoData[i++] = 4;
+    g.Auth_TargetInfoData[i++] = MsvAvDnsDomainName;
     g.Auth_TargetInfoData[i++] = 0;
     g.Auth_TargetInfoData[i++] = cbHNLen;
     g.Auth_TargetInfoData[i++] = 0;
     memcpy(g.Auth_TargetInfoData + i, g.DnsHostNameW, cbHNLen);
     i += cbHNLen;
 
-    g.Auth_TargetInfoData[i++] = 3;
+    g.Auth_TargetInfoData[i++] = MsvAvDnsComputerName;
     g.Auth_TargetInfoData[i++] = 0;
     g.Auth_TargetInfoData[i++] = cbHNLen;
     g.Auth_TargetInfoData[i++] = 0;
@@ -108,7 +109,7 @@ void NtlmCheckInit()
     // ???
     //07 00 08 00 ab b3 a8 2b
     //fa 49 d5 01 00 00 00 00
-    g.Auth_TargetInfoData[i++] = 7;
+    g.Auth_TargetInfoData[i++] = MsvAvTimestamp;
     g.Auth_TargetInfoData[i++] = 0;
     g.Auth_TargetInfoData[i++] = 8;
     g.Auth_TargetInfoData[i++] = 0;
@@ -123,10 +124,11 @@ void NtlmCheckInit()
     g.Auth_TargetInfoData[i++] = 0xd5;
     g.Auth_TargetInfoData[i++] = 0x01;
 
-    g.Auth_TargetInfoData[i++] = 0x00;
-    g.Auth_TargetInfoData[i++] = 0x00;
-    g.Auth_TargetInfoData[i++] = 0x00;
-    g.Auth_TargetInfoData[i++] = 0x00;
+    /* end of list */
+    g.Auth_TargetInfoData[i++] = MsvAvEOL;
+    g.Auth_TargetInfoData[i++] = 0;
+    g.Auth_TargetInfoData[i++] = 0;
+    g.Auth_TargetInfoData[i++] = 0;
 
     g.Auth_TargetInfoDataLen = i;
 }

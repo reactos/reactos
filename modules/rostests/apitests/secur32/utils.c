@@ -201,6 +201,109 @@ void PrintNtlmBlob(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob
     PrintHexDumpMax(pblob->Length, pData, 265);
 }
 
+void PrintNtlmAvl(const char* name, void* pmsg, ULONG msgsize, PNTLM_BLOB pblob)
+{
+    PBYTE pData;
+    PMSV1_0_AV_PAIR pAvp;
+    PBYTE pEnd = (PBYTE)pmsg + msgsize;
+    WCHAR* avpStrName;
+    int avlNr;
+
+    sync_trace("%s (AV list %p)\n", name, pblob);
+    if (pblob == NULL)
+        return;
+
+    sync_trace("->Length    %d\n", pblob->Length);
+    sync_trace("->MaxLength %d\n", pblob->MaxLength);
+    sync_trace("->Offset    %d\n", pblob->Offset);
+
+    pData = (PBYTE)pmsg + pblob->Offset;
+
+    avlNr = 0;
+    while (pData < pEnd)
+    {
+        pAvp = (PMSV1_0_AV_PAIR)pData;
+        pData += sizeof(MSV1_0_AV_PAIR);
+
+        if (pData + pAvp->AvLen > pEnd)
+        {
+            sync_err("invlaid PMSV1_0_AV_PAIR ... len excedes message size!");
+            break;
+        }
+
+        avpStrName = NULL;
+        switch (pAvp->AvId)
+        {
+            case MsvAvEOL:
+            {
+                sync_trace("%.2i MsvAvEOL\n", avlNr);
+                break;
+            }
+            case MsvAvNbComputerName:
+            {
+                avpStrName = L"MsvAvNbComputerName";
+                break;
+            }
+            case MsvAvNbDomainName:
+            {
+                avpStrName = L"MsvAvNbDomainName";
+                break;
+            }
+            case MsvAvDnsComputerName:
+            {
+                avpStrName = L"MsvAvDnsComputerName";
+                break;
+            }
+            case MsvAvDnsDomainName:
+            {
+                avpStrName = L"MsvAvDnsDomainName";
+                break;
+            }
+            case MsvAvDnsTreeName:
+            {
+                avpStrName = L"MsvAvDnsTreeName";
+                break;
+            }
+            case MsvAvFlags :;
+            {
+                /* is it a ULONG? */
+                assert(pAvp->AvLen == 4);
+                sync_trace("%.2i MsvAvFlags 0x%x\n", avlNr, (ULONG)pData);
+                break;
+            }
+            case MsvAvTimestamp :
+            {
+                PFILETIME pFt = (PFILETIME)pData;
+                SYSTEMTIME st;
+                if (!FileTimeToSystemTime(pFt, &st))
+                    RtlZeroMemory(&st, sizeof(st));
+                sync_trace("%.2i MsvAvTimestamp %.2d.%.2d.%.4d %.2d:%.2d:%.2d,%.4d\n",
+                           avlNr, st.wDay, st.wMonth, st.wYear,
+                           st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+                break;
+            }
+            /*TODO
+            case MsvAvSingleHost :;
+            case MsvAvTargetName:;
+            case MsvChannelBindings :;*/
+            default:
+            {
+                sync_err("AvId %d not implemented!\n", pAvp->AvId);
+                break;
+            }
+        }
+        /* is ist a string? */
+        if (avpStrName != NULL)
+        {
+            sync_trace("%.2i %S %.*S\n", avlNr, avpStrName,
+                        pAvp->AvLen / sizeof(WCHAR), (WCHAR*)pData);
+        }
+
+        pData += pAvp->AvLen;
+        avlNr++;
+    }
+}
+
 void PrintNtlmWindowsVersion(const char* name, PNTLM_WINDOWS_VERSION pver)
 {
     sync_trace("%s (PNTLM_WINDOWS_VERSION %p)\n", name, pver);
@@ -239,7 +342,7 @@ void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg, ULONG msgsize)
     //sys_trace("ServerChallenge %.*s\n", 8, pmsg->ServerChallenge);
     PrintHexDump(MSV1_0_CHALLENGE_LENGTH, (PBYTE)&pmsg->ServerChallenge);
     PrintHexDump(8, (PBYTE)&pmsg->Reserved);
-    PrintNtlmBlob("TargetInfo", pmsg, msgsize, &pmsg->TargetInfo);
+    PrintNtlmAvl("TargetInfo", pmsg, msgsize, &pmsg->TargetInfo);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
 }
 
