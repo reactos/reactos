@@ -21,14 +21,22 @@
 
 #ifdef _M_IX86
 
-VOID
-LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
-                      IN USHORT OperatingSystemVersion);
-VOID
-LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
-                     IN USHORT OperatingSystemVersion);
-VOID
-LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion);
+ARC_STATUS
+LoadAndBootBootSector(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
+
+ARC_STATUS
+LoadAndBootPartition(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
+
+ARC_STATUS
+LoadAndBootDrive(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
 
 #endif // _M_IX86

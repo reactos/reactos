@@ -258,6 +258,14 @@ UiShowMessageBoxesInSection(IN PCSTR SectionName)
 }
 
 VOID
+UiShowMessageBoxesInArgv(
+    IN ULONG Argc,
+    IN PCHAR Argv[])
+{
+    return;
+}
+
+VOID
 UiTruncateStringEllipsis(IN PCHAR StringText,
                          IN ULONG MaxChars)
 {

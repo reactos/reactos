@@ -88,16 +88,15 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     LPSTR LoadOptions, NewLoadOptions;
     CHAR  HalPath[] = "\\";
-    CHAR  ArcBoot[256];
-    CHAR  MiscFiles[256];
+    CHAR  ArcBoot[MAX_PATH+1];
+    CHAR  MiscFiles[MAX_PATH+1];
     ULONG i;
     ULONG_PTR PathSeparator;
     PLOADER_PARAMETER_EXTENSION Extension;
 
     /* Construct SystemRoot and ArcBoot from SystemPath */
     PathSeparator = strstr(BootPath, "\\") - BootPath;
-    strncpy(ArcBoot, BootPath, PathSeparator);
-    ArcBoot[PathSeparator] = ANSI_NULL;
+    RtlStringCbCopyNA(ArcBoot, sizeof(ArcBoot), BootPath, PathSeparator);
 
     TRACE("ArcBoot: '%s'\n", ArcBoot);
     TRACE("SystemRoot: '%s'\n", SystemRoot);
@@ -105,7 +104,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Fill ARC BootDevice */
     LoaderBlock->ArcBootDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
-    strncpy(LoaderBlock->ArcBootDeviceName, ArcBoot, MAX_PATH);
+    RtlStringCbCopyA(LoaderBlock->ArcBootDeviceName, sizeof(WinLdrSystemBlock->ArcBootDeviceName), ArcBoot);
     LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
 
     /* Fill ARC HalDevice, it matches ArcBoot path */
@@ -114,17 +113,17 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Fill SystemRoot */
     LoaderBlock->NtBootPathName = WinLdrSystemBlock->NtBootPathName;
-    strncpy(LoaderBlock->NtBootPathName, SystemRoot, MAX_PATH);
+    RtlStringCbCopyA(LoaderBlock->NtBootPathName, sizeof(WinLdrSystemBlock->NtBootPathName), SystemRoot);
     LoaderBlock->NtBootPathName = PaToVa(LoaderBlock->NtBootPathName);
 
     /* Fill NtHalPathName */
     LoaderBlock->NtHalPathName = WinLdrSystemBlock->NtHalPathName;
-    strncpy(LoaderBlock->NtHalPathName, HalPath, MAX_PATH);
+    RtlStringCbCopyA(LoaderBlock->NtHalPathName, sizeof(WinLdrSystemBlock->NtHalPathName), HalPath);
     LoaderBlock->NtHalPathName = PaToVa(LoaderBlock->NtHalPathName);
 
     /* Fill LoadOptions and strip the '/' switch symbol in front of each option */
     NewLoadOptions = LoadOptions = LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
-    strncpy(LoaderBlock->LoadOptions, Options, MAX_OPTIONS_LENGTH);
+    RtlStringCbCopyA(LoaderBlock->LoadOptions, sizeof(WinLdrSystemBlock->LoadOptions), Options);
 
     do
     {
@@ -205,8 +204,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 #endif
     /* Load drivers database */
-    strcpy(MiscFiles, BootPath);
-    strcat(MiscFiles, "AppPatch\\drvmain.sdb");
+    RtlStringCbCopyA(MiscFiles, sizeof(MiscFiles), BootPath);
+    RtlStringCbCatA(MiscFiles, sizeof(MiscFiles), "AppPatch\\drvmain.sdb");
     Extension->DrvDBImage = PaToVa(WinLdrLoadModule(MiscFiles,
                                                     &Extension->DrvDBSize,
                                                     LoaderRegistryData));
@@ -235,21 +234,21 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     PVOID DriverBase = NULL;
 
     // Separate the path to file name and directory path
-    _snprintf(DriverPath, sizeof(DriverPath), "%wZ", FilePath);
+    RtlStringCbPrintfA(DriverPath, sizeof(DriverPath), "%wZ", FilePath);
     DriverNamePos = strrchr(DriverPath, '\\');
     if (DriverNamePos != NULL)
     {
         // Copy the name
-        strcpy(DllName, DriverNamePos+1);
+        RtlStringCbCopyA(DllName, sizeof(DllName), DriverNamePos+1);
 
         // Cut out the name from the path
-        *(DriverNamePos+1) = 0;
+        *(DriverNamePos+1) = ANSI_NULL;
     }
     else
     {
         // There is no directory in the path
-        strcpy(DllName, DriverPath);
-        DriverPath[0] = ANSI_NULL;
+        RtlStringCbCopyA(DllName, sizeof(DllName), DriverPath);
+        *DriverPath = ANSI_NULL;
     }
 
     TRACE("DriverPath: '%s', DllName: '%s', LPB\n", DriverPath, DllName);
@@ -263,7 +262,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     }
 
     // It's not loaded, we have to load it
-    _snprintf(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
+    RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
     Success = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
     if (!Success)
         return FALSE;
@@ -280,7 +279,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     (*DriverDTE)->Flags |= Flags;
 
     // Look for any dependencies it may have, and load them too
-    sprintf(FullPath,"%s%s", BootPath, DriverPath);
+    RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%s", BootPath, DriverPath);
     Success = WinLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
     if (!Success)
     {
@@ -359,7 +358,7 @@ WinLdrLoadModule(PCSTR ModuleName,
 
     /* Inform user we are loading files */
     //UiDrawBackdrop();
-    //sprintf(ProgressString, "Loading %s...", FileName);
+    //RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", FileName);
     //UiDrawProgressBarCenter(1, 100, ProgressString);
 
     TRACE("Loading module %s\n", ModuleName);
@@ -441,11 +440,11 @@ LoadModule(
     PVOID BaseAddress = NULL;
 
     UiDrawBackdrop();
-    sprintf(ProgressString, "Loading %s...", File);
+    RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
     UiDrawProgressBarCenter(Percentage, 100, ProgressString);
 
-    strcpy(FullFileName, Path);
-    strcat(FullFileName, File);
+    RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
+    RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
 
     Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
@@ -488,16 +487,16 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     if (!KernelDTE) return FALSE;
 
     /* Initialize SystemRoot\System32 path */
-    strcpy(DirPath, BootPath);
-    strcat(DirPath, "system32\\");
+    RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
+    RtlStringCbCatA(DirPath, sizeof(DirPath), "system32\\");
 
     //
     // TODO: Parse also the separate INI values "Kernel=" and "Hal="
     //
 
     /* Default KERNEL and HAL file names */
-    strcpy(KernelFileName, "ntoskrnl.exe");
-    strcpy(HalFileName   , "hal.dll");
+    RtlStringCbCopyA(KernelFileName, sizeof(KernelFileName), "ntoskrnl.exe");
+    RtlStringCbCopyA(HalFileName   , sizeof(HalFileName)   , "hal.dll");
 
     /* Find any /KERNEL= or /HAL= switch in the boot options */
     Options = BootOptions;
@@ -528,15 +527,13 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             if (_strnicmp(Options, "KERNEL=", 7) == 0)
             {
                 Options += 7; i -= 7;
-                strncpy(KernelFileName, Options, i);
-                KernelFileName[i] = ANSI_NULL;
+                RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Options, i);
                 _strupr(KernelFileName);
             }
             else if (_strnicmp(Options, "HAL=", 4) == 0)
             {
                 Options += 4; i -= 4;
-                strncpy(HalFileName, Options, i);
-                HalFileName[i] = ANSI_NULL;
+                RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Options, i);
                 _strupr(HalFileName);
             }
         }
@@ -611,20 +608,20 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Format: /DEBUGPORT=COM1 or /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log or /DEBUGPORT=FOO
              * If we only have /DEBUGPORT= (i.e. without any port name), defaults it to "COM".
              */
-            strcpy(KdTransportDllName, "KD");
+            RtlStringCbCopyA(KdTransportDllName, sizeof(KdTransportDllName), "KD");
             if (_strnicmp(Options, "COM", 3) == 0 && '0' <= Options[3] && Options[3] <= '9')
             {
-                strncat(KdTransportDllName, Options, 3);
+                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Options, 3);
             }
             else
             {
                 size_t i = strcspn(Options, " \t:"); /* Skip valid separators: whitespace or colon */
                 if (i == 0)
-                    strcat(KdTransportDllName, "COM");
+                    RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), "COM");
                 else
-                    strncat(KdTransportDllName, Options, i);
+                    RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Options, i);
             }
-            strcat(KdTransportDllName, ".DLL");
+            RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), ".DLL");
             _strupr(KdTransportDllName);
 
             /*
@@ -646,38 +643,51 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     return Success;
 }
 
-VOID
-LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
-                   IN USHORT OperatingSystemVersion)
+ARC_STATUS
+LoadAndBootWindows(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
 {
-    ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
+    PCSTR ArgValue;
     PCHAR File;
     BOOLEAN Success;
-    BOOLEAN HasSection;
-    CHAR  SettingsValue[80];
+    USHORT OperatingSystemVersion;
+    PLOADER_PARAMETER_BLOCK LoaderBlock;
     CHAR  BootPath[MAX_PATH];
     CHAR  FileName[MAX_PATH];
     CHAR  BootOptions[256];
-    PLOADER_PARAMETER_BLOCK LoaderBlock;
 
-    /* Get OS setting value */
-    SettingsValue[0] = ANSI_NULL;
-    IniOpenSection("Operating Systems", &SectionId);
-    IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
+    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue)
+    {
+        ERR("No 'BootType' value, aborting!\n");
+        return EINVAL;
+    }
 
-    /* Open the operating system section specified in the .ini file */
-    HasSection = IniOpenSection(SectionName, &SectionId);
+    if (_stricmp(ArgValue, "Windows") == 0 ||
+        _stricmp(ArgValue, "Windows2003") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_WS03;
+    }
+    else if (_stricmp(ArgValue, "WindowsNT40") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_NT4;
+    }
+    else
+    {
+        ERR("Unknown 'BootType' value '%s', aborting!\n", ArgValue);
+        return EINVAL;
+    }
 
     UiDrawBackdrop();
     UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
-    /* Read the system path is set in the .ini file */
-    BootPath[0] = ANSI_NULL;
-    if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
-    {
-        strcpy(BootPath, SectionName);
-    }
+    /* Retrieve the system path */
+    *BootPath = ANSI_NULL;
+    ArgValue = GetArgumentValue(Argc, Argv, "SystemPath");
+    if (ArgValue)
+        RtlStringCbCopyA(BootPath, sizeof(BootPath), ArgValue);
 
     /*
      * Check whether BootPath is a full path
@@ -688,53 +698,42 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     if (strrchr(BootPath, ')') == NULL)
     {
         /* Temporarily save the boot path */
-        strcpy(FileName, BootPath);
+        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
 
         /* This is not a full path. Use the current (i.e. boot) device. */
         MachDiskGetBootPath(BootPath, sizeof(BootPath));
 
         /* Append a path separator if needed */
-        if (FileName[0] != '\\' && FileName[0] != '/')
-            strcat(BootPath, "\\");
+        if (*FileName != '\\' && *FileName != '/')
+            RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
         /* Append the remaining path */
-        strcat(BootPath, FileName);
+        RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
     }
 
     /* Append a backslash if needed */
-    if ((BootPath[0] == 0) || BootPath[strlen(BootPath) - 1] != '\\')
-        strcat(BootPath, "\\");
+    if (!*BootPath || BootPath[strlen(BootPath) - 1] != '\\')
+        RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
-    /* Read boot options */
-    BootOptions[0] = ANSI_NULL;
-    if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
-    {
-        /* Retrieve the options after the quoted title */
-        PCSTR p = SettingsValue;
+    TRACE("BootPath: '%s'\n", BootPath);
 
-        /* Trim any leading whitespace and quotes */
-        while (*p == ' ' || *p == '\t' || *p == '"')
-            ++p;
-        /* Skip all the text up to the first last quote */
-        while (*p != ANSI_NULL && *p != '"')
-            ++p;
-        /* Trim any trailing whitespace and quotes */
-        while (*p == ' ' || *p == '\t' || *p == '"')
-            ++p;
-
-        strcpy(BootOptions, p);
-        TRACE("BootOptions: '%s'\n", BootOptions);
-    }
+    /* Retrieve the boot options */
+    *BootOptions = ANSI_NULL;
+    ArgValue = GetArgumentValue(Argc, Argv, "Options");
+    if (ArgValue)
+        RtlStringCbCopyA(BootOptions, sizeof(BootOptions), ArgValue);
 
     /* Append boot-time options */
     AppendBootTimeOptions(BootOptions);
+
+    TRACE("BootOptions: '%s'\n", BootOptions);
 
     /* Check if a ramdisk file was given */
     File = strstr(BootOptions, "/RDPATH=");
     if (File)
     {
         /* Copy the file name and everything else after it */
-        strcpy(FileName, File + 8);
+        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
 
         /* Null-terminate */
         *strstr(FileName, " ") = ANSI_NULL;
@@ -743,14 +742,12 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         if (!RamDiskLoadVirtualFile(FileName))
         {
             UiMessageBox("Failed to load RAM disk file %s", FileName);
-            return;
+            return ENOENT;
         }
     }
 
     /* Let user know we started loading */
     //UiDrawStatusText("Loading...");
-
-    TRACE("BootPath: '%s'\n", BootPath);
 
     /* Allocate and minimalist-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
@@ -762,24 +759,24 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
     if (!Success)
-        return;
+        return ENOEXEC;
 
     /* Load NLS data, OEM font, and prepare boot drivers list */
     Success = WinLdrScanSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
     /* Bail out if failure */
     if (!Success)
-        return;
+        return ENOEXEC;
 
     /* Finish loading */
-    LoadAndBootWindowsCommon(OperatingSystemVersion,
-                             LoaderBlock,
-                             BootOptions,
-                             BootPath,
-                             FALSE);
+    return LoadAndBootWindowsCommon(OperatingSystemVersion,
+                                    LoaderBlock,
+                                    BootOptions,
+                                    BootPath,
+                                    FALSE);
 }
 
-VOID
+ARC_STATUS
 LoadAndBootWindowsCommon(
     USHORT OperatingSystemVersion,
     PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -820,7 +817,7 @@ LoadAndBootWindowsCommon(
     if (!Success)
     {
         UiMessageBox("Error loading NTOS core.");
-        return;
+        return ENOEXEC;
     }
 
     /* Load boot drivers */
@@ -875,6 +872,7 @@ LoadAndBootWindowsCommon(
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);
+    return ESUCCESS;
 }
 
 VOID

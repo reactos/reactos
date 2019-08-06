@@ -131,11 +131,17 @@ typedef struct
 VOID    __cdecl BootNewLinuxKernel(VOID);                // Implemented in linux.S
 VOID    __cdecl BootOldLinuxKernel(ULONG KernelSize);        // Implemented in linux.S
 
-VOID
-LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion);
+ARC_STATUS
+LoadAndBootLinux(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
 
-BOOLEAN    LinuxParseIniSection(PCSTR OperatingSystemName);
+BOOLEAN
+LinuxParseIniSection(
+    IN ULONG Argc,
+    IN PCHAR Argv[]);
+
 BOOLEAN    LinuxReadBootSector(PFILE LinuxKernelFile);
 BOOLEAN    LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOLEAN    LinuxReadKernel(PFILE LinuxKernelFile);

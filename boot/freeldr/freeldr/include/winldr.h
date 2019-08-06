@@ -58,17 +58,23 @@ typedef struct _ARC_DISK_SIGNATURE_EX
     CHAR ArcName[MAX_PATH];
 } ARC_DISK_SIGNATURE_EX, *PARC_DISK_SIGNATURE_EX;
 
-///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // ReactOS Loading Functions
 //
-///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
-                        IN USHORT OperatingSystemVersion);
+////////////////////////////////////////////////////////////////////////////////
 
-VOID
-LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion);
+ARC_STATUS
+LoadAndBootWindows(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
+
+ARC_STATUS
+LoadReactOSSetup(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
 
 
 // conversion.c and conversion.h

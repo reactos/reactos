@@ -430,6 +430,43 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
     }
 }
 
+VOID
+UiShowMessageBoxesInArgv(
+    IN ULONG Argc,
+    IN PCHAR Argv[])
+{
+    ULONG LastIndex;
+    PCSTR ArgValue;
+    PCHAR MessageBoxText;
+    ULONG MessageBoxTextSize;
+
+    /* Find all the message box settings and run them */
+    for (LastIndex = 0;
+         (ArgValue = GetNextArgumentValue(Argc, Argv, &LastIndex, "MessageBox")) != NULL;
+         ++LastIndex)
+    {
+        /* Get the real length of the MessageBox text */
+        MessageBoxTextSize = (strlen(ArgValue) + 1) * sizeof(CHAR);
+
+        /* Allocate enough memory to hold the text */
+        MessageBoxText = FrLdrTempAlloc(MessageBoxTextSize, TAG_UI_TEXT);
+        if (MessageBoxText)
+        {
+            /* Get the MessageBox text */
+            strcpy(MessageBoxText, ArgValue);
+
+            /* Fix it up */
+            UiEscapeString(MessageBoxText);
+
+            /* Display it */
+            UiMessageBox(MessageBoxText);
+
+            /* Free the memory */
+            FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
+        }
+    }
+}
+
 VOID UiEscapeString(PCHAR String)
 {
     ULONG    Idx;

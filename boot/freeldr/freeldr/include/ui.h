@@ -70,7 +70,14 @@ VOID    UiMessageBox(PCSTR Format, ...);                        // Displays a me
 VOID    UiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
 VOID    UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
 VOID    UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
+
 VOID    UiShowMessageBoxesInSection(PCSTR SectionName);        // Displays all the message boxes in a given section
+
+VOID
+UiShowMessageBoxesInArgv(
+    IN ULONG Argc,
+    IN PCHAR Argv[]);
+
 VOID    UiEscapeString(PCHAR String);                            // Processes a string and changes all occurrences of "\n" to '\n'
 BOOLEAN    UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 

@@ -58,6 +58,7 @@
 /* Internal headers */
 // #include <arcemul.h>
 #include <arcname.h>
+#include <arcsupp.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>

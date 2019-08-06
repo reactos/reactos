@@ -37,6 +37,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/elf)
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
 list(APPEND FREELDR_BOOTLIB_SOURCE
+    lib/arcsupp.c
     lib/debug.c
     lib/peloader.c
     lib/comm/rs232.c

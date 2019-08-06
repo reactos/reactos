@@ -108,7 +108,10 @@ VOID OptionMenuCustomBootDisk(VOID)
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootDisk%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootDisk%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -124,11 +127,8 @@ VOID OptionMenuCustomBootDisk(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootDrive(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
@@ -153,7 +153,10 @@ VOID OptionMenuCustomBootPartition(VOID)
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootPartition%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootPartition%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -173,11 +176,8 @@ VOID OptionMenuCustomBootPartition(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootPartition(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
@@ -207,7 +207,10 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootSectorFile%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootSectorFile%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -231,11 +234,8 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootBootSector(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
@@ -275,7 +275,10 @@ VOID OptionMenuCustomBootLinux(VOID)
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomLinux%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomLinux%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -298,7 +301,7 @@ VOID OptionMenuCustomBootLinux(VOID)
         return;
 
     /* Add the Initrd */
-    if (strlen(LinuxInitrdString) > 0)
+    if (*LinuxInitrdString)
     {
         if (!IniAddSettingValueToSection(SectionId, "Initrd", LinuxInitrdString))
             return;
@@ -310,11 +313,8 @@ VOID OptionMenuCustomBootLinux(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = "Custom Linux Setup";
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootLinux(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = "Custom Linux Setup";
     LoadOperatingSystem(&OperatingSystem);
 }
 
@@ -352,7 +352,10 @@ VOID OptionMenuCustomBootReactOS(VOID)
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomReactOS%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomReactOS%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -375,11 +378,8 @@ VOID OptionMenuCustomBootReactOS(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL; // ReactOSOptions
-
-    // LoadAndBootWindows(&OperatingSystem, _WIN32_WINNT_WS03);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 

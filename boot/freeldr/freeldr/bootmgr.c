@@ -22,71 +22,147 @@
 #include <freeldr.h>
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
+DBG_DEFAULT_CHANNEL(INIFILE);
 
-typedef
-VOID
-(*OS_LOADING_METHOD)(IN OperatingSystemItem* OperatingSystem,
-                     IN USHORT OperatingSystemVersion);
+/* GLOBALS ********************************************************************/
 
 static const struct
 {
-    PCHAR BootType;
-    USHORT OperatingSystemVersion;
-    OS_LOADING_METHOD Load;
+    PCSTR BootType;
+    ARC_ENTRY_POINT OsLoader;
 } OSLoadingMethods[] =
 {
-    {"ReactOSSetup", 0                , LoadReactOSSetup     },
+    {"ReactOSSetup", LoadReactOSSetup     },
 
 #ifdef _M_IX86
-    {"BootSector"  , 0                , LoadAndBootBootSector},
-    {"Drive"       , 0                , LoadAndBootDrive     },
-    {"Partition"   , 0                , LoadAndBootPartition },
+    {"BootSector"  , LoadAndBootBootSector},
+    {"Drive"       , LoadAndBootDrive     },
+    {"Partition"   , LoadAndBootPartition },
 
-    {"Linux"       , 0                , LoadAndBootLinux     },
+    {"Linux"       , LoadAndBootLinux     },
 
-    {"Windows"     , 0                , LoadAndBootWindows   },
-    {"WindowsNT40" , _WIN32_WINNT_NT4 , LoadAndBootWindows   },
+    {"Windows"     , LoadAndBootWindows   },
+    {"WindowsNT40" , LoadAndBootWindows   },
 #endif
-    {"Windows2003" , _WIN32_WINNT_WS03, LoadAndBootWindows   },
+    {"Windows2003" , LoadAndBootWindows   },
 };
 
 /* FUNCTIONS ******************************************************************/
 
+PCHAR*
+BuildArgvForOsLoader(
+    IN PCSTR LoadIdentifier,
+    IN ULONG_PTR SectionId,
+    OUT PULONG pArgc)
+{
+    SIZE_T Size;
+    ULONG Count;
+    ULONG i;
+    ULONG Argc;
+    PCHAR* Argv;
+    PCHAR* Args;
+    PCHAR SettingName, SettingValue;
+
+    /*
+     * Convert the list of key=value options in the given operating system section
+     * into a ARC-compatible argument vector.
+     */
+
+    *pArgc = 0;
+
+    /* Validate the LoadIdentifier (to make tests simpler later) */
+    if (LoadIdentifier && !*LoadIdentifier)
+        LoadIdentifier = NULL;
+
+    /* Count the number of operating systems in the section */
+    Count = IniGetNumSectionItems(SectionId);
+
+    /* The argument vector contains the program name, the LoadIdentifier (optional), and the items in the OS section */
+    Argc = 1 + Count;
+    if (LoadIdentifier)
+        ++Argc;
+
+    /* Calculate the total size needed for the string buffer of the argument vector */
+    Size = 0;
+    /* i == 0: Program name */
+    /* i == 1: LoadIdentifier */
+    if (LoadIdentifier)
+    {
+        Size += (strlen("LoadIdentifier=") + strlen(LoadIdentifier) + 1) * sizeof(CHAR);
+    }
+    for (i = 0; i < Count; ++i)
+    {
+        Size += IniGetSectionSettingNameSize(SectionId, i);  // Counts also the NULL-terminator, that we transform into the '=' sign separator.
+        Size += IniGetSectionSettingValueSize(SectionId, i); // Counts also the NULL-terminator.
+    }
+    Size += sizeof(ANSI_NULL); // Final NULL-terminator.
+
+    /* Allocate memory to hold the argument vector: pointers and string buffer */
+    Argv = FrLdrHeapAlloc(Argc * sizeof(PCHAR) + Size, TAG_STRING);
+    if (!Argv)
+        return NULL;
+
+    /* Initialize the argument vector: loop through the section and copy the key=value options */
+    SettingName = (PCHAR)((ULONG_PTR)Argv + (Argc * sizeof(PCHAR)));
+    Args = Argv;
+    /* i == 0: Program name */
+    *Args++ = NULL;
+    /* i == 1: LoadIdentifier */
+    if (LoadIdentifier)
+    {
+        strcpy(SettingName, "LoadIdentifier=");
+        strcat(SettingName, LoadIdentifier);
+
+        *Args++ = SettingName;
+        SettingName += (strlen(SettingName) + 1);
+    }
+    for (i = 0; i < Count; ++i)
+    {
+        Size = IniGetSectionSettingNameSize(SectionId, i);
+        SettingValue = SettingName + Size;
+        IniReadSettingByNumber(SectionId, i,
+                               SettingName, Size,
+                               SettingValue, IniGetSectionSettingValueSize(SectionId, i));
+        SettingName[Size - 1] = '=';
+
+        *Args++ = SettingName;
+        SettingName += (strlen(SettingName) + 1);
+    }
+
+#if DBG
+    /* Dump the argument vector for debugging */
+    for (i = 0; i < Argc; ++i)
+    {
+        TRACE("Argv[%lu]: '%s'\n", i, Argv[i]);
+    }
+#endif
+
+    *pArgc = Argc;
+    return Argv;
+}
+
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
 {
     ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR BootType[80];
+    PCSTR SectionName = OperatingSystem->SectionName;
     ULONG i;
+    ULONG Argc;
+    PCHAR* Argv;
+    CHAR BootType[80];
 
     /* Try to open the operating system section in the .ini file */
-    if (IniOpenSection(SectionName, &SectionId))
+    if (!IniOpenSection(SectionName, &SectionId))
     {
-        /* Try to read the boot type */
-        IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
-    }
-    else
-    {
-        BootType[0] = ANSI_NULL;
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
+        return;
     }
 
-    if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
-    {
-        /* Try to infer the boot type value */
-#ifdef _M_IX86
-        ULONG FileId;
-        if (ArcOpen((PSTR)SectionName, OpenReadOnly, &FileId) == ESUCCESS)
-        {
-            ArcClose(FileId);
-            strcpy(BootType, "BootSector");
-        }
-        else
-#endif
-        {
-            strcpy(BootType, "Windows");
-        }
-    }
+    /* Try to read the boot type */
+    *BootType = ANSI_NULL;
+    IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
+
+    /* We must have the "BootType" value (it has been possibly added by InitOperatingSystemList()) */
+    ASSERT(*BootType);
 
 #if defined(_M_IX86)
     /* Install the drive mapper according to this section drive mappings */
@@ -98,46 +174,15 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
     {
         if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
         {
-            OSLoadingMethods[i].Load(OperatingSystem,
-                                     OSLoadingMethods[i].OperatingSystemVersion);
+            Argv = BuildArgvForOsLoader(OperatingSystem->LoadIdentifier, SectionId, &Argc);
+            if (Argv)
+            {
+                OSLoadingMethods[i].OsLoader(Argc, Argv, NULL);
+                FrLdrHeapFree(Argv, TAG_STRING);
+            }
             return;
         }
     }
-}
-
-ULONG GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG OperatingSystemCount)
-{
-    CHAR      DefaultOSText[80];
-    PCSTR     DefaultOSName;
-    ULONG_PTR SectionId;
-    ULONG     DefaultOS = 0;
-    ULONG     Idx;
-
-    if (!IniOpenSection("FreeLoader", &SectionId))
-        return 0;
-
-    DefaultOSName = CmdLineGetDefaultOS();
-    if (DefaultOSName == NULL)
-    {
-        if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
-        {
-            DefaultOSName = DefaultOSText;
-        }
-    }
-
-    if (DefaultOSName != NULL)
-    {
-        for (Idx = 0; Idx < OperatingSystemCount; Idx++)
-        {
-            if (_stricmp(DefaultOSName, OperatingSystemList[Idx].SystemPartition) == 0)
-            {
-                DefaultOS = Idx;
-                break;
-            }
-        }
-    }
-
-    return DefaultOS;
 }
 
 LONG GetTimeOut(VOID)
@@ -176,11 +221,11 @@ BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
 VOID RunLoader(VOID)
 {
     ULONG_PTR SectionId;
+    LONG      TimeOut;
     ULONG     OperatingSystemCount;
     OperatingSystemItem* OperatingSystemList;
     PCSTR*    OperatingSystemDisplayNames;
     ULONG     DefaultOperatingSystem;
-    LONG      TimeOut;
     ULONG     SelectedOperatingSystem;
     ULONG     i;
 
@@ -222,20 +267,18 @@ VOID RunLoader(VOID)
         return;
     }
 
-    OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount);
+    OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount,
+                                                  &DefaultOperatingSystem);
     if (!OperatingSystemList)
     {
         UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
         goto Reboot;
     }
-
     if (OperatingSystemCount == 0)
     {
         UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
         goto Reboot;
     }
-
-    DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemList, OperatingSystemCount);
 
     /* Create list of display names */
     OperatingSystemDisplayNames = FrLdrTempAlloc(sizeof(PCSTR) * OperatingSystemCount, 'mNSO');

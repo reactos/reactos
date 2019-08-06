@@ -142,7 +142,7 @@ WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID
 WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-VOID
+ARC_STATUS
 LoadAndBootWindowsCommon(
     USHORT OperatingSystemVersion,
     PLOADER_PARAMETER_BLOCK LoaderBlock,

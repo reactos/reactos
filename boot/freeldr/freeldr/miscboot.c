@@ -25,51 +25,46 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
-LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
-                      IN USHORT OperatingSystemVersion)
+ARC_STATUS
+LoadAndBootBootSector(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
 {
-    ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  FileName[260];
+    PCSTR FileName;
     PFILE FilePointer;
     ULONG BytesRead;
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(SectionName);
+    UiShowMessageBoxesInArgv(Argc, Argv);
 
-    /* Try to open the operating system section in the .ini file */
-    if (!IniOpenSection(SectionName, &SectionId))
-    {
-        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
-        return;
-    }
-
-    if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, sizeof(FileName)))
+    /* Read the file name */
+    FileName = GetArgumentValue(Argc, Argv, "BootSectorFile");
+    if (!FileName)
     {
         UiMessageBox("Boot sector file not specified for selected OS!");
-        return;
+        return EINVAL;
     }
 
     FilePointer = FsOpenFile(FileName);
     if (!FilePointer)
     {
         UiMessageBox("%s not found.", FileName);
-        return;
+        return ENOENT;
     }
 
     /* Read boot sector */
     if (!FsReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
     {
         UiMessageBox("Unable to read boot sector.");
-        return;
+        return EIO;
     }
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return;
+        return ENOEXEC;
     }
 
     UiUnInitialize("Booting...");
@@ -87,65 +82,59 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     // DiskStopFloppyMotor();
     // DisableA20();
     ChainLoadBiosBootSectorCode();
+    return ESUCCESS;
 }
 
-VOID
-LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
-                     IN USHORT OperatingSystemVersion)
+ARC_STATUS
+LoadAndBootPartition(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
 {
-    ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  SettingValue[80];
+    PCSTR ArgValue;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     UCHAR DriveNumber;
     ULONG PartitionNumber;
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(SectionName);
-
-    /* Try to open the operating system section in the .ini file */
-    if (!IniOpenSection(SectionName, &SectionId))
-    {
-        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
-        return;
-    }
+    UiShowMessageBoxesInArgv(Argc, Argv);
 
     /* Read the boot drive */
-    if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, sizeof(SettingValue)))
+    ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
+    if (!ArgValue)
     {
         UiMessageBox("Boot drive not specified for selected OS!");
-        return;
+        return EINVAL;
     }
-
-    DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
+    DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
     /* Read the boot partition */
-    if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, sizeof(SettingValue)))
+    ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
+    if (!ArgValue)
     {
         UiMessageBox("Boot partition not specified for selected OS!");
-        return;
+        return EINVAL;
     }
-
-    PartitionNumber = atoi(SettingValue);
+    PartitionNumber = atoi(ArgValue);
 
     /* Get the partition table entry */
     if (!DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry))
     {
-        return;
+        return ENOENT;
     }
 
     /* Now try to read the partition boot sector. If this fails then abort. */
     if (!MachDiskReadLogicalSectors(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
     {
         UiMessageBox("Unable to read partition's boot sector.");
-        return;
+        return EIO;
     }
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return;
+        return ENOEXEC;
     }
 
     UiUnInitialize("Booting...");
@@ -164,47 +153,42 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
     // DisableA20();
     FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
+    return ESUCCESS;
 }
 
-VOID
-LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion)
+ARC_STATUS
+LoadAndBootDrive(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
 {
-    ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  SettingValue[80];
+    PCSTR ArgValue;
     UCHAR DriveNumber;
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(SectionName);
+    UiShowMessageBoxesInArgv(Argc, Argv);
 
-    /* Try to open the operating system section in the .ini file */
-    if (!IniOpenSection(SectionName, &SectionId))
-    {
-        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
-        return;
-    }
-
-    if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, sizeof(SettingValue)))
+    /* Read the boot drive */
+    ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
+    if (!ArgValue)
     {
         UiMessageBox("Boot drive not specified for selected OS!");
-        return;
+        return EINVAL;
     }
-
-    DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
+    DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
     /* Now try to read the boot sector (or mbr). If this fails then abort. */
     if (!MachDiskReadLogicalSectors(DriveNumber, 0, 1, (PVOID)0x7C00))
     {
         UiMessageBox("Unable to read boot sector");
-        return;
+        return EIO;
     }
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return;
+        return ENOEXEC;
     }
 
     UiUnInitialize("Booting...");
@@ -223,6 +207,7 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     // DisableA20();
     FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
+    return ESUCCESS;
 }
 
 #endif // _M_IX86
