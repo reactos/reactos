@@ -137,12 +137,12 @@ NtlmInitializeGlobals(VOID)
 VOID
 NtlmTerminateGlobals(VOID)
 {
-    NtlmFree(NtlmComputerNameString.Buffer);
-    NtlmFree(NtlmDomainNameString.Buffer);
-    NtlmFree(NtlmDnsNameString.Buffer);
-    NtlmFree(NtlmOemComputerNameString.Buffer);
-    NtlmFree(NtlmOemDomainNameString.Buffer);
-    NtlmFree(NtlmOemDnsNameString.Buffer);
+    RtlFreeUnicodeString(&NtlmComputerNameString);
+    RtlFreeUnicodeString(&NtlmDomainNameString);
+    RtlFreeUnicodeString(&NtlmDnsNameString);
+    RtlFreeOemString(&NtlmOemComputerNameString);
+    RtlFreeOemString(&NtlmOemDomainNameString);
+    RtlFreeOemString(&NtlmOemDnsNameString);
     NtlmAvFree(&NtlmAvTargetInfo);
     NtClose(NtlmSystemSecurityToken);
 }
