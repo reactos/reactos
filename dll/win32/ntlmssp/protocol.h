@@ -359,6 +359,11 @@ NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
                       IN PNTLM_AVDATA pAvData,
                       IN OUT PNTLM_BLOB OutputBlob,
                       IN OUT PULONG_PTR OffSet);
+VOID
+NtlmAppendToBlob(IN void* buffer,
+                 IN ULONG len,
+                 IN OUT PNTLM_BLOB OutputBlob,
+                 IN OUT PULONG_PTR OffSet);
 
 VOID
 NtlmStructWriteStrA(

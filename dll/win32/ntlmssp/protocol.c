@@ -126,9 +126,19 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
     PCHALLENGE_MESSAGE chaMessage = NULL;
     ULONG messageSize, offset;
 
+    #include "pshpack1.h"
+    struct _TargetInfoEnd
+    {
+        MSV1_0_AV_PAIR avpTs;
+        FILETIME ts;
+        MSV1_0_AV_PAIR avpEol;
+    } targetInfoEnd;
+    #include "poppack.h"
+
     /* compute message size */
     messageSize = sizeof(CHALLENGE_MESSAGE) +
-                  NtlmAvTargetInfo.bUsed +
+                  NtlmAvTargetInfoPart.bUsed +
+                  sizeof(targetInfoEnd)+
                   TargetName.bUsed;
 
     ERR("generating chaMessage of size %lu\n", messageSize);
@@ -175,8 +185,17 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
         chaMessage, TargetName.bUsed, offset);
     NtlmRawStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
 
-    ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage, NtlmAvTargetInfo.bUsed, offset);
-    NtlmWriteAvDataToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
+    ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
+        NtlmAvTargetInfoPart.bUsed, offset);
+    NtlmWriteAvDataToBlob((PVOID)chaMessage, &NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
+    /* append filetime and eol */
+    targetInfoEnd.avpTs.AvId = MsvAvTimestamp;
+    targetInfoEnd.avpTs.AvLen = sizeof(targetInfoEnd.ts);
+    GetSystemTimeAsFileTime(&targetInfoEnd.ts);
+    targetInfoEnd.avpEol.AvId = MsvAvEOL;
+    targetInfoEnd.avpEol.AvLen = 0;
+    NtlmAppendToBlob(&targetInfoEnd, sizeof(targetInfoEnd), &chaMessage->TargetInfo, &offset);
+
     chaMessage->NegotiateFlags |= MessageFlags;
 
     /* set state */

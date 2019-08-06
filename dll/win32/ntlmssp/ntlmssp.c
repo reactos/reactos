@@ -29,7 +29,7 @@ NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
 UNICODE_STRING NtlmComputerNameString;
 UNICODE_STRING NtlmDomainNameString;
 UNICODE_STRING NtlmDnsNameString;
-NTLM_AVDATA NtlmAvTargetInfo;
+NTLM_AVDATA NtlmAvTargetInfoPart;
 OEM_STRING NtlmOemComputerNameString;
 OEM_STRING NtlmOemDomainNameString;
 OEM_STRING NtlmOemDnsNameString;
@@ -108,29 +108,31 @@ NtlmInitializeGlobals(VOID)
            NtlmDnsNameString.Length + //fix me: dns domain name
            sizeof(MSV1_0_AV_PAIR)*4;
 
-    if (!NtlmAvlAlloc(&NtlmAvTargetInfo, AvPairsLen))
+    if (!NtlmAvlAlloc(&NtlmAvTargetInfoPart, AvPairsLen))
     {
         ERR("failed to allocate NtlmAvTargetInfo\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Fill NtlmAvTargetInfoPart. It contains not all data we need
+     * Timestamp and EOL is appended when challange message is
+     * generated. */
     if (NtlmComputerNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvNbComputerName,
+        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvNbComputerName,
                    NtlmComputerNameString.Buffer, NtlmComputerNameString.Length);
     if (NtlmDomainNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvNbDomainName,
+        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvNbDomainName,
                    NtlmDomainNameString.Buffer, NtlmDomainNameString.Length);
     if (NtlmDnsNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvDnsComputerName,
+        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvDnsComputerName,
                    NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
     if (NtlmDnsNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvDnsDomainName,
+        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvDnsDomainName,
                    NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
     //TODO: MsvAvDnsTreeName
-    NtlmAvlAdd(&NtlmAvTargetInfo, MsvAvEOL, NULL, 0);
 
-    ERR("NtlmAvTargetInfo len 0x%x\n", NtlmAvTargetInfo.bUsed);
-    NtlmPrintAvPairs(&NtlmAvTargetInfo);
+    ERR("NtlmAvTargetInfoPart len 0x%x\n", NtlmAvTargetInfoPart.bUsed);
+    NtlmPrintAvPairs(&NtlmAvTargetInfoPart);
     return status;
 }
 
@@ -143,7 +145,7 @@ NtlmTerminateGlobals(VOID)
     RtlFreeOemString(&NtlmOemComputerNameString);
     RtlFreeOemString(&NtlmOemDomainNameString);
     RtlFreeOemString(&NtlmOemDnsNameString);
-    NtlmAvFree(&NtlmAvTargetInfo);
+    NtlmAvFree(&NtlmAvTargetInfoPart);
     NtClose(NtlmSystemSecurityToken);
 }
 

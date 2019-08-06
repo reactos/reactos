@@ -60,7 +60,8 @@ extern OEM_STRING NtlmOemComputerNameString;
 extern OEM_STRING NtlmOemDomainNameString;
 extern OEM_STRING NtlmOemDnsNameString;
 extern HANDLE NtlmSystemSecurityToken;
-extern NTLM_AVDATA NtlmAvTargetInfo; // contains AV pairs with local info
+/* contains part of AV pairs with local info */
+extern NTLM_AVDATA NtlmAvTargetInfoPart;
 
 typedef enum _NTLM_MODE {
     NtlmLsaMode = 1,

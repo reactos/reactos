@@ -21,6 +21,7 @@
 #include "protocol.h"
 
 #include "wine/debug.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 PVOID
@@ -212,6 +213,23 @@ NtlmWriteToBlob(IN PVOID pOutputBuffer,
     /* set blob fields */
     OutputBlob->Length = OutputBlob->MaxLength = len;
     OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)pOutputBuffer);
+
+    /* move the offset to the end of the string we just copied */
+    *OffSet += len;
+}
+
+VOID
+NtlmAppendToBlob(IN void* buffer,
+                 IN ULONG len,
+                 IN OUT PNTLM_BLOB OutputBlob,
+                 IN OUT PULONG_PTR OffSet)
+{
+    /* copy string to target location */
+    memcpy((PVOID)*OffSet, buffer, len);
+
+    /* set blob fields */
+    OutputBlob->Length += len;
+    OutputBlob->MaxLength += len;
 
     /* move the offset to the end of the string we just copied */
     *OffSet += len;

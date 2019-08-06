@@ -103,7 +103,10 @@ NtlmAvlAdd(IN PNTLM_AVDATA pAvData,
 
     /* realloc not implemented ... */
     if (pAvData->bUsed + len + sizeof(MSV1_0_AV_PAIR) > pAvData->bAllocated)
+    {
+        ERR("NtlmAvlAdd - need more memory ...");
         return FALSE;
+    }
 
     pNewPair = (PMSV1_0_AV_PAIR)(pAvData->pData + pAvData->bUsed);
     pNewPair->AvId = (USHORT)AvId;
