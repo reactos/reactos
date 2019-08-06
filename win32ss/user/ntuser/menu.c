@@ -3354,10 +3354,20 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   pWnd = ValidateHwndNoErr(Menu->hWnd);
 
   /* Grab the rect of our (entire) parent menu, so we can try to not overlap it */
-  if (!IntGetWindowRect(pWnd, &ParentRect))
+  if (Menu->fFlags & MNF_POPUP)
   {
-      ERR("No pWnd\n");
-      ParentRect = Rect;
+    if (!IntGetWindowRect(pWnd, &ParentRect))
+    {
+        ERR("No pWnd\n");
+        ParentRect = Rect;
+    }
+  }
+  else
+  {
+    /* Inside the menu bar, we do not want to grab the entire window... */
+    ParentRect = Rect;
+    if (pWnd)
+        RECTL_vOffsetRect(&ParentRect, pWnd->rcWindow.left, pWnd->rcWindow.top);
   }
 
   /* correct item if modified as a reaction to WM_INITMENUPOPUP message */
