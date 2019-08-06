@@ -179,7 +179,7 @@ GenServerContext(
     SecBufferDesc     OutBuffDesc;
     SecBuffer         OutSecBuff;
     SecBufferDesc     InBuffDesc;
-    SecBuffer         InSecBuff;
+    SecBuffer         InSecBuff[2];
     ULONG             Attribs = 0;
 
     //----------------------------------------------------------------
@@ -197,15 +197,20 @@ GenServerContext(
     //  Prepare input buffers.
 
     InBuffDesc.ulVersion = 0;
-    InBuffDesc.cBuffers = 1;
-    InBuffDesc.pBuffers = &InSecBuff;
+    InBuffDesc.cBuffers = 2;
+    InBuffDesc.pBuffers = InSecBuff;
 
-    InSecBuff.cbBuffer = cbIn;
-    InSecBuff.BufferType = SECBUFFER_TOKEN;
-    InSecBuff.pvBuffer = pIn;
+    InSecBuff[0].cbBuffer = cbIn;
+    InSecBuff[0].BufferType = SECBUFFER_TOKEN;
+    InSecBuff[0].pvBuffer = pIn;
 
-    sync_trace("Token buffer received (%lu bytes):\n", InSecBuff.cbBuffer);
-    PrintSecBuffer(&InSecBuff);
+    /* second buffer should be of SECBUFFER_EMPTY type! */
+    InSecBuff[1].cbBuffer = 0;
+    InSecBuff[1].BufferType = SECBUFFER_EMPTY;
+    InSecBuff[1].pvBuffer = NULL;
+
+    sync_trace("Token buffer received (%lu bytes):\n", InSecBuff[0].cbBuffer);
+    PrintSecBuffer(&InSecBuff[0]);
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
     ss = AcceptSecurityContext(&hcred,
@@ -217,7 +222,16 @@ GenServerContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
-    sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
+    if (fNewConversation)
+    {
+        sync_ok(Attribs = 0x1c, "Attribs wrong\n");
+        sync_ok(OutSecBuff.cbBuffer != 0, "OutSecBuff.cbBuffer == 0\n");
+    }
+    else
+    {
+        sync_ok(Attribs = 0x2001c, "Attribs wrong\n");
+        sync_ok(OutSecBuff.cbBuffer == 0, "OutSecBuff.cbBuffer != 0\n");
+    }
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {

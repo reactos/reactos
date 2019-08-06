@@ -265,6 +265,9 @@ void PrintSecBuffer(PSecBuffer buf)
 {
     PNTLM_MESSAGE_HEAD pHead;
 
+    if (buf->cbBuffer == 0)
+        return;
+
     //sync_trace("buf->BufferType 0x%x\n", buf->BufferType);
     if (buf->BufferType == SECBUFFER_TOKEN)
     {
