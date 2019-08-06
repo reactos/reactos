@@ -82,7 +82,7 @@ CreateTitleFont(VOID)
     HDC hdc;
     HFONT hFont;
 
-    LogFont.lfWeight = FW_HEAVY;
+    LogFont.lfWeight = FW_BOLD;
     wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
     hdc = GetDC(NULL);
