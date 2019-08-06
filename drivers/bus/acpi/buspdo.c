@@ -1,3 +1,4 @@
+#ifndef UNIT_TEST
 #include "precomp.h"
 
 #include <initguid.h>
@@ -1294,6 +1295,7 @@ Bus_PDO_QueryResources(
     Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
     return STATUS_SUCCESS;
 }
+#endif /* UNIT_TEST */
 
 NTSTATUS
 Bus_PDO_QueryResourceRequirements(
@@ -1796,6 +1798,7 @@ Bus_PDO_QueryResourceRequirements(
     return STATUS_SUCCESS;
 }
 
+#ifndef UNIT_TEST
 NTSTATUS
 Bus_PDO_QueryDeviceRelations(
      PPDO_DEVICE_DATA     DeviceData,
@@ -2040,5 +2043,4 @@ GetDeviceCapabilitiesExit:
     return status;
 
 }
-
-
+#endif /* UNIT_TEST */
