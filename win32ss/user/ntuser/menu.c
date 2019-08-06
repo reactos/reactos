@@ -3046,6 +3046,10 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
                 TPM_VERTICAL,                                       /* Then swap horizontal / vertical */
                 TPM_BOTTOMALIGN | TPM_RIGHTALIGN | TPM_VERTICAL,    /* Then the other side again (still swapped hor/ver) */
             };
+
+            /* We should first try left / right, this flag is not needed as input */
+            UINT tryFlags = flags & ~TPM_VERTICAL;
+
             UINT n;
             for (n = 0; n < RTL_NUMBER_OF(flag_mods); ++n)
             {
@@ -3053,7 +3057,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
                 INT ty = y;
 
                 /* Try to move a bit around */
-                if (MENU_MoveRect(flags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
+                if (MENU_MoveRect(tryFlags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
                     !RECTL_Intersect(&Cleaned, tx, ty, width, height))
                 {
                     x = tx;
@@ -3361,6 +3365,9 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
         ERR("No pWnd\n");
         ParentRect = Rect;
     }
+
+    /* Ensure we can slightly overlap our parent */
+    RECTL_vInflateRect(&ParentRect, -UserGetSystemMetrics(SM_CXEDGE) * 2, 0);
   }
   else
   {
