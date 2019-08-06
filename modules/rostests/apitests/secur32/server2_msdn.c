@@ -234,11 +234,7 @@ GenServerContext(
     }
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
-    {
-        sync_err("AcceptSecurityContext failed: 0x%08lx\n", ss);
-        printerr(ss);
         return FALSE;
-    }
 
     /* Complete token if applicable */
     if ((ss == SEC_I_COMPLETE_NEEDED) ||
