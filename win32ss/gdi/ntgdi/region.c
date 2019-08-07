@@ -2135,6 +2135,7 @@ REGION_bXformRgn(
             {
                 /* Make sure the rect is well-ordered after the xform */
                 RECTL_vMakeWellOrdered(&prgn->Buffer[i]);
+                NT_ASSERT(prgn->Buffer[i].top <= prgn->Buffer[i].bottom);
 
                 /* Update bounds */
                 if (!RECTL_bUnionRect(&prgn->rdh.rcBound,
@@ -2149,7 +2150,6 @@ REGION_bXformRgn(
             /* Loop all rects in the region */
             for (i = 0; i < prgn->rdh.nCount - 1; i++)
             {
-                NT_ASSERT(prgn->Buffer[i].top <= prgn->Buffer[i].bottom);
                 NT_ASSERT(prgn->Buffer[i + 1].top >= prgn->Buffer[i].top);
             }
 
