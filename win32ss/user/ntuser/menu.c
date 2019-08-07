@@ -3405,6 +3405,8 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
       MENU_InitSysMenuPopup(Item->spSubMenu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
       NC_GetSysPopupPos(pWnd, &Rect);
+      /* Ensure we do not overlap this */
+      ParentRect = Rect;
       if (Flags & TPM_LAYOUTRTL) Rect.left = Rect.right;
       Rect.top = Rect.bottom;
       Rect.right = UserGetSystemMetrics(SM_CXSIZE);
