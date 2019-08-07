@@ -212,7 +212,7 @@ GenServerContext(
     sync_trace("Token buffer received (%lu bytes):\n", InSecBuff[0].cbBuffer);
     PrintSecBuffer(&InSecBuff[0]);
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
-
+ASC_REQ_ALLOCATE_MEMORY
     PrintASCReqAttr(Attribs);
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &g_sd.hctxt,
@@ -226,12 +226,12 @@ GenServerContext(
     PrintASCRetAttr(Attribs);
     if (fNewConversation)
     {
-        sync_ok(Attribs = 0x1c, "Attribs wrong\n");
+        sync_ok(Attribs == 0x1c, "Attribs 0x%x wrong, expected 0x%x.\n", Attribs, 0x1c);
         sync_ok(OutSecBuff.cbBuffer != 0, "OutSecBuff.cbBuffer == 0\n");
     }
     else
     {
-        sync_ok(Attribs = 0x2001c, "Attribs wrong\n");
+        sync_ok(Attribs == 0x2001c, "Attribs 0x%x wrong, expected 0x%x.\n", Attribs, 0x2001c);
         sync_ok(OutSecBuff.cbBuffer == 0, "OutSecBuff.cbBuffer != 0\n");
     }
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
