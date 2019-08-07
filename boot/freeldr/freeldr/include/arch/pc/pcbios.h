@@ -3,6 +3,8 @@
 
 #ifndef __ASM__
 
+#define MAX_BIOS_DESCRIPTORS 80
+
 typedef enum
 {
     // ACPI 1.0.

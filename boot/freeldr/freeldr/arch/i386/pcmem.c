@@ -35,8 +35,6 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 #define ULONGLONG_ALIGN_UP_BY(size, align) \
     (ULONGLONG_ALIGN_DOWN_BY(((ULONGLONG)(size) + align - 1), align))
 
-#define MAX_BIOS_DESCRIPTORS 80ul
-
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
 
