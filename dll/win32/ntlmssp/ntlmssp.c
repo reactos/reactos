@@ -54,7 +54,7 @@ NtlmInitializeGlobals(VOID)
     }
     TRACE("%s\n",debugstr_w(compName));
 
-    if (!GetComputerNameExW(ComputerNameDnsFullyQualified, dnsName, &dnsNamelen))
+    if (!GetComputerNameExW(ComputerNameDnsHostname, dnsName, &dnsNamelen))
     {
         dnsName[0] = L'\0';
         ERR("could not get dns name!\n");
