@@ -2879,8 +2879,10 @@ static void DebugRect(const RECT* rectl, COLORREF color)
 
 static void DebugPoint(INT x, INT y, COLORREF color)
 {
-    RECT rr = {x, y, x, y};
-    DebugRect(&rr, color);
+    RECT r1 = {x-10, y, x+10, y};
+    RECT r2 = {x, y-10, x, y+10};
+    DebugRect(&r1, color);
+    DebugRect(&r2, color);
 }
 #endif
 
@@ -3047,9 +3049,6 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
                 TPM_BOTTOMALIGN | TPM_RIGHTALIGN | TPM_VERTICAL,    /* Then the other side again (still swapped hor/ver) */
             };
 
-            /* We should first try left / right, this flag is not needed as input */
-            UINT tryFlags = flags & ~TPM_VERTICAL;
-
             UINT n;
             for (n = 0; n < RTL_NUMBER_OF(flag_mods); ++n)
             {
@@ -3057,7 +3056,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
                 INT ty = y;
 
                 /* Try to move a bit around */
-                if (MENU_MoveRect(tryFlags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
+                if (MENU_MoveRect(flags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
                     !RECTL_Intersect(&Cleaned, tx, ty, width, height))
                 {
                     x = tx;
@@ -3446,6 +3445,12 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
           Rect.bottom = Item->cyItem - Item->yItem; //ItemInfo.Rect.bottom - ItemInfo.Rect.top;
       }
   }
+
+  /* Next menu does not need to be shown vertical anymore */
+  if (Menu->fFlags & MNF_POPUP)
+      Flags &= (~TPM_VERTICAL);
+
+
 
   /* use default alignment for submenus */
   Flags &= ~(TPM_CENTERALIGN | TPM_RIGHTALIGN | TPM_VCENTERALIGN | TPM_BOTTOMALIGN);
@@ -4471,7 +4476,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
     PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) ); // See 74276 and CORE-12801
-    UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
+    UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
 
