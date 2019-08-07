@@ -134,7 +134,9 @@ typedef struct _NTLMSSP_CONTEXT
     ULONG Timeout;
     ULONG RefCount;
     ULONG NegotiateFlags;
-    ULONG ContextFlags;
+    /* FIXME: These flags are only assigned, never used ... remove? */
+    ULONG ISCRetContextFlags;
+    ULONG ASCRetContextFlags;
     NTLMSSP_CONTEXT_STATE State;
     PNTLMSSP_CREDENTIAL Credential;
     UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];

@@ -290,55 +290,55 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     if(ContextReq & ASC_REQ_IDENTIFY)
     {
         *pContextAttr |= ASC_RET_IDENTIFY;
-        context->ContextFlags |= ASC_RET_IDENTIFY;
+        context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
     }
 
     if(ContextReq & ASC_REQ_DATAGRAM)
     {
         *pContextAttr |= ASC_RET_DATAGRAM;
-        context->ContextFlags |= ASC_RET_DATAGRAM;
+        context->ASCRetContextFlags |= ASC_RET_DATAGRAM;
     }
 
     if(ContextReq & ASC_REQ_CONNECTION)
     {
         *pContextAttr |= ASC_RET_CONNECTION;
-        context->ContextFlags |= ASC_RET_CONNECTION;
+        context->ASCRetContextFlags |= ASC_RET_CONNECTION;
     }
 
     if(ContextReq & ASC_REQ_INTEGRITY)
     {
         *pContextAttr |= ASC_RET_INTEGRITY;
-        context->ContextFlags |= ASC_RET_INTEGRITY;
+        context->ASCRetContextFlags |= ASC_RET_INTEGRITY;
     }
 
     if(ContextReq & ASC_REQ_REPLAY_DETECT)
     {
         *pContextAttr |= ASC_RET_REPLAY_DETECT;
-        context->ContextFlags |= ASC_RET_REPLAY_DETECT;
+        context->ASCRetContextFlags |= ASC_RET_REPLAY_DETECT;
     }
 
     if(ContextReq & ASC_REQ_SEQUENCE_DETECT)
     {
         *pContextAttr |= ASC_RET_SEQUENCE_DETECT;
-        context->ContextFlags |= ASC_RET_SEQUENCE_DETECT;
+        context->ASCRetContextFlags |= ASC_RET_SEQUENCE_DETECT;
     }
 
     if(ContextReq & ASC_REQ_ALLOW_NULL_SESSION)
     {
-        context->ContextFlags |= ASC_REQ_ALLOW_NULL_SESSION;
+        context->ASCRetContextFlags |= ASC_REQ_ALLOW_NULL_SESSION;
     }
 
     if(ContextReq & ASC_REQ_ALLOW_NON_USER_LOGONS)
     {
         *pContextAttr |= ASC_RET_ALLOW_NON_USER_LOGONS;
-        context->ContextFlags |= ASC_RET_ALLOW_NON_USER_LOGONS;
+        context->ASCRetContextFlags |= ASC_RET_ALLOW_NON_USER_LOGONS;
     }
 
     /* encryption */
     if(ContextReq & ASC_REQ_CONFIDENTIALITY)
     {
         *pContextAttr |= ASC_RET_CONFIDENTIALITY;
-        context->ContextFlags |= ASC_RET_CONFIDENTIALITY;
+        context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
     }
 
     if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
@@ -396,14 +396,14 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
     {
         *pContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-        context->ContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+        context->ASCRetContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
         negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
     {
         *pContextAttr |= ASC_RET_CONFIDENTIALITY;
-        context->ContextFlags |= ASC_RET_CONFIDENTIALITY;
+        context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
         negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
     }
 
@@ -419,7 +419,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
     {
         *pContextAttr |= ASC_RET_IDENTIFY;
-        context->ContextFlags |= ASC_RET_IDENTIFY;
+        context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
         negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
     }
 

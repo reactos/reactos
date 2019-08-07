@@ -206,26 +206,27 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
                               NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
                               NTLMSSP_NEGOTIATE_56 |
                               NTLMSSP_NEGOTIATE_128; // if supported
+    *pfContextAttr = 0;
 
     /* client requested features */
     if(fContextReq & ISC_REQ_INTEGRITY)
     {
         *pfContextAttr |= ISC_RET_INTEGRITY;
-        context->ContextFlags |= ISC_RET_INTEGRITY;
+        context->ISCRetContextFlags |= ISC_RET_INTEGRITY;
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(fContextReq & ISC_REQ_SEQUENCE_DETECT)
     {
         *pfContextAttr |= ISC_RET_SEQUENCE_DETECT;
-        context->ContextFlags |= ISC_RET_SEQUENCE_DETECT;
+        context->ISCRetContextFlags |= ISC_RET_SEQUENCE_DETECT;
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(fContextReq & ISC_REQ_REPLAY_DETECT)
     {
         *pfContextAttr |= ISC_RET_REPLAY_DETECT;
-        context->ContextFlags |= ISC_RET_REPLAY_DETECT;
+        context->ISCRetContextFlags |= ISC_RET_REPLAY_DETECT;
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
@@ -237,34 +238,34 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
                                    NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         *pfContextAttr |= ISC_RET_CONFIDENTIALITY;
-        context->ContextFlags |= ISC_RET_CONFIDENTIALITY;
+        context->ISCRetContextFlags |= ISC_RET_CONFIDENTIALITY;
     }
 
     if(fContextReq & ISC_REQ_NULL_SESSION)
     {
         *pfContextAttr |= ISC_RET_NULL_SESSION;
-        context->ContextFlags |= ISC_RET_NULL_SESSION;
+        context->ISCRetContextFlags |= ISC_RET_NULL_SESSION;
     }
 
     if(fContextReq & ISC_REQ_CONNECTION)
     {
         *pfContextAttr |= ISC_RET_CONNECTION;
-        context->ContextFlags |= ISC_RET_CONNECTION;
+        context->ISCRetContextFlags |= ISC_RET_CONNECTION;
     }
 
     if(fContextReq & ISC_REQ_IDENTIFY)
     {
         context->NegotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
         *pfContextAttr |= ISC_RET_IDENTIFY;
-        context->ContextFlags |= ISC_RET_IDENTIFY;
+        context->ISCRetContextFlags |= ISC_RET_IDENTIFY;
     }
 
-    if(!(fContextReq & ISC_REQ_DATAGRAM))
+    if (fContextReq & ISC_REQ_DATAGRAM)
     {
         /* datagram flags */
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_DATAGRAM;
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_NT_ONLY;
-        context->ContextFlags |= ISC_RET_DATAGRAM;
+        context->ISCRetContextFlags |= ISC_RET_DATAGRAM;
         *pfContextAttr |= ISC_RET_DATAGRAM;
 
         /* generate session key */
