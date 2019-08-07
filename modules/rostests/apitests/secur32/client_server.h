@@ -175,6 +175,11 @@ void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
 void PrintHexDump(DWORD length, PBYTE buffer);
 void PrintSecBuffer(PSecBuffer buf);
 
+void PrintISCRetAttr(IN ULONG RetAttr);
+void PrintISCReqAttr(IN ULONG ReqAttr);
+void PrintASCRetAttr(IN ULONG RetAttr);
+void PrintASCReqAttr(IN ULONG ReqAttr);
+
 #define TESTSEC_CLI_AUTH_INIT  1
 #define TESTSEC_SVR_AUTH       2
 #define TESTSEC_CLI_AUTH_FINI  3

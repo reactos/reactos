@@ -287,6 +287,7 @@ GenClientContext(
         InSecBuff.BufferType = SECBUFFER_TOKEN;
         InSecBuff.pvBuffer   = pIn;
 
+        PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        hcText,
                                        (LPTSTR)pszTarget,
@@ -299,9 +300,14 @@ GenClientContext(
                                        &OutBuffDesc,
                                        &ContextAttributes,
                                        &Lifetime);
+        sync_ok(ContextAttributes == 0x1001c,
+                "ContextAttributes are 0x%x, expected 0x%x\n",
+                ContextAttributes, 0x1001c);
+        PrintISCRetAttr(ContextAttributes);
     }
     else
     {
+        PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        NULL,
                                        (LPTSTR)pszTarget,
@@ -314,6 +320,10 @@ GenClientContext(
                                        &OutBuffDesc,
                                        &ContextAttributes,
                                        &Lifetime);
+        sync_ok(ContextAttributes == 0x10010,
+                "ContextAttributes are 0x%x, expected 0x%x\n",
+                ContextAttributes, 0x10010);
+        PrintISCRetAttr(ContextAttributes);
     }
 
     sync_ok(SEC_SUCCESS(ss), "InitializeSecurityContext failed with error 0x%08lx\n", ss);

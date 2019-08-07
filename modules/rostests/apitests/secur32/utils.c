@@ -414,6 +414,209 @@ void PrintSecBuffer(PSecBuffer buf)
     }
 }
 
+void PrintISCReqAttr(
+    IN ULONG ReqAttr)
+{
+    sync_trace("ISCReqAttr \"0x%08lx\"{\n", ReqAttr);
+    if (ReqAttr & ISC_REQ_DELEGATE)
+       sync_trace("\tISC_REQ_DELEGATE\n");
+    if (ReqAttr & ISC_REQ_MUTUAL_AUTH)
+       sync_trace("\tISC_REQ_MUTUAL_AUTH\n");
+    if (ReqAttr & ISC_REQ_REPLAY_DETECT)
+       sync_trace("\tISC_REQ_REPLAY_DETECT\n");
+    if (ReqAttr & ISC_REQ_SEQUENCE_DETECT)
+       sync_trace("\tISC_REQ_SEQUENCE_DETECT\n");
+    if (ReqAttr & ISC_REQ_CONFIDENTIALITY)
+       sync_trace("\tISC_REQ_CONFIDENTIALITY\n");
+    if (ReqAttr & ISC_REQ_USE_SESSION_KEY)
+       sync_trace("\tISC_REQ_USE_SESSION_KEY\n");
+    if (ReqAttr & ISC_REQ_PROMPT_FOR_CREDS)
+       sync_trace("\tISC_REQ_PROMPT_FOR_CREDS\n");
+    if (ReqAttr & ISC_REQ_USE_SUPPLIED_CREDS)
+       sync_trace("\tISC_REQ_USE_SUPPLIED_CREDS\n");
+    if (ReqAttr & ISC_REQ_ALLOCATE_MEMORY)
+       sync_trace("\tISC_REQ_ALLOCATE_MEMORY\n");
+    if (ReqAttr & ISC_REQ_USE_DCE_STYLE)
+       sync_trace("\tISC_REQ_USE_DCE_STYLE\n");
+    if (ReqAttr & ISC_REQ_DATAGRAM)
+       sync_trace("\tISC_REQ_DATAGRAM\n");
+    if (ReqAttr & ISC_REQ_CONNECTION)
+       sync_trace("\tISC_REQ_CONNECTION\n");
+    if (ReqAttr & ISC_REQ_CALL_LEVEL)
+       sync_trace("\tISC_REQ_CALL_LEVEL\n");
+    if (ReqAttr & ISC_REQ_FRAGMENT_SUPPLIED)
+       sync_trace("\tISC_REQ_FRAGMENT_SUPPLIED\n");
+    if (ReqAttr & ISC_REQ_EXTENDED_ERROR)
+       sync_trace("\tISC_REQ_EXTENDED_ERROR\n");
+    if (ReqAttr & ISC_REQ_STREAM)
+       sync_trace("\tISC_REQ_STREAM\n");
+    if (ReqAttr & ISC_REQ_INTEGRITY)
+       sync_trace("\tISC_REQ_INTEGRITY\n");
+    if (ReqAttr & ISC_REQ_IDENTIFY)
+       sync_trace("\tISC_REQ_IDENTIFY\n");
+    if (ReqAttr & ISC_REQ_NULL_SESSION)
+       sync_trace("\tISC_REQ_NULL_SESSION\n");
+    if (ReqAttr & ISC_REQ_MANUAL_CRED_VALIDATION)
+       sync_trace("\tISC_REQ_MANUAL_CRED_VALIDATION\n");
+    if (ReqAttr & ISC_REQ_RESERVED1)
+       sync_trace("\tISC_REQ_RESERVED1\n");
+    if (ReqAttr & ISC_REQ_FRAGMENT_TO_FIT)
+       sync_trace("\tISC_REQ_FRAGMENT_TO_FIT\n");
+    sync_trace("}\n");
+}
+
+void PrintISCRetAttr(
+    IN ULONG RetAttr)
+{
+    sync_trace("ISCRetAttr \"0x%08lx\"{\n", RetAttr);
+    if (RetAttr & ISC_RET_DELEGATE)
+       sync_trace("\tISC_RET_DELEGATE\n");
+    if (RetAttr & ISC_RET_MUTUAL_AUTH)
+       sync_trace("\tISC_RET_MUTUAL_AUTH\n");
+    if (RetAttr & ISC_RET_REPLAY_DETECT)
+       sync_trace("\tISC_RET_REPLAY_DETECT\n");
+    if (RetAttr & ISC_RET_SEQUENCE_DETECT)
+       sync_trace("\tISC_RET_SEQUENCE_DETECT\n");
+    if (RetAttr & ISC_RET_CONFIDENTIALITY)
+       sync_trace("\tISC_RET_CONFIDENTIALITY\n");
+    if (RetAttr & ISC_RET_USE_SESSION_KEY)
+       sync_trace("\tISC_RET_USE_SESSION_KEY\n");
+    if (RetAttr & ISC_RET_USED_COLLECTED_CREDS)
+       sync_trace("\tISC_RET_USED_COLLECTED_CREDS\n");
+    if (RetAttr & ISC_RET_USED_SUPPLIED_CREDS)
+       sync_trace("\tISC_RET_USED_SUPPLIED_CREDS\n");
+    if (RetAttr & ISC_RET_ALLOCATED_MEMORY)
+       sync_trace("\tISC_RET_ALLOCATED_MEMORY\n");
+    if (RetAttr & ISC_RET_USED_DCE_STYLE)
+       sync_trace("\tISC_RET_USED_DCE_STYLE\n");
+    if (RetAttr & ISC_RET_DATAGRAM)
+       sync_trace("\tISC_RET_DATAGRAM\n");
+    if (RetAttr & ISC_RET_CONNECTION)
+       sync_trace("\tISC_RET_CONNECTION\n");
+    if (RetAttr & ISC_RET_INTERMEDIATE_RETURN)
+       sync_trace("\tISC_RET_INTERMEDIATE_RETURN\n");
+    if (RetAttr & ISC_RET_CALL_LEVEL)
+       sync_trace("\tISC_RET_CALL_LEVEL\n");
+    if (RetAttr & ISC_RET_EXTENDED_ERROR)
+       sync_trace("\tISC_RET_EXTENDED_ERROR\n");
+    if (RetAttr & ISC_RET_STREAM)
+       sync_trace("\tISC_RET_STREAM\n");
+    if (RetAttr & ISC_RET_INTEGRITY)
+       sync_trace("\tISC_RET_INTEGRITY\n");
+    if (RetAttr & ISC_RET_IDENTIFY)
+       sync_trace("\tISC_RET_IDENTIFY\n");
+    if (RetAttr & ISC_RET_NULL_SESSION)
+       sync_trace("\tISC_RET_NULL_SESSION\n");
+    if (RetAttr & ISC_RET_MANUAL_CRED_VALIDATION)
+       sync_trace("\tISC_RET_MANUAL_CRED_VALIDATION\n");
+    if (RetAttr & ISC_RET_RESERVED1)
+       sync_trace("\tISC_RET_RESERVED1\n");
+    if (RetAttr & ISC_RET_FRAGMENT_ONLY)
+       sync_trace("\tISC_RET_FRAGMENT_ONLY\n");
+    sync_trace("}\n");
+}
+
+void PrintASCRetAttr(IN ULONG RetAttr)
+{
+    sync_trace("ASCRetAttr \"0x%08lx\"{\n", RetAttr);
+    if (RetAttr & ASC_RET_DELEGATE)
+       sync_trace("\tASC_RET_DELEGATE\n");
+    if (RetAttr & ASC_RET_MUTUAL_AUTH)
+       sync_trace("\tASC_RET_MUTUAL_AUTH\n");
+    if (RetAttr & ASC_RET_REPLAY_DETECT)
+       sync_trace("\tASC_RET_REPLAY_DETECT\n");
+    if (RetAttr & ASC_RET_SEQUENCE_DETECT)
+       sync_trace("\tASC_RET_SEQUENCE_DETECT\n");
+    if (RetAttr & ASC_RET_CONFIDENTIALITY)
+       sync_trace("\tASC_RET_CONFIDENTIALITY\n");
+    if (RetAttr & ASC_RET_USE_SESSION_KEY)
+       sync_trace("\tASC_RET_USE_SESSION_KEY\n");
+    if (RetAttr & ASC_RET_ALLOCATED_MEMORY)
+       sync_trace("\tASC_RET_ALLOCATED_MEMORY\n");
+    if (RetAttr & ASC_RET_USED_DCE_STYLE)
+       sync_trace("\tASC_RET_USED_DCE_STYLE\n");
+    if (RetAttr & ASC_RET_DATAGRAM)
+       sync_trace("\tASC_RET_DATAGRAM\n");
+    if (RetAttr & ASC_RET_CONNECTION)
+       sync_trace("\tASC_RET_CONNECTION\n");
+    if (RetAttr & ASC_RET_CALL_LEVEL)
+       sync_trace("\tASC_RET_CALL_LEVEL\n");
+    if (RetAttr & ASC_RET_THIRD_LEG_FAILED)
+       sync_trace("\tASC_RET_THIRD_LEG_FAILED\n");
+    if (RetAttr & ASC_RET_EXTENDED_ERROR)
+       sync_trace("\tASC_RET_EXTENDED_ERROR\n");
+    if (RetAttr & ASC_RET_STREAM)
+       sync_trace("\tASC_RET_STREAM\n");
+    if (RetAttr & ASC_RET_INTEGRITY)
+       sync_trace("\tASC_RET_INTEGRITY\n");
+    if (RetAttr & ASC_RET_LICENSING)
+       sync_trace("\tASC_RET_LICENSING\n");
+    if (RetAttr & ASC_RET_IDENTIFY)
+       sync_trace("\tASC_RET_IDENTIFY\n");
+    if (RetAttr & ASC_RET_NULL_SESSION)
+       sync_trace("\tASC_RET_NULL_SESSION\n");
+    if (RetAttr & ASC_RET_ALLOW_NON_USER_LOGONS)
+       sync_trace("\tASC_RET_ALLOW_NON_USER_LOGONS\n");
+    if (RetAttr & ASC_RET_ALLOW_CONTEXT_REPLAY)
+       sync_trace("\tASC_RET_ALLOW_CONTEXT_REPLAY\n");
+    if (RetAttr & ASC_RET_FRAGMENT_ONLY)
+       sync_trace("\tASC_RET_FRAGMENT_ONLY\n");
+    if (RetAttr & ASC_RET_NO_TOKEN)
+       sync_trace("\tASC_RET_NO_TOKEN\n");
+    sync_trace("}\n");
+}
+
+void PrintASCReqAttr(IN ULONG ReqAttr)
+{
+    sync_trace("ASCReqAttr \"0x%08lx\"{\n", ReqAttr);
+    if (ReqAttr & ASC_REQ_DELEGATE)
+       sync_trace("\tASC_REQ_DELEGATE\n");
+    if (ReqAttr & ASC_REQ_MUTUAL_AUTH)
+       sync_trace("\tASC_REQ_MUTUAL_AUTH\n");
+    if (ReqAttr & ASC_REQ_REPLAY_DETECT)
+       sync_trace("\tASC_REQ_REPLAY_DETECT\n");
+    if (ReqAttr & ASC_REQ_SEQUENCE_DETECT)
+       sync_trace("\tASC_REQ_SEQUENCE_DETECT\n");
+    if (ReqAttr & ASC_REQ_CONFIDENTIALITY)
+       sync_trace("\tASC_REQ_CONFIDENTIALITY\n");
+    if (ReqAttr & ASC_REQ_USE_SESSION_KEY)
+       sync_trace("\tASC_REQ_USE_SESSION_KEY\n");
+    if (ReqAttr & ASC_REQ_ALLOCATE_MEMORY)
+       sync_trace("\tASC_REQ_ALLOCATE_MEMORY\n");
+    if (ReqAttr & ASC_REQ_USE_DCE_STYLE)
+       sync_trace("\tASC_REQ_USE_DCE_STYLE\n");
+    if (ReqAttr & ASC_REQ_DATAGRAM)
+       sync_trace("\tASC_REQ_DATAGRAM\n");
+    if (ReqAttr & ASC_REQ_CONNECTION)
+       sync_trace("\tASC_REQ_CONNECTION\n");
+    if (ReqAttr & ASC_REQ_CALL_LEVEL)
+       sync_trace("\tASC_REQ_CALL_LEVEL\n");
+    if (ReqAttr & ASC_REQ_FRAGMENT_SUPPLIED)
+       sync_trace("\tASC_REQ_FRAGMENT_SUPPLIED\n");
+    if (ReqAttr & ASC_REQ_EXTENDED_ERROR)
+       sync_trace("\tASC_REQ_EXTENDED_ERROR\n");
+    if (ReqAttr & ASC_REQ_STREAM)
+       sync_trace("\tASC_REQ_STREAM\n");
+    if (ReqAttr & ASC_REQ_INTEGRITY)
+       sync_trace("\tASC_REQ_INTEGRITY\n");
+    if (ReqAttr & ASC_REQ_LICENSING)
+       sync_trace("\tASC_REQ_LICENSING\n");
+    if (ReqAttr & ASC_REQ_IDENTIFY)
+       sync_trace("\tASC_REQ_IDENTIFY\n");
+    if (ReqAttr & ASC_REQ_ALLOW_NULL_SESSION)
+       sync_trace("\tASC_REQ_ALLOW_NULL_SESSION\n");
+    if (ReqAttr & ASC_REQ_ALLOW_NON_USER_LOGONS)
+       sync_trace("\tASC_REQ_ALLOW_NON_USER_LOGONS\n");
+    if (ReqAttr & ASC_REQ_ALLOW_CONTEXT_REPLAY)
+       sync_trace("\tASC_REQ_ALLOW_CONTEXT_REPLAY\n");
+    if (ReqAttr & ASC_REQ_FRAGMENT_TO_FIT)
+       sync_trace("\tASC_REQ_FRAGMENT_TO_FIT\n");
+    if (ReqAttr & ASC_REQ_FRAGMENT_NO_TOKEN)
+       sync_trace("\tASC_REQ_FRAGMENT_NO_TOKEN\n");
+    sync_trace("}\n");
+}
+
+
 BOOL SendMsg(
     SOCKET s,
     PBYTE pBuf,

@@ -213,6 +213,7 @@ GenServerContext(
     PrintSecBuffer(&InSecBuff[0]);
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
 
+    PrintASCReqAttr(Attribs);
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &g_sd.hctxt,
                                &InBuffDesc,
@@ -222,6 +223,7 @@ GenServerContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
+    PrintASCRetAttr(Attribs);
     if (fNewConversation)
     {
         sync_ok(Attribs = 0x1c, "Attribs wrong\n");
