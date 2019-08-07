@@ -3027,7 +3027,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     /* And the bottom */
     if (y + height > monitor->rcMonitor.bottom)
     {
-        if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom || bIsPopup)
+        if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom)
             y = monitor->rcMonitor.bottom - height;
         else
             y -= height;
