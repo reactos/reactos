@@ -248,7 +248,8 @@ LinuxParseIniSection(
     if (LinuxCommandLine)
     {
         RemoveQuotes(LinuxCommandLine);
-        LinuxCommandLineSize = min(strlen(LinuxCommandLine) + 1, 260);
+        LinuxCommandLineSize = (ULONG)strlen(LinuxCommandLine) + 1;
+        LinuxCommandLineSize = min(LinuxCommandLineSize, 260);
     }
 
     return TRUE;
