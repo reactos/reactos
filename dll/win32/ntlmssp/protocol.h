@@ -296,19 +296,19 @@ SECURITY_STATUS
 NtlmHandleNegotiateMessage(
     IN ULONG_PTR hCredential,
     IN OUT PULONG_PTR phContext,
-    IN ULONG fContextReq,
+    IN ULONG ASCContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
     OUT PSecBuffer OutputToken1,
     OUT PSecBuffer OutputToken2,
-    OUT PULONG pContextAttr,
+    OUT PULONG pASCContextAttr,
     OUT PTimeStamp ptsExpiry);
 
 SECURITY_STATUS
 NtlmGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
-    IN ULONG ContextReq,
+    IN ULONG ASCContextReq,
     IN RAW_STRING TargetName,
     IN ULONG MessageFlags,
     OUT PSecBuffer OutputToken);
@@ -316,22 +316,22 @@ NtlmGenerateChallengeMessage(
 SECURITY_STATUS
 NtlmHandleChallengeMessage(
     IN ULONG_PTR hContext,
-    IN ULONG ContextReq,
+    IN ULONG ISCContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,
     IN OUT PSecBuffer OutputToken1,
     IN OUT PSecBuffer OutputToken2,
-    OUT PULONG ContextAttr,
+    OUT PULONG pISCContextAttr,
     OUT PTimeStamp ptsExpiry,
     OUT PULONG NegotiateFlags);
 
 SECURITY_STATUS
 NtlmHandleAuthenticateMessage(
     IN ULONG_PTR hContext,
-    IN ULONG fContextReq,
+    IN ULONG ASCContextReq,
     IN PSecBuffer InputToken,
     OUT PSecBuffer OutputToken,
-    OUT PULONG pContextAttr,
+    OUT PULONG pASCContextAttr,
     OUT PTimeStamp ptsExpiry,
     OUT PUCHAR pSessionKey,
     OUT PULONG pfUserFlags);

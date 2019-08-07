@@ -24,7 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 SECURITY_STATUS
 NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
-                             IN ULONG ContextReq,
+                             IN ULONG ISCContextReq,
                              OUT PSecBuffer OutputToken)
 {
     PNTLMSSP_CONTEXT context = (PNTLMSSP_CONTEXT)Context;
@@ -52,7 +52,7 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
                   NtlmOemDomainNameString.Length;
 
     /* if should not allocate */
-    if (!(ContextReq & ISC_REQ_ALLOCATE_MEMORY))
+    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
     {
         /* not enough space */
         if(messageSize > OutputToken->cbBuffer)
@@ -118,7 +118,7 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
 SECURITY_STATUS
 NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
                              IN PNTLMSSP_CREDENTIAL Credentials,
-                             IN ULONG ContextReq,
+                             IN ULONG ASCContextReq,
                              IN RAW_STRING TargetName,
                              IN ULONG MessageFlags,
                              OUT PSecBuffer OutputToken)
@@ -143,7 +143,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
 
     ERR("generating chaMessage of size %lu\n", messageSize);
 
-    if (ContextReq & ASC_REQ_ALLOCATE_MEMORY)
+    if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
     {
         if (messageSize > NTLM_MAX_BUF)
             return SEC_E_INSUFFICIENT_MEMORY;
@@ -206,12 +206,12 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
 SECURITY_STATUS
 NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
                            IN OUT PULONG_PTR phContext,
-                           IN ULONG ContextReq,
+                           IN ULONG ASCContextReq,
                            IN PSecBuffer InputToken,
                            IN PSecBuffer InputToken2,
                            OUT PSecBuffer OutputToken,
                            OUT PSecBuffer OutputToken2,
-                           OUT PULONG pContextAttr,
+                           OUT PULONG pASCContextAttr,
                            OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
@@ -224,6 +224,10 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 
     memset(&OemDomainNameRef, 0, sizeof(OemDomainNameRef));
     memset(&OemWorkstationNameRef, 0, sizeof(OemWorkstationNameRef));
+
+    /* It seems these flags are always returned */
+    *pASCContextAttr = ASC_RET_REPLAY_DETECT |
+                       ASC_RET_SEQUENCE_DETECT;
 
     if (*phContext == 0)
     {
@@ -275,6 +279,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     /* get credentials */
     if(!(cred = NtlmReferenceCredential(hCredential)))
     {
+        ERR("failed to get credentials!\n");
         ret = SEC_E_INVALID_TOKEN;
         goto exit;
     }
@@ -287,57 +292,57 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     }
 
     /* convert flags */
-    if(ContextReq & ASC_REQ_IDENTIFY)
+    if(ASCContextReq & ASC_REQ_IDENTIFY)
     {
-        *pContextAttr |= ASC_RET_IDENTIFY;
+        *pASCContextAttr |= ASC_RET_IDENTIFY;
         context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
     }
 
-    if(ContextReq & ASC_REQ_DATAGRAM)
+    if(ASCContextReq & ASC_REQ_DATAGRAM)
     {
-        *pContextAttr |= ASC_RET_DATAGRAM;
+        *pASCContextAttr |= ASC_RET_DATAGRAM;
         context->ASCRetContextFlags |= ASC_RET_DATAGRAM;
     }
 
-    if(ContextReq & ASC_REQ_CONNECTION)
+    if(ASCContextReq & ASC_REQ_CONNECTION)
     {
-        *pContextAttr |= ASC_RET_CONNECTION;
+        *pASCContextAttr |= ASC_RET_CONNECTION;
         context->ASCRetContextFlags |= ASC_RET_CONNECTION;
     }
 
-    if(ContextReq & ASC_REQ_INTEGRITY)
+    if(ASCContextReq & ASC_REQ_INTEGRITY)
     {
-        *pContextAttr |= ASC_RET_INTEGRITY;
+        *pASCContextAttr |= ASC_RET_INTEGRITY;
         context->ASCRetContextFlags |= ASC_RET_INTEGRITY;
     }
 
-    if(ContextReq & ASC_REQ_REPLAY_DETECT)
+    if(ASCContextReq & ASC_REQ_REPLAY_DETECT)
     {
-        *pContextAttr |= ASC_RET_REPLAY_DETECT;
+        *pASCContextAttr |= ASC_RET_REPLAY_DETECT;
         context->ASCRetContextFlags |= ASC_RET_REPLAY_DETECT;
     }
 
-    if(ContextReq & ASC_REQ_SEQUENCE_DETECT)
+    if(ASCContextReq & ASC_REQ_SEQUENCE_DETECT)
     {
-        *pContextAttr |= ASC_RET_SEQUENCE_DETECT;
+        *pASCContextAttr |= ASC_RET_SEQUENCE_DETECT;
         context->ASCRetContextFlags |= ASC_RET_SEQUENCE_DETECT;
     }
 
-    if(ContextReq & ASC_REQ_ALLOW_NULL_SESSION)
+    if(ASCContextReq & ASC_REQ_ALLOW_NULL_SESSION)
     {
         context->ASCRetContextFlags |= ASC_REQ_ALLOW_NULL_SESSION;
     }
 
-    if(ContextReq & ASC_REQ_ALLOW_NON_USER_LOGONS)
+    if(ASCContextReq & ASC_REQ_ALLOW_NON_USER_LOGONS)
     {
-        *pContextAttr |= ASC_RET_ALLOW_NON_USER_LOGONS;
+        *pASCContextAttr |= ASC_RET_ALLOW_NON_USER_LOGONS;
         context->ASCRetContextFlags |= ASC_RET_ALLOW_NON_USER_LOGONS;
     }
 
     /* encryption */
-    if(ContextReq & ASC_REQ_CONFIDENTIALITY)
+    if(ASCContextReq & ASC_REQ_CONFIDENTIALITY)
     {
-        *pContextAttr |= ASC_RET_CONFIDENTIALITY;
+        *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
         context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
     }
 
@@ -395,14 +400,14 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 
     if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
     {
-        *pContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+        *pASCContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
         context->ASCRetContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
         negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
     {
-        *pContextAttr |= ASC_RET_CONFIDENTIALITY;
+        *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
         context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
         negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
     }
@@ -418,14 +423,14 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 
     if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
     {
-        *pContextAttr |= ASC_RET_IDENTIFY;
+        *pASCContextAttr |= ASC_RET_IDENTIFY;
         context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
         negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
     }
 
     ret = NtlmGenerateChallengeMessage(context,
                                        cred,
-                                       ContextReq,
+                                       ASCContextReq,
                                        *pRawTargetNameRef,
                                        negotiateFlags,
                                        OutputToken);
@@ -440,12 +445,12 @@ exit:
 
 SECURITY_STATUS
 NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
-                           IN ULONG ContextReq,
+                           IN ULONG ISCContextReq,
                            IN PSecBuffer InputToken1,
                            IN PSecBuffer InputToken2,
                            IN OUT PSecBuffer OutputToken1,
                            IN OUT PSecBuffer OutputToken2,
-                           OUT PULONG pContextAttr,
+                           OUT PULONG pISCContextAttr,
                            OUT PTimeStamp ptsExpiry,
                            OUT PULONG NegotiateFlags)
 {
@@ -471,6 +476,12 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     ULONG messageSize;
 
     TRACE("NtlmHandleChallengeMessage hContext %lx\n", hContext);
+
+    /* It seems these flags are always returned */
+    *pISCContextAttr = ISC_RET_REPLAY_DETECT |
+                       ISC_RET_SEQUENCE_DETECT |
+                       ISC_RET_INTEGRITY;
+
     /* get context */
     context = NtlmReferenceContext(hContext);
     if(!context || !context->Credential)
@@ -750,7 +761,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                             &offset);
 
     /* if should not allocate */
-    if (!(ContextReq & ISC_REQ_ALLOCATE_MEMORY))
+    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
     {
         /* not enough space */
         if(messageSize > OutputToken1->cbBuffer)
@@ -784,10 +795,10 @@ fail:
 
 SECURITY_STATUS
 NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
-                              IN ULONG ContextReq,
+                              IN ULONG ASCContextReq,
                               IN PSecBuffer InputToken,
                               OUT PSecBuffer OutputToken,
-                              OUT PULONG pContextAttr,
+                              OUT PULONG pASCContextAttr,
                               OUT PTimeStamp ptsExpiry,
                               OUT PUCHAR pSessionKey,
                               OUT PULONG pfUserFlags)
@@ -798,6 +809,12 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
     UNICODE_STRING UserName, Workstation, DomainName;
     //BOOLEAN isUnicode;
+
+    /* It seems these flags are always returned */
+    *pASCContextAttr = ASC_RET_INTEGRITY |
+                       ASC_RET_REPLAY_DETECT |
+                       ASC_RET_SEQUENCE_DETECT |
+                       ASC_RET_CONFIDENTIALITY;
 
     TRACE("NtlmHandleAuthenticateMessage hContext %x!\n", hContext);
     /* get context */
@@ -855,6 +872,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
         /* context and message dont agree on connection type! */
         if(!(authMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM))
         {
+            ERR("flags context and message inconsistent!\n");
             ret = SEC_E_INVALID_TOKEN;
             goto fail;
         }
@@ -893,6 +911,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
         authMessage->LmChallengeResponse, &LmChallengeResponse)))
     {
+        ERR("cant get blob data\n");
         ret = SEC_E_INVALID_TOKEN;
         goto fail;
     }
