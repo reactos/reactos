@@ -877,8 +877,8 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
             temp[j++] = MessageText[i];
     }
 
-    EditBoxTextLength = (ULONG)strlen(EditTextBuffer) + 1;
-    EditBoxTextLength = min(EditBoxTextLength, Length);
+    EditBoxTextLength = (ULONG)strlen(EditTextBuffer);
+    EditBoxTextLength = min(EditBoxTextLength, Length - 1);
     EditBoxTextPosition = 0;
     EditBoxLine = y2 - 2;
     EditBoxStartX = x1 + 3;
