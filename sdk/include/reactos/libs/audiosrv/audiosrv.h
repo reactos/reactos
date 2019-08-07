@@ -12,7 +12,7 @@
 #define AUDIOSRV_H
 
 /* This is currently set to avoid conflicting service names in Windows! */
-#define SERVICE_NAME                L"RosAudioSrv"
+#define SERVICE_NAME                L"AudioSrv"
 
 /* A named mutex is used for synchronizing access to the device list.
    If this mutex doesn't exist, it means the audio service isn't running. */
