@@ -164,7 +164,7 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
     /* We must have the "BootType" value (it has been possibly added by InitOperatingSystemList()) */
     ASSERT(*BootType);
 
-#if defined(_M_IX86)
+#ifdef _M_IX86
     /* Install the drive mapper according to this section drive mappings */
     DriveMapMapDrivesInSection(SectionName);
 #endif

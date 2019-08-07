@@ -107,10 +107,10 @@
 #include <arch/pc/machpc.h>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pxe.h>
-#include <arch/i386/drivemap.h>
 #endif
 #if defined(_M_IX86)
 #include <arch/i386/i386.h>
+#include <arch/i386/drivemap.h>
 #include <arch/i386/machxbox.h>
 #include <internal/i386/intrin_i.h>
 #elif defined(_M_AMD64)

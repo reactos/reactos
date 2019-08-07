@@ -154,7 +154,7 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_ARC_SOURCE
         lib/fs/pxe.c
         arch/i386/ntoskrnl.c
-        arch/i386/drivemap.c
+        # arch/i386/drivemap.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
