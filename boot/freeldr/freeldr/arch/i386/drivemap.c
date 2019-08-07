@@ -22,10 +22,75 @@
 
 DBG_DEFAULT_CHANNEL(DISK);
 
+#ifdef _M_IX86
+
 BOOLEAN      DriveMapInstalled = FALSE;    // Tells us if we have already installed our drive map int 13h handler code
 ULONG        OldInt13HandlerAddress = 0;   // Address of BIOS int 13h handler
 ULONG        DriveMapHandlerAddress = 0;   // Linear address of our drive map handler
 ULONG        DriveMapHandlerSegOff = 0;    // Segment:offset style address of our drive map handler
+
+#endif // _M_IX86
+
+BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
+{
+    ULONG Index;
+
+    // Now verify that the user has given us appropriate strings
+    if ((strlen(DriveString) < 3) ||
+        ((DriveString[0] != 'f') && (DriveString[0] != 'F') &&
+         (DriveString[0] != 'h') && (DriveString[0] != 'H')) ||
+        ((DriveString[1] != 'd') && (DriveString[1] != 'D')))
+    {
+        return FALSE;
+    }
+
+    // Now verify that the user has given us appropriate numbers
+    // Make sure that only numeric characters were given
+    for (Index = 2; Index < strlen(DriveString); Index++)
+    {
+        if (DriveString[Index] < '0' || DriveString[Index] > '9')
+        {
+            return FALSE;
+        }
+    }
+
+    // Now make sure that they are not outrageous values (i.e. hd90874)
+    if ((atoi(&DriveString[2]) < 0) || (atoi(&DriveString[2]) > 0xff))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
+{
+    UCHAR BiosDriveNumber = 0;
+
+    TRACE("DriveMapGetBiosDriveNumber(%s)\n", DeviceName);
+
+    // If they passed in a number string then just
+    // convert it to decimal and return it
+    if (DeviceName[0] >= '0' && DeviceName[0] <= '9')
+    {
+        return (UCHAR)strtoul(DeviceName, NULL, 0);
+    }
+
+    // Convert the drive number string into a number
+    // 'hd1' = 1
+    BiosDriveNumber = atoi(&DeviceName[2]);
+
+    // If it's a hard disk then set the high bit
+    if ((DeviceName[0] == 'h' || DeviceName[0] == 'H') &&
+        (DeviceName[1] == 'd' || DeviceName[1] == 'D'))
+    {
+        BiosDriveNumber |= 0x80;
+    }
+
+    return BiosDriveNumber;
+}
+
+#ifdef _M_IX86
 
 VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 {
@@ -111,65 +176,6 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
     }
 }
 
-BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
-{
-    ULONG Index;
-
-    // Now verify that the user has given us appropriate strings
-    if ((strlen(DriveString) < 3) ||
-        ((DriveString[0] != 'f') && (DriveString[0] != 'F') &&
-         (DriveString[0] != 'h') && (DriveString[0] != 'H')) ||
-        ((DriveString[1] != 'd') && (DriveString[1] != 'D')))
-    {
-        return FALSE;
-    }
-
-    // Now verify that the user has given us appropriate numbers
-    // Make sure that only numeric characters were given
-    for (Index = 2; Index < strlen(DriveString); Index++)
-    {
-        if (DriveString[Index] < '0' || DriveString[Index] > '9')
-        {
-            return FALSE;
-        }
-    }
-
-    // Now make sure that they are not outrageous values (i.e. hd90874)
-    if ((atoi(&DriveString[2]) < 0) || (atoi(&DriveString[2]) > 0xff))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
-{
-    UCHAR BiosDriveNumber = 0;
-
-    TRACE("DriveMapGetBiosDriveNumber(%s)\n", DeviceName);
-
-    // If they passed in a number string then just
-    // convert it to decimal and return it
-    if (DeviceName[0] >= '0' && DeviceName[0] <= '9')
-    {
-        return (UCHAR)strtoul(DeviceName, NULL, 0);
-    }
-
-    // Convert the drive number string into a number
-    // 'hd1' = 1
-    BiosDriveNumber = atoi(&DeviceName[2]);
-
-    // If it's a hard disk then set the high bit
-    if ((DeviceName[0] == 'h' || DeviceName[0] == 'H') &&
-        (DeviceName[1] == 'd' || DeviceName[1] == 'D'))
-    {
-        BiosDriveNumber |= 0x80;
-    }
-
-    return BiosDriveNumber;
-}
-
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
     ULONG*  RealModeIVT = (ULONG*)UlongToPtr(0x00000000);
@@ -225,3 +231,5 @@ VOID DriveMapRemoveInt13Handler(VOID)
         DriveMapInstalled = FALSE;
     }
 }
+
+#endif // _M_IX86
