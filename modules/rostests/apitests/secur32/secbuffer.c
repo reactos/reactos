@@ -13,17 +13,17 @@ typedef struct _GLOBAL_INFO_SEC_BUFFER
     /* its used by server / client - so we have to protect it! */
     CRITICAL_SECTION cs;
     OSVERSIONINFO osVerInfo;
-    WCHAR DnsHostNameW[MAX_COMPUTERNAME_LENGTH];
-    WCHAR NetBIOSNameW[MAX_COMPUTERNAME_LENGTH];
-    CHAR NetBIOSNameA[128];
+    WCHAR DnsHostNameW[MAX_COMPUTERNAME_LENGTH + 1];
+    WCHAR NetBIOSNameW[MAX_COMPUTERNAME_LENGTH + 1];
+    CHAR NetBIOSNameA[MAX_COMPUTERNAME_LENGTH + 1];
     CHAR DomainNameA[256];
 } GLOBAL_INFO_SEC_BUFFER;
 GLOBAL_INFO_SEC_BUFFER g_sb;
 
 void NtlmCheckInit()
 {
-    DWORD cchHNLen = MAX_COMPUTERNAME_LENGTH + 1;
-    DWORD cchNBLen = MAX_COMPUTERNAME_LENGTH + 1;
+    DWORD cchHNLen = ARRAY_SIZE(g_sb.DnsHostNameW);
+    DWORD cchNBLen = ARRAY_SIZE(g_sb.DnsHostNameW);
     LPWKSTA_INFO_100 pWksInfo = NULL;
     WCHAR DomainNameW[256];
 
@@ -58,7 +58,8 @@ void NtlmCheckInit()
 
     /* Convert W -> A */
     if (!WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             DomainNameW, -1, g_sb.DomainNameA, 256, NULL, NULL))
+                             DomainNameW, -1, g_sb.DomainNameA,
+                             ARRAY_SIZE(g_sb.DomainNameA), NULL, NULL))
     {
         sync_err("could not convert domainname (W->A)!\n");
         g_sb.DomainNameA[0] = 0;
@@ -87,7 +88,6 @@ void NtlmCheckBlobA(
     PBYTE pData;
     BOOL isEqual = FALSE;
     int blobChLen = pblob->Length / sizeof(char);
-
     pData = (PBYTE)msg + pblob->Offset;
     if (blobChLen == strlen(expected))
         isEqual = (strncmp((char*)pData, expected, blobChLen) == 0);
@@ -205,10 +205,11 @@ void NtlmCheckTargetInfoAvl(
 
         if (avpCmpStr != NULL)
         {
-            sync_ok(wcsncmp(avpCmpStr, (WCHAR*)pData, pAvp->AvLen / sizeof(WCHAR)) == 0,
+            int blobChLen = pAvp->AvLen / sizeof(WCHAR);
+            sync_ok(wcsncmp(avpCmpStr, (WCHAR*)pData, blobChLen) == 01,
                     "avl %s: %S: expected %S, got %.*S.\n",
                     blobName, avpCmpName, avpCmpStr,
-                    pAvp->AvLen / sizeof(WCHAR), (WCHAR*)pData);
+                    blobChLen, (WCHAR*)pData);
         }
         pData += pAvp->AvLen;
         entryCount++;
