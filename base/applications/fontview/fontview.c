@@ -515,6 +515,9 @@ MainWnd_OnInstall(HWND hwnd)
     /* Close the fonts key */
     RegCloseKey(hKey);
 
+    /* Broadcast WM_FONTCHANGE message */
+    SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+
     /* if all of this goes correctly, message the user about success */
     MessageBoxW(hwnd, L"Font Installation Completed.", L"Success", MB_OK);
 
