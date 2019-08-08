@@ -1687,7 +1687,7 @@ IntLoadFontsInRegistry(VOID)
     KEY_FULL_INFORMATION            KeyFullInfo;
     ULONG                           i, Length;
     UNICODE_STRING                  FontTitleW, FileNameW;
-    BYTE                            InfoBuffer[128];
+    BYTE                            InfoBuffer[MAX_PATH + 128];
     PKEY_VALUE_FULL_INFORMATION     pInfo;
     LPWSTR                          pchPath;
     BOOLEAN                         Success;
