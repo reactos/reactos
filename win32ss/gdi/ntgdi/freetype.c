@@ -1687,7 +1687,8 @@ IntLoadFontsInRegistry(VOID)
     KEY_FULL_INFORMATION            KeyFullInfo;
     ULONG                           i, Length;
     UNICODE_STRING                  FontTitleW, FileNameW;
-    BYTE                            InfoBuffer[MAX_PATH + 128];
+    SIZE_T                          InfoSize;
+    LPBYTE                          InfoBuffer;
     PKEY_VALUE_FULL_INFORMATION     pInfo;
     LPWSTR                          pchPath;
     BOOLEAN                         Success;
@@ -1716,12 +1717,37 @@ IntLoadFontsInRegistry(VOID)
         return FALSE;   /* failure */
     }
 
+    /* allocate buffer */
+    InfoSize = (MAX_PATH + 256) * sizeof(WCHAR);
+    InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+    if (!InfoBuffer)
+    {
+        DPRINT1("ExAllocatePoolWithTag failed\n");
+        ZwClose(KeyHandle);
+        return FALSE;
+    }
+
     /* for each value */
     for (i = 0; i < KeyFullInfo.Values; ++i)
     {
         /* get value name */
         Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
-                                     InfoBuffer, sizeof(InfoBuffer), &Length);
+                                     InfoBuffer, InfoSize, &Length);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* too short buffer */
+            ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+            InfoSize *= 2;
+            InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+            if (!InfoBuffer)
+            {
+                DPRINT1("ExAllocatePoolWithTag failed\n");
+                break;
+            }
+            /* try again */
+            Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                         InfoBuffer, InfoSize, &Length);
+        }
         if (!NT_SUCCESS(Status))
         {
             DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
@@ -1742,7 +1768,22 @@ IntLoadFontsInRegistry(VOID)
 
         /* query value */
         Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
-                                 InfoBuffer, sizeof(InfoBuffer), &Length);
+                                 InfoBuffer, InfoSize, &Length);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* too short buffer */
+            ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+            InfoSize *= 2;
+            InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+            if (!InfoBuffer)
+            {
+                DPRINT1("ExAllocatePoolWithTag failed\n");
+                break;
+            }
+            /* try again */
+            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+                                     InfoBuffer, InfoSize, &Length);
+        }
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         if (!NT_SUCCESS(Status) || !pInfo->DataLength)
         {
@@ -1782,6 +1823,12 @@ IntLoadFontsInRegistry(VOID)
 
     /* close now */
     ZwClose(KeyHandle);
+
+    /* free memory block */
+    if (InfoBuffer)
+    {
+        ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+    }
 
     if (KeyFullInfo.Values == 0 || nFontCount == 0)
     {
