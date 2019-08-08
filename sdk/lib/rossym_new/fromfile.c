@@ -45,7 +45,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
     /* Load NT headers */
     if (! RosSymSeekFile(FileContext, DosHeader.e_lfanew))
     {
-        werrstr("Failed seeking to NT headers\n");
+        werrstr("Failed seeking NT headers\n");
         return FALSE;
     }
     if (! RosSymReadFile(FileContext, &NtHeaders, sizeof(IMAGE_NT_HEADERS)))
@@ -74,7 +74,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
     if (! RosSymSeekFile(FileContext, (char *) IMAGE_FIRST_SECTION(&NtHeaders) -
                          (char *) &NtHeaders + DosHeader.e_lfanew))
     {
-        werrstr("Failed seeking to section headers\n");
+        werrstr("Failed seeking section headers\n");
         return FALSE;
     }
     DPRINT("Alloc section headers\n");

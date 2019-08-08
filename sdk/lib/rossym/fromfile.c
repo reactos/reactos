@@ -41,7 +41,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
   /* Load NT headers */
   if (! RosSymSeekFile(FileContext, DosHeader.e_lfanew))
     {
-      DPRINT1("Failed seeking to NT headers\n");
+      DPRINT1("Failed seeking NT headers\n");
       return FALSE;
     }
   if (! RosSymReadFile(FileContext, &NtHeaders, sizeof(IMAGE_NT_HEADERS)))
@@ -59,7 +59,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
   if (! RosSymSeekFile(FileContext, (char *) IMAGE_FIRST_SECTION(&NtHeaders) -
                                     (char *) &NtHeaders + DosHeader.e_lfanew))
     {
-      DPRINT1("Failed seeking to section headers\n");
+      DPRINT1("Failed seeking section headers\n");
       return FALSE;
     }
   SectionHeaders = RosSymAllocMem(NtHeaders.FileHeader.NumberOfSections
@@ -101,7 +101,7 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
   if (! RosSymSeekFile(FileContext, SectionHeader->PointerToRawData))
     {
       RosSymFreeMem(SectionHeaders);
-      DPRINT1("Failed seeking to section data\n");
+      DPRINT1("Failed seeking section data\n");
       return FALSE;
     }
   RosSymFreeMem(SectionHeaders);
