@@ -238,6 +238,24 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions2);
 
+    /* Check if a ramdisk file was given */
+    File = strstr(BootOptions2, "/RDPATH=");
+    if (File)
+    {
+        /* Copy the file name and everything else after it */
+        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
+
+        /* Null-terminate */
+        *strstr(FileName, " ") = ANSI_NULL;
+
+        /* Load the ramdisk */
+        if (!RamDiskLoadVirtualFile(FileName))
+        {
+            UiMessageBox("Failed to load RAM disk file %s", FileName);
+            return ENOENT;
+        }
+    }
+
     /* Check if we booted from floppy */
     BootFromFloppy = strstr(BootPath, "fdisk") != NULL;
 
@@ -292,24 +310,6 @@ LoadReactOSSetup(
     strcpy(BootOptions, LoadOptions);
 
     TRACE("BootOptions: '%s'\n", BootOptions);
-
-    /* Check if a ramdisk file was given */
-    File = strstr(BootOptions2, "/RDPATH=");
-    if (File)
-    {
-        /* Copy the file name and everything else after it */
-        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
-
-        /* Null-terminate */
-        *strstr(FileName, " ") = ANSI_NULL;
-
-        /* Load the ramdisk */
-        if (!RamDiskLoadVirtualFile(FileName))
-        {
-            UiMessageBox("Failed to load RAM disk file %s", FileName);
-            return ENOENT;
-        }
-    }
 
     /* Allocate and minimalist-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
