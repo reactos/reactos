@@ -2807,7 +2807,7 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
 
     RtlZeroMemory(&WindowName, sizeof(WindowName));
     RtlZeroMemory(&Cs, sizeof(Cs));
-    Cs.style = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER;
+    Cs.style = WS_POPUP | WS_CLIPSIBLINGS | WS_BORDER;
     Cs.dwExStyle = ex_style;
     Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
     Cs.lpszName = (LPCWSTR) &WindowName;
