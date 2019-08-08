@@ -1756,8 +1756,8 @@ IntLoadFontsInRegistry(VOID)
         Length = pInfo->DataLength / sizeof(WCHAR);
         pchPath[Length] = UNICODE_NULL; /* truncate */
 
-        /* Load font(s) with writing registry */
-        dwFlags = AFRX_WRITE_REGISTRY;
+        /* Load font(s) without writing registry */
+        dwFlags = 0;
         if (PathIsRelativeW(pchPath))
         {
             Status = RtlStringCbPrintfW(szPath, sizeof(szPath),
