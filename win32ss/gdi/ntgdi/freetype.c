@@ -1646,7 +1646,10 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 
             if (pFileName)
             {
-                pFileName++;
+                if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+                {
+                    pFileName++;
+                }
                 DataSize = (wcslen(pFileName) + 1) * sizeof(WCHAR);
                 ZwSetValueKey(KeyHandle, &LoadFont.RegValueName, 0, REG_SZ,
                               pFileName, DataSize);
