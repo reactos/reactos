@@ -686,7 +686,7 @@ InitFontSupport(VOID)
         return FALSE;
     }
 
-    IntLoadSystemFonts();
+    IntLoadFontsInRegistry();
     IntLoadFontSubstList(&g_FontSubstListHead);
 
 #if DBG
@@ -1020,7 +1020,7 @@ IntLoadSystemFonts(VOID)
                         TempString.MaximumLength = DirInfo->FileNameLength;
                     RtlCopyUnicodeString(&FileName, &Directory);
                     RtlAppendUnicodeStringToString(&FileName, &TempString);
-                    IntGdiAddFontResource(&FileName, 0);
+                    IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY);
                     if (DirInfo->NextEntryOffset == 0)
                         break;
                     DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset);
@@ -1533,7 +1533,8 @@ Finish:
  */
 
 INT FASTCALL
-IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
+                        DWORD dwFlags)
 {
     NTSTATUS Status;
     HANDLE FileHandle;
@@ -1599,7 +1600,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     ObDereferenceObject(SectionObject);
 
     /* Save the loaded font name into the registry */
-    if (FontCount > 0)
+    if (FontCount > 0 && (dwFlags & AFRX_WRITE_REGISTRY))
     {
         if (LoadFont.IsTrueType)
         {
@@ -1632,7 +1633,17 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         if (NT_SUCCESS(Status))
         {
             SIZE_T DataSize;
-            LPWSTR pFileName = wcsrchr(FileName->Buffer, L'\\');
+            LPWSTR pFileName;
+
+            if (dwFlags & AFRX_ALTERNATIVE_PATH)
+            {
+                pFileName = FileName->Buffer;
+            }
+            else
+            {
+                pFileName = wcsrchr(FileName->Buffer, L'\\');
+            }
+
             if (pFileName)
             {
                 pFileName++;
@@ -1646,6 +1657,139 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     RtlFreeUnicodeString(&LoadFont.RegValueName);
 
     return FontCount;
+}
+
+INT FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+{
+    return IntGdiAddFontResourceEx(FileName, Characteristics, 0);
+}
+
+/* Borrowed from shlwapi!PathIsRelativeW */
+BOOL WINAPI PathIsRelativeW(LPCWSTR lpszPath)
+{
+    if (!lpszPath || !*lpszPath)
+        return TRUE;
+    if (*lpszPath == L'\\' || (*lpszPath && lpszPath[1] == L':'))
+        return FALSE;
+    return TRUE;
+}
+
+BOOL FASTCALL
+IntLoadFontsInRegistry(VOID)
+{
+    NTSTATUS                        Status;
+    HANDLE                          KeyHandle;
+    OBJECT_ATTRIBUTES               ObjectAttributes;
+    KEY_FULL_INFORMATION            KeyFullInfo;
+    ULONG                           i, Length;
+    UNICODE_STRING                  FontTitleW, FileNameW;
+    BYTE                            InfoBuffer[128];
+    PKEY_VALUE_FULL_INFORMATION     pInfo;
+    LPWSTR                          pchPath;
+    BOOLEAN                         Success;
+    WCHAR                           szPath[MAX_PATH];
+    INT                             nFontCount = 0;
+    DWORD                           dwFlags;
+
+    /* open registry key */
+    InitializeObjectAttributes(&ObjectAttributes, &g_FontRegPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey failed: 0x%08X\n", Status);
+        return FALSE;   /* failure */
+    }
+
+    /* query count of values */
+    Status = ZwQueryKey(KeyHandle, KeyFullInformation,
+                        &KeyFullInfo, sizeof(KeyFullInfo), &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwQueryKey failed: 0x%08X\n", Status);
+        ZwClose(KeyHandle);
+        return FALSE;   /* failure */
+    }
+
+    /* for each value */
+    for (i = 0; i < KeyFullInfo.Values; ++i)
+    {
+        /* get value name */
+        Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                     InfoBuffer, sizeof(InfoBuffer), &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
+            break;      /* failure */
+        }
+
+        /* create FontTitleW string */
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        Length = pInfo->NameLength / sizeof(WCHAR);
+        pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
+        Success = RtlCreateUnicodeString(&FontTitleW, pInfo->Name);
+        if (!Success)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
+            break;      /* failure */
+        }
+
+        /* query value */
+        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+                                 InfoBuffer, sizeof(InfoBuffer), &Length);
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        if (!NT_SUCCESS(Status) || !pInfo->DataLength)
+        {
+            DPRINT("ZwQueryValueKey failed: 0x%08X\n", Status);
+            RtlFreeUnicodeString(&FontTitleW);
+            break;      /* failure */
+        }
+
+        /* Build pchPath */
+        pchPath = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
+        Length = pInfo->DataLength / sizeof(WCHAR);
+        pchPath[Length] = UNICODE_NULL; /* truncate */
+
+        /* Load font(s) with writing registry */
+        dwFlags = AFRX_WRITE_REGISTRY;
+        if (PathIsRelativeW(pchPath))
+        {
+            Status = RtlStringCbPrintfW(szPath, sizeof(szPath),
+                                        L"%s\\Fonts\\%s",
+                                        SharedUserData->NtSystemRoot, pchPath);
+        }
+        else
+        {
+            dwFlags |= AFRX_ALTERNATIVE_PATH;
+            Status = RtlStringCbCopyW(szPath, sizeof(szPath), pchPath);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            RtlCreateUnicodeString(&FileNameW, szPath);
+            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 0, dwFlags);
+            RtlFreeUnicodeString(&FileNameW);
+        }
+
+        RtlFreeUnicodeString(&FontTitleW);
+    }
+
+    /* close now */
+    ZwClose(KeyHandle);
+
+    if (KeyFullInfo.Values == 0 || nFontCount == 0)
+    {
+        DPRINT1("Fonts registry is empty.\n");
+
+        /* Load font(s) with writing registry */
+        IntLoadSystemFonts();
+        return TRUE;
+    }
+
+    return NT_SUCCESS(Status);
 }
 
 HANDLE FASTCALL
