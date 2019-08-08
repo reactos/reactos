@@ -1316,6 +1316,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 if (!Error)
                 {
                     FontGDI->CharSet = WinFNT.charset;
+                    pLoadFont->CharSet = WinFNT.charset;
                 }
                 IntUnLockFreeType();
             }
@@ -1526,6 +1527,34 @@ Finish:
     }
 }
 
+static LPCWSTR FASTCALL
+NameFromCharSet(BYTE CharSet)
+{
+    switch (CharSet)
+    {
+        case ANSI_CHARSET: return L"Ansi";
+        case DEFAULT_CHARSET: return L"Default";
+        case SYMBOL_CHARSET: return L"Symbol";
+        case SHIFTJIS_CHARSET: return L"Shift_JIS";
+        case HANGUL_CHARSET: return L"Hangul";
+        case GB2312_CHARSET: return L"GB2312";
+        case CHINESEBIG5_CHARSET: return L"Chinese Big5";
+        case OEM_CHARSET: return L"OEM";
+        case JOHAB_CHARSET: return L"Johab";
+        case HEBREW_CHARSET: return L"Hebrew";
+        case ARABIC_CHARSET: return L"Arabic";
+        case GREEK_CHARSET: return L"Greek";
+        case TURKISH_CHARSET: return L"Turkish";
+        case VIETNAMESE_CHARSET: return L"Vietnamese";
+        case THAI_CHARSET: return L"Thai";
+        case EASTEUROPE_CHARSET: return L"Eastern European";
+        case RUSSIAN_CHARSET: return L"Russian";
+        case MAC_CHARSET: return L"Mac";
+        case BALTIC_CHARSET: return L"Baltic";
+        default: return L"Unknown";
+    }
+}
+
 /*
  * IntGdiAddFontResource
  *
@@ -1589,6 +1618,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     LoadFont.Characteristics    = Characteristics;
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
     LoadFont.IsTrueType         = FALSE;
+    LoadFont.CharSet            = DEFAULT_CHARSET;
     LoadFont.PrivateEntry       = NULL;
     FontCount = IntGdiLoadFontsFromMemory(&LoadFont);
 
@@ -1602,13 +1632,13 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     /* Save the loaded font name into the registry */
     if (FontCount > 0 && (dwFlags & AFRX_WRITE_REGISTRY))
     {
+        UNICODE_STRING NewString;
+        SIZE_T Length;
+        PWCHAR pszBuffer;
+        LPCWSTR CharSetName;
         if (LoadFont.IsTrueType)
         {
             /* Append " (TrueType)" */
-            UNICODE_STRING NewString;
-            SIZE_T Length;
-            PWCHAR pszBuffer;
-
             Length = LoadFont.RegValueName.Length + TrueTypePostfix.Length + sizeof(UNICODE_NULL);
             pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
             if (pszBuffer)
@@ -1617,6 +1647,31 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
                 NewString.Buffer[0] = UNICODE_NULL;
                 RtlAppendUnicodeStringToString(&NewString, &LoadFont.RegValueName);
                 RtlAppendUnicodeStringToString(&NewString, &TrueTypePostfix);
+                RtlFreeUnicodeString(&LoadFont.RegValueName);
+                LoadFont.RegValueName = NewString;
+            }
+            else
+            {
+                // FIXME!
+            }
+        }
+        else if (LoadFont.CharSet != DEFAULT_CHARSET)
+        {
+            /* Append " (CharSetName)" */
+            CharSetName = NameFromCharSet(LoadFont.CharSet);
+            Length = LoadFont.RegValueName.Length +
+                     (wcslen(CharSetName) + 3) * sizeof(WCHAR) +
+                     sizeof(UNICODE_NULL);
+
+            pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+            if (pszBuffer)
+            {
+                RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                NewString.Buffer[0] = UNICODE_NULL;
+                RtlAppendUnicodeStringToString(&NewString, &LoadFont.RegValueName);
+                RtlAppendUnicodeToString(&NewString, L" (");
+                RtlAppendUnicodeToString(&NewString, CharSetName);
+                RtlAppendUnicodeToString(&NewString, L")");
                 RtlFreeUnicodeString(&LoadFont.RegValueName);
                 LoadFont.RegValueName = NewString;
             }
