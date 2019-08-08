@@ -1443,15 +1443,19 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     /* There is no position requested, so try to find one */
     if (lParam == ~0)
     {
-        int lvIndex;
+        HWND hFocus = ::GetFocus();
+        int lvIndex = -1;
         POINT pt;
 
-        /* Do we have a focused item, */
-        if ((lvIndex = m_ListView.GetNextItem(-1, LVIS_FOCUSED)) < 0)
+        if (hFocus == m_ListView.m_hWnd || m_ListView.IsChild(hFocus))
         {
-            /* or a selected item? */
-            lvIndex = m_ListView.GetNextItem(-1, LVIS_SELECTED);
+            /* Is there an item focused and selected? */
+            lvIndex = m_ListView.GetNextItem(-1, LVIS_SELECTED|LVIS_FOCUSED);
+            /* If not, find the first selected item */
+            if (lvIndex < 0)
+                lvIndex = m_ListView.GetNextItem(-1, LVIS_SELECTED);
         }
+
         /* We got something */
         if (lvIndex > -1)
         {
