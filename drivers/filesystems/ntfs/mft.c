@@ -140,6 +140,7 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     FIND_ATTR_CONTXT Context;
     PNTFS_ATTR_RECORD Attribute;
+    PNTFS_ATTRIBUTE_LIST_ITEM AttrListItem;
 
     DPRINT("FindAttribute(%p, %p, 0x%x, %S, %lu, %p, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx, Offset);
 
@@ -184,6 +185,61 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
         Status = FindNextAttribute(&Context, &Attribute);
     }
 
+    /* No attribute found, check if it is referenced in another file record */
+    Status = FindFirstAttributeListItem(&Context, &AttrListItem);
+    while (NT_SUCCESS(Status))
+    {
+        if (AttrListItem->Type == Type && AttrListItem->NameLength == NameLength)
+        {
+            if (NameLength != 0)
+            {
+                PWCHAR AttrName;
+
+                AttrName = (PWCHAR)((PCHAR)AttrListItem + AttrListItem->NameOffset);
+                DPRINT("%.*S, %.*S\n", AttrListItem->NameLength, AttrName, NameLength, Name);
+                if (RtlCompareMemory(AttrName, Name, NameLength * sizeof(WCHAR)) == (NameLength  * sizeof(WCHAR)))
+                {
+                    Found = TRUE;
+                }
+            }
+            else
+            {
+                Found = TRUE;
+            }
+
+            if (Found == TRUE)
+            {
+                /* Get the MFT Index of attribute */
+                ULONGLONG MftIndex;
+                PFILE_RECORD_HEADER RemoteHdr;
+
+                MftIndex = AttrListItem->MFTIndex & NTFS_MFT_MASK;
+                RemoteHdr = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
+
+                if (RemoteHdr == NULL)
+                {
+                    FindCloseAttribute(&Context);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                /* Check we are not reading ourselves */
+                if (MftRecord->MFTRecordNumber == MftIndex)
+                {
+                    DPRINT1("Attribute list references missing attribute to this file entry !");
+                    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, RemoteHdr);
+                    FindCloseAttribute(&Context);
+                    return STATUS_OBJECT_NAME_NOT_FOUND;
+                }
+                /* Read the new file record */
+                ReadFileRecord(Vcb, MftIndex, RemoteHdr);
+                Status = FindAttribute(Vcb, RemoteHdr, Type, Name, NameLength, AttrCtx, Offset);
+                ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, RemoteHdr);
+                FindCloseAttribute(&Context);
+                return Status;
+            }
+        }
+        Status = FindNextAttributeListItem(&Context, &AttrListItem);
+    }
     FindCloseAttribute(&Context);
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
