@@ -12,17 +12,30 @@
 
 #include "client_server.h"
 
-#define g_usPort 2000
-
 #define BIG_BUFF    2048
 
 #define cbMaxMessage 12000
 #define MessageAttribute ISC_REQ_CONFIDENTIALITY
 
+typedef struct _CLI_PARAMS
+{
+    WCHAR* ServerName;
+    int ServerPort;
+    WCHAR* TargetName;
+    WCHAR* PackageName;
+    WCHAR* user;
+    WCHAR* pass;
+} CLI_PARAMS, *PCLI_PARAMS;
+
 BOOL
 client2_DoAuthentication(
-    IN LPCTSTR TargetName,
-    IN LPCTSTR PackageName,
+    IN PCLI_PARAMS pcp,
+    IN SOCKET s,
+    IN PCredHandle hCred,
+    IN PSecHandle  hcText);
+BOOL
+client2_DoAuthenticationOverSMB(
+    IN PCLI_PARAMS pcp,
     IN SOCKET s,
     IN PCredHandle hCred,
     IN PSecHandle  hcText);
@@ -34,8 +47,7 @@ GenClientContext(
     PBYTE pOut,
     DWORD *pcbOut,
     BOOL  *pfDone,
-    LPCTSTR pszTarget,
-    LPCTSTR PackageName,
+    PCLI_PARAMS pcp,
     PCredHandle hCred,
     PSecHandle  hcText);
 
@@ -45,9 +57,7 @@ GenClientContext(
 
 BOOL
 client2_ConnectAuthSocket(
-    IN  LPCTSTR ServerName,
-    IN  LPCTSTR TargetName,
-    IN  LPCTSTR PackageName,
+    IN  PCLI_PARAMS pcp,
     OUT SOCKET     *s,
     OUT PCredHandle hCred,
     OUT PSecHandle  hcText)
@@ -60,7 +70,7 @@ client2_ConnectAuthSocket(
     char AnsiServerName[256];
 
     WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-        ServerName, -1, AnsiServerName, _countof(AnsiServerName), NULL, NULL);
+        pcp->ServerName, -1, AnsiServerName, _countof(AnsiServerName), NULL, NULL);
 #else
 #define AnsiServerName ServerName
 #endif
@@ -92,11 +102,11 @@ client2_ConnectAuthSocket(
         goto failed;
     }
 
-    sync_trace("client socket %x created.\n",*s);
+    sync_trace("client socket %x created, port %i.\n", *s, pcp->ServerPort);
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = ulAddress;
-    sin.sin_port = htons(g_usPort);
+    sin.sin_port = htons(pcp->ServerPort);
 
     /* Connect to the server */
     if (connect(*s, (LPSOCKADDR)&sin, sizeof(sin)) != 0)
@@ -107,11 +117,21 @@ client2_ConnectAuthSocket(
     }
 
     /* Authenticate the connection */
-    if (!client2_DoAuthentication(TargetName, PackageName,
-                                  *s, hCred, hcText))
+    if (pcp->ServerPort != 445)
     {
-        sync_err("Authentication failed\n");
-        goto failed;
+        if (!client2_DoAuthentication(pcp, *s, hCred, hcText))
+        {
+            sync_err("Authentication failed\n");
+            goto failed;
+        }
+    }
+    else
+    {
+        if (!client2_DoAuthenticationOverSMB(pcp, *s, hCred, hcText))
+        {
+            sync_err("Authentication failed\n");
+            goto failed;
+        }
     }
 
     return TRUE;
@@ -123,9 +143,219 @@ failed:
 }
 
 BOOL
+SendRecvMsgSMB(
+    IN SOCKET s,
+    IN PBYTE pOutBufSMB,
+    IN ULONG cbOutSMB,
+    IN OUT PBYTE pInBuf,
+    IN OUT PULONG pCbIn,
+    OUT PSMB_ERROR pStatus,
+    OUT PUSHORT pSessionId)
+{
+    PSMB_Header psh;
+
+    if (!SendMsgSMB(s, (PBYTE)pOutBufSMB, cbOutSMB))
+    {
+        sync_err("Send message failed.\n");
+        return FALSE;
+    }
+    /* get response */
+    if (!ReceiveMsgSMB(s, pInBuf, cbMaxMessage, pCbIn))
+    {
+        sync_err("Receive message failed ");
+        return FALSE;
+    }
+    //??psh = (PSMB_Header)pInBuf;
+    //??ServerPID = (psh->PIDHigh << 16) + psh->PIDLow;
+    PrintHexDump(cbMaxMessage, pInBuf);
+
+    psh = (PSMB_Header)pInBuf;
+    /* check status only if pStatus is NULL */
+    if ( (pStatus == NULL) &&
+         (psh->Status.NT_Status != 0) )
+    {
+        sync_err("Error NT_Status 0x%x\n", psh->Status.NT_Status);
+        return FALSE;
+    }
+    if (pStatus)
+        *pStatus = psh->Status;
+    if (pSessionId)
+        *pSessionId = psh->UID;
+    return TRUE;
+}
+
+BOOL
+client2_DoAuthenticationOverSMB(
+    IN PCLI_PARAMS pcp,
+    IN SOCKET s,
+    IN PCredHandle hCred,
+    IN PSecHandle  hcText)
+{
+    BOOL Success;
+    BOOL    fDone = FALSE;
+    ULONG   cbIn = 0;
+    DWORD   cbInSMB = 0;
+    DWORD   cbOut = 0;
+    ULONG   cbOutSMB = 0;
+    PBYTE   pInBuf;
+    PBYTE   pInBufSMB;
+    PBYTE   pOutBuf;
+    PBYTE   pOutBufSMB;
+    USHORT smbSessionID;
+    USHORT smbRequestCounter;
+    SMB_ERROR smbStatus;
+
+    if (!(pInBufSMB = (PBYTE)malloc(cbMaxMessage)))
+    {
+        sync_err("Memory allocation ");
+        return FALSE;
+    }
+
+    if (!(pOutBuf = (PBYTE)malloc(cbMaxMessage)))
+    {
+        sync_err("Memory allocation ");
+        return FALSE;
+    }
+    ZeroMemory(pOutBuf, cbMaxMessage);
+
+    if (!(pOutBufSMB = (PBYTE)malloc(cbMaxMessage)))
+    {
+        sync_err("Memory allocation ");
+        return FALSE;
+    }
+    ZeroMemory(pOutBufSMB, cbMaxMessage);
+
+    /* SMB Negotiate Protocol (0x72 request) */
+    cbOutSMB = cbMaxMessage;
+    if (!smb_GenComNegoMsg(pOutBufSMB, &cbOutSMB))
+    {
+        sync_err("smb_GenComNegoMsg failed!\n");
+        return FALSE;
+    }
+    PrintHexDumpMax(cbOutSMB, (PBYTE)pOutBufSMB, cbOutSMB);
+
+    /* fist call ... getting sessionid (smbSessinoID) in response */
+    cbInSMB = cbMaxMessage;
+    if (!SendRecvMsgSMB(s, (PBYTE)pOutBufSMB, cbOutSMB,
+                        pInBufSMB, &cbInSMB, NULL, NULL))
+    {
+        sync_err("SendRecvMsgSMB failed!\n");
+        return FALSE;
+    }
+
+    // Gen NTLM Message
+    cbOut = 1024;// Hack
+    Success = GenClientContext(NULL,
+                               0,
+                               pOutBuf,
+                               &cbOut,
+                               &fDone,
+                               pcp,
+                               hCred,
+                               hcText);
+    if (!Success)
+    {
+        sync_err("GenClientContext failed!\n");
+        return FALSE;
+    }
+    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf);
+
+    cbOutSMB = cbMaxMessage;
+    smbRequestCounter = 0;
+    // Session Setup AndX Request (0x73 request)
+    if (!smb_GenComSessionSetupMsg(pOutBufSMB, &cbOutSMB,
+                                   pOutBuf, cbOut, 0, 0))
+    {
+        sync_err("smb_GenComSessionSetupMsg failed!\n");
+        return FALSE;
+    }
+
+    cbInSMB = cbMaxMessage;
+    if (!SendRecvMsgSMB(s, (PBYTE)pOutBufSMB, cbOutSMB,
+                        pInBufSMB, &cbInSMB, &smbStatus,
+                        &smbSessionID))
+    {
+        sync_err("SendRecvMsgSMB failed!\n");
+        return FALSE;
+    }
+    sync_trace("SMB Status 0x%x\n", smbStatus.NT_Status);
+    if (smbStatus.NT_Status != STATUS_MORE_PROCESSING_REQUIRED)
+    {
+        // STATUS_INVALID_SMB = 0x00010002
+        sync_err("Error NT_Status 0x%x\n", smbStatus.NT_Status);
+        return FALSE;
+    }
+    if (!smb_GetNTMLMsg(pInBufSMB, cbInSMB, &pInBuf, &cbIn))
+    {
+        sync_err("smb_GetNTMLMsg failed!\n");
+        return FALSE;
+    }
+    printf("%li %li\n", cbInSMB, cbIn);
+    PrintHexDumpMax(cbInSMB, pInBufSMB, cbInSMB);
+    PrintHexDumpMax(cbIn, pInBuf, cbIn);
+
+    while (!fDone)
+    {
+        cbOut = cbMaxMessage;
+        Success = GenClientContext(pInBuf,
+                                   cbIn,
+                                   pOutBuf,
+                                   &cbOut,
+                                   &fDone,
+                                   pcp,
+                                   hCred,
+                                   hcText);
+        sync_ok(Success, "GenClientContext failed.\n");
+        if (!Success)
+        {
+            sync_err("GenClientContext failed.\n");
+            return FALSE;
+        }
+        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf);
+
+        cbOutSMB = cbMaxMessage;
+        smbRequestCounter++;
+        // Session Setup AndX Request (0x73 request)
+        if (!smb_GenComSessionSetupMsg(pOutBufSMB, &cbOutSMB, pOutBuf,
+                                       cbOut, smbSessionID,
+                                       smbRequestCounter))
+        {
+            sync_err("smb_GenComSessionSetupMsg failed!\n");
+            return FALSE;
+        }
+
+        cbInSMB = cbMaxMessage;
+        if (!SendRecvMsgSMB(s, (PBYTE)pOutBufSMB, cbOutSMB,
+                            pInBufSMB, &cbInSMB, &smbStatus,
+                            NULL))
+        {
+            sync_err("SendRecvMsgSMB failed!\n");
+            return FALSE;
+        }
+        sync_trace("SMB Status 0x%x\n", smbStatus.NT_Status);
+        if (smbStatus.NT_Status != STATUS_MORE_PROCESSING_REQUIRED)
+        {
+            // STATUS_INVALID_SMB = 0x00010002
+            sync_err("Error NT_Status 0x%x\n", smbStatus.NT_Status);
+            return FALSE;
+        }
+        if (!smb_GetNTMLMsg(pInBufSMB, cbInSMB, &pInBuf, &cbIn))
+        {
+            sync_err("smb_GetNTMLMsg failed!\n");
+            return FALSE;
+        }
+    }
+
+    sync_trace("DoAuthentication end\n");
+    free(pInBufSMB);
+    free(pOutBuf);
+    free(pOutBufSMB);
+    return TRUE;
+}
+
+BOOL
 client2_DoAuthentication(
-    IN LPCTSTR TargetName,
-    IN LPCTSTR PackageName,
+    PCLI_PARAMS pcp,
     IN SOCKET s,
     IN PCredHandle hCred,
     IN PSecHandle  hcText)
@@ -149,16 +379,13 @@ client2_DoAuthentication(
         return FALSE;
     }
 
-    //cbOut = 500;
-    //cbOut = cbMaxMessage;
-    cbOut = 1024;
+    cbOut = cbMaxMessage;
     Success = GenClientContext(NULL,
                                0,
                                pOutBuf,
                                &cbOut,
                                &fDone,
-                               TargetName,
-                               PackageName,
+                               pcp,
                                hCred,
                                hcText);
     sync_ok(Success, "GenClientContext failed\n");
@@ -189,8 +416,7 @@ client2_DoAuthentication(
                                    pOutBuf,
                                    &cbOut,
                                    &fDone,
-                                   TargetName,
-                                   PackageName,
+                                   pcp,
                                    hCred,
                                    hcText);
         sync_ok(Success, "GenClientContext failed.\n");
@@ -221,8 +447,7 @@ GenClientContext(
     PBYTE pOut,
     DWORD *pcbOut,
     BOOL  *pfDone,
-    LPCTSTR pszTarget,
-    LPCTSTR PackageName,
+    PCLI_PARAMS pcp,
     PCredHandle hCred,
     PSecHandle  hcText)
 {
@@ -246,7 +471,7 @@ GenClientContext(
     if (!pIn)
     {
         ss = AcquireCredentialsHandle(NULL,
-                                      (LPTSTR)PackageName,
+                                      pcp->PackageName,
                                       SECPKG_CRED_OUTBOUND,
                                       NULL,
                                       NULL,
@@ -290,7 +515,7 @@ GenClientContext(
         PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        hcText,
-                                       (LPTSTR)pszTarget,
+                                       pcp->TargetName,
                                        MessageAttribute,
                                        0,
                                        SECURITY_NATIVE_DREP,
@@ -310,7 +535,7 @@ GenClientContext(
         PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        NULL,
-                                       (LPTSTR)pszTarget,
+                                       pcp->TargetName,
                                        MessageAttribute,
                                        0,
                                        SECURITY_NATIVE_DREP,
@@ -358,6 +583,21 @@ GenClientContext(
     return TRUE;
 
 }
+
+BOOL
+GenClientContextSMB(
+    PBYTE pIn,
+    DWORD cbIn,
+    PBYTE pOut,
+    DWORD *pcbOut,
+    BOOL  *pfDone,
+    PCLI_PARAMS pcp,
+    PCredHandle hCred,
+    PSecHandle  hcText)
+{
+    return FALSE;
+}
+
 
 PBYTE
 DecryptThis(
@@ -482,9 +722,7 @@ VerifyThis(
 
 BOOL WINAPI
 client2_start(
-    IN LPCTSTR ServerName,
-    IN LPCTSTR TargetName,
-    IN LPCTSTR PackageName)
+    IN PCLI_PARAMS pcp)
 {
     SOCKET          Client_Socket = INVALID_SOCKET;
     BYTE            Data[BIG_BUFF];
@@ -500,8 +738,7 @@ client2_start(
     DWORD bRet = FALSE;
 
     /* Connect to a server */
-    if (!client2_ConnectAuthSocket(ServerName, TargetName, PackageName,
-                                   &Client_Socket, &hCred, &hCtxt))
+    if (!client2_ConnectAuthSocket(pcp, &Client_Socket, &hCred, &hCtxt))
     {
         /* do not free garbage (in done) */
         hCtxt.dwLower = 0;
@@ -594,17 +831,18 @@ int client2_main(int argc, WCHAR** argv)
 {
     DWORD dwRet = 1;//FAILED
     WSADATA wsaData;
-    LPCTSTR ServerName;
-    LPCTSTR TargetName;
-    LPCTSTR PackageName;
+    CLI_PARAMS cp;
 
-    sync_ok(argc == 3, "argumentcount mismatched - aborting\n");
-    if (argc != 3)
+    sync_ok(argc == 6, "argumentcount mismatched - aborting\n");
+    if (argc != 6)
         goto done;
 
-    ServerName = argv[0];
-    TargetName = argv[1];
-    PackageName = argv[2];
+    cp.ServerName = argv[0];
+    cp.ServerPort = _wtoi(argv[1]);
+    cp.TargetName = argv[2];
+    cp.PackageName = argv[3];
+    cp.user = argv[4];
+    cp.pass = argv[5];
 
     //printf("start %S %S %S\n", ServerName, TargetName, PackageName);
 
@@ -616,7 +854,7 @@ int client2_main(int argc, WCHAR** argv)
     }
 
     /* Start the client */
-    dwRet = client2_start(ServerName, TargetName, PackageName);
+    dwRet = client2_start(&cp);
 
 done:
     /* Shutdown WSA and return */

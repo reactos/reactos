@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <strsafe.h>
 #include <sspi.h>
+#include <math.h>
+#include <shellapi.h>
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -41,6 +43,8 @@
 // ntlmssp-protocol.h
 #include "ntlmssp.h"
 #include "protocol.h"
+
+#include "smb_nego.h"
 
 typedef struct _NTLM_MESSAGE_HEAD
 {
@@ -166,7 +170,9 @@ void initSecLib(
     PSecurityFunctionTable* pSecFuncTable);
 
 BOOL SendMsg(SOCKET s, PBYTE pBuf, DWORD cbBuf);
+BOOL SendMsgSMB(SOCKET s, PBYTE pBuf, DWORD cbBuf);
 BOOL ReceiveMsg(SOCKET s,PBYTE pBuf,DWORD cbBuf,DWORD *pcbRead);
+BOOL ReceiveMsgSMB(SOCKET s,PBYTE pBuf,DWORD cbBuf,DWORD *pcbRead);
 BOOL SendBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf);
 BOOL ReceiveBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf, DWORD *pcbRead);
 DWORD inet_addr_w(const WCHAR *pszAddr);

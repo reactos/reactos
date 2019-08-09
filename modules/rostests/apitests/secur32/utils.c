@@ -643,6 +643,43 @@ BOOL SendMsg(
     return TRUE;
 }
 
+BOOL SendMsgSMB(
+    SOCKET s,
+    PBYTE pBuf,
+    DWORD cbBuf)
+{
+    BYTE SMBLen[4];
+    if (cbBuf == 0)
+        return TRUE;
+
+    /* SMB: Transort
+     * 1 Byte 0
+     * 3 Byte length
+     */
+    SMBLen[0] = 0;
+    SMBLen[1] = ((cbBuf >> 16) & 0xff);
+    SMBLen[2] = ((cbBuf >> 8) & 0xff);
+    SMBLen[3] = (cbBuf & 0xff);
+    PrintHexDump(sizeof(SMBLen), (PBYTE)&SMBLen);
+
+    /* Send the size of the message */
+    if (!SendBytes(s,
+                   (PBYTE)&SMBLen,
+                   sizeof(SMBLen)))
+    {
+        return FALSE;
+    }
+    /* Send the body of the message */
+    if (!SendBytes(s,
+                   pBuf,
+                   cbBuf))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 BOOL SendBytes(
     SOCKET s,
     PBYTE pBuf,
@@ -702,6 +739,52 @@ BOOL ReceiveMsg(
     }
 
     sync_trace("message size = %lu\n", cbData);
+
+    if (sizeof(cbData) != cbRead)
+        return FALSE;
+
+    /* Read the full message */
+    if (!ReceiveBytes(s,
+                      pBuf,
+                      cbData,
+                      &cbRead))
+    {
+        return FALSE;
+    }
+
+    if (cbRead != cbData)
+    {
+        sync_err("cbRead != cbData, was %lu %lu\n",cbRead, cbData);
+        return FALSE;
+    }
+
+    *pcbRead = cbRead;
+    return TRUE;
+}
+
+BOOL ReceiveMsgSMB(SOCKET s,PBYTE pBuf,DWORD cbBuf,DWORD *pcbRead)
+{
+    DWORD cbRead;
+    DWORD cbData;
+    BYTE SMBLen[4];
+
+    /* Retrieve the number of bytes in the message */
+    if (!ReceiveBytes(s,
+                      (PBYTE)SMBLen,
+                      sizeof(SMBLen),
+                      &cbRead))
+    {
+        return FALSE;
+    }
+    /* SMB: Transort
+     * 1 Byte 0
+     * 3 Byte length
+     */
+    cbData = SMBLen[3] |
+             (SMBLen[2] << 8) |
+             (SMBLen[1] << 16);
+
+    sync_trace("smb message size = %lu\n", cbData);
 
     if (sizeof(cbData) != cbRead)
         return FALSE;

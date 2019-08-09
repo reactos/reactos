@@ -8,8 +8,6 @@
 
 #include "client_server.h"
 
-#define g_usPort 2000
-
 typedef struct _SERVER_DATA
 {
     CredHandle hcred;
@@ -32,10 +30,12 @@ GenServerContext(
     BOOL  fNewConversation);
 
 BOOL server2_DoAuthentication(
+    IN int ServerPort,
     IN SOCKET AuthSocket,
     IN LPCTSTR PackageName);
 
 BOOL AcceptAuthSocket(
+    IN int ServerPort,
     OUT SOCKET *ServerSocket,
     IN  LPCTSTR PackageName)
 {
@@ -58,7 +58,7 @@ BOOL AcceptAuthSocket(
     /* Bind to local port */
     sockIn.sin_family = AF_INET;
     sockIn.sin_addr.s_addr = 0;
-    sockIn.sin_port = htons(g_usPort);
+    sockIn.sin_port = htons(ServerPort);
 
     if (SOCKET_ERROR == bind(sockListen,
                              (LPSOCKADDR)&sockIn,
@@ -98,10 +98,11 @@ BOOL AcceptAuthSocket(
     sync_trace("connection accepted on socket %x!\n",sockClient);
     *ServerSocket = sockClient;
 
-    return server2_DoAuthentication(sockClient, PackageName);
+    return server2_DoAuthentication(ServerPort, sockClient, PackageName);
 }
 
 BOOL server2_DoAuthentication(
+    IN int ServerPort,
     IN SOCKET AuthSocket,
     IN LPCTSTR PackageName)
 {
@@ -212,7 +213,6 @@ GenServerContext(
     sync_trace("Token buffer received (%lu bytes):\n", InSecBuff[0].cbBuffer);
     PrintSecBuffer(&InSecBuff[0]);
     sync_trace(">>> %p %p\n", OutSecBuff.pvBuffer, pOut);
-ASC_REQ_ALLOCATE_MEMORY
     PrintASCReqAttr(Attribs);
     ss = AcceptSecurityContext(&hcred,
                                fNewConversation ? NULL : &g_sd.hctxt,
@@ -357,6 +357,7 @@ void server2_cleanup(void)
 
 BOOL WINAPI
 server2_start(
+    IN int ServerPort,
     IN LPCTSTR PackageName)
 {
     BOOL Success, res = FALSE;
@@ -408,7 +409,7 @@ server2_start(
         sync_trace("Waiting for client to connect...\n");
 
         /* Make an authenticated connection with client */
-        Success = AcceptAuthSocket(&Server_Socket, PackageName);
+        Success = AcceptAuthSocket(ServerPort, &Server_Socket, PackageName);
         sync_ok(Success, "AcceptAuthSocket failed\n");
         if (!Success)
         {
@@ -457,53 +458,46 @@ server2_start(
 
         /* Impersonate the client */
         ss = ImpersonateSecurityContext(&g_sd.hctxt);
-        sync_ok(SEC_SUCCESS(ss), "ImpersonateSecurityContext failed with error 0x%08lx\n", ss);
-        if (!SEC_SUCCESS(ss))
-        {
-            sync_err("Impersonate failed: 0x%08lx\n", ss);
-            printerr(ss);
-            sync_err("aborting\n");
-            goto done;
-        }
-        else
+        sync_ok(SEC_SUCCESS(ss), "ImpersonateSecurityContext failed with error 0x%08lx - skipping.\n", ss);
+        if (SEC_SUCCESS(ss))
         {
             sync_trace("Impersonation worked.\n");
-        }
 
-        GetUserName(NULL, &cchUserName);
-        pUserName = (TCHAR*)malloc(cchUserName*sizeof(TCHAR));
-        if (!pUserName)
-        {
-            sync_err("Memory allocation error.\n");
-            sync_err("aborting\n");
-            goto done;
-        }
+            GetUserName(NULL, &cchUserName);
+            pUserName = (TCHAR*)malloc(cchUserName*sizeof(TCHAR));
+            if (!pUserName)
+            {
+                sync_err("Memory allocation error.\n");
+                sync_err("aborting\n");
+                goto done;
+            }
 
-        if (!GetUserName(pUserName, &cchUserName))
-        {
-            sync_err("Could not get the client name.\n");
-            printerr(GetLastError());
-            sync_err("aborting\n");
-            goto done;
-        }
-        else
-        {
-            sync_trace("Client connected as :  %S\n", pUserName);
-        }
+            if (!GetUserName(pUserName, &cchUserName))
+            {
+                sync_err("Could not get the client name.\n");
+                printerr(GetLastError());
+                sync_err("aborting\n");
+                goto done;
+            }
+            else
+            {
+                sync_trace("Client connected as :  %S\n", pUserName);
+            }
 
-        /* Revert to self */
-        ss = RevertSecurityContext(&g_sd.hctxt);
-        sync_ok(SEC_SUCCESS(ss), "RevertSecurityContext failed with error 0x%08lx\n", ss);
-        if (!SEC_SUCCESS(ss))
-        {
-            sync_err("Revert failed: 0x%08lx\n", ss);
-            printerr(GetLastError());
-            sync_err("aborting\n");
-            goto done;
-        }
-        else
-        {
-            sync_trace("Reverted to self.\n");
+            /* Revert to self */
+            ss = RevertSecurityContext(&g_sd.hctxt);
+            sync_ok(SEC_SUCCESS(ss), "RevertSecurityContext failed with error 0x%08lx\n", ss);
+            if (!SEC_SUCCESS(ss))
+            {
+                sync_err("Revert failed: 0x%08lx\n", ss);
+                printerr(GetLastError());
+                sync_err("aborting\n");
+                goto done;
+            }
+            else
+            {
+                sync_trace("Reverted to self.\n");
+            }
         }
 
         /*
@@ -570,14 +564,16 @@ int server2_main(int argc, WCHAR** argv)
     DWORD dwRet;
     WSADATA wsaData;
     LPCTSTR PackageName;
+    int ServerPort;
 
-    if (argc != 1)
+    if (argc != 2)
     {
         sync_err("arg != 1\n");
         return -1;
     }
 
-    PackageName = argv[0];
+    ServerPort = _wtoi(argv[0]);
+    PackageName = argv[1];
 
     /* Startup WSA */
     if (WSAStartup(0x0101, &wsaData))
@@ -587,7 +583,7 @@ int server2_main(int argc, WCHAR** argv)
     }
 
     /* Start the server */
-    dwRet = server2_start(PackageName);
+    dwRet = server2_start(ServerPort, PackageName);
 
     /* Shutdown WSA and return */
     WSACleanup();
