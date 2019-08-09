@@ -2801,7 +2801,7 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     menu->spwndNotify = pWndOwner;
 
     if (flags & TPM_LAYOUTRTL || pWndOwner->ExStyle & WS_EX_LAYOUTRTL)
-       ex_style = WS_EX_LAYOUTRTL;
+       ex_style |= WS_EX_LAYOUTRTL;
 
     RtlInitUnicodeString(&ClassName, WC_MENU);
 
