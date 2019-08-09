@@ -57,6 +57,8 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
         /* not enough space */
         if(messageSize > OutputToken->cbBuffer)
             return SEC_E_BUFFER_TOO_SMALL;
+
+        OutputToken->cbBuffer = messageSize;
     }
     else
     {
