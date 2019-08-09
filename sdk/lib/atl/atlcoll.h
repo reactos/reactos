@@ -198,6 +198,10 @@ public:
 
     E RemoveHead();
     E RemoveTail();
+
+    POSITION InsertBefore(_In_ POSITION pos, INARGTYPE element);
+    POSITION InsertAfter(_In_ POSITION pos, INARGTYPE element);
+
     void RemoveAll();
     void RemoveAt(_In_ POSITION pos);
 
@@ -387,6 +391,50 @@ E CAtlList<E, ETraits>::RemoveTail()
     FreeNode(Node);
 
     return Element;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits >::InsertBefore(_In_ POSITION pos, _In_ INARGTYPE element)
+{
+    if (pos == NULL)
+        return AddHead(element);
+
+    CNode* OldNode = (CNode*)pos;
+    CNode* Node = CreateNode(element, OldNode->m_Prev, OldNode);
+
+    if (OldNode->m_Prev != NULL)
+    {
+        OldNode->m_Prev->m_Next = Node;
+    }
+    else
+    {
+        m_HeadNode = Node;
+    }
+    OldNode->m_Prev = Node;
+
+    return (POSITION)Node;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits >::InsertAfter(_In_ POSITION pos, _In_ INARGTYPE element)
+{
+    if (pos == NULL)
+        return AddTail(element);
+
+    CNode* OldNode = (CNode*)pos;
+    CNode* Node = CreateNode(element, OldNode, OldNode->m_Next);
+
+    if (OldNode->m_Next != NULL)
+    {
+        OldNode->m_Next->m_Prev = Node;
+    }
+    else
+    {
+        m_TailNode = Node;
+    }
+    OldNode->m_Next = Node;
+
+    return (POSITION)Node;
 }
 
 template<typename E, class ETraits>
