@@ -1537,7 +1537,7 @@ NameFromCharSet(BYTE CharSet)
         case SYMBOL_CHARSET: return L"Symbol";
         case SHIFTJIS_CHARSET: return L"Shift_JIS";
         case HANGUL_CHARSET: return L"Hangul";
-        case GB2312_CHARSET: return L"GB2312";
+        case GB2312_CHARSET: return L"GB 2312";
         case CHINESEBIG5_CHARSET: return L"Chinese Big5";
         case OEM_CHARSET: return L"OEM";
         case JOHAB_CHARSET: return L"Johab";
