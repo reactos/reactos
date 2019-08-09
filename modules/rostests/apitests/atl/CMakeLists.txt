@@ -7,6 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 list(APPEND SOURCE
     atltypes.cpp
     CAtlFileMapping.cpp
+    CAtlArray.cpp
     CAtlList.cpp
     CComBSTR.cpp
     CComHeapPtr.cpp
