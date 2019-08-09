@@ -2794,21 +2794,20 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     CREATESTRUCTW Cs;
     LARGE_STRING WindowName;
     UNICODE_STRING ClassName;
-    DWORD ex_style = WS_EX_TOOLWINDOW;
+    DWORD ex_style = WS_EX_PALETTEWINDOW | WS_EX_DLGMODALFRAME;
 
     TRACE("owner=%p hmenu=%p\n", pWndOwner, menu);
 
     menu->spwndNotify = pWndOwner;
 
     if (flags & TPM_LAYOUTRTL || pWndOwner->ExStyle & WS_EX_LAYOUTRTL)
-       ex_style = WS_EX_LAYOUTRTL;
+       ex_style |= WS_EX_LAYOUTRTL;
 
-    ClassName.Buffer = WC_MENU;
-    ClassName.Length = 0;
+    RtlInitUnicodeString(&ClassName, WC_MENU);
 
     RtlZeroMemory(&WindowName, sizeof(WindowName));
     RtlZeroMemory(&Cs, sizeof(Cs));
-    Cs.style = WS_POPUP;
+    Cs.style = WS_POPUP | WS_CLIPSIBLINGS | WS_BORDER;
     Cs.dwExStyle = ex_style;
     Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
     Cs.lpszName = (LPCWSTR) &WindowName;
