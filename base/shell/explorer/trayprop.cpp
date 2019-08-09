@@ -270,6 +270,19 @@ public:
     }
 };
 
+WORD *TEMPLATE_ExtractRect(LPARAM lParam, RECT &rc)
+{
+    WORD *ptr = reinterpret_cast<WORD*>(lParam);
+    ((*ptr == 1) && (*(ptr + 1) == 0xffff)) ? ptr += 9 : ptr += 5;
+    rc.left = *ptr;
+    rc.top = *(ptr + 1);
+    rc.right = *(ptr + 2);
+    rc.bottom = *(ptr + 3);
+    return ptr;
+}
+
+#define EXTRA_BUTTON_SPACE 20
+
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
@@ -277,6 +290,27 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     HICON hIcon;
     switch (uMsg)
     {
+        case PSCB_PRECREATE:
+        {
+            RECT rc;
+            HRSRC hRes;
+            LPVOID Template;
+
+            if ((hRes = FindResource(NULL, MAKEINTRESOURCE(IDD_TASKBARPROP_TASKBAR),
+                                     (LPWSTR)RT_DIALOG)) != NULL)
+                Template = LoadResource(NULL, hRes);
+            else 
+                return 0;
+
+            WORD *temple = TEMPLATE_ExtractRect(lParam, rc);
+            TEMPLATE_ExtractRect((LPARAM)Template, rc);
+            AdjustWindowRectEx(&rc, WS_CAPTION, 0, WS_EX_PALETTEWINDOW);
+
+            *(temple + 2) = rc.right;
+            *(temple + 3) = rc.bottom + 20 + EXTRA_BUTTON_SPACE;
+
+            return 0;
+        }
         case PSCB_INITIALIZED:
         {
             hIcon = LoadIconW(hExplorerInstance, MAKEINTRESOURCEW(IDI_STARTMENU));
