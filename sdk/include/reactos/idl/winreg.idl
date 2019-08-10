@@ -165,10 +165,10 @@ interface winreg
         [in] PRPC_UNICODE_STRING lpSubKey,
         [in] PRPC_UNICODE_STRING lpFile);
 
-    /* Function 14 */
+    /* Function 14 - Not used on wire */
     void
     __stdcall
-    Opnum14NotImplemented(void);
+    BaseRegNotifyChangeKeyValue(void);
 
     /* Function 15 */
     error_status_t
@@ -288,10 +288,10 @@ interface winreg
         [in] REGSAM samDesired,
         [out] PRPC_HKEY phKey);
 
-    /* Function 28 */
+    /* Function 28 - Not used on wire */
     void
     __stdcall
-    Opnum28NotImplemented(void);
+    OpenDynData(void);
 
     /* Function 29 */
     error_status_t

@@ -261,10 +261,10 @@ BaseRegLoadKey(
 }
 
 
-/* Function 14 */
+/* Function 14 - Not used on wire */
 void
 __stdcall
-Opnum14NotImplemented(
+BaseRegNotifyChangeKeyValue(
     handle_t IDL_handle)
 {
     TRACE("\n");
@@ -462,10 +462,10 @@ OpenCurrentConfig(
 }
 
 
-/* Function 28 */
+/* Function 28 - Not used on wire */
 void
 __stdcall
-Opnum28NotImplemented(
+OpenDynData(
     handle_t IDL_handle)
 {
     TRACE("\n");
