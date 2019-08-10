@@ -62,6 +62,7 @@ typedef struct GDI_LOAD_FONT
     DWORD               Characteristics;
     UNICODE_STRING      RegValueName;
     BOOL                IsTrueType;
+    BYTE                CharSet;
     PFONT_ENTRY_MEM     PrivateEntry;
 } GDI_LOAD_FONT, *PGDI_LOAD_FONT;
 

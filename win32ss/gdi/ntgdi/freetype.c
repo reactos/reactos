@@ -686,7 +686,14 @@ InitFontSupport(VOID)
         return FALSE;
     }
 
-    IntLoadSystemFonts();
+    if (!IntLoadFontsInRegistry())
+    {
+        DPRINT1("Fonts registry is empty.\n");
+
+        /* Load font(s) with writing registry */
+        IntLoadSystemFonts();
+    }
+
     IntLoadFontSubstList(&g_FontSubstListHead);
 
 #if DBG
@@ -1020,7 +1027,7 @@ IntLoadSystemFonts(VOID)
                         TempString.MaximumLength = DirInfo->FileNameLength;
                     RtlCopyUnicodeString(&FileName, &Directory);
                     RtlAppendUnicodeStringToString(&FileName, &TempString);
-                    IntGdiAddFontResource(&FileName, 0);
+                    IntGdiAddFontResourceEx(&FileName, 0, AFRX_WRITE_REGISTRY);
                     if (DirInfo->NextEntryOffset == 0)
                         break;
                     DirInfo = (PFILE_DIRECTORY_INFORMATION)((ULONG_PTR)DirInfo + DirInfo->NextEntryOffset);
@@ -1316,6 +1323,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 if (!Error)
                 {
                     FontGDI->CharSet = WinFNT.charset;
+                    pLoadFont->CharSet = WinFNT.charset;
                 }
                 IntUnLockFreeType();
             }
@@ -1526,6 +1534,34 @@ Finish:
     }
 }
 
+static LPCWSTR FASTCALL
+NameFromCharSet(BYTE CharSet)
+{
+    switch (CharSet)
+    {
+        case ANSI_CHARSET: return L"ANSI";
+        case DEFAULT_CHARSET: return L"Default";
+        case SYMBOL_CHARSET: return L"Symbol";
+        case SHIFTJIS_CHARSET: return L"Shift_JIS";
+        case HANGUL_CHARSET: return L"Hangul";
+        case GB2312_CHARSET: return L"GB 2312";
+        case CHINESEBIG5_CHARSET: return L"Chinese Big5";
+        case OEM_CHARSET: return L"OEM";
+        case JOHAB_CHARSET: return L"Johab";
+        case HEBREW_CHARSET: return L"Hebrew";
+        case ARABIC_CHARSET: return L"Arabic";
+        case GREEK_CHARSET: return L"Greek";
+        case TURKISH_CHARSET: return L"Turkish";
+        case VIETNAMESE_CHARSET: return L"Vietnamese";
+        case THAI_CHARSET: return L"Thai";
+        case EASTEUROPE_CHARSET: return L"Eastern European";
+        case RUSSIAN_CHARSET: return L"Russian";
+        case MAC_CHARSET: return L"Mac";
+        case BALTIC_CHARSET: return L"Baltic";
+        default: return L"Unknown";
+    }
+}
+
 /*
  * IntGdiAddFontResource
  *
@@ -1533,7 +1569,8 @@ Finish:
  */
 
 INT FASTCALL
-IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
+                        DWORD dwFlags)
 {
     NTSTATUS Status;
     HANDLE FileHandle;
@@ -1588,6 +1625,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     LoadFont.Characteristics    = Characteristics;
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
     LoadFont.IsTrueType         = FALSE;
+    LoadFont.CharSet            = DEFAULT_CHARSET;
     LoadFont.PrivateEntry       = NULL;
     FontCount = IntGdiLoadFontsFromMemory(&LoadFont);
 
@@ -1599,15 +1637,15 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     ObDereferenceObject(SectionObject);
 
     /* Save the loaded font name into the registry */
-    if (FontCount > 0)
+    if (FontCount > 0 && (dwFlags & AFRX_WRITE_REGISTRY))
     {
+        UNICODE_STRING NewString;
+        SIZE_T Length;
+        PWCHAR pszBuffer;
+        LPCWSTR CharSetName;
         if (LoadFont.IsTrueType)
         {
             /* Append " (TrueType)" */
-            UNICODE_STRING NewString;
-            SIZE_T Length;
-            PWCHAR pszBuffer;
-
             Length = LoadFont.RegValueName.Length + TrueTypePostfix.Length + sizeof(UNICODE_NULL);
             pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
             if (pszBuffer)
@@ -1624,6 +1662,31 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
                 // FIXME!
             }
         }
+        else if (LoadFont.CharSet != DEFAULT_CHARSET)
+        {
+            /* Append " (CharSetName)" */
+            CharSetName = NameFromCharSet(LoadFont.CharSet);
+            Length = LoadFont.RegValueName.Length +
+                     (wcslen(CharSetName) + 3) * sizeof(WCHAR) +
+                     sizeof(UNICODE_NULL);
+
+            pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+            if (pszBuffer)
+            {
+                RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                NewString.Buffer[0] = UNICODE_NULL;
+                RtlAppendUnicodeStringToString(&NewString, &LoadFont.RegValueName);
+                RtlAppendUnicodeToString(&NewString, L" (");
+                RtlAppendUnicodeToString(&NewString, CharSetName);
+                RtlAppendUnicodeToString(&NewString, L")");
+                RtlFreeUnicodeString(&LoadFont.RegValueName);
+                LoadFont.RegValueName = NewString;
+            }
+            else
+            {
+                // FIXME!
+            }
+        }
 
         InitializeObjectAttributes(&ObjectAttributes, &g_FontRegPath,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -1632,10 +1695,23 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         if (NT_SUCCESS(Status))
         {
             SIZE_T DataSize;
-            LPWSTR pFileName = wcsrchr(FileName->Buffer, L'\\');
+            LPWSTR pFileName;
+
+            if (dwFlags & AFRX_ALTERNATIVE_PATH)
+            {
+                pFileName = FileName->Buffer;
+            }
+            else
+            {
+                pFileName = wcsrchr(FileName->Buffer, L'\\');
+            }
+
             if (pFileName)
             {
-                pFileName++;
+                if (!(dwFlags & AFRX_ALTERNATIVE_PATH))
+                {
+                    pFileName++;
+                }
                 DataSize = (wcslen(pFileName) + 1) * sizeof(WCHAR);
                 ZwSetValueKey(KeyHandle, &LoadFont.RegValueName, 0, REG_SZ,
                               pFileName, DataSize);
@@ -1646,6 +1722,177 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     RtlFreeUnicodeString(&LoadFont.RegValueName);
 
     return FontCount;
+}
+
+INT FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
+{
+    return IntGdiAddFontResourceEx(FileName, Characteristics, 0);
+}
+
+/* Borrowed from shlwapi!PathIsRelativeW */
+BOOL WINAPI PathIsRelativeW(LPCWSTR lpszPath)
+{
+    if (!lpszPath || !*lpszPath)
+        return TRUE;
+    if (*lpszPath == L'\\' || (*lpszPath && lpszPath[1] == L':'))
+        return FALSE;
+    return TRUE;
+}
+
+BOOL FASTCALL
+IntLoadFontsInRegistry(VOID)
+{
+    NTSTATUS                        Status;
+    HANDLE                          KeyHandle;
+    OBJECT_ATTRIBUTES               ObjectAttributes;
+    KEY_FULL_INFORMATION            KeyFullInfo;
+    ULONG                           i, Length;
+    UNICODE_STRING                  FontTitleW, FileNameW;
+    SIZE_T                          InfoSize;
+    LPBYTE                          InfoBuffer;
+    PKEY_VALUE_FULL_INFORMATION     pInfo;
+    LPWSTR                          pchPath;
+    BOOLEAN                         Success;
+    WCHAR                           szPath[MAX_PATH];
+    INT                             nFontCount = 0;
+    DWORD                           dwFlags;
+
+    /* open registry key */
+    InitializeObjectAttributes(&ObjectAttributes, &g_FontRegPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey failed: 0x%08X\n", Status);
+        return FALSE;   /* failure */
+    }
+
+    /* query count of values */
+    Status = ZwQueryKey(KeyHandle, KeyFullInformation,
+                        &KeyFullInfo, sizeof(KeyFullInfo), &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwQueryKey failed: 0x%08X\n", Status);
+        ZwClose(KeyHandle);
+        return FALSE;   /* failure */
+    }
+
+    /* allocate buffer */
+    InfoSize = (MAX_PATH + 256) * sizeof(WCHAR);
+    InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+    if (!InfoBuffer)
+    {
+        DPRINT1("ExAllocatePoolWithTag failed\n");
+        ZwClose(KeyHandle);
+        return FALSE;
+    }
+
+    /* for each value */
+    for (i = 0; i < KeyFullInfo.Values; ++i)
+    {
+        /* get value name */
+        Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                     InfoBuffer, InfoSize, &Length);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* too short buffer */
+            ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+            InfoSize *= 2;
+            InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+            if (!InfoBuffer)
+            {
+                DPRINT1("ExAllocatePoolWithTag failed\n");
+                break;
+            }
+            /* try again */
+            Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                         InfoBuffer, InfoSize, &Length);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
+            break;      /* failure */
+        }
+
+        /* create FontTitleW string */
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        Length = pInfo->NameLength / sizeof(WCHAR);
+        pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
+        Success = RtlCreateUnicodeString(&FontTitleW, pInfo->Name);
+        if (!Success)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
+            break;      /* failure */
+        }
+
+        /* query value */
+        Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+                                 InfoBuffer, InfoSize, &Length);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            /* too short buffer */
+            ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+            InfoSize *= 2;
+            InfoBuffer = ExAllocatePoolWithTag(PagedPool, InfoSize, TAG_FONT);
+            if (!InfoBuffer)
+            {
+                DPRINT1("ExAllocatePoolWithTag failed\n");
+                break;
+            }
+            /* try again */
+            Status = ZwQueryValueKey(KeyHandle, &FontTitleW, KeyValueFullInformation, 
+                                     InfoBuffer, InfoSize, &Length);
+        }
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        if (!NT_SUCCESS(Status) || !pInfo->DataLength)
+        {
+            DPRINT("ZwQueryValueKey failed: 0x%08X\n", Status);
+            RtlFreeUnicodeString(&FontTitleW);
+            break;      /* failure */
+        }
+
+        /* Build pchPath */
+        pchPath = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
+        Length = pInfo->DataLength / sizeof(WCHAR);
+        pchPath[Length] = UNICODE_NULL; /* truncate */
+
+        /* Load font(s) without writing registry */
+        dwFlags = 0;
+        if (PathIsRelativeW(pchPath))
+        {
+            Status = RtlStringCbPrintfW(szPath, sizeof(szPath),
+                                        L"%s\\Fonts\\%s",
+                                        SharedUserData->NtSystemRoot, pchPath);
+        }
+        else
+        {
+            dwFlags |= AFRX_ALTERNATIVE_PATH;
+            Status = RtlStringCbCopyW(szPath, sizeof(szPath), pchPath);
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            RtlCreateUnicodeString(&FileNameW, szPath);
+            nFontCount += IntGdiAddFontResourceEx(&FileNameW, 0, dwFlags);
+            RtlFreeUnicodeString(&FileNameW);
+        }
+
+        RtlFreeUnicodeString(&FontTitleW);
+    }
+
+    /* close now */
+    ZwClose(KeyHandle);
+
+    /* free memory block */
+    if (InfoBuffer)
+    {
+        ExFreePoolWithTag(InfoBuffer, TAG_FONT);
+    }
+
+    return (KeyFullInfo.Values != 0 && nFontCount != 0);
 }
 
 HANDLE FASTCALL
