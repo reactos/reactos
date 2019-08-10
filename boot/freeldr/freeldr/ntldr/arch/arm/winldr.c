@@ -165,8 +165,8 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
 VOID
 WinLdrSetupForNt(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                  IN PVOID *GdtIdt,
-                 IN ULONG *PcrBasePage,
-                 IN ULONG *TssBasePage)
+                 IN PULONG PcrBasePage,
+                 IN PULONG TssBasePage)
 {
     PKPDR_PAGE PdrPage = (PVOID)0xFFD00000;
 

@@ -97,7 +97,7 @@ VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 
 
 // winldr.c
-PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
+PVOID WinLdrLoadModule(PCSTR ModuleName, PULONG Size,
                        TYPE_OF_MEMORY MemoryType);
 
 // wlmemory.c
@@ -112,21 +112,21 @@ WinLdrInitSystemHive(
     IN BOOLEAN Setup);
 
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath);
+                             IN PCSTR DirectoryPath);
 
 // winldr.c
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       LPCSTR Options,
-                       LPCSTR SystemPath,
-                       LPCSTR BootPath,
+                       PCSTR Options,
+                       PCSTR SystemPath,
+                       PCSTR BootPath,
                        USHORT VersionToBoot);
 BOOLEAN
 WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName);
+                  IN PCSTR DirectoryPath,
+                  IN PCSTR AnsiFileName,
+                  IN PCSTR OemFileName,
+                  IN PCSTR LanguageFileName);
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       LPWSTR RegistryPath,
@@ -146,6 +146,6 @@ ARC_STATUS
 LoadAndBootWindowsCommon(
     USHORT OperatingSystemVersion,
     PLOADER_PARAMETER_BLOCK LoaderBlock,
-    LPCSTR BootOptions,
-    LPCSTR BootPath,
+    PCSTR BootOptions,
+    PCSTR BootPath,
     BOOLEAN Setup);

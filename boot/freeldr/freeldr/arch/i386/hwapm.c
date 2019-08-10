@@ -27,30 +27,30 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 static BOOLEAN
 FindApmBios(VOID)
 {
-  REGS  RegsIn;
-  REGS  RegsOut;
+    REGS  RegsIn;
+    REGS  RegsOut;
 
-  RegsIn.b.ah = 0x53;
-  RegsIn.b.al = 0x00;
-  RegsIn.w.bx = 0x0000;
+    RegsIn.b.ah = 0x53;
+    RegsIn.b.al = 0x00;
+    RegsIn.w.bx = 0x0000;
 
-  Int386(0x15, &RegsIn, &RegsOut);
+    Int386(0x15, &RegsIn, &RegsOut);
 
-  if (INT386_SUCCESS(RegsOut))
+    if (INT386_SUCCESS(RegsOut))
     {
-      TRACE("Found APM BIOS\n");
-      TRACE("AH: %x\n", RegsOut.b.ah);
-      TRACE("AL: %x\n", RegsOut.b.al);
-      TRACE("BH: %x\n", RegsOut.b.bh);
-      TRACE("BL: %x\n", RegsOut.b.bl);
-      TRACE("CX: %x\n", RegsOut.w.cx);
+        TRACE("Found APM BIOS\n");
+        TRACE("AH: %x\n", RegsOut.b.ah);
+        TRACE("AL: %x\n", RegsOut.b.al);
+        TRACE("BH: %x\n", RegsOut.b.bh);
+        TRACE("BL: %x\n", RegsOut.b.bl);
+        TRACE("CX: %x\n", RegsOut.w.cx);
 
-      return TRUE;
+        return TRUE;
     }
 
-  TRACE("No APM BIOS found\n");
+    TRACE("No APM BIOS found\n");
 
-  return FALSE;
+    return FALSE;
 }
 
 

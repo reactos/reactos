@@ -33,10 +33,10 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
 
 static VOID
-SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
+SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
 {
     INFCONTEXT InfContext;
-    LPCSTR AnsiName, OemName, LangName;
+    PCSTR AnsiName, OemName, LangName;
 
     /* Get ANSI codepage file */
     if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
@@ -79,7 +79,7 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
     {
         BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
         TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
-    }    
+    }
 #else
     WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
 #endif
@@ -89,11 +89,11 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
 }
 
 static VOID
-SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR SearchPath)
+SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
     BOOLEAN Success;
-    LPCSTR Media, DriverName, dirIndex, ImagePath;
+    PCSTR Media, DriverName, dirIndex, ImagePath;
     WCHAR ServiceName[256];
     WCHAR ImagePathW[256];
 
@@ -152,8 +152,8 @@ LoadReactOSSetup(
     CHAR FileName[512];
     CHAR BootPath[512];
     CHAR BootOptions2[256];
-    LPCSTR LoadOptions;
-    LPSTR BootOptions;
+    PCSTR LoadOptions;
+    PSTR BootOptions;
     BOOLEAN BootFromFloppy;
     BOOLEAN Success;
     ULONG i, ErrorLine;
@@ -161,9 +161,9 @@ LoadReactOSSetup(
     INFCONTEXT InfContext;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     PSETUP_LOADER_BLOCK SetupBlock;
-    LPCSTR SystemPath;
+    PCSTR SystemPath;
 
-    static LPCSTR SourcePaths[] =
+    static PCSTR SourcePaths[] =
     {
         "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -297,7 +297,7 @@ LoadReactOSSetup(
     /* Get debug load options and use them */
     if (InfFindFirstLine(InfHandle, "SetupData", "DbgOsLoadOptions", &InfContext))
     {
-        LPCSTR DbgLoadOptions;
+        PCSTR DbgLoadOptions;
 
         if (InfGetDataField(&InfContext, 1, &DbgLoadOptions))
             LoadOptions = DbgLoadOptions;

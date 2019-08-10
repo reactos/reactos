@@ -23,7 +23,7 @@
 #include "prep.h"
 #include "compat.h"
 
-extern void BootMain( LPSTR CmdLine );
+extern void BootMain( PSTR CmdLine );
 extern const PCSTR GetFreeLoaderVersionString(VOID);
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;

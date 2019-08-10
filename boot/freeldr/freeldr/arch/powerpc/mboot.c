@@ -432,10 +432,10 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
     LARGE_INTEGER Position;
-    LPSTR TempName;
+    PSTR TempName;
 
     TempName = strrchr(ImageName, '\\');
-    if(TempName) TempName++; else TempName = (LPSTR)ImageName;
+    if(TempName) TempName++; else TempName = (PSTR)ImageName;
     ModuleData = LdrGetModuleObject(TempName);
 
     if(ModuleData)
@@ -708,7 +708,7 @@ FrLdrMapKernel(FILE *KernelImage)
 ULONG_PTR
 NTAPI
 FrLdrLoadModule(FILE *ModuleImage,
-                LPCSTR ModuleName,
+                PCSTR ModuleName,
                 PULONG ModuleSize)
 {
     ARC_STATUS Status;
@@ -716,8 +716,8 @@ FrLdrLoadModule(FILE *ModuleImage,
     ULONG LocalModuleSize;
     ULONG_PTR ThisModuleBase = NextModuleBase;
     PLOADER_MODULE ModuleData;
-    LPSTR NameBuffer;
-    LPSTR TempName;
+    PSTR NameBuffer;
+    PSTR TempName;
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
@@ -795,10 +795,10 @@ FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
 
 ULONG_PTR
 NTAPI
-FrLdrCreateModule(LPCSTR ModuleName)
+FrLdrCreateModule(PCSTR ModuleName)
 {
     PLOADER_MODULE ModuleData;
-    LPSTR NameBuffer;
+    PSTR NameBuffer;
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];

@@ -91,12 +91,9 @@ BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
     CacheManagerDrive.BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 
     CacheBlockCount = 0;
-    CacheSizeLimit = TotalPagesInLookupTable / 8 * MM_PAGE_SIZE;
     CacheSizeCurrent = 0;
-    if (CacheSizeLimit > TEMP_HEAP_SIZE - (128 * 1024))
-    {
-        CacheSizeLimit = TEMP_HEAP_SIZE - (128 * 1024);
-    }
+    CacheSizeLimit = TotalPagesInLookupTable / 8 * MM_PAGE_SIZE;
+    CacheSizeLimit = min(CacheSizeLimit, TEMP_HEAP_SIZE - (128 * 1024));
 
     CacheManagerInitialized = TRUE;
 

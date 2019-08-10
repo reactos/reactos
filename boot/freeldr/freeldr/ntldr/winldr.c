@@ -75,9 +75,9 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 // Init "phase 1"
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       LPCSTR Options,
-                       LPCSTR SystemRoot,
-                       LPCSTR BootPath,
+                       PCSTR Options,
+                       PCSTR SystemRoot,
+                       PCSTR BootPath,
                        USHORT VersionToBoot)
 {
     /* Examples of correct options and paths */
@@ -86,7 +86,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     //CHAR    SystemRoot[] = "\\WINNT\\";
     //CHAR    ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
 
-    LPSTR LoadOptions, NewLoadOptions;
+    PSTR  LoadOptions, NewLoadOptions;
     CHAR  HalPath[] = "\\";
     CHAR  ArcBoot[MAX_PATH+1];
     CHAR  MiscFiles[MAX_PATH+1];
@@ -106,6 +106,23 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     LoaderBlock->ArcBootDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
     RtlStringCbCopyA(LoaderBlock->ArcBootDeviceName, sizeof(WinLdrSystemBlock->ArcBootDeviceName), ArcBoot);
     LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
+
+//
+// IMPROVE!!
+// SetupBlock->ArcSetupDeviceName must be the path to the setup **SOURCE**,
+// and not the setup boot path. Indeed they may differ!!
+//
+    /* If we have a setup block, adjust also its ARC path */
+    if (LoaderBlock->SetupLdrBlock)
+    {
+        PSETUP_LOADER_BLOCK SetupBlock = LoaderBlock->SetupLdrBlock;
+
+        /* Matches ArcBoot path */
+        SetupBlock->ArcSetupDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
+        SetupBlock->ArcSetupDeviceName = PaToVa(SetupBlock->ArcSetupDeviceName);
+
+        /* Note: LoaderBlock->SetupLdrBlock is PaToVa'ed at the end of this function */
+    }
 
     /* Fill ARC HalDevice, it matches ArcBoot path */
     LoaderBlock->ArcHalDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
@@ -221,7 +238,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 static BOOLEAN
 WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
-                       LPCSTR BootPath,
+                       PCSTR BootPath,
                        PUNICODE_STRING FilePath,
                        ULONG Flags,
                        PLDR_DATA_TABLE_ENTRY *DriverDTE)
@@ -292,7 +309,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
 BOOLEAN
 WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      LPCSTR BootPath)
+                      PCSTR BootPath)
 {
     PLIST_ENTRY NextBd;
     PBOOT_DRIVER_LIST_ENTRY BootDriver;
@@ -344,7 +361,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 PVOID
 WinLdrLoadModule(PCSTR ModuleName,
-                 ULONG *Size,
+                 PULONG Size,
                  TYPE_OF_MEMORY MemoryType)
 {
     ULONG FileId;
@@ -782,15 +799,15 @@ ARC_STATUS
 LoadAndBootWindowsCommon(
     USHORT OperatingSystemVersion,
     PLOADER_PARAMETER_BLOCK LoaderBlock,
-    LPCSTR BootOptions,
-    LPCSTR BootPath,
+    PCSTR BootOptions,
+    PCSTR BootPath,
     BOOLEAN Setup)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlockVA;
     BOOLEAN Success;
     PLDR_DATA_TABLE_ENTRY KernelDTE;
     KERNEL_ENTRY_POINT KiSystemStartup;
-    LPCSTR SystemRoot;
+    PCSTR SystemRoot;
 
     TRACE("LoadAndBootWindowsCommon()\n");
 

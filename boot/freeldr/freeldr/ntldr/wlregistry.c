@@ -19,13 +19,13 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 ULONG TotalNLSSize = 0;
 
 static BOOLEAN
-WinLdrGetNLSNames(LPSTR AnsiName,
-                  LPSTR OemName,
-                  LPSTR LangName);
+WinLdrGetNLSNames(PSTR AnsiName,
+                  PSTR OemName,
+                  PSTR LangName);
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
-                   IN LPCSTR DirectoryPath);
+                   IN PCSTR SystemRoot);
 
 
 /* FUNCTIONS **************************************************************/
@@ -171,14 +171,14 @@ WinLdrInitSystemHive(
 }
 
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath)
+                             IN PCSTR SystemRoot)
 {
     CHAR SearchPath[1024];
     CHAR AnsiName[256], OemName[256], LangName[256];
     BOOLEAN Success;
 
     /* Scan registry and prepare boot drivers list */
-    WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, DirectoryPath);
+    WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, SystemRoot);
 
     /* Get names of NLS files */
     Success = WinLdrGetNLSNames(AnsiName, OemName, LangName);
@@ -191,7 +191,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
 
     /* Load NLS data */
-    strcpy(SearchPath, DirectoryPath);
+    strcpy(SearchPath, SystemRoot);
     strcat(SearchPath, "system32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
@@ -208,9 +208,9 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 // Queries registry for those three file names
 static BOOLEAN
-WinLdrGetNLSNames(LPSTR AnsiName,
-                  LPSTR OemName,
-                  LPSTR LangName)
+WinLdrGetNLSNames(PSTR AnsiName,
+                  PSTR OemName,
+                  PSTR LangName)
 {
     LONG rc = ERROR_SUCCESS;
     HKEY hKey;
@@ -218,7 +218,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     WCHAR NameBuffer[80];
     ULONG BufferSize;
 
-    /* open the codepage key */
+    /* Open the CodePage key */
     rc = RegOpenKey(NULL,
         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
         &hKey);
@@ -266,7 +266,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     }
     sprintf(OemName, "%S", NameBuffer);
 
-    /* Open the language key */
+    /* Open the Language key */
     rc = RegOpenKey(NULL,
         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
         &hKey);
@@ -299,10 +299,10 @@ WinLdrGetNLSNames(LPSTR AnsiName,
 
 BOOLEAN
 WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName)
+                  IN PCSTR DirectoryPath,
+                  IN PCSTR AnsiFileName,
+                  IN PCSTR OemFileName,
+                  IN PCSTR LanguageFileName)
 {
     CHAR FileName[255];
     ULONG AnsiFileId;
@@ -486,7 +486,7 @@ Failure:
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
-                   IN LPCSTR DirectoryPath)
+                   IN PCSTR SystemRoot)
 {
     LONG rc = 0;
     HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
@@ -614,11 +614,11 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");
                         TempImagePath[0] = 0;
-                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%S.sys", SystemRoot, ServiceName);
                     }
                     else if (TempImagePath[0] != L'\\')
                     {
-                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", DirectoryPath, TempImagePath);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
                     }
                     else
                     {
@@ -694,11 +694,11 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 {
                     TRACE_CH(REACTOS, "ImagePath: not found\n");
                     TempImagePath[0] = 0;
-                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", SystemRoot, ServiceName);
                 }
                 else if (TempImagePath[0] != L'\\')
                 {
-                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", DirectoryPath, TempImagePath);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
                 }
                 else
                 {

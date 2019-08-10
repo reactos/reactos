@@ -87,7 +87,7 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
     Int386(0x1A, &RegsIn, &RegsOut);
 
     if (INT386_SUCCESS(RegsOut) &&
-        (RegsOut.d.edx == 0x20494350) &&
+        (RegsOut.d.edx == ' ICP') &&
         (RegsOut.b.ah == 0))
     {
         TRACE("Found PCI bios\n");

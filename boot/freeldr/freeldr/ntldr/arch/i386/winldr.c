@@ -632,7 +632,7 @@ WinLdrSetProcessorContext(void)
 VOID
 MempDump(VOID)
 {
-    ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
+    PULONG PDE_Addr=(PULONG)PDE;//0xC0300000;
     int i, j;
 
     TRACE("\nPDE\n");
