@@ -877,6 +877,8 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     ULONG Count;
     ARC_STATUS Status;
 
+    TRACE("Enter NtfsMount(%lu)\n", DeviceId);
+
     //
     // Allocate data for volume information
     //
@@ -888,8 +890,7 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     //
     // Read the BootSector
     //
-    Position.HighPart = 0;
-    Position.LowPart = 0;
+    Position.QuadPart = 0;
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
@@ -997,6 +998,7 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     //
     // Return success
     //
+    TRACE("NtfsMount(%lu) success\n", DeviceId);
     return &NtfsFuncTable;
 }
 

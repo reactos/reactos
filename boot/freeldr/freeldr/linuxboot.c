@@ -17,6 +17,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*
+ * The x86 Linux Boot Protocol is explained at:
+ * https://www.kernel.org/doc/Documentation/x86/boot.txt
+ */
+
 #ifndef _M_ARM
 
 #ifdef _M_IX86
@@ -81,8 +86,10 @@ LoadAndBootLinux(
     IN PCHAR Envp[])
 {
     PCSTR Description;
-    PFILE LinuxKernel = 0;
-    PFILE LinuxInitrdFile = 0;
+    ULONG LinuxKernel = 0;
+    ULONG LinuxInitrdFile = 0;
+    ARC_STATUS Status;
+    FILEINFORMATION FileInfo;
 
     Description = GetArgumentValue(Argc, Argv, "LoadIdentifier");
     if (Description)
@@ -129,10 +136,22 @@ LoadAndBootLinux(
         goto LinuxBootFailed;
 
     /* Calc kernel size */
-    LinuxKernelSize = FsGetFileSize(LinuxKernel) - (512 + SetupSectorSize);
+    Status = ArcGetFileInformation(LinuxKernel, &FileInfo);
+    if (Status != ESUCCESS || FileInfo.EndingAddress.HighPart != 0)
+        LinuxKernelSize = 0;
+    else
+        LinuxKernelSize = FileInfo.EndingAddress.LowPart - (512 + SetupSectorSize);
 
-    /* Get the file size */
-    LinuxInitrdSize = FsGetFileSize(LinuxInitrdFile);
+    /* Get the initrd file image (if necessary) */
+    LinuxInitrdSize = 0;
+    if (LinuxInitrdName)
+    {
+        Status = ArcGetFileInformation(LinuxInitrdFile, &FileInfo);
+        if (Status != ESUCCESS || FileInfo.EndingAddress.HighPart != 0)
+            LinuxInitrdSize = 0;
+        else
+            LinuxInitrdSize = FileInfo.EndingAddress.LowPart;
+    }
 
     /* Read the kernel */
     if (!LinuxReadKernel(LinuxKernel))
@@ -184,10 +203,10 @@ LoadAndBootLinux(
 LinuxBootFailed:
 
     if (LinuxKernel)
-        FsCloseFile(LinuxKernel);
+        ArcClose(LinuxKernel);
 
     if (LinuxInitrdFile)
-        FsCloseFile(LinuxInitrdFile);
+        ArcClose(LinuxInitrdFile);
 
     if (LinuxBootSector != NULL)
         MmFreeMemory(LinuxBootSector);
@@ -224,12 +243,14 @@ LinuxParseIniSection(
     IN ULONG Argc,
     IN PCHAR Argv[])
 {
+#if 0
     LinuxBootPath = GetArgumentValue(Argc, Argv, "BootPath");
     if (!LinuxBootPath)
     {
         UiMessageBox("Boot path not specified for selected OS!");
         return FALSE;
     }
+#endif
 
     /* Get the kernel name */
     LinuxKernelName = GetArgumentValue(Argc, Argv, "Kernel");
@@ -255,16 +276,20 @@ LinuxParseIniSection(
     return TRUE;
 }
 
-BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
+BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile)
 {
+    LARGE_INTEGER Position;
+
     /* Allocate memory for boot sector */
     LinuxBootSector = MmAllocateMemoryWithType(512, LoaderSystemCode);
     if (LinuxBootSector == NULL)
         return FALSE;
 
     /* Read linux boot sector */
-    FsSetFilePointer(LinuxKernelFile, 0);
-    if (!FsReadFile(LinuxKernelFile, 512, NULL, LinuxBootSector))
+    Position.QuadPart = 0;
+    if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
+        return FALSE;
+    if (ArcRead(LinuxKernelFile, LinuxBootSector, 512, NULL) != ESUCCESS)
         return FALSE;
 
     /* Check for validity */
@@ -288,13 +313,16 @@ BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
     return TRUE;
 }
 
-BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
+BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile)
 {
+    LARGE_INTEGER Position;
     UCHAR TempLinuxSetupSector[512];
 
     /* Read first linux setup sector */
-    FsSetFilePointer(LinuxKernelFile, 512);
-    if (!FsReadFile(LinuxKernelFile, 512, NULL, TempLinuxSetupSector))
+    Position.QuadPart = 512;
+    if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
+        return FALSE;
+    if (ArcRead(LinuxKernelFile, TempLinuxSetupSector, 512, NULL) != ESUCCESS)
         return FALSE;
 
     /* Check the kernel version */
@@ -316,8 +344,10 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
     RtlCopyMemory(LinuxSetupSector, TempLinuxSetupSector, 512);
 
     /* Read in the rest of the linux setup sectors */
-    FsSetFilePointer(LinuxKernelFile, 1024);
-    if (!FsReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, (PVOID)((ULONG_PTR)LinuxSetupSector + 512)))
+    Position.QuadPart = 1024;
+    if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
+        return FALSE;
+    if (ArcRead(LinuxKernelFile, (PVOID)((ULONG_PTR)LinuxSetupSector + 512), SetupSectorSize - 512, NULL) != ESUCCESS)
         return FALSE;
 
     // DbgDumpBuffer(DPRINT_LINUX, LinuxSetupSector, SetupSectorSize);
@@ -341,11 +371,12 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
     return TRUE;
 }
 
-BOOLEAN LinuxReadKernel(PFILE LinuxKernelFile)
+BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
 {
+    PVOID LoadAddress;
+    LARGE_INTEGER Position;
     ULONG BytesLoaded;
     CHAR  StatusText[260];
-    PVOID LoadAddress;
 
     RtlStringCbPrintfA(StatusText, sizeof(StatusText), "Loading %s", LinuxKernelName);
     UiDrawStatusText(StatusText);
@@ -360,10 +391,12 @@ BOOLEAN LinuxReadKernel(PFILE LinuxKernelFile)
     LoadAddress = LinuxKernelLoadAddress;
 
     /* Read linux kernel to 0x100000 (1mb) */
-    FsSetFilePointer(LinuxKernelFile, 512 + SetupSectorSize);
+    Position.QuadPart = 512 + SetupSectorSize;
+    if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
+        return FALSE;
     for (BytesLoaded=0; BytesLoaded<LinuxKernelSize; )
     {
-        if (!FsReadFile(LinuxKernelFile, LINUX_READ_CHUNK_SIZE, NULL, LoadAddress))
+        if (ArcRead(LinuxKernelFile, LoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
@@ -412,7 +445,7 @@ BOOLEAN LinuxCheckKernelVersion(VOID)
     return TRUE;
 }
 
-BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
+BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
 {
     ULONG        BytesLoaded;
     CHAR    StatusText[260];
@@ -452,7 +485,7 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
     /* Read in the ramdisk */
     for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
     {
-        if (!FsReadFile(LinuxInitrdFile, LINUX_READ_CHUNK_SIZE, NULL, (PVOID)LinuxInitrdLoadAddress))
+        if (ArcRead(LinuxInitrdFile, (PVOID)LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;

@@ -496,6 +496,8 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     ULONG Count;
     ARC_STATUS Status;
 
+    TRACE("Enter IsoMount(%lu)\n", DeviceId);
+
     //
     // Read The Primary Volume Descriptor
     //
@@ -512,10 +514,12 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     // Check if PVD is valid. If yes, return ISO9660 function table
     //
     if (Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5))
+    {
+        TRACE("IsoMount(%lu) success\n", DeviceId);
         return &Iso9660FuncTable;
-    else
-        return NULL;
+    }
+
+    return NULL;
 }
 
 #endif
-

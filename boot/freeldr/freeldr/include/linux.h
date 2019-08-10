@@ -142,11 +142,11 @@ LinuxParseIniSection(
     IN ULONG Argc,
     IN PCHAR Argv[]);
 
-BOOLEAN    LinuxReadBootSector(PFILE LinuxKernelFile);
-BOOLEAN    LinuxReadSetupSector(PFILE LinuxKernelFile);
-BOOLEAN    LinuxReadKernel(PFILE LinuxKernelFile);
-BOOLEAN    LinuxCheckKernelVersion(VOID);
-BOOLEAN    LinuxReadInitrd(PFILE LinuxInitrdFile);
+BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile);
+BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile);
+BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile);
+BOOLEAN LinuxCheckKernelVersion(VOID);
+BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile);
 
 #endif // _M_IX86
 

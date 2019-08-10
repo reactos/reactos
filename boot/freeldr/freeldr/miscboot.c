@@ -32,7 +32,7 @@ LoadAndBootBootSector(
     IN PCHAR Envp[])
 {
     PCSTR FileName;
-    PFILE FilePointer;
+    ULONG FileId;
     ULONG BytesRead;
 
     /* Find all the message box settings and run them */
@@ -46,15 +46,16 @@ LoadAndBootBootSector(
         return EINVAL;
     }
 
-    FilePointer = FsOpenFile(FileName);
-    if (!FilePointer)
+    FileId = FsOpenFile(FileName);
+    if (!FileId)
     {
         UiMessageBox("%s not found.", FileName);
         return ENOENT;
     }
 
     /* Read boot sector */
-    if (!FsReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
+    if (ArcRead(FileId, (void*)0x7c00, 512, &BytesRead) != ESUCCESS ||
+        (BytesRead != 512))
     {
         UiMessageBox("Unable to read boot sector.");
         return EIO;

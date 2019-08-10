@@ -263,7 +263,7 @@ VOID FileSystemError(PCSTR ErrorString)
     UiMessageBox(ErrorString);
 }
 
-PFILE FsOpenFile(PCSTR FileName)
+ULONG FsOpenFile(PCSTR FileName)
 {
     CHAR FullPath[MAX_PATH] = "";
     ULONG FileId;
@@ -301,81 +301,9 @@ PFILE FsOpenFile(PCSTR FileName)
     // Check for success
     //
     if (Status == ESUCCESS)
-        return (PFILE)FileId;
+        return FileId;
     else
-        return (PFILE)0;
-}
-
-VOID FsCloseFile(PFILE FileHandle)
-{
-    ULONG FileId = (ULONG)FileHandle;
-
-    //
-    // Close the handle. Do not check for error,
-    // this function is supposed to always succeed.
-    //
-    ArcClose(FileId);
-}
-
-/*
- * ReadFile()
- * returns number of bytes read or EOF
- */
-BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
-{
-    ULONG FileId = (ULONG)FileHandle;
-
-    //
-    // Read the file
-    //
-    return (ArcRead(FileId, Buffer, BytesToRead, BytesRead) == ESUCCESS);
-}
-
-BOOLEAN FsGetFileInformation(PFILE FileHandle, FILEINFORMATION* Information)
-{
-    ULONG FileId = (ULONG)FileHandle;
-
-    //
-    // Get file information
-    //
-    return (ArcGetFileInformation(FileId, Information) == ESUCCESS);
-}
-
-ULONG FsGetFileSize(PFILE FileHandle)
-{
-    ULONG FileId = (ULONG)FileHandle;
-    FILEINFORMATION Information;
-    ARC_STATUS Status;
-
-    //
-    // Query file informations
-    //
-    Status = ArcGetFileInformation(FileId, &Information);
-
-    //
-    // Check for error
-    //
-    if (Status != ESUCCESS || Information.EndingAddress.HighPart != 0)
         return 0;
-
-    //
-    // Return file size
-    //
-    return Information.EndingAddress.LowPart;
-}
-
-VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
-{
-    ULONG FileId = (ULONG)FileHandle;
-    LARGE_INTEGER Position;
-
-    //
-    // Set file position. Do not check for error,
-    // this function is supposed to always succeed.
-    //
-    Position.HighPart = 0;
-    Position.LowPart = NewFilePointer;
-    ArcSeek(FileId, &Position, SeekAbsolute);
 }
 
 /*

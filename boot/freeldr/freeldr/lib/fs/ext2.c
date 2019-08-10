@@ -1302,6 +1302,8 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
     ULONG Count;
     ARC_STATUS Status;
 
+    TRACE("Enter Ext2Mount(%lu)\n", DeviceId);
+
     //
     // Read the SuperBlock
     //
@@ -1329,6 +1331,9 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
         if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
             return NULL;
         Ext2OpenVolume(DriveNumber, StartSector, SectorCount);
+
+        /* Return success */
+        TRACE("Ext2Mount(%lu) success\n", DeviceId);
         return &Ext2FuncTable;
     }
     else
@@ -1336,4 +1341,3 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 }
 
 #endif
-

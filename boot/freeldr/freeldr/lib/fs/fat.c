@@ -27,7 +27,7 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 ULONG    FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONGLONG PartitionSectorCount);
 PVOID    FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
 BOOLEAN    FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer);
+ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 void    FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
 BOOLEAN    FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPointer);
 ULONG    FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster);
@@ -762,7 +762,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID D
  * specified filename and fills in an FAT_FILE_INFO structure
  * with info describing the file, etc. returns ARC error code
  */
-ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer)
+ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
     UINT32        i;
     ULONG        NumberOfPathParts;
@@ -986,7 +986,8 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
         if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
         {
-            return FALSE;
+            Success = FALSE;
+            break;
         }
 
         // Get the fat entry
@@ -1439,7 +1440,7 @@ ARC_STATUS FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     TRACE("FatOpen() FileName = %s\n", Path);
 
     RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
-    Status = FatLookupFile(FatVolume, Path, DeviceId, &TempFileInfo);
+    Status = FatLookupFile(FatVolume, Path, &TempFileInfo);
     if (Status != ESUCCESS)
         return ENOENT;
 
@@ -1522,6 +1523,8 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     ULARGE_INTEGER SectorCount;
     ARC_STATUS Status;
 
+    TRACE("Enter FatMount(%lu)\n", DeviceId);
+
     //
     // Allocate data for volume information
     //
@@ -1533,8 +1536,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     //
     // Read the BootSector
     //
-    Position.HighPart = 0;
-    Position.LowPart = 0;
+    Position.QuadPart = 0;
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
@@ -1569,8 +1571,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
         FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
-    SectorCount.HighPart = FileInformation.EndingAddress.HighPart;
-    SectorCount.LowPart = FileInformation.EndingAddress.LowPart;
+    SectorCount.QuadPart = FileInformation.EndingAddress.QuadPart;
     SectorCount.QuadPart /= SECTOR_SIZE;
 
     //
@@ -1595,5 +1596,6 @@ const DEVVTBL* FatMount(ULONG DeviceId)
     //
     // Return success
     //
+    TRACE("FatMount(%lu) success\n", DeviceId);
     return &FatFuncTable;
 }

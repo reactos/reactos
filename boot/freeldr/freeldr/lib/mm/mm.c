@@ -243,7 +243,7 @@ VOID DumpMemoryAllocMap(VOID)
             DbgPrint("*");
             break;
         case LoaderBad:
-            DbgPrint( "-");
+            DbgPrint("-");
             break;
         case LoaderLoadedProgram:
             DbgPrint("O");
@@ -252,7 +252,7 @@ VOID DumpMemoryAllocMap(VOID)
             DbgPrint("T");
             break;
         case LoaderFirmwarePermanent:
-            DbgPrint( "P");
+            DbgPrint("P");
             break;
         case LoaderOsloaderHeap:
             DbgPrint("H");
