@@ -226,13 +226,15 @@ typedef struct ext2_dirent        EXT2_DIR_ENTRY, *PEXT2_DIR_ENTRY;
 
 #define FAST_SYMLINK_MAX_NAME_SIZE    60
 
+typedef struct _EXT2_VOLUME_INFO *PEXT2_VOLUME_INFO;
+
 typedef struct
 {
-    ULONGLONG    FileSize;        // File size
-    ULONGLONG    FilePointer;        // File pointer
-    ULONG*        FileBlockList;        // File block list
-    UCHAR        DriveNumber;        // Drive number of open file
-    EXT2_INODE    Inode;            // File's inode
+    ULONGLONG   FileSize;       // File size
+    ULONGLONG   FilePointer;    // File pointer
+    ULONG*      FileBlockList;  // File block list
+    EXT2_INODE  Inode;          // File's inode
+    PEXT2_VOLUME_INFO   Volume;
 } EXT2_FILE_INFO, * PEXT2_FILE_INFO;
 
 const DEVVTBL* Ext2Mount(ULONG DeviceId);
