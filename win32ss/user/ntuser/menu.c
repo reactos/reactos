@@ -2605,7 +2605,8 @@ static void FASTCALL MENU_DrawPopupMenu(PWND wnd, HDC hdc, PMENU menu )
     {
         HPEN hPrevPen;
 
-        NtGdiRectangle( hdc, rect.left, rect.top, rect.right, rect.bottom );
+        /* FIXME: Maybe we don't have to fill the background manually */
+        FillRect(hdc, &rect, brush);
 
         hPrevPen = NtGdiSelectPen( hdc, NtGdiGetStockObject( NULL_PEN ) );
         if ( hPrevPen )
