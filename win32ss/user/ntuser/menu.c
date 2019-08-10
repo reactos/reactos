@@ -2803,7 +2803,8 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     if (flags & TPM_LAYOUTRTL || pWndOwner->ExStyle & WS_EX_LAYOUTRTL)
        ex_style |= WS_EX_LAYOUTRTL;
 
-    RtlInitUnicodeString(&ClassName, WC_MENU);
+    ClassName.Buffer = WC_MENU;
+    ClassName.Length = 0;
 
     RtlZeroMemory(&WindowName, sizeof(WindowName));
     RtlZeroMemory(&Cs, sizeof(Cs));
