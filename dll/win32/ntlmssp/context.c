@@ -416,7 +416,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             }
         }
         *phNewContext = *phContext;
-        ret = NtlmHandleChallengeMessage(phNewContext->dwLower,
+        ret = NtlmGenerateAuthenticationMessage(phNewContext->dwLower,
                                          fContextReq,
                                          InputToken1,
                                          InputToken2,

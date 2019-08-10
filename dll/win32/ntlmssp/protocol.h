@@ -314,7 +314,7 @@ NtlmGenerateChallengeMessage(
     OUT PSecBuffer OutputToken);
 
 SECURITY_STATUS
-NtlmHandleChallengeMessage(
+NtlmGenerateAuthenticationMessage(
     IN ULONG_PTR hContext,
     IN ULONG ISCContextReq,
     IN PSecBuffer InputToken1,

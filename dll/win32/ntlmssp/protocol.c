@@ -446,15 +446,16 @@ exit:
 }
 
 SECURITY_STATUS
-NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
-                           IN ULONG ISCContextReq,
-                           IN PSecBuffer InputToken1,
-                           IN PSecBuffer InputToken2,
-                           IN OUT PSecBuffer OutputToken1,
-                           IN OUT PSecBuffer OutputToken2,
-                           OUT PULONG pISCContextAttr,
-                           OUT PTimeStamp ptsExpiry,
-                           OUT PULONG NegotiateFlags)
+NtlmGenerateAuthenticationMessage(
+    IN ULONG_PTR hContext,
+    IN ULONG ISCContextReq,
+    IN PSecBuffer InputToken1,
+    IN PSecBuffer InputToken2,
+    IN OUT PSecBuffer OutputToken1,
+    IN OUT PSecBuffer OutputToken2,
+    OUT PULONG pISCContextAttr,
+    OUT PTimeStamp ptsExpiry,
+    OUT PULONG NegotiateFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT context = NULL;
@@ -490,20 +491,20 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     {
         ERR("NtlmHandleChallengeMessage invalid handle!\n");
         ret = SEC_E_INVALID_HANDLE;
-        goto fail;
+        goto quit;
     }
 
     /* re-authenticate call */
     if(context->State == AuthenticateSent)
     {
         UNIMPLEMENTED;
-        goto fail;
+        goto quit;
     }
     else if(context->State != NegotiateSent)
     {
         ERR("Context not in correct state!\n");
         ret = SEC_E_OUT_OF_SEQUENCE;
-        goto fail;
+        goto quit;
     }
 
     /* InputToken1 should contain a challenge message */
@@ -512,19 +513,10 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     {
         ERR("Input token invalid!\n");
         ret = SEC_E_INVALID_TOKEN;
-        goto fail;
+        goto quit;
     }
 
-    /* allocate a buffer for it */
-    if(!(challenge = NtlmAllocate(sizeof(CHALLENGE_MESSAGE))))
-    {
-        ERR("failed to allocate challenge buffer!\n");
-        ret = SEC_E_INSUFFICIENT_MEMORY;
-        goto fail;
-    }
-
-    /* copy it */
-    memcpy(challenge, InputToken1->pvBuffer, sizeof(CHALLENGE_MESSAGE));
+    challenge = (PCHALLENGE_MESSAGE)InputToken1->pvBuffer;
 
     /* validate it */
     if(strncmp(challenge->Signature, NTLMSSP_SIGNATURE, 8) &&
@@ -532,7 +524,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     {
         ERR("Input message not valid!\n");
         ret = SEC_E_INVALID_TOKEN;
-        goto fail;
+        goto quit;
     }
 
     TRACE("Got valid challege message! with flags:\n");
@@ -541,16 +533,17 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     /* print challenge message and payloads */
     NtlmPrintHexDump((PBYTE)InputToken1->pvBuffer, InputToken1->cbBuffer);
 
-    if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM)
+    /* should we really change the input-buffer? */
+    /* if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM)
     {
-        /* take out bad flags */
+        / * take out bad flags * /
         challenge->NegotiateFlags &=
             (context->NegotiateFlags |
             NTLMSSP_NEGOTIATE_TARGET_INFO |
             NTLMSSP_TARGET_TYPE_SERVER |
             NTLMSSP_TARGET_TYPE_DOMAIN |
             NTLMSSP_NEGOTIATE_LOCAL_CALL);
-    }
+    }*/
 
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
         context->NegotiateFlags |= NTLMSSP_NEGOTIATE_TARGET_INFO;
@@ -575,7 +568,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
         /* these flags must be bad! */
         ERR("challenge flags did not specify unicode or oem!\n");
         ret = SEC_E_INVALID_TOKEN;
-        goto fail;
+        goto quit;
     }
 
     /* support ntlm2 */
@@ -594,7 +587,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
         {
             ERR("netware authentication not supported!!!\n");
             ret = SEC_E_UNSUPPORTED_FUNCTION;
-            goto fail;
+            goto quit;
         }
     }
 
@@ -629,6 +622,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_LOCAL_CALL)
         ERR("NTLMSSP_NEGOTIATE_LOCAL_CALL set!\n");
 
+    /* get params we need for auth message */
     /* extract target info */
     if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
@@ -640,7 +634,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
         if (!NT_SUCCESS(ret))
         {
             ERR("could not get target info!\n");
-            goto fail;
+            goto quit;
         }
 
         /* Copy to AvData */
@@ -655,7 +649,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
         if (!NtlmAvlGet(&AvDataRef, MsvAvNbDomainName, &data, &len))
         {
             ERR("could not get domainname from target info!\n");
-            goto fail;
+            goto quit;
         }
 
         /* FIXME: Convert to unicode or do we need it as it is? */
@@ -689,7 +683,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     }
 
     if(!(cred = NtlmReferenceCredential((ULONG_PTR)context->Credential)))
-        goto fail;
+        goto quit;
 
     /* unscramble password */
     NtlmUnProtectMemory(cred->Password.Buffer, cred->Password.Length);
@@ -707,25 +701,53 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                           &Lm2Response,
                           &UserSessionKey,
                           &LmSessionKey);
-
+//DebugBreak();
 #define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input
     InitString(NtResponseString, NtResponse);
     InitString(LmResponseString, Lm2Response);
     InitString(UserSessionKeyString, UserSessionKey);
     InitString(LmSessionKeyString, LmSessionKey);
 
-    messageSize = sizeof(AUTHENTICATE_MESSAGE) + ServerNameRef.Length +
-        cred->UserName.Length + cred->DomainName.Length + NtResponseString.Length +
-        UserSessionKeyString.Length + LmSessionKeyString.Length + LmResponseString.Length;
+    /* FIXME ... leads to invalid param - wireshark */
+    NtResponseString.Length = 0;//FIXME
 
-    if(!(authmessage = (PAUTHENTICATE_MESSAGE)NtlmAllocate(messageSize)))
+    /* calc message size */
+    messageSize = sizeof(AUTHENTICATE_MESSAGE) +
+                  cred->DomainName.Length +
+                  cred->UserName.Length +
+                  ServerNameRef.Length +
+                  NtResponseString.Length +
+                  UserSessionKeyString.Length;
+                  //?? LmSessionKeyString.Length
+    if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+        messageSize += LmResponseString.Length;
+
+    /* if should not allocate */
+    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
     {
-        ret = SEC_E_INSUFFICIENT_MEMORY;
-        goto fail;
+        /* not enough space */
+        if(messageSize > OutputToken1->cbBuffer)
+        {
+            ret = SEC_E_BUFFER_TOO_SMALL;
+            goto quit;
+        }
+        OutputToken1->cbBuffer = messageSize; /* says wine test */
     }
+    else
+    {
+        /* allocate */
+        if(!(OutputToken1->pvBuffer = NtlmAllocate(messageSize)))
+        {
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto quit;
+        }
+    }
+    authmessage = (PAUTHENTICATE_MESSAGE)OutputToken1->pvBuffer;
 
+    /* fill auth message */
     strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     authmessage->MsgType = NtlmAuthenticate;
+    authmessage->NegotiateFlags = context->NegotiateFlags;
 
     offset = (ULONG_PTR)(authmessage+1);
 
@@ -733,7 +755,7 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                             &cred->DomainName,
                             &authmessage->DomainName,
                             &offset);
-    
+
     NtlmUnicodeStringToBlob((PVOID)authmessage,
                             &cred->UserName,
                             &authmessage->UserName,
@@ -762,33 +784,16 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                             &authmessage->EncryptedRandomSessionKey,
                             &offset);
 
-    /* if should not allocate */
-    if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
-    {
-        /* not enough space */
-        if(messageSize > OutputToken1->cbBuffer)
-        {
-            ret = SEC_E_BUFFER_TOO_SMALL;
-            goto fail;
-        }
-    }
-    else
-    {
-        /* allocate */
-        if(!(OutputToken1->pvBuffer = NtlmAllocate(messageSize)))
-        {
-            ret = SEC_E_INSUFFICIENT_MEMORY;
-            goto fail;
-        }
-    }
-
-    OutputToken1->cbBuffer = messageSize; /* says wine test */
-    memcpy(OutputToken1->pvBuffer, authmessage, messageSize);
     context->State = AuthenticateSent;
     ret = SEC_E_OK;
-
-fail:
-    if(authmessage) NtlmFree(authmessage);
+quit:
+    if (ret != SEC_E_OK)
+    {
+        /* maybe free authmessage */
+        if ((ISCContextReq & ISC_REQ_ALLOCATE_MEMORY) &&
+            (authmessage))
+            NtlmFree(authmessage);
+    }
     if(context) NtlmDereferenceContext((ULONG_PTR)context);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
     ERR("handle challenge end\n");
