@@ -112,7 +112,7 @@ WinLdrInitSystemHive(
     IN BOOLEAN Setup);
 
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN PCSTR DirectoryPath);
+                             IN PCSTR SystemRoot);
 
 // winldr.c
 VOID
@@ -129,9 +129,9 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN PCSTR LanguageFileName);
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      LPWSTR RegistryPath,
-                      LPWSTR ImagePath,
-                      LPWSTR ServiceName);
+                      PWSTR RegistryPath,
+                      PWSTR ImagePath,
+                      PWSTR ServiceName);
 
 VOID
 WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);

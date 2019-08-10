@@ -26,7 +26,7 @@ typedef struct tagDEVVTBL
     ARC_OPEN Open;
     ARC_READ Read;
     ARC_SEEK Seek;
-    LPCWSTR ServiceName;
+    PCWSTR ServiceName;
 } DEVVTBL;
 
 #define MAX_FDS 60
@@ -43,7 +43,7 @@ ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
-LPCWSTR FsGetServiceName(ULONG FileId);
+PCWSTR FsGetServiceName(ULONG FileId);
 VOID  FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
 ULONG FsGetDeviceId(ULONG FileId);

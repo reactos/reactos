@@ -106,7 +106,7 @@ WinLdrLoadSystemHive(
         Success = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                         NULL,
-                                        (LPWSTR)FsService);
+                                        (PWSTR)FsService);
         if (!Success)
             TRACE(" Failed to add filesystem service\n");
     }
@@ -490,13 +490,13 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
 {
     LONG rc = 0;
     HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
-    LPWSTR GroupNameBuffer;
+    PWSTR GroupNameBuffer;
     WCHAR ServiceName[256];
     ULONG OrderList[128];
     ULONG BufferSize;
     ULONG Index;
     ULONG TagIndex;
-    LPWSTR GroupName;
+    PWSTR GroupName;
 
     ULONG ValueSize;
     ULONG ValueType;
@@ -773,9 +773,9 @@ InsertInBootDriverList(
 
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      LPWSTR RegistryPath,
-                      LPWSTR ImagePath,
-                      LPWSTR ServiceName)
+                      PWSTR RegistryPath,
+                      PWSTR ImagePath,
+                      PWSTR ServiceName)
 {
     PBOOT_DRIVER_LIST_ENTRY BootDriverEntry;
     NTSTATUS Status;
