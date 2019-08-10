@@ -686,7 +686,14 @@ InitFontSupport(VOID)
         return FALSE;
     }
 
-    IntLoadFontsInRegistry();
+    if (!IntLoadFontsInRegistry())
+    {
+        DPRINT1("Fonts registry is empty.\n");
+
+        /* Load font(s) with writing registry */
+        IntLoadSystemFonts();
+    }
+
     IntLoadFontSubstList(&g_FontSubstListHead);
 
 #if DBG
@@ -1885,16 +1892,7 @@ IntLoadFontsInRegistry(VOID)
         ExFreePoolWithTag(InfoBuffer, TAG_FONT);
     }
 
-    if (KeyFullInfo.Values == 0 || nFontCount == 0)
-    {
-        DPRINT1("Fonts registry is empty.\n");
-
-        /* Load font(s) with writing registry */
-        IntLoadSystemFonts();
-        return TRUE;
-    }
-
-    return NT_SUCCESS(Status);
+    return (KeyFullInfo.Values != 0 && nFontCount != 0);
 }
 
 HANDLE FASTCALL
