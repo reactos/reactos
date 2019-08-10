@@ -70,10 +70,6 @@ BOOL fInEndMenu = FALSE;
 /* Space between 2 columns */
 #define MENU_COL_SPACE 4
 
-/*  top and bottom margins for popup menus */
-#define MENU_TOP_MARGIN 3
-#define MENU_BOTTOM_MARGIN 2
-
 #define MENU_ITEM_HBMP_SPACE (5)
 #define MENU_BAR_ITEMS_SPACE (12)
 #define SEPARATOR_HEIGHT (5)
@@ -2023,7 +2019,7 @@ static void FASTCALL MENU_PopupMenuCalcSize(PMENU Menu, PWND WndOwner)
     NtGdiSelectFont( hdc, ghMenuFont );
 
     start = 0;
-    maxX = 2 + 1;
+    maxX = 0;
 
     Menu->cxTextAlign = 0;
 
@@ -2033,7 +2029,7 @@ static void FASTCALL MENU_PopupMenuCalcSize(PMENU Menu, PWND WndOwner)
       orgX = maxX;
       if( lpitem->fType & (MF_MENUBREAK | MF_MENUBARBREAK))
           orgX += MENU_COL_SPACE;
-      orgY = MENU_TOP_MARGIN;
+      orgY = 0;
 
       maxTab = maxTabWidth = 0;
       /* Parse items until column break or end of menu */
@@ -2072,13 +2068,9 @@ static void FASTCALL MENU_PopupMenuCalcSize(PMENU Menu, PWND WndOwner)
      * of the bitmaps */
     if( !textandbmp) Menu->cxTextAlign = 0;
 
-    /* space for 3d border */
-    Menu->cyMenu += MENU_BOTTOM_MARGIN;
-    Menu->cxMenu += 2;
-
     /* Adjust popup height if it exceeds maximum */
     maxHeight = MENU_GetMaxPopupHeight(Menu);
-    Menu->iMaxTop = Menu->cyMenu - MENU_TOP_MARGIN;
+    Menu->iMaxTop = Menu->cyMenu;
     if (Menu->cyMenu >= maxHeight)
     {
        Menu->cyMenu = maxHeight;
@@ -2618,14 +2610,6 @@ static void FASTCALL MENU_DrawPopupMenu(PWND wnd, HDC hdc, PMENU menu )
         hPrevPen = NtGdiSelectPen( hdc, NtGdiGetStockObject( NULL_PEN ) );
         if ( hPrevPen )
         {
-            BOOL flat_menu = FALSE;
-
-            UserSystemParametersInfo (SPI_GETFLATMENU, 0, &flat_menu, 0);
-            if (flat_menu)
-               FrameRect(hdc, &rect, IntGetSysColorBrush(COLOR_BTNSHADOW));
-            else
-               DrawEdge (hdc, &rect, EDGE_RAISED, BF_RECT);
-
             TRACE("hmenu %p Style %08x\n", UserHMGetHandle(menu), (menu->fFlags & MNS_STYLE_MASK));
             /* draw menu items */
             if (menu && menu->cItems)
@@ -2974,8 +2958,8 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
 
     /* adjust popup menu pos so that it fits within the desktop */
 
-    width = menu->cxMenu + UserGetSystemMetrics(SM_CXBORDER);
-    height = menu->cyMenu + UserGetSystemMetrics(SM_CYBORDER);
+    width = menu->cxMenu + UserGetSystemMetrics(SM_CXDLGFRAME) * 2;
+    height = menu->cyMenu + UserGetSystemMetrics(SM_CYDLGFRAME) * 2;
 
     if (flags & TPM_LAYOUTRTL)
         flags ^= TPM_RIGHTALIGN;
@@ -3120,7 +3104,7 @@ void MENU_EnsureMenuItemVisible(PMENU lppop, UINT wIndex, HDC hdc)
         arrow_bitmap_height = gpsi->oembmi[OBI_DNARROW].cy;
 
         rc.top += arrow_bitmap_height;
-        rc.bottom -= arrow_bitmap_height + MENU_BOTTOM_MARGIN;
+        rc.bottom -= arrow_bitmap_height;
 
         nMaxHeight -= UserGetSystemMetrics(SM_CYBORDER) + 2 * arrow_bitmap_height;
         UserRefObjectCo(pWnd, &Ref);
@@ -3131,9 +3115,9 @@ void MENU_EnsureMenuItemVisible(PMENU lppop, UINT wIndex, HDC hdc)
             MENU_DrawScrollArrows(lppop, hdc);
             //ERR("Scroll Down iTop %d iMaxTop %d nMaxHeight %d\n",lppop->iTop,lppop->iMaxTop,nMaxHeight);
         }
-        else if (item->yItem - MENU_TOP_MARGIN < lppop->iTop)
+        else if (item->yItem < lppop->iTop)
         {
-            lppop->iTop = item->yItem - MENU_TOP_MARGIN;
+            lppop->iTop = item->yItem;
             IntScrollWindow(pWnd, 0, nOldPos - lppop->iTop, &rc, &rc);
             MENU_DrawScrollArrows(lppop, hdc);
             //ERR("Scroll Up   iTop %d iMaxTop %d nMaxHeight %d\n",lppop->iTop,lppop->iMaxTop,nMaxHeight);
@@ -3428,13 +3412,11 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
           /* The first item in the popup menu has to be at the
              same y position as the focused menu item */
           if(Flags & TPM_LAYOUTRTL)
-             Rect.left += UserGetSystemMetrics(SM_CXBORDER);
+             Rect.left += UserGetSystemMetrics(SM_CXDLGFRAME);
           else
-             Rect.left += rc.right /*ItemInfo.Rect.right*/ - UserGetSystemMetrics(SM_CXBORDER);
-          Rect.top += rc.top - MENU_TOP_MARGIN;//3;
-          Rect.right = rc.left - rc.right + UserGetSystemMetrics(SM_CXBORDER);
-          Rect.bottom = rc.top - rc.bottom - MENU_TOP_MARGIN - MENU_BOTTOM_MARGIN/*2*/
-                                                     - UserGetSystemMetrics(SM_CYBORDER);
+             Rect.left += rc.right - UserGetSystemMetrics(SM_CXDLGFRAME);
+
+          Rect.top += rc.top;
       }
       else
       {
