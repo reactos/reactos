@@ -1532,7 +1532,7 @@ NameFromCharSet(BYTE CharSet)
 {
     switch (CharSet)
     {
-        case ANSI_CHARSET: return L"Ansi";
+        case ANSI_CHARSET: return L"ANSI";
         case DEFAULT_CHARSET: return L"Default";
         case SYMBOL_CHARSET: return L"Symbol";
         case SHIFTJIS_CHARSET: return L"Shift_JIS";
