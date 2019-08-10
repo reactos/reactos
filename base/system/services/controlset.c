@@ -17,6 +17,8 @@
 
 /* GLOBALS *******************************************************************/
 
+static BOOL bBootAccepted = FALSE;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -240,6 +242,113 @@ ScmCopyTree(
 
     return ERROR_SUCCESS;
 }
+
+
+DWORD
+ScmDeleteTree(
+    HKEY hKey,
+    PCWSTR pszSubKey)
+{
+    DWORD dwMaxSubkeyLength, dwMaxValueLength;
+    DWORD dwMaxLength, dwSize;
+    PWSTR pszName = NULL;
+    HKEY hSubKey = NULL;
+    DWORD dwError;
+
+    if (pszSubKey != NULL)
+    {
+        dwError = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+    }
+    else
+    {
+         hSubKey = hKey;
+    }
+
+    /* Get highest length for keys, values */
+    dwError = RegQueryInfoKeyW(hSubKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwMaxSubkeyLength,
+                               NULL,
+                               NULL,
+                               &dwMaxValueLength,
+                               NULL,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    dwMaxSubkeyLength++;
+    dwMaxValueLength++;
+    dwMaxLength = max(dwMaxSubkeyLength, dwMaxValueLength);
+
+    /* Allocate a buffer for key and value names */
+    pszName = HeapAlloc(GetProcessHeap(),
+                         0,
+                         dwMaxLength * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLength;
+        if (RegEnumKeyExW(hSubKey,
+                          0,
+                          pszName,
+                          &dwSize,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL))
+            break;
+
+        dwError = ScmDeleteTree(hSubKey, pszName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    if (pszSubKey != NULL)
+    {
+        dwError = RegDeleteKeyW(hKey, pszSubKey);
+    }
+    else
+    {
+        while (TRUE)
+        {
+            dwSize = dwMaxLength;
+            if (RegEnumValueW(hKey,
+                              0,
+                              pszName,
+                              &dwSize,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL))
+                break;
+
+            dwError = RegDeleteValueW(hKey, pszName);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+
+done:
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+
+    if (pszSubKey != NULL)
+        RegCloseKey(hSubKey);
+
+    return dwError;
+}
 #endif
 
 
@@ -460,6 +569,46 @@ done:
 }
 
 
+static
+DWORD
+ScmDeleteControlSet(
+    DWORD dwControlSet)
+{
+    WCHAR szControlSetName[32];
+    HKEY hControlSetKey = NULL;
+    DWORD dwError;
+
+    DPRINT("ScmDeleteControSet(%lu)\n", dwControlSet);
+
+    /* Create the control set name */
+    swprintf(szControlSetName, L"SYSTEM\\ControlSet%03lu", dwControlSet);
+    DPRINT("Control set: %S\n", szControlSetName);
+
+    /* Open the system key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            szControlSetName,
+                            0,
+                            DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE | KEY_SET_VALUE,
+                            &hControlSetKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Delete the control set */
+#if (_WIN32_WINNT >= 0x0600)
+    dwError = RegDeleteTreeW(hControlSetKey,
+                             NULL);
+#else
+    dwError = ScmDeleteTree(hControlSetKey,
+                            NULL);
+#endif
+
+    /* Open the system key */
+    RegCloseKey(hControlSetKey);
+
+    return dwError;
+}
+
+
 DWORD
 ScmCreateLastKnownGoodControlSet(VOID)
 {
@@ -507,9 +656,100 @@ ScmCreateLastKnownGoodControlSet(VOID)
 
         /* Set the new 'LastKnownGood' control set */
         dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
+        if (dwError == ERROR_SUCCESS)
+        {
+            /*
+             * Accept the boot here in order to prevent the creation of
+             * another control set when a user is going to get logged on
+             */
+            bBootAccepted = TRUE;
+        }
     }
 
     return dwError;
+}
+
+
+DWORD
+ScmAcceptBoot(VOID)
+{
+    DWORD dwCurrentControlSet, dwDefaultControlSet;
+    DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
+    DWORD dwNewControlSet;
+    DWORD dwError;
+
+    DPRINT("ScmAcceptBoot()\n");
+
+    if (bBootAccepted)
+    {
+        DPRINT1("Boot has alread been accepted!\n");
+        return ERROR_BOOT_ALREADY_ACCEPTED;
+    }
+
+    /* Get the control set values */
+    dwError = ScmGetControlSetValues(&dwCurrentControlSet,
+                                     &dwDefaultControlSet,
+                                     &dwFailedControlSet,
+                                     &dwLastKnownGoodControlSet);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Search for a new control set number */
+    for (dwNewControlSet = 1; dwNewControlSet < 1000; dwNewControlSet++)
+    {
+        if ((dwNewControlSet != dwCurrentControlSet) &&
+            (dwNewControlSet != dwDefaultControlSet) &&
+            (dwNewControlSet != dwFailedControlSet) &&
+            (dwNewControlSet != dwLastKnownGoodControlSet))
+            break;
+    }
+
+    /* Fail if we did not find an unused control set!*/
+    if (dwNewControlSet >= 1000)
+    {
+        DPRINT1("Too many control sets!\n");
+        return ERROR_NO_MORE_ITEMS;
+    }
+
+    /* Copy the current control set */
+    dwError = ScmCopyControlSet(dwCurrentControlSet,
+                                dwNewControlSet);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Delete the current last known good contol set, if it is not used anywhere else */
+    if ((dwLastKnownGoodControlSet != dwCurrentControlSet) &&
+        (dwLastKnownGoodControlSet != dwDefaultControlSet) &&
+        (dwLastKnownGoodControlSet != dwFailedControlSet))
+    {
+        ScmDeleteControlSet(dwLastKnownGoodControlSet);
+    }
+
+    /* Set the new 'LastKnownGood' control set */
+    dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    bBootAccepted = TRUE;
+
+    return ERROR_SUCCESS;
+}
+
+
+DWORD
+ScmRunLastKnownGood(VOID)
+{
+    DPRINT("ScmRunLastKnownGood()\n");
+
+    if (bBootAccepted)
+    {
+        DPRINT1("Boot has alread been accepted!\n");
+        return ERROR_BOOT_ALREADY_ACCEPTED;
+    }
+
+    /* FIXME */
+
+    return ERROR_SUCCESS;
 }
 
 /* EOF */

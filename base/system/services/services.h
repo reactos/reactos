@@ -164,6 +164,12 @@ ScmDecryptPassword(
 DWORD
 ScmCreateLastKnownGoodControlSet(VOID);
 
+DWORD
+ScmAcceptBoot(VOID);
+
+DWORD
+ScmRunLastKnownGood(VOID);
+
 
 /* database.c */
 
