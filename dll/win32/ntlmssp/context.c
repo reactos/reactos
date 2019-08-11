@@ -184,6 +184,8 @@ NtlmAllocateContextHdr(BOOL isServer)
     /* set process fields */
     ret->ProcId = GetCurrentProcessId();
 
+    ret->isServer = isServer;
+
     if(inLsaMode)
         if(NtlmLsaFuncTable->GetCallInfo(&CallInfo))
             ret->ProcId = CallInfo.ProcessId;
@@ -240,20 +242,19 @@ NtlmAllocateContextSvr(VOID)
 }
 
 SECURITY_STATUS
-NtlmCreateNegoContext(IN ULONG_PTR Credential,
-                      IN SEC_WCHAR *pszTargetName,
-                      IN ULONG ISCContextReq,
-                      OUT PNTLMSSP_CONTEXT_CLI* pNewContext,
-                      OUT PULONG pISCContextAttr,
-                      OUT PTimeStamp ptsExpiry,
-                      OUT PUCHAR pSessionKey,
-                      OUT PULONG pfNegotiateFlags)
+CliCreateContext(
+    IN ULONG_PTR Credential,
+    IN SEC_WCHAR *pszTargetName,
+    IN ULONG ISCContextReq,
+    OUT PNTLMSSP_CONTEXT_CLI* pNewContext,
+    OUT PULONG pISCContextAttr,
+    OUT PTimeStamp ptsExpiry,
+    OUT PULONG pfNegotiateFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;
     PNTLMSSP_CREDENTIAL cred;
 
-    *pSessionKey = 0;
     *pfNegotiateFlags = 0;
 
     /* It seems these flags are always returned */
@@ -402,7 +403,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     SecBufferDesc BufferDesc;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
     ULONG NegotiateFlags;
-    UCHAR sessionKey;
 
     TRACE("%p %p %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", phCredential, phContext,
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
@@ -442,14 +442,14 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             goto fail;
         }
 
-        ret = NtlmCreateNegoContext(phCredential->dwLower,
-                                    pszTargetName,
-                                    fContextReq,
-                                    &newContext,
-                                    pfContextAttr,
-                                    ptsExpiry,
-                                    &sessionKey,
-                                    &NegotiateFlags);
+        /* new context is referenced! */
+        ret = CliCreateContext(phCredential->dwLower,
+                               pszTargetName,
+                               fContextReq,
+                               &newContext,
+                               pfContextAttr,
+                               ptsExpiry,
+                               &NegotiateFlags);
 
         if(!newContext || !NT_SUCCESS(ret))
         {
@@ -457,9 +457,9 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             goto fail;
         }
 
-        ret = NtlmGenerateNegotiateMessage(newContext,
-                                           fContextReq,
-                                           OutputToken1);
+        ret = CliGenerateNegotiateMessage(newContext,
+                                          fContextReq,
+                                          OutputToken1);
         /* set result */
         phNewContext->dwUpper = NegotiateFlags;
         phNewContext->dwLower = (ULONG_PTR)newContext;
@@ -482,15 +482,11 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             }
         }
         *phNewContext = *phContext;
-        ret = NtlmGenerateAuthenticationMessage(phNewContext->dwLower,
-                                         fContextReq,
-                                         InputToken1,
-                                         InputToken2,
-                                         OutputToken1,
-                                         OutputToken2,
-                                         pfContextAttr,
-                                         ptsExpiry,
-                                         &NegotiateFlags);
+        ret = CliGenerateAuthenticationMessage(
+            phNewContext->dwLower, fContextReq,
+            InputToken1, InputToken2,
+            OutputToken1, OutputToken2,
+            pfContextAttr, ptsExpiry, &NegotiateFlags);
     }
     else
     {

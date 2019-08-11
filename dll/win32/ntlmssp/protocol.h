@@ -285,13 +285,28 @@ NtlmAvlSize(
     IN ULONG Pairs,
     IN ULONG PairsLen);
 
-/* message functions */
+/* client message functions */
 SECURITY_STATUS
-NtlmGenerateNegotiateMessage(
+CliGenerateNegotiateMessage(
     IN PNTLMSSP_CONTEXT_CLI context,
     IN ULONG ContextReq,
     OUT PSecBuffer OutputToken);
 
+SECURITY_STATUS
+CliGenerateAuthenticationMessage(
+    IN ULONG_PTR hContext,
+    IN ULONG ISCContextReq,
+    IN PSecBuffer InputToken1,
+    IN PSecBuffer InputToken2,
+    IN OUT PSecBuffer OutputToken1,
+    IN OUT PSecBuffer OutputToken2,
+    OUT PULONG pISCContextAttr,
+    OUT PTimeStamp ptsExpiry,
+    OUT PULONG NegotiateFlags);
+
+/* server message functions */
+
+/* ??? message functions */
 SECURITY_STATUS
 NtlmHandleNegotiateMessage(
     IN ULONG_PTR hCredential,
@@ -312,18 +327,6 @@ NtlmGenerateChallengeMessage(
     IN RAW_STRING TargetName,
     IN ULONG MessageFlags,
     OUT PSecBuffer OutputToken);
-
-SECURITY_STATUS
-NtlmGenerateAuthenticationMessage(
-    IN ULONG_PTR hContext,
-    IN ULONG ISCContextReq,
-    IN PSecBuffer InputToken1,
-    IN PSecBuffer InputToken2,
-    IN OUT PSecBuffer OutputToken1,
-    IN OUT PSecBuffer OutputToken2,
-    OUT PULONG pISCContextAttr,
-    OUT PTimeStamp ptsExpiry,
-    OUT PULONG NegotiateFlags);
 
 SECURITY_STATUS
 NtlmHandleAuthenticateMessage(

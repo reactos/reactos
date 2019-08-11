@@ -91,10 +91,14 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
             NtlmFree(cred->UserName.Buffer);
         if (cred->Password.Buffer)
             NtlmFree(cred->Password.Buffer);
-        if ((cred->SecToken) &&
+        if (cred->SecToken)
+        {
+            PNTLMSSP_GLOBALS g = lockGlobals();
             /* Do not close globals! FIXME */
-            (cred->SecToken != NtlmSystemSecurityToken))
-            NtClose(cred->SecToken);
+            if (cred->SecToken != g->NtlmSystemSecurityToken)
+                NtClose(cred->SecToken);
+            unlockGlobals(&g);
+        }
 
         /* remove from list */
         RemoveEntryList(&cred->Entry);
@@ -203,6 +207,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 {
 
     PNTLMSSP_CREDENTIAL cred = NULL;
+    PNTLMSSP_GLOBALS g;
     SECURITY_STATUS ret = SEC_E_OK;
     ULONG credFlags = fCredentialUse;
     UNICODE_STRING username, domain, password;
@@ -288,7 +293,10 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         cred->RefCount = 1;
         cred->ProcId = GetCurrentProcessId();//FIXME
         cred->UseFlags = credFlags;
-        cred->SecToken = NtlmSystemSecurityToken; //FIXME
+
+        g = lockGlobals();
+        cred->SecToken = g->NtlmSystemSecurityToken; //FIXME
+        unlockGlobals(&g);
 
         /* FIX ME: check against LSA token */
         if((cred->SecToken == NULL) && !(credFlags & NTLM_CRED_NULLSESSION))

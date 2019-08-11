@@ -23,17 +23,74 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 /* globals */
-CRITICAL_SECTION GlobalCritSect; /* use to read/write global state */
-
 NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
-UNICODE_STRING NtlmComputerNameString;
-UNICODE_STRING NtlmDomainNameString;
-UNICODE_STRING NtlmDnsNameString;
-NTLM_AVDATA NtlmAvTargetInfoPart;
-OEM_STRING NtlmOemComputerNameString;
-OEM_STRING NtlmOemDomainNameString;
-OEM_STRING NtlmOemDnsNameString;
-HANDLE NtlmSystemSecurityToken;
+
+NTLMSSP_GLOBALS ntlmGlobals;
+NTLMSSP_GLOBALS_CLI ntlmGlobalsCli;
+NTLMSSP_GLOBALS_SVR ntlmGlobalsSvr;
+
+PNTLMSSP_GLOBALS
+lockGlobals(VOID)
+{
+    EnterCriticalSection(&ntlmGlobals.cs);
+    return &ntlmGlobals;
+}
+
+PNTLMSSP_GLOBALS
+getGlobals(VOID)
+{
+    return &ntlmGlobals;
+}
+
+VOID
+unlockGlobals(
+    IN OUT PNTLMSSP_GLOBALS* g)
+{
+    LeaveCriticalSection(&(*g)->cs);
+    *g = NULL;
+}
+
+PNTLMSSP_GLOBALS_CLI
+lockGlobalsCli(VOID)
+{
+    EnterCriticalSection(&ntlmGlobalsCli.cs);
+    return &ntlmGlobalsCli;
+}
+
+VOID
+unlockGlobalsCli(
+    IN OUT PNTLMSSP_GLOBALS_CLI* g)
+{
+    LeaveCriticalSection(&(*g)->cs);
+    *g = NULL;
+}
+
+PNTLMSSP_GLOBALS_CLI
+getGlobalsCli(VOID)
+{
+    return &ntlmGlobalsCli;
+}
+
+PNTLMSSP_GLOBALS_SVR
+lockGlobalsSvr(VOID)
+{
+    EnterCriticalSection(&ntlmGlobalsSvr.cs);
+    return &ntlmGlobalsSvr;
+}
+
+VOID
+unlockGlobalsSvr(
+    IN OUT PNTLMSSP_GLOBALS_SVR *g)
+{
+    LeaveCriticalSection(&(*g)->cs);
+    *g = NULL;
+}
+
+PNTLMSSP_GLOBALS_SVR
+getGlobalsSvr(VOID)
+{
+    return &ntlmGlobalsSvr;
+}
 
 /* private functions */
 
@@ -45,7 +102,14 @@ NtlmInitializeGlobals(VOID)
     WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
     ULONG AvPairsLen;
-    InitializeCriticalSection(&GlobalCritSect);
+    /* shortcuts */
+    PNTLMSSP_GLOBALS g = &ntlmGlobals;
+    PNTLMSSP_GLOBALS_SVR gsvr = &ntlmGlobalsSvr;
+    PNTLMSSP_GLOBALS_CLI gcli = &ntlmGlobalsCli;
+
+    InitializeCriticalSection(&g->cs);
+    InitializeCriticalSection(&gcli->cs);
+    InitializeCriticalSection(&gsvr->cs);
 
     if(!GetComputerNameW(compName, &compNamelen))
     {
@@ -74,39 +138,38 @@ NtlmInitializeGlobals(VOID)
 
     ERR("%s\n", debugstr_w(domName));
 
-    RtlCreateUnicodeString(&NtlmComputerNameString, compName);
-    RtlCreateUnicodeString(&NtlmDnsNameString, dnsName);
-    RtlCreateUnicodeString(&NtlmDomainNameString, domName);
+    RtlCreateUnicodeString(&g->NtlmComputerNameString, compName);
+    RtlCreateUnicodeString(&gsvr->NtlmDnsNameString, dnsName);
+    RtlCreateUnicodeString(&gsvr->NtlmDomainNameString, domName);
 
-    RtlUnicodeStringToOemString(&NtlmOemComputerNameString,
-                                &NtlmComputerNameString,
+    RtlUnicodeStringToOemString(&g->NtlmOemComputerNameString,
+                                &g->NtlmComputerNameString,
                                 TRUE);
 
-    RtlUnicodeStringToOemString(&NtlmOemDomainNameString,
-                                &NtlmDomainNameString,
+    RtlUnicodeStringToOemString(&g->NtlmOemDomainNameString,
+                                &gsvr->NtlmDomainNameString,
                                 TRUE);
 
-    RtlUnicodeStringToOemString(&NtlmOemDnsNameString,
-                                &NtlmDnsNameString,
+    RtlUnicodeStringToOemString(&gsvr->NtlmOemDnsNameString,
+                                &gsvr->NtlmDnsNameString,
                                 TRUE);
 
     status = NtOpenProcessToken(NtCurrentProcess(),
                                 TOKEN_QUERY | TOKEN_DUPLICATE,
-                                &NtlmSystemSecurityToken);
+                                &g->NtlmSystemSecurityToken);
 
     if(!NT_SUCCESS(status))
     {
         ERR("could not get process token!!\n");
     }
-    //FIX ME: This is broken
     /* init global target AV pairs */
-    AvPairsLen = NtlmDomainNameString.Length + //fix me: domain controller name
-           NtlmComputerNameString.Length + //computer name
-           NtlmDnsNameString.Length + //dns computer name
-           NtlmDnsNameString.Length + //fix me: dns domain name
-           sizeof(MSV1_0_AV_PAIR)*4;
+    AvPairsLen = gsvr->NtlmDomainNameString.Length + //fix me: domain controller name
+                 gsvr->NtlmComputerNameString.Length + //computer name
+                 gsvr->NtlmDnsNameString.Length + //dns computer name
+                 gsvr->NtlmDnsNameString.Length + //fix me: dns domain name
+                 sizeof(MSV1_0_AV_PAIR)*4;
 
-    if (!NtlmAvlAlloc(&NtlmAvTargetInfoPart, AvPairsLen))
+    if (!NtlmAvlAlloc(&gsvr->NtlmAvTargetInfoPart, AvPairsLen))
     {
         ERR("failed to allocate NtlmAvTargetInfo\n");
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -115,36 +178,45 @@ NtlmInitializeGlobals(VOID)
     /* Fill NtlmAvTargetInfoPart. It contains not all data we need.
      * Timestamp and EOL is appended when challange message is
      * generated. */
-    if (NtlmComputerNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvNbComputerName,
-                   NtlmComputerNameString.Buffer, NtlmComputerNameString.Length);
-    if (NtlmDomainNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvNbDomainName,
-                   NtlmDomainNameString.Buffer, NtlmDomainNameString.Length);
-    if (NtlmDnsNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvDnsComputerName,
-                   NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
-    if (NtlmDnsNameString.Length > 0)
-        NtlmAvlAdd(&NtlmAvTargetInfoPart, MsvAvDnsDomainName,
-                   NtlmDnsNameString.Buffer, NtlmDnsNameString.Length);
+    if (gsvr->NtlmComputerNameString.Length > 0)
+        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbComputerName,
+                   gsvr->NtlmComputerNameString.Buffer, gsvr->NtlmComputerNameString.Length);
+    if (gsvr->NtlmDomainNameString.Length > 0)
+        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbDomainName,
+                   gsvr->NtlmDomainNameString.Buffer, gsvr->NtlmDomainNameString.Length);
+    if (gsvr->NtlmDnsNameString.Length > 0)
+        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsComputerName,
+                   gsvr->NtlmDnsNameString.Buffer, gsvr->NtlmDnsNameString.Length);
+    if (gsvr->NtlmDnsNameString.Length > 0)
+        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsDomainName,
+                   gsvr->NtlmDnsNameString.Buffer, gsvr->NtlmDnsNameString.Length);
     //TODO: MsvAvDnsTreeName
 
-    ERR("NtlmAvTargetInfoPart len 0x%x\n", NtlmAvTargetInfoPart.bUsed);
-    NtlmPrintAvPairs(&NtlmAvTargetInfoPart);
+    ERR("NtlmAvTargetInfoPart len 0x%x\n", gsvr->NtlmAvTargetInfoPart.bUsed);
+    NtlmPrintAvPairs(&gsvr->NtlmAvTargetInfoPart);
     return status;
 }
 
 VOID
 NtlmTerminateGlobals(VOID)
 {
-    RtlFreeUnicodeString(&NtlmComputerNameString);
-    RtlFreeUnicodeString(&NtlmDomainNameString);
-    RtlFreeUnicodeString(&NtlmDnsNameString);
-    RtlFreeOemString(&NtlmOemComputerNameString);
-    RtlFreeOemString(&NtlmOemDomainNameString);
-    RtlFreeOemString(&NtlmOemDnsNameString);
-    NtlmAvFree(&NtlmAvTargetInfoPart);
-    NtClose(NtlmSystemSecurityToken);
+    /* shortcuts */
+    PNTLMSSP_GLOBALS g = &ntlmGlobals;
+    PNTLMSSP_GLOBALS_SVR gsvr = &ntlmGlobalsSvr;
+    PNTLMSSP_GLOBALS_CLI gcli = &ntlmGlobalsCli;
+
+    RtlFreeUnicodeString(&g->NtlmComputerNameString);
+    RtlFreeUnicodeString(&gsvr->NtlmDomainNameString);
+    RtlFreeUnicodeString(&gsvr->NtlmDnsNameString);
+    RtlFreeOemString(&g->NtlmOemComputerNameString);
+    RtlFreeOemString(&g->NtlmOemDomainNameString);
+    RtlFreeOemString(&gsvr->NtlmOemDnsNameString);
+    NtlmAvFree(&gsvr->NtlmAvTargetInfoPart);
+    NtClose(g->NtlmSystemSecurityToken);
+
+    DeleteCriticalSection(&g->cs);
+    DeleteCriticalSection(&gcli->cs);
+    DeleteCriticalSection(&gsvr->cs);
 }
 
 /* public functions */

@@ -53,15 +53,85 @@ extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in 
 extern SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
 extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA in SpInitialize
 
-extern UNICODE_STRING NtlmComputerNameString;
-extern UNICODE_STRING NtlmDomainNameString;
-extern UNICODE_STRING NtlmDnsNameString;
-extern OEM_STRING NtlmOemComputerNameString;
-extern OEM_STRING NtlmOemDomainNameString;
-extern OEM_STRING NtlmOemDnsNameString;
-extern HANDLE NtlmSystemSecurityToken;
-/* contains part of AV pairs with local info */
-extern NTLM_AVDATA NtlmAvTargetInfoPart;
+typedef struct _NTLMSSP_GLOBALS
+{
+    /* internal - use to read/write global state */
+    CRITICAL_SECTION cs;
+
+    HANDLE NtlmSystemSecurityToken;
+    /* maybe client */
+    OEM_STRING NtlmOemComputerNameString;
+    OEM_STRING NtlmOemDomainNameString;
+
+    /* maybe server */
+    UNICODE_STRING NtlmComputerNameString;
+
+} NTLMSSP_GLOBALS, *PNTLMSSP_GLOBALS;
+
+
+/* MS-NLMP 3.2.1.1 */
+typedef struct _NTLMSSP_GLOBALS_CLI
+{
+    /* internal - use to read/write global state */
+    CRITICAL_SECTION cs;
+
+    /* needed vars from MS-NLMP
+     * activate if needed ... or move to context (cli) if needed */
+    // ClientConfigFlags:
+    // ExportedSessionKey:
+    // NegFlg: The set of configuration flags (section 2.2.2.5) that specifies the negotiated capabilities of
+    // the client and server for the current NTLM session.
+    // User: A string that indicates the name of the user.
+    // UserDom: A string that indicates the name of the user's domain.
+    //   The following NTLM configuration variables are internal to the client and impact all authenticated
+    //   sessions:
+    // NoLMResponseNTLMv1: A Boolean setting that controls using the NTLM response for the LM
+    //   response to the server challenge when NTLMv1 authentication is used.<35>
+    // ClientBlocked: A Boolean setting that disables the client from sending NTLM authenticate messages,
+    //   as defined in section 2.2.1.3.<36>
+    // ClientBlockExceptions: A list of server names that can use NTLM authentication.<37>
+    // ClientRequire128bitEncryption: A Boolean setting that requires the client to use 128-bit
+    //   encryption.<38>
+    // The following variables are internal to the client and are maintained for the entire length of the
+    //  authenticated session:
+    // MaxLifetime: An integer that indicates the maximum lifetime for challenge/response pairs.<
+} NTLMSSP_GLOBALS_CLI, *PNTLMSSP_GLOBALS_CLI;
+
+/* MS-NLMP 3.2.1.1 */
+typedef struct _NTLMSSP_GLOBALS_SVR
+{
+    /* internal - use to read/write global state */
+    CRITICAL_SECTION cs;
+
+    /* needed vars from MS-NLMP
+     * activate if needed ... or move to context (svr) if needed */
+    //The server maintains all of the variables that the client does (section 3.1.1.1) except the
+    //ClientConfigFlags.
+    //Additionally, the server maintains the following:
+    //CfgFlg: The set of server configuration flags (section 2.2.2.5) that specify the full set of capabilities of
+    //the server.
+    //DnsDomainName: A string that indicates the fully qualified domain name (FQDN) of the server's
+    //domain.
+    //DnsForestName: A string that indicates the FQDN of the server's forest. The DnsForestName is
+    //NULL on machines that are not domain joined.
+    //DnsMachineName: A string that indicates the FQDN of the server.
+    //NbDomainName: A string that indicates the NetBIOS name of the server's domain.
+    //NbMachineName: A string that indicates the NetBIOS machine name of the server.
+    //The following NTLM server configuration variables are internal to the client and impact all
+    //authenticated sessions:
+    //ServerBlock: A Boolean setting that disables the server from generating challenges and responding
+    //to NTLM_NEGOTIATE messages.<59>
+    //ServerRequire128bitEncryption: A Boolean setting that requires the server to use 128-bit
+    //encryption.<60>
+
+    /* vars not in spec (MS-NLMP) */
+    NTLM_AVDATA NtlmAvTargetInfoPart;
+    /* TODO rename to spec-name ... */
+    UNICODE_STRING NtlmComputerNameString;
+    UNICODE_STRING NtlmDomainNameString;
+    UNICODE_STRING NtlmDnsNameString;
+    OEM_STRING NtlmOemDnsNameString;
+} NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
 typedef enum _NTLM_MODE {
     NtlmLsaMode = 1,
@@ -192,6 +262,19 @@ NtlmInitializeGlobals(VOID);
 
 VOID
 NtlmTerminateGlobals(VOID);
+
+PNTLMSSP_GLOBALS lockGlobals(VOID);
+PNTLMSSP_GLOBALS_CLI lockGlobalsCli(VOID);
+PNTLMSSP_GLOBALS_SVR lockGlobalsSvr(VOID);
+
+VOID unlockGlobals(IN OUT PNTLMSSP_GLOBALS* g);
+VOID unlockGlobalsCli(IN OUT PNTLMSSP_GLOBALS_CLI* g);
+VOID unlockGlobalsSvr(IN OUT PNTLMSSP_GLOBALS_SVR* g);
+
+/* globals read only, no lock needed */
+PNTLMSSP_GLOBALS getGlobals(VOID);
+PNTLMSSP_GLOBALS_CLI getGlobalsCli(VOID);
+PNTLMSSP_GLOBALS_SVR getGlobalsSvr(VOID);
 
 /* credentials.c */
 NTSTATUS

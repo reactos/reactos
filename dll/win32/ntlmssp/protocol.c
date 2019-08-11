@@ -23,15 +23,17 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 SECURITY_STATUS
-NtlmGenerateNegotiateMessage(IN PNTLMSSP_CONTEXT_CLI context,
-                             IN ULONG ISCContextReq,
-                             OUT PSecBuffer OutputToken)
+CliGenerateNegotiateMessage(
+    IN PNTLMSSP_CONTEXT_CLI context,
+    IN ULONG ISCContextReq,
+    OUT PSecBuffer OutputToken)
 {
     PNTLMSSP_CREDENTIAL cred = context->Credential;
     PNEGOTIATE_MESSAGE message;
     ULONG messageSize = 0;
     ULONG_PTR offset;
     NTLM_BLOB blobBuffer[2]; //nego contains 2 blobs
+    PNTLMSSP_GLOBALS g = getGlobals();
 
     if(!OutputToken)
     {
@@ -47,8 +49,8 @@ NtlmGenerateNegotiateMessage(IN PNTLMSSP_CONTEXT_CLI context,
     }
 
     messageSize = sizeof(NEGOTIATE_MESSAGE) +
-                  NtlmOemComputerNameString.Length +
-                  NtlmOemDomainNameString.Length;
+                  g->NtlmOemComputerNameString.Length +
+                  g->NtlmOemDomainNameString.Length;
 
     /* if should not allocate */
     if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
@@ -92,11 +94,11 @@ NtlmGenerateNegotiateMessage(IN PNTLMSSP_CONTEXT_CLI context,
             NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED | NTLMSSP_NEGOTIATE_LOCAL_CALL);
 
         NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&NtlmOemComputerNameString,
+                                (PUNICODE_STRING)&g->NtlmOemComputerNameString,
                                 &message->OemWorkstationName,
                                 &offset);
         NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&NtlmOemDomainNameString,
+                                (PUNICODE_STRING)&g->NtlmOemDomainNameString,
                                 &message->OemDomainName,
                                 &offset);
     }
@@ -126,6 +128,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 {
     PCHALLENGE_MESSAGE chaMessage = NULL;
     ULONG messageSize, offset;
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     #include "pshpack1.h"
     struct _TargetInfoEnd
@@ -138,7 +141,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 
     /* compute message size */
     messageSize = sizeof(CHALLENGE_MESSAGE) +
-                  NtlmAvTargetInfoPart.bUsed +
+                  gsvr->NtlmAvTargetInfoPart.bUsed +
                   sizeof(targetInfoEnd)+
                   TargetName.bUsed;
 
@@ -187,8 +190,8 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     NtlmRawStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
-        NtlmAvTargetInfoPart.bUsed, offset);
-    NtlmWriteAvDataToBlob((PVOID)chaMessage, &NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
+        gsvr->NtlmAvTargetInfoPart.bUsed, offset);
+    NtlmWriteAvDataToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
     /* append filetime and eol */
     targetInfoEnd.avpTs.AvId = MsvAvTimestamp;
     targetInfoEnd.avpTs.AvLen = sizeof(targetInfoEnd.ts);
@@ -222,6 +225,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     PRAW_STRING pRawTargetNameRef = NULL;
     OEM_STRING OemDomainNameRef, OemWorkstationNameRef;
     ULONG negotiateFlags = 0;
+    PNTLMSSP_GLOBALS g = getGlobals();
 
     memset(&OemDomainNameRef, 0, sizeof(OemDomainNameRef));
     memset(&OemWorkstationNameRef, 0, sizeof(OemWorkstationNameRef));
@@ -355,12 +359,12 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
-            pRawTargetNameRef = (PRAW_STRING)&NtlmComputerNameString;
+            pRawTargetNameRef = (PRAW_STRING)&g->NtlmComputerNameString;
         }
         else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
-            pRawTargetNameRef = (PRAW_STRING)&NtlmOemComputerNameString;
+            pRawTargetNameRef = (PRAW_STRING)&g->NtlmOemComputerNameString;
         }
         else
         {
@@ -377,8 +381,8 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         NtlmBlobToStringRef(InputToken, negoMessage->OemDomainName, &OemDomainNameRef);
         NtlmBlobToStringRef(InputToken, negoMessage->OemWorkstationName, &OemWorkstationNameRef);
 
-        if (RtlEqualString(&OemWorkstationNameRef, &NtlmOemComputerNameString, FALSE) &&
-            RtlEqualString(&OemDomainNameRef, &NtlmOemDomainNameString, FALSE))
+        if (RtlEqualString(&OemWorkstationNameRef, &g->NtlmOemComputerNameString, FALSE) &&
+            RtlEqualString(&OemDomainNameRef, &g->NtlmOemDomainNameString, FALSE))
         {
             TRACE("local negotiate detected!\n");
             negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
@@ -445,7 +449,7 @@ exit:
 }
 
 SECURITY_STATUS
-NtlmGenerateAuthenticationMessage(
+CliGenerateAuthenticationMessage(
     IN ULONG_PTR hContext,
     IN ULONG ISCContextReq,
     IN PSecBuffer InputToken1,
@@ -708,7 +712,7 @@ NtlmGenerateAuthenticationMessage(
     InitString(LmSessionKeyString, LmSessionKey);
 
     /* FIXME ... leads to invalid param - wireshark */
-    NtResponseString.Length = 0;//FIXME
+    //NtResponseString.Length = 0;//FIXME
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
