@@ -243,7 +243,7 @@ SECURITY_STATUS
 NtlmCreateNegoContext(IN ULONG_PTR Credential,
                       IN SEC_WCHAR *pszTargetName,
                       IN ULONG ISCContextReq,
-                      OUT PULONG_PTR phNewContext,
+                      OUT PNTLMSSP_CONTEXT_CLI* pNewContext,
                       OUT PULONG pISCContextAttr,
                       OUT PTimeStamp ptsExpiry,
                       OUT PUCHAR pSessionKey,
@@ -268,13 +268,13 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
     }
 
     context = NtlmAllocateContextCli();
-
     if(!context)
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         ERR("SEC_E_INSUFFICIENT_MEMORY!\n");
         goto fail;
     }
+    NtlmReferenceContextCli((ULONG_PTR)context);
 
     /* client requested features */
     if(ISCContextReq & ISC_REQ_INTEGRITY)
@@ -369,7 +369,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
 
     context->Credential = cred;
     //*ptsExpiry = 
-    *phNewContext = (ULONG_PTR)context;
+    *pNewContext = context;
 
     return ret;
 
@@ -400,7 +400,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     PSecBuffer InputToken1, InputToken2 = NULL;
     PSecBuffer OutputToken1, OutputToken2 = NULL;
     SecBufferDesc BufferDesc;
-    ULONG_PTR newContext = 0;
+    PNTLMSSP_CONTEXT_CLI newContext = NULL;
     ULONG NegotiateFlags;
     UCHAR sessionKey;
 
@@ -462,7 +462,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                            OutputToken1);
         /* set result */
         phNewContext->dwUpper = NegotiateFlags;
-        phNewContext->dwLower = newContext;
+        phNewContext->dwLower = (ULONG_PTR)newContext;
 
     }
     else if(phContext)       /* challenge! */
@@ -520,7 +520,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
 fail:
     /* free resources */
     if(newContext)
-        NtlmDereferenceContext(newContext);
+        NtlmDereferenceContext((ULONG_PTR)newContext);
 
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
     {

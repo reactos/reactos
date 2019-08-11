@@ -184,10 +184,6 @@ typedef struct _NTLMSSP_CONTEXT_CLI
     NTLMSSP_CONTEXT_MSG msg;
 } NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
 
-/* HACK - remove later ... */
-typedef struct _NTLMSSP_CONTEXT_CLI
-    NTLMSSP_CONTEXT, *PNTLMSSP_CONTEXT;
-
 /* private functions */
 
 /* ntlmssp.c */

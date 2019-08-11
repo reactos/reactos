@@ -288,7 +288,7 @@ NtlmAvlSize(
 /* message functions */
 SECURITY_STATUS
 NtlmGenerateNegotiateMessage(
-    IN ULONG_PTR hContext,
+    IN PNTLMSSP_CONTEXT_CLI context,
     IN ULONG ContextReq,
     OUT PSecBuffer OutputToken);
 

@@ -23,11 +23,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 SECURITY_STATUS
-NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
+NtlmGenerateNegotiateMessage(IN PNTLMSSP_CONTEXT_CLI context,
                              IN ULONG ISCContextReq,
                              OUT PSecBuffer OutputToken)
 {
-    PNTLMSSP_CONTEXT context = (PNTLMSSP_CONTEXT)Context;
     PNTLMSSP_CREDENTIAL cred = context->Credential;
     PNEGOTIATE_MESSAGE message;
     ULONG messageSize = 0;
