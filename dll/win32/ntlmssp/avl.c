@@ -71,7 +71,7 @@ NtlmAvlGet(IN PNTLM_AVDATA pAvData,
         if (pAvPair->AvId == AvId)
         {
             *pLen = pAvPair->AvLen;
-            *pData = (*pLen > 0) ? (PBYTE)pAvPair+1 : 0;
+            *pData = (*pLen > 0) ? (PBYTE)(pAvPair+1) : NULL;
             return TRUE;
         }
         if (pAvPair->AvId == MsvAvEOL)
