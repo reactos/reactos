@@ -59,13 +59,9 @@ typedef struct _NTLMSSP_GLOBALS
     CRITICAL_SECTION cs;
 
     HANDLE NtlmSystemSecurityToken;
-    /* maybe client */
-    OEM_STRING NtlmOemComputerNameString;
-    OEM_STRING NtlmOemDomainNameString;
-
-    /* maybe server */
-    UNICODE_STRING NtlmComputerNameString;
-
+    /* needed by client and server */
+    OEM_STRING NbMachineNameOEM;
+    OEM_STRING NbDomainNameOEM;
 } NTLMSSP_GLOBALS, *PNTLMSSP_GLOBALS;
 
 
@@ -114,9 +110,15 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     //domain.
     //DnsForestName: A string that indicates the FQDN of the server's forest. The DnsForestName is
     //NULL on machines that are not domain joined.
-    //DnsMachineName: A string that indicates the FQDN of the server.
-    //NbDomainName: A string that indicates the NetBIOS name of the server's domain.
-    //NbMachineName: A string that indicates the NetBIOS machine name of the server.
+    /* MS-NLMP: A string that indicates the FQDN of the server. */
+    UNICODE_STRING DnsMachineName;
+    OEM_STRING DnsMachineNameOEM;
+    /* MS-NLMP: A string that indicates the NetBIOS
+     * name of the server's domain. */
+    UNICODE_STRING NbDomainName;
+    /* MS-NLMP: A string that indicates the NetBIOS
+     * machine name of the server. */
+    UNICODE_STRING NbMachineName;
     //The following NTLM server configuration variables are internal to the client and impact all
     //authenticated sessions:
     //ServerBlock: A Boolean setting that disables the server from generating challenges and responding
@@ -126,11 +128,6 @@ typedef struct _NTLMSSP_GLOBALS_SVR
 
     /* vars not in spec (MS-NLMP) */
     NTLM_AVDATA NtlmAvTargetInfoPart;
-    /* TODO rename to spec-name ... */
-    UNICODE_STRING NtlmComputerNameString;
-    UNICODE_STRING NtlmDomainNameString;
-    UNICODE_STRING NtlmDnsNameString;
-    OEM_STRING NtlmOemDnsNameString;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
 typedef enum _NTLM_MODE {

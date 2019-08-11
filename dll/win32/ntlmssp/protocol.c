@@ -49,8 +49,8 @@ CliGenerateNegotiateMessage(
     }
 
     messageSize = sizeof(NEGOTIATE_MESSAGE) +
-                  g->NtlmOemComputerNameString.Length +
-                  g->NtlmOemDomainNameString.Length;
+                  g->NbMachineNameOEM.Length +
+                  g->NbDomainNameOEM.Length;
 
     /* if should not allocate */
     if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
@@ -94,11 +94,11 @@ CliGenerateNegotiateMessage(
             NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED | NTLMSSP_NEGOTIATE_LOCAL_CALL);
 
         NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&g->NtlmOemComputerNameString,
+                                (PUNICODE_STRING)&g->NbMachineNameOEM,
                                 &message->OemWorkstationName,
                                 &offset);
         NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&g->NtlmOemDomainNameString,
+                                (PUNICODE_STRING)&g->NbDomainNameOEM,
                                 &message->OemDomainName,
                                 &offset);
     }
@@ -225,6 +225,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     PRAW_STRING pRawTargetNameRef = NULL;
     OEM_STRING OemDomainNameRef, OemWorkstationNameRef;
     ULONG negotiateFlags = 0;
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     PNTLMSSP_GLOBALS g = getGlobals();
 
     memset(&OemDomainNameRef, 0, sizeof(OemDomainNameRef));
@@ -359,12 +360,12 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
-            pRawTargetNameRef = (PRAW_STRING)&g->NtlmComputerNameString;
+            pRawTargetNameRef = (PRAW_STRING)&gsvr->NbMachineName;
         }
         else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
-            pRawTargetNameRef = (PRAW_STRING)&g->NtlmOemComputerNameString;
+            pRawTargetNameRef = (PRAW_STRING)&g->NbMachineNameOEM;
         }
         else
         {
@@ -381,8 +382,8 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         NtlmBlobToStringRef(InputToken, negoMessage->OemDomainName, &OemDomainNameRef);
         NtlmBlobToStringRef(InputToken, negoMessage->OemWorkstationName, &OemWorkstationNameRef);
 
-        if (RtlEqualString(&OemWorkstationNameRef, &g->NtlmOemComputerNameString, FALSE) &&
-            RtlEqualString(&OemDomainNameRef, &g->NtlmOemDomainNameString, FALSE))
+        if (RtlEqualString(&OemWorkstationNameRef, &g->NbMachineNameOEM, FALSE) &&
+            RtlEqualString(&OemDomainNameRef, &g->NbDomainNameOEM, FALSE))
         {
             TRACE("local negotiate detected!\n");
             negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
