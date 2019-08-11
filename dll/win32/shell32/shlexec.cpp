@@ -1993,7 +1993,53 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         }
         else
         {
-            lpFile = sei_tmp.lpFile;
+            /* If the executable name is not quoted, we have to use this search loop here,
+               that in CreateProcess() is not sufficient because it does not handle shell links. */
+            WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH], lpFilesave[MAX_PATH];
+            WCHAR wszParamSave[MAX_PATH], wszAppNameSave[MAX_PATH];
+            LPWSTR space, s;
+
+            /* Save inputs in case we need to revert them later */
+            memcpy(lpFilesave, sei_tmp.lpFile, wcslen(sei_tmp.lpFile) * sizeof(WCHAR) + 2);
+            memcpy(wszParamSave, sei_tmp.lpParameters, wcslen(sei_tmp.lpParameters) * sizeof(WCHAR) + 2);
+            memcpy(wszAppNameSave, wszApplicationName, wcslen(wszApplicationName) * sizeof(WCHAR) + 2);
+
+            LPWSTR beg = wszApplicationName/*sei_tmp.lpFile*/;
+            for(s = beg; (space = const_cast<LPWSTR>(strchrW(s, L' '))); s = space + 1)
+            {
+                int idx = space - sei_tmp.lpFile;
+                memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
+                buffer[idx] = '\0';
+
+                /*FIXME This finds directory paths if the targeted file name contains spaces. */
+                if (SearchPathW(*sei_tmp.lpDirectory ? sei_tmp.lpDirectory : NULL, buffer, wszExe, sizeof(xlpFile) / sizeof(xlpFile[0]), xlpFile, NULL))
+                {
+                    /* separate out command from parameter string */
+                    LPCWSTR p = space + 1;
+
+                    while(isspaceW(*p))
+                        ++p;
+
+                    strcpyW(wszParameters, p);
+                    *space = L'\0';
+
+                    break;
+                }
+            }
+
+            /* test if we end in '.exe' and if so keep changes.
+               Revert to beginning values if we do not. */
+            if (!wcsicmp(sei_tmp.lpFile + wcslen(sei_tmp.lpFile) - 4, wszExe))
+                {
+                lpFile = sei_tmp.lpFile;
+                }
+            else
+                {
+                lpFile = lpFilesave;
+                sei_tmp.lpFile = lpFilesave;
+                strcpyW(wszParameters, wszParamSave);
+                strcpyW(wszApplicationName, wszAppNameSave);
+                }
         }
     }
     else
