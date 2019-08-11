@@ -9,9 +9,11 @@
 /* INCLUDES ***************************************************************/
 
 #include <freeldr.h>
-
 #include <ndk/asm.h>
+#include "../../winldr.h"
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(WINDOWS);
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
@@ -27,8 +29,6 @@
         ULONG Base;
     } GDTIDT;
 #pragma pack(4)
-
-DBG_DEFAULT_CHANNEL(WINDOWS);
 
 /* GLOBALS ***************************************************************/
 

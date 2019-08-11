@@ -9,13 +9,13 @@
 /* INCLUDES ***************************************************************/
 
 #include <freeldr.h>
-
 #include <ndk/asm.h>
+#include "../../winldr.h"
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(WINDOWS);
 
 //extern ULONG LoaderPagesSpanned;
-
-DBG_DEFAULT_CHANNEL(WINDOWS);
 
 /* GLOBALS ***************************************************************/
 

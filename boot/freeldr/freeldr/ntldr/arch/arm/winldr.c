@@ -12,6 +12,7 @@
 #include <debug.h>
 #include <internal/arm/mm.h>
 #include <internal/arm/intrin_i.h>
+#include "../../winldr.h"
 
 #define PFN_SHIFT                   12
 #define LARGE_PFN_SHIFT             20

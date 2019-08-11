@@ -1215,6 +1215,12 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 }
 
+
+// Implemented in i386vid.c, returns the VESA version
+USHORT  BiosIsVesaSupported(VOID);
+BOOLEAN BiosIsVesaDdcSupported(VOID);
+BOOLEAN BiosVesaReadEdid(VOID);
+
 static VOID
 DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {

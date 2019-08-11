@@ -1,33 +1,15 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002,2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            boot/freeldr/freeldr/lib/inffile/inffile.c
- * PURPOSE:         INF file parser that caches contents of INF file in memory
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     INF file parser that caches contents of INF file in memory.
+ * COPYRIGHT:   Copyright 2002-2006 Royce Mitchell III
+ *              Copyright 2003-2019 Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <freeldr.h>
+#include "inffile.h"
 
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255

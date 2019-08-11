@@ -1,46 +1,22 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer    <brianp@sginet.com>
- *  Copyright (C) 2006       Aleksey Bragin  <aleksey@reactos.org>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Windows-compatible NT OS Loader.
+ * COPYRIGHT:   Copyright 2006-2019 Aleksey Bragin <aleksey@reactos.org>
  */
 
 #pragma once
 
 #include <arc/setupblk.h>
 
-#if 0
-// See freeldr/include/winldr.h
-#define TAG_WLDR_DTE 'eDlW'
-#define TAG_WLDR_BDE 'dBlW'
-#define TAG_WLDR_NAME 'mNlW'
-
-#endif
-
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-
-// Some definitions
-
-#if 0
-
-// Descriptors
+/* Descriptors */
 #define NUM_GDT 128     // Must be 128
 #define NUM_IDT 0x100   // Only 16 are used though. Must be 0x100
+
+#if 0
 
 #include <pshpack1.h>
 typedef struct  /* Root System Descriptor Pointer */
@@ -149,3 +125,21 @@ LoadAndBootWindowsCommon(
     PCSTR BootOptions,
     PCSTR BootPath,
     BOOLEAN Setup);
+
+VOID
+WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+VOID
+WinLdrSetProcessorContext(VOID);
+
+// arch/xxx/winldr.c
+BOOLEAN
+MempSetupPaging(IN PFN_NUMBER StartPage,
+                IN PFN_NUMBER NumberOfPages,
+                IN BOOLEAN KernelMapping);
+
+VOID
+MempUnmapPage(PFN_NUMBER Page);
+
+VOID
+MempDump(VOID);

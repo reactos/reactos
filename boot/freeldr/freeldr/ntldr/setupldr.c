@@ -1,32 +1,19 @@
 /*
- *  FreeLoader
- *
- *  Copyright (C) 2009       Aleksey Bragin  <aleksey@reactos.org>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Windows-compatible NT OS Setup Loader.
+ * COPYRIGHT:   Copyright 2009-2019 Aleksey Bragin <aleksey@reactos.org>
  */
 
 #include <freeldr.h>
-#include "winldr.h"
-
 #include <ndk/ldrtypes.h>
 #include <arc/setupblk.h>
+#include "winldr.h"
+#include "inffile.h"
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(WINDOWS);
+
 #define TAG_BOOT_OPTIONS 'pOtB'
 
 // TODO: Move to .h

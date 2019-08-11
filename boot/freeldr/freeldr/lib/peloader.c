@@ -1,26 +1,29 @@
 /*
- * PROJECT:         FreeLoader
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/windows/peloader.c
- * PURPOSE:         Provides routines for loading PE files.
- *                  (Deprecated remark) To be merged with arch/i386/loader.c in future.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides routines for loading PE files.
+ *              (Deprecated remark) To be merged with arch/i386/loader.c in future.
  *
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ * COPYRIGHT:   Copyright 1998-2003 Brian Palmer <brianp@sginet.com>
+ *              Copyright 2006-2019 Aleksey Bragin <aleksey@reactos.org>
  *
- *                  The source code in this file is based on the work of respective
- *                  authors of PE loading code in ReactOS and Brian Palmer and
- *                  Alex Ionescu's arch/i386/loader.c, and my research project
- *                  (creating a native EFI loader for Windows).
+ * NOTES:       The source code in this file is based on the work of respective
+ *              authors of PE loading code in ReactOS and Brian Palmer and
+ *              Alex Ionescu's arch/i386/loader.c, and my research project
+ *              (creating a native EFI loader for Windows).
  *
- * NOTE:            This article was very handy during development:
- *                  http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
+ *              This article was very handy during development:
+ *              http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
  */
 
 /* INCLUDES ***************************************************************/
+
 #include <freeldr.h>
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(PELOADER);
+
+/* FUNCTIONS **************************************************************/
 
 static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
@@ -49,9 +52,6 @@ WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PIMAGE_THUNK_DATA ThunkData,
                               IN PCSTR DirectoryPath);
 
-
-
-/* FUNCTIONS **************************************************************/
 
 /* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
 BOOLEAN

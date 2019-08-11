@@ -40,6 +40,8 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/arcsupp.c
     lib/debug.c
     lib/peloader.c
+    lib/cache/blocklist.c
+    lib/cache/cache.c
     lib/comm/rs232.c
     ## add KD support
     lib/fs/btrfs.c
@@ -64,10 +66,8 @@ list(APPEND FREELDR_NTLDR_SOURCE
 
 list(APPEND FREELDR_ARC_SOURCE
     arcname.c
-    machine.c
+    arch/arcemul.c
     arch/archwsup.c
-    cache/blocklist.c
-    cache/cache.c
     disk/disk.c
     disk/partition.c
     disk/ramdisk.c)
@@ -89,9 +89,7 @@ list(APPEND FREELDR_BOOTMGR_SOURCE
     ui/tui.c
     ui/tuimenu.c
     ui/ui.c
-    video/fade.c
-    video/palette.c
-    video/video.c)
+    ui/video.c)
 
 list(APPEND FREELDR_BASE_ASM_SOURCE)
 
@@ -226,7 +224,7 @@ list(APPEND FREELDR_BASE_SOURCE
                      ## even if ${FREELDR_NTLDR_SOURCE} is not added,
                      ## otherwise we get linking errors with Rtl**Bitmap** APIs.
                      ## Do not happen on MSVC builds however...
-    lib/inffile/inffile.c
+    ntldr/inffile.c
     lib/rtl/libsupp.c)
 
 if(ARCH STREQUAL "i386")
