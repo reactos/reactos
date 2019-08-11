@@ -19,7 +19,6 @@
 
 #pragma once
 
-// FIXME: This one has nothing to do here!!
 #define SECTOR_SIZE 512
 
 typedef struct tagDEVVTBL
