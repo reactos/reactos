@@ -113,12 +113,12 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
     memset(&message->Version, 0, sizeof(NTLM_WINDOWS_VERSION));
 
     /* set state */
-    context->State = NegotiateSent;
+    context->hdr.State = NegotiateSent;
     return SEC_I_CONTINUE_NEEDED;
 }
 
 SECURITY_STATUS
-NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
+NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
                              IN PNTLMSSP_CREDENTIAL Credentials,
                              IN ULONG ASCContextReq,
                              IN RAW_STRING TargetName,
@@ -201,7 +201,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
     chaMessage->NegotiateFlags |= MessageFlags;
 
     /* set state */
-    Context->State = ChallengeSent;
+    Context->hdr.State = ChallengeSent;
     return SEC_I_CONTINUE_NEEDED;
 }
 
@@ -219,7 +219,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     SECURITY_STATUS ret = SEC_E_OK;
     PNEGOTIATE_MESSAGE negoMessage = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
-    PNTLMSSP_CONTEXT context = NULL;
+    PNTLMSSP_CONTEXT_SVR context = NULL;
     PRAW_STRING pRawTargetNameRef = NULL;
     OEM_STRING OemDomainNameRef, OemWorkstationNameRef;
     ULONG negotiateFlags = 0;
@@ -233,7 +233,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
 
     if (*phContext == 0)
     {
-        if(!(context = NtlmAllocateContext()))
+        if(!(context = NtlmAllocateContextSvr()))
         {
             ret = SEC_E_INSUFFICIENT_MEMORY;
             ERR("SEC_E_INSUFFICIENT_MEMORY!\n");
@@ -245,7 +245,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         TRACE("NtlmHandleNegotiateMessage NEW hContext %lx\n", *phContext);
     }
 
-    context = NtlmReferenceContext(*phContext);
+    context = NtlmReferenceContextSvr(*phContext);
 
     /* InputToken should contain a negotiate message */
     if(InputToken->cbBuffer > NTLM_MAX_BUF ||
@@ -458,7 +458,7 @@ NtlmGenerateAuthenticationMessage(
     OUT PULONG NegotiateFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT context = NULL;
+    PNTLMSSP_CONTEXT_CLI context = NULL;
     PCHALLENGE_MESSAGE challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     BOOLEAN isUnicode;
@@ -486,7 +486,7 @@ NtlmGenerateAuthenticationMessage(
                        ISC_RET_INTEGRITY;
 
     /* get context */
-    context = NtlmReferenceContext(hContext);
+    context = NtlmReferenceContextCli(hContext);
     if(!context || !context->Credential)
     {
         ERR("NtlmHandleChallengeMessage invalid handle!\n");
@@ -495,12 +495,12 @@ NtlmGenerateAuthenticationMessage(
     }
 
     /* re-authenticate call */
-    if(context->State == AuthenticateSent)
+    if(context->hdr.State == AuthenticateSent)
     {
         UNIMPLEMENTED;
         goto quit;
     }
-    else if(context->State != NegotiateSent)
+    else if(context->hdr.State != NegotiateSent)
     {
         ERR("Context not in correct state!\n");
         ret = SEC_E_OUT_OF_SEQUENCE;
@@ -784,7 +784,7 @@ NtlmGenerateAuthenticationMessage(
                             &authmessage->EncryptedRandomSessionKey,
                             &offset);
 
-    context->State = AuthenticateSent;
+    context->hdr.State = AuthenticateSent;
     ret = SEC_E_OK;
 quit:
     if (ret != SEC_E_OK)
@@ -811,7 +811,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
                               OUT PULONG pfUserFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT context = NULL;
+    PNTLMSSP_CONTEXT_SVR context = NULL;
     PAUTHENTICATE_MESSAGE authMessage = NULL;
     UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
     UNICODE_STRING UserName, Workstation, DomainName;
@@ -825,14 +825,14 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
 
     TRACE("NtlmHandleAuthenticateMessage hContext %x!\n", hContext);
     /* get context */
-    if(!(context = NtlmReferenceContext(hContext)))
+    if(!(context = NtlmReferenceContextSvr(hContext)))
     {
         ret = SEC_E_INVALID_HANDLE;
         goto fail;
     }
 
-    TRACE("context->State %d\n", context->State);
-    if(context->State != ChallengeSent && context->State != Authenticated)
+    TRACE("context->State %d\n", context->hdr.State);
+    if(context->hdr.State != ChallengeSent && context->hdr.State != Authenticated)
     {
         ERR("Context not in correct state!\n");
         ret = SEC_E_OUT_OF_SEQUENCE;
@@ -840,7 +840,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     }
 
     /* re-authorize */
-    if(context->State == Authenticated)
+    if(context->hdr.State == Authenticated)
         UNIMPLEMENTED;
 
     /* InputToken1 should contain a authenticate message */

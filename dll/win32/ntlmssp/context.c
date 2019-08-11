@@ -35,13 +35,13 @@ NtlmContextInitialize(VOID)
     return STATUS_SUCCESS;
 }
 
-PNTLMSSP_CONTEXT
-NtlmReferenceContext(IN ULONG_PTR Handle)
+PNTLMSSP_CONTEXT_HDR
+NtlmReferenceContextHdr(IN ULONG_PTR Handle)
 {
-    PNTLMSSP_CONTEXT context;
+    PNTLMSSP_CONTEXT_HDR context;
     EnterCriticalSection(&ContextCritSect);
 
-    context = (PNTLMSSP_CONTEXT)Handle;
+    context = (PNTLMSSP_CONTEXT_HDR)Handle;
 
     /* sanity */
     ASSERT(context);
@@ -68,13 +68,40 @@ NtlmReferenceContext(IN ULONG_PTR Handle)
     return context;
 }
 
+PNTLMSSP_CONTEXT_SVR
+NtlmReferenceContextSvr(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CONTEXT_HDR c = (PNTLMSSP_CONTEXT_HDR)NtlmReferenceContextHdr(Handle);
+    ASSERT(c->isServer);
+    return (PNTLMSSP_CONTEXT_SVR)c;
+}
+
+PNTLMSSP_CONTEXT_CLI
+NtlmReferenceContextCli(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CONTEXT_HDR c = (PNTLMSSP_CONTEXT_HDR)NtlmReferenceContextHdr(Handle);
+    ASSERT(!c->isServer);
+    return (PNTLMSSP_CONTEXT_CLI)c;
+}
+PNTLMSSP_CONTEXT_MSG
+NtlmReferenceContextMsg(IN ULONG_PTR Handle)
+{
+    PNTLMSSP_CONTEXT_HDR c;
+    c = NtlmReferenceContextHdr(Handle);
+    if (c->isServer)
+        return &((PNTLMSSP_CONTEXT_SVR)c)->msg;
+    else
+        return &((PNTLMSSP_CONTEXT_CLI)c)->msg;
+}
+
+
 VOID
 NtlmDereferenceContext(IN ULONG_PTR Handle)
 {
-    PNTLMSSP_CONTEXT context;
+    PNTLMSSP_CONTEXT_HDR context;
     EnterCriticalSection(&ContextCritSect);
 
-    context = (PNTLMSSP_CONTEXT)Handle;
+    context = (PNTLMSSP_CONTEXT_HDR)Handle;
 
     /* sanity */
     ASSERT(context);
@@ -90,8 +117,18 @@ NtlmDereferenceContext(IN ULONG_PTR Handle)
         TRACE("Deleting context %p\n",context);
 
         /* dereference credential */
-        if(context->Credential)
-            NtlmDereferenceCredential((ULONG_PTR)context->Credential);
+        if (context->isServer)
+        {
+            PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)context;
+            if(csvr->Credential)
+                NtlmDereferenceCredential((ULONG_PTR)csvr->Credential);
+        }
+        else
+        {
+            PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)context;
+            if(ccli->Credential)
+                NtlmDereferenceCredential((ULONG_PTR)ccli->Credential);
+        }
 
         /* remove from list */
         RemoveEntryList(&context->Entry);
@@ -111,9 +148,9 @@ NtlmContextTerminate(VOID)
     /* dereference all items */
     while (!IsListEmpty(&ValidContextList))
     {
-        PNTLMSSP_CONTEXT Context;
+        PNTLMSSP_CONTEXT_HDR Context;
         Context = CONTAINING_RECORD(ValidContextList.Flink,
-                                    NTLMSSP_CONTEXT,
+                                    NTLMSSP_CONTEXT_HDR,
                                     Entry);
 
         NtlmDereferenceContext((ULONG_PTR)Context);
@@ -127,13 +164,16 @@ NtlmContextTerminate(VOID)
     return;
 }
 
-PNTLMSSP_CONTEXT
-NtlmAllocateContext(VOID)
+PNTLMSSP_CONTEXT_HDR
+NtlmAllocateContextHdr(BOOL isServer)
 {
     SECPKG_CALL_INFO CallInfo;
-    PNTLMSSP_CONTEXT ret;
+    PNTLMSSP_CONTEXT_HDR ret;
 
-    ret = (PNTLMSSP_CONTEXT)NtlmAllocate(sizeof(NTLMSSP_CONTEXT));
+    ULONG ctxSize = (isServer) ? sizeof(NTLMSSP_CONTEXT_SVR) :
+                                 sizeof(NTLMSSP_CONTEXT_CLI);
+
+    ret = (PNTLMSSP_CONTEXT_HDR)NtlmAllocate(ctxSize);
 
     if(!ret)
     {
@@ -159,6 +199,16 @@ NtlmAllocateContext(VOID)
     InsertHeadList(&ValidContextList, &ret->Entry);
     LeaveCriticalSection(&ContextCritSect);
 
+    TRACE("added context %p\n",ret);
+    return ret;
+}
+
+PNTLMSSP_CONTEXT_CLI
+NtlmAllocateContextCli(VOID)
+{
+    PNTLMSSP_CONTEXT_CLI ret;
+
+    ret = (PNTLMSSP_CONTEXT_CLI)NtlmAllocateContextHdr(FALSE);
     /* always on features */
     ret->NegotiateFlags = NTLMSSP_NEGOTIATE_UNICODE |
                           NTLMSSP_NEGOTIATE_OEM |
@@ -168,8 +218,24 @@ NtlmAllocateContext(VOID)
                           NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
                           NTLMSSP_NEGOTIATE_56 |
                           NTLMSSP_NEGOTIATE_128; // if supported
+    return ret;
+}
 
-    TRACE("added context %p\n",ret);
+PNTLMSSP_CONTEXT_SVR
+NtlmAllocateContextSvr(VOID)
+{
+    PNTLMSSP_CONTEXT_SVR ret;
+
+    ret = (PNTLMSSP_CONTEXT_SVR)NtlmAllocateContextHdr(TRUE);
+    /* always on features */
+    ret->NegotiateFlags = NTLMSSP_NEGOTIATE_UNICODE |
+                          NTLMSSP_NEGOTIATE_OEM |
+                          NTLMSSP_NEGOTIATE_NTLM |
+                          NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
+                          NTLMSSP_REQUEST_TARGET |
+                          NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                          NTLMSSP_NEGOTIATE_56 |
+                          NTLMSSP_NEGOTIATE_128; // if supported
     return ret;
 }
 
@@ -184,7 +250,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
                       OUT PULONG pfNegotiateFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT context = NULL;
+    PNTLMSSP_CONTEXT_CLI context = NULL;
     PNTLMSSP_CREDENTIAL cred;
 
     *pSessionKey = 0;
@@ -201,7 +267,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
         goto fail;
     }
 
-    context = NtlmAllocateContext();
+    context = NtlmAllocateContextCli();
 
     if(!context)
     {
@@ -521,7 +587,7 @@ QueryContextAttributesAW(
     const char* PKG_COMMENT_A = "NTLM Security Package";
 
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT context = NtlmReferenceContext(phContext->dwLower);
+    PNTLMSSP_CONTEXT_HDR context = NtlmReferenceContextHdr(phContext->dwLower);
 
     TRACE("%p %lx %p\n", phContext, ulAttribute, pBuffer);
 
@@ -541,11 +607,16 @@ QueryContextAttributesAW(
         }
         case SECPKG_ATTR_FLAGS:
         {
+            ULONG negoFlags;
             PSecPkgContext_Flags spcf = (PSecPkgContext_Flags)pBuffer;
             spcf->Flags = 0;
-            if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
+            if (context->isServer)
+                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->NegotiateFlags;
+            else
+                negoFlags = ((PNTLMSSP_CONTEXT_CLI)context)->NegotiateFlags;
+            if (negoFlags & NTLMSSP_NEGOTIATE_SIGN)
                 spcf->Flags |= ISC_RET_INTEGRITY;
-            if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
+            if (negoFlags & NTLMSSP_NEGOTIATE_SEAL)
                 spcf->Flags |= ISC_RET_CONFIDENTIALITY;
             break;
         }

@@ -306,7 +306,7 @@ NtlmHandleNegotiateMessage(
 
 SECURITY_STATUS
 NtlmGenerateChallengeMessage(
-    IN PNTLMSSP_CONTEXT Context,
+    IN PNTLMSSP_CONTEXT_SVR Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
     IN ULONG ASCContextReq,
     IN RAW_STRING TargetName,

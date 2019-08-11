@@ -125,25 +125,21 @@ typedef enum {
     PassedToService
 } NTLMSSP_CONTEXT_STATE, *PNTLMSSP_CONTEXT_STATE;
 
-typedef struct _NTLMSSP_CONTEXT
+/* context (client + server) base */
+typedef struct _NTLMSSP_CONTEXT_HDR
 {
     LIST_ENTRY Entry;
-    LARGE_INTEGER StartTime;
     BOOL isServer;
-    BOOL isLocal;
-    ULONG Timeout;
     ULONG RefCount;
-    ULONG NegotiateFlags;
-    /* FIXME: These flags are only assigned, never used ... remove? */
-    ULONG ISCRetContextFlags;
-    ULONG ASCRetContextFlags;
-    NTLMSSP_CONTEXT_STATE State;
-    PNTLMSSP_CREDENTIAL Credential;
-    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
-    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
-    HANDLE ClientToken;
+    LARGE_INTEGER StartTime;
     ULONG ProcId;
+    ULONG Timeout;
+    NTLMSSP_CONTEXT_STATE State;
+} NTLMSSP_CONTEXT_HDR, *PNTLMSSP_CONTEXT_HDR;
 
+/* context - message support (client + server) */
+typedef struct _NTLMSSP_CONTEXT_MSG
+{
     /* message support */
     int SentSequenceNum;
     int RecvSequenceNum;
@@ -154,7 +150,43 @@ typedef struct _NTLMSSP_CONTEXT
     UCHAR ServerSigningKey[16];
     UCHAR ServerSealingKey[16];
     UCHAR MessageIntegrityCheck[16];
-} NTLMSSP_CONTEXT, *PNTLMSSP_CONTEXT;
+} NTLMSSP_CONTEXT_MSG, *PNTLMSSP_CONTEXT_MSG;
+
+typedef struct _NTLMSSP_CONTEXT_SVR
+{
+    NTLMSSP_CONTEXT_HDR hdr;
+    BOOL isLocal;
+    ULONG NegotiateFlags;
+    /* FIXME: These flags are only assigned, never used ... remove? */
+    ULONG ISCRetContextFlags;
+    ULONG ASCRetContextFlags;
+    PNTLMSSP_CREDENTIAL Credential;
+    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
+    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+    HANDLE ClientToken;
+
+    NTLMSSP_CONTEXT_MSG msg;
+} NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
+
+typedef struct _NTLMSSP_CONTEXT_CLI
+{
+    NTLMSSP_CONTEXT_HDR hdr;
+    BOOL isLocal;
+    ULONG NegotiateFlags;
+    /* FIXME: These flags are only assigned, never used ... remove? */
+    ULONG ISCRetContextFlags;
+    ULONG ASCRetContextFlags;
+    PNTLMSSP_CREDENTIAL Credential;
+    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
+    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+    HANDLE ClientToken;
+
+    NTLMSSP_CONTEXT_MSG msg;
+} NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
+
+/* HACK - remove later ... */
+typedef struct _NTLMSSP_CONTEXT_CLI
+    NTLMSSP_CONTEXT, *PNTLMSSP_CONTEXT;
 
 /* private functions */
 
@@ -186,11 +218,19 @@ NtlmContextInitialize(VOID);
 VOID
 NtlmContextTerminate(VOID);
 
-PNTLMSSP_CONTEXT
-NtlmAllocateContext(VOID);
+PNTLMSSP_CONTEXT_CLI
+NtlmAllocateContextCli(VOID);
+PNTLMSSP_CONTEXT_SVR
+NtlmAllocateContextSvr(VOID);
 
-PNTLMSSP_CONTEXT
-NtlmReferenceContext(IN ULONG_PTR Handle);
+PNTLMSSP_CONTEXT_HDR
+NtlmReferenceContextHdr(IN ULONG_PTR Handle);
+PNTLMSSP_CONTEXT_MSG
+NtlmReferenceContextMsg(IN ULONG_PTR Handle);
+PNTLMSSP_CONTEXT_CLI
+NtlmReferenceContextCli(IN ULONG_PTR Handle);
+PNTLMSSP_CONTEXT_SVR
+NtlmReferenceContextSvr(IN ULONG_PTR Handle);
 
 VOID
 NtlmDereferenceContext(IN ULONG_PTR Handle);

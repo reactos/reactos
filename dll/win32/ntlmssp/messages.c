@@ -33,7 +33,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     PSecBuffer signature_buffer = NULL;
     UCHAR digest[16], checksum[8], *signature;
     UINT index, length, version = 1;
-    PNTLMSSP_CONTEXT context;
+    PNTLMSSP_CONTEXT_MSG ctxMsg;
     HMAC_MD5_CTX hmac;
     void* data;
 
@@ -49,12 +49,13 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         return SEC_E_INVALID_TOKEN;
 
     /* get context, need to free it later! */
-    context = NtlmReferenceContext(phContext->dwLower);
+    ctxMsg = NtlmReferenceContextMsg(phContext->dwLower);
 
-    if (!context->SendSealKey)
+    if (!ctxMsg->SendSealKey)
     {
         TRACE("context->SendSealKey is NULL\n");
-        return SEC_E_INVALID_TOKEN;
+        ret = SEC_E_INVALID_TOKEN;
+        goto exit;
     }
 
     TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
@@ -81,24 +82,24 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     memcpy(data, data_buffer->pvBuffer, length);
 
     /* Compute the HMAC-MD5 hash of ConcatenationOf(seq_num,data) using the client signing key */
-    HMACMD5Init(&hmac, context->ClientSigningKey, sizeof(context->ServerSigningKey));
+    HMACMD5Init(&hmac, ctxMsg->ClientSigningKey, sizeof(ctxMsg->ServerSigningKey));
     HMACMD5Update(&hmac, (void*) &(MessageSeqNo), sizeof(MessageSeqNo));
     HMACMD5Update(&hmac, data, length);
     HMACMD5Final(&hmac, digest);
 
     /* Encrypt message using with RC4, result overwrites original buffer */
-    rc4_crypt(context->SendSealKey, data_buffer->pvBuffer, data, length);
+    rc4_crypt(ctxMsg->SendSealKey, data_buffer->pvBuffer, data, length);
     NtlmFree(data);
 
     /* RC4-encrypt first 8 bytes of digest */
-    rc4_crypt(context->SendSealKey, checksum, digest, 8);
+    rc4_crypt(ctxMsg->SendSealKey, checksum, digest, 8);
     signature = (UCHAR*) signature_buffer->pvBuffer;
 
     /* Concatenate version, ciphertext and sequence number to build signature */
     memcpy(signature, (void*) &version, sizeof(version));
     memcpy(&signature[4], (void*) checksum, sizeof(checksum));
     memcpy(&signature[12], (void*) &(MessageSeqNo), sizeof(MessageSeqNo));
-    context->SentSequenceNum++;
+    ctxMsg->SentSequenceNum++;
 
 exit:
     NtlmDereferenceContext(phContext->dwLower);
@@ -113,7 +114,7 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT context;
+    PNTLMSSP_CONTEXT_MSG ctxMsg;
     ULONG index, length;
     HMAC_MD5_CTX hmac;
     UINT version = 1;
@@ -131,7 +132,7 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         return SEC_E_INVALID_TOKEN;
 
     /* get context */
-    context = NtlmReferenceContext(phContext->dwLower);
+    ctxMsg = NtlmReferenceContextMsg(phContext->dwLower);
 
     /* extract data and signature buffers */
     for (index = 0; index < (int) pMessage->cBuffers; index++)
@@ -164,23 +165,23 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
     memcpy(data, data_buffer->pvBuffer, length);
 
     /* Decrypt message using with RC4 */
-    rc4_crypt(context->RecvSealKey, data_buffer->pvBuffer, data, length);
+    rc4_crypt(ctxMsg->RecvSealKey, data_buffer->pvBuffer, data, length);
 
     /* Compute the HMAC-MD5 hash of ConcatenationOf(seq_num,data) using the client signing key */
-    HMACMD5Init(&hmac, context->ServerSigningKey, sizeof(context->ServerSigningKey));
+    HMACMD5Init(&hmac, ctxMsg->ServerSigningKey, sizeof(ctxMsg->ServerSigningKey));
     HMACMD5Update(&hmac, (UCHAR*) &(MessageSeqNo), sizeof(MessageSeqNo));
     HMACMD5Update(&hmac, data_buffer->pvBuffer, data_buffer->cbBuffer);
     HMACMD5Final(&hmac, digest);
     NtlmFree(data);
 
     /* RC4-encrypt first 8 bytes of digest */
-    rc4_crypt(context->RecvSealKey, digest, checksum, 8);
+    rc4_crypt(ctxMsg->RecvSealKey, digest, checksum, 8);
 
     /* Concatenate version, ciphertext and sequence number to build signature */
     memcpy(expected_signature, (void*) &version, 4);
     memcpy(&expected_signature[4], (void*) checksum, 4);
     memcpy(&expected_signature[12], (void*) &(MessageSeqNo), 4);
-    context->RecvSequenceNum++;
+    ctxMsg->RecvSequenceNum++;
 
     if (memcmp(signature->pvBuffer, expected_signature, sizeof(expected_signature)) != 0)
     {
