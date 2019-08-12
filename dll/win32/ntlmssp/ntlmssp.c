@@ -111,6 +111,10 @@ NtlmInitializeGlobals(VOID)
     InitializeCriticalSection(&gcli->cs);
     InitializeCriticalSection(&gsvr->cs);
 
+    /* maybe read from registry ... */
+    /*  only NTLMV2 supported */
+    gcli->CfgFlags = NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED;
+
     if(!GetComputerNameW(compName, &compNamelen))
     {
         compName[0] = L'\0';

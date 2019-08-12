@@ -55,6 +55,10 @@ extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in 
 extern SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
 extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA in SpInitialize
 
+/* client configuraion flags */
+#define NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED 0x000000001
+#define NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED 0x000000002
+
 typedef struct _NTLMSSP_GLOBALS
 {
     /* internal - use to read/write global state */
@@ -93,6 +97,10 @@ typedef struct _NTLMSSP_GLOBALS_CLI
     // The following variables are internal to the client and are maintained for the entire length of the
     //  authenticated session:
     // MaxLifetime: An integer that indicates the maximum lifetime for challenge/response pairs.<
+
+    /* configuration - maybe read from registry (TODO) */
+    // MS-NLSP 1.7
+    ULONG CfgFlags;
 } NTLMSSP_GLOBALS_CLI, *PNTLMSSP_GLOBALS_CLI;
 
 /* MS-NLMP 3.2.1.1 */
@@ -230,8 +238,12 @@ typedef struct _NTLMSSP_CONTEXT_CLI
     UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
     UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
     HANDLE ClientToken;
-
+    
     NTLMSSP_CONTEXT_MSG msg;
+
+    /* extra flags (not directly in spec) */
+    BOOL UseNTLMv2;
+
 } NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
 
 typedef struct _NTLMSSP_CONTEXT_SVR

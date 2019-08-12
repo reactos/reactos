@@ -240,15 +240,17 @@ MAC(ULONG flags,
     PUCHAR result);
 
 VOID
-NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
-                      IN PEXT_STRING pPasswordW,
-                      IN PEXT_STRING pDomainNameW,
-                      IN PUNICODE_STRING pServerName,
-                      IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-                      OUT PNTLM_DATABUF pNtResponseData,
-                      OUT PLM2_RESPONSE pLm2Response,
-                      OUT PUSER_SESSION_KEY pUserSessionKey,
-                      OUT PLM_SESSION_KEY pLmSessionKey);
+NtlmChallengeResponse(
+    IN PEXT_STRING pUserNameW,
+    IN PEXT_STRING pPasswordW,
+    IN PEXT_STRING pDomainNameW,
+    IN PUNICODE_STRING pServerName,
+    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
+    IN ULONGLONG TargetInfoTimeStamp,
+    OUT PNTLM_DATABUF pNtResponseData,
+    OUT PLM2_RESPONSE pLm2Response,
+    OUT PUSER_SESSION_KEY pUserSessionKey,
+    OUT PLM_SESSION_KEY pLmSessionKey);
 
 /* avl functions */
 

@@ -254,6 +254,7 @@ CliCreateContext(
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;
     PNTLMSSP_CREDENTIAL cred;
+    PNTLMSSP_GLOBALS_CLI gcli = getGlobalsCli();
 
     *pfNegotiateFlags = 0;
 
@@ -276,6 +277,18 @@ CliCreateContext(
         goto fail;
     }
     NtlmReferenceContextCli((ULONG_PTR)context);
+
+    /* configure */
+    if (gcli->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED)
+    {
+        context->UseNTLMv2 = TRUE;
+    }
+    else
+    {
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+        ERR("Only NTLMv2 is implemented!\n");
+        goto fail;
+    }
 
     /* client requested features */
     if(ISCContextReq & ISC_REQ_INTEGRITY)

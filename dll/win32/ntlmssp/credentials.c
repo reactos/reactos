@@ -218,45 +218,69 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     if (pGetKeyFn || pGetKeyArgument)
         WARN("msdn says these should always be null!\n");
 
-    //initialize to null
+    /* initialize to null */
     ExtWStrInit(&username, NULL);
     ExtWStrInit(&domain, NULL);
     ExtWStrInit(&password, NULL);
 
-    if(fCredentialUse == SECPKG_CRED_OUTBOUND && pAuthData)
+    if(fCredentialUse == SECPKG_CRED_OUTBOUND)
     {
-        PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
-
-        /* detect null session */
-        if ((auth_data->User) && (auth_data->Password) &&
-            (auth_data->Domain) && (!auth_data->UserLength) &&
-            (!auth_data->PasswordLength) &&(!auth_data->DomainLength))
+        if (pAuthData)
         {
-            WARN("Using null session.\n");
-            credFlags |= NTLM_CRED_NULLSESSION;
-        }
+            PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
 
-        /* create unicode strings and null terminate buffers */
+            /* detect null session */
+            if ((auth_data->User) && (auth_data->Password) &&
+                (auth_data->Domain) && (!auth_data->UserLength) &&
+                (!auth_data->PasswordLength) &&(!auth_data->DomainLength))
+            {
+                WARN("Using null session.\n");
+                credFlags |= NTLM_CRED_NULLSESSION;
+            }
 
-        if ((auth_data->User) &&
-            (!ExtWStrSetN(&username, auth_data->User, auth_data->UserLength)))
-        {
+            /* create unicode strings and null terminate buffers */
+
+            if ((auth_data->User) &&
+                (!ExtWStrSetN(&username, auth_data->User, auth_data->UserLength)))
+            {
             ret = SEC_E_INSUFFICIENT_MEMORY;
             goto quit;
-        }
+            }
 
-        if ((auth_data->Password) &&
-            (!ExtWStrSetN(&password, auth_data->Password, auth_data->PasswordLength)))
-        {
+            if ((auth_data->Password) &&
+                (!ExtWStrSetN(&password, auth_data->Password, auth_data->PasswordLength)))
+            {
             ret = SEC_E_INSUFFICIENT_MEMORY;
             goto quit;
-        }
+            }
 
-        if ((auth_data->Domain) &&
-            (!ExtWStrSetN(&domain, auth_data->Domain, auth_data->DomainLength)))
+            if ((auth_data->Domain) &&
+                (!ExtWStrSetN(&domain, auth_data->Domain, auth_data->DomainLength)))
+            {
+                ret = SEC_E_INSUFFICIENT_MEMORY;
+                goto quit;
+            }
+        }
+        else
         {
-            ret = SEC_E_INSUFFICIENT_MEMORY;
-            goto quit;
+            PWKSTA_USER_INFO_1 pUsrInfo1 = NULL;
+
+            if (NetWkstaUserGetInfo(NULL, 1, (LPBYTE*)&pUsrInfo1) != NERR_Success)
+            {
+                ERR("NetWkstaUserGetInfo failed.\n");
+                ret = SEC_E_INTERNAL_ERROR;
+                goto quit;
+            }
+            if (!ExtWStrSet(&username, pUsrInfo1->wkui1_username) ||
+                !ExtWStrSet(&domain, pUsrInfo1->wkui1_logon_domain) ||
+                !ExtWStrSet(&password, L""))
+            {
+                NetApiBufferFree(pUsrInfo1);
+                ERR("ExtWStrSet failed\n");
+                ret = SEC_E_INSUFFICIENT_MEMORY;
+                goto quit;
+            }
+            NetApiBufferFree(pUsrInfo1);
         }
     }
 
@@ -309,7 +333,6 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
     ptsExpiry->HighPart = 0x7FFFFF36;
     ptsExpiry->LowPart = 0xD5969FFF;
-
 
     /* free strings as we used recycled credentials */
     //if(foundCred)

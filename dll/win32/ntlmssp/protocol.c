@@ -474,6 +474,7 @@ CliGenerateAuthenticationMessage(
     LM_SESSION_KEY LmSessionKey;
     EXT_STRING AvDataTmp;
     NTLM_DATABUF AvDataRef;
+    ULONGLONG NtResponseTimeStamp;
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
@@ -629,7 +630,8 @@ CliGenerateAuthenticationMessage(
 
     /* get params we need for auth message */
     /* extract target info */
-    if(context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    NtResponseTimeStamp = 0;
+    if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
         PVOID data;
         ULONG len;
@@ -664,6 +666,9 @@ CliGenerateAuthenticationMessage(
         ServerNameRef.Length = len;
         ServerNameRef.MaximumLength = len;
         ServerNameRef.Buffer = data;
+
+        if (NtlmAvlGet(&AvDataRef, MsvAvTimestamp, &data, &len))
+            NtResponseTimeStamp = *(PULONGLONG)data;
     }
     else
     {
@@ -686,6 +691,13 @@ CliGenerateAuthenticationMessage(
         if(!isUnicode)
             FIXME("convert to unicode!\n");*/
     }
+    /* MS NLSP 3.1.5.1.2 */
+    if ((context->UseNTLMv2) &&
+        (NtResponseTimeStamp == 0))
+    {
+        if (!NT_SUCCESS(NtQuerySystemTime((PLARGE_INTEGER)&NtResponseTimeStamp)))
+            NtResponseTimeStamp = 0;
+    }
 
     if(!(cred = NtlmReferenceCredential((ULONG_PTR)context->Credential)))
         goto quit;
@@ -703,6 +715,7 @@ CliGenerateAuthenticationMessage(
                           &cred->DomainNameW,
                           &ServerNameRef,
                           challenge->ServerChallenge,
+                          NtResponseTimeStamp,
                           &NtResponseData,
                           &Lm2Response,
                           &UserSessionKey,
@@ -770,19 +783,22 @@ CliGenerateAuthenticationMessage(
                             &authmessage->WorkstationName,
                             &offset);
 
-    if (context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
+                            &authmessage->LmChallengeResponse,
+                            &offset);
+    /* CONNECTIONLESS
+    / * MS-NLSP - 3.1.5.2.1
+     * We SHOULD not set LmChallengeResponse if TargetInfo
+     * is set and NTLMv2 is used. * /
+    if ((challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO) &&
+        (!context->UseNTLMv2))
     {
         NtlmUnicodeStringToBlob((PVOID)authmessage,
                                 &LmResponseString,
                                 &authmessage->LmChallengeResponse,
                                 &offset);
-    }
-    else
-    {
-        NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
-                                &authmessage->LmChallengeResponse,
-                                &offset);
-    }
+    };*/
+
 
     NtlmWriteDataBufToBlob((PVOID)authmessage,
                            &NtResponseData,

@@ -380,15 +380,17 @@ NtlmNtResponse(IN PEXT_STRING pUserNameW,
 }
 
 VOID
-NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
-                      IN PEXT_STRING pPasswordW,
-                      IN PEXT_STRING pDomainNameW,
-                      IN PUNICODE_STRING pServerName,
-                      IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-                      OUT PNTLM_DATABUF pNtResponseData,
-                      OUT PLM2_RESPONSE pLm2Response,
-                      OUT PUSER_SESSION_KEY pUserSessionKey,
-                      OUT PLM_SESSION_KEY pLmSessionKey)
+NtlmChallengeResponse(
+    IN PEXT_STRING pUserNameW,
+    IN PEXT_STRING pPasswordW,
+    IN PEXT_STRING pDomainNameW,
+    IN PUNICODE_STRING pServerName,
+    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
+    IN ULONGLONG TimeStamp,
+    OUT PNTLM_DATABUF pNtResponseData,
+    OUT PLM2_RESPONSE pLm2Response,
+    OUT PUSER_SESSION_KEY pUserSessionKey,
+    OUT PLM_SESSION_KEY pLmSessionKey)
 {
     PMSV1_0_NTLM3_RESPONSE pNtResponse;
     BOOL avOk;
@@ -406,6 +408,7 @@ NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
     pNtResponse->HiRespType = 1;
     pNtResponse->Flags = 0;
     pNtResponse->MsgWord = 0;
+    pNtResponse->TimeStamp = TimeStamp;
 
     /* Av-Pairs should begin at AvPairsOff field. So we need
        to set the used-ptr back before writing avl */
@@ -424,7 +427,7 @@ NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
         pUserNameW, pPasswordW, pDomainNameW, pServerName, ChallengeToClient,
         pNtResponse, pLm2Response, pUserSessionKey, pLmSessionKey);
 
-    NtQuerySystemTime((PLARGE_INTEGER)&pNtResponse->TimeStamp);
+    /* 3.1.5.1.2 nonce */
     NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
 
     NtlmNtResponse(pUserNameW,
