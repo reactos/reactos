@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    11   /* Version 11 */
+#define _INC_MSGDUMP    15   /* Version 15 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -490,11 +490,172 @@ MD_OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
     return FALSE;
 }
 
+static __inline LPCTSTR MSGDUMP_API
+MD_GetNotifyCode(HWND hwndFrom, UINT code)
+{
+    TCHAR szClass[24], sz[2];
+    static TCHAR s_szText[64];
+
+    switch (code)
+    {
+        case NM_OUTOFMEMORY: return TEXT("NM_OUTOFMEMORY");
+        case NM_CLICK: return TEXT("NM_CLICK");
+        case NM_DBLCLK: return TEXT("NM_DBLCLK");
+        case NM_RETURN: return TEXT("NM_RETURN");
+        case NM_RCLICK: return TEXT("NM_RCLICK");
+        case NM_RDBLCLK: return TEXT("NM_RDBLCLK");
+        case NM_SETFOCUS: return TEXT("NM_SETFOCUS");
+        case NM_KILLFOCUS: return TEXT("NM_KILLFOCUS");
+#if (_WIN32_IE >= 0x0300)
+        case NM_CUSTOMDRAW: return TEXT("NM_CUSTOMDRAW");
+        case NM_HOVER: return TEXT("NM_HOVER");
+#endif
+#if (_WIN32_IE >= 0x0400)
+        case NM_NCHITTEST: return TEXT("NM_NCHITTEST");
+        case NM_KEYDOWN: return TEXT("NM_KEYDOWN");
+        case NM_RELEASEDCAPTURE: return TEXT("NM_RELEASEDCAPTURE");
+        case NM_SETCURSOR: return TEXT("NM_SETCURSOR");
+        case NM_CHAR: return TEXT("NM_CHAR");
+#endif
+#if (_WIN32_IE >= 0x0401)
+        case NM_TOOLTIPSCREATED: return TEXT("NM_TOOLTIPSCREATED");
+#endif
+#if (_WIN32_IE >= 0x0500)
+        case NM_LDOWN: return TEXT("NM_LDOWN");
+        case NM_RDOWN: return TEXT("NM_RDOWN");
+#endif
+    }
+
+    szClass[0] = 0;
+    GetClassName(hwndFrom, szClass, ARRAYSIZE(szClass));
+    sz[0] = szClass[0];
+    sz[1] = 0;
+    CharUpper(sz);
+
+    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    {
+        switch (code)
+        {
+            case EN_MSGFILTER: return TEXT("EN_MSGFILTER");
+            case EN_REQUESTRESIZE: return TEXT("EN_REQUESTRESIZE");
+            case EN_SELCHANGE: return TEXT("EN_SELCHANGE");
+            case EN_DROPFILES: return TEXT("EN_DROPFILES");
+            case EN_PROTECTED: return TEXT("EN_PROTECTED");
+            case EN_CORRECTTEXT: return TEXT("EN_CORRECTTEXT");
+            case EN_STOPNOUNDO: return TEXT("EN_STOPNOUNDO");
+            case EN_IMECHANGE: return TEXT("EN_IMECHANGE");
+            case EN_SAVECLIPBOARD: return TEXT("EN_SAVECLIPBOARD");
+            case EN_OLEOPFAILED: return TEXT("EN_OLEOPFAILED");
+            case EN_OBJECTPOSITIONS: return TEXT("EN_OBJECTPOSITIONS");
+            case EN_LINK: return TEXT("EN_LINK");
+            case EN_DRAGDROPDONE: return TEXT("EN_DRAGDROPDONE");
+            case EN_PARAGRAPHEXPANDED: return TEXT("EN_PARAGRAPHEXPANDED");
+            case EN_PAGECHANGE: return TEXT("EN_PAGECHANGE");
+            case EN_LOWFIRTF: return TEXT("EN_LOWFIRTF");
+            case EN_ALIGNLTR: return TEXT("EN_ALIGNLTR");
+            case EN_ALIGNRTL: return TEXT("EN_ALIGNRTL");
+#if _RICHEDIT_VER >= 0x0800
+            case EN_CLIPFORMAT: return TEXT("EN_CLIPFORMAT");
+            case EN_STARTCOMPOSITION: return TEXT("EN_STARTCOMPOSITION");
+            case EN_ENDCOMPOSITION: return TEXT("EN_ENDCOMPOSITION");
+#endif
+        }
+    }
+    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_LISTVIEW) == 0)
+    {
+        switch (code)
+        {
+            case LVN_ITEMCHANGING: return TEXT("LVN_ITEMCHANGING");
+            case LVN_ITEMCHANGED: return TEXT("LVN_ITEMCHANGED");
+            case LVN_INSERTITEM: return TEXT("LVN_INSERTITEM");
+            case LVN_DELETEITEM: return TEXT("LVN_DELETEITEM");
+            case LVN_DELETEALLITEMS: return TEXT("LVN_DELETEALLITEMS");
+            case LVN_BEGINLABELEDITA: return TEXT("LVN_BEGINLABELEDITA");
+            case LVN_BEGINLABELEDITW: return TEXT("LVN_BEGINLABELEDITW");
+            case LVN_ENDLABELEDITA: return TEXT("LVN_ENDLABELEDITA");
+            case LVN_ENDLABELEDITW: return TEXT("LVN_ENDLABELEDITW");
+            case LVN_COLUMNCLICK: return TEXT("LVN_COLUMNCLICK");
+            case LVN_BEGINDRAG: return TEXT("LVN_BEGINDRAG");
+            case LVN_BEGINRDRAG: return TEXT("LVN_BEGINRDRAG");
+            case LVN_ODCACHEHINT: return TEXT("LVN_ODCACHEHINT");
+            case LVN_ODFINDITEMA: return TEXT("LVN_ODFINDITEMA");
+            case LVN_ODFINDITEMW: return TEXT("LVN_ODFINDITEMW");
+            case LVN_ITEMACTIVATE: return TEXT("LVN_ITEMACTIVATE");
+            case LVN_ODSTATECHANGED: return TEXT("LVN_ODSTATECHANGED");
+            case LVN_HOTTRACK: return TEXT("LVN_HOTTRACK");
+            case LVN_GETDISPINFOA: return TEXT("LVN_GETDISPINFOA");
+            case LVN_GETDISPINFOW: return TEXT("LVN_GETDISPINFOW");
+            case LVN_SETDISPINFOA: return TEXT("LVN_SETDISPINFOA");
+            case LVN_SETDISPINFOW: return TEXT("LVN_SETDISPINFOW");
+            case LVN_KEYDOWN: return TEXT("LVN_KEYDOWN");
+            case LVN_MARQUEEBEGIN: return TEXT("LVN_MARQUEEBEGIN");
+            case LVN_GETINFOTIPA: return TEXT("LVN_GETINFOTIPA");
+            case LVN_GETINFOTIPW: return TEXT("LVN_GETINFOTIPW");
+            case LVN_INCREMENTALSEARCHA: return TEXT("LVN_INCREMENTALSEARCHA");
+            case LVN_INCREMENTALSEARCHW: return TEXT("LVN_INCREMENTALSEARCHW");
+#if NTDDI_VERSION >= 0x06000000
+            case LVN_COLUMNDROPDOWN: return TEXT("LVN_COLUMNDROPDOWN");
+            case LVN_COLUMNOVERFLOWCLICK: return TEXT("LVN_COLUMNOVERFLOWCLICK");
+#endif
+            case LVN_BEGINSCROLL: return TEXT("LVN_BEGINSCROLL");
+            case LVN_ENDSCROLL: return TEXT("LVN_ENDSCROLL");
+#if NTDDI_VERSION >= 0x06000000
+            case LVN_LINKCLICK: return TEXT("LVN_LINKCLICK");
+            case LVN_GETEMPTYMARKUP: return TEXT("LVN_GETEMPTYMARKUP");
+#endif
+        }
+    }
+    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_TREEVIEW) == 0)
+    {
+        switch (code)
+        {
+            case TVN_SELCHANGINGA: return TEXT("TVN_SELCHANGINGA");
+            case TVN_SELCHANGINGW: return TEXT("TVN_SELCHANGINGW");
+            case TVN_SELCHANGEDA: return TEXT("TVN_SELCHANGEDA");
+            case TVN_SELCHANGEDW: return TEXT("TVN_SELCHANGEDW");
+            case TVN_GETDISPINFOA: return TEXT("TVN_GETDISPINFOA");
+            case TVN_GETDISPINFOW: return TEXT("TVN_GETDISPINFOW");
+            case TVN_SETDISPINFOA: return TEXT("TVN_SETDISPINFOA");
+            case TVN_SETDISPINFOW: return TEXT("TVN_SETDISPINFOW");
+            case TVN_ITEMEXPANDINGA: return TEXT("TVN_ITEMEXPANDINGA");
+            case TVN_ITEMEXPANDINGW: return TEXT("TVN_ITEMEXPANDINGW");
+            case TVN_ITEMEXPANDEDA: return TEXT("TVN_ITEMEXPANDEDA");
+            case TVN_ITEMEXPANDEDW: return TEXT("TVN_ITEMEXPANDEDW");
+            case TVN_BEGINDRAGA: return TEXT("TVN_BEGINDRAGA");
+            case TVN_BEGINDRAGW: return TEXT("TVN_BEGINDRAGW");
+            case TVN_BEGINRDRAGA: return TEXT("TVN_BEGINRDRAGA");
+            case TVN_BEGINRDRAGW: return TEXT("TVN_BEGINRDRAGW");
+            case TVN_DELETEITEMA: return TEXT("TVN_DELETEITEMA");
+            case TVN_DELETEITEMW: return TEXT("TVN_DELETEITEMW");
+            case TVN_BEGINLABELEDITA: return TEXT("TVN_BEGINLABELEDITA");
+            case TVN_BEGINLABELEDITW: return TEXT("TVN_BEGINLABELEDITW");
+            case TVN_ENDLABELEDITA: return TEXT("TVN_ENDLABELEDITA");
+            case TVN_ENDLABELEDITW: return TEXT("TVN_ENDLABELEDITW");
+            case TVN_KEYDOWN: return TEXT("TVN_KEYDOWN");
+            case TVN_GETINFOTIPA: return TEXT("TVN_GETINFOTIPA");
+            case TVN_GETINFOTIPW: return TEXT("TVN_GETINFOTIPW");
+            case TVN_SINGLEEXPAND: return TEXT("TVN_SINGLEEXPAND");
+#ifdef TVN_ITEMCHANGINGA
+            case TVN_ITEMCHANGINGA: return TEXT("TVN_ITEMCHANGINGA");
+            case TVN_ITEMCHANGINGW: return TEXT("TVN_ITEMCHANGINGW");
+            case TVN_ITEMCHANGEDA: return TEXT("TVN_ITEMCHANGEDA");
+            case TVN_ITEMCHANGEDW: return TEXT("TVN_ITEMCHANGEDW");
+            case TVN_ASYNCDRAW: return TEXT("TVN_ASYNCDRAW");
+#endif
+        }
+    }
+
+    StringCbPrintf(s_szText, sizeof(s_szText), TEXT("%u"), code);
+    return s_szText;
+}
+
 static __inline LRESULT MSGDUMP_API
 MD_OnNotify(HWND hwnd, int idFrom, LPNMHDR pnmhdr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr);
+    MSGDUMP_TPRINTF(TEXT("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr,
+                    pnmhdr->hwndFrom, pnmhdr->idFrom,
+                    MD_GetNotifyCode(pnmhdr->hwndFrom, pnmhdr->code));
     return 0;
 }
 
@@ -4183,6 +4344,320 @@ MD_TreeView_OnEditLabelW(HWND hwnd, HTREEITEM hitem)
 #endif
 
 static __inline LRESULT MSGDUMP_API
+MD_RichEdit_OnCanPaste(HWND hwnd, UINT uFormat)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_CANPASTE(hwnd:%p, uFormat:%u)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, uFormat);
+    return 0;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnDisplayBand(HWND hwnd, LPRECT lprc)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_DISPLAYBAND(hwnd:%p, lprc:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lprc);
+    return FALSE;
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnExGetSel(HWND hwnd, CHARRANGE *lpchr)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_EXGETSEL(hwnd:%p, lpchr:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpchr);
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnExLimitText(HWND hwnd, DWORD cchTextMax)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_EXLIMITTEXT(hwnd:%p, cchTextMax:%ld)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, cchTextMax);
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnExLineFromChar(HWND hwnd, DWORD ichCharPos)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_EXLINEFROMCHAR(hwnd:%p, ichCharPos:0x%08lX)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, ichCharPos);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnExSetSel(HWND hwnd, INT ichChar)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_EXSETSEL(hwnd:%p, ichChar:%d)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, ichChar);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnFindText(HWND hwnd, UINT fuFlags, FINDTEXT *lpFindText)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_FINDTEXT(hwnd:%p, fuFlags:%u, lpFindText:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnFormatRange(HWND hwnd, BOOL fRender, FORMATRANGE *lpFmt)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_FORMATRANGE(hwnd:%p, fRender:%d, lpFmt:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fRender, (void *)lpFmt);
+    return 0;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnGetCharFormat(HWND hwnd, BOOL fSelection, CHARFORMAT *lpFmt)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETCHARFORMAT(hwnd:%p, fSelection:%d, lpFmt:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fSelection, (void *)lpFmt);
+    return 0;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnGetEventMask(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETEVENTMASK(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnGetOleInterface(HWND hwnd, LPVOID *ppObject)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETOLEINTERFACE(hwnd:%p, ppObject:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)ppObject);
+    return FALSE;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnGetParaFormat(HWND hwnd, PARAFORMAT *lpFmt)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETPARAFORMAT(hwnd:%p, lpFmt:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnGetSelText(HWND hwnd, LPTSTR lpBuf)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETSELTEXT(hwnd:%p, lpBuf:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpBuf);
+    return 0;
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnHideSelection(HWND hwnd, BOOL fHide, BOOL fChangeStyle)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_HIDESELECTION(hwnd:%p, fHide:%d, fChangeStyle:%d)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fHide, fChangeStyle);
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnPasteSpecial(HWND hwnd, UINT uFormat, REPASTESPECIAL *lpRePasteSpecial)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_PASTESPECIAL(hwnd:%p, uFormat:%u, lpRePasteSpecial:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpRePasteSpecial);
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnRequestResize(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_REQUESTRESIZE(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnSelectionType(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SELECTIONTYPE(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline COLORREF MSGDUMP_API
+MD_RichEdit_OnSetBkgndColor(HWND hwnd, BOOL fUseSysColor, COLORREF clr)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETBKGNDCOLOR(hwnd:%p, fUseSysColor:%d, clr:0x%08lX)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fUseSysColor, clr);
+    return 0;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnSetCharFormat(HWND hwnd, UINT uFlags, CHARFORMAT *lpFmt)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETCHARFORMAT(hwnd:%p, uFlags:%u, lpFmt:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, uFlags, (void *)lpFmt);
+    return FALSE;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnSetEventMask(HWND hwnd, DWORD dwMask)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETEVENTMASK(hwnd:%p, dwMask:0x%08lX)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, dwMask);
+    return 0;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnSetOleCallback(HWND hwnd, void *pCallback)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETOLECALLBACK(hwnd:%p, pCallback:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, pCallback);
+    return FALSE;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnSetParaFormat(HWND hwnd, PARAFORMAT *lpFmt)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETPARAFORMAT(hwnd:%p, lpFmt:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
+    return FALSE;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnSetTargetDevice(HWND hwnd, HDC hdcTarget, INT cxLineWidth)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETTARGETDEVICE(hwnd:%p, hdcTarget:%p, cxLineWidth:%d)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdcTarget, cxLineWidth);
+    return FALSE;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnStreamIn(HWND hwnd, UINT uFormat, EDITSTREAM *lpStream)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_STREAMIN(hwnd:%p, uFormat:%u, lpStream:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
+    return 0;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnStreamOut(HWND hwnd, UINT uFormat, EDITSTREAM *lpStream)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_STREAMOUT(hwnd:%p, uFormat:%u, lpStream:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
+    return 0;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnGetTextRange(HWND hwnd, TEXTRANGE *lpRange)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETTEXTRANGE(hwnd:%p, lpRange:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpRange);
+    return 0;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnFindWordBreak(HWND hwnd, UINT code, DWORD ichStart)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_FINDWORDBREAK(hwnd:%p, code:%u, ichStart:0x%08lX)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, code, ichStart);
+    return 0;
+}
+
+static __inline UINT MSGDUMP_API
+MD_RichEdit_OnSetOptions(HWND hwnd, UINT fOperation, UINT fOptions)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETOPTIONS(hwnd:%p, fOperation:%u, fOptions:%u)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fOperation, fOptions);
+    return 0;
+}
+
+static __inline UINT MSGDUMP_API
+MD_RichEdit_OnGetOptions(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETOPTIONS(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnFindTextEx(HWND hwnd, UINT fuFlags, FINDTEXTEX *lpFindText)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_FINDTEXTEX(hwnd:%p, fuFlags:%u, lpFindText:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
+    return 0;
+}
+
+static __inline void *MSGDUMP_API
+MD_RichEdit_OnGetWordBreakProcEx(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETWORDBREAKPROC(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return NULL;
+}
+
+static __inline void *MSGDUMP_API
+MD_RichEdit_OnSetWordBreakProcEx(HWND hwnd, void *pfn)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETWORDBREAKPROC(hwnd:%p, pfn:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, pfn);
+    return NULL;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnSetUndoLimit(HWND hwnd, DWORD dwMaxUndo)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETUNDOLIMIT(hwnd:%p, dwMaxUndo:%ld)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, dwMaxUndo);
+    return 0;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnRedo(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_REDO(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return FALSE;
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnCanRedo(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_CANREDO(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return FALSE;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnGetUndoName(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETUNDONAME(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline INT MSGDUMP_API
+MD_RichEdit_OnGetRedoName(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETREDONAME(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline void MSGDUMP_API
+MD_RichEdit_OnStopGroupTyping(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_STOPGROUPTYPING(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+}
+
+static __inline BOOL MSGDUMP_API
+MD_RichEdit_OnSetTextMode(HWND hwnd, DWORD dwTextMode)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_SETTEXTMODE(hwnd:%p, dwTextMode:0x%08lX)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, dwTextMode);
+    return FALSE;
+}
+
+static __inline DWORD MSGDUMP_API
+MD_RichEdit_OnGetTextMode(HWND hwnd)
+{
+    MSGDUMP_TPRINTF(TEXT("%sEM_GETTEXTMODE(hwnd:%p)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd);
+    return 0;
+}
+
+static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TCHAR szClass[24], sz[2];
@@ -4191,7 +4666,56 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     sz[0] = szClass[0];
     sz[1] = 0;
     CharUpper(sz);
-    if (sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0)
+
+    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    {
+        switch (uMsg)
+        {
+            HANDLE_MSG(hwnd, EM_CANPASTE, MD_RichEdit_OnCanPaste);
+            HANDLE_MSG(hwnd, EM_DISPLAYBAND, MD_RichEdit_OnDisplayBand);
+            HANDLE_MSG(hwnd, EM_EXGETSEL, MD_RichEdit_OnExGetSel);
+            HANDLE_MSG(hwnd, EM_EXLIMITTEXT, MD_RichEdit_OnExLimitText);
+            HANDLE_MSG(hwnd, EM_EXLINEFROMCHAR, MD_RichEdit_OnExLineFromChar);
+            HANDLE_MSG(hwnd, EM_EXSETSEL, MD_RichEdit_OnExSetSel);
+            HANDLE_MSG(hwnd, EM_FINDTEXT, MD_RichEdit_OnFindText);
+            HANDLE_MSG(hwnd, EM_FORMATRANGE, MD_RichEdit_OnFormatRange);
+            HANDLE_MSG(hwnd, EM_GETCHARFORMAT, MD_RichEdit_OnGetCharFormat);
+            HANDLE_MSG(hwnd, EM_GETEVENTMASK, MD_RichEdit_OnGetEventMask);
+            HANDLE_MSG(hwnd, EM_GETOLEINTERFACE, MD_RichEdit_OnGetOleInterface);
+            HANDLE_MSG(hwnd, EM_GETPARAFORMAT, MD_RichEdit_OnGetParaFormat);
+            HANDLE_MSG(hwnd, EM_GETSELTEXT, MD_RichEdit_OnGetSelText);
+            HANDLE_MSG(hwnd, EM_HIDESELECTION, MD_RichEdit_OnHideSelection);
+            HANDLE_MSG(hwnd, EM_PASTESPECIAL, MD_RichEdit_OnPasteSpecial);
+            HANDLE_MSG(hwnd, EM_REQUESTRESIZE, MD_RichEdit_OnRequestResize);
+            HANDLE_MSG(hwnd, EM_SELECTIONTYPE, MD_RichEdit_OnSelectionType);
+            HANDLE_MSG(hwnd, EM_SETBKGNDCOLOR, MD_RichEdit_OnSetBkgndColor);
+            HANDLE_MSG(hwnd, EM_SETCHARFORMAT, MD_RichEdit_OnSetCharFormat);
+            HANDLE_MSG(hwnd, EM_SETEVENTMASK, MD_RichEdit_OnSetEventMask);
+            HANDLE_MSG(hwnd, EM_SETOLECALLBACK, MD_RichEdit_OnSetOleCallback);
+            HANDLE_MSG(hwnd, EM_SETPARAFORMAT, MD_RichEdit_OnSetParaFormat);
+            HANDLE_MSG(hwnd, EM_SETTARGETDEVICE, MD_RichEdit_OnSetTargetDevice);
+            HANDLE_MSG(hwnd, EM_STREAMIN, MD_RichEdit_OnStreamIn);
+            HANDLE_MSG(hwnd, EM_STREAMOUT, MD_RichEdit_OnStreamOut);
+            HANDLE_MSG(hwnd, EM_GETTEXTRANGE, MD_RichEdit_OnGetTextRange);
+            HANDLE_MSG(hwnd, EM_FINDWORDBREAK, MD_RichEdit_OnFindWordBreak);
+            HANDLE_MSG(hwnd, EM_SETOPTIONS, MD_RichEdit_OnSetOptions);
+            HANDLE_MSG(hwnd, EM_GETOPTIONS, MD_RichEdit_OnGetOptions);
+            HANDLE_MSG(hwnd, EM_FINDTEXTEX, MD_RichEdit_OnFindTextEx);
+            HANDLE_MSG(hwnd, EM_GETWORDBREAKPROCEX, MD_RichEdit_OnGetWordBreakProcEx);
+            HANDLE_MSG(hwnd, EM_SETWORDBREAKPROCEX, MD_RichEdit_OnSetWordBreakProcEx);
+            HANDLE_MSG(hwnd, EM_SETUNDOLIMIT, MD_RichEdit_OnSetUndoLimit);
+            HANDLE_MSG(hwnd, EM_REDO, MD_RichEdit_OnRedo);
+            HANDLE_MSG(hwnd, EM_CANREDO, MD_RichEdit_OnCanRedo);
+            HANDLE_MSG(hwnd, EM_GETUNDONAME, MD_RichEdit_OnGetUndoName);
+            HANDLE_MSG(hwnd, EM_GETREDONAME, MD_RichEdit_OnGetRedoName);
+            HANDLE_MSG(hwnd, EM_STOPGROUPTYPING, MD_RichEdit_OnStopGroupTyping);
+            HANDLE_MSG(hwnd, EM_SETTEXTMODE, MD_RichEdit_OnSetTextMode);
+            HANDLE_MSG(hwnd, EM_GETTEXTMODE, MD_RichEdit_OnGetTextMode);
+        }
+    }
+
+    if ((sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0) ||
+        (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0))
     {
         switch (uMsg)
         {
@@ -4567,6 +5091,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
         }
     }
+
     switch (uMsg)
     {
         HANDLE_MSG(hwnd, WM_NULL, MD_OnNull);
@@ -4848,7 +5373,56 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
     sz[0] = szClass[0];
     sz[1] = 0;
     CharUpper(sz);
-    if (sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0)
+
+    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    {
+        switch (uMsg)
+        {
+            DEFINE_RESULT(EM_CANPASTE);
+            DEFINE_RESULT(EM_DISPLAYBAND);
+            DEFINE_RESULT(EM_EXGETSEL);
+            DEFINE_RESULT(EM_EXLIMITTEXT);
+            DEFINE_RESULT(EM_EXLINEFROMCHAR);
+            DEFINE_RESULT(EM_EXSETSEL);
+            DEFINE_RESULT(EM_FINDTEXT);
+            DEFINE_RESULT(EM_FORMATRANGE);
+            DEFINE_RESULT(EM_GETCHARFORMAT);
+            DEFINE_RESULT(EM_GETEVENTMASK);
+            DEFINE_RESULT(EM_GETOLEINTERFACE);
+            DEFINE_RESULT(EM_GETPARAFORMAT);
+            DEFINE_RESULT(EM_GETSELTEXT);
+            DEFINE_RESULT(EM_HIDESELECTION);
+            DEFINE_RESULT(EM_PASTESPECIAL);
+            DEFINE_RESULT(EM_REQUESTRESIZE);
+            DEFINE_RESULT(EM_SELECTIONTYPE);
+            DEFINE_RESULT(EM_SETBKGNDCOLOR);
+            DEFINE_RESULT(EM_SETCHARFORMAT);
+            DEFINE_RESULT(EM_SETEVENTMASK);
+            DEFINE_RESULT(EM_SETOLECALLBACK);
+            DEFINE_RESULT(EM_SETPARAFORMAT);
+            DEFINE_RESULT(EM_SETTARGETDEVICE);
+            DEFINE_RESULT(EM_STREAMIN);
+            DEFINE_RESULT(EM_STREAMOUT);
+            DEFINE_RESULT(EM_GETTEXTRANGE);
+            DEFINE_RESULT(EM_FINDWORDBREAK);
+            DEFINE_RESULT(EM_SETOPTIONS);
+            DEFINE_RESULT(EM_GETOPTIONS);
+            DEFINE_RESULT(EM_FINDTEXTEX);
+            DEFINE_RESULT(EM_GETWORDBREAKPROCEX);
+            DEFINE_RESULT(EM_SETWORDBREAKPROCEX);
+            DEFINE_RESULT(EM_SETUNDOLIMIT);
+            DEFINE_RESULT(EM_REDO);
+            DEFINE_RESULT(EM_CANREDO);
+            DEFINE_RESULT(EM_GETUNDONAME);
+            DEFINE_RESULT(EM_GETREDONAME);
+            DEFINE_RESULT(EM_STOPGROUPTYPING);
+            DEFINE_RESULT(EM_SETTEXTMODE);
+            DEFINE_RESULT(EM_GETTEXTMODE);
+        }
+    }
+
+    if ((sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0) ||
+        (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0))
     {
         switch (uMsg)
         {
@@ -5224,6 +5798,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
 #endif
         }
     }
+
     switch (uMsg)
     {
     DEFINE_RESULT(WM_NULL);
