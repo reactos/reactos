@@ -322,9 +322,9 @@ MAC(ULONG flags,
 }
 
 VOID
-NtlmLmResponse(IN PUNICODE_STRING pUserName,
-               IN PUNICODE_STRING pPassword,
-               IN PUNICODE_STRING pDomainName,
+NtlmLmResponse(IN PEXT_STRING pUserNameW,
+               IN PEXT_STRING pPasswordW,
+               IN PEXT_STRING pDomainNameW,
                IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
                IN PLM2_RESPONSE pLm2Response,
                OUT UCHAR Response[MSV1_0_NTLM3_RESPONSE_LENGTH])
@@ -332,9 +332,9 @@ NtlmLmResponse(IN PUNICODE_STRING pUserName,
     HMAC_MD5_CTX ctx;
     UCHAR NtlmOwf[MSV1_0_NTLM3_OWF_LENGTH];
 
-    NTOWFv2(pPassword->Buffer,
-            pUserName->Buffer,
-            pDomainName->Buffer,
+    NTOWFv2((WCHAR*)pPasswordW->Buffer,
+            (WCHAR*)pUserNameW->Buffer,
+            (WCHAR*)pDomainNameW->Buffer,
             NtlmOwf);
 
     HMACMD5Init(&ctx, NtlmOwf, MSV1_0_NTLM3_OWF_LENGTH);
@@ -346,9 +346,9 @@ NtlmLmResponse(IN PUNICODE_STRING pUserName,
 }
 
 VOID
-NtlmNtResponse(IN PUNICODE_STRING pUserName,
-               IN PUNICODE_STRING pPassword,
-               IN PUNICODE_STRING pDomainName,
+NtlmNtResponse(IN PEXT_STRING pUserNameW,
+               IN PEXT_STRING pPasswordW,
+               IN PEXT_STRING pDomainNameW,
                IN ULONG ServerNameLength,
                IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
                IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
@@ -359,9 +359,9 @@ NtlmNtResponse(IN PUNICODE_STRING pUserName,
     HMAC_MD5_CTX ctx;
     UCHAR NtlmOwf[MSV1_0_NTLM3_OWF_LENGTH];
 
-    NTOWFv2(pPassword->Buffer,
-            pUserName->Buffer,
-            pDomainName->Buffer,
+    NTOWFv2((WCHAR*)pPasswordW->Buffer,
+            (WCHAR*)pUserNameW->Buffer,
+            (WCHAR*)pDomainNameW->Buffer,
             NtlmOwf);
 
     HMACMD5Init(&ctx, NtlmOwf, MSV1_0_NTLM3_OWF_LENGTH);
@@ -380,9 +380,9 @@ NtlmNtResponse(IN PUNICODE_STRING pUserName,
 }
 
 VOID
-NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
-                      IN PUNICODE_STRING pPassword,
-                      IN PUNICODE_STRING pDomainName,
+NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
+                      IN PEXT_STRING pPasswordW,
+                      IN PEXT_STRING pDomainNameW,
                       IN PUNICODE_STRING pServerName,
                       IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
                       OUT PNTLM_DATABUF pNtResponseData,
@@ -398,7 +398,7 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
                      sizeof(MSV1_0_NTLM3_RESPONSE) +
                      sizeof(MSV1_0_AV_PAIR) * 3 +
                      pServerName->Length +
-                     pDomainName->Length,
+                     pDomainNameW->bUsed,
                      TRUE);
     pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtResponseData->pData;
 
@@ -412,24 +412,24 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
     pNtResponseData->bUsed = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
 
     avOk = NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, pServerName->Buffer, pServerName->Length);
-    if (pDomainName->Length > 0)
+    if (pDomainNameW->bUsed > 0)
         avOk = avOk &&
-               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, pDomainName->Buffer, pDomainName->Length);
+               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)pDomainNameW->Buffer, pDomainNameW->bUsed);
     avOk = avOk &&
            NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
     if (!avOk)
        ERR("failed to write avl data\n");
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
-        pUserName, pPassword, pDomainName, pServerName, ChallengeToClient,
+        pUserNameW, pPasswordW, pDomainNameW, pServerName, ChallengeToClient,
         pNtResponse, pLm2Response, pUserSessionKey, pLmSessionKey);
 
     NtQuerySystemTime((PLARGE_INTEGER)&pNtResponse->TimeStamp);
     NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
 
-    NtlmNtResponse(pUserName,
-                   pPassword,
-                   pDomainName,
+    NtlmNtResponse(pUserNameW,
+                   pPasswordW,
+                   pDomainNameW,
                    pServerName->Length,
                    ChallengeToClient,
                    pNtResponse,
@@ -442,9 +442,9 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
            pNtResponse->ChallengeFromClient,
            MSV1_0_CHALLENGE_LENGTH);
 
-    NtlmLmResponse(pUserName,
-                   pPassword,
-                   pDomainName,
+    NtlmLmResponse(pUserNameW,
+                   pPasswordW,
+                   pDomainNameW,
                    ChallengeToClient,
                    pLm2Response,
                    pLm2Response->Response);

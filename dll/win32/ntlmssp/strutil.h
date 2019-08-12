@@ -33,4 +33,41 @@ init_strutil(
     IN _strutil_alloc_proc ap,
     IN _strutil_free_proc fp);
 
+/* Unicode */
+
+/* initstr NULL sets all values to null */
+void
+ExtWStrInit(
+    IN PEXT_STRING dst,
+    IN WCHAR* initstr);
+
+/* chLen = length in chars */
+/* chLen = -1 to auto-detect length and newstr is null-terminated */
+BOOL
+ExtWStrSetN(
+    IN PEXT_STRING dst,
+    IN WCHAR* newstr,
+    IN size_t chLen);
+#define ExtWStrSet(dst, newstr) ExtWStrSetN(dst, newstr, (size_t)-1)
+
+/* Ansi */
+void
+ExtAStrInit(
+    IN PEXT_STRING dst,
+    IN char* initstr);
+/* TODO
+void ExtAStrSetN(
+    IN PEXT_STRING dst,
+    IN char* newstr,
+    IN size_t length);
+*/
+
+/* Data */
+
+/* All */
+
+void
+ExtStrFree(
+    IN PEXT_STRING s);
+
 #endif

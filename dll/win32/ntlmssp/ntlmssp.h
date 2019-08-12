@@ -169,9 +169,9 @@ typedef struct _NTLMSSP_CREDENTIAL
     LIST_ENTRY Entry;
     ULONG RefCount;
     ULONG UseFlags;
-    UNICODE_STRING UserName;
-    UNICODE_STRING Password;
-    UNICODE_STRING DomainName;
+    EXT_STRING UserNameW;
+    EXT_STRING PasswordW;
+    EXT_STRING DomainNameW;
     ULONG ProcId;
     HANDLE SecToken;
     LUID LogonId;

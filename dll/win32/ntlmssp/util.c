@@ -213,6 +213,7 @@ NtlmWriteToBlob(IN PVOID pOutputBuffer,
     if ((buffer == NULL) || (len == 0))
     {
         OutputBlob->Length = 0;
+        OutputBlob->MaxLength = 0;
         OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)pOutputBuffer);
         return;
     }
@@ -255,6 +256,7 @@ NtlmExtStringToBlob(IN PVOID OutputBuffer,
     if (!InStr)
     {
         OutputBlob->Length = 0;
+        OutputBlob->MaxLength = 0;
         OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)OutputBuffer);
         return;
     }

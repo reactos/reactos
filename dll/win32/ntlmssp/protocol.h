@@ -240,9 +240,9 @@ MAC(ULONG flags,
     PUCHAR result);
 
 VOID
-NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
-                      IN PUNICODE_STRING pPassword,
-                      IN PUNICODE_STRING pDomainName,
+NtlmChallengeResponse(IN PEXT_STRING pUserNameW,
+                      IN PEXT_STRING pPasswordW,
+                      IN PEXT_STRING pDomainNameW,
                       IN PUNICODE_STRING pServerName,
                       IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
                       OUT PNTLM_DATABUF pNtResponseData,

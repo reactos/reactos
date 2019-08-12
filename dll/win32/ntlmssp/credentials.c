@@ -85,12 +85,9 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
         TRACE("Deleting credential %p\n",cred);
 
         /* free memory */
-        if(cred->DomainName.Buffer)
-            NtlmFree(cred->DomainName.Buffer);
-        if (cred->UserName.Buffer)
-            NtlmFree(cred->UserName.Buffer);
-        if (cred->Password.Buffer)
-            NtlmFree(cred->Password.Buffer);
+        ExtStrFree(&cred->DomainNameW);
+        ExtStrFree(&cred->UserNameW);
+        ExtStrFree(&cred->PasswordW);
         if (cred->SecToken)
         {
             PNTLMSSP_GLOBALS g = lockGlobals();
@@ -153,7 +150,7 @@ QueryCredentialsAttributesW(PCredHandle phCredential,
     {
     case SECPKG_ATTR_NAMES:
         credname = (PSecPkgContext_NamesW) pBuffer;
-        credname->sUserName = _wcsdup(credentials->UserName.Buffer);
+        credname->sUserName = _wcsdup((WCHAR*)credentials->UserNameW.Buffer);
         ret = SEC_E_OK;
         break;
     default:
@@ -210,7 +207,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     PNTLMSSP_GLOBALS g;
     SECURITY_STATUS ret = SEC_E_OK;
     ULONG credFlags = fCredentialUse;
-    UNICODE_STRING username, domain, password;
+    EXT_STRING username, domain, password;
     BOOL foundCred = FALSE;
     LUID luidToUse = SYSTEM_LUID;
 
@@ -222,9 +219,9 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         WARN("msdn says these should always be null!\n");
 
     //initialize to null
-    RtlInitUnicodeString(&username, NULL);
-    RtlInitUnicodeString(&domain, NULL);
-    RtlInitUnicodeString(&password, NULL);
+    ExtWStrInit(&username, NULL);
+    ExtWStrInit(&domain, NULL);
+    ExtWStrInit(&password, NULL);
 
     if(fCredentialUse == SECPKG_CRED_OUTBOUND && pAuthData)
     {
@@ -241,46 +238,25 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
         /* create unicode strings and null terminate buffers */
 
-        if(auth_data->User)
+        if ((auth_data->User) &&
+            (!ExtWStrSetN(&username, auth_data->User, auth_data->UserLength)))
         {
-            int len = auth_data->UserLength * sizeof(WCHAR);
-            username.Buffer = NtlmAllocate(len+sizeof(WCHAR));
-            if(username.Buffer)
-            {
-                username.MaximumLength = username.Length = len;
-                memcpy(username.Buffer, auth_data->User, len);
-                username.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
-            }
-            else
-                return SEC_E_INSUFFICIENT_MEMORY;
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto quit;
         }
 
-        if(auth_data->Password)
+        if ((auth_data->Password) &&
+            (!ExtWStrSetN(&password, auth_data->Password, auth_data->PasswordLength)))
         {
-            int len = auth_data->PasswordLength * sizeof(WCHAR);
-            password.Buffer = NtlmAllocate(len+sizeof(WCHAR));
-            if(password.Buffer)
-            {
-                password.MaximumLength = password.Length = len;
-                memcpy(password.Buffer, auth_data->Password, len);
-                password.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
-            }
-            else
-                return SEC_E_INSUFFICIENT_MEMORY;
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto quit;
         }
 
-        if(auth_data->Domain)
+        if ((auth_data->Domain) &&
+            (!ExtWStrSetN(&domain, auth_data->Domain, auth_data->DomainLength)))
         {
-            int len = auth_data->DomainLength * sizeof(WCHAR);
-            domain.Buffer = NtlmAllocate(len+sizeof(WCHAR));
-            if(domain.Buffer)
-            {
-                domain.MaximumLength = domain.Length = len;
-                memcpy(domain.Buffer, auth_data->Domain, len);
-                domain.Buffer[(len/sizeof(WCHAR))+1] = L'\0';
-            }
-            else
-                return SEC_E_INSUFFICIENT_MEMORY;
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto quit;
         }
     }
 
@@ -306,15 +282,15 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         }
 
         if(domain.Buffer != NULL)
-            cred->DomainName = domain;
+            cred->DomainNameW = domain;
 
         if(username.Buffer != NULL)
-            cred->UserName = username;
+            cred->UserNameW = username;
 
         if(password.Buffer != NULL)
         {
-            NtlmProtectMemory(password.Buffer, password.Length);
-            cred->Password = password;
+            NtlmProtectMemory(password.Buffer, password.bUsed);
+            cred->PasswordW = password;
         }
 
         EnterCriticalSection(&CredentialCritSect);
@@ -322,7 +298,9 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         LeaveCriticalSection(&CredentialCritSect);
 
         TRACE("added credential %x\n",cred);
-        TRACE("%s %s %s\n",debugstr_w(username.Buffer), debugstr_w(password.Buffer), debugstr_w(domain.Buffer));
+        TRACE("%s %s %s\n", debugstr_w((WCHAR*)username.Buffer),
+              debugstr_w((WCHAR*)password.Buffer),
+              debugstr_w((WCHAR*)domain.Buffer));
     }
 
     /* return cred */
@@ -335,7 +313,13 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
 
     /* free strings as we used recycled credentials */
     //if(foundCred)
-
+quit:
+    if (ret != SEC_E_OK)
+    {
+        ExtStrFree(&username);
+        ExtStrFree(&domain);
+        ExtStrFree(&password);
+    }
     return ret;
 }
 

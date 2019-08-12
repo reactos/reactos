@@ -84,8 +84,8 @@ CliGenerateNegotiateMessage(
     NtlmPrintNegotiateFlags(message->NegotiateFlags);
 
     /* local connection */
-    if((!cred->DomainName.Buffer && !cred->UserName.Buffer &&
-        !cred->Password.Buffer) && cred->SecToken)
+    if((!cred->DomainNameW.Buffer && !cred->UserNameW.Buffer &&
+        !cred->PasswordW.Buffer) && cred->SecToken)
     {
         FIXME("try use local cached credentials?\n");
 
@@ -691,15 +691,16 @@ CliGenerateAuthenticationMessage(
         goto quit;
 
     /* unscramble password */
-    NtlmUnProtectMemory(cred->Password.Buffer, cred->Password.Length);
+    NtlmUnProtectMemory(cred->PasswordW.Buffer, cred->PasswordW.bUsed);
 
-    TRACE("cred: %s %s %s %s\n", debugstr_w(cred->UserName.Buffer),
-        debugstr_w(cred->Password.Buffer), debugstr_w(cred->DomainName.Buffer),
-        debugstr_w(ServerNameRef.Buffer));
+    TRACE("cred: %s %s %s %s\n", debugstr_w((WCHAR*)cred->UserNameW.Buffer),
+        debugstr_w((WCHAR*)cred->PasswordW.Buffer),
+        debugstr_w((WCHAR*)cred->DomainNameW.Buffer),
+        debugstr_w((WCHAR*)ServerNameRef.Buffer));
 
-    NtlmChallengeResponse(&cred->UserName,
-                          &cred->Password,
-                          &cred->DomainName,
+    NtlmChallengeResponse(&cred->UserNameW,
+                          &cred->PasswordW,
+                          &cred->DomainNameW,
                           &ServerNameRef,
                           challenge->ServerChallenge,
                           &NtResponseData,
@@ -716,8 +717,8 @@ CliGenerateAuthenticationMessage(
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
-                  cred->DomainName.Length +
-                  cred->UserName.Length +
+                  cred->DomainNameW.bUsed +
+                  cred->UserNameW.bUsed +
                   ServerNameRef.Length +
                   NtResponseData.bUsed +
                   UserSessionKeyString.Length;
@@ -754,15 +755,15 @@ CliGenerateAuthenticationMessage(
 
     offset = (ULONG_PTR)(authmessage+1);
 
-    NtlmUnicodeStringToBlob((PVOID)authmessage,
-                            &cred->DomainName,
-                            &authmessage->DomainName,
-                            &offset);
+    NtlmExtStringToBlob((PVOID)authmessage,
+                        &cred->DomainNameW,
+                        &authmessage->DomainName,
+                        &offset);
 
-    NtlmUnicodeStringToBlob((PVOID)authmessage,
-                            &cred->UserName,
-                            &authmessage->UserName,
-                            &offset);
+    NtlmExtStringToBlob((PVOID)authmessage,
+                        &cred->UserNameW,
+                        &authmessage->UserName,
+                        &offset);
 
     NtlmUnicodeStringToBlob((PVOID)authmessage,
                             &ServerNameRef,
