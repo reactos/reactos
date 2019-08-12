@@ -415,6 +415,10 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
         ResetMode   = (CommandLine == NULL) || (strstr(CommandLine, "BOOTLOGO") == NULL);
     }
+    else if (InbvDisplayState == INBV_DISPLAY_STATE_DISABLED)
+    {
+        return FALSE;
+    }
 
     /* Initialize the video */
     InbvBootDriverInstalled = VidInitialize(ResetMode);
