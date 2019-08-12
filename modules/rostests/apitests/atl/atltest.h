@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #ifndef _INC_WINDOWS
     #include <windows.h>
 #endif
