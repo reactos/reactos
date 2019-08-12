@@ -15,12 +15,12 @@
     #include <windows.h>
 #endif
 
-static int g_atltest_executed = 0;
-static int g_atltest_failed = 0;
-static int g_atltest_skipped = 0;
+int g_atltest_executed = 0;
+int g_atltest_failed = 0;
+int g_atltest_skipped = 0;
 
-static const char *g_atltest_file = NULL;
-static int g_atltest_line = 0;
+const char *g_atltest_file = NULL;
+int g_atltest_line = 0;
 
 void atltest_set_location(const char *file, int line)
 {
@@ -69,9 +69,10 @@ void atltest_skip(const char *fmt, ...)
 #define trace printf
 
 static void start_test(void);
+extern const char *g_atltest_name;
 
 #define START_TEST(x) \
-    static const char *g_atltest_name = #x; \
+    const char *g_atltest_name = #x; \
     static void start_test(void)
 
 int main(void)
