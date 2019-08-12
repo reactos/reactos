@@ -212,14 +212,14 @@ NtlmAllocateContextCli(VOID)
 
     ret = (PNTLMSSP_CONTEXT_CLI)NtlmAllocateContextHdr(FALSE);
     /* always on features */
-    ret->NegotiateFlags = NTLMSSP_NEGOTIATE_UNICODE |
-                          NTLMSSP_NEGOTIATE_OEM |
-                          NTLMSSP_NEGOTIATE_NTLM |
-                          NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
-                          NTLMSSP_REQUEST_TARGET |
-                          NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                          NTLMSSP_NEGOTIATE_56 |
-                          NTLMSSP_NEGOTIATE_128; // if supported
+    ret->NegFlg = NTLMSSP_NEGOTIATE_UNICODE |
+                  NTLMSSP_NEGOTIATE_OEM |
+                  NTLMSSP_NEGOTIATE_NTLM |
+                  NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
+                  NTLMSSP_REQUEST_TARGET |
+                  NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                  NTLMSSP_NEGOTIATE_56 |
+                  NTLMSSP_NEGOTIATE_128; // if supported
     return ret;
 }
 
@@ -230,14 +230,14 @@ NtlmAllocateContextSvr(VOID)
 
     ret = (PNTLMSSP_CONTEXT_SVR)NtlmAllocateContextHdr(TRUE);
     /* always on features */
-    ret->NegotiateFlags = NTLMSSP_NEGOTIATE_UNICODE |
-                          NTLMSSP_NEGOTIATE_OEM |
-                          NTLMSSP_NEGOTIATE_NTLM |
-                          NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
-                          NTLMSSP_REQUEST_TARGET |
-                          NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                          NTLMSSP_NEGOTIATE_56 |
-                          NTLMSSP_NEGOTIATE_128; // if supported
+    ret->CfgFlg = NTLMSSP_NEGOTIATE_UNICODE |
+                  NTLMSSP_NEGOTIATE_OEM |
+                  NTLMSSP_NEGOTIATE_NTLM |
+                  NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
+                  NTLMSSP_REQUEST_TARGET |
+                  NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                  NTLMSSP_NEGOTIATE_56 |
+                  NTLMSSP_NEGOTIATE_128; // if supported
     return ret;
 }
 
@@ -282,29 +282,29 @@ CliCreateContext(
     {
         *pISCContextAttr |= ISC_RET_INTEGRITY;
         context->ISCRetContextFlags |= ISC_RET_INTEGRITY;
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(ISCContextReq & ISC_REQ_SEQUENCE_DETECT)
     {
         *pISCContextAttr |= ISC_RET_SEQUENCE_DETECT;
         context->ISCRetContextFlags |= ISC_RET_SEQUENCE_DETECT;
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(ISCContextReq & ISC_REQ_REPLAY_DETECT)
     {
         *pISCContextAttr |= ISC_RET_REPLAY_DETECT;
         context->ISCRetContextFlags |= ISC_RET_REPLAY_DETECT;
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(ISCContextReq & ISC_REQ_CONFIDENTIALITY)
     {
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_SEAL |
-                                   NTLMSSP_NEGOTIATE_LM_KEY |
-                                   NTLMSSP_NEGOTIATE_KEY_EXCH |
-                                   NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_SEAL |
+                           NTLMSSP_NEGOTIATE_LM_KEY |
+                           NTLMSSP_NEGOTIATE_KEY_EXCH |
+                           NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         *pISCContextAttr |= ISC_RET_CONFIDENTIALITY;
         context->ISCRetContextFlags |= ISC_RET_CONFIDENTIALITY;
@@ -324,7 +324,7 @@ CliCreateContext(
 
     if(ISCContextReq & ISC_REQ_IDENTIFY)
     {
-        context->NegotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
+        context->NegFlg |= NTLMSSP_REQUEST_INIT_RESP;
         *pISCContextAttr |= ISC_RET_IDENTIFY;
         context->ISCRetContextFlags |= ISC_RET_IDENTIFY;
     }
@@ -332,14 +332,14 @@ CliCreateContext(
     if (ISCContextReq & ISC_REQ_DATAGRAM)
     {
         /* datagram flags */
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_DATAGRAM;
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_NT_ONLY;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_DATAGRAM;
+        context->NegFlg &= ~NTLMSSP_NEGOTIATE_NT_ONLY;
         context->ISCRetContextFlags |= ISC_RET_DATAGRAM;
         *pISCContextAttr |= ISC_RET_DATAGRAM;
 
         /* generate session key */
-        if(context->NegotiateFlags & (NTLMSSP_NEGOTIATE_SIGN |
-                                      NTLMSSP_NEGOTIATE_SEAL))
+        if(context->NegFlg & (NTLMSSP_NEGOTIATE_SIGN |
+                              NTLMSSP_NEGOTIATE_SEAL))
         {
             ret = NtlmGenerateRandomBits(context->SessionKey,
                                          MSV1_0_USER_SESSION_KEY_LENGTH);
@@ -353,7 +353,7 @@ CliCreateContext(
     }
     
     /* generate session key */
-    if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
+    if (context->NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
     {
         ret = NtlmGenerateRandomBits(context->SessionKey,
                                      MSV1_0_USER_SESSION_KEY_LENGTH);
@@ -366,7 +366,7 @@ CliCreateContext(
     }
 
     /* commit results */
-    *pfNegotiateFlags = context->NegotiateFlags;
+    *pfNegotiateFlags = context->NegFlg;
 
     context->Credential = cred;
     //*ptsExpiry = 
@@ -607,9 +607,9 @@ QueryContextAttributesAW(
             PSecPkgContext_Flags spcf = (PSecPkgContext_Flags)pBuffer;
             spcf->Flags = 0;
             if (context->isServer)
-                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->NegotiateFlags;
+                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->CfgFlg;
             else
-                negoFlags = ((PNTLMSSP_CONTEXT_CLI)context)->NegotiateFlags;
+                negoFlags = ((PNTLMSSP_CONTEXT_CLI)context)->NegFlg;
             if (negoFlags & NTLMSSP_NEGOTIATE_SIGN)
                 spcf->Flags |= ISC_RET_INTEGRITY;
             if (negoFlags & NTLMSSP_NEGOTIATE_SEAL)

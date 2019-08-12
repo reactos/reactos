@@ -72,11 +72,11 @@ typedef struct _NTLMSSP_GLOBALS_CLI
     CRITICAL_SECTION cs;
 
     /* needed vars from MS-NLMP
-     * activate if needed ... or move to context (cli) if needed */
+     * activate if needed ... or move to context (cli) if needed
+     * (ctx) means variable is _NTLMSSP_CONTEXT_CLI */
     // ClientConfigFlags:
     // ExportedSessionKey:
-    // NegFlg: The set of configuration flags (section 2.2.2.5) that specifies the negotiated capabilities of
-    // the client and server for the current NTLM session.
+    /* NegFlg: (ctx) */
     // User: A string that indicates the name of the user.
     // UserDom: A string that indicates the name of the user's domain.
     //   The following NTLM configuration variables are internal to the client and impact all authenticated
@@ -100,12 +100,12 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     CRITICAL_SECTION cs;
 
     /* needed vars from MS-NLMP
-     * activate if needed ... or move to context (svr) if needed */
+     * activate if needed ... or move to context (svr) if needed
+     * (ctx) means variable is _NTLMSSP_CONTEXT_SVR */
     //The server maintains all of the variables that the client does (section 3.1.1.1) except the
     //ClientConfigFlags.
     //Additionally, the server maintains the following:
-    //CfgFlg: The set of server configuration flags (section 2.2.2.5) that specify the full set of capabilities of
-    //the server.
+    /* CfgFlg (ctx): */
     //DnsDomainName: A string that indicates the fully qualified domain name (FQDN) of the server's
     //domain.
     //DnsForestName: A string that indicates the FQDN of the server's forest. The DnsForestName is
@@ -219,27 +219,16 @@ typedef struct _NTLMSSP_CONTEXT_MSG
     UCHAR MessageIntegrityCheck[16];
 } NTLMSSP_CONTEXT_MSG, *PNTLMSSP_CONTEXT_MSG;
 
-typedef struct _NTLMSSP_CONTEXT_SVR
-{
-    NTLMSSP_CONTEXT_HDR hdr;
-    BOOL isLocal;
-    ULONG NegotiateFlags;
-    /* FIXME: These flags are only assigned, never used ... remove? */
-    ULONG ISCRetContextFlags;
-    ULONG ASCRetContextFlags;
-    PNTLMSSP_CREDENTIAL Credential;
-    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
-    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
-    HANDLE ClientToken;
-
-    NTLMSSP_CONTEXT_MSG msg;
-} NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
-
 typedef struct _NTLMSSP_CONTEXT_CLI
 {
     NTLMSSP_CONTEXT_HDR hdr;
+    // MS-NLSP 3.1.1.1 (see also _NTLMSSP_GLOBALS_CLI)
+    /* The set of configuration flags (section 2.2.2.5) that
+     * specifies the negotiated capabilities of the client and
+     * server for the current NTLM session. */
+    ULONG NegFlg;
+    // TODO ... rename according to spec
     BOOL isLocal;
-    ULONG NegotiateFlags;
     /* FIXME: These flags are only assigned, never used ... remove? */
     ULONG ISCRetContextFlags;
     ULONG ASCRetContextFlags;
@@ -250,6 +239,30 @@ typedef struct _NTLMSSP_CONTEXT_CLI
 
     NTLMSSP_CONTEXT_MSG msg;
 } NTLMSSP_CONTEXT_CLI, *PNTLMSSP_CONTEXT_CLI;
+
+typedef struct _NTLMSSP_CONTEXT_SVR
+{
+    NTLMSSP_CONTEXT_HDR hdr;
+    // MS-NLSP 3.2.1.1 (see also _NTLMSSP_GLOBALS_SVR)
+    /* The server maintains all of the variables that the client does
+     * (section 3.1.1.1) except the ClientConfigFlags.*/
+    //TODO NTLMSSP_CONTEXT_CLI cli;
+    /* The set of server configuration flags (section 2.2.2.5) that specify the full set of
+     * capabilities of the server. */
+    ULONG CfgFlg;
+
+    // TODO ... rename according to spec
+    BOOL isLocal;
+    /* FIXME: These flags are only assigned, never used ... remove? */
+    ULONG ISCRetContextFlags;
+    ULONG ASCRetContextFlags;
+    PNTLMSSP_CREDENTIAL Credential;
+    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
+    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+    HANDLE ClientToken;
+
+    NTLMSSP_CONTEXT_MSG msg;
+} NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
 /* private functions */
 

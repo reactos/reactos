@@ -77,7 +77,7 @@ CliGenerateNegotiateMessage(
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     message->MsgType = NtlmNegotiate;
-    message->NegotiateFlags = context->NegotiateFlags;
+    message->NegotiateFlags = context->NegFlg;
 
     TRACE("nego message %p size %lu\n", message, messageSize);
     TRACE("context %p context->NegotiateFlags:\n",context);
@@ -175,7 +175,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     /* build message */
     strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     chaMessage->MsgType = NtlmChallenge;
-    chaMessage->NegotiateFlags = Context->NegotiateFlags;
+    chaMessage->NegotiateFlags = Context->CfgFlg;
     chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_NTLM;
 
     /* generate server challenge */
@@ -551,21 +551,21 @@ CliGenerateAuthenticationMessage(
     }*/
 
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_TARGET_INFO;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_TARGET_INFO;
     else
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_TARGET_INFO);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_TARGET_INFO);
 
     /* if caller supports unicode prefer it over oem */
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
     {
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_OEM;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_UNICODE;
+        context->NegFlg &= ~NTLMSSP_NEGOTIATE_OEM;
         isUnicode = TRUE;
     }
     else if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
     {
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_UNICODE;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_OEM;
+        context->NegFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
         isUnicode = FALSE;
     }
     else
@@ -580,12 +580,12 @@ CliGenerateAuthenticationMessage(
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
     {
         challenge->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
+        context->NegFlg &= ~NTLMSSP_NEGOTIATE_LM_KEY;
     }
     else
     {
         /* did not support ntlm2 */
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY);
 
         /* did not support ntlm */
         if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_NTLM))
@@ -598,30 +598,30 @@ CliGenerateAuthenticationMessage(
 
     /* did not support 128bit encryption */
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_128))
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_128);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_128);
 
     /* did not support 56bit encryption */
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_56))
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_56);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_56);
 
     /* did not support lm key */
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY))
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_LM_KEY);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_LM_KEY);
 
     /* did not support key exchange */
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH))
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_KEY_EXCH);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_KEY_EXCH);
 
     /* should sign */
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
+        context->NegFlg |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
     else
-        context->NegotiateFlags &= ~(NTLMSSP_NEGOTIATE_ALWAYS_SIGN);
+        context->NegFlg &= ~(NTLMSSP_NEGOTIATE_ALWAYS_SIGN);
 
     /* obligatory key exchange */
-    if((context->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM) &&
-        (context->NegotiateFlags & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL)))
-        context->NegotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
+    if((context->NegFlg & NTLMSSP_NEGOTIATE_DATAGRAM) &&
+        (context->NegFlg & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL)))
+        context->NegFlg |= NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* unimplemented */
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_LOCAL_CALL)
@@ -629,7 +629,7 @@ CliGenerateAuthenticationMessage(
 
     /* get params we need for auth message */
     /* extract target info */
-    if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    if(context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
         PVOID data;
         ULONG len;
@@ -722,7 +722,7 @@ CliGenerateAuthenticationMessage(
                   NtResponseData.bUsed +
                   UserSessionKeyString.Length;
                   //?? LmSessionKeyString.Length
-    if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    if (context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
         messageSize += LmResponseString.Length;
 
     /* if should not allocate */
@@ -750,7 +750,7 @@ CliGenerateAuthenticationMessage(
     /* fill auth message */
     strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     authmessage->MsgType = NtlmAuthenticate;
-    authmessage->NegotiateFlags = context->NegotiateFlags;
+    authmessage->NegotiateFlags = context->NegFlg;
 
     offset = (ULONG_PTR)(authmessage+1);
 
@@ -769,7 +769,7 @@ CliGenerateAuthenticationMessage(
                             &authmessage->WorkstationName,
                             &offset);
 
-    if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    if (context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
         NtlmUnicodeStringToBlob((PVOID)authmessage,
                                 &LmResponseString,
@@ -885,7 +885,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     }
 
     /* datagram */
-    if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM)
+    if(context->CfgFlg & NTLMSSP_NEGOTIATE_DATAGRAM)
     {
         /* context and message dont agree on connection type! */
         if(!(authMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM))
@@ -896,26 +896,26 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
         }
 
         /* use message flags */
-        context->NegotiateFlags = authMessage->NegotiateFlags;
+        context->CfgFlg = authMessage->NegotiateFlags;
 
         /* need a key */
-        if(context->NegotiateFlags & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL))
-            context->NegotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
+        if(context->CfgFlg & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL))
+            context->CfgFlg |= NTLMSSP_NEGOTIATE_KEY_EXCH;
 
         /* remove lm key */
-        if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
-            context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
+        if (context->CfgFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+            context->CfgFlg &= ~NTLMSSP_NEGOTIATE_LM_KEY;
     }
 
     /* supports unicode */
-    if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
+    if(context->CfgFlg & NTLMSSP_NEGOTIATE_UNICODE)
     {
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_OEM;
+        context->CfgFlg &= ~NTLMSSP_NEGOTIATE_OEM;
         //isUnicode = TRUE;
     }
-    else if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
+    else if(context->CfgFlg & NTLMSSP_NEGOTIATE_OEM)
     {
-        context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_UNICODE;
+        context->CfgFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
         //isUnicode = FALSE;
     }
     else
