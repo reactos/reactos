@@ -68,16 +68,16 @@ void atltest_skip(const char *fmt, ...)
 #undef trace
 #define trace printf
 
-static void start_test(void);
+static void atltest_start_test(void);
 extern const char *g_atltest_name;
 
 #define START_TEST(x) \
     const char *g_atltest_name = #x; \
-    static void start_test(void)
+    static void atltest_start_test(void)
 
 int main(void)
 {
-    start_test();
+    atltest_start_test();
     printf("%s: %d tests executed (0 marked as todo, %d failures), %d skipped.\n",
            g_atltest_name, g_atltest_executed, g_atltest_failed, g_atltest_skipped);
     return g_atltest_failed;
