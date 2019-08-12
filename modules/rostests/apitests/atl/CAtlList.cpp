@@ -20,13 +20,13 @@ START_TEST(CAtlList)
 {
     CAtlList<int> list1;
 
-    ok(list1.GetCount() == 0, "Expected list1's size is zero, was %d\n", list1.GetCount());
+    ok_size_t(list1.GetCount(), 0);
     list1.AddTail(56);
-    ok(list1.GetCount() == 1, "Expected list1's size is 1, was %d\n", list1.GetCount());
+    ok_size_t(list1.GetCount(), 1);
     POSITION head = list1.AddHead(12);
-    ok(list1.GetCount() == 2, "Expected list1's size is 2, was %d\n", list1.GetCount());
+    ok_size_t(list1.GetCount(), 2);
     POSITION tail = list1.AddTail(90);
-    ok(list1.GetCount() == 3, "Expected list1's size is 3, was %d\n", list1.GetCount());
+    ok_size_t(list1.GetCount(), 3);
 
     list1.InsertBefore(head, -123);
     list1.InsertAfter(head, 34);    // no longer head, but the POSITION should still be valid..

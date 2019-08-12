@@ -61,71 +61,71 @@ START_TEST(CAtlArray)
     {
         CAtlArray<CCreature> array1;
 
-        ok(CCreature::s_nCtorCount == 0, "Expected CCreature::s_nCtorCount is zero, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 0, "Expected CCreature::s_nCtorCount_Default is zero, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 0, "Expected CCreature::s_nCCtorCount is zero, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 0, "Expected CCreature::s_nDtorCount is zero, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 0, "Expected CCreature::s_nOpIsCount is zero, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 0);
+        ok_int(CCreature::s_nCtorCount_Default, 0);
+        ok_int(CCreature::s_nCCtorCount, 0);
+        ok_int(CCreature::s_nDtorCount, 0);
+        ok_int(CCreature::s_nOpIsCount, 0);
 
         array1.SetCount(2);
 
-        ok(CCreature::s_nCtorCount == 2, "Expected CCreature::s_nCtorCount is 2, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 2, "Expected CCreature::s_nCtorCount_Default is 2, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 0, "Expected CCreature::s_nCCtorCount is zero, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 0, "Expected CCreature::s_nDtorCount is zero, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 0, "Expected CCreature::s_nOpIsCount is zero, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 2);
+        ok_int(CCreature::s_nCtorCount_Default, 2);
+        ok_int(CCreature::s_nCCtorCount, 0);
+        ok_int(CCreature::s_nDtorCount, 0);
+        ok_int(CCreature::s_nOpIsCount, 0);
 
         array1.SetCount(1);
 
-        ok(CCreature::s_nCtorCount == 2, "Expected CCreature::s_nCtorCount is 2, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 2, "Expected CCreature::s_nCtorCount_Default is 2, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 0, "Expected CCreature::s_nCCtorCount is zero, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 1, "Expected CCreature::s_nDtorCount is 1, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 0, "Expected CCreature::s_nOpIsCount is zero, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 2);
+        ok_int(CCreature::s_nCtorCount_Default, 2);
+        ok_int(CCreature::s_nCCtorCount, 0);
+        ok_int(CCreature::s_nDtorCount, 1);
+        ok_int(CCreature::s_nOpIsCount, 0);
 
         CCreature test(111);
 
-        ok(CCreature::s_nCtorCount == 3, "Expected CCreature::s_nCtorCount is 3, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 2, "Expected CCreature::s_nCtorCount_Default is 2, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 0, "Expected CCreature::s_nCCtorCount is zero, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 1, "Expected CCreature::s_nDtorCount is 1, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 0, "Expected CCreature::s_nOpIsCount is zero, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 3);
+        ok_int(CCreature::s_nCtorCount_Default, 2);
+        ok_int(CCreature::s_nCCtorCount, 0);
+        ok_int(CCreature::s_nDtorCount, 1);
+        ok_int(CCreature::s_nOpIsCount, 0);
 
-        ok(array1.GetCount() == 1u, "Expected GetCount() to be 1, was %u\n", array1.GetCount());
-        ok(array1[0].m_id == 0x123456, "Got %d\n", array1[0].m_id);
-        ok(array1.GetAt(0).m_id == 0x123456, "Got %d\n", array1.GetAt(0).m_id);
+        ok_size_t(array1.GetCount(), 1u);
+        ok_int(array1[0].m_id, 0x123456);
+        ok_int(array1.GetAt(0).m_id, 0x123456);
 
         array1.Add(test);
 
-        ok(CCreature::s_nCtorCount == 3, "Expected CCreature::s_nCtorCount is 3, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 2, "Expected CCreature::s_nCtorCount_Default is 2, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 1, "Expected CCreature::s_nCCtorCount is 1, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 1, "Expected CCreature::s_nDtorCount is 1, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 0, "Expected CCreature::s_nOpIsCount is zero, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 3);
+        ok_int(CCreature::s_nCtorCount_Default, 2);
+        ok_int(CCreature::s_nCCtorCount, 1);
+        ok_int(CCreature::s_nDtorCount, 1);
+        ok_int(CCreature::s_nOpIsCount, 0);
 
-        ok(array1.GetCount() == 2u, "Expected GetCount() to be 2, was %u\n", array1.GetCount());
-        ok(array1[0].m_id == 0x123456, "Got %d\n", array1[0].m_id);
-        ok(array1.GetAt(0).m_id == 0x123456, "Got %d\n", array1.GetAt(0).m_id);
-        ok(array1[1].m_id == 111, "Got %d\n", array1[1].m_id);
-        ok(array1.GetAt(1).m_id == 111, "Got %d\n", array1.GetAt(1).m_id);
+        ok_size_t(array1.GetCount(), 2u);
+        ok_int(array1[0].m_id, 0x123456);
+        ok_int(array1.GetAt(0).m_id, 0x123456);
+        ok_int(array1[1].m_id, 111);
+        ok_int(array1.GetAt(1).m_id, 111);
 
         test.m_id = 222;
         array1[0] = test;
 
-        ok(CCreature::s_nCtorCount == 3, "Expected CCreature::s_nCtorCount is 3, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 2, "Expected CCreature::s_nCtorCount_Default is 2, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 1, "Expected CCreature::s_nCCtorCount is 1, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 1, "Expected CCreature::s_nDtorCount is 1, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 1, "Expected CCreature::s_nOpIsCount is 1, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 3);
+        ok_int(CCreature::s_nCtorCount_Default, 2);
+        ok_int(CCreature::s_nCCtorCount, 1);
+        ok_int(CCreature::s_nDtorCount, 1);
+        ok_int(CCreature::s_nOpIsCount, 1);
 
         // Default traits does not call anything when relocating objects!
         array1.SetCount(100);
 
-        ok(CCreature::s_nCtorCount == 101, "Expected CCreature::s_nCtorCount is 101, was: %d\n", CCreature::s_nCtorCount);
-        ok(CCreature::s_nCtorCount_Default == 100, "Expected CCreature::s_nCtorCount_Default is 100, was: %d\n", CCreature::s_nCtorCount_Default);
-        ok(CCreature::s_nCCtorCount == 1, "Expected CCreature::s_nCCtorCount is 1, was: %d\n", CCreature::s_nCCtorCount);
-        ok(CCreature::s_nDtorCount == 1, "Expected CCreature::s_nDtorCount is 1, was: %d\n", CCreature::s_nDtorCount);
-        ok(CCreature::s_nOpIsCount == 1, "Expected CCreature::s_nOpIsCount is 1, was: %d\n", CCreature::s_nOpIsCount);
+        ok_int(CCreature::s_nCtorCount, 101);
+        ok_int(CCreature::s_nCtorCount_Default, 100);
+        ok_int(CCreature::s_nCCtorCount, 1);
+        ok_int(CCreature::s_nDtorCount, 1);
+        ok_int(CCreature::s_nOpIsCount, 1);
 
         // Does not compile:
         //CAtlArray<CCreature> array2(array1);
@@ -136,9 +136,9 @@ START_TEST(CAtlArray)
     }
 
     // Objects are cleaned up when the list goes away
-    ok(CCreature::s_nCtorCount == 101, "Expected CCreature::s_nCtorCount is 101, was: %d\n", CCreature::s_nCtorCount);
-    ok(CCreature::s_nCtorCount_Default == 100, "Expected CCreature::s_nCtorCount_Default is 100, was: %d\n", CCreature::s_nCtorCount_Default);
-    ok(CCreature::s_nCCtorCount == 1, "Expected CCreature::s_nCCtorCount is 1, was: %d\n", CCreature::s_nCCtorCount);
-    ok(CCreature::s_nDtorCount == 102, "Expected CCreature::s_nDtorCount is 102, was: %d\n", CCreature::s_nDtorCount);
-    ok(CCreature::s_nOpIsCount == 1, "Expected CCreature::s_nOpIsCount is 1, was: %d\n", CCreature::s_nOpIsCount);
+    ok_int(CCreature::s_nCtorCount, 101);
+    ok_int(CCreature::s_nCtorCount_Default, 100);
+    ok_int(CCreature::s_nCCtorCount, 1);
+    ok_int(CCreature::s_nDtorCount, 102);
+    ok_int(CCreature::s_nOpIsCount, 1);
 }

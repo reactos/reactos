@@ -88,50 +88,50 @@ START_TEST(CComQIPtr)
 {
     CQITestObject testObject;
     IUnknown* unk = static_cast<IPersist*>(&testObject);
-    ok(testObject.m_dwRef == 1, "Expected m_dwRef 1, got %lu\n", testObject.m_dwRef);
-    ok(g_QI == 0, "Expected g_QI 0, got %lu\n", g_QI);
+    ok_long(testObject.m_dwRef, 1);
+    ok_long(g_QI, 0);
 
     {
         DECLARE_QIPTR(IPersist) ppPersist(unk);
-        ok(testObject.m_dwRef == 2, "Expected m_dwRef 2, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 1, "Expected g_QI 1, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 2);
+        ok_long(g_QI, 1);
 
         DECLARE_QIPTR(IStdMarshalInfo) ppMarshal(ppPersist);
-        ok(testObject.m_dwRef == 3, "Expected m_dwRef 3, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 2, "Expected g_QI 2, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 3);
+        ok_long(g_QI, 2);
     }
-    ok(testObject.m_dwRef == 1, "Expected m_dwRef 1, got %lu\n", testObject.m_dwRef);
+    ok_long(testObject.m_dwRef, 1);
     {
         DECLARE_QIPTR(IStdMarshalInfo) ppMarshal;
-        ok(testObject.m_dwRef == 1, "Expected m_dwRef 1, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 2, "Expected g_QI 2, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 1);
+        ok_long(g_QI, 2);
 
         ppMarshal = unk;
-        ok(testObject.m_dwRef == 2, "Expected m_dwRef 2, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 3, "Expected g_QI 3, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 2);
+        ok_long(g_QI, 3);
 
         ppMarshal = static_cast<IUnknown*>(NULL);
-        ok(testObject.m_dwRef == 1, "Expected m_dwRef 1, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 3, "Expected g_QI 3, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 1);
+        ok_long(g_QI, 3);
 
         CComPtr<IUnknown> spUnk(unk);
-        ok(testObject.m_dwRef == 2, "Expected m_dwRef 2, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 3, "Expected g_QI 3, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 2);
+        ok_long(g_QI, 3);
 
         ppMarshal = spUnk;
-        ok(testObject.m_dwRef == 3, "Expected m_dwRef 3, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 4, "Expected g_QI 4, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 3);
+        ok_long(g_QI, 4);
 
         spUnk.Release();
-        ok(testObject.m_dwRef == 2, "Expected m_dwRef 2, got %lu\n", testObject.m_dwRef);
-        ok(g_QI == 4, "Expected g_QI 4, got %lu\n", g_QI);
+        ok_long(testObject.m_dwRef, 2);
+        ok_long(g_QI, 4);
 
         spUnk = ppMarshal;
-        ok(testObject.m_dwRef == 3, "Expected m_dwRef 3, got %lu\n", testObject.m_dwRef);
+        ok_long(testObject.m_dwRef, 3);
 #ifdef __REACTOS__
         // CORE-12710
         todo_if(1)
 #endif
-        ok(g_QI == 5, "Expected g_QI 5, got %lu\n", g_QI);
+        ok_long(g_QI, 5);
     }
 }
