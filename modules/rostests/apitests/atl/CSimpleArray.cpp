@@ -152,7 +152,7 @@ START_TEST(CSimpleArray)
     array1.Add(321);
     ok(!!array1.RemoveAt(0), "Expected RemoveAt(0) to succeed\n");
     ok_int(array1.GetSize(), 1);
-    if (array1.GetSize(), 1)
+    if (array1.GetSize() == 1)
     {
         ok_int(array1[0], 321);
     }
