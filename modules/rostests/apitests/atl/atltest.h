@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS api tests
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Testing
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
@@ -74,9 +74,9 @@ void start_test(void);
 int main(void)
 {
     start_test();
-    printf("%s: %d tests executed (0 marked as todo, %d failures), %d skipped.\n", \
-           g_atltest_name, g_tests_executed, g_tests_failed, g_tests_skipped); \
-    return g_tests_failed; \
+    printf("%s: %d tests executed (0 marked as todo, %d failures), %d skipped.\n",
+           g_atltest_name, g_tests_executed, g_tests_failed, g_tests_skipped);
+    return g_tests_failed;
 }
 
 char *wine_dbgstr_w(const wchar_t *wstr)
