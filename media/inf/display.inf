@@ -40,6 +40,7 @@ CopyFiles = VGA.Miniport_CopyFiles.NT, VGA.Display_CopyFiles.NT
 [VGA.Miniport_CopyFiles.NT]
 vgamp.sys
 vbemp.sys
+xboxvmp.sys
 
 [VGA.Display_CopyFiles.NT]
 vgaddi.dll
@@ -49,6 +50,7 @@ framebuf.dll
 AddService = , 0x00000002
 ;AddService = VGA, , VGA_Service_Inst
 ;AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
+;AddService = XboxVmp, 0x00000003, XBOX_Service_Inst
 
 [VGA_Service_Inst]
 ServiceType   = 1
@@ -62,6 +64,13 @@ ServiceType   = 1
 StartType     = 1
 ErrorControl  = 0
 ServiceBinary = %12%\vbemp.sys
+LoadOrderGroup = Video Save
+
+[XBOX_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 0
+ServiceBinary = %12%\xboxvmp.sys
 LoadOrderGroup = Video Save
 
 ;-------------------------------- STRINGS -------------------------------
