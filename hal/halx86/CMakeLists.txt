@@ -54,6 +54,7 @@ if(ARCH STREQUAL "i386")
     include(legacy.cmake)
     include(up.cmake)
     include(pic.cmake)
+    include(xbox.cmake)
     add_subdirectory(minihal)
 
     # hal
@@ -61,6 +62,7 @@ if(ARCH STREQUAL "i386")
     add_hal(halacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy up apic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)
+    add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS generic up xbox)
 
     #add_hal(halmps SOURCES up/halup.rc COMPONENTS generic legacy smp pic)
     #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)
