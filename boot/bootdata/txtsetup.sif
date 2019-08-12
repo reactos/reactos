@@ -282,11 +282,13 @@ vbe_1600x1200x8  = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
 vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,VBE,1600,1200,16
 vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,VBE,1600,1200,24
 vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,VBE,1600,1200,32
+xbox             = "Original Xbox NV2A Framebuffer (640x480x32)",,XboxVmp,640,480,32
 
 [Map.Display]
 ;<id> = <pnp id string>
 vga = "VGA Display"
 vbe = "VBE Display"
+xboxvmp = "NV2A Framebuffer"
 
 [Keyboard]
 Default = "XT-, AT- or extended keyboard (83-105 keys)"

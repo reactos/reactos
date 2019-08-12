@@ -71,19 +71,21 @@ XboxVmpFindAdapter(
   PXBOXVMP_DEVICE_EXTENSION XboxVmpDeviceExtension;
   VIDEO_ACCESS_RANGE AccessRanges[3];
   VP_STATUS Status;
+  USHORT VendorId = 0x10DE; /* NVIDIA Corporation */
+  USHORT DeviceId = 0x02A0; /* NV2A XGPU */
 
   VideoPortDebugPrint(Trace, "XboxVmpFindAdapter\n");
 
   XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION) HwDeviceExtension;
   Status = VideoPortGetAccessRanges(HwDeviceExtension, 0, NULL, 3, AccessRanges,
-                                    NULL, NULL, NULL);
+                                    &VendorId, &DeviceId, NULL);
 
-  if (NO_ERROR == Status)
-    {
+  if (Status == NO_ERROR)
+  {
       XboxVmpDeviceExtension->PhysControlStart = AccessRanges[0].RangeStart;
       XboxVmpDeviceExtension->ControlLength = AccessRanges[0].RangeLength;
       XboxVmpDeviceExtension->PhysFrameBufferStart = AccessRanges[1].RangeStart;
-    }
+  }
 
   return Status;
 }
