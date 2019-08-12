@@ -11,7 +11,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <windows.h>
+#ifndef _INC_WINDOWS
+    #include <windows.h>
+#endif
 
 static int g_atltest_executed = 0;
 static int g_atltest_failed = 0;
