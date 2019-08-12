@@ -368,12 +368,12 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
      * video card, so it appears to be present on 1:0:0 - 1:31:0.
      * We hack around these problems by indicating "device not present" for devices
      * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
-    if ((0 == BusHandler->BusNumber && 0 == Slot.u.bits.DeviceNumber &&
-         (1 == Slot.u.bits.FunctionNumber || 2 == Slot.u.bits.FunctionNumber)) ||
-        (1 == BusHandler->BusNumber && 0 != Slot.u.bits.DeviceNumber))
+    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
+        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
+        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
     {
-        DPRINT("Blacklisted PCI slot\n");
-        if (0 == Offset && sizeof(USHORT) <= Length)
+        DPRINT("Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
+        if (Offset == 0 && Length >= sizeof(USHORT))
         {
             *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
             return sizeof(USHORT);
@@ -460,11 +460,11 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
      * video card, so it appears to be present on 1:0:0 - 1:31:0.
      * We hack around these problems by indicating "device not present" for devices
      * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
-    if ((0 == BusHandler->BusNumber && 0 == Slot.u.bits.DeviceNumber &&
-         (1 == Slot.u.bits.FunctionNumber || 2 == Slot.u.bits.FunctionNumber)) ||
-        (1 == BusHandler->BusNumber && 0 != Slot.u.bits.DeviceNumber))
+    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
+        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
+        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
     {
-        DPRINT1("Trying to set data on blacklisted PCI slot\n");
+        DPRINT1("Trying to set data on blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
         return 0;
     }
 #endif
