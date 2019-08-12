@@ -317,7 +317,7 @@ NtlmGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT_SVR Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
     IN ULONG ASCContextReq,
-    IN RAW_STRING TargetName,
+    IN EXT_STRING TargetName,
     IN ULONG MessageFlags,
     OUT PSecBuffer OutputToken);
 
@@ -336,20 +336,20 @@ NtlmHandleAuthenticateMessage(
 
 /* makes only a reference to blob - do not free! */
 SECURITY_STATUS
-NtlmBlobToRawStringRef(
+NtlmBlobToExtStringRef(
     IN PSecBuffer InputBuffer,
     IN NTLM_BLOB Blob,
-    IN OUT PRAW_STRING OutputStr);
-#define NtlmBlobToUnicodeStringRef(buf, blob, out) NtlmBlobToRawStringRef(buf, blob, (PRAW_STRING)out)
-#define NtlmBlobToStringRef(buf, blob, out) NtlmBlobToRawStringRef(buf, blob, (PRAW_STRING)out)
+    IN OUT PEXT_STRING OutputStr);
+#define NtlmBlobToUnicodeStringRef(buf, blob, out) NtlmBlobToExtStringRef(buf, blob, (PEXT_STRING)out)
+#define NtlmBlobToStringRef(buf, blob, out) NtlmBlobToExtStringRef(buf, blob, (PEXT_STRING)out)
 
 VOID
-NtlmRawStringToBlob(
+NtlmExtStringToBlob(
     IN PVOID OutputBuffer,
-    IN PRAW_STRING InStr,
+    IN PEXT_STRING InStr,
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet);
-#define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmRawStringToBlob(buf, (PRAW_STRING)str, out, ofs)
+#define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmExtStringToBlob(buf, (PEXT_STRING)str, out, ofs)
 
 VOID
 NtlmWriteDataBufToBlob(

@@ -37,6 +37,8 @@
 #include <ntmsv1_0.h>
 #include <lm.h>
 
+#include "strutil.h"
+
 #include "wine/unicode.h"
 
 /* forward */
@@ -161,14 +163,6 @@ extern NTLM_MODE NtlmMode;
 #define NTLM_DEFAULT_TIMEOUT (5*60*1000) //context valid for 5 mins
 #define NTLM_MAX_BUF 1904
 #define NTLM_CRED_NULLSESSION SECPKG_CRED_RESERVED
-
-/* String of any/unknown type */
-typedef struct _NTLM_RAW_STRING
-{
-    USHORT bUsed;
-    USHORT bAllocated;
-    PBYTE  Buffer;
-} RAW_STRING, *PRAW_STRING;
 
 typedef struct _NTLMSSP_CREDENTIAL
 {
@@ -354,11 +348,13 @@ NtlmUnProtectMemory(
 
 /* util.c */
 
-PVOID
-NtlmAllocate(IN ULONG Size);
+void*
+NtlmAllocate(
+    IN size_t Size);
 
-VOID
-NtlmFree(IN PVOID Buffer);
+void
+NtlmFree(
+    IN void* Buffer);
 
 BOOLEAN
 NtlmHasIntervalElapsed(

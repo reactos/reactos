@@ -12,6 +12,7 @@ list(APPEND SOURCE
 	messages.c
 	ntlmssp.c
 	protocol.c
+    strutil.c
 	stubs.c
 	sign.c
 	util.c

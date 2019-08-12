@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
+        init_strutil(NtlmAllocate, NtlmFree);
         NtlmInitializeGlobals();
         NtlmInitializeRNG();
         NtlmInitializeProtectedMemory();

@@ -123,7 +123,7 @@ SECURITY_STATUS
 NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
                              IN PNTLMSSP_CREDENTIAL Credentials,
                              IN ULONG ASCContextReq,
-                             IN RAW_STRING TargetName,
+                             IN EXT_STRING TargetName,
                              IN ULONG MessageFlags,
                              OUT PSecBuffer OutputToken)
 {
@@ -188,7 +188,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     /* set target information */
     ERR("set target information chaMessage %p to len %d, offset %x\n",
         chaMessage, TargetName.bUsed, offset);
-    NtlmRawStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
+    NtlmExtStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
         gsvr->NtlmAvTargetInfoPart.bUsed, offset);
@@ -223,7 +223,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     PNEGOTIATE_MESSAGE negoMessage = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     PNTLMSSP_CONTEXT_SVR context = NULL;
-    PRAW_STRING pRawTargetNameRef = NULL;
+    PEXT_STRING pRawTargetNameRef = NULL;
     OEM_STRING OemDomainNameRef, OemWorkstationNameRef;
     ULONG negotiateFlags = 0;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
@@ -361,12 +361,12 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
-            pRawTargetNameRef = (PRAW_STRING)&gsvr->NbMachineName;
+            pRawTargetNameRef = (PEXT_STRING)&gsvr->NbMachineName;
         }
         else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
             negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
-            pRawTargetNameRef = (PRAW_STRING)&g->NbMachineNameOEM;
+            pRawTargetNameRef = (PEXT_STRING)&g->NbMachineNameOEM;
         }
         else
         {
@@ -472,7 +472,7 @@ CliGenerateAuthenticationMessage(
     LM2_RESPONSE Lm2Response;
     USER_SESSION_KEY UserSessionKey;
     LM_SESSION_KEY LmSessionKey;
-    RAW_STRING AvDataTmp;
+    EXT_STRING AvDataTmp;
     NTLM_DATABUF AvDataRef;
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
@@ -635,7 +635,7 @@ CliGenerateAuthenticationMessage(
         ULONG len;
 
         ERR("NTLMSSP_NEGOTIATE_TARGET_INFO\n");
-        ret = NtlmBlobToRawStringRef(InputToken1, challenge->TargetInfo, &AvDataTmp);
+        ret = NtlmBlobToExtStringRef(InputToken1, challenge->TargetInfo, &AvDataTmp);
         if (!NT_SUCCESS(ret))
         {
             ERR("could not get target info!\n");

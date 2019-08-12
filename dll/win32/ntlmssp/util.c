@@ -24,8 +24,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-PVOID
-NtlmAllocate(IN ULONG Size)
+void*
+NtlmAllocate(
+    IN size_t Size)
 {
     PVOID buffer = NULL;
 
@@ -52,8 +53,9 @@ NtlmAllocate(IN ULONG Size)
     return buffer;
 }
 
-VOID
-NtlmFree(IN PVOID Buffer)
+void
+NtlmFree(
+    IN void* Buffer)
 {
     if (Buffer)
     {
@@ -180,9 +182,9 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
 }
 
 SECURITY_STATUS
-NtlmBlobToRawStringRef(IN PSecBuffer InputBuffer,
+NtlmBlobToExtStringRef(IN PSecBuffer InputBuffer,
                        IN NTLM_BLOB Blob,
-                       IN OUT PRAW_STRING OutputStr)
+                       IN OUT PEXT_STRING OutputStr)
 {
     /* check blob is not beyond the bounds of the input buffer */
     if(Blob.Offset >= InputBuffer->cbBuffer ||
@@ -244,8 +246,8 @@ NtlmAppendToBlob(IN void* buffer,
 }
 
 VOID
-NtlmRawStringToBlob(IN PVOID OutputBuffer,
-                    IN PRAW_STRING InStr,
+NtlmExtStringToBlob(IN PVOID OutputBuffer,
+                    IN PEXT_STRING InStr,
                     IN OUT PNTLM_BLOB OutputBlob,
                     IN OUT PULONG_PTR OffSet)
 {
