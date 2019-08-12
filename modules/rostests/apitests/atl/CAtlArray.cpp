@@ -9,27 +9,7 @@
 #ifdef HAVE_APITEST
     #include <apitest.h>
 #else
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <stdarg.h>
-    int g_tests_executed = 0;
-    int g_tests_failed = 0;
-    void ok_func(const char *file, int line, bool value, const char *fmt, ...)
-    {
-        va_list va;
-        va_start(va, fmt);
-        if (!value)
-        {
-            printf("%s (%d): ", file, line);
-            vprintf(fmt, va);
-            g_tests_failed++;
-        }
-        g_tests_executed++;
-        va_end(va);
-    }
-    #undef ok
-    #define ok(value, ...)  ok_func(__FILE__, __LINE__, value, __VA_ARGS__)
-    #define START_TEST(x)   int main(void)
+    #include "atltest.h"
 #endif
 
 #include <atlbase.h>
@@ -161,9 +141,4 @@ START_TEST(CAtlArray)
     ok(CCreature::s_nCCtorCount == 1, "Expected CCreature::s_nCCtorCount is 1, was: %d\n", CCreature::s_nCCtorCount);
     ok(CCreature::s_nDtorCount == 102, "Expected CCreature::s_nDtorCount is 102, was: %d\n", CCreature::s_nDtorCount);
     ok(CCreature::s_nOpIsCount == 1, "Expected CCreature::s_nOpIsCount is 1, was: %d\n", CCreature::s_nOpIsCount);
-
-#ifndef HAVE_APITEST
-    printf("CAtlArray: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
-    return g_tests_failed;
-#endif
 }

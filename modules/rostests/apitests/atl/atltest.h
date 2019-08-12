@@ -1,0 +1,133 @@
+/*
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Testing
+ * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#ifndef ATLTEST_H_
+#define ATLTEST_H_
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <windows.h>
+
+int g_tests_executed = 0;
+int g_tests_failed = 0;
+int g_tests_skipped = 0;
+const char *g_file = NULL;
+int g_line = 0;
+
+void set_location(const char *file, int line)
+{
+    g_file = file;
+    g_line = line;
+}
+
+void ok_func(int value, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    if (!value)
+    {
+        printf("%s (%d): ", g_file, g_line);
+        vprintf(fmt, va);
+        g_tests_failed++;
+    }
+    g_tests_executed++;
+    va_end(va);
+}
+
+void skip_func(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    printf("%s (%d): test skipped: ", g_file, g_line);
+    vprintf(fmt, va);
+    g_tests_skipped++;
+    va_end(va);
+}
+
+#undef ok
+#define ok(value, ...) do { \
+    set_location(__FILE__, __LINE__); \
+    ok_func(value, __VA_ARGS__); \
+} while (0)
+#define ok_(x1,x2) set_location(x1,x2); ok_func
+
+#undef skip
+#define skip(...) do { \
+    set_location(__FILE__, __LINE__); \
+    skip_func(__VA_ARGS__); \
+} while (0)
+
+#undef trace
+#define trace printf
+
+void start_test(void);
+
+#define START_TEST(x) \
+    static const char *g_atltest_name = #x; \
+    void start_test(void)
+
+int main(void)
+{
+    start_test();
+    printf("%s: %d tests executed (0 marked as todo, %d failures), %d skipped.\n", \
+           g_atltest_name, g_tests_executed, g_tests_failed, g_tests_skipped); \
+    return g_tests_failed; \
+}
+
+char *wine_dbgstr_w(const wchar_t *wstr)
+{
+    static char buf[512];
+    WideCharToMultiByte(CP_ACP, 0, wstr, -1, buf, _countof(buf), NULL, NULL);
+    return buf;
+}
+
+#define ok_hex(expression, result) \
+    do { \
+        int _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
+           #expression, (int)(result), _value); \
+    } while (0)
+
+#define ok_dec(expression, result) \
+    do { \
+        int _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
+           #expression, (int)(result), _value); \
+    } while (0)
+
+#define ok_ptr(expression, result) \
+    do { \
+        void *_value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+           #expression, (void*)(result), _value); \
+    } while (0)
+
+#define ok_size_t(expression, result) \
+    do { \
+        size_t _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
+           #expression, (size_t)(result), _value); \
+    } while (0)
+
+#define ok_char(expression, result) ok_hex(expression, result)
+
+#define ok_err(error) \
+    ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
+
+#define ok_str(x, y) \
+    ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+
+#define ok_wstr(x, y) \
+    ok(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+
+#define ok_long(expression, result) ok_hex(expression, result)
+#define ok_int(expression, result) ok_dec(expression, result)
+#define ok_ntstatus(status, expected) ok_hex(status, expected)
+#define ok_hdl ok_ptr
+
+#endif  /* ndef ATLTEST_H_ */
