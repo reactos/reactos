@@ -12,27 +12,7 @@
 #ifdef HAVE_APITEST
     #include <apitest.h>
 #else
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <stdarg.h>
-    int g_tests_executed = 0;
-    int g_tests_failed = 0;
-    void ok_func(const char *file, int line, BOOL value, const char *fmt, ...)
-    {
-        va_list va;
-        va_start(va, fmt);
-        if (!value)
-        {
-            printf("%s (%d): ", file, line);
-            vprintf(fmt, va);
-            g_tests_failed++;
-        }
-        g_tests_executed++;
-        va_end(va);
-    }
-    #undef ok
-    #define ok(value, ...)  ok_func(__FILE__, __LINE__, value, __VA_ARGS__)
-    #define START_TEST(x)   int main(void)
+    #include "atltest.h"
 #endif
 
 
@@ -141,9 +121,4 @@ START_TEST(CComObject)
         ok(g_DTOR == 1, "Expected 1, got %lu\n", g_DTOR);
         ok(g_BLIND == 1, "Expected 1, got %lu\n", g_BLIND);
     }
-
-#ifndef HAVE_APITEST
-    printf("CComObject: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
-    return g_tests_failed;
-#endif
 }
