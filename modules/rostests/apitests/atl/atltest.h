@@ -13,70 +13,71 @@
 #include <stdarg.h>
 #include <windows.h>
 
-int g_tests_executed = 0;
-int g_tests_failed = 0;
-int g_tests_skipped = 0;
-const char *g_file = NULL;
-int g_line = 0;
+static int g_atltest_executed = 0;
+static int g_atltest_failed = 0;
+static int g_atltest_skipped = 0;
 
-void set_location(const char *file, int line)
+static const char *g_atltest_file = NULL;
+static int g_atltest_line = 0;
+
+void atltest_set_location(const char *file, int line)
 {
-    g_file = file;
-    g_line = line;
+    g_atltest_file = file;
+    g_atltest_line = line;
 }
 
-void ok_func(int value, const char *fmt, ...)
+void atltest_ok(int value, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
     if (!value)
     {
-        printf("%s (%d): ", g_file, g_line);
+        printf("%s (%d): ", g_atltest_file, g_atltest_line);
         vprintf(fmt, va);
-        g_tests_failed++;
+        g_atltest_failed++;
     }
-    g_tests_executed++;
+    g_atltest_executed++;
     va_end(va);
 }
 
-void skip_func(const char *fmt, ...)
+void atltest_skip(const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    printf("%s (%d): test skipped: ", g_file, g_line);
+    printf("%s (%d): test skipped: ", g_atltest_file, g_atltest_line);
     vprintf(fmt, va);
-    g_tests_skipped++;
+    g_atltest_skipped++;
     va_end(va);
 }
 
 #undef ok
 #define ok(value, ...) do { \
-    set_location(__FILE__, __LINE__); \
-    ok_func(value, __VA_ARGS__); \
+    atltest_set_location(__FILE__, __LINE__); \
+    atltest_ok(value, __VA_ARGS__); \
 } while (0)
-#define ok_(x1,x2) set_location(x1,x2); ok_func
+#define ok_(x1,x2) atltest_set_location(x1,x2); atltest_ok
 
 #undef skip
 #define skip(...) do { \
-    set_location(__FILE__, __LINE__); \
-    skip_func(__VA_ARGS__); \
+    atltest_set_location(__FILE__, __LINE__); \
+    atltest_skip(__VA_ARGS__); \
 } while (0)
 
 #undef trace
 #define trace printf
 
-void start_test(void);
+static void start_test(void);
 
 #define START_TEST(x) \
     static const char *g_atltest_name = #x; \
-    void start_test(void)
+    static void start_test(void)
 
 int main(void)
 {
     start_test();
     printf("%s: %d tests executed (0 marked as todo, %d failures), %d skipped.\n",
-           g_atltest_name, g_tests_executed, g_tests_failed, g_tests_skipped);
-    return g_tests_failed;
+           g_atltest_name, g_atltest_executed, g_atltest_failed, g_atltest_skipped);
+    return g_atltest_failed;
 }
 
 char *wine_dbgstr_w(const wchar_t *wstr)
