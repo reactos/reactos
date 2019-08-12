@@ -256,11 +256,11 @@ BEGIN
 
     POPUP "Tastatură"
     BEGIN
-        MENUITEM "Tastatură îmbunătățită", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Tastatură extinsă", IDM_ENHANCED_KB, CHECKED
         MENUITEM "Tastatură standard", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Aspect regular", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Aspect pe blocuri", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "Structură standard", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Structură bloc", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "101 taste", IDM_101_KEYS, CHECKED, GRAYED
         MENUITEM "102 taste", IDM_102_KEYS, GRAYED
@@ -269,20 +269,20 @@ BEGIN
 
     POPUP "Setări"
     BEGIN
-        MENUITEM "Întotdeauna în sus", IDM_ON_TOP, CHECKED
+        MENUITEM "Întotdeauna în față", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Folosește sunetul de clic", IDM_CLICK_SOUND
+        MENUITEM "&Utilizare sunetul de clic", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Modalitatea de scriere...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Mod tastare...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Tip de caracter...", IDM_FONT, GRAYED
+        MENUITEM "&Font...", IDM_FONT, GRAYED
     END
 
     POPUP "Ajutor"
     BEGIN
         MENUITEM "&Manual", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Despre tastatură virtuală...", IDM_ABOUT
+        MENUITEM "&Despre Tastatura virtuală...", IDM_ABOUT
     END
 END
 
