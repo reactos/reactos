@@ -177,7 +177,7 @@ typedef struct _MESSAGE_SIGNATURE
 C_ASSERT(sizeof(MESSAGE_SIGNATURE) == 16);
 /* basic functions */
 
-VOID
+BOOLEAN
 NTOWFv1(
     LPCWSTR password,
     PUCHAR result);
@@ -187,7 +187,7 @@ NTOWFv2(
     LPCWSTR password,
     LPCWSTR user,
     LPCWSTR domain,
-    PUCHAR result);
+    UCHAR result[16]);
 
 VOID
 LMOWFv1(
@@ -240,31 +240,24 @@ MAC(ULONG flags,
     PUCHAR result);
 
 VOID
-NtlmChallengeResponse(
-    IN PUNICODE_STRING pUserName,
-    IN PUNICODE_STRING pPassword,
-    IN PUNICODE_STRING pDomainName,
-    IN PUNICODE_STRING pServerName,
-    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-    OUT PMSV1_0_NTLM3_RESPONSE pNtResponse,
-    OUT PLM2_RESPONSE pLm2Response,
-    OUT PUSER_SESSION_KEY UserSessionKey,
-    OUT PLM_SESSION_KEY LmSessionKey);
+NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
+                      IN PUNICODE_STRING pPassword,
+                      IN PUNICODE_STRING pDomainName,
+                      IN PUNICODE_STRING pServerName,
+                      IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
+                      OUT PNTLM_DATABUF pNtResponseData,
+                      OUT PLM2_RESPONSE pLm2Response,
+                      OUT PUSER_SESSION_KEY pUserSessionKey,
+                      OUT PLM_SESSION_KEY pLmSessionKey);
 
 /* avl functions */
 
-BOOL
-NtlmAvlAlloc(
-    IN PNTLM_AVDATA pAvData,
-    IN ULONG initlen);
-
-void
-NtlmAvFree(
-    IN OUT PNTLM_AVDATA pAvData);
+#define NtlmAvlAlloc NtlmDataBufAlloc
+#define NtlmAvlFree NtlmDataBufFree
 
 BOOL
 NtlmAvlGet(
-    IN PNTLM_AVDATA pAvData,
+    IN PNTLM_DATABUF pAvData,
     IN MSV1_0_AVID AvId,
     OUT PVOID* pData,
     OUT PULONG plen);
@@ -275,7 +268,7 @@ NtlmAvlGet(
 
 BOOL
 NtlmAvlAdd(
-    IN PNTLM_AVDATA pAvData,
+    IN PNTLM_DATABUF pAvData,
     IN MSV1_0_AVID AvId,
     IN void* data,
     IN ULONG len);
@@ -357,11 +350,14 @@ NtlmRawStringToBlob(
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet);
 #define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmRawStringToBlob(buf, (PRAW_STRING)str, out, ofs)
+
 VOID
-NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
-                      IN PNTLM_AVDATA pAvData,
-                      IN OUT PNTLM_BLOB OutputBlob,
-                      IN OUT PULONG_PTR OffSet);
+NtlmWriteDataBufToBlob(
+    IN PVOID OutputBuffer,
+    IN PNTLM_DATABUF pDataBuf,
+    IN OUT PNTLM_BLOB OutputBlob,
+    IN OUT PULONG_PTR OffSet);
+
 VOID
 NtlmAppendToBlob(IN void* buffer,
                  IN ULONG len,

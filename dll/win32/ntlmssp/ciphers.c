@@ -142,7 +142,7 @@ HMACMD5Update(HMAC_MD5_CTX *ctx, const unsigned char *data, unsigned int data_le
 }
 
 void
-HMACMD5Final(HMAC_MD5_CTX *ctx, unsigned char *digest)
+HMACMD5Final(HMAC_MD5_CTX *ctx, UCHAR digest[16])
 {
     MD5_CTX outer_ctx;
     unsigned char inner_digest[16];
@@ -224,7 +224,7 @@ MD5(const unsigned char * d, int len, unsigned char * result)
 }
 
 void
-HMAC_MD5(const unsigned char *key, int key_len, const unsigned char *data, int data_len, unsigned char *result)
+HMAC_MD5(const unsigned char *key, int key_len, const unsigned char *data, int data_len, UCHAR result[16])
 {
     HMAC_MD5_CTX ctx;
 

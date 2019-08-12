@@ -254,12 +254,13 @@ NtlmRawStringToBlob(IN PVOID OutputBuffer,
 }
 
 VOID
-NtlmWriteAvDataToBlob(IN PVOID OutputBuffer,
-                      IN PNTLM_AVDATA pAvData,
-                      IN OUT PNTLM_BLOB OutputBlob,
-                      IN OUT PULONG_PTR OffSet)
+NtlmWriteDataBufToBlob(
+    IN PVOID OutputBuffer,
+    IN PNTLM_DATABUF pDataBuf,
+    IN OUT PNTLM_BLOB OutputBlob,
+    IN OUT PULONG_PTR OffSet)
 {
-    NtlmWriteToBlob(OutputBuffer, pAvData->pData, pAvData->bUsed, OutputBlob, OffSet);
+    NtlmWriteToBlob(OutputBuffer, pDataBuf->pData, pDataBuf->bUsed, OutputBlob, OffSet);
 }
 
 VOID
@@ -310,4 +311,33 @@ NtlmStructWriteStrW(
     memcpy(*pOffset, dataW, datalen);
     *pDataFieldW = (WCHAR*)*pOffset;
     *pOffset += datalen;
+}
+
+BOOL
+NtlmDataBufAlloc(
+    IN PNTLM_DATABUF pAvData,
+    IN ULONG initlen,
+    IN BOOL doZeroMem)
+{
+    pAvData->pData = NtlmAllocate(initlen);
+    if (pAvData == NULL)
+        return FALSE;
+    pAvData->bUsed = 0;
+    pAvData->bAllocated = initlen;
+    if (doZeroMem)
+        RtlZeroMemory(pAvData->pData, initlen);
+    return TRUE;
+}
+
+void
+NtlmDataBufFree(
+    IN OUT PNTLM_DATABUF pAvData)
+{
+    if ((pAvData->pData == NULL) ||
+        (pAvData->bAllocated == 0))
+        return;
+    NtlmFree(pAvData->pData);
+    pAvData->pData = NULL;
+    pAvData->bAllocated = 0;
+    pAvData->bUsed = 0;
 }

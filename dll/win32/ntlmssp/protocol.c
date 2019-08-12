@@ -191,7 +191,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
         gsvr->NtlmAvTargetInfoPart.bUsed, offset);
-    NtlmWriteAvDataToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
+    NtlmWriteDataBufToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
     /* append filetime and eol */
     targetInfoEnd.avpTs.AvId = MsvAvTimestamp;
     targetInfoEnd.avpTs.AvLen = sizeof(targetInfoEnd.ts);
@@ -467,16 +467,15 @@ CliGenerateAuthenticationMessage(
     PNTLMSSP_CREDENTIAL cred = NULL;
     BOOLEAN isUnicode;
     UNICODE_STRING ServerNameRef;
-    MSV1_0_NTLM3_RESPONSE NtResponse;
+    NTLM_DATABUF NtResponseData;
     LM2_RESPONSE Lm2Response;
     USER_SESSION_KEY UserSessionKey;
     LM_SESSION_KEY LmSessionKey;
     RAW_STRING AvDataTmp;
-    NTLM_AVDATA AvDataRef;
+    NTLM_DATABUF AvDataRef;
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
-    UNICODE_STRING NtResponseString;
     UNICODE_STRING LmResponseString;
     UNICODE_STRING UserSessionKeyString;
     UNICODE_STRING LmSessionKeyString;
@@ -488,6 +487,7 @@ CliGenerateAuthenticationMessage(
     *pISCContextAttr = ISC_RET_REPLAY_DETECT |
                        ISC_RET_SEQUENCE_DETECT |
                        ISC_RET_INTEGRITY;
+    RtlZeroMemory(&NtResponseData, sizeof(NtResponseData));
 
     /* get context */
     context = NtlmReferenceContextCli(hContext);
@@ -701,26 +701,24 @@ CliGenerateAuthenticationMessage(
                           &cred->DomainName,
                           &ServerNameRef,
                           challenge->ServerChallenge,
-                          &NtResponse,
+                          &NtResponseData,
                           &Lm2Response,
                           &UserSessionKey,
                           &LmSessionKey);
+    TRACE("=== NtResponse ===\n");
+    NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
 //DebugBreak();
 #define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input
-    InitString(NtResponseString, NtResponse);
     InitString(LmResponseString, Lm2Response);
     InitString(UserSessionKeyString, UserSessionKey);
     InitString(LmSessionKeyString, LmSessionKey);
-
-    /* FIXME ... leads to invalid param - wireshark */
-    //NtResponseString.Length = 0;//FIXME
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
                   cred->DomainName.Length +
                   cred->UserName.Length +
                   ServerNameRef.Length +
-                  NtResponseString.Length +
+                  NtResponseData.bUsed +
                   UserSessionKeyString.Length;
                   //?? LmSessionKeyString.Length
     if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
@@ -778,10 +776,10 @@ CliGenerateAuthenticationMessage(
                                 &offset);
     }
 
-    NtlmUnicodeStringToBlob((PVOID)authmessage,
-                            &NtResponseString,
-                            &authmessage->NtChallengeResponse,
-                            &offset);
+    NtlmWriteDataBufToBlob((PVOID)authmessage,
+                           &NtResponseData,
+                           &authmessage->NtChallengeResponse,
+                           &offset);
 
     NtlmUnicodeStringToBlob((PVOID)authmessage,
                             &UserSessionKeyString,
@@ -800,6 +798,8 @@ quit:
     }
     if(context) NtlmDereferenceContext((ULONG_PTR)context);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
+    if (NtResponseData.bAllocated > 0)
+        NtlmDataBufFree(&NtResponseData);
     ERR("handle challenge end\n");
     return ret;
 }

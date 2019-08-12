@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ typedef struct
 
 void HMACMD5Init(HMAC_MD5_CTX *ctx, const unsigned char *key, unsigned int key_len);
 void HMACMD5Update(HMAC_MD5_CTX *ctx, const unsigned char *data, unsigned int data_len);
-void HMACMD5Final(HMAC_MD5_CTX *ctx, unsigned char *digest);
+void HMACMD5Final(HMAC_MD5_CTX *ctx, UCHAR digest[16]);
 
 /* high level api */
 UINT32
@@ -88,5 +88,5 @@ void
 MD5(const unsigned char * d, int len, unsigned char * result);
 
 void
-HMAC_MD5(const unsigned char *key, int key_len, const unsigned char *data, int data_len, unsigned char *result);
+HMAC_MD5(const unsigned char *key, int key_len, const unsigned char *data, int data_len, UCHAR result[16]);
 #endif

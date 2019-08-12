@@ -122,7 +122,7 @@ void NtlmPrintHexDump(PBYTE buffer, DWORD length)
 
 void
 NtlmPrintAvPairs(
-    IN PNTLM_AVDATA pAvData)
+    IN PNTLM_DATABUF pAvData)
 {
     PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvData;
 

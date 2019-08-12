@@ -169,7 +169,7 @@ NtlmInitializeGlobals(VOID)
                  gsvr->DnsMachineName.Length + //fix me: dns domain name
                  sizeof(MSV1_0_AV_PAIR)*4;
 
-    if (!NtlmAvlAlloc(&gsvr->NtlmAvTargetInfoPart, AvPairsLen))
+    if (!NtlmAvlAlloc(&gsvr->NtlmAvTargetInfoPart, AvPairsLen, TRUE))
     {
         ERR("failed to allocate NtlmAvTargetInfo\n");
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -212,7 +212,7 @@ NtlmTerminateGlobals(VOID)
     RtlFreeOemString(&g->NbMachineNameOEM);
     RtlFreeOemString(&g->NbDomainNameOEM);
     RtlFreeOemString(&gsvr->DnsMachineNameOEM);
-    NtlmAvFree(&gsvr->NtlmAvTargetInfoPart);
+    NtlmAvlFree(&gsvr->NtlmAvTargetInfoPart);
     NtClose(g->NtlmSystemSecurityToken);
 
     DeleteCriticalSection(&g->cs);

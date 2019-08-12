@@ -26,7 +26,7 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-VOID
+BOOLEAN
 NTOWFv1(LPCWSTR password,
         PUCHAR result)
 {
@@ -38,7 +38,7 @@ NTOWFv1(LPCWSTR password,
         (FAILED(RtlStringCchLengthW(password, MAX_PASSWD_LEN, &len))))
     {
         *result = 0;
-        return;
+        return FALSE;
     }
 
     memcpy(pass, password, len * sizeof(WCHAR));
@@ -47,13 +47,15 @@ NTOWFv1(LPCWSTR password,
         pass[i] = L'0';
     }
     MD4((PUCHAR)pass, 14, result);
+
+    return TRUE;
 }
 
 BOOLEAN
 NTOWFv2(LPCWSTR password,
         LPCWSTR user,
         LPCWSTR domain,
-        PUCHAR result)
+        UCHAR result[16])
 {
     UCHAR response_key_nt_v1 [16];
     size_t len_user = 0;
@@ -383,15 +385,40 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
                       IN PUNICODE_STRING pDomainName,
                       IN PUNICODE_STRING pServerName,
                       IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-                      OUT PMSV1_0_NTLM3_RESPONSE pNtResponse,
+                      OUT PNTLM_DATABUF pNtResponseData,
                       OUT PLM2_RESPONSE pLm2Response,
                       OUT PUSER_SESSION_KEY pUserSessionKey,
                       OUT PLM_SESSION_KEY pLmSessionKey)
 {
+    PMSV1_0_NTLM3_RESPONSE pNtResponse;
+    BOOL avOk;
+
+    /* alloc memory */
+    NtlmDataBufAlloc(pNtResponseData,
+                     sizeof(MSV1_0_NTLM3_RESPONSE) +
+                     sizeof(MSV1_0_AV_PAIR) * 3 +
+                     pServerName->Length +
+                     pDomainName->Length,
+                     TRUE);
+    pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtResponseData->pData;
+
     pNtResponse->RespType = 1;
     pNtResponse->HiRespType = 1;
     pNtResponse->Flags = 0;
     pNtResponse->MsgWord = 0;
+
+    /* Av-Pairs should begin at AvPairsOff field. So we need
+       to set the used-ptr back before writing avl */
+    pNtResponseData->bUsed = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
+
+    avOk = NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, pServerName->Buffer, pServerName->Length);
+    if (pDomainName->Length > 0)
+        avOk = avOk &&
+               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, pDomainName->Buffer, pDomainName->Length);
+    avOk = avOk &&
+           NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
+    if (!avOk)
+       ERR("failed to write avl data\n");
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
         pUserName, pPassword, pDomainName, pServerName, ChallengeToClient,
@@ -399,7 +426,6 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
 
     NtQuerySystemTime((PLARGE_INTEGER)&pNtResponse->TimeStamp);
     NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
-    memcpy(pNtResponse->Buffer, pServerName->Buffer, pServerName->Length);
 
     NtlmNtResponse(pUserName,
                    pPassword,

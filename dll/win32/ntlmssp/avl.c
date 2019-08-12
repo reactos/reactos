@@ -24,33 +24,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 BOOL
-NtlmAvlAlloc(
-    IN PNTLM_AVDATA pAvData,
-    IN ULONG initlen)
-{
-    pAvData->pData = NtlmAllocate(initlen);
-    if (pAvData == NULL)
-        return FALSE;
-    pAvData->bUsed = 0;
-    pAvData->bAllocated = initlen;
-    return TRUE;
-}
-
-void
-NtlmAvFree(
-    IN OUT PNTLM_AVDATA pAvData)
-{
-    if ((pAvData->pData == NULL) ||
-        (pAvData->bAllocated == 0))
-        return;
-    NtlmFree(pAvData->pData);
-    pAvData->pData = NULL;
-    pAvData->bAllocated = 0;
-    pAvData->bUsed = 0;
-}
-
-BOOL
-NtlmAvlGet(IN PNTLM_AVDATA pAvData,
+NtlmAvlGet(IN PNTLM_DATABUF pAvData,
            IN MSV1_0_AVID AvId,
            OUT PVOID* pData,
            OUT PULONG pLen)
@@ -94,7 +68,7 @@ NtlmAvlLen(IN PMSV1_0_AV_PAIR pAvList,
 }*/
 
 BOOL
-NtlmAvlAdd(IN PNTLM_AVDATA pAvData,
+NtlmAvlAdd(IN PNTLM_DATABUF pAvData,
            IN MSV1_0_AVID AvId,
            IN void* data,
            IN ULONG len)
