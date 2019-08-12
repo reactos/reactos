@@ -32,7 +32,6 @@ CliGenerateNegotiateMessage(
     PNEGOTIATE_MESSAGE message;
     ULONG messageSize = 0;
     ULONG_PTR offset;
-    NTLM_BLOB blobBuffer[2]; //nego contains 2 blobs
     PNTLMSSP_GLOBALS g = getGlobals();
 
     if(!OutputToken)
@@ -104,10 +103,12 @@ CliGenerateNegotiateMessage(
     }
     else
     {
-        blobBuffer[0].Length = blobBuffer[0].MaxLength = 0;
-        blobBuffer[0].Offset = offset;
-        blobBuffer[1].Length =  blobBuffer[1].MaxLength = 0;
-        blobBuffer[1].Offset = offset+1;
+        NtlmUnicodeStringToBlob((PVOID)message, NULL,
+                                &message->OemWorkstationName,
+                                &offset);
+        NtlmUnicodeStringToBlob((PVOID)message, NULL,
+                                &message->OemDomainName,
+                                &offset);
     }
 
     /* zero version struct */
@@ -772,6 +773,12 @@ CliGenerateAuthenticationMessage(
     {
         NtlmUnicodeStringToBlob((PVOID)authmessage,
                                 &LmResponseString,
+                                &authmessage->LmChallengeResponse,
+                                &offset);
+    }
+    else
+    {
+        NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
                                 &authmessage->LmChallengeResponse,
                                 &offset);
     }

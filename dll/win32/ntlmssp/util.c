@@ -207,6 +207,14 @@ NtlmWriteToBlob(IN PVOID pOutputBuffer,
                 IN OUT PNTLM_BLOB OutputBlob,
                 IN OUT PULONG_PTR OffSet)
 {
+    /* Handle NULL value */
+    if ((buffer == NULL) || (len == 0))
+    {
+        OutputBlob->Length = 0;
+        OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)pOutputBuffer);
+        return;
+    }
+
     /* copy string to target location */
     memcpy((PVOID)*OffSet, buffer, len);
 
@@ -241,6 +249,14 @@ NtlmRawStringToBlob(IN PVOID OutputBuffer,
                     IN OUT PNTLM_BLOB OutputBlob,
                     IN OUT PULONG_PTR OffSet)
 {
+    /* Handle NULL value */
+    if (!InStr)
+    {
+        OutputBlob->Length = 0;
+        OutputBlob->Offset = (ULONG)(*OffSet - (ULONG_PTR)OutputBuffer);
+        return;
+    }
+
     /* copy string to target location */
     if(InStr->Buffer)
         memcpy((PVOID)*OffSet, InStr->Buffer, InStr->bUsed);
@@ -260,7 +276,10 @@ NtlmWriteDataBufToBlob(
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet)
 {
-    NtlmWriteToBlob(OutputBuffer, pDataBuf->pData, pDataBuf->bUsed, OutputBlob, OffSet);
+    if (pDataBuf)
+        NtlmWriteToBlob(OutputBuffer, pDataBuf->pData, pDataBuf->bUsed, OutputBlob, OffSet);
+    else
+        NtlmWriteToBlob(OutputBuffer, NULL, 0, OutputBlob, OffSet);
 }
 
 VOID
