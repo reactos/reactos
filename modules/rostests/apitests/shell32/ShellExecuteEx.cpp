@@ -6,8 +6,82 @@
  */
 
 #include "shelltest.h"
+#include<stdio.h>
 
 #define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
+#define ok_ShellExecuteEx1 (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx1
+
+
+/* returns TRUE on success and FALSE on failure */
+/* Returns the OS Vendor String in VendorString if found */
+BOOL GetOSVendor(char* VendorString, int length)
+{
+    CHAR file_name[25] = {"OperatingSystem.txt"};
+    CHAR cmdline[100] = {"ver > "};
+    FILE *fp;
+    CHAR OSVendor[100] = {0};
+    CHAR *myreturn;
+    INT pos;
+    char *space_ptr;
+    INT iResult;
+
+    if(VendorString && (length >= 20))
+        strcpy(VendorString, "Unknown");
+    else
+        return FALSE;
+
+    fp = fopen(file_name, "r"); // read mode
+
+    if(fp != NULL)
+        return FALSE;
+
+    strcat(cmdline, file_name);
+
+    system(cmdline);
+
+    fp = fopen(file_name, "r"); // read mode
+
+    if(fp == NULL)
+        return FALSE;
+
+    /* first we must read past the <CR><LF> at the beginning of the file */
+    myreturn = fgets(OSVendor , 100 , fp);
+
+    if(myreturn == NULL)
+        return FALSE;
+
+    /* Now we can read the first actual text line */
+    myreturn = fgets(OSVendor , 100 , fp);
+
+    if(myreturn == NULL)
+        return FALSE;
+
+    space_ptr = strchr(OSVendor, ' ');
+    pos = -1;
+    if (space_ptr != NULL)
+        {
+            pos = space_ptr - OSVendor;
+        }
+
+    /* move zero into previous first space character position */
+    if(OSVendor[pos] == 32) OSVendor[pos]=0;
+
+    iResult = fclose(fp);
+
+    if(iResult != 0)
+        return FALSE;
+
+    iResult = remove(file_name);
+
+    if(iResult != 0)
+        return FALSE;
+
+   /* copy our result back to the calling function */
+   strcpy(VendorString, OSVendor);
+
+   return TRUE;
+}
+
 
 static
 BOOL
@@ -81,8 +155,67 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     }
 }
 
+static
+VOID
+TestShellExecuteEx1(const WCHAR* Name, const WCHAR* Params)
+{
+    SHELLEXECUTEINFOW ShellExecInfo;
+    BOOL Result;
+    CHAR OSVendor[100] = {0};
+    INT iResult;
+    UINT_PTR retval = SE_ERR_NOASSOC;
+
+    ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
+    ShellExecInfo.cbSize = sizeof(ShellExecInfo);
+    ShellExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
+    ShellExecInfo.hwnd = NULL;
+    ShellExecInfo.nShow = SW_SHOWNORMAL;
+    ShellExecInfo.lpFile = Name;
+    ShellExecInfo.lpParameters = Params;
+    ShellExecInfo.lpDirectory = NULL;
+    ShellExecInfo.lpVerb = L"open";
+
+    iResult = GetOSVendor(OSVendor, sizeof(OSVendor));
+    printf("OSVendor is '%s'.\n", OSVendor);
+
+    if(strcmp(OSVendor, "Microsoft") == 0)
+        skip("Test does not work on MS Windows.\n");
+
+    if(iResult == FALSE)
+        skip("Unable to determine Operating System.\n");
+
+    Result = ShellExecuteExW(&ShellExecInfo);
+
+    ok(Result, "ShellExecuteEx lpFile %s failed. Error: %lu\n",
+                wine_dbgstr_w(Name), GetLastError());
+
+    if(strcmp(OSVendor, "Microsoft") == 0)
+        skip("Test does not work on MS Windows.\n");
+
+    if(iResult == FALSE)
+        skip("Unable to determine Operating System.\n");
+
+    if(Result)
+    {
+        retval = (UINT_PTR) ShellExecInfo.hInstApp;
+        ok(retval > 31, "ShellExecuteEx lpFile %s failed. Error: %lu\n",
+                                  wine_dbgstr_w(Name), GetLastError());
+    }
+
+    if (ShellExecInfo.hProcess) 
+    {
+        Result = TerminateProcess(ShellExecInfo.hProcess, 0);
+        if (!Result) trace("Terminate process failed. Error: %lu\n", GetLastError());
+        WaitForSingleObject(ShellExecInfo.hProcess, INFINITE);
+        CloseHandle(ShellExecInfo.hProcess);
+    }
+
+}
+
 START_TEST(ShellExecuteEx)
 {
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
     ok_ShellExecuteEx(L"iexplore", TRUE);
     ok_ShellExecuteEx(L"iexplore.exe", TRUE);
 
@@ -99,4 +232,6 @@ START_TEST(ShellExecuteEx)
         ok_ShellExecuteEx(L"iexplore.bat.exe", TRUE);
         DeleteAppPathRegKey(L"iexplore.bat.exe");
     }
+
+    ok_ShellExecuteEx1(L"rundll32.exe", L"shell32.dll,Control_RunDLL desk.cpl");
 }
