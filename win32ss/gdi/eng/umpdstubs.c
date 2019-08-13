@@ -281,22 +281,6 @@ NtGdiEngEraseSurface(
 __kernel_entry
 BOOL
 APIENTRY
-NtGdiEngFillPath(
-    _In_ SURFOBJ *pso,
-    _In_ PATHOBJ *ppo,
-    _In_ CLIPOBJ *pco,
-    _In_ BRUSHOBJ *pbo,
-    _In_ POINTL *pptlBrushOrg,
-    _In_ MIX mix,
-    _In_ FLONG flOptions)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-__kernel_entry
-BOOL
-APIENTRY
 NtGdiEngGradientFill(
     _In_ SURFOBJ *psoDest,
     _In_ CLIPOBJ *pco,
@@ -392,41 +376,6 @@ NtGdiEngStretchBltROP(
     _In_ ULONG iMode,
     _In_ BRUSHOBJ *pbo,
     _In_ ROP4 rop4)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-__kernel_entry
-BOOL
-APIENTRY
-NtGdiEngStrokePath(
-    _In_ SURFOBJ *pso,
-    _In_ PATHOBJ *ppo,
-    _In_ CLIPOBJ *pco,
-    _In_ XFORMOBJ *pxo,
-    _In_ BRUSHOBJ *pbo,
-    _In_ POINTL *pptlBrushOrg,
-    _In_ LINEATTRS *plineattrs,
-    _In_ MIX mix)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-__kernel_entry
-BOOL
-APIENTRY
-NtGdiEngStrokeAndFillPath(
-    _In_ SURFOBJ *pso,
-    _In_ PATHOBJ *ppo,
-    _In_ CLIPOBJ *pco,IN XFORMOBJ *pxo,
-    _In_ BRUSHOBJ *pboStroke,
-    _In_ LINEATTRS *plineattrs,
-    _In_ BRUSHOBJ *pboFill,
-    _In_ POINTL *pptlBrushOrg,
-    _In_ MIX mix,
-    _In_ FLONG flOptions)
 {
     UNIMPLEMENTED;
     return FALSE;
