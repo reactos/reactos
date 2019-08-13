@@ -90,25 +90,6 @@ EngEnumForms(
 /*
  * @unimplemented
  */
-BOOL
-APIENTRY
-EngFillPath(
-    IN SURFOBJ   *pso,
-    IN PATHOBJ   *ppo,
-    IN CLIPOBJ   *pco,
-    IN BRUSHOBJ  *pbo,
-    IN POINTL    *pptlBrushOrg,
-    IN MIX        mix,
-    IN FLONG      flOptions)
-{
-    // www.osr.com/ddk/graphics/gdifncs_9pyf.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 PVOID
 APIENTRY
 EngFindResource(
@@ -303,42 +284,6 @@ EngSetPrinterData(
     // www.osr.com/ddk/graphics/gdifncs_8drb.htm
     UNIMPLEMENTED;
     return 0;
-}
-
-BOOL
-APIENTRY
-EngStrokeAndFillPath(
-    IN SURFOBJ  *pso,
-    IN PATHOBJ  *ppo,
-    IN CLIPOBJ  *pco,
-    IN XFORMOBJ  *pxo,
-    IN BRUSHOBJ  *pboStroke,
-    IN LINEATTRS  *plineattrs,
-    IN BRUSHOBJ  *pboFill,
-    IN POINTL  *pptlBrushOrg,
-    IN MIX  mixFill,
-    IN FLONG  flOptions)
-{
-    // www.osr.com/ddk/graphics/gdifncs_2xwn.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-APIENTRY
-EngStrokePath(
-    IN SURFOBJ  *pso,
-    IN PATHOBJ  *ppo,
-    IN CLIPOBJ  *pco,
-    IN XFORMOBJ  *pxo,
-    IN BRUSHOBJ  *pbo,
-    IN POINTL  *pptlBrushOrg,
-    IN LINEATTRS  *plineattrs,
-    IN MIX  mix)
-{
-    // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 INT

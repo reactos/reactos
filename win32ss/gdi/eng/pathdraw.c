@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS kernel
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Path drawing API.
- * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ
+ * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ.
  */
 
 #include <win32k.h>
@@ -10,6 +10,61 @@
 
 #define NDEBUG
 #include <debug.h>
+
+BOOL
+APIENTRY
+EngStrokePath(
+    IN SURFOBJ  *pso,
+    IN PATHOBJ  *ppo,
+    IN CLIPOBJ  *pco,
+    IN XFORMOBJ  *pxo,
+    IN BRUSHOBJ  *pbo,
+    IN POINTL  *pptlBrushOrg,
+    IN LINEATTRS  *plineattrs,
+    IN MIX  mix)
+{
+    // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+EngFillPath(
+    IN SURFOBJ   *pso,
+    IN PATHOBJ   *ppo,
+    IN CLIPOBJ   *pco,
+    IN BRUSHOBJ  *pbo,
+    IN POINTL    *pptlBrushOrg,
+    IN MIX        mix,
+    IN FLONG      flOptions)
+{
+    // www.osr.com/ddk/graphics/gdifncs_9pyf.htm
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+APIENTRY
+EngStrokeAndFillPath(
+    IN SURFOBJ  *pso,
+    IN PATHOBJ  *ppo,
+    IN CLIPOBJ  *pco,
+    IN XFORMOBJ  *pxo,
+    IN BRUSHOBJ  *pboStroke,
+    IN LINEATTRS  *plineattrs,
+    IN BRUSHOBJ  *pboFill,
+    IN POINTL  *pptlBrushOrg,
+    IN MIX  mixFill,
+    IN FLONG  flOptions)
+{
+    // www.osr.com/ddk/graphics/gdifncs_2xwn.htm
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 __kernel_entry
 W32KAPI
