@@ -482,6 +482,8 @@ CliGenerateAuthenticationMessage(
     UNICODE_STRING UserSessionKeyString;
     UNICODE_STRING LmSessionKeyString;
     ULONG messageSize;
+    BOOL sendLmChallengeResponse;
+    BOOL sendMIC;
 
     TRACE("NtlmHandleChallengeMessage hContext %lx\n", hContext);
 
@@ -722,11 +724,31 @@ CliGenerateAuthenticationMessage(
                           &LmSessionKey);
     TRACE("=== NtResponse ===\n");
     NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
+    /* FIXME: There is something wrong ... should be 24 not 100
+     * ... if not 24 wireshark shows malformed and response
+     *     error INVALID_PARAM is returned ... so... lets HACKFIX ...*/
+    NtResponseData.bUsed = 24;
+
 //DebugBreak();
 #define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input
     InitString(LmResponseString, Lm2Response);
     InitString(UserSessionKeyString, UserSessionKey);
     InitString(LmSessionKeyString, LmSessionKey);
+
+    /* elaborate which data to send ... */
+    sendLmChallengeResponse = FALSE;
+    /* MS-NLSP 3.2.5.1.2 says
+       * An AUTHENTICATE_MESSAGE indicates the presence of a
+         MIC field if the TargetInfo field has an AV_PAIR
+         structure whose two field
+       * not supported in Win2k3 */
+    sendMIC = FALSE;
+    /* FIXME/TODO: CONNECTIONLESS
+    / * MS-NLSP - 3.1.5.2.1
+     * We SHOULD not set LmChallengeResponse if TargetInfo
+     * is set and NTLMv2 is used.
+    if ((challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO) &&
+        (!context->UseNTLMv2)) */
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
@@ -734,11 +756,13 @@ CliGenerateAuthenticationMessage(
                   cred->UserNameW.bUsed +
                   ServerNameRef.Length +
                   NtResponseData.bUsed +
-                  UserSessionKeyString.Length;
-                  //?? LmSessionKeyString.Length
-    if (context->NegFlg & NTLMSSP_NEGOTIATE_TARGET_INFO)
+                  UserSessionKeyString.Length/*+
+                  LmSessionKeyString.Length*/;
+    if (sendLmChallengeResponse)
         messageSize += LmResponseString.Length;
-
+    if (!sendMIC)
+        messageSize -= sizeof(AUTHENTICATE_MESSAGE) -
+                       FIELD_OFFSET(AUTHENTICATE_MESSAGE, MIC);
     /* if should not allocate */
     if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
     {
@@ -766,7 +790,11 @@ CliGenerateAuthenticationMessage(
     authmessage->MsgType = NtlmAuthenticate;
     authmessage->NegotiateFlags = context->NegFlg;
 
+    /* calc blob offset */
     offset = (ULONG_PTR)(authmessage+1);
+    if (!sendMIC)
+        offset -= sizeof(AUTHENTICATE_MESSAGE) -
+                  FIELD_OFFSET(AUTHENTICATE_MESSAGE, MIC);
 
     NtlmExtStringToBlob((PVOID)authmessage,
                         &cred->DomainNameW,
@@ -783,22 +811,19 @@ CliGenerateAuthenticationMessage(
                             &authmessage->WorkstationName,
                             &offset);
 
-    NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
-                            &authmessage->LmChallengeResponse,
-                            &offset);
-    /* CONNECTIONLESS
-    / * MS-NLSP - 3.1.5.2.1
-     * We SHOULD not set LmChallengeResponse if TargetInfo
-     * is set and NTLMv2 is used. * /
-    if ((challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO) &&
-        (!context->UseNTLMv2))
+    if (sendLmChallengeResponse)
     {
         NtlmUnicodeStringToBlob((PVOID)authmessage,
                                 &LmResponseString,
                                 &authmessage->LmChallengeResponse,
                                 &offset);
-    };*/
-
+    }
+    else
+    {
+        NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
+                                &authmessage->LmChallengeResponse,
+                                &offset);
+    }
 
     NtlmWriteDataBufToBlob((PVOID)authmessage,
                            &NtResponseData,
@@ -809,6 +834,9 @@ CliGenerateAuthenticationMessage(
                             &UserSessionKeyString,
                             &authmessage->EncryptedRandomSessionKey,
                             &offset);
+
+    if (messageSize != ( (ULONG)offset - (ULONG)authmessage) )
+        WARN("messageSize is %ld, really needed %ld\n", messageSize, (ULONG)offset - (ULONG)authmessage);
 
     context->hdr.State = AuthenticateSent;
     ret = SEC_E_OK;
