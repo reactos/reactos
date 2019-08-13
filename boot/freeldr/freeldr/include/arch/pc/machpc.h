@@ -49,6 +49,7 @@ VOID PcVideoPrepareForReactOS(VOID);
 VOID PcPrepareForReactOS(VOID);
 
 PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
+BOOLEAN PcFindPciBios(PPCI_REGISTRY_INFO BusData);
 
 BOOLEAN DiskResetController(UCHAR DriveNumber);
 BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);

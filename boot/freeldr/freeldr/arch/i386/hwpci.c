@@ -24,6 +24,8 @@
 
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+FIND_PCI_BIOS FindPciBios = NULL;
+
 static
 PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
@@ -75,8 +77,8 @@ GetPciIrqRoutingTable(VOID)
 }
 
 
-static BOOLEAN
-FindPciBios(PPCI_REGISTRY_INFO BusData)
+BOOLEAN
+PcFindPciBios(PPCI_REGISTRY_INFO BusData)
 {
     REGS  RegsIn;
     REGS  RegsOut;

@@ -1353,6 +1353,7 @@ PcHwDetect(VOID)
     // TODO: Discover and set the machine type as the Component->Identifier
 
     GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
+    FindPciBios = PcFindPciBios;
 
     /* Detect buses */
     DetectPciBios(SystemKey, &BusNumber);
