@@ -76,8 +76,8 @@ list(APPEND SOURCE
     gdi/eng/engmisc.c
     gdi/eng/mouse.c
     gdi/eng/paint.c
-    gdi/eng/pathobj.c
     gdi/eng/pathdraw.c
+    gdi/eng/pathobj.c
     gdi/eng/pdevobj.c
     gdi/eng/perfcnt.c
     gdi/eng/rlecomp.c
