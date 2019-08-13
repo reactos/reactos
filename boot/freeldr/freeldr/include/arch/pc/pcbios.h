@@ -160,7 +160,6 @@ int __cdecl Int386(int ivec, REGS* in, REGS* out);
 // If CF is set then the call failed (usually)
 #define INT386_SUCCESS(regs)    ((regs.x.eflags & EFLAGS_CF) == 0)
 
-void    EnableA20(void);
 VOID __cdecl ChainLoadBiosBootSectorCode(VOID);    // Implemented in boot.S
 VOID __cdecl Reboot(VOID);                    // Implemented in boot.S
 VOID    DetectHardware(VOID);                 // Implemented in hardware.c

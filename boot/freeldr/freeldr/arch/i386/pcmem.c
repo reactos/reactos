@@ -571,6 +571,8 @@ PcMemFinalizeMemoryMap(
     TRACE("DiskReadBuffer=0x%p, DiskReadBufferSize=0x%lx\n",
           DiskReadBuffer, DiskReadBufferSize);
 
+    ASSERT(DiskReadBufferSize > 0);
+
     /* Now reserve the range for the disk read buffer */
     ReserveMemory(MemoryMap,
                   (ULONG_PTR)DiskReadBuffer,

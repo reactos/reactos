@@ -152,7 +152,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
 
-    // If MaxSectors is 0, this will lead to infinite loop
+    // If MaxSectors is 0, this will lead to infinite loop.
     // In release builds assertions are disabled, however we also have sanity checks in DiskOpen()
     ASSERT(MaxSectors > 0);
 
@@ -318,6 +318,8 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
     DiskReportError(FALSE);
     DiskCount = 0;
     DriveNumber = 0x80;
+
+    ASSERT(DiskReadBufferSize > 0);
 
     /*
      * There are some really broken BIOSes out there. There are even BIOSes

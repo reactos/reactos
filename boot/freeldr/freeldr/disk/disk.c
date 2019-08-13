@@ -81,7 +81,7 @@ PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
     case 0xE0:  return "fixed disk status error/Error reg = 0";
     case 0xFF:  return "sense operation failed";
 
-    default:  return "unknown error code";
+    default:    return "unknown error code";
     }
 }
 

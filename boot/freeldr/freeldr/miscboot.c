@@ -54,12 +54,13 @@ LoadAndBootBootSector(
     }
 
     /* Read boot sector */
-    if (ArcRead(FileId, (void*)0x7c00, 512, &BytesRead) != ESUCCESS ||
-        (BytesRead != 512))
+    if ((ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead) != ESUCCESS) || (BytesRead != 512))
     {
         UiMessageBox("Unable to read boot sector.");
         return EIO;
     }
+
+    ArcClose(FileId);
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
@@ -81,8 +82,69 @@ LoadAndBootBootSector(
      * result in a read error.
      */
     // DiskStopFloppyMotor();
-    // DisableA20();
+    /* NOTE: Don't touch FrldrBootDrive */
     ChainLoadBiosBootSectorCode();
+    Reboot(); /* Must not return! */
+    return ESUCCESS;
+}
+
+static ARC_STATUS
+LoadAndBootPartitionOrDrive(
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber OPTIONAL)
+{
+    ULONG FileId;
+    ULONG BytesRead;
+    CHAR ArcPath[MAX_PATH];
+
+    /* Construct the corresponding ARC path */
+    ConstructArcPath(ArcPath, "", DriveNumber, PartitionNumber);
+    *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
+    if (ArcOpen(ArcPath, OpenReadOnly, &FileId) != ESUCCESS)
+    {
+        UiMessageBox("Unable to open %s", ArcPath);
+        return ENOENT;
+    }
+
+    /*
+     * Now try to read the partition boot sector or the MBR (when PartitionNumber == 0).
+     * If this fails then abort.
+     */
+    if ((ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead) != ESUCCESS) || (BytesRead != 512))
+    {
+        if (PartitionNumber != 0)
+            UiMessageBox("Unable to read partition's boot sector.");
+        else
+            UiMessageBox("Unable to read MBR boot sector.");
+        return EIO;
+    }
+
+    ArcClose(FileId);
+
+    /* Check for validity */
+    if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
+    {
+        UiMessageBox("Invalid boot sector magic (0xaa55)");
+        return ENOEXEC;
+    }
+
+    UiUnInitialize("Booting...");
+    IniCleanup();
+
+    /*
+     * Don't stop the floppy drive motor when we
+     * are just booting a bootsector, or drive, or partition.
+     * If we were to stop the floppy motor then
+     * the BIOS wouldn't be informed and if the
+     * next read is to a floppy then the BIOS will
+     * still think the motor is on and this will
+     * result in a read error.
+     */
+    // DiskStopFloppyMotor();
+    FrldrBootDrive = DriveNumber;
+    FrldrBootPartition = PartitionNumber;
+    ChainLoadBiosBootSectorCode();
+    Reboot(); /* Must not return! */
     return ESUCCESS;
 }
 
@@ -93,7 +155,6 @@ LoadAndBootPartition(
     IN PCHAR Envp[])
 {
     PCSTR ArgValue;
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
     UCHAR DriveNumber;
     ULONG PartitionNumber;
 
@@ -118,43 +179,7 @@ LoadAndBootPartition(
     }
     PartitionNumber = atoi(ArgValue);
 
-    /* Get the partition table entry */
-    if (!DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry))
-    {
-        return ENOENT;
-    }
-
-    /* Now try to read the partition boot sector. If this fails then abort. */
-    if (!MachDiskReadLogicalSectors(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
-    {
-        UiMessageBox("Unable to read partition's boot sector.");
-        return EIO;
-    }
-
-    /* Check for validity */
-    if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
-    {
-        UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return ENOEXEC;
-    }
-
-    UiUnInitialize("Booting...");
-    IniCleanup();
-
-    /*
-     * Don't stop the floppy drive motor when we
-     * are just booting a bootsector, or drive, or partition.
-     * If we were to stop the floppy motor then
-     * the BIOS wouldn't be informed and if the
-     * next read is to a floppy then the BIOS will
-     * still think the motor is on and this will
-     * result in a read error.
-     */
-    // DiskStopFloppyMotor();
-    // DisableA20();
-    FrldrBootDrive = DriveNumber;
-    ChainLoadBiosBootSectorCode();
-    return ESUCCESS;
+    return LoadAndBootPartitionOrDrive(DriveNumber, PartitionNumber);
 }
 
 ARC_STATUS
@@ -178,37 +203,7 @@ LoadAndBootDrive(
     }
     DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
-    /* Now try to read the boot sector (or mbr). If this fails then abort. */
-    if (!MachDiskReadLogicalSectors(DriveNumber, 0, 1, (PVOID)0x7C00))
-    {
-        UiMessageBox("Unable to read boot sector");
-        return EIO;
-    }
-
-    /* Check for validity */
-    if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
-    {
-        UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return ENOEXEC;
-    }
-
-    UiUnInitialize("Booting...");
-    IniCleanup();
-
-    /*
-     * Don't stop the floppy drive motor when we
-     * are just booting a bootsector, or drive, or partition.
-     * If we were to stop the floppy motor then
-     * the BIOS wouldn't be informed and if the
-     * next read is to a floppy then the BIOS will
-     * still think the motor is on and this will
-     * result in a read error.
-     */
-    // DiskStopFloppyMotor();
-    // DisableA20();
-    FrldrBootDrive = DriveNumber;
-    ChainLoadBiosBootSectorCode();
-    return ESUCCESS;
+    return LoadAndBootPartitionOrDrive(DriveNumber, 0);
 }
 
 #endif // _M_IX86
