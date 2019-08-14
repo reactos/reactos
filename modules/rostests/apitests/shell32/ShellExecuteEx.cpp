@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Testing ShellExecuteEx
- * PROGRAMMER:      Yaroslav Veremenko <yaroslav@veremenko.info>
+ * PROGRAMMERS:     Yaroslav Veremenko <yaroslav@veremenko.info>
+ *                  Doug Lyons <douglyons@douglyons.com>
  */
 
 #include "shelltest.h"
@@ -25,14 +26,14 @@ BOOL GetOSVendor(char* VendorString, int length)
     char *space_ptr;
     INT iResult;
 
-    if(VendorString && (length >= 20))
+    if (VendorString && (length >= 20))
         strcpy(VendorString, "Unknown");
     else
         return FALSE;
 
     fp = fopen(file_name, "r"); // read mode
 
-    if(fp != NULL)
+    if (fp != NULL)
         return FALSE;
 
     strcat(cmdline, file_name);
@@ -41,19 +42,19 @@ BOOL GetOSVendor(char* VendorString, int length)
 
     fp = fopen(file_name, "r"); // read mode
 
-    if(fp == NULL)
+    if (fp == NULL)
         return FALSE;
 
     /* first we must read past the <CR><LF> at the beginning of the file */
     myreturn = fgets(OSVendor , 100 , fp);
 
-    if(myreturn == NULL)
+    if (myreturn == NULL)
         return FALSE;
 
     /* Now we can read the first actual text line */
     myreturn = fgets(OSVendor , 100 , fp);
 
-    if(myreturn == NULL)
+    if (myreturn == NULL)
         return FALSE;
 
     space_ptr = strchr(OSVendor, ' ');
@@ -64,16 +65,16 @@ BOOL GetOSVendor(char* VendorString, int length)
         }
 
     /* move zero into previous first space character position */
-    if(OSVendor[pos] == 32) OSVendor[pos]=0;
+    if (OSVendor[pos] == 32) OSVendor[pos]=0;
 
     iResult = fclose(fp);
 
-    if(iResult != 0)
+    if (iResult != 0)
         return FALSE;
 
     iResult = remove(file_name);
 
-    if(iResult != 0)
+    if (iResult != 0)
         return FALSE;
 
    /* copy our result back to the calling function */
@@ -178,10 +179,10 @@ TestShellExecuteEx1(const WCHAR* Name, const WCHAR* Params)
     iResult = GetOSVendor(OSVendor, sizeof(OSVendor));
     printf("OSVendor is '%s'.\n", OSVendor);
 
-    if(strcmp(OSVendor, "Microsoft") == 0)
+    if (strcmp(OSVendor, "Microsoft") == 0)
         skip("Test does not work on MS Windows.\n");
 
-    if(iResult == FALSE)
+    if (iResult == FALSE)
         skip("Unable to determine Operating System.\n");
 
     Result = ShellExecuteExW(&ShellExecInfo);
@@ -189,13 +190,13 @@ TestShellExecuteEx1(const WCHAR* Name, const WCHAR* Params)
     ok(Result, "ShellExecuteEx lpFile %s failed. Error: %lu\n",
                 wine_dbgstr_w(Name), GetLastError());
 
-    if(strcmp(OSVendor, "Microsoft") == 0)
+    if (strcmp(OSVendor, "Microsoft") == 0)
         skip("Test does not work on MS Windows.\n");
 
-    if(iResult == FALSE)
+    if (iResult == FALSE)
         skip("Unable to determine Operating System.\n");
 
-    if(Result)
+    if (Result)
     {
         retval = (UINT_PTR) ShellExecInfo.hInstApp;
         ok(retval > 31, "ShellExecuteEx lpFile %s failed. Error: %lu\n",
