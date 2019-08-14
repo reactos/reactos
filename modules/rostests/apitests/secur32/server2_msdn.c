@@ -268,80 +268,6 @@ GenServerContext(
     return TRUE;
 }
 
-BOOL
-EncryptThis(
-    PBYTE pMessage,
-    ULONG cbMessage,
-    BYTE ** ppOutput,
-    ULONG * pcbOutput,
-    ULONG cbSecurityTrailer)
-{
-    SECURITY_STATUS   ss;
-    SecBufferDesc     BuffDesc;
-    SecBuffer         SecBuff[2];
-    ULONG             ulQop = 0;
-    ULONG             SigBufferSize;
-
-    /*
-     * The size of the trailer (signature + padding) block is
-     * determined from the global cbSecurityTrailer.
-     */
-    SigBufferSize = cbSecurityTrailer;
-
-    sync_trace("Data before encryption: %.*s\n", (int)cbMessage/sizeof(TCHAR), pMessage);
-    sync_trace("Length of data before encryption: %ld\n", cbMessage);
-
-    /*
-     * Allocate a buffer to hold the signature,
-     * encrypted data, and a DWORD
-     * that specifies the size of the trailer block.
-     */
-    *ppOutput = (PBYTE)malloc(SigBufferSize + cbMessage + sizeof(DWORD));
-
-    /* Prepare buffers */
-    BuffDesc.ulVersion = 0;
-    BuffDesc.cBuffers = ARRAYSIZE(SecBuff);
-    BuffDesc.pBuffers = SecBuff;
-
-    SecBuff[0].cbBuffer = SigBufferSize;
-    SecBuff[0].BufferType = SECBUFFER_TOKEN;
-    SecBuff[0].pvBuffer = *ppOutput + sizeof(DWORD);
-
-    SecBuff[1].cbBuffer = cbMessage;
-    SecBuff[1].BufferType = SECBUFFER_DATA;
-    SecBuff[1].pvBuffer = pMessage;
-
-    ss = EncryptMessage(&g_sd.hctxt, ulQop, &BuffDesc, 0);
-    sync_ok(SEC_SUCCESS(ss), "EncryptMessage failed with error 0x%08lx\n", ss);
-    if (!SEC_SUCCESS(ss))
-    {
-        sync_err("EncryptMessage failed: 0x%08lx\n", ss);
-        return FALSE;
-    }
-    else
-    {
-        sync_trace("The message has been encrypted.\n");
-    }
-
-    /* Indicate the size of the buffer in the first DWORD */
-    *((DWORD*)*ppOutput) = SecBuff[0].cbBuffer;
-
-    /*
-     * Append the encrypted data to our trailer block
-     * to form a single block.
-     * Putting trailer at the beginning of the buffer works out
-     * better.
-     */
-    memcpy(*ppOutput+SecBuff[0].cbBuffer + sizeof(DWORD), pMessage, cbMessage);
-
-    *pcbOutput = cbMessage + SecBuff[0].cbBuffer + sizeof(DWORD);
-
-    sync_trace("data after encryption including trailer (%lu bytes):\n", *pcbOutput);
-    //PrintHexDump(*pcbOutput, *ppOutput);
-
-    return TRUE;
-}
-
 void server2_cleanup(void)
 {
     sync_trace("called server2_cleanup!\n");
@@ -368,9 +294,8 @@ server2_start(
     SOCKET Server_Socket = INVALID_SOCKET;
     SECURITY_STATUS ss;
     PSecPkgInfo pkgInfo;
-    SecPkgContext_Sizes SecPkgContextSizes;
+    SecPkgContext_Sizes SecPkgSizes;
     SecPkgContext_NegotiationInfo SecPkgNegInfo;
-    ULONG cbSecurityTrailer;
 
     // server2_init
     RtlZeroMemory(&g_sd, sizeof(g_sd));
@@ -419,16 +344,13 @@ server2_start(
 
         ss = QueryContextAttributes(&g_sd.hctxt,
                                     SECPKG_ATTR_SIZES,
-                                    &SecPkgContextSizes);
+                                    &SecPkgSizes);
         sync_ok(SEC_SUCCESS(ss), "QueryContextAttributes failed with error 0x%08lx\n", ss);
         if (!SEC_SUCCESS(ss))
         {
             sync_err("QueryContextAttributes failed: 0x%08lx\n", ss);
             goto done;
         }
-
-        /* The following values are used for encryption and signing */
-        cbSecurityTrailer = SecPkgContextSizes.cbSecurityTrailer;
 
         ss = QueryContextAttributes(&g_sd.hctxt,
                                     SECPKG_ATTR_NEGOTIATION_INFO,
@@ -504,14 +426,17 @@ server2_start(
          * Send the client an encrypted message
          */
         {
-        TCHAR pMessage[200] = _T("This is your server speaking");
-        DWORD cbMessage = _tcslen(pMessage) * sizeof(TCHAR);
+            TCHAR pMessage[200] = _T("This is your server speaking");
+            DWORD cbMessage = _tcslen(pMessage) * sizeof(TCHAR);
+            BOOL bOk;
 
-        EncryptThis((PBYTE)pMessage,
-                    cbMessage,
-                    &pDataToClient,
-                    &cbDataToClient,
-                    cbSecurityTrailer);
+            CodeCalcAndAllocBuffer(cbMessage, &SecPkgSizes,
+                                   &pDataToClient, &cbDataToClient);
+
+            bOk = CodeEncrypt(&g_sd.hctxt, (PBYTE)pMessage, cbMessage,
+                              &SecPkgSizes,
+                              cbDataToClient, pDataToClient);
+            sync_ok(bOk, "CodeEncrypt failed\n");
         }
 
         /* Send the encrypted data to client */
@@ -554,6 +479,8 @@ done:
         closesocket(Server_Socket);
         Server_Socket = 0;
     }
+    if (pDataToClient != NULL)
+        free(pDataToClient);
 
     server2_cleanup();
     return res;

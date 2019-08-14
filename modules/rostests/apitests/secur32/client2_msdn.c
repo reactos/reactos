@@ -25,6 +25,7 @@ typedef struct _CLI_PARAMS
     WCHAR* PackageName;
     WCHAR* user;
     WCHAR* pass;
+    BOOL ownServer;
 } CLI_PARAMS, *PCLI_PARAMS;
 
 BOOL
@@ -297,6 +298,9 @@ client2_DoAuthenticationOverSMB(
     while (!fDone)
     {
         cbOut = cbMaxMessage;
+        /*FIXME: fDone ist hier irgendwie nicht nötig
+         *       die Schleife wird aufgrund des SMB-ErrorCodes
+         *       beendet ... */
         Success = GenClientContext(pInBuf,
                                    cbIn,
                                    pOutBuf,
@@ -333,6 +337,8 @@ client2_DoAuthenticationOverSMB(
             return FALSE;
         }
         sync_trace("SMB Status 0x%x\n", smbStatus.NT_Status);
+        if (smbStatus.NT_Status == STATUS_SUCCESS)
+            break;
         if (smbStatus.NT_Status != STATUS_MORE_PROCESSING_REQUIRED)
         {
             // STATUS_INVALID_SMB = 0x00010002
@@ -461,20 +467,35 @@ GenClientContext(
 
     if (pIn)
     {
-        printf("===INPUT===\n");
+        sync_trace("===INPUT===\n");
         PrintHexDump(cbIn, (PBYTE)pIn);
     } else
     {
-        printf("===INPUT (EMPTY)===\n");
+        sync_trace("===INPUT (EMPTY)===\n");
     }
 
     if (!pIn)
     {
+        PSEC_WINNT_AUTH_IDENTITY pAuthData = NULL;
+        SEC_WINNT_AUTH_IDENTITY AuthData;
+        if (((pcp->pass != NULL) && (pcp->pass[0] != 0)) ||
+            ((pcp->user != NULL) && (pcp->user[0] != 0)))
+        {
+            /* works in ROS but not in W2k ... dont commit! */
+            AuthData.User = pcp->user;
+            AuthData.UserLength = wcslen(pcp->user);
+            AuthData.Password = pcp->pass;
+            AuthData.PasswordLength = wcslen(pcp->pass);
+            AuthData.Domain = L".";
+            AuthData.DomainLength = 1;
+            AuthData.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+            pAuthData = &AuthData;
+        }
         ss = AcquireCredentialsHandle(NULL,
                                       pcp->PackageName,
                                       SECPKG_CRED_OUTBOUND,
                                       NULL,
-                                      NULL,
+                                      (PVOID)pAuthData,
                                       NULL,
                                       NULL,
                                       hCred,
@@ -598,68 +619,79 @@ GenClientContextSMB(
     return FALSE;
 }
 
-
-PBYTE
-DecryptThis(
-    PBYTE   pBuffer,
-    LPDWORD pcbMessage,
-    PSecHandle hCtxt,
-    ULONG   cbSecurityTrailer)
+/* no buffer is allocated !
+ * the decryption uses pBuffer.
+ * on success pMsg points to pBuffer + n; */
+BOOL
+CodeDecrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pBuffer,
+    IN ULONG cbBuffer,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* pMsg,
+    OUT LPDWORD pcbMessage)
 {
-    SECURITY_STATUS   ss;
-    SecBufferDesc     BuffDesc;
-    SecBuffer         SecBuff[2];
-    ULONG             ulQop = 0;
-    PBYTE             pSigBuffer;
-    PBYTE             pDataBuffer;
-    DWORD             SigBufferSize;
+    SECURITY_STATUS ss;
+    SecBufferDesc BuffDesc;
+    SecBuffer SecBuff[2];
+    ULONG ulQop = 0;
+    //DWORD SigBufferSize;
+    PBYTE pBuf2;
 
     /*
-     * By agreement, the server encrypted the message and set the size
-     * of the trailer block to be just what it needed. DecryptMessage
-     * needs the size of the trailer block.
-     * The size of the trailer is in the first DWORD of the
-     * message received.
+     * Dataformat:
+     * - DWORD - size of trailer
+     * - trailer
+     * - message
      */
-    SigBufferSize = *((DWORD*)pBuffer);
-    sync_trace("data before decryption including trailer (%lu bytes):\n",
-          *pcbMessage);
-    PrintHexDump(*pcbMessage, (PBYTE)pBuffer);
+    //SigBufferSize = *((DWORD*)pBuffer);
 
-    /*
-     * By agreement, the server placed the trailer at the beginning
-     * of the message that was sent immediately following the trailer
-     * size DWORD.
-     */
-    pSigBuffer = pBuffer + sizeof(DWORD);
+    //pBuf2 = HeapAlloc(GetProcessHeap(), 0, cbBuffer+50);  // LocalAlloc(LMEM_FIXED, 1024);
+    //memcpy(pBuf2, pBuffer, cbBuffer+50);
+    pBuf2 = pBuffer;
+    //sync_trace("before decrypt!\n");
+    //PrintHexDumpMax(cbBuffer, pBuf2, cbBuffer);
 
-    /* The data comes after the trailer */
-    pDataBuffer = pSigBuffer + SigBufferSize;
-
-    /* *pcbMessage is reset to the size of just the encrypted bytes */
-    *pcbMessage = *pcbMessage - SigBufferSize - sizeof(DWORD);
-
-    /*
-     * Prepare the buffers to be passed to the DecryptMessage function
-     */
-
-    BuffDesc.ulVersion    = 0;
+    /* Prepare the buffers to be passed to the DecryptMessage function     */
+    BuffDesc.ulVersion    = SECBUFFER_VERSION;
     BuffDesc.cBuffers     = ARRAYSIZE(SecBuff);
     BuffDesc.pBuffers     = SecBuff;
 
-    SecBuff[0].cbBuffer   = SigBufferSize;
+    SecBuff[0].cbBuffer   = pSecSizes->cbSecurityTrailer;
     SecBuff[0].BufferType = SECBUFFER_TOKEN;
-    SecBuff[0].pvBuffer   = pSigBuffer;
+    SecBuff[0].pvBuffer   = pBuf2 + sizeof(DWORD);
 
-    SecBuff[1].cbBuffer   = *pcbMessage;
+    SecBuff[1].cbBuffer   = cbBuffer - sizeof(DWORD) -
+                            pSecSizes->cbSecurityTrailer;
     SecBuff[1].BufferType = SECBUFFER_DATA;
-    SecBuff[1].pvBuffer   = pDataBuffer;
+    SecBuff[1].pvBuffer   = pBuf2 + sizeof(DWORD) +
+                            pSecSizes->cbSecurityTrailer;
+
+    sync_trace("SecBuff before decrypt!\n");
+    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    /*SecBuff[0].cbBuffer = cbBuffer;
+    SecBuff[0].pvBuffer = (PBYTE)pBuf2 + sizeof(DWORD);// + SigBufferSize;
+    SecBuff[0].BufferType = SECBUFFER_DATA;
+
+    SecBuff[1].BufferType = SECBUFFER_EMPTY;
+    SecBuff[2].BufferType = SECBUFFER_EMPTY;
+    SecBuff[3].BufferType = SECBUFFER_EMPTY;*/
 
     ss = DecryptMessage(hCtxt, &BuffDesc, 0, &ulQop);
-    sync_ok(SEC_SUCCESS(ss), "DecryptMessage failed");
+    sync_ok(SEC_SUCCESS(ss), "DecryptMessage failed 0x%x\n", ss);
 
-    /* Return a pointer to the decrypted data. The trailer data is discarded. */
-    return pDataBuffer;
+    sync_trace("SecBuff after decrypt!\n");
+    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+
+    /* set results */
+    *pMsg = (PBYTE)SecBuff[1].pvBuffer;
+    *pcbMessage = SecBuff[1].cbBuffer;
+
+    return SEC_SUCCESS(ss);
 }
 
 PBYTE
@@ -725,15 +757,14 @@ client2_start(
     IN PCLI_PARAMS pcp)
 {
     SOCKET          Client_Socket = INVALID_SOCKET;
-    BYTE            Data[BIG_BUFF];
-    PCHAR           pMessage;
+    BYTE EncodedData[BIG_BUFF];
+    PWCHAR pDecodedMsg;
+    ULONG cbDecodedMsg;
     CredHandle      hCred;
     SecHandle       hCtxt;
     SECURITY_STATUS ss;
     DWORD           cbRead;
-    //ULONG           cbMaxSignature;
-    ULONG           cbSecurityTrailer;
-    SecPkgContext_Sizes           SecPkgContextSizes;
+    SecPkgContext_Sizes SecPkgSizes;
     SecPkgContext_NegotiationInfo SecPkgNegInfo;
     DWORD bRet = FALSE;
 
@@ -778,32 +809,69 @@ client2_start(
 
     ss = QueryContextAttributes(&hCtxt,
                                 SECPKG_ATTR_SIZES,
-                                &SecPkgContextSizes);
-    sync_ok(SEC_SUCCESS(ss), "Querycontext2 failed!");
+                                &SecPkgSizes);
+    sync_ok(SEC_SUCCESS(ss), "Querycontext2 failed with error 0x%x!", ss);
 
-    //cbMaxSignature = SecPkgContextSizes.cbMaxSignature;
-    cbSecurityTrailer = SecPkgContextSizes.cbSecurityTrailer;
+//HACK
+//pEncodedData = HeapAlloc(GetProcessHeap(), 0, BIG_BUFF);
 
-
-    /*
-     * Decrypt and display the message from the server
-     */
-    if (!ReceiveBytes(Client_Socket,
-                      Data,
-                      BIG_BUFF,
-                      &cbRead))
+    /* can get message only from our own server thread */
+    if (TRUE)//(pcp->ownServer)
     {
-        sync_err("No response from server.\n");
-        goto done;
+        /*
+         * Decrypt and display the message from the server
+         */
+        if (!ReceiveBytes(Client_Socket,
+                          EncodedData,
+                          BIG_BUFF,
+                          &cbRead))
+        {
+            sync_err("No response from server.\n");
+            goto done;
+        }
     }
+    else
+    {
+        /* FIXME ... doesnt work ... cant send/recive with same
+         * (client)-context ... in wine-test they have "forced
+         * NTLM to use password-security ... maybe this can help ..."
+         */
+        /* emulate server message */
+        BOOL bOk;
+        ULONG cbData, cbMsg;
+        WCHAR* msg = L"You would like to read this!";
+
+        cbRead = 0;
+        cbMsg = wcslen(msg) * sizeof(WCHAR);
+        CodeCalcAndAllocBuffer(cbMsg, &SecPkgSizes, NULL, &cbData);
+
+        bOk = CodeEncrypt(&hCtxt, (PBYTE)msg, cbMsg, &SecPkgSizes,
+                          BIG_BUFF, EncodedData);
+        if (bOk)
+        {
+            if (cbData > BIG_BUFF)
+            {
+                sync_err("data to big!\n");
+                cbData = 0;
+            }
+            cbRead = cbData;
+        }
+        sync_ok(bOk, "Failed to Encrypt message!\n");
+        
+    }
+
 
     sync_ok(cbRead != 0, "Zero bytes received ");
 
-    pMessage = (PCHAR)DecryptThis(Data,
-                                  &cbRead,
-                                  &hCtxt,
-                                  cbSecurityTrailer);
-    sync_trace("message len: %ld message: %.*s\n", cbRead, (int)cbRead/sizeof(TCHAR), pMessage);
+    if (!CodeDecrypt(&hCtxt, EncodedData, cbRead, &SecPkgSizes,
+                     (PBYTE*)&pDecodedMsg, &cbDecodedMsg))
+    {
+        sync_err("CodeDecrypt failed\n");
+        bRet = FALSE;
+        goto done;
+    }
+
+    sync_trace("message len: %ld message: %.*S\n", cbDecodedMsg, (int)cbRead / sizeof(WCHAR), pDecodedMsg);
 
     bRet = TRUE;
 done:
@@ -843,6 +911,7 @@ int client2_main(int argc, WCHAR** argv)
     cp.PackageName = argv[3];
     cp.user = argv[4];
     cp.pass = argv[5];
+    cp.ownServer = (cp.ServerPort != 445);
 
     //printf("start %S %S %S\n", ServerName, TargetName, PackageName);
 

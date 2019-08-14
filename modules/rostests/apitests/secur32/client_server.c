@@ -29,21 +29,22 @@ typedef struct _TESTDATA
 {
     TESTPROC server_main;
     int svr_argc;
-    WCHAR* svr_argv[1];
+    WCHAR* svr_argv[2];
     TESTPROC client_main;
     int cli_argc;
     WCHAR* cli_argv[6];
 } TESTDATA, *PTESTDATA;
 
-//#deinfe TEST_AUTO
-#define TEST_NO_AUTO
+#define TEST_AUTO
+//#define TEST_NO_AUTO
 
 TESTDATA testdata[] =
 {
 #ifdef TEST_AUTO
     {   // Test 0
         server2_main, 2, { L"2000", L"NTLM" },
-        client2_main, 4, { L"127.0.0.1", L"2000", L"", L"NTLM" }
+        // ip, port, targetname, package, usr, pwd
+        client2_main, 6, { L"127.0.0.1", L"2000", L"", L"NTLM", L"", L"" }
     }
 #endif
 #ifdef TEST_NO_AUTO
@@ -82,17 +83,40 @@ void test_runner(USHORT testidx)
     HANDLE hThreadServer = INVALID_HANDLE_VALUE;
     WCHAR FileName[MAX_PATH];
     LPWSTR *argv, parIp, parUsr, parPwd;
-    int argc;
+    int argc, nextarg;
     PTESTDATA td = &testdata[testidx];
+    BOOL runCLI = (td->client_main != NULL);
+    BOOL runSVR = (td->server_main != NULL);
+
+    /* optionen
+     * secur32_apitest ClientServer [cli] <ip> <usr> <pwd>
+     * secur32_apitest ClientServer [svr]
+     */
 
     /* replace <pwd> client-param if given .... */
     argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    if (argc >= 5)
+
+    nextarg = 2;
+    if (argc >= nextarg+1)
+    {
+        if (wcscmp(L"cli", argv[nextarg]) == 0)
+        {
+            runSVR = FALSE;
+            nextarg++;
+        }
+        else if (wcscmp(L"svr", argv[nextarg]) == 0)
+        {
+            runCLI = FALSE;
+            nextarg++;
+        }
+    }
+    if ((runCLI) &&
+        (argc >= nextarg+3))
     {
         int i1;
-        parIp = argv[2];
-        parUsr = argv[3];
-        parPwd = argv[4];
+        parIp = argv[nextarg];
+        parUsr = argv[nextarg+1];
+        parPwd = argv[nextarg+2];
         for (i1 = 0; i1 < td->cli_argc; i1++)
         {
             if (wcscmp(td->cli_argv[i1], L"<ip>") == 0)
@@ -111,7 +135,7 @@ void test_runner(USHORT testidx)
         return;
     }
 
-    if (td->server_main != NULL)
+    if (runSVR)
     {
         hThreadServer = CreateThread(NULL, 0, server_thread, td, 0, NULL);
         ok(hThreadServer != NULL, "CreateThread failed: %lu\n", GetLastError());
@@ -126,7 +150,8 @@ void test_runner(USHORT testidx)
      * Run client
      */
 
-    td->client_main(td->cli_argc, td->cli_argv);
+    if (runCLI)
+        td->client_main(td->cli_argc, td->cli_argv);
 
     if (hThreadServer != INVALID_HANDLE_VALUE)
         ok(WaitForSingleObject(hThreadServer, 10000) == WAIT_OBJECT_0, "Timeout waiting for thread\n");
@@ -138,6 +163,174 @@ Quit:
         TerminateThread(hThreadServer, 0);
         CloseHandle(hThreadServer);
     }
+}
+
+/*
+ * CRYPT
+ */
+
+VOID
+CodeCalcAndAllocBuffer(
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* ppBuffer,
+    OUT PULONG pBufLen)
+{
+    *pBufLen = pSecSizes->cbSecurityTrailer + cbMessage + sizeof(DWORD);
+    if (ppBuffer)
+        *ppBuffer = (PBYTE)malloc(*pBufLen);
+}
+
+BOOL
+CodeEncrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pbMessage,
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    IN ULONG cbBufLen,
+    OUT PBYTE pOutBuf)
+{
+    SECURITY_STATUS ss;
+    SecBufferDesc BuffDesc;
+    //SecBuffer SecBuff[4];
+    SecBuffer SecBuff[4];
+    ULONG /*cbIoBufLen, */neededBufSize, fQOP = 0;
+    //PBYTE pbIoBuffer;
+
+    /* cbSecurityTrailer:
+     * The size of the trailer (signature + padding) block is
+     * determined from the global cbSecurityTrailer.
+     */
+
+    sync_trace("Data (%ld bytes) before encryption: %.*s\n",
+                cbMessage, (int)cbMessage/sizeof(char), pbMessage);
+
+    /*
+     * Allocate a buffer to hold the a DWORD, signature,
+     * and encrypted data
+     * that specifies the size of the trailer block.
+     */
+    CodeCalcAndAllocBuffer(cbMessage, pSecSizes, NULL, &neededBufSize);
+    printf("need size %ld\n", neededBufSize);
+    if (neededBufSize > cbBufLen)
+    {
+        sync_err("Buffer to small\n");
+        return FALSE;
+    }
+    //cbIoBufLen = pSecSizes->cbHeader +
+    //             /*pSecSizes->cbMaximumMessage * */2*cbMessage +
+    //             pSecSizes->cbTrailer;
+    /*if(!(pOutBuf = (PBYTE)LocalAlloc(LMEM_FIXED, neededBufSize)))
+    {
+        sync_err("Out of memory");
+        return FALSE;
+    }*/
+//DebugBreak();
+    /* Prepare buffers */
+    memset(SecBuff, 0, sizeof(SecBuff));
+    memset(pOutBuf, 0, neededBufSize);
+    SecBuff[0].cbBuffer = pSecSizes->cbSecurityTrailer;
+    SecBuff[0].BufferType = SECBUFFER_TOKEN;
+    SecBuff[0].pvBuffer = pOutBuf + sizeof(DWORD);
+
+    SecBuff[1].cbBuffer = cbMessage;
+    SecBuff[1].BufferType = SECBUFFER_DATA;
+    SecBuff[1].pvBuffer = pOutBuf + sizeof(DWORD) +
+                          pSecSizes->cbSecurityTrailer;
+    SecBuff[2].BufferType = SECBUFFER_EMPTY;
+    SecBuff[3].BufferType = SECBUFFER_EMPTY;
+
+    /* header */
+    /*SecBuff[0].pvBuffer     = pbIoBuffer;
+    SecBuff[0].cbBuffer     = pSecSizes->cbHeader;
+    SecBuff[0].BufferType   = SECBUFFER_STREAM_HEADER;
+    / * message * /
+    SecBuff[1].pvBuffer     = pbIoBuffer +
+                              pSecSizes->cbHeader;
+    SecBuff[1].cbBuffer     = cbMessage;
+    SecBuff[1].BufferType   = SECBUFFER_DATA;
+    / * trailer * /
+    SecBuff[2].pvBuffer     = pbIoBuffer +
+                              pSecSizes->cbHeader +
+                              cbMessage;
+    SecBuff[2].cbBuffer     = pSecSizes->cbTrailer;
+    SecBuff[2].BufferType   = SECBUFFER_STREAM_TRAILER;
+    / * empty * /
+    SecBuff[3].BufferType   = SECBUFFER_EMPTY;*/
+
+    BuffDesc.ulVersion = SECBUFFER_VERSION;
+    BuffDesc.cBuffers = ARRAYSIZE(SecBuff);
+    BuffDesc.pBuffers = SecBuff;
+
+    //sync_trace("make sign\n");
+    //PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);
+
+    /*ss = MakeSignature(hCtxt, 0, &BuffDesc, 0);
+    sync_ok(SEC_SUCCESS(ss), "MakeSignature failed with error 0x%08lx\n", ss);
+    if (!SEC_SUCCESS(ss))
+        return FALSE;
+    sync_trace("after make sign\n");
+    PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);*/
+
+    /* the data will be encrypted in place ... so we have to copy it
+       first to the buffer */
+    memset(SecBuff[0].pvBuffer, 0x00, SecBuff[0].cbBuffer);
+    memcpy(SecBuff[1].pvBuffer, pbMessage, cbMessage);
+
+    sync_trace("SecBuff (before encrypt)!\n");
+    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+
+    //ss = MakeSignature(hCtxt, 0, &BuffDesc, 0);
+    //sync_ok(SEC_SUCCESS(ss), "MakeSignature failed with error 0x%08lx\n", ss);
+    //if (!SEC_SUCCESS(ss))
+    //    return FALSE;
+
+    //ss = VerifySignature(hCtxt, &BuffDesc, 0, NULL);
+    //sync_ok(SEC_SUCCESS(ss), "VerifySignature failed with error 0x%08lx\n", ss);
+    //if (!SEC_SUCCESS(ss))
+    //    return FALSE;
+
+    ss = EncryptMessage(hCtxt, fQOP, &BuffDesc, 0);
+    sync_ok(SEC_SUCCESS(ss), "EncryptMessage failed with error 0x%08lx\n", ss);
+    if (!SEC_SUCCESS(ss))
+        return FALSE;
+
+    //sync_trace("after encrypt sign\n");
+    //PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);
+
+    sync_trace("SecBuff (after encrypt)!\n");
+    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+
+    sync_trace("The message has been encrypted.\n");
+    /* set Byte 0-3 (DWORD) Trailer-Size  */
+    *((DWORD*)pOutBuf) = pSecSizes->cbSecurityTrailer;
+
+
+    /*ss = MakeSignature(hCtxt, 0, &BuffDesc, 0);
+    sync_ok(SEC_SUCCESS(ss), "MakeSignature failed with error 0x%08lx\n", ss);
+    if (!SEC_SUCCESS(ss))
+        return FALSE;
+    sync_trace("after make sign\n");
+    PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);
+*/
+    /*if (FALSE) {
+        //SEC_E_MESSAGE_ALTERED
+        //ULONG ulQop;
+        //BuffDesc.pBuffers[0].cbBuffer--;
+    BuffDesc.cBuffers = 2;
+    SecBuff[2].BufferType = SECBUFFER_PADDING;
+    SecBuff[3].BufferType = SECBUFFER_EMPTY;
+    ss = DecryptMessage(hCtxt, &BuffDesc, 0, &fQOP);
+    //ss = DecryptMessage(hCtxt, &BuffDesc, 0, &ulQop);
+    sync_ok(SEC_SUCCESS(ss), "DecryptMessage (A) failed with error 0x%08lx\n", ss);
+    if (!SEC_SUCCESS(ss))
+        return FALSE;
+    }*/
+    return TRUE;
 }
 
 /******************************************************************************/

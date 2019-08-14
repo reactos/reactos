@@ -177,6 +177,25 @@ BOOL SendBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf);
 BOOL ReceiveBytes(SOCKET s, PBYTE pBuf, DWORD cbBuf, DWORD *pcbRead);
 DWORD inet_addr_w(const WCHAR *pszAddr);
 
+/* allocates and returns a buffer that is
+ * big enough to hold the message an a few
+ * additonal stuff
+ * if ppBuffer is NULL no allocations is done */
+VOID
+CodeCalcAndAllocBuffer(
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* ppBuffer,
+    OUT PULONG pBufLen);
+BOOL
+CodeEncrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pMessage,
+    IN ULONG cbMessage,
+    IN PSecPkgContext_Sizes pSecSizes,
+    IN ULONG cbBufLen,
+    OUT PBYTE pOutBuf);
+
 void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
 void PrintHexDump(DWORD length, PBYTE buffer);
 void PrintSecBuffer(PSecBuffer buf);
