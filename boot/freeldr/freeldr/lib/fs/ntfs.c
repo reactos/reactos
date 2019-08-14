@@ -946,7 +946,7 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
-        FileSystemError("Failed to seek to Master File Table record.");
+        FileSystemError("Failed to seek Master File Table record.");
         FrLdrTempFree(Volume->MasterFileTable, TAG_NTFS_MFT);
         FrLdrTempFree(Volume, TAG_NTFS_VOLUME);
         return NULL;
