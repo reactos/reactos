@@ -31,6 +31,7 @@ LoadAndBootBootSector(
     IN PCHAR Argv[],
     IN PCHAR Envp[])
 {
+    ARC_STATUS Status;
     PCSTR FileName;
     ULONG FileId;
     ULONG BytesRead;
@@ -54,13 +55,13 @@ LoadAndBootBootSector(
     }
 
     /* Read boot sector */
-    if ((ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead) != ESUCCESS) || (BytesRead != 512))
+    Status = ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead);
+    ArcClose(FileId);
+    if ((Status != ESUCCESS) || (BytesRead != 512))
     {
         UiMessageBox("Unable to read boot sector.");
         return EIO;
     }
-
-    ArcClose(FileId);
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
@@ -93,6 +94,7 @@ LoadAndBootPartitionOrDrive(
     IN UCHAR DriveNumber,
     IN ULONG PartitionNumber OPTIONAL)
 {
+    ARC_STATUS Status;
     ULONG FileId;
     ULONG BytesRead;
     CHAR ArcPath[MAX_PATH];
@@ -100,7 +102,10 @@ LoadAndBootPartitionOrDrive(
     /* Construct the corresponding ARC path */
     ConstructArcPath(ArcPath, "", DriveNumber, PartitionNumber);
     *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
-    if (ArcOpen(ArcPath, OpenReadOnly, &FileId) != ESUCCESS)
+
+    /* Open the volume */
+    Status = ArcOpen(ArcPath, OpenReadOnly, &FileId);
+    if (Status != ESUCCESS)
     {
         UiMessageBox("Unable to open %s", ArcPath);
         return ENOENT;
@@ -110,7 +115,9 @@ LoadAndBootPartitionOrDrive(
      * Now try to read the partition boot sector or the MBR (when PartitionNumber == 0).
      * If this fails then abort.
      */
-    if ((ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead) != ESUCCESS) || (BytesRead != 512))
+    Status = ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead);
+    ArcClose(FileId);
+    if ((Status != ESUCCESS) || (BytesRead != 512))
     {
         if (PartitionNumber != 0)
             UiMessageBox("Unable to read partition's boot sector.");
@@ -118,8 +125,6 @@ LoadAndBootPartitionOrDrive(
             UiMessageBox("Unable to read MBR boot sector.");
         return EIO;
     }
-
-    ArcClose(FileId);
 
     /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)

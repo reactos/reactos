@@ -41,14 +41,14 @@ WinLdrLoadSystemHive(
     ARC_STATUS Status;
     FILEINFORMATION FileInfo;
     ULONG HiveFileSize;
-    ULONG_PTR HiveDataPhysical;
+    PVOID HiveDataPhysical;
     PVOID HiveDataVirtual;
     ULONG BytesRead;
     PCWSTR FsService;
 
     /* Concatenate path and filename to get the full name */
-    strcpy(FullHiveName, DirectoryPath);
-    strcat(FullHiveName, HiveName);
+    RtlStringCbCopyA(FullHiveName, sizeof(FullHiveName), DirectoryPath);
+    RtlStringCbCatA(FullHiveName, sizeof(FullHiveName), HiveName);
 
     Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
@@ -69,11 +69,11 @@ WinLdrLoadSystemHive(
     HiveFileSize = FileInfo.EndingAddress.LowPart;
 
     /* Round up the size to page boundary and alloc memory */
-    HiveDataPhysical = (ULONG_PTR)MmAllocateMemoryWithType(
+    HiveDataPhysical = MmAllocateMemoryWithType(
         MM_SIZE_TO_PAGES(HiveFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT,
         LoaderRegistryData);
 
-    if (HiveDataPhysical == 0)
+    if (HiveDataPhysical == NULL)
     {
         ArcClose(FileId);
         UiMessageBox("Unable to alloc memory for a hive!");
@@ -81,14 +81,14 @@ WinLdrLoadSystemHive(
     }
 
     /* Convert address to virtual */
-    HiveDataVirtual = PaToVa((PVOID)HiveDataPhysical);
+    HiveDataVirtual = PaToVa(HiveDataPhysical);
 
     /* Fill LoaderBlock's entries */
     LoaderBlock->RegistryLength = HiveFileSize;
     LoaderBlock->RegistryBase = HiveDataVirtual;
 
     /* Finally read from file to the memory */
-    Status = ArcRead(FileId, (PVOID)HiveDataPhysical, HiveFileSize, &BytesRead);
+    Status = ArcRead(FileId, HiveDataPhysical, HiveFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
         ArcClose(FileId);
@@ -131,7 +131,7 @@ WinLdrInitSystemHive(
 
     if (Setup)
     {
-        strcpy(SearchPath, SystemRoot);
+        RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
         HiveName = "SETUPREG.HIV";
     }
     else
@@ -140,8 +140,8 @@ WinLdrInitSystemHive(
         // fails, then give system.alt a try, and finally try a system.sav
 
         // FIXME: For now we only try system
-        strcpy(SearchPath, SystemRoot);
-        strcat(SearchPath, "system32\\config\\");
+        RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
+        RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\config\\");
         HiveName = "SYSTEM";
     }
 
@@ -191,8 +191,8 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
 
     /* Load NLS data */
-    strcpy(SearchPath, SystemRoot);
-    strcat(SearchPath, "system32\\");
+    RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
+    RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
@@ -224,7 +224,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
         &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't open CodePage registry key");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open CodePage registry key");
         return FALSE;
     }
 
@@ -233,7 +233,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get ACP NLS setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get ACP NLS setting");
         return FALSE;
     }
 
@@ -241,7 +241,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "ACP NLS Setting exists, but isn't readable");
         //return FALSE;
         wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
     }
@@ -252,7 +252,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get OEMCP NLS setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get OEMCP NLS setting");
         return FALSE;
     }
 
@@ -260,7 +260,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "OEMCP NLS setting exists, but isn't readable");
         //return FALSE;
         wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
     }
@@ -272,7 +272,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
         &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't open Language registry key");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open Language registry key");
         return FALSE;
     }
 
@@ -281,7 +281,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get Language Default setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get Language Default setting");
         return FALSE;
     }
 
@@ -289,7 +289,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Language Default setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Language Default setting exists, but isn't readable");
         return FALSE;
     }
     sprintf(LangName, "%S", NameBuffer);
@@ -305,12 +305,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN PCSTR LanguageFileName)
 {
     CHAR FileName[255];
-    ULONG AnsiFileId;
-    ULONG OemFileId;
-    ULONG LanguageFileId;
+    ULONG FileId;
     ULONG AnsiFileSize, OemFileSize, LanguageFileSize;
     ULONG TotalSize;
-    ULONG_PTR NlsDataBase;
+    PVOID NlsDataBase;
     PVOID NlsVirtual;
     BOOLEAN AnsiEqualsOem = FALSE;
     FILEINFORMATION FileInfo;
@@ -322,21 +320,21 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         AnsiEqualsOem = TRUE;
 
     /* Open file with ANSI and store its size */
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, AnsiFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
 
-    Status = ArcGetFileInformation(AnsiFileId, &FileInfo);
+    Status = ArcGetFileInformation(FileId, &FileInfo);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
         goto Failure;
     AnsiFileSize = FileInfo.EndingAddress.LowPart;
     TRACE("AnsiFileSize: %d\n", AnsiFileSize);
-    ArcClose(AnsiFileId);
 
     /* Open OEM file and store its length */
     if (AnsiEqualsOem)
@@ -346,127 +344,122 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     else
     {
         //Print(L"Loading %s...\n", Filename);
-        strcpy(FileName, DirectoryPath);
-        strcat(FileName, OemFileName);
-        Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
+        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
         {
             WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
         }
 
-        Status = ArcGetFileInformation(OemFileId, &FileInfo);
+        Status = ArcGetFileInformation(FileId, &FileInfo);
+        ArcClose(FileId);
         if (Status != ESUCCESS)
             goto Failure;
         OemFileSize = FileInfo.EndingAddress.LowPart;
-        ArcClose(OemFileId);
     }
     TRACE("OemFileSize: %d\n", OemFileSize);
 
     /* And finally open the language codepage file and store its length */
     //Print(L"Loading %s...\n", Filename);
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, LanguageFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
 
-    Status = ArcGetFileInformation(LanguageFileId, &FileInfo);
+    Status = ArcGetFileInformation(FileId, &FileInfo);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
         goto Failure;
     LanguageFileSize = FileInfo.EndingAddress.LowPart;
-    ArcClose(LanguageFileId);
     TRACE("LanguageFileSize: %d\n", LanguageFileSize);
 
     /* Sum up all three length, having in mind that every one of them
        must start at a page boundary => thus round up each file to a page */
     TotalSize = MM_SIZE_TO_PAGES(AnsiFileSize) +
-        MM_SIZE_TO_PAGES(OemFileSize)  +
-        MM_SIZE_TO_PAGES(LanguageFileSize);
+                MM_SIZE_TO_PAGES(OemFileSize)  +
+                MM_SIZE_TO_PAGES(LanguageFileSize);
 
     /* Store it for later marking the pages as NlsData type */
     TotalNLSSize = TotalSize;
 
-    NlsDataBase = (ULONG_PTR)MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
-
-    if (NlsDataBase == 0)
+    NlsDataBase = MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
+    if (NlsDataBase == NULL)
         goto Failure;
 
-    NlsVirtual = PaToVa((PVOID)NlsDataBase);
+    NlsVirtual = PaToVa(NlsDataBase);
     LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
-    LoaderBlock->NlsData->OemCodePageData = (PVOID)((PUCHAR)NlsVirtual +
+    LoaderBlock->NlsData->OemCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));
-    LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((PUCHAR)NlsVirtual +
+    LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT) +
-        (MM_SIZE_TO_PAGES(OemFileSize) << MM_PAGE_SHIFT));
+        (MM_SIZE_TO_PAGES(OemFileSize)  << MM_PAGE_SHIFT));
 
     /* Ansi and OEM data are the same - just set pointers to the same area */
     if (AnsiEqualsOem)
         LoaderBlock->NlsData->OemCodePageData = LoaderBlock->NlsData->AnsiCodePageData;
 
-
     /* Now actually read the data into memory, starting with Ansi file */
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, AnsiFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
 
-    Status = ArcRead(AnsiFileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
+    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
 
-    ArcClose(AnsiFileId);
-
     /* OEM now, if it doesn't equal Ansi of course */
     if (!AnsiEqualsOem)
     {
-        strcpy(FileName, DirectoryPath);
-        strcat(FileName, OemFileName);
-        Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
+        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
         {
             WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
         }
 
-        Status = ArcRead(OemFileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
+        Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
+        ArcClose(FileId);
         if (Status != ESUCCESS)
         {
             WARN("Error while reading '%s', Status: %u\n", FileName, Status);
             goto Failure;
         }
-
-        ArcClose(OemFileId);
     }
 
-    /* finally the language file */
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, LanguageFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
+    /* Finally the language file */
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
 
-    Status = ArcRead(LanguageFileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
+    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
     }
-
-    ArcClose(LanguageFileId);
 
     //
     // THIS IS HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACK

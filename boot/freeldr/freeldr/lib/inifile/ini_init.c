@@ -63,6 +63,7 @@ BOOLEAN IniFileInitialize(VOID)
     if (Status != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
     {
         UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
+        ArcClose(FileId);
         return FALSE;
     }
     FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
