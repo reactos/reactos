@@ -25,6 +25,8 @@
 #include <assert.h>
 #include <commctrl.h>
 #include <strsafe.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -342,13 +344,73 @@ BOOL DoCloseFile(VOID)
     return TRUE;
 }
 
+BOOL GetPathOfShortcut(HWND hWnd, LPCTSTR pszLnkFile,
+                       LPTSTR pszPath, SIZE_T cchPathMax)
+{
+    WCHAR szPath[MAX_PATH];
+    IShellLinkW *pShellLink = NULL;
+    IPersistFile *pPersistFile = NULL;
+    WIN32_FIND_DATA find;
+    HRESULT hr;
+    BOOL ret = FALSE;
+
+    pszPath[0] = 0;
+
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return ret;
+
+    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IShellLinkW, (LPVOID *)&pShellLink);
+    if (FAILED(hr))
+        goto hell;
+
+    hr = pShellLink->lpVtbl->QueryInterface(pShellLink, &IID_IPersistFile,
+                                            (VOID **)&pPersistFile);
+    if (FAILED(hr))
+        goto hell;
+
+    hr = pPersistFile->lpVtbl->Load(pPersistFile, pszLnkFile,  STGM_READ);
+    if (FAILED(hr))
+        goto hell;
+
+    szPath[0] = 0;
+    hr = pShellLink->lpVtbl->GetPath(pShellLink, szPath, ARRAY_SIZE(szPath),
+                                     &find, SLGP_SHORTPATH);
+    if (SUCCEEDED(hr))
+    {
+        if (szPath[0])
+        {
+            ret = GetLongPathNameW(szPath, pszPath, (DWORD)cchPathMax) != 0;
+        }
+    }
+
+hell:
+    if (pPersistFile)
+        pPersistFile->lpVtbl->Release(pPersistFile);
+    if (pShellLink)
+        pShellLink->lpVtbl->Release(pShellLink);
+    CoUninitialize();
+    return ret;
+}
+
 VOID DoOpenFile(LPCTSTR szFileName)
 {
     static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
-    LPTSTR pszText = NULL;
+    LPTSTR pszText = NULL, pchDotExt;
     DWORD dwTextLen;
     TCHAR log[5];
+    WCHAR szPath[MAX_PATH];
+
+    pchDotExt = PathFindExtensionW(szFileName);
+    if (lstrcmpiW(pchDotExt, L".lnk") == 0)   /* It's a shortcut */
+    {
+        if (GetPathOfShortcut(NULL, szFileName, szPath, ARRAY_SIZE(szPath)))
+        {
+            szFileName = szPath;
+        }
+    }
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
