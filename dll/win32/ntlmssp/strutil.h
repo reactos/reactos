@@ -36,10 +36,24 @@ init_strutil(
 /* Unicode */
 
 /* initstr NULL sets all values to null */
-void
+BOOL
 ExtWStrInit(
     IN PEXT_STRING dst,
     IN WCHAR* initstr);
+
+/* concatenate strings */
+BOOL
+ExtWStrCat(
+    IN OUT PEXT_STRING dst,
+    IN WCHAR* s);
+/*TODO
+BOOL
+ExtWStrCat(
+    IN OUT PEXT_STRING dst,
+    IN PEXT_STRING s);*/
+void
+ExtWStrUpper(
+    IN OUT PEXT_STRING s);
 
 /* chLen = length in chars */
 /* chLen = -1 to auto-detect length and newstr is null-terminated */
@@ -51,7 +65,7 @@ ExtWStrSetN(
 #define ExtWStrSet(dst, newstr) ExtWStrSetN(dst, newstr, (size_t)-1)
 
 /* Ansi */
-void
+BOOL
 ExtAStrInit(
     IN PEXT_STRING dst,
     IN char* initstr);

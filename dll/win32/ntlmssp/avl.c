@@ -87,7 +87,8 @@ NtlmAvlAdd(IN PNTLM_DATABUF pAvData,
     pNewPair->AvLen = (USHORT)len;
     pAvData->bUsed += sizeof(MSV1_0_AV_PAIR);
 
-    memcpy(pAvData->pData + pAvData->bUsed, data, len);
+    if (len > 0)
+        memcpy(pAvData->pData + pAvData->bUsed, data, len);
     pAvData->bUsed += len;
 
     return TRUE;
