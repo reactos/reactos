@@ -16,7 +16,7 @@
 #define FILENAME "redirection-testdata.txt"
 #define TESTDATA "This is a test data.\r\n"
 
-static void DoDownload(const char *url, const char *filename)
+static void DoDownload1(const char *url, const char *filename)
 {
     HANDLE hFile;
     HINTERNET hInternet, hConnect;
@@ -56,23 +56,28 @@ static void DoDownload(const char *url, const char *filename)
     CloseHandle(hFile);
 }
 
-START_TEST(Redirection)
+static void DoDownload2(const char *url, const char *filename)
 {
     FILE *fp;
     char buf[256];
-
-    // https://tinyurl.com/y3euesr5
-    // -->
-    // https://raw.githubusercontent.com/katahiromz/downloads/master/redirection-testdata.txt
-    DoDownload("https://tinyurl.com/y3euesr5", FILENAME);
-
+    DoDownload1(url, filename);
     ok_int(GetFileAttributesA(FILENAME) != INVALID_FILE_ATTRIBUTES, TRUE);
-
     fp = fopen(FILENAME, "rb");
     ok(fp != NULL, "fp was NULL.\n");
     ok(fgets(buf, ARRAYSIZE(buf), fp) != NULL, "fgets failed.\n");
     ok_str(buf, TESTDATA);
     fclose(fp);
-
     DeleteFileA(FILENAME);
+}
+
+START_TEST(Redirection)
+{
+    // https://tinyurl.com/y3euesr5
+    // -->
+    // https://raw.githubusercontent.com/katahiromz/downloads/master/redirection-testdata.txt
+    DoDownload2("https://tinyurl.com/y3euesr5", FILENAME);
+
+    DoDownload2(
+        "https://raw.githubusercontent.com/katahiromz/downloads/master/redirection-testdata.txt",
+        FILENAME);
 }
