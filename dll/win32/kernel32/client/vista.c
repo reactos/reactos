@@ -39,7 +39,8 @@ SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
                          IN OUT PCRITICAL_SECTION CriticalSection,
                          IN DWORD dwMilliseconds)
 {
-    NTSTATUS Status = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+#if 0
     LARGE_INTEGER TimeOut;
     PLARGE_INTEGER TimeOutPtr = NULL;
 
@@ -49,7 +50,6 @@ SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
         TimeOutPtr = &TimeOut;
     }
 
-#if 0
     Status = RtlSleepConditionVariableCS((PRTL_CONDITION_VARIABLE)ConditionVariable,
                                          (PRTL_CRITICAL_SECTION)CriticalSection,
                                          TimeOutPtr);
@@ -74,7 +74,8 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
                           IN DWORD dwMilliseconds,
                           IN ULONG Flags)
 {
-    NTSTATUS Status = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+#if 0
     LARGE_INTEGER TimeOut;
     PLARGE_INTEGER TimeOutPtr = NULL;
 
@@ -84,7 +85,6 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
         TimeOutPtr = &TimeOut;
     }
 
-#if 0
     Status = RtlSleepConditionVariableSRW((PRTL_CONDITION_VARIABLE)ConditionVariable,
                                           (PRTL_SRWLOCK)SRWLock,
                                           TimeOutPtr,
