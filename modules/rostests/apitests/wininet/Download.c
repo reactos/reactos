@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
- * PURPOSE:     wininet Redirection testcase
+ * PURPOSE:     wininet Download testcase
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include <apitest.h>
@@ -13,7 +13,7 @@
 #include <windef.h>
 #include <wininet.h>
 
-#define FILENAME "redirection-testdata.txt"
+#define FILENAME "download-testdata.txt"
 #define TESTDATA "This is a test data.\r\n"
 
 static void DoDownload1(const char *url, const char *filename)
@@ -70,14 +70,14 @@ static void DoDownload2(const char *url, const char *filename)
     DeleteFileA(FILENAME);
 }
 
-START_TEST(Redirection)
+START_TEST(Download)
 {
-    // https://tinyurl.com/y3euesr5
+    // https://tinyurl.com/y4cpy2fu
     // -->
-    // https://raw.githubusercontent.com/katahiromz/downloads/master/redirection-testdata.txt
-    DoDownload2("https://tinyurl.com/y3euesr5", FILENAME);
+    // https://raw.githubusercontent.com/katahiromz/downloads/master/download-testdata.txt
+    DoDownload2("https://tinyurl.com/y4cpy2fu", FILENAME);
 
     DoDownload2(
-        "https://raw.githubusercontent.com/katahiromz/downloads/master/redirection-testdata.txt",
+        "https://raw.githubusercontent.com/katahiromz/downloads/master/download-testdata.txt",
         FILENAME);
 }

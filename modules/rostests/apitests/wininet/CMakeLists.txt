@@ -1,5 +1,5 @@
 
-add_executable(wininet_apitest InternetOpen.c Redirection.c testlist.c)
+add_executable(wininet_apitest Download.c InternetOpen.c testlist.c)
 target_link_libraries(wininet_apitest wine)
 set_module_type(wininet_apitest win32cui)
 #add_delay_importlibs(wininet_apitest wininet)

@@ -3,13 +3,13 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_Download(void);
 extern void func_InternetOpen(void);
-extern void func_Redirection(void);
 
 const struct test winetest_testlist[] =
 {
+    { "Download", func_Download },
     { "InternetOpen", func_InternetOpen },
-    { "Redirection", func_Redirection },
 
     { 0, 0 }
 };
