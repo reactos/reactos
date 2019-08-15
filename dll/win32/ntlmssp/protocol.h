@@ -182,12 +182,12 @@ NTOWFv1(
     LPCWSTR password,
     PUCHAR result);
 
-BOOLEAN
+BOOL
 NTOWFv2(
-    LPCWSTR password,
-    LPCWSTR user,
-    LPCWSTR domain,
-    UCHAR result[16]);
+    IN LPCWSTR password,
+    IN LPCWSTR user,
+    IN LPCWSTR domain,
+    OUT UCHAR result[16]);
 
 VOID
 LMOWFv1(
@@ -239,6 +239,7 @@ MAC(ULONG flags,
     ULONG sequence,
     PUCHAR result);
 
+#if 0 /* old calculation */
 VOID
 NtlmChallengeResponse(
     IN PEXT_STRING pUserNameW,
@@ -251,6 +252,34 @@ NtlmChallengeResponse(
     OUT PLM2_RESPONSE pLm2Response,
     OUT PUSER_SESSION_KEY pUserSessionKey,
     OUT PLM_SESSION_KEY pLmSessionKey);
+#else
+BOOL
+NtlmChallengeResponse(
+    IN PEXT_STRING pUserNameW,
+    IN PEXT_STRING pPasswordW,
+    IN PEXT_STRING pDomainNameW,
+    IN PUNICODE_STRING pServerName,
+    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
+    IN ULONGLONG TargetInfoTimeStamp,
+    OUT PNTLM_DATABUF pNtResponseData,
+    OUT PLM2_RESPONSE pLm2Response,
+    OUT PUSER_SESSION_KEY pUserSessionKey,
+    OUT PLM_SESSION_KEY pLmSessionKey);
+/*BOOL
+ComputeResponseNVLMv2(
+    IN PEXT_STRING user,
+    IN PEXT_STRING passwd,
+    IN PEXT_STRING userdom,
+    IN PUNICODE_STRING ServerName,
+    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
+    OUT UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    OUT UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    OUT UCHAR NtChallengeResponse[24],
+    OUT UCHAR LmChallengeResponse[24],
+    OUT PUSER_SESSION_KEY SessionBaseKey);*/
+#endif
 
 /* avl functions */
 

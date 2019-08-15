@@ -725,9 +725,9 @@ CliGenerateAuthenticationMessage(
     TRACE("=== NtResponse ===\n");
     NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
     /* FIXME: There is something wrong ... should be 24 not 100
-     * ... if not 24 wireshark shows malformed and response
+     * ... (FIXED if not 24 wireshark shows malformed and) response
      *     error INVALID_PARAM is returned ... so... lets HACKFIX ...*/
-    NtResponseData.bUsed = 24;
+    //NtResponseData.bUsed = 24;
 
 //DebugBreak();
 #define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input

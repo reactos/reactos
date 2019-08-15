@@ -209,7 +209,15 @@ typedef struct _NTLMSSP_CONTEXT_HDR
 /* context - message support (client + server) */
 typedef struct _NTLMSSP_CONTEXT_MSG
 {
-    /* message support */
+    /* MS-NLSP 3.4.1 - variables */
+    /* ClientHandle (Public): The handle to a key state structure corresponding to the current state of
+       the ClientSealingKey.
+      ServerHandle (Public): The handle to a key state structure corresponding to the current state of
+      the ServerSealingKey.
+    */
+
+    /* not in spec or unknown whether they are... */
+    /* message support  */
     int SentSequenceNum;
     int RecvSequenceNum;
     struct _rc4_key* SendSealKey;
