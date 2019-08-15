@@ -107,6 +107,57 @@ BOOL IsCriticalProcess(HANDLE hProcess)
     return FALSE;
 }
 
+BOOL ShutdownProcessTreeHelper(HANDLE hSnapshot, HANDLE hParentProcess, DWORD dwParentPID)
+{
+    HANDLE hChildHandle;
+    PROCESSENTRY32W ProcessEntry = {0};
+    ProcessEntry.dwSize = sizeof(ProcessEntry);
+
+    if (Process32FirstW(hSnapshot, &ProcessEntry))
+    {
+        do
+        {
+            if (ProcessEntry.th32ParentProcessID == dwParentPID)
+            {
+                hChildHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                                           FALSE,
+                                           ProcessEntry.th32ProcessID);
+                if (!hChildHandle || IsCriticalProcess(hChildHandle))
+                {
+                    if (hChildHandle)
+                    {
+                        CloseHandle(hChildHandle);
+                    }
+                    continue;
+                }
+                if (!ShutdownProcessTreeHelper(hSnapshot, hChildHandle, ProcessEntry.th32ProcessID))
+                {
+                    CloseHandle(hChildHandle);
+                    return FALSE;
+                }
+                CloseHandle(hChildHandle);
+            }
+        } while (Process32NextW(hSnapshot, &ProcessEntry));
+    }
+
+    return TerminateProcess(hParentProcess, 0);
+}
+
+BOOL ShutdownProcessTree(HANDLE hParentProcess, DWORD dwParentPID)
+{
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    BOOL bResult;
+
+    if (!hSnapshot)
+    {
+        return FALSE;
+    }
+
+    bResult = ShutdownProcessTreeHelper(hSnapshot, hParentProcess, dwParentPID);
+    CloseHandle(hSnapshot);
+    return bResult;
+}
+
 void ProcessPage_OnEndProcessTree(void)
 {
     DWORD   dwProcessId;
@@ -147,7 +198,7 @@ void ProcessPage_OnEndProcessTree(void)
         return;
     }
 
-    if (!TerminateProcess(hProcess, 0))
+    if (!ShutdownProcessTree(hProcess, dwProcessId))
     {
         GetLastErrorText(strErrorText, 260);
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
