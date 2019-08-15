@@ -32,8 +32,7 @@
 #ifndef _RTLFUNCS_H
 NTSYSAPI
 VOID
-RtlAssert
-(
+RtlAssert(
     __in PVOID FailedAssertion,
     __in PVOID FileName,
     __in ULONG LineNumber,

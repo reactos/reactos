@@ -34,15 +34,13 @@ typedef
 NTAPI
 WDFAPI
 VOID
-(*PFN_WDFVERIFIERDBGBREAKPOINT)
-(
+(*PFN_WDFVERIFIERDBGBREAKPOINT)(
     __in PWDF_DRIVER_GLOBALS DriverGlobals
 );
 
 VOID
 FORCEINLINE
-WdfVerifierDbgBreakPoint
-(VOID)
+WdfVerifierDbgBreakPoint(VOID)
 {
     ((PFN_WDFVERIFIERDBGBREAKPOINT)WdfFunctions[WdfVerifierDbgBreakPointTableIndex])(WdfDriverGlobals);
 }
@@ -54,8 +52,7 @@ typedef
 NTAPI
 WDFAPI
 VOID
-(*PFN_WDFVERIFIERKEBUGCHECK)
-(
+(*PFN_WDFVERIFIERKEBUGCHECK)(
     __in PWDF_DRIVER_GLOBALS DriverGlobals,
     __in ULONG BugCheckCode,
     __in ULONG_PTR BugCheckParameter1,
@@ -67,8 +64,7 @@ VOID
 NTAPI
 VOID
 FORCEINLINE
-WdfVerifierKeBugCheck
-(
+WdfVerifierKeBugCheck(
     __in ULONG BugCheckCode,
     __in ULONG_PTR BugCheckParameter1,
     __in ULONG_PTR BugCheckParameter2,

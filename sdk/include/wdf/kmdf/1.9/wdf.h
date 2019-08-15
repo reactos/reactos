@@ -25,7 +25,6 @@
 #ifndef _WDF_H_
 #define _WDF_H_
 
-
 typedef VOID (NTAPI *WDFFUNC) (VOID);
 extern const WDFFUNC WdfFunctions[];
 
@@ -44,4 +43,5 @@ extern const WDFFUNC WdfFunctions[];
 
 /* Generic Objects */
 /* #include "wdfobject.h" */
+
 #endif /* _WDF_H_ */
