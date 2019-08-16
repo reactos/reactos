@@ -9,7 +9,7 @@ typedef struct _SURFACE
     //XDCOBJ *   pdcoAA;
     FLONG       flags;
     struct _PALETTE  * const ppal; // Use SURFACE_vSetPalette to assign a palette
-    //UINT       unk_050;
+    struct _EWNDOBJ  *pWinObj;
 
     union
     {
