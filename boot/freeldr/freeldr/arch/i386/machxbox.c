@@ -23,6 +23,18 @@
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 
+BOOLEAN
+XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
+{
+    /* We emulate PCI BIOS here, there are 2 known working PCI buses on an original Xbox */
+
+    BusData->NoBuses = 2;
+    BusData->MajorRevision = 1;
+    BusData->MinorRevision = 0;
+    BusData->HardwareMechanism = 1;
+    return TRUE;
+}
+
 VOID
 XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
 {
@@ -175,8 +187,10 @@ XboxHwDetect(VOID)
     FldrCreateSystemKey(&SystemKey);
 
     GetHarddiskConfigurationData = XboxGetHarddiskConfigurationData;
+    FindPciBios = XboxFindPciBios;
 
     /* TODO: Build actual xbox's hardware configuration tree */
+    DetectPciBios(SystemKey, &BusNumber);
     DetectIsaBios(SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
