@@ -1666,7 +1666,7 @@ OHCI_ProcessDoneIsoTD(IN POHCI_EXTENSION OhciExtension,
  * @param[in]  ohciExtension   The ohci extension
  * @param[in]  ohciEndpoint    The ohci endpoint
  * @param[in]  ohciTransfer    The ohci transfer
- * @param[out] CompletedLength 
+ * @param[out] CompletedLength
  */
 VOID
 NTAPI
@@ -1679,7 +1679,6 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_TRANSFER OhciTransfer = ohciTransfer;
     POHCI_HCD_ED ED = OhciEndpoint->HcdED;
-    ULONG_PTR NextTdPA;
     POHCI_HCD_TD TD, NextTD, LastTD;
     ULONG ix;
     BOOLEAN IsIsoEndpoint;
