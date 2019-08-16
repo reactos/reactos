@@ -346,7 +346,11 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     GetWindowTextW(infoPtr->Buddy, txt_old, ARRAY_SIZE(txt_old));
     if (lstrcmpiW(txt_old, txt) == 0) return FALSE;
 
+#ifdef __REACTOS__
+    return DefWindowProcW(infoPtr->Buddy, WM_SETTEXT, 0, (LPARAM)txt);
+#else
     return SetWindowTextW(infoPtr->Buddy, txt);
+#endif
 }
 
 /***********************************************************************
