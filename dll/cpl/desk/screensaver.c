@@ -26,6 +26,7 @@ typedef struct _DATA
     PROCESS_INFORMATION PrevWindowPi;
     int                 Selection;
     UINT                ScreenSaverCount;
+    BOOL                InChangingUI;
 } DATA, *PDATA;
 
 
@@ -594,6 +595,8 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
         return FALSE;
     }
 
+    pData->InChangingUI = TRUE;
+
     SetWindowLongPtr(hwndDlg,
                      DWLP_USER,
                      (LONG_PTR)pData);
@@ -684,6 +687,8 @@ OnInitDialog(HWND hwndDlg, PDATA pData)
     SelectionChanged(hwndDlg,
                      pData);
 
+    pData->InChangingUI = FALSE;
+
     return TRUE;
 }
 
@@ -747,7 +752,10 @@ ScreenSaverPageProc(HWND hwndDlg,
 
                 case IDC_SCREENS_TIMEDELAY:
                 {
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    if (HIWORD(wParam) == EN_CHANGE && !pData->InChangingUI)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
                 }
 
