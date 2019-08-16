@@ -113,7 +113,9 @@ endif()
 
 add_compile_flags("-Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
-add_compile_flags("-Wno-unused-const-variable")
+if(NOT GCC_VERSION VERSION_LESS 6.1)
+    add_compile_flags("-Wno-unused-const-variable")
+endif()
 add_compile_flags("-Wno-unused-local-typedefs")
 add_compile_flags("-Wno-deprecated")
 
