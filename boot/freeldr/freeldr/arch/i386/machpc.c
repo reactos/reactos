@@ -636,23 +636,11 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
     }
 }
 
-static
-VOID
-DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
+ULONG
+PcGetSerialPort(ULONG Index, PULONG Irq)
 {
-    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-    PCM_SERIAL_DEVICE_DATA SerialDeviceData;
-    ULONG Irq[MAX_COM_PORTS] = {4, 3, 4, 3};
-    ULONG Base;
-    CHAR Buffer[80];
+    static const ULONG PcIrq[MAX_COM_PORTS] = {4, 3, 4, 3};
     PUSHORT BasePtr;
-    ULONG ControllerNumber = 0;
-    PCONFIGURATION_COMPONENT_DATA ControllerKey;
-    ULONG i;
-    ULONG Size;
-
-    TRACE("DetectSerialPorts()\n");
 
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
@@ -660,10 +648,30 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
      * Infos at: http://www.bioscentral.com/misc/bda.htm
      */
     BasePtr = (PUSHORT)0x400;
+    *Irq = PcIrq[Index];
 
-    for (i = 0; i < MAX_COM_PORTS; i++, BasePtr++)
+    return (ULONG) *(BasePtr + Index);
+}
+
+VOID
+DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetSerialPort, ULONG Count)
+{
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_SERIAL_DEVICE_DATA SerialDeviceData;
+    ULONG Irq;
+    ULONG Base;
+    CHAR Buffer[80];
+    ULONG ControllerNumber = 0;
+    PCONFIGURATION_COMPONENT_DATA ControllerKey;
+    ULONG i;
+    ULONG Size;
+
+    TRACE("DetectSerialPorts()\n");
+
+    for (i = 0; i < Count; i++)
     {
-        Base = (ULONG) * BasePtr;
+        Base = MachGetSerialPort(i, &Irq);
         if ((Base == 0) || !CpDoesPortExist(UlongToPtr(Base)))
             continue;
 
@@ -703,8 +711,8 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialDescriptor->Type = CmResourceTypeInterrupt;
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
         PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-        PartialDescriptor->u.Interrupt.Level = Irq[i];
-        PartialDescriptor->u.Interrupt.Vector = Irq[i];
+        PartialDescriptor->u.Interrupt.Level = Irq;
+        PartialDescriptor->u.Interrupt.Vector = Irq;
         PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
         /* Set serial data (device specific) */
@@ -1319,7 +1327,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
-    DetectSerialPorts(BusKey);
+    DetectSerialPorts(BusKey, PcGetSerialPort, MAX_COM_PORTS);
     DetectParallelPorts(BusKey);
     DetectKeyboardController(BusKey);
     DetectPS2Mouse(BusKey);

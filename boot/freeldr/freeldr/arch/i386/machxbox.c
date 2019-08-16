@@ -35,6 +35,53 @@ XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
     return TRUE;
 }
 
+extern
+VOID
+DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey, PUCHAR Base);
+
+static
+ULONG
+XboxGetSerialPort(ULONG Index, PULONG Irq)
+{
+    /*
+     * Xbox may have maximum two Serial COM ports
+     * if the Super I/O chip is connected via LPC
+     */
+    static const UCHAR Device[MAX_XBOX_COM_PORTS] = {LPC_DEVICE_SERIAL_PORT_1, LPC_DEVICE_SERIAL_PORT_2};
+    ULONG ComBase = 0;
+
+    // Enter Configuration
+    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_ENTER_CONFIG_KEY);
+
+    // Select serial device
+    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_NUMBER);
+    WRITE_PORT_UCHAR(LPC_IO_BASE + 1, Device[Index]);
+
+    // Check if selected device is active
+    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_ACTIVATE);
+    if (READ_PORT_UCHAR(LPC_IO_BASE + 1) == 1)
+    {
+        // Read LSB
+        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_LOW);
+        ComBase = READ_PORT_UCHAR(LPC_IO_BASE + 1);
+        // Read MSB
+        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_HIGH);
+        ComBase |= (READ_PORT_UCHAR(LPC_IO_BASE + 1) << 8);
+        // Read IRQ
+        WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_CONFIG_DEVICE_INTERRUPT);
+        *Irq = READ_PORT_UCHAR(LPC_IO_BASE + 1);
+    }
+
+    // Exit Configuration
+    WRITE_PORT_UCHAR(LPC_IO_BASE, LPC_EXIT_CONFIG_KEY);
+
+    return ComBase;
+}
+
+extern
+VOID
+DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetSerialPort, ULONG Count);
+
 VOID
 XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
 {
@@ -155,6 +202,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
+    DetectSerialPorts(BusKey, XboxGetSerialPort, MAX_XBOX_COM_PORTS);
 
     /* FIXME: Detect more ISA devices */
 }
