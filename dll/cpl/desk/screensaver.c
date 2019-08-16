@@ -741,7 +741,7 @@ ScreenSaverPageProc(HWND hwndDlg,
             {
                 case IDC_SCREENS_LIST:
                 {
-                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE && !pData->InChangingUI)
                     {
                         SelectionChanged(hwndDlg, pData);
                         SetScreenSaverPreviewBox(hwndDlg, pData);
