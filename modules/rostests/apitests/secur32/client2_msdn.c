@@ -667,10 +667,10 @@ CodeDecrypt(
     SecBuff[1].pvBuffer   = pBuf2 + sizeof(DWORD) +
                             pSecSizes->cbSecurityTrailer;
 
-    sync_trace("SecBuff before decrypt!\n");
-    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
-    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
-    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    //sync_trace("SecBuff before decrypt!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
     /*SecBuff[0].cbBuffer = cbBuffer;
     SecBuff[0].pvBuffer = (PBYTE)pBuf2 + sizeof(DWORD);// + SigBufferSize;
     SecBuff[0].BufferType = SECBUFFER_DATA;
@@ -682,10 +682,10 @@ CodeDecrypt(
     ss = DecryptMessage(hCtxt, &BuffDesc, 0, &ulQop);
     sync_ok(SEC_SUCCESS(ss), "DecryptMessage failed 0x%x\n", ss);
 
-    sync_trace("SecBuff after decrypt!\n");
-    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
-    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
-    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    //sync_trace("SecBuff after decrypt!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
 
     /* set results */
     *pMsg = (PBYTE)SecBuff[1].pvBuffer;

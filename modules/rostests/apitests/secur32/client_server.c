@@ -36,7 +36,8 @@ typedef struct _TESTDATA
 } TESTDATA, *PTESTDATA;
 
 #define TEST_AUTO
-//#define TEST_NO_AUTO
+//#define TEST_NO_AUTO1
+//#define TEST_NO_AUTO2
 
 TESTDATA testdata[] =
 {
@@ -47,7 +48,14 @@ TESTDATA testdata[] =
         client2_main, 6, { L"127.0.0.1", L"2000", L"", L"NTLM", L"", L"" }
     }
 #endif
-#ifdef TEST_NO_AUTO
+#ifdef TEST_NO_AUTO1
+    {   // Test 0
+        server2_main, 2, { L"2000", L"NTLM" },
+        // ip, port, targetname, package, usr, pwd
+        client2_main, 6, { L"<ip>", L"2000", L"", L"NTLM", L"<usr>", L"<pwd>" }
+    },
+#endif
+#ifdef TEST_NO_AUTO2
     {   // Test 1 - not for automation
         // give params per cmd line <ip> <usr> <pwd>
         NULL, 0, {0},
@@ -126,7 +134,10 @@ void test_runner(USHORT testidx)
             if (wcscmp(td->cli_argv[i1], L"<pwd>") == 0)
                 td->cli_argv[i1] = parPwd;
         }
+        sync_trace("ip %S; user %S\n", parIp, parUsr);
     }
+
+    sync_trace("runCli %i, runSVR %i\n", runCLI, runSVR);
 
     /* Retrieve our full path */
     if (!GetModuleFileNameW(NULL, FileName, _countof(FileName)))
@@ -277,10 +288,10 @@ CodeEncrypt(
     memset(SecBuff[0].pvBuffer, 0x00, SecBuff[0].cbBuffer);
     memcpy(SecBuff[1].pvBuffer, pbMessage, cbMessage);
 
-    sync_trace("SecBuff (before encrypt)!\n");
-    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
-    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
-    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    //sync_trace("SecBuff (before encrypt)!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
 
     //ss = MakeSignature(hCtxt, 0, &BuffDesc, 0);
     //sync_ok(SEC_SUCCESS(ss), "MakeSignature failed with error 0x%08lx\n", ss);
@@ -300,10 +311,10 @@ CodeEncrypt(
     //sync_trace("after encrypt sign\n");
     //PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);
 
-    sync_trace("SecBuff (after encrypt)!\n");
-    PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
-    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
-    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    //sync_trace("SecBuff (after encrypt)!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
 
     sync_trace("The message has been encrypted.\n");
     /* set Byte 0-3 (DWORD) Trailer-Size  */

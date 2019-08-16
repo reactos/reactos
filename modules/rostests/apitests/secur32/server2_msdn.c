@@ -57,7 +57,7 @@ BOOL AcceptAuthSocket(
 
     /* Bind to local port */
     sockIn.sin_family = AF_INET;
-    sockIn.sin_addr.s_addr = 0;
+    sockIn.sin_addr.s_addr = INADDR_ANY;
     sockIn.sin_port = htons(ServerPort);
 
     if (SOCKET_ERROR == bind(sockListen,
