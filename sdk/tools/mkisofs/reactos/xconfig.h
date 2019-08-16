@@ -59,7 +59,7 @@
 
 #define HAVE_LOCALE_H 1
 #define HAVE_CTYPE_H 1
-#define HAVE_WCTYPE_H 1
+/* #define HAVE_WCTYPE_H 1 */   /* LNK2001 */
 #define HAVE_WCHAR_H 1
 
 /*
