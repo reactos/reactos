@@ -211,15 +211,6 @@ NtlmAllocateContextCli(VOID)
     PNTLMSSP_CONTEXT_CLI ret;
 
     ret = (PNTLMSSP_CONTEXT_CLI)NtlmAllocateContextHdr(FALSE);
-    /* always on features */
-    ret->NegFlg = NTLMSSP_NEGOTIATE_UNICODE |
-                  NTLMSSP_NEGOTIATE_OEM |
-                  NTLMSSP_NEGOTIATE_NTLM |
-                  NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
-                  NTLMSSP_REQUEST_TARGET |
-                  NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                  NTLMSSP_NEGOTIATE_56 |
-                  NTLMSSP_NEGOTIATE_128; // if supported
     return ret;
 }
 
@@ -289,6 +280,23 @@ CliCreateContext(
         ERR("Only NTLMv2 is implemented!\n");
         goto fail;
     }
+
+    /* always on features - MS-NLMP 3.1.5.1.1 */
+    context->NegFlg = NTLMSSP_REQUEST_TARGET |
+                      NTLMSSP_NEGOTIATE_NTLM |
+                      NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                      NTLMSSP_NEGOTIATE_UNICODE;
+
+    /* addiditonal flags / features w2k3 returns */
+    context->NegFlg = context->NegFlg |
+                      NTLMSSP_NEGOTIATE_SEAL |
+                      NTLMSSP_NEGOTIATE_56 |
+                      NTLMSSP_NEGOTIATE_128 |
+                      NTLMSSP_NEGOTIATE_OEM |
+                      NTLMSSP_NEGOTIATE_SIGN |
+                      NTLMSSP_NEGOTIATE_VERSION |
+                      NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
+                      NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* client requested features */
     if(ISCContextReq & ISC_REQ_INTEGRITY)
@@ -782,28 +790,28 @@ AcceptSecurityContext(IN PCredHandle phCredential,
         /* initialize with 0 to create a new context */
         phNewContext->dwLower = 0;
         TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
-        ret = NtlmHandleNegotiateMessage(phCredential->dwLower,
-                                         &phNewContext->dwLower,
-                                         fContextReq,
-                                         InputToken1,
-                                         InputToken2,
-                                         OutputToken1,
-                                         OutputToken2,
-                                         pfContextAttr,
-                                         ptsExpiry);
+        ret = SvrHandleNegotiateMessage(phCredential->dwLower,
+                                        &phNewContext->dwLower,
+                                        fContextReq,
+                                        InputToken1,
+                                        InputToken2,
+                                        OutputToken1,
+                                        OutputToken2,
+                                        pfContextAttr,
+                                        ptsExpiry);
     }
     else
     {
         *phNewContext = *phContext;
         TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
-        ret = NtlmHandleAuthenticateMessage(phNewContext->dwLower,
-                                            fContextReq,
-                                            InputToken1,
-                                            OutputToken1,
-                                            pfContextAttr,
-                                            ptsExpiry,
-                                            (PUCHAR)&sessionKey,
-                                            &userflags);
+        ret = SvrHandleAuthenticateMessage(phNewContext->dwLower,
+                                           fContextReq,
+                                           InputToken1,
+                                           OutputToken1,
+                                           pfContextAttr,
+                                           ptsExpiry,
+                                           (PUCHAR)&sessionKey,
+                                           &userflags);
     }
 
     if(!NT_SUCCESS(ret))

@@ -209,15 +209,16 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 }
 
 SECURITY_STATUS
-NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
-                           IN OUT PULONG_PTR phContext,
-                           IN ULONG ASCContextReq,
-                           IN PSecBuffer InputToken,
-                           IN PSecBuffer InputToken2,
-                           OUT PSecBuffer OutputToken,
-                           OUT PSecBuffer OutputToken2,
-                           OUT PULONG pASCContextAttr,
-                           OUT PTimeStamp ptsExpiry)
+SvrHandleNegotiateMessage(
+    IN ULONG_PTR hCredential,
+    IN OUT PULONG_PTR phContext,
+    IN ULONG ASCContextReq,
+    IN PSecBuffer InputToken,
+    IN PSecBuffer InputToken2,
+    OUT PSecBuffer OutputToken,
+    OUT PSecBuffer OutputToken2,
+    OUT PULONG pASCContextAttr,
+    OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNEGOTIATE_MESSAGE negoMessage = NULL;
@@ -857,14 +858,15 @@ quit:
 }
 
 SECURITY_STATUS
-NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
-                              IN ULONG ASCContextReq,
-                              IN PSecBuffer InputToken,
-                              OUT PSecBuffer OutputToken,
-                              OUT PULONG pASCContextAttr,
-                              OUT PTimeStamp ptsExpiry,
-                              OUT PUCHAR pSessionKey,
-                              OUT PULONG pfUserFlags)
+SvrHandleAuthenticateMessage(
+    IN ULONG_PTR hContext,
+    IN ULONG ASCContextReq,
+    IN PSecBuffer InputToken,
+    OUT PSecBuffer OutputToken,
+    OUT PULONG pASCContextAttr,
+    OUT PTimeStamp ptsExpiry,
+    OUT PUCHAR pSessionKey,
+    OUT PULONG pfUserFlags)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_SVR context = NULL;
@@ -872,6 +874,20 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
     UNICODE_STRING UserName, Workstation, DomainName;
     //BOOLEAN isUnicode;
+
+    // TODO/CHECK 3.2.5.1.2
+    // * username + response empty -> ANONYMOUSE
+    // * client security features not strong enough -> error
+    // --
+    // * obtain response key by looking up the name in a database
+    // * with nt + lm response key + client challenge compute expected response
+    //   * if it matches -> generate
+    //     * session, singing, and sealing keys
+    //   * if not -> error access denied
+    //
+    // * NTLM servers SHOULD support NTLM clients which
+    //   incorrectly use NIL for the UserDom for calculating
+    //   ResponseKeyNT and ResponseKeyLM.
 
     /* It seems these flags are always returned */
     *pASCContextAttr = ASC_RET_INTEGRITY |

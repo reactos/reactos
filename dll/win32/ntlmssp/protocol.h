@@ -332,7 +332,7 @@ CliGenerateAuthenticationMessage(
 
 /* ??? message functions */
 SECURITY_STATUS
-NtlmHandleNegotiateMessage(
+SvrHandleNegotiateMessage(
     IN ULONG_PTR hCredential,
     IN OUT PULONG_PTR phContext,
     IN ULONG ASCContextReq,
@@ -344,7 +344,7 @@ NtlmHandleNegotiateMessage(
     OUT PTimeStamp ptsExpiry);
 
 SECURITY_STATUS
-NtlmGenerateChallengeMessage(
+CliGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT_SVR Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
     IN ULONG ASCContextReq,
@@ -353,7 +353,7 @@ NtlmGenerateChallengeMessage(
     OUT PSecBuffer OutputToken);
 
 SECURITY_STATUS
-NtlmHandleAuthenticateMessage(
+SvrHandleAuthenticateMessage(
     IN ULONG_PTR hContext,
     IN ULONG ASCContextReq,
     IN PSecBuffer InputToken,

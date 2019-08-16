@@ -426,7 +426,7 @@ NtlmChallengeResponse(
 /* MS-NLSP 3.3.2 NTLM v2 Authentication */
 //#define VALIDATE_NTLMv2
 BOOL
-ComputeResponseNVLMv2(
+CliComputeResponseNVLMv2(
     IN PEXT_STRING user,
     IN PEXT_STRING passwd,
     IN PEXT_STRING userdom,
@@ -676,17 +676,17 @@ NtlmChallengeResponse(
                    ChallengeToClient,
                    pLm2Response,
                    pLm2Response->Response);*/
-    if (!ComputeResponseNVLMv2(pUserNameW,
-                               pPasswordW,
-                               pDomainNameW,
-                               pServerName,
-                               ChallengeToClient,
-                               pNtResponse->ChallengeFromClient,
-                               pNtResponse,
-                               pNtResponseData->bUsed,
-                               pNtResponse->Response,
-                               pLm2ChallengeResponse,
-                               pUserSessionKey))
+    if (!CliComputeResponseNVLMv2(pUserNameW,
+                                  pPasswordW,
+                                  pDomainNameW,
+                                  pServerName,
+                                  ChallengeToClient,
+                                  pNtResponse->ChallengeFromClient,
+                                  pNtResponse,
+                                  pNtResponseData->bUsed,
+                                  pNtResponse->Response,
+                                  pLm2ChallengeResponse,
+                                  pUserSessionKey))
     {
         ERR("ComputeResponseNVLMv2 failed!\n");
         return FALSE;
