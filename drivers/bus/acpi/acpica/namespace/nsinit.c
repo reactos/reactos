@@ -104,29 +104,30 @@ AcpiNsInitializeObjects (
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "**** Starting initialization of namespace objects ****\n"));
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "Completing Region/Field/Buffer/Package initialization:\n"));
+        "Final data object initialization: "));
 
-    /* Set all init info to zero */
+    /* Clear the info block */
 
     memset (&Info, 0, sizeof (ACPI_INIT_WALK_INFO));
 
     /* Walk entire namespace from the supplied root */
 
+    /*
+     * TBD: will become ACPI_TYPE_PACKAGE as this type object
+     * is now the only one that supports deferred initialization
+     * (forward references).
+     */
     Status = AcpiWalkNamespace (ACPI_TYPE_ANY, ACPI_ROOT_OBJECT,
-        ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL,
-        &Info, NULL);
+        ACPI_UINT32_MAX, AcpiNsInitOneObject, NULL, &Info, NULL);
     if (ACPI_FAILURE (Status))
     {
         ACPI_EXCEPTION ((AE_INFO, Status, "During WalkNamespace"));
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
-        "    Initialized %u/%u Regions %u/%u Fields %u/%u "
-        "Buffers %u/%u Packages (%u nodes)\n",
-        Info.OpRegionInit,  Info.OpRegionCount,
-        Info.FieldInit,     Info.FieldCount,
-        Info.BufferInit,    Info.BufferCount,
-        Info.PackageInit,   Info.PackageCount, Info.ObjectCount));
+        "Namespace contains %u (0x%X) objects\n",
+        Info.ObjectCount,
+        Info.ObjectCount));
 
     ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
         "%u Control Methods found\n%u Op Regions found\n",
@@ -453,33 +454,17 @@ AcpiNsInitOneObject (
     AcpiExEnterInterpreter ();
 
     /*
-     * Each of these types can contain executable AML code within the
-     * declaration.
+     * Only initialization of Package objects can be deferred, in order
+     * to support forward references.
      */
     switch (Type)
     {
-    case ACPI_TYPE_REGION:
-
-        Info->OpRegionInit++;
-        Status = AcpiDsGetRegionArguments (ObjDesc);
-        break;
-
-    case ACPI_TYPE_BUFFER_FIELD:
-
-        Info->FieldInit++;
-        Status = AcpiDsGetBufferFieldArguments (ObjDesc);
-        break;
-
     case ACPI_TYPE_LOCAL_BANK_FIELD:
+
+        /* TBD: BankFields do not require deferred init, remove this code */
 
         Info->FieldInit++;
         Status = AcpiDsGetBankFieldArguments (ObjDesc);
-        break;
-
-    case ACPI_TYPE_BUFFER:
-
-        Info->BufferInit++;
-        Status = AcpiDsGetBufferArguments (ObjDesc);
         break;
 
     case ACPI_TYPE_PACKAGE:
@@ -492,8 +477,12 @@ AcpiNsInitOneObject (
 
     default:
 
-        /* No other types can get here */
+        /* No other types should get here */
 
+        Status = AE_TYPE;
+        ACPI_EXCEPTION ((AE_INFO, Status,
+            "Opcode is not deferred [%4.4s] (%s)",
+            AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Type)));
         break;
     }
 

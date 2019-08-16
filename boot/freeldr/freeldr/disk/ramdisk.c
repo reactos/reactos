@@ -34,7 +34,7 @@ static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Infor
     //
     // Give current seek offset and ram disk size to caller
     //
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = gRamDiskSize;
     Information->CurrentAddress.LowPart = gRamDiskOffset;
 
@@ -120,7 +120,7 @@ BOOLEAN
 NTAPI
 RamDiskLoadVirtualFile(IN PCHAR FileName)
 {
-    PFILE RamFile;
+    ULONG RamFileId;
     ULONG TotalRead, ChunkSize, Count;
     PCHAR MsgBuffer = "Loading RamDisk...";
     ULONG PercentPerChunk, Percent;
@@ -137,17 +137,17 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     //
     // Try opening the ramdisk file
     //
-    RamFile = FsOpenFile(FileName);
-    if (!RamFile)
+    RamFileId = FsOpenFile(FileName);
+    if (!RamFileId)
         return FALSE;
 
     //
     // Get the file size
     //
-    Status = ArcGetFileInformation(RamFile, &Information);
+    Status = ArcGetFileInformation(RamFileId, &Information);
     if (Status != ESUCCESS)
     {
-        FsCloseFile(RamFile);
+        ArcClose(RamFileId);
         return FALSE;
     }
 
@@ -157,7 +157,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     if (Information.EndingAddress.HighPart != 0)
     {
         UiMessageBox("RAM disk too big.");
-        FsCloseFile(RamFile);
+        ArcClose(RamFileId);
         return FALSE;
     }
     gRamDiskSize = Information.EndingAddress.LowPart;
@@ -174,7 +174,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     if (!gRamDiskBase)
     {
         UiMessageBox("Failed to allocate memory for RAM disk.");
-        FsCloseFile(RamFile);
+        ArcClose(RamFileId);
         return FALSE;
     }
 
@@ -205,10 +205,10 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
         //
         Position.HighPart = 0;
         Position.LowPart = TotalRead;
-        Status = ArcSeek(RamFile, &Position, SeekAbsolute);
+        Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
         if (Status == ESUCCESS)
         {
-            Status = ArcRead(RamFile,
+            Status = ArcRead(RamFileId,
                              (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead),
                              ChunkSize,
                              &Count);
@@ -222,13 +222,13 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
             MmFreeMemory(gRamDiskBase);
             gRamDiskBase = NULL;
             gRamDiskSize = 0;
-            FsCloseFile(RamFile);
+            ArcClose(RamFileId);
             UiMessageBox("Failed to read RAM disk.");
             return FALSE;
         }
     }
 
-    FsCloseFile(RamFile);
+    ArcClose(RamFileId);
 
     /* Setup the RAMDISK device */
     RamDiskInitialize();

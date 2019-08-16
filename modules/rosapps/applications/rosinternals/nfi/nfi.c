@@ -618,7 +618,7 @@ _tmain(int argc, const TCHAR *argv[])
     OutputBuffer = HeapAlloc(GetProcessHeap(), 0, VolumeInfo.BytesPerFileRecordSegment + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER));
     if (OutputBuffer == NULL)
     {
-        _ftprintf(stderr, _T("Failed to allocate %x bytes\n"), VolumeInfo.BytesPerFileRecordSegment + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER));
+        _ftprintf(stderr, _T("Failed to allocate %Ix bytes\n"), VolumeInfo.BytesPerFileRecordSegment + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER));
         CloseHandle(VolumeHandle);
         return 1;
     }

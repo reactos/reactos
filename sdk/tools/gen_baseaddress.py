@@ -90,9 +90,12 @@ PRIORITIES = (
 EXCLUDE = (
     'bmfd.dll',
     'bootvid.dll',
+    'framebuf.dll',
+    'framebuf_new.dll',
     'freeldr_pe.dll',
     'ftfd.dll',
     'fusion.dll',
+    'genincdata.dll',
     'hal.dll',
     'halaacpi.dll',
     'halacpi.dll',
@@ -203,13 +206,13 @@ def is_x64():
 
 def size_of_image_fallback(filename):
     with open(filename, 'rb') as fin:
-        if fin.read(2) != 'MZ':
+        if fin.read(2) != b'MZ':
             print(filename, 'No dos header found!')
             return 0
         fin.seek(0x3C)
         e_lfanew = struct.unpack('i', fin.read(4))[0]
         fin.seek(e_lfanew)
-        if fin.read(4) != 'PE\0\0':
+        if fin.read(4) != b'PE\0\0':
             print(filename, 'No PE header found!')
             return 0
         fin.seek(e_lfanew + 0x18)
@@ -332,8 +335,8 @@ class MemoryLayout(object):
 def guess_version(ntdll_path):
     if 'pefile' in globals():
         ntdll_pe = pefile.PE(ntdll_path, fast_load=True)
-        names = [sect.Name.strip('\0') for sect in ntdll_pe.sections]
-        count = '|'.join(names).count('/')
+        names = [sect.Name.strip(b'\0') for sect in ntdll_pe.sections]
+        count = b'|'.join(names).count(b'/')
         if '.rossym' in names:
             print('# This should probably go in baseaddress.cmake')
         elif is_x64():

@@ -30,24 +30,6 @@ DBG_DEFAULT_CHANNEL(DISK);
 #define XBOX_IDE_COMMAND_PORT 0x1f0
 #define XBOX_IDE_CONTROL_PORT 0x170
 
-#define XBOX_SIGNATURE_SECTOR 3
-#define XBOX_SIGNATURE        ('B' | ('R' << 8) | ('F' << 16) | ('R' << 24))
-
-static struct
-{
-    ULONG SectorCountBeforePartition;
-    ULONG PartitionSectorCount;
-    UCHAR SystemIndicator;
-} XboxPartitions[] =
-{
-    /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
-    { 0x0055F400, 0x0098f800, PARTITION_FAT32  }, /* Store , E: */
-    { 0x00465400, 0x000FA000, PARTITION_FAT_16 }, /* System, C: */
-    { 0x00000400, 0x00177000, PARTITION_FAT_16 }, /* Cache1, X: */
-    { 0x00177400, 0x00177000, PARTITION_FAT_16 }, /* Cache2, Y: */
-    { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
-};
-
 #define  IDE_SECTOR_BUF_SZ      512
 #define  IDE_MAX_POLL_RETRIES   100000
 #define  IDE_MAX_BUSY_RETRIES   50000
@@ -433,21 +415,21 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
     ULONG StartSector;
     UCHAR Count;
 
-    if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
+    if (DriveNumber < 0x80 || (DriveNumber & 0x0f) >= 2)
     {
         /* Xbox has only 1 IDE controller and no floppy */
         WARN("Invalid drive number\n");
         return FALSE;
     }
 
-    if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
+    if (((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)) != UINT64_C(0))
     {
         FIXME("48bit LBA required but not implemented\n");
         return FALSE;
     }
 
     StartSector = (ULONG) SectorNumber;
-    while (0 < SectorCount)
+    while (SectorCount > 0)
     {
         Count = (SectorCount <= 255 ? (UCHAR)SectorCount : 255);
         if (!XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
@@ -457,7 +439,7 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
                                 (StartSector >> 8) & 0xff,
                                 (StartSector >> 16) & 0xff,
                                 ((StartSector >> 24) & 0x0f) | IDE_DH_LBA |
-                                (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                                ((DriveNumber & 0x0f) == 0 ? IDE_DH_DRV0 : IDE_DH_DRV1),
                                 IDE_CMD_READ,
                                 Buffer))
         {
@@ -468,32 +450,6 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
     }
 
     return TRUE;
-}
-
-BOOLEAN
-XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-    UCHAR SectorData[IDE_SECTOR_BUF_SZ];
-
-    /*
-     * This is the Xbox, chances are that there is a Xbox-standard
-     * partitionless disk in it so let's check that first.
-     */
-    if (1 <= PartitionNumber && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
-        MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
-    {
-        if (*((PULONG) SectorData) == XBOX_SIGNATURE)
-        {
-            memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
-            PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
-            PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
-            PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
-            return TRUE;
-        }
-    }
-
-    /* No magic Xbox partitions, maybe there's a MBR */
-    return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN
@@ -512,7 +468,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
                             0,
                             0,
                             0,
-                            (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                            ((DriveNumber & 0x0f) == 0 ? IDE_DH_DRV0 : IDE_DH_DRV1),
                             (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
                             (PUCHAR) &DrvParms))
     {
@@ -524,7 +480,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
     Geometry->Heads = DrvParms.LogicalHeads;
     Geometry->Sectors = DrvParms.SectorsPerTrack;
 
-    if (! Atapi && 0 != (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED))
+    if (!Atapi && (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED) != 0)
     {
         /* LBA ATA drives always have a sector size of 512 */
         Geometry->BytesPerSector = 512;

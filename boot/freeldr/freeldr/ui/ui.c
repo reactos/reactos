@@ -430,6 +430,43 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
     }
 }
 
+VOID
+UiShowMessageBoxesInArgv(
+    IN ULONG Argc,
+    IN PCHAR Argv[])
+{
+    ULONG LastIndex;
+    PCSTR ArgValue;
+    PCHAR MessageBoxText;
+    SIZE_T MessageBoxTextSize;
+
+    /* Find all the message box settings and run them */
+    for (LastIndex = 0;
+         (ArgValue = GetNextArgumentValue(Argc, Argv, &LastIndex, "MessageBox")) != NULL;
+         ++LastIndex)
+    {
+        /* Get the real length of the MessageBox text */
+        MessageBoxTextSize = (strlen(ArgValue) + 1) * sizeof(CHAR);
+
+        /* Allocate enough memory to hold the text */
+        MessageBoxText = FrLdrTempAlloc(MessageBoxTextSize, TAG_UI_TEXT);
+        if (MessageBoxText)
+        {
+            /* Get the MessageBox text */
+            strcpy(MessageBoxText, ArgValue);
+
+            /* Fix it up */
+            UiEscapeString(MessageBoxText);
+
+            /* Display it */
+            UiMessageBox(MessageBoxText);
+
+            /* Free the memory */
+            FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
+        }
+    }
+}
+
 VOID UiEscapeString(PCHAR String)
 {
     ULONG    Idx;
@@ -456,9 +493,24 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
     }
 }
 
-BOOLEAN UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN
+UiDisplayMenu(
+    IN PCSTR MenuHeader,
+    IN PCSTR MenuFooter OPTIONAL,
+    IN BOOLEAN ShowBootOptions,
+    IN PCSTR MenuItemList[],
+    IN ULONG MenuItemCount,
+    IN ULONG DefaultMenuItem,
+    IN LONG MenuTimeOut,
+    OUT PULONG SelectedMenuItem,
+    IN BOOLEAN CanEscape,
+    IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
+    IN PVOID Context OPTIONAL)
 {
-    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
+    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions,
+                              MenuItemList, MenuItemCount, DefaultMenuItem,
+                              MenuTimeOut, SelectedMenuItem, CanEscape,
+                              KeyPressFilter, Context);
 }
 
 VOID UiFadeInBackdrop(VOID)

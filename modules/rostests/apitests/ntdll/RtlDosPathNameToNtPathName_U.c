@@ -146,8 +146,8 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		if (!bOK)
 		{
 			printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
-			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpected);
-			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
+			printf("Expected: %2Iu chars \"%S\"\n", lenExp, pwszExpected);
+			printf("Actual  : %2Iu chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
 			return;
 		}
 	} else
@@ -156,8 +156,8 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		PWSTR pwszActual = NtName.Buffer + 4;
 		const size_t lenAct = (NtName.Length - 8) / 2;
 		check_result(FALSE, "Unexpected NtName (expected NULL)");
-		printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
-		printf("Actual  : %2u chars \"%S\"\n", lenAct, pwszActual);
+		printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
+		printf("Actual  : %2Iu chars \"%S\"\n", lenAct, pwszActual);
 	}
 
 	if (pwszExpectedPartName) {
@@ -167,17 +167,17 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		      wcscmp(PartName, pwszExpectedPartName) == 0;
 		check_result(bOK, "PartName does not match expected");
 		if (!bOK) {
-			printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
-			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpectedPartName);
-			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? PartName : L"(null)");
+			printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
+			printf("Expected: %2Iu chars \"%S\"\n", lenExp, pwszExpectedPartName);
+			printf("Actual  : %2Iu chars \"%S\"\n", lenAct, lenAct ? PartName : L"(null)");
 			return;
 		}
 	} else
 	if (PartName)
 	{
 		check_result(FALSE, "Unexpected PartName (expected NULL).");
-		printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
-		printf("Actual  : %2u chars %S\n", wcslen(PartName), PartName);
+		printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
+		printf("Actual  : %2Iu chars %S\n", wcslen(PartName), PartName);
 	}
 }
 

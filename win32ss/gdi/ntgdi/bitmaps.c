@@ -59,7 +59,7 @@ UnsafeSetBitmapBits(
     NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
+    nHeight = psurf->SurfObj.sizlBitmap.cy;
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
     pjDst = psurf->SurfObj.pvScan0;
@@ -509,7 +509,7 @@ UnsafeGetBitmapBits(
     ULONG Y, iSrc, iDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
+    nHeight = psurf->SurfObj.sizlBitmap.cy;
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
     /* Get pointers */
@@ -575,7 +575,7 @@ NtGdiGetBitmapBits(
     /* Calculate the size of the bitmap in bytes */
     cjSize = WIDTH_BYTES_ALIGN16(psurf->SurfObj.sizlBitmap.cx,
                 BitsPerFormat(psurf->SurfObj.iBitmapFormat)) *
-                abs(psurf->SurfObj.sizlBitmap.cy);
+                psurf->SurfObj.sizlBitmap.cy;
 
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)

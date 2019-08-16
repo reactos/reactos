@@ -22,8 +22,6 @@
 
 LANGUAGE LANG_ROMANSH, SUBLANG_DEFAULT
 
-#pragma code_page(65001)
-
 /* FIXME: This file is in the Vallader Romansh dialect and not in the
    official Rumantsch Grischun. */
 

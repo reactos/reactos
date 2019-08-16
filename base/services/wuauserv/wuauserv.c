@@ -15,7 +15,7 @@ static WCHAR ServiceName[] = L"wuauserv";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
-static HANDLE exitEvent = NULL;
+static HANDLE hStopEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -37,6 +37,9 @@ UpdateServiceStatus(DWORD dwState)
     else
         ServiceStatus.dwWaitHint = 0;
 
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
     SetServiceStatus(ServiceStatusHandle,
                      &ServiceStatus);
     DPRINT1("WU UpdateServiceStatus() called\n");
@@ -52,8 +55,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_STOP received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
-            SetEvent(exitEvent);
+            SetEvent(hStopEvent);
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
@@ -74,7 +77,8 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_SHUTDOWN received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
+            SetEvent(hStopEvent);
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         default :
@@ -100,12 +104,19 @@ ServiceMain(DWORD argc, LPTSTR *argv)
         return;
     }
 
+    hStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (hStopEvent == NULL)
+    {
+        DPRINT1("CreateEvent() failed! (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
     UpdateServiceStatus(SERVICE_RUNNING);
 
-    exitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    WaitForSingleObject(exitEvent, INFINITE);
-    CloseHandle(exitEvent);
+    WaitForSingleObject(hStopEvent, INFINITE);
+    CloseHandle(hStopEvent);
 
+done:
     UpdateServiceStatus(SERVICE_STOPPED);
 }
 

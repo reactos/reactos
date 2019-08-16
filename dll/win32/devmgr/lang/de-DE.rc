@@ -242,32 +242,46 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
 
-
+IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Entfernen des Geräts bestätigen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Warnung: Sie sind dabei, das Gerät aus der Systemkonfiguration zu deinstalleren.", -1, 7, 37, 204, 50
+    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 166, 100, 50, 14
+END
 
 /*
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
-  POPUP "&Datei"
-  BEGIN
-    MENUITEM "&Beenden",                       IDC_EXIT
-  END
-  MENUITEM "Ak&tion",                          IDC_ACTIONMENU
-  POPUP "&Ansicht"
-  BEGIN
-    MENUITEM "Geräte nach &Typ",               IDC_DEVBYTYPE
-    MENUITEM "Garäte nach &Verbindung",        IDC_DEVBYCONN
-    MENUITEM "Ressourcen nac&h Typ",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Ressourcen nach V&erbindung",    IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "Ausgeblendete &Geräte anzeigen", IDC_SHOWHIDDEN
-  END
-  POPUP "&Hilfe"
-  BEGIN
-    MENUITEM "Ü&ber",                          IDC_ABOUT
-  END
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Beenden",                       IDM_EXIT
+    END
+    POPUP "Ak&tion"
+    BEGIN
+        MENUITEM "Nach geänderter Hardware suchen", IDM_SCAN_HARDWARE
+        MENUITEM "Hardware hinzufügen",             IDM_ADD_HARDWARE
+    END
+    POPUP "&Ansicht"
+    BEGIN
+        MENUITEM "Geräte nach &Typ",               IDM_DEVBYTYPE
+        MENUITEM "Garäte nach &Verbindung",        IDM_DEVBYCONN
+        MENUITEM "Ressourcen nac&h Typ",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ressourcen nach V&erbindung",    IDM_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Ausgeblendete &Geräte anzeigen", IDM_SHOWHIDDEN
+    END
+    POPUP "&Hilfe"
+    BEGIN
+        MENUITEM "Ü&ber",                          IDM_ABOUT
+    END
 END
 
 

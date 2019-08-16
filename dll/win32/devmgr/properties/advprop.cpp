@@ -430,6 +430,104 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
 
 
 static
+INT_PTR
+CALLBACK
+UninstallDriverDlgProc(IN HWND hwndDlg,
+                       IN UINT uMsg,
+                       IN WPARAM wParam,
+                       IN LPARAM lParam)
+{
+    PDEVADVPROP_INFO dap;
+    INT_PTR Ret = FALSE;
+
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    if (dap != NULL || uMsg == WM_INITDIALOG)
+    {
+        switch (uMsg)
+        {
+            case WM_INITDIALOG:
+                dap = (PDEVADVPROP_INFO)lParam;
+                if (dap != NULL)
+                {
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)dap);
+
+                    /* Set the device image */
+                    SendDlgItemMessage(hwndDlg,
+                                       IDC_DEVICON,
+                                       STM_SETICON,
+                                       (WPARAM)dap->hDevIcon,
+                                       0);
+
+                    /* Set the device name */
+                    SetDlgItemText(hwndDlg,
+                                   IDC_DEVNAME,
+                                   dap->szDevName);
+                }
+
+                Ret = TRUE;
+                break;
+
+            case WM_COMMAND:
+                switch (LOWORD(wParam))
+                {
+                    case IDOK:
+                        EndDialog(hwndDlg, IDOK);
+                        break;
+
+                    case IDCANCEL:
+                        EndDialog(hwndDlg,  IDCANCEL);
+                        break;
+                }
+                break;
+
+            case WM_CLOSE:
+                EndDialog(hwndDlg, IDCANCEL);
+                break;
+        }
+    }
+
+    return Ret;
+}
+
+
+static
+VOID
+UninstallDriver(
+    _In_ HWND hwndDlg,
+    _In_ PDEVADVPROP_INFO dap)
+{
+    SP_REMOVEDEVICE_PARAMS RemoveDevParams;
+
+    if (DialogBoxParam(hDllInstance,
+                       MAKEINTRESOURCE(IDD_UNINSTALLDRIVER),
+                       hwndDlg,
+                       UninstallDriverDlgProc,
+                       (ULONG_PTR)dap) == IDCANCEL)
+        return;
+
+    RemoveDevParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    RemoveDevParams.ClassInstallHeader.InstallFunction = DIF_REMOVE;
+    RemoveDevParams.Scope = DI_REMOVEDEVICE_GLOBAL;
+    RemoveDevParams.HwProfile = 0;
+
+    SetupDiSetClassInstallParamsW(dap->DeviceInfoSet,
+                                  &dap->DeviceInfoData,
+                                  &RemoveDevParams.ClassInstallHeader,
+                                  sizeof(SP_REMOVEDEVICE_PARAMS));
+
+    SetupDiCallClassInstaller(DIF_REMOVE,
+                              dap->DeviceInfoSet,
+                              &dap->DeviceInfoData);
+
+    SetupDiSetClassInstallParamsW(dap->DeviceInfoSet,
+                                  &dap->DeviceInfoData,
+                                  NULL,
+                                  0);
+}
+
+
+static
 VOID
 UpdateDriver(
     IN HWND hwndDlg,
@@ -500,6 +598,9 @@ UpdateDriverDlg(IN HWND hwndDlg,
 {
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
+    DWORD dwStatus = 0;
+    DWORD dwProblem = 0;
+    CONFIGRET cr;
 
     if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
     {
@@ -556,6 +657,19 @@ UpdateDriverDlg(IN HWND hwndDlg,
                        IDC_DRVVERSION,
                        dap->szTemp);
     }
+
+    /* Disable the Uninstall button if the driver cannot be removed */
+    cr = CM_Get_DevNode_Status_Ex(&dwStatus,
+                                  &dwProblem,
+                                  dap->DeviceInfoData.DevInst,
+                                  0,
+                                  dap->hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        if ((dwStatus & DN_ROOT_ENUMERATED) != 0 &&
+            (dwStatus & DN_DISABLEABLE) == 0)
+            EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALLDRIVER), FALSE);
+    }
 }
 
 
@@ -596,7 +710,7 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                         break;
 
                     case IDC_UNINSTALLDRIVER:
-                        // FIXME
+                        UninstallDriver(hwndDlg, dap);
                         break;
                 }
                 break;
@@ -624,7 +738,6 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                                     dap);
                 }
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ROLLBACKDRIVER), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALLDRIVER), FALSE);
                 Ret = TRUE;
                 break;
             }

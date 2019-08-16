@@ -26,6 +26,8 @@ Arc(
                   xEndArc,
                   yEndArc);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiArcInternal(GdiTypeArc,
                             hdc,
                             xLeft,
@@ -62,6 +64,8 @@ AngleArc(
                   RCAST(DWORD, eStartAngle),
                   RCAST(DWORD, eSweepAngle));
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiAngleArc(hdc,
                          x,
                          y,
@@ -95,6 +99,8 @@ ArcTo(
                   yRadial1,
                   xRadial2,
                   yRadial2);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiArcInternal(GdiTypeArcTo,
                             hdc,
@@ -133,6 +139,8 @@ Chord(
                   yRadial1,
                   xRadial2,
                   yRadial2);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiArcInternal(GdiTypeChord,
                             hdc,
@@ -175,6 +183,8 @@ Pie(
                   yRadial1,
                   xRadial2,
                   yRadial2);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiArcInternal(GdiTypePie,
                             hdc,

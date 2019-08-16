@@ -697,7 +697,7 @@ InitStreamPin(
 ULONG
 GetDataRangeIndexForFormat(
     IN PKSDATARANGE ConnectionFormat,
-    IN PKSDATARANGE * DataRanges,
+    IN const PKSDATARANGE * DataRanges,
     IN ULONG DataRangesCount)
 {
     ULONG Index;

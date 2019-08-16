@@ -132,14 +132,9 @@
 // This macro uses the CreateNtObjectFromWin32Api macros from above to create an
 // NT object based on the Win32 API settings.
 //
-// Note that it is hardcoded to always use XXX_ALL_ACCESS permissions, which is
-// the behavior up until Vista. When/if the target moves to Vista, the macro can
-// be improved to support caller-specified access masks, as the underlying macro
-// above does support this.
-//
-#define CreateNtObjectFromWin32Api(obj, ntobj, capsobj, sec, name, ...)         \
+#define CreateNtObjectFromWin32Api(obj, ntobj, access, sec, name, ...)         \
     CreateNtObjectFromWin32ApiPrologue                                          \
-    CreateNtObjectFromWin32ApiBody(ntobj, sec, name, capsobj##_ALL_ACCESS, ##__VA_ARGS__); \
+    CreateNtObjectFromWin32ApiBody(ntobj, sec, name, access, ##__VA_ARGS__); \
     CreateNtObjectFromWin32ApiEpilogue
 
 //

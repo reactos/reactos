@@ -1,16 +1,16 @@
-1 stdcall ThemeWatchForStart()
-2 stdcall ThemeWaitForServiceReady(long)
-#3 stub Stub3
-#4 stub Stub4
-#5 stub Stub5
-#6 stub Stub6
-#7 stub BadApplicationServiceMain
-8 stdcall DllInstall(long wstr)
-9 stdcall DllRegisterServer()
-10 stdcall DllUnregisterServer()
-#11 stub HardwareDetectionServiceMain
-12 stdcall ThemeServiceMain(long ptr)
-#13 stub CreateHardwareEventMoniker
-14 stdcall DllCanUnloadNow()
-15 stdcall DllGetClassObject(ptr ptr ptr)
-#16 stub FUSCompatibilityEntryW
+1 stdcall -noname ThemeWatchForStart()
+2 stdcall -noname ThemeWaitForServiceReady(long)
+3 stdcall -stub -noname ThemeUserLogoff()
+4 stdcall -stub -noname ThemeUserLogon(ptr)
+5 stdcall -stub -noname ThemeUserStartShell()
+6 stdcall -stub -noname ThemeUserTSReconnect()
+@ stdcall -stub BadApplicationServiceMain(long ptr)
+@ stdcall -private DllInstall(long wstr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
+@ stdcall -stub HardwareDetectionServiceMain(long ptr)
+@ stdcall ThemeServiceMain(long ptr)
+@ stdcall -stub CreateHardwareEventMoniker(ptr ptr ptr)
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -stub FUSCompatibilityEntryW(long long wstr long)

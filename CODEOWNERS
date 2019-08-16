@@ -123,7 +123,6 @@
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
 /sdk/cmake/     @learn-more @ThFabba
-CMakeLists.txt  @learn-more @ThFabba
 *.cmake         @learn-more @ThFabba
 
 # File Patch API
@@ -238,6 +237,11 @@ CMakeLists.txt  @learn-more @ThFabba
 #   R: learn-more, learn_more, Mark Jansen
 #   S: Maintained
 /dll/shellext   @learn-more
+
+# UniATA
+#   M: ThFabba, Thomas Faber
+#   S: Upstream
+/drivers/storage/ide/uniata/   @ThFabba
 
 # Upstream File Systems
 #   M: HeisSpiter, Pierre Schweitzer

@@ -265,8 +265,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHLABEL "Search"
-    IDS_ADDRESSBANDLABEL "A&ddress"
+    IDS_SEARCHLABEL "חפש"
+    IDS_ADDRESSBANDLABEL "&כתובת"
 END
 
 STRINGTABLE
@@ -286,14 +286,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Back to %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_BACK "חזור אל %s"
+    IDS_FORWARD "%s התקדם אל"
     IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|אחורה|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
 END
 
 STRINGTABLE

@@ -225,13 +225,13 @@ CDeviceView::OnAction(
 {
     switch (Action)
     {
-        case IDC_PROPERTIES:
+        case IDM_PROPERTIES:
         {
             DisplayPropertySheet();
             break;
         }
 
-        case IDC_SCAN_HARDWARE:
+        case IDM_SCAN_HARDWARE:
         {
             Refresh(GetCurrentView(),
                     true,
@@ -239,7 +239,7 @@ CDeviceView::OnAction(
             break;
         }
 
-        case IDC_ENABLE_DRV:
+        case IDM_ENABLE_DRV:
         {
             bool NeedsReboot;
             if (EnableSelectedDevice(true, NeedsReboot) &&
@@ -250,27 +250,27 @@ CDeviceView::OnAction(
             break;
         }
 
-        case IDC_DISABLE_DRV:
+        case IDM_DISABLE_DRV:
         {
             bool NeedsReboot;
             EnableSelectedDevice(false, NeedsReboot);
             break;
         }
 
-        case IDC_UPDATE_DRV:
+        case IDM_UPDATE_DRV:
         {
             bool NeedsReboot;
             UpdateSelectedDevice(NeedsReboot);
             break;
         }
 
-        case IDC_UNINSTALL_DRV:
+        case IDM_UNINSTALL_DRV:
         {
             UninstallSelectedDevice();
             break;
         }
 
-        case IDC_ADD_HARDWARE:
+        case IDM_ADD_HARDWARE:
         {
             RunAddHardwareWizard();
             break;
@@ -878,7 +878,7 @@ CDeviceView::BuildActionMenuForNode(
         if (DeviceNode->CanUpdate())
         {
             String.LoadStringW(g_hThisInstance, IDS_MENU_UPDATE);
-            MenuItemInfo.wID = IDC_UPDATE_DRV;
+            MenuItemInfo.wID = IDM_UPDATE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
@@ -887,7 +887,7 @@ CDeviceView::BuildActionMenuForNode(
         if (DeviceNode->IsDisabled())
         {
             String.LoadStringW(g_hThisInstance, IDS_MENU_ENABLE);
-            MenuItemInfo.wID = IDC_ENABLE_DRV;
+            MenuItemInfo.wID = IDM_ENABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
@@ -896,7 +896,7 @@ CDeviceView::BuildActionMenuForNode(
         if (DeviceNode->CanDisable() && !DeviceNode->IsDisabled())
         {
             String.LoadStringW(g_hThisInstance, IDS_MENU_DISABLE);
-            MenuItemInfo.wID = IDC_DISABLE_DRV;
+            MenuItemInfo.wID = IDM_DISABLE_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
@@ -905,7 +905,7 @@ CDeviceView::BuildActionMenuForNode(
         if (DeviceNode->CanUninstall())
         {
             String.LoadStringW(g_hThisInstance, IDS_MENU_UNINSTALL);
-            MenuItemInfo.wID = IDC_UNINSTALL_DRV;
+            MenuItemInfo.wID = IDM_UNINSTALL_DRV;
             MenuItemInfo.dwTypeData = String.GetBuffer();
             InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
             i++;
@@ -917,7 +917,7 @@ CDeviceView::BuildActionMenuForNode(
 
     // All nodes have the scan option
     String.LoadStringW(g_hThisInstance, IDS_MENU_SCAN);
-    MenuItemInfo.wID = IDC_SCAN_HARDWARE;
+    MenuItemInfo.wID = IDM_SCAN_HARDWARE;
     MenuItemInfo.dwTypeData = String.GetBuffer();
     InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
     i++;
@@ -925,7 +925,7 @@ CDeviceView::BuildActionMenuForNode(
     if ((Node->GetNodeType() == RootNode) || (MainMenu == true))
     {
         String.LoadStringW(g_hThisInstance, IDS_MENU_ADD);
-        MenuItemInfo.wID = IDC_ADD_HARDWARE;
+        MenuItemInfo.wID = IDM_ADD_HARDWARE;
         MenuItemInfo.dwTypeData = String.GetBuffer();
         InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
         i++;
@@ -937,7 +937,7 @@ CDeviceView::BuildActionMenuForNode(
         i++;
 
         String.LoadStringW(g_hThisInstance, IDS_MENU_PROPERTIES);
-        MenuItemInfo.wID = IDC_PROPERTIES;
+        MenuItemInfo.wID = IDM_PROPERTIES;
         MenuItemInfo.dwTypeData = String.GetBuffer();
         InsertMenuItemW(OwnerMenu, i, TRUE, &MenuItemInfo);
         i++;

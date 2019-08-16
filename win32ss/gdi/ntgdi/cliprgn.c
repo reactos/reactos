@@ -31,7 +31,7 @@ IntGdiReleaseVisRgn(PDC pDC)
 }
 
 //
-// Updating Vis Region Attribute the for DC Attributes.
+// Updating Vis Region Attribute for DC Attributes.
 // BTW: This system region has an user attribute for it.
 //
 VOID
@@ -239,8 +239,8 @@ IntGdiExtSelectClipRect(
         }
     }
     else // Have a box to build a region with.
-    {
-        if (dc->dclevel.prgnClip)
+    {                             //       See CORE-16246 : Needs to be a one box Clip Region.
+        if ( dc->dclevel.prgnClip && (REGION_Complexity(dc->dclevel.prgnClip) == SIMPLEREGION) )
         {
             REGION_GetRgnBox(dc->dclevel.prgnClip, &rect);
 

@@ -43,7 +43,7 @@ static SERVICE_STATUS ServiceStatus;
 
 HKEY hEnumKey = NULL;
 HKEY hClassKey = NULL;
-
+BOOL g_IsUISuppressed = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -268,6 +268,77 @@ ServiceControlHandler(DWORD dwControl,
     }
 }
 
+static DWORD
+GetBooleanRegValue(
+    IN HKEY hKey,
+    IN PCWSTR lpSubKey,
+    IN PCWSTR lpValue,
+    OUT PBOOL pValue)
+{
+    DWORD dwError, dwType, dwData;
+    DWORD cbData = sizeof(dwData);
+    HKEY hSubKey = NULL;
+
+    /* Default value */
+    *pValue = FALSE;
+
+    dwError = RegOpenKeyExW(hKey,
+                            lpSubKey,
+                            0,
+                            KEY_READ,
+                            &hSubKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("GetBooleanRegValue(): RegOpenKeyExW() has failed to open '%S' key! (Error: %lu)\n",
+               lpSubKey, dwError);
+        return dwError;
+    }
+
+    dwError = RegQueryValueExW(hSubKey,
+                               lpValue,
+                               0,
+                               &dwType,
+                               (PBYTE)&dwData,
+                               &cbData);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("GetBooleanRegValue(): RegQueryValueExW() has failed to query '%S' value! (Error: %lu)\n",
+               lpValue, dwError);
+        goto Cleanup;
+    }
+    if (dwType != REG_DWORD)
+    {
+        DPRINT("GetBooleanRegValue(): The value is not of REG_DWORD type!\n");
+        goto Cleanup;
+    }
+
+    /* Return the value */
+    *pValue = (dwData == 1);
+
+Cleanup:
+    RegCloseKey(hSubKey);
+
+    return dwError;
+}
+
+BOOL
+GetSuppressNewUIValue(VOID)
+{
+    BOOL bSuppressNewHWUI = FALSE;
+
+    /*
+     * Query the SuppressNewHWUI policy registry value. Don't cache it
+     * as we want to update our behaviour in consequence.
+     */
+    GetBooleanRegValue(HKEY_LOCAL_MACHINE,
+                       L"Software\\Policies\\Microsoft\\Windows\\DeviceInstall\\Settings",
+                       L"SuppressNewHWUI",
+                       &bSuppressNewHWUI);
+    if (bSuppressNewHWUI)
+        DPRINT("GetSuppressNewUIValue(): newdev.dll's wizard UI won't be shown!\n");
+
+    return bSuppressNewHWUI;
+}
 
 VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR *argv)
@@ -362,6 +433,14 @@ InitializePnPManager(VOID)
     }
 
     InitializeSListHead(&DeviceInstallListHead);
+
+    /* Query the SuppressUI registry value and cache it for our whole lifetime */
+    GetBooleanRegValue(HKEY_LOCAL_MACHINE,
+                       L"System\\CurrentControlSet\\Services\\PlugPlay\\Parameters",
+                       L"SuppressUI",
+                       &g_IsUISuppressed);
+    if (g_IsUISuppressed)
+        DPRINT("UMPNPMGR: newdev.dll's wizard UI won't be shown!\n");
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

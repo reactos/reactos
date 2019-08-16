@@ -83,6 +83,3 @@ Int386_vector_opcode:
     pop ds
 
     ret
-
-
-

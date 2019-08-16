@@ -12,6 +12,7 @@
 #include <debug.h>
 #include <internal/arm/mm.h>
 #include <internal/arm/intrin_i.h>
+#include "../../winldr.h"
 
 #define PFN_SHIFT                   12
 #define LARGE_PFN_SHIFT             20
@@ -165,8 +166,8 @@ WinLdrMapSpecialPages(ULONG PcrBasePage)
 VOID
 WinLdrSetupForNt(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                  IN PVOID *GdtIdt,
-                 IN ULONG *PcrBasePage,
-                 IN ULONG *TssBasePage)
+                 IN PULONG PcrBasePage,
+                 IN PULONG TssBasePage)
 {
     PKPDR_PAGE PdrPage = (PVOID)0xFFD00000;
 

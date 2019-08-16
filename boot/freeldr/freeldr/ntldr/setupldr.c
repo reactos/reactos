@@ -1,42 +1,29 @@
 /*
- *  FreeLoader
- *
- *  Copyright (C) 2009       Aleksey Bragin  <aleksey@reactos.org>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Windows-compatible NT OS Setup Loader.
+ * COPYRIGHT:   Copyright 2009-2019 Aleksey Bragin <aleksey@reactos.org>
  */
 
 #include <freeldr.h>
-#include "winldr.h"
-
 #include <ndk/ldrtypes.h>
 #include <arc/setupblk.h>
+#include "winldr.h"
+#include "inffile.h"
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(WINDOWS);
+
 #define TAG_BOOT_OPTIONS 'pOtB'
 
 // TODO: Move to .h
 VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
 
 static VOID
-SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
+SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
 {
     INFCONTEXT InfContext;
-    LPCSTR AnsiName, OemName, LangName;
+    PCSTR AnsiName, OemName, LangName;
 
     /* Get ANSI codepage file */
     if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
@@ -73,13 +60,13 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
         return;
     }
 
-    TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
+    TRACE("NLS data '%s' '%s' '%s'\n", AnsiName, OemName, LangName);
 
 #if DBG
     {
         BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
         TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
-    }    
+    }
 #else
     WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
 #endif
@@ -89,11 +76,11 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
 }
 
 static VOID
-SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR SearchPath)
+SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
     BOOLEAN Success;
-    LPCSTR Media, DriverName, dirIndex, ImagePath;
+    PCSTR Media, DriverName, dirIndex, ImagePath;
     WCHAR ServiceName[256];
     WCHAR ImagePathW[256];
 
@@ -130,7 +117,7 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
                                                 ServiceName);
                 if (!Success)
                 {
-                    ERR("could not add boot driver %s, %s\n", SearchPath, DriverName);
+                    ERR("Could not add boot driver '%s', '%s'\n", SearchPath, DriverName);
                     return;
                 }
             }
@@ -141,20 +128,19 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
 
 /* SETUP STARTER **************************************************************/
 
-VOID
-LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion)
+ARC_STATUS
+LoadReactOSSetup(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
 {
-    ULONG_PTR SectionId;
-    PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  SettingsValue[80];
-    BOOLEAN HasSection;
-    CHAR  BootOptions2[256];
+    PCSTR ArgValue;
     PCHAR File;
     CHAR FileName[512];
     CHAR BootPath[512];
-    LPCSTR LoadOptions;
-    LPSTR BootOptions;
+    CHAR BootOptions2[256];
+    PCSTR LoadOptions;
+    PSTR BootOptions;
     BOOLEAN BootFromFloppy;
     BOOLEAN Success;
     ULONG i, ErrorLine;
@@ -162,8 +148,9 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     INFCONTEXT InfContext;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     PSETUP_LOADER_BLOCK SetupBlock;
-    LPCSTR SystemPath;
-    LPCSTR SourcePaths[] =
+    PCSTR SystemPath;
+
+    static PCSTR SourcePaths[] =
     {
         "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -179,31 +166,27 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
 
     UiDrawStatusText("Setup is loading...");
 
-    /* Get OS setting value */
-    SettingsValue[0] = ANSI_NULL;
-    IniOpenSection("Operating Systems", &SectionId);
-    IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
-
-    /* Open the operating system section specified in the .ini file */
-    HasSection = IniOpenSection(SectionName, &SectionId);
-
     UiDrawBackdrop();
     UiDrawProgressBarCenter(1, 100, "Loading ReactOS Setup...");
 
-    /* Read the system path is set in the .ini file */
-    if (!HasSection ||
-        !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
+    /* Retrieve the system path */
+    *BootPath = ANSI_NULL;
+    ArgValue = GetArgumentValue(Argc, Argv, "SystemPath");
+    if (ArgValue)
+    {
+        RtlStringCbCopyA(BootPath, sizeof(BootPath), ArgValue);
+    }
+    else
     {
         /*
          * IMPROVE: I don't want to call MachDiskGetBootPath here as a
          * default choice because I can call it after (see few lines below).
-         * Also doing the strcpy call as it is done in winldr.c is not
-         * really what we want. Instead I reset BootPath here so that
-         * we can build the full path using the general code from below.
+         * Instead I reset BootPath here so that we can build the full path
+         * using the general code from below.
          */
         // MachDiskGetBootPath(BootPath, sizeof(BootPath));
-        // strcpy(BootPath, SectionName);
-        BootPath[0] = '\0';
+        // RtlStringCbCopyA(BootPath, sizeof(BootPath), ArgValue);
+        *BootPath = ANSI_NULL;
     }
 
     /*
@@ -215,42 +198,39 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     if (strrchr(BootPath, ')') == NULL)
     {
         /* Temporarily save the boot path */
-        strcpy(FileName, BootPath);
+        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
 
         /* This is not a full path. Use the current (i.e. boot) device. */
         MachDiskGetBootPath(BootPath, sizeof(BootPath));
 
         /* Append a path separator if needed */
-        if (FileName[0] != '\\' && FileName[0] != '/')
-            strcat(BootPath, "\\");
+        if (*FileName != '\\' && *FileName != '/')
+            RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
         /* Append the remaining path */
-        strcat(BootPath, FileName);
+        RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
     }
 
     /* Append a backslash if needed */
-    if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
-        strcat(BootPath, "\\");
+    if (!*BootPath || BootPath[strlen(BootPath) - 1] != '\\')
+        RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
-    /* Read booting options */
-    if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions2, sizeof(BootOptions2)))
-    {
-        /* Get options after the title */
-        PCSTR p = SettingsValue;
-        while (*p == ' ' || *p == '"')
-            p++;
-        while (*p != '\0' && *p != '"')
-            p++;
-        strcpy(BootOptions2, p);
-        TRACE("BootOptions: '%s'\n", BootOptions2);
-    }
+    TRACE("BootPath: '%s'\n", BootPath);
+
+    /* Retrieve the boot options */
+    *BootOptions2 = ANSI_NULL;
+    ArgValue = GetArgumentValue(Argc, Argv, "Options");
+    if (ArgValue)
+        RtlStringCbCopyA(BootOptions2, sizeof(BootOptions2), ArgValue);
+
+    TRACE("BootOptions: '%s'\n", BootOptions2);
 
     /* Check if a ramdisk file was given */
     File = strstr(BootOptions2, "/RDPATH=");
     if (File)
     {
         /* Copy the file name and everything else after it */
-        strcpy(FileName, File + 8);
+        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
 
         /* Null-terminate */
         *strstr(FileName, " ") = ANSI_NULL;
@@ -259,13 +239,11 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         if (!RamDiskLoadVirtualFile(FileName))
         {
             UiMessageBox("Failed to load RAM disk file %s", FileName);
-            return;
+            return ENOENT;
         }
     }
 
-    TRACE("BootPath: '%s'\n", BootPath);
-
-    /* And check if we booted from floppy */
+    /* Check if we booted from floppy */
     BootFromFloppy = strstr(BootPath, "fdisk") != NULL;
 
     /* Open 'txtsetup.sif' from any of source paths */
@@ -276,11 +254,11 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         if (!SystemPath)
         {
             UiMessageBox("Failed to open txtsetup.sif");
-            return;
+            return ENOENT;
         }
-        strcpy(File, SystemPath);
-        strcpy(FileName, BootPath);
-        strcat(FileName, "txtsetup.sif");
+        RtlStringCbCopyA(File, sizeof(BootPath) - (File - BootPath)*sizeof(CHAR), SystemPath);
+        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
+        RtlStringCbCatA(FileName, sizeof(FileName), "txtsetup.sif");
         if (InfOpenFile(&InfHandle, FileName, &ErrorLine))
         {
             break;
@@ -293,20 +271,20 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     if (!InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
     {
         ERR("Failed to find 'SetupData/OsLoadOptions'\n");
-        return;
+        return EINVAL;
     }
 
     if (!InfGetDataField(&InfContext, 1, &LoadOptions))
     {
         ERR("Failed to get load options\n");
-        return;
+        return EINVAL;
     }
 
 #if DBG
     /* Get debug load options and use them */
     if (InfFindFirstLine(InfHandle, "SetupData", "DbgOsLoadOptions", &InfContext))
     {
-        LPCSTR DbgLoadOptions;
+        PCSTR DbgLoadOptions;
 
         if (InfGetDataField(&InfContext, 1, &DbgLoadOptions))
             LoadOptions = DbgLoadOptions;
@@ -315,6 +293,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
 
     /* Copy loadoptions (original string will be freed) */
     BootOptions = FrLdrTempAlloc(strlen(LoadOptions) + 1, TAG_BOOT_OPTIONS);
+    ASSERT(BootOptions);
     strcpy(BootOptions, LoadOptions);
 
     TRACE("BootOptions: '%s'\n", BootOptions);
@@ -336,11 +315,11 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     TRACE("Setup SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
     if (!Success)
-        return;
+        return ENOEXEC;
 
     /* Load NLS data, they are in the System32 directory of the installation medium */
-    strcpy(FileName, BootPath);
-    strcat(FileName, "system32\\");
+    RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), "system32\\");
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
 
     // UiDrawStatusText("Press F6 if you need to install a 3rd-party SCSI or RAID driver...");
@@ -354,9 +333,9 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     UiDrawStatusText("The Setup program is starting...");
 
     /* Load ReactOS Setup */
-    LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
-                             LoaderBlock,
-                             BootOptions,
-                             BootPath,
-                             TRUE);
+    return LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
+                                    LoaderBlock,
+                                    BootOptions,
+                                    BootPath,
+                                    TRUE);
 }

@@ -17,11 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-/*
- * TODO: This is here where we should add support for GPT partitions
- * as well as partitionless disks!
- */
-
 #ifndef _M_ARM
 #include <freeldr.h>
 
@@ -29,8 +24,30 @@
 
 DBG_DEFAULT_CHANNEL(DISK);
 
-/* This function serves to retrieve a partition entry for devices that handle partitions differently */
-DISK_GET_PARTITION_ENTRY DiskGetPartitionEntry = DiskGetMbrPartitionEntry;
+#define MaxDriveNumber 0xFF
+PARTITION_STYLE DiskPartitionType[MaxDriveNumber + 1];
+
+/* BRFR signature at disk offset 0x600 */
+#define XBOX_SIGNATURE_SECTOR 3
+#define XBOX_SIGNATURE        ('B' | ('R' << 8) | ('F' << 16) | ('R' << 24))
+
+/* Default hardcoded partition number to boot from Xbox disk */
+#define FATX_DATA_PARTITION 1
+
+static struct
+{
+    ULONG SectorCountBeforePartition;
+    ULONG PartitionSectorCount;
+    UCHAR SystemIndicator;
+} XboxPartitions[] =
+{
+    /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
+    { 0x0055F400, 0x0098F800, PARTITION_FAT32  }, /* Store , E: */
+    { 0x00465400, 0x000FA000, PARTITION_FAT_16 }, /* System, C: */
+    { 0x00000400, 0x00177000, PARTITION_FAT_16 }, /* Cache1, X: */
+    { 0x00177400, 0x00177000, PARTITION_FAT_16 }, /* Cache2, Y: */
+    { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
+};
 
 BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
                                     PPARTITION_TABLE_ENTRY PartitionTableEntry,
@@ -251,6 +268,152 @@ BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMA
     }
 
     return TRUE;
+}
+
+BOOLEAN
+DiskGetBrfrPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+    /*
+     * Get partition entry of an Xbox-standard BRFR partitioned disk.
+     */
+    if (PartitionNumber >= 1 && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
+        MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, DiskReadBuffer))
+    {
+        if (*((PULONG)DiskReadBuffer) != XBOX_SIGNATURE)
+        {
+            /* No magic Xbox partitions */
+            return FALSE;
+        }
+
+        memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
+        PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
+        PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
+        PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
+        return TRUE;
+    }
+
+    /* Partition does not exist */
+    return FALSE;
+}
+
+VOID DiskDetectPartitionType(UCHAR DriveNumber)
+{
+    MASTER_BOOT_RECORD MasterBootRecord;
+    ULONG Index;
+    ULONG PartitionCount = 0;
+    PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
+    BOOLEAN GPTProtect = FALSE;
+    PARTITION_TABLE_ENTRY PartitionTableEntry;
+
+    /* Probe for Master Boot Record */
+    if (DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
+    {
+        DiskPartitionType[DriveNumber] = PARTITION_STYLE_MBR;
+
+        /* Check for GUID Partition Table */
+        for (Index = 0; Index < 4; Index++)
+        {
+            ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
+
+            if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED)
+            {
+                PartitionCount++;
+
+                if (Index == 0 && ThisPartitionTableEntry->SystemIndicator == PARTITION_GPT)
+                {
+                    GPTProtect = TRUE;
+                }
+            }
+        }
+
+        if (PartitionCount == 1 && GPTProtect)
+        {
+            DiskPartitionType[DriveNumber] = PARTITION_STYLE_GPT;
+        }
+        TRACE("Drive 0x%X partition type %s\n", DriveNumber, DiskPartitionType[DriveNumber] == PARTITION_STYLE_MBR ? "MBR" : "GPT");
+        return;
+    }
+
+    /* Probe for Xbox-BRFR partitioning */
+    if (DiskGetBrfrPartitionEntry(DriveNumber, FATX_DATA_PARTITION, &PartitionTableEntry))
+    {
+        DiskPartitionType[DriveNumber] = PARTITION_STYLE_BRFR;
+        TRACE("Drive 0x%X partition type Xbox-BRFR\n", DriveNumber);
+        return;
+    }
+
+    /* Failed to detect partitions, assume partitionless disk */
+    DiskPartitionType[DriveNumber] = PARTITION_STYLE_RAW;
+    TRACE("Drive 0x%X partition type unknown\n", DriveNumber);
+}
+
+BOOLEAN DiskGetBootPartitionEntry(UCHAR DriveNumber,
+                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,
+                                  ULONG *BootPartition)
+{
+    switch (DiskPartitionType[DriveNumber])
+    {
+        case PARTITION_STYLE_MBR:
+        {
+            return DiskGetActivePartitionEntry(DriveNumber, PartitionTableEntry, BootPartition);
+        }
+        case PARTITION_STYLE_GPT:
+        {
+            FIXME("DiskGetBootPartitionEntry() unimplemented for GPT\n");
+            return FALSE;
+        }
+        case PARTITION_STYLE_RAW:
+        {
+            FIXME("DiskGetBootPartitionEntry() unimplemented for RAW\n");
+            return FALSE;
+        }
+        case PARTITION_STYLE_BRFR:
+        {
+            if (DiskGetBrfrPartitionEntry(DriveNumber, FATX_DATA_PARTITION, PartitionTableEntry))
+            {
+                *BootPartition = FATX_DATA_PARTITION;
+                return TRUE;
+            }
+            return FALSE;
+        }
+        default:
+        {
+            ERR("Drive 0x%X partition type = %d, should not happen!\n", DriveNumber, DiskPartitionType[DriveNumber]);
+            ASSERT(FALSE);
+        }
+    }
+    return FALSE;
+}
+
+BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+{
+    switch (DiskPartitionType[DriveNumber])
+    {
+        case PARTITION_STYLE_MBR:
+        {
+            return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+        }
+        case PARTITION_STYLE_GPT:
+        {
+            FIXME("DiskGetPartitionEntry() unimplemented for GPT\n");
+            return FALSE;
+        }
+        case PARTITION_STYLE_RAW:
+        {
+            FIXME("DiskGetPartitionEntry() unimplemented for RAW\n");
+            return FALSE;
+        }
+        case PARTITION_STYLE_BRFR:
+        {
+            return DiskGetBrfrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+        }
+        default:
+        {
+            ERR("Drive 0x%X partition type = %d, should not happen!\n", DriveNumber, DiskPartitionType[DriveNumber]);
+            ASSERT(FALSE);
+        }
+    }
+    return FALSE;
 }
 
 #ifndef _M_AMD64

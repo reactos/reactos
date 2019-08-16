@@ -95,7 +95,12 @@ const char* astrCallingConventions[] =
     "EXTERN"
 };
 
-static const char* astrShouldBePrivate[] =
+/*
+ * List of OLE exports that should be PRIVATE and not be assigned an ordinal.
+ * In case these conditions are not met when linking with MS LINK.EXE, warnings
+ * LNK4104 and LNK4222 respectively are emitted.
+ */
+static const char* astrOlePrivateExports[] =
 {
     "DllCanUnloadNow",
     "DllGetClassObject",
@@ -1087,15 +1092,37 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             return -1;
         }
 
-        if (!gbMSComp && !gbNotPrivateNoWarn && gbImportLib && !(exp.uFlags & FL_PRIVATE))
+        /*
+         * Check for special handling of OLE exports, only when MSVC
+         * is not used, since otherwise this is handled by MS LINK.EXE.
+         */
+        if (!gbMSComp)
         {
-            for (i = 0; i < ARRAYSIZE(astrShouldBePrivate); i++)
+            /* Check whether the current export is not PRIVATE, or has an ordinal */
+            int bIsNotPrivate = (!gbNotPrivateNoWarn && /*gbImportLib &&*/ !(exp.uFlags & FL_PRIVATE));
+            int bHasOrdinal = (exp.uFlags & FL_ORDINAL);
+
+            /* Check whether the current export is an OLE export, in case any of these tests pass */
+            if (bIsNotPrivate || bHasOrdinal)
             {
-                if (strlen(astrShouldBePrivate[i]) == exp.strName.len &&
-                    strncmp(exp.strName.buf, astrShouldBePrivate[i], exp.strName.len) == 0)
+                for (i = 0; i < ARRAYSIZE(astrOlePrivateExports); ++i)
                 {
-                    fprintf(stderr, "%s line %d: warning: export of '%.*s' should be PRIVATE\n",
-                            pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
+                    if (strlen(astrOlePrivateExports[i]) == exp.strName.len &&
+                        strncmp(exp.strName.buf, astrOlePrivateExports[i], exp.strName.len) == 0)
+                    {
+                        /* The current export is an OLE export: display the corresponding warning */
+                        if (bIsNotPrivate)
+                        {
+                            fprintf(stderr, "%s line %d: warning: exported symbol '%.*s' should be PRIVATE\n",
+                                    pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
+                        }
+                        if (bHasOrdinal)
+                        {
+                            fprintf(stderr, "%s line %d: warning: exported symbol '%.*s' should not be assigned an ordinal\n",
+                                    pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
+                        }
+                        break;
+                    }
                 }
             }
         }

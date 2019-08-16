@@ -29,13 +29,10 @@ EXTERN _KeI386FxsrPresent:DWORD
  * \brief
  *     The KiSwapContextInternal routine switches context to another thread.
  *
- * BOOLEAN USERCALL KiSwapContextInternal();
+ * BOOLEAN USERCALL KiSwapContextInternal(ULONG_PTR OldThreadAndApcFlag@<edx>);
  *
- * Params:
- *     ESI - Pointer to the KTHREAD to which the caller wishes to
- *           switch to.
- *     EDI - Pointer to the KTHREAD to which the caller wishes to
- *           switch from.
+ * \param OldThreadAndApcFlag@<edx>
+ *     Pointer to the current thread with the lowest bit set to the current IRQL.
  *
  * \returns
  *     APC state.
@@ -59,14 +56,14 @@ PUBLIC @KiSwapContextInternal@0
  *     The KiSwapContext routine switches context to another thread.
  *
  * BOOLEAN FASTCALL
- * KiSwapContext(PKTHREAD CurrentThread, PKTHREAD TargetThread);
+ * KiSwapContext(KIRQL WaitIrql@<cl>, PKTHREAD CurrentThread@<edx>);
  *
- * \param CurrentThread
+ * \param WaitIrql@<cl>
+ *     The IRQL at which the wait happens.
+ *
+ * \param CurrentThread@<edx>
  *     Pointer to the KTHREAD of the current thread.
  *                    
- * \param TargetThread
- *     Pointer to the KTHREAD to which the caller wishes to switch to.
- *
  * \returns
  *     The WaitStatus of the Target Thread.
  *
@@ -90,13 +87,13 @@ PUBLIC @KiSwapContext@8
     mov [esp+4], edi
     mov [esp+0], ebp
 
-    /* Get the wait IRQL */
+    /* Combine current thread and the wait IRQL in edx */
     or dl, cl
 
     /* Do the swap with the registers correctly setup */
     call @KiSwapContextInternal@0
 
-    /* Return the registers */
+    /* Restore the registers */
     mov ebp, [esp+0]
     mov edi, [esp+4]
     mov esi, [esp+8]

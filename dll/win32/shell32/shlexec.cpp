@@ -1993,34 +1993,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         }
         else
         {
-            /* If the executable name is not quoted, we have to use this search loop here,
-               that in CreateProcess() is not sufficient because it does not handle shell links. */
-            WCHAR buffer[MAX_PATH], xlpFile[MAX_PATH];
-            LPWSTR space, s;
-
-            LPWSTR beg = wszApplicationName/*sei_tmp.lpFile*/;
-            for(s = beg; (space = const_cast<LPWSTR>(strchrW(s, L' '))); s = space + 1)
-            {
-                int idx = space - sei_tmp.lpFile;
-                memcpy(buffer, sei_tmp.lpFile, idx * sizeof(WCHAR));
-                buffer[idx] = '\0';
-
-                /*FIXME This finds directory paths if the targeted file name contains spaces. */
-                if (SearchPathW(*sei_tmp.lpDirectory ? sei_tmp.lpDirectory : NULL, buffer, wszExe, sizeof(xlpFile) / sizeof(xlpFile[0]), xlpFile, NULL))
-                {
-                    /* separate out command from parameter string */
-                    LPCWSTR p = space + 1;
-
-                    while(isspaceW(*p))
-                        ++p;
-
-                    strcpyW(wszParameters, p);
-                    *space = L'\0';
-
-                    break;
-                }
-            }
-
             lpFile = sei_tmp.lpFile;
         }
     }

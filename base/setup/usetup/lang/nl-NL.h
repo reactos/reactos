@@ -1415,7 +1415,7 @@ static MUI_ENTRY nlNLDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Druk op D om de partitie te verwijderen.",
+        "\x07  Druk op L om de partitie te verwijderen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1433,7 +1433,7 @@ static MUI_ENTRY nlNLDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Verwijder partitie   ESC = Annuleren   F3 = Afsluiten",
+        "L = Verwijder partitie   ESC = Annuleren   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

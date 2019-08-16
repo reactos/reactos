@@ -21,7 +21,7 @@ int wmain(int argc, WCHAR * argv[])
    wsprintf(ServiceName.Buffer,
       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\%S",
       argv[1]);
-   wprintf(L"%s %u %d\n", ServiceName.Buffer, ServiceName.Length, wcslen(ServiceName.Buffer));
+   wprintf(L"%s %u %Id\n", ServiceName.Buffer, ServiceName.Length, wcslen(ServiceName.Buffer));
    Status = NtLoadDriver(&ServiceName);
    free(ServiceName.Buffer);
    if (!NT_SUCCESS(Status))

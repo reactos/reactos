@@ -1848,11 +1848,13 @@ RNotifyBootConfigStatus(
     SVCCTL_HANDLEW lpMachineName,
     DWORD BootAcceptable)
 {
-    DPRINT1("RNotifyBootConfigStatus(%p %lu) called\n", lpMachineName, BootAcceptable);
-    return ERROR_SUCCESS;
+    DPRINT("RNotifyBootConfigStatus(%p %lu)\n",
+           lpMachineName, BootAcceptable);
 
-//    UNIMPLEMENTED;
-//    return ERROR_CALL_NOT_IMPLEMENTED;
+    if (BootAcceptable)
+        return ScmAcceptBoot();
+
+    return ScmRunLastKnownGood();
 }
 
 

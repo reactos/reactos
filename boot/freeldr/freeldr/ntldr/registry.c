@@ -225,7 +225,7 @@ RegEnumKey(
     _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR Name,
-    _Inout_ ULONG* NameSize,
+    _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey)
 {
     PHHIVE Hive = &CmHive->Hive;
@@ -398,9 +398,9 @@ VOID
 RepGetValueData(
     _In_ PHHIVE Hive,
     _In_ PCM_KEY_VALUE ValueCell,
-    _Out_opt_ ULONG* Type,
+    _Out_opt_ PULONG Type,
     _Out_opt_ PUCHAR Data,
-    _Inout_opt_ ULONG* DataSize)
+    _Inout_opt_ PULONG DataSize)
 {
     ULONG DataLength;
     PVOID DataCell;
@@ -435,9 +435,9 @@ LONG
 RegQueryValue(
     _In_ HKEY Key,
     _In_z_ PCWSTR ValueName,
-    _Out_opt_ ULONG* Type,
+    _Out_opt_ PULONG Type,
     _Out_opt_ PUCHAR Data,
-    _Inout_opt_ ULONG* DataSize)
+    _Inout_opt_ PULONG DataSize)
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
@@ -485,10 +485,10 @@ RegEnumValue(
     _In_ HKEY Key,
     _In_ ULONG Index,
     _Out_ PWCHAR ValueName,
-    _Inout_ ULONG* NameSize,
-    _Out_opt_ ULONG* Type,
+    _Inout_ PULONG NameSize,
+    _Out_opt_ PULONG Type,
     _Out_opt_ PUCHAR Data,
-    _Inout_opt_ ULONG* DataSize)
+    _Inout_opt_ PULONG DataSize)
 {
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;

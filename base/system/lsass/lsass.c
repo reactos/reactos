@@ -50,7 +50,7 @@ wWinMain(IN HINSTANCE hInstance,
     /* Make us critical */
     RtlSetProcessIsCritical(TRUE, NULL, TRUE);
 
-    /* Initialize the LSA server DLL. */
+    /* Initialize the LSA server DLL */
     Status = LsapInitLsa();
     if (!NT_SUCCESS(Status))
     {
@@ -58,19 +58,19 @@ wWinMain(IN HINSTANCE hInstance,
         goto ByeBye;
     }
 
-    /* Start the Netlogon service. */
-    Status = ServiceInit();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ServiceInit() failed (Status 0x%08lX)\n", Status);
-        goto ByeBye;
-    }
-
-    /* Initialize the SAM server DLL. */
+    /* Initialize the SAM server DLL */
     Status = SamIInitialize();
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
+        goto ByeBye;
+    }
+
+    /* Start the security services */
+    Status = ServiceInit();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ServiceInit() failed (Status 0x%08lX)\n", Status);
         goto ByeBye;
     }
 

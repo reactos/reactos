@@ -157,7 +157,7 @@ RtlGetNtVersionNumbers(OUT PULONG pMajorVersion,
 NTSTATUS NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 {
-    ULONG Length;
+    SIZE_T Length;
     PPEB Peb = NtCurrentPeb();
 
     if (lpVersionInformation->dwOSVersionInfoSize != sizeof(RTL_OSVERSIONINFOW) &&

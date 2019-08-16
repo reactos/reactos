@@ -15,104 +15,127 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Note: much of this code was based on knowledge and/or code developed
- * by the Xbox Linux group: http://www.xbox-linux.org
+ *  Note: much of this code was based on knowledge and/or code developed
+ *  by the Xbox Linux group: http://www.xbox-linux.org
  */
 
 #include <freeldr.h>
+#include <debug.h>
+
+DBG_DEFAULT_CHANNEL(MEMORY);
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
 
 #define TEST_SIZE     0x200
-#define TEST_PATTERN1 0xaa
+#define TEST_PATTERN1 0xAA
 #define TEST_PATTERN2 0x55
+
+extern VOID
+SetMemory(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
+    ULONG_PTR BaseAddress,
+    SIZE_T Size,
+    TYPE_OF_MEMORY MemoryType);
+
+extern ULONG
+PcMemFinalizeMemoryMap(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap);
 
 VOID
 XboxMemInit(VOID)
 {
-  UCHAR ControlRegion[TEST_SIZE];
-  PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
-  PVOID MembaseLow = (PVOID)0;
+    UCHAR ControlRegion[TEST_SIZE];
+    PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
+    PVOID MembaseLow = (PVOID)0;
 
-  (*(PULONG)(0xfd000000 + 0x100200)) = 0x03070103 ;
-  (*(PULONG)(0xfd000000 + 0x100204)) = 0x11448000 ;
+    (*(PULONG)(0xfd000000 + 0x100200)) = 0x03070103;
+    (*(PULONG)(0xfd000000 + 0x100204)) = 0x11448000;
 
-  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-  WRITE_PORT_ULONG((ULONG*) 0xcfc, 0x7ffffff);             /* Prep hardware for 128 Mb */
+    WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
+    WRITE_PORT_ULONG((ULONG*) 0xcfc, 0x7ffffff);             /* Prep hardware for 128 Mb */
 
-  InstalledMemoryMb = 64;
-  memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
-  memset(MembaseTop, TEST_PATTERN1, TEST_SIZE);
-  __wbinvd();
+    InstalledMemoryMb = 64;
+    memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
+    memset(MembaseTop, TEST_PATTERN1, TEST_SIZE);
+    __wbinvd();
 
-  if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
+    if (memcmp(MembaseTop, ControlRegion, TEST_SIZE) == 0)
     {
-      /* Looks like there is memory .. maybe a 128MB box */
-      memset(ControlRegion, TEST_PATTERN2, TEST_SIZE);
-      memset(MembaseTop, TEST_PATTERN2, TEST_SIZE);
-      __wbinvd();
-      if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
+        /* Looks like there is memory .. maybe a 128MB box */
+        memset(ControlRegion, TEST_PATTERN2, TEST_SIZE);
+        memset(MembaseTop, TEST_PATTERN2, TEST_SIZE);
+        __wbinvd();
+        if (memcmp(MembaseTop, ControlRegion, TEST_SIZE) == 0)
         {
-          /* Definitely looks like there is memory */
-          if (0 == memcmp(MembaseLow, ControlRegion, TEST_SIZE))
+            /* Definitely looks like there is memory */
+            if (memcmp(MembaseLow, ControlRegion, TEST_SIZE) == 0)
             {
-              /* Hell, we find the Test-string at 0x0 too ! */
-              InstalledMemoryMb = 64;
+                /* Hell, we find the Test-string at 0x0 too! */
+                InstalledMemoryMb = 64;
             }
-          else
+            else
             {
-              InstalledMemoryMb = 128;
+                InstalledMemoryMb = 128;
             }
         }
     }
 
-  /* Set hardware for amount of memory detected */
-  WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
-  WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
+    /* Set hardware for amount of memory detected */
+    WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
+    WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
 
-  AvailableMemoryMb = InstalledMemoryMb;
+    /* 4 MB video framebuffer is reserved later using XboxMemReserveMemory() */
+    AvailableMemoryMb = InstalledMemoryMb;
 }
 
-FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[2];
+FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[MAX_BIOS_DESCRIPTORS + 1];
 
 PFREELDR_MEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
-  /* Synthesize memory map */
-      /* Available RAM block */
-      XboxMemoryMap[0].BasePage = 0;
-      XboxMemoryMap[0].PageCount = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
-      XboxMemoryMap[0].MemoryType = LoaderFree;
+    TRACE("XboxMemGetMemoryMap()\n");
+    /* FIXME: Obtain memory map via multiboot spec */
 
-      /* Video memory */
-      XboxMemoryMap[1].BasePage = AvailableMemoryMb * 1024 * 1024 / MM_PAGE_SIZE;
-      XboxMemoryMap[1].PageCount = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024 / MM_PAGE_SIZE;
-      XboxMemoryMap[1].MemoryType = LoaderFirmwarePermanent;
+    /* Synthesize memory map */
 
-  *MemoryMapSize = 2;
-  return XboxMemoryMap;
+    /* Available RAM block */
+    SetMemory(XboxMemoryMap,
+              0,
+              AvailableMemoryMb * 1024 * 1024,
+              LoaderFree);
+
+    /* Video memory */
+    SetMemory(XboxMemoryMap,
+              AvailableMemoryMb * 1024 * 1024,
+              (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024,
+              LoaderFirmwarePermanent);
+
+    *MemoryMapSize = PcMemFinalizeMemoryMap(XboxMemoryMap);
+    return XboxMemoryMap;
 }
 
 PVOID
 XboxMemReserveMemory(ULONG MbToReserve)
 {
-  if (0 == InstalledMemoryMb)
+    /* This function is used to reserve video framebuffer in XboxVideoInit() */
+
+    if (InstalledMemoryMb == 0)
     {
-      /* Hmm, seems we're not initialized yet */
-      XboxMemInit();
+        /* Hmm, seems we're not initialized yet */
+        XboxMemInit();
     }
 
-  if (AvailableMemoryMb < MbToReserve)
+    if (MbToReserve > AvailableMemoryMb)
     {
-      /* Can't satisfy the request */
-      return NULL;
+        /* Can't satisfy the request */
+        return NULL;
     }
 
-  AvailableMemoryMb -= MbToReserve;
+    AvailableMemoryMb -= MbToReserve;
 
-  /* Top of available memory points to the space just reserved */
-  return (PVOID) (AvailableMemoryMb * 1024 * 1024);
+    /* Top of available memory points to the space just reserved */
+    return (PVOID)(AvailableMemoryMb * 1024 * 1024);
 }
 
 /* EOF */

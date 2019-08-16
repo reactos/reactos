@@ -431,10 +431,11 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     PCHAR sptr;
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
-    LPSTR TempName;
+    LARGE_INTEGER Position;
+    PSTR TempName;
 
     TempName = strrchr(ImageName, '\\');
-    if(TempName) TempName++; else TempName = (LPSTR)ImageName;
+    if(TempName) TempName++; else TempName = (PSTR)ImageName;
     ModuleData = LdrGetModuleObject(TempName);
 
     if(ModuleData)
@@ -451,7 +452,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     //printf("Loading file (elf at %x)\n", KernelAddr);
 
     /* Load the first 1024 bytes of the kernel image so we can read the PE header */
-    if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
+    if (ArcRead(KernelImage, &ehdr, sizeof(ehdr), NULL) != ESUCCESS) {
 
         /* Fail if we couldn't read */
     printf("Couldn't read the elf header\n");
@@ -466,8 +467,9 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     sptr = (PCHAR)FrLdrTempAlloc(shnum * shsize, TAG_MBOOT);
 
     /* Read section headers */
-    FsSetFilePointer(KernelImage,  ehdr.e_shoff);
-    FsReadFile(KernelImage, shsize * shnum, NULL, sptr);
+    Position.QuadPart = ehdr.e_shoff;
+    ArcSeek(KernelImage, &Position, SeekAbsolute);
+    ArcRead(KernelImage, sptr, shsize * shnum, NULL);
 
     /* Now we'll get the PE Header */
     for( i = 0; i < shnum; i++ )
@@ -478,8 +480,9 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     /* Find the PE Header */
     if (shdr->sh_type == TYPE_PEHEADER)
     {
-        FsSetFilePointer(KernelImage, shdr->sh_offset);
-        FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
+        Position.QuadPart = shdr->sh_offset;
+        ArcSeek(KernelImage, &Position, SeekAbsolute);
+        ArcRead(KernelImage, MemLoadAddr, shdr->sh_size, NULL);
         ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
         NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
 #if 0
@@ -527,8 +530,9 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     {
         /* Content area */
         printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, MemLoadAddr+SectionAddr, shdr->sh_size);
-        FsSetFilePointer(KernelImage, shdr->sh_offset);
-        FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr + SectionAddr);
+        Position.QuadPart = shdr->sh_offset;
+        ArcSeek(KernelImage, &Position, SeekAbsolute);
+        ArcRead(KernelImage, MemLoadAddr + SectionAddr, shdr->sh_size, NULL);
     }
     else
     {
@@ -565,15 +569,17 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     if (!ELF_SECTION(targetSection)->sh_addr) continue;
 
     RelocSection = FrLdrTempAlloc(shdr->sh_size, TAG_MBOOT);
-    FsSetFilePointer(KernelImage, relstart);
-    FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
+    Position.QuadPart = relstart;
+    ArcSeek(KernelImage, &Position, SeekAbsolute);
+    ArcRead(KernelImage, RelocSection, shdr->sh_size, NULL);
 
     /* Get the symbol section */
     shdr = ELF_SECTION(shdr->sh_link);
 
     SymbolSection = FrLdrTempAlloc(shdr->sh_size, TAG_MBOOT);
-    FsSetFilePointer(KernelImage, shdr->sh_offset);
-    FsReadFile(KernelImage, shdr->sh_size, NULL, SymbolSection);
+    Position.QuadPart = shdr->sh_offset;
+    ArcSeek(KernelImage, &Position, SeekAbsolute);
+    ArcRead(KernelImage, SymbolSection, shdr->sh_size, NULL);
 
     for(j = 0; j < numreloc; j++)
     {
@@ -702,14 +708,16 @@ FrLdrMapKernel(FILE *KernelImage)
 ULONG_PTR
 NTAPI
 FrLdrLoadModule(FILE *ModuleImage,
-                LPCSTR ModuleName,
+                PCSTR ModuleName,
                 PULONG ModuleSize)
 {
+    ARC_STATUS Status;
+    FILEINFORMATION FileInfo;
     ULONG LocalModuleSize;
     ULONG_PTR ThisModuleBase = NextModuleBase;
     PLOADER_MODULE ModuleData;
-    LPSTR NameBuffer;
-    LPSTR TempName;
+    PSTR NameBuffer;
+    PSTR TempName;
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
@@ -726,9 +734,12 @@ FrLdrLoadModule(FILE *ModuleImage,
     } while(TempName);
     NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
 
-
     /* Get Module Size */
-    LocalModuleSize = FsGetFileSize(ModuleImage);
+    Status = ArcGetFileInformation(ModuleImage, &FileInfo);
+    if (Status != ESUCCESS || FileInfo.EndingAddress.HighPart != 0)
+        LocalModuleSize = 0;
+    else
+        LocalModuleSize = FileInfo.EndingAddress.LowPart;
 
     /* Fill out Module Data Structure */
     ModuleData->ModStart = NextModuleBase;
@@ -739,7 +750,7 @@ FrLdrLoadModule(FILE *ModuleImage,
     ModuleData->String = (ULONG_PTR)NameBuffer;
 
     /* Load the file image */
-    FsReadFile(ModuleImage, LocalModuleSize, NULL, (PVOID)NextModuleBase);
+    ArcRead(ModuleImage, (PVOID)NextModuleBase, LocalModuleSize, NULL);
 
     /* Move to next memory block and increase Module Count */
     NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
@@ -784,10 +795,10 @@ FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
 
 ULONG_PTR
 NTAPI
-FrLdrCreateModule(LPCSTR ModuleName)
+FrLdrCreateModule(PCSTR ModuleName)
 {
     PLOADER_MODULE ModuleData;
-    LPSTR NameBuffer;
+    PSTR NameBuffer;
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];

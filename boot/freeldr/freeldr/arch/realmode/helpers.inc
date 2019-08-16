@@ -18,6 +18,24 @@ EnableA20:
     mov al, HEX(0DF)                // A20 on
     out HEX(060), al
     call Empty8042
+    mov al, HEX(0FF)                // pulse output port
+    out HEX(064), al
+    call Empty8042
+    popa
+    ret
+
+DisableA20:
+    pusha
+    call Empty8042
+    mov al, HEX(0D1)                // command write
+    out HEX(064), al
+    call Empty8042
+    mov al, HEX(0DD)                // A20 off
+    out HEX(060), al
+    call Empty8042
+    mov al, HEX(0FF)                // pulse output port
+    out HEX(064), al
+    call Empty8042
     popa
     ret
 
@@ -95,6 +113,13 @@ writehex_common:
 Reboot:
     cli
 
+    /* Disable A20 address line */
+    call DisableA20
+
+    /* Set the video back to 80x25 text mode */
+    mov ax, HEX(0003)
+    int HEX(10)
+
     /* Set the word at location 40h:72h to 0 (cold reboot) */
     mov word ptr ds:[HEX(0472)], HEX(0)
 
@@ -103,8 +128,16 @@ Reboot:
 
 
 ChainLoadBiosBootSectorCode:
-    /* Load segment registers */
     cli
+
+    /* Disable A20 address line */
+    call DisableA20
+
+    /* Set the video back to 80x25 text mode */
+    mov ax, HEX(0003)
+    int HEX(10)
+
+    /* Load segment registers */
     xor ax, ax
     mov ds, ax
     mov es, ax

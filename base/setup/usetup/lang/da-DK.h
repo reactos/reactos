@@ -1415,7 +1415,7 @@ static MUI_ENTRY daDKDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tryk p\206 D for at slette partitionen.",
+        "\x07  Tryk p\206 L for at slette partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1433,7 +1433,7 @@ static MUI_ENTRY daDKDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Slet partition   ESC = Annuller   F3 = Afslut",
+        "L = Slet partition   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

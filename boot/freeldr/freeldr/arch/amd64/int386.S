@@ -80,5 +80,4 @@ int386_2:
     pop rbx
     ret
 
-
 END

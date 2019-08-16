@@ -470,7 +470,7 @@ NtTestAlert(VOID)
 }
 
 /*++
- * @name NtQueueApcThread
+ * @name NtQueueApcThreadEx
  * NT4
  *
  *    This routine is used to queue an APC from user-mode for the specified
@@ -479,6 +479,10 @@ NtTestAlert(VOID)
  * @param ThreadHandle
  *        Handle to the Thread.
  *        This handle must have THREAD_SET_CONTEXT privileges.
+ *        
+ * @param UserApcReserveHandle
+ *        Optional handle to reserve object (introduced in Windows 7), providing ability to
+ *        reserve memory before performing stability-critical parts of code.
  *
  * @param ApcRoutine
  *        Pointer to the APC Routine to call when the APC executes.
@@ -497,11 +501,12 @@ NtTestAlert(VOID)
  *--*/
 NTSTATUS
 NTAPI
-NtQueueApcThread(IN HANDLE ThreadHandle,
+NtQueueApcThreadEx(IN HANDLE ThreadHandle,
+                 IN OPTIONAL HANDLE UserApcReserveHandle,
                  IN PKNORMAL_ROUTINE ApcRoutine,
                  IN PVOID NormalContext,
-                 IN PVOID SystemArgument1,
-                 IN PVOID SystemArgument2)
+                 IN OPTIONAL PVOID SystemArgument1,
+                 IN OPTIONAL PVOID SystemArgument2)
 {
     PKAPC Apc;
     PETHREAD Thread;
@@ -562,6 +567,43 @@ NtQueueApcThread(IN HANDLE ThreadHandle,
 Quit:
     ObDereferenceObject(Thread);
     return Status;
+}
+
+/*++
+ * @name NtQueueApcThread
+ * NT4
+ *
+ *    This routine is used to queue an APC from user-mode for the specified
+ *    thread.
+ *
+ * @param ThreadHandle
+ *        Handle to the Thread.
+ *        This handle must have THREAD_SET_CONTEXT privileges.
+ *
+ * @param ApcRoutine
+ *        Pointer to the APC Routine to call when the APC executes.
+ *
+ * @param NormalContext
+ *        Pointer to the context to send to the Normal Routine.
+ *
+ * @param SystemArgument[1-2]
+ *        Pointer to a set of two parameters that contain untyped data.
+ *
+ * @return STATUS_SUCCESS or failure cute from associated calls.
+ *
+ * @remarks The thread must enter an alertable wait before the APC will be
+ *          delivered.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+NtQueueApcThread(IN HANDLE ThreadHandle,
+    IN PKNORMAL_ROUTINE ApcRoutine,
+    IN PVOID NormalContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2)
+{
+    return NtQueueApcThreadEx(ThreadHandle, NULL, ApcRoutine, NormalContext, SystemArgument1, SystemArgument2);
 }
 
 /* EOF */

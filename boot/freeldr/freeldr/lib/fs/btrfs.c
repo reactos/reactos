@@ -1123,16 +1123,12 @@ ARC_STATUS BtrFsGetFileInformation(ULONG FileId, FILEINFORMATION *Information)
 {
     pbtrfs_file_info phandle = FsGetDeviceSpecific(FileId);
 
-    TRACE("BtrFsGetFileInformation %lu\n", FileId);
-
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = phandle->inode.size;
     Information->CurrentAddress.QuadPart = phandle->position;
 
-    TRACE("BtrFsGetFileInformation() FileSize = %llu\n",
-          Information->EndingAddress.QuadPart);
-    TRACE("BtrFsGetFileInformation() FilePointer = %llu\n",
-          Information->CurrentAddress.QuadPart);
+    TRACE("BtrFsGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
+          FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
     return ESUCCESS;
 }
@@ -1233,7 +1229,7 @@ const DEVVTBL *BtrFsMount(ULONG DeviceId)
     struct btrfs_path path;
     struct btrfs_root_item fs_root_item;
 
-    TRACE("Enter BtrFsMount(), sizeof %d %d\n", sizeof(struct BTRFS_INFO), sizeof(struct btrfs_super_block));
+    TRACE("Enter BtrFsMount(%lu)\n", DeviceId);
 
     BtrFsInfo = FrLdrTempAlloc(sizeof(struct BTRFS_INFO), TAG_BTRFS_INFO);
     if (!BtrFsInfo)
@@ -1248,38 +1244,36 @@ const DEVVTBL *BtrFsMount(ULONG DeviceId)
     }
 
     /* Check if SuperBlock is valid. If yes, return BTRFS function table */
-    if (BtrFsInfo->SuperBlock.magic == BTRFS_MAGIC_N)
+    if (BtrFsInfo->SuperBlock.magic != BTRFS_MAGIC_N)
     {
-        BtrFsInfo->DeviceId = DeviceId;
-        TRACE("BtrFsMount() superblock magic ok\n");
-
-        btrfs_init_crc32c();
-
-        btrfs_read_sys_chunk_array();
-        btrfs_read_chunk_tree();
-
-        /* setup roots */
-        fs_root_item.bytenr = BtrFsInfo->SuperBlock.root;
-        fs_root_item.level = BtrFsInfo->SuperBlock.root_level;
-
-        init_path(&path);
-        if (!BtrFsSearchTreeType(&fs_root_item, BTRFS_FS_TREE_OBJECTID, BTRFS_ROOT_ITEM_KEY, &path))
-        {
-            FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
-            free_path(&path);
-            return NULL;
-        }
-
-        BtrFsInfo->FsRoot = *(struct btrfs_root_item *) path_current_data(&path);
-
-        free_path(&path);
-
-        TRACE("BtrFsMount success\n");
-
-        return &BtrFsFuncTable;
-    }
-    else
-    {
+        FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
         return NULL;
     }
+
+    BtrFsInfo->DeviceId = DeviceId;
+    TRACE("BtrFsMount(%lu) superblock magic ok\n", DeviceId);
+
+    btrfs_init_crc32c();
+
+    btrfs_read_sys_chunk_array();
+    btrfs_read_chunk_tree();
+
+    /* setup roots */
+    fs_root_item.bytenr = BtrFsInfo->SuperBlock.root;
+    fs_root_item.level = BtrFsInfo->SuperBlock.root_level;
+
+    init_path(&path);
+    if (!BtrFsSearchTreeType(&fs_root_item, BTRFS_FS_TREE_OBJECTID, BTRFS_ROOT_ITEM_KEY, &path))
+    {
+        FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
+        free_path(&path);
+        return NULL;
+    }
+
+    BtrFsInfo->FsRoot = *(struct btrfs_root_item *) path_current_data(&path);
+
+    free_path(&path);
+
+    TRACE("BtrFsMount(%lu) success\n", DeviceId);
+    return &BtrFsFuncTable;
 }

@@ -20,6 +20,9 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
+
+DBG_DEFAULT_CHANNEL(UI);
 
 static PVOID FrameBuffer;
 static ULONG ScreenWidth;
@@ -178,6 +181,12 @@ ULONG
 XboxVideoGetBufferSize(VOID)
 {
   return (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT * (ScreenWidth / CHAR_WIDTH) * 2;
+}
+
+VOID
+XboxVideoGetFontsFromFirmware(PULONG RomFontPointers)
+{
+    TRACE("XboxVideoGetFontsFromFirmware(): UNIMPLEMENTED\n");
 }
 
 VOID

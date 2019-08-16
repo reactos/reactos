@@ -2,6 +2,11 @@
 remove_definitions(-DWINVER=0x502 -D_WIN32_WINNT=0x502)
 add_definitions(-DWINVER=0x600 -D_WIN32_WINNT=0x600)
 
+if(MSVC)
+    # Disable warning C4477 (printf format warnings)
+    add_compile_flags("/wd4477")
+endif()
+
 list(APPEND SOURCE
     broadcast.c
     class.c

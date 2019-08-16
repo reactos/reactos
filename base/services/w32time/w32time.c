@@ -12,6 +12,7 @@
 
 SERVICE_STATUS ServiceStatus;
 SERVICE_STATUS_HANDLE hStatus;
+HANDLE hStopEvent = NULL;
 static WCHAR ServiceName[] = L"W32Time";
 
 int InitService(VOID);
@@ -129,16 +130,18 @@ GetIntervalSetting(VOID)
     LONG lRet;
 
     dwData = 0;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient",
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hKey) == ERROR_SUCCESS)
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
     {
-        /* This key holds the update interval in seconds
-         * It is useful for testing to set it to a value of 10 (Decimal)
-         * This will cause the clock to try and update every 10 seconds
-         * So you can change the time and expect it to be set back correctly in 10-20 seconds
+        /*
+         * This key holds the update interval in seconds.
+         * It is useful for testing to set it to a value of 10 (Decimal).
+         * This will cause the clock to try and update every 10 seconds.
+         * So you can change the time and expect it to be set back correctly in 10-20 seconds.
          */
         lRet = RegQueryValueExW(hKey,
                                 L"SpecialPollInterval",
@@ -149,8 +152,8 @@ GetIntervalSetting(VOID)
         RegCloseKey(hKey);
     }
 
-    if (lRet != ERROR_SUCCESS)
-        return 0;
+    if (lRet != ERROR_SUCCESS || dwData < 120)
+        return 9 * 60 * 60; // 9 hours, because Windows uses 9 hrs, 6 mins and 8 seconds by default.
     else
         return dwData;
 }
@@ -206,27 +209,20 @@ ControlHandler(DWORD request)
     switch (request)
     {
         case SERVICE_CONTROL_STOP:
-            DPRINT("W32Time Service stopped.\n");
-
-            ServiceStatus.dwWin32ExitCode = 0;
-            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
-            SetServiceStatus(hStatus, &ServiceStatus);
-            return;
-
         case SERVICE_CONTROL_SHUTDOWN:
-            DPRINT("W32Time Service stopped.\n");
+            DPRINT("Stopping W32Time Service\n");
 
             ServiceStatus.dwWin32ExitCode = 0;
-            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+            ServiceStatus.dwCurrentState  = SERVICE_STOP_PENDING;
             SetServiceStatus(hStatus, &ServiceStatus);
+
+            if (hStopEvent)
+                SetEvent(hStopEvent);
             return;
 
         default:
             break;
     }
-
-    /* Report current status */
-    SetServiceStatus(hStatus, &ServiceStatus);
 
     return;
 }
@@ -237,7 +233,7 @@ WINAPI
 ServiceMain(DWORD argc, LPWSTR *argv)
 {
     int   result;
-    DWORD dwPollInterval;
+    DWORD dwInterval;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
@@ -258,14 +254,27 @@ ServiceMain(DWORD argc, LPWSTR *argv)
         return;
     }
 
+    /* Create the stop event */
+    hStopEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (hStopEvent == NULL)
+    {
+        ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+        ServiceStatus.dwWin32ExitCode = GetLastError();
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(hStatus, &ServiceStatus);
+        return;
+    }
+
+    /* Get the interval */
+    dwInterval = GetIntervalSetting();
+
     /* We report the running status to SCM. */
     ServiceStatus.dwCurrentState = SERVICE_RUNNING;
     SetServiceStatus(hStatus, &ServiceStatus);
 
     /* The worker loop of a service */
-    while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+    for (;;)
     {
-        dwPollInterval = GetIntervalSetting();
         result = SetTime();
 
         if (result)
@@ -282,13 +291,24 @@ ServiceMain(DWORD argc, LPWSTR *argv)
              * service when the correct conditions can be determined, but it
              * is left commented out.
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
-            ServiceStatus.dwWin32ExitCode = -1;
+            ServiceStatus.dwWin32ExitCode = result;
             SetServiceStatus(hStatus, &ServiceStatus);
             return;
             */
         }
 
-        Sleep(dwPollInterval * 1000);
+        if (WaitForSingleObject(hStopEvent, dwInterval) == WAIT_OBJECT_0)
+        {
+            CloseHandle(hStopEvent);
+            hStopEvent = NULL;
+
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = ERROR_SUCCESS;
+            ServiceStatus.dwControlsAccepted = 0;
+            SetServiceStatus(hStatus, &ServiceStatus);
+            DPRINT("Stopped W32Time Service\n");
+            return;
+        }
     }
     return;
 }

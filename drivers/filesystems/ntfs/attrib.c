@@ -1258,7 +1258,74 @@ InternalReadNonResidentAttributes(PFIND_ATTR_CONTXT Context)
     }
 
     ReleaseAttributeContext(ListContext);
-    Context->NonResidentEnd = (PNTFS_ATTR_RECORD)((PCHAR)Context->NonResidentStart + ListSize);
+    Context->NonResidentEnd = (PNTFS_ATTRIBUTE_LIST_ITEM)((PCHAR)Context->NonResidentStart + ListSize);
+    return STATUS_SUCCESS;
+}
+
+static
+PNTFS_ATTRIBUTE_LIST_ITEM
+InternalGetNextAttributeListItem(PFIND_ATTR_CONTXT Context)
+{
+    PNTFS_ATTRIBUTE_LIST_ITEM NextItem;
+
+    if (Context->NonResidentCur == (PVOID)-1)
+    {
+        return NULL;
+    }
+
+    if (Context->NonResidentCur == NULL || Context->NonResidentCur->Type == AttributeEnd)
+    {
+        Context->NonResidentCur = (PVOID)-1;
+        return NULL;
+    }
+
+    if (Context->NonResidentCur->Length == 0)
+    {
+        DPRINT1("Broken length list entry length !");
+        Context->NonResidentCur = (PVOID)-1;
+        return NULL;
+    }
+
+    NextItem = (PNTFS_ATTRIBUTE_LIST_ITEM)((PCHAR)Context->NonResidentCur + Context->NonResidentCur->Length);
+    if (NextItem->Length == 0 || NextItem->Type == AttributeEnd)
+    {
+        Context->NonResidentCur = (PVOID)-1;
+        return NULL;
+    }
+
+    if (NextItem < Context->NonResidentStart || NextItem > Context->NonResidentEnd)
+    {
+        Context->NonResidentCur = (PVOID)-1;
+        return NULL;
+    }
+
+    Context->NonResidentCur = NextItem;
+    return NextItem;
+}
+
+NTSTATUS
+FindFirstAttributeListItem(PFIND_ATTR_CONTXT Context,
+                           PNTFS_ATTRIBUTE_LIST_ITEM *Item)
+{
+    if (Context->NonResidentStart == NULL || Context->NonResidentStart->Type == AttributeEnd)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Context->NonResidentCur = Context->NonResidentStart;
+    *Item = Context->NonResidentCur;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FindNextAttributeListItem(PFIND_ATTR_CONTXT Context,
+                          PNTFS_ATTRIBUTE_LIST_ITEM *Item)
+{
+    *Item = InternalGetNextAttributeListItem(Context);
+    if (*Item == NULL)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
     return STATUS_SUCCESS;
 }
 
@@ -1306,30 +1373,6 @@ InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
     {
         Context->CurrAttr = (PVOID)-1;
         return NULL;
-    }
-
-    if (Context->CurrAttr < Context->NonResidentStart ||
-        Context->CurrAttr >= Context->NonResidentEnd)
-    {
-        Context->CurrAttr = Context->NonResidentStart;
-    }
-    else if (Context->CurrAttr->Length != 0)
-    {
-        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
-        Context->Offset += ((ULONG_PTR)NextAttribute - (ULONG_PTR)Context->CurrAttr);
-        Context->CurrAttr = NextAttribute;
-    }
-    else
-    {
-        DPRINT1("Broken length!\n");
-        Context->CurrAttr = (PVOID)-1;
-        return NULL;
-    }
-
-    if (Context->CurrAttr < Context->NonResidentEnd &&
-        Context->CurrAttr->Type != AttributeEnd)
-    {
-        return Context->CurrAttr;
     }
 
     Context->CurrAttr = (PVOID)-1;

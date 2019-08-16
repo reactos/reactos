@@ -114,6 +114,8 @@ endif()
 add_compile_flags("-Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
 add_compile_flags("-Wno-unused-const-variable")
+add_compile_flags("-Wno-unused-local-typedefs")
+add_compile_flags("-Wno-deprecated")
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-maybe-uninitialized")
@@ -174,6 +176,9 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 add_definitions(-D_inline=__inline)
+
+# Fix build with GLIBCXX + our c++ headers
+add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
 
 # Alternative arch name
 if(ARCH STREQUAL "amd64")

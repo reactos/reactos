@@ -81,4 +81,5 @@ BOOLEAN    IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHA
 BOOLEAN    IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize);
 BOOLEAN    IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId);
 BOOLEAN    IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
+BOOLEAN IniModifySettingValue(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
 VOID IniCleanup(VOID);

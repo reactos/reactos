@@ -23,6 +23,14 @@
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 
+VOID
+XboxGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
+{
+    TRACE("XboxGetExtendedBIOSData(): UNIMPLEMENTED\n");
+    *ExtendedBIOSDataArea = 0;
+    *ExtendedBIOSDataSize = 0;
+}
+
 // NOTE: Similar to machpc.c!PcGetHarddiskConfigurationData(),
 // but without extended geometry support.
 static
@@ -139,6 +147,22 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more ISA devices */
 }
 
+static
+UCHAR
+XboxGetFloppyCount(VOID)
+{
+    /* On a PC we use CMOS/RTC I/O ports 0x70 and 0x71 to detect floppies.
+     * However an Xbox CMOS memory range [0x10, 0x70) and [0x80, 0x100)
+     * is filled with 0x55 0xAA 0x55 0xAA ... byte pattern which is used
+     * to validate the date/time settings by Xbox OS.
+     *
+     * Technically it's possible to connect a floppy drive to Xbox, but
+     * CMOS detection method should not be used here. */
+
+    WARN("XboxGetFloppyCount() is UNIMPLEMENTED, returning 0\n");
+    return 0;
+}
+
 PCONFIGURATION_COMPONENT_DATA
 XboxHwDetect(VOID)
 {
@@ -185,6 +209,7 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.VideoSetDisplayMode = XboxVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = XboxVideoGetDisplaySize;
     MachVtbl.VideoGetBufferSize = XboxVideoGetBufferSize;
+    MachVtbl.VideoGetFontsFromFirmware = XboxVideoGetFontsFromFirmware;
     MachVtbl.VideoHideShowTextCursor = XboxVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = XboxVideoPutChar;
     MachVtbl.VideoCopyOffScreenBufferToVRAM = XboxVideoCopyOffScreenBufferToVRAM;
@@ -195,6 +220,8 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.Beep = PcBeep;
     MachVtbl.PrepareForReactOS = XboxPrepareForReactOS;
     MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
+    MachVtbl.GetExtendedBIOSData = XboxGetExtendedBIOSData;
+    MachVtbl.GetFloppyCount = XboxGetFloppyCount;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
@@ -203,8 +230,6 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.InitializeBootDevices = PcInitializeBootDevices;
     MachVtbl.HwDetect = XboxHwDetect;
     MachVtbl.HwIdle = XboxHwIdle;
-
-    DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
 
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");

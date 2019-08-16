@@ -164,7 +164,7 @@ static BOOL CALLBACK cb_AddPage(HPROPSHEETPAGE page, LPARAM lParam)
     g_Pages.Add(page);
     if (lParam != (LPARAM)&g_Pages)
     {
-        wprintf(L"Propsheet failed to pass lParam, got: 0x%x\n", lParam);
+        wprintf(L"Propsheet failed to pass lParam, got: 0x%Ix\n", lParam);
     }
     return TRUE;
 }

@@ -135,7 +135,7 @@ _tmain(int argc, const TCHAR *argv[])
     _tprintf(_T("Total sectors\t\t: %I64u\n"), VolumeInfo.NumberSectors.QuadPart);
     _tprintf(_T("Total clusters\t\t: %I64u\n"), VolumeInfo.TotalClusters.QuadPart);
     _tprintf(_T("Free clusters\t\t: %I64u\n"), VolumeInfo.FreeClusters.QuadPart);
-    _tprintf(_T("Free space\t\t: %I64u MB (%u%% of drive)\n"), (VolumeInfo.FreeClusters.QuadPart * VolumeInfo.BytesPerCluster) >> 20, (VolumeInfo.FreeClusters.QuadPart * 100) / VolumeInfo.TotalClusters.QuadPart);
+    _tprintf(_T("Free space\t\t: %I64u MB (%I64u%% of drive)\n"), (VolumeInfo.FreeClusters.QuadPart * VolumeInfo.BytesPerCluster) >> 20, (VolumeInfo.FreeClusters.QuadPart * 100) / VolumeInfo.TotalClusters.QuadPart);
 
     _tprintf(_T("\nAllocation Size\n---------------\n"));
     _tprintf(_T("Bytes per sector\t: %lu\n"), VolumeInfo.BytesPerSector);
@@ -144,11 +144,11 @@ _tmain(int argc, const TCHAR *argv[])
     _tprintf(_T("Clusters per MFT record\t: %lu\n"), VolumeInfo.ClustersPerFileRecordSegment);
 
     _tprintf(_T("\nMFT Information\n---------------\n"));
-    _tprintf(_T("MFT size\t\t: %I64u MB (%u%% of drive)\n"), VolumeInfo.MftValidDataLength.QuadPart >> 20, (VolumeInfo.MftValidDataLength.QuadPart * 100) / VolumeSize);
+    _tprintf(_T("MFT size\t\t: %I64u MB (%I64u%% of drive)\n"), VolumeInfo.MftValidDataLength.QuadPart >> 20, (VolumeInfo.MftValidDataLength.QuadPart * 100) / VolumeSize);
     _tprintf(_T("MFT start cluster\t: %I64u\n"), VolumeInfo.MftStartLcn.QuadPart);
     _tprintf(_T("MFT zone clusters\t: %I64u - %I64u\n"), VolumeInfo.MftZoneStart.QuadPart, VolumeInfo.MftZoneEnd.QuadPart);
     MftClusters = VolumeInfo.MftZoneEnd.QuadPart - VolumeInfo.MftZoneStart.QuadPart;
-    _tprintf(_T("MFT zone size\t\t: %I64u MB (%u%% of drive)\n"), (MftClusters * VolumeInfo.BytesPerCluster) >> 20, (MftClusters * 100) / VolumeInfo.TotalClusters.QuadPart);
+    _tprintf(_T("MFT zone size\t\t: %I64u MB (%I64u%% of drive)\n"), (MftClusters * VolumeInfo.BytesPerCluster) >> 20, (MftClusters * 100) / VolumeInfo.TotalClusters.QuadPart);
     _tprintf(_T("MFT mirror start\t: %I64u\n"), VolumeInfo.Mft2StartLcn.QuadPart);
 
     _tprintf(_T("\nMeta-Data files\n---------------\n"));

@@ -91,7 +91,11 @@ static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_
     SERVICE_STATUS status;
 
     status.dwServiceType             = SERVICE_WIN32;
+#ifdef __REACTOS__
+    status.dwControlsAccepted        = 0;
+#else
     status.dwControlsAccepted        = SERVICE_ACCEPT_STOP;
+#endif
     status.dwWin32ExitCode           = 0;
     status.dwServiceSpecificExitCode = 0;
     status.dwCheckPoint              = 0;
@@ -137,11 +141,19 @@ static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
 
     status.dwServiceType             = SERVICE_WIN32;
     status.dwCurrentState            = SERVICE_RUNNING;
+#ifdef __REACTOS__
+    status.dwControlsAccepted        = 0;
+#else
     status.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+#endif
     status.dwWin32ExitCode           = 0;
     status.dwServiceSpecificExitCode = 0;
     status.dwCheckPoint              = 0;
+#ifdef __REACTOS__
+    status.dwWaitHint                = 0;
+#else
     status.dwWaitHint                = 10000;
+#endif
     SetServiceStatus( service_handle, &status );
 
 #ifdef __REACTOS__

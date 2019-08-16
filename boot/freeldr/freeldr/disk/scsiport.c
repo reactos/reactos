@@ -179,7 +179,7 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
     Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
 
@@ -803,7 +803,7 @@ SpiScanDevice(
     CHAR PartitionName[64];
 
     /* Register device with partition(0) suffix */
-    sprintf(PartitionName, "%spartition(0)", ArcName);
+    RtlStringCbPrintfA(PartitionName, sizeof(PartitionName), "%spartition(0)", ArcName);
     FsRegisterDevice(PartitionName, &DiskVtbl);
 
     /* Read device partition table */
@@ -817,8 +817,11 @@ SpiScanDevice(
             {
                 if (PartitionBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED)
                 {
-                    sprintf(PartitionName, "%spartition(%lu)",
-                            ArcName, PartitionBuffer->PartitionEntry[i].PartitionNumber);
+                    RtlStringCbPrintfA(PartitionName,
+                                       sizeof(PartitionName),
+                                       "%spartition(%lu)",
+                                       ArcName,
+                                       PartitionBuffer->PartitionEntry[i].PartitionNumber);
                     FsRegisterDevice(PartitionName, &DiskVtbl);
                 }
             }

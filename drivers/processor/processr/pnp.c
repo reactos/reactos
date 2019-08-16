@@ -105,7 +105,7 @@ ProcessorSetFriendlyName(
     PWSTR KeyNameBuffer = NULL;
     PWSTR DeviceId = NULL;
     PWSTR InstanceId = NULL;
-    PWSTR pszPrefix = L"\\Registry\\Machine\\System\\CurrentcontrolSet\\Enum";
+    PWSTR pszPrefix = L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum";
 
     RtlInitUnicodeString(&HardwareKeyName,
                          L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");

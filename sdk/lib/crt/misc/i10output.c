@@ -80,8 +80,8 @@ int CDECL MSVCRT_I10_OUTPUT(_LDOUBLE ld80, int prec, int flag, struct _I10_OUTPU
         prec = 0;
     }
 
-    sprintf(format, "%%.%dle", prec);
-    sprintf(buf, format, d);
+    sprintf_s(format, sizeof(format), "%%.%dle", prec);
+    sprintf_s(buf, sizeof(buf), format, d);
 
     buf[1] = buf[0];
     data->pos = atoi(buf+prec+3);

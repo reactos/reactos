@@ -195,7 +195,7 @@ KsCreatePin(HANDLE FilterHandle,
             PHANDLE  ConnectionHandle)
 {
     ULONG BufferSize = sizeof(KSPIN_CONNECT);
-    PKSDATAFORMAT DataFormat = ((PKSDATAFORMAT) ((ULONG_PTR)Connect + sizeof(KSPIN_CONNECT)));
+    PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)(Connect + 1);
 
     BufferSize += DataFormat->FormatSize;
 

@@ -340,6 +340,15 @@ cleanup:
 }
 
 
+FORCEINLINE
+BOOL
+IsUISuppressionAllowed(VOID)
+{
+    /* Display the newdev.dll wizard UI only if it's allowed */
+    return (g_IsUISuppressed || GetSuppressNewUIValue());
+}
+
+
 /* Loop to install all queued devices installations */
 DWORD
 WINAPI
@@ -368,7 +377,7 @@ DeviceInstallThread(LPVOID lpParameter)
         {
             ResetEvent(hNoPendingInstalls);
             Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
-            InstallDevice(Params->DeviceIds, showWizard);
+            InstallDevice(Params->DeviceIds, showWizard && !IsUISuppressionAllowed());
             HeapFree(GetProcessHeap(), 0, Params);
         }
     }

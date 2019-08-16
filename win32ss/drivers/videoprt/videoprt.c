@@ -905,7 +905,7 @@ VideoPortScanRom(
     IN ULONG RomLength,
     IN PUCHAR String)
 {
-    ULONG StringLength;
+    SIZE_T StringLength;
     BOOLEAN Found;
     PUCHAR SearchLocation;
 

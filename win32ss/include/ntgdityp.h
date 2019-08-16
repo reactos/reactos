@@ -572,7 +572,7 @@ typedef struct _DRIVER_FUNCTIONS
     PFN_DrvDisableSurface          DisableSurface;
     PFN_DrvAssertMode              AssertMode;
     PFN_DrvOffset                  Offset;
-    PFN_DrvResetDevice             ResetPDEV;
+    PFN_DrvResetPDEV               ResetPDEV;
     PFN_DrvDisableDriver           DisableDriver;
     PVOID                          Unknown1;
     PFN_DrvCreateDeviceBitmap      CreateDeviceBitmap;

@@ -39,7 +39,7 @@ NTAPI
 CsrpConnectToServer(IN PWSTR ObjectDirectory)
 {
     NTSTATUS Status;
-    ULONG PortNameLength;
+    SIZE_T PortNameLength;
     UNICODE_STRING PortName;
     LARGE_INTEGER CsrSectionViewSize;
     HANDLE CsrSectionHandle;
@@ -62,10 +62,15 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     /* Calculate the total port name size */
     PortNameLength = ((wcslen(ObjectDirectory) + 1) * sizeof(WCHAR)) +
                      sizeof(CSR_PORT_NAME);
+    if (PortNameLength > UNICODE_STRING_MAX_BYTES)
+    {
+        DPRINT1("PortNameLength too big: %Iu", PortNameLength);
+        return STATUS_NAME_TOO_LONG;
+    }
 
     /* Set the port name */
     PortName.Length = 0;
-    PortName.MaximumLength = PortNameLength;
+    PortName.MaximumLength = (USHORT)PortNameLength;
 
     /* Allocate a buffer for it */
     PortName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, PortNameLength);
@@ -366,11 +371,18 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
 
+    /* Make sure the length is valid */
+    if (DataLength > (MAXSHORT - sizeof(CSR_API_MESSAGE)))
+    {
+        DPRINT1("DataLength too big: %lu", DataLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength = DataLength +
+    ApiMessage->Header.u1.s1.TotalLength = (CSHORT)DataLength +
         sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength = DataLength +
+    ApiMessage->Header.u1.s1.DataLength = (CSHORT)DataLength +
         FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header); // ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     /* Fill out the CSR Header */

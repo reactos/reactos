@@ -1,11 +1,6 @@
 #ifndef _MSCONFIG_PCH_
 #define _MSCONFIG_PCH_
 
-// NOTE: It is completely idiotic to need those defines defined
-// for having the *_s string functions. In the MS CRT they are
-// directly available without further tricks.
-#define MINGW_HAS_SECURE_API    1
-
 #include <assert.h>
 
 #include <stdarg.h>

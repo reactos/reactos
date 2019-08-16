@@ -199,7 +199,8 @@ WriteRdpFile(HANDLE hFile,
              PRDPSETTINGS pRdpSettings)
 {
     WCHAR line[MAXKEY + MAXVALUE + 4];
-    DWORD BytesToWrite, BytesWritten;
+    SIZE_T BytesToWrite;
+    ULONG BytesWritten;
     BOOL bRet;
     INT i, k;
 

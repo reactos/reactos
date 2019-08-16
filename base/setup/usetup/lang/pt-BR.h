@@ -1427,7 +1427,7 @@ static MUI_ENTRY ptBRDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Para excluir esta parti\207\306o, pressione D",
+        "\x07  Para excluir esta parti\207\306o, pressione L",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1451,7 +1451,7 @@ static MUI_ENTRY ptBRDeletePartitionEntries[] =
     {
         0,
         0,
-        "D=Excluir  ESC=Cancelar  F3=Sair",
+        "L=Excluir  ESC=Cancelar  F3=Sair",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

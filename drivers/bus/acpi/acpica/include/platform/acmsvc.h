@@ -211,6 +211,10 @@
 #endif /* _M_IX86 */
 #endif /* __REACTOS__ */
 
+/* warn C4001: use of slash-slash comments */
+/* NOTE: MSVC 2015 headers use these extensively */
+#pragma warning(disable:4001)
+
 /* warn C4100: unreferenced formal parameter */
 #pragma warning(disable:4100)
 
@@ -223,9 +227,20 @@
 /* warn C4131: uses old-style declarator (iASL compiler only) */
 #pragma warning(disable:4131)
 
+/* warn C4131: uses old-style declarator (iASL compiler only) */
+#pragma warning(disable:4459)
+
 #if _MSC_VER > 1200 /* Versions above VC++ 6 */
 #pragma warning( disable : 4295 ) /* needed for acpredef.h array */
 #endif
+
+/*
+ * MSVC 2015+
+ */
+
+ /* warn C4459: xxxx (identifier) hides global declaration */
+#pragma warning(disable:4459)
+
 
 
 /* Debug support. */

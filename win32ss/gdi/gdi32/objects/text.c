@@ -505,6 +505,8 @@ ExtTextOutW(
                   cwc,
                   lpDx);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     if (!(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
     {
         if (LoadLPK(LPK_ETO))

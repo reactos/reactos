@@ -1,26 +1,29 @@
 /*
- * PROJECT:         FreeLoader
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/windows/peloader.c
- * PURPOSE:         Provides routines for loading PE files.
- *                  (Deprecated remark) To be merged with arch/i386/loader.c in future.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides routines for loading PE files.
+ *              (Deprecated remark) To be merged with arch/i386/loader.c in future.
  *
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ * COPYRIGHT:   Copyright 1998-2003 Brian Palmer <brianp@sginet.com>
+ *              Copyright 2006-2019 Aleksey Bragin <aleksey@reactos.org>
  *
- *                  The source code in this file is based on the work of respective
- *                  authors of PE loading code in ReactOS and Brian Palmer and
- *                  Alex Ionescu's arch/i386/loader.c, and my research project
- *                  (creating a native EFI loader for Windows).
+ * NOTES:       The source code in this file is based on the work of respective
+ *              authors of PE loading code in ReactOS and Brian Palmer and
+ *              Alex Ionescu's arch/i386/loader.c, and my research project
+ *              (creating a native EFI loader for Windows).
  *
- * NOTE:            This article was very handy during development:
- *                  http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
+ *              This article was very handy during development:
+ *              http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
  */
 
 /* INCLUDES ***************************************************************/
+
 #include <freeldr.h>
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(PELOADER);
+
+/* FUNCTIONS **************************************************************/
 
 static BOOLEAN
 WinLdrpCompareDllName(IN PCH DllName,
@@ -49,9 +52,6 @@ WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PIMAGE_THUNK_DATA ThunkData,
                               IN PCSTR DirectoryPath);
 
-
-
-/* FUNCTIONS **************************************************************/
 
 /* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
 BOOLEAN
@@ -287,7 +287,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        // UiMessageBox("Can not open the file.");
+        ERR("ArcOpen(FileName: \"%s\", OpenReadOnly: %u) failed. Status %u\n", FileName, OpenReadOnly, Status);
         return FALSE;
     }
 
@@ -295,6 +295,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
+        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
         UiMessageBox("Error reading from file.");
         ArcClose(FileId);
         return FALSE;
@@ -304,7 +305,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     NtHeaders = RtlImageNtHeader(HeadersBuffer);
     if (!NtHeaders)
     {
-        // Print(L"Error - no NT header found in %s\n", FileName);
+        ERR("No NT header found in \"%s\"\n", FileName);
         UiMessageBox("Error - no NT header found.");
         ArcClose(FileId);
         return FALSE;
@@ -313,7 +314,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     /* Ensure this is executable image */
     if (((NtHeaders->FileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == 0))
     {
-        // Print(L"Not an executable image %s\n", FileName);
+        ERR("Not an executable image \"%s\"\n", FileName);
         UiMessageBox("Not an executable image.");
         ArcClose(FileId);
         return FALSE;
@@ -335,7 +336,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 
         if (PhysicalBase == NULL)
         {
-            // Print(L"Failed to alloc pages for image %s\n", FileName);
+            ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FileName);
             UiMessageBox("Failed to alloc pages for image.");
             ArcClose(FileId);
             return FALSE;
@@ -348,11 +349,12 @@ WinLdrLoadImage(IN PCHAR FileName,
     TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
 
     /* Set to 0 position and fully load the file image */
-    Position.HighPart = Position.LowPart = 0;
+    Position.QuadPart = 0;
     Status = ArcSeek(FileId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
-        UiMessageBox("Error seeking to start of file.");
+        ERR("ArcSeek(File: '%s') failed. Status: 0x%lx\n", FileName, Status);
+        UiMessageBox("Error seeking the start of a file.");
         ArcClose(FileId);
         return FALSE;
     }
@@ -360,7 +362,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     Status = ArcRead(FileId, PhysicalBase, NtHeaders->OptionalHeader.SizeOfHeaders, &BytesRead);
     if (Status != ESUCCESS)
     {
-        // Print(L"Error reading headers %s\n", FileName);
+        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
         UiMessageBox("Error reading headers.");
         ArcClose(FileId);
         return FALSE;

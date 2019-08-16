@@ -13,8 +13,8 @@
 @ stdcall DirectDrawEnumerateW(ptr ptr)
 @ stdcall DirectDrawEnumerateExA(ptr ptr long)
 @ stdcall DirectDrawEnumerateExW(ptr ptr long)
-#@ stdcall DllCanUnloadNow()
-#@ stdcall DllGetClassObject(ptr ptr ptr)
+#@ stdcall -private DllCanUnloadNow()
+#@ stdcall -private DllGetClassObject(ptr ptr ptr)
 #@ stdcall GetDDSurfaceLocal
 #@ stdcall GetOLEThunkData
 #@ stdcall GetSurfaceFromDC

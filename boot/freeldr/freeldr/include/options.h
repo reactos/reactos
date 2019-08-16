@@ -19,6 +19,6 @@
 
 #pragma once
 
-VOID    DoOptionsMenu(VOID);
-VOID    DisplayBootTimeOptions(VOID);
-VOID    AppendBootTimeOptions(PCHAR BootOptions);
+VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem);
+VOID DisplayBootTimeOptions(VOID);
+VOID AppendBootTimeOptions(PCHAR BootOptions);

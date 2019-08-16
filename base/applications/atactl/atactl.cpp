@@ -1688,7 +1688,7 @@ main (
     )
 {
     //ULONG Flags = 0;
-    int i;
+    intptr_t i;
     uintptr_t j;
     char a;
     int bus_id = -1;

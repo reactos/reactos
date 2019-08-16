@@ -44,6 +44,7 @@ static DWORD
 ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
 {
     WCHAR szControlPipeName[MAX_PATH + 1];
+    SECURITY_ATTRIBUTES SecurityAttributes;
     HKEY hServiceCurrentKey = INVALID_HANDLE_VALUE;
     DWORD ServiceCurrent = 0;
     DWORD KeyDisposition;
@@ -97,6 +98,10 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
 
     DPRINT("PipeName: %S\n", szControlPipeName);
 
+    SecurityAttributes.nLength = sizeof(SecurityAttributes);
+    SecurityAttributes.lpSecurityDescriptor = pPipeSD;
+    SecurityAttributes.bInheritHandle = FALSE;
+
     pServiceImage->hControlPipe = CreateNamedPipeW(szControlPipeName,
                                                    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                                                    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -104,7 +109,7 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
                                                    8000,
                                                    4,
                                                    PipeTimeout,
-                                                   NULL);
+                                                   &SecurityAttributes);
     DPRINT("CreateNamedPipeW(%S) done\n", szControlPipeName);
     if (pServiceImage->hControlPipe == INVALID_HANDLE_VALUE)
     {
@@ -275,17 +280,64 @@ ScmIsLocalSystemAccount(
 
 
 static
+BOOL
+ScmEnableBackupRestorePrivileges(
+    _In_ HANDLE hToken,
+    _In_ BOOL bEnable)
+{
+    PTOKEN_PRIVILEGES pTokenPrivileges = NULL;
+    DWORD dwSize;
+    BOOL bRet = FALSE;
+
+    DPRINT("ScmEnableBackupRestorePrivileges(%p %d)\n", hToken, bEnable);
+
+    dwSize = sizeof(TOKEN_PRIVILEGES) + 2 * sizeof(LUID_AND_ATTRIBUTES);
+    pTokenPrivileges = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+    if (pTokenPrivileges == NULL)
+    {
+        DPRINT1("Failed to allocate the privilege buffer!\n");
+        goto done;
+    }
+
+    pTokenPrivileges->PrivilegeCount = 2;
+    pTokenPrivileges->Privileges[0].Luid.LowPart = SE_BACKUP_PRIVILEGE;
+    pTokenPrivileges->Privileges[0].Luid.HighPart = 0;
+    pTokenPrivileges->Privileges[0].Attributes = (bEnable ? SE_PRIVILEGE_ENABLED : 0);
+    pTokenPrivileges->Privileges[1].Luid.LowPart = SE_RESTORE_PRIVILEGE;
+    pTokenPrivileges->Privileges[1].Luid.HighPart = 0;
+    pTokenPrivileges->Privileges[1].Attributes = (bEnable ? SE_PRIVILEGE_ENABLED : 0);
+
+    bRet = AdjustTokenPrivileges(hToken, FALSE, pTokenPrivileges, 0, NULL, NULL);
+    if (!bRet)
+    {
+        DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
+    }
+    else if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+    {
+        DPRINT1("AdjustTokenPrivileges() succeeded, but with not all privileges assigned\n");
+        bRet = FALSE;
+    }
+
+done:
+    if (pTokenPrivileges != NULL)
+        HeapFree(GetProcessHeap(), 0, pTokenPrivileges);
+
+    return bRet;
+}
+
+
+static
 DWORD
 ScmLogonService(
     IN PSERVICE pService,
     IN PSERVICE_IMAGE pImage)
 {
-    DWORD dwError = ERROR_SUCCESS;
     PROFILEINFOW ProfileInfo;
     PWSTR pszUserName = NULL;
     PWSTR pszDomainName = NULL;
     PWSTR pszPassword = NULL;
     PWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
     DPRINT("Service %S\n", pService->lpServiceName);
@@ -350,9 +402,13 @@ ScmLogonService(
     // ProfileInfo.lpPolicyPath = NULL;
     // ProfileInfo.hProfile = NULL;
 
+    ScmEnableBackupRestorePrivileges(pImage->hToken, TRUE);
     if (!LoadUserProfileW(pImage->hToken, &ProfileInfo))
-    {
         dwError = GetLastError();
+    ScmEnableBackupRestorePrivileges(pImage->hToken, FALSE);
+
+    if (dwError != ERROR_SUCCESS)
+    {
         DPRINT1("LoadUserProfileW() failed (Error %lu)\n", dwError);
         goto done;
     }
@@ -470,7 +526,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
             /* Unload the user profile */
             if (pServiceImage->hProfile != NULL)
+            {
+                ScmEnableBackupRestorePrivileges(pServiceImage->hToken, TRUE);
                 UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+                ScmEnableBackupRestorePrivileges(pServiceImage->hToken, FALSE);
+            }
 
             /* Close the logon token */
             if (pServiceImage->hToken != NULL)
@@ -541,7 +601,11 @@ ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
 
     /* Unload the user profile */
     if (pServiceImage->hProfile != NULL)
+    {
+        ScmEnableBackupRestorePrivileges(pServiceImage->hToken, TRUE);
         UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+        ScmEnableBackupRestorePrivileges(pServiceImage->hToken, FALSE);
+    }
 
     /* Close the logon token */
     if (pServiceImage->hToken != NULL)
@@ -1852,18 +1916,26 @@ ScmStartUserModeService(PSERVICE Service,
             StartupInfo.lpDesktop = L"WinSta0\\Default";
         }
 
-        Result = CreateProcessW(NULL,
-                                Service->lpImage->pszImagePath,
-                                NULL,
-                                NULL,
-                                FALSE,
-                                CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
-                                lpEnvironment,
-                                NULL,
-                                &StartupInfo,
-                                &ProcessInformation);
-        if (!Result)
-            dwError = GetLastError();
+        if (wcsstr(Service->lpImage->pszImagePath, L"\\system32\\lsass.exe") == NULL)
+        {
+            Result = CreateProcessW(NULL,
+                                    Service->lpImage->pszImagePath,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                    lpEnvironment,
+                                    NULL,
+                                    &StartupInfo,
+                                    &ProcessInformation);
+            if (!Result)
+                dwError = GetLastError();
+        }
+        else
+        {
+            Result = TRUE;
+            dwError = ERROR_SUCCESS;
+        }
     }
 
     if (lpEnvironment)

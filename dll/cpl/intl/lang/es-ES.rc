@@ -10,7 +10,7 @@ BEGIN
     GROUPBOX "Estándares y formatos ", -1, 5, 5, 234, 162
     LTEXT "Esta opción afecta al formato que algunas aplicaciones dan a los números, monedas, fechas y horas.", -1, 14, 17, 220, 25
     LTEXT "Seleccione un elemento para que coincida con sus preferencias o haga clic en Personalizar para elegir su propia configuración:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Personalizar...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Ejemplos", -1, 14, 73, 70, 10
     LTEXT "Número:", -1, 16, 86, 48, 10
@@ -25,7 +25,7 @@ BEGIN
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Ubicación geográfica ", -1, 5, 172, 234, 55
     LTEXT "Seleccione su ubicación actual para ayudar a los servicios a suministrarle información local, como noticias y el tiempo.", -1, 14, 184, 210, 24
-    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
@@ -48,7 +48,7 @@ CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Idioma para programas no Unicode ", -1, 5, 5, 234, 90
-    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Esta configuración de sistema permite que algunos programas no Unicode muestren menús y diálogos en sus idiomas originales. No afecta a los programas Unicode pero afecta a todos los usuarios de este equipo.", -1, 14, 18, 223, 33
     LTEXT "Seleccione un idioma que coincida con la versión de idioma de los programas no Unicode que desea utilizar:", -1, 14, 55, 223, 18
     GROUPBOX "Tablas de conversión de páginas de código ", -1, 5, 101, 234, 88

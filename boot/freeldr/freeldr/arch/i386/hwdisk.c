@@ -64,9 +64,9 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
-    Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
-    Information->CurrentAddress.QuadPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+    RtlZeroMemory(Information, sizeof(*Information));
+    Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
+    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -81,6 +81,13 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     CHAR FileName[1];
+
+    if (DiskReadBufferSize == 0)
+    {
+        ERR("DiskOpen(): DiskReadBufferSize is 0, something is wrong.\n");
+        ASSERT(FALSE);
+        return ENOMEM;
+    }
 
     if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
         return EINVAL;
@@ -139,9 +146,15 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     BOOLEAN ret;
     ULONGLONG SectorOffset;
 
+    ASSERT(DiskReadBufferSize > 0);
+
     TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
+
+    // If MaxSectors is 0, this will lead to infinite loop.
+    // In release builds assertions are disabled, however we also have sanity checks in DiskOpen()
+    ASSERT(MaxSectors > 0);
 
     ret = TRUE;
 
@@ -217,6 +230,9 @@ GetHarddiskInformation(UCHAR DriveNumber)
     CHAR ArcName[MAX_PATH];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     PCHAR Identifier = PcDiskIdentifier[DriveNumber - 0x80];
+
+    /* Detect disk partition type */
+    DiskDetectPartitionType(DriveNumber);
 
     /* Read the MBR */
     if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
@@ -302,6 +318,8 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
     DiskReportError(FALSE);
     DiskCount = 0;
     DriveNumber = 0x80;
+
+    ASSERT(DiskReadBufferSize > 0);
 
     /*
      * There are some really broken BIOSes out there. There are even BIOSes

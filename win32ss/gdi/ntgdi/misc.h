@@ -21,9 +21,9 @@ extern BOOL APIENTRY IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
 extern BOOL APIENTRY IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave);
 
 extern HGDIOBJ StockObjects[];
-extern SHORT gusLanguageID;
+extern USHORT gusLanguageID;
 
-SHORT FASTCALL UserGetLanguageID(VOID);
+USHORT FASTCALL UserGetLanguageID(VOID);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
 

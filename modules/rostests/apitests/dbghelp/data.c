@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Support functions for dbghelp api test
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Support functions for dbghelp api test
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <windows.h>
@@ -69,7 +69,7 @@ static int extract_one(const char* filename, const char* resid)
 }
 
 
-int extract_msvc_exe(char szFile[MAX_PATH])
+int extract_msvc_dll(char szFile[MAX_PATH], char szPath[MAX_PATH])
 {
     const char* dir = tmpdir();
     BOOL ret = CreateDirectoryA(dir, NULL);
@@ -83,10 +83,11 @@ int extract_msvc_exe(char szFile[MAX_PATH])
     if (!extract_one(szFile, "msvc_uffs.dll"))
         return 0;
 
+    strcpy(szPath, dir);
     return 1;
 }
 
-void cleanup_msvc_exe()
+void cleanup_msvc_dll()
 {
     char szFile[MAX_PATH];
     BOOL ret;
@@ -103,7 +104,7 @@ void cleanup_msvc_exe()
     ok(ret, "RemoveDirectoryA failed(%d)\n", GetLastError());
 }
 
-int extract_gcc_exe(char szFile[MAX_PATH])
+int extract_gcc_dll(char szFile[MAX_PATH])
 {
     const char* dir = tmpdir();
     BOOL ret = CreateDirectoryA(dir, NULL);
@@ -116,7 +117,7 @@ int extract_gcc_exe(char szFile[MAX_PATH])
     return 1;
 }
 
-void cleanup_gcc_exe()
+void cleanup_gcc_dll()
 {
     char szFile[MAX_PATH];
     BOOL ret;

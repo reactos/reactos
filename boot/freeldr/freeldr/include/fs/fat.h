@@ -151,7 +151,6 @@ typedef struct
     ULONG    FileSize;        /* File size */
     ULONG    FilePointer;        /* File pointer */
     ULONG*    FileFatChain;        /* File fat chain array */
-    ULONG    DriveNumber;
     PFAT_VOLUME_INFO    Volume;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 

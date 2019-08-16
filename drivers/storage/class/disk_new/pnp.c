@@ -724,13 +724,13 @@ Return Value:
         if((Pdo->Characteristics & FILE_REMOVABLE_MEDIA) == 0) {
 
             if (diskData->PartitionStyle == PARTITION_STYLE_MBR) {
-                sprintf(string, "S%08lx_O%I64lx_L%I64lx",
+                sprintf(string, "S%08lx_O%I64x_L%I64x",
                         diskData->Mbr.Signature,
-                        commonExtension->StartingOffset,
-                        commonExtension->PartitionLength);
+                        commonExtension->StartingOffset.QuadPart,
+                        commonExtension->PartitionLength.QuadPart);
             } else {
                 sprintf(string,
-                        "S%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64lx_L%I64lx",
+                        "S%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
                         diskData->Efi.DiskId.Data1,
                         diskData->Efi.DiskId.Data2,
                         diskData->Efi.DiskId.Data3,
@@ -742,8 +742,8 @@ Return Value:
                         diskData->Efi.DiskId.Data4[5],
                         diskData->Efi.DiskId.Data4[6],
                         diskData->Efi.DiskId.Data4[7],
-                        commonExtension->StartingOffset,
-                        commonExtension->PartitionLength);
+                        commonExtension->StartingOffset.QuadPart,
+                        commonExtension->PartitionLength.QuadPart);
             }
         } else {
             sprintf(string, "RM");

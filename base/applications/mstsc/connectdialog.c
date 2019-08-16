@@ -505,7 +505,7 @@ AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICEW DisplayDevice)
     LPWSTR name = NULL;
     LPWSTR key = NULL;
     LPWSTR devid = NULL;
-    DWORD descriptionSize, nameSize, keySize, devidSize;
+    SIZE_T descriptionSize, nameSize, keySize, devidSize;
     PSETTINGS_ENTRY Current;
     DWORD ResolutionsCount = 1;
     DWORD i;

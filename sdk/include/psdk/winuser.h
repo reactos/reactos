@@ -5344,6 +5344,9 @@ BOOL WINAPI UnionRect(_Out_ LPRECT, _In_ LPCRECT, _In_ LPCRECT);
 BOOL WINAPI UnloadKeyboardLayout(_In_ HKL);
 BOOL WINAPI UnregisterClassA(_In_ LPCSTR,HINSTANCE);
 BOOL WINAPI UnregisterClassW(_In_ LPCWSTR,HINSTANCE);
+#if (WINVER >= 0x0500)
+BOOL WINAPI UnregisterDeviceNotification(_In_ HDEVNOTIFY);
+#endif
 BOOL WINAPI UnregisterHotKey(_In_opt_ HWND, _In_ int);
 BOOL WINAPI UpdateWindow(_In_ HWND);
 #if (_WIN32_WINNT >= 0x0500)
@@ -5597,14 +5600,14 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define wsprintf wsprintfW
 #define wvsprintf wvsprintfW
 
-#ifndef NOGDI
+#if defined(_WINGDI_) && !defined(NOGDI)
 #define ChangeDisplaySettings ChangeDisplaySettingsW
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExW
 #define CreateDesktop CreateDesktopW
 #define EnumDisplaySettings EnumDisplaySettingsW
 #define EnumDisplaySettingsEx EnumDisplaySettingsExW
 #define EnumDisplayDevices EnumDisplayDevicesW
-#endif /* NOGDI */
+#endif /* _WINGDI_ && !NOGDI */
 #else /* UNICODE */
 #define EDITWORDBREAKPROC EDITWORDBREAKPROCA
 #define PROPENUMPROC PROPENUMPROCA
@@ -5769,7 +5772,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define EnumDisplaySettings EnumDisplaySettingsA
 #define EnumDisplaySettingsEx EnumDisplaySettingsExA
 #define EnumDisplayDevices EnumDisplayDevicesA
-#endif /* NOGDI */
+#endif /* _WINGDI_ && !NOGDI */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
 

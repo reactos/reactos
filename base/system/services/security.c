@@ -14,14 +14,17 @@
 #include <debug.h>
 
 static PSID pNullSid = NULL;
+static PSID pWorldSid = NULL;
 static PSID pLocalSystemSid = NULL;
 static PSID pAuthenticatedUserSid = NULL;
 static PSID pAliasAdminsSid = NULL;
 
 static PACL pDefaultDacl = NULL;
 static PACL pDefaultSacl = NULL;
+static PACL pPipeDacl = NULL;
 
 static PSECURITY_DESCRIPTOR pDefaultSD = NULL;
+PSECURITY_DESCRIPTOR pPipeSD = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -33,6 +36,9 @@ ScmFreeSids(VOID)
     if (pNullSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pNullSid);
 
+    if (pWorldSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pWorldSid);
+
     if (pLocalSystemSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pLocalSystemSid);
 
@@ -41,7 +47,6 @@ ScmFreeSids(VOID)
 
     if (pAliasAdminsSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pAliasAdminsSid);
-
 }
 
 
@@ -65,6 +70,17 @@ ScmCreateSids(VOID)
     RtlInitializeSid(pNullSid, &NullAuthority, 1);
     pSubAuthority = RtlSubAuthoritySid(pNullSid, 0);
     *pSubAuthority = SECURITY_NULL_RID;
+
+    /* Create the World SID */
+    pWorldSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, ulLength1);
+    if (pWorldSid == NULL)
+    {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    RtlInitializeSid(pWorldSid, &NullAuthority, 1);
+    pSubAuthority = RtlSubAuthoritySid(pWorldSid, 0);
+    *pSubAuthority = SECURITY_WORLD_RID;
 
     /* Create the LocalSystem SID */
     pLocalSystemSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, ulLength1);
@@ -158,6 +174,21 @@ ScmCreateAcls(VOID)
                          FALSE,
                          TRUE);
 
+    /* Create the pipe DACL */
+    ulLength = sizeof(ACL) +
+               (sizeof(ACE) + RtlLengthSid(pWorldSid));
+
+    pPipeDacl = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, ulLength);
+    if (pPipeDacl == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    RtlCreateAcl(pPipeDacl, ulLength, ACL_REVISION);
+
+    RtlAddAccessAllowedAce(pPipeDacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           pWorldSid);
+
     return ERROR_SUCCESS;
 }
 
@@ -171,6 +202,9 @@ ScmFreeAcls(VOID)
 
     if (pDefaultSacl != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pDefaultSacl);
+
+    if (pPipeDacl != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pPipeDacl);
 }
 
 
@@ -228,6 +262,56 @@ ScmFreeDefaultSD(VOID)
 {
     if (pDefaultSD != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pDefaultSD);
+}
+
+
+static
+DWORD
+ScmCreatePipeSD(VOID)
+{
+    NTSTATUS Status;
+
+    /* Create the absolute security descriptor */
+    pPipeSD = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SECURITY_DESCRIPTOR));
+    if (pPipeSD == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    DPRINT("pPipeSD %p\n", pDefaultSD);
+
+    Status = RtlCreateSecurityDescriptor(pPipeSD,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    Status = RtlSetOwnerSecurityDescriptor(pPipeSD,
+                                           pLocalSystemSid,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    Status = RtlSetGroupSecurityDescriptor(pPipeSD,
+                                           pLocalSystemSid,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    Status = RtlSetDaclSecurityDescriptor(pPipeSD,
+                                          TRUE,
+                                          pPipeDacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    return ERROR_SUCCESS;
+}
+
+
+static
+VOID
+ScmFreePipeSD(VOID)
+{
+    if (pPipeSD != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pPipeSD);
 }
 
 
@@ -301,6 +385,10 @@ ScmInitializeSecurity(VOID)
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
+    dwError = ScmCreatePipeSD();
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
     return ERROR_SUCCESS;
 }
 
@@ -308,6 +396,7 @@ ScmInitializeSecurity(VOID)
 VOID
 ScmShutdownSecurity(VOID)
 {
+    ScmFreePipeSD();
     ScmFreeDefaultSD();
     ScmFreeAcls();
     ScmFreeSids();

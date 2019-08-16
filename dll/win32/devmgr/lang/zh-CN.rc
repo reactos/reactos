@@ -242,6 +242,18 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
 
+IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Confirm Device Removal"
+FONT 9, "宋体"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+END
+
 
 /*
  This code relates to the device manager GUI
@@ -249,24 +261,28 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "文件(&F)"
-  BEGIN
-    MENUITEM "关闭(&X)",                       IDC_EXIT
-  END
-  MENUITEM "操作",                        IDC_ACTIONMENU
-  POPUP "视图"
-  BEGIN
-    MENUITEM "按类型设备",             IDC_DEVBYTYPE
-    MENUITEM "依连接排序设备",       IDC_DEVBYCONN
-    MENUITEM "依类型排序资源",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "依连接排序资源",     IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "显示隐藏的设备",         IDC_SHOWHIDDEN
-  END
-  POPUP "帮助"
-  BEGIN
-    MENUITEM "关于",                       IDC_ABOUT
-  END
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "关闭(&X)",                       IDM_EXIT
+    END
+    POPUP "行动"
+    BEGIN
+        MENUITEM "扫描检测硬件改动",      IDM_SCAN_HARDWARE
+        MENUITEM "添加硬件",             IDM_ADD_HARDWARE
+    END
+    POPUP "视图"
+    BEGIN
+        MENUITEM "按类型设备",             IDM_DEVBYTYPE
+        MENUITEM "依连接排序设备",       IDM_DEVBYCONN
+        MENUITEM "依类型排序资源",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "依连接排序资源",     IDM_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "显示隐藏的设备",         IDM_SHOWHIDDEN
+    END
+    POPUP "帮助"
+    BEGIN
+        MENUITEM "关于",                       IDM_ABOUT
+    END
 END
 
 

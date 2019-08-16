@@ -47,6 +47,28 @@
 #define ACPI_USE_STANDARD_HEADERS
 #define ACPI_USE_SYSTEM_CLIBRARY
 
+ /* Note: do not include any C library headers here */
+
+ /*
+ * Note: MSVC project files should define ACPI_DEBUGGER and ACPI_DISASSEMBLER
+ * as appropriate to enable editor functions like "Find all references".
+ * The editor isn't smart enough to dig through the include files to find
+ * out if these are actually defined.
+ */
+
+ /* Eliminate warnings for "old" (non-secure) versions of clib functions */
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+/* Eliminate warnings for POSIX clib function names (open, write, etc.) */
+
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif
+
+
 #define ACPI_MACHINE_WIDTH          64
 
 /*

@@ -44,8 +44,32 @@
 #ifndef __ACWIN_H__
 #define __ACWIN_H__
 
+#include <io.h>
+
 #define ACPI_USE_STANDARD_HEADERS
 #define ACPI_USE_SYSTEM_CLIBRARY
+
+ /* Note: do not include any C library headers here */
+
+ /*
+ * Note: MSVC project files should define ACPI_DEBUGGER and ACPI_DISASSEMBLER
+ * as appropriate to enable editor functions like "Find all references".
+ * The editor isn't smart enough to dig through the include files to find
+ * out if these are actually defined.
+ */
+
+ /* Eliminate warnings for "old" (non-secure) versions of clib functions */
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+/* Eliminate warnings for POSIX clib function names (open, write, etc.) */
+
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif
+
 
 #define ACPI_MACHINE_WIDTH      32
 #define ACPI_USE_NATIVE_DIVIDE
@@ -75,7 +99,9 @@ typedef COMPILER_DEPENDENT_UINT64       u64;
 #define stat            _stat
 #define fstat           _fstat
 #define mkdir           _mkdir
-#define snprintf        _snprintf
+#define fileno          _fileno
+#define isatty          _isatty
+
 #if _MSC_VER <= 1200 /* Versions below VC++ 6 */
 #define vsnprintf       _vsnprintf
 #endif
@@ -87,6 +113,9 @@ typedef COMPILER_DEPENDENT_UINT64       u64;
 #define S_IREAD         _S_IREAD
 #define S_IWRITE        _S_IWRITE
 #define S_IFDIR         _S_IFDIR
+#if _MSC_VER < 1900
+#define snprintf        _snprintf
+#endif
 
 
 /*

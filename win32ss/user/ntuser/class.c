@@ -53,7 +53,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     ICLS_SWITCH
   },
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8000))),
-    CS_DBLCLKS|CS_SAVEBITS,
+    CS_DBLCLKS|CS_SAVEBITS|CS_DROPSHADOW,
     NULL, // Use User32 procs
     sizeof(LONG),
     (HICON)OCR_NORMAL,

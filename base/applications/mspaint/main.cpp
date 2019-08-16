@@ -131,7 +131,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 *pch = 0;
                 FileExtFromFilter(pch, pchTitle, pon->lpOFN);
                 SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)pchTitle);
-                lstrcpyn(pon->lpOFN->lpstrFile, Path, SIZEOF(pon->lpOFN->lpstrFile));
+                lstrcpyn(pon->lpOFN->lpstrFile, Path, pon->lpOFN->nMaxFile);
             }
         }
         break;

@@ -5,6 +5,15 @@
 #include "atlbase.h"
 #include "atlexcept.h"
 
+// FIXME: We need to include <new> for placement new, but that would mean everyone using atl
+// would also need to set the option 'WITH_STL'..
+// For now we just copy the definition here, under a guard..
+#ifndef _NEW
+inline void* operator new (size_t size, void* ptr) throw() { return ptr; }
+inline void operator delete (void* ptr, void* voidptr2) throw() { }
+#endif
+
+
 struct __POSITION
 {
 };
@@ -90,7 +99,7 @@ public:
         _In_reads_(NumElements) T* Source,
         _In_ size_t NumElements)
     {
-        memmove_s(Dest, NumElements * sizeof(T), Source, NumElements * sizeof(T));
+        memmove(Dest, Source, NumElements * sizeof(T));
     }
 };
 
@@ -135,6 +144,244 @@ class CElementTraits :
     public CDefaultElementTraits<T>
 {
 };
+
+
+template<typename E, class ETraits = CElementTraits<E> >
+class CAtlArray
+{
+public:
+    typedef typename ETraits::INARGTYPE INARGTYPE;
+    typedef typename ETraits::OUTARGTYPE OUTARGTYPE;
+
+private:
+    E* m_pData;
+    size_t m_Size;
+    size_t m_AllocatedSize;
+    size_t m_GrowBy;
+
+
+#pragma push_macro("new")
+#undef new
+
+    void CreateItems(E* pData, size_t Size)
+    {
+        for (size_t n = 0; n < Size; ++n)
+        {
+            ::new (pData + n) E;
+        }
+    }
+
+#pragma pop_macro("new")
+
+    void DestructItems(E* pData, size_t Size)
+    {
+        for (size_t n = 0; n < Size; ++n)
+        {
+            pData[n].~E();
+        }
+    }
+
+    bool GrowAllocatedData(size_t nNewSize)
+    {
+        if (m_pData)
+        {
+            size_t addSize = m_GrowBy > 0 ? m_GrowBy : m_AllocatedSize / 2;
+            size_t allocSize = m_AllocatedSize + addSize;
+            if (allocSize < nNewSize)
+                allocSize = nNewSize;
+
+            E* pData = (E*)malloc(nNewSize * sizeof(E));
+
+            if (pData == NULL)
+            {
+                return false;
+            }
+
+            // Copy the objects over (default implementation will just move them without calling anything
+            ETraits::RelocateElements(pData, m_pData, m_Size);
+
+            free(m_pData);
+            m_pData = pData;
+            m_AllocatedSize = nNewSize;
+        }
+        else
+        {
+            // We need to allocate a new buffer
+            size_t allocSize = m_GrowBy > nNewSize ? m_GrowBy : nNewSize;
+            m_pData = (E*)malloc(allocSize * sizeof(E));
+            if (m_pData == NULL)
+            {
+                return false;
+            }
+            m_AllocatedSize = allocSize;
+        }
+        return true;
+    }
+
+    /* The CAtlArray class does not support construction by copy */
+private:
+    CAtlArray(_In_ const CAtlArray&);
+    CAtlArray& operator=(_In_ const CAtlArray&);
+
+public:
+    CAtlArray();
+    ~CAtlArray();
+
+    size_t Add(INARGTYPE element);
+    size_t Add();
+
+    bool SetCount(size_t nNewSize, int nGrowBy = - 1);
+    size_t GetCount() const;
+
+    E& operator[](size_t ielement);
+    const E& operator[](size_t ielement) const;
+
+    E& GetAt(size_t iElement);
+    const E& GetAt(size_t iElement) const;
+
+    //FIXME: Most of this class is missing!
+};
+
+//
+// CAtlArray public methods
+//
+
+template<typename E, class ETraits>
+CAtlArray< E, ETraits >::CAtlArray()
+    : m_pData(NULL)
+    , m_Size(0)
+    , m_AllocatedSize(0)
+    , m_GrowBy(0)
+{
+}
+
+template<typename E, class ETraits>
+CAtlArray< E, ETraits >::~CAtlArray()
+{
+    // Destroy all items
+    SetCount(0, -1);
+}
+
+#pragma push_macro("new")
+#undef new
+
+template<typename E, class ETraits>
+size_t CAtlArray<E, ETraits>::Add(INARGTYPE element)
+{
+    if (m_Size >= m_AllocatedSize)
+    {
+        if (!GrowAllocatedData(m_Size + 1))
+        {
+            AtlThrow(E_OUTOFMEMORY);
+        }
+    }
+
+    ::new (m_pData + m_Size) E(element);
+    m_Size++;
+
+    return m_Size - 1;
+}
+
+#pragma pop_macro("new")
+
+template<typename E, class ETraits>
+size_t CAtlArray<E, ETraits>::Add()
+{
+    if (!SetCount(m_Size + 1))
+    {
+        AtlThrow(E_OUTOFMEMORY);
+    }
+
+    return m_Size - 1;
+}
+
+template<typename E, class ETraits>
+bool CAtlArray<E, ETraits>::SetCount(size_t nNewSize, int nGrowBy /*= -1*/)
+{
+
+    if (nGrowBy > -1)
+    {
+        m_GrowBy = (size_t)nGrowBy;
+    }
+
+    if (nNewSize == m_Size)
+    {
+        // Do nothing
+    }
+    else if (nNewSize == 0)
+    {
+        if (m_pData)
+        {
+            DestructItems(m_pData, m_Size);
+            m_pData = NULL;
+        }
+        m_Size = m_AllocatedSize = NULL;
+    }
+    else if (nNewSize < m_AllocatedSize)
+    {
+        if (nNewSize > m_Size)
+        {
+            CreateItems(m_pData + m_Size, nNewSize - m_Size);
+        }
+        else
+        {
+            DestructItems(m_pData + nNewSize, m_Size - nNewSize);
+        }
+        m_Size = nNewSize;
+    }
+    else
+    {
+        if (!GrowAllocatedData(nNewSize))
+        {
+            return false;
+        }
+
+        CreateItems(m_pData + m_Size, nNewSize - m_Size);
+        m_Size = nNewSize;
+    }
+
+    return true;
+}
+
+template<typename E, class ETraits>
+size_t CAtlArray<E, ETraits>::GetCount() const
+{
+    return m_Size;
+}
+
+template<typename E, class ETraits>
+E& CAtlArray<E, ETraits>::operator[](size_t iElement)
+{
+    ATLASSERT(iElement < m_Size);
+
+    return m_pData[iElement];
+}
+
+template<typename E, class ETraits>
+const E& CAtlArray<E, ETraits>::operator[](size_t iElement) const
+{
+    ATLASSERT(iElement < m_Size);
+
+    return m_pData[iElement];
+}
+
+template<typename E, class ETraits>
+E& CAtlArray<E, ETraits>::GetAt(size_t iElement)
+{
+    ATLASSERT(iElement < m_Size);
+
+    return m_pData[iElement];
+}
+
+template<typename E, class ETraits>
+const E& CAtlArray<E, ETraits>::GetAt(size_t iElement) const
+{
+    ATLASSERT(iElement < m_Size);
+
+    return m_pData[iElement];
+}
+
+
 
 template<typename E, class ETraits = CElementTraits<E> >
 class CAtlList
@@ -198,6 +445,10 @@ public:
 
     E RemoveHead();
     E RemoveTail();
+
+    POSITION InsertBefore(_In_ POSITION pos, INARGTYPE element);
+    POSITION InsertAfter(_In_ POSITION pos, INARGTYPE element);
+
     void RemoveAll();
     void RemoveAt(_In_ POSITION pos);
 
@@ -387,6 +638,50 @@ E CAtlList<E, ETraits>::RemoveTail()
     FreeNode(Node);
 
     return Element;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits >::InsertBefore(_In_ POSITION pos, _In_ INARGTYPE element)
+{
+    if (pos == NULL)
+        return AddHead(element);
+
+    CNode* OldNode = (CNode*)pos;
+    CNode* Node = CreateNode(element, OldNode->m_Prev, OldNode);
+
+    if (OldNode->m_Prev != NULL)
+    {
+        OldNode->m_Prev->m_Next = Node;
+    }
+    else
+    {
+        m_HeadNode = Node;
+    }
+    OldNode->m_Prev = Node;
+
+    return (POSITION)Node;
+}
+
+template<typename E, class ETraits>
+POSITION CAtlList<E, ETraits >::InsertAfter(_In_ POSITION pos, _In_ INARGTYPE element)
+{
+    if (pos == NULL)
+        return AddTail(element);
+
+    CNode* OldNode = (CNode*)pos;
+    CNode* Node = CreateNode(element, OldNode, OldNode->m_Next);
+
+    if (OldNode->m_Next != NULL)
+    {
+        OldNode->m_Next->m_Prev = Node;
+    }
+    else
+    {
+        m_TailNode = Node;
+    }
+    OldNode->m_Next = Node;
+
+    return (POSITION)Node;
 }
 
 template<typename E, class ETraits>

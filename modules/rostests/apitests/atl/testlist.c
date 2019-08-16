@@ -3,6 +3,8 @@
 
 extern void func_atltypes(void);
 extern void func_CAtlFileMapping(void);
+extern void func_CAtlArray(void);
+extern void func_CAtlList(void);
 extern void func_CComBSTR(void);
 extern void func_CComHeapPtr(void);
 extern void func_CComObject(void);
@@ -18,6 +20,8 @@ const struct test winetest_testlist[] =
 {
     { "atltypes", func_atltypes },
     { "CAtlFileMapping", func_CAtlFileMapping },
+    { "CAtlArray", func_CAtlArray },
+    { "CAtlList", func_CAtlList },
     { "CComBSTR", func_CComBSTR },
     { "CComHeapPtr", func_CComHeapPtr },
     { "CComObject", func_CComObject },

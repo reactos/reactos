@@ -3,7 +3,8 @@
  * LICENSE:     Freeware, permission to use under Public Domain
  * FILE:        base/applications/games/solitaire/lang/tr-TR.rc
  * PURPOSE:     Turkish Resource File for ReactOS Solitaire
- * TRANSLATORS: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
+ * TRANSLATORS: 2013, 2014, 2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ *              2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -18,19 +19,19 @@ BEGIN
     GROUPBOX "Kağıtlar", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "&Tekli Çek", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Üçlü Çek", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Sayılama", -1, 100, 7, 75, 53
+    GROUPBOX "Skorlama", -1, 100, 7, 75, 53
     AUTORADIOBUTTON "&Standart", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
     AUTORADIOBUTTON "&Yok", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Süreyi Göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX "Sü&reyi Göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Durum Çubuğu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "S&ayıyı Koru", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "S&koru Koru", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 35, 97, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Kağıt Arkalığı Seç"
+CAPTION "Kâğıt Arkalığı Seç"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -55,11 +56,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire, J Brown tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
-    IDS_SOL_QUIT "Bu oyundan çıkılsın mı?"
+    IDS_SOL_ABOUT "Solitaire, J Brown tarafından.\n\nCardLib sürümü: 1.0"
+    IDS_SOL_QUIT "Şimdiki oyundan çıkılsın mı?"
     IDS_SOL_WIN "Tebrikler, kazandınız!"
-    IDS_SOL_DEAL "Yine dağıtılsın mı?"
-    IDS_SOL_SCORE "Sayı: %d"
+    IDS_SOL_DEAL "Yeniden dağıtılsın mı?"
+    IDS_SOL_SCORE "Skor: %d"
     IDS_SOL_TIME "Süre: %d"
 END
 
@@ -71,10 +72,10 @@ BEGIN
     BEGIN
         MENUITEM "&Dağıt\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "D&esteler", IDM_GAME_DECK
-        MENUITEM "&Seçenekler", IDM_GAME_OPTIONS
+        MENUITEM "D&esteler...", IDM_GAME_DECK
+        MENUITEM "&Seçenekler...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", IDM_GAME_EXIT
+        MENUITEM "Ç&ıkış", IDM_GAME_EXIT
     END
     POPUP "&Yardım"
     BEGIN

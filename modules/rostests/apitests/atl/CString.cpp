@@ -12,59 +12,7 @@
 #ifdef HAVE_APITEST
     #include <apitest.h>
 #else
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <stdarg.h>
-    #include <windows.h>
-    int g_tests_executed = 0;
-    int g_tests_failed = 0;
-    int g_tests_skipped = 0;
-    const char *g_file = NULL;
-    int g_line = 0;
-    void set_location(const char *file, int line)
-    {
-        g_file = file;
-        g_line = line;
-    }
-    void ok_func(int value, const char *fmt, ...)
-    {
-        va_list va;
-        va_start(va, fmt);
-        if (!value)
-        {
-            printf("%s (%d): ", g_file, g_line);
-            vprintf(fmt, va);
-            g_tests_failed++;
-        }
-        g_tests_executed++;
-        va_end(va);
-    }
-    void skip_func(const char *fmt, ...)
-    {
-        va_list va;
-        va_start(va, fmt);
-        printf("%s (%d): test skipped: ", g_file, g_line);
-        vprintf(fmt, va);
-        g_tests_skipped++;
-        va_end(va);
-    }
-    #undef ok
-    #define ok(value, ...) do { \
-        set_location(__FILE__, __LINE__); \
-        ok_func(value, __VA_ARGS__); \
-    } while (0)
-    #define ok_(x1,x2) set_location(x1,x2); ok_func
-    #define skip(...) do { \
-        set_location(__FILE__, __LINE__); \
-        skip_func(__VA_ARGS__); \
-    } while (0)
-    #define START_TEST(x)   int main(void)
-    char *wine_dbgstr_w(const wchar_t *wstr)
-    {
-        static char buf[512];
-        WideCharToMultiByte(CP_ACP, 0, wstr, -1, buf, _countof(buf), NULL, NULL);
-        return buf;
-    }
+    #include "atltest.h"
 #endif
 
 struct traits_test
@@ -256,9 +204,4 @@ START_TEST(CString)
 
     test_bstrW();
     test_bstrA();
-
-#ifndef HAVE_APITEST
-    printf("CString: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
-    return g_tests_failed;
-#endif
 }

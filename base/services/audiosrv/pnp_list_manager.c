@@ -23,8 +23,7 @@ CreateDeviceDescriptor(WCHAR* path, BOOL is_enabled)
 /*    printf("path_length %d, total %d\n", path_length, size);*/
 
     device = malloc(size);
-
-    if ( ! device )
+    if (! device)
     {
         logmsg("Failed to create a device descriptor (malloc fail)\n");
         return NULL;
@@ -71,7 +70,7 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
 */
 
     /* We DON'T want to overshoot the end of the buffer! */
-    if ( audio_device_list->size + device_info_size > audio_device_list->max_size )
+    if (audio_device_list->size + device_info_size > audio_device_list->max_size)
     {
         /*printf("max_size would be exceeded! Failing...\n");*/
         
@@ -101,7 +100,7 @@ CreateAudioDeviceList(DWORD max_size)
 {
 /*    printf("Initializing memory device list lock\n");*/
 
-    if ( ! InitializeAudioDeviceListLock() )
+    if (!InitializeAudioDeviceListLock())
     {
         /*printf("Failed!\n");*/
         return FALSE;
@@ -120,8 +119,7 @@ CreateAudioDeviceList(DWORD max_size)
                                           0,
                                           max_size,
                                           AUDIO_LIST_NAME);
-
-    if ( ! device_list_file )
+    if (!device_list_file)
     {
         logmsg("Creation of audio device list failed (err %d)\n", GetLastError());
 
@@ -138,8 +136,7 @@ CreateAudioDeviceList(DWORD max_size)
                                       0,
                                       0,
                                       max_size);
-
-    if ( ! audio_device_list )
+    if (!audio_device_list)
     {
         logmsg("MapViewOfFile FAILED (err %d)\n", GetLastError());
 
@@ -168,7 +165,7 @@ CreateAudioDeviceList(DWORD max_size)
 }
 
 VOID
-DestroyAudioDeviceList()
+DestroyAudioDeviceList(VOID)
 {
     logmsg("Destroying device list\n");
 

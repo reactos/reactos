@@ -173,10 +173,14 @@
 #define LDC_INIT_DOCUMENT 0x00000040
 #define LDC_INIT_PAGE     0x00000080
 #define LDC_STARTPAGE     0x00000100
-#define LDC_PLAY_MFDC     0x00000800
+#define LDC_NEXTBAND      0x00000200
 #define LDC_CLOCKWISE     0x00002000
 #define LDC_KILL_DOCUMENT 0x00010000
 #define LDC_META_PRINT    0x00020000
+#define LDC_DIRECT        0x00040000
+#define LDC_RESET_BANDING 0x00080000
+#define LDC_RESETDC       0x00200000
+#define LDC_UFIMAP        0x00400000
 #define LDC_INFODC        0x01000000 /* If CreateIC was passed. */
 #define LDC_DEVCAPS       0x02000000
 #define LDC_ATENDPAGE     0x10000000
@@ -278,11 +282,14 @@ typedef struct _LDC
     ABORTPROC pAbortProc; /* AbortProc for Printing */
     DWORD CallBackTick;
     HANDLE hPrinter;      /* Local or Remote Printer driver */
-    PVOID pUMPDev;
-    PUMDHPDEV pUMdhpdev;
+    PDEVMODEW pdm;
+    PVOID pUMPDev;        /* Ptr to User Mode Printer Device structure */
+    PUMDHPDEV pUMdhpdev;  /* Ptr to Combined UMPD and DHPDEV structure */
     DEVCAPS DevCaps;
     HBRUSH BrushColor;
     HPEN PenColor;
+    // wine data
+    DWORD dwData[7];
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR

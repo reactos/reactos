@@ -7,16 +7,15 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "osk.h"
-#include "settings.h"
+#include "precomp.h"
 
 /* FUNCTIONS *******************************************************************/
 
-BOOL LoadDataFromRegistry()
+BOOL LoadDataFromRegistry(VOID)
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop, dwAlwaysOnTop;
+    DWORD dwValue;
     DWORD cbData = sizeof(DWORD);
 
     /* Initialize the registry application settings */
@@ -47,7 +46,7 @@ BOOL LoadDataFromRegistry()
                                L"ShowWarning",
                                0,
                                0,
-                               (BYTE *)&dwShowWarningData,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -58,14 +57,14 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the data value (it can be either FALSE or TRUE depending on the data itself) */
-    Globals.bShowWarning = (dwShowWarningData != 0);
+    Globals.bShowWarning = (dwValue != 0);
 
     /* Query the key */
     lResult = RegQueryValueExW(hKey,
                                L"IsEnhancedKeyboard",
                                0,
                                0,
-                               (BYTE *)&dwLayout,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -76,14 +75,14 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the dialog layout value */
-    Globals.bIsEnhancedKeyboard = (dwLayout != 0);
+    Globals.bIsEnhancedKeyboard = (dwValue != 0);
 
     /* Query the key */
     lResult = RegQueryValueExW(hKey,
                                L"ClickSound",
                                0,
                                0,
-                               (BYTE *)&dwSoundOnClick,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -94,14 +93,14 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the sound on click value event */
-    Globals.bSoundClick = (dwSoundOnClick != 0);
+    Globals.bSoundClick = (dwValue != 0);
 
     /* Query the key */
     lResult = RegQueryValueExW(hKey,
                                L"WindowLeft",
                                0,
                                0,
-                               (BYTE *)&dwPositionLeft,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -112,13 +111,13 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the X value data of the dialog's coordinate */
-    Globals.PosX = dwPositionLeft;
+    Globals.PosX = dwValue;
 
     lResult = RegQueryValueExW(hKey,
                                L"WindowTop",
                                0,
                                0,
-                               (BYTE *)&dwPositionTop,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -129,13 +128,13 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the Y value data of the dialog's coordinate */
-    Globals.PosY = dwPositionTop;
+    Globals.PosY = dwValue;
 
     lResult = RegQueryValueExW(hKey,
                                L"AlwaysOnTop",
                                0,
                                0,
-                               (BYTE *)&dwAlwaysOnTop,
+                               (BYTE *)&dwValue,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -146,18 +145,18 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the window state value data */
-    Globals.bAlwaysOnTop = (dwAlwaysOnTop != 0);
+    Globals.bAlwaysOnTop = (dwValue != 0);
     
     /* If we're here then we succeed, close the key and return TRUE */
     RegCloseKey(hKey);
     return TRUE;
 }
 
-BOOL SaveDataToRegistry()
+BOOL SaveDataToRegistry(VOID)
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop, dwAlwaysOnTop;
+    DWORD dwValue;
     WINDOWPLACEMENT wp;
 
     /* Set the structure length and retrieve the dialog's placement */
@@ -182,15 +181,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* The data value of the subkey will be appended to the warning dialog switch */
-    dwShowWarningData = Globals.bShowWarning;
+    dwValue = Globals.bShowWarning;
 
     /* Welcome warning box value key */
     lResult = RegSetValueExW(hKey,
                              L"ShowWarning",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwShowWarningData,
-                             sizeof(dwShowWarningData));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {
@@ -200,15 +199,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* The value will be appended to the layout dialog */
-    dwLayout = Globals.bIsEnhancedKeyboard;
+    dwValue = Globals.bIsEnhancedKeyboard;
 
     /* Keyboard dialog switcher */
     lResult = RegSetValueExW(hKey,
                              L"IsEnhancedKeyboard",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwLayout,
-                             sizeof(dwLayout));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {
@@ -218,15 +217,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* The value will be appended to the sound on click event */
-    dwSoundOnClick = Globals.bSoundClick;
+    dwValue = Globals.bSoundClick;
 
     /* "Sound on Click" switcher value key */
     lResult = RegSetValueExW(hKey,
                              L"ClickSound",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwSoundOnClick,
-                             sizeof(dwSoundOnClick));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {
@@ -236,15 +235,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* The value will be appended to the X coordination dialog's placement */
-    dwPositionLeft = wp.rcNormalPosition.left;
+    dwValue = wp.rcNormalPosition.left;
 
     /* Position X coordination of dialog's placement value key */
     lResult = RegSetValueExW(hKey,
                              L"WindowLeft",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwPositionLeft,
-                             sizeof(dwPositionLeft));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {
@@ -254,15 +253,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* The value will be appended to the Y coordination dialog's placement */
-    dwPositionTop = wp.rcNormalPosition.top;
+    dwValue = wp.rcNormalPosition.top;
 
     /* Position Y coordination of dialog's placement value key */
     lResult = RegSetValueExW(hKey,
                              L"WindowTop",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwPositionTop,
-                             sizeof(dwPositionTop));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {
@@ -272,15 +271,15 @@ BOOL SaveDataToRegistry()
     }
 
     /* Window top state value */
-    dwAlwaysOnTop = Globals.bAlwaysOnTop;
+    dwValue = Globals.bAlwaysOnTop;
 
     /* "Always on Top" state value key */
     lResult = RegSetValueExW(hKey,
                              L"AlwaysOnTop",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwAlwaysOnTop,
-                             sizeof(dwAlwaysOnTop));
+                             (BYTE *)&dwValue,
+                             sizeof(dwValue));
 
     if (lResult != ERROR_SUCCESS)
     {

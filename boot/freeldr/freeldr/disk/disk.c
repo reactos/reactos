@@ -81,7 +81,7 @@ PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
     case 0xE0:  return "fixed disk status error/Error reg = 0";
     case 0xFF:  return "sense operation failed";
 
-    default:  return "unknown error code";
+    default:    return "unknown error code";
     }
 }
 
@@ -103,6 +103,9 @@ BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     if (*FrldrBootPath)
         goto Done;
+
+    if (Size)
+        BootPath[0] = ANSI_NULL;
 
     /* 0x49 is our magic ramdisk drive, so try to detect it first */
     if (FrldrBootDrive == 0x49)
@@ -127,9 +130,9 @@ BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
         PARTITION_TABLE_ENTRY PartitionEntry;
 
         /* This is a hard disk */
-        if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
+        if (!DiskGetBootPartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
         {
-            ERR("Invalid active partition information\n");
+            ERR("Failed to get boot partition entry\n");
             return FALSE;
         }
 

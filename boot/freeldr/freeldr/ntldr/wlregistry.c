@@ -19,13 +19,13 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 ULONG TotalNLSSize = 0;
 
 static BOOLEAN
-WinLdrGetNLSNames(LPSTR AnsiName,
-                  LPSTR OemName,
-                  LPSTR LangName);
+WinLdrGetNLSNames(PSTR AnsiName,
+                  PSTR OemName,
+                  PSTR LangName);
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
-                   IN LPCSTR DirectoryPath);
+                   IN PCSTR SystemRoot);
 
 
 /* FUNCTIONS **************************************************************/
@@ -41,18 +41,19 @@ WinLdrLoadSystemHive(
     ARC_STATUS Status;
     FILEINFORMATION FileInfo;
     ULONG HiveFileSize;
-    ULONG_PTR HiveDataPhysical;
+    PVOID HiveDataPhysical;
     PVOID HiveDataVirtual;
     ULONG BytesRead;
     PCWSTR FsService;
 
     /* Concatenate path and filename to get the full name */
-    strcpy(FullHiveName, DirectoryPath);
-    strcat(FullHiveName, HiveName);
-    //Print(L"Loading %s...\n", FullHiveName);
+    RtlStringCbCopyA(FullHiveName, sizeof(FullHiveName), DirectoryPath);
+    RtlStringCbCatA(FullHiveName, sizeof(FullHiveName), HiveName);
+
     Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
+        WARN("Error while opening '%s', Status: %u\n", FullHiveName, Status);
         UiMessageBox("Opening hive file failed!");
         return FALSE;
     }
@@ -68,11 +69,11 @@ WinLdrLoadSystemHive(
     HiveFileSize = FileInfo.EndingAddress.LowPart;
 
     /* Round up the size to page boundary and alloc memory */
-    HiveDataPhysical = (ULONG_PTR)MmAllocateMemoryWithType(
+    HiveDataPhysical = MmAllocateMemoryWithType(
         MM_SIZE_TO_PAGES(HiveFileSize + MM_PAGE_SIZE - 1) << MM_PAGE_SHIFT,
         LoaderRegistryData);
 
-    if (HiveDataPhysical == 0)
+    if (HiveDataPhysical == NULL)
     {
         ArcClose(FileId);
         UiMessageBox("Unable to alloc memory for a hive!");
@@ -80,17 +81,18 @@ WinLdrLoadSystemHive(
     }
 
     /* Convert address to virtual */
-    HiveDataVirtual = PaToVa((PVOID)HiveDataPhysical);
+    HiveDataVirtual = PaToVa(HiveDataPhysical);
 
     /* Fill LoaderBlock's entries */
     LoaderBlock->RegistryLength = HiveFileSize;
     LoaderBlock->RegistryBase = HiveDataVirtual;
 
     /* Finally read from file to the memory */
-    Status = ArcRead(FileId, (PVOID)HiveDataPhysical, HiveFileSize, &BytesRead);
+    Status = ArcRead(FileId, HiveDataPhysical, HiveFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
         ArcClose(FileId);
+        WARN("Error while reading '%s', Status: %u\n", FullHiveName, Status);
         UiMessageBox("Unable to read from hive file!");
         return FALSE;
     }
@@ -104,7 +106,7 @@ WinLdrLoadSystemHive(
         Success = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                         NULL,
-                                        (LPWSTR)FsService);
+                                        (PWSTR)FsService);
         if (!Success)
             TRACE(" Failed to add filesystem service\n");
     }
@@ -129,7 +131,7 @@ WinLdrInitSystemHive(
 
     if (Setup)
     {
-        strcpy(SearchPath, SystemRoot);
+        RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
         HiveName = "SETUPREG.HIV";
     }
     else
@@ -138,8 +140,8 @@ WinLdrInitSystemHive(
         // fails, then give system.alt a try, and finally try a system.sav
 
         // FIXME: For now we only try system
-        strcpy(SearchPath, SystemRoot);
-        strcat(SearchPath, "system32\\config\\");
+        RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
+        RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\config\\");
         HiveName = "SYSTEM";
     }
 
@@ -169,14 +171,14 @@ WinLdrInitSystemHive(
 }
 
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath)
+                             IN PCSTR SystemRoot)
 {
     CHAR SearchPath[1024];
     CHAR AnsiName[256], OemName[256], LangName[256];
     BOOLEAN Success;
 
     /* Scan registry and prepare boot drivers list */
-    WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, DirectoryPath);
+    WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, SystemRoot);
 
     /* Get names of NLS files */
     Success = WinLdrGetNLSNames(AnsiName, OemName, LangName);
@@ -189,8 +191,8 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
 
     /* Load NLS data */
-    strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "system32\\");
+    RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
+    RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
@@ -206,9 +208,9 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 // Queries registry for those three file names
 static BOOLEAN
-WinLdrGetNLSNames(LPSTR AnsiName,
-                  LPSTR OemName,
-                  LPSTR LangName)
+WinLdrGetNLSNames(PSTR AnsiName,
+                  PSTR OemName,
+                  PSTR LangName)
 {
     LONG rc = ERROR_SUCCESS;
     HKEY hKey;
@@ -216,13 +218,13 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     WCHAR NameBuffer[80];
     ULONG BufferSize;
 
-    /* open the codepage key */
+    /* Open the CodePage key */
     rc = RegOpenKey(NULL,
         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
         &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't open CodePage registry key");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open CodePage registry key");
         return FALSE;
     }
 
@@ -231,7 +233,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get ACP NLS setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get ACP NLS setting");
         return FALSE;
     }
 
@@ -239,7 +241,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "ACP NLS Setting exists, but isn't readable");
         //return FALSE;
         wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
     }
@@ -250,7 +252,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get OEMCP NLS setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get OEMCP NLS setting");
         return FALSE;
     }
 
@@ -258,19 +260,19 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "OEMCP NLS setting exists, but isn't readable");
         //return FALSE;
         wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
     }
     sprintf(OemName, "%S", NameBuffer);
 
-    /* Open the language key */
+    /* Open the Language key */
     rc = RegOpenKey(NULL,
         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
         &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't open Language registry key");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open Language registry key");
         return FALSE;
     }
 
@@ -279,7 +281,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Couldn't get Language Default setting");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get Language Default setting");
         return FALSE;
     }
 
@@ -287,7 +289,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //strcpy(szErrorOut, "Language Default setting exists, but isn't readable");
+        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Language Default setting exists, but isn't readable");
         return FALSE;
     }
     sprintf(LangName, "%S", NameBuffer);
@@ -297,18 +299,16 @@ WinLdrGetNLSNames(LPSTR AnsiName,
 
 BOOLEAN
 WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName)
+                  IN PCSTR DirectoryPath,
+                  IN PCSTR AnsiFileName,
+                  IN PCSTR OemFileName,
+                  IN PCSTR LanguageFileName)
 {
     CHAR FileName[255];
-    ULONG AnsiFileId;
-    ULONG OemFileId;
-    ULONG LanguageFileId;
+    ULONG FileId;
     ULONG AnsiFileSize, OemFileSize, LanguageFileSize;
     ULONG TotalSize;
-    ULONG_PTR NlsDataBase;
+    PVOID NlsDataBase;
     PVOID NlsVirtual;
     BOOLEAN AnsiEqualsOem = FALSE;
     FILEINFORMATION FileInfo;
@@ -320,19 +320,21 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         AnsiEqualsOem = TRUE;
 
     /* Open file with ANSI and store its size */
-    //Print(L"Loading %s...\n", Filename);
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, AnsiFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
-    Status = ArcGetFileInformation(AnsiFileId, &FileInfo);
+    Status = ArcGetFileInformation(FileId, &FileInfo);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
         goto Failure;
     AnsiFileSize = FileInfo.EndingAddress.LowPart;
     TRACE("AnsiFileSize: %d\n", AnsiFileSize);
-    ArcClose(AnsiFileId);
 
     /* Open OEM file and store its length */
     if (AnsiEqualsOem)
@@ -342,103 +344,122 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     else
     {
         //Print(L"Loading %s...\n", Filename);
-        strcpy(FileName, DirectoryPath);
-        strcat(FileName, OemFileName);
-        Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
+        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
+        }
 
-        Status = ArcGetFileInformation(OemFileId, &FileInfo);
+        Status = ArcGetFileInformation(FileId, &FileInfo);
+        ArcClose(FileId);
         if (Status != ESUCCESS)
             goto Failure;
         OemFileSize = FileInfo.EndingAddress.LowPart;
-        ArcClose(OemFileId);
     }
     TRACE("OemFileSize: %d\n", OemFileSize);
 
     /* And finally open the language codepage file and store its length */
     //Print(L"Loading %s...\n", Filename);
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, LanguageFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
-    Status = ArcGetFileInformation(LanguageFileId, &FileInfo);
+    Status = ArcGetFileInformation(FileId, &FileInfo);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
         goto Failure;
     LanguageFileSize = FileInfo.EndingAddress.LowPart;
-    ArcClose(LanguageFileId);
     TRACE("LanguageFileSize: %d\n", LanguageFileSize);
 
     /* Sum up all three length, having in mind that every one of them
        must start at a page boundary => thus round up each file to a page */
     TotalSize = MM_SIZE_TO_PAGES(AnsiFileSize) +
-        MM_SIZE_TO_PAGES(OemFileSize)  +
-        MM_SIZE_TO_PAGES(LanguageFileSize);
+                MM_SIZE_TO_PAGES(OemFileSize)  +
+                MM_SIZE_TO_PAGES(LanguageFileSize);
 
     /* Store it for later marking the pages as NlsData type */
     TotalNLSSize = TotalSize;
 
-    NlsDataBase = (ULONG_PTR)MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
-
-    if (NlsDataBase == 0)
+    NlsDataBase = MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
+    if (NlsDataBase == NULL)
         goto Failure;
 
-    NlsVirtual = PaToVa((PVOID)NlsDataBase);
+    NlsVirtual = PaToVa(NlsDataBase);
     LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
-    LoaderBlock->NlsData->OemCodePageData = (PVOID)((PUCHAR)NlsVirtual +
+    LoaderBlock->NlsData->OemCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));
-    LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((PUCHAR)NlsVirtual +
+    LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT) +
-        (MM_SIZE_TO_PAGES(OemFileSize) << MM_PAGE_SHIFT));
+        (MM_SIZE_TO_PAGES(OemFileSize)  << MM_PAGE_SHIFT));
 
     /* Ansi and OEM data are the same - just set pointers to the same area */
     if (AnsiEqualsOem)
         LoaderBlock->NlsData->OemCodePageData = LoaderBlock->NlsData->AnsiCodePageData;
 
-
     /* Now actually read the data into memory, starting with Ansi file */
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, AnsiFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
-    Status = ArcRead(AnsiFileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
+    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
-
-    ArcClose(AnsiFileId);
+    }
 
     /* OEM now, if it doesn't equal Ansi of course */
     if (!AnsiEqualsOem)
     {
-        strcpy(FileName, DirectoryPath);
-        strcat(FileName, OemFileName);
-        Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
+        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while opening '%s', Status: %u\n", FileName, Status);
             goto Failure;
+        }
 
-        Status = ArcRead(OemFileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
+        Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
+        ArcClose(FileId);
         if (Status != ESUCCESS)
+        {
+            WARN("Error while reading '%s', Status: %u\n", FileName, Status);
             goto Failure;
-
-        ArcClose(OemFileId);
+        }
     }
 
-    /* finally the language file */
-    strcpy(FileName, DirectoryPath);
-    strcat(FileName, LanguageFileName);
-    Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
+    /* Finally the language file */
+    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
+    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
         goto Failure;
+    }
 
-    Status = ArcRead(LanguageFileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
+    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
+    ArcClose(FileId);
     if (Status != ESUCCESS)
+    {
+        WARN("Error while reading '%s', Status: %u\n", FileName, Status);
         goto Failure;
-
-    ArcClose(LanguageFileId);
+    }
 
     //
     // THIS IS HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACK
@@ -458,17 +479,17 @@ Failure:
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
-                   IN LPCSTR DirectoryPath)
+                   IN PCSTR SystemRoot)
 {
     LONG rc = 0;
     HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
-    LPWSTR GroupNameBuffer;
+    PWSTR GroupNameBuffer;
     WCHAR ServiceName[256];
     ULONG OrderList[128];
     ULONG BufferSize;
     ULONG Index;
     ULONG TagIndex;
-    LPWSTR GroupName;
+    PWSTR GroupName;
 
     ULONG ValueSize;
     ULONG ValueType;
@@ -586,15 +607,15 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");
                         TempImagePath[0] = 0;
-                        sprintf(ImagePath, "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s\\system32\\drivers\\%S.sys", SystemRoot, ServiceName);
                     }
                     else if (TempImagePath[0] != L'\\')
                     {
-                        sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
                     }
                     else
                     {
-                        sprintf(ImagePath, "%S", TempImagePath);
+                        RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
                         TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
                     }
 
@@ -666,15 +687,15 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 {
                     TRACE_CH(REACTOS, "ImagePath: not found\n");
                     TempImagePath[0] = 0;
-                    sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", SystemRoot, ServiceName);
                 }
                 else if (TempImagePath[0] != L'\\')
                 {
-                    sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
                 }
                 else
                 {
-                    sprintf(ImagePath, "%S", TempImagePath);
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
                     TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
                 }
                 TRACE("  Adding boot driver: '%s'\n", ImagePath);
@@ -745,9 +766,9 @@ InsertInBootDriverList(
 
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      LPWSTR RegistryPath,
-                      LPWSTR ImagePath,
-                      LPWSTR ServiceName)
+                      PWSTR RegistryPath,
+                      PWSTR ImagePath,
+                      PWSTR ServiceName)
 {
     PBOOT_DRIVER_LIST_ENTRY BootDriverEntry;
     NTSTATUS Status;
@@ -841,7 +862,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    // Insert entry into the list 
+    // Insert entry into the list
     if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
     {
         // It was already there, so delete our entry

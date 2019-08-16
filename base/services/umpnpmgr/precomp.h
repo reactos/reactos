@@ -39,7 +39,6 @@ typedef struct
     WCHAR DeviceIds[1];
 } DeviceInstallParams;
 
-
 /* install.c */
 
 extern HANDLE hUserToken;
@@ -51,6 +50,10 @@ extern HANDLE hDeviceInstallListNotEmpty;
 
 BOOL
 SetupIsActive(VOID);
+
+FORCEINLINE
+BOOL
+IsUISuppressionAllowed(VOID);
 
 DWORD
 WINAPI
@@ -70,6 +73,9 @@ RpcServerThread(
 
 extern HKEY hEnumKey;
 extern HKEY hClassKey;
+extern BOOL g_IsUISuppressed;
 
+BOOL
+GetSuppressNewUIValue(VOID);
 
 #endif /* _UMPNPMGR_PCH_ */

@@ -183,10 +183,17 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 
 NTSTATUS
 WINAPI
-BaseCreateStack(HANDLE hProcess,
-                 SIZE_T StackReserve,
-                 SIZE_T StackCommit,
-                 PINITIAL_TEB InitialTeb);
+BaseCreateStack(
+    _In_ HANDLE hProcess,
+    _In_opt_ SIZE_T StackCommit,
+    _In_opt_ SIZE_T StackReserve,
+    _Out_ PINITIAL_TEB InitialTeb);
+
+VOID
+WINAPI
+BaseFreeThreadStack(
+    _In_ HANDLE hProcess,
+    _In_ PINITIAL_TEB InitialTeb);
 
 VOID
 WINAPI
@@ -232,11 +239,6 @@ VOID
 WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter);
-
-VOID
-WINAPI
-BaseFreeThreadStack(IN HANDLE hProcess,
-                    IN PINITIAL_TEB InitialTeb);
 
 __declspec(noreturn)
 VOID

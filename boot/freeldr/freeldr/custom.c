@@ -40,6 +40,8 @@ const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 
 /* FUNCTIONS ******************************************************************/
 
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
+
 VOID OptionMenuCustomBoot(VOID)
 {
     PCSTR CustomBootMenuList[] = {
@@ -49,18 +51,19 @@ VOID OptionMenuCustomBoot(VOID)
         "Boot Sector File",
         "Linux",
 #endif
-        "ReactOS"
+        "ReactOS",
+        "ReactOS Setup"
         };
     ULONG SelectedMenuItem;
 
-    if (!UiDisplayMenu("Please choose a boot method:", "",
+    if (!UiDisplayMenu("Please choose a boot method:", NULL,
                        FALSE,
                        CustomBootMenuList,
                        sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,
-                       NULL))
+                       NULL, NULL))
     {
         /* The user pressed ESC */
         return;
@@ -70,45 +73,70 @@ VOID OptionMenuCustomBoot(VOID)
     {
 #ifdef _M_IX86
         case 0: // Disk
-            OptionMenuCustomBootDisk();
+            EditCustomBootDisk(0);
             break;
         case 1: // Partition
-            OptionMenuCustomBootPartition();
+            EditCustomBootPartition(0);
             break;
         case 2: // Boot Sector File
-            OptionMenuCustomBootBootSectorFile();
+            EditCustomBootSectorFile(0);
             break;
         case 3: // Linux
-            OptionMenuCustomBootLinux();
+            EditCustomBootLinux(0);
             break;
         case 4: // ReactOS
-#else
-        case 0:
-#endif
-            OptionMenuCustomBootReactOS();
+            EditCustomBootReactOS(0, FALSE);
             break;
+        case 5: // ReactOS Setup
+            EditCustomBootReactOS(0, TRUE);
+            break;
+#else
+        case 0: // ReactOS
+            EditCustomBootReactOS(0, FALSE);
+            break;
+        case 1: // ReactOS Setup
+            EditCustomBootReactOS(0, TRUE);
+            break;
+#endif
     }
 }
 
+#endif // HAS_OPTION_MENU_CUSTOM_BOOT
+
 #ifdef _M_IX86
 
-VOID OptionMenuCustomBootDisk(VOID)
+VOID EditCustomBootDisk(IN ULONG_PTR SectionId OPTIONAL)
 {
-    ULONG_PTR SectionId;
-    CHAR SectionName[100];
-    CHAR BootDriveString[20];
     TIMEINFO* TimeInfo;
     OperatingSystemItem OperatingSystem;
+    CHAR SectionName[100];
+    CHAR BootDriveString[20];
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+    if (SectionId != 0)
+    {
+        /* Load the settings */
+        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
+    }
+
+    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
         return;
+
+    /* Modify the settings values and return if we were in edit mode */
+    if (SectionId != 0)
+    {
+        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
+        return;
+    }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootDisk%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootDisk%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -124,36 +152,50 @@ VOID OptionMenuCustomBootDisk(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootDrive(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
-VOID OptionMenuCustomBootPartition(VOID)
+VOID EditCustomBootPartition(IN ULONG_PTR SectionId OPTIONAL)
 {
-    ULONG_PTR SectionId;
+    TIMEINFO* TimeInfo;
+    OperatingSystemItem OperatingSystem;
     CHAR SectionName[100];
     CHAR BootDriveString[20];
     CHAR BootPartitionString[20];
-    TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
     RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+    if (SectionId != 0)
+    {
+        /* Load the settings */
+        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
+        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+    }
+
+    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
         return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
+    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
         return;
+
+    /* Modify the settings values and return if we were in edit mode */
+    if (SectionId != 0)
+    {
+        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
+        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        return;
+    }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootPartition%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootPartition%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -173,41 +215,57 @@ VOID OptionMenuCustomBootPartition(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootPartition(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
-VOID OptionMenuCustomBootBootSectorFile(VOID)
+VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL)
 {
-    ULONG_PTR SectionId;
+    TIMEINFO* TimeInfo;
+    OperatingSystemItem OperatingSystem;
     CHAR SectionName[100];
     CHAR BootDriveString[20];
     CHAR BootPartitionString[20];
     CHAR BootSectorFileString[200];
-    TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
     RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
     RtlZeroMemory(BootSectorFileString, sizeof(BootSectorFileString));
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+    if (SectionId != 0)
+    {
+        /* Load the settings */
+        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
+        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+        IniReadSettingByName(SectionId, "BootSectorFile", BootSectorFileString, sizeof(BootSectorFileString));
+    }
+
+    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
         return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
+    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
         return;
 
-    if (!UiEditBox(BootSectorFilePrompt, BootSectorFileString, 200))
+    if (!UiEditBox(BootSectorFilePrompt, BootSectorFileString, sizeof(BootSectorFileString)))
         return;
+
+    /* Modify the settings values and return if we were in edit mode */
+    if (SectionId != 0)
+    {
+        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
+        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        IniModifySettingValue(SectionId, "BootSectorFile", BootSectorFileString);
+        return;
+    }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomBootSectorFile%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomBootSectorFile%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -231,25 +289,21 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootBootSector(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
 
-VOID OptionMenuCustomBootLinux(VOID)
+VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
 {
-    ULONG_PTR SectionId;
+    TIMEINFO* TimeInfo;
+    OperatingSystemItem OperatingSystem;
     CHAR SectionName[100];
     CHAR BootDriveString[20];
     CHAR BootPartitionString[20];
     CHAR LinuxKernelString[200];
     CHAR LinuxInitrdString[200];
     CHAR LinuxCommandLineString[200];
-    TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -258,24 +312,48 @@ VOID OptionMenuCustomBootLinux(VOID)
     RtlZeroMemory(LinuxInitrdString, sizeof(LinuxInitrdString));
     RtlZeroMemory(LinuxCommandLineString, sizeof(LinuxCommandLineString));
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+    if (SectionId != 0)
+    {
+        /* Load the settings */
+        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
+        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+        IniReadSettingByName(SectionId, "Kernel", LinuxKernelString, sizeof(LinuxKernelString));
+        IniReadSettingByName(SectionId, "Initrd", LinuxInitrdString, sizeof(LinuxInitrdString));
+        IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLineString, sizeof(LinuxCommandLineString));
+    }
+
+    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
         return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
+    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
         return;
 
-    if (!UiEditBox(LinuxKernelPrompt, LinuxKernelString, 200))
+    if (!UiEditBox(LinuxKernelPrompt, LinuxKernelString, sizeof(LinuxKernelString)))
         return;
 
-    if (!UiEditBox(LinuxInitrdPrompt, LinuxInitrdString, 200))
+    if (!UiEditBox(LinuxInitrdPrompt, LinuxInitrdString, sizeof(LinuxInitrdString)))
         return;
 
-    if (!UiEditBox(LinuxCommandLinePrompt, LinuxCommandLineString, 200))
+    if (!UiEditBox(LinuxCommandLinePrompt, LinuxCommandLineString, sizeof(LinuxCommandLineString)))
         return;
+
+    /* Modify the settings values and return if we were in edit mode */
+    if (SectionId != 0)
+    {
+        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
+        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        IniModifySettingValue(SectionId, "Kernel", LinuxKernelString);
+        IniModifySettingValue(SectionId, "Initrd", LinuxInitrdString);
+        IniModifySettingValue(SectionId, "CommandLine", LinuxCommandLineString);
+        return;
+    }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomLinux%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomLinux%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
@@ -298,7 +376,7 @@ VOID OptionMenuCustomBootLinux(VOID)
         return;
 
     /* Add the Initrd */
-    if (strlen(LinuxInitrdString) > 0)
+    if (*LinuxInitrdString)
     {
         if (!IniAddSettingValueToSection(SectionId, "Initrd", LinuxInitrdString))
             return;
@@ -310,56 +388,83 @@ VOID OptionMenuCustomBootLinux(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = "Custom Linux Setup";
-    OperatingSystem.OsLoadOptions   = NULL;
-
-    // LoadAndBootLinux(&OperatingSystem, 0);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = "Custom Linux Setup";
     LoadOperatingSystem(&OperatingSystem);
 }
 
 #endif // _M_IX86
 
-VOID OptionMenuCustomBootReactOS(VOID)
+VOID
+EditCustomBootReactOS(
+    IN ULONG_PTR SectionId OPTIONAL,
+    IN BOOLEAN IsSetup)
 {
-    ULONG_PTR SectionId;
+    TIMEINFO* TimeInfo;
+    OperatingSystemItem OperatingSystem;
     CHAR SectionName[100];
     CHAR BootDriveString[20];
     CHAR BootPartitionString[20];
     CHAR ReactOSSystemPath[200];
     CHAR ReactOSARCPath[200];
     CHAR ReactOSOptions[200];
-    TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
     RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
     RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
     RtlZeroMemory(ReactOSSystemPath, sizeof(ReactOSSystemPath));
+    RtlZeroMemory(ReactOSARCPath, sizeof(ReactOSARCPath));
     RtlZeroMemory(ReactOSOptions, sizeof(ReactOSOptions));
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+    if (SectionId != 0)
+    {
+        /* Load the settings */
+        // TODO? Maybe use DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition) to get back to the small elements.
+        IniReadSettingByName(SectionId, "SystemPath", ReactOSARCPath, sizeof(ReactOSARCPath));
+        IniReadSettingByName(SectionId, "Options", ReactOSOptions, sizeof(ReactOSOptions));
+    }
+
+    if (SectionId == 0)
+    {
+        if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
+            return;
+
+        if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
+            return;
+
+        if (!UiEditBox(ReactOSSystemPathPrompt, ReactOSSystemPath, sizeof(ReactOSSystemPath)))
+            return;
+    }
+    else
+    {
+        if (!UiEditBox(ReactOSSystemPathPrompt, ReactOSARCPath, sizeof(ReactOSARCPath)))
+            return;
+    }
+
+    if (!UiEditBox(ReactOSOptionsPrompt, ReactOSOptions, sizeof(ReactOSOptions)))
         return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
+    /* Modify the settings values and return if we were in edit mode */
+    if (SectionId != 0)
+    {
+        IniModifySettingValue(SectionId, "SystemPath", ReactOSARCPath);
+        IniModifySettingValue(SectionId, "Options", ReactOSOptions);
         return;
-
-    if (!UiEditBox(ReactOSSystemPathPrompt, ReactOSSystemPath, 200))
-        return;
-
-    if (!UiEditBox(ReactOSOptionsPrompt, ReactOSOptions, 200))
-        return;
+    }
 
     /* Generate a unique section name */
     TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomReactOS%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+    RtlStringCbPrintfA(SectionName, sizeof(SectionName),
+                       "CustomReactOS%u%u%u%u%u%u",
+                       TimeInfo->Year, TimeInfo->Day, TimeInfo->Month,
+                       TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
 
     /* Add the section */
     if (!IniAddSection(SectionName, &SectionId))
         return;
 
     /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", "Windows2003"))
+    if (!IniAddSettingValueToSection(SectionId, "BootType", IsSetup ? "ReactOSSetup" : "Windows2003"))
         return;
 
     /* Construct the ReactOS ARC system path */
@@ -375,13 +480,12 @@ VOID OptionMenuCustomBootReactOS(VOID)
 
     UiMessageBox(CustomBootPrompt);
 
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL; // ReactOSOptions
-
-    // LoadAndBootWindows(&OperatingSystem, _WIN32_WINNT_WS03);
+    OperatingSystem.SectionName = SectionName;
+    OperatingSystem.LoadIdentifier = NULL;
     LoadOperatingSystem(&OperatingSystem);
 }
+
+#ifdef HAS_OPTION_MENU_REBOOT
 
 VOID OptionMenuReboot(VOID)
 {
@@ -392,3 +496,5 @@ VOID OptionMenuReboot(VOID)
 #endif
     Reboot();
 }
+
+#endif // HAS_OPTION_MENU_REBOOT

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#define SECTOR_SIZE 512
+
 typedef struct tagDEVVTBL
 {
     ARC_CLOSE Close;
@@ -26,15 +28,10 @@ typedef struct tagDEVVTBL
     ARC_OPEN Open;
     ARC_READ Read;
     ARC_SEEK Seek;
-    LPCWSTR ServiceName;
+    PCWSTR ServiceName;
 } DEVVTBL;
 
-#define FS_FAT      1
-#define FS_NTFS     2
-#define FS_EXT2     3
-#define FS_ISO9660  5
-
-#define PFILE ULONG
+#define MAX_FDS 60
 
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
 ARC_STATUS ArcClose(ULONG FileId);
@@ -43,20 +40,13 @@ ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
 
 VOID  FileSystemError(PCSTR ErrorString);
-PFILE FsOpenFile(PCSTR FileName);
-VOID  FsCloseFile(PFILE FileHandle);
-BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-BOOLEAN FsGetFileInformation(PFILE FileHandle, FILEINFORMATION* Information);
-ULONG FsGetFileSize(PFILE FileHandle);
-VOID  FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
+ULONG FsOpenFile(PCSTR FileName);
 ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
-LPCWSTR FsGetServiceName(ULONG FileId);
+PCWSTR FsGetServiceName(ULONG FileId);
 VOID  FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
 ULONG FsGetDeviceId(ULONG FileId);
 VOID  FsInit(VOID);
-
-#define MAX_FDS 60

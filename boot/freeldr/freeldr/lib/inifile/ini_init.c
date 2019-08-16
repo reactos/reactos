@@ -51,6 +51,7 @@ BOOLEAN IniFileInitialize(VOID)
     Status = IniOpenIniFile(&FileId);
     if (Status != ESUCCESS)
     {
+        ERR("Error while opening freeldr.ini, Status: %d\n", Status);
         UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
         return FALSE;
     }
@@ -62,6 +63,7 @@ BOOLEAN IniFileInitialize(VOID)
     if (Status != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
     {
         UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
+        ArcClose(FileId);
         return FALSE;
     }
     FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
@@ -83,6 +85,7 @@ BOOLEAN IniFileInitialize(VOID)
     Status = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
     if (Status != ESUCCESS || Count != FreeLoaderIniFileSize)
     {
+        ERR("Error while reading freeldr.ini, Status: %d\n", Status);
         UiMessageBoxCritical("Error while reading freeldr.ini.");
         ArcClose(FileId);
         FrLdrTempFree(FreeLoaderIniFileData, TAG_INI_FILE);

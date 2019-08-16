@@ -103,6 +103,7 @@ IntVideoPortDispatchOpen(
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+    NTSTATUS Status;
 
     TRACE_(VIDEOPRT, "IntVideoPortDispatchOpen\n");
 
@@ -117,7 +118,12 @@ IntVideoPortDispatchOpen(
         Csrss = (PKPROCESS)PsGetCurrentProcess();
         INFO_(VIDEOPRT, "Csrss %p\n", Csrss);
 
-        IntInitializeVideoAddressSpace();
+        Status = IntInitializeVideoAddressSpace();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntInitializeVideoAddressSpace() failed: 0x%lx\n", Status);
+            return Status;
+        }
 
         CsrssInitialized = TRUE;
     }

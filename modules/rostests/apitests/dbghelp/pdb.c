@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for dbghelp PDB functions
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for dbghelp PDB functions
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -26,17 +26,17 @@
 
 // data.c
 void create_compressed_files();
-int extract_msvc_exe(char szFile[MAX_PATH]);
-void cleanup_msvc_exe();
+int extract_msvc_dll(char szFile[MAX_PATH], char szPath[MAX_PATH]);
+void cleanup_msvc_dll();
 
 static HANDLE proc()
 {
     return GetCurrentProcess();
 }
 
-static BOOL init_sym_imp(const char* file, int line)
+static BOOL init_sym_imp(BOOL fInvadeProcess, const char* file, int line)
 {
-    if (!SymInitialize(proc(), NULL, FALSE))
+    if (!SymInitialize(proc(), NULL, fInvadeProcess))
     {
         DWORD err = GetLastError();
         ok_(file, line)(0, "Failed to init: 0x%x\n", err);
@@ -50,7 +50,7 @@ static void deinit_sym()
     SymCleanup(proc());
 }
 
-#define init_sym()          init_sym_imp(__FILE__, __LINE__)
+#define init_sym(fInvadeProcess)          init_sym_imp(fInvadeProcess, __FILE__, __LINE__)
 
 #define INIT_PSYM(buff) do { \
     memset((buff), 0, sizeof((buff))); \
@@ -222,7 +222,7 @@ PfnDliHook __pfnDliFailureHook2 = DliFailHook;
 
 
 /* Maybe our dbghelp.dll is too old? */
-static BOOL can_enumerate(HANDLE hProc, DWORD64 BaseAddress)
+static BOOL supports_pdb(HANDLE hProc, DWORD64 BaseAddress)
 {
     IMAGEHLP_MODULE64 ModuleInfo;
     BOOL Ret;
@@ -235,26 +235,13 @@ static BOOL can_enumerate(HANDLE hProc, DWORD64 BaseAddress)
 }
 
 
-static void test_SymFromName(HANDLE hProc, const char* szModuleName)
+static void test_SymFromName(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
     char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
     PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
 
-    DWORD64 BaseAddress;
-    DWORD dwErr;
-
-    if (!init_sym())
-        return;
-
-    SetLastError(ERROR_SUCCESS);
-    BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
-
-    ok_ulonglong(BaseAddress, 0x600000);
-    ok_hex(dwErr, ERROR_SUCCESS);
-
-    if (!can_enumerate(hProc, BaseAddress))
+    if (!supports_pdb(hProc, BaseAddress))
     {
         skip("dbghelp.dll too old or cannot enumerate symbols!\n");
     }
@@ -314,28 +301,16 @@ static void test_SymFromName(HANDLE hProc, const char* szModuleName)
         ok_hex(pSymbol->Tag, SymTagPublicSymbol);
         ok_str(pSymbol->Name, "_FfsFormat@24");
     }
-
-    deinit_sym();
 }
 
-static void test_SymFromAddr(HANDLE hProc, const char* szModuleName)
+static void test_SymFromAddr(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
     char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
     PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
 
-    DWORD64 BaseAddress, Displacement;
+    DWORD64 Displacement;
     DWORD dwErr;
-
-    if (!init_sym())
-        return;
-
-    SetLastError(ERROR_SUCCESS);
-    BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
-
-    ok_ulonglong(BaseAddress, 0x600000);
-    ok_hex(dwErr, ERROR_SUCCESS);
 
     /* No address found before load address of module */
     Displacement = 0;
@@ -417,7 +392,7 @@ static void test_SymFromAddr(HANDLE hProc, const char* szModuleName)
     ok_hex(pSymbol->Tag, SymTagFunction);
     ok_str(pSymbol->Name, "FfsChkdsk");
 
-    if (!can_enumerate(hProc, BaseAddress))
+    if (!supports_pdb(hProc, BaseAddress))
     {
         skip("dbghelp.dll too old or cannot read this symbol!\n");
     }
@@ -435,8 +410,6 @@ static void test_SymFromAddr(HANDLE hProc, const char* szModuleName)
         ok_hex(pSymbol->Tag, SymTagPublicSymbol);
         ok_str(pSymbol->Name, "__imp__DbgPrint");
     }
-
-    deinit_sym();
 }
 
 typedef struct _test_context
@@ -484,25 +457,15 @@ static BOOL CALLBACK EnumSymProc(PSYMBOL_INFO pSymInfo, ULONG SymbolSize, PVOID 
     return TRUE;
 }
 
-static void test_SymEnumSymbols(HANDLE hProc, const char* szModuleName)
+static void test_SymEnumSymbols(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
-    DWORD dwErr;
-
     test_context ctx;
 
-    if (!init_sym())
-        return;
-
     ctx.Index = 0;
-    SetLastError(ERROR_SUCCESS);
-    ctx.BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
+    ctx.BaseAddress = BaseAddress;
 
-    ok_ulonglong(ctx.BaseAddress, 0x600000);
-    ok_hex(dwErr, ERROR_SUCCESS);
-
-    if (!can_enumerate(hProc, ctx.BaseAddress))
+    if (!supports_pdb(hProc, ctx.BaseAddress))
     {
         skip("dbghelp.dll too old or cannot enumerate symbols!\n");
     }
@@ -512,8 +475,6 @@ static void test_SymEnumSymbols(HANDLE hProc, const char* szModuleName)
         ok_int(Ret, TRUE);
         ok_int(ctx.Index, ARRAYSIZE(test_data));
     }
-
-    deinit_sym();
 }
 
 typedef struct _symregcallback_context
@@ -524,7 +485,6 @@ typedef struct _symregcallback_context
 
 static struct _symregcallback_test_data {
     ULONG ActionCode;
-    const char* Name;
 } symregcallback_test_data[] = {
     { CBA_DEFERRED_SYMBOL_LOAD_CANCEL },
     { CBA_DEFERRED_SYMBOL_LOAD_START },
@@ -567,7 +527,7 @@ static void test_SymRegCallback(HANDLE hProc, const char* szModuleName, BOOL tes
     ctx.idx = 0;
     ctx.isANSI = testANSI;
 
-    if (!init_sym())
+    if (!init_sym(FALSE))
         return;
 
     if (testANSI)
@@ -604,14 +564,19 @@ static void test_SymRegCallback(HANDLE hProc, const char* szModuleName, BOOL tes
 START_TEST(pdb)
 {
     char szDllName[MAX_PATH];
-    //create_compressed_files();
+    char szDllPath[MAX_PATH], szOldDir[MAX_PATH];
+#ifdef _M_IX86
+    HMODULE hMod;
+#endif
+    DWORD64 BaseAddress;
+    DWORD dwErr, Options;
 
-    DWORD Options = SymGetOptions();
+    Options = SymGetOptions();
     Options &= ~(SYMOPT_UNDNAME);
     //Options |= SYMOPT_DEBUG;
     SymSetOptions(Options);
 
-    if (!extract_msvc_exe(szDllName))
+    if (!extract_msvc_dll(szDllName, szDllPath))
     {
         ok(0, "Failed extracting files\n");
         return;
@@ -619,12 +584,54 @@ START_TEST(pdb)
 
     init_dbghelp_version();
 
-    test_SymFromName(proc(), szDllName);
-    test_SymFromAddr(proc(), szDllName);
-    test_SymEnumSymbols(proc(), szDllName);
+    if (init_sym(FALSE))
+    {
+        SetLastError(ERROR_SUCCESS);
+        BaseAddress = SymLoadModule64(proc(), NULL, szDllName, NULL, 0x600000, 0);
+        dwErr = GetLastError();
+
+        ok_ulonglong(BaseAddress, 0x600000);
+        ok_hex(dwErr, ERROR_SUCCESS);
+
+        if (BaseAddress == 0x600000)
+        {
+            trace("Module loaded by SymLoadModule64\n");
+            test_SymFromName(proc(), BaseAddress);
+            test_SymFromAddr(proc(), BaseAddress);
+            test_SymEnumSymbols(proc(), BaseAddress);
+        }
+
+        deinit_sym();
+    }
+
+    /* This needs to load the module by itself */
     test_SymRegCallback(proc(), szDllName, TRUE);
     test_SymRegCallback(proc(), szDllName, FALSE);
 
-    cleanup_msvc_exe();
+#ifdef _M_IX86
+    hMod = LoadLibraryA(szDllName);
+    if (hMod)
+    {
+        BaseAddress = (DWORD64)(DWORD_PTR)hMod;
+        /* Make sure we can find the pdb */
+        GetCurrentDirectoryA(_countof(szOldDir), szOldDir);
+        SetCurrentDirectoryA(szDllPath);
+        /* Invade process */
+        if (init_sym(TRUE))
+        {
+            trace("Module loaded by LoadLibraryA\n");
+            test_SymFromName(proc(), BaseAddress);
+            test_SymFromAddr(proc(), BaseAddress);
+            test_SymEnumSymbols(proc(), BaseAddress);
 
+            deinit_sym();
+        }
+        /* Restore working dir */
+        SetCurrentDirectoryA(szOldDir);
+
+        FreeLibrary(hMod);
+    }
+#endif
+
+    cleanup_msvc_dll();
 }

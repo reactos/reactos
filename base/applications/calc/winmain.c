@@ -894,7 +894,7 @@ static void delete_stat_item(int n)
 
 static char *ReadConversion(const char *formula)
 {
-    int len = strlen(formula);
+    intptr_t len = strlen(formula);
     char *str = (char *)malloc(len+3);
 
     if (str == NULL)

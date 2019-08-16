@@ -82,7 +82,7 @@ CreateTitleFont(VOID)
     HDC hdc;
     HFONT hFont;
 
-    LogFont.lfWeight = FW_HEAVY;
+    LogFont.lfWeight = FW_BOLD;
     wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
     hdc = GetDC(NULL);
@@ -107,7 +107,7 @@ CreateBoldFont(VOID)
     hDc = GetDC(NULL);
 
     tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
-    tmpFont.lfWeight = FW_HEAVY;
+    tmpFont.lfWeight = FW_BOLD;
     wcscpy(tmpFont.lfFaceName, L"MS Shell Dlg");
 
     hBoldFont = CreateFontIndirectW(&tmpFont);

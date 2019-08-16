@@ -1,5 +1,16 @@
 
 list(APPEND FONT_FILES
+    arial.ttf
+    arialbd.ttf
+    arialbi.ttf
+    ariali.ttf
+    ariblk.ttf
+    comic.ttf
+    comicbd.ttf
+    cour.ttf
+    courbd.ttf
+    courbi.ttf
+    couri.ttf
     DejaVuMathTeXGyre.ttf
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
@@ -22,6 +33,8 @@ list(APPEND FONT_FILES
     DejaVuSerifCondensed-BoldItalic.ttf
     DejaVuSerifCondensed-Italic.ttf
     DejaVuSerifCondensed.ttf
+    framd.ttf
+    framdit.ttf
     FreeMono.ttf
     FreeMonoBold.ttf
     FreeMonoBoldOblique.ttf
@@ -36,6 +49,10 @@ list(APPEND FONT_FILES
     FreeSerifItalic.ttf
     FSEX301.ttf
     FSEX301-L2.ttf
+    georgia.ttf
+    georgiab.ttf
+    georgiai.ttf
+    georgiaz.ttf
     LiberationMono-Bold.ttf
     LiberationMono-BoldItalic.ttf
     LiberationMono-Italic.ttf
@@ -70,7 +87,9 @@ list(APPEND FONT_FILES
     LibreFranklin-SemiBoldItalic.ttf
     LibreFranklin-Thin.ttf
     LibreFranklin-ThinItalic.ttf
+    lucon.ttf
     Marlett.ttf
+    micross.ttf
     OpenSans-Bold.ttf
     OpenSans-BoldItalic.ttf
     OpenSans-CondBold.ttf
@@ -84,6 +103,10 @@ list(APPEND FONT_FILES
     OpenSans-Regular.ttf
     OpenSans-Semibold.ttf
     OpenSans-SemiboldItalic.ttf
+    pala.ttf
+    palab.ttf
+    palabi.ttf
+    palai.ttf
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
@@ -126,10 +149,21 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     SourceCodePro-Semibold.ttf
     SourceCodePro-SemiboldIt.ttf
+    #ssee1255.fon
+    #ssee1256.fon
+    #ssee1257.fon
     #sserife.fon
     #sserifeg.fon
     #sserifer.fon
     #sserifet.fon
+    times.ttf
+    timesbd.ttf
+    timesbi.ttf
+    timesi.ttf
+    trebuc.ttf
+    trebucbd.ttf
+    trebucbi.ttf
+    trebucit.ttf
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})

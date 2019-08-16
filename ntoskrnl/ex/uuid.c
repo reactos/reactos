@@ -339,27 +339,9 @@ VOID
 NTAPI
 ExAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-    LARGE_INTEGER PrevLuid;
-    LONGLONG NewLuid, CompLuid;
-
     /* Atomically increment the luid */
-    PrevLuid.QuadPart = ExpLuid.QuadPart;
-    for (NewLuid = ExpLuid.QuadPart + ExpLuidIncrement; ;
-         NewLuid = PrevLuid.QuadPart + ExpLuidIncrement)
-    {
-        CompLuid = InterlockedCompareExchange64(&ExpLuid.QuadPart,
-                                                NewLuid,
-                                                PrevLuid.QuadPart);
-        if (CompLuid == PrevLuid.QuadPart)
-        {
-            break;
-        }
-
-        PrevLuid.QuadPart = CompLuid;
-    }
-
-    LocallyUniqueId->LowPart = PrevLuid.LowPart;
-    LocallyUniqueId->HighPart = PrevLuid.HighPart;
+    *(LONG64*)LocallyUniqueId = InterlockedExchangeAdd64(&ExpLuid.QuadPart,
+                                                         ExpLuidIncrement);
 }
 
 

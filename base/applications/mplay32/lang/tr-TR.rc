@@ -1,37 +1,37 @@
-/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Aç...\tDenetim+O", IDM_OPEN_FILE
-        MENUITEM "&Kapat\tDenetim+W", IDM_CLOSE_FILE
+        MENUITEM "&Aç...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Kapat\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", IDM_EXIT
+        MENUITEM "Ç&ıkış", IDM_EXIT
     END
     POPUP "&Oynat"
     BEGIN
-        MENUITEM "&Oynat ya da Duraklat\tDenetim+P", IDC_PLAY
-        MENUITEM "&Durdur\tDenetim+S", IDC_STOP
+        MENUITEM "&Oynat/Duraklat\tCtrl+P", IDC_PLAY
+        MENUITEM "&Durdur\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "&Yinele\tDenetim+T", IDM_REPEAT
+        MENUITEM "&Yinele\tCtrl+T", IDM_REPEAT
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ayrı Pencere Kipi", IDM_SWITCHVIEW
+        MENUITEM "&Tek Pencere Kipi", IDM_SWITCHVIEW
     END
     POPUP "&Aygıt"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Husûsiyetler", IDM_DEVPROPS
+        MENUITEM "&Özellikler", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Ses Düzeyi Denetimi", IDM_VOLUMECTL
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine", IDM_ABOUT
+        MENUITEM "&Hakkında", IDM_ABOUT
     END
 END
 
@@ -53,17 +53,17 @@ BEGIN
     IDS_MODE_PAUSE "Duraklatıldı"
     IDS_MODE_RECORD "Kaydediliyor"
     IDS_MODE_SEEK "Sarıyor"
-    IDS_MODE_NOT_READY "Anık değil"
-    IDS_ALL_TYPES_FILTER "Desteklenen Kütükler"
+    IDS_MODE_NOT_READY "Hazır değil"
+    IDS_ALL_TYPES_FILTER "Tüm Desteklenen"
     IDS_TOOLTIP_PLAY "Çal"
     IDS_TOOLTIP_STOP "Durdur"
-    IDS_TOOLTIP_EJECT "Çıkart"
+    IDS_TOOLTIP_EJECT "Çıkar"
     IDS_TOOLTIP_BACKWARD "Bir Öncekine Geç"
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
     IDS_TOOLTIP_PAUSE "Duraklat"
-    IDS_APPTITLE "Çoklu Ortam Oynatıcısı"
+    IDS_APPTITLE "ReactOS Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
-    IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
+    IDS_DEFAULTMCIERRMSG "Bu hata için bir tanım yoktur."
 END

@@ -50,6 +50,7 @@
 #include <internal/hal.h>
 #include <drivers/pci/pci.h>
 #include <winerror.h>
+#include <ntstrsafe.h>
 #else
 #include <ntsup.h>
 #endif
@@ -57,13 +58,13 @@
 /* Internal headers */
 // #include <arcemul.h>
 #include <arcname.h>
+#include <arcsupp.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>
 #include <comm.h>
 #include <disk.h>
 #include <fs.h>
-#include <inffile.h>
 #include <inifile.h>
 #include <keycodes.h>
 #include <linux.h>
@@ -77,11 +78,11 @@
 #include <ramdisk.h>
 #include <ui.h>
 #include <ver.h>
-#include <video.h>
 
 /* NTOS loader */
-#include <winldr.h>
+#include <include/ntldr/winldr.h>
 #include <conversion.h> // More-or-less related to MM also...
+#include <peloader.h>
 
 /* File system headers */
 #include <fs/ext2.h>
@@ -96,6 +97,7 @@
 #include <ui/minitui.h>
 #include <ui/noui.h>
 #include <ui/tui.h>
+#include <ui/video.h>
 
 /* Arch specific includes */
 #include <arch/archwsup.h>
@@ -124,6 +126,9 @@
 
 VOID __cdecl BootMain(IN PCCH CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
+#ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+VOID EditOperatingSystemEntry(IN OperatingSystemItem* OperatingSystem);
+#endif
 VOID RunLoader(VOID);
 VOID FrLdrCheckCpuCompatibility(VOID);
 

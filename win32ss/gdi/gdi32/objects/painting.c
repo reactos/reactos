@@ -13,6 +13,8 @@ LineTo(
 {
     HANDLE_METADC(BOOL, LineTo, FALSE, hdc, x, y);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiLineTo(hdc, x, y);
 }
 
@@ -75,6 +77,8 @@ Ellipse(
 {
     HANDLE_METADC(BOOL, Ellipse, FALSE, hdc, left, top, right, bottom);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiEllipse(hdc, left, top, right, bottom);
 }
 
@@ -92,6 +96,8 @@ Rectangle(
     _In_ INT bottom)
 {
     HANDLE_METADC(BOOL, Rectangle, FALSE, hdc, left, top, right, bottom);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiRectangle(hdc, left, top, right, bottom);
 }
@@ -112,6 +118,8 @@ RoundRect(
     _In_ INT height)
 {
     HANDLE_METADC(BOOL, RoundRect, FALSE, hdc, left, top, right, bottom, width, height);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiRoundRect(hdc, left, top, right, bottom, width, height);
 }
@@ -145,6 +153,8 @@ SetPixel(
     _In_ COLORREF crColor)
 {
     HANDLE_METADC(COLORREF, SetPixel, CLR_INVALID, hdc, x, y, crColor);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiSetPixel(hdc, x, y, crColor);
 }
@@ -181,6 +191,8 @@ FillRgn(
 
     HANDLE_METADC(BOOL, FillRgn, FALSE, hdc, hrgn, hbr);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiFillRgn(hdc, hrgn, hbr);
 }
 
@@ -203,6 +215,8 @@ FrameRgn(
 
     HANDLE_METADC(BOOL, FrameRgn, FALSE, hdc, hrgn, hbr, nWidth, nHeight);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
 }
 
@@ -221,6 +235,8 @@ InvertRgn(
         return FALSE;
 
     HANDLE_METADC(BOOL, InvertRgn, FALSE, hdc, hrgn);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiInvertRgn(hdc, hrgn);
 }
@@ -251,6 +267,8 @@ PolyBezier(
 {
     HANDLE_METADC(BOOL, PolyBezier, FALSE, hdc, apt, cpt);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiPolyPolyDraw(hdc ,(PPOINT)apt, &cpt, 1, GdiPolyBezier);
 }
 
@@ -266,6 +284,8 @@ PolyBezierTo(
     _In_ DWORD cpt)
 {
     HANDLE_METADC(BOOL, PolyBezierTo, FALSE, hdc, apt, cpt);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyBezierTo);
 }
@@ -284,6 +304,8 @@ PolyDraw(
 {
     HANDLE_METADC(BOOL, PolyDraw, FALSE, hdc, apt, aj, cpt);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiPolyDraw(hdc, (PPOINT)apt, (PBYTE)aj, cpt);
 }
 
@@ -299,6 +321,8 @@ Polygon(
     _In_ INT cpt)
 {
     HANDLE_METADC(BOOL, Polygon, FALSE, hdc, apt, cpt);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, (PULONG)&cpt, 1, GdiPolyPolygon);
 }
@@ -316,6 +340,8 @@ Polyline(
 {
     HANDLE_METADC(BOOL, Polyline, FALSE, hdc, apt, cpt);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiPolyPolyDraw(hdc, (PPOINT)apt, (PULONG)&cpt, 1, GdiPolyPolyLine);
 }
 
@@ -331,6 +357,8 @@ PolylineTo(
     _In_ DWORD cpt)
 {
     HANDLE_METADC(BOOL, PolylineTo, FALSE, hdc, apt, cpt);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyLineTo);
 }
@@ -348,6 +376,8 @@ PolyPolygon(
     _In_ INT csz)
 {
     HANDLE_METADC(BOOL, PolyPolygon, FALSE, hdc, apt, asz, csz);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiPolyPolyDraw(hdc, (PPOINT)apt, (PULONG)asz, csz, GdiPolyPolygon);
 }
@@ -369,6 +399,8 @@ PolyPolyline(
 
     HANDLE_METADC(BOOL, PolyPolyline, FALSE, hdc, apt, asz, csz);
 
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, (PULONG)asz, csz, GdiPolyPolyLine);
 }
 
@@ -386,6 +418,8 @@ ExtFloodFill(
     _In_ UINT fuFillType)
 {
     HANDLE_METADC(BOOL, ExtFloodFill, FALSE, hdc, xStart, yStart, crFill, fuFillType);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     return NtGdiExtFloodFill(hdc, xStart, yStart, crFill, fuFillType);
 }
@@ -443,6 +477,8 @@ BitBlt(
                   cx,
                   dwRop);
 
+    if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
+
     return NtGdiBitBlt(hdcDest, xDest, yDest, cx, cy, hdcSrc, xSrc, ySrc, dwRop, 0, 0);
 }
 
@@ -459,6 +495,8 @@ PatBlt(
     PDC_ATTR pdcattr;
 
     HANDLE_METADC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
+
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -612,6 +650,8 @@ StretchBlt(
                   cySrc,
                   dwRop);
 
+    if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
+
     return NtGdiStretchBlt(hdcDest,
                            xDest,
                            yDest,
@@ -662,6 +702,8 @@ MaskBlt(
                   yMask,
                   dwRop);
 
+    if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
+
     return NtGdiMaskBlt(hdcDest,
                         xDest,
                         yDest,
@@ -709,6 +751,8 @@ PlgBlt(
                   xMask,
                   yMask);
 
+    if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
+
     return NtGdiPlgBlt(hdcDest,
                        (LPPOINT)ppt,
                        hdcSrc,
@@ -755,6 +799,8 @@ GdiAlphaBlend(
                   cxSrc,
                   cySrc,
                   blendfn);
+
+    if ( GdiConvertAndCheckDC(hdcDst) == NULL ) return FALSE;
 
     return NtGdiAlphaBlend(hdcDst,
                            xDst,
@@ -804,7 +850,8 @@ GdiTransparentBlt(
                   cySrc,
                   crTransparent);
 
-    /* FIXME some part need be done in user mode */
+    if ( GdiConvertAndCheckDC(hdcDst) == NULL ) return FALSE;
+
     return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, crTransparent);
 }
 
@@ -823,6 +870,7 @@ GdiGradientFill(
 {
     HANDLE_METADC(BOOL, GradientFill, FALSE, hdc, pVertex, nVertex, pMesh, nCount, ulMode);
 
-    /* FIXME some part need be done in user mode */
+    if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
+
     return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nCount, ulMode);
 }

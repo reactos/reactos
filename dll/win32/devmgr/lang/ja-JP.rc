@@ -240,31 +240,47 @@ BEGIN
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
 
+IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Confirm Device Removal"
+FONT 9, "MS UI Gothic"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
+    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+END
+
 
 /*
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
-  POPUP "ファイル(&F)"
-  BEGIN
-    MENUITEM "終了(&X)",                     IDC_EXIT
-  END
-  MENUITEM "アクション(&A)",                 IDC_ACTIONMENU
-  POPUP "表示(&V)"
-  BEGIN
-    MENUITEM "種類別デバイス(&E)",           IDC_DEVBYTYPE
-    MENUITEM "接続別デバイス(&V)",           IDC_DEVBYCONN
-    MENUITEM "種類別リソース(&Y)",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "接続別リソース(&N)",           IDC_RESBYCONN, GRAYED
-    MENUITEM SEPARATOR
-    MENUITEM "隠しデバイスを表示(&W)",       IDC_SHOWHIDDEN
-  END
-  POPUP "ヘルプ(&H)"
-  BEGIN
-    MENUITEM "バージョン情報(&A)",           IDC_ABOUT
-  END
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "終了(&X)",                     IDM_EXIT
+    END
+    POPUP "アクション(&A)"
+    BEGIN
+        MENUITEM "ハードウェアの変更をスキャン",        IDM_SCAN_HARDWARE
+        MENUITEM "ハードウェアを追加",             IDM_ADD_HARDWARE
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "種類別デバイス(&E)",           IDM_DEVBYTYPE
+        MENUITEM "接続別デバイス(&V)",           IDM_DEVBYCONN
+        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "接続別リソース(&N)",           IDM_RESBYCONN, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "隠しデバイスを表示(&W)",       IDM_SHOWHIDDEN
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "バージョン情報(&A)",           IDM_ABOUT
+    END
 END
 
 

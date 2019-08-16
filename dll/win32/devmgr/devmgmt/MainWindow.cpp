@@ -30,26 +30,25 @@ HINSTANCE g_hParentInstance = NULL;
 static const MENU_HINT MainMenuHintTable[] =
 {
     // File Menu
-    { IDC_EXIT, IDS_HINT_EXIT },
+    { IDM_EXIT, IDS_HINT_EXIT },
 
     // Action Menu
-    { IDC_PROPERTIES, IDS_HINT_PROPERTIES },
-    { IDC_SCAN_HARDWARE, IDS_HINT_SCAN },
-    { IDC_ENABLE_DRV, IDS_HINT_ENABLE },
-    { IDC_DISABLE_DRV, IDS_HINT_DISABLE },
-    { IDC_UPDATE_DRV, IDS_HINT_UPDATE },  
-    { IDC_UNINSTALL_DRV, IDS_HINT_UNINSTALL },
-    { IDC_ADD_HARDWARE, IDS_HINT_ADD },
-    
+    { IDM_PROPERTIES, IDS_HINT_PROPERTIES },
+    { IDM_SCAN_HARDWARE, IDS_HINT_SCAN },
+    { IDM_ENABLE_DRV, IDS_HINT_ENABLE },
+    { IDM_DISABLE_DRV, IDS_HINT_DISABLE },
+    { IDM_UPDATE_DRV, IDS_HINT_UPDATE },  
+    { IDM_UNINSTALL_DRV, IDS_HINT_UNINSTALL },
+    { IDM_ADD_HARDWARE, IDS_HINT_ADD },
 
     // View Menu
-    { IDC_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
-    { IDC_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
-    { IDC_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
-    { IDC_RESBYCONN, IDS_HINT_RES_BY_TYPE},
-    { IDC_SHOWHIDDEN, IDS_HINT_SHOW_HIDDEN },
+    { IDM_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
+    { IDM_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
+    { IDM_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
+    { IDM_RESBYCONN, IDS_HINT_RES_BY_TYPE},
+    { IDM_SHOWHIDDEN, IDS_HINT_SHOW_HIDDEN },
 
-    { IDC_ABOUT, IDS_HINT_ABOUT }
+    { IDM_ABOUT, IDS_HINT_ABOUT }
 
 };
 
@@ -67,13 +66,13 @@ static const MENU_HINT SystemMenuHintTable[] =
 
 static TBBUTTON TbButtons[] =
 {
-    { BTN_PROPERTIES, IDC_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
-    { BTN_SCAN_HARDWARE, IDC_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_PROPERTIES, IDM_PROPERTIES, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_SCAN_HARDWARE, IDM_SCAN_HARDWARE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { 2, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
-    { BTN_ENABLE_DRV, IDC_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
-    { BTN_DISABLE_DRV, IDC_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
-    { BTN_UPDATE_DRV, IDC_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
-    { BTN_UNINSTALL_DRV, IDC_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
+    { BTN_ENABLE_DRV, IDM_ENABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_DISABLE_DRV, IDM_DISABLE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UPDATE_DRV, IDM_UPDATE_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_UNINSTALL_DRV, IDM_UNINSTALL_DRV, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
 };
 
 
@@ -150,7 +149,7 @@ CDeviceManager::Initialize(_In_z_ LPCTSTR lpCaption,
     wc.hIcon = LoadIcon(g_hThisInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
+    wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAINMENU);
     wc.lpszClassName = m_szMainWndClass;
     wc.hIconSm = (HICON)LoadImage(g_hThisInstance,
                                   MAKEINTRESOURCE(IDI_MAIN_ICON),
@@ -255,19 +254,19 @@ CDeviceManager::RefreshView(_In_ ViewType Type,
     switch (Type)
     {
         case DevicesByType:
-            CheckId = IDC_DEVBYTYPE;
+            CheckId = IDM_DEVBYTYPE;
             break;
 
         case DevicesByConnection:
-            CheckId = IDC_DEVBYCONN;
+            CheckId = IDM_DEVBYCONN;
             break;
 
         case ResourcesByType:
-            CheckId = IDC_RESBYTYPE;
+            CheckId = IDM_RESBYTYPE;
             break;
 
         case ResourcesByConnection:
-            CheckId = IDC_RESBYCONN;
+            CheckId = IDM_RESBYCONN;
             break;
 
         default:
@@ -277,8 +276,8 @@ CDeviceManager::RefreshView(_In_ ViewType Type,
 
     // Set the new check item
     CheckMenuRadioItem(m_hMenu,
-                       IDC_DEVBYTYPE,
-                       IDC_RESBYCONN,
+                       IDM_DEVBYTYPE,
+                       IDM_RESBYCONN,
                        CheckId,
                        MF_BYCOMMAND);
 
@@ -378,9 +377,9 @@ void CDeviceManager::UpdateToolbar()
     {
         State = TBSTATE_HIDDEN;
     }
-    SendMessageW(m_hToolBar, TB_SETSTATE, IDC_PROPERTIES, MAKELPARAM(State, 0));
-    SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UPDATE_DRV, MAKELPARAM(State, 0)); //hack
-    SendMessageW(m_hToolBar, TB_SETSTATE, IDC_UNINSTALL_DRV, MAKELPARAM(State, 0)); // hack
+    SendMessageW(m_hToolBar, TB_SETSTATE, IDM_PROPERTIES, MAKELPARAM(State, 0));
+    SendMessageW(m_hToolBar, TB_SETSTATE, IDM_UPDATE_DRV, MAKELPARAM(State, 0)); //hack
+    SendMessageW(m_hToolBar, TB_SETSTATE, IDM_UNINSTALL_DRV, MAKELPARAM(State, 0)); // hack
 
     // enable driver button
     if (Node->GetNodeType() == DeviceNode &&
@@ -392,7 +391,7 @@ void CDeviceManager::UpdateToolbar()
     {
         State = TBSTATE_HIDDEN;
     }
-    SendMessageW(m_hToolBar, TB_SETSTATE, IDC_ENABLE_DRV, MAKELPARAM(State, 0));
+    SendMessageW(m_hToolBar, TB_SETSTATE, IDM_ENABLE_DRV, MAKELPARAM(State, 0));
 
     // disable driver button
     if (Node->GetNodeType() == DeviceNode &&
@@ -405,7 +404,7 @@ void CDeviceManager::UpdateToolbar()
     {
         State = TBSTATE_HIDDEN;
     }
-    SendMessageW(m_hToolBar, TB_SETSTATE, IDC_DISABLE_DRV, MAKELPARAM(State, 0));
+    SendMessageW(m_hToolBar, TB_SETSTATE, IDM_DISABLE_DRV, MAKELPARAM(State, 0));
 }
 
 bool
@@ -505,6 +504,12 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
     {
         case TVN_SELCHANGED:
         {
+            HMENU hMenu = GetSubMenu(m_hMenu, 1);
+            for (INT i = GetMenuItemCount(hMenu) - 1; i >= 0; i--)
+            {
+                DeleteMenu(hMenu, i, MF_BYPOSITION);
+            }
+            m_DeviceView->CreateActionMenu(hMenu, true);
             UpdateToolbar();
             break;
         }
@@ -535,22 +540,22 @@ CDeviceManager::OnNotify(_In_ LPARAM lParam)
             UINT_PTR idButton = lpttt->hdr.idFrom;
             switch (idButton)
             {
-                case IDC_PROPERTIES:
+                case IDM_PROPERTIES:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_PROPERTIES);
                     break;
-                case IDC_SCAN_HARDWARE:
+                case IDM_SCAN_HARDWARE:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_SCAN);
                     break;
-                case IDC_ENABLE_DRV:
+                case IDM_ENABLE_DRV:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_ENABLE);
                     break;
-                case IDC_DISABLE_DRV:
+                case IDM_DISABLE_DRV:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_DISABLE);
                     break;
-                case IDC_UPDATE_DRV:
+                case IDM_UPDATE_DRV:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UPDATE);
                     break;
-                case IDC_UNINSTALL_DRV:
+                case IDM_UNINSTALL_DRV:
                     lpttt->lpszText = MAKEINTRESOURCEW(IDS_TOOLTIP_UNINSTALL);
                     break;
             }
@@ -579,19 +584,19 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
 
     switch (Msg)
     {
-        case IDC_PROPERTIES:
-        case IDC_SCAN_HARDWARE:
-        case IDC_ENABLE_DRV:
-        case IDC_DISABLE_DRV:
-        case IDC_UPDATE_DRV:
-        case IDC_UNINSTALL_DRV:
-        case IDC_ADD_HARDWARE:
+        case IDM_PROPERTIES:
+        case IDM_SCAN_HARDWARE:
+        case IDM_ENABLE_DRV:
+        case IDM_DISABLE_DRV:
+        case IDM_UPDATE_DRV:
+        case IDM_UNINSTALL_DRV:
+        case IDM_ADD_HARDWARE:
         {
             m_DeviceView->OnAction(Msg);
             break;
         }
 
-        case IDC_ACTIONMENU:
+        case IDM_ACTIONMENU:
         {
             // Create a popup menu with all the actions for the selected node
             HMENU hMenu = CreatePopupMenu();
@@ -614,38 +619,38 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
             break;
         }
 
-        case IDC_DEVBYTYPE:
+        case IDM_DEVBYTYPE:
         {
             RefreshView(DevicesByType, false);
             break;
         }
 
-        case IDC_DEVBYCONN:
+        case IDM_DEVBYCONN:
         {
             RefreshView(DevicesByConnection, false);
             break;
         }
 
-        case IDC_SHOWHIDDEN:
+        case IDM_SHOWHIDDEN:
         {
             // Get the current state
-            UINT CurCheckState = GetMenuState(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND);
+            UINT CurCheckState = GetMenuState(m_hMenu, IDM_SHOWHIDDEN, MF_BYCOMMAND);
             if (CurCheckState == MF_CHECKED)
             {
                 m_DeviceView->SetHiddenDevices(false);
-                CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(m_hMenu, IDM_SHOWHIDDEN, MF_BYCOMMAND | MF_UNCHECKED);
             }
             else if (CurCheckState == MF_UNCHECKED)
             {
                 m_DeviceView->SetHiddenDevices(true);
-                CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | MF_CHECKED);
+                CheckMenuItem(m_hMenu, IDM_SHOWHIDDEN, MF_BYCOMMAND | MF_CHECKED);
             }
             // Refresh the device view
             RefreshView(m_DeviceView->GetCurrentView(), false);
             break;
         }
 
-        case IDC_ABOUT:
+        case IDM_ABOUT:
         {
             // Apportion blame
             MessageBoxW(m_hMainWnd,
@@ -658,7 +663,7 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
             break;
         }
 
-        case IDC_EXIT:
+        case IDM_EXIT:
         {
             // Post a close message to the window
             PostMessageW(m_hMainWnd,
