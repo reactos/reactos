@@ -206,7 +206,7 @@ void NtlmCheckTargetInfoAvl(
         if (avpCmpStr != NULL)
         {
             int blobChLen = pAvp->AvLen / sizeof(WCHAR);
-            sync_ok(wcsncmp(avpCmpStr, (WCHAR*)pData, blobChLen) == 01,
+            sync_ok(wcsncmp(avpCmpStr, (WCHAR*)pData, blobChLen) == 0,
                     "avl %s: %S: expected %S, got %.*S.\n",
                     blobName, avpCmpName, avpCmpStr,
                     blobChLen, (WCHAR*)pData);
