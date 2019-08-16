@@ -11,7 +11,7 @@
 #ifndef AUDIOSRV_H
 #define AUDIOSRV_H
 
-/* This is currently set to avoid conflicting service names in Windows! */
+/* The service name */
 #define SERVICE_NAME                L"AudioSrv"
 
 /* A named mutex is used for synchronizing access to the device list.
