@@ -302,7 +302,11 @@ static BOOL UPDOWN_GetBuddyInt (UPDOWN_INFO *infoPtr)
  *   TRUE  - if it set the caption of the  buddy successfully
  *   FALSE - if an error occurred
  */
+#ifdef __REACTOS__
+static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr, BOOL bSendNotify)
+#else
 static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
+#endif
 {
     static const WCHAR fmt_hex[] = { '0', 'x', '%', '0', '4', 'X', 0 };
     static const WCHAR fmt_dec_oct[] = { '%', 'd', '\0' };
@@ -347,6 +351,8 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     if (lstrcmpiW(txt_old, txt) == 0) return FALSE;
 
 #ifdef __REACTOS__
+    if (bSendNotify)
+        return SetWindowTextW(infoPtr->Buddy, txt);
     return DefWindowProcW(infoPtr->Buddy, WM_SETTEXT, 0, (LPARAM)txt);
 #else
     return SetWindowTextW(infoPtr->Buddy, txt);
@@ -514,7 +520,11 @@ static int UPDOWN_SetPos(UPDOWN_INFO *infoPtr, int pos)
     }
 
     infoPtr->CurVal = pos;
+#ifdef __REACTOS__
+    UPDOWN_SetBuddyInt(infoPtr, FALSE);
+#else
     UPDOWN_SetBuddyInt(infoPtr);
+#endif
 
     if(!UPDOWN_InBounds(infoPtr, ret)) {
         if((infoPtr->MinVal < infoPtr->MaxVal && ret < infoPtr->MinVal)
@@ -745,7 +755,11 @@ static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action)
             TRACE("new %d, delta: %d\n", infoPtr->CurVal, ni.iDelta);
 
             /* Now take care about our buddy */
+#ifdef __REACTOS__
+            UPDOWN_SetBuddyInt (infoPtr, TRUE);
+#else
             UPDOWN_SetBuddyInt (infoPtr);
+#endif
         }
     }
 
@@ -1105,7 +1119,11 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 		infoPtr->Base = wParam;
 
 		if (old_base != infoPtr->Base)
+#ifdef __REACTOS__
+		    UPDOWN_SetBuddyInt(infoPtr, FALSE);
+#else
 		    UPDOWN_SetBuddyInt(infoPtr);
+#endif
 
 		return old_base;
 	    }
