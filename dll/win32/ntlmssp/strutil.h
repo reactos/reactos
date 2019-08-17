@@ -28,16 +28,16 @@ typedef struct _EXT_STRING_A
     PBYTE  Buffer;
     EXT_STRING_TYPE typ;
 } EXT_STRING, *PEXT_STRING;*/
-typedef struct _EXT_STRING_DATA
+typedef struct _EXT_DATA
 {
     USHORT bUsed;
     USHORT bAllocated;
     PBYTE  Buffer;
     EXT_STRING_TYPE typ;
-} EXT_STRING_DATA, *PEXT_STRING_DATA;
-typedef struct _EXT_STRING_DATA EXT_STRING_A, *PEXT_STRING_A;
-typedef struct _EXT_STRING_DATA EXT_STRING_W, *PEXT_STRING_W;
-typedef struct _EXT_STRING_DATA EXT_STRING, *PEXT_STRING;
+} EXT_DATA, *PEXT_DATA;
+typedef struct _EXT_DATA EXT_STRING_A, *PEXT_STRING_A;
+typedef struct _EXT_DATA EXT_STRING_W, *PEXT_STRING_W;
+typedef struct _EXT_DATA EXT_STRING, *PEXT_STRING;
 
 typedef void* (*_strutil_alloc_proc)(size_t size);
 typedef void (*_strutil_free_proc)(void* p);
@@ -76,7 +76,7 @@ ExtWStrUpper(
 /* chLen = -1 to auto-detect length and newstr is null-terminated */
 BOOL
 ExtWStrSetN(
-    IN PEXT_STRING dst,
+    IN PEXT_STRING_W dst,
     IN WCHAR* newstr,
     IN size_t chLen);
 #define ExtWStrSet(dst, newstr) ExtWStrSetN(dst, newstr, (size_t)-1)
@@ -84,14 +84,14 @@ ExtWStrSetN(
 /* Ansi */
 BOOL
 ExtAStrInit(
-    IN PEXT_STRING dst,
+    IN PEXT_STRING_A dst,
     IN char* initstr);
-/* TODO
-void ExtAStrSetN(
-    IN PEXT_STRING dst,
+BOOL
+ExtAStrSetN(
+    IN PEXT_STRING_A dst,
     IN char* newstr,
-    IN size_t length);
-*/
+    IN size_t chLen);
+#define ExtAStrSet(dst, newstr) ExtAStrSetN(dst, newstr, (size_t)-1)
 
 /* Data */
 

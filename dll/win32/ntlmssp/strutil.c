@@ -59,10 +59,18 @@ _ExtStrRealloc(
 
 void
 _ExtStrWSetTerm0(
-    PEXT_STRING dest,
+    PEXT_STRING_W dest,
     ULONG chLen)
 {
     ((WCHAR*)dest->Buffer)[chLen] = 0;
+}
+
+void
+_ExtStrASetTerm0(
+    PEXT_STRING_A dest,
+    ULONG chLen)
+{
+    ((char*)dest->Buffer)[chLen] = 0;
 }
 
 /* init */
@@ -172,7 +180,7 @@ ExtStrFree(
 
 BOOL
 ExtWStrSetN(
-    IN PEXT_STRING dest,
+    IN PEXT_STRING_W dst,
     IN WCHAR* newstr,
     IN size_t chLen)
 {
@@ -183,13 +191,37 @@ ExtWStrSetN(
 
     bNeeded = (chLen + 1) * sizeof(WCHAR);
 
-    if (!_ExtStrRealloc(dest, bNeeded, FALSE))
+    if (!_ExtStrRealloc(dst, bNeeded, FALSE))
         return FALSE;
 
-    dest->bUsed = chLen * sizeof(WCHAR);
+    dst->bUsed = chLen * sizeof(WCHAR);
     if (chLen > 0)
-        memcpy(dest->Buffer, newstr, dest->bUsed);
-    _ExtStrWSetTerm0(dest, chLen);
+        memcpy(dst->Buffer, newstr, dst->bUsed);
+    _ExtStrWSetTerm0(dst, chLen);
+
+    return TRUE;
+}
+
+BOOL
+ExtAStrSetN(
+    IN PEXT_STRING_A dst,
+    IN char* newstr,
+    IN size_t chLen)
+{
+    ULONG bNeeded;
+
+    if (chLen == (size_t)-1)
+        chLen = strlen(newstr);
+
+    bNeeded = (chLen + 1) * sizeof(char);
+
+    if (!_ExtStrRealloc(dst, bNeeded, FALSE))
+        return FALSE;
+
+    dst->bUsed = chLen * sizeof(char);
+    if (chLen > 0)
+        memcpy(dst->Buffer, newstr, dst->bUsed);
+    _ExtStrASetTerm0(dst, chLen);
 
     return TRUE;
 }

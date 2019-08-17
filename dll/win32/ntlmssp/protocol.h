@@ -366,13 +366,24 @@ SvrHandleAuthenticateMessage(
 /* helper functions */
 
 /* makes only a reference to blob - do not free! */
+/* do not use for strings ... its not null terminated! */
 SECURITY_STATUS
-NtlmBlobToExtStringRef(
+NtlmBlobToExtDataRef(
     IN PSecBuffer InputBuffer,
     IN NTLM_BLOB Blob,
-    IN OUT PEXT_STRING OutputStr);
-#define NtlmBlobToUnicodeStringRef(buf, blob, out) NtlmBlobToExtStringRef(buf, blob, (PEXT_STRING)out)
-#define NtlmBlobToStringRef(buf, blob, out) NtlmBlobToExtStringRef(buf, blob, (PEXT_STRING)out)
+    IN OUT PEXT_DATA OutputStr);
+
+/* copys a NTLM message blob into a string */
+SECURITY_STATUS
+NtlmCreateExtWStrFromBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    IN OUT PEXT_STRING_W OutputStr);
+SECURITY_STATUS
+NtlmCreateExtAStrFromBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    IN OUT PEXT_STRING_A OutputStr);
 
 VOID
 NtlmExtStringToBlob(

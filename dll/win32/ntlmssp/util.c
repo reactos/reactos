@@ -202,6 +202,54 @@ NtlmBlobToExtStringRef(IN PSecBuffer InputBuffer,
     return SEC_E_OK;
 }
 
+SECURITY_STATUS
+NtlmCreateExtWStrFromBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    IN OUT PEXT_STRING_W OutputStr)
+{
+    PBYTE pData;
+
+    /* check blob is not beyond the bounds of the input buffer */
+    if(Blob.Offset >= InputBuffer->cbBuffer ||
+       Blob.Offset + Blob.Length > InputBuffer->cbBuffer)
+    {
+        ERR("blob points beyond buffer bounds!\n");
+        return SEC_E_INVALID_TOKEN;
+    }
+
+    /* convert blob into a string */
+    pData = ((PBYTE)InputBuffer->pvBuffer) + Blob.Offset;
+    ExtWStrInit(OutputStr, NULL);
+    ExtWStrSetN(OutputStr, (WCHAR*)pData, Blob.Length / sizeof(WCHAR));
+
+    return SEC_E_OK;
+}
+
+SECURITY_STATUS
+NtlmCreateExtAStrFromBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    IN OUT PEXT_STRING_A OutputStr)
+{
+    PBYTE pData;
+
+    /* check blob is not beyond the bounds of the input buffer */
+    if(Blob.Offset >= InputBuffer->cbBuffer ||
+       Blob.Offset + Blob.Length > InputBuffer->cbBuffer)
+    {
+        ERR("blob points beyond buffer bounds!\n");
+        return SEC_E_INVALID_TOKEN;
+    }
+
+    /* convert blob into a string */
+    pData = ((PBYTE)InputBuffer->pvBuffer) + Blob.Offset;
+    ExtAStrInit(OutputStr, NULL);
+    ExtAStrSetN(OutputStr, (char*)pData, Blob.Length / sizeof(char));
+
+    return SEC_E_OK;
+}
+
 VOID
 NtlmWriteToBlob(IN PVOID pOutputBuffer,
                 IN void* buffer,

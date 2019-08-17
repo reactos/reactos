@@ -225,13 +225,13 @@ SvrHandleNegotiateMessage(
     PNTLMSSP_CREDENTIAL cred = NULL;
     PNTLMSSP_CONTEXT_SVR context = NULL;
     PEXT_STRING pRawTargetNameRef = NULL;
-    OEM_STRING OemDomainNameRef, OemWorkstationNameRef;
+    EXT_STRING_A OemDomainName, OemWorkstationName;
     ULONG negotiateFlags = 0;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     PNTLMSSP_GLOBALS g = getGlobals();
 
-    memset(&OemDomainNameRef, 0, sizeof(OemDomainNameRef));
-    memset(&OemWorkstationNameRef, 0, sizeof(OemWorkstationNameRef));
+    ExtAStrInit(&OemDomainName, NULL);
+    ExtAStrInit(&OemWorkstationName, NULL);
 
     /* It seems these flags are always returned */
     *pASCContextAttr = ASC_RET_REPLAY_DETECT |
@@ -381,11 +381,16 @@ SvrHandleNegotiateMessage(
     if((negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
         (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED))
     {
-        NtlmBlobToStringRef(InputToken, negoMessage->OemDomainName, &OemDomainNameRef);
-        NtlmBlobToStringRef(InputToken, negoMessage->OemWorkstationName, &OemWorkstationNameRef);
+        NtlmCreateExtAStrFromBlob(InputToken, negoMessage->OemDomainName,
+                                  &OemDomainName);
+        NtlmCreateExtAStrFromBlob(InputToken, negoMessage->OemWorkstationName,
+                                  &OemWorkstationName);
 
-        if (RtlEqualString(&OemWorkstationNameRef, &g->NbMachineNameOEM, FALSE) &&
-            RtlEqualString(&OemDomainNameRef, &g->NbDomainNameOEM, FALSE))
+        // FIXME use ExtAStrIsEqual ...
+        //if (RtlEqualString(&OemWorkstationNameRef, &g->NbMachineNameOEM, FALSE) &&
+        //    RtlEqualString(&OemDomainNameRef, &g->NbDomainNameOEM, FALSE))
+        if ((strcmp((char*)OemWorkstationName.Buffer, g->NbMachineNameOEM.Buffer) == 0) &&
+            (strcmp((char*)OemDomainName.Buffer, g->NbDomainNameOEM.Buffer) == 0))
         {
             TRACE("local negotiate detected!\n");
             negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
@@ -447,6 +452,8 @@ exit:
     if(negoMessage) NtlmFree(negoMessage);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
     if (context) NtlmDereferenceContext((ULONG_PTR)context);
+    ExtStrFree(&OemDomainName);
+    ExtStrFree(&OemWorkstationName);
 
     return ret;
 }
@@ -473,7 +480,7 @@ CliGenerateAuthenticationMessage(
     LM2_RESPONSE Lm2Response;
     USER_SESSION_KEY UserSessionKey;
     LM_SESSION_KEY LmSessionKey;
-    EXT_STRING AvDataTmp;
+    EXT_DATA AvDataTmp = {0};
     NTLM_DATABUF AvDataRef;
     ULONGLONG NtResponseTimeStamp;
 
@@ -640,7 +647,8 @@ CliGenerateAuthenticationMessage(
         ULONG len;
 
         ERR("NTLMSSP_NEGOTIATE_TARGET_INFO\n");
-        ret = NtlmBlobToExtStringRef(InputToken1, challenge->TargetInfo, &AvDataTmp);
+        ret = NtlmCreateExtWStrFromBlob(InputToken1, challenge->TargetInfo,
+                                        &AvDataTmp);
         if (!NT_SUCCESS(ret))
         {
             ERR("could not get target info!\n");
@@ -853,6 +861,7 @@ quit:
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
     if (NtResponseData.bAllocated > 0)
         NtlmDataBufFree(&NtResponseData);
+    ExtStrFree(&AvDataTmp);
     ERR("handle challenge end\n");
     return ret;
 }
@@ -871,9 +880,15 @@ SvrHandleAuthenticateMessage(
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_SVR context = NULL;
     PAUTHENTICATE_MESSAGE authMessage = NULL;
-    UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
-    UNICODE_STRING UserName, Workstation, DomainName;
+    EXT_STRING_W LmChallengeResponse, NtChallengeResponse, SessionKey;
+    EXT_STRING_W UserName, Workstation, DomainName;
     //BOOLEAN isUnicode;
+
+    ExtWStrInit(&LmChallengeResponse, NULL);
+    ExtWStrInit(&NtChallengeResponse, NULL);
+    ExtWStrInit(&UserName, NULL);
+    ExtWStrInit(&Workstation, NULL);
+    ExtWStrInit(&DomainName, NULL);
 
     // TODO/CHECK 3.2.5.1.2
     // * username + response empty -> ANONYMOUSE
@@ -987,7 +1002,7 @@ SvrHandleAuthenticateMessage(
         goto fail;
     }
 
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->LmChallengeResponse, &LmChallengeResponse)))
     {
         ERR("cant get blob data\n");
@@ -995,28 +1010,28 @@ SvrHandleAuthenticateMessage(
         goto fail;
     }
 
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->NtChallengeResponse, &NtChallengeResponse)))
     {
         ret = SEC_E_INVALID_TOKEN;
         goto fail;
     }
 
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->UserName, &UserName)))
     {
         ret = SEC_E_INVALID_TOKEN;
         goto fail;
     }
 
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->WorkstationName, &Workstation)))
     {
         ret = SEC_E_INVALID_TOKEN;
         goto fail;
     }
 
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->DomainName, &DomainName)))
     {
         ret = SEC_E_INVALID_TOKEN;
@@ -1024,7 +1039,7 @@ SvrHandleAuthenticateMessage(
     }
 
     //if(NTLMSSP_NEGOTIATE_KEY_EXCHANGE)
-    if(!NT_SUCCESS(NtlmBlobToUnicodeStringRef(InputToken,
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(InputToken,
         authMessage->EncryptedRandomSessionKey, &SessionKey)))
     {
         ret = SEC_E_INVALID_TOKEN;
@@ -1035,5 +1050,10 @@ SvrHandleAuthenticateMessage(
 
 fail:
     NtlmDereferenceContext((ULONG_PTR)context);
+    ExtStrFree(&LmChallengeResponse);
+    ExtStrFree(&NtChallengeResponse);
+    ExtStrFree(&UserName);
+    ExtStrFree(&Workstation);
+    ExtStrFree(&DomainName);
     return ret;
 }
