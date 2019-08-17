@@ -430,6 +430,8 @@ CliComputeResponseNVLMv2(
     IN PEXT_STRING user,
     IN PEXT_STRING passwd,
     IN PEXT_STRING userdom,
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN PUNICODE_STRING ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
@@ -441,51 +443,6 @@ CliComputeResponseNVLMv2(
     OUT PUSER_SESSION_KEY SessionBaseKey)
 {
     UCHAR NTProofStr[16];
-    UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
-    UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH];
-
-    //Define NTOWFv2(Passwd, User, UserDom) as HMAC_MD5(
-    //MD4(UNICODE(Passwd)), UNICODE(ConcatenationOf( Uppercase(User),
-    //UserDom ) ) )
-    //EndDefine
-
-    //Define LMOWFv2(Passwd, User, UserDom) as NTOWFv2(Passwd, User,
-    //UserDom)
-    //EndDefine
-
-    #ifdef VALIDATE_NTLMv2
-    {
-        ExtWStrSet(user, L"User");
-        ExtWStrSet(passwd, L"Password");
-        ExtWStrSet(userdom, L"Domain");
-        memcpy(ClientChallenge, "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa", 8);
-        memcpy(ServerChallenge, "\x01\x23\x45\x67\x89\xab\xcd\xef", 8);
-    }
-    #endif
-
-    //Set ResponseKeyNT to NTOWFv2(Passwd, User, UserDom)
-    if (!NTOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
-                 (WCHAR*)userdom->Buffer, ResponseKeyNT))
-    {
-        ERR("NTOWFv2 failed\n");
-        return FALSE;
-    }
-    #ifdef VALIDATE_NTLMv2
-    //TRACE("**** VALIDATE **** ResponseKeyNT\n");
-    //NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
-    #endif
-
-    //Set ResponseKeyLM to LMOWFv2(Passwd, User, UserDom)
-    if (!LMOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
-                 (WCHAR*)userdom->Buffer, ResponseKeyLM))
-    {
-        ERR("LMOWFv2 failed\n");
-        return FALSE;
-    }
-    #ifdef VALIDATE_NTLMv2
-    TRACE("**** VALIDATE **** ResponseKeyLM\n");
-    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
-    #endif
 
     //Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
     //CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
@@ -587,9 +544,9 @@ CliComputeResponseNVLMv2(
 
 BOOL
 NtlmChallengeResponse(
-    IN PEXT_STRING pUserNameW,
-    IN PEXT_STRING pPasswordW,
-    IN PEXT_STRING pDomainNameW,
+    IN PEXT_STRING user,
+    IN PEXT_STRING passwd,
+    IN PEXT_STRING userdom,
     IN PUNICODE_STRING pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
@@ -600,13 +557,15 @@ NtlmChallengeResponse(
 {
     PMSV1_0_NTLM3_RESPONSE pNtResponse;
     BOOL avOk;
+    UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
+    UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH];
 
     /* alloc memory */
     NtlmDataBufAlloc(pNtResponseData,
                      sizeof(MSV1_0_NTLM3_RESPONSE) +
                      sizeof(MSV1_0_AV_PAIR) * 3 +
                      pServerName->Length +
-                     pDomainNameW->bUsed,
+                     userdom->bUsed,
         #ifdef VALIDATE_NTLMv2
                      + 20 /* HACK */
         #endif
@@ -614,7 +573,7 @@ NtlmChallengeResponse(
     pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtResponseData->pData;
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
-        pUserNameW, pPasswordW, pDomainNameW, pServerName, ChallengeToClient,
+        user, passwd, userdom, pServerName, ChallengeToClient,
         pNtResponse, pLm2ChallengeResponse, pUserSessionKey, pLmSessionKey);
 
     pNtResponse->RespType = 1;
@@ -645,9 +604,9 @@ NtlmChallengeResponse(
            NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
     #else
     avOk = TRUE;
-    if (pDomainNameW->bUsed > 0)
+    if (userdom->bUsed > 0)
         avOk = avOk &&
-               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)pDomainNameW->Buffer, pDomainNameW->bUsed);
+               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)userdom->Buffer, userdom->bUsed);
     avOk = avOk &&
            NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, pServerName->Buffer, pServerName->Length) &&
            NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
@@ -655,30 +614,55 @@ NtlmChallengeResponse(
     if (!avOk)
        ERR("failed to write avl data\n");
 
-    /*NtlmNtResponse(pUserNameW,
-                   pPasswordW,
-                   pDomainNameW,
-                   pServerName->Length,
-                   ChallengeToClient,
-                   pNtResponse,
-                   pNtResponse->Response,
-                   pUserSessionKey,
-                   pLmSessionKey);
+    /* MS-NLSP 3.3.2 NTLM v2 Authentication */
+    //Define NTOWFv2(Passwd, User, UserDom) as HMAC_MD5(
+    //MD4(UNICODE(Passwd)), UNICODE(ConcatenationOf( Uppercase(User),
+    //UserDom ) ) )
+    //EndDefine
 
-    / * Use same challenge to compute the LM3 response * /
-    memcpy(pLm2Response->ChallengeFromClient,
-           pNtResponse->ChallengeFromClient,
-           MSV1_0_CHALLENGE_LENGTH);
+    //Define LMOWFv2(Passwd, User, UserDom) as NTOWFv2(Passwd, User,
+    //UserDom)
+    //EndDefine
 
-    NtlmLmResponse(pUserNameW,
-                   pPasswordW,
-                   pDomainNameW,
-                   ChallengeToClient,
-                   pLm2Response,
-                   pLm2Response->Response);*/
-    if (!CliComputeResponseNVLMv2(pUserNameW,
-                                  pPasswordW,
-                                  pDomainNameW,
+    #ifdef VALIDATE_NTLMv2
+    {
+        ExtWStrSet(user, L"User");
+        ExtWStrSet(passwd, L"Password");
+        ExtWStrSet(userdom, L"Domain");
+        memcpy(ClientChallenge, "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa", 8);
+        memcpy(ServerChallenge, "\x01\x23\x45\x67\x89\xab\xcd\xef", 8);
+    }
+    #endif
+
+    //Set ResponseKeyNT to NTOWFv2(Passwd, User, UserDom)
+    if (!NTOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
+                 (WCHAR*)userdom->Buffer, ResponseKeyNT))
+    {
+        ERR("NTOWFv2 failed\n");
+        return FALSE;
+    }
+    #ifdef VALIDATE_NTLMv2
+    //TRACE("**** VALIDATE **** ResponseKeyNT\n");
+    //NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    #endif
+
+    //Set ResponseKeyLM to LMOWFv2(Passwd, User, UserDom)
+    if (!LMOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
+                 (WCHAR*)userdom->Buffer, ResponseKeyLM))
+    {
+        ERR("LMOWFv2 failed\n");
+        return FALSE;
+    }
+    #ifdef VALIDATE_NTLMv2
+    TRACE("**** VALIDATE **** ResponseKeyLM\n");
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    #endif
+
+    if (!CliComputeResponseNVLMv2(user,
+                                  passwd,
+                                  userdom,
+                                  ResponseKeyLM,
+                                  ResponseKeyNT,
                                   pServerName,
                                   ChallengeToClient,
                                   pNtResponse->ChallengeFromClient,

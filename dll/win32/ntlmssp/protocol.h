@@ -410,3 +410,22 @@ NtlmStructWriteStrW(
     IN const WCHAR* dataW,
     IN OUT PBYTE* pOffset);
 
+/* calculations */
+BOOL
+CliComputeResponseNVLMv2(
+    IN PEXT_STRING user,
+    IN PEXT_STRING passwd,
+    IN PEXT_STRING userdom,
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN PUNICODE_STRING ServerName,
+    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
+    // fixme: NÖTIG ... evtl hier füllen oder länge ist nötig ...
+    IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
+    IN ULONG pNtResponseLen,
+    OUT UCHAR NtChallengeResponse[24],
+    OUT PLM2_RESPONSE pLmChallengeResponse,
+    OUT PUSER_SESSION_KEY SessionBaseKey);
+
+
