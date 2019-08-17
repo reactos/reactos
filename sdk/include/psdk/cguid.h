@@ -19,33 +19,39 @@
 #ifndef __CGUID_H__
 #define __CGUID_H__
 
+#if __GNUC__ >= 8
+#define GCC8DECLSPEC_SELECTANY DECLSPEC_SELECTANY
+#else
+#define GCC8DECLSPEC_SELECTANY
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const IID GUID_NULL;
-extern const IID IID_IRpcChannel;
-extern const IID IID_IRpcStub;
-extern const IID IID_IStubManager;
-extern const IID IID_IRpcProxy;
-extern const IID IID_IProxyManager;
-extern const IID IID_IPSFactory;
-extern const IID IID_IInternalMoniker;
-extern const IID IID_IDfReserved1;
-extern const IID IID_IDfReserved2;
-extern const IID IID_IDfReserved3;
+extern const IID GCC8DECLSPEC_SELECTANY GUID_NULL;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IRpcChannel;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IRpcStub;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IStubManager;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IRpcProxy;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IProxyManager;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IPSFactory;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IInternalMoniker;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IDfReserved1;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IDfReserved2;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IDfReserved3;
 extern const CLSID CLSID_StdMarshal;
 extern const CLSID CLSID_AggStdMarshal;
 extern const CLSID CLSID_StdAsyncActManager;
-extern const IID IID_IStub;
-extern const IID IID_IProxy;
-extern const IID IID_IEnumGeneric;
-extern const IID IID_IEnumHolder;
-extern const IID IID_IEnumCallback;
-extern const IID IID_IOleManager;
-extern const IID IID_IOlePresObj;
-extern const IID IID_IDebug;
-extern const IID IID_IDebugStream;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IStub;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IProxy;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IEnumGeneric;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IEnumHolder;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IEnumCallback;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IOleManager;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IOlePresObj;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IDebug;
+extern const IID GCC8DECLSPEC_SELECTANY IID_IDebugStream;
 extern const CLSID CLSID_PSGenObject;
 extern const CLSID CLSID_PSClientSite;
 extern const CLSID CLSID_PSClassObject;
