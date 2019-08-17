@@ -8,6 +8,11 @@
 #include <apitest.h>
 #include "dll_startup.h"
 
+// we test the initial value of m_uninit variable here, so this is required
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
+
 static struct counter_values counter_values =
 {
     0, 0, 0, 0, 5656, 0, 0
