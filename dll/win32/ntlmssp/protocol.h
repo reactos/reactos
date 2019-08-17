@@ -421,10 +421,8 @@ CliComputeResponseNVLMv2(
     IN PUNICODE_STRING ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    // fixme: NÖTIG ... evtl hier füllen oder länge ist nötig ...
-    IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
-    IN ULONG pNtResponseLen,
-    OUT UCHAR NtChallengeResponse[24],
+    IN ULONGLONG TimeStamp,
+    IN OUT PNTLM_DATABUF pNtResponseData,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);
 

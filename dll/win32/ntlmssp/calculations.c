@@ -435,14 +435,60 @@ CliComputeResponseNVLMv2(
     IN PUNICODE_STRING ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    // fixme: NÖTIG ... evtl hier füllen oder länge ist nötig ...
-    IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
-    IN ULONG pNtResponseLen,
-    OUT UCHAR NtChallengeResponse[24],
+    IN ULONGLONG TimeStamp,
+    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey)
 {
     UCHAR NTProofStr[16];
+    BOOL avOk;
+    PMSV1_0_NTLM3_RESPONSE pNtResponse;
+
+    /* alloc/fill NtResponse struct */
+    NtlmDataBufAlloc(pNtChallengeResponseData,
+                     sizeof(MSV1_0_NTLM3_RESPONSE) +
+                     sizeof(MSV1_0_AV_PAIR) * 3 +
+                     ServerName->Length +
+                     userdom->bUsed,
+        #ifdef VALIDATE_NTLMv2
+                     + 20 /* HACK */
+        #endif
+                     TRUE);
+    pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtChallengeResponseData->pData;
+    pNtResponse->RespType = 1;
+    pNtResponse->HiRespType = 1;
+    pNtResponse->Flags = 0;
+    pNtResponse->MsgWord = 0;
+    pNtResponse->TimeStamp = TimeStamp;
+    pNtResponse->AvPairsOff = 0;
+    memcpy(pNtResponse->ChallengeFromClient, ClientChallenge,
+           ARRAYSIZE(pNtResponse->ChallengeFromClient));
+    /* Av-Pairs should begin at AvPairsOff field. So we need
+       to set the used-ptr back before writing avl */
+    pNtChallengeResponseData->bUsed = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
+    // TEST_CALCULATION
+    #ifdef VALIDATE_NTLMv2
+    pNtResponse->TimeStamp = 0;
+    memset(pNtResponse->ChallengeFromClient, 0xaa, 8);
+    /* AV-Pais (Domain / Server) */
+    avOk = TRUE;
+    if (pDomainNameW->bUsed > 0)
+        avOk = avOk &&
+               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)L"Domain", 12);
+    avOk = avOk &&
+           NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, (WCHAR*)L"Server", 12) &&
+           NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
+    #else
+    avOk = TRUE;
+    if (userdom->bUsed > 0)
+        avOk = avOk &&
+               NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbDomainName, (WCHAR*)userdom->Buffer, userdom->bUsed);
+    avOk = avOk &&
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, ServerName->Buffer, ServerName->Length) &&
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvEOL, NULL, 0);
+    #endif
+    if (!avOk)
+       ERR("failed to write avl data\n");
 
     //Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
     //CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
@@ -482,7 +528,7 @@ CliComputeResponseNVLMv2(
         /* Spec (4.2.4.1.3 temp) shows 4 bytes more
          * (all 0) may be a bug in spec-doc. It works
          * without these extra bytes. */
-        tempLen = pNtResponseLen -
+        tempLen = pNtChallengeResponseData->bUsed -
                   FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, RespType);
         #ifdef VALIDATE_NTLMv2
         NtlmPrintHexDump((PBYTE)pNtResponse, pNtResponseLen);
@@ -503,8 +549,12 @@ CliComputeResponseNVLMv2(
         NtlmFree(ccTemp);
 
         //Set NtChallengeResponse to ConcatenationOf(NTProofStr, temp)
-        memcpy(&NtChallengeResponse[0], NTProofStr, ARRAYSIZE(NTProofStr));//16
-        memcpy(&NtChallengeResponse[16], temp, 8);
+        //memcpy(&NtChallengeResponse[0], NTProofStr, ARRAYSIZE(NTProofStr));//16
+        memcpy(&pNtResponse->Response[0], NTProofStr, ARRAYSIZE(NTProofStr));//16
+        /* MS-NLMP says concat temp ... however
+         * Response is oly 16 Byte ... temp points after it
+         * and this is the same address (temp == &pNtResponse->Response[16])
+         * which is already filled - so copy makes no sense */
         #ifdef VALIDATE_NTLMv2
         //TRACE("**** VALIDATE **** NTProofStr\n");
         //NtlmPrintHexDump(NTProofStr, ARRAYSIZE(NTProofStr));
@@ -550,69 +600,21 @@ NtlmChallengeResponse(
     IN PUNICODE_STRING pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
-    OUT PNTLM_DATABUF pNtResponseData,
+    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
     OUT PLM2_RESPONSE pLm2ChallengeResponse,
     OUT PUSER_SESSION_KEY pUserSessionKey,
     OUT PLM_SESSION_KEY pLmSessionKey)
 {
-    PMSV1_0_NTLM3_RESPONSE pNtResponse;
-    BOOL avOk;
     UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
     UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH];
-
-    /* alloc memory */
-    NtlmDataBufAlloc(pNtResponseData,
-                     sizeof(MSV1_0_NTLM3_RESPONSE) +
-                     sizeof(MSV1_0_AV_PAIR) * 3 +
-                     pServerName->Length +
-                     userdom->bUsed,
-        #ifdef VALIDATE_NTLMv2
-                     + 20 /* HACK */
-        #endif
-                     TRUE);
-    pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtResponseData->pData;
+    UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
         user, passwd, userdom, pServerName, ChallengeToClient,
-        pNtResponse, pLm2ChallengeResponse, pUserSessionKey, pLmSessionKey);
-
-    pNtResponse->RespType = 1;
-    pNtResponse->HiRespType = 1;
-    pNtResponse->Flags = 0;
-    pNtResponse->MsgWord = 0;
-    pNtResponse->TimeStamp = TimeStamp;
-    pNtResponse->AvPairsOff = 0;
-
-    /* Av-Pairs should begin at AvPairsOff field. So we need
-       to set the used-ptr back before writing avl */
-    pNtResponseData->bUsed = FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
+        pNtChallengeResponseData->pData, pLm2ChallengeResponse, pUserSessionKey, pLmSessionKey);
 
     /* 3.1.5.1.2 nonce */
-    NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
-
-    // TEST_CALCULATION
-    #ifdef VALIDATE_NTLMv2
-    pNtResponse->TimeStamp = 0;
-    memset(pNtResponse->ChallengeFromClient, 0xaa, 8);
-    /* AV-Pais (Domain / Server) */
-    avOk = TRUE;
-    if (pDomainNameW->bUsed > 0)
-        avOk = avOk &&
-               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)L"Domain", 12);
-    avOk = avOk &&
-           NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, (WCHAR*)L"Server", 12) &&
-           NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
-    #else
-    avOk = TRUE;
-    if (userdom->bUsed > 0)
-        avOk = avOk &&
-               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)userdom->Buffer, userdom->bUsed);
-    avOk = avOk &&
-           NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, pServerName->Buffer, pServerName->Length) &&
-           NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
-    #endif
-    if (!avOk)
-       ERR("failed to write avl data\n");
+    NtlmGenerateRandomBits(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
 
     /* MS-NLSP 3.3.2 NTLM v2 Authentication */
     //Define NTOWFv2(Passwd, User, UserDom) as HMAC_MD5(
@@ -665,10 +667,9 @@ NtlmChallengeResponse(
                                   ResponseKeyNT,
                                   pServerName,
                                   ChallengeToClient,
-                                  pNtResponse->ChallengeFromClient,
-                                  pNtResponse,
-                                  pNtResponseData->bUsed,
-                                  pNtResponse->Response,
+                                  ChallengeFromClient,
+                                  TimeStamp,
+                                  pNtChallengeResponseData,
                                   pLm2ChallengeResponse,
                                   pUserSessionKey))
     {
