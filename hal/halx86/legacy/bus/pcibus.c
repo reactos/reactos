@@ -325,6 +325,21 @@ HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
     if (Slot.u.bits.Reserved) return FALSE;
     if (Slot.u.bits.DeviceNumber >= BusData->MaxDevice) return FALSE;
 
+#ifdef SARCH_XBOX
+    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
+     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
+     * video card, so it appears to be present on 1:0:0 - 1:31:0.
+     * We hack around these problems by indicating "device not present" for devices
+     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
+    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
+        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
+        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
+    {
+        DPRINT("HalpValidPCISlot(): Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
+        return FALSE;
+    }
+#endif
+
     /* Function 0 doesn't need checking */
     if (!Slot.u.bits.FunctionNumber) return TRUE;
 
