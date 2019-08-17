@@ -34,7 +34,8 @@
 [Forum](https://reactos.org/forum) &bull; 
 [JIRA Bug Tracker](https://jira.reactos.org/issues) &bull; 
 [ReactOS Git mirror](https://git.reactos.org) &bull; 
-[Testman](https://reactos.org/testman/)
+[Testman](https://reactos.org/testman/) &bull; 
+[Join us, we hire!](https://reactos.org/node/785)
 
 
 ## What is ReactOS?
