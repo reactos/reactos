@@ -1,4 +1,8 @@
 
+if(GCC AND GCC_VERSION VERSION_GREATER 7)
+    add_compile_flags("-Wno-format-overflow")
+endif()
+
 list(APPEND SOURCE
     devinst.c
     dialog.c
