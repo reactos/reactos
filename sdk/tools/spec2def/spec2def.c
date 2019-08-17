@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef _MSC_VER
 #define strcasecmp(_String1, _String2) _stricmp(_String1, _String2)
@@ -711,6 +712,73 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     return 1;
 }
 
+void
+Fatalv(
+    const char* filename,
+    unsigned nLine,
+    char *pcLine,
+    char *pc,
+    size_t errorlen,
+    const char *format,
+    va_list argptr)
+{
+    unsigned i, errorpos, len;
+    const char* pcLineEnd;
+
+    /* Get the length of the line */
+    pcLineEnd = strpbrk(pcLine, "\r\n");
+    len = pcLineEnd - pcLine;
+
+    if (pc == NULL)
+    {
+        pc = pcLine + len - 1;
+        errorlen = 1;
+    }
+
+    errorpos = (unsigned)(pc - pcLine);
+
+    /* Output the error message */
+    fprintf(stderr, "ERROR: (%s:%u:%u): ", filename, nLine, errorpos);
+    vfprintf(stderr, format, argptr);
+    fprintf(stderr, "\n");
+
+    /* Output the line with the error */
+    fprintf(stderr, "> %.*s\n", len, pcLine);
+
+    if (errorlen == 0)
+    {
+        errorlen = TokenLength(pc);
+    }
+
+    for (i = 0; i < errorpos + 2; i++)
+    {
+        fprintf(stderr, " ");
+    }
+    for (i = 0; i < errorlen; i++)
+    {
+        fprintf(stderr, "~");
+    }
+    fprintf(stderr, "\n");
+    exit(-1);
+}
+
+void
+Fatal(
+    const char* filename,
+    unsigned nLine,
+    char *pcLine,
+    char *pc,
+    size_t errorlen,
+    const char *format,
+    ...)
+{
+    va_list argptr;
+
+    va_start(argptr, format);
+    Fatalv(filename, nLine, pcLine, pc, errorlen, format, argptr);
+    va_end(argptr);
+}
+
 int
 ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 {
@@ -743,20 +811,38 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 
         /* Now we should get either an ordinal or @ */
         if (*pc == '@')
-            exp.nOrdinal = -1;
-        else
         {
-            exp.nOrdinal = atol(pc);
+            exp.nOrdinal = -1;
+        }
+        else if ((*pc >= '0') && (*pc <= '9'))
+        {
+            char* end;
+            long int number = strtol(pc, &end, 10);
+            if ((*end != ' ') && (*end != '\t'))
+            {
+                Fatal(pszSourceFileName, nLine, pcLine, end, 0, "Unexpected character(s) after ordinal");
+            }
+
+            if ((number < 0) || (number > 0xFFFE))
+            {
+                Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Invalid value for ordinal");
+            }
+
+            exp.nOrdinal = number;
+
             /* The import lib should contain the ordinal only if -ordinal was specified */
             if (!gbImportLib)
                 exp.uFlags |= FL_ORDINAL;
+        }
+        else
+        {
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Expected '@' or ordinal");
         }
 
         /* Go to next token (type) */
         if (!(pc = NextToken(pc)))
         {
-            fprintf(stderr, "%s line %d: error: unexpected end of line\n", pszSourceFileName, nLine);
-            return -10;
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
         }
 
         //fprintf(stderr, "info: Token:'%.*s'\n", TokenLength(pc), pc);
@@ -789,16 +875,13 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
         else
         {
-            fprintf(stderr, "%s line %d: error: expected callconv, got '%.*s' %d\n",
-                    pszSourceFileName, nLine, TokenLength(pc), pc, *pc);
-            return -11;
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Invalid calling convention");
         }
 
         /* Go to next token (options or name) */
         if (!(pc = NextToken(pc)))
         {
-            fprintf(stderr, "fail2\n");
-            return -12;
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
         }
 
         /* Handle options */
@@ -832,6 +915,8 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             }
             else if (CompareToken(pc, "-version="))
             {
+                char * pcVersionStart = pc + 9;
+
                 /* Default to not included */
                 version_included = 0;
                 pc += 8;
@@ -865,8 +950,12 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     /* Check for degenerate range */
                     if (version > endversion)
                     {
-                        fprintf(stderr, "%s line %d: error: invalid version rangen\n", pszSourceFileName, nLine);
-                        return -1;
+                        Fatal(pszSourceFileName,
+                              nLine,
+                              pcLine,
+                              pcVersionStart,
+                              pc - pcVersionStart,
+                              "Invalid version range");
                     }
 
                     /* Now compare the range with our version */
@@ -915,8 +1004,12 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             }
             else
             {
-                fprintf(stderr, "info: ignored option: '%.*s'\n",
-                        TokenLength(pc), pc);
+                fprintf(stdout,
+                        "INFO: %s line %d: Ignored option: '%.*s'\n",
+                        pszSourceFileName,
+                        nLine,
+                        TokenLength(pc),
+                        pc);
             }
 
             /* Go to next token */
@@ -931,7 +1024,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Get name */
         exp.strName.buf = pc;
         exp.strName.len = TokenLength(pc);
-        DbgPrint("Got name: '%.*s'\n", exp.strName.len, exp.strName.buf);
+        //DbgPrint("Got name: '%.*s'\n", exp.strName.len, exp.strName.buf);
 
         /* Check for autoname */
         if ((exp.strName.len == 1) && (exp.strName.buf[0] == '@'))
@@ -950,15 +1043,13 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Go to next token */
             if (!(pc = NextToken(pc)))
             {
-                fprintf(stderr, "%s line %d: error: expected token\n", pszSourceFileName, nLine);
-                return -13;
+                Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
             }
 
             /* Verify syntax */
             if (*pc++ != '(')
             {
-                fprintf(stderr, "%s line %d: error: expected '('\n", pszSourceFileName, nLine);
-                return -14;
+                Fatal(pszSourceFileName, nLine, pcLine, pc - 1, 0, "Expected '('");
             }
 
             /* Skip whitespaces */
@@ -1008,23 +1099,23 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.anArgs[exp.nArgCount] = ARG_FLOAT;
                 }
                 else
-                    fprintf(stderr, "%s line %d: error: expected type, got: %.10s\n", pszSourceFileName, nLine, pc);
+                {
+                    Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Unrecognized type");
+                }
 
                 exp.nArgCount++;
 
                 /* Go to next parameter */
                 if (!(pc = NextToken(pc)))
                 {
-                    fprintf(stderr, "fail5\n");
-                    return -15;
+                    Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
                 }
             }
 
             /* Check syntax */
             if (*pc++ != ')')
             {
-                fprintf(stderr, "%s line %d: error: expected ')'\n", pszSourceFileName, nLine);
-                return -16;
+                Fatal(pszSourceFileName, nLine, pcLine, pc - 1, 0, "Expected ')'");
             }
         }
 
@@ -1049,8 +1140,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.strName.len = (int)(p - pc);
                     if (exp.strName.len < 1)
                     {
-                        fprintf(stderr, "%s line %d: error: unexpected @ found\n", pszSourceFileName, nLine);
-                        return -1;
+                        Fatal(pszSourceFileName, nLine, pcLine, p, 1, "Unexpected @");
                     }
                     exp.nStackBytes = atoi(p + 1);
                     exp.nArgCount =  exp.nStackBytes / 4;
@@ -1072,8 +1162,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check syntax (end of line) */
             if (NextToken(pc))
             {
-                 fprintf(stderr, "%s line %d: error: additional tokens after ')'\n", pszSourceFileName, nLine);
-                 return -17;
+                Fatal(pszSourceFileName, nLine, pcLine, NextToken(pc), 0, "Excess token(s) at end of definition");
             }
 
             /* Don't relay-trace forwarded functions */
@@ -1088,8 +1177,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Check for no-name without ordinal */
         if ((exp.uFlags & FL_ORDINAL) && (exp.nOrdinal == -1))
         {
-            fprintf(stderr, "%s line %d: error: ordinal export without ordinal!\n", pszSourceFileName, nLine);
-            return -1;
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 0, "Ordinal export without ordinal");
         }
 
         /*
@@ -1113,12 +1201,12 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                         /* The current export is an OLE export: display the corresponding warning */
                         if (bIsNotPrivate)
                         {
-                            fprintf(stderr, "%s line %d: warning: exported symbol '%.*s' should be PRIVATE\n",
+                            fprintf(stderr, "WARNING: %s line %d: Exported symbol '%.*s' should be PRIVATE\n",
                                     pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
                         }
                         if (bHasOrdinal)
                         {
-                            fprintf(stderr, "%s line %d: warning: exported symbol '%.*s' should not be assigned an ordinal\n",
+                            fprintf(stderr, "WARNING: %s line %d: exported symbol '%.*s' should not be assigned an ordinal\n",
                                     pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
                         }
                         break;
