@@ -5,7 +5,8 @@
  * PURPOSE:     Implementation of ctime, _ctime_s
  * PROGRAMERS:  Timo Kreuzer
  */
-#define MINGW_HAS_SECURE_API 1
+
+#define MINGW_HAS_SECURE_API
 
 #include <errno.h>
 #define RC_INVOKED 1 // to prevent inline functions

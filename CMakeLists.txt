@@ -152,7 +152,7 @@ else()
                     -D_WIN32_WINNT=0x502
                     -D_WIN32_WINDOWS=0x502
                     -D_SETUPAPI_VER=0x502
-                    -DMINGW_HAS_SECURE_API=1)
+                    -DMINGW_HAS_SECURE_API)
 
     # Arch Options
     if(ARCH STREQUAL "i386")

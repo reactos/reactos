@@ -8,7 +8,7 @@
 #define _INC_TIME_INL
 
 /* needed to expose _s api definitions */
-#define MINGW_HAS_SECURE_API 1
+#define MINGW_HAS_SECURE_API
 
 /* Headers to be compiled */
 #include <stdlib.h>

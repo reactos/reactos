@@ -7,7 +7,7 @@
  *                  Samuel Serapión
  */
 
-#define MINGW_HAS_SECURE_API 1
+#define MINGW_HAS_SECURE_API
 
 #include <stdio.h>
 #include <stdarg.h>
