@@ -133,11 +133,11 @@ else()
     endif()
 
     if(KDBG)
-        add_definitions(-DKDBG=1)
+        add_definitions(-DKDBG)
     endif()
 
     if(_WINKD_)
-        add_definitions(-D_WINKD_=1)
+        add_definitions(-D_WINKD_)
     endif()
 
     if(CMAKE_VERSION MATCHES "ReactOS")
