@@ -23,6 +23,12 @@
 #include <errno.h>
 #include "wine/test.h"
 
+#ifdef __REACTOS__
+#if defined(__GNUC__) && __GNUC__ >= 7
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than=9223372036854775807"
+#endif
+#endif
+
 static void (__cdecl *p_aligned_free)(void*) = NULL;
 static void * (__cdecl *p_aligned_malloc)(size_t,size_t) = NULL;
 static void * (__cdecl *p_aligned_offset_malloc)(size_t,size_t,size_t) = NULL;
@@ -489,13 +495,13 @@ START_TEST(heap)
 
     mem = realloc(NULL, 10);
     ok(mem != NULL, "memory not allocated\n");
-    
+
     mem = realloc(mem, 20);
     ok(mem != NULL, "memory not reallocated\n");
- 
+
     mem = realloc(mem, 0);
     ok(mem == NULL, "memory not freed\n");
-    
+
     mem = realloc(NULL, 0);
     ok(mem != NULL, "memory not (re)allocated for size 0\n");
 

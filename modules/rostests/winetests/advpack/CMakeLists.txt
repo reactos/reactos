@@ -1,6 +1,10 @@
 
 add_definitions(-DUSE_WINE_TODOS)
 
+if(GCC AND GCC_VERSION VERSION_GREATER 7)
+    add_compile_flags("-Wno-format-overflow")
+endif()
+
 list(APPEND SOURCE
     advpack.c
     files.c
