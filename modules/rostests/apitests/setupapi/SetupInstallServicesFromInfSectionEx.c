@@ -25,6 +25,7 @@
 #include <winreg.h>
 #include <winsvc.h>
 #include <setupapi.h>
+#include <strsafe.h>
 
 static const char inffile[] = "test.inf";
 static char CURR_DIR[MAX_PATH];
@@ -72,7 +73,7 @@ static void test_SetupInstallServicesFromInfSectionExA(void)
     /* Basic inf file to satisfy SetupOpenInfFileA */
     strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
     create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    StringCbPrintfA(path, sizeof(path), "%s\\%s", CURR_DIR, inffile);
     infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
 
     /* Nothing but the Version section */
@@ -193,7 +194,7 @@ static void test_SetupInstallServicesFromInfSectionExA(void)
     strcat(inf, "[XSP.InstallPerVer]\n");
     strcat(inf, "AddReg=AspEventlogMsg.Reg,Perf.Reg,AspVersions.Reg,FreeADO.Reg,IndexServer.Reg\n");
     create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    StringCbPrintfA(path, sizeof(path), "%s\\%s", CURR_DIR, inffile);
     infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
 
     SetLastError(0xdeadbeef);
@@ -227,7 +228,7 @@ static void test_SetupInstallServicesFromInfSectionExW(void)
     /* Basic inf file to satisfy SetupOpenInfFileA */
     strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
     create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    StringCbPrintfA(path, sizeof(path), "%s\\%s", CURR_DIR, inffile);
     infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
 
     /* Nothing but the Version section */
@@ -348,7 +349,7 @@ static void test_SetupInstallServicesFromInfSectionExW(void)
     strcat(inf, "[XSP.InstallPerVer]\n");
     strcat(inf, "AddReg=AspEventlogMsg.Reg,Perf.Reg,AspVersions.Reg,FreeADO.Reg,IndexServer.Reg\n");
     create_inf_file(inffile, inf);
-    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    StringCbPrintfA(path, sizeof(path), "%s\\%s", CURR_DIR, inffile);
     infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
 
     SetLastError(0xdeadbeef);
@@ -364,7 +365,7 @@ static void test_SetupInstallServicesFromInfSectionExW(void)
 
 START_TEST(SetupInstallServicesFromInfSectionEx)
 {
-    char temp_path[MAX_PATH], prev_path[MAX_PATH]; 
+    char temp_path[MAX_PATH], prev_path[MAX_PATH];
 
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPathA(MAX_PATH, temp_path);

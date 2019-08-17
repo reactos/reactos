@@ -17,6 +17,7 @@
 #endif
 #include <winerror.h>
 #include <stdio.h>
+#include <strsafe.h>
 
 #include "wine/test.h"
 #include "apitest_iathook.h"
@@ -310,9 +311,9 @@ static void test_SdbGetPermLayerKeys(void)
         skip("Skipping tests for HKLM, cannot alter the registry\n");
     }
     /* Fail from these paths */
-    sprintf(tmp, "\\?\\%s", file);
+    StringCbPrintfA(tmp, sizeof(tmp), "\\?\\%s", file);
     expect_Sdb(tmp, GPLK_USER, FALSE, 0xffffffff, "");
-    sprintf(tmp, "\\??\\%s", file);
+    StringCbPrintfA(tmp, sizeof(tmp), "\\??\\%s", file);
     expect_Sdb(tmp, GPLK_USER, FALSE, 0xffffffff, "");
 
     ok(setLayerValue(FALSE, file, "!#!# RUNASADMIN RUNASADMIN  !#  WINXPSP3    "), "Expected setLayerValue not to fail\n");
