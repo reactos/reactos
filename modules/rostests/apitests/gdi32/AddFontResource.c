@@ -11,7 +11,7 @@
 
 void Test_AddFontResourceA()
 {
-    CHAR szFileNameA[MAX_PATH];
+    CHAR szFileNameA[MAX_PATH*2 + 3];
     CHAR szFileNameFont1A[MAX_PATH];
     CHAR szFileNameFont2A[MAX_PATH];
     int result;
@@ -24,7 +24,7 @@ void Test_AddFontResourceA()
     memcpy(szFileNameFont2A,szFileNameA,MAX_PATH );
     strcat(szFileNameFont2A, "\\bin\\testdata\\test.otf");
 
-    RtlZeroMemory(szFileNameA,MAX_PATH);
+    RtlZeroMemory(szFileNameA, sizeof(szFileNameA));
 
     /*
      * Start testing Ansi version

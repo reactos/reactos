@@ -57,7 +57,7 @@ typedef struct UNICODE_STRING {
     USHORT Length;
     USHORT MaximumLength;
     PWSTR  Buffer;
-} UNICODE_STRING, *PUNICODE_STRING; 
+} UNICODE_STRING, *PUNICODE_STRING;
 
 typedef struct _RTLP_CURDIR_REF
 {
@@ -207,7 +207,8 @@ typedef struct DirComponents
 	char szCD[512];
 	char szCDPlusSlash[512];
 	char* pszLastCDComponent;
-	char szCurDrive[4];
+	char szCurDrive[3];
+	char reserved1;
 	char szCurDriveSlash[4];
 	char szParentDir[512];
 	char szParentDirPlusSlash[512];
@@ -346,7 +347,7 @@ int main()
 #endif // PRINT_INFO
 
 	DirComponents cd;
-	char szTmp[512];
+	char szTmp[518];
 
 #ifndef COMPILE_AS_ROSTEST
 	InitFunctionPointer();

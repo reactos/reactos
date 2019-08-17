@@ -73,7 +73,7 @@ TestGetVolumeInformationW(VOID)
     WCHAR Outbuf[MAX_PATH];
     DWORD i, MCL, Flags, Len;
 
-    memset(Outbuf, 0xAA, MAX_PATH);
+    memset(Outbuf, 0xAA, sizeof(Outbuf));
     Ret = GetVolumeInformationW(L"C:\\", NULL, 0, NULL, &MCL, &Flags, Outbuf, MAX_PATH);
     ok(Ret != FALSE, "GetVolumeInformationW failed: %ld\n", GetLastError());
     for (i = 0; i < MAX_PATH; ++i)
@@ -85,7 +85,7 @@ TestGetVolumeInformationW(VOID)
     }
     ok(i != MAX_PATH, "String was not null terminated!\n");
 
-    memset(Outbuf, 0xAA, MAX_PATH);
+    memset(Outbuf, 0xAA, sizeof(Outbuf));
     Len = i;
     Ret = GetVolumeInformationW(L"C:\\", NULL, 0, NULL, &MCL, &Flags, Outbuf, Len + 1);
     ok(Ret != FALSE, "GetVolumeInformationW failed: %ld\n", GetLastError());
@@ -99,7 +99,7 @@ TestGetVolumeInformationW(VOID)
     ok(i != MAX_PATH, "String was not null terminated!\n");
     ok(i == Len, "String was truncated\n");
 
-    memset(Outbuf, 0xAA, MAX_PATH);
+    memset(Outbuf, 0xAA, sizeof(Outbuf));
     Len = i;
     SetLastError(0xdeadbeef);
     Ret = GetVolumeInformationW(L"C:\\", NULL, 0, NULL, &MCL, &Flags, Outbuf, Len);
