@@ -2158,6 +2158,7 @@ UDFMarkAllocatedAsNotXXX(
         Extent[i].extLocation = 0;
         Extent[i].extLength = (Extent[i].extLength & UDF_EXTENT_LENGTH_MASK) | flags;
         NewExtent = Extent;
+        Extent = NULL;
         AdPrint(("Alloc->Not (1) NewExtent = Extent = %x\n", NewExtent));
     } else
     if(l < BOffs) {
@@ -2211,15 +2212,17 @@ UDFMarkAllocatedAsNotXXX(
     if(Deallocate)
         UDFMarkSpaceAsXXX(Vcb, (-1), TmpExtInf.Mapping, AS_DISCARDED); // mark as free
 
+    ExtInfo->Modified = TRUE;
+    ExtInfo->Mapping = NewExtent;
+    
+    AdPrint(("Alloc->Not: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
+
     if(Extent) {
         AdPrint(("Alloc->Not kill %x\n", Extent));
         MyFreePool__(Extent);
     } else {
         AdPrint(("Alloc->Not keep %x\n", Extent));
     }
-    ExtInfo->Modified = TRUE;
-    ExtInfo->Mapping = NewExtent;
-    AdPrint(("Alloc->Not: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
 
     return STATUS_SUCCESS;
 } // end UDFMarkAllocatedAsNotXXX()
