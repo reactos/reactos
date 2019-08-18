@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+#define ROSCOMPAT_HOST
+#include <roscompat.h>
+
 #ifdef _MSC_VER
 #define strcasecmp(_String1, _String2) _stricmp(_String1, _String2)
 #define strncasecmp(_String1, _String2, _MaxCount) _strnicmp(_String1, _String2, _MaxCount)
@@ -28,8 +31,7 @@ typedef struct
     int anArgs[30];
     unsigned int uFlags;
     int nNumber;
-    unsigned nStartVersion;
-    unsigned nEndVersion;
+    unsigned uVersionMask;
     int bVersionIncluded;
 } EXPORT;
 
@@ -107,6 +109,31 @@ enum
     ARG_INT128,
     ARG_FLOAT
 };
+
+unsigned
+GetVersionMask(unsigned uStartVersion, unsigned uEndVersion)
+{
+    unsigned uMask = 0;
+    if ((uStartVersion <= 0x400) && (uEndVersion >= 0x400))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_NT4);
+    if ((uStartVersion <= 0x500) && (uEndVersion >= 0x500))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WIN2K);
+    if ((uStartVersion <= 0x501) && (uEndVersion >= 0x501))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WINXP);
+    if ((uStartVersion <= 0x502) && (uEndVersion >= 0x502))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WS03);
+    if ((uStartVersion <= 0x600) && (uEndVersion >= 0x600))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_VISTA);
+    if ((uStartVersion <= 0x601) && (uEndVersion >= 0x601))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WIN7);
+    if ((uStartVersion <= 0x602) && (uEndVersion >= 0x602))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WIN8);
+    if ((uStartVersion <= 0x603) && (uEndVersion >= 0x603))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WIN81);
+    if ((uStartVersion <= 0xA00) && (uEndVersion >= 0xA00))
+        uMask |= (1 << ROSCOMPAT_VERSION_BIT_WIN10);
+    return uMask;
+}
 
 const char* astrCallingConventions[] =
 {
@@ -867,8 +894,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
         exp.nArgCount = 0;
         exp.uFlags = 0;
         exp.nNumber++;
-        exp.nStartVersion = 0;
-        exp.nEndVersion = 0xFFFFFFFF;
+        exp.uVersionMask = 0xFFF;
         exp.bVersionIncluded = 1;
 
         /* Skip white spaces */
@@ -996,6 +1022,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
                 /* Default to not included */
                 exp.bVersionIncluded = 0;
+                exp.uVersionMask = 0;
                 pc += 8;
 
                 /* Look if we are included */
@@ -1035,8 +1062,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                               "Invalid version range");
                     }
 
-                    exp.nStartVersion = version;
-                    exp.nEndVersion = endversion;
+                    exp.uVersionMask |= GetVersionMask(version, endversion);
 
                     /* Now compare the range with our version */
                     if ((guOsVersion >= version) &&
@@ -1320,6 +1346,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     {
         if (pexports[i].uFlags & FL_ORDINAL)
         {
+            assert(pexports[i].nOrdinal >= 0 && pexports[i].nOrdinal <= 0xFFF);
             if (used[pexports[i].nOrdinal] != 0)
             {
                 fprintf(stderr, "Found duplicate ordinal: %u\n", pexports[i].nOrdinal);
@@ -1332,10 +1359,17 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     /* Pass 2: apply available ordinals */
     for (i = 0, j = 1; i < cExports; i++)
     {
-        if ((pexports[i].uFlags & FL_ORDINAL) == 0 && pexports[i].bVersionIncluded)
+        if ((pexports[i].uFlags & FL_ORDINAL) == 0)
         {
             while (used[j] != 0)
+            {
+                if (j >= 0xFFF)
+                {
+                    fprintf(stderr, "Ran out of ordinals.");
+                    return -1;
+                }
                 j++;
+            }
 
             pexports[i].nOrdinal = j;
             used[j] = 1;
@@ -1360,6 +1394,68 @@ void usage(void)
            "  --no-private-warnings   suppress warnings about symbols that should be -private\n"
            "  -a=<arch>               set architecture to <arch> (i386, x86_64, arm)\n"
            "  --with-tracing          generate wine-like \"+relay\" trace trampolines (needs -s)\n");
+}
+
+// HACK, because mingw headers
+#define MIN(a,b) ((a) <= (b) ? (a) : (b))
+
+int CompareExports(const void* pLeft,const void* pRight)
+{
+    EXPORT *pexpLeft = (EXPORT*)pLeft;
+    EXPORT *pexpRight = (EXPORT*)pRight;
+    int result = strncmp(pexpLeft->strName.buf,
+                         pexpRight->strName.buf,
+                         MIN(pexpLeft->strName.len,
+                             pexpRight->strName.len));
+    if (result == 0)
+    {
+        return (pexpLeft->strName.len < pexpRight->strName.len) ? -1 : 1;
+    }
+
+    return result;
+}
+
+void
+Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
+{
+    unsigned int i;
+
+    /// HACK: should make a copy
+    qsort(pexports, cExports, sizeof(EXPORT), CompareExports);
+
+    fprintf(file, "ULONG __roscompat_export_masks__[] =\n{\n");
+    
+    for (i = 0; i < cExports; i++)
+    {
+        if ((pexports[i].uFlags & FL_NONAME) == 0)
+        {
+            fprintf(file,
+                    "    0x%08x, // %.*s\n",
+                    pexports[i].uVersionMask,
+                    pexports[i].strName.len,
+                    pexports[i].strName.buf);
+        }
+    }
+
+    fprintf(file,
+            "    0x0 // dummy \n"
+            "};\n"
+            "\n"
+            "IMAGE_EXPORT_DIRECTORY __roscompat_magic_export_dir__;\n"
+            "#if defined(_MSC_VER)\n"
+            "#pragma section(\".expvers\")\n"
+            "__declspec(allocate(\".expvers\"))\n"
+            "#elif defined(__GNUC__)\n"
+            "__attribute__ ((section(\".expvers\")))\n"
+            "#else\n"
+            "#error Your compiler is not supported (fix in spec2def).\n"
+            "#endif\n"
+            "ROSCOMPAT_DESCRIPTOR __roscompat_descriptor__ = \n"
+            "{\n"
+            "    __roscompat_export_masks__,\n"
+            "    (sizeof(__roscompat_export_masks__) / sizeof(__roscompat_export_masks__[0])) - 1,\n"
+            "   &__roscompat_magic_export_dir__\n"
+            "};\n");
 }
 
 int main(int argc, char *argv[])
@@ -1539,7 +1635,7 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            if (pexports[i].bVersionIncluded)
+            //if (pexports[i].bVersionIncluded)
                  OutputLine_def(file, &pexports[i]);
         }
 
@@ -1560,9 +1656,11 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            if (pexports[i].bVersionIncluded)
+            //if (pexports[i].bVersionIncluded)
                 OutputLine_stub(file, &pexports[i]);
         }
+
+        Output_RosCompatDescriptor(file, pexports, cExports);
 
         fclose(file);
     }
@@ -1581,7 +1679,7 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            if (pexports[i].bVersionIncluded)
+            //if (pexports[i].bVersionIncluded)
                 OutputLine_asmstub(file, &pexports[i]);
         }
 
