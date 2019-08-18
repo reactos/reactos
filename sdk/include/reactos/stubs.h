@@ -1,5 +1,6 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
+#include <roscompat.h>
 
 #ifndef PRIx64
 #define PRIx64 "I64x"
