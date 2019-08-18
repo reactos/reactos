@@ -1042,6 +1042,18 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
             TRACE("Couldn't launch\n");
             goto error;
         }
+        /* if ddeexec is NULL, then we just need to exit here */
+        if (ddeexec == NULL)
+        {
+            TRACE("Exiting because ddeexec is NULL. ret=33.\n");
+            return 33; /* FIXME see SHELL_FindExecutable() */
+        }
+        /* if ddeexec is 'empty string', then we just need to exit here */
+        if (wcscmp(ddeexec, L"") == 0)
+        {
+            TRACE("Exiting because ddeexec is 'empty string'. ret=33.\n");
+            return 33; /* FIXME see SHELL_FindExecutable() */
+        }
         hConv = DdeConnect(ddeInst, hszApp, hszTopic, NULL);
         if (!hConv)
         {
