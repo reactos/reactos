@@ -155,16 +155,7 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
                 timeElapsed = GetTickCount() - dwStartTime;
                 if (timeElapsed < 1000)
                 {
-                    /*
-                     * For whatever reason, x86 MSVC generates a ntdll!_allmul
-                     * call when using Int32x32To64(), instead of an imul
-                     * instruction. This leads the linker to error that _allmul
-                     * is missing, since we do not link against ntdll.
-                     * Everything is however OK with GCC...
-                     * We therefore use the __emul() intrinsic which does
-                     * the correct job.
-                     */
-                    DueTime.QuadPart = __emul(1000 - timeElapsed, -10000);
+                    DueTime.QuadPart = Int32x32To64(1000 - timeElapsed, -10000);
                     SetWaitableTimer(hTimer, &DueTime, 0, NULL, NULL, FALSE);
                     dwWaitState = WaitForSingleObject(hTimer, INFINITE);
 
