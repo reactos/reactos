@@ -1,0 +1,32 @@
+/*!
+    \brief Header shared by ntdll/ldr and spec2def
+*/
+#pragma once
+
+#ifdef ROSCOMPAT_HOST
+#include "../host/pecoff.h"
+#else
+#endif
+
+typedef enum _ROSCOMPAT_VERSION_BIT
+{
+    ROSCOMPAT_VERSION_BIT_NT4 = 0,
+    ROSCOMPAT_VERSION_BIT_WIN2K = 1,
+    ROSCOMPAT_VERSION_BIT_WINXP = 2,
+    ROSCOMPAT_VERSION_BIT_WS03 = 3,
+    ROSCOMPAT_VERSION_BIT_VISTA = 4,
+    ROSCOMPAT_VERSION_BIT_WIN7 = 5,
+    ROSCOMPAT_VERSION_BIT_WIN8 = 6,
+    ROSCOMPAT_VERSION_BIT_WIN81 = 7,
+    ROSCOMPAT_VERSION_BIT_WIN10 = 8,
+} ROSCOMPAT_VERSION_BIT;
+
+typedef ULONG ROSCOMPAT_VERMASK;
+
+typedef struct _ROSCOMPAT_DESCRIPTOR
+{
+    ROSCOMPAT_VERMASK* ExportNameMasks; // Array with size NumberOfExportNames
+    ROSCOMPAT_VERMASK NumberOfExportNames;
+    PIMAGE_EXPORT_DIRECTORY MagicExportDir;
+} ROSCOMPAT_DESCRIPTOR, * PROSCOMPAT_DESCRIPTOR;
+
