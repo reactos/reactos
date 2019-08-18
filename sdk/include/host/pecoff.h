@@ -1,5 +1,7 @@
 #pragma once
 
+#include "typedefs.h"
+
 #define IMAGE_NT_OPTIONAL_HDR32_MAGIC 0x010b
 #define IMAGE_NT_OPTIONAL_HDR64_MAGIC 0x020b
 
@@ -86,6 +88,22 @@ typedef struct _IMAGE_DOS_HEADER {
 #pragma pack(pop)
 
 #pragma pack(push,4)
+typedef struct _IMAGE_EXPORT_DIRECTORY {
+  ULONG Characteristics;
+  ULONG TimeDateStamp;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  ULONG Name;
+  ULONG Base;
+  ULONG NumberOfFunctions;
+  ULONG NumberOfNames;
+  ULONG AddressOfFunctions;
+  ULONG AddressOfNames;
+  ULONG AddressOfNameOrdinals;
+} IMAGE_EXPORT_DIRECTORY, * PIMAGE_EXPORT_DIRECTORY;
+#pragma pack(pop)
+
+#pragma pack(push,4)
 typedef struct _IMAGE_FILE_HEADER {
 	WORD Machine;
 	WORD NumberOfSections;
@@ -102,7 +120,7 @@ typedef struct _IMAGE_DATA_DIRECTORY {
   DWORD Size;
 } IMAGE_DATA_DIRECTORY,*PIMAGE_DATA_DIRECTORY;
 
-typedef struct _IMAGE_OPTIONAL_HEADER32 {
+typedef struct _IMAGE_OPTIONAL_HEADER {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
 	BYTE MinorLinkerVersion;

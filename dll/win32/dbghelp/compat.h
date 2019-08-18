@@ -153,6 +153,7 @@ INT __WideCharToMultiByte( UINT page, DWORD flags, LPCWSTR src, INT srclen, LPST
 #define IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG	10
 #define IMAGE_DEBUG_MISC_EXENAME 1
 #define IMAGE_SEPARATE_DEBUG_SIGNATURE 0x4944
+#if 0
 typedef struct _IMAGE_EXPORT_DIRECTORY {
   DWORD Characteristics;
   DWORD TimeDateStamp;
@@ -166,6 +167,7 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
   DWORD AddressOfNames;
   DWORD AddressOfNameOrdinals;
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
+#endif
 typedef struct _IMAGE_DEBUG_MISC {
   DWORD DataType;
   DWORD Length;

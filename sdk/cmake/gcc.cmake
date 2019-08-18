@@ -370,11 +370,17 @@ function(fixup_load_config _target)
         DEPENDS native-pefixup)
 endfunction()
 
-function(generate_import_lib _libname _dllname _spec_file __version_arg)
+if(ENABLE_EXPORT_VERSIONING)
+    set(SPEC2DEF_NOROSCOMPAT "")
+else()
+    set(SPEC2DEF_NOROSCOMPAT "--noroscompat")
+endif()
+
+function(generate_import_lib _libname _dllname _spec_file __version_arg __roscompat_arg)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def ${__version_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__roscompat_arg} ${__version_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
@@ -424,7 +430,7 @@ endfunction()
 
 function(spec2def _dllname _spec_file)
 
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY;KERNELMODE" "VERSION" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -438,7 +444,11 @@ function(spec2def _dllname _spec_file)
         set(__with_relay_arg "--with-tracing")
     endif()
 
-    if(__spec2def_VERSION)
+    set(__roscompat_arg ${SPEC2DEF_NOROSCOMPAT})
+    if(__spec2def_KERNELMODE)
+        set(__version_arg "--version=0x502")
+        set(__roscompat_arg "--noroscompat")
+    elseif(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
     else()
         set(__version_arg "--version=${DLL_EXPORT_VERSION}")
@@ -447,7 +457,7 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__roscompat_arg} -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Do not use precompiled headers for the stub file
@@ -459,7 +469,7 @@ function(spec2def _dllname _spec_file)
             set(_extraflags --no-private-warnings)
         endif()
 
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags} "${__version_arg}")
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags} "${__version_arg}" "${__roscompat_arg}")
     endif()
 endfunction()
 

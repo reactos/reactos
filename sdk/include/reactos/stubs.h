@@ -1,4 +1,9 @@
 
+#pragma once
+#define __STUBS__H__
+
+#include <roscompat.h>
+
 #ifndef _WINDEF_
 typedef unsigned short wchar_t;
 typedef unsigned long DWORD, ULONG;

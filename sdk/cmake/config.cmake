@@ -115,5 +115,8 @@ endif()
 set(USE_DUMMY_PSEH FALSE CACHE BOOL
 "Whether to disable PSEH support.")
 
-set(DLL_EXPORT_VERSION "0x502" CACHE STRING
+set(DLL_EXPORT_VERSION "0xFFF" CACHE STRING
 "The NT version the user mode DLLs target.")
+
+set(ENABLE_EXPORT_VERSIONING TRUE CACHE BOOL
+"Whether to enable export patching based on appcompat version.")

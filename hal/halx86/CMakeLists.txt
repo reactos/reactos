@@ -12,7 +12,7 @@ function(add_hal _halname)
     cmake_parse_arguments(_haldata "" "" "SOURCES;COMPONENTS" ${ARGN})
 
     # Handle the spec file for the dll name
-    spec2def(${_halname}.dll ../hal.spec ADD_IMPORTLIB)
+    spec2def(${_halname}.dll ../hal.spec ADD_IMPORTLIB KERNELMODE)
 
     # Create the actual target
     foreach(_component ${_haldata_COMPONENTS})

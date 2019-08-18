@@ -313,7 +313,13 @@ function(fixup_load_config _target)
     # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
-function(generate_import_lib _libname _dllname _spec_file __version_arg)
+if(ENABLE_EXPORT_VERSIONING)
+    set(SPEC2DEF_NOROSCOMPAT "")
+else()
+    set(SPEC2DEF_NOROSCOMPAT "--noroscompat")
+endif()
+
+function(generate_import_lib _libname _dllname _spec_file __version_arg __roscompat_arg)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
@@ -322,7 +328,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
     # Generate the def, asm stub and alias files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file} ${_asm_impalias_file}
-        COMMAND native-spec2def --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__roscompat_arg} --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
@@ -372,7 +378,7 @@ else()
 endif()
 function(spec2def _dllname _spec_file)
 
-    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY;KERNELMODE" "VERSION" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -386,7 +392,11 @@ function(spec2def _dllname _spec_file)
         set(__with_relay_arg "--with-tracing")
     endif()
 
-    if(__spec2def_VERSION)
+    set(__roscompat_arg ${SPEC2DEF_NOROSCOMPAT})
+    if(__spec2def_KERNELMODE)
+        set(__version_arg "--version=0x502")
+        set(__roscompat_arg "--noroscompat")
+    elseif(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
     else()
         set(__version_arg "--version=${DLL_EXPORT_VERSION}")
@@ -395,14 +405,14 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__roscompat_arg} --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Do not use precompiled headers for the stub file
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}")
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}" "${__roscompat_arg}")
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
         endif()
