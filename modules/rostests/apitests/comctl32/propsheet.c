@@ -18,7 +18,7 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
     s_bNotified = FALSE;
     SetDlgItemTextW(hwnd, edt1, L"text");
-    SetTimer(hwnd, 999, 500, NULL);
+    SetTimer(hwnd, 999, 300, NULL);
     return TRUE;
 }
 
