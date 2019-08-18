@@ -77,8 +77,7 @@ DnsCToW(const CHAR *NarrowString)
                                       0);
     if (WideLen == 0)
         return NULL;
-    WideLen *= sizeof(WCHAR);
-    WideString = RtlAllocateHeap(RtlGetProcessHeap(), 0, WideLen);
+    WideString = RtlAllocateHeap(RtlGetProcessHeap(), 0, WideLen * sizeof(WCHAR));
     if (WideString == NULL)
     {
         return NULL;
@@ -93,8 +92,67 @@ DnsCToW(const CHAR *NarrowString)
     return WideString;
 }
 
+static PCHAR
+DnsWToUTF8(const WCHAR *WideString)
+{
+    PCHAR AnsiString;
+    int AnsiLen = WideCharToMultiByte(CP_UTF8,
+                                      0,
+                                      WideString,
+                                      -1,
+                                      NULL,
+                                      0,
+                                      NULL,
+                                      0);
+    if (AnsiLen == 0)
+        return NULL;
+    AnsiString = RtlAllocateHeap(RtlGetProcessHeap(), 0, AnsiLen);
+    if (AnsiString == NULL)
+    {
+        return NULL;
+    }
+    WideCharToMultiByte(CP_UTF8,
+                        0,
+                        WideString,
+                        -1,
+                        AnsiString,
+                        AnsiLen,
+                        NULL,
+                        0);
+
+    return AnsiString;
+}
+
+static PWCHAR
+DnsUTF8ToW(const CHAR *NarrowString)
+{
+    PWCHAR WideString;
+    int WideLen = MultiByteToWideChar(CP_UTF8,
+                                      0,
+                                      NarrowString,
+                                      -1,
+                                      NULL,
+                                      0);
+    if (WideLen == 0)
+        return NULL;
+    WideString = RtlAllocateHeap(RtlGetProcessHeap(), 0, WideLen * sizeof(WCHAR));
+    if (WideString == NULL)
+    {
+        return NULL;
+    }
+    MultiByteToWideChar(CP_UTF8,
+                        0,
+                        NarrowString,
+                        -1,
+                        WideString,
+                        WideLen);
+
+    return WideString;
+}
+
 DNS_STATUS WINAPI
-DnsQuery_A(LPCSTR Name,
+DnsQuery_CodePage(UINT CodePage,
+           LPCSTR Name,
            WORD Type,
            DWORD Options,
            PIP4_ARRAY Servers,
@@ -112,7 +170,19 @@ DnsQuery_A(LPCSTR Name,
     if (QueryResultSet == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    Buffer = DnsCToW(Name);
+    switch (CodePage)
+    {
+    case CP_ACP:
+        Buffer = DnsCToW(Name);
+        break;
+
+    case CP_UTF8:
+        Buffer = DnsUTF8ToW(Name);
+        break;
+
+    default:
+        return ERROR_INVALID_PARAMETER;
+    }
 
     Status = DnsQuery_W(Buffer, Type, Options, Servers, &QueryResultWide, Reserved);
 
@@ -122,9 +192,46 @@ DnsQuery_A(LPCSTR Name,
         {
         case DNS_TYPE_A:
         case DNS_TYPE_WKS:
+        case DNS_TYPE_CNAME:
+        case DNS_TYPE_PTR:
+        case DNS_TYPE_NS:
+        case DNS_TYPE_MB:
+        case DNS_TYPE_MD:
+        case DNS_TYPE_MF:
+        case DNS_TYPE_MG:
+        case DNS_TYPE_MR:
             ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
+            break;
+
+        case DNS_TYPE_MINFO:
+            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_TXT_DATA) + QueryResultWide->Data.TXT.dwStringCount);
+            break;
+
+        case DNS_TYPE_NULL:
+            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_NULL_DATA) + QueryResultWide->Data.Null.dwByteCount);
+            break;
+        }
+        if (ConvertedRecord == NULL)
+        {
+            /* The name */
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+            /* The result*/
+            DnsIntFreeRecordList(QueryResultWide);
+            QueryResultSet = NULL;
+            return ERROR_OUTOFMEMORY;
+        }
+
+        if (CodePage == CP_ACP)
             ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
+        else
+            ConvertedRecord->pName = DnsWToUTF8((PWCHAR)QueryResultWide->pName);
+
+        ConvertedRecord->wType = QueryResultWide->wType;
+
+        switch (QueryResultWide->wType)
+        {
+        case DNS_TYPE_A:
+        case DNS_TYPE_WKS:
             ConvertedRecord->wDataLength = QueryResultWide->wDataLength;
             memcpy(&ConvertedRecord->Data, &QueryResultWide->Data, QueryResultWide->wDataLength);
             break;
@@ -137,47 +244,50 @@ DnsQuery_A(LPCSTR Name,
         case DNS_TYPE_MF:
         case DNS_TYPE_MG:
         case DNS_TYPE_MR:
-            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-            ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
             ConvertedRecord->wDataLength = sizeof(DNS_PTR_DATA);
-            ConvertedRecord->Data.PTR.pNameHost = DnsWToC((PWCHAR)QueryResultWide->Data.PTR.pNameHost);
+            if (CodePage == CP_ACP)
+                ConvertedRecord->Data.PTR.pNameHost = DnsWToC((PWCHAR)QueryResultWide->Data.PTR.pNameHost);
+            else
+                ConvertedRecord->Data.PTR.pNameHost = DnsWToUTF8((PWCHAR)QueryResultWide->Data.PTR.pNameHost);
             break;
 
         case DNS_TYPE_MINFO:
-            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-            ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
             ConvertedRecord->wDataLength = sizeof(DNS_MINFO_DATA);
-            ConvertedRecord->Data.MINFO.pNameMailbox = DnsWToC((PWCHAR)QueryResultWide->Data.MINFO.pNameMailbox);
-            ConvertedRecord->Data.MINFO.pNameErrorsMailbox = DnsWToC((PWCHAR)QueryResultWide->Data.MINFO.pNameErrorsMailbox);
+            if (CodePage == CP_ACP)
+            {
+                ConvertedRecord->Data.MINFO.pNameMailbox = DnsWToC((PWCHAR)QueryResultWide->Data.MINFO.pNameMailbox);
+                ConvertedRecord->Data.MINFO.pNameErrorsMailbox = DnsWToC((PWCHAR)QueryResultWide->Data.MINFO.pNameErrorsMailbox);
+            }
+            else
+            {
+                ConvertedRecord->Data.MINFO.pNameMailbox = DnsWToUTF8((PWCHAR)QueryResultWide->Data.MINFO.pNameMailbox);
+                ConvertedRecord->Data.MINFO.pNameErrorsMailbox = DnsWToUTF8((PWCHAR)QueryResultWide->Data.MINFO.pNameErrorsMailbox);
+            }
             break;
 
         case DNS_TYPE_MX:
-            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-            ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
             ConvertedRecord->wDataLength = sizeof(DNS_MX_DATA);
-            ConvertedRecord->Data.MX.pNameExchange = DnsWToC((PWCHAR)QueryResultWide->Data.MX.pNameExchange);
+            if (CodePage == CP_ACP)
+                ConvertedRecord->Data.MX.pNameExchange = DnsWToC((PWCHAR)QueryResultWide->Data.MX.pNameExchange);
+            else
+                ConvertedRecord->Data.MX.pNameExchange = DnsWToUTF8((PWCHAR)QueryResultWide->Data.MX.pNameExchange);
             ConvertedRecord->Data.MX.wPreference = QueryResultWide->Data.MX.wPreference;
             break;
 
         case DNS_TYPE_HINFO:
-            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_TXT_DATA) + QueryResultWide->Data.TXT.dwStringCount);
-            ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
             ConvertedRecord->wDataLength = sizeof(DNS_TXT_DATA) + (sizeof(PCHAR) * QueryResultWide->Data.TXT.dwStringCount);
             ConvertedRecord->Data.TXT.dwStringCount = QueryResultWide->Data.TXT.dwStringCount;
 
-            for (i = 0; i < ConvertedRecord->Data.TXT.dwStringCount; i++)
-                ConvertedRecord->Data.TXT.pStringArray[i] = DnsWToC((PWCHAR)QueryResultWide->Data.TXT.pStringArray[i]);
+            if (CodePage == CP_ACP)
+                for (i = 0; i < ConvertedRecord->Data.TXT.dwStringCount; i++)
+                    ConvertedRecord->Data.TXT.pStringArray[i] = DnsWToC((PWCHAR)QueryResultWide->Data.TXT.pStringArray[i]);
+            else
+                for (i = 0; i < ConvertedRecord->Data.TXT.dwStringCount; i++)
+                    ConvertedRecord->Data.TXT.pStringArray[i] = DnsWToUTF8((PWCHAR)QueryResultWide->Data.TXT.pStringArray[i]);
 
             break;
 
         case DNS_TYPE_NULL:
-            ConvertedRecord = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_NULL_DATA) + QueryResultWide->Data.Null.dwByteCount);
-            ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
-            ConvertedRecord->wType = QueryResultWide->wType;
             ConvertedRecord->wDataLength = sizeof(DNS_NULL_DATA) + QueryResultWide->Data.Null.dwByteCount;
             ConvertedRecord->Data.Null.dwByteCount = QueryResultWide->Data.Null.dwByteCount;
             memcpy(&ConvertedRecord->Data.Null.Data, &QueryResultWide->Data.Null.Data, QueryResultWide->Data.Null.dwByteCount);
@@ -206,6 +316,28 @@ DnsQuery_A(LPCSTR Name,
     if (QueryResultWide) DnsIntFreeRecordList(QueryResultWide);
 
     return Status;
+}
+
+DNS_STATUS WINAPI
+DnsQuery_A(LPCSTR Name,
+           WORD Type,
+           DWORD Options,
+           PIP4_ARRAY Servers,
+           PDNS_RECORD *QueryResultSet,
+           PVOID *Reserved)
+{
+    return DnsQuery_CodePage(CP_ACP, Name, Type, Options, Servers, QueryResultSet, Reserved);
+}
+
+DNS_STATUS WINAPI
+DnsQuery_UTF8(LPCSTR Name,
+              WORD Type,
+              DWORD Options,
+              PIP4_ARRAY Servers,
+              PDNS_RECORD *QueryResultSet,
+              PVOID *Reserved)
+{
+    return DnsQuery_CodePage(CP_UTF8, Name, Type, Options, Servers, QueryResultSet, Reserved);
 }
 
 WCHAR
@@ -687,7 +819,7 @@ DnsQuery_W(LPCWSTR Name,
                   AnsiName[i] == '-' || AnsiName[i] == '_' || AnsiName[i] == '.'))
             {
                 RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return ERROR_INVALID_NAME;
+                return DNS_ERROR_INVALID_NAME_CHAR;
             }
             i++;
         }
@@ -896,18 +1028,6 @@ DnsQuery_W(LPCWSTR Name,
     default:
         return ERROR_OUTOFMEMORY; /* XXX arty: find a better error code. */
     }
-}
-
-DNS_STATUS WINAPI
-DnsQuery_UTF8(LPCSTR Name,
-              WORD Type,
-              DWORD Options,
-              PIP4_ARRAY Servers,
-              PDNS_RECORD *QueryResultSet,
-              PVOID *Reserved)
-{
-    UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
 }
 
 void
