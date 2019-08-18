@@ -115,7 +115,7 @@ ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
     BYTE b0, b1;
     DWORD cw = cb / 2;
     INT flag = 0;
-    UTF8STATE state = UTF8_ACCEPT;
+    UTF8STATE state;
 
     if (cb <= 1)
         return ENCODING_ANSI;
@@ -167,6 +167,7 @@ ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
     }
 
     /* is it UTF-8? */
+    state = UTF8_ACCEPT;
     if (ValidateUTF8(&state, pb, cb) == UTF8_ACCEPT)
         return ENCODING_UTF8;
 
