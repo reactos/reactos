@@ -110,17 +110,17 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     pBytes[dwSize + 1] = '\0';
 
     /* Look for Byte Order Marks */
-    if ((dwSize >= 2) && memcmp(pBytes, "\xFF\xFE", 2) == 0)
+    if ((dwSize >= 2) && (pBytes[0] == 0xFF) && (pBytes[1] == 0xFE))
     {
         encFile = ENCODING_UTF16LE;
         dwPos += 2;
     }
-    else if ((dwSize >= 2) && memcmp(pBytes, "\xFE\xFF", 2) == 0)
+    else if ((dwSize >= 2) && (pBytes[0] == 0xFE) && (pBytes[1] == 0xFF))
     {
         encFile = ENCODING_UTF16BE;
         dwPos += 2;
     }
-    else if ((dwSize >= 3) && memcmp(pBytes, "\xEF\xBB\xBF", 3) == 0)
+    else if ((dwSize >= 3) && (pBytes[0] == 0xEF) && (pBytes[1] == 0xBB) && (pBytes[2] == 0xBF))
     {
         encFile = ENCODING_UTF8;
         dwPos += 3;
