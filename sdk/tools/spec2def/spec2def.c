@@ -153,8 +153,8 @@ ScanToken(const char *token, char chr)
     return 0;
 }
 
-char *
-NextLine(char *pc)
+const char *
+NextLine(const char *pc)
 {
     while (*pc != 0)
     {
@@ -166,7 +166,7 @@ NextLine(char *pc)
 }
 
 int
-TokenLength(char *pc)
+TokenLength(const char *pc)
 {
     int length = 0;
 
@@ -175,8 +175,8 @@ TokenLength(char *pc)
     return length;
 }
 
-char *
-NextToken(char *pc)
+const char *
+NextToken(const char *pc)
 {
     /* Skip token */
     while (!IsSeparator(*pc)) pc++;
@@ -716,8 +716,8 @@ void
 Fatalv(
     const char* filename,
     unsigned nLine,
-    char *pcLine,
-    char *pc,
+    const char *pcLine,
+    const char *pc,
     size_t errorlen,
     const char *format,
     va_list argptr)
@@ -766,8 +766,8 @@ void
 Fatal(
     const char* filename,
     unsigned nLine,
-    char *pcLine,
-    char *pc,
+    const char *pcLine,
+    const char *pc,
     size_t errorlen,
     const char *format,
     ...)
@@ -782,7 +782,7 @@ Fatal(
 int
 ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 {
-    char *pc, *pcLine;
+    const char *pc, *pcLine;
     int nLine;
     EXPORT exp;
     int included, version_included;
@@ -915,7 +915,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             }
             else if (CompareToken(pc, "-version="))
             {
-                char * pcVersionStart = pc + 9;
+                const char *pcVersionStart = pc + 9;
 
                 /* Default to not included */
                 version_included = 0;
@@ -931,7 +931,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     if ((pc[0] == '0') && (pc[1] == 'x')) pc += 2;
 
                     /* Now get the version number */
-                    endversion = version = strtoul(pc, &pc, 16);
+                    endversion = version = strtoul(pc, (char**)&pc, 16);
 
                     /* Check if it's a range */
                     if (pc[0] == '+')
@@ -944,7 +944,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                         /* Optionally skip leading '0x' */
                         pc++;
                         if ((pc[0] == '0') && (pc[1] == 'x')) pc += 2;
-                        endversion = strtoul(pc, &pc, 16);
+                        endversion = strtoul(pc, (char**)&pc, 16);
                     }
 
                     /* Check for degenerate range */
