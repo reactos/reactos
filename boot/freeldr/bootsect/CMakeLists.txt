@@ -30,5 +30,11 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     add_cd_file(TARGET fat32 DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin FOR bootcd regtest)
     add_cd_file(TARGET isoboot DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isoboot.bin FOR all hybridcd)
     add_cd_file(TARGET isobtrt DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isobtrt.bin FOR bootcd regtest)
-
+elseif(ARCH STREQUAL "arm")
+    add_custom_target(fat
+        COMMAND exit 1
+        COMMENT "arm fat target not implemented yet")
+    add_custom_target(fat32
+        COMMAND exit 1
+        COMMENT "arm fat32 target not implemented yet")
 endif()
