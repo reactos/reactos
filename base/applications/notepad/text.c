@@ -48,14 +48,14 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
     return TRUE;
 }
 
-ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
+ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 {
     INT flags = IS_TEXT_UNICODE_STATISTICS;
 
-    if (cb <= 1)
+    if (dwSize <= 1)
         return ENCODING_ANSI;
 
-    if (IsTextUnicode(pb, cb, &flags))
+    if (IsTextUnicode(pBytes, dwSize, &flags))
     {
         return ENCODING_UTF16LE;
     }
@@ -66,8 +66,7 @@ ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
     }
 
     /* is it UTF-8? */
-    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-                            (const char *)pb, cb, NULL, 0))
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
     {
         return ENCODING_UTF8;
     }
@@ -128,7 +127,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     }
     else
     {
-        encFile = AnalyzeEncoding(pBytes, dwSize);
+        encFile = AnalyzeEncoding((const char *)pBytes, dwSize);
     }
 
     switch(encFile)
