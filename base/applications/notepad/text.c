@@ -95,11 +95,11 @@ static const BYTE utf8d[] =
 
 UTF8STATE ValidateUTF8(UTF8STATE *state, const BYTE *pb, DWORD cb)
 {
-    DWORD i, type;
+    DWORD type;
 
-    for (i = 0; i < cb; i++)
+    while (cb-- > 0)
     {
-        type = utf8d[pb[i]];
+        type = utf8d[*pb++];
         *state = utf8d[256 + (*state) * 16 + type];
 
         if (*state == UTF8_REJECT)
