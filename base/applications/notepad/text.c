@@ -4,6 +4,7 @@
  *  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2002 Andriy Palamarchuk
+ *  Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #include "notepad.h"
@@ -45,6 +66,109 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
         *pdwTextLen += dwAppendLen;
     }
     return TRUE;
+}
+
+typedef UINT UTF8STATE;
+#define UTF8_ACCEPT 0
+#define UTF8_REJECT 1
+
+// Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
+// See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
+static const BYTE utf8d[] =
+{
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40..5f
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 60..7f
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, // 80..9f
+    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, // a0..bf
+    8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // c0..df
+    0xa,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x4,0x3,0x3, // e0..ef
+    0xb,0x6,0x6,0x6,0x5,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8, // f0..ff
+    0x0,0x1,0x2,0x3,0x5,0x8,0x7,0x1,0x1,0x1,0x4,0x6,0x1,0x1,0x1,0x1, // s0..s0
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1, // s1..s2
+    1,2,1,1,1,1,1,2,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1, // s3..s4
+    1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,3,1,1,1,1,1,1, // s5..s6
+    1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
+};
+
+UTF8STATE ValidateUTF8(UTF8STATE *state, const BYTE *pb, DWORD cb)
+{
+    DWORD i, type;
+
+    for (i = 0; i < cb; i++)
+    {
+        type = utf8d[pb[i]];
+        *state = utf8d[256 + (*state) * 16 + type];
+
+        if (*state == UTF8_REJECT)
+            break;
+    }
+
+    return *state;
+}
+
+ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
+{
+    DWORD i;
+    BYTE b0, b1;
+    const DWORD cw = cb / 2;
+    INT flag = 0;
+    UTF8STATE state = UTF8_ACCEPT;
+
+    if (cb <= 1)
+        return ENCODING_ANSI;
+
+    // check NULs
+    for (i = 0; i < cw; ++i)
+    {
+        b0 = pb[i * 2];
+        b1 = pb[i * 2 + 1];
+
+        if (b0 && !b1)
+        {
+            if (flag >= 0)
+            {
+                flag = 1;
+            }
+            else
+            {
+                flag = 0;
+                break;
+            }
+        }
+        else if (!b0 && b1)
+        {
+            if (flag <= 0)
+            {
+                flag = -1;
+            }
+            else
+            {
+                flag = 0;
+                break;
+            }
+        }
+        else if (!b0 && !b1)
+        {
+            /* maybe binary file */
+            return ENCODING_ANSI;
+        }
+    }
+
+    switch (flag)
+    {
+        case 1:
+            return ENCODING_UTF16LE;
+        case -1:
+            return ENCODING_UTF16BE;
+    }
+
+    // is it UTF-8?
+    if (ValidateUTF8(&state, pb, cb) == UTF8_ACCEPT)
+        return ENCODING_UTF8;
+
+    return ENCODING_ANSI;
 }
 
 BOOL
@@ -97,6 +221,10 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     {
         encFile = ENCODING_UTF8;
         dwPos += 3;
+    }
+    else
+    {
+        encFile = AnalyzeEncoding(pBytes, dwSize);
     }
 
     switch(encFile)
