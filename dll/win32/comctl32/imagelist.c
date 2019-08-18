@@ -115,6 +115,9 @@ struct _IMAGELIST
 };
 
 #define IMAGELIST_MAGIC 0x53414D58
+#ifdef __REACTOS__
+#define IMAGELIST_MAGIC_DESTROYED 0x44454144
+#endif
 
 /* Header used by ImageList_Read() and ImageList_Write() */
 #include "pshpack2.h"
@@ -3494,6 +3497,9 @@ static ULONG WINAPI ImageListImpl_Release(IImageList2 *iface)
         if (This->hbrBlend25) DeleteObject (This->hbrBlend25);
         if (This->hbrBlend50) DeleteObject (This->hbrBlend50);
 
+#ifdef __REACTOS__
+        This->usMagic = IMAGELIST_MAGIC_DESTROYED;
+#endif
         This->IImageList2_iface.lpVtbl = NULL;
         heap_free(This->has_alpha);
         heap_free(This);
@@ -3996,6 +4002,10 @@ static BOOL is_valid(HIMAGELIST himl)
     {
 #ifdef __REACTOS__
         valid = himl && himl->usMagic == IMAGELIST_MAGIC;
+        if (!valid && himl && himl->usMagic == IMAGELIST_MAGIC_DESTROYED)
+        {
+            ERR("Imagelist no longer valid: 0x%p\n", himl);
+        }
 #else
         valid = himl && himl->IImageList2_iface.lpVtbl == &ImageListImpl_Vtbl;
 #endif
@@ -4097,6 +4107,11 @@ BOOL is_valid2(HIMAGELIST himl)
         valid = himl && 
                 himl->IImageList2_iface.lpVtbl == &ImageListImpl_Vtbl && 
                 himl->usMagic == IMAGELIST_MAGIC;
+        if (!valid && himl &&
+            himl->usMagic == IMAGELIST_MAGIC_DESTROYED)
+        {
+            ERR("Imagelist no longer valid: 0x%p\n", himl);
+        }
     }
     __EXCEPT_PAGE_FAULT
     {
