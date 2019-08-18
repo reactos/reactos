@@ -882,7 +882,7 @@ ArchRestoreProcessorFeatures (
     if (ArchXCr0BitsToClear)
     {
         /* Clear them */
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(_M_ARM)
         __xsetbv(0, __xgetbv(0) & ~ArchXCr0BitsToClear);
 #endif
         ArchXCr0BitsToClear = 0;
@@ -892,7 +892,9 @@ ArchRestoreProcessorFeatures (
     if (ArchCr4BitsToClear)
     {
         /* Clear them */
+#if !defined(_M_ARM)
         __writecr4(__readcr4() & ~ArchCr4BitsToClear);
+#endif
         ArchCr4BitsToClear = 0;
     }
 }
@@ -979,10 +981,11 @@ OslpMain (
     _Out_ PULONG ReturnFlags
     )
 {
-    CPU_INFO CpuInfo;
-    BOOLEAN NxEnabled;
     NTSTATUS Status;
     BOOLEAN ExecuteJump;
+#if !defined(_M_ARM)
+    CPU_INFO CpuInfo;
+    BOOLEAN NxEnabled;
     LARGE_INTEGER MiscMsr;
 
     /* Check if the CPU supports NX */
@@ -1006,6 +1009,8 @@ OslpMain (
     /* Turn on NX support with the CPU-generic MSR */
     __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_NXE);
 
+#endif
+
     /* Load the kernel */
     Status = OslPrepareTarget(ReturnFlags, &ExecuteJump);
     if (NT_SUCCESS(Status) && (ExecuteJump))
@@ -1014,6 +1019,7 @@ OslpMain (
         Status = OslExecuteTransition();
     }
 
+#if !defined(_M_ARM)
     /* Retore NX support */
     __writemsr(MSR_EFER, __readmsr(MSR_EFER) ^ MSR_NXE);
 
@@ -1026,6 +1032,7 @@ OslpMain (
         __writemsr(MSR_IA32_MISC_ENABLE, MiscMsr.QuadPart);
     }
 
+#endif
     /* Go back */
     return Status;
 }
@@ -1073,6 +1080,7 @@ OslMain (
         goto Quickie;
     }
 
+#if !defined(_M_ARM)
     /* Check if CPUID 01h is supported */
     if (BlArchIsCpuIdFunctionSupported(1))
     {
@@ -1085,6 +1093,7 @@ OslMain (
             EfiPrintf(L"PAE Supported, but won't be used\r\n");
         }
     }
+#endif
 
     /* Setup the boot library parameters for this application */
     BlSetupDefaultParameters(&LibraryParameters);
