@@ -35,7 +35,7 @@ NTAPI
 WDFAPI
 VOID
 (*PFN_WDFVERIFIERDBGBREAKPOINT)(
-    __in PWDF_DRIVER_GLOBALS DriverGlobals
+    _In_ PWDF_DRIVER_GLOBALS DriverGlobals
 );
 
 VOID
@@ -53,23 +53,23 @@ NTAPI
 WDFAPI
 VOID
 (*PFN_WDFVERIFIERKEBUGCHECK)(
-    __in PWDF_DRIVER_GLOBALS DriverGlobals,
-    __in ULONG BugCheckCode,
-    __in ULONG_PTR BugCheckParameter1,
-    __in ULONG_PTR BugCheckParameter2,
-    __in ULONG_PTR BugCheckParameter3,
-    __in ULONG_PTR BugCheckParameter4
+    _In_ PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_ ULONG BugCheckCode,
+    _In_ ULONG_PTR BugCheckParameter1,
+    _In_ ULONG_PTR BugCheckParameter2,
+    _In_ ULONG_PTR BugCheckParameter3,
+    _In_ ULONG_PTR BugCheckParameter4
 );
 
 NTAPI
 VOID
 FORCEINLINE
 WdfVerifierKeBugCheck(
-    __in ULONG BugCheckCode,
-    __in ULONG_PTR BugCheckParameter1,
-    __in ULONG_PTR BugCheckParameter2,
-    __in ULONG_PTR BugCheckParameter3,
-    __in ULONG_PTR BugCheckParameter4
+    _In_ ULONG BugCheckCode,
+    _In_ ULONG_PTR BugCheckParameter1,
+    _In_ ULONG_PTR BugCheckParameter2,
+    _In_ ULONG_PTR BugCheckParameter3,
+    _In_ ULONG_PTR BugCheckParameter4
 )
 {
     ((PFN_WDFVERIFIERKEBUGCHECK)WdfFunctions[WdfVerifierKeBugCheckTableIndex])(WdfDriverGlobals, BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);

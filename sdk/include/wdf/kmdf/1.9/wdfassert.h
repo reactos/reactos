@@ -33,10 +33,10 @@
 NTSYSAPI
 VOID
 RtlAssert(
-    __in PVOID FailedAssertion,
-    __in PVOID FileName,
-    __in ULONG LineNumber,
-    __in_opt PSTR Message
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_ PSTR Message
 );
 #endif
 
