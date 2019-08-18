@@ -1365,7 +1365,7 @@
 1351 cdecl memcpy(ptr ptr long) memmove
 1352 cdecl memmove(ptr ptr long)
 1353 cdecl memset(ptr long long)
-1354 cdecl -arch=i386,x86_64 pow(double double)
+1354 cdecl -arch=i386,x86_64,arm pow(double double)
 1355 cdecl qsort(ptr long long ptr)
 1356 cdecl sin(double)
 1357 varargs sprintf(ptr str)
