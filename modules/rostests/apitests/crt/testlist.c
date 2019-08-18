@@ -51,7 +51,7 @@ const struct test winetest_testlist[] =
 #endif
 #if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
-#if !defined(_M_X64)
+#if defined(_M_IX86)
     { "__getmainargs", func___getmainargs },
 #endif
     { "_vscprintf", func__vscprintf },
