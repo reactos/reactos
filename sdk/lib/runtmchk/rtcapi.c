@@ -15,6 +15,22 @@
 #error Unsupported platform
 #endif
 
+// Provide a fallback memset for libraries like kbdrost.dll
+#if defined(_M_ARM)
+void* __cdecl memset_fallback(void* src, int val, size_t count)
+{
+    char *char_src = (char *)src;
+    while(count > 0)
+    {
+        *char_src = val;
+        char_src++;
+        count--;
+    }
+    return src;
+}
+#pragma comment(linker, "/alternatename:memset=memset_fallback")
+#endif
+
 int
 __cdecl
 _RTC_DefaultErrorFuncW(
