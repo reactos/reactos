@@ -65,6 +65,7 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR S
 #if DBG
     {
         BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+        (VOID)Success;
         TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
     }
 #else
