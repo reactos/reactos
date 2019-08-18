@@ -12,6 +12,8 @@ class CFindFolder :
         public IShellFolder2,
         public IPersistFolder2,
         public IShellFolderViewCB,
+        public IConnectionPointContainerImpl<CFindFolder>,
+        public IConnectionPointImpl<CFindFolder, &DIID_DSearchCommandEvents>,
         public IContextMenuCB
 {
     // *** IShellFolder2 methods ***
@@ -68,6 +70,9 @@ private:
     CComPtr<IShellBrowser> m_shellBrowser;
     HANDLE m_hStopEvent;
 
+    void NotifyConnections(DISPID id);
+    static DWORD WINAPI SearchThreadProc(LPVOID lpParameter);
+
     //// *** IPersistFolder2 methods ***
     STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
 
@@ -95,6 +100,10 @@ public:
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
+    BEGIN_CONNECTION_POINT_MAP(CFindFolder)
+        CONNECTION_POINT_ENTRY(DIID_DSearchCommandEvents)
+    END_CONNECTION_POINT_MAP()
+
     BEGIN_MSG_MAP(CFindFolder)
         MESSAGE_HANDLER(WM_SEARCH_START, StartSearch)
         MESSAGE_HANDLER(WM_SEARCH_ADD_RESULT, AddResult)
@@ -108,6 +117,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IConnectionPointContainer, IConnectionPointContainer)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenuCB, IContextMenuCB)
     END_COM_MAP()
 };

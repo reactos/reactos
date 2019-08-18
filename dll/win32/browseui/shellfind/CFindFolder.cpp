@@ -1,11 +1,5 @@
-/*
- * PROJECT:     ReactOS Search Shell Extension
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Search results folder
- * COPYRIGHT:   Copyright 2019 Brock Mammen
- */
-
 #include "CFindFolder.h"
+#include <exdispid.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
@@ -88,6 +82,7 @@ struct _SearchData
     HWND hwnd;
     HANDLE hStopEvent;
     SearchStart *pSearchParams;
+    CFindFolder *pFindFolder;
 };
 
 static LPCSTR WINAPI StrStrNA(LPCSTR lpFirst, LPCSTR lpSrch, UINT cchMax)
@@ -210,18 +205,38 @@ static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         FindClose(hFindFile);
 }
 
-static DWORD WINAPI _SearchThreadProc(LPVOID lpParameter)
+DWORD WINAPI CFindFolder::_SearchThreadProc(LPVOID lpParameter)
 {
     _SearchData *data = static_cast<_SearchData*>(lpParameter);
-
     SearchStart* params = (SearchStart *) data->pSearchParams;
 
+    data->pFindFolder->NotifyConnections(DISPID_SEARCHSTART);
+
     RecursiveFind(params->szPath, data);
+
+    data->pFindFolder->NotifyConnections(DISPID_SEARCHCOMPLETE);
 
     SHFree(params);
     SHFree(lpParameter);
 
     return 0;
+}
+
+void CFindFolder::NotifyConnections(DISPID id)
+{
+    DISPPARAMS dispatchParams = {0};
+    CComDynamicUnkArray &subscribers =
+        IConnectionPointImpl<CFindFolder, &DIID_DSearchCommandEvents>::m_vec;
+    for (IUnknown** pSubscriber = subscribers.begin(); pSubscriber < subscribers.end(); pSubscriber++)
+    {
+        if (!*pSubscriber)
+            continue;
+
+        CComPtr<IDispatch> pDispatch;
+        HRESULT hResult = (*pSubscriber)->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
+        if (!FAILED_UNEXPECTEDLY(hResult))
+            pDispatch->Invoke(id, GUID_NULL, 0, DISPATCH_METHOD, &dispatchParams, NULL, NULL, NULL);
+    }
 }
 
 LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
