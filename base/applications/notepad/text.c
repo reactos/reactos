@@ -59,7 +59,8 @@ ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
     {
         return ENCODING_UTF16LE;
     }
-    if (flags & IS_TEXT_UNICODE_REVERSE_MASK)
+
+    if ((flags & IS_TEXT_UNICODE_REVERSE_MASK) && !(flags & IS_TEXT_UNICODE_ILLEGAL_CHARS))
     {
         return ENCODING_UTF16BE;
     }
