@@ -343,6 +343,7 @@ client2_DoAuthenticationOverSMB(
         {
             // STATUS_INVALID_SMB = 0x00010002
             sync_err("Error NT_Status 0x%x\n", smbStatus.NT_Status);
+            printerr(smbStatus.NT_Status);
             return FALSE;
         }
         if (!smb_GetNTMLMsg(pInBufSMB, cbInSMB, &pInBuf, &cbIn))

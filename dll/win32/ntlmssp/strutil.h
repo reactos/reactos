@@ -1,17 +1,19 @@
 #ifndef _STRUTIL_H
 #define _STRUTIL_H
 
-typedef enum _EXT_STRING_TYPE
+typedef enum _EXT_DATA_TYPE
 {
     /* unknown */
     stUnknown,
     /* Ansi-String */
     stAnsiStr,
+    /* OEM-String */
+    stOEMStr,
     /* Unicode-String */
     stUnicodeStr,
     /* any Data (or unknown) */
     stData
-} EXT_STRING_TYPE;
+} EXT_DATA_TYPE;
 
 /* String of any/unknown type */
 /*typedef struct _EXT_STRING_W
@@ -33,7 +35,7 @@ typedef struct _EXT_DATA
     USHORT bUsed;
     USHORT bAllocated;
     PBYTE  Buffer;
-    EXT_STRING_TYPE typ;
+    EXT_DATA_TYPE typ;
 } EXT_DATA, *PEXT_DATA;
 typedef struct _EXT_DATA EXT_STRING_A, *PEXT_STRING_A;
 typedef struct _EXT_DATA EXT_STRING_W, *PEXT_STRING_W;
@@ -81,6 +83,13 @@ ExtWStrSetN(
     IN size_t chLen);
 #define ExtWStrSet(dst, newstr) ExtWStrSetN(dst, newstr, (size_t)-1)
 
+BOOL
+ExtWStrToAStr(
+    IN OUT PEXT_STRING_A dst,
+    IN PEXT_STRING_W src,
+    IN BOOL cpOEM,
+    IN BOOL bAlloc);
+
 /* Ansi */
 BOOL
 ExtAStrInit(
@@ -92,8 +101,33 @@ ExtAStrSetN(
     IN char* newstr,
     IN size_t chLen);
 #define ExtAStrSet(dst, newstr) ExtAStrSetN(dst, newstr, (size_t)-1)
+BOOL
+ExtAStrIsEqual(
+    IN PEXT_STRING v1,
+    char* v2);
+BOOL
+ExtDataIsEqual(
+    IN PEXT_DATA v1,
+    IN PEXT_DATA v2);
+
+/*TODO
+BOOL
+ExtAStrIsEqual(
+    IN PEXT_STRING v1,
+    IN PEXT_STRING v2);
+*/
+
+BOOL
+ExtDataIsEqual(
+    IN PEXT_DATA v1,
+    IN PEXT_DATA v2);
 
 /* Data */
+BOOL
+ExtDataInit(
+    IN PEXT_DATA dst,
+    IN PBYTE initdata,
+    IN ULONG len);
 
 /* All */
 

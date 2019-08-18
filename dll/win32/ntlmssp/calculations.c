@@ -426,13 +426,13 @@ NtlmChallengeResponse(
 /* MS-NLSP 3.3.2 NTLM v2 Authentication */
 //#define VALIDATE_NTLMv2
 BOOL
-CliComputeResponseNVLMv2(
-    IN PEXT_STRING user,
-    IN PEXT_STRING passwd,
-    IN PEXT_STRING userdom,
+CliComputeResponseNTLMv2(
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W passwd,
+    IN PEXT_STRING_W userdom,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN PUNICODE_STRING ServerName,
+    IN PEXT_STRING_W ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
@@ -444,11 +444,27 @@ CliComputeResponseNVLMv2(
     BOOL avOk;
     PMSV1_0_NTLM3_RESPONSE pNtResponse;
 
+    TRACE("XXX\n");
+    TRACE("user %S\n", user->Buffer);
+    TRACE("pass %S\n", passwd->Buffer);
+    TRACE("userdom %S\n", userdom->Buffer);
+    TRACE("ServerName %S\n", ServerName->Buffer);
+    TRACE("ResponseKeyLM\n");
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    TRACE("ResponseKeyNT\n");
+    NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    TRACE("ServerChallenge\n");
+    NtlmPrintHexDump(ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
+    TRACE("ClientChallenge\n");
+    NtlmPrintHexDump(ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
+    TRACE("TimeStamp\n");
+    TRACE("0x%x\n", TimeStamp);
+
     /* alloc/fill NtResponse struct */
     NtlmDataBufAlloc(pNtChallengeResponseData,
                      sizeof(MSV1_0_NTLM3_RESPONSE) +
                      sizeof(MSV1_0_AV_PAIR) * 3 +
-                     ServerName->Length +
+                     ServerName->bUsed +
                      userdom->bUsed,
         #ifdef VALIDATE_NTLMv2
                      + 20 /* HACK */
@@ -484,7 +500,7 @@ CliComputeResponseNVLMv2(
         avOk = avOk &&
                NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbDomainName, (WCHAR*)userdom->Buffer, userdom->bUsed);
     avOk = avOk &&
-           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, ServerName->Buffer, ServerName->Length) &&
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, ServerName->Buffer, ServerName->bUsed) &&
            NtlmAvlAdd(pNtChallengeResponseData, MsvAvEOL, NULL, 0);
     #endif
     if (!avOk)
@@ -510,10 +526,10 @@ CliComputeResponseNVLMv2(
         //UNICODE_STRING val;
         PBYTE ccTemp;
         PBYTE temp;
-        OEM_STRING ServerNameOEM;
+        EXT_STRING_A ServerNameOEM;
         int tempLen, ccTempLen;
 
-        RtlUnicodeStringToOemString(&ServerNameOEM, ServerName, TRUE);
+        ExtWStrToAStr(&ServerNameOEM, ServerName, TRUE, TRUE);
         //FILETIME ft;
         //SYSTEMTIME st;
         //ft.dwLowDateTime = (pNtResponse->TimeStamp && 0xFFFFFFFF);
@@ -576,7 +592,7 @@ CliComputeResponseNVLMv2(
         memcpy(pLmChallengeResponse->ChallengeFromClient, ClientChallenge, 8);
         #ifdef VALIDATE_NTLMv2
         TRACE("**** VALIDATE **** LmChallengeResponse\n");
-        NtlmPrintHexDump(LmChallengeResponse, 24);
+        NtlmPrintHexDump((PBYTE)pLmChallengeResponse, 24);
         #endif
     }
     //EndIf
@@ -594,10 +610,10 @@ CliComputeResponseNVLMv2(
 
 BOOL
 NtlmChallengeResponse(
-    IN PEXT_STRING user,
-    IN PEXT_STRING passwd,
-    IN PEXT_STRING userdom,
-    IN PUNICODE_STRING pServerName,
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W passwd,
+    IN PEXT_STRING_W userdom,
+    IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
     IN OUT PNTLM_DATABUF pNtChallengeResponseData,
@@ -660,7 +676,7 @@ NtlmChallengeResponse(
     NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
     #endif
 
-    if (!CliComputeResponseNVLMv2(user,
+    if (!CliComputeResponseNTLMv2(user,
                                   passwd,
                                   userdom,
                                   ResponseKeyLM,
@@ -698,3 +714,11 @@ NtpLmSessionKeys(IN PUSER_SESSION_KEY NtpUserSessionKey,
     memcpy(pLmSessionKey, pUserSessionKey, sizeof(*pLmSessionKey));
 }
 */
+
+VOID
+RC4Init(
+    OUT PHANDLE pClientHandle,
+    IN UCHAR* Key)
+{
+    //STUB
+}

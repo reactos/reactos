@@ -242,10 +242,10 @@ MAC(ULONG flags,
 #if 0 /* old calculation */
 VOID
 NtlmChallengeResponse(
-    IN PEXT_STRING pUserNameW,
-    IN PEXT_STRING pPasswordW,
-    IN PEXT_STRING pDomainNameW,
-    IN PUNICODE_STRING pServerName,
+    IN PEXT_STRING_W pUserNameW,
+    IN PEXT_STRING_W pPasswordW,
+    IN PEXT_STRING_W pDomainNameW,
+    IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
     OUT PNTLM_DATABUF pNtResponseData,
@@ -255,10 +255,10 @@ NtlmChallengeResponse(
 #else
 BOOL
 NtlmChallengeResponse(
-    IN PEXT_STRING pUserNameW,
-    IN PEXT_STRING pPasswordW,
-    IN PEXT_STRING pDomainNameW,
-    IN PUNICODE_STRING pServerName,
+    IN PEXT_STRING_W pUserNameW,
+    IN PEXT_STRING_W pPasswordW,
+    IN PEXT_STRING_W pDomainNameW,
+    IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
     OUT PNTLM_DATABUF pNtResponseData,
@@ -372,6 +372,12 @@ NtlmBlobToExtDataRef(
     IN PSecBuffer InputBuffer,
     IN NTLM_BLOB Blob,
     IN OUT PEXT_DATA OutputStr);
+SECURITY_STATUS
+NtlmCopyBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    OUT PVOID dst,
+    IN ULONG len);
 
 /* copys a NTLM message blob into a string */
 SECURITY_STATUS
@@ -423,13 +429,13 @@ NtlmStructWriteStrW(
 
 /* calculations */
 BOOL
-CliComputeResponseNVLMv2(
-    IN PEXT_STRING user,
-    IN PEXT_STRING passwd,
-    IN PEXT_STRING userdom,
+CliComputeResponseNTLMv2(
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W passwd,
+    IN PEXT_STRING_W userdom,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN PUNICODE_STRING ServerName,
+    IN PEXT_STRING_W ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
@@ -437,4 +443,8 @@ CliComputeResponseNVLMv2(
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);
 
+VOID
+RC4Init(
+    OUT PHANDLE pClientHandle,
+    IN UCHAR* Key);
 

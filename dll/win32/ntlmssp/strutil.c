@@ -98,18 +98,13 @@ ExtWStrInit(
     IN WCHAR* initstr)
 {
     ULONG bNeeded, chLen;
-    if (initstr == NULL)
-    {
-        dst->bUsed = 0;
-        dst->bAllocated = 0;
-        dst->Buffer = NULL;
-        dst->typ = stUnicodeStr;
-        return TRUE;
-    }
 
     dst->bUsed = 0;
     dst->bAllocated = 0;
     dst->Buffer = NULL;
+    dst->typ = stUnicodeStr;
+    if (initstr == NULL)
+        return TRUE;
 
     chLen = wcslen(initstr);
     bNeeded = (chLen + 1) * sizeof(WCHAR);
@@ -126,14 +121,42 @@ ExtAStrInit(
     IN PEXT_STRING dst,
     IN char* initstr)
 {
+    ULONG bNeeded, chLen;
+
+    dst->bUsed = 0;
+    dst->bAllocated = 0;
+    dst->Buffer = NULL;
+    dst->typ = stAnsiStr;
     if (initstr == NULL)
-    {
-        dst->bUsed = 0;
-        dst->bAllocated = 0;
-        dst->Buffer = NULL;
-        dst->typ = stAnsiStr;
         return TRUE;
-    }
+
+    chLen = strlen(initstr);
+    bNeeded = (chLen + 1) * sizeof(char);
+    if (!_ExtStrRealloc(dst, bNeeded, FALSE))
+        return FALSE;
+    dst->bUsed = chLen * sizeof(char);
+    memcpy(dst->Buffer, initstr, dst->bUsed);
+    _ExtStrASetTerm0(dst, chLen);
+    return TRUE;
+}
+
+BOOL
+ExtDataInit(
+    IN PEXT_DATA dst,
+    IN PBYTE initdata,
+    IN ULONG len)
+{
+    dst->bUsed = 0;
+    dst->bAllocated = 0;
+    dst->Buffer = NULL;
+    dst->typ = stAnsiStr;
+    if (len == 0)
+        return TRUE;
+
+    if (!_ExtStrRealloc(dst, len, FALSE))
+        return FALSE;
+    dst->bUsed = len;
+    memcpy(dst->Buffer, initdata, len);
     return TRUE;
 }
 
@@ -224,5 +247,51 @@ ExtAStrSetN(
     _ExtStrASetTerm0(dst, chLen);
 
     return TRUE;
+}
+
+BOOL
+ExtWStrToAStr(
+    IN OUT PEXT_STRING_A dst,
+    IN PEXT_STRING_W src,
+    IN BOOL cpOEM,
+    IN BOOL bAlloc)
+{
+    int res;
+    int cp = (cpOEM) ? CP_OEMCP : CP_ACP;
+
+    if (bAlloc)
+    {
+        ULONG bNeeded = (src->bUsed / sizeof(WCHAR)) + 1;
+        /* new */
+        memset(dst, 0, sizeof(*dst));
+        if (!_ExtStrRealloc(dst, bNeeded, FALSE))
+            return FALSE;
+    }
+
+    res = WideCharToMultiByte(cp, 0,
+                              (WCHAR*)src->Buffer, src->bUsed / sizeof(WCHAR),
+                              (char*)dst->Buffer, dst->bAllocated / sizeof(char),
+                              NULL, NULL);
+    return (res > 0);
+}
+
+BOOL
+ExtAStrIsEqual(
+    IN PEXT_STRING v1,
+    char* v2)
+{
+    if (v1->bUsed != strlen(v2))
+        return FALSE;
+    return (memcmp(v1->Buffer, v2, v1->bUsed) == 0);
+}
+
+BOOL
+ExtDataIsEqual(
+    IN PEXT_DATA v1,
+    IN PEXT_DATA v2)
+{
+    if (v1->bUsed != v2->bUsed)
+        return FALSE;
+    return (memcmp(v1->Buffer, v2, v1->bUsed) == 0);
 }
 

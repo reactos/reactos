@@ -69,7 +69,7 @@ do { \
                          (LPWSTR)&buffer,     \
                          0,       \
                          NULL);   \
-    if (res)    \
+    if (res > 0)    \
     {   \
         sync_err("%S\n", buffer); \
         LocalFree(buffer);      \

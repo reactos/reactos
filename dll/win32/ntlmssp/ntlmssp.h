@@ -112,8 +112,7 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     /* needed vars from MS-NLMP
      * activate if needed ... or move to context (svr) if needed
      * (ctx) means variable is _NTLMSSP_CONTEXT_SVR */
-    //The server maintains all of the variables that the client does (section 3.1.1.1) except the
-    //ClientConfigFlags.
+    /* ClientConfigFlags. (ctx) */
     //Additionally, the server maintains the following:
     /* CfgFlg (ctx): */
     //DnsDomainName: A string that indicates the fully qualified domain name (FQDN) of the server's
@@ -260,7 +259,8 @@ typedef struct _NTLMSSP_CONTEXT_SVR
     // MS-NLSP 3.2.1.1 (see also _NTLMSSP_GLOBALS_SVR)
     /* The server maintains all of the variables that the client does
      * (section 3.1.1.1) except the ClientConfigFlags.*/
-    //TODO NTLMSSP_CONTEXT_CLI cli;
+    // NTLMSSP_CONTEXT_CLI cli;
+    ULONG cli_NegFlg;
     /* The set of server configuration flags (section 2.2.2.5) that specify the full set of
      * capabilities of the server. */
     ULONG CfgFlg;
@@ -271,9 +271,12 @@ typedef struct _NTLMSSP_CONTEXT_SVR
     ULONG ISCRetContextFlags;
     ULONG ASCRetContextFlags;
     PNTLMSSP_CREDENTIAL Credential;
-    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
     UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
     HANDLE ClientToken;
+
+    /* generated in GenerateChallenge, needed when
+     * AUTHENTICATE_MESSAGE is processed */
+    UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
 
     NTLMSSP_CONTEXT_MSG msg;
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;

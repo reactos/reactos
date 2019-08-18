@@ -182,9 +182,10 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
 }
 
 SECURITY_STATUS
-NtlmBlobToExtStringRef(IN PSecBuffer InputBuffer,
-                       IN NTLM_BLOB Blob,
-                       IN OUT PEXT_STRING OutputStr)
+NtlmBlobToExtStringRef(
+  IN PSecBuffer InputBuffer,
+  IN NTLM_BLOB Blob,
+  IN OUT PEXT_STRING OutputStr)
 {
     /* check blob is not beyond the bounds of the input buffer */
     if(Blob.Offset >= InputBuffer->cbBuffer ||
@@ -199,6 +200,26 @@ NtlmBlobToExtStringRef(IN PSecBuffer InputBuffer,
     OutputStr->Buffer = ((PBYTE)InputBuffer->pvBuffer) + Blob.Offset;
     OutputStr->bUsed = Blob.Length;
 
+    return SEC_E_OK;
+}
+
+SECURITY_STATUS
+NtlmCopyBlob(
+    IN PSecBuffer InputBuffer,
+    IN NTLM_BLOB Blob,
+    OUT PVOID dst,
+    IN ULONG len)
+{
+    /* check blob is not beyond the bounds of the input buffer */
+    if(Blob.Offset >= InputBuffer->cbBuffer ||
+       Blob.Offset + Blob.Length > InputBuffer->cbBuffer)
+    {
+        ERR("blob points beyond buffer bounds!\n");
+        return SEC_E_INVALID_TOKEN;
+    }
+
+    /* convert blob into a string */
+    memcpy(dst, ((PBYTE)InputBuffer->pvBuffer) + Blob.Offset, len);
     return SEC_E_OK;
 }
 
