@@ -111,9 +111,9 @@ UTF8STATE ValidateUTF8(UTF8STATE *state, const BYTE *pb, DWORD cb)
 
 ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
 {
-    DWORD i;
+    const BYTE *pb2;
     BYTE b0, b1;
-    const DWORD cw = cb / 2;
+    DWORD cw = cb / 2;
     INT flag = 0;
     UTF8STATE state = UTF8_ACCEPT;
 
@@ -121,10 +121,11 @@ ENCODING AnalyzeEncoding(const BYTE *pb, DWORD cb)
         return ENCODING_ANSI;
 
     /* check NULs */
-    for (i = 0; i < cw; ++i)
+    pb2 = pb;
+    while (cw-- > 0)
     {
-        b0 = pb[i * 2];
-        b1 = pb[i * 2 + 1];
+        b0 = *pb2++;
+        b1 = *pb2++;
 
         if (b0 && !b1)
         {
