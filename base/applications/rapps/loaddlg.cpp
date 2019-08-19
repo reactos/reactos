@@ -351,9 +351,6 @@ public:
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static DWORD WINAPI ThreadFunc(LPVOID Context);
-    static BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal = FALSE);
-    static BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal = FALSE);
-    static VOID DownloadApplicationsDB(LPCWSTR lpUrl);
     static VOID LaunchDownloadDialog(BOOL);
 };
 
