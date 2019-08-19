@@ -15,20 +15,6 @@
 #pragma warning(disable:28719) /* disable banned api usage warning */
 #endif /* _MSC_VER */
 
-#ifndef C_ASSERT
-#ifdef _MSC_VER
-# define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
-#else
-# define C_ASSERT(e) extern void __C_ASSERT__(int [(e)?1:-1])
-#endif
-#endif /* C_ASSERT */
-
-#ifdef __cplusplus
-#define _STRSAFE_EXTERN_C extern "C"
-#else
-#define _STRSAFE_EXTERN_C extern
-#endif
-
 #define NTSTRSAFEAPI static __inline NTSTATUS NTAPI
 #define NTSTRSAFEVAPI static __inline NTSTATUS __cdecl
 #define NTSTRSAFE_INLINE_API static __inline NTSTATUS NTAPI
