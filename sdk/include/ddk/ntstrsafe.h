@@ -1007,6 +1007,7 @@ RtlStringCchVPrintfA(
     {
         if (cchDest > 0)
             *pszDest = '\0';
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1110,6 +1111,7 @@ RtlStringCchPrintfA(
     {
         if (cchDest > 0)
             *pszDest = '\0';
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1172,6 +1174,7 @@ RtlStringCbPrintfA(
     {
         if (cbDest > 0)
             *pszDest = '\0';
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1244,6 +1247,7 @@ RtlStringCchPrintfExA(
     {
         if (cchDest > 0)
             *pszDest = '\0';
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1321,6 +1325,7 @@ RtlStringCbPrintfExA(
     {
         if (cchDest > 0)
             *pszDest = '\0';
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1777,6 +1782,7 @@ NTSTRSAFEAPI RtlStringCopyExWorkerA(
             {
                 pszDestEnd = pszDest;
                 cchRemaining = 0;
+
                 if (*pszSrc != '\0')
                 {
                     if (!pszDest)
@@ -2082,6 +2088,7 @@ NTSTRSAFEAPI RtlStringCopyNExWorkerA(
             {
                 pszDestEnd = pszDest;
                 cchRemaining = 0;
+
                 if ((cchToCopy != 0) && (*pszSrc != '\0'))
                 {
                     if (!pszDest)
