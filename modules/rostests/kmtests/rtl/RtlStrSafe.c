@@ -18,19 +18,18 @@ Test_RtlUnicodeStringPrintf()
 {
     WCHAR Buffer[1024];
     WCHAR OvrBuffer[1024];
-    WCHAR BufferSmall[2];
-    WCHAR BufferSmall2[7];
+    WCHAR BufferSmall[16];
     UNICODE_STRING UsString;
     const WCHAR FormatStringInts[] = L"%d %d %d";
     const WCHAR FormatStringStrs[] = L"%s %s %s";
     const WCHAR Result[] = L"1 2 3";
     UNICODE_STRING UsStringNull;
+    int i;
 
     /* No zeros (Don't assume UNICODE_STRINGS are NULL terminated) */
 
     RtlFillMemory(Buffer, sizeof(Buffer), 0xAA);
     RtlFillMemory(BufferSmall, sizeof(BufferSmall), 0xAA);
-    RtlFillMemory(BufferSmall2, sizeof(BufferSmall2), 0xAA);
 
     /* STATUS_SUCCESS test */
 
@@ -53,16 +52,18 @@ Test_RtlUnicodeStringPrintf()
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = sizeof(BufferSmall);
+    UsString.MaximumLength = 2;
     
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
     ok_eq_char(UsString.Buffer[0], L'A');
-    ok_eq_char(UsString.Buffer[1], (WCHAR)0);
+    ok_eq_char(UsString.Buffer[1], L'\0');
+    for (i = 2; i < sizeof(BufferSmall); i++)
+        ok_eq_char(UsString.Buffer[i], 0xAA);
 
-    UsString.Buffer = BufferSmall2;
+    UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = sizeof(BufferSmall2);
+    UsString.MaximumLength = 7;
 
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"0123", L"4567", L"89AB"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
@@ -72,7 +73,9 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_char(UsString.Buffer[3], L'3');
     ok_eq_char(UsString.Buffer[4], L' ');
     ok_eq_char(UsString.Buffer[5], L'4');
-    ok_eq_char(UsString.Buffer[6], (WCHAR) 0);
+    ok_eq_char(UsString.Buffer[6], L'\0');
+    for (i = 7; i < sizeof(BufferSmall); i++)
+        ok_eq_char(UsString.Buffer[i], 0xAA);
 
     ///* STATUS_INVALID_PARAMETER tests */
 
@@ -105,16 +108,18 @@ TESTAPI
 Test_RtlUnicodeStringPrintfEx()
 {
     WCHAR Buffer[32];
-    WCHAR BufferSmall[8] = { 0 };
+    WCHAR BufferSmall[16];
     WCHAR OvrBuffer[1024];
     UNICODE_STRING UsString, RemString;
     const WCHAR FormatStringInts[] = L"%d %d %d";
     const WCHAR FormatStringStrs[] = L"%s %s %s";
     const WCHAR Result[] = L"1 2 3";
+    int i;
 
     /* No zeros (Don't assume UNICODE_STRINGS are NULL terminated) */
 
     RtlFillMemory(Buffer, sizeof(Buffer), 0xAA);
+    RtlFillMemory(BufferSmall, sizeof(BufferSmall), 0xAA);
 
     UsString.Buffer = Buffer;
     UsString.Length = 0;
@@ -141,7 +146,7 @@ Test_RtlUnicodeStringPrintfEx()
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = sizeof(BufferSmall);
+    UsString.MaximumLength = 8;
 
     RemString.Buffer = NULL;
     RemString.Length = 0;
@@ -157,6 +162,8 @@ Test_RtlUnicodeStringPrintfEx()
     ok_eq_char(UsString.Buffer[5], L'B');
     ok_eq_char(UsString.Buffer[6], L'B');
     ok_eq_char(UsString.Buffer[7], (WCHAR)0);
+    for (i = 8; i < sizeof(BufferSmall); i++)
+        ok_eq_char(UsString.Buffer[i], 0xAA);
 
     // Takes \0 into account
     ok_eq_pointer(RemString.Buffer, UsString.Buffer + (UsString.Length - 1) / sizeof(WCHAR));
