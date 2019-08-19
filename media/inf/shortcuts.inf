@@ -579,6 +579,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
+UTILMAN_TITLE=Gestionnaire d'utilitaires d'accessibilité
+UTILMAN_DESC=Lance le gestionnaire d'utilitaires d'accessibilité
 
 ; Hebrew
 [Strings.040D]
