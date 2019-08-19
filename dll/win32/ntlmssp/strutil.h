@@ -128,6 +128,11 @@ ExtDataInit(
     IN PEXT_DATA dst,
     IN PBYTE initdata,
     IN ULONG len);
+BOOL
+ExtDataSetLength(
+    IN PEXT_DATA dst,
+    IN ULONG len,
+    IN BOOL doZeroMem);
 
 /* All */
 

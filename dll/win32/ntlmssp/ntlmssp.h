@@ -58,6 +58,21 @@ extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA
 /* client configuraion flags */
 #define NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED 0x000000001
 #define NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED 0x000000002
+/* client configuration flags */
+
+/* FIXME implement the following options ... */
+/* Send LM & NTLM responses - never NTLMv2 */
+//#define NTLMSSP_LMCOMPLVL_LM_NTLM 0;
+/* Send LM & NTLM - use NTLMv2 session security if negotiated */
+//#define NTLMSSP_LMCOMPLVL_LM_NTLM_NTLMv2 1
+/* Send NTLM responses only */
+//#define NTLMSSP_LMCOMPLVL_NTLM 2 // w2k default
+/* Send NTLMv2 responses only */
+//#define NTLMSSP_LMCOMPLVL_NTLMv2 3
+/* Send NTLMv2 responses only. Refuse LM */
+//#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM 4
+/* Send NTLMv2 responses only. Refuse LM & NTLM */
+//#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM_NTLM 5;
 
 typedef struct _NTLMSSP_GLOBALS
 {
@@ -101,6 +116,10 @@ typedef struct _NTLMSSP_GLOBALS_CLI
     /* configuration - maybe read from registry (TODO) */
     // MS-NLSP 1.7
     ULONG CfgFlags;
+    /* should be readed from registry
+     * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\LMCompatibilityLevel */
+    /* editable witht local security policy console */
+    ULONG LMCompatibilityLevel;
 } NTLMSSP_GLOBALS_CLI, *PNTLMSSP_GLOBALS_CLI;
 
 /* MS-NLMP 3.2.1.1 */

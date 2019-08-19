@@ -76,7 +76,7 @@ NTOWFv2(
 }
 
 VOID
-LMOWFv1(const PCCHAR password, PUCHAR result)
+LMOWFv1(const PCCHAR password, UCHAR result[16])
 {
 #if 0
     SystemFunction006(password, result);
@@ -285,6 +285,89 @@ MAC(ULONG flags,
 
         // Replace the first four bytes of the ciphertext with the random_pad
         res_ptr[1] = random_pad; // 4 bytes
+    }
+
+    return TRUE;
+}
+
+/* MS-NLSP 3.3.1 NTLM v1 Authentication */
+BOOL
+CliComputeResponseNTLMv1(
+    IN ULONG NegFlg,
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W passwd,
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
+    OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
+    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH])
+{
+    //--Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
+    //--CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
+    //As
+    //If (User is set to "" AND Passwd is set to "")
+    if ((user->bUsed == 0) &&
+        (passwd->bUsed == 0))
+    {
+        //-- Special case for anonymous authentication
+        //Set NtChallengeResponseLen to 0
+        //Set NtChallengeResponseMaxLen to 0
+        //Set NtChallengeResponseBufferOffset to 0
+        //Set LmChallengeResponse to Z(1)
+        //ElseIf
+        FIXME("anyonymouse not implemented\n");
+        return FALSE;
+    }
+    else
+    {
+    //If (NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY flag is set in NegFlg)
+        if (NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+        {
+            UCHAR tmpCat[MSV1_0_CHALLENGE_LENGTH * 2];
+            UCHAR tmpMD5[16];
+            //Set NtChallengeResponse to
+            //  DESL(ResponseKeyNT,
+            //    MD5(
+            //      ConcatenationOf(
+            //        CHALLENGE_MESSAGE.ServerChallenge,
+            //        ClientChallenge
+            //      )
+            //    )[0..7]
+            //  )
+            memcpy(&tmpCat[0], ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
+            memcpy(&tmpCat[MSV1_0_CHALLENGE_LENGTH], ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
+            MD5(tmpCat, MSV1_0_CHALLENGE_LENGTH * 2, tmpMD5);
+            /* uses only first 8 bytes from tmpMD5! */
+            DESL(ResponseKeyNT, tmpMD5, NtChallengeResponse);
+            //Set LmChallengeResponse to ConcatenationOf{ClientChallenge,
+            //Z(16)}
+            memcpy(LmChallengeResponse, ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
+            memset(LmChallengeResponse + MSV1_0_CHALLENGE_LENGTH, 0,
+                   MSV1_0_NTLM3_RESPONSE_LENGTH - MSV1_0_CHALLENGE_LENGTH);
+            return TRUE;
+        }
+        //Else
+        else
+        {
+            //Set NtChallengeResponse to DESL(ResponseKeyNT,
+            //CHALLENGE_MESSAGE.ServerChallenge)
+            DESL(ResponseKeyNT, ServerChallenge, NtChallengeResponse);
+            FIXME("TODO: Implement client option NoLMResponseNTLMv1 - assume TRUE!\n");
+            //If (NoLMResponseNTLMv1 is TRUE)
+            if (TRUE)
+            {
+                // set LmChallengeResponse to NtChallengeResponse
+                memcpy(LmChallengeResponse, NtChallengeResponse, sizeof(LmChallengeResponse));
+            }
+            else
+            {
+                //Set LmChallengeResponse to DESL(ResponseKeyLM,
+                //CHALLENGE_MESSAGE.ServerChallenge)
+                DESL(ResponseKeyLM, ServerChallenge, LmChallengeResponse);
+            }
+        }
+    //EndI
     }
 
     return TRUE;
@@ -610,6 +693,7 @@ CliComputeResponseNTLMv2(
 
 BOOL
 NtlmChallengeResponse(
+    IN ULONG NegFlg,
     IN PEXT_STRING_W user,
     IN PEXT_STRING_W passwd,
     IN PEXT_STRING_W userdom,
@@ -617,17 +701,22 @@ NtlmChallengeResponse(
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
     IN OUT PNTLM_DATABUF pNtChallengeResponseData,
-    OUT PLM2_RESPONSE pLm2ChallengeResponse,
-    OUT PUSER_SESSION_KEY pUserSessionKey,
-    OUT PLM_SESSION_KEY pLmSessionKey)
+    /* NTLMv1 UCHAR[16]
+     * NTLMv2 PLM2_RESPONSE */
+    OUT PEXT_DATA pLmChallengeResponseData,
+    OUT PEXT_DATA pUserSessionKey,
+    OUT PEXT_DATA pLmSessionKey)
 {
+    BOOL UseNTLMv2 = (getGlobalsCli()->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED);
     UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
     UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH];
     UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
         user, passwd, userdom, pServerName, ChallengeToClient,
-        pNtChallengeResponseData->pData, pLm2ChallengeResponse, pUserSessionKey, pLmSessionKey);
+        pNtChallengeResponseData->pData,
+        pLmChallengeResponseData->Buffer,
+        pUserSessionKey, pLmSessionKey);
 
     /* 3.1.5.1.2 nonce */
     NtlmGenerateRandomBits(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
@@ -652,49 +741,108 @@ NtlmChallengeResponse(
     }
     #endif
 
-    //Set ResponseKeyNT to NTOWFv2(Passwd, User, UserDom)
-    if (!NTOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
-                 (WCHAR*)userdom->Buffer, ResponseKeyNT))
+    if (!UseNTLMv2)
     {
-        ERR("NTOWFv2 failed\n");
-        return FALSE;
-    }
-    #ifdef VALIDATE_NTLMv2
-    //TRACE("**** VALIDATE **** ResponseKeyNT\n");
-    //NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
-    #endif
+        EXT_STRING_A passwdOEM;
+        //Z(M)- Defined in section 6.
+        //Define NTOWFv1(Passwd, User, UserDom) as MD4(UNICODE(Passwd))
+        //EndDefine
 
-    //Set ResponseKeyLM to LMOWFv2(Passwd, User, UserDom)
-    if (!LMOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
-                 (WCHAR*)userdom->Buffer, ResponseKeyLM))
-    {
-        ERR("LMOWFv2 failed\n");
-        return FALSE;
-    }
-    #ifdef VALIDATE_NTLMv2
-    TRACE("**** VALIDATE **** ResponseKeyLM\n");
-    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
-    #endif
+        //Define LMOWFv1(Passwd, User, UserDom) as
+        //ConcatenationOf( DES( UpperCase( Passwd)[0..6],"KGS!@#$%"),
+        //DES( UpperCase( Passwd)[7..13],"KGS!@#$%"))
+        //EndDefine
 
-    if (!CliComputeResponseNTLMv2(user,
-                                  passwd,
-                                  userdom,
-                                  ResponseKeyLM,
-                                  ResponseKeyNT,
-                                  pServerName,
-                                  ChallengeToClient,
-                                  ChallengeFromClient,
-                                  TimeStamp,
-                                  pNtChallengeResponseData,
-                                  pLm2ChallengeResponse,
-                                  pUserSessionKey))
-    {
-        ERR("ComputeResponseNVLMv2 failed!\n");
-        return FALSE;
+        //Set ResponseKeyNT to NTOWFv1(Passwd, User, UserDom)
+        if (!NTOWFv1((WCHAR*)passwd->Buffer, ResponseKeyNT))
+        {
+            ERR("NTOWFv1 failed\n");
+            return FALSE;
+        }
+        //Set ResponseKeyLM to LMOWFv1( Passwd, User, UserDom )
+        if (!ExtWStrToAStr(&passwdOEM, passwd, TRUE, TRUE))
+        {
+            ERR("ExtWStrToAStr failed\n");
+            return FALSE;
+        }
+        LMOWFv1((char*)passwdOEM.Buffer, ResponseKeyLM);
+        ExtStrFree(&passwdOEM);
+
+        /* prepare CompureResponse */
+        NtlmDataBufAlloc(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
+        pNtChallengeResponseData->bUsed = MSV1_0_RESPONSE_LENGTH;
+        ExtDataSetLength(pLmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
+
+        if (!CliComputeResponseNTLMv1(NegFlg,
+                                      user,
+                                      passwd,
+                                      ResponseKeyLM,
+                                      ResponseKeyNT,
+                                      ChallengeToClient,
+                                      ChallengeFromClient,
+                                      (PUCHAR)pNtChallengeResponseData->pData,
+                                      (PUCHAR)pLmChallengeResponseData->Buffer))
+        {
+            NtlmFree(pNtChallengeResponseData);
+            ExtStrFree(pLmChallengeResponseData);
+            ERR("CliComputeResponseNTLMv1 failed!\n");
+            return FALSE;
+        }
+        /* uses same key ... */
+        memset(pUserSessionKey, 0, sizeof(*pUserSessionKey));
     }
-    /* uses same key ... */
-    memcpy(pLmSessionKey, pUserSessionKey, sizeof(*pLmSessionKey));
-    return TRUE;}
+    else
+    {
+        //Set ResponseKeyNT to NTOWFv2(Passwd, User, UserDom)
+        if (!NTOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
+                     (WCHAR*)userdom->Buffer, ResponseKeyNT))
+        {
+            ERR("NTOWFv2 failed\n");
+            return FALSE;
+        }
+        #ifdef VALIDATE_NTLMv2
+        //TRACE("**** VALIDATE **** ResponseKeyNT\n");
+        //NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        #endif
+
+        //Set ResponseKeyLM to LMOWFv2(Passwd, User, UserDom)
+        if (!LMOWFv2((WCHAR*)passwd->Buffer, (WCHAR*)user->Buffer,
+                     (WCHAR*)userdom->Buffer, ResponseKeyLM))
+        {
+            ERR("LMOWFv2 failed\n");
+            return FALSE;
+        }
+        #ifdef VALIDATE_NTLMv2
+        TRACE("**** VALIDATE **** ResponseKeyLM\n");
+        NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        #endif
+
+        /* prepare CompureResponse */
+        ExtDataSetLength(pLmChallengeResponseData, sizeof(LM2_RESPONSE), TRUE);
+        ExtDataSetLength(pUserSessionKey, sizeof(USER_SESSION_KEY), TRUE);
+
+        if (!CliComputeResponseNTLMv2(user,
+                                      passwd,
+                                      userdom,
+                                      ResponseKeyLM,
+                                      ResponseKeyNT,
+                                      pServerName,
+                                      ChallengeToClient,
+                                      ChallengeFromClient,
+                                      TimeStamp,
+                                      pNtChallengeResponseData,
+                                      (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
+                                      (PUSER_SESSION_KEY)pUserSessionKey->Buffer))
+        {
+            ExtStrFree(pLmChallengeResponseData);
+            ERR("ComputeResponseNVLMv2 failed!\n");
+            return FALSE;
+        }
+        /* uses same key ... */
+        memcpy(pLmSessionKey, pUserSessionKey, sizeof(*pLmSessionKey));
+    }
+    return TRUE;
+}
 #endif
 
 /*

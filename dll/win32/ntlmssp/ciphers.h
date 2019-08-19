@@ -79,7 +79,7 @@ void
 DES(const unsigned char *k, const unsigned char *d, unsigned char * results);
 
 void
-DESL(unsigned char *k, const unsigned char *d, unsigned char * results);
+DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24]);
 
 void
 MD4(const unsigned char * d, int len, unsigned char * result);

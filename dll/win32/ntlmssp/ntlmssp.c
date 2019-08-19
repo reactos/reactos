@@ -112,8 +112,10 @@ NtlmInitializeGlobals(VOID)
     InitializeCriticalSection(&gsvr->cs);
 
     /* maybe read from registry ... */
-    /*  only NTLMV2 supported */
-    gcli->CfgFlags = NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED;
+    /*  NTLMV1 WIP */
+    /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
+    gcli->CfgFlags = NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED;
+    gcli->LMCompatibilityLevel = 2;// totally unimplemented
 
     if(!GetComputerNameW(compName, &compNamelen))
     {

@@ -276,9 +276,7 @@ CliCreateContext(
     }
     else
     {
-        ret = SEC_E_UNSUPPORTED_FUNCTION;
-        ERR("Only NTLMv2 is implemented!\n");
-        goto fail;
+        context->UseNTLMv2 = FALSE;
     }
 
     /* always on features - MS-NLMP 3.1.5.1.1 */

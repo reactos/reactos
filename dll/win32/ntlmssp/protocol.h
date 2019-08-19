@@ -255,16 +255,19 @@ NtlmChallengeResponse(
 #else
 BOOL
 NtlmChallengeResponse(
+    IN ULONG NegFlg,
     IN PEXT_STRING_W pUserNameW,
     IN PEXT_STRING_W pPasswordW,
     IN PEXT_STRING_W pDomainNameW,
     IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
-    OUT PNTLM_DATABUF pNtResponseData,
-    OUT PLM2_RESPONSE pLm2Response,
-    OUT PUSER_SESSION_KEY pUserSessionKey,
-    OUT PLM_SESSION_KEY pLmSessionKey);
+    OUT PNTLM_DATABUF pNtChallengeResponseData,
+    OUT PEXT_DATA pLmChallengeResponseData,
+    //PUSER_SESSION_KEY
+    OUT PEXT_DATA pUserSessionKey,
+    // PLM_SESSION_KEY
+    OUT PEXT_DATA pLmSessionKey);
 /*BOOL
 ComputeResponseNVLMv2(
     IN PEXT_STRING user,
@@ -439,9 +442,21 @@ CliComputeResponseNTLMv2(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
-    IN OUT PNTLM_DATABUF pNtResponseData,
+    IN OUT PNTLM_DATABUF pNtChallengeResponse,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);
+
+BOOL
+CliComputeResponseNTLMv1(
+    IN ULONG NegFlg,
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W passwd,
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
+    OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
+    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH]);
 
 VOID
 RC4Init(

@@ -479,18 +479,15 @@ CliGenerateAuthenticationMessage(
     BOOLEAN isUnicode;
     EXT_STRING_W ServerName;
     NTLM_DATABUF NtResponseData;
-    LM2_RESPONSE Lm2Response;
-    USER_SESSION_KEY UserSessionKey;
-    LM_SESSION_KEY LmSessionKey;
+    EXT_DATA LmResponseData; /* LM2_RESPONSE / RESPONSE */
+    EXT_DATA UserSessionKey; //USER_SESSION_KEY
+    EXT_DATA LmSessionKey; // LM_SESSION_KEY
     EXT_DATA AvDataTmp = {0};
     NTLM_DATABUF AvDataRef;
     ULONGLONG NtResponseTimeStamp;
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
-    UNICODE_STRING LmResponseString;
-    UNICODE_STRING UserSessionKeyString;
-    UNICODE_STRING LmSessionKeyString;
     ULONG messageSize;
     BOOL sendLmChallengeResponse;
     BOOL sendMIC;
@@ -503,6 +500,9 @@ CliGenerateAuthenticationMessage(
                        ISC_RET_INTEGRITY;
 
     RtlZeroMemory(&NtResponseData, sizeof(NtResponseData));
+    ExtDataInit(&LmResponseData, NULL, 0);
+    ExtDataInit(&LmSessionKey, NULL, 0);
+    ExtDataInit(&UserSessionKey, NULL, 0);
     ExtWStrInit(&ServerName, NULL);
 
     /* get context */
@@ -725,14 +725,15 @@ CliGenerateAuthenticationMessage(
         debugstr_w((WCHAR*)cred->DomainNameW.Buffer),
         debugstr_w((WCHAR*)ServerName.Buffer));
 
-    NtlmChallengeResponse(&cred->UserNameW,
+    NtlmChallengeResponse(context->NegFlg,
+                          &cred->UserNameW,
                           &cred->PasswordW,
                           &cred->DomainNameW,
                           &ServerName,
                           challenge->ServerChallenge,
                           NtResponseTimeStamp,
                           &NtResponseData,
-                          &Lm2Response,
+                          &LmResponseData,
                           &UserSessionKey,
                           &LmSessionKey);
     TRACE("=== NtResponse ===\n");
@@ -743,13 +744,9 @@ CliGenerateAuthenticationMessage(
     //NtResponseData.bUsed = 24;
 
 //DebugBreak();
-#define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input
-    InitString(LmResponseString, Lm2Response);
-    InitString(UserSessionKeyString, UserSessionKey);
-    InitString(LmSessionKeyString, LmSessionKey);
 
     /* elaborate which data to send ... */
-    sendLmChallengeResponse = FALSE;
+    sendLmChallengeResponse = !context->UseNTLMv2;
     /* MS-NLSP 3.2.5.1.2 says
        * An AUTHENTICATE_MESSAGE indicates the presence of a
          MIC field if the TargetInfo field has an AV_PAIR
@@ -759,9 +756,10 @@ CliGenerateAuthenticationMessage(
     /* FIXME/TODO: CONNECTIONLESS
     / * MS-NLSP - 3.1.5.2.1
      * We SHOULD not set LmChallengeResponse if TargetInfo
-     * is set and NTLMv2 is used.
-    if ((challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO) &&
-        (!context->UseNTLMv2)) */
+     * is set and NTLMv2 is used. */
+    /*if ((challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO) &&
+        (!context->UseNTLMv2))
+        sendLmChallengeResponse = FALSE;*/
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
@@ -769,10 +767,10 @@ CliGenerateAuthenticationMessage(
                   cred->UserNameW.bUsed +
                   ServerName.bUsed +
                   NtResponseData.bUsed +
-                  UserSessionKeyString.Length/*+
+                  UserSessionKey.bUsed/*+
                   LmSessionKeyString.Length*/;
     if (sendLmChallengeResponse)
-        messageSize += LmResponseString.Length;
+        messageSize += LmResponseData.bUsed;
     if (!sendMIC)
         messageSize -= sizeof(AUTHENTICATE_MESSAGE) -
                        FIELD_OFFSET(AUTHENTICATE_MESSAGE, MIC);
@@ -826,10 +824,10 @@ CliGenerateAuthenticationMessage(
 
     if (sendLmChallengeResponse)
     {
-        NtlmUnicodeStringToBlob((PVOID)authmessage,
-                                &LmResponseString,
-                                &authmessage->LmChallengeResponse,
-                                &offset);
+        NtlmExtStringToBlob((PVOID)authmessage,
+                            &LmResponseData,
+                            &authmessage->LmChallengeResponse,
+                            &offset);
     }
     else
     {
@@ -843,10 +841,10 @@ CliGenerateAuthenticationMessage(
                            &authmessage->NtChallengeResponse,
                            &offset);
 
-    NtlmUnicodeStringToBlob((PVOID)authmessage,
-                            &UserSessionKeyString,
-                            &authmessage->EncryptedRandomSessionKey,
-                            &offset);
+    NtlmExtStringToBlob((PVOID)authmessage,
+                         &UserSessionKey,
+                         &authmessage->EncryptedRandomSessionKey,
+                         &offset);
 
     if (messageSize != ( (ULONG)offset - (ULONG)authmessage) )
         WARN("messageSize is %ld, really needed %ld\n", messageSize, (ULONG)offset - (ULONG)authmessage);
@@ -867,6 +865,9 @@ quit:
         NtlmDataBufFree(&NtResponseData);
     ExtStrFree(&ServerName);
     ExtStrFree(&AvDataTmp);
+    ExtStrFree(&LmResponseData);
+    ExtStrFree(&LmSessionKey);
+    ExtStrFree(&UserSessionKey);
     ERR("handle challenge end\n");
     return ret;
 }

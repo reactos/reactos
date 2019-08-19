@@ -159,6 +159,19 @@ ExtDataInit(
     memcpy(dst->Buffer, initdata, len);
     return TRUE;
 }
+BOOL
+ExtDataSetLength(
+    IN PEXT_DATA dst,
+    IN ULONG len,
+    IN BOOL doZeroMem)
+{
+    if (!_ExtStrRealloc(dst, len, FALSE))
+        return FALSE;
+    dst->bUsed = len;
+    if (doZeroMem)
+        memset(dst->Buffer, 0, len);
+    return TRUE;
+}
 
 BOOL
 ExtWStrCat(

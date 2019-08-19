@@ -177,18 +177,18 @@ CRC32(const char *msg, int len)
     return crc;
 }
 
-// (k = 7 byte key, d = 8 byte data) returns 8 bytes in results
+// (k(ey) = 7 byte key, d = 8 byte data) returns 8 bytes in results
 void
-DES(const unsigned char *k, const unsigned char *d, unsigned char * results)
+DES(const UCHAR k[7], const UCHAR d[8], UCHAR results[8])
 {
     SystemFunction001(d, k, (LPBYTE)results);
 }
 
-// (K = 21 byte key, D = 8 bytes of data) returns 24 bytes in results:
+// (K(ey) = 16 byte key, D(ata) = 8 bytes of data) returns 24 bytes in results:
 void
-DESL(unsigned char *k, const unsigned char *d, unsigned char * results)
+DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24])
 {
-    unsigned char keys[21];
+    UCHAR keys[21];
 
     /* copy the first 16 bytes */
     memcpy(keys, k, 16);
