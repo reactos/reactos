@@ -29,7 +29,7 @@ typedef struct _ShimData
 } ShimData;
 
 #define SHIMDATA_MAGIC  0xAC0DEDAB
-
+#define REACTOS_COMPATVERSION_IGNOREMANIFEST 0xffffffff
 
 C_ASSERT(SHIMDATA_MAGIC == REACTOS_SHIMDATA_MAGIC);
 C_ASSERT(sizeof(ShimData) == sizeof(ReactOS_ShimData));
@@ -739,7 +739,8 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
         if (SdbQueryData(hsdb, pQueryResult->atrLayers[n], L"SHIMVERSIONNT", &dwType, &dwValue, &dwValueSize) == ERROR_SUCCESS &&
             dwType == REG_DWORD && dwValueSize == sizeof(dwValue))
         {
-            dwValue = (dwValue % 100) | ((dwValue / 100) << 8);
+            if (dwValue != REACTOS_COMPATVERSION_IGNOREMANIFEST)
+                dwValue = (dwValue % 100) | ((dwValue / 100) << 8);
             if (dwValue > pData->dwRosProcessCompatVersion)
                 pData->dwRosProcessCompatVersion = dwValue;
         }
