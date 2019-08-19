@@ -32,6 +32,27 @@
  */
 // #define REACTOS_SKUS
 
+typedef struct _INBV_PROGRESS_STATE
+{
+    ULONG Floor;
+    ULONG Ceiling;
+    ULONG Bias;
+} INBV_PROGRESS_STATE;
+
+typedef struct _BT_PROGRESS_INDICATOR
+{
+    ULONG Count;
+    ULONG Expected;
+    ULONG Percentage;
+} BT_PROGRESS_INDICATOR, *PBT_PROGRESS_INDICATOR;
+
+typedef enum _ROT_BAR_TYPE
+{
+    RB_UNSPECIFIED,
+    RB_SQUARE_CELLS,
+    RB_PROGRESS_BAR
+} ROT_BAR_TYPE;
+
 /*
  * Screen resolution (for default VGA)
  */
@@ -155,8 +176,8 @@ typedef struct tagRGBQUAD
 
 static RGBQUAD MainPalette[16];
 
-#define PALETTE_FADE_STEPS  15
-#define PALETTE_FADE_TIME   (20 * 1000) /* 20 ms */
+#define PALETTE_FADE_STEPS  12
+#define PALETTE_FADE_TIME   (15 * 1000) /* 15 ms */
 
 /** From bootvid/precomp.h **/
 //
@@ -1062,7 +1083,7 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
-    PVOID Header = NULL, Footer = NULL, Screen = NULL;
+    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[24 * 9];
@@ -1155,8 +1176,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
          */
         MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
-        /* Load the standard boot screen */
-        Screen = InbvGetResourceAddress(IDB_BOOT_SCREEN);
+        /* Load boot screen logo */
+        BootLogo = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
 
 #ifdef REACTOS_SKUS
         Text = NULL;
@@ -1197,15 +1218,19 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
         /* Make sure we have a logo */
-        if (Screen)
+        if (BootLogo)
         {
             /* Save the main image palette for implementing the fade-in effect */
-            PBITMAPINFOHEADER BitmapInfoHeader = Screen;
-            LPRGBQUAD Palette = (LPRGBQUAD)((PUCHAR)Screen + BitmapInfoHeader->biSize);
+            PBITMAPINFOHEADER BitmapInfoHeader = BootLogo;
+            LPRGBQUAD Palette = (LPRGBQUAD)((PUCHAR)BootLogo + BitmapInfoHeader->biSize);
             RtlCopyMemory(MainPalette, Palette, sizeof(MainPalette));
 
-            /* Blit the background */
-            BitBltPalette(Screen, TRUE, 0, 0);
+            /* Draw the logo at the center of the screen */
+            BitBltAligned(BootLogo,
+                          TRUE,
+                          AL_HORIZONTAL_CENTER,
+                          AL_VERTICAL_CENTER,
+                          0, 0, 0, 34);
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
             /* Choose progress bar */
@@ -1229,6 +1254,22 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             }
 #endif
         }
+
+        /* Load and draw progress bar bitmap */
+        BootProgress = InbvGetResourceAddress(IDB_PROGRESS_BAR);
+        BitBltAligned(BootProgress,
+                      TRUE,
+                      AL_HORIZONTAL_CENTER,
+                      AL_VERTICAL_CENTER,
+                      0, 118, 0, 0);
+
+        /* Load and draw copyright text bitmap */
+        BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
+        BitBltAligned(BootCopy,
+                      TRUE,
+                      AL_HORIZONTAL_LEFT,
+                      AL_VERTICAL_BOTTOM,
+                      22, 0, 0, 20);
 
 #ifdef REACTOS_SKUS
         /* Draw the SKU text if it exits */
@@ -1309,14 +1350,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
         RotBarSelection = TempRotBarSelection;
         InbvRotBarInit();
         InbvReleaseLock();
-
-        // FIXME: This was added to allow animation start before the processor hangs
-        if (TempRotBarSelection != RB_UNSPECIFIED)
-        {
-            LARGE_INTEGER Delay;
-            Delay.QuadPart = -3000000; // 300 ms
-            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
-        }
     }
 #endif
 }
