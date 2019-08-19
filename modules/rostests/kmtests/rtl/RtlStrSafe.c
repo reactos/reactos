@@ -38,6 +38,7 @@ Test_RtlUnicodeStringPrintf()
     UsString.Length = 0;
     UsString.MaximumLength = sizeof(Buffer);
 
+    KmtStartSeh();
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringInts, 1, 2, 3), STATUS_SUCCESS);
     ok_eq_uint(UsString.Length, sizeof(Result) - sizeof(WCHAR));
     ok_eq_uint(UsString.MaximumLength, sizeof(Buffer));
@@ -95,6 +96,9 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") -sizeof(WCHAR));
     ok_eq_char(UsString.Buffer[11], (WCHAR)0);
     ok_eq_uint(0, memcmp(OvrBuffer + 12, Buffer + 12, sizeof(Buffer) - (12 * sizeof(WCHAR))));
+
+    // None of these functions should have crashed.
+    KmtEndSeh(STATUS_SUCCESS);
 }
 
 TESTAPI
@@ -122,6 +126,7 @@ Test_RtlUnicodeStringPrintfEx()
 
     /* STATUS_SUCCESS test, fill behind flag: low-byte as fill character */
 
+    KmtStartSeh();
     ok_eq_hex(RtlUnicodeStringPrintfEx(&UsString, &RemString, STRSAFE_FILL_BEHIND | 0xFF, FormatStringInts, 1, 2, 3), STATUS_SUCCESS);
     
     ok_eq_uint(UsString.Length, sizeof(Result) - sizeof(WCHAR));
@@ -170,6 +175,9 @@ Test_RtlUnicodeStringPrintfEx()
     ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") - sizeof(WCHAR));
     ok_eq_char(UsString.Buffer[11], (WCHAR)0);
     ok_eq_uint(0, memcmp(OvrBuffer + 12, Buffer + 12, sizeof(Buffer) - (12 * sizeof(WCHAR))));
+
+    // None of these functions should have crashed.
+    KmtEndSeh(STATUS_SUCCESS);
 }
 
 START_TEST(RtlStrSafe)
