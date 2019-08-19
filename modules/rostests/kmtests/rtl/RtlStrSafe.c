@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Test for ntstrsafe.h functions
  * COPYRIGHT:       Copyright 2018 Hernán Di Pietro <hernan.di.pietro@gmail.com>
  */
@@ -78,7 +78,7 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_hex(RtlUnicodeStringPrintf(NULL, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, NULL, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
 
-    UsStringNull.Buffer = (PWCH)NULL;
+    UsStringNull.Buffer = NULL;
     UsStringNull.Length = 0;
     UsStringNull.MaximumLength = 0;
     ok_eq_bool(RtlUnicodeStringPrintf(&UsStringNull, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
@@ -116,7 +116,7 @@ Test_RtlUnicodeStringPrintfEx()
     UsString.Length = 0;
     UsString.MaximumLength = sizeof(Buffer);
 
-    RemString.Buffer = (PWCH)NULL;
+    RemString.Buffer = NULL;
     RemString.Length = 0;
     RemString.MaximumLength = 0;
 
@@ -138,7 +138,7 @@ Test_RtlUnicodeStringPrintfEx()
     UsString.Length = 0;
     UsString.MaximumLength = sizeof(BufferSmall);
 
-    RemString.Buffer = (PWCH)NULL;
+    RemString.Buffer = NULL;
     RemString.Length = 0;
     RemString.MaximumLength = 0;
     
