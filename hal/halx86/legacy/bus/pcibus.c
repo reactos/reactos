@@ -311,6 +311,36 @@ HalpWritePCIConfig(IN PBUS_HANDLER BusHandler,
     }
 }
 
+#ifdef SARCH_XBOX
+BOOLEAN
+NTAPI
+HalpXboxBlacklistedPCISlot(IN PBUS_HANDLER BusHandler,
+                           IN PCI_SLOT_NUMBER Slot)
+{
+    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
+     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
+     * video card, so it appears to be present on 1:0:0 - 1:31:0.
+     * We hack around these problems by indicating "device not present" for devices
+     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
+    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
+        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
+        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
+    {
+        DPRINT("Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
+        return TRUE;
+    }
+
+    /* Temporary hack to avoid stack overflow in kernel, see CORE-16319 */
+    if (BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 8 && Slot.u.bits.FunctionNumber == 0)
+    {
+        DPRINT("Blacklisted PCI-to-PCI bridge (00:08.0 - PCI\\VEN_10DE&DEV_01B8, see CORE-16319)\n");
+        return TRUE;
+    }
+
+    return FALSE;
+}
+#endif
+
 BOOLEAN
 NTAPI
 HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
@@ -326,18 +356,7 @@ HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
     if (Slot.u.bits.DeviceNumber >= BusData->MaxDevice) return FALSE;
 
 #ifdef SARCH_XBOX
-    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
-     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
-     * video card, so it appears to be present on 1:0:0 - 1:31:0.
-     * We hack around these problems by indicating "device not present" for devices
-     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
-    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
-        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
-        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
-    {
-        DPRINT("HalpValidPCISlot(): Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
-        return FALSE;
-    }
+    if (HalpXboxBlacklistedPCISlot(BusHandler, Slot)) return FALSE;
 #endif
 
     /* Function 0 doesn't need checking */
@@ -378,16 +397,8 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
 
     Slot.u.AsULONG = SlotNumber;
 #ifdef SARCH_XBOX
-    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
-     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
-     * video card, so it appears to be present on 1:0:0 - 1:31:0.
-     * We hack around these problems by indicating "device not present" for devices
-     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
-    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
-        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
-        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
+    if (HalpXboxBlacklistedPCISlot(BusHandler, Slot))
     {
-        DPRINT("Blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
         if (Offset == 0 && Length >= sizeof(USHORT))
         {
             *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
@@ -470,18 +481,7 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
 
     Slot.u.AsULONG = SlotNumber;
 #ifdef SARCH_XBOX
-    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
-     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
-     * video card, so it appears to be present on 1:0:0 - 1:31:0.
-     * We hack around these problems by indicating "device not present" for devices
-     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
-    if ((BusHandler->BusNumber == 0 && Slot.u.bits.DeviceNumber == 0 &&
-        (Slot.u.bits.FunctionNumber == 1 || Slot.u.bits.FunctionNumber == 2)) ||
-        (BusHandler->BusNumber == 1 && Slot.u.bits.DeviceNumber != 0))
-    {
-        DPRINT1("Trying to set data on blacklisted PCI slot (%d:%d:%d)\n", BusHandler->BusNumber, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
-        return 0;
-    }
+    if (HalpXboxBlacklistedPCISlot(BusHandler, Slot)) return 0;
 #endif
 
     /* Normalize the length */
