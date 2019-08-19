@@ -743,7 +743,7 @@ BEGIN
     /* special folders */
     IDS_DESKTOP "שולחן עבודה"
     IDS_MYCOMPUTER "המחשב שלי"
-    IDS_RECYCLEBIN_FOLDER_NAME "אשפה"
+    IDS_RECYCLEBIN_FOLDER_NAME "סל המיחזור"
     IDS_CONTROLPANEL "לוח הבקרה"
     IDS_ADMINISTRATIVETOOLS "כלי ניהול"
 
