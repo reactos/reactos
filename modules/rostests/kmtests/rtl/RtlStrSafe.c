@@ -3,6 +3,7 @@
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Test for ntstrsafe.h functions
  * COPYRIGHT:       Copyright 2018 Hernán Di Pietro <hernan.di.pietro@gmail.com>
+ *                  Copyright 2019 Colin Finck <colin@reactos.org>
  */
 
 #define KMT_EMULATE_KERNEL
@@ -46,7 +47,7 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_wchar(UsString.Buffer[2], L'2');
     ok_eq_wchar(UsString.Buffer[3], L' ');
     ok_eq_wchar(UsString.Buffer[4], L'3');
-    ok_eq_wchar(UsString.Buffer[5], (WCHAR) 0);
+    ok_eq_wchar(UsString.Buffer[5], L'\0');
     
     /* STATUS_BUFFER_OVERFLOW tests */
 
@@ -56,10 +57,10 @@ Test_RtlUnicodeStringPrintf()
     
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
-    ok_eq_char(UsString.Buffer[0], L'A');
-    ok_eq_char(UsString.Buffer[1], L'\0');
+    ok_eq_wchar(UsString.Buffer[0], L'A');
+    ok_eq_wchar(UsString.Buffer[1], L'\0');
     for (i = 2; i < sizeof(BufferSmall); i++)
-        ok_eq_char(UsString.Buffer[i], 0xAA);
+        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
@@ -67,15 +68,15 @@ Test_RtlUnicodeStringPrintf()
 
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"0123", L"4567", L"89AB"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
-    ok_eq_char(UsString.Buffer[0], L'0');
-    ok_eq_char(UsString.Buffer[1], L'1');
-    ok_eq_char(UsString.Buffer[2], L'2');
-    ok_eq_char(UsString.Buffer[3], L'3');
-    ok_eq_char(UsString.Buffer[4], L' ');
-    ok_eq_char(UsString.Buffer[5], L'4');
-    ok_eq_char(UsString.Buffer[6], L'\0');
+    ok_eq_wchar(UsString.Buffer[0], L'0');
+    ok_eq_wchar(UsString.Buffer[1], L'1');
+    ok_eq_wchar(UsString.Buffer[2], L'2');
+    ok_eq_wchar(UsString.Buffer[3], L'3');
+    ok_eq_wchar(UsString.Buffer[4], L' ');
+    ok_eq_wchar(UsString.Buffer[5], L'4');
+    ok_eq_wchar(UsString.Buffer[6], L'\0');
     for (i = 7; i < sizeof(BufferSmall); i++)
-        ok_eq_char(UsString.Buffer[i], 0xAA);
+        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
 
     ///* STATUS_INVALID_PARAMETER tests */
 
@@ -96,8 +97,8 @@ Test_RtlUnicodeStringPrintf()
     UsString.MaximumLength = 16 * sizeof(WCHAR);
 
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"abc", L"def", L"ghi"), STATUS_SUCCESS);
-    ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") -sizeof(WCHAR));
-    ok_eq_char(UsString.Buffer[11], (WCHAR)0);
+    ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") - sizeof(WCHAR));
+    ok_eq_wchar(UsString.Buffer[11], L'\0');
     ok_eq_uint(0, memcmp(OvrBuffer + 12, Buffer + 12, sizeof(Buffer) - (12 * sizeof(WCHAR))));
 
     // None of these functions should have crashed.
@@ -154,16 +155,16 @@ Test_RtlUnicodeStringPrintfEx()
     
     ok_eq_hex(RtlUnicodeStringPrintfEx(&UsString, &RemString, 0, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
-    ok_eq_char(UsString.Buffer[0], L'A');
-    ok_eq_char(UsString.Buffer[1], L'A');
-    ok_eq_char(UsString.Buffer[2], L'A');
-    ok_eq_char(UsString.Buffer[3], L' ');
-    ok_eq_char(UsString.Buffer[4], L'B');
-    ok_eq_char(UsString.Buffer[5], L'B');
-    ok_eq_char(UsString.Buffer[6], L'B');
-    ok_eq_char(UsString.Buffer[7], (WCHAR)0);
+    ok_eq_wchar(UsString.Buffer[0], L'A');
+    ok_eq_wchar(UsString.Buffer[1], L'A');
+    ok_eq_wchar(UsString.Buffer[2], L'A');
+    ok_eq_wchar(UsString.Buffer[3], L' ');
+    ok_eq_wchar(UsString.Buffer[4], L'B');
+    ok_eq_wchar(UsString.Buffer[5], L'B');
+    ok_eq_wchar(UsString.Buffer[6], L'B');
+    ok_eq_wchar(UsString.Buffer[7], L'\0');
     for (i = 8; i < sizeof(BufferSmall); i++)
-        ok_eq_char(UsString.Buffer[i], 0xAA);
+        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
 
     // Takes \0 into account
     ok_eq_pointer(RemString.Buffer, UsString.Buffer + (UsString.Length - 1) / sizeof(WCHAR));
@@ -180,7 +181,7 @@ Test_RtlUnicodeStringPrintfEx()
 
     ok_eq_hex(RtlUnicodeStringPrintfEx(&UsString, &RemString, 0, FormatStringStrs, L"abc", L"def", L"ghi"), STATUS_SUCCESS);
     ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") - sizeof(WCHAR));
-    ok_eq_char(UsString.Buffer[11], (WCHAR)0);
+    ok_eq_wchar(UsString.Buffer[11], L'\0');
     ok_eq_uint(0, memcmp(OvrBuffer + 12, Buffer + 12, sizeof(Buffer) - (12 * sizeof(WCHAR))));
 
     // None of these functions should have crashed.
