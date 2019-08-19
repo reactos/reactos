@@ -36,6 +36,20 @@ else()
 "Whether to compile for debugging.")
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(GCC TRUE CACHE BOOL "The compiler is GCC")
+    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
+elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
+    set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
+    # MSVC variable is already set by cmake
+else()
+    message("WARNING: the compiler has not been recognized")
+endif()
+
 if(MSVC AND (NOT USE_CLANG_CL))
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
