@@ -30,6 +30,7 @@
 #endif
 
 #define NTSTRSAFEAPI static __inline NTSTATUS NTAPI
+#define NTSTRSAFEVAPI static __inline NTSTATUS __cdecl
 #define NTSTRSAFE_INLINE_API static __inline NTSTATUS NTAPI
 
 #ifndef NTSTRSAFE_MAX_CCH
@@ -1081,21 +1082,21 @@ RtlStringCbVPrintfW(
     return RtlStringVPrintfWorkerW(pszDest, cchDest, pszFormat, argList);
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfA(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cchDest,
     _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfW(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cchDest,
     _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfA(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cchDest,
@@ -1119,7 +1120,7 @@ RtlStringCchPrintfA(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfW(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cchDest,
@@ -1143,21 +1144,21 @@ RtlStringCchPrintfW(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfA(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cbDest,
     _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfW(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cbDest,
     _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfA(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cbDest,
@@ -1181,7 +1182,7 @@ RtlStringCbPrintfA(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfW(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cbDest,
@@ -1206,7 +1207,7 @@ RtlStringCbPrintfW(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfExA(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cchDest,
@@ -1216,7 +1217,7 @@ RtlStringCchPrintfExA(
     _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfExW(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cchDest,
@@ -1226,7 +1227,7 @@ RtlStringCchPrintfExW(
     _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfExA(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cchDest,
@@ -1253,7 +1254,7 @@ RtlStringCchPrintfExA(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCchPrintfExW(
     _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cchDest,
@@ -1281,7 +1282,7 @@ RtlStringCchPrintfExW(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfExA(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cbDest,
@@ -1291,7 +1292,7 @@ RtlStringCbPrintfExA(
     _In_ _Printf_format_string_ NTSTRSAFE_PCSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfExW(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cbDest,
@@ -1301,7 +1302,7 @@ RtlStringCbPrintfExW(
     _In_ _Printf_format_string_ NTSTRSAFE_PCWSTR pszFormat,
     ...);
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfExA(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,
     _In_ size_t cbDest,
@@ -1341,7 +1342,7 @@ RtlStringCbPrintfExA(
     return Status;
 }
 
-static __inline NTSTATUS
+NTSTRSAFEVAPI
 RtlStringCbPrintfExW(
     _Out_writes_bytes_(cbDest) _Always_(_Post_z_) NTSTRSAFE_PWSTR pszDest,
     _In_ size_t cbDest,
@@ -3267,9 +3268,7 @@ RtlUnicodeStringValidateEx(
     return RtlpUnicodeStringValidate(SourceString, dwFlags);
 }
 
-static
-NTSTATUS
-__cdecl
+NTSTRSAFEVAPI
 RtlUnicodeStringPrintf(
     _In_ PUNICODE_STRING DestinationString,
     _In_ NTSTRSAFE_PCWSTR pszFormat,
@@ -3308,9 +3307,7 @@ RtlUnicodeStringPrintf(
     return Status;
 }
 
-static
-NTSTATUS
-__cdecl
+NTSTRSAFEVAPI
 RtlUnicodeStringPrintfEx(
     _In_opt_ PUNICODE_STRING DestinationString,
     _In_opt_  PUNICODE_STRING RemainingString,
