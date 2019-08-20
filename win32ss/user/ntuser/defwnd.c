@@ -539,6 +539,9 @@ IntDefWindowProc(
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
    USER_REFERENCE_ENTRY Ref;
+   BOOL IsTaskBar;
+   DWORD Style;
+   DWORD ExStyle;
 
    if (Msg > WM_USER) return 0;
 
@@ -785,7 +788,22 @@ IntDefWindowProc(
          {
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
-            if (topWnd)
+
+            /* Test for typical TaskBar ExStyle Values */
+            ExStyle = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
+            TRACE("ExStyle is '%x'.\n", ExStyle);
+
+            /* Test for typical TaskBar Style Values */
+            Style = (topWnd->style & (WS_POPUP | WS_VISIBLE |
+                        WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
+            TRACE("Style is '%x'.\n", Style);
+
+            /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
+            IsTaskBar = (Style == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+                        && (ExStyle == WS_EX_TOOLWINDOW);
+            TRACE("This %s the TaskBar.\n", IsTaskBar ? "is" : "is not");
+
+            if (topWnd && !IsTaskBar)  /* Second test is so we are not touching the Taskbar */
             {
                if ((topWnd->style & WS_THICKFRAME) == 0)
                {
