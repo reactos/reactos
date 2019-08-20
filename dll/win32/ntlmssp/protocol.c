@@ -49,8 +49,8 @@ CliGenerateNegotiateMessage(
     }
 
     messageSize = sizeof(NEGOTIATE_MESSAGE) +
-                  g->NbMachineNameOEM.Length +
-                  g->NbDomainNameOEM.Length;
+                  g->NbMachineNameOEM.bUsed +
+                  g->NbDomainNameOEM.bUsed;
 
     /* if should not allocate */
     if (!(ISCContextReq & ISC_REQ_ALLOCATE_MEMORY))
@@ -388,11 +388,8 @@ SvrHandleNegotiateMessage(
         NtlmCreateExtAStrFromBlob(InputToken, negoMessage->OemWorkstationName,
                                   &OemWorkstationName);
 
-        // FIXME use ExtAStrIsEqual ...
-        //if (RtlEqualString(&OemWorkstationNameRef, &g->NbMachineNameOEM, FALSE) &&
-        //    RtlEqualString(&OemDomainNameRef, &g->NbDomainNameOEM, FALSE))
-        if ((strcmp((char*)OemWorkstationName.Buffer, g->NbMachineNameOEM.Buffer) == 0) &&
-            (strcmp((char*)OemDomainName.Buffer, g->NbDomainNameOEM.Buffer) == 0))
+        if (ExtAStrIsEqual1(&OemWorkstationName, &g->NbMachineNameOEM) &&
+            ExtAStrIsEqual1(&OemDomainName, &g->NbDomainNameOEM))
         {
             TRACE("local negotiate detected!\n");
             negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
@@ -1009,7 +1006,6 @@ SvrAuthMsgProcessData(
     UCHAR* ChallengeFromClient;
     EXT_STRING_W ServerName;
     ULONGLONG TimeStamp = {0};
-    NTLM_DATABUF ntRespAvl;
     NTLM_DATABUF ExpectedNtChallengeResponse;
     LM2_RESPONSE ExpectedLmChallengeResponse;
     USER_SESSION_KEY SessionBaseKey;
@@ -1022,21 +1018,12 @@ SvrAuthMsgProcessData(
     UCHAR ClientSealingKey[16];
     UCHAR ServerSealingKey[16];
     HANDLE ClientHandle, ServerHandle;
-    ULONG cnlen;
-    PVOID cnptr;
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     ExpectedNtChallengeResponse.bUsed = 0;
-    memset(&ServerName, 0, sizeof(ServerName));
 
-    /* NetBIOS or dns Name of the Server
-     * Which one to prefer? */
-    ntRespAvl.pData = ((PBYTE)ad->NtChallengeResponse.Buffer) +
-              FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, Buffer);
-    ntRespAvl.bAllocated = 0;
-    ntRespAvl.bUsed = (ULONG)((PBYTE)ntRespAvl.pData -
-                                ad->NtChallengeResponse.bUsed);
-    NtlmAvlGet(&ntRespAvl, MsvAvNbComputerName, &cnptr, &cnlen);
-    ExtWStrSetN(&ServerName, (WCHAR*)cnptr, cnlen / sizeof(WCHAR));
+    /* Servername is NetBIOS Name or DNS Hostname */
+    ExtWStrInit(&ServerName, (WCHAR*)gsvr->NbMachineName.Buffer);
 
     //if (AUTHENTICATE_MESSAGE.UserNameLen == 0 AND
     //AUTHENTICATE_MESSAGE.NtChallengeResponse.Length == 0 AND
@@ -1136,7 +1123,7 @@ SvrAuthMsgProcessData(
     // ExpectedLmChallengeResponse)
     /* Really and-condition?? */
     /* HACK: cast to PEXT_DATA */
-    if (!ExtDataIsEqual(&ad->NtChallengeResponse, (PEXT_DATA)&ExpectedNtChallengeResponse) &&
+    if (!ExtDataIsEqual1(&ad->NtChallengeResponse, (PEXT_DATA)&ExpectedNtChallengeResponse) &&
        ((ad->LmChallengeResponseIsNULL) ||
         memcmp(&ad->LmChallengeResponse, &ExpectedLmChallengeResponse, sizeof(ExpectedLmChallengeResponse)) != 0))
     {
@@ -1230,6 +1217,9 @@ SvrAuthMsgExtractData(
     IN OUT PAUTH_DATA ad)
 {
     SECURITY_STATUS ret = SEC_E_OK;
+
+    /* set client Negotiation flags */
+    context->cli_NegFlg = ad->authMessage->NegotiateFlags;
 
     /* datagram */
     if(context->CfgFlg & NTLMSSP_NEGOTIATE_DATAGRAM)

@@ -144,21 +144,18 @@ NtlmInitializeGlobals(VOID)
 
     ERR("%s\n", debugstr_w(domName));
 
-    RtlCreateUnicodeString(&gsvr->NbMachineName, compName);
-    RtlCreateUnicodeString(&gsvr->DnsMachineName, dnsName);
-    RtlCreateUnicodeString(&gsvr->NbDomainName, domName);
+    ExtWStrInit(&gsvr->NbMachineName, compName);
+    ExtWStrInit(&gsvr->DnsMachineName, dnsName);
+    ExtWStrInit(&gsvr->NbDomainName, domName);
 
-    RtlUnicodeStringToOemString(&g->NbMachineNameOEM,
-                                &gsvr->NbMachineName,
-                                TRUE);
+    ExtWStrToAStr(&g->NbMachineNameOEM,
+                  &gsvr->NbMachineName, TRUE, TRUE);
 
-    RtlUnicodeStringToOemString(&g->NbDomainNameOEM,
-                                &gsvr->NbDomainName,
-                                TRUE);
+    ExtWStrToAStr(&g->NbDomainNameOEM,
+                  &gsvr->NbDomainName, TRUE, TRUE);
 
-    RtlUnicodeStringToOemString(&gsvr->DnsMachineNameOEM,
-                                &gsvr->DnsMachineName,
-                                TRUE);
+    ExtWStrToAStr(&gsvr->DnsMachineNameOEM,
+                  &gsvr->DnsMachineName, TRUE, TRUE);
 
     status = NtOpenProcessToken(NtCurrentProcess(),
                                 TOKEN_QUERY | TOKEN_DUPLICATE,
@@ -169,10 +166,10 @@ NtlmInitializeGlobals(VOID)
         ERR("could not get process token!!\n");
     }
     /* init global target AV pairs */
-    AvPairsLen = gsvr->NbDomainName.Length + //fix me: domain controller name
-                 gsvr->NbMachineName.Length + //computer name
-                 gsvr->DnsMachineName.Length + //dns computer name
-                 gsvr->DnsMachineName.Length + //fix me: dns domain name
+    AvPairsLen = gsvr->NbDomainName.bUsed + //fix me: domain controller name
+                 gsvr->NbMachineName.bUsed + //computer name
+                 gsvr->DnsMachineName.bUsed + //dns computer name
+                 gsvr->DnsMachineName.bUsed + //fix me: dns domain name
                  sizeof(MSV1_0_AV_PAIR)*4;
 
     if (!NtlmAvlAlloc(&gsvr->NtlmAvTargetInfoPart, AvPairsLen, TRUE))
@@ -184,19 +181,19 @@ NtlmInitializeGlobals(VOID)
     /* Fill NtlmAvTargetInfoPart. It contains not all data we need.
      * Timestamp and EOL is appended when challange message is
      * generated. */
-    if (gsvr->NbMachineName.Length > 0)
+    if (gsvr->NbMachineName.bUsed > 0)
         NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbComputerName,
-                   gsvr->NbMachineName.Buffer, gsvr->NbMachineName.Length);
-    if (gsvr->NbDomainName.Length > 0)
+                   gsvr->NbMachineName.Buffer, gsvr->NbMachineName.bUsed);
+    if (gsvr->NbDomainName.bUsed > 0)
         NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbDomainName,
-                   gsvr->NbDomainName.Buffer, gsvr->NbDomainName.Length);
-    if (gsvr->DnsMachineName.Length > 0)
+                   gsvr->NbDomainName.Buffer, gsvr->NbDomainName.bUsed);
+    if (gsvr->DnsMachineName.bUsed > 0)
         NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsComputerName,
-                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.Length);
+                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
     /* FIXME: This is not correct! - (same value as above??) */
-    if (gsvr->DnsMachineName.Length > 0)
+    if (gsvr->DnsMachineName.bUsed > 0)
         NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsDomainName,
-                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.Length);
+                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
     //TODO: MsvAvDnsTreeName
 
     ERR("NtlmAvTargetInfoPart len 0x%x\n", gsvr->NtlmAvTargetInfoPart.bUsed);
@@ -212,12 +209,12 @@ NtlmTerminateGlobals(VOID)
     PNTLMSSP_GLOBALS_SVR gsvr = &ntlmGlobalsSvr;
     PNTLMSSP_GLOBALS_CLI gcli = &ntlmGlobalsCli;
 
-    RtlFreeUnicodeString(&gsvr->NbMachineName);
-    RtlFreeUnicodeString(&gsvr->NbDomainName);
-    RtlFreeUnicodeString(&gsvr->DnsMachineName);
-    RtlFreeOemString(&g->NbMachineNameOEM);
-    RtlFreeOemString(&g->NbDomainNameOEM);
-    RtlFreeOemString(&gsvr->DnsMachineNameOEM);
+    ExtStrFree(&gsvr->NbMachineName);
+    ExtStrFree(&gsvr->NbDomainName);
+    ExtStrFree(&gsvr->DnsMachineName);
+    ExtStrFree(&g->NbMachineNameOEM);
+    ExtStrFree(&g->NbDomainNameOEM);
+    ExtStrFree(&gsvr->DnsMachineNameOEM);
     NtlmAvlFree(&gsvr->NtlmAvTargetInfoPart);
     NtClose(g->NtlmSystemSecurityToken);
 

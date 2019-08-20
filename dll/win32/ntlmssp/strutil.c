@@ -289,17 +289,26 @@ ExtWStrToAStr(
 }
 
 BOOL
-ExtAStrIsEqual(
-    IN PEXT_STRING v1,
+ExtAStrIsEqual2(
+    IN PEXT_STRING_A v1,
     char* v2)
 {
     if (v1->bUsed != strlen(v2))
         return FALSE;
     return (memcmp(v1->Buffer, v2, v1->bUsed) == 0);
 }
+BOOL
+ExtAStrIsEqual1(
+    IN PEXT_STRING_A v1,
+    IN PEXT_STRING_A v2)
+{
+    if (v1->bUsed != v2->bUsed)
+        return FALSE;
+    return (memcmp(v1->Buffer, v2->Buffer, v1->bUsed) == 0);
+}
 
 BOOL
-ExtDataIsEqual(
+ExtDataIsEqual1(
     IN PEXT_DATA v1,
     IN PEXT_DATA v2)
 {

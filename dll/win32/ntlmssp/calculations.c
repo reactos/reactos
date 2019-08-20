@@ -393,6 +393,15 @@ CliComputeResponseNTLMv2(
     UCHAR NTProofStr[16];
     BOOL avOk;
     PMSV1_0_NTLM3_RESPONSE pNtResponse;
+    UCHAR ClientChallenge0[MSV1_0_CHALLENGE_LENGTH];
+
+    /* prevent access to NULL pointer */
+    if (ClientChallenge == NULL)
+    {
+        ClientChallenge = ClientChallenge0;
+        memset(ClientChallenge0, 0, MSV1_0_CHALLENGE_LENGTH);
+    }
+
 
     TRACE("XXX\n");
     TRACE("user %S\n", user->Buffer);

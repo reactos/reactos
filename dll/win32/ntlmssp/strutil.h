@@ -102,11 +102,15 @@ ExtAStrSetN(
     IN size_t chLen);
 #define ExtAStrSet(dst, newstr) ExtAStrSetN(dst, newstr, (size_t)-1)
 BOOL
-ExtAStrIsEqual(
-    IN PEXT_STRING v1,
+ExtAStrIsEqual1(
+    IN PEXT_STRING_A v1,
+    IN PEXT_STRING_A v2);
+BOOL
+ExtAStrIsEqual2(
+    IN PEXT_STRING_A v1,
     char* v2);
 BOOL
-ExtDataIsEqual(
+ExtDataIsEqual1(
     IN PEXT_DATA v1,
     IN PEXT_DATA v2);
 

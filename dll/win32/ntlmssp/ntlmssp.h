@@ -81,8 +81,8 @@ typedef struct _NTLMSSP_GLOBALS
 
     HANDLE NtlmSystemSecurityToken;
     /* needed by client and server */
-    OEM_STRING NbMachineNameOEM;
-    OEM_STRING NbDomainNameOEM;
+    EXT_STRING_A NbMachineNameOEM;
+    EXT_STRING_A NbDomainNameOEM;
 } NTLMSSP_GLOBALS, *PNTLMSSP_GLOBALS;
 
 
@@ -139,14 +139,14 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     //DnsForestName: A string that indicates the FQDN of the server's forest. The DnsForestName is
     //NULL on machines that are not domain joined.
     /* MS-NLMP: A string that indicates the FQDN of the server. */
-    UNICODE_STRING DnsMachineName;
-    OEM_STRING DnsMachineNameOEM;
+    EXT_STRING_W DnsMachineName;
+    EXT_STRING_A DnsMachineNameOEM;
     /* MS-NLMP: A string that indicates the NetBIOS
      * name of the server's domain. */
-    UNICODE_STRING NbDomainName;
+    EXT_STRING_W NbDomainName;
     /* MS-NLMP: A string that indicates the NetBIOS
      * machine name of the server. */
-    UNICODE_STRING NbMachineName;
+    EXT_STRING_W NbMachineName;
     //The following NTLM server configuration variables are internal to the client and impact all
     //authenticated sessions:
     //ServerBlock: A Boolean setting that disables the server from generating challenges and responding
