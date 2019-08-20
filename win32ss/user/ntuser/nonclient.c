@@ -256,6 +256,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    //PMONITOR mon = 0; Don't port sync from wine!!! This breaks explorer task bar sizing!!
    //                  The task bar can grow in size and can not reduce due to the change
    //                  in the work area.
+   DWORD ExStyleTB, StyleTB;
+   BOOL IsTaskBar;
 
    Style = pwnd->style;
    ExStyle = pwnd->ExStyle;
@@ -394,6 +396,20 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       /* Exit on button-up */
       if (msg.message == WM_LBUTTONUP)
       {
+         /* Test for typical TaskBar ExStyle Values */
+         ExStyleTB = (ExStyle & WS_EX_TOOLWINDOW);
+         TRACE("ExStyle is '%x'.\n", ExStyleTB);
+
+         /* Test for typical TaskBar Style Values */
+         StyleTB = (Style & (WS_POPUP | WS_VISIBLE |
+                        WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
+         TRACE("Style is '%x'.\n", StyleTB);
+
+         /* Test for masked typical TaskBar Style and ExStyles to detect TaskBar */
+         IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+                     && (ExStyleTB == WS_EX_TOOLWINDOW);
+         TRACE("This %s the TaskBar.\n", IsTaskBar ? "is" : "is not");
+
          // check for snapping if was moved by caption
          if (hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
@@ -401,6 +417,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             BOOL doSideSnap = FALSE;
             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
 
+            /* if this is the taskbar, then we want to just exit */
+            if (IsTaskBar)
+            {
+               break;
+            }
             // snap to left
             if (pt.x <= snapRect.left)
             {
