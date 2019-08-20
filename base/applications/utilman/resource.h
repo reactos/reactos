@@ -15,6 +15,9 @@
 /* List box resource */
 #define IDC_LISTBOX                    60
 
+/* Accelerators */
+#define IDC_UTILMAN_ACCEL              70
+
 /* Utility tools name strings */
 #define IDS_OSK                        100
 #define IDS_MAGNIFIER                  101

@@ -380,6 +380,8 @@ INT WINAPI wWinMain(
     HANDLE hMutex;
     DWORD dwError;
     INITCOMMONCONTROLSEX iccex;
+    MSG msg;
+    HACCEL hAccelTable;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(pCmdLine);
@@ -427,6 +429,26 @@ INT WINAPI wWinMain(
                MAKEINTRESOURCEW(IDD_MAIN_DIALOG),
                GetDesktopWindow(),
                DlgProc);
+
+    /* Begin loading keyboard accelerators */
+    hAccelTable = LoadAcceleratorsW(Globals.hInstance, MAKEINTRESOURCEW(IDC_UTILMAN_ACCEL));
+
+    /* Main message loop */
+    while (IsWindow(Globals.hMainDlg) && GetMessageW(&msg, NULL, 0, 0))
+    {
+        /* Process the accelerators table */
+        if (!TranslateAcceleratorW(Globals.hMainDlg, hAccelTable, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+    }
+
+    /* Destroy the accelerators table */
+    if (hAccelTable != NULL)
+    {
+        DestroyAcceleratorTable(hAccelTable);
+    }
 
     /* Delete the mutex */
     if (hMutex)
