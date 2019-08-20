@@ -266,6 +266,16 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return S_OK;
 }
 
+LRESULT CFindFolder::StopSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (m_hStopEvent)
+    {
+        SetEvent(m_hStopEvent);
+        m_hStopEvent = NULL;
+    }
+    return 0;
+}
+
 LRESULT CFindFolder::AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (!lParam)

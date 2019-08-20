@@ -27,8 +27,9 @@
 #include "../resource.h"
 
 #define WM_SEARCH_START          WM_USER + 0
-#define WM_SEARCH_ADD_RESULT     WM_USER + 1
-#define WM_SEARCH_UPDATE_STATUS  WM_USER + 2
+#define WM_SEARCH_STOP           WM_USER + 1
+#define WM_SEARCH_ADD_RESULT     WM_USER + 2
+#define WM_SEARCH_UPDATE_STATUS  WM_USER + 3
 
 struct SearchStart
 {
