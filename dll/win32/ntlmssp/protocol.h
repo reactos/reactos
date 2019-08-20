@@ -239,22 +239,8 @@ MAC(ULONG flags,
     ULONG sequence,
     PUCHAR result);
 
-#if 0 /* old calculation */
-VOID
-NtlmChallengeResponse(
-    IN PEXT_STRING_W pUserNameW,
-    IN PEXT_STRING_W pPasswordW,
-    IN PEXT_STRING_W pDomainNameW,
-    IN PEXT_STRING_W pServerName,
-    IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
-    IN ULONGLONG TargetInfoTimeStamp,
-    OUT PNTLM_DATABUF pNtResponseData,
-    OUT PLM2_RESPONSE pLm2Response,
-    OUT PUSER_SESSION_KEY pUserSessionKey,
-    OUT PLM_SESSION_KEY pLmSessionKey);
-#else
 BOOL
-NtlmChallengeResponse(
+CliComputeResponse(
     IN ULONG NegFlg,
     IN PEXT_STRING_W pUserNameW,
     IN PEXT_STRING_W pPasswordW,
@@ -264,25 +250,17 @@ NtlmChallengeResponse(
     IN ULONGLONG TargetInfoTimeStamp,
     OUT PNTLM_DATABUF pNtChallengeResponseData,
     OUT PEXT_DATA pLmChallengeResponseData,
-    //PUSER_SESSION_KEY
-    OUT PEXT_DATA pUserSessionKey,
-    // PLM_SESSION_KEY
-    OUT PEXT_DATA pLmSessionKey);
-/*BOOL
-ComputeResponseNVLMv2(
-    IN PEXT_STRING user,
-    IN PEXT_STRING passwd,
-    IN PEXT_STRING userdom,
-    IN PUNICODE_STRING ServerName,
+    OUT PUSER_SESSION_KEY pUserSessionKey);
+
+BOOL
+CliComputeKeys(
+    IN ULONG ChallengeMsg_NegFlg,
+    IN PUSER_SESSION_KEY pSessionBaseKey,
+    IN PEXT_DATA pLmChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN PMSV1_0_NTLM3_RESPONSE pNtResponse,
-    OUT UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    OUT UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    OUT UCHAR NtChallengeResponse[24],
-    OUT UCHAR LmChallengeResponse[24],
-    OUT PUSER_SESSION_KEY SessionBaseKey);*/
-#endif
+    OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
+    OUT PEXT_DATA pEncryptedRandomSessionKey,
+    OUT PNTLMSSP_CONTEXT_MSG ctxmsg);
 
 /* avl functions */
 

@@ -480,16 +480,18 @@ CliGenerateAuthenticationMessage(
     EXT_STRING_W ServerName;
     NTLM_DATABUF NtResponseData;
     EXT_DATA LmResponseData; /* LM2_RESPONSE / RESPONSE */
-    EXT_DATA UserSessionKey; //USER_SESSION_KEY
-    EXT_DATA LmSessionKey; // LM_SESSION_KEY
+    EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
     EXT_DATA AvDataTmp = {0};
+    USER_SESSION_KEY SessionBaseKey;
     NTLM_DATABUF AvDataRef;
     ULONGLONG NtResponseTimeStamp;
+    UCHAR ExportedSessionKey[16];
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
     ULONG messageSize;
     BOOL sendLmChallengeResponse;
+    //BOOL sendERSessionKey;
     BOOL sendMIC;
 
     TRACE("NtlmHandleChallengeMessage hContext %lx\n", hContext);
@@ -501,8 +503,8 @@ CliGenerateAuthenticationMessage(
 
     RtlZeroMemory(&NtResponseData, sizeof(NtResponseData));
     ExtDataInit(&LmResponseData, NULL, 0);
-    ExtDataInit(&LmSessionKey, NULL, 0);
-    ExtDataInit(&UserSessionKey, NULL, 0);
+    ExtDataInit(&EncryptedRandomSessionKey, NULL, 0);
+    //ExtDataInit(&UserSessionKey, NULL, 0);
     ExtWStrInit(&ServerName, NULL);
 
     /* get context */
@@ -725,26 +727,6 @@ CliGenerateAuthenticationMessage(
         debugstr_w((WCHAR*)cred->DomainNameW.Buffer),
         debugstr_w((WCHAR*)ServerName.Buffer));
 
-    NtlmChallengeResponse(context->NegFlg,
-                          &cred->UserNameW,
-                          &cred->PasswordW,
-                          &cred->DomainNameW,
-                          &ServerName,
-                          challenge->ServerChallenge,
-                          NtResponseTimeStamp,
-                          &NtResponseData,
-                          &LmResponseData,
-                          &UserSessionKey,
-                          &LmSessionKey);
-    TRACE("=== NtResponse ===\n");
-    NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
-    /* FIXME: There is something wrong ... should be 24 not 100
-     * ... (FIXED if not 24 wireshark shows malformed and) response
-     *     error INVALID_PARAM is returned ... so... lets HACKFIX ...*/
-    //NtResponseData.bUsed = 24;
-
-//DebugBreak();
-
     /* elaborate which data to send ... */
     sendLmChallengeResponse = !context->UseNTLMv2;
     /* MS-NLSP 3.2.5.1.2 says
@@ -761,13 +743,39 @@ CliGenerateAuthenticationMessage(
         (!context->UseNTLMv2))
         sendLmChallengeResponse = FALSE;*/
 
+    /* MS-NLSP 3.1.5.1.2 */
+    CliComputeResponse(context->NegFlg,
+                       &cred->UserNameW,
+                       &cred->PasswordW,
+                       &cred->DomainNameW,
+                       &ServerName,
+                       challenge->ServerChallenge,
+                       NtResponseTimeStamp,
+                       &NtResponseData,
+                       &LmResponseData,
+                       &SessionBaseKey);
+    TRACE("=== NtResponse ===\n");
+    NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
+
+    if (!CliComputeKeys(challenge->NegotiateFlags,
+                        &SessionBaseKey,
+                        &LmResponseData,
+                        challenge->ServerChallenge,
+                        ExportedSessionKey,
+                        &EncryptedRandomSessionKey,
+                        &context->msg))
+    {
+        ret = SEC_E_INTERNAL_ERROR;
+        goto quit;
+    }
+
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
                   cred->DomainNameW.bUsed +
                   cred->UserNameW.bUsed +
                   ServerName.bUsed +
                   NtResponseData.bUsed +
-                  UserSessionKey.bUsed/*+
+                  EncryptedRandomSessionKey.bUsed/*+
                   LmSessionKeyString.Length*/;
     if (sendLmChallengeResponse)
         messageSize += LmResponseData.bUsed;
@@ -842,7 +850,7 @@ CliGenerateAuthenticationMessage(
                            &offset);
 
     NtlmExtStringToBlob((PVOID)authmessage,
-                         &UserSessionKey,
+                         &EncryptedRandomSessionKey,
                          &authmessage->EncryptedRandomSessionKey,
                          &offset);
 
@@ -866,8 +874,7 @@ quit:
     ExtStrFree(&ServerName);
     ExtStrFree(&AvDataTmp);
     ExtStrFree(&LmResponseData);
-    ExtStrFree(&LmSessionKey);
-    ExtStrFree(&UserSessionKey);
+    ExtStrFree(&EncryptedRandomSessionKey);
     ERR("handle challenge end\n");
     return ret;
 }
