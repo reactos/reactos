@@ -479,10 +479,8 @@ CliGenerateAuthenticationMessage(
     EXT_DATA LmResponseData; /* LM2_RESPONSE / RESPONSE */
     EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
     EXT_DATA AvDataTmp = {0};
-    USER_SESSION_KEY SessionBaseKey;
     NTLM_DATABUF AvDataRef;
     ULONGLONG NtResponseTimeStamp;
-    UCHAR ExportedSessionKey[16];
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
@@ -742,29 +740,19 @@ CliGenerateAuthenticationMessage(
 
     /* MS-NLSP 3.1.5.1.2 */
     CliComputeResponse(context->NegFlg,
+                       challenge->NegotiateFlags,
                        &cred->UserNameW,
                        &cred->PasswordW,
                        &cred->DomainNameW,
                        &ServerName,
                        challenge->ServerChallenge,
                        NtResponseTimeStamp,
+                       &context->msg,
                        &NtResponseData,
                        &LmResponseData,
-                       &SessionBaseKey);
+                       &EncryptedRandomSessionKey);
     TRACE("=== NtResponse ===\n");
     NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
-
-    if (!CliComputeKeys(challenge->NegotiateFlags,
-                        &SessionBaseKey,
-                        &LmResponseData,
-                        challenge->ServerChallenge,
-                        ExportedSessionKey,
-                        &EncryptedRandomSessionKey,
-                        &context->msg))
-    {
-        ret = SEC_E_INTERNAL_ERROR;
-        goto quit;
-    }
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
@@ -884,7 +872,7 @@ typedef struct _AUTH_DATA
     PAUTHENTICATE_MESSAGE authMessage;
     EXT_STRING_W NtChallengeResponse;
     EXT_DATA EncryptedRandomSessionKey;
-    BOOL LmChallengeResponseIsNULL;
+    ULONG LmChallengeResponseLen;
     LM2_RESPONSE LmChallengeResponse;
     //FIXME: Is DomainName = UserDom?
     //FIXME: Fill UserPasswd
@@ -1002,22 +990,18 @@ SvrAuthMsgProcessData(
     SECURITY_STATUS ret = SEC_E_OK;
     UCHAR ResponseKeyNt[MSV1_0_NTLM3_RESPONSE_LENGTH];
     UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
-    UCHAR KeyExchangeKey[16];
+    UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH];
     UCHAR* ChallengeFromClient;
     EXT_STRING_W ServerName;
     ULONGLONG TimeStamp = {0};
     NTLM_DATABUF ExpectedNtChallengeResponse;
     LM2_RESPONSE ExpectedLmChallengeResponse;
-    USER_SESSION_KEY SessionBaseKey;
     /* UCHAR* MessageMIC; unused */
     UCHAR MIC[16];
     //MSV1_0_NTLM3_RESPONSE NtResponse;
     UCHAR ExportedSessionKey[16];
-    UCHAR ClientSigningKey[16];
-    UCHAR ServerSigningKey[16];
-    UCHAR ClientSealingKey[16];
-    UCHAR ServerSealingKey[16];
     HANDLE ClientHandle, ServerHandle;
+    USER_SESSION_KEY SessionBaseKey;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     ExpectedNtChallengeResponse.bUsed = 0;
@@ -1033,7 +1017,7 @@ SvrAuthMsgProcessData(
     if ((ad->UserName.bUsed == 0) &&
         (ad->NtChallengeResponse.bUsed == 0) &&
         // lt spec == ' ' or '0' ... mabye v this will not work...
-        ( (ad->LmChallengeResponseIsNULL) ||
+        ( (ad->LmChallengeResponseLen == 0) ||
           (memcmp(&ad->LmChallengeResponse, " ", 1) == 0)))
     {
         //-- Special case: client requested anonymous authentication
@@ -1115,8 +1099,9 @@ SvrAuthMsgProcessData(
     /* is KXKEY only NTLMv1 ?? */
     // Set KeyExchangeKey to KXKEY(SessionBaseKey,
     // AUTHENTICATE_MESSAGE.LmChallengeResponse, CHALLENGE_MESSAGE.ServerChallenge)
-    KXKEY(context->cli_NegFlg, (PUCHAR)&SessionBaseKey, (PUCHAR)&ad->LmChallengeResponse,
-          context->ServerChallenge, KeyExchangeKey);
+    KXKEY(context->cli_NegFlg, (PUCHAR)&SessionBaseKey,
+          (UCHAR*)&ad->LmChallengeResponse, ad->LmChallengeResponseLen,
+          context->ServerChallenge, ResponseKeyLM, KeyExchangeKey);
     // If (AUTHENTICATE_MESSAGE.NtChallengeResponse !=
     // ExpectedNtChallengeResponse)
     // If (AUTHENTICATE_MESSAGE.LmChallengeResponse !=
@@ -1124,7 +1109,7 @@ SvrAuthMsgProcessData(
     /* Really and-condition?? */
     /* HACK: cast to PEXT_DATA */
     if (!ExtDataIsEqual1(&ad->NtChallengeResponse, (PEXT_DATA)&ExpectedNtChallengeResponse) &&
-       ((ad->LmChallengeResponseIsNULL) ||
+       ((ad->LmChallengeResponseLen == 0) ||
         memcmp(&ad->LmChallengeResponse, &ExpectedLmChallengeResponse, sizeof(ExpectedLmChallengeResponse)) != 0))
     {
         TRACE("NTChallengeResponse\n");
@@ -1192,17 +1177,17 @@ SvrAuthMsgProcessData(
     FIXME("need NEGO/CHALLENGE and Auth-Message for MIC!\n");
     memset(&MIC, 0, 16);
     //Set ClientSigningKey to SIGNKEY(NegFlg, ExportedSessionKey , "Client")
-    SIGNKEY(ExportedSessionKey, TRUE, ClientSigningKey);
+    SIGNKEY(ExportedSessionKey, TRUE, context->msg.ClientSigningKey);
     //Set ServerSigningKey to SIGNKEY(NegFlg, ExportedSessionKey , "Server")
-    SIGNKEY(ExportedSessionKey, FALSE, ServerSigningKey);
+    SIGNKEY(ExportedSessionKey, FALSE, context->msg.ServerSigningKey);
     //Set ClientSealingKey to SEALKEY(NegFlg, ExportedSessionKey , "Client")
-    SEALKEY(context->cli_NegFlg, ExportedSessionKey, TRUE, ClientSealingKey);
+    SEALKEY(context->cli_NegFlg, ExportedSessionKey, TRUE, context->msg.ClientSealingKey);
     //Set ServerSealingKey to SEALKEY(NegFlg, ExportedSessionKey , "Server")
-    SEALKEY(context->cli_NegFlg, ExportedSessionKey, FALSE, ServerSealingKey);
+    SEALKEY(context->cli_NegFlg, ExportedSessionKey, FALSE, context->msg.ServerSealingKey);
     //RC4Init(ClientHandle, ClientSealingKey)
-    RC4Init(&ClientHandle, ClientSealingKey);
+    RC4Init(&ClientHandle, context->msg.ClientSealingKey);
     //RC4Init(ServerHandle, ServerSealingKey)
-    RC4Init(&ServerHandle, ServerSealingKey);
+    RC4Init(&ServerHandle, context->msg.ServerSealingKey);
 quit:
     if (ExpectedNtChallengeResponse.bUsed != 0)
         NtlmDataBufFree(&ExpectedNtChallengeResponse);
@@ -1263,7 +1248,7 @@ SvrAuthMsgExtractData(
         goto quit;
     }
 
-    ad->LmChallengeResponseIsNULL = (ad->authMessage->LmChallengeResponse.Length > 0);
+    ad->LmChallengeResponseLen = ad->authMessage->LmChallengeResponse.Length;
     if(!NT_SUCCESS(NtlmCopyBlob(ad->InputToken,
         ad->authMessage->LmChallengeResponse,
         &ad->LmChallengeResponse, sizeof(ad->LmChallengeResponse))))
@@ -1336,7 +1321,7 @@ SvrHandleAuthenticateMessage(
                        ASC_RET_SEQUENCE_DETECT |
                        ASC_RET_CONFIDENTIALITY;
 
-    ad.LmChallengeResponseIsNULL = TRUE;
+    ad.LmChallengeResponseLen = 0;
     ExtWStrInit(&ad.NtChallengeResponse, NULL);
     ExtWStrInit(&ad.UserName, NULL);
     ExtWStrInit(&ad.Workstation, NULL);

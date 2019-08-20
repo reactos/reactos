@@ -208,11 +208,13 @@ NONCE(
 
 VOID
 KXKEY(
-    ULONG flags,
-    const PUCHAR session_base_key,
-    const PUCHAR lm_challenge_resonse,
-    const PUCHAR server_challenge,
-    PUCHAR key_exchange_key);
+    IN ULONG NegFlg,
+    IN UCHAR SessionBaseKey[MSV1_0_USER_SESSION_KEY_LENGTH],
+    IN UCHAR* LmChallengeResponse,
+    IN ULONG LmChallengeResponseLen,
+    IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
+    OUT UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH]);
 
 BOOLEAN
 SIGNKEY(
@@ -242,15 +244,17 @@ MAC(ULONG flags,
 BOOL
 CliComputeResponse(
     IN ULONG NegFlg,
+    IN ULONG Challenge_NegFlg,
     IN PEXT_STRING_W pUserNameW,
     IN PEXT_STRING_W pPasswordW,
     IN PEXT_STRING_W pDomainNameW,
     IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
-    OUT PNTLM_DATABUF pNtChallengeResponseData,
+    IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
+    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
     OUT PEXT_DATA pLmChallengeResponseData,
-    OUT PUSER_SESSION_KEY pUserSessionKey);
+    IN OUT PEXT_DATA EncryptedRandomSessionKey);
 
 BOOL
 CliComputeKeys(
@@ -258,6 +262,7 @@ CliComputeKeys(
     IN PUSER_SESSION_KEY pSessionBaseKey,
     IN PEXT_DATA pLmChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
     OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
     OUT PEXT_DATA pEncryptedRandomSessionKey,
     OUT PNTLMSSP_CONTEXT_MSG ctxmsg);

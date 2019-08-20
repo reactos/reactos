@@ -76,7 +76,7 @@ void
 RC4K (const unsigned char * k, unsigned long key_len, const unsigned char * d, int len, unsigned char * result);
 
 void
-DES(const unsigned char *k, const unsigned char *d, unsigned char * results);
+DES(const UCHAR k[7], const UCHAR d[8], UCHAR results[8]);
 
 void
 DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24]);

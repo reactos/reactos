@@ -174,6 +174,9 @@ extern NTLM_MODE NtlmMode;
 #define NTLM_COMMENT_A "NTLM Security Package\0"
 #define NTLM_COMMENT_W L"NTLM Security Package\0"
 
+#define NTLM_KEYEXCHANGE_KEY_LENGTH 16
+#define NTLM_ENCRNDSESSION_KEY_LENGTH 16
+
 /* NTLM has the following capabilities. */
 #define NTLM_CAPS ( \
         SECPKG_FLAG_ACCEPT_WIN32_NAME | \
