@@ -246,7 +246,7 @@ base/applications/write             # Synced to WineStaging-3.3
 base/services/rpcss                 # Synced to WineStaging-3.3
 base/system/expand                  # Synced to WineStaging-3.3
 base/system/msiexec                 # Synced to WineStaging-3.3
-modules/rosapps/winfile             # Autosync
+modules/rosapps/applications/winfile # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
