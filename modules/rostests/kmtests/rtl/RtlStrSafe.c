@@ -123,9 +123,9 @@ Test_RtlUnicodeStringPrintfEx()
     RtlInitEmptyUnicodeString(&RemString, NULL, 0);
 
     Status = RtlUnicodeStringPrintfEx(&UsString, &RemString, STRSAFE_FILL_BEHIND | 0xAA, FormatStringInts, 1, 2, 3);
-    EqualBytes = RtlCompareMemory(UsString.Buffer, FormatStringIntsResult, sizeof(FormatStringIntsResult));
+    EqualBytes = RtlCompareMemory(UsString.Buffer, FormatStringIntsResult, sizeof(FormatStringIntsResult) - sizeof(WCHAR));
     ok_eq_hex(Status, STATUS_SUCCESS);
-    ok_eq_size(EqualBytes, sizeof(FormatStringIntsResult));
+    ok_eq_size(EqualBytes, sizeof(FormatStringIntsResult) - sizeof(WCHAR));
     ok_eq_uint(UsString.Length, sizeof(FormatStringIntsResult) - sizeof(WCHAR));
     ok_eq_uint(UsString.MaximumLength, BufferSize);
 
