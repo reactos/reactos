@@ -1826,7 +1826,7 @@ NTSTRSAFEAPI RtlStringCopyExWorkerA(
                 }
             }
 
-            if (dwFlags & (STRSAFE_NULL_ON_FAILURE | STRSAFE_NO_TRUNCATION) && cchDest > 0)
+            if ((dwFlags & (STRSAFE_NULL_ON_FAILURE | STRSAFE_NO_TRUNCATION)) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
@@ -1944,7 +1944,7 @@ NTSTRSAFEAPI RtlStringCopyExWorkerW(
                 }
             }
 
-            if (dwFlags & (STRSAFE_NULL_ON_FAILURE | STRSAFE_NO_TRUNCATION) && cchDest > 0)
+            if ((dwFlags & (STRSAFE_NULL_ON_FAILURE | STRSAFE_NO_TRUNCATION)) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
@@ -2399,7 +2399,7 @@ NTSTRSAFEAPI RtlStringCatExWorkerA(
                 }
             }
 
-            if (dwFlags & STRSAFE_NULL_ON_FAILURE && cchDest > 0)
+            if ((dwFlags & STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
@@ -2511,7 +2511,7 @@ NTSTRSAFEAPI RtlStringCatExWorkerW(
                 }
             }
 
-            if (dwFlags & STRSAFE_NULL_ON_FAILURE && cchDest > 0)
+            if ((dwFlags & STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
@@ -2655,7 +2655,7 @@ NTSTRSAFEAPI RtlStringCatNExWorkerA(
                 }
             }
 
-            if (dwFlags & (STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
+            if ((dwFlags & STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
@@ -2773,7 +2773,7 @@ NTSTRSAFEAPI RtlStringCatNExWorkerW(
                 }
             }
 
-            if (dwFlags & (STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
+            if ((dwFlags & STRSAFE_NULL_ON_FAILURE) && cchDest > 0)
             {
                 pszDestEnd = pszDest;
                 cchRemaining = cchDest;
