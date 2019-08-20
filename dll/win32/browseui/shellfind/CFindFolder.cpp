@@ -160,15 +160,16 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     return uMatches;
 }
 
-static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
+static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 {
     if (WaitForSingleObject(pSearchData->hStopEvent, 0) != WAIT_TIMEOUT)
-        return;
+        return 0;
 
     WCHAR szPath[MAX_PATH];
     WIN32_FIND_DATAW FindData;
     HANDLE hFindFile;
     BOOL bMoreFiles = TRUE;
+    UINT uTotalFound = 0;
 
     PathCombineW(szPath, lpPath, L"*.*");
 
@@ -183,11 +184,11 @@ static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            CStringW* status = new CStringW();
-            status->Format(L"Searching '%s'", FindData.cFileName);
-            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) status);
+            CStringW status;
+            status.Format(IDS_SEARCH_FOLDER, FindData.cFileName);
+            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
 
-            RecursiveFind(szPath, pSearchData);
+            uTotalFound += RecursiveFind(szPath, pSearchData);
         }
         else if ((pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
                 && (pSearchData->szQueryA.IsEmpty() || SearchFile(szPath, pSearchData)))
@@ -199,6 +200,8 @@ static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 
     if (hFindFile != INVALID_HANDLE_VALUE)
         FindClose(hFindFile);
+
+    return uTotalFound;
 }
 
 DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
@@ -207,12 +210,15 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 
     data->pFindFolder->NotifyConnections(DISPID_SEARCHSTART);
 
-    RecursiveFind(params->szPath, data);
+    UINT uTotalFound = RecursiveFind(data->szPath, data);
 
     data->pFindFolder->NotifyConnections(DISPID_SEARCHCOMPLETE);
 
-    SHFree(params);
-    SHFree(lpParameter);
+    CStringW status;
+    status.Format(IDS_SEARCH_FILES_FOUND, uTotalFound);
+    ::PostMessageW(data->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
+
+    delete data;
 
     return 0;
 }
@@ -296,12 +302,11 @@ LRESULT CFindFolder::AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CFindFolder::UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    CStringW *status = (CStringW *) lParam;
+    CComHeapPtr<WCHAR> status((LPWSTR) lParam);
     if (m_shellBrowser)
     {
-        m_shellBrowser->SetStatusTextSB(status->GetBuffer());
+        m_shellBrowser->SetStatusTextSB(status);
     }
-    delete status;
 
     return S_OK;
 }
