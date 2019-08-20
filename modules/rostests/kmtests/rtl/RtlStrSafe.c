@@ -48,23 +48,23 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_wchar(UsString.Buffer[3], L' ');
     ok_eq_wchar(UsString.Buffer[4], L'3');
     ok_eq_wchar(UsString.Buffer[5], L'\0');
-    
+
     /* STATUS_BUFFER_OVERFLOW tests */
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = 2;
-    
+    UsString.MaximumLength = 2 * sizeof(WCHAR);
+
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
     ok_eq_wchar(UsString.Buffer[0], L'A');
-    ok_eq_wchar(UsString.Buffer[1], L'\0');
-    for (i = 2; i < sizeof(BufferSmall); i++)
-        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
+    ok_eq_wchar(UsString.Buffer[1], L'A');
+    for (i = 2; i < sizeof(BufferSmall) / sizeof(BufferSmall[0]); i++)
+        ok(UsString.Buffer[i] == 0xAAAA, "UsString.Buffer[%d] is 0x%hx\n", i, (USHORT)UsString.Buffer[i]);
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = 7;
+    UsString.MaximumLength = 7 * sizeof(WCHAR);
 
     ok_eq_hex(RtlUnicodeStringPrintf(&UsString, FormatStringStrs, L"0123", L"4567", L"89AB"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
@@ -74,19 +74,16 @@ Test_RtlUnicodeStringPrintf()
     ok_eq_wchar(UsString.Buffer[3], L'3');
     ok_eq_wchar(UsString.Buffer[4], L' ');
     ok_eq_wchar(UsString.Buffer[5], L'4');
-    ok_eq_wchar(UsString.Buffer[6], L'\0');
-    for (i = 7; i < sizeof(BufferSmall); i++)
-        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
+    ok_eq_wchar(UsString.Buffer[6], L'5');
+    for (i = 7; i < sizeof(BufferSmall) / sizeof(BufferSmall[0]); i++)
+        ok(UsString.Buffer[i] == 0xAAAA, "UsString.Buffer[%d] is 0x%hx\n", i, (USHORT)UsString.Buffer[i]);
 
-    ///* STATUS_INVALID_PARAMETER tests */
-
-    ok_eq_hex(RtlUnicodeStringPrintf(NULL, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
-    ok_eq_hex(RtlUnicodeStringPrintf(&UsString, NULL, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
-
+    // Note: RtlUnicodeStringPrintf returns STATUS_BUFFER_OVERFLOW here while RtlUnicodeStringPrintfEx returns STATUS_INVALID_PARAMETER!
+    // Documented on MSDN and verified with the Win10 version of ntstrsafe.h
     UsStringNull.Buffer = NULL;
     UsStringNull.Length = 0;
     UsStringNull.MaximumLength = 0;
-    ok_eq_bool(RtlUnicodeStringPrintf(&UsStringNull, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
+    ok_eq_hex(RtlUnicodeStringPrintf(&UsStringNull, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
 
     /* Test  for buffer overruns */
 
@@ -112,6 +109,7 @@ Test_RtlUnicodeStringPrintfEx()
     WCHAR BufferSmall[16];
     WCHAR OvrBuffer[1024];
     UNICODE_STRING UsString, RemString;
+    UNICODE_STRING UsStringNull;
     const WCHAR FormatStringInts[] = L"%d %d %d";
     const WCHAR FormatStringStrs[] = L"%s %s %s";
     const WCHAR Result[] = L"1 2 3";
@@ -134,12 +132,14 @@ Test_RtlUnicodeStringPrintfEx()
 
     KmtStartSeh();
     ok_eq_hex(RtlUnicodeStringPrintfEx(&UsString, &RemString, STRSAFE_FILL_BEHIND | 0xFF, FormatStringInts, 1, 2, 3), STATUS_SUCCESS);
-    
+
     ok_eq_uint(UsString.Length, sizeof(Result) - sizeof(WCHAR));
     ok_eq_uint(UsString.MaximumLength, sizeof(Buffer));
     ok_eq_uint(memcmp(UsString.Buffer, Result, sizeof(Result) - sizeof(WCHAR)), 0);
+    for (i = sizeof(Result) - sizeof(WCHAR); i < sizeof(Buffer) / sizeof(Buffer[0]); i++)
+        ok(UsString.Buffer[i] == 0xFFFF, "UsString.Buffer[%d] is 0x%hx\n", i, (USHORT)UsString.Buffer[i]);
 
-    ok_eq_pointer(RemString.Buffer, UsString.Buffer + (UsString.Length / sizeof(WCHAR)));
+    ok_eq_pointer(RemString.Buffer, &UsString.Buffer[UsString.Length / sizeof(WCHAR)]);
     ok_eq_uint(RemString.Length, 0);
     ok_eq_uint(RemString.MaximumLength, UsString.MaximumLength - UsString.Length);
 
@@ -147,12 +147,12 @@ Test_RtlUnicodeStringPrintfEx()
 
     UsString.Buffer = BufferSmall;
     UsString.Length = 0;
-    UsString.MaximumLength = 8;
+    UsString.MaximumLength = 8 * sizeof(WCHAR);
 
     RemString.Buffer = NULL;
     RemString.Length = 0;
     RemString.MaximumLength = 0;
-    
+
     ok_eq_hex(RtlUnicodeStringPrintfEx(&UsString, &RemString, 0, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_BUFFER_OVERFLOW);
     ok_eq_uint(UsString.Length, UsString.MaximumLength);
     ok_eq_wchar(UsString.Buffer[0], L'A');
@@ -162,14 +162,14 @@ Test_RtlUnicodeStringPrintfEx()
     ok_eq_wchar(UsString.Buffer[4], L'B');
     ok_eq_wchar(UsString.Buffer[5], L'B');
     ok_eq_wchar(UsString.Buffer[6], L'B');
-    ok_eq_wchar(UsString.Buffer[7], L'\0');
-    for (i = 8; i < sizeof(BufferSmall); i++)
-        ok_eq_wchar(UsString.Buffer[i], 0xAAAA);
+    ok_eq_wchar(UsString.Buffer[7], L' ');
+    for (i = 8; i < sizeof(BufferSmall) / sizeof(WCHAR); i++)
+        ok(UsString.Buffer[i] == 0xAAAA, "UsString.Buffer[%d] is 0x%hx\n", i, (USHORT)UsString.Buffer[i]);
 
     // Takes \0 into account
-    ok_eq_pointer(RemString.Buffer, UsString.Buffer + (UsString.Length - 1) / sizeof(WCHAR));
-    ok_eq_uint(RemString.Length, 0); 
-    ok_eq_uint(RemString.MaximumLength, 2);
+    ok_eq_pointer(RemString.Buffer, &UsString.Buffer[UsString.Length / sizeof(WCHAR)]);
+    ok_eq_uint(RemString.Length, 0);
+    ok_eq_uint(RemString.MaximumLength, 0);
 
     /* Test  for buffer overruns */
 
@@ -183,6 +183,13 @@ Test_RtlUnicodeStringPrintfEx()
     ok_eq_uint(UsString.Length, sizeof(L"abc def ghi") - sizeof(WCHAR));
     ok_eq_wchar(UsString.Buffer[11], L'\0');
     ok_eq_uint(0, memcmp(OvrBuffer + 12, Buffer + 12, sizeof(Buffer) - (12 * sizeof(WCHAR))));
+
+    // Note: RtlUnicodeStringPrintf returns STATUS_BUFFER_OVERFLOW here while RtlUnicodeStringPrintfEx returns STATUS_INVALID_PARAMETER!
+    // Documented on MSDN and verified with the Win10 version of ntstrsafe.h
+    UsStringNull.Buffer = NULL;
+    UsStringNull.Length = 0;
+    UsStringNull.MaximumLength = 0;
+    ok_eq_hex(RtlUnicodeStringPrintfEx(&UsStringNull, NULL, 0, FormatStringStrs, L"AAA", L"BBB", L"CCC"), STATUS_INVALID_PARAMETER);
 
     // None of these functions should have crashed.
     KmtEndSeh(STATUS_SUCCESS);
