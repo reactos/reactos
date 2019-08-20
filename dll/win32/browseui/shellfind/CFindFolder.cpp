@@ -81,27 +81,50 @@ struct _SearchData
 {
     HWND hwnd;
     HANDLE hStopEvent;
-    SearchStart *pSearchParams;
-    CFindFolder *pFindFolder;
+    CStringW szPath;
+    CStringW szFileName;
+    CStringA szQueryA;
+    CStringW szQueryW;
+    CComPtr<CFindFolder> pFindFolder;
 };
 
-static LPCSTR WINAPI StrStrNA(LPCSTR lpFirst, LPCSTR lpSrch, UINT cchMax)
+template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
+static const TChar* StrStrN(const TChar *lpFirst, const TString &lpSrch, UINT cchMax)
 {
-    UINT i;
-    int len;
-
-    if (!lpFirst || !lpSrch || !*lpSrch || !cchMax)
+    if (!lpFirst || lpSrch.IsEmpty() || !cchMax)
         return NULL;
 
-    len = strlen(lpSrch);
-
-    for (i = cchMax; *lpFirst && (i > 0); i--, lpFirst++)
+    for (UINT i = cchMax; i > 0 && *lpFirst; i--, lpFirst++)
     {
-        if (!strncmp(lpFirst, lpSrch, len))
-            return (LPCSTR)lpFirst;
+        if (!StrNCmp(lpFirst, lpSrch, lpSrch.GetLength()))
+            return (const TChar*)lpFirst;
     }
 
     return NULL;
+}
+
+template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
+static UINT StrStrNCount(const TChar *lpFirst, const TString &lpSrch, UINT cchMax)
+{
+    const TChar *lpSearchEnd = lpFirst + cchMax;
+    UINT uCount = 0;
+    while (lpFirst < lpSearchEnd && (lpFirst = StrStrN<TChar, TString, StrNCmp>(lpFirst, lpSrch, cchMax)))
+    {
+        uCount++;
+        lpFirst += lpSrch.GetLength();
+        cchMax = lpSearchEnd - lpFirst;
+    }
+    return uCount;
+}
+
+static UINT StrStrCountA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
+{
+    return StrStrNCount<CHAR, CStringA, strncmp>(lpFirst, lpSrch, cchMax);
+}
+
+static UINT StrStrCountW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
+{
+    return StrStrNCount<WCHAR, CStringW, wcsncmp>(lpFirst, lpSrch, cchMax);
 }
 
 static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
@@ -122,38 +145,14 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return 0;
 
     UINT uMatches = 0;
-    if ((size >= 2) && (lpFileContent[0] == 0xFF) && (lpFileContent[1] == 0xFE))
+    // Check for UTF-16 BOM
+    if (size >= 2 && lpFileContent[0] == 0xFF && lpFileContent[1] == 0xFE)
     {
-        // UTF16 LE
-        LPCWSTR lpSearchPos = (LPCWSTR) lpFileContent;
-        DWORD dwCharsRemaining = size / sizeof(WCHAR);
-        const LPCWSTR lpSearchEnd = (LPCWSTR) lpFileContent + dwCharsRemaining;
-        const LPCWSTR lpszQuery = pSearchData->pSearchParams->szQuery;
-        const size_t queryLen = wcslen(lpszQuery);
-        while ((lpSearchPos = StrStrNW(lpSearchPos, lpszQuery, dwCharsRemaining))
-                && lpSearchPos < lpSearchEnd)
-        {
-            uMatches++;
-            lpSearchPos += queryLen;
-            dwCharsRemaining -= queryLen;
-        }
+        uMatches = StrStrCountW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
     }
     else
     {
-        DWORD len = WideCharToMultiByte(CP_ACP, 0, pSearchData->pSearchParams->szQuery, -1, NULL, 0, NULL, NULL);
-        const LPSTR lpszQuery = new CHAR[len];
-        WideCharToMultiByte(CP_ACP, 0, pSearchData->pSearchParams->szQuery, -1, lpszQuery, len, NULL, NULL);
-        LPCSTR lpSearchPos = (LPCSTR) lpFileContent;
-        DWORD dwCharsRemaining = size;
-        const LPCSTR lpSearchEnd = (LPCSTR) lpFileContent + dwCharsRemaining;
-        const size_t queryLen = len;
-        while ((lpSearchPos = StrStrNA(lpSearchPos, lpszQuery, dwCharsRemaining))
-                && lpSearchPos < lpSearchEnd)
-        {
-            uMatches++;
-            lpSearchPos += queryLen;
-            dwCharsRemaining -= queryLen;
-        }
+        uMatches = StrStrCountA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
     UnmapViewOfFile(lpFileContent);
@@ -190,14 +189,11 @@ static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 
             RecursiveFind(szPath, pSearchData);
         }
-        else if (pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
+        else if ((pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
+                && (pSearchData->szQueryA.IsEmpty() || SearchFile(szPath, pSearchData)))
         {
-            DbgPrint("Searching file: '%S'\n", szPath);
-            UINT uMatches = SearchFile(szPath, pSearchData);
-            if (uMatches)
-            {
-                ::PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
-            }
+            uTotalFound++;
+            PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
         }
     }
 
@@ -205,10 +201,9 @@ static VOID RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         FindClose(hFindFile);
 }
 
-DWORD WINAPI CFindFolder::_SearchThreadProc(LPVOID lpParameter)
+DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 {
     _SearchData *data = static_cast<_SearchData*>(lpParameter);
-    SearchStart* params = (SearchStart *) data->pSearchParams;
 
     data->pFindFolder->NotifyConnections(DISPID_SEARCHSTART);
 
@@ -251,14 +246,20 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     _SearchData* pSearchData = new _SearchData();
     pSearchData->pFindFolder = this;
     pSearchData->hwnd = m_hWnd;
+
+    SearchStart *pSearchParams = (SearchStart *) lParam;
+    pSearchData->szPath = pSearchParams->szPath;
+    pSearchData->szFileName = pSearchParams->szFileName;
+    pSearchData->szQueryA = pSearchParams->szQuery;
+    pSearchData->szQueryW = pSearchParams->szQuery;
+    SHFree(pSearchParams);
+
     if (m_hStopEvent)
         SetEvent(m_hStopEvent);
     pSearchData->hStopEvent = m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    pSearchData->pSearchParams = (SearchStart *) lParam;
 
-    if (!SHCreateThread(_SearchThreadProc, pSearchData, NULL, NULL))
+    if (!SHCreateThread(SearchThreadProc, pSearchData, NULL, NULL))
     {
-        SHFree(pSearchData->pSearchParams);
         SHFree(pSearchData);
         return HRESULT_FROM_WIN32(GetLastError());
     }
