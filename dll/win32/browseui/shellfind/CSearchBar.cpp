@@ -18,6 +18,10 @@
 
 #include "CSearchBar.h"
 #include <psdk/wingdi.h>
+#include <commoncontrols.h>
+#include <../browseui.h>
+#include <shellapi.h>
+#include <exdispid.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
@@ -38,53 +42,42 @@ CSearchBar::~CSearchBar()
 {
 }
 
-void CSearchBar::InitializeSearchBar()
+LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    CreateWindowExW(0, WC_STATIC, L"Search by any or all of the criteria below.",
-        WS_CHILD | WS_VISIBLE,
-        10, 10, 200, 40,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
+    SetSearchInProgress(FALSE);
 
-    CreateWindowExW(0, WC_STATIC, L"All or part &of the file name:",
-        WS_CHILD | WS_VISIBLE,
-        10, 50, 500, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
-    m_fileName = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
-        WS_BORDER | WS_CHILD | WS_VISIBLE,
-        10, 70, 100, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
+    HWND hCombobox = GetDlgItem(IDC_SEARCH_COMBOBOX);
+    IImageList *pImageList;
+    HRESULT hResult = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &pImageList));
+    SendMessage(hCombobox, CBEM_SETIMAGELIST, 0, FAILED_UNEXPECTEDLY(hResult) ? 0 : reinterpret_cast<LPARAM>(pImageList));
 
-    CreateWindowExW(0, WC_STATIC, L"A &word or phrase in the file:",
-        WS_CHILD | WS_VISIBLE,
-        10, 100, 500, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
-    m_query = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
-        WS_BORDER | WS_CHILD | WS_VISIBLE,
-        10, 120, 100, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
-    Edit_LimitText(m_query, MAX_PATH);
+    SendMessage(hCombobox, CBEM_SETEXTENDEDSTYLE,
+        CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT, CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT);
+    HWND hEditControl = reinterpret_cast<HWND>(SendMessage(hCombobox, CBEM_GETEDITCONTROL, 0, 0));
+    hResult = CAddressEditBox_CreateInstance(IID_PPV_ARG(IAddressEditBox, &m_AddressEditBox));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
 
-    CreateWindowExW(0, WC_STATIC, L"&Look in:",
-        WS_CHILD | WS_VISIBLE,
-        10, 150, 500, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
-    m_path = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL,
-        WS_BORDER | WS_CHILD | WS_VISIBLE,
-        10, 180, 100, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
+    CComPtr<IShellService> pShellService;
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pShellService));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = fAddressEditBox->Init(hCombobox, fEditControl, 0, pSite);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
 
-    CreateWindowExW(0, WC_BUTTON, L"Sea&rch",
-        WS_BORDER | WS_CHILD | WS_VISIBLE,
-        10, 210, 100, 20,
-        m_hWnd, NULL,
-        _AtlBaseModule.GetModuleInstance(), NULL);
+    CComPtr<IDispatch> pDispatch;
+    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    DISPPARAMS params = {0};
+    hResult = pDispatch->Invoke(DISPID_NAVIGATECOMPLETE2, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+
+    hResult = pShellService->SetOwner(NULL);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    return 0;
 }
 
 HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
@@ -173,6 +166,15 @@ HRESULT CSearchBar::GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND 
 
 LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    CComHeapPtr<SearchStart> pSearchStart((SearchStart *)SHAlloc(sizeof(SearchStart)));
+    GetDlgItemText(IDC_SEARCH_FILENAME, pSearchStart->szFileName, _countof(pSearchStart->szFileName));
+    GetDlgItemText(IDC_SEARCH_QUERY, pSearchStart->szQuery, _countof(pSearchStart->szQuery));
+    if (!GetAddressEditBoxPath(pSearchStart->szPath))
+    {
+        ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID), MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, pSearchStart->szPath);
+        return TRUE;
+    }
+
     CComPtr<IShellBrowser> pShellBrowser;
     HRESULT hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
     if (FAILED_UNEXPECTEDLY(hr))
@@ -181,6 +183,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     HWND hwnd;
     if (FAILED(GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL)))
     {
+        // Open a new search results folder
         WCHAR szShellGuid[MAX_PATH];
         const WCHAR shellGuidPrefix[] = L"shell:::";
         memcpy(szShellGuid, shellGuidPrefix, sizeof(shellGuidPrefix));
@@ -197,25 +200,78 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         hr = pShellBrowser->BrowseObject(findFolderPidl, 0);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        CComPtr<IShellFolder> pShellFolder;
+        hr = GetSearchResultsFolder(*pShellBrowser, &hwnd, &pShellFolder);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        // Subscribe to search events
+        DWORD fAdviseCookie;
+        hr = AtlAdvise(pShellFolder, static_cast<IDispatch *>(this), DIID_DSearchCommandEvents, &fAdviseCookie);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
     }
 
-    hr = GetSearchResultsFolder(*pShellBrowser, &hwnd, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) pSearchStart.Detach());
 
-    ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) StrDupW(L"Starting search..."));
+    SetSearchInProgress(TRUE);
 
-    return S_OK;
+    return TRUE;
 }
 
-LRESULT CSearchBar::OnClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CSearchBar::OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     HWND hwnd;
     HRESULT hr = GetSearchResultsFolder(NULL, &hwnd, NULL);
     if (SUCCEEDED(hr))
+        ::PostMessageW(hwnd, WM_SEARCH_STOP, 0, 0);
+
+    return TRUE;
+}
+
+BOOL CSearchBar::GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH])
+{
+    HWND hComboboxEx = GetDlgItem(IDC_SEARCH_COMBOBOX);
+    ::GetWindowTextW(hComboboxEx, szPath, _countof(szPath));
+    INT iSelectedIndex = SendMessageW(hComboboxEx, CB_GETCURSEL, 0, 0);
+    if (iSelectedIndex != CB_ERR)
     {
-        LPCWSTR path = L"C:\\readme.txt";
-        ::PostMessageW(hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(path));
+        WCHAR szItemText[MAX_PATH];
+        COMBOBOXEXITEMW item = {0};
+        item.mask = CBEIF_LPARAM | CBEIF_TEXT;
+        item.iItem = iSelectedIndex;
+        item.pszText = szItemText;
+        item.cchTextMax = _countof(szItemText);
+        SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
+
+        if (!wcscmp(szItemText, szPath) && SHGetPathFromIDListW((LPCITEMIDLIST)item.lParam, szPath))
+        {
+            return TRUE;
+        }
+    }
+
+    DWORD dwAttributes = GetFileAttributesW(szPath);
+    return dwAttributes != INVALID_FILE_ATTRIBUTES
+        && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+LRESULT CSearchBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    INT iWidth = LOWORD(lParam);
+    INT iPadding = 10;
+
+    ((CWindow)GetDlgItem(IDC_SEARCH_LABEL)).SetWindowPos(NULL, 0, 0, iWidth - iPadding, 40, SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+
+    HWND inputs[] = { GetDlgItem(IDC_SEARCH_FILENAME), GetDlgItem(IDC_SEARCH_QUERY), GetDlgItem(IDC_SEARCH_COMBOBOX), GetDlgItem(IDC_SEARCH_BUTTON), GetDlgItem(IDC_SEARCH_STOP_BUTTON), GetDlgItem(IDC_PROGRESS_BAR) };
+    for (SIZE_T i = 0; i < _countof(inputs); i++)
+    {
+        CWindow wFileName = (CWindow) inputs[i];
+        RECT rect;
+        wFileName.GetWindowRect(&rect);
+        POINT pt = { rect.left, rect.top };
+        ScreenToClient(&pt);
+        wFileName.MoveWindow(iPadding, pt.y, iWidth - iPadding * 2, rect.bottom - rect.top);
     }
 
     return 0;
@@ -358,9 +414,8 @@ HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
     }
     else
     {
-        CWindowImpl::Create(parentWnd);
+        CDialogImpl::Create(parentWnd);
 
-        InitializeSearchBar();
     }
     return S_OK;
 }
@@ -420,7 +475,10 @@ HRESULT STDMETHODCALLTYPE CSearchBar::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CSearchBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    if (lpMsg->hwnd == m_hWnd)
+    if (IsDialogMessage(lpMsg))
+        return S_OK;
+
+    if ((lpMsg->hwnd == m_hWnd || IsChild(lpMsg->hwnd)))
     {
         TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
@@ -535,8 +593,21 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetIDsOfNames(REFIID riid, LPOLESTR *rgszN
     return E_NOTIMPL;
 }
 
+void CSearchBar::SetSearchInProgress(BOOL bInProgress)
+{
+    ::ShowWindow(GetDlgItem(IDC_SEARCH_BUTTON), bInProgress ? SW_HIDE : SW_SHOW);
+    ::ShowWindow(GetDlgItem(IDC_SEARCH_STOP_BUTTON), bInProgress ? SW_SHOW : SW_HIDE);
+    HWND hProgressBar = GetDlgItem(IDC_PROGRESS_BAR);
+    ::ShowWindow(hProgressBar, bInProgress ? SW_SHOW : SW_HIDE);
+    ::PostMessage(hProgressBar, PBM_SETMARQUEE, bInProgress, 0);
+}
+
 HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
+    if (dispIdMember == DISPID_SEARCHCOMPLETE || dispIdMember == DISPID_SEARCHABORT)
+    {
+        SetSearchInProgress(FALSE);
+        return S_OK;
+    }
     return E_INVALIDARG;
 }
