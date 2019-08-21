@@ -177,10 +177,10 @@ typedef struct _MESSAGE_SIGNATURE
 C_ASSERT(sizeof(MESSAGE_SIGNATURE) == 16);
 /* basic functions */
 
-BOOLEAN
+BOOL
 NTOWFv1(
-    LPCWSTR password,
-    PUCHAR result);
+    IN LPCWSTR password,
+    IN PUCHAR result);
 
 BOOL
 NTOWFv2(
@@ -191,8 +191,8 @@ NTOWFv2(
 
 VOID
 LMOWFv1(
-    const PCCHAR password,
-    PUCHAR result);
+    IN PCCHAR password,
+    OUT UCHAR result[16]);
 
 BOOLEAN
 LMOWFv2(

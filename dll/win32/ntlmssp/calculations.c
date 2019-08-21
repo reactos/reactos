@@ -26,32 +26,22 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-BOOLEAN
-NTOWFv1(LPCWSTR password,
-        PUCHAR result)
+/* MS-NLSP 3.3.1 */
+BOOL
+NTOWFv1(
+    IN LPCWSTR password,
+    IN PUCHAR result)
 {
-    ULONG i;
-    size_t len;
-    WCHAR pass[14];
+    ULONG chLen;
 
-    if ((password == NULL) ||
-        (FAILED(RtlStringCchLengthW(password, MAX_PASSWD_LEN, &len))))
-    {
-        *result = 0;
-        return FALSE;
-    }
+    chLen = (password != NULL) ? wcslen(password) : 0;
 
-    memcpy(pass, password, len * sizeof(WCHAR));
-    for(i = len; i<14; i++)
-    {
-        pass[i] = L'0';
-    }
-    MD4((PUCHAR)pass, 14, result);
+    MD4((PUCHAR)password, chLen * sizeof(WCHAR), result);
 
     return TRUE;
 }
 
-// MS-NLSP 3.3.2
+/* MS-NLSP 3.3.2 */
 BOOL
 NTOWFv2(
     IN LPCWSTR password,
@@ -75,14 +65,16 @@ NTOWFv2(
     return TRUE;
 }
 
+/* MS-NLSP 3.3.1 */
 VOID
-LMOWFv1(const PCCHAR password, UCHAR result[16])
+LMOWFv1(
+    IN PCCHAR password,
+    OUT UCHAR result[16])
 {
 #if 0
     SystemFunction006(password, result);
 #else
-    /* "KGS!@#$%" */
-    UCHAR magic[] = { 0x4B, 0x47, 0x53, 0x21, 0x40, 0x23, 0x24, 0x25 };
+    UCHAR* magic = (UCHAR*)"KGS!@#$%";
     UCHAR uppercase_password[14];
     ULONG i;
 
@@ -325,6 +317,8 @@ MAC(ULONG flags,
 }
 
 /* MS-NLSP 3.3.1 NTLM v1 Authentication */
+//#define VALIDATE_NTLMv1
+//#define VALIDATE_NTLM
 BOOL
 CliComputeResponseNTLMv1(
     IN ULONG NegFlg,
@@ -350,7 +344,7 @@ CliComputeResponseNTLMv1(
         //Set NtChallengeResponseBufferOffset to 0
         //Set LmChallengeResponse to Z(1)
         //ElseIf
-        FIXME("anyonymouse not implemented\n");
+        FIXME("anonymouse not implemented\n");
         return FALSE;
     }
     else
@@ -409,6 +403,7 @@ CliComputeResponseNTLMv1(
 
 /* MS-NLSP 3.3.2 NTLM v2 Authentication */
 //#define VALIDATE_NTLMv2
+//#define VALIDATE_NTLM
 BOOL
 CliComputeResponseNTLMv2(
     IN PEXT_STRING_W user,
@@ -458,10 +453,10 @@ CliComputeResponseNTLMv2(
                      sizeof(MSV1_0_NTLM3_RESPONSE) +
                      sizeof(MSV1_0_AV_PAIR) * 3 +
                      ServerName->bUsed +
-                     userdom->bUsed,
         #ifdef VALIDATE_NTLMv2
-                     + 20 /* HACK */
+                     20 + /* HACK */
         #endif
+                     userdom->bUsed,
                      TRUE);
     pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtChallengeResponseData->pData;
     pNtResponse->RespType = 1;
@@ -481,12 +476,12 @@ CliComputeResponseNTLMv2(
     memset(pNtResponse->ChallengeFromClient, 0xaa, 8);
     /* AV-Pais (Domain / Server) */
     avOk = TRUE;
-    if (pDomainNameW->bUsed > 0)
+    if (userdom->bUsed > 0)
         avOk = avOk &&
-               NtlmAvlAdd(pNtResponseData, MsvAvNbDomainName, (WCHAR*)L"Domain", 12);
+               NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbDomainName, (WCHAR*)L"Domain", 12);
     avOk = avOk &&
-           NtlmAvlAdd(pNtResponseData, MsvAvNbComputerName, (WCHAR*)L"Server", 12) &&
-           NtlmAvlAdd(pNtResponseData, MsvAvEOL, NULL, 0);
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvNbComputerName, (WCHAR*)L"Server", 12) &&
+           NtlmAvlAdd(pNtChallengeResponseData, MsvAvEOL, NULL, 0);
     #else
     avOk = TRUE;
     if (userdom->bUsed > 0)
@@ -540,8 +535,8 @@ CliComputeResponseNTLMv2(
         tempLen = pNtChallengeResponseData->bUsed -
                   FIELD_OFFSET(MSV1_0_NTLM3_RESPONSE, RespType);
         #ifdef VALIDATE_NTLMv2
-        NtlmPrintHexDump((PBYTE)pNtResponse, pNtResponseLen);
-        TRACE("%p %i %p %i\n", pNtResponse, temp, pNtResponseLen, tempLen);
+        NtlmPrintHexDump((PBYTE)pNtChallengeResponseData->pData, pNtChallengeResponseData->bUsed);
+        TRACE("%p %i %p %i\n", pNtResponse, temp, pNtChallengeResponseData->pData, tempLen);
         TRACE("**** VALIDATE **** temp\n");
         NtlmPrintHexDump((PBYTE)temp, tempLen);
         #endif
@@ -568,7 +563,7 @@ CliComputeResponseNTLMv2(
         //TRACE("**** VALIDATE **** NTProofStr\n");
         //NtlmPrintHexDump(NTProofStr, ARRAYSIZE(NTProofStr));
         TRACE("**** VALIDATE **** NtChallengeResponse\n");
-        NtlmPrintHexDump(NtChallengeResponse, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        NtlmPrintHexDump(pNtResponse->Response, MSV1_0_NTLM3_RESPONSE_LENGTH);
         #endif
 
         //Set LmChallengeResponse to ConcatenationOf(HMAC_MD5(ResponseKeyLM,
@@ -695,16 +690,15 @@ CliComputeResponse(
     //UserDom)
     //EndDefine
 
-    #ifdef VALIDATE_NTLMv2
+    #ifdef VALIDATE_NTLM
     {
         ExtWStrSet(user, L"User");
         ExtWStrSet(passwd, L"Password");
         ExtWStrSet(userdom, L"Domain");
-        memcpy(ClientChallenge, "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa", 8);
-        memcpy(ServerChallenge, "\x01\x23\x45\x67\x89\xab\xcd\xef", 8);
+        memcpy(ChallengeFromClient, "\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa", 8);
+        memcpy(ChallengeToClient, "\x01\x23\x45\x67\x89\xab\xcd\xef", 8);
     }
     #endif
-
     if (!UseNTLMv2)
     {
         EXT_STRING_A passwdOEM;
@@ -723,6 +717,11 @@ CliComputeResponse(
             ERR("NTOWFv1 failed\n");
             return FALSE;
         }
+        #ifdef VALIDATE_NTLMv1
+        TRACE("**** VALIDATE **** ResponseKeyNT\n");
+        NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        #endif
+
         //Set ResponseKeyLM to LMOWFv1( Passwd, User, UserDom )
         if (!ExtWStrToAStr(&passwdOEM, passwd, TRUE, TRUE))
         {
@@ -731,6 +730,10 @@ CliComputeResponse(
         }
         LMOWFv1((char*)passwdOEM.Buffer, ResponseKeyLM);
         ExtStrFree(&passwdOEM);
+        #ifdef VALIDATE_NTLMv1
+        TRACE("**** VALIDATE **** ResponseKeyLM\n");
+        NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+        #endif
 
         /* prepare CompureResponse */
         NtlmDataBufAlloc(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
@@ -754,6 +757,9 @@ CliComputeResponse(
         }
         /* set session key to 0 ... */
         memset(&SessionBaseKey, 0, sizeof(SessionBaseKey));
+        #ifdef VALIDATE_NTLMv1
+        DebugBreak();
+        #endif
     }
     else
     {

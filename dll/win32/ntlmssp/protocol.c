@@ -473,20 +473,21 @@ CliGenerateAuthenticationMessage(
     PNTLMSSP_CONTEXT_CLI context = NULL;
     PCHALLENGE_MESSAGE challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
-    BOOLEAN isUnicode;
+    BOOL isUnicode;
     EXT_STRING_W ServerName;
+    EXT_STRING_W WorkstationName;
     NTLM_DATABUF NtResponseData;
     EXT_DATA LmResponseData; /* LM2_RESPONSE / RESPONSE */
     EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
     EXT_DATA AvDataTmp = {0};
     NTLM_DATABUF AvDataRef;
     ULONGLONG NtResponseTimeStamp;
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
     ULONG messageSize;
     BOOL sendLmChallengeResponse;
-    //BOOL sendERSessionKey;
     BOOL sendMIC;
 
     TRACE("NtlmHandleChallengeMessage hContext %lx\n", hContext);
@@ -499,7 +500,7 @@ CliGenerateAuthenticationMessage(
     RtlZeroMemory(&NtResponseData, sizeof(NtResponseData));
     ExtDataInit(&LmResponseData, NULL, 0);
     ExtDataInit(&EncryptedRandomSessionKey, NULL, 0);
-    //ExtDataInit(&UserSessionKey, NULL, 0);
+    ExtWStrInit(&WorkstationName, (WCHAR*)gsvr->NbMachineName.Buffer);
     ExtWStrInit(&ServerName, NULL);
 
     /* get context */
@@ -578,6 +579,9 @@ CliGenerateAuthenticationMessage(
     {
         context->NegFlg |= NTLMSSP_NEGOTIATE_OEM;
         context->NegFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
+        /* we have to convert all strings to OEM ...
+         * maybe targetinfo-strings too!? */
+        FIXME("OEM will not work ...\n");
         isUnicode = FALSE;
     }
     else
@@ -758,7 +762,7 @@ CliGenerateAuthenticationMessage(
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
                   cred->DomainNameW.bUsed +
                   cred->UserNameW.bUsed +
-                  ServerName.bUsed +
+                  WorkstationName.bUsed +
                   NtResponseData.bUsed +
                   EncryptedRandomSessionKey.bUsed/*+
                   LmSessionKeyString.Length*/;
@@ -811,7 +815,7 @@ CliGenerateAuthenticationMessage(
                         &offset);
 
     NtlmExtStringToBlob((PVOID)authmessage,
-                         &ServerName,
+                         &gsvr->NbMachineName,
                          &authmessage->WorkstationName,
                          &offset);
 
@@ -860,6 +864,7 @@ quit:
     ExtStrFree(&AvDataTmp);
     ExtStrFree(&LmResponseData);
     ExtStrFree(&EncryptedRandomSessionKey);
+    ExtStrFree(&WorkstationName);
     ERR("handle challenge end\n");
     return ret;
 }
