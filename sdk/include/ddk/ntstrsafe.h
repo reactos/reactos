@@ -3071,7 +3071,7 @@ NTSTRSAFEAPI RtlpStringVPrintfExWorkerW(
 
                 if (NT_SUCCESS(Status) && (dwFlags & STRSAFE_FILL_BEHIND) && cchRemaining)
                 {
-                    memset(pszDestEnd + 1, STRSAFE_GET_FILL_PATTERN(dwFlags), ((cchRemaining - 1) * sizeof(wchar_t)) + (cbDest % sizeof(wchar_t)));
+                    memset(pszDestEnd, STRSAFE_GET_FILL_PATTERN(dwFlags), (cchRemaining * sizeof(wchar_t)) + (cbDest % sizeof(wchar_t)));
                 }
 
                 if (pcchDestNewLen)
