@@ -133,6 +133,11 @@ ExtDataInit(
     IN PBYTE initdata,
     IN ULONG len);
 BOOL
+ExtDataInit2(
+    IN PEXT_DATA dst,
+    IN ULONG minBytesToAlloc);
+
+BOOL
 ExtDataSetLength(
     IN PEXT_DATA dst,
     IN ULONG len,

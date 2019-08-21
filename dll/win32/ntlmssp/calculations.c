@@ -415,7 +415,7 @@ CliComputeResponseNTLMv2(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
-    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
+    IN OUT PEXT_DATA pNtChallengeResponseData,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey)
 {
@@ -449,7 +449,7 @@ CliComputeResponseNTLMv2(
     TRACE("0x%x\n", TimeStamp);
 
     /* alloc/fill NtResponse struct */
-    NtlmDataBufAlloc(pNtChallengeResponseData,
+    ExtDataSetLength(pNtChallengeResponseData,
                      sizeof(MSV1_0_NTLM3_RESPONSE) +
                      sizeof(MSV1_0_AV_PAIR) * 3 +
                      ServerName->bUsed +
@@ -458,7 +458,7 @@ CliComputeResponseNTLMv2(
         #endif
                      userdom->bUsed,
                      TRUE);
-    pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtChallengeResponseData->pData;
+    pNtResponse = (PMSV1_0_NTLM3_RESPONSE)pNtChallengeResponseData->Buffer;
     pNtResponse->RespType = 1;
     pNtResponse->HiRespType = 1;
     pNtResponse->Flags = 0;
@@ -659,10 +659,10 @@ CliComputeResponse(
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
     IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
-    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
+    IN OUT PEXT_DATA pNtChallengeResponseData,
     /* NTLMv1 UCHAR[16]
      * NTLMv2 PLM2_RESPONSE */
-    OUT PEXT_DATA pLmChallengeResponseData,
+    IN OUT PEXT_DATA pLmChallengeResponseData,
     IN OUT PEXT_DATA EncryptedRandomSessionKey)
 {
     BOOL UseNTLMv2 = (getGlobalsCli()->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED);
@@ -674,7 +674,7 @@ CliComputeResponse(
 
     TRACE("%wZ %wZ %wZ %wZ %p %p %p %p\n",
         user, passwd, userdom, pServerName, ChallengeToClient,
-        pNtChallengeResponseData->pData,
+        pNtChallengeResponseData->Buffer,
         pLmChallengeResponseData->Buffer);
 
     /* 3.1.5.1.2 nonce */
@@ -735,9 +735,8 @@ CliComputeResponse(
         NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
         #endif
 
-        /* prepare CompureResponse */
-        NtlmDataBufAlloc(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
-        pNtChallengeResponseData->bUsed = MSV1_0_RESPONSE_LENGTH;
+        /* prepare ComputeResponse */
+        ExtDataSetLength(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
         ExtDataSetLength(pLmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
 
         if (!CliComputeResponseNTLMv1(NegFlg,
@@ -747,10 +746,10 @@ CliComputeResponse(
                                       ResponseKeyNT,
                                       ChallengeToClient,
                                       ChallengeFromClient,
-                                      (PUCHAR)pNtChallengeResponseData->pData,
+                                      (PUCHAR)pNtChallengeResponseData->Buffer,
                                       (PUCHAR)pLmChallengeResponseData->Buffer))
         {
-            NtlmFree(pNtChallengeResponseData);
+            ExtStrFree(pNtChallengeResponseData);
             ExtStrFree(pLmChallengeResponseData);
             ERR("CliComputeResponseNTLMv1 failed!\n");
             return FALSE;

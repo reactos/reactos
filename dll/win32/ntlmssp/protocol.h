@@ -252,8 +252,8 @@ CliComputeResponse(
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
     IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
-    IN OUT PNTLM_DATABUF pNtChallengeResponseData,
-    OUT PEXT_DATA pLmChallengeResponseData,
+    IN OUT PEXT_DATA pNtChallengeResponseData,
+    IN OUT PEXT_DATA pLmChallengeResponseData,
     IN OUT PEXT_DATA EncryptedRandomSessionKey);
 
 BOOL
@@ -269,23 +269,19 @@ CliComputeKeys(
 
 /* avl functions */
 
-#define NtlmAvlAlloc NtlmDataBufAlloc
-#define NtlmAvlFree NtlmDataBufFree
+#define NtlmAvlInit ExtDataInit2
+#define NtlmAvlFree ExtStrFree
 
 BOOL
 NtlmAvlGet(
-    IN PNTLM_DATABUF pAvData,
+    IN PEXT_DATA pAvData,
     IN MSV1_0_AVID AvId,
     OUT PVOID* pData,
     OUT PULONG plen);
-//ULONG
-//NtlmAvlLen(
-//    IN PMSV1_0_AV_PAIR pAvList,
-//    IN LONG cAvList);
 
 BOOL
 NtlmAvlAdd(
-    IN PNTLM_DATABUF pAvData,
+    IN PEXT_DATA pAvData,
     IN MSV1_0_AVID AvId,
     IN void* data,
     IN ULONG len);
@@ -383,14 +379,6 @@ NtlmExtStringToBlob(
     IN PEXT_STRING InStr,
     IN OUT PNTLM_BLOB OutputBlob,
     IN OUT PULONG_PTR OffSet);
-#define NtlmUnicodeStringToBlob(buf, str, out, ofs) NtlmExtStringToBlob(buf, (PEXT_STRING)str, out, ofs)
-
-VOID
-NtlmWriteDataBufToBlob(
-    IN PVOID OutputBuffer,
-    IN PNTLM_DATABUF pDataBuf,
-    IN OUT PNTLM_BLOB OutputBlob,
-    IN OUT PULONG_PTR OffSet);
 
 VOID
 NtlmAppendToBlob(IN void* buffer,
@@ -425,7 +413,7 @@ CliComputeResponseNTLMv2(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
-    IN OUT PNTLM_DATABUF pNtChallengeResponse,
+    IN OUT PEXT_DATA pNtChallengeResponse,
     OUT PLM2_RESPONSE pLmChallengeResponse,
     OUT PUSER_SESSION_KEY SessionBaseKey);
 

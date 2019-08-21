@@ -93,23 +93,23 @@ CliGenerateNegotiateMessage(
         message->NegotiateFlags |= (NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED |
             NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED | NTLMSSP_NEGOTIATE_LOCAL_CALL);
 
-        NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&g->NbMachineNameOEM,
-                                &message->OemWorkstationName,
-                                &offset);
-        NtlmUnicodeStringToBlob((PVOID)message,
-                                (PUNICODE_STRING)&g->NbDomainNameOEM,
-                                &message->OemDomainName,
-                                &offset);
+        NtlmExtStringToBlob((PVOID)message,
+                            &g->NbMachineNameOEM,
+                            &message->OemWorkstationName,
+                            &offset);
+        NtlmExtStringToBlob((PVOID)message,
+                            &g->NbDomainNameOEM,
+                            &message->OemDomainName,
+                            &offset);
     }
     else
     {
-        NtlmUnicodeStringToBlob((PVOID)message, NULL,
-                                &message->OemWorkstationName,
-                                &offset);
-        NtlmUnicodeStringToBlob((PVOID)message, NULL,
-                                &message->OemDomainName,
-                                &offset);
+        NtlmExtStringToBlob((PVOID)message, NULL,
+                            &message->OemWorkstationName,
+                            &offset);
+        NtlmExtStringToBlob((PVOID)message, NULL,
+                            &message->OemDomainName,
+                            &offset);
     }
 
     /* zero version struct */
@@ -194,7 +194,7 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
         gsvr->NtlmAvTargetInfoPart.bUsed, offset);
-    NtlmWriteDataBufToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
+    NtlmExtStringToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
     /* append filetime and eol */
     targetInfoEnd.avpTs.AvId = MsvAvTimestamp;
     targetInfoEnd.avpTs.AvLen = sizeof(targetInfoEnd.ts);
@@ -476,11 +476,10 @@ CliGenerateAuthenticationMessage(
     BOOL isUnicode;
     EXT_STRING_W ServerName;
     EXT_STRING_W WorkstationName;
-    NTLM_DATABUF NtResponseData;
+    EXT_DATA NtResponseData;
     EXT_DATA LmResponseData; /* LM2_RESPONSE / RESPONSE */
     EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
-    EXT_DATA AvDataTmp = {0};
-    NTLM_DATABUF AvDataRef;
+    EXT_DATA AvDataTmp;
     ULONGLONG NtResponseTimeStamp;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
@@ -497,7 +496,8 @@ CliGenerateAuthenticationMessage(
                        ISC_RET_SEQUENCE_DETECT |
                        ISC_RET_INTEGRITY;
 
-    RtlZeroMemory(&NtResponseData, sizeof(NtResponseData));
+    ExtDataInit(&NtResponseData, NULL, 0);
+    ExtDataInit(&AvDataTmp, NULL, 0);
     ExtDataInit(&LmResponseData, NULL, 0);
     ExtDataInit(&EncryptedRandomSessionKey, NULL, 0);
     ExtWStrInit(&WorkstationName, (WCHAR*)gsvr->NbMachineName.Buffer);
@@ -660,16 +660,11 @@ CliGenerateAuthenticationMessage(
             goto quit;
         }
 
-        /* Copy to AvData */
-        AvDataRef.pData = AvDataTmp.Buffer;
-        AvDataRef.bAllocated = AvDataTmp.bAllocated;
-        AvDataRef.bUsed = AvDataTmp.bUsed;
-
         //FIXME...
         //NtlmPrintAvPairs(ptr);
         //NtlmPrintHexDump(InputToken1->pvBuffer, InputToken1->cbBuffer);
 
-        if (!NtlmAvlGet(&AvDataRef, MsvAvNbDomainName, &data, &len))
+        if (!NtlmAvlGet(&AvDataTmp, MsvAvNbDomainName, &data, &len))
         {
             ERR("could not get domainname from target info!\n");
             goto quit;
@@ -681,7 +676,7 @@ CliGenerateAuthenticationMessage(
 
         ExtWStrSetN(&ServerName, (WCHAR*)data, len / sizeof(WCHAR));
 
-        if (NtlmAvlGet(&AvDataRef, MsvAvTimestamp, &data, &len))
+        if (NtlmAvlGet(&AvDataTmp, MsvAvTimestamp, &data, &len))
             NtResponseTimeStamp = *(PULONGLONG)data;
     }
     else
@@ -756,7 +751,7 @@ CliGenerateAuthenticationMessage(
                        &LmResponseData,
                        &EncryptedRandomSessionKey);
     TRACE("=== NtResponse ===\n");
-    NtlmPrintHexDump(NtResponseData.pData, NtResponseData.bUsed);
+    NtlmPrintHexDump(NtResponseData.Buffer, NtResponseData.bUsed);
 
     /* calc message size */
     messageSize = sizeof(AUTHENTICATE_MESSAGE) +
@@ -828,15 +823,15 @@ CliGenerateAuthenticationMessage(
     }
     else
     {
-        NtlmUnicodeStringToBlob((PVOID)authmessage, NULL,
-                                &authmessage->LmChallengeResponse,
-                                &offset);
+        NtlmExtStringToBlob((PVOID)authmessage, NULL,
+                            &authmessage->LmChallengeResponse,
+                            &offset);
     }
 
-    NtlmWriteDataBufToBlob((PVOID)authmessage,
-                           &NtResponseData,
-                           &authmessage->NtChallengeResponse,
-                           &offset);
+    NtlmExtStringToBlob((PVOID)authmessage,
+                        &NtResponseData,
+                        &authmessage->NtChallengeResponse,
+                        &offset);
 
     NtlmExtStringToBlob((PVOID)authmessage,
                          &EncryptedRandomSessionKey,
@@ -858,8 +853,7 @@ quit:
     }
     if(context) NtlmDereferenceContext((ULONG_PTR)context);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
-    if (NtResponseData.bAllocated > 0)
-        NtlmDataBufFree(&NtResponseData);
+    ExtStrFree(&NtResponseData);
     ExtStrFree(&ServerName);
     ExtStrFree(&AvDataTmp);
     ExtStrFree(&LmResponseData);
@@ -999,7 +993,7 @@ SvrAuthMsgProcessData(
     UCHAR* ChallengeFromClient;
     EXT_STRING_W ServerName;
     ULONGLONG TimeStamp = {0};
-    NTLM_DATABUF ExpectedNtChallengeResponse;
+    EXT_DATA ExpectedNtChallengeResponse;
     LM2_RESPONSE ExpectedLmChallengeResponse;
     /* UCHAR* MessageMIC; unused */
     UCHAR MIC[16];
@@ -1009,8 +1003,8 @@ SvrAuthMsgProcessData(
     USER_SESSION_KEY SessionBaseKey;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
-    ExpectedNtChallengeResponse.bUsed = 0;
-
+    ExtDataInit(&ExpectedNtChallengeResponse, NULL, 0);
+    
     /* Servername is NetBIOS Name or DNS Hostname */
     ExtWStrInit(&ServerName, (WCHAR*)gsvr->NbMachineName.Buffer);
 
@@ -1120,7 +1114,7 @@ SvrAuthMsgProcessData(
         TRACE("NTChallengeResponse\n");
         NtlmPrintHexDump(ad->NtChallengeResponse.Buffer, ad->NtChallengeResponse.bUsed);
         TRACE("NTChallengeResponse (expected)\n");
-        NtlmPrintHexDump(ExpectedNtChallengeResponse.pData, ExpectedNtChallengeResponse.bUsed);
+        NtlmPrintHexDump(ExpectedNtChallengeResponse.Buffer, ExpectedNtChallengeResponse.bUsed);
 
         TRACE("LmChallengeResponse\n");
         NtlmPrintHexDump((PBYTE)&ad->LmChallengeResponse, sizeof(ad->LmChallengeResponse));
@@ -1194,8 +1188,7 @@ SvrAuthMsgProcessData(
     //RC4Init(ServerHandle, ServerSealingKey)
     RC4Init(&ServerHandle, context->msg.ServerSealingKey);
 quit:
-    if (ExpectedNtChallengeResponse.bUsed != 0)
-        NtlmDataBufFree(&ExpectedNtChallengeResponse);
+    ExtStrFree(&ExpectedNtChallengeResponse);
     ExtStrFree(&ServerName);
     return ret;
 }

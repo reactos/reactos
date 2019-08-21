@@ -149,7 +149,7 @@ ExtDataInit(
     dst->bUsed = 0;
     dst->bAllocated = 0;
     dst->Buffer = NULL;
-    dst->typ = stAnsiStr;
+    dst->typ = stData;
     if (len == 0)
         return TRUE;
 
@@ -159,6 +159,25 @@ ExtDataInit(
     memcpy(dst->Buffer, initdata, len);
     return TRUE;
 }
+
+BOOL
+ExtDataInit2(
+    IN PEXT_DATA dst,
+    IN ULONG minBytesToAlloc)
+{
+    dst->bUsed = 0;
+    dst->bAllocated = 0;
+    dst->Buffer = NULL;
+    dst->typ = stData;
+    if (minBytesToAlloc == 0)
+        return TRUE;
+
+    if (!_ExtStrRealloc(dst, minBytesToAlloc, FALSE))
+        return FALSE;
+    dst->bUsed = 0;
+    return TRUE;
+}
+
 BOOL
 ExtDataSetLength(
     IN PEXT_DATA dst,

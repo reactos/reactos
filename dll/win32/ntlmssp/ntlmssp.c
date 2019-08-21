@@ -112,7 +112,7 @@ NtlmInitializeGlobals(VOID)
     InitializeCriticalSection(&gsvr->cs);
 
     /* maybe read from registry ... */
-    /*  NTLMV1 WIP */
+    /*  NTLMV1 works */
     /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
     gcli->CfgFlags = NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED;
     gcli->LMCompatibilityLevel = 2;// totally unimplemented
@@ -172,7 +172,7 @@ NtlmInitializeGlobals(VOID)
                  gsvr->DnsMachineName.bUsed + //fix me: dns domain name
                  sizeof(MSV1_0_AV_PAIR)*4;
 
-    if (!NtlmAvlAlloc(&gsvr->NtlmAvTargetInfoPart, AvPairsLen, TRUE))
+    if (!NtlmAvlInit(&gsvr->NtlmAvTargetInfoPart, AvPairsLen))
     {
         ERR("failed to allocate NtlmAvTargetInfo\n");
         return STATUS_INSUFFICIENT_RESOURCES;

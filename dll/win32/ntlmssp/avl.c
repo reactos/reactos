@@ -24,13 +24,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 BOOL
-NtlmAvlGet(IN PNTLM_DATABUF pAvData,
+NtlmAvlGet(IN PEXT_DATA pAvData,
            IN MSV1_0_AVID AvId,
            OUT PVOID* pData,
            OUT PULONG pLen)
 {
     PMSV1_0_AV_PAIR pAvPair;
-    PBYTE ptr = pAvData->pData;
+    PBYTE ptr = pAvData->Buffer;
     PBYTE ptrend = ptr + pAvData->bUsed;
 
     do
@@ -68,7 +68,7 @@ NtlmAvlLen(IN PMSV1_0_AV_PAIR pAvList,
 }*/
 
 BOOL
-NtlmAvlAdd(IN PNTLM_DATABUF pAvData,
+NtlmAvlAdd(IN PEXT_DATA pAvData,
            IN MSV1_0_AVID AvId,
            IN void* data,
            IN ULONG len)
@@ -82,13 +82,13 @@ NtlmAvlAdd(IN PNTLM_DATABUF pAvData,
         return FALSE;
     }
 
-    pNewPair = (PMSV1_0_AV_PAIR)(pAvData->pData + pAvData->bUsed);
+    pNewPair = (PMSV1_0_AV_PAIR)(pAvData->Buffer + pAvData->bUsed);
     pNewPair->AvId = (USHORT)AvId;
     pNewPair->AvLen = (USHORT)len;
     pAvData->bUsed += sizeof(MSV1_0_AV_PAIR);
 
     if (len > 0)
-        memcpy(pAvData->pData + pAvData->bUsed, data, len);
+        memcpy(pAvData->Buffer + pAvData->bUsed, data, len);
     pAvData->bUsed += len;
 
     return TRUE;

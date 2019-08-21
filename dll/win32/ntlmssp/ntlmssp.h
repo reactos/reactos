@@ -41,14 +41,6 @@
 
 #include "wine/unicode.h"
 
-/* forward */
-typedef struct _NTLM_DATABUF
-{
-    ULONG bAllocated;
-    ULONG bUsed;
-    BYTE* pData;
-} NTLM_DATABUF, *PNTLM_DATABUF;
-
 /* globals */
 extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
 extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
@@ -155,7 +147,7 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     //encryption.<60>
 
     /* vars not in spec (MS-NLMP) */
-    NTLM_DATABUF NtlmAvTargetInfoPart;
+    EXT_DATA NtlmAvTargetInfoPart;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
 typedef enum _NTLM_MODE {
@@ -413,16 +405,6 @@ NtlmGetSecBuffer(
     OUT PSecBuffer *pOutBuffer,
     IN BOOLEAN Output);
 
-BOOL
-NtlmDataBufAlloc(
-    IN PNTLM_DATABUF pAvData,
-    IN ULONG initlen,
-    IN BOOL doZeroMem);
-
-void
-NtlmDataBufFree(
-    IN OUT PNTLM_DATABUF pAvData);
-
 /* debug.c */
 
 void
@@ -433,6 +415,6 @@ NtlmPrintHexDump(PBYTE buffer, DWORD length);
 
 void
 NtlmPrintAvPairs(
-    IN PNTLM_DATABUF pAvData);
+    IN PEXT_DATA pAvData);
 
 #endif

@@ -321,7 +321,7 @@ NtlmExtStringToBlob(IN PVOID OutputBuffer,
                     IN OUT PNTLM_BLOB OutputBlob,
                     IN OUT PULONG_PTR OffSet)
 {
-    /* Handle NULL value */
+    /*  Handle NULL value */
     if (!InStr)
     {
         OutputBlob->Length = 0;
@@ -340,19 +340,6 @@ NtlmExtStringToBlob(IN PVOID OutputBuffer,
 
     /* move the offset to the end of the string we just copied */
     *OffSet += InStr->bUsed;
-}
-
-VOID
-NtlmWriteDataBufToBlob(
-    IN PVOID OutputBuffer,
-    IN PNTLM_DATABUF pDataBuf,
-    IN OUT PNTLM_BLOB OutputBlob,
-    IN OUT PULONG_PTR OffSet)
-{
-    if (pDataBuf)
-        NtlmWriteToBlob(OutputBuffer, pDataBuf->pData, pDataBuf->bUsed, OutputBlob, OffSet);
-    else
-        NtlmWriteToBlob(OutputBuffer, NULL, 0, OutputBlob, OffSet);
 }
 
 VOID
@@ -405,31 +392,3 @@ NtlmStructWriteStrW(
     *pOffset += datalen;
 }
 
-BOOL
-NtlmDataBufAlloc(
-    IN PNTLM_DATABUF pAvData,
-    IN ULONG initlen,
-    IN BOOL doZeroMem)
-{
-    pAvData->pData = NtlmAllocate(initlen);
-    if (pAvData == NULL)
-        return FALSE;
-    pAvData->bUsed = 0;
-    pAvData->bAllocated = initlen;
-    if (doZeroMem)
-        RtlZeroMemory(pAvData->pData, initlen);
-    return TRUE;
-}
-
-void
-NtlmDataBufFree(
-    IN OUT PNTLM_DATABUF pAvData)
-{
-    if ((pAvData->pData == NULL) ||
-        (pAvData->bAllocated == 0))
-        return;
-    NtlmFree(pAvData->pData);
-    pAvData->pData = NULL;
-    pAvData->bAllocated = 0;
-    pAvData->bUsed = 0;
-}
