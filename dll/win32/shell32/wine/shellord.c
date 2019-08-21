@@ -1826,8 +1826,14 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 {
-    FIXME("%p %p\n", pidlFolder, pidlSaveFile );
-    return FALSE;
+    FIXME("params ignored: %p %p\n", pidlFolder, pidlSaveFile);
+    if (SHRestricted(REST_NOFIND))
+    {
+        return FALSE;
+    }
+    /* Open the search results folder */
+    /* FIXME: CSearchBar should be opened as well */
+    return ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{E17D4FC0-5564-11D1-83F2-00A0C90DC849}", NULL, SW_SHOWNORMAL) > (HINSTANCE)32;
 }
 
 /*************************************************************************
