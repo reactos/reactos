@@ -33,26 +33,27 @@ class CSearchBar :
     public IWinEventHandler,
     public INamespaceProxy,
     public IDispatch,
-    public CWindowImpl<CSearchBar>
+    public CDialogImpl<CSearchBar>
 {
 
 private:
     // *** BaseBarSite information ***
     CComPtr<IUnknown> pSite;
+    CComPtr<IAddressEditBox> fAddressEditBox;
     BOOL fVisible;
     BOOL bFocused;
-    HWND m_fileName;
-    HWND m_query;
-    HWND m_path;
 
-    void InitializeSearchBar();
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
+    BOOL GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH]);
+    void SetSearchInProgress(BOOL bInProgress);
     HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
 
     // *** ATL event handlers ***
+    LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 public:
     CSearchBar();
@@ -115,6 +116,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
     virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
+    enum { IDD = IDD_SEARCH_DLG };
+
     DECLARE_REGISTRY_RESOURCEID(IDR_EXPLORERBAND)
     DECLARE_NOT_AGGREGATABLE(CSearchBar)
 
@@ -122,6 +125,7 @@ public:
 
     BEGIN_COM_MAP(CSearchBar)
         COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
+        COM_INTERFACE_ENTRY_IID(DIID_DSearchCommandEvents, IDispatch)
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IBandNavigate, IBandNavigate)
         COM_INTERFACE_ENTRY_IID(IID_INamespaceProxy, INamespaceProxy)
@@ -136,11 +140,11 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
     END_COM_MAP()
 
-    DECLARE_WND_CLASS_EX(_T("SrchCompExplorerBar"), 0, COLOR_WINDOW)
-
     BEGIN_MSG_MAP(CSearchBar)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        COMMAND_CODE_HANDLER(BN_CLICKED, OnSearchButtonClicked)
-        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClicked)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        COMMAND_HANDLER(IDC_SEARCH_BUTTON, BN_CLICKED, OnSearchButtonClicked)
+        COMMAND_HANDLER(IDC_SEARCH_STOP_BUTTON, BN_CLICKED, OnStopButtonClicked)
     END_MSG_MAP()
 };
