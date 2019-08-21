@@ -117,14 +117,14 @@ static UINT StrStrNCount(const TChar *lpFirst, const TString &lpSrch, UINT cchMa
     return uCount;
 }
 
-static UINT StrStrCountA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
+static UINT StrStrCountNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
 {
-    return StrStrNCount<CHAR, CStringA, strncmp>(lpFirst, lpSrch, cchMax);
+    return StrStrNCount<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax);
 }
 
-static UINT StrStrCountW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
+static UINT StrStrCountNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
 {
-    return StrStrNCount<WCHAR, CStringW, wcsncmp>(lpFirst, lpSrch, cchMax);
+    return StrStrNCount<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax);
 }
 
 static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
@@ -148,11 +148,11 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     // Check for UTF-16 BOM
     if (size >= 2 && lpFileContent[0] == 0xFF && lpFileContent[1] == 0xFE)
     {
-        uMatches = StrStrCountW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
     }
     else
     {
-        uMatches = StrStrCountA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
     UnmapViewOfFile(lpFileContent);
