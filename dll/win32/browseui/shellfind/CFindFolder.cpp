@@ -609,6 +609,6 @@ STDMETHODIMP CFindFolder::GetClassID(CLSID *pClassId)
 {
     if (pClassId == NULL)
         return E_INVALIDARG;
-    memcpy(pClassId, &CLSID_FindFolder, sizeof(CLSID));
+    *pClassId = CLSID_FindFolder;
     return S_OK;
 }
