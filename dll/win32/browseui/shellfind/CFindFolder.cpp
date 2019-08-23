@@ -224,7 +224,9 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
     CStringW status;
     status.Format(IDS_SEARCH_FILES_FOUND, uTotalFound);
     ::PostMessageW(data->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
+    ::SendMessageW(data->hwnd, WM_SEARCH_STOP, 0, 0);
 
+    CloseHandle(data->hStopEvent);
     delete data;
 
     return 0;
