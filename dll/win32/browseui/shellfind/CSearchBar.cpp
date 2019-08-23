@@ -362,15 +362,6 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetBandInfo(DWORD dwBandID, DWORD dwViewMo
     return S_OK;
 }
 
-LRESULT CALLBACK MyWindowProc(
-    _In_ HWND   hwnd,
-    _In_ UINT   uMsg,
-    _In_ WPARAM wParam,
-    _In_ LPARAM lParam
-)
-{
-    return 0;
-}
 
 // *** IObjectWithSite methods ***
 HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
