@@ -41,7 +41,6 @@ private:
     CComPtr<IUnknown> pSite;
     CComPtr<IAddressEditBox> fAddressEditBox;
     BOOL fVisible;
-    BOOL bFocused;
 
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
     BOOL GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH]);

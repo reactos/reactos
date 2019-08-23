@@ -33,8 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
 CSearchBar::CSearchBar() :
     pSite(NULL),
-    fVisible(FALSE),
-    bFocused(FALSE)
+    fVisible(FALSE)
 {
 }
 
@@ -111,7 +110,6 @@ HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
 // *** ATL event handlers ***
 LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    bFocused = TRUE;
     IUnknown_OnFocusChangeIS(pSite, reinterpret_cast<IUnknown*>(this), TRUE);
     bHandled = FALSE;
     return TRUE;
@@ -470,7 +468,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 
 HRESULT STDMETHODCALLTYPE CSearchBar::HasFocusIO()
 {
-    return bFocused ? S_OK : S_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CSearchBar::TranslateAcceleratorIO(LPMSG lpMsg)
