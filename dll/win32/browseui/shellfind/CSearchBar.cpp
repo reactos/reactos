@@ -250,16 +250,24 @@ LRESULT CSearchBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     ((CWindow)GetDlgItem(IDC_SEARCH_LABEL)).SetWindowPos(NULL, 0, 0, iWidth - iPadding, 40, SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 
-    HWND inputs[] = { GetDlgItem(IDC_SEARCH_FILENAME), GetDlgItem(IDC_SEARCH_QUERY), GetDlgItem(IDC_SEARCH_COMBOBOX), GetDlgItem(IDC_SEARCH_BUTTON), GetDlgItem(IDC_SEARCH_STOP_BUTTON), GetDlgItem(IDC_PROGRESS_BAR) };
+    int inputs[] = { IDC_SEARCH_FILENAME, IDC_SEARCH_QUERY, IDC_SEARCH_COMBOBOX, IDC_SEARCH_BUTTON, IDC_SEARCH_STOP_BUTTON, IDC_PROGRESS_BAR };
+    HDWP hdwp = BeginDeferWindowPos(_countof(inputs));
     for (SIZE_T i = 0; i < _countof(inputs); i++)
     {
-        CWindow wFileName = (CWindow) inputs[i];
+        CWindow wnd = (CWindow) GetDlgItem(inputs[i]);
         RECT rect;
-        wFileName.GetWindowRect(&rect);
+        wnd.GetWindowRect(&rect);
         POINT pt = { rect.left, rect.top };
         ScreenToClient(&pt);
-        wFileName.MoveWindow(iPadding, pt.y, iWidth - iPadding * 2, rect.bottom - rect.top);
+        hdwp = wnd.DeferWindowPos(hdwp,
+                                  HWND_TOP,
+                                  iPadding,
+                                  pt.y,
+                                  iWidth - iPadding * 2,
+                                  rect.bottom - rect.top,
+                                  SWP_NOZORDER | SWP_NOACTIVATE);
     }
+    EndDeferWindowPos(hdwp);
 
     return 0;
 }
