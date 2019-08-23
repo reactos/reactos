@@ -471,7 +471,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetClassID(CLSID *pClassID)
 {
     if (!pClassID)
         return E_POINTER;
-    memcpy(pClassID, &CLSID_FileSearchBand, sizeof(CLSID));
+    *pClassID = CLSID_FileSearchBand;
     return S_OK;
 }
 
