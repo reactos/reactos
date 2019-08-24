@@ -44,7 +44,6 @@ typedef struct _PARTENTRY
 
     BOOLEAN BootIndicator;
     UCHAR PartitionType;
-    ULONG HiddenSectors;
     ULONG OnDiskPartitionNumber; /* Enumerated partition number (primary partitions first, excluding the extended partition container, then the logical partitions) */
     ULONG PartitionNumber;       /* Current partition number, only valid for the currently running NTOS instance */
     ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
@@ -231,6 +230,9 @@ BOOLEAN
 IsSuperFloppy(
     IN PDISKENTRY DiskEntry);
 
+BOOLEAN
+IsPartitionActive(
+    IN PPARTENTRY PartEntry);
 
 PPARTLIST
 CreatePartitionList(VOID);
@@ -294,22 +296,26 @@ GetPrevPartition(
 BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
 BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount);
 
 BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
+
+NTSTATUS
+DismountVolume(
+    IN PPARTENTRY PartEntry);
 
 BOOLEAN
 DeletePartition(

@@ -748,7 +748,7 @@ IsSuperFloppy(
  * Of course no disk region should overlap at all with one another.
  */
 static
-VOID
+BOOLEAN
 InsertDiskRegion(
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry,
@@ -801,7 +801,7 @@ InsertDiskRegion(
                      PartEntry->StartSector.QuadPart +  PartEntry->SectorCount.QuadPart - 1,
                     PartEntry2->StartSector.QuadPart,
                     PartEntry2->StartSector.QuadPart + PartEntry2->SectorCount.QuadPart - 1);
-            return;
+            return FALSE;
         }
 
         /* We have found the first region before which the new one has to be inserted */
@@ -810,6 +810,7 @@ InsertDiskRegion(
 
     /* Insert the disk region */
     InsertTailList(Entry, &PartEntry->ListEntry);
+    return TRUE;
 }
 
 static
@@ -834,6 +835,7 @@ CreateInsertBlankRegion(
     NewPartEntry->StartSector.QuadPart = StartSector;
     NewPartEntry->SectorCount.QuadPart = SectorCount;
 
+    NewPartEntry->LogicalPartition = LogicalSpace;
     NewPartEntry->IsPartitioned = FALSE;
     NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
     NewPartEntry->FormatState = Unformatted;
@@ -850,69 +852,72 @@ CreateInsertBlankRegion(
 }
 
 static
-// BOOLEAN
-PPARTENTRY
+BOOLEAN
 InitializePartitionEntry(
-    IN PDISKENTRY DiskEntry,
-    IN PPARTENTRY PartEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate)
 {
-    PPARTENTRY NewPartEntry;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
 
     DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+
+    /* Fail if we try to initialize this partition entry with more sectors than what it actually contains */
+    if (SectorCount > PartEntry->SectorCount.QuadPart)
+        return FALSE;
+
+    /* Fail if the partition is already in use */
+    ASSERT(!PartEntry->IsPartitioned);
 
     if ((AutoCreate != FALSE) ||
         (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
                    PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
     {
-        DPRINT1("Convert existing partition entry\n");
-
-        NewPartEntry = PartEntry;
-        NewPartEntry->AutoCreate = AutoCreate;
+        PartEntry->AutoCreate = AutoCreate;
     }
     else
     {
-        DPRINT1("Add new partition entry\n");
+        ULONGLONG StartSector;
+        ULONGLONG SectorCount2;
+        PPARTENTRY NewPartEntry;
 
-        /* Insert and initialize a new partition entry */
-        NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(PARTENTRY));
+        /* Create a partition entry that represents the remaining space after the partition to be initialized */
+
+        StartSector = AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment);
+        SectorCount2 = PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - StartSector;
+
+        NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                               PartEntry->ListEntry.Flink,
+                                               StartSector,
+                                               SectorCount2,
+                                               PartEntry->LogicalPartition);
         if (NewPartEntry == NULL)
-            return NULL;
+        {
+            DPRINT1("Failed to create a new empty region for disk space!\n");
+            return FALSE;
+        }
 
-        NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
-        NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
-                                             NewPartEntry->StartSector.QuadPart;
-
-        PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
-        PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
-
-        /* Insert the new entry into the list */
-        InsertTailList(&PartEntry->ListEntry, &NewPartEntry->ListEntry);
+        /* Resize down the partition entry; its StartSector remains the same */
+        PartEntry->SectorCount.QuadPart = StartSector - PartEntry->StartSector.QuadPart;
     }
 
-    /* Create entry as 'New (Unformatted)' */
-    NewPartEntry->New = TRUE;
-    NewPartEntry->IsPartitioned = TRUE;
+    /* Convert the partition entry to 'New (Unformatted)' */
+    PartEntry->New = TRUE;
+    PartEntry->IsPartitioned = TRUE;
 
-    NewPartEntry->PartitionType = FileSystemToPartitionType(L"RAW", &NewPartEntry->StartSector, &NewPartEntry->SectorCount);
-    ASSERT(NewPartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+    PartEntry->PartitionType = FileSystemToPartitionType(L"RAW", &PartEntry->StartSector, &PartEntry->SectorCount);
+    ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
-    NewPartEntry->FormatState = Unformatted;
-    NewPartEntry->FileSystem[0] = L'\0';
-    // NewPartEntry->AutoCreate = AutoCreate;
-    NewPartEntry->BootIndicator = FALSE;
-    NewPartEntry->LogicalPartition = FALSE;
+    PartEntry->FormatState = Unformatted;
+    PartEntry->FileSystem[0] = L'\0';
+    // PartEntry->AutoCreate = AutoCreate;
+    PartEntry->BootIndicator = FALSE;
 
-    DPRINT1("First Sector : %I64u\n", NewPartEntry->StartSector.QuadPart);
-    DPRINT1("Last Sector  : %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-    DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+    DPRINT1("First Sector : %I64u\n", PartEntry->StartSector.QuadPart);
+    DPRINT1("Last Sector  : %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
+    DPRINT1("Total Sectors: %I64u\n", PartEntry->SectorCount.QuadPart);
 
-    return NewPartEntry;
+    return TRUE;
 }
 
 
@@ -956,7 +961,6 @@ AddPartitionToDisk(
 
     PartEntry->BootIndicator = PartitionInfo->BootIndicator;
     PartEntry->PartitionType = PartitionInfo->PartitionType;
-    PartEntry->HiddenSectors = PartitionInfo->HiddenSectors;
 
     PartEntry->LogicalPartition = LogicalPartition;
     PartEntry->IsPartitioned = TRUE;
@@ -983,7 +987,7 @@ AddPartitionToDisk(
         ASSERT(PartitionInfo->RecognizedPartition);
         ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
-        /* Open the volume, ignore any errors */
+        /* Try to open the volume so as to mount it */
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\\Device\\Harddisk%lu\\Partition%lu",
                             DiskEntry->DiskNumber,
@@ -1008,8 +1012,10 @@ AddPartitionToDisk(
             DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
         }
 
-        if (/* NT_SUCCESS(Status) && */ PartitionHandle)
+        if (PartitionHandle)
         {
+            ASSERT(NT_SUCCESS(Status));
+
             /* We don't have a FS, try to guess one */
             Status = InferFileSystemByHandle(PartitionHandle,
                                              PartEntry->PartitionType,
@@ -1020,10 +1026,54 @@ AddPartitionToDisk(
         }
         if (*PartEntry->FileSystem)
         {
+            ASSERT(PartitionHandle);
+
+            /*
+             * Handle partition mounted with RawFS: it is
+             * either unformatted or has an unknown format.
+             */
             if (wcsicmp(PartEntry->FileSystem, L"RAW") == 0)
-                PartEntry->FormatState = Unformatted;
+            {
+                /*
+                 * True unformatted partitions on NT are created with their
+                 * partition type set to either one of the following values,
+                 * and are mounted with RawFS. This is done this way since we
+                 * are assured to have FAT support, which is the only FS that
+                 * uses these partition types. Therefore, having a partition
+                 * mounted with RawFS and with these partition types means that
+                 * the FAT FS was unable to mount it beforehand and thus the
+                 * partition is unformatted.
+                 * However, any partition mounted by RawFS that does NOT have
+                 * any of these partition types must be considered as having
+                 * an unknown format.
+                 */
+                if (PartEntry->PartitionType == PARTITION_FAT_12 ||
+                    PartEntry->PartitionType == PARTITION_FAT_16 ||
+                    PartEntry->PartitionType == PARTITION_HUGE   ||
+                    PartEntry->PartitionType == PARTITION_XINT13 ||
+                    PartEntry->PartitionType == PARTITION_FAT32  ||
+                    PartEntry->PartitionType == PARTITION_FAT32_XINT13)
+                {
+                    PartEntry->FormatState = Unformatted;
+                }
+                else
+                {
+                    /* Close the partition before dismounting */
+                    NtClose(PartitionHandle);
+                    PartitionHandle = NULL;
+                    /*
+                     * Dismount the partition since RawFS owns it, and set its
+                     * format to unknown (may or may not be actually formatted).
+                     */
+                    DismountVolume(PartEntry);
+                    PartEntry->FormatState = UnknownFormat;
+                    PartEntry->FileSystem[0] = L'\0';
+                }
+            }
             else
+            {
                 PartEntry->FormatState = Preformatted;
+            }
         }
         else
         {
@@ -1056,7 +1106,7 @@ AddPartitionToDisk(
     }
     else
     {
-        /* Unknown partition, hence unknown partition format (may or may not be actually formatted) */
+        /* Unknown partition, hence unknown format (may or may not be actually formatted) */
         PartEntry->FormatState = UnknownFormat;
     }
 
@@ -1195,7 +1245,6 @@ ScanForUnpartitionedDiskSpace(
                 DPRINT1("Failed to create a new empty region for full extended partition space!\n");
                 return;
             }
-            NewPartEntry->LogicalPartition = TRUE;
 
             return;
         }
@@ -1236,7 +1285,6 @@ ScanForUnpartitionedDiskSpace(
                         DPRINT1("Failed to create a new empty region for extended partition space!\n");
                         return;
                     }
-                    NewPartEntry->LogicalPartition = TRUE;
                 }
 
                 LastStartSector = PartEntry->StartSector.QuadPart;
@@ -1269,7 +1317,6 @@ ScanForUnpartitionedDiskSpace(
                     DPRINT1("Failed to create a new empty region for extended partition space!\n");
                     return;
                 }
-                NewPartEntry->LogicalPartition = TRUE;
             }
         }
     }
@@ -1846,9 +1893,9 @@ CreatePartitionList(VOID)
     ULONG ReturnSize;
     NTSTATUS Status;
     ULONG DiskNumber;
-    WCHAR Buffer[MAX_PATH];
-    UNICODE_STRING Name;
     HANDLE FileHandle;
+    UNICODE_STRING Name;
+    WCHAR Buffer[MAX_PATH];
 
     List = (PPARTLIST)RtlAllocateHeap(ProcessHeap,
                                       0,
@@ -2768,37 +2815,34 @@ GetNextUnpartitionedEntry(
 BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate)
 {
     ERROR_NUMBER Error;
-    PPARTENTRY PartEntry;
 
     DPRINT1("CreatePrimaryPartition(%I64u)\n", SectorCount);
 
-    if (List == NULL ||
-        SelectedEntry == NULL ||
-        SelectedEntry->DiskEntry == NULL ||
-        SelectedEntry->IsPartitioned)
+    if (List == NULL || PartEntry == NULL ||
+        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = PrimaryPartitionCreationChecks(SelectedEntry);
+    Error = PrimaryPartitionCreationChecks(PartEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("PrimaryPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, AutoCreate);
-    if (PartEntry == NULL)
+    /* Initialize the partition entry, inserting a new blank region if needed */
+    if (!InitializePartitionEntry(PartEntry, SectorCount, AutoCreate))
         return FALSE;
 
-    UpdateDiskLayout(PartEntry->DiskEntry);
+    ASSERT(PartEntry->LogicalPartition == FALSE);
 
+    UpdateDiskLayout(PartEntry->DiskEntry);
     AssignDriveLetters(List);
 
     return TRUE;
@@ -2830,39 +2874,36 @@ AddLogicalDiskSpace(
         DPRINT1("Failed to create a new empty region for extended partition space!\n");
         return;
     }
-    NewPartEntry->LogicalPartition = TRUE;
 }
 
 BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount)
 {
     ERROR_NUMBER Error;
-    PPARTENTRY PartEntry;
 
     DPRINT1("CreateExtendedPartition(%I64u)\n", SectorCount);
 
-    if (List == NULL ||
-        SelectedEntry == NULL ||
-        SelectedEntry->DiskEntry == NULL ||
-        SelectedEntry->IsPartitioned)
+    if (List == NULL || PartEntry == NULL ||
+        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = ExtendedPartitionCreationChecks(SelectedEntry);
+    Error = ExtendedPartitionCreationChecks(PartEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("ExtendedPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, FALSE);
-    if (PartEntry == NULL)
+    /* Initialize the partition entry, inserting a new blank region if needed */
+    if (!InitializePartitionEntry(PartEntry, SectorCount, FALSE))
         return FALSE;
+
+    ASSERT(PartEntry->LogicalPartition == FALSE);
 
     if (PartEntry->StartSector.QuadPart < 1450560)
     {
@@ -2884,7 +2925,6 @@ CreateExtendedPartition(
     AddLogicalDiskSpace(PartEntry->DiskEntry);
 
     UpdateDiskLayout(PartEntry->DiskEntry);
-
     AssignDriveLetters(List);
 
     return TRUE;
@@ -2893,45 +2933,39 @@ CreateExtendedPartition(
 BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate)
 {
     ERROR_NUMBER Error;
-    PPARTENTRY PartEntry;
 
     DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
 
-    if (List == NULL ||
-        SelectedEntry == NULL ||
-        SelectedEntry->DiskEntry == NULL ||
-        SelectedEntry->IsPartitioned)
+    if (List == NULL || PartEntry == NULL ||
+        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = LogicalPartitionCreationChecks(SelectedEntry);
+    Error = LogicalPartitionCreationChecks(PartEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("LogicalPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, AutoCreate);
-    if (PartEntry == NULL)
+    /* Initialize the partition entry, inserting a new blank region if needed */
+    if (!InitializePartitionEntry(PartEntry, SectorCount, AutoCreate))
         return FALSE;
 
-    PartEntry->LogicalPartition = TRUE;
+    ASSERT(PartEntry->LogicalPartition == TRUE);
 
     UpdateDiskLayout(PartEntry->DiskEntry);
-
     AssignDriveLetters(List);
 
     return TRUE;
 }
 
-static
 NTSTATUS
 DismountVolume(
     IN PPARTENTRY PartEntry)
@@ -2948,7 +2982,9 @@ DismountVolume(
     if (!PartEntry->IsPartitioned ||
         IsContainerPartition(PartEntry->PartitionType)   ||
         !IsRecognizedPartition(PartEntry->PartitionType) ||
-        PartEntry->FormatState == Unformatted /* || PartEntry->FormatState == UnknownFormat */ ||
+        PartEntry->FormatState == UnknownFormat ||
+        // NOTE: If FormatState == Unformatted but *FileSystem != 0 this means
+        // it has been usually mounted with RawFS and thus needs to be dismounted.
         !*PartEntry->FileSystem ||
         PartEntry->PartitionNumber == 0)
     {
@@ -3049,10 +3085,8 @@ DeletePartition(
     PPARTENTRY LogicalPartEntry;
     PLIST_ENTRY Entry;
 
-    if (List == NULL ||
-        PartEntry == NULL ||
-        PartEntry->DiskEntry == NULL ||
-        PartEntry->IsPartitioned == FALSE)
+    if (List == NULL || PartEntry == NULL ||
+        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned == FALSE)
     {
         return FALSE;
     }
@@ -3154,13 +3188,15 @@ DeletePartition(
     {
         /* Nothing to merge but change the current entry */
         PartEntry->IsPartitioned = FALSE;
+        PartEntry->OnDiskPartitionNumber = 0;
+        PartEntry->PartitionNumber = 0;
+        // PartEntry->PartitionIndex = 0;
+        PartEntry->BootIndicator = FALSE;
         PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
         PartEntry->FileSystem[0] = L'\0';
         PartEntry->DriveLetter = 0;
-        PartEntry->OnDiskPartitionNumber = 0;
-        PartEntry->PartitionNumber = 0;
-        // PartEntry->PartitionIndex = 0;
+        RtlZeroMemory(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel));
 
         /* Optionally return the freed region */
         if (FreeRegion)
@@ -3168,7 +3204,6 @@ DeletePartition(
     }
 
     UpdateDiskLayout(DiskEntry);
-
     AssignDriveLetters(List);
 
     return TRUE;
@@ -3179,6 +3214,28 @@ DeletePartition(
  * On MBR disks, partition with the Active/Boot flag set;
  * on GPT disks, partition with the correct GUID.
  */
+BOOLEAN
+IsPartitionActive(
+    IN PPARTENTRY PartEntry)
+{
+    // TODO: Support for GPT disks!
+
+    if (IsContainerPartition(PartEntry->PartitionType))
+        return FALSE;
+
+    /* Check if the partition is partitioned, used and active */
+    if (PartEntry->IsPartitioned &&
+        // !IsContainerPartition(PartEntry->PartitionType) &&
+        PartEntry->BootIndicator)
+    {
+        /* Yes it is */
+        ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static
 PPARTENTRY
 GetActiveDiskPartition(
@@ -3210,17 +3267,11 @@ GetActiveDiskPartition(
     {
         /* Retrieve the partition */
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
-
-        // TODO: Support for GPT disks!
-
-        /* Check if the partition is partitioned, used and active */
-        if (PartEntry->IsPartitioned &&
-            // !IsContainerPartition(PartEntry->PartitionType) &&
-            PartEntry->BootIndicator)
+        if (IsPartitionActive(PartEntry))
         {
-            /* Yes, we found it */
+            /* Yes, we've found it */
             ASSERT(DiskEntry == PartEntry->DiskEntry);
-            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+            ASSERT(PartEntry->IsPartitioned);
 
             ActivePartition = PartEntry;
 
@@ -3247,7 +3298,7 @@ BOOLEAN
 IsSupportedActivePartition(
     IN PPARTENTRY PartEntry)
 {
-    /* Check the type and the filesystem of this partition */
+    /* Check the type and the file system of this partition */
 
     /*
      * We do not support extended partition containers (on MBR disks) marked
@@ -3276,9 +3327,13 @@ IsSupportedActivePartition(
      * NOTE also that for those architectures looking for a
      * partition boot indicator is insufficient.
      */
-    if ((PartEntry->FormatState == Unformatted ) ||
-        (PartEntry->FormatState == Preformatted) ||
-        (PartEntry->FormatState == Formatted   ))
+    if (PartEntry->FormatState == Unformatted)
+    {
+        /* If this partition is mounted, it would use RawFS ("RAW") */
+        return TRUE;
+    }
+    else if ((PartEntry->FormatState == Preformatted) ||
+             (PartEntry->FormatState == Formatted))
     {
         ASSERT(*PartEntry->FileSystem);
 
@@ -3286,8 +3341,7 @@ IsSupportedActivePartition(
         if (wcsicmp(PartEntry->FileSystem, L"FAT")   == 0 ||
             wcsicmp(PartEntry->FileSystem, L"FAT32") == 0 ||
          // wcsicmp(PartEntry->FileSystem, L"NTFS")  == 0 ||
-            wcsicmp(PartEntry->FileSystem, L"BTRFS") == 0 ||
-            wcsicmp(PartEntry->FileSystem, L"RAW")   == 0)
+            wcsicmp(PartEntry->FileSystem, L"BTRFS") == 0)
         {
             return TRUE;
         }
