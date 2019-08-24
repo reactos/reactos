@@ -27,9 +27,9 @@ class CSearchBar :
 
 private:
     // *** BaseBarSite information ***
-    CComPtr<IUnknown> pSite;
-    CComPtr<IAddressEditBox> fAddressEditBox;
-    BOOL fVisible;
+    CComPtr<IUnknown> m_pSite;
+    CComPtr<IAddressEditBox> m_AddressEditBox;
+    BOOL m_bVisible;
 
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
     BOOL GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH]);
