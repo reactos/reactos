@@ -313,10 +313,58 @@ DsDeregisterDnsHostRecordsA(
     _In_opt_ GUID *DsaGuid,
     _In_ LPSTR DnsHostName)
 {
-    FIXME("DsDeregisterDnsHostRecordsA(%s, %s, %p, %p, %s)\n",
+    PWSTR pServerNameW = NULL, pDnsDomainNameW = NULL;
+    PWSTR pDnsHostNameW = NULL;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsDeregisterDnsHostRecordsA(%s, %s, %p, %p, %s)\n",
           debugstr_a(ServerName), debugstr_a(DnsDomainName),
           DomainGuid, DsaGuid, debugstr_a(DnsHostName));
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    if (DnsDomainName != NULL)
+    {
+        pDnsDomainNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsDomainName);
+        if (pDnsDomainNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    pDnsHostNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsDomainName);
+    if (pDnsHostNameW == NULL)
+    {
+        status = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    status = DsDeregisterDnsHostRecordsW(pServerNameW,
+                                         pDnsDomainNameW,
+                                         DomainGuid,
+                                         DsaGuid,
+                                         pDnsHostNameW);
+
+done:
+    if (pDnsHostNameW != NULL)
+        NetApiBufferFree(pDnsHostNameW);
+
+    if (pDnsDomainNameW != NULL)
+        NetApiBufferFree(pDnsDomainNameW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
