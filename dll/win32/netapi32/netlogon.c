@@ -496,9 +496,86 @@ DsGetDcSiteCoverageA(
     _Out_ PULONG EntryCount,
     _Out_ LPSTR **SiteNames)
 {
-    FIXME("DsGetDcSiteCoverageA(%s, %p, %p)\n",
+    PWSTR pServerNameW = NULL;
+    PWSTR *pSiteNamesW = NULL;
+    PSTR *pSiteNamesA = NULL;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    PSTR Ptr;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = ERROR_SUCCESS;
+
+    TRACE("DsGetDcSiteCoverageA(%s, %p, %p)\n",
           debugstr_a(ServerName), EntryCount, SiteNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    status = DsGetDcSiteCoverageW(pServerNameW,
+                                  EntryCount,
+                                  &pSiteNamesW);
+    if (status != ERROR_SUCCESS)
+        goto done;
+
+    BufferSize = *EntryCount * sizeof(PSTR);
+    for (i = 0; i < *EntryCount; i++)
+    {
+        RtlInitUnicodeString(&UnicodeString, pSiteNamesW[i]);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+    }
+
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    ZeroMemory(pSiteNamesA, BufferSize);
+
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + *EntryCount * sizeof(PSTR));
+    for (i = 0; i < *EntryCount; i++)
+    {
+        pSiteNamesA[i] = Ptr;
+
+        RtlInitUnicodeString(&UnicodeString, pSiteNamesW[i]);
+
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+        BufferSize -= (AnsiString.Length + sizeof(CHAR));
+    }
+
+    *SiteNames = pSiteNamesA;
+    pSiteNamesA = NULL;
+
+done:
+    if (status != NERR_Success && pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
@@ -609,7 +686,7 @@ DsGetSiteNameA(
 {
     PWSTR pComputerNameW = NULL;
     PWSTR pSiteNameW = NULL;
-    DWORD dwError = ERROR_SUCCESS;
+    NET_API_STATUS status = ERROR_SUCCESS;
 
     TRACE("DsGetSiteNameA(%s, %p)\n",
           debugstr_a(ComputerName), SiteName);
@@ -619,20 +696,20 @@ DsGetSiteNameA(
         pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
         if (pComputerNameW == NULL)
         {
-            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            status = ERROR_NOT_ENOUGH_MEMORY;
             goto done;
         }
     }
 
-    dwError = DsGetSiteNameW(pComputerNameW,
-                             &pSiteNameW);
-    if (dwError != ERROR_SUCCESS)
+    status = DsGetSiteNameW(pComputerNameW,
+                            &pSiteNameW);
+    if (status != ERROR_SUCCESS)
         goto done;
 
     *SiteName = NetpAllocAnsiStrFromWStr(pSiteNameW);
     if (*SiteName == NULL)
     {
-        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        status = ERROR_NOT_ENOUGH_MEMORY;
     }
 
 done:
@@ -642,7 +719,7 @@ done:
     if (pComputerNameW != NULL)
         NetApiBufferFree(pComputerNameW);
 
-    return dwError;
+    return status;
 }
 
 
