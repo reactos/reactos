@@ -49,7 +49,7 @@ dummy_HtmlHelpW(HWND hWnd, LPCWSTR pszFile, UINT uCommand, DWORD dwData)
 
 void HtmlHelp_Start(HINSTANCE hInstance)
 {
-    hHtmlHelp = LoadLibrary(_T("HTMLHELP"));
+    hHtmlHelp = LoadLibrary(_T("HHCTRL.OCX"));
     if (hHtmlHelp == NULL)
         return;
 
