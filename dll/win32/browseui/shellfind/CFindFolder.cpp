@@ -20,7 +20,7 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
 
 struct FolderViewColumns
 {
-    LPCWSTR wzColumnName;
+    int iResource;
     DWORD dwDefaultState;
     int fmt;
     int cxChar;
@@ -28,9 +28,9 @@ struct FolderViewColumns
 
 static FolderViewColumns g_ColumnDefs[] =
 {
-    {L"Name",      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30},
-    {L"In Folder", SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30},
-    {L"Relevance", SHCOLSTATE_TYPE_STR,                          LVCFMT_LEFT, 0}
+    {IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30},
+    {IDS_COL_LOCATION,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 30},
+    {IDS_COL_RELEVANCE, SHCOLSTATE_TYPE_STR,                          LVCFMT_LEFT, 0}
 };
 
 CFindFolder::CFindFolder() :
@@ -366,7 +366,7 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
     pDetails->fmt = g_ColumnDefs[iColumn].fmt;
 
     if (!pidl)
-        return SHSetStrRet(&pDetails->str, g_ColumnDefs[iColumn].wzColumnName);
+        return SHSetStrRet(&pDetails->str, _AtlBaseModule.GetResourceInstance(), g_ColumnDefs[iColumn].iResource);
 
     if (iColumn == 1)
     {
@@ -550,7 +550,7 @@ STDMETHODIMP CFindFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
         {
             QCMINFO *pqcminfo = (QCMINFO *) lParam;
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, L"Open Containing Folder", MFS_ENABLED);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
             _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
             return S_OK;
         }
