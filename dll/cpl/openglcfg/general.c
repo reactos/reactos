@@ -173,7 +173,10 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             if (LOWORD(wParam) == IDC_RENDERER ||
                 LOWORD(wParam) == IDC_DEBUG_OUTPUT)
             {
-                PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
+                if (HIWORD(wParam) == CBN_SELCHANGE)
+                {
+                    PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
+                }
             }
             break;
 
