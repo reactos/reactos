@@ -604,19 +604,52 @@ DsGetForestTrustInformationW(
 DWORD
 WINAPI
 DsGetSiteNameA(
-    _In_ LPCSTR ComputerName,
+    _In_opt_ LPCSTR ComputerName,
     _Out_ LPSTR *SiteName)
 {
-    FIXME("DsGetSiteNameA(%s, %p)\n",
+    PWSTR pComputerNameW = NULL;
+    PWSTR pSiteNameW = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+
+    TRACE("DsGetSiteNameA(%s, %p)\n",
           debugstr_a(ComputerName), SiteName);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    dwError = DsGetSiteNameW(pComputerNameW,
+                             &pSiteNameW);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    *SiteName = NetpAllocAnsiStrFromWStr(pSiteNameW);
+    if (*SiteName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+done:
+    if (pSiteNameW != NULL)
+        NetApiBufferFree(pSiteNameW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return dwError;
 }
 
 
 DWORD
 WINAPI
 DsGetSiteNameW(
-    _In_ LPCWSTR ComputerName,
+    _In_opt_ LPCWSTR ComputerName,
     _Out_ LPWSTR *SiteName)
 {
     NET_API_STATUS status;
