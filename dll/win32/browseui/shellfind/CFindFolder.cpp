@@ -18,6 +18,72 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
                            PCUITEMID_CHILD_ARRAY apidl,
                            DWORD dwFlags);
 
+static HRESULT SHELL32_CoCreateInitSF(LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
+                                LPCITEMIDLIST pidlChild, const GUID* clsid, REFIID riid, LPVOID *ppvOut)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder> pShellFolder;
+
+    hr = SHCoCreateInstance(NULL, clsid, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
+    if (FAILED(hr))
+        return hr;
+
+    LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
+    CComPtr<IPersistFolder> ppf;
+    CComPtr<IPersistFolder3> ppf3;
+
+    if (ppfti && SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
+    {
+        ppf3->InitializeEx(NULL, pidlAbsolute, ppfti);
+    }
+    else if (SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &ppf))))
+    {
+        ppf->Initialize(pidlAbsolute);
+    }
+    ILFree (pidlAbsolute);
+
+    return pShellFolder->QueryInterface(riid, ppvOut);
+}
+
+static void WINAPI _InsertMenuItemW(
+        HMENU hMenu,
+        UINT indexMenu,
+        BOOL fByPosition,
+        UINT wID,
+        UINT fType,
+        LPCWSTR dwTypeData,
+        UINT fState)
+{
+    MENUITEMINFOW mii;
+    WCHAR wszText[100];
+
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    if (fType == MFT_SEPARATOR)
+        mii.fMask = MIIM_ID | MIIM_TYPE;
+    else if (fType == MFT_STRING)
+    {
+        mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
+        if ((ULONG_PTR)HIWORD((ULONG_PTR)dwTypeData) == 0)
+        {
+            if (LoadStringW(_AtlBaseModule.GetResourceInstance(), LOWORD((ULONG_PTR)dwTypeData), wszText, _countof(wszText)))
+                mii.dwTypeData = wszText;
+            else
+            {
+                ERR("failed to load string %p\n", dwTypeData);
+                return;
+            }
+        }
+        else
+            mii.dwTypeData = (LPWSTR)dwTypeData;
+        mii.fState = fState;
+    }
+
+    mii.wID = wID;
+    mii.fType = fType;
+    InsertMenuItemW(hMenu, indexMenu, fByPosition, &mii);
+}
+
 struct FolderViewColumns
 {
     int iResource;
@@ -447,28 +513,93 @@ STDMETHODIMP CFindFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl
     return m_pisfInner->GetAttributesOf(cidl, aFSPidl, rgfInOut);
 }
 
+class CFindFolderContextMenu :
+        public IContextMenu,
+        public CComObjectRootEx<CComMultiThreadModelNoCS>
+{
+    CComPtr<IContextMenu> m_pInner;
+    CComPtr<IShellFolderView> m_shellFolderView;
+    UINT m_firstCmdId;
+    static const UINT ADDITIONAL_MENU_ITEMS = 2;
+
+    //// *** IContextMenu methods ***
+    STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+    {
+        m_firstCmdId = indexMenu;
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_SEPARATOR, NULL, 0);
+        return m_pInner->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    }
+
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+    {
+        if (!IS_INTRESOURCE(lpcmi->lpVerb))
+        {
+            return m_pInner->InvokeCommand(lpcmi);
+        }
+
+        if (LOWORD(lpcmi->lpVerb) < m_firstCmdId + ADDITIONAL_MENU_ITEMS)
+        {
+            PCUITEMID_CHILD *apidl;
+            UINT cidl;
+            HRESULT hResult = m_shellFolderView->GetSelectedObjects(&apidl, &cidl);
+            if (FAILED_UNEXPECTEDLY(hResult))
+                return hResult;
+
+            for (UINT i = 0; i < cidl; i++)
+            {
+                WCHAR path[MAX_PATH];
+                wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
+                PathRemoveFileSpecW(path);
+                CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(path));
+                if (!folderPidl)
+                    return E_OUTOFMEMORY;
+                CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPathW((LPCWSTR) apidl[i]->mkid.abID));
+                if (!pidl)
+                    return E_OUTOFMEMORY;
+                SHOpenFolderAndSelectItems(folderPidl, 1, &pidl, 0);
+            }
+            return S_OK;
+        }
+
+        CMINVOKECOMMANDINFOEX actualCmdInfo;
+        memcpy(&actualCmdInfo, lpcmi, lpcmi->cbSize);
+        actualCmdInfo.lpVerb -= ADDITIONAL_MENU_ITEMS;
+        return m_pInner->InvokeCommand((CMINVOKECOMMANDINFO *)&actualCmdInfo);
+    }
+
+    STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+    {
+        return m_pInner->GetCommandString(idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+    }
+
+public:
+    static HRESULT Create(IShellFolderView *pShellFolderView, IContextMenu *pInnerContextMenu, IContextMenu **pContextMenu)
+    {
+        CComObject<CFindFolderContextMenu> *pObj;
+        HRESULT hResult = CComObject<CFindFolderContextMenu>::CreateInstance(&pObj);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        pObj->m_shellFolderView = pShellFolderView;
+        pObj->m_pInner = pInnerContextMenu;
+        return pObj->QueryInterface(IID_PPV_ARG(IContextMenu, pContextMenu));
+    }
+
+    BEGIN_COM_MAP(CFindFolderContextMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    END_COM_MAP()
+};
+
 STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
                                         UINT *prgfInOut, LPVOID *ppvOut)
 {
-    if (riid == IID_IDataObject && cidl == 1)
-    {
-        WCHAR path[MAX_PATH];
-        wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
-        PathRemoveFileSpecW(path);
-        CComHeapPtr<ITEMIDLIST> rootPidl(ILCreateFromPathW(path));
-        if (!rootPidl)
-            return E_OUTOFMEMORY;
-        PCITEMID_CHILD aFSPidl[1];
-        aFSPidl[0] = _ILGetFSPidl(apidl[0]);
-        return IDataObject_Constructor(hwndOwner, rootPidl, aFSPidl, cidl, (IDataObject **) ppvOut);
-    }
-
     if (cidl <= 0)
     {
         return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
     }
 
-    PCITEMID_CHILD *aFSPidl = new PCITEMID_CHILD[cidl];
+    CComHeapPtr<PCITEMID_CHILD> aFSPidl;
+    aFSPidl.Allocate(cidl);
     for (UINT i = 0; i < cidl; i++)
     {
         aFSPidl[i] = _ILGetFSPidl(apidl[i]);
@@ -476,30 +607,28 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
 
     if (riid == IID_IContextMenu)
     {
-        HKEY hKeys[16];
-        UINT cKeys = 0;
-        AddFSClassKeysToArray(aFSPidl[0], hKeys, &cKeys);
-
-        DEFCONTEXTMENU dcm;
-        dcm.hwnd = hwndOwner;
-        dcm.pcmcb = this;
-        dcm.pidlFolder = m_pidl;
-        dcm.psf = this;
-        dcm.cidl = cidl;
-        dcm.apidl = apidl;
-        dcm.cKeys = cKeys;
-        dcm.aKeys = hKeys;
-        dcm.punkAssociationInfo = NULL;
-        HRESULT hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
-        delete[] aFSPidl;
-
-        return hr;
+        WCHAR path[MAX_PATH];
+        wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
+        PathRemoveFileSpecW(path);
+        CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(path));
+        if (!folderPidl)
+            return E_OUTOFMEMORY;
+        CComPtr<IShellFolder> pDesktopFolder;
+        HRESULT hResult = SHGetDesktopFolder(&pDesktopFolder);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        CComPtr<IShellFolder> pShellFolder;
+        hResult = pDesktopFolder->BindToObject(folderPidl, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        CComPtr<IContextMenu> pContextMenu;
+        hResult = pShellFolder->GetUIObjectOf(hwndOwner, cidl, aFSPidl, riid, prgfInOut, (LPVOID *)&pContextMenu);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        return CFindFolderContextMenu::Create(m_shellFolderView, pContextMenu, (IContextMenu **)ppvOut);
     }
 
-    HRESULT hr = m_pisfInner->GetUIObjectOf(hwndOwner, cidl, aFSPidl, riid, prgfInOut, ppvOut);
-    delete[] aFSPidl;
-
-    return hr;
+    return m_pisfInner->GetUIObjectOf(hwndOwner, cidl, aFSPidl, riid, prgfInOut, ppvOut);
 }
 
 STDMETHODIMP CFindFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET pName)
@@ -539,50 +668,6 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
     return E_NOTIMPL;
-}
-
-//// *** IContextMenuCB method ***
-STDMETHODIMP CFindFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case DFM_MERGECONTEXTMENU:
-        {
-            QCMINFO *pqcminfo = (QCMINFO *) lParam;
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
-            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_SEPARATOR, NULL, 0);
-            return S_OK;
-        }
-        case DFM_INVOKECOMMAND:
-        case DFM_INVOKECOMMANDEX:
-        {
-            if (wParam != 1)
-                break;
-
-            PCUITEMID_CHILD *apidl;
-            UINT cidl;
-            HRESULT hr = m_shellFolderView->GetSelectedObjects(&apidl, &cidl);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            for (UINT i = 0; i < cidl; i++)
-            {
-                CComHeapPtr<ITEMIDLIST> pidl;
-                DWORD attrs = 0;
-                hr = SHILCreateFromPathW((LPCWSTR) apidl[i]->mkid.abID, &pidl, &attrs);
-                if (SUCCEEDED(hr))
-                {
-                    SHOpenFolderAndSelectItems(NULL, 1, &pidl, 0);
-                }
-            }
-
-            return S_OK;
-        }
-        case DFM_GETDEFSTATICID:
-            return S_FALSE;
-    }
-    return Shell_DefaultContextMenuCallBack(m_pisfInner, pdtobj);
 }
 
 //// *** IPersistFolder2 methods ***

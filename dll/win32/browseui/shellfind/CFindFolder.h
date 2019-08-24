@@ -17,8 +17,7 @@ class CFindFolder :
         public IPersistFolder2,
         public IShellFolderViewCB,
         public IConnectionPointContainerImpl<CFindFolder>,
-        public IConnectionPointImpl<CFindFolder, &DIID_DSearchCommandEvents>,
-        public IContextMenuCB
+        public IConnectionPointImpl<CFindFolder, &DIID_DSearchCommandEvents>
 {
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *pguid);
@@ -62,10 +61,6 @@ class CFindFolder :
 
     //// *** IShellFolderViewCB methods ***
     STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    //// *** IContextMenuCB method ***
-    STDMETHODIMP CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam,
-                          LPARAM lParam);
 
 private:
     LPITEMIDLIST m_pidl;
@@ -125,7 +120,6 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IConnectionPointContainer, IConnectionPointContainer)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenuCB, IContextMenuCB)
     END_COM_MAP()
 };
 
