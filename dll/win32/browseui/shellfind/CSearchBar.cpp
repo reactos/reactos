@@ -21,8 +21,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 #endif
 
 CSearchBar::CSearchBar() :
-    pSite(NULL),
-    fVisible(FALSE)
+    m_pSite(NULL),
+    m_bVisible(FALSE)
 {
 }
 
@@ -47,15 +47,15 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         return hResult;
 
     CComPtr<IShellService> pShellService;
-    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pShellService));
+    hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pShellService));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fAddressEditBox->Init(hCombobox, fEditControl, 0, pSite);
+    hResult = m_AddressEditBox->Init(hCombobox, hEditControl, 0, m_pSite);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     CComPtr<IDispatch> pDispatch;
-    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
+    hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     DISPPARAMS params = {0};
@@ -75,7 +75,7 @@ HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
     HWND                                browserWnd;
     HRESULT                             hr;
 
-    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
+    hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -99,7 +99,7 @@ HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
 // *** ATL event handlers ***
 LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    IUnknown_OnFocusChangeIS(pSite, reinterpret_cast<IUnknown*>(this), TRUE);
+    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), TRUE);
     bHandled = FALSE;
     return TRUE;
 }
@@ -163,7 +163,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     }
 
     CComPtr<IShellBrowser> pShellBrowser;
-    HRESULT hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
+    HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -305,7 +305,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::ResizeBorderDW(const RECT *prcBorder, IUnk
 
 HRESULT STDMETHODCALLTYPE CSearchBar::ShowDW(BOOL fShow)
 {
-    fVisible = fShow;
+    m_bVisible = fShow;
     ShowWindow(fShow);
     return S_OK;
 }
@@ -366,7 +366,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
     HRESULT hr;
     HWND parentWnd;
 
-    if (pUnkSite == pSite)
+    if (pUnkSite == m_pSite)
         return S_OK;
 
     TRACE("SetSite called \n");
@@ -376,9 +376,9 @@ HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
         m_hWnd = NULL;
     }
 
-    if (pUnkSite != pSite)
+    if (pUnkSite != m_pSite)
     {
-        pSite = NULL;
+        m_pSite = NULL;
     }
 
     if(!pUnkSite)
@@ -391,7 +391,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
         return E_INVALIDARG;
     }
 
-    pSite = pUnkSite;
+    m_pSite = pUnkSite;
 
     if (m_hWnd)
     {
@@ -410,7 +410,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetSite(REFIID riid, void **ppvSite)
 {
     if (!ppvSite)
         return E_POINTER;
-    *ppvSite = pSite;
+    *ppvSite = m_pSite;
     return S_OK;
 }
 
@@ -433,7 +433,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Exec(const GUID *pguidCmdGroup, DWORD nCmd
 HRESULT STDMETHODCALLTYPE CSearchBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
     /* FIXME: we probably want to handle more services here */
-    return IUnknown_QueryService(pSite, SID_SShellBrowser, riid, ppvObject);
+    return IUnknown_QueryService(m_pSite, SID_SShellBrowser, riid, ppvObject);
 }
 
 
