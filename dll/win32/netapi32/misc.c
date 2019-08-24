@@ -167,6 +167,38 @@ NetpAllocAnsiStrFromWStr(
 }
 
 
+PSTR
+WINAPI
+NetpAllocStrFromWStr(
+    _In_ PWSTR InString)
+{
+    UNICODE_STRING UnicodeString;
+    OEM_STRING OemString;
+    ULONG Size;
+    NET_API_STATUS NetStatus;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&UnicodeString, InString);
+
+    Size = RtlUnicodeStringToOemSize(&UnicodeString);
+    NetStatus = NetApiBufferAllocate(Size,
+                                     (PVOID*)&OemString.Buffer);
+    if (NetStatus != NERR_Success)
+        return NULL;
+
+    Status = RtlUnicodeStringToOemString(&OemString,
+                                         &UnicodeString,
+                                         FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        NetApiBufferFree(OemString.Buffer);
+        return NULL;
+    }
+
+    return OemString.Buffer;
+}
+
+
 PWSTR
 WINAPI
 NetpAllocWStrFromAnsiStr(
