@@ -5106,6 +5106,9 @@ RunUSetup(VOID)
             case REBOOT_PAGE:
             case RECOVERY_PAGE:
                 break;
+
+            default:
+                break;
         }
     }
 
