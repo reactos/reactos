@@ -657,9 +657,30 @@ DsEnumerateDomainTrustsW(
     _Out_ PDS_DOMAIN_TRUSTSW *Domains,
     _Out_ PULONG DomainCount)
 {
-    FIXME("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
+    NETLOGON_TRUSTED_DOMAIN_ARRAY DomainsArray = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
           debugstr_w(ServerName), Flags, Domains, DomainCount);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        status = DsrEnumerateDomainTrusts(ServerName,
+                                          Flags,
+                                          &DomainsArray);
+        if (status == NERR_Success)
+        {
+            *Domains = DomainsArray.Domains;
+            *DomainCount = DomainsArray.DomainCount;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
