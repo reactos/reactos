@@ -149,6 +149,7 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     SourceCodePro-Semibold.ttf
     SourceCodePro-SemiboldIt.ttf
+    #ssee874.fon
     #ssee1255.fon
     #ssee1256.fon
     #ssee1257.fon
