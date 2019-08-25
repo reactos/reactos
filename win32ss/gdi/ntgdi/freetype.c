@@ -1611,12 +1611,13 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 
     /* Build PathName */
     Length = wcslen(SharedUserData->NtSystemRoot);
-    FileName->Buffer[FileName->Length / sizeof(WCHAR)] = 0;
-    if (RtlCompareMemory(FileName->Buffer, SharedUserData->NtSystemRoot,
-                         Length * sizeof(WCHAR)) == Length * sizeof(WCHAR))
+    RtlStringCbCopyNW(szPath, sizeof(szPath), FileName->Buffer,
+                      min(Length * sizeof(WCHAR), FileName->Length));
+    if (_wcsnicmp(szPath, SharedUserData->NtSystemRoot, Length) == 0)
     {
         RtlStringCbCopyW(szPath, sizeof(szPath), L"\\SystemRoot");
-        RtlStringCbCatW(szPath, sizeof(szPath), &FileName->Buffer[Length]);
+        RtlStringCbCatNW(szPath, sizeof(szPath), &FileName->Buffer[Length],
+                         FileName->Length - Length * sizeof(WCHAR));
         RtlInitUnicodeString(&PathName, szPath);
     }
     else
