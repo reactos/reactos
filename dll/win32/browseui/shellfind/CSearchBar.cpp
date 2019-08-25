@@ -46,24 +46,20 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    CComPtr<IShellService> pShellService;
-    hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pShellService));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
     hResult = m_AddressEditBox->Init(hCombobox, hEditControl, 0, m_pSite);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    CComPtr<IDispatch> pDispatch;
-    hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    DISPPARAMS params = {0};
-    hResult = pDispatch->Invoke(DISPID_NAVIGATECOMPLETE2, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
+    // Subscribe to navigation events
+    CComPtr<IShellBrowser> pShellBrowser;
+    hResult = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
+    DWORD dwAdviseCookie;
+    if (SUCCEEDED(hResult))
+        AtlAdvise(pShellBrowser, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &dwAdviseCookie);
 
-    hResult = pShellService->SetOwner(NULL);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+    // Invoke the navigate event in case a search results folder is already open
+    DISPPARAMS params = {0};
+    Invoke(DISPID_NAVIGATECOMPLETE2, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
 
     return 0;
 }
@@ -188,14 +184,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        CComPtr<IShellFolder> pShellFolder;
-        hr = GetSearchResultsFolder(*pShellBrowser, &hwnd, &pShellFolder);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        // Subscribe to search events
-        DWORD fAdviseCookie;
-        hr = AtlAdvise(pShellFolder, static_cast<IDispatch *>(this), DIID_DSearchCommandEvents, &fAdviseCookie);
+        hr = GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
@@ -232,8 +221,9 @@ BOOL CSearchBar::GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH])
         item.cchTextMax = _countof(szItemText);
         SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
 
-        if (!wcscmp(szItemText, szPath) && SHGetPathFromIDListW((LPCITEMIDLIST)item.lParam, szPath))
+        if (!wcscmp(szItemText, szPath) && SHGetPathFromIDListW((LPCITEMIDLIST)item.lParam, szItemText))
         {
+            StringCbCopyW(szPath, MAX_PATH * sizeof(WCHAR), szItemText);
             return TRUE;
         }
     }
@@ -588,12 +578,34 @@ void CSearchBar::SetSearchInProgress(BOOL bInProgress)
     ::PostMessage(hProgressBar, PBM_SETMARQUEE, bInProgress, 0);
 }
 
+HRESULT CSearchBar::TrySubscribeToSearchEvents()
+{
+    CComPtr<IShellFolder> pShellFolder;
+    HRESULT hr = GetSearchResultsFolder(NULL, NULL, &pShellFolder);
+    if (FAILED(hr))
+        return hr;
+
+    DWORD fAdviseCookie;
+    hr = AtlAdvise(pShellFolder, static_cast<IDispatch *>(this), DIID_DSearchCommandEvents, &fAdviseCookie);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    if (dispIdMember == DISPID_SEARCHCOMPLETE || dispIdMember == DISPID_SEARCHABORT)
+    switch (dispIdMember)
     {
+    case DISPID_NAVIGATECOMPLETE2:
+    case DISPID_DOCUMENTCOMPLETE:
+        TrySubscribeToSearchEvents();
+        return S_OK;
+    case DISPID_SEARCHCOMPLETE:
+    case DISPID_SEARCHABORT:
         SetSearchInProgress(FALSE);
         return S_OK;
+    default:
+        return E_INVALIDARG;
     }
-    return E_INVALIDARG;
 }
