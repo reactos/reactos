@@ -112,9 +112,98 @@ DsAddressToSiteNamesA(
     _In_ PSOCKET_ADDRESS SocketAddresses,
     _Out_ LPSTR **SiteNames)
 {
-    FIXME("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
+    PWSTR pComputerNameW = NULL, *pSiteNamesW = NULL;
+    PSTR *pSiteNamesA = NULL, Ptr;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
           debugstr_a(ComputerName), EntryCount, SocketAddresses, SiteNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (EntryCount == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    /* Call the Unicode function */
+    status = DsAddressToSiteNamesW(pComputerNameW,
+                                   EntryCount,
+                                   SocketAddresses,
+                                   &pSiteNamesW);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Calculate the required site names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the site names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the site names */
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            pSiteNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    *SiteNames = pSiteNamesA;
+    pSiteNamesA = NULL;
+
+done:
+    if (pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
@@ -199,10 +288,155 @@ DsAddressToSiteNamesExA(
     _Out_ LPSTR **SiteNames,
     _Out_ LPSTR **SubnetNames)
 {
-    FIXME("DsAddressToSiteNamesExA(%s, %lu, %p, %p, %p)\n",
+    PWSTR pComputerNameW = NULL, *pSiteNamesW = NULL;
+    PWSTR *pSubnetNamesW = NULL;
+    PSTR *pSiteNamesA = NULL, *pSubnetNamesA = NULL, Ptr;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsAddressToSiteNamesExA(%s, %lu, %p, %p, %p)\n",
           debugstr_a(ComputerName), EntryCount, SocketAddresses,
           SiteNames, SubnetNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (EntryCount == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    /* Call the Unicode function */
+    status = DsAddressToSiteNamesExW(pComputerNameW,
+                                     EntryCount,
+                                     SocketAddresses,
+                                     &pSiteNamesW,
+                                     &pSubnetNamesW);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Calculate the required site names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the site names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the site names */
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            pSiteNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    /* Calculate the required subnet names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSubnetNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSubnetNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the subnet names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSubnetNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the subnet names */
+    Ptr = (PSTR)((ULONG_PTR)pSubnetNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSubnetNamesW[i] != NULL)
+        {
+            pSubnetNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSubnetNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    *SiteNames = pSiteNamesA;
+    *SubnetNames = pSubnetNamesA;
+    pSiteNamesA = NULL;
+    pSubnetNamesA = NULL;
+
+done:
+    if (pSubnetNamesA != NULL)
+        NetApiBufferFree(pSubnetNamesA);
+
+    if (pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSubnetNamesW != NULL)
+        NetApiBufferFree(pSubnetNamesW);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
