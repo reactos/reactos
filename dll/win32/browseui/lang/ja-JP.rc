@@ -339,3 +339,14 @@ BEGIN
     IDS_TOOLBAR_ERR_TITLE "Toolbar"
     IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHINVALID "'%1' is not a valid folder."
+    IDS_SEARCH_FOLDER "Searching %s"
+    IDS_SEARCH_FILES_FOUND "%u files found"
+    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
+    IDS_COL_NAME "Name"
+    IDS_COL_LOCATION "In Folder"
+    IDS_COL_RELEVANCE "Relevance"
+END
