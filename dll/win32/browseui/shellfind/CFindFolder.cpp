@@ -656,15 +656,27 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case SFVM_WINDOWCREATED:
         {
+            // Subclass window to receive window messages
             SubclassWindow((HWND) wParam);
 
+            // Get shell browser for updating status bar text
             CComPtr<IServiceProvider> pServiceProvider;
             HRESULT hr = m_shellFolderView->QueryInterface(IID_PPV_ARG(IServiceProvider, &pServiceProvider));
             if (FAILED_UNEXPECTEDLY(hr))
-            {
                 return hr;
-            }
-            return pServiceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &m_shellBrowser));
+            hr = pServiceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &m_shellBrowser));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            // Open search bar
+            CComPtr<IWebBrowser2> pWebBrowser2;
+            hr = m_shellBrowser->QueryInterface(IID_PPV_ARG(IWebBrowser2, &pWebBrowser2));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+            WCHAR pwszGuid[MAX_PATH];
+            StringFromGUID2(CLSID_FileSearchBand, pwszGuid, _countof(pwszGuid));
+            CComVariant searchBar(pwszGuid);
+            return pWebBrowser2->ShowBrowserBar(&searchBar, NULL, NULL);
         }
     }
     return E_NOTIMPL;
