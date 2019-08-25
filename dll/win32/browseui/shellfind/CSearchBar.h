@@ -35,6 +35,7 @@ private:
     BOOL GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH]);
     void SetSearchInProgress(BOOL bInProgress);
     HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
+    HRESULT TrySubscribeToSearchEvents();
 
     // *** ATL event handlers ***
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -113,6 +114,7 @@ public:
 
     BEGIN_COM_MAP(CSearchBar)
         COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
+        COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents, IDispatch)
         COM_INTERFACE_ENTRY_IID(DIID_DSearchCommandEvents, IDispatch)
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IBandNavigate, IBandNavigate)
