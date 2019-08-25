@@ -599,8 +599,49 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
     {
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
+    {
         TrySubscribeToSearchEvents();
+
+        // Remove the search results folder from the address box
+        CComPtr<IDispatch> pDispatch;
+        HRESULT hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IDispatch, &pDispatch));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        pDispatch->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+        CComPtr<IShellService> pShellService;
+        hResult = m_AddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pShellService));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        hResult = pShellService->SetOwner(NULL);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        HWND hComboboxEx = GetDlgItem(IDC_SEARCH_COMBOBOX);
+        int index = SendMessageW(hComboboxEx, CB_GETCOUNT, 0, 0);
+        if (index <= 0)
+            return S_OK;
+        COMBOBOXEXITEMW item = {0};
+        item.mask = CBEIF_LPARAM;
+        item.iItem = index - 1;
+        SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
+        if (!item.lParam)
+            return S_OK;
+        CComPtr<IShellFolder> pDesktopFolder;
+        hResult = SHGetDesktopFolder(&pDesktopFolder);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        CComPtr<IShellFolder> pShellFolder;
+        hResult = pDesktopFolder->BindToObject((LPCITEMIDLIST)item.lParam, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
+        if (FAILED(hResult))
+            return S_OK;
+        CLSID clsid;
+        hResult = IUnknown_GetClassID(pShellFolder, &clsid);
+        if (SUCCEEDED(hResult) && clsid == CLSID_FindFolder)
+        {
+            SendMessageW(hComboboxEx, CBEM_DELETEITEM, item.iItem, 0);
+            SendMessageW(hComboboxEx, CB_SETCURSEL, 0, 0);
+        }
         return S_OK;
+    }
     case DISPID_SEARCHCOMPLETE:
     case DISPID_SEARCHABORT:
         SetSearchInProgress(FALSE);
