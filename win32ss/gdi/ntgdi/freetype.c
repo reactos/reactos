@@ -1399,9 +1399,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             {
                 // L"Name StyleName\0"
                 Length = NameLength + sizeof(L' ') + Entry->StyleName.Length + sizeof(UNICODE_NULL);
-                if (Entry->StyleName.Length == 0)
-                    Length -= sizeof(L' ');
-
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
@@ -1444,9 +1441,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 // L"... & Name StyleName\0"
                 Length = pValueName->Length + 3 * sizeof(WCHAR) + Entry->FaceName.Length +
                          sizeof(L' ') + Entry->StyleName.Length + sizeof(UNICODE_NULL);
-                if (Entry->StyleName.Length == 0)
-                    Length -= sizeof(L' ');
-
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
@@ -1471,9 +1465,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 _itow(PX2PT(FontGDI->EmHeight), szSize+1, 10);
 
                 Length = pValueName->Length + (wcslen(szSize) + 1) * sizeof(WCHAR);
-                if (Entry->StyleName.Length == 0)
-                    Length -= sizeof(WCHAR);
-
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
