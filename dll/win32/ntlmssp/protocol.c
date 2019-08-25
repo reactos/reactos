@@ -75,6 +75,14 @@ CliGenerateNegotiateMessage(
     message = (PNEGOTIATE_MESSAGE) OutputToken->pvBuffer;
     offset = (ULONG_PTR)(message+1);
 
+    /* HACK flags ... add if one works ...
+     * its less ... let's getting better ...
+     * */
+    context->NegFlg = context->NegFlg &
+                      (NTLMSSP_NEGOTIATE_UNICODE |
+                       NTLMSSP_NEGOTIATE_56 |
+                       NTLMSSP_NEGOTIATE_OEM);
+
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     message->MsgType = NtlmNegotiate;
