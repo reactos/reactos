@@ -28,6 +28,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo)
 {
+#if 1
+    return SEC_E_UNSUPPORTED_FUNCTION;
+#else
     SECURITY_STATUS ret = SEC_E_OK;
     PSecBuffer data_buffer = NULL;
     PSecBuffer signature_buffer = NULL;
@@ -104,7 +107,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
 exit:
     NtlmDereferenceContext(phContext->dwLower);
     return ret;
-
+#endif
 }
 
 /***********************************************************************
@@ -113,6 +116,9 @@ exit:
 SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
 {
+#if 1
+    return SEC_E_UNSUPPORTED_FUNCTION;
+#else
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_MSG ctxMsg;
     ULONG index, length;
@@ -193,4 +199,5 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
 exit:
     NtlmDereferenceContext(phContext->dwLower);
     return ret;
+#endif
 }

@@ -166,15 +166,21 @@ typedef struct _AUTHENTICATE_MESSAGE
                   /* payload */
 }AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
 
-typedef struct _MESSAGE_SIGNATURE
+/* MS-NTLM 2.2.2.9.1 + 2 */
+typedef struct _NTLMSSP_MESSAGE_SIGNATURE
 {
     ULONG Version;
-    ULONG RandomPad;
-    ULONG Checksum;
-    ULONG Nonce;
-}MESSAGE_SIGNATURE, *PMESSAGE_SIGNATURE;
+    union
+    {
+        /* 2.2.2.9.1 without extended session security */
+        struct { ULONG RandomPad; ULONG CheckSum; } normsec;
+        /* 2.2.2.9.2 with extended session security */
+        struct { ULONGLONG CheckSum; } extsec;
+    } u1;
+    ULONG SeqNum;
+} NTLMSSP_MESSAGE_SIGNATURE, *PNTLMSSP_MESSAGE_SIGNATURE;
+//??C_ASSERT(sizeof(NTLMSSP_MESSAGE_SIGNATURE) == 16);
 
-C_ASSERT(sizeof(MESSAGE_SIGNATURE) == 16);
 /* basic functions */
 
 BOOL
@@ -222,12 +228,12 @@ SIGNKEY(
     BOOLEAN IsClient,
     PUCHAR Result);
 
-BOOLEAN
+BOOL
 SEALKEY(
-    ULONG flags,
-    const PUCHAR  RandomSessionKey,
-    BOOLEAN client,
-    PUCHAR result);
+    IN ULONG flags,
+    IN const PUCHAR RandomSessionKey,
+    IN BOOL client,
+    OUT PUCHAR result);
 
 BOOLEAN
 MAC(ULONG flags,
@@ -431,6 +437,11 @@ CliComputeResponseNTLMv1(
 
 VOID
 RC4Init(
-    OUT PHANDLE pClientHandle,
-    IN UCHAR* Key);
+    OUT prc4_key pHandle,
+    IN UCHAR* Key,
+    IN ULONG KeyLen);
+VOID
+RC4(IN prc4_key pHandle,
+    IN OUT UCHAR* pData,
+    IN ULONG len);
 

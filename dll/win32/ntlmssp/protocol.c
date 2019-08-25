@@ -88,6 +88,7 @@ CliGenerateNegotiateMessage(
     message->MsgType = NtlmNegotiate;
     message->NegotiateFlags = context->NegFlg;
 
+
     TRACE("nego message %p size %lu\n", message, messageSize);
     TRACE("context %p context->NegotiateFlags:\n",context);
     NtlmPrintNegotiateFlags(message->NegotiateFlags);
@@ -1007,7 +1008,6 @@ SvrAuthMsgProcessData(
     UCHAR MIC[16];
     //MSV1_0_NTLM3_RESPONSE NtResponse;
     UCHAR ExportedSessionKey[16];
-    HANDLE ClientHandle, ServerHandle;
     USER_SESSION_KEY SessionBaseKey;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
@@ -1184,17 +1184,17 @@ SvrAuthMsgProcessData(
     FIXME("need NEGO/CHALLENGE and Auth-Message for MIC!\n");
     memset(&MIC, 0, 16);
     //Set ClientSigningKey to SIGNKEY(NegFlg, ExportedSessionKey , "Client")
-    SIGNKEY(ExportedSessionKey, TRUE, context->msg.ClientSigningKey);
+    SIGNKEY(ExportedSessionKey, TRUE, context->cli_msg.ClientSigningKey);
     //Set ServerSigningKey to SIGNKEY(NegFlg, ExportedSessionKey , "Server")
-    SIGNKEY(ExportedSessionKey, FALSE, context->msg.ServerSigningKey);
+    SIGNKEY(ExportedSessionKey, FALSE, context->cli_msg.ServerSigningKey);
     //Set ClientSealingKey to SEALKEY(NegFlg, ExportedSessionKey , "Client")
-    SEALKEY(context->cli_NegFlg, ExportedSessionKey, TRUE, context->msg.ClientSealingKey);
+    SEALKEY(context->cli_NegFlg, ExportedSessionKey, TRUE, context->cli_msg.ClientSealingKey);
     //Set ServerSealingKey to SEALKEY(NegFlg, ExportedSessionKey , "Server")
-    SEALKEY(context->cli_NegFlg, ExportedSessionKey, FALSE, context->msg.ServerSealingKey);
+    SEALKEY(context->cli_NegFlg, ExportedSessionKey, FALSE, context->cli_msg.ServerSealingKey);
     //RC4Init(ClientHandle, ClientSealingKey)
-    RC4Init(&ClientHandle, context->msg.ClientSealingKey);
+    RC4Init(&context->cli_msg.ClientHandle, context->cli_msg.ClientSealingKey, sizeof(context->cli_msg.ClientSealingKey));
     //RC4Init(ServerHandle, ServerSealingKey)
-    RC4Init(&ServerHandle, context->msg.ServerSealingKey);
+    RC4Init(&context->cli_msg.ServerHandle, context->cli_msg.ServerSealingKey, sizeof(context->cli_msg.ServerSealingKey));
 quit:
     ExtStrFree(&ExpectedNtChallengeResponse);
     ExtStrFree(&ServerName);

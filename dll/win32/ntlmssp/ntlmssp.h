@@ -36,6 +36,7 @@
 #include <ntstrsafe.h>
 #include <ntmsv1_0.h>
 #include <lm.h>
+#include <ciphers.h>
 
 #include "strutil.h"
 
@@ -51,6 +52,11 @@ extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA
 #define NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED 0x000000001
 #define NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED 0x000000002
 /* client configuration flags */
+
+#define NTLM_KEYEXCHANGE_KEY_LENGTH 16
+#define NTLM_ENCRNDSESSION_KEY_LENGTH 16
+#define NTLM_SEALINGKEY_LENGTH 16
+#define NTLM_SIGNKEY_LENGTH 16
 
 /* FIXME implement the following options ... */
 /* Send LM & NTLM responses - never NTLMv2 */
@@ -166,9 +172,6 @@ extern NTLM_MODE NtlmMode;
 #define NTLM_COMMENT_A "NTLM Security Package\0"
 #define NTLM_COMMENT_W L"NTLM Security Package\0"
 
-#define NTLM_KEYEXCHANGE_KEY_LENGTH 16
-#define NTLM_ENCRNDSESSION_KEY_LENGTH 16
-
 /* NTLM has the following capabilities. */
 #define NTLM_CAPS ( \
         SECPKG_FLAG_ACCEPT_WIN32_NAME | \
@@ -224,21 +227,20 @@ typedef struct _NTLMSSP_CONTEXT_MSG
 {
     /* MS-NLSP 3.4.1 - variables */
     /* ClientHandle (Public): The handle to a key state structure corresponding to the current state of
-       the ClientSealingKey.
-      ServerHandle (Public): The handle to a key state structure corresponding to the current state of
-      the ServerSealingKey.
-    */
+       the ClientSealingKey. */
+    rc4_key ClientHandle;
+    /* ServerHandle (Public): The handle to a key state structure corresponding to the current state of
+      the ServerSealingKey. */
+    rc4_key ServerHandle;
 
     /* not in spec or unknown whether they are... */
     /* message support  */
     int SentSequenceNum;
     int RecvSequenceNum;
-    struct _rc4_key* SendSealKey;
-    struct _rc4_key* RecvSealKey;
-    UCHAR ClientSigningKey[16];
-    UCHAR ClientSealingKey[16];
-    UCHAR ServerSigningKey[16];
-    UCHAR ServerSealingKey[16];
+    UCHAR ClientSigningKey[NTLM_SIGNKEY_LENGTH];
+    UCHAR ClientSealingKey[NTLM_SEALINGKEY_LENGTH];
+    UCHAR ServerSigningKey[NTLM_SIGNKEY_LENGTH];
+    UCHAR ServerSealingKey[NTLM_SEALINGKEY_LENGTH];
     UCHAR MessageIntegrityCheck[16];
 } NTLMSSP_CONTEXT_MSG, *PNTLMSSP_CONTEXT_MSG;
 
@@ -275,6 +277,7 @@ typedef struct _NTLMSSP_CONTEXT_SVR
      * (section 3.1.1.1) except the ClientConfigFlags.*/
     // NTLMSSP_CONTEXT_CLI cli;
     ULONG cli_NegFlg;
+    NTLMSSP_CONTEXT_MSG cli_msg;
     /* The set of server configuration flags (section 2.2.2.5) that specify the full set of
      * capabilities of the server. */
     ULONG CfgFlg;
@@ -292,7 +295,6 @@ typedef struct _NTLMSSP_CONTEXT_SVR
      * AUTHENTICATE_MESSAGE is processed */
     UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
 
-    NTLMSSP_CONTEXT_MSG msg;
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
 /* private functions */
@@ -346,7 +348,11 @@ NtlmAllocateContextSvr(VOID);
 PNTLMSSP_CONTEXT_HDR
 NtlmReferenceContextHdr(IN ULONG_PTR Handle);
 PNTLMSSP_CONTEXT_MSG
-NtlmReferenceContextMsg(IN ULONG_PTR Handle);
+NtlmReferenceContextMsg(
+    IN ULONG_PTR Handle,
+    OUT PULONG pNegFlg,
+    OUT prc4_key* pSendHandle,
+    OUT prc4_key* pRecvHandle);
 PNTLMSSP_CONTEXT_CLI
 NtlmReferenceContextCli(IN ULONG_PTR Handle);
 PNTLMSSP_CONTEXT_SVR

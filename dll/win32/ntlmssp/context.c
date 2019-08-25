@@ -84,14 +84,32 @@ NtlmReferenceContextCli(IN ULONG_PTR Handle)
     return (PNTLMSSP_CONTEXT_CLI)c;
 }
 PNTLMSSP_CONTEXT_MSG
-NtlmReferenceContextMsg(IN ULONG_PTR Handle)
+NtlmReferenceContextMsg(
+    IN ULONG_PTR Handle,
+    OUT PULONG pNegFlg,
+    OUT prc4_key* pSendHandle,
+    OUT prc4_key* pRecvHandle)
 {
     PNTLMSSP_CONTEXT_HDR c;
     c = NtlmReferenceContextHdr(Handle);
     if (c->isServer)
-        return &((PNTLMSSP_CONTEXT_SVR)c)->msg;
+    {
+        PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)c;
+        if (pNegFlg)
+            *pNegFlg = csvr->cli_NegFlg;
+        *pSendHandle = &csvr->cli_msg.ServerHandle;
+        *pRecvHandle = &csvr->cli_msg.ClientHandle;
+        return &csvr->cli_msg;
+    }
     else
-        return &((PNTLMSSP_CONTEXT_CLI)c)->msg;
+    {
+        PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)c;
+        if (pNegFlg)
+            *pNegFlg = ccli->NegFlg;
+        *pSendHandle = &ccli->msg.ClientHandle;
+        *pRecvHandle = &ccli->msg.ServerHandle;
+        return &ccli->msg;
+    }
 }
 
 
@@ -615,9 +633,9 @@ QueryContextAttributesAW(
         {
             PSecPkgContext_Sizes spcs  = (PSecPkgContext_Sizes) pBuffer;
             spcs->cbMaxToken = NTLM_MAX_BUF;
-            spcs->cbMaxSignature = sizeof(MESSAGE_SIGNATURE);
+            spcs->cbMaxSignature = sizeof(NTLMSSP_MESSAGE_SIGNATURE);
             spcs->cbBlockSize = 0;
-            spcs->cbSecurityTrailer = sizeof(MESSAGE_SIGNATURE);
+            spcs->cbSecurityTrailer = sizeof(NTLMSSP_MESSAGE_SIGNATURE);
             break;
         }
         case SECPKG_ATTR_FLAGS:

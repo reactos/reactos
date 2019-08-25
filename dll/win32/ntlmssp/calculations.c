@@ -181,8 +181,13 @@ SIGNKEY(const PUCHAR RandomSessionKey, BOOLEAN IsClient, PUCHAR Result)
     return TRUE;
 }
 
-BOOLEAN
-SEALKEY(ULONG flags, const PUCHAR RandomSessionKey, BOOLEAN client, PUCHAR result)
+/* 3.4.5.3 SEALKEY */
+BOOL
+SEALKEY(
+    IN ULONG flags,
+    IN const PUCHAR RandomSessionKey,
+    IN BOOL client,
+    OUT PUCHAR result)
 {
     if (flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
     {
@@ -640,10 +645,14 @@ CliComputeKeys(
     //ServerSealingKey SEALKEY(NegFlg,ExportedSessionKey,S
     SEALKEY(ChallengeMsg_NegFlg, ExportedSessionKey, FALSE, ctxmsg->ServerSealingKey);
 
-    //TODO RC4Init(ClientHandle, ctxmsg->ClientSealingKey)
-    //TODO RC4Init(ServerHandle, ctxmsg->ServerSealingKey)
-    //TODO Set MIC to HMAC_MD5(ExportedSessionKey, ConcatenationOf(
-    //TODO NEGOTIATE_MESSAGE, CHALLENGE_MESSAGE
+    //RC4Init(ClientHandle, ctxmsg->ClientSealingKey)
+    RC4Init(&ctxmsg->ClientHandle, ctxmsg->ClientSealingKey, ARRAYSIZE(ctxmsg->ClientSealingKey));
+    //RC4Init(ServerHandle, ctxmsg->ServerSealingKey)
+    RC4Init(&ctxmsg->ServerHandle, ctxmsg->ServerSealingKey, ARRAYSIZE(ctxmsg->ServerSealingKey));
+    //TODO  Set MIC to HMAC_MD5(ExportedSessionKey, ConcatenationOf(
+    //TODO  NEGOTIATE_MESSAGE, CHALLENGE_MESSAGE, AUTHENTICATE_MESSAGE))
+    //TODO  Set AUTHENTICATE_MESSAGE.MIC to MIC
+    //... HMAC_MD5(ExportdSessionKey, sizeof(ExportedSessionKey), );
     return TRUE;
 }
 
@@ -846,8 +855,19 @@ NtpLmSessionKeys(IN PUSER_SESSION_KEY NtpUserSessionKey,
 
 VOID
 RC4Init(
-    OUT PHANDLE pClientHandle,
-    IN UCHAR* Key)
+    OUT prc4_key pHandle,
+    IN UCHAR* Key,
+    IN ULONG KeyLen)
 {
-    //STUB
+    rc4_init(pHandle, Key, KeyLen);
+}
+
+VOID
+RC4(IN prc4_key pHandle,
+    IN OUT UCHAR* pData,
+    //OUT UCHAR* pDataOut,
+    IN ULONG len)
+{
+    /* use pData for in/out should be okay - i think! */
+    rc4_crypt(pHandle, pData, pData, len);
 }
