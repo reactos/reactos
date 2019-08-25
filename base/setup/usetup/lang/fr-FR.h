@@ -738,7 +738,8 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
         "Vous voulez changer le type d'\202cran \205 installer.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  Appuyer sur HAUT ou BAS pour s\202lectionner le type d'\202cran.",
          TEXT_STYLE_NORMAL
@@ -928,6 +929,112 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
         0,
         0,
         "Patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "La partition syst\212me actuelle de votre ordinateur",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "sur le disque syst\212me",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "emploie un format qui n'est pas support\202 par ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "Afin de pouvoir installer ReactOS avec succ\212s, ReactOS Setup doit changer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "la partition syst\212me actuelle par une nouvelle.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "La nouvelle partition syst\212me candidate est :",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  Pour accepter ce choix, appuyez sur ENTR\220E.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  Pour changer manuellement la partition syst\212me, appuyez sur \220CHAP",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   afin de revenir dans la liste des partitions, puis s\202lectionnez ou",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   cr\202ez une nouvelle partition syst\212me sur le disque syst\212me.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "S'il existe d'autres syst\212mes d'exploitation qui d\202pendent de la partition",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "syst\212me d'origine, vous devrez peut-\210tre les reconfigurer pour la nouvelle",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "partition syst\212me, ou bien changer la partition syst\212me vers celle",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "d'origine apr\212s la fin de l'installation de ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTR\220E = Continuer  \220CHAP = Annuler",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1394,7 +1501,6 @@ static MUI_ENTRY frFRSelectFSEntries[] =
         "ENTR\220E = Continuer   \220CHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1438,7 +1544,7 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         0,
         0,
-        "L = Supprimer la Partition   \220CHAP = Annuler   F3 = Quitter",
+        "L = Supprimer la partition   \220CHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1577,8 +1683,8 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         // ERROR_NEW_PARTITION,
-        "Vous ne pouvez cr\202er une nouvelle Partition \205 l'int\202rieur\n"
-        "d'une Partition d\202j\205 existante!\n"
+        "Vous ne pouvez cr\202er une nouvelle partition \205 l'int\202rieur\n"
+        "d'une partition d\202j\205 existante!\n"
         "\n"
         "  * Appuyer sur une touche pour continuer.",
         NULL
@@ -1788,6 +1894,10 @@ MUI_PAGE frFRPages[] =
         frFRSelectPartitionEntries
     },
     {
+        CHANGE_SYSTEM_PARTITION,
+        frFRChangeSystemPartition
+    },
+    {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
         frFRConfirmDeleteSystemPartitionEntries
     },
@@ -1854,13 +1964,13 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTR\220E = Installer   P/E = Cr\202er Partition Primaire/\220tendue   F3 = Quitter"},
+     "   ENTR\220E = Installer   P/E = Cr\202er partition Primaire/\220tendue   F3 = Quitter"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTR\220E = Installer   L = Cr\202er Partition Logique   F3 = Quitter"},
+     "   ENTR\220E = Installer   L = Cr\202er partition Logique   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTR\220E = Installer   D = Supprimer Partition   F3 = Quitter"},
+     "   ENTR\220E = Installer   D = Supprimer partition   F3 = Quitter"},
     {STRING_DELETEPARTITION,
-     "   D = Supprimer Partition   F3 = Quitter"},
+     "   D = Supprimer partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
     {STRING_CHOOSENEWPARTITION,
@@ -1872,15 +1982,15 @@ MUI_STRING frFRStrings[] =
     {STRING_HDDSIZE,
     "Veuillez entrer la taille de la nouvelle partition en m\202gaoctets."},
     {STRING_CREATEPARTITION,
-     "   ENTR\220E = Cr\202er Partition   \220CHAP = Annuler   F3 = Quitter"},
+     "   ENTR\220E = Cr\202er partition   \220CHAP = Annuler   F3 = Quitter"},
     {STRING_PARTFORMAT,
-    "Cette Partition sera ensuite format\202e."},
+    "Cette partition sera ensuite format\202e."},
     {STRING_NONFORMATTEDPART,
     "Vous avez choisi d'installer ReactOS sur une nouvelle partition."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "La partition syst\212me n'est pas encore format\202e."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "La nouvelle partition n'est pas encore format\202e."},
     {STRING_INSTALLONPART,
     "Setup installe ReactOS sur la partition"},
     {STRING_CHECKINGPART,

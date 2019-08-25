@@ -734,7 +734,8 @@ static MUI_ENTRY heILDisplayPageEntries[] =
         ".\217\227\232\205\216\204 \204\202\205\226\232\204 \202\205\221 \232\200 \232\205\220\231\214 \212\220\205\226\230\201",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  .\211\205\226\230\204 \204\202\205\226\232\204 \202\205\221 \232\200 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
          TEXT_STYLE_NORMAL
@@ -924,6 +925,112 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
         0,
         0,
         "...\217\211\232\216\204\214 \200\220",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY heILChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1378,7 +1485,6 @@ static MUI_ENTRY heILSelectFSEntries[] =
         "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1768,6 +1874,10 @@ MUI_PAGE heILPages[] =
     {
         SELECT_PARTITION_PAGE,
         heILSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        heILChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

@@ -1788,7 +1788,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 }
             }
 
-// FIXME TODO: PartitionList->SystemPartition is not yet initialized!!!!
             if (CurrentPartition == PartitionList->SystemPartition ||
                 IsPartitionActive(CurrentPartition))
             {
@@ -2693,7 +2692,7 @@ ResetFileSystemList(VOID)
  *
  * SIDEEFFECTS
  *  Calls UpdatePartitionType()
- *  Calls CheckActiveSystemPartition()
+ *  Calls FindSupportedSystemPartition()
  *
  * RETURNS
  *   Number of the next page.
@@ -2722,14 +2721,172 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     /* Find or set the active system partition when starting formatting */
     if (FormatState == Start)
     {
-        /* Find or set the active system partition */
-        CheckActiveSystemPartition(PartitionList,
-                                   FALSE,
-                                   InstallPartition->DiskEntry,
-                                   InstallPartition);
-        if (PartitionList->SystemPartition == NULL)
+        /*
+         * If we install on a fixed disk, try to find a supported system
+         * partition on the system. Otherwise if we install on a removable disk
+         * use the install partition as the system partition.
+         */
+        // TODO: Include that logic inside the FindSupportedSystemPartition() function?
+        if (InstallPartition->DiskEntry->MediaType == FixedMedia)
         {
-            /* FIXME: show an error dialog */
+            SystemPartition = FindSupportedSystemPartition(PartitionList,
+                                                           FALSE,
+                                                           InstallPartition->DiskEntry,
+                                                           InstallPartition);
+            /* Use the original system partition as the old active partition hint */
+            PartEntry = PartitionList->SystemPartition;
+
+            if ( SystemPartition && PartitionList->SystemPartition &&
+                (SystemPartition != PartitionList->SystemPartition) )
+            {
+                DPRINT1("We are using a different system partition!!!!\n");
+
+                MUIDisplayPage(CHANGE_SYSTEM_PARTITION);
+
+                {
+                PPARTENTRY PartEntry; // Shadow variable
+
+                PartEntry = PartitionList->SystemPartition;
+                DiskEntry = PartEntry->DiskEntry;
+
+                /* Adjust partition size */
+                PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+                if (PartSize >= 10 * GB) /* 10 GB */
+                {
+                    PartSize = PartSize / GB;
+                    PartUnit = MUIGetString(STRING_GB);
+                }
+                else
+                {
+                    PartSize = PartSize / MB;
+                    PartUnit = MUIGetString(STRING_MB);
+                }
+
+                /* Adjust partition type */
+                GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                                   PartTypeString,
+                                                   ARRAYSIZE(PartTypeString));
+
+                if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
+                {
+                    CONSOLE_PrintTextXY(8, 10,
+                                        MUIGetString(STRING_HDDINFOUNK4),
+                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
+                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                        PartEntry->PartitionType,
+                                        PartSize,
+                                        PartUnit);
+                }
+                else
+                {
+                    CONSOLE_PrintTextXY(8, 10,
+                                        "%c%c  %s    %I64u %s",
+                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
+                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                        PartTypeString,
+                                        PartSize,
+                                        PartUnit);
+                }
+
+
+                /* Adjust disk size */
+                DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+                if (DiskSize >= 10 * GB) /* 10 GB */
+                {
+                    DiskSize = DiskSize / GB;
+                    DiskUnit = MUIGetString(STRING_GB);
+                }
+                else
+                {
+                    DiskSize = DiskSize / MB;
+                    DiskUnit = MUIGetString(STRING_MB);
+                }
+
+                CONSOLE_PrintTextXY(8, 14, MUIGetString(STRING_HDINFOPARTZEROED_1),
+                                    DiskEntry->DiskNumber,
+                                    DiskSize,
+                                    DiskUnit,
+                                    DiskEntry->Port,
+                                    DiskEntry->Bus,
+                                    DiskEntry->Id,
+                                    &DiskEntry->DriverName,
+                                    DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
+                                    DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
+                                                                                  "RAW");
+
+
+                PartEntry = SystemPartition;
+                DiskEntry = PartEntry->DiskEntry;
+
+                /* Adjust partition size */
+                PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+                if (PartSize >= 10 * GB) /* 10 GB */
+                {
+                    PartSize = PartSize / GB;
+                    PartUnit = MUIGetString(STRING_GB);
+                }
+                else
+                {
+                    PartSize = PartSize / MB;
+                    PartUnit = MUIGetString(STRING_MB);
+                }
+
+                /* Adjust partition type */
+                GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                                   PartTypeString,
+                                                   ARRAYSIZE(PartTypeString));
+
+                if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
+                {
+                    CONSOLE_PrintTextXY(8, 23,
+                                        MUIGetString(STRING_HDDINFOUNK4),
+                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
+                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                        PartEntry->PartitionType,
+                                        PartSize,
+                                        PartUnit);
+                }
+                else
+                {
+                    CONSOLE_PrintTextXY(8, 23,
+                                        "%c%c  %s    %I64u %s",
+                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
+                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                        PartTypeString,
+                                        PartSize,
+                                        PartUnit);
+                }
+
+                }
+
+                while (TRUE)
+                {
+                    CONSOLE_ConInKey(Ir);
+
+                    if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
+                    {
+                        break;
+                    }
+                    else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+                    {
+                        return SELECT_PARTITION_PAGE;
+                    }
+                }
+
+                CONSOLE_ClearScreen();
+                CONSOLE_Flush();
+            }
+        }
+        else // if (InstallPartition->DiskEntry->MediaType == RemovableMedia)
+        {
+            SystemPartition = InstallPartition;
+            /* Don't specify any old active partition hint */
+            PartEntry = NULL;
+        }
+
+        if (!SystemPartition)
+        {
+            /* FIXME: improve the error dialog */
             //
             // Error dialog should say that we cannot find a suitable
             // system partition and create one on the system. At this point,
@@ -2737,9 +2894,14 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             // or use an external drive as the system drive/partition
             // (e.g. floppy, USB drive, etc...)
             //
-            return QUIT_PAGE;
+            PopupError("The ReactOS Setup could not find a supported system partition\n"
+                       "on your system or could not create a new one. Without such partition\n"
+                       "the Setup program cannot install ReactOS.\n"
+                       "Press ENTER to return to the partition selection list.",
+                       MUIGetString(STRING_CONTINUE),
+                       Ir, POPUP_WAIT_ENTER);
+            return SELECT_PARTITION_PAGE;
         }
-        SystemPartition = PartitionList->SystemPartition;
 
         /*
          * If the system partition can be created in some
@@ -2758,6 +2920,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             // else
             {
             }
+        }
+
+        /* Set it as such */
+        if (!SetActivePartition(PartitionList, SystemPartition, PartEntry))
+        {
+            DPRINT1("SetActivePartition(0x%p) failed?!\n", SystemPartition);
+            ASSERT(FALSE);
         }
 
         /* Commit all partition changes to all the disks */

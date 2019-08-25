@@ -738,7 +738,8 @@ static MUI_ENTRY svSEDisplayPageEntries[] =
         "\216ndra vilken typ av bildsk\204rmsinst\204llning som ska installeras.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  Anv\204nd UPP- och NED-piltangenterna f\224r att v\204lja \224nskad inst\204llning.",
          TEXT_STYLE_NORMAL
@@ -930,6 +931,112 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
         0,
         "   Var V\204nlig V\204nta...",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSEChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1383,7 +1490,6 @@ static MUI_ENTRY svSESelectFSEntries[] =
         "   ENTER = Forts\204tt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS
     },
-
     {
         0,
         0,
@@ -1702,14 +1808,14 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
+        "You cannot create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "You cannot create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
@@ -1775,6 +1881,10 @@ MUI_PAGE svSEPages[] =
     {
         SELECT_PARTITION_PAGE,
         svSESelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        svSEChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

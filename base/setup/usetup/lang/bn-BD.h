@@ -729,7 +729,8 @@ static MUI_ENTRY bnBDDisplayPageEntries[] =
         "You want to change the type of display to be installed.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  Press the UP or DOWN key to select the desired display type.",
          TEXT_STYLE_NORMAL
@@ -919,6 +920,112 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
         0,
         0,
         "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bnBDChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1373,7 +1480,6 @@ static MUI_ENTRY bnBDSelectFSEntries[] =
         "ENTER = Continue   ESC = Cancel   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1546,7 +1652,7 @@ MUI_ERROR bnBDErrorEntries[] =
     {
         // ERROR_WARN_PARTITION,
           "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
+          "partition table that cannot be handled properly!\n"
           "\n"
           "Creating or deleting partitions can destroy the partition table.\n"
           "\n"
@@ -1556,15 +1662,15 @@ MUI_ERROR bnBDErrorEntries[] =
     },
     {
         // ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "You cannot create a new partition inside\n"
+        "of an already existing partition!\n"
         "\n"
         "  * Press any key to continue.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "You cannot delete unpartitioned disk space!\n"
         "\n"
         "  * Press any key to continue.",
         NULL
@@ -1692,14 +1798,14 @@ MUI_ERROR bnBDErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
+        "You cannot create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "You cannot create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
@@ -1765,6 +1871,10 @@ MUI_PAGE bnBDPages[] =
     {
         SELECT_PARTITION_PAGE,
         bnBDSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        bnBDChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

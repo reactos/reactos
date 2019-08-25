@@ -1883,10 +1883,147 @@ AddDiskToList(
     ScanForUnpartitionedDiskSpace(DiskEntry);
 }
 
+/*
+ * Retrieve the system disk, i.e. the fixed disk that is accessible by the
+ * firmware during boot time and where the system partition resides.
+ * If no system partition has been determined, we retrieve the first disk
+ * that verifies the mentioned criteria above.
+ */
+static
+PDISKENTRY
+GetSystemDisk(
+    IN PPARTLIST List)
+{
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+
+    /* Check for empty disk list */
+    if (IsListEmpty(&List->DiskListHead))
+        return NULL;
+
+    /*
+     * If we already have a system partition, the system disk
+     * is the one on which the system partition resides.
+     */
+    if (List->SystemPartition)
+        return List->SystemPartition->DiskEntry;
+
+    /* Loop over the disks and find the correct one */
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        /* The disk must be a fixed disk and be found by the firmware */
+        if (DiskEntry->MediaType == FixedMedia && DiskEntry->BiosFound)
+        {
+            break;
+        }
+    }
+    if (Entry == &List->DiskListHead)
+    {
+        /* We haven't encountered any suitable disk */
+        return NULL;
+    }
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("System disk -- GPT-partitioned disk detected, not currently supported by SETUP!\n");
+    }
+
+    return DiskEntry;
+}
+
+/*
+ * Retrieve the actual "active" partition of the given disk.
+ * On MBR disks, partition with the Active/Boot flag set;
+ * on GPT disks, partition with the correct GUID.
+ */
+BOOLEAN
+IsPartitionActive(
+    IN PPARTENTRY PartEntry)
+{
+    // TODO: Support for GPT disks!
+
+    if (IsContainerPartition(PartEntry->PartitionType))
+        return FALSE;
+
+    /* Check if the partition is partitioned, used and active */
+    if (PartEntry->IsPartitioned &&
+        // !IsContainerPartition(PartEntry->PartitionType) &&
+        PartEntry->BootIndicator)
+    {
+        /* Yes it is */
+        ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static
+PPARTENTRY
+GetActiveDiskPartition(
+    IN PDISKENTRY DiskEntry)
+{
+    PLIST_ENTRY ListEntry;
+    PPARTENTRY PartEntry;
+    PPARTENTRY ActivePartition = NULL;
+
+    /* Check for empty disk list */
+    // ASSERT(DiskEntry);
+    if (!DiskEntry)
+        return NULL;
+
+    /* Check for empty partition list */
+    if (IsListEmpty(&DiskEntry->PrimaryPartListHead))
+        return NULL;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return NULL;
+    }
+
+    /* Scan all (primary) partitions to find the active disk partition */
+    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+         ListEntry != &DiskEntry->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Retrieve the partition */
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (IsPartitionActive(PartEntry))
+        {
+            /* Yes, we've found it */
+            ASSERT(DiskEntry == PartEntry->DiskEntry);
+            ASSERT(PartEntry->IsPartitioned);
+
+            ActivePartition = PartEntry;
+
+            DPRINT1("Found active system partition %lu in disk %lu, drive letter %C\n",
+                    PartEntry->PartitionNumber, DiskEntry->DiskNumber,
+                    (PartEntry->DriveLetter == 0) ? L'-' : PartEntry->DriveLetter);
+            break;
+        }
+    }
+
+    /* Check if the disk is new and if so, use its first partition as the active system partition */
+    if (DiskEntry->NewDisk && ActivePartition != NULL)
+    {
+        // FIXME: What to do??
+        DPRINT1("NewDisk TRUE but already existing active partition?\n");
+    }
+
+    /* Return the active partition found (or none) */
+    return ActivePartition;
+}
+
 PPARTLIST
 CreatePartitionList(VOID)
 {
     PPARTLIST List;
+    PDISKENTRY SystemDisk;
     OBJECT_ATTRIBUTES ObjectAttributes;
     SYSTEM_DEVICE_INFORMATION Sdi;
     IO_STATUS_BLOCK Iosb;
@@ -1904,7 +2041,6 @@ CreatePartitionList(VOID)
         return NULL;
 
     List->SystemPartition = NULL;
-    List->OriginalSystemPartition = NULL;
 
     InitializeListHead(&List->DiskListHead);
     InitializeListHead(&List->BiosDiskListHead);
@@ -1956,6 +2092,13 @@ CreatePartitionList(VOID)
     UpdateDiskSignatures(List);
     UpdateHwDiskNumbers(List);
     AssignDriveLetters(List);
+
+    /*
+     * Retrieve the system partition: the active partition on the system
+     * disk (the one that will be booted by default by the hardware).
+     */
+    SystemDisk = GetSystemDisk(List);
+    List->SystemPartition = (SystemDisk ? GetActiveDiskPartition(SystemDisk) : NULL);
 
     return List;
 }
@@ -3093,14 +3236,10 @@ DeletePartition(
 
     ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
-    /* Clear the system partition pointers if it is being deleted */
+    /* Clear the system partition if it is being deleted */
     if (List->SystemPartition == PartEntry)
     {
         ASSERT(List->SystemPartition);
-        ASSERT(List->SystemPartition->DiskEntry->MediaType != RemovableMedia);
-
-        if (List->SystemPartition == List->OriginalSystemPartition)
-            List->OriginalSystemPartition = NULL;
         List->SystemPartition = NULL;
     }
 
@@ -3209,90 +3348,6 @@ DeletePartition(
     return TRUE;
 }
 
-/*
- * Retrieve the actual "active" partition of the given disk.
- * On MBR disks, partition with the Active/Boot flag set;
- * on GPT disks, partition with the correct GUID.
- */
-BOOLEAN
-IsPartitionActive(
-    IN PPARTENTRY PartEntry)
-{
-    // TODO: Support for GPT disks!
-
-    if (IsContainerPartition(PartEntry->PartitionType))
-        return FALSE;
-
-    /* Check if the partition is partitioned, used and active */
-    if (PartEntry->IsPartitioned &&
-        // !IsContainerPartition(PartEntry->PartitionType) &&
-        PartEntry->BootIndicator)
-    {
-        /* Yes it is */
-        ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static
-PPARTENTRY
-GetActiveDiskPartition(
-    IN PDISKENTRY DiskEntry)
-{
-    PLIST_ENTRY ListEntry;
-    PPARTENTRY PartEntry;
-    PPARTENTRY ActivePartition = NULL;
-
-    /* Check for empty disk list */
-    // ASSERT(DiskEntry);
-    if (!DiskEntry)
-        return NULL;
-
-    /* Check for empty partition list */
-    if (IsListEmpty(&DiskEntry->PrimaryPartListHead))
-        return NULL;
-
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return NULL;
-    }
-
-    /* Scan all (primary) partitions to find the active disk partition */
-    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
-         ListEntry != &DiskEntry->PrimaryPartListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Retrieve the partition */
-        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
-        if (IsPartitionActive(PartEntry))
-        {
-            /* Yes, we've found it */
-            ASSERT(DiskEntry == PartEntry->DiskEntry);
-            ASSERT(PartEntry->IsPartitioned);
-
-            ActivePartition = PartEntry;
-
-            DPRINT1("Found active system partition %lu in disk %lu, drive letter %C\n",
-                    PartEntry->PartitionNumber, DiskEntry->DiskNumber,
-                    (PartEntry->DriveLetter == 0) ? L'-' : PartEntry->DriveLetter);
-            break;
-        }
-    }
-
-    /* Check if the disk is new and if so, use its first partition as the active system partition */
-    if (DiskEntry->NewDisk && ActivePartition != NULL)
-    {
-        // FIXME: What to do??
-        DPRINT1("NewDisk TRUE but already existing active partition?\n");
-    }
-
-    /* Return the active partition found (or none) */
-    return ActivePartition;
-}
-
 static
 BOOLEAN
 IsSupportedActivePartition(
@@ -3374,12 +3429,12 @@ IsSupportedActivePartition(
     return TRUE;
 }
 
-VOID
-CheckActiveSystemPartition(
+PPARTENTRY
+FindSupportedSystemPartition(
     IN PPARTLIST List,
     IN BOOLEAN ForceSelect,
-    IN PDISKENTRY AlternateDisk OPTIONAL,
-    IN PPARTENTRY AlternatePart OPTIONAL)
+    IN PDISKENTRY AlternativeDisk OPTIONAL,
+    IN PPARTENTRY AlternativePart OPTIONAL)
 {
     PLIST_ENTRY ListEntry;
     PDISKENTRY DiskEntry;
@@ -3391,75 +3446,63 @@ CheckActiveSystemPartition(
     if (IsListEmpty(&List->DiskListHead))
     {
         /* No system partition! */
-        List->SystemPartition = NULL;
-        List->OriginalSystemPartition = NULL;
+        ASSERT(List->SystemPartition == NULL);
         goto NoSystemPartition;
     }
 
-    if (List->SystemPartition != NULL)
-    {
-        /* We already have an active system partition */
-        DPRINT1("Use the current system partition %lu in disk %lu, drive letter %C\n",
-                List->SystemPartition->PartitionNumber,
-                List->SystemPartition->DiskEntry->DiskNumber,
-                (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
-        return;
-    }
+    /* Adjust the optional alternative disk if needed */
+    if (!AlternativeDisk && AlternativePart)
+        AlternativeDisk = AlternativePart->DiskEntry;
+
+    /* Ensure that the alternative partition is on the alternative disk */
+    if (AlternativePart)
+        ASSERT(AlternativeDisk && (AlternativePart->DiskEntry == AlternativeDisk));
+
+    /* Ensure that the alternative disk is in the list */
+    if (AlternativeDisk)
+        ASSERT(AlternativeDisk->PartList == List);
 
     /* Start fresh */
-    List->SystemPartition = NULL;
-    List->OriginalSystemPartition = NULL;
-
-    /* Adjust the optional alternate disk if needed */
-    if (!AlternateDisk && AlternatePart)
-        AlternateDisk = AlternatePart->DiskEntry;
-
-    /* Ensure that the alternate partition is on the alternate disk */
-    if (AlternatePart)
-        ASSERT(AlternateDisk && (AlternatePart->DiskEntry == AlternateDisk));
-
-    /* Ensure that the alternate disk is in the list */
-    if (AlternateDisk)
-        ASSERT(AlternateDisk->PartList == List);
+    CandidatePartition = NULL;
 
 //
-// Pass == 1 : Check the first (system) disk.
+// Step 1 : Check the system disk.
 //
 
     /*
-     * First, check whether the first disk (the one that will be booted
-     * by default by the hardware) contains an active partition. If so
-     * this should be our system partition.
+     * First, check whether the system disk, i.e. the one that will be booted
+     * by default by the hardware, contains an active partition. If so this
+     * should be our system partition.
      */
-    DiskEntry = CONTAINING_RECORD(List->DiskListHead.Flink,
-                                  DISKENTRY, ListEntry);
+    DiskEntry = GetSystemDisk(List);
 
     if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
-        DPRINT1("First (system) disk -- GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        goto UseAlternateDisk;
+        DPRINT1("System disk -- GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        goto UseAlternativeDisk;
     }
 
-    ActivePartition = GetActiveDiskPartition(DiskEntry);
-    if (ActivePartition)
+    /* If we have a system partition (in the system disk), validate it */
+    ActivePartition = List->SystemPartition;
+    if (ActivePartition && IsSupportedActivePartition(ActivePartition))
     {
-        /* Save the actual system partition */
-        List->OriginalSystemPartition = ActivePartition;
+        CandidatePartition = ActivePartition;
 
-        /* If we get a candidate active partition in the first disk, validate it */
-        if (IsSupportedActivePartition(ActivePartition))
-        {
-            CandidatePartition = ActivePartition;
-            goto SystemPartitionFound;
-        }
+        DPRINT1("Use the current system partition %lu in disk %lu, drive letter %C\n",
+                CandidatePartition->PartitionNumber,
+                CandidatePartition->DiskEntry->DiskNumber,
+                (CandidatePartition->DriveLetter == 0) ? L'-' : CandidatePartition->DriveLetter);
+
+        /* Return the candidate system partition */
+        return CandidatePartition;
     }
 
-    /* If this first disk is not the optional alternate disk, perform the minimal checks */
-    if (DiskEntry != AlternateDisk)
+    /* If the system disk is not the optional alternative disk, perform the minimal checks */
+    if (DiskEntry != AlternativeDisk)
     {
         /*
          * No active partition has been recognized. Enumerate all the (primary)
-         * partitions in the first disk, excluding the possible current active
+         * partitions in the system disk, excluding the possible current active
          * partition, to find a new candidate.
          */
         for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
@@ -3470,7 +3513,7 @@ CheckActiveSystemPartition(
             PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
             /* Skip the current active partition */
-            if (/* ActivePartition != NULL && */ PartEntry == ActivePartition)
+            if (PartEntry == ActivePartition)
                 continue;
 
             /* Check if the partition is partitioned and used */
@@ -3479,11 +3522,11 @@ CheckActiveSystemPartition(
             {
                 ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
-                /* If we get a candidate active partition in the first disk, validate it */
+                /* If we get a candidate active partition in the disk, validate it */
                 if (IsSupportedActivePartition(PartEntry))
                 {
                     CandidatePartition = PartEntry;
-                    goto FindAndUseAlternativeSystemPartition;
+                    goto UseAlternativePartition;
                 }
             }
 
@@ -3495,7 +3538,7 @@ CheckActiveSystemPartition(
 
                 // TODO: Check for minimal size!!
                 CandidatePartition = PartEntry;
-                goto FindAndUseAlternativeSystemPartition;
+                goto UseAlternativePartition;
             }
 #endif
         }
@@ -3520,7 +3563,7 @@ CheckActiveSystemPartition(
                 PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
                 /* Skip the current active partition */
-                if (/* ActivePartition != NULL && */ PartEntry == ActivePartition)
+                if (PartEntry == ActivePartition)
                     continue;
 
                 /* Check for unpartitioned space */
@@ -3530,7 +3573,7 @@ CheckActiveSystemPartition(
 
                     // TODO: Check for minimal size!!
                     CandidatePartition = PartEntry;
-                    goto FindAndUseAlternativeSystemPartition;
+                    goto UseAlternativePartition;
                 }
             }
         }
@@ -3538,33 +3581,30 @@ CheckActiveSystemPartition(
 
 
 //
-// Pass == 2 : No active partition found: Check the alternate disk if specified.
+// Step 2 : No active partition found: Check the alternative disk if specified.
 //
 
-UseAlternateDisk:
-    if (!AlternateDisk || (!ForceSelect && (DiskEntry != AlternateDisk)))
+UseAlternativeDisk:
+    if (!AlternativeDisk || (!ForceSelect && (DiskEntry != AlternativeDisk)))
         goto NoSystemPartition;
 
-    if (AlternateDisk->DiskStyle == PARTITION_STYLE_GPT)
+    if (AlternativeDisk->DiskStyle == PARTITION_STYLE_GPT)
     {
-        DPRINT1("Alternate disk -- GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        DPRINT1("Alternative disk -- GPT-partitioned disk detected, not currently supported by SETUP!\n");
         goto NoSystemPartition;
     }
 
-    if (DiskEntry != AlternateDisk)
+    if (DiskEntry != AlternativeDisk)
     {
-        /* Choose the alternate disk */
-        DiskEntry = AlternateDisk;
+        /* Choose the alternative disk */
+        DiskEntry = AlternativeDisk;
 
+        /* If we get a candidate active partition, validate it */
         ActivePartition = GetActiveDiskPartition(DiskEntry);
-        if (ActivePartition)
+        if (ActivePartition && IsSupportedActivePartition(ActivePartition))
         {
-            /* If we get a candidate active partition, validate it */
-            if (IsSupportedActivePartition(ActivePartition))
-            {
-                CandidatePartition = ActivePartition;
-                goto FindAndUseAlternativeSystemPartition;
-            }
+            CandidatePartition = ActivePartition;
+            goto UseAlternativePartition;
         }
     }
 
@@ -3575,7 +3615,7 @@ UseAlternateDisk:
  *** - If we want a really separate system partition from the partition where
  ***   we install, do something similar to what's done below in the code.
  *** - Otherwise if we allow for the system partition to be also the partition
- ***   where we install, just directly fall down to using AlternatePart.
+ ***   where we install, just directly fall down to using AlternativePart.
  ***/
 
     /* Retrieve the first partition of the disk */
@@ -3597,15 +3637,13 @@ UseAlternateDisk:
         {
             ASSERT(DiskEntry == CandidatePartition->DiskEntry);
 
-            List->SystemPartition = CandidatePartition;
-            List->OriginalSystemPartition = List->SystemPartition;
-
             DPRINT1("Use new first active system partition %lu in disk %lu, drive letter %C\n",
-                    List->SystemPartition->PartitionNumber,
-                    List->SystemPartition->DiskEntry->DiskNumber,
-                    (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
+                    CandidatePartition->PartitionNumber,
+                    CandidatePartition->DiskEntry->DiskNumber,
+                    (CandidatePartition->DriveLetter == 0) ? L'-' : CandidatePartition->DriveLetter);
 
-            goto SetSystemPartition;
+            /* Return the candidate system partition */
+            return CandidatePartition;
         }
 
         // FIXME: What to do??
@@ -3638,81 +3676,116 @@ UseAlternateDisk:
          * so use the first one as the system partition.
          */
         ASSERT(DiskEntry == CandidatePartition->DiskEntry);
-        List->SystemPartition = CandidatePartition; // The first PartEntry
-        List->OriginalSystemPartition = List->SystemPartition;
 
         DPRINT1("Use first active system partition %lu in disk %lu, drive letter %C\n",
-                List->SystemPartition->PartitionNumber,
-                List->SystemPartition->DiskEntry->DiskNumber,
-                (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
+                CandidatePartition->PartitionNumber,
+                CandidatePartition->DiskEntry->DiskNumber,
+                (CandidatePartition->DriveLetter == 0) ? L'-' : CandidatePartition->DriveLetter);
 
-        goto SetSystemPartition;
+        /* Return the candidate system partition */
+        return CandidatePartition;
     }
 
     /*
      * The disk is not new, we did not find any actual active partition,
-     * or the one we found was not supported, or any possible other canditate
-     * is not supported. We then use the alternate partition if specified.
+     * or the one we found was not supported, or any possible other candidate
+     * is not supported. We then use the alternative partition if specified.
      */
-    if (AlternatePart)
+    if (AlternativePart)
     {
-        DPRINT1("No system partition found, use the alternative partition!\n");
-        CandidatePartition = AlternatePart;
-        goto UseAlternativeSystemPartition;
+        DPRINT1("No valid or supported system partition has been found, use the alternative partition!\n");
+        CandidatePartition = AlternativePart;
+        goto UseAlternativePartition;
     }
     else
     {
 NoSystemPartition:
         DPRINT1("No valid or supported system partition has been found on this system!\n");
-        return;
+        return NULL;
     }
 
-
-SystemPartitionFound:
-    ASSERT(CandidatePartition);
-    List->SystemPartition = CandidatePartition;
-
-    DPRINT1("Use existing active system partition %lu in disk %lu, drive letter %C\n",
-            List->SystemPartition->PartitionNumber,
-            List->SystemPartition->DiskEntry->DiskNumber,
-            (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
-
-    return;
-
-FindAndUseAlternativeSystemPartition:
+UseAlternativePartition:
     /*
-     * We are here because we have not found any (active) candidate
-     * system partition that we know how to support. What we are going
-     * to do is to change the existing system partition and use the
-     * partition on which we install ReactOS as the new system partition,
-     * and then we will need to add in FreeLdr's entry a boot entry to boot
+     * We are here because we did not find any (active) candidate system
+     * partition that we know how to support. What we are going to do is
+     * to change the existing system partition and use the alternative partition
+     * (e.g. on which we install ReactOS) as the new system partition.
+     * Then we will need to add in FreeLdr's boot menu an entry for booting
      * from the original system partition.
      */
-
-    /* Unset the old system partition */
-    if (List->OriginalSystemPartition)
-    {
-        List->OriginalSystemPartition->BootIndicator = FALSE;
-        List->OriginalSystemPartition->DiskEntry->LayoutBuffer->PartitionEntry[List->OriginalSystemPartition->PartitionIndex].BootIndicator = FALSE;
-        List->OriginalSystemPartition->DiskEntry->LayoutBuffer->PartitionEntry[List->OriginalSystemPartition->PartitionIndex].RewritePartition = TRUE;
-        List->OriginalSystemPartition->DiskEntry->Dirty = TRUE;
-    }
-
-UseAlternativeSystemPartition:
     ASSERT(CandidatePartition);
-    List->SystemPartition = CandidatePartition;
 
     DPRINT1("Use alternative active system partition %lu in disk %lu, drive letter %C\n",
-            List->SystemPartition->PartitionNumber,
-            List->SystemPartition->DiskEntry->DiskNumber,
-            (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
+            CandidatePartition->PartitionNumber,
+            CandidatePartition->DiskEntry->DiskNumber,
+            (CandidatePartition->DriveLetter == 0) ? L'-' : CandidatePartition->DriveLetter);
 
-SetSystemPartition:
-    /* Set the new active system partition */
-    List->SystemPartition->BootIndicator = TRUE;
-    List->SystemPartition->DiskEntry->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].BootIndicator = TRUE;
-    List->SystemPartition->DiskEntry->LayoutBuffer->PartitionEntry[List->SystemPartition->PartitionIndex].RewritePartition = TRUE;
-    List->SystemPartition->DiskEntry->Dirty = TRUE;
+    /* Return the candidate system partition */
+    return CandidatePartition;
+}
+
+BOOLEAN
+SetActivePartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY PartEntry,
+    IN PPARTENTRY OldActivePart OPTIONAL)
+{
+    /* Check for empty disk list */
+    if (IsListEmpty(&List->DiskListHead))
+        return FALSE;
+
+    /* Validate the partition entry */
+    if (!PartEntry)
+        return FALSE;
+
+    /*
+     * If the partition entry is already the system partition, or if it is
+     * the same as the old active partition hint the user provided (and if
+     * it is already active), just return success.
+     */
+    if ((PartEntry == List->SystemPartition) ||
+        ((PartEntry == OldActivePart) && IsPartitionActive(OldActivePart)))
+    {
+        return TRUE;
+    }
+
+    ASSERT(PartEntry->DiskEntry);
+
+    /* Ensure that the partition's disk is in the list */
+    ASSERT(PartEntry->DiskEntry->PartList == List);
+
+    /*
+     * If the user provided an old active partition hint, verify that it is
+     * indeeed active and belongs to the same disk where the new partition
+     * belongs. Otherwise determine the current active partition on the disk
+     * where the new partition belongs.
+     */
+    if (!(OldActivePart && IsPartitionActive(OldActivePart) && (OldActivePart->DiskEntry == PartEntry->DiskEntry)))
+    {
+        /* It's not, determine the current active partition for the disk */
+        OldActivePart = GetActiveDiskPartition(PartEntry->DiskEntry);
+    }
+
+    /* Unset the old active partition if it exists */
+    if (OldActivePart)
+    {
+        OldActivePart->BootIndicator = FALSE;
+        OldActivePart->DiskEntry->LayoutBuffer->PartitionEntry[OldActivePart->PartitionIndex].BootIndicator = FALSE;
+        OldActivePart->DiskEntry->LayoutBuffer->PartitionEntry[OldActivePart->PartitionIndex].RewritePartition = TRUE;
+        OldActivePart->DiskEntry->Dirty = TRUE;
+    }
+
+    /* Modify the system partition if the new partition is on the system disk */
+    if (PartEntry->DiskEntry == GetSystemDisk(List))
+        List->SystemPartition = PartEntry;
+
+    /* Set the new active partition */
+    PartEntry->BootIndicator = TRUE;
+    PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].BootIndicator = TRUE;
+    PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
+    PartEntry->DiskEntry->Dirty = TRUE;
+
+    return TRUE;
 }
 
 NTSTATUS
