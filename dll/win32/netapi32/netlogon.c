@@ -341,7 +341,7 @@ DsDeregisterDnsHostRecordsA(
         }
     }
 
-    pDnsHostNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsDomainName);
+    pDnsHostNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsHostName);
     if (pDnsHostNameW == NULL)
     {
         status = ERROR_NOT_ENOUGH_MEMORY;
