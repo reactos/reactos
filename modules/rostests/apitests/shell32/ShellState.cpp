@@ -8,6 +8,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <stdio.h>
 #include <shellutils.h>
 #include <strsafe.h>
 

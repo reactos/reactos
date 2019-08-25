@@ -9,8 +9,7 @@
 
 #include <wincon.h>
 #include <wingdi.h>
-
-ULONG DbgPrint(PCH Format,...);
+#include <stdio.h>
 #include <shellutils.h>
 
 HRESULT (STDAPICALLTYPE *pSHCreateFileExtractIconW)(LPCWSTR pszFile, DWORD dwFileAttributes, REFIID riid, void **ppv);
