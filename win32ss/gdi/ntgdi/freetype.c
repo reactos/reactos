@@ -1450,7 +1450,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                     RtlAppendUnicodeStringToString(&NewString, &Entry->FaceName);
                     if (Entry->StyleName.Length > 0)
                     {
-                        RtlAppendUnicodeToString(pValueName, L" ");
+                        RtlAppendUnicodeToString(&NewString, L" ");
                         RtlAppendUnicodeStringToString(&NewString, &Entry->StyleName);
                     }
                 }
