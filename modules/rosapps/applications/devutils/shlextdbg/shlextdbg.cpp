@@ -12,8 +12,6 @@
 #include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <conio.h>
- // hack for gcc:
-#define DbgPrint(...) printf(__VA_ARGS__)
 #include <shellutils.h>
 
 enum WaitType
