@@ -120,7 +120,6 @@ CmpPrepareKey(
 
     ASSERT(KeyCell->Signature == CM_KEY_NODE_SIGNATURE);
 
-    KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
     KeyCell->SubKeyCounts[Volatile] = 0;
 
     /* Enumerate and add subkeys */
