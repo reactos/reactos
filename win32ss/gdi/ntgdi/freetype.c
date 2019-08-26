@@ -1412,7 +1412,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 }
                 else
                 {
-                    // FIXME!
+                    break;
                 }
             }
             else
@@ -1430,7 +1430,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 }
                 else
                 {
-                    // FIXME!
+                    break;
                 }
             }
         }
@@ -1456,7 +1456,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 }
                 else
                 {
-                    // FIXME!
+                    RtlFreeUnicodeString(pValueName);
+                    break;
                 }
             }
             else
@@ -1474,7 +1475,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 }
                 else
                 {
-                    // FIXME!
+                    RtlFreeUnicodeString(pValueName);
+                    break;
                 }
             }
 
