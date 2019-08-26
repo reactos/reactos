@@ -1402,7 +1402,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
-                    RtlInitEmptyUnicodeString(pValueName, pszBuffer, (USHORT)Length);
+                    RtlInitEmptyUnicodeString(pValueName, pszBuffer, Length);
                     RtlCopyUnicodeString(pValueName, &Entry->FaceName);
                     if (Entry->StyleName.Length > 0)
                     {
@@ -1424,7 +1424,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
-                    RtlInitEmptyUnicodeString(pValueName, pszBuffer, (USHORT)Length);
+                    RtlInitEmptyUnicodeString(pValueName, pszBuffer, Length);
                     RtlCopyUnicodeString(pValueName, &Entry->FaceName);
                     RtlAppendUnicodeToString(pValueName, szSize);
                 }
@@ -1444,7 +1444,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
-                    RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                    RtlInitEmptyUnicodeString(&NewString, pszBuffer, Length);
                     RtlCopyUnicodeString(&NewString, pValueName);
                     RtlAppendUnicodeToString(&NewString, L" & ");
                     RtlAppendUnicodeStringToString(&NewString, &Entry->FaceName);
@@ -1469,7 +1469,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
                 pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
                 if (pszBuffer)
                 {
-                    RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                    RtlInitEmptyUnicodeString(&NewString, pszBuffer, Length);
                     RtlCopyUnicodeString(&NewString, pValueName);
                     RtlAppendUnicodeToString(&NewString, szSize);
                 }
@@ -1694,7 +1694,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
             pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
             if (pszBuffer)
             {
-                RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                RtlInitEmptyUnicodeString(&NewString, pszBuffer, Length);
                 NewString.Buffer[0] = UNICODE_NULL;
                 RtlAppendUnicodeStringToString(&NewString, &LoadFont.RegValueName);
                 RtlAppendUnicodeStringToString(&NewString, &TrueTypePostfix);
@@ -1717,7 +1717,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
             pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
             if (pszBuffer)
             {
-                RtlInitEmptyUnicodeString(&NewString, pszBuffer, (USHORT)Length);
+                RtlInitEmptyUnicodeString(&NewString, pszBuffer, Length);
                 NewString.Buffer[0] = UNICODE_NULL;
                 RtlAppendUnicodeStringToString(&NewString, &LoadFont.RegValueName);
                 RtlAppendUnicodeToString(&NewString, L" (");
