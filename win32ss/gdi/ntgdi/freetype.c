@@ -1601,31 +1601,45 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     PVOID Buffer = NULL;
     IO_STATUS_BLOCK Iosb;
     PVOID SectionObject;
-    SIZE_T ViewSize = 0, Length;
+    SIZE_T ViewSize = 0, Length, BufferSize;
     LARGE_INTEGER SectionSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
     GDI_LOAD_FONT LoadFont;
     INT FontCount;
     HANDLE KeyHandle;
-    UNICODE_STRING PathName;
-    WCHAR szPath[MAX_PATH];
+    UNICODE_STRING PathName, PathTail;
+    LPWSTR pszBuffer;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
+    static const UNICODE_STRING SysRoot = RTL_CONSTANT_STRING(L"\\SystemRoot");
 
     /* Build PathName */
     Length = wcslen(SharedUserData->NtSystemRoot);
-    RtlStringCbCopyNW(szPath, sizeof(szPath), FileName->Buffer,
-                      min(Length * sizeof(WCHAR), FileName->Length));
     if (FileName->Length > Length * sizeof(WCHAR) &&
-        _wcsnicmp(szPath, SharedUserData->NtSystemRoot, Length) == 0)
+        _wcsnicmp(FileName->Buffer, SharedUserData->NtSystemRoot, Length) == 0)
     {
-        RtlStringCbCopyW(szPath, sizeof(szPath), L"\\SystemRoot");
-        RtlStringCbCatNW(szPath, sizeof(szPath), &FileName->Buffer[Length],
-                         FileName->Length - Length * sizeof(WCHAR));
-        RtlInitUnicodeString(&PathName, szPath);
+        PathTail.Buffer = &FileName->Buffer[Length];
+        PathTail.Length = FileName->Length - Length * sizeof(WCHAR);
+        PathTail.MaximumLength = FileName->MaximumLength - Length * sizeof(WCHAR);
+
+        BufferSize = FileName->Length + SysRoot.Length - Length * sizeof(WCHAR)
+               + sizeof(UNICODE_NULL);
+        pszBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_USTR);
+        if (pszBuffer)
+        {
+            RtlInitEmptyUnicodeString(&PathName, pszBuffer, BufferSize);
+            RtlAppendUnicodeStringToString(&PathName, &SysRoot);
+            RtlAppendUnicodeStringToString(&PathName, &PathTail);
+        }
+        else
+        {
+            return 0;   /* failure */
+        }
     }
     else
     {
-        PathName = *FileName;
+        Status = DuplicateUnicodeString(FileName, &PathName);
+        if (!NT_SUCCESS(Status))
+            return 0;   /* failure */
     }
 
     /* Open the font file */
@@ -1641,6 +1655,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not load font file: %wZ\n", &PathName);
+        RtlFreeUnicodeString(&PathName);
         return 0;
     }
 
@@ -1652,6 +1667,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     {
         DPRINT1("Could not map file: %wZ\n", &PathName);
         ZwClose(FileHandle);
+        RtlFreeUnicodeString(&PathName);
         return 0;
     }
     ZwClose(FileHandle);
@@ -1661,6 +1677,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     {
         DPRINT1("Could not map file: %wZ\n", &PathName);
         ObDereferenceObject(SectionObject);
+        RtlFreeUnicodeString(&PathName);
         return 0;
     }
 
@@ -1765,6 +1782,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     }
     RtlFreeUnicodeString(&LoadFont.RegValueName);
 
+    RtlFreeUnicodeString(&PathName);
     return FontCount;
 }
 
