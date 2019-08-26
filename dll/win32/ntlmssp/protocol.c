@@ -78,10 +78,16 @@ CliGenerateNegotiateMessage(
     /* HACK flags ... add if one works ...
      * its less ... let's getting better ...
      * */
-    context->NegFlg = context->NegFlg &
+    context->NegFlg = context->NegFlg /*&
                       (NTLMSSP_NEGOTIATE_UNICODE |
+                       NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                       NTLMSSP_NEGOTIATE_SIGN |
+                       NTLMSSP_NEGOTIATE_SEAL |
+                       NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
+                       NTLMSSP_NEGOTIATE_LM_KEY |
                        NTLMSSP_NEGOTIATE_56 |
-                       NTLMSSP_NEGOTIATE_OEM);
+                       NTLMSSP_NEGOTIATE_OEM);*/ -
+                       NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));

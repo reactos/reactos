@@ -433,7 +433,8 @@ CliComputeResponseNTLMv1(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
-    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH]);
+    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH],
+    OUT PUSER_SESSION_KEY SessionBaseKey);
 
 VOID
 RC4Init(

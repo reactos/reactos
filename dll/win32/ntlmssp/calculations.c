@@ -322,8 +322,8 @@ MAC(ULONG flags,
 }
 
 /* MS-NLSP 3.3.1 NTLM v1 Authentication */
-//#define VALIDATE_NTLMv1
-//#define VALIDATE_NTLM
+#define VALIDATE_NTLMv1
+#define VALIDATE_NTLM
 BOOL
 CliComputeResponseNTLMv1(
     IN ULONG NegFlg,
@@ -334,7 +334,8 @@ CliComputeResponseNTLMv1(
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
-    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH])
+    OUT UCHAR LmChallengeResponse[MSV1_0_RESPONSE_LENGTH],
+    OUT PUSER_SESSION_KEY SessionBaseKey)
 {
     //--Define ComputeResponse(NegFlg, ResponseKeyNT, ResponseKeyLM,
     //--CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge, Time, ServerName)
@@ -378,7 +379,6 @@ CliComputeResponseNTLMv1(
             memcpy(LmChallengeResponse, ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
             memset(LmChallengeResponse + MSV1_0_CHALLENGE_LENGTH, 0,
                    MSV1_0_NTLM3_RESPONSE_LENGTH - MSV1_0_CHALLENGE_LENGTH);
-            return TRUE;
         }
         //Else
         else
@@ -391,7 +391,7 @@ CliComputeResponseNTLMv1(
             if (TRUE)
             {
                 // set LmChallengeResponse to NtChallengeResponse
-                memcpy(LmChallengeResponse, NtChallengeResponse, sizeof(LmChallengeResponse));
+                memcpy(LmChallengeResponse, NtChallengeResponse, MSV1_0_RESPONSE_LENGTH);
             }
             else
             {
@@ -402,7 +402,8 @@ CliComputeResponseNTLMv1(
         }
     //EndI
     }
-
+    // Set SessionBaseKey to MD4(NTOWF)
+    MD4(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH, (UCHAR*)SessionBaseKey);
     return TRUE;
 }
 
@@ -633,7 +634,7 @@ CliComputeKeys(
     else
     {
         // Set ExportedSessionKey to KeyExchangeKey
-        memcpy(ExportedSessionKey, KeyExchangeKey, sizeof(ExportedSessionKey));
+        memcpy(ExportedSessionKey, KeyExchangeKey, MSV1_0_USER_SESSION_KEY_LENGTH);
         // Set AUTHENTICATE_MESSAGE.EncryptedRandomSessionKey to NIL
     }
     //ClientSigningKey SIGNKEY(NegFlg,ExportedSessionKey,C
@@ -756,15 +757,14 @@ CliComputeResponse(
                                       ChallengeToClient,
                                       ChallengeFromClient,
                                       (PUCHAR)pNtChallengeResponseData->Buffer,
-                                      (PUCHAR)pLmChallengeResponseData->Buffer))
+                                      (PUCHAR)pLmChallengeResponseData->Buffer,
+                                      &SessionBaseKey))
         {
             ExtStrFree(pNtChallengeResponseData);
             ExtStrFree(pLmChallengeResponseData);
             ERR("CliComputeResponseNTLMv1 failed!\n");
             return FALSE;
         }
-        /* set session key to 0 ... */
-        memset(&SessionBaseKey, 0, sizeof(SessionBaseKey));
         #ifdef VALIDATE_NTLMv1
         DebugBreak();
         #endif
@@ -818,6 +818,20 @@ CliComputeResponse(
         /* uses same key ... */
         //memcpy(pLmSessionKey, pUserSessionKey, sizeof(*pLmSessionKey));
     }
+
+    TRACE("=== CliComputeKeys === \n\n");
+    TRACE("Challenge_NegFlg\n");
+    TRACE("0x%x\n", Challenge_NegFlg);
+    TRACE("SessionBaseKey\n");
+    NtlmPrintHexDump((PBYTE)&SessionBaseKey, sizeof(SessionBaseKey));
+    TRACE("pLmChallengeResponseData\n");
+    NtlmPrintHexDump(pLmChallengeResponseData->Buffer, pLmChallengeResponseData->bUsed);
+    TRACE("ServerChallenge\n");
+    NtlmPrintHexDump(ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
+    TRACE("ResponseKeyLM\n");
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    TRACE("ExportedSessionKey\n");
+    NtlmPrintHexDump(ExportedSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
 
     if (!CliComputeKeys(Challenge_NegFlg,
                         &SessionBaseKey,

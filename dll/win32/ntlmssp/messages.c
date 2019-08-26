@@ -159,6 +159,8 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
     /* extract data and signature buffers */
     for (index = 0; index < (int) pMessage->cBuffers; index++)
     {
+        TRACE("buffer %i, type %i\n", index, pMessage->pBuffers[index].BufferType);
+        NtlmPrintHexDump(pMessage->pBuffers[index].pvBuffer, pMessage->pBuffers[index].cbBuffer);
         if (pMessage->pBuffers[index].BufferType == SECBUFFER_DATA)
             data_buffer = &pMessage->pBuffers[index];
         else if (pMessage->pBuffers[index].BufferType == SECBUFFER_TOKEN)
@@ -203,9 +205,9 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         TRACE("RC4 before\n");
         NtlmPrintHexDump(data, length);
         RC4(pSendHandle, data, length);
-        TRACE("RC4 done\n");
-        NtlmPrintHexDump(data, length);
     }
+    TRACE("done\n");
+    NtlmPrintHexDump(data, length);
 
     if (cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
     {
