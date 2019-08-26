@@ -121,6 +121,7 @@ CmpPrepareKey(
     ASSERT(KeyCell->Signature == CM_KEY_NODE_SIGNATURE);
 
     KeyCell->SubKeyCounts[Volatile] = 0;
+    // KeyCell->SubKeyLists[Volatile] = HCELL_NIL; // FIXME! Done only on Windows < XP.
 
     /* Enumerate and add subkeys */
     if (KeyCell->SubKeyCounts[Stable] > 0)
