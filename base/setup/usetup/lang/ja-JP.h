@@ -732,7 +732,8 @@ static MUI_ENTRY jaJPDisplayPageEntries[] =
         "\262\335\275\304\260\331 \273\332\331 \303\336\250\275\314\337\332\262\311 \274\255\331\262\246 \315\335\272\263 \275\331 \272\304\266\336 \276\335\300\270 \273\332\317\274\300\241",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  UP \323\274\270\312 DOWN \267\260\246 \265\274\303 \303\267\275\331 \303\336\250\275\314\337\332\262\311 \274\255\331\262\246 \276\335\300\270 \274\303 \270\300\336\273\262\241",
          TEXT_STYLE_NORMAL
@@ -923,6 +924,112 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
         0,
         0,
         "\265\317\301 \270\300\336\273\262...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY jaJPChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1377,7 +1484,6 @@ static MUI_ENTRY jaJPSelectFSEntries[] =
         "ENTER = \277\336\257\272\263   ESC = \267\254\335\276\331   F3 = \301\255\263\274",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1403,7 +1509,7 @@ static MUI_ENTRY jaJPDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  \272\311 \312\337\260\303\250\274\256\335\246 \273\270\274\336\256 \275\331\306\312 D \267\260\246 \265\274\303 \270\300\336\273\262\241",
+        "\x07  \272\311 \312\337\260\303\250\274\256\335\246 \273\270\274\336\256 \275\331\306\312 L \267\260\246 \265\274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1421,7 +1527,7 @@ static MUI_ENTRY jaJPDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = \312\337\260\303\274\256\335 \273\270\274\336\256   ESC = \267\254\335\276\331   F3 = \301\255\263\274",
+        "L = \312\337\260\303\274\256\335 \273\270\274\336\256   ESC = \267\254\335\276\331   F3 = \301\255\263\274",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1476,6 +1582,21 @@ MUI_ERROR jaJPErrorEntries[] =
         "  \x07  \276\257\304\261\257\314\337\246 \277\336\257\272\263 \275\331\306\312 ENTER \267\260\246 \265\274\303 \270\300\336\273\262\241\n"
         "  \x07  \276\257\304\261\257\314\337\246 \301\255\263\274 \275\331\306\312 F3 \267\260\246 \265\274\303 \270\300\336\273\262\241",
         "F3 = \301\255\263\274  ENTER = \277\336\257\272\263"
+    },
+    {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
     },
     {
         // ERROR_NO_HDD
@@ -1681,14 +1802,14 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
+        "You cannot create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "You cannot create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
@@ -1754,6 +1875,10 @@ MUI_PAGE jaJPPages[] =
     {
         SELECT_PARTITION_PAGE,
         jaJPSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        jaJPChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

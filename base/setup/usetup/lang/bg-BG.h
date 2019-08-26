@@ -127,7 +127,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
         "\x07  \215\240\342\250\341\255\245\342\245 L, \247\240 \244\240 \242\250\244\250\342\245 \340\240\247\340\245\350\250\342\245\253\255\250\342\245 (\253\250\346\245\255\247\255\250\342\245)",
         TEXT_STYLE_NORMAL
     },
-        {
+    {
         8,
         20,
         "   \250\247\250\341\252\242\240\255\250\357 \250 \343\341\253\256\242\250\357 \255\240 \220\245\240\252\342\216\221",
@@ -738,7 +738,8 @@ static MUI_ENTRY bgBGDisplayPageEntries[] =
         "\220\245\350\250\253\250 \341\342\245 \244\240 \341\254\245\255\250\342\245 \242\250\244\240 \255\240 \245\252\340\240\255\240.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  \210\247\241\245\340\245\342\245 \242\250\244\240 \255\240 \245\252\340\240\255\240 \341\352\341 \341\342\340\245\253\252\250\342\245 \255\240\243\256\340\245 \250 \255\240\244\256\253\343 \250 ",
          TEXT_STYLE_NORMAL
@@ -930,6 +931,112 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
         0,
         "   \217\256\347\240\252\240\251\342\245...",  /* Редът да не се превежда, защото списъкът с дяловете ще се размести */
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bgBGChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1384,7 +1491,6 @@ static MUI_ENTRY bgBGSelectFSEntries[] =
         "   ENTER = \217\340\256\244\352\253\246\240\242\240\255\245   ESC = \216\342\252\240\247   F3 = \210\247\345\256\244",
         TEXT_TYPE_STATUS
     },
-
     {
         0,
         0,
@@ -1410,7 +1516,7 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  \215\240\342\250\341\255\245\342\245 D, \247\240 \244\240 \250\247\342\340\250\245\342\245 \244\357\253\240.",
+        "\x07  \215\240\342\250\341\255\245\342\245 L, \247\240 \244\240 \250\247\342\340\250\245\342\245 \244\357\253\240.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1428,7 +1534,7 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = \210\247\342\340\250\242\240\255\245 \255\240 \244\357\253\240, ESC = \216\342\252\240\247    F3 = \210\247\345\256\244",
+        "   L = \210\247\342\340\250\242\240\255\245 \255\240 \244\357\253\240, ESC = \216\342\252\240\247    F3 = \210\247\345\256\244",
         TEXT_TYPE_STATUS
     },
     {
@@ -1483,6 +1589,21 @@ MUI_ERROR bgBGErrorEntries[] =
         "  \x07  \207\240 \244\240 \257\340\256\244\352\253\246\250 \341\253\240\243\240\255\245\342\256, \255\240\342\250\341\255\245\342\245 ENTER.\n"
         "  \x07  \207\240 \250\247\345\256\244 \255\240\342\250\341\255\245\342\245 F3.",
         "F3 = \210\247\345\256\244 ENTER = \217\340\256\244\352\253\246\240\242\240\255\245"
+    },
+    {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
     },
     {
         // ERROR_NO_HDD
@@ -1690,14 +1811,14 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
+        "You cannot create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "You cannot create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
@@ -1763,6 +1884,10 @@ MUI_PAGE bgBGPages[] =
     {
         SELECT_PARTITION_PAGE,
         bgBGSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        bgBGChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

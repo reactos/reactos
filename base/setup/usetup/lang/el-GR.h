@@ -738,12 +738,14 @@ static MUI_ENTRY elGRDisplayPageEntries[] =
         "\207\342\242\234\253\234 \244\230 \230\242\242\341\245\234\253\234 \253\246\244 \253\347\247\246 \253\236\252 \234\243\255\341\244\240\251\236\252 \247\246\254 \237\230 \234\232\241\230\253\230\251\253\230\237\234\345.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  \217\230\253\343\251\253\234 \253\246 \247\242\343\241\253\250\246 \217\200\214\227 \343 \211\200\222\227 \232\240\230 \244\230 \234\247\240\242\342\245\234\253\234 \253\246\244 \234\247\240\237\254\243\236\253\346.",
          TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         11,
          "  \253\347\247\246 \234\243\255\341\244\240\251\236\252.",
          TEXT_STYLE_NORMAL
@@ -935,6 +937,112 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
         0,
         "   \217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234...",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY elGRChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1400,7 +1508,6 @@ static MUI_ENTRY elGRSelectFSEntries[] =
         "   ENTER = \221\254\244\342\256\234\240\230   ESC = \200\241\347\250\340\251\236   F3 = \200\247\246\256\351\250\236\251\236",
         TEXT_TYPE_STATUS
     },
-
     {
         0,
         0,
@@ -1426,7 +1533,7 @@ static MUI_ENTRY elGRDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  \217\230\253\343\251\253\234 D \232\240\230 \244\230 \233\240\230\232\250\341\257\234\253\234 \253\246 partition.",
+        "\x07  \217\230\253\343\251\253\234 L \232\240\230 \244\230 \233\240\230\232\250\341\257\234\253\234 \253\246 partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1444,7 +1551,7 @@ static MUI_ENTRY elGRDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = \203\240\230\232\250\230\255\343 Partition   ESC = \200\241\347\250\340\251\236   F3 = \200\247\246\256\351\250\236\251\236",
+        "   L = \203\240\230\232\250\230\255\343 Partition   ESC = \200\241\347\250\340\251\236   F3 = \200\247\246\256\351\250\236\251\236",
         TEXT_TYPE_STATUS
     },
     {
@@ -1499,6 +1606,21 @@ MUI_ERROR elGRErrorEntries[] =
         "  \x07  \217\230\253\343\251\253\234 ENTER \232\240\230 \230\244 \251\254\244\234\256\345\251\234\253\234 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236.\n"
         "  \x07  \217\230\253\343\251\253\234 F3 \232\240\230 \244\230 \230\247\246\256\340\250\343\251\234\253\234 \230\247\346 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236.",
         "F3 = \200\247\246\256\351\250\236\251\236  ENTER = \221\254\244\342\256\234\240\230"
+    },
+    {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
     },
     {
         // ERROR_NO_HDD
@@ -1696,14 +1818,14 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
+        "You cannot create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "You cannot create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
@@ -1769,6 +1891,10 @@ MUI_PAGE elGRPages[] =
     {
         SELECT_PARTITION_PAGE,
         elGRSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        elGRChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
