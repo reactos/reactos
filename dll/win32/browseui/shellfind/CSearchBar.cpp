@@ -364,15 +364,8 @@ HRESULT STDMETHODCALLTYPE CSearchBar::SetSite(IUnknown *pUnkSite)
     {
         DestroyWindow();
         m_hWnd = NULL;
-    }
-
-    if (pUnkSite != m_pSite)
-    {
-        m_pSite = NULL;
-    }
-
-    if(!pUnkSite)
         return S_OK;
+    }
 
     hr = IUnknown_GetWindow(pUnkSite, &parentWnd);
     if (!SUCCEEDED(hr))
