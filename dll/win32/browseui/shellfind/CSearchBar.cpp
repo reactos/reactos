@@ -95,7 +95,7 @@ HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
 // *** ATL event handlers ***
 LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), TRUE);
+    IUnknown_OnFocusChangeIS(m_pSite, static_cast<IDeskBand *>(this), TRUE);
     bHandled = FALSE;
     return TRUE;
 }
