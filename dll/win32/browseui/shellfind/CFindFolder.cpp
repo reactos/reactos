@@ -114,7 +114,7 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     }
     LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
 
-    int pathLen = (wcslen(lpszPath) + 1) * sizeof(WCHAR);
+    int pathLen = (PathFindFileNameW(lpszPath) - lpszPath) * sizeof(WCHAR);
     int cbData = sizeof(WORD) + pathLen + lpLastFSPidl->mkid.cb;
     LPITEMIDLIST pidl = (LPITEMIDLIST) SHAlloc(cbData + sizeof(WORD));
     if (!pidl)
@@ -125,7 +125,9 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     p += sizeof(WORD);
 
     memcpy(p, lpszPath, pathLen);
-    p += pathLen;
+    p += pathLen - sizeof(WCHAR);
+    *((WCHAR *) p) = '\0';
+    p += sizeof(WCHAR);
 
     memcpy(p, lpLastFSPidl, lpLastFSPidl->mkid.cb);
     p += lpLastFSPidl->mkid.cb;
@@ -436,10 +438,7 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
 
     if (iColumn == 1)
     {
-        WCHAR path[MAX_PATH];
-        wcscpy(path, _ILGetPath(pidl));
-        PathRemoveFileSpecW(path);
-        return SHSetStrRet(&pDetails->str, path);
+        return SHSetStrRet(&pDetails->str, _ILGetPath(pidl));
     }
 
     return GetDisplayNameOf(pidl, SHGDN_NORMAL, &pDetails->str);
@@ -548,15 +547,10 @@ class CFindFolderContextMenu :
 
             for (UINT i = 0; i < cidl; i++)
             {
-                WCHAR path[MAX_PATH];
-                wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
-                PathRemoveFileSpecW(path);
-                CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(path));
+                CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(_ILGetPath(apidl[i])));
                 if (!folderPidl)
                     return E_OUTOFMEMORY;
-                CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPathW((LPCWSTR) apidl[i]->mkid.abID));
-                if (!pidl)
-                    return E_OUTOFMEMORY;
+                LPCITEMIDLIST pidl = _ILGetFSPidl(apidl[i]);
                 SHOpenFolderAndSelectItems(folderPidl, 1, &pidl, 0);
             }
             return S_OK;
@@ -607,10 +601,7 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
 
     if (riid == IID_IContextMenu)
     {
-        WCHAR path[MAX_PATH];
-        wcscpy(path, (LPCWSTR) apidl[0]->mkid.abID);
-        PathRemoveFileSpecW(path);
-        CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(path));
+        CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(_ILGetPath(apidl[0])));
         if (!folderPidl)
             return E_OUTOFMEMORY;
         CComPtr<IShellFolder> pDesktopFolder;
