@@ -1610,7 +1610,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     UNICODE_STRING PathName;
     LPWSTR pszBuffer;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\\\.\\");
+    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\\\?\\");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -1778,7 +1778,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 INT FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 {
-    return IntGdiAddFontResourceEx(FileName, Characteristics, AFRX_DOS_DEVICE_PATH);
+    return IntGdiAddFontResourceEx(FileName, Characteristics, 0);
 }
 
 /* Borrowed from shlwapi!PathIsRelativeW */
