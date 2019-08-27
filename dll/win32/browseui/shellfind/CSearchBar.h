@@ -16,11 +16,6 @@ class CSearchBar :
     public IObjectWithSite,
     public IInputObject,
     public IPersistStream,
-    public IOleCommandTarget,
-    public IServiceProvider,
-    public IBandNavigate,
-    public IWinEventHandler,
-    public INamespaceProxy,
     public IDispatch,
     public CDialogImpl<CSearchBar>
 {
@@ -63,13 +58,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
     virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
-    // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-
-    // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
-
     // *** IInputObject methods ***
     virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
     virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
@@ -83,20 +71,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
     virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
     virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
-
-    // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
-
-    // *** IBandNavigate methods ***
-    virtual HRESULT STDMETHODCALLTYPE Select(long paramC);
-
-    // *** INamespaceProxy ***
-    virtual HRESULT STDMETHODCALLTYPE GetNavigateTarget(long paramC, long param10, long param14);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE OnSelectionChanged(long paramC);
-    virtual HRESULT STDMETHODCALLTYPE RefreshFlags(long paramC, long param10, long param14);
-    virtual HRESULT STDMETHODCALLTYPE CacheItem(long paramC);
 
     // *** IDispatch methods ***
     virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
@@ -115,15 +89,10 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
         COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents, IDispatch)
         COM_INTERFACE_ENTRY_IID(DIID_DSearchCommandEvents, IDispatch)
-        COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
-        COM_INTERFACE_ENTRY_IID(IID_IBandNavigate, IBandNavigate)
-        COM_INTERFACE_ENTRY_IID(IID_INamespaceProxy, INamespaceProxy)
         COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDeskBand)
         COM_INTERFACE_ENTRY2_IID(IID_IDockingWindow, IDockingWindow, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
         COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
         COM_INTERFACE_ENTRY2_IID(IID_IPersist, IPersist, IPersistStream)
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
