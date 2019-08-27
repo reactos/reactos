@@ -371,28 +371,6 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetSite(REFIID riid, void **ppvSite)
 }
 
 
-// *** IOleCommandTarget methods ***
-HRESULT STDMETHODCALLTYPE CSearchBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-
-// *** IServiceProvider methods ***
-HRESULT STDMETHODCALLTYPE CSearchBar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
-{
-    /* FIXME: we probably want to handle more services here */
-    return IUnknown_QueryService(m_pSite, SID_SShellBrowser, riid, ppvObject);
-}
-
-
 // *** IInputObject methods ***
 HRESULT STDMETHODCALLTYPE CSearchBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
@@ -466,55 +444,6 @@ HRESULT STDMETHODCALLTYPE CSearchBar::GetSizeMax(ULARGE_INTEGER *pcbSize)
     return E_NOTIMPL;
 }
 
-
-// *** IWinEventHandler methods ***
-HRESULT STDMETHODCALLTYPE CSearchBar::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-{
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::IsWindowOwner(HWND hWnd)
-{
-    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
-}
-
-// *** IBandNavigate methods ***
-HRESULT STDMETHODCALLTYPE CSearchBar::Select(long paramC)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** INamespaceProxy ***
-HRESULT STDMETHODCALLTYPE CSearchBar::GetNavigateTarget(long paramC, long param10, long param14)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(long paramC)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::OnSelectionChanged(long paramC)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::RefreshFlags(long paramC, long param10, long param14)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CSearchBar::CacheItem(long paramC)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
 
 // *** IDispatch methods ***
 HRESULT STDMETHODCALLTYPE CSearchBar::GetTypeInfoCount(UINT *pctinfo)
