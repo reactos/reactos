@@ -32,7 +32,7 @@ private:
     BOOL m_bVisible;
 
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
-    BOOL GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH]);
+    BOOL GetAddressEditBoxPath(WCHAR *szPath);
     void SetSearchInProgress(BOOL bInProgress);
     HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
     HRESULT TrySubscribeToSearchEvents();
