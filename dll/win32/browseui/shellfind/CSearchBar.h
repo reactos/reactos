@@ -34,7 +34,6 @@ private:
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
     BOOL GetAddressEditBoxPath(WCHAR *szPath);
     void SetSearchInProgress(BOOL bInProgress);
-    HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
     HRESULT TrySubscribeToSearchEvents();
 
     // *** ATL event handlers ***

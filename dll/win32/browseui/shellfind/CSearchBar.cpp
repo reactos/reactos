@@ -64,33 +64,6 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return 0;
 }
 
-HRESULT CSearchBar::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
-{
-    CComPtr<IOleWindow>                 pBrowserOleWnd;
-    CMINVOKECOMMANDINFO                 cmi;
-    HWND                                browserWnd;
-    HRESULT                             hr;
-
-    hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pBrowserOleWnd->GetWindow(&browserWnd);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    ZeroMemory(&cmi, sizeof(cmi));
-    cmi.cbSize = sizeof(cmi);
-    cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
-    cmi.hwnd = browserWnd;
-    if (GetKeyState(VK_SHIFT) & 0x8000)
-        cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
-    if (GetKeyState(VK_CONTROL) & 0x8000)
-        cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
-
-    return menu->InvokeCommand(&cmi);
-}
-
 
 // *** ATL event handlers ***
 LRESULT CSearchBar::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
