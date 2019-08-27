@@ -149,7 +149,7 @@ HRESULT CSearchBar::GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND 
 
 LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    CComHeapPtr<SearchStart> pSearchStart((SearchStart *)SHAlloc(sizeof(SearchStart)));
+    CComHeapPtr<SearchStart> pSearchStart(static_cast<SearchStart *>(CoTaskMemAlloc(sizeof(SearchStart))));
     GetDlgItemText(IDC_SEARCH_FILENAME, pSearchStart->szFileName, _countof(pSearchStart->szFileName));
     GetDlgItemText(IDC_SEARCH_QUERY, pSearchStart->szQuery, _countof(pSearchStart->szQuery));
     if (!GetAddressEditBoxPath(pSearchStart->szPath))
