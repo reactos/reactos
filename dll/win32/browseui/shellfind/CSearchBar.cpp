@@ -44,11 +44,11 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     HWND hEditControl = reinterpret_cast<HWND>(SendMessage(hCombobox, CBEM_GETEDITCONTROL, 0, 0));
     hResult = CAddressEditBox_CreateInstance(IID_PPV_ARG(IAddressEditBox, &m_AddressEditBox));
     if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+        return FALSE;
 
     hResult = m_AddressEditBox->Init(hCombobox, hEditControl, 0, m_pSite);
     if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+        return FALSE;
 
     // Subscribe to navigation events
     CComPtr<IShellBrowser> pShellBrowser;
@@ -61,7 +61,7 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     DISPPARAMS params = {0};
     Invoke(DISPID_NAVIGATECOMPLETE2, GUID_NULL, 0, DISPATCH_METHOD, &params, NULL, NULL, NULL);
 
-    return 0;
+    return TRUE;
 }
 
 
@@ -128,13 +128,13 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     if (!GetAddressEditBoxPath(pSearchStart->szPath))
     {
         ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID), MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, pSearchStart->szPath);
-        return TRUE;
+        return 0;
     }
 
     CComPtr<IShellBrowser> pShellBrowser;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));
     if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+        return 0;
 
     HWND hwnd;
     if (FAILED(GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL)))
@@ -146,27 +146,27 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         hr = StringFromGUID2(CLSID_FindFolder, szShellGuid + _countof(shellGuidPrefix) - 1,
                              _countof(szShellGuid) - _countof(shellGuidPrefix));
         if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            return 0;
 
         CComHeapPtr<ITEMIDLIST> findFolderPidl;
         hr = SHParseDisplayName(szShellGuid, NULL, &findFolderPidl, 0, NULL);
         if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            return 0;
 
         hr = pShellBrowser->BrowseObject(findFolderPidl, 0);
         if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            return 0;
 
         hr = GetSearchResultsFolder(&pShellBrowser, &hwnd, NULL);
         if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            return 0;
     }
 
     ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) pSearchStart.Detach());
 
     SetSearchInProgress(TRUE);
 
-    return TRUE;
+    return 0;
 }
 
 LRESULT CSearchBar::OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -176,7 +176,7 @@ LRESULT CSearchBar::OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl
     if (SUCCEEDED(hr))
         ::PostMessageW(hwnd, WM_SEARCH_STOP, 0, 0);
 
-    return TRUE;
+    return 0;
 }
 
 BOOL CSearchBar::GetAddressEditBoxPath(WCHAR *szPath)
