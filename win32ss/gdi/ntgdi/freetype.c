@@ -1601,39 +1601,28 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     PVOID Buffer = NULL;
     IO_STATUS_BLOCK Iosb;
     PVOID SectionObject;
-    SIZE_T ViewSize = 0, Length, BufferSize;
+    SIZE_T ViewSize = 0, Length;
     LARGE_INTEGER SectionSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
     GDI_LOAD_FONT LoadFont;
     INT FontCount;
     HANDLE KeyHandle;
-    UNICODE_STRING PathName, PathTail;
+    UNICODE_STRING PathName;
     LPWSTR pszBuffer;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING SysRoot = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\\\.\\");
 
     /* Build PathName */
-    Length = wcslen(SharedUserData->NtSystemRoot);
-    if (FileName->Length > Length * sizeof(WCHAR) &&
-        _wcsnicmp(FileName->Buffer, SharedUserData->NtSystemRoot, Length) == 0)
+    if (dwFlags & AFRX_DOS_DEVICE_PATH)
     {
-        PathTail.Buffer = &FileName->Buffer[Length];
-        PathTail.Length = FileName->Length - Length * sizeof(WCHAR);
-        PathTail.MaximumLength = FileName->MaximumLength - Length * sizeof(WCHAR);
-
-        BufferSize = FileName->Length + SysRoot.Length - Length * sizeof(WCHAR)
-               + sizeof(UNICODE_NULL);
-        pszBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_USTR);
-        if (pszBuffer)
-        {
-            RtlInitEmptyUnicodeString(&PathName, pszBuffer, BufferSize);
-            RtlAppendUnicodeStringToString(&PathName, &SysRoot);
-            RtlAppendUnicodeStringToString(&PathName, &PathTail);
-        }
-        else
-        {
+        Length = DosPathPrefix.Length + FileName->Length + sizeof(UNICODE_NULL);
+        pszBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_USTR);
+        if (!pszBuffer)
             return 0;   /* failure */
-        }
+
+        RtlInitEmptyUnicodeString(&PathName, pszBuffer, Length);
+        RtlAppendUnicodeStringToString(&PathName, &DosPathPrefix);
+        RtlAppendUnicodeStringToString(&PathName, FileName);
     }
     else
     {
@@ -1789,7 +1778,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 INT FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 {
-    return IntGdiAddFontResourceEx(FileName, Characteristics, 0);
+    return IntGdiAddFontResourceEx(FileName, Characteristics, AFRX_DOS_DEVICE_PATH);
 }
 
 /* Borrowed from shlwapi!PathIsRelativeW */
@@ -1922,16 +1911,15 @@ IntLoadFontsInRegistry(VOID)
         pchPath[Length] = UNICODE_NULL; /* truncate */
 
         /* Load font(s) without writing registry */
-        dwFlags = 0;
         if (PathIsRelativeW(pchPath))
         {
+            dwFlags = 0;
             Status = RtlStringCbPrintfW(szPath, sizeof(szPath),
-                                        L"%s\\Fonts\\%s",
-                                        SharedUserData->NtSystemRoot, pchPath);
+                                        L"\\SystemRoot\\Fonts\\%s", pchPath);
         }
         else
         {
-            dwFlags |= AFRX_ALTERNATIVE_PATH;
+            dwFlags = AFRX_ALTERNATIVE_PATH | AFRX_DOS_DEVICE_PATH;
             Status = RtlStringCbCopyW(szPath, sizeof(szPath), pchPath);
         }
 

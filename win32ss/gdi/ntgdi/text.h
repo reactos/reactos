@@ -103,6 +103,7 @@ TEXTOBJ_UnlockText(PLFONT plfnt)
 /* dwFlags for IntGdiAddFontResourceEx */
 #define AFRX_WRITE_REGISTRY 0x1
 #define AFRX_ALTERNATIVE_PATH 0x2
+#define AFRX_DOS_DEVICE_PATH 0x4
 
 PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
