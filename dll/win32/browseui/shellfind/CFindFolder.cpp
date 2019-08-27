@@ -107,7 +107,7 @@ CFindFolder::CFindFolder() :
 static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
 {
     CComHeapPtr<ITEMIDLIST> lpFSPidl(ILCreateFromPathW(lpszPath));
-    if (!(LPITEMIDLIST)lpFSPidl)
+    if (!lpFSPidl)
     {
         ERR("Failed to create pidl from path\n");
         return 0;
