@@ -35,9 +35,9 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     SetSearchInProgress(FALSE);
 
     HWND hCombobox = GetDlgItem(IDC_SEARCH_COMBOBOX);
-    IImageList *pImageList;
+    CComPtr<IImageList> pImageList;
     HRESULT hResult = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &pImageList));
-    SendMessage(hCombobox, CBEM_SETIMAGELIST, 0, FAILED_UNEXPECTEDLY(hResult) ? 0 : reinterpret_cast<LPARAM>(pImageList));
+    SendMessage(hCombobox, CBEM_SETIMAGELIST, 0, FAILED_UNEXPECTEDLY(hResult) ? 0 : reinterpret_cast<LPARAM>(pImageList.p));
 
     SendMessage(hCombobox, CBEM_SETEXTENDEDSTYLE,
         CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT, CBES_EX_CASESENSITIVE | CBES_EX_NOSIZELIMIT);
