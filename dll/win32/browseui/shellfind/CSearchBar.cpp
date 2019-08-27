@@ -206,10 +206,10 @@ LRESULT CSearchBar::OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl
     return TRUE;
 }
 
-BOOL CSearchBar::GetAddressEditBoxPath(WCHAR (&szPath)[MAX_PATH])
+BOOL CSearchBar::GetAddressEditBoxPath(WCHAR *szPath)
 {
     HWND hComboboxEx = GetDlgItem(IDC_SEARCH_COMBOBOX);
-    ::GetWindowTextW(hComboboxEx, szPath, _countof(szPath));
+    ::GetWindowTextW(hComboboxEx, szPath, MAX_PATH);
     INT iSelectedIndex = SendMessageW(hComboboxEx, CB_GETCURSEL, 0, 0);
     if (iSelectedIndex != CB_ERR)
     {
