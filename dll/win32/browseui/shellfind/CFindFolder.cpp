@@ -110,7 +110,7 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     if (!lpFSPidl)
     {
         ERR("Failed to create pidl from path\n");
-        return 0;
+        return NULL;
     }
     LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
 
@@ -344,10 +344,10 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     if (!SHCreateThread(SearchThreadProc, pSearchData, NULL, NULL))
     {
         SHFree(pSearchData);
-        return HRESULT_FROM_WIN32(GetLastError());
+        return 0;
     }
 
-    return S_OK;
+    return 0;
 }
 
 LRESULT CFindFolder::StopSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -385,7 +385,7 @@ LRESULT CFindFolder::UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         m_shellBrowser->SetStatusTextSB(status);
     }
 
-    return S_OK;
+    return 0;
 }
 
 // *** IShellFolder2 methods ***
