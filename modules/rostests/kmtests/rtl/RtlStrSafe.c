@@ -114,7 +114,7 @@ Test_RtlUnicodeStringPrintfEx()
     KmtStartSeh();
 
     /* STATUS_SUCCESS test, fill behind flag: low-byte as fill character */
-    BufferSize = 16 * sizeof(WCHAR);
+    BufferSize = sizeof(FormatStringIntsResult) - sizeof(UNICODE_NULL) + sizeof(FillResult);
     pBuffer = KmtAllocateGuarded(BufferSize);
     if (!pBuffer)
         goto Cleanup;
@@ -133,7 +133,7 @@ Test_RtlUnicodeStringPrintfEx()
     ok_eq_uint(RemString.Length, 0);
     ok_eq_uint(RemString.MaximumLength, UsString.MaximumLength - UsString.Length);
 
-    EqualBytes = RtlCompareMemory(RemString.Buffer, FillResult, sizeof(FillResult));
+    EqualBytes = RtlCompareMemory(RemString.Buffer, FillResult, RemString.MaximumLength);
     ok_eq_size(EqualBytes, sizeof(FillResult));
 
     KmtFreeGuarded(pBuffer);
