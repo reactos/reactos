@@ -88,6 +88,7 @@ ULONG LdrpActiveUnloadCount;
 VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
+VOID RtlpInitializeKeyedEvent(VOID);
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -1941,6 +1942,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         /* Then disable CS Timeout */
         RtlpTimeoutDisable = TRUE;
     }
+
+    /* Initialize CondVarKeyedEventHandle */
+    RtlpInitializeKeyedEvent();
 
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();

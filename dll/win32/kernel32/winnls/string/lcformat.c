@@ -24,6 +24,11 @@
 
 #ifdef __REACTOS__
 
+#undef _WIN32_WINNT
+#undef WINVER
+#define _WIN32_WINNT 0x600
+#define WINVER 0x600
+
 #include <k32.h>
 #include "japanese.h"   /* Japanese eras */
 
