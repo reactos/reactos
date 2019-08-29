@@ -7,125 +7,21 @@
 
 /* INCLUDES *******************************************************************/
 
+#undef _WIN32_WINNT
+#undef WINVER
+#define _WIN32_WINNT 0x600
+#define WINVER 0x600
+
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
+#define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
+
 #if _WIN32_WINNT >= 0x600
 
-/* FIXME: Move these RTL declarations to the NDK */
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                            IN OUT PRTL_CRITICAL_SECTION CriticalSection,
-                            IN PLARGE_INTEGER TimeOut  OPTIONAL);
-
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                             IN OUT PRTL_SRWLOCK SRWLock,
-                             IN PLARGE_INTEGER TimeOut  OPTIONAL,
-                             IN ULONG Flags);
-
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
-                         IN OUT PCRITICAL_SECTION CriticalSection,
-                         IN DWORD dwMilliseconds)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-#if 0
-    LARGE_INTEGER TimeOut;
-    PLARGE_INTEGER TimeOutPtr = NULL;
-
-    if (dwMilliseconds != INFINITE)
-    {
-        TimeOut.QuadPart = dwMilliseconds * -10000LL;
-        TimeOutPtr = &TimeOut;
-    }
-
-    Status = RtlSleepConditionVariableCS((PRTL_CONDITION_VARIABLE)ConditionVariable,
-                                         (PRTL_CRITICAL_SECTION)CriticalSection,
-                                         TimeOutPtr);
-#endif
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
-                          IN OUT PSRWLOCK SRWLock,
-                          IN DWORD dwMilliseconds,
-                          IN ULONG Flags)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-#if 0
-    LARGE_INTEGER TimeOut;
-    PLARGE_INTEGER TimeOutPtr = NULL;
-
-    if (dwMilliseconds != INFINITE)
-    {
-        TimeOut.QuadPart = dwMilliseconds * -10000LL;
-        TimeOutPtr = &TimeOut;
-    }
-
-    Status = RtlSleepConditionVariableSRW((PRTL_CONDITION_VARIABLE)ConditionVariable,
-                                          (PRTL_SRWLOCK)SRWLock,
-                                          TimeOutPtr,
-                                          Flags);
-#endif
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection,
-                                        IN DWORD dwSpinCount,
-                                        IN DWORD flags)
-{
-    NTSTATUS Status;
-
-    /* FIXME: Flags ignored */
-
-    /* Initialize the critical section */
-    Status = RtlInitializeCriticalSectionAndSpinCount(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection,
-        dwSpinCount);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Set failure code */
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    /* Success */
-    return TRUE;
-}
-
 
 /*
  * @implemented

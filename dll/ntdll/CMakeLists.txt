@@ -8,6 +8,7 @@ add_definitions(
 
 include_directories(
     BEFORE include
+    ../win32/ntdll_vista
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 
 list(APPEND SOURCE
@@ -24,6 +25,8 @@ list(APPEND SOURCE
     rtl/uilist.c
     rtl/version.c
     etw/trace.c
+    ../win32/ntdll_vista/condvar.c
+    ../win32/ntdll_vista/srw.c
     include/ntdll.h)
 
 if(ARCH STREQUAL "i386")
