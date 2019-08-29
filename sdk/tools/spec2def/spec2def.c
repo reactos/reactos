@@ -443,8 +443,8 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     /* Handle autoname */
     if (pexp->strName.len == 1 && pexp->strName.buf[0] == '@')
     {
-        sprintf(szNameBuffer, "%sordinal%d\n%sordinal%d: nop\n",
-                gpszUnderscore, pexp->nOrdinal, gpszUnderscore, pexp->nOrdinal);
+        sprintf(szNameBuffer, "%s_stub_ordinal%d",
+                gpszUnderscore, pexp->nOrdinal);
     }
     else if (giArch != ARCH_X86)
     {
@@ -496,6 +496,14 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
     const char *pcName = pstr->buf;
     int nNameLength = pstr->len;
     const char* pcDot, *pcAt;
+    char namebuffer[16];
+
+    if ((nNameLength == 1) && (pcName[0] == '@'))
+    {
+        sprintf(namebuffer, "ordinal%d", pexp->nOrdinal);
+        pcName = namebuffer;
+        nNameLength = strlen(namebuffer);
+    }
 
     /* Check for non-x86 first */
     if (giArch != ARCH_X86)
@@ -570,7 +578,8 @@ OutputLine_def_MS(FILE *fileDest, EXPORT *pexp)
     if (gbImportLib)
     {
         /* Redirect to a stub function, to get the right decoration in the lib */
-        fprintf(fileDest, "=_stub_%.*s", pexp->strName.len, pexp->strName.buf);
+        fprintf(fileDest, "=_stub_");
+        PrintName(fileDest, pexp, &pexp->strName, 0);
     }
     else if (pexp->strTarget.buf)
     {
@@ -786,7 +795,6 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
     int nLine;
     EXPORT exp;
     int included, version_included;
-    char namebuffer[16];
     unsigned int i;
 
     //fprintf(stderr, "info: line %d, pcStart:'%.30s'\n", nLine, pcStart);
@@ -1029,9 +1037,6 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Check for autoname */
         if ((exp.strName.len == 1) && (exp.strName.buf[0] == '@'))
         {
-            sprintf(namebuffer, "ordinal%d", exp.nOrdinal);
-            exp.strName.len = strlen(namebuffer);
-            exp.strName.buf = namebuffer;
             exp.uFlags |= FL_ORDINAL | FL_NONAME;
         }
 
