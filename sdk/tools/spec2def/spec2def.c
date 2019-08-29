@@ -448,8 +448,21 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     }
     else if (giArch != ARCH_X86)
     {
-        sprintf(szNameBuffer, "_stub_%.*s",
-                pexp->strName.len, pexp->strName.buf);
+        /* Does the string already have stdcall decoration? */
+        const char *pcAt = ScanToken(pexp->strName.buf, '@');
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
+            (pexp->strName.buf[0] == '_'))
+        {
+            /* Skip leading underscore and remove trailing decoration */
+            sprintf(szNameBuffer, "_stub_%.*s",
+                    (int)(pcAt - pexp->strName.buf - 1),
+                    pexp->strName.buf + 1);
+        }
+        else
+        {
+            sprintf(szNameBuffer, "_stub_%.*s",
+                    pexp->strName.len, pexp->strName.buf);
+        }
     }
     else if (pexp->nCallingConvention == CC_STDCALL)
     {
@@ -670,7 +683,9 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco && (pcDeco < pexp->strName.buf + pexp->strName.len))
+            if (pcDeco && 
+                (pexp->strName.len > 1) &&
+                (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
                 /* Write the name including the leading @  */
                 fprintf(fileDest, "==%.*s", pexp->strName.len, pexp->strName.buf);
