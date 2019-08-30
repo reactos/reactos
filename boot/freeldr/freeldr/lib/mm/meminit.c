@@ -19,8 +19,8 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 PVOID    PageLookupTableAddress = NULL;

@@ -21,7 +21,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(DISK);
 
 #define MaxDriveNumber 0xFF

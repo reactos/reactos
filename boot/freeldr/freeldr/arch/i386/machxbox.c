@@ -19,7 +19,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 

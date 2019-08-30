@@ -20,7 +20,6 @@
 #include <cportlib/cportlib.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 

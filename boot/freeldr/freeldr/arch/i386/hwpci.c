@@ -21,7 +21,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 FIND_PCI_BIOS FindPciBios = NULL;
