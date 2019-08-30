@@ -122,7 +122,7 @@ KXKEY(
     IN UCHAR* LmChallengeResponse,
     IN ULONG LmChallengeResponseLen,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
     OUT UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH])
 {
     UCHAR* LMOWF = ResponseKeyLM;
@@ -205,7 +205,6 @@ SEALKEY(
             ERR("Out of memory\n");
             return FALSE;
         }
-
         if (flags & NTLMSSP_NEGOTIATE_128) {
             TRACE("NTLM SEALKEY(): 128-bit key (Extended session security)\n");
             key_len = 16;
@@ -329,8 +328,8 @@ CliComputeResponseNTLMv1(
     IN ULONG NegFlg,
     IN PEXT_STRING_W user,
     IN PEXT_STRING_W passwd,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
     OUT UCHAR NtChallengeResponse[MSV1_0_RESPONSE_LENGTH],
@@ -403,7 +402,7 @@ CliComputeResponseNTLMv1(
     //EndI
     }
     // Set SessionBaseKey to MD4(NTOWF)
-    MD4(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH, (UCHAR*)SessionBaseKey);
+    MD4(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH, (UCHAR*)SessionBaseKey);
     return TRUE;
 }
 
@@ -415,8 +414,8 @@ CliComputeResponseNTLMv2(
     IN PEXT_STRING_W user,
     IN PEXT_STRING_W passwd,
     IN PEXT_STRING_W userdom,
-    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
-    IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
     IN PEXT_STRING_W ServerName,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ClientChallenge[MSV1_0_CHALLENGE_LENGTH],
@@ -444,9 +443,9 @@ CliComputeResponseNTLMv2(
     TRACE("userdom %S\n", userdom->Buffer);
     TRACE("ServerName %S\n", ServerName->Buffer);
     TRACE("ResponseKeyLM\n");
-    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_OWF_LENGTH);
     TRACE("ResponseKeyNT\n");
-    NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    NtlmPrintHexDump(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH);
     TRACE("ServerChallenge\n");
     NtlmPrintHexDump(ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ClientChallenge\n");
@@ -554,7 +553,7 @@ CliComputeResponseNTLMv2(
         ccTemp = NtlmAllocate(ccTempLen);
         memcpy(ccTemp, ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
         memcpy(ccTemp + MSV1_0_CHALLENGE_LENGTH, temp, tempLen);
-        HMAC_MD5(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH,
+        HMAC_MD5(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH,
                  ccTemp, ccTempLen, NTProofStr);
         NtlmFree(ccTemp);
 
@@ -579,7 +578,7 @@ CliComputeResponseNTLMv2(
         ccTemp = NtlmAllocate(ccTempLen);
         memcpy(ccTemp, ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
         memcpy(ccTemp + MSV1_0_CHALLENGE_LENGTH, ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
-        HMAC_MD5(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH,
+        HMAC_MD5(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH,
                  ccTemp, ccTempLen,
                  pLmChallengeResponse->Response);
         NtlmFree(ccTemp);
@@ -592,7 +591,7 @@ CliComputeResponseNTLMv2(
     //EndIf
     //Set SessionBaseKey to HMAC_MD5(ResponseKeyNT, NTProofStr)
     //EndDefine
-    HMAC_MD5(ResponseKeyNT, MSV1_0_NTLM3_RESPONSE_LENGTH,
+    HMAC_MD5(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH,
              NTProofStr, ARRAYSIZE(NTProofStr),
              (UCHAR*)SessionBaseKey);
     #ifdef VALIDATE_NTLMv2
@@ -608,18 +607,32 @@ CliComputeKeys(
     IN PUSER_SESSION_KEY pSessionBaseKey,
     IN PEXT_DATA pLmChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
-    IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
     OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
     OUT PEXT_DATA pEncryptedRandomSessionKey,
     OUT PNTLMSSP_CONTEXT_MSG ctxmsg)
 {
     UCHAR KeyExchangeKey[16];
+    TRACE("=== ComputeKeys ===\n");
+    TRACE("ChallengeMsg_NegFlg\n");
+    NtlmPrintNegotiateFlags(ChallengeMsg_NegFlg);
+    TRACE("pSessionBaseKey\n");
+    NtlmPrintHexDump((PBYTE)pSessionBaseKey, sizeof(USER_SESSION_KEY));
+    TRACE("LmChallengeResponse\n");
+    NtlmPrintHexDump(pLmChallengeResponseData->Buffer, pLmChallengeResponseData->bUsed);
+    TRACE("ServerChallenge\n");
+    NtlmPrintHexDump(ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
+    TRACE("ResponseKeyLM\n");
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_OWF_LENGTH);
     //Set KeyExchangeKey to KXKEY(SessionBaseKey, LmChallengeResponse,
     //CHALLENGE_MESSAGE.ServerChallenge)
     KXKEY(ChallengeMsg_NegFlg, (PUCHAR)pSessionBaseKey,
           pLmChallengeResponseData->Buffer,
           pLmChallengeResponseData->bUsed, ServerChallenge,
           ResponseKeyLM, KeyExchangeKey);
+    TRACE("KeyExchangeKey\n");
+    NtlmPrintHexDump(KeyExchangeKey, 16);
+
     if (ChallengeMsg_NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
     {
         //Set ExportedSessionKey to NONCE(16)
@@ -676,8 +689,8 @@ CliComputeResponse(
     IN OUT PEXT_DATA EncryptedRandomSessionKey)
 {
     BOOL UseNTLMv2 = (getGlobalsCli()->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED);
-    UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH];
-    UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH];
+    UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH];
+    UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH];
     UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
     USER_SESSION_KEY SessionBaseKey;
     UCHAR ExportedSessionKey[16];
@@ -829,7 +842,7 @@ CliComputeResponse(
     TRACE("ServerChallenge\n");
     NtlmPrintHexDump(ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ResponseKeyLM\n");
-    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_RESPONSE_LENGTH);
+    NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_OWF_LENGTH);
     TRACE("ExportedSessionKey\n");
     NtlmPrintHexDump(ExportedSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
 
