@@ -934,7 +934,7 @@ InfOpenFile(
     //
     // Open the .inf file
     //
-    Status = ArcOpen((PCHAR)FileName, OpenReadOnly, &FileId);
+    Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         return FALSE;

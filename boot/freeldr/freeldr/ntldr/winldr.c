@@ -65,11 +65,13 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCSTR BootPath,
                        USHORT VersionToBoot)
 {
-    /* Examples of correct options and paths */
-    //CHAR    Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
-    //CHAR    Options[] = "/NODEBUG";
-    //CHAR    SystemRoot[] = "\\WINNT\\";
-    //CHAR    ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
+    /*
+     * Examples of correct options and paths:
+     * CHAR Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
+     * CHAR Options[] = "/NODEBUG";
+     * CHAR SystemRoot[] = "\\WINNT\\";
+     * CHAR ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
+     */
 
     PSTR  LoadOptions, NewLoadOptions;
     CHAR  HalPath[] = "\\";
@@ -367,7 +369,7 @@ WinLdrLoadModule(PCSTR ModuleName,
     *Size = 0;
 
     /* Open the image file */
-    Status = ArcOpen((PCHAR)ModuleName, OpenReadOnly, &FileId);
+    Status = ArcOpen((PSTR)ModuleName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         /* In case of errors, we just return, without complaining to the user */
@@ -413,17 +415,16 @@ WinLdrDetectVersion(VOID)
     LONG rc;
     HKEY hKey;
 
-    rc = RegOpenKey(
-        NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
-        &hKey);
+    rc = RegOpenKey(NULL,
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
+                    &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        // Key doesn't exist; assume NT 4.0
+        /* Key doesn't exist; assume NT 4.0 */
         return _WIN32_WINNT_NT4;
     }
 
-    // We may here want to read the value of ProductVersion
+    /* We may here want to read the value of ProductVersion */
     return _WIN32_WINNT_WS03;
 }
 
@@ -483,8 +484,8 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     BOOLEAN Success;
     PCSTR Options;
     CHAR DirPath[MAX_PATH];
-    CHAR KernelFileName[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
+    CHAR KernelFileName[MAX_PATH];
     CHAR KdTransportDllName[MAX_PATH];
     PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
 
@@ -494,25 +495,27 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
     RtlStringCbCatA(DirPath, sizeof(DirPath), "system32\\");
 
-    //
-    // TODO: Parse also the separate INI values "Kernel=" and "Hal="
-    //
-
-    /* Default KERNEL and HAL file names */
-    RtlStringCbCopyA(KernelFileName, sizeof(KernelFileName), "ntoskrnl.exe");
+    /*
+     * Default HAL and KERNEL file names.
+     * See the following links to know how the file names are actually chosen:
+     * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/detecthal.htm
+     * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/hal.htm
+     * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/kernel.htm
+     */
     RtlStringCbCopyA(HalFileName   , sizeof(HalFileName)   , "hal.dll");
+    RtlStringCbCopyA(KernelFileName, sizeof(KernelFileName), "ntoskrnl.exe");
 
-    /* Find any /KERNEL= or /HAL= switch in the boot options */
+    /* Find any "/HAL=" or "/KERNEL=" switch in the boot options */
     Options = BootOptions;
     while (Options)
     {
         /* Skip possible initial whitespace */
         Options += strspn(Options, " \t");
 
-        /* Check whether a new option starts and it is either KERNEL or HAL */
+        /* Check whether a new option starts and it is either HAL or KERNEL */
         if (*Options != '/' || (++Options,
-            !(_strnicmp(Options, "KERNEL=", 7) == 0 ||
-              _strnicmp(Options, "HAL=",    4) == 0)) )
+            !(_strnicmp(Options, "HAL=",    4) == 0 ||
+              _strnicmp(Options, "KERNEL=", 7) == 0)) )
         {
             /* Search for another whitespace */
             Options = strpbrk(Options, " \t");
@@ -527,23 +530,23 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 break;
             }
 
-            /* We have found either KERNEL or HAL options */
-            if (_strnicmp(Options, "KERNEL=", 7) == 0)
-            {
-                Options += 7; i -= 7;
-                RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Options, i);
-                _strupr(KernelFileName);
-            }
-            else if (_strnicmp(Options, "HAL=", 4) == 0)
+            /* We have found either HAL or KERNEL options */
+            if (_strnicmp(Options, "HAL=", 4) == 0)
             {
                 Options += 4; i -= 4;
                 RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Options, i);
                 _strupr(HalFileName);
             }
+            else if (_strnicmp(Options, "KERNEL=", 7) == 0)
+            {
+                Options += 7; i -= 7;
+                RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Options, i);
+                _strupr(KernelFileName);
+            }
         }
     }
 
-    TRACE("Kernel file = '%s' ; HAL file = '%s'\n", KernelFileName, HalFileName);
+    TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
     /* Load the Kernel */
     LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
@@ -653,7 +656,9 @@ LoadAndBootWindows(
     IN PCHAR Argv[],
     IN PCHAR Envp[])
 {
+    ARC_STATUS Status;
     PCSTR ArgValue;
+    PCSTR SystemPartition;
     PCHAR File;
     BOOLEAN Success;
     USHORT OperatingSystemVersion;
@@ -662,13 +667,15 @@ LoadAndBootWindows(
     CHAR  FileName[MAX_PATH];
     CHAR  BootOptions[256];
 
+    /* Retrieve the (mandatory) boot type */
     ArgValue = GetArgumentValue(Argc, Argv, "BootType");
-    if (!ArgValue)
+    if (!ArgValue || !*ArgValue)
     {
         ERR("No 'BootType' value, aborting!\n");
         return EINVAL;
     }
 
+    /* Convert it to an OS version */
     if (_stricmp(ArgValue, "Windows") == 0 ||
         _stricmp(ArgValue, "Windows2003") == 0)
     {
@@ -681,6 +688,14 @@ LoadAndBootWindows(
     else
     {
         ERR("Unknown 'BootType' value '%s', aborting!\n", ArgValue);
+        return EINVAL;
+    }
+
+    /* Retrieve the (mandatory) system partition */
+    SystemPartition = GetArgumentValue(Argc, Argv, "SystemPartition");
+    if (!SystemPartition || !*SystemPartition)
+    {
+        ERR("No 'SystemPartition' specified, aborting!\n");
         return EINVAL;
     }
 
@@ -704,8 +719,8 @@ LoadAndBootWindows(
         /* Temporarily save the boot path */
         RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
 
-        /* This is not a full path. Use the current (i.e. boot) device. */
-        MachDiskGetBootPath(BootPath, sizeof(BootPath));
+        /* This is not a full path: prepend the SystemPartition */
+        RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
 
         /* Append a path separator if needed */
         if (*FileName != '\\' && *FileName != '/')
@@ -715,7 +730,7 @@ LoadAndBootWindows(
         RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
     }
 
-    /* Append a backslash if needed */
+    /* Append a path separator if needed */
     if (!*BootPath || BootPath[strlen(BootPath) - 1] != '\\')
         RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
@@ -724,11 +739,44 @@ LoadAndBootWindows(
     /* Retrieve the boot options */
     *BootOptions = ANSI_NULL;
     ArgValue = GetArgumentValue(Argc, Argv, "Options");
-    if (ArgValue)
+    if (ArgValue && *ArgValue)
         RtlStringCbCopyA(BootOptions, sizeof(BootOptions), ArgValue);
 
     /* Append boot-time options */
     AppendBootTimeOptions(BootOptions);
+
+    /*
+     * Set "/HAL=" and "/KERNEL=" options if needed.
+     * If already present on the standard "Options=" option line, they take
+     * precedence over those passed via the separate "Hal=" and "Kernel="
+     * options.
+     */
+    if (strstr(BootOptions, "/HAL=") != 0)
+    {
+        /*
+         * Not found in the options, try to retrieve the
+         * separate value and append it to the options.
+         */
+        ArgValue = GetArgumentValue(Argc, Argv, "Hal");
+        if (ArgValue && *ArgValue)
+        {
+            RtlStringCbCatA(BootOptions, sizeof(BootOptions), " /HAL=");
+            RtlStringCbCatA(BootOptions, sizeof(BootOptions), ArgValue);
+        }
+    }
+    if (strstr(BootOptions, "/KERNEL=") != 0)
+    {
+        /*
+         * Not found in the options, try to retrieve the
+         * separate value and append it to the options.
+         */
+        ArgValue = GetArgumentValue(Argc, Argv, "Kernel");
+        if (ArgValue && *ArgValue)
+        {
+            RtlStringCbCatA(BootOptions, sizeof(BootOptions), " /KERNEL=");
+            RtlStringCbCatA(BootOptions, sizeof(BootOptions), ArgValue);
+        }
+    }
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
@@ -743,10 +791,11 @@ LoadAndBootWindows(
         *strstr(FileName, " ") = ANSI_NULL;
 
         /* Load the ramdisk */
-        if (!RamDiskLoadVirtualFile(FileName))
+        Status = RamDiskLoadVirtualFile(FileName, SystemPartition);
+        if (Status != ESUCCESS)
         {
             UiMessageBox("Failed to load RAM disk file %s", FileName);
-            return ENOENT;
+            return Status;
         }
     }
 

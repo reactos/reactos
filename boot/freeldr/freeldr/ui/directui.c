@@ -10,7 +10,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -252,7 +251,8 @@ UiDrawProgressBar(IN ULONG Left,
 }
 
 VOID
-UiShowMessageBoxesInSection(IN PCSTR SectionName)
+UiShowMessageBoxesInSection(
+    IN ULONG_PTR SectionId)
 {
     return;
 }
@@ -270,7 +270,8 @@ UiTruncateStringEllipsis(IN PCHAR StringText,
                          IN ULONG MaxChars)
 {
     /* If it's too large, just add some ellipsis past the maximum */
-    if (strlen(StringText) > MaxChars) strcpy(&StringText[MaxChars - 3], "...");
+    if (strlen(StringText) > MaxChars)
+        strcpy(&StringText[MaxChars - 3], "...");
 }
 
 VOID

@@ -71,7 +71,10 @@ VOID    UiMessageBoxCritical(PCSTR MessageText);                // Displays a me
 VOID    UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
 VOID    UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
 
-VOID    UiShowMessageBoxesInSection(PCSTR SectionName);        // Displays all the message boxes in a given section
+// Displays all the message boxes in a given section.
+VOID
+UiShowMessageBoxesInSection(
+    IN ULONG_PTR SectionId);
 
 VOID
 UiShowMessageBoxesInArgv(

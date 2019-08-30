@@ -137,17 +137,6 @@ LoadAndBootLinux(
     IN PCHAR Argv[],
     IN PCHAR Envp[]);
 
-BOOLEAN
-LinuxParseIniSection(
-    IN ULONG Argc,
-    IN PCHAR Argv[]);
-
-BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile);
-BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile);
-BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile);
-BOOLEAN LinuxCheckKernelVersion(VOID);
-BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile);
-
 #endif // _M_IX86
 
 #endif // defined __LINUX_H

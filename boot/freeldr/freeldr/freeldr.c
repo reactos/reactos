@@ -20,8 +20,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
 /* FUNCTIONS ******************************************************************/
@@ -31,7 +31,7 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     CmdLineParse(CmdLine);
 
     /* Debugger pre-initialization */
-    DebugInit(FALSE);
+    DebugInit(0);
 
     TRACE("BootMain() called.\n");
 

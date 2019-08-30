@@ -20,8 +20,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
 #define TAG_OS_ITEM 'tISO'
@@ -42,49 +42,16 @@ static PCSTR CopyString(PCSTR Source)
     return Dest;
 }
 
-static ULONG
-GetDefaultOperatingSystem(
-    IN OperatingSystemItem* OperatingSystemList,
-    IN ULONG OperatingSystemCount)
-{
-    ULONG     DefaultOS = 0;
-    ULONG     i;
-    ULONG_PTR SectionId;
-    PCSTR     DefaultOSName;
-    CHAR      DefaultOSText[80];
-
-    if (!IniOpenSection("FreeLoader", &SectionId))
-        return 0;
-
-    DefaultOSName = CmdLineGetDefaultOS();
-    if (DefaultOSName == NULL)
-    {
-        if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
-        {
-            DefaultOSName = DefaultOSText;
-        }
-    }
-
-    if (DefaultOSName != NULL)
-    {
-        for (i = 0; i < OperatingSystemCount; ++i)
-        {
-            if (_stricmp(DefaultOSName, OperatingSystemList[i].SectionName) == 0)
-            {
-                DefaultOS = i;
-                break;
-            }
-        }
-    }
-
-    return DefaultOS;
-}
-
 OperatingSystemItem*
 InitOperatingSystemList(
+    IN ULONG_PTR FrLdrSectionId,
     OUT PULONG OperatingSystemCount,
     OUT PULONG DefaultOperatingSystem)
 {
+    ULONG DefaultOS = 0;
+    PCSTR DefaultOSName = NULL;
+    CHAR  DefaultOSText[80];
+
     OperatingSystemItem* Items;
     ULONG Count;
     ULONG i;
@@ -110,7 +77,18 @@ InitOperatingSystemList(
     if (!Items)
         return NULL;
 
-    /* Now loop through and read the operating system section and display names */
+    /* Retrieve which OS is the default one */
+    DefaultOSName = CmdLineGetDefaultOS();
+    if (!DefaultOSName || !*DefaultOSName)
+    {
+        if ((FrLdrSectionId != 0) &&
+            IniReadSettingByName(FrLdrSectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
+        {
+            DefaultOSName = DefaultOSText;
+        }
+    }
+
+    /* Now loop through the operating system section and load each item */
     for (i = 0; i < Count; ++i)
     {
         IniReadSettingByNumber(OsSectionId, i,
@@ -118,7 +96,7 @@ InitOperatingSystemList(
                                SettingValue, sizeof(SettingValue));
         if (!*SettingName)
         {
-            ERR("Invalid OS entry number %lu, skipping.\n", i);
+            ERR("Invalid OS entry %lu, skipping.\n", i);
             continue;
         }
 
@@ -151,6 +129,13 @@ InitOperatingSystemList(
               // "OsLoadOptions = '%s'\n",
               // SettingName, TitleStart, OsLoadOptions);
 
+        /* Find the default OS item while we haven't got one */
+        if (DefaultOSName && _stricmp(DefaultOSName, SettingName) == 0)
+        {
+            DefaultOS = i;
+            DefaultOSName = NULL; // We have found the first one, don't search for others.
+        }
+
         /*
          * Determine whether this is a legacy operating system entry of the form:
          *
@@ -174,6 +159,7 @@ InitOperatingSystemList(
          */
 
         /* Try to open the operating system section in the .ini file */
+        SectionId = 0;
         HadSection = IniOpenSection(SettingName, &SectionId);
         if (HadSection)
         {
@@ -192,7 +178,7 @@ InitOperatingSystemList(
         {
 #ifdef _M_IX86
             ULONG FileId;
-            if (ArcOpen((PSTR)SettingName, OpenReadOnly, &FileId) == ESUCCESS)
+            if (ArcOpen(SettingName, OpenReadOnly, &FileId) == ESUCCESS)
             {
                 ArcClose(FileId);
                 strcpy(BootType, "BootSector");
@@ -236,7 +222,7 @@ InitOperatingSystemList(
             /* Add the section */
             if (!IniAddSection(SettingName, &SectionId))
             {
-                ERR("Could not convert legacy OS entry! Continuing...\n");
+                ERR("Could not convert legacy OS entry %lu, skipping.\n", i);
                 continue;
             }
 
@@ -245,7 +231,7 @@ InitOperatingSystemList(
             {
                 if (!IniAddSettingValueToSection(SectionId, "BootSectorFile", TempBuffer))
                 {
-                    ERR("Could not convert legacy OS entry! Continuing...\n");
+                    ERR("Could not convert legacy OS entry %lu, skipping.\n", i);
                     continue;
                 }
             }
@@ -253,7 +239,7 @@ InitOperatingSystemList(
             {
                 if (!IniAddSettingValueToSection(SectionId, "SystemPath", TempBuffer))
                 {
-                    ERR("Could not convert legacy OS entry! Continuing...\n");
+                    ERR("Could not convert legacy OS entry %lu, skipping.\n", i);
                     continue;
                 }
             }
@@ -265,7 +251,7 @@ InitOperatingSystemList(
             /* Add the OS options */
             if (OsLoadOptions && !IniAddSettingValueToSection(SectionId, "Options", OsLoadOptions))
             {
-                ERR("Could not convert legacy OS entry! Continuing...\n");
+                ERR("Could not convert legacy OS entry %lu, skipping.\n", i);
                 continue;
             }
         }
@@ -296,14 +282,15 @@ InitOperatingSystemList(
                 ERR("Could not modify the options for OS '%s', ignoring.\n", SettingName);
         }
 
-        /* Copy the OS section name and identifier */
-        Items[i].SectionName = CopyString(SettingName);
+        /* Copy the OS section ID and its identifier */
+        Items[i].SectionId = SectionId;
         Items[i].LoadIdentifier = CopyString(TitleStart);
-        // TRACE("We did Items[%lu]: SectionName = '%s', LoadIdentifier = '%s'\n", i, Items[i].SectionName, Items[i].LoadIdentifier);
+        // TRACE("We did Items[%lu]: SectionName = '%s' (SectionId = 0x%p), LoadIdentifier = '%s'\n",
+              // i, SettingName, Items[i].SectionId, Items[i].LoadIdentifier);
     }
 
     /* Return success */
     *OperatingSystemCount = Count;
-    *DefaultOperatingSystem = GetDefaultOperatingSystem(Items, Count);
+    *DefaultOperatingSystem = DefaultOS;
     return Items;
 }

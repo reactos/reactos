@@ -22,7 +22,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
 /*
@@ -80,7 +79,6 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONGLONG SectorOffset = 0;
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
-    CHAR FileName[1];
 
     if (DiskReadBufferSize == 0)
     {
@@ -89,7 +87,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         return ENOMEM;
     }
 
-    if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
+    if (!DissectArcPath(Path, NULL, &DriveNumber, &DrivePartition))
         return EINVAL;
 
     if (DrivePartition == 0xff)

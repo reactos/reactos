@@ -286,7 +286,7 @@ WinLdrLoadImage(IN PCHAR FileName,
     TRACE("WinLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
 
     /* Open the image file */
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
+    Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         WARN("ArcOpen(FileName: '%s') failed. Status: %u\n", FileName, Status);
