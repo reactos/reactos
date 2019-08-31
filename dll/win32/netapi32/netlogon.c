@@ -643,9 +643,141 @@ DsEnumerateDomainTrustsA(
     _Out_ PDS_DOMAIN_TRUSTSA *Domains,
     _Out_ PULONG DomainCount)
 {
-    FIXME("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
+    PWSTR pServerNameW = NULL;
+    PDS_DOMAIN_TRUSTSW pDomainsW = NULL;
+    PDS_DOMAIN_TRUSTSA pDomainsA = NULL;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    PSTR Ptr;
+    ULONG i, BufferSize, SidLength;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
           debugstr_a(ServerName), Flags, Domains, DomainCount);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    status = DsEnumerateDomainTrustsW(pServerNameW,
+                                      Flags,
+                                      &pDomainsW,
+                                      DomainCount);
+    if (status != NERR_Success)
+        goto done;
+
+    BufferSize = *DomainCount * sizeof(DS_DOMAIN_TRUSTSA);
+    for (i = 0; i < *DomainCount; i++)
+    {
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainsW[i].NetbiosDomainName);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+        if (pDomainsW[i].DnsDomainName != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pDomainsW[i].DnsDomainName);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+
+        BufferSize += RtlLengthSid(pDomainsW[i].DomainSid);
+    }
+
+    /* Allocate the ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pDomainsA);
+    if (status != NERR_Success)
+        goto done;
+
+    Ptr = (PSTR)((ULONG_PTR)pDomainsA + *DomainCount * sizeof(DS_DOMAIN_TRUSTSA));
+    for (i = 0; i < *DomainCount; i++)
+    {
+        pDomainsA[i].NetbiosDomainName = Ptr;
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainsW[i].NetbiosDomainName);
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+        BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+        if (pDomainsW[i].DnsDomainName != NULL)
+        {
+            pDomainsA[i].DnsDomainName = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pDomainsW[i].DnsDomainName);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+
+        pDomainsA[i].Flags = pDomainsW[i].Flags;
+        pDomainsA[i].ParentIndex = pDomainsW[i].ParentIndex;
+        pDomainsA[i].TrustType = pDomainsW[i].TrustType;
+        pDomainsA[i].TrustAttributes = pDomainsW[i].TrustAttributes;
+
+        /* DomainSid */
+        pDomainsA[i].DomainSid = (PSID)Ptr;
+        SidLength = RtlLengthSid(pDomainsW[i].DomainSid);
+        Status = RtlCopySid(SidLength,
+                            (PSID)Ptr,
+                            pDomainsW[i].DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + SidLength);
+        BufferSize -= SidLength;
+
+        CopyMemory(&pDomainsA[i].DomainGuid,
+                   &pDomainsW[i].DomainGuid,
+                   sizeof(GUID));
+    }
+
+    *Domains = pDomainsA;
+    pDomainsA = NULL;
+
+done:
+    if (pDomainsA != NULL)
+        NetApiBufferFree(pDomainsA);
+
+    if (pDomainsW != NULL)
+        NetApiBufferFree(pDomainsW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
