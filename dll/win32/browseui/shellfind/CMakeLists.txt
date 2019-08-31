@@ -20,3 +20,4 @@ if(NOT MSVC)
 endif()
 
 add_pch(shellfind shellfind.h SOURCE)
+add_dependencies(shellfind psdk)
