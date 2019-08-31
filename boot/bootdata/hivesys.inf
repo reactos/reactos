@@ -2266,9 +2266,6 @@ THEMES_SERVICE_DESCRIPTION="Themes support"
 WINMGMT_SERVICE="ReactOS Management Infrastructure"
 WINMGMT_SERVICE_DESCRIPTION="Provides interface to system management information."
 
-WUAUSERV_SERVICE="Automatic Updates"
-WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
-
 WLANSVC_SERVICE="WLAN Service"
 WLANSVC_SERVICE_DESCRIPTION="WLAN Service"
 
@@ -2277,6 +2274,9 @@ W32TIME_SERVICE_DESCRIPTION="ReactOS Time Service"
 
 WORKSTATION_SERVICE="Workstation"
 WORKSTATION_SERVICE_DESCRIPTION="Responsible for creating and maintaining network connections to servers."
+
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
 ; Keyboard layouts
 ALBANIAN = "Albanian"
@@ -2423,6 +2423,9 @@ WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
 WORKSTATION_SERVICE="Stacja robocza"
 WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
 
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+
 ; Keyboard layouts
 ALBANIAN = "Albański"
 ARABIC_101 = "Arabski (101)"
@@ -2567,6 +2570,9 @@ WLANSVC_SERVICE_DESCRIPTION="Serviciu pentru rețele locale fără fir."
 
 WORKSTATION_SERVICE="Stație de lucru"
 WORKSTATION_SERVICE_DESCRIPTION="Serviciu responsabil pentru crearea și menținerea conexiunilor la servere în rețea."
+
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
 ; Keyboard layouts
 ALBANIAN = "Albaneză"
@@ -2713,5 +2719,7 @@ WLANSVC_SERVICE_DESCRIPTION="Обеспечивает поддержку бес�
 WORKSTATION_SERVICE="Рабочая станция"
 WORKSTATION_SERVICE_DESCRIPTION="Обеспечивает поддержку сетевых подключений и связь."
 
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
 ; EOF
