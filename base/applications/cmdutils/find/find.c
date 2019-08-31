@@ -337,7 +337,7 @@ int wmain(int argc, WCHAR* argv[])
     }
     else
     {
-        FindString(stdin, NULL, argv[iSearchedStringIndex]);
+        iReturnValue = FindString(stdin, NULL, argv[iSearchedStringIndex]);
     }
 
     return iReturnValue;
