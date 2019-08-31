@@ -256,6 +256,7 @@ ScmCreateDefaultServiceSD(
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
+DWORD SetSecurityServicesEvent(VOID);
 VOID ScmLogEvent(DWORD dwEventId,
                  WORD wType,
                  WORD wStrings,
