@@ -38,7 +38,10 @@
 #include "debug.h"           /* assert, DEBUGLOG */
 #include "error_private.h"   /* ERROR */
 #include "hist.h"
+#include <ntifs.h>
+#include <ntddk.h>
 
+#define HIST_ALLOC_TAG 0x54534948 // "HIST"
 
 /* --- Error management --- */
 unsigned HIST_isError(size_t code) { return ERR_isError(code); }
@@ -171,8 +174,17 @@ size_t HIST_countFast_wksp(unsigned* count, unsigned* maxSymbolValuePtr,
 size_t HIST_countFast(unsigned* count, unsigned* maxSymbolValuePtr,
                      const void* source, size_t sourceSize)
 {
-    unsigned tmpCounters[HIST_WKSP_SIZE_U32];
-    return HIST_countFast_wksp(count, maxSymbolValuePtr, source, sourceSize, tmpCounters);
+    unsigned* tmpCounters = ExAllocatePoolWithTag(NonPagedPool, sizeof(unsigned) * HIST_WKSP_SIZE_U32, HIST_ALLOC_TAG);
+    size_t ret;
+
+    if (!tmpCounters)
+        return 0;
+
+    ret = HIST_countFast_wksp(count, maxSymbolValuePtr, source, sourceSize, tmpCounters);
+
+    ExFreePool(tmpCounters);
+
+    return ret;
 }
 
 /* HIST_count_wksp() :

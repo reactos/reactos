@@ -163,10 +163,6 @@ HUF_PUBLIC_API size_t HUF_compress4X_wksp (void* dst, size_t dstCapacity,
 /* static allocation of HUF's DTable */
 typedef U32 HUF_DTable;
 #define HUF_DTABLE_SIZE(maxTableLog)   (1 + (1<<(maxTableLog)))
-#define HUF_CREATE_STATIC_DTABLEX1(DTable, maxTableLog) \
-        HUF_DTable DTable[HUF_DTABLE_SIZE((maxTableLog)-1)] = { ((U32)((maxTableLog)-1) * 0x01000001) }
-#define HUF_CREATE_STATIC_DTABLEX2(DTable, maxTableLog) \
-        HUF_DTable DTable[HUF_DTABLE_SIZE(maxTableLog)] = { ((U32)(maxTableLog) * 0x01000001) }
 
 
 /* ****************************************

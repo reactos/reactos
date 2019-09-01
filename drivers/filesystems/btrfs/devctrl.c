@@ -52,7 +52,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
     btrfs_filesystem* bfs = NULL;
     ULONG itemsize;
 
-    ExAcquireResourceSharedLite(&global_loading_lock, TRUE);
+    ExAcquireResourceSharedLite(&global_loading_lock, true);
 
     if (IsListEmpty(&VcbList)) {
         if (length < sizeof(btrfs_filesystem)) {
@@ -73,7 +73,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
 
         if (bfs) {
             bfs->next_entry = itemsize;
-            bfs = (btrfs_filesystem*)((UINT8*)bfs + itemsize);
+            bfs = (btrfs_filesystem*)((uint8_t*)bfs + itemsize);
         } else
             bfs = data;
 
@@ -88,9 +88,9 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
         bfs->next_entry = 0;
         RtlCopyMemory(&bfs->uuid, &Vcb->superblock.uuid, sizeof(BTRFS_UUID));
 
-        ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+        ExAcquireResourceSharedLite(&Vcb->tree_lock, true);
 
-        bfs->num_devices = (UINT32)Vcb->superblock.num_devices;
+        bfs->num_devices = (uint32_t)Vcb->superblock.num_devices;
 
         bfd = NULL;
 
@@ -100,7 +100,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
             MOUNTDEV_NAME mdn;
 
             if (bfd)
-                bfd = (btrfs_filesystem_device*)((UINT8*)bfd + offsetof(btrfs_filesystem_device, name[0]) + bfd->name_length);
+                bfd = (btrfs_filesystem_device*)((uint8_t*)bfd + offsetof(btrfs_filesystem_device, name[0]) + bfd->name_length);
             else
                 bfd = &bfs->device;
 
@@ -116,7 +116,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
             RtlCopyMemory(&bfd->uuid, &dev->devitem.device_uuid, sizeof(BTRFS_UUID));
 
             if (dev->devobj) {
-                Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), TRUE, NULL);
+                Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), true, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
                     ExReleaseResourceLite(&Vcb->tree_lock);
                     ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
@@ -129,7 +129,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
                     goto end;
                 }
 
-                Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &bfd->name_length, (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength, TRUE, NULL);
+                Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &bfd->name_length, (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength, true, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
                     ExReleaseResourceLite(&Vcb->tree_lock);
                     ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
@@ -139,7 +139,7 @@ static NTSTATUS query_filesystems(void* data, ULONG length) {
                 itemsize += bfd->name_length;
                 length -= bfd->name_length;
             } else {
-                bfd->missing = TRUE;
+                bfd->missing = true;
                 bfd->name_length = 0;
             }
 
@@ -195,7 +195,7 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
     }
 
     if (RtlCompareMemory(guid, &GUID_DEVINTERFACE_DISK, sizeof(GUID)) == sizeof(GUID)) {
-        Status = dev_ioctl(DeviceObject, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, TRUE, NULL);
+        Status = dev_ioctl(DeviceObject, IOCTL_DISK_UPDATE_PROPERTIES, NULL, 0, NULL, 0, true, NULL);
         if (!NT_SUCCESS(Status))
             WARN("IOCTL_DISK_UPDATE_PROPERTIES returned %08x\n", Status);
     }
@@ -236,11 +236,11 @@ static NTSTATUS control_ioctl(PIRP Irp) {
 
 _Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS NTAPI drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS __stdcall drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     device_extension* Vcb = DeviceObject->DeviceExtension;
-    BOOL top_level;
+    bool top_level;
 
     FsRtlEnterFileSystem();
 

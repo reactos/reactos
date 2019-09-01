@@ -19,7 +19,7 @@
 
 #define SECTOR_BLOCK 16
 
-NTSTATUS add_calc_job(device_extension* Vcb, UINT8* data, UINT32 sectors, UINT32* csum, calc_job** pcj) {
+NTSTATUS add_calc_job(device_extension* Vcb, uint8_t* data, uint32_t sectors, uint32_t* csum, calc_job** pcj) {
     calc_job* cj;
 
     cj = ExAllocatePoolWithTag(NonPagedPool, sizeof(calc_job), ALLOC_TAG);
@@ -34,13 +34,13 @@ NTSTATUS add_calc_job(device_extension* Vcb, UINT8* data, UINT32 sectors, UINT32
     cj->pos = 0;
     cj->done = 0;
     cj->refcount = 1;
-    KeInitializeEvent(&cj->event, NotificationEvent, FALSE);
+    KeInitializeEvent(&cj->event, NotificationEvent, false);
 
-    ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, TRUE);
+    ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, true);
 
     InsertTailList(&Vcb->calcthreads.job_list, &cj->list_entry);
 
-    KeSetEvent(&Vcb->calcthreads.event, 0, FALSE);
+    KeSetEvent(&Vcb->calcthreads.event, 0, false);
     KeClearEvent(&Vcb->calcthreads.event);
 
     ExReleaseResourceLite(&Vcb->calcthreads.lock);
@@ -57,16 +57,16 @@ void free_calc_job(calc_job* cj) {
         ExFreePool(cj);
 }
 
-static BOOL do_calc(device_extension* Vcb, calc_job* cj) {
+static bool do_calc(device_extension* Vcb, calc_job* cj) {
     LONG pos, done;
-    UINT32* csum;
-    UINT8* data;
+    uint32_t* csum;
+    uint8_t* data;
     ULONG blocksize, i;
 
     pos = InterlockedIncrement(&cj->pos) - 1;
 
-    if ((UINT32)pos * SECTOR_BLOCK >= cj->sectors)
-        return FALSE;
+    if ((uint32_t)pos * SECTOR_BLOCK >= cj->sectors)
+        return false;
 
     csum = &cj->csum[pos * SECTOR_BLOCK];
     data = cj->data + (pos * SECTOR_BLOCK * Vcb->superblock.sector_size);
@@ -80,36 +80,32 @@ static BOOL do_calc(device_extension* Vcb, calc_job* cj) {
 
     done = InterlockedIncrement(&cj->done);
 
-    if ((UINT32)done * SECTOR_BLOCK >= cj->sectors) {
-        ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, TRUE);
+    if ((uint32_t)done * SECTOR_BLOCK >= cj->sectors) {
+        ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, true);
         RemoveEntryList(&cj->list_entry);
         ExReleaseResourceLite(&Vcb->calcthreads.lock);
 
-        KeSetEvent(&cj->event, 0, FALSE);
+        KeSetEvent(&cj->event, 0, false);
     }
 
-    return TRUE;
+    return true;
 }
 
 _Function_class_(KSTART_ROUTINE)
-#ifdef __REACTOS__
-void NTAPI calc_thread(void* context) {
-#else
-void calc_thread(void* context) {
-#endif
+void __stdcall calc_thread(void* context) {
     drv_calc_thread* thread = context;
     device_extension* Vcb = thread->DeviceObject->DeviceExtension;
 
     ObReferenceObject(thread->DeviceObject);
 
-    while (TRUE) {
-        KeWaitForSingleObject(&Vcb->calcthreads.event, Executive, KernelMode, FALSE, NULL);
+    while (true) {
+        KeWaitForSingleObject(&Vcb->calcthreads.event, Executive, KernelMode, false, NULL);
 
-        while (TRUE) {
+        while (true) {
             calc_job* cj;
-            BOOL b;
+            bool b;
 
-            ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, TRUE);
+            ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, true);
 
             if (IsListEmpty(&Vcb->calcthreads.job_list)) {
                 ExReleaseResourceLite(&Vcb->calcthreads.lock);
@@ -135,7 +131,7 @@ void calc_thread(void* context) {
 
     ObDereferenceObject(thread->DeviceObject);
 
-    KeSetEvent(&thread->finished, 0, FALSE);
+    KeSetEvent(&thread->finished, 0, false);
 
     PsTerminateSystemThread(STATUS_SUCCESS);
 }

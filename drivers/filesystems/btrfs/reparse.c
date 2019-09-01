@@ -17,6 +17,8 @@
 
 #include "btrfs_drv.h"
 
+extern tFsRtlValidateReparsePointBuffer fFsRtlValidateReparsePointBuffer;
+
 NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen) {
     USHORT subnamelen, printnamelen, i;
     ULONG stringlen;
@@ -31,12 +33,12 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
     if (!ccb)
         return STATUS_INVALID_PARAMETER;
 
-    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
-    ExAcquireResourceSharedLite(fcb->Header.Resource, TRUE);
+    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
+    ExAcquireResourceSharedLite(fcb->Header.Resource, true);
 
     if (fcb->type == BTRFS_TYPE_SYMLINK) {
         if (ccb->lxss) {
-            reqlen = offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + sizeof(UINT32);
+            reqlen = offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + sizeof(uint32_t);
 
             if (buflen < reqlen) {
                 Status = STATUS_BUFFER_OVERFLOW;
@@ -44,10 +46,10 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
             }
 
             rdb->ReparseTag = IO_REPARSE_TAG_LXSS_SYMLINK;
-            rdb->ReparseDataLength = offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + sizeof(UINT32);
+            rdb->ReparseDataLength = offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + sizeof(uint32_t);
             rdb->Reserved = 0;
 
-            *((UINT32*)rdb->GenericReparseBuffer.DataBuffer) = 1;
+            *((uint32_t*)rdb->GenericReparseBuffer.DataBuffer) = 1;
 
             *retlen = reqlen;
         } else {
@@ -66,7 +68,7 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
             }
 
             TRACE("data = %p, size = %x\n", data, fcb->inode_item.st_size);
-            Status = read_file(fcb, (UINT8*)data, 0, fcb->inode_item.st_size, NULL, NULL);
+            Status = read_file(fcb, (uint8_t*)data, 0, fcb->inode_item.st_size, NULL, NULL);
 
             if (!NT_SUCCESS(Status)) {
                 ERR("read_file returned %08x\n", Status);
@@ -74,15 +76,15 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
                 goto end;
             }
 
-            Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, data, (ULONG)fcb->inode_item.st_size);
+            Status = utf8_to_utf16(NULL, 0, &stringlen, data, (ULONG)fcb->inode_item.st_size);
             if (!NT_SUCCESS(Status)) {
-                ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
+                ERR("utf8_to_utf16 1 returned %08x\n", Status);
                 ExFreePool(data);
                 goto end;
             }
 
-            subnamelen = (UINT16)stringlen;
-            printnamelen = (UINT16)stringlen;
+            subnamelen = (uint16_t)stringlen;
+            printnamelen = (uint16_t)stringlen;
 
             reqlen = offsetof(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) + subnamelen + printnamelen;
 
@@ -108,11 +110,11 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
             rdb->SymbolicLinkReparseBuffer.PrintNameLength = printnamelen;
             rdb->SymbolicLinkReparseBuffer.Flags = SYMLINK_FLAG_RELATIVE;
 
-            Status = RtlUTF8ToUnicodeN(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)],
+            Status = utf8_to_utf16(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)],
                                        stringlen, &stringlen, data, (ULONG)fcb->inode_item.st_size);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("RtlUTF8ToUnicodeN 2 returned %08x\n", Status);
+                ERR("utf8_to_utf16 2 returned %08x\n", Status);
                 ExFreePool(data);
                 goto end;
             }
@@ -169,7 +171,7 @@ end:
     return Status;
 }
 
-static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, BOOL write, LIST_ENTRY* rollback) {
+static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, bool write, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     ULONG minlen;
     ULONG tlength;
@@ -211,9 +213,9 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
             return Status;
         }
 
-        Status = RtlUnicodeToUTF8N(NULL, 0, (PULONG)&target.Length, subname.Buffer, subname.Length);
+        Status = utf16_to_utf8(NULL, 0, (PULONG)&target.Length, subname.Buffer, subname.Length);
         if (!NT_SUCCESS(Status)) {
-            ERR("RtlUnicodeToUTF8N 1 failed with error %08x\n", Status);
+            ERR("utf16_to_utf8 1 failed with error %08x\n", Status);
             return Status;
         }
 
@@ -224,9 +226,9 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        Status = RtlUnicodeToUTF8N(target.Buffer, target.Length, (PULONG)&target.Length, subname.Buffer, subname.Length);
+        Status = utf16_to_utf8(target.Buffer, target.Length, (PULONG)&target.Length, subname.Buffer, subname.Length);
         if (!NT_SUCCESS(Status)) {
-            ERR("RtlUnicodeToUTF8N 2 failed with error %08x\n", Status);
+            ERR("utf16_to_utf8 2 failed with error %08x\n", Status);
             ExFreePool(target.Buffer);
             return Status;
         }
@@ -238,8 +240,8 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
 
         offset.QuadPart = 0;
         tlength = target.Length;
-        Status = write_file2(fcb->Vcb, Irp, offset, target.Buffer, &tlength, FALSE, TRUE,
-                             TRUE, FALSE, FALSE, rollback);
+        Status = write_file2(fcb->Vcb, Irp, offset, target.Buffer, &tlength, false, true,
+                             true, false, false, rollback);
         ExFreePool(target.Buffer);
     } else
         Status = STATUS_SUCCESS;
@@ -259,7 +261,7 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
     fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
     fcb->subvol->root_item.ctime = now;
 
-    fcb->inode_item_changed = TRUE;
+    fcb->inode_item_changed = true;
     mark_fcb_dirty(fcb);
 
     if (fileref)
@@ -286,7 +288,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
         return STATUS_INVALID_BUFFER_SIZE;
     }
 
-    Status = FsRtlValidateReparsePointBuffer(buflen, rdb);
+    Status = fFsRtlValidateReparsePointBuffer(buflen, rdb);
     if (!NT_SUCCESS(Status)) {
         ERR("FsRtlValidateReparsePointBuffer returned %08x\n", Status);
         return Status;
@@ -310,7 +312,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
                 ERR("out of memory\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-            buf.Length = buf.MaximumLength = (UINT16)buflen;
+            buf.Length = buf.MaximumLength = (uint16_t)buflen;
 
             if (fcb->reparse_xattr.Buffer)
                 ExFreePool(fcb->reparse_xattr.Buffer);
@@ -318,7 +320,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
             fcb->reparse_xattr = buf;
             RtlCopyMemory(buf.Buffer, rdb, buflen);
 
-            fcb->reparse_xattr_changed = TRUE;
+            fcb->reparse_xattr_changed = true;
 
             Status = STATUS_SUCCESS;
         } else { // otherwise, store as file data
@@ -330,7 +332,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
 
             offset.QuadPart = 0;
 
-            Status = write_file2(fcb->Vcb, Irp, offset, rdb, &buflen, FALSE, TRUE, TRUE, FALSE, FALSE, rollback);
+            Status = write_file2(fcb->Vcb, Irp, offset, rdb, &buflen, false, true, true, false, false, rollback);
             if (!NT_SUCCESS(Status)) {
                 ERR("write_file2 returned %08x\n", Status);
                 return Status;
@@ -350,12 +352,12 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
             fcb->inode_item.st_mtime = now;
 
         fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
-        fcb->atts_changed = TRUE;
+        fcb->atts_changed = true;
 
         fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
         fcb->subvol->root_item.ctime = now;
 
-        fcb->inode_item_changed = TRUE;
+        fcb->inode_item_changed = true;
         mark_fcb_dirty(fcb);
     }
 
@@ -414,8 +416,8 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     TRACE("%S\n", file_desc(FileObject));
 
-    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
-    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
+    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
 
     Status = set_reparse_point2(fcb, rdb, buflen, ccb, fileref, Irp, &rollback);
     if (!NT_SUCCESS(Status)) {
@@ -483,8 +485,8 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         return STATUS_INVALID_PARAMETER;
     }
 
-    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
-    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
+    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
 
     TRACE("%S\n", file_desc(FileObject));
 
@@ -539,7 +541,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
         mark_fileref_dirty(fileref);
 
-        fileref->fcb->inode_item_changed = TRUE;
+        fileref->fcb->inode_item_changed = true;
         mark_fcb_dirty(fileref->fcb);
 
         fileref->fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
@@ -557,7 +559,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         }
 
         fcb->atts &= ~FILE_ATTRIBUTE_REPARSE_POINT;
-        fcb->atts_changed = TRUE;
+        fcb->atts_changed = true;
 
         KeQuerySystemTime(&time);
         win_time_to_unix(time, &now);
@@ -571,7 +573,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         if (!ccb->user_set_write_time)
             fcb->inode_item.st_mtime = now;
 
-        fcb->inode_item_changed = TRUE;
+        fcb->inode_item_changed = true;
         mark_fcb_dirty(fcb);
 
         fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
@@ -583,14 +585,14 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         // FIXME - do we need to check that the reparse tags match?
 
         fcb->atts &= ~FILE_ATTRIBUTE_REPARSE_POINT;
-        fcb->atts_changed = TRUE;
+        fcb->atts_changed = true;
 
         if (fcb->reparse_xattr.Buffer) {
             ExFreePool(fcb->reparse_xattr.Buffer);
             fcb->reparse_xattr.Buffer = NULL;
         }
 
-        fcb->reparse_xattr_changed = TRUE;
+        fcb->reparse_xattr_changed = true;
 
         KeQuerySystemTime(&time);
         win_time_to_unix(time, &now);
@@ -604,7 +606,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         if (!ccb->user_set_write_time)
             fcb->inode_item.st_mtime = now;
 
-        fcb->inode_item_changed = TRUE;
+        fcb->inode_item_changed = true;
         mark_fcb_dirty(fcb);
 
         fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;

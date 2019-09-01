@@ -194,8 +194,17 @@ size_t FSE_buildCTable_wksp(FSE_CTable* ct,
 
 size_t FSE_buildCTable(FSE_CTable* ct, const short* normalizedCounter, unsigned maxSymbolValue, unsigned tableLog)
 {
-    FSE_FUNCTION_TYPE tableSymbol[FSE_MAX_TABLESIZE];   /* memset() is not necessary, even if static analyzer complain about it */
-    return FSE_buildCTable_wksp(ct, normalizedCounter, maxSymbolValue, tableLog, tableSymbol, sizeof(tableSymbol));
+    FSE_FUNCTION_TYPE* tableSymbol = ExAllocatePoolWithTag(NonPagedPool, sizeof(FSE_FUNCTION_TYPE) * FSE_MAX_TABLESIZE, FSEC_ALLOC_TAG);
+    size_t ret;
+
+    if (!tableSymbol)
+        return 0;
+
+    ret = FSE_buildCTable_wksp(ct, normalizedCounter, maxSymbolValue, tableLog, tableSymbol, sizeof(FSE_FUNCTION_TYPE) * FSE_MAX_TABLESIZE);
+
+    ExFreePool(tableSymbol);
+
+    return ret;
 }
 
 
@@ -709,10 +718,24 @@ typedef struct {
 
 size_t FSE_compress2 (void* dst, size_t dstCapacity, const void* src, size_t srcSize, unsigned maxSymbolValue, unsigned tableLog)
 {
-    fseWkspMax_t scratchBuffer;
-    DEBUG_STATIC_ASSERT(sizeof(scratchBuffer) >= FSE_WKSP_SIZE_U32(FSE_MAX_TABLELOG, FSE_MAX_SYMBOL_VALUE));   /* compilation failures here means scratchBuffer is not large enough */
-    if (tableLog > FSE_MAX_TABLELOG) return ERROR(tableLog_tooLarge);
-    return FSE_compress_wksp(dst, dstCapacity, src, srcSize, maxSymbolValue, tableLog, &scratchBuffer, sizeof(scratchBuffer));
+    fseWkspMax_t* scratchBuffer;
+    size_t ret;
+
+    DEBUG_STATIC_ASSERT(sizeof(fseWkspMax_t) >= FSE_WKSP_SIZE_U32(FSE_MAX_TABLELOG, FSE_MAX_SYMBOL_VALUE));   /* compilation failures here means scratchBuffer is not large enough */
+
+    if (tableLog > FSE_MAX_TABLELOG)
+        return ERROR(tableLog_tooLarge);
+
+    scratchBuffer = ExAllocatePoolWithTag(NonPagedPool, sizeof(fseWkspMax_t), FSEC_ALLOC_TAG);
+
+    if (!scratchBuffer)
+        return 0;
+
+    ret = FSE_compress_wksp(dst, dstCapacity, src, srcSize, maxSymbolValue, tableLog, scratchBuffer, sizeof(fseWkspMax_t));
+
+    ExFreePool(scratchBuffer);
+
+    return ret;
 }
 
 size_t FSE_compress (void* dst, size_t dstCapacity, const void* src, size_t srcSize)

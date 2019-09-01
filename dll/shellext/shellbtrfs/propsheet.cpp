@@ -111,11 +111,11 @@ void BtrfsPropSheet::do_search(const wstring& fn) {
                 if (fh != INVALID_HANDLE_VALUE) {
                     NTSTATUS Status;
                     IO_STATUS_BLOCK iosb;
-                    btrfs_inode_info2 bii2;
+                    btrfs_inode_info bii2;
 
                     memset(&bii2, 0, sizeof(bii2));
 
-                    Status = NtFsControlFile(fh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info2));
+                    Status = NtFsControlFile(fh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info));
 
                     if (NT_SUCCESS(Status)) {
                         sizes[0] += bii2.inline_length;
@@ -167,7 +167,7 @@ HRESULT BtrfsPropSheet::check_file(const wstring& fn, UINT i, UINT num_files, UI
     NTSTATUS Status;
     FILE_ACCESS_INFORMATION fai;
     BY_HANDLE_FILE_INFORMATION bhfi;
-    btrfs_inode_info2 bii2;
+    btrfs_inode_info bii2;
 
     h = CreateFileW(fn.c_str(), MAXIMUM_ALLOWED, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
                     OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
@@ -192,7 +192,7 @@ HRESULT BtrfsPropSheet::check_file(const wstring& fn, UINT i, UINT num_files, UI
 
     memset(&bii2, 0, sizeof(bii2));
 
-    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info2));
+    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info));
 
     if (NT_SUCCESS(Status) && !bii2.top) {
         LARGE_INTEGER filesize;
@@ -396,7 +396,7 @@ void BtrfsPropSheet::set_cmdline(const wstring& cmdline) {
     NTSTATUS Status;
     UINT sv = 0;
     BY_HANDLE_FILE_INFORMATION bhfi;
-    btrfs_inode_info2 bii2;
+    btrfs_inode_info bii2;
     FILE_ACCESS_INFORMATION fai;
 
     min_mode = 0;
@@ -430,7 +430,7 @@ void BtrfsPropSheet::set_cmdline(const wstring& cmdline) {
 
     memset(&bii2, 0, sizeof(bii2));
 
-    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info2));
+    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info));
 
     if (NT_SUCCESS(Status) && !bii2.top) {
         LARGE_INTEGER filesize;
@@ -583,7 +583,7 @@ void BtrfsPropSheet::apply_changes_file(HWND hDlg, const wstring& fn) {
     IO_STATUS_BLOCK iosb;
     NTSTATUS Status;
     btrfs_set_inode_info bsii;
-    btrfs_inode_info2 bii2;
+    btrfs_inode_info bii2;
     ULONG perms = FILE_TRAVERSE | FILE_READ_ATTRIBUTES;
 
     if (flags_changed || ro_changed)
@@ -603,7 +603,7 @@ void BtrfsPropSheet::apply_changes_file(HWND hDlg, const wstring& fn) {
 
     ZeroMemory(&bsii, sizeof(btrfs_set_inode_info));
 
-    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info2));
+    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii2, sizeof(btrfs_inode_info));
 
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);

@@ -542,7 +542,7 @@ void BtrfsContextMenu::reflink_copy(HWND hwnd, const WCHAR* fn, const WCHAR* dir
     wstring dirw, newpath;
     FILE_BASIC_INFO fbi;
     FILETIME atime, mtime;
-    btrfs_inode_info2 bii;
+    btrfs_inode_info bii;
     btrfs_set_inode_info bsii;
     ULONG bytesret;
     NTSTATUS Status;
@@ -575,7 +575,7 @@ void BtrfsContextMenu::reflink_copy(HWND hwnd, const WCHAR* fn, const WCHAR* dir
     if (source == INVALID_HANDLE_VALUE)
         throw last_error(GetLastError());
 
-    Status = NtFsControlFile(source, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii, sizeof(btrfs_inode_info2));
+    Status = NtFsControlFile(source, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii, sizeof(btrfs_inode_info));
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
 
@@ -1302,7 +1302,7 @@ static void reflink_copy2(const wstring& srcfn, const wstring& destdir, const ws
     win_handle source, dest;
     FILE_BASIC_INFO fbi;
     FILETIME atime, mtime;
-    btrfs_inode_info2 bii;
+    btrfs_inode_info bii;
     btrfs_set_inode_info bsii;
     ULONG bytesret;
     NTSTATUS Status;
@@ -1313,7 +1313,7 @@ static void reflink_copy2(const wstring& srcfn, const wstring& destdir, const ws
     if (source == INVALID_HANDLE_VALUE)
         throw last_error(GetLastError());
 
-    Status = NtFsControlFile(source, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii, sizeof(btrfs_inode_info2));
+    Status = NtFsControlFile(source, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_INODE_INFO, nullptr, 0, &bii, sizeof(btrfs_inode_info));
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
 

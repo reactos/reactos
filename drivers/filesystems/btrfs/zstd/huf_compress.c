@@ -53,6 +53,10 @@
 #define HUF_STATIC_LINKING_ONLY
 #include "huf.h"
 #include "error_private.h"
+#include <ntifs.h>
+#include <ntddk.h>
+
+#define HUFC_ALLOC_TAG 0x63465548 // "HUFc"
 
 
 /* **************************************************************
@@ -423,8 +427,17 @@ size_t HUF_buildCTable_wksp (HUF_CElt* tree, const U32* count, U32 maxSymbolValu
  */
 size_t HUF_buildCTable (HUF_CElt* tree, const U32* count, U32 maxSymbolValue, U32 maxNbBits)
 {
-    huffNodeTable nodeTable;
-    return HUF_buildCTable_wksp(tree, count, maxSymbolValue, maxNbBits, nodeTable, sizeof(nodeTable));
+    huffNodeTable* nodeTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(huffNodeTable), HUFC_ALLOC_TAG);
+    size_t ret;
+
+    if (!nodeTable)
+        return 0;
+
+    ret = HUF_buildCTable_wksp(tree, count, maxSymbolValue, maxNbBits, nodeTable, sizeof(huffNodeTable));
+
+    ExFreePool(nodeTable);
+
+    return ret;
 }
 
 static size_t HUF_estimateCompressedSize(HUF_CElt* CTable, const unsigned* count, unsigned maxSymbolValue)
@@ -749,8 +762,17 @@ size_t HUF_compress1X (void* dst, size_t dstSize,
                  const void* src, size_t srcSize,
                  unsigned maxSymbolValue, unsigned huffLog)
 {
-    unsigned workSpace[HUF_WORKSPACE_SIZE_U32];
-    return HUF_compress1X_wksp(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, workSpace, sizeof(workSpace));
+    unsigned* workSpace = ExAllocatePoolWithTag(NonPagedPool, sizeof(unsigned) * HUF_WORKSPACE_SIZE_U32, HUFC_ALLOC_TAG);
+    size_t ret;
+
+    if (!workSpace)
+        return 0;
+
+    ret = HUF_compress1X_wksp(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, workSpace, sizeof(unsigned) * HUF_WORKSPACE_SIZE_U32);
+
+    ExFreePool(workSpace);
+
+    return ret;
 }
 
 /* HUF_compress4X_repeat():
@@ -786,8 +808,17 @@ size_t HUF_compress2 (void* dst, size_t dstSize,
                 const void* src, size_t srcSize,
                 unsigned maxSymbolValue, unsigned huffLog)
 {
-    unsigned workSpace[HUF_WORKSPACE_SIZE_U32];
-    return HUF_compress4X_wksp(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, workSpace, sizeof(workSpace));
+    unsigned* workSpace = ExAllocatePoolWithTag(NonPagedPool, sizeof(unsigned) * HUF_WORKSPACE_SIZE_U32, HUFC_ALLOC_TAG);
+    size_t ret;
+
+    if (!workSpace)
+        return 0;
+
+    ret = HUF_compress4X_wksp(dst, dstSize, src, srcSize, maxSymbolValue, huffLog, workSpace, sizeof(unsigned) * HUF_WORKSPACE_SIZE_U32);
+
+    ExFreePool(workSpace);
+
+    return ret;
 }
 
 size_t HUF_compress (void* dst, size_t maxDstSize, const void* src, size_t srcSize)
