@@ -44,6 +44,9 @@ ZwQuerySystemInformation(
     OUT PULONG ResultLength
 );
 
+#define I2C_IO_BASE 0xC000
+#define NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
+
 typedef struct
 {
     PHYSICAL_ADDRESS PhysControlStart;
