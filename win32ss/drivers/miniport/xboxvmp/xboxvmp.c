@@ -16,9 +16,8 @@
 
 #include "xboxvmp.h"
 
-#define I2C_IO_BASE 0xc000
-
-#define CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
+#include <debug.h>
+#include <dpfilter.h>
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
@@ -65,7 +64,7 @@ XboxVmpFindAdapter(
     USHORT VendorId = 0x10DE; /* NVIDIA Corporation */
     USHORT DeviceId = 0x02A0; /* NV2A XGPU */
 
-    VideoPortDebugPrint(Trace, "XboxVmpFindAdapter\n");
+    TRACE_(IHVVIDEO, "XboxVmpFindAdapter\n");
 
     XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION)HwDeviceExtension;
 
@@ -98,7 +97,7 @@ XboxVmpInitialize(
     ULONG inIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
     ULONG Length;
 
-    VideoPortDebugPrint(Trace, "XboxVmpInitialize\n");
+    TRACE_(IHVVIDEO, "XboxVmpInitialize\n");
 
     XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION)HwDeviceExtension;
 
@@ -111,11 +110,11 @@ XboxVmpInitialize(
                            &inIoSpace,
                            &XboxVmpDeviceExtension->VirtControlStart) != NO_ERROR)
     {
-        VideoPortDebugPrint(Error, "Failed to map control memory\n");
+        ERR_(IHVVIDEO, "Failed to map control memory\n");
         return FALSE;
     }
 
-    VideoPortDebugPrint(Info, "Mapped 0x%x bytes of control mem at 0x%x to virt addr 0x%x\n",
+    INFO_(IHVVIDEO, "Mapped 0x%x bytes of control mem at 0x%x to virt addr 0x%x\n",
         XboxVmpDeviceExtension->ControlLength,
         XboxVmpDeviceExtension->PhysControlStart.u.LowPart,
         XboxVmpDeviceExtension->VirtControlStart);
@@ -143,7 +142,7 @@ XboxVmpStartIO(
     {
         case IOCTL_VIDEO_SET_CURRENT_MODE:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_SET_CURRENT_MODE\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_SET_CURRENT_MODE\n");
 
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
             {
@@ -160,7 +159,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_RESET_DEVICE:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_RESET_DEVICE\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_RESET_DEVICE\n");
 
             Result = XboxVmpResetDevice(
                 (PXBOXVMP_DEVICE_EXTENSION)HwDeviceExtension,
@@ -170,7 +169,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_MAP_VIDEO_MEMORY\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_MAP_VIDEO_MEMORY\n");
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
                 RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
@@ -189,7 +188,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_UNMAP_VIDEO_MEMORY\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_UNMAP_VIDEO_MEMORY\n");
 
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
             {
@@ -206,7 +205,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES\n");
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
             {
@@ -223,7 +222,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_QUERY_AVAIL_MODES:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_AVAIL_MODES\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_QUERY_AVAIL_MODES\n");
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
             {
@@ -240,7 +239,7 @@ XboxVmpStartIO(
 
         case IOCTL_VIDEO_QUERY_CURRENT_MODE:
         {
-            VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_CURRENT_MODE\n");
+            TRACE_(IHVVIDEO, "XboxVmpStartIO IOCTL_VIDEO_QUERY_CURRENT_MODE\n");
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
             {
@@ -257,7 +256,7 @@ XboxVmpStartIO(
 
         default:
         {
-            VideoPortDebugPrint(Warn, "XboxVmpStartIO 0x%x not implemented\n");
+            WARN_(IHVVIDEO, "XboxVmpStartIO 0x%x not implemented\n", RequestPacket->IoControlCode);
 
             RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
             return FALSE;
@@ -285,7 +284,7 @@ XboxVmpResetHw(
     ULONG Columns,
     ULONG Rows)
 {
-    VideoPortDebugPrint(Trace, "XboxVmpResetHw\n");
+    TRACE_(IHVVIDEO, "XboxVmpResetHw\n");
 
     if (!XboxVmpResetDevice((PXBOXVMP_DEVICE_EXTENSION)DeviceExtension, NULL))
     {
@@ -308,7 +307,7 @@ XboxVmpGetPowerState(
     ULONG HwId,
     PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
-    VideoPortDebugPrint(Error, "XboxVmpGetPowerState is not supported\n");
+    ERR_(IHVVIDEO, "XboxVmpGetPowerState is not supported\n");
 
     return ERROR_INVALID_FUNCTION;
 }
@@ -326,7 +325,7 @@ XboxVmpSetPowerState(
     ULONG HwId,
     PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
-    VideoPortDebugPrint(Error, "XboxVmpSetPowerState not supported\n");
+    ERR_(IHVVIDEO, "XboxVmpSetPowerState not supported\n");
 
     return ERROR_INVALID_FUNCTION;
 }
@@ -406,7 +405,7 @@ XboxVmpMapVideoMemory(
     }
     else
     {
-        VideoPortDebugPrint(Error, "ZwQueryBasicInformation failed, assuming 64MB total memory\n");
+        ERR_(IHVVIDEO, "ZwQueryBasicInformation failed, assuming 64MB total memory\n");
         FrameBuffer.u.LowPart = 60 * 1024 * 1024;
     }
 
@@ -425,9 +424,9 @@ XboxVmpMapVideoMemory(
     MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
 
     /* Tell the nVidia controller about the framebuffer */
-    *((PULONG)((char *)DeviceExtension->VirtControlStart + CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
+    *((PULONG)((char *)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
 
-    VideoPortDebugPrint(Info, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
+    INFO_(IHVVIDEO, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
         MapInformation->VideoRamLength, FrameBuffer.u.LowPart, MapInformation->VideoRamBase);
 
     return TRUE;
@@ -531,12 +530,12 @@ ReadfromSMBus(
 
         if ((b & 0x24) != 0)
         {
-            /* printf("I2CTransmitByteGetReturn error %x\n", b); */
+            ERR_(IHVVIDEO, "I2CTransmitByteGetReturn error %x\n", b);
         }
 
         if ((b & 0x10) == 0)
         {
-            /* printf("I2CTransmitByteGetReturn no complete, retry\n"); */
+            ERR_(IHVVIDEO, "I2CTransmitByteGetReturn no complete, retry\n");
         }
         else
         {
