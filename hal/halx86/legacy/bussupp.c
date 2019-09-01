@@ -1319,7 +1319,7 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
         }
 
         /* If we made it, we're done */
-        *Context = (ULONG_PTR)Handler;
+        *Context = (ULONG_PTR)&BusHandler->Handler;
         return TRUE;
     }
 
