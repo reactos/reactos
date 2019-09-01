@@ -56,12 +56,7 @@ CCFDATAStorage::~CCFDATAStorage()
 ULONG CCFDATAStorage::Create()
 {
     if ((FileHandle = tmpfile()) == NULL)
-    {
-        /* Workaround for breakage on some Windows system */
-        FileHandle = fopen(tmpnam(NULL) + 1, "wb");
-        if (FileHandle == NULL)
-            return CAB_STATUS_CANNOT_CREATE;
-    }
+        return CAB_STATUS_CANNOT_CREATE;
 
     return CAB_STATUS_SUCCESS;
 }
