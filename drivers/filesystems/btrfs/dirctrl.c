@@ -17,6 +17,7 @@
 
 #include "btrfs_drv.h"
 
+#ifndef __REACTOS__
 // not currently in mingw
 #ifndef _MSC_VER
 #define FileIdExtdDirectoryInformation (enum _FILE_INFORMATION_CLASS)60
@@ -58,6 +59,10 @@ typedef struct _FILE_ID_EXTD_BOTH_DIR_INFORMATION {
     WCHAR FileName[1];
 } FILE_ID_EXTD_BOTH_DIR_INFORMATION, *PFILE_ID_EXTD_BOTH_DIR_INFORMATION;
 
+#endif
+#else
+#define FileIdExtdDirectoryInformation (enum _FILE_INFORMATION_CLASS)60
+#define FileIdExtdBothDirectoryInformation (enum _FILE_INFORMATION_CLASS)63
 #endif
 
 enum DirEntryType {
@@ -516,6 +521,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
 #endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
         case FileIdExtdDirectoryInformation:
         {
             FILE_ID_EXTD_DIR_INFORMATION* fiedi = buf;
@@ -603,6 +609,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 
             return STATUS_SUCCESS;
         }
+#endif
 
 #ifndef _MSC_VER
 #pragma GCC diagnostic pop
