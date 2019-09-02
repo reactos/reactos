@@ -45,8 +45,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do dispositivo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Pesquise nestes locais", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
-    CONTROL "Escolha o driver manualmente", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
+    CONTROL "Pesquisar nestes locais", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
+    CONTROL "Escolher o controlador manualmente", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
     CONTROL "Pesquisar mídia removível", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
     CONTROL "Incluir este caminho", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
     PUSHBUTTON "Procurar", IDC_BROWSE, 248, 70, 50, 14

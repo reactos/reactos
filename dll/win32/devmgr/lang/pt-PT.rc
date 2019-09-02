@@ -162,37 +162,37 @@ END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "Controlador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Fornecedor do driver:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Fornecedor do controlador:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Data do driver:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Data do controlador:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Versão do driver:", -1, 37, 67, 60, 8, SS_NOPREFIX
+    LTEXT "Versão do controlador:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Signatário Digital:", -1, 37, 81, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON "&Detalhes do driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
-    LTEXT "Exibir detalhes sobre os arquivos de driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Actualizar Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Actualiza o driver dede dispositivo.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Repor Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "Se o dispositivo falhar após actualização,reverta para o driver instalado anteriormente.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Detalhes do controlador...", IDC_DRIVERDETAILS, 7, 106, 75, 15
+    LTEXT "Exibir detalhes sobre os arquivos de controlador.", -1, 91, 110, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Actualiza o controlador dede dispositivo.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Repor controlador", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "Se o dispositivo falhar após actualização,reverta para o controlador instalado anteriormente.", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "&Desinstalar", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "Para desinstalar o driver (Avançado).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    LTEXT "Para desinstalar o controlador (Avançado).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detalhes sobre os arquivos de driver"
+CAPTION "Detalhes sobre os arquivos do controlador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "&Arquivos de driver:", -1, 7, 36, 204, 8
+    LTEXT "&Arquivos de controlador:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
@@ -209,7 +209,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Detalhes"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -244,14 +244,14 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "Confirmar Remoção do dispositivo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    LTEXT "Aviso: Está prestes a desinstalar este dispositivo do seu sistema.", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 166, 100, 50, 14
 END
 
 
