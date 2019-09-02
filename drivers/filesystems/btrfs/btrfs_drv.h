@@ -144,11 +144,9 @@
 #define FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL 0x00020000
 #endif
 
-#ifndef _MSC_VER
 typedef struct _FILE_ID_128 {
     UCHAR Identifier[16];
 } FILE_ID_128, *PFILE_ID_128;
-#endif
 
 typedef struct _DUPLICATE_EXTENTS_DATA {
     HANDLE FileHandle;
@@ -1820,6 +1818,7 @@ typedef struct _PEB {
     PVOID Reserved7[1];
     ULONG SessionId;
 } PEB,*PPEB;
+#endif
 
 #ifdef _MSC_VER
 __kernel_entry
@@ -1830,5 +1829,4 @@ NTSTATUS NTAPI ZwQueryInformationProcess(
     IN ULONG ProcessInformationLength,
     OUT PULONG ReturnLength OPTIONAL
 );
-#endif
 #endif
