@@ -389,28 +389,22 @@ XboxVmpMapVideoMemory(
 {
     PHYSICAL_ADDRESS FrameBuffer;
     ULONG inIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
-    SYSTEM_BASIC_INFORMATION BasicInfo;
-    ULONG Length;
 
-    /* FIXME: this should probably be done differently, without native API */
     StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
-    FrameBuffer.u.HighPart = 0;
-    if (ZwQuerySystemInformation(SystemBasicInformation,
-                                 (PVOID)&BasicInfo,
-                                 sizeof(SYSTEM_BASIC_INFORMATION),
-                                 &Length) == NO_ERROR)
+    /* Reuse framebuffer that was set up by firmware */
+    FrameBuffer.QuadPart = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET));
+    if (FrameBuffer.QuadPart != 0x3C00000 && FrameBuffer.QuadPart != 0x7C00000)
     {
-        FrameBuffer.u.LowPart = BasicInfo.HighestPhysicalPageNumber * PAGE_SIZE;
+        /* Check framebuffer address (high 4 MB of either 64 or 128 MB RAM) */
+        WARN_(IHVVIDEO, "Non-standard framebuffer address 0x%p\n", FrameBuffer.QuadPart);
     }
-    else
-    {
-        ERR_(IHVVIDEO, "ZwQueryBasicInformation failed, assuming 64MB total memory\n");
-        FrameBuffer.u.LowPart = 60 * 1024 * 1024;
-    }
+    /* Verify that framebuffer address is page-aligned */
+    ASSERT(FrameBuffer.QuadPart % PAGE_SIZE == 0);
 
     FrameBuffer.QuadPart += DeviceExtension->PhysFrameBufferStart.QuadPart;
     MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
+    /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
     MapInformation->VideoRamLength = 4 * 1024 * 1024;
 
     VideoPortMapMemory(
@@ -424,7 +418,7 @@ XboxVmpMapVideoMemory(
     MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
 
     /* Tell the nVidia controller about the framebuffer */
-    *((PULONG)((char *)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
+    *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
 
     INFO_(IHVVIDEO, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
         MapInformation->VideoRamLength, FrameBuffer.u.LowPart, MapInformation->VideoRamBase);
@@ -475,112 +469,6 @@ XboxVmpQueryNumAvailModes(
     return TRUE;
 }
 
-static
-BOOLEAN
-ReadfromSMBus(
-    UCHAR Address,
-    UCHAR bRegister,
-    UCHAR Size,
-    ULONG *Data_to_smbus)
-{
-    int nRetriesToLive = 50;
-
-    while ((VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 0)) & 0x0800) != 0)
-    {
-        ; /* Franz's spin while bus busy with any master traffic */
-    }
-
-    while (nRetriesToLive-- != 0)
-    {
-        UCHAR b;
-        int temp;
-
-        VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
-        VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 8), bRegister);
-
-        temp = VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 0));
-        VideoPortWritePortUshort((PUSHORT) (I2C_IO_BASE + 0), temp); /* clear down all preexisting errors */
-
-        switch (Size)
-        {
-            case 4:
-            {
-                VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0d); /* DWORD modus ? */
-                break;
-            }
-
-            case 2:
-            {
-                VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0b); /* WORD modus */
-                break;
-            }
-
-            default:
-            {
-                VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0a); /* BYTE */
-            }
-        }
-
-        b = 0;
-
-        while ((b & 0x36) == 0)
-        {
-            b = VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 0));
-        }
-
-        if ((b & 0x24) != 0)
-        {
-            ERR_(IHVVIDEO, "I2CTransmitByteGetReturn error %x\n", b);
-        }
-
-        if ((b & 0x10) == 0)
-        {
-            ERR_(IHVVIDEO, "I2CTransmitByteGetReturn no complete, retry\n");
-        }
-        else
-        {
-            switch (Size)
-            {
-                case 4:
-                {
-                    VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 6));
-                    VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
-                    VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
-                    VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
-                    VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
-                    break;
-                }
-
-                case 2:
-                {
-                    *Data_to_smbus = VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 6));
-                    break;
-                }
-
-                default:
-                {
-                    *Data_to_smbus = VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 6));
-                }
-            }
-
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-
-static
-BOOLEAN
-I2CTransmitByteGetReturn(
-    UCHAR bPicAddressI2cFormat,
-    UCHAR bDataToWrite,
-    ULONG *Return)
-{
-    return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
-}
-
 /*
  * XboxVmpQueryAvailModes
  *
@@ -610,57 +498,58 @@ XboxVmpQueryCurrentMode(
     PVIDEO_MODE_INFORMATION VideoMode,
     PSTATUS_BLOCK StatusBlock)
 {
-	ULONG AvMode = 0;
+    ULONG AvMode = 0;
 
-	VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
-	VideoMode->ModeIndex = 0;
+    VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
+    VideoMode->ModeIndex = 0;
 
-	if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
-	{
-		if (AvMode == 1) /* HDTV */
-		{
-			VideoMode->VisScreenWidth = 720;
-		}
-		else
-		{
-			/* FIXME Other possible values of AvMode:
-			 * 0 - AV_SCART_RGB
-			 * 2 - AV_VGA_SOG
-			 * 4 - AV_SVIDEO
-			 * 6 - AV_COMPOSITE
-			 * 7 - AV_VGA
-			 * other AV_COMPOSITE
-			 */
-			VideoMode->VisScreenWidth = 640;
-		}
-	}
-	else
-	{
-		VideoMode->VisScreenWidth = 640;
-	}
+    /* FIXME: don't use SMBus, obtain current video resolution directly from NV2A */
+    if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
+    {
+        if (AvMode == 1) /* HDTV */
+        {
+            VideoMode->VisScreenWidth = 720;
+        }
+        else
+        {
+            /* FIXME Other possible values of AvMode:
+             * 0 - AV_SCART_RGB
+             * 2 - AV_VGA_SOG
+             * 4 - AV_SVIDEO
+             * 6 - AV_COMPOSITE
+             * 7 - AV_VGA
+             * other AV_COMPOSITE
+             */
+            VideoMode->VisScreenWidth = 640;
+        }
+    }
+    else
+    {
+        VideoMode->VisScreenWidth = 640;
+    }
 
-	VideoMode->VisScreenHeight = 480;
-	VideoMode->ScreenStride = VideoMode->VisScreenWidth * 4;
-	VideoMode->NumberOfPlanes = 1;
-	VideoMode->BitsPerPlane = 32;
-	VideoMode->Frequency = 1;
-	VideoMode->XMillimeter = 0; /* FIXME */
-	VideoMode->YMillimeter = 0; /* FIXME */
-	VideoMode->NumberRedBits = 8;
-	VideoMode->NumberGreenBits = 8;
-	VideoMode->NumberBlueBits = 8;
-	VideoMode->RedMask = 0xFF0000;
-	VideoMode->GreenMask = 0x00FF00;
-	VideoMode->BlueMask = 0x0000FF;
-	VideoMode->VideoMemoryBitmapWidth = VideoMode->VisScreenWidth;
-	VideoMode->VideoMemoryBitmapHeight = VideoMode->VisScreenHeight;
-	VideoMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
-		VIDEO_MODE_NO_OFF_SCREEN;
-	VideoMode->DriverSpecificAttributeFlags = 0;
+    VideoMode->VisScreenHeight = 480;
+    VideoMode->ScreenStride = VideoMode->VisScreenWidth * 4;
+    VideoMode->NumberOfPlanes = 1;
+    VideoMode->BitsPerPlane = 32;
+    VideoMode->Frequency = 1;
+    VideoMode->XMillimeter = 0; /* FIXME */
+    VideoMode->YMillimeter = 0; /* FIXME */
+    VideoMode->NumberRedBits = 8;
+    VideoMode->NumberGreenBits = 8;
+    VideoMode->NumberBlueBits = 8;
+    VideoMode->RedMask = 0xFF0000;
+    VideoMode->GreenMask = 0x00FF00;
+    VideoMode->BlueMask = 0x0000FF;
+    VideoMode->VideoMemoryBitmapWidth = VideoMode->VisScreenWidth;
+    VideoMode->VideoMemoryBitmapHeight = VideoMode->VisScreenHeight;
+    VideoMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
+        VIDEO_MODE_NO_OFF_SCREEN;
+    VideoMode->DriverSpecificAttributeFlags = 0;
 
-	StatusBlock->Information = sizeof(VIDEO_MODE_INFORMATION);
+    StatusBlock->Information = sizeof(VIDEO_MODE_INFORMATION);
 
-	return TRUE;
+    return TRUE;
 }
 
 /* EOF */

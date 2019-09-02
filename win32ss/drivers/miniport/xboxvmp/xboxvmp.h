@@ -11,6 +11,10 @@
 
 /* INCLUDES *******************************************************************/
 
+/*
+ * FIXME: specify headers properly in the triangle brackets and rearrange them
+ * in a way so it would be simpler to add NDK and other headers for debugging.
+ */
 #include "ntdef.h"
 #define PAGE_SIZE 4096
 #include "dderror.h"
@@ -18,34 +22,14 @@
 #include "miniport.h"
 #include "video.h"
 
-/* FIXME: NDK not compatible with miniport drivers */
-#define SystemBasicInformation 0
-typedef struct _SYSTEM_BASIC_INFORMATION
-{
-    ULONG Reserved;
-    ULONG TimerResolution;
-    ULONG PageSize;
-    ULONG NumberOfPhysicalPages;
-    ULONG LowestPhysicalPageNumber;
-    ULONG HighestPhysicalPageNumber;
-    ULONG AllocationGranularity;
-    ULONG MinimumUserModeAddress;
-    ULONG MaximumUserModeAddress;
-    KAFFINITY ActiveProcessorsAffinityMask;
-    CCHAR NumberOfProcessors;
-} SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
-
-LONG
-__stdcall
-ZwQuerySystemInformation(
-    IN ULONG SystemInformationClass,
-    OUT PVOID SystemInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
-);
-
 #define I2C_IO_BASE 0xC000
 #define NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
+
+BOOLEAN
+I2CTransmitByteGetReturn(
+    UCHAR bPicAddressI2cFormat,
+    UCHAR bDataToWrite,
+    ULONG *Return);
 
 typedef struct
 {
