@@ -23,7 +23,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 /* GLOBALS ********************************************************************/
@@ -199,8 +198,8 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (i == MAX_FDS)
         return EMFILE;
 
-    /* Skip leading backslash, if any */
-    if (*FileName == '\\')
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
         FileName++;
 
     /* Open the file */
@@ -263,47 +262,62 @@ VOID FileSystemError(PCSTR ErrorString)
     UiMessageBox(ErrorString);
 }
 
-ULONG FsOpenFile(PCSTR FileName)
+ARC_STATUS
+FsOpenFile(
+    IN PCSTR FileName,
+    IN PCSTR DefaultPath OPTIONAL,
+    IN OPENMODE OpenMode,
+    OUT PULONG FileId)
 {
+    NTSTATUS Status;
+    SIZE_T cchPathLen;
     CHAR FullPath[MAX_PATH] = "";
-    ULONG FileId;
-    ARC_STATUS Status;
 
-    //
-    // Print status message
-    //
-    TRACE("Opening file '%s'...\n", FileName);
-
-    //
-    // Check whether FileName is a full path
-    // and if not, create a full file name.
-    //
-    // See ArcOpen: Search last ')', which delimits device and path.
-    //
+    /*
+     * Check whether FileName is a full path and if not, create a full
+     * file name using the user-provided default path (if present).
+     *
+     * See ArcOpen(): Search last ')', which delimits device and path.
+     */
     if (strrchr(FileName, ')') == NULL)
     {
-        /* This is not a full path. Use the current (i.e. boot) device. */
-        MachDiskGetBootPath(FullPath, sizeof(FullPath));
+        /* This is not a full path: prepend the user-provided default path */
+        if (DefaultPath)
+        {
+            Status = RtlStringCbCopyA(FullPath, sizeof(FullPath), DefaultPath);
+            if (!NT_SUCCESS(Status))
+                return ENAMETOOLONG;
+        }
 
         /* Append a path separator if needed */
-        if (FileName[0] != '\\' && FileName[0] != '/')
-            strcat(FullPath, "\\");
+
+        cchPathLen = min(sizeof(FullPath)/sizeof(CHAR), strlen(FullPath));
+        if (cchPathLen >= sizeof(FullPath)/sizeof(CHAR))
+            return ENAMETOOLONG;
+
+        if ((*FileName != '\\' && *FileName != '/') &&
+            cchPathLen > 0 && (FullPath[cchPathLen-1] != '\\' && FullPath[cchPathLen-1] != '/'))
+        {
+            /* FileName does not start with '\' and FullPath does not end with '\' */
+            Status = RtlStringCbCatA(FullPath, sizeof(FullPath), "\\");
+            if (!NT_SUCCESS(Status))
+                return ENAMETOOLONG;
+        }
+        else if ((*FileName == '\\' || *FileName == '/') &&
+                 cchPathLen > 0 && (FullPath[cchPathLen-1] == '\\' || FullPath[cchPathLen-1] == '/'))
+        {
+            /* FileName starts with '\' and FullPath ends with '\' */
+            while (*FileName == '\\' || *FileName == '/')
+                ++FileName; // Skip any backslash
+        }
     }
-    // Append (or just copy) the remaining file name.
-    strcat(FullPath, FileName);
+    /* Append (or just copy) the remaining file name */
+    Status = RtlStringCbCatA(FullPath, sizeof(FullPath), FileName);
+    if (!NT_SUCCESS(Status))
+        return ENAMETOOLONG;
 
-    //
-    // Open the file
-    //
-    Status = ArcOpen(FullPath, OpenReadOnly, &FileId);
-
-    //
-    // Check for success
-    //
-    if (Status == ESUCCESS)
-        return FileId;
-    else
-        return 0;
+    /* Open the file */
+    return ArcOpen(FullPath, OpenMode, FileId);
 }
 
 /*
@@ -422,8 +436,4 @@ VOID FsInit(VOID)
         FileData[i].DeviceId = (ULONG)-1;
 
     InitializeListHead(&DeviceListHead);
-
-    // FIXME: Retrieve the current boot device with MachDiskGetBootPath
-    // and store it somewhere in order to not call again and again this
-    // function.
 }

@@ -93,7 +93,7 @@ ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
-void actctx_init(void);
+void actctx_init(PVOID* pOldShimData);
 extern BOOLEAN RtlpUse16ByteSLists;
 
 #ifdef _WIN64
@@ -1539,11 +1539,19 @@ LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
 
 VOID
 NTAPI
-LdrpInitializeProcessCompat(PVOID* pOldShimData)
+LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
 {
-    static const GUID* GuidOrder[] = { &COMPAT_GUID_WIN10, &COMPAT_GUID_WIN81, &COMPAT_GUID_WIN8,
-                                       &COMPAT_GUID_WIN7, &COMPAT_GUID_VISTA };
-    static const DWORD GuidVersions[] = { WINVER_WIN10, WINVER_WIN81, WINVER_WIN8, WINVER_WIN7, WINVER_VISTA };
+    static const struct
+    {
+        const GUID* Guid;
+        const DWORD Version;
+    } KnownCompatGuids[] = {
+        { &COMPAT_GUID_WIN10, _WIN32_WINNT_WIN10 },
+        { &COMPAT_GUID_WIN81, _WIN32_WINNT_WINBLUE },
+        { &COMPAT_GUID_WIN8, _WIN32_WINNT_WIN8 },
+        { &COMPAT_GUID_WIN7, _WIN32_WINNT_WIN7 },
+        { &COMPAT_GUID_VISTA, _WIN32_WINNT_VISTA },
+    };
 
     ULONG Buffer[(sizeof(COMPATIBILITY_CONTEXT_ELEMENT) * 10 + sizeof(ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION)) / sizeof(ULONG)];
     ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION* ContextCompatInfo;
@@ -1551,8 +1559,6 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
     NTSTATUS Status;
     DWORD n, cur;
     ReactOS_ShimData* pShimData = *pOldShimData;
-
-    C_ASSERT(RTL_NUMBER_OF(GuidOrder) == RTL_NUMBER_OF(GuidVersions));
 
     if (pShimData)
     {
@@ -1564,14 +1570,21 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
         }
         if (pShimData->dwRosProcessCompatVersion)
         {
-            DPRINT1("LdrpInitializeProcessCompat: ProcessCompatVersion already set to 0x%x\n", pShimData->dwRosProcessCompatVersion);
+            if (pShimData->dwRosProcessCompatVersion == REACTOS_COMPATVERSION_IGNOREMANIFEST)
+            {
+                DPRINT1("LdrpInitializeProcessCompat: ProcessCompatVersion set to ignore manifest\n");
+            }
+            else
+            {
+                DPRINT1("LdrpInitializeProcessCompat: ProcessCompatVersion already set to 0x%x\n", pShimData->dwRosProcessCompatVersion);
+            }
             return;
         }
     }
 
     SizeRequired = sizeof(Buffer);
     Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF,
-                                                  NULL,
+                                                  pProcessActctx,
                                                   NULL,
                                                   CompatibilityInformationInActivationContext,
                                                   Buffer,
@@ -1590,12 +1603,12 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
         return;
 
     /* Search for known GUID's, starting from newest to oldest. */
-    for (cur = 0; cur < RTL_NUMBER_OF(GuidOrder); ++cur)
+    for (cur = 0; cur < RTL_NUMBER_OF(KnownCompatGuids); ++cur)
     {
         for (n = 0; n < ContextCompatInfo->ElementCount; ++n)
         {
             if (ContextCompatInfo->Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS &&
-                RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, GuidOrder[cur], sizeof(GUID)) == sizeof(GUID))
+                RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, KnownCompatGuids[cur].Guid, sizeof(GUID)) == sizeof(GUID))
             {
                 /* If this process did not need shim data before, allocate and store it */
                 if (pShimData == NULL)
@@ -1619,8 +1632,8 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
                 }
 
                 /* Store the highest found version, and bail out. */
-                pShimData->dwRosProcessCompatVersion = GuidVersions[cur];
-                DPRINT1("LdrpInitializeProcessCompat: Found guid for winver 0x%x\n", GuidVersions[cur]);
+                pShimData->dwRosProcessCompatVersion = KnownCompatGuids[cur].Version;
+                DPRINT1("LdrpInitializeProcessCompat: Found guid for winver 0x%x\n", KnownCompatGuids[cur].Version);
                 return;
             }
         }
@@ -2174,10 +2187,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                    &LdrpNtDllDataTableEntry->InInitializationOrderLinks);
 
     /* Initialize Wine's active context implementation for the current process */
-    actctx_init();
-
-    /* ReactOS specific */
-    LdrpInitializeProcessCompat(&OldShimData);
+    actctx_init(&OldShimData);
 
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);

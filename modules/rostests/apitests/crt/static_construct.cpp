@@ -10,6 +10,10 @@
 #include <strsafe.h>
 #include "dll_startup.h"
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#endif
+
 extern "C"
 {
 extern int static_init_counter;
@@ -221,7 +225,7 @@ START_TEST(static_construct)
         ok(g_CreatedFileMapping == FALSE, "Expected the shared memory to be created by my parent!\n");
         return;
     }
-    
+
     TestInitStatic();
     TestDllStartup();
     TestStaticDestruct();

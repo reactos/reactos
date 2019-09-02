@@ -23,22 +23,33 @@
 #define HAS_OPTION_MENU_CUSTOM_BOOT
 #define HAS_OPTION_MENU_REBOOT
 
-#ifdef _M_IX86
-
-VOID EditCustomBootDisk(IN ULONG_PTR SectionId OPTIONAL);
-VOID EditCustomBootPartition(IN ULONG_PTR SectionId OPTIONAL);
-VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL);
-VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL);
-
-#endif // _M_IX86
-
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 VOID OptionMenuCustomBoot(VOID);
 #endif
 
+#ifdef _M_IX86
+
+VOID
+EditCustomBootDisk(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+VOID
+EditCustomBootPartition(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+VOID
+EditCustomBootSectorFile(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+VOID
+EditCustomBootLinux(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+#endif // _M_IX86
+
 VOID
 EditCustomBootReactOS(
-    IN ULONG_PTR SectionId OPTIONAL,
+    IN OUT OperatingSystemItem* OperatingSystem,
     IN BOOLEAN IsSetup);
 
 #ifdef HAS_OPTION_MENU_REBOOT

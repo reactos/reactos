@@ -634,8 +634,8 @@
 ;@ cdecl -arch=arm ?QueryObjectSink@CWbemProviderGlue@@UAAJJPAPAUIWbemObjectSink@@@Z()
 ;@ cdecl -arch=arm ?QueryPostProcess@MethodContext@@UAAXXZ()
 ;@ cdecl -arch=arm ?RegisterForMessage@CWinMsgEvent@@IAAXIH@Z()
-# @ cdecl -arch=arm ?Release@CHString@@QAAXXZ() # FIXME!
-# @ cdecl -arch=arm ?Release@CHString@@SAXPAUCHStringData@@@Z() # FIXME!
+@ cdecl -arch=arm ?Release@CHString@@IAAXXZ()
+@ cdecl -arch=arm ?Release@CHString@@KAXPAUCHStringData@@@Z()
 ;@ cdecl -arch=arm ?Release@CInstance@@QAAJXZ()
 ;@ cdecl -arch=arm ?Release@CThreadBase@@QAAJXZ()
 ;@ cdecl -arch=arm ?Release@CWbemGlueFactory@@UAAKXZ()

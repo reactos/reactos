@@ -9,6 +9,10 @@ if(MSVC)
     add_compile_flags("/wd4477")
 endif()
 
+if(GCC AND GCC_VERSION VERSION_GREATER 7)
+    add_compile_flags("-Wno-stringop-truncation")
+endif()
+
 list(APPEND SOURCE
     cpp.c
     data.c

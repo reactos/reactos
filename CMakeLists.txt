@@ -31,10 +31,6 @@ set(CMAKE_COLOR_MAKEFILE OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
-if(NOT DEFINED NEW_STYLE_BUILD)
-    set(NEW_STYLE_BUILD TRUE)
-endif()
-
 if(NOT ARCH)
     set(ARCH i386)
 endif()
@@ -75,11 +71,7 @@ endif()
 # include(sdk/cmake/bison-flex.cmake)
 
 if(NOT CMAKE_CROSSCOMPILING)
-
-    if(NEW_STYLE_BUILD)
-        set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
-    endif()
-
+    set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
     add_definitions(-DTARGET_${ARCH})
 
     if(MSVC)
@@ -105,21 +97,21 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(sdk/tools)
     add_subdirectory(sdk/lib)
 
-    if(NOT NEW_STYLE_BUILD)
-        if(NOT MSVC)
-            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc rsym mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-        else()
-            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-        endif()
+    set(NATIVE_TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb)
+    if(NOT MSVC)
+        list(APPEND NATIVE_TARGETS rsym)
     endif()
+
+    export(TARGETS ${NATIVE_TARGETS} FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+    configure_file(sdk/cmake/host-tools.in ${CMAKE_BINARY_DIR}/TargetList.cmake)
 
 else()
+    # Add host tools target
+    include(sdk/cmake/host-tools.cmake)
+    setup_host_tools()
+
     # We don't need CMake importlib handling.
     unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
-
-    if(NEW_STYLE_BUILD)
-        include(sdk/cmake/host-tools.cmake)
-    endif()
 
     # Print build type
     message("-- Build Type: ${CMAKE_BUILD_TYPE}")
@@ -134,14 +126,6 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
 
-    if(NOT NEW_STYLE_BUILD)
-        if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-            set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
-        endif()
-        set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
-        include(${IMPORT_EXECUTABLES})
-    endif()
-
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
     else()
@@ -149,11 +133,11 @@ else()
     endif()
 
     if(KDBG)
-        add_definitions(-DKDBG=1)
+        add_definitions(-DKDBG)
     endif()
 
     if(_WINKD_)
-        add_definitions(-D_WINKD_=1)
+        add_definitions(-D_WINKD_)
     endif()
 
     if(CMAKE_VERSION MATCHES "ReactOS")

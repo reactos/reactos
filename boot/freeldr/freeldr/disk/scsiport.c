@@ -10,6 +10,9 @@
 
 #include <freeldr.h>
 
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(SCSIPORT);
+
 #define _SCSIPORT_
 
 #include <ntddk.h>
@@ -48,14 +51,10 @@
 #undef ScsiPortReadRegisterUlong
 #undef ScsiPortReadRegisterUshort
 
-#include <debug.h>
-
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008
 
 #define TAG_SCSI_DEVEXT 'DscS'
 #define TAG_SCSI_ACCESS_RANGES 'AscS'
-
-DBG_DEFAULT_CHANNEL(SCSIPORT);
 
 /* GLOBALS ********************************************************************/
 
@@ -1631,7 +1630,7 @@ LoadBootDeviceDriver(VOID)
         return EIO;
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
-       contains Scsiport* exports, imported by ntbootdd.sys */
+       contains ScsiPort* exports, imported by ntbootdd.sys */
     Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
         "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Success)

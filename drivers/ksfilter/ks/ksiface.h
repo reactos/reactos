@@ -144,10 +144,192 @@ DECLARE_INTERFACE_(IKsPin, IUnknown)
 #undef INTERFACE
 #define INTERFACE IKsQueue
 
+enum KSPSTREAM_POINTER_MOTION {
+    KSPSTREAM_POINTER_MOTION_NONE = 0,
+    KSPSTREAM_POINTER_MOTION_ADVANCE = 1,
+    KSPSTREAM_POINTER_MOTION_CLEAR = 2,
+    KSPSTREAM_POINTER_MOTION_FLUSH = 3
+};
+
+enum KSPSTREAM_POINTER_STATE {
+    KSPSTREAM_POINTER_STATE_UNLOCKED = 0,
+    KSPSTREAM_POINTER_STATE_LOCKED = 1,
+    KSPSTREAM_POINTER_STATE_CANCELLED = 2,
+    KSPSTREAM_POINTER_STATE_DELETED = 3,
+    KSPSTREAM_POINTER_STATE_CANCEL_PENDING = 4,
+    KSPSTREAM_POINTER_STATE_DEAD = 5,
+    KSPSTREAM_POINTER_STATE_TIMED_OUT = 6,
+    KSPSTREAM_POINTER_STATE_TIMER_RESCHEDULE = 7
+};
+
+enum KSPSTREAM_POINTER_TYPE {
+    KSPSTREAM_POINTER_TYPE_NORMAL = 0,
+    KSPSTREAM_POINTER_TYPE_INTERNAL = 1
+};
+
+typedef struct _KSPTRANSPORTCONFIG {
+	UCHAR TransportType; /*  +0x0000  */
+	USHORT IrpDisposition; /*  +0x0002  */
+	UCHAR StackDepth; /*  +0x0004  */
+} KSPTRANSPORTCONFIG;
+
+typedef enum _KSPFRAME_HEADER_TYPE {
+	KSPFRAME_HEADER_TYPE_NORMAL = 0,
+	KSPFRAME_HEADER_TYPE_GHOST = 1
+} KSPFRAME_HEADER_TYPE;
+
+typedef struct _KSPIRP_FRAMING_ {
+	ULONG  OutputBufferLength; /*  +0x0000  */
+	ULONG  RefCount; /*  +0x0004  */
+	ULONG  QueuedFrameHeaderCount; /*  +0x0008  */
+	PVOID FrameHeaders; /*  +0x0010 ba 13 00 00  */
+}KSPIRP_FRAMING;
+
+typedef struct _KSPFRAME_HEADER {
+	LIST_ENTRY ListEntry; /*  +0x0000 29 10 00 00  */
+	struct _KSPFRAME_HEADER * NextFrameHeaderInIrp; /*  +0x0010 ba 13 00 00  */
+	PVOID Queue; /*  +0x0018  */
+	PIRP OriginalIrp; /*  +0x0020 c4 10 00 00  */
+	PMDL Mdl; /*  +0x0028 b3 10 00 00  */
+	PIRP Irp; /*  +0x0030 c4 10 00 00  */
+	KSPIRP_FRAMING* IrpFraming; /*  +0x0038 a8 17 00 00  */
+	PVOID StreamHeader; /*  +0x0040 60 15 00 00  */
+	PVOID FrameBuffer; /*  +0x0048  */
+	PVOID MappingsTable; /*  +0x0050 a2 17 00 00  */
+	ULONG StreamHeaderSize; /*  +0x0058  */
+	ULONG FrameBufferSize; /*  +0x005c  */
+	PVOID Context; /*  +0x0060  */
+	ULONG RefCount; /*  +0x0068  */
+	PVOID OriginalData; /*  +0x0070  */
+	PVOID BufferedData; /*  +0x0078  */
+	NTSTATUS Status; /*  +0x0080  */
+	UCHAR DismissalCall; /*  +0x0084  */
+	KSPFRAME_HEADER_TYPE Type; /*  +0x0088 1a 1b 00 00  */
+	PVOID FrameHolder; /*  +0x0090 b8 13 00 00  */
+}KSPFRAME_HEADER;
+C_ASSERT(sizeof(KSPFRAME_HEADER) == 0x54);
+
+
+typedef struct _KSPSTREAM_POINTER {
+    LIST_ENTRY ListEntry; /*  +0x0000 29 10 00 00  */
+    LIST_ENTRY TimeoutListEntry; /*  +0x0010 29 10 00 00  */
+    ULONGLONG TimeoutTime; /*  +0x0020  */
+    PFNKSSTREAMPOINTER CancelCallback; /*  +0x0028 4a 17 00 00  */
+    PDRIVER_CANCEL TimeoutCallback; /*  +0x0030 4a 17 00 00  */
+    enum KSPSTREAM_POINTER_STATE State; /*  +0x0038 50 18 00 00  */
+    enum KSPSTREAM_POINTER_TYPE Type; /*  +0x003c 4c 17 00 00  */
+    ULONG Stride; /*  +0x0040  */
+    PVOID CKsQueue;/*  +0x0048 e1 12 00 00  */
+    KSPFRAME_HEADER* FrameHeader; /*  +0x0050 ba 13 00 00  */
+    KSPFRAME_HEADER* FrameHeaderStarted; /*  +0x0058 ba 13 00 00  */
+    KSSTREAM_POINTER StreamPointer;
+} KSPSTREAM_POINTER;
+
+C_ASSERT(sizeof(KSPSTREAM_POINTER) == 0x68);
+
+
 DECLARE_INTERFACE_(IKsQueue, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
 
+    STDMETHOD_(NTSTATUS, TransferKsIrp)(THIS_
+        IN PIRP Irp,
+        OUT IKsTransport ** Transport) PURE;
+
+    STDMETHOD_(NTSTATUS, DiscardKsIrp)(THIS_
+        IN PIRP Irp,
+        OUT IKsTransport ** Transport) PURE;
+
+    STDMETHOD_(NTSTATUS, Connect)(THIS_
+        IN IKsTransport *T1,
+        OUT IKsTransport **OutTransport1,
+        OUT IKsTransport **OutTransport2,
+        IN KSPIN_DATAFLOW DataFlow) PURE;
+
+    STDMETHOD_(NTSTATUS, SetDeviceState)(THIS_
+        IN KSSTATE ToState,
+        IN KSSTATE FromState,
+        IN PCHAR Message) PURE;
+
+    STDMETHOD_(NTSTATUS, SetResetState)(THIS_
+        IN KSRESET Reset,
+        IN PCHAR Message) PURE;
+
+    STDMETHOD_(NTSTATUS, GetTransportConfig)(THIS_
+        IN KSPTRANSPORTCONFIG * TransportConfig,
+        OUT IKsTransport **OutTransport,
+        OUT IKsTransport **OutTransport2) PURE;
+
+    STDMETHOD_(NTSTATUS, SetTransportConfig)(THIS_
+        IN KSPTRANSPORTCONFIG *a2,
+        IN PCHAR Message,
+        OUT IKsTransport **OutTransport,
+        OUT IKsTransport **OutTransport2) PURE;
+
+    STDMETHOD_(VOID, ResetTransportConfig)(THIS_
+        IN IKsTransport ** NextTransport,
+        IN IKsTransport ** PrevTransport) PURE;
+
+    STDMETHOD_(NTSTATUS, CloneStreamPointer)(THIS_
+        OUT KSPSTREAM_POINTER ** CloneStreamPointer,
+        IN PFNKSSTREAMPOINTER CancelCallback,
+        IN ULONG ContextSize,
+        IN KSPSTREAM_POINTER* StreamPointer,
+        IN ULONG Unknown8) PURE;
+
+    STDMETHOD_(VOID, DeleteStreamPointer)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer);
+
+    STDMETHOD_(KSPSTREAM_POINTER*, LockStreamPointer)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer) PURE;
+
+    STDMETHOD_(VOID, UnlockStreamPointer)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer,
+        IN enum KSPSTREAM_POINTER_MOTION Motion) PURE;
+
+    STDMETHOD_(VOID, AdvanceUnlockedStreamPointer)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer) PURE;
+
+    STDMETHOD_(KSPSTREAM_POINTER *, GetLeadingStreamPointer)(THIS_
+        IN KSSTREAM_POINTER_STATE State) PURE;
+
+    STDMETHOD_(KSPSTREAM_POINTER *, GetTrailingStreamPointer)(THIS_
+        IN KSSTREAM_POINTER_STATE State) PURE;
+
+    STDMETHOD_(VOID, ScheduleTimeout)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer,
+        IN PFNKSSTREAMPOINTER CancelRoutine,
+        IN ULONGLONG TimeOut) PURE;
+
+    STDMETHOD_(VOID, CancelTimeout)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer) PURE;
+
+    STDMETHOD_(KSPSTREAM_POINTER*, GetFirstClone)(THIS) PURE;
+
+    STDMETHOD_(KSPSTREAM_POINTER*, GetNextClone)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer) PURE;
+
+    STDMETHOD_(VOID, GetAvailableByteCount)(THIS_
+        IN PULONG InputDataBytes,
+        IN PULONG OutputBufferBytes) PURE;
+
+    STDMETHOD_(VOID, UpdateByteAvailability)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer,
+        IN ULONG Unknown1,
+        IN ULONG Unknown2) PURE;
+
+    STDMETHOD_(NTSTATUS, SetStreamPointerStatusCode)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer,
+        IN NTSTATUS StatusCode) PURE;
+
+    STDMETHOD_(VOID, RegisterFrameDismissalCallback)(THIS_
+        IN KSPSTREAM_POINTER * StreamPointer) PURE;
+
+    STDMETHOD_(UCHAR, GeneratesMappings)(THIS) PURE;
+
+    STDMETHOD_(VOID, CopyFrame)(THIS_
+        IN KSPSTREAM_POINTER * Src,
+        IN KSPSTREAM_POINTER * Target) PURE;
 };
 
 /*****************************************************************************

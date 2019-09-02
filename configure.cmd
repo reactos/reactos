@@ -18,18 +18,6 @@ if /I "%1" == "/?" (
     goto quit
 )
 
-REM Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
-if /I "%1" == "arm_hosttools" (
-    echo Configuring x86 host tools for ARM cross build
-
-    REM This launches %VSINSTALLDIR%VS\vcvarsall.bat
-    call %2 x86
-
-    REM Configure host tools for x86.
-    cmake -G %3 -A Win32 -DARCH:STRING=i386 %~dp0
-    exit
-)
-
 REM Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
 
@@ -95,14 +83,11 @@ if not defined ARCH (
     goto quit
 )
 
-set NEW_STYLE_BUILD=1
 set USE_CLANG_CL=0
 
 REM Parse command line parameters
 :repeat
-    if /I "%1" == "-DNEW_STYLE_BUILD" (
-        set NEW_STYLE_BUILD=%2
-    ) else if "%BUILD_ENVIRONMENT%" == "MinGW" (
+    if "%BUILD_ENVIRONMENT%" == "MinGW" (
         if /I "%1" == "Codeblocks" (
             set CMAKE_GENERATOR="CodeBlocks - MinGW Makefiles"
         ) else if /I "%1" == "Eclipse" (
@@ -210,50 +195,12 @@ if "%VS_SOLUTION%" == "1" (
     goto quit
 )
 
-if "%NEW_STYLE_BUILD%"=="0" (
-
-    if not exist host-tools (
-        mkdir host-tools
-    )
-
-    if not exist reactos (
-        mkdir reactos
-    )
-
-    echo Preparing host tools...
-    cd host-tools
-    if EXIST CMakeCache.txt (
-        del CMakeCache.txt /q
-    )
-
-    set REACTOS_BUILD_TOOLS_DIR=!CD!
-
-    REM Use x86 for ARM host tools
-    if "%ARCH%" == "arm" (
-        REM Launch new script instance for x86 host tools configuration
-        start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
-    ) else (
-        cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
-    )
-
-    cd..
-
-)
-
 echo Preparing reactos...
-
-if "%NEW_STYLE_BUILD%"=="0" (
-    cd reactos
-)
 
 if EXIST CMakeCache.txt (
     del CMakeCache.txt /q
-    del host-tools\CMakeCache.txt /q
 )
 
-if "%NEW_STYLE_BUILD%"=="0" (
-    set BUILD_TOOLS_FLAG=-DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%"
-)
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
@@ -261,10 +208,6 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
         cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 ) else (
     cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
-)
-
-if "%NEW_STYLE_BUILD%"=="0" (
-    cd..
 )
 
 if %ERRORLEVEL% NEQ 0 (

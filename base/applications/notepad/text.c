@@ -4,6 +4,7 @@
  *  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2002 Andriy Palamarchuk
+ *  Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -45,6 +46,32 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
         *pdwTextLen += dwAppendLen;
     }
     return TRUE;
+}
+
+ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
+{
+    INT flags = IS_TEXT_UNICODE_STATISTICS;
+
+    if (dwSize <= 1)
+        return ENCODING_ANSI;
+
+    if (IsTextUnicode(pBytes, dwSize, &flags))
+    {
+        return ENCODING_UTF16LE;
+    }
+
+    if ((flags & IS_TEXT_UNICODE_REVERSE_MASK) && !(flags & IS_TEXT_UNICODE_ILLEGAL_CHARS))
+    {
+        return ENCODING_UTF16BE;
+    }
+
+    /* is it UTF-8? */
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
+    {
+        return ENCODING_UTF8;
+    }
+
+    return ENCODING_ANSI;
 }
 
 BOOL
@@ -97,6 +124,10 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     {
         encFile = ENCODING_UTF8;
         dwPos += 3;
+    }
+    else
+    {
+        encFile = AnalyzeEncoding((const char *)pBytes, dwSize);
     }
 
     switch(encFile)

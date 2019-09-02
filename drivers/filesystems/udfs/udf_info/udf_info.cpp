@@ -1719,8 +1719,8 @@ UDFWriteFile__(
             }
         }
         if(OldInIcb) {
-            MyFreePool__(OldInIcb);
             UDFWriteExtent(Vcb, &(Dloc->DataLoc), 0, (uint32)OldLen, FALSE, OldInIcb, &_WrittenBytes);
+            MyFreePool__(OldInIcb);
         }
         if((int64)OldLen != Dloc->DataLoc.Length) {
             // restore file size

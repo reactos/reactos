@@ -31,6 +31,15 @@ extern "C" {
 
 #define SYNCH_LEVEL DISPATCH_LEVEL
 
+
+//
+// CPU Vendors
+//
+typedef enum
+{
+    CPU_UNKNOWN = 0,
+} CPU_VENDORS;
+
 //
 // Co-Processor register definitions
 //
@@ -297,6 +306,15 @@ extern "C" {
 // Number of pool lookaside lists per pool in the PRCB
 //
 #define NUMBER_POOL_LOOKASIDE_LISTS 32
+
+//
+// Structure for CPUID info
+//
+typedef union _CPU_INFO
+{
+    ULONG Dummy;
+} CPU_INFO, *PCPU_INFO;
+
 
 //
 // ARM VFP State
@@ -577,6 +595,14 @@ typedef enum _ARM_DOMAINS
 ///
 /// "Custom" definition end
 ///
+
+typedef struct _DESCRIPTOR
+{
+    USHORT Pad;
+    USHORT Dummy1;
+    ULONG Dummy2;
+} KDESCRIPTOR, *PKDESCRIPTOR;
+
 
 //
 // Special Registers Structure (outside of CONTEXT)

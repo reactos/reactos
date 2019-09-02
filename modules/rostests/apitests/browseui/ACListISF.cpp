@@ -17,6 +17,7 @@
 // Yes, gcc at it again, let's validate everything found inside unused templates!
 ULONG DbgPrint(PCH Format,...);
 
+#include <stdio.h>
 #include <shellutils.h>
 #include <shlwapi.h>
 #include <strsafe.h>

@@ -228,12 +228,7 @@ elseif(NO_ROSSYM)
     set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 else()
     # Normal rsym build
-    if(NEW_STYLE_BUILD)
-        string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
-        get_target_property(RSYM native-rsym IMPORTED_LOCATION_${_build_type})
-    else()
-        get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
-    endif()
+    get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
     
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"

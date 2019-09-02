@@ -38,6 +38,16 @@ PCM_PARTIAL_RESOURCE_LIST
 
 extern GET_HARDDISK_CONFIG_DATA GetHarddiskConfigurationData;
 
+typedef
+BOOLEAN
+(*FIND_PCI_BIOS)(PPCI_REGISTRY_INFO BusData);
+
+extern FIND_PCI_BIOS FindPciBios;
+
+typedef
+ULONG
+(*GET_SERIAL_PORT)(ULONG Index, PULONG Irq);
+
 VOID
 DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                 PCONFIGURATION_COMPONENT_DATA BusKey);

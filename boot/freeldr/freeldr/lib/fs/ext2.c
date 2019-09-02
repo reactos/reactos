@@ -19,8 +19,8 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 BOOLEAN    Ext2OpenVolume(PEXT2_VOLUME_INFO Volume);

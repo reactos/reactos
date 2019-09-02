@@ -6,12 +6,12 @@ CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ברוכים הבאים", IDC_WELCOMETITLE, 120, 8, 195, 16
-    LTEXT "This wizard installs a new device driver for:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "לחץ הבא כדי להמשיך.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 36, 147, 17
-    LTEXT "WARNING! INSTALLING A CUSTOM DEVICE MAY FREEZE YOUR COMPUTER OR RENDER IT UNBOOTABLE!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "התקן תוכנת מנהל התקן באופן אוטומטי", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
-    CONTROL "התקן תוכנת מהל התקן ממיקום מסוים", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
+    LTEXT "אשף זה יתקין מנהל התקן חדש עבור:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "לחץ על הבא כדי להמשיך.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 148, 36, 147, 17
+    LTEXT "אזהרה! התקנה של התקן מותאם אישית עלולה לגרום למחשבך להפסיק להגיב או לגרום שלא יהיה ניתן להפעילו!", IDC_STATIC, 120, 59, 195, 16
+    CONTROL "התקן מנהל התקן באופן אוטומטי", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "התקן מנהל התקן ממיקום מסוים", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -19,10 +19,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "The device could not be installed because the driver could not be found.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "Click on Back if you have a driver disk or know the path to the driver.", IDC_STATIC, 120, 98, 195, 16
-    CONTROL "Do not show this dialog anymore", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
+    LTEXT "ההגדרה כשלה", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "ההתקן לא הותקן מכיוון שלא היה אפשר למצוא את מנהל ההתקן.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "לחץ על 'הקודם' אם יש ברשותך דיסק עם מנהל ההתקן או אם אתה יודע את המיקום של מנהל ההתקן על מחשבך או במקום אחר.", IDC_STATIC, 120, 98, 195, 25
+    CONTROL "אל תציג שוב בקשה להתקנת מנהל התקן זה.", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -30,9 +30,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "The device could not be installed because an unexpected error happened.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "ההגדרה כשלה", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "התקן זה כשל בהתקנה בגלל שגיאה לא צפויה.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -40,7 +40,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "חפש במיקומים הבאים", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
+    CONTROL "חפש במיקומים הבאים:", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "בחר באופן ידני", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
     CONTROL "חפש במדיה נשלפת", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
     CONTROL "כלול את הנתיב הבא", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
@@ -53,7 +53,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
@@ -61,7 +61,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
@@ -70,9 +70,9 @@ CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "You need to reboot to finish the install of:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "נא הפעל מחדש את המחשב בשביל לסיים להתקין את:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -81,16 +81,16 @@ CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "The wizard has finished installing the driver for:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "האשף סיים להתקין את מנהל ההתקן עבור:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 17
+    LTEXT "התקן לא מוכר", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New Hardware Wizard"
-    IDS_UPDATEWIZARDTITLE "Update Driver Wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "אשף הוספת התקן"
+    IDS_UPDATEWIZARDTITLE "אשף עדכון מנהל התקן"
+    IDS_CHSOURCE_TITLE "בחר בין האפשרויות של חיפוש והתקנה"
+    IDS_SEARCHDRV_TITLE "מחפש..."
+    IDS_INSTALLDRV_TITLE "מתקין..."
 END

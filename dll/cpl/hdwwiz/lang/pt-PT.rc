@@ -1,0 +1,153 @@
+
+/* Portuguese Language resource file
+ *
+ * Traduzido por: Jose Carlos Jesus 03-08-2019 zecarlos1957@hotmail.com
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Bem-vindo ao 'Assistente para adicionar hardware'", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Este assistente auxilia a:", -1, 114, 40, 182, 8
+    LTEXT "1) Instalar software de suporte ao hardware adicionado ao computador.", -1, 121, 56, 184, 16
+    LTEXT "2) Solucionar problemas que possam estar ocorrendo no hardware.", -1, 121, 78, 185, 16
+    ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+    LTEXT "Se tem um CD de instalação para o novo hardware, clique em 'Cancelar' para fechar este assistente e utilizar o CD do fabricante para instalar este hardware.", 503, 150, 106, 155, 50
+    LTEXT "Para continuar, clique em 'Avançar'.", -1, 114, 166, 193, 8
+END
+
+IDD_SEARCHPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+    ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+END
+
+IDD_ISCONNECTEDPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Já ligou este hardware ao computador?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "&Sim, já liguei o hardware", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "Não, ainda não liguei o &hardware", IDC_NOTCONNECTED, 29, 35, 266, 8
+END
+
+IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "A partir da lista abaixo, seleccione o dispositivo de hardware instalado, em seguida clique em 'Avançar' para verificar as propriedades ou solucionar problemas.", -1, 21, 8, 275, 22
+    LTEXT "Para adicionar itens de hardware que não estejam na lista, clique em 'Adicionar novo dispositivo de hardware'.", -1, 21, 32, 275, 24
+    LTEXT "&Hardware instalado:", -1, 21, 62, 140, 8
+    CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
+END
+
+IDD_SELECTWAYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "O assistente pode procurar outros itens de hardware e instalá-los automaticamente, ou, se souber exactamente o modelo de hardware que deseja instalar, poderá seleccioná-lo na lista.", -1, 21, 8, 280, 24
+    LTEXT "O que deseja que o assistente faça?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "&Procurar e instalar automaticamente o hardware (recomendado)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Instalar o hardware que eu seleccionar manualmente na lista (avançado)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+END
+
+IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
+    LTEXT "Hardware detectado:", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
+END
+
+IDD_HWTYPESPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Se não conseguir ver a categoria de hardware que deseja instalar, clique em 'Mostrar todos os dispositivos'.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Tipos comuns de &hardware:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
+END
+
+IDD_PROGRESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "O processo de detecção de hardware pode levar alguns minutos.", -1, 21, 8, 275, 15
+    LTEXT "Progresso geral:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
+    LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
+    CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8
+END
+
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "A concluir o 'Assistente para adicionar hardware'", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "O 'Assistente para adicionar hardware' foi executado com sucesso.", -1, 114, 32, 193, 19
+    LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+    LTEXT "Para fechar o assistente, clique em 'Finalizar'.", -1, 114, 166, 132, 8
+END
+
+IDD_ISFOUNDPAGE DIALOGEX 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Concluindo o 'Assistente para adicionar hardware'", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "O assistente encontrou o seguinte hardware ligado ao computador:", -1, 114, 32, 193, 19
+    LTEXT "Para fechar o assistente, clique em 'Finalizar'.", -1, 114, 166, 132, 8
+    CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
+END
+
+IDD_HWSTATUSPAGE DIALOGEX 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Concluindo o 'Assistente para adicionar hardware'", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Este é o status actual do hardware selecionado:", -1, 114, 40, 193, 19
+    EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Para começar a solucionar os problemas que possam estar a ocorrer, clique em 'Finalizar'.", -1, 114, 136, 193, 16
+    LTEXT "Para fechar o assistente, clique em 'Cancelar'.", IDC_STATUSTEXT, 114, 166, 132, 8
+END
+
+IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Assistente para adicionar hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Não é possível continuar com o 'Assistente'", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "Para continuar, ligue o novo hardware ao computador.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "&Desligar o computador quando eu clico em 'Finalizar' para que possa abrir o computador e ligar o hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "Na maioria dos casos, o ReactOS instala automaticamente o hardware após o ligar ao computador. Se o ReactOS não o encontrar poderá reabrir este assistente para instalar o software de suporte.", -1, 114, 98, 193, 32
+    LTEXT "Para fechar o assistente, clique em 'Finalizar'.", IDC_STATUSTEXT, 114, 166, 193, 8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Adicionar hardware"
+    IDS_CPLDESCRIPTION "Adiciona hardware ao computador."
+    IDS_SEARCHTITLE "Aguarde enquanto o assistente faz a pesquisa..."
+    IDS_SEARCHTEXT "O assistente está a procurar novo hardware ligado ao computador que ainda não tenha sido instalado."
+    IDS_ISCONNECTED "O hardware está ligado?"
+    IDS_PROBELISTTITLE "O seguinte hardware já está instalado no computador"
+    IDS_ADDNEWDEVICE "Adicionar novo dispositivo de hardware"
+    IDS_SELECTWAYTITLE "Este assistente pode ajudá-lo a instalar outro hardware"
+    IDS_HDTYPESTITLE "Na lista abaixo, seleccione o tipo de hardware que está a instalar"
+END

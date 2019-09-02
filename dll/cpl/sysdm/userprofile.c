@@ -325,7 +325,7 @@ SetListViewColumns(
 static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
-    _In_ LPTSTR lpProfileSid,
+    _In_ PSID pProfileSid,
     _In_ PSID pMySid,
     _In_ HKEY hProfileKey)
 {
@@ -336,18 +336,13 @@ AddUserProfile(
     DWORD dwAccountNameSize, dwDomainNameSize;
     DWORD dwProfileData, dwSize, dwType, dwState = 0;
     PWSTR ptr;
-    PSID pSid = NULL;
     INT nId, iItem;
     LV_ITEM lvi;
-
-    if (!ConvertStringSidToSid(lpProfileSid,
-                               &pSid))
-        return;
 
     dwAccountNameSize = ARRAYSIZE(szAccountName);
     dwDomainNameSize = ARRAYSIZE(szDomainName);
     if (!LookupAccountSidW(NULL,
-                           pSid,
+                           pProfileSid,
                            szAccountName,
                            &dwAccountNameSize,
                            szDomainName,
@@ -361,7 +356,7 @@ AddUserProfile(
     {
         /* Show only the user accounts */
         if (Use != SidTypeUser)
-            goto done;
+            return;
 
         if (szAccountName[0] == UNICODE_NULL)
         {
@@ -394,9 +389,9 @@ AddUserProfile(
                              0,
                              dwProfileData);
     if (pProfileData == NULL)
-        goto done;
+        return;
 
-    pProfileData->bMyProfile = EqualSid(pMySid, pSid);
+    pProfileData->bMyProfile = EqualSid(pMySid, pProfileSid);
     pProfileData->dwState = dwState;
 
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
@@ -423,10 +418,6 @@ AddUserProfile(
     LoadStringW(hApplet, nId, szAccountName, ARRAYSIZE(szAccountName));
 
     ListView_SetItemText(hwndListView, iItem, 2, szAccountName);
-
-done:
-    if (pSid != NULL)
-        LocalFree(pSid);
 }
 
 
@@ -450,7 +441,7 @@ UpdateButtonState(
             if (Item.lParam != 0)
             {
                 bMyProfile = ((PPROFILEDATA)Item.lParam)->bMyProfile;
-                if (/*IsUserAnAdmin() &&*/ !bMyProfile)
+                if (!bMyProfile)
                 {
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), TRUE);
                     EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), TRUE);
@@ -471,7 +462,8 @@ UpdateButtonState(
 static VOID
 AddUserProfiles(
     _In_ HWND hwndDlg,
-    _In_ HWND hwndListView)
+    _In_ HWND hwndListView,
+    _In_ BOOL bAdmin)
 {
     HKEY hKeyUserProfiles = INVALID_HANDLE_VALUE;
     HKEY hProfileKey;
@@ -482,6 +474,8 @@ AddUserProfiles(
     DWORD dwSize;
     HANDLE hToken = NULL;
     PTOKEN_USER pTokenUser = NULL;
+    PSID pProfileSid;
+    PWSTR pszProfileSid;
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return;
@@ -504,32 +498,57 @@ AddUserProfiles(
                       &hKeyUserProfiles))
         goto done;
 
-    for (dwIndex = 0; ; dwIndex++)
+    if (bAdmin)
     {
-        dwSidLength = ARRAYSIZE(szProfileSid);
-        if (RegEnumKeyExW(hKeyUserProfiles,
-                          dwIndex,
-                          szProfileSid,
-                          &dwSidLength,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &ftLastWrite))
-            break;
-
-        if (RegOpenKeyExW(hKeyUserProfiles,
-                          szProfileSid,
-                          0,
-                          KEY_READ,
-                          &hProfileKey) == ERROR_SUCCESS)
+        for (dwIndex = 0; ; dwIndex++)
         {
-            AddUserProfile(hwndListView, szProfileSid, pTokenUser->User.Sid, hProfileKey);
-            RegCloseKey(hProfileKey);
+            dwSidLength = ARRAYSIZE(szProfileSid);
+            if (RegEnumKeyExW(hKeyUserProfiles,
+                              dwIndex,
+                              szProfileSid,
+                              &dwSidLength,
+                              NULL,
+                              NULL,
+                              NULL,
+                              &ftLastWrite))
+                break;
+
+            if (RegOpenKeyExW(hKeyUserProfiles,
+                              szProfileSid,
+                              0,
+                              KEY_READ,
+                              &hProfileKey) == ERROR_SUCCESS)
+            {
+                if (ConvertStringSidToSid(szProfileSid, &pProfileSid))
+                {
+                    AddUserProfile(hwndListView, pProfileSid, pTokenUser->User.Sid, hProfileKey);
+                    LocalFree(pProfileSid);
+                }
+
+                RegCloseKey(hProfileKey);
+            }
+        }
+    }
+    else
+    {
+        if (ConvertSidToStringSidW(pTokenUser->User.Sid, &pszProfileSid))
+        {
+            if (RegOpenKeyExW(hKeyUserProfiles,
+                              pszProfileSid,
+                              0,
+                              KEY_READ,
+                              &hProfileKey) == ERROR_SUCCESS)
+            {
+                AddUserProfile(hwndListView, pTokenUser->User.Sid, pTokenUser->User.Sid, hProfileKey);
+                RegCloseKey(hProfileKey);
+            }
+
+            LocalFree(pszProfileSid);
         }
     }
 
     if (ListView_GetItemCount(hwndListView) != 0)
-        ListView_SetItemState(hwndListView, 0, LVIS_SELECTED, LVIS_SELECTED);
+        ListView_SetItemState(hwndListView, 0, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 
     UpdateButtonState(hwndDlg, hwndListView);
 
@@ -548,10 +567,19 @@ done:
 static VOID
 OnInitUserProfileDialog(HWND hwndDlg)
 {
+    BOOL bAdmin;
+
+    bAdmin = IsUserAdmin();
+
     /* Initialize the list view control */
     SetListViewColumns(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
 
-    AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
+    /* Hide the delete and copy buttons for non-admins */
+    ShowWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), bAdmin ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), bAdmin ? SW_SHOW : SW_HIDE);
+
+    /* Add the profiles to the list view */
+    AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST), bAdmin);
 }
 
 

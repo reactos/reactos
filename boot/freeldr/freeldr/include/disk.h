@@ -145,12 +145,21 @@ extern SIZE_T DiskReadBufferSize;
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-VOID DiskDetectPartitionType(UCHAR DriveNumber);
-BOOLEAN DiskGetBootPartitionEntry(UCHAR DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *BootPartition);
-BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+VOID
+DiskDetectPartitionType(
+    IN UCHAR DriveNumber);
+
+BOOLEAN
+DiskGetBootPartitionEntry(
+    IN UCHAR DriveNumber,
+    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
+    OUT PULONG BootPartition);
+
+BOOLEAN
+DiskGetPartitionEntry(
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber,
+    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry);
 
 /*
  * SCSI support (disk/scsiport.c)

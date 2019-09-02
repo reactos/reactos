@@ -20,13 +20,13 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define SECTORSIZE 2048
 #define TAG_ISO_BUFFER 'BosI'
 #define TAG_ISO_FILE 'FosI'
-
-DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {

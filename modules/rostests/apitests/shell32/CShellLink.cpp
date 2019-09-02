@@ -9,6 +9,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <stdio.h>
 #include <shellutils.h>
 
 /* Test IShellLink::SetPath with environment-variables, existing, non-existing, ...*/

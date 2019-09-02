@@ -980,6 +980,16 @@ extern "C" {
 #define ICM_ON 2
 #define ICM_OFF 1
 #define ICM_QUERY 3
+
+#if (WINVER >= 0x0400)
+typedef struct _DRAWPATRECT {
+        POINT ptPosition;
+        POINT ptSize;
+        WORD  wStyle;
+        WORD  wPattern;
+} DRAWPATRECT, *PDRAWPATRECT;
+#endif
+
 #define NEWFRAME	1
 #define ABORTDOC	2
 #define NEXTBAND	3

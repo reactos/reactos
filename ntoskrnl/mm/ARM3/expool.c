@@ -2460,6 +2460,12 @@ ExFreePoolWithTag(IN PVOID P,
     PGENERAL_LOOKASIDE LookasideList;
     PEPROCESS Process;
 
+	if (P == NULL)
+	{
+		DPRINT1("Freeing null address not allowed\n");
+		return;
+		
+	}
     //
     // Check if any of the debug flags are enabled
     //

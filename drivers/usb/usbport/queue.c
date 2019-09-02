@@ -1261,7 +1261,7 @@ USBPORT_FlushController(IN PDEVICE_OBJECT FdoDevice)
     PUSBPORT_DEVICE_EXTENSION  FdoExtension;
     PLIST_ENTRY Entry;
     PUSBPORT_ENDPOINT Endpoint;
-    ULONG KilledTransfers = 0;
+    ULONG KilledTransfers;
     PLIST_ENTRY EndpointList;
     KIRQL OldIrql;
     LIST_ENTRY FlushList;
@@ -1301,6 +1301,7 @@ USBPORT_FlushController(IN PDEVICE_OBJECT FdoDevice)
 
         KeReleaseSpinLock(&FdoExtension->EndpointListSpinLock, OldIrql);
 
+        KilledTransfers = 0;
         while (!IsListEmpty(&FlushList))
         {
             Endpoint = CONTAINING_RECORD(FlushList.Flink,
@@ -1355,7 +1356,7 @@ USBPORT_AbortEndpoint(IN PDEVICE_OBJECT FdoDevice,
                       IN PIRP Irp)
 {
     PLIST_ENTRY PendingList;
-    PUSBPORT_TRANSFER PendingTransfer; 
+    PUSBPORT_TRANSFER PendingTransfer;
     PLIST_ENTRY ActiveList;
     PUSBPORT_TRANSFER ActiveTransfer;
 

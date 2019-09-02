@@ -16,10 +16,13 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable:4778) // unterminated format string '%'
-#else
+#elif defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-zero-length"
 #pragma GCC diagnostic ignored "-Wnonnull"
+#if __GNUC__ >= 7
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+#endif
 #endif
 
 static

@@ -23,6 +23,7 @@ list(APPEND SOURCE
     misc.c
     pin.c
     property.c
+    queue.c
     topology.c
     unknown.c
     worker.c

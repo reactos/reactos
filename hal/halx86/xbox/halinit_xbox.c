@@ -15,9 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ******************************************************************/
+
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
-/* FUNCTIONS ***************************************************************/
+/* FUNCTIONS ****************************************************************/
 
 VOID
 NTAPI
@@ -30,14 +32,33 @@ HalpInitProcessor(
 }
 
 VOID
-HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Initialize Xbox-specific disk hacks */
     HalpXboxInitPartIo();
 }
 
 VOID
 HalpInitPhase1(VOID)
 {
+    /* Enable IRQ 0 */
+    HalpEnableInterruptHandler(IDT_DEVICE,
+                               0,
+                               PRIMARY_VECTOR_BASE,
+                               CLOCK2_LEVEL,
+                               HalpClockInterrupt,
+                               Latched);
+
+    /* Enable IRQ 8 */
+    HalpEnableInterruptHandler(IDT_DEVICE,
+                               0,
+                               PRIMARY_VECTOR_BASE + 8,
+                               PROFILE_LEVEL,
+                               HalpProfileInterrupt,
+                               Latched);
+
+    /* Initialize DMA. NT does this in Phase 0 */
+    HalpInitDma();
 }
 
 /* EOF */

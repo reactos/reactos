@@ -588,7 +588,12 @@ Return Value:
         //  Knock as many files down for this volume as we can.
         Vcb->Vpb->RealDevice->Flags |= DO_VERIFY_VOLUME;
         Buf = (PPREVENT_MEDIA_REMOVAL_USER_IN)MyAllocatePool__(NonPagedPool, sizeof(PREVENT_MEDIA_REMOVAL_USER_IN));
-        if(!Buf) try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
+        if(!Buf) {
+            VcbAcquired = FALSE;
+            VcbDeleted = FALSE;
+            try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
+        }
+        
         UDFDoDismountSequence(Vcb, Buf, FALSE);
         Vcb->VCBFlags &= ~UDF_VCB_FLAGS_VOLUME_MOUNTED;
         Vcb->WriteSecurity = FALSE;

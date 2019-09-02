@@ -8,7 +8,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sintaxa comenzii:\n  REG [operație] [parametri]\n\nOperații disponibile:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nPentru informații despre o anume operație, tastați:\n  REG [operație] /?\n\n"
+    STRING_USAGE, "Sintaxa comenzii:\n  REG [operație] [parametri]\n\nOperații disponibile:\n  ADD | DELETE | IMPORT | EXPORT | QUERY | SAVE | RESTORE\n\nPentru informații despre o anume operație, tastați:\n  REG [operație] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"
@@ -46,4 +46,6 @@ STRINGTABLE
     STRING_EXPORT_USAGE, "REG EXPORT nume_cheie fișier.reg [/y]\n"
     STRING_INVALID_SYSTEM_KEY, "reg: Cheia de sistem [%1] nu este una validă.\n"
     STRING_OVERWRITE_FILE, "Fișierul «%1» deja există. Doriți suprascrierea lui?"
+    STRING_SAVE_USAGE, "REG SAVE key_name file_name [/y]"
+    STRING_RESTORE_USAGE, "REG RESTORE key_name file_name"
 }

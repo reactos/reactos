@@ -8,13 +8,6 @@
 #include "shelltest.h"
 #include <atlsimpcoll.h>
 #include <stdio.h>
-
-#if 1
-#define DbgPrint(...)   trace(__VA_ARGS__)
-#else
-EXTERN_C
-void DbgPrint(PCSTR, ...);
-#endif
 #include <shellutils.h>
 //#include <msgtrace.h>
 

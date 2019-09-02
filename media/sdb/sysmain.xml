@@ -233,9 +233,9 @@
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
 
-            <SHIM NAME="HideShimEnv">
+            <!--<SHIM NAME="HideShimEnv">
                 <DLLFILE>aclayers.dll</DLLFILE>
-            </SHIM>
+            </SHIM>-->
 
             <FLAG NAME="GetShortPathNameNT4">
                 <FLAG_MASK_KERNEL>1</FLAG_MASK_KERNEL>
@@ -247,6 +247,10 @@
         </LIBRARY>
 
         <!-- Backwards compatibility layers, incomplete! -->
+
+        <LAYER NAME="IgnoreManifestCompatVersion">
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="0xffffffff" />   <!-- REACTOS_COMPATVERSION_IGNOREMANIFEST -->
+        </LAYER>
 
         <LAYER NAME="WIN95">
             <SHIM_REF NAME="Win95VersionLie" />

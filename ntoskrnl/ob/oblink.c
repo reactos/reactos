@@ -5,6 +5,7 @@
 * PURPOSE:         Implements symbolic links
 * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
 *                  David Welch (welch@mcmail.com)
+*                  Pierre Schweitzer
 */
 
 /* INCLUDES *****************************************************************/
@@ -481,7 +482,98 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     /* Check if this symlink is bound to a specific object */
     if (SymlinkObject->LinkTargetObject)
     {
-        UNIMPLEMENTED;
+        /* No name to reparse, directly reparse the object */
+        if (!SymlinkObject->LinkTargetRemaining.Length)
+        {
+            *NextObject = SymlinkObject->LinkTargetObject;
+            return STATUS_REPARSE_OBJECT;
+        }
+
+        TempLength = SymlinkObject->LinkTargetRemaining.Length;
+        /* The target and remaining names aren't empty, so check for slashes */
+        if (SymlinkObject->LinkTargetRemaining.Buffer[TempLength / sizeof(WCHAR) - 1] == OBJ_NAME_PATH_SEPARATOR &&
+            RemainingName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+        {
+            /* Reduce the length by one to cut off the extra '\' */
+            TempLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+        }
+
+        /* Calculate the new length */
+        LengthUsed = TempLength + RemainingName->Length;
+        LengthUsed += (sizeof(WCHAR) * (RemainingName->Buffer - FullPath->Buffer));
+
+        /* Check if it's not too much */
+        if (LengthUsed > 0xFFF0)
+            return STATUS_NAME_TOO_LONG;
+
+        /* If FullPath is enough, use it */
+        if (FullPath->MaximumLength > LengthUsed)
+        {
+            /* Update remaining length if appropriate */
+            if (RemainingName->Length)
+            {
+                RtlMoveMemory((PVOID)((ULONG_PTR)RemainingName->Buffer + TempLength),
+                              RemainingName->Buffer,
+                              RemainingName->Length);
+            }
+
+            /* And move the target object name */
+            RtlCopyMemory(RemainingName->Buffer,
+                          SymlinkObject->LinkTargetRemaining.Buffer,
+                          TempLength);
+
+            /* Finally update the full path with what we parsed */
+            FullPath->Length += SymlinkObject->LinkTargetRemaining.Length;
+            RemainingName->Length += SymlinkObject->LinkTargetRemaining.Length;
+            RemainingName->MaximumLength += RemainingName->Length + sizeof(WCHAR);
+            FullPath->Buffer[FullPath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            /* And reparse */
+            *NextObject = SymlinkObject->LinkTargetObject;
+            return STATUS_REPARSE_OBJECT;
+        }
+
+        /* FullPath is not enough, we'll have to reallocate */
+        MaximumLength = LengthUsed + sizeof(WCHAR);
+        NewTargetPath = ExAllocatePoolWithTag(NonPagedPool,
+                                              MaximumLength,
+                                              OB_NAME_TAG);
+        if (!NewTargetPath) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Copy path begin */
+        RtlCopyMemory(NewTargetPath,
+                      FullPath->Buffer,
+                      sizeof(WCHAR) * (RemainingName->Buffer - FullPath->Buffer));
+
+        /* Copy path end (if any) */
+        if (RemainingName->Length)
+        {
+            RtlCopyMemory((PVOID)((ULONG_PTR)&NewTargetPath[RemainingName->Buffer - FullPath->Buffer] + TempLength),
+                          RemainingName->Buffer,
+                          RemainingName->Length);
+        }
+
+        /* And finish path with bound object */
+        RtlCopyMemory(&NewTargetPath[RemainingName->Buffer - FullPath->Buffer],
+                      SymlinkObject->LinkTargetRemaining.Buffer,
+                      TempLength);
+
+        /* Free old buffer */
+        ExFreePool(FullPath->Buffer);
+
+        /* Set new buffer in FullPath */
+        FullPath->Buffer = NewTargetPath;
+        FullPath->MaximumLength = MaximumLength;
+        FullPath->Length = LengthUsed;
+
+        /* Update remaining with what we handled */
+        RemainingName->Length = LengthUsed + (ULONG_PTR)NewTargetPath - (ULONG_PTR)&NewTargetPath[RemainingName->Buffer - FullPath->Buffer];
+        RemainingName->Buffer = &NewTargetPath[RemainingName->Buffer - FullPath->Buffer];
+        RemainingName->MaximumLength = RemainingName->Length + sizeof(WCHAR);
+
+        /* Reparse! */
+        *NextObject = SymlinkObject->LinkTargetObject;
+        return STATUS_REPARSE_OBJECT;
     }
 
     /* Set the target path and length */

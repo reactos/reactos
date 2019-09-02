@@ -10,12 +10,11 @@
 
 #include "installed.h"
 
-#include "gui.h"
 #include "misc.h"
 
-BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, ATL::CStringW& String)
+BOOL INSTALLED_INFO::GetApplicationString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
-    BOOL result = GetApplicationString(hKey, lpKeyName, String.GetBuffer(MAX_PATH));
+    BOOL result = ::GetApplicationString(hSubKey, lpKeyName, String.GetBuffer(MAX_PATH));
     String.ReleaseBuffer();
     return result;
 }
@@ -38,48 +37,16 @@ BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR szString)
     return FALSE;
 }
 
-BOOL UninstallApplication(INT Index, BOOL bModify)
+BOOL UninstallApplication(PINSTALLED_INFO ItemInfo, BOOL bModify)
 {
     LPCWSTR szModify = L"ModifyPath";
     LPCWSTR szUninstall = L"UninstallString";
-    WCHAR szPath[MAX_PATH];
-    WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
-    INT ItemIndex;
-    LVITEMW Item;
-    HKEY hKey;
-    PINSTALLED_INFO ItemInfo;
-
-    if (!IsInstalledEnum(SelectedEnumType))
-        return FALSE;
-
-    if (Index == -1)
-    {
-        ItemIndex = (INT) SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-        if (ItemIndex == -1)
-            return FALSE;
-    }
-    else
-    {
-        ItemIndex = Index;
-    }
-
-    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, _countof(szAppName));
-    WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
-
-    ZeroMemory(&Item, sizeof(Item));
-
-    Item.mask = LVIF_PARAM;
-    Item.iItem = ItemIndex;
-    if (!ListView_GetItem(hListView, &Item))
-        return FALSE;
-
-    ItemInfo = (PINSTALLED_INFO) Item.lParam;
-    hKey = ItemInfo->hSubKey;
+    WCHAR szPath[MAX_PATH];
 
     dwType = REG_SZ;
     dwSize = MAX_PATH * sizeof(WCHAR);
-    if (RegQueryValueExW(hKey,
+    if (RegQueryValueExW(ItemInfo->hSubKey,
                          bModify ? szModify : szUninstall,
                          NULL,
                          &dwType,
@@ -92,85 +59,7 @@ BOOL UninstallApplication(INT Index, BOOL bModify)
     return StartProcess(szPath, TRUE);
 }
 
-BOOL ShowInstalledAppInfo(INT Index)
-{
-    ATL::CStringW szText;
-    ATL::CStringW szInfo;
-    PINSTALLED_INFO Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
-
-    if (!Info || !Info->hSubKey) return FALSE;
-
-    GetApplicationString(Info->hSubKey, L"DisplayName", szText);
-    NewRichEditText(szText, CFE_BOLD);
-    InsertRichEditText(L"\n", 0);
-
-#define GET_INFO(a, b, c, d) \
-    if (GetApplicationString(Info->hSubKey, a, szInfo)) \
-    { \
-        szText.LoadStringW(b); \
-        InsertRichEditText(szText, c); \
-        InsertRichEditText(szInfo, d); \
-    } \
-
-    GET_INFO(L"DisplayVersion", IDS_INFO_VERSION, CFE_BOLD, 0);
-    GET_INFO(L"Publisher", IDS_INFO_PUBLISHER, CFE_BOLD, 0);
-    GET_INFO(L"RegOwner", IDS_INFO_REGOWNER, CFE_BOLD, 0);
-    GET_INFO(L"ProductID", IDS_INFO_PRODUCTID, CFE_BOLD, 0);
-    GET_INFO(L"HelpLink", IDS_INFO_HELPLINK, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"HelpTelephone", IDS_INFO_HELPPHONE, CFE_BOLD, 0);
-    GET_INFO(L"Readme", IDS_INFO_README, CFE_BOLD, 0);
-    GET_INFO(L"Contact", IDS_INFO_CONTACT, CFE_BOLD, 0);
-    GET_INFO(L"URLUpdateInfo", IDS_INFO_UPDATEINFO, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"URLInfoAbout", IDS_INFO_INFOABOUT, CFE_BOLD, CFM_LINK);
-    GET_INFO(L"Comments", IDS_INFO_COMMENTS, CFE_BOLD, 0);
-    GET_INFO(L"InstallDate", IDS_INFO_INSTALLDATE, CFE_BOLD, 0);
-    GET_INFO(L"InstallLocation", IDS_INFO_INSTLOCATION, CFE_BOLD, 0);
-    GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-    GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
-    GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
-    GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
-    
-    return TRUE;
-}
-
-VOID RemoveAppFromRegistry(INT Index)
-{
-    PINSTALLED_INFO Info;
-    WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
-    ATL::CStringW szMsgText, szMsgTitle;
-    INT ItemIndex = SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-
-    if (!IsInstalledEnum(SelectedEnumType))
-        return;
-
-    Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
-    if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
-
-    if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
-        !szMsgTitle.LoadStringW(IDS_INFORMATION))
-        return;
-
-    if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-    {
-        ATL::CStringW::CopyChars(szFullName,
-                                 MAX_PATH,
-                                 Info->szKeyName.GetString(),
-                                 MAX_PATH - wcslen(szFullName));
-
-        if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
-        {
-            ListView_DeleteItem(hListView, ItemIndex);
-            return;
-        }
-
-        if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
-            return;
-
-        MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
-    }
-}
-
-BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
+BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc, PVOID param)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent, bIsUpdate;
@@ -240,7 +129,7 @@ BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumP
                         ((EnumType == ENUM_INSTALLED_APPLICATIONS) && (!bIsUpdate)) || /* Applications only */
                         ((EnumType == ENUM_UPDATES) && (bIsUpdate))) /* Updates only */
                     {
-                        if (!lpEnumProc(ItemIndex, szDisplayName, &Info))
+                        if (!lpEnumProc(ItemIndex, szDisplayName, &Info, param))
                             break;
                     }
                     else

@@ -629,6 +629,7 @@ VideoPortGetAccessRanges(
                 /*
                  * Search for the device id and vendor id on this bus.
                  */
+                PciSlotNumber.u.bits.Reserved = 0;
                 for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
                 {
                     PciSlotNumber.u.bits.DeviceNumber = DeviceNumber;

@@ -1549,4 +1549,107 @@ done:
     return Status;
 }
 
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+SpLsaModeInitialize(
+    _In_ ULONG LsaVersion,
+    _Out_ PULONG PackageVersion,
+    _Out_ PSECPKG_FUNCTION_TABLE *ppTables,
+    _Out_ PULONG pcTables)
+{
+    SECPKG_FUNCTION_TABLE Tables[1];
+
+    TRACE("SpLsaModeInitialize(0x%lx %p %p %p)\n",
+          LsaVersion, PackageVersion, ppTables, pcTables);
+
+    if (LsaVersion != SECPKG_INTERFACE_VERSION)
+        return STATUS_INVALID_PARAMETER;
+
+    *PackageVersion = SECPKG_INTERFACE_VERSION;
+
+    RtlZeroMemory(&Tables, sizeof(Tables));
+
+    Tables[0].InitializePackage = LsaApInitializePackage;
+//    Tables[0].LogonUser = NULL;
+    Tables[0].CallPackage = (PLSA_AP_CALL_PACKAGE)LsaApCallPackage;
+    Tables[0].LogonTerminated = LsaApLogonTerminated;
+    Tables[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
+    Tables[0].CallPackagePassthrough = (PLSA_AP_CALL_PACKAGE_PASSTHROUGH)LsaApCallPackagePassthrough;
+//    Tables[0].LogonUserEx = NULL;
+    Tables[0].LogonUserEx2 = LsaApLogonUserEx2;
+//    Tables[0].Initialize = SpInitialize;
+//    Tables[0].Shutdown = NULL;
+//    Tables[0].GetInfo = NULL;
+//    Tables[0].AcceptCredentials = NULL;
+//    Tables[0].SpAcquireCredentialsHandle = NULL;
+//    Tables[0].SpQueryCredentialsAttributes = NULL;
+//    Tables[0].FreeCredentialsHandle = NULL;
+//    Tables[0].SaveCredentials = NULL;
+//    Tables[0].GetCredentials = NULL;
+//    Tables[0].DeleteCredentials = NULL;
+//    Tables[0].InitLsaModeContext = NULL;
+//    Tables[0].AcceptLsaModeContext = NULL;
+//    Tables[0].DeleteContext = NULL;
+//    Tables[0].ApplyControlToken = NULL;
+//    Tables[0].GetUserInfo = NULL;
+//    Tables[0].GetExtendedInformation = NULL;
+//    Tables[0].SpQueryContextAttributes = NULL;
+//    Tables[0].SpAddCredentials = NULL;
+//    Tables[0].SetExtendedInformation = NULL;
+
+    *ppTables = Tables;
+    *pcTables = 1;
+
+    return STATUS_SUCCESS;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+SpUserModeInitialize(
+    _In_ ULONG LsaVersion,
+    _Out_ PULONG PackageVersion,
+    _Out_ PSECPKG_USER_FUNCTION_TABLE *ppTables,
+    _Out_ PULONG pcTables)
+{
+    SECPKG_USER_FUNCTION_TABLE Tables[1];
+
+    TRACE("SpUserModeInitialize(0x%lx %p %p %p)\n",
+          LsaVersion, PackageVersion, ppTables, pcTables);
+
+    if (LsaVersion != SECPKG_INTERFACE_VERSION)
+        return STATUS_INVALID_PARAMETER;
+
+    *PackageVersion = SECPKG_INTERFACE_VERSION;
+
+    RtlZeroMemory(&Tables, sizeof(Tables));
+
+//    Tables[0].InstanceInit = SpInstanceInit;
+//    Tables[0].InitUserModeContext = NULL;
+//    Tables[0].MakeSignature = NULL;
+//    Tables[0].VerifySignature = NULL;
+//    Tables[0].SealMessage = NULL;
+//    Tables[0].UnsealMessage = NULL;
+//    Tables[0].GetContextToken = NULL;
+//    Tables[0].SpQueryContextAttributes = NULL;
+//    Tables[0].CompleteAuthToken = NULL;
+//    Tables[0].DeleteUserModeContext = NULL;
+//    Tables[0].FormatCredentials = NULL;
+//    Tables[0].MarshallSupplementalCreds = NULL;
+//    Tables[0].ExportContext = NULL;
+//    Tables[0].ImportContext = NULL;
+
+    *ppTables = Tables;
+    *pcTables = 1;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

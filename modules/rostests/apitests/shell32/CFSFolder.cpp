@@ -9,6 +9,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <stdio.h>
 #include <shellutils.h>
 
 LPITEMIDLIST _CreateDummyPidl()

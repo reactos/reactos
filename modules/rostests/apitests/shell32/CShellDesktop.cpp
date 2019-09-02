@@ -9,6 +9,7 @@
 #include "shelltest.h"
 
 #include <ndk/rtlfuncs.h>
+#include <stdio.h>
 #include <shellutils.h>
 
 // We would normally use S_LESSTHAN and S_GREATERTHAN, but w2k3 returns numbers like 3 and -3...

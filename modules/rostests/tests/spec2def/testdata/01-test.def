@@ -1,0 +1,14 @@
+; File generated automatically, do not edit!
+
+NAME testdll.xyz
+
+EXPORTS
+ @FastcallFunction@16
+ StdcallFunction@4
+ @Ret64Function@8
+ @Fastcalli386@4
+ Stdcalli386x64@0
+ StdcallVersionRange@16
+ StdcallForwarderToSameDll@0=StdcallTargetInSameDll@0
+ StubFunction
+ StdcallSuccessStub@4

@@ -741,7 +741,8 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
         "Chcesz zmieni\206 rozdzielczo\230\206 monitora.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  U\276ywaj\245c klawiszy G\340RA lub D\340\235, wybierz rozdzielczo\230\206 i llo\230\206",
          TEXT_STYLE_NORMAL
@@ -931,6 +932,112 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
         0,
         0,
         "Prosz\251 czeka\206...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY plPLChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1385,7 +1492,6 @@ static MUI_ENTRY plPLSelectFSEntries[] =
         "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj\230cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1484,6 +1590,21 @@ MUI_ERROR plPLErrorEntries[] =
         "  \x07  Naci\230nij ENTER, aby kontynuowa\206 instalacj\251.\n"
         "  \x07  Naci\230nij F3, aby wyj\230\206 z instalatora.",
         "F3 = Wyj\230cie  ENTER = Kontynuacja"
+    },
+    {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
     },
     {
         // ERROR_NO_HDD
@@ -1762,6 +1883,10 @@ MUI_PAGE plPLPages[] =
     {
         SELECT_PARTITION_PAGE,
         plPLSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        plPLChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

@@ -149,6 +149,7 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     SourceCodePro-Semibold.ttf
     SourceCodePro-SemiboldIt.ttf
+    #ssee874.fon
     #ssee1255.fon
     #ssee1256.fon
     #ssee1257.fon
@@ -164,7 +165,11 @@ list(APPEND FONT_FILES
     trebucbd.ttf
     trebucbi.ttf
     trebucit.ttf
-    UniVGA16.ttf)
+    UniVGA16.ttf
+    verdanab.ttf
+    verdanaz.ttf
+    verdanai.ttf
+    verdana.ttf)
 
 foreach(item ${FONT_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)

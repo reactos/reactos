@@ -26,5 +26,17 @@ for %%i in (M,
 N,
 O
 ) do echo %%j
+echo ------------ Testing Amp-Amp ---------
+echo --- test for something that is TRUE
+ver | find "Ver" > NUL && Echo TRUE Amp-Amp
+echo ------------ Testing Amp-Amp ---------
+echo --- test for something that is FALSE
+ver | find "1234" > NUL && Echo FALSE Amp-Amp
+echo ------------ Testing Pipe-Pipe -------
+echo --- test for something that is TRUE
+ver | find "Ver" > NUL || Echo TRUE Pipe-Pipe
+echo ------------ Testing Pipe-Pipe -------
+echo --- test for something that is FALSE
+ver | find "1234" > NUL || Echo FALSE Pipe-Pipe
 echo ------------ End of Testing ------------
 echo --- Testing ends here

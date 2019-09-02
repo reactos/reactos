@@ -22,9 +22,7 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(HWDETECT);
-
 
 #define MILLISEC     (10)
 #define PRECISION    (8)

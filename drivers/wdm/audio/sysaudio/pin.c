@@ -438,7 +438,7 @@ DispatchCreateSysAudioPin(
     PKSPIN_CONNECT Connect;
     PDISPATCH_CONTEXT DispatchContext;
 
-    DPRINT("DispatchCreateSysAudioPin entered\n");
+    DPRINT1("DispatchCreateSysAudioPin entered\n");
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);

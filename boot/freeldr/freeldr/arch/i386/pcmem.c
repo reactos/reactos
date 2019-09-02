@@ -26,7 +26,6 @@
 #include <arch/pc/x86common.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 #define ULONGLONG_ALIGN_DOWN_BY(size, align) \

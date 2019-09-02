@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel - Vista+ APIs
- * LICENSE:         GPL v2 - See COPYING in the top level directory
+ * LICENSE:         LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * FILE:            lib/drivers/ntoskrnl_vista/fsrtl.c
  * PURPOSE:         FsRtl functions of Vista+
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

@@ -18,11 +18,11 @@
  */
 
 #include <freeldr.h>
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(HEAP);
 
 #define FREELDR_HEAP_VERIFIER
-
-DBG_DEFAULT_CHANNEL(HEAP);
 
 #define REDZONE_MARK 0xCCCCCCCCCCCCCCCCULL
 #define REDZONE_ALLOCATION 24

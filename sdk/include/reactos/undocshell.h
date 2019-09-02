@@ -618,140 +618,6 @@ BOOL WINAPI GUIDFromStringW(
     _Out_  LPGUID pguid
     );
 
-static inline ULONG
-Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
-{
-    char szMsg[512];
-    char *szMsgStart;
-    const char *fname;
-    va_list vl;
-    ULONG uRet;
-
-    fname = strrchr(filename, '\\');
-    if (fname == NULL)
-    {
-        fname = strrchr(filename, '/');
-        if (fname != NULL)
-            fname++;
-    }
-    else
-        fname++;
-
-    if (fname == NULL)
-        fname = filename;
-
-    szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
-
-    va_start(vl, lpFormat);
-    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
-    va_end(vl);
-
-    OutputDebugStringA(szMsg);
-
-    return uRet;
-}
-
-#define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
-static inline void DbgDumpMenuInternal(HMENU hmenu, char* padding, int padlevel)
-{
-    WCHAR label[128];
-    int i;
-    int count = GetMenuItemCount(hmenu);
-
-    padding[padlevel] = '.';
-    padding[padlevel + 1] = '.';
-    padding[padlevel + 2] = 0;
-
-    for (i = 0; i < count; i++)
-    {
-        MENUITEMINFOW mii = { 0 };
-
-        mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU | MIIM_STATE | MIIM_ID;
-        mii.dwTypeData = label;
-        mii.cch = _countof(label);
-
-        GetMenuItemInfoW(hmenu, i, TRUE, &mii);
-
-        if (mii.fType & MFT_BITMAP)
-            DbgPrint("%s%2d - %08x: BITMAP %08p (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.hbmpItem, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
-        else if (mii.fType & MFT_SEPARATOR)
-            DbgPrint("%s%2d - %08x ---SEPARATOR---\n", padding, i, mii.wID);
-        else
-            DbgPrint("%s%2d - %08x: %S (state=%d, has submenu=%s)\n", padding, i, mii.wID, mii.dwTypeData, mii.fState, mii.hSubMenu ? "TRUE" : "FALSE");
-
-        if (mii.hSubMenu)
-            DbgDumpMenuInternal(mii.hSubMenu, padding, padlevel + 2);
-
-    }
-
-    padding[padlevel] = 0;
-}
-
-static __inline void DbgDumpMenu(HMENU hmenu)
-{
-    char padding[128];
-    DbgDumpMenuInternal(hmenu, padding, 0);
-}
-
-
-static inline
-void DumpIdList(LPCITEMIDLIST pcidl)
-{
-    DbgPrint("Begin IDList Dump\n");
-
-    for (; pcidl != NULL; pcidl = ILGetNext(pcidl))
-    {
-        int i;
-        int cb = pcidl->mkid.cb;
-        BYTE * sh = (BYTE*) &(pcidl->mkid);
-        if (cb == 0) // ITEMIDLISTs are terminatedwith a null SHITEMID.
-            break;
-        DbgPrint("Begin SHITEMID (cb=%d)\n", cb);
-        if ((cb & 3) != 0)
-            DbgPrint(" - WARNING: cb is not a multiple of 4\n");
-        for (i = 0; (i + 4) <= cb; i += 4)
-        {
-            DbgPrint(" - abID[%08x]: %02x %02x %02x %02x\n",
-                     i,
-                     sh[i + 0],
-                     sh[i + 1],
-                     sh[i + 2],
-                     sh[i + 3]);
-        }
-        if (i < cb)
-        {
-            cb -= i;
-            if (cb == 3)
-            {
-                DbgPrint(" - abID[%08x]: %02x %02x %02x --\n",
-                         i,
-                         sh[i + 0],
-                         sh[i + 1],
-                         sh[i + 2]);
-            }
-            else if (cb == 2)
-            {
-                DbgPrint(" - abID[%08x]: %02x %02x -- --\n",
-                         i,
-                         sh[i + 0],
-                         sh[i + 1]);
-            }
-            else if (cb == 1)
-            {
-                DbgPrint(" - abID[%08x]: %02x -- -- --\n",
-                         i,
-                         sh[i + 0]);
-            }
-        }
-        DbgPrint("End SHITEMID\n");
-    }
-    DbgPrint("End IDList Dump.\n");
-}
-
-
 /*****************************************************************************
  * Shell32 resources
  */
@@ -784,6 +650,31 @@ void DumpIdList(LPCITEMIDLIST pcidl)
 // undocumented flags for IShellMenu::SetShellFolder
 #define SMSET_UNKNOWN08             0x08
 #define SMSET_UNKNOWN10             0x10
+
+// explorer tray commands
+#define TRAYCMD_STARTMENU           305
+#define TRAYCMD_RUN_DIALOG          401
+#define TRAYCMD_LOGOFF_DIALOG       402
+#define TRAYCMD_CASCADE             403
+#define TRAYCMD_TILE_H              404
+#define TRAYCMD_TILE_V              405
+#define TRAYCMD_TOGGLE_DESKTOP      407
+#define TRAYCMD_DATE_AND_TIME       408
+#define TRAYCMD_TASKBAR_PROPERTIES  413
+#define TRAYCMD_MINIMIZE_ALL        415
+#define TRAYCMD_RESTORE_ALL         416
+#define TRAYCMD_SHOW_DESKTOP        419
+#define TRAYCMD_SHOW_TASK_MGR       420
+#define TRAYCMD_CUSTOMIZE_TASKBAR   421
+#define TRAYCMD_LOCK_TASKBAR        424
+#define TRAYCMD_HELP_AND_SUPPORT    503
+#define TRAYCMD_CONTROL_PANEL       505
+#define TRAYCMD_SHUTDOWN_DIALOG     506
+#define TRAYCMD_PRINTERS_AND_FAXES  510
+#define TRAYCMD_LOCK_DESKTOP        517
+#define TRAYCMD_SWITCH_USER_DIALOG  5000
+#define TRAYCMD_SEARCH_FILES        41093
+#define TRAYCMD_SEARCH_COMPUTERS    41094
 
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);

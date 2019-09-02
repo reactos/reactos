@@ -34,196 +34,195 @@ LIST_ENTRY PnpNotifyListHead;
 
 VOID
 IopNotifyPlugPlayNotification(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-	IN LPCGUID Event,
-	IN PVOID EventCategoryData1,
-	IN PVOID EventCategoryData2)
+    IN PDEVICE_OBJECT DeviceObject,
+    IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
+    IN LPCGUID Event,
+    IN PVOID EventCategoryData1,
+    IN PVOID EventCategoryData2)
 {
-	PPNP_NOTIFY_ENTRY ChangeEntry;
-	PLIST_ENTRY ListEntry;
-	PVOID NotificationStructure;
-	BOOLEAN CallCurrentEntry;
-	UNICODE_STRING GuidString;
-	NTSTATUS Status;
-	PDEVICE_OBJECT EntryDeviceObject = NULL;
+    PPNP_NOTIFY_ENTRY ChangeEntry;
+    PLIST_ENTRY ListEntry;
+    PVOID NotificationStructure;
+    BOOLEAN CallCurrentEntry;
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+    PDEVICE_OBJECT EntryDeviceObject = NULL;
 
-	ASSERT(DeviceObject);
+    ASSERT(DeviceObject);
 
-	KeAcquireGuardedMutex(&PnpNotifyListLock);
-	if (IsListEmpty(&PnpNotifyListHead))
-	{
-		KeReleaseGuardedMutex(&PnpNotifyListLock);
-		return;
-	}
+    KeAcquireGuardedMutex(&PnpNotifyListLock);
+    if (IsListEmpty(&PnpNotifyListHead))
+    {
+        KeReleaseGuardedMutex(&PnpNotifyListLock);
+        return;
+    }
 
-	switch (EventCategory)
-	{
-		case EventCategoryDeviceInterfaceChange:
-		{
-			PDEVICE_INTERFACE_CHANGE_NOTIFICATION NotificationInfos;
-			NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
-				PagedPool,
-				sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION),
-				TAG_PNP_NOTIFY);
-			if (!NotificationInfos)
-			{
-				KeReleaseGuardedMutex(&PnpNotifyListLock);
-				return;
-			}
-			NotificationInfos->Version = 1;
-			NotificationInfos->Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
-			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
-			RtlCopyMemory(&NotificationInfos->InterfaceClassGuid, EventCategoryData1, sizeof(GUID));
-			NotificationInfos->SymbolicLinkName = (PUNICODE_STRING)EventCategoryData2;
-			Status = RtlStringFromGUID(&NotificationInfos->InterfaceClassGuid, &GuidString);
-			if (!NT_SUCCESS(Status))
-			{
-				KeReleaseGuardedMutex(&PnpNotifyListLock);
-				ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
-				return;
-			}
-			break;
-		}
-		case EventCategoryHardwareProfileChange:
-		{
-			PHWPROFILE_CHANGE_NOTIFICATION NotificationInfos;
-			NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
-				PagedPool,
-				sizeof(HWPROFILE_CHANGE_NOTIFICATION),
-				TAG_PNP_NOTIFY);
-			if (!NotificationInfos)
-			{
-				KeReleaseGuardedMutex(&PnpNotifyListLock);
-				return;
-			}
-			NotificationInfos->Version = 1;
-			NotificationInfos->Size = sizeof(HWPROFILE_CHANGE_NOTIFICATION);
-			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
-			break;
-		}
-		case EventCategoryTargetDeviceChange:
-		{
-			if (Event != &GUID_PNP_CUSTOM_NOTIFICATION)
-			{
-				PTARGET_DEVICE_REMOVAL_NOTIFICATION NotificationInfos;
-				NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
-					PagedPool,
-					sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION),
-					TAG_PNP_NOTIFY);
-				if (!NotificationInfos)
-				{
-					KeReleaseGuardedMutex(&PnpNotifyListLock);
-					return;
-				}
-				NotificationInfos->Version = 1;
-				NotificationInfos->Size = sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION);
-				RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
-			}
-			else
-			{
-				PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationInfos;
-				NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
-					PagedPool,
-					sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION),
-					TAG_PNP_NOTIFY);
-				if (!NotificationInfos)
-				{
-					KeReleaseGuardedMutex(&PnpNotifyListLock);
-					return;
-				}
-				RtlCopyMemory(NotificationInfos, EventCategoryData1, sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION));
-			}
-			break;
-		}
-		default:
-		{
-			DPRINT1("IopNotifyPlugPlayNotification(): unknown EventCategory 0x%x UNIMPLEMENTED\n", EventCategory);
-			KeReleaseGuardedMutex(&PnpNotifyListLock);
-			return;
-		}
-	}
+    switch (EventCategory)
+    {
+        case EventCategoryDeviceInterfaceChange:
+        {
+            PDEVICE_INTERFACE_CHANGE_NOTIFICATION NotificationInfos;
+            NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+                PagedPool,
+                sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION),
+                TAG_PNP_NOTIFY);
+            if (!NotificationInfos)
+            {
+                KeReleaseGuardedMutex(&PnpNotifyListLock);
+                return;
+            }
+            NotificationInfos->Version = 1;
+            NotificationInfos->Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
+            RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
+            RtlCopyMemory(&NotificationInfos->InterfaceClassGuid, EventCategoryData1, sizeof(GUID));
+            NotificationInfos->SymbolicLinkName = (PUNICODE_STRING)EventCategoryData2;
+            Status = RtlStringFromGUID(&NotificationInfos->InterfaceClassGuid, &GuidString);
+            if (!NT_SUCCESS(Status))
+            {
+                KeReleaseGuardedMutex(&PnpNotifyListLock);
+                ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
+                return;
+            }
+            break;
+        }
+        case EventCategoryHardwareProfileChange:
+        {
+            PHWPROFILE_CHANGE_NOTIFICATION NotificationInfos;
+            NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+                PagedPool,
+                sizeof(HWPROFILE_CHANGE_NOTIFICATION),
+                TAG_PNP_NOTIFY);
+            if (!NotificationInfos)
+            {
+                KeReleaseGuardedMutex(&PnpNotifyListLock);
+                return;
+            }
+            NotificationInfos->Version = 1;
+            NotificationInfos->Size = sizeof(HWPROFILE_CHANGE_NOTIFICATION);
+            RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
+            break;
+        }
+        case EventCategoryTargetDeviceChange:
+        {
+            if (Event != &GUID_PNP_CUSTOM_NOTIFICATION)
+            {
+                PTARGET_DEVICE_REMOVAL_NOTIFICATION NotificationInfos;
+                NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+                    PagedPool,
+                    sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION),
+                    TAG_PNP_NOTIFY);
+                if (!NotificationInfos)
+                {
+                    KeReleaseGuardedMutex(&PnpNotifyListLock);
+                    return;
+                }
+                NotificationInfos->Version = 1;
+                NotificationInfos->Size = sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION);
+                RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
+            }
+            else
+            {
+                PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationInfos;
+                NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+                    PagedPool,
+                    sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION),
+                    TAG_PNP_NOTIFY);
+                if (!NotificationInfos)
+                {
+                    KeReleaseGuardedMutex(&PnpNotifyListLock);
+                    return;
+                }
+                RtlCopyMemory(NotificationInfos, EventCategoryData1, sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION));
+            }
+            break;
+        }
+        default:
+        {
+            DPRINT1("IopNotifyPlugPlayNotification(): unknown EventCategory 0x%x UNIMPLEMENTED\n", EventCategory);
+            KeReleaseGuardedMutex(&PnpNotifyListLock);
+            return;
+        }
+    }
 
-	/* Loop through procedures registred in PnpNotifyListHead
-	 * list to find those that meet some criteria.
-	 */
-	ListEntry = PnpNotifyListHead.Flink;
-	while (ListEntry != &PnpNotifyListHead)
-	{
-		ChangeEntry = CONTAINING_RECORD(ListEntry, PNP_NOTIFY_ENTRY, PnpNotifyList);
-		CallCurrentEntry = FALSE;
+    /* Loop through procedures registred in PnpNotifyListHead
+     * list to find those that meet some criteria.
+     */
+    ListEntry = PnpNotifyListHead.Flink;
+    while (ListEntry != &PnpNotifyListHead)
+    {
+        ChangeEntry = CONTAINING_RECORD(ListEntry, PNP_NOTIFY_ENTRY, PnpNotifyList);
+        CallCurrentEntry = FALSE;
 
-		if (ChangeEntry->EventCategory != EventCategory)
-		{
-			ListEntry = ListEntry->Flink;
-			continue;
-		}
+        if (ChangeEntry->EventCategory != EventCategory)
+        {
+            ListEntry = ListEntry->Flink;
+            continue;
+        }
 
-		switch (EventCategory)
-		{
-			case EventCategoryDeviceInterfaceChange:
-			{
-				if (RtlCompareUnicodeString(&ChangeEntry->Guid, &GuidString, FALSE) == 0)
-				{
-					CallCurrentEntry = TRUE;
-				}
-				break;
-			}
-			case EventCategoryHardwareProfileChange:
-			{
-				CallCurrentEntry = TRUE;
-				break;
-			}
-			case EventCategoryTargetDeviceChange:
-			{
-				Status = IoGetRelatedTargetDevice(ChangeEntry->FileObject, &EntryDeviceObject);
-				if (NT_SUCCESS(Status))
-				{
-					if (DeviceObject == EntryDeviceObject)
-					{
-						if (Event == &GUID_PNP_CUSTOM_NOTIFICATION)
-						{
-							((PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
-						}
-						else
-						{
-							((PTARGET_DEVICE_REMOVAL_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
-						}
-						CallCurrentEntry = TRUE;
-					}
-				}
-				break;
-			}
-			default:
-			{
-				DPRINT1("IopNotifyPlugPlayNotification(): unknown EventCategory 0x%x UNIMPLEMENTED\n", EventCategory);
-				break;
-			}
-		}
+        switch (EventCategory)
+        {
+            case EventCategoryDeviceInterfaceChange:
+            {
+                if (RtlCompareUnicodeString(&ChangeEntry->Guid, &GuidString, FALSE) == 0)
+                {
+                    CallCurrentEntry = TRUE;
+                }
+                break;
+            }
+            case EventCategoryHardwareProfileChange:
+            {
+                CallCurrentEntry = TRUE;
+                break;
+            }
+            case EventCategoryTargetDeviceChange:
+            {
+                Status = IoGetRelatedTargetDevice(ChangeEntry->FileObject, &EntryDeviceObject);
+                if (NT_SUCCESS(Status))
+                {
+                    if (DeviceObject == EntryDeviceObject)
+                    {
+                        if (Event == &GUID_PNP_CUSTOM_NOTIFICATION)
+                        {
+                            ((PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
+                        }
+                        else
+                        {
+                            ((PTARGET_DEVICE_REMOVAL_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
+                        }
+                        CallCurrentEntry = TRUE;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                DPRINT1("IopNotifyPlugPlayNotification(): unknown EventCategory 0x%x UNIMPLEMENTED\n", EventCategory);
+                break;
+            }
+        }
 
-		/* Move to the next element now, as callback may unregister itself */
-		ListEntry = ListEntry->Flink;
-		/* FIXME: If ListEntry was the last element and that callback registers
-		 * new notifications, those won't be checked... */
+        /* Move to the next element now, as callback may unregister itself */
+        ListEntry = ListEntry->Flink;
+        /* FIXME: If ListEntry was the last element and that callback registers
+         * new notifications, those won't be checked... */
 
-		if (CallCurrentEntry)
-		{
-			/* Call entry into new allocated memory */
-			DPRINT("IopNotifyPlugPlayNotification(): found suitable callback %p\n",
-				ChangeEntry);
+        if (CallCurrentEntry)
+        {
+            /* Call entry into new allocated memory */
+            DPRINT("IopNotifyPlugPlayNotification(): found suitable callback %p\n",
+                ChangeEntry);
 
-			KeReleaseGuardedMutex(&PnpNotifyListLock);
-			(ChangeEntry->PnpNotificationProc)(
-				NotificationStructure,
-				ChangeEntry->Context);
-			KeAcquireGuardedMutex(&PnpNotifyListLock);
-		}
+            KeReleaseGuardedMutex(&PnpNotifyListLock);
+            (ChangeEntry->PnpNotificationProc)(NotificationStructure,
+                                               ChangeEntry->Context);
+            KeAcquireGuardedMutex(&PnpNotifyListLock);
+        }
 
-	}
-	KeReleaseGuardedMutex(&PnpNotifyListLock);
-	ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
-	if (EventCategory == EventCategoryDeviceInterfaceChange)
-		RtlFreeUnicodeString(&GuidString);
+    }
+    KeReleaseGuardedMutex(&PnpNotifyListLock);
+    ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
+    if (EventCategory == EventCategoryDeviceInterfaceChange)
+        RtlFreeUnicodeString(&GuidString);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -280,7 +279,7 @@ IoRegisterPlugPlayNotification(IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (EventCategory == EventCategoryDeviceInterfaceChange	&&
+    if (EventCategory == EventCategoryDeviceInterfaceChange &&
         EventCategoryFlags & PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES)
     {
         DEVICE_INTERFACE_CHANGE_NOTIFICATION NotificationInfos;

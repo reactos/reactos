@@ -75,8 +75,8 @@ WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
             InLoadOrderLinks);
 
         TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%.*ws'\n",
-            DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
-            DataTableEntry->BaseDllName.Length / 2, VaToPa(DataTableEntry->BaseDllName.Buffer));
+              DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
+              DataTableEntry->BaseDllName.Length / 2, VaToPa(DataTableEntry->BaseDllName.Buffer));
 
         /* Compare names */
         if (WinLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
@@ -119,7 +119,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
         BaseName.MaximumLength = ScanDTE->BaseDllName.MaximumLength;
         BaseName.Length = ScanDTE->BaseDllName.Length;
         TRACE("WinLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
-            &BaseName, ImportTable);
+              &BaseName, ImportTable);
     }
 #endif
 
@@ -182,8 +182,9 @@ WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     PIMAGE_NT_HEADERS NtHeaders;
     USHORT Length;
+
     TRACE("WinLdrAllocateDataTableEntry(, '%s', '%s', %p)\n",
-       BaseDllName, FullDllName, BasePA);
+          BaseDllName, FullDllName, BasePA);
 
     /* Allocate memory for a data table entry, zero-initialize it */
     DataTableEntry = (PLDR_DATA_TABLE_ENTRY)FrLdrHeapAlloc(sizeof(LDR_DATA_TABLE_ENTRY),
@@ -281,13 +282,14 @@ WinLdrLoadImage(IN PCHAR FileName,
     ARC_STATUS Status;
     LARGE_INTEGER Position;
     ULONG i, BytesRead;
+
     TRACE("WinLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
 
     /* Open the image file */
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
+    Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        ERR("ArcOpen(FileName: \"%s\", OpenReadOnly: %u) failed. Status %u\n", FileName, OpenReadOnly, Status);
+        WARN("ArcOpen(FileName: '%s') failed. Status: %u\n", FileName, Status);
         return FALSE;
     }
 
@@ -472,7 +474,7 @@ WinLdrpCompareDllName(IN PCH DllName,
         UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
         UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
         TRACE("WinLdrpCompareDllName: %s and %wZ, Length = %d "
-            "UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
+              "UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
     }
 #endif
 
@@ -525,7 +527,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
     BOOLEAN Success;
 
     //TRACE("WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
-    //    DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
+    //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
     /* Check passed DllBase param */
     if(DllBase == NULL)
@@ -564,7 +566,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
         OrdinalTable = VaToPa(RVA(DllBase, ExportDirectory->AddressOfNameOrdinals));
 
         //TRACE("NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
-        //    NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
+        //      NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
 
         /* Get the hint, convert it to a physical pointer */
         Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
@@ -604,14 +606,13 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                 /* Compare the names */
                 Result = strcmp(ExportName, (PCHAR)ImportData->Name);
 
-                /*TRACE("Binary search: comparing Import '__', Export '%s'\n",*/
-                    /*VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),*/
-                    /*(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));*/
+                // TRACE("Binary search: comparing Import '__', Export '%s'\n",
+                      // VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
+                      // (PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
-                /*TRACE("TE->u1.AOD %p, fulladdr %p\n",
-                    ThunkData->u1.AddressOfData,
-                    ((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name );*/
-
+                // TRACE("TE->u1.AOD %p, fulladdr %p\n",
+                      // ThunkData->u1.AddressOfData,
+                      // ((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name );
 
                 /* Depending on result of strcmp, perform different actions */
                 if (Result > 0)
@@ -634,7 +635,6 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
             /* If high boundary is less than low boundary, then no result found */
             if (High < Low)
             {
-                //Print(L"Error in binary search\n");
                 ERR("Did not find export '%s'!\n", (PCHAR)ImportData->Name);
                 return FALSE;
             }
@@ -668,6 +668,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
         CHAR ForwardDllName[255];
         PIMAGE_EXPORT_DIRECTORY RefExportDirectory;
         ULONG RefExportSize;
+
         TRACE("WinLdrpBindImportName(): ForwarderName %s\n", ForwarderName);
 
         /* Save the name of the forward dll */
@@ -770,7 +771,6 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
     strcat(FullDllName, ImportName);
 
     TRACE("Loading referenced DLL: %s\n", FullDllName);
-    //Print(L"Loading referenced DLL: %s\n", FullDllName);
 
     /* Load the image */
     Success = WinLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
@@ -794,7 +794,7 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 
     /* Scan its dependencies too */
     TRACE("WinLdrScanImportDescriptorTable() calling ourselves for %S\n",
-        VaToPa((*DataTableEntry)->BaseDllName.Buffer));
+          VaToPa((*DataTableEntry)->BaseDllName.Buffer));
     Success = WinLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
     if (!Success)
     {
@@ -817,7 +817,7 @@ WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
     ULONG ExportSize;
 
     TRACE("WinLdrpScanImportAddressTable(): DllBase 0x%X, "
-        "ImageBase 0x%X, ThunkData 0x%X\n", DllBase, ImageBase, ThunkData);
+          "ImageBase 0x%X, ThunkData 0x%X\n", DllBase, ImageBase, ThunkData);
 
     /* Obtain the export table from the DLL's base */
     if (DllBase == NULL)

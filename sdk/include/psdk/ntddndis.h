@@ -45,16 +45,30 @@ typedef enum _NDIS_DEVICE_POWER_STATE {
 typedef enum _NDIS_802_11_WEP_STATUS
 {
     Ndis802_11WEPEnabled,
+    Ndis802_11Encryption1Enabled = Ndis802_11WEPEnabled,
     Ndis802_11WEPDisabled,
+    Ndis802_11EncryptionDisabled = Ndis802_11WEPDisabled,
     Ndis802_11WEPKeyAbsent,
-    Ndis802_11WEPNotSupported
-} NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS;
+    Ndis802_11Encryption1KeyAbsent = Ndis802_11WEPKeyAbsent,
+    Ndis802_11WEPNotSupported,
+    Ndis802_11EncryptionNotSupported = Ndis802_11WEPNotSupported,
+    Ndis802_11Encryption2Enabled,
+    Ndis802_11Encryption2KeyAbsent,
+    Ndis802_11Encryption3Enabled,
+    Ndis802_11Encryption3KeyAbsent
+} NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS,
+  NDIS_802_11_ENCRYPTION_STATUS, *PNDIS_802_11_ENCRYPTION_STATUS;
 
 typedef enum _NDIS_802_11_AUTHENTICATION_MODE
 {
     Ndis802_11AuthModeOpen,
     Ndis802_11AuthModeShared,
     Ndis802_11AuthModeAutoSwitch,
+    Ndis802_11AuthModeWPA,
+    Ndis802_11AuthModeWPAPSK,
+    Ndis802_11AuthModeWPANone,
+    Ndis802_11AuthModeWPA2,
+    Ndis802_11AuthModeWPA2PSK,
     Ndis802_11AuthModeMax
 } NDIS_802_11_AUTHENTICATION_MODE, *PNDIS_802_11_AUTHENTICATION_MODE;
 
@@ -140,6 +154,18 @@ typedef struct _NDIS_802_11_WEP
     ULONG KeyLength;
     UCHAR KeyMaterial[1];
 } NDIS_802_11_WEP, *PNDIS_802_11_WEP;
+
+typedef ULONGLONG NDIS_802_11_KEY_RSC;
+
+typedef struct _NDIS_802_11_KEY
+{
+    ULONG Length;
+    ULONG KeyIndex;
+    ULONG KeyLength;
+    NDIS_802_11_MAC_ADDRESS BSSID;
+    NDIS_802_11_KEY_RSC KeyRSC;
+    UCHAR KeyMaterial[1];
+} NDIS_802_11_KEY, *PNDIS_802_11_KEY;
 
 typedef struct _NDIS_PM_WAKE_UP_CAPABILITIES {
   NDIS_DEVICE_POWER_STATE  MinMagicPacketWakeUp;

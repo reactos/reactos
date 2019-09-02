@@ -50,6 +50,7 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 [AccessibilityShortcuts]
 %SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\utilman.exe, %UTILMAN_TITLE%, %UTILMAN_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [EntertainmentShortcuts]
 %SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
@@ -133,6 +134,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
+UTILMAN_TITLE=Accessibility Utility Manager
+UTILMAN_DESC=Launch Accessibility Utility Manager
 
 ; Bulgarian
 [Strings.0402]
@@ -576,6 +579,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=WineMine
 SPIDER_TITLE=Spider Solitaire
 SPIDER_DESC=Spider Solitaire
+UTILMAN_TITLE=Gestionnaire d'utilitaires d'accessibilité
+UTILMAN_DESC=Lance le gestionnaire d'utilitaires d'accessibilité
 
 ; Hebrew
 [Strings.040D]
@@ -625,8 +630,8 @@ DXDIAG_TITLE=ReactX Diagnostic
 DXDIAG_DESC=Launch ReactX-Diagnostic program
 MAGNIFY_TITLE=זכוכית מגדלת
 MAGNIFY_DESC=זכוכית מגדלת
-OSK_TITLE=על לוח מקשים על המסך
-OSK_DESC=הפעלה על לוח מקשים על המסך
+OSK_TITLE=לוח מקשים על התצוגה
+OSK_DESC=הפעל את לוח מקשים על התצוגה
 MPLAY_TITLE=נגן מולטימדיה
 MPLAY_DESC=נגן המולטימדיה
 SNDVOL_TITLE=בקרת עוצמה
@@ -639,6 +644,8 @@ WINMINE_TITLE=שולה המוקשים
 WINMINE_DESC=שולה המוקשים
 SPIDER_TITLE=סוליטייר עכביש
 SPIDER_DESC=סוליטייר עכביש
+UTILMAN_TITLE=מנהל כלי הנגישות
+UTILMAN_DESC=הפעל את מנהל כלי הנגישות
 
 ; Hungarian
 [Strings.040E]

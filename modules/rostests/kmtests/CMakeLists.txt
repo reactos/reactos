@@ -23,6 +23,7 @@ list(APPEND COMMON_SOURCE
     rtl/RtlRegistry.c
     rtl/RtlSplayTree.c
     rtl/RtlStack.c
+    rtl/RtlStrSafe.c
     rtl/RtlUnicodeString.c)
 
 #

@@ -144,6 +144,23 @@ static void output_formatstring(const WCHAR *fmt, __ms_va_list va_args)
     LocalFree(str);
 }
 
+static void output_error(LSTATUS status)
+{
+    WCHAR* str;
+    DWORD len;
+
+    SetLastError(NO_ERROR);
+    len = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, status, 0, (WCHAR*)&str, 0, NULL);
+    if (len == 0 && GetLastError() != NO_ERROR)
+    {
+        WINE_FIXME("Could not format error code: le=%u, error=%u", GetLastError(), status);
+        return;
+    }
+
+    output_writeconsole(str, len);
+    LocalFree(str);
+}
+
 void WINAPIV output_message(unsigned int id, ...)
 {
     WCHAR fmt[1024];
@@ -892,6 +909,141 @@ static BOOL is_switch(const WCHAR *s, const WCHAR c)
     return FALSE;
 }
 
+static BOOL set_privilege(LPCWSTR privilegeName, BOOL enabled)
+{
+    HANDLE hToken = INVALID_HANDLE_VALUE;
+    TOKEN_PRIVILEGES tp;
+    DWORD error = ERROR_SUCCESS;
+
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (enabled ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValueW(NULL, privilegeName, &tp.Privileges[0].Luid))
+        {
+            if (AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL))
+            {
+                if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                {
+                    error = ERROR_NOT_ALL_ASSIGNED;
+                    goto fail;
+                }
+            }
+            else
+            {
+                error = GetLastError();
+                goto fail;
+            }
+        }
+        else
+        {
+            error = GetLastError();
+            goto fail;
+        }
+    }
+    else
+    {
+        error = GetLastError();
+        goto fail;
+    }
+
+    CloseHandle(hToken);
+    return TRUE;
+
+fail:
+    // Don't allow a success error to be printed, as that would confuse the user.
+    // "Access denied" seems like a reasonable default.
+    if (error == ERROR_SUCCESS) error = ERROR_ACCESS_DENIED;
+    if (hToken != INVALID_HANDLE_VALUE) CloseHandle(hToken);
+
+    output_error(error);
+    return FALSE;
+}
+
+static int reg_save(int argc, WCHAR* argv[]) {
+    HKEY root, hkey;
+    LSTATUS status;
+    WCHAR* path, *long_key;
+
+    if (argc < 4 || argc > 5) goto error;
+
+    if (!parse_registry_key(argv[2], &root, &path, &long_key))
+        return 1;
+
+    if (GetFileAttributes(argv[3]) != INVALID_FILE_ATTRIBUTES)
+    {
+        if (argc == 5 && !strcmpiW(argv[4], L"/y"))
+        {
+            DeleteFile(argv[3]);
+        }
+        else
+        {
+            if (ask_confirm(STRING_OVERWRITE_FILE, argv[3]))
+                DeleteFile(argv[3]);
+        }
+    }
+
+    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
+    {
+        output_message(STRING_INVALID_KEY);
+        return 1;
+    }
+
+    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1; 
+
+    status = RegSaveKeyExW(hkey, argv[3], NULL, REG_LATEST_FORMAT);
+    RegCloseKey(hkey);
+
+    if (status != ERROR_SUCCESS) {
+        output_error(status);
+        return 1;
+    }
+
+    return 0;
+
+error:
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, struprW(argv[1]));
+    return 1;
+}
+
+static int reg_restore(int argc, WCHAR* argv[])
+{
+    HKEY root, hkey;
+    LSTATUS status;
+    WCHAR* path, * long_key;
+
+    if (argc != 4) goto error;
+
+    if (!parse_registry_key(argv[2], &root, &path, &long_key))
+        return 1;
+
+    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
+    {
+        output_message(STRING_INVALID_KEY);
+        return 1;
+    }
+
+    if (!set_privilege(SE_BACKUP_NAME, TRUE)) return 1;
+    if (!set_privilege(SE_RESTORE_NAME, TRUE)) return 1;
+
+    status = RegRestoreKeyW(hkey, argv[3], 0);
+    RegCloseKey(hkey);
+
+    if (status != ERROR_SUCCESS) {
+        output_error(status);
+        return 1;
+    }
+
+    return 0;
+
+error:
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, struprW(argv[1]));
+    return 1;
+}
+
 static BOOL is_help_switch(const WCHAR *s)
 {
     if (is_switch(s, '?') || is_switch(s, 'h'))
@@ -906,6 +1058,8 @@ enum operations {
     REG_IMPORT,
     REG_EXPORT,
     REG_QUERY,
+    REG_SAVE,
+    REG_RESTORE,
     REG_INVALID
 };
 
@@ -918,6 +1072,8 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
     static const WCHAR import[] = {'i','m','p','o','r','t',0};
     static const WCHAR export[] = {'e','x','p','o','r','t',0};
     static const WCHAR query[] = {'q','u','e','r','y',0};
+    static const WCHAR save[] = L"save";
+    static const WCHAR restore[] = L"restore";
 
     static const struct op_info op_array[] =
     {
@@ -926,6 +1082,8 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
         { import,  REG_IMPORT,  STRING_IMPORT_USAGE },
         { export,  REG_EXPORT,  STRING_EXPORT_USAGE },
         { query,   REG_QUERY,   STRING_QUERY_USAGE },
+        { save,    REG_SAVE,    STRING_SAVE_USAGE },
+        { restore, REG_RESTORE, STRING_RESTORE_USAGE },
         { NULL,    -1,          0 }
     };
 
@@ -995,6 +1153,12 @@ int wmain(int argc, WCHAR *argvW[])
 
     if (op == REG_EXPORT)
         return reg_export(argc, argvW);
+
+    if (op == REG_SAVE)
+        return reg_save(argc, argvW);
+
+    if (op == REG_RESTORE)
+        return reg_restore(argc, argvW);
 
     if (!parse_registry_key(argvW[2], &root, &path, &key_name))
         return 1;

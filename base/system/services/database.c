@@ -40,61 +40,89 @@ static DWORD PipeTimeout = 30000; /* 30 Seconds */
 
 /* FUNCTIONS *****************************************************************/
 
+static
+BOOL
+ScmIsSecurityService(
+    _In_ PSERVICE_IMAGE pServiceImage)
+{
+    return (wcsstr(pServiceImage->pszImagePath, L"\\system32\\lsass.exe") != NULL);
+}
+
+
 static DWORD
-ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
+ScmCreateNewControlPipe(
+    _In_ PSERVICE_IMAGE pServiceImage,
+    _In_ BOOL bSecurityServiceProcess)
 {
     WCHAR szControlPipeName[MAX_PATH + 1];
     SECURITY_ATTRIBUTES SecurityAttributes;
     HKEY hServiceCurrentKey = INVALID_HANDLE_VALUE;
-    DWORD ServiceCurrent = 0;
-    DWORD KeyDisposition;
+    DWORD dwServiceCurrent = 1;
+    DWORD dwKeyDisposition;
     DWORD dwKeySize;
     DWORD dwError;
 
     /* Get the service number */
-    /* TODO: Create registry entry with correct write access */
-    dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                              L"SYSTEM\\CurrentControlSet\\Control\\ServiceCurrent", 0, NULL,
-                              REG_OPTION_VOLATILE,
-                              KEY_WRITE | KEY_READ,
-                              NULL,
-                              &hServiceCurrentKey,
-                              &KeyDisposition);
-    if (dwError != ERROR_SUCCESS)
+    if (bSecurityServiceProcess == FALSE)
     {
-        DPRINT1("RegCreateKeyEx() failed with error %lu\n", dwError);
-        return dwError;
-    }
-
-    if (KeyDisposition == REG_OPENED_EXISTING_KEY)
-    {
-        dwKeySize = sizeof(DWORD);
-        dwError = RegQueryValueExW(hServiceCurrentKey,
-                                   L"", 0, NULL, (BYTE*)&ServiceCurrent, &dwKeySize);
-
+        /* TODO: Create registry entry with correct write access */
+        dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                                  L"SYSTEM\\CurrentControlSet\\Control\\ServiceCurrent",
+                                  0,
+                                  NULL,
+                                  REG_OPTION_VOLATILE,
+                                  KEY_WRITE | KEY_READ,
+                                  NULL,
+                                  &hServiceCurrentKey,
+                                  &dwKeyDisposition);
         if (dwError != ERROR_SUCCESS)
         {
-            RegCloseKey(hServiceCurrentKey);
-            DPRINT1("RegQueryValueEx() failed with error %lu\n", dwError);
+            DPRINT1("RegCreateKeyEx() failed with error %lu\n", dwError);
             return dwError;
         }
 
-        ServiceCurrent++;
+        if (dwKeyDisposition == REG_OPENED_EXISTING_KEY)
+        {
+            dwKeySize = sizeof(DWORD);
+            dwError = RegQueryValueExW(hServiceCurrentKey,
+                                       L"",
+                                       0,
+                                       NULL,
+                                       (BYTE*)&dwServiceCurrent,
+                                       &dwKeySize);
+            if (dwError != ERROR_SUCCESS)
+            {
+                RegCloseKey(hServiceCurrentKey);
+                DPRINT1("RegQueryValueEx() failed with error %lu\n", dwError);
+                return dwError;
+            }
+
+            dwServiceCurrent++;
+        }
+
+        dwError = RegSetValueExW(hServiceCurrentKey,
+                                 L"",
+                                 0,
+                                 REG_DWORD,
+                                 (BYTE*)&dwServiceCurrent,
+                                 sizeof(dwServiceCurrent));
+
+        RegCloseKey(hServiceCurrentKey);
+
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegSetValueExW() failed (Error %lu)\n", dwError);
+            return dwError;
+        }
     }
-
-    dwError = RegSetValueExW(hServiceCurrentKey, L"", 0, REG_DWORD, (BYTE*)&ServiceCurrent, sizeof(ServiceCurrent));
-
-    RegCloseKey(hServiceCurrentKey);
-
-    if (dwError != ERROR_SUCCESS)
+    else
     {
-        DPRINT1("RegSetValueExW() failed (Error %lu)\n", dwError);
-        return dwError;
+        dwServiceCurrent = 0;
     }
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
     StringCchPrintfW(szControlPipeName, ARRAYSIZE(szControlPipeName),
-                     L"\\\\.\\pipe\\net\\NtControlPipe%lu", ServiceCurrent);
+                     L"\\\\.\\pipe\\net\\NtControlPipe%lu", dwServiceCurrent);
 
     DPRINT("PipeName: %S\n", szControlPipeName);
 
@@ -437,6 +465,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwRecordSize;
     LPWSTR pString;
+    BOOL bSecurityService;
 
     DPRINT("ScmCreateOrReferenceServiceImage(%p)\n", pService);
 
@@ -518,8 +547,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
             goto done;
         }
 
+        bSecurityService = ScmIsSecurityService(pServiceImage);
+
         /* Create the control pipe */
-        dwError = ScmCreateNewControlPipe(pServiceImage);
+        dwError = ScmCreateNewControlPipe(pServiceImage,
+                                          bSecurityService);
         if (dwError != ERROR_SUCCESS)
         {
             DPRINT1("ScmCreateNewControlPipe() failed (Error %lu)\n", dwError);
@@ -540,6 +572,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
             HeapFree(GetProcessHeap(), 0, pServiceImage);
 
             goto done;
+        }
+
+        if (bSecurityService)
+        {
+            SetSecurityServicesEvent();
         }
 
         /* FIXME: Add more initialization code here */
@@ -1806,7 +1843,8 @@ ScmWaitForServiceConnect(PSERVICE Service)
         }
     }
 
-    if (dwProcessId != Service->lpImage->dwProcessId)
+    if ((ScmIsSecurityService(Service->lpImage) == FALSE)&&
+        (dwProcessId != Service->lpImage->dwProcessId))
     {
 #if 0
         _ultow(Service->lpImage->dwProcessId, szBuffer1, 10);
@@ -1916,7 +1954,7 @@ ScmStartUserModeService(PSERVICE Service,
             StartupInfo.lpDesktop = L"WinSta0\\Default";
         }
 
-        if (wcsstr(Service->lpImage->pszImagePath, L"\\system32\\lsass.exe") == NULL)
+        if (!ScmIsSecurityService(Service->lpImage))
         {
             Result = CreateProcessW(NULL,
                                     Service->lpImage->pszImagePath,

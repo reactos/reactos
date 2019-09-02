@@ -1044,8 +1044,12 @@ if (!winetest_interactive)
     skip("Skipping test_persistent_connection due to hang. See ROSTESTS-295.\n");
 }
 else
-#endif
+{
     test_persistent_connection( si.port );
+}
+#else
+    test_persistent_connection( si.port );
+#endif
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request( si.port, NULL, quitW );

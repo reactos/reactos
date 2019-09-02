@@ -39,6 +39,7 @@ list(APPEND INF_FILES
     usbport.inf
     usbstor.inf
     wdmaudio.inf
+    wdma_usb.inf
     wmiacpi.inf
     xboxdisp.inf)
 

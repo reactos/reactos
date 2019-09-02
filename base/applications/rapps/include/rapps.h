@@ -7,6 +7,5 @@
 #include "installed.h"
 #include "available.h"
 #include "misc.h"
-#include "gui.h"
 
 #endif /* _RAPPS_H */

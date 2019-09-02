@@ -11,17 +11,13 @@
 //
 // Ramdisk Routines
 //
-BOOLEAN
-NTAPI
+ARC_STATUS
 RamDiskLoadVirtualFile(
-    IN PCHAR FileName
-);
+    IN PCSTR FileName,
+    IN PCSTR DefaultPath OPTIONAL);
 
 VOID
-NTAPI
-RamDiskInitialize(
-    VOID
-);
+RamDiskInitialize(VOID);
 
 extern PVOID gRamDiskBase;
 extern ULONG gRamDiskSize;

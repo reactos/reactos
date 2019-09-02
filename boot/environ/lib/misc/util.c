@@ -943,6 +943,7 @@ BlArchGetCpuVendor (
 
     /* Get the CPU Vendor */
     BlArchCpuId(0, 0, &CpuInfo);
+#if defined(_M_IX86) || defined(_M_X64)
     Temp = CpuInfo.Ecx;
     CpuInfo.Ecx = CpuInfo.Edx;
     CpuInfo.Edx = Temp;
@@ -974,6 +975,9 @@ BlArchGetCpuVendor (
         return CPU_RISE;
     }
 #endif // _M_IX86
+#else // defined(_M_IX86) || defined(_M_X64)
+    EfiPrintf(L"BlArchGetCpuVendor not implemented for this platform.\r\n");
+#endif
     /* Other */
     return CPU_UNKNOWN;
 }

@@ -26,7 +26,9 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define TAG_NTFS_CONTEXT 'CftN'
 #define TAG_NTFS_LIST 'LftN'
@@ -36,8 +38,6 @@
 #define TAG_NTFS_FILE 'FftN'
 #define TAG_NTFS_VOLUME 'VftN'
 #define TAG_NTFS_DATA 'DftN'
-
-DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 typedef struct _NTFS_VOLUME_INFO
 {

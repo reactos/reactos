@@ -3306,9 +3306,12 @@ MmspCompareSegments(const void * x,
     const MM_SECTION_SEGMENT *Segment1 = (const MM_SECTION_SEGMENT *)x;
     const MM_SECTION_SEGMENT *Segment2 = (const MM_SECTION_SEGMENT *)y;
 
-    return
-        (Segment1->Image.VirtualAddress - Segment2->Image.VirtualAddress) >>
-        ((sizeof(ULONG_PTR) - sizeof(int)) * 8);
+    if (Segment1->Image.VirtualAddress > Segment2->Image.VirtualAddress)
+        return 1;
+    else if (Segment1->Image.VirtualAddress < Segment2->Image.VirtualAddress)
+        return -1;
+    else
+        return 0;
 }
 
 /*

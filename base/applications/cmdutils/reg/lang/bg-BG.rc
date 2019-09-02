@@ -2,7 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY | SAVE | RESTORE\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD ключ_име [/v стойност_име | /ve] [/t вид] [/s разделител] [/d данни] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE ключ_име [/v стойност_име | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY ключ_име [/v стойност_име | /ve] [/s]\n"
@@ -40,4 +40,6 @@ STRINGTABLE
     STRING_EXPORT_USAGE, "REG EXPORT key_name file.reg [/y]\n"
     STRING_INVALID_SYSTEM_KEY, "reg: Invalid system key [%1]\n"
     STRING_OVERWRITE_FILE, "The file '%1' already exists. Do you want to overwrite it?"
+    STRING_SAVE_USAGE, "REG SAVE key_name file_name [/y]"
+    STRING_RESTORE_USAGE, "REG RESTORE key_name file_name"
 }

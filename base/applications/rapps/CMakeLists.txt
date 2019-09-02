@@ -20,7 +20,6 @@ list(APPEND SOURCE
     unattended.cpp
     include/rapps.h
     include/available.h
-    include/gui.h
     include/dialogs.h
     include/installed.h
     include/crichedit.h

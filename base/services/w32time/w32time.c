@@ -297,7 +297,7 @@ ServiceMain(DWORD argc, LPWSTR *argv)
             */
         }
 
-        if (WaitForSingleObject(hStopEvent, dwInterval) == WAIT_OBJECT_0)
+        if (WaitForSingleObject(hStopEvent, dwInterval * 1000) == WAIT_OBJECT_0)
         {
             CloseHandle(hStopEvent);
             hStopEvent = NULL;

@@ -399,7 +399,7 @@ VideoPortInt10(
     }
 
     /* Copy arguments to other format */
-    RtlCopyMemory(&Int10BiosArguments, BiosArguments, sizeof(BiosArguments));
+    RtlCopyMemory(&Int10BiosArguments, BiosArguments, sizeof(*BiosArguments));
     Int10BiosArguments.SegDs = 0;
     Int10BiosArguments.SegEs = 0;
 
@@ -407,7 +407,7 @@ VideoPortInt10(
     Status = IntInt10CallBios(NULL, &Int10BiosArguments);
 
     /* Copy results back */
-    RtlCopyMemory(BiosArguments, &Int10BiosArguments, sizeof(BiosArguments));
+    RtlCopyMemory(BiosArguments, &Int10BiosArguments, sizeof(*BiosArguments));
 
     return Status;
 }

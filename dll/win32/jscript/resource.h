@@ -58,6 +58,7 @@
 #define IDS_INVALID_DELETE                  0x1394
 #define IDS_NOT_VBARRAY                     0x1395
 #define IDS_JSCRIPT_EXPECTED                0x1396
+#define IDS_NOT_ENUMERATOR                  0x1397
 #define IDS_REGEXP_SYNTAX_ERROR             0x1399
 #define IDS_URI_INVALID_CHAR                0x13A0
 #define IDS_URI_INVALID_CODING              0x13A1

@@ -22,7 +22,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(DISK);
 
 #include <pshpack2.h>

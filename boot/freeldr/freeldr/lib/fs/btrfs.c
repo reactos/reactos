@@ -8,8 +8,8 @@
 /* Some code was taken from u-boot, https://github.com/u-boot/u-boot/tree/master/fs/btrfs */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define TAG_BTRFS_INFO 'IftB'

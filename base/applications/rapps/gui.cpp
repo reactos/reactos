@@ -26,8 +26,6 @@
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
-HWND hListView = NULL;
-
 INT GetSystemColorDepth()
 {
     DEVMODEW pDevMode;
@@ -55,60 +53,62 @@ INT GetSystemColorDepth()
     return ColorDepth;
 }
 
-class CAvailableAppView
+class CAppRichEdit: 
+    public CUiWindow<CRichEdit>
 {
-    static inline VOID InsertTextAfterLoaded_RichEdit(UINT uStringID,
-                                                      const ATL::CStringW& szText,
-                                                      DWORD StringFlags,
-                                                      DWORD TextFlags)
+private:
+    VOID LoadAndInsertText(UINT uStringID,
+                           const ATL::CStringW& szText,
+                           DWORD StringFlags,
+                           DWORD TextFlags)
     {
         ATL::CStringW szLoadedText;
         if (!szText.IsEmpty() && szLoadedText.LoadStringW(uStringID))
         {
-            InsertRichEditText(szLoadedText, StringFlags);
-            InsertRichEditText(szText, TextFlags);
+            InsertText(szLoadedText, StringFlags);
+            InsertText(szText, TextFlags);
         }
     }
 
-    static inline VOID InsertLoadedTextNewl_RichEdit(UINT uStringID,
-                                                     DWORD StringFlags)
+    VOID LoadAndInsertText(UINT uStringID,
+                                       DWORD StringFlags)
     {
         ATL::CStringW szLoadedText;
         if (szLoadedText.LoadStringW(uStringID))
         {
-            InsertRichEditText(L"\n", 0);
-            InsertRichEditText(szLoadedText, StringFlags);
-            InsertRichEditText(L"\n", 0);
+            InsertText(L"\n", 0);
+            InsertText(szLoadedText, StringFlags);
+            InsertText(L"\n", 0);
         }
     }
 
-    static VOID InsertVersionInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertVersionInfo(CAvailableApplicationInfo* Info)
     {
         if (Info->IsInstalled())
         {
             if (Info->HasInstalledVersion())
             {
                 if (Info->HasUpdate())
-                    InsertLoadedTextNewl_RichEdit(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
+                    LoadAndInsertText(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
                 else
-                    InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
+                    LoadAndInsertText(IDS_STATUS_INSTALLED, CFE_ITALIC);
 
-                InsertTextAfterLoaded_RichEdit(IDS_AINFO_VERSION, Info->m_szInstalledVersion, CFE_BOLD, 0);
+                LoadAndInsertText(IDS_AINFO_VERSION, Info->m_szInstalledVersion, CFE_BOLD, 0);
             }
             else
             {
-                InsertLoadedTextNewl_RichEdit(IDS_STATUS_INSTALLED, CFE_ITALIC);
+                LoadAndInsertText(IDS_STATUS_INSTALLED, CFE_ITALIC);
             }
         }
         else
         {
-            InsertLoadedTextNewl_RichEdit(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+            LoadAndInsertText(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
         }
 
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_AVAILABLEVERSION, Info->m_szVersion, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_AVAILABLEVERSION, Info->m_szVersion, CFE_BOLD, 0);
     }
 
-    static VOID InsertLicenseInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertLicenseInfo(CAvailableApplicationInfo* Info)
     {
         ATL::CStringW szLicense;
         switch (Info->m_LicenseType)
@@ -123,15 +123,15 @@ class CAvailableAppView
             szLicense.LoadStringW(IDS_LICENSE_TRIAL);
             break;
         default:
-            InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, Info->m_szLicense, CFE_BOLD, 0);
+            LoadAndInsertText(IDS_AINFO_LICENSE, Info->m_szLicense, CFE_BOLD, 0);
             return;
         }
 
         szLicense += L" (" + Info->m_szLicense + L")";
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
     }
 
-    static VOID InsertLanguageInfo_RichEdit(CAvailableApplicationInfo* Info)
+    VOID InsertLanguageInfo(CAvailableApplicationInfo* Info)
     {
         if (!Info->HasLanguageInfo())
         {
@@ -180,28 +180,80 @@ class CAvailableAppView
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_NO_TRANSLATION);
         }
 
-        InsertRichEditText(szLoadedAInfoText, CFE_BOLD);
-        InsertRichEditText(szLoadedTextAvailability, NULL);
-        InsertRichEditText(szLangInfo, CFE_ITALIC);
+        InsertText(szLoadedAInfoText, CFE_BOLD);
+        InsertText(szLoadedTextAvailability, NULL);
+        InsertText(szLangInfo, CFE_ITALIC);
     }
 
 public:
-    static BOOL ShowAvailableAppInfo(INT Index)
+    BOOL ShowAvailableAppInfo(CAvailableApplicationInfo* Info)
     {
-        CAvailableApplicationInfo* Info = (CAvailableApplicationInfo*) ListViewGetlParam(Index);
         if (!Info) return FALSE;
 
-        NewRichEditText(Info->m_szName, CFE_BOLD);
-        InsertVersionInfo_RichEdit(Info);
-        InsertLicenseInfo_RichEdit(Info);
-        InsertLanguageInfo_RichEdit(Info);
+        SetText(Info->m_szName, CFE_BOLD);
+        InsertVersionInfo(Info);
+        InsertLicenseInfo(Info);
+        InsertLanguageInfo(Info);
 
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_SIZE, Info->m_szSize, CFE_BOLD, 0);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLSITE, Info->m_szUrlSite, CFE_BOLD, CFE_LINK);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_DESCRIPTION, Info->m_szDesc, CFE_BOLD, 0);
-        InsertTextAfterLoaded_RichEdit(IDS_AINFO_URLDOWNLOAD, Info->m_szUrlDownload, CFE_BOLD, CFE_LINK);
+        LoadAndInsertText(IDS_AINFO_SIZE, Info->m_szSize, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_URLSITE, Info->m_szUrlSite, CFE_BOLD, CFE_LINK);
+        LoadAndInsertText(IDS_AINFO_DESCRIPTION, Info->m_szDesc, CFE_BOLD, 0);
+        LoadAndInsertText(IDS_AINFO_URLDOWNLOAD, Info->m_szUrlDownload, CFE_BOLD, CFE_LINK);
 
         return TRUE;
+    }
+
+    BOOL ShowInstalledAppInfo(PINSTALLED_INFO Info)
+    {
+        ATL::CStringW szText;
+        ATL::CStringW szInfo;
+
+        if (!Info || !Info->hSubKey)
+            return FALSE;
+
+        Info->GetApplicationString(L"DisplayName", szText);
+        SetText(szText, CFE_BOLD);
+        InsertText(L"\n", 0);
+
+#define GET_INFO(a, b, c, d) \
+    if (Info->GetApplicationString(a, szInfo)) \
+    { \
+        LoadAndInsertText(b, szInfo, c, d); \
+    }
+
+        GET_INFO(L"DisplayVersion", IDS_INFO_VERSION, CFE_BOLD, 0);
+        GET_INFO(L"Publisher", IDS_INFO_PUBLISHER, CFE_BOLD, 0);
+        GET_INFO(L"RegOwner", IDS_INFO_REGOWNER, CFE_BOLD, 0);
+        GET_INFO(L"ProductID", IDS_INFO_PRODUCTID, CFE_BOLD, 0);
+        GET_INFO(L"HelpLink", IDS_INFO_HELPLINK, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"HelpTelephone", IDS_INFO_HELPPHONE, CFE_BOLD, 0);
+        GET_INFO(L"Readme", IDS_INFO_README, CFE_BOLD, 0);
+        GET_INFO(L"Contact", IDS_INFO_CONTACT, CFE_BOLD, 0);
+        GET_INFO(L"URLUpdateInfo", IDS_INFO_UPDATEINFO, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"URLInfoAbout", IDS_INFO_INFOABOUT, CFE_BOLD, CFM_LINK);
+        GET_INFO(L"Comments", IDS_INFO_COMMENTS, CFE_BOLD, 0);
+        GET_INFO(L"InstallDate", IDS_INFO_INSTALLDATE, CFE_BOLD, 0);
+        GET_INFO(L"InstallLocation", IDS_INFO_INSTLOCATION, CFE_BOLD, 0);
+        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
+        GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
+        GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
+        GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
+
+        return TRUE;
+    }
+
+    VOID SetWelcomeText()
+    {
+        ATL::CStringW szText;
+
+        szText.LoadStringW(IDS_WELCOME_TITLE);
+        SetText(szText, CFE_BOLD);
+
+        szText.LoadStringW(IDS_WELCOME_TEXT);
+        InsertText(szText, 0);
+
+        szText.LoadStringW(IDS_WELCOME_URL);
+        InsertText(szText, CFM_LINK);
     }
 };
 
@@ -454,32 +506,6 @@ public:
         bIsAscending = !bIsAscending;
     }
 
-    PVOID GetLParam(INT Index)
-    {
-        INT ItemIndex;
-        LVITEMW Item;
-
-        if (Index == -1)
-        {
-            ItemIndex = (INT) SendMessage(LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-            if (ItemIndex == -1)
-                return NULL;
-        }
-        else
-        {
-            ItemIndex = Index;
-        }
-
-        ZeroMemory(&Item, sizeof(Item));
-
-        Item.mask = LVIF_PARAM;
-        Item.iItem = ItemIndex;
-        if (!GetItem(&Item))
-            return NULL;
-
-        return (PVOID) Item.lParam;
-    }
-
     BOOL AddColumn(INT Index, ATL::CStringW& Text, INT Width, INT Format)
     {
         return AddColumn(Index, const_cast<LPWSTR>(Text.GetString()), Width, Format);
@@ -500,14 +526,14 @@ public:
         return (InsertColumn(Index, &Column) == -1) ? FALSE : TRUE;
     }
 
-    INT AddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam)
+    INT AddItem(INT ItemIndex, INT IconIndex, LPCWSTR lpText, LPARAM lParam)
     {
         LVITEMW Item;
 
         ZeroMemory(&Item, sizeof(Item));
 
         Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-        Item.pszText = lpText;
+        Item.pszText = const_cast<LPWSTR>(lpText);
         Item.lParam = lParam;
         Item.iItem = ItemIndex;
         Item.iImage = IconIndex;
@@ -733,7 +759,7 @@ class CMainWindow :
 
     CSideTreeView* m_TreeView;
     CUiWindow<CStatusBar>* m_StatusBar;
-    CUiWindow<CRichEdit>* m_RichEdit;
+    CAppRichEdit* m_RichEdit;
 
     CUiWindow<CSearchBar>* m_SearchBar;
     CAvailableApps m_AvailableApps;
@@ -745,11 +771,15 @@ class CMainWindow :
     BOOL bSearchEnabled;
     BOOL bUpdating;
 
+    ATL::CStringW szSearchPattern;
+    INT SelectedEnumType;
+
 public:
     CMainWindow() :
         m_ClientPanel(NULL),
         pLink(NULL),
-        bSearchEnabled(FALSE)
+        bSearchEnabled(FALSE),
+        SelectedEnumType(ENUM_ALL_INSTALLED)
     {
     }
 
@@ -772,38 +802,33 @@ private:
         // UpdateApplicationsList(ENUM_ALL_COMPONENTS);
     }
 
-    HTREEITEM AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
-    {
-        return m_TreeView->AddCategory(hRootItem, TextIndex, IconIndex);
-    }
-
     VOID InitCategoriesList()
     {
         HTREEITEM hRootItemInstalled, hRootItemAvailable;
 
-        hRootItemInstalled = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
-        AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
-        AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
+        hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
+        m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
+        m_TreeView->AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
 
-        AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
+        m_TreeView->AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
 
-        hRootItemAvailable = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
-        AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
-        AddCategory(hRootItemAvailable, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
-        AddCategory(hRootItemAvailable, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
-        AddCategory(hRootItemAvailable, IDS_CAT_GAMES, IDI_CAT_GAMES);
-        AddCategory(hRootItemAvailable, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
-        AddCategory(hRootItemAvailable, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
-        AddCategory(hRootItemAvailable, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
-        AddCategory(hRootItemAvailable, IDS_CAT_EDU, IDI_CAT_EDU);
-        AddCategory(hRootItemAvailable, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
-        AddCategory(hRootItemAvailable, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
-        AddCategory(hRootItemAvailable, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
-        AddCategory(hRootItemAvailable, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
-        AddCategory(hRootItemAvailable, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
-        AddCategory(hRootItemAvailable, IDS_CAT_LIBS, IDI_CAT_LIBS);
-        AddCategory(hRootItemAvailable, IDS_CAT_THEMES, IDI_CAT_THEMES);
-        AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
+        hRootItemAvailable = m_TreeView->AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_GAMES, IDI_CAT_GAMES);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_EDU, IDI_CAT_EDU);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_THEMES, IDI_CAT_THEMES);
+        m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList();
         m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
@@ -848,13 +873,12 @@ private:
         m_ListView->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->First().Append(m_ListView);
 
-        hListView = m_ListView->Create(m_hWnd);
-        return hListView != NULL;
+        return m_ListView->Create(m_hWnd) != NULL;
     }
 
     BOOL CreateRichEdit()
     {
-        m_RichEdit = new CUiWindow<CRichEdit>();
+        m_RichEdit = new CAppRichEdit();
         m_RichEdit->m_VerticalAlignment = UiAlign_Stretch;
         m_RichEdit->m_HorizontalAlignment = UiAlign_Stretch;
         m_HSplitter->Second().Append(m_RichEdit);
@@ -965,6 +989,28 @@ private:
         return FALSE;
     }
 
+    VOID ShowAppInfo(INT Index)
+    {
+        if (IsInstalledEnum(SelectedEnumType))
+        {
+            if (Index == -1)
+                Index = m_ListView->GetSelectionMark();
+
+            PINSTALLED_INFO Info = (PINSTALLED_INFO) m_ListView->GetItemData(Index);
+
+            m_RichEdit->ShowInstalledAppInfo(Info);
+        }
+        else if (IsAvailableEnum(SelectedEnumType))
+        {
+            if (Index == -1)
+                return;
+
+            CAvailableApplicationInfo* Info = (CAvailableApplicationInfo*) m_ListView->GetItemData(Index);
+
+            m_RichEdit->ShowAvailableAppInfo(Info);
+        }
+    }
+
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         if (wParam == SIZE_MINIMIZED)
@@ -1018,6 +1064,61 @@ private:
 
     }
 
+    VOID RemoveSelectedAppFromRegistry()
+    {
+        PINSTALLED_INFO Info;
+        WCHAR szFullName[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
+        ATL::CStringW szMsgText, szMsgTitle;
+        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
+
+        if (!IsInstalledEnum(SelectedEnumType))
+            return;
+
+        Info = reinterpret_cast<PINSTALLED_INFO>(m_ListView->GetItemData(ItemIndex));
+        if (!Info || !Info->hSubKey || (ItemIndex == -1)) 
+            return;
+
+        if (!szMsgText.LoadStringW(IDS_APP_REG_REMOVE) ||
+            !szMsgTitle.LoadStringW(IDS_INFORMATION))
+            return;
+
+        if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+            ATL::CStringW::CopyChars(szFullName,
+                                     MAX_PATH,
+                                     Info->szKeyName.GetString(),
+                                     MAX_PATH - wcslen(szFullName));
+
+            if (RegDeleteKeyW(Info->hRootKey, szFullName) == ERROR_SUCCESS)
+            {
+                m_ListView->DeleteItem(ItemIndex);
+                return;
+            }
+
+            if (!szMsgText.LoadStringW(IDS_UNABLE_TO_REMOVE))
+                return;
+
+            MessageBoxW(szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+        }
+    }
+
+    BOOL UninstallSelectedApp(BOOL bModify)
+    {
+        WCHAR szAppName[MAX_STR_LEN];
+
+        if (!IsInstalledEnum(SelectedEnumType))
+            return FALSE;
+
+        INT ItemIndex = m_ListView->GetNextItem(-1, LVNI_FOCUSED);
+        if (ItemIndex == -1)
+            return FALSE;
+
+        m_ListView->GetItemText(ItemIndex, 0, szAppName, _countof(szAppName));
+        WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
+
+        PINSTALLED_INFO ItemInfo = (PINSTALLED_INFO)m_ListView->GetItemData(ItemIndex);
+        return UninstallApplication(ItemInfo, bModify);
+    }
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
     {
         theResult = 0;
@@ -1208,10 +1309,7 @@ private:
                         (pnic->uNewState & LVIS_FOCUSED) &&
                         !(pnic->uOldState & LVIS_FOCUSED))
                     {
-                        if (IsInstalledEnum(SelectedEnumType))
-                            ShowInstalledAppInfo(ItemIndex);
-                        if (IsAvailableEnum(SelectedEnumType))
-                            CAvailableAppView::ShowAvailableAppInfo(ItemIndex);
+                        ShowAppInfo(ItemIndex);
                     }
                     /* Check if the item is checked */
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
@@ -1250,10 +1348,7 @@ private:
             {
                 if (data->hwndFrom == m_ListView->m_hWnd && ((LPNMLISTVIEW) lParam)->iItem != -1)
                 {
-                    if (IsInstalledEnum(SelectedEnumType))
-                        ShowInstalledAppInfo(-1);
-                    if (IsAvailableEnum(SelectedEnumType))
-                        CAvailableAppView::ShowAvailableAppInfo(-1);
+                    ShowAppInfo(-1);
                 }
             }
             break;
@@ -1462,7 +1557,7 @@ private:
             break;
 
         case ID_SEARCH:
-            ::SetFocus(m_SearchBar->m_hWnd);
+            m_SearchBar->SetFocus();
             break;
 
         case ID_INSTALL:
@@ -1470,11 +1565,11 @@ private:
             {
                 if (nSelectedApps > 0)
                 {
-                    CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
+                    DownloadListOfApplications(m_AvailableApps.GetSelected(), FALSE);
                     UpdateApplicationsList(-1);
                     m_ListView->SetSelected(-1, FALSE);
                 }
-                else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
+                else if (DownloadApplication(m_ListView->GetSelectedData(), FALSE))
                 {
                     UpdateApplicationsList(-1);
                 }
@@ -1483,17 +1578,17 @@ private:
             break;
 
         case ID_UNINSTALL:
-            if (UninstallApplication(-1, FALSE))
+            if (UninstallSelectedApp(FALSE))
                 UpdateApplicationsList(-1);
             break;
 
         case ID_MODIFY:
-            if (UninstallApplication(-1, TRUE))
+            if (UninstallSelectedApp(TRUE))
                 UpdateApplicationsList(-1);
             break;
 
         case ID_REGREMOVE:
-            RemoveAppFromRegistry(-1);
+            RemoveSelectedAppFromRegistry();
             break;
 
         case ID_REFRESH:
@@ -1526,7 +1621,7 @@ private:
 
         while (Count >= 0)
         {
-            Info = (PINSTALLED_INFO) ListViewGetlParam(Count);
+            Info = (PINSTALLED_INFO) m_ListView->GetItemData(Count);
             if (Info)
             {
                 RegCloseKey(Info->hSubKey);
@@ -1544,7 +1639,7 @@ private:
         return StrStrIW(szHaystack, szNeedle) != NULL;
     }
 
-    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
+    BOOL CALLBACK EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info)
     {
         PINSTALLED_INFO ItemInfo;
         ATL::CStringW szText;
@@ -1563,25 +1658,25 @@ private:
             return FALSE;
         }
 
-        Index = ListViewAddItem(ItemIndex, 0, m_szName, (LPARAM) ItemInfo);
+        Index = m_ListView->AddItem(ItemIndex, 0, m_szName.GetString(), (LPARAM) ItemInfo);
 
         /* Get version info */
-        GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
-        ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(szText.GetString()));
+        ItemInfo->GetApplicationString(L"DisplayVersion", szText);
+        m_ListView->SetItemText(Index, 1, szText.GetString());
 
         /* Get comments */
-        GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
-        ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(szText.GetString()));
+        ItemInfo->GetApplicationString(L"Comments", szText);
+        m_ListView->SetItemText(Index, 2, szText.GetString());
 
         return TRUE;
     }
 
-    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
+    BOOL EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath)
     {
         INT Index;
         HICON hIcon = NULL;
 
-        HIMAGELIST hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
+        HIMAGELIST hImageListView = (HIMAGELIST)m_ListView->SendMessage(LVM_GETIMAGELIST, LVSIL_SMALL, 0);
 
         if (!SearchPatternMatch(Info->m_szName.GetString(), szSearchPattern) &&
             !SearchPatternMatch(Info->m_szDesc.GetString(), szSearchPattern))
@@ -1608,14 +1703,25 @@ private:
         Index = ImageList_AddIcon(hImageListView, hIcon);
         DestroyIcon(hIcon);
 
-        Index = ListViewAddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
-        ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
-
-        ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
-        ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(Info->m_szDesc.GetString()));
-        ListView_SetCheckState(hListView, Index, Info->m_IsSelected);
+        Index = m_ListView->AddItem(Info->m_Category, Index, Info->m_szName.GetString(), (LPARAM) Info);
+        m_ListView->SetImageList(hImageListView, LVSIL_SMALL);
+        m_ListView->SetItemText(Index, 1, Info->m_szVersion.GetString());
+        m_ListView->SetItemText(Index, 2, Info->m_szDesc.GetString());
+        m_ListView->SetCheckState(Index, Info->m_IsSelected);
 
         return TRUE;
+    }
+
+    static BOOL CALLBACK s_EnumInstalledAppProc(INT ItemIndex, ATL::CStringW &m_szName, PINSTALLED_INFO Info, PVOID param)
+    {
+        CMainWindow* pThis = (CMainWindow*)param;
+        return pThis->EnumInstalledAppProc(ItemIndex, m_szName, Info);
+    }
+
+    static BOOL CALLBACK s_EnumAvailableAppProc(CAvailableApplicationInfo* Info, LPCWSTR szFolderPath, PVOID param)
+    {
+        CMainWindow* pThis = (CMainWindow*)param;
+        return pThis->EnumAvailableAppProc(Info, szFolderPath);
     }
 
     VOID UpdateStatusBarText()
@@ -1675,8 +1781,8 @@ private:
             DestroyIcon(hIcon);
 
             // Enum installed applications and updates
-            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
-            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
+            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc, this);
+            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc, this);
         }
         else if (IsAvailableEnum(EnumType))
         {
@@ -1686,12 +1792,12 @@ private:
             }
 
             // Enum available applications
-            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc);
+            m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
         }
 
         SelectedEnumType = EnumType;
         UpdateStatusBarText();
-        SetWelcomeText();
+        m_RichEdit->SetWelcomeText();
 
         // Set automatic column width for program names if the list is not empty
         if (m_ListView->GetItemCount() > 0)
@@ -1744,88 +1850,37 @@ public:
 
         return CWindowImpl::Create(NULL, r, szWindowName.GetString(), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE);
     }
-
-    CStatusBar * GetStatusBar()
-    {
-        return m_StatusBar;
-    }
-
-    CAppsListView * GetListView()
-    {
-        return m_ListView;
-    }
-
-    CRichEdit * GetRichEdit()
-    {
-        return m_RichEdit;
-    }
-
-    CAvailableApps * GetAvailableApps()
-    {
-        return &m_AvailableApps;
-    }
 };
 
-// global interface
-CMainWindow * g_MainWindow;
-
-HWND CreateMainWindow()
+VOID ShowMainWindow(INT nShowCmd)
 {
-    g_MainWindow = new CMainWindow();
-    return g_MainWindow->Create();
-}
+    HACCEL KeyBrd;
+    MSG Msg;
 
-DWORD_PTR ListViewGetlParam(INT item)
-{
-    if (item < 0)
+    CMainWindow* wnd = new CMainWindow();
+    if (!wnd)
+        return;
+
+    hMainWnd = wnd->Create();
+    if (!hMainWnd)
+        return;
+
+    /* Maximize it if we must */
+    wnd->ShowWindow((SettingsInfo.bSaveWndPos && SettingsInfo.Maximized) ? SW_MAXIMIZE : nShowCmd);
+    wnd->UpdateWindow();
+
+    /* Load the menu hotkeys */
+    KeyBrd = LoadAcceleratorsW(NULL, MAKEINTRESOURCEW(HOTKEYS));
+
+    /* Message Loop */
+    while (GetMessageW(&Msg, NULL, 0, 0))
     {
-        item = g_MainWindow->GetListView()->GetSelectionMark();
+        if (!TranslateAcceleratorW(hMainWnd, KeyBrd, &Msg))
+        {
+            TranslateMessage(&Msg);
+            DispatchMessageW(&Msg);
+        }
     }
-    return g_MainWindow->GetListView()->GetItemData(item);
-}
 
-VOID SetStatusBarText(LPCWSTR szText)
-{
-    g_MainWindow->GetStatusBar()->SetText(szText);
-}
-
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpName, LPARAM lParam)
-{
-    return g_MainWindow->GetListView()->AddItem(ItemIndex, IconIndex, lpName, lParam);
-}
-
-VOID NewRichEditText(LPCWSTR szText, DWORD flags)
-{
-    g_MainWindow->GetRichEdit()->SetText(szText, flags);
-}
-
-VOID InsertRichEditText(LPCWSTR szText, DWORD flags)
-{
-    g_MainWindow->GetRichEdit()->InsertText(szText, flags);
-}
-
-CAvailableApps* GetAvailableApps()
-{
-    return g_MainWindow->GetAvailableApps();
-}
-
-// ATL version of functions above
-VOID SetStatusBarText(const ATL::CStringW& szText)
-{
-    SetStatusBarText(szText.GetString());
-}
-
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, const ATL::CStringW& Name, LPARAM lParam)
-{
-    return ListViewAddItem(ItemIndex, IconIndex, const_cast<LPWSTR>(Name.GetString()), lParam);
-}
-
-VOID NewRichEditText(const ATL::CStringW& szText, DWORD flags)
-{
-    NewRichEditText(szText.GetString(), flags);
-}
-
-VOID InsertRichEditText(const ATL::CStringW& szText, DWORD flags)
-{
-    InsertRichEditText(szText.GetString(), flags);
+    delete wnd;
 }
