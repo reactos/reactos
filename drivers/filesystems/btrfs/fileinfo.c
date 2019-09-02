@@ -17,6 +17,7 @@
 
 #include "btrfs_drv.h"
 
+#if (NTDDI_VERSION >= NTDDI_WIN10)
 // not currently in mingw - introduced with Windows 10
 #ifndef _MSC_VER
 #define FileIdInformation (enum _FILE_INFORMATION_CLASS)59
@@ -145,6 +146,45 @@ typedef struct _FILE_LINKS_FULL_ID_INFORMATION {
 #define FILE_RENAME_INFORMATION_EX FILE_RENAME_INFORMATION
 #define FILE_LINK_INFORMATION_EX FILE_LINK_INFORMATION
 
+#endif
+#endif
+
+#ifdef __REACTOS__
+typedef struct _FILE_RENAME_INFORMATION_EX {
+    union {
+        BOOLEAN ReplaceIfExists;
+        ULONG Flags;
+    };
+    HANDLE RootDirectory;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_RENAME_INFORMATION_EX, *PFILE_RENAME_INFORMATION_EX;
+
+typedef struct _FILE_DISPOSITION_INFORMATION_EX {
+    ULONG Flags;
+} FILE_DISPOSITION_INFORMATION_EX, *PFILE_DISPOSITION_INFORMATION_EX;
+
+typedef struct _FILE_LINK_INFORMATION_EX {
+    union {
+        BOOLEAN ReplaceIfExists;
+        ULONG Flags;
+    };
+    HANDLE RootDirectory;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_LINK_INFORMATION_EX, *PFILE_LINK_INFORMATION_EX;
+
+#define FILE_RENAME_REPLACE_IF_EXISTS                       0x001
+#define FILE_RENAME_POSIX_SEMANTICS                         0x002
+#define FILE_RENAME_IGNORE_READONLY_ATTRIBUTE               0x040
+
+#define FILE_DISPOSITION_DELETE                         0x1
+#define FILE_DISPOSITION_POSIX_SEMANTICS                0x2
+#define FILE_DISPOSITION_FORCE_IMAGE_SECTION_CHECK      0x4
+
+#define FILE_LINK_REPLACE_IF_EXISTS                       0x001
+#define FILE_LINK_POSIX_SEMANTICS                         0x002
+#define FILE_LINK_IGNORE_READONLY_ATTRIBUTE               0x040
 #endif
 
 static NTSTATUS set_basic_information(device_extension* Vcb, PIRP Irp, PFILE_OBJECT FileObject) {
@@ -2826,7 +2866,11 @@ NTSTATUS __stdcall drv_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP I
     }
 
     if (fcb != Vcb->dummy_fcb && is_subvol_readonly(fcb->subvol, Irp) && IrpSp->Parameters.SetFile.FileInformationClass != FilePositionInformation &&
+#ifndef __REACTOS__
         (fcb->inode != SUBVOL_ROOT_INODE || (IrpSp->Parameters.SetFile.FileInformationClass != FileBasicInformation && IrpSp->Parameters.SetFile.FileInformationClass != FileRenameInformation && IrpSp->Parameters.SetFile.FileInformationClass != FileRenameInformationEx))) {
+#else
+        (fcb->inode != SUBVOL_ROOT_INODE || (IrpSp->Parameters.SetFile.FileInformationClass != FileBasicInformation && IrpSp->Parameters.SetFile.FileInformationClass != FileRenameInformation))) {
+#endif
         Status = STATUS_ACCESS_DENIED;
         goto end;
     }
