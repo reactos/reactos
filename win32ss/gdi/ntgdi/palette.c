@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define PAL_SETOWNER 0x8000
+#define PAL_SETPOWNER 0x8000
 #define MAX_PALCOLORS 65536
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* The program need save the pallete and restore it */
@@ -1304,7 +1304,7 @@ NtGdiEngCreatePalette(
     }
     _SEH2_END;
 
-    hPal = EngCreatePalette( iMode/*|PAL_SETOWNER*/, cColors, pulColors, flRed, flGreen, flBlue );
+    hPal = EngCreatePalette( iMode/*|PAL_SETPOWNER*/, cColors, pulcSafe, flRed, flGreen, flBlue );
 
     if ( cColors > WINDDI_MAXSETPALETTECOLORS ) ExFreePoolWithTag( pulcSafe, GDITAG_UMPD );
 
