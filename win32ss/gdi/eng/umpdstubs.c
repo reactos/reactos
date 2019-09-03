@@ -212,21 +212,6 @@ NtGdiEngCreateDeviceSurface(
 }
 
 __kernel_entry
-HPALETTE
-APIENTRY
-NtGdiEngCreatePalette(
-    _In_ ULONG iMode,
-    _In_ ULONG cColors,
-    _In_ ULONG *pulColors,
-    _In_ FLONG flRed,
-    _In_ FLONG flGreen,
-    _In_ FLONG flBlue)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiEngDeleteClip(
@@ -234,16 +219,6 @@ NtGdiEngDeleteClip(
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
-}
-
-__kernel_entry
-BOOL
-APIENTRY
-NtGdiEngDeletePalette(
-    _In_ HPALETTE hPal)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 __kernel_entry
