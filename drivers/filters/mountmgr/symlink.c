@@ -124,7 +124,7 @@ GlobalCreateSymbolicLink(IN PUNICODE_STRING DosName,
     }
 
     /* Then, create the symlink */
-    Status = IoCreateSymbolicLink(&GlobalName, DosName);
+    Status = IoCreateSymbolicLink(&GlobalName, DeviceName);
 
     FreePool(GlobalName.Buffer);
 
