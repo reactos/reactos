@@ -114,8 +114,6 @@ GlobalCreateSymbolicLink(IN PUNICODE_STRING DosName,
     NTSTATUS Status;
     UNICODE_STRING GlobalName;
 
-    UNREFERENCED_PARAMETER(DeviceName);
-
     /* First create the global string */
     Status = CreateStringWithGlobal(DosName, &GlobalName);
     if (!NT_SUCCESS(Status))
