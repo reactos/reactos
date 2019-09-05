@@ -1745,7 +1745,7 @@ MountMgrQueryPoints(IN PDEVICE_EXTENSION DeviceExtension,
 
     /* We can't go beyond */
     if (((ULONG)MountPoint->SymbolicLinkNameLength + MountPoint->UniqueIdLength +
-        MountPoint->DeviceNameLength) < Stack->Parameters.DeviceIoControl.InputBufferLength)
+        MountPoint->DeviceNameLength) > Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
