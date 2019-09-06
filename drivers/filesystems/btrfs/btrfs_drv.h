@@ -70,6 +70,10 @@
 #include "btrfs.h"
 #include "btrfsioctl.h"
 
+#ifdef __REACTOS__
+C_ASSERT(sizeof(bool) == 1);
+#endif
+
 #ifdef _DEBUG
 // #define DEBUG_FCB_REFCOUNTS
 // #define DEBUG_LONG_MESSAGES
