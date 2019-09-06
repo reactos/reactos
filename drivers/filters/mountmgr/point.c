@@ -342,6 +342,8 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
+
         return STATUS_BUFFER_OVERFLOW;
     }
 
