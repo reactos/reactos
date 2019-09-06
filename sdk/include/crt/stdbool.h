@@ -28,7 +28,11 @@
 
 /* Don't define bool, true, and false in C++, except as a GNU extension. */
 #ifndef __cplusplus
+#if _MSC_VER <= 1600
+#define bool unsigned char
+#else
 #define bool _Bool
+#endif
 #define true 1
 #define false 0
 #elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
