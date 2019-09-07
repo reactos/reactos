@@ -57,7 +57,7 @@ MountMgrChangeNotify(IN PDEVICE_EXTENSION DeviceExtension,
     if (DeviceExtension->EpicNumber != ChangeNotify->EpicNumber)
     {
         ChangeNotify->EpicNumber = DeviceExtension->EpicNumber;
-        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_CHANGE_NOTIFY_INFO);
         return STATUS_SUCCESS;
     }
 
