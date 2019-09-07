@@ -5949,19 +5949,12 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     InitializeObjectAttributes(&oa, RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateKey(&regh, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
-    /* ReactOS specific hack: allow BtrFS driver to start in 1st stage with no hive */
-#ifndef __REACTOS__
     if (!NT_SUCCESS(Status)) {
         ERR("ZwCreateKey returned %08x\n", Status);
         return Status;
     }
 
     watch_registry(regh);
-#else
-    if (NT_SUCCESS(Status)) {
-        watch_registry(regh);
-    }
-#endif
 
     Status = IoCreateDevice(DriverObject, sizeof(bus_device_extension), NULL, FILE_DEVICE_UNKNOWN,
                             FILE_DEVICE_SECURE_OPEN, false, &busobj);
