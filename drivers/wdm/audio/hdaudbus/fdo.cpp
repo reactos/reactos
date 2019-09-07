@@ -391,8 +391,8 @@ HDA_InitCorbRirbPos(
     corbReadPointer |= CORB_READ_POS_RESET;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS), corbReadPointer);
 
-    for (Index = 0; Index < 100; Index++) {
-        KeStallExecutionProcessor(10);
+    for (Index = 0; Index < 10; Index++) {
+        KeStallExecutionProcessor(100);
         corbReadPointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
         if ((corbReadPointer & CORB_READ_POS_RESET) != 0)
             break;
@@ -411,7 +411,7 @@ HDA_InitCorbRirbPos(
     corbReadPointer &= ~CORB_READ_POS_RESET;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS), corbReadPointer);
     for (Index = 0; Index < 10; Index++) {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
         corbReadPointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
         if ((corbReadPointer & CORB_READ_POS_RESET) == 0)
             break;
@@ -493,7 +493,7 @@ HDA_ResetController(
     WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL, Control);
 
     for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
 
         corbControl = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL);
         rirbControl = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL);
@@ -514,7 +514,7 @@ HDA_ResetController(
     WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL), Control & ~GLOBAL_CONTROL_RESET);
 
     for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
 
         Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
         if ((Control & GLOBAL_CONTROL_RESET) == 0)
@@ -531,7 +531,7 @@ HDA_ResetController(
     WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL), Control | GLOBAL_CONTROL_RESET);
 
     for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
 
         Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
         if ((Control & GLOBAL_CONTROL_RESET) != 0)
@@ -544,7 +544,7 @@ HDA_ResetController(
 
     // Wait for codecs to finish their own reset (apparently needs more
     // time than documented in the specs)
-    KeStallExecutionProcessor(100);
+    KeStallExecutionProcessor(1000);
 
     // Enable unsolicited responses
     Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
@@ -646,7 +646,7 @@ HDA_FDOStartDevice(
         // Enable controller interrupts
         WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_INTR_CONTROL), INTR_CONTROL_GLOBAL_ENABLE | INTR_CONTROL_CONTROLLER_ENABLE);
 
-        KeStallExecutionProcessor(100);
+        KeStallExecutionProcessor(1000);
 
         Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_STATE_STATUS));
         if (!Value) {
