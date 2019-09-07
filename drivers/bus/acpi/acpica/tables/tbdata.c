@@ -865,6 +865,7 @@ AcpiTbDeleteNamespaceByOwner (
     {
         return_ACPI_STATUS (Status);
     }
+
     AcpiNsDeleteNamespaceByOwner (OwnerId);
     AcpiUtReleaseWriteLock (&AcpiGbl_NamespaceRwLock);
     return_ACPI_STATUS (Status);

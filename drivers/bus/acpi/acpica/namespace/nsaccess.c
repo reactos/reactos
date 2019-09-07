@@ -659,7 +659,7 @@ AcpiNsLookup (
                 if (Flags & ACPI_NS_PREFIX_MUST_EXIST)
                 {
                     AcpiOsPrintf (ACPI_MSG_BIOS_ERROR
-                        "Object does not exist: %4.4s\n", &SimpleName);
+                        "Object does not exist: %4.4s\n", (char *) &SimpleName);
                 }
 #endif
                 /* Name not found in ACPI namespace */

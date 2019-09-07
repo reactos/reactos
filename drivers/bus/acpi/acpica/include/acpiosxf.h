@@ -469,6 +469,7 @@ AcpiOsEnterSleep (
  * Debug print routines
  */
 #ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsPrintf
+ACPI_PRINTF_LIKE (1)
 void ACPI_INTERNAL_VAR_XFACE
 AcpiOsPrintf (
     const char              *Format,

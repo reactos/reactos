@@ -740,6 +740,15 @@ AcpiEvDetectGpe (
 
     Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
 
+    if (!GpeEventInfo)
+    {
+        GpeEventInfo = AcpiEvGetGpeEventInfo (GpeDevice, GpeNumber);
+        if (!GpeEventInfo)
+        {
+            goto ErrorExit;
+        }
+    }
+
     /* Get the info block for the entire GPE register */
 
     GpeRegisterInfo = GpeEventInfo->RegisterInfo;

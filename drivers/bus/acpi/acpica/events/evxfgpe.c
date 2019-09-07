@@ -769,6 +769,33 @@ ACPI_EXPORT_SYMBOL (AcpiGetGpeStatus)
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiDispatchGpe
+ *
+ * PARAMETERS:  GpeDevice           - Parent GPE Device. NULL for GPE0/GPE1
+ *              GpeNumber           - GPE level within the GPE block
+ *
+ * RETURN:      INTERRUPT_HANDLED or INTERRUPT_NOT_HANDLED
+ *
+ * DESCRIPTION: Detect and dispatch a General Purpose Event to either a function
+ *              (e.g. EC) or method (e.g. _Lxx/_Exx) handler.
+ *
+ ******************************************************************************/
+
+UINT32
+AcpiDispatchGpe(
+    ACPI_HANDLE             GpeDevice,
+    UINT32                  GpeNumber)
+{
+    ACPI_FUNCTION_TRACE(acpi_dispatch_gpe);
+
+    return (AcpiEvDetectGpe (GpeDevice, NULL, GpeNumber));
+}
+
+ACPI_EXPORT_SYMBOL (AcpiDispatchGpe)
+
+
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiFinishGpe
  *
  * PARAMETERS:  GpeDevice           - Namespace node for the GPE Block
