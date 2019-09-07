@@ -6013,11 +6013,9 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     KeInitializeEvent(&mountmgr_thread_event, NotificationEvent, false);
 
-#ifndef __REACTOS__
     Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, NULL, NULL, NULL, mountmgr_thread, NULL);
     if (!NT_SUCCESS(Status))
         WARN("PsCreateSystemThread returned %08x\n", Status);
-#endif
 
     IoRegisterFileSystem(DeviceObject);
 
