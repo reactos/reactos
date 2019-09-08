@@ -134,7 +134,24 @@ KXKEY(
         return;
     }
 
-    if (NegFlg & NTLMSSP_NEGOTIATE_LM_KEY)
+    /* NTLMv2 Security - only used with NTLMv1*/
+    if ((NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) &&
+        /* using NTLMv1? */
+        (LmChallengeResponse->bUsed == 24) &&
+        (NtChallengeResponse->bUsed == 24))
+    {
+        UCHAR nonce[16];
+        //Define KXKEY(SessionBaseKey, LmChallengeResponse, ServerChallenge) as
+        //Set KeyExchangeKey to HMAC_MD5(SessionBaseKey, ConcatenationOf(ServerChallenge,
+        //LmChallengeResponse [0..7]))
+        //EndDefine
+        memcpy(nonce, ServerChallenge, 8);
+        memcpy(nonce+8, LmChallengeResponse->Buffer, 8);
+        HMAC_MD5(SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH,
+                 nonce, 16,
+                 KeyExchangeKey);
+    }
+    else if (NegFlg & NTLMSSP_NEGOTIATE_LM_KEY)
     {
         //Set KeyExchangeKey to
         //  ConcatenationOf(
