@@ -384,6 +384,56 @@ MAC(
     return TRUE;
 }
 
+//
+//Define SEAL(Handle, SigningKey, SeqNum, Message) as
+//Set Sealed message to RC4(Handle, Message)
+//Set Signature to MAC(Handle, SigningKey, SeqNum, Message)
+//EndDefin
+BOOL
+SEAL(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN UCHAR* msg,
+    IN ULONG msgLen,
+    OUT UCHAR* data,
+    OUT PULONG pDataLen)
+{
+    PBYTE pSign;
+    ULONG signLen = 16;
+    ULONG neededLen = msgLen + signLen;
+    if (*pDataLen < neededLen)
+        return FALSE;
+
+    printf("msg\n");
+    NtlmPrintHexDump(msg, msgLen);
+
+    pSign = (data + msgLen);
+    MAC(NegFlg,
+        Handle, SigningKey, SigningKeyLength, pSeqNum, msg,
+        msgLen, pSign, signLen);
+
+    printf("sign\n");
+    NtlmPrintHexDump(pSign, signLen);
+
+    if (NegFlg & NTLMSSP_NEGOTIATE_SEAL)
+    {
+        RC4(Handle, msg, data, msgLen);
+    }
+    else
+    {
+        memcpy(data, msg, msgLen);
+    }
+    printf("result\n");
+    NtlmPrintHexDump(data, neededLen);
+
+    *pDataLen = neededLen;
+
+    return TRUE;
+}
+
 /* MS-NLSP 3.3.1 NTLM v1 Authentication */
 #define VALIDATE_NTLMv1
 #define VALIDATE_NTLM
