@@ -176,13 +176,18 @@ KXKEY(
     }
 }
 
-BOOLEAN
-SIGNKEY(const PUCHAR RandomSessionKey, BOOLEAN IsClient, PUCHAR Result)
+BOOL
+SIGNKEY(
+    IN PUCHAR RandomSessionKey,
+    IN BOOL IsClient,
+    IN PUCHAR Result)
 {
     PCHAR magic = IsClient
         ? "session key to client-to-server signing key magic constant"
         : "session key to server-to-client signing key magic constant";
-    ULONG len = strlen(magic);
+    /* To get the correct key - magic constant and null-terminator
+       will be used in MD5. */
+    ULONG len = strlen(magic) + 1;
     UCHAR *md5_input = NULL;
 
     md5_input = NtlmAllocate(16 + len);
