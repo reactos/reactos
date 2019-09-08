@@ -113,8 +113,8 @@ TestGetVolumeInformationW(VOID)
             break;
         }
     }
-    ok(i != MAX_PATH, "String was not null terminated!\n");
-    ok(i >= Len, "Buffer has not been overruned\n");
+    ok(i == MAX_PATH, "String was null terminated!\n");
+    ok(i >= Len, "Buffer has not been overrun\n");
 }
 
 START_TEST(GetVolumeInformation)
