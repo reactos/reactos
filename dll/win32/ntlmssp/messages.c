@@ -204,7 +204,7 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
          * RC4 has in/out-buffer memcpy before could be removed */
         TRACE("RC4 before\n");
         NtlmPrintHexDump(data, length);
-        RC4(pSendHandle, data, length);
+        RC4(pSendHandle, data, data, length);
     }
     TRACE("done\n");
     NtlmPrintHexDump(data, length);

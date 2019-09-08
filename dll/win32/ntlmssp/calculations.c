@@ -265,80 +265,122 @@ SEALKEY(
     return TRUE;
 }
 
-BOOLEAN
-MAC(ULONG flags,
-    PCCHAR buf,
-    ULONG buf_len,
-    PUCHAR sign_key,
-    ULONG sign_key_len,
-    PUCHAR seal_key,
-    ULONG seal_key_len,
-    ULONG random_pad,
-    ULONG sequence,
-    PUCHAR result)
+BOOL
+MAC(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN UCHAR* msg,
+    IN ULONG msgLen,
+    OUT PBYTE pSign,
+    IN ULONG signLen)
 {
-    ULONG *res_ptr;
-
-    if (flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+    if (NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
     {
-        UCHAR seal_key_ [16];
-        UCHAR hmac[16];
-        UCHAR *tmp;
+        PNTLMSSP_MESSAGE_SIGNATURE pmsig;
+        PBYTE data;
+        ULONG dataLen;
+        UCHAR dataMD5[16];
 
-        /* SealingKey' = MD5(ConcatenationOf(SealingKey, SequenceNumber))
-        RC4Init(Handle, SealingKey')
-
-        */
-        if (flags & NTLMSSP_NEGOTIATE_DATAGRAM)
-        {
-            UCHAR tmp2 [16+4];
-            memcpy(tmp2, seal_key, seal_key_len);
-            *((ULONG *)(tmp2+16)) = sequence;
-            MD5 (tmp2, 16+4, seal_key_);
-        } else {
-            memcpy(seal_key_, seal_key, seal_key_len);
-        }
+        if (signLen < sizeof(NTLMSSP_MESSAGE_SIGNATURE))
+            return 0;
+        pmsig = (PNTLMSSP_MESSAGE_SIGNATURE)pSign;
 
         TRACE("NTLM MAC(): Extented Session Security\n");
 
-        res_ptr = (ULONG *)result;
-        res_ptr[0] = 0x00000001L;
-        res_ptr[3] = sequence;
+        //Define MAC(Handle, SigningKey, SeqNum, Message) as
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Version to 0x00000001
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Checksum to RC4(Handle,
+        //HMAC_MD5(SigningKey, ConcatenationOf(SeqNum, Message))[0..7])
+        //Set NTLMSSP_MESSAGE_SIGNATURE.SeqNum to SeqNum
+        //Set SeqNum to SeqNum + 1
+        //EndDefine
+        // -----
 
-        tmp = NtlmAllocate(4 + buf_len);
-        res_ptr = (ULONG *)tmp;
-        res_ptr[0] = sequence;
-        memcpy(tmp+4, buf, buf_len);
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Checksum to RC4(Handle,
+        //HMAC_MD5(SigningKey, ConcatenationOf(SeqNum, Message))[0..7])
+        dataLen = sizeof(ULONG) + msgLen;
+        data = NtlmAllocate(dataLen);
+        memcpy(data + sizeof(ULONG), msg, msgLen);
+        *(PULONG)(data) = *pSeqNum;
+        HMAC_MD5(SigningKey, SigningKeyLength, data, dataLen, dataMD5);
 
-        HMAC_MD5(sign_key, sign_key_len, tmp, 4 + buf_len, hmac);
+        printf("md5\n");
+        NtlmPrintHexDump(dataMD5, 16);
 
-        NtlmFree(tmp);
-
-        if (flags & NTLMSSP_NEGOTIATE_KEY_EXCH)
-        {
+       if (NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
+       {
             TRACE("NTLM MAC(): Key Exchange\n");
-            RC4K(seal_key_, seal_key_len, hmac, 8, result+4);
-        } else {
-            TRACE("NTLM MAC(): *NO* Key Exchange\n");
-            memcpy(result+4, hmac, 8);
+            RC4(Handle, dataMD5, (UCHAR*)(&pmsig->u1.extsec.CheckSum), sizeof(pmsig->u1.extsec.CheckSum));
         }
-    } else {
-        /* The content of the first 4 bytes is irrelevant */
-        ULONG crc = CRC32(buf, strlen(buf));
-        ULONG plaintext [] = { 0, crc, sequence };
+        else
+        {
+            TRACE("NTLM MAC(): *NO* Key Exchange\n");
+            pmsig->u1.extsec.CheckSum = *(PULONGLONG)dataMD5;
+        }
+        printf("checksum\n");
+        NtlmPrintHexDump((PBYTE)(&pmsig->u1.extsec.CheckSum), 8);
+
+        pmsig->Version = 1;
+        pmsig->SeqNum = *pSeqNum;
+
+        NtlmFree(data);
+
+        (*pSeqNum)++;
+    }
+    else
+    {
+        UINT32* pData = (UINT32*)pSign;
+        UINT32* pDataRC4 = pData + 1;
+
+        if (signLen < 16)
+            return 0;
 
         TRACE("NTLM MAC(): *NO* Extented Session Security\n");
 
-        RC4K(seal_key, seal_key_len, (const PUCHAR )plaintext, 12, result+4);
+        //Define MAC(Handle, SigningKey, SeqNum, Message) as
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Version to 0x00000001
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Checksum to CRC32(Message)
+        //Set NTLMSSP_MESSAGE_SIGNATURE.RandomPad RC4(Handle, RandomPad)
+        //Set NTLMSSP_MESSAGE_SIGNATURE.Checksum to RC4(Handle,
+        //NTLMSSP_MESSAGE_SIGNATURE.Checksum)
+        //Set NTLMSSP_MESSAGE_SIGNATURE.SeqNum to RC4(Handle, 0x00000000)
+        pData[0] = 1; /* version */
+        pDataRC4[0] = 0;
+        pDataRC4[1] = CRC32((char*)msg, msgLen);
+        pDataRC4[2] = *pSeqNum;
 
-        res_ptr = (ULONG *)result;
-        // Highest four bytes are the Version
-        res_ptr[0] = 0x00000001; // 4 bytes
+        printf("MAC\n");
+        NtlmPrintHexDump((UCHAR*)pDataRC4, 12);
+        RC4(Handle, (UCHAR*)pDataRC4, (UCHAR*)pDataRC4, 12);
+        printf("MAC ENC\n");
+        NtlmPrintHexDump((UCHAR*)pDataRC4, 12);
+        /* override first 4 bytes (any value) */
+        pDataRC4[0] = 0x00090178;// 78010900;
+        printf("MAC FULL\n");
+        NtlmPrintHexDump((UCHAR*)pData, 16);
 
-        // Replace the first four bytes of the ciphertext with the random_pad
-        res_ptr[1] = random_pad; // 4 bytes
+        /* connection oriented */
+        if (!(NegFlg & NTLMSSP_NEGOTIATE_DATAGRAM))
+        {
+            //Set NTLMSSP_MESSAGE_SIGNATURE.SeqNum to
+            //NTLMSSP_MESSAGE_SIGNATURE.SeqNum XOR SeqNum
+            //Set SeqNum to SeqNum + 1
+            //pMacData->SeqNum = /*?pMacData->SeqNum ^*/ *pSeqNum;
+            (*pSeqNum)++;
+        }
+        else
+        {
+            //TODO Connection-less (DATAGRAM)
+            //Set NTLMSSP_MESSAGE_SIGNATURE.SeqNum to                NTLMSSP_MESSAGE_SIGNATURE.SeqNum XOR
+            //(application supplied SeqNum)
+        }
+        //Set NTLMSSP_MESSAGE_SIGNATURE.RandomPad to 0
+        //EndDefine
+        (*pSeqNum)++;
     }
-
     return TRUE;
 }
 
@@ -914,10 +956,10 @@ RC4Init(
 
 VOID
 RC4(IN prc4_key pHandle,
-    IN OUT UCHAR* pData,
-    //OUT UCHAR* pDataOut,
+    IN UCHAR* pDataI,
+    OUT UCHAR* pDataO,
     IN ULONG len)
 {
     /* use pData for in/out should be okay - i think! */
-    rc4_crypt(pHandle, pData, pData, len);
+    rc4_crypt(pHandle, pDataI, pDataO, len);
 }

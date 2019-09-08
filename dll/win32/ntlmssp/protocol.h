@@ -222,11 +222,11 @@ KXKEY(
     IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
     OUT UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH]);
 
-BOOLEAN
+BOOL
 SIGNKEY(
-    const PUCHAR RandomSessionKey,
-    BOOLEAN IsClient,
-    PUCHAR Result);
+    IN PUCHAR RandomSessionKey,
+    IN BOOL IsClient,
+    IN PUCHAR Result);
 
 BOOL
 SEALKEY(
@@ -235,17 +235,16 @@ SEALKEY(
     IN BOOL client,
     OUT PUCHAR result);
 
-BOOLEAN
-MAC(ULONG flags,
-    PCCHAR buf,
-    ULONG buf_len,
-    PUCHAR sign_key,
-    ULONG sign_key_len,
-    PUCHAR seal_key,
-    ULONG seal_key_len,
-    ULONG random_pad,
-    ULONG sequence,
-    PUCHAR result);
+BOOL
+MAC(IN ULONG NegFlg,
+    IN prc4_key SealKeyHandle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN UCHAR* msg,
+    IN ULONG msgLen,
+    OUT PBYTE pSign,
+    IN ULONG signLen);
 
 BOOL
 CliComputeResponse(
@@ -444,6 +443,7 @@ RC4Init(
     IN ULONG KeyLen);
 VOID
 RC4(IN prc4_key pHandle,
-    IN OUT UCHAR* pData,
+    IN UCHAR* pDataI,
+    OUT UCHAR* pDataO,
     IN ULONG len);
 
