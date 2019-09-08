@@ -435,8 +435,8 @@ SEAL(
 }
 
 /* MS-NLSP 3.3.1 NTLM v1 Authentication */
-#define VALIDATE_NTLMv1
-#define VALIDATE_NTLM
+//#define VALIDATE_NTLMv1
+//#define VALIDATE_NTLM
 BOOL
 CliComputeResponseNTLMv1(
     IN ULONG NegFlg,
