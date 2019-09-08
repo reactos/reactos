@@ -247,10 +247,17 @@ HRESULT STDMETHODCALLTYPE CFolderItems::get_Parent(IDispatch **ppid)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CFolderItems::Item(VARIANT index, FolderItem **ppid)
+HRESULT STDMETHODCALLTYPE CFolderItems::Item(VARIANT var, FolderItem **ppid)
 {
+    CComVariant index;
+    HRESULT hr;
+
     if (!m_EnumIDList)
         return E_FAIL;
+
+    hr = VariantCopyInd(&index, &var);
+    if (FAILED(hr))
+        return hr;
 
     if (V_VT(&index) == VT_I2)
         VariantChangeType(&index, &index, 0, VT_I4);
@@ -259,7 +266,7 @@ HRESULT STDMETHODCALLTYPE CFolderItems::Item(VARIANT index, FolderItem **ppid)
     {
         ULONG count = V_UI4(&index);
 
-        HRESULT hr = m_EnumIDList->Reset();
+        hr = m_EnumIDList->Reset();
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -282,7 +289,7 @@ HRESULT STDMETHODCALLTYPE CFolderItems::Item(VARIANT index, FolderItem **ppid)
         if (!V_BSTR(&index))
             return S_FALSE;
 
-        HRESULT hr = m_Folder->ParseName(V_BSTR(&index), ppid);
+        hr = m_Folder->ParseName(V_BSTR(&index), ppid);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
         return hr;
