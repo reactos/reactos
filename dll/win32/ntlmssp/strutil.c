@@ -304,6 +304,8 @@ ExtWStrToAStr(
                               (WCHAR*)src->Buffer, src->bUsed / sizeof(WCHAR),
                               (char*)dst->Buffer, dst->bAllocated / sizeof(char),
                               NULL, NULL);
+    dst->bUsed = res * sizeof(char);
+    dst->typ = stAnsiStr;
     return (res > 0);
 }
 
