@@ -119,8 +119,8 @@ VOID
 KXKEY(
     IN ULONG NegFlg,
     IN UCHAR SessionBaseKey[MSV1_0_USER_SESSION_KEY_LENGTH],
-    IN UCHAR* LmChallengeResponse,
-    IN ULONG LmChallengeResponseLen,
+    IN PEXT_DATA LmChallengeResponse,
+    IN PEXT_DATA NtChallengeResponse,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
     OUT UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH])
@@ -128,7 +128,7 @@ KXKEY(
     UCHAR* LMOWF = ResponseKeyLM;
     UCHAR DESv2[8] = "\x00\xBD\xBD\xBD\xBD\xBD\xBD\xBD";
 
-    if (LmChallengeResponseLen < 8)
+    if (LmChallengeResponse->bUsed < 8)
     {
         ERR("KXKEY: LmChallengeResponseLen < 8 Bytes!\n");
         return;
@@ -141,9 +141,9 @@ KXKEY(
         //    DES(LMOWF[0..6],LmChallengeResponse[0..7]),
         //    DES(ConcatenationOf(LMOWF[7], 0xBDBDBDBDBDBD),
         //        LmChallengeResponse[0..7]) )
-        DES(&LMOWF[0], LmChallengeResponse, &KeyExchangeKey[0]);
+        DES(&LMOWF[0], LmChallengeResponse->Buffer, &KeyExchangeKey[0]);
         DESv2[0] = LMOWF[7];
-        DES(DESv2, LmChallengeResponse, &KeyExchangeKey[8]);
+        DES(DESv2, LmChallengeResponse->Buffer, &KeyExchangeKey[8]);
     }
     else
     {
@@ -606,6 +606,7 @@ CliComputeKeys(
     IN ULONG ChallengeMsg_NegFlg,
     IN PUSER_SESSION_KEY pSessionBaseKey,
     IN PEXT_DATA pLmChallengeResponseData,
+    IN PEXT_DATA pNtChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
     OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
@@ -627,9 +628,8 @@ CliComputeKeys(
     //Set KeyExchangeKey to KXKEY(SessionBaseKey, LmChallengeResponse,
     //CHALLENGE_MESSAGE.ServerChallenge)
     KXKEY(ChallengeMsg_NegFlg, (PUCHAR)pSessionBaseKey,
-          pLmChallengeResponseData->Buffer,
-          pLmChallengeResponseData->bUsed, ServerChallenge,
-          ResponseKeyLM, KeyExchangeKey);
+          pLmChallengeResponseData, pNtChallengeResponseData,
+          ServerChallenge, ResponseKeyLM, KeyExchangeKey);
     TRACE("KeyExchangeKey\n");
     NtlmPrintHexDump(KeyExchangeKey, 16);
 
@@ -849,6 +849,7 @@ CliComputeResponse(
     if (!CliComputeKeys(Challenge_NegFlg,
                         &SessionBaseKey,
                         pLmChallengeResponseData,
+                        pNtChallengeResponseData,
                         ChallengeToClient,/* = ServerChallenge*/
                         ResponseKeyLM,
                         ExportedSessionKey,

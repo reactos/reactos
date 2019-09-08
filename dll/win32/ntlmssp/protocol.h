@@ -216,8 +216,8 @@ VOID
 KXKEY(
     IN ULONG NegFlg,
     IN UCHAR SessionBaseKey[MSV1_0_USER_SESSION_KEY_LENGTH],
-    IN UCHAR* LmChallengeResponse,
-    IN ULONG LmChallengeResponseLen,
+    IN PEXT_DATA LmChallengeResponse,
+    IN PEXT_DATA NtChallengeResponse,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
     OUT UCHAR KeyExchangeKey[NTLM_KEYEXCHANGE_KEY_LENGTH]);
@@ -267,6 +267,7 @@ CliComputeKeys(
     IN ULONG ChallengeMsg_NegFlg,
     IN PUSER_SESSION_KEY pSessionBaseKey,
     IN PEXT_DATA pLmChallengeResponseData,
+    IN PEXT_DATA pNtChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
     OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],

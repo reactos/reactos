@@ -884,10 +884,9 @@ typedef struct _AUTH_DATA
 {
     PSecBuffer InputToken;
     PAUTHENTICATE_MESSAGE authMessage;
-    EXT_STRING_W NtChallengeResponse;
     EXT_DATA EncryptedRandomSessionKey;
-    ULONG LmChallengeResponseLen;
-    LM2_RESPONSE LmChallengeResponse;
+    EXT_DATA LmChallengeResponse;
+    EXT_DATA NtChallengeResponse;
     //FIXME: Is DomainName = UserDom?
     //FIXME: Fill UserPasswd
     //FIXME: Use EXT_STRING_W
@@ -1030,7 +1029,7 @@ SvrAuthMsgProcessData(
     if ((ad->UserName.bUsed == 0) &&
         (ad->NtChallengeResponse.bUsed == 0) &&
         // lt spec == ' ' or '0' ... mabye v this will not work...
-        ( (ad->LmChallengeResponseLen == 0) ||
+        ( (ad->LmChallengeResponse.bUsed == 0) ||
           (memcmp(&ad->LmChallengeResponse, " ", 1) == 0)))
     {
         //-- Special case: client requested anonymous authentication
@@ -1086,7 +1085,7 @@ SvrAuthMsgProcessData(
             TimeStamp = ntResp->TimeStamp;
         }
         else if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
-            ChallengeFromClient = ad->LmChallengeResponse.ChallengeFromClient;
+            ChallengeFromClient = ((PLM2_RESPONSE)ad->LmChallengeResponse.Buffer)->ChallengeFromClient;
         else
             ChallengeFromClient = NULL;
     }
@@ -1113,7 +1112,8 @@ SvrAuthMsgProcessData(
     // Set KeyExchangeKey to KXKEY(SessionBaseKey,
     // AUTHENTICATE_MESSAGE.LmChallengeResponse, CHALLENGE_MESSAGE.ServerChallenge)
     KXKEY(context->cli_NegFlg, (PUCHAR)&SessionBaseKey,
-          (UCHAR*)&ad->LmChallengeResponse, ad->LmChallengeResponseLen,
+          &ad->LmChallengeResponse,
+          &ad->NtChallengeResponse,
           context->ServerChallenge, ResponseKeyLM, KeyExchangeKey);
     // If (AUTHENTICATE_MESSAGE.NtChallengeResponse !=
     // ExpectedNtChallengeResponse)
@@ -1122,7 +1122,7 @@ SvrAuthMsgProcessData(
     /* Really and-condition?? */
     /* HACK: cast to PEXT_DATA */
     if (!ExtDataIsEqual1(&ad->NtChallengeResponse, (PEXT_DATA)&ExpectedNtChallengeResponse) &&
-       ((ad->LmChallengeResponseLen == 0) ||
+       ((ad->LmChallengeResponse.bUsed == 0) ||
         memcmp(&ad->LmChallengeResponse, &ExpectedLmChallengeResponse, sizeof(ExpectedLmChallengeResponse)) != 0))
     {
         TRACE("NTChallengeResponse\n");
@@ -1260,10 +1260,8 @@ SvrAuthMsgExtractData(
         goto quit;
     }
 
-    ad->LmChallengeResponseLen = ad->authMessage->LmChallengeResponse.Length;
-    if(!NT_SUCCESS(NtlmCopyBlob(ad->InputToken,
-        ad->authMessage->LmChallengeResponse,
-        &ad->LmChallengeResponse, sizeof(ad->LmChallengeResponse))))
+    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(ad->InputToken,
+        ad->authMessage->LmChallengeResponse, &ad->LmChallengeResponse)))
     {
         ERR("cant get blob data\n");
         ret = SEC_E_INVALID_TOKEN;
@@ -1333,8 +1331,8 @@ SvrHandleAuthenticateMessage(
                        ASC_RET_SEQUENCE_DETECT |
                        ASC_RET_CONFIDENTIALITY;
 
-    ad.LmChallengeResponseLen = 0;
-    ExtWStrInit(&ad.NtChallengeResponse, NULL);
+    ExtDataInit(&ad.LmChallengeResponse, NULL, 0);
+    ExtDataInit(&ad.NtChallengeResponse, NULL, 0);
     ExtWStrInit(&ad.UserName, NULL);
     ExtWStrInit(&ad.Workstation, NULL);
     ExtWStrInit(&ad.DomainName, NULL);
@@ -1403,6 +1401,7 @@ SvrHandleAuthenticateMessage(
 
 quit:
     NtlmDereferenceContext((ULONG_PTR)context);
+    ExtStrFree(&ad.LmChallengeResponse);
     ExtStrFree(&ad.NtChallengeResponse);
     ExtStrFree(&ad.UserName);
     ExtStrFree(&ad.Workstation);
