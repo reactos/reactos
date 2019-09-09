@@ -204,6 +204,13 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // FIXME: Extension->AcpiTableSize;
     }
 
+    Extension->BootViaWinload = 1;
+
+    InitializeListHead(&Extension->BootApplicationPersistentData);
+    List_PaToVa(&Extension->BootApplicationPersistentData);
+
+    Extension->LoaderPerformanceData = PaToVa(&WinLdrSystemBlock->LoaderPerformanceData);
+
 #ifdef _M_IX86
     /* Set headless block pointer */
     if (WinLdrTerminalConnected)
@@ -752,6 +759,10 @@ LoadAndBootWindows(
     else if (_stricmp(ArgValue, "WindowsNT40") == 0)
     {
         OperatingSystemVersion = _WIN32_WINNT_NT4;
+    }
+    else if (_stricmp(ArgValue, "WindowsVista") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_VISTA;
     }
     else
     {
