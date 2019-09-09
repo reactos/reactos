@@ -396,21 +396,18 @@ SEAL(
     IN UCHAR* SigningKey,
     IN ULONG SigningKeyLength,
     IN PULONG pSeqNum,
-    IN UCHAR* msg,
+    IN OUT UCHAR* msg,
     IN ULONG msgLen,
-    OUT UCHAR* data,
-    OUT PULONG pDataLen)
+    OUT UCHAR* pSign,
+    OUT PULONG pSignLen)
 {
-    PBYTE pSign;
     ULONG signLen = 16;
-    ULONG neededLen = msgLen + signLen;
-    if (*pDataLen < neededLen)
+    if (*pSignLen < signLen)
         return FALSE;
 
     printf("msg\n");
     NtlmPrintHexDump(msg, msgLen);
 
-    pSign = (data + msgLen);
     MAC(NegFlg,
         Handle, SigningKey, SigningKeyLength, pSeqNum, msg,
         msgLen, pSign, signLen);
@@ -420,16 +417,12 @@ SEAL(
 
     if (NegFlg & NTLMSSP_NEGOTIATE_SEAL)
     {
-        RC4(Handle, msg, data, msgLen);
-    }
-    else
-    {
-        memcpy(data, msg, msgLen);
+        RC4(Handle, msg, msg, msgLen);
     }
     printf("result\n");
-    NtlmPrintHexDump(data, neededLen);
+    NtlmPrintHexDump(msg, msgLen);
 
-    *pDataLen = neededLen;
+    *pSignLen = signLen;
 
     return TRUE;
 }

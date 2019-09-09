@@ -23,6 +23,9 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+#define NEGO_FLAGS_DONOTUSE  NTLMSSP_NEGOTIATE_KEY_EXCH// | NTLMSSP_NEGOTIATE_NTLM
+
+
 SECURITY_STATUS
 CliGenerateNegotiateMessage(
     IN PNTLMSSP_CONTEXT_CLI context,
@@ -86,8 +89,8 @@ CliGenerateNegotiateMessage(
                        NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
                        NTLMSSP_NEGOTIATE_LM_KEY |
                        NTLMSSP_NEGOTIATE_56 |
-                       NTLMSSP_NEGOTIATE_OEM);*/ -
-                       NTLMSSP_NEGOTIATE_KEY_EXCH;
+                       NTLMSSP_NEGOTIATE_OEM);*/ &
+                       ~(NEGO_FLAGS_DONOTUSE);
 
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
@@ -806,6 +809,7 @@ CliGenerateAuthenticationMessage(
     /* fill auth message */
     strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     authmessage->MsgType = NtlmAuthenticate;
+    context->NegFlg = context->NegFlg & ~(NEGO_FLAGS_DONOTUSE);
     authmessage->NegotiateFlags = context->NegFlg;
 
     /* calc blob offset */
@@ -1198,9 +1202,9 @@ SvrAuthMsgProcessData(
     //Set ServerSealingKey to SEALKEY(NegFlg, ExportedSessionKey , "Server")
     SEALKEY(context->cli_NegFlg, ExportedSessionKey, FALSE, context->cli_msg.ServerSealingKey);
     //RC4Init(ClientHandle, ClientSealingKey)
-    RC4Init(&context->cli_msg.ClientHandle, context->cli_msg.ClientSealingKey, sizeof(context->cli_msg.ClientSealingKey));
+    RC4Init(&context->cli_msg.ClientHandle, context->cli_msg.ClientSealingKey, 16);//sizeof(context->cli_msg.ClientSealingKey));
     //RC4Init(ServerHandle, ServerSealingKey)
-    RC4Init(&context->cli_msg.ServerHandle, context->cli_msg.ServerSealingKey, sizeof(context->cli_msg.ServerSealingKey));
+    RC4Init(&context->cli_msg.ServerHandle, context->cli_msg.ServerSealingKey, 16);//sizeof(context->cli_msg.ServerSealingKey));
 quit:
     ExtStrFree(&ExpectedNtChallengeResponse);
     ExtStrFree(&ServerName);
@@ -1408,3 +1412,4 @@ quit:
     ExtStrFree(&ad.DomainName);
     return ret;
 }
+

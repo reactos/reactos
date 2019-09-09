@@ -232,15 +232,15 @@ typedef struct _NTLMSSP_CONTEXT_MSG
     /* ServerHandle (Public): The handle to a key state structure corresponding to the current state of
       the ServerSealingKey. */
     rc4_key ServerHandle;
-
-    /* not in spec or unknown whether they are... */
-    /* message support  */
-    int SentSequenceNum;
-    int RecvSequenceNum;
+    ULONG ClientSeqNum;
+    ULONG ServerSeqNum;
     UCHAR ClientSigningKey[NTLM_SIGNKEY_LENGTH];
     UCHAR ClientSealingKey[NTLM_SEALINGKEY_LENGTH];
     UCHAR ServerSigningKey[NTLM_SIGNKEY_LENGTH];
     UCHAR ServerSealingKey[NTLM_SEALINGKEY_LENGTH];
+
+    /* not in spec or unknown whether they are... */
+    /* message support  */
     UCHAR MessageIntegrityCheck[16];
 } NTLMSSP_CONTEXT_MSG, *PNTLMSSP_CONTEXT_MSG;
 
@@ -350,9 +350,11 @@ NtlmReferenceContextHdr(IN ULONG_PTR Handle);
 PNTLMSSP_CONTEXT_MSG
 NtlmReferenceContextMsg(
     IN ULONG_PTR Handle,
+    IN BOOL isSending,
     OUT PULONG pNegFlg,
-    OUT prc4_key* pSendHandle,
-    OUT prc4_key* pRecvHandle);
+    OUT prc4_key* pSealHandle,
+    OUT PBYTE* pSignKey,
+    OUT PULONG* pSeqNum);
 PNTLMSSP_CONTEXT_CLI
 NtlmReferenceContextCli(IN ULONG_PTR Handle);
 PNTLMSSP_CONTEXT_SVR

@@ -86,9 +86,11 @@ NtlmReferenceContextCli(IN ULONG_PTR Handle)
 PNTLMSSP_CONTEXT_MSG
 NtlmReferenceContextMsg(
     IN ULONG_PTR Handle,
+    IN BOOL isSending,
     OUT PULONG pNegFlg,
-    OUT prc4_key* pSendHandle,
-    OUT prc4_key* pRecvHandle)
+    OUT prc4_key* pSealHandle,
+    OUT PBYTE* pSignKey,
+    OUT PULONG* pSeqNum)
 {
     PNTLMSSP_CONTEXT_HDR c;
     c = NtlmReferenceContextHdr(Handle);
@@ -97,8 +99,18 @@ NtlmReferenceContextMsg(
         PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)c;
         if (pNegFlg)
             *pNegFlg = csvr->cli_NegFlg;
-        *pSendHandle = &csvr->cli_msg.ServerHandle;
-        *pRecvHandle = &csvr->cli_msg.ClientHandle;
+        if (isSending)
+        {
+            *pSealHandle = &csvr->cli_msg.ServerHandle;
+            *pSignKey    = (PBYTE)&csvr->cli_msg.ServerSigningKey;
+            *pSeqNum     = &csvr->cli_msg.ServerSeqNum;
+        }
+        else
+        {
+            *pSealHandle = &csvr->cli_msg.ClientHandle;
+            *pSignKey    = (PBYTE)&csvr->cli_msg.ClientSigningKey;
+            *pSeqNum     = &csvr->cli_msg.ClientSeqNum;
+        }
         return &csvr->cli_msg;
     }
     else
@@ -106,8 +118,18 @@ NtlmReferenceContextMsg(
         PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)c;
         if (pNegFlg)
             *pNegFlg = ccli->NegFlg;
-        *pSendHandle = &ccli->msg.ClientHandle;
-        *pRecvHandle = &ccli->msg.ServerHandle;
+        if (isSending)
+        {
+            *pSealHandle = &ccli->msg.ClientHandle;
+            *pSignKey    = (PBYTE)&ccli->msg.ClientSigningKey;
+            *pSeqNum     = &ccli->msg.ClientSeqNum;
+        }
+        else
+        {
+            *pSealHandle = &ccli->msg.ServerHandle;
+            *pSignKey    = (PBYTE)&ccli->msg.ServerSigningKey;
+            *pSeqNum     = &ccli->msg.ServerSeqNum;
+        }
         return &ccli->msg;
     }
 }

@@ -167,6 +167,7 @@ typedef struct _AUTHENTICATE_MESSAGE
 }AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
 
 /* MS-NTLM 2.2.2.9.1 + 2 */
+#include "pshpack1.h"
 typedef struct _NTLMSSP_MESSAGE_SIGNATURE
 {
     ULONG Version;
@@ -179,6 +180,13 @@ typedef struct _NTLMSSP_MESSAGE_SIGNATURE
     } u1;
     ULONG SeqNum;
 } NTLMSSP_MESSAGE_SIGNATURE, *PNTLMSSP_MESSAGE_SIGNATURE;
+typedef struct _NTLMSSP_MESSAGE_SIGNATURE_12
+{
+    ULONG Version;
+    ULONG CheckSum;
+    ULONG SeqNum;
+} NTLMSSP_MESSAGE_SIGNATURE_12, *PNTLMSSP_MESSAGE_SIGNATURE_12;
+#include "poppack.h"
 //??C_ASSERT(sizeof(NTLMSSP_MESSAGE_SIGNATURE) == 16);
 
 /* basic functions */
@@ -236,8 +244,9 @@ SEALKEY(
     OUT PUCHAR result);
 
 BOOL
-MAC(IN ULONG NegFlg,
-    IN prc4_key SealKeyHandle,
+MAC(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
     IN UCHAR* SigningKey,
     IN ULONG SigningKeyLength,
     IN PULONG pSeqNum,
@@ -245,6 +254,18 @@ MAC(IN ULONG NegFlg,
     IN ULONG msgLen,
     OUT PBYTE pSign,
     IN ULONG signLen);
+
+BOOL
+SEAL(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN OUT UCHAR* msg,
+    IN ULONG msgLen,
+    OUT UCHAR* sign,
+    OUT PULONG pSignLen);
 
 BOOL
 CliComputeResponse(

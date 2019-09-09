@@ -30,16 +30,14 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo)
 {
     SECURITY_STATUS ret = SEC_E_OK;
+    BOOL bRet;
     PSecBuffer data_buffer = NULL;
     PSecBuffer signature_buffer = NULL;
-    //prc4_key pSendHandle, pRecvHandle;
-    //UCHAR digest[16], checksum[8], *signature;
-    UINT index, length;//, version = 1;
-    //HMAC_MD5_CTX hmac;
+    prc4_key pSealHandle;
+    PBYTE pSignKey;
     //PNTLMSSP_CONTEXT_MSG cli_msg;
-    ULONG cli_NegFlg;
-
-    void* data;
+    PULONG pSeqNum;
+    ULONG index, cli_NegFlg;
 
     ERR("EncryptMessage(%p %d %p %d)\n", phContext, fQOP, pMessage, MessageSeqNo);
 
@@ -53,12 +51,8 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         return SEC_E_INVALID_TOKEN;
 
     /* get context, need to free it later! */
-    //cli_msg =  NtlmReferenceContextMsg(phContext->dwLower, &cli_NegFlg);
-    cli_NegFlg = 0;//HACK
-    /* not sure ... swap if we are server ?! */
-    //pSendHandle = &cli_msg->ClientHandle;
-    //pRecvHandle = &cli_msg->ServerHandle;
-
+    /*cli_msg = */NtlmReferenceContextMsg(phContext->dwLower, TRUE,
+                                      &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
     /*if (!ctxMsg->SendSealKey)
     {
         TRACE("context->SendSealKey is NULL\n");
@@ -84,43 +78,29 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         goto exit;
     }
 
-    /* Copy original data buffer */
-    length = data_buffer->cbBuffer;
-    data = NtlmAllocate(length);
-    memcpy(data, data_buffer->pvBuffer, length);
+    //printf("SealingKey (Client)\n");
+    //NtlmPrintHexDump(cli_msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
+    //printf("SealingKey (Server)\n");
+    //NtlmPrintHexDump(cli_msg->ServerSealingKey, NTLM_SEALINGKEY_LENGTH);
+    //printf("SigningKey (Client)\n");
+    //NtlmPrintHexDump(cli_msg->ClientSigningKey, NTLM_SIGNKEY_LENGTH);
+    //printf("SigningKey (Server)\n");
+    //NtlmPrintHexDump(cli_msg->ServerSigningKey, NTLM_SIGNKEY_LENGTH);
 
-    /* Compute the HMAC-MD5 hash of ConcatenationOf(seq_num,data) using the client signing key */
-    /*HMACMD5Init(&hmac, ctxMsg->ClientSigningKey, sizeof(ctxMsg->ServerSigningKey));
-    HMACMD5Update(&hmac, (void*) &(MessageSeqNo), sizeof(MessageSeqNo));
-    HMACMD5Update(&hmac, data, length);
-    HMACMD5Final(&hmac, digest);*/
-    if (NTLMSSP_NEGOTIATE_SIGN & cli_NegFlg)
+    bRet = SEAL(cli_NegFlg, pSealHandle, (UCHAR*)pSignKey,
+                NTLM_SIGNKEY_LENGTH, pSeqNum,
+                data_buffer->pvBuffer, data_buffer->cbBuffer,
+                signature_buffer->pvBuffer, &signature_buffer->cbBuffer);
+    if (!bRet)
     {
-        FIXME("SIGN not implemented\n");
-        //Define SIGN(Handle, SigningKey, SeqNum, Message) as
-        //ConcatenationOf(Message, MAC(Handle, SigningKey, SeqNum, Message))
-        //EndDefine
-        //SIGN
+        ret = SEC_E_INTERNAL_ERROR;
+        goto exit;
     }
 
-    /* Encrypt message using with RC4, result overwrites original buffer */
-    /*rc4_crypt(ctxMsg->SendSealKey, data_buffer->pvBuffer, data, length);
-     * */
-    FIXME("ENCRYPT\n");
-    NtlmFree(data);
-    /* RC4-encrypt first 8 bytes of digest */
-    /*
-    rc4_crypt(ctxMsg->SendSealKey, checksum, digest, 8);
-    signature = (UCHAR*) signature_buffer->pvBuffer;
-     */
-
-    /* Concatenate version, ciphertext and sequence number to build signature */
-    /*
-    memcpy(signature, (void*) &version, sizeof(version));
-    memcpy(&signature[4], (void*) checksum, sizeof(checksum));
-    memcpy(&signature[12], (void*) &(MessageSeqNo), sizeof(MessageSeqNo));
-    ctxMsg->SentSequenceNum++;
-     */
+    //memcpy(signature_buffer->pvBuffer, (PBYTE)(data)+datalen-16, 16);
+    //memcpy(data_buffer->pvBuffer, (PBYTE)(data), datalen-16);
+    NtlmPrintHexDump(signature_buffer->pvBuffer, signature_buffer->cbBuffer);
+    NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
     NtlmDereferenceContext(phContext->dwLower);
@@ -141,7 +121,9 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
     PSecBuffer data_buffer = NULL, signature = NULL;
     PVOID data;
     ULONG cli_NegFlg;
-    prc4_key pRecvHandle, pSendHandle;
+    prc4_key pSealHandle;
+    PBYTE pSignKey;
+    PULONG pSeqNum;
     PNTLMSSP_CONTEXT_MSG cli_msg;
 
     TRACE("(%p %p %d %p)\n", phContext, pMessage, MessageSeqNo, pfQOP);
@@ -154,7 +136,8 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         return SEC_E_INVALID_TOKEN;
 
     /* get context */
-    cli_msg = NtlmReferenceContextMsg(phContext->dwLower, &cli_NegFlg, &pSendHandle, &pRecvHandle);
+    cli_msg = NtlmReferenceContextMsg(phContext->dwLower, FALSE,
+                                      &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
 
     /* extract data and signature buffers */
     for (index = 0; index < (int) pMessage->cBuffers; index++)
@@ -204,7 +187,7 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
          * RC4 has in/out-buffer memcpy before could be removed */
         TRACE("RC4 before\n");
         NtlmPrintHexDump(data, length);
-        RC4(pSendHandle, data, data, length);
+        RC4(pSealHandle, data, data, length);
     }
     TRACE("done\n");
     NtlmPrintHexDump(data, length);
