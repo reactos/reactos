@@ -76,6 +76,47 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR S
     // Value "OemHalFont"
 }
 
+static
+BOOLEAN
+SetupLdrInitErrataInf(
+    IN HINF InfHandle,
+    IN PCSTR SystemRoot)
+{
+    INFCONTEXT InfContext;
+    PCSTR FileName;
+    ULONG FileSize;
+    PVOID PhysicalBase;
+    CHAR ErrataFilePath[MAX_PATH];
+
+    /* Retrieve the INF file name value */
+    if (!InfFindFirstLine(InfHandle, "BiosInfo", "InfName", &InfContext))
+    {
+        WARN("Failed to find 'BiosInfo/InfName'\n");
+        return FALSE;
+    }
+    if (!InfGetDataField(&InfContext, 1, &FileName))
+    {
+        WARN("Failed to read 'InfName' value\n");
+        return FALSE;
+    }
+
+    RtlStringCbCopyA(ErrataFilePath, sizeof(ErrataFilePath), SystemRoot);
+    RtlStringCbCatA(ErrataFilePath, sizeof(ErrataFilePath), FileName);
+
+    /* Load the INF file */
+    PhysicalBase = WinLdrLoadModule(ErrataFilePath, &FileSize, LoaderRegistryData);
+    if (!PhysicalBase)
+    {
+        WARN("Could not load '%s'\n", ErrataFilePath);
+        return FALSE;
+    }
+
+    WinLdrSystemBlock->Extension.EmInfFileImage = PaToVa(PhysicalBase);
+    WinLdrSystemBlock->Extension.EmInfFileSize  = FileSize;
+
+    return TRUE;
+}
+
 static VOID
 SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR SearchPath)
 {
@@ -332,6 +373,11 @@ LoadReactOSSetup(
     RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
     RtlStringCbCatA(FileName, sizeof(FileName), "system32\\");
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
+
+    /* Load the Firmware Errata file from the installation medium */
+    Success = SetupLdrInitErrataInf(InfHandle, BootPath);
+    TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
+    /* Not necessarily fatal if not found - carry on going */
 
     // UiDrawStatusText("Press F6 if you need to install a 3rd-party SCSI or RAID driver...");
 

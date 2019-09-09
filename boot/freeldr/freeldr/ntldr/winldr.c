@@ -377,7 +377,7 @@ WinLdrLoadModule(PCSTR ModuleName,
         return NULL;
     }
 
-    /* Get this file's size */
+    /* Retrieve its size */
     Status = ArcGetFileInformation(FileId, &FileInfo);
     if (Status != ESUCCESS)
     {
@@ -391,11 +391,12 @@ WinLdrLoadModule(PCSTR ModuleName,
     PhysicalBase = MmAllocateMemoryWithType(FileSize, MemoryType);
     if (PhysicalBase == NULL)
     {
+        ERR("Could not allocate memory for '%s'\n", ModuleName);
         ArcClose(FileId);
         return NULL;
     }
 
-    /* Load whole file */
+    /* Load the whole file */
     Status = ArcRead(FileId, PhysicalBase, FileSize, &BytesRead);
     ArcClose(FileId);
     if (Status != ESUCCESS)
@@ -650,6 +651,67 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     return Success;
 }
 
+static
+BOOLEAN
+WinLdrInitErrataInf(
+    IN USHORT OperatingSystemVersion,
+    IN PCSTR SystemRoot)
+{
+    LONG rc;
+    HKEY hKey;
+    ULONG BufferSize;
+    ULONG FileSize;
+    PVOID PhysicalBase;
+    WCHAR szFileName[80];
+    CHAR ErrataFilePath[MAX_PATH];
+
+    /* Open either the 'BiosInfo' (Windows <= 2003) or the 'Errata' (Vista+) key */
+    if (OperatingSystemVersion >= _WIN32_WINNT_VISTA)
+    {
+        rc = RegOpenKey(NULL,
+                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Errata",
+                        &hKey);
+    }
+    else // (OperatingSystemVersion <= _WIN32_WINNT_WS03)
+    {
+        rc = RegOpenKey(NULL,
+                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\BiosInfo",
+                        &hKey);
+    }
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("Could not open the BiosInfo/Errata registry key (Error %u)\n", (int)rc);
+        return FALSE;
+    }
+
+    /* Retrieve the INF file name value */
+    BufferSize = sizeof(szFileName);
+    rc = RegQueryValue(hKey, L"InfName", NULL, (PUCHAR)szFileName, &BufferSize);
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("Could not retrieve the InfName value (Error %u)\n", (int)rc);
+        return FALSE;
+    }
+
+    // TODO: "SystemBiosDate"
+
+    RtlStringCbPrintfA(ErrataFilePath, sizeof(ErrataFilePath), "%s%s%S",
+                       SystemRoot, "inf\\", szFileName);
+
+    /* Load the INF file */
+    PhysicalBase = WinLdrLoadModule(ErrataFilePath, &FileSize, LoaderRegistryData);
+    if (!PhysicalBase)
+    {
+        WARN("Could not load '%s'\n", ErrataFilePath);
+        return FALSE;
+    }
+
+    WinLdrSystemBlock->Extension.EmInfFileImage = PaToVa(PhysicalBase);
+    WinLdrSystemBlock->Extension.EmInfFileSize  = FileSize;
+
+    return TRUE;
+}
+
 ARC_STATUS
 LoadAndBootWindows(
     IN ULONG Argc,
@@ -820,6 +882,11 @@ LoadAndBootWindows(
     /* Bail out if failure */
     if (!Success)
         return ENOEXEC;
+
+    /* Load the Firmware Errata file */
+    Success = WinLdrInitErrataInf(OperatingSystemVersion, BootPath);
+    TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
+    /* Not necessarily fatal if not found - carry on going */
 
     /* Finish loading */
     return LoadAndBootWindowsCommon(OperatingSystemVersion,
