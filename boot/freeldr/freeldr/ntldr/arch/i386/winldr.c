@@ -245,7 +245,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         }
 
         PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-        PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
+        PhysicalPT[Page & 0x3ff].Valid = 1;
         PhysicalPT[Page & 0x3ff].Write = (Page != 0);
 
         if (KernelMapping)
@@ -429,7 +429,8 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 
 VOID
-WinLdrSetProcessorContext(void)
+WinLdrSetProcessorContext(
+    _In_ USHORT OperatingSystemVersion)
 {
     GDTIDT GdtDesc, IdtDesc, OldIdt;
     PKGDTENTRY    pGdt;
@@ -526,15 +527,19 @@ WinLdrSetProcessorContext(void)
      * Longhorn/Vista reports LimitLow == 0x0fff == MM_PAGE_SIZE - 1, whereas
      * Windows 7+ uses larger sizes there (not aligned on a page boundary).
      */
-#if 1
-    /* Server 2003 way */
-    KiSetGdtEntryEx(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, 0x1,
-                    TYPE_DATA, DPL_SYSTEM, TRUE, 2);
-#else
-    /* Vista+ way */
-    KiSetGdtEntry(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, MM_PAGE_SIZE - 1,
-                  TYPE_DATA, DPL_SYSTEM, 2);
-#endif
+    if (OperatingSystemVersion < _WIN32_WINNT_VISTA)
+    {
+        /* Server 2003 way */
+        KiSetGdtEntryEx(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, 0x1,
+                        TYPE_DATA, DPL_SYSTEM, TRUE, 2);
+    }
+    else
+    {
+        /* Vista+ way */
+        KiSetGdtEntry(KiGetGdtEntry(pGdt, KGDT_R0_PCR), (ULONG32)Pcr, MM_PAGE_SIZE - 1,
+                      TYPE_DATA, DPL_SYSTEM, 2);
+    }
+
     // DumpGDTEntry(GdtDesc.Base, KGDT_R0_PCR);
 
     /* KGDT_R3_TEB (0x38) Thread Environment Block Selector (Ring 3) */
