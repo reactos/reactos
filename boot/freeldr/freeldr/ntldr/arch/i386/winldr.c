@@ -319,7 +319,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         }
 
         PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-        PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
+        PhysicalPT[Page & 0x3ff].Valid = 1;
         PhysicalPT[Page & 0x3ff].Write = (Page != 0);
 
         if (KernelMapping)
