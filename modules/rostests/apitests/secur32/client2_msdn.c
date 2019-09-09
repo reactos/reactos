@@ -723,12 +723,12 @@ client2_start(
                                 &SecPkgSizes);
     sync_ok(SEC_SUCCESS(ss), "Querycontext2 failed with error 0x%x!", ss);
 
-    bRet = //msgtest_recv(Client_Socket, &hCtxt, &SecPkgSizes, pcp->ownServer,
-           //             L"This is your server speaking.") &&
+    bRet = msgtest_recv(Client_Socket, &hCtxt, &SecPkgSizes, pcp->ownServer,
+                        L"This is your server speaking.") &&
            msgtest_send(Client_Socket, &hCtxt, &SecPkgSizes,
                         L"Greetings from client.") &&
-           //msgtest_recv(Client_Socket, &hCtxt, &SecPkgSizes, pcp->ownServer,
-           //             L"2nd message from server.") &&
+           msgtest_recv(Client_Socket, &hCtxt, &SecPkgSizes, pcp->ownServer,
+                        L"2nd message from server.") &&
            msgtest_send(Client_Socket, &hCtxt, &SecPkgSizes,
                         L"Client got a 2nd message.");
 

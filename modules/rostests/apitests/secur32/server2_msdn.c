@@ -422,12 +422,12 @@ server2_start(
             }
         }
 
-        bRes = //msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
-               //             L"This is your server speaking.")  &&
+        bRes = msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
+                            L"This is your server speaking.")  &&
                msgtest_recv(Server_Socket, &g_sd.hctxt, &SecPkgSizes, TRUE,
                             L"Greetings from client.") &&
-               //msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
-               //             L"2nd message from server.") &&
+               msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
+                            L"2nd message from server.") &&
                msgtest_recv(Server_Socket, &g_sd.hctxt, &SecPkgSizes, TRUE,
                             L"Client got a 2nd message.");
 
