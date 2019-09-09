@@ -331,8 +331,8 @@ void PrintNegotiateMessage(PNEGOTIATE_MESSAGE pmsg, ULONG msgsize)
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
-    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
-    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
+    sync_trace("MsgType     0x%x\n", pmsg->MsgType);
+    sync_trace("NegotiateFlags 0x%x\n", pmsg->NegotiateFlags);
     PrintNtlmBlob("OemDomainName", pmsg, msgsize, &pmsg->OemDomainName);
     PrintNtlmBlob("OemWorkstationName", pmsg, msgsize, &pmsg->OemWorkstationName);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
@@ -344,10 +344,10 @@ void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg, ULONG msgsize)
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
-    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    sync_trace("MsgType     0x%x\n", pmsg->MsgType);
     PrintNtlmBlob("TargetName", pmsg, msgsize, &pmsg->TargetName);
-    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
-    //sys_trace("ServerChallenge %.*s\n", 8, pmsg->ServerChallenge);
+    sync_trace("NegotiateFlags 0x%x\n", pmsg->NegotiateFlags);
+    printf("ServerChallenge\n");
     PrintHexDump(MSV1_0_CHALLENGE_LENGTH, (PBYTE)&pmsg->ServerChallenge);
     PrintHexDump(8, (PBYTE)&pmsg->Reserved);
     PrintNtlmAvl("TargetInfo", pmsg, msgsize, &pmsg->TargetInfo);
@@ -360,14 +360,14 @@ void PrintAuthenticateMessage(PAUTHENTICATE_MESSAGE pmsg, ULONG msgsize)
     if (pmsg == NULL)
         return;
     sync_trace("Signature   %.*s\n", 8, pmsg->Signature);
-    sync_trace("MsgType     0x%x\n", 8, pmsg->MsgType);
+    sync_trace("MsgType     0x%x\n", pmsg->MsgType);
     PrintNtlmBlob("LmChallengeResponse", pmsg, msgsize, &pmsg->LmChallengeResponse);
     PrintNtlmBlob("NtChallengeResponse", pmsg, msgsize, &pmsg->NtChallengeResponse);
     PrintNtlmBlob("DomainName", pmsg, msgsize, &pmsg->DomainName);
     PrintNtlmBlob("UserName", pmsg, msgsize, &pmsg->UserName);
     PrintNtlmBlob("WorkstationName", pmsg, msgsize, &pmsg->WorkstationName);
     PrintNtlmBlob("EncryptedRandomSessionKey", pmsg, msgsize, &pmsg->EncryptedRandomSessionKey);
-    sync_trace("NegotiateFlags 0x%x\n", 8, pmsg->NegotiateFlags);
+    sync_trace("NegotiateFlags 0x%x\n", pmsg->NegotiateFlags);
     PrintNtlmWindowsVersion("Version", &pmsg->Version);
     PrintHexDump(sizeof(pmsg->MIC), (PBYTE)&pmsg->MIC);
 }

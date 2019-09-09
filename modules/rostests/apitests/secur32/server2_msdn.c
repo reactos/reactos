@@ -281,15 +281,15 @@ void server2_cleanup(void)
     WSACleanup();
 }
 
+//#define SEND_MSG_TO_CLI
+//#define RECV_MSG_FROM_CLI
 BOOL WINAPI
 server2_start(
     IN int ServerPort,
     IN LPCTSTR PackageName)
 {
-    BOOL Success, res = FALSE;
-    PBYTE pDataToClient = NULL;
-    DWORD cbDataToClient = 0;
-    TCHAR* pUserName = NULL;
+    BOOL Success, bRes = TRUE;
+    WCHAR* pUserName = NULL;
     DWORD cchUserName = 0;
     SOCKET Server_Socket = INVALID_SOCKET;
     SECURITY_STATUS ss;
@@ -422,35 +422,14 @@ server2_start(
             }
         }
 
-        /*
-         * Send the client an encrypted message
-         */
-        {
-            TCHAR pMessage[200] = _T("This is your server speaking");
-            DWORD cbMessage = _tcslen(pMessage) * sizeof(TCHAR);
-            BOOL bOk;
-
-            CodeCalcAndAllocBuffer(cbMessage, &SecPkgSizes,
-                                   &pDataToClient, &cbDataToClient);
-
-            bOk = CodeEncrypt(&g_sd.hctxt, (PBYTE)pMessage, cbMessage,
-                              &SecPkgSizes,
-                              cbDataToClient, pDataToClient);
-            sync_ok(bOk, "CodeEncrypt failed\n");
-        }
-
-        /* Send the encrypted data to client */
-        if (!SendBytes(Server_Socket,
-                       pDataToClient,
-                       cbDataToClient))
-        {
-            sync_err("send message failed.\n");
-            printerr(GetLastError());
-            sync_err("aborting\n");
-            goto done;
-        }
-
-        sync_trace(" %ld encrypted bytes sent.\n", cbDataToClient);
+        bRes = //msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
+               //             L"This is your server speaking.")  &&
+               msgtest_recv(Server_Socket, &g_sd.hctxt, &SecPkgSizes, TRUE,
+                            L"Greetings from client.") &&
+               //msgtest_send(Server_Socket, &g_sd.hctxt, &SecPkgSizes,
+               //             L"2nd message from server.") &&
+               msgtest_recv(Server_Socket, &g_sd.hctxt, &SecPkgSizes, TRUE,
+                            L"Client got a 2nd message.");
 
         if (pUserName)
         {
@@ -458,16 +437,10 @@ server2_start(
             pUserName = NULL;
             cchUserName = 0;
         }
-        if (pDataToClient)
-        {
-            free(pDataToClient);
-            pDataToClient = NULL;
-            cbDataToClient = 0;
-        }
     }
 
-    sync_trace("Server ran to completion without error.\n");
-    res = TRUE;
+    if (bRes)
+        sync_trace("Server ran to completion without error.\n");
 done:
     if (g_sd.hcred.dwLower != 0)
         DeleteSecurityContext(&g_sd.hctxt);
@@ -479,11 +452,9 @@ done:
         closesocket(Server_Socket);
         Server_Socket = 0;
     }
-    if (pDataToClient != NULL)
-        free(pDataToClient);
 
     server2_cleanup();
-    return res;
+    return bRes;
 }
 
 int server2_main(int argc, WCHAR** argv)

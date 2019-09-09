@@ -35,8 +35,8 @@ typedef struct _TESTDATA
     WCHAR* cli_argv[6];
 } TESTDATA, *PTESTDATA;
 
-#define TEST_AUTO
-//#define TEST_NO_AUTO1
+//#define TEST_AUTO
+#define TEST_NO_AUTO1
 //#define TEST_NO_AUTO2
 
 TESTDATA testdata[] =
@@ -311,15 +311,14 @@ CodeEncrypt(
     //sync_trace("after encrypt sign\n");
     //PrintHexDumpMax(neededBufSize, pOutBuf, neededBufSize);
 
-    //sync_trace("SecBuff (after encrypt)!\n");
+    sync_trace("SecBuff (after encrypt)!\n");
     //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
-    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
-    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
 
     sync_trace("The message has been encrypted.\n");
     /* set Byte 0-3 (DWORD) Trailer-Size  */
     *((DWORD*)pOutBuf) = pSecSizes->cbSecurityTrailer;
-
 
     /*ss = MakeSignature(hCtxt, 0, &BuffDesc, 0);
     sync_ok(SEC_SUCCESS(ss), "MakeSignature failed with error 0x%08lx\n", ss);
@@ -341,6 +340,179 @@ CodeEncrypt(
     if (!SEC_SUCCESS(ss))
         return FALSE;
     }*/
+    return TRUE;
+}
+
+/* no buffer is allocated !
+ * the decryption uses pBuffer.
+ * on success pMsg points to pBuffer + n; */
+BOOL
+CodeDecrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pBuffer,
+    IN ULONG cbBuffer,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* pMsg,
+    OUT LPDWORD pcbMessage)
+{
+    SECURITY_STATUS ss;
+    SecBufferDesc BuffDesc;
+    SecBuffer SecBuff[2];
+    ULONG ulQop = 0;
+    //DWORD SigBufferSize;
+    PBYTE pBuf2;
+
+    /*
+     * Dataformat:
+     * - DWORD - size of trailer
+     * - trailer
+     * - message
+     */
+    //SigBufferSize = *((DWORD*)pBuffer);
+
+    //pBuf2 = HeapAlloc(GetProcessHeap(), 0, cbBuffer+50);  // LocalAlloc(LMEM_FIXED, 1024);
+    //memcpy(pBuf2, pBuffer, cbBuffer+50);
+    pBuf2 = pBuffer;
+    //sync_trace("before decrypt!\n");
+    //PrintHexDumpMax(cbBuffer, pBuf2, cbBuffer);
+
+    /* Prepare the buffers to be passed to the DecryptMessage function     */
+    BuffDesc.ulVersion    = SECBUFFER_VERSION;
+    BuffDesc.cBuffers     = ARRAYSIZE(SecBuff);
+    BuffDesc.pBuffers     = SecBuff;
+
+    SecBuff[0].cbBuffer   = pSecSizes->cbSecurityTrailer;
+    SecBuff[0].BufferType = SECBUFFER_TOKEN;
+    SecBuff[0].pvBuffer   = pBuf2 + sizeof(DWORD);
+
+    SecBuff[1].cbBuffer   = cbBuffer - sizeof(DWORD) -
+                            pSecSizes->cbSecurityTrailer;
+    SecBuff[1].BufferType = SECBUFFER_DATA;
+    SecBuff[1].pvBuffer   = pBuf2 + sizeof(DWORD) +
+                            pSecSizes->cbSecurityTrailer;
+
+    sync_trace("SecBuff before decrypt!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+    /*SecBuff[0].cbBuffer = cbBuffer;
+    SecBuff[0].pvBuffer = (PBYTE)pBuf2 + sizeof(DWORD);// + SigBufferSize;
+    SecBuff[0].BufferType = SECBUFFER_DATA;
+
+    SecBuff[1].BufferType = SECBUFFER_EMPTY;
+    SecBuff[2].BufferType = SECBUFFER_EMPTY;
+    SecBuff[3].BufferType = SECBUFFER_EMPTY;*/
+
+    ss = DecryptMessage(hCtxt, &BuffDesc, 0, &ulQop);
+    sync_ok(SEC_SUCCESS(ss), "DecryptMessage failed 0x%x\n", ss);
+
+    //sync_trace("SecBuff after decrypt!\n");
+    //PrintHexDumpMax(sizeof(SecBuff), (PBYTE)&SecBuff, sizeof(SecBuff));
+    //PrintHexDumpMax(SecBuff[0].cbBuffer, (PBYTE)SecBuff[0].pvBuffer, SecBuff[0].cbBuffer);
+    //PrintHexDumpMax(SecBuff[1].cbBuffer, (PBYTE)SecBuff[1].pvBuffer, SecBuff[1].cbBuffer);
+
+    /* set results */
+    *pMsg = (PBYTE)SecBuff[1].pvBuffer;
+    *pcbMessage = SecBuff[1].cbBuffer;
+
+    return SEC_SUCCESS(ss);
+}
+
+/******************************************************************************/
+BOOL
+msgtest_send(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN WCHAR* msg)
+{
+    BOOL bRes;
+    PBYTE pEncryptedMsg = NULL;
+    ULONG cbEncryptedMsg = 0;
+    ULONG cbMsg = wcslen(msg) * sizeof(WCHAR);
+
+    sync_trace("sending msg \"%S\"\n", msg);
+
+    /* send (encrypted) messag */
+    CodeCalcAndAllocBuffer(cbMsg, pSecPkgSizes,
+                           &pEncryptedMsg, &cbEncryptedMsg);
+
+    bRes = CodeEncrypt(phCtxt, (PBYTE)msg, cbMsg,
+                       pSecPkgSizes,
+                       cbEncryptedMsg, pEncryptedMsg);
+    sync_ok(bRes, "CodeEncrypt failed.\n");
+    if (!bRes)
+        goto done;
+
+    /* Send the encrypted data to client */
+    bRes = SendMsg(socket,
+                   pEncryptedMsg,
+                   cbEncryptedMsg);
+    sync_ok(bRes, "SendMsg failed.\n");
+    if (!bRes)
+        goto done;
+
+    sync_trace("%ld encrypted bytes sent.\n", cbEncryptedMsg);
+
+done:
+    if (pEncryptedMsg)
+        free(pEncryptedMsg);
+    return bRes;
+}
+
+BOOL
+msgtest_recv(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN BOOL hasOwnServer,
+    IN WCHAR* expectedmsg)
+{
+    BOOL bRes;
+    BYTE EncodedMsg[BIG_BUFF];
+    PWCHAR pDecodedMsg;
+    ULONG cbDecodedMsg, cbEncodedMsg;
+    ULONG expectedMsgLen = wcslen(expectedmsg);
+
+    /* can get message only from our own server thread */
+    if (!hasOwnServer)
+        /* can't test without "own" server - skip */
+        return TRUE;
+
+    /* Decrypt and display the message from the server */
+    bRes =  ReceiveMsg(socket,
+                       EncodedMsg,
+                       BIG_BUFF,
+                       &cbEncodedMsg);
+    if (!bRes)
+    {
+        sync_err("No response from server.\n");
+        return FALSE;
+    }
+
+    sync_ok(cbEncodedMsg != 0, "Zero bytes received ");
+    if (cbEncodedMsg == 0)
+        return FALSE;
+
+    if (!CodeDecrypt(phCtxt, EncodedMsg, cbEncodedMsg, pSecPkgSizes,
+                     (PBYTE*)&pDecodedMsg, &cbDecodedMsg))
+    {
+        sync_err("CodeDecrypt failed\n");
+        return FALSE;
+    }
+
+    if (expectedMsgLen != (cbDecodedMsg / sizeof(WCHAR)) ||
+        (wcsncmp(expectedmsg, pDecodedMsg, expectedMsgLen) != 0))
+    {
+        sync_err("Decoded message not as expected.\n" \
+                 "   expected \"%S\"\n" \
+                 "   received \"%.*S\".\n", \
+                 expectedmsg,
+                 cbDecodedMsg / sizeof(WCHAR), pDecodedMsg);
+        return FALSE;
+    }
+
+    sync_trace("received msg (len %ld): %.*S\n", cbDecodedMsg, (int)cbDecodedMsg / sizeof(WCHAR), pDecodedMsg);
     return TRUE;
 }
 

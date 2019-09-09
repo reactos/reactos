@@ -57,6 +57,7 @@ typedef struct _NTLM_MESSAGE_HEAD
 #include <secext.h>
 
 #define SEC_SUCCESS(Status) ((Status) >= 0)
+#define BIG_BUFF 2048
 
 #define printerr(errnum)    \
 do { \
@@ -195,6 +196,31 @@ CodeEncrypt(
     IN PSecPkgContext_Sizes pSecSizes,
     IN ULONG cbBufLen,
     OUT PBYTE pOutBuf);
+/* no buffer is allocated !
+ * the decryption uses pBuffer.
+ * on success pMsg points to pBuffer + n; */
+BOOL
+CodeDecrypt(
+    IN PSecHandle hCtxt,
+    IN PBYTE pBuffer,
+    IN ULONG cbBuffer,
+    IN PSecPkgContext_Sizes pSecSizes,
+    OUT PBYTE* pMsg,
+    OUT LPDWORD pcbMessage);
+
+BOOL
+msgtest_recv(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN BOOL hasOwnServer,
+    IN WCHAR* expectedmsg);
+BOOL
+msgtest_send(
+    IN SOCKET socket,
+    IN PSecHandle phCtxt,
+    IN PSecPkgContext_Sizes pSecPkgSizes,
+    IN WCHAR* msg);
 
 void PrintHexDumpMax(DWORD length, PBYTE buffer, int printmax);
 void PrintHexDump(DWORD length, PBYTE buffer);
