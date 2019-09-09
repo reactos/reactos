@@ -619,7 +619,7 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
         name_buf = (char *) item + sizeof(*item);
         TRACE("Compare names %.*s and %.*s\n", name_len, name, item->name_len, name_buf);
 
-        if (_strnicmp(name, name_buf, name_len) == 0)
+        if (name_len == item->name_len && _strnicmp(name, name_buf, name_len) == 0)
         {
             *ret_item = *item;
             result = TRUE;
