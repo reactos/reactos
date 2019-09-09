@@ -740,6 +740,95 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
         GroupName = GroupName + wcslen(GroupName) + 1;
     }
 
+    /* Load any boot drivers that haven't been picked up above */
+    Index = 0;
+    while (TRUE)
+    {
+        /* Get the Driver's Name */
+        ValueSize = sizeof(ServiceName);
+        rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize, &hDriverKey);
+
+        if (rc == ERROR_NO_MORE_ITEMS)
+            break;
+
+        if (rc != ERROR_SUCCESS)
+        {
+            FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
+            return;
+        }
+
+        /* Read the Start Value */
+        ValueSize = sizeof(ULONG);
+        rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+        if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
+
+        if (StartValue == 0)
+        {
+            BOOLEAN found = FALSE;
+            LIST_ENTRY* le = BootDriverListHead->Flink;
+            ULONG ServiceNameLength = wcslen(ServiceName) * sizeof(WCHAR);
+
+            while (le != BootDriverListHead)
+            {
+                BOOT_DRIVER_LIST_ENTRY* bdle = CONTAINING_RECORD(le, BOOT_DRIVER_LIST_ENTRY, Link);
+
+                if (bdle->ServiceName.Length == ServiceNameLength &&
+                    RtlCompareMemory(bdle->ServiceName.Buffer, ServiceName, ServiceNameLength) == ServiceNameLength) {
+                    found = TRUE;
+                    break;
+                }
+
+                le = le->Flink;
+            }
+
+            if (!found)
+            {
+                ValueSize = sizeof(TempImagePath);
+                rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
+                if (rc != ERROR_SUCCESS)
+                {
+                    TRACE_CH(REACTOS, "ImagePath: not found\n");
+                    TempImagePath[0] = 0;
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%ssystem32\\drivers\\%S.sys", SystemRoot, ServiceName);
+                }
+                else if (TempImagePath[0] != L'\\')
+                {
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%s%S", SystemRoot, TempImagePath);
+                }
+                else
+                {
+                    RtlStringCbPrintfA(ImagePath, sizeof(ImagePath), "%S", TempImagePath);
+                    TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
+                }
+                TRACE("  Adding boot driver: '%s'\n", ImagePath);
+
+                DriverGroupSize = sizeof(DriverGroup);
+                rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
+                if (rc != ERROR_SUCCESS) DriverGroup[0] = 0;
+
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"ErrorControl", &ValueType, (PUCHAR)&ErrorControl, &ValueSize);
+                if (rc != ERROR_SUCCESS) ErrorControl = 0;
+
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
+                if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
+
+                Success = WinLdrAddDriverToList(BootDriverListHead,
+                                                L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                TempImagePath,
+                                                ServiceName,
+                                                DriverGroup,
+                                                ErrorControl,
+                                                TagValue);
+                if (!Success)
+                    ERR(" Failed to add boot driver\n");
+            }
+        }
+
+        Index++;
+    }
+
     /* Free allocated memory */
     FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
 }
