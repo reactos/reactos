@@ -78,6 +78,12 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
         goto exit;
     }
 
+    if (signature_buffer->cbBuffer < sizeof(NTLMSSP_MESSAGE_SIGNATURE))
+    {
+        ret = SEC_E_BUFFER_TOO_SMALL;
+        goto exit;
+    }
+
     //printf("SealingKey (Client)\n");
     //NtlmPrintHexDump(cli_msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
     //printf("SealingKey (Server)\n");
@@ -114,111 +120,94 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
         PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    ULONG index, length;
-    //HMAC_MD5_CTX hmac;
-    //UINT version = 1;
-    //UCHAR digest[16], expected_signature[16], checksum[8];
-    PSecBuffer data_buffer = NULL, signature = NULL;
-    PVOID data;
-    ULONG cli_NegFlg;
+    BOOL bRet;
+    PSecBuffer data_buffer = NULL;
+    PSecBuffer signature_buffer = NULL;
     prc4_key pSealHandle;
     PBYTE pSignKey;
+    //PNTLMSSP_CONTEXT_MSG cli_msg;
     PULONG pSeqNum;
-    PNTLMSSP_CONTEXT_MSG cli_msg;
+    ULONG index, cli_NegFlg, expectedSignLen;
+    NTLMSSP_MESSAGE_SIGNATURE expectedSign;
 
-    TRACE("(%p %p %d %p)\n", phContext, pMessage, MessageSeqNo, pfQOP);
+    ERR("DecryptMessage(%p %p %d)\n", phContext, pMessage, MessageSeqNo);
 
-    /* sanity checks */
     if(!phContext)
         return SEC_E_INVALID_HANDLE;
 
     if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
 
-    /* get context */
-    cli_msg = NtlmReferenceContextMsg(phContext->dwLower, FALSE,
+    /* get context, need to free it later! */
+    /*cli_msg = */NtlmReferenceContextMsg(phContext->dwLower, FALSE,
                                       &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
+    /*if (!ctxMsg->SendSealKey)
+    {
+        TRACE("context->SendSealKey is NULL\n");
+        ret = SEC_E_INVALID_TOKEN;
+        goto exit;
+    }*/
 
+    TRACE("pMessage->cBuffers %d\n", pMessage->cBuffers);
     /* extract data and signature buffers */
     for (index = 0; index < (int) pMessage->cBuffers; index++)
     {
-        TRACE("buffer %i, type %i\n", index, pMessage->pBuffers[index].BufferType);
-        NtlmPrintHexDump(pMessage->pBuffers[index].pvBuffer, pMessage->pBuffers[index].cbBuffer);
+        TRACE("pMessage->pBuffers[index].BufferType %d\n", pMessage->pBuffers[index].BufferType);
         if (pMessage->pBuffers[index].BufferType == SECBUFFER_DATA)
             data_buffer = &pMessage->pBuffers[index];
         else if (pMessage->pBuffers[index].BufferType == SECBUFFER_TOKEN)
-            signature = &pMessage->pBuffers[index];
+            signature_buffer = &pMessage->pBuffers[index];
     }
 
-    /* verify we got needed buffers */
-    if (!data_buffer || !signature)
+    if (!data_buffer || !signature_buffer)
     {
         ERR("No data or tokens provided!\n");
         ret = SEC_E_INVALID_TOKEN;
         goto exit;
     }
 
-
-    if ((cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN) &&
-        (signature->cbBuffer < 16))
+    if (signature_buffer->cbBuffer < sizeof(NTLMSSP_MESSAGE_SIGNATURE))
     {
-        ERR("Signature buffer too small!\n");
         ret = SEC_E_BUFFER_TOO_SMALL;
         goto exit;
     }
-    
-    /* Copy original data buffer */
-    length = data_buffer->cbBuffer;
-    data = NtlmAllocate(length);
-    memcpy(data, data_buffer->pvBuffer, length);
 
-    if (cli_NegFlg & NTLMSSP_NEGOTIATE_SEAL)
+    //printf("SealingKey (Client)\n");
+    //NtlmPrintHexDump(cli_msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
+    //printf("SealingKey (Server)\n");
+    //NtlmPrintHexDump(cli_msg->ServerSealingKey, NTLM_SEALINGKEY_LENGTH);
+    //printf("SigningKey (Client)\n");
+    //NtlmPrintHexDump(cli_msg->ClientSigningKey, NTLM_SIGNKEY_LENGTH);
+    //printf("SigningKey (Server)\n");
+    //NtlmPrintHexDump(cli_msg->ServerSigningKey, NTLM_SIGNKEY_LENGTH);
+
+    expectedSignLen = sizeof(expectedSign);
+    bRet = UNSEAL(cli_NegFlg, pSealHandle, (UCHAR*)pSignKey,
+                  NTLM_SIGNKEY_LENGTH, pSeqNum,
+                  data_buffer->pvBuffer, data_buffer->cbBuffer,
+                  (UCHAR*)&expectedSign, &expectedSignLen);
+    if (!bRet)
     {
-        FIXME("Check SEAL\n");
-        /* Decrypt message using with RC4 */
-        FIXME("Decrypt (UNSEAL)\n");
-
-        TRACE("RC4 ClientSealingKey\n");
-        NtlmPrintHexDump(cli_msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
-        TRACE("RC4 ServerSealingKey\n");
-        NtlmPrintHexDump(cli_msg->ServerSealingKey, NTLM_SEALINGKEY_LENGTH);
-        //rc4_crypt(ctxMsg->RecvSealKey, data_buffer->pvBuffer, data, length);
-        /* TODO optimize ... RC4 uses in/out ... if
-         * RC4 has in/out-buffer memcpy before could be removed */
-        TRACE("RC4 before\n");
-        NtlmPrintHexDump(data, length);
-        RC4(pSealHandle, data, data, length);
-    }
-    TRACE("done\n");
-    NtlmPrintHexDump(data, length);
-
-    if (cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
-    {
-        FIXME("Check SIGN\n");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto exit;
     }
 
-    /* Compute the HMAC-MD5 hash of ConcatenationOf(seq_num,data) using the client signing key */
-    /*HMACMD5Init(&hmac, ctxMsg->ServerSigningKey, sizeof(ctxMsg->ServerSigningKey));
-    HMACMD5Update(&hmac, (UCHAR*) &(MessageSeqNo), sizeof(MessageSeqNo));
-    HMACMD5Update(&hmac, data_buffer->pvBuffer, data_buffer->cbBuffer);
-    HMACMD5Final(&hmac, digest);*/
-    NtlmFree(data);
+    printf("sign ...\n");
+    NtlmPrintHexDump((UCHAR*)&expectedSign, 16);
+    NtlmPrintHexDump(signature_buffer->pvBuffer, 16);
 
-    /* RC4-encrypt first 8 bytes of digest */
-    /*rc4_crypt(ctxMsg->RecvSealKey, digest, checksum, 8);*/
-
-    /* Concatenate version, ciphertext and sequence number to build signature */
-    /*memcpy(expected_signature, (void*) &version, 4);
-    memcpy(&expected_signature[4], (void*) checksum, 4);
-    memcpy(&expected_signature[12], (void*) &(MessageSeqNo), 4);
-    ctxMsg->RecvSequenceNum++;
-
-    if (memcmp(signature->pvBuffer, expected_signature, sizeof(expected_signature)) != 0)
+    /* validate signature */
+    if ((expectedSignLen != signature_buffer->cbBuffer) ||
+        (memcmp(&expectedSign, signature_buffer->pvBuffer, expectedSignLen) != 0))
     {
-        / * signature verification failed! * /
-        ERR("signature verification failed, something nasty is going on!\n");
         ret = SEC_E_MESSAGE_ALTERED;
-    }*/
+        goto exit;
+    }
+
+    //memcpy(signature_buffer->pvBuffer, (PBYTE)(data)+datalen-16, 16);
+    //memcpy(data_buffer->pvBuffer, (PBYTE)(data), datalen-16);
+    NtlmPrintHexDump(signature_buffer->pvBuffer, signature_buffer->cbBuffer);
+    NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
     NtlmDereferenceContext(phContext->dwLower);

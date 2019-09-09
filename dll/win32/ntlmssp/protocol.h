@@ -268,6 +268,18 @@ SEAL(
     OUT PULONG pSignLen);
 
 BOOL
+UNSEAL(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN OUT UCHAR* msg,
+    IN ULONG msgLen,
+    OUT UCHAR* pSign,
+    OUT PULONG pSignLen);
+
+BOOL
 CliComputeResponse(
     IN ULONG NegFlg,
     IN ULONG Challenge_NegFlg,

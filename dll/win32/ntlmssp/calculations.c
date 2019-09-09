@@ -427,6 +427,44 @@ SEAL(
     return TRUE;
 }
 
+BOOL
+UNSEAL(
+    IN ULONG NegFlg,
+    IN prc4_key Handle,
+    IN UCHAR* SigningKey,
+    IN ULONG SigningKeyLength,
+    IN PULONG pSeqNum,
+    IN OUT UCHAR* msg,
+    IN ULONG msgLen,
+    OUT UCHAR* pSign,
+    OUT PULONG pSignLen)
+{
+    ULONG signLen = 16;
+    if (*pSignLen < signLen)
+        return FALSE;
+
+    printf("msg (encoded)\n");
+    NtlmPrintHexDump(msg, msgLen);
+    if (NegFlg & NTLMSSP_NEGOTIATE_SEAL)
+    {
+        RC4(Handle, msg, msg, msgLen);
+    }
+
+    printf("msg (decodec)\n");
+    NtlmPrintHexDump(msg, msgLen);
+
+    MAC(NegFlg,
+        Handle, SigningKey, SigningKeyLength, pSeqNum, msg,
+        msgLen, pSign, signLen);
+
+    printf("sign\n");
+    NtlmPrintHexDump(pSign, signLen);
+
+    *pSignLen = signLen;
+
+    return TRUE;
+}
+
 /* MS-NLSP 3.3.1 NTLM v1 Authentication */
 //#define VALIDATE_NTLMv1
 //#define VALIDATE_NTLM
