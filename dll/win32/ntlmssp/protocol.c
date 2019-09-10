@@ -191,11 +191,14 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     /* use allocated memory */
     chaMessage = (PCHALLENGE_MESSAGE)OutputToken->pvBuffer;
 
-    /* build message */
+    /* build message
+     * MS-NLMP 3.2.5.1.1 */
     strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     chaMessage->MsgType = NtlmChallenge;
-    chaMessage->NegotiateFlags = Context->CfgFlg;
-    chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_NTLM;
+    chaMessage->NegotiateFlags = gsvr->CfgFlg |
+                                 NTLMSSP_REQUEST_TARGET |
+                                 NTLMSSP_NEGOTIATE_NTLM |
+                                 NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
 
     /* generate server challenge */
     NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -1217,43 +1220,41 @@ SvrAuthMsgExtractData(
     IN PNTLMSSP_CONTEXT_SVR context,
     IN OUT PAUTH_DATA ad)
 {
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     SECURITY_STATUS ret = SEC_E_OK;
+
+    if ((ad->authMessage->NegotiateFlags & ~gsvr->CfgFlg) != 0)
+    {
+        /* flags set that we do not support */
+        ERR("Unsupported flags!\n");
+        ret = SEC_E_INVALID_TOKEN;
+        goto quit;
+    }
 
     /* set client Negotiation flags */
     context->cli_NegFlg = ad->authMessage->NegotiateFlags;
 
     /* datagram */
-    if(context->CfgFlg & NTLMSSP_NEGOTIATE_DATAGRAM)
+    if(context->cli_NegFlg & NTLMSSP_NEGOTIATE_DATAGRAM)
     {
-        /* context and message dont agree on connection type! */
-        if(!(ad->authMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM))
-        {
-            ERR("flags context and message inconsistent!\n");
-            ret = SEC_E_INVALID_TOKEN;
-            goto quit;
-        }
-
-        /* use message flags */
-        context->CfgFlg = ad->authMessage->NegotiateFlags;
-
         /* need a key */
-        if(context->CfgFlg & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL))
-            context->CfgFlg |= NTLMSSP_NEGOTIATE_KEY_EXCH;
+        if(context->cli_NegFlg & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL))
+            context->cli_NegFlg |= NTLMSSP_NEGOTIATE_KEY_EXCH;
 
         /* remove lm key */
-        if (context->CfgFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
-            context->CfgFlg &= ~NTLMSSP_NEGOTIATE_LM_KEY;
+        if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+            context->cli_NegFlg &= ~NTLMSSP_NEGOTIATE_LM_KEY;
     }
 
     /* supports unicode */
-    if(context->CfgFlg & NTLMSSP_NEGOTIATE_UNICODE)
+    if(context->cli_NegFlg & NTLMSSP_NEGOTIATE_UNICODE)
     {
-        context->CfgFlg &= ~NTLMSSP_NEGOTIATE_OEM;
+        context->cli_NegFlg &= ~NTLMSSP_NEGOTIATE_OEM;
         //isUnicode = TRUE;
     }
-    else if(context->CfgFlg & NTLMSSP_NEGOTIATE_OEM)
+    else if(context->cli_NegFlg & NTLMSSP_NEGOTIATE_OEM)
     {
-        context->CfgFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
+        context->cli_NegFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
         //isUnicode = FALSE;
     }
     else

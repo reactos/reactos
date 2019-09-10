@@ -114,8 +114,108 @@ NtlmInitializeGlobals(VOID)
     /* maybe read from registry ... */
     /*  NTLMV1 works */
     /*  NTLMV2 not fully working (AUTH_MESSAGE receives INVALID_PARAMETER :-( ) */
-    gcli->CfgFlags = NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED;
-    gcli->LMCompatibilityLevel = 2;// totally unimplemented
+    /* FIXME value is stored in registry ... so get it from there! */
+    g->LMCompatibilityLevel = 2;// partly unimplemented
+    /* LMCompatibilityLevel - matrix
+     * cli/DC  lvl   LM-     NTLMv1-   NTLMv2   v2-Session-
+     *               auth.   auth.     auth.     Security
+     * cli      0    use     use       -         never
+     * DC       0    accept  accept    accept    accept
+     * cli      1    use     use                 use if svr supports it
+     * DC       1    accept  accept    -         accept
+     * cli      2    -       use       -         use if svr supports it
+     * DC       2    accept  accept    accept    accept
+     * cli      3    -       -         use       use if svr supports it
+     * DC       3    accept  accept    accept    accept
+     * cli      4    -       -         use       use if svr supports it
+     * DC       4    refuse  accept    accept    accept
+     * cli      5    -       -         use       use if svr supports it
+     * DC       5    refuse  refuse    accept    accept
+     *
+     * W2k-default = 2 */
+
+    /* FIXME implement the following options ...
+       Send LM & NTLM responses - never NTLMv2 */
+    //#define NTLMSSP_LMCOMPLVL_LM_NTLM 0;
+    /* Send LM & NTLM - use NTLMv2 session security if negotiated */
+    //#define NTLMSSP_LMCOMPLVL_LM_NTLM_NTLMv2 1
+    /* Send NTLM responses only */
+    //#define NTLMSSP_LMCOMPLVL_NTLM 2 // w2k default
+    /* Send NTLMv2 responses only */
+    //#define NTLMSSP_LMCOMPLVL_NTLMv2 3
+    /* Send NTLMv2 responses only. Refuse LM */
+    //#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM 4
+    /* Send NTLMv2 responses only. Refuse LM & NTLM */
+    //#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM_NTLM 5;
+
+    switch (g->LMCompatibilityLevel)
+    {
+        case 0 :
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_LM |
+                               CLI_LMFLAG_USE_AUTH_NTLMv1;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+        case 1 :
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_LM |
+                               CLI_LMFLAG_USE_AUTH_NTLMv1 |
+                               CLI_LMFLAG_USE_SSEC_NTLMv2;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+        case 2:
+        default:
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_NTLMv1 |
+                               CLI_LMFLAG_USE_SSEC_NTLMv2;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+        case 3 :
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_NTLMv2 |
+                               CLI_LMFLAG_USE_SSEC_NTLMv2;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+        case 4 :
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_NTLMv2 |
+                               CLI_LMFLAG_USE_SSEC_NTLMv2;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+        case 5 :
+        {
+            gcli->CliLMLevel = CLI_LMFLAG_USE_AUTH_NTLMv2 |
+                               CLI_LMFLAG_USE_SSEC_NTLMv2;
+            gsvr->SvrLMLevel = SVR_LMFLAG_ACCPT_AUTH_LM |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv1 |
+                               SVR_LMFLAG_ACCPT_AUTH_NTLMv2;
+            break;
+        }
+    }
+    /* server supported features */
+    gsvr->CfgFlg = NTLMSSP_NEGOTIATE_UNICODE |
+                   NTLMSSP_NEGOTIATE_OEM |
+                   NTLMSSP_NEGOTIATE_NTLM |
+                   NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
+                   NTLMSSP_REQUEST_TARGET |
+                   NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                   NTLMSSP_NEGOTIATE_56 |
+                   NTLMSSP_NEGOTIATE_128;
 
     if(!GetComputerNameW(compName, &compNamelen))
     {

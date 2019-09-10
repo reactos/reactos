@@ -260,15 +260,6 @@ NtlmAllocateContextSvr(VOID)
     PNTLMSSP_CONTEXT_SVR ret;
 
     ret = (PNTLMSSP_CONTEXT_SVR)NtlmAllocateContextHdr(TRUE);
-    /* always on features */
-    ret->CfgFlg = NTLMSSP_NEGOTIATE_UNICODE |
-                  NTLMSSP_NEGOTIATE_OEM |
-                  NTLMSSP_NEGOTIATE_NTLM |
-                  NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | //if supported
-                  NTLMSSP_REQUEST_TARGET |
-                  NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                  NTLMSSP_NEGOTIATE_56 |
-                  NTLMSSP_NEGOTIATE_128; // if supported
     return ret;
 }
 
@@ -310,20 +301,22 @@ CliCreateContext(
     NtlmReferenceContextCli((ULONG_PTR)context);
 
     /* configure */
-    if (gcli->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED)
-    {
+    if (gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2)
         context->UseNTLMv2 = TRUE;
-    }
     else
-    {
         context->UseNTLMv2 = FALSE;
-    }
 
     /* always on features - MS-NLMP 3.1.5.1.1 */
     context->NegFlg = NTLMSSP_REQUEST_TARGET |
-                      NTLMSSP_NEGOTIATE_NTLM |
                       NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
                       NTLMSSP_NEGOTIATE_UNICODE;
+
+    /* if LM auth is not used set ext. session security (ntlmv2 session security) */
+    if (gcli->CliLMLevel & (~CLI_LMFLAG_USE_AUTH_LM))
+        context->NegFlg |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+    if ((gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv1) &&
+        (gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2))
+        context->NegFlg |= NTLMSSP_NEGOTIATE_NTLM;
 
     /* addiditonal flags / features w2k3 returns */
     context->NegFlg = context->NegFlg |
@@ -333,7 +326,6 @@ CliCreateContext(
                       NTLMSSP_NEGOTIATE_OEM |
                       NTLMSSP_NEGOTIATE_SIGN |
                       NTLMSSP_NEGOTIATE_VERSION |
-                      NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
                       NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* client requested features */
@@ -666,7 +658,7 @@ QueryContextAttributesAW(
             PSecPkgContext_Flags spcf = (PSecPkgContext_Flags)pBuffer;
             spcf->Flags = 0;
             if (context->isServer)
-                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->CfgFlg;
+                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->cli_NegFlg;
             else
                 negoFlags = ((PNTLMSSP_CONTEXT_CLI)context)->NegFlg;
             if (negoFlags & NTLMSSP_NEGOTIATE_SIGN)

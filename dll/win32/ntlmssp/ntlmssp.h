@@ -48,29 +48,22 @@ extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in 
 extern SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
 extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA in SpInitialize
 
-/* client configuraion flags */
-#define NTLMSSP_CLICFGFLAG_NTLMV1_ENABLED 0x000000001
-#define NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED 0x000000002
-/* client configuration flags */
+/* client configuraion flags CliLMLevel
+ * (settings depends on (registry-Key) LMCompatibilityLevel) */
+#define CLI_LMFLAG_USE_AUTH_LM     0x000000001
+#define CLI_LMFLAG_USE_AUTH_NTLMv1 0x000000002
+#define CLI_LMFLAG_USE_AUTH_NTLMv2 0x000000004
+#define CLI_LMFLAG_USE_SSEC_NTLMv2 0x000000008
+/* server configuration flags (SvrLMLevel)
+ * (settings depends on (registry-Key) LMCompatibilityLevel) */
+#define SVR_LMFLAG_ACCPT_AUTH_LM     0x000000001
+#define SVR_LMFLAG_ACCPT_AUTH_NTLMv1 0x000000002
+#define SVR_LMFLAG_ACCPT_AUTH_NTLMv2 0x000000004
 
 #define NTLM_KEYEXCHANGE_KEY_LENGTH 16
 #define NTLM_ENCRNDSESSION_KEY_LENGTH 16
 #define NTLM_SEALINGKEY_LENGTH 16
 #define NTLM_SIGNKEY_LENGTH 16
-
-/* FIXME implement the following options ... */
-/* Send LM & NTLM responses - never NTLMv2 */
-//#define NTLMSSP_LMCOMPLVL_LM_NTLM 0;
-/* Send LM & NTLM - use NTLMv2 session security if negotiated */
-//#define NTLMSSP_LMCOMPLVL_LM_NTLM_NTLMv2 1
-/* Send NTLM responses only */
-//#define NTLMSSP_LMCOMPLVL_NTLM 2 // w2k default
-/* Send NTLMv2 responses only */
-//#define NTLMSSP_LMCOMPLVL_NTLMv2 3
-/* Send NTLMv2 responses only. Refuse LM */
-//#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM 4
-/* Send NTLMv2 responses only. Refuse LM & NTLM */
-//#define NTLMSSP_LMCOMPLVL_NTLMv2_NoLM_NTLM 5;
 
 typedef struct _NTLMSSP_GLOBALS
 {
@@ -81,6 +74,11 @@ typedef struct _NTLMSSP_GLOBALS
     /* needed by client and server */
     EXT_STRING_A NbMachineNameOEM;
     EXT_STRING_A NbDomainNameOEM;
+
+    /* should be readed from registry
+     * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\LMCompatibilityLevel */
+    /* editable witht local security policy console */
+    ULONG LMCompatibilityLevel;
 } NTLMSSP_GLOBALS, *PNTLMSSP_GLOBALS;
 
 
@@ -93,7 +91,9 @@ typedef struct _NTLMSSP_GLOBALS_CLI
     /* needed vars from MS-NLMP
      * activate if needed ... or move to context (cli) if needed
      * (ctx) means variable is _NTLMSSP_CONTEXT_CLI */
-    // ClientConfigFlags:
+    /* The set of client configuration flags (section 2.2.2.5) that specify the
+     * full set of capabilities of the client. */
+    /* ULONG ClientConfigFlags; */
     // ExportedSessionKey:
     /* NegFlg: (ctx) */
     // User: A string that indicates the name of the user.
@@ -111,13 +111,9 @@ typedef struct _NTLMSSP_GLOBALS_CLI
     //  authenticated session:
     // MaxLifetime: An integer that indicates the maximum lifetime for challenge/response pairs.<
 
-    /* configuration - maybe read from registry (TODO) */
-    // MS-NLSP 1.7
-    ULONG CfgFlags;
-    /* should be readed from registry
-     * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\LMCompatibilityLevel */
-    /* editable witht local security policy console */
-    ULONG LMCompatibilityLevel;
+    /* vars not in spec (MS-NLMP) */
+    /* CliLMLevel - "expanded LMCompatiblilyLevel" */
+    ULONG CliLMLevel;
 } NTLMSSP_GLOBALS_CLI, *PNTLMSSP_GLOBALS_CLI;
 
 /* MS-NLMP 3.2.1.1 */
@@ -129,9 +125,10 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     /* needed vars from MS-NLMP
      * activate if needed ... or move to context (svr) if needed
      * (ctx) means variable is _NTLMSSP_CONTEXT_SVR */
-    /* ClientConfigFlags. (ctx) */
     //Additionally, the server maintains the following:
-    /* CfgFlg (ctx): */
+    /* The set of server configuration flags (section 2.2.2.5) that specify the
+       full set of capabilities of the server. */
+    ULONG CfgFlg;
     //DnsDomainName: A string that indicates the fully qualified domain name (FQDN) of the server's
     //domain.
     //DnsForestName: A string that indicates the FQDN of the server's forest. The DnsForestName is
@@ -154,6 +151,8 @@ typedef struct _NTLMSSP_GLOBALS_SVR
 
     /* vars not in spec (MS-NLMP) */
     EXT_DATA NtlmAvTargetInfoPart;
+    /* SvrLMLevel - "expanded LMCompatiblilyLevel" */
+    ULONG SvrLMLevel;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
 typedef enum _NTLM_MODE {
@@ -278,9 +277,6 @@ typedef struct _NTLMSSP_CONTEXT_SVR
     // NTLMSSP_CONTEXT_CLI cli;
     ULONG cli_NegFlg;
     NTLMSSP_CONTEXT_MSG cli_msg;
-    /* The set of server configuration flags (section 2.2.2.5) that specify the full set of
-     * capabilities of the server. */
-    ULONG CfgFlg;
 
     // TODO ... rename according to spec
     BOOL isLocal;

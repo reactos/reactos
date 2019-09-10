@@ -833,7 +833,7 @@ CliComputeResponse(
     IN OUT PEXT_DATA pLmChallengeResponseData,
     IN OUT PEXT_DATA EncryptedRandomSessionKey)
 {
-    BOOL UseNTLMv2 = (getGlobalsCli()->CfgFlags & NTLMSSP_CLICFGFLAG_NTLMV2_ENABLED);
+    BOOL UseNTLMv2 = (getGlobalsCli()->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2);
     UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH];
     UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH];
     UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
