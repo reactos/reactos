@@ -68,7 +68,7 @@ class CDrivesFolder :
         virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
         // IContextMenuCB
         virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -638,7 +638,7 @@ HRESULT WINAPI CControlPanelFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *    CControlPanelFolder::GetCurFolder
  */
-HRESULT WINAPI CControlPanelFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT WINAPI CControlPanelFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE("(%p)->(%p)\n", this, pidl);
 

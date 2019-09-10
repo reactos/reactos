@@ -180,7 +180,7 @@ HRESULT WINAPI CMyDocsFolder::Initialize(LPCITEMIDLIST pidl)
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
-HRESULT WINAPI CMyDocsFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CMyDocsFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     if (!pidl)
         return E_POINTER;

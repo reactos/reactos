@@ -63,7 +63,7 @@ class CMyDocsFolder :
         virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_MYDOCUMENTS)
         DECLARE_NOT_AGGREGATABLE(CMyDocsFolder)

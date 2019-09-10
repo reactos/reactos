@@ -598,7 +598,7 @@ public:
     //STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName);
 
     //// *** IPersistFolder2 methods ***
-    STDMETHODIMP GetCurFolder(LPITEMIDLIST * pidl)
+    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE * pidl)
     {
         *pidl = ILClone(m_CurDir);
         return S_OK;

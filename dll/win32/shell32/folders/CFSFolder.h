@@ -76,7 +76,7 @@ class CFSFolder :
         virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
         // IPersistFolder3
         virtual HRESULT WINAPI InitializeEx(IBindCtx *pbc, LPCITEMIDLIST pidlRoot, const PERSIST_FOLDER_TARGET_INFO *ppfti);

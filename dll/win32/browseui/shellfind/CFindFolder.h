@@ -73,7 +73,7 @@ private:
     static DWORD WINAPI SearchThreadProc(LPVOID lpParameter);
 
     //// *** IPersistFolder2 methods ***
-    STDMETHODIMP GetCurFolder(LPITEMIDLIST *pidl);
+    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE *pidl);
 
 
     // *** IPersistFolder methods ***

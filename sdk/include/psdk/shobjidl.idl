@@ -69,7 +69,7 @@ interface IPersistFolder2 : IPersistFolder
 {
     typedef IPersistFolder2 *LPPERSISTFOLDER2;
 
-    HRESULT GetCurFolder( [out] LPITEMIDLIST *ppidl );
+    HRESULT GetCurFolder( [out] PIDLIST_ABSOLUTE *ppidl );
 }
 
 

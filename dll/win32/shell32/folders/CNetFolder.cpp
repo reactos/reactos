@@ -583,7 +583,7 @@ HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *    CNetFolder::GetCurFolder
  */
-HRESULT WINAPI CNetFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CNetFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     TRACE("(%p)->(%p)\n", this, pidl);
 

@@ -704,7 +704,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 // IPersistFolder2
-HRESULT STDMETHODCALLTYPE CMergedFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT STDMETHODCALLTYPE CMergedFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     if (pidl)
         *pidl = m_shellPidl;

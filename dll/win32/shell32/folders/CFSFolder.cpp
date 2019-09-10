@@ -1398,7 +1398,7 @@ HRESULT WINAPI CFSFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  * CFSFolder::GetCurFolder
  */
-HRESULT WINAPI CFSFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT WINAPI CFSFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 

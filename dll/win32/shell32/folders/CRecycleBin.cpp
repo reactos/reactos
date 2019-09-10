@@ -443,7 +443,7 @@ HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CRecycleBin::GetCurFolder(PIDLIST_ABSOLUTE *ppidl)
 {
     TRACE("\n");
     *ppidl = ILClone(pidl);

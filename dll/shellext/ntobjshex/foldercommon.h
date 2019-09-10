@@ -641,7 +641,7 @@ public:
     }
 
     // IPersistFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(LPITEMIDLIST * pidl)
+    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(PIDLIST_ABSOLUTE * pidl)
     {
         if (pidl)
             *pidl = ILClone(m_shellPidl);

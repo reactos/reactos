@@ -674,7 +674,7 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 //// *** IPersistFolder2 methods ***
-STDMETHODIMP CFindFolder::GetCurFolder(LPITEMIDLIST *pidl)
+STDMETHODIMP CFindFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     *pidl = ILClone(m_pidl);
     return S_OK;

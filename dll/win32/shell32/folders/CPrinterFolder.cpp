@@ -491,7 +491,7 @@ HRESULT WINAPI CPrinterFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *    CPrinterFolder::GetCurFolder
  */
-HRESULT WINAPI CPrinterFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT WINAPI CPrinterFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 

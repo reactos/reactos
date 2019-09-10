@@ -180,7 +180,7 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CAdminToolsFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     if (!pidl)
         return E_POINTER;
