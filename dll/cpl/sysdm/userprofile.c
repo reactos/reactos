@@ -10,6 +10,7 @@
 
 #include "precomp.h"
 #include <sddl.h>
+#include <winnls.h>
 
 #include <debug.h>
 
@@ -322,22 +323,16 @@ SetListViewColumns(
 }
 
 
-static VOID
-AddUserProfile(
-    _In_ HWND hwndListView,
+static
+BOOL
+GetProfileName(
     _In_ PSID pProfileSid,
-    _In_ PSID pMySid,
-    _In_ HKEY hProfileKey)
+    _In_ DWORD dwNameBufferSize,
+    _Out_ PWSTR pszNameBuffer)
 {
-    PPROFILEDATA pProfileData = NULL;
     WCHAR szAccountName[128], szDomainName[128];
-    WCHAR szNameBuffer[256];
-    SID_NAME_USE Use;
     DWORD dwAccountNameSize, dwDomainNameSize;
-    DWORD dwProfileData, dwSize, dwType, dwState = 0;
-    PWSTR ptr;
-    INT nId, iItem;
-    LV_ITEM lvi;
+    SID_NAME_USE Use;
 
     dwAccountNameSize = ARRAYSIZE(szAccountName);
     dwDomainNameSize = ARRAYSIZE(szDomainName);
@@ -350,25 +345,89 @@ AddUserProfile(
                            &Use))
     {
         /* Unknown account */
-        LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_UNKNOWN, szNameBuffer, ARRAYSIZE(szNameBuffer));
+        LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_UNKNOWN, pszNameBuffer, dwNameBufferSize);
     }
     else
     {
         /* Show only the user accounts */
         if (Use != SidTypeUser)
-            return;
+            return FALSE;
 
         if (szAccountName[0] == UNICODE_NULL)
         {
             /* Deleted account */
-            LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_DELETED, szNameBuffer, ARRAYSIZE(szNameBuffer));
+            LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_DELETED, pszNameBuffer, dwNameBufferSize);
         }
         else
         {
             /* Normal account */
-            wsprintf(szNameBuffer, L"%s\\%s", szDomainName, szAccountName);
+            wsprintf(pszNameBuffer, L"%s\\%s", szDomainName, szAccountName);
         }
     }
+
+    return TRUE;
+}
+
+
+static VOID
+AddUserProfile(
+    _In_ HWND hwndListView,
+    _In_ PWSTR pszProfileSid,
+    _In_ PSID pProfileSid,
+    _In_ BOOL bMyProfile,
+    _In_ HKEY hProfileKey)
+{
+    WCHAR szTempProfilePath[MAX_PATH], szProfilePath[MAX_PATH];
+    WCHAR szNameBuffer[256];
+    PPROFILEDATA pProfileData = NULL;
+    DWORD dwProfileData, dwSize, dwType, dwState = 0;
+    DWORD dwProfilePathLength;
+    PWSTR ptr;
+    INT nId, iItem;
+    LV_ITEM lvi;
+    WIN32_FIND_DATA FindData;
+    HANDLE hFile;
+    SYSTEMTIME SystemTime;
+    DWORD dwError;
+
+    /* Get the profile path */
+    dwSize = MAX_PATH * sizeof(WCHAR);
+    dwError = RegQueryValueExW(hProfileKey,
+                               L"ProfileImagePath",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)szTempProfilePath,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return;
+
+    /* Expand it */
+    ExpandEnvironmentStringsW(szTempProfilePath,
+                              szProfilePath,
+                              MAX_PATH);
+
+    /* Check if the profile path exists */
+    hFile = FindFirstFileW(szProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    FindClose(hFile);
+
+    /* Get the length of the profile path */
+    dwProfilePathLength = wcslen(szProfilePath);
+
+    /* Check for the ntuser.dat file */
+    wcscat(szProfilePath, L"\\ntuser.dat");
+    hFile = FindFirstFileW(szProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    FindClose(hFile);
+    szProfilePath[dwProfilePathLength] = UNICODE_NULL;
+
+    /* Get the profile name */
+    if (!GetProfileName(pProfileSid, ARRAYSIZE(szNameBuffer), szNameBuffer))
+        return;
 
     /* Get the profile state value */
     dwSize = sizeof(dwState);
@@ -386,12 +445,12 @@ AddUserProfile(
     dwProfileData = sizeof(PROFILEDATA) +
                     ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
-                             0,
+                             HEAP_ZERO_MEMORY,
                              dwProfileData);
     if (pProfileData == NULL)
         return;
 
-    pProfileData->bMyProfile = EqualSid(pMySid, pProfileSid);
+    pProfileData->bMyProfile = bMyProfile;
     pProfileData->dwState = dwState;
 
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
@@ -407,6 +466,8 @@ AddUserProfile(
     lvi.lParam = (LPARAM)pProfileData;
     iItem = ListView_InsertItem(hwndListView, &lvi);
 
+    /* FIXME: Set the profile size */
+
     /* Set the profile type */
     if (dwState & 0x0001) // PROFILE_MANDATORY
         nId = IDS_USERPROFILE_MANDATORY;
@@ -415,9 +476,24 @@ AddUserProfile(
     else
         nId = IDS_USERPROFILE_LOCAL;
 
-    LoadStringW(hApplet, nId, szAccountName, ARRAYSIZE(szAccountName));
+    LoadStringW(hApplet, nId, szNameBuffer, ARRAYSIZE(szNameBuffer));
 
-    ListView_SetItemText(hwndListView, iItem, 2, szAccountName);
+    ListView_SetItemText(hwndListView, iItem, 2, szNameBuffer);
+
+    /* FIXME: Set the profile status */
+
+    /* Set the profile modified time */
+    FileTimeToSystemTime(&FindData.ftLastWriteTime,
+                         &SystemTime);
+
+    GetDateFormatW(LOCALE_USER_DEFAULT,
+                   DATE_SHORTDATE,
+                   &SystemTime,
+                   NULL,
+                   szNameBuffer,
+                   ARRAYSIZE(szNameBuffer));
+
+    ListView_SetItemText(hwndListView, iItem, 4, szNameBuffer);
 }
 
 
@@ -521,7 +597,11 @@ AddUserProfiles(
             {
                 if (ConvertStringSidToSid(szProfileSid, &pProfileSid))
                 {
-                    AddUserProfile(hwndListView, pProfileSid, pTokenUser->User.Sid, hProfileKey);
+                    AddUserProfile(hwndListView,
+                                   pszProfileSid,
+                                   pProfileSid,
+                                   EqualSid(pProfileSid, pTokenUser->User.Sid),
+                                   hProfileKey);
                     LocalFree(pProfileSid);
                 }
 
@@ -539,7 +619,11 @@ AddUserProfiles(
                               KEY_READ,
                               &hProfileKey) == ERROR_SUCCESS)
             {
-                AddUserProfile(hwndListView, pTokenUser->User.Sid, pTokenUser->User.Sid, hProfileKey);
+                AddUserProfile(hwndListView,
+                               pszProfileSid,
+                               pTokenUser->User.Sid,
+                               TRUE,
+                               hProfileKey);
                 RegCloseKey(hProfileKey);
             }
 
