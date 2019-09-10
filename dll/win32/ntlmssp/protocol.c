@@ -296,8 +296,8 @@ SvrHandleNegotiateMessage(
     memcpy(negoMessage, InputToken->pvBuffer, sizeof(NEGOTIATE_MESSAGE));
 
     /* validate it */
-    if(strncmp(negoMessage->Signature, NTLMSSP_SIGNATURE, 8) &&
-       negoMessage->MsgType == NtlmNegotiate)
+    if ((memcmp(negoMessage->Signature, NTLMSSP_SIGNATURE, 8) != 0) ||
+        (negoMessage->MsgType != NtlmNegotiate))
     {
         ERR("Input message not valid!\n");
         ret = SEC_E_INVALID_TOKEN;
@@ -558,8 +558,8 @@ CliGenerateAuthenticationMessage(
     challenge = (PCHALLENGE_MESSAGE)InputToken1->pvBuffer;
 
     /* validate it */
-    if(strncmp(challenge->Signature, NTLMSSP_SIGNATURE, 8) &&
-       challenge->MsgType == NtlmChallenge)
+    if ((memcmp(challenge->Signature, NTLMSSP_SIGNATURE, 8) != 0) ||
+        (challenge->MsgType != NtlmChallenge))
     {
         ERR("Input message not valid!\n");
         ret = SEC_E_INVALID_TOKEN;
@@ -1386,8 +1386,8 @@ SvrHandleAuthenticateMessage(
     memcpy(ad.authMessage, InputToken->pvBuffer, sizeof(AUTHENTICATE_MESSAGE));
 
     /* validate it */
-    if(strncmp(ad.authMessage->Signature, NTLMSSP_SIGNATURE, 8) &&
-       ad.authMessage->MsgType == NtlmAuthenticate)
+    if ((memcmp(ad.authMessage->Signature, NTLMSSP_SIGNATURE, 8) != 0) ||
+        (ad.authMessage->MsgType != NtlmAuthenticate))
     {
         ERR("Input message not valid!\n");
         ret = SEC_E_INVALID_TOKEN;
