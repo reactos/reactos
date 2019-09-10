@@ -1609,6 +1609,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     HANDLE KeyHandle;
     UNICODE_STRING PathName;
     LPWSTR pszBuffer;
+    PFILE_OBJECT FileObject;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
     static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
@@ -1633,7 +1634,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 
     /* Open the font file */
     InitializeObjectAttributes(&ObjectAttributes, &PathName,
-                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = ZwOpenFile(
                  &FileHandle,
                  FILE_GENERIC_READ | SYNCHRONIZE,
@@ -1648,15 +1649,26 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
         return 0;
     }
 
+    Status = ObReferenceObjectByHandle(FileHandle, FILE_READ_DATA, NULL,
+                                       KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ObReferenceObjectByHandle failed.\n");
+        ZwClose(FileHandle);
+        RtlFreeUnicodeString(&PathName);
+        return 0;
+    }
+
     SectionSize.QuadPart = 0LL;
     Status = MmCreateSection(&SectionObject,
                              STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
                              NULL, &SectionSize, PAGE_READONLY,
-                             SEC_COMMIT, FileHandle, NULL);
+                             SEC_COMMIT, FileHandle, FileObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not map file: %wZ\n", &PathName);
         ZwClose(FileHandle);
+        ObDereferenceObject(FileObject);
         RtlFreeUnicodeString(&PathName);
         return 0;
     }
@@ -1667,6 +1679,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     {
         DPRINT1("Could not map file: %wZ\n", &PathName);
         ObDereferenceObject(SectionObject);
+        ObDereferenceObject(FileObject);
         RtlFreeUnicodeString(&PathName);
         return 0;
     }
@@ -1686,6 +1699,8 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     IntUnLockFreeType();
 
     ObDereferenceObject(SectionObject);
+
+    ObDereferenceObject(FileObject);
 
     /* Save the loaded font name into the registry */
     if (FontCount > 0 && (dwFlags & AFRX_WRITE_REGISTRY))
