@@ -372,7 +372,6 @@ GetProfileName(
 static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
-    _In_ PWSTR pszProfileSid,
     _In_ PSID pProfileSid,
     _In_ BOOL bMyProfile,
     _In_ HKEY hProfileKey)
@@ -598,7 +597,6 @@ AddUserProfiles(
                 if (ConvertStringSidToSid(szProfileSid, &pProfileSid))
                 {
                     AddUserProfile(hwndListView,
-                                   pszProfileSid,
                                    pProfileSid,
                                    EqualSid(pProfileSid, pTokenUser->User.Sid),
                                    hProfileKey);
@@ -620,7 +618,6 @@ AddUserProfiles(
                               &hProfileKey) == ERROR_SUCCESS)
             {
                 AddUserProfile(hwndListView,
-                               pszProfileSid,
                                pTokenUser->User.Sid,
                                TRUE,
                                hProfileKey);
