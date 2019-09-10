@@ -1610,7 +1610,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     UNICODE_STRING PathName;
     LPWSTR pszBuffer;
     static const UNICODE_STRING TrueTypePostfix = RTL_CONSTANT_STRING(L" (TrueType)");
-    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\\\?\\");
+    static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
     /* Build PathName */
     if (dwFlags & AFRX_DOS_DEVICE_PATH)
@@ -1633,7 +1633,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
 
     /* Open the font file */
     InitializeObjectAttributes(&ObjectAttributes, &PathName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = ZwOpenFile(
                  &FileHandle,
                  FILE_GENERIC_READ | SYNCHRONIZE,
@@ -1649,7 +1649,8 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     }
 
     SectionSize.QuadPart = 0LL;
-    Status = MmCreateSection(&SectionObject, SECTION_ALL_ACCESS,
+    Status = MmCreateSection(&SectionObject,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ,
                              NULL, &SectionSize, PAGE_READONLY,
                              SEC_COMMIT, FileHandle, NULL);
     if (!NT_SUCCESS(Status))
