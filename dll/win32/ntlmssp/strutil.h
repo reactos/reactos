@@ -88,7 +88,7 @@ ExtWStrToAStr(
     IN OUT PEXT_STRING_A dst,
     IN PEXT_STRING_W src,
     IN BOOL cpOEM,
-    IN BOOL bAlloc);
+    IN BOOL bInitAndAlloc);
 
 /* Ansi */
 BOOL
@@ -120,11 +120,6 @@ ExtAStrIsEqual(
     IN PEXT_STRING v1,
     IN PEXT_STRING v2);
 */
-
-BOOL
-ExtDataIsEqual(
-    IN PEXT_DATA v1,
-    IN PEXT_DATA v2);
 
 /* Data */
 BOOL

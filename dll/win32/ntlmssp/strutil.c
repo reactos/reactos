@@ -286,12 +286,24 @@ ExtWStrToAStr(
     IN OUT PEXT_STRING_A dst,
     IN PEXT_STRING_W src,
     IN BOOL cpOEM,
-    IN BOOL bAlloc)
+    IN BOOL bInitAndAlloc)
 {
     int res;
     int cp = (cpOEM) ? CP_OEMCP : CP_ACP;
 
-    if (bAlloc)
+    if (src->bUsed == 0)
+    {
+        if (bInitAndAlloc)
+            memset(dst, 0, sizeof(*dst));
+        dst->bUsed = 0;
+        if (dst->bAllocated > 0)
+            ((PBYTE)dst->Buffer)[0] = 0;
+        else
+            dst->Buffer = NULL;
+        return TRUE;
+    }
+
+    if (bInitAndAlloc)
     {
         ULONG bNeeded = (src->bUsed / sizeof(WCHAR)) + 1;
         /* new */
@@ -335,6 +347,6 @@ ExtDataIsEqual1(
 {
     if (v1->bUsed != v2->bUsed)
         return FALSE;
-    return (memcmp(v1->Buffer, v2, v1->bUsed) == 0);
+    return (memcmp(v1->Buffer, v2->Buffer, v1->bUsed) == 0);
 }
 

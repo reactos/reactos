@@ -194,7 +194,7 @@ typedef struct _NTLMSSP_MESSAGE_SIGNATURE_12
 BOOL
 NTOWFv1(
     IN LPCWSTR password,
-    IN PUCHAR result);
+    OUT PUCHAR result);
 
 BOOL
 NTOWFv2(
@@ -280,13 +280,23 @@ UNSEAL(
     OUT PULONG pSignLen);
 
 BOOL
+CliComputeResponseKeys(
+    IN BOOL UseNTLMv2,
+    IN PEXT_STRING_W user,
+    IN PEXT_STRING_W userdom,
+    IN PEXT_STRING_W pServerName,
+    OUT UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
+    OUT UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH]);
+
+BOOL
 ComputeResponse(
     IN ULONG NegFlg,
     IN ULONG Challenge_NegFlg,
     IN BOOL UseNTLMv2,
-    IN PEXT_STRING_W pUserNameW,
-    IN PEXT_STRING_W pPasswordW,
-    IN PEXT_STRING_W pDomainNameW,
+    IN BOOL Anonymouse,
+    IN PEXT_STRING_W userdom,
+    IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
+    IN UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH],
     IN PEXT_STRING_W pServerName,
     IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
@@ -445,8 +455,7 @@ NtlmStructWriteStrW(
 /* calculations */
 BOOL
 CliComputeResponseNTLMv2(
-    IN PEXT_STRING_W user,
-    IN PEXT_STRING_W passwd,
+    IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
@@ -461,8 +470,7 @@ CliComputeResponseNTLMv2(
 BOOL
 CliComputeResponseNTLMv1(
     IN ULONG NegFlg,
-    IN PEXT_STRING_W user,
-    IN PEXT_STRING_W passwd,
+    IN BOOL Anonymouse,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ResponseKeyNT[MSV1_0_NTLM3_RESPONSE_LENGTH],
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
