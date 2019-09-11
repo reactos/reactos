@@ -502,6 +502,7 @@ CliGenerateAuthenticationMessage(
     EXT_DATA EncryptedRandomSessionKey; //USER_SESSION_KEY
     EXT_DATA AvDataTmp;
     ULONGLONG NtResponseTimeStamp;
+    UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
@@ -758,19 +759,24 @@ CliGenerateAuthenticationMessage(
         (!context->UseNTLMv2))
         sendLmChallengeResponse = FALSE;*/
 
-    /* MS-NLSP 3.1.5.1.2 */
-    CliComputeResponse(context->NegFlg,
-                       challenge->NegotiateFlags,
-                       &cred->UserNameW,
-                       &cred->PasswordW,
-                       &cred->DomainNameW,
-                       &ServerName,
-                       challenge->ServerChallenge,
-                       NtResponseTimeStamp,
-                       &context->msg,
-                       &NtResponseData,
-                       &LmResponseData,
-                       &EncryptedRandomSessionKey);
+    /* MS-NLMP 3.1.5.1.2 nonce */
+    NtlmGenerateRandomBits(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
+
+    /* MS-NLMP 3.1.5.1.2 */
+    ComputeResponse(context->NegFlg,
+                    challenge->NegotiateFlags,
+                    context->UseNTLMv2,
+                    &cred->UserNameW,
+                    &cred->PasswordW,
+                    &cred->DomainNameW,
+                    &ServerName,
+                    ChallengeFromClient,
+                    challenge->ServerChallenge,
+                    NtResponseTimeStamp,
+                    &context->msg,
+                    &NtResponseData,
+                    &LmResponseData,
+                    &EncryptedRandomSessionKey);
     TRACE("=== NtResponse ===\n");
     NtlmPrintHexDump(NtResponseData.Buffer, NtResponseData.bUsed);
 
@@ -1015,16 +1021,18 @@ SvrAuthMsgProcessData(
     EXT_STRING_W ServerName;
     ULONGLONG TimeStamp = {0};
     EXT_DATA ExpectedNtChallengeResponse;
-    LM2_RESPONSE ExpectedLmChallengeResponse;
+    EXT_DATA ExpectedLmChallengeResponse;
+    EXT_DATA SessionBaseKey;
+    BOOL UseNTLMv2;
     /* UCHAR* MessageMIC; unused */
     UCHAR MIC[16];
     //MSV1_0_NTLM3_RESPONSE NtResponse;
     UCHAR ExportedSessionKey[16];
-    USER_SESSION_KEY SessionBaseKey;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
 
     ExtDataInit(&ExpectedNtChallengeResponse, NULL, 0);
-    
+    ExtDataInit(&ExpectedLmChallengeResponse, NULL, 0);
+    ExtDataInit(&SessionBaseKey, NULL, 0);
     /* Servername is NetBIOS Name or DNS Hostname */
     ExtWStrInit(&ServerName, (WCHAR*)gsvr->NbMachineName.Buffer);
 
@@ -1033,6 +1041,7 @@ SvrAuthMsgProcessData(
     //(AUTHENTICATE_MESSAGE.LmChallengeResponse == Z(1)
     //OR
     //AUTHENTICATE_MESSAGE.LmChallengeResponse.Length == 0))
+    UseNTLMv2 = FALSE;
     if ((ad->UserName.bUsed == 0) &&
         (ad->NtChallengeResponse.bUsed == 0) &&
         // lt spec == ' ' or '0' ... mabye v this will not work...
@@ -1090,6 +1099,7 @@ SvrAuthMsgProcessData(
             //Time.dwHighDateTime = ntResp->TimeStamp >> 32;
             //Time.dwLowDateTime = ntResp->TimeStamp && 0xffffffff;
             TimeStamp = ntResp->TimeStamp;
+            UseNTLMv2 = TRUE;
         }
         else if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
             ChallengeFromClient = ((PLM2_RESPONSE)ad->LmChallengeResponse.Buffer)->ChallengeFromClient;
@@ -1100,7 +1110,21 @@ SvrAuthMsgProcessData(
     // SessionBaseKey to ComputeResponse(NegFlg, ResponseKeyNT,
     // ResponseKeyLM, CHALLENGE_MESSAGE.ServerChallenge,
     // ChallengeFromClient, Time, ServerName)
-    if (!CliComputeResponseNTLMv2(
+    if (!ComputeResponse(
+        context->cli_NegFlg,
+        /*challenge-negflg?*/
+        context->cli_NegFlg,
+        UseNTLMv2,
+        &ad->UserName, &ad->UserPasswd, &ad->DomainName,
+        &ServerName,
+        ChallengeFromClient,
+        context->ServerChallenge,
+        TimeStamp,
+        &context->cli_msg,
+        &ExpectedNtChallengeResponse,
+        &ExpectedLmChallengeResponse,
+        &SessionBaseKey))
+    /*if (!CliComputeResponseNTLMv2(
         //context->cli_NegFlg,
         &ad->UserName, &ad->UserPasswd, &ad->DomainName,
         ResponseKeyNt, ResponseKeyLM,
@@ -1110,7 +1134,7 @@ SvrAuthMsgProcessData(
         TimeStamp,
         &ExpectedNtChallengeResponse,
         &ExpectedLmChallengeResponse,
-        &SessionBaseKey))
+        &SessionBaseKey))*/
     {
         ret = SEC_E_INTERNAL_ERROR;
         goto quit;
@@ -1126,9 +1150,7 @@ SvrAuthMsgProcessData(
     // ExpectedNtChallengeResponse)
     // If (AUTHENTICATE_MESSAGE.LmChallengeResponse !=
     // ExpectedLmChallengeResponse)
-    /* Really and-condition?? */
-    /* HACK: cast to PEXT_DATA */
-    if (!ExtDataIsEqual1(&ad->NtChallengeResponse, (PEXT_DATA)&ExpectedNtChallengeResponse) &&
+    if (!ExtDataIsEqual1(&ad->NtChallengeResponse, &ExpectedNtChallengeResponse) &&
        ((ad->LmChallengeResponse.bUsed == 0) ||
         memcmp(&ad->LmChallengeResponse, &ExpectedLmChallengeResponse, sizeof(ExpectedLmChallengeResponse)) != 0))
     {
@@ -1209,6 +1231,8 @@ SvrAuthMsgProcessData(
     //RC4Init(ServerHandle, ServerSealingKey)
     RC4Init(&context->cli_msg.ServerHandle, context->cli_msg.ServerSealingKey, 16);//sizeof(context->cli_msg.ServerSealingKey));
 quit:
+    ExtStrFree(&SessionBaseKey);
+    ExtStrFree(&ExpectedLmChallengeResponse);
     ExtStrFree(&ExpectedNtChallengeResponse);
     ExtStrFree(&ServerName);
     return ret;
@@ -1223,12 +1247,15 @@ SvrAuthMsgExtractData(
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     SECURITY_STATUS ret = SEC_E_OK;
 
+    // FIXME Check if server is all supporting ...
     if ((ad->authMessage->NegotiateFlags & ~gsvr->CfgFlg) != 0)
     {
         /* flags set that we do not support */
         ERR("Unsupported flags!\n");
-        ret = SEC_E_INVALID_TOKEN;
-        goto quit;
+        ERR("NEG %x\n",ad->authMessage->NegotiateFlags);
+        ERR("CFG %x\n",gsvr->CfgFlg);
+        //FIXME ret = SEC_E_INVALID_TOKEN;
+        //FIXME goto quit;
     }
 
     /* set client Negotiation flags */

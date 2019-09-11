@@ -815,15 +815,18 @@ CliComputeKeys(
     return TRUE;
 }
 
+/* used by server and client */
 BOOL
-CliComputeResponse(
+ComputeResponse(
     /* really 2 x Negflg needed ? */
     IN ULONG NegFlg,
     IN ULONG Challenge_NegFlg,
+    IN BOOL UseNTLMv2,
     IN PEXT_STRING_W user,
     IN PEXT_STRING_W passwd,
     IN PEXT_STRING_W userdom,
     IN PEXT_STRING_W pServerName,
+    IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
     IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
@@ -833,10 +836,8 @@ CliComputeResponse(
     IN OUT PEXT_DATA pLmChallengeResponseData,
     IN OUT PEXT_DATA EncryptedRandomSessionKey)
 {
-    BOOL UseNTLMv2 = (getGlobalsCli()->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2);
     UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH];
     UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH];
-    UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
     USER_SESSION_KEY SessionBaseKey;
     UCHAR ExportedSessionKey[16];
 
@@ -844,9 +845,6 @@ CliComputeResponse(
         user, passwd, userdom, pServerName, ChallengeToClient,
         pNtChallengeResponseData->Buffer,
         pLmChallengeResponseData->Buffer);
-
-    /* 3.1.5.1.2 nonce */
-    NtlmGenerateRandomBits(ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
 
     /* MS-NLSP 3.3.2 NTLM v2 Authentication */
     //Define NTOWFv2(Passwd, User, UserDom) as HMAC_MD5(

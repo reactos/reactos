@@ -280,13 +280,15 @@ UNSEAL(
     OUT PULONG pSignLen);
 
 BOOL
-CliComputeResponse(
+ComputeResponse(
     IN ULONG NegFlg,
     IN ULONG Challenge_NegFlg,
+    IN BOOL UseNTLMv2,
     IN PEXT_STRING_W pUserNameW,
     IN PEXT_STRING_W pPasswordW,
     IN PEXT_STRING_W pDomainNameW,
     IN PEXT_STRING_W pServerName,
+    IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
     IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,

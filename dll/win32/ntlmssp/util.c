@@ -231,6 +231,12 @@ NtlmCreateExtWStrFromBlob(
 {
     PBYTE pData;
 
+    if (Blob.Length == 0)
+    {
+        ExtWStrInit(OutputStr, NULL);
+        return SEC_E_OK;
+    }
+
     /* check blob is not beyond the bounds of the input buffer */
     if(Blob.Offset >= InputBuffer->cbBuffer ||
        Blob.Offset + Blob.Length > InputBuffer->cbBuffer)
@@ -254,6 +260,12 @@ NtlmCreateExtAStrFromBlob(
     IN OUT PEXT_STRING_A OutputStr)
 {
     PBYTE pData;
+
+    if (Blob.Length == 0)
+    {
+        ExtWStrInit(OutputStr, NULL);
+        return SEC_E_OK;
+    }
 
     /* check blob is not beyond the bounds of the input buffer */
     if(Blob.Offset >= InputBuffer->cbBuffer ||
