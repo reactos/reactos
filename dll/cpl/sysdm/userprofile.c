@@ -325,6 +325,68 @@ SetListViewColumns(
 
 static
 BOOL
+GetProfileSize(
+    PWSTR pszProfilePath,
+    PULONGLONG pullProfileSize)
+{
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATA FindData;
+    DWORD dwProfilePathLength;
+    ULARGE_INTEGER Size;
+    BOOL bResult = TRUE;
+
+    dwProfilePathLength = wcslen(pszProfilePath);
+
+    wcscat(pszProfilePath, L"\\*.*");
+
+    hFile = FindFirstFileW(pszProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        if ((GetLastError() != ERROR_FILE_NOT_FOUND) &&
+            (GetLastError() != ERROR_PATH_NOT_FOUND))
+            bResult = FALSE;
+
+        goto done;
+    }
+
+    do
+    {
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if ((_wcsicmp(FindData.cFileName, L".") == 0) ||
+                (_wcsicmp(FindData.cFileName, L"..") == 0))
+                continue;
+
+            pszProfilePath[dwProfilePathLength + 1] = UNICODE_NULL;
+            wcscat(pszProfilePath, FindData.cFileName);
+
+            if (!GetProfileSize(pszProfilePath, pullProfileSize))
+            {
+                bResult = FALSE;
+                goto done;
+            }
+        }
+        else
+        {
+            Size.u.LowPart = FindData.nFileSizeLow;
+            Size.u.HighPart = FindData.nFileSizeHigh;
+            *pullProfileSize += Size.QuadPart;
+        }
+    }
+    while (FindNextFile(hFile, &FindData));
+
+done:
+    pszProfilePath[dwProfilePathLength] = UNICODE_NULL;
+
+    if (hFile != INVALID_HANDLE_VALUE)
+        FindClose(hFile);
+
+    return bResult;
+}
+
+
+static
+BOOL
 GetProfileName(
     _In_ PSID pProfileSid,
     _In_ DWORD dwNameBufferSize,
@@ -387,6 +449,7 @@ AddUserProfile(
     WIN32_FIND_DATA FindData;
     HANDLE hFile;
     SYSTEMTIME SystemTime;
+    ULONGLONG ullProfileSize;
     DWORD dwError;
 
     /* Get the profile path */
@@ -423,6 +486,10 @@ AddUserProfile(
 
     FindClose(hFile);
     szProfilePath[dwProfilePathLength] = UNICODE_NULL;
+
+    /* Get the profile size */
+    ullProfileSize = 0ULL;
+    GetProfileSize(szProfilePath, &ullProfileSize);
 
     /* Get the profile name */
     if (!GetProfileName(pProfileSid, ARRAYSIZE(szNameBuffer), szNameBuffer))
@@ -466,6 +533,8 @@ AddUserProfile(
     iItem = ListView_InsertItem(hwndListView, &lvi);
 
     /* FIXME: Set the profile size */
+    swprintf(szNameBuffer, L"%I64u MB", ullProfileSize / (1024 * 1024));
+    ListView_SetItemText(hwndListView, iItem, 1, szNameBuffer);
 
     /* Set the profile type */
     if (dwState & 0x0001) // PROFILE_MANDATORY
