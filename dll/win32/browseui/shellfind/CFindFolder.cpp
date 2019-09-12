@@ -64,7 +64,7 @@ static void WINAPI _InsertMenuItemW(
     else if (fType == MFT_STRING)
     {
         mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
-        if ((ULONG_PTR)HIWORD((ULONG_PTR)dwTypeData) == 0)
+        if (IS_INTRESOURCE(dwTypeData))
         {
             if (LoadStringW(_AtlBaseModule.GetResourceInstance(), LOWORD((ULONG_PTR)dwTypeData), wszText, _countof(wszText)))
                 mii.dwTypeData = wszText;
