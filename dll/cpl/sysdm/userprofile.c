@@ -564,9 +564,7 @@ AddUserProfile(
     ListView_SetItemText(hwndListView, iItem, 1, szNameBuffer);
 
     /* Set the profile type */
-    if (dwState & 0x0001) // PROFILE_MANDATORY
-        nId = IDS_USERPROFILE_MANDATORY;
-    else if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
+    if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
         nId = IDS_USERPROFILE_ROAMING;
     else
         nId = IDS_USERPROFILE_LOCAL;
@@ -576,6 +574,16 @@ AddUserProfile(
     ListView_SetItemText(hwndListView, iItem, 2, szNameBuffer);
 
     /* FIXME: Set the profile status */
+    if (dwState & 0x0001) // PROFILE_MANDATORY
+        nId = IDS_USERPROFILE_MANDATORY;
+    else if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
+        nId = IDS_USERPROFILE_ROAMING;
+    else
+        nId = IDS_USERPROFILE_LOCAL;
+
+    LoadStringW(hApplet, nId, szNameBuffer, ARRAYSIZE(szNameBuffer));
+
+    ListView_SetItemText(hwndListView, iItem, 3, szNameBuffer);
 
     /* Set the profile modified time */
     FileTimeToSystemTime(&FindData.ftLastWriteTime,
