@@ -73,8 +73,46 @@ Reboot:
     /* Set the function ID */
     mov bx, FNID_Reboot
 
-    /* Switch to real mode (We don't return) */
+    /* Switch to real mode (we don't return) */
     jmp SwitchToReal
+
+
+/*
+ * VOID __cdecl ChainLoadBiosBootSectorCode(
+ *     IN UCHAR BootDrive OPTIONAL,
+ *     IN ULONG BootPartition OPTIONAL);
+ *
+ * RETURNS: Nothing
+ */
+PUBLIC ChainLoadBiosBootSectorCode
+ChainLoadBiosBootSectorCode:
+    /* Set the boot drive */
+    mov dl, [esp + 4]
+    test dl, dl
+    jnz set_part
+    mov dl, byte ptr [FrldrBootDrive]
+
+    /* Set the boot partition */
+set_part:
+    mov eax, [esp + 8]
+    test eax, eax
+    jnz continue
+    mov eax, dword ptr [FrldrBootPartition]
+continue:
+    /* Store the 1-byte truncated partition number in DH */
+    mov dh, al
+
+    /* Set the function ID */
+    mov bx, FNID_ChainLoadBiosBootSectorCode
+
+    /* Switch to real mode (we don't return) */
+    jmp SwitchToReal
+
+
+PUBLIC PxeCallApi
+PxeCallApi:
+    xor eax, eax
+    ret
 
 
 /* Internal function for realmode calls
@@ -135,23 +173,6 @@ CallRealMode_return:
 /////////////////////////////////////////
 
 
-    /* 64-bit stack pointer */
-stack64:
-    .quad STACKADDR
-
-PUBLIC FrldrBootDrive
-FrldrBootDrive:
-    .byte 0
-
-PUBLIC FrldrBootPartition
-FrldrBootPartition:
-    .long 0
-
-PUBLIC PxeCallApi
-PxeCallApi:
-    xor eax, eax
-    ret
-
 //void __lgdt(void *Source);
 PUBLIC __lgdt
 __lgdt:
@@ -164,5 +185,17 @@ __ltr:
     ltr cx
     ret
 
+
+    /* 64-bit stack pointer */
+stack64:
+    .quad STACKADDR
+
+PUBLIC FrldrBootDrive
+FrldrBootDrive:
+    .byte 0
+
+PUBLIC FrldrBootPartition
+FrldrBootPartition:
+    .long 0
 
 END

@@ -22,20 +22,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
-static ARC_STATUS IniOpenIniFile(ULONG* FileId)
-{
-    CHAR FreeldrPath[MAX_PATH];
-
-    //
-    // Create full freeldr.ini path
-    //
-    MachDiskGetBootPath(FreeldrPath, sizeof(FreeldrPath));
-    strcat(FreeldrPath, "\\freeldr.ini");
-
-    // Try to open freeldr.ini
-    return ArcOpen(FreeldrPath, OpenReadOnly, FileId);
-}
-
 BOOLEAN IniFileInitialize(VOID)
 {
     FILEINFORMATION FileInformation;
@@ -44,12 +30,11 @@ BOOLEAN IniFileInitialize(VOID)
     ULONG FreeLoaderIniFileSize, Count;
     ARC_STATUS Status;
     BOOLEAN Success;
+
     TRACE("IniFileInitialize()\n");
 
-    //
-    // Open freeldr.ini
-    //
-    Status = IniOpenIniFile(&FileId);
+    /* Try to open freeldr.ini */
+    Status = FsOpenFile("freeldr.ini", FrldrBootPath, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
         ERR("Error while opening freeldr.ini, Status: %d\n", Status);
@@ -57,9 +42,7 @@ BOOLEAN IniFileInitialize(VOID)
         return FALSE;
     }
 
-    //
-    // Get the file size
-    //
+    /* Get the file size */
     Status = ArcGetFileInformation(FileId, &FileInformation);
     if (Status != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
     {
@@ -69,9 +52,7 @@ BOOLEAN IniFileInitialize(VOID)
     }
     FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
 
-    //
-    // Allocate memory to cache the whole freeldr.ini
-    //
+    /* Allocate memory to cache the whole freeldr.ini */
     FreeLoaderIniFileData = FrLdrTempAlloc(FreeLoaderIniFileSize, TAG_INI_FILE);
     if (!FreeLoaderIniFileData)
     {
@@ -80,9 +61,7 @@ BOOLEAN IniFileInitialize(VOID)
         return FALSE;
     }
 
-    //
-    // Read freeldr.ini off the disk
-    //
+    /* Load freeldr.ini from the disk */
     Status = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
     if (Status != ESUCCESS || Count != FreeLoaderIniFileSize)
     {
@@ -93,14 +72,10 @@ BOOLEAN IniFileInitialize(VOID)
         return FALSE;
     }
 
-    //
-    // Parse the .ini file data
-    //
+    /* Parse the .ini file data */
     Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
 
-    //
-    // Do some cleanup, and return
-    //
+    /* Do some cleanup, and return */
     ArcClose(FileId);
     FrLdrTempFree(FreeLoaderIniFileData, TAG_INI_FILE);
 

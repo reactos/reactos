@@ -128,9 +128,8 @@ LoadAndBootBootSector(
      * result in a read error.
      */
     // DiskStopFloppyMotor();
-    /* NOTE: Don't touch FrldrBootDrive */
-    ChainLoadBiosBootSectorCode();
-    Reboot(); /* Must not return! */
+    ChainLoadBiosBootSectorCode(0 /*DriveNumber*/, 0 /*PartitionNumber*/);
+    /* Must not return! */
     return ESUCCESS;
 }
 
@@ -215,10 +214,8 @@ LoadAndBootPartitionOrDrive(
      * result in a read error.
      */
     // DiskStopFloppyMotor();
-    FrldrBootDrive = DriveNumber;
-    FrldrBootPartition = PartitionNumber;
-    ChainLoadBiosBootSectorCode();
-    Reboot(); /* Must not return! */
+    ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
+    /* Must not return! */
     return ESUCCESS;
 }
 

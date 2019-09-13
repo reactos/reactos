@@ -1194,9 +1194,7 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(PEXT2_VOLUME_INFO Volume, ULONG* Blo
 ARC_STATUS Ext2Close(ULONG FileId)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
-
     FrLdrTempFree(FileHandle, TAG_EXT_FILE);
-
     return ESUCCESS;
 }
 

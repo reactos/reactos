@@ -30,7 +30,7 @@
 /* We'll check this to see if we're in OFW land */
 extern of_proxy ofproxy;
 
-PVOID KernelMemory = 0;
+PVOID KernelMemory = NULL;
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
 #define PFN_SHIFT 12

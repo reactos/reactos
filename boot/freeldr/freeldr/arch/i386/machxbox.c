@@ -284,7 +284,6 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
     MachVtbl.GetExtendedBIOSData = XboxGetExtendedBIOSData;
     MachVtbl.GetFloppyCount = XboxGetFloppyCount;
-    MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;

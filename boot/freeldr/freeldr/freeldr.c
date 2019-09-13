@@ -24,6 +24,10 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
+/* GLOBALS ********************************************************************/
+
+CCHAR FrldrBootPath[MAX_PATH] = "";
+
 /* FUNCTIONS ******************************************************************/
 
 VOID __cdecl BootMain(IN PCCH CmdLine)

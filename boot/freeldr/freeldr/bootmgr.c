@@ -87,7 +87,6 @@ BuildArgvForOsLoader(
     PCHAR* Argv;
     PCHAR* Args;
     PCHAR SettingName, SettingValue;
-    CHAR BootPath[MAX_PATH];
 
     *pArgc = 0;
 
@@ -96,9 +95,6 @@ BuildArgvForOsLoader(
     /* Validate the LoadIdentifier (to make tests simpler later) */
     if (LoadIdentifier && !*LoadIdentifier)
         LoadIdentifier = NULL;
-
-    /* Get the boot path we're booting from (the "SystemPartition") */
-    MachDiskGetBootPath(BootPath, sizeof(BootPath));
 
     /* Count the number of operating systems in the section */
     Count = IniGetNumSectionItems(SectionId);
@@ -113,7 +109,7 @@ BuildArgvForOsLoader(
     Size = 0;
     /* i == 0: Program name */
     /* i == 1: SystemPartition : from where FreeLdr has been started */
-    Size += (strlen("SystemPartition=") + strlen(BootPath) + 1) * sizeof(CHAR);
+    Size += (strlen("SystemPartition=") + strlen(FrldrBootPath) + 1) * sizeof(CHAR);
     /* i == 2: LoadIdentifier  : ASCII string that may be used to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
     {
@@ -139,7 +135,7 @@ BuildArgvForOsLoader(
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
-        strcat(SettingName, BootPath);
+        strcat(SettingName, FrldrBootPath);
 
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);

@@ -105,7 +105,7 @@ inrmode:
 
     /* Do the callback, specified by bx */
     shl bx, 1
-    call word ptr ds:callback_table[bx]
+    call word ptr ds:CallbackTable[bx]
 
 
 /*
@@ -140,7 +140,7 @@ pm_entrypoint:
     .long 0 // receives address of PE entry point
     nop
 
-callback_table:
+CallbackTable:
     .word Int386
     .word Reboot
     .word ChainLoadBiosBootSectorCode

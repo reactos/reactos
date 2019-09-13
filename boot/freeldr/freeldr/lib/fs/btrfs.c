@@ -1115,7 +1115,6 @@ ARC_STATUS BtrFsClose(ULONG FileId)
     TRACE("BtrFsClose %lu\n", FileId);
 
     FrLdrTempFree(phandle, TAG_BTRFS_FILE);
-
     return ESUCCESS;
 }
 

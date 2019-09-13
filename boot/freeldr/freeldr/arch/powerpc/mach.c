@@ -32,7 +32,7 @@ static int chosen_package, stdin_handle, stdout_handle, part_handle = -1;
 int mmu_handle = 0;
 int claimed[4];
 BOOLEAN AcpiPresent = FALSE;
-char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
+CHAR FrldrBootPath[MAX_PATH] = "", BootPart[MAX_PATH] = "", CmdLine[MAX_PATH] = "bootprep";
 jmp_buf jmp;
 volatile char *video_mem = 0;
 
@@ -247,11 +247,6 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return slots;
 }
 
-BOOLEAN PpcDiskGetBootPath(PCHAR OutBootPath, ULONG Size) {
-    strncpy( OutBootPath, BootPath, Size );
-    return TRUE;
-}
-
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
                    ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
@@ -441,7 +436,6 @@ void PpcDefaultMachVtbl()
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
-    MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PpcDiskGetCacheableBlockCount;
@@ -493,7 +487,7 @@ void MachInit(const char *CmdLine) {
     char *sep;
 
     BootPart[0] = 0;
-    BootPath[0] = 0;
+    FrldrBootPath[0] = 0;
 
     printf( "Determining boot device: [%s]\n", CmdLine );
 
@@ -511,18 +505,18 @@ void MachInit(const char *CmdLine) {
     if( strlen(BootPart) == 0 ) {
     if (ofproxy)
             len = ofw_getprop(chosen_package, "bootpath",
-                              BootPath, sizeof(BootPath));
+                              FrldrBootPath, sizeof(FrldrBootPath));
     else
             len = 0;
     if( len < 0 ) len = 0;
-    BootPath[len] = 0;
-    printf( "Boot Path: %s\n", BootPath );
+    FrldrBootPath[len] = 0;
+    printf( "Boot Path: %s\n", FrldrBootPath );
 
-    sep = strrchr(BootPath, ',');
+    sep = strrchr(FrldrBootPath, ',');
 
-    strcpy(BootPart, BootPath);
+    strcpy(BootPart, FrldrBootPath);
     if( sep ) {
-        BootPart[sep - BootPath] = 0;
+        BootPart[sep - FrldrBootPath] = 0;
     }
     }
 
@@ -551,7 +545,10 @@ void BootNewLinuxKernel() {
     ofw_exit();
 }
 
-void ChainLoadBiosBootSectorCode() {
+VOID __cdecl ChainLoadBiosBootSectorCode(
+    IN UCHAR BootDrive OPTIONAL,
+    IN ULONG BootPartition OPTIONAL)
+{
     ofw_exit();
 }
 

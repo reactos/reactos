@@ -243,9 +243,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
 ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
-
     FrLdrTempFree(FileHandle, TAG_ISO_FILE);
-
     return ESUCCESS;
 }
 

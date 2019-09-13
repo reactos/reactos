@@ -169,7 +169,6 @@ SpiSendSynchronousSrb(
 static ARC_STATUS DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
-
     ExFreePool(Context);
     return ESUCCESS;
 }
@@ -1612,7 +1611,7 @@ LoadBootDeviceDriver(VOID)
     InitializeListHead(&ModuleListHead);
 
     /* Create full ntbootdd.sys path */
-    MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
+    strcpy(NtBootDdPath, FrldrBootPath);
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load file */
