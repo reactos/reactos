@@ -346,9 +346,9 @@ stack16:
 
 
 #include "int386.inc"
+#include "helpers.inc"
 #include "pxe.inc"
 #include "pnp.inc"
-#include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE - 1)
 .byte 0

@@ -118,16 +118,6 @@ LoadAndBootBootSector(
     UiUnInitialize("Booting...");
     IniCleanup();
 
-    /*
-     * Don't stop the floppy drive motor when we
-     * are just booting a bootsector, or drive, or partition.
-     * If we were to stop the floppy motor then
-     * the BIOS wouldn't be informed and if the
-     * next read is to a floppy then the BIOS will
-     * still think the motor is on and this will
-     * result in a read error.
-     */
-    // DiskStopFloppyMotor();
     ChainLoadBiosBootSectorCode(0 /*DriveNumber*/, 0 /*PartitionNumber*/);
     /* Must not return! */
     return ESUCCESS;
@@ -204,16 +194,6 @@ LoadAndBootPartitionOrDrive(
     UiUnInitialize("Booting...");
     IniCleanup();
 
-    /*
-     * Don't stop the floppy drive motor when we
-     * are just booting a bootsector, or drive, or partition.
-     * If we were to stop the floppy motor then
-     * the BIOS wouldn't be informed and if the
-     * next read is to a floppy then the BIOS will
-     * still think the motor is on and this will
-     * result in a read error.
-     */
-    // DiskStopFloppyMotor();
     ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
     /* Must not return! */
     return ESUCCESS;

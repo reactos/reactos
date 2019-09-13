@@ -259,8 +259,6 @@ LoadAndBootLinux(
     UiUnInitialize("Booting Linux...");
     IniCleanup();
 
-    DiskStopFloppyMotor();
-
     if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
         BootNewLinuxKernel();
     else

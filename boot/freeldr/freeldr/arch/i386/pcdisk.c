@@ -478,10 +478,12 @@ BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULON
     return TRUE;
 }
 
-VOID DiskStopFloppyMotor(VOID)
+#if defined(__i386__) || defined(_M_AMD64)
+VOID __cdecl DiskStopFloppyMotor(VOID)
 {
-    WRITE_PORT_UCHAR((PUCHAR)0x3F2, 0);
+    WRITE_PORT_UCHAR((PUCHAR)0x3F2, 0x0C); // DOR_FDC_ENABLE | DOR_DMA_IO_INTERFACE_ENABLE
 }
+#endif // defined __i386__ || defined(_M_AMD64)
 
 BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize)
 {

@@ -59,10 +59,6 @@ ULONG LenBits[] =
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DiskStopFloppyMotor(VOID)
-{
-}
-
 VOID
 FrLdrCheckCpuCompatibility(VOID)
 {

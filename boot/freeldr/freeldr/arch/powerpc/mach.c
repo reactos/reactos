@@ -534,9 +534,6 @@ void WRITE_PORT_UCHAR(PUCHAR Address, UCHAR Value) {
     SetPhysByte(((ULONG)Address)+0x80000000, Value);
 }
 
-void DiskStopFloppyMotor() {
-}
-
 void BootOldLinuxKernel( unsigned long size ) {
     ofw_exit();
 }

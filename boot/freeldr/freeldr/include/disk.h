@@ -114,7 +114,7 @@ typedef struct _MASTER_BOOT_RECORD
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 #if defined(__i386__) || defined(_M_AMD64)
-VOID DiskStopFloppyMotor(VOID);
+VOID __cdecl DiskStopFloppyMotor(VOID);
 #endif // defined __i386__ || defined(_M_AMD64)
 
 /* Buffer for disk reads (hwdisk.c) */

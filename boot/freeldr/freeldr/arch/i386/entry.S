@@ -27,6 +27,8 @@ EXTERN _i386Idt:DWORD
 //EXTERN _i386idtptr:FWORD
 EXTERN cmdline:DWORD
 
+EXTERN _DiskStopFloppyMotor:PROC
+
 #ifdef _USE_ML
 EXTERN __bss_start__:DWORD
 EXTERN __bss_end__:DWORD
@@ -101,6 +103,9 @@ stop:
 
 PUBLIC _Reboot
 _Reboot:
+    /* Stop the floppy drive motor */
+    call _DiskStopFloppyMotor
+
     /* Set the function ID */
     mov bx, FNID_Reboot
 
@@ -132,6 +137,14 @@ set_part:
 continue:
     /* Store the 1-byte truncated partition number in DH */
     mov dh, al
+
+    /*
+     * Don't stop the floppy drive motor when we are just booting a bootsector,
+     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
+     * wouldn't be informed and if the next read is to a floppy then the BIOS
+     * will still think the motor is on and this will result in a read error.
+     */
+    // call _DiskStopFloppyMotor
 
     /* Set the function ID */
     mov bx, FNID_ChainLoadBiosBootSectorCode

@@ -5,6 +5,8 @@
 EXTERN BootMain:PROC
 // EXTERN cmdline:DWORD
 
+EXTERN DiskStopFloppyMotor:PROC
+
 #ifdef _USE_ML
 EXTERN __bss_start__:FWORD
 EXTERN __bss_end__:FWORD
@@ -70,6 +72,9 @@ stop:
 
 PUBLIC Reboot
 Reboot:
+    /* Stop the floppy drive motor */
+    call DiskStopFloppyMotor
+
     /* Set the function ID */
     mov bx, FNID_Reboot
 
@@ -102,6 +107,14 @@ continue:
     /* Store the 1-byte truncated partition number in DH */
     mov dh, al
 
+    /*
+     * Don't stop the floppy drive motor when we are just booting a bootsector,
+     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
+     * wouldn't be informed and if the next read is to a floppy then the BIOS
+     * will still think the motor is on and this will result in a read error.
+     */
+    // call DiskStopFloppyMotor
+
     /* Set the function ID */
     mov bx, FNID_ChainLoadBiosBootSectorCode
 
@@ -109,6 +122,11 @@ continue:
     jmp SwitchToReal
 
 
+/*
+ * U16 PxeCallApi(U16 Segment, U16 Offset, U16 Service, VOID *Parameter);
+ *
+ * RETURNS:
+ */
 PUBLIC PxeCallApi
 PxeCallApi:
     xor eax, eax
