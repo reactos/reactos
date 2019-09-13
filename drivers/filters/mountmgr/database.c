@@ -624,9 +624,10 @@ ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
         goto ReleaseRDS;
     }
 
-    if (DeviceObject->Flags & 1)
+    /* Mark mounted only if not unloading */
+    if (!(DeviceObject->Flags & DO_UNLOAD_PENDING))
     {
-        _InterlockedExchangeAdd(&ListDeviceInfo->MountState, 1u);
+        InterlockedExchangeAdd(&ListDeviceInfo->MountState, 1);
     }
 
     ObDereferenceObject(FileObject);
