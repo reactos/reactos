@@ -284,17 +284,13 @@ LoadReactOSSetup(
     File = strstr(BootOptions2, "/RDPATH=");
     if (File)
     {
-        /* Copy the file name and everything else after it */
-        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
-
-        /* Null-terminate */
-        *strstr(FileName, " ") = ANSI_NULL;
-
         /* Load the ramdisk */
-        Status = RamDiskLoadVirtualFile(FileName, SystemPartition);
+        Status = RamDiskInitialize(FALSE, BootOptions2, SystemPartition);
         if (Status != ESUCCESS)
         {
-            UiMessageBox("Failed to load RAM disk file %s", FileName);
+            File += 8;
+            UiMessageBox("Failed to load RAM disk file '%.*s'",
+                         strcspn(File, " \t"), File);
             return Status;
         }
     }
@@ -323,7 +319,7 @@ LoadReactOSSetup(
 
     TRACE("BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
-    /* Get Load options - debug and non-debug */
+    /* Get load options - debug and non-debug */
     if (!InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
     {
         ERR("Failed to find 'SetupData/OsLoadOptions'\n");

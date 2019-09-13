@@ -731,9 +731,9 @@ LoadAndBootWindows(
     BOOLEAN Success;
     USHORT OperatingSystemVersion;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
-    CHAR  BootPath[MAX_PATH];
-    CHAR  FileName[MAX_PATH];
-    CHAR  BootOptions[256];
+    CHAR BootPath[MAX_PATH];
+    CHAR FileName[MAX_PATH];
+    CHAR BootOptions[256];
 
     /* Retrieve the (mandatory) boot type */
     ArgValue = GetArgumentValue(Argc, Argv, "BootType");
@@ -852,17 +852,13 @@ LoadAndBootWindows(
     File = strstr(BootOptions, "/RDPATH=");
     if (File)
     {
-        /* Copy the file name and everything else after it */
-        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
-
-        /* Null-terminate */
-        *strstr(FileName, " ") = ANSI_NULL;
-
         /* Load the ramdisk */
-        Status = RamDiskLoadVirtualFile(FileName, SystemPartition);
+        Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
         if (Status != ESUCCESS)
         {
-            UiMessageBox("Failed to load RAM disk file %s", FileName);
+            File += 8;
+            UiMessageBox("Failed to load RAM disk file '%.*s'",
+                         strcspn(File, " \t"), File);
             return Status;
         }
     }

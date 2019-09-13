@@ -91,7 +91,7 @@ CmdLineParse(IN PCSTR CmdLine)
     Setting = strstr(CmdLine, "rdbase=");
     if (Setting)
     {
-        gRamDiskBase =
+        gInitRamDiskBase =
             (PVOID)(ULONG_PTR)strtoull(Setting +
                                        sizeof("rdbase=") - sizeof(ANSI_NULL),
                                        NULL, 0);
@@ -101,9 +101,9 @@ CmdLineParse(IN PCSTR CmdLine)
     Setting = strstr(CmdLine, "rdsize=");
     if (Setting)
     {
-        gRamDiskSize = strtoul(Setting +
-                               sizeof("rdsize=") - sizeof(ANSI_NULL),
-                               NULL, 0);
+        gInitRamDiskSize = strtoul(Setting +
+                                   sizeof("rdsize=") - sizeof(ANSI_NULL),
+                                   NULL, 0);
     }
 
     /* Get ramdisk offset */
@@ -116,7 +116,7 @@ CmdLineParse(IN PCSTR CmdLine)
     }
 
     /* Fix it up */
-    gRamDiskBase = (PVOID)((ULONG_PTR)gRamDiskBase + Offset);
+    gInitRamDiskBase = (PVOID)((ULONG_PTR)gInitRamDiskBase + Offset);
 }
 
 PCSTR
