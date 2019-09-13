@@ -109,7 +109,6 @@ CliGenerateNegotiateMessage(
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     message->MsgType = NtlmNegotiate;
-    message->NegotiateFlags = context->NegFlg;
 
     TRACE("nego message %p size %lu\n", message, messageSize);
     TRACE("context %p context->NegotiateFlags:\n",context);
@@ -120,9 +119,9 @@ CliGenerateNegotiateMessage(
         !cred->PasswordW.Buffer) && cred->SecToken)
     {
         FIXME("try use local cached credentials?\n");
-
-        message->NegotiateFlags |= (NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED |
-            NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED | NTLMSSP_NEGOTIATE_LOCAL_CALL);
+        context->NegFlg |= NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED |
+                           NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED |
+                           NTLMSSP_NEGOTIATE_LOCAL_CALL;
 
         NtlmExtStringToBlob((PVOID)message,
                             &g->NbMachineNameOEM,
@@ -146,6 +145,7 @@ CliGenerateNegotiateMessage(
     /* zero version struct */
     memset(&message->Version, 0, sizeof(NTLM_WINDOWS_VERSION));
 
+    message->NegotiateFlags = context->NegFlg;
     /* set state */
     context->hdr.State = NegotiateSent;
     return SEC_I_CONTINUE_NEEDED;
