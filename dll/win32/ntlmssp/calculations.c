@@ -475,7 +475,7 @@ UNSEAL(
 //#define VALIDATE_NTLMv1
 //#define VALIDATE_NTLM
 BOOL
-CliComputeResponseNTLMv1(
+ComputeResponseNTLMv1(
     IN ULONG NegFlg,
     IN BOOL Anonymouse,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
@@ -559,7 +559,7 @@ CliComputeResponseNTLMv1(
 //#define VALIDATE_NTLMv2
 //#define VALIDATE_NTLM
 BOOL
-CliComputeResponseNTLMv2(
+ComputeResponseNTLMv2(
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
@@ -929,19 +929,19 @@ ComputeResponse(
         ExtDataSetLength(pNtChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
         ExtDataSetLength(pLmChallengeResponseData, MSV1_0_RESPONSE_LENGTH, TRUE);
 
-        if (!CliComputeResponseNTLMv1(NegFlg,
-                                      Anonymouse,
-                                      ResponseKeyLM,
-                                      ResponseKeyNT,
-                                      ChallengeToClient,
-                                      ChallengeFromClient,
-                                      (PUCHAR)pNtChallengeResponseData->Buffer,
-                                      (PUCHAR)pLmChallengeResponseData->Buffer,
-                                      pSessionBaseKey))
+        if (!ComputeResponseNTLMv1(NegFlg,
+                                   Anonymouse,
+                                   ResponseKeyLM,
+                                   ResponseKeyNT,
+                                   ChallengeToClient,
+                                   ChallengeFromClient,
+                                   (PUCHAR)pNtChallengeResponseData->Buffer,
+                                   (PUCHAR)pLmChallengeResponseData->Buffer,
+                                   pSessionBaseKey))
         {
             ExtStrFree(pNtChallengeResponseData);
             ExtStrFree(pLmChallengeResponseData);
-            ERR("CliComputeResponseNTLMv1 failed!\n");
+            ERR("ComputeResponseNTLMv1 failed!\n");
             return FALSE;
         }
         #ifdef VALIDATE_NTLMv1
@@ -953,17 +953,17 @@ ComputeResponse(
         /* prepare CompureResponse */
         ExtDataSetLength(pLmChallengeResponseData, sizeof(LM2_RESPONSE), TRUE);
 
-        if (!CliComputeResponseNTLMv2(Anonymouse,
-                                      userdom,
-                                      ResponseKeyLM,
-                                      ResponseKeyNT,
-                                      pServerName,
-                                      ChallengeToClient,
-                                      ChallengeFromClient,
-                                      TimeStamp,
-                                      pNtChallengeResponseData,
-                                      (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
-                                      pSessionBaseKey))
+        if (!ComputeResponseNTLMv2(Anonymouse,
+                                   userdom,
+                                   ResponseKeyLM,
+                                   ResponseKeyNT,
+                                   pServerName,
+                                   ChallengeToClient,
+                                   ChallengeFromClient,
+                                   TimeStamp,
+                                   pNtChallengeResponseData,
+                                   (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
+                                   pSessionBaseKey))
         {
             ExtStrFree(pLmChallengeResponseData);
             ERR("ComputeResponseNVLMv2 failed!\n");

@@ -458,7 +458,7 @@ NtlmStructWriteStrW(
 
 /* calculations */
 BOOL
-CliComputeResponseNTLMv2(
+ComputeResponseNTLMv2(
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
@@ -472,7 +472,7 @@ CliComputeResponseNTLMv2(
     OUT PUSER_SESSION_KEY SessionBaseKey);
 
 BOOL
-CliComputeResponseNTLMv1(
+ComputeResponseNTLMv1(
     IN ULONG NegFlg,
     IN BOOL Anonymouse,
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_RESPONSE_LENGTH],
