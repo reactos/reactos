@@ -93,7 +93,7 @@ typedef struct _NTLMSSP_GLOBALS_CLI
      * (ctx) means variable is _NTLMSSP_CONTEXT_CLI */
     /* The set of client configuration flags (section 2.2.2.5) that specify the
      * full set of capabilities of the client. */
-    /* ULONG ClientConfigFlags; */
+    ULONG ClientConfigFlags;
     // ExportedSessionKey:
     /* NegFlg: (ctx) */
     // User: A string that indicates the name of the user.

@@ -396,6 +396,12 @@ SvrHandleAuthenticateMessage(
     OUT PUCHAR pSessionKey,
     OUT PULONG pfUserFlags);
 
+BOOL
+ValidateNegFlg(
+    IN ULONG SupportedFlags,
+    IN OUT PULONG pFlags,
+    IN BOOL RemoveUnsupportedFlags);
+
 /* helper functions */
 
 /* makes only a reference to blob - do not free! */

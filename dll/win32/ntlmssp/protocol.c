@@ -25,6 +25,27 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 #define NEGO_FLAGS_DONOTUSE  NTLMSSP_NEGOTIATE_KEY_EXCH// | NTLMSSP_NEGOTIATE_NTLM
 
+/* Returns true if all Flags in <Flags> are supported!
+ * RemoveUnsupportedFlags = TRUE will remove all unsupported
+ * flags from *pFlags. So result is always TRUE.*/
+BOOL
+ValidateNegFlg(
+    IN ULONG SupportedFlags,
+    IN OUT PULONG pFlags,
+    IN BOOL RemoveUnsupportedFlags)
+{
+    ULONG UnsupportedFlags = *pFlags & (~SupportedFlags);
+    if (UnsupportedFlags)
+    {
+        TRACE("Flags not supported:\n");
+        NtlmPrintNegotiateFlags(UnsupportedFlags);
+        if (!RemoveUnsupportedFlags)
+            return FALSE;
+        TRACE("Removing this flags ...\n");
+        *pFlags ^= UnsupportedFlags;
+    }
+    return TRUE;
+}
 
 SECURITY_STATUS
 CliGenerateNegotiateMessage(
@@ -75,7 +96,7 @@ CliGenerateNegotiateMessage(
     }
 
     /* use allocated memory */
-    message = (PNEGOTIATE_MESSAGE) OutputToken->pvBuffer;
+    message = (PNEGOTIATE_MESSAGE)OutputToken->pvBuffer;
     offset = (ULONG_PTR)(message+1);
 
     /* HACK flags ... add if one works ...
@@ -96,7 +117,6 @@ CliGenerateNegotiateMessage(
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     message->MsgType = NtlmNegotiate;
     message->NegotiateFlags = context->NegFlg;
-
 
     TRACE("nego message %p size %lu\n", message, messageSize);
     TRACE("context %p context->NegotiateFlags:\n",context);
@@ -198,7 +218,10 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     chaMessage->NegotiateFlags = gsvr->CfgFlg |
                                  NTLMSSP_REQUEST_TARGET |
                                  NTLMSSP_NEGOTIATE_NTLM |
-                                 NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
+                                 NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                                 NTLMSSP_NEGOTIATE_UNICODE;
+    /* HACK */
+    chaMessage->NegotiateFlags = chaMessage->NegotiateFlags & (~NTLMSSP_NEGOTIATE_KEY_EXCH);
 
     /* generate server challenge */
     NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -304,8 +327,12 @@ SvrHandleNegotiateMessage(
         goto exit;
     }
 
+    negotiateFlags = negoMessage->NegotiateFlags;
+
     TRACE("Got valid nego message! with flags:\n");
-    NtlmPrintNegotiateFlags(negoMessage->NegotiateFlags);
+    NtlmPrintNegotiateFlags(negotiateFlags);
+    /* remove unsupported flags */
+    ValidateNegFlg(gsvr->CfgFlg, &negotiateFlags, TRUE);
 
     /* get credentials */
     if(!(cred = NtlmReferenceCredential(hCredential)))
@@ -377,19 +404,21 @@ SvrHandleNegotiateMessage(
         context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
     }
 
-    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
-        negoMessage->NegotiateFlags & NTLMSSP_REQUEST_TARGET)
+    if (negotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
+        negotiateFlags & NTLMSSP_REQUEST_TARGET)
     {
-        negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER | NTLMSSP_REQUEST_TARGET | NTLMSSP_NEGOTIATE_TARGET_INFO;
+        negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER |
+                          NTLMSSP_REQUEST_TARGET |
+                          NTLMSSP_NEGOTIATE_TARGET_INFO;
 
-        if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
+        if (negotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
-            negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
+            //negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
             pRawTargetNameRef = (PEXT_STRING)&gsvr->NbMachineName;
         }
-        else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
+        else if (negotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
-            negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
+            //negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
             pRawTargetNameRef = (PEXT_STRING)&g->NbMachineNameOEM;
         }
         else
@@ -401,8 +430,8 @@ SvrHandleNegotiateMessage(
     }
 
     /* check for local call */
-    if((negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
-        (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED))
+    if ((negotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
+        (negotiateFlags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED))
     {
         NtlmCreateExtAStrFromBlob(InputToken, negoMessage->OemDomainName,
                                   &OemDomainName);
@@ -418,48 +447,48 @@ SvrHandleNegotiateMessage(
     }
 
     /* compute negotiate message flags */
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+    if (negotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
     {
-        negoMessage->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
-        negotiateFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+        negotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
+        //negotiateFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
     }
-    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY)
-    {
-        negotiateFlags |= NTLMSSP_NEGOTIATE_LM_KEY;
-    }
+    //else if (negotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY)
+    //{
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_LM_KEY;
+    //}
 
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
-        negotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
+    //if (negotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
 
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
-    {
-        *pASCContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-        context->ASCRetContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-        negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
-    }
+    //if (negotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
+    //{
+    //    *pASCContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+    //    context->ASCRetContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
+    //}
 
-    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
-    {
-        *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
-        context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
-        negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
-    }
+    //if (negotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
+    //{
+    //    *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
+    //    context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
+    //}
 
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
-        negotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
+    //if (negotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* client requested encryption */
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_128)
-        negotiateFlags |= NTLMSSP_NEGOTIATE_128;
-    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_56)
-        negotiateFlags |= NTLMSSP_NEGOTIATE_56;
+    //if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_128)
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_128;
+    //else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_56)
+    //    negotiateFlags |= NTLMSSP_NEGOTIATE_56;
 
-    if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
-    {
-        *pASCContextAttr |= ASC_RET_IDENTIFY;
-        context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
-        negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
-    }
+    //if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
+    //{
+    //    *pASCContextAttr |= ASC_RET_IDENTIFY;
+    //    context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
+    //    negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
+    //}
 
     ret = NtlmGenerateChallengeMessage(context,
                                        cred,
@@ -507,6 +536,7 @@ CliGenerateAuthenticationMessage(
     UCHAR ResponseKeyNT[MSV1_0_NT_OWF_PASSWORD_LENGTH];
     UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
+    PNTLMSSP_GLOBALS_CLI gcli = getGlobalsCli();
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
@@ -573,8 +603,19 @@ CliGenerateAuthenticationMessage(
     TRACE("Got valid challege message! with flags:\n");
     NtlmPrintNegotiateFlags(challenge->NegotiateFlags);
 
+    /* validate NegotiateFlags & fail if client wants something
+     * we do not support
+     * TODO: may not correct for datagram-mode! */
+    if (!ValidateNegFlg(gcli->ClientConfigFlags, &challenge->NegotiateFlags, FALSE))
+    {
+        ret = SEC_E_INVALID_TOKEN;
+        goto quit;
+    }
+
     /* print challenge message and payloads */
     NtlmPrintHexDump((PBYTE)InputToken1->pvBuffer, InputToken1->cbBuffer);
+
+    isUnicode = (challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE);
 
     /* should we really change the input-buffer? */
     /* if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_DATAGRAM)
@@ -588,12 +629,14 @@ CliGenerateAuthenticationMessage(
             NTLMSSP_NEGOTIATE_LOCAL_CALL);
     }*/
 
-    if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    // FIXME move elsewhere ... here, only in DATAGRAM-mode
+    // flags need to be "negotiated"
+    /*if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
         context->NegFlg |= NTLMSSP_NEGOTIATE_TARGET_INFO;
     else
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_TARGET_INFO);
 
-    /* if caller supports unicode prefer it over oem */
+    / * if caller supports unicode prefer it over oem * /
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
     {
         context->NegFlg |= NTLMSSP_NEGOTIATE_UNICODE;
@@ -604,20 +647,20 @@ CliGenerateAuthenticationMessage(
     {
         context->NegFlg |= NTLMSSP_NEGOTIATE_OEM;
         context->NegFlg &= ~NTLMSSP_NEGOTIATE_UNICODE;
-        /* we have to convert all strings to OEM ...
-         * maybe targetinfo-strings too!? */
+        / * we have to convert all strings to OEM ...
+         * maybe targetinfo-strings too!? * /
         FIXME("OEM will not work ...\n");
         isUnicode = FALSE;
     }
     else
     {
-        /* these flags must be bad! */
+        / * these flags must be bad! * /
         ERR("challenge flags did not specify unicode or oem!\n");
         ret = SEC_E_INVALID_TOKEN;
         goto quit;
     }
 
-    /* support ntlm2 */
+    / * support ntlm2 * /
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
     {
         challenge->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
@@ -625,10 +668,10 @@ CliGenerateAuthenticationMessage(
     }
     else
     {
-        /* did not support ntlm2 */
+        / * did not support ntlm2 * /
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY);
 
-        /* did not support ntlm */
+        / * did not support ntlm * /
         if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_NTLM))
         {
             ERR("netware authentication not supported!!!\n");
@@ -637,36 +680,36 @@ CliGenerateAuthenticationMessage(
         }
     }
 
-    /* did not support 128bit encryption */
+    / * did not support 128bit encryption * /
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_128))
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_128);
 
-    /* did not support 56bit encryption */
+    / * did not support 56bit encryption * /
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_56))
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_56);
 
-    /* did not support lm key */
+    / * did not support lm key * /
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY))
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_LM_KEY);
 
-    /* did not support key exchange */
+    / * did not support key exchange * /
     if(!(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH))
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_KEY_EXCH);
 
-    /* should sign */
+    / * should sign * /
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
         context->NegFlg |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
     else
         context->NegFlg &= ~(NTLMSSP_NEGOTIATE_ALWAYS_SIGN);
 
-    /* obligatory key exchange */
+    / * obligatory key exchange * /
     if((context->NegFlg & NTLMSSP_NEGOTIATE_DATAGRAM) &&
         (context->NegFlg & (NTLMSSP_NEGOTIATE_SIGN | NTLMSSP_NEGOTIATE_SEAL)))
         context->NegFlg |= NTLMSSP_NEGOTIATE_KEY_EXCH;
 
-    /* unimplemented */
+    / * unimplemented * /
     if(challenge->NegotiateFlags & NTLMSSP_NEGOTIATE_LOCAL_CALL)
-        ERR("NTLMSSP_NEGOTIATE_LOCAL_CALL set!\n");
+        ERR("NTLMSSP_NEGOTIATE_LOCAL_CALL set!\n"); */
 
     /* get params we need for auth message */
     /* extract target info */
@@ -1268,8 +1311,11 @@ SvrAuthMsgExtractData(
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     SECURITY_STATUS ret = SEC_E_OK;
 
-    // FIXME Check if server is all supporting ...
-    if ((ad->authMessage->NegotiateFlags & ~gsvr->CfgFlg) != 0)
+    /* Check if client sends only supported flags
+     * (we have negotiated it!)
+     * TODO: check is wrong in DATAGRAM-Mode!
+     * */
+    if (!ValidateNegFlg(gsvr->CfgFlg, &ad->authMessage->NegotiateFlags, FALSE))
     {
         /* flags set that we do not support */
         ERR("Unsupported flags!\n");

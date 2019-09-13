@@ -213,7 +213,28 @@ NtlmInitializeGlobals(VOID)
                    NTLMSSP_NEGOTIATE_NTLM |
                    NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
                    NTLMSSP_REQUEST_TARGET |
+                   NTLMSSP_TARGET_TYPE_SERVER |
                    NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                   NTLMSSP_NEGOTIATE_SEAL |
+                   NTLMSSP_NEGOTIATE_SIGN |
+                   NTLMSSP_NEGOTIATE_TARGET_INFO |
+                   NTLMSSP_NEGOTIATE_VERSION |
+                   //NTLMSSP_NEGOTIATE_KEY_EXCH |
+                   NTLMSSP_NEGOTIATE_56 |
+                   NTLMSSP_NEGOTIATE_128;
+    gcli->ClientConfigFlags =
+                   NTLMSSP_NEGOTIATE_UNICODE |
+                   NTLMSSP_NEGOTIATE_OEM |
+                   NTLMSSP_NEGOTIATE_NTLM |
+                   NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
+                   NTLMSSP_REQUEST_TARGET |
+                   NTLMSSP_TARGET_TYPE_SERVER |
+                   NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                   NTLMSSP_NEGOTIATE_SEAL |
+                   NTLMSSP_NEGOTIATE_SIGN |
+                   NTLMSSP_NEGOTIATE_TARGET_INFO |
+                   NTLMSSP_NEGOTIATE_VERSION |
+                   //NTLMSSP_NEGOTIATE_KEY_EXCH |
                    NTLMSSP_NEGOTIATE_56 |
                    NTLMSSP_NEGOTIATE_128;
 
