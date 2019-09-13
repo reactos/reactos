@@ -23,8 +23,6 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-#define NEGO_FLAGS_DONOTUSE  NTLMSSP_NEGOTIATE_KEY_EXCH// | NTLMSSP_NEGOTIATE_NTLM
-
 /* Returns true if all Flags in <Flags> are supported!
  * RemoveUnsupportedFlags = TRUE will remove all unsupported
  * flags from *pFlags. So result is always TRUE.*/
@@ -107,20 +105,6 @@ CliGenerateNegotiateMessage(
     /* use allocated memory */
     message = (PNEGOTIATE_MESSAGE)OutputToken->pvBuffer;
     offset = (ULONG_PTR)(message+1);
-
-    /* HACK flags ... add if one works ...
-     * its less ... let's getting better ...
-     * */
-    context->NegFlg = context->NegFlg /*&
-                      (NTLMSSP_NEGOTIATE_UNICODE |
-                       NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                       NTLMSSP_NEGOTIATE_SIGN |
-                       NTLMSSP_NEGOTIATE_SEAL |
-                       NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
-                       NTLMSSP_NEGOTIATE_LM_KEY |
-                       NTLMSSP_NEGOTIATE_56 |
-                       NTLMSSP_NEGOTIATE_OEM);*/ &
-                       ~(NEGO_FLAGS_DONOTUSE);
 
     /* build message */
     strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
@@ -903,7 +887,6 @@ CliGenerateAuthenticationMessage(
     /* fill auth message */
     strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     authmessage->MsgType = NtlmAuthenticate;
-    context->NegFlg = context->NegFlg & ~(NEGO_FLAGS_DONOTUSE);
     authmessage->NegotiateFlags = context->NegFlg;
 
     /* calc blob offset */
