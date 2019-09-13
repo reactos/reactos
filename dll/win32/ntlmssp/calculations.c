@@ -145,6 +145,7 @@ KXKEY(
         //Set KeyExchangeKey to HMAC_MD5(SessionBaseKey, ConcatenationOf(ServerChallenge,
         //LmChallengeResponse [0..7]))
         //EndDefine
+        TRACE("KXKEY: NTLMv2 security\n");
         memcpy(nonce, ServerChallenge, 8);
         memcpy(nonce+8, LmChallengeResponse->Buffer, 8);
         HMAC_MD5(SessionBaseKey, MSV1_0_USER_SESSION_KEY_LENGTH,
@@ -158,6 +159,7 @@ KXKEY(
         //    DES(LMOWF[0..6],LmChallengeResponse[0..7]),
         //    DES(ConcatenationOf(LMOWF[7], 0xBDBDBDBDBDBD),
         //        LmChallengeResponse[0..7]) )
+        TRACE("KXKEY: LM_KEY!\n");
         DES(&LMOWF[0], LmChallengeResponse->Buffer, &KeyExchangeKey[0]);
         DESv2[0] = LMOWF[7];
         DES(DESv2, LmChallengeResponse->Buffer, &KeyExchangeKey[8]);
@@ -167,12 +169,16 @@ KXKEY(
         if (NegFlg & NTLMSSP_REQUEST_NON_NT_SESSION_KEY)
         {
             //Set KeyExchangeKey to ConcatenationOf(LMOWF[0..7], Z(8)),
+            TRACE("KXKEY: NT SESSION KEY!\n");
             memcpy(KeyExchangeKey, LMOWF, 8);
             memset(&KeyExchangeKey[8], 0, 8);
         }
         else
+        {
             //Set KeyExchangeKey to SessionBaseKey
+            TRACE("KXKEY: ---!\n");
             memcpy(KeyExchangeKey, SessionBaseKey, NTLM_KEYEXCHANGE_KEY_LENGTH);
+        }
     }
 }
 
@@ -747,10 +753,10 @@ CliComputeKeys(
     IN PEXT_DATA pNtChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_NTLM3_OWF_LENGTH],
-    OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
     OUT PEXT_DATA pEncryptedRandomSessionKey,
     OUT PNTLMSSP_CONTEXT_MSG ctxmsg)
 {
+    UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
     UCHAR KeyExchangeKey[16];
     TRACE("=== ComputeKeys ===\n");
     TRACE("ChallengeMsg_NegFlg\n");
@@ -805,6 +811,9 @@ CliComputeKeys(
     //TODO  NEGOTIATE_MESSAGE, CHALLENGE_MESSAGE, AUTHENTICATE_MESSAGE))
     //TODO  Set AUTHENTICATE_MESSAGE.MIC to MIC
     //... HMAC_MD5(ExportdSessionKey, sizeof(ExportedSessionKey), );
+
+    PrintSignSealKeyInfo(ctxmsg);
+
     return TRUE;
 }
 
@@ -884,9 +893,7 @@ BOOL CliComputeResponseKeys(
 /* used by server and client */
 BOOL
 ComputeResponse(
-    /* really 2 x Negflg needed ? */
     IN ULONG NegFlg,
-    IN ULONG Challenge_NegFlg,
     IN BOOL UseNTLMv2,
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
@@ -896,16 +903,13 @@ ComputeResponse(
     IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TimeStamp,
-    IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     /* NTLMv1 UCHAR[16]
      * NTLMv2 PLM2_RESPONSE */
     IN OUT PEXT_DATA pLmChallengeResponseData,
-    IN OUT PEXT_DATA EncryptedRandomSessionKey)
+    IN OUT PEXT_DATA EncryptedRandomSessionKey,
+    OUT PUSER_SESSION_KEY pSessionBaseKey)
 {
-    USER_SESSION_KEY SessionBaseKey;
-    UCHAR ExportedSessionKey[16];
-
     TRACE("%S %p %p\n",
         pServerName->Buffer, ChallengeToClient,
         userdom->Buffer);
@@ -933,7 +937,7 @@ ComputeResponse(
                                       ChallengeFromClient,
                                       (PUCHAR)pNtChallengeResponseData->Buffer,
                                       (PUCHAR)pLmChallengeResponseData->Buffer,
-                                      &SessionBaseKey))
+                                      pSessionBaseKey))
         {
             ExtStrFree(pNtChallengeResponseData);
             ExtStrFree(pLmChallengeResponseData);
@@ -959,7 +963,7 @@ ComputeResponse(
                                       TimeStamp,
                                       pNtChallengeResponseData,
                                       (PLM2_RESPONSE)pLmChallengeResponseData->Buffer,
-                                      &SessionBaseKey))
+                                      pSessionBaseKey))
         {
             ExtStrFree(pLmChallengeResponseData);
             ERR("ComputeResponseNVLMv2 failed!\n");
@@ -970,32 +974,14 @@ ComputeResponse(
     }
 
     TRACE("=== CliComputeKeys === \n\n");
-    TRACE("Challenge_NegFlg\n");
-    TRACE("0x%x\n", Challenge_NegFlg);
     TRACE("SessionBaseKey\n");
-    NtlmPrintHexDump((PBYTE)&SessionBaseKey, sizeof(SessionBaseKey));
+    NtlmPrintHexDump((PBYTE)pSessionBaseKey, sizeof(USER_SESSION_KEY));
     TRACE("pLmChallengeResponseData\n");
     NtlmPrintHexDump(pLmChallengeResponseData->Buffer, pLmChallengeResponseData->bUsed);
     TRACE("ServerChallenge\n");
     NtlmPrintHexDump(ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
     TRACE("ResponseKeyLM\n");
     NtlmPrintHexDump(ResponseKeyLM, MSV1_0_NTLM3_OWF_LENGTH);
-    TRACE("ExportedSessionKey\n");
-    NtlmPrintHexDump(ExportedSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
-
-    if (!CliComputeKeys(Challenge_NegFlg,
-                        &SessionBaseKey,
-                        pLmChallengeResponseData,
-                        pNtChallengeResponseData,
-                        ChallengeToClient,/* = ServerChallenge*/
-                        ResponseKeyLM,
-                        ExportedSessionKey,
-                        EncryptedRandomSessionKey,
-                        ctxmsg))
-    {
-        ERR("CliComputeKeys error\n");
-        return FALSE;
-    }
 
     return TRUE;
 }

@@ -421,4 +421,7 @@ void
 NtlmPrintAvPairs(
     IN PEXT_DATA pAvData);
 
+void
+PrintSignSealKeyInfo(PNTLMSSP_CONTEXT_MSG msg);
+
 #endif

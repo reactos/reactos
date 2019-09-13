@@ -291,7 +291,6 @@ CliComputeResponseKeys(
 BOOL
 ComputeResponse(
     IN ULONG NegFlg,
-    IN ULONG Challenge_NegFlg,
     IN BOOL UseNTLMv2,
     IN BOOL Anonymouse,
     IN PEXT_STRING_W userdom,
@@ -301,10 +300,10 @@ ComputeResponse(
     IN UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH],
     IN ULONGLONG TargetInfoTimeStamp,
-    IN OUT PNTLMSSP_CONTEXT_MSG ctxmsg,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     IN OUT PEXT_DATA pLmChallengeResponseData,
-    IN OUT PEXT_DATA EncryptedRandomSessionKey);
+    IN OUT PEXT_DATA EncryptedRandomSessionKey,
+    OUT PUSER_SESSION_KEY pSessionBaseKey);
 
 BOOL
 CliComputeKeys(
@@ -314,7 +313,6 @@ CliComputeKeys(
     IN PEXT_DATA pNtChallengeResponseData,
     IN UCHAR ServerChallenge[MSV1_0_CHALLENGE_LENGTH],
     IN UCHAR ResponseKeyLM[MSV1_0_RESPONSE_LENGTH],
-    OUT UCHAR ExportedSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH],
     OUT PEXT_DATA pEncryptedRandomSessionKey,
     OUT PNTLMSSP_CONTEXT_MSG ctxmsg);
 

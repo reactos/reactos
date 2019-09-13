@@ -169,3 +169,20 @@ NtlmPrintAvPairs(
             + sizeof(MSV1_0_AV_PAIR));
     }while(pAvPair->AvId != MsvAvEOL);
 }
+
+void
+PrintSignSealKeyInfo(PNTLMSSP_CONTEXT_MSG msg)
+{
+    TRACE("ClientSigningKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ClientSigningKey, NTLM_SIGNKEY_LENGTH);
+    TRACE("ServerSigningKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ServerSigningKey, NTLM_SIGNKEY_LENGTH);
+    TRACE("ClientSealingKey\n");
+    NtlmPrintHexDump((PBYTE)msg->ClientSealingKey, NTLM_SEALINGKEY_LENGTH);
+    TRACE("ClientHandle\n");
+    NtlmPrintHexDump((PBYTE)msg->ServerSealingKey, NTLM_SEALINGKEY_LENGTH);
+    TRACE("ClientHandle\n");
+    NtlmPrintHexDump((PBYTE)&msg->ClientHandle, sizeof(rc4_key));
+    TRACE("ServerHandle\n");
+    NtlmPrintHexDump((PBYTE)&msg->ServerHandle, sizeof(rc4_key));
+}
