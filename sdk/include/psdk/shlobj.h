@@ -2382,6 +2382,20 @@ CDefFolderMenu_Create2(
 #define DFM_INVOKECOMMANDEX          12
 #define DFM_GETDEFSTATICID           14
 
+#define DFM_GETHELPTEXT              5
+#define DFM_WM_MEASUREITEM           6
+#define DFM_WM_DRAWITEM              7
+#define DFM_WM_INITMENUPOPUP         8
+#define DFM_VALIDATECMD              9
+#define DFM_MERGECONTEXTMENU_TOP    10
+#define DFM_GETHELPTEXTW            11
+#define DFM_MAPCOMMANDNAME          13
+#define DFM_GETVERBW                15
+#define DFM_GETVERBA                16
+#define DFM_MERGECONTEXTMENU_BOTTOM 17
+#define DFM_MODIFYQCMFLAGS          18
+
+
 #define DFM_CMD_DELETE          ((UINT)-1)
 #define DFM_CMD_MOVE            ((UINT)-2)
 #define DFM_CMD_COPY            ((UINT)-3)
