@@ -15,7 +15,7 @@
 typedef struct tagCMDLINEINFO
 {
     PCSTR DebugString;
-    PCSTR DefaultOperatingSystem;
+    PCSTR DefaultOs;
     LONG  TimeOut;
 } CMDLINEINFO, *PCMDLINEINFO;
 
@@ -33,7 +33,7 @@ CmdLineParse(IN PCSTR CmdLine)
 
     /* Set defaults */
     CmdLineInfo.DebugString = NULL;
-    CmdLineInfo.DefaultOperatingSystem = NULL;
+    CmdLineInfo.DefaultOs = NULL;
     CmdLineInfo.TimeOut = -1;
 
     /*
@@ -84,7 +84,7 @@ CmdLineParse(IN PCSTR CmdLine)
 
         /* Copy the default OS */
         RtlStringCbCopyNA(DefaultOs, sizeof(DefaultOs), Setting, Length);
-        CmdLineInfo.DefaultOperatingSystem = DefaultOs;
+        CmdLineInfo.DefaultOs = DefaultOs;
     }
 
     /* Get ramdisk base address */
@@ -128,7 +128,7 @@ CmdLineGetDebugString(VOID)
 PCSTR
 CmdLineGetDefaultOS(VOID)
 {
-    return CmdLineInfo.DefaultOperatingSystem;
+    return CmdLineInfo.DefaultOs;
 }
 
 LONG
