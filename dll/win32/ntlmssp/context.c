@@ -327,8 +327,6 @@ CliCreateContext(
                       NTLMSSP_NEGOTIATE_SIGN |
                       NTLMSSP_NEGOTIATE_VERSION |
                       NTLMSSP_NEGOTIATE_KEY_EXCH;
-    /* Remove flags we dont support */
-    ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE);
 
     /* client requested features */
     if(ISCContextReq & ISC_REQ_INTEGRITY)
@@ -417,6 +415,9 @@ CliCreateContext(
             goto fail;
         }
     }
+
+    /* Remove flags we dont support */
+    ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE);
 
     /* commit results */
     *pfNegotiateFlags = context->NegFlg;

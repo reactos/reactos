@@ -42,7 +42,16 @@ ValidateNegFlg(
         if (!RemoveUnsupportedFlags)
             return FALSE;
         TRACE("Removing this flags ...\n");
-        *pFlags ^= UnsupportedFlags;
+        *pFlags &= (~UnsupportedFlags);
+    }
+    /* check flag consistency MS-NLMP 2.2.2.5 NEGOTIATE */
+    if ((*pFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) &&
+        (*pFlags & NTLMSSP_NEGOTIATE_LM_KEY))
+    {
+        TRACE("Cant have both: NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | NTLMSSP_NEGOTIATE_LM_KEY\n");
+        if (!RemoveUnsupportedFlags)
+            return FALSE;
+        *pFlags &= (~NTLMSSP_NEGOTIATE_LM_KEY);
     }
     return TRUE;
 }
@@ -1345,10 +1354,8 @@ SvrAuthMsgExtractData(
         ERR("Unsupported flags!\n");
         ERR("NEG %x\n",ad->authMessage->NegotiateFlags);
         ERR("CFG %x\n",gsvr->CfgFlg);
-        //HACK
-        ValidateNegFlg(gsvr->CfgFlg, &ad->authMessage->NegotiateFlags, TRUE);
-        //FIXME ret = SEC_E_INVALID_TOKEN;
-        //FIXME goto quit;
+        ret = SEC_E_INVALID_TOKEN;
+        goto quit;
     }
 
     /* set client Negotiation flags */
