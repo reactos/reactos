@@ -837,9 +837,6 @@ BOOL ReceiveBytes(
         }
         sync_trace("received %d bytes, %d remain in buffer\n", cbRead, cbRemaining);
 
-        if (cbRead == 0)
-            break;
-
         cbRemaining -= cbRead;
         pTemp += cbRead;
     }

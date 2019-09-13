@@ -233,6 +233,8 @@ GenServerContext(
     {
         sync_ok(Attribs == 0x2001c, "Attribs 0x%x wrong, expected 0x%x.\n", Attribs, 0x2001c);
         sync_ok(OutSecBuff.cbBuffer == 0, "OutSecBuff.cbBuffer != 0\n");
+        /* avoid more errors */
+        OutSecBuff.cbBuffer = 0;
     }
     sync_ok(SEC_SUCCESS(ss), "AcceptSecurityContext failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
