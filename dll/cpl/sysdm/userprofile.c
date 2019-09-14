@@ -16,7 +16,7 @@
 
 typedef struct _PROFILEDATA
 {
-    BOOL bMyProfile;
+    DWORD dwRefCount;
     DWORD dwState;
     PWSTR pszFullName;
 } PROFILEDATA, *PPROFILEDATA;
@@ -176,7 +176,7 @@ DeleteUserProfile(
         return FALSE;
 
     pProfileData = (PPROFILEDATA)Item.lParam;
-    if (pProfileData->bMyProfile)
+    if (pProfileData->dwRefCount != 0)
         return FALSE;
 
     LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
@@ -462,13 +462,12 @@ static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
     _In_ PSID pProfileSid,
-    _In_ BOOL bMyProfile,
     _In_ HKEY hProfileKey)
 {
     WCHAR szTempProfilePath[MAX_PATH], szProfilePath[MAX_PATH];
     WCHAR szNameBuffer[256];
     PPROFILEDATA pProfileData = NULL;
-    DWORD dwProfileData, dwSize, dwType, dwState = 0;
+    DWORD dwProfileData, dwSize, dwType, dwState = 0, dwRefCount = 0;
     DWORD dwProfilePathLength;
     PWSTR ptr;
     INT nId, iItem;
@@ -534,6 +533,18 @@ AddUserProfile(
         dwState = 0;
     }
 
+    /* Get the profile reference counter */
+    dwSize = sizeof(dwRefCount);
+    if (RegQueryValueExW(hProfileKey,
+                         L"RefCount",
+                         NULL,
+                         &dwType,
+                         (LPBYTE)&dwRefCount,
+                         &dwSize) != ERROR_SUCCESS)
+    {
+        dwRefCount = 0;
+    }
+
     /* Create and fill the profile data entry */
     dwProfileData = sizeof(PROFILEDATA) +
                     ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
@@ -543,7 +554,7 @@ AddUserProfile(
     if (pProfileData == NULL)
         return;
 
-    pProfileData->bMyProfile = bMyProfile;
+    pProfileData->dwRefCount = dwRefCount;
     pProfileData->dwState = dwState;
 
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
@@ -607,7 +618,9 @@ UpdateButtonState(
 {
     LVITEM Item;
     INT iSelected;
-    BOOL bMyProfile;
+    BOOL bChange = FALSE;
+    BOOL bCopy = FALSE;
+    BOOL bDelete = FALSE;
 
     iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
     if (iSelected != -1)
@@ -619,22 +632,23 @@ UpdateButtonState(
         {
             if (Item.lParam != 0)
             {
-                bMyProfile = ((PPROFILEDATA)Item.lParam)->bMyProfile;
-                if (!bMyProfile)
-                {
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), TRUE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), TRUE);
-                }
+                bCopy = (((PPROFILEDATA)Item.lParam)->dwRefCount == 0);
+                bDelete = (((PPROFILEDATA)Item.lParam)->dwRefCount == 0);
             }
         }
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), TRUE);
+
+        bChange = TRUE;
     }
     else
     {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), FALSE);
+        bChange = FALSE;
+        bCopy = FALSE;
+        bDelete = FALSE;
     }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), bChange);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), bDelete);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), bCopy);
 }
 
 
@@ -702,7 +716,6 @@ AddUserProfiles(
                 {
                     AddUserProfile(hwndListView,
                                    pProfileSid,
-                                   EqualSid(pProfileSid, pTokenUser->User.Sid),
                                    hProfileKey);
                     LocalFree(pProfileSid);
                 }
@@ -723,7 +736,6 @@ AddUserProfiles(
             {
                 AddUserProfile(hwndListView,
                                pTokenUser->User.Sid,
-                               TRUE,
                                hProfileKey);
                 RegCloseKey(hProfileKey);
             }
