@@ -1736,7 +1736,7 @@ MountMgrCleanup(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Otherwise, cancel all the IRPs */
-    NextEntry = &(DeviceExtension->IrpListHead);
+    NextEntry = DeviceExtension->IrpListHead.Flink;
     do
     {
         ListIrp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
