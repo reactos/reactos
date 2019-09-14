@@ -95,8 +95,8 @@ HasDriveLetter(IN PDEVICE_INFORMATION DeviceInformation)
         return FALSE;
     }
 
-    /* Browse all the links untill a drive letter is found */
-    NextEntry = &(DeviceInformation->SymbolicLinksListHead);
+    /* Browse all the symlinks to check if there is at least a drive letter */
+    NextEntry = DeviceInformation->SymbolicLinksListHead.Flink;
     do
     {
         SymlinkInfo = CONTAINING_RECORD(NextEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
