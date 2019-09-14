@@ -302,7 +302,6 @@ ComputeResponse(
     IN ULONGLONG TargetInfoTimeStamp,
     IN OUT PEXT_DATA pNtChallengeResponseData,
     IN OUT PEXT_DATA pLmChallengeResponseData,
-    IN OUT PEXT_DATA EncryptedRandomSessionKey,
     OUT PUSER_SESSION_KEY pSessionBaseKey);
 
 BOOL

@@ -213,8 +213,6 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
                                  NTLMSSP_NEGOTIATE_NTLM |
                                  NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
                                  NTLMSSP_NEGOTIATE_UNICODE;
-    /* HACK */
-    chaMessage->NegotiateFlags = chaMessage->NegotiateFlags & (~NTLMSSP_NEGOTIATE_KEY_EXCH);
 
     /* generate server challenge */
     NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -828,7 +826,6 @@ CliGenerateAuthenticationMessage(
                          NtResponseTimeStamp,
                          &NtResponseData,
                          &LmResponseData,
-                         &EncryptedRandomSessionKey,
                          &SessionBaseKey))
     {
         ERR("ComputeResponse error\n");
@@ -1205,7 +1202,6 @@ SvrAuthMsgProcessData(
             TimeStamp,
             &ExpectedNtChallengeResponse,
             &ExpectedLmChallengeResponse,
-            &EncryptedRandomSessionKey,
             (PUSER_SESSION_KEY)SessionBaseKey.Buffer))
         {
             ret = SEC_E_INTERNAL_ERROR;
@@ -1270,6 +1266,7 @@ SvrAuthMsgProcessData(
     //Set MessageMIC to AUTHENTICATE_MESSAGE.MIC
     /* MessageMIC = ad->authMessage->MIC; unused should compared with?? */
     //Set AUTHENTICATE_MESSAGE.MIC to Z(16)
+
     //If (NTLMSSP_NEGOTIATE_KEY_EXCH flag is set in NegFlg
     //AND (NTLMSSP_NEGOTIATE_SIGN OR NTLMSSP_NEGOTIATE_SEAL are set in NegFlg) )
     if ((context->cli_NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH) &&
@@ -1278,6 +1275,8 @@ SvrAuthMsgProcessData(
     {
         //Set ExportedSessionKey to RC4K(KeyExchangeKey,
         //AUTHENTICATE_MESSAGE.EncryptedRandomSessionKey)
+        TRACE("EncryptedRandomSessionKey...\n");
+        NtlmPrintHexDump(ad->EncryptedRandomSessionKey.Buffer, ad->EncryptedRandomSessionKey.bUsed);
         // Assert nötig, da ExportedSessionKey auch 16 Bytes ist ...
         ASSERT(ad->authMessage->EncryptedRandomSessionKey.Length == MSV1_0_USER_SESSION_KEY_LENGTH);
         RC4K(KeyExchangeKey, ARRAYSIZE(KeyExchangeKey),
@@ -1290,6 +1289,8 @@ SvrAuthMsgProcessData(
         //Set ExportedSessionKey to KeyExchangeKey
         memcpy(ExportedSessionKey, KeyExchangeKey, MSV1_0_USER_SESSION_KEY_LENGTH);
     }
+    TRACE("ExportedSessionKey\n");
+    NtlmPrintHexDump(ExportedSessionKey, 16);
     //Set MIC to HMAC_MD5(ExportedSessionKey, ConcatenationOf(
     //NEGOTIATE_MESSAGE, CHALLENGE_MESSAGE,
     //AUTHENTICATE_MESSAGE))
@@ -1411,14 +1412,18 @@ SvrAuthMsgExtractData(
         goto quit;
     }
 
-    //if(NTLMSSP_NEGOTIATE_KEY_EXCHANGE)
-    if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(ad->InputToken,
-        ad->authMessage->EncryptedRandomSessionKey,
-        &ad->EncryptedRandomSessionKey)))
+    if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
     {
-        ret = SEC_E_INVALID_TOKEN;
-        goto quit;
+        if(!NT_SUCCESS(NtlmCreateExtWStrFromBlob(ad->InputToken,
+            ad->authMessage->EncryptedRandomSessionKey,
+            &ad->EncryptedRandomSessionKey)))
+        {
+            ret = SEC_E_INVALID_TOKEN;
+            goto quit;
+        }
     }
+    else
+        ExtDataInit(&ad->EncryptedRandomSessionKey, NULL, 0);
 
 quit:
     return ret;

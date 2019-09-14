@@ -219,7 +219,7 @@ NtlmInitializeGlobals(VOID)
                    NTLMSSP_NEGOTIATE_SIGN |
                    NTLMSSP_NEGOTIATE_TARGET_INFO |
                    NTLMSSP_NEGOTIATE_VERSION |
-                   //NTLMSSP_NEGOTIATE_KEY_EXCH |
+                   NTLMSSP_NEGOTIATE_KEY_EXCH |
                    NTLMSSP_NEGOTIATE_56 |
                    NTLMSSP_NEGOTIATE_128;
     gcli->ClientConfigFlags =
@@ -234,7 +234,7 @@ NtlmInitializeGlobals(VOID)
                    NTLMSSP_NEGOTIATE_SIGN |
                    NTLMSSP_NEGOTIATE_TARGET_INFO |
                    NTLMSSP_NEGOTIATE_VERSION |
-                   //NTLMSSP_NEGOTIATE_KEY_EXCH |
+                   NTLMSSP_NEGOTIATE_KEY_EXCH |
                    NTLMSSP_NEGOTIATE_56 |
                    NTLMSSP_NEGOTIATE_128;
 

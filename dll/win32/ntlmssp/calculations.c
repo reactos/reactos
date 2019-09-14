@@ -316,8 +316,8 @@ MAC(
         printf("md5\n");
         NtlmPrintHexDump(dataMD5, 16);
 
-       if (NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
-       {
+        if (NegFlg & NTLMSSP_NEGOTIATE_KEY_EXCH)
+        {
             TRACE("NTLM MAC(): Key Exchange\n");
             RC4(Handle, dataMD5, (UCHAR*)(&pmsig->u1.extsec.CheckSum), sizeof(pmsig->u1.extsec.CheckSum));
         }
@@ -408,27 +408,41 @@ SEAL(
     OUT PULONG pSignLen)
 {
     ULONG signLen = 16;
+    EXT_DATA msgOrig;
     if (*pSignLen < signLen)
         return FALSE;
 
+    /* copy msg, needed in MAC
+     * The order of calls is mandatory if NTLMSSP_NEGOTIATE_KEY_EXCH flag is set.
+     * Keep in mind
+     *   * MAC calls RC4(Handle,..) too.
+     *   * State of Handle is modified with every call to RC4.
+     *   * Result of RC4 depends on state of handle.
+     * MAC needs the original (not encrypted) message. Therefor
+     * we make a copy (msgOrig).
+     * */
+    ExtDataInit(&msgOrig, msg, msgLen);
+
     printf("msg\n");
     NtlmPrintHexDump(msg, msgLen);
-
-    MAC(NegFlg,
-        Handle, SigningKey, SigningKeyLength, pSeqNum, msg,
-        msgLen, pSign, signLen);
-
-    printf("sign\n");
-    NtlmPrintHexDump(pSign, signLen);
 
     if (NegFlg & NTLMSSP_NEGOTIATE_SEAL)
     {
         RC4(Handle, msg, msg, msgLen);
     }
-    printf("result\n");
+    printf("msg (encoded)\n");
     NtlmPrintHexDump(msg, msgLen);
 
+    MAC(NegFlg,
+        Handle, SigningKey, SigningKeyLength, pSeqNum,
+        (UCHAR*)msgOrig.Buffer, msgOrig.bUsed, pSign, signLen);
+
+    printf("sign\n");
+    NtlmPrintHexDump(pSign, signLen);
+
     *pSignLen = signLen;
+
+    ExtStrFree(&msgOrig);
 
     return TRUE;
 }
@@ -784,9 +798,15 @@ CliComputeKeys(
         //Set AUTHENTICATE_MESSAGE.EncryptedRandomSessionKey to
         //RC4K(KeyExchangeKey, ExportedSessionKey)
         ExtDataSetLength(pEncryptedRandomSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH, TRUE);
+        TRACE("(RC4K) KeyExchangeKey\n");
+        NtlmPrintHexDump(KeyExchangeKey, ARRAYSIZE(KeyExchangeKey));
+        TRACE("(RC4K) ExportedSessionKey\n");
+        NtlmPrintHexDump(ExportedSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH);
         RC4K(KeyExchangeKey, ARRAYSIZE(KeyExchangeKey),
              ExportedSessionKey, MSV1_0_USER_SESSION_KEY_LENGTH,
              pEncryptedRandomSessionKey->Buffer);
+        TRACE("RC4K Output - EncryptedRandomSessionKey\n");
+        NtlmPrintHexDump(pEncryptedRandomSessionKey->Buffer, pEncryptedRandomSessionKey->bUsed);
     }
     else
     {
@@ -907,7 +927,6 @@ ComputeResponse(
     /* NTLMv1 UCHAR[16]
      * NTLMv2 PLM2_RESPONSE */
     IN OUT PEXT_DATA pLmChallengeResponseData,
-    IN OUT PEXT_DATA EncryptedRandomSessionKey,
     OUT PUSER_SESSION_KEY pSessionBaseKey)
 {
     TRACE("%S %p %p\n",
