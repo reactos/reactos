@@ -89,28 +89,18 @@ HasDriveLetter(IN PDEVICE_INFORMATION DeviceInformation)
     PLIST_ENTRY NextEntry;
     PSYMLINK_INFORMATION SymlinkInfo;
 
-    /* To have a drive letter, a device must have symbolic links */
-    if (IsListEmpty(&(DeviceInformation->SymbolicLinksListHead)))
-    {
-        return FALSE;
-    }
-
     /* Browse all the symlinks to check if there is at least a drive letter */
-    NextEntry = DeviceInformation->SymbolicLinksListHead.Flink;
-    do
+    for (NextEntry = DeviceInformation->SymbolicLinksListHead.Flink;
+         NextEntry != &DeviceInformation->SymbolicLinksListHead;
+         NextEntry = NextEntry->Flink)
     {
         SymlinkInfo = CONTAINING_RECORD(NextEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-        if (SymlinkInfo->Online)
+        if (IsDriveLetter(&SymlinkInfo->Name) && SymlinkInfo->Online)
         {
-            if (IsDriveLetter(&(SymlinkInfo->Name)))
-            {
-                return TRUE;
-            }
+            return TRUE;
         }
-
-        NextEntry = NextEntry->Flink;
-    } while (NextEntry != &(DeviceInformation->SymbolicLinksListHead));
+    }
 
     return FALSE;
 }
