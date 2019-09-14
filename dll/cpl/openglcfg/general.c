@@ -48,7 +48,7 @@ static VOID InitSettings(HWND hWndDlg)
     if (dwType == REG_SZ)
     {
         DWORD ret;
-        INT iKey;
+        DWORD iKey;
 
         if (wcsncmp(szBultin, szDriver, MAX_KEY_LENGTH) == 0)
             SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_RSWR, 0);
@@ -192,7 +192,8 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         case WM_DESTROY:
             if (pOglDrivers != NULL)
             {
-                INT iKey;
+                DWORD iKey;
+
                 for (iKey = 0; iKey < dwNumDrivers; ++iKey)
                     HeapFree(GetProcessHeap(), 0, pOglDrivers[iKey]);
 
