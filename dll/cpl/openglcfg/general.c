@@ -139,7 +139,7 @@ static VOID SaveSettings(HWND hWndDlg)
         {
             WCHAR szBuffer[MAX_KEY_LENGTH];
             LoadString(hApplet, IDS_RENDERER_RSWR, (LPTSTR)szBuffer, 127);
-            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (DWORD)((wcslen(szBuffer) + 1) * sizeof(WCHAR)));
             break;
         }
 
@@ -149,7 +149,7 @@ static VOID SaveSettings(HWND hWndDlg)
             iSel -= 2;
 
             if (iSel >= 0 && iSel < dwNumDrivers)
-                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR));
+                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (DWORD)((wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR)));
 
             break;
         }
