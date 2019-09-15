@@ -13505,6 +13505,7 @@ static void test_MsiEnumProducts(void)
     ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %u\n", r);
     ok(found1, "product1 not found\n");
     ok(found2, "product2 not found\n");
+    ros_skip_flaky
     ok(found3, "product3 not found\n");
 
     delete_key(key1, "", access & KEY_WOW64_64KEY);
@@ -13693,17 +13694,24 @@ static void test_MsiEnumProductsEx(void)
             ok( !sid[0], "got \"%s\"\n", sid );
             ok( !len, "unexpected length %u\n", len );
         }
-        if (!strcmp( product2, guid ))
+        else if (!strcmp( product2, guid ))
         {
             ok( context == MSIINSTALLCONTEXT_USERMANAGED, "got %u\n", context );
             ok( sid[0], "empty sid\n" );
             ok( len == strlen(sid), "unexpected length %u\n", len );
         }
-        if (!strcmp( product3, guid ))
+        else if (!strcmp( product3, guid ))
         {
             ok( context == MSIINSTALLCONTEXT_USERUNMANAGED, "got %u\n", context );
             ok( sid[0], "empty sid\n" );
             ok( len == strlen(sid), "unexpected length %u\n", len );
+        }
+        else
+        {
+            trace("Unexpected guid: %s (have %s | %s | %s)\n", guid, product1, product2, product3);
+            ok(context != MSIINSTALLCONTEXT_NONE, "got %u\n", context);
+            ok(sid[0], "empty sid\n");
+            ok(len == strlen(sid), "unexpected length %u\n", len);
         }
         index++;
         guid[0] = 0;

@@ -657,6 +657,7 @@ static void test_EM_POSFROMCHAR(void)
     }
     else
     {
+      ros_skip_flaky
       ok(HIWORD(result) == i * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", HIWORD(result), i * height);
       ok(LOWORD(result) == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", LOWORD(result));
     }

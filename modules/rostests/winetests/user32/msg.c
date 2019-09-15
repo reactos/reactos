@@ -10070,6 +10070,7 @@ static void test_timers(void)
     start = GetTickCount();
     while (GetTickCount()-start < 1001 && GetMessageA(&msg, info.hWnd, 0, 0))
         DispatchMessageA(&msg);
+ros_skip_flaky
 todo_wine
     ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE /* xp */
        || broken(abs(count-64) < TIMER_COUNT_TOLERANCE) /* most common */
@@ -16546,6 +16547,7 @@ static void test_hotkey(void)
     keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
     {
+        ros_skip_flaky
         ok(msg.hwnd != NULL, "unexpected thread message %x\n", msg.message);
         DispatchMessageA(&msg);
     }
