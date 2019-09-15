@@ -10,9 +10,12 @@
 START_TEST(QueryPoints)
 {
     BOOL Ret;
-    DWORD BytesReturned;
     HANDLE MountMgrHandle;
-    MOUNTMGR_MOUNT_POINT SinglePoint;
+    DWORD BytesReturned, Drives, i;
+    struct {
+        MOUNTMGR_MOUNT_POINT;
+        WCHAR Buffer[sizeof(L"\\DosDevice\\A:")];
+    } SinglePoint;
     MOUNTMGR_MOUNT_POINTS MountPoints;
     PMOUNTMGR_MOUNT_POINTS AllocatedPoints;
 
@@ -26,7 +29,7 @@ START_TEST(QueryPoints)
         return;
     }
 
-    ZeroMemory(&SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT));
+    ZeroMemory(&SinglePoint, sizeof(SinglePoint));
 
     Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
                           &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
@@ -39,16 +42,52 @@ START_TEST(QueryPoints)
     if (AllocatedPoints == NULL)
     {
         win_skip("Insufficiant memory\n");
+    }
+    else
+    {
+        Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
+                              &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
+                              AllocatedPoints, MountPoints.Size,
+                              &BytesReturned, NULL);
+        ok(Ret == TRUE, "IOCTL unexpectedly failed %lx\n", GetLastError());
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPoints);
+    }
+
+    Drives = GetLogicalDrives();
+    if (Drives == 0)
+    {
+        win_skip("Drives map unavailable: %lx\n", GetLastError());
         goto Done;
     }
 
-    Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
-                          &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
-                          AllocatedPoints, MountPoints.Size,
-                          &BytesReturned, NULL);
-    ok(Ret == TRUE, "IOCTL unexpectedly failed %lx\n", GetLastError());
+    for (i = 0; i < 26; i++)
+    {
+        if (!(Drives & (1 << i)))
+        {
+            break;
+        }
+    }
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPoints);
+    if (i == 26)
+    {
+        win_skip("All the drive letters are in use, skipping\n");
+        goto Done;
+    }
+
+    SinglePoint.SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
+    SinglePoint.SymbolicLinkNameLength = sizeof(L"\\DosDevice\\A:") - sizeof(UNICODE_NULL);
+    StringCbPrintfW((PWSTR)((ULONG_PTR)&SinglePoint + sizeof(MOUNTMGR_MOUNT_POINT)),
+                    sizeof(L"\\DosDevice\\A:"),
+                    L"\\DosDevice\\%C:",
+                    i + L'A');
+
+    Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
+                          &SinglePoint, sizeof(SinglePoint),
+                          &MountPoints, sizeof(MOUNTMGR_MOUNT_POINTS),
+                          &BytesReturned, NULL);
+    ok(Ret == FALSE, "IOCTL unexpectedly succeed\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Unexcepted failure: %lx\n", GetLastError());
 
 Done:
     CloseHandle(MountMgrHandle);
