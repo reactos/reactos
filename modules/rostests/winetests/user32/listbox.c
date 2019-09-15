@@ -1720,6 +1720,7 @@ static void test_listbox_dlgdir(void)
         memset(tempBuffer, 0, MAX_PATH);
         driveletter = '\0';
         SendMessageA(g_listBox, LB_GETTEXT, i, (LPARAM)itemBuffer);
+        if (!strstr(itemBuffer, ".exe")) continue; // skip downloaded/generated files from other tests
         res = SendMessageA(g_listBox, LB_SETCURSEL, i, 0);
         ok (res == i, "SendMessageA(LB_SETCURSEL, %d) failed\n", i);
         if (sscanf(itemBuffer, "[-%c-]", &driveletter) == 1) {

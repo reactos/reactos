@@ -74,10 +74,12 @@ static void test_connect(HINTERNET hInternet)
     hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", NULL, INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     if (hFtp)  /* some servers accept an empty password */
     {
+        ros_skip_flaky
         ok ( GetLastError() == ERROR_SUCCESS, "ERROR_SUCCESS, got %d\n", GetLastError());
         InternetCloseHandle(hFtp);
     }
     else
+        ros_skip_flaky
         ok ( GetLastError() == ERROR_INTERNET_LOGIN_FAILURE,
              "Expected ERROR_INTERNET_LOGIN_FAILURE, got %d\n", GetLastError());
 
@@ -109,7 +111,9 @@ static void test_connect(HINTERNET hInternet)
         SetLastError(0xdeadbeef);
         hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     }
+    ros_skip_flaky
     ok ( hFtp != NULL, "InternetConnect failed : %d\n", GetLastError());
+    ros_skip_flaky
     ok ( GetLastError() == ERROR_SUCCESS,
         "ERROR_SUCCESS, got %d\n", GetLastError());
     InternetCloseHandle(hFtp);
@@ -119,11 +123,13 @@ static void test_connect(HINTERNET hInternet)
             INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     if (!hFtp)
     {
+        ros_skip_flaky
         ok(GetLastError() == ERROR_INTERNET_LOGIN_FAILURE,
                 "Expected ERROR_INTERNET_LOGIN_FAILURE, got %d\n", GetLastError());
     }
     else
     {
+        ros_skip_flaky
         ok(GetLastError() == ERROR_SUCCESS,
                 "Expected ERROR_SUCCESS, got %d\n", GetLastError());
         InternetCloseHandle(hFtp);

@@ -5586,8 +5586,8 @@ static void test_SetDIBitsToDevice_RLE8(void)
     for (i = 0; i < 24; i++) ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
     for (i = 24; i < 64; i++)
         if (i == 52) ok( dib_bits[i] == 0x00808080, "%d: got %08x\n", i, dib_bits[i] );
-        else if (i & 4) ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
-        else ok( dib_bits[i] == bottom_up[i - 20], "%d: got %08x\n", i, dib_bits[i] );
+        else if (i & 4) ros_skip_flaky ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
+        else ros_skip_flaky ok(dib_bits[i] == bottom_up[i - 20], "%d: got %08x\n", i, dib_bits[i]);
     memset( dib_bits, 0xaa, 64 * 4 );
 
     /* top-down compressed dibs are invalid */
@@ -5653,8 +5653,8 @@ static void test_SetDIBitsToDevice_RLE8(void)
     ok( ret == 37, "got %d\n", ret );
     for (i = 0; i < 40; i++)
         if (i == 12) ok( dib_bits[i] == 0x00808080, "%d: got %08x\n", i, dib_bits[i] );
-        else if (i & 4) ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
-        else ok( dib_bits[i] == top_down[i + 28], "%d: got %08x\n", i, dib_bits[i] );
+        else if (i & 4) ros_skip_flaky ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
+        else ros_skip_flaky ok( dib_bits[i] == top_down[i + 28], "%d: got %08x\n", i, dib_bits[i] );
     for (i = 40; i < 64; i++) ok( dib_bits[i] == 0xaaaaaaaa, "%d: got %08x\n", i, dib_bits[i] );
     memset( dib_bits, 0xaa, 64 * 4 );
 

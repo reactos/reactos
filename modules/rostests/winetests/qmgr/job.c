@@ -359,6 +359,7 @@ static void test_CompleteLocal(void)
     hres = IBackgroundCopyJob_Resume(test_job);
     ok(hres == S_OK, "IBackgroundCopyJob_Resume\n");
 
+    disable_success_count
     for (i = 0; i < timeout_sec; ++i)
     {
         hres = IBackgroundCopyJob_GetState(test_job, &state);
@@ -428,6 +429,7 @@ static void test_CompleteLocalURL(void)
     hres = IBackgroundCopyJob_Resume(test_job);
     ok(hres == S_OK, "IBackgroundCopyJob_Resume\n");
 
+    disable_success_count
     for (i = 0; i < timeout_sec; ++i)
     {
         hres = IBackgroundCopyJob_GetState(test_job, &state);
@@ -570,6 +572,7 @@ static void test_HttpOptions(void)
     hr = IBackgroundCopyJob_Resume(test_job);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
+    disable_success_count
     for (i = 0; i < timeout; i++)
     {
         hr = IBackgroundCopyJob_GetState(test_job, &state);

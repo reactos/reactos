@@ -1553,7 +1553,9 @@ pointer_tests(void)
       names = NULL;
       get_names(&n, &names);
       ok(n == 2, "expected 2, got %d\n", n);
+      ros_skip_flaky
       ok(!strcmp(names[0], "Hello"), "expected Hello, got %s\n", names[0]);
+      ros_skip_flaky
       ok(!strcmp(names[1], "World!"), "expected World!, got %s\n", names[1]);
       MIDL_user_free(names[0]);
       MIDL_user_free(names[1]);
@@ -1563,7 +1565,9 @@ pointer_tests(void)
       namesw = NULL;
       get_namesw(&n, &namesw);
       ok(n == 2, "expected 2, got %d\n", n);
+      ros_skip_flaky
       ok(!lstrcmpW(namesw[0], helloW), "expected Hello, got %s\n", wine_dbgstr_w(namesw[0]));
+      ros_skip_flaky
       ok(!lstrcmpW(namesw[1], worldW), "expected World!, got %s\n", wine_dbgstr_w(namesw[1]));
       MIDL_user_free(namesw[0]);
       MIDL_user_free(namesw[1]);
@@ -1573,6 +1577,7 @@ pointer_tests(void)
 
   if (!is_interp) { /* broken in widl */
   pa2 = a;
+  ros_skip_flaky
   ok(sum_pcarr2(4, &pa2) == 10, "RPC sum_pcarr2\n");
   }
 

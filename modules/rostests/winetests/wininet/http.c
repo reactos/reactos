@@ -351,6 +351,7 @@ static VOID WINAPI callback(
      DWORD dwStatusInformationLength
 )
 {
+    ros_skip_flaky
     CHECK_EXPECT(dwInternetStatus);
     switch (dwInternetStatus)
     {
@@ -4800,9 +4801,11 @@ static void test_async_read(int port)
         ret = InternetReadFileExA( req, &ib, 0, 0xdeadbeef );
         if (!count) /* the first part should arrive immediately */
             ok( ret, "InternetReadFileExA failed %u\n", GetLastError() );
+        ros_skip_flaky
         if (!ret)
         {
             ok( GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %u\n", GetLastError() );
+            ros_skip_flaky
             CHECK_NOTIFIED( INTERNET_STATUS_RECEIVING_RESPONSE );
             SET_EXPECT( INTERNET_STATUS_REQUEST_COMPLETE );
             if (!pending_reads++)
@@ -4891,6 +4894,7 @@ static void test_async_read(int port)
         {
             ok( GetLastError() == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %u\n", GetLastError() );
             ok( bytes == 0, "expected 0, got %u\n", bytes );
+            ros_skip_flaky
             CHECK_NOTIFIED( INTERNET_STATUS_RECEIVING_RESPONSE );
             SET_EXPECT( INTERNET_STATUS_REQUEST_COMPLETE );
             if (!pending_reads++)
@@ -4902,9 +4906,13 @@ static void test_async_read(int port)
             res = WaitForSingleObject( complete_event, INFINITE );
             ok( res == WAIT_OBJECT_0, "expected WAIT_OBJECT_0, got %u\n", res );
             ok( req_error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", req_error );
+            ros_skip_flaky {
             todo_wine_if( pending_reads > 1 )
             ok( bytes != 0, "expected bytes != 0\n" );
+            }
+            ros_skip_flaky
             CHECK_NOTIFIED( INTERNET_STATUS_RESPONSE_RECEIVED );
+            ros_skip_flaky
             CHECK_NOTIFIED( INTERNET_STATUS_REQUEST_COMPLETE );
         }
 
@@ -4913,6 +4921,7 @@ static void test_async_read(int port)
         if (!bytes) break;
     }
 
+    ros_skip_flaky
     ok( pending_reads == 1, "expected 1 pending read, got %u\n", pending_reads );
     ok( !strcmp(buffer, page1), "unexpected buffer content\n" );
     close_async_handle( ses, 2 );
@@ -6160,6 +6169,7 @@ static void test_security_flags(void)
     }
     HeapFree(GetProcessHeap(), 0, cert);
 
+    ros_skip_flaky
     CHECK_NOTIFIED2(INTERNET_STATUS_CONNECTING_TO_SERVER, 2);
     CHECK_NOTIFIED2(INTERNET_STATUS_CONNECTED_TO_SERVER, 2);
     CHECK_NOTIFIED2(INTERNET_STATUS_CLOSING_CONNECTION, 2);
