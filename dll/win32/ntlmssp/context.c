@@ -332,21 +332,18 @@ CliCreateContext(
     if(ISCContextReq & ISC_REQ_INTEGRITY)
     {
         *pISCContextAttr |= ISC_RET_INTEGRITY;
-        context->ISCRetContextFlags |= ISC_RET_INTEGRITY;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(ISCContextReq & ISC_REQ_SEQUENCE_DETECT)
     {
         *pISCContextAttr |= ISC_RET_SEQUENCE_DETECT;
-        context->ISCRetContextFlags |= ISC_RET_SEQUENCE_DETECT;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
     if(ISCContextReq & ISC_REQ_REPLAY_DETECT)
     {
         *pISCContextAttr |= ISC_RET_REPLAY_DETECT;
-        context->ISCRetContextFlags |= ISC_RET_REPLAY_DETECT;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
@@ -358,26 +355,22 @@ CliCreateContext(
                            NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         *pISCContextAttr |= ISC_RET_CONFIDENTIALITY;
-        context->ISCRetContextFlags |= ISC_RET_CONFIDENTIALITY;
     }
 
     if(ISCContextReq & ISC_REQ_NULL_SESSION)
     {
         *pISCContextAttr |= ISC_RET_NULL_SESSION;
-        context->ISCRetContextFlags |= ISC_RET_NULL_SESSION;
     }
 
     if(ISCContextReq & ISC_REQ_CONNECTION)
     {
         *pISCContextAttr |= ISC_RET_CONNECTION;
-        context->ISCRetContextFlags |= ISC_RET_CONNECTION;
     }
 
     if(ISCContextReq & ISC_REQ_IDENTIFY)
     {
         context->NegFlg |= NTLMSSP_REQUEST_INIT_RESP;
         *pISCContextAttr |= ISC_RET_IDENTIFY;
-        context->ISCRetContextFlags |= ISC_RET_IDENTIFY;
     }
 
     if (ISCContextReq & ISC_REQ_DATAGRAM)
@@ -385,7 +378,6 @@ CliCreateContext(
         /* datagram flags */
         context->NegFlg |= NTLMSSP_NEGOTIATE_DATAGRAM;
         context->NegFlg &= ~NTLMSSP_NEGOTIATE_NT_ONLY;
-        context->ISCRetContextFlags |= ISC_RET_DATAGRAM;
         *pISCContextAttr |= ISC_RET_DATAGRAM;
 
         /* generate session key */

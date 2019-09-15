@@ -120,8 +120,7 @@ CliGenerateNegotiateMessage(
     {
         FIXME("try use local cached credentials?\n");
         context->NegFlg |= NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED |
-                           NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED |
-                           NTLMSSP_NEGOTIATE_LOCAL_CALL;
+                           NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED;
 
         NtlmExtStringToBlob((PVOID)message,
                             &g->NbMachineNameOEM,
@@ -152,13 +151,16 @@ CliGenerateNegotiateMessage(
 }
 
 SECURITY_STATUS
-NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
-                             IN PNTLMSSP_CREDENTIAL Credentials,
-                             IN ULONG ASCContextReq,
-                             IN EXT_STRING TargetName,
-                             IN ULONG MessageFlags,
-                             OUT PSecBuffer OutputToken)
+SvrGenerateChallengeMessage(
+    IN PNTLMSSP_CONTEXT_SVR Context,
+    IN PNTLMSSP_CREDENTIAL Credentials,
+    IN ULONG ASCContextReq,
+    IN ULONG ASCRequestedFlags,
+    IN ULONG negoMsgNegotiateFlags,
+    IN EXT_STRING TargetNameRef,
+    OUT PSecBuffer OutputToken)
 {
+    SECURITY_STATUS ret = SEC_I_CONTINUE_NEEDED;
     PCHALLENGE_MESSAGE chaMessage = NULL;
     ULONG messageSize, offset;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
@@ -175,8 +177,8 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     /* compute message size */
     messageSize = sizeof(CHALLENGE_MESSAGE) +
                   gsvr->NtlmAvTargetInfoPart.bUsed +
-                  sizeof(targetInfoEnd)+
-                  TargetName.bUsed;
+                  sizeof(targetInfoEnd) +
+                  TargetNameRef.bUsed;
 
     ERR("generating chaMessage of size %lu\n", messageSize);
 
@@ -208,11 +210,42 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
      * MS-NLMP 3.2.5.1.1 */
     strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     chaMessage->MsgType = NtlmChallenge;
-    chaMessage->NegotiateFlags = gsvr->CfgFlg |
-                                 NTLMSSP_REQUEST_TARGET |
-                                 NTLMSSP_NEGOTIATE_NTLM |
-                                 NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                                 NTLMSSP_NEGOTIATE_UNICODE;
+    /* Anyway i think spec (3.2.5.1.1) is here misleading
+     * It says set
+     * - chaMessage->NegotiateFlags to gsrv-CfgFlg | supported flags from nego-message
+     * - In CfgFlg we SHOULD have all supported flags. So we can ignore nego-message-flags?
+     * -> Sould be true for DATAGRAM-Mode
+     * 2.2.1.2 should be the right way to do (not DTAGRAM).
+     * - select supported flags from nego message flags
+     * -> connection oriented mode (not DATAGRAM)
+     * */
+    /* CONNECTION-MODE -> not gsvr-CfgFlg -> nur was supported!
+     * + SYNC WITH CONTEXT!
+     * */
+    if (ASCContextReq & ASC_REQ_DATAGRAM)
+    {
+        /* ignore negoMsgNegotiateFlags - should be 0 */
+        chaMessage->NegotiateFlags = gsvr->CfgFlg |
+                                     NTLMSSP_REQUEST_TARGET |
+                                     NTLMSSP_NEGOTIATE_NTLM |
+                                     NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                                     NTLMSSP_NEGOTIATE_UNICODE;
+    }
+    else
+    {
+        chaMessage->NegotiateFlags = negoMsgNegotiateFlags;
+        ValidateNegFlg(gsvr->CfgFlg, &chaMessage->NegotiateFlags, TRUE);
+        /* check: do we use all requested flags */
+        if (!ValidateNegFlg(chaMessage->NegotiateFlags, &ASCRequestedFlags, FALSE))
+        {
+            ERR("Server-App request for flags that are not negotiated!\n");
+            return SEC_E_INVALID_TOKEN;
+        }
+    }
+
+    // MS-NLMP 3.2.5.1.1
+    chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_TARGET_INFO |
+                                  NTLMSSP_REQUEST_TARGET;
 
     /* generate server challenge */
     NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -224,8 +257,8 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
 
     /* set target information */
     ERR("set target information chaMessage %p to len %d, offset %x\n",
-        chaMessage, TargetName.bUsed, offset);
-    NtlmExtStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
+        chaMessage, TargetNameRef.bUsed, offset);
+    NtlmExtStringToBlob((PVOID)chaMessage, &TargetNameRef, &chaMessage->TargetName, &offset);
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
         gsvr->NtlmAvTargetInfoPart.bUsed, offset);
@@ -238,11 +271,11 @@ NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT_SVR Context,
     targetInfoEnd.avpEol.AvLen = 0;
     NtlmAppendToBlob(&targetInfoEnd, sizeof(targetInfoEnd), &chaMessage->TargetInfo, &offset);
 
-    chaMessage->NegotiateFlags |= MessageFlags;
-
     /* set state */
     Context->hdr.State = ChallengeSent;
-    return SEC_I_CONTINUE_NEEDED;
+    Context->cli_NegFlg = chaMessage->NegotiateFlags;
+
+    return ret;
 }
 
 SECURITY_STATUS
@@ -261,18 +294,15 @@ SvrHandleNegotiateMessage(
     PNEGOTIATE_MESSAGE negoMessage = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     PNTLMSSP_CONTEXT_SVR context = NULL;
-    PEXT_STRING pRawTargetNameRef = NULL;
+    EXT_STRING TargetNameRef;
     EXT_STRING_A OemDomainName, OemWorkstationName;
-    ULONG negotiateFlags = 0;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
     PNTLMSSP_GLOBALS g = getGlobals();
+    ULONG ASCRequestedFlags = 0;
 
     ExtAStrInit(&OemDomainName, NULL);
     ExtAStrInit(&OemWorkstationName, NULL);
-
-    /* It seems these flags are always returned */
-    *pASCContextAttr = ASC_RET_REPLAY_DETECT |
-                       ASC_RET_SEQUENCE_DETECT;
+    ExtWStrInit(&TargetNameRef, NULL);
 
     if (*phContext == 0)
     {
@@ -318,12 +348,8 @@ SvrHandleNegotiateMessage(
         goto exit;
     }
 
-    negotiateFlags = negoMessage->NegotiateFlags;
-
     TRACE("Got valid nego message! with flags:\n");
-    NtlmPrintNegotiateFlags(negotiateFlags);
-    /* remove unsupported flags */
-    ValidateNegFlg(gsvr->CfgFlg, &negotiateFlags, TRUE);
+    NtlmPrintNegotiateFlags(negoMessage->NegotiateFlags);
 
     /* get credentials */
     if(!(cred = NtlmReferenceCredential(hCredential)))
@@ -340,8 +366,40 @@ SvrHandleNegotiateMessage(
         goto exit;
     }
 
-    /* convert flags */
-    if(ASCContextReq & ASC_REQ_IDENTIFY)
+    /* in connection oriented mode (non-DATAGRAM)
+     * most of the ContextReq-flags are ignored.
+     * So we have to implement only the following flags
+     *   ASC_REQ_DATAGRAM - TODO
+     *   ASC_REQ_LICENSING - maybe no need to implement
+     *   ASC_REQ_ALLOW_NULL_SESSION - TODO
+     *   ASC_REQ_ALLOCATE_MEMORY - works */
+    if (ASCContextReq & ASC_REQ_DATAGRAM)
+    {
+        /* FIXME */
+        FIXME("DATAGRAM authentication not supported!\n");
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+        goto exit;
+    }
+    if (ASCContextReq & ASC_REQ_LICENSING)
+        TRACE("Ignoring ContextReq ASC_REQ_LICENSING!\n");
+    if (ASCContextReq & ASC_REQ_ALLOW_NULL_SESSION)
+    {
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+        goto exit;
+    }
+
+    /* get Target-name */
+    ExtWStrInit(&TargetNameRef, NULL);
+
+    /* convert flags
+     * Commented out ... code has no effect ...
+     * I have to figure out what to do with these flags ...
+     * Seems these dosn't have any effet. Maybe this
+     * changes if ASC_REQ_DATAGRAM is included ...
+     * and maybe the logic is the same as for
+     * InitializeSecurityContext ... todo figure out
+     */
+    /*if(ASCContextReq & ASC_REQ_IDENTIFY)
     {
         *pASCContextAttr |= ASC_RET_IDENTIFY;
         context->ASCRetContextFlags |= ASC_RET_IDENTIFY;
@@ -386,31 +444,20 @@ SvrHandleNegotiateMessage(
     {
         *pASCContextAttr |= ASC_RET_ALLOW_NON_USER_LOGONS;
         context->ASCRetContextFlags |= ASC_RET_ALLOW_NON_USER_LOGONS;
-    }
+    }*/
 
-    /* encryption */
-    if(ASCContextReq & ASC_REQ_CONFIDENTIALITY)
+    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
+        negoMessage->NegotiateFlags & NTLMSSP_REQUEST_TARGET)
     {
-        *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
-        context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
-    }
-
-    if (negotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
-        negotiateFlags & NTLMSSP_REQUEST_TARGET)
-    {
-        negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER |
-                          NTLMSSP_REQUEST_TARGET |
-                          NTLMSSP_NEGOTIATE_TARGET_INFO;
-
-        if (negotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
+        //negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER;
+        if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
-            //negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
-            pRawTargetNameRef = (PEXT_STRING)&gsvr->NbMachineName;
+            TargetNameRef = gsvr->NbMachineName;
         }
-        else if (negotiateFlags & NTLMSSP_NEGOTIATE_OEM)
+        else if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
             //negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
-            pRawTargetNameRef = (PEXT_STRING)&g->NbMachineNameOEM;
+            TargetNameRef = g->NbMachineNameOEM;
         }
         else
         {
@@ -421,7 +468,7 @@ SvrHandleNegotiateMessage(
     }
 
     /* check for local call */
-    if ((negotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
+    /*if ((negotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
         (negotiateFlags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED))
     {
         NtlmCreateExtAStrFromBlob(InputToken, negoMessage->OemDomainName,
@@ -435,44 +482,7 @@ SvrHandleNegotiateMessage(
             TRACE("local negotiate detected!\n");
             negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
         }
-    }
-
-    /* compute negotiate message flags */
-    if (negotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
-    {
-        negotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
-        //negotiateFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
-    }
-    //else if (negotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY)
-    //{
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_LM_KEY;
-    //}
-
-    //if (negotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
-
-    //if (negotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
-    //{
-    //    *pASCContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-    //    context->ASCRetContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
-    //}
-
-    //if (negotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
-    //{
-    //    *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
-    //    context->ASCRetContextFlags |= ASC_RET_CONFIDENTIALITY;
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
-    //}
-
-    //if (negotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
-
-    /* client requested encryption */
-    //if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_128)
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_128;
-    //else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_56)
-    //    negotiateFlags |= NTLMSSP_NEGOTIATE_56;
+    }*/
 
     //if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
     //{
@@ -481,12 +491,28 @@ SvrHandleNegotiateMessage(
     //    negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
     //}
 
-    ret = NtlmGenerateChallengeMessage(context,
-                                       cred,
-                                       ASCContextReq,
-                                       *pRawTargetNameRef,
-                                       negotiateFlags,
-                                       OutputToken);
+    /* convert ASCContextReq to flags we MUST support! */
+    if (ASCContextReq & ASC_REQ_CONFIDENTIALITY)
+        ASCRequestedFlags |= NTLMSSP_NEGOTIATE_SEAL;
+    if (ASCContextReq & ASC_REQ_INTEGRITY)
+        ASCRequestedFlags |= NTLMSSP_NEGOTIATE_SIGN;
+
+    ret = SvrGenerateChallengeMessage(context,
+                                      cred,
+                                      ASCContextReq,
+                                      ASCRequestedFlags,
+                                      negoMessage->NegotiateFlags,
+                                      TargetNameRef,
+                                      OutputToken);
+
+    /* It seems these flags are always returned */
+    *pASCContextAttr = ASC_RET_REPLAY_DETECT |
+                       ASC_RET_SEQUENCE_DETECT;
+
+    if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SEAL)
+        *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
+    if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
+        *pASCContextAttr |= ASC_RET_INTEGRITY;
 
 exit:
     if(negoMessage) NtlmFree(negoMessage);

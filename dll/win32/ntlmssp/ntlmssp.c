@@ -226,7 +226,6 @@ NtlmInitializeGlobals(VOID)
                    NTLMSSP_NEGOTIATE_UNICODE |
                    NTLMSSP_NEGOTIATE_OEM |
                    NTLMSSP_NEGOTIATE_NTLM |
-                   NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
                    NTLMSSP_REQUEST_TARGET |
                    NTLMSSP_TARGET_TYPE_SERVER |
                    NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
@@ -237,6 +236,8 @@ NtlmInitializeGlobals(VOID)
                    NTLMSSP_NEGOTIATE_KEY_EXCH |
                    NTLMSSP_NEGOTIATE_56 |
                    NTLMSSP_NEGOTIATE_128;
+    if (gcli->CliLMLevel & CLI_LMFLAG_USE_SSEC_NTLMv2)
+        gcli->ClientConfigFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
     if(!GetComputerNameW(compName, &compNamelen))
     {

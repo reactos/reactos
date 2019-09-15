@@ -253,9 +253,6 @@ typedef struct _NTLMSSP_CONTEXT_CLI
     ULONG NegFlg;
     // TODO ... rename according to spec
     BOOL isLocal;
-    /* FIXME: These flags are only assigned, never used ... remove? */
-    ULONG ISCRetContextFlags;
-    ULONG ASCRetContextFlags;
     PNTLMSSP_CREDENTIAL Credential;
     UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
     UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
