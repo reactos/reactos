@@ -26,31 +26,31 @@ static LPCSTR D3dError_WrongSdkVersion =
 
 HRESULT WINAPI Direct3DShaderValidatorCreate9(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
 HRESULT WINAPI PSGPError(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
 HRESULT WINAPI PSGPSampleTexture(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
 HRESULT WINAPI DebugSetLevel(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
 HRESULT WINAPI DebugSetMute(DWORD dw1)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 

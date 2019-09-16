@@ -24,7 +24,7 @@ BOOL IsExtendedFormat(D3DFORMAT Format)
 
 BOOL IsZBufferFormat(D3DFORMAT Format)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return TRUE;
 }

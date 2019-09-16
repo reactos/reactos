@@ -64,7 +64,9 @@
  * #defines and error codes
  */
 #define D3D_SDK_VERSION                         32
+#define D3D9b_SDK_VERSION                       31
 #define D3DADAPTER_DEFAULT                      0
+#define D3DENUM_WHQL_LEVEL                      0x00000002L
 #define D3DENUM_NO_WHQL_LEVEL                   0x00000002L
 #define D3DPRESENT_DONOTWAIT                    1L
 #define D3DPRESENT_LINEAR_CONTENT               2L
