@@ -19,14 +19,15 @@ typedef struct _PROFILEDATA
     DWORD dwRefCount;
     DWORD dwState;
     PWSTR pszFullName;
+    PWSTR pszProfilePath;
 } PROFILEDATA, *PPROFILEDATA;
 
 
 static
 BOOL
 OnProfileTypeInit(
-    HWND hwndDlg,
-    PPROFILEDATA pProfileData)
+    _In_ HWND hwndDlg,
+    _In_ PPROFILEDATA pProfileData)
 {
     PWSTR pszRawBuffer = NULL, pszCookedBuffer = NULL;
     INT nLength;
@@ -326,8 +327,8 @@ SetListViewColumns(
 static
 BOOL
 GetProfileSize(
-    PWSTR pszProfilePath,
-    PULONGLONG pullProfileSize)
+    _In_ PWSTR pszProfilePath,
+    _Inout_ PULONGLONG pullProfileSize)
 {
     HANDLE hFile = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATA FindData;
@@ -433,7 +434,9 @@ GetProfileName(
 
 static
 VOID
-FormatProfileSize(LPWSTR Buffer, double size)
+FormatProfileSize(
+    _Out_ LPWSTR Buffer,
+    _In_ double size)
 {
     const LPWSTR units[] = {L"MB", L"GB", L"TB"};
     int i = 0, j;
@@ -547,7 +550,8 @@ AddUserProfile(
 
     /* Create and fill the profile data entry */
     dwProfileData = sizeof(PROFILEDATA) +
-                    ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
+                    ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR)) +
+                    ((wcslen(szProfilePath) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
                              HEAP_ZERO_MEMORY,
                              dwProfileData);
@@ -561,6 +565,10 @@ AddUserProfile(
     pProfileData->pszFullName = ptr;
 
     wcscpy(pProfileData->pszFullName, szNameBuffer);
+
+    ptr = (PWSTR)((ULONG_PTR)ptr + ((wcslen(pProfileData->pszFullName) + 1) * sizeof(WCHAR)));
+    pProfileData->pszProfilePath = ptr;
+    wcscpy(pProfileData->pszProfilePath, szProfilePath);
 
     /* Add the profile and set its name */
     memset(&lvi, 0x00, sizeof(lvi));
