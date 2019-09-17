@@ -58,7 +58,7 @@ BOOLEAN PcFindPciBios(PPCI_REGISTRY_INFO BusData);
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
 
-VOID DiskReportError(BOOLEAN bError);
+LONG DiskReportError(BOOLEAN bShowError);
 BOOLEAN DiskResetController(UCHAR DriveNumber);
 BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
 

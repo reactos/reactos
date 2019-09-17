@@ -55,9 +55,9 @@ static const struct
     {"ReactOSSetup", EditCustomBootReactOSSetup, LoadReactOSSetup},
 
 #ifdef _M_IX86
-    {"Drive"       , EditCustomBootDisk      , LoadAndBootDrive     },
-    {"Partition"   , EditCustomBootPartition , LoadAndBootPartition },
-    {"BootSector"  , EditCustomBootSectorFile, LoadAndBootBootSector},
+    {"Drive"       , EditCustomBootDisk      , LoadAndBootDevice},
+    {"Partition"   , EditCustomBootPartition , LoadAndBootDevice},
+    {"BootSector"  , EditCustomBootSectorFile, LoadAndBootDevice},
 
     {"Linux"       , EditCustomBootLinux, LoadAndBootLinux  },
     {"WindowsNT40" , EditCustomBootNTOS , LoadAndBootWindows},

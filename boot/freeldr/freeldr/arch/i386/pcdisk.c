@@ -75,11 +75,14 @@ typedef struct
 
 /* DISK IO ERROR SUPPORT *****************************************************/
 
-static BOOLEAN bReportError = TRUE;
+static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
 
-VOID DiskReportError(BOOLEAN bError)
+LONG DiskReportError(BOOLEAN bShowError)
 {
-    bReportError = bError;
+    /* Set the reference count */
+    if (bShowError) ++lReportError;
+    else            --lReportError;
+    return lReportError;
 }
 
 static PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
@@ -121,7 +124,7 @@ static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 {
     CHAR ErrorCodeString[200];
 
-    if (bReportError == FALSE)
+    if (lReportError < 0)
         return;
 
     sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",

@@ -25,24 +25,23 @@
 
 /* FUNCTIONS ******************************************************************/
 
-ARC_STATUS
-LoadAndBootBootSector(
+static ARC_STATUS
+LoadBootSector(
     IN ULONG Argc,
     IN PCHAR Argv[],
-    IN PCHAR Envp[])
+    OUT PUCHAR DriveNumber,
+    OUT PULONG PartitionNumber)
 {
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR BootPath;
     PCSTR FileName;
-    UCHAR DriveNumber = 0;
-    ULONG PartitionNumber = 0;
     ULONG FileId;
     ULONG BytesRead;
     CHAR ArcPath[MAX_PATH];
 
-    /* Find all the message box settings and run them */
-    UiShowMessageBoxesInArgv(Argc, Argv);
+    *DriveNumber = 0;
+    *PartitionNumber = 0;
 
     /*
      * Check whether we have a "BootPath" value (takes precedence
@@ -57,21 +56,21 @@ LoadAndBootBootSector(
         ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
         if (ArgValue && *ArgValue)
         {
-            DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+            *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
             /* Retrieve the boot partition (not optional and cannot be zero) */
-            PartitionNumber = 0;
+            *PartitionNumber = 0;
             ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
             if (ArgValue && *ArgValue)
-                PartitionNumber = atoi(ArgValue);
-            if (PartitionNumber == 0)
+                *PartitionNumber = atoi(ArgValue);
+            if (*PartitionNumber == 0)
             {
                 UiMessageBox("Boot partition cannot be 0!");
                 return EINVAL;
             }
 
             /* Construct the corresponding ARC path */
-            ConstructArcPath(ArcPath, "", DriveNumber, PartitionNumber);
+            ConstructArcPath(ArcPath, "", *DriveNumber, *PartitionNumber);
             *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
 
             BootPath = ArcPath;
@@ -115,18 +114,17 @@ LoadAndBootBootSector(
         return ENOEXEC;
     }
 
-    UiUnInitialize("Booting...");
-    IniCleanup();
+    /* Reset the drive and partition numbers so as to use their default values */
+    *DriveNumber = 0;
+    *PartitionNumber = 0;
 
-    ChainLoadBiosBootSectorCode(0 /*DriveNumber*/, 0 /*PartitionNumber*/);
-    /* Must not return! */
     return ESUCCESS;
 }
 
 static ARC_STATUS
-LoadAndBootPartitionOrDrive(
-    IN UCHAR DriveNumber,
-    IN ULONG PartitionNumber OPTIONAL,
+LoadPartitionOrDrive(
+    IN OUT PUCHAR DriveNumber,
+    IN OUT PULONG PartitionNumber,
     IN PCSTR BootPath OPTIONAL)
 {
     ARC_STATUS Status;
@@ -135,8 +133,8 @@ LoadAndBootPartitionOrDrive(
     CHAR ArcPath[MAX_PATH];
 
     /*
-     * If the user specifies an ARC "BootPath" value, it takes precedence
-     * over both the DriveNumber and PartitionNumber options.
+     * The ARC "BootPath" value takes precedence over
+     * both the DriveNumber and PartitionNumber options.
      */
     if (BootPath && *BootPath)
     {
@@ -146,7 +144,7 @@ LoadAndBootPartitionOrDrive(
          * Retrieve the BIOS drive and partition numbers; verify also that the
          * path is "valid" in the sense that it must not contain any file name.
          */
-        if (!DissectArcPath(BootPath, &FileName, &DriveNumber, &PartitionNumber) ||
+        if (!DissectArcPath(BootPath, &FileName, DriveNumber, PartitionNumber) ||
             (FileName && *FileName))
         {
             return EINVAL;
@@ -155,7 +153,7 @@ LoadAndBootPartitionOrDrive(
     else
     {
         /* We don't have one, so construct the corresponding ARC path */
-        ConstructArcPath(ArcPath, "", DriveNumber, PartitionNumber);
+        ConstructArcPath(ArcPath, "", *DriveNumber, *PartitionNumber);
         *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
 
         BootPath = ArcPath;
@@ -177,7 +175,7 @@ LoadAndBootPartitionOrDrive(
     ArcClose(FileId);
     if ((Status != ESUCCESS) || (BytesRead != 512))
     {
-        if (PartitionNumber != 0)
+        if (*PartitionNumber != 0)
             UiMessageBox("Unable to load partition's boot sector.");
         else
             UiMessageBox("Unable to load MBR boot sector.");
@@ -191,27 +189,21 @@ LoadAndBootPartitionOrDrive(
         return ENOEXEC;
     }
 
-    UiUnInitialize("Booting...");
-    IniCleanup();
-
-    ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
-    /* Must not return! */
     return ESUCCESS;
 }
 
-ARC_STATUS
-LoadAndBootPartition(
+static ARC_STATUS
+LoadPartition(
     IN ULONG Argc,
     IN PCHAR Argv[],
-    IN PCHAR Envp[])
+    OUT PUCHAR DriveNumber,
+    OUT PULONG PartitionNumber)
 {
     PCSTR ArgValue;
     PCSTR BootPath;
-    UCHAR DriveNumber = 0;
-    ULONG PartitionNumber = 0;
 
-    /* Find all the message box settings and run them */
-    UiShowMessageBoxesInArgv(Argc, Argv);
+    *DriveNumber = 0;
+    *PartitionNumber = 0;
 
     /*
      * Check whether we have a "BootPath" value (takes precedence
@@ -229,30 +221,30 @@ LoadAndBootPartition(
             UiMessageBox("Boot drive not specified for selected OS!");
             return EINVAL;
         }
-        DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+        *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
         /* Retrieve the boot partition (optional, fall back to zero otherwise) */
-        PartitionNumber = 0;
+        *PartitionNumber = 0;
         ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
         if (ArgValue && *ArgValue)
-            PartitionNumber = atoi(ArgValue);
+            *PartitionNumber = atoi(ArgValue);
     }
 
-    return LoadAndBootPartitionOrDrive(DriveNumber, PartitionNumber, BootPath);
+    return LoadPartitionOrDrive(DriveNumber, PartitionNumber, BootPath);
 }
 
-ARC_STATUS
-LoadAndBootDrive(
+static ARC_STATUS
+LoadDrive(
     IN ULONG Argc,
     IN PCHAR Argv[],
-    IN PCHAR Envp[])
+    OUT PUCHAR DriveNumber,
+    OUT PULONG PartitionNumber)
 {
     PCSTR ArgValue;
     PCSTR BootPath;
-    UCHAR DriveNumber = 0;
 
-    /* Find all the message box settings and run them */
-    UiShowMessageBoxesInArgv(Argc, Argv);
+    *DriveNumber = 0;
+    *PartitionNumber = 0;
 
     /* Check whether we have a "BootPath" value (takes precedence over "BootDrive") */
     BootPath = GetArgumentValue(Argc, Argv, "BootPath");
@@ -277,10 +269,66 @@ LoadAndBootDrive(
             UiMessageBox("Boot drive not specified for selected OS!");
             return EINVAL;
         }
-        DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+        *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
     }
 
-    return LoadAndBootPartitionOrDrive(DriveNumber, 0, BootPath);
+    return LoadPartitionOrDrive(DriveNumber, PartitionNumber, BootPath);
+}
+
+
+ARC_STATUS
+LoadAndBootDevice(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
+{
+    ARC_STATUS Status;
+    PCSTR ArgValue;
+    UCHAR Type;
+    UCHAR DriveNumber = 0;
+    ULONG PartitionNumber = 0;
+
+    /* Retrieve the (mandatory) boot type */
+    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue)
+        return EINVAL;
+    if (_stricmp(ArgValue, "Drive") == 0)
+        Type = 1;
+    else if (_stricmp(ArgValue, "Partition") == 0)
+        Type = 2;
+    else if (_stricmp(ArgValue, "BootSector") == 0)
+        Type = 3;
+    else
+        return EINVAL;
+
+    /* Find all the message box settings and run them */
+    UiShowMessageBoxesInArgv(Argc, Argv);
+
+    /* Load the corresponding device */
+    switch (Type)
+    {
+        case 1:
+            Status = LoadDrive(Argc, Argv, &DriveNumber, &PartitionNumber);
+            break;
+        case 2:
+            Status = LoadPartition(Argc, Argv, &DriveNumber, &PartitionNumber);
+            break;
+        case 3:
+            Status = LoadBootSector(Argc, Argv, &DriveNumber, &PartitionNumber);
+            break;
+        default:
+            return EINVAL;
+    }
+    if (Status != ESUCCESS)
+        return Status;
+
+    UiUnInitialize("Booting...");
+    IniCleanup();
+
+    /* Boot the loaded sector code at 0x7C00 */
+    ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
+    /* Must not return! */
+    return ESUCCESS;
 }
 
 #endif // _M_IX86
