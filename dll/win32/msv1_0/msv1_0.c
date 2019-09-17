@@ -1014,7 +1014,7 @@ LsaApCallPackagePassthrough(IN PLSA_CLIENT_REQUEST ClientRequest,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -1026,8 +1026,31 @@ LsaApCallPackageUntrusted(IN PLSA_CLIENT_REQUEST ClientRequest,
                           OUT PULONG ReturnBufferLength,
                           OUT PNTSTATUS ProtocolStatus)
 {
+    ULONG MessageType;
+    NTSTATUS Status;
+
     TRACE("LsaApCallPackageUntrusted()\n");
-    return STATUS_NOT_IMPLEMENTED;
+
+    if (SubmitBufferLength < sizeof(MSV1_0_PROTOCOL_MESSAGE_TYPE))
+        return STATUS_INVALID_PARAMETER;
+
+    MessageType = (ULONG)*((PMSV1_0_PROTOCOL_MESSAGE_TYPE)ProtocolSubmitBuffer);
+
+    *ProtocolReturnBuffer = NULL;
+    *ReturnBufferLength = 0;
+
+    if (MessageType == MsV1_0ChangePassword)
+        Status = MsvpChangePassword(ClientRequest,
+                                    ProtocolSubmitBuffer,
+                                    ClientBufferBase,
+                                    SubmitBufferLength,
+                                    ProtocolReturnBuffer,
+                                    ReturnBufferLength,
+                                    ProtocolStatus);
+    else
+        Status = STATUS_ACCESS_DENIED;
+
+    return Status;
 }
 
 
