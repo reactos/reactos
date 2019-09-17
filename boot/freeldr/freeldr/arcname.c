@@ -39,10 +39,8 @@ DissectArcPath(
 
         /* Get the path (optional) */
         if (Path)
-        {
-            p = ArcPath + 11;
-            *Path = p;
-        }
+            *Path = ArcPath + 10;
+
         return TRUE;
     }
 

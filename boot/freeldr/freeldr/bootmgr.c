@@ -109,7 +109,7 @@ BuildArgvForOsLoader(
     Size = 0;
     /* i == 0: Program name */
     /* i == 1: SystemPartition : from where FreeLdr has been started */
-    Size += (strlen("SystemPartition=") + strlen(FrldrBootPath) + 1) * sizeof(CHAR);
+    Size += (strlen("SystemPartition=") + strlen(FrLdrBootPath) + 1) * sizeof(CHAR);
     /* i == 2: LoadIdentifier  : ASCII string that may be used to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
     {
@@ -135,7 +135,7 @@ BuildArgvForOsLoader(
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
-        strcat(SettingName, FrldrBootPath);
+        strcat(SettingName, FrLdrBootPath);
 
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
@@ -197,20 +197,23 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
     DriveMapMapDrivesInSection(SectionId);
 #endif
 
-    /* Loop through the OS loading method table and find a suitable OS to boot */
-    for (i = 0; i < sizeof(OSLoadingMethods) / sizeof(OSLoadingMethods[0]); ++i)
+    /* Find the suitable OS loader to start */
+    for (i = 0; ; ++i)
     {
-        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
-        {
-            Argv = BuildArgvForOsLoader(OperatingSystem->LoadIdentifier, SectionId, &Argc);
-            if (Argv)
-            {
-                OSLoadingMethods[i].OsLoader(Argc, Argv, NULL);
-                FrLdrHeapFree(Argv, TAG_STRING);
-            }
+        if (i >= RTL_NUMBER_OF(OSLoadingMethods))
             return;
-        }
+        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
+            break;
     }
+
+    /* Build the ARC-compatible argument vector */
+    Argv = BuildArgvForOsLoader(OperatingSystem->LoadIdentifier, SectionId, &Argc);
+    if (!Argv)
+        return; // Unexpected failure.
+
+    /* Start the OS loader */
+    OSLoadingMethods[i].OsLoader(Argc, Argv, NULL);
+    FrLdrHeapFree(Argv, TAG_STRING);
 }
 
 #ifdef HAS_OPTION_MENU_EDIT_CMDLINE
@@ -231,15 +234,17 @@ VOID EditOperatingSystemEntry(IN OperatingSystemItem* OperatingSystem)
     /* We must have the "BootType" value (it has been possibly added by InitOperatingSystemList()) */
     ASSERT(*BootType);
 
-    /* Loop through the OS loading method table and find a suitable OS entry editor */
-    for (i = 0; i < sizeof(OSLoadingMethods) / sizeof(OSLoadingMethods[0]); ++i)
+    /* Find the suitable OS entry editor */
+    for (i = 0; ; ++i)
     {
-        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
-        {
-            OSLoadingMethods[i].EditOsEntry(OperatingSystem);
+        if (i >= RTL_NUMBER_OF(OSLoadingMethods))
             return;
-        }
+        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
+            break;
     }
+
+    /* Run it */
+    OSLoadingMethods[i].EditOsEntry(OperatingSystem);
 }
 
 #endif // HAS_OPTION_MENU_EDIT_CMDLINE

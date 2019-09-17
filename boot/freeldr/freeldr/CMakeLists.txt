@@ -81,7 +81,6 @@ list(APPEND FREELDR_BOOTMGR_SOURCE
     miscboot.c
     options.c
     oslist.c
-    version.c
     ui/directui.c
     ui/gui.c
     ui/minitui.c

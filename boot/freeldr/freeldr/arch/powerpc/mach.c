@@ -24,7 +24,6 @@
 #include "compat.h"
 
 extern void BootMain( PSTR CmdLine );
-extern const PCSTR GetFreeLoaderVersionString(VOID);
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
@@ -32,7 +31,7 @@ static int chosen_package, stdin_handle, stdout_handle, part_handle = -1;
 int mmu_handle = 0;
 int claimed[4];
 BOOLEAN AcpiPresent = FALSE;
-CHAR FrldrBootPath[MAX_PATH] = "", BootPart[MAX_PATH] = "", CmdLine[MAX_PATH] = "bootprep";
+CHAR FrLdrBootPath[MAX_PATH] = "", BootPart[MAX_PATH] = "", CmdLine[MAX_PATH] = "bootprep";
 jmp_buf jmp;
 volatile char *video_mem = 0;
 
@@ -468,7 +467,7 @@ void PpcOfwInit()
     return;
     }
 
-    printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
+    printf( "FreeLDR version [%s]\n", FrLdrVersionString );
 
     BootMain( CmdLine );
 }
@@ -487,7 +486,7 @@ void MachInit(const char *CmdLine) {
     char *sep;
 
     BootPart[0] = 0;
-    FrldrBootPath[0] = 0;
+    FrLdrBootPath[0] = 0;
 
     printf( "Determining boot device: [%s]\n", CmdLine );
 
@@ -505,18 +504,18 @@ void MachInit(const char *CmdLine) {
     if( strlen(BootPart) == 0 ) {
     if (ofproxy)
             len = ofw_getprop(chosen_package, "bootpath",
-                              FrldrBootPath, sizeof(FrldrBootPath));
+                              FrLdrBootPath, sizeof(FrLdrBootPath));
     else
             len = 0;
     if( len < 0 ) len = 0;
-    FrldrBootPath[len] = 0;
-    printf( "Boot Path: %s\n", FrldrBootPath );
+    FrLdrBootPath[len] = 0;
+    printf( "Boot Path: %s\n", FrLdrBootPath );
 
-    sep = strrchr(FrldrBootPath, ',');
+    sep = strrchr(FrLdrBootPath, ',');
 
-    strcpy(BootPart, FrldrBootPath);
+    strcpy(BootPart, FrLdrBootPath);
     if( sep ) {
-        BootPart[sep - FrldrBootPath] = 0;
+        BootPart[sep - FrLdrBootPath] = 0;
     }
     }
 

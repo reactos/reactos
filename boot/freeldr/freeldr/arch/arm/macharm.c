@@ -139,7 +139,7 @@ ArmInitializeBootDevices(VOID)
         return FALSE;
 
     /* On ARM platforms, the loader is always in RAM */
-    strcpy(FrldrBootPath, "ramdisk(0)");
+    strcpy(FrLdrBootPath, "ramdisk(0)");
     return TRUE;
 }
 

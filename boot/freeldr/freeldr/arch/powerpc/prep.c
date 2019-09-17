@@ -141,7 +141,7 @@ void PpcPrepInit()
     MachVtbl.HwDetect = PpcPrepHwDetect;
     MachVtbl.HwIdle = PcPrepHwIdle;
 
-    printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
+    printf( "FreeLDR version [%s]\n", FrLdrVersionString );
 
     BootMain( "" );
 }

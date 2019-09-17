@@ -1611,7 +1611,7 @@ LoadBootDeviceDriver(VOID)
     InitializeListHead(&ModuleListHead);
 
     /* Create full ntbootdd.sys path */
-    strcpy(NtBootDdPath, FrldrBootPath);
+    strcpy(NtBootDdPath, FrLdrBootPath);
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load file */

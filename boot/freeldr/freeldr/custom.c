@@ -61,7 +61,7 @@ VOID OptionMenuCustomBoot(VOID)
     if (!UiDisplayMenu("Please choose a boot method:", NULL,
                        FALSE,
                        CustomBootMenuList,
-                       sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
+                       RTL_NUMBER_OF(CustomBootMenuList),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,
@@ -123,7 +123,7 @@ EditCustomBootDisk(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -218,7 +218,7 @@ EditCustomBootPartition(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -328,7 +328,7 @@ EditCustomBootSectorFile(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -461,7 +461,7 @@ EditCustomBootLinux(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct

@@ -378,32 +378,32 @@ DiskIsDriveRemovable(UCHAR DriveNumber)
 static BOOLEAN
 DiskGetBootPath(BOOLEAN IsPxe)
 {
-    if (*FrldrBootPath)
+    if (*FrLdrBootPath)
         return TRUE;
 
     // FIXME! FIXME! Do this in some drive recognition procedure!!!!
     if (IsPxe)
     {
-        RtlStringCbCopyA(FrldrBootPath, sizeof(FrldrBootPath), "net(0)");
+        RtlStringCbCopyA(FrLdrBootPath, sizeof(FrLdrBootPath), "net(0)");
     }
     else
     /* 0x49 is our magic ramdisk drive, so try to detect it first */
     if (FrldrBootDrive == 0x49)
     {
         /* This is the ramdisk. See ArmInitializeBootDevices() too... */
-        // RtlStringCbPrintfA(FrldrBootPath, sizeof(FrldrBootPath), "ramdisk(%u)", 0);
-        RtlStringCbCopyA(FrldrBootPath, sizeof(FrldrBootPath), "ramdisk(0)");
+        // RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(%u)", 0);
+        RtlStringCbCopyA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(0)");
     }
     else if (FrldrBootDrive < 0x80)
     {
         /* This is a floppy */
-        RtlStringCbPrintfA(FrldrBootPath, sizeof(FrldrBootPath),
+        RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)fdisk(%u)", FrldrBootDrive);
     }
     else if (FrldrBootPartition == 0xFF)
     {
         /* Boot Partition 0xFF is the magic value that indicates booting from CD-ROM (see isoboot.S) */
-        RtlStringCbPrintfA(FrldrBootPath, sizeof(FrldrBootPath),
+        RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - 0x80);
     }
     else
@@ -420,7 +420,7 @@ DiskGetBootPath(BOOLEAN IsPxe)
 
         FrldrBootPartition = BootPartition;
 
-        RtlStringCbPrintfA(FrldrBootPath, sizeof(FrldrBootPath),
+        RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)rdisk(%u)partition(%lu)",
                            FrldrBootDrive - 0x80, FrldrBootPartition);
     }
@@ -437,7 +437,7 @@ PcInitializeBootDevices(VOID)
 
     DiskCount = EnumerateHarddisks(&BootDriveReported);
 
-    /* Initialize FrldrBootPath, the boot path we're booting from (the "SystemPartition") */
+    /* Initialize FrLdrBootPath, the boot path we're booting from (the "SystemPartition") */
     DiskGetBootPath(PxeInit());
 
     /* Add it, if it's a floppy or cdrom */
@@ -473,9 +473,9 @@ PcInitializeBootDevices(VOID)
         TRACE("Checksum: %x\n", Checksum);
 
         /* Fill out the ARC disk block */
-        AddReactOSArcDiskInfo(FrldrBootPath, Signature, Checksum, TRUE);
+        AddReactOSArcDiskInfo(FrLdrBootPath, Signature, Checksum, TRUE);
 
-        FsRegisterDevice(FrldrBootPath, &DiskVtbl);
+        FsRegisterDevice(FrLdrBootPath, &DiskVtbl);
         DiskCount++; // This is not accounted for in the number of pre-enumerated BIOS drives!
         TRACE("Additional boot drive detected: 0x%02X\n", (int)FrldrBootDrive);
     }

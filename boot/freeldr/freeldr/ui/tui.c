@@ -110,7 +110,7 @@ VOID TuiDrawBackdrop(VOID)
     //
     TuiDrawText(2,
             1,
-            GetFreeLoaderVersionString(),
+            FrLdrVersionString,
             ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
     //

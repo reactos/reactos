@@ -123,7 +123,7 @@ extern SIZE_T DiskReadBufferSize;
 
 
 /* ARC path of the boot drive and partition */
-extern CCHAR FrldrBootPath[MAX_PATH];
+extern CCHAR FrLdrBootPath[MAX_PATH];
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
