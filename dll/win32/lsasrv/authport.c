@@ -35,6 +35,64 @@ LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg,
 }
 
 
+static
+BOOL
+LsapIsTrustedClient(
+    _In_ HANDLE ProcessHandle)
+{
+    LUID TcbPrivilege = {SE_TCB_PRIVILEGE, 0};
+    HANDLE TokenHandle = NULL;
+    PTOKEN_PRIVILEGES Privileges = NULL;
+    ULONG Size, i;
+    BOOL Trusted = FALSE;
+    NTSTATUS Status;
+
+    Status = NtOpenProcessToken(ProcessHandle,
+                                TOKEN_QUERY,
+                                &TokenHandle);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenPrivileges,
+                                     NULL,
+                                     0,
+                                     &Size);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+        goto done;
+
+    Privileges = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+    if (Privileges == NULL)
+        goto done;
+
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenPrivileges,
+                                     Privileges,
+                                     Size,
+                                     &Size);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    for (i = 0; i < Privileges->PrivilegeCount; i++)
+    {
+        if (RtlEqualLuid(&Privileges->Privileges[i].Luid, &TcbPrivilege))
+        {
+            Trusted = TRUE;
+            break;
+        }
+    }
+
+done:
+    if (Privileges != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Privileges);
+
+    if (TokenHandle != NULL)
+        NtClose(TokenHandle);
+
+    return Trusted;
+}
+
+
 static NTSTATUS
 LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
                       PLSAP_LOGON_CONTEXT *LogonContext)
@@ -55,7 +113,7 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
                                NULL);
 
     Status = NtOpenProcess(&ProcessHandle,
-                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE,
+                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION,
                            &ObjectAttributes,
                            &RequestMsg->h.ClientId);
     if (!NT_SUCCESS(Status))
@@ -77,6 +135,10 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
     TRACE("New LogonContext: %p\n", Context);
 
     Context->ClientProcessHandle = ProcessHandle;
+    Context->Untrusted = RequestMsg->ConnectInfo.Untrusted;
+
+    if (Context->Untrusted == FALSE)
+        Context->Untrusted = LsapIsTrustedClient(ProcessHandle);
 
     *LogonContext = Context;
 
