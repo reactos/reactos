@@ -147,7 +147,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
         DiskGeometry->SectorsPerTrack = ExtGeometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = ExtGeometry.Heads;
     }
-    else if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+    else if (PcDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;

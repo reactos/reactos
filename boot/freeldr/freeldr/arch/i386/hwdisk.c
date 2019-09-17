@@ -63,8 +63,16 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
     RtlZeroMemory(Information, sizeof(*Information));
-    Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
-    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
+
+    /*
+     * The ARC specification mentions that for partitions, StartingAddress and
+     * EndingAddress are the start and end positions of the partition in terms
+     * of byte offsets from the start of the disk.
+     * CurrentAddress is the current offset into (i.e. relative to) the partition.
+     */
+    Information->StartingAddress.QuadPart = Context->SectorOffset * Context->SectorSize;
+    Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -113,12 +121,21 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
     }
-#if 0 // FIXME: Investigate
     else
     {
-        SectorCount = 0; /* FIXME */
+        GEOMETRY Geometry;
+        if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+            return EINVAL;
+
+        if (SectorSize != Geometry.BytesPerSector)
+        {
+            ERR("SectorSize (%lu) != Geometry.BytesPerSector (%lu), expect problems!\n",
+                SectorSize, Geometry.BytesPerSector);
+        }
+
+        SectorOffset = 0;
+        SectorCount = (ULONGLONG)Geometry.Cylinders * Geometry.Heads * Geometry.Sectors;
     }
-#endif
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
     if (!Context)
@@ -147,7 +164,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
     TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
-    SectorOffset = Context->SectorNumber + Context->SectorOffset;
+    SectorOffset = Context->SectorOffset + Context->SectorNumber;
 
     // If MaxSectors is 0, this will lead to infinite loop.
     // In release builds assertions are disabled, however we also have sanity checks in DiskOpen()
@@ -189,13 +206,18 @@ static ARC_STATUS
 DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    ULONGLONG SectorNumber;
 
     if (SeekMode != SeekAbsolute)
         return EINVAL;
     if (Position->LowPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    Context->SectorNumber = Position->QuadPart / Context->SectorSize;
+    SectorNumber = Position->QuadPart / Context->SectorSize;
+    if (SectorNumber >= Context->SectorCount)
+        return EINVAL;
+
+    Context->SectorNumber = SectorNumber;
     return ESUCCESS;
 }
 

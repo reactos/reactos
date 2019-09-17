@@ -1570,7 +1570,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
         FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
-    SectorCount.QuadPart = FileInformation.EndingAddress.QuadPart;
+    SectorCount.QuadPart = (FileInformation.EndingAddress.QuadPart - FileInformation.StartingAddress.QuadPart);
     SectorCount.QuadPart /= SECTOR_SIZE;
 
     //

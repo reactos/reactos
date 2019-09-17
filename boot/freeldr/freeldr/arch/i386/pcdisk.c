@@ -240,9 +240,11 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNu
     TRACE("PcDiskReadLogicalSectorsCHS()\n");
 
     /* Get the drive geometry */
-    if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry) ||
-        DriveGeometry.Sectors == 0 ||
-        DriveGeometry.Heads == 0)
+    //
+    // TODO: Cache this information for the given drive.
+    //
+    if (!PcDiskGetDriveGeometry(DriveNumber, &DriveGeometry) ||
+        DriveGeometry.Sectors == 0 || DriveGeometry.Heads == 0)
     {
         return FALSE;
     }

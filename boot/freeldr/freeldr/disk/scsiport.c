@@ -178,8 +178,16 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
     RtlZeroMemory(Information, sizeof(*Information));
-    Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
-    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
+
+    /*
+     * The ARC specification mentions that for partitions, StartingAddress and
+     * EndingAddress are the start and end positions of the partition in terms
+     * of byte offsets from the start of the disk.
+     * CurrentAddress is the current offset into (i.e. relative to) the partition.
+     */
+    Information->StartingAddress.QuadPart = Context->SectorOffset * Context->SectorSize;
+    Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -276,7 +284,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
     /* Read full sectors */
     ASSERT(Context->SectorNumber < 0xFFFFFFFF);
-    Lba = (ULONG)Context->SectorNumber;
+    Lba = (ULONG)(Context->SectorOffset + Context->SectorNumber);
     if (FullSectors > 0)
     {
         Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
@@ -365,13 +373,18 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    ULONGLONG SectorNumber;
 
     if (SeekMode != SeekAbsolute)
         return EINVAL;
     if (Position->QuadPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    Context->SectorNumber = Position->QuadPart / Context->SectorSize;
+    SectorNumber = Position->QuadPart / Context->SectorSize;
+    if (SectorNumber >= Context->SectorCount)
+        return EINVAL;
+
+    Context->SectorNumber = SectorNumber;
     return ESUCCESS;
 }
 
