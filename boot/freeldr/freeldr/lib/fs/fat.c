@@ -1485,17 +1485,26 @@ ARC_STATUS FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("FatSeek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (ULONGLONG)FileHandle->FilePointer;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.HighPart != 0)
         return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= FileHandle->FileSize)
+    if (NewPosition.LowPart >= FileHandle->FileSize)
         return EINVAL;
 
-    FileHandle->FilePointer = Position->LowPart;
+    FileHandle->FilePointer = NewPosition.LowPart;
     return ESUCCESS;
 }
 

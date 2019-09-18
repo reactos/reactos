@@ -1263,17 +1263,24 @@ ARC_STATUS Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("Ext2Seek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += FileHandle->FilePointer;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
-        return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= FileHandle->FileSize)
+    if (NewPosition.QuadPart >= FileHandle->FileSize)
         return EINVAL;
 
-    FileHandle->FilePointer = Position->LowPart;
+    FileHandle->FilePointer = NewPosition.QuadPart;
     return ESUCCESS;
 }
 

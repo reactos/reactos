@@ -206,18 +206,29 @@ static ARC_STATUS
 DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
-    ULONGLONG SectorNumber;
+    LARGE_INTEGER NewPosition = *Position;
 
-    if (SeekMode != SeekAbsolute)
-        return EINVAL;
-    if (Position->LowPart & (Context->SectorSize - 1))
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (Context->SectorNumber * Context->SectorSize);
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
+
+    if (NewPosition.QuadPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    SectorNumber = Position->QuadPart / Context->SectorSize;
-    if (SectorNumber >= Context->SectorCount)
+    /* Convert in number of sectors */
+    NewPosition.QuadPart /= Context->SectorSize;
+    if (NewPosition.QuadPart >= Context->SectorCount)
         return EINVAL;
 
-    Context->SectorNumber = SectorNumber;
+    Context->SectorNumber = NewPosition.QuadPart;
     return ESUCCESS;
 }
 
