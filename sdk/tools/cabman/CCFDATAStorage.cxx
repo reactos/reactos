@@ -55,7 +55,7 @@ CCFDATAStorage::~CCFDATAStorage()
 */
 ULONG CCFDATAStorage::Create()
 {
-    char TmpName[MAX_PATH];
+    char TmpName[PATH_MAX];
     char *pName;
     int length;
 
