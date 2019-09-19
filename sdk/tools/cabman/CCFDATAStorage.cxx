@@ -55,7 +55,27 @@ CCFDATAStorage::~CCFDATAStorage()
 */
 ULONG CCFDATAStorage::Create()
 {
-    if ((FileHandle = tmpfile()) == NULL)
+    char TmpName[MAX_PATH];
+    char *pName;
+    int length;
+
+    if (tmpnam(TmpName) == NULL)
+        return CAB_STATUS_CANNOT_CREATE;
+
+    /* Append 'tmp' if the file name ends with a dot */
+    length = strlen(TmpName);
+    if (length > 0 && TmpName[length - 1] == '.')
+        strcat(TmpName, "tmp");
+
+    /* Skip a leading slash or backslash */
+    pName = TmpName;
+    if (*pName == '/' || *pName == '\\')
+        pName++;
+
+    strcpy(FullName, pName);
+
+    FileHandle = fopen(FullName, "w+b");
+    if (FileHandle == NULL)
         return CAB_STATUS_CANNOT_CREATE;
 
     return CAB_STATUS_SUCCESS;
@@ -78,6 +98,8 @@ ULONG CCFDATAStorage::Destroy()
 
     FileHandle = NULL;
 
+    remove(FullName);
+
     return CAB_STATUS_SUCCESS;
 }
 
@@ -93,7 +115,7 @@ ULONG CCFDATAStorage::Destroy()
 ULONG CCFDATAStorage::Truncate()
 {
     fclose(FileHandle);
-    FileHandle = tmpfile();
+    FileHandle = fopen(FullName, "w+b");
     if (FileHandle == NULL)
     {
         DPRINT(MID_TRACE, ("ERROR '%i'.\n", errno));
