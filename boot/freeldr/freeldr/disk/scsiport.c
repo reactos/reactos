@@ -1639,7 +1639,7 @@ LoadBootDeviceDriver(VOID)
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load file */
-    Success = WinLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
+    Success = PeLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
     if (!Success)
     {
         /* That's OK. File simply doesn't exist */
@@ -1647,15 +1647,15 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Allocate a DTE for ntbootdd */
-    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
-        "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
+                                          "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Success)
         return EIO;
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains ScsiPort* exports, imported by ntbootdd.sys */
-    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
-        "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
+                                          "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Success)
     {
         RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
@@ -1663,7 +1663,7 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Fix imports */
-    Success = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
+    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
 
     /* Now unlinkt the DTEs, they won't be valid later */
     RemoveEntryList(&BootDdDTE->InLoadOrderLinks);

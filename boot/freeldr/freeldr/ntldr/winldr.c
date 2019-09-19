@@ -258,7 +258,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     TRACE("DriverPath: '%s', DllName: '%s', LPB\n", DriverPath, DllName);
 
     // Check if driver is already loaded
-    Success = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
+    Success = PeLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
     if (Success)
     {
         // We've got the pointer to its DTE, just return success
@@ -267,15 +267,15 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // It's not loaded, we have to load it
     RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
-    Success = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
+    Success = PeLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
     if (!Success)
         return FALSE;
 
     // Allocate a DTE for it
-    Success = WinLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
     if (!Success)
     {
-        ERR("WinLdrAllocateDataTableEntry() failed\n");
+        ERR("PeLdrAllocateDataTableEntry() failed\n");
         return FALSE;
     }
 
@@ -284,10 +284,10 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // Look for any dependencies it may have, and load them too
     RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%s", BootPath, DriverPath);
-    Success = WinLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
+    Success = PeLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
     if (!Success)
     {
-        ERR("WinLdrScanImportDescriptorTable() failed for %s\n", FullPath);
+        ERR("PeLdrScanImportDescriptorTable() failed for %s\n", FullPath);
         return FALSE;
     }
 
@@ -451,7 +451,7 @@ LoadModule(
     RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
     RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
 
-    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
+    Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
         TRACE("Loading %s failed\n", File);
@@ -464,11 +464,11 @@ LoadModule(
      * the Kernel Debugger Transport DLL, to make the
      * PE loader happy.
      */
-    Success = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
-                                           ImportName,
-                                           FullFileName,
-                                           BaseAddress,
-                                           Dte);
+    Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+                                          ImportName,
+                                          FullFileName,
+                                          BaseAddress,
+                                          Dte);
 
     return Success;
 }
@@ -640,11 +640,11 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
-    Success  = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
-    Success &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
+    Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
+    Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
     if (KdComDTE)
     {
-        Success &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
+        Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
     }
 
     return Success;
