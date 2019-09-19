@@ -55,6 +55,7 @@ CCFDATAStorage::~CCFDATAStorage()
 */
 ULONG CCFDATAStorage::Create()
 {
+#if defined(_WIN32)
     char TmpName[PATH_MAX];
     char *pName;
     int length;
@@ -77,7 +78,10 @@ ULONG CCFDATAStorage::Create()
     FileHandle = fopen(FullName, "w+b");
     if (FileHandle == NULL)
         return CAB_STATUS_CANNOT_CREATE;
-
+#else
+    if ((FileHandle = tmpfile()) == NULL)
+        return CAB_STATUS_CANNOT_CREATE;
+#endif
     return CAB_STATUS_SUCCESS;
 }
 
@@ -98,7 +102,9 @@ ULONG CCFDATAStorage::Destroy()
 
     FileHandle = NULL;
 
+#if defined(_WIN32)
     remove(FullName);
+#endif
 
     return CAB_STATUS_SUCCESS;
 }
