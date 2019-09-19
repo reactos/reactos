@@ -225,7 +225,9 @@ DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 
     /* Convert in number of sectors */
     NewPosition.QuadPart /= Context->SectorSize;
-    if (NewPosition.QuadPart >= Context->SectorCount)
+
+    /* HACK: CDROMs may have a SectorCount of 0 */
+    if (Context->SectorCount != 0 && NewPosition.QuadPart >= Context->SectorCount)
         return EINVAL;
 
     Context->SectorNumber = NewPosition.QuadPart;
