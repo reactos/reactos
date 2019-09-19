@@ -130,11 +130,11 @@ BEGIN
     LTEXT "Te ustawienia sterują barwą tonów dźwięku.", -1, 17, 48, 200, 14
     LTEXT "&Tony niskie:", -1, 17, 62, 50, 8
     LTEXT "Cicho", IDC_ADV_BASS_LOW, 77, 62, 20, 8
-    LTEXT "Głośno", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
+    LTEXT "Głośno", IDC_ADV_BASS_HIGH, 182, 62, 22, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
     LTEXT "Tony &wysokie:", -1, 17, 90, 50, 8
     LTEXT "Cicho", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
-    LTEXT "Głośno", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
+    LTEXT "Głośno", IDC_ADV_TREBLE_HIGH, 182, 90, 22, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
     GROUPBOX "Inne sterowniki", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
     LTEXT "Te ustawienia wprowadzają inne zmiany do konfiguracji dźwięku. Szczegółowe informacje można znaleźć w dokumentacji sprzętu.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28

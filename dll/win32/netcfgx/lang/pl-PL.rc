@@ -12,7 +12,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Możesz automatycznie pobrać ustawienia sieciowe protokołu IP, jeżeli Twoja sieć obsługuje te funkcje. W innym przypadku musisz skontaktować się z administratorem sieci w celu zdobycia odpowiednich ustawień.", -1, 9, 9, 235, 27
+    LTEXT "Możesz automatycznie pobrać ustawienia sieciowe protokołu IP, jeżeli Twoja sieć obsługuje te funkcje. W innym przypadku musisz skontaktować się z administratorem sieci w celu zdobycia odpowiednich ustawień.", -1, 9, 7, 235, 34
     CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
     CONTROL "&Użyj następującego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
@@ -29,7 +29,7 @@ BEGIN
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 171 - 2, 85, 12
     LTEXT "Alternatywny serwer DNS:", -1, 14, 186, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 186 - 2, 85, 12
-    PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 186, 209, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 178, 209, 60, 14, WS_TABSTOP
 END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX 0, 0, 246, 228
@@ -40,7 +40,7 @@ BEGIN
     LTEXT "Jeśli ten komputer jest używany w więcej niż jednej sieci, wprowadź poniżej alternatywne ustawienia protokołu IP", -1, 9, 9, 220, 20
     CONTROL "Au&tomatyczny prywatny adres IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "&Ustawienia konfigurowane przez użytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    CONTROL "&Ustawienia konfigurowane przez użytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 210, 12
     LTEXT "Adres &IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "&Maska podsieci:", -1, 14, 95, 135, 8
@@ -170,19 +170,19 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CHECKBOX "Włącz filtrowanie TCP/IP (wszystkie karty)", IDC_USE_FILTER, 15, 5, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     GROUPBOX "", -1, 5, 30, 90, 150
-    CONTROL "Pozwalaj wszystkim", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 70, 12
+    CONTROL "Pozwalaj wszystkim", IDC_TCP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 30, 75, 12
     CONTROL "Pozwalaj tylko", IDC_TCP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 44, 70, 12
     CONTROL "", IDC_TCP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 11, 62, 72, 75
     PUSHBUTTON "Dodaj", IDC_TCP_ADD, 15, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Usuń", IDC_TCP_DEL, 15, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 105, 30, 90, 150
-    CONTROL "Pozwalaj wszystkim", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 70, 12
+    CONTROL "Pozwalaj wszystkim", IDC_UDP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 30, 75, 12
     CONTROL "Pozwalaj tylko", IDC_UDP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 115, 44, 70, 12
     CONTROL "", IDC_UDP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 111, 62, 72, 75
     PUSHBUTTON "Dodaj", IDC_UDP_ADD, 115, 141, 50, 14, WS_TABSTOP
     PUSHBUTTON "Usuń", IDC_UDP_DEL, 115, 161, 50, 14, WS_TABSTOP
     GROUPBOX "", -1, 205, 30, 90, 150
-    CONTROL "Pozwalaj wszystkim", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 70, 12
+    CONTROL "Pozwalaj wszystkim", IDC_IP_ALLOW_ALL, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 30, 75, 12
     CONTROL "Pozwalaj tylko", IDC_IP_RESTRICT, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 215, 44, 70, 12
     CONTROL "", IDC_IP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 211, 62, 72, 75
     PUSHBUTTON "Dodaj", IDC_IP_ADD, 215, 141, 50, 14, WS_TABSTOP
