@@ -121,7 +121,11 @@ ULONG CCFDATAStorage::Destroy()
 ULONG CCFDATAStorage::Truncate()
 {
     fclose(FileHandle);
+#if defined(_WIN32)
     FileHandle = fopen(FullName, "w+b");
+#else
+    FileHandle = tmpfile();
+#endif
     if (FileHandle == NULL)
     {
         DPRINT(MID_TRACE, ("ERROR '%i'.\n", errno));
