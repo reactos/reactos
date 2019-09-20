@@ -1,0 +1,28 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Impostazioni di rendering", -1, 5, 25, 230, 90
+    LTEXT "&Renderer:", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Questo sostituirà le impostazioni predefinite del tuo driver video! Selezionare ""Predefinito"" per tornare alle impostazioni predefinite.", -1, 15, 60, 210, 40
+    GROUPBOX "Debugging", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Attiva/disattiva l'output di debug da OpenGL32.\n\nATTENZIONE: selezionando ""Imposta"" o ""Elimina"", il contenuto della variabile di ambiente DEBUGCHANNEL verrà sovrascritto!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "Predefinito"
+    IDS_RENDERER_RSWR "Implementazione software ReactOS"
+    IDS_CPLNAME "Configurazione OpenGL"
+    IDS_CPLDESCRIPTION "Configura il rendering OpenGL."
+    IDS_DEBUG_SET "Imposta"
+    IDS_DEBUG_CLEAR "Elimina"
+    IDS_DEBUG_DNM "Non modificare"
+END
