@@ -190,7 +190,8 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             break;
 
         case WM_DESTROY:
-             {
+            if (pOglDrivers != NULL)
+            {
                 INT iKey;
                 for (iKey = 0; iKey <= dwNumDrivers; iKey++)
                     HeapFree(GetProcessHeap(), 0, pOglDrivers[iKey]);
