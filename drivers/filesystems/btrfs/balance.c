@@ -3599,7 +3599,11 @@ NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESS
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &system_thread_attributes, NULL, NULL, balance_thread, Vcb);
+#else
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+#endif
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         return Status;
@@ -3679,7 +3683,11 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &system_thread_attributes, NULL, NULL, balance_thread, Vcb);
+#else
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+#endif
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         return Status;
@@ -3876,7 +3884,11 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &system_thread_attributes, NULL, NULL, balance_thread, Vcb);
+#else
     Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+#endif
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         dev->reloc = false;
