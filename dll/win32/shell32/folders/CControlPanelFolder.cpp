@@ -614,7 +614,7 @@ HRESULT WINAPI CControlPanelFolder::GetClassID(CLSID *lpClassId)
  *
  * NOTES: it makes no sense to change the pidl
  */
-HRESULT WINAPI CControlPanelFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CControlPanelFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     if (pidlRoot)
         SHFree((LPVOID)pidlRoot);

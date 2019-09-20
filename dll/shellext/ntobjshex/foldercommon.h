@@ -631,7 +631,7 @@ public:
     }
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl)
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl)
     {
         m_shellPidl = ILClone(pidl);
 

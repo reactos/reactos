@@ -53,7 +53,7 @@ interface IPersistFolder : IPersist
 {
     typedef IPersistFolder *LPPERSISTFOLDER;
 
-    HRESULT Initialize( [in] LPCITEMIDLIST pidl );
+    HRESULT Initialize( [in] PCIDLIST_ABSOLUTE pidl );
 }
 
 

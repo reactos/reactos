@@ -479,7 +479,7 @@ HRESULT WINAPI CPrinterFolder::GetClassID(CLSID *lpClassId)
 /************************************************************************
  *    CPrinterFolder::Initialize
  */
-HRESULT WINAPI CPrinterFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CPrinterFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     if (pidlRoot)
         SHFree((LPVOID)pidlRoot);

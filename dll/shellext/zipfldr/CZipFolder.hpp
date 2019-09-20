@@ -605,7 +605,7 @@ public:
     }
 
     // *** IPersistFolder methods ***
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidl)
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl)
     {
         WCHAR tmpPath[MAX_PATH];
 

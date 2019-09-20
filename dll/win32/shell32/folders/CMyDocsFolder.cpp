@@ -168,7 +168,7 @@ HRESULT WINAPI CMyDocsFolder::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-HRESULT WINAPI CMyDocsFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CMyDocsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_pidlInner = ILClone(pidl);
     if (!m_pidlInner)

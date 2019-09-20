@@ -168,7 +168,7 @@ HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CAdminToolsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_pidlInner = ILClone(pidl);
     if (!m_pidlInner)

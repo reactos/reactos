@@ -681,7 +681,7 @@ STDMETHODIMP CFindFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 }
 
 // *** IPersistFolder methods ***
-STDMETHODIMP CFindFolder::Initialize(LPCITEMIDLIST pidl)
+STDMETHODIMP CFindFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_pidl = ILClone(pidl);
     if (!m_pidl)

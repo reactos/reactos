@@ -571,7 +571,7 @@ HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
  *
  * NOTES: it makes no sense to change the pidl
  */
-HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CNetFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     if (pidlRoot)
         SHFree((LPVOID)pidlRoot);

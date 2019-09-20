@@ -77,7 +77,7 @@ private:
 
 
     // *** IPersistFolder methods ***
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidl);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl);
 
 
     // *** IPersist methods ***
