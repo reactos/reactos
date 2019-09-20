@@ -1084,6 +1084,8 @@ WINMINE_TITLE=Saper
 WINMINE_DESC=Saper
 SPIDER_TITLE=Pasjans Pająk
 SPIDER_DESC=Pasjans Pająk
+UTILMAN_TITLE=Menedżer narzędzi ułatwienia dostępu
+UTILMAN_DESC=Uruchom Menedżer narzędzi ułatwienia dostępu
 
 ; Portuguese - Brazil
 [Strings.0416]

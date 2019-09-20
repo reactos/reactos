@@ -100,7 +100,7 @@ BEGIN
     GROUPBOX "Wybór profili sprzętu", IDC_STATIC, 7, 130, 240, 80
     LTEXT "Podczas uruchamiania ReactOS:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Czekaj na wybór profilu sprzętu przez użytkownika", IDC_HRDPROFWAIT, 14, 158, 175, 8, WS_GROUP
-    AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze \nprofilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 215, 15, BS_MULTILINE
+    AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze \nprofilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 215, 17, BS_MULTILINE
     LTEXT "s", IDC_STATIC, 65, 195, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 193, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Zmienianie typu profilu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
+    LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 8, 206, 34
     AUTORADIOBUTTON "&Profil mobilny", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
     AUTORADIOBUTTON "Profil lo&kalny", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14

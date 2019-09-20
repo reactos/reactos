@@ -219,7 +219,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLASSIC "Classic"
+    IDS_CLASSIC "Klasyczny"
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
     IDS_MIZU "Mizu"

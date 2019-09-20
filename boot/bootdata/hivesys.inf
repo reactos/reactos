@@ -2420,11 +2420,14 @@ WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do 
 WLANSVC_SERVICE="Usługa WLAN"
 WLANSVC_SERVICE_DESCRIPTION="Usługa WLAN"
 
+W32TIME_SERVICE="Usługa Czas"
+W32TIME_SERVICE_DESCRIPTION="Usługa Czas systemu ReactOS"
+
 WORKSTATION_SERVICE="Stacja robocza"
 WORKSTATION_SERVICE_DESCRIPTION="Tworzy i zachowuje połączenia sieciowe klientów z serwerami."
 
-WUAUSERV_SERVICE="Automatic Updates"
-WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
+WUAUSERV_SERVICE="Aktualizacje automatyczne"
+WUAUSERV_SERVICE_DESCRIPTION="Namiastka usługi Aktualizacje automatyczne."
 
 ; Keyboard layouts
 ALBANIAN = "Albański"
