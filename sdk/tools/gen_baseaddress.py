@@ -92,7 +92,6 @@ EXCLUDE = (
     'bootvid.dll',
     'framebuf.dll',
     'framebuf_new.dll',
-    'freeldr_pe.dll',
     'ftfd.dll',
     'fusion.dll',
     'genincdata.dll',
@@ -182,7 +181,6 @@ EXCLUDE = (
     'kbdycl.dll',
     'kdcom.dll',
     'kdvbox.dll',
-    'setupldr_pe.dll',
     'vgaddi.dll',
     'dllexport_test_dll1.dll',
     'dllexport_test_dll2.dll',
@@ -337,14 +335,14 @@ def guess_version(ntdll_path):
         ntdll_pe = pefile.PE(ntdll_path, fast_load=True)
         names = [sect.Name.strip(b'\0') for sect in ntdll_pe.sections]
         count = b'|'.join(names).count(b'/')
-        if '.rossym' in names:
-            print('# This should probably go in baseaddress.cmake')
+        if b'.rossym' in names:
+            print('# This should probably go in sdk/cmake/baseaddress.cmake')
         elif is_x64():
-            print('# This should probably go in baseaddress_msvc_x64.cmake')
+            print('# This should probably go in sdk/cmake/baseaddress_msvc_x64.cmake')
         elif count == 0:
-            print('# This should probably go in baseaddress_msvc.cmake')
+            print('# This should probably go in sdk/cmake/baseaddress_msvc.cmake')
         elif count > 3:
-            print('# This should probably go in baseaddress_dwarf.cmake')
+            print('# This should probably go in sdk/cmake/baseaddress_dwarf.cmake')
         else:
             print('# No clue where to put this')
 
