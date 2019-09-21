@@ -396,7 +396,8 @@ BOOL
 ValidateNegFlg(
     IN ULONG SupportedFlags,
     IN OUT PULONG pFlags,
-    IN BOOL RemoveUnsupportedFlags);
+    IN BOOL RemoveUnsupportedFlags,
+    IN BOOL ValidateLMKeyFlag);
 
 /* helper functions */
 

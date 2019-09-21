@@ -210,6 +210,7 @@ NtlmInitializeGlobals(VOID)
     /* server supported features */
     gsvr->CfgFlg = NTLMSSP_NEGOTIATE_UNICODE |
                    NTLMSSP_NEGOTIATE_OEM |
+                   NTLMSSP_NEGOTIATE_LM_KEY |
                    NTLMSSP_NEGOTIATE_NTLM |
                    NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY |
                    NTLMSSP_REQUEST_TARGET |
@@ -225,6 +226,7 @@ NtlmInitializeGlobals(VOID)
     gcli->ClientConfigFlags =
                    NTLMSSP_NEGOTIATE_UNICODE |
                    NTLMSSP_NEGOTIATE_OEM |
+                   NTLMSSP_NEGOTIATE_LM_KEY |
                    NTLMSSP_NEGOTIATE_NTLM |
                    NTLMSSP_REQUEST_TARGET |
                    NTLMSSP_TARGET_TYPE_SERVER |

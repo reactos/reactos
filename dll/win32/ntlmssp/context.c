@@ -311,7 +311,7 @@ CliCreateContext(
     /* if LM auth is not used set ext. session security (ntlmv2 session security) */
     if (gcli->CliLMLevel & (~CLI_LMFLAG_USE_AUTH_LM))
         context->NegFlg |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
-    if ((gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv1) &&
+    if ((gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv1) ||
         (gcli->CliLMLevel & CLI_LMFLAG_USE_AUTH_NTLMv2))
         context->NegFlg |= NTLMSSP_NEGOTIATE_NTLM;
 
@@ -405,8 +405,11 @@ CliCreateContext(
         }
     }
 
-    /* Remove flags we dont support */
-    ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE);
+    /* Remove flags we dont support
+     * Do not remove LM-KEY flag if EXTENDES_SECURITY exists.
+     * => This is done in authentication message.
+     */
+    ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE, FALSE);
 
     context->Credential = cred;
     //*ptsExpiry = 

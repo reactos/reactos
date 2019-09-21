@@ -30,7 +30,8 @@ BOOL
 ValidateNegFlg(
     IN ULONG SupportedFlags,
     IN OUT PULONG pFlags,
-    IN BOOL RemoveUnsupportedFlags)
+    IN BOOL RemoveUnsupportedFlags,
+    IN BOOL ValidateLMKeyFlag)
 {
     ULONG UnsupportedFlags = *pFlags & (~SupportedFlags);
     if (UnsupportedFlags)
@@ -43,7 +44,8 @@ ValidateNegFlg(
         *pFlags &= (~UnsupportedFlags);
     }
     /* check flag consistency MS-NLMP 2.2.2.5 NEGOTIATE */
-    if ((*pFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) &&
+    if (ValidateLMKeyFlag &&
+        (*pFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) &&
         (*pFlags & NTLMSSP_NEGOTIATE_LM_KEY))
     {
         TRACE("Cant have both: NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | NTLMSSP_NEGOTIATE_LM_KEY\n");
@@ -253,9 +255,9 @@ SvrGenerateChallengeMessage(
     else
     {
         chaMessage->NegotiateFlags = negoMsgNegotiateFlags;
-        ValidateNegFlg(gsvr->CfgFlg, &chaMessage->NegotiateFlags, TRUE);
+        ValidateNegFlg(gsvr->CfgFlg, &chaMessage->NegotiateFlags, TRUE, TRUE);
         /* check: do we use all requested flags */
-        if (!ValidateNegFlg(chaMessage->NegotiateFlags, &ASCRequestedFlags, FALSE))
+        if (!ValidateNegFlg(chaMessage->NegotiateFlags, &ASCRequestedFlags, FALSE, TRUE))
         {
             ERR("Server-App request for flags that are not negotiated!\n");
             return SEC_E_INVALID_TOKEN;
@@ -645,7 +647,7 @@ CliGenerateAuthenticationMessage(
     /* validate NegotiateFlags & fail if client wants something
      * we do not support
      * TODO: may not correct for datagram-mode! */
-    if (!ValidateNegFlg(gcli->ClientConfigFlags, &challenge->NegotiateFlags, FALSE))
+    if (!ValidateNegFlg(gcli->ClientConfigFlags, &challenge->NegotiateFlags, FALSE, TRUE))
     {
         ret = SEC_E_INVALID_TOKEN;
         goto quit;
@@ -1382,7 +1384,7 @@ SvrAuthMsgExtractData(
      * (we have negotiated it!)
      * TODO: check is wrong in DATAGRAM-Mode!
      * */
-    if (!ValidateNegFlg(gsvr->CfgFlg, &ad->authMessage->NegotiateFlags, FALSE))
+    if (!ValidateNegFlg(gsvr->CfgFlg, &ad->authMessage->NegotiateFlags, FALSE, TRUE))
     {
         /* flags set that we do not support */
         ERR("Unsupported flags!\n");
