@@ -555,8 +555,7 @@ CliGenerateAuthenticationMessage(
     IN OUT PSecBuffer OutputToken1,
     IN OUT PSecBuffer OutputToken2,
     OUT PULONG pISCContextAttr,
-    OUT PTimeStamp ptsExpiry,
-    OUT PULONG NegotiateFlags)
+    OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;

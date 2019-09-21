@@ -270,15 +270,12 @@ CliCreateContext(
     IN ULONG ISCContextReq,
     OUT PNTLMSSP_CONTEXT_CLI* pNewContext,
     OUT PULONG pISCContextAttr,
-    OUT PTimeStamp ptsExpiry,
-    OUT PULONG pfNegotiateFlags)
+    OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT_CLI context = NULL;
     PNTLMSSP_CREDENTIAL cred;
     PNTLMSSP_GLOBALS_CLI gcli = getGlobalsCli();
-
-    *pfNegotiateFlags = 0;
 
     /* It seems these flags are always returned */
     *pISCContextAttr = ISC_RET_INTEGRITY;
@@ -411,9 +408,6 @@ CliCreateContext(
     /* Remove flags we dont support */
     ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE);
 
-    /* commit results */
-    *pfNegotiateFlags = context->NegFlg;
-
     context->Credential = cred;
     //*ptsExpiry = 
     *pNewContext = context;
@@ -448,7 +442,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     PSecBuffer OutputToken1, OutputToken2 = NULL;
     SecBufferDesc BufferDesc;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
-    ULONG NegotiateFlags;
 
     TRACE("%p %p %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", phCredential, phContext,
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
@@ -494,8 +487,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                fContextReq,
                                &newContext,
                                pfContextAttr,
-                               ptsExpiry,
-                               &NegotiateFlags);
+                               ptsExpiry);
 
         if(!newContext || !NT_SUCCESS(ret))
         {
@@ -507,7 +499,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                           fContextReq,
                                           OutputToken1);
         /* set result */
-        phNewContext->dwUpper = NegotiateFlags;
+        phNewContext->dwUpper = newContext->NegFlg;
         phNewContext->dwLower = (ULONG_PTR)newContext;
 
     }
@@ -532,7 +524,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
             phNewContext->dwLower, fContextReq,
             InputToken1, InputToken2,
             OutputToken1, OutputToken2,
-            pfContextAttr, ptsExpiry, &NegotiateFlags);
+            pfContextAttr, ptsExpiry);
     }
     else
     {

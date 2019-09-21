@@ -355,8 +355,7 @@ CliGenerateAuthenticationMessage(
     IN OUT PSecBuffer OutputToken1,
     IN OUT PSecBuffer OutputToken2,
     OUT PULONG pISCContextAttr,
-    OUT PTimeStamp ptsExpiry,
-    OUT PULONG NegotiateFlags);
+    OUT PTimeStamp ptsExpiry);
 
 /* server message functions */
 
