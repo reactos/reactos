@@ -60,8 +60,6 @@
 ##     Maintained:  Someone is handling that area
 ##     Upstream: This is 3rd party code, synced in our tree
 ##     Abandoned:  No one is handling that code anymore
-##  F: Files. Directories, files (wildcards allowed) covered in
-##     this area
 ##  C: Comments
 
 
@@ -106,6 +104,7 @@
 /dll/appcompat/         @learn-more
 /dll/shellext/acppage/  @learn-more
 /ntoskrnl/ps/apphelp.c  @learn-more
+/sdk/tools/xml2sdb/     @learn-more
 
 # Cache Manager
 #   M: HeisSpiter, Pierre Schweitzer
@@ -147,13 +146,13 @@
 
 # Freeloader
 #   M:
-#   R: tkreuzer. ThePhysicist, Timo Kreuzer
+#   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
 /boot/freeldr/freeldr/  @tkreuzer @Extravert-ir
 
 # HAL / APIC
-#   M: tkreuzer. ThePhysicist, Timo Kreuzer
+#   M: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 /hal/halx86/apic/   @tkreuzer
 
@@ -167,7 +166,7 @@
 #   M:
 #   R: HeisSpiter, Pierre Schweitzer
 #   R: ThFabba, Thomas Faber
-#   R: tkreuzer. ThePhysicist, Timo Kreuzer
+#   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 /ntoskrnl/  @HeisSpiter @ThFabba @tkreuzer
 
@@ -202,7 +201,7 @@
 #   R: HeisSpiter, Pierre Schweitzer
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
-#   R: tkreuzer. ThePhysicist, Timo Kreuzer
+#   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 /dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
 
@@ -228,7 +227,7 @@
 #   R: HeisSpiter, Pierre Schweitzer
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
-#   R: tkreuzer. ThePhysicist, Timo Kreuzer
+#   R: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 /sdk/lib/rtl/   @HeisSpiter @learn-more @ThFabba @tkreuzer
 
@@ -306,10 +305,11 @@
 /sdk/lib/3rdparty/zlib/         @ThFabba
 
 # x64 related code (keep this at the bottom)
-#   M: tkreuzer. ThePhysicist, Timo Kreuzer
+#   M: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
 amd64/                                      @tkreuzer
 /boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
 
 # Translations
 de-DE.rc    @reactos/lang-german
+nl-NL.rc    @reactos/lang-dutch
