@@ -14,19 +14,19 @@ static MUI_ENTRY jaJPSetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "ReactOS \276\257\304\261\257\314\337 \311 \274\256\267\266 \304 \303\336\312\336\262\275 \311 \271\335\274\255\302",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "\246 \265\317\301 \270\300\336\273\262...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         0,
-        "Please wait...",
+        "\265\317\301 \270\300\336\273\262...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY jaJPWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  ReactOS \246 \262\335\275\304\260\331 / \261\257\314\337\270\336\332\260\304\336 \275\331 \306\312 ENTER \246 \265\274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
@@ -170,55 +170,55 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Version Status",
+        "ReactOS \311 \312\336\260\274\336\256\335 \274\336\256\263\300\262",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS \312 \261\331\314\247 \300\336\335\266\262 \306 \261\330\244 \267\311\263 \266\336 \320\266\335\276\262 \303\336",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "\266\262\312\302 \301\255\263 \303\336\275\241 \274\300\266\336\257\303 \313\256\263\266 \317\300\312 \303\275\304 \323\270\303\267 \303\336 \311\320 \274\326\263",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "\275\331 \272\304 \246 \265\275\275\322 \274\317\275\241 \306\301\274\336\256\263 \303\267 \305 \274\326\263 \306\312 \265\275\275\322 \303\336\267\317\276\335\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "\274\336\257\273\262 \311 \312\260\304\336\263\252\261 \303\336 \300\322\275 \312\336\261\262 \312 \303\336\260\300 \246 \312\336\257\270\261\257\314\337 \275\331 \266",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "\326\313\336 \311 \312\337\277\272\335 \303\336 \274\326\263 \274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  ENTER \246 \265\275\304 \277\336\257\272\263 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  F3 \246 \265\275 \304 ReactOS \246 \262\335\275\304\260\331 \276\275\336\306 \274\255\263\330\256\263 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = \277\336\257\272\263   F3 = \274\255\263\330\256\263",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -521,55 +521,55 @@ static MUI_ENTRY jaJPUpgradePageEntries[] =
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "ReactOS \276\257\304\261\257\314\337 \312 \274\300 \306 \332\257\267\256 \273\332\300 \262\335\275\304\260\331 \311 \262\275\336\332\266 \266\336 \266\311\263 \303\336\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "\323\274\270\312\244 \323\274 ReactOS \262\335\275\304\260\331 \266\336 \277\335\274\256\263 \274\303 \262\332\312\336 \276\257\304\261\257\314\337 \314\337\333\270\336\327\321 \312",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "\274\255\263\314\270 \246 \272\272\333\320\331 \272\304 \266\336 \303\336\267\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "\274\255\263\314\270 \267\311\263 \312 \317\300\336 \266\335\276\336\335 \306\312 \274\336\257\277\263 \273\332\303 \262\317\276\335\241",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  UP \317\300\312 DOWN \246 \265\276\312\336 OS \311 \262\335\275\304\260\331 \246 \276\335\300\270 \303\336\267\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  U \246 \265\276\312\336 \276\335\300\270 \274\300 \262\335\275\304\260\331 \246 \261\257\314\337\270\336\332\260\304\336 \303\336\267\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  ESC \246 \265\276\312\336 \261\300\327\274\262 \262\335\275\304\260\331 \303\336 \277\336\257\272\263 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  F3 \246 \265\276\312\336 ReactOS \246 \262\335\275\304\260\331 \276\275\336\306 \274\255\263\330\256\263 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = \261\257\314\337\270\336\332\260\304\336  ESC = \261\257\314\337\270\336\332\260\304\336 \274\305\262  F3 = \274\255\263\330\256\263",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -898,20 +898,20 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  P \246 \265\276\312\336 \314\337\327\262\317\330\260 \312\337\260\303\250\274\256\335 \246 \273\270\276\262 \274\317\275\241",
 //        "\x07  ±À×¼² Êß°Ã¨¼®Ý ¦ »¸¾² ½ÙÆÊ C ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  E \246 \265\276\312\336 \266\270\301\256\263 \312\337\260\303\250\274\256\335 \246 \273\270\276\262 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  L \246 \265\276\312\336 \333\335\330 \312\337\260\303\250\274\256\335 \246 \273\270\276\262 \274\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
@@ -939,97 +939,97 @@ static MUI_ENTRY jaJPChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "\274\275\303\321 \303\336\250\275\270 \306 \261\331 \261\305\300 \311 \312\337\277\272\335 \311 \271\336\335\273\336\262 \311 \274\275\303\321",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "on the system disk",
+        "\312\337\260\303\250\274\256\335 \312 ReactOS \303\336 \273\316\337\260\304 \273\332\303 \262\305\262 \271\262\274\267 \246",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "\302\266\257\303 \262\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "ReactOS \246 \314\336\274\336\306 \276\262\272\263 \273\276\331 \300\322 \306\312\244 \276\257\304\261\257\314\337 \314\337\333\270\336\327\321 \312",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "\271\336\335\273\336\262 \311 \274\275\303\321 \312\337\260\303\250\274\256\335 \246 \261\300\327\274\262 \323\311 \306 \266\264\305\262\304 \262\271\317\276\335\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "\261\300\327\274\262 \274\275\303\321 \312\337\260\303\250\274\256\335 \311 \272\263\316 \312:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  \272\311 \276\335\300\270 \246 \263\271\262\332\331 \305\327 ENTER \246 \265\274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  \274\275\303\321 \312\337\260\303\250\274\256\335 \246 \274\255\304\336\263 \303\336 \315\335\272\263 \275\331 \305\327\244 ESC \246 \265\274\303",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   \312\337\260\303\250\274\256\335 \276\335\300\270 \330\275\304 \306 \323\304\336\330\244 \261\300\327\274\262 \274\275\303\321 \312\337\260\303\250\274\256\335 \246",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   \276\335\300\270 \275\331\266 \273\270\276\262 \274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "\323\274 \323\304\311 \274\275\303\321 \312\337\260\303\250\274\256\335 \306 \262\277\336\335\275\331 \316\266\311 OS \266\336 \261\332\312\336\244",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "ReactOS \262\335\275\304\260\331 \311 \261\304 \306 \261\300\327\274\262 \274\275\303\321 \312\337\260\303\250\274\256\335 \306",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "\273\262\276\257\303\262 \275\331\266\244 \274\275\303\321 \312\337\260\303\250\274\256\335 \246 \323\304 \306 \323\304\336\275 \313\302\326\263 \266\336 ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "\261\331 \266\323 \274\332\317\276\335\241",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = \277\336\257\272\263   ESC = \267\254\335\276\331",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1051,79 +1051,79 @@ static MUI_ENTRY jaJPConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "\274\275\303\321 \312\337\260\303\250\274\256\335 \311 \273\270\274\336\256 \202\252 \264\327\312\336\332 \317\274\300\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "\274\275\303\321 \312\337\260\303\250\274\256\335 \202\315 \274\335\300\336\335 \314\337\333\270\336\327\321\244 \312\260\304\336\263\252\261 \276\257\303\262 \314\337\333\270\336\327\321\244 ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "\305\304\336 \311 OS  \324\244\312\260\304\336\263\252\261 \266\262\312\302\323\304 \266\336 \303\262\267\256\263 \275\331 \316\266\311 \314\337\333\270\336\327\321 \246 \266\262\274 \275\331",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "\314\337\333\270\336\327\321 \246 \314\270\321 \272\304 \266\336 \261\330\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "\277\311\326\263\305 \314\337\333\270\336\327\321 \266\336 \305\262 \266 \266\270\306\335 \274\300 \266\244 \273\270\274\336\256 \274\303 \323 \262\262\304\267 \311\320",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "\273\270\274\336\256 \274\303 \270\300\336\273\262\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "\312\337\260\303\250\274\256\335 \246 \273\270\274\336\256 \274\300 \304\267\244 ReactOS \276\257\304\261\257\314\337 \266\336 \274\255\263\330\256\263 \275\331\317\303\336\244",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "\312\260\304\336\303\336\250\275\270 \266\327 \277\311 \272\335\313\337\255\260\300 \246 \267\304\336\263 \303\336\267\305\262 \266\323 \274\332\317\276\335\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  ENTER \246 \265\276\312\336 \274\275\303\321 \312\337\260\303\250\274\256\335 \246 \273\270\274\336\256 \274\317\275\241 \266\270\306\335 \311 \300\322\244",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   \261\304\303\336 \323\263\262\301\304\336 \300\275\336\310\317\275\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  ESC \246 \265\276\312\336 \317\264 \311 \315\337\260\274\336 \315 \323\304\336\330\317\275\241 \312\337\260\303\250\274\256\335 \312",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   \273\270\274\336\256 \273\332\317\276\335\241",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER=\277\336\257\272\263  ESC=\267\254\335\276\331",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1571,7 +1571,7 @@ MUI_ERROR jaJPErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "\276\262\272\263\n"
     },
     {
         // ERROR_NOT_INSTALLED
@@ -1585,18 +1585,18 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
-        "ENTER = Reboot computer"
+        "ReactOS \262\335\275\304\260\331 \303\336\250\332\270\304\330 \311 \262\335\275\304\260\331 \273\267 \311 \312\337\275 \246 \272\263\301\270 \275\331 \311\306 \274\257\312\337\262 \274\317\274\300!\n"
+        "ENTER = \273\262\267\304\336\263"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
-        "ENTER = Reboot computer"
+        "\262\335\275\304\260\331 \323\304 \246 \314\270\321 \312\337\260\303\250\274\256\335 \246 \273\270\274\336\256 \303\336\267\317\276\335!\n"
+        "ENTER = \273\262\267\304\336\263"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
-        "ENTER = Reboot computer"
+        "\262\335\275\304\260\331 \323\304 \305\262\314\336 \306 ReactOS \246 \262\335\275\304\260\331 \303\336\267\317\276\335!\n"
+        "ENTER = \273\262\267\304\336\263"
     },
     {
         // ERROR_NO_HDD
@@ -1788,37 +1788,37 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         // ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "\314\276\262 \305 \303\336\250\332\270\304\330 \322\262 \303\336\275\241\n"
         "\n"
-        "  * Press any key to continue."
+        "  * \277\336\257\272\263 \275\331 \306\312 \305\306\266 \267\260 \246 \265\274\303 \270\300\336\273\262\241"
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "\276\335\300\270 \274\300 \312\337\260\303\250\274\256\335 \312\244 ReactOS \311 \262\335\275\304\260\331 \306\312\244 \301\262\273 \275\267\336 \317\275\241\n"
+        "\262\335\275\304\260\331 \273\267 \311 \312\337\260\303\250\274\256\335 \312 \275\270\305\270\304\323 %lu MB \313\302\326\263 \303\336\275\241\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * \277\336\257\272\263 \275\331 \306\312 \305\306\266 \267\260 \246 \265\274\303 \270\300\336\273\262\241",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You cannot create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "\312\337\260\303\250\274\256\335 \303\260\314\336\331 \266\336 \262\257\312\337\262 \305\311\303\336\244 \272\311 \303\336\250\275\270 \306\n"
+        "\261\300\327\274\262 \314\337\327\262\317\330\260 \317\300\312 \266\270\301\256\263 \312\337\260\303\250\274\256\335 \246 \273\270\276\262 \303\336\267\317\276\335\241\n"
         "\n"
-        "  * Press any key to continue."
+        "  * \277\336\257\272\263 \275\331 \306\312 \305\306\266 \267\260 \246 \265\274\303 \270\300\336\273\262\241"
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You cannot create more than one extended partition per disk.\n"
+        "\313\304\302 \311 \303\336\250\275\270 \306 \262\257\272\262\274\336\256\263 \311 \266\270\301\256\263 \312\337\260\303\250\274\256\335 \246 \273\270\276\262 \303\336\267\317\276\335\241\n"
         "\n"
-        "  * Press any key to continue."
+        "  * \277\336\257\272\263 \275\331 \306\312 \305\306\266 \267\260 \246 \265\274\303 \270\300\336\273\262\241"
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "\276\257\304\261\257\314\337 \312 \272\311 \312\337\260\303\250\274\256\335 \246 \314\253\260\317\257\304 \303\336\267\317\276\335:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = \272\335\313\337\255\260\300 \311 \273\262\267\304\336\263"
     },
     {
         NULL,
@@ -1958,12 +1958,12 @@ MUI_STRING jaJPStrings[] =
     {STRING_PARTITIONSIZE,
      "\261\300\327\274\262 \312\337\260\303\250\274\256\335\311 \273\262\275\336:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
+     "\314\337\327\262\317\330\260 \312\337\260\303\250\274\256\335 \311 \273\270\276\262 \246 \264\327\313\336 \317\274\300"},
 //     "±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "\266\270\301\256\263 \312\337\260\303\250\274\256\335 \311 \273\270\276\262 \246 \264\327\313\336 \317\274\300"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "\333\335\330 \312\337\260\303\250\274\256\335 \311 \273\270\276\262 \246 \264\327\313\336 \317\274\300"},
     {STRING_HDDSIZE,
     "\261\300\327\274\262 \312\337\260\303\250\274\256\335\311 \273\262\275\336\246 \322\266\336\312\336\262\304 \300\335\262\303\336 \306\255\263\330\256\270 \274\303\270\300\336\273\262\241"},
     {STRING_CREATEPARTITION,
@@ -1973,9 +1973,9 @@ MUI_STRING jaJPStrings[] =
     {STRING_NONFORMATTEDPART,
     "ReactOS\246 \274\335\267 \317\300\312 \320\314\253\260\317\257\304\311 \312\337\260\303\250\274\256\335\306 \262\335\275\304\260\331\275\331 \272\304\266\336 \276\335\300\270 \273\332\317\274\300\241"},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "\274\275\303\321 \312\337\260\303\250\274\256\335 \312 \317\300\336 \314\253\260\317\257\304 \273\332\303 \262\317\276\335\241"},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "\261\300\327\274\262 \312\337\260\303\250\274\256\335 \312 \317\300\336 \314\253\260\317\257\304 \273\332\303 \262\317\276\335\241"},
     {STRING_INSTALLONPART,
     "\276\257\304\261\257\314\337\312 ReactOS\246 \312\337\260\303\250\274\256\335 \274\336\256\263\306 \262\335\275\304\260\331\274\317\275\241"},
     {STRING_CHECKINGPART,
@@ -1987,11 +1987,11 @@ MUI_STRING jaJPStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = \272\335\313\337\255\260\300\311 \273\262\267\304\336\263"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   \314\247\262\331 \311 \273\270\274\336\256: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   \314\247\262\331 \311 \262\304\336\263: %S \266\327: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   \305\317\264 \311 \315\335\272\263: %S to: %S"},
     {STRING_COPYING,
      "   \272\313\337\260 \301\255\263\311 \314\247\262\331: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -2013,7 +2013,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = \272\335\313\337\255\260\300\311 \273\262\267\304\336\263"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " %li \313\336\256\263\272\336 \306 \273\262\267\304\336\263 \273\332\317\275... "},
     {STRING_CONSOLEFAIL1,
     "\272\335\277\260\331\246 \265\260\314\337\335 \303\336\267\317\276\335\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
@@ -2059,7 +2059,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_MAXSIZE,
     "MB (\273\262\300\336\262. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "\266\270\301\256\263 \312\337\260\303\250\274\256\335"},
     {STRING_UNFORMATTED,
     "\274\335\267 (\320\314\253\260\317\257\304)"},
     {STRING_FORMATUNUSED,
