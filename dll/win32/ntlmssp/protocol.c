@@ -54,6 +54,25 @@ ValidateNegFlg(
     return TRUE;
 }
 
+VOID
+NtlmMsgSetVersion(
+    IN ULONG NegFlg,
+    OUT PNTLM_WINDOWS_VERSION pVer)
+{
+    if (!(NegFlg & NTLMSSP_NEGOTIATE_VERSION))
+    {
+        memset(pVer, 0, sizeof(NTLM_WINDOWS_VERSION));
+        return;
+    }
+
+    /* values for windows 2003 */
+    pVer->ProductMajor = 5;
+    pVer->ProductMinor = 2;
+    pVer->ProductBuild = 3790;
+    memset(&pVer->Reserved, 0, sizeof(pVer->Reserved));
+    pVer->NtlmRevisionCurrent = NTLMSSP_REVISION_W2K3;
+}
+
 SECURITY_STATUS
 CliGenerateNegotiateMessage(
     IN PNTLMSSP_CONTEXT_CLI context,
@@ -141,8 +160,8 @@ CliGenerateNegotiateMessage(
                             &offset);
     }
 
-    /* zero version struct */
-    memset(&message->Version, 0, sizeof(NTLM_WINDOWS_VERSION));
+    /* set version */
+    NtlmMsgSetVersion(context->NegFlg, &message->Version);
 
     message->NegotiateFlags = context->NegFlg;
     /* set state */
@@ -270,6 +289,9 @@ SvrGenerateChallengeMessage(
     targetInfoEnd.avpEol.AvId = MsvAvEOL;
     targetInfoEnd.avpEol.AvLen = 0;
     NtlmAppendToBlob(&targetInfoEnd, sizeof(targetInfoEnd), &chaMessage->TargetInfo, &offset);
+
+    /* set version */
+    NtlmMsgSetVersion(chaMessage->NegotiateFlags, &chaMessage->Version);
 
     /* set state */
     Context->hdr.State = ChallengeSent;
@@ -959,6 +981,9 @@ CliGenerateAuthenticationMessage(
 
     if (messageSize != ( (ULONG)offset - (ULONG)authmessage) )
         WARN("messageSize is %ld, really needed %ld\n", messageSize, (ULONG)offset - (ULONG)authmessage);
+
+    /* set version */
+    NtlmMsgSetVersion(context->NegFlg, &authmessage->Version);
 
     context->hdr.State = AuthenticateSent;
     ret = SEC_E_OK;
