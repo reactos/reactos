@@ -18,19 +18,6 @@ assoc (wyświetla wszystkie skojarzenia)\n\
 assoc .ext (wyświetla określone skojarzenie)\n\
 assoc .ext= (usuwa określone skojarzenie)\n\
 assoc .ext=typPliku (dodaje nowe skojarzenie)\n"
-    STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
-       [/S [/D]]\n\n\
-  +   Ustawia atrybut\n\
-  -   Czyści atrybut\n\
-  R   Atrybut pliku tylko do odczytu\n\
-  A   Atrybut pliku archiwalnego\n\
-  S   Atrybut pliku systemowego\n\
-  H   Atrybut pliku ukrytego\n\
-  /S  Przetwarza wszystkie, pasujące pliki w bieżącym katalogu\n\
-      i we wszystkich podkatalogach\n\
-  /D  Przetwarza również katalogi\n\n\
-Wpisz ATTRIB bez żadnego parametru, by wyświetlić atrybuty wszystkich plików.\n"
     STRING_ALIAS_HELP "Ustawia, usuwa, a także wyświetla aliasy.\n\n\
 ALIAS [nazwa=[tekst]]\n\n\
   nazwa   Nazwa aliasu.\n\

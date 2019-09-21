@@ -11,19 +11,6 @@ assoc (afișează toate asocierile)\n\
 assoc .ext (afișează o anumită asociere)\n\
 assoc .ext= (elimină o anumită asociere)\n\
 assoc .ext=tip_fișier (adaugă o nouă asociere)\n"
-    STRING_ATTRIB_HELP "Afișează sau modifică atributele de fișiere.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fișier ...\n\
-       [/S [/D]]\n\n\
-  +   Consimte atributul\n\
-  -   Reprobă atributul\n\
-  R   Atributul fișierelor nemodificabile\n\
-  A   Atributul fișierelor arhivabile\n\
-  S   Atributul fișierelor de sistem\n\
-  H   Atributul fișierelor ascunse\n\
-  /S  Aplică și pentru fișierele din subdirectoare\n\
-  /D  Aplică și pentru directoare\n\n\
-Tastați ATTRIB fără argumente pentru afișarea atributelor pentru\n\
-toate fișierele.\n"
     STRING_ALIAS_HELP "Instituie, destituie sau afișează alias.\n\n\
 ALIAS [alias=[comandă]]\n\n\
   alias    Numele pentru alias.\n\

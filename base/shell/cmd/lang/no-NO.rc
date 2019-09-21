@@ -9,19 +9,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Viser eller endrer filattributtene.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
-       [/S [/D]]\n\n\
-  +   Setter et attributt\n\
-  -   Fjerner et attributt\n\
-  R   Attributt: Skrivebeskyttet.\n\
-  A   Attributt: Arkiver.\n\
-  S   Attributt: System.\n\
-  H   Attributt: Skjult.\n\
-  /S  Behandler tilsvarende filer i gjeldende mappe\n\
-      og alle undermapper.\n\
-  /D  Bearbeider også mapper.\n\n\
-Skriv ATTRIB uten parametere for å vise attributtene til alle filer.\n"
     STRING_ALIAS_HELP "Setter, fjerner eller viser alias.\n\n\
 ALIAS [alias=[Kommando]]\n\n\
   alias    Navn for et alias.\n\

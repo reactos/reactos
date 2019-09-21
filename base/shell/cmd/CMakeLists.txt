@@ -9,7 +9,6 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 list(APPEND SOURCE
     alias.c
     assoc.c
-    attrib.c
     batch.c
     beep.c
     call.c

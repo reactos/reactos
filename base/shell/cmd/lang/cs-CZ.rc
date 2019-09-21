@@ -14,19 +14,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Displays or changes file attributes.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
-       [/S [/D]]\n\n\
-  +   Sets an attribute\n\
-  -   Clears an attribute\n\
-  R   Read-only file attribute\n\
-  A   Archive file attribute\n\
-  S   System file attribute\n\
-  H   Hidden file attribute\n\
-  /S  Processes matching files in the current directory\n\
-      and all subdirectories\n\
-  /D  Processes directories as well\n\n\
-Type ATTRIB without a parameter to display the attributes of all files.\n"
     STRING_ALIAS_HELP "Sets, removes or shows aliases.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Name for an alias.\n\

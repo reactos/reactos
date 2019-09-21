@@ -11,19 +11,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Menampilkan atau mengubah atribut file.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
-       [/S [/D]]\n\n\
-  +   Menyetel atribut\n\
-  -   Membersihkan atribut\n\
-  R   Atribut file Hanya-baca\n\
-  A   Atribut file Arsip\n\
-  S   Atribut file Sistem\n\
-  H   Atribut file Tersembunyi\n\
-  /S  Proses file yang sama dalam direktori dan semua subdirektori\n\
-      saat ini\n\
-  /D  Proses direktori juga\n\n\
-Ketik ATTRIB tanpa parameter untuk menampilkan atribut dari semua file.\n"
     STRING_ALIAS_HELP "Menyetel, menghapus atau menampilkan alias.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Nama untuk alias.\n\

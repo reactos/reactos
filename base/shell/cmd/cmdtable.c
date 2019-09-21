@@ -42,10 +42,6 @@ COMMAND cmds[] =
     {_T("assoc"), 0, CommandAssoc},
 #endif
 
-#ifdef INCLUDE_CMD_ATTRIB
-    {_T("attrib"), 0, CommandAttrib},
-#endif
-
 #ifdef INCLUDE_CMD_BEEP
     {_T("beep"),     0, cmd_beep},
 #endif

@@ -1,4 +1,5 @@
 add_subdirectory(at)
+add_subdirectory(attrib)
 add_subdirectory(chcp)
 add_subdirectory(clip)
 add_subdirectory(comp)
