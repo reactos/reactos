@@ -329,25 +329,25 @@ CliCreateContext(
                       NTLMSSP_NEGOTIATE_KEY_EXCH;
 
     /* client requested features */
-    if(ISCContextReq & ISC_REQ_INTEGRITY)
+    if (ISCContextReq & ISC_REQ_INTEGRITY)
     {
         *pISCContextAttr |= ISC_RET_INTEGRITY;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
-    if(ISCContextReq & ISC_REQ_SEQUENCE_DETECT)
+    if (ISCContextReq & ISC_REQ_SEQUENCE_DETECT)
     {
         *pISCContextAttr |= ISC_RET_SEQUENCE_DETECT;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
-    if(ISCContextReq & ISC_REQ_REPLAY_DETECT)
+    if (ISCContextReq & ISC_REQ_REPLAY_DETECT)
     {
         *pISCContextAttr |= ISC_RET_REPLAY_DETECT;
         context->NegFlg |= NTLMSSP_NEGOTIATE_SIGN;
     }
 
-    if(ISCContextReq & ISC_REQ_CONFIDENTIALITY)
+    if (ISCContextReq & ISC_REQ_CONFIDENTIALITY)
     {
         context->NegFlg |= NTLMSSP_NEGOTIATE_SEAL |
                            NTLMSSP_NEGOTIATE_LM_KEY |
@@ -357,17 +357,17 @@ CliCreateContext(
         *pISCContextAttr |= ISC_RET_CONFIDENTIALITY;
     }
 
-    if(ISCContextReq & ISC_REQ_NULL_SESSION)
+    if (ISCContextReq & ISC_REQ_NULL_SESSION)
     {
         *pISCContextAttr |= ISC_RET_NULL_SESSION;
     }
 
-    if(ISCContextReq & ISC_REQ_CONNECTION)
+    if (ISCContextReq & ISC_REQ_CONNECTION)
     {
         *pISCContextAttr |= ISC_RET_CONNECTION;
     }
 
-    if(ISCContextReq & ISC_REQ_IDENTIFY)
+    if (ISCContextReq & ISC_REQ_IDENTIFY)
     {
         context->NegFlg |= NTLMSSP_REQUEST_INIT_RESP;
         *pISCContextAttr |= ISC_RET_IDENTIFY;
