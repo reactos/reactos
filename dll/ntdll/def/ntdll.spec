@@ -1,6 +1,6 @@
-# @ stdcall PropertyLengthAsVariant(ptr long long long)
-# @ stdcall RtlConvertPropertyToVariant(ptr long ptr ptr)
-# @ stdcall RtlConvertVariantToProperty(ptr long ptr ptr ptr long ptr)
+@ stdcall PropertyLengthAsVariant(ptr long long long)
+@ stdcall RtlConvertPropertyToVariant(ptr long ptr ptr)
+@ stdcall RtlConvertVariantToProperty(ptr long ptr ptr ptr long ptr)
 @ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ fastcall RtlDeactivateActivationContextUnsafeFast(ptr)
 @ fastcall RtlInterlockedPushListSList(ptr ptr ptr long)
@@ -86,7 +86,7 @@
 @ stdcall LdrAccessOutOfProcessResource(ptr ptr ptr ptr ptr)
 @ stdcall LdrAccessResource(long ptr ptr ptr)
 @ stdcall LdrAddRefDll(long ptr)
-# @ stdcall LdrAlternateResourcesEnabled
+@ stdcall LdrAlternateResourcesEnabled()
 @ stdcall LdrCreateOutOfProcessImage(long ptr ptr ptr)
 @ stdcall LdrDestroyOutOfProcessImage(ptr)
 @ stdcall LdrDisableThreadCalloutsForDll(long)
@@ -110,7 +110,7 @@
 @ stdcall LdrOpenImageFileOptionsKey(ptr long ptr) ; 5.2 SP1 and higher
 @ stdcall LdrProcessRelocationBlock(ptr long ptr long)
 @ stdcall LdrQueryImageFileExecutionOptions(ptr str long ptr long ptr)
-# stdcall LdrQueryImageFileExecutionOptionsEx(ptr ptr long ptr long ptr long)
+@ stdcall LdrQueryImageFileExecutionOptionsEx(ptr ptr long ptr long ptr long)
 @ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
 # stdcall LdrSetAppCompatDllRedirectionCallback
@@ -422,10 +422,10 @@
 @ stdcall NtWriteRequestData(ptr ptr long ptr long ptr)
 @ stdcall NtWriteVirtualMemory(long ptr ptr long ptr)
 @ stdcall NtYieldExecution()
-# stdcall PfxFindPrefix
-# stdcall PfxInitialize
-# stdcall PfxInsertPrefix
-# stdcall PfxRemovePrefix
+@ stdcall PfxFindPrefix(ptr ptr)
+@ stdcall PfxInitialize(ptr)
+@ stdcall PfxInsertPrefix(ptr ptr ptr)
+@ stdcall PfxRemovePrefix(ptr ptr)
 @ stdcall RtlAbortRXact(ptr)
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAcquirePebLock()
@@ -709,8 +709,8 @@
 @ stdcall RtlInitializeSid(ptr ptr long)
 @ stdcall RtlInsertElementGenericTable(ptr ptr long ptr)
 @ stdcall RtlInsertElementGenericTableAvl(ptr ptr long ptr)
-# RtlInsertElementGenericTableFull
-# stdcall RtlInsertElementGenericTableFullAvl(ptr ptr long ptr ptr long)
+@ stdcall RtlInsertElementGenericTableFull(ptr ptr long ptr ptr long)
+@ stdcall RtlInsertElementGenericTableFullAvl(ptr ptr long ptr ptr long)
 @ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr)
 @ stdcall RtlInt64ToUnicodeString(double long ptr)
 @ stdcall RtlIntegerToChar(long long long ptr)
@@ -766,8 +766,8 @@
 @ stdcall RtlLookupAtomInAtomTable(ptr wstr ptr)
 @ stdcall RtlLookupElementGenericTable(ptr ptr)
 @ stdcall RtlLookupElementGenericTableAvl(ptr ptr)
-# RtlLookupElementGenericTableFull
-# RtlLookupElementGenericTableFullAvl
+@ stdcall RtlLookupElementGenericTableFull(ptr ptr ptr long)
+@ stdcall RtlLookupElementGenericTableFullAvl(ptr ptr ptr long)
 @ stdcall -arch=x86_64 RtlLookupFunctionEntry(long ptr ptr)
 @ stdcall RtlMakeSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlMapGenericMask(long ptr)
@@ -776,8 +776,8 @@
 @ stdcall RtlMultiAppendUnicodeStringBuffer(ptr long ptr)
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
 @ stdcall RtlMultiByteToUnicodeSize(ptr str long)
-# RtlMultipleAllocateHeap
-# RtlMultipleFreeHeap
+@ stdcall RtlMultipleAllocateHeap(ptr long ptr long ptr)
+@ stdcall RtlMultipleFreeHeap(ptr long long ptr)
 @ stdcall RtlNewInstanceSecurityObject(long long ptr ptr ptr ptr ptr long ptr ptr)
 @ stdcall RtlNewSecurityGrantedAccess(long ptr ptr ptr ptr ptr)
 @ stdcall RtlNewSecurityObject(ptr ptr ptr long ptr ptr)
@@ -878,7 +878,7 @@
 @ cdecl RtlSetThreadIsCritical(long ptr long)
 @ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
 @ stdcall RtlSetTimeZoneInformation(ptr)
-# stdcall RtlSetTimer
+@ stdcall RtlSetTimer(ptr ptr ptr ptr long long long) RtlCreateTimer
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)
 # stdcall RtlSetUnicodeCallouts
 @ stdcall RtlSetUserFlagsHeap(ptr long ptr long long)
@@ -898,14 +898,14 @@
 @ stdcall RtlTimeToSecondsSince1970(ptr ptr)
 @ stdcall RtlTimeToSecondsSince1980(ptr ptr)
 @ stdcall RtlTimeToTimeFields (long long)
-# stdcall RtlTraceDatabaseAdd
-# stdcall RtlTraceDatabaseCreate
-# stdcall RtlTraceDatabaseDestroy
-# stdcall RtlTraceDatabaseEnumerate
-# stdcall RtlTraceDatabaseFind
-# stdcall RtlTraceDatabaseLock
-# stdcall RtlTraceDatabaseUnlock
-# stdcall RtlTraceDatabaseValidate
+@ stdcall RtlTraceDatabaseAdd(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseCreate(long ptr long long ptr)
+@ stdcall RtlTraceDatabaseDestroy(ptr)
+@ stdcall RtlTraceDatabaseEnumerate(ptr ptr ptr)
+@ stdcall RtlTraceDatabaseFind(ptr long ptr ptr)
+@ stdcall RtlTraceDatabaseLock(ptr)
+@ stdcall RtlTraceDatabaseUnlock(ptr)
+@ stdcall RtlTraceDatabaseValidate(ptr)
 @ stdcall RtlTryEnterCriticalSection(ptr)
 # stdcall RtlUnhandledExceptionFilter2
 @ stdcall RtlUnhandledExceptionFilter(ptr)
