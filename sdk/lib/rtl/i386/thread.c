@@ -77,4 +77,20 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
     ThreadContext->Esp -= sizeof(PVOID);
 }
 
+NTSTATUS
+NTAPI
+RtlQueueApcWow64Thread(
+    _In_ HANDLE ThreadHandle,
+    _In_ PKNORMAL_ROUTINE ApcRoutine,
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    return NtQueueApcThread(ThreadHandle,
+                            ApcRoutine,
+                            NormalContext,
+                            SystemArgument1,
+                            SystemArgument2);
+}
+
 /* EOF */

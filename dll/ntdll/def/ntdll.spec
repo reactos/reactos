@@ -113,7 +113,7 @@
 @ stdcall LdrQueryImageFileExecutionOptionsEx(ptr ptr long ptr long ptr long)
 @ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
-# stdcall LdrSetAppCompatDllRedirectionCallback
+@ stdcall LdrSetAppCompatDllRedirectionCallback(long ptr ptr)
 @ stdcall LdrSetDllManifestProber(ptr)
 @ stdcall LdrShutdownProcess()
 @ stdcall LdrShutdownThread()
@@ -475,7 +475,7 @@
 @ stdcall RtlAreBitsClear(ptr long long)
 @ stdcall RtlAreBitsSet(ptr long long)
 @ stdcall RtlAssert(ptr ptr long ptr)
-# stdcall RtlCancelTimer
+@ stdcall RtlCancelTimer(ptr ptr)
 @ stdcall -register RtlCaptureContext(ptr)
 @ stdcall RtlCaptureStackBackTrace(long long ptr ptr)
 # stdcall RtlCaptureStackContext
@@ -525,6 +525,7 @@
 @ stdcall RtlCreateQueryDebugBuffer(long long)
 @ stdcall RtlCreateRegistryKey(long wstr)
 @ stdcall RtlCreateSecurityDescriptor(ptr long)
+@ stdcall RtlCreateServiceSid(ptr ptr ptr)
 @ stdcall RtlCreateSystemVolumeInformationFolder(ptr)
 @ stdcall RtlCreateTagHeap(ptr long str str)
 @ stdcall RtlCreateTimer(ptr ptr ptr ptr long long long)
@@ -812,13 +813,13 @@
 @ stdcall RtlQueryInterfaceMemoryStream(ptr ptr ptr)
 # stdcall RtlQueryProcessBackTraceInformation
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
-# stdcall RtlQueryProcessHeapInformation
+@ stdcall RtlQueryProcessHeapInformation(ptr)
 # stdcall RtlQueryProcessLockInformation
 @ stdcall RtlQueryRegistryValues(long ptr ptr ptr ptr)
 @ stdcall RtlQuerySecurityObject(ptr long ptr long ptr)
 @ stdcall RtlQueryTagHeap(ptr long long long ptr)
 @ stdcall RtlQueryTimeZoneInformation(ptr)
-# stdcall RtlQueueApcWow64Thread
+@ stdcall -arch=i386,x86_64 RtlQueueApcWow64Thread(ptr ptr ptr ptr ptr)
 @ stdcall RtlQueueWorkItem(ptr ptr long)
 @ stdcall -register RtlRaiseException(ptr)
 @ stdcall RtlRaiseStatus(long)
@@ -878,7 +879,7 @@
 @ cdecl RtlSetThreadIsCritical(long ptr long)
 @ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
 @ stdcall RtlSetTimeZoneInformation(ptr)
-@ stdcall RtlSetTimer(ptr ptr ptr ptr long long long) RtlCreateTimer
+@ stdcall RtlSetTimer(ptr ptr ptr ptr long long long)
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)
 # stdcall RtlSetUnicodeCallouts
 @ stdcall RtlSetUserFlagsHeap(ptr long ptr long long)
@@ -907,7 +908,7 @@
 @ stdcall RtlTraceDatabaseUnlock(ptr)
 @ stdcall RtlTraceDatabaseValidate(ptr)
 @ stdcall RtlTryEnterCriticalSection(ptr)
-# stdcall RtlUnhandledExceptionFilter2
+@ stdcall RtlUnhandledExceptionFilter2(ptr long)
 @ stdcall RtlUnhandledExceptionFilter(ptr)
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
 @ stdcall RtlUnicodeStringToAnsiString(ptr ptr long)
@@ -957,7 +958,7 @@
 @ stdcall RtlZombifyActivationContext(ptr)
 @ stdcall RtlpApplyLengthFunction(long long ptr ptr)
 @ stdcall RtlpEnsureBufferSize(long ptr long)
-# stdcall RtlpNotOwnerCriticalSection
+@ stdcall RtlpNotOwnerCriticalSection(ptr)
 @ stdcall RtlpNtCreateKey(ptr long ptr long ptr ptr)
 @ stdcall RtlpNtEnumerateSubKey(ptr ptr long long)
 @ stdcall RtlpNtMakeTemporaryKey(ptr)

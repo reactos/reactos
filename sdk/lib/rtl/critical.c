@@ -801,4 +801,11 @@ RtlIsCriticalSectionLockedByThread(PRTL_CRITICAL_SECTION CriticalSection)
            CriticalSection->RecursionCount != 0;
 }
 
+VOID
+NTAPI
+RtlpNotOwnerCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+{
+    RtlRaiseStatus(STATUS_RESOURCE_NOT_OWNED);
+}
+
 /* EOF */
