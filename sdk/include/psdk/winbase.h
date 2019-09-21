@@ -3287,8 +3287,8 @@ DWORD WINAPI WriteTapemark(_In_ HANDLE, _In_ DWORD, _In_ DWORD, _In_ BOOL);
 #define Yield()
 
 #if (_WIN32_WINNT >= 0x0501)
-BOOL WINAPI ZombifyActCtx(_Inout_ HANDLE);
 DWORD WINAPI WTSGetActiveConsoleSessionId(VOID);
+BOOL WINAPI ZombifyActCtx(_Inout_ HANDLE);
 #endif
 
 #if (_WIN32_WINNT >= 0x0500)
