@@ -95,14 +95,14 @@
 @ stdcall LdrFindCreateProcessManifest(long ptr ptr long ptr) ; 5.1 and 5.2 only
 @ stdcall LdrFindEntryForAddress(ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(long ptr long ptr)
-# stdcall LdrFindResourceEx_U ; 5.1 and higher
+@ stdcall -stub LdrFindResourceEx_U(ptr ptr ptr ptr ptr) ; 5.1 and higher
 @ stdcall LdrFindResource_U(long ptr long ptr)
 @ stdcall LdrFlushAlternateResourceModules()
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
 @ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
-# stdcall LdrHotPatchRoutine
-# stdcall LdrInitShimEngineDynamic
+@ stdcall -stub LdrHotPatchRoutine(ptr)
+@ stdcall -stub LdrInitShimEngineDynamic(ptr)
 @ stdcall LdrInitializeThunk(long long long long)
 @ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stdcall LdrLoadDll(wstr long ptr ptr)
@@ -447,13 +447,13 @@
 @ stdcall RtlAddAuditAccessAce(ptr long long ptr long long)
 @ stdcall RtlAddAuditAccessAceEx(ptr long long long ptr long long)
 @ stdcall RtlAddAuditAccessObjectAce(ptr long long long ptr ptr ptr long long)
-# stdcall RtlAddCompoundAce
+@ stdcall -stub RtlAddCompoundAce(ptr long long long ptr ptr)
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long)
 @ stdcall RtlAddRefActivationContext(ptr)
 @ stdcall RtlAddRefMemoryStream(ptr)
 @ stdcall RtlAddVectoredContinueHandler(long ptr)
 @ stdcall RtlAddVectoredExceptionHandler(long ptr)
-# stdcall RtlAddressInSectionTable
+@ stdcall -stub RtlAddressInSectionTable(ptr ptr long)
 @ stdcall RtlAdjustPrivilege(long long long ptr)
 @ stdcall RtlAllocateActivationContextStack(ptr) ; CHECKME
 @ stdcall RtlAllocateAndInitializeSid(ptr long long long long long long long long long ptr)
@@ -463,7 +463,7 @@
 @ stdcall RtlAnsiStringToUnicodeSize(ptr) RtlxAnsiStringToUnicodeSize
 @ stdcall RtlAnsiStringToUnicodeString(ptr ptr long)
 @ stdcall RtlAppendAsciizToString(ptr str)
-# stdcall RtlAppendPathElement
+@ stdcall -stub RtlAppendPathElement(ptr ptr ptr)
 @ stdcall RtlAppendStringToString(ptr ptr)
 @ stdcall RtlAppendUnicodeStringToString(ptr ptr)
 @ stdcall RtlAppendUnicodeToString(ptr wstr)
@@ -478,10 +478,10 @@
 @ stdcall RtlCancelTimer(ptr ptr)
 @ stdcall -register RtlCaptureContext(ptr)
 @ stdcall RtlCaptureStackBackTrace(long long ptr ptr)
-# stdcall RtlCaptureStackContext
+@ stdcall -stub RtlCaptureStackContext(ptr ptr ptr)
 @ stdcall RtlCharToInteger(ptr long ptr)
 @ stdcall RtlCheckForOrphanedCriticalSections(ptr)
-# stdcall RtlCheckProcessParameters
+@ stdcall -stub RtlCheckProcessParameters(ptr ptr ptr ptr)
 @ stdcall RtlCheckRegistryKey(long ptr)
 @ stdcall RtlClearAllBits(ptr)
 @ stdcall RtlClearBits(ptr long long)
@@ -539,7 +539,7 @@
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
 @ stdcall RtlDeNormalizeProcessParams(ptr)
 @ stdcall RtlDeactivateActivationContext(long long)
-# RtlDebugPrintTimes
+@ stdcall -stub RtlDebugPrintTimes()
 @ stdcall RtlDecodePointer(ptr)
 @ stdcall RtlDecodeSystemPointer(ptr)
 @ stdcall RtlDecompressBuffer(long ptr long ptr long ptr)
@@ -583,7 +583,7 @@
 @ stdcall RtlDumpResource(ptr)
 @ stdcall RtlDuplicateUnicodeString(long ptr ptr)
 @ stdcall RtlEmptyAtomTable(ptr long)
-# stdcall RtlEnableEarlyCriticalSectionEventCreation
+@ stdcall -stub RtlEnableEarlyCriticalSectionEventCreation()
 @ stdcall RtlEncodePointer(ptr)
 @ stdcall RtlEncodeSystemPointer(ptr)
 @ stdcall -arch=win32 -ret64 RtlEnlargedIntegerMultiply(long long)
@@ -676,7 +676,7 @@
 @ stdcall RtlGetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlGetSetBootStatusData(ptr long long ptr long long)
 @ stdcall RtlGetThreadErrorMode()
-# stdcall RtlGetUnloadEventTrace
+@ stdcall -stub RtlGetUnloadEventTrace()
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
 @ stdcall RtlHashUnicodeString(ptr long long ptr)
@@ -696,7 +696,7 @@
 @ stdcall RtlInitString(ptr str)
 @ stdcall RtlInitUnicodeString(ptr wstr)
 @ stdcall RtlInitUnicodeStringEx(ptr wstr)
-# stdcall RtlInitializeAtomPackage
+@ stdcall -stub RtlInitializeAtomPackage(ptr)
 @ stdcall RtlInitializeBitMap(ptr long long)
 @ stdcall RtlInitializeContext(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeCriticalSection(ptr)
@@ -763,7 +763,7 @@
 @ stdcall RtlLockBootStatusData(ptr)
 @ stdcall RtlLockHeap(long)
 @ stdcall RtlLockMemoryStreamRegion(ptr int64 int64 long)
-# stdcall RtlLogStackBackTrace
+@ stdcall -stub RtlLogStackBackTrace()
 @ stdcall RtlLookupAtomInAtomTable(ptr wstr ptr)
 @ stdcall RtlLookupElementGenericTable(ptr ptr)
 @ stdcall RtlLookupElementGenericTableAvl(ptr ptr)
@@ -811,10 +811,10 @@
 @ stdcall RtlQueryInformationActivationContext(long long ptr long ptr long ptr)
 @ stdcall RtlQueryInformationActiveActivationContext(long ptr long ptr)
 @ stdcall RtlQueryInterfaceMemoryStream(ptr ptr ptr)
-# stdcall RtlQueryProcessBackTraceInformation
+@ stdcall -stub RtlQueryProcessBackTraceInformation(ptr)
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
 @ stdcall RtlQueryProcessHeapInformation(ptr)
-# stdcall RtlQueryProcessLockInformation
+@ stdcall -stub RtlQueryProcessLockInformation(ptr)
 @ stdcall RtlQueryRegistryValues(long ptr ptr ptr ptr)
 @ stdcall RtlQuerySecurityObject(ptr long ptr long ptr)
 @ stdcall RtlQueryTagHeap(ptr long long long ptr)
@@ -881,7 +881,7 @@
 @ stdcall RtlSetTimeZoneInformation(ptr)
 @ stdcall RtlSetTimer(ptr ptr ptr ptr long long long)
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)
-# stdcall RtlSetUnicodeCallouts
+@ stdcall -stub RtlSetUnicodeCallouts(ptr)
 @ stdcall RtlSetUserFlagsHeap(ptr long ptr long long)
 @ stdcall RtlSetUserValueHeap(ptr long ptr ptr)
 @ stdcall RtlSizeHeap(long long ptr)
