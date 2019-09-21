@@ -1658,4 +1658,19 @@ LdrFlushAlternateResourceModules(VOID)
     return FALSE;
 }
 
+/*
+ * @unimplemented
+ * See https://www.kernelmode.info/forum/viewtopic.php?t=991
+ */
+NTSTATUS
+NTAPI
+LdrSetAppCompatDllRedirectionCallback(
+    _In_ ULONG Flags,
+    _In_ PLDR_APP_COMPAT_DLL_REDIRECTION_CALLBACK_FUNCTION CallbackFunction,
+    _In_opt_ PVOID CallbackData)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

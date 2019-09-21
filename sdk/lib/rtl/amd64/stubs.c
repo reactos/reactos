@@ -113,4 +113,16 @@ RtlRestoreContext(
     UNIMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+RtlQueueApcWow64Thread(
+    _In_ HANDLE ThreadHandle,
+    _In_ PKNORMAL_ROUTINE ApcRoutine,
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
