@@ -1480,11 +1480,16 @@ MENU_AdjustMenuItemRect(PMENU menu, PRECTL rect)
 static ITEM *MENU_FindItemByCoords( MENU *menu, POINT pt, UINT *pos )
 {
     ITEM *item;
-    UINT i;
+    UINT i, cx, cy;
     RECT rect;
     PWND pWnd = ValidateHwndNoErr(menu->hWnd);
 
     if (!IntGetWindowRect(pWnd, &rect)) return NULL;
+
+    cx = UserGetSystemMetrics(SM_CXDLGFRAME);
+    cy = UserGetSystemMetrics(SM_CYDLGFRAME);
+    RECTL_vInflateRect(&rect, -cx, -cy);
+
     if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
        pt.x = rect.right - 1 - pt.x;
     else
