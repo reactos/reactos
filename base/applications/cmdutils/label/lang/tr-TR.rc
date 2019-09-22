@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
+//    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
     STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
 LABEL [drive:][label]\n\n\
   drive:          Specifies the drive letter of a drive.\n\

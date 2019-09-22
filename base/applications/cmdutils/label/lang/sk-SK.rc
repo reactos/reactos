@@ -8,7 +8,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_LABEL_HELP "Displays or changes drive label.\n\nLABEL [drive:][label]\n"
     STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
 LABEL [drive:][label]\n\n\
   drive:          Specifies the drive letter of a drive.\n\
