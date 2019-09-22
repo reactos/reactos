@@ -21,7 +21,7 @@ public:
     ~CLayerUIPropPage();
 
     // IShellExtInit
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pdtobj, HKEY hkeyProgID);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, LPDATAOBJECT pdtobj, HKEY hkeyProgID);
 
 
     // IShellPropSheetExt

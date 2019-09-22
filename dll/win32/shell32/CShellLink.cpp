@@ -2539,7 +2539,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetFlags(DWORD dwFlags)
  *
  * Loads the shelllink from the dataobject the shell is pointing to.
  */
-HRESULT STDMETHODCALLTYPE CShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT STDMETHODCALLTYPE CShellLink::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     TRACE("%p %p %p %p\n", this, pidlFolder, pdtobj, hkeyProgID);
 

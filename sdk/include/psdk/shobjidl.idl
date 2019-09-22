@@ -1273,7 +1273,7 @@ interface IShellExtInit : IUnknown
     typedef IShellExtInit *LPSHELLEXTINIT;
 
     HRESULT Initialize(
-        [in] LPCITEMIDLIST pidlFolder,
+        [in] PCIDLIST_ABSOLUTE pidlFolder,
         [in] IDataObject *pdtobj,
         [in] HKEY hkeyProgID);
 }

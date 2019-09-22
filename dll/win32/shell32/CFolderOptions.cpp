@@ -83,7 +83,7 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::ReplacePage(EXPPS uPageID, LPFNSVADDPR
  * FolderOptions IShellExtInit interface
  */
 
-HRESULT STDMETHODCALLTYPE CFolderOptions::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT STDMETHODCALLTYPE CFolderOptions::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     return S_OK;
 }

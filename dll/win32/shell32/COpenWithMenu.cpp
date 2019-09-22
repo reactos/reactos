@@ -1327,7 +1327,7 @@ HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
 }
 
 HRESULT WINAPI
-COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
+COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                           IDataObject *pdtobj,
                           HKEY hkeyProgID)
 {
