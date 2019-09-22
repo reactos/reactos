@@ -1,4 +1,11 @@
 /*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * COPYRIGHT:   Copyright 2014-2015 Petr Akhlamov (petr-akhlamov@yandex.ru)
+ *              Copyright 2017 Stanislav Motylkov (binarymaster@mail.ru)
+ *              Copyright 2019 Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
+ */
 	Translators:
 	Petr Akhlamov (petr-akhlamov@yandex.ru)
 	Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com)
