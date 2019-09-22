@@ -586,8 +586,11 @@ VOID ShowInfo(BOOL bAll)
         }
         _tprintf(_T("\n"));
 
-        HeapFree(ProcessHeap, 0, pPerAdapterInfo);
-        pPerAdapterInfo = NULL;
+        if (pPerAdapterInfo)
+        {
+            HeapFree(ProcessHeap, 0, pPerAdapterInfo);
+            pPerAdapterInfo = NULL;
+        }
 
         pAdapter = pAdapter->Next;
     }
