@@ -83,8 +83,8 @@ interface IPersistFolder2 : IPersistFolder
 ]
 interface IPersistIDList : IPersist
 {
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
-    HRESULT GetIDList( [out] LPITEMIDLIST *ppidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE *ppidl );
 }
 
 
@@ -1139,9 +1139,9 @@ interface IShellLinkA : IUnknown
         [in, out, unique] WIN32_FIND_DATAA *pfd,
         [in] DWORD fFlags);
 
-    HRESULT GetIDList( [out] LPITEMIDLIST * ppidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE * ppidl );
 
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
 
     HRESULT GetDescription(
         [out, size_is(cch)] LPSTR pszName,
@@ -1206,9 +1206,9 @@ interface IShellLinkW : IUnknown
         [in, out] WIN32_FIND_DATAW *pfd,
         [in] DWORD fFlags);
 
-    HRESULT GetIDList( [out] LPITEMIDLIST * ppidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE * ppidl );
 
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
 
     HRESULT GetDescription(
         [out, size_is(cch)] LPWSTR pszName,

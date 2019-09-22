@@ -129,8 +129,8 @@ public:
 
     // IShellLinkA
     virtual HRESULT STDMETHODCALLTYPE GetPath(LPSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAA *pfd, DWORD fFlags);
-    virtual HRESULT STDMETHODCALLTYPE GetIDList(LPITEMIDLIST *ppidl);
-    virtual HRESULT STDMETHODCALLTYPE SetIDList(LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE GetIDList(PIDLIST_ABSOLUTE *ppidl);
+    virtual HRESULT STDMETHODCALLTYPE SetIDList(PCIDLIST_ABSOLUTE pidl);
     virtual HRESULT STDMETHODCALLTYPE GetDescription(LPSTR pszName, INT cchMaxName);
     virtual HRESULT STDMETHODCALLTYPE SetDescription(LPCSTR pszName);
     virtual HRESULT STDMETHODCALLTYPE GetWorkingDirectory(LPSTR pszDir, INT cchMaxPath);
@@ -149,8 +149,8 @@ public:
 
     // IShellLinkW
     virtual HRESULT STDMETHODCALLTYPE GetPath(LPWSTR pszFile, INT cchMaxPath, WIN32_FIND_DATAW *pfd, DWORD fFlags);
-    // virtual HRESULT STDMETHODCALLTYPE GetIDList(LPITEMIDLIST *ppidl);
-    // virtual HRESULT STDMETHODCALLTYPE SetIDList(LPCITEMIDLIST pidl);
+    // virtual HRESULT STDMETHODCALLTYPE GetIDList(PIDLIST_ABSOLUTE *ppidl);
+    // virtual HRESULT STDMETHODCALLTYPE SetIDList(PCIDLIST_ABSOLUTE pidl);
     virtual HRESULT STDMETHODCALLTYPE GetDescription(LPWSTR pszName, INT cchMaxName);
     virtual HRESULT STDMETHODCALLTYPE SetDescription(LPCWSTR pszName);
     virtual HRESULT STDMETHODCALLTYPE GetWorkingDirectory(LPWSTR pszDir, INT cchMaxPath);
