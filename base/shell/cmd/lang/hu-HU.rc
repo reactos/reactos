@@ -230,12 +230,6 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST állományname    Specifies a true condition if the specified állományname exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-    STRING_LABEL_HELP1 "A kötet címkéjét megjeleníti, vagy megváltoztatja.\n\n\
-LABEL [meghajtó:] [új_címke]\n"
-    STRING_LABEL_HELP2 "A (%c) meghajtóban lévõ kötet címkéje %s\n"
-    STRING_LABEL_HELP3 "A (%c) megjajtóban lévõ kötetnek nincs címkéje.\n"
-    STRING_LABEL_HELP4 "A kötet sorozatszáma %04X-%04X\n"
-    STRING_LABEL_HELP5 "Új kötetcímke (11 betû, ENTER ha üres)? "
     STRING_LOCALE_HELP1 "Az aktuális idõ:"
     STRING_MKDIR_HELP "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]path\nMD [meghajtó:]path"

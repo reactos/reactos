@@ -1,0 +1,18 @@
+/* French translation by Sylvain Pétréolle, Pierre Schweitzer */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Affiche ou change le nom de volume du disque.\n\nLABEL [disque:][nomdevolume]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Le nom de volume du disque %c: est %s\n"
+    STRING_LABEL_TEXT2 "Le disque %c: n'a pas de nom de volume\n"
+    STRING_LABEL_TEXT3 "Le numéro de serie du volume est %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Nom de volume (32 Caractères, ENTREE si aucun) ? "
+    STRING_ERROR_INVALID_DRIVE "Lecteur spécifié introuvable\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

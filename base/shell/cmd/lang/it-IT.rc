@@ -245,12 +245,6 @@ command           E' il comando da eseguire se la condizione è verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
 DEFINED variabile E' verificata se la variabile è definita.\n"
-    STRING_LABEL_HELP1 "Visualizza o modifica l'etichetta di un disco.\n\n\
-LABEL [disco:][etichetta]\n"
-    STRING_LABEL_HELP2 "Il Volume nel disco %c: è %s\n"
-    STRING_LABEL_HELP3 "Il Volume nel disco %c: non ha etichetta\n"
-    STRING_LABEL_HELP4 "Il numero di serie del Volume è %04X-%04X\n"
-    STRING_LABEL_HELP5 "Etichetta del disco (11 Caratteri, INVIO per nessuna)? "
     STRING_LOCALE_HELP1 "L'ora attuale è"
     STRING_MKDIR_HELP "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"

@@ -230,11 +230,6 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
-    STRING_LABEL_HELP1 "显示或改变驱动器卷标。\n\nLABEL [驱动器:][卷标]\n"
-    STRING_LABEL_HELP2 "驱动器 %c 中的卷是 %s\n"
-    STRING_LABEL_HELP3 "驱动器 %c 中的卷没有卷标。\n"
-    STRING_LABEL_HELP4 "卷的序列号是 %04X-%04X\n"
-    STRING_LABEL_HELP5 "驱动器卷标 (11 个字符, 按 ENTER 忽略)? "
     STRING_LOCALE_HELP1 "当前时间是"
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"

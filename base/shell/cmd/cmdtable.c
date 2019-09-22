@@ -121,10 +121,6 @@ COMMAND cmds[] =
 
     {_T("if"), 0, cmd_if},
 
-#ifdef INCLUDE_CMD_LABEL
-    {_T("label"), 0, cmd_label},
-#endif
-
 #ifdef INCLUDE_CMD_MEMORY
     {_T("memory"), 0, CommandMemory},
 #endif

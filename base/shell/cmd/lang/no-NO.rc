@@ -243,11 +243,6 @@ streng1==streng2  Angir et oppfylt vilkår hvis tekststrengene er like\n\
 EXIST filnavn     Angir et oppfylt vilkår hvis spesifisert filnavn eksisterer.\n\
 DEFINED variabel  Angir et oppfylt vilkår hvis spesifisert variabel er\n\
                   definert.\n"
-    STRING_LABEL_HELP1 "Viser eller endrer navn på stasjon.\n\nLABEL [stasjon:][merke]\n"
-    STRING_LABEL_HELP2 "Volumet i stasjon %c: er %s\n"
-    STRING_LABEL_HELP3 "Volumet i stasjon %c: er uten navn\n"
-    STRING_LABEL_HELP4 "Volumserienummeret er %04X-%04X\n"
-    STRING_LABEL_HELP5 "Volumnavn (11 tegn, Enter = intet navn)? "
     STRING_LOCALE_HELP1 "gjeldende tid er"
     STRING_MKDIR_HELP "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"

@@ -1,0 +1,19 @@
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "顯示或改變驅動器卷標。\n\nLABEL [驅動器:][卷標]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "驅動器 %c 中的卷是 %s\n"
+    STRING_LABEL_TEXT2 "驅動器 %c 中的卷沒有卷標。\n"
+    STRING_LABEL_TEXT3 "卷的序列號是 %04X-%04X\n"
+    STRING_LABEL_TEXT4 "驅動器卷標 (32 個字元, 按 ENTER 忽略)? "
+    STRING_ERROR_INVALID_DRIVE "無效驅動器指定\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END 

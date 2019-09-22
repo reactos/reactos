@@ -243,11 +243,6 @@ Variable1==Variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
-    STRING_LABEL_HELP1 "Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\nLABEL [Laufwerk:][label]"
-    STRING_LABEL_HELP2 "Datenträger im Laufwerk %c: ist %s\n"
-    STRING_LABEL_HELP3 "Datenträger im Laufwerk %c: hat keine Bezeichnung\n"
-    STRING_LABEL_HELP4 "Datenträger-Seriennummer: %04X-%04X\n"
-    STRING_LABEL_HELP5 "Laufwerksbezeichnung (max. 11 Zeichen, ENTER für keine)? "
     STRING_LOCALE_HELP1 "Aktuelle Zeit: "
     STRING_MKDIR_HELP "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"

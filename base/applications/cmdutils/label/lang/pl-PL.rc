@@ -1,0 +1,25 @@
+/*
+ *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *    Updated by niski - Maciej Bialas (Mar, 2010)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Wolumin w napędzie %c: ma etykietę: %s\n"
+    STRING_LABEL_TEXT2 "Wolumin w napędzie %c: nie posiada etykiety\n"
+    STRING_LABEL_TEXT3 "Numer seryjny woluminu to: %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Podaj etykietę (0-32 znaków, ENTER = brak etykiety) "
+    STRING_ERROR_INVALID_DRIVE "Nieprawidłowe określenie napędu\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

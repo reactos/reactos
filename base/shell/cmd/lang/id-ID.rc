@@ -245,11 +245,6 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
-    STRING_LABEL_HELP1 "Menampilkan atau mengubah label drive.\n\nLABEL [drive:][label]\n"
-    STRING_LABEL_HELP2 "Volume di drive %c: adalah %s\n"
-    STRING_LABEL_HELP3 "Volume di drive %c: tidak berlabel\n"
-    STRING_LABEL_HELP4 "Nomor Seri Volume adalah %04X-%04X\n"
-    STRING_LABEL_HELP5 "Label Drive (11 Karakter, ENTER jika sudah)? "
     STRING_LOCALE_HELP1 "Waktu saat ini"
     STRING_MKDIR_HELP "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"

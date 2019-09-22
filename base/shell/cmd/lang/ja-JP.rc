@@ -251,11 +251,6 @@ EXIST ファイル名  指定したファイル名が存在するときに条件
                   指定します。\n\
 DEFINED 変数      指定した変数が定義されているときに条件が真になるように\n\
                   指定します。\n"
-    STRING_LABEL_HELP1 "ディスクのボリューム ラベルを表示または変更します。\n\nLABEL [ドライブ:][ラベル]\n"
-    STRING_LABEL_HELP2 "ドライブ %c: のボリューム ラベルは %s です\n"
-    STRING_LABEL_HELP3 "ドライブ %c: にはボリューム ラベルがありませんl\n"
-    STRING_LABEL_HELP4 "ボリューム シリアル番号は %04X-%04X\n です"
-    STRING_LABEL_HELP5 "ボリューム ラベルを 11 文字以内で入力してください。\n必要なければ Enter キーを押してください: "
     STRING_LOCALE_HELP1 "現在時刻は"
     STRING_MKDIR_HELP "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\

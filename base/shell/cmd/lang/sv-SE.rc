@@ -243,11 +243,6 @@ sträng1==sträng2  Anger ett uppfyllt villkor om textsträngarna är lika\n\
 EXIST filnamn     Anger ett uppfyllt villkor om angivet filnamn existerar.\n\
 DEFINED variabel  Anger ett uppfyllt villkor om angiven variabel är\n\
                   definerad.\n"
-    STRING_LABEL_HELP1 "Skapar, tar bort eller ändrar etikett på enhet.\n\nLABEL [enhet:][etikett]\n"
-    STRING_LABEL_HELP2 "Volymen i enhet %c: är %s\n"
-    STRING_LABEL_HELP3 "Volymen i enhet %c: är utan namn\n"
-    STRING_LABEL_HELP4 "Volymens serienummer är %04X-%04X\n"
-    STRING_LABEL_HELP5 "Volymnamn (11 tecken, Enter = inget namn)? "
     STRING_LOCALE_HELP1 "aktuell tid är"
     STRING_MKDIR_HELP "Skapar en mapp.\n\n\
 MKDIR [enhet:]mapp\nMD [enhet:]mapp"

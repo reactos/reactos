@@ -250,11 +250,6 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
-    STRING_LABEL_HELP1 "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
-    STRING_LABEL_HELP2 "Wolumin w napędzie %c: ma etykietę: %s\n"
-    STRING_LABEL_HELP3 "Wolumin w napędzie %c: nie posiada etykiety\n"
-    STRING_LABEL_HELP4 "Numer seryjny woluminu to: %04X-%04X\n"
-    STRING_LABEL_HELP5 "Podaj etykietę (0-11 znaków, ENTER = brak etykiety) "
     STRING_LOCALE_HELP1 "Czas bieżący"
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"

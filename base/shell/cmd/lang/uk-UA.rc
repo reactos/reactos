@@ -255,11 +255,6 @@ ERRORLEVEL число  Ця умова є iстинною, якщо код, що
 EXIST iм'я_файлу  Умова є iстинною, якщо файл з вказаним iменем iснує.\n\
 DEFINED змiнна    Ця умова є iстинною, якщо вказана змiнна\n\
                   задана.\n"
-    STRING_LABEL_HELP1 "Вiдображення або змiна мiтки тому.\n\nLABEL [диск:][мiтка]\n"
-    STRING_LABEL_HELP2 "Том в пристрої %c: має мiтку %s\n"
-    STRING_LABEL_HELP3 "Том в пристрої %c: не має мiтки\n"
-    STRING_LABEL_HELP4 "Серiйний номер тому: %04X-%04X\n"
-    STRING_LABEL_HELP5 "Мiтка тому (11 букв, ENTER без мiтки)? "
     STRING_LOCALE_HELP1 "Поточний час: "
     STRING_MKDIR_HELP "Створення каталогу.\n\n\
 MKDIR [диск:]шлях\nMD [диск:]шлях"

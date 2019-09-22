@@ -1,0 +1,18 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "%c sürücüsünde birim %s\n"
+    STRING_LABEL_TEXT2 "%c sürücüsünde birimin etiketi yok\n"
+    STRING_LABEL_TEXT3 "Birim Dizilik Numarası %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Sürücü etiketi (32 damga, yok için Giriş)? "
+    STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü belirtmesi.\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

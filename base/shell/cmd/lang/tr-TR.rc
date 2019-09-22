@@ -251,11 +251,6 @@ dizgi1==dizgi2    Belirtilen metin dizgileri birbiriyle uyuşuyorsa bir doğru\n
                   şart belirtir.\n\
 EXIST kütük adı   Belirtilen kütük adı varsa bir doğru şart belirtir.\n\
 DEFINED değişken  Belirtilen değişken tanımlanmışsa bir doğru şart belirtir.\n"
-    STRING_LABEL_HELP1 "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
-    STRING_LABEL_HELP2 "%c sürücüsünde birim %s\n"
-    STRING_LABEL_HELP3 "%c sürücüsünde birimin etiketi yok\n"
-    STRING_LABEL_HELP4 "Birim Dizilik Numarası %04X-%04X\n"
-    STRING_LABEL_HELP5 "Sürücü etiketi (11 damga, yok için Giriş)? "
     STRING_LOCALE_HELP1 "Şimdiki zaman"
     STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
 MKDIR [sürücü:]yol\nMD [sürücü:]yol"

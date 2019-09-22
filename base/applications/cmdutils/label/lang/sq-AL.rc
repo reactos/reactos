@@ -1,0 +1,20 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Shfaq ose ndrysho etiketën e driverit.\n\nLABEL [drive:][etikete]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Volumi në drive %c: is %s\n"
+    STRING_LABEL_TEXT2 "Volumi në drive %c: has no label\n"
+    STRING_LABEL_TEXT3 "Numri Serial i Volumit është %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Volume label (32 Characters, ENTER if none)? "
+    STRING_ERROR_INVALID_DRIVE "Specifikimi i drivit invalid\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

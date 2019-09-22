@@ -1,0 +1,18 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Afișează sau modifică eticheta unei unități (de stocare).\n\nLABEL [unitate:][etichetă]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Volumul unității %c: este etichetat ca %s\n"
+    STRING_LABEL_TEXT2 "Volumul unității %c: nu este etichetat.\n"
+    STRING_LABEL_TEXT3 "Numărul de serie al volumului este %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Introduceți eticheta unității (opțională, de 32 caractere), apoi ENTER "
+    STRING_ERROR_INVALID_DRIVE "Specificarea unității este eronată\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

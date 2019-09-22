@@ -246,11 +246,6 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
-    STRING_LABEL_HELP1 "Muestra o cambia la etiqueta de una unidad.\n\nLABEL [unidad:][etiqueta]\n"
-    STRING_LABEL_HELP2 "El volumen en la unidad %c: es %s\n"
-    STRING_LABEL_HELP3 "El volumen en la unidad %c: no tiene etiqueta\n"
-    STRING_LABEL_HELP4 "El número de serie del volumen es %04X-%04X\n"
-    STRING_LABEL_HELP5 "Etiqueta del volumen (11 Caracteres, INTRO para ninguna)? "
     STRING_LOCALE_HELP1 "La hora actual es"
     STRING_MKDIR_HELP "Crea un directorio.\n\n\
 MKDIR [unidad:]ruta\nMD [unidad:]ruta"

@@ -237,9 +237,6 @@ INT  CommandExit (LPTSTR);
 INT  CommandRem (LPTSTR);
 INT  CommandShowCommands (LPTSTR);
 
-/* Prototypes for LABEL.C */
-INT cmd_label (LPTSTR);
-
 /* Prototypes for LOCALE.C */
 extern TCHAR cDateSeparator;
 extern INT   nDateFormat;

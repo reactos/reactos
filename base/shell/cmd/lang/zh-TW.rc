@@ -231,11 +231,6 @@ ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字�
 字元串1==字元串2   當所指定的字元串相匹配時為真。\n\
 EXIST 檔名       當指定的檔名存在時為真。\n\
 DEFINED 變數       當指定的變數已被定義時為真。\n"
-    STRING_LABEL_HELP1 "顯示或改變驅動器卷標。\n\nLABEL [驅動器:][卷標]\n"
-    STRING_LABEL_HELP2 "驅動器 %c 中的卷是 %s\n"
-    STRING_LABEL_HELP3 "驅動器 %c 中的卷沒有卷標。\n"
-    STRING_LABEL_HELP4 "卷的序列號是 %04X-%04X\n"
-    STRING_LABEL_HELP5 "驅動器卷標 (11 個字元, 按 ENTER 忽略)? "
     STRING_LOCALE_HELP1 "當前時間是"
     STRING_MKDIR_HELP "創建一個目錄。\n\n\
 MKDIR [驅動器:]路徑\nMD [驅動器:]路徑"

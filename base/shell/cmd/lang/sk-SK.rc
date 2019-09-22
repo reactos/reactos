@@ -250,11 +250,6 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-    STRING_LABEL_HELP1 "Displays or changes drive label.\n\nLABEL [drive:][label]\n"
-    STRING_LABEL_HELP2 "Volume in drive %c: is %s\n"
-    STRING_LABEL_HELP3 "Volume in drive %c: has no label\n"
-    STRING_LABEL_HELP4 "Volume Serial Number is %04X-%04X\n"
-    STRING_LABEL_HELP5 "Drive label (11 Characters, ENTER if none)? "
     STRING_LOCALE_HELP1 "Aktuálny čas je"
     STRING_MKDIR_HELP "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"

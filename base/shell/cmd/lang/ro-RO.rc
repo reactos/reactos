@@ -274,11 +274,6 @@ O etichetă va fi definită pe un rând întreg, începând cu două puncte (:)\
                     fișierului specificat.\n\
   DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
-    STRING_LABEL_HELP1 "Afișează sau modifică eticheta unei unități (de stocare).\n\nLABEL [unitate:][etichetă]\n"
-    STRING_LABEL_HELP2 "Volumul unității %c: este etichetat ca %s\n"
-    STRING_LABEL_HELP3 "Volumul unității %c: nu este etichetat.\n"
-    STRING_LABEL_HELP4 "Numărul de serie al volumului este %04X-%04X\n"
-    STRING_LABEL_HELP5 "Introduceți eticheta unității (opțională, de 11 caractere), apoi ENTER "
     STRING_LOCALE_HELP1 "Ora curentă este"
     STRING_MKDIR_HELP "Crează un director.\n\n\
 MD [unitate:]cale\nMKDIR [unitate:]cale\n"

@@ -36,7 +36,6 @@ list(APPEND SOURCE
     history.c
     if.c
     internal.c
-    label.c
     locale.c
     memory.c
     misc.c
