@@ -65,7 +65,7 @@ KeInsertDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
                        &DeviceQueueEntry->DeviceListEntry);
     }
 
-    /* Sert the Insert state into the entry */
+    /* Set the Insert state into the entry */
     DeviceQueueEntry->Inserted = Inserted;
 
     /* Release the lock */
