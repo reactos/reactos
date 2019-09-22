@@ -13,6 +13,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "%c sürücüsünde birimin etiketi yok\n"
     STRING_LABEL_TEXT3 "Birim Dizilik Numarası %04X-%04X\n"
     STRING_LABEL_TEXT4 "Sürücü etiketi (32 damga, yok için Giriş)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Geçersiz sürücü belirtmesi.\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

@@ -19,6 +19,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Том в пристрої %c: не має мiтки\n"
     STRING_LABEL_TEXT3 "Серiйний номер тому: %04X-%04X\n"
     STRING_LABEL_TEXT4 "Мiтка тому (32 букв, ENTER без мiтки)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Невiрне визначення диску\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

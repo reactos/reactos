@@ -13,6 +13,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "驱动器 %c 中的卷没有卷标。\n"
     STRING_LABEL_TEXT3 "卷的序列号是 %04X-%04X\n"
     STRING_LABEL_TEXT4 "驱动器卷标 (32 个字符, 按 ENTER 忽略)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "无效驱动器指定\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

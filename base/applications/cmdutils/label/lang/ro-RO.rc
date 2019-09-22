@@ -13,6 +13,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Volumul unității %c: nu este etichetat.\n"
     STRING_LABEL_TEXT3 "Numărul de serie al volumului este %04X-%04X\n"
     STRING_LABEL_TEXT4 "Introduceți eticheta unității (opțională, de 32 caractere), apoi ENTER "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Specificarea unității este eronată\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

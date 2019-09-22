@@ -102,6 +102,43 @@ IsValidPathName(LPCWSTR pszPath)
 }
 
 
+static
+BOOL
+PromptYesNo(VOID)
+{
+    WCHAR szOptions[4];
+    WCHAR szInput[16];
+    BOOL bResult = FALSE;
+
+    LoadString(GetModuleHandle(NULL), STRING_LABEL_OPTIONS, szOptions, ARRAYSIZE(szOptions));
+
+    for (;;)
+    {
+        ConPuts(StdOut, L"\n");
+        ConResPuts(StdOut, STRING_LABEL_PROMPT);
+
+        ConInString(szInput, ARRAYSIZE(szInput));
+
+        if (towupper(szInput[0]) == szOptions[0])
+        {
+            bResult = TRUE;
+            break;
+        }
+        else if (towupper(szInput[0]) == szOptions[1])
+        {
+            bResult = FALSE;
+            break;
+        }
+
+        ConPuts(StdOut, L"\n");
+    }
+
+    ConPuts(StdOut, L"\n");
+
+    return bResult;
+}
+
+
 int wmain(int argc, WCHAR *argv[])
 {
     WCHAR szRootPath[] = L" :\\";
@@ -204,6 +241,12 @@ int wmain(int argc, WCHAR *argv[])
 
         ConInString(szLabel, ARRAYSIZE(szLabel));
         ConPuts(StdOut, L"\n");
+
+        if (wcslen(szLabel) == 0)
+        {
+            if (PromptYesNo() == FALSE)
+                return 0;
+        }
     }
 
     if (!SetVolumeLabelW(szRootPath, szLabel))

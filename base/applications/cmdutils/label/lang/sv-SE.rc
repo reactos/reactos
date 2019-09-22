@@ -11,6 +11,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Volymen i enhet %c: är utan namn\n"
     STRING_LABEL_TEXT3 "Volymens serienummer är %04X-%04X\n"
     STRING_LABEL_TEXT4 "Volymnamn (32 tecken, Enter = inget namn)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Ogiltig enhet angiven\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

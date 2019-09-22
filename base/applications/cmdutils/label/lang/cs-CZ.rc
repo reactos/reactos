@@ -15,6 +15,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Volume in drive %c: has no label\n"
     STRING_LABEL_TEXT3 "Volume Serial Number is %04X-%04X\n"
     STRING_LABEL_TEXT4 "Volume label (32 Characters, ENTER if none)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Neplatná specifikace jednotky\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

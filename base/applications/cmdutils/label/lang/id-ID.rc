@@ -13,6 +13,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Volume di drive %c: tidak berlabel\n"
     STRING_LABEL_TEXT3 "Nomor Seri Volume adalah %04X-%04X\n"
     STRING_LABEL_TEXT4 "Label Drive (32 Karakter, ENTER jika sudah)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Spesifikasi drive tidak benar\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

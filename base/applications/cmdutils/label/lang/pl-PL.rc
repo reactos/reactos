@@ -20,6 +20,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Wolumin w napędzie %c: nie posiada etykiety\n"
     STRING_LABEL_TEXT3 "Numer seryjny woluminu to: %04X-%04X\n"
     STRING_LABEL_TEXT4 "Podaj etykietę (0-32 znaków, ENTER = brak etykiety) "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Nieprawidłowe określenie napędu\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

@@ -13,6 +13,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "Le disque %c: n'a pas de nom de volume\n"
     STRING_LABEL_TEXT3 "Le numéro de serie du volume est %04X-%04X\n"
     STRING_LABEL_TEXT4 "Nom de volume (32 Caractères, ENTREE si aucun) ? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "Lecteur spécifié introuvable\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END

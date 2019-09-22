@@ -11,6 +11,8 @@ LABEL [drive:][label]\n\n\
     STRING_LABEL_TEXT2 "ドライブ %c: にはボリューム ラベルがありませんl\n"
     STRING_LABEL_TEXT3 "ボリューム シリアル番号は %04X-%04X\n です"
     STRING_LABEL_TEXT4 "ボリューム ラベルを 32 文字以内で入力してください。\n必要なければ Enter キーを押してください: "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
     STRING_ERROR_INVALID_DRIVE "無効なドライブ指定です。\n"
     STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
 END
