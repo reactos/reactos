@@ -122,6 +122,12 @@ HRESULT CSearchBar::GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND 
 
 LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+    INT len = 0;
+    WCHAR ptrchar;
+    WCHAR endchar[2] = { 0 };
+    WCHAR startchar[2] = { 0 };
+    WCHAR asterisk[2] = L"*";
+
     CComHeapPtr<SearchStart> pSearchStart(static_cast<SearchStart *>(CoTaskMemAlloc(sizeof(SearchStart))));
     GetDlgItemText(IDC_SEARCH_FILENAME, pSearchStart->szFileName, _countof(pSearchStart->szFileName));
     GetDlgItemText(IDC_SEARCH_QUERY, pSearchStart->szQuery, _countof(pSearchStart->szQuery));
@@ -130,6 +136,34 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID), MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, pSearchStart->szPath);
         return 0;
     }
+
+    // See if we have a szFileName, our first character is not an asterisk,
+    // and we have room in MAX_PATH to add an asterisk at the beginning of szFileName then add it
+    if(wcscmp(pSearchStart->szFileName, L"") != 0)
+        {
+        len = wcslen(pSearchStart->szFileName);
+        if(len > 0)
+            {
+            ptrchar = pSearchStart->szFileName[len - 1];
+            memcpy(endchar, &ptrchar, 2);
+            ptrchar = pSearchStart->szFileName[0];
+            memcpy(startchar, &ptrchar, 2);
+            if ((len < MAX_PATH) && (wcscmp(startchar, L"*") != 0))
+                {
+                    memmove(&pSearchStart->szFileName[1], &pSearchStart->szFileName[0],
+                            len * sizeof(WCHAR) + sizeof(WCHAR));
+                    len = len + 1;
+                    pSearchStart->szFileName[0] = asterisk[0];
+                }
+            }
+
+        // See if our last character is an asterisk and if not and we have room then add one
+        if((wcscmp(endchar, L"*") != 0) && (len < MAX_PATH))
+            wcscat(pSearchStart->szFileName, L"*");
+        }
+
+    // Print our final search string for szFileName
+    TRACE("Searched szFileName is '%S'.\n", pSearchStart->szFileName);
 
     CComPtr<IShellBrowser> pShellBrowser;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pShellBrowser));

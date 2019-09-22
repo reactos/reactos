@@ -260,6 +260,12 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             CStringW status;
+            if ((pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
+                && (pSearchData->szQueryA.IsEmpty() || SearchFile(szPath, pSearchData)))
+                {
+                PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
+                uTotalFound++;
+                }
             status.Format(IDS_SEARCH_FOLDER, FindData.cFileName);
             PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
 
