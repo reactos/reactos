@@ -994,8 +994,9 @@ CsrLockProcessByClientId(IN HANDLE Pid,
     *CsrProcess = NULL;
 
     /* Setup the List Pointers */
-    NextEntry = &CsrRootProcess->ListLink;
-    do
+    for (NextEntry = CsrRootProcess->ListLink.Flink;
+         NextEntry != &CsrRootProcess->ListLink;
+         NextEntry = NextEntry->Flink)
     {
         /* Get the Process */
         CurrentProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
@@ -1006,10 +1007,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
             Status = STATUS_SUCCESS;
             break;
         }
-
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
-    } while (NextEntry != &CsrRootProcess->ListLink);
+    }
 
     /* Check if we didn't find it in the list */
     if (!NT_SUCCESS(Status))
