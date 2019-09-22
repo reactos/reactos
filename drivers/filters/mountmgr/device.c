@@ -506,13 +506,13 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     DeviceInformation->LetterAssigned =
     DriveLetterInfo->DriveLetterWasAssigned = TRUE;
 
-    /* Browse all the symlink to see if there's already a drive letter */
+    /* Browse all the symlinks to check if there is already a drive letter */
     NextEntry = DeviceInformation->SymbolicLinksListHead.Flink;
     while (NextEntry != &(DeviceInformation->SymbolicLinksListHead))
     {
         SymlinkInformation = CONTAINING_RECORD(NextEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-        /* This is a driver letter & online one, forget about new drive eltter */
+        /* If this is a drive letter and it is online, forget about new drive letter */
         if (IsDriveLetter(&(SymlinkInformation->Name)) && SymlinkInformation->Online)
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
