@@ -335,6 +335,6 @@ BEGIN
     IDS_SEARCH_FILES_FOUND "Найдено файлов: %u"
     IDS_SEARCH_OPEN_FOLDER "Открыть &расположение файла"
     IDS_COL_NAME "Имя"
-    IDS_COL_LOCATION "Папка"
+    IDS_COL_LOCATION "В папке"
     IDS_COL_RELEVANCE "Релевантность"
 END
