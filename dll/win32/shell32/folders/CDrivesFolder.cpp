@@ -1054,7 +1054,7 @@ HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
  *
  * NOTES: it makes no sense to change the pidl
  */
-HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CDrivesFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     return S_OK;
 }
