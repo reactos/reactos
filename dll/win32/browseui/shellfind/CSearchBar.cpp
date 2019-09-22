@@ -147,7 +147,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
             endchar = ptrchar;
             ptrchar = pSearchStart->szFileName[0];
             startchar = ptrchar;
-            if ((len < MAX_PATH) && (startchar != L'*'))
+            if ((len < MAX_PATH - 1) && (startchar != L'*'))
             {
                 memmove(&pSearchStart->szFileName[1], &pSearchStart->szFileName[0],
                        len * sizeof(WCHAR) + sizeof(WCHAR));
@@ -157,7 +157,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
         }
 
         // See if our last character is an asterisk and if not and we have room then add one
-        if ((len < MAX_PATH) && (endchar != L'*'))
+        if ((len < MAX_PATH - 1) && (endchar != L'*'))
             wcscat(pSearchStart->szFileName, L"*");
     }
 
