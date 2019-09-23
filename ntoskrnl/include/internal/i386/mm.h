@@ -8,7 +8,7 @@
 #define _MI_HAS_NO_EXECUTE 1
 #else
 #define _MI_PAGING_LEVELS 2
-#define _MI_NO_EXECUTE 0
+#define _MI_HAS_NO_EXECUTE 0
 #endif
 
 /* Memory layout base addresses */
