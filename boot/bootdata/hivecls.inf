@@ -400,7 +400,7 @@ HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 HKCR,".xml","",0x00000000,"xmlfile"
 HKCR,".xml","Content Type",0x00000000,"text/xml"
 HKCR,"xmlfile","",0x00000000,%XMLFILE%
-;;HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
+HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
 HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
@@ -408,7 +408,7 @@ HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 HKCR,".xsl","",0x00000000,"xslfile"
 HKCR,".xsl","Content Type",0x00000000,"text/xml"
 HKCR,"xslfile","",0x00000000,%XSLFILE%
-;;HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
+HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
