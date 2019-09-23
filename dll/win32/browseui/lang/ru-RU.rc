@@ -333,7 +333,7 @@ BEGIN
     IDS_SEARCHINVALID "'%1' не является допустимой папкой."
     IDS_SEARCH_FOLDER "Ищем в ""%s"""
     IDS_SEARCH_FILES_FOUND "Найдено файлов: %u"
-    IDS_SEARCH_OPEN_FOLDER "Открыть &расположение файла"
+    IDS_SEARCH_OPEN_FOLDER "Открыть папку с содер&жимым"
     IDS_COL_NAME "Имя"
     IDS_COL_LOCATION "Папка"
     IDS_COL_RELEVANCE "Релевантность"
