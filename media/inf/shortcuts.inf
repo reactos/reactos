@@ -1282,6 +1282,8 @@ WINMINE_TITLE=Сапер
 WINMINE_DESC=Сапер
 SPIDER_TITLE=Пасьянс Паук
 SPIDER_DESC=Пасьянс Паук
+UTILMAN_TITLE=Диспетчер служебных программ
+UTILMAN_DESC=Обеспечивает запуск и настройку программ поддержки специальных возможностей.
 
 ; Slovak
 [Strings.041B]
