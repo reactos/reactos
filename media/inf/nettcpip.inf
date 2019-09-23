@@ -242,7 +242,13 @@ StartType     = 1
 ErrorControl  = 1
 ServiceBinary = %12%\tcpip.sys
 LoadOrderGroup = PNP_TDI
-AddReg = tcpip_AddReg
+AddReg = tcpip_AddReg_Parameters, tcpip_AddReg
+
+[tcpip_AddReg_Parameters]
+HKR,"Parameters",,0x00000010
+HKR,"Parameters\Adapters",,0x00000010
+HKR,"Parameters\Interfaces",,0x00000010
+HKR,"Parameters\PersistentRoutes",,0x00000010
 
 [tcpip_AddReg]
 HKR,"Parameters","DataBasePath",0x00020000,"%SystemRoot%\System32\drivers\etc"
@@ -253,7 +259,6 @@ HKR,"Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
 HKR,"Parameters","SearchList",0x00000000,""
 HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
-;HKR,"Parameters","PersistentRoutes",,0x00000010
 
 [dhcp_Service_Inst]
 DisplayName   = "DHCP Client"
