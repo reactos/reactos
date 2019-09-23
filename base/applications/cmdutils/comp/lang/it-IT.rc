@@ -1,0 +1,23 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Confronta il contenuto di due file o gruppi di file.\n\n\
+COMP [/L] [/A] [file1] [file2]\n\n\
+  file1      Specifica la posizione ed il nome del primo file da confrontare.\n\
+  file2      Specifica la posizione ed il nome del secondo file da confrontare.\n\
+  /A         Visualizza le differenze con caratteri ASCII (predefinito: esadecimale).\n\
+  /L         Visualizza i numeri delle linee differenti.\n"
+    IDS_INVALIDSWITCH "Parametro non valido - /%c\n"
+    IDS_BADSYNTAX "Errore di sintassi sulla linea di comando\n"
+    IDS_FILEERROR "Impossibile aprire/trovare il file: %s\n"
+    IDS_COMPARING "Confronto %s con %s...\n"
+    IDS_FILESIZEERROR "Impossibile determinare la dimensione del file: %s\n"
+    IDS_SIZEDIFFERS "I file hanno dimensione differente.\n"
+    IDS_READERROR "Errore di lettura dei file.\n"
+    IDS_MISMATCHLINE "Errore di confronto alla LINEA %d\n"
+    IDS_MISMATCHOFFSET "Errore di confronto all'OFFSET 0x%X\n"
+    IDS_ASCIIDIFF "file%d = %c\n"
+    IDS_HEXADECIMALDIFF "file%d = %X\n"
+    IDS_MATCH "Confronto dei file OK\n"
+END
