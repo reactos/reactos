@@ -1357,9 +1357,9 @@ USBPORT_InvalidateEndpointHandler(IN PDEVICE_OBJECT FdoDevice,
     {
         KeAcquireSpinLock(&FdoExtension->EndpointListSpinLock, &OldIrql);
 
-        Entry = &FdoExtension->EndpointList;
-
-        while (Entry && Entry != &FdoExtension->EndpointList)
+        for (Entry = FdoExtension->EndpointList.Flink;
+             Entry && Entry != &FdoExtension->EndpointList;
+             Entry = Entry->Flink)
         {
             endpoint = CONTAINING_RECORD(Entry,
                                          USBPORT_ENDPOINT,
@@ -1376,8 +1376,6 @@ USBPORT_InvalidateEndpointHandler(IN PDEVICE_OBJECT FdoDevice,
                     IsAddEntry = TRUE;
                 }
             }
-
-            Entry = endpoint->EndpointLink.Flink;
         }
 
         KeReleaseSpinLock(&FdoExtension->EndpointListSpinLock, OldIrql);
