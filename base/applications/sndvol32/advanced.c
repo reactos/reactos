@@ -188,7 +188,7 @@ OnHScroll(
     DWORD dwControlID = 0, dwStep, dwPosition;
     DWORD dwMaximum, dwMinimum;
 
-    if (dwCtrlID != IDC_ADV_BASS_SLIDER ||
+    if (dwCtrlID != IDC_ADV_BASS_SLIDER &&
         dwCtrlID != IDC_ADV_TREBLE_SLIDER)
         return;
 
