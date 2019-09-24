@@ -1615,7 +1615,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                               PWND ParentWindow,
                               PWND OwnerWindow,
                               PVOID acbiBuffer,
-                              PDESKTOP pdeskCreated)
+                              PDESKTOP pdeskCreated,
+                              DWORD dwVer )
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1695,7 +1696,19 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->spwndOwner = OwnerWindow;
    pWnd->fnid = 0;
    pWnd->spwndLastActive = pWnd;
-   pWnd->state2 |= WNDS2_WIN40COMPAT; // FIXME!!!
+   // Ramp up compatible version sets.
+   if ( dwVer >= WINVER_WIN31 )
+   {
+       pWnd->state2 |= WNDS2_WIN31COMPAT;
+       if ( dwVer >= WINVER_WINNT4 )
+       {
+           pWnd->state2 |= WNDS2_WIN40COMPAT;
+           if ( dwVer >= WINVER_WIN2K )
+           {
+               pWnd->state2 |= WNDS2_WIN50COMPAT;
+           }
+       }
+   }
    pWnd->pcls = Class;
    pWnd->hModule = Cs->hInstance;
    pWnd->style = Cs->style & ~WS_VISIBLE;
@@ -1956,7 +1969,8 @@ PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                      PUNICODE_STRING ClassName,
                      PLARGE_STRING WindowName,
-                     PVOID acbiBuffer)
+                     PVOID acbiBuffer,
+                     DWORD dwVer )
 {
    ULONG style;
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
@@ -2073,7 +2087,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             ParentWindow,
                             OwnerWindow,
                             acbiBuffer,
-                            NULL);
+                            NULL,
+                            dwVer );
    if(!Window)
    {
        ERR("IntCreateWindow failed!\n");
@@ -2598,7 +2613,7 @@ NtUserCreateWindowEx(
     UserEnterExclusive();
 
     /* Call the internal function */
-    pwnd = co_UserCreateWindowEx(&Cs, &ustrClsVersion, plstrWindowName, acbiBuffer);
+    pwnd = co_UserCreateWindowEx(&Cs, &ustrClsVersion, plstrWindowName, acbiBuffer, dwFlags);
 
     if(!pwnd)
     {

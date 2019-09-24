@@ -1533,7 +1533,7 @@ VOID NTAPI DesktopThreadMain(VOID)
 }
 
 HDC FASTCALL
-UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
+UserGetDesktopDC(ULONG DcType, BOOL bAltDc, BOOL ValidatehWnd)
 {
     PWND DesktopObject = 0;
     HDC DesktopHDC = 0;
@@ -1549,7 +1549,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     else
     {
         PMONITOR pMonitor = UserGetPrimaryMonitor();
-        DesktopHDC = IntGdiCreateDisplayDC(pMonitor->hDev, DcType, EmptyDC);
+        DesktopHDC = IntGdiCreateDisplayDC(pMonitor->hDev, DcType, bAltDc);
     }
 
     UserLeave();
@@ -2403,7 +2403,7 @@ IntCreateDesktop(
     Cs.lpszClass = (LPCWSTR) &ClassName;
 
     /* Use IntCreateWindow instead of co_UserCreateWindowEx because the later expects a thread with a desktop */
-    pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
+    pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk, WINVER);
     if (pWnd == NULL)
     {
         ERR("Failed to create desktop window for the new desktop\n");
@@ -2433,7 +2433,7 @@ IntCreateDesktop(
     Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
     Cs.lpszName = (LPCWSTR)&WindowName;
     Cs.lpszClass = (LPCWSTR)&ClassName;
-    pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
+    pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk, WINVER);
     if (pWnd == NULL)
     {
         ERR("Failed to create message window for the new desktop\n");

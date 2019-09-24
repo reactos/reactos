@@ -2807,7 +2807,7 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     Cs.hwndParent = UserHMGetHandle(pWndOwner);
 
     /* NOTE: In Windows, top menu popup is not owned. */
-    pWndCreated = co_UserCreateWindowEx( &Cs, &ClassName, &WindowName, NULL);
+    pWndCreated = co_UserCreateWindowEx( &Cs, &ClassName, &WindowName, NULL, WINVER );
 
     if( !pWndCreated ) return FALSE;
 
