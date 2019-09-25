@@ -522,7 +522,7 @@ ProcessPEImage(
         if (RawSize != 0)
         {
             /* Read this section from the file, size = SizeOfRawData */
-            RtlMoveMemory(RVA(pImage, pSection->VirtualAddress),
+            RtlCopyMemory(RVA(pImage, pSection->VirtualAddress),
                           RVA(pData, pSection->PointerToRawData),
                           RawSize);
         }
