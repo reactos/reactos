@@ -247,12 +247,14 @@ MountMgrTargetDeviceNotification(IN PVOID NotificationStructure,
      */
     else if (IsEqualGUID(&(Notification->Event), &GUID_IO_VOLUME_MOUNT))
     {
+        /* If we were already mounted, then mark us unmounted */
         if (InterlockedCompareExchange(&(DeviceInformation->MountState),
                                        FALSE,
-                                       TRUE) == TRUE)
+                                       FALSE) == TRUE)
         {
             InterlockedDecrement(&(DeviceInformation->MountState));
         }
+        /* Otherwise, start mounting the device and first, reconcile its DB if required */
         else
         {
             if (DeviceInformation->NeedsReconcile)

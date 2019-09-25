@@ -42,9 +42,8 @@ typedef struct _PARTENTRY
     ULARGE_INTEGER StartSector;
     ULARGE_INTEGER SectorCount;
 
-    BOOLEAN BootIndicator;
+    BOOLEAN BootIndicator;  // NOTE: See comment for the PARTLIST::SystemPartition member.
     UCHAR PartitionType;
-    ULONG HiddenSectors;
     ULONG OnDiskPartitionNumber; /* Enumerated partition number (primary partitions first, excluding the extended partition container, then the logical partitions) */
     ULONG PartitionNumber;       /* Current partition number, only valid for the currently running NTOS instance */
     ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
@@ -150,17 +149,11 @@ typedef struct _PARTLIST
      * The corresponding system disk is obtained via:
      *    SystemPartition->DiskEntry.
      */
+    // NOTE: It seems to appear that the specifications of ARC and (u)EFI
+    // actually allow for multiple system partitions to exist on the system.
+    // If so we should instead rely on the BootIndicator bit of the PARTENTRY
+    // structure in order to find these.
     PPARTENTRY SystemPartition;
-    /*
-     * The original system partition in case we are redefining it because
-     * we do not have write support on it.
-     * Please note that this is partly a HACK and MUST NEVER happen on
-     * architectures where real system partitions are mandatory (because then
-     * they are formatted in FAT FS and we support write operation on them).
-     * The corresponding original system disk is obtained via:
-     *    OriginalSystemPartition->DiskEntry.
-     */
-    PPARTENTRY OriginalSystemPartition;
 
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
@@ -231,6 +224,9 @@ BOOLEAN
 IsSuperFloppy(
     IN PDISKENTRY DiskEntry);
 
+BOOLEAN
+IsPartitionActive(
+    IN PPARTENTRY PartEntry);
 
 PPARTLIST
 CreatePartitionList(VOID);
@@ -294,22 +290,26 @@ GetPrevPartition(
 BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
 BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount);
 
 BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
-    IN PPARTENTRY SelectedEntry,
+    IN OUT PPARTENTRY PartEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
+
+NTSTATUS
+DismountVolume(
+    IN PPARTENTRY PartEntry);
 
 BOOLEAN
 DeletePartition(
@@ -317,12 +317,18 @@ DeletePartition(
     IN PPARTENTRY PartEntry,
     OUT PPARTENTRY* FreeRegion OPTIONAL);
 
-VOID
-CheckActiveSystemPartition(
+PPARTENTRY
+FindSupportedSystemPartition(
     IN PPARTLIST List,
     IN BOOLEAN ForceSelect,
-    IN PDISKENTRY AlternateDisk OPTIONAL,
-    IN PPARTENTRY AlternatePart OPTIONAL);
+    IN PDISKENTRY AlternativeDisk OPTIONAL,
+    IN PPARTENTRY AlternativePart OPTIONAL);
+
+BOOLEAN
+SetActivePartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY PartEntry,
+    IN PPARTENTRY OldActivePart OPTIONAL);
 
 NTSTATUS
 WritePartitions(

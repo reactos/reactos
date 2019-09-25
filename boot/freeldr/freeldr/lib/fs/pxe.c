@@ -20,11 +20,10 @@
 #include <freeldr.h>
 
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define TAG_PXE_FILE 'FexP'
 #define NO_FILE ((ULONG)-1)
-
-DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 static IP4 _ServerIP = { 0, };
 static ULONG _OpenFile = NO_FILE;

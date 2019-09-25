@@ -242,7 +242,6 @@
 #pragma warning(disable:4459)
 
 
-
 /* Debug support. */
 
 #ifdef _DEBUG

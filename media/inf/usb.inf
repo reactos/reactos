@@ -28,8 +28,7 @@ CopyFiles = usbhub_CopyFiles.NT
 usbhub.sys
 
 [usbhub_Inst.NT.Services]
-;AddService = usbhub, 0x00000002, usbhub_Service_Inst
-AddService = , 0x00000002
+AddService = usbhub, 0x00000002, usbhub_Service_Inst
 
 [usbhub_Service_Inst]
 ServiceType   = 1

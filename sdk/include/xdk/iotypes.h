@@ -219,6 +219,7 @@ $if (_NTDDK_)
 $endif (_NTDDK_)
 $if (_WDMDDK_)
 /* DEVICE_OBJECT.Flags */
+#define DO_UNLOAD_PENDING                 0x00000001
 #define DO_VERIFY_VOLUME                  0x00000002
 #define DO_BUFFERED_IO                    0x00000004
 #define DO_EXCLUSIVE                      0x00000008

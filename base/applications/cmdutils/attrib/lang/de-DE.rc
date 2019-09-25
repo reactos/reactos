@@ -1,0 +1,22 @@
+/* German language file by Klemens Friedl <frik85> 2005-06-03 */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Zeigt Dateiattribute an oder ändert sie.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
+       [/S [/D]]\n\n\
+  +   Setzt ein Attribut\n\
+  -   Löscht ein Attribut\n\
+  R   Attribut für 'schreibgeschützte Datei'\n\
+  A   Attribut für 'zu archivierende Datei'\n\
+  S   Attribut für 'Systemdatei'\n\
+  H   Attribut für 'versteckte Datei'\n\
+ /S   Verarbeitet übereinstimmende Dateien im aktuellen Ordner\n\
+      und in allen Unterordnern.\n\
+  /D  Verarbeitet auch die Ordner.\n\n\
+ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
+    STRING_CONSOLE_ERROR "Unbekannter Fehler: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ungültiges Parameterformat - %s\n"
+END

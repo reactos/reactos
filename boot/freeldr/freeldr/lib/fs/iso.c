@@ -20,13 +20,13 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define SECTORSIZE 2048
 #define TAG_ISO_BUFFER 'BosI'
 #define TAG_ISO_FILE 'FosI'
-
-DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
@@ -243,9 +243,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
 ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
-
     FrLdrTempFree(FileHandle, TAG_ISO_FILE);
-
     return ESUCCESS;
 }
 
@@ -464,17 +462,26 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("IsoSeek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (ULONGLONG)FileHandle->FilePointer;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.HighPart != 0)
         return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= FileHandle->FileSize)
+    if (NewPosition.LowPart >= FileHandle->FileSize)
         return EINVAL;
 
-    FileHandle->FilePointer = Position->LowPart;
+    FileHandle->FilePointer = NewPosition.LowPart;
     return ESUCCESS;
 }
 

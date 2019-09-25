@@ -28,6 +28,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
+static HANDLE hScmSecurityServicesEvent = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -45,6 +46,38 @@ PrintString(LPCSTR fmt, ...)
 
     OutputDebugStringA(buffer);
 #endif
+}
+
+
+DWORD
+SetSecurityServicesEvent(VOID)
+{
+    DWORD dwError;
+
+    if (hScmSecurityServicesEvent != NULL)
+        return ERROR_SUCCESS;
+
+    /* Create or open the SECURITY_SERVICES_STARTED event */
+    hScmSecurityServicesEvent = CreateEventW(NULL,
+                                             TRUE,
+                                             FALSE,
+                                             L"SECURITY_SERVICES_STARTED");
+    if (hScmSecurityServicesEvent == NULL)
+    {
+        dwError = GetLastError();
+        if (dwError != ERROR_ALREADY_EXISTS)
+            return dwError;
+
+        hScmSecurityServicesEvent = OpenEventW(EVENT_MODIFY_STATE,
+                                               FALSE,
+                                               L"SECURITY_SERVICES_STARTED");
+        if (hScmSecurityServicesEvent == NULL)
+            return GetLastError();
+    }
+
+    SetEvent(hScmSecurityServicesEvent);
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -257,6 +290,9 @@ done:
     /* Delete our communication named pipe's critical section */
     if (bCanDeleteNamedPipeCriticalSection != FALSE)
         ScmDeleteNamedPipeCriticalSection();
+
+    if (hScmSecurityServicesEvent != NULL)
+        CloseHandle(hScmSecurityServicesEvent);
 
     /* Close the shutdown event */
     if (hScmShutdownEvent != NULL)

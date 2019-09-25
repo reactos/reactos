@@ -11,19 +11,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Állományok attribútumok megjelenítése vagy beállításai.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] állomány ...\n\
-       [/S [/D]]\n\n\
-  +   bekapcsol egy attribútumot\n\
-  -   kikapcsol egy attribútumot\n\
-  R   Írásvédett állomány\n\
-  A   Archiválandó állomány\n\
-  S   Rendszer állomány\n\
-  H   Rejtett állomány\n\
-  /S  Minden állomány módosítása a mappában és minden\n\
-      almappábanban\n\
-  /D  Mappákra is érvényesíti\n\n\
-Ha ATTRIB-ot paraméter nélkül írod be, megjeleníti a mappában található összes állományt és annak attribútumát.\n"
     STRING_ALIAS_HELP "Aliasok megjelenítése, hozzáadása és törlése\n\n\
 ALIAS [alias=[parancs]]\n\n\
   alias    Alias neve.\n\
@@ -243,12 +230,6 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST állományname    Specifies a true condition if the specified állományname exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-    STRING_LABEL_HELP1 "A kötet címkéjét megjeleníti, vagy megváltoztatja.\n\n\
-LABEL [meghajtó:] [új_címke]\n"
-    STRING_LABEL_HELP2 "A (%c) meghajtóban lévõ kötet címkéje %s\n"
-    STRING_LABEL_HELP3 "A (%c) megjajtóban lévõ kötetnek nincs címkéje.\n"
-    STRING_LABEL_HELP4 "A kötet sorozatszáma %04X-%04X\n"
-    STRING_LABEL_HELP5 "Új kötetcímke (11 betû, ENTER ha üres)? "
     STRING_LOCALE_HELP1 "Az aktuális idõ:"
     STRING_MKDIR_HELP "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]path\nMD [meghajtó:]path"

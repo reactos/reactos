@@ -1,0 +1,29 @@
+/*
+ *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *    Updated by niski - Maciej Bialas (Mar, 2010)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ *    UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
+       [/S [/D]]\n\n\
+  +   Ustawia atrybut\n\
+  -   Czyści atrybut\n\
+  R   Atrybut pliku tylko do odczytu\n\
+  A   Atrybut pliku archiwalnego\n\
+  S   Atrybut pliku systemowego\n\
+  H   Atrybut pliku ukrytego\n\
+  /S  Przetwarza wszystkie, pasujące pliki w bieżącym katalogu\n\
+      i we wszystkich podkatalogach\n\
+  /D  Przetwarza również katalogi\n\n\
+Wpisz ATTRIB bez żadnego parametru, by wyświetlić atrybuty wszystkich plików.\n"
+    STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Niewłaściwy format parametru - %s\n"
+END

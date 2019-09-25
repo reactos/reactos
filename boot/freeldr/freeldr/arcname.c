@@ -21,23 +21,30 @@
 
 #include <freeldr.h>
 
-BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition)
+BOOLEAN
+DissectArcPath(
+    IN  PCSTR ArcPath,
+    OUT PCSTR* Path OPTIONAL,
+    OUT PUCHAR DriveNumber,
+    OUT PULONG PartitionNumber)
 {
-    char *p;
+    PCCH p;
 
     /* Detect ramdisk path */
     if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
     {
         /* Magic value for ramdisks */
-        *BootDrive = 0x49;
-        *BootPartition = 1;
+        *DriveNumber = 0x49;
+        *PartitionNumber = 1;
 
-        /* Get the path */
-        p = ArcPath + 11;
-        strcpy(BootPath, p);
+        /* Get the path (optional) */
+        if (Path)
+            *Path = ArcPath + 10;
+
         return TRUE;
     }
 
+    /* NOTE: We are currently limited when handling multi()disk() paths!! */
     if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
         return FALSE;
 
@@ -49,12 +56,12 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
          *  multi(0)disk(0)fdisk(x)\path
          */
         p = p + 6;
-        *BootDrive = atoi(p);
+        *DriveNumber = atoi(p);
         p = strchr(p, ')');
         if (p == NULL)
             return FALSE;
-        p++;
-        *BootPartition = 0;
+        ++p;
+        *PartitionNumber = 0;
     }
     else if (_strnicmp(p, "cdrom(", 6) == 0)
     {
@@ -63,37 +70,48 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
          *  multi(0)disk(0)cdrom(x)\path
          */
         p = p + 6;
-        *BootDrive = atoi(p) + 0x80;
+        *DriveNumber = atoi(p) + 0x80;
         p = strchr(p, ')');
         if (p == NULL)
             return FALSE;
-        p++;
-        *BootPartition = 0xff;
+        ++p;
+        *PartitionNumber = 0xff;
     }
     else if (_strnicmp(p, "rdisk(", 6) == 0)
     {
         /*
          * Hard disk path:
-         *  multi(0)disk(0)rdisk(x)partition(y)\path
+         *  multi(0)disk(0)rdisk(x)[partition(y)][\path]
          */
         p = p + 6;
-        *BootDrive = atoi(p) + 0x80;
-        p = strchr(p, ')');
-        if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
-            return FALSE;
-        p = p + 11;
-        *BootPartition = atoi(p);
+        *DriveNumber = atoi(p) + 0x80;
         p = strchr(p, ')');
         if (p == NULL)
             return FALSE;
-        p++;
+        ++p;
+        /* The partition is optional */
+        if (_strnicmp(p, "partition(", 10) == 0)
+        {
+            p = p + 10;
+            *PartitionNumber = atoi(p);
+            p = strchr(p, ')');
+            if (p == NULL)
+                return FALSE;
+            ++p;
+        }
+        else
+        {
+            *PartitionNumber = 0;
+        }
     }
     else
     {
         return FALSE;
     }
 
-    strcpy(BootPath, p);
+    /* Get the path (optional) */
+    if (Path)
+        *Path = p;
 
     return TRUE;
 }
@@ -101,12 +119,12 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
 /* PathSyntax: scsi() = 0, multi() = 1, ramdisk() = 2 */
 BOOLEAN
 DissectArcPath2(
-    IN CHAR* ArcPath,
-    OUT ULONG* x,
-    OUT ULONG* y,
-    OUT ULONG* z,
-    OUT ULONG* Partition,
-    OUT ULONG *PathSyntax)
+    IN  PCSTR ArcPath,
+    OUT PULONG x,
+    OUT PULONG y,
+    OUT PULONG z,
+    OUT PULONG Partition,
+    OUT PULONG PathSyntax)
 {
     /* Detect ramdisk() */
     if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)

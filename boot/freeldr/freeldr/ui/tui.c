@@ -22,7 +22,7 @@
 #define TAG_TUI_SCREENBUFFER 'SiuT'
 #define TAG_TAG_TUI_PALETTE 'PiuT'
 
-PVOID    TextVideoBuffer = NULL;
+PVOID TextVideoBuffer = NULL;
 
 /*
  * TuiPrintf()
@@ -110,7 +110,7 @@ VOID TuiDrawBackdrop(VOID)
     //
     TuiDrawText(2,
             1,
-            GetFreeLoaderVersionString(),
+            FrLdrVersionString,
             ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
     //
@@ -699,55 +699,58 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 
 UCHAR TuiTextToColor(PCSTR ColorText)
 {
-    if (_stricmp(ColorText, "Black") == 0)
-        return COLOR_BLACK;
-    else if (_stricmp(ColorText, "Blue") == 0)
-        return COLOR_BLUE;
-    else if (_stricmp(ColorText, "Green") == 0)
-        return COLOR_GREEN;
-    else if (_stricmp(ColorText, "Cyan") == 0)
-        return COLOR_CYAN;
-    else if (_stricmp(ColorText, "Red") == 0)
-        return COLOR_RED;
-    else if (_stricmp(ColorText, "Magenta") == 0)
-        return COLOR_MAGENTA;
-    else if (_stricmp(ColorText, "Brown") == 0)
-        return COLOR_BROWN;
-    else if (_stricmp(ColorText, "Gray") == 0)
-        return COLOR_GRAY;
-    else if (_stricmp(ColorText, "DarkGray") == 0)
-        return COLOR_DARKGRAY;
-    else if (_stricmp(ColorText, "LightBlue") == 0)
-        return COLOR_LIGHTBLUE;
-    else if (_stricmp(ColorText, "LightGreen") == 0)
-        return COLOR_LIGHTGREEN;
-    else if (_stricmp(ColorText, "LightCyan") == 0)
-        return COLOR_LIGHTCYAN;
-    else if (_stricmp(ColorText, "LightRed") == 0)
-        return COLOR_LIGHTRED;
-    else if (_stricmp(ColorText, "LightMagenta") == 0)
-        return COLOR_LIGHTMAGENTA;
-    else if (_stricmp(ColorText, "Yellow") == 0)
-        return COLOR_YELLOW;
-    else if (_stricmp(ColorText, "White") == 0)
-        return COLOR_WHITE;
+    static const struct
+    {
+        PCSTR ColorName;
+        UCHAR ColorValue;
+    } Colors[] =
+    {
+        {"Black"  , COLOR_BLACK  },
+        {"Blue"   , COLOR_BLUE   },
+        {"Green"  , COLOR_GREEN  },
+        {"Cyan"   , COLOR_CYAN   },
+        {"Red"    , COLOR_RED    },
+        {"Magenta", COLOR_MAGENTA},
+        {"Brown"  , COLOR_BROWN  },
+        {"Gray"   , COLOR_GRAY   },
+        {"DarkGray"    , COLOR_DARKGRAY    },
+        {"LightBlue"   , COLOR_LIGHTBLUE   },
+        {"LightGreen"  , COLOR_LIGHTGREEN  },
+        {"LightCyan"   , COLOR_LIGHTCYAN   },
+        {"LightRed"    , COLOR_LIGHTRED    },
+        {"LightMagenta", COLOR_LIGHTMAGENTA},
+        {"Yellow"      , COLOR_YELLOW      },
+        {"White"       , COLOR_WHITE       },
+    };
+    ULONG i;
+
+    for (i = 0; i < sizeof(Colors)/sizeof(Colors[0]); ++i)
+    {
+        if (_stricmp(ColorText, Colors[i].ColorName) == 0)
+            return Colors[i].ColorValue;
+    }
 
     return COLOR_BLACK;
 }
 
 UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
 {
-    if (_stricmp(FillStyleText, "Light") == 0)
+    static const struct
     {
-        return LIGHT_FILL;
-    }
-    else if (_stricmp(FillStyleText, "Medium") == 0)
+        PCSTR FillStyleName;
+        UCHAR FillStyleValue;
+    } FillStyles[] =
     {
-        return MEDIUM_FILL;
-    }
-    else if (_stricmp(FillStyleText, "Dark") == 0)
+        {"Light" , LIGHT_FILL },
+        {"Medium", MEDIUM_FILL},
+        {"Dark"  , DARK_FILL  },
+    };
+    ULONG i;
+
+    for (i = 0; i < sizeof(FillStyles)/sizeof(FillStyles[0]); ++i)
     {
-        return DARK_FILL;
+        if (_stricmp(FillStyleText, FillStyles[i].FillStyleName) == 0)
+            return FillStyles[i].FillStyleValue;
     }
 
     return LIGHT_FILL;

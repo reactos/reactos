@@ -20,6 +20,7 @@
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
+EXTERN _DiskStopFloppyMotor:PROC
 EXTERN i386CallRealMode:PROC
 
 .code32
@@ -45,6 +46,8 @@ _BootOldLinuxKernel:
 
 PUBLIC _BootNewLinuxKernel
 _BootNewLinuxKernel:
+    /* Stop the floppy drive motor */
+    call _DiskStopFloppyMotor
 
     mov bx, FNID_BootLinuxKernel
     call i386CallRealMode

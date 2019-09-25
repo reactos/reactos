@@ -6,7 +6,7 @@ CAPTION "Impostazioni salvaschermo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
-    PUSHBUTTON      "Cancella",IDCANCEL,61,35,50,14
+    PUSHBUTTON      "Annulla",IDCANCEL,61,35,50,14
     CONTROL         "Ruota le farfalle",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
     PUSHBUTTON      "Informazioni",IDABOUT,115,35,50,14

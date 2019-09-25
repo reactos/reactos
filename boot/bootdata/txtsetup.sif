@@ -161,7 +161,7 @@ PCI\CC_0105 = uniata
 PCI\CC_0106 = uniata
 ;PCI\CC_0106 = storahci
 *PNP0600 = uniata
-;USB\CLASS_09 = usbhub
+USB\CLASS_09 = usbhub
 USB\ROOT_HUB = usbhub
 USB\ROOT_HUB20 = usbhub
 PCI\CC_0C0300 = usbuhci
@@ -220,20 +220,26 @@ UnicodeCasetable = l_intl.nls
 DefaultLayout    = 00000409
 DefaultLanguage  = 00000409
 
-[Computer]
+[Computer.NTx86]
 pci_up = "Standard PC Uniprocessor"
 ;pci_mp = "Standard PC Multiprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
 xbox = "Original Xbox"
 
-[Map.Computer]
+[Computer.NTamd64]
+x64_up = "Standard x64 Uniprocessor"
+
+[Map.Computer.NTx86]
 ;<id> = <pnp id string>
 pci_up = "PC UP"
 ;pci_mp = "PC MP"
 acpi_up = "ACPI UP"
 ;acpi_mp = "ACPI MP"
 xbox = "Xbox"
+
+[Map.Computer.NTamd64]
+x64_up = "ACPI UP"
 
 [Files.pci_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
@@ -254,6 +260,10 @@ halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.x64_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+hal.dll      = 1,,,,,,,2,,,,1,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<height>,<width>,<bpp>
@@ -282,11 +292,13 @@ vbe_1600x1200x8  = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
 vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,VBE,1600,1200,16
 vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,VBE,1600,1200,24
 vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,VBE,1600,1200,32
+xbox             = "Original Xbox NV2A Framebuffer (640x480x32)",,XboxVmp,640,480,32
 
 [Map.Display]
 ;<id> = <pnp id string>
 vga = "VGA Display"
 vbe = "VBE Display"
+xboxvmp = "NV2A Framebuffer"
 
 [Keyboard]
 Default = "XT-, AT- or extended keyboard (83-105 keys)"

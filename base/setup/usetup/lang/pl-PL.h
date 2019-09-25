@@ -741,7 +741,8 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
         "Chcesz zmieni\206 rozdzielczo\230\206 monitora.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  U\276ywaj\245c klawiszy G\340RA lub D\340\235, wybierz rozdzielczo\230\206 i llo\230\206",
          TEXT_STYLE_NORMAL
@@ -931,6 +932,112 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
         0,
         0,
         "Prosz\251 czeka\206...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY plPLChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Bie\276\245ca partycja systemowa twojego komputera",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "na dysku systemowym",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "u\276ywa formatu nie obs\210ugiwanego przez system ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "Aby pomy\230lnie zainstalowa\206 system ReactOS, Instalator musi zmieni\206",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "bi\251\276\245c\245 partycj\251 systemow\245 na now\245.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "Nowa proponowana partycja systemowa to:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  Naci\230nij ENTER, aby zaakceptowa\206 ten wyb\242r.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  Je\230li chcesz r\251cznie zmieni\206 partycj\251 systemow\245, nacisnij ESC, by powr\242ci\206",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   do listy wyboru partycji, i wybierz istniej\245c\245 lub utw\242rz now\245 partycj\251",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   systemow\245 na dysku systemowym.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "Je\230li na twoim komputerze s\245 zainstalowane inne systemy operacyjne, kt\242re",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "wymagaj\245 poprzedniej partycji systemowej, mo\276e zaistnie\206 potrzeba",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "skonfigurowania ich dla nowej partycji systemowej, albo zmiana partycji",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "systemowej do poprzednej po zako\344czeniu instalacji systemu ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Kontynuacja   ESC = Anulowanie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1385,7 +1492,6 @@ static MUI_ENTRY plPLSelectFSEntries[] =
         "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj\230cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1487,17 +1593,17 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Nie mo\276na utworzy\206 scie\276ek instalacji dla katalogu instalacji systemu ReactOS!\n"
         "ENTER = Reboot computer"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
+        "Nie mo\276na usun\245\206 partycji zawieraj\245cej \253r\242d\210o instalacji!\n"
         "ENTER = Reboot computer"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "Nie mo\276na zainstalowa\206 systemu ReactOS w katalogu \253r\242d\210owym instalacji!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1532,7 +1638,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Nieudane zapisanie FAT bootcode na partycji systemowej.",
+        "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego FAT na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"
     },
     {
@@ -1558,9 +1664,9 @@ MUI_ERROR plPLErrorEntries[] =
     {
         // ERROR_WARN_PARTITION,
         "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245 \n"
-        "tablic\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
+        "tabel\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
         "\n"
-        "Tworzenie lub kasowanie partycji mo\276e zniszczy\206 ca\210\245 tablic\251 partycji.\n"
+        "Tworzenie lub usuwanie partycji mo\276e nieodwracalnie uszkodi\206 tabel\251 partycji.\n"
         "\n"
         "  \x07  Naci\230nij F3, aby wyj\230\206 z instalatora.\n"
         "  \x07  Naci\230nij ENTER, aby kontynuowa\206.",
@@ -1583,7 +1689,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Nieudana instalacja %S bootcode na partycji systemowej.",
+        "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego %S na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"
     },
     {
@@ -1777,6 +1883,10 @@ MUI_PAGE plPLPages[] =
     {
         SELECT_PARTITION_PAGE,
         plPLSelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        plPLChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

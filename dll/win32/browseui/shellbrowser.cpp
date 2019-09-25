@@ -1234,6 +1234,13 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
             if (FAILED_UNEXPECTEDLY(hResult))
                 return hResult;
         }
+        else if (IsEqualCLSID(classID, CLSID_FileSearchBand))
+        {
+            TRACE("CLSID_FileSearchBand requested, building internal band.\n");
+            hResult = CSearchBar_CreateInstance(IID_PPV_ARG(IUnknown, &newBand));
+            if (FAILED_UNEXPECTEDLY(hResult))
+                return hResult;
+        }
         else
         {
             TRACE("A different CLSID requested, using CoCreateInstance.\n");
@@ -2010,25 +2017,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         switch (nCmdID)
         {
             case 0x1c: //Toggle Search
-                if (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
-                    IsEqualCLSID(CLSID_SearchBand, fCurrentVertBar) ||
-                    IsEqualCLSID(CLSID_IE_SearchBand, fCurrentVertBar) ||
-                    IsEqualCLSID(CLSID_FileSearchBand, fCurrentVertBar))
-                {
-                    hResult = IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
-                    memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
-                    FireCommandStateChangeAll();
-                }
-                else
-                {
-                    OnSearch();
-                }
-                return S_OK;
             case 0x1d: //Toggle History
             case 0x1e: //Toggle Favorites
             case 0x23: //Toggle Folders
                 const GUID* pclsid;
-                if (nCmdID == 0x1d) pclsid = &CLSID_SH_HistBand;
+                if (nCmdID == 0x1c) pclsid = &CLSID_FileSearchBand;
+                else if (nCmdID == 0x1d) pclsid = &CLSID_SH_HistBand;
                 else if (nCmdID == 0x1e) pclsid = &CLSID_SH_FavBand;
                 else pclsid = &CLSID_ExplorerBand;
 
@@ -3756,7 +3750,7 @@ LRESULT CShellBrowser::OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     switch (wID)
     {
     case IDM_EXPLORERBAR_SEARCH:
-        Exec(&CLSID_CommonButtons, 0x123, 1, NULL, NULL);
+        ShowBand(CLSID_FileSearchBand, true);
         break;
     case IDM_EXPLORERBAR_FOLDERS:
         ShowBand(CLSID_ExplorerBand, true);

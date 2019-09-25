@@ -13,19 +13,6 @@ assoc (shfaq të gjith asociacionet)\n\
 assoc .ext (shfaq asociacionet specifike)\n\
 assoc .ext= (hiq acosiacionet specifike)\n\
 assoc .ext=FileType (shto asociacione te reja)\n"
-    STRING_ATTRIB_HELP "Shfaq ose ndryshu atributet e dokumentave.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
-       [/S [/D]]\n\n\
-  +   Vendos nje atribute\n\
-  -   Pastron një atribute\n\
-  R   Lexo-vetem atributet e dokumentave\n\
-  A   Atributet e dokumentave në arkiv\n\
-  S   Atributet e dokumentave të sistemit\n\
-  H   Atributet e dokumentave te fshehur\n\
-  /S  Procesi i përputhjes së dokumentave ne skedën aktuale\n\
-      dhe të gjitha nënskedat\n\
-  /D  Proçeso skedat gjithashtu\n\n\
-Shkruaj ATTRIB pa një parameter për të shfaque atributet e të gjithë dokumentave.\n"
     STRING_ALIAS_HELP "Vëndos, hew ose shfaq pseudonimin.\n\n\
 ALIAS [alias=[Komande]]\n\n\
   alias    Emri i pseudonimit.\n\
@@ -261,11 +248,6 @@ string1==string2  Përcakton një kusht të vërtetë nëse vargjet e specifikua
 EXIST filename    Përcakton një kusht të vërtetë, nëse ekziston dokumenti i specifikuar.\n\
 DEFINED variable  Përcakton një kusht të vërtetë nëse variabli është specifikuar\n\
                   dhe karakterizuar.\n"
-    STRING_LABEL_HELP1 "Shfaq ose ndrysho etiketën e driverit.\n\nLABEL [drive:][etikete]\n"
-    STRING_LABEL_HELP2 "Volumi në drive %c: is %s\n"
-    STRING_LABEL_HELP3 "Volumi në drive %c: has no label\n"
-    STRING_LABEL_HELP4 "Numri Serial i Volumit është %04X-%04X\n"
-    STRING_LABEL_HELP5 "Drive label (11 Characters, ENTER if none)? "
     STRING_LOCALE_HELP1 "Koha e tanishme është"
     STRING_MKDIR_HELP "Krijon një skedë.\n\n\
 MKDIR [drive:]rrugë\nMD [drive:]rrugë"

@@ -64,6 +64,16 @@ CopySidFromSidAndRid(
     _In_ PSID SrcSid,
     _In_ ULONG RelativeId);
 
+PSTR
+WINAPI
+NetpAllocAnsiStrFromWStr(
+    _In_ PWSTR InString);
+
+PSTR
+WINAPI
+NetpAllocStrFromWStr(
+    _In_ PWSTR InString);
+
 PWSTR
 WINAPI
 NetpAllocWStrFromAnsiStr(

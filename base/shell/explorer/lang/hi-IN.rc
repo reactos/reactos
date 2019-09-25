@@ -47,10 +47,7 @@ BEGIN
             MENUITEM "&प्रिंटर और फैक्स", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&टास्कबार और प्रारंभ मेन्यू", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&ढूंढे", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "&ढूंढे", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&सहायता और समर्थन", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "&रन...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

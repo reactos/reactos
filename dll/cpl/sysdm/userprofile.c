@@ -10,22 +10,24 @@
 
 #include "precomp.h"
 #include <sddl.h>
+#include <winnls.h>
 
 #include <debug.h>
 
 typedef struct _PROFILEDATA
 {
-    BOOL bMyProfile;
+    DWORD dwRefCount;
     DWORD dwState;
     PWSTR pszFullName;
+    PWSTR pszProfilePath;
 } PROFILEDATA, *PPROFILEDATA;
 
 
 static
 BOOL
 OnProfileTypeInit(
-    HWND hwndDlg,
-    PPROFILEDATA pProfileData)
+    _In_ HWND hwndDlg,
+    _In_ PPROFILEDATA pProfileData)
 {
     PWSTR pszRawBuffer = NULL, pszCookedBuffer = NULL;
     INT nLength;
@@ -175,7 +177,7 @@ DeleteUserProfile(
         return FALSE;
 
     pProfileData = (PPROFILEDATA)Item.lParam;
-    if (pProfileData->bMyProfile)
+    if (pProfileData->dwRefCount != 0)
         return FALSE;
 
     LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
@@ -322,32 +324,83 @@ SetListViewColumns(
 }
 
 
-static VOID
-AddUserProfile(
-    _In_ HWND hwndListView,
-    _In_ LPTSTR lpProfileSid,
-    _In_ PSID pMySid,
-    _In_ HKEY hProfileKey)
+static
+BOOL
+GetProfileSize(
+    _In_ PWSTR pszProfilePath,
+    _Inout_ PULONGLONG pullProfileSize)
 {
-    PPROFILEDATA pProfileData = NULL;
-    WCHAR szAccountName[128], szDomainName[128];
-    WCHAR szNameBuffer[256];
-    SID_NAME_USE Use;
-    DWORD dwAccountNameSize, dwDomainNameSize;
-    DWORD dwProfileData, dwSize, dwType, dwState = 0;
-    PWSTR ptr;
-    PSID pSid = NULL;
-    INT nId, iItem;
-    LV_ITEM lvi;
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATA FindData;
+    DWORD dwProfilePathLength;
+    ULARGE_INTEGER Size;
+    BOOL bResult = TRUE;
 
-    if (!ConvertStringSidToSid(lpProfileSid,
-                               &pSid))
-        return;
+    dwProfilePathLength = wcslen(pszProfilePath);
+
+    wcscat(pszProfilePath, L"\\*.*");
+
+    hFile = FindFirstFileW(pszProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        if ((GetLastError() != ERROR_FILE_NOT_FOUND) &&
+            (GetLastError() != ERROR_PATH_NOT_FOUND))
+            bResult = FALSE;
+
+        goto done;
+    }
+
+    do
+    {
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if ((_wcsicmp(FindData.cFileName, L".") == 0) ||
+                (_wcsicmp(FindData.cFileName, L"..") == 0))
+                continue;
+
+            pszProfilePath[dwProfilePathLength + 1] = UNICODE_NULL;
+            wcscat(pszProfilePath, FindData.cFileName);
+
+            if (!GetProfileSize(pszProfilePath, pullProfileSize))
+            {
+                bResult = FALSE;
+                goto done;
+            }
+        }
+        else
+        {
+            Size.u.LowPart = FindData.nFileSizeLow;
+            Size.u.HighPart = FindData.nFileSizeHigh;
+            *pullProfileSize += Size.QuadPart;
+        }
+    }
+    while (FindNextFile(hFile, &FindData));
+
+done:
+    pszProfilePath[dwProfilePathLength] = UNICODE_NULL;
+
+    if (hFile != INVALID_HANDLE_VALUE)
+        FindClose(hFile);
+
+    return bResult;
+}
+
+
+static
+BOOL
+GetProfileName(
+    _In_ PSID pProfileSid,
+    _In_ DWORD dwNameBufferSize,
+    _Out_ PWSTR pszNameBuffer)
+{
+    WCHAR szAccountName[128], szDomainName[128];
+    DWORD dwAccountNameSize, dwDomainNameSize;
+    SID_NAME_USE Use;
 
     dwAccountNameSize = ARRAYSIZE(szAccountName);
     dwDomainNameSize = ARRAYSIZE(szDomainName);
     if (!LookupAccountSidW(NULL,
-                           pSid,
+                           pProfileSid,
                            szAccountName,
                            &dwAccountNameSize,
                            szDomainName,
@@ -355,25 +408,121 @@ AddUserProfile(
                            &Use))
     {
         /* Unknown account */
-        LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_UNKNOWN, szNameBuffer, ARRAYSIZE(szNameBuffer));
+        LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_UNKNOWN, pszNameBuffer, dwNameBufferSize);
     }
     else
     {
         /* Show only the user accounts */
         if (Use != SidTypeUser)
-            goto done;
+            return FALSE;
 
         if (szAccountName[0] == UNICODE_NULL)
         {
             /* Deleted account */
-            LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_DELETED, szNameBuffer, ARRAYSIZE(szNameBuffer));
+            LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_DELETED, pszNameBuffer, dwNameBufferSize);
         }
         else
         {
             /* Normal account */
-            wsprintf(szNameBuffer, L"%s\\%s", szDomainName, szAccountName);
+            wsprintf(pszNameBuffer, L"%s\\%s", szDomainName, szAccountName);
         }
     }
+
+    return TRUE;
+}
+
+
+static
+VOID
+FormatProfileSize(
+    _Out_ LPWSTR Buffer,
+    _In_ double size)
+{
+    const LPWSTR units[] = {L"MB", L"GB", L"TB"};
+    int i = 0, j;
+
+    size /= 1024;
+    size /= 1024;
+
+    while (size >= 1024 && i < 3)
+    {
+        size /= 1024;
+        i++;
+    }
+
+    if (size < 10)
+        j = 2;
+    else if (size < 100)
+        j = 1;
+    else
+        j = 0;
+
+    swprintf(Buffer, L"%.*f %s", j, size, units[i]);
+}
+
+
+static VOID
+AddUserProfile(
+    _In_ HWND hwndListView,
+    _In_ PSID pProfileSid,
+    _In_ HKEY hProfileKey)
+{
+    WCHAR szTempProfilePath[MAX_PATH], szProfilePath[MAX_PATH];
+    WCHAR szNameBuffer[256];
+    PPROFILEDATA pProfileData = NULL;
+    DWORD dwProfileData, dwSize, dwType, dwState = 0, dwRefCount = 0;
+    DWORD dwProfilePathLength;
+    PWSTR ptr;
+    INT nId, iItem;
+    LV_ITEM lvi;
+    WIN32_FIND_DATA FindData;
+    HANDLE hFile;
+    SYSTEMTIME SystemTime;
+    ULONGLONG ullProfileSize;
+    DWORD dwError;
+
+    /* Get the profile path */
+    dwSize = MAX_PATH * sizeof(WCHAR);
+    dwError = RegQueryValueExW(hProfileKey,
+                               L"ProfileImagePath",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)szTempProfilePath,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return;
+
+    /* Expand it */
+    ExpandEnvironmentStringsW(szTempProfilePath,
+                              szProfilePath,
+                              MAX_PATH);
+
+    /* Check if the profile path exists */
+    hFile = FindFirstFileW(szProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    FindClose(hFile);
+
+    /* Get the length of the profile path */
+    dwProfilePathLength = wcslen(szProfilePath);
+
+    /* Check for the ntuser.dat file */
+    wcscat(szProfilePath, L"\\ntuser.dat");
+    hFile = FindFirstFileW(szProfilePath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    FindClose(hFile);
+    szProfilePath[dwProfilePathLength] = UNICODE_NULL;
+
+    /* Get the profile size */
+    ullProfileSize = 0ULL;
+    GetProfileSize(szProfilePath, &ullProfileSize);
+
+    /* Get the profile name */
+    if (!GetProfileName(pProfileSid, ARRAYSIZE(szNameBuffer), szNameBuffer))
+        return;
 
     /* Get the profile state value */
     dwSize = sizeof(dwState);
@@ -387,22 +536,39 @@ AddUserProfile(
         dwState = 0;
     }
 
+    /* Get the profile reference counter */
+    dwSize = sizeof(dwRefCount);
+    if (RegQueryValueExW(hProfileKey,
+                         L"RefCount",
+                         NULL,
+                         &dwType,
+                         (LPBYTE)&dwRefCount,
+                         &dwSize) != ERROR_SUCCESS)
+    {
+        dwRefCount = 0;
+    }
+
     /* Create and fill the profile data entry */
     dwProfileData = sizeof(PROFILEDATA) +
-                    ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
+                    ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR)) +
+                    ((wcslen(szProfilePath) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
-                             0,
+                             HEAP_ZERO_MEMORY,
                              dwProfileData);
     if (pProfileData == NULL)
-        goto done;
+        return;
 
-    pProfileData->bMyProfile = EqualSid(pMySid, pSid);
+    pProfileData->dwRefCount = dwRefCount;
     pProfileData->dwState = dwState;
 
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
     pProfileData->pszFullName = ptr;
 
     wcscpy(pProfileData->pszFullName, szNameBuffer);
+
+    ptr = (PWSTR)((ULONG_PTR)ptr + ((wcslen(pProfileData->pszFullName) + 1) * sizeof(WCHAR)));
+    pProfileData->pszProfilePath = ptr;
+    wcscpy(pProfileData->pszProfilePath, szProfilePath);
 
     /* Add the profile and set its name */
     memset(&lvi, 0x00, sizeof(lvi));
@@ -412,7 +578,21 @@ AddUserProfile(
     lvi.lParam = (LPARAM)pProfileData;
     iItem = ListView_InsertItem(hwndListView, &lvi);
 
+    /* Set the profile size */
+    FormatProfileSize(szNameBuffer, (double)ullProfileSize);
+    ListView_SetItemText(hwndListView, iItem, 1, szNameBuffer);
+
     /* Set the profile type */
+    if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
+        nId = IDS_USERPROFILE_ROAMING;
+    else
+        nId = IDS_USERPROFILE_LOCAL;
+
+    LoadStringW(hApplet, nId, szNameBuffer, ARRAYSIZE(szNameBuffer));
+
+    ListView_SetItemText(hwndListView, iItem, 2, szNameBuffer);
+
+    /* FIXME: Set the profile status */
     if (dwState & 0x0001) // PROFILE_MANDATORY
         nId = IDS_USERPROFILE_MANDATORY;
     else if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
@@ -420,13 +600,22 @@ AddUserProfile(
     else
         nId = IDS_USERPROFILE_LOCAL;
 
-    LoadStringW(hApplet, nId, szAccountName, ARRAYSIZE(szAccountName));
+    LoadStringW(hApplet, nId, szNameBuffer, ARRAYSIZE(szNameBuffer));
 
-    ListView_SetItemText(hwndListView, iItem, 2, szAccountName);
+    ListView_SetItemText(hwndListView, iItem, 3, szNameBuffer);
 
-done:
-    if (pSid != NULL)
-        LocalFree(pSid);
+    /* Set the profile modified time */
+    FileTimeToSystemTime(&FindData.ftLastWriteTime,
+                         &SystemTime);
+
+    GetDateFormatW(LOCALE_USER_DEFAULT,
+                   DATE_SHORTDATE,
+                   &SystemTime,
+                   NULL,
+                   szNameBuffer,
+                   ARRAYSIZE(szNameBuffer));
+
+    ListView_SetItemText(hwndListView, iItem, 4, szNameBuffer);
 }
 
 
@@ -437,7 +626,9 @@ UpdateButtonState(
 {
     LVITEM Item;
     INT iSelected;
-    BOOL bMyProfile;
+    BOOL bChange = FALSE;
+    BOOL bCopy = FALSE;
+    BOOL bDelete = FALSE;
 
     iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
     if (iSelected != -1)
@@ -449,29 +640,31 @@ UpdateButtonState(
         {
             if (Item.lParam != 0)
             {
-                bMyProfile = ((PPROFILEDATA)Item.lParam)->bMyProfile;
-                if (/*IsUserAnAdmin() &&*/ !bMyProfile)
-                {
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), TRUE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), TRUE);
-                }
+                bCopy = (((PPROFILEDATA)Item.lParam)->dwRefCount == 0);
+                bDelete = (((PPROFILEDATA)Item.lParam)->dwRefCount == 0);
             }
         }
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), TRUE);
+
+        bChange = TRUE;
     }
     else
     {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), FALSE);
+        bChange = FALSE;
+        bCopy = FALSE;
+        bDelete = FALSE;
     }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), bChange);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), bDelete);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), bCopy);
 }
 
 
 static VOID
 AddUserProfiles(
     _In_ HWND hwndDlg,
-    _In_ HWND hwndListView)
+    _In_ HWND hwndListView,
+    _In_ BOOL bAdmin)
 {
     HKEY hKeyUserProfiles = INVALID_HANDLE_VALUE;
     HKEY hProfileKey;
@@ -482,6 +675,8 @@ AddUserProfiles(
     DWORD dwSize;
     HANDLE hToken = NULL;
     PTOKEN_USER pTokenUser = NULL;
+    PSID pProfileSid;
+    PWSTR pszProfileSid;
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return;
@@ -504,32 +699,61 @@ AddUserProfiles(
                       &hKeyUserProfiles))
         goto done;
 
-    for (dwIndex = 0; ; dwIndex++)
+    if (bAdmin)
     {
-        dwSidLength = ARRAYSIZE(szProfileSid);
-        if (RegEnumKeyExW(hKeyUserProfiles,
-                          dwIndex,
-                          szProfileSid,
-                          &dwSidLength,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &ftLastWrite))
-            break;
-
-        if (RegOpenKeyExW(hKeyUserProfiles,
-                          szProfileSid,
-                          0,
-                          KEY_READ,
-                          &hProfileKey) == ERROR_SUCCESS)
+        for (dwIndex = 0; ; dwIndex++)
         {
-            AddUserProfile(hwndListView, szProfileSid, pTokenUser->User.Sid, hProfileKey);
-            RegCloseKey(hProfileKey);
+            dwSidLength = ARRAYSIZE(szProfileSid);
+            if (RegEnumKeyExW(hKeyUserProfiles,
+                              dwIndex,
+                              szProfileSid,
+                              &dwSidLength,
+                              NULL,
+                              NULL,
+                              NULL,
+                              &ftLastWrite))
+                break;
+
+            if (RegOpenKeyExW(hKeyUserProfiles,
+                              szProfileSid,
+                              0,
+                              KEY_READ,
+                              &hProfileKey) == ERROR_SUCCESS)
+            {
+                if (ConvertStringSidToSid(szProfileSid, &pProfileSid))
+                {
+                    AddUserProfile(hwndListView,
+                                   pProfileSid,
+                                   hProfileKey);
+                    LocalFree(pProfileSid);
+                }
+
+                RegCloseKey(hProfileKey);
+            }
+        }
+    }
+    else
+    {
+        if (ConvertSidToStringSidW(pTokenUser->User.Sid, &pszProfileSid))
+        {
+            if (RegOpenKeyExW(hKeyUserProfiles,
+                              pszProfileSid,
+                              0,
+                              KEY_READ,
+                              &hProfileKey) == ERROR_SUCCESS)
+            {
+                AddUserProfile(hwndListView,
+                               pTokenUser->User.Sid,
+                               hProfileKey);
+                RegCloseKey(hProfileKey);
+            }
+
+            LocalFree(pszProfileSid);
         }
     }
 
     if (ListView_GetItemCount(hwndListView) != 0)
-        ListView_SetItemState(hwndListView, 0, LVIS_SELECTED, LVIS_SELECTED);
+        ListView_SetItemState(hwndListView, 0, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 
     UpdateButtonState(hwndDlg, hwndListView);
 
@@ -548,10 +772,19 @@ done:
 static VOID
 OnInitUserProfileDialog(HWND hwndDlg)
 {
+    BOOL bAdmin;
+
+    bAdmin = IsUserAdmin();
+
     /* Initialize the list view control */
     SetListViewColumns(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
 
-    AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
+    /* Hide the delete and copy buttons for non-admins */
+    ShowWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), bAdmin ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), bAdmin ? SW_SHOW : SW_HIDE);
+
+    /* Add the profiles to the list view */
+    AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST), bAdmin);
 }
 
 

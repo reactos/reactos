@@ -23,6 +23,7 @@
 
 #include <precomp.h>
 #include "excpt.h"
+#include "cppexcept.h"
 #include <wine/exception.h>
 
 void CDECL _global_unwind2(EXCEPTION_REGISTRATION_RECORD* frame);
@@ -299,4 +300,39 @@ MSVCRT_security_error_handler CDECL _set_security_error_handler(
 
     security_error_handler = handler;
     return old;
+}
+
+/*********************************************************************
+ * __DestructExceptionObject (MSVCRT.@)
+ */
+void CDECL __DestructExceptionObject(EXCEPTION_RECORD* rec)
+{
+    cxx_exception_type* info = (cxx_exception_type*)rec->ExceptionInformation[2];
+    void* object = (void*)rec->ExceptionInformation[1];
+
+    TRACE("(%p)\n", rec);
+
+    if (rec->ExceptionCode != CXX_EXCEPTION) return;
+#ifndef __x86_64__
+    if (rec->NumberParameters != 3) return;
+#else
+    if (rec->NumberParameters != 4) return;
+#endif
+    if (rec->ExceptionInformation[0] < CXX_FRAME_MAGIC_VC6 ||
+        rec->ExceptionInformation[0] > CXX_FRAME_MAGIC_VC8) return;
+
+    if (!info || !info->destructor)
+        return;
+
+#if defined(__i386__)
+  #ifdef _MSC_VER
+    ((void(__fastcall*)(void*))info->destructor)(object);
+  #else
+    __asm__ __volatile__("call *%0" : : "r" (info->destructor), "c" (object) : "eax", "edx", "memory");
+  #endif
+#elif defined(__x86_64__)
+    ((void(__cdecl*)(void*))(info->destructor + rec->ExceptionInformation[3]))(object);
+#else
+    ((void(__cdecl*)(void*))info->destructor)(object);
+#endif
 }

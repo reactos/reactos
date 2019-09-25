@@ -1,0 +1,114 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nWyświetla statystykę protokołu i bieżące połączenia sieciowe TCP/IP.\n\n\
+NETSTAT [-a] [-e] [-n] [-o] [-p protokół] [-r] [-s] [interwał]\n\n\
+  -a            Wyświetla wszystkie połączenia i porty nasłuchiwania.\n\
+  -e            Wyświetla statystykę sieci Ethernet. Ta opcja może być używana\n\
+                razem z opcją -s\n\
+  -n            Wyświetla adresy i numery portów w postaci liczbowej.\n\
+  -o            Wyświetla dla każdego połączenia skojarzony z nim\n\
+                identyfikator procesu będącego jego właścicielem.\n\
+  -p protokół   Wyświetla połączenia dla określonego protokołu; może to być\n\
+                protokół TCP lub UDP.\n\
+                Jeżeli ta opcja zostanie użyta razem z opcją -s do\n\
+                wyświetlenia statystyki wybranego protokołu, protokół\n\
+                może mieć dowolną wartość z następujących: IP, TCP lub UDP.\n\
+  -r            Wyświetla tabelę routingu.\n\
+  -s            Wyświetla statystykę wybranego protokołu. Domyślnie jest to\n\
+                statystyka protokołów IP, ICMP, TCP i UDP; do określenia jej\n\
+                podzbioru można użyć opcji -p.\n\
+  interwał      Wyświetla wybraną statystykę, odczekując zadaną liczbę sekund\n\
+                pomiędzy każdym wyświetleniem. Naciśnij klawisze CTRL+C, aby\n\
+                przerwać wyświetlenie statystyki. Jeżeli ta zmienna nie\n\
+                zostanie określona, program netstat wyświetli informacje\n\
+                o aktualnej konfiguracji jeden raz.\n\n"
+    IDS_DISPLAY_THEADER "\n  Protokół  Adres lokalny          Obcy adres             Stan"
+    IDS_DISPLAY_PROCESS "       Proces\n"
+    IDS_ACTIVE_CONNECT "\nAktywne połączenia\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_IP4_STAT_HEADER "\nStatystyki IPv4\n\n"
+    IDS_IP_PACK_REC            "  Odebrane pakiety                       = %lu\n"
+    IDS_IP_HEAD_REC_ERROR      "  Odebrane błędy nagłówka                = %lu\n"
+    IDS_IP_ADDR_REC_ERROR      "  Odebrane błędy adresu                  = %lu\n"
+    IDS_IP_DATAG_FWD           "  Przekazane datagramy                   = %lu\n"
+    IDS_IP_UNKNOWN_PRO_REC     "  Odebrane nieznane protokoły            = %lu\n"
+    IDS_IP_REC_PACK_DISCARD    "  Odebrane pakiety następnie odrzucone   = %lu\n"
+    IDS_IP_REC_PACK_DELIVER    "  Odebrane pakiety następnie dostarczone = %lu\n"
+    IDS_IP_OUT_REQUEST         "  Żądania wyjściowe                      = %lu\n"
+    IDS_IP_ROUTE_DISCARD       "  Odrzucenia routingu                    = %lu\n"
+    IDS_IP_DISCARD_OUT_PACK    "  Odrzucone pakiety wyjściowe            = %lu\n"
+    IDS_IP_OUT_PACKET_NO_ROUTE "  Pakiet wyjściowy bez trasy             = %lu\n"
+    IDS_IP_REASSEMBLE_REQUIRED "  Wymagane ponowne składanie             = %lu\n"
+    IDS_IP_REASSEMBLE_SUCCESS  "  Pomyślne ponowne składanie             = %lu\n"
+    IDS_IP_REASSEMBLE_FAILURE  "  Niepowodzenia ponownego składania      = %lu\n"
+    IDS_IP_DATAG_FRAG_SUCCESS  "  Datagramy pomyślnie pofragmentowane    = %lu\n"
+    IDS_IP_DATAG_FRAG_FAILURE  "  Datagramy niepofragmentowane           = %lu\n"
+    IDS_IP_DATAG_FRAG_CREATE   "  Utworzone fragmenty                    = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ICMP4_STAT_HEADER "\nStatystyki ICMPv4\n\n"
+    IDS_ICMP_THEADER "                            Odebrano  Wysłano\n"
+    IDS_ICMP_MSG                 "  Komunikaty                      %-11lu %lu\n"
+    IDS_ICMP_ERROR               "  Błędy                           %-11lu %lu\n"
+    IDS_ICMP_DEST_UNREACH        "  Miejsce docelowe nieosiągalne   %-11lu %lu\n"
+    IDS_ICMP_TIME_EXCEED         "  Przekroczono czas               %-11lu %lu\n"
+    IDS_ICMP_PARAM_PROBLEM       "  Problemy z parametrami          %-11lu %lu\n"
+    IDS_ICMP_SRC_QUENCHES        "  Wygaszacze źródeł               %-11lu %lu\n"
+    IDS_ICMP_REDIRECT            "  Przekierowania                  %-11lu %lu\n"
+    IDS_ICMP_ECHO                "  Echa                            %-11lu %lu\n"
+    IDS_ICMP_ECHO_REPLY          "  Odpowiedzi echa                 %-11lu %lu\n"
+    IDS_ICMP_TIMESTAMP           "  Sygnatury czasowe               %-11lu %lu\n"
+    IDS_ICMP_TIMESTAMP_REPLY     "  Odpowiedzi sygnatur czasowych   %-11lu %lu\n"
+    IDS_ICMP_ADDRESSS_MASK       "  Maski adresów                   %-11lu %lu\n"
+    IDS_ICMP_ADDRESSS_MASK_REPLY "  Odpowiedzi masek adresów        %-11lu %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TCP4_HEADER         "\nStatystyki TCP dla IPv4\n\n"
+    IDS_TCP_ACTIVE_OPEN     "  Aktywne otwarcia                     = %lu\n"
+    IDS_TCP_PASS_OPEN       "  Pasywne otwarcia                     = %lu\n"
+    IDS_TCP_FAIL_CONNECT    "  Niepomyślne próby połączenia         = %lu\n"
+    IDS_TCP_RESET_CONNECT   "  Resetowane połączenia                = %lu\n"
+    IDS_TCP_CURRENT_CONNECT "  Bieżące połączenia                   = %lu\n"
+    IDS_TCP_SEG_RECEIVE     "  Odebrane segmenty                    = %lu\n"
+    IDS_TCP_SEG_SENT        "  Wysłane segmenty                     = %lu\n"
+    IDS_TCP_SEG_RETRANSMIT  "  Retransmitowane segmenty             = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UDP_IP4_HEADER    "\nStatystyki UDP dla IPv4\n\n"
+    IDS_UDP_DATAG_RECEIVE "  Odebrane datagramy     = %lu\n"
+    IDS_UDP_NO_PORT       "  Brak portów            = %lu\n"
+    IDS_UDP_RECEIVE_ERROR "  Błędy odbioru          = %lu\n"
+    IDS_UDP_DATAG_SEND    "  Wysłane datagramy      = %lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ETHERNET_INTERFACE_STAT     "Statystyki interfejsu\n\n"
+    IDS_ETHERNET_THEADER            "                           Odebrano          Wysłano\n\n"
+    IDS_ETHERNET_BYTES              "  Bajty                               %14lu %15lu\n"
+    IDS_ETHERNET_UNICAST_PACKET     "  Pakiety emisji pojedynczej          %14lu %15lu\n"
+    IDS_ETHERNET_NON_UNICAST_PACKET "  Pakiety inne niż emisji pojedynczej %14lu %15lu\n"
+    IDS_ETHERNET_DISCARD            "  Odrzucone                           %14lu %15lu\n"
+    IDS_ETHERNET_ERROR              "  Błędy                               %14lu %15lu\n"
+    IDS_ETHERNET_UNKNOWN            "  Nieznane protokoły                  %14lu\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_WSA_START "BŁĄD: Procedura WSAStartup() nie powiodła się : %d\n"
+    IDS_ERROR_ROUTE "BŁĄD: Nie można odnaleźć pliku 'route.exe'\n"
+    IDS_ERROR_TCP_SNAPSHOT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych TCP.\n"
+    IDS_ERROR_UDP_ENDPOINT "BŁĄD: Nie powiodło się utworzenie migawki dla punktów końcowych UDP.\n"
+    IDS_ERROR_UDP_ENDPOINT_TABLE "BŁĄD: Nie powiodło się utworzenie migawki dla tabeli punktów końcowych UDP.\n"
+END

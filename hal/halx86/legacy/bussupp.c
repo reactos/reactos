@@ -809,7 +809,7 @@ HalpDebugPciDumpBus(IN ULONG i,
                     IN ULONG k,
                     IN PPCI_COMMON_CONFIG PciData)
 {
-    PCHAR p, ClassName, SubClassName, VendorName, ProductName, SubVendorName;
+    PCHAR p, ClassName, ClassEnd, SubClassName, VendorName, ProductName, SubVendorName;
     ULONG Length;
     CHAR LookupString[16] = "";
     CHAR bSubClassName[64] = "";
@@ -824,19 +824,28 @@ HalpDebugPciDumpBus(IN ULONG i,
     if (ClassName)
     {
         /* Isolate the subclass name */
-        ClassName += 6;
-        sprintf(LookupString, "\t%02x  ", PciData->SubClass);
+        ClassName += strlen("C 00  ");
+        ClassEnd = strstr(ClassName, "\nC ");
+        sprintf(LookupString, "\n\t%02x  ", PciData->SubClass);
         SubClassName = strstr(ClassName, LookupString);
-        if (SubClassName)
+        if (ClassEnd && SubClassName > ClassEnd)
         {
-            /* Copy the subclass into our buffer */
-            SubClassName += 5;
-            p = strpbrk(SubClassName, "\r\n");
-            Length = p - SubClassName;
-            if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
-            strncpy(bSubClassName, SubClassName, Length);
-            bSubClassName[Length] = '\0';
+            SubClassName = NULL;
         }
+        if (!SubClassName)
+        {
+            SubClassName = ClassName;
+        }
+        else
+        {
+            SubClassName += strlen("\n\t00  ");
+        }
+        /* Copy the subclass into our buffer */
+        p = strpbrk(SubClassName, "\r\n");
+        Length = p - SubClassName;
+        if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
+        strncpy(bSubClassName, SubClassName, Length);
+        bSubClassName[Length] = '\0';
     }
 
     /* Isolate the vendor name */
@@ -1319,7 +1328,7 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
         }
 
         /* If we made it, we're done */
-        *Context = (ULONG_PTR)Handler;
+        *Context = (ULONG_PTR)&BusHandler->Handler;
         return TRUE;
     }
 

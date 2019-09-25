@@ -253,7 +253,7 @@ TestFastMutexConcurrent(
     THREAD_DATA ThreadDataUnsafe;
     THREAD_DATA ThreadDataTry;
     LARGE_INTEGER Timeout;
-    Timeout.QuadPart = -10 * 1000 * 10; /* 10 ms */
+    Timeout.QuadPart = -50 * MILLISECOND;
 
     InitThreadData(&ThreadData, Mutex, ExAcquireFastMutex, NULL, ExReleaseFastMutex);
     InitThreadData(&ThreadData2, Mutex, ExAcquireFastMutex, NULL, ExReleaseFastMutex);

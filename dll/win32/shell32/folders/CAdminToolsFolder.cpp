@@ -168,7 +168,7 @@ HRESULT WINAPI CAdminToolsFolder::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CAdminToolsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_pidlInner = ILClone(pidl);
     if (!m_pidlInner)
@@ -180,7 +180,7 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(LPCITEMIDLIST pidl)
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
-HRESULT WINAPI CAdminToolsFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CAdminToolsFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     if (!pidl)
         return E_POINTER;

@@ -10,10 +10,8 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#include <stdio.h>
-//#include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/psfuncs.h>
+// #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
 NTSTATUS
@@ -39,9 +37,9 @@ VOID FASTCALL EnvironmentStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usO
 
         while (*CurrentChar)
         {
-            while(*CurrentChar++);
+            while (*CurrentChar++);
         }
-        /* double nullterm at end */
+        /* Double NULL-termination at end */
         CurrentChar++;
 
         usOut->Buffer = wsIn;
@@ -56,10 +54,8 @@ VOID FASTCALL EnvironmentStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usO
     }
 }
 
-
-
 VOID
-WINAPI
+NTAPI
 NtProcessStartup(PPEB Peb)
 {
     NTSTATUS Status;
@@ -87,7 +83,7 @@ NtProcessStartup(PPEB Peb)
     ASSERT(ProcessParameters);
 
     /* Allocate memory for the argument list, enough for 512 tokens */
-    //FIXME: what if 512 is not enough????
+    // FIXME: what if 512 is not enough????
     ArgumentList = RtlAllocateHeap(RtlGetProcessHeap(), 0, 512 * sizeof(PCHAR));
     if (!ArgumentList)
     {
@@ -140,7 +136,7 @@ NtProcessStartup(PPEB Peb)
         /* Start parsing */
         while (*Source)
         {
-            /* Skip the white space. */
+            /* Skip the white space */
             while (*Source && *Source <= ' ') Source++;
 
             /* Copy until the next white space is reached */
@@ -170,7 +166,7 @@ NtProcessStartup(PPEB Peb)
     if (ProcessParameters->Environment)
     {
         EnvironmentStringToUnicodeString(ProcessParameters->Environment, &UnicodeEnvironment);
-        Status = RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
+        Status = RtlUnicodeStringToAnsiString (&AnsiEnvironment, &UnicodeEnvironment, TRUE);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERR: no mem(guess)\n");

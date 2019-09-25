@@ -20,6 +20,7 @@
 #include <suppress.h>
 
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(UI);
 
 #define VIDEOPORT_PALETTE_READ        0x03C7
 #define VIDEOPORT_PALETTE_WRITE        0x03C8
@@ -49,8 +50,6 @@
 #define VERTRES_200_SCANLINES        0x00
 #define VERTRES_350_SCANLINES        0x01
 #define VERTRES_400_SCANLINES        0x02
-
-DBG_DEFAULT_CHANNEL(UI);
 
 #include <pshpack2.h>
 typedef struct

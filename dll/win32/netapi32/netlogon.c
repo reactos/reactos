@@ -112,9 +112,98 @@ DsAddressToSiteNamesA(
     _In_ PSOCKET_ADDRESS SocketAddresses,
     _Out_ LPSTR **SiteNames)
 {
-    FIXME("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
+    PWSTR pComputerNameW = NULL, *pSiteNamesW = NULL;
+    PSTR *pSiteNamesA = NULL, Ptr;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
           debugstr_a(ComputerName), EntryCount, SocketAddresses, SiteNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (EntryCount == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    /* Call the Unicode function */
+    status = DsAddressToSiteNamesW(pComputerNameW,
+                                   EntryCount,
+                                   SocketAddresses,
+                                   &pSiteNamesW);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Calculate the required site names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the site names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the site names */
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            pSiteNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    *SiteNames = pSiteNamesA;
+    pSiteNamesA = NULL;
+
+done:
+    if (pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
@@ -199,10 +288,155 @@ DsAddressToSiteNamesExA(
     _Out_ LPSTR **SiteNames,
     _Out_ LPSTR **SubnetNames)
 {
-    FIXME("DsAddressToSiteNamesExA(%s, %lu, %p, %p, %p)\n",
+    PWSTR pComputerNameW = NULL, *pSiteNamesW = NULL;
+    PWSTR *pSubnetNamesW = NULL;
+    PSTR *pSiteNamesA = NULL, *pSubnetNamesA = NULL, Ptr;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsAddressToSiteNamesExA(%s, %lu, %p, %p, %p)\n",
           debugstr_a(ComputerName), EntryCount, SocketAddresses,
           SiteNames, SubnetNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (EntryCount == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    /* Call the Unicode function */
+    status = DsAddressToSiteNamesExW(pComputerNameW,
+                                     EntryCount,
+                                     SocketAddresses,
+                                     &pSiteNamesW,
+                                     &pSubnetNamesW);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Calculate the required site names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the site names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the site names */
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSiteNamesW[i] != NULL)
+        {
+            pSiteNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSiteNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    /* Calculate the required subnet names buffer size */
+    BufferSize = EntryCount * sizeof(PSTR);
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSubnetNamesW[i] != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSubnetNamesW[i]);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+    }
+
+    /* Allocate the subnet names ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSubnetNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    /* Convert the subnet names */
+    Ptr = (PSTR)((ULONG_PTR)pSubnetNamesA + EntryCount * sizeof(PSTR));
+    BufferSize -= EntryCount * sizeof(PSTR);
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        if (pSubnetNamesW[i] != NULL)
+        {
+            pSubnetNamesA[i] = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pSubnetNamesW[i]);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = Ptr + AnsiString.Length + sizeof(CHAR);
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+    }
+
+    *SiteNames = pSiteNamesA;
+    *SubnetNames = pSubnetNamesA;
+    pSiteNamesA = NULL;
+    pSubnetNamesA = NULL;
+
+done:
+    if (pSubnetNamesA != NULL)
+        NetApiBufferFree(pSubnetNamesA);
+
+    if (pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSubnetNamesW != NULL)
+        NetApiBufferFree(pSubnetNamesW);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
@@ -313,10 +547,58 @@ DsDeregisterDnsHostRecordsA(
     _In_opt_ GUID *DsaGuid,
     _In_ LPSTR DnsHostName)
 {
-    FIXME("DsDeregisterDnsHostRecordsA(%s, %s, %p, %p, %s)\n",
+    PWSTR pServerNameW = NULL, pDnsDomainNameW = NULL;
+    PWSTR pDnsHostNameW = NULL;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsDeregisterDnsHostRecordsA(%s, %s, %p, %p, %s)\n",
           debugstr_a(ServerName), debugstr_a(DnsDomainName),
           DomainGuid, DsaGuid, debugstr_a(DnsHostName));
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    if (DnsDomainName != NULL)
+    {
+        pDnsDomainNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsDomainName);
+        if (pDnsDomainNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    pDnsHostNameW = NetpAllocWStrFromAnsiStr((PSTR)DnsHostName);
+    if (pDnsHostNameW == NULL)
+    {
+        status = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    status = DsDeregisterDnsHostRecordsW(pServerNameW,
+                                         pDnsDomainNameW,
+                                         DomainGuid,
+                                         DsaGuid,
+                                         pDnsHostNameW);
+
+done:
+    if (pDnsHostNameW != NULL)
+        NetApiBufferFree(pDnsHostNameW);
+
+    if (pDnsDomainNameW != NULL)
+        NetApiBufferFree(pDnsDomainNameW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
@@ -361,9 +643,141 @@ DsEnumerateDomainTrustsA(
     _Out_ PDS_DOMAIN_TRUSTSA *Domains,
     _Out_ PULONG DomainCount)
 {
-    FIXME("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
+    PWSTR pServerNameW = NULL;
+    PDS_DOMAIN_TRUSTSW pDomainsW = NULL;
+    PDS_DOMAIN_TRUSTSA pDomainsA = NULL;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    PSTR Ptr;
+    ULONG i, BufferSize, SidLength;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
           debugstr_a(ServerName), Flags, Domains, DomainCount);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    status = DsEnumerateDomainTrustsW(pServerNameW,
+                                      Flags,
+                                      &pDomainsW,
+                                      DomainCount);
+    if (status != NERR_Success)
+        goto done;
+
+    BufferSize = *DomainCount * sizeof(DS_DOMAIN_TRUSTSA);
+    for (i = 0; i < *DomainCount; i++)
+    {
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainsW[i].NetbiosDomainName);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+        if (pDomainsW[i].DnsDomainName != NULL)
+        {
+            RtlInitUnicodeString(&UnicodeString,
+                                 pDomainsW[i].DnsDomainName);
+            BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+        }
+
+        BufferSize += RtlLengthSid(pDomainsW[i].DomainSid);
+    }
+
+    /* Allocate the ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pDomainsA);
+    if (status != NERR_Success)
+        goto done;
+
+    Ptr = (PSTR)((ULONG_PTR)pDomainsA + *DomainCount * sizeof(DS_DOMAIN_TRUSTSA));
+    for (i = 0; i < *DomainCount; i++)
+    {
+        pDomainsA[i].NetbiosDomainName = Ptr;
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainsW[i].NetbiosDomainName);
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+        BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+        if (pDomainsW[i].DnsDomainName != NULL)
+        {
+            pDomainsA[i].DnsDomainName = Ptr;
+            RtlInitUnicodeString(&UnicodeString,
+                                 pDomainsW[i].DnsDomainName);
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = BufferSize;
+            AnsiString.Buffer = Ptr;
+
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                status = RtlNtStatusToDosError(Status);
+                goto done;
+            }
+
+            Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+            BufferSize -= AnsiString.Length + sizeof(CHAR);
+        }
+
+        pDomainsA[i].Flags = pDomainsW[i].Flags;
+        pDomainsA[i].ParentIndex = pDomainsW[i].ParentIndex;
+        pDomainsA[i].TrustType = pDomainsW[i].TrustType;
+        pDomainsA[i].TrustAttributes = pDomainsW[i].TrustAttributes;
+
+        /* DomainSid */
+        pDomainsA[i].DomainSid = (PSID)Ptr;
+        SidLength = RtlLengthSid(pDomainsW[i].DomainSid);
+        Status = RtlCopySid(SidLength,
+                            (PSID)Ptr,
+                            pDomainsW[i].DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + SidLength);
+        BufferSize -= SidLength;
+
+        CopyMemory(&pDomainsA[i].DomainGuid,
+                   &pDomainsW[i].DomainGuid,
+                   sizeof(GUID));
+    }
+
+    *Domains = pDomainsA;
+    pDomainsA = NULL;
+
+done:
+    if (pDomainsA != NULL)
+        NetApiBufferFree(pDomainsA);
+
+    if (pDomainsW != NULL)
+        NetApiBufferFree(pDomainsW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
@@ -375,9 +789,30 @@ DsEnumerateDomainTrustsW(
     _Out_ PDS_DOMAIN_TRUSTSW *Domains,
     _Out_ PULONG DomainCount)
 {
-    FIXME("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
+    NETLOGON_TRUSTED_DOMAIN_ARRAY DomainsArray = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
           debugstr_w(ServerName), Flags, Domains, DomainCount);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        status = DsrEnumerateDomainTrusts(ServerName,
+                                          Flags,
+                                          &DomainsArray);
+        if (status == NERR_Success)
+        {
+            *Domains = DomainsArray.Domains;
+            *DomainCount = DomainsArray.DomainCount;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
@@ -441,11 +876,256 @@ DsGetDcNameWithAccountA(
     _In_ ULONG Flags,
     _Out_ PDOMAIN_CONTROLLER_INFOA *DomainControllerInfo)
 {
-    FIXME("DsGetDcNameWithAccountA(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
+    PWSTR pComputerNameW = NULL, pAccountNameW = NULL;
+    PWSTR pDomainNameW = NULL, pSiteNameW = NULL;
+    PDOMAIN_CONTROLLER_INFOW pDomainControllerInfoW = NULL;
+    PDOMAIN_CONTROLLER_INFOA pDomainControllerInfoA = NULL;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    PSTR Ptr;
+    ULONG BufferSize;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsGetDcNameWithAccountA(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
           debugstr_a(ComputerName), debugstr_a(AccountName), AccountControlBits,
           debugstr_a(DomainName), debugstr_guid(DomainGuid),
           debugstr_a(SiteName), Flags, DomainControllerInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    if (AccountName != NULL)
+    {
+        pAccountNameW = NetpAllocWStrFromAnsiStr((PSTR)AccountName);
+        if (pAccountNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    pDomainNameW = NetpAllocWStrFromAnsiStr((PSTR)DomainName);
+    if (pDomainNameW == NULL)
+    {
+        status = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    pSiteNameW = NetpAllocWStrFromAnsiStr((PSTR)SiteName);
+    if (pSiteNameW == NULL)
+    {
+        status = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    status = DsGetDcNameWithAccountW(pComputerNameW,
+                                     pAccountNameW,
+                                     AccountControlBits,
+                                     pDomainNameW,
+                                     DomainGuid,
+                                     pSiteNameW,
+                                     Flags,
+                                     &pDomainControllerInfoW);
+    if (status != NERR_Success)
+        goto done;
+
+    BufferSize = sizeof(DOMAIN_CONTROLLER_INFOA);
+
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainControllerName);
+    BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainControllerAddress);
+    BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainName);
+    BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DnsForestName);
+    BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+
+    if (pDomainControllerInfoW->DcSiteName != NULL)
+    {
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainControllerInfoW->DcSiteName);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+    }
+
+    if (pDomainControllerInfoW->ClientSiteName != NULL)
+    {
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainControllerInfoW->ClientSiteName);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+    }
+
+    /* Allocate the ANSI buffer */
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pDomainControllerInfoA);
+    if (status != NERR_Success)
+        goto done;
+
+    pDomainControllerInfoA->DomainControllerAddressType = 
+        pDomainControllerInfoW->DomainControllerAddressType;
+
+    pDomainControllerInfoA->Flags = pDomainControllerInfoW->Flags;
+
+    CopyMemory(&pDomainControllerInfoA->DomainGuid,
+               &pDomainControllerInfoW->DomainGuid,
+               sizeof(GUID));
+
+    Ptr = (PSTR)((ULONG_PTR)pDomainControllerInfoA + sizeof(DOMAIN_CONTROLLER_INFOA));
+    BufferSize -= sizeof(DOMAIN_CONTROLLER_INFOA);
+
+    pDomainControllerInfoA->DomainControllerName = Ptr;
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainControllerName);
+    AnsiString.Length = 0;
+    AnsiString.MaximumLength = BufferSize;
+    AnsiString.Buffer = Ptr;
+
+    Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                          &UnicodeString,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        status = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+    Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+    BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+    pDomainControllerInfoA->DomainControllerAddress = Ptr;
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainControllerAddress);
+    AnsiString.Length = 0;
+    AnsiString.MaximumLength = BufferSize;
+    AnsiString.Buffer = Ptr;
+
+    Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                          &UnicodeString,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        status = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+    Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+    BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+    pDomainControllerInfoA->DomainName = Ptr;
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DomainName);
+    AnsiString.Length = 0;
+    AnsiString.MaximumLength = BufferSize;
+    AnsiString.Buffer = Ptr;
+
+    Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                          &UnicodeString,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        status = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+    Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+    BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+    pDomainControllerInfoA->DnsForestName = Ptr;
+    RtlInitUnicodeString(&UnicodeString,
+                         pDomainControllerInfoW->DnsForestName);
+    AnsiString.Length = 0;
+    AnsiString.MaximumLength = BufferSize;
+    AnsiString.Buffer = Ptr;
+
+    Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                          &UnicodeString,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        status = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+    Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+    BufferSize -= AnsiString.Length + sizeof(CHAR);
+
+    if (pDomainControllerInfoW->DcSiteName != NULL)
+    {
+        pDomainControllerInfoA->DcSiteName = Ptr;
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainControllerInfoW->DcSiteName);
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+        BufferSize -= AnsiString.Length + sizeof(CHAR);
+    }
+
+    if (pDomainControllerInfoW->ClientSiteName != NULL)
+    {
+        pDomainControllerInfoA->ClientSiteName = Ptr;
+        RtlInitUnicodeString(&UnicodeString,
+                             pDomainControllerInfoW->ClientSiteName);
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+    }
+
+    *DomainControllerInfo = pDomainControllerInfoA;
+    pDomainControllerInfoA = NULL;
+
+done:
+    if (pDomainControllerInfoA != NULL)
+        NetApiBufferFree(pDomainControllerInfoA);
+
+    if (pDomainControllerInfoW != NULL)
+        NetApiBufferFree(pDomainControllerInfoW);
+
+    if (pSiteNameW != NULL)
+        NetApiBufferFree(pSiteNameW);
+
+    if (pDomainNameW != NULL)
+        NetApiBufferFree(pDomainNameW);
+
+    if (pAccountNameW != NULL)
+        NetApiBufferFree(pAccountNameW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
@@ -463,7 +1143,7 @@ DsGetDcNameWithAccountW(
 {
     NET_API_STATUS status;
 
-    FIXME("DsGetDcNameWithAccountW(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
+    TRACE("DsGetDcNameWithAccountW(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
           debugstr_w(ComputerName), debugstr_w(AccountName), AccountControlBits,
           debugstr_w(DomainName), debugstr_guid(DomainGuid),
           debugstr_w(SiteName), Flags, DomainControllerInfo);
@@ -496,9 +1176,86 @@ DsGetDcSiteCoverageA(
     _Out_ PULONG EntryCount,
     _Out_ LPSTR **SiteNames)
 {
-    FIXME("DsGetDcSiteCoverageA(%s, %p, %p)\n",
+    PWSTR pServerNameW = NULL;
+    PWSTR *pSiteNamesW = NULL;
+    PSTR *pSiteNamesA = NULL;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
+    PSTR Ptr;
+    ULONG BufferSize, i;
+    NTSTATUS Status;
+    NET_API_STATUS status = NERR_Success;
+
+    TRACE("DsGetDcSiteCoverageA(%s, %p, %p)\n",
           debugstr_a(ServerName), EntryCount, SiteNames);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ServerName != NULL)
+    {
+        pServerNameW = NetpAllocWStrFromAnsiStr((PSTR)ServerName);
+        if (pServerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    status = DsGetDcSiteCoverageW(pServerNameW,
+                                  EntryCount,
+                                  &pSiteNamesW);
+    if (status != ERROR_SUCCESS)
+        goto done;
+
+    BufferSize = *EntryCount * sizeof(PSTR);
+    for (i = 0; i < *EntryCount; i++)
+    {
+        RtlInitUnicodeString(&UnicodeString, pSiteNamesW[i]);
+        BufferSize += RtlUnicodeStringToAnsiSize(&UnicodeString);
+    }
+
+    status = NetApiBufferAllocate(BufferSize, (PVOID*)&pSiteNamesA);
+    if (status != NERR_Success)
+        goto done;
+
+    ZeroMemory(pSiteNamesA, BufferSize);
+
+    Ptr = (PSTR)((ULONG_PTR)pSiteNamesA + *EntryCount * sizeof(PSTR));
+    for (i = 0; i < *EntryCount; i++)
+    {
+        pSiteNamesA[i] = Ptr;
+
+        RtlInitUnicodeString(&UnicodeString, pSiteNamesW[i]);
+
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = BufferSize;
+        AnsiString.Buffer = Ptr;
+
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            status = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+
+        Ptr = (PSTR)((ULONG_PTR)Ptr + AnsiString.Length + sizeof(CHAR));
+        BufferSize -= (AnsiString.Length + sizeof(CHAR));
+    }
+
+    *SiteNames = pSiteNamesA;
+    pSiteNamesA = NULL;
+
+done:
+    if (status != NERR_Success && pSiteNamesA != NULL)
+        NetApiBufferFree(pSiteNamesA);
+
+    if (pSiteNamesW != NULL)
+        NetApiBufferFree(pSiteNamesW);
+
+    if (pServerNameW != NULL)
+        NetApiBufferFree(pServerNameW);
+
+    return status;
 }
 
 
@@ -604,19 +1361,52 @@ DsGetForestTrustInformationW(
 DWORD
 WINAPI
 DsGetSiteNameA(
-    _In_ LPCSTR ComputerName,
+    _In_opt_ LPCSTR ComputerName,
     _Out_ LPSTR *SiteName)
 {
-    FIXME("DsGetSiteNameA(%s, %p)\n",
+    PWSTR pComputerNameW = NULL;
+    PWSTR pSiteNameW = NULL;
+    NET_API_STATUS status = ERROR_SUCCESS;
+
+    TRACE("DsGetSiteNameA(%s, %p)\n",
           debugstr_a(ComputerName), SiteName);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ComputerName != NULL)
+    {
+        pComputerNameW = NetpAllocWStrFromAnsiStr((PSTR)ComputerName);
+        if (pComputerNameW == NULL)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    status = DsGetSiteNameW(pComputerNameW,
+                            &pSiteNameW);
+    if (status != ERROR_SUCCESS)
+        goto done;
+
+    *SiteName = NetpAllocAnsiStrFromWStr(pSiteNameW);
+    if (*SiteName == NULL)
+    {
+        status = ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+done:
+    if (pSiteNameW != NULL)
+        NetApiBufferFree(pSiteNameW);
+
+    if (pComputerNameW != NULL)
+        NetApiBufferFree(pComputerNameW);
+
+    return status;
 }
 
 
 DWORD
 WINAPI
 DsGetSiteNameW(
-    _In_ LPCWSTR ComputerName,
+    _In_opt_ LPCWSTR ComputerName,
     _Out_ LPWSTR *SiteName)
 {
     NET_API_STATUS status;

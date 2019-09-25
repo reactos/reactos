@@ -49,7 +49,7 @@ ULONG PortIrq  = 0; // Not used at the moment.
 
 BOOLEAN DebugStartOfLine = TRUE;
 
-VOID DebugInit(BOOLEAN MainInit)
+VOID DebugInit(IN ULONG_PTR FrLdrSectionId)
 {
     PCHAR CommandLine, PortString, BaudString, IrqString;
     ULONG Value;
@@ -78,7 +78,7 @@ VOID DebugInit(BOOLEAN MainInit)
 #endif
 
     /* Check for pre- or main initialization phase */
-    if (!MainInit)
+    if (FrLdrSectionId == 0)
     {
         /* Pre-initialization phase: use the FreeLdr command-line debugging string */
         CommandLine = (PCHAR)CmdLineGetDebugString();
@@ -92,14 +92,10 @@ VOID DebugInit(BOOLEAN MainInit)
     else
     {
         /* Main initialization phase: use the FreeLdr INI debugging string */
-
-        ULONG_PTR SectionId;
-
-        if (!IniOpenSection("FreeLoader", &SectionId))
+        if (!IniReadSettingByName(FrLdrSectionId, "Debug", DebugString, sizeof(DebugString)))
+        {
             return;
-
-        if (!IniReadSettingByName(SectionId, "Debug", DebugString, sizeof(DebugString)))
-            return;
+        }
     }
 
     /* Get the Command Line */

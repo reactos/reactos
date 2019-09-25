@@ -11,18 +11,6 @@ assoc (输出所有文件关联)\n\
 assoc .ext (输出指定的文件关联)\n\
 assoc .ext= (删除指定的文件关联)\n\
 assoc .ext=文件类型 (添加新的文件关联)\n"
-    STRING_ATTRIB_HELP "显示或更改文件属性。\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 文件 ...\n\
-       [/S [/D]]\n\n\
-  +   设置一个属性\n\
-  -   清除一个属性\n\
-  R   只读属性\n\
-  A   归档属性\n\
-  S   系统属性\n\
-  H   隐藏属性\n\
-  /S  处理当前目录和所有子目录下的所有匹配文件\n\
-  /D  同时处理目录\n\n\
-执行不带参数的 ATTRIB 将会显示所有文件的属性。\n"
     STRING_ALIAS_HELP "设置、删除或显示别名。\n\n\
 ALIAS [别名=[命令]]\n\n\
   别名    别名的名称。\n\
@@ -242,11 +230,6 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
-    STRING_LABEL_HELP1 "显示或改变驱动器卷标。\n\nLABEL [驱动器:][卷标]\n"
-    STRING_LABEL_HELP2 "驱动器 %c 中的卷是 %s\n"
-    STRING_LABEL_HELP3 "驱动器 %c 中的卷没有卷标。\n"
-    STRING_LABEL_HELP4 "卷的序列号是 %04X-%04X\n"
-    STRING_LABEL_HELP5 "驱动器卷标 (11 个字符, 按 ENTER 忽略)? "
     STRING_LOCALE_HELP1 "当前时间是"
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"

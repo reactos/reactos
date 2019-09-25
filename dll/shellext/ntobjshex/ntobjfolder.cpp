@@ -198,7 +198,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::InternalBindToObject(
 }
 
 // IPersistFolder
-HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_shellPidl = ILClone(pidl);
 
@@ -208,7 +208,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
 }
 
 // Internal
-HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
+HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath)
 {
     m_shellPidl = ILClone(pidl);
 

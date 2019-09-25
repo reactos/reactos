@@ -1,0 +1,20 @@
+/* Russian translation by Andrey Korotaev (unC0Rr@inbox.ru) & Aleksey Bragin (aleksey@reactos.org) & Kudratov Olimjon (olim98@bk.ru)*/
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Создание, изменение и удаление меток тома.\n\nLABEL [диск:][метка]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Том в устройстве %c имеет метку %s\n"
+    STRING_LABEL_TEXT2 "Том в устройстве %c: не имеет метки\n"
+    STRING_LABEL_TEXT3 "Серийный номер тома: %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Метка тома (32 букв, ВВОД для пустой метки)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
+    STRING_ERROR_INVALID_DRIVE "Неверное определение диска\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

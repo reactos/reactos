@@ -332,15 +332,18 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Now, ensure output buffer can hold everything */
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Ensure we set output to let user reallocate! */
     MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
     MountPoints->NumberOfMountPoints = TotalSymLinks;
+    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
+
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -517,7 +520,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Get output buffer */
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Compute output length */
@@ -527,9 +530,12 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
     /* Give length to allow reallocation */
     MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalLength;
     MountPoints->NumberOfMountPoints = 1;
+    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalLength;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
+
         return STATUS_BUFFER_OVERFLOW;
     }
 

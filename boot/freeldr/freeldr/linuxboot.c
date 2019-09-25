@@ -29,8 +29,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(LINUX);
 
 /* GLOBALS ********************************************************************/
@@ -50,11 +50,16 @@ ULONG   LinuxCommandLineSize = 0;
 PVOID   LinuxKernelLoadAddress = NULL;
 PVOID   LinuxInitrdLoadAddress = NULL;
 CHAR    LinuxBootDescription[80];
-PCSTR   LinuxBootPath = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
+static BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile);
+static BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile);
+static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile);
+static BOOLEAN LinuxCheckKernelVersion(VOID);
+static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile);
+
+static VOID
 RemoveQuotes(
     IN OUT PSTR QuotedString)
 {
@@ -85,14 +90,19 @@ LoadAndBootLinux(
     IN PCHAR Argv[],
     IN PCHAR Envp[])
 {
+    ARC_STATUS Status;
     PCSTR Description;
+    PCSTR ArgValue;
+    PCSTR BootPath;
+    UCHAR DriveNumber = 0;
+    ULONG PartitionNumber = 0;
     ULONG LinuxKernel = 0;
     ULONG LinuxInitrdFile = 0;
-    ARC_STATUS Status;
     FILEINFORMATION FileInfo;
+    CHAR ArcPath[MAX_PATH];
 
     Description = GetArgumentValue(Argc, Argv, "LoadIdentifier");
-    if (Description)
+    if (Description && *Description)
         RtlStringCbPrintfA(LinuxBootDescription, sizeof(LinuxBootDescription), "Loading %s...", Description);
     else
         strcpy(LinuxBootDescription, "Loading Linux...");
@@ -104,34 +114,91 @@ LoadAndBootLinux(
     /* Find all the message box settings and run them */
     UiShowMessageBoxesInArgv(Argc, Argv);
 
-    /* Parse the .ini file section */
-    if (!LinuxParseIniSection(Argc, Argv))
+    /*
+     * Check whether we have a "BootPath" value (takes precedence
+     * over both "BootDrive" and "BootPartition").
+     */
+    BootPath = GetArgumentValue(Argc, Argv, "BootPath");
+    if (!BootPath || !*BootPath)
+    {
+        /* We don't have one, check whether we use "BootDrive" and "BootPartition" */
+
+        /* Retrieve the boot drive (optional, fall back to using default path otherwise) */
+        ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
+        if (ArgValue && *ArgValue)
+        {
+            DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+
+            /* Retrieve the boot partition (not optional and cannot be zero) */
+            PartitionNumber = 0;
+            ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
+            if (ArgValue && *ArgValue)
+                PartitionNumber = atoi(ArgValue);
+            if (PartitionNumber == 0)
+            {
+                UiMessageBox("Boot partition cannot be 0!");
+                goto LinuxBootFailed;
+                // return EINVAL;
+            }
+
+            /* Construct the corresponding ARC path */
+            ConstructArcPath(ArcPath, "", DriveNumber, PartitionNumber);
+            *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
+
+            BootPath = ArcPath;
+        }
+        else
+        {
+            /* Fall back to using the system partition as default path */
+            BootPath = GetArgumentValue(Argc, Argv, "SystemPartition");
+        }
+    }
+
+    /* Get the kernel name */
+    LinuxKernelName = GetArgumentValue(Argc, Argv, "Kernel");
+    if (!LinuxKernelName || !*LinuxKernelName)
+    {
+        UiMessageBox("Linux kernel filename not specified for selected OS!");
         goto LinuxBootFailed;
+    }
+
+    /* Get the initrd name (optional) */
+    LinuxInitrdName = GetArgumentValue(Argc, Argv, "Initrd");
+
+    /* Get the command line (optional) */
+    LinuxCommandLineSize = 0;
+    LinuxCommandLine = GetArgumentValue(Argc, Argv, "CommandLine");
+    if (LinuxCommandLine && *LinuxCommandLine)
+    {
+        RemoveQuotes(LinuxCommandLine);
+        LinuxCommandLineSize = (ULONG)strlen(LinuxCommandLine) + 1;
+        LinuxCommandLineSize = min(LinuxCommandLineSize, 260);
+    }
 
     /* Open the kernel */
-    LinuxKernel = FsOpenFile(LinuxKernelName);
-    if (!LinuxKernel)
+    Status = FsOpenFile(LinuxKernelName, BootPath, OpenReadOnly, &LinuxKernel);
+    if (Status != ESUCCESS)
     {
-        UiMessageBox("Linux kernel \'%s\' not found.", LinuxKernelName);
+        UiMessageBox("Linux kernel '%s' not found.", LinuxKernelName);
         goto LinuxBootFailed;
     }
 
     /* Open the initrd file image (if necessary) */
     if (LinuxInitrdName)
     {
-        LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
-        if (!LinuxInitrdFile)
+        Status = FsOpenFile(LinuxInitrdName, BootPath, OpenReadOnly, &LinuxInitrdFile);
+        if (Status != ESUCCESS)
         {
-            UiMessageBox("Linux initrd image \'%s\' not found.", LinuxInitrdName);
+            UiMessageBox("Linux initrd image '%s' not found.", LinuxInitrdName);
             goto LinuxBootFailed;
         }
     }
 
-    /* Read the boot sector */
+    /* Load the boot sector */
     if (!LinuxReadBootSector(LinuxKernel))
         goto LinuxBootFailed;
 
-    /* Read the setup sector */
+    /* Load the setup sector */
     if (!LinuxReadSetupSector(LinuxKernel))
         goto LinuxBootFailed;
 
@@ -153,11 +220,11 @@ LoadAndBootLinux(
             LinuxInitrdSize = FileInfo.EndingAddress.LowPart;
     }
 
-    /* Read the kernel */
+    /* Load the kernel */
     if (!LinuxReadKernel(LinuxKernel))
         goto LinuxBootFailed;
 
-    /* Read the initrd (if necessary) */
+    /* Load the initrd (if necessary) */
     if (LinuxInitrdName)
     {
         if (!LinuxReadInitrd(LinuxInitrdFile))
@@ -191,8 +258,6 @@ LoadAndBootLinux(
 
     UiUnInitialize("Booting Linux...");
     IniCleanup();
-
-    DiskStopFloppyMotor();
 
     if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
         BootNewLinuxKernel();
@@ -233,50 +298,11 @@ LinuxBootFailed:
     LinuxKernelLoadAddress = NULL;
     LinuxInitrdLoadAddress = NULL;
     *LinuxBootDescription = ANSI_NULL;
-    LinuxBootPath = NULL;
 
     return ENOEXEC;
 }
 
-BOOLEAN
-LinuxParseIniSection(
-    IN ULONG Argc,
-    IN PCHAR Argv[])
-{
-#if 0
-    LinuxBootPath = GetArgumentValue(Argc, Argv, "BootPath");
-    if (!LinuxBootPath)
-    {
-        UiMessageBox("Boot path not specified for selected OS!");
-        return FALSE;
-    }
-#endif
-
-    /* Get the kernel name */
-    LinuxKernelName = GetArgumentValue(Argc, Argv, "Kernel");
-    if (!LinuxKernelName)
-    {
-        UiMessageBox("Linux kernel filename not specified for selected OS!");
-        return FALSE;
-    }
-
-    /* Get the initrd name (optional) */
-    LinuxInitrdName = GetArgumentValue(Argc, Argv, "Initrd");
-
-    /* Get the command line (optional) */
-    LinuxCommandLineSize = 0;
-    LinuxCommandLine = GetArgumentValue(Argc, Argv, "CommandLine");
-    if (LinuxCommandLine)
-    {
-        RemoveQuotes(LinuxCommandLine);
-        LinuxCommandLineSize = (ULONG)strlen(LinuxCommandLine) + 1;
-        LinuxCommandLineSize = min(LinuxCommandLineSize, 260);
-    }
-
-    return TRUE;
-}
-
-BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile)
+static BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile)
 {
     LARGE_INTEGER Position;
 
@@ -285,7 +311,7 @@ BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile)
     if (LinuxBootSector == NULL)
         return FALSE;
 
-    /* Read linux boot sector */
+    /* Load the linux boot sector */
     Position.QuadPart = 0;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
@@ -313,12 +339,12 @@ BOOLEAN LinuxReadBootSector(ULONG LinuxKernelFile)
     return TRUE;
 }
 
-BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile)
+static BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile)
 {
     LARGE_INTEGER Position;
     UCHAR TempLinuxSetupSector[512];
 
-    /* Read first linux setup sector */
+    /* Load the first linux setup sector */
     Position.QuadPart = 512;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
@@ -343,7 +369,7 @@ BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile)
     /* Copy over first setup sector */
     RtlCopyMemory(LinuxSetupSector, TempLinuxSetupSector, 512);
 
-    /* Read in the rest of the linux setup sectors */
+    /* Load the rest of the linux setup sectors */
     Position.QuadPart = 1024;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
@@ -371,7 +397,7 @@ BOOLEAN LinuxReadSetupSector(ULONG LinuxKernelFile)
     return TRUE;
 }
 
-BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
+static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
 {
     PVOID LoadAddress;
     LARGE_INTEGER Position;
@@ -390,7 +416,7 @@ BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
 
     LoadAddress = LinuxKernelLoadAddress;
 
-    /* Read linux kernel to 0x100000 (1mb) */
+    /* Load the linux kernel at 0x100000 (1mb) */
     Position.QuadPart = 512 + SetupSectorSize;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
@@ -408,7 +434,7 @@ BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
     return TRUE;
 }
 
-BOOLEAN LinuxCheckKernelVersion(VOID)
+static BOOLEAN LinuxCheckKernelVersion(VOID)
 {
     /* Just assume old kernel until we find otherwise */
     NewStyleLinuxKernel = FALSE;
@@ -445,7 +471,7 @@ BOOLEAN LinuxCheckKernelVersion(VOID)
     return TRUE;
 }
 
-BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
+static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
 {
     ULONG        BytesLoaded;
     CHAR    StatusText[260];
@@ -482,7 +508,7 @@ BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
         TRACE("InitrdAddressMax: 0x%x\n", LinuxSetupSector->InitrdAddressMax);
     }
 
-    /* Read in the ramdisk */
+    /* Load the ramdisk */
     for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
     {
         if (ArcRead(LinuxInitrdFile, (PVOID)LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)

@@ -315,7 +315,7 @@ AcpiNsInstallNode (
     Node->Type = (UINT8) Type;
 
     ACPI_DEBUG_PRINT ((ACPI_DB_NAMES,
-        "%4.4s (%s) [Node %p Owner %X] added to %4.4s (%s) [Node %p]\n",
+        "%4.4s (%s) [Node %p Owner %3.3X] added to %4.4s (%s) [Node %p]\n",
         AcpiUtGetNodeName (Node), AcpiUtGetTypeName (Node->Type), Node, OwnerId,
         AcpiUtGetNodeName (ParentNode), AcpiUtGetTypeName (ParentNode->Type),
         ParentNode));

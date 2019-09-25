@@ -825,7 +825,7 @@ HRESULT WINAPI CDesktopFolder::Initialize(LPCITEMIDLIST pidl)
     return E_INVALIDARG;
 }
 
-HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT WINAPI CDesktopFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 

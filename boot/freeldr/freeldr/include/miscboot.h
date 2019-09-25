@@ -22,19 +22,7 @@
 #ifdef _M_IX86
 
 ARC_STATUS
-LoadAndBootBootSector(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
-
-ARC_STATUS
-LoadAndBootPartition(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
-
-ARC_STATUS
-LoadAndBootDrive(
+LoadAndBootDevice(
     IN ULONG Argc,
     IN PCHAR Argv[],
     IN PCHAR Envp[]);

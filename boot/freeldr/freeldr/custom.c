@@ -34,6 +34,7 @@ const CHAR LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nE
 
 const CHAR BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
 const CHAR BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
+const CHAR ARCPathPrompt[] = "Enter the boot ARC path.\n\nExamples:\nmulti(0)disk(0)rdisk(0)partition(1)\nmulti(0)disk(0)fdisk(0)";
 const CHAR ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
 const CHAR ReactOSOptionsPrompt[] = "Enter the options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
 const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
@@ -55,11 +56,12 @@ VOID OptionMenuCustomBoot(VOID)
         "ReactOS Setup"
         };
     ULONG SelectedMenuItem;
+    OperatingSystemItem OperatingSystem;
 
     if (!UiDisplayMenu("Please choose a boot method:", NULL,
                        FALSE,
                        CustomBootMenuList,
-                       sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
+                       RTL_NUMBER_OF(CustomBootMenuList),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,
@@ -69,35 +71,44 @@ VOID OptionMenuCustomBoot(VOID)
         return;
     }
 
+    /* Initialize a new custom OS entry */
+    OperatingSystem.SectionId = 0;
     switch (SelectedMenuItem)
     {
 #ifdef _M_IX86
         case 0: // Disk
-            EditCustomBootDisk(0);
+            EditCustomBootDisk(&OperatingSystem);
             break;
         case 1: // Partition
-            EditCustomBootPartition(0);
+            EditCustomBootPartition(&OperatingSystem);
             break;
         case 2: // Boot Sector File
-            EditCustomBootSectorFile(0);
+            EditCustomBootSectorFile(&OperatingSystem);
             break;
         case 3: // Linux
-            EditCustomBootLinux(0);
+            EditCustomBootLinux(&OperatingSystem);
             break;
         case 4: // ReactOS
-            EditCustomBootReactOS(0, FALSE);
+            EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
         case 5: // ReactOS Setup
-            EditCustomBootReactOS(0, TRUE);
+            EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
 #else
         case 0: // ReactOS
-            EditCustomBootReactOS(0, FALSE);
+            EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
         case 1: // ReactOS Setup
-            EditCustomBootReactOS(0, TRUE);
+            EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
 #endif
+    }
+
+    /* And boot it */
+    if (OperatingSystem.SectionId != 0)
+    {
+        UiMessageBox(CustomBootPrompt);
+        LoadOperatingSystem(&OperatingSystem);
     }
 }
 
@@ -105,29 +116,66 @@ VOID OptionMenuCustomBoot(VOID)
 
 #ifdef _M_IX86
 
-VOID EditCustomBootDisk(IN ULONG_PTR SectionId OPTIONAL)
+VOID
+EditCustomBootDisk(
+    IN OUT OperatingSystemItem* OperatingSystem)
 {
     TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
+    ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    CHAR BootDriveString[20];
+    /* This construct is a trick for saving some stack space */
+    union
+    {
+        struct
+        {
+            CHAR Guard1;
+            CHAR Drive[20];
+            CHAR Guard2;
+        };
+        CHAR ArcPath[200];
+    } BootStrings;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
+    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
 
     if (SectionId != 0)
     {
         /* Load the settings */
-        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
+
+        /* Check whether we have a "BootPath" value (takes precedence over "BootDrive") */
+        *BootStrings.ArcPath = ANSI_NULL;
+        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
+        if (!*BootStrings.ArcPath)
+        {
+            /* We don't, retrieve the boot drive value instead */
+            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
+        }
     }
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
-        return;
+    if (!*BootStrings.ArcPath)
+    {
+        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
+            return;
+    }
+    if (!*BootStrings.Drive)
+    {
+        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
+            return;
+    }
 
     /* Modify the settings values and return if we were in edit mode */
     if (SectionId != 0)
     {
-        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
+        /* Modify the BootPath if we have one */
+        if (*BootStrings.ArcPath)
+        {
+            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
+        }
+        else if (*BootStrings.Drive)
+        {
+            /* Otherwise, modify the BootDrive */
+            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
+        }
         return;
     }
 
@@ -146,47 +194,95 @@ VOID EditCustomBootDisk(IN ULONG_PTR SectionId OPTIONAL)
     if (!IniAddSettingValueToSection(SectionId, "BootType", "Drive"))
         return;
 
-    /* Add the BootDrive */
-    if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootDriveString))
-        return;
+    /* Add the BootPath if we have one */
+    if (*BootStrings.ArcPath)
+    {
+        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
+            return;
+    }
+    else if (*BootStrings.Drive)
+    {
+        /* Otherwise, add the BootDrive */
+        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
+            return;
+    }
 
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SectionName = SectionName;
-    OperatingSystem.LoadIdentifier = NULL;
-    LoadOperatingSystem(&OperatingSystem);
+    OperatingSystem->SectionId = SectionId;
+    OperatingSystem->LoadIdentifier = NULL;
 }
 
-VOID EditCustomBootPartition(IN ULONG_PTR SectionId OPTIONAL)
+VOID
+EditCustomBootPartition(
+    IN OUT OperatingSystemItem* OperatingSystem)
 {
     TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
+    ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    CHAR BootDriveString[20];
-    CHAR BootPartitionString[20];
+    /* This construct is a trick for saving some stack space */
+    union
+    {
+        struct
+        {
+            CHAR Guard1;
+            CHAR Drive[20];
+            CHAR Partition[20];
+            CHAR Guard2;
+        };
+        CHAR ArcPath[200];
+    } BootStrings;
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
-    RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
+    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
 
     if (SectionId != 0)
     {
         /* Load the settings */
-        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
-        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+
+        /*
+         * Check whether we have a "BootPath" value (takes precedence
+         * over both "BootDrive" and "BootPartition").
+         */
+        *BootStrings.ArcPath = ANSI_NULL;
+        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
+        if (!*BootStrings.ArcPath)
+        {
+            /* We don't, retrieve the boot drive and partition values instead */
+            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
+            IniReadSettingByName(SectionId, "BootPartition", BootStrings.Partition, sizeof(BootStrings.Partition));
+        }
     }
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
-        return;
+    if (!*BootStrings.ArcPath)
+    {
+        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
+            return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
-        return;
+        if (*BootStrings.Drive)
+        {
+            if (!UiEditBox(BootPartitionPrompt, BootStrings.Partition, sizeof(BootStrings.Partition)))
+                return;
+        }
+    }
+    if (!*BootStrings.Drive)
+    {
+        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
+            return;
+    }
 
     /* Modify the settings values and return if we were in edit mode */
     if (SectionId != 0)
     {
-        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
-        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        /* Modify the BootPath if we have one */
+        if (*BootStrings.ArcPath)
+        {
+            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
+        }
+        else if (*BootStrings.Drive)
+        {
+            /* Otherwise, modify the BootDrive and BootPartition */
+            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
+            IniModifySettingValue(SectionId, "BootPartition", BootStrings.Partition);
+        }
         return;
     }
 
@@ -205,48 +301,87 @@ VOID EditCustomBootPartition(IN ULONG_PTR SectionId OPTIONAL)
     if (!IniAddSettingValueToSection(SectionId, "BootType", "Partition"))
         return;
 
-    /* Add the BootDrive */
-    if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootDriveString))
-        return;
+    /* Add the BootPath if we have one */
+    if (*BootStrings.ArcPath)
+    {
+        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
+            return;
+    }
+    else if (*BootStrings.Drive)
+    {
+        /* Otherwise, add the BootDrive and BootPartition */
+        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
+            return;
 
-    /* Add the BootPartition */
-    if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootPartitionString))
-        return;
+        if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootStrings.Partition))
+            return;
+    }
 
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SectionName = SectionName;
-    OperatingSystem.LoadIdentifier = NULL;
-    LoadOperatingSystem(&OperatingSystem);
+    OperatingSystem->SectionId = SectionId;
+    OperatingSystem->LoadIdentifier = NULL;
 }
 
-VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL)
+VOID
+EditCustomBootSectorFile(
+    IN OUT OperatingSystemItem* OperatingSystem)
 {
     TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
+    ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    CHAR BootDriveString[20];
-    CHAR BootPartitionString[20];
+    /* This construct is a trick for saving some stack space */
+    union
+    {
+        struct
+        {
+            CHAR Guard1;
+            CHAR Drive[20];
+            CHAR Partition[20];
+            CHAR Guard2;
+        };
+        CHAR ArcPath[200];
+    } BootStrings;
     CHAR BootSectorFileString[200];
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
-    RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
+    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
     RtlZeroMemory(BootSectorFileString, sizeof(BootSectorFileString));
 
     if (SectionId != 0)
     {
         /* Load the settings */
-        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
-        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+
+        /*
+         * Check whether we have a "BootPath" value (takes precedence
+         * over both "BootDrive" and "BootPartition").
+         */
+        *BootStrings.ArcPath = ANSI_NULL;
+        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
+        if (!*BootStrings.ArcPath)
+        {
+            /* We don't, retrieve the boot drive and partition values instead */
+            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
+            IniReadSettingByName(SectionId, "BootPartition", BootStrings.Partition, sizeof(BootStrings.Partition));
+        }
+
         IniReadSettingByName(SectionId, "BootSectorFile", BootSectorFileString, sizeof(BootSectorFileString));
     }
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
-        return;
+    if (!*BootStrings.ArcPath)
+    {
+        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
+            return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
-        return;
+        if (*BootStrings.Drive)
+        {
+            if (!UiEditBox(BootPartitionPrompt, BootStrings.Partition, sizeof(BootStrings.Partition)))
+                return;
+        }
+    }
+    if (!*BootStrings.Drive)
+    {
+        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
+            return;
+    }
 
     if (!UiEditBox(BootSectorFilePrompt, BootSectorFileString, sizeof(BootSectorFileString)))
         return;
@@ -254,8 +389,28 @@ VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL)
     /* Modify the settings values and return if we were in edit mode */
     if (SectionId != 0)
     {
-        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
-        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        /* Modify the BootPath if we have one */
+        if (*BootStrings.ArcPath)
+        {
+            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
+        }
+        else if (*BootStrings.Drive)
+        {
+            /* Otherwise, modify the BootDrive and BootPartition */
+            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
+            IniModifySettingValue(SectionId, "BootPartition", BootStrings.Partition);
+        }
+        else
+        {
+            /*
+             * Otherwise, zero out all values: BootSectorFile will be
+             * relative to the default system partition.
+             */
+            IniModifySettingValue(SectionId, "BootPath", "");
+            IniModifySettingValue(SectionId, "BootDrive", "");
+            IniModifySettingValue(SectionId, "BootPartition", "");
+        }
+
         IniModifySettingValue(SectionId, "BootSectorFile", BootSectorFileString);
         return;
     }
@@ -275,39 +430,55 @@ VOID EditCustomBootSectorFile(IN ULONG_PTR SectionId OPTIONAL)
     if (!IniAddSettingValueToSection(SectionId, "BootType", "BootSector"))
         return;
 
-    /* Add the BootDrive */
-    if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootDriveString))
-        return;
+    /* Add the BootPath if we have one */
+    if (*BootStrings.ArcPath)
+    {
+        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
+            return;
+    }
+    else if (*BootStrings.Drive)
+    {
+        /* Otherwise, add the BootDrive and BootPartition */
+        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
+            return;
 
-    /* Add the BootPartition */
-    if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootPartitionString))
-        return;
+        if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootStrings.Partition))
+            return;
+    }
 
     /* Add the BootSectorFile */
     if (!IniAddSettingValueToSection(SectionId, "BootSectorFile", BootSectorFileString))
         return;
 
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SectionName = SectionName;
-    OperatingSystem.LoadIdentifier = NULL;
-    LoadOperatingSystem(&OperatingSystem);
+    OperatingSystem->SectionId = SectionId;
+    OperatingSystem->LoadIdentifier = NULL;
 }
 
-VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
+VOID
+EditCustomBootLinux(
+    IN OUT OperatingSystemItem* OperatingSystem)
 {
     TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
+    ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    CHAR BootDriveString[20];
-    CHAR BootPartitionString[20];
+    /* This construct is a trick for saving some stack space */
+    union
+    {
+        struct
+        {
+            CHAR Guard1;
+            CHAR Drive[20];
+            CHAR Partition[20];
+            CHAR Guard2;
+        };
+        CHAR ArcPath[200];
+    } BootStrings;
     CHAR LinuxKernelString[200];
     CHAR LinuxInitrdString[200];
     CHAR LinuxCommandLineString[200];
 
     RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
-    RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
+    RtlZeroMemory(&BootStrings, sizeof(BootStrings));
     RtlZeroMemory(LinuxKernelString, sizeof(LinuxKernelString));
     RtlZeroMemory(LinuxInitrdString, sizeof(LinuxInitrdString));
     RtlZeroMemory(LinuxCommandLineString, sizeof(LinuxCommandLineString));
@@ -315,18 +486,41 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
     if (SectionId != 0)
     {
         /* Load the settings */
-        IniReadSettingByName(SectionId, "BootDrive", BootDriveString, sizeof(BootDriveString));
-        IniReadSettingByName(SectionId, "BootPartition", BootPartitionString, sizeof(BootPartitionString));
+
+        /*
+         * Check whether we have a "BootPath" value (takes precedence
+         * over both "BootDrive" and "BootPartition").
+         */
+        *BootStrings.ArcPath = ANSI_NULL;
+        IniReadSettingByName(SectionId, "BootPath", BootStrings.ArcPath, sizeof(BootStrings.ArcPath));
+        if (!*BootStrings.ArcPath)
+        {
+            /* We don't, retrieve the boot drive and partition values instead */
+            IniReadSettingByName(SectionId, "BootDrive", BootStrings.Drive, sizeof(BootStrings.Drive));
+            IniReadSettingByName(SectionId, "BootPartition", BootStrings.Partition, sizeof(BootStrings.Partition));
+        }
+
         IniReadSettingByName(SectionId, "Kernel", LinuxKernelString, sizeof(LinuxKernelString));
         IniReadSettingByName(SectionId, "Initrd", LinuxInitrdString, sizeof(LinuxInitrdString));
         IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLineString, sizeof(LinuxCommandLineString));
     }
 
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, sizeof(BootDriveString)))
-        return;
+    if (!*BootStrings.ArcPath)
+    {
+        if (!UiEditBox(BootDrivePrompt, BootStrings.Drive, sizeof(BootStrings.Drive)))
+            return;
 
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, sizeof(BootPartitionString)))
-        return;
+        if (*BootStrings.Drive)
+        {
+            if (!UiEditBox(BootPartitionPrompt, BootStrings.Partition, sizeof(BootStrings.Partition)))
+                return;
+        }
+    }
+    if (!*BootStrings.Drive)
+    {
+        if (!UiEditBox(ARCPathPrompt, BootStrings.ArcPath, sizeof(BootStrings.ArcPath)))
+            return;
+    }
 
     if (!UiEditBox(LinuxKernelPrompt, LinuxKernelString, sizeof(LinuxKernelString)))
         return;
@@ -340,8 +534,28 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
     /* Modify the settings values and return if we were in edit mode */
     if (SectionId != 0)
     {
-        IniModifySettingValue(SectionId, "BootDrive", BootDriveString);
-        IniModifySettingValue(SectionId, "BootPartition", BootPartitionString);
+        /* Modify the BootPath if we have one */
+        if (*BootStrings.ArcPath)
+        {
+            IniModifySettingValue(SectionId, "BootPath", BootStrings.ArcPath);
+        }
+        else if (*BootStrings.Drive)
+        {
+            /* Otherwise, modify the BootDrive and BootPartition */
+            IniModifySettingValue(SectionId, "BootDrive", BootStrings.Drive);
+            IniModifySettingValue(SectionId, "BootPartition", BootStrings.Partition);
+        }
+        else
+        {
+            /*
+             * Otherwise, zero out all values: BootSectorFile will be
+             * relative to the default system partition.
+             */
+            IniModifySettingValue(SectionId, "BootPath", "");
+            IniModifySettingValue(SectionId, "BootDrive", "");
+            IniModifySettingValue(SectionId, "BootPartition", "");
+        }
+
         IniModifySettingValue(SectionId, "Kernel", LinuxKernelString);
         IniModifySettingValue(SectionId, "Initrd", LinuxInitrdString);
         IniModifySettingValue(SectionId, "CommandLine", LinuxCommandLineString);
@@ -363,13 +577,21 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
     if (!IniAddSettingValueToSection(SectionId, "BootType", "Linux"))
         return;
 
-    /* Add the BootDrive */
-    if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootDriveString))
-        return;
+    /* Add the BootPath if we have one */
+    if (*BootStrings.ArcPath)
+    {
+        if (!IniAddSettingValueToSection(SectionId, "BootPath", BootStrings.ArcPath))
+            return;
+    }
+    else if (*BootStrings.Drive)
+    {
+        /* Otherwise, add the BootDrive and BootPartition */
+        if (!IniAddSettingValueToSection(SectionId, "BootDrive", BootStrings.Drive))
+            return;
 
-    /* Add the BootPartition */
-    if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootPartitionString))
-        return;
+        if (!IniAddSettingValueToSection(SectionId, "BootPartition", BootStrings.Partition))
+            return;
+    }
 
     /* Add the Kernel */
     if (!IniAddSettingValueToSection(SectionId, "Kernel", LinuxKernelString))
@@ -386,22 +608,19 @@ VOID EditCustomBootLinux(IN ULONG_PTR SectionId OPTIONAL)
     if (!IniAddSettingValueToSection(SectionId, "CommandLine", LinuxCommandLineString))
         return;
 
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SectionName = SectionName;
-    OperatingSystem.LoadIdentifier = "Custom Linux Setup";
-    LoadOperatingSystem(&OperatingSystem);
+    OperatingSystem->SectionId = SectionId;
+    OperatingSystem->LoadIdentifier = "Custom Linux Setup";
 }
 
 #endif // _M_IX86
 
 VOID
 EditCustomBootReactOS(
-    IN ULONG_PTR SectionId OPTIONAL,
+    IN OUT OperatingSystemItem* OperatingSystem,
     IN BOOLEAN IsSetup)
 {
     TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
+    ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
     CHAR BootDriveString[20];
     CHAR BootPartitionString[20];
@@ -419,7 +638,6 @@ EditCustomBootReactOS(
     if (SectionId != 0)
     {
         /* Load the settings */
-        // TODO? Maybe use DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition) to get back to the small elements.
         IniReadSettingByName(SectionId, "SystemPath", ReactOSARCPath, sizeof(ReactOSARCPath));
         IniReadSettingByName(SectionId, "Options", ReactOSOptions, sizeof(ReactOSOptions));
     }
@@ -478,11 +696,8 @@ EditCustomBootReactOS(
     if (!IniAddSettingValueToSection(SectionId, "Options", ReactOSOptions))
         return;
 
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SectionName = SectionName;
-    OperatingSystem.LoadIdentifier = NULL;
-    LoadOperatingSystem(&OperatingSystem);
+    OperatingSystem->SectionId = SectionId;
+    OperatingSystem->LoadIdentifier = NULL;
 }
 
 #ifdef HAS_OPTION_MENU_REBOOT
@@ -490,10 +705,6 @@ EditCustomBootReactOS(
 VOID OptionMenuReboot(VOID)
 {
     UiMessageBox("The system will now reboot.");
-
-#if defined(__i386__) || defined(_M_AMD64)
-    DiskStopFloppyMotor();
-#endif
     Reboot();
 }
 

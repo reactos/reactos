@@ -1,0 +1,19 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Visualizza o modifica l'etichetta di un disco.\n\n\
+//LABEL [disco:][etichetta]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Il Volume nel disco %c: è %s\n"
+    STRING_LABEL_TEXT2 "Il Volume nel disco %c: non ha etichetta\n"
+    STRING_LABEL_TEXT3 "Il numero di serie del Volume è %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Etichetta del disco (32 Caratteri, INVIO per nessuna)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
+    STRING_ERROR_INVALID_DRIVE "Disco non valido\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

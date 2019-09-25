@@ -21,7 +21,6 @@
 #include <freeldr.h>
 
 #include <debug.h>
-
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 ULONG    FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONGLONG PartitionSectorCount);
@@ -1486,17 +1485,26 @@ ARC_STATUS FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("FatSeek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (ULONGLONG)FileHandle->FilePointer;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.HighPart != 0)
         return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= FileHandle->FileSize)
+    if (NewPosition.LowPart >= FileHandle->FileSize)
         return EINVAL;
 
-    FileHandle->FilePointer = Position->LowPart;
+    FileHandle->FilePointer = NewPosition.LowPart;
     return ESUCCESS;
 }
 
@@ -1571,7 +1579,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
         FrLdrTempFree(Volume, TAG_FAT_VOLUME);
         return NULL;
     }
-    SectorCount.QuadPart = FileInformation.EndingAddress.QuadPart;
+    SectorCount.QuadPart = (FileInformation.EndingAddress.QuadPart - FileInformation.StartingAddress.QuadPart);
     SectorCount.QuadPart /= SECTOR_SIZE;
 
     //

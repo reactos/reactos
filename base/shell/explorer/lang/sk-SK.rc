@@ -52,10 +52,7 @@ BEGIN
             MENUITEM "&Tlačiarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "P&anel úloh a ponuka Štart", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Hľadať", IDM_SEARCH
-        BEGIN
-            MENUITEM "", -1, MFT_SEPARATOR
-        END
+        MENUITEM "&Hľadať", IDM_SEARCH, MFT_STRING, MFS_ENABLED
         MENUITEM "&Pomoc a technická podpora", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
         MENUITEM "Sp&ustiť...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED

@@ -5,6 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers
 
 list(APPEND SOURCE
     balance.c
+    boot.c
     btrfs.c
     cache.c
     calcthread.c
@@ -19,6 +20,7 @@ list(APPEND SOURCE
     flushthread.c
     free-space.c
     fsctl.c
+    fsrtl.c
     galois.c
     guid.c
     pnp.c
@@ -55,6 +57,6 @@ add_library(btrfs MODULE ${SOURCE} btrfs.rc)
 
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)
-target_link_libraries(btrfs rtlver ntoskrnl_vista zlib_solo chkstk wdmguid ${PSEH_LIB})
+target_link_libraries(btrfs rtlver zlib_solo chkstk wdmguid ${PSEH_LIB})
 add_importlibs(btrfs ntoskrnl hal)
 add_cd_file(TARGET btrfs DESTINATION reactos/system32/drivers NO_CAB FOR all)

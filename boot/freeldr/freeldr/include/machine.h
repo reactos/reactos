@@ -64,7 +64,6 @@ typedef struct tagMACHVTBL
     VOID (*GetExtendedBIOSData)(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize);
 
     UCHAR (*GetFloppyCount)(VOID);
-    BOOLEAN (*DiskGetBootPath)(PCHAR BootPath, ULONG Size);
     BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
     BOOLEAN (*DiskGetDriveGeometry)(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
     ULONG (*DiskGetCacheableBlockCount)(UCHAR DriveNumber);
@@ -124,8 +123,6 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.GetExtendedBIOSData((ExtendedBIOSDataArea), (ExtendedBIOSDataSize))
 #define MachGetFloppyCount() \
     MachVtbl.GetFloppyCount()
-#define MachDiskGetBootPath(Path, Size) \
-    MachVtbl.DiskGetBootPath((Path), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)    \
     MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetDriveGeometry(Drive, Geom)   \

@@ -18,8 +18,8 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(DISK);
 
 #ifdef _M_IX86
@@ -92,24 +92,23 @@ UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 
 #ifdef _M_IX86
 
-VOID DriveMapMapDrivesInSection(PCSTR SectionName)
+VOID
+DriveMapMapDrivesInSection(
+    IN ULONG_PTR SectionId)
 {
     CHAR           SettingName[80];
     CHAR           SettingValue[80];
     CHAR           Drive1[80];
     CHAR           Drive2[80];
-    ULONG_PTR      SectionId;
     ULONG          SectionItemCount;
     ULONG          Index;
     ULONG          Index2;
     DRIVE_MAP_LIST DriveMapList;
 
-    RtlZeroMemory(&DriveMapList, sizeof(DRIVE_MAP_LIST));
-
-    if (!IniOpenSection(SectionName, &SectionId))
-    {
+    if (SectionId == 0)
         return;
-    }
+
+    RtlZeroMemory(&DriveMapList, sizeof(DRIVE_MAP_LIST));
 
     // Get the number of items in this section
     SectionItemCount = IniGetNumSectionItems(SectionId);
@@ -125,7 +124,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
                 // Make sure we haven't exceeded the drive map max count
                 if (DriveMapList.DriveMapCount >= 4)
                 {
-                    UiMessageBox("Max DriveMap count exceeded in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
+                    UiMessageBox("Max DriveMap count exceeded in section [%s]:\n\n%s=%s", ((PINI_SECTION)SectionId)->SectionName, SettingName, SettingValue);
                     continue;
                 }
 
@@ -150,7 +149,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
                 // Make sure we got good values before we add them to the map
                 if (!DriveMapIsValidDriveString(Drive1) || !DriveMapIsValidDriveString(Drive2))
                 {
-                    UiMessageBox("Error in DriveMap setting in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
+                    UiMessageBox("Error in DriveMap setting in section [%s]:\n\n%s=%s", ((PINI_SECTION)SectionId)->SectionName, SettingName, SettingValue);
                     continue;
                 }
 

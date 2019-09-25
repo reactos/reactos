@@ -11,19 +11,6 @@ assoc (Gibt alle Zuordnungen aus)\n\
 assoc .erw (Gibt die spezifische Zuordnung aus)\n\
 assoc .erw= (Löscht die spezifische Zuordnung)\n\
 assoc .erw=Dateityp (Fügt neue Zuordnung hinzu)\n"
-    STRING_ATTRIB_HELP "Zeigt Dateiattribute an oder ändert sie.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
-       [/S [/D]]\n\n\
-  +   Setzt ein Attribut\n\
-  -   Löscht ein Attribut\n\
-  R   Attribut für 'schreibgeschützte Datei'\n\
-  A   Attribut für 'zu archivierende Datei'\n\
-  S   Attribut für 'Systemdatei'\n\
-  H   Attribut für 'versteckte Datei'\n\
- /S   Verarbeitet übereinstimmende Dateien im aktuellen Ordner\n\
-      und in allen Unterordnern.\n\
-  /D  Verarbeitet auch die Ordner.\n\n\
-ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
     STRING_ALIAS_HELP "Setzt, löscht oder zeigt ein Alias.\n\n\
 ALIAS [Alias=[Befehl]]\n\n\
   Alias    Name des Alias.\n\
@@ -256,11 +243,6 @@ Variable1==Variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
-    STRING_LABEL_HELP1 "Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\nLABEL [Laufwerk:][label]"
-    STRING_LABEL_HELP2 "Datenträger im Laufwerk %c: ist %s\n"
-    STRING_LABEL_HELP3 "Datenträger im Laufwerk %c: hat keine Bezeichnung\n"
-    STRING_LABEL_HELP4 "Datenträger-Seriennummer: %04X-%04X\n"
-    STRING_LABEL_HELP5 "Laufwerksbezeichnung (max. 11 Zeichen, ENTER für keine)? "
     STRING_LOCALE_HELP1 "Aktuelle Zeit: "
     STRING_MKDIR_HELP "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"

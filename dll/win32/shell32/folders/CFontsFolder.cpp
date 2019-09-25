@@ -169,7 +169,7 @@ HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CFontsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_pidlInner = ILClone(pidl);
     if (!m_pidlInner)
@@ -181,7 +181,7 @@ HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
-HRESULT WINAPI CFontsFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CFontsFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     if (!pidl)
         return E_POINTER;

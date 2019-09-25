@@ -18,8 +18,8 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
 LIST_ENTRY        IniFileSectionListHead;

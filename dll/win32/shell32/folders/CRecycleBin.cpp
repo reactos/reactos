@@ -432,7 +432,7 @@ HRESULT WINAPI CRecycleBin::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CRecycleBin::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     TRACE("(%p, %p)\n", this, pidl);
 
@@ -443,7 +443,7 @@ HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CRecycleBin::GetCurFolder(PIDLIST_ABSOLUTE *ppidl)
 {
     TRACE("\n");
     *ppidl = ILClone(pidl);

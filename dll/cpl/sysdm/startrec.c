@@ -11,7 +11,6 @@
 #include "precomp.h"
 
 #include <shlwapi.h>
-#include <setupapi.h>
 
 typedef struct _STARTINFO
 {

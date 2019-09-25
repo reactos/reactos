@@ -27,6 +27,8 @@ EXTERN _i386Idt:DWORD
 //EXTERN _i386idtptr:FWORD
 EXTERN cmdline:DWORD
 
+EXTERN _DiskStopFloppyMotor:PROC
+
 #ifdef _USE_ML
 EXTERN __bss_start__:DWORD
 EXTERN __bss_end__:DWORD
@@ -61,7 +63,6 @@ _RealEntryPoint:
 PUBLIC ContinueAddress
 ContinueAddress:
     .long _FrldrStartup
-
 
 _FrldrStartup:
 
@@ -98,6 +99,58 @@ stop:
     jmp short stop
     nop
     nop
+
+
+PUBLIC _Reboot
+_Reboot:
+    /* Stop the floppy drive motor */
+    call _DiskStopFloppyMotor
+
+    /* Set the function ID */
+    mov bx, FNID_Reboot
+
+    /* Switch to real mode (we don't return) */
+    jmp SwitchToReal
+
+
+/*
+ * VOID __cdecl ChainLoadBiosBootSectorCode(
+ *     IN UCHAR BootDrive OPTIONAL,
+ *     IN ULONG BootPartition OPTIONAL);
+ *
+ * RETURNS: Nothing
+ */
+PUBLIC _ChainLoadBiosBootSectorCode
+_ChainLoadBiosBootSectorCode:
+    /* Set the boot drive */
+    mov dl, [esp + 4]
+    test dl, dl
+    jnz set_part
+    mov dl, byte ptr ds:[_FrldrBootDrive]
+
+    /* Set the boot partition */
+set_part:
+    mov eax, [esp + 8]
+    test eax, eax
+    jnz continue
+    mov eax, dword ptr ds:[_FrldrBootPartition]
+continue:
+    /* Store the 1-byte truncated partition number in DH */
+    mov dh, al
+
+    /*
+     * Don't stop the floppy drive motor when we are just booting a bootsector,
+     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
+     * wouldn't be informed and if the next read is to a floppy then the BIOS
+     * will still think the motor is on and this will result in a read error.
+     */
+    // call _DiskStopFloppyMotor
+
+    /* Set the function ID */
+    mov bx, FNID_ChainLoadBiosBootSectorCode
+
+    /* Switch to real mode (we don't return) */
+    jmp SwitchToReal
 
 
 /*
@@ -137,27 +190,6 @@ _PxeCallApi:
     mov ax, word ptr [BSS_PxeResult]
 
     ret
-
-
-PUBLIC _Reboot
-_Reboot:
-    /* Set the function ID */
-    mov bx, FNID_Reboot
-
-    /* Switch to real mode (we don't return) */
-    jmp SwitchToReal
-
-
-PUBLIC _ChainLoadBiosBootSectorCode
-_ChainLoadBiosBootSectorCode:
-    /* Set the boot drive */
-    mov dl, byte ptr ds:[_FrldrBootDrive]
-
-    /* Set the function ID */
-    mov bx, FNID_ChainLoadBiosBootSectorCode
-
-    /* Switch to real mode (we don't return) */
-    jmp SwitchToReal
 
 
 PUBLIC i386CallRealMode

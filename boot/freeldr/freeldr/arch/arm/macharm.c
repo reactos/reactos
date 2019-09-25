@@ -59,10 +59,6 @@ ULONG LenBits[] =
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DiskStopFloppyMotor(VOID)
-{
-}
-
 VOID
 FrLdrCheckCpuCompatibility(VOID)
 {
@@ -93,19 +89,6 @@ VOID
 ArmPrepareForReactOS(VOID)
 {
     return;
-}
-
-BOOLEAN
-ArmDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
-{
-    PCCH Path = "ramdisk(0)";
-
-    /* Make sure enough space exists */
-    if (Size < sizeof(Path)) return FALSE;
-
-    /* On ARM platforms, the loader is always in RAM */
-    strcpy(BootPath, Path);
-    return TRUE;
 }
 
 PCONFIGURATION_COMPONENT_DATA
@@ -152,7 +135,12 @@ BOOLEAN
 ArmInitializeBootDevices(VOID)
 {
     /* Emulate old behavior */
-    return (ArmHwDetect() != NULL);
+    if (ArmHwDetect() == NULL)
+        return FALSE;
+
+    /* On ARM platforms, the loader is always in RAM */
+    strcpy(FrLdrBootPath, "ramdisk(0)");
+    return TRUE;
 }
 
 FREELDR_MEMORY_DESCRIPTOR ArmMemoryMap[32];
@@ -239,6 +227,5 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
     MachVtbl.InitializeBootDevices = ArmInitializeBootDevices;
     MachVtbl.HwDetect = ArmHwDetect;
-    MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
     MachVtbl.HwIdle = ArmHwIdle;
 }

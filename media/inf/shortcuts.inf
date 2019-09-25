@@ -630,8 +630,8 @@ DXDIAG_TITLE=ReactX Diagnostic
 DXDIAG_DESC=Launch ReactX-Diagnostic program
 MAGNIFY_TITLE=זכוכית מגדלת
 MAGNIFY_DESC=זכוכית מגדלת
-OSK_TITLE=על לוח מקשים על המסך
-OSK_DESC=הפעלה על לוח מקשים על המסך
+OSK_TITLE=לוח מקשים על התצוגה
+OSK_DESC=הפעל את לוח מקשים על התצוגה
 MPLAY_TITLE=נגן מולטימדיה
 MPLAY_DESC=נגן המולטימדיה
 SNDVOL_TITLE=בקרת עוצמה
@@ -644,6 +644,8 @@ WINMINE_TITLE=שולה המוקשים
 WINMINE_DESC=שולה המוקשים
 SPIDER_TITLE=סוליטייר עכביש
 SPIDER_DESC=סוליטייר עכביש
+UTILMAN_TITLE=מנהל כלי הנגישות
+UTILMAN_DESC=הפעל את מנהל כלי הנגישות
 
 ; Hungarian
 [Strings.040E]
@@ -1082,6 +1084,8 @@ WINMINE_TITLE=Saper
 WINMINE_DESC=Saper
 SPIDER_TITLE=Pasjans Pająk
 SPIDER_DESC=Pasjans Pająk
+UTILMAN_TITLE=Menedżer narzędzi ułatwienia dostępu
+UTILMAN_DESC=Uruchom Menedżer narzędzi ułatwienia dostępu
 
 ; Portuguese - Brazil
 [Strings.0416]
@@ -1278,6 +1282,8 @@ WINMINE_TITLE=Сапер
 WINMINE_DESC=Сапер
 SPIDER_TITLE=Пасьянс Паук
 SPIDER_DESC=Пасьянс Паук
+UTILMAN_TITLE=Диспетчер служебных программ
+UTILMAN_DESC=Обеспечивает запуск и настройку программ поддержки специальных возможностей.
 
 ; Slovak
 [Strings.041B]

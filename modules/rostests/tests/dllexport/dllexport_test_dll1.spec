@@ -12,8 +12,8 @@
  @ stdcall StdcallFunc1(ptr)
 
 # Decorated export of a stdcall function
- @ stdcall _StdcallFunc1@4(ptr)
- @ stdcall -arch=i386 _DecoratedStdcallFunc1@4(ptr)
+ @ stdcall -arch=i386 _StdcallFunc1@4(ptr) # Reuse function name on x86 only!
+ @ stdcall _DecoratedStdcallFunc1@4(ptr)
 
 # Redirected stdcall function
  @ stdcall StdcallFunc2(ptr) StdcallFunc1

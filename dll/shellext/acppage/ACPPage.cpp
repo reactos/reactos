@@ -83,36 +83,6 @@ struct CCoInit
 };
 
 EXTERN_C
-inline ULONG
-Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
-{
-    char Buffer[512];
-    char* Current = Buffer;
-    size_t Length = _countof(Buffer);
-    const char* fname = strrchr(filename, '\\');
-    if (fname == NULL)
-    {
-        fname = strrchr(filename, '/');
-        if (fname != NULL)
-            fname++;
-    }
-    else
-        fname++;
-
-    if (fname == NULL)
-        fname = filename;
-
-    StringCchPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, "%s:%d: ", fname, line);
-    va_list ArgList;
-    va_start(ArgList, lpFormat);
-    StringCchVPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, lpFormat, ArgList);
-    va_end(ArgList);
-    OutputDebugStringA(Buffer);
-    return 0;
-}
-
-
-EXTERN_C
 BOOL WINAPI GetExeFromLnk(PCWSTR pszLnk, PWSTR pszExe, size_t cchSize)
 {
     CCoInit init;

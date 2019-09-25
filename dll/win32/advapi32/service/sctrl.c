@@ -58,6 +58,7 @@ typedef struct _ACTIVE_SERVICE
 static DWORD dwActiveServiceCount = 0;
 static PACTIVE_SERVICE lpActiveServices = NULL;
 static handle_t hStatusBinding = NULL;
+static BOOL bSecurityServiceProcess = FALSE;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -227,7 +228,7 @@ ScConnectControlPipe(HANDLE *hPipe)
 {
     DWORD dwBytesWritten;
     DWORD dwState;
-    DWORD dwServiceCurrent = 0;
+    DWORD dwServiceCurrent = 1;
     NTSTATUS Status;
     WCHAR NtControlPipeName[MAX_PATH + 1];
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -237,25 +238,32 @@ ScConnectControlPipe(HANDLE *hPipe)
           hPipe);
 
     /* Get the service number and create the named pipe */
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
-
-    QueryTable[0].Name = L"";
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[0].EntryContext = &dwServiceCurrent;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-                                    L"ServiceCurrent",
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-    if (!NT_SUCCESS(Status))
+    if (bSecurityServiceProcess == FALSE)
     {
-        ERR("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-        return RtlNtStatusToDosError(Status);
+        RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+
+        QueryTable[0].Name = L"";
+        QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+        QueryTable[0].EntryContext = &dwServiceCurrent;
+
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                        L"ServiceCurrent",
+                                        QueryTable,
+                                        NULL,
+                                        NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+    else
+    {
+        dwServiceCurrent = 0;
     }
 
     swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", dwServiceCurrent);
+    TRACE("PipeName: %S\n", NtControlPipeName);
 
     if (!WaitNamedPipeW(NtControlPipeName, 30000))
     {
@@ -836,13 +844,14 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
  *
  * Undocumented
  *
- * @unimplemented
+ * @implemented
  */
 VOID
 WINAPI
 I_ScIsSecurityProcess(VOID)
 {
-    FIXME("I_ScIsSecurityProcess()\n");
+    TRACE("I_ScIsSecurityProcess()\n");
+    bSecurityServiceProcess = TRUE;
 }
 
 

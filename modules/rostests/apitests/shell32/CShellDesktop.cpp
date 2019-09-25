@@ -9,6 +9,7 @@
 #include "shelltest.h"
 
 #include <ndk/rtlfuncs.h>
+#include <stdio.h>
 #include <shellutils.h>
 
 // We would normally use S_LESSTHAN and S_GREATERTHAN, but w2k3 returns numbers like 3 and -3...
@@ -204,7 +205,7 @@ VOID TestInitialize(_In_ IShellFolder *psf)
     //hr = ppf2->GetCurFolder(NULL);
     //ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
 
-    LPITEMIDLIST pidl;
+    CComHeapPtr<ITEMIDLIST> pidl;
     hr = ppf2->GetCurFolder(&pidl);
     ok(hr == S_OK, "hr = %lx\n", hr);
     ok(pidl->mkid.cb == 0, "expected empty pidl got cb = %x\n", pidl->mkid.cb);

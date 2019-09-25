@@ -24,7 +24,7 @@ typedef struct {
     UCHAR revision;
     UCHAR elements;
     UCHAR auth[6];
-    UINT32 nums[8];
+    uint32_t nums[8];
 } sid_header;
 
 static sid_header sid_BA = { 1, 2, SECURITY_NT_AUTHORITY, {32, 544}}; // BUILTIN\Administrators
@@ -53,10 +53,10 @@ static dacl def_dacls[] = {
 extern LIST_ENTRY uid_map_list, gid_map_list;
 extern ERESOURCE mapping_lock;
 
-void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
+void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, uint32_t uid) {
     unsigned int i, np;
-    UINT8 numdashes;
-    UINT64 val;
+    uint8_t numdashes;
+    uint64_t val;
     ULONG sidsize;
     sid_header* sid;
     uid_map* um;
@@ -106,17 +106,17 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
         }
 
         i++;
-        TRACE("val = %u, i = %u, ssl = %u\n", (UINT32)val, i, sidstringlength);
+        TRACE("val = %u, i = %u, ssl = %u\n", (uint32_t)val, i, sidstringlength);
 
         if (np == 0) {
-            sid->auth[0] = (UINT8)((val & 0xff0000000000) >> 40);
-            sid->auth[1] = (UINT8)((val & 0xff00000000) >> 32);
-            sid->auth[2] = (UINT8)((val & 0xff000000) >> 24);
-            sid->auth[3] = (UINT8)((val & 0xff0000) >> 16);
-            sid->auth[4] = (UINT8)((val & 0xff00) >> 8);
+            sid->auth[0] = (uint8_t)((val & 0xff0000000000) >> 40);
+            sid->auth[1] = (uint8_t)((val & 0xff00000000) >> 32);
+            sid->auth[2] = (uint8_t)((val & 0xff000000) >> 24);
+            sid->auth[3] = (uint8_t)((val & 0xff0000) >> 16);
+            sid->auth[4] = (uint8_t)((val & 0xff00) >> 8);
             sid->auth[5] = val & 0xff;
         } else {
-            sid->nums[np-1] = (UINT32)val;
+            sid->nums[np-1] = (uint32_t)val;
         }
 
         np++;
@@ -142,10 +142,10 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
     InsertTailList(&uid_map_list, &um->listentry);
 }
 
-void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 gid) {
+void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, uint32_t gid) {
     unsigned int i, np;
-    UINT8 numdashes;
-    UINT64 val;
+    uint8_t numdashes;
+    uint64_t val;
     ULONG sidsize;
     sid_header* sid;
     gid_map* gm;
@@ -191,17 +191,17 @@ void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 gid) {
         }
 
         i++;
-        TRACE("val = %u, i = %u, ssl = %u\n", (UINT32)val, i, sidstringlength);
+        TRACE("val = %u, i = %u, ssl = %u\n", (uint32_t)val, i, sidstringlength);
 
         if (np == 0) {
-            sid->auth[0] = (UINT8)((val & 0xff0000000000) >> 40);
-            sid->auth[1] = (UINT8)((val & 0xff00000000) >> 32);
-            sid->auth[2] = (UINT8)((val & 0xff000000) >> 24);
-            sid->auth[3] = (UINT8)((val & 0xff0000) >> 16);
-            sid->auth[4] = (UINT8)((val & 0xff00) >> 8);
+            sid->auth[0] = (uint8_t)((val & 0xff0000000000) >> 40);
+            sid->auth[1] = (uint8_t)((val & 0xff00000000) >> 32);
+            sid->auth[2] = (uint8_t)((val & 0xff000000) >> 24);
+            sid->auth[3] = (uint8_t)((val & 0xff0000) >> 16);
+            sid->auth[4] = (uint8_t)((val & 0xff00) >> 8);
             sid->auth[5] = val & 0xff;
         } else
-            sid->nums[np-1] = (UINT32)val;
+            sid->nums[np-1] = (uint32_t)val;
 
         np++;
 
@@ -226,12 +226,12 @@ void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 gid) {
     InsertTailList(&gid_map_list, &gm->listentry);
 }
 
-NTSTATUS uid_to_sid(UINT32 uid, PSID* sid) {
+NTSTATUS uid_to_sid(uint32_t uid, PSID* sid) {
     LIST_ENTRY* le;
     sid_header* sh;
     UCHAR els;
 
-    ExAcquireResourceSharedLite(&mapping_lock, TRUE);
+    ExAcquireResourceSharedLite(&mapping_lock, true);
 
     le = uid_map_list.Flink;
     while (le != &uid_map_list) {
@@ -261,7 +261,7 @@ NTSTATUS uid_to_sid(UINT32 uid, PSID* sid) {
 
         els = 1;
 
-        sh = ExAllocatePoolWithTag(PagedPool, sizeof(sid_header) + ((els - 1) * sizeof(UINT32)), ALLOC_TAG);
+        sh = ExAllocatePoolWithTag(PagedPool, sizeof(sid_header) + ((els - 1) * sizeof(uint32_t)), ALLOC_TAG);
         if (!sh) {
             ERR("out of memory\n");
             *sid = NULL;
@@ -307,11 +307,11 @@ NTSTATUS uid_to_sid(UINT32 uid, PSID* sid) {
     return STATUS_SUCCESS;
 }
 
-UINT32 sid_to_uid(PSID sid) {
+uint32_t sid_to_uid(PSID sid) {
     LIST_ENTRY* le;
     sid_header* sh = sid;
 
-    ExAcquireResourceSharedLite(&mapping_lock, TRUE);
+    ExAcquireResourceSharedLite(&mapping_lock, true);
 
     le = uid_map_list.Flink;
     while (le != &uid_map_list) {
@@ -338,7 +338,7 @@ UINT32 sid_to_uid(PSID sid) {
     return UID_NOBODY;
 }
 
-static void gid_to_sid(UINT32 gid, PSID* sid) {
+static void gid_to_sid(uint32_t gid, PSID* sid) {
     sid_header* sh;
     UCHAR els;
 
@@ -346,7 +346,7 @@ static void gid_to_sid(UINT32 gid, PSID* sid) {
 
     // fallback to S-1-22-2-X, Samba's SID scheme
     els = 2;
-    sh = ExAllocatePoolWithTag(PagedPool, sizeof(sid_header) + ((els - 1) * sizeof(UINT32)), ALLOC_TAG);
+    sh = ExAllocatePoolWithTag(PagedPool, sizeof(sid_header) + ((els - 1) * sizeof(uint32_t)), ALLOC_TAG);
     if (!sh) {
         ERR("out of memory\n");
         *sid = NULL;
@@ -370,7 +370,7 @@ static void gid_to_sid(UINT32 gid, PSID* sid) {
 }
 
 static ACL* load_default_acl() {
-    UINT16 size, i;
+    uint16_t size, i;
     ACL* acl;
     ACCESS_ALLOWED_ACE* aaa;
 
@@ -378,7 +378,7 @@ static ACL* load_default_acl() {
     i = 0;
     while (def_dacls[i].sid) {
         size += sizeof(ACCESS_ALLOWED_ACE);
-        size += 8 + (def_dacls[i].sid->elements * sizeof(UINT32)) - sizeof(ULONG);
+        size += 8 + (def_dacls[i].sid->elements * sizeof(uint32_t)) - sizeof(ULONG);
         i++;
     }
 
@@ -399,12 +399,12 @@ static ACL* load_default_acl() {
     while (def_dacls[i].sid) {
         aaa->Header.AceType = ACCESS_ALLOWED_ACE_TYPE;
         aaa->Header.AceFlags = def_dacls[i].flags;
-        aaa->Header.AceSize = sizeof(ACCESS_ALLOWED_ACE) - sizeof(ULONG) + 8 + (def_dacls[i].sid->elements * sizeof(UINT32));
+        aaa->Header.AceSize = sizeof(ACCESS_ALLOWED_ACE) - sizeof(ULONG) + 8 + (def_dacls[i].sid->elements * sizeof(uint32_t));
         aaa->Mask = def_dacls[i].mask;
 
-        RtlCopyMemory(&aaa->SidStart, def_dacls[i].sid, 8 + (def_dacls[i].sid->elements * sizeof(UINT32)));
+        RtlCopyMemory(&aaa->SidStart, def_dacls[i].sid, 8 + (def_dacls[i].sid->elements * sizeof(uint32_t)));
 
-        aaa = (ACCESS_ALLOWED_ACE*)((UINT8*)aaa + aaa->Header.AceSize);
+        aaa = (ACCESS_ALLOWED_ACE*)((uint8_t*)aaa + aaa->Header.AceSize);
 
         i++;
     }
@@ -432,7 +432,7 @@ static void get_top_level_sd(fcb* fcb) {
         goto end;
     }
 
-    RtlSetOwnerSecurityDescriptor(&sd, usersid, FALSE);
+    RtlSetOwnerSecurityDescriptor(&sd, usersid, false);
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlSetOwnerSecurityDescriptor returned %08x\n", Status);
@@ -446,7 +446,7 @@ static void get_top_level_sd(fcb* fcb) {
         goto end;
     }
 
-    RtlSetGroupSecurityDescriptor(&sd, groupsid, FALSE);
+    RtlSetGroupSecurityDescriptor(&sd, groupsid, false);
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlSetGroupSecurityDescriptor returned %08x\n", Status);
@@ -460,7 +460,7 @@ static void get_top_level_sd(fcb* fcb) {
         goto end;
     }
 
-    Status = RtlSetDaclSecurityDescriptor(&sd, TRUE, acl, FALSE);
+    Status = RtlSetDaclSecurityDescriptor(&sd, true, acl, false);
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlSetDaclSecurityDescriptor returned %08x\n", Status);
@@ -508,13 +508,13 @@ end:
         ExFreePool(groupsid);
 }
 
-void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp) {
+void fcb_get_sd(fcb* fcb, struct _fcb* parent, bool look_for_xattr, PIRP Irp) {
     NTSTATUS Status;
     PSID usersid = NULL, groupsid = NULL;
     SECURITY_SUBJECT_CONTEXT subjcont;
     ULONG buflen;
 
-    if (look_for_xattr && get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8**)&fcb->sd, (UINT16*)&buflen, Irp))
+    if (look_for_xattr && get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (uint8_t**)&fcb->sd, (uint16_t*)&buflen, Irp))
         return;
 
     if (!parent) {
@@ -536,7 +536,7 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp) {
         return;
     }
 
-    RtlSetOwnerSecurityDescriptor(&fcb->sd, usersid, FALSE);
+    RtlSetOwnerSecurityDescriptor(&fcb->sd, usersid, false);
 
     gid_to_sid(fcb->inode_item.st_gid, &groupsid);
     if (!groupsid) {
@@ -544,7 +544,7 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp) {
         return;
     }
 
-    RtlSetGroupSecurityDescriptor(&fcb->sd, groupsid, FALSE);
+    RtlSetGroupSecurityDescriptor(&fcb->sd, groupsid, false);
 
     ExFreePool(usersid);
     ExFreePool(groupsid);
@@ -578,13 +578,13 @@ static NTSTATUS get_file_security(PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* 
 
 _Dispatch_type_(IRP_MJ_QUERY_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS NTAPI drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS __stdcall drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     SECURITY_DESCRIPTOR* sd;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     device_extension* Vcb = DeviceObject->DeviceExtension;
     ULONG buflen;
-    BOOL top_level;
+    bool top_level;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     ccb* ccb = FileObject ? FileObject->FsContext2 : NULL;
 
@@ -696,7 +696,7 @@ static NTSTATUS set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject
     if (!fcb || !ccb)
         return STATUS_INVALID_PARAMETER;
 
-    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
 
     if (is_subvol_readonly(fcb->subvol, Irp)) {
         Status = STATUS_ACCESS_DENIED;
@@ -724,9 +724,9 @@ static NTSTATUS set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject
 
     fcb->inode_item.sequence++;
 
-    fcb->sd_dirty = TRUE;
-    fcb->sd_deleted = FALSE;
-    fcb->inode_item_changed = TRUE;
+    fcb->sd_dirty = true;
+    fcb->sd_deleted = false;
+    fcb->inode_item_changed = true;
 
     fcb->subvol->root_item.ctransid = Vcb->superblock.generation;
     fcb->subvol->root_item.ctime = now;
@@ -743,14 +743,14 @@ end:
 
 _Dispatch_type_(IRP_MJ_SET_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS NTAPI drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS __stdcall drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     ccb* ccb = FileObject ? FileObject->FsContext2 : NULL;
     device_extension* Vcb = DeviceObject->DeviceExtension;
     ULONG access_req = 0;
-    BOOL top_level;
+    bool top_level;
 
     FsRtlEnterFileSystem();
 
@@ -820,7 +820,7 @@ end:
     return Status;
 }
 
-static BOOL search_for_gid(fcb* fcb, PSID sid) {
+static bool search_for_gid(fcb* fcb, PSID sid) {
     LIST_ENTRY* le;
 
     le = gid_map_list.Flink;
@@ -829,13 +829,13 @@ static BOOL search_for_gid(fcb* fcb, PSID sid) {
 
         if (RtlEqualSid(sid, gm->sid)) {
             fcb->inode_item.st_gid = gm->gid;
-            return TRUE;
+            return true;
         }
 
         le = le->Flink;
     }
 
-    return FALSE;
+    return false;
 }
 
 void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT subjcont) {
@@ -849,7 +849,7 @@ void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT s
         return;
     }
 
-    ExAcquireResourceSharedLite(&mapping_lock, TRUE);
+    ExAcquireResourceSharedLite(&mapping_lock, true);
 
     if (!subjcont || !subjcont->PrimaryToken || IsListEmpty(&gid_map_list)) {
         ExReleaseResourceLite(&mapping_lock);

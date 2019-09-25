@@ -55,7 +55,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
 
     // *** IPersistFolder methods ***
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
 
 public:
 

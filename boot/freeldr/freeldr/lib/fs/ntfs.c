@@ -26,7 +26,9 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define TAG_NTFS_CONTEXT 'CftN'
 #define TAG_NTFS_LIST 'LftN'
@@ -36,8 +38,6 @@
 #define TAG_NTFS_FILE 'FftN'
 #define TAG_NTFS_VOLUME 'VftN'
 #define TAG_NTFS_DATA 'DftN'
-
-DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 typedef struct _NTFS_VOLUME_INFO
 {
@@ -846,17 +846,24 @@ ARC_STATUS NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("NtfsSeek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += FileHandle->Offset;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
-        return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record))
+    if (NewPosition.QuadPart >= NtfsGetAttributeSize(&FileHandle->DataContext->Record))
         return EINVAL;
 
-    FileHandle->Offset = Position->LowPart;
+    FileHandle->Offset = NewPosition.QuadPart;
     return ESUCCESS;
 }
 

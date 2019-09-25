@@ -298,7 +298,7 @@ static HRESULT WINAPI IStream_fnStat(IStream *iface, STATSTG* lpStat,
 
     TRACE("(%p,%p,%d)\n", This, lpStat, grfStatFlag);
 
-    if (!grfStatFlag)
+    if (!lpStat)
         return STG_E_INVALIDPOINTER;
 
     memset(&fi, 0, sizeof(fi));

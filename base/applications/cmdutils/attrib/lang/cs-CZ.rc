@@ -1,0 +1,25 @@
+/* FILE:       base/shell/cmd/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2015-04-12
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Displays or changes file attributes.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Sets an attribute\n\
+  -   Clears an attribute\n\
+  R   Read-only file attribute\n\
+  A   Archive file attribute\n\
+  S   System file attribute\n\
+  H   Hidden file attribute\n\
+  /S  Processes matching files in the current directory\n\
+      and all subdirectories\n\
+  /D  Processes directories as well\n\n\
+Type ATTRIB without a parameter to display the attributes of all files.\n"
+    STRING_CONSOLE_ERROR "Neznámá chyba: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Neplatný formát parametru - %s\n"
+END

@@ -1,0 +1,19 @@
+/* German language file by Klemens Friedl <frik85> 2005-06-03 */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_LABEL_HELP "Erstellt, ändert oder löscht die Bezeichnung eines Laufwerks.\n\n\
+LABEL [Laufwerk:][Bezeichnung]\n\n\
+  Laufwerk:       Gibt den Laufwerksbuchstaben eines Laufwerks an.\n\
+  Bezeichnung     Gibt die Bezeichnung des Laufwerks an.\n"
+    STRING_LABEL_TEXT1 "Volume in Laufwerk %c: ist %s\n"
+    STRING_LABEL_TEXT2 "Volume in Laufwerk %c: hat keine Bezeichnung\n"
+    STRING_LABEL_TEXT3 "Volumenummer: %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Volumebezeichnung (32 Zeichen, EINGABETASTE für keine)? "
+    STRING_LABEL_PROMPT "Aktuelle Volumebezeichnung löschen (J/N)? "
+    STRING_LABEL_OPTIONS "JN"
+    STRING_ERROR_INVALID_DRIVE "Ungültige Laufwerksangaben\n"
+    STRING_ERROR_INVALID_LABEL "Unzulässige Volumebezeichnung\n"
+END

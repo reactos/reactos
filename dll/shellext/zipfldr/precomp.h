@@ -37,7 +37,6 @@ EXTERN_C const GUID CLSID_ZipFolderExtractAllCommand;
 extern LONG g_ModuleRefCnt;
 
 
-#define Win32DbgPrint(file, line, warn, func)   DbgPrint("(%s:%d) " warn, file, line, func)
 WCHAR* guid2string(REFCLSID iid);
 
 

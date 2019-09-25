@@ -23,5 +23,15 @@ I
 %j
 %j
 %j
+------------ Testing Amp-Amp ---------
+--- test for something that is TRUE
+TRUE Amp-Amp
+------------ Testing Amp-Amp ---------
+--- test for something that is FALSE
+------------ Testing Pipe-Pipe -------
+--- test for something that is TRUE
+------------ Testing Pipe-Pipe -------
+--- test for something that is FALSE
+FALSE Pipe-Pipe
 ------------ End of Testing ------------
 --- Testing ends here

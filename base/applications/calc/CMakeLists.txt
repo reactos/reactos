@@ -1,6 +1,4 @@
 
-add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
-
 list(APPEND SOURCE
     convert.c
     fun_ieee.c

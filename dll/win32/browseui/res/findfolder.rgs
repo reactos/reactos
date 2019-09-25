@@ -1,0 +1,18 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {E17D4FC0-5564-11D1-83F2-00A0C90DC849} = s 'Search Results Folder'
+		{
+			DefaultIcon = e '%%SystemRoot%%\System32\shell32.dll,-134'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ShellFolder
+			{
+				val Attributes = d '0x20180000'
+			}
+		}
+	}
+}

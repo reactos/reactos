@@ -40,7 +40,14 @@ ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
 
 VOID  FileSystemError(PCSTR ErrorString);
-ULONG FsOpenFile(PCSTR FileName);
+
+ARC_STATUS
+FsOpenFile(
+    IN PCSTR FileName,
+    IN PCSTR DefaultPath OPTIONAL,
+    IN OPENMODE OpenMode,
+    OUT PULONG FileId);
+
 ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 

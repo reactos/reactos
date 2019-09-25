@@ -105,6 +105,8 @@
 #define IDR_ISFBAND              143
 #define IDR_ACLCUSTOMMRU         144
 #define IDR_TASKBARLIST          145
+#define IDR_FILESEARCHBAND       146
+#define IDR_FINDFOLDER           147
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
@@ -154,3 +156,18 @@
 #define IDB_SHELL_BRANDBAND_SM_LO   245
 #define IDB_SHELL_BRANDBAND_MD_LO   246
 #define IDB_SHELL_BRANDBAND_LG_LO   247*/
+
+#define IDD_SEARCH_DLG          1000
+#define IDC_SEARCH_LABEL        1001
+#define IDC_SEARCH_FILENAME     1002
+#define IDC_SEARCH_QUERY        1003
+#define IDC_SEARCH_BUTTON       1004
+#define IDC_SEARCH_STOP_BUTTON  1005
+#define IDC_SEARCH_COMBOBOX     1006
+#define IDS_SEARCHINVALID       4518
+#define IDS_COL_NAME            8976
+#define IDS_COL_LOCATION        8977
+#define IDS_COL_RELEVANCE       8989
+#define IDS_SEARCH_FILES_FOUND  9232
+#define IDS_SEARCH_FOLDER       9234
+#define IDS_SEARCH_OPEN_FOLDER  40960

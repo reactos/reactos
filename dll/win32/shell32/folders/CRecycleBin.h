@@ -46,10 +46,10 @@ class CRecycleBin :
 
         // IPersistFolder
         virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
-        virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);

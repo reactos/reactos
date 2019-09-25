@@ -1,0 +1,22 @@
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Muestra o cambia los atributos de los archivos.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Añade un atributo\n\
+  -   Borra un atributo\n\
+  R   Atributo de sólo lectura\n\
+  A   Atributo de archivo\n\
+  S   Atributo de archivo de sistema\n\
+  H   Atributo de archivo oculto\n\
+  /S  Procesa los archivos coincidentes en el directorio actual \n\
+      y sus subdirectorios\n\
+  /D  Procesa también los directorios\n\n\
+Type ATTRIB without a parameter to display the attributes of all files.\n"
+    STRING_CONSOLE_ERROR "Error desconocido: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formato de parámetro erróneo - %s\n"
+END

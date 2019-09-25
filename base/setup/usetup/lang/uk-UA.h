@@ -737,7 +737,8 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
         "\222\343\342 \242\250 \254\256\246\245\342\245 \247\254i\255\250\342\250 \342\250\257 \245\252\340\240\255\343.",
         TEXT_STYLE_NORMAL
     },
-    {   8,
+    {
+        8,
         10,
          "\x07  \215\240\342\250\341\252\240\251\342\245 \252\253\240\242i\350i \202\202\205\220\225 \342\240 \202\215\210\207 \244\253\357 \242\250\241\256\340\343 \257\256\342\340i\241\255\256\243\256 \342\250\257\343 \254\256\255i\342\256\340\343",
          TEXT_STYLE_NORMAL
@@ -928,6 +929,112 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
         0,
         0,
         "\201\343\244\354-\253\240\341\252\240, \247\240\347\245\252\240\251\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ukUAChangeSystemPartition[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The current system partition of your computer",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "on the system disk",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "uses a format not supported by ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        18,
+        "In order to successfully install ReactOS, the Setup program must change",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        19,
+        "the current system partition to a new one.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        21,
+        "The new candidate system partition is:",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        25,
+        "\x07  To accept this choice, press ENTER.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
+        "\x07  To manually change the system partition, press ESC to go back to",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        28,
+        "   the partition selection list, then select or create a new system",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        29,
+        "   partition on the system disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        32,
+        "In case there are other operating systems that depend on the original",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        33,
+        "system partition, you may need to either reconfigure them for the new",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        34,
+        "system partition, or you may need to change the system partition back",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        35,
+        "to the original one after finishing the installation of ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   ESC = Cancel",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1382,7 +1489,6 @@ static MUI_ENTRY ukUASelectFSEntries[] =
         "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
-
     {
         0,
         0,
@@ -1775,6 +1881,10 @@ MUI_PAGE ukUAPages[] =
     {
         SELECT_PARTITION_PAGE,
         ukUASelectPartitionEntries
+    },
+    {
+        CHANGE_SYSTEM_PARTITION,
+        ukUAChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,

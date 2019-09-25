@@ -42,10 +42,6 @@ COMMAND cmds[] =
     {_T("assoc"), 0, CommandAssoc},
 #endif
 
-#ifdef INCLUDE_CMD_ATTRIB
-    {_T("attrib"), 0, CommandAttrib},
-#endif
-
 #ifdef INCLUDE_CMD_BEEP
     {_T("beep"),     0, cmd_beep},
 #endif
@@ -124,10 +120,6 @@ COMMAND cmds[] =
 #endif
 
     {_T("if"), 0, cmd_if},
-
-#ifdef INCLUDE_CMD_LABEL
-    {_T("label"), 0, cmd_label},
-#endif
 
 #ifdef INCLUDE_CMD_MEMORY
     {_T("memory"), 0, CommandMemory},

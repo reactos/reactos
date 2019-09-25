@@ -18,19 +18,6 @@ assoc (wyświetla wszystkie skojarzenia)\n\
 assoc .ext (wyświetla określone skojarzenie)\n\
 assoc .ext= (usuwa określone skojarzenie)\n\
 assoc .ext=typPliku (dodaje nowe skojarzenie)\n"
-    STRING_ATTRIB_HELP "Wyświetla lub zmienia atrybuty plików.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
-       [/S [/D]]\n\n\
-  +   Ustawia atrybut\n\
-  -   Czyści atrybut\n\
-  R   Atrybut pliku tylko do odczytu\n\
-  A   Atrybut pliku archiwalnego\n\
-  S   Atrybut pliku systemowego\n\
-  H   Atrybut pliku ukrytego\n\
-  /S  Przetwarza wszystkie, pasujące pliki w bieżącym katalogu\n\
-      i we wszystkich podkatalogach\n\
-  /D  Przetwarza również katalogi\n\n\
-Wpisz ATTRIB bez żadnego parametru, by wyświetlić atrybuty wszystkich plików.\n"
     STRING_ALIAS_HELP "Ustawia, usuwa, a także wyświetla aliasy.\n\n\
 ALIAS [nazwa=[tekst]]\n\n\
   nazwa   Nazwa aliasu.\n\
@@ -263,11 +250,6 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
-    STRING_LABEL_HELP1 "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
-    STRING_LABEL_HELP2 "Wolumin w napędzie %c: ma etykietę: %s\n"
-    STRING_LABEL_HELP3 "Wolumin w napędzie %c: nie posiada etykiety\n"
-    STRING_LABEL_HELP4 "Numer seryjny woluminu to: %04X-%04X\n"
-    STRING_LABEL_HELP5 "Podaj etykietę (0-11 znaków, ENTER = brak etykiety) "
     STRING_LOCALE_HELP1 "Czas bieżący"
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"

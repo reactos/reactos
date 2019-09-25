@@ -3283,8 +3283,11 @@ BOOL WINAPI WriteProfileSectionW(_In_ LPCWSTR, _In_ LPCWSTR);
 BOOL WINAPI WriteProfileStringA(_In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPCSTR);
 BOOL WINAPI WriteProfileStringW(_In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR);
 DWORD WINAPI WriteTapemark(_In_ HANDLE, _In_ DWORD, _In_ DWORD, _In_ BOOL);
+
 #define Yield()
+
 #if (_WIN32_WINNT >= 0x0501)
+DWORD WINAPI WTSGetActiveConsoleSessionId(VOID);
 BOOL WINAPI ZombifyActCtx(_Inout_ HANDLE);
 #endif
 

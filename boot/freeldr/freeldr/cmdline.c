@@ -14,9 +14,9 @@
 
 typedef struct tagCMDLINEINFO
 {
-    PCCH DebugString;
-    PCCH DefaultOperatingSystem;
-    LONG TimeOut;
+    PCSTR DebugString;
+    PCSTR DefaultOs;
+    LONG  TimeOut;
 } CMDLINEINFO, *PCMDLINEINFO;
 
 CCHAR DebugString[256];
@@ -26,14 +26,14 @@ CMDLINEINFO CmdLineInfo;
 /* FUNCTIONS ******************************************************************/
 
 VOID
-CmdLineParse(IN PCCH CmdLine)
+CmdLineParse(IN PCSTR CmdLine)
 {
     PCHAR End, Setting;
     ULONG_PTR Length, Offset = 0;
 
     /* Set defaults */
     CmdLineInfo.DebugString = NULL;
-    CmdLineInfo.DefaultOperatingSystem = NULL;
+    CmdLineInfo.DefaultOs = NULL;
     CmdLineInfo.TimeOut = -1;
 
     /*
@@ -46,16 +46,12 @@ CmdLineParse(IN PCCH CmdLine)
     if (Setting)
     {
         /* Check if there are more command-line parameters following */
-        Setting += sizeof("debug=") + sizeof(ANSI_NULL);
+        Setting += sizeof("debug=") - sizeof(ANSI_NULL);
         End = strstr(Setting, " ");
-        if (End)
-            Length = End - Setting;
-        else
-            Length = sizeof(DebugString);
+        Length = (End ? (End - Setting) : strlen(Setting));
 
         /* Copy the debug string and upcase it */
-        strncpy(DebugString, Setting, Length);
-        DebugString[Length - 1] = ANSI_NULL;
+        RtlStringCbCopyNA(DebugString, sizeof(DebugString), Setting, Length);
         _strupr(DebugString);
 
         /* Replace all separators ';' by spaces */
@@ -71,66 +67,68 @@ CmdLineParse(IN PCCH CmdLine)
 
     /* Get timeout */
     Setting = strstr(CmdLine, "timeout=");
-    if (Setting) CmdLineInfo.TimeOut = atoi(Setting +
-                                            sizeof("timeout=") +
-                                            sizeof(ANSI_NULL));
+    if (Setting)
+    {
+        CmdLineInfo.TimeOut = atoi(Setting +
+                                   sizeof("timeout=") - sizeof(ANSI_NULL));
+    }
 
     /* Get default OS */
     Setting = strstr(CmdLine, "defaultos=");
     if (Setting)
     {
         /* Check if there are more command-line parameters following */
-        Setting += sizeof("defaultos=") + sizeof(ANSI_NULL);
+        Setting += sizeof("defaultos=") - sizeof(ANSI_NULL);
         End = strstr(Setting, " ");
-        if (End)
-            Length = End - Setting;
-        else
-            Length = sizeof(DefaultOs);
+        Length = (End ? (End - Setting) : strlen(Setting));
 
         /* Copy the default OS */
-        strncpy(DefaultOs, Setting, Length);
-        DefaultOs[Length - 1] = ANSI_NULL;
-        CmdLineInfo.DefaultOperatingSystem = DefaultOs;
+        RtlStringCbCopyNA(DefaultOs, sizeof(DefaultOs), Setting, Length);
+        CmdLineInfo.DefaultOs = DefaultOs;
     }
 
     /* Get ramdisk base address */
     Setting = strstr(CmdLine, "rdbase=");
-    if (Setting) gRamDiskBase = (PVOID)(ULONG_PTR)strtoull(Setting +
-                                               sizeof("rdbase=") -
-                                               sizeof(ANSI_NULL),
-                                               NULL,
-                                               0);
+    if (Setting)
+    {
+        gRamDiskBase =
+            (PVOID)(ULONG_PTR)strtoull(Setting +
+                                       sizeof("rdbase=") - sizeof(ANSI_NULL),
+                                       NULL, 0);
+    }
 
     /* Get ramdisk size */
     Setting = strstr(CmdLine, "rdsize=");
-    if (Setting) gRamDiskSize = strtoul(Setting +
-                                        sizeof("rdsize=") -
-                                        sizeof(ANSI_NULL),
-                                        NULL,
-                                        0);
+    if (Setting)
+    {
+        gRamDiskSize = strtoul(Setting +
+                               sizeof("rdsize=") - sizeof(ANSI_NULL),
+                               NULL, 0);
+    }
 
     /* Get ramdisk offset */
     Setting = strstr(CmdLine, "rdoffset=");
-    if (Setting) Offset = strtoul(Setting +
-                                  sizeof("rdoffset=") -
-                                  sizeof(ANSI_NULL),
-                                  NULL,
-                                  0);
+    if (Setting)
+    {
+        Offset = strtoul(Setting +
+                         sizeof("rdoffset=") - sizeof(ANSI_NULL),
+                         NULL, 0);
+    }
 
     /* Fix it up */
     gRamDiskBase = (PVOID)((ULONG_PTR)gRamDiskBase + Offset);
 }
 
-PCCH
+PCSTR
 CmdLineGetDebugString(VOID)
 {
     return CmdLineInfo.DebugString;
 }
 
-PCCH
+PCSTR
 CmdLineGetDefaultOS(VOID)
 {
-    return CmdLineInfo.DefaultOperatingSystem;
+    return CmdLineInfo.DefaultOs;
 }
 
 LONG

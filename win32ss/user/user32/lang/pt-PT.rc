@@ -1,0 +1,82 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+/* Dialogs */
+
+SELWINDOW DIALOGEX 20, 20, 220, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Seleccionar Janela"
+BEGIN
+    LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Cancelar", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/* Menus */
+
+EDITMENU MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Desfazer", EM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Recor&tar", WM_CUT
+        MENUITEM "&Copiar", WM_COPY
+        MENUITEM "C&olar", WM_PASTE
+        MENUITEM "&Apagar", WM_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Seleccionar Tudo", EM_SETSEL
+    END
+END
+
+SYSMENU MENU
+BEGIN
+    MENUITEM "&Restaurar", SC_RESTORE
+    MENUITEM "&Mover", SC_MOVE
+    MENUITEM "&Tamanho", SC_SIZE
+    MENUITEM "Mi&nimizar", SC_MINIMIZE
+    MENUITEM "Ma&ximizar", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Fechar\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "&Restaurar", SC_RESTORE
+    MENUITEM "&Mover", SC_MOVE
+    MENUITEM "&Tamanho", SC_SIZE
+    MENUITEM "Mi&nimizar", SC_MINIMIZE
+    MENUITEM "Ma&ximizar", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "&Fechar\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "&Próximo\tCtrl+F6", SC_NEXTWINDOW
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "Erro"
+    IDS_NOT_RESPONDING " (Não Responde)"
+    IDS_ASK_TERMINATE "Esta aplicação não responde. Deseja terminar esta aplicação?"
+    IDS_HUNG_UP_TITLE "Desligada!"
+    IDS_OK "OK"
+    IDS_CANCEL "Cancelar"
+    IDS_ABORT "&Abortar"
+    IDS_RETRY "&Repetir"
+    IDS_IGNORE "&Ignorar"
+    IDS_YES "&Sim"
+    IDS_NO "&Não"
+    IDS_CLOSE "&Fechar"
+    IDS_HELP "Ajuda"
+    IDS_TRYAGAIN "&Tentar Novamente"
+    IDS_CONTINUE "&Continuar"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MDI_MOREWINDOWS "&Mais Janelas..."
+END

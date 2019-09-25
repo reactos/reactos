@@ -8,8 +8,8 @@
 /* Some code was taken from u-boot, https://github.com/u-boot/u-boot/tree/master/fs/btrfs */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define TAG_BTRFS_INFO 'IftB'
@@ -1115,7 +1115,6 @@ ARC_STATUS BtrFsClose(ULONG FileId)
     TRACE("BtrFsClose %lu\n", FileId);
 
     FrLdrTempFree(phandle, TAG_BTRFS_FILE);
-
     return ESUCCESS;
 }
 
@@ -1202,15 +1201,24 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
 ARC_STATUS BtrFsSeek(ULONG FileId, LARGE_INTEGER *Position, SEEKMODE SeekMode)
 {
     pbtrfs_file_info phandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("BtrFsSeek %lu NewFilePointer = %llu\n", FileId, Position->QuadPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += phandle->position;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.QuadPart >= phandle->inode.size)
         return EINVAL;
-    if (Position->QuadPart >= phandle->inode.size)
-        return EINVAL;
 
-    phandle->position = Position->QuadPart;
+    phandle->position = NewPosition.QuadPart;
     return ESUCCESS;
 }
 

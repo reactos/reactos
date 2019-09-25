@@ -1350,6 +1350,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                         // Navigate to our new location
                         UpdateBrowser(pidlNewAbs);
 
+                        ILFree(pidlParent);
                         ILFree(pidlNewAbs);
                         ILFree(pidlNew);
                         if (theResult)

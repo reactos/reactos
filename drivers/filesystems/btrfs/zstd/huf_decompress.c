@@ -42,6 +42,10 @@
 #define HUF_STATIC_LINKING_ONLY
 #include "huf.h"
 #include "error_private.h"
+#include <ntifs.h>
+#include <ntddk.h>
+
+#define HUFD_ALLOC_TAG 0x64465548 // "HUFd"
 
 
 /* **************************************************************
@@ -388,8 +392,21 @@ size_t HUF_decompress1X1_DCtx(HUF_DTable* DCtx, void* dst, size_t dstSize,
 
 size_t HUF_decompress1X1 (void* dst, size_t dstSize, const void* cSrc, size_t cSrcSize)
 {
-    HUF_CREATE_STATIC_DTABLEX1(DTable, HUF_TABLELOG_MAX);
-    return HUF_decompress1X1_DCtx (DTable, dst, dstSize, cSrc, cSrcSize);
+    HUF_DTable* DTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX-1), HUFD_ALLOC_TAG);
+    size_t ret;
+
+    if (!DTable)
+        return 0;
+
+    RtlZeroMemory(DTable, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX-1));
+
+    DTable[0] = (U32)(HUF_TABLELOG_MAX-1) * 0x01000001;
+
+    ret = HUF_decompress1X1_DCtx (DTable, dst, dstSize, cSrc, cSrcSize);
+
+    ExFreePool(DTable);
+
+    return ret;
 }
 
 size_t HUF_decompress4X1_usingDTable(
@@ -433,8 +450,21 @@ size_t HUF_decompress4X1_DCtx (HUF_DTable* dctx, void* dst, size_t dstSize, cons
 }
 size_t HUF_decompress4X1 (void* dst, size_t dstSize, const void* cSrc, size_t cSrcSize)
 {
-    HUF_CREATE_STATIC_DTABLEX1(DTable, HUF_TABLELOG_MAX);
-    return HUF_decompress4X1_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+    HUF_DTable* DTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX-1), HUFD_ALLOC_TAG);
+    size_t ret;
+
+    if (!DTable)
+        return 0;
+
+    RtlZeroMemory(DTable, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX-1));
+
+    DTable[0] = (U32)(HUF_TABLELOG_MAX-1) * 0x01000001;
+
+    ret = HUF_decompress4X1_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+
+    ExFreePool(DTable);
+
+    return ret;
 }
 
 
@@ -860,8 +890,21 @@ size_t HUF_decompress1X2_DCtx(HUF_DTable* DCtx, void* dst, size_t dstSize,
 
 size_t HUF_decompress1X2 (void* dst, size_t dstSize, const void* cSrc, size_t cSrcSize)
 {
-    HUF_CREATE_STATIC_DTABLEX2(DTable, HUF_TABLELOG_MAX);
-    return HUF_decompress1X2_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+    HUF_DTable* DTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX), HUFD_ALLOC_TAG);
+    size_t ret;
+
+    if (!DTable)
+        return 0;
+
+    RtlZeroMemory(DTable, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX));
+
+    DTable[0] = (U32)(HUF_TABLELOG_MAX) * 0x01000001;
+
+    ret = HUF_decompress1X2_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+
+    ExFreePool(DTable);
+
+    return ret;
 }
 
 size_t HUF_decompress4X2_usingDTable(
@@ -907,8 +950,21 @@ size_t HUF_decompress4X2_DCtx(HUF_DTable* dctx, void* dst, size_t dstSize,
 
 size_t HUF_decompress4X2 (void* dst, size_t dstSize, const void* cSrc, size_t cSrcSize)
 {
-    HUF_CREATE_STATIC_DTABLEX2(DTable, HUF_TABLELOG_MAX);
-    return HUF_decompress4X2_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+    HUF_DTable* DTable = ExAllocatePoolWithTag(NonPagedPool, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX), HUFD_ALLOC_TAG);
+    size_t ret;
+
+    if (!DTable)
+        return 0;
+
+    RtlZeroMemory(DTable, sizeof(HUF_DTable) * HUF_DTABLE_SIZE(HUF_TABLELOG_MAX));
+
+    DTable[0] = (U32)(HUF_TABLELOG_MAX) * 0x01000001;
+
+    ret = HUF_decompress4X2_DCtx(DTable, dst, dstSize, cSrc, cSrcSize);
+
+    ExFreePool(DTable);
+
+    return ret;
 }
 
 

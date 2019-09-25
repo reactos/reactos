@@ -135,10 +135,12 @@ LoadReactOSSetup(
     IN PCHAR Argv[],
     IN PCHAR Envp[])
 {
+    ARC_STATUS Status;
     PCSTR ArgValue;
+    PCSTR SystemPartition;
     PCHAR File;
-    CHAR FileName[512];
-    CHAR BootPath[512];
+    CHAR FileName[MAX_PATH];
+    CHAR BootPath[MAX_PATH];
     CHAR BootOptions2[256];
     PCSTR LoadOptions;
     PSTR BootOptions;
@@ -165,6 +167,14 @@ LoadReactOSSetup(
         NULL
     };
 
+    /* Retrieve the (mandatory) system partition */
+    SystemPartition = GetArgumentValue(Argc, Argv, "SystemPartition");
+    if (!SystemPartition || !*SystemPartition)
+    {
+        ERR("No 'SystemPartition' specified, aborting!\n");
+        return EINVAL;
+    }
+
     UiDrawStatusText("Setup is loading...");
 
     UiDrawBackdrop();
@@ -180,13 +190,12 @@ LoadReactOSSetup(
     else
     {
         /*
-         * IMPROVE: I don't want to call MachDiskGetBootPath here as a
-         * default choice because I can call it after (see few lines below).
+         * IMPROVE: I don't want to use the SystemPartition here as a
+         * default choice because I can do it after (see few lines below).
          * Instead I reset BootPath here so that we can build the full path
          * using the general code from below.
          */
-        // MachDiskGetBootPath(BootPath, sizeof(BootPath));
-        // RtlStringCbCopyA(BootPath, sizeof(BootPath), ArgValue);
+        // RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
         *BootPath = ANSI_NULL;
     }
 
@@ -201,8 +210,8 @@ LoadReactOSSetup(
         /* Temporarily save the boot path */
         RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
 
-        /* This is not a full path. Use the current (i.e. boot) device. */
-        MachDiskGetBootPath(BootPath, sizeof(BootPath));
+        /* This is not a full path: prepend the SystemPartition */
+        RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
 
         /* Append a path separator if needed */
         if (*FileName != '\\' && *FileName != '/')
@@ -212,7 +221,7 @@ LoadReactOSSetup(
         RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
     }
 
-    /* Append a backslash if needed */
+    /* Append a path separator if needed */
     if (!*BootPath || BootPath[strlen(BootPath) - 1] != '\\')
         RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
@@ -221,7 +230,7 @@ LoadReactOSSetup(
     /* Retrieve the boot options */
     *BootOptions2 = ANSI_NULL;
     ArgValue = GetArgumentValue(Argc, Argv, "Options");
-    if (ArgValue)
+    if (ArgValue && *ArgValue)
         RtlStringCbCopyA(BootOptions2, sizeof(BootOptions2), ArgValue);
 
     TRACE("BootOptions: '%s'\n", BootOptions2);
@@ -237,10 +246,11 @@ LoadReactOSSetup(
         *strstr(FileName, " ") = ANSI_NULL;
 
         /* Load the ramdisk */
-        if (!RamDiskLoadVirtualFile(FileName))
+        Status = RamDiskLoadVirtualFile(FileName, SystemPartition);
+        if (Status != ESUCCESS)
         {
             UiMessageBox("Failed to load RAM disk file %s", FileName);
-            return ENOENT;
+            return Status;
         }
     }
 
@@ -292,7 +302,7 @@ LoadReactOSSetup(
     }
 #endif
 
-    /* Copy loadoptions (original string will be freed) */
+    /* Copy LoadOptions (original string will be freed) */
     BootOptions = FrLdrTempAlloc(strlen(LoadOptions) + 1, TAG_BOOT_OPTIONS);
     ASSERT(BootOptions);
     strcpy(BootOptions, LoadOptions);

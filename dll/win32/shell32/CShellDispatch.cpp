@@ -8,7 +8,6 @@
 
 #include "precomp.h"
 #include "winsvc.h"
-#include <traycmd.h>   // tray commands
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

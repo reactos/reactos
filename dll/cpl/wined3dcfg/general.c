@@ -154,7 +154,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             return TRUE;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) > IDC_MIN && LOWORD(wParam) < IDC_MAX)
+            if (LOWORD(wParam) > IDC_MIN && LOWORD(wParam) < IDC_MAX && HIWORD(wParam) == CBN_SELCHANGE)
                 PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
             break;
 

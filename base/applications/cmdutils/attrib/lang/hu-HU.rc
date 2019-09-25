@@ -1,0 +1,22 @@
+/* Hungarian translation by Robert Horvath (talley at cubeclub.hu) 2005 */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Állományok attribútumok megjelenítése vagy beállításai.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] állomány ...\n\
+       [/S [/D]]\n\n\
+  +   bekapcsol egy attribútumot\n\
+  -   kikapcsol egy attribútumot\n\
+  R   Írásvédett állomány\n\
+  A   Archiválandó állomány\n\
+  S   Rendszer állomány\n\
+  H   Rejtett állomány\n\
+  /S  Minden állomány módosítása a mappában és minden\n\
+      almappábanban\n\
+  /D  Mappákra is érvényesíti\n\n\
+Ha ATTRIB-ot paraméter nélkül írod be, megjeleníti a mappában található összes állományt és annak attribútumát.\n"
+    STRING_CONSOLE_ERROR "Ismeretlen hiba: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Érvénytelen paraméter megadás - %s\n"
+END

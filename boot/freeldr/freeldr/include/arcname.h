@@ -24,16 +24,25 @@
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+
+BOOLEAN
+DissectArcPath(
+    IN  PCSTR ArcPath,
+    OUT PCSTR* Path OPTIONAL,
+    OUT PUCHAR DriveNumber,
+    OUT PULONG PartitionNumber);
+
 BOOLEAN
 DissectArcPath2(
-    IN CHAR* ArcPath,
-    OUT ULONG* x,
-    OUT ULONG* y,
-    OUT ULONG* z,
-    OUT ULONG* Partition,
-    OUT ULONG *PathSyntax);
-BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition);
+    IN  PCSTR ArcPath,
+    OUT PULONG x,
+    OUT PULONG y,
+    OUT PULONG z,
+    OUT PULONG Partition,
+    OUT PULONG PathSyntax);
+
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Partition);
+
 #if 0
 UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
 #endif

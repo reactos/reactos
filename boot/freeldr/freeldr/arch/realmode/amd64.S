@@ -273,7 +273,7 @@ InRealMode:
     /* Restore real mode stack */
     mov sp, word ptr ds:[stack16]
 
-   // sti /* These are ok now */
+    // sti /* These are ok now */
 
     /* Do the callback, specified by bx */
     shl bx, 1
@@ -346,9 +346,9 @@ stack16:
 
 
 #include "int386.inc"
+#include "helpers.inc"
 #include "pxe.inc"
 #include "pnp.inc"
-#include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE - 1)
 .byte 0

@@ -1062,7 +1062,7 @@ HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *    CDrivesFolder::GetCurFolder
  */
-HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CDrivesFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     TRACE("(%p)->(%p)\n", this, pidl);
 
