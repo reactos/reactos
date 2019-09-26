@@ -101,7 +101,6 @@ NtlmInitializeGlobals(VOID)
     LPWKSTA_INFO_100 pBuf = NULL;
     WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
-    ULONG AvPairsLen;
     /* shortcuts */
     PNTLMSSP_GLOBALS g = &ntlmGlobals;
     PNTLMSSP_GLOBALS_SVR gsvr = &ntlmGlobalsSvr;
@@ -289,39 +288,7 @@ NtlmInitializeGlobals(VOID)
     {
         ERR("could not get process token!!\n");
     }
-    /* init global target AV pairs */
-    AvPairsLen = gsvr->NbDomainName.bUsed + //fix me: domain controller name
-                 gsvr->NbMachineName.bUsed + //computer name
-                 gsvr->DnsMachineName.bUsed + //dns computer name
-                 gsvr->DnsMachineName.bUsed + //fix me: dns domain name
-                 sizeof(MSV1_0_AV_PAIR)*4;
 
-    if (!NtlmAvlInit(&gsvr->NtlmAvTargetInfoPart, AvPairsLen))
-    {
-        ERR("failed to allocate NtlmAvTargetInfo\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Fill NtlmAvTargetInfoPart. It contains not all data we need.
-     * Timestamp and EOL is appended when challange message is
-     * generated. */
-    if (gsvr->NbMachineName.bUsed > 0)
-        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbComputerName,
-                   gsvr->NbMachineName.Buffer, gsvr->NbMachineName.bUsed);
-    if (gsvr->NbDomainName.bUsed > 0)
-        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvNbDomainName,
-                   gsvr->NbDomainName.Buffer, gsvr->NbDomainName.bUsed);
-    if (gsvr->DnsMachineName.bUsed > 0)
-        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsComputerName,
-                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
-    /* FIXME: This is not correct! - (same value as above??) */
-    if (gsvr->DnsMachineName.bUsed > 0)
-        NtlmAvlAdd(&gsvr->NtlmAvTargetInfoPart, MsvAvDnsDomainName,
-                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
-    //TODO: MsvAvDnsTreeName
-
-    ERR("NtlmAvTargetInfoPart len 0x%x\n", gsvr->NtlmAvTargetInfoPart.bUsed);
-    NtlmPrintAvPairs(&gsvr->NtlmAvTargetInfoPart);
     return status;
 }
 
@@ -339,7 +306,6 @@ NtlmTerminateGlobals(VOID)
     ExtStrFree(&g->NbMachineNameOEM);
     ExtStrFree(&g->NbDomainNameOEM);
     ExtStrFree(&gsvr->DnsMachineNameOEM);
-    NtlmAvlFree(&gsvr->NtlmAvTargetInfoPart);
     NtClose(g->NtlmSystemSecurityToken);
 
     DeleteCriticalSection(&g->cs);

@@ -291,7 +291,10 @@ MAC(
         UCHAR dataMD5[16];
 
         if (signLen < sizeof(NTLMSSP_MESSAGE_SIGNATURE))
-            return 0;
+        {
+            TRACE("signLen to small!\n");
+            return FALSE;
+        }
         pmsig = (PNTLMSSP_MESSAGE_SIGNATURE)pSign;
 
         TRACE("NTLM MAC(): Extented Session Security\n");

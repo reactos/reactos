@@ -125,13 +125,17 @@ void
 NtlmPrintAvPairs(
     IN PEXT_DATA pAvData)
 {
-    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvData;
+    PMSV1_0_AV_PAIR pAvPair = (PMSV1_0_AV_PAIR)pAvData->Buffer;
 
     /* warning: the string buffers are not null terminated! */
-#define AV_DESC(av_name) TRACE("%s: len: %xl value: %S\n", av_name, pAvPair->AvLen, av_value);
+    #define AV_DESC(av_name) \
+        TRACE("%s: len: %x value: %.*S\n", \
+              av_name, pAvPair->AvLen, \
+              av_chlen, av_value);
     do
     {
         WCHAR *av_value = (WCHAR*)((PCHAR)pAvPair + sizeof(MSV1_0_AV_PAIR));
+        ULONG av_chlen = pAvPair->AvLen / sizeof(WCHAR);
         switch(pAvPair->AvId)
         {
         case MsvAvNbComputerName:

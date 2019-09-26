@@ -149,8 +149,6 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     //ServerRequire128bitEncryption: A Boolean setting that requires the server to use 128-bit
     //encryption.<60>
 
-    /* vars not in spec (MS-NLMP) */
-    EXT_DATA NtlmAvTargetInfoPart;
     /* SvrLMLevel - "expanded LMCompatiblilyLevel" */
     ULONG SvrLMLevel;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;

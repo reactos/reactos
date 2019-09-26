@@ -172,65 +172,84 @@ CliGenerateNegotiateMessage(
 }
 
 SECURITY_STATUS
+SvrGenerateChallengeMessageBuildTargetInfo(
+    IN OUT PEXT_DATA pTargetInfo)
+{
+    ULONG AvPairsLen;
+    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
+#if 0 /* this is > w2k */
+    FILETIME ts;
+#endif
+
+    /* init global target AV pairs */
+    AvPairsLen = gsvr->NbDomainName.bUsed + //fix me: domain controller name
+                 gsvr->NbMachineName.bUsed + //computer name
+                 gsvr->DnsMachineName.bUsed + //dns computer name
+                 gsvr->DnsMachineName.bUsed + //fix me: dns domain name
+#if 0 /* this is > w2k */
+                 sizeof(ts) +
+                 sizeof(MSV1_0_AV_PAIR)*6;
+#else
+                 sizeof(MSV1_0_AV_PAIR)*5;
+#endif
+    if (!NtlmAvlInit(pTargetInfo, AvPairsLen))
+    {
+        ERR("failed to allocate NtlmAvTargetInfo\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* generate av-list */
+    if (gsvr->NbMachineName.bUsed > 0)
+        NtlmAvlAdd(pTargetInfo, MsvAvNbComputerName,
+                   gsvr->NbMachineName.Buffer, gsvr->NbMachineName.bUsed);
+    if (gsvr->NbDomainName.bUsed > 0)
+        NtlmAvlAdd(pTargetInfo, MsvAvNbDomainName,
+                   gsvr->NbDomainName.Buffer, gsvr->NbDomainName.bUsed);
+    if (gsvr->DnsMachineName.bUsed > 0)
+        NtlmAvlAdd(pTargetInfo, MsvAvDnsComputerName,
+                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
+    /* FIXME: This is not correct! - (same value as above??) */
+    if (gsvr->DnsMachineName.bUsed > 0)
+        NtlmAvlAdd(pTargetInfo, MsvAvDnsDomainName,
+                   gsvr->DnsMachineName.Buffer, gsvr->DnsMachineName.bUsed);
+#if 0 /* this is > w2k */
+    /* timestamp */
+    GetSystemTimeAsFileTime(&ts);
+    NtlmAvlAdd(pTargetInfo, MsvAvTimestamp, &ts, sizeof(ts));
+#endif
+    /* eol */
+    NtlmAvlAdd(pTargetInfo, MsvAvEOL, NULL, 0);
+    //TODO: MsvAvDnsTreeName
+
+    ERR("avlTargetInfo len 0x%x\n", pTargetInfo->bUsed);
+    NtlmPrintAvPairs(pTargetInfo);
+    return SEC_E_OK;
+}
+
+SECURITY_STATUS
 SvrGenerateChallengeMessage(
     IN PNTLMSSP_CONTEXT_SVR Context,
     IN PNTLMSSP_CREDENTIAL Credentials,
     IN ULONG ASCContextReq,
     IN ULONG ASCRequestedFlags,
     IN ULONG negoMsgNegotiateFlags,
-    IN EXT_STRING TargetNameRef,
     OUT PSecBuffer OutputToken)
 {
-    SECURITY_STATUS ret = SEC_I_CONTINUE_NEEDED;
+    SECURITY_STATUS ret = SEC_E_OK;
     PCHALLENGE_MESSAGE chaMessage = NULL;
-    ULONG messageSize, offset;
+    EXT_DATA avlTargetInfo;
+    EXT_DATA TargetNameRef;
+    ULONG messageSize, offset, chaMsgNegFlg;
     PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
+    PNTLMSSP_GLOBALS g = getGlobals();
 
-    #include "pshpack1.h"
-    struct _TargetInfoEnd
-    {
-        MSV1_0_AV_PAIR avpTs;
-        FILETIME ts;
-        MSV1_0_AV_PAIR avpEol;
-    } targetInfoEnd;
-    #include "poppack.h"
+    ExtDataInit(&avlTargetInfo, NULL, 0);
+    ExtDataInit(&TargetNameRef, NULL, 0);
 
-    /* compute message size */
-    messageSize = sizeof(CHALLENGE_MESSAGE) +
-                  gsvr->NtlmAvTargetInfoPart.bUsed +
-                  sizeof(targetInfoEnd) +
-                  TargetNameRef.bUsed;
+    ret = SvrGenerateChallengeMessageBuildTargetInfo(&avlTargetInfo);
+    if (ret != SEC_E_OK)
+        goto done;
 
-    ERR("generating chaMessage of size %lu\n", messageSize);
-
-    if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
-    {
-        if (messageSize > NTLM_MAX_BUF)
-            return SEC_E_INSUFFICIENT_MEMORY;
-        /*
-         * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
-         * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
-         */
-        OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
-        OutputToken->cbBuffer = NTLM_MAX_BUF;
-    }
-    else
-    {
-        if (OutputToken->cbBuffer < messageSize)
-            return SEC_E_BUFFER_TOO_SMALL;
-    }
-
-    /* check allocation */
-    if(!OutputToken->pvBuffer)
-        return SEC_E_INSUFFICIENT_MEMORY;
-
-    /* use allocated memory */
-    chaMessage = (PCHALLENGE_MESSAGE)OutputToken->pvBuffer;
-
-    /* build message
-     * MS-NLMP 3.2.5.1.1 */
-    strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
-    chaMessage->MsgType = NtlmChallenge;
     /* Anyway i think spec (3.2.5.1.1) is here misleading
      * It says set
      * - chaMessage->NegotiateFlags to gsrv-CfgFlg | supported flags from nego-message
@@ -246,27 +265,125 @@ SvrGenerateChallengeMessage(
     if (ASCContextReq & ASC_REQ_DATAGRAM)
     {
         /* ignore negoMsgNegotiateFlags - should be 0 */
-        chaMessage->NegotiateFlags = gsvr->CfgFlg |
-                                     NTLMSSP_REQUEST_TARGET |
-                                     NTLMSSP_NEGOTIATE_NTLM |
-                                     NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                                     NTLMSSP_NEGOTIATE_UNICODE;
+        chaMsgNegFlg = gsvr->CfgFlg |
+                       NTLMSSP_REQUEST_TARGET |
+                       NTLMSSP_NEGOTIATE_NTLM |
+                       NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
+                       NTLMSSP_NEGOTIATE_UNICODE;
     }
     else
     {
-        chaMessage->NegotiateFlags = negoMsgNegotiateFlags;
-        ValidateNegFlg(gsvr->CfgFlg, &chaMessage->NegotiateFlags, TRUE, TRUE);
+        chaMsgNegFlg = negoMsgNegotiateFlags;
+        ValidateNegFlg(gsvr->CfgFlg, &chaMsgNegFlg, TRUE, TRUE);
         /* check: do we use all requested flags */
-        if (!ValidateNegFlg(chaMessage->NegotiateFlags, &ASCRequestedFlags, FALSE, TRUE))
+        if (!ValidateNegFlg(chaMsgNegFlg, &ASCRequestedFlags, FALSE, TRUE))
         {
             ERR("Server-App request for flags that are not negotiated!\n");
-            return SEC_E_INVALID_TOKEN;
+            ret = SEC_E_INVALID_TOKEN;
+            goto done;
+        }
+        // MS-NLMP 3.2.5.1.1
+        //If (NTLMSSP_NEGOTIATE_UNICODE is set in NEGOTIATE.NegotiateFlags)
+        //Set the NTLMSSP_NEGOTIATE_UNICODE flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //ElseIf (NTLMSSP_NEGOTIATE_OEM flag is set in NEGOTIATE.NegotiateFlag)
+        //Set the NTLMSSP_NEGOTIATE_OEM flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //EndIf
+        if (negoMsgNegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
+        {
+            chaMsgNegFlg |= NTLMSSP_NEGOTIATE_UNICODE;
+            chaMsgNegFlg &= (~NTLMSSP_NEGOTIATE_OEM);
+        }
+        else
+        {
+            chaMsgNegFlg |= NTLMSSP_NEGOTIATE_OEM;
+            chaMsgNegFlg &= (~NTLMSSP_NEGOTIATE_UNICODE);
+        }
+        // **************TODO**********
+        //If (NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY flag
+        //is set in NEGOTIATE.NegotiateFlags)
+        //Set the NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //ElseIf (NTLMSSP_NEGOTIATE_LM_KEY flag is set in NEGOTIATE.NegotiateFlag)
+        //Set the NTLMSSP_NEGOTIATE_LM_KEY flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //EndIf
+        // ************************
+
+        //If (Server is domain joined)
+        //Set CHALLENGE_MESSAGE.TargetName to NbDomainName
+        //Set the NTLMSSP_TARGET_TYPE_DOMAIN flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //Else
+        //Set CHALLENGE_MESSAGE.TargetName to NbMachineName
+        //Set the NTLMSSP_TARGET_TYPE_SERVER flag in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        //EndIf
+        if (/*isdomainjoined*/FALSE)
+        {
+            chaMsgNegFlg |= NTLMSSP_TARGET_TYPE_DOMAIN;
+        }
+        else
+        {
+            if (chaMsgNegFlg & NTLMSSP_NEGOTIATE_UNICODE)
+                TargetNameRef = gsvr->NbMachineName;
+            else
+                TargetNameRef = g->NbMachineNameOEM;
+            chaMsgNegFlg |= NTLMSSP_TARGET_TYPE_SERVER;
+        }
+
+        //Set the NTLMSSP_NEGOTIATE_TARGET_INFO and NTLMSSP_REQUEST_TARGET flags in
+        //CHALLENGE_MESSAGE.NegotiateFlags
+        chaMsgNegFlg |= NTLMSSP_NEGOTIATE_TARGET_INFO |
+                        NTLMSSP_REQUEST_TARGET;
+    }
+
+    /* compute message size */
+    messageSize = sizeof(CHALLENGE_MESSAGE) +
+                  avlTargetInfo.bUsed +
+                  TargetNameRef.bUsed;
+
+    ERR("generating chaMessage of size %lu\n", messageSize);
+
+    if (ASCContextReq & ASC_REQ_ALLOCATE_MEMORY)
+    {
+        if (messageSize > NTLM_MAX_BUF)
+        {
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+        /*
+         * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
+         * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
+         */
+        OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
+        OutputToken->cbBuffer = NTLM_MAX_BUF;
+    }
+    else
+    {
+        if (OutputToken->cbBuffer < messageSize)
+        {
+            ret =  SEC_E_BUFFER_TOO_SMALL;
+            goto done;
         }
     }
 
-    // MS-NLMP 3.2.5.1.1
-    chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_TARGET_INFO |
-                                  NTLMSSP_REQUEST_TARGET;
+    /* check allocation */
+    if(!OutputToken->pvBuffer)
+    {
+        ret = SEC_E_INSUFFICIENT_MEMORY;
+        goto done;
+    }
+
+    /* use allocated memory */
+    chaMessage = (PCHALLENGE_MESSAGE)OutputToken->pvBuffer;
+
+    /* build message
+     * MS-NLMP 3.2.5.1.1 */
+    strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
+    chaMessage->MsgType = NtlmChallenge;
+    chaMessage->NegotiateFlags = chaMsgNegFlg;
 
     /* generate server challenge */
     NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
@@ -282,15 +399,8 @@ SvrGenerateChallengeMessage(
     NtlmExtStringToBlob((PVOID)chaMessage, &TargetNameRef, &chaMessage->TargetName, &offset);
 
     ERR("set target information %p, len 0x%x\n, offset 0x%x\n", chaMessage,
-        gsvr->NtlmAvTargetInfoPart.bUsed, offset);
-    NtlmExtStringToBlob((PVOID)chaMessage, &gsvr->NtlmAvTargetInfoPart, &chaMessage->TargetInfo, &offset);
-    /* append filetime and eol */
-    targetInfoEnd.avpTs.AvId = MsvAvTimestamp;
-    targetInfoEnd.avpTs.AvLen = sizeof(targetInfoEnd.ts);
-    GetSystemTimeAsFileTime(&targetInfoEnd.ts);
-    targetInfoEnd.avpEol.AvId = MsvAvEOL;
-    targetInfoEnd.avpEol.AvLen = 0;
-    NtlmAppendToBlob(&targetInfoEnd, sizeof(targetInfoEnd), &chaMessage->TargetInfo, &offset);
+        avlTargetInfo.bUsed, offset);
+    NtlmExtStringToBlob((PVOID)chaMessage, &avlTargetInfo, &chaMessage->TargetInfo, &offset);
 
     /* set version */
     NtlmMsgSetVersion(chaMessage->NegotiateFlags, &chaMessage->Version);
@@ -299,6 +409,10 @@ SvrGenerateChallengeMessage(
     Context->hdr.State = ChallengeSent;
     Context->cli_NegFlg = chaMessage->NegotiateFlags;
 
+done:
+    ExtStrFree(&avlTargetInfo);
+    if (ret == SEC_E_OK)
+        ret = SEC_I_CONTINUE_NEEDED;
     return ret;
 }
 
@@ -318,15 +432,11 @@ SvrHandleNegotiateMessage(
     PNEGOTIATE_MESSAGE negoMessage = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     PNTLMSSP_CONTEXT_SVR context = NULL;
-    EXT_STRING TargetNameRef;
     EXT_STRING_A OemDomainName, OemWorkstationName;
-    PNTLMSSP_GLOBALS_SVR gsvr = getGlobalsSvr();
-    PNTLMSSP_GLOBALS g = getGlobals();
     ULONG ASCRequestedFlags = 0;
 
     ExtAStrInit(&OemDomainName, NULL);
     ExtAStrInit(&OemWorkstationName, NULL);
-    ExtWStrInit(&TargetNameRef, NULL);
 
     if (*phContext == 0)
     {
@@ -412,9 +522,6 @@ SvrHandleNegotiateMessage(
         goto exit;
     }
 
-    /* get Target-name */
-    ExtWStrInit(&TargetNameRef, NULL);
-
     /* convert flags
      * Commented out ... code has no effect ...
      * I have to figure out what to do with these flags ...
@@ -470,7 +577,7 @@ SvrHandleNegotiateMessage(
         context->ASCRetContextFlags |= ASC_RET_ALLOW_NON_USER_LOGONS;
     }*/
 
-    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
+    /*if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
         negoMessage->NegotiateFlags & NTLMSSP_REQUEST_TARGET)
     {
         //negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER;
@@ -489,7 +596,7 @@ SvrHandleNegotiateMessage(
             ERR("flags invalid!\n");
             goto exit;
         }
-    }
+    }*/
 
     /* check for local call */
     /*if ((negotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
@@ -526,7 +633,6 @@ SvrHandleNegotiateMessage(
                                       ASCContextReq,
                                       ASCRequestedFlags,
                                       negoMessage->NegotiateFlags,
-                                      TargetNameRef,
                                       OutputToken);
 
     /* It seems these flags are always returned */
@@ -535,8 +641,8 @@ SvrHandleNegotiateMessage(
 
     if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SEAL)
         *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
-    if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
-        *pASCContextAttr |= ASC_RET_INTEGRITY;
+    //if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
+    //    *pASCContextAttr |= ASC_RET_INTEGRITY;
 
 exit:
     if(negoMessage) NtlmFree(negoMessage);
@@ -580,7 +686,7 @@ CliGenerateAuthenticationMessage(
 
     PAUTHENTICATE_MESSAGE authmessage = NULL;
     ULONG_PTR offset;
-    ULONG messageSize;
+    ULONG messageSize, NegFlg;
     BOOL sendLmChallengeResponse;
     BOOL sendMIC;
     USER_SESSION_KEY SessionBaseKey;
@@ -644,14 +750,29 @@ CliGenerateAuthenticationMessage(
     TRACE("Got valid challege message! with flags:\n");
     NtlmPrintNegotiateFlags(challenge->NegotiateFlags);
 
-    /* validate NegotiateFlags & fail if client wants something
-     * we do not support
-     * TODO: may not correct for datagram-mode! */
-    if (!ValidateNegFlg(gcli->ClientConfigFlags, &challenge->NegotiateFlags, FALSE, TRUE))
+    /* validate NegotiateFlags */
+    NegFlg = challenge->NegotiateFlags;
+    if (NegFlg & NTLMSSP_NEGOTIATE_DATAGRAM)
     {
-        ret = SEC_E_INVALID_TOKEN;
-        goto quit;
+        /* connection-less - this is the coice the client has made
+         * from our last CHALLENGE message */
+        if (!ValidateNegFlg(gcli->ClientConfigFlags, &NegFlg, TRUE, TRUE))
+        {
+            ret = SEC_E_INVALID_TOKEN;
+            goto quit;
+        }
     }
+    else
+    {
+        /* connection oriented - flags are negotiated now, so
+         * fail if client wants something we do not support */
+        if (!ValidateNegFlg(gcli->ClientConfigFlags, &NegFlg, FALSE, FALSE))
+        {
+            ret = SEC_E_INVALID_TOKEN;
+            goto quit;
+        }
+    }
+    context->NegFlg = NegFlg;
 
     /* print challenge message and payloads */
     NtlmPrintHexDump((PBYTE)InputToken1->pvBuffer, InputToken1->cbBuffer);
