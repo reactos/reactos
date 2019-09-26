@@ -36,7 +36,7 @@ BEGIN
         END
         MENUITEM "סדר סמלים", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "רענון", FCIDM_SHVIEW_REFRESH
+        MENUITEM "רענן", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "הדבק", FCIDM_SHVIEW_INSERT
         MENUITEM "הדבק כקיצור דרך", FCIDM_SHVIEW_INSERTLINK
@@ -398,7 +398,7 @@ END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "פתיחה באמצעות"
+CAPTION "פתח באמצעות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
@@ -851,7 +851,7 @@ BEGIN
     IDS_FS_UNKNOWN "לא ידוע"
 
     /* Open With */
-    IDS_OPEN_WITH "פתיחה באמצעות"
+    IDS_OPEN_WITH "פתח באמצעות"
     IDS_OPEN_WITH_CHOOSE "בחירת תכנית..."
     IDS_OPEN_WITH_RECOMMENDED "תכניות מומלצות:"
     IDS_OPEN_WITH_OTHER "תכניות אחרות:"
@@ -864,7 +864,7 @@ BEGIN
     IDS_FOLDER_OPTIONS "אפשרויות תיקיה"
     IDS_RECYCLEBIN_LOCATION "מיקום סל מחזור"
     IDS_RECYCLEBIN_DISKSPACE "שטח פנוי"
-    IDS_EMPTY_BITBUCKET "רקן סל מחזור"
+    IDS_EMPTY_BITBUCKET "רוקן את סל המיחזור"
     IDS_PICK_ICON_TITLE "בחר סמל"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
