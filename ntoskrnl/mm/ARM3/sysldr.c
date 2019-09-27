@@ -2474,14 +2474,10 @@ MiWriteProtectSystemImage(
     /* Get the base address of the first section */
     SectionBase = Add2Ptr(ImageBase, SectionHeaders[0].VirtualAddress);
 
-    /* Start protecting the image header as R/O */
+    /* Protection starts with the image header as R/W */
     FirstPte = MiAddressToPte(ImageBase);
     LastPte = MiAddressToPte(SectionBase) - 1;
-    Protection = IMAGE_SCN_MEM_READ;
-    if (LastPte >= FirstPte)
-    {
-        MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
-    }
+    Protection = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
     /* Loop the sections */
     for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++)
