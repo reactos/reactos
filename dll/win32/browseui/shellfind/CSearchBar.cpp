@@ -122,8 +122,7 @@ HRESULT CSearchBar::GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND 
 
 LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    INT len = 0;
-    WCHAR ptrchar;
+    size_t len = 0;
     WCHAR endchar;
     WCHAR startchar;
 
@@ -138,27 +137,22 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
 
     // See if we have a szFileName, our first character is not an asterisk,
     // and we have room in MAX_PATH to add an asterisk at the beginning of szFileName then add it
-    if (wcscmp(pSearchStart->szFileName, L"") != 0)
+    StringCchLength(pSearchStart->szFileName, MAX_PATH, &len);
+    if ((len > 0) && !StrStrW(pSearchStart->szFileName, L"*") && !StrStrW(pSearchStart->szFileName, L"?"))
     {
-        len = wcslen(pSearchStart->szFileName);
-        if(len > 0)
+        endchar = pSearchStart->szFileName[len - 1];
+        startchar = pSearchStart->szFileName[0];
+        if ((len < MAX_PATH - 1) && (startchar != L'*'))
         {
-            ptrchar = pSearchStart->szFileName[len - 1];
-            endchar = ptrchar;
-            ptrchar = pSearchStart->szFileName[0];
-            startchar = ptrchar;
-            if ((len < MAX_PATH - 1) && (startchar != L'*'))
-            {
-                memmove(&pSearchStart->szFileName[1], &pSearchStart->szFileName[0],
-                       len * sizeof(WCHAR) + sizeof(WCHAR));
-                len = len + 1;
-                pSearchStart->szFileName[0] = L'*';
-            }
+            memmove(&pSearchStart->szFileName[1], &pSearchStart->szFileName[0],
+                   len * sizeof(WCHAR) + sizeof(WCHAR));
+            len = len + 1;
+            pSearchStart->szFileName[0] = L'*';
         }
 
         // See if our last character is an asterisk and if not and we have room then add one
         if ((len < MAX_PATH - 1) && (endchar != L'*'))
-            wcscat(pSearchStart->szFileName, L"*");
+            StringCchCatW(pSearchStart->szFileName, MAX_PATH, L"*");
     }
 
     // Print our final search string for szFileName
