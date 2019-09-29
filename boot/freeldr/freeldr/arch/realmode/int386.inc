@@ -1,10 +1,6 @@
 
 #include "../../include/arch/pc/pcbios.h"
 
-#define EFLAGS_CF HEX(01)
-#define EFLAGS_ZF HEX(40)
-#define EFLAGS_SF HEX(80)
-
 Int386:
     /* Save all registers + segment registers */
     push ds

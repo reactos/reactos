@@ -128,7 +128,7 @@ Reboot:
     ljmp16 HEX(0F000), HEX(0FFF0)
 
 
-ChainLoadBiosBootSectorCode:
+Relocator16Boot:
     cli
 
     /* Disable A20 address line */
@@ -138,14 +138,54 @@ ChainLoadBiosBootSectorCode:
     mov ax, HEX(0003)
     int HEX(10)
 
-    /* Load segment registers */
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    mov esp, HEX(7C00)
+    /* Get current EFLAGS and mask CF, ZF and SF */
+    pushf
+    pop cx
+    and cx, not (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
 
-    /* Jump to the bootsector code */
-    ljmp16 HEX(0000), HEX(7C00)
+    /* Get flags CF, ZF and SF from the REGS structure */
+    mov ax, word ptr cs:[BSS_RegisterSet + REGS_EFLAGS]
+    and ax, (EFLAGS_CF or EFLAGS_ZF or EFLAGS_SF)
+
+    /* Combine flags and set them */
+    or ax, cx
+    push ax
+    popf
+
+    /* Setup the segment registers */
+    mov ax, word ptr cs:[BSS_RegisterSet + REGS_DS]
+    mov ds, ax
+    mov ax, word ptr cs:[BSS_RegisterSet + REGS_ES]
+    mov es, ax
+    mov ax, word ptr cs:[BSS_RegisterSet + REGS_FS]
+    mov fs, ax
+    mov ax, word ptr cs:[BSS_RegisterSet + REGS_GS]
+    mov gs, ax
+
+    /* Patch the jump address (segment:offset) */
+    mov eax, dword ptr cs:[BSS_RealModeEntry]
+    mov dword ptr cs:[Relocator16Address], eax
+
+    /* Switch the stack (segment:offset) */
+    mov eax, dword ptr cs:[BSS_CallbackReturn]
+    shr eax, 16
+    mov ss, ax
+    mov eax, dword ptr cs:[BSS_CallbackReturn]
+    and eax, HEX(0FFFF)
+    mov esp, eax
+
+    /* Setup the registers */
+    mov eax, dword ptr cs:[BSS_RegisterSet + REGS_EAX]
+    mov ebx, dword ptr cs:[BSS_RegisterSet + REGS_EBX]
+    mov ecx, dword ptr cs:[BSS_RegisterSet + REGS_ECX]
+    mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
+    mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
+    mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
+    // Don't setup ebp, we only use it as output! <-- FIXME!
+
+    /* Jump to the new CS:IP (e.g. jump to bootsector code...) */
+    .byte HEX(0EA) // ljmp16 segment:offset
+Relocator16Address:
+    .word HEX(7C00) // Default offset
+    .word HEX(0000) // Default segment
+    nop

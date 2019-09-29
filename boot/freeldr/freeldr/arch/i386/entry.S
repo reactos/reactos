@@ -106,50 +106,58 @@ _Reboot:
     /* Stop the floppy drive motor */
     call _DiskStopFloppyMotor
 
-    /* Set the function ID */
+    /* Set the function ID and switch to real mode (we don't return) */
     mov bx, FNID_Reboot
-
-    /* Switch to real mode (we don't return) */
     jmp SwitchToReal
 
 
 /*
- * VOID __cdecl ChainLoadBiosBootSectorCode(
- *     IN UCHAR BootDrive OPTIONAL,
- *     IN ULONG BootPartition OPTIONAL);
+ * VOID __cdecl Relocator16Boot(
+ *     IN REGS*  In,
+ *     IN USHORT StackSegment,
+ *     IN USHORT StackPointer,
+ *     IN USHORT CodeSegment,
+ *     IN USHORT CodePointer);
  *
- * RETURNS: Nothing
+ * RETURNS: Nothing.
+ *
+ * NOTE: The implementation of this function is similar to that of Int386(),
+ * with the proviso that no attempt is done to save the original values of
+ * the registers since we will not need them anyway, as we do not return back
+ * to the caller but instead place the machine in a permanent new CPU state.
  */
-PUBLIC _ChainLoadBiosBootSectorCode
-_ChainLoadBiosBootSectorCode:
-    /* Set the boot drive */
-    mov dl, [esp + 4]
-    test dl, dl
-    jnz set_part
-    mov dl, byte ptr ds:[_FrldrBootDrive]
+PUBLIC _Relocator16Boot
+_Relocator16Boot:
 
-    /* Set the boot partition */
-set_part:
-    mov eax, [esp + 8]
-    test eax, eax
-    jnz continue
-    mov eax, dword ptr ds:[_FrldrBootPartition]
-continue:
-    /* Store the 1-byte truncated partition number in DH */
-    mov dh, al
+    /* Copy input registers */
+    mov esi, dword ptr [esp + 4]
+    mov edi, BSS_RegisterSet
+    mov ecx, REGS_SIZE / 4
+    rep movsd
+
+    /* Set the stack segment/offset */
+    // Since BSS_CallbackReturn contains a ULONG, store in its high word
+    // the stack segment and in its low word the stack offset.
+    mov ax, word ptr [esp + 8]
+    shl eax, 16
+    mov ax, word ptr [esp + 12]
+    mov dword ptr ds:[BSS_CallbackReturn], eax
 
     /*
-     * Don't stop the floppy drive motor when we are just booting a bootsector,
-     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
-     * wouldn't be informed and if the next read is to a floppy then the BIOS
-     * will still think the motor is on and this will result in a read error.
+     * Set the code segment/offset (Copy entry point)
+     * NOTE: We permanently *ERASE* the contents of ds:[BSS_RealModeEntry]
+     * but it is not a problem since we are going to place the machine in
+     * a permanent new CPU state.
      */
-    // call _DiskStopFloppyMotor
+    // Since BSS_RealModeEntry contains a ULONG, store in its high word
+    // the code segment and in its low word the code offset.
+    mov ax, word ptr [esp + 16]
+    shl eax, 16
+    mov ax, word ptr [esp + 20]
+    mov dword ptr ds:[BSS_RealModeEntry], eax
 
-    /* Set the function ID */
-    mov bx, FNID_ChainLoadBiosBootSectorCode
-
-    /* Switch to real mode (we don't return) */
+    /* Set the function ID and switch to real mode (we don't return) */
+    mov bx, FNID_Relocator16Boot
     jmp SwitchToReal
 
 

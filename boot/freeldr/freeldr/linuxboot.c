@@ -154,6 +154,17 @@ LoadAndBootLinux(
         }
     }
 
+    /* If we haven't retrieved the BIOS drive and partition numbers above, do it now */
+    if (PartitionNumber == 0)
+    {
+        /* Retrieve the BIOS drive and partition numbers */
+        if (!DissectArcPath(BootPath, NULL, &DriveNumber, &PartitionNumber))
+        {
+            /* This is not a fatal failure, but just an inconvenience: display a message */
+            TRACE("DissectArcPath(%s) failed to retrieve BIOS drive and partition numbers.\n", BootPath);
+        }
+    }
+
     /* Get the kernel name */
     LinuxKernelName = GetArgumentValue(Argc, Argv, "Kernel");
     if (!LinuxKernelName || !*LinuxKernelName)
@@ -259,11 +270,13 @@ LoadAndBootLinux(
     UiUnInitialize("Booting Linux...");
     IniCleanup();
 
-    if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
-        BootNewLinuxKernel();
-    else
-        BootOldLinuxKernel(LinuxKernelSize);
-
+    BootLinuxKernel(LinuxKernelSize, LinuxKernelLoadAddress,
+                    (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
+                        ? (PVOID)LINUX_KERNEL_LOAD_ADDRESS /* == 0x100000 */
+                        : (PVOID)0x10000,
+                    DriveNumber, PartitionNumber);
+    /* Must not return! */
+    return ESUCCESS;
 
 LinuxBootFailed:
 
@@ -407,11 +420,17 @@ static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
     RtlStringCbPrintfA(StatusText, sizeof(StatusText), "Loading %s", LinuxKernelName);
     UiDrawStatusText(StatusText);
 
-    /* Allocate memory for Linux kernel */
+    /* Try to allocate memory for the Linux kernel; if it fails, allocate somewhere else */
     LinuxKernelLoadAddress = MmAllocateMemoryAtAddress(LinuxKernelSize, (PVOID)LINUX_KERNEL_LOAD_ADDRESS, LoaderSystemCode);
     if (LinuxKernelLoadAddress != (PVOID)LINUX_KERNEL_LOAD_ADDRESS)
     {
-        return FALSE;
+        /* It's OK, let's allocate again somewhere else */
+        LinuxKernelLoadAddress = MmAllocateMemoryWithType(LinuxKernelSize, LoaderSystemCode);
+        if (LinuxKernelLoadAddress == NULL)
+        {
+            TRACE("Failed to allocate 0x%lx bytes for the kernel image.\n", LinuxKernelSize);
+            return FALSE;
+        }
     }
 
     LoadAddress = LinuxKernelLoadAddress;
