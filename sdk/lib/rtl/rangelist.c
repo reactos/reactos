@@ -74,6 +74,46 @@ RtlpCreateRangeListEntry(
     return RtlEntry;
 }
 
+NTSTATUS
+NTAPI 
+RtlpAddRange(
+    _In_ PLIST_ENTRY ListHead,
+    _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
+    _In_ ULONG Flags)
+{
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+  
+    PAGED_CODE_RTL();
+    ASSERT(AddRtlEntry);
+
+    DPRINT("RtlpAddRange: [%X] %p, %p [%I64X-%I64X]\n", Flags, ListHead, AddRtlEntry, AddRtlEntry->Start, AddRtlEntry->End);
+
+    AddRtlEntry->PublicFlags &= ~RTL_RANGE_CONFLICT;
+
+    for (RtlEntry = RtlpEntryFromLink(ListHead->Flink);
+         &RtlEntry->ListEntry != ListHead;
+         RtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink))
+    {
+        if (AddRtlEntry->End < RtlEntry->Start)
+        {
+            DPRINT("RtlpAddRange: Add before. Entry [%I64X-%I64X], Add [%I64X-%I64X]\n", RtlEntry->Start, RtlEntry->End, AddRtlEntry->Start, AddRtlEntry->End);
+            InsertHeadList(RtlEntry->ListEntry.Blink, &AddRtlEntry->ListEntry);
+            return STATUS_SUCCESS;
+        }
+
+        if (IsRangesIntersection(RtlEntry, AddRtlEntry))
+        {
+            DPRINT("RtlpAddRange: IntersectingRanges. Entry [%I64X-%I64X], AddEntry [%I64X-%I64X]\n", RtlEntry->Start, RtlEntry->End, AddRtlEntry->Start, AddRtlEntry->End);
+            return RtlpAddIntersectingRanges(ListHead, RtlEntry, AddRtlEntry, Flags);
+        }
+    }
+
+    DPRINT("RtlpAddRange: Add to end ranges\n");
+    InsertTailList(ListHead, &AddRtlEntry->ListEntry);
+
+    return STATUS_SUCCESS;
+}
+
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlAddRange
