@@ -1428,49 +1428,54 @@ RtlGetFirstRange(
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
-                    IN ULONGLONG Start,
-                    IN ULONGLONG End,
-                    IN ULONG Flags,
-                    IN UCHAR AttributeAvailableMask,
-                    IN PVOID Context OPTIONAL,
-                    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-                    OUT PBOOLEAN Available)
+RtlIsRangeAvailable(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ ULONG Flags,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_ PVOID Context OPTIONAL,
+    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+    _Out_ PBOOLEAN Available)
 {
-    PRTL_RANGE_ENTRY Current;
-    PLIST_ENTRY Entry;
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE RtlRange;
+    NTSTATUS Status;
 
-    *Available = TRUE;
+    PAGED_CODE_RTL();
+    DPRINT("RtlIsRangeAvailable: [%X] %p, [%I64X-%I64X], %X\n", Flags, RangeList, Start, End, AttributeAvailableMask);
 
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
+    ASSERT(RangeList);
+    ASSERT(Available);
+
+    Status = RtlGetFirstRange(RangeList, &Iterator, &RtlRange);
+
+    if (Status == STATUS_NO_MORE_ENTRIES)
     {
-        Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-
-        if (!((Current->Range.Start >= End && Current->Range.End > End) ||
-              (Current->Range.Start <= Start && Current->Range.End < Start &&
-               (!(Flags & RTL_RANGE_SHARED) ||
-                !(Current->Range.Flags & RTL_RANGE_SHARED)))))
-        {
-            if (Callback != NULL)
-            {
-                *Available = Callback(Context,
-                                      &Current->Range);
-            }
-            else
-            {
-                *Available = FALSE;
-            }
-        }
-
-        Entry = Entry->Flink;
+        *Available = TRUE;
+        return STATUS_SUCCESS;
     }
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlIsRangeAvailable: Status %X\n", Status);
+        return Status;
+    }
+
+    *Available = RtlpIsRangeAvailable(&Iterator,
+                                      Start,
+                                      End,
+                                      AttributeAvailableMask,
+                                      ((Flags & RTL_RANGE_LIST_SHARED_OK) != 0),
+                                      ((Flags & RTL_RANGE_LIST_NULL_CONFLICT_OK) != 0),
+                                      TRUE,
+                                      Context,
+                                      Callback);
     return STATUS_SUCCESS;
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED
