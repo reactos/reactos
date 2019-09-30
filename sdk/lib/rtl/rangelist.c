@@ -642,6 +642,98 @@ RtlCopyRangeList(
  */
 NTSTATUS
 NTAPI
+RtlpDeleteFromMergedRange(
+    _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
+    _In_ PRTLP_RANGE_LIST_ENTRY MergedRtlEntry)
+{
+    PRTLP_RANGE_LIST_ENTRY CurrentRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+    LIST_ENTRY TmpList;
+    NTSTATUS Status;
+
+    PAGED_CODE_RTL();
+    DPRINT("Deleting merged range %p [%I64X-%I64X] from %p\n", MergedRtlEntry, MergedRtlEntry->Start, MergedRtlEntry->End, RtlEntry);
+
+    ASSERT((RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED));
+
+    InitializeListHead(&TmpList);
+    RemoveEntryList(&MergedRtlEntry->ListEntry);
+
+    CurrentRtlEntry = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Flink);
+    NextRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink);
+
+    while (&CurrentRtlEntry->ListEntry != &RtlEntry->Merged.ListHead)
+    {
+        RemoveEntryList(&CurrentRtlEntry->ListEntry);
+        CurrentRtlEntry->PublicFlags &= ~RTL_RANGE_CONFLICT;
+
+        DPRINT("RtlpDeleteFromMergedRange: Add %p to TmpList\n", CurrentRtlEntry);
+
+        Status = RtlpAddRange(&TmpList, CurrentRtlEntry, RTL_RANGE_LIST_ADD_IF_CONFLICT);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status != STATUS_INSUFFICIENT_RESOURCES)
+            {
+                DPRINT1("RtlpDeleteFromMergedRange: Status %X\n", Status);
+                ASSERT(Status == STATUS_INSUFFICIENT_RESOURCES);
+            }
+            else
+            {
+                DPRINT1("RtlpDeleteFromMergedRange: STATUS_INSUFFICIENT_RESOURCES\n");
+            }
+
+            CurrentRtlEntry = RtlpEntryFromLink(TmpList.Flink);
+            NextRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink);
+
+            while (&TmpList != &CurrentRtlEntry->ListEntry)
+            {
+                Status = RtlpAddToMergedRange(RtlEntry, CurrentRtlEntry, RTL_RANGE_LIST_ADD_IF_CONFLICT);
+                ASSERT(NT_SUCCESS(Status));
+
+                CurrentRtlEntry = NextRtlEntry;
+                NextRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink);
+            }
+
+            return RtlpAddToMergedRange(RtlEntry, MergedRtlEntry, RTL_RANGE_LIST_ADD_IF_CONFLICT);
+        }
+
+        CurrentRtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(NextRtlEntry->ListEntry.Flink);
+    }
+
+    if (IsListEmpty(&TmpList))
+    {
+        DPRINT("RtlpDeleteFromMergedRange: IsListEmpty(&TmpList)\n");
+        RemoveEntryList(&RtlEntry->ListEntry);
+    }
+    else
+    {
+        PLIST_ENTRY Flink;
+        PLIST_ENTRY Blink;
+
+        DPRINT("RtlpDeleteFromMergedRange: Add entry from TmpList\n");
+
+        Blink = RtlEntry->ListEntry.Blink;
+        Flink = RtlEntry->ListEntry.Flink;
+
+        Blink->Flink = TmpList.Flink;
+        TmpList.Flink->Blink = Blink;
+
+        Flink->Blink = TmpList.Blink;
+        TmpList.Blink->Flink = Flink;
+    }
+
+    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, MergedRtlEntry);
+    RtlpFreeMemory(MergedRtlEntry, 'elRR');
+    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
+    RtlpFreeMemory(RtlEntry, 'elRR');
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 RtlDeleteOwnersRanges(
     _In_ PRTL_RANGE_LIST RangeList,
     _In_ PVOID Owner)
