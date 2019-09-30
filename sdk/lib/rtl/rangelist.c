@@ -109,6 +109,137 @@ RtlpCreateRangeListEntry(
 
 NTSTATUS
 NTAPI 
+RtlpAddIntersectingRanges(
+    _In_ PLIST_ENTRY ListHead,
+    _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
+    _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
+    _In_ ULONG Flags)
+{
+    PRTLP_RANGE_LIST_ENTRY CurrentRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextMergedRtlEntry;
+    NTSTATUS Status;
+    BOOLEAN AddRtlEntryIsShared;
+    BOOLEAN MergedRtlEntryIsShared;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlpAddIntersectingRanges: [%X], %p, %p [%I64X-%I64X], %p [%I64X-%I64X]\n", Flags, ListHead, RtlEntry, RtlEntry->Start, RtlEntry->End, AddRtlEntry, AddRtlEntry->Start, AddRtlEntry->End);
+
+    ASSERT(RtlEntry);
+    ASSERT(AddRtlEntry);
+
+    AddRtlEntryIsShared = (AddRtlEntry->PublicFlags & RTL_RANGE_SHARED);
+
+    if ((Flags & RTL_RANGE_LIST_ADD_IF_CONFLICT) == 0)
+    {
+        for(CurrentRtlEntry = RtlEntry;
+            &CurrentRtlEntry->ListEntry != ListHead;
+            CurrentRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink))
+        {
+            if (AddRtlEntry->End < CurrentRtlEntry->Start) {
+                break;
+            }
+
+            if (CurrentRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
+            {
+                for (MergedRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->Merged.ListHead.Flink);
+                     &MergedRtlEntry->ListEntry != &CurrentRtlEntry->Merged.ListHead;
+                     MergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink))
+                {
+                    MergedRtlEntryIsShared = (MergedRtlEntry->PublicFlags & RTL_RANGE_SHARED);
+
+                    if (IsRangesIntersection(MergedRtlEntry, AddRtlEntry) &&
+                        !(AddRtlEntryIsShared && MergedRtlEntryIsShared))
+                    {
+                        DPRINT1("RtlpAddIntersectingRanges: STATUS_RANGE_LIST_CONFLICT\n");
+                        return STATUS_RANGE_LIST_CONFLICT;
+                    }
+                }
+            }
+            else if (!AddRtlEntryIsShared ||
+                     !(CurrentRtlEntry->PublicFlags & RTL_RANGE_SHARED))
+            {
+                DPRINT1("RtlpAddIntersectingRanges: STATUS_RANGE_LIST_CONFLICT\n");
+                return STATUS_RANGE_LIST_CONFLICT;
+            }
+        }
+    }
+
+    if (!(RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
+    {
+        Status = RtlpConvertToMergedRange(RtlEntry);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("RtlpAddIntersectingRanges: Status %X\n", Status);
+            return Status;
+        }
+    }
+
+    ASSERT((RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED));
+
+    CurrentRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+    NextRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink);
+
+    while (&CurrentRtlEntry->ListEntry != ListHead)
+    {
+        if (AddRtlEntry->End < CurrentRtlEntry->Start)
+        {
+            break;
+        }
+
+        if (CurrentRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
+        {
+            DPRINT("RtlpAddIntersectingRanges: PrivateFlags & RTLP_ENTRY_IS_MERGED\n");
+            DbgBreakPoint();
+
+            MergedRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->Merged.ListHead.Flink);
+            NextMergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
+
+            while (&MergedRtlEntry->ListEntry != &CurrentRtlEntry->Merged.ListHead)
+            {
+                RemoveEntryList(&MergedRtlEntry->ListEntry);
+
+                DPRINT("RtlpAddIntersectingRanges: MergedRtlEntry %p [%I64X-%I64X]\n", MergedRtlEntry, MergedRtlEntry->Start, MergedRtlEntry->End);
+
+                Status = RtlpAddToMergedRange(RtlEntry, MergedRtlEntry, Flags);
+                ASSERT(NT_SUCCESS(Status));
+
+                MergedRtlEntry = NextMergedRtlEntry;
+                NextMergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
+            }
+
+            ASSERT(IsListEmpty(&CurrentRtlEntry->Merged.ListHead));
+
+            RemoveEntryList(&CurrentRtlEntry->ListEntry);
+
+            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, CurrentRtlEntry);
+            RtlpFreeMemory(CurrentRtlEntry, 'elRR');
+        }
+        else
+        {
+            RemoveEntryList(&CurrentRtlEntry->ListEntry);
+
+            DPRINT("RtlpAddIntersectingRanges: CurrentRtlEntry %p [%I64X-%I64X]\n", CurrentRtlEntry, CurrentRtlEntry->Start, CurrentRtlEntry->End);
+
+            Status = RtlpAddToMergedRange(RtlEntry, CurrentRtlEntry, Flags);
+            ASSERT(NT_SUCCESS(Status));
+        }
+
+        CurrentRtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink);
+    }
+
+    DPRINT("RtlpAddIntersectingRanges: AddRtlEntry %p [%I64X-%I64X]\n", AddRtlEntry, AddRtlEntry->Start, AddRtlEntry->End);
+
+    Status = RtlpAddToMergedRange(RtlEntry, AddRtlEntry, Flags);
+    ASSERT(NT_SUCCESS(Status));
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI 
 RtlpAddRange(
     _In_ PLIST_ENTRY ListHead,
     _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
