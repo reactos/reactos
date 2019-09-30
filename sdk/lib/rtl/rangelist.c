@@ -57,106 +57,54 @@
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
-            IN ULONGLONG Start,
-            IN ULONGLONG End,
-            IN UCHAR Attributes,
-            IN ULONG Flags,
-            IN PVOID UserData OPTIONAL,
-            IN PVOID Owner OPTIONAL)
+RtlAddRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ UCHAR Attributes,
+    _In_ ULONG Flags,
+    _In_opt_ PVOID UserData,
+    _In_opt_ PVOID Owner)
 {
-    PRTLP_RANGE_LIST_ENTRY RangeEntry;
-    PRTLP_RANGE_LIST_ENTRY Current;
-    PLIST_ENTRY Entry;
+    PRTLP_RANGE_LIST_ENTRY AddRtlEntry;
     NTSTATUS Status;
 
     PAGED_CODE_RTL();
-    DPRINT("RtlAddRange: RangeList - %p [%I64X-%I64X], Count - %X, Attributes - %X, Flags - %X, UserData - %X, Owner - %X\n",
-           RangeList, Start, End, RangeList->Count, Attributes, Flags, UserData, Owner);
+    DPRINT("RtlAddRange: [%X] %p [%I64X-%I64X], %X, %X, %X, %X\n", Flags, RangeList, Start, End, RangeList->Count, Attributes, UserData, Owner);
 
-    if (Start > End)
+    if (End < Start)
     {
+        DPRINT1("RtlAddRange: STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Create new range entry */
-    RangeEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
-    //RangeEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList); // FIXME
-
-    if (RangeEntry == NULL)
+    AddRtlEntry = RtlpCreateRangeListEntry(Start, End, Attributes, UserData, Owner);
+    if (!AddRtlEntry)
     {
+        DPRINT1("RtlAddRange: STATUS_INSUFFICIENT_RESOURCES\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RangeEntry->Start = Start;
-    RangeEntry->End = End;
-
-    RangeEntry->Allocated.UserData = UserData;
-    RangeEntry->Allocated.Owner = Owner;
-
-    RangeEntry->ListEntry.Flink = NULL;
-    RangeEntry->ListEntry.Blink = NULL;
-
-    RangeEntry->PublicFlags = 0;
-    RangeEntry->PrivateFlags = 0;
-    RangeEntry->Attributes = Attributes;
-
     if (Flags & RTL_RANGE_LIST_ADD_SHARED)
     {
-        RangeEntry->PublicFlags |= RTL_RANGE_SHARED;
-    }
-  
-    RangeEntry->PublicFlags &= ~RTL_RANGE_CONFLICT;
-
-    /* Insert range entry */
-    if (RangeList->Count == 0)
-    {
-        /* Insert tail */
-        InsertTailList(&RangeList->ListHead, &RangeEntry->ListEntry);
-        Status =  STATUS_SUCCESS;
-    }
-    else
-    {
-        for (Entry = RangeList->ListHead.Flink;
-             Entry != &RangeList->ListHead;
-             Entry = Entry->Flink)
-        {
-            Current = CONTAINING_RECORD(Entry, RTLP_RANGE_LIST_ENTRY, ListEntry);
-            if (Current->Start > RangeEntry->End)
-            {
-                /* Insert before current */
-                InsertHeadList(Current->ListEntry.Blink, &RangeEntry->ListEntry);
-                Status = STATUS_SUCCESS;
-                break;
-            }
-
-            if ((Current->Start <= RangeEntry->Start || Current->Start <= RangeEntry->End) &&
-                (Current->Start > RangeEntry->Start || Current->End > RangeEntry->Start))
-            {
-                /* Intersecting ranges */
-                DPRINT("RtlAddRange: Current [%I64X - %I64X], RangeEntry [%I64X - %I64X]\n",
-                       Current->Start, Current->End, RangeEntry->Start, RangeEntry->End);
-
-                ASSERT(FALSE);
-                Status = 0;//RtlpAddIntersectingRanges(RangeList, Current, RangeEntry, Flags);
-                break;
-            }
-        }
+        AddRtlEntry->PublicFlags |= RTL_RANGE_SHARED;
     }
 
+    Status = RtlpAddRange(&RangeList->ListHead, AddRtlEntry, Flags);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("RtlAddRange: Status %X\n", Status);
         ASSERT(FALSE);
-        RtlpFreeMemory(RangeEntry, 'elRR');
-        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RangeEntry);
+        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, AddRtlEntry);
+        RtlpFreeMemory(AddRtlEntry, 'elRR');
+        return Status;
     }
-    else
-    {
-        RangeList->Count++;
-        RangeList->Stamp++;
-    }
+
+    RangeList->Count++;
+    RangeList->Stamp++;
 
     return Status;
 }
