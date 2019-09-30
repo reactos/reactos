@@ -1355,29 +1355,53 @@ RtlFreeRangeList(
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlGetFirstRange(IN PRTL_RANGE_LIST RangeList,
-                 OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-                 OUT PRTL_RANGE *Range)
+RtlGetFirstRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Out_ PRTL_RANGE * OutRange)
 {
+    PRTLP_RANGE_LIST_ENTRY FirstRtlEntry;
+
     Iterator->RangeListHead = &RangeList->ListHead;
-    Iterator->MergedHead = NULL;
     Iterator->Stamp = RangeList->Stamp;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlGetFirstRange: %p, %X, Iterator %p\n", RangeList, RangeList->Count, Iterator);
 
     if (IsListEmpty(&RangeList->ListHead))
     {
         Iterator->Current = NULL;
-        *Range = NULL;
+        Iterator->MergedHead = NULL;
+
+        *OutRange = NULL;
+
         return STATUS_NO_MORE_ENTRIES;
     }
 
-    Iterator->Current = RangeList->ListHead.Flink;
-    *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+    FirstRtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
+
+    if (FirstRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
+    {
+        ASSERT(!IsListEmpty(&FirstRtlEntry->Merged.ListHead));
+
+        Iterator->MergedHead = &FirstRtlEntry->Merged.ListHead;
+        Iterator->Current = RtlpEntryFromLink(FirstRtlEntry->Merged.ListHead.Flink);
+    }
+    else
+    {
+        Iterator->MergedHead = NULL;
+        Iterator->Current = FirstRtlEntry;
+    }
+
+    *OutRange = Iterator->Current;
+
+    DPRINT("RtlGetFirstRange: *OutRange %p\n", *OutRange);
 
     return STATUS_SUCCESS;
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED
