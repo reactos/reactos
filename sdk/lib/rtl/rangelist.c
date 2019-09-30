@@ -1125,6 +1125,59 @@ RtlpIsRangeAvailable(
     return TRUE;
 }
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLastRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Out_ PRTL_RANGE * OutRange)
+{
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlGetLastRange: RangeList %p, Iterator %p\n", RangeList, Iterator);
+
+    Iterator->RangeListHead = &RangeList->ListHead;
+    Iterator->Stamp = RangeList->Stamp;
+
+    if (IsListEmpty(&RangeList->ListHead))
+    {
+        DPRINT("RtlGetLastRange: return STATUS_NO_MORE_ENTRIES\n");
+
+        Iterator->Current = NULL;
+        Iterator->MergedHead = NULL;
+        *OutRange = NULL;
+
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
+    RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Blink);
+    //DPRINT("RtlGetLastRange: Iterator->RangeListHead %p, Iterator->Stamp %X, RtlEntry %p\n", Iterator->RangeListHead, Iterator->Stamp, RtlEntry);
+
+    if (RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
+    {
+        ASSERT(!IsListEmpty(&RtlEntry->Merged.ListHead));
+
+        Iterator->MergedHead = &RtlEntry->Merged.ListHead;
+        Iterator->Current = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Blink);
+
+        DPRINT("RtlGetLastRange: MergedHead %X, Current %p\n", Iterator->MergedHead, Iterator->Current);
+    }
+    else
+    {
+        Iterator->MergedHead = NULL;
+        Iterator->Current = RtlEntry;
+        //DPRINT("RtlGetLastRange: Iterator->MergedHead %p, Iterator->Current %p\n", Iterator->MergedHead, Iterator->Current);
+    }
+
+    *OutRange = (PRTL_RANGE)Iterator->Current;
+
+    DPRINT("RtlGetLastRange: *OutRange %p, [%I64X-%I64X]\n", Iterator->Current, (*OutRange)->Start, (*OutRange)->End);
+
+    return STATUS_SUCCESS;
+}
+
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlFindRange
