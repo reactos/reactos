@@ -66,6 +66,44 @@ IsRangesIntersection(
     }
 }
 
+VOID
+NTAPI
+RtlpDeleteRangeListEntry(
+    _In_ PRTLP_RANGE_LIST_ENTRY DelEntry)
+{
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlpDeleteRangeListEntry: DelEntry %p\n", DelEntry);
+
+    if (!(DelEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
+    {
+        goto Finish;
+    }
+
+    RtlEntry = RtlpEntryFromLink(DelEntry->Merged.ListHead.Flink);
+    NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+
+    while (&RtlEntry->ListEntry != &DelEntry->Merged.ListHead)
+    {
+        DPRINT("RtlpDeleteRangeListEntry: Free RtlEntry %p, [%I64X-%I64X]\n", RtlEntry, RtlEntry->Start, RtlEntry->End);
+
+        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
+        RtlpFreeMemory(RtlEntry, 'elRR');
+
+        RtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+    }
+
+Finish:
+
+    DPRINT("RtlpDeleteRangeListEntry: Free DelEntry %p, [%I64X-%I64X]\n", DelEntry, DelEntry->Start, DelEntry->End);
+
+    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, DelEntry);
+    RtlpFreeMemory(DelEntry, 'elRR');
+}
+
 PRTLP_RANGE_LIST_ENTRY
 NTAPI
 RtlpCopyRangeListEntry(
