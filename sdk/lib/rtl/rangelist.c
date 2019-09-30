@@ -109,6 +109,86 @@ RtlpCreateRangeListEntry(
 
 NTSTATUS
 NTAPI
+RtlpAddToMergedRange(
+    _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
+    _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
+    _In_ UCHAR Flags)
+{
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+    PLIST_ENTRY ListEntry = NULL;
+    BOOLEAN RtlEntryIsShared;
+    BOOLEAN AddRtlEntryIsShared;
+    BOOLEAN MergedRtlEntryIsShared;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlpAddToMergedRange: %p [%I64X-%I64X], %p [%I64X-%I64X]\n", RtlEntry, RtlEntry->Start, RtlEntry->End, AddRtlEntry, AddRtlEntry->Start, AddRtlEntry->End);
+
+    ASSERT(RtlEntry);
+    ASSERT(AddRtlEntry);
+    ASSERT((RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED));
+
+    AddRtlEntryIsShared = AddRtlEntry->PublicFlags & RTL_RANGE_SHARED;
+
+    for (MergedRtlEntry = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Flink);
+         &MergedRtlEntry->ListEntry != &RtlEntry->Merged.ListHead;
+         MergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink))
+    {
+        MergedRtlEntryIsShared = MergedRtlEntry->PublicFlags & RTL_RANGE_SHARED;
+
+        if (IsRangesIntersection(MergedRtlEntry, AddRtlEntry) &&
+            !(AddRtlEntryIsShared && MergedRtlEntryIsShared))
+        {
+            if ((Flags & RTL_RANGE_LIST_ADD_IF_CONFLICT) == 0)
+            {
+                DPRINT1("RtlpAddToMergedRange: STATUS_RANGE_LIST_CONFLICT\n");
+                return STATUS_RANGE_LIST_CONFLICT;
+            }
+
+            MergedRtlEntry->PublicFlags |= RTL_RANGE_CONFLICT;
+            AddRtlEntry->PublicFlags |= RTL_RANGE_CONFLICT;
+        }
+
+        if (ListEntry == NULL && (MergedRtlEntry->Start > AddRtlEntry->Start))
+        {
+            ListEntry = MergedRtlEntry->ListEntry.Blink;
+        }
+    }
+
+    if (ListEntry)
+    {
+        AddRtlEntry->ListEntry.Flink = ListEntry->Flink;
+        AddRtlEntry->ListEntry.Blink = ListEntry;
+        ListEntry->Flink->Blink = &AddRtlEntry->ListEntry;
+        ListEntry->Flink = &AddRtlEntry->ListEntry;
+    }
+    else
+    {
+        InsertTailList(&RtlEntry->Merged.ListHead, &AddRtlEntry->ListEntry);
+    }
+
+    if (AddRtlEntry->Start < RtlEntry->Start)
+    {
+        RtlEntry->Start = AddRtlEntry->Start;
+    }
+
+    if (AddRtlEntry->End > RtlEntry->End)
+    {
+        RtlEntry->End = AddRtlEntry->End;
+    }
+
+    RtlEntryIsShared = (RtlEntry->PublicFlags & RTL_RANGE_SHARED);
+
+    if (RtlEntryIsShared && !AddRtlEntryIsShared)
+    {
+        DPRINT("RtlpAddToMergedRange: Merged range no longer completely shared\n");
+        RtlEntry->PublicFlags &= ~RTL_RANGE_SHARED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 RtlpConvertToMergedRange(
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry)
 {
