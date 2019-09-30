@@ -33,6 +33,47 @@
 
 /* FUNCTIONS ***************************************************************/
 
+PRTLP_RANGE_LIST_ENTRY
+NTAPI
+RtlpCreateRangeListEntry(
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ UCHAR Attributes,
+    _In_ PVOID UserData,
+    _In_ PVOID Owner)
+{
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+
+    PAGED_CODE_RTL();
+    ASSERT(Start <= End);
+
+    //RtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
+    RtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+    if (!RtlEntry)
+    {
+        DPRINT1("RtlpCreateRangeListEntry: RtlpAllocateMemory failed\n");
+        return NULL;
+    }
+
+    DPRINT("RtlpCreateRangeListEntry: %p [%I64X-%I64X], %X, %p, %p\n", RtlEntry, Start, End, Attributes, UserData, Owner);
+
+    RtlEntry->Start = Start;
+    RtlEntry->End = End;
+
+    RtlEntry->Allocated.UserData = UserData;
+    RtlEntry->Allocated.Owner = Owner;
+
+    RtlEntry->ListEntry.Flink = NULL;
+    RtlEntry->ListEntry.Blink = NULL;
+
+    RtlEntry->PublicFlags = 0;
+    RtlEntry->PrivateFlags = 0;
+
+    RtlEntry->Attributes = Attributes;
+
+    return RtlEntry;
+}
+
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlAddRange
@@ -73,7 +114,7 @@ RtlAddRange(
     NTSTATUS Status;
 
     PAGED_CODE_RTL();
-    DPRINT("RtlAddRange: [%X] %p [%I64X-%I64X], %X, %X, %X, %X\n", Flags, RangeList, Start, End, RangeList->Count, Attributes, UserData, Owner);
+    DPRINT("RtlAddRange: [%X] %p [%I64X-%I64X], %X, %X, %p, %p\n", Flags, RangeList, Start, End, RangeList->Count, Attributes, UserData, Owner);
 
     if (End < Start)
     {
