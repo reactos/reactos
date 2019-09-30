@@ -1059,89 +1059,93 @@ RtlGetNextRange(
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlFindRange(IN PRTL_RANGE_LIST RangeList,
-             IN ULONGLONG Minimum,
-             IN ULONGLONG Maximum,
-             IN ULONG Length,
-             IN ULONG Alignment,
-             IN ULONG Flags,
-             IN UCHAR AttributeAvailableMask,
-             IN PVOID Context OPTIONAL,
-             IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-             OUT PULONGLONG Start)
+RtlFindRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Minimum,
+    _In_ ULONGLONG Maximum,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment,
+    _In_ ULONG Flags,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_ PVOID Context OPTIONAL,
+    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+    _Out_ PULONGLONG OutStart)
 {
-    PRTL_RANGE_ENTRY CurrentEntry;
-    PRTL_RANGE_ENTRY NextEntry;
-    PLIST_ENTRY Entry;
-    ULONGLONG RangeMin;
-    ULONGLONG RangeMax;
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE TmpRange;
+    ULONGLONG Start;
+    ULONGLONG End;
 
-    if (Alignment == 0 || Length == 0)
+    PAGED_CODE_RTL();
+    DPRINT("RtlFindRange: [%X] %p, %X, [%I64X-%I64X], %X, %X\n", Flags, RangeList, RangeList->Count, Minimum, Maximum, Length, Alignment);
+
+    ASSERT(RangeList);
+    ASSERT(OutStart);
+    ASSERT(Alignment > 0);
+    ASSERT(Length > 0);
+
+    Start = Maximum - (Length - 1) - ((Maximum - (Length - 1)) % Alignment);
+
+    if ((Minimum > Maximum) ||
+        ((Maximum - Minimum) < (Length - 1)) ||
+        ((Minimum + Alignment) < Minimum) ||
+        (Start < Minimum) ||
+        Length == 0 ||
+        Alignment == 0)
     {
+      #ifdef NDEBUG
+        DPRINT1("RtlFindRange: [%X] %p, %X, [%I64X-%I64X], %X, %X\n", Flags, RangeList, RangeList->Count, Minimum, Maximum, Length, Alignment);
+      #endif
+
+        DPRINT1("RtlFindRange: Testing: STATUS_INVALID_PARAMETER\n");
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (IsListEmpty(&RangeList->ListHead))
+    End = Start + Length - 1;
+    RtlGetLastRange(RangeList, &Iterator, &TmpRange);
+
+    do
     {
-        *Start = ROUND_DOWN(Maximum - (Length - 1), Alignment);
-        return STATUS_SUCCESS;
-    }
+        DPRINT("RtlFindRange: Testing [%I64X-%I64X]\n", Start, End);
 
-    NextEntry = NULL;
-    Entry = RangeList->ListHead.Blink;
-    while (Entry != &RangeList->ListHead)
-    {
-        CurrentEntry = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-
-        RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-        if (RangeMax + (Length - 1) < Minimum)
+        if (RtlpIsRangeAvailable(&Iterator,
+                                 Start,
+                                 End,
+                                 AttributeAvailableMask,
+                                 ((Flags & RTL_RANGE_LIST_SHARED_OK) != 0),
+                                 ((Flags & RTL_RANGE_LIST_NULL_CONFLICT_OK) != 0),
+                                 FALSE,
+                                 Context,
+                                 Callback))
         {
-            return STATUS_RANGE_NOT_FOUND;
-        }
-
-        RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
-        if (RangeMin < Minimum ||
-            (RangeMax - RangeMin) < (Length - 1))
-        {
-            return STATUS_RANGE_NOT_FOUND;
-        }
-
-        DPRINT("RangeMax: %I64x\n", RangeMax);
-        DPRINT("RangeMin: %I64x\n", RangeMin);
-
-        if (RangeMin > CurrentEntry->Range.End)
-        {
-            *Start = RangeMin;
+            *OutStart = Start;
+            ASSERT((*OutStart >= Minimum) && (*OutStart + Length - 1 <= Maximum));
+            DPRINT("RtlFindRange: return STATUS_SUCCESS\n");
             return STATUS_SUCCESS;
         }
 
-        NextEntry = CurrentEntry;
-        Entry = Entry->Blink;
+        Start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->Start;
+        DPRINT("RtlFindRange: Iterator Start %I64X\n", Start);
+
+        if (Start - Length > Start) {
+            DPRINT("RtlFindRange: break\n");
+            break;
+        }
+
+        Start = Start - Length - (Start % Alignment);
+        End = Start + Length - 1;
+
+        DPRINT("RtlFindRange: [%I64X-%I64X], Minimum %I64X\n", Start, End, Minimum);
     }
+    while (Start >= Minimum);
 
-    RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-    if (RangeMax + (Length - 1) < Minimum)
-    {
-        return STATUS_RANGE_NOT_FOUND;
-    }
+    DPRINT("RtlFindRange: return STATUS_UNSUCCESSFUL\n");
 
-    RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
-    if (RangeMin < Minimum ||
-        (RangeMax - RangeMin) < (Length - 1))
-    {
-        return STATUS_RANGE_NOT_FOUND;
-    }
-
-    DPRINT("RangeMax: %I64x\n", RangeMax);
-    DPRINT("RangeMin: %I64x\n", RangeMin);
-
-    *Start = RangeMin;
-
-    return STATUS_SUCCESS;
+    return STATUS_UNSUCCESSFUL;
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED
