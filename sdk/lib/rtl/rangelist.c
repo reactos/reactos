@@ -68,6 +68,64 @@ IsRangesIntersection(
 
 PRTLP_RANGE_LIST_ENTRY
 NTAPI
+RtlpCopyRangeListEntry(
+    _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry)
+{
+    PRTLP_RANGE_LIST_ENTRY NewRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NewMergedRtlEntry;
+
+    PAGED_CODE_RTL();
+    ASSERT (RtlEntry);
+
+    //NewRtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
+    NewRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+    if (!NewRtlEntry)
+    {
+        DPRINT1("RtlpCopyRangeListEntry: Allocate failed\n");
+        return NULL;
+    }
+
+    DPRINT("RtlpCopyRangeListEntry: (%p) ==> (%p) [%I64X-%I64X]\n", RtlEntry, NewRtlEntry, RtlEntry->Start, RtlEntry->End);
+    RtlCopyMemory(NewRtlEntry, RtlEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
+
+    NewRtlEntry->ListEntry.Flink = NULL;
+    NewRtlEntry->ListEntry.Blink = NULL;
+
+    if (!(RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
+    {
+        //DPRINT("RtlpCopyRangeListEntry: !RTLP_ENTRY_IS_MERGED. return %p, \n", NewRtlEntry);
+        return NewRtlEntry;
+    }
+
+    InitializeListHead(&NewRtlEntry->Merged.ListHead);
+
+    DPRINT("RtlpCopyRangeListEntry: copy Merged %p\n", &NewRtlEntry->Merged.ListHead);
+
+    for (MergedRtlEntry = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Flink);
+         &MergedRtlEntry->ListEntry != &RtlEntry->Merged.ListHead;
+         MergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink))
+    {
+        //NewMergedRtlEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
+        NewMergedRtlEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+        if (!NewMergedRtlEntry)
+        {
+            DPRINT1("RtlpCopyRangeListEntry: Allocate failed\n");
+            RtlpDeleteRangeListEntry(NewRtlEntry);
+            return NULL;
+        }
+
+        DPRINT("RtlpCopyRangeListEntry: (%p) ==> (%p) [%I64X-%I64X]\n", MergedRtlEntry, NewMergedRtlEntry, MergedRtlEntry->Start, MergedRtlEntry->End);
+        RtlCopyMemory(NewMergedRtlEntry, MergedRtlEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
+
+        InsertTailList(&NewRtlEntry->Merged.ListHead, &NewMergedRtlEntry->ListEntry);
+    }
+
+    return NewRtlEntry;
+}
+
+PRTLP_RANGE_LIST_ENTRY
+NTAPI
 RtlpCreateRangeListEntry(
     _In_ ULONGLONG Start,
     _In_ ULONGLONG End,
