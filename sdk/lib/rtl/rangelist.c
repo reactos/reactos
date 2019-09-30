@@ -108,6 +108,37 @@ RtlpCreateRangeListEntry(
 }
 
 NTSTATUS
+NTAPI
+RtlpConvertToMergedRange(
+    _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry)
+{
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+
+    PAGED_CODE_RTL();
+
+    ASSERT(RtlEntry);
+    ASSERT(!(RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED));
+    ASSERT(!(RtlEntry->PublicFlags & RTL_RANGE_CONFLICT));
+
+    MergedRtlEntry = RtlpCopyRangeListEntry(RtlEntry);
+    if (!MergedRtlEntry)
+    {
+        DPRINT1("RtlpConvertToMergedRange: STATUS_INSUFFICIENT_RESOURCES\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    DPRINT("RtlpConvertToMergedRange: (%p) ==> (%p) [%I64X-%I64X]\n", RtlEntry, MergedRtlEntry, MergedRtlEntry->Start, MergedRtlEntry->End);
+
+    RtlEntry->PrivateFlags = RTLP_ENTRY_IS_MERGED;
+    ASSERT(RtlEntry->PublicFlags == RTL_RANGE_SHARED || RtlEntry->PublicFlags == 0);
+
+    InitializeListHead(&RtlEntry->Merged.ListHead);
+    InsertHeadList(&RtlEntry->Merged.ListHead, &MergedRtlEntry->ListEntry);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 NTAPI 
 RtlpAddIntersectingRanges(
     _In_ PLIST_ENTRY ListHead,
