@@ -33,6 +33,14 @@
 
 /* FUNCTIONS ***************************************************************/
 
+static
+PRTLP_RANGE_LIST_ENTRY
+FASTCALL
+RtlpEntryFromLink(PVOID Link)
+{
+    return CONTAINING_RECORD(Link, RTLP_RANGE_LIST_ENTRY, ListEntry);
+}
+
 PRTLP_RANGE_LIST_ENTRY
 NTAPI
 RtlpCreateRangeListEntry(
