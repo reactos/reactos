@@ -1480,7 +1480,8 @@ MENU_AdjustMenuItemRect(PMENU menu, PRECTL rect)
 static ITEM *MENU_FindItemByCoords( MENU *menu, POINT pt, UINT *pos )
 {
     ITEM *item;
-    UINT i, cx, cy;
+    UINT i;
+    INT cx, cy;
     RECT rect;
     PWND pWnd = ValidateHwndNoErr(menu->hWnd);
 
@@ -2938,7 +2939,7 @@ static BOOL MENU_MoveRect(UINT flags, INT* x, INT* y, INT width, INT height, con
 static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT flags,
                               INT x, INT y, const RECT* pExclude)
 {
-    UINT width, height;
+    INT width, height;
     POINT ptx;
     PMONITOR monitor;
     PWND pWnd;
@@ -3410,7 +3411,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
           RECT rc;
           rc.left   = Item->xItem;
           rc.top    = Item->yItem;
-          rc.right  = Item->cxItem; // Do this for now......
+          rc.right  = Item->cxItem;
           rc.bottom = Item->cyItem;
 
           MENU_AdjustMenuItemRect(Menu, &rc);
