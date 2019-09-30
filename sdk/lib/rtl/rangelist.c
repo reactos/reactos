@@ -561,105 +561,6 @@ RtlAddRange(
     return Status;
 }
 
-VOID
-NTAPI
-RtlpDeleteRangeListEntry(
-    IN PRTLP_RANGE_LIST_ENTRY DelEntry)
-{
-    PRTLP_RANGE_LIST_ENTRY RangeListEntry;
-    PRTLP_RANGE_LIST_ENTRY entry;
-
-    PAGED_CODE_RTL();
-    DPRINT("RtlpDeleteRangeListEntry: DelEntry - %p\n", DelEntry);
-
-    if (!(DelEntry->PrivateFlags & RTLP_RANGE_LIST_ENTRY_MERGED))
-    {
-        goto Exit;
-    }
-
-    for (RangeListEntry = CONTAINING_RECORD(DelEntry->Merged.ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-         &RangeListEntry->ListEntry != &DelEntry->Merged.ListHead;
-         RangeListEntry = entry,
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
-    {
-        DPRINT("RtlpDeleteRangeListEntry: ExFree. RangeListEntry - %p, Start - %X, End - %X\n",
-               RangeListEntry, RangeListEntry->Start, RangeListEntry->End);
-
-        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RangeListEntry);
-        RtlpFreeMemory(RangeListEntry, 'elRR');
-    }
-
-Exit:
-
-    DPRINT("RtlpDeleteRangeListEntry: ExFree. DelEntry - %p, Start - %X, End - %X\n",
-           DelEntry, DelEntry->Start, DelEntry->End);
-
-    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, DelEntry);
-    RtlpFreeMemory(DelEntry, 'elRR');
-}
-
-PRTLP_RANGE_LIST_ENTRY
-NTAPI
-RtlpCopyRangeListEntry(PRTLP_RANGE_LIST_ENTRY listEntry)
-{
-    PRTLP_RANGE_LIST_ENTRY NewListEntry;
-    PRTLP_RANGE_LIST_ENTRY mergedEntry;
-    PRTLP_RANGE_LIST_ENTRY NewMergedEntry;
-
-    PAGED_CODE_RTL();
-    ASSERT (listEntry);
-
-    NewListEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
-    //NewListEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
-
-    if (!NewListEntry)
-    {
-        ASSERT(FALSE);
-        return NewListEntry;
-    }
-
-    DPRINT("RtlpCopyRangeListEntry: (ListEntry - %p) ==> (NewListEntry - %p) [%I64X-%I64X]\n",
-           listEntry, NewListEntry, listEntry->Start, listEntry->End);
-
-    RtlCopyMemory(NewListEntry, listEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
-
-    NewListEntry->ListEntry.Flink = NULL;
-    NewListEntry->ListEntry.Blink = NULL;
-
-    if (!(listEntry->PrivateFlags & RTLP_RANGE_LIST_ENTRY_MERGED))
-    {
-        DPRINT("RtlpCopyRangeListEntry: return NewListEntry - %p, !RTLP_RANGE_LIST_ENTRY_MERGED\n",
-               NewListEntry);
-        return NewListEntry;
-    }
-
-    InitializeListHead(&NewListEntry->Merged.ListHead);
-
-    for (mergedEntry = CONTAINING_RECORD(listEntry->Merged.ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-         &mergedEntry->ListEntry != &listEntry->Merged.ListHead;
-         mergedEntry = CONTAINING_RECORD(mergedEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
-    {
-        NewMergedEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
-        //NewMergedEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList);
-
-        if (!NewMergedEntry)
-        {
-            RtlpDeleteRangeListEntry(NewListEntry);
-            return NULL;
-        }
-
-        DPRINT("RtlpCopyRangeListEntry: RtlCopyMemory(NewMergedEntry - %p) <== (mergedEntry - %p) [%I64X-%I64X]\n",
-               NewMergedEntry, mergedEntry, mergedEntry->Start, mergedEntry->End);
-
-        RtlCopyMemory(NewMergedEntry, mergedEntry, sizeof(RTLP_RANGE_LIST_ENTRY));
-
-        InsertTailList(&NewListEntry->Merged.ListHead, &NewMergedEntry->ListEntry);
-    }
-
-    return NewListEntry;
-}
-
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlCopyRangeList
@@ -676,27 +577,25 @@ RtlpCopyRangeListEntry(PRTLP_RANGE_LIST_ENTRY listEntry)
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlCopyRangeList(OUT PRTL_RANGE_LIST CopyRangeList,
-                 IN PRTL_RANGE_LIST RangeList)
+RtlCopyRangeList(
+    _Out_ PRTL_RANGE_LIST CopyRangeList,
+    _In_ PRTL_RANGE_LIST RangeList)
 {
-    PRTLP_RANGE_LIST_ENTRY listEntry;
-    PRTLP_RANGE_LIST_ENTRY NewListEntry;
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NewRtlEntry;
 
     PAGED_CODE_RTL();
     ASSERT(RangeList);
     ASSERT(CopyRangeList);
 
-    DPRINT("RtlCopyRangeList: (CopyRangeList - %p) <== (RangeList - %p) [%X]\n",
-           CopyRangeList, RangeList, RangeList->Count);
+    DPRINT("RtlCopyRangeList: (%p) ==> (%p) [%X]\n", RangeList, CopyRangeList, RangeList->Count);
 
     if (CopyRangeList->Count)
     {
-        DPRINT("RtlCopyRangeList: STATUS_INVALID_PARAMETER. CopyRangeList->Count - %X\n",
-               CopyRangeList->Count);
-
-        ASSERT(FALSE);
+        DPRINT1("RtlCopyRangeList: STATUS_INVALID_PARAMETER. Count %X\n", CopyRangeList->Count);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -704,29 +603,25 @@ RtlCopyRangeList(OUT PRTL_RANGE_LIST CopyRangeList,
     CopyRangeList->Count = RangeList->Count;
     CopyRangeList->Stamp = RangeList->Stamp;
 
-    for (listEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-         &listEntry->ListEntry!= &RangeList->ListHead;
-         listEntry = CONTAINING_RECORD(listEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+    for (RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
+         &RtlEntry->ListEntry!= &RangeList->ListHead;
+         RtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink))
     {
-        //DPRINT("RtlCopyRangeList: ListEntry - %p [%I64X - %I64X], Attributes - %X, PublicFlags - %X, PrivateFlags - %X\n",
-        //       listEntry, listEntry->Start, listEntry->End, listEntry->Attributes, listEntry->PublicFlags, listEntry->PrivateFlags);
+        DPRINT("RtlCopyRangeList: %p [%I64X-%I64X], %X, %X, %X\n", RtlEntry, RtlEntry->Start, RtlEntry->End, RtlEntry->Attributes, RtlEntry->PublicFlags, RtlEntry->PrivateFlags);
 
-        NewListEntry = RtlpCopyRangeListEntry(listEntry);
-
-        if (!NewListEntry)
+        NewRtlEntry = RtlpCopyRangeListEntry(RtlEntry);
+        if (!NewRtlEntry)
         {
-            DPRINT("RtlCopyRangeList: STATUS_INSUFFICIENT_RESOURCES\n");
-            ASSERT(FALSE);
+            DPRINT1("RtlCopyRangeList: STATUS_INSUFFICIENT_RESOURCES\n");
             RtlFreeRangeList(CopyRangeList);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        InsertTailList(&CopyRangeList->ListHead, &NewListEntry->ListEntry);
+        InsertTailList(&CopyRangeList->ListHead, &NewRtlEntry->ListEntry);
     }
 
     return STATUS_SUCCESS;
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED
