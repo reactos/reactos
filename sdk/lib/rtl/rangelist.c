@@ -41,6 +41,31 @@ RtlpEntryFromLink(PVOID Link)
     return CONTAINING_RECORD(Link, RTLP_RANGE_LIST_ENTRY, ListEntry);
 }
 
+static
+BOOLEAN
+FASTCALL
+IsRangesIntersection(
+    _In_ PRTLP_RANGE_LIST_ENTRY Entry1,
+    _In_ PRTLP_RANGE_LIST_ENTRY Entry2)
+{
+    /* Not intersection when:
+       (Entry1->Start - Entry1->End) ... (Entry2->Start -
+       (Entry2->Start - Entry2->End) ... (Entry1->Start -
+    */
+
+    if (((Entry2->Start > Entry1->Start && Entry2->Start > Entry1->End) ||
+         (Entry1->Start > Entry2->Start && Entry1->Start > Entry2->End)))
+    {
+        /* No intersection */
+        return FALSE;
+    }
+    else
+    {
+        /* Entry1 and Entry2 overlap */
+        return TRUE;
+    }
+}
+
 PRTLP_RANGE_LIST_ENTRY
 NTAPI
 RtlpCreateRangeListEntry(
