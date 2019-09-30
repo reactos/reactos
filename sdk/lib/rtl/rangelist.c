@@ -793,16 +793,22 @@ RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
+NTSYSAPI
 VOID
 NTAPI
-RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
+RtlInitializeRangeList(
+    _Inout_ PRTL_RANGE_LIST RangeList)
 {
+    PAGED_CODE_RTL();
+    DPRINT("RtlInitializeRangeList: RangeList %p\n", RangeList);
+
+    ASSERT(RangeList);
+
     InitializeListHead(&RangeList->ListHead);
     RangeList->Flags = 0;
     RangeList->Count = 0;
     RangeList->Stamp = 0;
 }
-
 
 // !!! FIXME ==> PRTLP_RANGE_LIST_ENTRY
 
