@@ -13,15 +13,23 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ******************************************************************/
+
+//extern PAGED_LOOKASIDE_LIST RtlpRangeListEntryLookasideList;
+
 /* TYPES ********************************************************************/
 
-typedef struct _RTL_RANGE_ENTRY
-{
-    LIST_ENTRY Entry;
-    RTL_RANGE Range;
-} RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
+/* RTLP_RANGE_LIST_ENTRY == RTL_RANGE + ListEntry */
 
-#define RTLP_RANGE_LIST_ENTRY_MERGED  1
+/*  FIXME ? ntddk.h */
+/* Flags for public functions: RtlFindRange(), RtlIsRangeAvailable() */
+#define RTL_RANGE_LIST_SHARED_OK           1
+#define RTL_RANGE_LIST_NULL_CONFLICT_OK    2
+/* ? ntddk.h */
+
+/* RTLP_RANGE_LIST_ENTRY.PrivateFlags */
+#define RTLP_ENTRY_IS_MERGED  1
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -701,126 +709,6 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
     return STATUS_SUCCESS;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlInitializeRangeList
- *
- * DESCRIPTION
- *	Initializes a range list.
- *
- * ARGUMENTS
- *	RangeList	Pointer to a user supplied range list.
- *
- * RETURN VALUE
- *	None
- *
- * @implemented
- */
-VOID
-NTAPI
-RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
-{
-    InitializeListHead(&RangeList->ListHead);
-    RangeList->Flags = 0;
-    RangeList->Count = 0;
-    RangeList->Stamp = 0;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlInvertRangeList
- *
- * DESCRIPTION
- *	Inverts a range list.
- *
- * ARGUMENTS
- *	InvertedRangeList	Inverted range list.
- *	RangeList		Range list.
- *
- * RETURN VALUE
- *	Status
- *
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
-                   IN PRTL_RANGE_LIST RangeList)
-{
-    PRTL_RANGE_ENTRY Previous;
-    PRTL_RANGE_ENTRY Current;
-    PLIST_ENTRY Entry;
-    NTSTATUS Status;
-
-    /* Add leading and intermediate ranges */
-    Previous = NULL;
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
-    {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-
-        if (Previous == NULL)
-        {
-            if (Current->Range.Start != (ULONGLONG)0)
-            {
-                Status = RtlAddRange(InvertedRangeList,
-                                     (ULONGLONG)0,
-                                     Current->Range.Start - 1,
-                                     0,
-                                     0,
-                                     NULL,
-                                     NULL);
-                if (!NT_SUCCESS(Status))
-                    return Status;
-            }
-        }
-        else
-        {
-            if (Previous->Range.End + 1 != Current->Range.Start)
-            {
-                Status = RtlAddRange(InvertedRangeList,
-                                     Previous->Range.End + 1,
-                                     Current->Range.Start - 1,
-                                     0,
-                                     0,
-                                     NULL,
-                                     NULL);
-                if (!NT_SUCCESS(Status))
-                    return Status;
-            }
-        }
-
-        Previous = Current;
-        Entry = Entry->Flink;
-    }
-
-    /* Check if the list was empty */
-    if (Previous == NULL)
-    {
-        /* We're done */
-        return STATUS_SUCCESS;
-    }
-
-    /* Add trailing range */
-    if (Previous->Range.End + 1 != (ULONGLONG)-1)
-    {
-        Status = RtlAddRange(InvertedRangeList,
-                             Previous->Range.End + 1,
-                             (ULONGLONG)-1,
-                             0,
-                             0,
-                             NULL,
-                             NULL);
-        if (!NT_SUCCESS(Status))
-            return Status;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-
 /**********************************************************************
  * NAME							EXPORTED
  * 	RtlIsRangeAvailable
@@ -892,6 +780,141 @@ RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
 
 /**********************************************************************
  * NAME							EXPORTED
+ * 	RtlInitializeRangeList
+ *
+ * DESCRIPTION
+ *	Initializes a range list.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to a user supplied range list.
+ *
+ * RETURN VALUE
+ *	None
+ *
+ * @implemented
+ */
+VOID
+NTAPI
+RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
+{
+    InitializeListHead(&RangeList->ListHead);
+    RangeList->Flags = 0;
+    RangeList->Count = 0;
+    RangeList->Stamp = 0;
+}
+
+
+// !!! FIXME ==> PRTLP_RANGE_LIST_ENTRY
+
+typedef struct _RTL_RANGE_ENTRY {
+    RTL_RANGE   Range;
+    USHORT      PrivateFlags;
+    LIST_ENTRY  Entry;
+    UCHAR       _PADDING0_[0x4];
+} RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlInvertRangeList
+ *
+ * DESCRIPTION
+ *	Inverts a range list.
+ *
+ * ARGUMENTS
+ *	InvertedRangeList	Inverted range list.
+ *	RangeList		Range list.
+ *
+ * RETURN VALUE
+ *	Status
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlInvertRangeList(
+    _Out_ PRTL_RANGE_LIST InvertedRangeList,
+    _In_ PRTL_RANGE_LIST RangeList)
+{
+    PRTL_RANGE_ENTRY Previous;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status;
+
+    DPRINT("RtlInvertRangeList: InvertedRangeList %p, RangeList %p\n", InvertedRangeList, RangeList);
+
+// FIXME None Reworked !
+ASSERT(FALSE);
+
+    /* Add leading and intermediate ranges */
+    Previous = NULL;
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
+    {
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+
+        if (Previous == NULL)
+        {
+            if (Current->Range.Start != (ULONGLONG)0)
+            {
+                Status = RtlAddRange(InvertedRangeList,
+                                     (ULONGLONG)0,
+                                     Current->Range.Start - 1,
+                                     0,
+                                     0,
+                                     NULL,
+                                     NULL);
+                if (!NT_SUCCESS(Status))
+                    return Status;
+            }
+        }
+        else
+        {
+            if (Previous->Range.End + 1 != Current->Range.Start)
+            {
+                Status = RtlAddRange(InvertedRangeList,
+                                     Previous->Range.End + 1,
+                                     Current->Range.Start - 1,
+                                     0,
+                                     0,
+                                     NULL,
+                                     NULL);
+                if (!NT_SUCCESS(Status))
+                    return Status;
+            }
+        }
+
+        Previous = Current;
+        Entry = Entry->Flink;
+    }
+
+    /* Check if the list was empty */
+    if (Previous == NULL)
+    {
+        /* We're done */
+        return STATUS_SUCCESS;
+    }
+
+    /* Add trailing range */
+    if (Previous->Range.End + 1 != (ULONGLONG)-1)
+    {
+        Status = RtlAddRange(InvertedRangeList,
+                             Previous->Range.End + 1,
+                             (ULONGLONG)-1,
+                             0,
+                             0,
+                             NULL,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+// !!! FIXME
+
+/**********************************************************************
+ * NAME							EXPORTED
  * 	RtlMergeRangeList
  *
  * DESCRIPTION
@@ -910,43 +933,44 @@ RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
  */
 NTSTATUS
 NTAPI
-RtlMergeRangeLists(OUT PRTL_RANGE_LIST MergedRangeList,
-                   IN PRTL_RANGE_LIST RangeList1,
-                   IN PRTL_RANGE_LIST RangeList2,
-                   IN ULONG Flags)
+RtlMergeRangeLists(
+    _Out_ PRTL_RANGE_LIST MergedRangeList,
+    _In_ PRTL_RANGE_LIST RangeList1,
+    _In_ PRTL_RANGE_LIST RangeList2,
+    _In_ ULONG Flags)
 {
     RTL_RANGE_LIST_ITERATOR Iterator;
-    PRTL_RANGE Range;
+    PRTL_RANGE RtlRange;
     NTSTATUS Status;
 
+    DPRINT("RtlMergeRangeLists: RangeList1 %p, RangeList2 %p\n", RangeList1, RangeList2);
+
+// FIXME Nonereworked !
+ASSERT(FALSE);
+
     /* Copy range list 1 to the merged range list */
-    Status = RtlCopyRangeList(MergedRangeList,
-                              RangeList1);
+    Status = RtlCopyRangeList(MergedRangeList, RangeList1);
     if (!NT_SUCCESS(Status))
         return Status;
 
     /* Add range list 2 entries to the merged range list */
-    Status = RtlGetFirstRange(RangeList2,
-                              &Iterator,
-                              &Range);
+    Status = RtlGetFirstRange(RangeList2, &Iterator, &RtlRange);
     if (!NT_SUCCESS(Status))
         return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
 
     while (TRUE)
     {
         Status = RtlAddRange(MergedRangeList,
-                             Range->Start,
-                             Range->End,
-                             Range->Attributes,
-                             Range->Flags | Flags,
-                             Range->UserData,
-                             Range->Owner);
+                             RtlRange->Start,
+                             RtlRange->End,
+                             RtlRange->Attributes,
+                             RtlRange->Flags | Flags,
+                             RtlRange->UserData,
+                             RtlRange->Owner);
         if (!NT_SUCCESS(Status))
             break;
 
-        Status = RtlGetNextRange(&Iterator,
-                                 &Range,
-                                 TRUE);
+        Status = RtlGetNextRange(&Iterator, &RtlRange, TRUE);
         if (!NT_SUCCESS(Status))
             break;
     }
