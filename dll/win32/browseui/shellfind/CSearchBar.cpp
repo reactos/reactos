@@ -138,8 +138,8 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
     // See if we have an szFileName by testing for its entry lenth > 0 and our searched FileName does not contain
     // an asterisk or a question mark. If so, then prepend and append an asterisk to the searched FileName.
     // (i.e. it's equivalent to searching for *<the_file_name>* )
-    StringCchLength(pSearchStart->szFileName, MAX_PATH, &len);
-    if ((len > 0) && !StrStrW(pSearchStart->szFileName, L"*") && !StrStrW(pSearchStart->szFileName, L"?"))
+    if (FAILED (StringCchLengthW (pSearchStart->szFileName, MAX_PATH, &len))) return 0;
+    if ((len > 0) && !wcspbrk(pSearchStart->szFileName, L"*?"))
     {
         endchar = pSearchStart->szFileName[len - 1];
         startchar = pSearchStart->szFileName[0];
