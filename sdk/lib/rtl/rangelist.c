@@ -646,53 +646,71 @@ RtlDeleteOwnersRanges(
     _In_ PRTL_RANGE_LIST RangeList,
     _In_ PVOID Owner)
 {
-    PRTLP_RANGE_LIST_ENTRY RangeListEntry;
-    PRTLP_RANGE_LIST_ENTRY entry;
-    PRTLP_RANGE_LIST_ENTRY MergedListEntry;
-    PRTLP_RANGE_LIST_ENTRY mergedentry;
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY MergedNextEntry;
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE_RTL();
     ASSERT(RangeList);
 
-    DPRINT("RtlDeleteOwnersRanges: RangeList - %p, Owner - %p, RangeList->Count - %X\n",
-           RangeList, Owner, RangeList->Count);
+    DPRINT("RtlDeleteOwnersRanges: RangeList %p, Owner %p, [%X]\n", RangeList, Owner, RangeList->Count);
 
-    for (RangeListEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-         &RangeListEntry->ListEntry != &RangeList->ListHead;
-         RangeListEntry = entry,
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+START:
+
+    RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
+    NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+
+    while (&RtlEntry->ListEntry != &RangeList->ListHead)
     {
-        if (RangeListEntry->PrivateFlags & RTLP_RANGE_LIST_ENTRY_MERGED)
+        if (RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
         {
-            for (MergedListEntry = CONTAINING_RECORD(&RangeListEntry->Merged.ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
-                     mergedentry = CONTAINING_RECORD(MergedListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-                 &MergedListEntry->ListEntry != &RangeListEntry->Merged.ListHead;
-                 MergedListEntry = mergedentry,
-                     mergedentry = CONTAINING_RECORD(MergedListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+            MergedRtlEntry = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Flink);
+            MergedNextEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
+
+            while (&MergedRtlEntry->ListEntry != &RtlEntry->Merged.ListHead)
             {
-                if (MergedListEntry->Allocated.Owner == Owner)
+                if (MergedRtlEntry->Allocated.Owner == Owner)
                 {
-                    ASSERT(FALSE);
+                    DPRINT("RtlDeleteOwnersRanges: Deleting merged range [%I64X-%I64X]\n", MergedRtlEntry->Start, MergedRtlEntry->End);
+
+                    Status = RtlpDeleteFromMergedRange(RtlEntry, MergedRtlEntry);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT("RtlDeleteOwnersRanges: Status %X\n", Status);
+                        return Status;
+                    }
+
+                    RangeList->Count--;
+                    RangeList->Stamp++;
+
+                    goto START;
                 }
+
+                MergedRtlEntry = MergedNextEntry;
+                MergedNextEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
             }
         }
-        else if (RangeListEntry->Allocated.Owner == Owner)
+        else if (RtlEntry->Allocated.Owner == Owner)
         {
-            DPRINT("RtlDeleteOwnersRanges: Deleting range (Start - %I64X, End - %I64X)\n",
-                   RangeListEntry->Start, RangeListEntry->End);
+            DPRINT("RtlDeleteOwnersRanges: Deleting range [%I64X-%I64X]\n", RtlEntry->Start, RtlEntry->End);
 
-            RemoveEntryList(&RangeListEntry->ListEntry);
-            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RangeListEntry);
-            RtlpFreeMemory(RangeListEntry, 'elRR');
+            RemoveEntryList(&RtlEntry->ListEntry);
+            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
+            RtlpFreeMemory(RtlEntry, 'elRR');
 
             RangeList->Count--;
             RangeList->Stamp++;
 
             Status = STATUS_SUCCESS;
         }
+
+        RtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
     }
+
+    DPRINT("RtlDeleteOwnersRanges: return Status %X\n", Status);
 
     return Status;
 }
