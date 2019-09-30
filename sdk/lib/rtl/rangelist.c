@@ -825,39 +825,83 @@ START:
  *
  * @implemented
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlDeleteRange(IN OUT PRTL_RANGE_LIST RangeList,
-               IN ULONGLONG Start,
-               IN ULONGLONG End,
-               IN PVOID Owner)
+RtlDeleteRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ PVOID Owner)
 {
-    PRTL_RANGE_ENTRY Current;
-    PLIST_ENTRY Entry;
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextMergedRtlEntry;
+    NTSTATUS Status = STATUS_RANGE_NOT_FOUND;
 
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
+    PAGED_CODE_RTL();
+    DPRINT1("RtlDeleteRange: %p [%I64X-%I64X] %p\n", RangeList, Start, End, Owner);
+    ASSERT(RangeList);
+
+    RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
+    NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+
+    while (&RangeList->ListHead != &RtlEntry->ListEntry && End >= RtlEntry->Start)
     {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-        if (Current->Range.Start == Start &&
-            Current->Range.End == End &&
-            Current->Range.Owner == Owner)
+        DPRINT("RtlDeleteRange: %p [%I64X-%I64X] %p\n", RtlEntry, RtlEntry->Start, RtlEntry->End, Owner);
+
+        if (RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
         {
-            RemoveEntryList(Entry);
+            if (Start >= RtlEntry->Start && End <= RtlEntry->End)
+            {
+                MergedRtlEntry = RtlpEntryFromLink(RtlEntry->Merged.ListHead.Flink);
+                NextMergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
 
-            RtlpFreeMemory(Current, 0);
+                while (&RtlEntry->Merged.ListHead != &MergedRtlEntry->ListEntry)
+                {
+                    if (MergedRtlEntry->Start == Start &&
+                        MergedRtlEntry->End == End &&
+                        MergedRtlEntry->Allocated.Owner == Owner)
+                    {
+                        Status = RtlpDeleteFromMergedRange(MergedRtlEntry, RtlEntry);
+                        goto Exit;
+                    }
 
-            RangeList->Count--;
-            RangeList->Stamp++;
-            return STATUS_SUCCESS;
+                    MergedRtlEntry = NextMergedRtlEntry;
+                    NextMergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
+                }
+            }
+        }
+        else if (RtlEntry->Start == Start &&
+                 RtlEntry->End == End &&
+                 RtlEntry->Allocated.Owner == Owner)
+        {
+            RemoveEntryList(&RtlEntry->ListEntry);
+
+            DPRINT("RtlDeleteRange: Free %p [%I64X-%I64X] %p\n", RtlEntry, RtlEntry->Start, RtlEntry->End, Owner);
+            //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RtlEntry);
+            RtlpFreeMemory(RtlEntry, 'elRR');
+
+            Status = STATUS_SUCCESS;
+            break;
         }
 
-        Entry = Entry->Flink;
+        RtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
     }
 
-    return STATUS_RANGE_NOT_FOUND;
-}
+Exit:
 
+    if (NT_SUCCESS(Status))
+    {
+        RangeList->Count++;
+        RangeList->Stamp++;
+    }
+
+    DPRINT("RtlDeleteRange: return Status %X\n", Status);
+    return Status;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
