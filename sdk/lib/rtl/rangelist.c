@@ -1314,26 +1314,27 @@ NTAPI
 RtlFreeRangeList(
     _In_ PRTL_RANGE_LIST RangeList)
 {
-    PRTLP_RANGE_LIST_ENTRY entry;
-    PRTLP_RANGE_LIST_ENTRY RangeListEntry;
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
 
     PAGED_CODE_RTL();
     ASSERT(RangeList);
 
-    DPRINT("RtlFreeRangeList: RangeList - %p, RangeList->Count - %X\n",
-           RangeList, RangeList->Count);
+    DPRINT("RtlFreeRangeList: RangeList %p, Count %X\n", RangeList, RangeList->Count);
 
     RangeList->Flags = 0;
     RangeList->Count = 0;
 
-    for (RangeListEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
-         &RangeListEntry->ListEntry != &RangeList->ListHead;
-         RangeListEntry = entry,
-                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+    RtlEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
+    NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
+
+    while (&RtlEntry->ListEntry != &RangeList->ListHead)
     {
-        RemoveEntryList(&RangeListEntry->ListEntry);
-        RtlpDeleteRangeListEntry(RangeListEntry);
+        RemoveEntryList(&RtlEntry->ListEntry);
+        RtlpDeleteRangeListEntry(RtlEntry);
+
+        RtlEntry = NextRtlEntry;
+        NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
     }
 }
 
