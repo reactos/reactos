@@ -20,6 +20,7 @@
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pcbios.h>
+
 .code64
 
 EXTERN CallRealMode:PROC
@@ -40,7 +41,7 @@ Int386:
     push rsi
     push rdi
 
-    /* Alloc stack space for home registers */
+    /* Alloc stack space for home registers (+ alignment) */
     sub rsp, 40
     //.ENDPROLOG
 
@@ -68,11 +69,11 @@ int386_2:
 
     /* Copy output registers */
     mov rsi, BSS_RegisterSet
-    mov rdi, [r11 + 24]
+    mov rdi, qword ptr [r11 + 24]
     mov rcx, REGS_SIZE / 4
     rep movsd
 
-    /* cleanup and return */
+    /* Cleanup and return */
     add rsp, 40
     pop rdi
     pop rsi

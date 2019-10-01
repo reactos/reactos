@@ -8,7 +8,7 @@
 
 .code16
 
-/* fat helper code */
+/* FAT helper code */
 #include "fathelp.inc"
 
 .org 512
@@ -107,20 +107,20 @@ Msg_SwitchToLongMode:
 gdt:
     .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 00: NULL descriptor */
     .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08:  */
-    .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode cs */
-    .word HEX(ffff), HEX(0000), HEX(f300), HEX(00cf) /* 18: long mode ds */
+    .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode CS */
+    .word HEX(FFFF), HEX(0000), HEX(F300), HEX(00CF) /* 18: long mode DS */
     .word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
     .word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
-    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode cs */
+    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode CS */
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(37) /* Limit */
-    .long offset gdt   /* Base Address */
+    .word HEX(37)       /* Limit */
+    .long offset gdt    /* Base Address */
 
 
 CheckFor64BitSupport:
-    /* Check if CPU supports CPUID */
+    /* Check whether the CPU supports CPUID */
     pushad
     pushfd
     pop eax
@@ -130,7 +130,7 @@ CheckFor64BitSupport:
     popfd
     pushfd
     pop eax
-    cmp eax,ebx
+    cmp eax, ebx
     jnz .CheckForPAE
 
     mov si, offset .Msg_NoCpuidSupport
@@ -144,10 +144,10 @@ CheckFor64BitSupport:
 
 .CheckForPAE:
     /* CPUID support detected - getting the PAE/PGE */
-    mov eax,1 // Fn0000_0001 - PAE in EDX[6]
+    mov eax, 1 // Fn0000_0001 - PAE in EDX[6]
     cpuid
-    and edx, HEX(00a0)
-    cmp edx, HEX(00a0)
+    and edx, HEX(00A0)
+    cmp edx, HEX(00A0)
     je .CheckForLongMode
 
     mov si, offset .Msg_NoPAE
@@ -164,7 +164,7 @@ CheckFor64BitSupport:
     mov eax, HEX(80000001)
     cpuid
     and edx, HEX(20000000)
-    test edx,edx
+    test edx, edx
     jnz .Success
 
     mov si, offset .Msg_NoLongMode
@@ -195,7 +195,7 @@ BuildPageTables:
 
     /* One entry in the PML4 pointing to PDP */
     mov eax, PDP_ADDRESS
-    or eax, HEX(0f)
+    or eax, HEX(0F)
     stosd
 
     /* clear rest */
@@ -205,7 +205,7 @@ BuildPageTables:
 
     /* One entry in the PDP pointing to PD */
     mov eax, PD_ADDRESS
-    or eax, HEX(0f)
+    or eax, HEX(0F)
     stosd
 
     /* clear rest */
@@ -218,8 +218,8 @@ BuildPageTables:
     mov eax, HEX(008f)
 
 .Bpt2:
-    mov es: [di], eax
-    mov dword ptr es: [di + 4], 0
+    mov es:[di], eax
+    mov dword ptr es:[di + 4], 0
     add eax, 512 * 4096 // add 512 4k pages
     add di, 8
 
@@ -242,7 +242,7 @@ BuildPageTables:
 RealModeEntryPoint:
     /* Disable Protected Mode */
     mov eax, cr0
-    and eax, HEX(0fffffffe) // ~0x00000001
+    and eax, HEX(0FFFFFFFE) // ~0x00000001
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
@@ -295,7 +295,7 @@ ExitToLongMode:
     mov word ptr ds:[stack16], sp
 
     /* Set PAE and PGE: 10100000b */
-    mov eax, HEX(00a0)
+    mov eax, HEX(00A0)
     mov cr4, eax
 
     /* Point cr3 at the PML4 */
@@ -322,7 +322,7 @@ InLongMode:
     //DB 66h, 66h, 0C7h, 04h, 25h, 00h, 80h, 0Bh, 00h, 31h, 0Eh
     //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
 
-    .byte HEX(0ff), HEX(25) // opcode of 64bit indirect jump
+    .byte HEX(0FF), HEX(25) // opcode of 64bit indirect jump
     .long 1 // relative address of LongModeEntryPoint
     nop
 LongModeEntryPoint:
@@ -334,11 +334,10 @@ LongModeEntryPoint:
 CallbackTable:
     .word Int386
     .word Reboot
-    .word ChainLoadBiosBootSectorCode
+    .word Relocator16Boot
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
-    .word 0 // BootLinuxKernel
 
     /* 16-bit stack pointer */
 stack16:
