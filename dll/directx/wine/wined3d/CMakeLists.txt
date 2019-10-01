@@ -7,11 +7,6 @@ add_definitions(
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
-if(MSVC)
-    # error C4312: 'type cast': conversion from 'LONG' to 'void *' of greater size
-    replace_compile_flags("/we4312" " ")
-endif()
-
 # We name this d3dwine.dll, because the Virtualbox additions ship with a custom wined3d.dll
 # and it breaks everything if it is installed.
 spec2def(d3dwine.dll wined3d.spec ADD_IMPORTLIB)
@@ -46,7 +41,7 @@ list(APPEND SOURCE
     wined3d_main.c
     precomp.h)
 
-add_library(d3dwine MODULE
+add_library(d3dwine SHARED
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dwine.def)
