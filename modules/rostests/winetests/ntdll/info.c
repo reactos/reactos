@@ -1883,9 +1883,7 @@ static void test_queryvirtualmemory(void)
 {
     NTSTATUS status;
     SIZE_T readcount;
-#ifndef __REACTOS__
     static const WCHAR windowsW[] = {'w','i','n','d','o','w','s'};
-#endif
     static const char teststring[] = "test string";
     static char datatestbuf[42] = "abc";
     static char rwtestbuf[42];
@@ -1893,10 +1891,13 @@ static void test_queryvirtualmemory(void)
     char stackbuf[42];
     HMODULE module;
     char buffer_name[sizeof(MEMORY_SECTION_NAME) + MAX_PATH * sizeof(WCHAR)];
-    MEMORY_SECTION_NAME *msn = (MEMORY_SECTION_NAME *)buffer_name;
 #ifndef __REACTOS__
+    MEMORY_SECTION_NAME *msn = (MEMORY_SECTION_NAME *)buffer_name;
+#endif
     BOOL found;
     int i;
+#ifdef __REACTOS__
+    MEMORY_SECTION_NAME *msn = HeapAlloc(GetProcessHeap(), 0, sizeof(buffer_name));
 #endif
 
     module = GetModuleHandleA( "ntdll.dll" );
@@ -1998,7 +1999,6 @@ static void test_queryvirtualmemory(void)
     memset(buffer_name, 0x77, sizeof(buffer_name));
     readcount = 0;
     status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(buffer_name), &readcount);
-#ifndef __REACTOS__
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
     trace ("Section Name: %s\n", wine_dbgstr_w(msn->SectionFileName.Buffer));
@@ -2006,18 +2006,17 @@ static void test_queryvirtualmemory(void)
     for (found = FALSE, i = (msn->SectionFileName.Length - sizeof(windowsW)) / sizeof(WCHAR); i >= 0; i--)
         found |= !memcmp( &msn->SectionFileName.Buffer[i], windowsW, sizeof(windowsW) );
     ok( found, "Section name does not contain \"Windows\"\n");
-#else
-    /* W2K3 will return this, because the buffer is not ULONG-aligned */
-    ok( status == STATUS_DATATYPE_MISALIGNMENT, "Expected STATUS_DATATYPE_MISALIGNMENT, got %08x\n", status);
-    ok( readcount == 0, "Expected readcount to be 0: %ld\n", readcount);
-#endif
 
     trace("Check section name of non mapped memory\n");
-    memset(msn, 0, sizeof(*msn));
+    memset(msn, 0, sizeof(buffer_name));
     readcount = 0;
     status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
     ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
+
+#ifdef __REACTOS__
+    HeapFree(GetProcessHeap(), 0, msn);
+#endif
 }
 
 static void test_affinity(void)
