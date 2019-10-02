@@ -4739,6 +4739,16 @@ RtlCloneMemoryStream(
     _Outptr_ struct IStream **ResultStream
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetNativeSystemInformation(
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _Out_writes_bytes_to_opt_(SystemInformationLength, *ReturnLength) PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
 #endif // NTOS_MODE_USER
 
 NTSYSAPI
