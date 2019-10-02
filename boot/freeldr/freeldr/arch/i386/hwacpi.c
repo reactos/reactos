@@ -94,7 +94,18 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
-        AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
+
+        if (Rsdp->revision > 0)
+        {
+            TRACE("ACPI >1.0, using XSDT address\n");
+            AcpiBiosData->RSDTAddress.QuadPart = Rsdp->xsdt_physical_address;
+        }
+        else
+        {
+            TRACE("ACPI 1.0, using RSDT address\n");
+            AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
+        }
+
         AcpiBiosData->Count = PcBiosMapCount;
         memcpy(AcpiBiosData->MemoryMap, PcBiosMemoryMap,
             PcBiosMapCount * sizeof(BIOS_MEMORY_MAP));
