@@ -209,18 +209,16 @@ GetNativeSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
     SYSTEM_PROCESSOR_INFORMATION ProcInfo;
     NTSTATUS Status;
 
-    /* FIXME: Should be SystemNativeBasicInformation */
-    Status = NtQuerySystemInformation(SystemBasicInformation,
-                                      &BasicInfo,
-                                      sizeof(BasicInfo),
-                                      0);
+    Status = RtlGetNativeSystemInformation(SystemBasicInformation,
+                                           &BasicInfo,
+                                           sizeof(BasicInfo),
+                                           0);
     if (!NT_SUCCESS(Status)) return;
                                   
-    /* FIXME: Should be SystemNativeProcessorInformation */
-    Status = NtQuerySystemInformation(SystemProcessorInformation,
-                                      &ProcInfo,
-                                      sizeof(ProcInfo),
-                                      0);
+    Status = RtlGetNativeSystemInformation(SystemProcessorInformation,
+                                           &ProcInfo,
+                                           sizeof(ProcInfo),
+                                           0);
     if (!NT_SUCCESS(Status)) return;
     
     GetSystemInfoInternal(&BasicInfo, &ProcInfo, lpSystemInfo);
