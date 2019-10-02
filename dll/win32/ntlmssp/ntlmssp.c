@@ -94,12 +94,13 @@ getGlobalsSvr(VOID)
 
 /* private functions */
 
-NTSTATUS
+BOOL
 NtlmInitializeGlobals(VOID)
 {
-    NTSTATUS status = STATUS_SUCCESS;
-    LPWKSTA_INFO_100 pBuf = NULL;
-    WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
+    BOOL bRes = TRUE;
+    NTSTATUS status;
+    WCHAR compName[CNLEN + 1], /*domName[DNLEN+1],*/ dnsName[256];
+    WCHAR *domNameW;
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
     /* shortcuts */
     PNTLMSSP_GLOBALS g = &ntlmGlobals;
@@ -254,22 +255,35 @@ NtlmInitializeGlobals(VOID)
     }
     TRACE("%s\n",debugstr_w(dnsName));
 
-    if (NERR_Success == NetWkstaGetInfo(0, 100, (LPBYTE*)&pBuf))
-    {
-        wcscpy(domName, pBuf->wki100_langroup);
-        NetApiBufferFree(pBuf);
-    }
+    /* is this computer a domain member? */
+    /* FIXME: NetGetJoinInformation is not implmented on ROS */
+    /*        if implemented remove #if 1 block ... */
+#if 1
+    domNameW = NULL;
+    /* assume no domain is joined */
+    if (NetApiBufferAllocate((compNamelen + 1) * sizeof(WCHAR), (PVOID*)&domNameW) == NERR_Success)
+        wcscpy(domNameW, compName);
     else
+        domNameW = NULL;
+#else
+    if (NetGetJoinInformation(NULL, &domNameW, &gsvr->lmJoinState) != NERR_Success)
     {
-        wcscpy(domName, L"WORKGROUP");
-        ERR("could not get domain name!\n");
+        ERR("failed to get domain join state!\n");
+        gsvr->lmJoinState = NetSetupUnknownStatus;
+        if (NetApiBufferAllocate(50, (PVOID*)&domNameW) == NERR_Success)
+            wcscpy(domNameW, L"WORKGROUP");
+        else
+            domNameW = NULL;
     }
+#endif
+    if (!domNameW)
+        ERR("could not get domain name!\n");
 
-    ERR("%s\n", debugstr_w(domName));
+    ERR("%s\n", debugstr_w(domNameW));
 
     ExtWStrInit(&gsvr->NbMachineName, compName);
     ExtWStrInit(&gsvr->DnsMachineName, dnsName);
-    ExtWStrInit(&gsvr->NbDomainName, domName);
+    ExtWStrInit(&gsvr->NbDomainName, domNameW);
 
     ExtWStrToAStr(&g->NbMachineNameOEM,
                   &gsvr->NbMachineName, TRUE, TRUE);
@@ -287,9 +301,12 @@ NtlmInitializeGlobals(VOID)
     if(!NT_SUCCESS(status))
     {
         ERR("could not get process token!!\n");
+        g->NtlmSystemSecurityToken = INVALID_HANDLE_VALUE;
     }
 
-    return status;
+    if (domNameW)
+        NetApiBufferFree(domNameW);
+    return bRes;
 }
 
 VOID

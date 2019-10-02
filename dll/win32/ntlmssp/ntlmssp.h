@@ -151,6 +151,8 @@ typedef struct _NTLMSSP_GLOBALS_SVR
 
     /* SvrLMLevel - "expanded LMCompatiblilyLevel" */
     ULONG SvrLMLevel;
+    /* lmJoinState - is this computer a domain member? */
+    NETSETUP_JOIN_STATUS lmJoinState;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
 typedef enum _NTLM_MODE {
@@ -291,7 +293,7 @@ typedef struct _NTLMSSP_CONTEXT_SVR
 /* private functions */
 
 /* ntlmssp.c */
-NTSTATUS
+BOOL
 NtlmInitializeGlobals(VOID);
 
 VOID
