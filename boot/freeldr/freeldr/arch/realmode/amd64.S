@@ -160,6 +160,12 @@ CheckFor64BitSupport:
     .ascii "PAE or PGE not set.", CR, LF, NUL
 
 .CheckForLongMode:
+    /* Check whether extended functions are supported */
+    mov eax, HEX(80000000)
+    cpuid
+    cmp eax, HEX(80000000)  // Any function > 0x80000000 ?
+    jbe .NoLongMode         // If not, no long mode.
+    /* Check whether the CPU supports Long Mode */
     xor edx, edx
     mov eax, HEX(80000001)
     cpuid
@@ -167,6 +173,7 @@ CheckFor64BitSupport:
     test edx, edx
     jnz .Success
 
+.NoLongMode:
     mov si, offset .Msg_NoLongMode
     call writestr
     popad
@@ -240,6 +247,18 @@ BuildPageTables:
 
 /* This is the entry point from long mode */
 RealModeEntryPoint:
+
+    /* Disable long mode */
+    mov ecx, MSR_EFER
+    rdmsr
+    and eax, HEX(0FFFFFEFF) // ~0100
+    wrmsr
+
+    /* Mask PAE and PGE out */
+    mov eax, cr4
+    and eax, HEX(0FFFFFF5F) // ~00A0
+    mov cr4, eax
+
     /* Disable Protected Mode */
     mov eax, cr0
     and eax, HEX(0FFFFFFFE) // ~0x00000001
@@ -295,6 +314,8 @@ ExitToLongMode:
     mov word ptr ds:[stack16], sp
 
     /* Set PAE and PGE: 10100000b */
+    // mov eax, cr4
+    // or eax, HEX(00A0)
     mov eax, HEX(00A0)
     mov cr4, eax
 
