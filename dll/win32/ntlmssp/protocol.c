@@ -639,6 +639,8 @@ SvrHandleNegotiateMessage(
     *pASCContextAttr = ASC_RET_REPLAY_DETECT |
                        ASC_RET_SEQUENCE_DETECT;
 
+
+    /* keep similar to code in  CliGenerateAuthenticationMessage */
     if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SEAL)
         *pASCContextAttr |= ASC_RET_CONFIDENTIALITY;
     //if (context->cli_NegFlg & NTLMSSP_NEGOTIATE_SIGN)
@@ -1106,6 +1108,10 @@ CliGenerateAuthenticationMessage(
 
     /* set version */
     NtlmMsgSetVersion(context->NegFlg, &authmessage->Version);
+
+    /* keep similar to code in Svr CliGenerateAuthenticationMessage */
+    if (context->NegFlg & NTLMSSP_NEGOTIATE_SEAL)
+        *pISCContextAttr |= ASC_RET_CONFIDENTIALITY;
 
     context->hdr.State = AuthenticateSent;
     ret = SEC_E_OK;
