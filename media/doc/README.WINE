@@ -41,7 +41,7 @@ dll/directx/wine/dxdiagn        # Synced to WineStaging-3.3
 dll/directx/wine/msdmo          # Synced to WineStaging-3.17
 dll/directx/wine/qedit          # Synced to WineStaging-3.17
 dll/directx/wine/quartz         # Synced to WineStaging-3.9
-dll/directx/wine/wined3d        # Synced to WineStaging-3.9
+dll/directx/wine/wined3d        # Synced to WineStaging-3.3
 
 dll/win32/activeds            # Synced to WineStaging-3.3
 dll/win32/actxprxy            # Synced to WineStaging-3.3
