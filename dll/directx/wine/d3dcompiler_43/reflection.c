@@ -1107,10 +1107,18 @@ static HRESULT d3dcompiler_parse_stat(struct d3dcompiler_shader_reflection *r, c
 
     skip_dword_unknown(&ptr, 1);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->input_primitive);
+#else
     read_dword(&ptr, &r->input_primitive);
+#endif
     TRACE("InputPrimitive: %x\n", r->input_primitive);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->gs_output_topology);
+#else
     read_dword(&ptr, &r->gs_output_topology);
+#endif
     TRACE("GSOutputTopology: %x\n", r->gs_output_topology);
 
     read_dword(&ptr, &r->gs_max_output_vertex_count);
@@ -1126,13 +1134,25 @@ static HRESULT d3dcompiler_parse_stat(struct d3dcompiler_shader_reflection *r, c
     read_dword(&ptr, &r->c_control_points);
     TRACE("cControlPoints: %u\n", r->c_control_points);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->hs_output_primitive);
+#else
     read_dword(&ptr, &r->hs_output_primitive);
+#endif
     TRACE("HSOutputPrimitive: %x\n", r->hs_output_primitive);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->hs_prtitioning);
+#else
     read_dword(&ptr, &r->hs_prtitioning);
+#endif
     TRACE("HSPartitioning: %x\n", r->hs_prtitioning);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->tessellator_domain);
+#else
     read_dword(&ptr, &r->tessellator_domain);
+#endif
     TRACE("TessellatorDomain: %x\n", r->tessellator_domain);
 
     skip_dword_unknown(&ptr, 3);
@@ -1438,13 +1458,25 @@ static HRESULT d3dcompiler_parse_rdef(struct d3dcompiler_shader_reflection *r, c
             desc->Name = string_data + (offset - string_data_offset);
             TRACE("Input bind Name: %s\n", debugstr_a(desc->Name));
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->Type);
+#else
             read_dword(&ptr, &desc->Type);
+#endif
             TRACE("Input bind Type: %#x\n", desc->Type);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->ReturnType);
+#else
             read_dword(&ptr, &desc->ReturnType);
+#endif
             TRACE("Input bind ReturnType: %#x\n", desc->ReturnType);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->Dimension);
+#else
             read_dword(&ptr, &desc->Dimension);
+#endif
             TRACE("Input bind Dimension: %#x\n", desc->Dimension);
 
             read_dword(&ptr, &desc->NumSamples);
@@ -1507,7 +1539,11 @@ static HRESULT d3dcompiler_parse_rdef(struct d3dcompiler_shader_reflection *r, c
             read_dword(&ptr, &cb->flags);
             TRACE("Cbuffer flags: %u\n", cb->flags);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&cb->type);
+#else
             read_dword(&ptr, &cb->type);
+#endif
             TRACE("Cbuffer type: %#x\n", cb->type);
         }
     }
@@ -1603,8 +1639,13 @@ static HRESULT d3dcompiler_parse_signature(struct d3dcompiler_shader_signature *
         read_dword(&ptr, &name_offset);
         d[i].SemanticName = string_data + (name_offset - string_data_offset);
         read_dword(&ptr, &d[i].SemanticIndex);
+#ifdef __REACTOS__ /* DWORD* casts added */
+        read_dword(&ptr, (DWORD*)&d[i].SystemValueType);
+        read_dword(&ptr, (DWORD*)&d[i].ComponentType);
+#else
         read_dword(&ptr, &d[i].SystemValueType);
         read_dword(&ptr, &d[i].ComponentType);
+#endif
         read_dword(&ptr, &d[i].Register);
         read_dword(&ptr, &mask);
         d[i].ReadWriteMask = (mask >> 8) & 0xff;
