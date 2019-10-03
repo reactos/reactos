@@ -82,6 +82,7 @@ PeLdrpLoadAndScanReferencedDll(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH DirectoryPath,
     IN PCH ImportName,
+    IN PLIST_ENTRY Parent OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry);
 
 static BOOLEAN
@@ -93,7 +94,8 @@ PeLdrpBindImportName(
     IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
     IN ULONG ExportSize,
     IN BOOLEAN ProcessForwards,
-    IN PCSTR DirectoryPath)
+    IN PCSTR DirectoryPath,
+    IN PLIST_ENTRY Parent)
 {
     ULONG Ordinal;
     PULONG NameTable, FunctionTable;
@@ -269,6 +271,7 @@ PeLdrpBindImportName(
             Success = PeLdrpLoadAndScanReferencedDll(ModuleListHead,
                                                      DirectoryPath,
                                                      ForwardDllName,
+                                                     Parent,
                                                      &DataTableEntry);
             if (!Success)
             {
@@ -315,7 +318,8 @@ PeLdrpBindImportName(
                                            RefExportDirectory,
                                            RefExportSize,
                                            TRUE,
-                                           DirectoryPath);
+                                           DirectoryPath,
+                                           Parent);
 
             /* Fill out the ThunkData with data from RefThunkData */
             ThunkData->u1 = RefThunkData.u1;
@@ -339,6 +343,7 @@ PeLdrpLoadAndScanReferencedDll(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH DirectoryPath,
     IN PCH ImportName,
+    IN PLIST_ENTRY Parent OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry)
 {
     CHAR FullDllName[256];
@@ -360,7 +365,7 @@ PeLdrpLoadAndScanReferencedDll(
     }
 
     /* Allocate DTE for newly loaded DLL */
-    Success = PeLdrAllocateDataTableEntry(ModuleListHead,
+    Success = PeLdrAllocateDataTableEntry(Parent ? Parent->Blink : ModuleListHead,
                                           ImportName,
                                           FullDllName,
                                           BasePA,
@@ -392,7 +397,8 @@ PeLdrpScanImportAddressTable(
     IN PVOID DllBase,
     IN PVOID ImageBase,
     IN PIMAGE_THUNK_DATA ThunkData,
-    IN PCSTR DirectoryPath)
+    IN PCSTR DirectoryPath,
+    IN PLIST_ENTRY Parent)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
     BOOLEAN Success;
@@ -436,7 +442,8 @@ PeLdrpScanImportAddressTable(
                                        ExportDirectory,
                                        ExportSize,
                                        FALSE,
-                                       DirectoryPath);
+                                       DirectoryPath,
+                                       Parent);
 
         /* Move to the next entry */
         ThunkData++;
@@ -546,6 +553,7 @@ PeLdrScanImportDescriptorTable(
             Success = PeLdrpLoadAndScanReferencedDll(ModuleListHead,
                                                      DirectoryPath,
                                                      ImportName,
+                                                     &ScanDTE->InLoadOrderLinks,
                                                      &DataTableEntry);
             if (!Success)
             {
@@ -559,7 +567,8 @@ PeLdrScanImportDescriptorTable(
                                                DataTableEntry->DllBase,
                                                ScanDTE->DllBase,
                                                (PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk),
-                                               DirectoryPath);
+                                               DirectoryPath,
+                                               &ScanDTE->InLoadOrderLinks);
 
         if (!Success)
         {
