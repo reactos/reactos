@@ -227,7 +227,6 @@ svr_GenContext(
                                &OutBuffDesc,
                                &Attribs,
                                &Lifetime);
-printf("XXX \n %lx \n", ss);
     PrintASCRetAttr(Attribs);
     if (fNewConversation)
     {

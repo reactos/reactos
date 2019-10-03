@@ -13,10 +13,14 @@ typedef struct _GLOBAL_INFO_SEC_BUFFER
     /* its used by server / client - so we have to protect it! */
     CRITICAL_SECTION cs;
     OSVERSIONINFO osVerInfo;
+    NETSETUP_JOIN_STATUS joinState;
     WCHAR DnsHostNameW[MAX_COMPUTERNAME_LENGTH + 1];
     WCHAR NetBIOSNameW[MAX_COMPUTERNAME_LENGTH + 1];
     CHAR NetBIOSNameA[MAX_COMPUTERNAME_LENGTH + 1];
-    CHAR DomainNameA[256];
+    CHAR DomainNameA[DNLEN];
+    WCHAR DomainNameW[DNLEN];
+    /* Auth-Message DomainName or ComputerName */
+    WCHAR* authMsg_WorkstNameW;
 } GLOBAL_INFO_SEC_BUFFER;
 GLOBAL_INFO_SEC_BUFFER g_sb;
 
@@ -24,8 +28,8 @@ void NtlmCheckInit()
 {
     DWORD cchHNLen = ARRAY_SIZE(g_sb.DnsHostNameW);
     DWORD cchNBLen = ARRAY_SIZE(g_sb.DnsHostNameW);
+    LPWSTR DomainNameW;
     LPWKSTA_INFO_100 pWksInfo = NULL;
-    WCHAR DomainNameW[256];
 
     InitializeCriticalSection(&g_sb.cs);
 
@@ -37,29 +41,36 @@ void NtlmCheckInit()
         memset(&g_sb.osVerInfo, 0, sizeof(g_sb.osVerInfo));
     }
 
+    if (NetGetJoinInformation(NULL, &DomainNameW, &g_sb.joinState) != NERR_Success)
+    {
+        sync_err("failed to get domain join state!\n");
+        g_sb.joinState = NetSetupUnknownStatus;
+    }
+    //NetApiBufferFree(&DomainNameW);
+
     if (!GetComputerNameExW(ComputerNameDnsHostname, g_sb.DnsHostNameW, &cchHNLen))
         g_sb.DnsHostNameW[0] = 0;
     if (!GetComputerNameExW(ComputerNameNetBIOS, g_sb.NetBIOSNameW, &cchNBLen))
         g_sb.NetBIOSNameW[0] = 0;
 
-    DomainNameW[0] = 0;
+    g_sb.DomainNameW[0] = 0;
     if (NERR_Success == NetWkstaGetInfo(NULL, 100, (LPBYTE*)&pWksInfo))
     {
-        if (FAILED(StringCchCopyW(DomainNameW, ARRAY_SIZE(DomainNameW),
+        if (FAILED(StringCchCopyW(g_sb.DomainNameW, DNLEN,
                                   pWksInfo->wki100_langroup)))
-            DomainNameW[0] = 0;
+            g_sb.DomainNameW[0] = 0;
         NetApiBufferFree(pWksInfo);
     }
-    if (DomainNameW[0] == 0)
+    if (g_sb.DomainNameW[0] == 0)
     {
         sync_err("could not get domain name!\n");
-        StringCchCopyW(DomainNameW, 10, L"WORKGROUP");
+        StringCchCopyW(g_sb.DomainNameW, 10, L"WORKGROUP");
     };
 
     /* Convert W -> A */
     if (!WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
-                             DomainNameW, -1, g_sb.DomainNameA,
-                             ARRAY_SIZE(g_sb.DomainNameA), NULL, NULL))
+                             g_sb.DomainNameW, -1, g_sb.DomainNameA,
+                             DNLEN, NULL, NULL))
     {
         sync_err("could not convert domainname (W->A)!\n");
         g_sb.DomainNameA[0] = 0;
@@ -71,6 +82,11 @@ void NtlmCheckInit()
         sync_err("could not convert NetBIOSName (W->A)!\n");
         g_sb.NetBIOSNameA[0] = 0;
     }
+
+    if (g_sb.joinState == NetSetupDomainName)
+        g_sb.authMsg_WorkstNameW = g_sb.DomainNameW;
+    else
+        g_sb.authMsg_WorkstNameW = g_sb.NetBIOSNameW;
 }
 
 void NtlmCheckFini()
@@ -88,8 +104,10 @@ void NtlmCheckBlobA(
     PBYTE pData;
     BOOL isEqual = FALSE;
     int blobChLen = pblob->Length / sizeof(char);
+    int expectedChLen = (expected == NULL) ? 0 : strlen(expected);
+
     pData = (PBYTE)msg + pblob->Offset;
-    if (blobChLen == strlen(expected))
+    if (blobChLen == expectedChLen)
         isEqual = (strncmp((char*)pData, expected, blobChLen) == 0);
 
     sync_ok(isEqual, "%s: blob \"%s\" is %.*s, expected %s\n",
@@ -107,9 +125,10 @@ void NtlmCheckBlobW(
     PBYTE pData;
     BOOL isEqual = FALSE;
     int blobChLen = pblob->Length / sizeof(WCHAR);
+    int expectedChLen = (expected == NULL) ? 0 : wcslen(expected);
 
     pData = (PBYTE)msg + pblob->Offset;
-    if (blobChLen == wcslen(expected))
+    if (blobChLen == expectedChLen)
         isEqual = (wcsncmp((WCHAR*)pData, expected, blobChLen) == 0);
 
     sync_ok(isEqual, "%s: blob \"%s\" is %.*S, expected %S\n",
@@ -121,7 +140,8 @@ void NtlmCheckTargetInfoAvl(
     char* testName,
     char* blobName,
     void* msg,
-    PNTLM_BLOB pblob)
+    PNTLM_BLOB pblob,
+    PAUTH_TEST_DATA_SVR ptest)
 {
     PBYTE pData;
     PMSV1_0_AV_PAIR pAvp;
@@ -219,7 +239,10 @@ void NtlmCheckTargetInfoAvl(
     sync_ok(hasMsvAvNbDomainName, "avl %s: missing entry MsvAvNbDomainName!\n", blobName);
     sync_ok(hasMsvAvDnsComputerName, "avl %s: missing entry MsvAvDnsComputerName!\n", blobName);
     sync_ok(hasMsvAvDnsDomainName, "avl %s: missing entry MsvAvDnsDomainName!\n", blobName);
-    sync_ok(hasMsvAvTimestamp, "avl %s: missing entry MsvAvTimestamp!\n", blobName);
+    if (ptest->ChaMsg_hasAvTimestamp)
+        sync_ok(hasMsvAvTimestamp,"avl %s: missing entry MsvAvTimestamp!\n", blobName);
+    else
+        sync_ok(!hasMsvAvTimestamp,"avl %s: entry MsvAvTimestamp not needed!\n", blobName);
     sync_ok(hasMsvAvEOL, "avl %s: missing entry MsvAvEOL!\n", blobName);
 
     PrintHexDumpMax(pblob->Length, (PBYTE)msg + pblob->Offset, 1024);
@@ -249,7 +272,10 @@ void NtlmCheckWinVer(
             testName, pVer->NtlmRevisionCurrent, expRevision);
 }
 
-void NtlmCheckSecBuffer_CliAuthInit(char* testName, PBYTE buffer)
+void NtlmCheckSecBuffer_CliAuthInit(
+    IN char* testName,
+    IN PBYTE buffer,
+    IN PAUTH_TEST_DATA_CLI ptest)
 {
     PNTLM_MESSAGE_HEAD pHdr;
     PNEGOTIATE_MESSAGE pNego;
@@ -263,19 +289,22 @@ void NtlmCheckSecBuffer_CliAuthInit(char* testName, PBYTE buffer)
     pNego = (PNEGOTIATE_MESSAGE)pHdr;
     sync_ok(strncmp(pNego->Signature, NTLMSSP_SIGNATURE, 8) == 0,
         "invalid signature (%.8s)", pNego->Signature);
-    sync_ok(pNego->NegotiateFlags == 0xe208b2b7,
-            "%s: pChallenge->NegotiateFlags is %x, expected %x!\n",
-            testName, pNego->NegotiateFlags, 0xe208b2b7);
+    sync_ok(pNego->NegotiateFlags == ptest->NegMsg_NegotiateFlags,
+            "%s: pNego->NegotiateFlags is %x, expected %x!\n",
+            testName, pNego->NegotiateFlags, ptest->NegMsg_NegotiateFlags);
     NtlmCheckBlobA(testName, "OemDomainName",
-        g_sb.DomainNameA,
+        "",//g_sb.DomainNameA,
         pNego, &pNego->OemDomainName);
     NtlmCheckBlobA(testName, "OemWorkstationName",
-        g_sb.NetBIOSNameA,
+        "",//g_sb.NetBIOSNameA,
         pNego, &pNego->OemWorkstationName);
     NtlmCheckWinVer(testName, &pNego->Version, &g_sb.osVerInfo);
 }
 
-void NtlmCheckSecBuffer_SvrAuth(char* testName, PBYTE buffer)
+void NtlmCheckSecBuffer_SvrAuth(
+    IN char* testName,
+    IN PBYTE buffer,
+    IN PAUTH_TEST_DATA_SVR ptest)
 {
     PNTLM_MESSAGE_HEAD pHdr;
     PCHALLENGE_MESSAGE pChallenge;
@@ -292,18 +321,22 @@ void NtlmCheckSecBuffer_SvrAuth(char* testName, PBYTE buffer)
     NtlmCheckBlobW(testName, "TargetName",
         g_sb.NetBIOSNameW,
         pChallenge, &pChallenge->TargetName);
-    sync_ok(pChallenge->NegotiateFlags == 0xe28ac235,
+    sync_ok(pChallenge->NegotiateFlags == ptest->ChaMsg_NegotiateFlags,
             "%s: pChallenge->NegotiateFlags is %x, expected %x!\n",
-            testName, pChallenge->NegotiateFlags, 0xe28ac235);
+            testName, pChallenge->NegotiateFlags,
+            ptest->ChaMsg_NegotiateFlags);
     //TODO ServerChallenge[MSV1_0_CHALLENGE_LENGTH];
     //TODO Reserved[8];
     NtlmCheckTargetInfoAvl(testName, "TargetInfo",
-        pChallenge, &pChallenge->TargetInfo);
+        pChallenge, &pChallenge->TargetInfo, ptest);
     //FIXME: This is win 7!
     NtlmCheckWinVer(testName, &pChallenge->Version, &g_sb.osVerInfo);
 }
 
-void NtlmCheckSecBuffer_CliAuth(char* testName, PBYTE buffer)
+void NtlmCheckSecBuffer_CliAuth(
+    IN char* testName,
+    IN PBYTE buffer,
+    IN PAUTH_TEST_DATA_CLI ptest)
 {
     PNTLM_MESSAGE_HEAD pHdr;
     PAUTHENTICATE_MESSAGE pAuth;
@@ -318,34 +351,36 @@ void NtlmCheckSecBuffer_CliAuth(char* testName, PBYTE buffer)
     sync_ok(strncmp(pAuth->Signature, NTLMSSP_SIGNATURE, 8) == 0,
         "invalid signature (%.8s)", pAuth->Signature);
 
-    NtlmCheckBlobW(testName, "LmChallengeResponse",
-        L"",
-        pAuth, &pAuth->LmChallengeResponse);
-    NtlmCheckBlobW(testName, "NtChallengeResponse",
-        L"",
-        pAuth, &pAuth->NtChallengeResponse);
+    //NtlmCheckBlobW(testName, "LmChallengeResponse",
+    //    L"",
+    //    pAuth, &pAuth->LmChallengeResponse);
+    //NtlmCheckBlobW(testName, "NtChallengeResponse",
+    //    L"",
+    //    pAuth, &pAuth->NtChallengeResponse);
     NtlmCheckBlobW(testName, "DomainName",
-        L"",
+        ptest->userdom,
         pAuth, &pAuth->DomainName);
     NtlmCheckBlobW(testName, "UserName",
-        L"",
+        ptest->user,
         pAuth, &pAuth->UserName);
     NtlmCheckBlobW(testName, "WorkstationName",
-        L"",
+        g_sb.authMsg_WorkstNameW,
         pAuth, &pAuth->WorkstationName);
-    NtlmCheckBlobW(testName, "EncryptedRandomSessionKey",
-        L"",
-        pAuth, &pAuth->EncryptedRandomSessionKey);
-    sync_ok(pAuth->NegotiateFlags == 0xe288c235,
+    //NtlmCheckBlobW(testName, "EncryptedRandomSessionKey",
+    //    L"",
+    //    pAuth, &pAuth->EncryptedRandomSessionKey);
+    sync_ok(pAuth->NegotiateFlags == ptest->AuthMsg_NegotiateFlags,
             "%s: pAuth->NegotiateFlags is %x, expected %x!\n",
-            testName, pAuth->NegotiateFlags, 0xe288c235);
+            testName, pAuth->NegotiateFlags, ptest->AuthMsg_NegotiateFlags);
     NtlmCheckWinVer(testName, &pAuth->Version, &g_sb.osVerInfo);
     // MIC[16]; //doc says its ommited in nt,2k,xp,2k3
 }
 
 void NtlmCheckSecBuffer(
     IN int TESTSEC_idx,
-    IN PBYTE buffer)
+    IN PBYTE buffer,
+    IN PCLI_PARAMS pcp,
+    IN PSVR_PARAMS psp)
 {
     sync_trace("*** *** ***>>\n");
 
@@ -359,17 +394,17 @@ void NtlmCheckSecBuffer(
     {
         case TESTSEC_CLI_AUTH_INIT:
         {
-            NtlmCheckSecBuffer_CliAuthInit("cli-init", buffer);
+            NtlmCheckSecBuffer_CliAuthInit("cli-nego", buffer, pcp->ptest);
             break;
         }
         case TESTSEC_SVR_AUTH:
         {
-            NtlmCheckSecBuffer_SvrAuth("svr-auth", buffer);
+            NtlmCheckSecBuffer_SvrAuth("svr-chal", buffer, psp->ptest);
             break;
         }
         case TESTSEC_CLI_AUTH_FINI:
         {
-            NtlmCheckSecBuffer_CliAuth("cli-auth", buffer);
+            NtlmCheckSecBuffer_CliAuth("cli-auth", buffer, pcp->ptest);
             break;
         }
     }

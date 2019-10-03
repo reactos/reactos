@@ -30,14 +30,14 @@ GenServerContext(
     BOOL  fNewConversation);
 
 BOOL server2_DoAuthentication(
+    IN PSVR_PARAMS psp,
     IN int ServerPort,
-    IN SOCKET AuthSocket,
-    IN LPCTSTR PackageName);
+    IN SOCKET AuthSocket);
 
 BOOL AcceptAuthSocket(
+    IN PSVR_PARAMS pcp,
     IN int ServerPort,
-    OUT SOCKET *ServerSocket,
-    IN  LPCTSTR PackageName)
+    OUT SOCKET *ServerSocket)
 {
     SOCKET sockListen;
     SOCKET sockClient;
@@ -98,13 +98,13 @@ BOOL AcceptAuthSocket(
     sync_trace("connection accepted on socket %x!\n",sockClient);
     *ServerSocket = sockClient;
 
-    return server2_DoAuthentication(ServerPort, sockClient, PackageName);
+    return server2_DoAuthentication(pcp, ServerPort, sockClient);
 }
 
 BOOL server2_DoAuthentication(
+    IN PSVR_PARAMS psp,
     IN int ServerPort,
-    IN SOCKET AuthSocket,
-    IN LPCTSTR PackageName)
+    IN SOCKET AuthSocket)
 {
     SECURITY_STATUS   ss;
     DWORD cbIn,       cbOut;
@@ -113,7 +113,7 @@ BOOL server2_DoAuthentication(
     BOOL              fNewConversation = TRUE;
 
     ss = AcquireCredentialsHandle(NULL,
-                                  (LPTSTR)PackageName,
+                                  (LPTSTR)psp->PackageName,
                                   SECPKG_CRED_INBOUND,
                                   NULL,
                                   NULL,
@@ -152,7 +152,7 @@ BOOL server2_DoAuthentication(
             sync_err("GenServerContext failed.\n");
             return FALSE;
         }
-        NtlmCheckSecBuffer(TESTSEC_SVR_AUTH, g_sd.pOutBuf);
+        NtlmCheckSecBuffer(TESTSEC_SVR_AUTH, g_sd.pOutBuf, NULL, psp);
 
         fNewConversation = FALSE;
         if (!SendMsg(AuthSocket, g_sd.pOutBuf, cbOut))
@@ -287,8 +287,8 @@ void server2_cleanup(void)
 //#define RECV_MSG_FROM_CLI
 BOOL WINAPI
 server2_start(
-    IN int ServerPort,
-    IN LPCTSTR PackageName)
+    IN PSVR_PARAMS psp,
+    IN int ServerPort)
 {
     BOOL Success, bRes = TRUE;
     WCHAR* pUserName = NULL;
@@ -305,12 +305,12 @@ server2_start(
     /*
      * Initialize the security package
      */
-    ss = QuerySecurityPackageInfo((LPTSTR)PackageName, &pkgInfo);
+    ss = QuerySecurityPackageInfo((LPTSTR)psp->PackageName, &pkgInfo);
     sync_ok(SEC_SUCCESS(ss), "QuerySecurityPackageInfo failed with error 0x%08lx\n", ss);
     if (!SEC_SUCCESS(ss))
     {
         skip("Could not query package info for %S, error 0x%08lx\n",
-             PackageName, ss);
+             psp->PackageName, ss);
         printerr(ss);
         goto done;
     }
@@ -336,7 +336,7 @@ server2_start(
         sync_trace("Waiting for client to connect...\n");
 
         /* Make an authenticated connection with client */
-        Success = AcceptAuthSocket(ServerPort, &Server_Socket, PackageName);
+        Success = AcceptAuthSocket(psp, ServerPort, &Server_Socket);
         sync_ok(Success, "AcceptAuthSocket failed\n");
         if (!Success)
         {
@@ -463,8 +463,9 @@ int server2_main(int argc, WCHAR** argv)
 {
     DWORD dwRet;
     WSADATA wsaData;
-    LPCTSTR PackageName;
     int ServerPort;
+    SVR_PARAMS sp;
+    AUTH_TEST_DATA_SVR authtest;
 
     if (argc != 2)
     {
@@ -473,7 +474,9 @@ int server2_main(int argc, WCHAR** argv)
     }
 
     ServerPort = _wtoi(argv[0]);
-    PackageName = argv[1];
+    sp.ptest = &authtest;
+    sp.PackageName = argv[1];
+    authtest.MessageAttribute = ASC_REQ_CONFIDENTIALITY;
 
     /* Startup WSA */
     if (WSAStartup(0x0101, &wsaData))
@@ -483,7 +486,7 @@ int server2_main(int argc, WCHAR** argv)
     }
 
     /* Start the server */
-    dwRet = server2_start(ServerPort, PackageName);
+    dwRet = server2_start(&sp, ServerPort);
 
     /* Shutdown WSA and return */
     WSACleanup();

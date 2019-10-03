@@ -4,6 +4,7 @@
  * PURPOSE:         Tests for client/server authentication via secur32 API.
  * PROGRAMMERS:     Samuel Serapión
  *                  Hermes Belusca-Maito
+ *                  Andreas Maier <staubim@quantentunnel.de> (2019)
  */
 
 #include "client_server.h"
@@ -14,7 +15,7 @@
  * IN LPCTSTR PackageName); // Example: _T("NTLM"), or _T("Negotiate")
  */
 int server2_main(int argc, WCHAR** argv);
-
+int svr_auth_main(int argc, WCHAR** argv);
 /*
  * Params:
  * IN LPCTSTR ServerName,   // ServerName must be defined as the name of the computer running the server sample.    Example: _T("127.0.0.1")
@@ -22,6 +23,7 @@ int server2_main(int argc, WCHAR** argv);
  * IN LPCTSTR PackageName); // Example: _T("NTLM"), or _T("Negotiate")
  */
 int client2_main(int argc, WCHAR** argv);
+int cli_auth_main(int argc, WCHAR** argv);
 
 typedef int (*TESTPROC)(int argc, WCHAR** argv);
 
@@ -46,7 +48,7 @@ TESTDATA testdata[] =
         server2_main, 2, { L"2000", L"NTLM" },
         // ip, port, targetname, package, usr, pwd
         client2_main, 6, { L"127.0.0.1", L"2000", L"", L"NTLM", L"", L"" }
-    }
+    },
 #endif
 #ifdef TEST_NO_AUTO1
     {   // Test 0
@@ -61,8 +63,13 @@ TESTDATA testdata[] =
         NULL, 0, {0},
         // Port 139 / 445 (smb)
         client2_main, 6, { L"<ip>", L"445", L"", L"NTLM", L"<usr>", L"<pwd>" }
-    }
+    },
 #endif
+    {   // Test 0
+        svr_auth_main, 2, { L"2000", L"<testidx>" },
+        // ip, port, targetname, package, usr, pwd
+        cli_auth_main, 3, { L"localhost", L"2000", L"<testidx>" }
+    }
 };
 
 CRITICAL_SECTION sync_msg_cs;
@@ -86,15 +93,15 @@ static DWORD WINAPI server_thread(void *param)
     return 0;
 }
 
-void test_runner(USHORT testidx)
+void test_runner(USHORT testidx, WCHAR* testidx2)
 {
     HANDLE hThreadServer = INVALID_HANDLE_VALUE;
     WCHAR FileName[MAX_PATH];
     LPWSTR *argv, parIp, parUsr, parPwd;
-    int argc, nextarg;
-    PTESTDATA td = &testdata[testidx];
-    BOOL runCLI = (td->client_main != NULL);
-    BOOL runSVR = (td->server_main != NULL);
+    int argc, nextarg, i1;
+    TESTDATA td = testdata[testidx];
+    BOOL runCLI = (td.client_main != NULL);
+    BOOL runSVR = (td.server_main != NULL);
 
     /* optionen
      * secur32_apitest ClientServer [cli] <ip> <usr> <pwd>
@@ -121,23 +128,32 @@ void test_runner(USHORT testidx)
     if ((runCLI) &&
         (argc >= nextarg+3))
     {
-        int i1;
         parIp = argv[nextarg];
         parUsr = argv[nextarg+1];
         parPwd = argv[nextarg+2];
-        for (i1 = 0; i1 < td->cli_argc; i1++)
+        for (i1 = 0; i1 < td.cli_argc; i1++)
         {
-            if (wcscmp(td->cli_argv[i1], L"<ip>") == 0)
-                td->cli_argv[i1] = parIp;
-            if (wcscmp(td->cli_argv[i1], L"<usr>") == 0)
-                td->cli_argv[i1] = parUsr;
-            if (wcscmp(td->cli_argv[i1], L"<pwd>") == 0)
-                td->cli_argv[i1] = parPwd;
+            if (wcscmp(td.cli_argv[i1], L"<ip>") == 0)
+                td.cli_argv[i1] = parIp;
+            if (wcscmp(td.cli_argv[i1], L"<usr>") == 0)
+                td.cli_argv[i1] = parUsr;
+            if (wcscmp(td.cli_argv[i1], L"<pwd>") == 0)
+                td.cli_argv[i1] = parPwd;
         }
         sync_trace("ip %S; user %S\n", parIp, parUsr);
     }
-
     sync_trace("runCli %i, runSVR %i\n", runCLI, runSVR);
+
+    for (i1 = 0; i1 < td.cli_argc; i1++)
+    {
+        if (wcscmp(td.cli_argv[i1], L"<testidx>") == 0)
+            td.cli_argv[i1] = testidx2;
+    }
+    for (i1 = 0; i1 < td.svr_argc; i1++)
+    {
+        if (wcscmp(td.svr_argv[i1], L"<testidx>") == 0)
+            td.svr_argv[i1] = testidx2;
+    }
 
     /* Retrieve our full path */
     if (!GetModuleFileNameW(NULL, FileName, _countof(FileName)))
@@ -148,7 +164,7 @@ void test_runner(USHORT testidx)
 
     if (runSVR)
     {
-        hThreadServer = CreateThread(NULL, 0, server_thread, td, 0, NULL);
+        hThreadServer = CreateThread(NULL, 0, server_thread, &td, 0, NULL);
         ok(hThreadServer != NULL, "CreateThread failed: %lu\n", GetLastError());
         if (!hThreadServer)
             goto Quit;
@@ -162,7 +178,7 @@ void test_runner(USHORT testidx)
      */
 
     if (runCLI)
-        td->client_main(td->cli_argc, td->cli_argv);
+        td.client_main(td.cli_argc, td.cli_argv);
 
     if (hThreadServer != INVALID_HANDLE_VALUE)
         ok(WaitForSingleObject(hThreadServer, 10000) == WAIT_OBJECT_0, "Timeout waiting for thread\n");
@@ -222,7 +238,6 @@ CodeEncrypt(
      * that specifies the size of the trailer block.
      */
     CodeCalcAndAllocBuffer(cbMessage, pSecSizes, NULL, &neededBufSize);
-    printf("need size %ld\n", neededBufSize);
     if (neededBufSize > cbBufLen)
     {
         sync_err("Buffer to small\n");
@@ -523,7 +538,19 @@ START_TEST(ClientServer)
     InitializeCriticalSection(&sync_msg_cs);
     NtlmCheckInit();
 
-    test_runner(0);
+    test_runner(0, L"0");
+
+    NtlmCheckFini();
+    DeleteCriticalSection(&sync_msg_cs);
+}
+
+START_TEST(Auth)
+{
+    InitializeCriticalSection(&sync_msg_cs);
+    NtlmCheckInit();
+
+    test_runner(1, L"0");
+    //test_runner(1, L"1");
 
     NtlmCheckFini();
     DeleteCriticalSection(&sync_msg_cs);

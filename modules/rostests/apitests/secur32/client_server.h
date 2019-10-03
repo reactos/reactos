@@ -43,6 +43,7 @@
 // ntlmssp-protocol.h
 #include "ntlmssp.h"
 #include "protocol.h"
+#include "client_server.h"
 
 #include "smb_nego.h"
 
@@ -231,6 +232,57 @@ void PrintISCReqAttr(IN ULONG ReqAttr);
 void PrintASCRetAttr(IN ULONG RetAttr);
 void PrintASCReqAttr(IN ULONG ReqAttr);
 
+typedef struct auth_test_data_svr
+{
+    ULONG MessageAttribute;
+    /* challenge-message */
+    ULONG ChaMsg_NegotiateFlags;
+    /* Accept security context (nego->challenge)*/
+    ULONG ASCContextRETAttr1;
+    /* Accept security context (auth->)*/
+    ULONG ASCContextRETAttr2;
+    BOOL ChaMsg_hasAvTimestamp;
+} AUTH_TEST_DATA_SVR, *PAUTH_TEST_DATA_SVR;
+
+typedef struct auth_test_data_cli
+{
+    WCHAR* user;
+    WCHAR* pass;
+    WCHAR* userdom;
+    ULONG MessageAttribute;
+    /* negotiate-message */
+    ULONG NegMsg_NegotiateFlags;
+    ULONG ISCContextRETAttr1;
+    /* authenticate-message */
+    ULONG AuthMsg_NegotiateFlags;
+    ULONG ISCContextRETAttr2;
+} AUTH_TEST_DATA_CLI, *PAUTH_TEST_DATA_CLI;
+
+typedef struct auth_test_data
+{
+    WCHAR* PackageName;
+    AUTH_TEST_DATA_CLI cli;
+    AUTH_TEST_DATA_SVR svr;
+} AUTH_TEST_DATA, *PAUTH_TEST_DATA;
+
+extern int AUTH_TEST_DATA_SIZE;
+extern AUTH_TEST_DATA authtestdata[];
+
+typedef struct _CLI_PARAMS
+{
+    WCHAR* PackageName;
+    WCHAR* ServerName;
+    int ServerPort;
+    BOOL ownServer;
+    PAUTH_TEST_DATA_CLI ptest;
+} CLI_PARAMS, *PCLI_PARAMS;
+
+typedef struct _SVR_PARAMS
+{
+    WCHAR* PackageName;
+    PAUTH_TEST_DATA_SVR ptest;
+} SVR_PARAMS, *PSVR_PARAMS;
+
 #define TESTSEC_CLI_AUTH_INIT  1
 #define TESTSEC_SVR_AUTH       2
 #define TESTSEC_CLI_AUTH_FINI  3
@@ -239,6 +291,8 @@ void NtlmCheckInit();
 void NtlmCheckFini();
 void NtlmCheckSecBuffer(
     IN int TESTSEC_idx,
-    IN PBYTE buffer);
+    IN PBYTE buffer,
+    IN PCLI_PARAMS pcp,
+    IN PSVR_PARAMS psp);
 
 #endif // __CLIENT_SERVER_H__

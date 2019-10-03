@@ -20,17 +20,6 @@
                                 ISC_REQ_CONFIDENTIALITY | \
                                 ISC_REQ_EXTENDED_ERROR*/
 
-typedef struct _CLI_PARAMS
-{
-    WCHAR* ServerName;
-    int ServerPort;
-    WCHAR* TargetName;
-    WCHAR* PackageName;
-    WCHAR* user;
-    WCHAR* pass;
-    BOOL ownServer;
-} CLI_PARAMS, *PCLI_PARAMS;
-
 BOOL
 client2_DoAuthentication(
     IN PCLI_PARAMS pcp,
@@ -262,7 +251,7 @@ client2_DoAuthenticationOverSMB(
         sync_err("GenClientContext failed!\n");
         return FALSE;
     }
-    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf);
+    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf, pcp, NULL);
 
     cbOutSMB = cbMaxMessage;
     smbRequestCounter = 0;
@@ -294,7 +283,7 @@ client2_DoAuthenticationOverSMB(
         sync_err("smb_GetNTMLMsg failed!\n");
         return FALSE;
     }
-    printf("%li %li\n", cbInSMB, cbIn);
+    sync_trace("%li %li\n", cbInSMB, cbIn);
     PrintHexDumpMax(cbInSMB, pInBufSMB, cbInSMB);
     PrintHexDumpMax(cbIn, pInBuf, cbIn);
 
@@ -318,7 +307,7 @@ client2_DoAuthenticationOverSMB(
             sync_err("GenClientContext failed.\n");
             return FALSE;
         }
-        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf);
+        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf, pcp, NULL);
 
         cbOutSMB = cbMaxMessage;
         smbRequestCounter++;
@@ -404,7 +393,7 @@ client2_DoAuthentication(
         sync_err("GenClientContext failed!\n");
         return FALSE;
     }
-    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf);
+    NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_INIT, pOutBuf, pcp, NULL);
 
     if (!SendMsg(s, pOutBuf, cbOut))
     {
@@ -435,7 +424,7 @@ client2_DoAuthentication(
             sync_err("GenClientContext failed.\n");
             return FALSE;
         }
-        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf);
+        NtlmCheckSecBuffer(TESTSEC_CLI_AUTH_FINI, pOutBuf, pcp, NULL);
 
         if (!SendMsg(s, pOutBuf, cbOut))
         {
@@ -482,14 +471,14 @@ GenClientContext(
     {
         PSEC_WINNT_AUTH_IDENTITY pAuthData = NULL;
         SEC_WINNT_AUTH_IDENTITY AuthData;
-        if (((pcp->pass != NULL) && (pcp->pass[0] != 0)) ||
-            ((pcp->user != NULL) && (pcp->user[0] != 0)))
+        if (((pcp->ptest->pass != NULL) && (pcp->ptest->pass[0] != 0)) ||
+            ((pcp->ptest->user != NULL) && (pcp->ptest->user[0] != 0)))
         {
             /* works in ROS but not in W2k ... dont commit! */
-            AuthData.User = pcp->user;
-            AuthData.UserLength = wcslen(pcp->user);
-            AuthData.Password = pcp->pass;
-            AuthData.PasswordLength = wcslen(pcp->pass);
+            AuthData.User = pcp->ptest->user;
+            AuthData.UserLength = wcslen(pcp->ptest->user);
+            AuthData.Password = pcp->ptest->pass;
+            AuthData.PasswordLength = wcslen(pcp->ptest->pass);
             AuthData.Domain = L"ANDY-PC";
             AuthData.DomainLength = 7;
             AuthData.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
@@ -540,7 +529,7 @@ GenClientContext(
         PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        hcText,
-                                       pcp->TargetName,
+                                       pcp->ServerName,
                                        MessageAttribute,
                                        0,
                                        SECURITY_NATIVE_DREP,
@@ -560,7 +549,7 @@ GenClientContext(
         PrintISCReqAttr(MessageAttribute);
         ss = InitializeSecurityContext(hCred,
                                        NULL,
-                                       pcp->TargetName,
+                                       pcp->ServerName,
                                        MessageAttribute,
                                        0,
                                        SECURITY_NATIVE_DREP,
@@ -602,7 +591,7 @@ GenClientContext(
                 (ss == SEC_I_COMPLETE_AND_CONTINUE));
 
     sync_trace("Token buffer generated (%lu bytes):\n", OutSecBuff.cbBuffer);
-    printf("===OUTPUT===\n");
+    sync_trace("===OUTPUT===\n");
     PrintSecBuffer(&OutSecBuff);
 
     return TRUE;
@@ -610,7 +599,7 @@ GenClientContext(
 }
 
 PBYTE
-VerifyThis(
+doVerifyThis(
     PBYTE   pBuffer,
     LPDWORD pcbMessage,
     PSecHandle hCtxt,
@@ -758,18 +747,20 @@ int client2_main(int argc, WCHAR** argv)
     DWORD dwRet = 1;//FAILED
     WSADATA wsaData;
     CLI_PARAMS cp;
+    AUTH_TEST_DATA_CLI testcli;
 
     sync_ok(argc == 6, "argumentcount mismatched - aborting\n");
     if (argc != 6)
         goto done;
 
+    cp.ptest = &testcli;
+    cp.PackageName = argv[3];
     cp.ServerName = argv[0];
     cp.ServerPort = _wtoi(argv[1]);
-    cp.TargetName = argv[2];
-    cp.PackageName = argv[3];
-    cp.user = argv[4];
-    cp.pass = argv[5];
     cp.ownServer = (cp.ServerPort != 445);
+    cp.ptest->user = argv[4];
+    cp.ptest->pass = argv[5];
+    cp.ptest->userdom = L"ANDY-PC";
 
     //printf("start %S %S %S\n", ServerName, TargetName, PackageName);
 

@@ -347,7 +347,6 @@ void PrintChallengeMessage(PCHALLENGE_MESSAGE pmsg, ULONG msgsize)
     sync_trace("MsgType     0x%x\n", pmsg->MsgType);
     PrintNtlmBlob("TargetName", pmsg, msgsize, &pmsg->TargetName);
     sync_trace("NegotiateFlags 0x%x\n", pmsg->NegotiateFlags);
-    printf("ServerChallenge\n");
     PrintHexDump(MSV1_0_CHALLENGE_LENGTH, (PBYTE)&pmsg->ServerChallenge);
     PrintHexDump(8, (PBYTE)&pmsg->Reserved);
     PrintNtlmAvl("TargetInfo", pmsg, msgsize, &pmsg->TargetInfo);

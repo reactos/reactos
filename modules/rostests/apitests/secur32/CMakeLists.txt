@@ -1,5 +1,8 @@
 
 list(APPEND SOURCE
+    auth_cli.c
+    auth_common.c
+    auth_svr.c
     client_server.c
 #    client1.c
     client2_msdn.c
