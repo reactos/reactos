@@ -1,3 +1,3 @@
-ReactOS Verdana fonts are based on "Bitstream Vera Sans" fonts.
+ReactOS "Verdana" font is based on "DejaVu Sans".
 
-See also COPYRIGHT.TXT.
+See also LICENSE.txt file.
