@@ -371,6 +371,8 @@ PeLdrpLoadAndScanReferencedDll(
         return Success;
     }
 
+    (*DataTableEntry)->Flags |= LDRP_DRIVER_DEPENDENT_DLL;
+
     /* Scan its dependencies too */
     TRACE("PeLdrScanImportDescriptorTable() calling ourselves for %S\n",
           VaToPa((*DataTableEntry)->BaseDllName.Buffer));
