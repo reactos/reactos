@@ -15,7 +15,6 @@ list(APPEND HAL_XBOX_SOURCE
     generic/memory.c
     generic/misc.c
     generic/pic.c
-    generic/reboot.c
     generic/sysinfo.c
     generic/usage.c
     generic/bios.c
@@ -34,6 +33,7 @@ list(APPEND HAL_XBOX_SOURCE
     generic/timer.c
     xbox/part_xbox.c
     xbox/halinit_xbox.c
+    xbox/reboot.c
     up/pic.c)
 
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})
