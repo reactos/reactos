@@ -60,7 +60,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     {
         DeviceInformation = CONTAINING_RECORD(DeviceEntry, DEVICE_INFORMATION, DeviceListEntry);
 
-        if (RtlCompareUnicodeString(&TargetDeviceName, &(DeviceInformation->DeviceName), TRUE) == 0)
+        if (RtlEqualUnicodeString(&TargetDeviceName, &(DeviceInformation->DeviceName), TRUE))
         {
             break;
         }
@@ -452,7 +452,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         {
             DeviceInformation = CONTAINING_RECORD(DeviceEntry, DEVICE_INFORMATION, DeviceListEntry);
 
-            if (RtlEqualUnicodeString(&DeviceName, &(DeviceInformation->DeviceName), TRUE) == 0)
+            if (RtlEqualUnicodeString(&DeviceName, &(DeviceInformation->DeviceName), TRUE))
             {
                 break;
             }
