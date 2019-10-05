@@ -344,6 +344,11 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     {
         Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
 
+        if (SymbolicName)
+        {
+            FreePool(DeviceName.Buffer);
+        }
+
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -417,6 +422,11 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         {
             break;
         }
+    }
+
+    if (SymbolicName)
+    {
+        FreePool(DeviceName.Buffer);
     }
 
     return STATUS_SUCCESS;
