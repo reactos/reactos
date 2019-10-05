@@ -472,7 +472,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-            if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE) == 0)
+            if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE))
             {
                 break;
             }
@@ -500,7 +500,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
             {
                 SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-                if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE) == 0)
+                if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE))
                 {
                     break;
                 }
