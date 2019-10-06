@@ -149,14 +149,14 @@ list(APPEND FONT_FILES
     SourceCodePro-Regular.ttf
     #SourceCodePro-Semibold.ttf
     #SourceCodePro-SemiboldIt.ttf
-    #ssee874.fon
-    #ssee1255.fon
-    #ssee1256.fon
-    #ssee1257.fon
-    #sserife.fon
-    #sserifeg.fon
-    #sserifer.fon
-    #sserifet.fon
+    #ssee874.fon # to be added
+    #ssee1255.fon # to be added
+    #ssee1256.fon # to be added
+    #ssee1257.fon # to be added
+    #sserife.fon # to be added
+    #sserifeg.fon # to be added
+    #sserifer.fon # to be added
+    #sserifet.fon # to be added
     times.ttf
     timesbd.ttf
     timesbi.ttf
