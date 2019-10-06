@@ -92,9 +92,9 @@ list(APPEND FONT_FILES
     micross.ttf
     OpenSans-Bold.ttf
     OpenSans-BoldItalic.ttf
-    OpenSans-CondBold.ttf
-    OpenSans-CondLight.ttf
-    OpenSans-CondLightItalic.ttf
+    #OpenSans-CondBold.ttf
+    #OpenSans-CondLight.ttf
+    #OpenSans-CondLightItalic.ttf
     #OpenSans-ExtraBold.ttf
     #OpenSans-ExtraBoldItalic.ttf
     OpenSans-Italic.ttf
