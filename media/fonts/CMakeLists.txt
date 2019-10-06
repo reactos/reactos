@@ -11,16 +11,16 @@ list(APPEND FONT_FILES
     courbd.ttf
     courbi.ttf
     couri.ttf
-    DejaVuMathTeXGyre.ttf
+    #DejaVuMathTeXGyre.ttf
     DejaVuSans-Bold.ttf
     DejaVuSans-BoldOblique.ttf
-    DejaVuSans-ExtraLight.ttf
+    #DejaVuSans-ExtraLight.ttf
     DejaVuSans-Oblique.ttf
     DejaVuSans.ttf
-    DejaVuSansCondensed-Bold.ttf
-    DejaVuSansCondensed-BoldOblique.ttf
-    DejaVuSansCondensed-Oblique.ttf
-    DejaVuSansCondensed.ttf
+    #DejaVuSansCondensed-Bold.ttf
+    #DejaVuSansCondensed-BoldOblique.ttf
+    #DejaVuSansCondensed-Oblique.ttf
+    #DejaVuSansCondensed.ttf
     DejaVuSansMono-Bold.ttf
     DejaVuSansMono-BoldOblique.ttf
     DejaVuSansMono-Oblique.ttf
@@ -29,10 +29,10 @@ list(APPEND FONT_FILES
     DejaVuSerif-BoldItalic.ttf
     DejaVuSerif-Italic.ttf
     DejaVuSerif.ttf
-    DejaVuSerifCondensed-Bold.ttf
-    DejaVuSerifCondensed-BoldItalic.ttf
-    DejaVuSerifCondensed-Italic.ttf
-    DejaVuSerifCondensed.ttf
+    #DejaVuSerifCondensed-Bold.ttf
+    #DejaVuSerifCondensed-BoldItalic.ttf
+    #DejaVuSerifCondensed-Italic.ttf
+    #DejaVuSerifCondensed.ttf
     framd.ttf
     framdit.ttf
     FreeMono.ttf
@@ -61,22 +61,22 @@ list(APPEND FONT_FILES
     LiberationSans-BoldItalic.ttf
     LiberationSans-Italic.ttf
     LiberationSans-Regular.ttf
-    LiberationSansNarrow-Bold.ttf
-    LiberationSansNarrow-BoldItalic.ttf
-    LiberationSansNarrow-Italic.ttf
-    LiberationSansNarrow-Regular.ttf
+    #LiberationSansNarrow-Bold.ttf
+    #LiberationSansNarrow-BoldItalic.ttf
+    #LiberationSansNarrow-Italic.ttf
+    #LiberationSansNarrow-Regular.ttf
     LiberationSerif-Bold.ttf
     LiberationSerif-BoldItalic.ttf
     LiberationSerif-Italic.ttf
     LiberationSerif-Regular.ttf
-    LibreFranklin-Black.ttf
-    LibreFranklin-BlackItalic.ttf
-    LibreFranklin-Bold.ttf
-    LibreFranklin-BoldItalic.ttf
-    LibreFranklin-ExtraBold.ttf
-    LibreFranklin-ExtraBoldItalic.ttf
-    LibreFranklin-ExtraLight.ttf
-    LibreFranklin-ExtraLightItalic.ttf
+    #LibreFranklin-Black.ttf
+    #LibreFranklin-BlackItalic.ttf
+    #LibreFranklin-Bold.ttf
+    #LibreFranklin-BoldItalic.ttf
+    #LibreFranklin-ExtraBold.ttf
+    #LibreFranklin-ExtraBoldItalic.ttf
+    #LibreFranklin-ExtraLight.ttf
+    #LibreFranklin-ExtraLightItalic.ttf
     LibreFranklin-Italic.ttf
     LibreFranklin-Light.ttf
     LibreFranklin-LightItalic.ttf
@@ -95,14 +95,14 @@ list(APPEND FONT_FILES
     OpenSans-CondBold.ttf
     OpenSans-CondLight.ttf
     OpenSans-CondLightItalic.ttf
-    OpenSans-ExtraBold.ttf
-    OpenSans-ExtraBoldItalic.ttf
+    #OpenSans-ExtraBold.ttf
+    #OpenSans-ExtraBoldItalic.ttf
     OpenSans-Italic.ttf
     OpenSans-Light.ttf
     OpenSans-LightItalic.ttf
     OpenSans-Regular.ttf
-    OpenSans-Semibold.ttf
-    OpenSans-SemiboldItalic.ttf
+    #OpenSans-Semibold.ttf
+    #OpenSans-SemiboldItalic.ttf
     pala.ttf
     palab.ttf
     palabi.ttf
@@ -127,28 +127,28 @@ list(APPEND FONT_FILES
     SourceSansPro-BlackIt.ttf
     SourceSansPro-Bold.ttf
     SourceSansPro-BoldIt.ttf
-    SourceSansPro-ExtraLight.ttf
-    SourceSansPro-ExtraLightIt.ttf
+    #SourceSansPro-ExtraLight.ttf
+    #SourceSansPro-ExtraLightIt.ttf
     SourceSansPro-It.ttf
     SourceSansPro-Light.ttf
     SourceSansPro-LightIt.ttf
     SourceSansPro-Regular.ttf
-    SourceSansPro-Semibold.ttf
-    SourceSansPro-SemiboldIt.ttf
+    #SourceSansPro-Semibold.ttf
+    #SourceSansPro-SemiboldIt.ttf
     SourceCodePro-Black.ttf
     SourceCodePro-BlackIt.ttf
     SourceCodePro-Bold.ttf
     SourceCodePro-BoldIt.ttf
-    SourceCodePro-ExtraLight.ttf
-    SourceCodePro-ExtraLightIt.ttf
+    #SourceCodePro-ExtraLight.ttf
+    #SourceCodePro-ExtraLightIt.ttf
     SourceCodePro-It.ttf
     SourceCodePro-Light.ttf
     SourceCodePro-LightIt.ttf
     SourceCodePro-Medium.ttf
     SourceCodePro-MediumIt.ttf
     SourceCodePro-Regular.ttf
-    SourceCodePro-Semibold.ttf
-    SourceCodePro-SemiboldIt.ttf
+    #SourceCodePro-Semibold.ttf
+    #SourceCodePro-SemiboldIt.ttf
     #ssee874.fon
     #ssee1255.fon
     #ssee1256.fon
