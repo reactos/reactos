@@ -1,0 +1,37 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Ater"
+}
+
+STRINGTABLE
+{
+2000, "Lautus Ater"
+}
+
+STRINGTABLE
+{
+3000, "Звичайний"
+3001, "Крупный шрифт"
+3002, "Величезний шрифт"
+}
+
+STRINGTABLE
+{
+4000, "Звичайний"
+4001, "Великий шрифт"
+4002, "Величезний шрифт"
+}
+
+STRINGTABLE
+{
+5000, "Lautus"
+5001, "Візуальний Cтиль"
+5002, "Команда ReactOS"
+5003, "Pisarz, заснований на Luna Inspirat"
+5004, "Випущений під  GNU/GPL 2.0, 2011"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Візуальний стиль для ReactOS"
+}
