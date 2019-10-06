@@ -17,7 +17,10 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 #define TAG_BOOT_OPTIONS 'pOtB'
 
 // TODO: Move to .h
-VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
+VOID
+AllocateAndInitLPB(
+    IN USHORT VersionToBoot,
+    OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock);
 
 static VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
@@ -79,6 +82,7 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR S
 static
 BOOLEAN
 SetupLdrInitErrataInf(
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN HINF InfHandle,
     IN PCSTR SystemRoot)
 {
@@ -111,8 +115,8 @@ SetupLdrInitErrataInf(
         return FALSE;
     }
 
-    WinLdrSystemBlock->Extension.EmInfFileImage = PaToVa(PhysicalBase);
-    WinLdrSystemBlock->Extension.EmInfFileSize  = FileSize;
+    LoaderBlock->Extension->EmInfFileImage = PaToVa(PhysicalBase);
+    LoaderBlock->Extension->EmInfFileSize  = FileSize;
 
     return TRUE;
 }
@@ -350,8 +354,8 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    /* Allocate and minimalist-initialize LPB */
-    AllocateAndInitLPB(&LoaderBlock);
+    /* Allocate and minimally-initialize the Loader Parameter Block */
+    AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
 
     /* Allocate and initialize setup loader block */
     SetupBlock = &WinLdrSystemBlock->SetupBlock;
@@ -375,7 +379,7 @@ LoadReactOSSetup(
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
 
     /* Load the Firmware Errata file from the installation medium */
-    Success = SetupLdrInitErrataInf(InfHandle, BootPath);
+    Success = SetupLdrInitErrataInf(LoaderBlock, InfHandle, BootPath);
     TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
     /* Not necessarily fatal if not found - carry on going */
 

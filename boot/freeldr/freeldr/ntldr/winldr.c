@@ -31,11 +31,14 @@ VOID DumpMemoryAllocMap(VOID);
 
 // Init "phase 0"
 VOID
-AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
+AllocateAndInitLPB(
+    IN USHORT VersionToBoot,
+    OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock;
+    PLOADER_PARAMETER_EXTENSION Extension;
 
-    /* Allocate and zero-init the LPB */
+    /* Allocate and zero-init the Loader Parameter Block */
     WinLdrSystemBlock = MmAllocateMemoryWithType(sizeof(LOADER_SYSTEM_BLOCK),
                                                  LoaderSystemBlock);
     if (WinLdrSystemBlock == NULL)
@@ -48,6 +51,13 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 
     LoaderBlock = &WinLdrSystemBlock->LoaderBlock;
     LoaderBlock->NlsData = &WinLdrSystemBlock->NlsDataBlock;
+
+    /* Initialize the Loader Block Extension */
+    Extension = &WinLdrSystemBlock->Extension;
+    LoaderBlock->Extension = Extension;
+    Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
+    Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
+    Extension->MinorVersion = (VersionToBoot & 0xFF);
 
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
@@ -99,16 +109,16 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 // SetupBlock->ArcSetupDeviceName must be the path to the setup **SOURCE**,
 // and not the setup boot path. Indeed they may differ!!
 //
-    /* If we have a setup block, adjust also its ARC path */
     if (LoaderBlock->SetupLdrBlock)
     {
         PSETUP_LOADER_BLOCK SetupBlock = LoaderBlock->SetupLdrBlock;
 
-        /* Matches ArcBoot path */
+        /* Adjust the ARC path in the setup block - Matches ArcBoot path */
         SetupBlock->ArcSetupDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
         SetupBlock->ArcSetupDeviceName = PaToVa(SetupBlock->ArcSetupDeviceName);
 
-        /* Note: LoaderBlock->SetupLdrBlock is PaToVa'ed at the end of this function */
+        /* Convert the setup block pointer */
+        LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
     }
 
     /* Fill ARC HalDevice, it matches ArcBoot path */
@@ -162,7 +172,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        &ArcDiskSig->DiskSignature.ListEntry);
     }
 
-    /* Convert all list's to Virtual address */
+    /* Convert all lists to Virtual address */
 
     /* Convert the ArcDisks list to virtual address */
     List_PaToVa(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
@@ -181,11 +191,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Convert list of boot drivers */
     List_PaToVa(&LoaderBlock->BootDriverListHead);
 
-    /* Initialize Extension now */
-    Extension = &WinLdrSystemBlock->Extension;
-    Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
-    Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
-    Extension->MinorVersion = VersionToBoot & 0xFF;
+    Extension = LoaderBlock->Extension;
+
+    /* FIXME! HACK value for docking profile */
     Extension->Profile.Status = 2;
 
     /* Check if FreeLdr detected a ACPI table */
@@ -214,11 +222,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                     &Extension->DrvDBSize,
                                                     LoaderRegistryData));
 
-    /* Convert extension and setup block pointers */
-    LoaderBlock->Extension = PaToVa(Extension);
-
-    if (LoaderBlock->SetupLdrBlock)
-        LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
+    /* Convert the extension block pointer */
+    LoaderBlock->Extension = PaToVa(LoaderBlock->Extension);
 
     TRACE("WinLdrInitializePhase1() completed\n");
 }
@@ -654,6 +659,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 static
 BOOLEAN
 WinLdrInitErrataInf(
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN USHORT OperatingSystemVersion,
     IN PCSTR SystemRoot)
 {
@@ -706,8 +712,8 @@ WinLdrInitErrataInf(
         return FALSE;
     }
 
-    WinLdrSystemBlock->Extension.EmInfFileImage = PaToVa(PhysicalBase);
-    WinLdrSystemBlock->Extension.EmInfFileSize  = FileSize;
+    LoaderBlock->Extension->EmInfFileImage = PaToVa(PhysicalBase);
+    LoaderBlock->Extension->EmInfFileSize  = FileSize;
 
     return TRUE;
 }
@@ -864,8 +870,8 @@ LoadAndBootWindows(
     /* Let user know we started loading */
     //UiDrawStatusText("Loading...");
 
-    /* Allocate and minimalist-initialize LPB */
-    AllocateAndInitLPB(&LoaderBlock);
+    /* Allocate and minimally-initialize the Loader Parameter Block */
+    AllocateAndInitLPB(OperatingSystemVersion, &LoaderBlock);
 
     /* Load the system hive */
     UiDrawBackdrop();
@@ -876,6 +882,12 @@ LoadAndBootWindows(
     if (!Success)
         return ENOEXEC;
 
+    /* Fixup the version number using data from the registry */
+    if (OperatingSystemVersion == 0)
+        OperatingSystemVersion = WinLdrDetectVersion();
+    LoaderBlock->Extension->MajorVersion = (OperatingSystemVersion & 0xFF00) >> 8;
+    LoaderBlock->Extension->MinorVersion = (OperatingSystemVersion & 0xFF);
+
     /* Load NLS data, OEM font, and prepare boot drivers list */
     Success = WinLdrScanSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
@@ -884,7 +896,7 @@ LoadAndBootWindows(
         return ENOEXEC;
 
     /* Load the Firmware Errata file */
-    Success = WinLdrInitErrataInf(OperatingSystemVersion, BootPath);
+    Success = WinLdrInitErrataInf(LoaderBlock, OperatingSystemVersion, BootPath);
     TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
     /* Not necessarily fatal if not found - carry on going */
 
@@ -912,6 +924,8 @@ LoadAndBootWindowsCommon(
 
     TRACE("LoadAndBootWindowsCommon()\n");
 
+    ASSERT(OperatingSystemVersion != 0);
+
 #ifdef _M_IX86
     /* Setup redirection support */
     WinLdrSetupEms((PCHAR)BootOptions);
@@ -924,9 +938,6 @@ LoadAndBootWindowsCommon(
     UiDrawBackdrop();
     UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
-
-    if (OperatingSystemVersion == 0)
-        OperatingSystemVersion = WinLdrDetectVersion();
 
     /* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
     Success = LoadWindowsCore(OperatingSystemVersion,
