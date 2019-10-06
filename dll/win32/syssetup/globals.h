@@ -31,6 +31,12 @@ extern ADMIN_INFO AdminInfo;
 
 BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
 
+/* netinstall.c */
+
+BOOL
+InstallNetworkComponent(
+    _In_ PWSTR pszComponentId);
+
 /* security.c */
 
 VOID InstallSecurity(VOID);

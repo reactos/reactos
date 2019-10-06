@@ -503,7 +503,7 @@ CreateNotificationObject(
     HRESULT hr;
     LONG lRet;
     CLSID ClassGUID;
-    //CLSID InstanceGUID;
+    CLSID InstanceGUID;
 
     wcscpy(szName,L"SYSTEM\\CurrentControlSet\\Control\\Network\\");
 
@@ -521,7 +521,6 @@ CreateNotificationObject(
     wcscat(szName, L"\\");
 
     /* get the Instance GUID */
-#if 0
     hr = INetCfgComponent_GetInstanceGuid(iface, &InstanceGUID);
     if (FAILED(hr))
         return hr;
@@ -532,10 +531,6 @@ CreateNotificationObject(
 
     wcscat(szName, pStr);
     CoTaskMemFree(pStr);
-#else
-    // HACK HACK HACK HACK HACK
-    wcscat(szName, L"{RandomProtocolGUID_TCPIP}");
-#endif
 
     wcscat(szName, L"\\NDI");
 
