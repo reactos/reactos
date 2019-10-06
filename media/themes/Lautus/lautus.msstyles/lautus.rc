@@ -216,6 +216,6 @@ NORMAL_NORMALGROUPEXPAND_BMP BITMAP "bitmaps/dummy.bmp"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
-#ifdef LANGUAGE_UA_UA
+#ifdef LANGUAGE_UK_UA
     #include "lang/ua-UA.rc"
 #endif
