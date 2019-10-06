@@ -17,7 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 /* INCLUDES *******************************************************************/
 
@@ -331,4 +331,4 @@ LoadAndBootDevice(
     return ESUCCESS;
 }
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */

@@ -22,9 +22,7 @@
  * https://www.kernel.org/doc/Documentation/x86/boot.txt
  */
 
-#ifndef _M_ARM
-
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 /* INCLUDES *******************************************************************/
 
@@ -439,7 +437,7 @@ static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
     Position.QuadPart = 512 + SetupSectorSize;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
-    for (BytesLoaded=0; BytesLoaded<LinuxKernelSize; )
+    for (BytesLoaded = 0; BytesLoaded < LinuxKernelSize; )
     {
         if (ArcRead(LinuxKernelFile, LoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
@@ -492,31 +490,37 @@ static BOOLEAN LinuxCheckKernelVersion(VOID)
 
 static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
 {
-    ULONG        BytesLoaded;
-    CHAR    StatusText[260];
+    ULONG BytesLoaded;
+    CHAR  StatusText[260];
 
     RtlStringCbPrintfA(StatusText, sizeof(StatusText), "Loading %s", LinuxInitrdName);
     UiDrawStatusText(StatusText);
 
-    // Allocate memory for the ramdisk
-    //LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
-    // Try to align it at the next MB boundary after the kernel
-    //LinuxInitrdLoadAddress = MmAllocateMemoryAtAddress(LinuxInitrdSize, (PVOID)ROUND_UP((LINUX_KERNEL_LOAD_ADDRESS + LinuxKernelSize), 0x100000));
+    /* Allocate memory for the ramdisk, below 4GB */
+    // LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
+    /* Try to align it at the next MB boundary after the kernel */
+    // LinuxInitrdLoadAddress = MmAllocateMemoryAtAddress(LinuxInitrdSize, (PVOID)ROUND_UP((LINUX_KERNEL_LOAD_ADDRESS + LinuxKernelSize), 0x100000));
     if (LinuxSetupSector->Version <= 0x0202)
     {
+#ifdef _M_AMD64
+        C_ASSERT(LINUX_MAX_INITRD_ADDRESS < 0x100000000);
+#endif
         LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LINUX_MAX_INITRD_ADDRESS, LoaderSystemCode);
     }
     else
     {
-        LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LinuxSetupSector->InitrdAddressMax, LoaderSystemCode);
+        LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, UlongToPtr(LinuxSetupSector->InitrdAddressMax), LoaderSystemCode);
     }
     if (LinuxInitrdLoadAddress == NULL)
     {
         return FALSE;
     }
+#ifdef _M_AMD64
+    ASSERT((ULONG_PTR)LinuxInitrdLoadAddress < 0x100000000);
+#endif
 
     /* Set the information in the setup struct */
-    LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
+    LinuxSetupSector->RamdiskAddress = PtrToUlong(LinuxInitrdLoadAddress);
     LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
     TRACE("RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
@@ -528,9 +532,9 @@ static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
     }
 
     /* Load the ramdisk */
-    for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
+    for (BytesLoaded = 0; BytesLoaded < LinuxInitrdSize; )
     {
-        if (ArcRead(LinuxInitrdFile, (PVOID)LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
+        if (ArcRead(LinuxInitrdFile, LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
@@ -542,6 +546,4 @@ static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
     return TRUE;
 }
 
-#endif // _M_IX86
-
-#endif
+#endif /* _M_IX86 || _M_AMD64 */
