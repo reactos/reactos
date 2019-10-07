@@ -38,9 +38,10 @@ list(APPEND FONT_FILES
     palab.ttf
     palabi.ttf
     palai.ttf
-    symbol.ttf
-    tahoma.ttf
-    tahomabd.ttf
+    SourceSansPro-Regular.ttf
+    SourceSansPro-Bold.ttf
+    SourceSansPro-BoldIt.ttf
+    SourceSansPro-It.ttf
     #ssee874.fon # to be added
     #ssee1255.fon # to be added
     #ssee1256.fon # to be added
@@ -49,6 +50,9 @@ list(APPEND FONT_FILES
     #sserifeg.fon # to be added
     #sserifer.fon # to be added
     #sserifet.fon # to be added
+    symbol.ttf
+    tahoma.ttf
+    tahomabd.ttf
     times.ttf
     timesbd.ttf
     timesbi.ttf
