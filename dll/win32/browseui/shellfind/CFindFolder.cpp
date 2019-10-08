@@ -127,7 +127,6 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     memcpy(p, lpszPath, pathLen);
     p += pathLen;
 
-
     memcpy(p, lpLastFSPidl, lpLastFSPidl->mkid.cb);
     p += lpLastFSPidl->mkid.cb;
 
