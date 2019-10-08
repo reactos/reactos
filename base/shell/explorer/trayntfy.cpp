@@ -298,7 +298,11 @@ public:
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         bHandled = TRUE;
-        return 0;
+
+        if (reinterpret_cast<HWND>(wParam) == m_hwndClock)
+            return GetParent().SendMessage(uMsg, wParam, lParam);
+        else
+            return 0;
     }
 
     LRESULT OnClockMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -345,7 +349,7 @@ public:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
-        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu) // FIXME: This handler is not necessary in Windows
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnClockMessage)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnClockMessage)
         MESSAGE_HANDLER(WM_SETFONT, OnClockMessage)
