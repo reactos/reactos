@@ -1,10 +1,10 @@
-/* Indonesian resource file by Zaenal Mutaqin  (ade999@gmail.com) */
+/* Indonesian resource file by Zaenal Mutaqin (ade999@gmail.com) and Mas Ahmad Muhammad (m.charly81@gmail.com) */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDR_TASKMANAGER MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "Tugas &Baru (jalankan...)", ID_FILE_NEW
         MENUITEM SEPARATOR
@@ -12,81 +12,81 @@ BEGIN
     END
     POPUP "&Opsi"
     BEGIN
-        MENUITEM "Sel&alu Di Atas", ID_OPTIONS_ALWAYSONTOP, CHECKED
-        MENUITEM "&Kecilkan Saat Digunakan", ID_OPTIONS_MINIMIZEONUSE, CHECKED
-        MENUITEM "Se&mbunyikan Saat Dikecilkan", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "Sel&alu di atas", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "Per&kecil Saat Digunakan", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "Se&mbunyikan Saat Diperkecil", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
         MENUITEM "&Tampilkan tugas 16-bit", ID_OPTIONS_SHOW16BITTASKS, CHECKED
     END
-    POPUP "&Lihat"
+    POPUP "&Tampilan"
     BEGIN
         MENUITEM "&Segarkan Sekarang", ID_VIEW_REFRESH
-        POPUP "&Mutakhirkan Kecepatan"
+        POPUP "&Kecepatan penyegaran"
         BEGIN
             MENUITEM "&Tinggi", ID_VIEW_UPDATESPEED_HIGH
             MENUITEM "&Normal", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
             MENUITEM "&Rendah", ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "&Istirahat", ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "&Jeda", ID_VIEW_UPDATESPEED_PAUSED
         END
         MENUITEM SEPARATOR
         MENUITEM "Ikon &Besar", ID_VIEW_LARGE
-        MENUITEM "Ikon &Kecil", ID_VIEW_SMALL
-        MENUITEM "&Detil", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "Ikon K&ecil", ID_VIEW_SMALL
+        MENUITEM "&Rinci", ID_VIEW_DETAILS, CHECKED
         MENUITEM "&Pilih Kolom...", ID_VIEW_SELECTCOLUMNS
-        POPUP "&CPU Histori"
+        POPUP "Riwayat &CPU"
         BEGIN
-            MENUITEM "&One Graph, All CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&Satu Grafik Semua CPU", ID_VIEW_CPUHISTORY_ONEGRAPHALL
             MENUITEM "Satu Grafik &Per CPU", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
         MENUITEM "&Tampilkan Waktu Kernel", ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Jendela"
     BEGIN
-        MENUITEM "Tile &Horizontally", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Tile &Vertically", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimize", ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximize", ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Cascade", ID_WINDOWS_CASCADE
-        MENUITEM "&Bring To Front", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "Ubin secara &Horisontal", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Ubin secara &Vertikal", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Perkecil", ID_WINDOWS_MINIMIZE
+        MENUITEM "Per&besar", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Tumpuk", ID_WINDOWS_CASCADE
+        MENUITEM "&Bawa ke depan", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "&Matikan"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "&Siaga", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Hibernasi", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Nonaktifkan", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Mulai Ulang", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Keluarkan %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Pindah Pengguna\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Kunci Komputer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "P&utuskan Sambungan", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Lepaskan Komputer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
-    POPUP "&Help"
+    POPUP "&Bantuan"
     BEGIN
-        MENUITEM "Task Manager &Help Topics", ID_HELP_TOPICS
+        MENUITEM "&Topik Bantuan Manajer Tugas", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Task Manager", ID_HELP_ABOUT
+        MENUITEM "Te&ntang Manajer Tugas", ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU
 BEGIN
-    MENUITEM "Tile &Horisontal", ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Tile &Vertikal", ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "&Kecilkan", ID_WINDOWS_MINIMIZE
-    MENUITEM "Be&sarkan", ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Cascade", ID_WINDOWS_CASCADE
-    MENUITEM "&Bawa Ke Depan", ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "Ubin secara &Horisontal", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Ubin secara &Vertikal", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Perkecil", ID_WINDOWS_MINIMIZE
+    MENUITEM "Per&besar", ID_WINDOWS_MAXIMIZE
+    MENUITEM "&Tumpuk", ID_WINDOWS_CASCADE
+    MENUITEM "&Bawa ke depan", ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&New Task (Run...)", ID_FILE_NEW
+        MENUITEM "&Tugas Baru (Jalankan...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Lar&ge Icons", ID_VIEW_LARGE
-        MENUITEM "S&mall Icons", ID_VIEW_SMALL
-        MENUITEM "&Details", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "I&kon Besar", ID_VIEW_LARGE
+        MENUITEM "Iko&n Kecil", ID_VIEW_SMALL
+        MENUITEM "&Rincian", ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -94,17 +94,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Switch To", ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&Bring To Front", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "B&erpindah Ke", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&Bawa ke Depan", ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Tile &Horizontally", ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Tile &Vertically", ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimize", ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximize", ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Cascade", ID_WINDOWS_CASCADE
+        MENUITEM "Ubin secara &Horisontal", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Ubin secara &Vertikal", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Perkecil", ID_WINDOWS_MINIMIZE
+        MENUITEM "Per&besar", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Tumpuk", ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&End Task", ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Go To Process", ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&Akhiri Tugas", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Per&gi ke Proses", ID_APPLICATION_PAGE_GOTOPROCESS
     END
 END
 
@@ -112,10 +112,10 @@ IDR_TRAY_POPUP MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Restore", ID_RESTORE
-        MENUITEM "&Close", ID_FILE_EXIT
+        MENUITEM "&Kembalikan", ID_RESTORE
+        MENUITEM "&Tutup", ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Always On Top", ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Selalu di Atas", ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -123,21 +123,21 @@ IDR_PROCESS_PAGE_CONTEXT MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&End Process", ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "End Process &Tree", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Akhiri Proses", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "A&khiri Pohon Proses", ID_PROCESS_PAGE_ENDPROCESSTREE
         MENUITEM "&Debug", ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "Set &Priority"
+        POPUP "Setel &Prioritas"
         BEGIN
-            MENUITEM "&Realtime", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-            MENUITEM "&High", ID_PROCESS_PAGE_SETPRIORITY_HIGH
-            MENUITEM "&AboveNormal", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Waktu Nyata", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&Tinggi", ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&Di atas Normal", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
             MENUITEM "&Normal", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-            MENUITEM "&BelowNormal", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-            MENUITEM "&Low", ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "Di &Bawah Normal", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&Rendah", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
-        MENUITEM "Set &Affinity...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Edit Debug &Channels...", ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "Setel &Afinitas...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Edit &Saluran Debug...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -161,9 +161,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&New Task...", IDC_NEWTASK, 187, 189, 53, 14
-    PUSHBUTTON "&Switch To", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
-    PUSHBUTTON "&End Task", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Tugas Baru...", IDC_NEWTASK, 187, 189, 53, 14
+    PUSHBUTTON "&Berpindah ke", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Akhiri Tugas", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
@@ -172,8 +172,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&End Process", IDC_ENDPROCESS, 171, 189, 69, 14
-    CONTROL "&Show processes from all users", IDC_SHOWALLPROCESSES, "Button",
+    PUSHBUTTON "&Akhiri Proses", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "&Tunjukkan proses dari semua pengguna", IDC_SHOWALLPROCESSES, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
 END
 
@@ -185,11 +185,11 @@ BEGIN
     GROUPBOX "Pemakaian CPU", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
     GROUPBOX "Pemakaian MEM", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX "Total", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Commit Charge (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Biaya Komit (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memori Fisik (K)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
     GROUPBOX "Memori Kernel (K)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
-    LTEXT "Handle", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
-    LTEXT "Thread", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
+    LTEXT "Tuas", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
+    LTEXT "Utas", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
     LTEXT "Proses", IDS_TOTALS_PROCESS_COUNT, 12, 149, 34, 8
     EDITTEXT IDC_TOTALS_HANDLE_COUNT, 65, 131, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -199,7 +199,7 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Total", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
     LTEXT "Batas", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 27, 8, NOT WS_BORDER
-    LTEXT "Peak", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
+    LTEXT "Puncak", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
     EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_COMMIT_CHARGE_LIMIT, 65, 184, 45, 8, ES_RIGHT | ES_READONLY |
@@ -208,7 +208,7 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Total", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 27, 8
     LTEXT "Tersedia", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 30, 8
-    LTEXT "Sistem Cache", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 46, 8
+    LTEXT "Tembolok Sistem", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 46, 8
     EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
@@ -224,17 +224,17 @@ BEGIN
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 185, 193, 48, 8, ES_RIGHT | ES_READONLY |
              ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX "Histori Pemakaian CPU", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
-    GROUPBOX "Histori Pemakaian Memori", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Riwayat Pemakaian CPU", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Riwayat Pemakaian Memori", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
     PUSHBUTTON "Tampilan Pemakaian CPU", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
     PUSHBUTTON "Tampilan Pemakaian MEM", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Histori Pemakaian CPU", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Histori Pemakaian MEM", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Riwayat Pemakaian CPU", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Riwayat Pemakaian MEM", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kanal Debug"
+CAPTION "Saluran Debug"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -249,7 +249,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 120, 133, 50, 14
     PUSHBUTTON "Batal", IDCANCEL, 174, 133, 50, 14
-    LTEXT "The Processor Affinity setting controls which CPUs the process will be allowed to execute on.", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "Pengaturan Afinitas Prosesor mengontrol CPU mana yang prosesnya akan memungkinkan untuk dieksekusi.", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -291,33 +291,33 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 84, 178, 50, 14
     PUSHBUTTON "Batal", IDCANCEL, 138, 178, 50, 14
-    LTEXT "Select the columns that will appear on the Process page of the Task Manager.", IDC_STATIC, 7, 7, 181, 17
-    CONTROL "&Image Name", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
+    LTEXT "Pilih kolom yang akan muncul di halaman Proses pada Task Manager.", IDC_STATIC, 7, 7, 181, 17
+    CONTROL "Nama C&itra", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
     CONTROL "&PID (Process Identifier)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 88, 10
-    CONTROL "&CPU Usage", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
-    CONTROL "CPU Tim&e", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
-    CONTROL "&Memory Usage", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
-    CONTROL "Memory Usage &Delta", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
-    CONTROL "Pea&k Memory Usage", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
-    CONTROL "Page &Faults", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
-    CONTROL "&USER Objects", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
-    CONTROL "I/O Reads", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
-    CONTROL "I/O Read Bytes", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
-    CONTROL "&Session ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
-    CONTROL "User &Name", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 51, 10
-    CONTROL "Page F&aults Delta", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
-    CONTROL "&Virtual Memory Size", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
+    CONTROL "Pemakaian &CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
+    CONTROL "&Waktu CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 48, 10
+    CONTROL "Penggunaan &Memori", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
+    CONTROL "Penggunaan Memori &Delta", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
+    CONTROL "Punca&k Penggunaan Memori", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
+    CONTROL "K&esalahan Halaman", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "Obyek Pengg&una", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
+    CONTROL "I/O Baca", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
+    CONTROL "I/O Byte Baca", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
+    CONTROL "&Sesi ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
+    CONTROL "&Nama Pengguna", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 51, 10
+    CONTROL "Kes&alahan Halaman Delta", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
+    CONTROL "Ukuran Memori Ma&ya", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
     CONTROL "Pa&ged Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
     CONTROL "N&on-paged Pool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 67, 10
-    CONTROL "Base P&riority", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
-    CONTROL "&Handle Count", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
-    CONTROL "&Thread Count", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
-    CONTROL "GDI Objects", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
-    CONTROL "I/O Writes", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 49, 10
-    CONTROL "I/O Write Bytes", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
-    CONTROL "I/O Other", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
-    CONTROL "I/O Other Bytes", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
-    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "P&rioritas Dasar", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
+    CONTROL "&Jumlah Tuas", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
+    CONTROL "&Jumlah U&tas", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
+    CONTROL "Obyek GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
+    CONTROL "I/O Tulis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 49, 10
+    CONTROL "I/O Byte Tulis", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
+    CONTROL "I/O Lainnya", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
+    CONTROL "I/O Byte Lainnya", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "&Baris Perintah", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -331,37 +331,37 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW "Runs a new program"
-    ID_OPTIONS_ALWAYSONTOP "Task Manager remains in front of all other windows unless minimized"
-    ID_OPTIONS_MINIMIZEONUSE "Task Manager is minimized when a SwitchTo operation is performed"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Hide the Task Manager when it is minimized"
-    ID_VIEW_REFRESH "Force Task Manager to update now, regardless of Update Speed setting"
-    ID_VIEW_LARGE "Displays tasks by using large icons"
-    ID_VIEW_SMALL "Displays tasks by using small icons"
-    ID_VIEW_DETAILS "Displays information about each task"
-    ID_VIEW_UPDATESPEED_HIGH "Updates the display twice per second"
-    ID_VIEW_UPDATESPEED_NORMAL "Updates the display every two seconds"
-    ID_VIEW_UPDATESPEED_LOW "Updates the display every four seconds"
+    ID_FILE_NEW "Jalankan porgram baru"
+    ID_OPTIONS_ALWAYSONTOP "Manajer Tugas tetap berada di depan semua jendela lain kecuali jika diperkecil"
+    ID_OPTIONS_MINIMIZEONUSE "Manajer Tugas akan diperkecil ketika tindakan Berpindah ke dilakukan"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Sembunyikan Manajer Tugas ketika diperkecil"
+    ID_VIEW_REFRESH "Memaksa Manajer Tugas untuk menyegarkan sekarang, terlepas dari setelan Kecepatan Pembaruan"
+    ID_VIEW_LARGE "Menampilkan tugas menggunakan ikon besar"
+    ID_VIEW_SMALL "Menampilkan tugas menggunakan ikon kecil"
+    ID_VIEW_DETAILS "Menampilkan informasi terkait setiap tugas"
+    ID_VIEW_UPDATESPEED_HIGH "Memperbarui tampilan dua kali per detik"
+    ID_VIEW_UPDATESPEED_NORMAL "Memperbarui tampilan dua detik sekali"
+    ID_VIEW_UPDATESPEED_LOW "Memperbarui tampilan empat detik sekali"
 END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Does not automatically update"
-    ID_WINDOWS_TILEHORIZONTALLY "Tiles the windows horizontally on the desktop"
-    ID_WINDOWS_TILEVERTICALLY "Tiles the windows vertically on the desktop"
-    ID_WINDOWS_MINIMIZE "Minimizes the windows"
-    ID_WINDOWS_MAXIMIZE "Maximizes the windows"
-    ID_WINDOWS_CASCADE "Cascades the windows diagonally on the desktop"
-    ID_WINDOWS_BRINGTOFRONT "Brings the window front, but does not switch to it"
-    ID_HELP_TOPICS "Displays Task Manager help topics"
-    ID_HELP_ABOUT "Displays program information, version number, and copyright"
-    ID_FILE_EXIT "Exits the Task Manager application"
-    ID_OPTIONS_SHOW16BITTASKS "Shows 16-bit tasks under the associated ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Select which columns will be visible on the Process page"
-    ID_VIEW_SHOWKERNELTIMES "Displays kernel time in the performance graphs"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "A single history graph shows total CPU usage"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Each CPU has its own history graph"
-    ID_APPLICATION_PAGE_SWITCHTO "Brings a task to the foreground, switch focus to that task"
+    ID_VIEW_UPDATESPEED_PAUSED "Jangan memperbarui secara otomatis"
+    ID_WINDOWS_TILEHORIZONTALLY "Secara horisontal mengubinkan jendela pada desktop"
+    ID_WINDOWS_TILEVERTICALLY "Secara vertikal mengubinkan jendela pada desktop"
+    ID_WINDOWS_MINIMIZE "Perkecil jendela"
+    ID_WINDOWS_MAXIMIZE "Perbesar jendela"
+    ID_WINDOWS_CASCADE "Secara diagonal menumpuk Jendela pada desktop"
+    ID_WINDOWS_BRINGTOFRONT "Bawa jendela ke depan, tapi tidak berpindah tugas"
+    ID_HELP_TOPICS "Menampilkan topik bantuan Manajer Tugas"
+    ID_HELP_ABOUT "Menampilkan informasi program , nomor versi, dan hak cipta"
+    ID_FILE_EXIT "Keluar dari aplikasi Manajer Tugas"
+    ID_OPTIONS_SHOW16BITTASKS "Menampilkan tugas 16-bit yang terhubung dengan ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS "Pilih kolom mana yang akan terlihat pada halaman Proses"
+    ID_VIEW_SHOWKERNELTIMES "Menampilkan waktu kernel dalam grafik kinerja"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Grafik riwayat tunggal yang menunjukkan penggunaan total CPU"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Setiap CPU memiliki grafik riwayatnya sendiri"
+    ID_APPLICATION_PAGE_SWITCHTO "Membawa tugas ke latar depan, alihkan fokus ke tugas itu"
 END
 
 STRINGTABLE
@@ -383,60 +383,60 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_APPS "Applications"
-    IDS_TAB_PROCESSES "Processes"
-    IDS_TAB_PERFORMANCE "Performance"
-    IDS_TAB_TASK "Task"
+    IDS_TAB_APPS "Aplikasi"
+    IDS_TAB_PROCESSES "Proses"
+    IDS_TAB_PERFORMANCE "Kinerja"
+    IDS_TAB_TASK "Tugas"
     IDS_TAB_STATUS "Status"
-    IDS_TAB_IMAGENAME "Image Name"
+    IDS_TAB_IMAGENAME "Nama Citra"
     IDS_TAB_PID "PID"
-    IDS_TAB_USERNAME "Username"
-    IDS_TAB_SESSIONID "Session ID"
+    IDS_TAB_USERNAME "Nama Pengguna"
+    IDS_TAB_SESSIONID "Sesi ID"
     IDS_TAB_CPU "CPU"
-    IDS_TAB_CPUTIME "CPU Time"
-    IDS_TAB_MEMUSAGE "Mem Usage"
-    IDS_TAB_PEAKMEMUSAGE "Peak Mem Usage"
+    IDS_TAB_CPUTIME "Waktu CPU"
+    IDS_TAB_MEMUSAGE "Pgunaan Mem"
+    IDS_TAB_PEAKMEMUSAGE "Pck Pgunaan Mem"
     IDS_TAB_MEMDELTA "Mem Delta"
-    IDS_TAB_PAGEFAULT "Page Faults"
-    IDS_TAB_PFDELTA "PF Delta"
-    IDS_TAB_VMSIZE "VM Size"
+    IDS_TAB_PAGEFAULT "Ksalahan Hlm"
+    IDS_TAB_PFDELTA "KH Delta"
+    IDS_TAB_VMSIZE "Ukuran VM"
     IDS_TAB_PAGEDPOOL "Paged Pool"
     IDS_TAB_NPPOOL "NP Pool"
-    IDS_TAB_BASEPRI "Base Pri"
-    IDS_TAB_HANDLES "Handles"
-    IDS_TAB_THREADS "Threads"
-    IDS_TAB_USERPBJECTS "USER Objects"
-    IDS_TAB_GDIOBJECTS "GDI Objects"
-    IDS_TAB_IOREADS "I/O Reads"
-    IDS_TAB_IOWRITES "I/O Writes"
-    IDS_TAB_IOOTHER "I/O Other"
-    IDS_TAB_IOREADBYTES "I/O Read Bytes"
-    IDS_TAB_IOWRITESBYTES "I/O Write Bytes"
-    IDS_TAB_IOOTHERBYTES "I/O Other Bytes"
-    IDS_TAB_COMMANDLINE "Command Line"
-    IDS_MENU_SELECTCOLUMNS "&Select Columns..."
-    IDS_MENU_16BITTASK "&Show 16-bit tasks"
-    IDS_MENU_WINDOWS "&Windows"
-    IDS_MENU_LARGEICONS "Lar&ge Icons"
-    IDS_MENU_SMALLICONS "S&mall Icons"
-    IDS_MENU_DETAILS "&Details"
-    IDS_MENU_ONEGRAPHALLCPUS "&One Graph, All CPUs"
-    IDS_MENU_ONEGRAPHPERCPU "One Graph &Per CPU"
-    IDS_MENU_CPUHISTORY "&CPU History"
-    IDS_MENU_SHOWKERNELTIMES "&Show Kernel Times"
-    IDS_CREATENEWTASK "Create New Task"
-    IDS_CREATENEWTASK_DESC "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you."
-    IDS_MSG_ACCESSPROCESSAFF "Unable to Access or Set Process Affinity"
-    IDS_MSG_PROCESSONEPRO "The process must have affinity with at least one processor."
-    IDS_MSG_INVALIDOPTION "Invalid Option"
-    IDS_MSG_UNABLEDEBUGPROCESS "Unable to Debug Process"
-    IDS_MSG_WARNINGDEBUG "WARNING: Debugging this process may result in loss of data.\nAre you sure you wish to attach the debugger?"
-    IDS_MSG_TASKMGRWARNING "Task Manager Warning"
-    IDS_MSG_WARNINGTERMINATING "WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"
-    IDS_MSG_UNABLETERMINATEPRO "Unable to Terminate Process"
-    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
-    IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
-    IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
+    IDS_TAB_BASEPRI "Pri Dasar"
+    IDS_TAB_HANDLES "Tuas"
+    IDS_TAB_THREADS "Utas"
+    IDS_TAB_USERPBJECTS "Obyek USER"
+    IDS_TAB_GDIOBJECTS "Obyek GDI"
+    IDS_TAB_IOREADS "I/O Baca"
+    IDS_TAB_IOWRITES "I/O Tulis"
+    IDS_TAB_IOOTHER "I/O Lain"
+    IDS_TAB_IOREADBYTES "I/O Byte Baca"
+    IDS_TAB_IOWRITESBYTES "I/O Byte Tulis"
+    IDS_TAB_IOOTHERBYTES "I/O Byte Lain"
+    IDS_TAB_COMMANDLINE "Baris Perintah"
+    IDS_MENU_SELECTCOLUMNS "&Pilih Kolom..."
+    IDS_MENU_16BITTASK "&Tampilkan tugas 16-bit"
+    IDS_MENU_WINDOWS "&Jendela"
+    IDS_MENU_LARGEICONS "I&kon Bersar"
+    IDS_MENU_SMALLICONS "Iko&n Kecil"
+    IDS_MENU_DETAILS "&Rinci"
+    IDS_MENU_ONEGRAPHALLCPUS "&Satu Grafik Semua CPU"
+    IDS_MENU_ONEGRAPHPERCPU "Satu Grafik &Per CPU"
+    IDS_MENU_CPUHISTORY "Riwayat &CPU"
+    IDS_MENU_SHOWKERNELTIMES "Tampilkan &Waktu Kernel"
+    IDS_CREATENEWTASK "Membuat Tugas Baru"
+    IDS_CREATENEWTASK_DESC "Ketik nama program, folder, dokumen, atau sumber Internet, dan Manajer Tugas akan membukakannya untuk anda."
+    IDS_MSG_ACCESSPROCESSAFF "Tidak Dapat Mengakses atau Mengatur Afinitas Proses"
+    IDS_MSG_PROCESSONEPRO "Proses harus memiliki afinitas dengan setidaknya satu prosesor."
+    IDS_MSG_INVALIDOPTION "Pilihan tidak sah"
+    IDS_MSG_UNABLEDEBUGPROCESS "Tidak bisa Debug Proses"
+    IDS_MSG_WARNINGDEBUG "PERINGATAN: Debugging proses ini dapat menyebabkan hilangnya data.\nAnda yakin ingin melampirkan debugger?"
+    IDS_MSG_TASKMGRWARNING "Peringatan Manajer Tugas"
+    IDS_MSG_WARNINGTERMINATING "PERINGATAN: Menghentikan suatu proses dapat menyebabkan\nhasil yang tidak diinginkan termasuk hilangnya data dan ketidakstabilan sistem.\nProses tidak akan diberi kesempatan untuk menyelamatkan statusnya atau data sebelum diakhiri.\nAnda yakin ingin menghentikan proses tersebut?"
+    IDS_MSG_UNABLETERMINATEPRO "Tidak bisa Hentikan Proses"
+    IDS_MSG_CLOSESYSTEMPROCESS "Ini adalah proses sistem kritis. Manajer Tugas tidak akan mengakhiri proses ini."
+    IDS_MSG_UNABLECHANGEPRIORITY "Tidak Bisa Mengubah Prioritas"
+    IDS_MSG_WARNINGCHANGEPRIORITY "PERINGATAN: Mengubah kelas prioritas dari proses ini\ndapat menyebabkan hasil yang tidak diinginkan termasuk ketidakstabilan sistem.\nAnda yakin ingin mengubah kelas prioritas?"
     IDS_MSG_TRAYICONCPUUSAGE "Pemakaian CPU: %d%%"
     IDS_STATUS_MEMUSAGE "Pemakaian Mem: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Pemakaian CPU: %3d%%"

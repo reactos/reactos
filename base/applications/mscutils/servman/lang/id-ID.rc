@@ -2,19 +2,19 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&File"
+    POPUP "Be&rkas"
     BEGIN
         MENUITEM "Ekspor...", ID_EXPORT
         MENUITEM SEPARATOR
         MENUITEM "&Keluar", ID_EXIT
     END
-    POPUP "Aksi"
+    POPUP "A&ksi"
     BEGIN
         MENUITEM "Sambung ke...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Mulai", ID_START, GRAYED
         MENUITEM "Hentikan", ID_STOP, GRAYED
-        MENUITEM "Istirahat", ID_PAUSE, GRAYED
+        MENUITEM "Jeda", ID_PAUSE, GRAYED
         MENUITEM "Lanjutkan", ID_RESUME, GRAYED
         MENUITEM "Mulai lagi", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
@@ -26,16 +26,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Properti...", ID_PROP, GRAYED
     END
-    POPUP "Lihat"
+    POPUP "&Lihat"
     BEGIN
         MENUITEM "Ikon Besar", ID_VIEW_LARGE
         MENUITEM "Ikon Kecil", ID_VIEW_SMALL
         MENUITEM "Daftar", ID_VIEW_LIST
         MENUITEM "Detil", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "Kustomisasi...", ID_VIEW_CUST, GRAYED
+        MENUITEM "Sesuaikan...", ID_VIEW_CUST, GRAYED
     END
-    POPUP "Bantuan"
+    POPUP "&Bantuan"
     BEGIN
         MENUITEM "Bantuan", ID_HELP
         MENUITEM "Tentang", ID_ABOUT
@@ -48,7 +48,7 @@ BEGIN
     BEGIN
         MENUITEM "Mulai", ID_START, GRAYED
         MENUITEM "Hentikan", ID_STOP, GRAYED
-        MENUITEM "Istirahat", ID_PAUSE, GRAYED
+        MENUITEM "Jeda", ID_PAUSE, GRAYED
         MENUITEM "Lanjutkan", ID_RESUME, GRAYED
         MENUITEM "Mulai lagi", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
@@ -91,12 +91,12 @@ BEGIN
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     PUSHBUTTON "Mulai", IDC_START, 6, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Hentikan", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Istirahat", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Jeda", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "Lanjutkan", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Nama Layanan:", IDC_STATIC, 4, 11, 53, 11
     LTEXT "Nama Tampilan:", IDC_STATIC, 4, 29, 53, 11
     LTEXT "Deskripsi:", IDC_STATIC, 4, 51, 53, 11
-    LTEXT "Path ke executable:", IDC_STATIC, 6, 73, 82, 9
+    LTEXT "Jalur ke executable:", IDC_STATIC, 6, 73, 82, 9
     LTEXT "Tipe Startup:", IDC_STATIC, 6, 108, 53, 11
     LTEXT "Status Layanan:", IDC_STATIC, 4, 138, 53, 11
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
@@ -107,19 +107,19 @@ BEGIN
 END
 
 IDD_LOGON DIALOGEX 6, 6, 253, 232
-CAPTION "Log On"
+CAPTION "Masuk"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "Log on as:", IDC_STATIC, 7, 7, 238, 8
-    AUTORADIOBUTTON "&Local System account", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&This account:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
-    AUTOCHECKBOX "Allo&w service to interact with desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    LTEXT "Masuk sebagai:", IDC_STATIC, 7, 7, 238, 8
+    AUTORADIOBUTTON "Akun Sistem &Lokal", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Akun ini:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
+    AUTOCHECKBOX "Izinkan layanan berinteraksi denga&n desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Browse...", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Password:", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Cari...", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Kata sandi:", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD1, 72, 68, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Confirm password:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
+    LTEXT "Konfir&masi kata sandi:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD2, 72, 86, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "You can enable or disable this service for the hardware profiles listed below:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
@@ -167,7 +167,7 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
     LTEXT "Beberapa layanan bergantung pada layanan lainnya, driver sistem dan grup urutan pengambilan. Jika komponen sistem dihentikan atau tidak berjalan dengan benar, layanan yang bergantung akan dipengaruhi.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Layanan ini tergantun pada komponen berikut", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Layanan ini tergantung pada komponen berikut", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
@@ -181,13 +181,13 @@ BEGIN
     EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
-    LTEXT "*Nama Layanan :", IDC_STATIC, 12, 12, 54, 9
+    LTEXT "*Nama Layanan:", IDC_STATIC, 12, 12, 54, 9
     LTEXT "*Nama Tampilan:", IDC_STATIC, 12, 33, 54, 9
-    LTEXT "*Path ke executable :", IDC_STATIC, 10, 51, 68, 9
+    LTEXT "*Jalur ke pengeksekusi:", IDC_STATIC, 10, 51, 68, 9
     LTEXT "Deskripsi :", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
     PUSHBUTTON "Batal", IDCANCEL, 176, 192, 46, 13
-    LTEXT "Opsi tambahan (klik bantuan untuk lengkapnya)", IDC_STATIC, 10, 151, 134, 9
+    LTEXT "Opsi tambahan (klik bantuan untuk selengkapnya)", IDC_STATIC, 10, 151, 134, 9
     PUSHBUTTON "Bantuan", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
@@ -197,7 +197,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-    LTEXT "Anda yakin ingin menghapus layanann berikut? Ini tidak bisa dibatalkan sekali dihapus!", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "Anda yakin ingin menghapus layananan berikut? Ini tidak bisa dibatalkan setelah dihapus!", IDC_STATIC, 50, 6, 125, 25
     LTEXT "Nama Layanan:",IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
@@ -207,14 +207,14 @@ BEGIN
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
-CAPTION "Stop Other Services"
+CAPTION "Menghentikan Layanan Lain"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
     LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
     LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
-    LTEXT "Do you want to stop these services?", IDC_STATIC, 15, 110, 150, 10
+    LTEXT "Anda yakin ingin menghentikan layanan ini?", IDC_STATIC, 15, 110, 150, 10
     DEFPUSHBUTTON "Ya", IDOK, 60, 129, 54, 14
     PUSHBUTTON "Tidak", IDCANCEL, 120, 129, 54, 14
 END
@@ -261,7 +261,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NUM_SERVICES "Jumlah Layanan: %d"
-    IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
+    IDS_STOP_DEPENDS "Ketika %s berhenti, layanan lain terkait juga akan berhenti"
     IDS_NO_DEPENDS "<No Dependencies>"
     IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
@@ -283,11 +283,11 @@ STRINGTABLE
 BEGIN
     IDS_PROGRESS_INFO_START "ReactOS sedang mencoba untuk memulai layanan berikut"
     IDS_PROGRESS_INFO_STOP "ReactOS sedang mencoba untuk menghentikan layanan berikut"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS is attempting to pause the following service"
-    IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
-    IDS_CREATE_SUCCESS "Layanan Dibuat Dengan Sukses"
-    IDS_DELETE_SUCCESS "Service Deleted Succesfully"
-    IDS_CREATE_REQ "Field yang ditandai dengan\nbintang adalah mandatori"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS sedang mencoba menjeda layanan berikut"
+    IDS_PROGRESS_INFO_RESUME "ReactOS sedang mencoba melanjutkan layanan tersebut"
+    IDS_CREATE_SUCCESS "Layanan Berhasil Dibuat"
+    IDS_DELETE_SUCCESS "Layanan Berhasil Dihapus"
+    IDS_CREATE_REQ "Kotak yang ditandai dengan\nbintang adalah penting"
     IDS_DELETE_STOP "Anda harus menghentikan layanan sebelum menghapus!"
 END
 
@@ -336,15 +336,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ACTION "Take no action"
-    IDS_RESTART_SERVICE "Restart the Service"
-    IDS_RUN_PROGRAM "Run a Program"
-    IDS_RESTART_COMPUTER "Restart the Computer"
+    IDS_NO_ACTION "Tidak Mengambil Tindakan"
+    IDS_RESTART_SERVICE "Mulai Ulang Layanan"
+    IDS_RUN_PROGRAM "Jalankan Program"
+    IDS_RESTART_COMPUTER "Mulai Ulang Komputer"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOT_SAME_PASSWORD "The Passwords are not the same!"
-    IDS_INVALID_PASSWORD "Enter a valid Password!"
+    IDS_NOT_SAME_PASSWORD "Kata sandi tidak sama!"
+    IDS_INVALID_PASSWORD "Masukkan kata sandi yang sah!"
 END
 
