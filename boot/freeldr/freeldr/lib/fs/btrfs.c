@@ -687,7 +687,8 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     if (size > dlen - offset)
         size = dlen - offset;
 
-    if (extent->disk_bytenr == 0 && extent->disk_num_bytes == 0) // sparse extent
+    /* Handle sparse extent */
+    if (extent->disk_bytenr == 0 && extent->disk_num_bytes == 0)
     {
         RtlZeroMemory(out, size);
         return size;
