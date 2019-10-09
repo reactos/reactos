@@ -658,6 +658,24 @@ PeLdrAllocateDataTableEntry(
     DataTableEntry->Flags = LDRP_ENTRY_PROCESSED;
     DataTableEntry->LoadCount = 1;
 
+    /* Honour the FORCE_INTEGRITY flag */
+    if (NtHeaders->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY)
+    {
+        /*
+         * On Vista and above, the LDRP_IMAGE_INTEGRITY_FORCED flag must be set
+         * if IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY is set in the image header.
+         * This is done after the image has been loaded and the digital signature
+         * check has passed successfully. (We do not do it yet!)
+         *
+         * Several OS functionality depend on the presence of this flag.
+         * For example, when using Object-Manager callbacks the latter will call
+         * MmVerifyCallbackFunction() to verify whether the flag is present.
+         * If not callbacks will not work.
+         * (See Windows Internals Part 1, 6th edition, p. 176.)
+         */
+        DataTableEntry->Flags |= LDRP_IMAGE_INTEGRITY_FORCED;
+    }
+
     /* Insert this DTE to a list in the LPB */
     InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
     TRACE("Inserting DTE %p, name='%.*S' DllBase=%p \n", DataTableEntry,
@@ -782,6 +800,12 @@ PeLdrLoadImage(
         ArcClose(FileId);
         return FALSE;
     }
+
+    /*
+     * On Vista and above, a digital signature check is performed when the image
+     * has the IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY flag set in its header.
+     * (We of course do not perform this check yet!)
+     */
 
     /* Reload the NT Header */
     NtHeaders = RtlImageNtHeader(PhysicalBase);
