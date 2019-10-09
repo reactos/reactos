@@ -1201,6 +1201,7 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
         return ENOENT;
     }
 
+    phandle->position += rd;
     *BytesRead = rd;
     return ESUCCESS;
 }

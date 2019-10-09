@@ -832,6 +832,7 @@ ARC_STATUS NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     // Read file
     //
     BytesRead64 = NtfsReadAttribute(FileHandle->Volume, FileHandle->DataContext, FileHandle->Offset, Buffer, N);
+    FileHandle->Offset += BytesRead64;
     *Count = (ULONG)BytesRead64;
 
     //

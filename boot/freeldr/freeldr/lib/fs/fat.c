@@ -1206,9 +1206,8 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
     }
 
     //
-    // If they are trying to read past the
-    // end of the file then return success
-    // with BytesRead == 0
+    // If the user is trying to read past the end of
+    // the file then return success with BytesRead == 0.
     //
     if (FatFileInfo->FilePointer >= FatFileInfo->FileSize)
     {
@@ -1216,8 +1215,8 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
     }
 
     //
-    // If they are trying to read more than there is to read
-    // then adjust the amount to read
+    // If the user is trying to read more than there is to read
+    // then adjust the amount to read.
     //
     if ((FatFileInfo->FilePointer + BytesToRead) > FatFileInfo->FileSize)
     {
@@ -1489,7 +1488,7 @@ ARC_STATUS FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
         case SeekAbsolute:
             break;
         case SeekRelative:
-            NewPosition.QuadPart += (UINT64)FileHandle->FilePointer;
+            NewPosition.QuadPart += (ULONGLONG)FileHandle->FilePointer;
             break;
         default:
             ASSERT(FALSE);

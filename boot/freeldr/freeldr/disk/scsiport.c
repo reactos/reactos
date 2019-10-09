@@ -318,6 +318,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Buffer = (PUCHAR)Buffer + FullSectors * Context->SectorSize;
         N -= FullSectors * Context->SectorSize;
         *Count += FullSectors * Context->SectorSize;
+        Context->SectorNumber += FullSectors;
         Lba += FullSectors;
     }
 
@@ -364,6 +365,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         }
         RtlCopyMemory(Buffer, Sector, N);
         *Count += N;
+        /* Context->SectorNumber remains untouched (incomplete sector read) */
         ExFreePool(Sector);
     }
 
@@ -399,7 +401,8 @@ static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekM
     return ESUCCESS;
 }
 
-static const DEVVTBL DiskVtbl = {
+static const DEVVTBL DiskVtbl =
+{
     DiskClose,
     DiskGetFileInformation,
     DiskOpen,
