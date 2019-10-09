@@ -141,6 +141,16 @@ GetSystemTimeAsFileTime(OUT PFILETIME lpFileTime)
 }
 
 /*
+ * @unimplemented
+ */
+VOID
+WINAPI
+GetSystemTimePreciseAsFileTime(OUT PFILETIME lpFileTime)
+{
+    STUB;
+}
+
+/*
  * @implemented
  */
 BOOL
