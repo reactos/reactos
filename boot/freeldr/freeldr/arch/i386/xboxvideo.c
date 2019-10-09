@@ -24,7 +24,8 @@
 
 DBG_DEFAULT_CHANNEL(UI);
 
-static PVOID FrameBuffer;
+PVOID FrameBuffer;
+ULONG FrameBufferSize;
 static ULONG ScreenWidth;
 static ULONG ScreenHeight;
 static ULONG BytesPerPixel;
@@ -126,8 +127,15 @@ XboxVideoInit(VOID)
 {
   ULONG AvMode;
 
-  FrameBuffer = (PVOID)((ULONG) XboxMemReserveMemory(FB_SIZE_MB) | 0xf0000000);
+  /* Reuse framebuffer that was set up by firmware */
+  FrameBuffer = (PVOID)*((PULONG) 0xfd600800);
+  /* Verify that framebuffer address is page-aligned */
+  ASSERT((ULONG_PTR)FrameBuffer % PAGE_SIZE == 0);
 
+  /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
+  FrameBufferSize = 4 * 1024 * 1024;
+
+  /* FIXME: don't use SMBus, obtain current video resolution directly from NV2A */
   if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
     {
       if (1 == AvMode) /* HDTV */
@@ -157,9 +165,6 @@ XboxVideoInit(VOID)
   Delta = (ScreenWidth * BytesPerPixel + 3) & ~ 0x3;
 
   XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
-
-  /* Tell the nVidia controller about the framebuffer */
-  *((PULONG) 0xfd600800) = (ULONG) FrameBuffer;
 }
 
 VIDEODISPLAYMODE
