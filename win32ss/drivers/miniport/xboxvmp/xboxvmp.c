@@ -405,7 +405,7 @@ XboxVmpMapVideoMemory(
     FrameBuffer.QuadPart += DeviceExtension->PhysFrameBufferStart.QuadPart;
     MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
     /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
-    MapInformation->VideoRamLength = 4 * 1024 * 1024;
+    MapInformation->VideoRamLength = NV2A_VIDEO_MEMORY_SIZE;
 
     VideoPortMapMemory(
         DeviceExtension,
@@ -485,6 +485,37 @@ XboxVmpQueryAvailModes(
     return XboxVmpQueryCurrentMode(DeviceExtension, VideoMode, StatusBlock);
 }
 
+UCHAR
+NvGetCrtc(
+    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
+    UCHAR Index)
+{
+    *((PUCHAR)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_INDEX)) = Index;
+    return *((PUCHAR)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_REGISTER_VALUE));
+}
+
+UCHAR
+NvGetBytesPerPixel(
+    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
+    ULONG ScreenWidth)
+{
+    UCHAR BytesPerPixel;
+
+    /* Get BPP directly from NV2A CRTC (magic constants are from Cromwell) */
+    BytesPerPixel = 8 * (((NvGetCrtc(DeviceExtension, 0x19) & 0xE0) << 3) | (NvGetCrtc(DeviceExtension, 0x13) & 0xFF)) / ScreenWidth;
+
+    if (BytesPerPixel == 4)
+    {
+        ASSERT((NvGetCrtc(DeviceExtension, 0x28) & 0xF) == BytesPerPixel - 1);
+    }
+    else
+    {
+        ASSERT((NvGetCrtc(DeviceExtension, 0x28) & 0xF) == BytesPerPixel);
+    }
+
+    return BytesPerPixel;
+}
+
 /*
  * VBEQueryCurrentMode
  *
@@ -498,49 +529,43 @@ XboxVmpQueryCurrentMode(
     PVIDEO_MODE_INFORMATION VideoMode,
     PSTATUS_BLOCK StatusBlock)
 {
-    ULONG AvMode = 0;
+    UCHAR BytesPerPixel;
 
     VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
     VideoMode->ModeIndex = 0;
 
-    /* FIXME: don't use SMBus, obtain current video resolution directly from NV2A */
-    if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
+    VideoMode->VisScreenWidth = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_HVALID_END)) + 1;
+    VideoMode->VisScreenHeight = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_RAMDAC_FP_VVALID_END)) + 1;
+
+    if (VideoMode->VisScreenWidth <= 1 || VideoMode->VisScreenHeight <= 1)
     {
-        if (AvMode == 1) /* HDTV */
-        {
-            VideoMode->VisScreenWidth = 720;
-        }
-        else
-        {
-            /* FIXME Other possible values of AvMode:
-             * 0 - AV_SCART_RGB
-             * 2 - AV_VGA_SOG
-             * 4 - AV_SVIDEO
-             * 6 - AV_COMPOSITE
-             * 7 - AV_VGA
-             * other AV_COMPOSITE
-             */
-            VideoMode->VisScreenWidth = 640;
-        }
-    }
-    else
-    {
-        VideoMode->VisScreenWidth = 640;
+        ERR_(IHVVIDEO, "Cannot obtain current screen resolution!\n");
+        return FALSE;
     }
 
-    VideoMode->VisScreenHeight = 480;
-    VideoMode->ScreenStride = VideoMode->VisScreenWidth * 4;
+    BytesPerPixel = NvGetBytesPerPixel(DeviceExtension, VideoMode->VisScreenWidth);
+    ASSERT(BytesPerPixel >= 1 && BytesPerPixel <= 4);
+
+    VideoMode->ScreenStride = VideoMode->VisScreenWidth * BytesPerPixel;
     VideoMode->NumberOfPlanes = 1;
-    VideoMode->BitsPerPlane = 32;
+    VideoMode->BitsPerPlane = BytesPerPixel * 8;
     VideoMode->Frequency = 1;
     VideoMode->XMillimeter = 0; /* FIXME */
     VideoMode->YMillimeter = 0; /* FIXME */
-    VideoMode->NumberRedBits = 8;
-    VideoMode->NumberGreenBits = 8;
-    VideoMode->NumberBlueBits = 8;
-    VideoMode->RedMask = 0xFF0000;
-    VideoMode->GreenMask = 0x00FF00;
-    VideoMode->BlueMask = 0x0000FF;
+    if (BytesPerPixel >= 3)
+    {
+        VideoMode->NumberRedBits = 8;
+        VideoMode->NumberGreenBits = 8;
+        VideoMode->NumberBlueBits = 8;
+        VideoMode->RedMask = 0xFF0000;
+        VideoMode->GreenMask = 0x00FF00;
+        VideoMode->BlueMask = 0x0000FF;
+    }
+    else
+    {
+        /* FIXME: not implemented */
+        WARN_(IHVVIDEO, "BytesPerPixel %d - not implemented\n", BytesPerPixel);
+    }
     VideoMode->VideoMemoryBitmapWidth = VideoMode->VisScreenWidth;
     VideoMode->VideoMemoryBitmapHeight = VideoMode->VisScreenHeight;
     VideoMode->AttributeFlags = VIDEO_MODE_GRAPHICS | VIDEO_MODE_COLOR |
@@ -548,6 +573,13 @@ XboxVmpQueryCurrentMode(
     VideoMode->DriverSpecificAttributeFlags = 0;
 
     StatusBlock->Information = sizeof(VIDEO_MODE_INFORMATION);
+
+    /* Verify that screen fits framebuffer size */
+    if (VideoMode->VisScreenWidth * VideoMode->VisScreenHeight * (VideoMode->BitsPerPlane / 8) > NV2A_VIDEO_MEMORY_SIZE)
+    {
+        ERR_(IHVVIDEO, "Current screen resolution exceeds video memory bounds!\n");
+        return FALSE;
+    }
 
     return TRUE;
 }
