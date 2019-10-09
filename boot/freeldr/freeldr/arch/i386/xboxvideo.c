@@ -40,8 +40,6 @@ static ULONG Delta;
 
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
 
-BOOLEAN I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return);
-
 static VOID
 XboxVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgColor)
 {
@@ -122,47 +120,44 @@ XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
   XboxVideoOutputChar(Ch, X, Y, FgColor, BgColor);
 }
 
+UCHAR
+NvGetCrtc(UCHAR Index)
+{
+    *((PUCHAR) NV2A_CRTC_REGISTER_INDEX) = Index;
+    return *((PUCHAR) NV2A_CRTC_REGISTER_VALUE);
+}
+
 VOID
 XboxVideoInit(VOID)
 {
-  ULONG AvMode;
-
   /* Reuse framebuffer that was set up by firmware */
-  FrameBuffer = (PVOID)*((PULONG) 0xfd600800);
+  FrameBuffer = (PVOID)*((PULONG) NV2A_CRTC_FRAMEBUFFER_START);
   /* Verify that framebuffer address is page-aligned */
   ASSERT((ULONG_PTR)FrameBuffer % PAGE_SIZE == 0);
 
   /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
   FrameBufferSize = 4 * 1024 * 1024;
 
-  /* FIXME: don't use SMBus, obtain current video resolution directly from NV2A */
-  if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
-    {
-      if (1 == AvMode) /* HDTV */
-        {
-          ScreenWidth = 720;
-        }
-      else
-        {
-          /* FIXME Other possible values of AvMode:
-           * 0 - AV_SCART_RGB
-           * 2 - AV_VGA_SOG
-           * 4 - AV_SVIDEO
-           * 6 - AV_COMPOSITE
-           * 7 - AV_VGA
-           * other AV_COMPOSITE
-           */
-          ScreenWidth = 640;
-        }
-    }
+  ScreenWidth = *((PULONG) NV2A_RAMDAC_FP_HVALID_END) + 1;
+  ScreenHeight = *((PULONG) NV2A_RAMDAC_FP_VVALID_END) + 1;
+  /* Get BPP directly from NV2A CRTC (magic constants are from Cromwell) */
+  BytesPerPixel = 8 * (((NvGetCrtc(0x19) & 0xE0) << 3) | (NvGetCrtc(0x13) & 0xFF)) / ScreenWidth;
+  if (BytesPerPixel == 4)
+  {
+    ASSERT((NvGetCrtc(0x28) & 0xF) == BytesPerPixel - 1);
+  }
   else
-    {
-      ScreenWidth = 640;
-    }
-
-  ScreenHeight = 480;
-  BytesPerPixel = 4;
+  {
+    ASSERT((NvGetCrtc(0x28) & 0xF) == BytesPerPixel);
+  }
   Delta = (ScreenWidth * BytesPerPixel + 3) & ~ 0x3;
+
+  /* Verify screen resolution */
+  ASSERT(ScreenWidth > 1);
+  ASSERT(ScreenHeight > 1);
+  ASSERT(BytesPerPixel >= 1 && BytesPerPixel <= 4);
+  /* Verify that screen fits framebuffer size */
+  ASSERT(ScreenWidth * ScreenHeight * BytesPerPixel <= FrameBufferSize);
 
   XboxVideoClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 }

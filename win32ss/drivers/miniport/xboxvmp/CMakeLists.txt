@@ -1,6 +1,5 @@
 
 list(APPEND SOURCE
-    xboxi2c.c
     xboxvmp.c
     xboxvmp.h)
 
