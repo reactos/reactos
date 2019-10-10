@@ -704,20 +704,34 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     if (extent->compression == BTRFS_COMPRESS_NONE)
     {
         physical += extent->offset + offset;
-        if (physical & (512 - 1))
-        {
-            /* If somebody tried to do unaligned access */
-            physical -= offset;
-            temp_out = FrLdrTempAlloc(size + offset, TAG_BTRFS_FILE);
 
-            if (!disk_read(physical, temp_out, size + offset))
+        /* If somebody tried to do unaligned access */
+        if (physical & (SECTOR_SIZE - 1))
+        {
+            u32 shift;
+
+            temp_out = FrLdrTempAlloc(SECTOR_SIZE, TAG_BTRFS_FILE);
+
+            if (!disk_read(ALIGN_DOWN_BY(physical, SECTOR_SIZE), temp_out, SECTOR_SIZE))
             {
                 FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
                 return READ_ERROR;
             }
 
-            memcpy(out, temp_out + offset, size);
+            shift = (u32)(physical & (SECTOR_SIZE - 1));
+
+            if (size <= SECTOR_SIZE - shift)
+            {
+                memcpy(out, temp_out + shift, size);
+                FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
+                return size;
+            }
+
+            memcpy(out, temp_out + shift, SECTOR_SIZE - shift);
             FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
+
+            if (!disk_read(physical + SECTOR_SIZE - shift, out + SECTOR_SIZE - shift, size - SECTOR_SIZE + shift))
+                return READ_ERROR;
         } else
         {
             if (!disk_read(physical, out, size))
