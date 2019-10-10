@@ -4,7 +4,7 @@
  * FILE:            boot/freeldr/freeldr/ui/minitui.c
  * PURPOSE:         Mini Text UI interface
  * PROGRAMMERS:     Brian Palmer <brianp@sginet.com>
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  */
 #ifndef _M_ARM
 #include <freeldr.h>
@@ -31,23 +31,24 @@ VOID MiniTuiDrawStatusText(PCSTR StatusText)
 
 VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-    ULONG        Left, Top, Right, Bottom;
-    ULONG        Width = 50; // Allow for 50 "bars"
-    ULONG        Height = 2;
+    ULONG Left, Top, Right, Bottom, Width, Height;
 
+    /* Build the coordinates and sizes */
+    Height = 2;
     Width = UiScreenWidth;
     Left = 0;
-    Right = Left + Width;
+    Right = (Left + Width) - 1;
     Top = UiScreenHeight - Height - 4;
     Bottom = Top + Height + 1;
 
+    /* Draw the progress bar */
     MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
     ULONG        i;
-    ULONG        ProgressBarWidth = (Right - Left) - 4;
+    ULONG        ProgressBarWidth = (Right - Left) - 3;
 
     // First make sure the progress bar text fits
     UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
