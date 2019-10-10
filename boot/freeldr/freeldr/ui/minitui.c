@@ -35,7 +35,7 @@ VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressTex
     ULONG        Width = 50; // Allow for 50 "bars"
     ULONG        Height = 2;
 
-    Width = 80;
+    Width = UiScreenWidth;
     Left = 0;
     Right = Left + Width;
     Top = UiScreenHeight - Height - 4;
