@@ -6,6 +6,7 @@
 extern void func_AddCommas(void);
 extern void func_Control_RunDLLW(void);
 extern void func_CFSFolder(void);
+extern void func_CIDLData(void);
 extern void func_CMyComputer(void);
 extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
@@ -25,6 +26,7 @@ const struct test winetest_testlist[] =
     { "AddCommas", func_AddCommas },
     { "Control_RunDLLW", func_Control_RunDLLW },
     { "CFSFolder", func_CFSFolder },
+    { "CIDLData", func_CIDLData },
     { "CMyComputer", func_CMyComputer },
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
