@@ -783,6 +783,13 @@ UserChangeDisplaySettings(
         }
     }
 
+    /* Check if DEVMODE matches the current mode */
+    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
+    {
+        ERR("DEVMODE matches, nothing to do\n");
+        goto leave;
+    }
+
     /* Shall we apply the settings? */
     if (!(flags & CDS_NORESET))
     {
@@ -922,6 +929,11 @@ NtUserChangeDisplaySettings(
 
     /* Check flags */
     if ((dwflags & (CDS_GLOBAL|CDS_NORESET)) && !(dwflags & CDS_UPDATEREGISTRY))
+    {
+        return DISP_CHANGE_BADFLAGS;
+    }
+
+    if ((dwflags & CDS_RESET) && (dwflags & CDS_NORESET))
     {
         return DISP_CHANGE_BADFLAGS;
     }
