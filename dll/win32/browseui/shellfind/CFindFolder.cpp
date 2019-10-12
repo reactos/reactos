@@ -556,8 +556,10 @@ class CFindFolderContextMenu :
                 CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(_ILGetPath(apidl[i])));
                 if (!folderPidl)
                     return E_OUTOFMEMORY;
-                LPCITEMIDLIST pidl = _ILGetFSPidl(apidl[i]);
-                SHOpenFolderAndSelectItems(folderPidl, 1, &pidl, 0);
+                CComHeapPtr<ITEMIDLIST> filePidl(ILCombine(folderPidl, _ILGetFSPidl(apidl[i])));
+                if (!filePidl)
+                    return E_OUTOFMEMORY;
+                SHOpenFolderAndSelectItems(folderPidl, 1, &filePidl, 0);
             }
             return S_OK;
         }
