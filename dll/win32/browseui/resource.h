@@ -164,6 +164,7 @@
 #define IDC_SEARCH_BUTTON       1004
 #define IDC_SEARCH_STOP_BUTTON  1005
 #define IDC_SEARCH_COMBOBOX     1006
+#define IDC_SEARCH_HIDDEN       1007
 #define IDS_SEARCHINVALID       4518
 #define IDS_COL_NAME            8976
 #define IDS_COL_LOCATION        8977
