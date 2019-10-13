@@ -63,6 +63,13 @@ _tWinMain(HINSTANCE /*hInstance*/,
           LPTSTR /*lpCmdLine*/,
           int nCmdShow)
 {
+    if (GetEnvironmentVariableA("I_REALIZE_MMC_NEW_IS_NOT_READY_YET", NULL, 0) == 0)
+    {
+        MessageBoxW(NULL, L"This application is not ready for use yet.", L"mmc_new", MB_OK);
+        return -1;
+    }
+
+
     InitCommonControls();
 
     return g_AtlModule.WinMain(nCmdShow);
