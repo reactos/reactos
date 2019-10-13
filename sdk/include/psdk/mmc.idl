@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS MMC idl
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Define MMC interfaces
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 
@@ -19,6 +19,7 @@ interface IHeaderCtrl;
 interface IToolbar;
 interface IImageList;
 interface IConsoleVerb;
+interface ISnapInAbout;
 
 
 typedef IComponent *LPCOMPONENT;
@@ -32,6 +33,8 @@ typedef IHeaderCtrl *LPHEADERCTRL;
 typedef IToolbar *LPTOOLBAR;
 typedef IImageList *LPIMAGELIST;
 typedef IConsoleVerb *LPCONSOLEVERB;
+typedef ISnapInAbout *LPSNAPABOUT;
+typedef ISnapInAbout *LPSNAPINABOUT;
 
 
 typedef enum _MMC_NOTIFY_TYPE { 
@@ -504,6 +507,35 @@ interface IConsoleVerb : IUnknown
     );
 }
 
+[
+    object,
+    uuid(1245208c-a151-11d0-a7d7-00c04fd909dd)
+]
+interface ISnapInAbout : IUnknown
+{
+    HRESULT GetSnapinDescription(
+        [out] LPOLESTR* lpDescription
+    );
+
+    HRESULT GetProvider(
+        [out] LPOLESTR* lpName
+    );
+
+    HRESULT GetSnapinVersion(
+        [out] LPOLESTR* lpVersion
+    );
+
+    HRESULT GetSnapinImage(
+        [out] HICON* hAppIcon
+    );
+
+    HRESULT GetStaticFolderImage(
+        [out] HBITMAP* hSmallImage,
+        [out] HBITMAP* hSmallImageOpen,
+        [out] HBITMAP* hLargeImage,
+        [out] COLORREF* cMask
+    );
+}
 
 
 
