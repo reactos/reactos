@@ -4751,7 +4751,11 @@ static NTSTATUS resize_device(device_extension* Vcb, void* data, ULONG len, PIRP
 
             space_list_subtract2(&dev->space, NULL, br->size, delta, NULL, NULL);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+            Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &system_thread_attributes, NULL, NULL, balance_thread, Vcb);
+#else
             Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+#endif
             if (!NT_SUCCESS(Status)) {
                 ERR("PsCreateSystemThread returned %08x\n", Status);
                 goto end;

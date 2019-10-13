@@ -1756,6 +1756,8 @@ typedef BOOLEAN (*tCcCopyReadEx)(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOff
 #if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
 typedef struct _ECP_LIST ECP_LIST;
 typedef struct _ECP_LIST *PECP_LIST;
+
+extern OBJECT_ATTRIBUTES system_thread_attributes;
 #endif
 
 typedef VOID (*tCcSetAdditionalCacheAttributesEx)(PFILE_OBJECT FileObject, ULONG Flags);

@@ -107,7 +107,9 @@ HANDLE degraded_wait_handle = NULL, mountmgr_thread_handle = NULL;
 bool degraded_wait = true;
 KEVENT mountmgr_thread_event;
 bool shutting_down = false;
-
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+OBJECT_ATTRIBUTES system_thread_attributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(NULL, OBJ_KERNEL_HANDLE);
+#endif
 #ifdef _DEBUG
 PFILE_OBJECT comfo = NULL;
 PDEVICE_OBJECT comdo = NULL;
@@ -4020,7 +4022,11 @@ static NTSTATUS create_calc_threads(_In_ PDEVICE_OBJECT DeviceObject) {
         Vcb->calcthreads.threads[i].DeviceObject = DeviceObject;
         KeInitializeEvent(&Vcb->calcthreads.threads[i].finished, NotificationEvent, false);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+        Status = PsCreateSystemThread(&Vcb->calcthreads.threads[i].handle, 0, &system_thread_attributes, NULL, NULL, calc_thread, &Vcb->calcthreads.threads[i]);
+#else
         Status = PsCreateSystemThread(&Vcb->calcthreads.threads[i].handle, 0, NULL, NULL, NULL, calc_thread, &Vcb->calcthreads.threads[i]);
+#endif
         if (!NT_SUCCESS(Status)) {
             ULONG j;
 
@@ -4826,7 +4832,11 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     KeInitializeEvent(&Vcb->flush_thread_finished, NotificationEvent, false);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, &system_thread_attributes, NULL, NULL, flush_thread, NewDeviceObject);
+#else
     Status = PsCreateSystemThread(&Vcb->flush_thread_handle, 0, NULL, NULL, NULL, flush_thread, NewDeviceObject);
+#endif
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         goto exit;
@@ -5518,7 +5528,11 @@ static void init_serial(bool first_time) {
         ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
 
         if (first_time) {
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+            Status = PsCreateSystemThread(&serial_thread_handle, 0, &system_thread_attributes, NULL, NULL, serial_thread, NULL);
+#else
             Status = PsCreateSystemThread(&serial_thread_handle, 0, NULL, NULL, NULL, serial_thread, NULL);
+#endif
             if (!NT_SUCCESS(Status)) {
                 ERR("PsCreateSystemThread returned %08x\n", Status);
                 return;
@@ -5990,7 +6004,11 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     IoInvalidateDeviceRelations(bde->buspdo, BusRelations);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&degraded_wait_handle, 0, &system_thread_attributes, NULL, NULL, degraded_wait_thread, NULL);
+#else
     Status = PsCreateSystemThread(&degraded_wait_handle, 0, NULL, NULL, NULL, degraded_wait_thread, NULL);
+#endif
     if (!NT_SUCCESS(Status))
         WARN("PsCreateSystemThread returned %08x\n", Status);
 
@@ -6013,7 +6031,11 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     KeInitializeEvent(&mountmgr_thread_event, NotificationEvent, false);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, &system_thread_attributes, NULL, NULL, mountmgr_thread, NULL);
+#else
     Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, NULL, NULL, NULL, mountmgr_thread, NULL);
+#endif
     if (!NT_SUCCESS(Status))
         WARN("PsCreateSystemThread returned %08x\n", Status);
 

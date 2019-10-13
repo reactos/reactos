@@ -3292,7 +3292,11 @@ NTSTATUS start_scrub(device_extension* Vcb, KPROCESSOR_MODE processor_mode) {
     Vcb->scrub.error = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->scrub.event, NotificationEvent, !Vcb->scrub.paused);
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+    Status = PsCreateSystemThread(&Vcb->scrub.thread, 0, &system_thread_attributes, NULL, NULL, scrub_thread, Vcb);
+#else
     Status = PsCreateSystemThread(&Vcb->scrub.thread, 0, NULL, NULL, NULL, scrub_thread, Vcb);
+#endif
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         return Status;
