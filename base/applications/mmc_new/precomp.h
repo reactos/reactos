@@ -23,16 +23,16 @@
 #include <atlcom.h>
 #include <atlsimpcoll.h>
 #include <rosctrls.h>
-
+#include <shlwapi.h>
+#include <wincon.h>
+#include <shlobj.h>
+#include <reactos/debug.h>
+#include <shellutils.h>
 #include <mmc.h>
 
-//#define NDEBUG
-#include <debug.h>
 
 #define WM_USER_CLOSE_CHILD (WM_USER + 1)
 
-// tmp:
-#include <shlwapi.h>
 
 
 #include "resource.h"

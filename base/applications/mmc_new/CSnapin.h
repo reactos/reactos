@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Management Console
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Retrieve / store information about a snapin
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -24,23 +24,54 @@ class CSnapin
 private:
     GUID m_Guid;
     CAtlString m_Name;
-    CAtlString m_About;
+    CAtlString m_Provider;
+    int m_ImageIndex;
+    //CAtlString m_About;
 
 
-    //CComPtr<ISnapInAbout> m_SnapinAbout;    // https://msdn.microsoft.com/en-us/library/aa814515(v=vs.85).aspx
-    CComPtr<CImageList> m_Imagelist;
+    CComPtr<ISnapInAbout> m_SnapinAbout;
+    //CComPtr<CImageList> m_Imagelist;
 
-    CSnapin(const GUID& guid, const CAtlString& name, const CAtlString& about)
-        :m_Guid(guid), m_Name(name), m_About(about)
+    CSnapin(const GUID& guid, const CAtlString& name, const CAtlString& provider, const CAtlString& about)
+        :m_Guid(guid), m_Name(name), m_Provider(provider), m_ImageIndex(-1)
     {
+        GUID aboutGuid;
+        if (!about.IsEmpty() &&
+            !FAILED_UNEXPECTEDLY(::CLSIDFromString(about, &aboutGuid)))
+        {
+            HRESULT hr = CoCreateInstance(aboutGuid, NULL, CLSCTX_INPROC, IID_PPV_ARG(ISnapInAbout, &m_SnapinAbout));
+            if (!FAILED_UNEXPECTEDLY(hr))
+            {
+                CComHeapPtr<WCHAR> ProviderName;
+                if (!FAILED_UNEXPECTEDLY(m_SnapinAbout->GetProvider(&ProviderName)))
+                {
+                    m_Provider = ProviderName;
+                }
+            }
+        }
     }
 
 public:
 
-    const CAtlString& Name() const { return m_Name; }
-
     ~CSnapin()
     {
+    }
+
+    const CAtlString& Name() const { return m_Name; }
+    const CAtlString& Provider() const { return m_Provider; }
+    int ImageIndex() const { return m_ImageIndex; }
+
+    void SetImageIndex(int index)
+    {
+        m_ImageIndex = index;
+    }
+
+    HRESULT GetIcon(HICON* hAppIcon)
+    {
+        if (!m_SnapinAbout)
+            return E_NOINTERFACE;
+
+        return m_SnapinAbout->GetSnapinImage(hAppIcon);
     }
 
     void OnAdd(IConsole* console)
@@ -50,7 +81,7 @@ public:
 
         if (SUCCEEDED(hr))
         {
-            CComPtr<IExtendPropertySheet> spPropertySheet;
+            //CComPtr<IExtendPropertySheet> spPropertySheet;
         }
 
     }
@@ -125,9 +156,13 @@ public:
         if (Name.IsEmpty())
             return NULL;
 
+        CAtlString Provider;
+        QueryString(snapin, L"Provider", Provider);
+
         CAtlString About;
         QueryString(snapin, L"About", About);
-        return new CSnapin(guid, Name, About);
+
+        return new CSnapin(guid, Name, Provider, About);
     }
 
     static void QueryString(CRegKey& key, PCWSTR Name, CAtlString& Value)

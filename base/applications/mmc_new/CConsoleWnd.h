@@ -34,8 +34,18 @@ public:
         static CWndClassInfo wc =
         {
             {
-                sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW, StartWindowProc,
-                0, sizeof(CConsoleWnd*), NULL, NULL, NULL, (HBRUSH)(COLOR_3DFACE + 1), NULL, L"MMCChildFrm", NULL
+                /* cbSize= */sizeof(WNDCLASSEX),
+                /* style= */CS_HREDRAW | CS_VREDRAW,
+                /* lpfnWndProc= */StartWindowProc,
+                /* cbClsExtra= */0,
+                /* cbWndExtra= */sizeof(CConsoleWnd*),
+                /* hInstance= */NULL,
+                /* hIcon= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP)),
+                /* hCursor= */NULL,
+                /* hbrBackground= */(HBRUSH)(COLOR_3DFACE + 1),
+                /* lpszMenuName= */NULL,
+                /* lpszClassName= */L"MMCChildFrm",
+                /* hIconSm= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP))
             },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
         };

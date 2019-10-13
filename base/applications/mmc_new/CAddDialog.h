@@ -32,12 +32,14 @@ private:
 
     CComPtr<CConsoleWnd> m_Console;
     CSimpleArray<CSnapin> m_Snapins;
+    HIMAGELIST m_Imagelist;
 
 public:
 
     CAddDialog(CConsoleWnd* console)
     {
         m_Console = console;
+        m_Imagelist = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 20, 0);
     }
 
     ~CAddDialog()
@@ -50,26 +52,53 @@ public:
         listView.DeleteAllItems();
 
         CAtlString module(MAKEINTRESOURCE(IDS_MODULE));
-        listView.InsertColumn(0, (LPWSTR)module.GetString(), LVCFMT_LEFT, 120, 0);
+        listView.InsertColumn(0, (LPWSTR)module.GetString(), LVCFMT_LEFT, 130, 0);
 
         CAtlString vendor(MAKEINTRESOURCE(IDS_VENDOR));
-        listView.InsertColumn(0, (LPWSTR)vendor.GetString(), LVCFMT_LEFT, 120, 1);
+        listView.InsertColumn(1, (LPWSTR)vendor.GetString(), LVCFMT_LEFT, 120, 1);
+
+        listView.SetImageList(m_Imagelist, LVSIL_SMALL);
     }
 
     void InsertItem(CListView& listView, CSnapin* snapin)
     {
+        if (snapin->ImageIndex() == -1)
+        {
+            HICON Icon;
+            HRESULT hr = snapin->GetIcon(&Icon);
+            if (SUCCEEDED(hr))
+            {
+                int nIndex = ImageList_AddIcon(m_Imagelist, Icon);
+                if (nIndex > -1)
+                    snapin->SetImageIndex(nIndex);
+                else
+                    snapin->SetImageIndex(0);
+            }
+            else
+            {
+                snapin->SetImageIndex(0);
+            }
+        }
+
         LVITEM lvi = { 0 };
-        lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
+        lvi.mask = LVIF_TEXT | LVIF_PARAM;
         lvi.lParam = (LPARAM)snapin;
         lvi.pszText = (LPWSTR)snapin->Name().GetString();
         lvi.iItem = INT_MAX;
-        lvi.iImage = 0;
-        listView.InsertItem(&lvi);
+
+        if (snapin->ImageIndex() > -1)
+        {
+            lvi.mask |= LVIF_IMAGE;
+            lvi.iImage = snapin->ImageIndex();
+        }
+
+        int nIndex = listView.InsertItem(&lvi);
+        listView.SetItemText(nIndex, 1, snapin->Provider().GetString());
     }
 
     LRESULT OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        //m_pChildInfo = (PCONSOLE_CHILDFRM_WND)lParam;
+        CenterWindow(m_Console->m_hWnd);
 
         m_Available.Attach(GetDlgItem(IDC_LIST_AVAILABLE));
         m_Selected.Attach(GetDlgItem(IDC_LIST_SELECTED));
@@ -102,7 +131,7 @@ public:
             CSnapin* snapin;
             if (iItem != -1 && (snapin = (CSnapin*)m_Available.GetItemData(iItem)))
             {
-                snapin->OnAdd(m_Console)
+                snapin->OnAdd(m_Console);
                 InsertItem(m_Selected, snapin);
             }
         }

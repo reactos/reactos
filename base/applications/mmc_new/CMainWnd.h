@@ -44,10 +44,18 @@ public:
         static CWndClassInfo wc =
         {
             {
-                sizeof(WNDCLASSEX), 0,
-                StartWindowProc,
-                0, 0, NULL, LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP)), NULL, (HBRUSH)(COLOR_BTNFACE + 1), NULL,
-                TEXT("MMCMainFrame"), NULL
+                /* cbSize= */sizeof(WNDCLASSEX),
+                /* style= */0,
+                /* lpfnWndProc= */StartWindowProc,
+                /* cbClsExtra= */0,
+                /* cbWndExtra= */0,
+                /* hInstance= */NULL,
+                /* hIcon= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP)),
+                /* hCursor= */NULL,
+                /* hbrBackground= */(HBRUSH)(COLOR_BTNFACE + 1),
+                /* lpszMenuName= */NULL,
+                /* lpszClassName= */TEXT("MMCMainFrame"),
+                /* hIconSm= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP))
             },
             NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
         };
@@ -172,16 +180,21 @@ public:
         mcs.y = mcs.cy = CW_USEDEFAULT;
         mcs.style = MDIS_ALLCHILDSTYLES;
 
-        CConsoleWnd* child = new CConsoleWnd(this);
-        (void*)child;
         BOOL bMaximized = FALSE;
         HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
         mcs.lParam = bMaximized || !hWndOld;
 
+        /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
+        CConsoleWnd* child = new CConsoleWnd(this);
+        /* Ask for a new MDI Child window */
         hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
         if (hChild)
         {
             m_nConsoleCount++;
+        }
+        else
+        {
+            delete child;
         }
 
         UpdateMenu();
