@@ -30,7 +30,6 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     char *szMsgStart;
     const char *fname;
     va_list vl;
-    ULONG uRet;
 
     fname = strrchr(filename, '\\');
     if (fname == NULL)
@@ -48,12 +47,13 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
 
     va_start(vl, lpFormat);
-    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
+    vsprintf(szMsgStart, lpFormat, vl);
     va_end(vl);
 
     OutputDebugStringA(szMsg);
 
-    return uRet;
+    /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
+    return 0;
 }
 
 #define DbgPrint(fmt, ...) \
