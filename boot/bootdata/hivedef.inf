@@ -83,6 +83,7 @@ HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
 
+HKCU,"Control Panel\Desktop\WindowMetrics","AppliedDPI",0x00010003,0x00000060
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","CaptionWidth",2,"18"
