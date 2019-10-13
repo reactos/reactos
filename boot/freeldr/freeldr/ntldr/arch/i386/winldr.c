@@ -64,8 +64,8 @@ typedef struct
 #define TYPE_CODE   (0x10 | DESCRIPTOR_CODE | DESCRIPTOR_EXECUTE_READ)
 #define TYPE_DATA   (0x10 | DESCRIPTOR_READ_WRITE)
 
-PKGDTENTRY
 FORCEINLINE
+PKGDTENTRY
 KiGetGdtEntry(
     IN PVOID pGdt,
     IN USHORT Selector)
@@ -73,8 +73,8 @@ KiGetGdtEntry(
     return (PKGDTENTRY)((ULONG_PTR)pGdt + (Selector & ~RPL_MASK));
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSetGdtDescriptorBase(
     IN OUT PKGDTENTRY Entry,
     IN ULONG32 Base)
@@ -85,8 +85,8 @@ KiSetGdtDescriptorBase(
     // Entry->BaseUpper = (ULONG)(Base >> 32);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSetGdtDescriptorLimit(
     IN OUT PKGDTENTRY Entry,
     IN ULONG Limit)
@@ -126,8 +126,8 @@ KiSetGdtEntryEx(
     // Entry->MustBeZero = 0;
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSetGdtEntry(
     IN OUT PKGDTENTRY Entry,
     IN ULONG32 Base,
