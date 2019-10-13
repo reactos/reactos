@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    15   /* Version 15 */
+#define _INC_MSGDUMP    16   /* Version 16 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -3546,6 +3546,10 @@ MD_ListView_OnSetSelectedColumn(HWND hwnd, INT iCol)
     MSGDUMP_TPRINTF(TEXT("%sLVM_SETSELECTEDCOLUMN(hwnd:%p, iCol:%d)\n"),
                     MSGDUMP_PREFIX, (void *)hwnd, iCol);
 }
+
+#ifndef LVM_SETTILEWIDTH
+    #define LVM_SETTILEWIDTH (LVM_FIRST+141)
+#endif
 
 static __inline LRESULT MSGDUMP_API
 MD_ListView_OnSetTileWidth(HWND hwnd, WPARAM wParam, LPARAM lParam)
