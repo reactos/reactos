@@ -167,7 +167,21 @@ public:
 
     LRESULT OnItemChanged(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
+        LPNMLISTVIEW nmv = (LPNMLISTVIEW) hdr;
         UpdateButtons();
+
+        if (nmv->uNewState & LVIS_SELECTED)
+        {
+            CSnapin* snapin = (CSnapin*)nmv->lParam;
+            if (snapin)
+            {
+                SetDlgItemText(IDC_DESCRIPTION, snapin->Description());
+                return TRUE;
+            }
+        }
+        // No selection or no snapin, clear description
+        SetDlgItemText(IDC_DESCRIPTION, TEXT(""));
+
         return TRUE;
     }
 

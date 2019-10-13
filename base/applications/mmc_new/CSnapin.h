@@ -25,8 +25,8 @@ private:
     GUID m_Guid;
     CAtlString m_Name;
     CAtlString m_Provider;
+    CAtlString m_Description;
     int m_ImageIndex;
-    //CAtlString m_About;
 
 
     CComPtr<ISnapInAbout> m_SnapinAbout;
@@ -60,6 +60,19 @@ public:
     const CAtlString& Name() const { return m_Name; }
     const CAtlString& Provider() const { return m_Provider; }
     int ImageIndex() const { return m_ImageIndex; }
+    const CAtlString& Description()
+    {
+        if (m_Description.IsEmpty() && m_SnapinAbout)
+        {
+            CComHeapPtr<WCHAR> Description;
+            if (!FAILED_UNEXPECTEDLY(m_SnapinAbout->GetSnapinDescription(&Description)))
+            {
+                m_Description = Description;
+            }
+        }
+        return m_Description;
+    }
+
 
     void SetImageIndex(int index)
     {
