@@ -478,7 +478,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         /* Check for the link */
         for (SymlinksEntry = DeviceInformation->SymbolicLinksListHead.Flink;
              SymlinksEntry != &(DeviceInformation->SymbolicLinksListHead);
-             SymlinksEntry = DeviceEntry->Flink)
+             SymlinksEntry = SymlinksEntry->Flink)
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
