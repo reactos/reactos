@@ -75,7 +75,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
                 IsoFileInfoPointer->FileStart = Record->ExtentLocationL;
                 IsoFileInfoPointer->FileSize = Record->DataLengthL;
                 IsoFileInfoPointer->FilePointer = 0;
-                IsoFileInfoPointer->Directory = (Record->FileFlags & 0x02)?TRUE:FALSE;
+                IsoFileInfoPointer->Directory = !!(Record->FileFlags & 0x02);
 
                 return TRUE;
             }
@@ -243,9 +243,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
 ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
-
     FrLdrTempFree(FileHandle, TAG_ISO_FILE);
-
     return ESUCCESS;
 }
 
@@ -294,17 +292,16 @@ ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
+    ARC_STATUS Status;
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     UCHAR SectorBuffer[SECTORSIZE];
     LARGE_INTEGER Position;
     ULONG DeviceId;
-    ULONG FilePointer;
-    ULONG        SectorNumber;
-    ULONG        OffsetInSector;
-    ULONG        LengthInSector;
-    ULONG        NumberOfSectors;
+    ULONG SectorNumber;
+    ULONG OffsetInSector;
+    ULONG LengthInSector;
+    ULONG NumberOfSectors;
     ULONG BytesRead;
-    ARC_STATUS Status;
 
     TRACE("IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
 
@@ -312,23 +309,21 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     *Count = 0;
 
     //
-    // If they are trying to read past the
-    // end of the file then return success
-    // with Count == 0
+    // If the user is trying to read past the end of
+    // the file then return success with Count == 0.
     //
-    FilePointer = FileHandle->FilePointer;
-    if (FilePointer >= FileHandle->FileSize)
+    if (FileHandle->FilePointer >= FileHandle->FileSize)
     {
         return ESUCCESS;
     }
 
     //
-    // If they are trying to read more than there is to read
-    // then adjust the amount to read
+    // If the user is trying to read more than there is to read
+    // then adjust the amount to read.
     //
-    if (FilePointer + N > FileHandle->FileSize)
+    if (FileHandle->FilePointer + N > FileHandle->FileSize)
     {
-        N = FileHandle->FileSize - FilePointer;
+        N = FileHandle->FileSize - FileHandle->FilePointer;
     }
 
     //
@@ -364,14 +359,14 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     // Only do the first read if we
     // aren't aligned on a cluster boundary
     //
-    if (FilePointer % SECTORSIZE)
+    if (FileHandle->FilePointer % SECTORSIZE)
     {
         //
         // Do the math for our first read
         //
-        SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
-        OffsetInSector = FilePointer % SECTORSIZE;
-        LengthInSector = (N > (SECTORSIZE - OffsetInSector)) ? (SECTORSIZE - OffsetInSector) : N;
+        SectorNumber = FileHandle->FileStart + (FileHandle->FilePointer / SECTORSIZE);
+        OffsetInSector = FileHandle->FilePointer % SECTORSIZE;
+        LengthInSector = min(N, SECTORSIZE - OffsetInSector);
 
         //
         // Now do the read and update Count, N, FilePointer, & Buffer
@@ -391,7 +386,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         RtlCopyMemory(Buffer, SectorBuffer + OffsetInSector, LengthInSector);
         *Count += LengthInSector;
         N -= LengthInSector;
-        FilePointer += LengthInSector;
+        FileHandle->FilePointer += LengthInSector;
         Buffer = (PVOID)((ULONG_PTR)Buffer + LengthInSector);
     }
 
@@ -405,7 +400,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         //
         NumberOfSectors = (N / SECTORSIZE);
 
-        SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
+        SectorNumber = FileHandle->FileStart + (FileHandle->FilePointer / SECTORSIZE);
 
         //
         // Now do the read and update Count, N, FilePointer, & Buffer
@@ -425,7 +420,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
         *Count += NumberOfSectors * SECTORSIZE;
         N -= NumberOfSectors * SECTORSIZE;
-        FilePointer += NumberOfSectors * SECTORSIZE;
+        FileHandle->FilePointer += NumberOfSectors * SECTORSIZE;
         Buffer = (PVOID)((ULONG_PTR)Buffer + NumberOfSectors * SECTORSIZE);
     }
 
@@ -434,7 +429,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     //
     if (N > 0)
     {
-        SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
+        SectorNumber = FileHandle->FileStart + (FileHandle->FilePointer / SECTORSIZE);
 
         //
         // Now do the read and update Count, N, FilePointer, & Buffer
@@ -453,7 +448,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         }
         RtlCopyMemory(Buffer, SectorBuffer, N);
         *Count += N;
-        FilePointer += N;
+        FileHandle->FilePointer += N;
     }
 
     TRACE("IsoRead() done\n");
@@ -464,17 +459,26 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("IsoSeek() NewFilePointer = %lu\n", Position->LowPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (ULONGLONG)FileHandle->FilePointer;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.HighPart != 0)
         return EINVAL;
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= FileHandle->FileSize)
+    if (NewPosition.LowPart >= FileHandle->FileSize)
         return EINVAL;
 
-    FileHandle->FilePointer = Position->LowPart;
+    FileHandle->FilePointer = NewPosition.LowPart;
     return ESUCCESS;
 }
 

@@ -1,0 +1,20 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Visar eller ändrar filattributen.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
+       [/S [/D]]\n\n\
+  +   Sätter ett attribut\n\
+  -   Rensar ett attribut\n\
+  R   Attribut: Skrivskyddad.\n\
+  A   Attribut: Arkiverad.\n\
+  S   Attribut: System.\n\
+  H   Attribut: Dold.\n\
+  /S  Behandlar matchande filer i den aktuella mappen\n\
+      och alla undermappar.\n\
+  /D  Bearbetar även mappar.\n\n\
+Skriv ATTRIB utan parametrar för att visa attributten för alla filer.\n"
+    STRING_CONSOLE_ERROR "Okänt fel: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ogiltigt parameterformat - %s\n"
+END

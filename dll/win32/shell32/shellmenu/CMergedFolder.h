@@ -191,10 +191,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *lpClassId);
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
 
     // IPersistFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(LPITEMIDLIST * pidl);
+    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
     // IAugmentedShellFolder2
     virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID lpGuid, IShellFolder * psf, LPCITEMIDLIST pcidl, ULONG dwUnknown);

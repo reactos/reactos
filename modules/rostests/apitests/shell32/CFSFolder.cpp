@@ -76,7 +76,7 @@ VOID TestUninitialized()
     hr = ppf2->Initialize(testpidl);
     ok(hr == S_OK, "hr = %lx\n", hr);
     
-    LPITEMIDLIST pidl;
+    CComHeapPtr<ITEMIDLIST> pidl;
     hr = ppf2->GetCurFolder(&pidl);
     ok(hr == S_OK, "hr = %lx\n", hr);
     ok(pidl->mkid.cb == 2 * sizeof(WORD), "got wrong pidl size, cb = %x\n", pidl->mkid.cb);

@@ -1,0 +1,20 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Viser eller endrer filattributtene.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
+       [/S [/D]]\n\n\
+  +   Setter et attributt\n\
+  -   Fjerner et attributt\n\
+  R   Attributt: Skrivebeskyttet.\n\
+  A   Attributt: Arkiver.\n\
+  S   Attributt: System.\n\
+  H   Attributt: Skjult.\n\
+  /S  Behandler tilsvarende filer i gjeldende mappe\n\
+      og alle undermapper.\n\
+  /D  Bearbeider også mapper.\n\n\
+Skriv ATTRIB uten parametere for å vise attributtene til alle filer.\n"
+    STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ugyldig parameter format - %s\n"
+END

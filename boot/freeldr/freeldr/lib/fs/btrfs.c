@@ -619,7 +619,7 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
         name_buf = (char *) item + sizeof(*item);
         TRACE("Compare names %.*s and %.*s\n", name_len, name, item->name_len, name_buf);
 
-        if (_strnicmp(name, name_buf, name_len) == 0)
+        if (name_len == item->name_len && _strnicmp(name, name_buf, name_len) == 0)
         {
             *ret_item = *item;
             result = TRUE;
@@ -686,6 +686,13 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
 
     if (size > dlen - offset)
         size = dlen - offset;
+
+    /* Handle sparse extent */
+    if (extent->disk_bytenr == 0 && extent->disk_num_bytes == 0)
+    {
+        RtlZeroMemory(out, size);
+        return size;
+    }
 
     physical = logical_physical(extent->disk_bytenr);
     if (physical == INVALID_ADDRESS)
@@ -1115,7 +1122,6 @@ ARC_STATUS BtrFsClose(ULONG FileId)
     TRACE("BtrFsClose %lu\n", FileId);
 
     FrLdrTempFree(phandle, TAG_BTRFS_FILE);
-
     return ESUCCESS;
 }
 
@@ -1195,6 +1201,7 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
         return ENOENT;
     }
 
+    phandle->position += rd;
     *BytesRead = rd;
     return ESUCCESS;
 }
@@ -1202,15 +1209,24 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
 ARC_STATUS BtrFsSeek(ULONG FileId, LARGE_INTEGER *Position, SEEKMODE SeekMode)
 {
     pbtrfs_file_info phandle = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    TRACE("BtrFsSeek %lu NewFilePointer = %llu\n", FileId, Position->QuadPart);
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += phandle->position;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
 
-    if (SeekMode != SeekAbsolute)
+    if (NewPosition.QuadPart >= phandle->inode.size)
         return EINVAL;
-    if (Position->QuadPart >= phandle->inode.size)
-        return EINVAL;
 
-    phandle->position = Position->QuadPart;
+    phandle->position = NewPosition.QuadPart;
     return ESUCCESS;
 }
 

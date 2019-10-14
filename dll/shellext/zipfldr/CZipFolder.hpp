@@ -542,7 +542,7 @@ public:
     }
 
     // *** IShellExtInit methods ***
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID)
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID)
     {
         FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
         STGMEDIUM stg;
@@ -598,14 +598,14 @@ public:
     //STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName);
 
     //// *** IPersistFolder2 methods ***
-    STDMETHODIMP GetCurFolder(LPITEMIDLIST * pidl)
+    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE * pidl)
     {
         *pidl = ILClone(m_CurDir);
         return S_OK;
     }
 
     // *** IPersistFolder methods ***
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidl)
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl)
     {
         WCHAR tmpPath[MAX_PATH];
 

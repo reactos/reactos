@@ -1,0 +1,23 @@
+/* Slovak translation for CMD
+ * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 21-03-2009
+ * LastChange: 10-08-2010
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Volume in drive %c: is %s\n"
+    STRING_LABEL_TEXT2 "Volume in drive %c: has no label\n"
+    STRING_LABEL_TEXT3 "Volume Serial Number is %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Volume label (32 Characters, ENTER if none)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
+    STRING_ERROR_INVALID_DRIVE "Invalid drive specification\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

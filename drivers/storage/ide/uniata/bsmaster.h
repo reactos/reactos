@@ -1003,7 +1003,11 @@ struct _HW_LU_EXTENSION;
 
 typedef struct _IORES {
     union {
+#ifdef __REACTOS__
+        ULONG_PTR Addr;      /* Base address*/
+#else
         ULONG Addr;          /* Base address*/
+#endif
         PVOID pAddr;         /* Base address in pointer form */
     };
     ULONG MemIo:1;       /* Memory mapping (1) vs IO ports (0) */

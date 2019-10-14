@@ -9,19 +9,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Viser eller endrer filattributtene.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] fil ...\n\
-       [/S [/D]]\n\n\
-  +   Setter et attributt\n\
-  -   Fjerner et attributt\n\
-  R   Attributt: Skrivebeskyttet.\n\
-  A   Attributt: Arkiver.\n\
-  S   Attributt: System.\n\
-  H   Attributt: Skjult.\n\
-  /S  Behandler tilsvarende filer i gjeldende mappe\n\
-      og alle undermapper.\n\
-  /D  Bearbeider også mapper.\n\n\
-Skriv ATTRIB uten parametere for å vise attributtene til alle filer.\n"
     STRING_ALIAS_HELP "Setter, fjerner eller viser alias.\n\n\
 ALIAS [alias=[Kommando]]\n\n\
   alias    Navn for et alias.\n\
@@ -256,11 +243,6 @@ streng1==streng2  Angir et oppfylt vilkår hvis tekststrengene er like\n\
 EXIST filnavn     Angir et oppfylt vilkår hvis spesifisert filnavn eksisterer.\n\
 DEFINED variabel  Angir et oppfylt vilkår hvis spesifisert variabel er\n\
                   definert.\n"
-    STRING_LABEL_HELP1 "Viser eller endrer navn på stasjon.\n\nLABEL [stasjon:][merke]\n"
-    STRING_LABEL_HELP2 "Volumet i stasjon %c: er %s\n"
-    STRING_LABEL_HELP3 "Volumet i stasjon %c: er uten navn\n"
-    STRING_LABEL_HELP4 "Volumserienummeret er %04X-%04X\n"
-    STRING_LABEL_HELP5 "Volumnavn (11 tegn, Enter = intet navn)? "
     STRING_LOCALE_HELP1 "gjeldende tid er"
     STRING_MKDIR_HELP "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"

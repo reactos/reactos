@@ -947,97 +947,97 @@ static MUI_ENTRY plPLChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "Bie\276\245ca partycja systemowa twojego komputera",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "on the system disk",
+        "na dysku systemowym",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "u\276ywa formatu nie obs\210ugiwanego przez system ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "Aby pomy\230lnie zainstalowa\206 system ReactOS, Instalator musi zmieni\206",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "bi\251\276\245c\245 partycj\251 systemow\245 na now\245.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "Nowa proponowana partycja systemowa to:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  Naci\230nij ENTER, aby zaakceptowa\206 ten wyb\242r.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  Je\230li chcesz r\251cznie zmieni\206 partycj\251 systemow\245, nacisnij ESC, by powr\242ci\206",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   do listy wyboru partycji, i wybierz istniej\245c\245 lub utw\242rz now\245 partycj\251",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   systemow\245 na dysku systemowym.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "Je\230li na twoim komputerze s\245 zainstalowane inne systemy operacyjne, kt\242re",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "wymagaj\245 poprzedniej partycji systemowej, mo\276e zaistnie\206 potrzeba",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "skonfigurowania ich dla nowej partycji systemowej, albo zmiana partycji",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "systemowej do poprzednej po zako\344czeniu instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Kontynuacja   ESC = Anulowanie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1593,17 +1593,17 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Nie mo\276na utworzy\206 scie\276ek instalacji dla katalogu instalacji systemu ReactOS!\n"
         "ENTER = Reboot computer"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
+        "Nie mo\276na usun\245\206 partycji zawieraj\245cej \253r\242d\210o instalacji!\n"
         "ENTER = Reboot computer"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "Nie mo\276na zainstalowa\206 systemu ReactOS w katalogu \253r\242d\210owym instalacji!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1638,7 +1638,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Nieudane zapisanie FAT bootcode na partycji systemowej.",
+        "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego FAT na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"
     },
     {
@@ -1664,9 +1664,9 @@ MUI_ERROR plPLErrorEntries[] =
     {
         // ERROR_WARN_PARTITION,
         "Instalator wykry\210, \276e co najmniej jeden dysk twardy zawiera niekompatybiln\245 \n"
-        "tablic\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
+        "tabel\251 partycji, kt\242ra nie b\251dzie poprawnie obs\210ugiwana!\n"
         "\n"
-        "Tworzenie lub kasowanie partycji mo\276e zniszczy\206 ca\210\245 tablic\251 partycji.\n"
+        "Tworzenie lub usuwanie partycji mo\276e nieodwracalnie uszkodi\206 tabel\251 partycji.\n"
         "\n"
         "  \x07  Naci\230nij F3, aby wyj\230\206 z instalatora.\n"
         "  \x07  Naci\230nij ENTER, aby kontynuowa\206.",
@@ -1689,7 +1689,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Nieudana instalacja %S bootcode na partycji systemowej.",
+        "Instalator nie m\242g\210 zapisa\206 kodu rozruchowego %S na partycji systemowej.",
         "ENTER = Ponowne uruchomienie komputera"
     },
     {

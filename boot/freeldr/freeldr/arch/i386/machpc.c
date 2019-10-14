@@ -147,7 +147,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
         DiskGeometry->SectorsPerTrack = ExtGeometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = ExtGeometry.Heads;
     }
-    else if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+    else if (PcDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
@@ -1428,7 +1428,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
     MachVtbl.GetExtendedBIOSData = PcGetExtendedBIOSData;
     MachVtbl.GetFloppyCount = PcGetFloppyCount;
-    MachVtbl.DiskGetBootPath = PcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;

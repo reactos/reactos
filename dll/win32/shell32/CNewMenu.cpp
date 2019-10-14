@@ -767,7 +767,7 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
 }
 
 HRESULT WINAPI
-CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
+CNewMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
     m_pidlFolder = ILClone(pidlFolder);

@@ -95,7 +95,7 @@ HRESULT STDMETHODCALLTYPE CACListISF::GetClassID(CLSID *pClassID)
 }
 
 // *** IPersistFolder methods ***
-HRESULT STDMETHODCALLTYPE CACListISF::Initialize(LPCITEMIDLIST pidl)
+HRESULT STDMETHODCALLTYPE CACListISF::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     TRACE("(%p, %p)\n", this, pidl);
     return S_OK;

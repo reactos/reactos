@@ -30,9 +30,9 @@ typedef struct _GEOMETRY
 
 } GEOMETRY, *PGEOMETRY;
 
-//
-// Extended disk geometry (Int13 / ah=48h)
-//
+/*
+ * Extended disk geometry (Int13 / ah=48h)
+ */
 #include <pshpack1.h>
 typedef struct _EXTENDED_GEOMETRY
 {
@@ -47,9 +47,9 @@ typedef struct _EXTENDED_GEOMETRY
 
 } EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
 
-//
-// Define the structure of a partition table entry
-//
+/*
+ * Define the structure of a partition table entry
+ */
 typedef struct _PARTITION_TABLE_ENTRY
 {
     UCHAR   BootIndicator;              // 0x00 - non-bootable partition,
@@ -66,9 +66,9 @@ typedef struct _PARTITION_TABLE_ENTRY
 
 } PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
-//
-// Define the structure of the master boot record
-//
+/*
+ * Define the structure of the master boot record
+ */
 typedef struct _MASTER_BOOT_RECORD
 {
     UCHAR   MasterBootRecordCodeAndData[0x1b8]; /* 0x000 */
@@ -80,9 +80,9 @@ typedef struct _MASTER_BOOT_RECORD
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 #include <poppack.h>
 
-//
-// Partition type defines (of PSDK)
-//
+/*
+ * Partition type defines (of PSDK)
+ */
 #define PARTITION_ENTRY_UNUSED          0x00      // Entry unused
 #define PARTITION_FAT_12                0x01      // 12-bit FAT entries
 #define PARTITION_XENIX_1               0x02      // Xenix
@@ -114,29 +114,16 @@ typedef struct _MASTER_BOOT_RECORD
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 #if defined(__i386__) || defined(_M_AMD64)
-VOID DiskStopFloppyMotor(VOID);
+VOID __cdecl DiskStopFloppyMotor(VOID);
 #endif // defined __i386__ || defined(_M_AMD64)
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// FreeLoader Disk Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
-VOID DiskReportError(BOOLEAN bError);
-VOID DiskError(PCSTR ErrorString, ULONG ErrorCode);
-PCSTR DiskGetErrorCodeString(ULONG ErrorCode);
-BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber);
-
-BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size);
-/* Platform-specific boot drive and partition numbers */
-extern UCHAR FrldrBootDrive;
-extern ULONG FrldrBootPartition;
-/* ARC path of the boot drive and partition */
-extern CHAR FrldrBootPath[MAX_PATH];
-
-/* Buffer for disk reads */
+/* Buffer for disk reads (hwdisk.c) */
 extern PVOID DiskReadBuffer;
 extern SIZE_T DiskReadBufferSize;
+
+
+/* ARC path of the boot drive and partition */
+extern CCHAR FrLdrBootPath[MAX_PATH];
 
 
 ///////////////////////////////////////////////////////////////////////////////////////

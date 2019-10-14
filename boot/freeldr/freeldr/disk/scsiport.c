@@ -169,7 +169,6 @@ SpiSendSynchronousSrb(
 static ARC_STATUS DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
-
     ExFreePool(Context);
     return ESUCCESS;
 }
@@ -179,8 +178,16 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
     RtlZeroMemory(Information, sizeof(*Information));
-    Information->EndingAddress.QuadPart = Context->SectorCount * Context->SectorSize;
-    Information->CurrentAddress.QuadPart = Context->SectorNumber * Context->SectorSize;
+
+    /*
+     * The ARC specification mentions that for partitions, StartingAddress and
+     * EndingAddress are the start and end positions of the partition in terms
+     * of byte offsets from the start of the disk.
+     * CurrentAddress is the current offset into (i.e. relative to) the partition.
+     */
+    Information->StartingAddress.QuadPart = Context->SectorOffset * Context->SectorSize;
+    Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
     return ESUCCESS;
 }
@@ -277,7 +284,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
     /* Read full sectors */
     ASSERT(Context->SectorNumber < 0xFFFFFFFF);
-    Lba = (ULONG)Context->SectorNumber;
+    Lba = (ULONG)(Context->SectorOffset + Context->SectorNumber);
     if (FullSectors > 0)
     {
         Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
@@ -311,6 +318,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Buffer = (PUCHAR)Buffer + FullSectors * Context->SectorSize;
         N -= FullSectors * Context->SectorSize;
         *Count += FullSectors * Context->SectorSize;
+        Context->SectorNumber += FullSectors;
         Lba += FullSectors;
     }
 
@@ -357,6 +365,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         }
         RtlCopyMemory(Buffer, Sector, N);
         *Count += N;
+        /* Context->SectorNumber remains untouched (incomplete sector read) */
         ExFreePool(Sector);
     }
 
@@ -366,17 +375,34 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    LARGE_INTEGER NewPosition = *Position;
 
-    if (SeekMode != SeekAbsolute)
-        return EINVAL;
-    if (Position->QuadPart & (Context->SectorSize - 1))
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += (Context->SectorNumber * Context->SectorSize);
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
+
+    if (NewPosition.QuadPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    Context->SectorNumber = Position->QuadPart / Context->SectorSize;
+    /* Convert in number of sectors */
+    NewPosition.QuadPart /= Context->SectorSize;
+    if (NewPosition.QuadPart >= Context->SectorCount)
+        return EINVAL;
+
+    Context->SectorNumber = NewPosition.QuadPart;
     return ESUCCESS;
 }
 
-static const DEVVTBL DiskVtbl = {
+static const DEVVTBL DiskVtbl =
+{
     DiskClose,
     DiskGetFileInformation,
     DiskOpen,
@@ -1612,11 +1638,11 @@ LoadBootDeviceDriver(VOID)
     InitializeListHead(&ModuleListHead);
 
     /* Create full ntbootdd.sys path */
-    MachDiskGetBootPath(NtBootDdPath, sizeof(NtBootDdPath));
+    strcpy(NtBootDdPath, FrLdrBootPath);
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load file */
-    Success = WinLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
+    Success = PeLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
     if (!Success)
     {
         /* That's OK. File simply doesn't exist */
@@ -1624,15 +1650,15 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Allocate a DTE for ntbootdd */
-    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
-        "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
+                                          "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
     if (!Success)
         return EIO;
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains ScsiPort* exports, imported by ntbootdd.sys */
-    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
-        "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
+                                          "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
     if (!Success)
     {
         RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
@@ -1640,7 +1666,7 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Fix imports */
-    Success = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
+    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
 
     /* Now unlinkt the DTEs, they won't be valid later */
     RemoveEntryList(&BootDdDTE->InLoadOrderLinks);

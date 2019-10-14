@@ -7,8 +7,8 @@
 ---
 
 <p align=center>
-  <a href="https://reactos.org/project-news/reactos-0411-released">
-    <img alt="ReactOS 0.4.11 Release" src="https://img.shields.io/badge/release-0.4.11-0688CB.svg">
+  <a href="https://reactos.org/project-news/reactos-0412-released">
+    <img alt="ReactOS 0.4.12 Release" src="https://img.shields.io/badge/release-0.4.12-0688CB.svg">
   </a>
   <a href="https://reactos.org/download">
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">

@@ -131,9 +131,9 @@
 
 #define ACPI_DEFAULT_PAGE_SIZE          4096    /* Must be power of 2 */
 
-/* OwnerId tracking. 8 entries allows for 255 OwnerIds */
+/* OwnerId tracking. 128 entries allows for 4095 OwnerIds */
 
-#define ACPI_NUM_OWNERID_MASKS          8
+#define ACPI_NUM_OWNERID_MASKS          128
 
 /* Size of the root table array is increased by this increment */
 

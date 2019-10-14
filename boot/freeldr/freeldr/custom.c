@@ -23,14 +23,14 @@
 
 /* GLOBALS ********************************************************************/
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 const CHAR BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExamples:\n\\BOOTSECT.DOS\n/boot/bootsect.dos";
 const CHAR LinuxKernelPrompt[] = "Enter the Linux kernel image path.\n\nExamples:\n/vmlinuz\n/boot/vmlinuz-2.4.18";
 const CHAR LinuxInitrdPrompt[] = "Enter the initrd image path.\n\nExamples:\n/initrd.gz\n/boot/root.img.gz\n\nLeave blank for no initial ram disk.";
 const CHAR LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nExamples:\nroot=/dev/hda1\nroot=/dev/fd0 read-only\nroot=/dev/sdb1 init=/sbin/init";
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */
 
 const CHAR BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
 const CHAR BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
@@ -46,7 +46,7 @@ const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 VOID OptionMenuCustomBoot(VOID)
 {
     PCSTR CustomBootMenuList[] = {
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
         "Disk",
         "Partition",
         "Boot Sector File",
@@ -61,7 +61,7 @@ VOID OptionMenuCustomBoot(VOID)
     if (!UiDisplayMenu("Please choose a boot method:", NULL,
                        FALSE,
                        CustomBootMenuList,
-                       sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
+                       RTL_NUMBER_OF(CustomBootMenuList),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,
@@ -75,7 +75,7 @@ VOID OptionMenuCustomBoot(VOID)
     OperatingSystem.SectionId = 0;
     switch (SelectedMenuItem)
     {
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
         case 0: // Disk
             EditCustomBootDisk(&OperatingSystem);
             break;
@@ -101,7 +101,7 @@ VOID OptionMenuCustomBoot(VOID)
         case 1: // ReactOS Setup
             EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
-#endif
+#endif /* _M_IX86 || _M_AMD64 */
     }
 
     /* And boot it */
@@ -114,7 +114,7 @@ VOID OptionMenuCustomBoot(VOID)
 
 #endif // HAS_OPTION_MENU_CUSTOM_BOOT
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 VOID
 EditCustomBootDisk(
@@ -123,7 +123,7 @@ EditCustomBootDisk(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -218,7 +218,7 @@ EditCustomBootPartition(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -328,7 +328,7 @@ EditCustomBootSectorFile(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -461,7 +461,7 @@ EditCustomBootLinux(
     TIMEINFO* TimeInfo;
     ULONG_PTR SectionId = OperatingSystem->SectionId;
     CHAR SectionName[100];
-    /* The following is a trick for saving some stack space */
+    /* This construct is a trick for saving some stack space */
     union
     {
         struct
@@ -612,7 +612,7 @@ EditCustomBootLinux(
     OperatingSystem->LoadIdentifier = "Custom Linux Setup";
 }
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */
 
 VOID
 EditCustomBootReactOS(
@@ -705,10 +705,6 @@ EditCustomBootReactOS(
 VOID OptionMenuReboot(VOID)
 {
     UiMessageBox("The system will now reboot.");
-
-#if defined(__i386__) || defined(_M_AMD64)
-    DiskStopFloppyMotor();
-#endif
     Reboot();
 }
 

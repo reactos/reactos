@@ -1,0 +1,18 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+//    STRING_LABEL_HELP "Skapar, tar bort eller ändrar etikett på enhet.\n\nLABEL [enhet:][etikett]\n"
+    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
+LABEL [drive:][label]\n\n\
+  drive:          Specifies the drive letter of a drive.\n\
+  label           Specifies the label of the drive."
+    STRING_LABEL_TEXT1 "Volymen i enhet %c: är %s\n"
+    STRING_LABEL_TEXT2 "Volymen i enhet %c: är utan namn\n"
+    STRING_LABEL_TEXT3 "Volymens serienummer är %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Volymnamn (32 tecken, Enter = inget namn)? "
+    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
+    STRING_LABEL_OPTIONS "YN"
+    STRING_ERROR_INVALID_DRIVE "Ogiltig enhet angiven\n"
+    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+END

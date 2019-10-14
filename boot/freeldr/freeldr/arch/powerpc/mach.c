@@ -24,7 +24,6 @@
 #include "compat.h"
 
 extern void BootMain( PSTR CmdLine );
-extern const PCSTR GetFreeLoaderVersionString(VOID);
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
@@ -32,7 +31,7 @@ static int chosen_package, stdin_handle, stdout_handle, part_handle = -1;
 int mmu_handle = 0;
 int claimed[4];
 BOOLEAN AcpiPresent = FALSE;
-char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
+CHAR FrLdrBootPath[MAX_PATH] = "", BootPart[MAX_PATH] = "", CmdLine[MAX_PATH] = "bootprep";
 jmp_buf jmp;
 volatile char *video_mem = 0;
 
@@ -247,11 +246,6 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return slots;
 }
 
-BOOLEAN PpcDiskGetBootPath(PCHAR OutBootPath, ULONG Size) {
-    strncpy( OutBootPath, BootPath, Size );
-    return TRUE;
-}
-
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
                    ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
@@ -441,7 +435,6 @@ void PpcDefaultMachVtbl()
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
-    MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PpcDiskGetCacheableBlockCount;
@@ -474,7 +467,7 @@ void PpcOfwInit()
     return;
     }
 
-    printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
+    printf( "FreeLDR version [%s]\n", FrLdrVersionString );
 
     BootMain( CmdLine );
 }
@@ -493,7 +486,7 @@ void MachInit(const char *CmdLine) {
     char *sep;
 
     BootPart[0] = 0;
-    BootPath[0] = 0;
+    FrLdrBootPath[0] = 0;
 
     printf( "Determining boot device: [%s]\n", CmdLine );
 
@@ -511,18 +504,18 @@ void MachInit(const char *CmdLine) {
     if( strlen(BootPart) == 0 ) {
     if (ofproxy)
             len = ofw_getprop(chosen_package, "bootpath",
-                              BootPath, sizeof(BootPath));
+                              FrLdrBootPath, sizeof(FrLdrBootPath));
     else
             len = 0;
     if( len < 0 ) len = 0;
-    BootPath[len] = 0;
-    printf( "Boot Path: %s\n", BootPath );
+    FrLdrBootPath[len] = 0;
+    printf( "Boot Path: %s\n", FrLdrBootPath );
 
-    sep = strrchr(BootPath, ',');
+    sep = strrchr(FrLdrBootPath, ',');
 
-    strcpy(BootPart, BootPath);
+    strcpy(BootPart, FrLdrBootPath);
     if( sep ) {
-        BootPart[sep - BootPath] = 0;
+        BootPart[sep - FrLdrBootPath] = 0;
     }
     }
 
@@ -540,18 +533,20 @@ void WRITE_PORT_UCHAR(PUCHAR Address, UCHAR Value) {
     SetPhysByte(((ULONG)Address)+0x80000000, Value);
 }
 
-void DiskStopFloppyMotor() {
-}
-
-void BootOldLinuxKernel( unsigned long size ) {
+VOID __cdecl BootLinuxKernel(
+    IN ULONG KernelSize,
+    IN PVOID KernelCurrentLoadAddress,
+    IN PVOID KernelTargetLoadAddress,
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber)
+{
     ofw_exit();
 }
 
-void BootNewLinuxKernel() {
-    ofw_exit();
-}
-
-void ChainLoadBiosBootSectorCode() {
+VOID __cdecl ChainLoadBiosBootSectorCode(
+    IN UCHAR BootDrive OPTIONAL,
+    IN ULONG BootPartition OPTIONAL)
+{
     ofw_exit();
 }
 

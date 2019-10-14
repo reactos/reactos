@@ -181,14 +181,15 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
     MaxKeyValueInfoClass
 } KEY_VALUE_INFORMATION_CLASS;
 
-typedef enum _KEY_SET_INFORMATION_CLASS {
-  KeyWriteTimeInformation,
-  KeyWow64FlagsInformation,
-  KeyControlFlagsInformation,
-  KeySetVirtualizationInformation,
-  KeySetDebugInformation,
-  KeySetHandleTagsInformation,
-  MaxKeySetInfoClass
+typedef enum _KEY_SET_INFORMATION_CLASS
+{
+    KeyWriteTimeInformation,
+    KeyWow64FlagsInformation,
+    KeyControlFlagsInformation,
+    KeySetVirtualizationInformation,
+    KeySetDebugInformation,
+    KeySetHandleTagsInformation,
+    MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
 #endif
@@ -451,6 +452,16 @@ typedef struct _PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA
     UNICODE_STRING DeviceInstance;
     ULONG Flags;
 } PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA, *PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA;
+
+// Class 0x06
+typedef struct _PLUGPLAY_CONTROL_QUERY_REMOVE_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    ULONG Unknown2;
+    PNP_VETO_TYPE VetoType;
+    LPWSTR VetoName;
+    ULONG NameLength;
+} PLUGPLAY_CONTROL_QUERY_REMOVE_DATA, *PPLUGPLAY_CONTROL_QUERY_REMOVE_DATA;
 
 // Class 0x07
 typedef struct _PLUGPLAY_CONTROL_USER_RESPONSE_DATA

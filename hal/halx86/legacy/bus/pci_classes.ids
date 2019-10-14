@@ -5,8 +5,8 @@
 #
 #	List of PCI ID's
 #
-#	Version: 2018.11.21
-#	Date:    2018-11-21 03:15:02
+#	Version: 2019.09.28
+#	Date:    2019-09-28 03:15:02
 #
 #	Maintained by Albert Pool, Martin Mares, and other volunteers from
 #	the PCI ID Project at https://pci-ids.ucw.cz/.
@@ -220,6 +220,8 @@ C 11  Signal processing controller
 	80  Signal processing controller
 C 12  Processing accelerators
 	00  Processing accelerators
+# For the class of PCI attached devices which perform a function of Deep Learning Neural Network inference acceleration
+	01  AI Inference Accelerator
 C 13  Non-Essential Instrumentation
 C 40  Coprocessor
 C ff  Unassigned class

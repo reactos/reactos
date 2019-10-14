@@ -133,7 +133,7 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     /* Get the disk geometry */
     //ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
 
-    if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+    if (XboxDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
@@ -284,7 +284,6 @@ XboxMachInit(const char *CmdLine)
     MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
     MachVtbl.GetExtendedBIOSData = XboxGetExtendedBIOSData;
     MachVtbl.GetFloppyCount = XboxGetFloppyCount;
-    MachVtbl.DiskGetBootPath = DiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;

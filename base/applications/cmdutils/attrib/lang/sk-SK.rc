@@ -1,0 +1,26 @@
+/* Slovak translation for CMD
+ * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR: 21-03-2009
+ * LastChange: 10-08-2010
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Displays or changes file attributes.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Sets an attribute\n\
+  -   Clears an attribute\n\
+  R   Read-only file attribute\n\
+  A   Archive file attribute\n\
+  S   System file attribute\n\
+  H   Hidden file attribute\n\
+  /S  Processes matching files in the current directory\n\
+      and all subdirectories\n\
+  /D  Processes directories as well\n\n\
+Type ATTRIB without a parameter to display the attributes of all files.\n"
+    STRING_CONSOLE_ERROR "Neznáma chyba: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Invalid parameter format - %s\n"
+END

@@ -60,10 +60,10 @@ class CFontsFolder :
         virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
 
         // IPersistFolder
-        virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST *pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE *pidl);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_FONTSFOLDERSHORTCUT)
         DECLARE_NOT_AGGREGATABLE(CFontsFolder)

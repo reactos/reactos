@@ -60,7 +60,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     {
         DeviceInformation = CONTAINING_RECORD(DeviceEntry, DEVICE_INFORMATION, DeviceListEntry);
 
-        if (RtlCompareUnicodeString(&TargetDeviceName, &(DeviceInformation->DeviceName), TRUE) == 0)
+        if (RtlEqualUnicodeString(&TargetDeviceName, &(DeviceInformation->DeviceName), TRUE))
         {
             break;
         }
@@ -332,15 +332,23 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Now, ensure output buffer can hold everything */
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Ensure we set output to let user reallocate! */
     MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
     MountPoints->NumberOfMountPoints = TotalSymLinks;
+    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
+
+        if (SymbolicName)
+        {
+            FreePool(DeviceName.Buffer);
+        }
+
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -416,6 +424,11 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         }
     }
 
+    if (SymbolicName)
+    {
+        FreePool(DeviceName.Buffer);
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -449,7 +462,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         {
             DeviceInformation = CONTAINING_RECORD(DeviceEntry, DEVICE_INFORMATION, DeviceListEntry);
 
-            if (RtlEqualUnicodeString(&DeviceName, &(DeviceInformation->DeviceName), TRUE) == 0)
+            if (RtlEqualUnicodeString(&DeviceName, &(DeviceInformation->DeviceName), TRUE))
             {
                 break;
             }
@@ -469,7 +482,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-            if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE) == 0)
+            if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE))
             {
                 break;
             }
@@ -497,7 +510,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
             {
                 SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-                if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE) == 0)
+                if (RtlEqualUnicodeString(SymbolicName, &SymlinkInformation->Name, TRUE))
                 {
                     break;
                 }
@@ -517,7 +530,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Get output buffer */
-    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Compute output length */
@@ -527,9 +540,12 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
     /* Give length to allow reallocation */
     MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalLength;
     MountPoints->NumberOfMountPoints = 1;
+    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalLength;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
+        Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS);
+
         return STATUS_BUFFER_OVERFLOW;
     }
 

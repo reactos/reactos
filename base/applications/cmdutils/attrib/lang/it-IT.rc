@@ -1,0 +1,20 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Visualizza o modifica gli attributi dei file.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Attiva un attributo\n\
+  -   Toglie un attributo\n\
+  R   Attributo di file di sola lettura\n\
+  A   Attributo di file di archivio\n\
+  S   Attributo di file di sistema\n\
+  H   Attributo di file nascosto\n\
+  /S  Tratta i file indicati nella cartella corrente e in\n\
+       tutte le sottocartelle\n\
+  /D  Tratta anche le cartelle\n\n\
+Scrivi ATTRIB senza parametri per visualizzare gli attributi di tutti i file.\n"
+    STRING_CONSOLE_ERROR "Errore sconosciuto: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formato dei parametri non valido - %s\n"
+END

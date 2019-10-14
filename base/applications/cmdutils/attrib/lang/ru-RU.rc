@@ -1,0 +1,22 @@
+/* Russian translation by Andrey Korotaev (unC0Rr@inbox.ru) & Aleksey Bragin (aleksey@reactos.org) & Kudratov Olimjon (olim98@bk.ru)*/
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Вывод и изменение атрибутов файлов.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
+       [/S [/D]]\n\n\
+  +   Установка атрибута.\n\
+  -   Снятие атрибута.\n\
+  R   Атрибут ""Только чтение"".\n\
+  A   Атрибут ""Архивный"".\n\
+  S   Атрибут ""Системный"".\n\
+  H   Атрибут ""Скрытый"".\n\
+  /S  Обработка файлов с указанными именами в текущей папке\n\
+      и во всех ее подпапках.\n\
+  /D  Обработка и файлов, и папок.\n\n\
+Команда ATTRIB без параметров выводит атрибуты всех файлов.\n"
+    STRING_CONSOLE_ERROR "Неизвестная ошибка: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Неверный формат параметра - %s\n"
+END

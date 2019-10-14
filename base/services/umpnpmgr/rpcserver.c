@@ -2950,8 +2950,36 @@ PNP_QueryRemove(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_QUERY_REMOVE_DATA PlugPlayData;
+    NTSTATUS Status;
+    DWORD ret = CR_SUCCESS;
+
+    DPRINT1("PNP_QueryRemove(%p %S %p %p %lu 0x%lx)\n",
+            hBinding, pszDeviceID, pVetoType, pszVetoName,
+            ulNameLength, ulFlags);
+
+    if (ulFlags & ~CM_REMOVE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pVetoType != NULL)
+        *pVetoType = PNP_VetoTypeUnknown;
+
+    if (pszVetoName != NULL && ulNameLength > 0)
+        *pszVetoName = UNICODE_NULL;
+
+    RtlZeroMemory(&PlugPlayData, sizeof(PlugPlayData));
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+    PlugPlayData.VetoName = pszVetoName;
+    PlugPlayData.NameLength = ulNameLength;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
+                               &PlugPlayData,
+                               sizeof(PlugPlayData));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 

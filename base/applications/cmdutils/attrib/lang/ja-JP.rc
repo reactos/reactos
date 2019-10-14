@@ -1,0 +1,20 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "ファイル属性を表示または変更します。\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] [ファイル] ...\n\
+       [/S [/D]]\n\n\
+  +   属性を設定します。\n\
+  -   属性を解除します。\n\
+  R   読みとり専用属性。\n\
+  A   アーカイブ属性。\n\
+  S   システム ファイル属性。\n\
+  H   隠しファイル属性。\n\
+  /S  現在のフォルダとすべてのサブフォルダの一致するファイルを\n\
+      処理します。\n\
+  /D  フォルダも処理します。\n\n\
+パラメータを指定しないで ATTRIB と入力すると、すべてのファイルの属性を表示します。\n"
+    STRING_CONSOLE_ERROR "不明なエラー: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "無効なパラメータの書式です。 - %s\n"
+END

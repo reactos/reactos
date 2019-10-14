@@ -22,9 +22,7 @@
  * https://www.kernel.org/doc/Documentation/x86/boot.txt
  */
 
-#ifndef _M_ARM
-
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 /* INCLUDES *******************************************************************/
 
@@ -154,6 +152,17 @@ LoadAndBootLinux(
         }
     }
 
+    /* If we haven't retrieved the BIOS drive and partition numbers above, do it now */
+    if (PartitionNumber == 0)
+    {
+        /* Retrieve the BIOS drive and partition numbers */
+        if (!DissectArcPath(BootPath, NULL, &DriveNumber, &PartitionNumber))
+        {
+            /* This is not a fatal failure, but just an inconvenience: display a message */
+            TRACE("DissectArcPath(%s) failed to retrieve BIOS drive and partition numbers.\n", BootPath);
+        }
+    }
+
     /* Get the kernel name */
     LinuxKernelName = GetArgumentValue(Argc, Argv, "Kernel");
     if (!LinuxKernelName || !*LinuxKernelName)
@@ -259,13 +268,13 @@ LoadAndBootLinux(
     UiUnInitialize("Booting Linux...");
     IniCleanup();
 
-    DiskStopFloppyMotor();
-
-    if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
-        BootNewLinuxKernel();
-    else
-        BootOldLinuxKernel(LinuxKernelSize);
-
+    BootLinuxKernel(LinuxKernelSize, LinuxKernelLoadAddress,
+                    (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
+                        ? (PVOID)LINUX_KERNEL_LOAD_ADDRESS /* == 0x100000 */
+                        : (PVOID)0x10000,
+                    DriveNumber, PartitionNumber);
+    /* Must not return! */
+    return ESUCCESS;
 
 LinuxBootFailed:
 
@@ -409,11 +418,17 @@ static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
     RtlStringCbPrintfA(StatusText, sizeof(StatusText), "Loading %s", LinuxKernelName);
     UiDrawStatusText(StatusText);
 
-    /* Allocate memory for Linux kernel */
+    /* Try to allocate memory for the Linux kernel; if it fails, allocate somewhere else */
     LinuxKernelLoadAddress = MmAllocateMemoryAtAddress(LinuxKernelSize, (PVOID)LINUX_KERNEL_LOAD_ADDRESS, LoaderSystemCode);
     if (LinuxKernelLoadAddress != (PVOID)LINUX_KERNEL_LOAD_ADDRESS)
     {
-        return FALSE;
+        /* It's OK, let's allocate again somewhere else */
+        LinuxKernelLoadAddress = MmAllocateMemoryWithType(LinuxKernelSize, LoaderSystemCode);
+        if (LinuxKernelLoadAddress == NULL)
+        {
+            TRACE("Failed to allocate 0x%lx bytes for the kernel image.\n", LinuxKernelSize);
+            return FALSE;
+        }
     }
 
     LoadAddress = LinuxKernelLoadAddress;
@@ -422,7 +437,7 @@ static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
     Position.QuadPart = 512 + SetupSectorSize;
     if (ArcSeek(LinuxKernelFile, &Position, SeekAbsolute) != ESUCCESS)
         return FALSE;
-    for (BytesLoaded=0; BytesLoaded<LinuxKernelSize; )
+    for (BytesLoaded = 0; BytesLoaded < LinuxKernelSize; )
     {
         if (ArcRead(LinuxKernelFile, LoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
@@ -475,31 +490,37 @@ static BOOLEAN LinuxCheckKernelVersion(VOID)
 
 static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
 {
-    ULONG        BytesLoaded;
-    CHAR    StatusText[260];
+    ULONG BytesLoaded;
+    CHAR  StatusText[260];
 
     RtlStringCbPrintfA(StatusText, sizeof(StatusText), "Loading %s", LinuxInitrdName);
     UiDrawStatusText(StatusText);
 
-    // Allocate memory for the ramdisk
-    //LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
-    // Try to align it at the next MB boundary after the kernel
-    //LinuxInitrdLoadAddress = MmAllocateMemoryAtAddress(LinuxInitrdSize, (PVOID)ROUND_UP((LINUX_KERNEL_LOAD_ADDRESS + LinuxKernelSize), 0x100000));
+    /* Allocate memory for the ramdisk, below 4GB */
+    // LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
+    /* Try to align it at the next MB boundary after the kernel */
+    // LinuxInitrdLoadAddress = MmAllocateMemoryAtAddress(LinuxInitrdSize, (PVOID)ROUND_UP((LINUX_KERNEL_LOAD_ADDRESS + LinuxKernelSize), 0x100000));
     if (LinuxSetupSector->Version <= 0x0202)
     {
+#ifdef _M_AMD64
+        C_ASSERT(LINUX_MAX_INITRD_ADDRESS < 0x100000000);
+#endif
         LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LINUX_MAX_INITRD_ADDRESS, LoaderSystemCode);
     }
     else
     {
-        LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, (PVOID)LinuxSetupSector->InitrdAddressMax, LoaderSystemCode);
+        LinuxInitrdLoadAddress = MmAllocateHighestMemoryBelowAddress(LinuxInitrdSize, UlongToPtr(LinuxSetupSector->InitrdAddressMax), LoaderSystemCode);
     }
     if (LinuxInitrdLoadAddress == NULL)
     {
         return FALSE;
     }
+#ifdef _M_AMD64
+    ASSERT((ULONG_PTR)LinuxInitrdLoadAddress < 0x100000000);
+#endif
 
     /* Set the information in the setup struct */
-    LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
+    LinuxSetupSector->RamdiskAddress = PtrToUlong(LinuxInitrdLoadAddress);
     LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
     TRACE("RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress);
@@ -511,9 +532,9 @@ static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
     }
 
     /* Load the ramdisk */
-    for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
+    for (BytesLoaded = 0; BytesLoaded < LinuxInitrdSize; )
     {
-        if (ArcRead(LinuxInitrdFile, (PVOID)LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
+        if (ArcRead(LinuxInitrdFile, LinuxInitrdLoadAddress, LINUX_READ_CHUNK_SIZE, NULL) != ESUCCESS)
             return FALSE;
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
@@ -525,6 +546,4 @@ static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
     return TRUE;
 }
 
-#endif // _M_IX86
-
-#endif
+#endif /* _M_IX86 || _M_AMD64 */

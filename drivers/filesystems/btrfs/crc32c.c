@@ -18,11 +18,15 @@
 #include <windef.h>
 #ifndef __REACTOS__
 #include <smmintrin.h>
+#endif /* __REACTOS__ */
+#include <stdint.h>
+#include <stdbool.h>
 
-extern BOOL have_sse42;
+#ifndef __REACTOS__
+extern bool have_sse42;
 #endif /* __REACTOS__ */
 
-static const UINT32 crctable[] = {
+static const uint32_t crctable[] = {
     0x00000000, 0xf26b8303, 0xe13b70f7, 0x1350f3f4, 0xc79a971f, 0x35f1141c, 0x26a1e7e8, 0xd4ca64eb,
     0x8ad958cf, 0x78b2dbcc, 0x6be22838, 0x9989ab3b, 0x4d43cfd0, 0xbf284cd3, 0xac78bf27, 0x5e133c24,
     0x105ec76f, 0xe235446c, 0xf165b798, 0x030e349b, 0xd7c45070, 0x25afd373, 0x36ff2087, 0xc494a384,
@@ -68,7 +72,7 @@ static const UINT32 crctable[] = {
     }                                                                   \
   } while(0)
 
-static UINT32 crc32c_hw(const void *input, ULONG len, UINT32 crc) {
+static uint32_t crc32c_hw(const void *input, ULONG len, uint32_t crc) {
     const char* buf = (const char*)input;
 
     // Annoyingly, the CRC32 intrinsics don't work properly in modern versions of MSVC -
@@ -86,31 +90,31 @@ static UINT32 crc32c_hw(const void *input, ULONG len, UINT32 crc) {
 #ifdef _AMD64_
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable:4244) // _mm_crc32_u64 wants to return UINT64(!)
+#pragma warning(disable:4244) // _mm_crc32_u64 wants to return uint64_t(!)
 #pragma warning(disable:4242)
 #endif
-    CALC_CRC(_mm_crc32_u64, crc, UINT64, buf, len);
+    CALC_CRC(_mm_crc32_u64, crc, uint64_t, buf, len);
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 #endif
-    CALC_CRC(_mm_crc32_u32, crc, UINT32, buf, len);
+    CALC_CRC(_mm_crc32_u32, crc, uint32_t, buf, len);
 
 #ifdef _MSC_VER
     for (; len > 0; len--, buf++) {
         crc = crctable[(crc ^ *buf) & 0xff] ^ (crc >> 8);
     }
 #else
-    CALC_CRC(_mm_crc32_u16, crc, UINT16, buf, len);
-    CALC_CRC(_mm_crc32_u8, crc, UINT8, buf, len);
+    CALC_CRC(_mm_crc32_u16, crc, uint16_t, buf, len);
+    CALC_CRC(_mm_crc32_u8, crc, uint8_t, buf, len);
 #endif
 
     return crc;
 }
 #endif
 
-UINT32 calc_crc32c(_In_ UINT32 seed, _In_reads_bytes_(msglen) UINT8* msg, _In_ ULONG msglen) {
-    UINT32 rem;
+uint32_t calc_crc32c(_In_ uint32_t seed, _In_reads_bytes_(msglen) uint8_t* msg, _In_ ULONG msglen) {
+    uint32_t rem;
     ULONG i;
 
 #ifndef __REACTOS__

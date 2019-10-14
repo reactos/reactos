@@ -697,14 +697,14 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetClassID(CLSID *lpClassId)
 }
 
 // IPersistFolder
-HRESULT STDMETHODCALLTYPE CMergedFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT STDMETHODCALLTYPE CMergedFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_shellPidl = ILClone(pidl);
     return S_OK;
 }
 
 // IPersistFolder2
-HRESULT STDMETHODCALLTYPE CMergedFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT STDMETHODCALLTYPE CMergedFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     if (pidl)
         *pidl = m_shellPidl;

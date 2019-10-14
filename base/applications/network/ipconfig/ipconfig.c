@@ -407,6 +407,8 @@ VOID ShowInfo(BOOL bAll)
     ULONG adaptOutBufLen = 0;
     PFIXED_INFO pFixedInfo = NULL;
     ULONG netOutBufLen = 0;
+    PIP_PER_ADAPTER_INFO pPerAdapterInfo = NULL;
+    ULONG ulPerAdapterInfoLength = 0;
     ULONG ret = 0;
 
     /* call GetAdaptersInfo to obtain the adapter info */
@@ -495,6 +497,15 @@ VOID ShowInfo(BOOL bAll)
 
         if (myConType != NULL) HeapFree(ProcessHeap, 0, myConType);
 
+        if (GetPerAdapterInfo(pAdapter->Index, pPerAdapterInfo, &ulPerAdapterInfoLength) == ERROR_BUFFER_OVERFLOW)
+        {
+            pPerAdapterInfo = (PIP_PER_ADAPTER_INFO)HeapAlloc(ProcessHeap, 0, ulPerAdapterInfoLength);
+            if (pPerAdapterInfo != NULL)
+            {
+                GetPerAdapterInfo(pAdapter->Index, pPerAdapterInfo, &ulPerAdapterInfoLength);
+            }
+        }
+
         /* check if the adapter is connected to the media */
         if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
@@ -515,10 +526,20 @@ VOID ShowInfo(BOOL bAll)
             if (bConnected)
             {
                 if (pAdapter->DhcpEnabled)
+                {
                     _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
+                    if (pPerAdapterInfo != NULL)
+                    {
+                        if (pPerAdapterInfo->AutoconfigEnabled)
+                            _tprintf(_T("\tAutoconfiguration Enabled . . . . : Yes\n"));
+                        else
+                            _tprintf(_T("\tAutoconfiguration Enabled . . . . : No\n"));
+                    }
+                }
                 else
+                {
                     _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : No\n"));
-                _tprintf(_T("\tAutoconfiguration Enabled . . . . : \n"));
+                }
             }
         }
 
@@ -565,8 +586,10 @@ VOID ShowInfo(BOOL bAll)
         }
         _tprintf(_T("\n"));
 
-        pAdapter = pAdapter->Next;
+        HeapFree(ProcessHeap, 0, pPerAdapterInfo);
+        pPerAdapterInfo = NULL;
 
+        pAdapter = pAdapter->Next;
     }
 
     HeapFree(ProcessHeap, 0, pFixedInfo);

@@ -12,18 +12,6 @@ assoc (輸出所有檔案關聯)\n\
 assoc .ext (輸出指定的檔案關聯)\n\
 assoc .ext= (刪除指定的檔案關聯)\n\
 assoc .ext=檔案類型 (添加新的檔案關聯)\n"
-    STRING_ATTRIB_HELP "顯示或更改檔案屬性。\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
-       [/S [/D]]\n\n\
-  +   設定一個屬性\n\
-  -   清除一個屬性\n\
-  R   只讀屬性\n\
-  A   歸檔屬性\n\
-  S   系統屬性\n\
-  H   隱藏屬性\n\
-  /S  處理當前目錄和所有子目錄下的所有匹配檔案\n\
-  /D  同時處理目錄\n\n\
-執行不帶參數的 ATTRIB 將會顯示所有檔案的屬性。\n"
     STRING_ALIAS_HELP "設定、刪除或顯示別名。\n\n\
 ALIAS [別名=[命令]]\n\n\
   別名    別名的名稱。\n\
@@ -243,11 +231,6 @@ ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字�
 字元串1==字元串2   當所指定的字元串相匹配時為真。\n\
 EXIST 檔名       當指定的檔名存在時為真。\n\
 DEFINED 變數       當指定的變數已被定義時為真。\n"
-    STRING_LABEL_HELP1 "顯示或改變驅動器卷標。\n\nLABEL [驅動器:][卷標]\n"
-    STRING_LABEL_HELP2 "驅動器 %c 中的卷是 %s\n"
-    STRING_LABEL_HELP3 "驅動器 %c 中的卷沒有卷標。\n"
-    STRING_LABEL_HELP4 "卷的序列號是 %04X-%04X\n"
-    STRING_LABEL_HELP5 "驅動器卷標 (11 個字元, 按 ENTER 忽略)? "
     STRING_LOCALE_HELP1 "當前時間是"
     STRING_MKDIR_HELP "創建一個目錄。\n\n\
 MKDIR [驅動器:]路徑\nMD [驅動器:]路徑"

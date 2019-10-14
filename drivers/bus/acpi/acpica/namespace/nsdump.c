@@ -272,7 +272,7 @@ AcpiNsDumpOneObject (
 
     /* Now we can print out the pertinent information */
 
-    AcpiOsPrintf (" %-12s %p %2.2X ",
+    AcpiOsPrintf (" %-12s %p %3.3X ",
         AcpiUtGetTypeName (Type), ThisNode, ThisNode->OwnerId);
 
     DbgLevel = AcpiDbgLevel;

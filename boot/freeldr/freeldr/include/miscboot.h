@@ -19,24 +19,12 @@
 
 #pragma once
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 ARC_STATUS
-LoadAndBootBootSector(
+LoadAndBootDevice(
     IN ULONG Argc,
     IN PCHAR Argv[],
     IN PCHAR Envp[]);
 
-ARC_STATUS
-LoadAndBootPartition(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
-
-ARC_STATUS
-LoadAndBootDrive(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
-
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */

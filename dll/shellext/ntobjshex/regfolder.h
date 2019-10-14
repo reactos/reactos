@@ -94,10 +94,10 @@ public:
         SHCOLUMNID *pscid);
 
     // IPersistFolder
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl);
 
     // Internal
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath, HKEY hRoot);
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath, HKEY hRoot);
 
 protected:
     virtual HRESULT STDMETHODCALLTYPE CompareIDs(LPARAM lParam, const RegPidlEntry * first, const RegPidlEntry * second);

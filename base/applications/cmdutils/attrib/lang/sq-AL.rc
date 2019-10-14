@@ -1,0 +1,24 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Shfaq ose ndryshu atributet e dokumentave.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Vendos nje atribute\n\
+  -   Pastron një atribute\n\
+  R   Lexo-vetem atributet e dokumentave\n\
+  A   Atributet e dokumentave në arkiv\n\
+  S   Atributet e dokumentave të sistemit\n\
+  H   Atributet e dokumentave te fshehur\n\
+  /S  Procesi i përputhjes së dokumentave ne skedën aktuale\n\
+      dhe të gjitha nënskedat\n\
+  /D  Proçeso skedat gjithashtu\n\n\
+Shkruaj ATTRIB pa një parameter për të shfaque atributet e të gjithë dokumentave.\n"
+    STRING_CONSOLE_ERROR "Error i paditur: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Parametrat e formatit invalid - %s\n"
+END

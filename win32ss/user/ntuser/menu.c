@@ -1481,10 +1481,16 @@ static ITEM *MENU_FindItemByCoords( MENU *menu, POINT pt, UINT *pos )
 {
     ITEM *item;
     UINT i;
+    INT cx, cy;
     RECT rect;
     PWND pWnd = ValidateHwndNoErr(menu->hWnd);
 
     if (!IntGetWindowRect(pWnd, &rect)) return NULL;
+
+    cx = UserGetSystemMetrics(SM_CXDLGFRAME);
+    cy = UserGetSystemMetrics(SM_CYDLGFRAME);
+    RECTL_vInflateRect(&rect, -cx, -cy);
+
     if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
        pt.x = rect.right - 1 - pt.x;
     else
@@ -2802,7 +2808,7 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     Cs.hwndParent = UserHMGetHandle(pWndOwner);
 
     /* NOTE: In Windows, top menu popup is not owned. */
-    pWndCreated = co_UserCreateWindowEx( &Cs, &ClassName, &WindowName, NULL);
+    pWndCreated = co_UserCreateWindowEx( &Cs, &ClassName, &WindowName, NULL, WINVER );
 
     if( !pWndCreated ) return FALSE;
 
@@ -2933,7 +2939,7 @@ static BOOL MENU_MoveRect(UINT flags, INT* x, INT* y, INT width, INT height, con
 static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT flags,
                               INT x, INT y, const RECT* pExclude)
 {
-    UINT width, height;
+    INT width, height;
     POINT ptx;
     PMONITOR monitor;
     PWND pWnd;
@@ -3405,7 +3411,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
           RECT rc;
           rc.left   = Item->xItem;
           rc.top    = Item->yItem;
-          rc.right  = Item->cxItem; // Do this for now......
+          rc.right  = Item->cxItem;
           rc.bottom = Item->cyItem;
 
           MENU_AdjustMenuItemRect(Menu, &rc);

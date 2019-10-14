@@ -842,7 +842,9 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
             nmhotitem.dwFlags      = HICF_ENTERING;
             SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
 
-            InvalidateRect(hWnd, NULL, TRUE);
+            theme = GetWindowTheme( hWnd );
+            if (theme)
+                InvalidateRect(hWnd, NULL, TRUE);
         }
 
         if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&TME_LEAVE))
@@ -896,7 +898,9 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
             nmhotitem.dwFlags      = HICF_LEAVING;
             SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
 
-            InvalidateRect(hWnd, NULL, TRUE);
+            theme = GetWindowTheme( hWnd );
+            if (theme)
+                InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
 #else

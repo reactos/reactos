@@ -54,11 +54,10 @@
 /* Realmode function IDs */
 #define FNID_Int386 0
 #define FNID_Reboot 1
-#define FNID_ChainLoadBiosBootSectorCode 2
+#define FNID_Relocator16Boot 2
 #define FNID_PxeCallApi 3
-#define FNID_PnpBiosGetDeviceNodeCount 4
-#define FNID_PnpBiosGetDeviceNode 5
-#define FNID_BootLinuxKernel 6
+#define FNID_PnpBiosGetDeviceNodeCount  4
+#define FNID_PnpBiosGetDeviceNode       5
 
 /* Flag Masks */
 #define CR0_PE_SET    HEX(00000001)    /* OR this value with CR0 to enable pmode */

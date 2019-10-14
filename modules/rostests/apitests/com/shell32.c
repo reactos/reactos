@@ -119,6 +119,19 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_FindFolder),
+        {
+            {    0x0,   &IID_IShellFolder2 },
+            {    0x0,       &IID_IShellFolder },
+            {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IShellIcon },
+            {    0x8,   &IID_IShellIconOverlay },
+            {    0xc,   &IID_IPersistFolder2 },
+            {    0xc,       &IID_IPersistFolder },
+            {    0xc,           &IID_IPersist },
+        }
+    },
+    {
         ID_NAME(CLSID_FolderItem),
         {
             //{    0x0,   &CLSID_ShellFolderItem }, // broken QueryInterface that doesn't add a reference

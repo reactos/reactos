@@ -219,9 +219,9 @@ typedef struct acpi_evaluate_info
     UINT32                          ReturnFlags;        /* Used for return value analysis */
     UINT32                          ReturnBtype;        /* Bitmapped type of the returned object */
     UINT16                          ParamCount;         /* Count of the input argument list */
+    UINT16                          NodeFlags;          /* Same as Node->Flags */
     UINT8                           PassNumber;         /* Parser pass number */
     UINT8                           ReturnObjectType;   /* Object type of the returned object */
-    UINT8                           NodeFlags;          /* Same as Node->Flags */
     UINT8                           Flags;              /* General flags */
 
 } ACPI_EVALUATE_INFO;

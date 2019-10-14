@@ -1,7 +1,6 @@
 // No copyright claimed in this file - do what you want with it.
 
-#ifndef BTRFSIOCTL_H_DEFINED
-#define BTRFSIOCTL_H_DEFINED
+#pragma once
 
 #include "btrfs.h"
 
@@ -39,8 +38,8 @@
 #define FSCTL_BTRFS_RESIZE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x848, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
 
 typedef struct {
-    UINT64 subvol;
-    UINT64 inode;
+    uint64_t subvol;
+    uint64_t inode;
     BOOL top;
 } btrfs_get_file_ids;
 
@@ -48,7 +47,7 @@ typedef struct {
     HANDLE subvol;
     BOOL readonly;
     BOOL posix;
-    UINT16 namelen;
+    uint16_t namelen;
     WCHAR name[1];
 } btrfs_create_snapshot;
 
@@ -56,7 +55,7 @@ typedef struct {
     void* POINTER_32 subvol;
     BOOL readonly;
     BOOL posix;
-    UINT16 namelen;
+    uint16_t namelen;
     WCHAR name[1];
 } btrfs_create_snapshot32;
 
@@ -66,77 +65,63 @@ typedef struct {
 #define BTRFS_COMPRESSION_ZSTD  3
 
 typedef struct {
-    UINT64 subvol;
-    UINT64 inode;
+    uint64_t subvol;
+    uint64_t inode;
     BOOL top;
-    UINT8 type;
-    UINT32 st_uid;
-    UINT32 st_gid;
-    UINT32 st_mode;
-    UINT64 st_rdev;
-    UINT64 flags;
-    UINT32 inline_length;
-    UINT64 disk_size[3];
-    UINT8 compression_type;
+    uint8_t type;
+    uint32_t st_uid;
+    uint32_t st_gid;
+    uint32_t st_mode;
+    uint64_t st_rdev;
+    uint64_t flags;
+    uint32_t inline_length;
+    uint64_t disk_size_uncompressed;
+    uint64_t disk_size_zlib;
+    uint64_t disk_size_lzo;
+    uint8_t compression_type;
+    uint64_t disk_size_zstd;
+    uint64_t sparse_size;
+    uint32_t num_extents;
 } btrfs_inode_info;
 
 typedef struct {
-    UINT64 subvol;
-    UINT64 inode;
-    BOOL top;
-    UINT8 type;
-    UINT32 st_uid;
-    UINT32 st_gid;
-    UINT32 st_mode;
-    UINT64 st_rdev;
-    UINT64 flags;
-    UINT32 inline_length;
-    UINT64 disk_size_uncompressed;
-    UINT64 disk_size_zlib;
-    UINT64 disk_size_lzo;
-    UINT8 compression_type;
-    UINT64 disk_size_zstd;
-    UINT64 sparse_size;
-} btrfs_inode_info2;
-
-typedef struct {
-    UINT64 flags;
+    uint64_t flags;
     BOOL flags_changed;
-    UINT32 st_uid;
+    uint32_t st_uid;
     BOOL uid_changed;
-    UINT32 st_gid;
+    uint32_t st_gid;
     BOOL gid_changed;
-    UINT32 st_mode;
+    uint32_t st_mode;
     BOOL mode_changed;
-    UINT8 compression_type;
+    uint8_t compression_type;
     BOOL compression_type_changed;
 } btrfs_set_inode_info;
 
 typedef struct {
-    UINT32 next_entry;
-    UINT64 dev_id;
-    UINT64 size;
-    UINT64 max_size;
+    uint32_t next_entry;
+    uint64_t dev_id;
+    uint64_t size;
+    uint64_t max_size;
     BOOL readonly;
     BOOL missing;
     ULONG device_number;
     ULONG partition_number;
-    UINT64 stats[5];
+    uint64_t stats[5];
     USHORT namelen;
     WCHAR name[1];
 } btrfs_device;
 
 typedef struct {
-    UINT64 dev_id;
-    UINT64 alloc;
+    uint64_t dev_id;
+    uint64_t alloc;
 } btrfs_usage_device;
 
 typedef struct {
-    UINT32 next_entry;
-    UINT64 type;
-    UINT64 size;
-    UINT64 used;
-    UINT64 num_devices;
+    uint32_t next_entry;
+    uint64_t type;
+    uint64_t size;
+    uint64_t used;
+    uint64_t num_devices;
     btrfs_usage_device devices[1];
 } btrfs_usage;
 
@@ -154,20 +139,20 @@ typedef struct {
 #define BLOCK_FLAG_SINGLE 0x1000000000000 // only used in balance
 
 typedef struct {
-    UINT64 flags;
-    UINT64 profiles;
-    UINT64 devid;
-    UINT64 drange_start;
-    UINT64 drange_end;
-    UINT64 vrange_start;
-    UINT64 vrange_end;
-    UINT64 limit_start;
-    UINT64 limit_end;
-    UINT16 stripes_start;
-    UINT16 stripes_end;
-    UINT8 usage_start;
-    UINT8 usage_end;
-    UINT64 convert;
+    uint64_t flags;
+    uint64_t profiles;
+    uint64_t devid;
+    uint64_t drange_start;
+    uint64_t drange_end;
+    uint64_t vrange_start;
+    uint64_t vrange_end;
+    uint64_t limit_start;
+    uint64_t limit_end;
+    uint16_t stripes_start;
+    uint16_t stripes_end;
+    uint8_t usage_start;
+    uint8_t usage_end;
+    uint64_t convert;
 } btrfs_balance_opts;
 
 #define BTRFS_BALANCE_STOPPED   0
@@ -178,9 +163,9 @@ typedef struct {
 #define BTRFS_BALANCE_SHRINKING 16
 
 typedef struct {
-    UINT32 status;
-    UINT64 chunks_left;
-    UINT64 total_chunks;
+    uint32_t status;
+    uint64_t chunks_left;
+    uint64_t total_chunks;
     NTSTATUS error;
     btrfs_balance_opts data_opts;
     btrfs_balance_opts metadata_opts;
@@ -192,16 +177,16 @@ typedef struct {
 } btrfs_start_balance;
 
 typedef struct {
-    UINT8 uuid[16];
+    uint8_t uuid[16];
     BOOL missing;
     USHORT name_length;
     WCHAR name[1];
 } btrfs_filesystem_device;
 
 typedef struct {
-    UINT32 next_entry;
-    UINT8 uuid[16];
-    UINT32 num_devices;
+    uint32_t next_entry;
+    uint8_t uuid[16];
+    uint32_t num_devices;
     btrfs_filesystem_device device;
 } btrfs_filesystem;
 
@@ -210,52 +195,52 @@ typedef struct {
 #define BTRFS_SCRUB_PAUSED      2
 
 typedef struct {
-    UINT32 next_entry;
-    UINT64 address;
-    UINT64 device;
+    uint32_t next_entry;
+    uint64_t address;
+    uint64_t device;
     BOOL recovered;
     BOOL is_metadata;
     BOOL parity;
 
     union {
         struct {
-            UINT64 subvol;
-            UINT64 offset;
-            UINT16 filename_length;
+            uint64_t subvol;
+            uint64_t offset;
+            uint16_t filename_length;
             WCHAR filename[1];
         } data;
 
         struct {
-            UINT64 root;
-            UINT8 level;
+            uint64_t root;
+            uint8_t level;
             KEY firstitem;
         } metadata;
     };
 } btrfs_scrub_error;
 
 typedef struct {
-    UINT32 status;
+    uint32_t status;
     LARGE_INTEGER start_time;
     LARGE_INTEGER finish_time;
-    UINT64 chunks_left;
-    UINT64 total_chunks;
-    UINT64 data_scrubbed;
-    UINT64 duration;
+    uint64_t chunks_left;
+    uint64_t total_chunks;
+    uint64_t data_scrubbed;
+    uint64_t duration;
     NTSTATUS error;
-    UINT32 num_errors;
+    uint32_t num_errors;
     btrfs_scrub_error errors;
 } btrfs_query_scrub;
 
 typedef struct {
-    UINT64 inode;
-    UINT8 type;
-    UINT64 st_rdev;
-    UINT16 namelen;
+    uint64_t inode;
+    uint8_t type;
+    uint64_t st_rdev;
+    uint16_t namelen;
     WCHAR name[1];
 } btrfs_mknod;
 
 typedef struct {
-    UINT64 generation;
+    uint64_t generation;
     BTRFS_UUID uuid;
 } btrfs_received_subvol;
 
@@ -274,7 +259,7 @@ typedef struct {
 
 typedef struct {
     BTRFS_UUID uuid;
-    UINT64 ctransid;
+    uint64_t ctransid;
 } btrfs_find_subvol;
 
 typedef struct {
@@ -290,8 +275,6 @@ typedef struct {
 } btrfs_send_subvol32;
 
 typedef struct {
-    UINT64 device;
-    UINT64 size;
+    uint64_t device;
+    uint64_t size;
 } btrfs_resize;
-
-#endif

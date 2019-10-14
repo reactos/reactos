@@ -1043,4 +1043,16 @@ coclass SearchAssistantOC {
     [default, source] dispinterface _SearchAssistantEvents;
 }
 
+[
+    uuid(60890160-69f0-11d1-b758-00a0c90564fe),
+    hidden
+]
+dispinterface DSearchCommandEvents {
+    properties:
+    methods:
+    [id(DISPID_SEARCHSTART)]    void SearchStart();
+    [id(DISPID_SEARCHCOMPLETE)] void SearchComplete();
+    [id(DISPID_SEARCHABORT)]    void SearchAbort();
+}
+
 } /* library */

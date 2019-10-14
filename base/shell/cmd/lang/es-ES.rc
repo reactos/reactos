@@ -11,19 +11,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "Muestra o cambia los atributos de los archivos.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
-       [/S [/D]]\n\n\
-  +   Añade un atributo\n\
-  -   Borra un atributo\n\
-  R   Atributo de sólo lectura\n\
-  A   Atributo de archivo\n\
-  S   Atributo de archivo de sistema\n\
-  H   Atributo de archivo oculto\n\
-  /S  Procesa los archivos coincidentes en el directorio actual \n\
-      y sus subdirectorios\n\
-  /D  Procesa también los directorios\n\n\
-Type ATTRIB without a parameter to display the attributes of all files.\n"
     STRING_ALIAS_HELP "Pone, borra o muestra los alias.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Nombre para un alias.\n\
@@ -259,11 +246,6 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
-    STRING_LABEL_HELP1 "Muestra o cambia la etiqueta de una unidad.\n\nLABEL [unidad:][etiqueta]\n"
-    STRING_LABEL_HELP2 "El volumen en la unidad %c: es %s\n"
-    STRING_LABEL_HELP3 "El volumen en la unidad %c: no tiene etiqueta\n"
-    STRING_LABEL_HELP4 "El número de serie del volumen es %04X-%04X\n"
-    STRING_LABEL_HELP5 "Etiqueta del volumen (11 Caracteres, INTRO para ninguna)? "
     STRING_LOCALE_HELP1 "La hora actual es"
     STRING_MKDIR_HELP "Crea un directorio.\n\n\
 MKDIR [unidad:]ruta\nMD [unidad:]ruta"

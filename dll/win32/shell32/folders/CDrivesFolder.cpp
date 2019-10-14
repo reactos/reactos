@@ -536,6 +536,9 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
     TRACE("(%p)->(pidl=%p,%p,%s,%p)\n", this,
           pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
+    if (!pidl)
+        return E_INVALIDARG;
+
     if (_ILIsSpecialFolder(pidl))
         return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
@@ -1054,7 +1057,7 @@ HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
  *
  * NOTES: it makes no sense to change the pidl
  */
-HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CDrivesFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     return S_OK;
 }
@@ -1062,7 +1065,7 @@ HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *    CDrivesFolder::GetCurFolder
  */
-HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CDrivesFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     TRACE("(%p)->(%p)\n", this, pidl);
 

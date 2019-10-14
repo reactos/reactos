@@ -6,6 +6,7 @@
 #include <initguid.h>
 #include <hdaudio.h>
 #include <stdio.h>
+#include <ntstrsafe.h>
 
 #define TAG_HDA 'bADH'
 

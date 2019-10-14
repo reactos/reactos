@@ -593,7 +593,7 @@ GAMES=משחקים
 
 CMD_TITLE=שורת הפקודה
 CMD_DESC=שורת הפקודה
-EXPLORER_TITLE=ReactOS סייר
+EXPLORER_TITLE=סייר ReactOS 
 EXPLORER_DESC=סייר
 RAPPS_TITLE=מנהל היישומים של ReactOS
 RAPPS_TITLE_SHORT=מנהל היישומים
@@ -1084,6 +1084,8 @@ WINMINE_TITLE=Saper
 WINMINE_DESC=Saper
 SPIDER_TITLE=Pasjans Pająk
 SPIDER_DESC=Pasjans Pająk
+UTILMAN_TITLE=Menedżer narzędzi ułatwienia dostępu
+UTILMAN_DESC=Uruchom Menedżer narzędzi ułatwienia dostępu
 
 ; Portuguese - Brazil
 [Strings.0416]
@@ -1280,6 +1282,8 @@ WINMINE_TITLE=Сапер
 WINMINE_DESC=Сапер
 SPIDER_TITLE=Пасьянс Паук
 SPIDER_DESC=Пасьянс Паук
+UTILMAN_TITLE=Диспетчер служебных программ
+UTILMAN_DESC=Обеспечивает запуск и настройку программ поддержки специальных возможностей.
 
 ; Slovak
 [Strings.041B]

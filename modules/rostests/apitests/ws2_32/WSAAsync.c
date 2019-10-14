@@ -121,11 +121,10 @@ START_TEST(WSAAsync)
     {
         dwWait = WaitForMultipleObjects(2, fEvents, FALSE, WAIT_TIMEOUT_);
 
-        ok(dwWait == WAIT_OBJECT_0 || // server socket event
-           dwWait == WAIT_OBJECT_0+1, // client socket event
-           "Unknown event received %ld\n", dwWait);
-        if (dwWait != WAIT_OBJECT_0 && dwWait != WAIT_OBJECT_0+1)
+        if (dwWait != WAIT_OBJECT_0 && // server socket event
+            dwWait != WAIT_OBJECT_0+1) // client socket event
         {
+            ok(0, "Unknown event received %ld\n", dwWait);
             skip("ERROR: Connection timeout\n");
             break;
         }
@@ -227,9 +226,12 @@ START_TEST(WSAAsync)
         }
         else
         {
-            ok(nSockNameRes == 0, "ERROR: getsockname function failed, expected %d error %d\n", 0, nSockNameRes);
-            ok(len == sizeof(addr_con_loc), "ERROR: getsockname function wrong size, expected %d returned %d\n", sizeof(addr_con_loc), len);
-            ok(addr_con_loc.sin_addr.s_addr == server_addr_in.sin_addr.s_addr, "ERROR: getsockname function wrong addr, expected %lx returned %lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+            if (nSockNameRes != 0)
+                ok(0, "ERROR: getsockname function failed, expected %d error %d\n", 0, nSockNameRes);
+            if (len != sizeof(addr_con_loc))
+                ok(0, "ERROR: getsockname function wrong size, expected %d returned %d\n", sizeof(addr_con_loc), len);
+            if (addr_con_loc.sin_addr.s_addr != server_addr_in.sin_addr.s_addr)
+                ok(0, "ERROR: getsockname function wrong addr, expected %lx returned %lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
         }
         if ((dwFlags & FD_ACCEPT) != 0)
         {// client connected

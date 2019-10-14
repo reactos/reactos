@@ -24,6 +24,20 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
+/* GLOBALS ********************************************************************/
+
+#define TOSTRING_(X) #X
+#define TOSTRING(X) TOSTRING_(X)
+
+const PCSTR FrLdrVersionString =
+#if (FREELOADER_PATCH_VERSION == 0)
+    "FreeLoader v" TOSTRING(FREELOADER_MAJOR_VERSION) "." TOSTRING(FREELOADER_MINOR_VERSION);
+#else
+    "FreeLoader v" TOSTRING(FREELOADER_MAJOR_VERSION) "." TOSTRING(FREELOADER_MINOR_VERSION) "." TOSTRING(FREELOADER_PATCH_VERSION);
+#endif
+
+CCHAR FrLdrBootPath[MAX_PATH] = "";
+
 /* FUNCTIONS ******************************************************************/
 
 VOID __cdecl BootMain(IN PCCH CmdLine)
@@ -61,9 +75,6 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */
-#if defined(__i386__) || defined(_M_AMD64)
-    DiskStopFloppyMotor();
-#endif
     Reboot();
 }
 

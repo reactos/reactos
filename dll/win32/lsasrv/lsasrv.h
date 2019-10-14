@@ -28,6 +28,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/sefuncs.h>
 #include <ndk/ketypes.h>
 #include <ndk/setypes.h>
 
@@ -78,6 +79,7 @@ typedef struct _LSAP_LOGON_CONTEXT
     LIST_ENTRY Entry;
     HANDLE ClientProcessHandle;
     HANDLE ConnectionHandle;
+    BOOL Untrusted;
 } LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
 typedef struct _SAMPR_ULONG_ARRAY

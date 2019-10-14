@@ -1,0 +1,22 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_ATTRIB_HELP "Kütük öz niteliklerini görüntüler ya da değiştirir.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] kütük ...\n\
+       [/S [/D]]\n\n\
+  +   Bir öz nitelik ayarlar\n\
+  -   Bir öz nitelik siler\n\
+  R   Yalnızca okunur kütük öz niteliği\n\
+  A   Belgelik kütük öz niteliği\n\
+  S   Dizge kütük öz niteliği\n\
+  H   Gizli kütük öz niteliği\n\
+  /S  Şimdiki dizindeki ve tüm alt dizinlerdeki kütükleri eşlemeyi yapar\n\
+  /D  Dizinleri de yap\n\n\
+Tüm kütüklerin öz niteliklerini görüntülemek için bir değişken olmadan ATTRIB\n\
+yazınız.\n"
+    STRING_CONSOLE_ERROR "Bilinmeyen yanlışlık: %d\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Geçersiz değişken biçimi - %s\n"
+END

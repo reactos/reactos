@@ -315,7 +315,6 @@ typedef struct _MEMORY_WORKING_SET_LIST
 typedef struct
 {
     UNICODE_STRING SectionFileName;
-    WCHAR NameBuffer[ANYSIZE_ARRAY];
 } MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
 //

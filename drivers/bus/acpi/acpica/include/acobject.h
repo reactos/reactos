@@ -225,8 +225,8 @@ typedef struct acpi_object_method
     } Dispatch;
 
     UINT32                          AmlLength;
-    UINT8                           ThreadCount;
     ACPI_OWNER_ID                   OwnerId;
+    UINT8                           ThreadCount;
 
 } ACPI_OBJECT_METHOD;
 

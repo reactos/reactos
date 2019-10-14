@@ -169,19 +169,22 @@ AlarmsDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-        if (!Ala_InitData(hwndDlg))
-        {
-            // TODO:
-            // Handle initialization error
-        }
-        return TRUE;
-    default:
-        break;
-  }
-  return FALSE;
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            if (!Ala_InitData(hwndDlg))
+            {
+                // TODO:
+                // Handle initialization error
+            }
+            return TRUE;
+
+        default:
+            break;
+    }
+
+    return FALSE;
 }

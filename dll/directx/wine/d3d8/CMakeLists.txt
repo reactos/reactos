@@ -19,7 +19,7 @@ list(APPEND SOURCE
     volume.c
     precomp.h)
 
-add_library(d3d8 MODULE
+add_library(d3d8 SHARED
     ${SOURCE}
     guid.c
     version.rc

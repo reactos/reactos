@@ -46,10 +46,10 @@ class CRecycleBin :
 
         // IPersistFolder
         virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
-        virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
 
         // IPersistFolder2
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE * pidl);
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
@@ -82,7 +82,7 @@ class CRecycleBin :
         virtual HRESULT WINAPI ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
 
         // IShellExtInit
-        virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+        virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_RECYCLEBIN)
         DECLARE_NOT_AGGREGATABLE(CRecycleBin)

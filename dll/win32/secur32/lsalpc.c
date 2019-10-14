@@ -174,6 +174,7 @@ LsaConnectUntrusted(
                   ConnectInfoLength);
 
     ConnectInfo.CreateContext = TRUE;
+    ConnectInfo.Untrusted = TRUE;
 
     Status = NtConnectPort(LsaHandle,
                            &PortName,

@@ -8,7 +8,7 @@
 
 .code16
 
-/* fat helper code */
+/* FAT helper code */
 #include "fathelp.inc"
 
 .org 512
@@ -105,7 +105,7 @@ inrmode:
 
     /* Do the callback, specified by bx */
     shl bx, 1
-    call word ptr ds:callback_table[bx]
+    call word ptr ds:CallbackTable[bx]
 
 
 /*
@@ -140,14 +140,13 @@ pm_entrypoint:
     .long 0 // receives address of PE entry point
     nop
 
-callback_table:
+CallbackTable:
     .word Int386
     .word Reboot
-    .word ChainLoadBiosBootSectorCode
+    .word Relocator16Boot
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount
     .word PnpBiosGetDeviceNode
-    .word BootLinuxKernel
 
 
     /* 16-bit stack pointer */
@@ -194,16 +193,16 @@ gdtptr:
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-    .word HEX(3ff)      /* Limit */
+    .word HEX(3FF)      /* Limit */
     .long 0             /* Base Address */
 
 #include "int386.inc"
+#include "helpers.inc"
 #include "pxe.inc"
 #include "pnp.inc"
-#include "linux.inc"
-#include "helpers.inc"
 
 .org (FREELDR_PE_BASE - FREELDR_BASE - 1)
 .byte 0
 .endcode16
+
 END

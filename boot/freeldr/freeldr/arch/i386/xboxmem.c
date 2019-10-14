@@ -26,6 +26,8 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
+extern PVOID FrameBuffer;
+extern ULONG FrameBufferSize;
 
 #define TEST_SIZE     0x200
 #define TEST_PATTERN1 0xAA
@@ -37,6 +39,14 @@ SetMemory(
     ULONG_PTR BaseAddress,
     SIZE_T Size,
     TYPE_OF_MEMORY MemoryType);
+
+extern VOID
+ReserveMemory(
+    PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
+    ULONG_PTR BaseAddress,
+    SIZE_T Size,
+    TYPE_OF_MEMORY MemoryType,
+    PCHAR Usage);
 
 extern ULONG
 PcMemFinalizeMemoryMap(
@@ -85,7 +95,6 @@ XboxMemInit(VOID)
     WRITE_PORT_ULONG((ULONG*) 0xcf8, CONFIG_CMD(0, 0, 0x84));
     WRITE_PORT_ULONG((ULONG*) 0xcfc, InstalledMemoryMb * 1024 * 1024 - 1);
 
-    /* 4 MB video framebuffer is reserved later using XboxMemReserveMemory() */
     AvailableMemoryMb = InstalledMemoryMb;
 }
 
@@ -105,37 +114,18 @@ XboxMemGetMemoryMap(ULONG *MemoryMapSize)
               AvailableMemoryMb * 1024 * 1024,
               LoaderFree);
 
-    /* Video memory */
-    SetMemory(XboxMemoryMap,
-              AvailableMemoryMb * 1024 * 1024,
-              (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024,
-              LoaderFirmwarePermanent);
+    if (FrameBufferSize != 0)
+    {
+        /* Video memory */
+        ReserveMemory(XboxMemoryMap,
+                      (ULONG_PTR)FrameBuffer,
+                      FrameBufferSize,
+                      LoaderFirmwarePermanent,
+                      "Video memory");
+    }
 
     *MemoryMapSize = PcMemFinalizeMemoryMap(XboxMemoryMap);
     return XboxMemoryMap;
-}
-
-PVOID
-XboxMemReserveMemory(ULONG MbToReserve)
-{
-    /* This function is used to reserve video framebuffer in XboxVideoInit() */
-
-    if (InstalledMemoryMb == 0)
-    {
-        /* Hmm, seems we're not initialized yet */
-        XboxMemInit();
-    }
-
-    if (MbToReserve > AvailableMemoryMb)
-    {
-        /* Can't satisfy the request */
-        return NULL;
-    }
-
-    AvailableMemoryMb -= MbToReserve;
-
-    /* Top of available memory points to the space just reserved */
-    return (PVOID)(AvailableMemoryMb * 1024 * 1024);
 }
 
 /* EOF */

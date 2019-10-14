@@ -1097,7 +1097,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CShellLink::GetIDList(LPITEMIDLIST *ppidl)
+HRESULT STDMETHODCALLTYPE CShellLink::GetIDList(PIDLIST_ABSOLUTE *ppidl)
 {
     TRACE("(%p)->(ppidl=%p)\n", this, ppidl);
 
@@ -1111,7 +1111,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIDList(LPITEMIDLIST *ppidl)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CShellLink::SetIDList(LPCITEMIDLIST pidl)
+HRESULT STDMETHODCALLTYPE CShellLink::SetIDList(PCIDLIST_ABSOLUTE pidl)
 {
     TRACE("(%p)->(pidl=%p)\n", this, pidl);
     return SetTargetFromPIDLOrPath(pidl, NULL);
@@ -2539,7 +2539,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetFlags(DWORD dwFlags)
  *
  * Loads the shelllink from the dataobject the shell is pointing to.
  */
-HRESULT STDMETHODCALLTYPE CShellLink::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT STDMETHODCALLTYPE CShellLink::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     TRACE("%p %p %p %p\n", this, pidlFolder, pdtobj, hkeyProgID);
 

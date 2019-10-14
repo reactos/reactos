@@ -15,7 +15,7 @@
 typedef struct tagCMDLINEINFO
 {
     PCSTR DebugString;
-    PCSTR DefaultOperatingSystem;
+    PCSTR DefaultOs;
     LONG  TimeOut;
 } CMDLINEINFO, *PCMDLINEINFO;
 
@@ -33,7 +33,7 @@ CmdLineParse(IN PCSTR CmdLine)
 
     /* Set defaults */
     CmdLineInfo.DebugString = NULL;
-    CmdLineInfo.DefaultOperatingSystem = NULL;
+    CmdLineInfo.DefaultOs = NULL;
     CmdLineInfo.TimeOut = -1;
 
     /*
@@ -84,14 +84,14 @@ CmdLineParse(IN PCSTR CmdLine)
 
         /* Copy the default OS */
         RtlStringCbCopyNA(DefaultOs, sizeof(DefaultOs), Setting, Length);
-        CmdLineInfo.DefaultOperatingSystem = DefaultOs;
+        CmdLineInfo.DefaultOs = DefaultOs;
     }
 
     /* Get ramdisk base address */
     Setting = strstr(CmdLine, "rdbase=");
     if (Setting)
     {
-        gRamDiskBase =
+        gInitRamDiskBase =
             (PVOID)(ULONG_PTR)strtoull(Setting +
                                        sizeof("rdbase=") - sizeof(ANSI_NULL),
                                        NULL, 0);
@@ -101,9 +101,9 @@ CmdLineParse(IN PCSTR CmdLine)
     Setting = strstr(CmdLine, "rdsize=");
     if (Setting)
     {
-        gRamDiskSize = strtoul(Setting +
-                               sizeof("rdsize=") - sizeof(ANSI_NULL),
-                               NULL, 0);
+        gInitRamDiskSize = strtoul(Setting +
+                                   sizeof("rdsize=") - sizeof(ANSI_NULL),
+                                   NULL, 0);
     }
 
     /* Get ramdisk offset */
@@ -116,7 +116,7 @@ CmdLineParse(IN PCSTR CmdLine)
     }
 
     /* Fix it up */
-    gRamDiskBase = (PVOID)((ULONG_PTR)gRamDiskBase + Offset);
+    gInitRamDiskBase = (PVOID)((ULONG_PTR)gInitRamDiskBase + Offset);
 }
 
 PCSTR
@@ -128,7 +128,7 @@ CmdLineGetDebugString(VOID)
 PCSTR
 CmdLineGetDefaultOS(VOID)
 {
-    return CmdLineInfo.DefaultOperatingSystem;
+    return CmdLineInfo.DefaultOs;
 }
 
 LONG

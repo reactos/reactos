@@ -24,7 +24,7 @@
 DBG_DEFAULT_CHANNEL(DISK);
 
 #define MaxDriveNumber 0xFF
-PARTITION_STYLE DiskPartitionType[MaxDriveNumber + 1];
+static PARTITION_STYLE DiskPartitionType[MaxDriveNumber + 1];
 
 /* BRFR signature at disk offset 0x600 */
 #define XBOX_SIGNATURE_SECTOR 3
@@ -84,12 +84,7 @@ DiskReadBootRecord(
     }
 
     /* Check the partition table magic value */
-    if (BootRecord->MasterBootRecordMagic != 0xaa55)
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return (BootRecord->MasterBootRecordMagic == 0xaa55);
 }
 
 static BOOLEAN
@@ -503,10 +498,10 @@ IoReadPartitionTable(
     IN BOOLEAN ReturnRecognizedPartitions,
     OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
+    NTSTATUS Status;
     PMASTER_BOOT_RECORD MasterBootRecord;
     PDRIVE_LAYOUT_INFORMATION Partitions;
     ULONG NbPartitions, i, Size;
-    NTSTATUS ret;
 
     *PartitionBuffer = NULL;
 
@@ -518,11 +513,11 @@ IoReadPartitionTable(
         return STATUS_NO_MEMORY;
 
     /* Read disk MBR */
-    ret = IopReadBootRecord(DeviceObject, 0, SectorSize, MasterBootRecord);
-    if (!NT_SUCCESS(ret))
+    Status = IopReadBootRecord(DeviceObject, 0, SectorSize, MasterBootRecord);
+    if (!NT_SUCCESS(Status))
     {
         ExFreePool(MasterBootRecord);
-        return ret;
+        return Status;
     }
 
     /* Check validity of boot record */

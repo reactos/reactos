@@ -9,19 +9,6 @@ assoc (print all associations)\n\
 assoc .ext (print specific association)\n\
 assoc .ext= (remove specific association)\n\
 assoc .ext=FileType (add new association)\n"
-    STRING_ATTRIB_HELP "ファイル属性を表示または変更します。\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] [ファイル] ...\n\
-       [/S [/D]]\n\n\
-  +   属性を設定します。\n\
-  -   属性を解除します。\n\
-  R   読みとり専用属性。\n\
-  A   アーカイブ属性。\n\
-  S   システム ファイル属性。\n\
-  H   隠しファイル属性。\n\
-  /S  現在のフォルダとすべてのサブフォルダの一致するファイルを\n\
-      処理します。\n\
-  /D  フォルダも処理します。\n\n\
-パラメータを指定しないで ATTRIB と入力すると、すべてのファイルの属性を表示します。\n"
     STRING_ALIAS_HELP "エイリアスの設定や解除をしたり、エイリアスを表示したりします。\n\n\
 ALIAS [エイリアス=[コマンド]]\n\n\
   エイリアス   エイリアスとしてつける名前。\n\
@@ -264,11 +251,6 @@ EXIST ファイル名  指定したファイル名が存在するときに条件
                   指定します。\n\
 DEFINED 変数      指定した変数が定義されているときに条件が真になるように\n\
                   指定します。\n"
-    STRING_LABEL_HELP1 "ディスクのボリューム ラベルを表示または変更します。\n\nLABEL [ドライブ:][ラベル]\n"
-    STRING_LABEL_HELP2 "ドライブ %c: のボリューム ラベルは %s です\n"
-    STRING_LABEL_HELP3 "ドライブ %c: にはボリューム ラベルがありませんl\n"
-    STRING_LABEL_HELP4 "ボリューム シリアル番号は %04X-%04X\n です"
-    STRING_LABEL_HELP5 "ボリューム ラベルを 11 文字以内で入力してください。\n必要なければ Enter キーを押してください: "
     STRING_LOCALE_HELP1 "現在時刻は"
     STRING_MKDIR_HELP "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\

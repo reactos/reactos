@@ -1923,11 +1923,12 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
         {
             _SEH2_TRY
             {
-                RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-                SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
+                RtlInitEmptyUnicodeString(&SectionName->SectionFileName,
+                                          (PWSTR)(SectionName + 1),
+                                          MemoryInformationLength - sizeof(MEMORY_SECTION_NAME));
                 RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
-                if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+                if (ReturnLength) *ReturnLength = ModuleFileName.Length + sizeof(MEMORY_SECTION_NAME);
 
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1938,11 +1939,12 @@ MiQueryMemorySectionName(IN HANDLE ProcessHandle,
         }
         else
         {
-            RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
-            SectionName->SectionFileName.MaximumLength = (USHORT)MemoryInformationLength;
+            RtlInitEmptyUnicodeString(&SectionName->SectionFileName,
+                                      (PWSTR)(SectionName + 1),
+                                      MemoryInformationLength - sizeof(MEMORY_SECTION_NAME));
             RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
 
-            if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+            if (ReturnLength) *ReturnLength = ModuleFileName.Length + sizeof(MEMORY_SECTION_NAME);
 
         }
 

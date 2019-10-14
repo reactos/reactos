@@ -19,36 +19,28 @@
 
 CACHE_MANAGER_CALLBACKS* cache_callbacks;
 
-#ifdef __REACTOS__
-static BOOLEAN NTAPI acquire_for_lazy_write(PVOID Context, BOOLEAN Wait) {
-#else
-static BOOLEAN acquire_for_lazy_write(PVOID Context, BOOLEAN Wait) {
-#endif
+static BOOLEAN __stdcall acquire_for_lazy_write(PVOID Context, BOOLEAN Wait) {
     PFILE_OBJECT FileObject = Context;
     fcb* fcb = FileObject->FsContext;
 
     TRACE("(%p, %u)\n", Context, Wait);
 
     if (!ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, Wait))
-        return FALSE;
+        return false;
 
     if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, Wait)) {
         ExReleaseResourceLite(&fcb->Vcb->tree_lock);
-        return FALSE;
+        return false;
     }
 
     fcb->lazy_writer_thread = KeGetCurrentThread();
 
     IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
 
-    return TRUE;
+    return true;
 }
 
-#ifdef __REACTOS__
-static void NTAPI release_from_lazy_write(PVOID Context) {
-#else
-static void release_from_lazy_write(PVOID Context) {
-#endif
+static void __stdcall release_from_lazy_write(PVOID Context) {
     PFILE_OBJECT FileObject = Context;
     fcb* fcb = FileObject->FsContext;
 
@@ -64,29 +56,21 @@ static void release_from_lazy_write(PVOID Context) {
         IoSetTopLevelIrp(NULL);
 }
 
-#ifdef __REACTOS__
-static BOOLEAN NTAPI acquire_for_read_ahead(PVOID Context, BOOLEAN Wait) {
-#else
-static BOOLEAN acquire_for_read_ahead(PVOID Context, BOOLEAN Wait) {
-#endif
+static BOOLEAN __stdcall acquire_for_read_ahead(PVOID Context, BOOLEAN Wait) {
     PFILE_OBJECT FileObject = Context;
     fcb* fcb = FileObject->FsContext;
 
     TRACE("(%p, %u)\n", Context, Wait);
 
     if (!ExAcquireResourceSharedLite(fcb->Header.Resource, Wait))
-        return FALSE;
+        return false;
 
     IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
 
-    return TRUE;
+    return true;
 }
 
-#ifdef __REACTOS__
-static void NTAPI release_from_read_ahead(PVOID Context) {
-#else
-static void release_from_read_ahead(PVOID Context) {
-#endif
+static void __stdcall release_from_read_ahead(PVOID Context) {
     PFILE_OBJECT FileObject = Context;
     fcb* fcb = FileObject->FsContext;
 

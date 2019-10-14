@@ -19,23 +19,27 @@
 #pragma once
 
 BOOLEAN
-WinLdrLoadImage(IN PCHAR FileName,
-                TYPE_OF_MEMORY MemoryType,
-                OUT PVOID *ImageBasePA);
+PeLdrLoadImage(
+    IN PCHAR FileName,
+    IN TYPE_OF_MEMORY MemoryType,
+    OUT PVOID *ImageBasePA);
 
 BOOLEAN
-WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
-                             IN PCCH BaseDllName,
-                             IN PCCH FullDllName,
-                             IN PVOID BasePA,
-                             OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
+PeLdrAllocateDataTableEntry(
+    IN OUT PLIST_ENTRY ModuleListHead,
+    IN PCCH BaseDllName,
+    IN PCCH FullDllName,
+    IN PVOID BasePA,
+    OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 BOOLEAN
-WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
-                                IN PCCH DirectoryPath,
-                                IN PLDR_DATA_TABLE_ENTRY ScanDTE);
+PeLdrScanImportDescriptorTable(
+    IN OUT PLIST_ENTRY ModuleListHead,
+    IN PCCH DirectoryPath,
+    IN PLDR_DATA_TABLE_ENTRY ScanDTE);
 
 BOOLEAN
-WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
-                        IN PCH DllName,
-                        OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
+PeLdrCheckForLoadedDll(
+    IN OUT PLIST_ENTRY ModuleListHead,
+    IN PCH DllName,
+    OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);

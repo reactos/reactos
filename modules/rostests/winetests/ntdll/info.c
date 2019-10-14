@@ -1891,9 +1891,14 @@ static void test_queryvirtualmemory(void)
     char stackbuf[42];
     HMODULE module;
     char buffer_name[sizeof(MEMORY_SECTION_NAME) + MAX_PATH * sizeof(WCHAR)];
+#ifndef __REACTOS__
     MEMORY_SECTION_NAME *msn = (MEMORY_SECTION_NAME *)buffer_name;
+#endif
     BOOL found;
     int i;
+#ifdef __REACTOS__
+    MEMORY_SECTION_NAME *msn = HeapAlloc(GetProcessHeap(), 0, sizeof(buffer_name));
+#endif
 
     module = GetModuleHandleA( "ntdll.dll" );
     trace("Check flags of the PE header of NTDLL.DLL at %p\n", module);
@@ -2003,11 +2008,15 @@ static void test_queryvirtualmemory(void)
     ok( found, "Section name does not contain \"Windows\"\n");
 
     trace("Check section name of non mapped memory\n");
-    memset(msn, 0, sizeof(*msn));
+    memset(msn, 0, sizeof(buffer_name));
     readcount = 0;
     status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
     ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
+
+#ifdef __REACTOS__
+    HeapFree(GetProcessHeap(), 0, msn);
+#endif
 }
 
 static void test_affinity(void)

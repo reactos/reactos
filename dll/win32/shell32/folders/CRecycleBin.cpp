@@ -432,7 +432,7 @@ HRESULT WINAPI CRecycleBin::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CRecycleBin::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     TRACE("(%p, %p)\n", this, pidl);
 
@@ -443,7 +443,7 @@ HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT WINAPI CRecycleBin::GetCurFolder(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CRecycleBin::GetCurFolder(PIDLIST_ABSOLUTE *ppidl)
 {
     TRACE("\n");
     *ppidl = ILClone(pidl);
@@ -862,7 +862,7 @@ HRESULT WINAPI CRecycleBin::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pf
  * RecycleBin IShellExtInit interface
  */
 
-HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT WINAPI CRecycleBin::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     TRACE("%p %p %p %p\n", this, pidlFolder, pdtobj, hkeyProgID );
     return S_OK;

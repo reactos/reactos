@@ -233,7 +233,7 @@ HRESULT WINAPI CShellItem::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
-HRESULT WINAPI CShellItem::SetIDList(LPCITEMIDLIST pidlx)
+HRESULT WINAPI CShellItem::SetIDList(PCIDLIST_ABSOLUTE pidlx)
 {
     LPITEMIDLIST new_pidl;
 
@@ -250,7 +250,7 @@ HRESULT WINAPI CShellItem::SetIDList(LPCITEMIDLIST pidlx)
         return E_OUTOFMEMORY;
 }
 
-HRESULT WINAPI CShellItem::GetIDList(LPITEMIDLIST *ppidl)
+HRESULT WINAPI CShellItem::GetIDList(PIDLIST_ABSOLUTE *ppidl)
 {
     TRACE("(%p,%p)\n", this, ppidl);
 

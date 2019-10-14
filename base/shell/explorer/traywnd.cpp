@@ -753,6 +753,7 @@ public:
             case TRAYCMD_SWITCH_USER_DIALOG:
                 // TODO:
                 break;
+            case IDM_SEARCH:
             case TRAYCMD_SEARCH_FILES:
                 SHFindFiles(NULL, NULL);
                 break;

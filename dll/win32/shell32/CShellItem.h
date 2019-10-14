@@ -47,8 +47,8 @@ public:
 
     // IPersistIDList
     virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
-    virtual HRESULT WINAPI SetIDList(LPCITEMIDLIST pidl);
-    virtual HRESULT WINAPI GetIDList(LPITEMIDLIST *ppidl);
+    virtual HRESULT WINAPI SetIDList(PCIDLIST_ABSOLUTE pidl);
+    virtual HRESULT WINAPI GetIDList(PIDLIST_ABSOLUTE *ppidl);
 
 DECLARE_NO_REGISTRY()
 DECLARE_NOT_AGGREGATABLE(CShellItem)

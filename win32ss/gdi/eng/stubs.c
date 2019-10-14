@@ -70,7 +70,7 @@ EngComputeGlyphSet(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -83,7 +83,7 @@ EngEnumForms(
     OUT LPDWORD  pcReturned)
 {
     // www.osr.com/ddk/graphics/gdifncs_5e07.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
@@ -151,7 +151,7 @@ EngGetFilePath(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -164,12 +164,12 @@ EngGetForm(
     OUT LPDWORD  pcbNeeded)
 {
     // www.osr.com/ddk/graphics/gdifncs_5vvr.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -181,12 +181,12 @@ EngGetPrinter(
     OUT LPDWORD  pcbNeeded)
 {
     // www.osr.com/ddk/graphics/gdifncs_50h3.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 APIENTRY
@@ -199,7 +199,7 @@ EngGetPrinterData(
     OUT LPDWORD  pcbNeeded)
 {
     // www.osr.com/ddk/graphics/gdifncs_8t5z.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return 0;
 }
 
@@ -216,7 +216,7 @@ EngGetPrinterDataFileName(IN HDEV hdev)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -229,7 +229,7 @@ EngGetType1FontList(
     OUT LARGE_INTEGER  *pLastModified)
 {
     // www.osr.com/ddk/graphics/gdifncs_6e5j.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
@@ -301,7 +301,7 @@ EngSetPrinterData(
     IN DWORD  cjPrinterData)
 {
     // www.osr.com/ddk/graphics/gdifncs_8drb.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return 0;
 }
 
@@ -364,7 +364,7 @@ EngWritePrinter(
     OUT LPDWORD  pcWritten)
 {
     // www.osr.com/ddk/graphics/gdifncs_9v6v.htm
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
@@ -515,7 +515,7 @@ EngDeleteFile(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -527,7 +527,7 @@ EngGetPrinterDriver(
     IN DWORD Buf,
     OUT DWORD *Needed)
 {
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
@@ -1063,13 +1063,13 @@ NtGdiGetEudcTimeStampEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
 NtGdiInitSpool(VOID)
 {
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 
@@ -1088,7 +1088,7 @@ NtGdiQueryFonts(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 APIENTRY
@@ -1099,7 +1099,7 @@ NtGdiGetSpoolMessage(
     DWORD u4)
 {
     /* FIXME: The prototypes */
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return 0;
 }
 
@@ -1473,7 +1473,7 @@ NtGdiSetMagicColors(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -1481,7 +1481,7 @@ NtGdiUnloadPrinterDriver(
     IN LPWSTR pDriverName,
     IN ULONG cbDriverName)
 {
-    UNIMPLEMENTED;
+    EngSetLastError(ERROR_NOT_SUPPORTED);
     return FALSE;
 }
 

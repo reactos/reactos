@@ -9,19 +9,6 @@ assoc (mostra tutte le associazioni)\n\
 assoc .ext (mostra una specifica associazione)\n\
 assoc .ext= (rimuove una specifica associazione)\n\
 assoc .ext=FileType (aggiung una associazione)\n"
-    STRING_ATTRIB_HELP "Visualizza o modifica gli attributi dei file.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
-       [/S [/D]]\n\n\
-  +   Attiva un attributo\n\
-  -   Toglie un attributo\n\
-  R   Attributo di file di sola lettura\n\
-  A   Attributo di file di archivio\n\
-  S   Attributo di file di sistema\n\
-  H   Attributo di file nascosto\n\
-  /S  Tratta i file indicati nella cartella corrente e in\n\
-       tutte le sottocartelle\n\
-  /D  Tratta anche le cartelle\n\n\
-Scrivi ATTRIB senza parametri per visualizzare gli attributi di tutti i file.\n"
     STRING_ALIAS_HELP "Attiva, toglie o visualizza gli alias.\n\n\
 ALIAS [alias=[comando]]\n\n\
   alias    Nome dell'alias.\n\
@@ -258,12 +245,6 @@ command           E' il comando da eseguire se la condizione è verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
 DEFINED variabile E' verificata se la variabile è definita.\n"
-    STRING_LABEL_HELP1 "Visualizza o modifica l'etichetta di un disco.\n\n\
-LABEL [disco:][etichetta]\n"
-    STRING_LABEL_HELP2 "Il Volume nel disco %c: è %s\n"
-    STRING_LABEL_HELP3 "Il Volume nel disco %c: non ha etichetta\n"
-    STRING_LABEL_HELP4 "Il numero di serie del Volume è %04X-%04X\n"
-    STRING_LABEL_HELP5 "Etichetta del disco (11 Caratteri, INVIO per nessuna)? "
     STRING_LOCALE_HELP1 "L'ora attuale è"
     STRING_MKDIR_HELP "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"

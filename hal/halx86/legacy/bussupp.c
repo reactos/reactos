@@ -809,10 +809,10 @@ HalpDebugPciDumpBus(IN ULONG i,
                     IN ULONG k,
                     IN PPCI_COMMON_CONFIG PciData)
 {
-    PCHAR p, ClassName, SubClassName, VendorName, ProductName, SubVendorName;
+    PCHAR p, ClassName, Boundary, SubClassName, VendorName, ProductName, SubVendorName;
     ULONG Length;
     CHAR LookupString[16] = "";
-    CHAR bSubClassName[64] = "";
+    CHAR bSubClassName[64] = "Unknown";
     CHAR bVendorName[64] = "";
     CHAR bProductName[128] = "Unknown device";
     CHAR bSubVendorName[128] = "Unknown";
@@ -824,19 +824,28 @@ HalpDebugPciDumpBus(IN ULONG i,
     if (ClassName)
     {
         /* Isolate the subclass name */
-        ClassName += 6;
-        sprintf(LookupString, "\t%02x  ", PciData->SubClass);
+        ClassName += strlen("C 00  ");
+        Boundary = strstr(ClassName, "\nC ");
+        sprintf(LookupString, "\n\t%02x  ", PciData->SubClass);
         SubClassName = strstr(ClassName, LookupString);
-        if (SubClassName)
+        if (Boundary && SubClassName > Boundary)
         {
-            /* Copy the subclass into our buffer */
-            SubClassName += 5;
-            p = strpbrk(SubClassName, "\r\n");
-            Length = p - SubClassName;
-            if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
-            strncpy(bSubClassName, SubClassName, Length);
-            bSubClassName[Length] = '\0';
+            SubClassName = NULL;
         }
+        if (!SubClassName)
+        {
+            SubClassName = ClassName;
+        }
+        else
+        {
+            SubClassName += strlen("\n\t00  ");
+        }
+        /* Copy the subclass into our buffer */
+        p = strpbrk(SubClassName, "\r\n");
+        Length = p - SubClassName;
+        if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
+        strncpy(bSubClassName, SubClassName, Length);
+        bSubClassName[Length] = '\0';
     }
 
     /* Isolate the vendor name */
@@ -845,25 +854,43 @@ HalpDebugPciDumpBus(IN ULONG i,
     if (VendorName)
     {
         /* Copy the vendor name into our buffer */
-        VendorName += 8;
+        VendorName += strlen("\r\n0000  ");
         p = strpbrk(VendorName, "\r\n");
         Length = p - VendorName;
         if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;
         strncpy(bVendorName, VendorName, Length);
         bVendorName[Length] = '\0';
+        p += strlen("\r\n");
+        while (*p == '\t' || *p == '#')
+        {
+            p = strpbrk(p, "\r\n");
+            p += strlen("\r\n");
+        }
+        Boundary = p;
 
         /* Isolate the product name */
         sprintf(LookupString, "\t%04x  ", PciData->DeviceID);
         ProductName = strstr(VendorName, LookupString);
+        if (Boundary && ProductName >= Boundary)
+        {
+            ProductName = NULL;
+        }
         if (ProductName)
         {
             /* Copy the product name into our buffer */
-            ProductName += 7;
+            ProductName += strlen("\t0000  ");
             p = strpbrk(ProductName, "\r\n");
             Length = p - ProductName;
             if (Length >= sizeof(bProductName)) Length = sizeof(bProductName) - 1;
             strncpy(bProductName, ProductName, Length);
             bProductName[Length] = '\0';
+            p += strlen("\r\n");
+            while ((*p == '\t' && *(p + 1) == '\t') || *p == '#')
+            {
+                p = strpbrk(p, "\r\n");
+                p += strlen("\r\n");
+            }
+            Boundary = p;
 
             /* Isolate the subvendor and subsystem name */
             sprintf(LookupString,
@@ -871,10 +898,14 @@ HalpDebugPciDumpBus(IN ULONG i,
                     PciData->u.type0.SubVendorID,
                     PciData->u.type0.SubSystemID);
             SubVendorName = strstr(ProductName, LookupString);
+            if (Boundary && SubVendorName >= Boundary)
+            {
+                SubVendorName = NULL;
+            }
             if (SubVendorName)
             {
                 /* Copy the subvendor name into our buffer */
-                SubVendorName += 13;
+                SubVendorName += strlen("\t\t0000 0000  ");
                 p = strpbrk(SubVendorName, "\r\n");
                 Length = p - SubVendorName;
                 if (Length >= sizeof(bSubVendorName)) Length = sizeof(bSubVendorName) - 1;

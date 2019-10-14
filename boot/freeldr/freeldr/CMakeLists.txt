@@ -81,7 +81,6 @@ list(APPEND FREELDR_BOOTMGR_SOURCE
     miscboot.c
     options.c
     oslist.c
-    version.c
     ui/directui.c
     ui/gui.c
     ui/minitui.c
@@ -144,7 +143,8 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
-        arch/amd64/pnpbios.S)
+        arch/amd64/pnpbios.S
+        arch/amd64/linux.S)
 
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/amd64/winldr.c)

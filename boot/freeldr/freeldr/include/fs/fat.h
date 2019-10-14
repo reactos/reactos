@@ -147,11 +147,12 @@ typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
 
 typedef struct
 {
-    UCHAR    Attributes;        /* File attributes */
+    PFAT_VOLUME_INFO    Volume;
     ULONG    FileSize;        /* File size */
     ULONG    FilePointer;        /* File pointer */
-    ULONG*    FileFatChain;        /* File fat chain array */
-    PFAT_VOLUME_INFO    Volume;
+    ULONG    CurrentCluster;  /* The cluster for file pointer */
+    ULONG    StartCluster;    /* The first cluster for file */
+    UCHAR    Attributes;      /* File attributes */
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
 #define    ATTR_NORMAL        0x00

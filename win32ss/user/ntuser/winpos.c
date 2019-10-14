@@ -1746,7 +1746,7 @@ co_WinPosSetWindowPos(
 
    ASSERT_REFS_CO(Window);
 
-   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags %s",
+   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags 0x%x",
           Window, WndInsertAfter, x, y, cx, cy, flags);
 #if DBG
    dump_winpos_flags(flags);

@@ -1369,7 +1369,7 @@ HRESULT WINAPI CFSFolder::GetClassID(CLSID * lpClassId)
  * NOTES
  *  sPathTarget is not set. Don't know how to handle in a non rooted environment.
  */
-HRESULT WINAPI CFSFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CFSFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     WCHAR wszTemp[MAX_PATH];
 
@@ -1398,7 +1398,7 @@ HRESULT WINAPI CFSFolder::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  * CFSFolder::GetCurFolder
  */
-HRESULT WINAPI CFSFolder::GetCurFolder(LPITEMIDLIST * pidl)
+HRESULT WINAPI CFSFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 

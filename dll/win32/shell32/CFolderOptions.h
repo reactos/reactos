@@ -47,7 +47,7 @@ class CFolderOptions :
         virtual HRESULT STDMETHODCALLTYPE ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
         
         // IShellExtInit
-        virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+        virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
         // IObjectWithSite
         virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);

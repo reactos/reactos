@@ -136,7 +136,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::InternalBindToObject(
     return ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, m_hRoot, IID_PPV_ARG(IShellFolder, ppsfChild));
 }
 
-HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
+HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_shellPidl = ILClone(pidl);
     m_hRoot = NULL;
@@ -145,7 +145,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath, HKEY hRoot)
+HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(PCIDLIST_ABSOLUTE pidl, PCWSTR ntPath, HKEY hRoot)
 {
     m_shellPidl = ILClone(pidl);
     m_hRoot = hRoot;
