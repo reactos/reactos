@@ -2972,6 +2972,7 @@ PNP_QueryRemove(
                          pszDeviceID);
     PlugPlayData.VetoName = pszVetoName;
     PlugPlayData.NameLength = ulNameLength;
+//    PlugPlayData.Flags = 
 
     Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
                                &PlugPlayData,
@@ -2994,8 +2995,37 @@ PNP_RequestDeviceEject(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_QUERY_REMOVE_DATA PlugPlayData;
+    NTSTATUS Status;
+    DWORD ret = CR_SUCCESS;
+
+    DPRINT1("PNP_RequestDeviceEject(%p %S %p %p %lu 0x%lx)\n",
+            hBinding, pszDeviceID, pVetoType, pszVetoName,
+            ulNameLength, ulFlags);
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pVetoType != NULL)
+        *pVetoType = PNP_VetoTypeUnknown;
+
+    if (pszVetoName != NULL && ulNameLength > 0)
+        *pszVetoName = UNICODE_NULL;
+
+    RtlZeroMemory(&PlugPlayData, sizeof(PlugPlayData));
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDeviceID);
+    PlugPlayData.VetoName = pszVetoName;
+    PlugPlayData.NameLength = ulNameLength;
+//    PlugPlayData.Flags = 
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryAndRemoveDevice,
+                               &PlugPlayData,
+                               sizeof(PlugPlayData));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
