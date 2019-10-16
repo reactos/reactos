@@ -7,6 +7,15 @@
 
 #include "precomp.h"
 
+VOID
+TraceMountPoint(PMOUNTMGR_MOUNT_POINTS MountPoints,
+                PMOUNTMGR_MOUNT_POINT MountPoint)
+{
+    trace("MountPoint: %p\n", MountPoint);
+    trace("\tSymbolicLinkName: %.*S\n", MountPoint->SymbolicLinkNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->SymbolicLinkNameOffset));
+    trace("\tDeviceName: %.*S\n", MountPoint->DeviceNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->DeviceNameOffset));
+}
+
 START_TEST(QueryPoints)
 {
     BOOL Ret;
@@ -45,11 +54,18 @@ START_TEST(QueryPoints)
     }
     else
     {
+        AllocatedPoints->NumberOfMountPoints = 0;
+
         Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
                               &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
                               AllocatedPoints, MountPoints.Size,
                               &BytesReturned, NULL);
         ok(Ret == TRUE, "IOCTL unexpectedly failed %lx\n", GetLastError());
+
+        for (i = 0; i < AllocatedPoints->NumberOfMountPoints; ++i)
+        {
+            TraceMountPoint(AllocatedPoints, &AllocatedPoints->MountPoints[i]);
+        }
 
         RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPoints);
     }
