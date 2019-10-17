@@ -2900,7 +2900,7 @@ WSPSetSockOpt(
               GetSocketInformation(Socket,
                                    AFD_INFO_RECEIVE_WINDOW_SIZE,
                                    NULL,
-                                   &Socket->SharedData->SizeOfSendBuffer,
+                                   &Socket->SharedData->SizeOfRecvBuffer,
                                    NULL,
                                    NULL,
                                    NULL);
