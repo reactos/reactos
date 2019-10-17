@@ -2638,12 +2638,12 @@ WSPGetSockOpt(IN SOCKET Handle,
 
                 case SO_RCVBUF:
                     Buffer = &Socket->SharedData->SizeOfRecvBuffer;
-                    BufferSize = sizeof(INT);
+                    BufferSize = sizeof(ULONG);
                     break;
 
                 case SO_SNDBUF:
                     Buffer = &Socket->SharedData->SizeOfSendBuffer;
-                    BufferSize = sizeof(INT);
+                    BufferSize = sizeof(ULONG);
                     break;
 
                 case SO_ACCEPTCONN:
@@ -2860,7 +2860,7 @@ WSPSetSockOpt(
               return NO_ERROR;
 
            case SO_SNDBUF:
-              if (optlen < sizeof(DWORD))
+              if (optlen < sizeof(ULONG))
               {
                   if (lpErrno) *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
@@ -2884,7 +2884,7 @@ WSPSetSockOpt(
               return NO_ERROR;
 
            case SO_RCVBUF:
-              if (optlen < sizeof(DWORD))
+              if (optlen < sizeof(ULONG))
               {
                   if (lpErrno) *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
