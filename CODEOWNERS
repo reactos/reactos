@@ -93,6 +93,11 @@
 #   S: Upstream
 /drivers/bus/acpi/acpica/   @ThFabba
 
+# Ancillary Function Driver DLL
+#   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
+#   S: Maintained
+/dll/win32/msafd/ @HeisSpiter
+
 # Apisets
 #   M: learn-more, learn_more, Mark Jansen
 #   S: Maintained
