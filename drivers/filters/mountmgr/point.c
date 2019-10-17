@@ -336,9 +336,9 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Ensure we set output to let user reallocate! */
-    MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
+    MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSymLinks * sizeof(MOUNTMGR_MOUNT_POINT) + TotalSize;
     MountPoints->NumberOfMountPoints = TotalSymLinks;
-    Irp->IoStatus.Information = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSize;
+    Irp->IoStatus.Information = MountPoints->Size;
 
     if (MountPoints->Size > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
@@ -353,8 +353,8 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Now, start putting mount points */
+    TotalSize = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSymLinks * sizeof(MOUNTMGR_MOUNT_POINT);
     TotalSymLinks = 0;
-    TotalSize = 0;
     for (DeviceEntry = DeviceExtension->DeviceListHead.Flink;
          DeviceEntry != &(DeviceExtension->DeviceListHead);
          DeviceEntry = DeviceEntry->Flink)
@@ -391,16 +391,12 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
         {
             SymlinkInformation = CONTAINING_RECORD(SymlinksEntry, SYMLINK_INFORMATION, SymbolicLinksListEntry);
 
-
-            MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                             TotalSize;
+            MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameOffset = TotalSize;
             MountPoints->MountPoints[TotalSymLinks].SymbolicLinkNameLength = SymlinkInformation->Name.Length;
-            MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                     SymlinkInformation->Name.Length +
+            MountPoints->MountPoints[TotalSymLinks].UniqueIdOffset = SymlinkInformation->Name.Length +
                                                                      TotalSize;
             MountPoints->MountPoints[TotalSymLinks].UniqueIdLength = DeviceInformation->UniqueId->UniqueIdLength;
-            MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINTS) +
-                                                                       SymlinkInformation->Name.Length +
+            MountPoints->MountPoints[TotalSymLinks].DeviceNameOffset = SymlinkInformation->Name.Length +
                                                                        DeviceInformation->UniqueId->UniqueIdLength +
                                                                        TotalSize;
             MountPoints->MountPoints[TotalSymLinks].DeviceNameLength = DeviceInformation->DeviceName.Length;
