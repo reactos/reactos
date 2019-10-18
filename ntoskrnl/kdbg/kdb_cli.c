@@ -849,7 +849,7 @@ KdbpCmdRegs(
     ULONG Argc,
     PCHAR Argv[])
 {
-    PCONTEXT Tf = &KdbCurrentTrapFrame->Tf;
+    PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
     INT i;
     static const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                           " ZF", " SF", " TF", " IF", " DF", " OF",
@@ -868,7 +868,7 @@ KdbpCmdRegs(
                   "   ESI  0x%08x   EDI  0x%08x\n"
                   "   EBP  0x%08x\n",
                   Tf->SegCs & 0xFFFF, Tf->Eip,
-                  Tf->SegSs, Tf->Esp,
+                  Tf->HardwareSegSs, Tf->HardwareEsp,
                   Tf->Eax, Tf->Ebx,
                   Tf->Ecx, Tf->Edx,
                   Tf->Esi, Tf->Edi,
@@ -966,7 +966,7 @@ KdbpCmdRegs(
         KdbpPrint("GS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
                   Tf->SegGs, Tf->SegGs >> 3, (Tf->SegGs & (1 << 2)) ? 'L' : 'G', Tf->SegGs & 3);
         KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                  Tf->SegSs, Tf->SegSs >> 3, (Tf->SegSs & (1 << 2)) ? 'L' : 'G', Tf->SegSs & 3);
+                  Tf->HardwareSegSs, Tf->HardwareSegSs >> 3, (Tf->HardwareSegSs & (1 << 2)) ? 'L' : 'G', Tf->HardwareSegSs & 3);
     }
     else /* dregs */
     {
@@ -986,7 +986,7 @@ KdbpCmdRegs(
 
 static BOOLEAN
 KdbpTrapFrameFromPrevTss(
-    PCONTEXT TrapFrame)
+    PKTRAP_FRAME TrapFrame)
 {
     ULONG_PTR Eip, Ebp;
     KDESCRIPTOR Gdtr;
@@ -1075,7 +1075,7 @@ KdbpCmdBackTrace(
     ULONGLONG Result = 0;
     ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Ebp;
     ULONG_PTR Address;
-    CONTEXT TrapFrame;
+    KTRAP_FRAME TrapFrame;
 
     if (Argc >= 2)
     {
