@@ -393,7 +393,7 @@ IsFtVolume(IN PUNICODE_STRING SymbolicName)
     }
 
     /* Check if this is a FT volume */
-    return IsRecognizedPartition(PartitionInfo.PartitionType);
+    return IsFTPartition(PartitionInfo.PartitionType);
 }
 
 /*
