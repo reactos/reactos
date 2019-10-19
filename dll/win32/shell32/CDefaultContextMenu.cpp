@@ -840,18 +840,16 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
-    if (!bCopy)
-    {
-        FORMATETC formatetc;
-        STGMEDIUM medium;
-        InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-        m_pDataObj->GetData(&formatetc, &medium);
-        DWORD * pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
-        if (pdwFlag)
-            *pdwFlag = DROPEFFECT_MOVE;
-        GlobalUnlock(medium.hGlobal);
-        m_pDataObj->SetData(&formatetc, &medium, TRUE);
-    }
+    FORMATETC formatetc;
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
+    STGMEDIUM medium = {0};
+    medium.tymed = TYMED_HGLOBAL;
+    medium.hGlobal = GlobalAlloc(GHND, sizeof(DWORD));
+    DWORD* pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
+    if (pdwFlag)
+        *pdwFlag = bCopy ? DROPEFFECT_COPY : DROPEFFECT_MOVE;
+    GlobalUnlock(medium.hGlobal);
+    m_pDataObj->SetData(&formatetc, &medium, TRUE);
 
     HRESULT hr = OleSetClipboard(m_pDataObj);
     if (FAILED_UNEXPECTEDLY(hr))
