@@ -5,6 +5,10 @@
  * COPYRIGHT:   Victor Perevertkin <victor.perevertkin@reactos.org>
  */
 
+// Evil hack necessary, because we're linking to the RosBE-provided libstdc++ when using GCC.
+// This can only be solved cleanly by adding a GCC-compatible C++ standard library to our tree.
+#ifdef __GNUC__
+
 #include <precomp.h>
 
 /*********************************************************************
@@ -15,6 +19,6 @@ FILE * CDECL __acrt_iob_func(int index)
     return &__iob_func()[index];
 }
 
-// Evil hack necessary, because we're linking to the RosBE-provided libstdc++ when using GCC.
-// This can only be solved cleanly by adding a GCC-compatible C++ standard library to our tree.
 const void* _imp____acrt_iob_func = __acrt_iob_func;
+
+#endif
