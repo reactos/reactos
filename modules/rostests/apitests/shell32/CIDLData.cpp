@@ -258,6 +258,17 @@ static void TestDefaultFormat(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIDLIST
         if (SUCCEEDED(hr))
             ReleaseStgMedium(&medium);
     }
+
+    // Not registered
+    CLIPFORMAT Format = RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECTW);
+    FORMATETC formatetc = { Format, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM medium;
+
+    hr = spDataObj->GetData(&formatetc, &medium);
+    if (g_WinVersion < _WIN32_WINNT_VISTA)
+        ok_hex(hr, E_INVALIDARG);
+    else
+        ok_hex(hr, DV_E_FORMATETC);
 }
 
 
