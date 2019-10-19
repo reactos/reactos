@@ -1369,14 +1369,14 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
     {
         TRACE("pidl is not a file\n");
         GlobalUnlock(medium.hGlobal);
-        GlobalFree(medium.hGlobal);
+        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
     pidl = ILCombine(pidlFolder2, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
-    GlobalFree(medium.hGlobal);
+    ReleaseStgMedium(&medium);
 
     if (!pidl)
     {
