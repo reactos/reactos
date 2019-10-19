@@ -784,7 +784,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
         hr = IDataObject_Constructor (hwndOwner,
-                                      pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                                      pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
     }
     else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {

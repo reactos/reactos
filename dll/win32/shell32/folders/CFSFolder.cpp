@@ -1064,7 +1064,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         {
             if (cidl >= 1) 
             {
-                hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
+                hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, TRUE, (IDataObject **)&pObj);
             }
             else
             {

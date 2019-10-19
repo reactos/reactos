@@ -143,7 +143,7 @@ private:
 public:
     CIDLDataObj();
     ~CIDLDataObj();
-    HRESULT WINAPI Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx);
+    HRESULT WINAPI Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx, BOOL bAddAdditionalFormats);
 
     // *** IDataObject methods ***
     virtual HRESULT WINAPI GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium);
@@ -187,7 +187,7 @@ CIDLDataObj::~CIDLDataObj()
     m_Storage.RemoveAll();
 }
 
-HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx)
+HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidlx, UINT cidlx, BOOL bAddAdditionalFormats)
 {
     HGLOBAL hida = RenderSHELLIDLIST((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
     if (!hida)
@@ -198,12 +198,33 @@ HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl
 
     m_cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
 
-    FORMATETC HIDAFormat = { (CLIPFORMAT)m_cfShellIDList, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    FORMATETC Format = { (CLIPFORMAT)m_cfShellIDList, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM medium = {0};
     medium.tymed = TYMED_HGLOBAL;
     medium.hGlobal = hida;
+    HRESULT hr = SetData(&Format, &medium, TRUE);
+    if (!FAILED_UNEXPECTEDLY(hr) && bAddAdditionalFormats)
+    {
+        Format.cfFormat = CF_HDROP;
+        medium.hGlobal = RenderHDROP((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
+        hr = SetData(&Format, &medium, TRUE);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-    return SetData(&HIDAFormat, &medium, TRUE);
+        Format.cfFormat = RegisterClipboardFormatA(CFSTR_FILENAMEA);
+        medium.hGlobal = RenderFILENAMEA((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
+        hr = SetData(&Format, &medium, TRUE);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        Format.cfFormat = RegisterClipboardFormatW(CFSTR_FILENAMEW);
+        medium.hGlobal = RenderFILENAMEW((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
+        hr = SetData(&Format, &medium, TRUE);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    return hr;
 }
 
 
@@ -355,11 +376,11 @@ HRESULT WINAPI CIDLDataObj::EndOperation(HRESULT hResult, IBindCtx *pbcReserved,
 /**************************************************************************
  *  IDataObject_Constructor
  */
-HRESULT IDataObject_Constructor(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidl, UINT cidl, IDataObject **dataObject)
+HRESULT IDataObject_Constructor(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl, PCUIDLIST_RELATIVE_ARRAY apidl, UINT cidl, BOOL bExtendedObject, IDataObject **dataObject)
 {
     if (!dataObject)
         return E_INVALIDARG;
-    return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, IID_PPV_ARG(IDataObject, dataObject));
+    return ShellObjectCreatorInit<CIDLDataObj>(hwndOwner, pMyPidl, apidl, cidl, bExtendedObject, IID_PPV_ARG(IDataObject, dataObject));
 }
 
 /*************************************************************************
@@ -373,7 +394,7 @@ HRESULT WINAPI SHCreateDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIT
     {
         if (pdtInner)
             UNIMPLEMENTED;
-        return CIDLData_CreateFromIDArray(pidlFolder, cidl, apidl, (IDataObject **)ppv);
+        return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, (IDataObject **)ppv);
     }
     return E_FAIL;
 }
