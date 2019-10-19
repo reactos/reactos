@@ -291,7 +291,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
 STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     if (!pidl)
-        return S_FALSE;
+        return E_NOTIMPL;
 
     // Validate that this pidl is the last one
     PCUIDLIST_RELATIVE curpidl = ILGetNext(pidl);
