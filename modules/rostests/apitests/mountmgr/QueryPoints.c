@@ -12,7 +12,9 @@ TraceMountPoint(PMOUNTMGR_MOUNT_POINTS MountPoints,
                 PMOUNTMGR_MOUNT_POINT MountPoint)
 {
     trace("MountPoint: %p\n", MountPoint);
+    trace("\tSymbolicOffset: %ld\n", MountPoint->SymbolicLinkNameOffset);
     trace("\tSymbolicLinkName: %.*S\n", MountPoint->SymbolicLinkNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->SymbolicLinkNameOffset));
+    trace("\tDeviceOffset: %ld\n", MountPoint->DeviceNameOffset);
     trace("\tDeviceName: %.*S\n", MountPoint->DeviceNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->DeviceNameOffset));
 }
 
