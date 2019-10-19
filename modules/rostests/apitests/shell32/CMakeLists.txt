@@ -20,6 +20,7 @@ list(APPEND SOURCE
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathResolve.cpp
+    SHCreateDataObject.cpp
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp
