@@ -524,11 +524,12 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* If we didn't find a drive letter online
-     * ensure there's no GPT drive letter nor no drive entry
+     * ensure this is not a no drive entry
+    * by querying GPT attributes & database
      */
     if (NextEntry == &(DeviceInformation->SymbolicLinksListHead))
     {
-        if (GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
+        if (!GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
