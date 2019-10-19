@@ -44,7 +44,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     PDEVICE_INFORMATION DeviceInformation = NULL, DeviceInfo;
 
     /* Get device name */
-    Status = QueryDeviceInformation(SymbolicLinkName,
+    Status = QueryDeviceInformation(DeviceName,
                                     &TargetDeviceName,
                                     NULL, NULL, NULL,
                                     NULL, NULL, NULL);
