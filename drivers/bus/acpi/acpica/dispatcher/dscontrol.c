@@ -127,7 +127,7 @@ AcpiDsExecBeginControlOp (
         ControlState->Control.Opcode =
             Op->Common.AmlOpcode;
         ControlState->Control.LoopTimeout = AcpiOsGetTimer () +
-           (UINT64) (AcpiGbl_MaxLoopIterations * ACPI_100NSEC_PER_SEC);
+           ((UINT64) AcpiGbl_MaxLoopIterations * ACPI_100NSEC_PER_SEC);
 
         /* Push the control state on this walk's control stack */
 

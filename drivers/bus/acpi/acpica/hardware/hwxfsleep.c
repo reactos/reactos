@@ -249,6 +249,10 @@ AcpiEnterSleepStateS4bios (
 
     Status = AcpiHwWritePort (AcpiGbl_FADT.SmiCommand,
         (UINT32) AcpiGbl_FADT.S4BiosRequest, 8);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
 
     do {
         AcpiOsStall (ACPI_USEC_PER_MSEC);

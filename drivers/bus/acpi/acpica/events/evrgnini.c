@@ -255,7 +255,6 @@ AcpiEvPciConfigRegionSetup (
                          * root bridge. Still need to return a context object
                          * for the new PCI_Config operation region, however.
                          */
-                        Status = AE_OK;
                     }
                     else
                     {
