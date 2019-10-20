@@ -83,7 +83,7 @@ Used Version: 4.0.10
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS
-Used Version: 2.7.11
+Used Version: 2.7.12
 Website: https://tls.mbed.org/
 
 Title: libpng
