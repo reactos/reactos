@@ -75,7 +75,7 @@ list(APPEND IDL_SOURCES
 #    mstime.idl
     msxml.idl
 #    my_msdatsrc.idl
-#    natupnp.idl
+    natupnp.idl
 #    netcfgn.idl
 #    netcfgp.idl
 #    netcfgx.idl
