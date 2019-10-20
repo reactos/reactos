@@ -38,10 +38,6 @@ Title: GNU adns
 Used Version: 1.0 REV 5
 Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
 
-Title: BZip2
-Used Version: 1.0.6
-Website: http://www.bzip.org
-
 Title: LibXML
 Used Version: 2.9.9
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
