@@ -1063,18 +1063,29 @@ static int handle_apetag(mpg123_handle *fr, unsigned long newhead)
 	unsigned char apebuf[28];
 	unsigned long val;
 	int i, ret;
-
+	/* How many bytes to backpedal to get back to just after the first byte of */
+	/* the supposed header. */
+	int back_bytes = 3;
 	fr->oldhead = 0;
 
+	debug1("trying to read remaining APE header at %"OFF_P, (off_p)fr->rd->tell(fr));
 	/* Apetag headers are 32 bytes, newhead contains 4, read the rest */
-	if((ret=fr->rd->fullread(fr,apebuf,28)) < 0) return ret;
-
+	if((ret=fr->rd->fullread(fr,apebuf,28)) < 0)
+		return ret;
+	back_bytes += ret;
+	if(ret < 28)
+		goto apetag_bad;
+	
+	debug1("trying to parse APE header at %"OFF_P, (off_p)fr->rd->tell(fr));
 	/* Apetags start with "APETAGEX", "APET" is already tested. */
 	if(strncmp((char *)apebuf,"AGEX",4) != 0)
 		goto apetag_bad;
 
 	/* Version must be 2.000 / 2000 */
-	val = (apebuf[7]<<24)|(apebuf[6]<<16)|(apebuf[5]<<8)|apebuf[4];
+	val = ((unsigned long)apebuf[7]<<24)
+	|	((unsigned long)apebuf[6]<<16)
+	|	((unsigned long)apebuf[5]<<8)
+	|	apebuf[4];
 	if(val != 2000)
 		goto apetag_bad;
 
@@ -1084,14 +1095,22 @@ static int handle_apetag(mpg123_handle *fr, unsigned long newhead)
 			goto apetag_bad;
 
 	/* Looks good, skip the rest. */
-	val = (apebuf[11]<<24)|(apebuf[10]<<16)|(apebuf[9]<<8)|apebuf[8];
-	if((ret=fr->rd->skip_bytes(fr,val)) < 0) return ret;
+	val = ((unsigned long)apebuf[11]<<24)
+	|	((unsigned long)apebuf[10]<<16)
+	|	((unsigned long)apebuf[9]<<8)
+	|	apebuf[8];
+	debug2( "skipping %lu bytes of APE data at %"OFF_P
+	,	val, (off_p)fr->rd->tell(fr) );
+	/* If encountering EOF here, things are just at an end. */
+	if((ret=fr->rd->skip_bytes(fr,val)) < 0)
+		return ret;
 
 	return PARSE_AGAIN;
 
 apetag_bad:	
-	if(fr->rd->back_bytes(fr,31) < 0 && NOQUIET)
-		error("Cannot seek 31 bytes back!");
+	debug("no proper APE tag found, seeking back");
+	if(fr->rd->back_bytes(fr,back_bytes) < 0 && NOQUIET)
+		error1("Cannot seek %d bytes back!", back_bytes);
 
 	return PARSE_AGAIN; /* Give the resync code a chance to fix things */
 }
