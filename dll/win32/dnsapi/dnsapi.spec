@@ -41,7 +41,7 @@
 @ stdcall DnsFreeNetworkInformation()
 @ stdcall DnsFreeSearchInformation()
 @ stdcall DnsGetBufferLengthForStringCopy()
-@ stdcall DnsGetCacheDataTable()
+@ stdcall DnsGetCacheDataTable(ptr)
 @ stdcall DnsGetDnsServerList()
 @ stdcall DnsGetDomainName()
 @ stdcall DnsGetHostName_A()

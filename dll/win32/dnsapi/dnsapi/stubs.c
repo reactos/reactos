@@ -216,11 +216,11 @@ DnsFindAuthoritativeZone()
     return ERROR_OUTOFMEMORY;
 }
 
-DNS_STATUS WINAPI
-DnsFlushResolverCache()
+BOOL WINAPI
+DnsFlushResolverCache(VOID)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return TRUE;
 }
 
 BOOL WINAPI
@@ -273,11 +273,13 @@ DnsGetBufferLengthForStringCopy()
     return ERROR_OUTOFMEMORY;
 }
 
-DNS_STATUS WINAPI
-DnsGetCacheDataTable()
+BOOL
+WINAPI
+DnsGetCacheDataTable(
+    _Out_ PDNSCACHEENTRY *DnsCache)
 {
     UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
+    return TRUE;
 }
 
 DNS_STATUS WINAPI
