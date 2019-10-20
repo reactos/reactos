@@ -325,18 +325,13 @@ HasClipboardData()
 
     if (SUCCEEDED(OleGetClipboard(&pDataObj)))
     {
-        STGMEDIUM medium;
         FORMATETC formatetc;
 
         TRACE("pDataObj=%p\n", pDataObj.p);
 
         /* Set the FORMATETC structure*/
         InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-        if (SUCCEEDED(pDataObj->GetData(&formatetc, &medium)))
-        {
-            bRet = TRUE;
-            ReleaseStgMedium(&medium);
-        }
+        bRet = SUCCEEDED(pDataObj->QueryGetData(&formatetc));
     }
 
     return bRet;
