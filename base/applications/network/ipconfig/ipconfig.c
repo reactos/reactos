@@ -8,10 +8,11 @@
 /*
  * TODO:
  * fix renew / release
- * implement flushdns, registerdns, displaydns, showclassid, setclassid
+ * implement registerdns, showclassid, setclassid
  * allow globbing on adapter names
  */
 
+#define WIN32_NO_STATUS
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
@@ -21,6 +22,10 @@
 #include <tchar.h>
 #include <time.h>
 #include <iphlpapi.h>
+#include <ndk/rtlfuncs.h>
+#include <inaddr.h>
+#include <windns.h>
+#include <windns_undoc.h>
 
 #include "resource.h"
 
@@ -725,7 +730,132 @@ VOID Renew(LPTSTR Index)
     }
 }
 
+VOID
+FlushDns(VOID)
+{
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
+    if (DnsFlushResolverCache())
+        _tprintf(_T("The DNS Resolver Cache has been deleted.\n"));
+    else
+        DoFormatMessage(GetLastError());
+}
+
+VOID
+DisplayDns(VOID)
+{
+    PDNSCACHEENTRY DnsEntry = NULL, pThisEntry, pNextEntry;
+    PDNS_RECORDW pQueryResults, pThisRecord, pNextRecord;
+    IN_ADDR Addr4;
+    IN6_ADDR Addr6;
+    WCHAR szBuffer[48];
+    DNS_STATUS Status;
+
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
+
+    if (!DnsGetCacheDataTable(&DnsEntry))
+    {
+        DoFormatMessage(GetLastError());
+        return;
+    }
+
+    if (DnsEntry == NULL)
+        return;
+
+    pThisEntry = DnsEntry;
+    while (pThisEntry != NULL)
+    {
+        pNextEntry = pThisEntry->pNext;
+
+        pQueryResults = NULL;
+        Status = DnsQuery_W(pThisEntry->pszName,
+                            pThisEntry->wType,
+                            DNS_QUERY_NO_WIRE_QUERY,
+                            NULL,
+                            (PDNS_RECORD *)&pQueryResults,
+                            NULL);
+        if (Status == 0)
+        {
+            _tprintf(_T("\t%S\n"), pThisEntry->pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+
+            pThisRecord = pQueryResults;
+            while (pThisRecord != NULL)
+            {
+                pNextRecord = pThisRecord->pNext;
+
+                _tprintf(_T("\tRecord Name . . . . . : %S\n"), pThisRecord->pName);
+                _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
+                _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
+                _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
+
+                switch (pThisRecord->Flags.S.Section)
+                {
+                    case DnsSectionQuestion:
+                        _tprintf(_T("\tSection . . . . . . . : Question\n"));
+                        break;
+
+                    case DnsSectionAnswer:
+                        _tprintf(_T("\tSection . . . . . . . : Answer\n"));
+                        break;
+
+                    case DnsSectionAuthority:
+                        _tprintf(_T("\tSection . . . . . . . : Authority\n"));
+                        break;
+
+                    case DnsSectionAdditional:
+                        _tprintf(_T("\tSection . . . . . . . : Additional\n"));
+                        break;
+                }
+
+                switch (pThisRecord->wType)
+                {
+                    case DNS_TYPE_A:
+                        Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
+                        RtlIpv4AddressToStringW(&Addr4, szBuffer);
+                        _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
+                        break;
+
+                    case DNS_TYPE_PTR:
+                        _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
+                        break;
+
+                    case DNS_TYPE_NS:
+                        _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
+                        break;
+
+                    case DNS_TYPE_CNAME:
+                        _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
+                        break;
+
+                    case DNS_TYPE_AAAA:
+                        RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
+                        RtlIpv6AddressToStringW(&Addr6, szBuffer);
+                        _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
+                        break;
+                }
+                _tprintf(_T("\n\n"));
+
+                pThisRecord = pNextRecord;
+            }
+
+            DnsRecordListFree((PDNS_RECORD)pQueryResults, DnsFreeRecordList);
+            pQueryResults = NULL;
+        }
+        else if (Status != ERROR_SUCCESS && pThisEntry->wType != 0)
+        {
+            _tprintf(_T("\t%S\n"), pThisEntry->pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+            _tprintf(_T("\tNo records of type %hu\n\n"), pThisEntry->wType);
+        }
+
+        if (pThisEntry->pszName)
+            LocalFree(pThisEntry->pszName);
+        LocalFree(pThisEntry);
+
+        pThisEntry = pNextEntry;
+    }
+}
 
 VOID Usage(VOID)
 {
@@ -835,11 +965,11 @@ int main(int argc, char *argv[])
             else if (DoRenew)
                 Renew(NULL);
             else if (DoFlushdns)
-                _tprintf(_T("\nSorry /flushdns is not implemented yet\n"));
+                FlushDns();
             else if (DoRegisterdns)
                 _tprintf(_T("\nSorry /registerdns is not implemented yet\n"));
             else if (DoDisplaydns)
-                _tprintf(_T("\nSorry /displaydns is not implemented yet\n"));
+                DisplayDns();
             else
                 Usage();
             break;
