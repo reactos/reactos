@@ -41,7 +41,7 @@ list(APPEND SOURCE
     wined3d_main.c
     precomp.h)
 
-add_library(d3dwine SHARED
+add_library(d3dwine MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dwine.def)
