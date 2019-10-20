@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -29,7 +28,6 @@
 #include "netfw.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "hnetcfg_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
@@ -238,6 +236,10 @@ static HRESULT WINAPI netfw_rules_get__NewEnum(
     fw_rules *This = impl_from_INetFwRules( iface );
 
     FIXME("%p, %p\n", This, newEnum);
+
+    if (!newEnum) return E_POINTER;
+    *newEnum = NULL;
+
     return E_NOTIMPL;
 }
 
@@ -641,11 +643,8 @@ static HRESULT WINAPI fwpolicy2_get_Rules(INetFwPolicy2 *iface, INetFwRules **ru
     if(!rules)
         return E_POINTER;
 
-    if(rules)
-    {
-        *rules = This->fw_policy2_rules;
-        INetFwRules_AddRef(This->fw_policy2_rules);
-    }
+    *rules = This->fw_policy2_rules;
+    INetFwRules_AddRef(This->fw_policy2_rules);
 
     return S_OK;
 }

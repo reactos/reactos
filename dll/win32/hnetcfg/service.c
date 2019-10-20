@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -29,7 +28,6 @@
 #include "netfw.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "hnetcfg_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
