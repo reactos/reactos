@@ -2,8 +2,6 @@
 #ifndef __WINE_MSI_PRECOMP__
 #define __WINE_MSI_PRECOMP__
 
-#include <wine/config.h>
-
 #include <assert.h>
 
 #define _INC_WINDOWS
@@ -18,11 +16,11 @@
 
 #include <winreg.h>
 #include <wincon.h>
-#include <msiserver.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <sddl.h>
 
+#include <wine/heap.h>
 #include <wine/unicode.h>
 
 #include "resource.h"

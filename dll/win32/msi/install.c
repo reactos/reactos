@@ -27,15 +27,16 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "wine/debug.h"
 #include "msi.h"
 #include "msidefs.h"
 #include "objbase.h"
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
-#include "wine/unicode.h"
+#include "winemsi.h"
+#include "wine/heap.h"
+#include "wine/debug.h"
+#include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -74,38 +75,25 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
-        BSTR action;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        action = SysAllocString( szAction );
-        if (!action)
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_DoAction(remote, szAction);
         }
-
-        hr = IWineMsiRemotePackage_DoAction( remote_package, action );
-
-        SysFreeString( action );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
  
-    ret = ACTION_PerformAction( package, szAction, SCRIPT_NONE );
+    ret = ACTION_PerformAction(package, szAction);
     msiobj_release( &package->hdr );
 
     return ret;
@@ -140,38 +128,28 @@ UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode
 
     TRACE("%s, %d\n", debugstr_w(szTable), iSequenceMode);
 
+    if (!szTable)
+        return ERROR_INVALID_PARAMETER;
+
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
-        BSTR table;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        table = SysAllocString( szTable );
-        if (!table)
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_Sequence(remote, szTable, iSequenceMode);
         }
-
-        hr = IWineMsiRemotePackage_Sequence( remote_package, table, iSequenceMode );
-
-        SysFreeString( table );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
     ret = MSI_Sequence( package, szTable );
     msiobj_release( &package->hdr );
@@ -187,10 +165,14 @@ UINT msi_strcpy_to_awstring( const WCHAR *str, int len, awstring *awbuf, DWORD *
     if (!sz)
         return ERROR_SUCCESS;
 
-    if (len < 0) len = strlenW( str );
+    if (len < 0) len = lstrlenW( str );
  
     if (awbuf->unicode && awbuf->str.w)
+    {
         memcpy( awbuf->str.w, str, min(len + 1, *sz) * sizeof(WCHAR) );
+        if (*sz && len >= *sz)
+            awbuf->str.w[*sz - 1] = 0;
+    }
     else
     {
         int lenA = WideCharToMultiByte( CP_ACP, 0, str, len + 1, NULL, 0, NULL, NULL );
@@ -206,6 +188,48 @@ UINT msi_strcpy_to_awstring( const WCHAR *str, int len, awstring *awbuf, DWORD *
     return r;
 }
 
+UINT msi_strncpyWtoA(const WCHAR *str, int lenW, char *buf, DWORD *sz, BOOL remote)
+{
+    UINT r = ERROR_SUCCESS;
+    DWORD lenA;
+
+    if (!sz)
+        return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
+
+    if (lenW < 0) lenW = lstrlenW(str);
+    lenA = WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, NULL, 0, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, buf, *sz, NULL, NULL);
+    lenA--;
+    if (buf && lenA >= *sz)
+    {
+        if (*sz) buf[*sz - 1] = 0;
+        r = ERROR_MORE_DATA;
+    }
+    if (remote && lenA >= *sz)
+        lenA *= 2;
+    *sz = lenA;
+    return r;
+}
+
+UINT msi_strncpyW(const WCHAR *str, int len, WCHAR *buf, DWORD *sz)
+{
+    UINT r = ERROR_SUCCESS;
+
+    if (!sz)
+        return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
+
+    if (len < 0) len = lstrlenW(str);
+    if (buf)
+        memcpy(buf, str, min(len + 1, *sz) * sizeof(WCHAR));
+    if (buf && len >= *sz)
+    {
+        if (*sz) buf[*sz - 1] = 0;
+        r = ERROR_MORE_DATA;
+    }
+    *sz = len;
+    return r;
+}
+
 const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
 {
     MSIFOLDER *folder = msi_get_loaded_folder( package, name );
@@ -214,7 +238,7 @@ const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
     if (!folder->ResolvedTarget)
     {
         MSIFOLDER *parent = folder;
-        while (parent->Parent && strcmpW( parent->Parent, parent->Directory ))
+        while (parent->Parent && wcscmp( parent->Parent, parent->Directory ))
         {
             parent = msi_get_loaded_folder( package, parent->Parent );
         }
@@ -224,122 +248,112 @@ const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
 }
 
 /***********************************************************************
- * MsiGetTargetPath   (internal)
+ * MsiGetTargetPathA        (MSI.@)
  */
-static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
-                               awstring *szPathBuf, LPDWORD pcchPathBuf )
+UINT WINAPI MsiGetTargetPathA(MSIHANDLE hinst, const char *folder, char *buf, DWORD *sz)
 {
     MSIPACKAGE *package;
     const WCHAR *path;
-    UINT r = ERROR_FUNCTION_FAILED;
+    WCHAR *folderW;
+    UINT r;
 
-    if (!szFolder)
+    TRACE("%s %p %p\n", debugstr_a(folder), buf, sz);
+
+    if (!folder)
         return ERROR_INVALID_PARAMETER;
 
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!(folderW = strdupAtoW(folder)))
+        return ERROR_OUTOFMEMORY;
+
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
-        LPWSTR value = NULL;
-        BSTR folder;
-        DWORD len;
+        WCHAR *path = NULL;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hinst)))
+        {
+            heap_free(folderW);
             return ERROR_INVALID_HANDLE;
-
-        folder = SysAllocString( szFolder );
-        if (!folder)
-        {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
         }
 
-        len = 0;
-        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder, NULL, &len );
-        if (FAILED(hr))
-            goto done;
-
-        len++;
-        value = msi_alloc(len * sizeof(WCHAR));
-        if (!value)
+        __TRY
         {
-            r = ERROR_OUTOFMEMORY;
-            goto done;
+            r = remote_GetTargetPath(remote, folderW, &path);
         }
-
-        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder, value, &len );
-        if (FAILED(hr))
-            goto done;
-
-        r = msi_strcpy_to_awstring( value, len, szPathBuf, pcchPathBuf );
-
-done:
-        IWineMsiRemotePackage_Release( remote_package );
-        SysFreeString( folder );
-        msi_free( value );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            r = GetExceptionCode();
         }
+        __ENDTRY
 
+        if (!r)
+            r = msi_strncpyWtoA(path, -1, buf, sz, TRUE);
+
+        midl_user_free(path);
+        heap_free(folderW);
         return r;
     }
 
-    path = msi_get_target_folder( package, szFolder );
-    msiobj_release( &package->hdr );
+    path = msi_get_target_folder(package, folderW);
+    if (path)
+        r = msi_strncpyWtoA(path, -1, buf, sz, FALSE);
+    else
+        r = ERROR_DIRECTORY;
 
-    if (!path)
-        return ERROR_DIRECTORY;
-
-    return msi_strcpy_to_awstring( path, -1, szPathBuf, pcchPathBuf );
-}
-
-/***********************************************************************
- * MsiGetTargetPathA        (MSI.@)
- */
-UINT WINAPI MsiGetTargetPathA( MSIHANDLE hInstall, LPCSTR szFolder, 
-                               LPSTR szPathBuf, LPDWORD pcchPathBuf )
-{
-    LPWSTR szwFolder;
-    awstring path;
-    UINT r;
-
-    TRACE("%s %p %p\n", debugstr_a(szFolder), szPathBuf, pcchPathBuf);
-
-    szwFolder = strdupAtoW(szFolder);
-    if (szFolder && !szwFolder)
-        return ERROR_FUNCTION_FAILED; 
-
-    path.unicode = FALSE;
-    path.str.a = szPathBuf;
-
-    r = MSI_GetTargetPath( hInstall, szwFolder, &path, pcchPathBuf );
-
-    msi_free( szwFolder );
-
+    heap_free(folderW);
+    msiobj_release(&package->hdr);
     return r;
 }
 
 /***********************************************************************
  * MsiGetTargetPathW        (MSI.@)
  */
-UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder,
-                               LPWSTR szPathBuf, LPDWORD pcchPathBuf )
+UINT WINAPI MsiGetTargetPathW(MSIHANDLE hinst, const WCHAR *folder, WCHAR *buf, DWORD *sz)
 {
-    awstring path;
+    MSIPACKAGE *package;
+    const WCHAR *path;
+    UINT r;
 
-    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf);
+    TRACE("%s %p %p\n", debugstr_w(folder), buf, sz);
 
-    path.unicode = TRUE;
-    path.str.w = szPathBuf;
+    if (!folder)
+        return ERROR_INVALID_PARAMETER;
 
-    return MSI_GetTargetPath( hInstall, szFolder, &path, pcchPathBuf );
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+    {
+        WCHAR *path = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hinst)))
+            return ERROR_INVALID_HANDLE;
+
+        __TRY
+        {
+            r = remote_GetTargetPath(remote, folder, &path);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
+        if (!r)
+            r = msi_strncpyW(path, -1, buf, sz);
+
+        midl_user_free(path);
+        return r;
+    }
+
+    path = msi_get_target_folder(package, folder);
+    if (path)
+        r = msi_strncpyW(path, -1, buf, sz);
+    else
+        r = ERROR_DIRECTORY;
+
+    msiobj_release(&package->hdr);
+    return r;
 }
 
 static WCHAR *get_source_root( MSIPACKAGE *package )
@@ -355,11 +369,11 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
 
     TRACE("working to resolve %s\n", debugstr_w(name));
 
-    if (!strcmpW( name, szSourceDir )) name = szTargetDir;
+    if (!wcscmp( name, szSourceDir )) name = szTargetDir;
     if (!(f = msi_get_loaded_folder( package, name ))) return NULL;
 
     /* special resolving for root dir */
-    if (!strcmpW( name, szTargetDir ) && !f->ResolvedSource)
+    if (!wcscmp( name, szTargetDir ) && !f->ResolvedSource)
     {
         f->ResolvedSource = get_source_root( package );
     }
@@ -391,129 +405,113 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
 }
 
 /***********************************************************************
- * MSI_GetSourcePath   (internal)
+ * MsiGetSourcePathA     (MSI.@)
  */
-static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
-                               awstring *szPathBuf, LPDWORD pcchPathBuf )
+UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DWORD *sz)
 {
     MSIPACKAGE *package;
-    LPWSTR path;
-    UINT r = ERROR_FUNCTION_FAILED;
+    WCHAR *path, *folderW;
+    UINT r;
 
-    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf );
+    TRACE("%s %p %p\n", debugstr_a(folder), buf, sz);
 
-    if (!szFolder)
+    if (!folder)
         return ERROR_INVALID_PARAMETER;
 
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!(folderW = strdupAtoW(folder)))
+        return ERROR_OUTOFMEMORY;
+
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
-        LPWSTR value = NULL;
-        BSTR folder;
-        DWORD len;
+        WCHAR *path = NULL;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hinst)))
+        {
+            heap_free(folderW);
             return ERROR_INVALID_HANDLE;
-
-        folder = SysAllocString( szFolder );
-        if (!folder)
-        {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
         }
 
-        len = 0;
-        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder, NULL, &len );
-        if (FAILED(hr))
-            goto done;
-
-        len++;
-        value = msi_alloc(len * sizeof(WCHAR));
-        if (!value)
+        __TRY
         {
-            r = ERROR_OUTOFMEMORY;
-            goto done;
+            r = remote_GetSourcePath(remote, folderW, &path);
         }
-
-        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder, value, &len );
-        if (FAILED(hr))
-            goto done;
-
-        r = msi_strcpy_to_awstring( value, len, szPathBuf, pcchPathBuf );
-
-done:
-        IWineMsiRemotePackage_Release( remote_package );
-        SysFreeString( folder );
-        msi_free( value );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            r = GetExceptionCode();
         }
+        __ENDTRY
 
+        if (!r)
+            r = msi_strncpyWtoA(path, -1, buf, sz, TRUE);
+
+        midl_user_free(path);
+        heap_free(folderW);
         return r;
     }
 
-    if (szPathBuf->str.w && !pcchPathBuf )
-    {
-        msiobj_release( &package->hdr );
-        return ERROR_INVALID_PARAMETER;
-    }
+    path = msi_resolve_source_folder(package, folderW, NULL);
+    if (path)
+        r = msi_strncpyWtoA(path, -1, buf, sz, FALSE);
+    else
+        r = ERROR_DIRECTORY;
 
-    path = msi_resolve_source_folder( package, szFolder, NULL );
-    msiobj_release( &package->hdr );
-
-    TRACE("path = %s\n", debugstr_w(path));
-    if (!path)
-        return ERROR_DIRECTORY;
-
-    r = msi_strcpy_to_awstring( path, -1, szPathBuf, pcchPathBuf );
-    msi_free( path );
-    return r;
-}
-
-/***********************************************************************
- * MsiGetSourcePathA     (MSI.@)
- */
-UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder, 
-                               LPSTR szPathBuf, LPDWORD pcchPathBuf )
-{
-    LPWSTR folder;
-    awstring str;
-    UINT r;
-
-    TRACE("%s %p %p\n", debugstr_a(szFolder), szPathBuf, pcchPathBuf);
-
-    str.unicode = FALSE;
-    str.str.a = szPathBuf;
-
-    folder = strdupAtoW( szFolder );
-    r = MSI_GetSourcePath( hInstall, folder, &str, pcchPathBuf );
-    msi_free( folder );
-
+    heap_free(path);
+    heap_free(folderW);
+    msiobj_release(&package->hdr);
     return r;
 }
 
 /***********************************************************************
  * MsiGetSourcePathW     (MSI.@)
  */
-UINT WINAPI MsiGetSourcePathW( MSIHANDLE hInstall, LPCWSTR szFolder,
-                               LPWSTR szPathBuf, LPDWORD pcchPathBuf )
+UINT WINAPI MsiGetSourcePathW(MSIHANDLE hinst, const WCHAR *folder, WCHAR *buf, DWORD *sz)
 {
-    awstring str;
+    MSIPACKAGE *package;
+    WCHAR *path;
+    UINT r;
 
-    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf );
+    TRACE("%s %p %p\n", debugstr_w(folder), buf, sz);
 
-    str.unicode = TRUE;
-    str.str.w = szPathBuf;
+    if (!folder)
+        return ERROR_INVALID_PARAMETER;
 
-    return MSI_GetSourcePath( hInstall, szFolder, &str, pcchPathBuf );
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+    {
+        WCHAR *path = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hinst)))
+            return ERROR_INVALID_HANDLE;
+
+        __TRY
+        {
+            r = remote_GetSourcePath(remote, folder, &path);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
+        if (!r)
+            r = msi_strncpyW(path, -1, buf, sz);
+
+        midl_user_free(path);
+        return r;
+    }
+
+    path = msi_resolve_source_folder(package, folder, NULL);
+    if (path)
+        r = msi_strncpyW(path, -1, buf, sz);
+    else
+        r = ERROR_DIRECTORY;
+
+    heap_free(path);
+    msiobj_release(&package->hdr);
+    return r;
 }
 
 /***********************************************************************
@@ -549,7 +547,7 @@ static void set_target_path( MSIPACKAGE *package, MSIFOLDER *folder, const WCHAR
     WCHAR *target_path;
 
     if (!(target_path = msi_normalize_path( path ))) return;
-    if (strcmpW( target_path, folder->ResolvedTarget ))
+    if (wcscmp( target_path, folder->ResolvedTarget ))
     {
         msi_free( folder->ResolvedTarget );
         folder->ResolvedTarget = target_path;
@@ -572,7 +570,7 @@ UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolder
 
     TRACE("%p %s %s\n", package, debugstr_w(szFolder), debugstr_w(szFolderPath));
 
-    attrib = GetFileAttributesW(szFolderPath);
+    attrib = msi_get_file_attributes( package, szFolderPath );
     /* native MSI tests writeability by making temporary files at each drive */
     if (attrib != INVALID_FILE_ATTRIBUTES &&
         (attrib & FILE_ATTRIBUTE_OFFLINE || attrib & FILE_ATTRIBUTE_READONLY))
@@ -614,39 +612,22 @@ UINT WINAPI MsiSetTargetPathW(MSIHANDLE hInstall, LPCWSTR szFolder,
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR folder, path;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        folder = SysAllocString( szFolder );
-        path = SysAllocString( szFolderPath );
-        if (!folder || !path)
+        __TRY
         {
-            SysFreeString(folder);
-            SysFreeString(path);
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_SetTargetPath(remote, szFolder, szFolderPath);
         }
-
-        hr = IWineMsiRemotePackage_SetTargetPath( remote_package, folder, path );
-
-        SysFreeString(folder);
-        SysFreeString(path);
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_SetTargetPathW( package, szFolder, szFolderPath );
@@ -697,21 +678,22 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        BOOL ret;
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return FALSE;
 
-        hr = IWineMsiRemotePackage_GetMode(remote_package, iRunMode, &ret);
-        IWineMsiRemotePackage_Release(remote_package);
+        __TRY
+        {
+            r = remote_GetMode(remote, iRunMode);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = FALSE;
+        }
+        __ENDTRY
 
-        if (hr == S_OK)
-            return ret;
-
-        return FALSE;
+        return r;
     }
 
     switch (iRunMode)
@@ -789,25 +771,22 @@ UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return FALSE;
 
-        hr = IWineMsiRemotePackage_SetMode( remote_package, iRunMode, fState );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __TRY
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            r = remote_SetMode(remote, iRunMode, fState);
         }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return r;
     }
 
     switch (iRunMode)
@@ -844,9 +823,6 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
 
     szwFeature = strdupAtoW(szFeature);
 
-    if (!szwFeature)
-        return ERROR_FUNCTION_FAILED;
-   
     rc = MsiSetFeatureStateW(hInstall,szwFeature, iState); 
 
     msi_free(szwFeature);
@@ -959,7 +935,7 @@ UINT MSI_SetFeatureStateW( MSIPACKAGE *package, LPCWSTR szFeature, INSTALLSTATE 
     /* update all the features that are children of this feature */
     LIST_FOR_EACH_ENTRY( child, &package->features, MSIFEATURE, entry )
     {
-        if (child->Feature_Parent && !strcmpW( szFeature, child->Feature_Parent ))
+        if (child->Feature_Parent && !wcscmp( szFeature, child->Feature_Parent ))
             MSI_SetFeatureStateW(package, child->Feature, iState);
     }
     
@@ -977,38 +953,28 @@ UINT WINAPI MsiSetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 
     TRACE("%s %i\n",debugstr_w(szFeature), iState);
 
+    if (!szFeature)
+        return ERROR_UNKNOWN_FEATURE;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR feature;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
+        __TRY
         {
-            IWineMsiRemotePackage_Release(remote_package);
-            return ERROR_OUTOFMEMORY;
+            rc = remote_SetFeatureState(remote, szFeature, iState);
         }
-
-        hr = IWineMsiRemotePackage_SetFeatureState(remote_package, feature, iState);
-
-        SysFreeString(feature);
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            rc = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return rc;
     }
 
     rc = MSI_SetFeatureStateW(package,szFeature,iState);
@@ -1064,7 +1030,7 @@ UINT WINAPI MsiSetFeatureAttributesW( MSIHANDLE handle, LPCWSTR name, DWORD attr
         return ERROR_INVALID_HANDLE;
 
     costing = msi_dup_property( package->db, szCostingComplete );
-    if (!costing || !strcmpW( costing, szOne ))
+    if (!costing || !wcscmp( costing, szOne ))
     {
         msi_free( costing );
         msiobj_release( &package->hdr );
@@ -1128,39 +1094,28 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 
     TRACE("%d %s %p %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction);
 
+    if (!szFeature)
+        return ERROR_UNKNOWN_FEATURE;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR feature;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
+        __TRY
         {
-            IWineMsiRemotePackage_Release(remote_package);
-            return ERROR_OUTOFMEMORY;
+            ret = remote_GetFeatureState(remote, szFeature, piInstalled, piAction);
         }
-
-        hr = IWineMsiRemotePackage_GetFeatureState(remote_package, feature,
-                                                   piInstalled, piAction);
-
-        SysFreeString(feature);
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_GetFeatureStateW(package, szFeature, piInstalled, piAction);
@@ -1260,39 +1215,34 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
     TRACE("(%d %s %i %i %p)\n", hInstall, debugstr_w(szFeature),
           iCostTree, iState, piCost);
 
+    if (!szFeature)
+        return ERROR_INVALID_PARAMETER;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR feature;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
+        __TRY
         {
-            IWineMsiRemotePackage_Release(remote_package);
-            return ERROR_OUTOFMEMORY;
+            ret = remote_GetFeatureCost(remote, szFeature, iCostTree, iState, piCost);
         }
-
-        hr = IWineMsiRemotePackage_GetFeatureCost(remote_package, feature,
-                                                  iCostTree, iState, piCost);
-
-        SysFreeString(feature);
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
+    }
+
+    if (!piCost)
+    {
+        msiobj_release( &package->hdr );
+        return ERROR_INVALID_PARAMETER;
     }
 
     feature = msi_get_loaded_feature(package, szFeature);
@@ -1367,7 +1317,7 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
     if (attrs) *attrs = map_feature_attributes( feature->Attributes );
     if (title_len)
     {
-        if (feature->Title) len = strlenW( feature->Title );
+        if (feature->Title) len = lstrlenW( feature->Title );
         else len = 0;
         if (*title_len <= len)
         {
@@ -1376,14 +1326,14 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
         }
         else if (title)
         {
-            if (feature->Title) strcpyW( title, feature->Title );
+            if (feature->Title) lstrcpyW( title, feature->Title );
             else *title = 0;
             *title_len = len;
         }
     }
     if (help_len)
     {
-        if (feature->Description) len = strlenW( feature->Description );
+        if (feature->Description) len = lstrlenW( feature->Description );
         else len = 0;
         if (*help_len <= len)
         {
@@ -1392,7 +1342,7 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
         }
         else if (help)
         {
-            if (feature->Description) strcpyW( help, feature->Description );
+            if (feature->Description) lstrcpyW( help, feature->Description );
             else *help = 0;
             *help_len = len;
         }
@@ -1518,38 +1468,28 @@ UINT WINAPI MsiSetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
     MSIPACKAGE* package;
     UINT ret;
 
+    if (!szComponent)
+        return ERROR_UNKNOWN_COMPONENT;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR component;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        component = SysAllocString(szComponent);
-        if (!component)
+        __TRY
         {
-            IWineMsiRemotePackage_Release(remote_package);
-            return ERROR_OUTOFMEMORY;
+            ret = remote_SetComponentState(remote, szComponent, iState);
         }
-
-        hr = IWineMsiRemotePackage_SetComponentState(remote_package, component, iState);
-
-        SysFreeString(component);
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_SetComponentStateW(package, szComponent, iState);
@@ -1569,39 +1509,28 @@ UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
     TRACE("%d %s %p %p\n", hInstall, debugstr_w(szComponent),
            piInstalled, piAction);
 
+    if (!szComponent)
+        return ERROR_UNKNOWN_COMPONENT;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR component;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        component = SysAllocString(szComponent);
-        if (!component)
+        __TRY
         {
-            IWineMsiRemotePackage_Release(remote_package);
-            return ERROR_OUTOFMEMORY;
+            ret = remote_GetComponentState(remote, szComponent, piInstalled, piAction);
         }
-
-        hr = IWineMsiRemotePackage_GetComponentState(remote_package, component,
-                                                     piInstalled, piAction);
-
-        SysFreeString(component);
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_GetComponentStateW( package, szComponent, piInstalled, piAction);
@@ -1620,20 +1549,22 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        LANGID lang;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        hr = IWineMsiRemotePackage_GetLanguage(remote_package, &lang);
+        __TRY
+        {
+            langid = remote_GetLanguage(remote);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            langid = 0;
+        }
+        __ENDTRY
 
-        if (SUCCEEDED(hr))
-            return lang;
-
-        return 0;
+        return langid;
     }
 
     langid = msi_get_property_int( package->db, szProductLanguage, 0 );
@@ -1656,7 +1587,7 @@ UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
     if (iInstallLevel < 1)
         return MSI_SetFeatureStates( package );
 
-    len = sprintfW( level, fmt, iInstallLevel );
+    len = swprintf( level, fmt, iInstallLevel );
     r = msi_set_property( package->db, szInstallLevel, level, len );
     if ( r == ERROR_SUCCESS )
         r = MSI_SetFeatureStates( package );
@@ -1677,26 +1608,22 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        hr = IWineMsiRemotePackage_SetInstallLevel(remote_package, iInstallLevel);
-
-        IWineMsiRemotePackage_Release(remote_package);
-
-        if (FAILED(hr))
+        __TRY
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            r = remote_SetInstallLevel(remote, iInstallLevel);
         }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return r;
     }
 
     r = MSI_SetInstallLevel( package, iInstallLevel );

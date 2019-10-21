@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.1.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -40,11 +41,14 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
 /* Identify Bison output.  */
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.1"
+#define YYBISON_VERSION "3.4.1"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -67,8 +71,8 @@
 #define yynerrs         cond_nerrs
 
 
-/* Copy the first part of user declarations.  */
-#line 1 "cond.y" /* yacc.c:339  */
+/* First part of user prologue.  */
+#line 1 "cond.y"
 
 
 /*
@@ -93,8 +97,6 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,9 +110,9 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
+#include "wine/exception.h"
 #include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -184,13 +186,17 @@ static void value_free( struct value val )
 }
 
 
-#line 188 "cond.tab.c" /* yacc.c:339  */
+#line 190 "cond.tab.c"
 
 # ifndef YY_NULLPTR
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#  if defined __cplusplus
+#   if 201103L <= __cplusplus
+#    define YY_NULLPTR nullptr
+#   else
+#    define YY_NULLPTR 0
+#   endif
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULLPTR ((void*)0)
 #  endif
 # endif
 
@@ -202,7 +208,10 @@ static void value_free( struct value val )
 # define YYERROR_VERBOSE 0
 #endif
 
-
+/* Use api.header.include to #include this header
+   instead of duplicating it here.  */
+#ifndef YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
+# define YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -259,10 +268,9 @@ extern int cond_debug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-
 union YYSTYPE
 {
-#line 122 "cond.y" /* yacc.c:355  */
+#line 120 "cond.y"
 
     struct cond_str str;
     struct value value;
@@ -270,9 +278,9 @@ union YYSTYPE
     INT operator;
     BOOL bool;
 
-#line 274 "cond.tab.c" /* yacc.c:355  */
-};
+#line 282 "cond.tab.c"
 
+};
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -282,11 +290,9 @@ typedef union YYSTYPE YYSTYPE;
 
 int cond_parse (COND_input *info);
 
+#endif /* !YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED  */
 
 
-/* Copy the second part of user declarations.  */
-
-#line 290 "cond.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -361,15 +367,6 @@ typedef short yytype_int16;
 # define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
 #endif
 
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
-# endif
-#endif
-
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
@@ -396,6 +393,8 @@ typedef short yytype_int16;
 # define YY_INITIAL_VALUE(Value) /* Nothing. */
 #endif
 
+
+#define YY_ASSERT(E) ((void) (0 && (E)))
 
 #if ! defined yyoverflow || YYERROR_VERBOSE
 
@@ -539,16 +538,16 @@ union yyalloc
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  56
 
-/* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
-   by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   295
 
+/* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
+   as returned by yylex, with out-of-bounds checking.  */
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
-   as returned by yylex, without out-of-bounds checking.  */
+   as returned by yylex.  */
 static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -587,11 +586,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   149,   149,   155,   162,   166,   170,   174,   178,   185,
-     189,   196,   200,   208,   243,   251,   252,   253,   254,   255,
-     256,   257,   258,   259,   260,   261,   262,   263,   264,   265,
-     266,   267,   268,   272,   286,   301,   309,   319,   336,   353,
-     370,   390
+       0,   147,   147,   153,   160,   164,   168,   172,   176,   183,
+     187,   194,   198,   206,   241,   249,   250,   251,   252,   253,
+     254,   255,   256,   257,   258,   259,   260,   261,   262,   263,
+     264,   265,   266,   270,   284,   299,   307,   317,   334,   351,
+     368,   388
 };
 #endif
 
@@ -743,22 +742,22 @@ static const yytype_uint8 yyr2[] =
 
 #define YYRECOVERING()  (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)                                  \
-do                                                              \
-  if (yychar == YYEMPTY)                                        \
-    {                                                           \
-      yychar = (Token);                                         \
-      yylval = (Value);                                         \
-      YYPOPSTACK (yylen);                                       \
-      yystate = *yyssp;                                         \
-      goto yybackup;                                            \
-    }                                                           \
-  else                                                          \
-    {                                                           \
-      yyerror (info, YY_("syntax error: cannot back up")); \
-      YYERROR;                                                  \
-    }                                                           \
-while (0)
+#define YYBACKUP(Token, Value)                                    \
+  do                                                              \
+    if (yychar == YYEMPTY)                                        \
+      {                                                           \
+        yychar = (Token);                                         \
+        yylval = (Value);                                         \
+        YYPOPSTACK (yylen);                                       \
+        yystate = *yyssp;                                         \
+        goto yybackup;                                            \
+      }                                                           \
+    else                                                          \
+      {                                                           \
+        yyerror (info, YY_("syntax error: cannot back up")); \
+        YYERROR;                                                  \
+      }                                                           \
+  while (0)
 
 /* Error token number */
 #define YYTERROR        1
@@ -798,38 +797,38 @@ do {                                                                      \
 } while (0)
 
 
-/*----------------------------------------.
-| Print this symbol's value on YYOUTPUT.  |
-`----------------------------------------*/
+/*-----------------------------------.
+| Print this symbol's value on YYO.  |
+`-----------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, COND_input *info)
+yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep, COND_input *info)
 {
-  FILE *yyo = yyoutput;
-  YYUSE (yyo);
+  FILE *yyoutput = yyo;
+  YYUSE (yyoutput);
   YYUSE (info);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
-    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
+    YYPRINT (yyo, yytoknum[yytype], *yyvaluep);
 # endif
   YYUSE (yytype);
 }
 
 
-/*--------------------------------.
-| Print this symbol on YYOUTPUT.  |
-`--------------------------------*/
+/*---------------------------.
+| Print this symbol on YYO.  |
+`---------------------------*/
 
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, COND_input *info)
+yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep, COND_input *info)
 {
-  YYFPRINTF (yyoutput, "%s %s (",
+  YYFPRINTF (yyo, "%s %s (",
              yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, info);
-  YYFPRINTF (yyoutput, ")");
+  yy_symbol_value_print (yyo, yytype, yyvaluep, info);
+  YYFPRINTF (yyo, ")");
 }
 
 /*------------------------------------------------------------------.
@@ -874,7 +873,7 @@ yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule, COND_input *in
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
                        yystos[yyssp[yyi + 1 - yynrhs]],
-                       &(yyvsp[(yyi + 1) - (yynrhs)])
+                       &yyvsp[(yyi + 1) - (yynrhs)]
                                               , info);
       YYFPRINTF (stderr, "\n");
     }
@@ -978,7 +977,10 @@ yytnamerr (char *yyres, const char *yystr)
           case '\\':
             if (*++yyp != '\\')
               goto do_not_strip_quotes;
-            /* Fall through.  */
+            else
+              goto append;
+
+          append:
           default:
             if (yyres)
               yyres[yyn] = *yyp;
@@ -996,7 +998,7 @@ yytnamerr (char *yyres, const char *yystr)
   if (! yyres)
     return yystrlen (yystr);
 
-  return yystpcpy (yyres, yystr) - yyres;
+  return (YYSIZE_T) (yystpcpy (yyres, yystr) - yyres);
 }
 # endif
 
@@ -1074,10 +1076,10 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yyarg[yycount++] = yytname[yyx];
                 {
                   YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
-                  if (! (yysize <= yysize1
-                         && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+                  if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
+                    yysize = yysize1;
+                  else
                     return 2;
-                  yysize = yysize1;
                 }
               }
         }
@@ -1101,9 +1103,10 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 
   {
     YYSIZE_T yysize1 = yysize + yystrlen (yyformat);
-    if (! (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
+    if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
+      yysize = yysize1;
+    else
       return 2;
-    yysize = yysize1;
   }
 
   if (*yymsg_alloc < yysize)
@@ -1234,23 +1237,33 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
   yychar = YYEMPTY; /* Cause a token to be read.  */
   goto yysetstate;
 
+
 /*------------------------------------------------------------.
-| yynewstate -- Push a new state, which is found in yystate.  |
+| yynewstate -- push a new state, which is found in yystate.  |
 `------------------------------------------------------------*/
- yynewstate:
+yynewstate:
   /* In all cases, when you get here, the value and location stacks
      have just been pushed.  So pushing a state here evens the stacks.  */
   yyssp++;
 
- yysetstate:
-  *yyssp = yystate;
+
+/*--------------------------------------------------------------------.
+| yynewstate -- set current state (the top of the stack) to yystate.  |
+`--------------------------------------------------------------------*/
+yysetstate:
+  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
+  YY_ASSERT (0 <= yystate && yystate < YYNSTATES);
+  *yyssp = (yytype_int16) yystate;
 
   if (yyss + yystacksize - 1 <= yyssp)
+#if !defined yyoverflow && !defined YYSTACK_RELOCATE
+    goto yyexhaustedlab;
+#else
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = yyssp - yyss + 1;
+      YYSIZE_T yysize = (YYSIZE_T) (yyssp - yyss + 1);
 
-#ifdef yyoverflow
+# if defined yyoverflow
       {
         /* Give user a chance to reallocate the stack.  Use copies of
            these so that the &'s don't force the real ones into
@@ -1266,14 +1279,10 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
                     &yyss1, yysize * sizeof (*yyssp),
                     &yyvs1, yysize * sizeof (*yyvsp),
                     &yystacksize);
-
         yyss = yyss1;
         yyvs = yyvs1;
       }
-#else /* no yyoverflow */
-# ifndef YYSTACK_RELOCATE
-      goto yyexhaustedlab;
-# else
+# else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
         goto yyexhaustedlab;
@@ -1289,12 +1298,11 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
           goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-#  undef YYSTACK_RELOCATE
+# undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
       }
 # endif
-#endif /* no yyoverflow */
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
@@ -1305,19 +1313,18 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
       if (yyss + yystacksize - 1 <= yyssp)
         YYABORT;
     }
-
-  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
+#endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
 
   if (yystate == YYFINAL)
     YYACCEPT;
 
   goto yybackup;
 
+
 /*-----------.
 | yybackup.  |
 `-----------*/
 yybackup:
-
   /* Do appropriate processing given the current state.  Read a
      lookahead token if we need one and don't already have one.  */
 
@@ -1375,7 +1382,6 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
-
   goto yynewstate;
 
 
@@ -1390,7 +1396,7 @@ yydefault:
 
 
 /*-----------------------------.
-| yyreduce -- Do a reduction.  |
+| yyreduce -- do a reduction.  |
 `-----------------------------*/
 yyreduce:
   /* yyn is the number of a rule to reduce with.  */
@@ -1410,90 +1416,90 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 2:
-#line 150 "cond.y" /* yacc.c:1651  */
+  case 2:
+#line 148 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = (yyvsp[0].bool);
         }
-#line 1420 "cond.tab.c" /* yacc.c:1651  */
+#line 1426 "cond.tab.c"
     break;
 
   case 3:
-#line 155 "cond.y" /* yacc.c:1651  */
+#line 153 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = MSICONDITION_NONE;
         }
-#line 1429 "cond.tab.c" /* yacc.c:1651  */
+#line 1435 "cond.tab.c"
     break;
 
   case 4:
-#line 163 "cond.y" /* yacc.c:1651  */
+#line 161 "cond.y"
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1437 "cond.tab.c" /* yacc.c:1651  */
+#line 1443 "cond.tab.c"
     break;
 
   case 5:
-#line 167 "cond.y" /* yacc.c:1651  */
+#line 165 "cond.y"
     {
             (yyval.bool) = (yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1445 "cond.tab.c" /* yacc.c:1651  */
+#line 1451 "cond.tab.c"
     break;
 
   case 6:
-#line 171 "cond.y" /* yacc.c:1651  */
+#line 169 "cond.y"
     {
             (yyval.bool) = !(yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1453 "cond.tab.c" /* yacc.c:1651  */
+#line 1459 "cond.tab.c"
     break;
 
   case 7:
-#line 175 "cond.y" /* yacc.c:1651  */
+#line 173 "cond.y"
     {
             (yyval.bool) = ( (yyvsp[-2].bool) || (yyvsp[0].bool) ) && !( (yyvsp[-2].bool) && (yyvsp[0].bool) );
         }
-#line 1461 "cond.tab.c" /* yacc.c:1651  */
+#line 1467 "cond.tab.c"
     break;
 
   case 8:
-#line 179 "cond.y" /* yacc.c:1651  */
+#line 177 "cond.y"
     {
             (yyval.bool) = ( (yyvsp[-2].bool) && (yyvsp[0].bool) ) || ( !(yyvsp[-2].bool) && !(yyvsp[0].bool) );
         }
-#line 1469 "cond.tab.c" /* yacc.c:1651  */
+#line 1475 "cond.tab.c"
     break;
 
   case 9:
-#line 186 "cond.y" /* yacc.c:1651  */
+#line 184 "cond.y"
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1477 "cond.tab.c" /* yacc.c:1651  */
+#line 1483 "cond.tab.c"
     break;
 
   case 10:
-#line 190 "cond.y" /* yacc.c:1651  */
+#line 188 "cond.y"
     {
             (yyval.bool) = (yyvsp[-2].bool) && (yyvsp[0].bool);
         }
-#line 1485 "cond.tab.c" /* yacc.c:1651  */
+#line 1491 "cond.tab.c"
     break;
 
   case 11:
-#line 197 "cond.y" /* yacc.c:1651  */
+#line 195 "cond.y"
     {
             (yyval.bool) = !(yyvsp[0].bool);
         }
-#line 1493 "cond.tab.c" /* yacc.c:1651  */
+#line 1499 "cond.tab.c"
     break;
 
   case 12:
-#line 201 "cond.y" /* yacc.c:1651  */
+#line 199 "cond.y"
     {
             if ((yyvsp[0].value).type == VALUE_INTEGER)
                 (yyval.bool) = (yyvsp[0].value).u.integer ? 1 : 0;
@@ -1501,11 +1507,11 @@ yyreduce:
                 (yyval.bool) = (yyvsp[0].value).u.string && (yyvsp[0].value).u.string[0];
             value_free( (yyvsp[0].value) );
         }
-#line 1505 "cond.tab.c" /* yacc.c:1651  */
+#line 1511 "cond.tab.c"
     break;
 
   case 13:
-#line 209 "cond.y" /* yacc.c:1651  */
+#line 207 "cond.y"
     {
             if ((yyvsp[-2].value).type == VALUE_INTEGER && (yyvsp[0].value).type == VALUE_INTEGER)
             {
@@ -1540,127 +1546,127 @@ yyreduce:
             value_free( (yyvsp[-2].value) );
             value_free( (yyvsp[0].value) );
         }
-#line 1544 "cond.tab.c" /* yacc.c:1651  */
+#line 1550 "cond.tab.c"
     break;
 
   case 14:
-#line 244 "cond.y" /* yacc.c:1651  */
+#line 242 "cond.y"
     {
             (yyval.bool) = (yyvsp[-1].bool);
         }
-#line 1552 "cond.tab.c" /* yacc.c:1651  */
+#line 1558 "cond.tab.c"
     break;
 
   case 15:
-#line 251 "cond.y" /* yacc.c:1651  */
+#line 249 "cond.y"
     { (yyval.operator) = COND_EQ; }
-#line 1558 "cond.tab.c" /* yacc.c:1651  */
+#line 1564 "cond.tab.c"
     break;
 
   case 16:
-#line 252 "cond.y" /* yacc.c:1651  */
+#line 250 "cond.y"
     { (yyval.operator) = COND_NE; }
-#line 1564 "cond.tab.c" /* yacc.c:1651  */
+#line 1570 "cond.tab.c"
     break;
 
   case 17:
-#line 253 "cond.y" /* yacc.c:1651  */
+#line 251 "cond.y"
     { (yyval.operator) = COND_LT; }
-#line 1570 "cond.tab.c" /* yacc.c:1651  */
+#line 1576 "cond.tab.c"
     break;
 
   case 18:
-#line 254 "cond.y" /* yacc.c:1651  */
+#line 252 "cond.y"
     { (yyval.operator) = COND_GT; }
-#line 1576 "cond.tab.c" /* yacc.c:1651  */
+#line 1582 "cond.tab.c"
     break;
 
   case 19:
-#line 255 "cond.y" /* yacc.c:1651  */
+#line 253 "cond.y"
     { (yyval.operator) = COND_LE; }
-#line 1582 "cond.tab.c" /* yacc.c:1651  */
+#line 1588 "cond.tab.c"
     break;
 
   case 20:
-#line 256 "cond.y" /* yacc.c:1651  */
+#line 254 "cond.y"
     { (yyval.operator) = COND_GE; }
-#line 1588 "cond.tab.c" /* yacc.c:1651  */
+#line 1594 "cond.tab.c"
     break;
 
   case 21:
-#line 257 "cond.y" /* yacc.c:1651  */
+#line 255 "cond.y"
     { (yyval.operator) = COND_SS; }
-#line 1594 "cond.tab.c" /* yacc.c:1651  */
+#line 1600 "cond.tab.c"
     break;
 
   case 22:
-#line 258 "cond.y" /* yacc.c:1651  */
+#line 256 "cond.y"
     { (yyval.operator) = COND_IEQ; }
-#line 1600 "cond.tab.c" /* yacc.c:1651  */
+#line 1606 "cond.tab.c"
     break;
 
   case 23:
-#line 259 "cond.y" /* yacc.c:1651  */
+#line 257 "cond.y"
     { (yyval.operator) = COND_INE; }
-#line 1606 "cond.tab.c" /* yacc.c:1651  */
+#line 1612 "cond.tab.c"
     break;
 
   case 24:
-#line 260 "cond.y" /* yacc.c:1651  */
+#line 258 "cond.y"
     { (yyval.operator) = COND_ILT; }
-#line 1612 "cond.tab.c" /* yacc.c:1651  */
+#line 1618 "cond.tab.c"
     break;
 
   case 25:
-#line 261 "cond.y" /* yacc.c:1651  */
+#line 259 "cond.y"
     { (yyval.operator) = COND_IGT; }
-#line 1618 "cond.tab.c" /* yacc.c:1651  */
+#line 1624 "cond.tab.c"
     break;
 
   case 26:
-#line 262 "cond.y" /* yacc.c:1651  */
+#line 260 "cond.y"
     { (yyval.operator) = COND_ILE; }
-#line 1624 "cond.tab.c" /* yacc.c:1651  */
+#line 1630 "cond.tab.c"
     break;
 
   case 27:
-#line 263 "cond.y" /* yacc.c:1651  */
+#line 261 "cond.y"
     { (yyval.operator) = COND_IGE; }
-#line 1630 "cond.tab.c" /* yacc.c:1651  */
+#line 1636 "cond.tab.c"
     break;
 
   case 28:
-#line 264 "cond.y" /* yacc.c:1651  */
+#line 262 "cond.y"
     { (yyval.operator) = COND_ISS; }
-#line 1636 "cond.tab.c" /* yacc.c:1651  */
+#line 1642 "cond.tab.c"
     break;
 
   case 29:
-#line 265 "cond.y" /* yacc.c:1651  */
+#line 263 "cond.y"
     { (yyval.operator) = COND_LHS; }
-#line 1642 "cond.tab.c" /* yacc.c:1651  */
+#line 1648 "cond.tab.c"
     break;
 
   case 30:
-#line 266 "cond.y" /* yacc.c:1651  */
+#line 264 "cond.y"
     { (yyval.operator) = COND_RHS; }
-#line 1648 "cond.tab.c" /* yacc.c:1651  */
+#line 1654 "cond.tab.c"
     break;
 
   case 31:
-#line 267 "cond.y" /* yacc.c:1651  */
+#line 265 "cond.y"
     { (yyval.operator) = COND_ILHS; }
-#line 1654 "cond.tab.c" /* yacc.c:1651  */
+#line 1660 "cond.tab.c"
     break;
 
   case 32:
-#line 268 "cond.y" /* yacc.c:1651  */
+#line 266 "cond.y"
     { (yyval.operator) = COND_IRHS; }
-#line 1660 "cond.tab.c" /* yacc.c:1651  */
+#line 1666 "cond.tab.c"
     break;
 
   case 33:
-#line 273 "cond.y" /* yacc.c:1651  */
+#line 271 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             UINT len;
@@ -1674,11 +1680,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1678 "cond.tab.c" /* yacc.c:1651  */
+#line 1684 "cond.tab.c"
     break;
 
   case 34:
-#line 287 "cond.y" /* yacc.c:1651  */
+#line 285 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             UINT len = GetEnvironmentVariableW( (yyvsp[0].identifier), NULL, 0 );
@@ -1693,11 +1699,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1697 "cond.tab.c" /* yacc.c:1651  */
+#line 1703 "cond.tab.c"
     break;
 
   case 35:
-#line 302 "cond.y" /* yacc.c:1651  */
+#line 300 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             (yyval.value).type = VALUE_LITERAL;
@@ -1705,25 +1711,25 @@ yyreduce:
             if( !(yyval.value).u.string )
                 YYABORT;
         }
-#line 1709 "cond.tab.c" /* yacc.c:1651  */
+#line 1715 "cond.tab.c"
     break;
 
   case 36:
-#line 310 "cond.y" /* yacc.c:1651  */
+#line 308 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             LPWSTR szNum = COND_GetString( cond, &(yyvsp[0].str) );
             if( !szNum )
                 YYABORT;
             (yyval.value).type = VALUE_INTEGER;
-            (yyval.value).u.integer = atoiW( szNum );
+            (yyval.value).u.integer = wcstol( szNum, NULL, 10 );
             cond_free( szNum );
         }
-#line 1723 "cond.tab.c" /* yacc.c:1651  */
+#line 1729 "cond.tab.c"
     break;
 
   case 37:
-#line 320 "cond.y" /* yacc.c:1651  */
+#line 318 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1740,11 +1746,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1744 "cond.tab.c" /* yacc.c:1651  */
+#line 1750 "cond.tab.c"
     break;
 
   case 38:
-#line 337 "cond.y" /* yacc.c:1651  */
+#line 335 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1761,11 +1767,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1765 "cond.tab.c" /* yacc.c:1651  */
+#line 1771 "cond.tab.c"
     break;
 
   case 39:
-#line 354 "cond.y" /* yacc.c:1651  */
+#line 352 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install, action;
@@ -1782,11 +1788,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1786 "cond.tab.c" /* yacc.c:1651  */
+#line 1792 "cond.tab.c"
     break;
 
   case 40:
-#line 371 "cond.y" /* yacc.c:1651  */
+#line 369 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1803,22 +1809,23 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1807 "cond.tab.c" /* yacc.c:1651  */
+#line 1813 "cond.tab.c"
     break;
 
   case 41:
-#line 391 "cond.y" /* yacc.c:1651  */
+#line 389 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             (yyval.identifier) = COND_GetString( cond, &(yyvsp[0].str) );
             if( !(yyval.identifier) )
                 YYABORT;
         }
-#line 1818 "cond.tab.c" /* yacc.c:1651  */
+#line 1824 "cond.tab.c"
     break;
 
 
-#line 1822 "cond.tab.c" /* yacc.c:1651  */
+#line 1828 "cond.tab.c"
+
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1843,14 +1850,13 @@ yyreduce:
   /* Now 'shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
      number reduced by.  */
-
-  yyn = yyr1[yyn];
-
-  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
-  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp)
-    yystate = yytable[yystate];
-  else
-    yystate = yydefgoto[yyn - YYNTOKENS];
+  {
+    const int yylhs = yyr1[yyn] - YYNTOKENS;
+    const int yyi = yypgoto[yylhs] + *yyssp;
+    yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *yyssp
+               ? yytable[yyi]
+               : yydefgoto[yylhs]);
+  }
 
   goto yynewstate;
 
@@ -1933,12 +1939,10 @@ yyerrlab:
 | yyerrorlab -- error raised explicitly by YYERROR.  |
 `---------------------------------------------------*/
 yyerrorlab:
-
-  /* Pacify compilers like GCC when the user code never invokes
-     YYERROR and the label yyerrorlab therefore never appears in user
-     code.  */
-  if (/*CONSTCOND*/ 0)
-     goto yyerrorlab;
+  /* Pacify compilers when the user code never invokes YYERROR and the
+     label yyerrorlab therefore never appears in user code.  */
+  if (0)
+    YYERROR;
 
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
@@ -2000,12 +2004,14 @@ yyacceptlab:
   yyresult = 0;
   goto yyreturn;
 
+
 /*-----------------------------------.
 | yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
   goto yyreturn;
+
 
 #if !defined yyoverflow || YYERROR_VERBOSE
 /*-------------------------------------------------.
@@ -2017,6 +2023,10 @@ yyexhaustedlab:
   /* Fall through.  */
 #endif
 
+
+/*-----------------------------------------------------.
+| yyreturn -- parsing is finished, return the result.  |
+`-----------------------------------------------------*/
 yyreturn:
   if (yychar != YYEMPTY)
     {
@@ -2046,7 +2056,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 399 "cond.y" /* yacc.c:1910  */
+#line 397 "cond.y"
 
 
 
@@ -2067,7 +2077,7 @@ static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
     LPWSTR strlower, sublower, r;
     strlower = CharLowerW( strdupW( str ) );
     sublower = CharLowerW( strdupW( sub ) );
-    r = strstrW( strlower, sublower );
+    r = wcsstr( strlower, sublower );
     if (r)
         r = (LPWSTR)str + (r - strlower);
     msi_free( strlower );
@@ -2083,7 +2093,7 @@ static BOOL str_is_number( LPCWSTR str )
         return FALSE;
 
     for (i = 0; i < lstrlenW( str ); i++)
-        if (!isdigitW(str[i]))
+        if (!iswdigit(str[i]))
             return FALSE;
 
     return TRUE;
@@ -2102,44 +2112,44 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
         return 1;
 
     /* if both strings contain only numbers, use integer comparison */
-    lhs = atoiW(a);
-    rhs = atoiW(b);
+    lhs = wcstol(a, NULL, 10);
+    rhs = wcstol(b, NULL, 10);
     if (str_is_number(a) && str_is_number(b))
         return compare_int( lhs, operator, rhs );
 
     switch (operator)
     {
     case COND_SS:
-        return strstrW( a, b ) != 0;
+        return wcsstr( a, b ) != 0;
     case COND_ISS:
         return strstriW( a, b ) != 0;
     case COND_LHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a, b, r );
+        return !wcsncmp( a, b, r );
     }
     case COND_RHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a + (l - r), b, r );
+        return !wcsncmp( a + (l - r), b, r );
     }
     case COND_ILHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a, b, r );
+        return !_wcsnicmp( a, b, r );
     }
     case COND_IRHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a + (l - r), b, r );
+        return !_wcsnicmp( a + (l - r), b, r );
     }
     default:
         ERR("invalid substring operator\n");
@@ -2158,35 +2168,35 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
     if (!b) b = szEmpty;
 
     if (convert && str_is_number(a) && str_is_number(b))
-        return compare_int( atoiW(a), operator, atoiW(b) );
+        return compare_int( wcstol(a, NULL, 10), operator, wcstol(b, NULL, 10) );
 
     /* a or b may be NULL */
     switch (operator)
     {
     case COND_LT:
-        return strcmpW( a, b ) < 0;
+        return wcscmp( a, b ) < 0;
     case COND_GT:
-        return strcmpW( a, b ) > 0;
+        return wcscmp( a, b ) > 0;
     case COND_EQ:
-        return strcmpW( a, b ) == 0;
+        return wcscmp( a, b ) == 0;
     case COND_NE:
-        return strcmpW( a, b ) != 0;
+        return wcscmp( a, b ) != 0;
     case COND_GE:
-        return strcmpW( a, b ) >= 0;
+        return wcscmp( a, b ) >= 0;
     case COND_LE:
-        return strcmpW( a, b ) <= 0;
+        return wcscmp( a, b ) <= 0;
     case COND_ILT:
-        return strcmpiW( a, b ) < 0;
+        return wcsicmp( a, b ) < 0;
     case COND_IGT:
-        return strcmpiW( a, b ) > 0;
+        return wcsicmp( a, b ) > 0;
     case COND_IEQ:
-        return strcmpiW( a, b ) == 0;
+        return wcsicmp( a, b ) == 0;
     case COND_INE:
-        return strcmpiW( a, b ) != 0;
+        return wcsicmp( a, b ) != 0;
     case COND_IGE:
-        return strcmpiW( a, b ) >= 0;
+        return wcsicmp( a, b ) >= 0;
     case COND_ILE:
-        return strcmpiW( a, b ) <= 0;
+        return wcsicmp( a, b ) <= 0;
     default:
         ERR("invalid string operator\n");
         return 0;
@@ -2269,7 +2279,7 @@ static int COND_GetOperator( COND_input *cond )
     while ( 1 )
     {
         len = lstrlenW( table[i].str );
-        if ( !len || 0 == strncmpW( table[i].str, p, len ) )
+        if ( !len || 0 == wcsncmp( table[i].str, p, len ) )
             break;
         i++;
     }
@@ -2318,7 +2328,7 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 
     if (ch == '"' )
     {
-        LPCWSTR p = strchrW( str->data + 1, '"' );
+        LPCWSTR p = wcschr( str->data + 1, '"' );
         if (!p) return COND_ERROR;
         len = p - str->data + 1;
         rc = COND_LITER;
@@ -2338,18 +2348,18 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 
         if ( len == 3 )
         {
-            if ( !strncmpiW( str->data, szNot, len ) )
+            if ( !_wcsnicmp( str->data, szNot, len ) )
                 rc = COND_NOT;
-            else if( !strncmpiW( str->data, szAnd, len ) )
+            else if( !_wcsnicmp( str->data, szAnd, len ) )
                 rc = COND_AND;
-            else if( !strncmpiW( str->data, szXor, len ) )
+            else if( !_wcsnicmp( str->data, szXor, len ) )
                 rc = COND_XOR;
-            else if( !strncmpiW( str->data, szEqv, len ) )
+            else if( !_wcsnicmp( str->data, szEqv, len ) )
                 rc = COND_EQV;
-            else if( !strncmpiW( str->data, szImp, len ) )
+            else if( !_wcsnicmp( str->data, szImp, len ) )
                 rc = COND_IMP;
         }
-        else if( (len == 2) && !strncmpiW( str->data, szOr, len ) )
+        else if( (len == 2) && !_wcsnicmp( str->data, szOr, len ) )
             rc = COND_OR;
     }
     else if( COND_IsNumber( ch ) )
@@ -2501,35 +2511,25 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
     {
-        HRESULT hr;
-        BSTR condition;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
-        condition = SysAllocString( szCondition );
-        if (!condition)
+        if (!szCondition)
+            return MSICONDITION_NONE;
+
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_EvaluateCondition(remote, szCondition);
         }
-
-        hr = IWineMsiRemotePackage_EvaluateCondition( remote_package, condition );
-
-        SysFreeString( condition );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

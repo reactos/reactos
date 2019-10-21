@@ -25,6 +25,8 @@
 #define MSIERR_INFO_ACTIONSTART     14
 #define MSIERR_INFO_ACTIONENDED     15
 
+#define IDS_NEWFOLDER               100
+
 #define MSIERR_INSERTDISK           1302
 #define MSIERR_CABNOTFOUND          1311
 
