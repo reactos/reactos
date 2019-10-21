@@ -4041,14 +4041,77 @@ Return Value:
         goto SetStatusAndReturn;
     }
 
-    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_UNIQUE_ID ||
-        irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME) {
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME) {
 
         UNIMPLEMENTED;
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         status = STATUS_NOT_IMPLEMENTED;
+        goto SetStatusAndReturn;
+    }
+
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_MOUNTDEV_QUERY_UNIQUE_ID) {
+
+        //
+        // FIXME
+        // This is a HACK. We don't have unique ID.
+        // We'll just return device name as unique ID.
+        // It's unique but may not survive to a reboot,
+        // which is not matching the requirements for
+        // a MountMgr unique ID.
+        //
+
+        PMOUNTDEV_UNIQUE_ID uniqueId = Irp->AssociatedIrp.SystemBuffer;
+
+        //
+        // Check output buffer is big enough.
+        //
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_UNIQUE_ID)) {
+
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            status = STATUS_INVALID_PARAMETER;
+            goto SetStatusAndReturn;
+        }
+
+        //
+        // Set size we'll return so that caller can allocate big enough buffer.
+        //
+
+        RtlZeroMemory(uniqueId, sizeof(MOUNTDEV_UNIQUE_ID));
+        uniqueId->UniqueIdLength = deviceExtension->DeviceName.Length;
+
+        //
+        // Check buffer is big enough to contain device name.
+        //
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + uniqueId->UniqueIdLength) {
+
+            Irp->IoStatus.Information = sizeof(MOUNTDEV_UNIQUE_ID);
+            Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            status = STATUS_BUFFER_OVERFLOW;
+            goto SetStatusAndReturn;
+        }
+
+        //
+        // Copy device name.
+        //
+
+        RtlCopyMemory(uniqueId->UniqueId, deviceExtension->DeviceName.Buffer,
+                      uniqueId->UniqueIdLength);
+        status = STATUS_SUCCESS;
+
+        //
+        // And return to the caller.
+        //
+
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + uniqueId->UniqueIdLength;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         goto SetStatusAndReturn;
     }
 
