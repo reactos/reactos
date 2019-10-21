@@ -1622,9 +1622,6 @@ ReconcileThisDatabaseWithMaster(IN PDEVICE_EXTENSION DeviceExtension,
         return;
     }
 
-    UNIMPLEMENTED;
-    return;
-
     /* Allocate a work item */
     WorkItem = AllocatePool(sizeof(RECONCILE_WORK_ITEM));
     if (!WorkItem)
