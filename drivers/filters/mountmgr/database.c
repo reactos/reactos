@@ -678,11 +678,10 @@ ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
         goto ReleaseRDS;
     }
 
-    
     RtlCopyMemory(ReparseFile.Buffer, DeviceInformation->DeviceName.Buffer,
                   DeviceInformation->DeviceName.Length);
     RtlCopyMemory((PVOID)((ULONG_PTR)ReparseFile.Buffer + DeviceInformation->DeviceName.Length),
-                  ReparseFile.Buffer, ReparseFile.Length);
+                  ReparseIndex.Buffer, ReparseIndex.Length);
     ReparseFile.Buffer[ReparseFile.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     InitializeObjectAttributes(&ObjectAttributes,
