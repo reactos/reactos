@@ -33,6 +33,7 @@
 #include <ntdef.h>
 #include <ntifs.h>
 #include <wdmguid.h>
+#include <diskguid.h>
 #include <arc/arc.h>
 #include <mountmgr.h>
 #undef NTHALAPI
