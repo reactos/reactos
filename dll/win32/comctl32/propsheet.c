@@ -1470,6 +1470,9 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
      (psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
      (ppshpage->dwFlags & PSP_HIDEHEADER))
   {
+#ifdef __REACTOS__
+    if (psInfo->ppshheader.u4.hbmWatermark)
+#endif
       SetWindowSubclass(hwndPage, PROPSHEET_WizardSubclassProc, 1,
                         (DWORD_PTR)ppshpage);
   }
