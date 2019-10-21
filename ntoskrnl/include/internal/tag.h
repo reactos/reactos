@@ -190,3 +190,6 @@
 
 #define TAG_WAIT            'tiaW'
 #define TAG_SEC_QUERY       'qSbO'
+
+/* FSTUB */
+#define TAG_FSTUB 'BtsF'
