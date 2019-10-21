@@ -1,7 +1,7 @@
 
 spec2def(w32time.dll w32time.spec ADD_IMPORTLIB)
 
-add_library(w32time SHARED
+add_library(w32time MODULE
     w32time.c
     ntpclient.c
     ${CMAKE_CURRENT_BINARY_DIR}/w32time.def)
