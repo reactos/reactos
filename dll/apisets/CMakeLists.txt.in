@@ -17,7 +17,7 @@ function (add_apiset apiset_name baseaddress)
         -D_WCTYPE_DEFINED
         -D_CRT_ERRNO_DEFINED)
 
-    add_library(${apiset_name} SHARED
+    add_library(${apiset_name} MODULE
         ${CMAKE_CURRENT_BINARY_DIR}/${apiset_name}_stubs.c
         ${CMAKE_CURRENT_BINARY_DIR}/${apiset_name}.def)
 
