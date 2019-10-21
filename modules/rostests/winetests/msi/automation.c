@@ -34,13 +34,11 @@
 #include "wine/test.h"
 
 #ifdef __REACTOS__
-#include "ole2.h"
+#include <ole2.h>
 #endif
 
 static BOOL is_wow64;
 
-static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL);
-static BOOL (WINAPI *pOpenProcessToken)(HANDLE, DWORD, PHANDLE);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
@@ -223,8 +221,6 @@ static void init_functionpointers(void)
     if(!p ## func) \
       trace("GetProcAddress(%s) failed\n", #func);
 
-    GET_PROC(hadvapi32, CheckTokenMembership);
-    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
 
@@ -238,11 +234,9 @@ static BOOL is_process_limited(void)
     BOOL IsInGroup;
     HANDLE token;
 
-    if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
-
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !pCheckTokenMembership(NULL, Group, &IsInGroup))
+        !CheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
         FreeSid(Group);
@@ -256,7 +250,7 @@ static BOOL is_process_limited(void)
         return TRUE;
     }
 
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -359,9 +353,7 @@ static BOOL create_package(LPWSTR path)
     DWORD len;
 
     /* Prepare package */
-    create_database(msifile, tables,
-                    sizeof(tables) / sizeof(msi_table), summary_info,
-                    sizeof(summary_info) / sizeof(msi_summary_info));
+    create_database(msifile, tables, ARRAY_SIZE(tables), summary_info, ARRAY_SIZE(summary_info));
 
     len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
                               CURR_DIR, -1, path, MAX_PATH);
@@ -907,7 +899,7 @@ static HRESULT Installer_CreateRecord(int count, IDispatch **pRecord)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -922,7 +914,7 @@ static HRESULT Installer_CreateRecord(int count, IDispatch **pRecord)
 static HRESULT Installer_RegistryValue(HKEY hkey, LPCWSTR szKey, VARIANT vValue, VARIANT *pVarResult, VARTYPE vtExpect)
 {
     VARIANTARG vararg[3];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[2]);
     V_VT(&vararg[2]) = VT_I4;
@@ -987,7 +979,7 @@ static HRESULT Installer_OpenPackage(LPCWSTR szPackagePath, int options, IDispat
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[1]);
@@ -1006,7 +998,7 @@ static HRESULT Installer_OpenDatabase(LPCWSTR szDatabasePath, int openmode, IDis
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[1]);
@@ -1025,7 +1017,7 @@ static HRESULT Installer_InstallProduct(LPCWSTR szPackagePath, LPCWSTR szPropert
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_BSTR;
@@ -1041,7 +1033,7 @@ static HRESULT Installer_ProductState(LPCWSTR szProduct, int *pInstallState)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1058,7 +1050,7 @@ static HRESULT Installer_ProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute, LPW
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[1]);
@@ -1089,7 +1081,7 @@ static HRESULT Installer_RelatedProducts(LPCWSTR szProduct, IDispatch **pStringL
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1131,7 +1123,7 @@ static HRESULT Installer_SummaryInformation(BSTR PackagePath, int UpdateCount, I
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[1]);
@@ -1161,7 +1153,7 @@ static HRESULT Session_PropertyGet(IDispatch *pSession, LPCWSTR szName, LPWSTR s
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1179,7 +1171,7 @@ static HRESULT Session_PropertyPut(IDispatch *pSession, LPCWSTR szName, LPCWSTR 
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_BSTR;
@@ -1207,7 +1199,7 @@ static HRESULT Session_ModeGet(IDispatch *pSession, int iFlag, VARIANT_BOOL *mod
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1225,7 +1217,7 @@ static HRESULT Session_ModePut(IDispatch *pSession, int iFlag, VARIANT_BOOL mode
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_I4;
@@ -1252,7 +1244,7 @@ static HRESULT Session_DoAction(IDispatch *pSession, LPCWSTR szAction, int *iRet
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1269,7 +1261,7 @@ static HRESULT Session_EvaluateCondition(IDispatch *pSession, LPCWSTR szConditio
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1286,7 +1278,7 @@ static HRESULT Session_Message(IDispatch *pSession, LONG kind, IDispatch *record
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&varresult);
@@ -1307,7 +1299,7 @@ static HRESULT Session_SetInstallLevel(IDispatch *pSession, LONG iInstallLevel)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_I4;
@@ -1320,7 +1312,7 @@ static HRESULT Session_FeatureCurrentState(IDispatch *pSession, LPCWSTR szName, 
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1337,7 +1329,7 @@ static HRESULT Session_FeatureRequestStateGet(IDispatch *pSession, LPCWSTR szNam
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1355,7 +1347,7 @@ static HRESULT Session_FeatureRequestStatePut(IDispatch *pSession, LPCWSTR szNam
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_BSTR;
@@ -1371,7 +1363,7 @@ static HRESULT Database_OpenView(IDispatch *pDatabase, LPCWSTR szSql, IDispatch 
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1387,7 +1379,7 @@ static HRESULT Database_SummaryInformation(IDispatch *pDatabase, int iUpdateCoun
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1403,7 +1395,7 @@ static HRESULT View_Execute(IDispatch *pView, IDispatch *pRecord)
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_DISPATCH;
@@ -1425,7 +1417,7 @@ static HRESULT View_Modify(IDispatch *pView, int iMode, IDispatch *pRecord)
 {
     VARIANT varresult;
     VARIANTARG vararg[2];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_I4;
@@ -1460,7 +1452,7 @@ static HRESULT Record_StringDataGet(IDispatch *pRecord, int iField, LPWSTR szStr
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1478,7 +1470,7 @@ static HRESULT Record_StringDataPut(IDispatch *pRecord, int iField, LPCWSTR szSt
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_I4;
@@ -1494,7 +1486,7 @@ static HRESULT Record_IntegerDataGet(IDispatch *pRecord, int iField, int *pValue
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1512,7 +1504,7 @@ static HRESULT Record_IntegerDataPut(IDispatch *pRecord, int iField, int iValue)
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_I4;
@@ -1537,7 +1529,7 @@ static HRESULT StringList_Item(IDispatch *pStringList, int iIndex, LPWSTR szStri
 {
     VARIANT varresult;
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
     HRESULT hr;
 
     VariantInit(&vararg[0]);
@@ -1563,7 +1555,7 @@ static HRESULT StringList_Count(IDispatch *pStringList, int *pCount)
 static HRESULT SummaryInfo_PropertyGet(IDispatch *pSummaryInfo, int pid, VARIANT *pVarResult, VARTYPE vtExpect)
 {
     VARIANTARG vararg[1];
-    DISPPARAMS dispparams = {vararg, NULL, sizeof(vararg)/sizeof(VARIANTARG), 0};
+    DISPPARAMS dispparams = {vararg, NULL, ARRAY_SIZE(vararg), 0};
 
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_I4;
@@ -1576,7 +1568,7 @@ static HRESULT SummaryInfo_PropertyPut(IDispatch *pSummaryInfo, int pid, VARIANT
     VARIANT varresult;
     VARIANTARG vararg[2];
     DISPID dispid = DISPID_PROPERTYPUT;
-    DISPPARAMS dispparams = {vararg, &dispid, sizeof(vararg)/sizeof(VARIANTARG), 1};
+    DISPPARAMS dispparams = {vararg, &dispid, ARRAY_SIZE(vararg), 1};
 
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_I4;
@@ -1854,7 +1846,7 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
     ok(pSummaryInfo != NULL, "Database_SummaryInformation should not have returned NULL record\n");
     if (pSummaryInfo)
     {
-        test_SummaryInfo(pSummaryInfo, summary_info, sizeof(summary_info)/sizeof(msi_summary_info), readonly);
+        test_SummaryInfo(pSummaryInfo, summary_info, ARRAY_SIZE(summary_info), readonly);
         IDispatch_Release(pSummaryInfo);
     }
 }
@@ -2701,7 +2693,7 @@ static void test_Installer(void)
     ok(hr == S_OK, "Installer_SummaryInformation failed, hresult 0x%08x\n", hr);
     if (hr == S_OK)
     {
-        test_SummaryInfo(pSumInfo, summary_info, sizeof(summary_info)/sizeof(msi_summary_info), TRUE);
+        test_SummaryInfo(pSumInfo, summary_info, ARRAY_SIZE(summary_info), TRUE);
         IDispatch_Release(pSumInfo);
     }
 

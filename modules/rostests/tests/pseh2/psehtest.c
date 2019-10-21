@@ -2754,7 +2754,7 @@ DEFINE_TEST(test_PSEH3_bug2)
 #define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
 #define USE_TEST(NAME_) { USE_TEST_NAME(NAME_), NAME_ }
 
-struct subtest
+struct pseh_subtest
 {
 	const char * name;
 	int (* func)(void);
@@ -2762,7 +2762,7 @@ struct subtest
 
 void testsuite_syntax(void)
 {
-	const struct subtest testsuite[] =
+	const struct pseh_subtest testsuite[] =
 	{
 		USE_TEST(test_empty_1),
 		USE_TEST(test_empty_2),
