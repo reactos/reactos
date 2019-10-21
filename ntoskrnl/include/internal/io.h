@@ -1418,6 +1418,7 @@ extern PDRIVER_OBJECT IopRootDriverObject;
 extern KSPIN_LOCK IopDeviceActionLock;
 extern LIST_ENTRY IopDeviceActionRequestList;
 extern RESERVE_IRP_ALLOCATOR IopReserveIrpAllocator;
+extern BOOLEAN IoRemoteBootClient;
 
 //
 // Inlined Functions
