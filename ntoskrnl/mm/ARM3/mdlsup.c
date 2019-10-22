@@ -89,6 +89,8 @@ MiMapLockedPagesInUserSpace(
     Vad->u.VadFlags.Protection = MM_READWRITE;
     Vad->u.VadFlags.PrivateMemory = 1;
 
+    // FIXME: use MiInsertVadEx
+
     /* Did the caller specify an address? */
     if (BaseAddress == NULL)
     {

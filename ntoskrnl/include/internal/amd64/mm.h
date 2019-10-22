@@ -7,6 +7,7 @@
 #define _MI_HAS_NO_EXECUTE 1
 
 /* Memory layout base addresses (This is based on Vista!) */
+//#define MM_SHARED_USER_DATA_VA               0x000000007FFE0000ULL
 #define MI_USER_PROBE_ADDRESS           (PVOID)0x000007FFFFFF0000ULL
 #define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0xFFFF080000000000ULL
 #define MI_REAL_SYSTEM_RANGE_START             0xFFFF800000000000ULL
