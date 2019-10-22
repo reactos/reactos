@@ -1268,8 +1268,8 @@ QueueWorkItem(IN PDEVICE_EXTENSION DeviceExtension,
 
     /* When called, lock is already acquired */
 
-    /* If noone, start to work */
-    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)))
+    /* If noone (-1 as references), start to work */
+    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)) == 0)
     {
         IoQueueWorkItem(WorkItem->WorkItem, WorkerThread, DelayedWorkQueue, DeviceExtension);
     }

@@ -822,7 +822,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
     KeInitializeEvent(&UnloadEvent, NotificationEvent, FALSE);
 
     /* Wait for workers to finish */
-    if (InterlockedIncrement(&DeviceExtension->WorkerReferences))
+    if (InterlockedIncrement(&DeviceExtension->WorkerReferences) > 0)
     {
         KeReleaseSemaphore(&(DeviceExtension->WorkerSemaphore),
                            IO_NO_INCREMENT, 1, FALSE);
@@ -1770,7 +1770,7 @@ MountMgrShutdown(IN PDEVICE_OBJECT DeviceObject,
     KeInitializeEvent(&UnloadEvent, NotificationEvent, FALSE);
 
     /* Wait for workers */
-    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)))
+    if (InterlockedIncrement(&(DeviceExtension->WorkerReferences)) > 0)
     {
         KeReleaseSemaphore(&(DeviceExtension->WorkerSemaphore),
                            IO_NO_INCREMENT,
