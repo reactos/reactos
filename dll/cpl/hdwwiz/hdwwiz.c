@@ -434,7 +434,6 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
-                        LVITEM Item;
                         PWSTR pts;
 
                         ZeroMemory(&Item, sizeof(LV_ITEM));
