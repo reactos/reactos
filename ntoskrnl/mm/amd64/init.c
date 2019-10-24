@@ -404,6 +404,74 @@ MiBuildSystemPteSpace(VOID)
     MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES;
 }
 
+#if 0
+static
+VOID
+MiSetupPageTablePfns(
+    PFN_NUMBER PageFrameNumber,
+    PMMPTE PteAddress.
+    ULONG PageTableLevel
+)
+{
+    ULONG i;
+    PFN_NUMBER PageFrameNumber, ChildFrame;
+    MI_PFN_CACHE_ATTRIBUTE PteCacheAttribute;
+    PMMPFN Pfn;
+    ASSERT(Level <= 4);
+
+    /* No mapping should be WriteThrough at this point */
+    ASSERT(PteAddress->u.Hard.WriteThrough == 0);
+    PteCacheAttribute = PteAddress->u.Hard.CacheDisable ?
+        MiNonCached : MiCached;
+
+    /* Get the pfn entry for this page */
+    Pfn = MiGetPfnEntry(PageFrameNumber);
+    ASSERT(Pfn->u3.e1.PageLocation == ActiveAndValid);
+
+    /* Setup the PFN entry */
+    Pfn->u1.WsIndex = 0;
+    Pfn->u2.ShareCount = 1;
+    Pfn->PteAddress = PteAddress;
+    Pfn->OriginalPte = *PteAddress;
+    //Pfn->u3.e1.PageLocation = ActiveAndValid;
+    ASSERT((Pfn->u3.e1.CacheAttribute == MiNotMapped) ||
+           (Pfn->u3.e1.CacheAttribute == PteCacheAttribute));
+    Pfn->u3.e1.CacheAttribute = PteCacheAttribute;
+    Pfn->u3.e2.ReferenceCount = 1;
+    Pfn->u4.PteFrame = PFN_FROM_PTE(PteAddress);
+
+    /* Check if this is a page table */
+    if (PageTableLevel > 0)
+    {
+        /* Loop all entries in the page table */
+        for (i = 0; i < PTE_PER_PAGE; i++)
+        {
+            /* Check if it's valid */
+            if (PteAddress[i].u.Hard.Valid)
+            {
+                /* For now no large pages */
+                ASSERT(PageTableBase[i].u.Hard.LargePage == 0);
+
+                /* Increment the page table's share count */
+                Pfn->u2.ShareCount++;
+
+                /* Get the page frame number */
+                ChildFrame = PFN_FROM_PTE(&PageTableBase[i]);
+
+                /* Recursively handle the child */
+                MiSetupPageTablePfns(ChildFrame, &PteAddress[i], Level - 1);
+            }
+            else
+            {
+                /* If it's not valid, it must be zero */
+                ASSERT(PageTableBase[i].u.Long == 0);
+            }
+        }
+    }
+
+}
+#endif
+
 static
 VOID
 MiSetupPfnForPageTable(
