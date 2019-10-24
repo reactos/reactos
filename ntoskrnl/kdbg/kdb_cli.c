@@ -1051,7 +1051,7 @@ KdbpTrapFrameFromPrevTss(
     return TRUE;
 }
 
-VOID __cdecl KiTrap02(VOID);
+VOID __cdecl  KiTrap02Handler(VOID);
 VOID FASTCALL KiTrap03Handler(IN PKTRAP_FRAME);
 VOID __cdecl  KiTrap08Handler(VOID);
 VOID FASTCALL KiTrap09Handler(IN PKTRAP_FRAME);
@@ -1060,7 +1060,7 @@ static BOOLEAN
 KdbpInNmiOrDoubleFaultHandler(
     PVOID Address)
 {
-    return (Address >= (PVOID)KiTrap02 && Address < (PVOID)KiTrap03Handler) ||
+    return (Address >= (PVOID)KiTrap02Handler && Address < (PVOID)KiTrap03Handler) ||
            (Address >= (PVOID)KiTrap08Handler && Address < (PVOID)KiTrap09Handler);
 }
 
