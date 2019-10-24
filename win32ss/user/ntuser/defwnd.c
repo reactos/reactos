@@ -420,7 +420,7 @@ UserPaintCaption(PWND pWnd, INT Flags)
       else
       {
          HDC hDC = UserGetDCEx(pWnd, NULL, DCX_WINDOW|DCX_USESTYLE);
-         UserDrawCaptionBar(pWnd, hDC, Flags);
+         UserDrawCaptionBar(pWnd, hDC, Flags | DC_FRAME); // DCFRAME added as fix for CORE-10855.
          UserReleaseDC(pWnd, hDC, FALSE);
       }
       Ret = TRUE;
@@ -1232,7 +1232,7 @@ IntDefWindowProc(
       {
           HDC hDC = UserGetDCEx(Wnd, NULL, DCX_WINDOW|DCX_USESTYLE);
           TRACE("WM_NCUAHDRAWCAPTION: wParam DC_ flags %08x\n",wParam);
-          UserDrawCaptionBar(Wnd, hDC, wParam|DC_FRAME); // Include DC_FRAME to comp for drawing glich.
+          UserDrawCaptionBar(Wnd, hDC, wParam | DC_FRAME); // Include DC_FRAME to comp for drawing glitch.
           UserReleaseDC(Wnd, hDC, FALSE);
           return 0;
       }
