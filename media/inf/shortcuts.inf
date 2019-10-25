@@ -1473,6 +1473,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=Сапер
 SPIDER_TITLE=Пас'янс Павук
 SPIDER_DESC=Пас'янс Павук
+UTILMAN_TITLE=Диспетчер службових програм
+UTILMAN_DESC=Забезпечує запуск і настройку програм підтримки спеціальних можливостей.
 
 ; Simplified Chinese
 [Strings.0804]
