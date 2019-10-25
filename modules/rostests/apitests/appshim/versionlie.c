@@ -288,6 +288,10 @@ VersionLieInfo g_Win7SP1 = { 0x1db10106, 6, 1, 7601, VER_PLATFORM_WIN32_NT, 1, 0
 VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
 VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
 
+VersionLieInfo g_Win10RTM = { 0x47ba000a, 10, 0, 18362, VER_PLATFORM_WIN32_NT, 0, 0 };
+
+VersionLieInfo g_Win2k16RTM = { 0x3fab000a, 10, 0, 16299, VER_PLATFORM_WIN32_NT, 0, 0 };
+VersionLieInfo g_Win2k19RTM = { 0x4563000a, 10, 0, 17763, VER_PLATFORM_WIN32_NT, 0, 0 };
 
 DWORD get_host_winver(void)
 {
@@ -406,4 +410,7 @@ START_TEST(versionlie)
     run_test("Win7SP1VersionLie", &g_Win7SP1);    /* ReactOS specific. Windows does not have this version lie */
     run_test("Win8RTMVersionLie", &g_Win8RTM);
     run_test("Win81RTMVersionLie", &g_Win81RTM);
+    run_test("Win10RTMVersionLie", &g_Win10RTM);    /* ReactOS specific. Windows does not have this version lie */
+    run_test("Win2k16RTMVersionLie", &g_Win2k16RTM);    /* ReactOS specific. Windows does not have this version lie */
+    run_test("Win2k19RTMVersionLie", &g_Win2k19RTM);    /* ReactOS specific. Windows does not have this version lie */
 }
