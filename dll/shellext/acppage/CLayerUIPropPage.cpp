@@ -29,17 +29,16 @@ static struct {
     { L"Windows 98/ME", L"WIN98" },
     { L"Windows NT 4.0 (SP5)", L"NT4SP5" },
     { L"Windows 2000", L"WIN2000" },
-    { L"Windows XP (SP2)", L"WINXPSP2" },
     { L"Windows XP (SP3)", L"WINXPSP3" },
     { L"Windows Server 2003 (SP1)", L"WINSRV03SP1" },
     { L"Windows Server 2008 (SP1)", L"WINSRV08SP1" },
-    { L"Windows Vista", L"VISTARTM" },
-    { L"Windows Vista (SP1)", L"VISTASP1" },
     { L"Windows Vista (SP2)", L"VISTASP2" },
     { L"Windows 7", L"WIN7RTM" },
     { L"Windows 7 (SP1)", L"WIN7SP1" },
-    { L"Windows 8", L"WIN8RTM" },
     { L"Windows 8.1", L"WIN81RTM" },
+    { L"Windows 10", L"WIN10RTM" },
+    { L"Windows Server 2016", L"WINSRV16RTM" },
+    { L"Windows Server 2019", L"WINSRV19RTM" },
     { NULL, NULL }
 };
 
@@ -339,7 +338,7 @@ LRESULT CLayerUIPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     HWND cboMode = GetDlgItem(IDC_COMPATIBILITYMODE);
     for (size_t n = 0; g_CompatModes[n].Display; ++n)
         ComboBox_AddString(cboMode, g_CompatModes[n].Display);
-    ComboBox_SetCurSel(cboMode, 5);
+    ComboBox_SetCurSel(cboMode, 4);
 
     CStringW explanation;
     if (!m_AllowPermLayer)

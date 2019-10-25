@@ -200,6 +200,33 @@
                 <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="Win10RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+            <SHIM NAME="Win2k16RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+            <SHIM NAME="Win2k19RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
 
             <!-- Display mode shims -->
 
@@ -361,6 +388,24 @@
         <LAYER NAME="WIN81RTM">
             <SHIM_REF NAME="Win81RTMVersionLie" />
             <DATA NAME="SHIMVERSIONNT" DATA_DWORD="603" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+        <LAYER NAME="WIN10RTM">
+            <!-- ReactOS specific. Windows does not have this version lie -->
+            <SHIM_REF NAME="Win10RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+        <LAYER NAME="WINSRV16RTM">
+            <!-- ReactOS specific. Windows does not have this version lie -->
+            <SHIM_REF NAME="Win2k16RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+        <LAYER NAME="WINSRV19RTM">
+            <!-- ReactOS specific. Windows does not have this version lie -->
+            <SHIM_REF NAME="Win2k19RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
 
