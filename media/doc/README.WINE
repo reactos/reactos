@@ -60,7 +60,7 @@ dll/win32/comdlg32            # Synced to WineStaging-4.18
 dll/win32/compstui            # Synced to WineStaging-4.18
 dll/win32/credui              # Synced to WineStaging-4.18
 dll/win32/crypt32             # Synced to WineStaging-4.0
-dll/win32/cryptdlg            # Synced to WineStaging-3.3
+dll/win32/cryptdlg            # Synced to WineStaging-4.18
 dll/win32/cryptdll            # Synced to WineStaging-3.3
 dll/win32/cryptnet            # Synced to WineStaging-3.3
 dll/win32/cryptui             # Synced to WineStaging-4.0
