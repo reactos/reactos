@@ -33,7 +33,6 @@
 #include "dlgs.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 #include "cderr.h"
 #include "cdlg.h"
 
@@ -423,7 +422,7 @@ static BOOL AddFontSizeToCombo3(HWND hwnd, UINT h, const CHOOSEFONTW *lpcf)
     if (  (!(lpcf->Flags & CF_LIMITSIZE))  ||
             ((lpcf->Flags & CF_LIMITSIZE) && (h >= lpcf->nSizeMin) && (h <= lpcf->nSizeMax)))
     {
-        sprintfW(buffer, fontsizefmtW, h);
+        swprintf(buffer, fontsizefmtW, h);
         j=SendMessageW(hwnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
         if (j==CB_ERR)
         {
@@ -905,7 +904,7 @@ static INT get_dialog_font_point_size(HWND hDlg, CHOOSEFONTW *cf)
         WCHAR buffW[8], *endptrW;
 
         GetDlgItemTextW(hDlg, cmb3, buffW, ARRAY_SIZE(buffW));
-        size = strtolW(buffW, &endptrW, 10);
+        size = wcstol(buffW, &endptrW, 10);
         invalid_size = size == 0 && *endptrW;
 
         if (size == 0)
