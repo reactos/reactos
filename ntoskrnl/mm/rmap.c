@@ -393,6 +393,8 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
     PMM_RMAP_ENTRY current_entry, previous_entry;
+    if (!RMAP_IS_SEGMENT(Address))
+        Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
     ExAcquireFastMutex(&RmapListLock);
     previous_entry = NULL;
