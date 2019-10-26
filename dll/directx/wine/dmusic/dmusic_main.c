@@ -17,8 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -226,11 +224,13 @@ const char *debugstr_fourcc (DWORD fourcc) {
 }
 
 /* DMUS_VERSION struct to string conversion for debug messages */
-static const char *debugstr_dmversion (const DMUS_VERSION *version) {
-	if (!version) return "'null'";
-	return wine_dbg_sprintf ("\'%i,%i,%i,%i\'",
-		(int)((version->dwVersionMS & 0xFFFF0000) >> 8), (int)(version->dwVersionMS & 0x0000FFFF), 
-		(int)((version->dwVersionLS & 0xFFFF0000) >> 8), (int)(version->dwVersionLS & 0x0000FFFF));
+static const char *debugstr_dmversion(const DMUS_VERSION *version)
+{
+    if (!version)
+        return "'null'";
+    return wine_dbg_sprintf("'%hu,%hu,%hu,%hu'",
+            HIWORD(version->dwVersionMS), LOWORD(version->dwVersionMS),
+            HIWORD(version->dwVersionLS), LOWORD(version->dwVersionLS));
 }
 
 /* returns name of given GUID */
