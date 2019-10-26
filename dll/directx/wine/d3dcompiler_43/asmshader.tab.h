@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,8 +31,11 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_ASMSHADER_ASMSHADER_TAB_H_INCLUDED
-# define YY_ASMSHADER_ASMSHADER_TAB_H_INCLUDED
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
+#ifndef YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED
+# define YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -210,10 +214,9 @@ extern int asmshader_debug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 70 "asmshader.y" /* yacc.c:1909  */
+#line 68 "asmshader.y"
 
     struct {
         float           val;
@@ -248,8 +251,10 @@ union YYSTYPE
     struct rel_reg      rel_reg;
     struct src_regs     sregs;
 
-#line 252 "asmshader.tab.h" /* yacc.c:1909  */
+#line 255 "asmshader.tab.h"
+
 };
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
@@ -259,4 +264,4 @@ extern YYSTYPE asmshader_lval;
 
 int asmshader_parse (void);
 
-#endif /* !YY_ASMSHADER_ASMSHADER_TAB_H_INCLUDED  */
+#endif /* !YY_ASMSHADER_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_ASMSHADER_TAB_H_INCLUDED  */
