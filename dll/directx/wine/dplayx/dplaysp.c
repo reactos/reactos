@@ -466,7 +466,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage( IDirectPlaySP *iface, voi
     {
       LPDPMSG_CHAT msg = lpMsg;
 
-      FIXME( "DPSYS_CHAT not implemeneted\n" );
+      FIXME( "DPSYS_CHAT not implemented\n" );
 
       break;
     }
