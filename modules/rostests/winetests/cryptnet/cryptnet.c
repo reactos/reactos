@@ -316,7 +316,7 @@ static void make_tmp_file(LPSTR path)
 static void test_retrieveObjectByUrl(void)
 {
     BOOL ret;
-    char tmpfile[MAX_PATH * 2], url[MAX_PATH + 8];
+    char tmpfile[MAX_PATH], url[MAX_PATH + 8];
     CRYPT_BLOB_ARRAY *pBlobArray;
     PCCERT_CONTEXT cert;
     PCCRL_CONTEXT crl;
@@ -332,7 +332,7 @@ static void test_retrieveObjectByUrl(void)
        GetLastError(), GetLastError());
 
     make_tmp_file(tmpfile);
-    snprintf(url, sizeof(url), "file://%s", tmpfile);
+    sprintf(url, "file://%s", tmpfile);
 
     pBlobArray = (CRYPT_BLOB_ARRAY *)0xdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, NULL, 0, 0, (void **)&pBlobArray,
