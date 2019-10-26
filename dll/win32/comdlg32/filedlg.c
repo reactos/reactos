@@ -77,6 +77,9 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
