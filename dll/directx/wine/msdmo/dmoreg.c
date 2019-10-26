@@ -27,7 +27,6 @@
 #include "winerror.h"
 #include "winreg.h"
 #include "objbase.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "dmo.h"
 
@@ -121,7 +120,7 @@ static HRESULT string_to_guid(const WCHAR *string, GUID *guid)
 {
     WCHAR buffer[39];
     buffer[0] = '{';
-    strcpyW(buffer + 1, string);
+    lstrcpyW(buffer + 1, string);
     buffer[37] = '}';
     buffer[38] = 0;
     return CLSIDFromString(buffer, guid);
@@ -218,7 +217,7 @@ HRESULT WINAPI DMORegister(
 
     /* Set default Name value */
     ret = RegSetValueExW(hkey, NULL, 0, REG_SZ, (const BYTE*) szName,
-        (strlenW(szName) + 1) * sizeof(WCHAR));
+        (lstrlenW(szName) + 1) * sizeof(WCHAR));
 
     /* Set InputTypes */
     hres = write_types(hkey, szDMOInputType, pInTypes, cInTypes);
@@ -530,7 +529,7 @@ static HRESULT WINAPI IEnumDMO_fnNext(
 
     TRACE("(%p)->(%d %p %p %p)\n", This, cItemsToFetch, pCLSID, Names, pcItemsFetched);
 
-    if (!pCLSID || !Names)
+    if (!pCLSID)
         return E_POINTER;
 
     if (!pcItemsFetched && cItemsToFetch > 1)
@@ -656,14 +655,17 @@ static HRESULT WINAPI IEnumDMO_fnNext(
         }
 
         /* Media object wasn't filtered so add it to return list */
-        Names[count] = NULL;
         len = MAX_PATH * sizeof(WCHAR);
         ret = RegQueryValueExW(hkey, NULL, NULL, NULL, (LPBYTE)szValue, &len);
-        if (ERROR_SUCCESS == ret)
+        if (Names)
         {
-            Names[count] = CoTaskMemAlloc((strlenW(szValue) + 1) * sizeof(WCHAR));
-            if (Names[count])
-                strcpyW(Names[count], szValue);
+            Names[count] = NULL;
+            if (ret == ERROR_SUCCESS)
+            {
+                Names[count] = CoTaskMemAlloc((lstrlenW(szValue) + 1) * sizeof(WCHAR));
+                if (Names[count])
+                    lstrcpyW(Names[count], szValue);
+            }
         }
         wsprintfW(szGuidKey,szToGuidFmt,szNextKey);
         CLSIDFromString(szGuidKey, &pCLSID[count]);
