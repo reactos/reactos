@@ -1364,7 +1364,7 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                   visibleItem = (HTREEITEM)SendMessageA(pHdr->hwndFrom, TVM_GETNEXTITEM,
                           TVGN_NEXTVISIBLE, (LPARAM)visibleItem);
                   *(HTREEITEM*)&rect = visibleItem;
-                  ok(visibleItem != NULL, "There must be a visible item after the first visisble item.\n");
+                  ok(visibleItem != NULL, "There must be a visible item after the first one.\n");
                   ok(SendMessageA(pHdr->hwndFrom, TVM_GETITEMRECT, TRUE, (LPARAM)&rect),
                           "Failed to get rect for second visible item.\n");
                 }

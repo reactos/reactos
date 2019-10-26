@@ -931,7 +931,7 @@ static void test_selection(void)
 static void test_thumb_length(void)
 {
     HWND hWndTrackbar;
-    int r;
+    int r, r2;
 
     hWndTrackbar = create_trackbar(defaultstyle, hWndParent);
     ok(hWndTrackbar != NULL, "Expected non NULL value\n");
@@ -961,6 +961,22 @@ static void test_thumb_length(void)
 
     ok_sequence(sequences, TRACKBAR_SEQ_INDEX, thumb_length_test_seq, "thumb length test sequence", TRUE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_thumb_length_test_seq, "parent thumb length test sequence", TRUE);
+
+    DestroyWindow(hWndTrackbar);
+
+    /* Fixed thumb length does not depend on window size. */
+    hWndTrackbar = CreateWindowA(TRACKBAR_CLASSA, "Trackbar Control", WS_VISIBLE | TBS_ENABLESELRANGE
+            | TBS_FIXEDLENGTH, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandleA(NULL), NULL);
+
+    r = SendMessageA(hWndTrackbar, TBM_GETTHUMBLENGTH, 0, 0);
+
+    DestroyWindow(hWndTrackbar);
+
+    hWndTrackbar = CreateWindowA(TRACKBAR_CLASSA, "Trackbar Control", WS_VISIBLE | TBS_ENABLESELRANGE
+            | TBS_FIXEDLENGTH, 0, 0, 200, 200, hWndParent, NULL, GetModuleHandleA(NULL), NULL);
+
+    r2 = SendMessageA(hWndTrackbar, TBM_GETTHUMBLENGTH, 0, 0);
+    ok(r2 == r, "Unexpected thumb length %d.\n", r);
 
     DestroyWindow(hWndTrackbar);
 }

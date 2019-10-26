@@ -1563,8 +1563,7 @@ cleanup:
     if(hbmDst)
         DeleteObject(hbmDst);
 
-    if(hdcDst)
-        DeleteDC(hdcDst);
+    DeleteDC(hdcDst);
 
     if(hbmMask)
         DeleteObject(hbmMask);
@@ -2181,7 +2180,7 @@ static void test_color_table(UINT ilc)
     rgb[2].rgbBlue = 0xff;
     check_color_table("remove all, add 8", hdc, himl, ilc, rgb, default_table);
 
-    /* remove all, add 4. Color table remains the same since it's inplicitly
+    /* remove all, add 4. Color table remains the same since it's implicitly
        been set by the previous _Add */
     ret = pImageList_Remove(himl, -1);
     ok(ret, "got %d\n", ret);
