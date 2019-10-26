@@ -23,6 +23,9 @@
 
 #define COBJMACROS
 #define INITGUID
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -34,7 +37,6 @@
 #include "strsafe.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "fusionpriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
@@ -277,7 +279,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetDisplayName(IAssemblyName *iface,
         if (!name->displayname || !*name->displayname)
             return FUSION_E_INVALID_NAME;
 
-        size = strlenW(name->displayname) + 1;
+        size = lstrlenW(name->displayname) + 1;
 
         if (*pccDisplayName < size)
         {
@@ -285,7 +287,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetDisplayName(IAssemblyName *iface,
             return E_NOT_SUFFICIENT_BUFFER;
         }
 
-        if (szDisplayName) strcpyW(szDisplayName, name->displayname);
+        if (szDisplayName) lstrcpyW(szDisplayName, name->displayname);
         *pccDisplayName = size;
 
         return S_OK;
@@ -417,7 +419,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetName(IAssemblyName *iface,
     TRACE("(%p, %p, %p)\n", iface, lpcwBuffer, pwzName);
 
     if (name->name)
-        len = strlenW(name->name) + 1;
+        len = lstrlenW(name->name) + 1;
     else
         len = 0;
 
@@ -427,7 +429,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetName(IAssemblyName *iface,
         return E_NOT_SUFFICIENT_BUFFER;
     }
     if (!name->name) lpcwBuffer[0] = 0;
-    else strcpyW(pwzName, name->name);
+    else lstrcpyW(pwzName, name->name);
 
     *lpcwBuffer = len;
     return S_OK;
@@ -465,7 +467,7 @@ static HRESULT WINAPI IAssemblyNameImpl_IsEqual(IAssemblyName *iface,
     if (!pName) return S_FALSE;
     if (flags & ~ASM_CMPF_IL_ALL) FIXME("unsupported flags\n");
 
-    if ((flags & ASM_CMPF_NAME) && strcmpW(name1->name, name2->name)) return S_FALSE;
+    if ((flags & ASM_CMPF_NAME) && lstrcmpW(name1->name, name2->name)) return S_FALSE;
     if (name1->versize && name2->versize)
     {
         if ((flags & ASM_CMPF_MAJOR_VERSION) &&
@@ -483,7 +485,7 @@ static HRESULT WINAPI IAssemblyNameImpl_IsEqual(IAssemblyName *iface,
 
     if ((flags & ASM_CMPF_CULTURE) &&
         name1->culture && name2->culture &&
-        strcmpW(name1->culture, name2->culture)) return S_FALSE;
+        lstrcmpW(name1->culture, name2->culture)) return S_FALSE;
 
     return S_OK;
 }
@@ -560,10 +562,10 @@ static HRESULT parse_version(IAssemblyNameImpl *name, LPWSTR version)
         if (!*beg)
             return S_OK;
 
-        end = strchrW(beg, '.');
+        end = wcschr(beg, '.');
 
         if (end) *end = '\0';
-        name->version[i] = atolW(beg);
+        name->version[i] = wcstol(beg, NULL, 10);
         name->versize++;
 
         if (!end && i < 3)
@@ -700,11 +702,11 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
         goto done;
     }
 
-    ptr = strchrW(str, ',');
+    ptr = wcschr(str, ',');
     if (ptr) *ptr = '\0';
 
     /* no ',' but ' ' only */
-    if( !ptr && strchrW(str, ' ') )
+    if( !ptr && wcschr(str, ' ') )
     {
         hr = FUSION_E_INVALID_NAME;
         goto done;
@@ -723,7 +725,7 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
     str = ptr + 1;
     while (!done)
     {
-        ptr = strchrW(str, '=');
+        ptr = wcschr(str, '=');
         if (!ptr)
         {
             hr = FUSION_E_INVALID_NAME;
@@ -737,9 +739,9 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
             goto done;
         }
 
-        if (!(ptr2 = strchrW(ptr, ',')))
+        if (!(ptr2 = wcschr(ptr, ',')))
         {
-            if (!(ptr2 = strchrW(ptr, '\0')))
+            if (!(ptr2 = wcschr(ptr, '\0')))
             {
                 hr = FUSION_E_INVALID_NAME;
                 goto done;
