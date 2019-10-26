@@ -269,23 +269,19 @@ static void test_QueryInterface(void)
                                 &IID_IDirectInput2A, &IID_IDirectInput2W,
                                 &IID_IDirectInput7A, &IID_IDirectInput7W};
 
-    static const struct
+    static REFIID no_interface_list[] =
     {
-        REFIID riid;
-        int test_todo;
-    } no_interface_list[] =
-    {
-        {&IID_IDirectInput8A, 1},
-        {&IID_IDirectInput8W, 1},
-        {&IID_IDirectInputDeviceA},
-        {&IID_IDirectInputDeviceW},
-        {&IID_IDirectInputDevice2A},
-        {&IID_IDirectInputDevice2W},
-        {&IID_IDirectInputDevice7A},
-        {&IID_IDirectInputDevice7W},
-        {&IID_IDirectInputDevice8A},
-        {&IID_IDirectInputDevice8W},
-        {&IID_IDirectInputEffect},
+        &IID_IDirectInput8A,
+        &IID_IDirectInput8W,
+        &IID_IDirectInputDeviceA,
+        &IID_IDirectInputDeviceW,
+        &IID_IDirectInputDevice2A,
+        &IID_IDirectInputDevice2W,
+        &IID_IDirectInputDevice7A,
+        &IID_IDirectInputDevice7W,
+        &IID_IDirectInputDevice8A,
+        &IID_IDirectInputDevice8W,
+        &IID_IDirectInputEffect,
     };
 
     IDirectInputA *pDI;
@@ -323,21 +319,9 @@ static void test_QueryInterface(void)
     for (i = 0; i < ARRAY_SIZE(no_interface_list); i++)
     {
         pUnk = (void *)0xdeadbeef;
-        hr = IDirectInput_QueryInterface(pDI, no_interface_list[i].riid, (void **)&pUnk);
-        if (no_interface_list[i].test_todo)
-        {
-            todo_wine
-            ok(hr == E_NOINTERFACE, "[%d] IDirectInput_QueryInterface returned 0x%08x\n", i, hr);
-            todo_wine
-            ok(pUnk == NULL, "[%d] Output interface pointer is %p\n", i, pUnk);
-
-            if (pUnk) IUnknown_Release(pUnk);
-        }
-        else
-        {
-            ok(hr == E_NOINTERFACE, "[%d] IDirectInput_QueryInterface returned 0x%08x\n", i, hr);
-            ok(pUnk == NULL, "[%d] Output interface pointer is %p\n", i, pUnk);
-        }
+        hr = IDirectInput_QueryInterface(pDI, no_interface_list[i], (void **)&pUnk);
+        ok(hr == E_NOINTERFACE, "[%d] IDirectInput_QueryInterface returned 0x%08x\n", i, hr);
+        ok(pUnk == NULL, "[%d] Output interface pointer is %p\n", i, pUnk);
     }
 
     IDirectInput_Release(pDI);
@@ -400,6 +384,30 @@ static BOOL CALLBACK enum_devices_callback(const DIDEVICEINSTANCEA *instance, vo
            "%s guidInstance (%s) does not match guidProduct (%s)\n",
            device, wine_dbgstr_guid(&instance->guidInstance),
            wine_dbgstr_guid(&instance->guidProduct));
+    }
+
+    if ((instance->dwDevType & 0xff) == DIDEVTYPE_KEYBOARD)
+        ok(IsEqualGUID(&instance->guidProduct, &GUID_SysKeyboard),
+           "Keyboard guidProduct (%s) does not match GUID_SysKeyboard (%s)\n",
+           wine_dbgstr_guid(&instance->guidProduct),
+           wine_dbgstr_guid(&GUID_SysMouse));
+    else if ((instance->dwDevType & 0xff) == DIDEVTYPE_MOUSE)
+        ok(IsEqualGUID(&instance->guidProduct, &GUID_SysMouse),
+           "Mouse guidProduct (%s) does not match GUID_SysMouse (%s)\n",
+           wine_dbgstr_guid(&instance->guidProduct),
+           wine_dbgstr_guid(&GUID_SysMouse));
+    else {
+        /* Non-keyboard/mouse devices use the "PIDVID" guidProduct */
+        static const GUID pidvid_product_guid = { /* device_pidvid-0000-0000-0000-504944564944 "PIDVID" */
+          0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0x50, 0x49, 0x44, 0x56, 0x49, 0x44}
+        };
+
+        ok(instance->guidProduct.Data2 == pidvid_product_guid.Data2,
+           "guidProduct.Data2 is %04x\n", instance->guidProduct.Data2);
+        ok(instance->guidProduct.Data3 == pidvid_product_guid.Data3,
+           "guidProduct.Data3 is %04x\n", instance->guidProduct.Data3);
+        ok(!memcmp(instance->guidProduct.Data4, pidvid_product_guid.Data4, sizeof(pidvid_product_guid.Data4)),
+           "guidProduct.Data4 does not match: %s\n", wine_dbgstr_guid(&instance->guidProduct));
     }
 
     enum_test->device_count++;
@@ -604,10 +612,14 @@ static void test_DirectInputJoyConfig8(void)
            "IDirectInputJoyConfig8_GetConfig returned 0x%08x\n", hr);
 
         if (SUCCEEDED(hr))
-            ok (SUCCEEDED(IDirectInput_CreateDevice(pDI, &info.guidInstance, &pDID, NULL)),
-               "IDirectInput_CreateDevice failed with guid from GetConfig hr = 0x%08x\n", hr);
+        {
+            hr = IDirectInput_CreateDevice(pDI, &info.guidInstance, &pDID, NULL);
+            ok (SUCCEEDED(hr), "IDirectInput_CreateDevice failed with guid from GetConfig hr = 0x%08x\n", hr);
+            IDirectInputDevice_Release(pDID);
+        }
     }
 
+    IDirectInputJoyConfig8_Release(pDIJC);
     IDirectInput_Release(pDI);
 }
 

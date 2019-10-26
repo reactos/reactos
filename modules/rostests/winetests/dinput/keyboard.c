@@ -93,6 +93,7 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
         };
     DIDATAFORMAT df;
     HKL hkl, hkl_orig;
+    UINT prev_raw_devices_count, raw_devices_count;
 
     hkl = activate_keyboard_layout(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &hkl_orig);
     if (!hkl) return;
@@ -164,6 +165,22 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
             ok(custom_state[i] == 0, "Should be zeroed, got 0x%08x\n", custom_state[i]);
     }
     keybd_event('Q', 0, KEYEVENTF_KEYUP, 0);
+
+    prev_raw_devices_count = 0;
+    GetRegisteredRawInputDevices(NULL, &prev_raw_devices_count, sizeof(RAWINPUTDEVICE));
+    ok(prev_raw_devices_count == 0 || broken(prev_raw_devices_count == 1) /* wxppro, w2003std */,
+       "Unexpected raw devices registered: %d\n", prev_raw_devices_count);
+
+    hr = IDirectInputDevice_Acquire(pKeyboard);
+    ok(SUCCEEDED(hr), "IDirectInputDevice_Acquire() failed: %08x\n", hr);
+
+    raw_devices_count = 0;
+    GetRegisteredRawInputDevices(NULL, &raw_devices_count, sizeof(RAWINPUTDEVICE));
+    ok(raw_devices_count == prev_raw_devices_count,
+       "Unexpected raw devices registered: %d\n", raw_devices_count);
+
+    hr = IDirectInputDevice_Unacquire(pKeyboard);
+    ok(SUCCEEDED(hr), "IDirectInputDevice_Unacquire() failed: %08x\n", hr);
 
     if (pKeyboard) IUnknown_Release(pKeyboard);
 
@@ -453,6 +470,35 @@ fail:
     IUnknown_Release(device);
 }
 
+static void test_GetDeviceInfo(IDirectInputA *pDI)
+{
+    HRESULT hr;
+    IDirectInputDeviceA *pKey = NULL;
+    DIDEVICEINSTANCEA instA;
+    DIDEVICEINSTANCE_DX3A inst3A;
+
+    hr = IDirectInput_CreateDevice(pDI, &GUID_SysKeyboard, &pKey, NULL);
+    ok(SUCCEEDED(hr), "IDirectInput_CreateDevice() failed: %08x\n", hr);
+    if (FAILED(hr)) return;
+
+    instA.dwSize = sizeof(instA);
+    hr = IDirectInputDevice_GetDeviceInfo(pKey, &instA);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    inst3A.dwSize = sizeof(inst3A);
+    hr = IDirectInputDevice_GetDeviceInfo(pKey, (DIDEVICEINSTANCEA *)&inst3A);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    ok(instA.dwSize != inst3A.dwSize, "got %d, %d \n", instA.dwSize, inst3A.dwSize);
+    ok(IsEqualGUID(&instA.guidInstance, &inst3A.guidInstance), "got %s, %s\n",
+            wine_dbgstr_guid(&instA.guidInstance), wine_dbgstr_guid(&inst3A.guidInstance) );
+    ok(IsEqualGUID(&instA.guidProduct, &inst3A.guidProduct), "got %s, %s\n",
+            wine_dbgstr_guid(&instA.guidProduct), wine_dbgstr_guid(&inst3A.guidProduct) );
+    ok(instA.dwDevType == inst3A.dwDevType, "got %d, %d\n", instA.dwDevType, inst3A.dwDevType);
+
+    IUnknown_Release(pKey);
+}
+
 static void keyboard_tests(DWORD version)
 {
     HRESULT hr;
@@ -483,6 +529,7 @@ static void keyboard_tests(DWORD version)
         test_set_coop(pDI, hwnd);
         test_get_prop(pDI, hwnd);
         test_capabilities(pDI, hwnd);
+        test_GetDeviceInfo(pDI);
 
         test_dik_codes(pDI, hwnd, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT));
         test_dik_codes(pDI, hwnd, MAKELANGID(LANG_FRENCH, SUBLANG_FRENCH));
