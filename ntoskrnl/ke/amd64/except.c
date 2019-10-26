@@ -425,6 +425,14 @@ KiNpxNotAvailableFaultHandler(
     return -1;
 }
 
+static
+NTSTATUS
+KiGeneralProtectionFaultUserMode(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    /// FIXME
+    return STATUS_ACCESS_VIOLATION;
+}
 
 NTSTATUS
 NTAPI
@@ -436,8 +444,7 @@ KiGeneralProtectionFaultHandler(
     /* Check for user-mode GPF */
     if (TrapFrame->SegCs & 3)
     {
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        return KiGeneralProtectionFaultUserMode(TrapFrame);
     }
 
     /* Check for lazy segment load */
