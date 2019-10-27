@@ -245,9 +245,9 @@
 // #ifdef LANGUAGE_HR_HR
     // #include "lang/hr-HR.h"
 // #endif
-// #ifdef LANGUAGE_HU_HU
-    // #include "lang/hu-HU.h"
-// #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.h"
+#endif
 // #ifdef LANGUAGE_HY_AM
     // #include "lang/hy-AM.h"
 // #endif
@@ -637,7 +637,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000439", L"Hindi", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HU_HU
-    {L"0000040E", L"Hungarian", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"0000040E", L"Hungarian", huHUPages, huHUErrorEntries, huHUStrings},
 #endif
 #ifdef LANGUAGE_IS_IS
     {L"0000040F", L"Icelandic", enUSPages, enUSErrorEntries, enUSStrings},
