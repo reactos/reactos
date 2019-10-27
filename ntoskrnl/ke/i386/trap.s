@@ -17,14 +17,28 @@ MACRO(GENERATE_IDT_STUB, Vector)
 idt _KiUnexpectedInterrupt&Vector, INT_32_DPL0
 ENDM
 
+/*
+ * The INT stub handlers must all have the same size (stored in _KiUnexpectedEntrySize)
+ * in all situations. Therefore, we force using a push instruction with 32-bit operand
+ * and a non-short near jump.
+ */
 MACRO(GENERATE_INT_HANDLER, Vector)
-//.func KiUnexpectedInterrupt&Vector
 _KiUnexpectedInterrupt&Vector:
-    /* This is a push instruction with 8bit operand. Since the instruction
-       sign extends the value to 32 bits, we need to offset it */
-    push (Vector - 128)
-    jmp _KiEndUnexpectedRange@0
-//.endfunc
+#ifdef _USE_ML
+    push dword ptr (&Vector)
+    jmp near ptr _KiEndUnexpectedRange@0
+#else
+    /*
+     * NOTE: GAS does not take the explicit 'dword ptr' / 'near ptr' overrides
+     * into account, and will use e.g. the 8-bit push for values <= 0x7F.
+     * We therefore need to hardcode the explicit instruction opcodes.
+     */
+    .byte HEX(68)  // push dword ptr (&Vector)
+    .long (&Vector)
+    .byte HEX(0E9) // jmp near ptr _KiEndUnexpectedRange@0
+    .long _KiEndUnexpectedRange@0 - 1f
+1:
+#endif
 ENDM
 
 /* GLOBALS *******************************************************************/
@@ -95,6 +109,10 @@ REPEAT 208
     i = i + 1
 ENDR
 
+PUBLIC _KiEndUnexpectedRange@0
+_KiEndUnexpectedRange@0:
+    jmp _KiUnexpectedInterruptTail
+
 TRAP_ENTRY KiTrap00, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap01, KI_PUSH_FAKE_ERROR_CODE
 TASK_ENTRY KiTrap02, KI_NMI
@@ -121,7 +139,7 @@ TRAP_ENTRY KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiDebugService, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiUnexpectedInterruptTail, 0
 
-ALIGN 4
+.align 4
 EXTERN @KiInterruptTemplateHandler@8:PROC
 PUBLIC _KiInterruptTemplate
 _KiInterruptTemplate:
@@ -158,11 +176,6 @@ PUBLIC _KiFastCallEntryWithSingleStep
     or dword ptr [ecx + KTRAP_FRAME_EFLAGS], EFLAGS_TF
     KiCallHandler @KiSystemServiceHandler@8
 .ENDP
-
-PUBLIC _KiEndUnexpectedRange@0
-_KiEndUnexpectedRange@0:
-    add dword ptr[esp], 128
-    jmp _KiUnexpectedInterruptTail
 
 
 /* EXIT CODE *****************************************************************/
