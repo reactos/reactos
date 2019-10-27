@@ -34,59 +34,6 @@
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
-BOOL
-DoNamesMatch(
-    _In_ LPWSTR pszName,
-    _In_ LPTSTR pszPattern)
-{
-    if (pszPattern == NULL)
-        return TRUE;
-
-//    if (_wcsicmp(pszName, pszPattern) == 0)
-//        return TRUE;
-#if 0
-    for (;;)
-    {
-        if (*pszPattern == L'*')
-        {
-            pszPattern++;
-            if (*pszPattern == L'\0')
-                return TRUE;
-
-            while (towlower(*pszName) != towlower(*pszPattern))
-            {
-                if (*pszName == L'\0')
-                    return FALSE;
-
-                pszName++;
-            }
-        }
-        else if (*pszPattern == L'?')
-        {
-            pszPattern++;
-
-            if (*pszName == L'\0')
-                return FALSE;
-
-            pszName++;
-        }
-        else
-        {
-            if (*pszName == L'\0' && *pszPattern == L'\0')
-                return TRUE;
-
-            if (towlower(*pszName) != towlower(*pszPattern))
-                return FALSE;
-
-            pszName++;
-            pszPattern++;
-        }
-    }
-#endif
-
-    return FALSE;
-}
-
 int LoadStringAndOem(HINSTANCE hInst,
                      UINT uID,
                      LPTSTR szNode,
@@ -660,20 +607,22 @@ VOID Release(LPTSTR Index)
     IP_ADAPTER_INDEX_MAP AdapterInfo;
     DWORD ret;
     DWORD i;
-    PIP_INTERFACE_INFO pInfo = NULL;
-    ULONG ulOutBufLen = 0;
 
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+    /* if interface is not given, query GetInterfaceInfo */
+    if (Index == NULL)
     {
-        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-        if (pInfo == NULL)
-            return;
+        PIP_INTERFACE_INFO pInfo = NULL;
+        ULONG ulOutBufLen = 0;
 
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
         {
-            for (i = 0; i < pInfo->NumAdapters; i++)
+            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+            if (pInfo == NULL)
+                return;
+
+            if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
             {
-                if (DoNamesMatch(pInfo->Adapter[i].Name, Index))
+                for (i = 0; i < pInfo->NumAdapters; i++)
                 {
                     CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
                     _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
@@ -685,57 +634,71 @@ VOID Release(LPTSTR Index)
                         DoFormatMessage(ret);
                     }
                 }
-            }
 
-            HeapFree(ProcessHeap, 0, pInfo);
+                HeapFree(ProcessHeap, 0, pInfo);
+            }
+            else
+            {
+                DoFormatMessage(0);
+                HeapFree(ProcessHeap, 0, pInfo);
+                return;
+            }
         }
         else
         {
             DoFormatMessage(0);
-            HeapFree(ProcessHeap, 0, pInfo);
             return;
         }
     }
     else
     {
-        DoFormatMessage(0);
-        return;
+        ;
+        /* FIXME:
+         * we need to be able to release connections by name with support for globbing
+         * i.e. ipconfig /release Eth* will release all cards starting with Eth...
+         *      ipconfig /release *con* will release all cards with 'con' in their name
+         */
     }
 }
+
+
+
 
 VOID Renew(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
-    PIP_INTERFACE_INFO pInfo;
-    ULONG ulOutBufLen = 0;
     DWORD i;
 
-    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, sizeof(IP_INTERFACE_INFO));
-    if (pInfo == NULL)
+    /* if interface is not given, query GetInterfaceInfo */
+    if (Index == NULL)
     {
-        _tprintf(_T("memory allocation error"));
-        return;
-    }
+        PIP_INTERFACE_INFO pInfo;
+        ULONG ulOutBufLen = 0;
 
-    /* Make an initial call to GetInterfaceInfo to get
-     * the necessary size into the ulOutBufLen variable */
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
-    {
-        HeapFree(ProcessHeap, 0, pInfo);
-        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, sizeof(IP_INTERFACE_INFO));
         if (pInfo == NULL)
         {
             _tprintf(_T("memory allocation error"));
             return;
         }
-    }
 
-    /* Make a second call to GetInterfaceInfo to get the actual data we want */
-    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
-    {
-        for (i = 0; i < pInfo->NumAdapters; i++)
+        /* Make an initial call to GetInterfaceInfo to get
+         * the necessary size into the ulOutBufLen variable */
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
         {
-            if (DoNamesMatch(pInfo->Adapter[i].Name, Index))
+            HeapFree(ProcessHeap, 0, pInfo);
+            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+            if (pInfo == NULL)
+            {
+                _tprintf(_T("memory allocation error"));
+                return;
+            }
+        }
+
+        /* Make a second call to GetInterfaceInfo to get the actual data we want */
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
+        {
+            for (i = 0; i < pInfo->NumAdapters; i++)
             {
                 CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
                 _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
@@ -748,14 +711,23 @@ VOID Renew(LPTSTR Index)
                 }
             }
         }
+        else
+        {
+            _tprintf(_T("\nGetInterfaceInfo failed : "));
+            DoFormatMessage(0);
+        }
+
+        HeapFree(ProcessHeap, 0, pInfo);
     }
     else
     {
-        _tprintf(_T("\nGetInterfaceInfo failed : "));
-        DoFormatMessage(0);
+        ;
+        /* FIXME:
+         * we need to be able to renew connections by name with support for globbing
+         * i.e. ipconfig /renew Eth* will renew all cards starting with Eth...
+         *      ipconfig /renew *con* will renew all cards with 'con' in their name
+         */
     }
-
-    HeapFree(ProcessHeap, 0, pInfo);
 }
 
 VOID
@@ -1018,9 +990,10 @@ int main(int argc, char *argv[])
             break;
         case 3: /* Process all the options that can have 1 parameter */
             if (DoRelease)
-                Release(argv[2]);
+                _tprintf(_T("\nSorry /release [adapter] is not implemented yet\n"));
+                //Release(argv[2]);
             else if (DoRenew)
-                Renew(argv[2]);
+                _tprintf(_T("\nSorry /renew [adapter] is not implemented yet\n"));
             else if (DoShowclassid)
                 _tprintf(_T("\nSorry /showclassid adapter is not implemented yet\n"));
             else if (DoSetclassid)
