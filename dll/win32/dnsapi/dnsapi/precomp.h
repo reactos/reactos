@@ -27,8 +27,12 @@
 
 #include <dnsrslvr_c.h>
 
-/* Internal DNSAPI Headers */
-#include <internal/windns.h>
+#include <adns.h>
+
+typedef struct
+{
+    adns_state State;
+} WINDNS_CONTEXT, *PWINDNS_CONTEXT;
 
 static inline LPWSTR dns_strdup_uw( const char *str )
 {
@@ -133,5 +137,8 @@ static inline LPSTR dns_strdup_ua( const char *src )
     }
     return dst;
 }
+
+DNS_STATUS DnsIntTranslateAdnsToDNS_STATUS(int Status);
+void DnsIntFreeRecordList(PDNS_RECORD ToFree);
 
 #endif /* _DNSAPI_H */
