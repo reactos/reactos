@@ -2,6 +2,7 @@
 add_subdirectory(audiosrv)
 add_subdirectory(dcomlaunch)
 add_subdirectory(dhcpcsvc)
+add_subdirectory(dnsrslvr)
 add_subdirectory(eventlog)
 add_subdirectory(netlogon)
 add_subdirectory(nfsd)

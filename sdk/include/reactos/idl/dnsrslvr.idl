@@ -6,7 +6,10 @@
 
 #define UNICODE
 #include <sal.h>
+
+cpp_quote("#ifndef _WINDNS_INCLUDED_")
 #include <windns.h>
+cpp_quote("#endif")
 
 typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 

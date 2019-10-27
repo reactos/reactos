@@ -14,6 +14,10 @@ typedef struct _DNS_CACHE_ENTRY
     unsigned short wFlags;          /* DNS Record Flags */
 } DNS_CACHE_ENTRY, *PDNS_CACHE_ENTRY;
 
+
+#ifndef __WIDL__
+// Hack
+
 BOOL
 WINAPI
 DnsFlushResolverCache(VOID);
@@ -22,6 +26,8 @@ BOOL
 WINAPI
 DnsGetCacheDataTable(
     _Out_ PDNS_CACHE_ENTRY *DnsCache);
+
+#endif /* __WIDL__ */
 
 #ifdef __cplusplus
 }
