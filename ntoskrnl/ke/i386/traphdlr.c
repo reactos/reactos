@@ -12,6 +12,43 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * Preprocessor definitions to put code and data into a specific section.
+ * Based on ndk/section_attribs.h by Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
+#if defined(__GNUC__) || defined(__clang__)
+
+#define _TRAPALLOC_(x) __attribute__((section(x)))
+#define _TRAPALLOC(x) _TRAPALLOC_(".inthdlr$"#x)
+#define _TRAPHANDL(x) __attribute__((section(".inthdlr$"#x)))
+
+#elif defined(_MSC_VER)
+
+// #pragma comment(linker, "/SECTION:INIT,ERW")
+// __pragma(section(x, read,execute))
+#define _TRAPALLOC_(x) \
+    __pragma(code_seg(x)) __pragma(code_seg()) \
+    __declspec(allocate(x))
+#define _TRAPALLOC(x) _TRAPALLOC_(".inthdlr$"#x)
+
+#if (_MSC_VER >= 1800) // Visual Studio 2013 / version 12.0
+#define _TRAPHANDL(x) __declspec(code_seg(".inthdlr$"#x))
+#else
+// __pragma(section(".inthdlr$"#x, read,execute))
+#define _TRAPHANDL(x) __pragma(code_seg(".inthdlr$"#x))
+#endif
+
+#else
+
+#error Your compiler is not supported.
+
+#endif
+
+#ifdef _MSC_VER
+#pragma comment(linker, "/MERGE:.inthdlr=.text")
+#endif
+
+
 VOID __cdecl KiFastCallEntry(VOID);
 VOID __cdecl KiFastCallEntryWithSingleStep(VOID);
 
@@ -401,6 +438,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 1, Error, 0, 0, TrapFrame);
 }
 
+_TRAPHANDL(00)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -421,6 +459,7 @@ KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+_TRAPHANDL(01)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -455,6 +494,7 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+_TRAPHANDL(02)
 VOID
 __cdecl
 KiTrap02Handler(VOID)
@@ -580,6 +620,7 @@ KiTrap02Handler(VOID)
     /* Handled, return from interrupt */
 }
 
+_TRAPHANDL(03)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -592,6 +633,7 @@ KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
     KiDebugHandler(TrapFrame, BREAKPOINT_BREAK, 0, 0);
 }
 
+_TRAPHANDL(04)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -612,6 +654,7 @@ KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+_TRAPHANDL(05)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -635,6 +678,7 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+_TRAPHANDL(06)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -716,6 +760,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 
 }
 
+_TRAPHANDL(07)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -825,6 +870,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
     KiNpxHandler(TrapFrame, Thread, SaveArea);
 }
 
+_TRAPHANDL(08)
 DECLSPEC_NORETURN
 VOID
 __cdecl
@@ -876,6 +922,7 @@ KiTrap08Handler(VOID)
                      NULL);
 }
 
+_TRAPHANDL(09)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -889,6 +936,7 @@ KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_NPX_OVERRUN, TrapFrame);
 }
 
+_TRAPHANDL(0A)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -904,6 +952,7 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_INVALID_TSS, TrapFrame);
 }
 
+_TRAPHANDL(0B)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -917,6 +966,7 @@ KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_SEGMENT_NOT_PRESENT, TrapFrame);
 }
 
+_TRAPHANDL(0C)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -930,9 +980,15 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_STACK_FAULT, TrapFrame);
 }
 
-/* DECLSPEC_NORETURN VOID FASTCALL KiTrap0DHandler(IN PKTRAP_FRAME); */
-DECLSPEC_NORETURN VOID FASTCALL KiTrap0EHandler(IN PKTRAP_FRAME);
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame);
 
+_TRAPALLOC_(".inthdlr$0D_A") char _KiTrap0D_start;
+_TRAPALLOC_(".inthdlr$0D_Z") char _KiTrap0D_end;
+
+_TRAPHANDL(0D_C)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1117,12 +1173,22 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     /*
      * Check for a fault during checking of the user instruction.
      *
-     * Note that the SEH handler will catch invalid EIP, but we could be dealing
-     * with an invalid CS, which will generate another GPF instead.
-     *
+     * Note that the SEH handler will catch invalid EIP, but we could be
+     * dealing with an invalid CS, which will generate another GPF instead.
      */
-    if ((PVOID)TrapFrame->Eip >= (PVOID)KiTrap0DHandler &&
-        (PVOID)TrapFrame->Eip <  (PVOID)KiTrap0EHandler)
+    // FIXME BUG! Nothing ensures that the C compiler correctly orders the C trap handlers!!
+    // Bug fix PR #1996
+#if 0
+    // I managed to have the trap handlers sorted as follows:
+    // ... KiTrap(X)() KiTrap(X)Handler() KiTrap(X+1)() KiTrap(X+1)Handler() ...
+    //
+    if (((ULONG_PTR)TrapFrame->Eip >= (ULONG_PTR)KiTrap0D/*Handler*/) &&
+        ((ULONG_PTR)TrapFrame->Eip <  (ULONG_PTR)KiTrap0E/*Handler*/))
+#else
+    // Using (sub)section delimiters...
+    if (((ULONG_PTR)TrapFrame->Eip >= (ULONG_PTR)&_KiTrap0D_start) &&
+        ((ULONG_PTR)TrapFrame->Eip <  (ULONG_PTR)&_KiTrap0D_end  ))
+#endif
     {
         /* Not implemented */
         UNIMPLEMENTED_FATAL();
@@ -1315,6 +1381,7 @@ KiCheckForSListFault(PKTRAP_FRAME TrapFrame)
     return FALSE;
 }
 
+_TRAPHANDL(0E)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1440,6 +1507,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                                      TrapFrame);
 }
 
+_TRAPHANDL(0F)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1453,6 +1521,7 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_RESERVED_TRAP, TrapFrame);
 }
 
+_TRAPHANDL(10)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1481,6 +1550,7 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
     KiNpxHandler(TrapFrame, Thread, SaveArea);
 }
 
+_TRAPHANDL(11)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1494,6 +1564,7 @@ KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_ALIGNMENT_CHECK, TrapFrame);
 }
 
+_TRAPHANDL(13)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1581,6 +1652,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 
 /* SOFTWARE SERVICES **********************************************************/
 
+_TRAPHANDL(29)
 VOID
 FASTCALL
 KiRaiseSecurityCheckFailureHandler(IN PKTRAP_FRAME TrapFrame)
@@ -1625,6 +1697,7 @@ KiRaiseSecurityCheckFailureHandler(IN PKTRAP_FRAME TrapFrame)
     }
 }
 
+_TRAPHANDL(2A)
 VOID
 FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
@@ -1642,6 +1715,7 @@ KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
+_TRAPHANDL(2B)
 VOID
 FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
@@ -1668,6 +1742,7 @@ KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
     KiServiceExit(TrapFrame, Status);
 }
 
+_TRAPHANDL(2C)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1685,6 +1760,7 @@ KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+_TRAPHANDL(2D)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1699,7 +1775,6 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     /* Continue with the common handler */
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
 }
-
 
 FORCEINLINE
 VOID
@@ -1722,6 +1797,7 @@ KiDbgPostServiceHook(ULONG SystemCallNumber, ULONG_PTR Result)
     return Result;
 }
 
+// _TRAPHANDL(2E)
 DECLSPEC_NORETURN
 VOID
 FASTCALL
@@ -1858,6 +1934,10 @@ ExitCall:
     /* Exit from system call */
     KiServiceExit(TrapFrame, Status);
 }
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
 
 VOID
 FASTCALL
