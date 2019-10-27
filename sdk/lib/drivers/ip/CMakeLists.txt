@@ -1,10 +1,23 @@
 
-add_definitions(-D__NTDRIVER__)
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lwip)
+set(LWIP_INCLUDE_DIRS
+    "${LWIP_DIR}/src/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lwip_glue/include")
 
-include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include/ipv4)
+add_library(lwipglue STATIC
+	lwip_glue/rosip.c
+	lwip_glue/rosmem.c
+	lwip_glue/rostcp.c
+	lwip_glue/sys_arch.c)
+target_include_directories(lwipglue PRIVATE ${LWIP_INCLUDE_DIRS})
+target_include_directories(lwipglue BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include)
+add_dependencies(lwipglue xdk)
+add_importlibs(lwipglue ntoskrnl)
+
+include(${LWIP_DIR}/src/Filelists.cmake)
+target_link_libraries(lwipcore lwipglue)
+add_dependencies(lwipcore xdk)
+
 
 if(ARCH STREQUAL "i386")
     add_asm_files(ip_asm network/i386/checksum.S)
@@ -36,3 +49,7 @@ list(APPEND SOURCE
 add_library(ip ${SOURCE} ${ip_asm})
 add_pch(ip precomp.h SOURCE)
 add_dependencies(ip asm)
+
+target_include_directories(ip PUBLIC ${LWIP_INCLUDE_DIRS})
+target_include_directories(ip BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include)
+target_compile_definitions(ip PRIVATE -D__NTDRIVER__)
