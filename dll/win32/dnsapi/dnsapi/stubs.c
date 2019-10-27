@@ -276,7 +276,7 @@ DnsGetBufferLengthForStringCopy()
 BOOL
 WINAPI
 DnsGetCacheDataTable(
-    _Out_ PDNSCACHEENTRY *DnsCache)
+    _Out_ PDNS_CACHE_ENTRY *DnsCache)
 {
     UNIMPLEMENTED;
     return TRUE;

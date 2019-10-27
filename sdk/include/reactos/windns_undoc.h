@@ -9,10 +9,10 @@ typedef struct _DNS_CACHE_ENTRY
 {
     struct _DNS_CACHE_ENTRY *pNext; /* Pointer to next entry */
     PWSTR pszName;                  /* DNS Record Name */
-    unsigned short wType;           /* DNS Record Type */
-    unsigned short wUnknown;        /* Unknown */
+    unsigned short wType1;          /* DNS Record Type 1 */
+    unsigned short wType2;          /* DNS Record Type 2 */
     unsigned short wFlags;          /* DNS Record Flags */
-} DNSCACHEENTRY, *PDNSCACHEENTRY;
+} DNS_CACHE_ENTRY, *PDNS_CACHE_ENTRY;
 
 BOOL
 WINAPI
@@ -21,7 +21,7 @@ DnsFlushResolverCache(VOID);
 BOOL
 WINAPI
 DnsGetCacheDataTable(
-    _Out_ PDNSCACHEENTRY *DnsCache);
+    _Out_ PDNS_CACHE_ENTRY *DnsCache);
 
 #ifdef __cplusplus
 }

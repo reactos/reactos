@@ -34,6 +34,59 @@
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
+BOOL
+DoNamesMatch(
+    _In_ LPWSTR pszName,
+    _In_ LPTSTR pszPattern)
+{
+    if (pszPattern == NULL)
+        return TRUE;
+
+//    if (_wcsicmp(pszName, pszPattern) == 0)
+//        return TRUE;
+#if 0
+    for (;;)
+    {
+        if (*pszPattern == L'*')
+        {
+            pszPattern++;
+            if (*pszPattern == L'\0')
+                return TRUE;
+
+            while (towlower(*pszName) != towlower(*pszPattern))
+            {
+                if (*pszName == L'\0')
+                    return FALSE;
+
+                pszName++;
+            }
+        }
+        else if (*pszPattern == L'?')
+        {
+            pszPattern++;
+
+            if (*pszName == L'\0')
+                return FALSE;
+
+            pszName++;
+        }
+        else
+        {
+            if (*pszName == L'\0' && *pszPattern == L'\0')
+                return TRUE;
+
+            if (towlower(*pszName) != towlower(*pszPattern))
+                return FALSE;
+
+            pszName++;
+            pszPattern++;
+        }
+    }
+#endif
+
+    return FALSE;
+}
+
 int LoadStringAndOem(HINSTANCE hInst,
                      UINT uID,
                      LPTSTR szNode,
@@ -607,22 +660,20 @@ VOID Release(LPTSTR Index)
     IP_ADAPTER_INDEX_MAP AdapterInfo;
     DWORD ret;
     DWORD i;
+    PIP_INTERFACE_INFO pInfo = NULL;
+    ULONG ulOutBufLen = 0;
 
-    /* if interface is not given, query GetInterfaceInfo */
-    if (Index == NULL)
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
     {
-        PIP_INTERFACE_INFO pInfo = NULL;
-        ULONG ulOutBufLen = 0;
+        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
+        if (pInfo == NULL)
+            return;
 
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
         {
-            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-            if (pInfo == NULL)
-                return;
-
-            if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
+            for (i = 0; i < pInfo->NumAdapters; i++)
             {
-                for (i = 0; i < pInfo->NumAdapters; i++)
+                if (DoNamesMatch(pInfo->Adapter[i].Name, Index))
                 {
                     CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
                     _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
@@ -634,71 +685,57 @@ VOID Release(LPTSTR Index)
                         DoFormatMessage(ret);
                     }
                 }
+            }
 
-                HeapFree(ProcessHeap, 0, pInfo);
-            }
-            else
-            {
-                DoFormatMessage(0);
-                HeapFree(ProcessHeap, 0, pInfo);
-                return;
-            }
+            HeapFree(ProcessHeap, 0, pInfo);
         }
         else
         {
             DoFormatMessage(0);
+            HeapFree(ProcessHeap, 0, pInfo);
             return;
         }
     }
     else
     {
-        ;
-        /* FIXME:
-         * we need to be able to release connections by name with support for globbing
-         * i.e. ipconfig /release Eth* will release all cards starting with Eth...
-         *      ipconfig /release *con* will release all cards with 'con' in their name
-         */
+        DoFormatMessage(0);
+        return;
     }
 }
-
-
-
 
 VOID Renew(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
+    PIP_INTERFACE_INFO pInfo;
+    ULONG ulOutBufLen = 0;
     DWORD i;
 
-    /* if interface is not given, query GetInterfaceInfo */
-    if (Index == NULL)
+    pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, sizeof(IP_INTERFACE_INFO));
+    if (pInfo == NULL)
     {
-        PIP_INTERFACE_INFO pInfo;
-        ULONG ulOutBufLen = 0;
+        _tprintf(_T("memory allocation error"));
+        return;
+    }
 
-        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, sizeof(IP_INTERFACE_INFO));
+    /* Make an initial call to GetInterfaceInfo to get
+     * the necessary size into the ulOutBufLen variable */
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+    {
+        HeapFree(ProcessHeap, 0, pInfo);
+        pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
         if (pInfo == NULL)
         {
             _tprintf(_T("memory allocation error"));
             return;
         }
+    }
 
-        /* Make an initial call to GetInterfaceInfo to get
-         * the necessary size into the ulOutBufLen variable */
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == ERROR_INSUFFICIENT_BUFFER)
+    /* Make a second call to GetInterfaceInfo to get the actual data we want */
+    if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
+    {
+        for (i = 0; i < pInfo->NumAdapters; i++)
         {
-            HeapFree(ProcessHeap, 0, pInfo);
-            pInfo = (IP_INTERFACE_INFO *)HeapAlloc(ProcessHeap, 0, ulOutBufLen);
-            if (pInfo == NULL)
-            {
-                _tprintf(_T("memory allocation error"));
-                return;
-            }
-        }
-
-        /* Make a second call to GetInterfaceInfo to get the actual data we want */
-        if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR)
-        {
-            for (i = 0; i < pInfo->NumAdapters; i++)
+            if (DoNamesMatch(pInfo->Adapter[i].Name, Index))
             {
                 CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
                 _tprintf(_T("name - %ls\n"), pInfo->Adapter[i].Name);
@@ -711,23 +748,14 @@ VOID Renew(LPTSTR Index)
                 }
             }
         }
-        else
-        {
-            _tprintf(_T("\nGetInterfaceInfo failed : "));
-            DoFormatMessage(0);
-        }
-
-        HeapFree(ProcessHeap, 0, pInfo);
     }
     else
     {
-        ;
-        /* FIXME:
-         * we need to be able to renew connections by name with support for globbing
-         * i.e. ipconfig /renew Eth* will renew all cards starting with Eth...
-         *      ipconfig /renew *con* will renew all cards with 'con' in their name
-         */
+        _tprintf(_T("\nGetInterfaceInfo failed : "));
+        DoFormatMessage(0);
     }
+
+    HeapFree(ProcessHeap, 0, pInfo);
 }
 
 VOID
@@ -741,15 +769,110 @@ FlushDns(VOID)
         DoFormatMessage(GetLastError());
 }
 
+
+static
+VOID
+DisplayDnsRecord(
+    PWSTR pszName,
+    WORD wType)
+{
+    PDNS_RECORDW pQueryResults = NULL, pThisRecord, pNextRecord;
+    WCHAR szBuffer[48];
+    IN_ADDR Addr4;
+    IN6_ADDR Addr6;
+    DNS_STATUS Status;
+
+    pQueryResults = NULL;
+    Status = DnsQuery_W(pszName,
+                        wType,
+                        DNS_QUERY_NO_WIRE_QUERY,
+                        NULL,
+                        (PDNS_RECORD *)&pQueryResults,
+                        NULL);
+    if (Status != ERROR_SUCCESS)
+    {
+#if 0
+        if (wType != 0)
+        {
+            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+            _tprintf(_T("\tNo records of type %hu\n\n"), wType);
+        }
+#endif
+        return;
+    }
+
+    _tprintf(_T("\t%S\n"), pszName);
+    _tprintf(_T("\t----------------------------------------\n"));
+
+    pThisRecord = pQueryResults;
+    while (pThisRecord != NULL)
+    {
+        pNextRecord = pThisRecord->pNext;
+
+        _tprintf(_T("\tRecord Name . . . . . : %S\n"), pThisRecord->pName);
+        _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
+        _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
+        _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
+
+        switch (pThisRecord->Flags.S.Section)
+        {
+            case DnsSectionQuestion:
+                _tprintf(_T("\tSection . . . . . . . : Question\n"));
+                break;
+
+            case DnsSectionAnswer:
+                _tprintf(_T("\tSection . . . . . . . : Answer\n"));
+                break;
+
+            case DnsSectionAuthority:
+                _tprintf(_T("\tSection . . . . . . . : Authority\n"));
+                break;
+
+            case DnsSectionAdditional:
+                _tprintf(_T("\tSection . . . . . . . : Additional\n"));
+                break;
+        }
+
+        switch (pThisRecord->wType)
+        {
+            case DNS_TYPE_A:
+                Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
+                RtlIpv4AddressToStringW(&Addr4, szBuffer);
+                _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
+                break;
+
+            case DNS_TYPE_PTR:
+                _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
+                break;
+
+            case DNS_TYPE_NS:
+                _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
+                break;
+
+            case DNS_TYPE_CNAME:
+                _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
+                break;
+
+            case DNS_TYPE_AAAA:
+                RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
+                RtlIpv6AddressToStringW(&Addr6, szBuffer);
+                _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
+                break;
+        }
+        _tprintf(_T("\n\n"));
+
+        pThisRecord = pNextRecord;
+    }
+
+    DnsRecordListFree((PDNS_RECORD)pQueryResults, DnsFreeRecordList);
+}
+
+
 VOID
 DisplayDns(VOID)
 {
-    PDNSCACHEENTRY DnsEntry = NULL, pThisEntry, pNextEntry;
-    PDNS_RECORDW pQueryResults, pThisRecord, pNextRecord;
-    IN_ADDR Addr4;
-    IN6_ADDR Addr6;
-    WCHAR szBuffer[48];
-    DNS_STATUS Status;
+    PDNS_CACHE_ENTRY DnsEntry = NULL, pThisEntry, pNextEntry;
 
     _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
@@ -767,87 +890,9 @@ DisplayDns(VOID)
     {
         pNextEntry = pThisEntry->pNext;
 
-        pQueryResults = NULL;
-        Status = DnsQuery_W(pThisEntry->pszName,
-                            pThisEntry->wType,
-                            DNS_QUERY_NO_WIRE_QUERY,
-                            NULL,
-                            (PDNS_RECORD *)&pQueryResults,
-                            NULL);
-        if (Status == 0)
-        {
-            _tprintf(_T("\t%S\n"), pThisEntry->pszName);
-            _tprintf(_T("\t----------------------------------------\n"));
-
-            pThisRecord = pQueryResults;
-            while (pThisRecord != NULL)
-            {
-                pNextRecord = pThisRecord->pNext;
-
-                _tprintf(_T("\tRecord Name . . . . . : %S\n"), pThisRecord->pName);
-                _tprintf(_T("\tRecord Type . . . . . : %hu\n"), pThisRecord->wType);
-                _tprintf(_T("\tTime To Live. . . . . : %lu\n"), pThisRecord->dwTtl);
-                _tprintf(_T("\tData Length . . . . . : %hu\n"), pThisRecord->wDataLength);
-
-                switch (pThisRecord->Flags.S.Section)
-                {
-                    case DnsSectionQuestion:
-                        _tprintf(_T("\tSection . . . . . . . : Question\n"));
-                        break;
-
-                    case DnsSectionAnswer:
-                        _tprintf(_T("\tSection . . . . . . . : Answer\n"));
-                        break;
-
-                    case DnsSectionAuthority:
-                        _tprintf(_T("\tSection . . . . . . . : Authority\n"));
-                        break;
-
-                    case DnsSectionAdditional:
-                        _tprintf(_T("\tSection . . . . . . . : Additional\n"));
-                        break;
-                }
-
-                switch (pThisRecord->wType)
-                {
-                    case DNS_TYPE_A:
-                        Addr4.S_un.S_addr = pThisRecord->Data.A.IpAddress;
-                        RtlIpv4AddressToStringW(&Addr4, szBuffer);
-                        _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
-                        break;
-
-                    case DNS_TYPE_PTR:
-                        _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
-                        break;
-
-                    case DNS_TYPE_NS:
-                        _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
-                        break;
-
-                    case DNS_TYPE_CNAME:
-                        _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
-                        break;
-
-                    case DNS_TYPE_AAAA:
-                        RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
-                        RtlIpv6AddressToStringW(&Addr6, szBuffer);
-                        _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
-                        break;
-                }
-                _tprintf(_T("\n\n"));
-
-                pThisRecord = pNextRecord;
-            }
-
-            DnsRecordListFree((PDNS_RECORD)pQueryResults, DnsFreeRecordList);
-            pQueryResults = NULL;
-        }
-        else if (Status != ERROR_SUCCESS && pThisEntry->wType != 0)
-        {
-            _tprintf(_T("\t%S\n"), pThisEntry->pszName);
-            _tprintf(_T("\t----------------------------------------\n"));
-            _tprintf(_T("\tNo records of type %hu\n\n"), pThisEntry->wType);
-        }
+        DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType1);
+        if (pThisEntry->wType2 != 0)
+            DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType2);
 
         if (pThisEntry->pszName)
             LocalFree(pThisEntry->pszName);
@@ -890,8 +935,6 @@ VOID Usage(VOID)
             HeapFree(ProcessHeap, 0, lpUsage);
         }
     }
-
-
 }
 
 int main(int argc, char *argv[])
@@ -975,10 +1018,9 @@ int main(int argc, char *argv[])
             break;
         case 3: /* Process all the options that can have 1 parameter */
             if (DoRelease)
-                _tprintf(_T("\nSorry /release [adapter] is not implemented yet\n"));
-                //Release(argv[2]);
+                Release(argv[2]);
             else if (DoRenew)
-                _tprintf(_T("\nSorry /renew [adapter] is not implemented yet\n"));
+                Renew(argv[2]);
             else if (DoShowclassid)
                 _tprintf(_T("\nSorry /showclassid adapter is not implemented yet\n"));
             else if (DoSetclassid)
