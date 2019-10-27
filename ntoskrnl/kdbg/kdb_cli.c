@@ -2024,19 +2024,19 @@ KdbpCmdGdtLdtIdt(
             {
                 switch (Type)
                 {
-                    case 1: SegType = "TSS16(Avl)"; break;
-                    case 2: SegType = "LDT"; break;
-                    case 3: SegType = "TSS16(Busy)"; break;
-                    case 4: SegType = "CALLGATE16"; break;
-                    case 5: SegType = "TASKGATE"; break;
-                    case 6: SegType = "INTGATE16"; break;
-                    case 7: SegType = "TRAPGATE16"; break;
-                    case 9: SegType = "TSS32(Avl)"; break;
-                    case 11: SegType = "TSS32(Busy)"; break;
-                    case 12: SegType = "CALLGATE32"; break;
-                    case 14: SegType = "INTGATE32"; break;
-                    case 15: SegType = "INTGATE32"; break;
-                    default: SegType = "UNKNOWN"; break;
+                    case  1: SegType = "TSS16(Avl)";    break;
+                    case  2: SegType = "LDT";           break;
+                    case  3: SegType = "TSS16(Busy)";   break;
+                    case  4: SegType = "CALLGATE16";    break;
+                    case  5: SegType = "TASKGATE";      break;
+                    case  6: SegType = "INTGATE16";     break;
+                    case  7: SegType = "TRAPGATE16";    break;
+                    case  9: SegType = "TSS32(Avl)";    break;
+                    case 11: SegType = "TSS32(Busy)";   break;
+                    case 12: SegType = "CALLGATE32";    break;
+                    case 14: SegType = "INTGATE32";     break;
+                    case 15: SegType = "TRAPGATE32";    break;
+                    default: SegType = "UNKNOWN";       break;
                 }
 
                 if (!(Type >= 1 && Type <= 3) &&
@@ -2061,7 +2061,7 @@ KdbpCmdGdtLdtIdt(
                     SegType = "CODE16";
             }
 
-            if ((SegDesc[1] & (1 << 15)) == 0) /* not present */
+            if ((SegDesc[1] & (1 << 15)) == 0) /* Not present */
             {
                 KdbpPrint("  %03d  0x%04x  %-11s  [NP]        [NP]        %02d   NP\n",
                           i / 8, i | Dpl | ul, SegType, Dpl);
