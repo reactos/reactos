@@ -1072,3 +1072,26 @@ DnsIntFreeRecordList(PDNS_RECORD ToDelete)
         ToDelete = next;
     }
 }
+
+BOOL
+WINAPI
+DnsFlushResolverCache(VOID)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+
+    DPRINT("DnsFlushResolverCache()\n");
+
+    RpcTryExcept
+    {
+        Status = R_ResolverFlushCache(NULL);
+        DPRINT("R_ResolverFlushCache() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    return (Status == ERROR_SUCCESS);
+}

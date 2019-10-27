@@ -217,13 +217,6 @@ DnsFindAuthoritativeZone()
 }
 
 BOOL WINAPI
-DnsFlushResolverCache(VOID)
-{
-    UNIMPLEMENTED;
-    return TRUE;
-}
-
-BOOL WINAPI
 DnsFlushResolverCacheEntry_A(PCSTR entry)
 {
     DPRINT1("DnsFlushResolverCacheEntry_A(%s) is stubplemented.\n", entry);

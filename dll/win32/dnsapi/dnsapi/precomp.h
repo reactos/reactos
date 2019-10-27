@@ -25,6 +25,8 @@
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
+#include <dnsrslvr_c.h>
+
 /* Internal DNSAPI Headers */
 #include <internal/windns.h>
 
