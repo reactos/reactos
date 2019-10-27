@@ -75,6 +75,7 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
     ULONG Code = Stack->Parameters.DeviceIoControl.IoControlCode;
     BOOLEAN DiskChanged;
     PMOUNTDEV_NAME Name;
+    PMOUNTDEV_UNIQUE_ID UniqueId;
 
     TRACE_(FLOPPY, "DeviceIoctl called\n");
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -256,27 +257,54 @@ DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
         Irp->IoStatus.Information = 0;
         break;
 
-    case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
-        if (OutputLength < sizeof(MOUNTDEV_NAME)) {
+    case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+        if(OutputLength < sizeof(MOUNTDEV_UNIQUE_ID))
+        {
             Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-            Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
+            Irp->IoStatus.Information = 0;
+            break;
+        }
+
+        UniqueId = Irp->AssociatedIrp.SystemBuffer;
+        UniqueId->UniqueIdLength = wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
+
+        if(OutputLength < FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueId->UniqueIdLength)
+        {
+            Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+            Irp->IoStatus.Information = sizeof(MOUNTDEV_UNIQUE_ID);
+            break;
+        }
+
+        RtlCopyMemory(UniqueId->UniqueId, &DriveInfo->DeviceNameBuffer[0],
+                      UniqueId->UniqueIdLength);
+
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueId->UniqueIdLength;
+        break;
+
+    case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+        if(OutputLength < sizeof(MOUNTDEV_NAME))
+        {
+            Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+            Irp->IoStatus.Information = 0;
             break;
         }
 
         Name = Irp->AssociatedIrp.SystemBuffer;
-        Name->NameLength = wcslen(&DriveInfo->SymLinkBuffer[0]) * sizeof(WCHAR);
+        Name->NameLength = wcslen(&DriveInfo->DeviceNameBuffer[0]) * sizeof(WCHAR);
 
-        if (OutputLength < sizeof(USHORT) + Name->NameLength) {
+        if(OutputLength < FIELD_OFFSET(MOUNTDEV_NAME, Name) + Name->NameLength)
+        {
             Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
             Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
             break;
         }
 
-        RtlCopyMemory(Name->Name, &DriveInfo->SymLinkBuffer[0],
+        RtlCopyMemory(Name->Name, &DriveInfo->DeviceNameBuffer[0],
                       Name->NameLength);
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = sizeof(USHORT) + Name->NameLength;
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTDEV_NAME, Name) + Name->NameLength;
         break;
 
     default:

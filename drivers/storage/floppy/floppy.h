@@ -48,8 +48,8 @@ typedef struct _DRIVE_INFO
     CM_FLOPPY_DEVICE_DATA    FloppyDeviceData;
     DISK_GEOMETRY            DiskGeometry;
     UCHAR                    BytesPerSectorCode;
-    WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
     WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
+    WCHAR                    DeviceNameBuffer[MAX_DEVICE_NAME];
     ULONG                    DiskChangeCount;
     BOOLEAN                  Initialized;
 } DRIVE_INFO, *PDRIVE_INFO;

@@ -406,9 +406,6 @@ Unload(PDRIVER_OBJECT DriverObject)
             {
                 UNICODE_STRING Link;
 
-                RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].SymLinkBuffer);
-                IoDeleteSymbolicLink(&Link);
-
                 RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
                 IoDeassignArcName(&Link);
 
@@ -811,6 +808,98 @@ InitController(PCONTROLLER_INFO ControllerInfo)
 }
 
 
+static VOID NTAPI
+ReportToMountMgr(UCHAR ControlerId, UCHAR DriveId)
+/*
+ * FUNCTION: Called to report a new controler to the MountMgr
+ * ARGUMENTS:
+ *     ControlerId: ID of the controler
+ *     DriveId: ID of the device for the controler
+ * RETURNS:
+ *     Nothing
+ * NOTES:
+ *     - This is a hack to allow MountMgr handling our devices
+ */
+{
+    NTSTATUS              Status;
+    UNICODE_STRING        MountMgrDevice;
+    PDEVICE_OBJECT        DeviceObject;
+    PFILE_OBJECT          FileObject;
+    PMOUNTMGR_TARGET_NAME MountTarget;
+    ULONG                 DeviceLen;
+    PIRP                  Irp;
+    KEVENT                Event;
+    IO_STATUS_BLOCK       IoStatus;
+
+    /* First, get MountMgr DeviceObject */
+    RtlInitUnicodeString(&MountMgrDevice, MOUNTMGR_DEVICE_NAME);
+    Status = IoGetDeviceObjectPointer(&MountMgrDevice, FILE_READ_ATTRIBUTES,
+                                      &FileObject, &DeviceObject);
+
+    if(!NT_SUCCESS(Status))
+    {
+        WARN_(FLOPPY, "ReportToMountMgr: Can't get MountMgr pointers %lx\n", Status);
+        return;
+    }
+
+    DeviceLen = wcslen(&gControllerInfo[ControlerId].DriveInfo[DriveId].DeviceNameBuffer[0]) * sizeof(WCHAR);
+
+    /* Allocate input buffer to report our floppy device */
+    MountTarget = ExAllocatePool(NonPagedPool,
+                                 sizeof(MOUNTMGR_TARGET_NAME) + DeviceLen);
+
+    if(!MountTarget)
+    {
+        WARN_(FLOPPY, "ReportToMountMgr: Allocation of mountTarget failed\n");
+        ObDereferenceObject(FileObject);
+        return;
+    }
+
+    MountTarget->DeviceNameLength = DeviceLen;
+    RtlCopyMemory(MountTarget->DeviceName,
+                  gControllerInfo[ControlerId].DriveInfo[DriveId].DeviceNameBuffer,
+                  DeviceLen);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Build the IRP used to communicate with the MountMgr */
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
+                                        DeviceObject,
+                                        MountTarget,
+                                        sizeof(MOUNTMGR_TARGET_NAME) + DeviceLen,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatus);
+
+    if(!Irp)
+    {
+        WARN_(FLOPPY, "ReportToMountMgr: Allocation of irp failed\n");
+        ExFreePool(MountTarget);
+        ObDereferenceObject(FileObject);
+        return;
+    }
+
+    /* Call the MountMgr */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    if (Status == STATUS_PENDING) {
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+
+    /* We're done */
+
+    INFO_(FLOPPY, "Reported to the MountMgr: %lx\n", Status);
+
+    ExFreePool(MountTarget);
+    ObDereferenceObject(FileObject);
+
+    return;
+}
+
+
 static BOOLEAN NTAPI
 AddControllers(PDRIVER_OBJECT DriverObject)
 /*
@@ -912,9 +1001,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
         /* 3: per-drive setup */
         for(j = 0; j < gControllerInfo[i].NumberOfDrives; j++)
         {
-            WCHAR DeviceNameBuf[MAX_DEVICE_NAME];
             UNICODE_STRING DeviceName;
-            UNICODE_STRING LinkName;
             UNICODE_STRING ArcPath;
             UCHAR DriveNumber;
 
@@ -936,9 +1023,8 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
             DriveNumber = (UCHAR)(i*4 + j); /* loss of precision is OK; there are only 16 of 'em */
 
-            RtlZeroMemory(&DeviceNameBuf, MAX_DEVICE_NAME * sizeof(WCHAR));
-            swprintf(DeviceNameBuf, L"\\Device\\Floppy%d", DriveNumber);
-            RtlInitUnicodeString(&DeviceName, DeviceNameBuf);
+            swprintf(gControllerInfo[i].DriveInfo[j].DeviceNameBuffer, L"\\Device\\Floppy%d", DriveNumber);
+            RtlInitUnicodeString(&DeviceName, gControllerInfo[i].DriveInfo[j].DeviceNameBuffer);
 
             if(IoCreateDevice(DriverObject, sizeof(PVOID), &DeviceName,
                               FILE_DEVICE_DISK, FILE_REMOVABLE_MEDIA | FILE_FLOPPY_DISKETTE, FALSE,
@@ -949,7 +1035,9 @@ AddControllers(PDRIVER_OBJECT DriverObject)
                 continue; /* continue on to next drive */
             }
 
-            INFO_(FLOPPY, "AddControllers: New device: %S (0x%p)\n", DeviceNameBuf, gControllerInfo[i].DriveInfo[j].DeviceObject);
+            INFO_(FLOPPY, "AddControllers: New device: %S (0x%p)\n",
+                          gControllerInfo[i].DriveInfo[j].DeviceNameBuffer,
+                          gControllerInfo[i].DriveInfo[j].DeviceObject);
 
             /* 3b.5: Create an ARC path in case we're booting from this drive */
             swprintf(gControllerInfo[i].DriveInfo[j].ArcPathBuffer,
@@ -961,37 +1049,29 @@ AddControllers(PDRIVER_OBJECT DriverObject)
             /* 3c: Set flags up */
             gControllerInfo[i].DriveInfo[j].DeviceObject->Flags |= DO_DIRECT_IO;
 
-            /* 3d: Create a symlink */
-            swprintf(gControllerInfo[i].DriveInfo[j].SymLinkBuffer, L"\\DosDevices\\%c:", DriveNumber + 'A');
-            RtlInitUnicodeString(&LinkName, gControllerInfo[i].DriveInfo[j].SymLinkBuffer);
-            if(IoCreateSymbolicLink(&LinkName, &DeviceName) != STATUS_SUCCESS)
-            {
-                WARN_(FLOPPY, "AddControllers: Unable to create a symlink for drive %d\n", DriveNumber);
-                IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
-                IoDeassignArcName(&ArcPath);
-                continue; /* continue to next drive */
-            }
-
-            /* 3e: Increase global floppy drives count */
+            /* 3d: Increase global floppy drives count */
             IoGetConfigurationInformation()->FloppyCount++;
 
-            /* 3f: Set up the DPC */
+            /* 3e: Set up the DPC */
             IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, (PIO_DPC_ROUTINE)DpcForIsr);
 
-            /* 3g: Point the device extension at our DriveInfo struct */
+            /* 3f: Point the device extension at our DriveInfo struct */
             gControllerInfo[i].DriveInfo[j].DeviceObject->DeviceExtension = &gControllerInfo[i].DriveInfo[j];
 
-            /* 3h: neat comic strip */
+            /* 3g: neat comic strip */
 
-            /* 3i: set the initial media type to unknown */
+            /* 3h: set the initial media type to unknown */
             memset(&gControllerInfo[i].DriveInfo[j].DiskGeometry, 0, sizeof(DISK_GEOMETRY));
             gControllerInfo[i].DriveInfo[j].DiskGeometry.MediaType = Unknown;
 
-            /* 3j: Now that we're done, set the Initialized flag so we know to free this in Unload */
+            /* 3i: Now that we're done, set the Initialized flag so we know to free this in Unload */
             gControllerInfo[i].DriveInfo[j].Initialized = TRUE;
 
-            /* 3k: Clear the DO_DEVICE_INITIALIZING flag */
+            /* 3j: Clear the DO_DEVICE_INITIALIZING flag */
             gControllerInfo[i].DriveInfo[j].DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            /* 3k: Report to the MountMgr */
+            ReportToMountMgr(i, j);
 
             /* 3l: Attempt to get drive info - if a floppy is already present */
             StartMotor(&gControllerInfo[i].DriveInfo[j]);
