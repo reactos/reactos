@@ -282,12 +282,12 @@ Description   = "Service that caches local DNS queries"
 ServiceType   = 0x20
 StartType     = 2
 ErrorControl  = 1
-ServiceBinary = "%11%\svchost.exe -k netsvcs"
+ServiceBinary = "%11%\svchost.exe -k NetworkService"
 LoadOrderGroup = TDI
 AddReg=dns_AddReg
 
 [dns_AddReg]
-HKR,,"ObjectName",0x00000000,"LocalSystem"
+HKR,,"ObjectName",0x00000000,"NT AUTHORITY\NetworkService"
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dnsrslvr.dll"
 
 ;-------------------------------- STRINGS -------------------------------
