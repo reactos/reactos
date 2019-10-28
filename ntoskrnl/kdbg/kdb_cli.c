@@ -1033,84 +1033,71 @@ KdbpRetrieveTss(
     return Tss;
 }
 
-static BOOLEAN
-KdbpTrapFrameFromPrevTss(
-    PKTRAP_FRAME TrapFrame)
+FORCEINLINE BOOLEAN
+KdbpIsNestedTss(
+    IN USHORT TssSelector,
+    IN PKTSS Tss)
 {
-    ULONG_PTR Eip, Ebp;
-    KDESCRIPTOR Gdtr;
-    KGDTENTRY Desc;
-    USHORT Sel;
-    PKTSS Tss;
+    USHORT Backlink;
 
-    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
-    Sel = Ke386GetTr();
-
-    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
-        (Sel < sizeof(KGDTENTRY)) ||
-        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+    if (!Tss)
         return FALSE;
 
-    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
-                                       (PVOID)(Gdtr.Base + Sel),
-                                       sizeof(KGDTENTRY))))
-        return FALSE;
-
-    if (Desc.HighWord.Bits.Type != 0xB)
-        return FALSE;
-
-    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
-                             Desc.HighWord.Bytes.BaseMid << 16 |
-                             Desc.HighWord.Bytes.BaseHi << 24);
-
-    if (!NT_SUCCESS(KdbpSafeReadMemory(&Sel,
+    /* Retrieve the TSS Backlink */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
                                        (PVOID)&Tss->Backlink,
                                        sizeof(USHORT))))
+    {
         return FALSE;
+    }
 
-    if ((Sel & (sizeof(KGDTENTRY) - 1)) ||
-        (Sel < sizeof(KGDTENTRY)) ||
-        (Sel + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+    return (Backlink != 0 && Backlink != TssSelector);
+}
+
+static BOOLEAN
+KdbpTrapFrameFromPrevTss(
+    IN OUT PKTRAP_FRAME TrapFrame,
+    OUT PUSHORT TssSelector,
+    IN OUT PKTSS* pTss,
+    IN PKDESCRIPTOR pGdtr)
+{
+    ULONG_PTR Eip, Ebp;
+    USHORT Backlink;
+    PKTSS Tss = *pTss;
+
+    /* Retrieve the TSS Backlink */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Backlink,
+                                       (PVOID)&Tss->Backlink,
+                                       sizeof(USHORT))))
+    {
         return FALSE;
+    }
 
-    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
-                                       (PVOID)(Gdtr.Base + Sel),
-                                       sizeof(KGDTENTRY))))
+    /* Retrieve the parent TSS */
+    Tss = KdbpRetrieveTss(Backlink, NULL, pGdtr);
+    if (!Tss)
         return FALSE;
-
-    if (Desc.HighWord.Bits.Type != 0xB)
-        return FALSE;
-
-    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
-                             Desc.HighWord.Bytes.BaseMid << 16 |
-                             Desc.HighWord.Bytes.BaseHi << 24);
 
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Eip,
                                        (PVOID)&Tss->Eip,
                                        sizeof(ULONG_PTR))))
+    {
         return FALSE;
+    }
 
     if (!NT_SUCCESS(KdbpSafeReadMemory(&Ebp,
                                        (PVOID)&Tss->Ebp,
                                        sizeof(ULONG_PTR))))
+    {
         return FALSE;
+    }
 
+    /* Return the parent TSS and its trap frame */
+    *TssSelector = Backlink;
+    *pTss = Tss;
     TrapFrame->Eip = Eip;
     TrapFrame->Ebp = Ebp;
     return TRUE;
-}
-
-VOID __cdecl KiTrap02(VOID);
-VOID FASTCALL KiTrap03Handler(IN PKTRAP_FRAME);
-VOID __cdecl KiTrap08(VOID);
-VOID __cdecl KiTrap09(VOID);
-
-static BOOLEAN
-KdbpInNmiOrDoubleFaultHandler(
-    ULONG_PTR Address)
-{
-    return (Address > (ULONG_PTR)KiTrap02 && Address < (ULONG_PTR)KiTrap03Handler) ||
-           (Address > (ULONG_PTR)KiTrap08 && Address < (ULONG_PTR)KiTrap09);
 }
 
 /*!\brief Displays a backtrace.
@@ -1122,15 +1109,17 @@ KdbpCmdBackTrace(
 {
     ULONG ul;
     ULONGLONG Result = 0;
-    ULONG_PTR Frame = KdbCurrentTrapFrame->Tf.Ebp;
+    KTRAP_FRAME TrapFrame = KdbCurrentTrapFrame->Tf;
+    ULONG_PTR Frame = TrapFrame.Ebp;
     ULONG_PTR Address;
-    KTRAP_FRAME TrapFrame;
+    KDESCRIPTOR Gdtr;
+    USHORT TssSelector;
+    PKTSS Tss;
 
     if (Argc >= 2)
     {
         /* Check for [L count] part */
         ul = 0;
-
         if (strcmp(Argv[Argc-2], "L") == 0)
         {
             ul = strtoul(Argv[Argc-1], NULL, 0);
@@ -1157,7 +1146,7 @@ KdbpCmdBackTrace(
         Argc++;
     }
 
-    /* Check if frame addr or thread id is given. */
+    /* Check if a Frame Address or Thread ID is given */
     if (Argc > 1)
     {
         if (Argv[1][0] == '*')
@@ -1169,7 +1158,7 @@ KdbpCmdBackTrace(
                 return TRUE;
 
             if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-                KdbpPrint("Warning: Address %I64x is beeing truncated\n",Result);
+                KdbpPrint("Warning: Address %I64x is beeing truncated\n", Result);
 
             Frame = (ULONG_PTR)Result;
         }
@@ -1179,66 +1168,95 @@ KdbpCmdBackTrace(
             return TRUE;
         }
     }
-    else
+
+    /* Retrieve the Global Descriptor Table */
+    Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+
+    /* Retrieve the current (active) TSS */
+    TssSelector = Ke386GetTr();
+    Tss = KdbpRetrieveTss(TssSelector, NULL, &Gdtr);
+    if (KdbpIsNestedTss(TssSelector, Tss))
+    {
+        /* Display the active TSS if it is nested */
+        KdbpPrint("[Active TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
+    }
+
+    /* If no Frame Address or Thread ID was given, try printing the function at EIP */
+    if (Argc <= 1)
     {
         KdbpPrint("Eip:\n");
-
-        /* Try printing the function at EIP */
-        if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
-            KdbpPrint("<%08x>\n", KdbCurrentTrapFrame->Tf.Eip);
+        if (!KdbSymPrintAddress((PVOID)TrapFrame.Eip, &TrapFrame))
+            KdbpPrint("<%08x>\n", TrapFrame.Eip);
         else
             KdbpPrint("\n");
     }
 
-    TrapFrame = KdbCurrentTrapFrame->Tf;
+    /* Walk through the frames */
     KdbpPrint("Frames:\n");
-
     for (;;)
     {
         BOOLEAN GotNextFrame;
 
         if (Frame == 0)
-            break;
+            goto CheckForParentTSS;
 
-        if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
+        Address = 0;
+        if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof(ULONG_PTR))))
         {
             KdbpPrint("Couldn't access memory at 0x%p!\n", Frame + sizeof(ULONG_PTR));
-            break;
+            goto CheckForParentTSS;
         }
 
-        if ((GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR)))))
-            TrapFrame.Ebp = Frame;
+        if (Address == 0)
+            goto CheckForParentTSS;
 
-        /* Print the location of the call instruction */
+        GotNextFrame = NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof(ULONG_PTR)));
+        if (GotNextFrame)
+            TrapFrame.Ebp = Frame;
+        // else
+            // Frame = 0;
+
+        /* Print the location of the call instruction (assumed 5 bytes length) */
         if (!KdbSymPrintAddress((PVOID)(Address - 5), &TrapFrame))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");
 
-        if (KdbOutputAborted) break;
-
-        if (Address == 0)
+        if (KdbOutputAborted)
             break;
-
-        if (KdbpInNmiOrDoubleFaultHandler(Address))
-        {
-            if ((GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame)))
-            {
-                Address = TrapFrame.Eip;
-                Frame = TrapFrame.Ebp;
-
-                if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
-                    KdbpPrint("<%08x>\n", Address);
-                else
-                    KdbpPrint("\n");
-            }
-        }
 
         if (!GotNextFrame)
         {
             KdbpPrint("Couldn't access memory at 0x%p!\n", Frame);
-            break;
+            goto CheckForParentTSS; // break;
         }
+
+        continue;
+
+CheckForParentTSS:
+        /*
+         * We have ended the stack walking for the current (active) TSS.
+         * Check whether this TSS was nested, and if so switch to its parent
+         * and walk its stack.
+         */
+        if (!KdbpIsNestedTss(TssSelector, Tss))
+            break; // The TSS is not nested, we stop there.
+
+        GotNextFrame = KdbpTrapFrameFromPrevTss(&TrapFrame, &TssSelector, &Tss, &Gdtr);
+        if (!GotNextFrame)
+        {
+            KdbpPrint("Couldn't access parent TSS 0x%04x\n", Tss->Backlink);
+            break; // Cannot retrieve the parent TSS, we stop there.
+        }
+        Address = TrapFrame.Eip;
+        Frame = TrapFrame.Ebp;
+
+        KdbpPrint("[Parent TSS 0x%04x @ 0x%p]\n", TssSelector, Tss);
+
+        if (!KdbSymPrintAddress((PVOID)Address, &TrapFrame))
+            KdbpPrint("<%08x>\n", Address);
+        else
+            KdbpPrint("\n");
     }
 
     return TRUE;
