@@ -8,7 +8,7 @@ EVENTCREATE [/S computer [/U [dominio\\]utente [/P password]]] /ID id_evento\n\
             {[/L registro] | [/SO sorgente]} /T tipo /C categoria /D descrizione\n\
 \n\
 Descrizione:\n\
-    Questo programma consente ad un amministratore di creare un evento\n
+    Questo programma consente ad un amministratore di creare un evento\n\
     personalizzato in un registro eventi specificato.\n\
 \n\
 Parametri:\n\
