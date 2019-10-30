@@ -1,0 +1,55 @@
+﻿/*
+ * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:         Ukrainian (Ukraine) translation resource
+ * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
+
+IDD_MAIN_DIALOG DIALOGEX 0, 0, 284, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Диспетчер службових програм"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX IDC_LISTBOX, 4, 4, 273, 56, LBS_STANDARD | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
+    CONTROL "", IDC_GROUPBOX, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 3, 62, 275, 92
+    CONTROL "Запустити", IDC_START, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 14, 76, 45, 16
+    CONTROL "Зупинити", IDC_STOP, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 69, 76, 45, 16
+    CONTROL "Запускати автоматично при моєму вході в систему", IDC_START_LOG_IN, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 101, 206, 14 
+    CONTROL "Запускати автоматично при блокуванні робочого столу", IDC_START_DESKTOP, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 118, 212, 14 
+    CONTROL "Запускати автоматично при запуску диспетчера", IDC_START_UTILMAN, "Button", BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 12, 134, 212, 13 
+    CONTROL "&OK", IDC_OK, "Button", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 160, 161, 50, 14 
+    CONTROL "&Скасувати", IDC_CANCEL, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 221, 161, 50, 14 
+    CONTROL "&Довідка", IDC_HELP_TOPICS, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 98, 161, 50, 14 
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 65
+CAPTION "Про программу"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    ICON IDI_ICON_UTILMAN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Диспетчер службових програм\n© 2019 Джордж Бісок (fraizeraust99 at gmail dot com)", IDC_STATIC, 48, 7, 150, 36
+    LTEXT "© 2019 Гермес Белуска-Майто", IDC_STATIC, 48, 33, 150, 36
+    PUSHBUTTON "OK", IDOK, 75, 47, 44, 15
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OSK "Екранна клавіатура"
+    IDS_MAGNIFIER "Екранна лупа"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTRUNNING "%s не виконується"
+    IDS_RUNNING "%s працює"
+    IDS_GROUPBOX_OPTIONS_TITLE "Параметри для програми %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDM_ABOUT "Про программу"
+END
