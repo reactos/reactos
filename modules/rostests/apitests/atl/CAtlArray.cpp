@@ -6,11 +6,6 @@
  *              Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
-#if defined(__GNUC__) && __GNUC__ >= 7
-// this is an intended behaviour
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-#endif
-
 #ifdef HAVE_APITEST
     #include <apitest.h>
 #else

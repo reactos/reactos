@@ -99,7 +99,18 @@ public:
         _In_reads_(NumElements) T* Source,
         _In_ size_t NumElements)
     {
+        // A simple memmove works for most of the types.
+        // You'll have to override this for types that have pointers to their
+        // own members.
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
         memmove(Dest, Source, NumElements * sizeof(T));
+#if defined(__GNUC__) && __GNUC__ >= 8
+    #pragma GCC diagnostic pop
+#endif
     }
 };
 
