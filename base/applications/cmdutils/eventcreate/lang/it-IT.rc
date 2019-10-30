@@ -61,7 +61,7 @@ Parametri:\n\
     IDS_LOG_NOT_FOUND "Il registro '%s' non esiste. Impossibile creare l'evento.\n"
     IDS_SOURCE_NOCREATE "Impossibile creare la nuova sorgente perché il nome del registro non è stato specificato.\nUsare l'opzione /L per specificare il nome del registro.\n"
     IDS_SOURCE_EXISTS "La sorgente esiste già nel registro '%s' e non può essere duplicata.\n"
-    IDS_SOURCE_NOT_CUSTOM "Il parametro sorgente viene utilizzato per\n identificare script e applicazioni personalizzate\n(non le applicazioni installate).\n"
+    IDS_SOURCE_NOT_CUSTOM "Il parametro sorgente viene utilizzato per\nidentificare script e applicazioni personalizzate\n(non le applicazioni installate).\n"
 
     IDS_SUCCESS_1   "Operazione riuscita: un evento di tipo '%s' è stato creato nel registro '%s'.\n"
     IDS_SUCCESS_2   "Operazione riuscita: un evento di tipo '%s' è stato creato con la sorgente '%s'.\n"
