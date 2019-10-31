@@ -392,13 +392,11 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             if (Char < 0x80)
             {
                 TrailLength = 0;
-                ++WideCharCount;
                 continue;
             }
             if ((Char & 0xC0) == 0x80)
             {
                 TrailLength = 0;
-                ++WideCharCount;
                 StringIsValid = FALSE;
                 continue;
             }
@@ -406,7 +404,6 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             TrailLength = UTF8Length[Char - 0x80];
             if (TrailLength == 0)
             {
-                ++WideCharCount;
                 StringIsValid = FALSE;
                 continue;
             }
@@ -436,9 +433,10 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         if (TrailLength)
         {
             WideCharCount++;
+            StringIsValid = FALSE;
         }
 
-        if (Flags == MB_ERR_INVALID_CHARS && (!StringIsValid || TrailLength))
+        if (Flags == MB_ERR_INVALID_CHARS && !StringIsValid)
         {
             SetLastError(ERROR_NO_UNICODE_TRANSLATION);
             return 0;
@@ -458,10 +456,11 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             TrailLength = 0;
             continue;
         }
-        if (Char >= 0xF8 || Char == 0x80 || (Char & 0xC0) == 0x80)
+        if ((Char & 0xC0) == 0x80)
         {
             *WideCharString++ = InvalidChar;
             TrailLength = 0;
+            StringIsValid = FALSE;
             continue;
         }
 
@@ -469,6 +468,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         if (TrailLength == 0)
         {
             *WideCharString++ = InvalidChar;
+            StringIsValid = FALSE;
             continue;
         }
 
@@ -496,6 +496,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         {
             *WideCharString++ = InvalidChar;
             MultiByteString = MbsPtrSave;
+            StringIsValid = FALSE;
         }
     }
 
