@@ -48,6 +48,18 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
     return TRUE;
 }
 
+BOOL IsTextASCII(const signed char *pBytes, DWORD dwSize)
+{
+    while (dwSize-- > 0)
+    {
+        if (*pBytes < 0)
+            return FALSE;
+
+        ++pBytes;
+    }
+    return TRUE;
+}
+
 ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
 {
     INT flags = IS_TEXT_UNICODE_STATISTICS;
@@ -65,8 +77,8 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
         return ENCODING_UTF16BE;
     }
 
-    /* is it ANSI? */
-    if (MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
+    /* is it ASCII? */
+    if (IsTextASCII((const signed char *)pBytes, dwSize))
     {
         return ENCODING_ANSI;
     }
