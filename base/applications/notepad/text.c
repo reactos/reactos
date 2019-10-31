@@ -48,8 +48,9 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
     return TRUE;
 }
 
-BOOL IsTextNonZeroASCII(const signed char *pBytes, DWORD dwSize)
+BOOL IsTextNonZeroASCII(const void *pText, DWORD dwSize)
 {
+    const signed char *pBytes = pText;
     while (dwSize-- > 0)
     {
         if (*pBytes <= 0)
@@ -67,7 +68,7 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
     if (dwSize <= 1)
         return ENCODING_ANSI;
 
-    if (IsTextNonZeroASCII((const signed char *)pBytes, dwSize))
+    if (IsTextNonZeroASCII(pBytes, dwSize))
     {
         return ENCODING_ANSI;
     }
