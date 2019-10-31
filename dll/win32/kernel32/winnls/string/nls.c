@@ -389,21 +389,30 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         for (; MultiByteString < MbsEnd; WideCharCount++)
         {
             Char = *MultiByteString++;
-            if (Char < 0xC0)
+            if (Char < 0x80)
             {
                 TrailLength = 0;
+                ++WideCharCount;
                 continue;
             }
-            if (Char >= 0xF8 || (Char & 0xC0) == 0x80)
+            if ((Char & 0xC0) == 0x80)
             {
                 TrailLength = 0;
+                ++WideCharCount;
+                StringIsValid = FALSE;
+                continue;
+            }
+
+            TrailLength = UTF8Length[Char - 0x80];
+            if (TrailLength == 0)
+            {
+                ++WideCharCount;
                 StringIsValid = FALSE;
                 continue;
             }
 
             CharIsValid = TRUE;
             MbsPtrSave = MultiByteString;
-            TrailLength = UTF8Length[Char - 0x80];
             WideChar = Char & UTF8Mask[TrailLength];
 
             while (TrailLength && MultiByteString < MbsEnd)
@@ -456,9 +465,15 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             continue;
         }
 
+        TrailLength = UTF8Length[Char - 0x80];
+        if (TrailLength == 0)
+        {
+            *WideCharString++ = InvalidChar;
+            continue;
+        }
+
         CharIsValid = TRUE;
         MbsPtrSave = MultiByteString;
-        TrailLength = UTF8Length[Char - 0x80];
         WideChar = Char & UTF8Mask[TrailLength];
 
         while (TrailLength && MultiByteString < MbsEnd)
