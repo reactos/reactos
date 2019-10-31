@@ -67,6 +67,12 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
     if (dwSize <= 1)
         return ENCODING_ANSI;
 
+    /* is it ASCII? */
+    if (IsTextASCII((const signed char *)pBytes, dwSize))
+    {
+        return ENCODING_ANSI;
+    }
+
     if (IsTextUnicode(pBytes, dwSize, &flags))
     {
         return ENCODING_UTF16LE;
@@ -75,12 +81,6 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
     if ((flags & IS_TEXT_UNICODE_REVERSE_MASK) && !(flags & IS_TEXT_UNICODE_ILLEGAL_CHARS))
     {
         return ENCODING_UTF16BE;
-    }
-
-    /* is it ASCII? */
-    if (IsTextASCII((const signed char *)pBytes, dwSize))
-    {
-        return ENCODING_ANSI;
     }
 
     /* is it UTF-8? */
