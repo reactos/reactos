@@ -65,6 +65,12 @@ ENCODING AnalyzeEncoding(const char *pBytes, DWORD dwSize)
         return ENCODING_UTF16BE;
     }
 
+    /* is it ANSI? */
+    if (MultiByteToWideChar(CP_ACP, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
+    {
+        return ENCODING_ANSI;
+    }
+
     /* is it UTF-8? */
     if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pBytes, dwSize, NULL, 0))
     {
