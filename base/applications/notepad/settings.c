@@ -169,8 +169,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     }
     else
     {
-        TCHAR szFontName[LF_FACESIZE];
-
         /* If no settings are found in the registry, then use default values */
         Globals.bShowStatusBar = FALSE;
         Globals.bWrapLongLines = FALSE;
@@ -183,13 +181,13 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
                    ARRAY_SIZE(Globals.szHeader));
         LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
                    ARRAY_SIZE(Globals.szFooter));
-        LoadString(Globals.hInstance, STRING_DEFAULTFONT, szFontName, ARRAY_SIZE(szFontName));
 
         ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
         Globals.lfFont.lfCharSet = ANSI_CHARSET;
         Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
         Globals.lfFont.lfEscapement = 0;
-        _tcscpy(Globals.lfFont.lfFaceName, szFontName);
+        LoadString(Globals.hInstance, STRING_DEFAULTFONT,
+                   Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName));
         Globals.lfFont.lfItalic = FALSE;
         Globals.lfFont.lfOrientation = 0;
         Globals.lfFont.lfOutPrecision = OUT_STRING_PRECIS;
