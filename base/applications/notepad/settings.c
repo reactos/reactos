@@ -183,10 +183,10 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
                    ARRAY_SIZE(Globals.szFooter));
 
         ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
-        Globals.lfFont.lfCharSet = ANSI_CHARSET;
+        Globals.lfFont.lfCharSet = DEFAULT_CHARSET;
         Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
         Globals.lfFont.lfEscapement = 0;
-        _tcscpy(Globals.lfFont.lfFaceName, _T("Lucida Console"));
+        Globals.lfFont.lfFaceName[0] = 0;
         Globals.lfFont.lfItalic = FALSE;
         Globals.lfFont.lfOrientation = 0;
         Globals.lfFont.lfOutPrecision = OUT_STRING_PRECIS;
