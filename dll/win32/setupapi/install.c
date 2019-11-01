@@ -42,6 +42,7 @@ static const WCHAR SecurityKey[] = {'S','e','c','u','r','i','t','y',0};
 static const WCHAR ServiceBinaryKey[] = {'S','e','r','v','i','c','e','B','i','n','a','r','y',0};
 static const WCHAR ServiceTypeKey[] = {'S','e','r','v','i','c','e','T','y','p','e',0};
 static const WCHAR StartTypeKey[] = {'S','t','a','r','t','T','y','p','e',0};
+static const WCHAR StartNameKey[] = {'S','t','a','r','t','N','a','m','e',0};
 
 static const WCHAR Name[] = {'N','a','m','e',0};
 static const WCHAR CmdLine[] = {'C','m','d','L','i','n','e',0};
@@ -1791,6 +1792,7 @@ static BOOL InstallOneService(
     LPWSTR DisplayName = NULL;
     LPWSTR Description = NULL;
     LPWSTR Dependencies = NULL;
+    LPWSTR StartName = NULL;
     LPWSTR SecurityDescriptor = NULL;
     PSECURITY_DESCRIPTOR sd = NULL;
     INT ServiceType, StartType, ErrorControl;
@@ -1834,6 +1836,7 @@ static BOOL InstallOneService(
     GetLineText(hInf, ServiceSection, DisplayNameKey, &DisplayName);
     GetLineText(hInf, ServiceSection, DescriptionKey, &Description);
     GetLineText(hInf, ServiceSection, DependenciesKey, &Dependencies);
+    GetLineText(hInf, ServiceSection, StartNameKey, &StartName);
 
     /* If there is no group, we must not request a tag */
     if (!LoadOrderGroup || !*LoadOrderGroup)
@@ -1868,7 +1871,8 @@ static BOOL InstallOneService(
             LoadOrderGroup,
             useTag ? &tagId : NULL,
             Dependencies,
-            NULL, NULL);
+            StartName,
+            NULL);
         if (hService == NULL)
             goto cleanup;
     }
@@ -1901,7 +1905,8 @@ static BOOL InstallOneService(
             (ServiceFlags & SPSVCINST_NOCLOBBER_LOADORDERGROUP && ServiceConfig->lpLoadOrderGroup) ? NULL : LoadOrderGroup,
             useTag ? &tagId : NULL,
             (ServiceFlags & SPSVCINST_NOCLOBBER_DEPENDENCIES && ServiceConfig->lpDependencies) ? NULL : Dependencies,
-            NULL, NULL,
+            StartName,
+            NULL,
             (ServiceFlags & SPSVCINST_NOCLOBBER_DISPLAYNAME && ServiceConfig->lpDisplayName) ? NULL : DisplayName);
         if (!ret)
             goto cleanup;
@@ -2057,6 +2062,7 @@ cleanup:
     MyFree(Dependencies);
     MyFree(SecurityDescriptor);
     MyFree(GroupOrder);
+    MyFree(StartName);
 
     TRACE("Returning %d\n", ret);
     return ret;
