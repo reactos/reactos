@@ -955,7 +955,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     HFONT hFont, hOldFont;
     WCHAR Symbol;
     RECT myr;
-    INT cxy, nBkMode;
+    INT cxy;
     cxy = UITOOLS_MakeSquareRect(r, &myr);
     switch(uFlags & 0xff)
     {
@@ -1014,9 +1014,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
        IntGdiSetTextColor(dc, IntGetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     }
     /* draw selected symbol */
-    nBkMode = IntGdiSetBkMode(dc, TRANSPARENT);
     GreTextOutW(dc, myr.left, myr.top, &Symbol, 1);
-    IntGdiSetBkMode(dc, nBkMode);
     /* restore previous settings */
     NtGdiSelectFont(dc, hOldFont);
     GreDeleteObject(hFont);
