@@ -270,10 +270,10 @@ StartType     = 2
 ErrorControl  = 1
 ServiceBinary = "%11%\svchost.exe -k netsvcs"
 LoadOrderGroup = TDI
+StartName     = "LocalSystem"
 AddReg=dhcp_AddReg
 
 [dhcp_AddReg]
-HKR,,"ObjectName",0x00000000,"LocalSystem"
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 [dns_Service_Inst]
@@ -284,10 +284,10 @@ StartType     = 2
 ErrorControl  = 1
 ServiceBinary = "%11%\svchost.exe -k NetworkService"
 LoadOrderGroup = TDI
+StartName     = "NT AUTHORITY\NetworkService"
 AddReg=dns_AddReg
 
 [dns_AddReg]
-HKR,,"ObjectName",0x00000000,"NT AUTHORITY\NetworkService"
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dnsrslvr.dll"
 
 ;-------------------------------- STRINGS -------------------------------
