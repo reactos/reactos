@@ -5120,7 +5120,7 @@ Return Value:
                                     NULL,
                                     NonPagedPoolMustSucceed,
                                     SCSI_REQUEST_BLOCK_SIZE,
-                                    'ScsH',
+                                    'HscS',
                                     (USHORT)NumberElements);
 
 }
