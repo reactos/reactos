@@ -234,8 +234,6 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
 
 WCHAR JF_LocalName0[] = {0xFF2D, 0xFF33, ' ', 0x660E, 0x671D, 0};                           /* MS Mincho */
 WCHAR JF_LocalName1[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x660E, 0x671D, 0};                   /* MS PMincho */
-WCHAR JF_LocalName2[] = {0xFF2D, 0xFF33, ' ', 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};           /* MS Gothic */
-WCHAR JF_LocalName3[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};   /* MS PGothic */
 MUI_SUBFONT JapaneseFonts[] =
 {
     { L"Arial Baltic,186",       L"Arial,186" },
@@ -253,9 +251,7 @@ MUI_SUBFONT JapaneseFonts[] =
     { L"Franklin Gothic Medium", L"Droid Sans Fallback" },
     { L"Helv",            L"Droid Sans Fallback" },
     { L"Helvetica",       L"Arial" },
-    { L"MS Gothic",       L"Droid Sans Fallback" },
     { L"MS Mincho",       L"Droid Sans Fallback" },
-    { L"MS PGothic",      L"Droid Sans Fallback" },
     { L"MS PMincho",      L"Droid Sans Fallback" },
     { L"MS Sans Serif",   L"Droid Sans Fallback" },
     { L"MS Shell Dlg",    L"Droid Sans Fallback" },
@@ -277,8 +273,6 @@ MUI_SUBFONT JapaneseFonts[] =
     /* localized names */
     { JF_LocalName0,      L"Droid Sans Fallback" },
     { JF_LocalName1,      L"Droid Sans Fallback" },
-    { JF_LocalName2,      L"Droid Sans Fallback" },
-    { JF_LocalName3,      L"Droid Sans Fallback" },
     { NULL, NULL }
 };
 

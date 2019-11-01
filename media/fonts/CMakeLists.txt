@@ -34,6 +34,7 @@ list(APPEND FONT_FILES
     lucon.ttf
     Marlett.ttf
     micross.ttf
+    msgothic.ttc
     pala.ttf
     palab.ttf
     palabi.ttf
