@@ -25,27 +25,6 @@
 #include "imagehlp.h"
 #include "wine/debug.h"
 
-/**********************************************************************/
-DECLSPEC_HIDDEN HANDLE IMAGEHLP_hHeap = NULL;
-
-/***********************************************************************
- *           DllMain (IMAGEHLP.init)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-  switch(fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-      DisableThreadLibraryCalls(hinstDLL);
-      IMAGEHLP_hHeap = HeapCreate(0, 0x10000, 0);
-      break;
-    case DLL_PROCESS_DETACH:
-      if (lpvReserved) break;
-      HeapDestroy(IMAGEHLP_hHeap);
-      break;
-    }
-  return TRUE;
-}
 
 /***********************************************************************
  *           MarkImageAsRunFromSwap (IMAGEHLP.@)
