@@ -2037,7 +2037,7 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     PCONSRV_CONSOLE Console = GuiData->Console;
 
     /* Do nothing if the window is hidden */
-    if (!GuiData->IsWindowVisible) return;
+    if (!GuiData->IsWindowVisible || IsIconic(GuiData->hWindow)) return;
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -2067,8 +2067,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         if ((windy % HeightUnit) >= (HeightUnit / 2)) ++chary;
 
         /* Compensate for added scroll bars in window */
-        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL); // Window will have a horizontal scroll bar
-        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL); // Window will have a vertical scroll bar
+        if (Buff->ViewSize.X < Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL); // Window will have a horizontal scroll bar
+        if (Buff->ViewSize.Y < Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL); // Window will have a vertical scroll bar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
