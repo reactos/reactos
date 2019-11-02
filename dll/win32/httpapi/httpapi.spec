@@ -1,12 +1,18 @@
 @ stub HttpAddFragmentToCache
 @ stdcall HttpAddUrl(ptr wstr ptr)
 @ stub HttpAddUrlToConfigGroup
+@ stdcall HttpAddUrlToUrlGroup(int64 wstr int64 long)
 @ stub HttpCancelHttpRequest
 @ stub HttpCreateAppPool
 @ stub HttpCreateConfigGroup
 @ stub HttpCreateFilter
 @ stdcall HttpCreateHttpHandle(ptr long)
+@ stdcall HttpCreateRequestQueue(long wstr ptr long ptr)
 @ stdcall HttpCreateServerSession(long ptr long)
+@ stdcall HttpCreateUrlGroup(int64 ptr long)
+@ stdcall HttpCloseRequestQueue(ptr)
+@ stdcall HttpCloseServerSession(int64)
+@ stdcall HttpCloseUrlGroup(int64)
 @ stub HttpDeleteConfigGroup
 @ stdcall HttpDeleteServiceConfiguration(ptr long ptr long ptr)
 @ stub HttpFilterAccept
@@ -31,14 +37,15 @@
 @ stdcall HttpQueryServiceConfiguration(ptr long ptr long ptr long ptr ptr)
 @ stub HttpReadFragmentFromCache
 @ stub HttpReceiveClientCertificate
-@ stub HttpReceiveHttpRequest
+@ stdcall HttpReceiveHttpRequest(ptr int64 long ptr long ptr ptr)
 @ stub HttpReceiveHttpResponse
 @ stub HttpReceiveRequestEntityBody
 @ stub HttpRemoveAllUrlsFromConfigGroup
-@ stub HttpRemoveUrl
+@ stdcall HttpRemoveUrl(ptr wstr)
 @ stub HttpRemoveUrlFromConfigGroup
+@ stdcall HttpRemoveUrlFromUrlGroup(int64 wstr long)
 @ stub HttpSendHttpRequest
-@ stub HttpSendHttpResponse
+@ stdcall HttpSendHttpResponse(ptr int64 long ptr ptr ptr ptr long ptr ptr)
 @ stub HttpSendRequestEntityBody
 @ stub HttpSendResponseEntityBody
 @ stub HttpSetAppPoolInformation
@@ -46,6 +53,7 @@
 @ stub HttpSetControlChannelInformation
 @ stub HttpSetServerContextInformation
 @ stdcall HttpSetServiceConfiguration(ptr long ptr long ptr)
+@ stdcall HttpSetUrlGroupProperty(int64 long ptr long)
 @ stub HttpShutdownAppPool
 @ stub HttpShutdownFilter
 @ stdcall HttpTerminate(long ptr)
