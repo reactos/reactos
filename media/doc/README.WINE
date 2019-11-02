@@ -75,7 +75,7 @@ dll/win32/hlink               # Synced to WineStaging-4.18
 dll/win32/hnetcfg             # Synced to WineStaging-4.18
 dll/win32/httpapi             # Synced to WineStaging-4.18
 dll/win32/iccvid              # Synced to WineStaging-4.0
-dll/win32/ieframe             # Synced to WineStaging-4.0
+dll/win32/ieframe             # Synced to WineStaging-4.18
 dll/win32/imaadp32.acm        # Synced to WineStaging-4.0
 dll/win32/imagehlp            # Synced to WineStaging-3.3
 dll/win32/imm32               # Synced to WineStaging-4.0
