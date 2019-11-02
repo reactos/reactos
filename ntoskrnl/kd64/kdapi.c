@@ -529,7 +529,7 @@ KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+KdpReadPhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                       IN PSTRING Data,
                       IN PCONTEXT Context)
 {
@@ -592,7 +592,7 @@ KdpReadPhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpWritePhysicalmemory(IN PDBGKD_MANIPULATE_STATE64 State,
+KdpWritePhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                        IN PSTRING Data,
                        IN PCONTEXT Context)
 {
@@ -1395,13 +1395,13 @@ SendPacket:
             case DbgKdReadPhysicalMemoryApi:
 
                 /* Read  physical memory */
-                KdpReadPhysicalmemory(&ManipulateState, &Data, Context);
+                KdpReadPhysicalMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWritePhysicalMemoryApi:
 
                 /* Write  physical memory */
-                KdpWritePhysicalmemory(&ManipulateState, &Data, Context);
+                KdpWritePhysicalMemory(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdQuerySpecialCallsApi:

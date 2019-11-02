@@ -118,7 +118,7 @@ KdpTranslateAddress(ULONG_PTR Addr, PULONG_PTR ResultAddr)
 {
     ULONG_PTR CR3Value = __readcr3();
     ULONG_PTR CR4Value = __readcr4();
-    ULONG_PTR PageDirectory = (CR3Value & ~(PAGE_SIZE-1)) + 
+    ULONG_PTR PageDirectory = (CR3Value & ~(PAGE_SIZE-1)) +
         ((Addr >> 22) * sizeof(ULONG));
     ULONG_PTR PageDirectoryEntry = KdpPhysRead(PageDirectory, sizeof(ULONG));
 
@@ -137,7 +137,7 @@ KdpTranslateAddress(ULONG_PTR Addr, PULONG_PTR ResultAddr)
     }
     else
     {
-        ULONG_PTR PageTableAddr = 
+        ULONG_PTR PageTableAddr =
             (PageDirectoryEntry & ~(PAGE_SIZE-1)) +
             ((Addr >> PAGE_SHIFT) & PAGE_TABLE_MASK) * sizeof(ULONG);
         ULONG_PTR PageTableEntry = KdpPhysRead(PageTableAddr, sizeof(ULONG));
@@ -165,7 +165,7 @@ KdpSafeReadMemory(ULONG_PTR Addr, LONG Len, PVOID Value)
     }
 
     memset(Value, 0, Len);
-            
+
     if (!KdpTranslateAddress(Addr, &ResultPhysAddr))
         return FALSE;
 
@@ -199,7 +199,7 @@ KdpSafeWriteMemory(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
         memcpy((PVOID)Addr, &Value, Len);
         return TRUE;
     }
-            
+
     if (!KdpTranslateAddress(Addr, &ResultPhysAddr))
         return FALSE;
 
