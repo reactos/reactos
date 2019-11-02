@@ -242,7 +242,7 @@ static HRESULT WINAPI IHlink_fnSetMonikerReference( IHlink* iface,
             CreateBindCtx( 0, &pbc);
             IMoniker_GetDisplayName(This->Moniker, pbc, NULL, &display_name);
             IBindCtx_Release(pbc);
-            This->absolute = display_name && strchrW(display_name, ':');
+            This->absolute = display_name && wcschr(display_name, ':');
             CoTaskMemFree(display_name);
         }
     }
@@ -290,7 +290,7 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
 
             if (FAILED(r))
             {
-                LPCWSTR p = strchrW(pwzTarget, ':');
+                LPCWSTR p = wcschr(pwzTarget, ':');
                 if (p && (p - pwzTarget > 1))
                     r = CreateURLMoniker(NULL, pwzTarget, &pMon);
                 else
@@ -739,7 +739,7 @@ static HRESULT write_hlink_string(IStream *pStm, LPCWSTR str)
 
     TRACE("(%p, %s)\n", pStm, debugstr_w(str));
 
-    len = strlenW(str) + 1;
+    len = lstrlenW(str) + 1;
 
     hr = IStream_Write(pStm, &len, sizeof(len), NULL);
     if (FAILED(hr)) return hr;
@@ -752,7 +752,7 @@ static HRESULT write_hlink_string(IStream *pStm, LPCWSTR str)
 
 static inline ULONG size_hlink_string(LPCWSTR str)
 {
-    return sizeof(DWORD) + (strlenW(str) + 1) * sizeof(WCHAR);
+    return sizeof(DWORD) + (lstrlenW(str) + 1) * sizeof(WCHAR);
 }
 
 static HRESULT read_hlink_string(IStream *pStm, LPWSTR *out_str)
