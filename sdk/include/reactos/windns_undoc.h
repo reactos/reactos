@@ -27,6 +27,10 @@ WINAPI
 DnsGetCacheDataTable(
     _Out_ PDNS_CACHE_ENTRY *DnsCache);
 
+DNS_STATUS
+WINAPI
+GetCurrentTimeInSeconds(VOID);
+
 #endif /* __WIDL__ */
 
 #ifdef __cplusplus

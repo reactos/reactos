@@ -16,6 +16,7 @@
 #define NDEBUG
 #include <debug.h>
 
+
 /* DnsQuery ****************************
  * Begin a DNS query, and allow the result to be placed in the application
  * supplied result pointer.  The result can be manipulated with the record
@@ -155,7 +156,7 @@ DnsQuery_CodePage(UINT CodePage,
            LPCSTR Name,
            WORD Type,
            DWORD Options,
-           PIP4_ARRAY Servers,
+           PVOID Extra,
            PDNS_RECORD *QueryResultSet,
            PVOID *Reserved)
 {
@@ -163,7 +164,7 @@ DnsQuery_CodePage(UINT CodePage,
     PWCHAR Buffer;
     DNS_STATUS Status;
     PDNS_RECORD QueryResultWide;
-    PDNS_RECORD ConvertedRecord = 0, LastRecord = 0;
+    PDNS_RECORD ConvertedRecord = NULL, LastRecord = NULL;
 
     if (Name == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -184,7 +185,7 @@ DnsQuery_CodePage(UINT CodePage,
         return ERROR_INVALID_PARAMETER;
     }
 
-    Status = DnsQuery_W(Buffer, Type, Options, Servers, &QueryResultWide, Reserved);
+    Status = DnsQuery_W(Buffer, Type, Options, Extra, &QueryResultWide, Reserved);
 
     while (Status == ERROR_SUCCESS && QueryResultWide)
     {
@@ -308,7 +309,7 @@ DnsQuery_CodePage(UINT CodePage,
     }
 
     if (LastRecord)
-        LastRecord->pNext = 0;
+        LastRecord->pNext = NULL;
 
     /* The name */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
@@ -322,22 +323,22 @@ DNS_STATUS WINAPI
 DnsQuery_A(LPCSTR Name,
            WORD Type,
            DWORD Options,
-           PIP4_ARRAY Servers,
+           PVOID Extra,
            PDNS_RECORD *QueryResultSet,
            PVOID *Reserved)
 {
-    return DnsQuery_CodePage(CP_ACP, Name, Type, Options, Servers, QueryResultSet, Reserved);
+    return DnsQuery_CodePage(CP_ACP, Name, Type, Options, Extra, QueryResultSet, Reserved);
 }
 
 DNS_STATUS WINAPI
 DnsQuery_UTF8(LPCSTR Name,
               WORD Type,
               DWORD Options,
-              PIP4_ARRAY Servers,
+              PVOID Extra,
               PDNS_RECORD *QueryResultSet,
               PVOID *Reserved)
 {
-    return DnsQuery_CodePage(CP_UTF8, Name, Type, Options, Servers, QueryResultSet, Reserved);
+    return DnsQuery_CodePage(CP_UTF8, Name, Type, Options, Extra, QueryResultSet, Reserved);
 }
 
 WCHAR
@@ -725,7 +726,7 @@ DNS_STATUS WINAPI
 DnsQuery_W(LPCWSTR Name,
            WORD Type,
            DWORD Options,
-           PIP4_ARRAY Servers,
+           PVOID Extra,
            PDNS_RECORD *QueryResultSet,
            PVOID *Reserved)
 {
@@ -922,14 +923,6 @@ DnsQuery_W(LPCWSTR Name,
         }
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
 
-        if (Servers)
-        {
-            for (i = 0; i < Servers->AddrCount; i++)
-            {
-                adns_addserver(astate, *((struct in_addr *)&Servers->AddrArray[i]));
-            }
-        }
-
         if (!adns_numservers(astate))
         {
             /* There are no servers to query so bail out */
@@ -1094,4 +1087,21 @@ DnsFlushResolverCache(VOID)
     RpcEndExcept;
 
     return (Status == ERROR_SUCCESS);
+}
+
+DNS_STATUS
+WINAPI
+GetCurrentTimeInSeconds(VOID)
+{
+    FILETIME Time;
+    FILETIME Adjustment;
+    ULARGE_INTEGER lTime, lAdj;
+    SYSTEMTIME st = {1970, 1, 0, 1, 0, 0, 0};
+
+    SystemTimeToFileTime(&st, &Adjustment);
+    memcpy(&lAdj, &Adjustment, sizeof(lAdj));
+    GetSystemTimeAsFileTime(&Time);
+    memcpy(&lTime, &Time, sizeof(lTime));
+    lTime.QuadPart -= lAdj.QuadPart;
+    return (DWORD)(lTime.QuadPart/10000000LLU);
 }
