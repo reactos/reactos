@@ -84,7 +84,6 @@ KdpGetDebugMode(PCHAR Currentp2)
             }
         }
     }
-
     /* Check for Debug Log Debugging */
     else if (!_strnicmp(p2, "FILE", 4))
     {
@@ -100,7 +99,6 @@ KdpGetDebugMode(PCHAR Currentp2)
             KdpLogFileName.Buffer = p1;
         }
     }
-
     /* Check for BOCHS Debugging */
     else if (!_strnicmp(p2, "BOCHS", 5))
     {
@@ -108,7 +106,6 @@ KdpGetDebugMode(PCHAR Currentp2)
         p2 += 5;
         KdpDebugMode.Bochs = TRUE;
     }
-
     /* Check for GDB Debugging */
     else if (!_strnicmp(p2, "GDB", 3))
     {
@@ -122,7 +119,6 @@ KdpGetDebugMode(PCHAR Currentp2)
         SharedUserData->KdDebuggerEnabled = TRUE;
         WrapperInitRoutine = KdpGdbStubInit;
     }
-
     /* Check for PICE Debugging */
     else if (!_strnicmp(p2, "PICE", 4))
     {
@@ -175,38 +171,54 @@ KdInitSystem(ULONG BootPhase,
 {
     ULONG Value;
     ULONG i;
-    PCHAR CommandLine, Port, BaudRate, Irq;
+    PCHAR CommandLine, Port = NULL, BaudRate = NULL, Irq = NULL;
 
     /* Set Default Port Options */
     if (BootPhase == 0)
     {
-        /* Get the Command Line */
-        CommandLine = LoaderBlock->LoadOptions;
-
-        /* Upcase it */
-        _strupr(CommandLine);
-
-        /* XXX Check for settings that we support */
-        if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
-        else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
-        else if (strstr(CommandLine, "DEBUG"))
+        /* Check if we have a loader block */
+        if (LoaderBlock)
         {
-            /* Enable the kernel debugger */
-            KdDebuggerNotPresent = FALSE;
-            KdDebuggerEnabled = TRUE;
+            /* Check if we have a command line */
+            CommandLine = LoaderBlock->LoadOptions;
+            if (CommandLine)
+            {
+                /* Upcase it */
+                _strupr(CommandLine);
+
+                /* XXX Check for settings that we support */
+                if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
+                else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
+                else if (strstr(CommandLine, "DEBUG"))
+                {
+                    /* Enable the kernel debugger */
+                    KdDebuggerNotPresent = FALSE;
+                    KdDebuggerEnabled = TRUE;
 #ifdef KDBG
-            /* Get the KDBG Settings */
-            KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
+                    /* Get the KDBG Settings */
+                    KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
 #endif
+                }
+
+                /* Get the port and baud rate */
+                Port = strstr(CommandLine, "DEBUGPORT");
+                BaudRate = strstr(CommandLine, "BAUDRATE");
+                Irq = strstr(CommandLine, "IRQ");
+            }
+            else
+            {
+                /* No command line options? Disable debugger by default */
+                KdDebuggerEnabled = FALSE;
+            }
+        }
+        else
+        {
+            /* Called from a bugcheck or a re-enable. Unconditionally enable KD */
+            KdDebuggerEnabled = TRUE;
         }
 
         /* Let user-mode know our state */
         SharedUserData->KdDebuggerEnabled = KdDebuggerEnabled;
-
-        /* Get the port and baud rate */
-        Port = strstr(CommandLine, "DEBUGPORT");
-        BaudRate = strstr(CommandLine, "BAUDRATE");
-        Irq = strstr(CommandLine, "IRQ");
 
         /* Check if we got the /DEBUGPORT parameter(s) */
         while (Port)
