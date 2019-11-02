@@ -117,7 +117,7 @@ HRESULT decode_source(WCHAR *code)
     static const WCHAR decode_endW[] = {'^','#','~','@'};
 
     while(*src) {
-        if(!strncmpW(src, decode_beginW, ARRAY_SIZE(decode_beginW))) {
+        if(!wcsncmp(src, decode_beginW, ARRAY_SIZE(decode_beginW))) {
             DWORD len, i, j=0, csum, s=0;
 
             src += ARRAY_SIZE(decode_beginW);
@@ -165,7 +165,7 @@ HRESULT decode_source(WCHAR *code)
                 return JS_E_INVALID_CHAR;
             src += 8;
 
-            if(strncmpW(src, decode_endW, ARRAY_SIZE(decode_endW)))
+            if(wcsncmp(src, decode_endW, ARRAY_SIZE(decode_endW)))
                 return JS_E_INVALID_CHAR;
             src += ARRAY_SIZE(decode_endW);
         }else {

@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#ifdef __REACTOS__
+#include <wine/config.h>
+#include <wine/port.h>
+#endif
 
 #include <math.h>
 #include <assert.h>
@@ -619,9 +621,9 @@ static BOOL lookup_global_members(script_ctx_t *ctx, BSTR identifier, exprval_t 
     return FALSE;
 }
 
-static int local_ref_cmp(const void *key, const void *ref)
+static int __cdecl local_ref_cmp(const void *key, const void *ref)
 {
-    return strcmpW((const WCHAR*)key, ((const local_ref_t*)ref)->name);
+    return wcscmp((const WCHAR*)key, ((const local_ref_t*)ref)->name);
 }
 
 local_ref_t *lookup_local(const function_code_t *function, const WCHAR *identifier)
@@ -653,7 +655,7 @@ static HRESULT identifier_eval(script_ctx_t *ctx, BSTR identifier, exprval_t *re
                     return S_OK;
                 }
 
-                if(!strcmpW(identifier, argumentsW)) {
+                if(!wcscmp(identifier, argumentsW)) {
                     hres = detach_variable_object(ctx, scope->frame, FALSE);
                     if(FAILED(hres))
                         return hres;
@@ -677,7 +679,7 @@ static HRESULT identifier_eval(script_ctx_t *ctx, BSTR identifier, exprval_t *re
     }
 
     for(item = ctx->named_items; item; item = item->next) {
-        if((item->flags & SCRIPTITEM_ISVISIBLE) && !strcmpW(item->name, identifier)) {
+        if((item->flags & SCRIPTITEM_ISVISIBLE) && !wcscmp(item->name, identifier)) {
             if(!item->disp) {
                 IUnknown *unk;
 
@@ -1449,15 +1451,19 @@ static HRESULT interp_new_obj(script_ctx_t *ctx)
 /* ECMA-262 3rd Edition    11.1.5 */
 static HRESULT interp_obj_prop(script_ctx_t *ctx)
 {
-    const BSTR name = get_op_bstr(ctx, 0);
+    jsstr_t *name_arg = get_op_str(ctx, 0);
     unsigned type = get_op_uint(ctx, 1);
+    const WCHAR *name;
     jsdisp_t *obj;
     jsval_t val;
     HRESULT hres;
 
-    TRACE("%s\n", debugstr_w(name));
+    TRACE("%s\n", debugstr_jsstr(name_arg));
 
     val = stack_pop(ctx);
+
+    /* FIXME: we should pass it as jsstr_t */
+    name = jsstr_flatten(name_arg);
 
     assert(is_object_instance(stack_top(ctx)));
     obj = as_jsdisp(get_object(stack_top(ctx)));
