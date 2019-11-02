@@ -25,6 +25,7 @@ list(APPEND SOURCE
 add_library(dnsapi MODULE
     ${SOURCE}
     dnsapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dnsapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def)
 
 set_module_type(dnsapi win32dll)
