@@ -28,7 +28,7 @@
 #include "imagehlp.h"
 #include "psapi.h"
 
-static HMODULE hImageHlp, hPsapi;
+static HMODULE hImageHlp, hPsapi, hNtdll;
 static char test_dll_path[MAX_PATH];
 
 static BOOL (WINAPI *pImageAddCertificate)(HANDLE, LPWIN_CERTIFICATE, PDWORD);
@@ -38,7 +38,9 @@ static BOOL (WINAPI *pImageGetCertificateHeader)(HANDLE, DWORD, LPWIN_CERTIFICAT
 static BOOL (WINAPI *pImageRemoveCertificate)(HANDLE, DWORD);
 static PIMAGE_NT_HEADERS (WINAPI *pCheckSumMappedFile)(PVOID, DWORD, PDWORD, PDWORD);
 
-static BOOL (WINAPI *pGetModuleInformation)(HANDLE, HMODULE, LPMODULEINFO, DWORD cb);
+static BOOL (WINAPI *pGetModuleInformation)(HANDLE, HMODULE, LPMODULEINFO, DWORD);
+
+static PIMAGE_NT_HEADERS (WINAPI *pRtlImageNtHeader)(PVOID);
 
 static const char test_cert_data[] =
 {0x30,0x82,0x02,0xE1,0x06,0x09,0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x07,0x02
@@ -264,43 +266,11 @@ static void test_remove_certificate(int index)
     CloseHandle(hFile);
 }
 
-static DWORD _get_checksum_offset(PVOID base, PIMAGE_NT_HEADERS *nt_header, DWORD *checksum)
-{
-    IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)base;
-    PIMAGE_NT_HEADERS32 Header32;
-    PIMAGE_NT_HEADERS64 Header64;
-
-    if (dos->e_magic != IMAGE_DOS_SIGNATURE)
-        return 0;
-
-    Header32 = (IMAGE_NT_HEADERS32 *)((char *)dos + dos->e_lfanew);
-    if (Header32->Signature != IMAGE_NT_SIGNATURE)
-        return 0;
-
-    *nt_header = (PIMAGE_NT_HEADERS)Header32;
-
-    if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
-    {
-        *checksum = Header32->OptionalHeader.CheckSum;
-        return (char *)&Header32->OptionalHeader.CheckSum - (char *)base;
-    }
-    else if (Header32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
-    {
-        Header64 = (IMAGE_NT_HEADERS64 *)Header32;
-        *checksum = Header64->OptionalHeader.CheckSum;
-        return (char *)&Header64->OptionalHeader.CheckSum - (char *)base;
-    }
-
-    return 0;
-}
-
 static void test_pe_checksum(void)
 {
-    DWORD checksum_orig, checksum_new, checksum_off, checksum_correct;
+    DWORD checksum_orig, checksum_new, checksum_correct;
     PIMAGE_NT_HEADERS nt_header;
     PIMAGE_NT_HEADERS ret;
-    HMODULE quartz_data;
-    char* quartz_base;
     MODULEINFO modinfo;
     char buffer[20];
     BOOL ret_bool;
@@ -312,60 +282,47 @@ static void test_pe_checksum(void)
     }
 
     SetLastError(0xdeadbeef);
-    checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(NULL, 0, &checksum_orig, &checksum_new);
     ok(!ret, "Expected CheckSumMappedFile to fail, got %p\n", ret);
-    ok(GetLastError() == 0xdeadbeef, "Expected err=0xdeadbeef, got %x\n", GetLastError());
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0, "Expected 0, got %x\n", checksum_new);
+    ok(((GetLastError() == ERROR_INVALID_PARAMETER)||(GetLastError() == 0xdeadbeef)),
+       "Expected 0xdeadbeef (XP) or ERROR_INVALID_PARAMETER (Vista+), got %x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile((void *)0xdeadbeef, 0, &checksum_orig, &checksum_new);
     ok(!ret, "Expected CheckSumMappedFile to fail, got %p\n", ret);
-    ok(GetLastError() == 0xdeadbeef, "Expected err=0xdeadbeef, got %x\n", GetLastError());
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0, "Expected 0, got %x\n", checksum_new);
-
-    if (0)
-    {
-        /* crashes on Windows */
-        checksum_orig = checksum_new = 0xdeadbeef;
-        pCheckSumMappedFile(0, 0x1000, &checksum_orig, &checksum_new);
-        pCheckSumMappedFile((void *)0xdeadbeef, 0x1000, NULL, NULL);
-    }
+    ok(((GetLastError() == ERROR_INVALID_PARAMETER)||(GetLastError() == 0xdeadbeef)),
+       "Expected 0xdeadbeef (XP) or ERROR_INVALID_PARAMETER (Vista+), got %x\n", GetLastError());
 
     /* basic checksum tests */
     memset(buffer, 0x11, sizeof(buffer));
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(buffer, sizeof(buffer), &checksum_orig, &checksum_new);
     ok(ret == NULL, "Expected NULL, got %p\n", ret);
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0xaabe, "Expected 0xaabe, got %x\n", checksum_new);
+    todo_wine ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
+    todo_wine ok(checksum_new == 0xaabe, "Expected 0xaabe, got %x\n", checksum_new);
 
     memset(buffer, 0x22, sizeof(buffer));
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(buffer, sizeof(buffer), &checksum_orig, &checksum_new);
     ok(ret == NULL, "Expected NULL, got %p\n", ret);
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0x5569, "Expected 0x5569, got %x\n", checksum_new);
+    todo_wine ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
+    todo_wine ok(checksum_new == 0x5569, "Expected 0x5569, got %x\n", checksum_new);
 
     memset(buffer, 0x22, sizeof(buffer));
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(buffer, 10, &checksum_orig, &checksum_new);
     ok(ret == NULL, "Expected NULL, got %p\n", ret);
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0xaab4, "Expected 0xaab4, got %x\n", checksum_new);
+    todo_wine ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
+    todo_wine ok(checksum_new == 0xaab4, "Expected 0xaab4, got %x\n", checksum_new);
 
     memset(buffer, 0x22, sizeof(buffer));
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(buffer, 11, &checksum_orig, &checksum_new);
     ok(ret == NULL, "Expected NULL, got %p\n", ret);
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0xaad7, "Expected 0xaad7, got %x\n", checksum_new);
+    todo_wine ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
+    todo_wine ok(checksum_new == 0xaad7, "Expected 0xaad7, got %x\n", checksum_new);
 
     /* test checksum of PE module */
-    memset(buffer, 0x22, sizeof(buffer));
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(test_pe_executable, sizeof(test_pe_executable),
                               &checksum_orig, &checksum_new);
@@ -383,12 +340,6 @@ static void test_pe_checksum(void)
                                      &modinfo, sizeof(modinfo));
     ok(ret_bool, "GetModuleInformation failed, error: %x\n", GetLastError());
 
-    if (0)
-    {
-        /* crashes on Windows */
-        pCheckSumMappedFile(modinfo.lpBaseOfDll, modinfo.SizeOfImage, NULL, NULL);
-    }
-
     SetLastError(0xdeadbeef);
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(modinfo.lpBaseOfDll, modinfo.SizeOfImage, &checksum_orig, &checksum_new);
@@ -403,82 +354,38 @@ static void test_pe_checksum(void)
                               &checksum_orig, &checksum_new);
     ok(!ret, "Expected CheckSumMappedFile to fail, got %p\n", ret);
     ok(GetLastError() == 0xdeadbeef, "Expected err=0xdeadbeef, got %x\n", GetLastError());
-    ok(checksum_orig == 0, "Expected 0xdeadbeef, got %x\n", checksum_orig);
-    ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
+    todo_wine ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
+    todo_wine ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
 
-    checksum_off = _get_checksum_offset(modinfo.lpBaseOfDll, &nt_header, &checksum_correct);
-    ok(checksum_off != 0, "Failed to get checksum offset\n");
-
-    checksum_orig = checksum_new = 0xdeadbeef;
-    ret = pCheckSumMappedFile(modinfo.lpBaseOfDll, checksum_off, &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
+    nt_header = pRtlImageNtHeader( modinfo.lpBaseOfDll );
+    checksum_correct = nt_header->OptionalHeader.CheckSum;
 
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(modinfo.lpBaseOfDll, (char *)nt_header - (char *)modinfo.lpBaseOfDll,
                               &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
+    ok(!ret || (ret == nt_header), "Expected CheckSumMappedFile to fail, got %p\n", ret);
+    ok((checksum_orig == 0) || (checksum_orig == checksum_correct), "Expected %x, got %x\n", checksum_correct, checksum_orig);
     ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
 
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(modinfo.lpBaseOfDll, sizeof(IMAGE_DOS_HEADER),
                               &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
+    ok(!ret || (ret == nt_header), "Expected CheckSumMappedFile to fail, got %p\n", ret);
+    ok((checksum_orig == 0) || (checksum_orig == checksum_correct), "Expected %x, got %x\n", checksum_correct, checksum_orig);
     ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
 
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile(modinfo.lpBaseOfDll, 0, &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    todo_wine ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
+    ok(!ret || (ret == nt_header), "Expected CheckSumMappedFile to fail, got %p\n", ret);
+    ok((checksum_orig == 0xdeadbeef) || (checksum_orig == checksum_correct), "Expected %x, got %x\n", checksum_correct, checksum_orig);
+    ok((checksum_new == 0xdeadbeef) || (checksum_new != 0 && checksum_new != 0xdeadbeef), "Got unexpected value %x\n", checksum_new);
 
     checksum_orig = checksum_new = 0xdeadbeef;
     ret = pCheckSumMappedFile((char *)modinfo.lpBaseOfDll + 1, 0,
                               &checksum_orig, &checksum_new);
     ok(ret == NULL, "Expected NULL, got %p\n", ret);
-    ok(checksum_orig == 0, "Expected 0, got %x\n", checksum_orig);
-    ok(checksum_new == 0, "Expected 0, got %x\n", checksum_new);
-
-    quartz_data = LoadLibraryExA("quartz.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-    if (!quartz_data)
-    {
-        skip("Failed to load quartz as datafile, skipping tests\n");
-        return;
-    }
-
-    quartz_base = (char *)((DWORD_PTR)quartz_data & ~1);
-    checksum_off = _get_checksum_offset(quartz_base, &nt_header, &checksum_correct);
-    ok(checksum_off != 0, "Failed to get checksum offset\n");
-
-    checksum_orig = checksum_new = 0xdeadbeef;
-    ret = pCheckSumMappedFile(quartz_base, checksum_off, &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
-
-    checksum_orig = checksum_new = 0xdeadbeef;
-    ret = pCheckSumMappedFile(quartz_base, (char *)nt_header - quartz_base,
-                              &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
-
-    checksum_orig = checksum_new = 0xdeadbeef;
-    ret = pCheckSumMappedFile(quartz_base, sizeof(IMAGE_DOS_HEADER), &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
-
-    checksum_orig = checksum_new = 0xdeadbeef;
-    ret = pCheckSumMappedFile(quartz_base, 0, &checksum_orig, &checksum_new);
-    ok(ret == nt_header, "Expected %p, got %p\n", nt_header, ret);
-    ok(checksum_orig == checksum_correct, "Expected %x, got %x\n", checksum_correct, checksum_orig);
-    todo_wine ok(checksum_new != 0 && checksum_new != 0xdeadbeef, "Got unexpected value %x\n", checksum_new);
-
-    FreeLibrary(quartz_data);
+    ok((checksum_orig == 0) || (checksum_orig == 0xdeadbeef), "Expected 0, got %x\n", checksum_orig);
+    ok((checksum_new == 0) || (checksum_new == 0xdeadbeef), "Expected 0, got %x\n", checksum_new);
 }
 
 START_TEST(integrity)
@@ -500,15 +407,6 @@ START_TEST(integrity)
     }
 
     file_size_orig = get_file_size();
-    /*
-     * Align file_size_orig to an 8-byte boundary. This avoids tests failures where
-     * the original dll is not correctly aligned (but when written to it will be).
-     */
-    if (file_size_orig % 8 != 0)
-    {
-        skip("We need to align to an 8-byte boundary\n");
-        file_size_orig = (file_size_orig + 7) & ~7;
-    }
 
     pImageAddCertificate = (void *) GetProcAddress(hImageHlp, "ImageAddCertificate");
     pImageEnumerateCertificates = (void *) GetProcAddress(hImageHlp, "ImageEnumerateCertificates");
@@ -520,6 +418,10 @@ START_TEST(integrity)
     hPsapi = LoadLibraryA("psapi.dll");
     if (hPsapi)
         pGetModuleInformation = (void *) GetProcAddress(hPsapi, "GetModuleInformation");
+
+    hNtdll = LoadLibraryA("ntdll.dll");
+    if (hNtdll)
+        pRtlImageNtHeader = (void *) GetProcAddress(hNtdll, "RtlImageNtHeader");
 
     first = test_add_certificate(test_cert_data, sizeof(test_cert_data));
     test_get_certificate(test_cert_data, first);
@@ -549,6 +451,7 @@ START_TEST(integrity)
     test_pe_checksum();
 
     if (hPsapi) FreeLibrary(hPsapi);
+    if (hNtdll) FreeLibrary(hNtdll);
     FreeLibrary(hImageHlp);
     DeleteFileA(test_dll_path);
 }
