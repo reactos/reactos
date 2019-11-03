@@ -287,6 +287,7 @@ ULONG WINAPI HttpRemoveUrl(HANDLE queue, const WCHAR *url)
 ULONG WINAPI HttpReceiveHttpRequest(HANDLE queue, HTTP_REQUEST_ID id, ULONG flags,
         HTTP_REQUEST *request, ULONG size, ULONG *ret_size, OVERLAPPED *ovl)
 {
+#ifndef __REACTOS__
     struct http_receive_request_params params =
     {
         .addr = (ULONG_PTR)request,
@@ -294,6 +295,10 @@ ULONG WINAPI HttpReceiveHttpRequest(HANDLE queue, HTTP_REQUEST_ID id, ULONG flag
         .flags = flags,
         .bits = sizeof(void *) * 8,
     };
+#else
+    struct http_receive_request_params params =
+        { (ULONGLONG)(ULONG_PTR)request, id, flags, sizeof(void *) * 8 };
+#endif
     ULONG ret = ERROR_SUCCESS;
     OVERLAPPED sync_ovl;
 
