@@ -16,9 +16,7 @@
 
 #include <mm/ARM3/miarm.h>
 
-#ifdef _WINKD_
 extern PMMPTE MmDebugPte;
-#endif
 
 /* Helper macros */
 #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
@@ -258,12 +256,10 @@ MiInitializePageTable(VOID)
     MmLastReservedMappingPte = MiAddressToPte((PVOID)MI_MAPPING_RANGE_END);
     MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
 
-#ifdef _WINKD_
     /* Setup debug mapping PTE */
     MiMapPPEs((PVOID)MI_DEBUG_MAPPING, (PVOID)MI_DEBUG_MAPPING);
     MiMapPDEs((PVOID)MI_DEBUG_MAPPING, (PVOID)MI_DEBUG_MAPPING);
     MmDebugPte = MiAddressToPte((PVOID)MI_DEBUG_MAPPING);
-#endif
 
     /* Setup PDE and PTEs for VAD bitmap and working set list */
     MiMapPDEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
