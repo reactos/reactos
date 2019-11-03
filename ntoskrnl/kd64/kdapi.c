@@ -84,8 +84,8 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         }
 
         /*
-         * The chunk size can be larger than the remaining size if this isn't
-         * the first round, so check if we need to shrink it back
+         * The chunk size can be larger than the remaining size if this
+         * isn't the first round, so check if we need to shrink it back.
          */
         while (CopyChunk > RemainingLength)
         {
@@ -110,14 +110,12 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         RemainingLength = RemainingLength - CopyChunk;
     }
 
-    /*
-     * We may have modified executable code, flush the instruction cache
-     */
-     KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
+    /* We may have modified executable code, flush the instruction cache */
+    KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
 
     /*
-     * Return the size we managed to copy
-     * and return success if we could copy the whole range
+     * Return the size we managed to copy and return
+     * success if we could copy the whole range.
      */
     if (ActualSize) *ActualSize = TotalSize - RemainingLength;
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
@@ -1201,12 +1199,12 @@ KdpWriteIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
 
     /* Call the internal routine */
     State->ReturnStatus = KdpSysWriteIoSpace(WriteIoExtended->InterfaceType,
-                                            WriteIoExtended->BusNumber,
-                                            WriteIoExtended->AddressSpace,
-                                            WriteIoExtended->IoAddress,
-                                            &WriteIoExtended->DataValue,
-                                            WriteIoExtended->DataSize,
-                                            &WriteIoExtended->DataSize);
+                                             WriteIoExtended->BusNumber,
+                                             WriteIoExtended->AddressSpace,
+                                             WriteIoExtended->IoAddress,
+                                             &WriteIoExtended->DataValue,
+                                             WriteIoExtended->DataSize,
+                                             &WriteIoExtended->DataSize);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -1275,7 +1273,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
 
     /*
      * Reset the context state to ensure the debugger has received
-     * the current context before it sets it
+     * the current context before it sets it.
      */
     KdpContextSent = FALSE;
 
@@ -1545,7 +1543,7 @@ SendPacket:
                 break;
 
             case DbgKdGetContextExApi:
-            
+
                 /* Extended Context Get */
                 KdpGetContextEx(&ManipulateState, &Data, Context);
                 break;
@@ -2279,8 +2277,8 @@ KdRefreshDebuggerNotPresent(VOID)
     Enable = KdEnterDebugger(NULL, NULL);
 
     /*
-     * Attempt to send a string to the debugger to refresh the
-     * connection state
+     * Attempt to send a string to the debugger
+     * to refresh the connection state.
      */
     KdpDprintf("KDTARGET: Refreshing KD connection\n");
 
@@ -2311,8 +2309,8 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
     else if (ComponentId == MAXULONG)
     {
         /*
-         * This is the internal ID used for DbgPrint messages without ID and
-         * Level. Use the system-wide mask for those.
+         * This is the internal ID used for DbgPrint messages without ID
+         * and Level. Use the system-wide mask for those.
          */
         Mask = &Kd_WIN2000_Mask;
     }
@@ -2367,8 +2365,8 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     else if (ComponentId == MAXULONG)
     {
         /*
-         * This is the internal ID used for DbgPrint messages without ID and
-         * Level. Use the system-wide mask for those.
+         * This is the internal ID used for DbgPrint messages without ID
+         * and Level. Use the system-wide mask for those.
          */
         Mask = &Kd_WIN2000_Mask;
     }
