@@ -797,7 +797,7 @@ KdbpCmdDisassembleX(
         while (Count > 0)
         {
             if (!KdbSymPrintAddress((PVOID)Address, NULL))
-                KdbpPrint("<%x>:", Address);
+                KdbpPrint("<%08x>:", Address);
             else
                 KdbpPrint(":");
 
@@ -2116,7 +2116,7 @@ KdbpCmdPcr(
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
-    KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
+    KdbpPrint("Current PCR is at 0x%p.\n", Pcr);
     KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
               "  Tib.StackBase:             0x%08x\n"
               "  Tib.StackLimit:            0x%08x\n"
@@ -2163,7 +2163,7 @@ KdbpCmdTss(
 {
     KTSS *Tss = KeGetPcr()->TSS;
 
-    KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
+    KdbpPrint("Current TSS is at 0x%p.\n", Tss);
     KdbpPrint("  Eip:           0x%08x\n"
               "  Es:            0x%04x\n"
               "  Cs:            0x%04x\n"
@@ -3470,7 +3470,7 @@ KdbpCliMainLoop(
     {
         if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip, &KdbCurrentTrapFrame->Tf))
         {
-            KdbpPrint("<%x>", KdbCurrentTrapFrame->Tf.Eip);
+            KdbpPrint("<%08x>", KdbCurrentTrapFrame->Tf.Eip);
         }
 
         KdbpPrint(": ");
