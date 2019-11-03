@@ -257,8 +257,8 @@ MiGetPteProtection(MMPTE Pte)
     return Protect;
 }
 
+static
 VOID
-NTAPI
 MiSetPteProtection(PMMPTE Pte, ULONG Protection)
 {
     Pte->u.Flush.CopyOnWrite = (Protection & PAGE_WRITECOPY_ANY) ? 1 : 0;
@@ -267,7 +267,7 @@ MiSetPteProtection(PMMPTE Pte, ULONG Protection)
     Pte->u.Flush.WriteThrough = (Protection & PAGE_WRITETHROUGH) ? 1 : 0;
 
     // FIXME: This doesn't work. Why?
-//    Pte->u.Flush.NoExecute = (Protection & PAGE_EXECUTE_ANY) ? 0 : 1;
+    Pte->u.Flush.NoExecute = (Protection & PAGE_EXECUTE_ANY) ? 0 : 1;
 }
 
 /* FUNCTIONS ***************************************************************/
