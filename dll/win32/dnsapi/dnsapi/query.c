@@ -1103,5 +1103,5 @@ GetCurrentTimeInSeconds(VOID)
     GetSystemTimeAsFileTime(&Time);
     memcpy(&lTime, &Time, sizeof(lTime));
     lTime.QuadPart -= lAdj.QuadPart;
-    return (DWORD)(lTime.QuadPart/10000000LLU);
+    return (DWORD)(lTime.QuadPart/10000000ULL);
 }
