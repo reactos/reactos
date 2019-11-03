@@ -146,7 +146,7 @@ static const struct
     { "disasm", "disasm [address] [L count]", "Disassemble count instructions at address.", KdbpCmdDisassembleX },
     { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
-    { "cregs", "cregs", "Display control registers.", KdbpCmdRegs },
+    { "cregs", "cregs", "Display control, descriptor table and task segment registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame address.", KdbpCmdBackTrace },
@@ -873,8 +873,9 @@ KdbpCmdRegs(
                   Tf->Ecx, Tf->Edx,
                   Tf->Esi, Tf->Edi,
                   Tf->Ebp);
-        KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
 
+        /* Display the EFlags */
+        KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
         for (i = 0; i < 32; i++)
         {
             if (i == 1)
@@ -894,14 +895,13 @@ KdbpCmdRegs(
                 KdbpPrint(EflagsBits[i]);
             }
         }
-
         KdbpPrint("\n");
     }
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
         KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
-        USHORT Ldtr;
+        USHORT Ldtr, Tr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -911,19 +911,20 @@ KdbpCmdRegs(
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
+        /* Retrieve the control registers */
         Cr0 = KdbCurrentTrapFrame->Cr0;
         Cr2 = KdbCurrentTrapFrame->Cr2;
         Cr3 = KdbCurrentTrapFrame->Cr3;
         Cr4 = KdbCurrentTrapFrame->Cr4;
 
-        /* Get descriptor table regs */
+        /* Retrieve the descriptor table and task segment registers */
         Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
         Ldtr = Ke386GetLocalDescriptorTable();
         __sidt(&Idtr.Limit);
+        Tr = Ke386GetTr();
 
         /* Display the control registers */
         KdbpPrint("CR0  0x%08x ", Cr0);
-
         for (i = 0; i < 32; i++)
         {
             if (!Cr0Bits[i])
@@ -932,12 +933,12 @@ KdbpCmdRegs(
             if ((Cr0 & (1 << i)) != 0)
                 KdbpPrint(Cr0Bits[i]);
         }
+        KdbpPrint("\n");
 
-        KdbpPrint("\nCR2  0x%08x\n", Cr2);
+        KdbpPrint("CR2  0x%08x\n", Cr2);
         KdbpPrint("CR3  0x%08x  Pagedir-Base 0x%08x %s%s\n", Cr3, (Cr3 & 0xfffff000),
                   (Cr3 & (1 << 3)) ? " PWT" : "", (Cr3 & (1 << 4)) ? " PCD" : "" );
         KdbpPrint("CR4  0x%08x ", Cr4);
-
         for (i = 0; i < 32; i++)
         {
             if (!Cr4Bits[i])
@@ -946,11 +947,13 @@ KdbpCmdRegs(
             if ((Cr4 & (1 << i)) != 0)
                 KdbpPrint(Cr4Bits[i]);
         }
+        KdbpPrint("\n");
 
-        /* Display the descriptor table regs */
-        KdbpPrint("\nGDTR  Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
-        KdbpPrint("LDTR  0x%04x\n", Ldtr);
-        KdbpPrint("IDTR  Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        /* Display the descriptor table and task segment registers */
+        KdbpPrint("GDTR Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
+        KdbpPrint("LDTR 0x%04x\n", Ldtr);
+        KdbpPrint("IDTR Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        KdbpPrint("TR   0x%04x\n", Tr);
     }
     else if (Argv[0][0] == 's') /* sregs */
     {
