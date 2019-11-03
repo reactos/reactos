@@ -131,7 +131,7 @@ BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
         if (ImageMajorVersion > SharedUserData->NtMajorVersion ||
             (ImageMajorVersion == SharedUserData->NtMajorVersion && ImageMinorVersion > SharedUserData->NtMinorVersion))
         {
-            DPRINT1("Accepting image version %lu.%lu, although ReactOS is an NT %hu.%hu OS!\n",
+            DPRINT1("Accepting image version %lu.%lu, although ReactOS is NT %hu.%hu OS!\n",
                 ImageMajorVersion,
                 ImageMinorVersion,
                 SharedUserData->NtMajorVersion,
