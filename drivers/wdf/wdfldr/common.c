@@ -34,36 +34,36 @@ GetNameFromPath(
 	OUT PUNICODE_STRING Name
 )
 {
-	PWCHAR nextSym;
-	PWCHAR currSym;
+	PWCHAR pNextSym;
+	PWCHAR pCurrSym;
 
-	if (Path->Length >= 2) 
+	if (Path->Length >= sizeof(WCHAR))
 	{
-		Name->Buffer = (wchar_t*)((char*)Path->Buffer + Path->Length - 2);
-		Name->Length = 2;
+		Name->Buffer = Path->Buffer + (Path->Length / 2) - 1;
+		Name->Length = sizeof(WCHAR);
 
-		for (nextSym = Name->Buffer; ; Name->Buffer = nextSym) 
+		for (pNextSym = Name->Buffer; ; Name->Buffer = pNextSym)
 		{
-			if (nextSym < Path->Buffer) 
+			if (pNextSym < Path->Buffer)
 			{
-				Name->Length -= 2;
+				Name->Length -= sizeof(WCHAR);
 				++Name->Buffer;
 				goto end;
 			}
-			currSym = Name->Buffer;
+			pCurrSym = Name->Buffer;
 
-			if (*currSym == '\\')
+			if (*pCurrSym == '\\')
 			{
 				break;
 			}
-			nextSym = currSym - 1;
-			Name->Length += 2;
+			pNextSym = pCurrSym - 1;
+			Name->Length += sizeof(WCHAR);
 		}
 
 		++Name->Buffer;
-		Name->Length -= 2;
+		Name->Length -= sizeof(WCHAR);
 
-		if (Name->Length == 2) 
+		if (Name->Length == sizeof(WCHAR))
 		{
 			Name->Buffer = NULL;
 			Name->Length = 0;
@@ -88,7 +88,7 @@ GetImageName(
 )
 {
 	NTSTATUS status;
-	OBJECT_ATTRIBUTES ObjectAttributes;
+	OBJECT_ATTRIBUTES objectAttributes;
 	UNICODE_STRING name;
 	UNICODE_STRING path;
 	PKEY_VALUE_PARTIAL_INFORMATION pKeyValPartial;
@@ -102,22 +102,16 @@ GetImageName(
 	KeyHandle = NULL;
 	pKeyValPartial = NULL;
 	RtlInitUnicodeString(&ValueName, L"ImagePath");
+	InitializeObjectAttributes(&objectAttributes, DriverServiceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-	ObjectAttributes.ObjectName = DriverServiceName;
-	ObjectAttributes.Length = 24;
-	ObjectAttributes.RootDirectory = 0;
-	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576; OBJ_OPENIF;
-	ObjectAttributes.SecurityDescriptor = 0;
-	ObjectAttributes.SecurityQualityOfService = 0;
-
-	status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+	status = ZwOpenKey(&KeyHandle, KEY_READ, &objectAttributes);
 
 	if (!NT_SUCCESS(status)) 
 	{
 		goto end;
 	}
 
-	status = FxLdrQueryData(KeyHandle, &ValueName, '1LxF', &pKeyValPartial);
+	status = FxLdrQueryData(KeyHandle, &ValueName, WDFLDR_TAG, &pKeyValPartial);
 	if (!NT_SUCCESS(status)) 
 	{
 		goto end;
@@ -141,10 +135,10 @@ GetImageName(
 	path.Length = (USHORT)pKeyValPartial->DataLength;
 	path.MaximumLength = (USHORT)pKeyValPartial->DataLength;
 
-	if (pKeyValPartial->DataLength >= 2u &&
-		!*(((WCHAR*)& pKeyValPartial->Data) + pKeyValPartial->DataLength / 2)) 
+	if (pKeyValPartial->DataLength >= sizeof(WCHAR) &&
+		!*(((WCHAR*)&pKeyValPartial->Data) + pKeyValPartial->DataLength / sizeof(WCHAR)))
 	{
-		path.Length = (USHORT)pKeyValPartial->DataLength - 2;
+		path.Length = (USHORT)pKeyValPartial->DataLength - sizeof(WCHAR);
 	}
 
 	GetNameFromPath(&path, &name);
@@ -166,7 +160,7 @@ GetImageName(
 
 			if (ImageName->Buffer != NULL) 
 			{
-				memset(ImageName->Buffer, 0, ImageName->Length);
+				RtlZeroMemory(ImageName->Buffer, ImageName->Length);
 				ImageName->MaximumLength = ImageName->Length;
 				ImageName->Length = 0;
 				RtlCopyUnicodeString(ImageName, &name);
@@ -280,7 +274,7 @@ AuxKlibQueryModuleInformation(
 	}
 
 	status = STATUS_SUCCESS;
-	if (SizePerModule != 4 && SizePerModule != 0x10C) 
+	if (SizePerModule != sizeof(RTL_MODULE_BASIC_INFO) && SizePerModule != sizeof(RTL_MODULE_EXTENDED_INFO))
 	{
 		return STATUS_INVALID_PARAMETER_2;
 	}
@@ -291,7 +285,7 @@ AuxKlibQueryModuleInformation(
 	}
 
 	pSysInfo = &systemInformation;
-	for (sysInfoLen = 0x120; ; sysInfoLen = ResultLength) 
+	for (sysInfoLen = sizeof(RTL_PROCESS_MODULES); ; sysInfoLen = ResultLength)
 	{
 		status = ZwQuerySystemInformation(SystemModuleInformation, pSysInfo, sysInfoLen, &ResultLength);
 		if (NT_SUCCESS(status))
@@ -301,7 +295,7 @@ AuxKlibQueryModuleInformation(
 			goto clean;
 
 		if (pSysInfo != &systemInformation)
-			ExFreePoolWithTag(pSysInfo, 0);
+			ExFreePoolWithTag(pSysInfo, WDFLDR_TAG);
 
 		pSysInfo = ExAllocatePoolWithQuotaTag(PagedPool, ResultLength, WDFLDR_TAG);
 		
@@ -336,14 +330,14 @@ AuxKlibQueryModuleInformation(
 		ModuleInfo->BasicInfo.ImageBase = pSysInfo->Modules[index].ImageBase;
 		ModuleInfo->ImageSize = pSysInfo->Modules[index].ImageSize;
 		ModuleInfo->FileNameOffset = pSysInfo->Modules[index].OffsetToFileName;
-		memcpy(ModuleInfo->FullPathName, pSysInfo->Modules[index].FullPathName, 0x100);
+		RtlCopyMemory(ModuleInfo->FullPathName, pSysInfo->Modules[index].FullPathName, sizeof(ModuleInfo->FullPathName));
 	}
 
 end:
 	*pInfoLength = modulesSize;
 clean:
 	if (pSysInfo != &systemInformation)
-		ExFreePoolWithTag(pSysInfo, 0);
+		ExFreePoolWithTag(pSysInfo, WDFLDR_TAG);
 
 	return status;
 }
@@ -358,133 +352,126 @@ GetImageBase(
 )
 {
 	PCHAR fileName;
-	PRTL_MODULE_EXTENDED_INFO pModuleInfo;
-	PVOID infoBuffer;
-	ULONG_PTR endOfArray;
+	PRTL_MODULE_EXTENDED_INFO pModuleInfoBuffer;
 	STRING ansiImageName;
 	size_t fileNameLength;
 	ULONG informationLength;
 	ULONG totalSize;
 	ULONG numberOfBytes;
 	NTSTATUS status;
+	ULONG i;
 
-	infoBuffer = NULL;
+	pModuleInfoBuffer = NULL;
 	*ImageBase = 0;
 	*ImageSize = 0;
 	ansiImageName.Length = 0;
 	ansiImageName.MaximumLength = 0;
-	ansiImageName.Buffer = 0;
+	ansiImageName.Buffer = NULL;
 	informationLength = 0;
-	pModuleInfo = NULL;
 	status = RtlUnicodeStringToAnsiString(&ansiImageName, ImageName, TRUE);
 
-	if (NT_SUCCESS(status) && ansiImageName.Buffer) 
+	if (!NT_SUCCESS(status) || ansiImageName.Buffer == NULL)
 	{
-		ansiImageName.Buffer[ansiImageName.Length] = 0;
-		fileName = GetFileName(ansiImageName.Buffer);
-		fileNameLength = strlen(fileName);
-
-		if (fileName == NULL ||	fileNameLength == 0)
-		{
-			status = STATUS_OBJECT_NAME_NOT_FOUND;
-			goto clean;
-		}
-		totalSize = 0;
-
-		for(;;)
-		{
-			numberOfBytes = 0;
-			status = AuxKlibQueryModuleInformation(&numberOfBytes, sizeof(RTL_MODULE_EXTENDED_INFO), 0);
-
-			if (!NT_SUCCESS(status) || !numberOfBytes)
-			{
-				if (!WdfLdrDiags)
-					goto clean;
-				break;
-			}
-			status = RtlULongAdd(numberOfBytes, totalSize, &informationLength);
-
-			if (!NT_SUCCESS(status)) 
-			{
-				if (WdfLdrDiags) 
-				{
-					DbgPrint("WdfLdr: GetImageBase - ");
-					DbgPrint("ERROR: RtlUlongAdd failed with Status 0x%x\n", status);
-				}
-			}
-			else 
-			{
-				numberOfBytes = informationLength;
-			}
-
-			infoBuffer = ExAllocatePoolWithTag(PagedPool, numberOfBytes, WDFLDR_TAG);
-			pModuleInfo = infoBuffer;
-
-			if (pModuleInfo == NULL)
-			{
-				status = STATUS_INSUFFICIENT_RESOURCES;
-
-				if (WdfLdrDiags) 
-				{
-					DbgPrint("WdfLdr: GetImageBase - ");
-					DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status);
-				}
-				goto end;
-			}
-
-			memset(pModuleInfo, 0, numberOfBytes);
-			informationLength = numberOfBytes;
-			status = AuxKlibQueryModuleInformation(&informationLength, sizeof(RTL_MODULE_EXTENDED_INFO), pModuleInfo);
-
-			if (status != STATUS_BUFFER_TOO_SMALL)
-				break;
-
-			ExFreePoolWithTag(pModuleInfo, 0);
-			totalSize += sizeof(RTL_MODULE_EXTENDED_INFO);
-			pModuleInfo = NULL;
-
-			if (totalSize >= sizeof(RTL_MODULE_EXTENDED_INFO) * 10)
-				goto clean;
-		}
-
-		if (!NT_SUCCESS(status))
-		{
-			if (!WdfLdrDiags)
-				goto end;
-
-			DbgPrint("WdfLdr: GetImageBase - ");
-			DbgPrint("ERROR: AuxKlibQueryModuleInformation failed with Status 0x%x\n", status);
-			goto end;
-		}
-
-		endOfArray = (ULONG_PTR)pModuleInfo + informationLength;
-		numberOfBytes = informationLength;
-
-		for(;;)
-		{
-			if (pModuleInfo->FileNameOffset < 0x100 &&
-				strncmp(pModuleInfo->FullPathName, fileName, fileNameLength) == 0)
-				break;
-
-			pModuleInfo++;
-			if ((ULONG_PTR)pModuleInfo >= endOfArray)
-				goto end;
-		}
-		*ImageBase = pModuleInfo->BasicInfo.ImageBase;
-		*ImageSize = pModuleInfo->ImageSize;
-	}
-	else 
-	{
-		if (WdfLdrDiags) 
+		if (WdfLdrDiags)
 		{
 			DbgPrint("WdfLdr: GetImageBase - ");
 			DbgPrint("ERROR: RtlUnicodeStringToAnsiString failed with Status 0x%x\n", status);
 		}
 		ansiImageName.Buffer = NULL;
+		goto end;
 	}
+
+	ansiImageName.Buffer[ansiImageName.Length] = 0;
+	fileName = GetFileName(ansiImageName.Buffer);
+	fileNameLength = strlen(fileName);
+
+	if (fileName == NULL || fileNameLength == 0)
+	{
+		status = STATUS_OBJECT_NAME_NOT_FOUND;
+		goto clean;
+	}
+	totalSize = 0;
+
+	for (;;)
+	{
+		numberOfBytes = 0;
+		status = AuxKlibQueryModuleInformation(&numberOfBytes, sizeof(RTL_MODULE_EXTENDED_INFO), NULL);
+
+		if (!NT_SUCCESS(status) || !numberOfBytes)
+		{
+			if (!WdfLdrDiags)
+				goto clean;
+			break;
+		}
+		status = RtlULongAdd(numberOfBytes, totalSize, &informationLength);
+
+		if (!NT_SUCCESS(status))
+		{
+			if (WdfLdrDiags)
+			{
+				DbgPrint("WdfLdr: GetImageBase - ");
+				DbgPrint("ERROR: RtlUlongAdd failed with Status 0x%x\n", status);
+			}
+		}
+		else
+		{
+			numberOfBytes = informationLength;
+		}
+
+		pModuleInfoBuffer = ExAllocatePoolWithTag(PagedPool, numberOfBytes, WDFLDR_TAG);
+
+		if (pModuleInfoBuffer == NULL)
+		{
+			status = STATUS_INSUFFICIENT_RESOURCES;
+
+			if (WdfLdrDiags)
+			{
+				DbgPrint("WdfLdr: GetImageBase - ");
+				DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status);
+			}
+			goto end;
+		}
+
+		RtlZeroMemory(pModuleInfoBuffer, numberOfBytes);
+		informationLength = numberOfBytes;
+		status = AuxKlibQueryModuleInformation(&informationLength, sizeof(RTL_MODULE_EXTENDED_INFO), pModuleInfoBuffer);
+
+		if (status != STATUS_BUFFER_TOO_SMALL)
+			break;
+
+		ExFreePoolWithTag(pModuleInfoBuffer, WDFLDR_TAG);
+		totalSize += sizeof(RTL_MODULE_EXTENDED_INFO);
+		pModuleInfoBuffer = NULL;
+
+		if (totalSize >= sizeof(RTL_MODULE_EXTENDED_INFO) * 10)
+			goto clean;
+	}
+
+	if (!NT_SUCCESS(status))
+	{
+		if (WdfLdrDiags)
+		{
+			DbgPrint("WdfLdr: GetImageBase - ");
+			DbgPrint("ERROR: AuxKlibQueryModuleInformation failed with Status 0x%x\n", status);
+		}
+
+		goto end;
+	}
+
+	for ( i = 0; i < informationLength / sizeof(RTL_MODULE_EXTENDED_INFO); i++)
+	{
+		if (pModuleInfoBuffer[i].FileNameOffset < 0x100 &&
+			strncmp(pModuleInfoBuffer[i].FullPathName, fileName, fileNameLength) == 0)
+		{
+			*ImageBase = pModuleInfoBuffer[i].BasicInfo.ImageBase;
+			*ImageSize = pModuleInfoBuffer[i].ImageSize;
+			break;
+		}
+	}
+
 end:
-	if (infoBuffer != NULL)
-		ExFreePoolWithTag(infoBuffer, 0);
+	if (pModuleInfoBuffer != NULL)
+		ExFreePoolWithTag(pModuleInfoBuffer, WDFLDR_TAG);
 clean:
 	if (ansiImageName.Buffer)
 		RtlFreeAnsiString(&ansiImageName);
@@ -500,28 +487,23 @@ ServiceCheckBootStart(
 )
 {
 	NTSTATUS status;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	HANDLE KeyHandle;
+	OBJECT_ATTRIBUTES objectAttributes;
+	HANDLE keyHandle;
 	BOOLEAN result;
 	ULONG value;
-	UNICODE_STRING ValueName;
+	UNICODE_STRING valueName;
 
-	KeyHandle = NULL;
+	keyHandle = NULL;
 	result = FALSE;
-	ObjectAttributes.Length = 24;
-	ObjectAttributes.RootDirectory = 0;
-	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
-	ObjectAttributes.ObjectName = Service;
-	ObjectAttributes.SecurityDescriptor = 0;
-	ObjectAttributes.SecurityQualityOfService = 0;
-	status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
-	RtlInitUnicodeString(&ValueName, L"Start");
+	InitializeObjectAttributes(&objectAttributes, Service, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+	status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);
+	RtlInitUnicodeString(&valueName, L"Start");
 
 	if (status != STATUS_OBJECT_NAME_NOT_FOUND) 
 	{
 		if (NT_SUCCESS(status)) 
 		{
-			status = FxLdrQueryUlong(KeyHandle, &ValueName, &value);
+			status = FxLdrQueryUlong(keyHandle, &valueName, &value);
 			if (NT_SUCCESS(status))
 			{
 				result = value == 0;
@@ -534,8 +516,8 @@ ServiceCheckBootStart(
 		}
 	}
 
-	if (KeyHandle)
-		ZwClose(KeyHandle);
+	if (keyHandle)
+		ZwClose(keyHandle);
 
 	return result;
 }
@@ -631,7 +613,7 @@ FxLdrQueryData(
 			break;
 		}
 
-		memset(pKeyInfo, 0, resultLength);
+		RtlZeroMemory(pKeyInfo, resultLength);
 		status = ZwQueryValueKey(
 			KeyHandle,
 			ValueName,
@@ -646,7 +628,7 @@ FxLdrQueryData(
 			return status;
 		}
 
-		ExFreePoolWithTag(pKeyInfo, 0);
+		ExFreePoolWithTag(pKeyInfo, WDFLDR_TAG);
 
 		if (status != STATUS_BUFFER_TOO_SMALL) 
 		{
@@ -668,23 +650,18 @@ FxLdrQueryData(
 	return STATUS_INSUFFICIENT_RESOURCES;
 }
 
-PWCHAR
+VOID
 FreeString(
 	IN PUNICODE_STRING String
 )
 {
-	PWCHAR buffer;
-	buffer = String->Buffer;
-
-	if (buffer) 
+	if (String != NULL && String->Buffer != NULL)
 	{
-		ExFreePoolWithTag(buffer, 0);
-		buffer = 0;
+		ExFreePoolWithTag(String->Buffer, WDFLDR_TAG);
 		String->Length = 0;
-		String->Buffer = 0;
+		String->MaximumLength = 0;
+		String->Buffer = NULL;
 	}
-
-	return buffer;
 }
 
 VOID
@@ -756,14 +733,14 @@ BuildServicePath(
 	if (buffer != NULL)
 	{
 		ServicePath->Length = 0;
-		ServicePath->MaximumLength = name.Length + sizeof(regPath);//106;
+		ServicePath->MaximumLength = name.Length + sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");//106;
 		ServicePath->Buffer = buffer;
-		memset(ServicePath->Buffer, 0, ServicePath->MaximumLength);
+		RtlZeroMemory(ServicePath->Buffer, ServicePath->MaximumLength);
 		status = RtlUnicodeStringPrintf(ServicePath, regPath, &name);
 
 		if (!NT_SUCCESS(status)) 
 		{
-			ExFreePoolWithTag(buffer, 0);
+			ExFreePoolWithTag(buffer, WDFLDR_TAG);
 			ServicePath->Length = 0;
 			ServicePath->Buffer = NULL;
 		}
@@ -805,10 +782,10 @@ GetNameFromUnicodePath(
 	PWCHAR current;
 	NTSTATUS status;
 
-	*Dest = 0;
-	if (Path->Length >= 2) 
+	*Dest = UNICODE_NULL;
+	if (Path->Length >= sizeof(WCHAR))
 	{
-		stringEnd = &Path->Buffer[Path->Length / 2];
+		stringEnd = &Path->Buffer[Path->Length / sizeof(WCHAR)];
 
 		for (current = stringEnd - 1; *current != '\\'; --current) 
 		{

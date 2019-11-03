@@ -1089,7 +1089,8 @@ WdfRegisterClassLibrary(
 
 	status = STATUS_SUCCESS;
 	FxLdrAcquireLoadedModuleLock();
-	pClassModule = FindClassByServiceNameLocked((struct _UNICODE_STRING*)SourceString, &libModule);
+	pClassModule = FindClassByServiceNameLocked(SourceString, &libModule);
+
 	if (pClassModule)
 	{
 		pClassModule->ClassLibraryInfo = ClassLibInfo;

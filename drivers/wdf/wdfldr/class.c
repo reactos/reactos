@@ -67,7 +67,7 @@ ClassOpen(
 	if (!ObjectName)
 		return STATUS_SUCCESS;
 
-	result = IoGetDeviceObjectPointer(ObjectName, 1u, &ClassModule->ClassFileObject, &deviceObject);
+	result = IoGetDeviceObjectPointer(ObjectName, FILE_READ_DATA, &ClassModule->ClassFileObject, &deviceObject);
 	
 	if (NT_SUCCESS(result))
 		ClassModule->ClassDriverObject = deviceObject->DriverObject;
@@ -100,20 +100,20 @@ ClassCleanupAndFree(
 
 	if (ClassModule->Service.Buffer != NULL)
 	{
-		ExFreePoolWithTag(ClassModule->Service.Buffer, 0);
+		ExFreePoolWithTag(ClassModule->Service.Buffer, WDFLDR_TAG);
 		ClassModule->Service.Length = 0;
-		ClassModule->Service.Buffer = 0;
+		ClassModule->Service.Buffer = NULL;
 	}
 
 	if (ClassModule->ImageName.Buffer != NULL)
 	{
-		ExFreePoolWithTag(ClassModule->ImageName.Buffer, 0);
+		ExFreePoolWithTag(ClassModule->ImageName.Buffer, WDFLDR_TAG);
 		ClassModule->ImageName.Length = 0;
-		ClassModule->ImageName.Buffer = 0;
+		ClassModule->ImageName.Buffer = NULL;
 	}
 
 	ExDeleteResourceLite(&ClassModule->ClientsListLock);
-	ExFreePoolWithTag(ClassModule, 0);
+	ExFreePoolWithTag(ClassModule, WDFLDR_TAG);
 }
 
 
@@ -125,54 +125,54 @@ ClassCreate(
 	IN PUNICODE_STRING ServiceName
 )
 {
-	PCLASS_MODULE result;
+	PCLASS_MODULE pNewClassModule;
 	NTSTATUS status;
 
-	result = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_MODULE), WDFLDR_TAG);
+	pNewClassModule = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_MODULE), WDFLDR_TAG);
 
-	if (result != NULL)
+	if (pNewClassModule == NULL)
 	{
 		goto exit;
 	}
 
-	memset(result, 0, sizeof(CLASS_MODULE));
+	RtlZeroMemory(pNewClassModule, sizeof(CLASS_MODULE));
 	if (ClassLibInfo != NULL)
 	{
-		result->ImplicitlyLoaded = TRUE;
-		result->ClassLibraryInfo = ClassLibInfo;
-		result->Version.Major = ClassLibInfo->Version.Major;
-		result->Version.Minor = ClassLibInfo->Version.Minor;
-		result->Version.Build = ClassLibInfo->Version.Build;
+		pNewClassModule->ImplicitlyLoaded = TRUE;
+		pNewClassModule->ClassLibraryInfo = ClassLibInfo;
+		pNewClassModule->Version.Major = ClassLibInfo->Version.Major;
+		pNewClassModule->Version.Minor = ClassLibInfo->Version.Minor;
+		pNewClassModule->Version.Build = ClassLibInfo->Version.Build;
 	}
 
-	result->ClassRefCount = 1;
-	result->Library = LibModule;
-	ExInitializeResourceLite(&result->ClientsListLock);
-	InitializeListHead(&result->ClientsListHead);
-	InitializeListHead(&result->LibraryLinkage);
-	result->Service.Buffer = ExAllocatePoolWithTag(PagedPool, ServiceName->MaximumLength, WDFLDR_TAG);
+	pNewClassModule->ClassRefCount = 1;
+	pNewClassModule->Library = LibModule;
+	ExInitializeResourceLite(&pNewClassModule->ClientsListLock);
+	InitializeListHead(&pNewClassModule->ClientsListHead);
+	InitializeListHead(&pNewClassModule->LibraryLinkage);
+	pNewClassModule->Service.Buffer = ExAllocatePoolWithTag(PagedPool, ServiceName->MaximumLength, WDFLDR_TAG);
 
-	if (result->Service.Buffer == NULL)
+	if (pNewClassModule->Service.Buffer == NULL)
 	{
 		goto clean;
 	}
 
-	result->Service.MaximumLength = ServiceName->MaximumLength;
-	memset(result->Service.Buffer, 0, result->Service.MaximumLength);
-	RtlCopyUnicodeString(&result->Service, ServiceName);
-	status = GetImageName(ServiceName, 0x694C7846u, &result->ImageName);
+	pNewClassModule->Service.MaximumLength = ServiceName->MaximumLength;
+	RtlZeroMemory(pNewClassModule->Service.Buffer, pNewClassModule->Service.MaximumLength);
+	RtlCopyUnicodeString(&pNewClassModule->Service, ServiceName);
+	status = GetImageName(ServiceName, WDFLDR_TAG, &pNewClassModule->ImageName);
 
 	if (!NT_SUCCESS(status))
 	{
 		goto clean;
 	}
 
-	result->IsBootDriver = ServiceCheckBootStart(&result->Service);
-	status = GetImageBase((PCUNICODE_STRING)& result->ImageName, &result->ImageAddress, &result->ImageSize);
+	pNewClassModule->IsBootDriver = ServiceCheckBootStart(&pNewClassModule->Service);
+	status = GetImageBase(&pNewClassModule->ImageName, &pNewClassModule->ImageAddress, &pNewClassModule->ImageSize);
 
 	if (NT_SUCCESS(status))
 	{
-		return result;
+		return pNewClassModule;
 	}
 	else if (WdfLdrDiags)
 	{
@@ -181,7 +181,7 @@ ClassCreate(
 	}
 
 clean:
-	ClassCleanupAndFree(result);
+	ClassCleanupAndFree(pNewClassModule);
 exit:
 	return NULL;
 }
@@ -191,18 +191,18 @@ PCLASS_CLIENT_MODULE
 NTAPI
 ClassClientCreate()
 {
-	PCLASS_CLIENT_MODULE result;
+	PCLASS_CLIENT_MODULE pNewClassClientModule;
 
-	result = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_CLIENT_MODULE), WDFLDR_TAG);
+	pNewClassClientModule = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_CLIENT_MODULE), WDFLDR_TAG);
 
-	if (result != NULL)
+	if (pNewClassClientModule != NULL)
 	{
-		memset(result, 0, sizeof(CLASS_CLIENT_MODULE));
-		InitializeListHead(&result->ClassLinkage);
-		InitializeListHead(&result->ClientLinkage);
+		RtlZeroMemory(pNewClassClientModule, sizeof(CLASS_CLIENT_MODULE));
+		InitializeListHead(&pNewClassClientModule->ClassLinkage);
+		InitializeListHead(&pNewClassClientModule->ClientLinkage);
 	}
 
-	return result;
+	return pNewClassClientModule;
 }
 
 
@@ -213,16 +213,14 @@ LibraryFindClientLocked(
 	IN PWDF_BIND_INFO BindInfo
 )
 {
-	PCLIENT_MODULE result;
+	PCLIENT_MODULE pFoundClient;
+	PLIST_ENTRY entry;
 
-	result = (PCLIENT_MODULE)LibModule->ClientsListHead.Flink;
-
-	for (; result != (PCLIENT_MODULE)&LibModule->ClientsListHead;
-		result = (PCLIENT_MODULE)result->LibListEntry.Flink)
+	for (entry = LibModule->ClientsListHead.Flink; entry != &LibModule->ClientsListHead; entry = entry->Flink)
 	{
-
-		if (result->Info == BindInfo)
-			return result;
+		pFoundClient = CONTAINING_RECORD(entry, CLIENT_MODULE, LibListEntry);
+		if (pFoundClient->Info == BindInfo)
+			return pFoundClient;
 	}
 
 	return NULL;
@@ -289,7 +287,7 @@ GetClassRegistryHandle(
 	PWDF_BIND_INFO pBindInfo;
 	PWDF_CLASS_BIND_INFO pClassBindInfo;
 	UNICODE_STRING classVersions;
-	OBJECT_ATTRIBUTES ObjectAttributes;
+	OBJECT_ATTRIBUTES objectAttributes;
 	HANDLE rootHandle;
 	HANDLE classVersionsHandle;
 	HANDLE classVersionHandle;
@@ -303,18 +301,13 @@ GetClassRegistryHandle(
 	classVersions.Length = 0;
 	classVersions.Buffer = NULL;
 	RtlInitUnicodeString(&objectName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf");
-	ObjectAttributes.ObjectName = &objectName;
 	rootHandle = NULL;
 	classVersionsHandle = NULL;
-	classVersionHandle = 0;
-
+	classVersionHandle = NULL;
 	*KeyHandle = NULL;
-	ObjectAttributes.Length = 24;
-	ObjectAttributes.RootDirectory = 0;
-	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
-	ObjectAttributes.SecurityDescriptor = 0;
-	ObjectAttributes.SecurityQualityOfService = 0;
-	status = ZwOpenKey(&rootHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+	InitializeObjectAttributes(&objectAttributes, &objectName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+	status = ZwOpenKey(&rootHandle, KEY_QUERY_VALUE, &objectAttributes);
 
 	if (NT_SUCCESS(status))
 	{
@@ -326,7 +319,7 @@ GetClassRegistryHandle(
 			++pClassName;
 		} while ( currentSym != '\0');
 
-		numOfBytes = 2 * (pClassName - pClassNameBegin - 1) + 20;
+		numOfBytes = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + sizeof(L"\\Versions");
 		classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, numOfBytes, WDFLDR_TAG);
 
 		if (classVersions.Buffer != NULL)
@@ -335,39 +328,24 @@ GetClassRegistryHandle(
 			status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", pClassBindInfo->ClassName);
 			if (NT_SUCCESS(status))
 			{
-				ObjectAttributes.RootDirectory = rootHandle;
-				ObjectAttributes.ObjectName = &classVersions;
-				ObjectAttributes.Length = 24;
-				ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
-				ObjectAttributes.SecurityDescriptor = NULL;
-				ObjectAttributes.SecurityQualityOfService = NULL;
-				status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+				InitializeObjectAttributes(&objectAttributes, &classVersions, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, rootHandle, NULL);
+				status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &objectAttributes);
 
 				if (NT_SUCCESS(status))
 				{
 					status = ConvertUlongToWString(pClassBindInfo->Version.Major, &versionString);
 					if (NT_SUCCESS(status))
 					{
-						ObjectAttributes.RootDirectory = classVersionsHandle;
-						ObjectAttributes.ObjectName = &versionString;
-						ObjectAttributes.Length = 24;
-						ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
-						ObjectAttributes.SecurityDescriptor = NULL;
-						ObjectAttributes.SecurityQualityOfService = NULL;
-						status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+						InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionsHandle, NULL);
+						status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &objectAttributes);
 
 						if (NT_SUCCESS(status))
 						{
 							status = ConvertUlongToWString(pBindInfo->Version.Major, &versionString);
 							if (NT_SUCCESS(status))
 							{
-								ObjectAttributes.RootDirectory = classVersionHandle;
-								ObjectAttributes.ObjectName = &versionString;
-								ObjectAttributes.Length = 24;
-								ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
-								ObjectAttributes.SecurityDescriptor = NULL;
-								ObjectAttributes.SecurityQualityOfService = NULL;
-								status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+								InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionHandle, NULL);
+								status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
 								//*keyHandle = tmpKeyHandle;
 							}
 						}
@@ -390,7 +368,7 @@ GetClassRegistryHandle(
 
 	if (classVersions.Buffer)
 	{
-		ExFreePoolWithTag(classVersions.Buffer, 0);
+		ExFreePoolWithTag(classVersions.Buffer, WDFLDR_TAG);
 		classVersions.Length = 0;
 		classVersions.Buffer = NULL;
 	}
@@ -421,7 +399,7 @@ GetDefaultClassServiceName(
 		++pClassName;
 	} while (currentSymbol);
 
-	size = 2 * (pClassName - pClassNameBegin - 1) + 148;
+	size = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + 148;
 	ServiceName->Buffer = ExAllocatePoolWithTag(PagedPool, size, WDFLDR_TAG);
 
 	if (ServiceName->Buffer == NULL)
@@ -439,7 +417,7 @@ GetDefaultClassServiceName(
 
 	if (!NT_SUCCESS(status))
 	{
-		ExFreePoolWithTag(ServiceName->Buffer, 0);
+		ExFreePoolWithTag(ServiceName->Buffer, WDFLDR_TAG);
 		ServiceName->Length = 0;
 		ServiceName->Buffer = NULL;
 	}
@@ -478,7 +456,7 @@ GetClassServicePath(
 	}
 	else
 	{
-		status = FxLdrQueryData(Handle, &ValueName, 0x674C7846u, &pKeyValPartial);
+		status = FxLdrQueryData(Handle, &ValueName, WDFLDR_TAG, &pKeyValPartial);
 		
 		if (!NT_SUCCESS(status))
 		{
@@ -560,7 +538,7 @@ ReferenceClassVersion(
 		}
 		else
 		{
-			pClassModule = ClassCreate(0, pLibModule, &driverServiceName);
+			pClassModule = ClassCreate(NULL, pLibModule, &driverServiceName);
 
 			if (pClassModule)
 			{
@@ -756,11 +734,11 @@ ClassUnlinkClient(
 )
 {
 	PCLASS_CLIENT_MODULE client;
-	BOOLEAN unlinked;
+	BOOLEAN isUnlinked;
 	PLIST_ENTRY entry;	
 
 	client = NULL;
-	unlinked = FALSE;
+	isUnlinked = FALSE;
 	ClassAcquireClientLock(&ClassModule->ClientsListLock);
 
 	for (entry = ClassModule->ClientsListHead.Flink;
@@ -769,24 +747,24 @@ ClassUnlinkClient(
 	{
 		client = CONTAINING_RECORD(entry, CLASS_CLIENT_MODULE, ClassLinkage);
 
-		if(CONTAINING_RECORD(entry, CLASS_CLIENT_MODULE, ClassLinkage)->ClientClassBindInfo == ClassBindInfo)
+		if (CONTAINING_RECORD(entry, CLASS_CLIENT_MODULE, ClassLinkage)->ClientClassBindInfo == ClassBindInfo)
 		{
-			RemoveEntryList(entry);
-			InitializeListHead(entry);
-			unlinked = TRUE;
+			isUnlinked = TRUE;
 			break;
 		}
 	}
 
 	ClassReleaseClientLock(&ClassModule->ClientsListLock);
 
-	if (unlinked)
+	if (isUnlinked)
 	{
+		RemoveEntryList(entry);
+		InitializeListHead(entry);
 		LibraryAcquireClientLock(ClassModule->Library);
 		InitializeListHead(&client->ClientLinkage);
 		RemoveEntryList(&client->ClientLinkage);
 		LibraryReleaseClientLock(ClassModule->Library);
-		ExFreePoolWithTag(client, 0);
+		ExFreePoolWithTag(client, WDFLDR_TAG);
 	}
 }
 
@@ -824,7 +802,7 @@ ClassUnload(
 	}
 
 	ClassClose(ClassModule);
-	status = ZwUnloadDriver((PUNICODE_STRING)& ClassModule->Service);
+	status = ZwUnloadDriver(&ClassModule->Service);
 
 	if (!NT_SUCCESS(status) && WdfLdrDiags)
 	{

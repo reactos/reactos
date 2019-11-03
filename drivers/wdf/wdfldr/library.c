@@ -75,7 +75,7 @@ LibraryCreate(
 		return NULL;
 	}
 
-	memset(pLibModule, 0, sizeof(LIBRARY_MODULE));
+	RtlZeroMemory(pLibModule, sizeof(LIBRARY_MODULE));
 	pLibModule->LibraryRefCount = 1;
 	InitializeListHead(&pLibModule->LibraryListEntry);
 
@@ -93,7 +93,6 @@ LibraryCreate(
 	if (pLibModule->Service.Buffer != NULL)
 	{
 		pLibModule->Service.MaximumLength = DriverServiceName->MaximumLength;
-		memset(pLibModule->Service.Buffer, 0, pLibModule->Service.MaximumLength);
 		RtlCopyUnicodeString(&pLibModule->Service, DriverServiceName);
 	}
 	else
@@ -101,7 +100,7 @@ LibraryCreate(
 		goto clean;
 	}
 	
-	status = GetImageName(DriverServiceName, '2LxF', &pLibModule->ImageName);
+	status = GetImageName(DriverServiceName, WDFLDR_TAG, &pLibModule->ImageName);
 	if (!NT_SUCCESS(status))
 	{
 		goto clean;
@@ -155,20 +154,20 @@ LibraryCleanupAndFree(
 
 	if (LibModule->Service.Buffer != NULL)
 	{
-		ExFreePoolWithTag(LibModule->Service.Buffer, 0);
+		ExFreePoolWithTag(LibModule->Service.Buffer, WDFLDR_TAG);
 		LibModule->Service.Length = 0;
 		LibModule->Service.Buffer = NULL;
 	}
 
 	if (LibModule->ImageName.Buffer)
 	{
-		ExFreePoolWithTag(LibModule->ImageName.Buffer, 0);
+		ExFreePoolWithTag(LibModule->ImageName.Buffer, WDFLDR_TAG);
 		LibModule->ImageName.Length = 0;
 		LibModule->ImageName.Buffer = NULL;
 	}
 
 	ExDeleteResourceLite(&LibModule->ClientsListLock);
-	ExFreePoolWithTag(LibModule, 0);
+	ExFreePoolWithTag(LibModule, WDFLDR_TAG);
 }
 
 
@@ -258,7 +257,7 @@ ClientCleanupAndFree(
 	IN PCLIENT_MODULE ClientModule
 )
 {
-	if (ClientModule->ImageName.Buffer == NULL)
+	if (ClientModule->ImageName.Buffer != NULL)
 	{
 		if (WdfLdrDiags)
 		{
@@ -266,12 +265,12 @@ ClientCleanupAndFree(
 			DbgPrint("Client Image Name: %wZ\n", &ClientModule->ImageName);
 		}
 
-		ExFreePoolWithTag(ClientModule->ImageName.Buffer, 0);
+		ExFreePoolWithTag(ClientModule->ImageName.Buffer, WDFLDR_TAG);
 		ClientModule->ImageName.Length = 0;
 		ClientModule->ImageName.Buffer = NULL;
 	}
 
-	ExFreePoolWithTag(ClientModule, 0);
+	ExFreePoolWithTag(ClientModule, WDFLDR_TAG);
 }
 
 NTSTATUS
@@ -303,16 +302,12 @@ LibraryLinkInClient(
 		goto error;
 	}
 
-	memset(pClientModule, 0, sizeof(CLIENT_MODULE));
+	RtlZeroMemory(pClientModule, sizeof(CLIENT_MODULE));
 	InitializeListHead(&pClientModule->ClassListHead);
 	InitializeListHead(&pClientModule->LibListEntry);
-
-	pClientModule->Globals = NULL;
-	pClientModule->ImageAddr = NULL;
-	pClientModule->ImageSize = 0;
 	pClientModule->Context = Context;
 	pClientModule->Info = BindInfo;
-	status = GetImageName(DriverServiceName, 'cLxF', &pClientModule->ImageName);
+	status = GetImageName(DriverServiceName, WDFLDR_TAG, &pClientModule->ImageName);
 
 	if (NT_SUCCESS(status))
 	{
@@ -391,7 +386,7 @@ LibraryUnload(
 	}	
 
 	LibraryClose(LibModule);
-	status = ZwUnloadDriver((PUNICODE_STRING)& LibModule->Service);
+	status = ZwUnloadDriver(&LibModule->Service);
 
 	if (!NT_SUCCESS(status) && WdfLdrDiags)
 	{
@@ -446,30 +441,30 @@ LibraryUnlinkClient(
 	PWDF_BIND_INFO BindInfo
 )
 {
-	BOOLEAN unlinked;
+	BOOLEAN isBindFound;
 	PCLIENT_MODULE pClientModule;
 	PLIST_ENTRY entry;
 	NTSTATUS status;
 
-	unlinked = FALSE;
+	isBindFound = FALSE;
 	pClientModule = NULL;
 	LibraryAcquireClientLock(LibModule);
 
 	for (entry = LibModule->ClientsListHead.Flink; entry != &LibModule->ClientsListHead; entry = entry->Flink)
 	{
 		pClientModule = CONTAINING_RECORD(entry, CLIENT_MODULE, LibListEntry);
-		if (CONTAINING_RECORD(entry, CLIENT_MODULE, LibListEntry)->Info == BindInfo)
+		if (pClientModule->Info == BindInfo)
 		{
-			RemoveEntryList(entry);
-			InitializeListHead(entry);
-			unlinked = TRUE;
+			isBindFound = TRUE;
 			break;
 		}
 	}
 	LibraryReleaseClientLock(LibModule);
 
-	if (unlinked)
+	if (isBindFound)
 	{
+		RemoveEntryList(entry);
+		InitializeListHead(entry);
 		status = STATUS_SUCCESS;
 		ClientCleanupAndFree(pClientModule);
 	}

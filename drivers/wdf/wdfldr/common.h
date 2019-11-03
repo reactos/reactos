@@ -17,6 +17,10 @@ typedef PVOID WDF_COMPONENT_GLOBALS, *PWDF_COMPONENT_GLOBALS;
 
 BOOLEAN WdfLdrDiags;
 LONG gKlibInitialized;
+ERESOURCE Resource;
+LIST_ENTRY gLibList;
+typedef int (NTAPI* PRtlQueryModuleInformation)(PULONG, ULONG, PVOID);
+PRtlQueryModuleInformation pfnRtlQueryModuleInformation;
 
 #define WDFLDR_TAG 'LfdW'
 
@@ -24,14 +28,14 @@ LONG gKlibInitialized;
 typedef struct _WDF_INTERFACE_HEADER {
 	PGUID InterfaceType;
 	ULONG InterfaceSize;
-} WDF_INTERFACE_HEADER, * PWDF_INTERFACE_HEADER;
+} WDF_INTERFACE_HEADER, *PWDF_INTERFACE_HEADER;
 
 
 typedef struct _WDF_VERSION {
 	ULONG Major;
 	ULONG Minor;
 	ULONG Build;
-} WDF_VERSION, * PWDF_VERSION;
+} WDF_VERSION, *PWDF_VERSION;
 
 typedef
 NTSTATUS
@@ -67,7 +71,7 @@ typedef struct _WDF_LIBRARY_INFO {
 	PFNLIBRARYREGISTERCLIENT LibraryRegisterClient;
 	PFNLIBRARYUNREGISTERCLIENT LibraryUnregisterClient;
 	WDF_VERSION Version;
-} WDF_LIBRARY_INFO, * PWDF_LIBRARY_INFO;
+} WDF_LIBRARY_INFO, *PWDF_LIBRARY_INFO;
 
 
 typedef struct _LIBRARY_MODULE {
@@ -88,7 +92,7 @@ typedef struct _LIBRARY_MODULE {
 	ERESOURCE         ClientsListLock;
 	WDF_VERSION       Version;
 	LIST_ENTRY        ClassListHead;
-} LIBRARY_MODULE, * PLIBRARY_MODULE;
+} LIBRARY_MODULE, *PLIBRARY_MODULE;
 
 
 typedef struct _WDF_BIND_INFO {
@@ -98,7 +102,7 @@ typedef struct _WDF_BIND_INFO {
 	ULONG           FuncCount;
 	void(__fastcall** FuncTable)();
 	PLIBRARY_MODULE Module;
-} WDF_BIND_INFO, * PWDF_BIND_INFO;
+} WDF_BIND_INFO, *PWDF_BIND_INFO;
 
 
 typedef struct _WDF_LOADER_INTERFACE {
@@ -107,26 +111,26 @@ typedef struct _WDF_LOADER_INTERFACE {
 	int(__stdcall* VersionBind)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***);
 	NTSTATUS(__stdcall* VersionUnbind)(PUNICODE_STRING, PWDF_BIND_INFO, PWDF_COMPONENT_GLOBALS);
 	NTSTATUS(__stdcall* DiagnosticsValueByNameAsULONG)(PUNICODE_STRING, PULONG);
-} WDF_LOADER_INTERFACE, * PWDF_LOADER_INTERFACE;
+} WDF_LOADER_INTERFACE, *PWDF_LOADER_INTERFACE;
 
 
 typedef struct _CLIENT_MODULE {
 	LIST_ENTRY     LibListEntry;
-	PVOID* Globals;
+	PVOID          *Globals;
 	PVOID          Context;
 	PVOID          ImageAddr;
 	ULONG          ImageSize;
 	UNICODE_STRING ImageName;
 	PWDF_BIND_INFO Info;
 	LIST_ENTRY     ClassListHead;
-} CLIENT_MODULE, * PCLIENT_MODULE;
+} CLIENT_MODULE, *PCLIENT_MODULE;
 
 
 typedef struct _WDF_CLASS_VERSION {
 	ULONG Major;
 	ULONG Minor;
 	ULONG Build;
-} WDF_CLASS_VERSION, * PWDF_CLASS_VERSION;
+} WDF_CLASS_VERSION, *PWDF_CLASS_VERSION;
 
 
 typedef struct _WDF_CLASS_BIND_INFO {
@@ -139,7 +143,7 @@ typedef struct _WDF_CLASS_BIND_INFO {
 	int (NTAPI* ClientBindClass)(int (NTAPI*)(PWDF_BIND_INFO, PVOID*, PWDF_CLASS_BIND_INFO), PWDF_BIND_INFO, PVOID*, PWDF_CLASS_BIND_INFO);
 	VOID(NTAPI* ClientUnbindClass)(void (NTAPI*)(PWDF_BIND_INFO, PVOID*, PWDF_CLASS_BIND_INFO), PWDF_BIND_INFO, PVOID*, PWDF_CLASS_BIND_INFO);
 	PVOID ClassModule;
-} WDF_CLASS_BIND_INFO, * PWDF_CLASS_BIND_INFO;
+} WDF_CLASS_BIND_INFO, *PWDF_CLASS_BIND_INFO;
 
 
 typedef struct _WDF_CLASS_LIBRARY_INFO {
@@ -149,10 +153,9 @@ typedef struct _WDF_CLASS_LIBRARY_INFO {
 	void (NTAPI* ClassLibraryDeinitialize)();
 	int (NTAPI* ClassLibraryBindClient)(PWDF_CLASS_BIND_INFO, void**);
 	void (NTAPI* ClassLibraryUnbindClient)(PWDF_CLASS_BIND_INFO, void**);
-} WDF_CLASS_LIBRARY_INFO, * PWDF_CLASS_LIBRARY_INFO;
+} WDF_CLASS_LIBRARY_INFO, *PWDF_CLASS_LIBRARY_INFO;
 
 
-//struct __declspec(align(2))
 typedef struct _CLASS_MODULE {
 	ERESOURCE      ClientsListLock;
 	LIST_ENTRY     ClientsListHead;
@@ -171,7 +174,7 @@ typedef struct _CLASS_MODULE {
 	BOOLEAN ImplicitlyLoaded;
 	BOOLEAN IsBootDriver;
 	BOOLEAN ImageAlreadyLoaded;
-} CLASS_MODULE, * PCLASS_MODULE;
+} CLASS_MODULE, *PCLASS_MODULE;
 
 
 typedef struct _CLASS_CLIENT_MODULE {
@@ -180,31 +183,14 @@ typedef struct _CLASS_CLIENT_MODULE {
 	PCLIENT_MODULE       Client;
 	PCLASS_MODULE        Class;
 	PWDF_CLASS_BIND_INFO ClientClassBindInfo;
-} CLASS_CLIENT_MODULE, * PCLASS_CLIENT_MODULE;
+} CLASS_CLIENT_MODULE, *PCLASS_CLIENT_MODULE;
 
 
 typedef struct _CLIENT_INFO {
 	ULONG           Size;
 	PUNICODE_STRING RegistryPath;
-} CLIENT_INFO, * PCLIENT_INFO;
+} CLIENT_INFO, *PCLIENT_INFO;
 
-
-/*NTSTATUS
-NTAPI
-LibraryLinkInClient(
-	PLIBRARY_MODULE LibModule,
-	PUNICODE_STRING DriverServiceName,
-	PWDF_BIND_INFO BindInfo,
-	PVOID Context,
-	PCLIENT_MODULE* ClientModule
-);*/
-
-
-ERESOURCE Resource;
-LIST_ENTRY gLibList;
-typedef int (NTAPI* PRtlQueryModuleInformation)(PULONG, ULONG, PVOID);
-PRtlQueryModuleInformation pfnRtlQueryModuleInformation;
-//int(NTAPI* pfnRtlQueryModuleInformation)(PULONG, ULONG, PVOID);
 
 NTSTATUS
 NTAPI
@@ -245,7 +231,7 @@ FxLdrQueryData(
 	OUT PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo
 );
 
-PWCHAR
+VOID
 FreeString(
 	IN PUNICODE_STRING String
 );
