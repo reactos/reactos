@@ -178,7 +178,7 @@ static const struct
     { "ldt", "ldt", "Display the local descriptor table.", KdbpCmdGdtLdtIdt },
     { "idt", "idt", "Display the interrupt descriptor table.", KdbpCmdGdtLdtIdt },
     { "pcr", "pcr", "Display the processor control region.", KdbpCmdPcr },
-    { "tss", "tss", "Display a task state segment.", KdbpCmdTss },
+    { "tss", "tss [selector|*descaddr]", "Display the current task state segment, or the one specified by its selector number or descriptor address.", KdbpCmdTss },
 
     /* Others */
     { NULL, NULL, "Others", NULL },
@@ -985,6 +985,52 @@ KdbpCmdRegs(
     }
 
     return TRUE;
+}
+
+static PKTSS
+KdbpRetrieveTss(
+    IN USHORT TssSelector,
+    OUT PULONG pType OPTIONAL,
+    IN PKDESCRIPTOR pGdtr OPTIONAL)
+{
+    KDESCRIPTOR Gdtr;
+    KGDTENTRY Desc;
+    PKTSS Tss;
+
+    /* Retrieve the Global Descriptor Table (user-provided or system) */
+    if (pGdtr)
+        Gdtr = *pGdtr;
+    else
+        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+
+    /* Check limits */
+    if ((TssSelector & (sizeof(KGDTENTRY) - 1)) ||
+        (TssSelector < sizeof(KGDTENTRY)) ||
+        (TssSelector + sizeof(KGDTENTRY) - 1 > Gdtr.Limit))
+    {
+        return NULL;
+    }
+
+    /* Retrieve the descriptor */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(&Desc,
+                                       (PVOID)(Gdtr.Base + TssSelector),
+                                       sizeof(KGDTENTRY))))
+    {
+        return NULL;
+    }
+
+    /* Check for TSS32(Avl) or TSS32(Busy) */
+    if (Desc.HighWord.Bits.Type != 9 && Desc.HighWord.Bits.Type != 11)
+    {
+        return NULL;
+    }
+    if (pType) *pType = Desc.HighWord.Bits.Type;
+
+    Tss = (PKTSS)(ULONG_PTR)(Desc.BaseLow |
+                             Desc.HighWord.Bytes.BaseMid << 16 |
+                             Desc.HighWord.Bytes.BaseHi << 24);
+
+    return Tss;
 }
 
 static BOOLEAN
@@ -2164,18 +2210,93 @@ KdbpCmdTss(
     ULONG Argc,
     PCHAR Argv[])
 {
-    KTSS *Tss = KeGetPcr()->TSS;
+    USHORT TssSelector;
+    PKTSS Tss = NULL;
 
-    KdbpPrint("Current TSS is at 0x%p.\n", Tss);
-    KdbpPrint("  Eip:           0x%08x\n"
-              "  Es:            0x%04x\n"
-              "  Cs:            0x%04x\n"
-              "  Ss:            0x%04x\n"
-              "  Ds:            0x%04x\n"
-              "  Fs:            0x%04x\n"
-              "  Gs:            0x%04x\n"
-              "  IoMapBase:     0x%04x\n",
-              Tss->Eip, Tss->Es, Tss->Cs, Tss->Ds, Tss->Fs, Tss->Gs, Tss->IoMapBase);
+    if (Argc >= 2)
+    {
+        /*
+         * Specified TSS via its selector [selector] or descriptor address [*descaddr].
+         * Note that we ignore any other argument values.
+         */
+        PCHAR Param, pszNext;
+        ULONG ulValue;
+
+        Param = Argv[1];
+        if (Argv[1][0] == '*')
+            ++Param;
+
+        ulValue = strtoul(Param, &pszNext, 0);
+        if (pszNext && *pszNext)
+        {
+            KdbpPrint("Invalid TSS specification.\n");
+            return TRUE;
+        }
+
+        if (Argv[1][0] == '*')
+        {
+            /* Descriptor specified */
+            TssSelector = 0; // Unknown selector!
+            // TODO: Room for improvement: Find the TSS descriptor
+            // in the GDT so as to validate it.
+            Tss = (PKTSS)(ULONG_PTR)ulValue;
+            if (!Tss)
+            {
+                KdbpPrint("Invalid 32-bit TSS descriptor.\n");
+                return TRUE;
+            }
+        }
+        else
+        {
+            /* Selector specified, retrive the corresponding TSS */
+            TssSelector = (USHORT)ulValue;
+            Tss = KdbpRetrieveTss(TssSelector, NULL, NULL);
+            if (!Tss)
+            {
+                KdbpPrint("Invalid 32-bit TSS selector.\n");
+                return TRUE;
+            }
+        }
+    }
+
+    if (!Tss)
+    {
+        /* If no TSS was specified, use the current TSS descriptor */
+        TssSelector = Ke386GetTr();
+        Tss = KeGetPcr()->TSS;
+        // NOTE: If everything works OK, Tss is the current TSS corresponding to the TR selector.
+    }
+
+    KdbpPrint("%s TSS 0x%04x is at 0x%p.\n",
+              (Tss == KeGetPcr()->TSS) ? "Current" : "Specified", TssSelector, Tss);
+    KdbpPrint("  Backlink:  0x%04x\n"
+              "  Ss0:Esp0:  0x%04x:0x%08x\n"
+              // NOTE: Ss1:Esp1 and Ss2:Esp2: are in the NotUsed1 field.
+              "  CR3:       0x%08x\n"
+              "  EFlags:    0x%08x\n"
+              "  Eax:       0x%08x\n"
+              "  Ebx:       0x%08x\n"
+              "  Ecx:       0x%08x\n"
+              "  Edx:       0x%08x\n"
+              "  Esi:       0x%08x\n"
+              "  Edi:       0x%08x\n"
+              "  Eip:       0x%08x\n"
+              "  Esp:       0x%08x\n"
+              "  Ebp:       0x%08x\n"
+              "  Cs:        0x%04x\n"
+              "  Ss:        0x%04x\n"
+              "  Ds:        0x%04x\n"
+              "  Es:        0x%04x\n"
+              "  Fs:        0x%04x\n"
+              "  Gs:        0x%04x\n"
+              "  LDT:       0x%04x\n"
+              "  Flags:     0x%04x\n"
+              "  IoMapBase: 0x%04x\n",
+              Tss->Backlink, Tss->Ss0, Tss->Esp0, Tss->CR3, Tss->EFlags,
+              Tss->Eax, Tss->Ebx, Tss->Ecx, Tss->Edx, Tss->Esi, Tss->Edi,
+              Tss->Eip, Tss->Esp, Tss->Ebp,
+              Tss->Cs, Tss->Ss, Tss->Ds, Tss->Es, Tss->Fs, Tss->Gs,
+              Tss->LDT, Tss->Flags, Tss->IoMapBase);
 
     return TRUE;
 }
