@@ -144,19 +144,19 @@ static const struct
     { NULL, NULL, "Data", NULL },
     { "?", "? expression", "Evaluate expression.", KdbpCmdEvalExpression },
     { "disasm", "disasm [address] [L count]", "Disassemble count instructions at address.", KdbpCmdDisassembleX },
-    { "x", "x [address] [L count]", "Display count dwords, starting at addr.", KdbpCmdDisassembleX },
+    { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
     { "cregs", "cregs", "Display control registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
-    { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame addr", KdbpCmdBackTrace },
+    { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame address.", KdbpCmdBackTrace },
 #ifdef __ROS_DWARF__
-    { "dt", "dt [mod] [type] [addr]", "Print a struct.  Addr is optional.", KdbpCmdPrintStruct },
+    { "dt", "dt [mod] [type] [addr]", "Print a struct. The address is optional.", KdbpCmdPrintStruct },
 #endif
 
     /* Flow control */
     { NULL, NULL, "Flow control", NULL },
-    { "cont", "cont", "Continue execution (leave debugger)", KdbpCmdContinue },
+    { "cont", "cont", "Continue execution (leave debugger).", KdbpCmdContinue },
     { "step", "step [count]", "Execute single instructions, stepping into interrupts.", KdbpCmdStep },
     { "next", "next [count]", "Execute single instructions, skipping calls and reps.", KdbpCmdStep },
     { "bl", "bl", "List breakpoints.", KdbpCmdBreakPointList },
@@ -174,17 +174,17 @@ static const struct
     /* System information */
     { NULL, NULL, "System info", NULL },
     { "mod", "mod [address]", "List all modules or the one containing address.", KdbpCmdMod },
-    { "gdt", "gdt", "Display global descriptor table.", KdbpCmdGdtLdtIdt },
-    { "ldt", "ldt", "Display local descriptor table.", KdbpCmdGdtLdtIdt },
-    { "idt", "idt", "Display interrupt descriptor table.", KdbpCmdGdtLdtIdt },
-    { "pcr", "pcr", "Display processor control region.", KdbpCmdPcr },
-    { "tss", "tss", "Display task state segment.", KdbpCmdTss },
+    { "gdt", "gdt", "Display the global descriptor table.", KdbpCmdGdtLdtIdt },
+    { "ldt", "ldt", "Display the local descriptor table.", KdbpCmdGdtLdtIdt },
+    { "idt", "idt", "Display the interrupt descriptor table.", KdbpCmdGdtLdtIdt },
+    { "pcr", "pcr", "Display the processor control region.", KdbpCmdPcr },
+    { "tss", "tss", "Display a task state segment.", KdbpCmdTss },
 
     /* Others */
     { NULL, NULL, "Others", NULL },
     { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
     { "reboot", "reboot", "Reboots the system.", KdbpCmdReboot},
-    { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels", KdbpCmdFilter },
+    { "filter", "filter [error|warning|trace|info|level]+|-[componentname|default]", "Enable/disable debug channels.", KdbpCmdFilter },
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
@@ -194,8 +194,8 @@ static const struct
     { "!poolfind", "!poolfind Tag [Pool]", "Search for pool tag allocations.", ExpKdbgExtPoolFind },
     { "!filecache", "!filecache", "Display cache usage.", ExpKdbgExtFileCache },
     { "!defwrites", "!defwrites", "Display cache write values.", ExpKdbgExtDefWrites },
-    { "!irpfind", "!irpfind [Pool [startaddress [criteria data]]]", "Lists IRPs potentially matching criteria", ExpKdbgExtIrpFind },
-    { "!handle", "!handle [Handle]", "Displays info about handles", ExpKdbgExtHandle },
+    { "!irpfind", "!irpfind [Pool [startaddress [criteria data]]]", "Lists IRPs potentially matching criteria.", ExpKdbgExtIrpFind },
+    { "!handle", "!handle [Handle]", "Displays info about handles.", ExpKdbgExtHandle },
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -1888,7 +1888,7 @@ KdbpCmdMod(
     return TRUE;
 }
 
-/*!\brief Displays GDT, LDT or IDTd.
+/*!\brief Displays GDT, LDT or IDT.
  */
 static BOOLEAN
 KdbpCmdGdtLdtIdt(
@@ -2186,7 +2186,6 @@ KdbpCmdBugCheck(
 {
     /* Set the flag and quit looping */
     KdbpBugCheckRequested = TRUE;
-
     return FALSE;
 }
 
@@ -2216,41 +2215,41 @@ KdbpCmdDmesg(
     ULONG Argc,
     PCHAR Argv[])
 {
-  ULONG beg, end;
+    ULONG beg, end;
 
-  KdbpIsInDmesgMode = TRUE; /* Toggle logging flag */
-  if (!KdpDmesgBuffer)
-  {
-    KdbpPrint("Dmesg: error, buffer is not allocated! /DEBUGPORT=SCREEN kernel param required for dmesg.\n");
+    KdbpIsInDmesgMode = TRUE; /* Toggle logging flag */
+    if (!KdpDmesgBuffer)
+    {
+        KdbpPrint("Dmesg: error, buffer is not allocated! /DEBUGPORT=SCREEN kernel param required for dmesg.\n");
+        return TRUE;
+    }
+
+    KdbpPrint("*** Dmesg *** TotalWritten=%lu, BufferSize=%lu, CurrentPosition=%lu\n",
+              KdbDmesgTotalWritten, KdpDmesgBufferSize, KdpDmesgCurrentPosition);
+
+    /* Pass data to the pager */
+    end = KdpDmesgCurrentPosition;
+    beg = (end + KdpDmesgFreeBytes) % KdpDmesgBufferSize;
+
+    /* No roll-overs, and overwritten=lost bytes */
+    if (KdbDmesgTotalWritten <= KdpDmesgBufferSize)
+    {
+        /* Show buffer (KdpDmesgBuffer + beg, num) */
+        KdbpPager(KdpDmesgBuffer, KdpDmesgCurrentPosition);
+    }
+    else
+    {
+        /* Show 2 buffers: (KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg)
+         *            and: (KdpDmesgBuffer,       end) */
+        KdbpPager(KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg);
+        KdbpPrint("*** Dmesg: buffer rollup ***\n");
+        KdbpPager(KdpDmesgBuffer,       end);
+    }
+    KdbpPrint("*** Dmesg: end of output ***\n");
+
+    KdbpIsInDmesgMode = FALSE; /* Toggle logging flag */
+
     return TRUE;
-  }
-
-  KdbpPrint("*** Dmesg *** TotalWritten=%lu, BufferSize=%lu, CurrentPosition=%lu\n",
-            KdbDmesgTotalWritten, KdpDmesgBufferSize, KdpDmesgCurrentPosition);
-
-  // Pass data to the pager:
-  end = KdpDmesgCurrentPosition;
-  beg = (end + KdpDmesgFreeBytes) % KdpDmesgBufferSize;
-
-  // no roll-overs, and overwritten=lost bytes
-  if (KdbDmesgTotalWritten <= KdpDmesgBufferSize)
-  {
-    // show buffer (KdpDmesgBuffer + beg, num)
-    KdbpPager(KdpDmesgBuffer, KdpDmesgCurrentPosition);
-  }
-  else
-  {
-    // show 2 buffers: (KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg)
-    //            and: (KdpDmesgBuffer,       end)
-    KdbpPager(KdpDmesgBuffer + beg, KdpDmesgBufferSize - beg);
-    KdbpPrint("*** Dmesg: buffer rollup ***\n");
-    KdbpPager(KdpDmesgBuffer,       end);
-  }
-  KdbpPrint("*** Dmesg: end of output ***\n");
-
-  KdbpIsInDmesgMode = FALSE; /* Toggle logging flag */
-
-  return TRUE;
 }
 
 /*!\brief Sets or displays a config variables value.
@@ -2308,10 +2307,10 @@ KdbpCmdSet(
                     continue;
 
                 if (!KdbpGetEnterCondition(l, TRUE, &ConditionFirst))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (!KdbpGetEnterCondition(l, FALSE, &ConditionLast))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 KdbpPrint("  #%02d  %-20s %-8s %-8s\n", l, ExceptionNames[l],
                           KDB_ENTER_CONDITION_TO_STRING(ConditionFirst),
@@ -2389,10 +2388,10 @@ KdbpCmdSet(
             else /* Argc >= 3 */
             {
                 if (!KdbpGetEnterCondition(l, TRUE, &ConditionFirst))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (!KdbpGetEnterCondition(l, FALSE, &ConditionLast))
-                    ASSERT(0);
+                    ASSERT(FALSE);
 
                 if (l < (RTL_NUMBER_OF(ExceptionNames) - 1))
                 {
@@ -2918,7 +2917,7 @@ KdbpPager(
           break;
 
         /* Calculate the number of lines which will be printed in the terminal
-         * when outputting the current line
+         * when outputting the current line.
          */
         if (i > 0)
             RowsPrintedByTerminal = (i + KdbNumberOfColsPrinted - 1) / KdbNumberOfColsTerminal;
