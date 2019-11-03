@@ -249,27 +249,6 @@ MACRO(TRAP_ENTRY, Trap, Flags)
     .ENDP
 ENDM
 
-#define KI_NMI  HEX(0001)
-
-MACRO(TASK_ENTRY, Trap, Flags)
-    EXTERN _&Trap&Handler :PROC
-    PUBLIC _&Trap
-    .PROC _&Trap
-        /* Generate proper debugging symbols */
-        FPO 0, 0, 0, 0, 0, FRAME_TSS
-
-        /* Call the C handler */
-        call _&Trap&Handler
-
-        if (Flags AND KI_NMI)
-            /* Return from NMI: return with iret and handle NMI recursion */
-            iretd
-            jmp _&Trap
-        endif
-
-    .ENDP
-ENDM
-
 #define KI_RESTORE_EAX        HEX(0001)
 #define KI_RESTORE_ECX_EDX    HEX(0002)
 #define KI_RESTORE_FS         HEX(0004)

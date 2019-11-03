@@ -455,9 +455,10 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
+DECLSPEC_NORETURN
 VOID
 __cdecl
-KiTrap02Handler(VOID)
+KiTrap02(VOID)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
@@ -477,8 +478,8 @@ KiTrap02Handler(VOID)
     _disable();
 
     /* Get the current TSS, thread, and process */
-    Tss = KeGetPcr()->TSS;
-    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+    Tss = PCR->TSS;
+    Thread = ((PKIPCR)PCR)->PrcbData.CurrentThread;
     Process = Thread->ApcState.Process;
 
     /* Save data usually not present in the TSS */
@@ -498,7 +499,7 @@ KiTrap02Handler(VOID)
      * Note that in reality, we are already on the NMI TSS -- we just
      * need to update the PCR to reflect this.
      */
-    KeGetPcr()->TSS = NmiTss;
+    PCR->TSS = NmiTss;
     __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
     TssGdt->HighWord.Bits.Dpl = 0;
     TssGdt->HighWord.Bits.Pres = 1;
@@ -523,7 +524,7 @@ KiTrap02Handler(VOID)
     TrapFrame.Esi = Tss->Esi;
     TrapFrame.Edi = Tss->Edi;
     TrapFrame.SegFs = Tss->Fs;
-    TrapFrame.ExceptionList = KeGetPcr()->NtTib.ExceptionList;
+    TrapFrame.ExceptionList = PCR->NtTib.ExceptionList;
     TrapFrame.PreviousPreviousMode = (ULONG)-1;
     TrapFrame.Eax = Tss->Eax;
     TrapFrame.Ecx = Tss->Ecx;
@@ -547,10 +548,10 @@ KiTrap02Handler(VOID)
          * the normal APIs here as playing with the IRQL could change the system
          * state.
          */
-        OldIrql = KeGetPcr()->Irql;
-        KeGetPcr()->Irql = HIGH_LEVEL;
+        OldIrql = PCR->Irql;
+        PCR->Irql = HIGH_LEVEL;
         HalHandleNMI(NULL);
-        KeGetPcr()->Irql = OldIrql;
+        PCR->Irql = OldIrql;
     }
 
     /*
@@ -560,24 +561,25 @@ KiTrap02Handler(VOID)
      * We have to make sure we're still in our original NMI -- a nested NMI
      * will point back to the NMI TSS, and in that case we're hosed.
      */
-    if (KeGetPcr()->TSS->Backlink == KGDT_NMI_TSS)
+    if (PCR->TSS->Backlink != KGDT_NMI_TSS)
     {
-        /* Unhandled: crash the system */
-        KiSystemFatalException(EXCEPTION_NMI, NULL);
+        /* Restore original TSS */
+        PCR->TSS = Tss;
+
+        /* Set it back to busy */
+        TssGdt->HighWord.Bits.Dpl = 0;
+        TssGdt->HighWord.Bits.Pres = 1;
+        TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
+
+        /* Restore nested flag */
+        __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
+
+        /* Handled, return from interrupt */
+        KiIret();
     }
 
-    /* Restore original TSS */
-    KeGetPcr()->TSS = Tss;
-
-    /* Set it back to busy */
-    TssGdt->HighWord.Bits.Dpl = 0;
-    TssGdt->HighWord.Bits.Pres = 1;
-    TssGdt->HighWord.Bits.Type = I386_ACTIVE_TSS;
-
-    /* Restore nested flag */
-    __writeeflags(__readeflags() | EFLAGS_NESTED_TASK);
-
-    /* Handled, return from interrupt */
+    /* Unhandled: crash the system */
+    KiSystemFatalException(EXCEPTION_NMI, NULL);
 }
 
 DECLSPEC_NORETURN
@@ -827,53 +829,11 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 
 DECLSPEC_NORETURN
 VOID
-__cdecl
-KiTrap08Handler(VOID)
+FASTCALL
+KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
-    PKTSS Tss, DfTss;
-    PKTHREAD Thread;
-    PKPROCESS Process;
-    PKGDTENTRY TssGdt;
-
-    /* For sanity's sake, make sure interrupts are disabled */
-    _disable();
-
-    /* Get the current TSS, thread, and process */
-    Tss = KeGetPcr()->TSS;
-    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
-    Process = Thread->ApcState.Process;
-
-    /* Save data usually not present in the TSS */
-    Tss->CR3 = Process->DirectoryTableBase[0];
-    Tss->IoMapBase = Process->IopmOffset;
-    Tss->LDT = Process->LdtDescriptor.LimitLow ? KGDT_LDT : 0;
-
-    /* Now get the base address of the double-fault TSS */
-    TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_DF_TSS / sizeof(KGDTENTRY)];
-    DfTss  = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
-                                TssGdt->HighWord.Bytes.BaseMid << 16 |
-                                TssGdt->HighWord.Bytes.BaseHi << 24);
-
-    /*
-     * Switch to it and activate it, masking off the nested flag.
-     *
-     * Note that in reality, we are already on the double-fault TSS
-     * -- we just need to update the PCR to reflect this.
-     */
-    KeGetPcr()->TSS = DfTss;
-    __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
-    TssGdt->HighWord.Bits.Dpl = 0;
-    TssGdt->HighWord.Bits.Pres = 1;
-    // TssGdt->HighWord.Bits.Type &= ~0x2; /* I386_ACTIVE_TSS --> I386_TSS */
-    TssGdt->HighWord.Bits.Type = I386_TSS; // Busy bit cleared in the TSS selector.
-
-    /* Bugcheck the system */
-    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
-                     EXCEPTION_DOUBLE_FAULT,
-                     (ULONG_PTR)Tss,
-                     0,
-                     0,
-                     NULL);
+    /* FIXME: Not handled */
+    KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
 }
 
 DECLSPEC_NORETURN
