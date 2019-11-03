@@ -124,7 +124,14 @@ LoadAndBootWindowsCommon(
     PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCSTR BootOptions,
     PCSTR BootPath,
-    BOOLEAN Setup);
+    BOOLEAN Setup,
+    PVOID KernelAddress);
+
+BOOLEAN
+LoadKernel(
+    IN PCHAR BootOptions,
+    IN PCHAR BootPath,
+    OUT PVOID KernelAddress);
 
 VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);

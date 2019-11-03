@@ -197,6 +197,7 @@ LoadReactOSSetup(
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     PSETUP_LOADER_BLOCK SetupBlock;
     PCSTR SystemPath;
+    PVOID KernelAddress;
 
     static PCSTR SourcePaths[] =
     {
@@ -350,6 +351,12 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
+    if (!LoadKernel(BootOptions, BootPath, &KernelAddress))
+    {
+        UiMessageBox("Failed to load kernel");
+        return EINVAL;
+    }
+
     /* Allocate and minimally-initialize the Loader Parameter Block */
     AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
 
@@ -394,5 +401,6 @@ LoadReactOSSetup(
                                     LoaderBlock,
                                     BootOptions,
                                     BootPath,
-                                    TRUE);
+                                    TRUE,
+                                    KernelAddress);
 }
