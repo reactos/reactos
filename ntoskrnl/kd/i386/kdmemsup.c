@@ -1,3 +1,11 @@
+/*****************************************************************************\
+ *                                                                           *
+ *     This file is current kept ONLY for DOCUMENTATION purposes, until      *
+ *  we are sure that all the functionality (e.g. regarding the "big pages")  *
+ * are fully present in Mm and in mm/ARM3/mmdbg.c that supersedes this file. *
+ *                                                                           *
+\*****************************************************************************/
+
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
@@ -44,14 +52,14 @@ KdpPhysMap(ULONG_PTR PhysAddr, LONG Len)
     if ((PhysAddr & (PAGE_SIZE - 1)) + Len > PAGE_SIZE)
     {
         TempPte.u.Hard.PageFrameNumber = (PhysAddr >> PAGE_SHIFT) + 1;
-        PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_1);
+        PointerPte = MiAddressToPte((PVOID)MI_KDBG_TMP_PAGE_1);
         *PointerPte = TempPte;
         VirtAddr = (ULONG_PTR)PointerPte << 10;
         KeInvalidateTlbEntry((PVOID)VirtAddr);
     }
 
     TempPte.u.Hard.PageFrameNumber = PhysAddr >> PAGE_SHIFT;
-    PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_0);
+    PointerPte = MiAddressToPte((PVOID)MI_KDBG_TMP_PAGE_0);
     *PointerPte = TempPte;
     VirtAddr = (ULONG_PTR)PointerPte << 10;
     KeInvalidateTlbEntry((PVOID)VirtAddr);
@@ -112,8 +120,8 @@ KdpPhysWrite(ULONG_PTR PhysAddr, LONG Len, ULONGLONG Value)
     }
 }
 
+static
 BOOLEAN
-NTAPI
 KdpTranslateAddress(ULONG_PTR Addr, PULONG_PTR ResultAddr)
 {
     ULONG_PTR CR3Value = __readcr3();

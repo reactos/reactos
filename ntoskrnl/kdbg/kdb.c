@@ -1730,40 +1730,101 @@ KdbpGetCommandLineSettings(
     }
 }
 
+/*
+ * Copied from ntoskrnl/kd64/kdapi.c
+ */
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(IN ULONG64 Address,
+                    IN PVOID Buffer,
+                    IN ULONG TotalSize,
+                    IN ULONG ChunkSize,
+                    IN ULONG Flags,
+                    OUT PULONG ActualSize OPTIONAL)
+{
+    NTSTATUS Status;
+    ULONG RemainingLength, CopyChunk;
+
+    /* Check if we didn't get a chunk size or if it is too big */
+    if (ChunkSize == 0)
+    {
+        /* Default to 4 byte chunks */
+        ChunkSize = 4;
+    }
+    else if (ChunkSize > MMDBG_COPY_MAX_SIZE)
+    {
+        /* Normalize to maximum size */
+        ChunkSize = MMDBG_COPY_MAX_SIZE;
+    }
+
+    /* Copy the whole range in aligned chunks */
+    RemainingLength = TotalSize;
+    CopyChunk = 1;
+    while (RemainingLength > 0)
+    {
+        /*
+         * Determine the best chunk size for this round.
+         * The ideal size is aligned, isn't larger than the
+         * the remaining length and respects the chunk limit.
+         */
+        while (((CopyChunk * 2) <= RemainingLength) &&
+               (CopyChunk < ChunkSize) &&
+               ((Address & ((CopyChunk * 2) - 1)) == 0))
+        {
+            /* Increase it */
+            CopyChunk *= 2;
+        }
+
+        /*
+         * The chunk size can be larger than the remaining size if this
+         * isn't the first round, so check if we need to shrink it back.
+         */
+        while (CopyChunk > RemainingLength)
+        {
+            /* Shrink it */
+            CopyChunk /= 2;
+        }
+
+        /* Do the copy */
+        Status = MmDbgCopyMemory(Address,
+                                 Buffer,
+                                 CopyChunk,
+                                 Flags);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Copy failed, break out */
+            break;
+        }
+
+        /* Update pointers and length for the next run */
+        Address = Address + CopyChunk;
+        Buffer = (PVOID)((ULONG_PTR)Buffer + CopyChunk);
+        RemainingLength = RemainingLength - CopyChunk;
+    }
+
+    /* We may have modified executable code, flush the instruction cache */
+    KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
+
+    /*
+     * Return the size we managed to copy and return
+     * success if we could copy the whole range.
+     */
+    if (ActualSize) *ActualSize = TotalSize - RemainingLength;
+    return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+}
+
 NTSTATUS
 KdbpSafeReadMemory(
     OUT PVOID Dest,
     IN PVOID Src,
     IN ULONG Bytes)
 {
-    BOOLEAN Result = TRUE;
-
-    switch (Bytes)
-    {
-        case 1:
-        case 2:
-        case 4:
-        case 8:
-            Result = KdpSafeReadMemory((ULONG_PTR)Src, Bytes, Dest);
-            break;
-
-        default:
-        {
-            ULONG_PTR Start, End, Write;
-
-            for (Start = (ULONG_PTR)Src,
-                    End = Start + Bytes,
-                    Write = (ULONG_PTR)Dest;
-                 Result && (Start < End);
-                 Start++, Write++)
-                if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
-                    Result = FALSE;
-
-            break;
-        }
-    }
-
-    return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
+    return KdpCopyMemoryChunks((ULONG64)(ULONG_PTR)Src,
+                               Dest,
+                               Bytes,
+                               0,
+                               MMDBG_COPY_UNSAFE,
+                               NULL);
 }
 
 NTSTATUS
@@ -1772,16 +1833,10 @@ KdbpSafeWriteMemory(
     IN PVOID Src,
     IN ULONG Bytes)
 {
-    BOOLEAN Result = TRUE;
-    ULONG_PTR Start, End, Write;
-
-    for (Start = (ULONG_PTR)Src,
-            End = Start + Bytes,
-            Write = (ULONG_PTR)Dest;
-         Result && (Start < End);
-         Start++, Write++)
-        if (!KdpSafeWriteMemory(Write, 1, *((PCHAR)Start)))
-            Result = FALSE;
-
-    return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
+    return KdpCopyMemoryChunks((ULONG64)(ULONG_PTR)Dest,
+                               Src,
+                               Bytes,
+                               0,
+                               MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                               NULL);
 }
