@@ -34,108 +34,110 @@
 #include "fat.h"
 #include "fat32.h"
 
-bool BackupBootSector(char* lpszVolumeName);
 bool InstallBootSector(char* lpszVolumeType);
 int stricmp(const char *a, const char *b);
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
-    {
-        printf("syntax: install x: [fs_type]\nwhere fs_type is fat or fat32\n");
-        return -1;
-    }
+	if (argc < 3)
+	{
+		printf("syntax: install x: [fs_type]\nwhere fs_type is fat or fat32\n");
+		return -1;
+	}
 
-    if (!OpenVolume(argv[1]))
-    {
-        printf("Exiting program...\n");
-        return -1;
-    }
-    
+	if (!OpenVolume(argv[1]))
+	{
+		printf("Exiting program...\n");
+		return -1;
+	}
+
 	if (!InstallBootSector(argv[2]))
-    {
-        printf("Exiting program...\n");
-        return -1;
-    }
-    
-    CloseVolume();
+	{
+		printf("Exiting program...\n");
+		return -1;
+	}
 
-    printf("You must now copy freeldr.sys & freeldr.ini to %s.\n", argv[1]);
+	CloseVolume();
 
-    return 0;
+	printf("You must now copy freeldr.sys & freeldr.ini to %s.\n", argv[1]);
+
+	return 0;
 }
 
 
 bool InstallBootSector(char* lpszVolumeType)
 {
-    unsigned char BootSectorBuffer[512];
+	unsigned char BootSectorBuffer[512];
 
-    if (!ReadVolumeSector(0, BootSectorBuffer))
-    {
-        return false;
+	if (!ReadVolumeSector(0, BootSectorBuffer))
+	{
+		return false;
+	}
+
+	if (stricmp(lpszVolumeType, "fat32") == 0)
+	{
+		//
+		// Update the BPB in the new boot sector
+		//
+		memcpy((fat32_data+3), (BootSectorBuffer+3), 87 /*fat32 BPB length*/);
+
+		//
+		// Write out new boot sector
+		//
+		if (!WriteVolumeSector(0, fat32_data))
+		{
+			return false;
+		}
+
+		//
+		// Write out new extra sector
+		//
+		if (!WriteVolumeSector(14, (fat32_data+512)))
+		{
+			return false;
+		}
     }
 
-    if (stricmp(lpszVolumeType, "fat") == 0)
-    {
-        //
-        // Update the BPB in the new boot sector
-        //
-        memcpy((fat_data+3), (BootSectorBuffer+3), 59 /*fat BPB length*/);
+	else if (stricmp(lpszVolumeType, "fat") == 0)
+	{
+		//
+		// Update the BPB in the new boot sector
+ 		//
+		memcpy((fat_data+3), (BootSectorBuffer+3), 59 /*fat BPB length*/);
 
-        //
-        // Write out new boot sector
-        //
-        if (!WriteVolumeSector(0, fat_data))
-        {
-            return false;
-        }
-    }
-    else if (stricmp(lpszVolumeType, "fat32") == 0)
-    {
-        //
-        // Update the BPB in the new boot sector
-        //
-        memcpy((fat32_data+3), (BootSectorBuffer+3), 87 /*fat32 BPB length*/);
+		//
+		// Write out new boot sector
+		//
+		if (!WriteVolumeSector(0, fat_data))
+		{
+			return false;
+		}
+	}
 
-        //
-        // Write out new boot sector
-        //
-        if (!WriteVolumeSector(0, fat32_data))
-        {
-            return false;
-        }
+	else
+	{
+		printf("%s:%d: ", __FILE__, __LINE__);
+		printf("File system type %s unknown.\n", lpszVolumeType);
+		return false;
+	}
 
-        //
-        // Write out new extra sector
-        //
-        if (!WriteVolumeSector(14, (fat32_data+512)))
-        {
-            return false;
-        }
-    }
-    else
-    {
-        printf("%s:%d: ", __FILE__, __LINE__);
-        printf("File system type %s unknown.\n", lpszVolumeType);
-        return false;
-    }
+	printf("%s boot sector installed.\n", lpszVolumeType);
 
-    printf("%s boot sector installed.\n", lpszVolumeType);
-
-    return true;
+	return true;
 }
 
 int stricmp(const char *a, const char *b)
 {
-  int ca, cb;
-  do
-  {
-     ca = (unsigned char) *a++;
-     cb = (unsigned char) *b++;
-     ca = tolower(toupper(ca));
-     cb = tolower(toupper(cb));
-   }
-   while (ca == cb && ca != '\0');
-   
-   return ca - cb;
+	int ca, cb;
+	do
+	{
+		ca = (unsigned char) *a++;
+		cb = (unsigned char) *b++;
+		ca = tolower(toupper(ca));
+		cb = tolower(toupper(cb));
+	}
+
+	while (ca == cb && ca != '\0');
+
+	return ca - cb;
 }
