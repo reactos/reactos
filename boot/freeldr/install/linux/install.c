@@ -87,7 +87,6 @@ bool InstallBootSector(char* lpszVolumeType)
         //
         if (!WriteVolumeSector(0, fat_data))
         {
-            printf("Exiting program...\n");
             return false;
         }
     }
@@ -103,7 +102,6 @@ bool InstallBootSector(char* lpszVolumeType)
         //
         if (!WriteVolumeSector(0, fat32_data))
         {
-            printf("Exiting program...\n");
             return false;
         }
 
@@ -112,7 +110,6 @@ bool InstallBootSector(char* lpszVolumeType)
         //
         if (!WriteVolumeSector(14, (fat32_data+512)))
         {
-            printf("Exiting program...\n");
             return false;
         }
     }
