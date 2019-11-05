@@ -42,7 +42,7 @@ bool OpenVolume(char* lpszVolumeName)
 	
 	hDiskVolume = open(lpszVolumeName, O_RDWR | O_SYNC);
 	
-	if(hDiskVolume < 0)
+	if (hDiskVolume < 0)
 	{
 		perror("OpenVolume() failed!");
 		return false;
@@ -63,7 +63,7 @@ bool ReadVolumeSector(long SectorNumber, void* SectorBuffer)
 	
 	dwFilePosition = lseek(hDiskVolume, (SectorNumber* 512), SEEK_SET);
 	
-	if(dwFilePosition != (SectorNumber * 512))
+	if (dwFilePosition != (SectorNumber * 512))
 	{
 		perror("ReadVolumeSector() failed!");
 		return false;
@@ -87,7 +87,7 @@ bool WriteVolumeSector(long SectorNumber, void* SectorBuffer)
 	
 	dwFilePosition = lseek(hDiskVolume, (SectorNumber * 512), SEEK_SET);
 	
-	if(dwFilePosition != (SectorNumber * 512))
+	if (dwFilePosition != (SectorNumber * 512))
 	{
 		perror("WriteVolumeSector() failed!");
 		return false;
