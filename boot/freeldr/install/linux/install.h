@@ -19,3 +19,4 @@
  */
 
 #pragma once
+#define stricmp strcasecmp

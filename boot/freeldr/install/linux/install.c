@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdbool.h> 
 #include "install.h"
 #include "volume.h"
@@ -35,7 +36,6 @@
 #include "fat32.h"
 
 bool InstallBootSector(char* lpszVolumeType);
-int stricmp(const char *a, const char *b);
 
 int main(int argc, char *argv[])
 {
@@ -124,20 +124,4 @@ bool InstallBootSector(char* lpszVolumeType)
 	printf("%s boot sector installed.\n", lpszVolumeType);
 
 	return true;
-}
-
-int stricmp(const char *a, const char *b)
-{
-	int ca, cb;
-	do
-	{
-		ca = (unsigned char) *a++;
-		cb = (unsigned char) *b++;
-		ca = tolower(toupper(ca));
-		cb = tolower(toupper(cb));
-	}
-
-	while (ca == cb && ca != '\0');
-
-	return ca - cb;
 }
