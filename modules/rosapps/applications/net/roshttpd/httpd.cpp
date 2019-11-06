@@ -461,22 +461,22 @@ VOID CHttpDaemonThread::Execute()
 		            case HTTPD_START: {
 			            if (Daemon->GetState() == hsStopped)
 				            Daemon->Start();
-					    break;
+                    break;
 					}
 					case HTTPD_STOP: {
 	                    if (Daemon->GetState() == hsRunning)
 							Daemon->Stop();
-						break;
+                    break;
 					}
 					case HTTPD_SUSPEND: {
 						if (Daemon->GetState() == hsRunning){}
 							// FIXME: Suspend service
-						break;
+                    break;
 					}
 					case HTTPD_RESUME: {
 						if (Daemon->GetState() != hsSuspended){}
 							// FIXME: Resume service
-						break;
+                    break;
 					}
 					default:
                         DispatchMessage(&Msg);
@@ -486,7 +486,7 @@ VOID CHttpDaemonThread::Execute()
 		delete Daemon;
 	} catch (ESocket e) {
 		ReportErrorStr(e.what());
-	} catch	(bad_alloc e) {
+	} catch	(bad_alloc&) {
 		ReportErrorStr(TS("Insufficient resources."));
 	}
 }

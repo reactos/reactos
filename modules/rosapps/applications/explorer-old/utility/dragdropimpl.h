@@ -246,15 +246,15 @@ public:
 		if (pDragSourceHelper == NULL)
 			return E_FAIL;
 
-			SHDRAGIMAGE di;
-			BITMAP		bm;
-			GetObject(hBitmap, sizeof(bm), &bm);
-			di.sizeDragImage.cx = bm.bmWidth;
-			di.sizeDragImage.cy = bm.bmHeight;
-			di.hbmpDragImage = hBitmap;
-			di.crColorKey = crColorKey;
-			di.ptOffset.x = pt.x - rc.left;
-			di.ptOffset.y = pt.y - rc.top;
+		SHDRAGIMAGE	di;
+		BITMAP		bm;
+		GetObject(hBitmap, sizeof(bm), &bm);
+		di.sizeDragImage.cx = bm.bmWidth;
+		di.sizeDragImage.cy = bm.bmHeight;
+		di.hbmpDragImage = hBitmap;
+		di.crColorKey = crColorKey;
+		di.ptOffset.x = pt.x - rc.left;
+		di.ptOffset.y = pt.y - rc.top;
 		return pDragSourceHelper->InitializeFromBitmap(&di, pDataObject);
 	}
 
