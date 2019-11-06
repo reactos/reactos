@@ -49,7 +49,7 @@ void CConfig::Default()
 	try {
 		lpsStr = _strdup(dcfgDefaultResource);
 		DefaultResources.Insert(lpsStr);
-	} catch (bad_alloc e) {
+	} catch (bad_alloc&) {
 		free((void *)lpsStr);
 		Clear();
 		throw;

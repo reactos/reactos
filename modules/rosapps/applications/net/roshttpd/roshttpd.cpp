@@ -45,7 +45,7 @@ VOID Run()
 
 		if (pConfiguration != NULL)
 		    delete pConfiguration;
-	} catch (bad_alloc e) {
+	} catch (bad_alloc&) {
 		if (pConfiguration != NULL)
 			delete pConfiguration;
 		ReportErrorStr(TS("Insufficient resources."));
