@@ -32,7 +32,7 @@ add_library(fontext MODULE
 
 set_module_type(fontext win32dll UNICODE)
 target_link_libraries(fontext uuid wine)
-add_delay_importlibs(fontext ole32 oleaut32 shlwapi)
+add_delay_importlibs(fontext ole32 oleaut32 shlwapi gdi32)
 add_importlibs(fontext shell32 advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(fontext precomp.h SOURCE)
 add_cd_file(TARGET fontext DESTINATION reactos/system32 FOR all)
