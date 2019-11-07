@@ -13,16 +13,11 @@ add_custom_command(
     DEPENDS native-bin2c fat32)
 #####################################
 
-add_executable(installfreeldr EXCLUDE_FROM_ALL
+add_executable(installfreeldrlinux EXCLUDE_FROM_ALL
     install.c
     volume.c
     ${CMAKE_CURRENT_BINARY_DIR}/fat.c
     ${CMAKE_CURRENT_BINARY_DIR}/fat32.c)
 
-set_module_type(installfreeldr win32cui)
-add_importlibs(installfreeldr msvcrt kernel32)
+set_module_type(installfreeldrlinux nativecui)
 add_cd_file(TARGET installfreeldr DESTINATION loader NO_CAB FOR bootcd)
-
-if(UNIX)
-    add_subdirectory(linux)
-endif()
