@@ -365,8 +365,6 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
-HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
-
 // *** IDropTarget methods ***
 STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
