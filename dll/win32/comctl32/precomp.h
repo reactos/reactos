@@ -20,8 +20,6 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 
-#include <windowsx.h>
-
 #include <wine/debug.h>
 #include <wine/heap.h>
 #include <wine/list.h>
