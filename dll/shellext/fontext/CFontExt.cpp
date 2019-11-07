@@ -441,13 +441,9 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         }
 
         LPCWSTR pchDotExt = PathFindExtensionW(File);
-        if (_wcsicmp(pchDotExt, L".ttf") != 0 &&
-            _wcsicmp(pchDotExt, L".ttc") != 0 &&
-            _wcsicmp(pchDotExt, L".otf") != 0 &&
-            _wcsicmp(pchDotExt, L".otc") != 0 &&
-            _wcsicmp(pchDotExt, L".fon") != 0 &&
-            _wcsicmp(pchDotExt, L".fnt") != 0)
+        if (!IsFontDotExt(pchDotExt))
         {
+            ERR("%S is not supported\n", pchDotExt);
             bOK = FALSE;
             break;
         }
