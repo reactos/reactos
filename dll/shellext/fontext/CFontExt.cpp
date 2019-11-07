@@ -477,6 +477,13 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
     RegCloseKey(hkeyFonts);
 
+    if (bOK)
+    {
+        SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    }
+
+    // TODO: Show message
+
     return bOK ? S_OK : E_FAIL;
 }
 
