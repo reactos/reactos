@@ -1187,6 +1187,9 @@ static void DEFDLG_Reposition(HWND hwnd)
     RECT rc;
     SIZE siz;
 
+    if (GetWindowLong(hwnd, GWL_STYLE) & WS_CHILD)
+        return;
+
     hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
 
     if (!GetMonitorInfoW(hMon, &mi) || !GetWindowRect(hwnd, &rc))
