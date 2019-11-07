@@ -430,13 +430,13 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
                 break;
             }
 
-            CStringW strDotExt = PathFindExtensionW(szPath);
-            if (strDotExt.CompareNoCase(L".ttf") != 0 &&
-                strDotExt.CompareNoCase(L".ttc") != 0 &&
-                strDotExt.CompareNoCase(L".otf") != 0 &&
-                strDotExt.CompareNoCase(L".otc") != 0 &&
-                strDotExt.CompareNoCase(L".fon") != 0 &&
-                strDotExt.CompareNoCase(L".fnt") != 0)
+            LPCWSTR pchDotExt = PathFindExtensionW(szPath);
+            if (_wcsicmp(pchDotExt, L".ttf") != 0 &&
+                _wcsicmp(pchDotExt, L".ttc") != 0 &&
+                _wcsicmp(pchDotExt, L".otf") != 0 &&
+                _wcsicmp(pchDotExt, L".otc") != 0 &&
+                _wcsicmp(pchDotExt, L".fon") != 0 &&
+                _wcsicmp(pchDotExt, L".fnt") != 0)
             {
                 bOK = FALSE;
                 break;
@@ -500,15 +500,14 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     WCHAR szDestFile[MAX_PATH];
     LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
 
-    StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
-    PathAppendW(szDestFile, pszFileTitle);
-
     WCHAR szFontName[512];
     if (!DoGetFontTitle(pszFontPath, szFontName))
         return E_FAIL;
 
     RemoveFontResourceW(pszFileTitle);
 
+    StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
+    PathAppendW(szDestFile, pszFileTitle);
     if (!CopyFileW(pszFontPath, szDestFile, FALSE))
         return E_FAIL;
 
