@@ -50,7 +50,7 @@ inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
     {
         L".ttf", L".ttc", L".otf", L".otc", L".fon", L".fnt", NULL
     };
-    for (LPCWSTR *pp = array; *pp; ++pp)
+    for (const LPCWSTR *pp = array; *pp; ++pp)
     {
         if (!_wcsicmp(*pp, pchDotExt))
             return TRUE;
