@@ -11,7 +11,8 @@ class CFontExt :
     public CComCoClass<CFontExt, &CLSID_CFontExt>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
 
