@@ -409,6 +409,10 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    WCHAR szRoot[MAX_PATH];
+    PCUIDLIST_ABSOLUTE pidlRoot = HIDA_GetPIDLFolder(cida);
+    SHGetPathFromIDListW(pidlRoot, szRoot);
+
     BOOL bOK = TRUE;
     CAtlArray<CStringW> FontPaths;
     for (UINT n = 0; n < cida->cidl; ++n)
@@ -426,7 +430,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
         if (PathIsRelativeW(File))
         {
-            File = szFontsDir + File;
+            File = szRoot + File;
         }
 
         if (PathIsDirectoryW(File))
