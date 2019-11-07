@@ -89,7 +89,6 @@ public:
         //COM_INTERFACE_ENTRY_FUNC_BLIND(0, log_stuff)
     END_COM_MAP()
 
-    HRESULT DoGetFormatETC(IDataObject* pDataObj, FORMATETC& formatETC);
     HRESULT DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts);
     HRESULT DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName);
 };

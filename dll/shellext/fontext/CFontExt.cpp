@@ -365,21 +365,19 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
+HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
+
 // *** IDropTarget methods ***
 STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    FORMATETC formatETC;
-    HRESULT hr = DoGetFormatETC(pDataObj, formatETC);
-    if (hr != S_OK)
-    {
-        *pdwEffect = DROPEFFECT_NONE;
-        return DRAGDROP_S_CANCEL;
-    }
+    *pdwEffect = DROPEFFECT_NONE;
 
-    // TODO: Check filename extension
+    CComHeapPtr<CIDA> cida;
+    HRESULT hr = _GetCidlFromDataObject(pDataObj, &cida);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
 #if 1   // Please implement DoGetFontTitle
-    *pdwEffect = DROPEFFECT_NONE;
     return DRAGDROP_S_CANCEL;
 #else
     *pdwEffect = DROPEFFECT_COPY;
@@ -399,64 +397,62 @@ STDMETHODIMP CFontExt::DragLeave()
 
 STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    FORMATETC formatETC;
-    HRESULT hr = DoGetFormatETC(pDataObj, formatETC);
-    if (hr != S_OK)
-    {
-        *pdwEffect = DROPEFFECT_NONE;
-        return DRAGDROP_S_CANCEL;
-    }
+    *pdwEffect = DROPEFFECT_NONE;
 
-    STGMEDIUM medium;
-    hr = pDataObj->GetData(&formatETC, &medium);
-    if (FAILED(hr))
-    {
-        *pdwEffect = DROPEFFECT_NONE;
-        return DRAGDROP_S_CANCEL;
-    }
+    WCHAR szFontsDir[MAX_PATH];
+    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, szFontsDir);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_FAIL;
+
+    CComHeapPtr<CIDA> cida;
+    hr = _GetCidlFromDataObject(pDataObj, &cida);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     BOOL bOK = TRUE;
     CAtlArray<CStringW> FontPaths;
-    HDROP hDrop = (HDROP)GlobalLock(medium.hGlobal);
-    if (hDrop)
+    for (UINT n = 0; n < cida->cidl; ++n)
     {
-        WCHAR szPath[MAX_PATH];
-        UINT iFile, cFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-        for (iFile = 0; iFile < cFiles; ++iFile)
+        const FontPidlEntry* fontEntry = _FontFromIL(HIDA_GetPIDLItem(cida, n));
+        if (!fontEntry)
+            continue;
+
+        CStringW File = g_FontCache->Filename(fontEntry);
+        if (File.IsEmpty())
         {
-            DragQueryFile(hDrop, iFile, szPath, _countof(szPath));
-
-            if (PathIsDirectoryW(szPath))
-            {
-                bOK = FALSE;
-                break;
-            }
-
-            LPCWSTR pchDotExt = PathFindExtensionW(szPath);
-            if (_wcsicmp(pchDotExt, L".ttf") != 0 &&
-                _wcsicmp(pchDotExt, L".ttc") != 0 &&
-                _wcsicmp(pchDotExt, L".otf") != 0 &&
-                _wcsicmp(pchDotExt, L".otc") != 0 &&
-                _wcsicmp(pchDotExt, L".fon") != 0 &&
-                _wcsicmp(pchDotExt, L".fnt") != 0)
-            {
-                bOK = FALSE;
-                break;
-            }
-
-            FontPaths.Add(szPath);
+            ERR("No file found for %S\n", fontEntry->Name);
+            continue;
         }
 
-        GlobalUnlock(medium.hGlobal);
+        if (PathIsRelativeW(File))
+        {
+            File = szFontsDir + File;
+        }
+
+        if (PathIsDirectoryW(File))
+        {
+            ERR("PathIsDirectory\n");
+            bOK = FALSE;
+            break;
+        }
+
+        LPCWSTR pchDotExt = PathFindExtensionW(File);
+        if (_wcsicmp(pchDotExt, L".ttf") != 0 &&
+            _wcsicmp(pchDotExt, L".ttc") != 0 &&
+            _wcsicmp(pchDotExt, L".otf") != 0 &&
+            _wcsicmp(pchDotExt, L".otc") != 0 &&
+            _wcsicmp(pchDotExt, L".fon") != 0 &&
+            _wcsicmp(pchDotExt, L".fnt") != 0)
+        {
+            bOK = FALSE;
+            break;
+        }
+
+        FontPaths.Add(File);
     }
-    ReleaseStgMedium(&medium);
 
     if (!bOK)
         return E_FAIL;
-
-    WCHAR szFontsDir[MAX_PATH];
-    GetWindowsDirectoryW(szFontsDir, _countof(szFontsDir));
-    PathAppendW(szFontsDir, L"Fonts");
 
     HKEY hkeyFonts = NULL;
     RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -470,7 +466,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
     {
         HRESULT hr = DoInstallFontFile(FontPaths[iItem], szFontsDir, hkeyFonts);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             bOK = FALSE;
             break;
@@ -479,29 +475,11 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
     RegCloseKey(hkeyFonts);
 
-    if (bOK)
-    {
-        SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-    }
+    SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
     // TODO: Show message
 
     return bOK ? S_OK : E_FAIL;
-}
-
-HRESULT CFontExt::DoGetFormatETC(IDataObject* pDataObj, FORMATETC& formatETC)
-{
-    if (!pDataObj)
-        return E_POINTER;
-
-    formatETC.cfFormat = CF_HDROP;
-    formatETC.ptd = NULL;
-    formatETC.dwAspect = DVASPECT_CONTENT;
-    formatETC.lindex = -1;
-    formatETC.tymed = TYMED_HGLOBAL;
-
-    HRESULT hr = pDataObj->QueryGetData(&formatETC);
-    return hr;
 }
 
 HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts)
@@ -518,19 +496,28 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
     PathAppendW(szDestFile, pszFileTitle);
     if (!CopyFileW(pszFontPath, szDestFile, FALSE))
+    {
+        ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, szDestFile);
         return E_FAIL;
+    }
 
     if (!AddFontResourceW(pszFileTitle))
+    {
+        ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
         return E_FAIL;
+    }
 
     DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
     LONG nError = RegSetValueExW(hkeyFonts, szFontName, 0, REG_SZ, (const BYTE *)szFontName, cbData);
     if (nError)
     {
+        ERR("RegSetValueExW failed with %ld\n", nError);
+        RemoveFontResourceW(pszFileTitle);
+        DeleteFileW(szDestFile);
         return E_FAIL;
     }
 
-    return E_FAIL;
+    return S_OK;
 }
 
 HRESULT CFontExt::DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName)
