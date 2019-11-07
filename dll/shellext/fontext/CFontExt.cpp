@@ -197,6 +197,7 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
 
     if (IsEqualIID(riid, IID_IDropTarget))
     {
+        ERR("IDropTarget not implemented\n");
         *ppvOut = static_cast<IDropTarget *>(this);
         AddRef();
         hr = S_OK;
