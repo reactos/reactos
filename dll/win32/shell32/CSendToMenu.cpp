@@ -474,8 +474,9 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
             if (!lpmis || lpmis->CtlType != ODT_MENU)
                 break;
 
-            if (lpmis->itemWidth < (UINT)GetSystemMetrics(SM_CXMENUCHECK))
-                lpmis->itemWidth = GetSystemMetrics(SM_CXMENUCHECK);
+            UINT cxMenuCheck = GetSystemMetrics(SM_CXMENUCHECK);
+            if (lpmis->itemWidth < cxMenuCheck)
+                lpmis->itemWidth = cxMenuCheck;
             if (lpmis->itemHeight < cySmall)
                 lpmis->itemHeight = cySmall;
 
