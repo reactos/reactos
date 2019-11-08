@@ -129,7 +129,7 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl,
 
     LPCITEMIDLIST pidlLast;
     CComPtr<IShellFolder> pFolder;
-    HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID *)&pFolder, &pidlLast);
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
     if (FAILED(hr))
     {
         ERR("SHBindToParent: %08lX\n", hr);
