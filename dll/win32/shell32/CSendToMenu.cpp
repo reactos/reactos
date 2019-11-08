@@ -51,17 +51,33 @@ CSendToMenu::~CSendToMenu()
 
 HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 {
-    DWORD dwEffect;
-    if (GetAsyncKeyState(VK_SHIFT) < 0)
-        dwEffect = DROPEFFECT_MOVE; // SHIFT is pressed
-    else
-        dwEffect = DROPEFFECT_COPY;
+    DWORD dwEffect = DROPEFFECT_MOVE | DROPEFFECT_COPY | DROPEFFECT_LINK;
+
+    BOOL bShift = (GetAsyncKeyState(VK_SHIFT) < 0);
+    BOOL bCtrl = (GetAsyncKeyState(VK_CONTROL) < 0);
+
+    // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+    DWORD dwKeyState = MK_LBUTTON;
+    if (bShift && bCtrl)
+        dwKeyState |= MK_SHIFT | MK_CONTROL;
+    else if (!bShift)
+        dwKeyState |= MK_CONTROL;
+    if (bCtrl)
+        dwKeyState |= MK_SHIFT;
 
     POINTL ptl = { 0, 0 };
-    HRESULT hr = pDropTarget->DragEnter(pDataObject, MK_LBUTTON, ptl, &dwEffect);
+    HRESULT hr = pDropTarget->DragEnter(pDataObject, dwKeyState, ptl, &dwEffect);
     if (SUCCEEDED(hr) && dwEffect != DROPEFFECT_NONE)
     {
-        hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, ptl, &dwEffect);
+        // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+        if (bShift && bCtrl)
+            dwEffect = DROPEFFECT_LINK;
+        else if (!bShift)
+            dwEffect = DROPEFFECT_MOVE;
+        else
+            dwEffect = DROPEFFECT_COPY;
+
+        hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffect);
     }
     else
     {
