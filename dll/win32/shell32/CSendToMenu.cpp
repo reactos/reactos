@@ -22,6 +22,8 @@
 #define INITGUID
 #include <guiddef.h>
 
+#define MAX_ITEM_COUNT 64
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 DEFINE_GUID(CLSID_SendToMenu, 0x7BA4C740, 0x9E81, 0x11CF,
@@ -51,7 +53,7 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 {
     DWORD dwEffect;
     if (GetAsyncKeyState(VK_SHIFT) < 0)
-        dwEffect = DROPEFFECT_MOVE;
+        dwEffect = DROPEFFECT_MOVE; // SHIFT is pressed
     else
         dwEffect = DROPEFFECT_COPY;
 
@@ -70,6 +72,7 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
     return hr;
 }
 
+// get an IShellFolder from CSIDL
 IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
 {
     if (!m_pDesktop)
@@ -100,6 +103,7 @@ IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
     return NULL;
 }
 
+// get a UI object from PIDL
 HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl,
                                          REFIID riid, LPVOID *ppvOut)
 {
@@ -179,6 +183,7 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
 
     BOOL bOK = TRUE;
     LPITEMIDLIST pidlChild;
+    UINT nCount = 0;
     while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
         SENDTO_ITEM *pNewItem = (SENDTO_ITEM *)HeapAlloc(GetProcessHeap(),
@@ -202,15 +207,17 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
             {
                 pNewItem->pidlChild = pidlChild;
                 pNewItem->pszText = pszText;
-
                 if (m_pItems)
                 {
                     pNewItem->pNext = m_pItems;
-                    m_pItems = pNewItem;
                 }
-                else
+                m_pItems = pNewItem;
+
+                // successful
+                ++nCount;
+                if (nCount >= MAX_ITEM_COUNT)
                 {
-                    m_pItems = pNewItem;
+                    break;
                 }
 
                 continue;
@@ -245,9 +252,10 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     m_idCmdFirst = idCmdFirst;
 
     UINT idCmd = idCmdFirst;
+    UINT nCount = 0;
     for (SENDTO_ITEM *pCurItem = m_pItems; pCurItem; pCurItem = pCurItem->pNext)
     {
-        UINT uFlags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
+        const UINT uFlags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
         if (InsertMenuW(hMenu, Pos, uFlags, idCmd, pCurItem->pszText))
         {
             MENUITEMINFOW mii;
@@ -256,6 +264,13 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             mii.dwItemData = (ULONG_PTR)pCurItem;
             SetMenuItemInfoW(hMenu, idCmd, FALSE, &mii);
             ++idCmd;
+
+            // successful
+            ++nCount;
+            if (nCount >= MAX_ITEM_COUNT)
+            {
+                break;
+            }
         }
     }
 
