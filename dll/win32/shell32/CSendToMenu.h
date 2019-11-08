@@ -38,13 +38,14 @@ private:
         SENDTO_ITEM *pNext;
     };
 
+    HMENU m_hSubMenu;
+    SENDTO_ITEM *m_pItems;
+    UINT m_idCmdFirst;
+
     CComPtr<IUnknown> m_pSite;
     CComPtr<IShellFolder> m_pDesktop;
     CComPtr<IShellFolder> m_pSendTo;
     CComPtr<IDataObject> m_pDataObject;
-    HMENU m_hSubMenu;
-    SENDTO_ITEM *m_pItems;
-    UINT m_idCmdFirst;
 
     BOOL LoadAllItems(HWND hwnd);
     void UnloadItem(SENDTO_ITEM *pItem);
@@ -64,35 +65,34 @@ public:
     ~CSendToMenu();
 
     // IObjectWithSite
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    STDMETHODIMP SetSite(IUnknown *pUnkSite);
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite);
 
     // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+    STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
     // IContextMenu3
-    virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+    STDMETHODIMP HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 
     // IContextMenu2
-    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHODIMP HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // IShellExtInit
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
-DECLARE_REGISTRY_RESOURCEID(IDR_SENDTOMENU)
-DECLARE_NOT_AGGREGATABLE(CSendToMenu)
+    DECLARE_REGISTRY_RESOURCEID(IDR_SENDTOMENU)
+    DECLARE_NOT_AGGREGATABLE(CSendToMenu)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-BEGIN_COM_MAP(CSendToMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
-END_COM_MAP()
+    BEGIN_COM_MAP(CSendToMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
+    END_COM_MAP()
 };
 
 #endif /* _SHV_ITEM_SENDTO_H_ */
