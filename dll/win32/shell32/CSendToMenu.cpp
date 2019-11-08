@@ -70,7 +70,13 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
 {
     if (!m_pDesktop)
+    {
         SHGetDesktopFolder(&m_pDesktop);
+        if (!m_pDesktop)
+        {
+            ERR("SHGetDesktopFolder\n");
+        }
+    }
 
     LPITEMIDLIST pidl = NULL;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
@@ -113,22 +119,24 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl, REFIID ri
 
 void CSendToMenu::UnloadItem(SENDTO_ITEM *pItem)
 {
-    CoTaskMemFree(pItem->pidlAbsolute);
-    CoTaskMemFree(pItem->pszText);
-    HeapFree(GetProcessHeap(), 0, pItem);
+    if (pItem)
+    {
+        CoTaskMemFree(pItem->pidlAbsolute);
+        CoTaskMemFree(pItem->pszText);
+        HeapFree(GetProcessHeap(), 0, pItem);
+    }
 }
 
 void CSendToMenu::UnloadAllItems()
 {
-    SENDTO_ITEM *pCurItem;
-
-    while (m_pItems)
+    SENDTO_ITEM *pItems = m_pItems;
+    m_pItems = NULL;
+    while (pItems)
     {
-        pCurItem = m_pItems;
-        m_pItems = m_pItems->pNext;
+        SENDTO_ITEM *pCurItem = pItems;
+        pItems = pItems->pNext;
         UnloadItem(pCurItem);
     }
-    m_pItems = NULL;
 }
 
 BOOL
@@ -138,7 +146,7 @@ CSendToMenu::LoadAllItems(HWND hwnd)
 
     if (!m_pSendTo)
     {
-        m_pSendTo = GetSpecialFolder(NULL, CSIDL_SENDTO);
+        m_pSendTo = GetSpecialFolder(hwnd, CSIDL_SENDTO);
         if (!m_pSendTo)
         {
             ERR("GetSpecialFolder\n");
@@ -284,12 +292,12 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
 
 HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpici)
 {
-    LPITEMIDLIST pidl = pItem->pidlAbsolute;
+    LPITEMIDLIST pidlAbsolute = pItem->pidlAbsolute;
 
     HRESULT hr;
 
     IDataObject *pDataObject;
-    hr = GetUIObjectFromPidl(NULL, pidl, IID_IDataObject, (LPVOID *)&pDataObject);
+    hr = GetUIObjectFromPidl(NULL, pidlAbsolute, IID_IDataObject, (LPVOID *)&pDataObject);
     if (FAILED(hr))
     {
         ERR("GetUIObjectFromPidl: %08lX\n", hr);
@@ -297,7 +305,7 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     }
 
     IDropTarget *pDropTarget;
-    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidl, IID_IDropTarget,
+    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlAbsolute, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (SUCCEEDED(hr))
     {
@@ -323,6 +331,9 @@ HRESULT STDMETHODCALLTYPE CSendToMenu::SetSite(IUnknown *pUnkSite)
 
 HRESULT STDMETHODCALLTYPE CSendToMenu::GetSite(REFIID riid, void **ppvSite)
 {
+    if (!m_pSite)
+        return E_FAIL;
+
     return m_pSite->QueryInterface(riid, ppvSite);
 }
 
@@ -334,29 +345,26 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
                               UINT idCmdLast,
                               UINT uFlags)
 {
-    MENUITEMINFOW mii;
-    UINT cItems = 0;
-    WCHAR wszSendTo[64];
-    HMENU hSubMenu, hOldSubMenu;
-
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
+    WCHAR wszSendTo[64];
     if (!LoadStringW(shell32_hInstance, IDS_SENDTO, wszSendTo, _countof(wszSendTo)))
     {
         ERR("IDS_SENDTO\n");
         return E_FAIL;
     }
 
-    hSubMenu = CreateMenu();
+    HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
         ERR("CreateMenu\n");
         return E_FAIL;
     }
 
-    cItems = InsertSendToItems(hSubMenu, idCmdFirst, 0);
+    UINT cItems = InsertSendToItems(hSubMenu, idCmdFirst, 0);
 
+    MENUITEMINFOW mii;
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
@@ -372,7 +380,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
         return E_FAIL;
     }
 
-    hOldSubMenu = m_hSubMenu;
+    HMENU hOldSubMenu = m_hSubMenu;
     m_hSubMenu = hSubMenu;
     DestroyMenu(hOldSubMenu);
 
@@ -387,6 +395,7 @@ CSendToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
     WORD idCmd = LOWORD(lpici->lpVerb);
     TRACE("idCmd: %d\n", idCmd);
+
     SENDTO_ITEM *pItem = FindItemFromIdOffset(idCmd);
     if (pItem)
     {
