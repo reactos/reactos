@@ -407,31 +407,42 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    WCHAR szRoot[MAX_PATH];
-    PCUIDLIST_ABSOLUTE pidlRoot = HIDA_GetPIDLFolder(cida);
-    SHGetPathFromIDListW(pidlRoot, szRoot);
+    WCHAR szParent[MAX_PATH];
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
+    if (!pidlParent)
+    {
+        ERR("pidlParent is NULL\n");
+        return E_FAIL;
+    }
 
     BOOL bOK = TRUE;
     CAtlArray<CStringW> FontPaths;
     for (UINT n = 0; n < cida->cidl; ++n)
     {
-        const FontPidlEntry* fontEntry = _FontFromIL(HIDA_GetPIDLItem(cida, n));
-        if (!fontEntry)
+        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
+        if (!pidlRelative)
             continue;
 
-        CStringW File = g_FontCache->Filename(fontEntry);
-        if (File.IsEmpty())
+        PIDLIST_ABSOLUTE pidl = ILCombine(pidlParent, pidlRelative);
+        if (!pidl)
         {
-            ERR("No file found for %S\n", fontEntry->Name);
-            continue;
+            ERR("ILCombine failed\n");
+            bOK = FALSE;
+            break;
         }
 
-        if (PathIsRelativeW(File))
+        WCHAR szPath[MAX_PATH];
+        BOOL ret = SHGetPathFromIDListW(pidl, szPath);
+        ILFree(pidl);
+
+        if (!ret)
         {
-            File = szRoot + File;
+            ERR("SHGetPathFromIDListW failed\n");
+            bOK = FALSE;
+            break;
         }
 
-        if (PathIsDirectoryW(File))
+        if (PathIsDirectoryW(szPath))
         {
             ERR("PathIsDirectory\n");
             bOK = FALSE;
@@ -441,7 +452,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         LPCWSTR pchDotExt = PathFindExtensionW(File);
         if (!IsFontDotExt(pchDotExt))
         {
-            ERR("%S is not supported\n", pchDotExt);
+            ERR("'%S' is not supported\n", pchDotExt);
             bOK = FALSE;
             break;
         }
