@@ -39,11 +39,12 @@ private:
     };
 
     CComPtr<IUnknown> m_pSite;
+    CComPtr<IShellFolder> m_pDesktop;
+    CComPtr<IShellFolder> m_pSendTo;
+    CComPtr<IDataObject> m_pDataObject;
     HMENU m_hSubMenu;
     SENDTO_ITEM *m_pItems;
     UINT m_idCmdFirst;
-    CComPtr<IShellFolder> m_pDesktop;
-    CComPtr<IShellFolder> m_pSendTo;
 
     BOOL LoadAllItems(HWND hwnd);
     void UnloadItem(SENDTO_ITEM *pItem);

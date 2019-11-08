@@ -284,24 +284,20 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
 
 HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpici)
 {
-    LPITEMIDLIST pidlChild = pItem->pidlChild;
-
-    HRESULT hr;
-
-    IDataObject *pDataObject;
-    hr = GetUIObjectFromPidl(NULL, pidlChild, IID_IDataObject, (LPVOID *)&pDataObject);
-    if (FAILED(hr))
+    if (!m_pDataObject)
     {
-        ERR("GetUIObjectFromPidl: %08lX\n", hr);
-        return hr;
+        ERR("!m_pDataObject\n");
+        return E_FAIL;
     }
 
+    HRESULT hr;
     IDropTarget *pDropTarget;
+    LPITEMIDLIST pidlChild = pItem->pidlChild;
     hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (SUCCEEDED(hr))
     {
-        hr = DoDrop(pDataObject, pDropTarget);
+        hr = DoDrop(m_pDataObject, pDropTarget);
 
         pDropTarget->Release();
     }
@@ -309,8 +305,6 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     {
         ERR("GetUIObjectOf: %08lX\n", hr);
     }
-
-    pDataObject->Release();
 
     return hr;
 }
@@ -432,7 +426,8 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pl
 
 HRESULT WINAPI
 CSendToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
-                     IDataObject *pdtobj, HKEY hkeyProgID)
+                        IDataObject *pdtobj, HKEY hkeyProgID)
 {
+    m_pDataObject = pdtobj;
     return S_OK;
 }
