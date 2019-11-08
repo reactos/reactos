@@ -27,6 +27,8 @@ extern LONG g_ModuleRefCnt;
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
 
+#define FONT_HIVE   HKEY_LOCAL_MACHINE
+#define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
 
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID* ppvOut);
 HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,

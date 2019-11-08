@@ -9,10 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
-#define FONT_HIVE   HKEY_LOCAL_MACHINE
-#define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
-
 CFontCache* g_FontCache = NULL;
 
 CFontInfo::CFontInfo(LPCWSTR name)

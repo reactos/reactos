@@ -479,6 +479,8 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         }
     }
 
+    g_FontCache->Read();
+
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
     // TODO: Show message
@@ -508,6 +510,7 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     if (!AddFontResourceW(pszFileTitle))
     {
         ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
+        DeleteFileW(szDestFile);
         return E_FAIL;
     }
 
