@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS installfreeldr for linux
+ * PROJECT:     ReactOS FreeLoader installer for Linux
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     installfreeldr for linux.
- * COPYRIGHT:   Copyright 2001  Brian Palmer (brianp@sginet.com)
+ * PURPOSE:     Installation functions
+ * COPYRIGHT:   Copyright 2001 Brian Palmer (brianp@sginet.com)
  *              Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
  */
 
