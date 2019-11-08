@@ -51,7 +51,11 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 {
     POINTL ptl = { 0, 0 };
 
-    DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_LINK;
+    DWORD dwEffect;
+    if (GetAsyncKeyState(VK_SHIFT) < 0)
+        dwEffect = DROPEFFECT_MOVE;
+    else
+        dwEffect = DROPEFFECT_COPY;
 
     HRESULT hr = pDropTarget->DragEnter(pDataObject, MK_LBUTTON, ptl, &dwEffect);
     if (SUCCEEDED(hr) && dwEffect != DROPEFFECT_NONE)
