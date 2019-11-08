@@ -91,7 +91,8 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 }
 
 // get an IShellFolder from CSIDL
-IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
+IShellFolder *
+CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
 {
     if (ppidl)
         *ppidl = NULL;
@@ -260,7 +261,7 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
         }
 
         UnloadItem(pNewItem);
-        ILFree(pidlChild);
+        CoTaskMemFree(pidlChild);
     }
 
     ILFree(pidlSendTo);
