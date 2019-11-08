@@ -879,6 +879,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Ei saa meediumit väljutada (Veateade: %lu)."
     IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"

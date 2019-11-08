@@ -872,6 +872,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Tidak bisa mengeluarkan media (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "Tidak bisa menampilkan properti (Error Code: %lu)."
     IDS_CANTDISCONNECT "Tidak bisa memutuskan (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"

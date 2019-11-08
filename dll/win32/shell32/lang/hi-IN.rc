@@ -867,6 +867,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "मीडिया को इजेक्ट करने में असमर्थ (एरर कोड: %lu)."
     IDS_CANTSHOWPROPERTIES "गुण दिखाने में असमर्थ (एरर कोड: %lu)."
     IDS_CANTDISCONNECT "डिस्कनेक्ट करने में असमर्थ (एरर कोड: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "फोल्डर"

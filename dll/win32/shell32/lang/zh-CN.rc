@@ -882,6 +882,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "无法弹出媒体 (错误代码: %lu)."
     IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
     IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"

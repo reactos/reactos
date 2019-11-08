@@ -883,6 +883,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "無法退出媒體 (錯誤碼: %lu)."
     IDS_CANTSHOWPROPERTIES "無法顯示內容 (錯誤碼: %lu)."
     IDS_CANTDISCONNECT "無法中斷 (錯誤碼: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"

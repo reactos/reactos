@@ -872,6 +872,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Impossible d'éjecter le média (code d'erreur : %lu)."
     IDS_CANTSHOWPROPERTIES "Impossible de montrer les propriétés (code d'erreur : %lu)."
     IDS_CANTDISCONNECT "Impossible de déconnecter (code d'erreur : %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dossier"

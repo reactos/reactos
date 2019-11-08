@@ -224,7 +224,10 @@ CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 
     if (idCmd == idCmdFirst)
     {
-        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, L"(None)");
+        WCHAR szNone[64] = L"(None)";
+        LoadStringW(shell32_hInstance, IDS_NONE, szNone, _countof(szNone));
+
+        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, szNone);
     }
 
     return idCmd - idCmdFirst;
