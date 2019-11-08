@@ -479,7 +479,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         }
     }
 
-    g_FontCache->Read();
+    // TODO: update g_FontCache
 
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
