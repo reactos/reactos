@@ -91,8 +91,11 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 }
 
 // get an IShellFolder from CSIDL
-IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
+IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
 {
+    if (ppidl)
+        *ppidl = NULL;
+
     if (!m_pDesktop)
     {
         SHGetDesktopFolder(&m_pDesktop);
@@ -113,7 +116,12 @@ IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
 
     IShellFolder *pFolder = NULL;
     hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
-    CoTaskMemFree(pidl);
+
+    if (ppidl)
+        *ppidl = pidl;
+    else
+        CoTaskMemFree(pidl);
+
     if (SUCCEEDED(hr))
         return pFolder;
 
@@ -151,6 +159,7 @@ void CSendToMenu::UnloadItem(SENDTO_ITEM *pItem)
 
     CoTaskMemFree(pItem->pidlChild);
     CoTaskMemFree(pItem->pszText);
+    DestroyIcon(pItem->hIcon);
     HeapFree(GetProcessHeap(), 0, pItem);
 }
 
@@ -170,21 +179,11 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
 {
     UnloadAllItems();
 
+    LPITEMIDLIST pidlSendTo;
+    m_pSendTo = GetSpecialFolder(hwnd, CSIDL_SENDTO, &pidlSendTo);
     if (!m_pSendTo)
     {
-        m_pSendTo = GetSpecialFolder(hwnd, CSIDL_SENDTO);
-        if (!m_pSendTo)
-        {
-            ERR("GetSpecialFolder\n");
-            return FALSE;
-        }
-    }
-
-    LPITEMIDLIST pidlParent;
-    SHGetSpecialFolderLocation(hwnd, CSIDL_SENDTO, &pidlParent);
-    if (!pidlParent)
-    {
-        ERR("pidlParent\n");
+        ERR("GetSpecialFolder\n");
         return FALSE;
     }
 
@@ -196,6 +195,7 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
     if (FAILED(hr))
     {
         ERR("EnumObjects: %08lX\n", hr);
+        ILFree(pidlSendTo);
         return FALSE;
     }
 
@@ -223,8 +223,18 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
             hr = StrRetToStrW(&strret, pidlChild, &pszText);
             if (SUCCEEDED(hr))
             {
+                LPITEMIDLIST pidlAbsolute = ILCombine(pidlSendTo, pidlChild);
+
+                SHFILEINFOW fi = { NULL };
+                const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
+                                    SHGFI_ICON | SHGFI_SMALLICON;
+                SHGetFileInfoW((LPCWSTR)pidlAbsolute, 0, &fi, sizeof(fi), uFlags);
+
+                ILFree(pidlAbsolute);
+
                 pNewItem->pidlChild = pidlChild;
                 pNewItem->pszText = pszText;
+                pNewItem->hIcon = fi.hIcon;
                 if (m_pItems)
                 {
                     pNewItem->pNext = m_pItems;
@@ -237,7 +247,6 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
                 {
                     break;
                 }
-
                 continue;
             }
             else
@@ -250,8 +259,11 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
             ERR("GetDisplayNameOf: %08lX\n", hr);
         }
 
+        UnloadItem(pNewItem);
         ILFree(pidlChild);
     }
+
+    ILFree(pidlSendTo);
 
     return bOK;
 }
@@ -278,8 +290,9 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
         {
             MENUITEMINFOW mii;
             mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_DATA;
+            mii.fMask = MIIM_DATA | MIIM_BITMAP;
             mii.dwItemData = (ULONG_PTR)pCurItem;
+            mii.hbmpItem = HBMMENU_CALLBACK;
             SetMenuItemInfoW(hMenu, idCmd, FALSE, &mii);
             ++idCmd;
 
@@ -450,6 +463,49 @@ STDMETHODIMP
 CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
                             LRESULT *plResult)
 {
+    UINT cxSmall = GetSystemMetrics(SM_CXSMICON);
+    UINT cySmall = GetSystemMetrics(SM_CYSMICON);
+
+    switch (uMsg)
+    {
+    case WM_MEASUREITEM:
+        {
+            MEASUREITEMSTRUCT* lpmis = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
+            if (!lpmis || lpmis->CtlType != ODT_MENU)
+                break;
+
+            if (lpmis->itemWidth < (UINT)GetSystemMetrics(SM_CXMENUCHECK))
+                lpmis->itemWidth = GetSystemMetrics(SM_CXMENUCHECK);
+            if (lpmis->itemHeight < cySmall)
+                lpmis->itemHeight = cySmall;
+
+            if (plResult)
+                *plResult = TRUE;
+            break;
+        }
+    case WM_DRAWITEM:
+        {
+            DRAWITEMSTRUCT* lpdis = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
+            if (!lpdis || lpdis->CtlType != ODT_MENU)
+                break;
+
+            SENDTO_ITEM *pItem = (SENDTO_ITEM *)lpdis->itemData;
+            HICON hIcon = NULL;
+            if (pItem)
+                hIcon = pItem->hIcon;
+            if (!hIcon)
+                break;
+
+            RECT rcItem = lpdis->rcItem;
+            DrawIconEx(lpdis->hDC, 2,
+                       lpdis->rcItem.top + (rcItem.bottom - rcItem.top - 16) / 2,
+                       hIcon, cxSmall, cySmall, 0, NULL, DI_NORMAL);
+
+            if (plResult)
+                *plResult = TRUE;
+        }
+    }
+
     return S_OK;
 }
 

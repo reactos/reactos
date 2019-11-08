@@ -35,6 +35,7 @@ private:
     {
         LPITEMIDLIST pidlChild;
         LPWSTR pszText;
+        HICON hIcon;
         SENDTO_ITEM *pNext;
     };
 
@@ -57,7 +58,7 @@ private:
     HRESULT DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpici);
 
     HRESULT DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget);
-    IShellFolder *GetSpecialFolder(HWND hwnd, int csidl);
+    IShellFolder *GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl = NULL);
     HRESULT GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
 
 public:
