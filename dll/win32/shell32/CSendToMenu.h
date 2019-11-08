@@ -33,7 +33,7 @@ class CSendToMenu :
 private:
     struct SENDTO_ITEM
     {
-        LPITEMIDLIST pidlAbsolute;
+        LPITEMIDLIST pidlChild;
         LPWSTR pszText;
         SENDTO_ITEM *pNext;
     };

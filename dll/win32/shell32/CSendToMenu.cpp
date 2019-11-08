@@ -121,7 +121,7 @@ void CSendToMenu::UnloadItem(SENDTO_ITEM *pItem)
 {
     if (pItem)
     {
-        CoTaskMemFree(pItem->pidlAbsolute);
+        CoTaskMemFree(pItem->pidlChild);
         CoTaskMemFree(pItem->pszText);
         HeapFree(GetProcessHeap(), 0, pItem);
     }
@@ -173,18 +173,10 @@ CSendToMenu::LoadAllItems(HWND hwnd)
         return FALSE;
     }
 
-    LPITEMIDLIST pidl;
+    LPITEMIDLIST pidlChild;
     BOOL bOK = TRUE;
-    while (pEnumIDList->Next(1, &pidl, NULL) == S_OK)
+    while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
-        LPITEMIDLIST pidlAbsolute = ILCombine(pidlParent, pidl);
-        if (!pidlAbsolute)
-        {
-            ERR("ILCombine\n");
-            bOK = FALSE;
-            break;
-        }
-
         SENDTO_ITEM *pNewItem;
         pNewItem = (SENDTO_ITEM *)HeapAlloc(GetProcessHeap(),
                                             HEAP_ZERO_MEMORY,
@@ -193,19 +185,19 @@ CSendToMenu::LoadAllItems(HWND hwnd)
         {
             ERR("HeapAlloc\n");
             bOK = FALSE;
-            CoTaskMemFree(pidlAbsolute);
+            CoTaskMemFree(pidlChild);
             break;
         }
 
         STRRET strret;
-        hr = m_pSendTo->GetDisplayNameOf(pidl, SHGDN_NORMAL, &strret);
+        hr = m_pSendTo->GetDisplayNameOf(pidlChild, SHGDN_NORMAL, &strret);
         if (SUCCEEDED(hr))
         {
             LPWSTR pszText = NULL;
-            hr = StrRetToStrW(&strret, pidl, &pszText);
+            hr = StrRetToStrW(&strret, pidlChild, &pszText);
             if (SUCCEEDED(hr))
             {
-                pNewItem->pidlAbsolute = pidlAbsolute;
+                pNewItem->pidlChild = pidlChild;
                 pNewItem->pszText = pszText;
 
                 if (m_pItems)
@@ -229,7 +221,7 @@ CSendToMenu::LoadAllItems(HWND hwnd)
             ERR("GetDisplayNameOf: %08lX\n", hr);
         }
 
-        ILFree(pidlAbsolute);
+        ILFree(pidlChild);
     }
 
     return bOK;
@@ -292,12 +284,12 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
 
 HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpici)
 {
-    LPITEMIDLIST pidlAbsolute = pItem->pidlAbsolute;
+    LPITEMIDLIST pidlChild = pItem->pidlChild;
 
     HRESULT hr;
 
     IDataObject *pDataObject;
-    hr = GetUIObjectFromPidl(NULL, pidlAbsolute, IID_IDataObject, (LPVOID *)&pDataObject);
+    hr = GetUIObjectFromPidl(NULL, pidlChild, IID_IDataObject, (LPVOID *)&pDataObject);
     if (FAILED(hr))
     {
         ERR("GetUIObjectFromPidl: %08lX\n", hr);
@@ -305,7 +297,7 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     }
 
     IDropTarget *pDropTarget;
-    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlAbsolute, IID_IDropTarget,
+    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (SUCCEEDED(hr))
     {
