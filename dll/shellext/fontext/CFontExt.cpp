@@ -407,7 +407,6 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    WCHAR szParent[MAX_PATH];
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
     if (!pidlParent)
     {
@@ -449,7 +448,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
             break;
         }
 
-        LPCWSTR pchDotExt = PathFindExtensionW(File);
+        LPCWSTR pchDotExt = PathFindExtensionW(szPath);
         if (!IsFontDotExt(pchDotExt))
         {
             ERR("'%S' is not supported\n", pchDotExt);
@@ -457,32 +456,28 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
             break;
         }
 
-        FontPaths.Add(File);
+        FontPaths.Add(szPath);
     }
 
     if (!bOK)
         return E_FAIL;
 
-    HKEY hkeyFonts = NULL;
-    RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts",
-                  0,
-                  KEY_READ | KEY_WRITE,
-                  &hkeyFonts);
-    if (!hkeyFonts)
+    CRegKey keyFonts;
+    if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
+    {
+        ERR("keyFonts.Open failed\n");
         return E_FAIL;
+    }
 
     for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
     {
-        HRESULT hr = DoInstallFontFile(FontPaths[iItem], szFontsDir, hkeyFonts);
+        HRESULT hr = DoInstallFontFile(FontPaths[iItem], szFontsDir, keyFonts.m_hKey);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             bOK = FALSE;
             break;
         }
     }
-
-    RegCloseKey(hkeyFonts);
 
     SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
