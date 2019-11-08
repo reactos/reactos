@@ -57,6 +57,7 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
     BOOL bCtrl = (GetAsyncKeyState(VK_CONTROL) < 0);
 
     // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+    // (We have to translate a SendTo action to a Drop action)
     DWORD dwKeyState = MK_LBUTTON;
     if (bShift && bCtrl)
         dwKeyState |= MK_SHIFT | MK_CONTROL;
@@ -70,6 +71,7 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
     if (SUCCEEDED(hr) && dwEffect != DROPEFFECT_NONE)
     {
         // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+        // (We have to translate a SendTo action to a Drop action)
         if (bShift && bCtrl)
             dwEffect = DROPEFFECT_LINK;
         else if (!bShift)
