@@ -110,7 +110,7 @@ IShellFolder *CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl)
     }
 
     IShellFolder *pFolder = NULL;
-    hr = m_pDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (LPVOID *)&pFolder);
+    hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
     CoTaskMemFree(pidl);
     if (SUCCEEDED(hr))
         return pFolder;
