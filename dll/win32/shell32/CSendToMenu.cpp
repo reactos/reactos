@@ -60,6 +60,7 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
     }
     else
     {
+        ERR("DragEnter: %08lX\n", hr);
         pDropTarget->DragLeave();
     }
 
@@ -210,6 +211,14 @@ CSendToMenu::LoadAllItems(HWND hwnd)
                 }
                 continue;
             }
+            else
+            {
+                ERR("StrRetToStrW: %08lX\n", hr);
+            }
+        }
+        else
+        {
+            ERR("GetDisplayNameOf: %08lX\n", hr);
         }
 
         ILFree(pidlAbsolute);
@@ -296,6 +305,10 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
 
         pDropTarget->Release();
     }
+    else
+    {
+        ERR("GetUIObjectOf: %08lX\n", hr);
+    }
 
     pDataObject->Release();
 
@@ -372,7 +385,9 @@ CSendToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
 
-    SENDTO_ITEM *pItem = FindItemFromIdOffset(LOWORD(lpici->lpVerb));
+    WORD idCmd = LOWORD(lpici->lpVerb);
+    TRACE("idCmd: %d\n", idCmd);
+    SENDTO_ITEM *pItem = FindItemFromIdOffset(idCmd);
     if (pItem)
     {
         hr = DoSendToItem(pItem, lpici);
