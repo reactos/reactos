@@ -812,7 +812,7 @@ BEGIN
     IDS_FAVORITES "Favorites"
     IDS_STARTUP "スタート メニュー\\プログラム\\スタートアップ"
     IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "送る(&N)"
     IDS_STARTMENU "スタート メニュー"
     IDS_MYMUSIC "My Music"
     IDS_MYVIDEO "My Videos"

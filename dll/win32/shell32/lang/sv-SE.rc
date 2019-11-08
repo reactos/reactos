@@ -815,7 +815,7 @@ BEGIN
     IDS_FAVORITES "Favoriter"
     IDS_STARTUP "Start-meny\\Program\\Autostart"
     IDS_RECENT "Tidigare"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Se&nd To"
     IDS_STARTMENU "Start-meny"
     IDS_MYMUSIC "Min musik"
     IDS_MYVIDEO "Mina videoklipp"
