@@ -880,6 +880,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Error Code: %lu)."
     IDS_CANTDISCONNECT "No se pudo desconectar (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Directorio"

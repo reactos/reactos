@@ -821,7 +821,7 @@ BEGIN
     IDS_FAVORITES "Oblíbené"
     IDS_STARTUP "Nabídka Start\\Programy\\Po spuštění"
     IDS_RECENT "Poslední dokumenty"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Se&nd To"
     IDS_STARTMENU "Nabídka Start"
     IDS_MYMUSIC "Hudba"
     IDS_MYVIDEO "Filmy"
@@ -878,6 +878,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Složka"

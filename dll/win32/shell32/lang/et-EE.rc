@@ -822,7 +822,7 @@ BEGIN
     IDS_FAVORITES "Lemmikud"
     IDS_STARTUP "Start Menu\\Programs\\StartUp"
     IDS_RECENT "Hiljutised"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Se&nd To"
     IDS_STARTMENU "Start Menüü"
     IDS_MYMUSIC "Minu muusika"
     IDS_MYVIDEO "Minu videod"
@@ -879,6 +879,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Ei saa meediumit väljutada (Veateade: %lu)."
     IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"

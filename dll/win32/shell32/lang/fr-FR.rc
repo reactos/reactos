@@ -815,7 +815,7 @@ BEGIN
     IDS_FAVORITES "Favoris"
     IDS_STARTUP "Menu Démarrer\\Programmes\\Démarrage"
     IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Se&nd To"
     IDS_STARTMENU "Menu Démarrer"
     IDS_MYMUSIC "Ma musique"
     IDS_MYVIDEO "Mes vidéos"
@@ -872,6 +872,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Impossible d'éjecter le média (code d'erreur : %lu)."
     IDS_CANTSHOWPROPERTIES "Impossible de montrer les propriétés (code d'erreur : %lu)."
     IDS_CANTDISCONNECT "Impossible de déconnecter (code d'erreur : %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dossier"

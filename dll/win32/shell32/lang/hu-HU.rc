@@ -815,7 +815,7 @@ BEGIN
     IDS_FAVORITES "Kedvencek"
     IDS_STARTUP "Start Menu\\Programs\\Automatikus indítás" /* MS style: Indítópult */
     IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Se&nd To"
     IDS_STARTMENU "Start Menu"
     IDS_MYMUSIC "Zenék"
     IDS_MYVIDEO "Videók"
@@ -872,6 +872,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"

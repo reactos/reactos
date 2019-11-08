@@ -873,6 +873,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
     IDS_CANTSHOWPROPERTIES "Anzeigen der Eigenschaften nicht möglich (Fehlercode: %lu)."
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"

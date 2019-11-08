@@ -872,6 +872,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Не вдалось відключити носій (код помилки: %lu)."
     IDS_CANTSHOWPROPERTIES "Не вдалось відкрити властивості (код помилки: %lu)."
     IDS_CANTDISCONNECT "Не вдалось відключити (код помилки: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка"
