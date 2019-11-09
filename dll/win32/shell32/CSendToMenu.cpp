@@ -19,15 +19,10 @@
  */
 
 #include "precomp.h"
-#define INITGUID
-#include <guiddef.h>
 
 #define MAX_ITEM_COUNT 64
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-DEFINE_GUID(CLSID_SendToMenu, 0x7BA4C740, 0x9E81, 0x11CF,
-            0x99, 0xD3, 0x00, 0xAA, 0x00, 0x4A, 0xE8, 0x37);
 
 CSendToMenu::CSendToMenu()
     : m_hSubMenu(NULL)
@@ -35,7 +30,7 @@ CSendToMenu::CSendToMenu()
     , m_idCmdFirst(0)
 {
     SHGetDesktopFolder(&m_pDesktop);
-    m_pSendTo = GetSpecialFolder(NULL, CSIDL_SENDTO);
+    GetSpecialFolder(NULL, &m_pSendTo, CSIDL_SENDTO);
 }
 
 CSendToMenu::~CSendToMenu()
@@ -91,23 +86,18 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 }
 
 // get an IShellFolder from CSIDL
-IShellFolder *
-CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
+HRESULT
+CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
+                              int csidl, PIDLIST_ABSOLUTE *ppidl)
 {
+    if (!ppFolder)
+        return E_POINTER;
+    *ppFolder = NULL;
+
     if (ppidl)
         *ppidl = NULL;
 
-    if (!m_pDesktop)
-    {
-        SHGetDesktopFolder(&m_pDesktop);
-        if (!m_pDesktop)
-        {
-            ERR("SHGetDesktopFolder\n");
-            return NULL;
-        }
-    }
-
-    LPITEMIDLIST pidl = NULL;
+    PIDLIST_ABSOLUTE pidl = NULL;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
     if (FAILED(hr))
     {
@@ -124,21 +114,25 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
         CoTaskMemFree(pidl);
 
     if (SUCCEEDED(hr))
-        return pFolder;
+    {
+        *ppFolder = pFolder;
+        return hr;
+    }
 
     ERR("BindToObject: %08lX\n", hr);
-    return NULL;
+    return hr;
 }
 
 // get a UI object from PIDL
-HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl,
+HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
                                          REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
-    LPCITEMIDLIST pidlLast;
+    PITEMID_CHILD pidlLast;
     CComPtr<IShellFolder> pFolder;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder),
+                                const_cast<PCITEMID_CHILD *>(&pidlLast));
     if (FAILED(hr))
     {
         ERR("SHBindToParent: %08lX\n", hr);
@@ -176,19 +170,18 @@ void CSendToMenu::UnloadAllItems()
     }
 }
 
-BOOL CSendToMenu::LoadAllItems(HWND hwnd)
+HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
 {
     UnloadAllItems();
 
-    LPITEMIDLIST pidlSendTo;
-    m_pSendTo = GetSpecialFolder(hwnd, CSIDL_SENDTO, &pidlSendTo);
-    if (!m_pSendTo)
+    PIDLIST_ABSOLUTE pidlSendTo;
+    HRESULT hr = GetSpecialFolder(hwnd, &m_pSendTo, CSIDL_SENDTO, &pidlSendTo);
+    if (FAILED(hr))
     {
-        ERR("GetSpecialFolder\n");
-        return FALSE;
+        ERR("GetSpecialFolder: %08lX\n", hr);
+        return E_FAIL;
     }
 
-    HRESULT hr;
     CComPtr<IEnumIDList> pEnumIDList;
     hr = m_pSendTo->EnumObjects(hwnd,
                                 SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
@@ -197,11 +190,11 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
     {
         ERR("EnumObjects: %08lX\n", hr);
         ILFree(pidlSendTo);
-        return FALSE;
+        return E_FAIL;
     }
 
-    BOOL bOK = TRUE;
-    LPITEMIDLIST pidlChild;
+    hr = S_OK;
+    PITEMID_CHILD pidlChild;
     UINT nCount = 0;
     while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
@@ -211,7 +204,7 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
         if (!pNewItem)
         {
             ERR("HeapAlloc\n");
-            bOK = FALSE;
+            hr = E_OUTOFMEMORY;
             CoTaskMemFree(pidlChild);
             break;
         }
@@ -224,7 +217,7 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
             hr = StrRetToStrW(&strret, pidlChild, &pszText);
             if (SUCCEEDED(hr))
             {
-                LPITEMIDLIST pidlAbsolute = ILCombine(pidlSendTo, pidlChild);
+                PIDLIST_ABSOLUTE pidlAbsolute = ILCombine(pidlSendTo, pidlChild);
 
                 SHFILEINFOW fi = { NULL };
                 const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
@@ -266,14 +259,14 @@ BOOL CSendToMenu::LoadAllItems(HWND hwnd)
 
     ILFree(pidlSendTo);
 
-    return bOK;
+    return hr;
 }
 
 UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 {
     if (m_pItems == NULL)
     {
-        if (!LoadAllItems(NULL))
+        if (FAILED(LoadAllItems(NULL)))
         {
             ERR("LoadAllItems\n");
             return 0;
@@ -340,7 +333,7 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
 
     HRESULT hr;
     CComPtr<IDropTarget> pDropTarget;
-    LPITEMIDLIST pidlChild = pItem->pidlChild;
+    PITEMID_CHILD pidlChild = pItem->pidlChild;
     hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (SUCCEEDED(hr))
@@ -353,20 +346,6 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     }
 
     return hr;
-}
-
-STDMETHODIMP CSendToMenu::SetSite(IUnknown *pUnkSite)
-{
-    m_pSite = pUnkSite;
-    return S_OK;
-}
-
-STDMETHODIMP CSendToMenu::GetSite(REFIID riid, void **ppvSite)
-{
-    if (!m_pSite)
-        return E_FAIL;
-
-    return m_pSite->QueryInterface(riid, ppvSite);
 }
 
 STDMETHODIMP
