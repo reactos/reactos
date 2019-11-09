@@ -48,6 +48,7 @@ static DWORD from_bmformat( BMFORMAT format )
     case BM_GRAY:        ret = TYPE_GRAY_8; break;
     case BM_xRGBQUADS:   ret = TYPE_ARGB_8; break;
     case BM_xBGRQUADS:   ret = TYPE_ABGR_8; break;
+    case BM_KYMCQUADS:   ret = TYPE_KYMC_8; break;
     default:
         if (!quietfixme)
         {

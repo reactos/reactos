@@ -918,7 +918,11 @@ BOOL WINAPI EnumColorProfilesA( PCSTR machine, PENUMTYPEA record, PBYTE buffer,
         *p = 0;
         ret = TRUE;
     }
-    else ret = FALSE;
+    else
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        ret = FALSE;
+    }
 
     *size = totalsize;
     if (number) *number = count;
@@ -1044,7 +1048,11 @@ BOOL WINAPI EnumColorProfilesW( PCWSTR machine, PENUMTYPEW record, PBYTE buffer,
         *p = 0;
         ret = TRUE;
     }
-    else ret = FALSE;
+    else
+    {
+        SetLastError( ERROR_INSUFFICIENT_BUFFER );
+        ret = FALSE;
+    }
 
     *size = totalsize;
     if (number) *number = count;
@@ -1327,6 +1335,18 @@ BOOL WINAPI UninstallColorProfileW( PCWSTR machine, PCWSTR profile, BOOL delete 
     return TRUE;
 }
 
+static BOOL profile_AtoW( const PROFILE *in, PROFILE *out )
+{
+    int len;
+    if (!in->pProfileData) return FALSE;
+    len = MultiByteToWideChar( CP_ACP, 0, in->pProfileData, -1, NULL, 0 );
+    if (!(out->pProfileData = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
+    out->cbDataSize = len * sizeof(WCHAR);
+    MultiByteToWideChar( CP_ACP, 0, in->pProfileData, -1, out->pProfileData, len );
+    out->dwType = in->dwType;
+    return TRUE;
+}
+
 /******************************************************************************
  * OpenColorProfileA               [MSCMS.@]
  *
@@ -1335,6 +1355,7 @@ BOOL WINAPI UninstallColorProfileW( PCWSTR machine, PCWSTR profile, BOOL delete 
 HPROFILE WINAPI OpenColorProfileA( PPROFILE profile, DWORD access, DWORD sharing, DWORD creation )
 {
     HPROFILE handle = NULL;
+    PROFILE profileW;
 
     TRACE( "( %p, 0x%08x, 0x%08x, 0x%08x )\n", profile, access, sharing, creation );
 
@@ -1344,25 +1365,9 @@ HPROFILE WINAPI OpenColorProfileA( PPROFILE profile, DWORD access, DWORD sharing
     if (profile->dwType & PROFILE_MEMBUFFER)
         return OpenColorProfileW( profile, access, sharing, creation );
 
-    if (profile->dwType & PROFILE_FILENAME)
-    {
-        UINT len;
-        PROFILE profileW;
-
-        profileW.dwType = profile->dwType;
- 
-        len = MultiByteToWideChar( CP_ACP, 0, profile->pProfileData, -1, NULL, 0 );
-        profileW.pProfileData = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-
-        if (profileW.pProfileData)
-        {
-            profileW.cbDataSize = len * sizeof(WCHAR);
-            MultiByteToWideChar( CP_ACP, 0, profile->pProfileData, -1, profileW.pProfileData, len );
-
-            handle = OpenColorProfileW( &profileW, access, sharing, creation );
-            HeapFree( GetProcessHeap(), 0, profileW.pProfileData );
-        }
-    }
+    if (!profile_AtoW( profile, &profileW )) return FALSE;
+    handle = OpenColorProfileW( &profileW, access, sharing, creation );
+    HeapFree( GetProcessHeap(), 0, profileW.pProfileData );
     return handle;
 }
 
@@ -1545,4 +1550,40 @@ BOOL WINAPI WcsEnumColorProfilesSize( WCS_PROFILE_MANAGEMENT_SCOPE scope, ENUMTY
     FIXME( "%d %p %p\n", scope, record, size );
     SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
     return FALSE;
+}
+
+/******************************************************************************
+ * WcsOpenColorProfileA               [MSCMS.@]
+ */
+HPROFILE WINAPI WcsOpenColorProfileA( PROFILE *cdm, PROFILE *camp, PROFILE *gmmp, DWORD access, DWORD sharing,
+                                      DWORD creation, DWORD flags )
+{
+    PROFILE cdmW, campW = {0}, gmmpW = {0};
+    HPROFILE ret = NULL;
+
+    TRACE( "%p, %p, %p, %08x, %08x, %08x, %08x\n", cdm, camp, gmmp, access, sharing, creation, flags );
+
+    if (!cdm || !profile_AtoW( cdm, &cdmW )) return NULL;
+    if (camp && !profile_AtoW( camp, &campW )) goto done;
+    if (gmmp && !profile_AtoW( gmmp, &gmmpW )) goto done;
+
+    ret = WcsOpenColorProfileW( &cdmW, &campW, &gmmpW, access, sharing, creation, flags );
+
+done:
+    HeapFree( GetProcessHeap(), 0, cdmW.pProfileData );
+    HeapFree( GetProcessHeap(), 0, campW.pProfileData );
+    HeapFree( GetProcessHeap(), 0, gmmpW.pProfileData );
+    return ret;
+}
+
+/******************************************************************************
+ * WcsOpenColorProfileW               [MSCMS.@]
+ */
+HPROFILE WINAPI WcsOpenColorProfileW( PROFILE *cdm, PROFILE *camp, PROFILE *gmmp, DWORD access, DWORD sharing,
+                                      DWORD creation, DWORD flags )
+{
+    TRACE( "%p, %p, %p, %08x, %08x, %08x, %08x\n", cdm, camp, gmmp, access, sharing, creation, flags );
+    FIXME("no support for WCS profiles\n" );
+
+    return OpenColorProfileW( cdm, access, sharing, creation );
 }
