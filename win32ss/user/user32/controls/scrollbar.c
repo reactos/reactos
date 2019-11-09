@@ -831,9 +831,13 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         PrevPt = Pt;
         if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
         SetCapture(Wnd);
-        ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
-        NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
-        NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
+        /* Don't update scrollbar if disabled. */
+        if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+        {
+            ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
+            NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
+            NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
+        }
         break;
 
       case WM_MOUSEMOVE:
@@ -846,13 +850,16 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         ReleaseCapture();
         /* if scrollbar has focus, show back caret */
         if (Wnd == GetFocus()) ShowCaret(Wnd);
-        ScrollBarInfo.rgstate[ScrollTrackHitTest] &= ~STATE_SYSTEM_PRESSED;
-        NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
-        NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
+        /* Don't update scrollbar if disabled. */
+        if (ScrollBarInfo.rgstate[ScrollTrackHitTest] != STATE_SYSTEM_UNAVAILABLE)
+        {
+            ScrollBarInfo.rgstate[ScrollTrackHitTest] &= ~STATE_SYSTEM_PRESSED;
+            NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
+            NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
 
-        IntDrawScrollInterior(Wnd,Dc,SBType,Vertical,&ScrollBarInfo);
-        IntDrawScrollArrows(Dc, &ScrollBarInfo, Vertical);
-
+            IntDrawScrollInterior(Wnd,Dc,SBType,Vertical,&ScrollBarInfo);
+            IntDrawScrollArrows(Dc, &ScrollBarInfo, Vertical);
+        }
         break;
 
       case WM_SYSTIMER:
