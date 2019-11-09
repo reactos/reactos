@@ -3090,8 +3090,29 @@ WINAPI
 PNP_RequestEjectPC(
     handle_t hBinding)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    WCHAR szDockDeviceInstance[MAX_DEVICE_ID_LEN];
+    PLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA DockData;
+    NTSTATUS Status;
+
+    DPRINT("PNP_RequestEjectPC(%p)\n", hBinding);
+
+    /* Retrieve the dock device */
+    DockData.DeviceInstanceLength = ARRAYSIZE(szDockDeviceInstance);
+    DockData.DeviceInstance = szDockDeviceInstance;
+
+    Status = NtPlugPlayControl(PlugPlayControlRetrieveDock,
+                               &DockData,
+                               sizeof(DockData));
+    if (!NT_SUCCESS(Status))
+        return NtStatusToCrError(Status);
+
+    /* Eject the dock device */
+    return PNP_RequestDeviceEject(hBinding,
+                                  szDockDeviceInstance,
+                                  NULL,
+                                  NULL,
+                                  0,
+                                  0);
 }
 
 
