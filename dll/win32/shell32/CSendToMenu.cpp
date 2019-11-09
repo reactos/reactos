@@ -202,9 +202,10 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
     UINT nCount = 0;
     while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
-        SENDTO_ITEM *pNewItem = (SENDTO_ITEM *)HeapAlloc(GetProcessHeap(),
-                                                         HEAP_ZERO_MEMORY,
-                                                         sizeof(SENDTO_ITEM));
+        SENDTO_ITEM *pNewItem;
+        pNewItem = reinterpret_cast<SENDTO_ITEM *>(HeapAlloc(GetProcessHeap(),
+                                                             HEAP_ZERO_MEMORY,
+                                                             sizeof(SENDTO_ITEM)));
         if (!pNewItem)
         {
             ERR("HeapAlloc: %08lX\n", GetLastError());
@@ -226,7 +227,8 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
                 SHFILEINFOW fi = { NULL };
                 const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
                                     SHGFI_ICON | SHGFI_SMALLICON;
-                SHGetFileInfoW((LPCWSTR)pidlAbsolute, 0, &fi, sizeof(fi), uFlags);
+                SHGetFileInfoW(reinterpret_cast<LPWSTR>(pidlAbsolute), 0,
+                               &fi, sizeof(fi), uFlags);
 
                 ILFree(pidlAbsolute);
 
@@ -290,7 +292,7 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             MENUITEMINFOW mii;
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_DATA | MIIM_BITMAP;
-            mii.dwItemData = (ULONG_PTR)pCurItem;
+            mii.dwItemData = reinterpret_cast<ULONG_PTR>(pCurItem);
             mii.hbmpItem = HBMMENU_CALLBACK;
             SetMenuItemInfoW(hMenu, idCmd, FALSE, &mii);
             ++idCmd;
@@ -322,7 +324,7 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
     MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_DATA;
     if (GetMenuItemInfoW(m_hSubMenu, idCmd, FALSE, &mii))
-        return (SENDTO_ITEM *)mii.dwItemData;
+        return reinterpret_cast<SENDTO_ITEM *>(mii.dwItemData);
 
     ERR("GetMenuItemInfoW: %08lX\n", GetLastError());
     return NULL;
@@ -471,7 +473,7 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            SENDTO_ITEM *pItem = (SENDTO_ITEM *)lpdis->itemData;
+            SENDTO_ITEM *pItem = reinterpret_cast<SENDTO_ITEM *>(lpdis->itemData);
             HICON hIcon = NULL;
             if (pItem)
                 hIcon = pItem->hIcon;
