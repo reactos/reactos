@@ -138,7 +138,8 @@ VOID UnInitFontBoxesWndClass(VOID);
 VOID GetCharacterRect(IN UINT uFontRow, IN UINT uFontColumn, OUT LPRECT CharacterRect);
 VOID EditCurrentGlyph(PFONT_WND_INFO FontWndInfo);
 
-inline VOID GetCharacterPosition(IN UINT uCharacter, OUT PUINT uFontRow, OUT PUINT uFontColumn)
+static __inline VOID
+GetCharacterPosition(IN UINT uCharacter, OUT PUINT uFontRow, OUT PUINT uFontColumn)
 {
     *uFontRow = uCharacter / 16;
     *uFontColumn = uCharacter % 16;
