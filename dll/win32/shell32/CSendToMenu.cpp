@@ -29,7 +29,12 @@ CSendToMenu::CSendToMenu()
     , m_pItems(NULL)
     , m_idCmdFirst(0)
 {
-    SHGetDesktopFolder(&m_pDesktop);
+    HRESULT hr = SHGetDesktopFolder(&m_pDesktop);
+    if (FAILED(hr))
+    {
+        ERR("SHGetDesktopFolder: %08lX\n", hr);
+    }
+
     GetSpecialFolder(NULL, &m_pSendTo, CSIDL_SENDTO);
 }
 
