@@ -274,19 +274,20 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     switch (pEntry->dwEffects2)
     {
     case D_NONE_OR_COPY:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_COPY),
+           "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     case D_NONE_OR_MOVE:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_MOVE),
+           "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     case D_NONE_OR_LINK:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_LINK),
+           "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     default:
-        ok(dwEffects == pEntry->dwEffects2, "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        ok(dwEffects == pEntry->dwEffects2,
+           "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     }
 
@@ -297,19 +298,20 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     switch (pEntry->dwEffects3)
     {
     case D_NONE_OR_COPY:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_COPY), "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_COPY),
+           "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
         break;
     case D_NONE_OR_MOVE:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_MOVE), "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_MOVE),
+           "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
         break;
     case D_NONE_OR_LINK:
-        ok((dwEffects == D_NONE ||
-            dwEffects == D_LINK), "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
+        ok((dwEffects == D_NONE || dwEffects == D_LINK),
+           "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
         break;
     default:
-        ok(dwEffects == pEntry->dwEffects3, "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
+        ok(dwEffects == pEntry->dwEffects3,
+           "Line %d: dwEffects3 was %08lX\n", line, dwEffects);
         break;
     }
 
