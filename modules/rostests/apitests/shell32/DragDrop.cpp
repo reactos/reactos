@@ -113,7 +113,7 @@ HRESULT DoCreateShortcut(
 }
 
 static HRESULT
-GetUIObjectOfAbsPidl(HWND hwnd, LPITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut)
+GetUIObjectOfAbsPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
@@ -133,7 +133,7 @@ GetUIObjectOfPath(HWND hwnd, LPCWSTR pszPath, REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
-    LPITEMIDLIST pidl = ILCreateFromPathW(pszPath);
+    PIDLIST_ABSOLUTE pidl = ILCreateFromPathW(pszPath);
     if (!pidl)
         return E_FAIL;
 
@@ -182,7 +182,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     int line = pEntry->line;
     HRESULT hr;
     HWND hwnd = NULL;
-    LPITEMIDLIST pidlDesktop = NULL;
+    PIDLIST_ABSOLUTE pidlDesktop = NULL;
     CComPtr<IDropTarget> pDropTarget;
     CComPtr<IDataObject> pDataObject;
 
@@ -234,7 +234,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     // get an IDropTarget
     CComPtr<IEnumIDList> pEnumIDList;
-    LPITEMIDLIST pidl = NULL;
+    PIDLIST_ABSOLUTE pidl = NULL;
     hr = s_pDesktop->EnumObjects(hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
                                  &pEnumIDList);
     ok_long(hr, S_OK);
@@ -251,7 +251,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     }
     ok(pidl != NULL, "pidl is NULL\n");
     pDropTarget = NULL;
-    LPITEMIDLIST pidlLast = ILFindLastID(pidl);
+    PITEMID_CHILD pidlLast = ILFindLastID(pidl);
     hr = s_pDesktop->GetUIObjectOf(hwnd, 1, &pidlLast, IID_IDropTarget,
                                    NULL, (LPVOID *)&pDropTarget);
     CoTaskMemFree(pidl);
@@ -336,7 +336,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
         break;
     case TEST_OP_NONE_OR_MOVE:
         ok(PathFileExistsW(s_szSrcTestFile) != PathFileExistsW(s_szDestTestFile),
-           "Line %d: It must be none or Move\n", line);
+           "Line %d: It must be either None or Move\n", line);
         break;
     case TEST_OP_NONE_OR_LINK:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
