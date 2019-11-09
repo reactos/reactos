@@ -23,15 +23,15 @@ static WCHAR s_szDestTestFile[MAX_PATH];
 static WCHAR s_szDestLinkSpec[MAX_PATH];
 static WCHAR s_szDroppedToItem[MAX_PATH];
 
-enum TEST_OP
+enum OP
 {
-    TEST_OP_NONE,
-    TEST_OP_COPY,
-    TEST_OP_MOVE,
-    TEST_OP_LINK,
-    TEST_OP_NONE_OR_COPY,
-    TEST_OP_NONE_OR_MOVE,
-    TEST_OP_NONE_OR_LINK
+    OP_NONE,
+    OP_COPY,
+    OP_MOVE,
+    OP_LINK,
+    OP_NONE_OR_COPY,
+    OP_NONE_OR_MOVE,
+    OP_NONE_OR_LINK
 };
 
 #define D_NONE DROPEFFECT_NONE
@@ -45,7 +45,7 @@ enum TEST_OP
 struct TEST_ENTRY
 {
     int line;
-    TEST_OP op;
+    OP op;
     HRESULT hr1;
     HRESULT hr2;
     DWORD dwKeyState;
@@ -57,32 +57,32 @@ struct TEST_ENTRY
 static const TEST_ENTRY s_TestEntries[] =
 {
     // MK_LBUTTON
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON, D_NONE, D_NONE, D_NONE },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON, D_COPY, D_COPY, D_COPY },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_COPY | D_MOVE, D_MOVE, D_NONE },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_MOVE, D_MOVE, D_NONE },
-    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON, D_LINK, D_LINK, D_LINK },
+    { __LINE__, OP_NONE, S_OK, S_OK, MK_LBUTTON, D_NONE, D_NONE, D_NONE },
+    { __LINE__, OP_COPY, S_OK, S_OK, MK_LBUTTON, D_COPY, D_COPY, D_COPY },
+    { __LINE__, OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_COPY | D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, OP_LINK, S_OK, S_OK, MK_LBUTTON, D_LINK, D_LINK, D_LINK },
 
     // MK_LBUTTON | MK_SHIFT
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_NONE, D_NONE, D_NONE },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY | D_MOVE, D_MOVE, D_NONE },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_MOVE, D_MOVE, D_NONE },
-    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
+    { __LINE__, OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_NONE, D_NONE, D_NONE },
+    { __LINE__, OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY | D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
 
     // MK_LBUTTON | MK_SHIFT | MK_CONTROL
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_NONE, D_NONE, D_NONE },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY | D_MOVE, D_NONE_OR_COPY, D_NONE_OR_COPY },
-    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
-    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_LINK, D_LINK, D_LINK },
+    { __LINE__, OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_NONE, D_NONE, D_NONE },
+    { __LINE__, OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY | D_MOVE, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
+    { __LINE__, OP_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_LINK, D_LINK, D_LINK },
 
     // MK_LBUTTON | MK_CONTROL
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_NONE, D_NONE, D_NONE },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY, D_COPY, D_COPY },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY | D_MOVE, D_COPY, D_COPY },
-    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
-    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
+    { __LINE__, OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_NONE, D_NONE, D_NONE },
+    { __LINE__, OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY, D_COPY, D_COPY },
+    { __LINE__, OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY | D_MOVE, D_COPY, D_COPY },
+    { __LINE__, OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
+    { __LINE__, OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
 };
 
 static void DoCreateTestFile(LPCWSTR pszFileName)
@@ -314,35 +314,35 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     // check file existence by pEntry->op
     switch (pEntry->op)
     {
-    case TEST_OP_NONE:
+    case OP_NONE:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
         ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest exists\n", line);
         ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
         break;
-    case TEST_OP_COPY:
+    case OP_COPY:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
         ok(PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
         ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
         break;
-    case TEST_OP_MOVE:
+    case OP_MOVE:
         ok(!PathFileExistsW(s_szSrcTestFile), "Line %d: src exists\n", line);
         ok(PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
         ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
         break;
-    case TEST_OP_LINK:
+    case OP_LINK:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
         ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
         ok(DoSpecExistsW(s_szDestLinkSpec), "Line %d: link not exists\n", line);
         break;
-    case TEST_OP_NONE_OR_COPY:
+    case OP_NONE_OR_COPY:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
         ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
         break;
-    case TEST_OP_NONE_OR_MOVE:
+    case OP_NONE_OR_MOVE:
         ok(PathFileExistsW(s_szSrcTestFile) != PathFileExistsW(s_szDestTestFile),
            "Line %d: It must be either None or Move\n", line);
         break;
-    case TEST_OP_NONE_OR_LINK:
+    case OP_NONE_OR_LINK:
         ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
         ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
         break;
