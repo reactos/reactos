@@ -42,7 +42,7 @@ USBSTOR_FdoHandleDeviceRelations(
     IN PFDO_DEVICE_EXTENSION DeviceExtension,
     IN OUT PIRP Irp)
 {
-    ULONG DeviceCount = 0;
+    INT32 DeviceCount = 0;
     LONG Index;
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
@@ -61,7 +61,7 @@ USBSTOR_FdoHandleDeviceRelations(
             }
         }
 
-        DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? (DeviceCount-1) * sizeof(PDEVICE_OBJECT) : 0));
+        DeviceRelations = ExFreePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount-1) * sizeof(PDEVICE_OBJECT), USB_STOR_TAG);
         if (!DeviceRelations)
         {
             Irp->IoStatus.Information = 0;
@@ -106,7 +106,7 @@ USBSTOR_FdoHandleRemoveDevice(
     DPRINT("Handling FDO removal %p\n", DeviceObject);
 
     // FIXME: wait for devices finished processing
-    for (Index = 0; Index < 16; Index++)
+    for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (DeviceExtension->ChildPDO[Index] != NULL)
         {
@@ -198,17 +198,15 @@ USBSTOR_FdoHandleStartDevice(
     ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
 
     DPRINT("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
-    if (InterfaceDesc->bInterfaceProtocol != 0x50)
+    if (InterfaceDesc->bInterfaceProtocol != USB_PROTOCOL_BULK)
     {
         DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
         return STATUS_NOT_SUPPORTED;
     }
 
-    if (InterfaceDesc->bInterfaceSubClass == 0x04) // UFI subclass
+    if (InterfaceDesc->bInterfaceSubClass == USB_SUBCLASS_UFI)
     {
-        // FIXME: need to pad CDBs to 12 byte
-        // mode select commands must be translated from 1AH / 15h to 5AH / 55h
-        DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
+        DPRINT1("USB Floppy devices are not supported\n");
         return STATUS_NOT_SUPPORTED;
     }
 

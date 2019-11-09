@@ -137,7 +137,6 @@ USBSTOR_CSWCompletionRoutine(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PSCSI_REQUEST_BLOCK Request;
-    PUFI_CAPACITY_RESPONSE Response;
 
     Context = (PIRP_CONTEXT)Ctx;
 
@@ -189,17 +188,6 @@ USBSTOR_CSWCompletionRoutine(
             Request = FDODeviceExtension->ActiveSrb;
             IoStack->Parameters.Scsi.Srb = Request;
             Request->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
-        }
-
-        // read capacity needs special work
-        if (Request->Cdb[0] == SCSIOP_READ_CAPACITY)
-        {
-            // get output buffer
-            Response = (PUFI_CAPACITY_RESPONSE)Request->DataBuffer;
-
-            // store in pdo
-            PDODeviceExtension->BlockLength = NTOHL(Response->BlockLength);
-            PDODeviceExtension->LastLogicBlockAddress = NTOHL(Response->LastLogicalBlockAddress);
         }
 
         Irp->IoStatus.Status = USBSTOR_SrbStatusToNtStatus(Request);
