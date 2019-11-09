@@ -45,7 +45,7 @@ enum TEST_OP
 struct TEST_ENTRY
 {
     int line;
-    LONG op;    // TEST_OP
+    TEST_OP op;
     HRESULT hr1;
     HRESULT hr2;
     DWORD dwKeyState;
