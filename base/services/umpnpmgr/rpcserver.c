@@ -226,6 +226,72 @@ GetDeviceStatus(
 }
 
 
+static
+BOOL
+IsValidDeviceInstanceID(
+    _In_ PWSTR pszDeviceInstanceID)
+{
+    INT nPartLength[3] = {0, 0, 0};
+    INT nLength = 0, nParts = 0;
+    PWCHAR p;
+
+    DPRINT("IsValidDeviceInstanceID(%S)\n",
+           pszDeviceInstanceID);
+
+    if (pszDeviceInstanceID == NULL)
+    {
+        DPRINT("Device instance ID is NULL!\n");
+        return FALSE;
+    }
+
+    p = pszDeviceInstanceID;
+    while (*p != UNICODE_NULL)
+    {
+        if (*p == L'\\')
+        {
+            nParts++;
+            if (nParts >= 3)
+            {
+                DPRINT("Too many separators: %d\n", nParts);
+                return FALSE;
+            }
+        }
+        else
+        {
+            nPartLength[nParts]++;
+        }
+
+        nLength++;
+        if (nLength >= MAX_DEVICE_ID_LEN)
+        {
+            DPRINT("Too long: %d\n", nLength);
+            return FALSE;
+        }
+
+        p++;
+    }
+
+    if (nParts != 2)
+    {
+        DPRINT("Invalid number of separtors: %d\n", nParts);
+        return FALSE;
+    }
+
+    if ((nPartLength[0] == 0) ||
+        (nPartLength[1] == 0) ||
+        (nPartLength[2] == 0))
+    {
+        DPRINT("Invalid part lengths: %d %d %d\n",
+               nPartLength[0], nPartLength[1], nPartLength[2]);
+        return FALSE;
+    }
+
+    DPRINT("Valid device instance ID!\n");
+
+    return TRUE;
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /* Function 0 */
@@ -361,6 +427,9 @@ PNP_ValidateDeviceInstance(
     DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
            pDeviceID, ulFlags);
 
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
     if (RegOpenKeyExW(hEnumKey,
                       pDeviceID,
                       0,
@@ -440,6 +509,9 @@ PNP_GetRelatedDeviceInstance(
     DPRINT("PNP_GetRelatedDeviceInstance() called\n");
     DPRINT("  Relationship %ld\n", ulRelationship);
     DPRINT("  DeviceId %S\n", pDeviceID);
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
                          pDeviceID);
@@ -1349,6 +1421,9 @@ PNP_GetDepth(
 
     DPRINT("PNP_GetDepth() called\n");
 
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
 
@@ -1406,7 +1481,12 @@ PNP_GetDeviceRegProp(
         goto done;
     }
 
-    /* FIXME: Check pDeviceID */
+    /* Check pDeviceID */
+    if (!IsValidDeviceInstanceID(pDeviceID))
+    {
+        ret = CR_INVALID_DEVINST;
+        goto done;
+    }
 
     if (*pulLength < *pulTransferLen)
         *pulLength = *pulTransferLen;
@@ -1653,6 +1733,9 @@ PNP_SetDeviceRegProp(
     DPRINT("DataType: %lu\n", ulDataType);
     DPRINT("Length: %lu\n", ulLength);
 
+    if (!IsValidDeviceInstanceID(pDeviceId))
+        return CR_INVALID_DEVINST;
+
     switch (ulProperty)
     {
         case CM_DRP_DEVICEDESC:
@@ -1789,6 +1872,9 @@ PNP_GetClassInstance(
 
     DPRINT("PNP_GetClassInstance(%p %S %p %lu)\n",
            hBinding, pDeviceId, pszClassInstance, ulLength);
+
+    if (!IsValidDeviceInstanceID(pDeviceId))
+        return CR_INVALID_DEVINST;
 
     ulTransferLength = ulLength;
     ret = PNP_GetDeviceRegProp(hBinding,
@@ -2091,6 +2177,9 @@ PNP_GetInterfaceDeviceList(
 
     UNREFERENCED_PARAMETER(hBinding);
 
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
 
@@ -2133,6 +2222,9 @@ PNP_GetInterfaceDeviceListSize(
     UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_GetInterfaceDeviceListSize() called\n");
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
@@ -2729,6 +2821,9 @@ PNP_GetDeviceStatus(
     DPRINT("PNP_GetDeviceStatus(%p %S %p %p)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
+
     return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
 }
 
@@ -2961,6 +3056,9 @@ PNP_QueryRemove(
     if (ulFlags & ~CM_REMOVE_BITS)
         return CR_INVALID_FLAG;
 
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
     if (pVetoType != NULL)
         *pVetoType = PNP_VetoTypeUnknown;
 
@@ -3005,6 +3103,9 @@ PNP_RequestDeviceEject(
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (pVetoType != NULL)
         *pVetoType = PNP_VetoTypeUnknown;
@@ -3139,6 +3240,9 @@ PNP_HwProfFlags(
     UNREFERENCED_PARAMETER(hBinding);
 
     DPRINT("PNP_HwProfFlags() called\n");
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (ulConfig == 0)
     {
@@ -3747,6 +3851,9 @@ PNP_GetCustomDevProp(
         ret = CR_INVALID_FLAG;
         goto done;
     }
+
+    if (!IsValidDeviceInstanceID(pDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (*pulLength < *pulTransferLen)
         *pulLength = *pulTransferLen;
