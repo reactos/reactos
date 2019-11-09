@@ -18,10 +18,6 @@
 
 #pragma once
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h to use this header
-#endif
-
 extern HRESULT MMDevEnum_Create(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
 extern void MMDevEnum_Free(void) DECLSPEC_HIDDEN;
 
