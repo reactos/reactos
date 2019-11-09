@@ -34,9 +34,13 @@ enum TEST_OP
     TEST_OP_NONE_OR_LINK
 };
 
-#define DROP_NONE_OR_COPY 0xAABBCCDD
-#define DROP_NONE_OR_MOVE 0x11223344
-#define DROP_NONE_OR_LINK 0x55667788
+#define D_NONE DROPEFFECT_NONE
+#define D_COPY DROPEFFECT_COPY
+#define D_MOVE DROPEFFECT_MOVE
+#define D_LINK DROPEFFECT_LINK
+#define D_NONE_OR_COPY 0xAABBCCDD
+#define D_NONE_OR_MOVE 0x11223344
+#define D_NONE_OR_LINK 0x55667788
 
 struct TEST_ENTRY
 {
@@ -53,32 +57,32 @@ struct TEST_ENTRY
 static const TEST_ENTRY s_TestEntries[] =
 {
     // MK_LBUTTON
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_COPY, DROPEFFECT_COPY, DROPEFFECT_COPY },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_LINK, DROPEFFECT_LINK, DROPEFFECT_LINK },
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON, D_NONE, D_NONE, D_NONE },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON, D_COPY, D_COPY, D_COPY },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_COPY | D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON, D_LINK, D_LINK, D_LINK },
 
     // MK_LBUTTON | MK_SHIFT
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_COPY, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_LINK, DROP_NONE_OR_LINK, DROP_NONE_OR_LINK },
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_NONE, D_NONE, D_NONE },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_COPY | D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_MOVE, D_MOVE, D_NONE },
+    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
 
     // MK_LBUTTON | MK_SHIFT | MK_CONTROL
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_COPY, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
-    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
-    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_MOVE, DROP_NONE_OR_MOVE, DROP_NONE_OR_MOVE },
-    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_LINK, DROPEFFECT_LINK, DROPEFFECT_LINK },
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_NONE, D_NONE, D_NONE },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_COPY | D_MOVE, D_NONE_OR_COPY, D_NONE_OR_COPY },
+    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
+    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, D_LINK, D_LINK, D_LINK },
 
     // MK_LBUTTON | MK_CONTROL
-    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_COPY, DROPEFFECT_COPY, DROPEFFECT_COPY },
-    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_COPY, DROPEFFECT_COPY },
-    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_MOVE, DROP_NONE_OR_MOVE, DROP_NONE_OR_MOVE },
-    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_LINK, DROP_NONE_OR_LINK, DROP_NONE_OR_LINK },
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_NONE, D_NONE, D_NONE },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY, D_COPY, D_COPY },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_COPY | D_MOVE, D_COPY, D_COPY },
+    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_MOVE, D_NONE_OR_MOVE, D_NONE_OR_MOVE },
+    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, D_LINK, D_NONE_OR_LINK, D_NONE_OR_LINK },
 };
 
 static void DoCreateTestFile(LPCWSTR pszFileName)
@@ -267,17 +271,17 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     switch (pEntry->dwEffects2)
     {
-    case DROP_NONE_OR_COPY:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_COPY:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
-    case DROP_NONE_OR_MOVE:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_MOVE:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
-    case DROP_NONE_OR_LINK:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_LINK:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     default:
         ok(dwEffects == pEntry->dwEffects2, "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
@@ -290,17 +294,17 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     switch (pEntry->dwEffects3)
     {
-    case DROP_NONE_OR_COPY:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_COPY:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
-    case DROP_NONE_OR_MOVE:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_MOVE:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
-    case DROP_NONE_OR_LINK:
-        ok((dwEffects == DROPEFFECT_NONE ||
-            dwEffects == DROPEFFECT_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+    case D_NONE_OR_LINK:
+        ok((dwEffects == D_NONE ||
+            dwEffects == D_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
         break;
     default:
         ok(dwEffects == pEntry->dwEffects3, "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
