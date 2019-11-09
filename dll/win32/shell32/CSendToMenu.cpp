@@ -208,7 +208,7 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
                                                          sizeof(SENDTO_ITEM));
         if (!pNewItem)
         {
-            ERR("HeapAlloc\n");
+            ERR("HeapAlloc: %08lX\n", GetLastError());
             hr = E_OUTOFMEMORY;
             CoTaskMemFree(pidlChild);
             break;
@@ -271,9 +271,10 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 {
     if (m_pItems == NULL)
     {
-        if (FAILED(LoadAllItems(NULL)))
+        HRESULT hr = LoadAllItems(NULL);
+        if (FAILED(hr))
         {
-            ERR("LoadAllItems\n");
+            ERR("LoadAllItems: %08lX\n", hr);
             return 0;
         }
     }
@@ -324,7 +325,7 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
     if (GetMenuItemInfoW(m_hSubMenu, idCmd, FALSE, &mii))
         return (SENDTO_ITEM *)mii.dwItemData;
 
-    ERR("GetMenuItemInfoW\n");
+    ERR("GetMenuItemInfoW: %08lX\n", GetLastError());
     return NULL;
 }
 
@@ -367,14 +368,14 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     if (!LoadStringW(shell32_hInstance, IDS_SENDTO,
                      wszSendTo, _countof(wszSendTo)))
     {
-        ERR("IDS_SENDTO\n");
+        ERR("IDS_SENDTO: %08lX\n", GetLastError());
         return E_FAIL;
     }
 
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
-        ERR("CreateMenu\n");
+        ERR("CreateMenu: %08lX\n", GetLastError());
         return E_FAIL;
     }
 
@@ -392,7 +393,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     mii.hSubMenu = hSubMenu;
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
-        ERR("InsertMenuItemW\n");
+        ERR("InsertMenuItemW: %08lX\n", GetLastError());
         return E_FAIL;
     }
 
@@ -415,10 +416,6 @@ CSendToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     if (pItem)
     {
         hr = DoSendToItem(pItem, lpici);
-    }
-    else
-    {
-        ERR("FindItemFromIdOffset\n");
     }
 
     TRACE("CSendToMenu::InvokeCommand %x\n", hr);
