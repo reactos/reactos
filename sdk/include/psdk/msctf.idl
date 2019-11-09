@@ -1139,6 +1139,25 @@ interface ITfKeyTraceEventSink : IUnknown
 [
   object,
   local,
+  uuid(ea1ea136-19df-11d7-a6d2-00065b84435c),
+  pointer_default(unique)
+]
+interface ITfUIElementSink : IUnknown
+{
+    HRESULT BeginUIElement(
+        [in] DWORD id,
+        [in, out] BOOL *show);
+
+    HRESULT UpdateUIElement(
+        [in] DWORD id);
+
+    HRESULT EndUIElement(
+        [in] DWORD id);
+}
+
+[
+  object,
+  local,
   uuid(8f1b8ad8-0b6b-4874-90c5-bd76011e8f7c),
   pointer_default(unique)
 ]
