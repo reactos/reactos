@@ -119,7 +119,7 @@ HRESULT DoCreateShortcut(
 }
 
 static HRESULT
-GetUIObjectOfAbsPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID *ppvOut)
+GetUIObjectOfAbsPidl(PIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
@@ -130,12 +130,12 @@ GetUIObjectOfAbsPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID *ppvO
     if (FAILED(hr))
         return hr;
 
-    hr = psf->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
+    hr = psf->GetUIObjectOf(NULL, 1, &pidlLast, riid, NULL, ppvOut);
     return hr;
 }
 
 static HRESULT
-GetUIObjectOfPath(HWND hwnd, LPCWSTR pszPath, REFIID riid, LPVOID *ppvOut)
+GetUIObjectOfPath(LPCWSTR pszPath, REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
@@ -143,7 +143,7 @@ GetUIObjectOfPath(HWND hwnd, LPCWSTR pszPath, REFIID riid, LPVOID *ppvOut)
     if (!pidl)
         return E_FAIL;
 
-    HRESULT hr = GetUIObjectOfAbsPidl(hwnd, pidl, riid, ppvOut);
+    HRESULT hr = GetUIObjectOfAbsPidl(pidl, riid, ppvOut);
 
     CoTaskMemFree(pidl);
 
@@ -187,13 +187,12 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 {
     int line = pEntry->line;
     HRESULT hr;
-    HWND hwnd = NULL;
     PIDLIST_ABSOLUTE pidlDesktop = NULL;
     CComPtr<IDropTarget> pDropTarget;
     CComPtr<IDataObject> pDataObject;
 
     // get the desktop PIDL
-    SHGetSpecialFolderLocation(hwnd, CSIDL_DESKTOP, &pidlDesktop);
+    SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidlDesktop);
     ok(!!pidlDesktop, "pidlDesktop is NULL\n");
 
     // build paths
@@ -205,12 +204,10 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     PathRemoveFileSpecW(s_szSrcTestFile);
     PathAppendW(s_szSrcTestFile, TESTFILENAME);
 
-    SHGetSpecialFolderPathW(hwnd, s_szDestTestFile, CSIDL_DESKTOP, FALSE);
+    lstrcpyW(s_szDestTestFile, s_szDestFolder);
     PathAppendW(s_szDestTestFile, TESTFILENAME);
 
-    SHGetSpecialFolderPathW(hwnd, s_szDestFolder, CSIDL_DESKTOP, FALSE);
-
-    SHGetSpecialFolderPathW(hwnd, s_szDestLinkSpec, CSIDL_DESKTOP, FALSE);
+    lstrcpyW(s_szDestLinkSpec, s_szDestFolder);
     PathAppendW(s_szDestLinkSpec, L"*DragDropTest*.lnk");
 
     //trace("s_szSrcTestFile: '%S'\n", s_szSrcTestFile);
@@ -235,13 +232,13 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     // get an IDataObject
     pDataObject = NULL;
-    hr = GetUIObjectOfPath(hwnd, s_szSrcTestFile, IID_IDataObject, (LPVOID *)&pDataObject);
+    hr = GetUIObjectOfPath(s_szSrcTestFile, IID_IDataObject, (LPVOID *)&pDataObject);
     ok_long(hr, S_OK);
 
     // get an IDropTarget
     CComPtr<IEnumIDList> pEnumIDList;
     PIDLIST_ABSOLUTE pidl = NULL;
-    hr = s_pDesktop->EnumObjects(hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
+    hr = s_pDesktop->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
                                  &pEnumIDList);
     ok_long(hr, S_OK);
     while (pEnumIDList->Next(1, &pidl, NULL) == S_OK)
@@ -258,7 +255,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     ok(pidl != NULL, "pidl is NULL\n");
     pDropTarget = NULL;
     PITEMID_CHILD pidlLast = ILFindLastID(pidl);
-    hr = s_pDesktop->GetUIObjectOf(hwnd, 1, &pidlLast, IID_IDropTarget,
+    hr = s_pDesktop->GetUIObjectOf(NULL, 1, &pidlLast, IID_IDropTarget,
                                    NULL, (LPVOID *)&pDropTarget);
     CoTaskMemFree(pidl);
     ok_long(hr, S_OK);
@@ -361,10 +358,14 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
 START_TEST(DragDrop)
 {
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    ok_int(SUCCEEDED(hr), TRUE);
 
     SHGetDesktopFolder(&s_pDesktop);
     ok(!!s_pDesktop, "s_pDesktop is NULL\n");
+
+    BOOL ret = SHGetSpecialFolderPathW(NULL, s_szDestFolder, CSIDL_DESKTOP, FALSE);
+    ok_int(ret, TRUE);
 
     for (size_t i = 0; i < _countof(s_TestEntries); ++i)
     {
