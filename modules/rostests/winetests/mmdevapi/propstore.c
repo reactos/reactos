@@ -58,23 +58,26 @@ static void test_propertystore(IPropertyStore *store)
     {
         WideCharToMultiByte(CP_ACP, 0, pv.u.pwszVal, -1, temp, sizeof(temp)-1, NULL, NULL);
         trace("guid: %s\n", temp);
-        CoTaskMemFree(pv.u.pwszVal);
+        PropVariantClear(&pv);
     }
 
     pv.vt = VT_EMPTY;
     hr = IPropertyStore_GetValue(store, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_FriendlyName, &pv);
     ok(hr == S_OK, "Failed with %08x\n", hr);
     ok(pv.vt == VT_LPWSTR && pv.u.pwszVal, "FriendlyName value had wrong type: 0x%x or was NULL\n", pv.vt);
+    PropVariantClear(&pv);
 
     pv.vt = VT_EMPTY;
     hr = IPropertyStore_GetValue(store, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_Enabled, &pv);
     ok(hr == S_OK, "Failed with %08x\n", hr);
     ok(pv.vt == VT_EMPTY, "Key should not be found\n");
+    PropVariantClear(&pv);
 
     pv.vt = VT_EMPTY;
     hr = IPropertyStore_GetValue(store, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_ClassGuid, &pv);
     ok(hr == S_OK, "Failed with %08x\n", hr);
     ok(pv.vt == VT_EMPTY, "Key should not be found\n");
+    PropVariantClear(&pv);
 }
 
 static void test_deviceinterface(IPropertyStore *store)
@@ -91,7 +94,7 @@ static void test_deviceinterface(IPropertyStore *store)
     ok(hr == S_OK, "GetValue failed: %08x\n", hr);
     ok(pv.vt == VT_LPWSTR, "Got wrong variant type: 0x%x\n", pv.vt);
     trace("device interface: %s\n", wine_dbgstr_w(pv.u.pwszVal));
-    CoTaskMemFree(pv.u.pwszVal);
+    PropVariantClear(&pv);
 }
 
 static void test_getat(IPropertyStore *store)
@@ -108,7 +111,7 @@ static void test_getat(IPropertyStore *store)
     hr = IPropertyStore_GetCount(store, &propcount);
 
     ok(hr == S_OK, "Failed with %08x\n", hr);
-    ok(propcount > 0, "Propcount %d should be greather than zero\n", propcount);
+    ok(propcount > 0, "Propcount %d should be greater than zero\n", propcount);
 
     for (prop = 0; prop < propcount; prop++) {
 	hr = IPropertyStore_GetAt(store, prop, &pkey);
