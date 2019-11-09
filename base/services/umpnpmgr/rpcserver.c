@@ -36,7 +36,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
+static WCHAR szRootDeviceInstanceID[] = L"HTREE\\ROOT\\0";
 
 
 /* FUNCTIONS *****************************************************************/
@@ -292,6 +292,18 @@ IsValidDeviceInstanceID(
 }
 
 
+static
+BOOL
+IsRootDeviceInstanceID(
+    _In_ PWSTR pszDeviceInstanceID)
+{
+    if (_wcsicmp(pszDeviceInstanceID, szRootDeviceInstanceID) == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /* Function 0 */
@@ -472,14 +484,14 @@ PNP_GetRootDeviceInstance(
         ret = CR_INVALID_POINTER;
         goto Done;
     }
-    if (ulLength < lstrlenW(szRootDeviceId) + 1)
+    if (ulLength < lstrlenW(szRootDeviceInstanceID) + 1)
     {
         ret = CR_BUFFER_SMALL;
         goto Done;
     }
 
     lstrcpyW(pDeviceID,
-             szRootDeviceId);
+             szRootDeviceInstanceID);
 
 Done:
     DPRINT("PNP_GetRootDeviceInstance() done (returns %lx)\n", ret);
@@ -2626,7 +2638,18 @@ PNP_CreateDevInst(
 {
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_CreateDevInst: %S\n", pszDeviceID);
+    DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
+           hBinding, pszParentDeviceID, pszDeviceID, ulLength, ulFlags);
+
+    if (ulFlags & ~CM_CREATE_DEVNODE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pszDeviceID == NULL || pszParentDeviceID == NULL)
+        return CR_INVALID_POINTER;
+
+    /* Fail, if the parent device is not the root device */
+    if (!IsRootDeviceInstanceID(pszParentDeviceID))
+        return CR_INVALID_DEVINST;
 
     if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
     {
@@ -3056,7 +3079,8 @@ PNP_QueryRemove(
     if (ulFlags & ~CM_REMOVE_BITS)
         return CR_INVALID_FLAG;
 
-    if (!IsValidDeviceInstanceID(pszDeviceID))
+    if (!IsValidDeviceInstanceID(pszDeviceID) ||
+        IsRootDeviceInstanceID(pszDeviceID))
         return CR_INVALID_DEVINST;
 
     if (pVetoType != NULL)
