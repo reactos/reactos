@@ -1,0 +1,372 @@
+/*
+ * PROJECT:         ReactOS api tests
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
+ * PURPOSE:         Test for Drag & Drop
+ * PROGRAMMER:      Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+#include "shelltest.h"
+#include <shlwapi.h>
+
+#define NDEBUG
+#include <debug.h>
+#include <stdio.h>
+
+#define TESTFILENAME L"DragDropTest.txt"
+#define DROPPED_ON_FILE L"DragDroppedOn.lnk"
+
+static CComPtr<IShellFolder> s_pDesktop;
+
+static WCHAR s_szSrcTestFile[MAX_PATH];
+static WCHAR s_szDestFolder[MAX_PATH];
+static WCHAR s_szDestTestFile[MAX_PATH];
+static WCHAR s_szDestLinkSpec[MAX_PATH];
+static WCHAR s_szDroppedToItem[MAX_PATH];
+
+enum TEST_OP
+{
+    TEST_OP_NONE,
+    TEST_OP_COPY,
+    TEST_OP_MOVE,
+    TEST_OP_LINK,
+    TEST_OP_NONE_OR_COPY,
+    TEST_OP_NONE_OR_MOVE,
+    TEST_OP_NONE_OR_LINK
+};
+
+#define DROP_NONE_OR_COPY 0xAABBCCDD
+#define DROP_NONE_OR_MOVE 0x11223344
+#define DROP_NONE_OR_LINK 0x55667788
+
+struct TEST_ENTRY
+{
+    int line;
+    LONG op;    // TEST_OP
+    HRESULT hr1;
+    HRESULT hr2;
+    DWORD dwKeyState;
+    DWORD dwEffects1;
+    DWORD dwEffects2;
+    DWORD dwEffects3;
+};
+
+static const TEST_ENTRY s_TestEntries[] =
+{
+    // MK_LBUTTON
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_COPY, DROPEFFECT_COPY, DROPEFFECT_COPY },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON, DROPEFFECT_LINK, DROPEFFECT_LINK, DROPEFFECT_LINK },
+
+    // MK_LBUTTON | MK_SHIFT
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_COPY, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_MOVE, DROPEFFECT_MOVE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT, DROPEFFECT_LINK, DROP_NONE_OR_LINK, DROP_NONE_OR_LINK },
+
+    // MK_LBUTTON | MK_SHIFT | MK_CONTROL
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_COPY, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
+    { __LINE__, TEST_OP_NONE_OR_COPY, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROP_NONE_OR_COPY, DROP_NONE_OR_COPY },
+    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_MOVE, DROP_NONE_OR_MOVE, DROP_NONE_OR_MOVE },
+    { __LINE__, TEST_OP_LINK, S_OK, S_OK, MK_LBUTTON | MK_SHIFT | MK_CONTROL, DROPEFFECT_LINK, DROPEFFECT_LINK, DROPEFFECT_LINK },
+
+    // MK_LBUTTON | MK_CONTROL
+    { __LINE__, TEST_OP_NONE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_NONE, DROPEFFECT_NONE, DROPEFFECT_NONE },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_COPY, DROPEFFECT_COPY, DROPEFFECT_COPY },
+    { __LINE__, TEST_OP_COPY, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_COPY | DROPEFFECT_MOVE, DROPEFFECT_COPY, DROPEFFECT_COPY },
+    { __LINE__, TEST_OP_NONE_OR_MOVE, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_MOVE, DROP_NONE_OR_MOVE, DROP_NONE_OR_MOVE },
+    { __LINE__, TEST_OP_NONE_OR_LINK, S_OK, S_OK, MK_LBUTTON | MK_CONTROL, DROPEFFECT_LINK, DROP_NONE_OR_LINK, DROP_NONE_OR_LINK },
+};
+
+static void DoCreateTestFile(LPCWSTR pszFileName)
+{
+    FILE *fp = _wfopen(pszFileName, L"wb");
+    ok(fp != NULL, "fp is NULL for '%S'\n", pszFileName);
+    fclose(fp);
+}
+
+HRESULT DoCreateShortcut(
+    LPCWSTR pszLnkFileName,
+    LPCWSTR pszTargetPathName)
+{
+    CComPtr<IPersistFile> ppf;
+    CComPtr<IShellLinkW> psl;
+    HRESULT hr;
+
+    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          IID_IShellLinkW, (LPVOID *)&psl);
+    if (SUCCEEDED(hr))
+    {
+        psl->SetPath(pszTargetPathName);
+
+        hr = psl->QueryInterface(IID_IPersistFile, (LPVOID *)&ppf);
+        if (SUCCEEDED(hr))
+        {
+            hr = ppf->Save(pszLnkFileName, TRUE);
+        }
+    }
+
+    return hr;
+}
+
+static HRESULT
+GetUIObjectOfAbsPidl(HWND hwnd, LPITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut)
+{
+    *ppvOut = NULL;
+
+    LPCITEMIDLIST pidlLast;
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = SHBindToParent(pidl, IID_IShellFolder, (LPVOID *)&psf,
+                                &pidlLast);
+    if (FAILED(hr))
+        return hr;
+
+    hr = psf->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
+    return hr;
+}
+
+static HRESULT
+GetUIObjectOfPath(HWND hwnd, LPCWSTR pszPath, REFIID riid, LPVOID *ppvOut)
+{
+    *ppvOut = NULL;
+
+    LPITEMIDLIST pidl = ILCreateFromPathW(pszPath);
+    if (!pidl)
+        return E_FAIL;
+
+    HRESULT hr = GetUIObjectOfAbsPidl(hwnd, pidl, riid, ppvOut);
+
+    CoTaskMemFree(pidl);
+
+    return hr;
+}
+
+BOOL DoSpecExistsW(LPCWSTR pszSpec)
+{
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(pszSpec, &find);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        FindClose(hFind);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void DoDeleteSpecW(LPCWSTR pszSpec)
+{
+    WCHAR szPath[MAX_PATH], szFile[MAX_PATH];
+    lstrcpyW(szPath, pszSpec);
+    PathRemoveFileSpecW(szPath);
+
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(pszSpec, &find);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            lstrcpyW(szFile, szPath);
+            PathAppendW(szFile, find.cFileName);
+            DeleteFileW(szFile);
+        } while (FindNextFileW(hFind, &find));
+
+        FindClose(hFind);
+    }
+}
+
+static void DoTestEntry(const TEST_ENTRY *pEntry)
+{
+    int line = pEntry->line;
+    HRESULT hr;
+    HWND hwnd = NULL;
+    LPITEMIDLIST pidlDesktop = NULL;
+    CComPtr<IDropTarget> pDropTarget;
+    CComPtr<IDataObject> pDataObject;
+
+    // get the desktop PIDL
+    SHGetSpecialFolderLocation(hwnd, CSIDL_DESKTOP, &pidlDesktop);
+    ok(!!pidlDesktop, "pidlDesktop is NULL\n");
+
+    // build paths
+    //
+    SHGetPathFromIDListW(pidlDesktop, s_szDroppedToItem);
+    PathAppendW(s_szDroppedToItem, DROPPED_ON_FILE);
+
+    GetModuleFileNameW(NULL, s_szSrcTestFile, _countof(s_szSrcTestFile));
+    PathRemoveFileSpecW(s_szSrcTestFile);
+    PathAppendW(s_szSrcTestFile, TESTFILENAME);
+
+    SHGetSpecialFolderPathW(hwnd, s_szDestTestFile, CSIDL_DESKTOP, FALSE);
+    PathAppendW(s_szDestTestFile, TESTFILENAME);
+
+    SHGetSpecialFolderPathW(hwnd, s_szDestFolder, CSIDL_DESKTOP, FALSE);
+
+    SHGetSpecialFolderPathW(hwnd, s_szDestLinkSpec, CSIDL_DESKTOP, FALSE);
+    PathAppendW(s_szDestLinkSpec, L"*DragDropTest*.lnk");
+
+    //trace("s_szSrcTestFile: '%S'\n", s_szSrcTestFile);
+    //trace("s_szDestTestFile: '%S'\n", s_szDestTestFile);
+    //trace("s_szDestLinkSpec: '%S'\n", s_szDestLinkSpec);
+    //trace("s_szDroppedToItem: '%S'\n", s_szDroppedToItem);
+
+    // create or delete files
+    //
+    DoCreateTestFile(s_szSrcTestFile);
+    DeleteFileW(s_szDestTestFile);
+    DoDeleteSpecW(s_szDestLinkSpec);
+    DeleteFileW(s_szDroppedToItem);
+    DoCreateShortcut(s_szDroppedToItem, s_szDestFolder);
+
+    // check file existence
+    //
+    ok(PathIsDirectoryW(s_szDestFolder), "s_szDestFolder is not directory\n");
+    ok(PathFileExistsW(s_szSrcTestFile), "s_szSrcTestFile doesn't exist\n");
+    ok(!DoSpecExistsW(s_szDestLinkSpec), "s_szDestLinkSpec doesn't exist\n");
+    ok(!PathFileExistsW(s_szDestTestFile), "s_szDestTestFile exists\n");
+
+    // get an IDataObject
+    pDataObject = NULL;
+    hr = GetUIObjectOfPath(hwnd, s_szSrcTestFile, IID_IDataObject, (LPVOID *)&pDataObject);
+    ok_long(hr, S_OK);
+
+    // get an IDropTarget
+    CComPtr<IEnumIDList> pEnumIDList;
+    LPITEMIDLIST pidl = NULL;
+    hr = s_pDesktop->EnumObjects(hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
+                                 &pEnumIDList);
+    ok_long(hr, S_OK);
+    while (pEnumIDList->Next(1, &pidl, NULL) == S_OK)
+    {
+        WCHAR szText[MAX_PATH];
+        SHGetPathFromIDListW(pidl, szText);
+        if (wcsstr(szText, DROPPED_ON_FILE) != NULL)
+        {
+            break;
+        }
+        CoTaskMemFree(pidl);
+        pidl = NULL;
+    }
+    ok(pidl != NULL, "pidl is NULL\n");
+    pDropTarget = NULL;
+    LPITEMIDLIST pidlLast = ILFindLastID(pidl);
+    hr = s_pDesktop->GetUIObjectOf(hwnd, 1, &pidlLast, IID_IDropTarget,
+                                   NULL, (LPVOID *)&pDropTarget);
+    CoTaskMemFree(pidl);
+    ok_long(hr, S_OK);
+
+    // DragEnter
+    POINTL ptl = { 0, 0 };
+    DWORD dwKeyState = pEntry->dwKeyState;
+    DWORD dwEffects = pEntry->dwEffects1;
+    hr = pDropTarget->DragEnter(pDataObject, dwKeyState, ptl, &dwEffects);
+
+    ok(hr == pEntry->hr1, "Line %d: hr1 was %08lX\n", line, hr);
+
+    switch (pEntry->dwEffects2)
+    {
+    case DROP_NONE_OR_COPY:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    case DROP_NONE_OR_MOVE:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    case DROP_NONE_OR_LINK:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    default:
+        ok(dwEffects == pEntry->dwEffects2, "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    }
+
+    // Drop
+    hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffects);
+    ok(hr == pEntry->hr2, "Line %d: hr2 was %08lX\n", line, hr);
+
+    switch (pEntry->dwEffects3)
+    {
+    case DROP_NONE_OR_COPY:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_COPY), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    case DROP_NONE_OR_MOVE:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_MOVE), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    case DROP_NONE_OR_LINK:
+        ok((dwEffects == DROPEFFECT_NONE ||
+            dwEffects == DROPEFFECT_LINK), "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    default:
+        ok(dwEffects == pEntry->dwEffects3, "Line %d: dwEffects2 was %08lX\n", line, dwEffects);
+        break;
+    }
+
+    // check file existence by pEntry->op
+    switch (pEntry->op)
+    {
+    case TEST_OP_NONE:
+        ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
+        ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest exists\n", line);
+        ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
+        break;
+    case TEST_OP_COPY:
+        ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
+        ok(PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
+        ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
+        break;
+    case TEST_OP_MOVE:
+        ok(!PathFileExistsW(s_szSrcTestFile), "Line %d: src exists\n", line);
+        ok(PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
+        ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
+        break;
+    case TEST_OP_LINK:
+        ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
+        ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
+        ok(DoSpecExistsW(s_szDestLinkSpec), "Line %d: link not exists\n", line);
+        break;
+    case TEST_OP_NONE_OR_COPY:
+        ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
+        ok(!DoSpecExistsW(s_szDestLinkSpec), "Line %d: link exists\n", line);
+        break;
+    case TEST_OP_NONE_OR_MOVE:
+        ok(PathFileExistsW(s_szSrcTestFile) != PathFileExistsW(s_szDestTestFile),
+           "Line %d: It must be none or Move\n", line);
+        break;
+    case TEST_OP_NONE_OR_LINK:
+        ok(PathFileExistsW(s_szSrcTestFile), "Line %d: src not exists\n", line);
+        ok(!PathFileExistsW(s_szDestTestFile), "Line %d: dest not exists\n", line);
+        break;
+    }
+
+    // clean up
+    DeleteFileW(s_szSrcTestFile);
+    DeleteFileW(s_szDestTestFile);
+    DoDeleteSpecW(s_szDestLinkSpec);
+    ILFree(pidlDesktop);
+}
+
+START_TEST(DragDrop)
+{
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    SHGetDesktopFolder(&s_pDesktop);
+    ok(!!s_pDesktop, "s_pDesktop is NULL\n");
+
+    for (size_t i = 0; i < _countof(s_TestEntries); ++i)
+    {
+        DoTestEntry(&s_TestEntries[i]);
+    }
+
+    DeleteFileW(s_szSrcTestFile);
+    DeleteFileW(s_szDestTestFile);
+    DoDeleteSpecW(s_szDestLinkSpec);
+    DeleteFileW(s_szDroppedToItem);
+
+    CoUninitialize();
+}
