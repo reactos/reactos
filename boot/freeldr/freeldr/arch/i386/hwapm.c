@@ -29,12 +29,15 @@ FindApmBios(VOID)
     REGS  RegsIn;
     REGS  RegsOut;
 
-    RegsIn.b.ah = 0x53;
-    RegsIn.b.al = 0x00;
+#if defined(SARCH_PC98)
+    RegsIn.w.ax = 0x9A00;
     RegsIn.w.bx = 0x0000;
-
+    Int386(0x1F, &RegsIn, &RegsOut);
+#else
+    RegsIn.w.ax = 0x5300;
+    RegsIn.w.bx = 0x0000;
     Int386(0x15, &RegsIn, &RegsOut);
-
+#endif
     if (INT386_SUCCESS(RegsOut))
     {
         TRACE("Found APM BIOS\n");
