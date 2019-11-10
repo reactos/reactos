@@ -20,8 +20,6 @@
 
 #include "precomp.h"
 
-#define MAX_ITEM_COUNT 64
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 CSendToMenu::CSendToMenu()
@@ -183,7 +181,6 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
 
     hr = S_OK;
     CComHeapPtr<ITEMID_CHILD> pidlChild;
-    UINT nCount = 0;
     while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
         SENDTO_ITEM *pNewItem;
@@ -224,11 +221,6 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
                 m_pItems = pNewItem;
 
                 // successful
-                ++nCount;
-                if (nCount >= MAX_ITEM_COUNT)
-                {
-                    break;
-                }
                 continue;
             }
             else
@@ -259,7 +251,6 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     m_idCmdFirst = idCmdFirst;
 
     UINT idCmd = idCmdFirst;
-    UINT nCount = 0;
     for (SENDTO_ITEM *pCurItem = m_pItems; pCurItem; pCurItem = pCurItem->pNext)
     {
         const UINT uFlags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
@@ -274,11 +265,6 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             ++idCmd;
 
             // successful
-            ++nCount;
-            if (nCount >= MAX_ITEM_COUNT)
-            {
-                break;
-            }
         }
     }
 
