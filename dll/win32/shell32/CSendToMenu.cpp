@@ -104,11 +104,8 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
 
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
-    if (FAILED(hr))
-    {
-        ERR("SHGetSpecialFolderLocation: %08lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
-    }
 
     IShellFolder *pFolder = NULL;
     hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
@@ -135,17 +132,13 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
     PCITEMID_CHILD pidlLast;
     CComPtr<IShellFolder> pFolder;
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
-    if (FAILED(hr))
-    {
-        ERR("SHBindToParent: %08lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     hr = pFolder->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
-    if (FAILED(hr))
-    {
-        ERR("GetUIObjectOf: %08lX\n", hr);
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     return hr;
 }
 
@@ -178,21 +171,15 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
 
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlSendTo;
     HRESULT hr = GetSpecialFolder(hwnd, &m_pSendTo, CSIDL_SENDTO, &pidlSendTo);
-    if (FAILED(hr))
-    {
-        ERR("GetSpecialFolder: %08lX\n", hr);
-        return E_FAIL;
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     CComPtr<IEnumIDList> pEnumIDList;
     hr = m_pSendTo->EnumObjects(hwnd,
                                 SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
                                 &pEnumIDList);
-    if (FAILED(hr))
-    {
-        ERR("EnumObjects: %08lX\n", hr);
-        return E_FAIL;
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     hr = S_OK;
     CComHeapPtr<ITEMID_CHILD> pidlChild;
@@ -265,11 +252,8 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     if (m_pItems == NULL)
     {
         HRESULT hr = LoadAllItems(NULL);
-        if (FAILED(hr))
-        {
-            ERR("LoadAllItems: %08lX\n", hr);
+        if (FAILED_UNEXPECTEDLY(hr))
             return 0;
-        }
     }
 
     m_idCmdFirst = idCmdFirst;
@@ -335,13 +319,15 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     PITEMID_CHILD pidlChild = pItem->pidlChild;
     hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
-    if (SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        hr = DoDrop(m_pDataObject, pDropTarget);
+        return hr;
     }
-    else
+
+    hr = DoDrop(m_pDataObject, pDropTarget);
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        ERR("GetUIObjectOf: %08lX\n", hr);
+        return hr;
     }
 
     return hr;
