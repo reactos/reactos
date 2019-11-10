@@ -401,7 +401,7 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
             if (!hIcon)
                 break;
 
-            RECT& rcItem = lpdis->rcItem;
+            const RECT& rcItem = lpdis->rcItem;
             INT x = 4;
             INT y = lpdis->rcItem.top;
             y += (rcItem.bottom - rcItem.top - cySmall) / 2;
