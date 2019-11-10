@@ -140,17 +140,6 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
     return hr;
 }
 
-void CSendToMenu::UnloadItem(SENDTO_ITEM *pItem)
-{
-    if (!pItem)
-        return;
-
-    CoTaskMemFree(pItem->pidlChild);
-    CoTaskMemFree(pItem->pszText);
-    DestroyIcon(pItem->hIcon);
-    HeapFree(GetProcessHeap(), 0, pItem);
-}
-
 void CSendToMenu::UnloadAllItems()
 {
     SENDTO_ITEM *pItems = m_pItems;
@@ -159,7 +148,7 @@ void CSendToMenu::UnloadAllItems()
     {
         SENDTO_ITEM *pCurItem = pItems;
         pItems = pItems->pNext;
-        UnloadItem(pCurItem);
+        delete pCurItem;
     }
 }
 
@@ -186,57 +175,32 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
         CComHeapPtr<ITEMID_CHILD> pidlChild;
         pidlChild.Attach(child);
 
-        SENDTO_ITEM *pNewItem;
-        pNewItem = reinterpret_cast<SENDTO_ITEM *>(HeapAlloc(GetProcessHeap(),
-                                                             HEAP_ZERO_MEMORY,
-                                                             sizeof(SENDTO_ITEM)));
-        if (!pNewItem)
-        {
-            ERR("HeapAlloc: %08lX\n", GetLastError());
-            hr = E_OUTOFMEMORY;
-            break;
-        }
-
         STRRET strret;
         hr = m_pSendTo->GetDisplayNameOf(pidlChild, SHGDN_NORMAL, &strret);
-        if (SUCCEEDED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
+            continue;
+
+        CComHeapPtr<WCHAR> pszText;
+        hr = StrRetToStrW(&strret, pidlChild, &pszText);
+        if (FAILED_UNEXPECTEDLY(hr))
+            continue;
+
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAbsolute;
+        pidlAbsolute.Attach(ILCombine(pidlSendTo, pidlChild));
+
+        SHFILEINFOW fi = { NULL };
+        const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
+                            SHGFI_ICON | SHGFI_SMALLICON;
+        SHGetFileInfoW(*reinterpret_cast<LPWSTR *>(&pidlAbsolute), 0,
+                       &fi, sizeof(fi), uFlags);
+
+        SENDTO_ITEM *pNewItem =
+            new SENDTO_ITEM(pidlChild.Detach(), pszText.Detach(), fi.hIcon);
+        if (m_pItems)
         {
-            LPWSTR pszText = NULL;
-            hr = StrRetToStrW(&strret, pidlChild, &pszText);
-            if (SUCCEEDED(hr))
-            {
-                CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAbsolute;
-                pidlAbsolute.Attach(ILCombine(pidlSendTo, pidlChild));
-
-                SHFILEINFOW fi = { NULL };
-                const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
-                                    SHGFI_ICON | SHGFI_SMALLICON;
-                SHGetFileInfoW(*reinterpret_cast<LPWSTR *>(&pidlAbsolute), 0,
-                               &fi, sizeof(fi), uFlags);
-
-                pNewItem->pidlChild = pidlChild.Detach();
-                pNewItem->pszText = pszText;
-                pNewItem->hIcon = fi.hIcon;
-                if (m_pItems)
-                {
-                    pNewItem->pNext = m_pItems;
-                }
-                m_pItems = pNewItem;
-
-                // successful
-                continue;
-            }
-            else
-            {
-                ERR("StrRetToStrW: %08lX\n", hr);
-            }
+            pNewItem->pNext = m_pItems;
         }
-        else
-        {
-            ERR("GetDisplayNameOf: %08lX\n", hr);
-        }
-
-        UnloadItem(pNewItem);
+        m_pItems = pNewItem;
     }
 
     return hr;

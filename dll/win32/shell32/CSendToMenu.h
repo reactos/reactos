@@ -36,6 +36,26 @@ private:
         PITEMID_CHILD pidlChild;
         LPWSTR pszText;
         HICON hIcon;
+
+        SENDTO_ITEM(PITEMID_CHILD child, LPWSTR text, HICON icon)
+            : pNext(NULL)
+            , pidlChild(child)
+            , pszText(text)
+            , hIcon(icon)
+        {
+        }
+
+        ~SENDTO_ITEM()
+        {
+            CoTaskMemFree(pidlChild);
+            CoTaskMemFree(pszText);
+            DestroyIcon(hIcon);
+        }
+
+    private:
+        SENDTO_ITEM();
+        SENDTO_ITEM(const SENDTO_ITEM&);
+        SENDTO_ITEM& operator=(const SENDTO_ITEM&);
     };
 
     HMENU m_hSubMenu;
@@ -47,7 +67,6 @@ private:
     CComPtr<IDataObject> m_pDataObject;
 
     HRESULT LoadAllItems(HWND hwnd);
-    void UnloadItem(SENDTO_ITEM *pItem);
     void UnloadAllItems();
 
     UINT InsertSendToItems(HMENU hMenu, UINT idFirst, UINT idMenu);
