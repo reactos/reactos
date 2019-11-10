@@ -400,10 +400,12 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
             if (!hIcon)
                 break;
 
-            RECT rcItem = lpdis->rcItem;
-            DrawIconEx(lpdis->hDC, 2,
-                       lpdis->rcItem.top + (rcItem.bottom - rcItem.top - 16) / 2,
-                       hIcon, cxSmall, cySmall, 0, NULL, DI_NORMAL);
+            RECT& rcItem = lpdis->rcItem;
+            INT x = 4;
+            INT y = lpdis->rcItem.top;
+            y += (rcItem.bottom - rcItem.top - cySmall) / 2;
+            DrawIconEx(lpdis->hDC, x, y, hIcon, cxSmall, cySmall,
+                       0, NULL, DI_NORMAL);
 
             if (plResult)
                 *plResult = TRUE;
