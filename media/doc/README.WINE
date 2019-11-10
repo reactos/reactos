@@ -139,7 +139,7 @@ dll/win32/npptools            # Synced to WineStaging-4.18
 dll/win32/ntdsapi             # Synced to WineStaging-4.18
 dll/win32/objsel              # Synced to WineStaging-4.18
 dll/win32/odbc32              # Synced to WineStaging-4.18. Depends on port of Linux ODBC.
-dll/win32/odbccp32            # Synced to WineStaging-4.0
+dll/win32/odbccp32            # Synced to WineStaging-4.18
 dll/win32/ole32               # Synced to WineStaging-4.0
 dll/win32/oleacc              # Synced to WineStaging-4.0
 dll/win32/oleaut32            # Synced to WineStaging-4.0
