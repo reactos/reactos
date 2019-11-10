@@ -37,8 +37,10 @@ interface DnsResolver
     /* R_ResolverGetConfig */
 
     /* Function: 0x04 */
-    DWORD R_ResolverFlushCache(
-        [in][unique][string] DNSRSLVR_HANDLE pwszServerName);
+    DWORD
+    __stdcall
+    R_ResolverFlushCache(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName);
 
     /* Function: 0x05 */
     /* R_ResolverFlushCacheEntry */
@@ -47,12 +49,14 @@ interface DnsResolver
     /* R_ResolverRegisterCluster */
 
     /* Function: 0x07 */
-    DWORD R_ResolverQuery(
-        [in][unique][string] DNSRSLVR_HANDLE pwszServerName,
-        [in][unique][string] LPCWSTR pwsName, 
+    DWORD
+    __stdcall
+    R_ResolverQuery(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
+        [in, unique, string] LPCWSTR pwsName, 
         [in] WORD wType, 
         [in] DWORD Flags, 
-        [in][out] DWORD *dwRecords, 
+        [in, out] DWORD *dwRecords, 
         [out] DNS_RECORDW **ppResultRecords);
 
     /* Function: 0x08 */

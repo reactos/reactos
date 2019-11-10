@@ -42,6 +42,7 @@ RpcThreadRoutine(LPVOID lpParameter)
 }
 
 DWORD
+__stdcall
 R_ResolverFlushCache(
     DNSRSLVR_HANDLE pwszServerName)
 {
@@ -53,6 +54,7 @@ R_ResolverFlushCache(
 }
 
 DWORD
+__stdcall
 R_ResolverQuery(
     DNSRSLVR_HANDLE pszServerName,
     LPCWSTR pszName,
