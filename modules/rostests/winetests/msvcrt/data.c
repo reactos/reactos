@@ -153,9 +153,8 @@ static void test___getmainargs(void)
         new_argv = *p___p___argv();
         ok(new_argc == 4, "*__p___argc() = %d\n", new_argc);
         ok(new_argv == argv, "*__p___argv() = %p, expected %p\n", new_argv, argv);
-    }else {
-        win_skip("__p___argc or __p___argv is not available\n");
     }
+    else skip("__p___argc or __p___argv is not available\n");
 
     mode = 0;
     __getmainargs(&argc, &argv, &envp, 1, &mode);
