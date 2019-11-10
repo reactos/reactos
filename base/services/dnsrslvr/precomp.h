@@ -11,6 +11,7 @@
 #include <winbase.h>
 #include <winsvc.h>
 #include <windns.h>
+#include <windns_undoc.h>
 
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>

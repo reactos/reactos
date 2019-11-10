@@ -31,6 +31,14 @@ DNS_STATUS
 WINAPI
 GetCurrentTimeInSeconds(VOID);
 
+DNS_STATUS
+WINAPI
+Query_Main(
+    LPCWSTR Name,
+    WORD Type,
+    DWORD Options,
+    PDNS_RECORD *QueryResultSet);
+
 #endif /* __WIDL__ */
 
 #ifdef __cplusplus

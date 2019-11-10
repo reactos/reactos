@@ -45,6 +45,8 @@ DWORD
 R_ResolverFlushCache(
     DNSRSLVR_HANDLE pwszServerName)
 {
+    DPRINT("R_ResolverFlushCache()\n");
+
     // FIXME Should store (and flush) entries by server handle
     DnsIntCacheFlush();
     return 0;
@@ -52,65 +54,61 @@ R_ResolverFlushCache(
 
 DWORD
 R_ResolverQuery(
-    DNSRSLVR_HANDLE pwszServerName,
-    LPCWSTR pwsName,
+    DNSRSLVR_HANDLE pszServerName,
+    LPCWSTR pszName,
     WORD wType,
-    DWORD Flags,
+    DWORD dwFlags,
     DWORD *dwRecords,
     DNS_RECORDW **ppResultRecords)
 {
-#if 0
-    DNS_QUERY_REQUEST  QueryRequest = { 0 };
-    DNS_QUERY_RESULT   QueryResults = { 0 };
-#endif
-    DNS_STATUS         Status;
-    PDNS_RECORDW       Record;
+    PDNS_RECORDW Record;
+    DNS_STATUS Status;
 
-    DPRINT1("R_ResolverQuery %p %p %x %lx %p %p\n",
-            pwszServerName, pwsName, wType, Flags, dwRecords, ppResultRecords);
+    DPRINT("R_ResolverQuery(%S %S %x %lx %p %p)\n",
+           pszServerName, pszName, wType, dwFlags, dwRecords, ppResultRecords);
 
-    if (!pwszServerName || !pwsName || !wType || !ppResultRecords)
+    if (pszName == NULL || wType == 0 || ppResultRecords == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    // FIXME Should lookup entries by server handle
-    if (DnsIntCacheGetEntryFromName(pwsName, ppResultRecords))
+    if ((dwFlags & DNS_QUERY_WIRE_ONLY) != 0 && (dwFlags & DNS_QUERY_NO_WIRE_QUERY) != 0)
+        return ERROR_INVALID_PARAMETER;
+
+    if (DnsIntCacheGetEntryFromName(pszName, ppResultRecords))
     {
+        DPRINT("DNS cache query successful!\n");
         Status = ERROR_SUCCESS;
     }
     else
     {
-#if 0
-        QueryRequest.Version = DNS_QUERY_REQUEST_VERSION1;
-        QueryRequest.QueryType = wType;
-        QueryRequest.QueryName = pwsName;
-        QueryRequest.QueryOptions = Flags;
-        QueryResults.Version = DNS_QUERY_REQUEST_VERSION1;
-
-        Status = DnsQueryEx(&QueryRequest, &QueryResults, NULL);
+        DPRINT("DNS query!\n");
+        Status = Query_Main(pszName,
+                            wType,
+                            dwFlags,
+                            ppResultRecords);
         if (Status == ERROR_SUCCESS)
         {
-            // FIXME Should store (and flush) entries by server handle
-            DnsIntCacheAddEntry(QueryResults.pQueryRecords);
-            *ppResultRecords = QueryResults.pQueryRecords;
+            DPRINT("DNS query successful!\n");
+            DnsIntCacheAddEntry(*ppResultRecords);
         }
-#endif
     }
 
     if (dwRecords)
+    {
         *dwRecords = 0;
 
-    if (Status == ERROR_SUCCESS)
-    {
-        Record = *ppResultRecords;
-        while (Record)
+        if (Status == ERROR_SUCCESS)
         {
-            if (dwRecords)
+            Record = *ppResultRecords;
+            while (Record)
+            {
+                DPRINT("Record: %S\n", Record->pName);
                 (*dwRecords)++;
-            Record = Record->pNext;
+                Record = Record->pNext;
+            }
         }
     }
 
-    DPRINT1("R_ResolverQuery result %ld %ld\n", Status, *dwRecords);
+    DPRINT("R_ResolverQuery result %ld %ld\n", Status, *dwRecords);
 
     return Status;
 }

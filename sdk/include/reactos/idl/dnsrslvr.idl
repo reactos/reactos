@@ -53,7 +53,7 @@ interface DnsResolver
         [in] WORD wType, 
         [in] DWORD Flags, 
         [in][out] DWORD *dwRecords, 
-        [out][ref] DNS_RECORDW** ppResultRecords);
+        [out] DNS_RECORDW **ppResultRecords);
 
     /* Function: 0x08 */
     /* R_ResolverEnumCache */

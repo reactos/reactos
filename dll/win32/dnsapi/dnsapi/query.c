@@ -164,7 +164,7 @@ DnsQuery_CodePage(UINT CodePage,
     PWCHAR Buffer;
     DNS_STATUS Status;
     PDNS_RECORD QueryResultWide;
-    PDNS_RECORD ConvertedRecord = NULL, LastRecord = NULL;
+    PDNS_RECORD ConvertedRecord = 0, LastRecord = 0;
 
     if (Name == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -309,7 +309,7 @@ DnsQuery_CodePage(UINT CodePage,
     }
 
     if (LastRecord)
-        LastRecord->pNext = NULL;
+        LastRecord->pNext = 0;
 
     /* The name */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
@@ -730,6 +730,41 @@ DnsQuery_W(LPCWSTR Name,
            PDNS_RECORD *QueryResultSet,
            PVOID *Reserved)
 {
+    DWORD dwRecords = 0;
+    DNS_STATUS Status = ERROR_SUCCESS;
+
+    DPRINT("DnsQuery_W()\n");
+
+    *QueryResultSet = NULL;
+
+    RpcTryExcept
+    {
+        Status = R_ResolverQuery(NULL,
+                                 Name,
+                                 Type,
+                                 Options,
+                                 &dwRecords,
+                                 (DNS_RECORDW **)QueryResultSet);
+        DPRINT("R_ResolverQuery() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+DNS_STATUS
+WINAPI
+Query_Main(LPCWSTR Name,
+           WORD Type,
+           DWORD Options,
+           PDNS_RECORD *QueryResultSet)
+{
     adns_state astate;
     int quflags = (Options & DNS_QUERY_NO_RECURSION) == 0 ? adns_qf_search : 0;
     int adns_error;
@@ -750,10 +785,8 @@ DnsQuery_W(LPCWSTR Name,
         return ERROR_INVALID_PARAMETER;
     if (QueryResultSet == NULL)
         return ERROR_INVALID_PARAMETER;
-    if ((Options & DNS_QUERY_WIRE_ONLY) != 0 && (Options & DNS_QUERY_NO_WIRE_QUERY) != 0)
-        return ERROR_INVALID_PARAMETER;
 
-    *QueryResultSet = 0;
+    *QueryResultSet = NULL;
 
     switch (Type)
     {

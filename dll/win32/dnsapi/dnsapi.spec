@@ -82,7 +82,6 @@
 @ stdcall DnsNameCompareEx_W()
 @ stdcall DnsNameCompare_A(str str)
 @ stdcall DnsNameCompare_W(wstr wstr)
-
 @ stdcall DnsNameCopy()
 @ stdcall DnsNameCopyAllocate()
 @ stdcall DnsNotifyResolver()
@@ -188,5 +187,5 @@
 @ stub NetInfo_IsForUpdate
 @ stub NetInfo_ResetServerPriorities
 @ stub QueryDirectEx
-@ stub Query_Main
+@ stdcall Query_Main(wstr long long ptr)
 @ stub Reg_ReadGlobalsEx
