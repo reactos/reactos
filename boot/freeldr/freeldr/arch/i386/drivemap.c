@@ -180,6 +180,11 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
     ULONG*  RealModeIVT = (ULONG*)UlongToPtr(0x00000000);
     USHORT* BiosLowMemorySize = (USHORT*)ULongToPtr(0x00000413);
 
+#if defined(SARCH_PC98)
+    /* FIXME */
+    return;
+#endif
+
     if (!DriveMapInstalled)
     {
         // Get the old INT 13h handler address from the vector table
@@ -217,6 +222,11 @@ VOID DriveMapRemoveInt13Handler(VOID)
 {
     ULONG*  RealModeIVT = (ULONG*)0x00000000;
     USHORT* BiosLowMemorySize = (USHORT*)0x00000413;
+
+#if defined(SARCH_PC98)
+    /* FIXME */
+    return;
+#endif
 
     if (DriveMapInstalled)
     {

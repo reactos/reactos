@@ -50,6 +50,12 @@ Int386_set_registers:
     mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
     mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
     mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
+#if defined(SARCH_PC98)
+    /* Always set EBP register even if its equals zero.
+     * Otherwise the DISK BIOS calls will store garbage data in a output buffer.
+     */
+    mov ebp, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
+#endif
 
     /* Call the interrupt vector */
     /*int       Int386_vector*/

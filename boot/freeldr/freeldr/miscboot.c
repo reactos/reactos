@@ -39,6 +39,7 @@ LoadBootSector(
     ULONG FileId;
     ULONG BytesRead;
     CHAR ArcPath[MAX_PATH];
+    ULONG LoadAddress;
 
     *DriveNumber = 0;
     *PartitionNumber = 0;
@@ -98,8 +99,14 @@ LoadBootSector(
         return Status;
     }
 
+#if defined(SARCH_PC98)
+    LoadAddress = Pc98GetBootSectorLoadAddress(*DriveNumber);
+#else
+    LoadAddress = 0x7C00;
+#endif
+
     /* Now try to load the boot sector. If this fails then abort. */
-    Status = ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead);
+    Status = ArcRead(FileId, UlongToPtr(LoadAddress), 512, &BytesRead);
     ArcClose(FileId);
     if ((Status != ESUCCESS) || (BytesRead != 512))
     {
@@ -108,7 +115,7 @@ LoadBootSector(
     }
 
     /* Check for validity */
-    if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
+    if (*(USHORT*)UlongToPtr(LoadAddress + 0x1FE) != 0xAA55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
         return ENOEXEC;
@@ -131,6 +138,7 @@ LoadPartitionOrDrive(
     ULONG FileId;
     ULONG BytesRead;
     CHAR ArcPath[MAX_PATH];
+    ULONG LoadAddress;
 
     /*
      * The ARC "BootPath" value takes precedence over
@@ -167,11 +175,17 @@ LoadPartitionOrDrive(
         return Status;
     }
 
+#if defined(SARCH_PC98)
+    LoadAddress = Pc98GetBootSectorLoadAddress(*DriveNumber);
+#else
+    LoadAddress = 0x7C00;
+#endif
+
     /*
      * Now try to load the partition boot sector or the MBR (when PartitionNumber == 0).
      * If this fails then abort.
      */
-    Status = ArcRead(FileId, (PVOID)0x7c00, 512, &BytesRead);
+    Status = ArcRead(FileId, UlongToPtr(LoadAddress), 512, &BytesRead);
     ArcClose(FileId);
     if ((Status != ESUCCESS) || (BytesRead != 512))
     {
@@ -183,7 +197,7 @@ LoadPartitionOrDrive(
     }
 
     /* Check for validity */
-    if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
+    if (*(USHORT*)UlongToPtr(LoadAddress + 0x1FE) != 0xAA55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
         return ENOEXEC;
@@ -325,7 +339,7 @@ LoadAndBootDevice(
     UiUnInitialize("Booting...");
     IniCleanup();
 
-    /* Boot the loaded sector code at 0x7C00 */
+    /* Boot the loaded sector code */
     ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
     /* Must not return! */
     return ESUCCESS;

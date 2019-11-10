@@ -139,6 +139,18 @@ if(ARCH STREQUAL "i386")
             arch/i386/xbox/xboxmem.c
             arch/i386/xbox/xboxrtc.c
             arch/i386/xbox/xboxvideo.c)
+    elseif(SARCH STREQUAL "pc98")
+        list(APPEND FREELDR_ARC_SOURCE
+            arch/i386/pc/pcmem.c
+            arch/i386/pc98/machpc98.c
+            arch/i386/pc98/pc98beep.c
+            arch/i386/pc98/pc98cons.c
+            arch/i386/pc98/pc98disk.c
+            arch/i386/pc98/pc98hw.c
+            arch/i386/pc98/pc98mem.c
+            arch/i386/pc98/pc98rtc.c
+            arch/i386/pc98/pc98video.c
+            arch/i386/xbox/xboxfont.c)
     else()
         list(APPEND FREELDR_ARC_SOURCE
             arch/i386/pc/machpc.c
@@ -307,7 +319,7 @@ add_dependencies(freeldr_pe_dbg asm)
 if(SARCH STREQUAL "pc98")
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/PC98)
     add_custom_target(pc98bootfdd
-        COMMAND native-fatten ${REACTOS_BINARY_DIR}/PC98/ReactOS-98.IMG -format 2880 ROS98BOOT -boot ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/pc98/fat12fdd.bin -add ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys FREELDR.SYS -add ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.ini FREELDR.INI
+        COMMAND native-fatten ${REACTOS_BINARY_DIR}/PC98/ReactOS-98.IMG -format 2880 ROS98BOOT -boot ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/pc98/fat12fdd.bin -add ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys FREELDR.SYS -add ${CMAKE_SOURCE_DIR}/boot/bootdata/floppy_pc98.ini FREELDR.INI
         DEPENDS native-fatten fat12pc98 freeldr
         VERBATIM)
 endif()
