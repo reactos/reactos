@@ -161,6 +161,8 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
     UnloadAllItems();
 
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlSendTo;
+
+    m_pSendTo.Release();
     HRESULT hr = GetSpecialFolder(hwnd, &m_pSendTo, CSIDL_SENDTO, &pidlSendTo);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
