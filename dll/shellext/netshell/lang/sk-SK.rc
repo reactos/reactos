@@ -20,8 +20,8 @@ BEGIN
     PUSHBUTTON "Vl&astnosti", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Popis komponentu príde sem ...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Show Icon in taskbar when connected", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "&Show Icon in taskbar when connected", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

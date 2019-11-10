@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Proprietà", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Descrizione", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Visualizzare l'icona nella barra dei task durante la connessione", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Notificare quando la connessione è limitata o non attiva", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Visualizzare l'icona nella barra dei task durante la connessione", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Notificare quando la connessione è limitata o non attiva", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

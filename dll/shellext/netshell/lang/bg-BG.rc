@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Свойства", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Описание", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Показване на значе в задачната лента при свързаност", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Уведомяване при ограничена или липсваща свързаност", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Показване на значе в задачната лента при свързаност", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Уведомяване при ограничена или липсваща свързаност", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 180

@@ -15,8 +15,8 @@ BEGIN
     PUSHBUTTON "&Свойства", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Описание", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Свойства компонента перечислены ниже...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Отображать значок в трее при установленном соединении", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Оповещать в случае разрыва соединения", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "Отображать значок в трее при установленном соединении", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Оповещать в случае разрыва соединения", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
