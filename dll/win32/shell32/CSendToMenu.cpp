@@ -66,24 +66,31 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 
     POINTL ptl = { 0, 0 };
     HRESULT hr = pDropTarget->DragEnter(pDataObject, dwKeyState, ptl, &dwEffect);
-    if (SUCCEEDED(hr) && dwEffect != DROPEFFECT_NONE)
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
-        // (We have to translate a SendTo action to a Drop action)
-        if (bShift && bCtrl)
-            dwEffect = DROPEFFECT_LINK;
-        else if (!bShift)
-            dwEffect = DROPEFFECT_MOVE;
-        else
-            dwEffect = DROPEFFECT_COPY;
-
-        hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffect);
-    }
-    else
-    {
-        ERR("DragEnter: %08lX\n", hr);
         pDropTarget->DragLeave();
+        return hr;
     }
+
+    if (dwEffect == DROPEFFECT_NONE)
+    {
+        ERR("DROPEFFECT_NONE\n");
+        pDropTarget->DragLeave();
+        return E_FAIL;
+    }
+
+    // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+    // (We have to translate a SendTo action to a Drop action)
+    if (bShift && bCtrl)
+        dwEffect = DROPEFFECT_LINK;
+    else if (!bShift)
+        dwEffect = DROPEFFECT_MOVE;
+    else
+        dwEffect = DROPEFFECT_COPY;
+
+    hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffect);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
 }
@@ -111,13 +118,10 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
     if (ppidl)
         *ppidl = pidl.Detach();
 
-    if (SUCCEEDED(hr))
-    {
-        *ppFolder = pFolder;
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
-    ERR("BindToObject: %08lX\n", hr);
+    *ppFolder = pFolder;
     return hr;
 }
 
@@ -172,8 +176,7 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
     PITEMID_CHILD child;
     while (pEnumIDList->Next(1, &child, NULL) == S_OK)
     {
-        CComHeapPtr<ITEMID_CHILD> pidlChild;
-        pidlChild.Attach(child);
+        CComHeapPtr<ITEMID_CHILD> pidlChild(child);
 
         STRRET strret;
         hr = m_pSendTo->GetDisplayNameOf(pidlChild, SHGDN_NORMAL, &strret);
@@ -271,15 +274,11 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
     hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
         return hr;
-    }
 
     hr = DoDrop(m_pDataObject, pDropTarget);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
         return hr;
-    }
 
     return hr;
 }
@@ -294,8 +293,6 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO));
-
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
@@ -305,9 +302,9 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
 
     UINT cItems = InsertSendToItems(hSubMenu, idCmdFirst, 0);
 
-    MENUITEMINFOW mii;
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
+    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO));
+
+    MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
     mii.fType = MFT_STRING;
     mii.wID = -1;
