@@ -103,7 +103,7 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
     if (FAILED_UNEXPECTEDLY(hr))
-        return NULL;
+        return hr;
 
     IShellFolder *pFolder = NULL;
     hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
@@ -180,9 +180,12 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
         return hr;
 
     hr = S_OK;
-    CComHeapPtr<ITEMID_CHILD> pidlChild;
-    while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
+    PITEMID_CHILD child;
+    while (pEnumIDList->Next(1, &child, NULL) == S_OK)
     {
+        CComHeapPtr<ITEMID_CHILD> pidlChild;
+        pidlChild.Attach(child);
+
         SENDTO_ITEM *pNewItem;
         pNewItem = reinterpret_cast<SENDTO_ITEM *>(HeapAlloc(GetProcessHeap(),
                                                              HEAP_ZERO_MEMORY,
