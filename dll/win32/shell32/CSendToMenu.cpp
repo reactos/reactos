@@ -102,7 +102,7 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
     if (ppidl)
         *ppidl = NULL;
 
-    PIDLIST_ABSOLUTE pidl = NULL;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
     if (FAILED(hr))
     {
@@ -114,9 +114,7 @@ CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
     hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
 
     if (ppidl)
-        *ppidl = pidl;
-    else
-        CoTaskMemFree(pidl);
+        *ppidl = pidl.Detach();
 
     if (SUCCEEDED(hr))
     {
@@ -178,7 +176,7 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
 {
     UnloadAllItems();
 
-    PIDLIST_ABSOLUTE pidlSendTo;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlSendTo;
     HRESULT hr = GetSpecialFolder(hwnd, &m_pSendTo, CSIDL_SENDTO, &pidlSendTo);
     if (FAILED(hr))
     {
@@ -193,12 +191,11 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
     if (FAILED(hr))
     {
         ERR("EnumObjects: %08lX\n", hr);
-        ILFree(pidlSendTo);
         return E_FAIL;
     }
 
     hr = S_OK;
-    PITEMID_CHILD pidlChild;
+    CComHeapPtr<ITEMID_CHILD> pidlChild;
     UINT nCount = 0;
     while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
     {
@@ -210,7 +207,6 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
         {
             ERR("HeapAlloc: %08lX\n", GetLastError());
             hr = E_OUTOFMEMORY;
-            CoTaskMemFree(pidlChild);
             break;
         }
 
@@ -222,17 +218,16 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
             hr = StrRetToStrW(&strret, pidlChild, &pszText);
             if (SUCCEEDED(hr))
             {
-                PIDLIST_ABSOLUTE pidlAbsolute = ILCombine(pidlSendTo, pidlChild);
+                CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAbsolute;
+                pidlAbsolute.Attach(ILCombine(pidlSendTo, pidlChild));
 
                 SHFILEINFOW fi = { NULL };
                 const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
                                     SHGFI_ICON | SHGFI_SMALLICON;
-                SHGetFileInfoW(reinterpret_cast<LPWSTR>(pidlAbsolute), 0,
+                SHGetFileInfoW(*reinterpret_cast<LPWSTR *>(&pidlAbsolute), 0,
                                &fi, sizeof(fi), uFlags);
 
-                ILFree(pidlAbsolute);
-
-                pNewItem->pidlChild = pidlChild;
+                pNewItem->pidlChild = pidlChild.Detach();
                 pNewItem->pszText = pszText;
                 pNewItem->hIcon = fi.hIcon;
                 if (m_pItems)
@@ -260,10 +255,7 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
         }
 
         UnloadItem(pNewItem);
-        CoTaskMemFree(pidlChild);
     }
-
-    ILFree(pidlSendTo);
 
     return hr;
 }
