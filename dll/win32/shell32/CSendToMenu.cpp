@@ -196,7 +196,7 @@ HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
         SHFILEINFOW fi = { NULL };
         const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
                             SHGFI_ICON | SHGFI_SMALLICON;
-        SHGetFileInfoW(*reinterpret_cast<LPWSTR *>(&pidlAbsolute), 0,
+        SHGetFileInfoW(reinterpret_cast<LPWSTR>(static_cast<PIDLIST_ABSOLUTE>(pidlAbsolute)), 0,
                        &fi, sizeof(fi), uFlags);
 
         SENDTO_ITEM *pNewItem =
