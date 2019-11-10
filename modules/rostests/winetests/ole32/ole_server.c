@@ -244,7 +244,7 @@ static void ole_server(void)
     if (hr == S_OK)
     {
         trace("server: registering class object\n");
-        hr = CoRegisterClassObject(&CLSID_WineTestObject, (IUnknown *)&factory,
+        hr = CoRegisterClassObject(&CLSID_WineTestObject, (IUnknown *)&factory.IClassFactory_iface,
                                    CLSCTX_SERVER, REGCLS_MULTIPLEUSE, &key);
         if (hr == S_OK)
         {
