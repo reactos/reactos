@@ -32,10 +32,10 @@ class CSendToMenu :
 private:
     struct SENDTO_ITEM
     {
+        SENDTO_ITEM *pNext;
         PITEMID_CHILD pidlChild;
         LPWSTR pszText;
         HICON hIcon;
-        SENDTO_ITEM *pNext;
     };
 
     HMENU m_hSubMenu;
