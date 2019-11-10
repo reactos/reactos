@@ -284,10 +284,8 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 
     if (idCmd == idCmdFirst)
     {
-        WCHAR szNone[64] = L"(None)";
-        LoadStringW(shell32_hInstance, IDS_NONE, szNone, _countof(szNone));
-
-        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, szNone);
+        CStringW strNone(MAKEINTRESOURCEW(IDS_NONE));
+        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, strNone);
     }
 
     return idCmd - idCmdFirst;
@@ -343,13 +341,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    WCHAR wszSendTo[64];
-    if (!LoadStringW(shell32_hInstance, IDS_SENDTO,
-                     wszSendTo, _countof(wszSendTo)))
-    {
-        ERR("IDS_SENDTO: %08lX\n", GetLastError());
-        return E_FAIL;
-    }
+    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO));
 
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
@@ -366,7 +358,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
     mii.fType = MFT_STRING;
     mii.wID = -1;
-    mii.dwTypeData = wszSendTo;
+    mii.dwTypeData = strSendTo.GetBuffer();
     mii.cch = wcslen(mii.dwTypeData);
     mii.fState = MFS_ENABLED;
     mii.hSubMenu = hSubMenu;
