@@ -272,8 +272,7 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
 
     HRESULT hr;
     CComPtr<IDropTarget> pDropTarget;
-    PITEMID_CHILD pidlChild = pItem->pidlChild;
-    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
+    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pItem->pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
