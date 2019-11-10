@@ -741,6 +741,31 @@ static void test_SQLValidDSNW(void)
     ok(ret, "got %d\n", ret);
 }
 
+static void test_SQLConfigDataSource(void)
+{
+    BOOL ret;
+
+    ret = SQLConfigDataSource(0, ODBC_ADD_DSN, "SQL Server", "DSN=WINEMQIS\0Database=MQIS\0\0");
+    ok(ret, "got %d\n", ret);
+
+    ret = SQLConfigDataSource(0, ODBC_REMOVE_DSN, "SQL Server", "DSN=WINEMQIS\0\0");
+    ok(ret, "got %d\n", ret);
+
+    ret = SQLConfigDataSource(0, ODBC_REMOVE_DSN, "SQL Server", "DSN=WINEMQIS\0\0");
+    if(!ret)
+    {
+        RETCODE ret;
+        DWORD err;
+        ret = SQLInstallerError(1, &err, NULL, 0, NULL);
+        ok(ret == SQL_SUCCESS_WITH_INFO, "got %d\n", ret);
+        todo_wine ok(err == ODBC_ERROR_INVALID_DSN, "got %u\n", err);
+    }
+
+    ret = SQLConfigDataSource(0, ODBC_ADD_DSN, "ODBC driver", "DSN=ODBC data source\0\0");
+    todo_wine ok(!ret, "got %d\n", ret);
+    todo_wine check_error(ODBC_ERROR_COMPONENT_NOT_FOUND);
+}
+
 START_TEST(misc)
 {
     test_SQLConfigMode();
@@ -754,4 +779,5 @@ START_TEST(misc)
     test_SQLGetInstalledDrivers();
     test_SQLValidDSN();
     test_SQLValidDSNW();
+    test_SQLConfigDataSource();
 }
