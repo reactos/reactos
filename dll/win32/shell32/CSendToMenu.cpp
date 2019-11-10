@@ -258,7 +258,7 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
     if (GetMenuItemInfoW(m_hSubMenu, idCmd, FALSE, &mii))
         return reinterpret_cast<SENDTO_ITEM *>(mii.dwItemData);
 
-    ERR("GetMenuItemInfoW: %08lX\n", GetLastError());
+    ERR("GetMenuItemInfoW: %ld\n", GetLastError());
     return NULL;
 }
 
@@ -297,7 +297,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
-        ERR("CreateMenu: %08lX\n", GetLastError());
+        ERR("CreateMenu: %ld\n", GetLastError());
         return E_FAIL;
     }
 
@@ -315,7 +315,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     mii.hSubMenu = hSubMenu;
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
-        ERR("InsertMenuItemW: %08lX\n", GetLastError());
+        ERR("InsertMenuItemW: %ld\n", GetLastError());
         return E_FAIL;
     }
 
