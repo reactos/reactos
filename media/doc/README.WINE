@@ -121,7 +121,7 @@ dll/win32/msisys.ocx          # Synced to WineStaging-4.18
 dll/win32/msnet32             # Synced to WineStaging-4.18
 dll/win32/mspatcha            # Forked at WineStaging-3.3
 dll/win32/msrle32             # Synced to WineStaging-4.18
-dll/win32/mssign32            # Synced to WineStaging-3.3
+dll/win32/mssign32            # Synced to WineStaging-4.18
 dll/win32/mssip32             # Synced to WineStaging-3.3
 dll/win32/mstask              # Synced to WineStaging-3.3
 dll/win32/msvcrt20            # Out of sync
