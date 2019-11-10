@@ -150,31 +150,43 @@ static inline unsigned get_libid_from_tid(tid_t tid)
     return tid_ids[tid].lib;
 }
 
-HRESULT get_typeinfo(enum tid_t tid, ITypeInfo **typeinfo)
+static HRESULT get_typelib(unsigned lib, ITypeLib **tl)
 {
-    unsigned lib = get_libid_from_tid(tid);
     HRESULT hres;
 
     if(!typelib[lib]) {
-        ITypeLib *tl;
-
-        hres = LoadRegTypeLib(lib_ids[lib].iid, lib_ids[lib].major, 0, LOCALE_SYSTEM_DEFAULT, &tl);
+        hres = LoadRegTypeLib(lib_ids[lib].iid, lib_ids[lib].major, 0, LOCALE_SYSTEM_DEFAULT, tl);
         if(FAILED(hres)) {
             ERR("LoadRegTypeLib failed: %08x\n", hres);
             return hres;
         }
 
-        if(InterlockedCompareExchangePointer((void**)&typelib[lib], tl, NULL))
-            ITypeLib_Release(tl);
+        if (InterlockedCompareExchangePointer((void**)&typelib[lib], *tl, NULL))
+            ITypeLib_Release(*tl);
     }
+
+    *tl = typelib[lib];
+    return S_OK;
+}
+
+HRESULT get_typeinfo(enum tid_t tid, ITypeInfo **typeinfo)
+{
+    unsigned lib = get_libid_from_tid(tid);
+    ITypeLib *typelib;
+    HRESULT hres;
+
+    if (FAILED(hres = get_typelib(lib, &typelib)))
+        return hres;
 
     if(!typeinfos[tid]) {
         ITypeInfo *ti;
 
-        hres = ITypeLib_GetTypeInfoOfGuid(typelib[lib], get_riid_from_tid(tid), &ti);
+        hres = ITypeLib_GetTypeInfoOfGuid(typelib, get_riid_from_tid(tid), &ti);
         if(FAILED(hres)) {
             /* try harder with typelib from msxml.dll */
-            hres = ITypeLib_GetTypeInfoOfGuid(typelib[LibXml], get_riid_from_tid(tid), &ti);
+            if (FAILED(hres = get_typelib(LibXml, &typelib)))
+                return hres;
+            hres = ITypeLib_GetTypeInfoOfGuid(typelib, get_riid_from_tid(tid), &ti);
             if(FAILED(hres)) {
                 ERR("GetTypeInfoOfGuid failed: %08x\n", hres);
                 return hres;
