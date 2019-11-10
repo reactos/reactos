@@ -106,7 +106,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         6,
         12,
-        "a sz\240m\241t\242g\202pedre \202s el\213k\202sz\241ti a telep\241t\202s m\240sodik szakasz\240t.",
+        "a sz\240m\241t\242g\202pre \202s el\213k\202sz\241ti a telep\241t\202s m\240sodik szakasz\240t.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -130,7 +130,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  Nyomj F3-mat a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -142,7 +142,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org -ra.",
+        "http://www.reactos.org weboldalra.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -212,7 +212,7 @@ static MUI_ENTRY huHUIntroPageEntries[] =
     {
         8,
         21,
-        "\x07  Nyomj F3-mat a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -246,13 +246,13 @@ static MUI_ENTRY huHULicensePageEntries[] =
     {
         8,
         8,
-        "A ReactOS rendszer GNU GPL licenc alatt lett k\224zreadva,",
+        "A ReactOS rendszer GNU GPL licenc alatt lett k\224zreadva",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "olyan r\202szekkel amik m\240s kompatibilis lincenc\373 k\242dokat",
+        "olyan r\202szekkel, amelyek m\240s kompatibilis lincenc\373 k\242dokat",
         TEXT_STYLE_NORMAL
     },
     {
@@ -270,7 +270,7 @@ static MUI_ENTRY huHULicensePageEntries[] =
     {
         8,
         12,
-        "a GNU GPL alatt ker\201l kiad\240sra, az eredeti licenc fenntart\240sa",
+        "a GNU GPL alatt ker\201l kiad\240sra az eredeti licenc fenntart\240sa",
         TEXT_STYLE_NORMAL
     },
     {
@@ -300,13 +300,13 @@ static MUI_ENTRY huHULicensePageEntries[] =
     {
         8,
         18,
-        "terjeszt\202sekre vonatkozik. Ha valamilyen okb\242l nem kapta meg",
+        "terjeszt\202sekre vonatkozik. Ha valamilyen okb\242l nem kaptad meg",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "a GNU General Public License egy p\202ld\240ny\240t, k\202rj\201k l\240togasson el",
+        "a GNU General Public License egy p\202ld\240ny\240t, k\202rj\201k l\240togass el",
         TEXT_STYLE_NORMAL
     },
     {
@@ -534,7 +534,7 @@ static MUI_ENTRY huHUUpgradePageEntries[] =
     {
         6,
         10,
-        "a telep\241t\213 megpr\242b\240lhatja kijav\241tani azt.",
+        "megpr\242b\240lhatja kijav\241tani azt.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -564,7 +564,7 @@ static MUI_ENTRY huHUUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Nyomj F3-mat a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -833,13 +833,13 @@ static MUI_ENTRY huHUBootPageEntries[] =
     {
         6,
         8,
-        "A telep\241t\213 nem tudja install\240lni a rendszerbet\224lt\213t",
+        "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "a sz\240m\241t\242g\202ped merevlemez\202re.",
+        "a sz\240m\241t\242g\202p merevlemez\202re.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -851,7 +851,7 @@ static MUI_ENTRY huHUBootPageEntries[] =
     {
         6,
         14,
-        "az A: meghajt\242ba, majd nyomj ENTER-t,",
+        "az A: meghajt\242ba, majd nyomj ENTER-t.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -962,13 +962,13 @@ static MUI_ENTRY huHUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "konfigur\240l\242 programok, programok amik egy oper\240ci\242s rendszert",
+        "konfigur\240l\242 programok, programok, melyek egy oper\240ci\242s rendszert",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "(pl. ReactOS) ind\241tanak vagy egy\202b szoftverek amiket",
+        "(pl. ReactOS) ind\241tanak vagy egy\202b szoftverek, melyeket",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1028,7 +1028,7 @@ static MUI_ENTRY huHUConfirmDeleteSystemPartitionEntries[] =
     {
         0,
         0,
-        "ENTER=Folytat\240s  ESC=M\202gse",
+        "ENTER = Folytat\240s  ESC = M\202gse",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1339,7 +1339,7 @@ static MUI_ENTRY huHUPrepareCopyEntries[] =
     {
         6,
         8,
-        "A telep\241t\213 el\213k\202sz\241ti a sz\240m\241t\242g\202pedet a ReactOS f\240jlok m\240sol\240s\240ra.",
+        "A telep\241t\213 el\213k\202sz\241ti a sz\240m\241t\242g\202pet a ReactOS f\240jlok m\240sol\240s\240ra.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1486,12 +1486,12 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "A ReactOS nincs teljesen telep\241tve a sz\240m\241t\242g\202pedre.\n"
+        "A ReactOS nincs teljesen telep\241tve a sz\240m\241t\242g\202pre.\n"
         "Ha most kil\202psz a telep\241t\213b\213l, \243jra futtatnod kell azt\n"
         "a ReactOS telep\241t\202s\202hez.\n"
         "\n"
         "  \x07 Nyomj ENTER-t a telep\241t\202s folytat\240s\240hoz.\n"
-        "  \x07 Nyomj F3-mat a kil\202p\202shez.\n",
+        "  \x07 Nyomj F3-at a kil\202p\202shez.\n",
         "F3 = Kil\202p\202s  ENTER = Folytat\240s"
     },
     {
@@ -1531,7 +1531,7 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "A telep\241t\213 egy \202rv\202nytelen al\240\241r\240st tal\240lt a TXTSETUP.SIF-ben.\n",
+        "A telep\241t\213 egy \202rv\202nytelen al\240\241r\240st tal\240lt a TXTSETUP.SIF f\240jlban.\n",
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
     },
     {
@@ -1566,12 +1566,12 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-        "A telep\241t\213 legal\240bb egy olyan merevlemezt tal\240lt ami nem kompatibilis\n"
-        "part\241ci\242s t\240bl\240t tartalmaz, amit nem tud rendesen kezelni!\n"
+        "A telep\241t\213 legal\240bb egy olyan merevlemezt tal\240lt amely nem kompatibilis\n"
+        "part\241ci\242s t\240bl\240t tartalmaz, amelyet nem tud rendesen kezelni!\n"
         "\n"
         "Part\241ci\242k l\202trehoz\240sa vagy t\224rl\202se t\224nkreteheti a part\241ci\242s t\240bl\240t.\n"
         "\n"
-        "  \x07  Nyomj F3-mat a telep\241t\213b\213l val\242 kil\202p\202shez.\n"
+        "  \x07  Nyomj F3-at a telep\241t\213b\213l val\242 kil\202p\202shez.\n"
         "  \x07  Nyomj ENTER-t a folytat\240shoz.",
         "F3 = Kil\202p\202s  ENTER = Folytat\240s"
     },
@@ -1585,7 +1585,7 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_DELETE_SPACE,
-        "Nem tudsz t\224r\224lni part\241cion\240latlan lemezter\201letet!\n"
+        "Nem tudsz t\224r\224lni particion\240latlan lemezter\201letet!\n"
         "\n"
         "  * Nyomj meg egy gombot a folytat\240shoz.",
         NULL
@@ -1642,7 +1642,7 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "A kabinetf\240jlban nincs telep\241t\213 szkript.\n",
+        "A kabinetf\240jlban nincs telep\241t\213 parancsf\240jl.\n",
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
     },
     {
@@ -1689,7 +1689,7 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
-        "Nem siker\201lt a billenyt\373zet kioszt\240sok hozz\240ad\240sa\n"
+        "Nem siker\201lt a billenyt\373zetkioszt\240sok hozz\240ad\240sa\n"
         "a regisztr\240ci\242s adatb\240zishoz.\n"
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
     },
@@ -1707,7 +1707,7 @@ MUI_ERROR huHUErrorEntries[] =
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "A kijel\224lt part\241ci\242 nem el\202g nagy a ReactOS telep\241t\202s\202hez.\n"
-        "A telep\241\202si part\241ci\242nak legal\240bb %lu MB-nak kell lennie.\n"
+        "A telep\241t\202si part\241ci\242nak legal\240bb %lu MB-nak kell lennie.\n"
         "\n"
         "  * Nyomj meg egy gombot a folytat\240shoz.",
         NULL
@@ -1919,7 +1919,7 @@ MUI_STRING huHUStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"},
     {STRING_REBOOTPROGRESSBAR,
-    " A sz\240m\241t\242g\202ped %li m\240sodperc m\243lva \243jraindul... "},
+    " A sz\240m\241t\242g\202p %li m\240sodperc m\243lva \243jraindul... "},
     {STRING_CONSOLEFAIL1,
     "Nem lehet megnyitni a konzolt\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
@@ -1927,9 +1927,9 @@ MUI_STRING huHUStrings[] =
     {STRING_CONSOLEFAIL3,
     "Az USB-s billenty\373zetek m\202g nincsenek teljesen t\240mogatva\r\n"},
     {STRING_FORMATTINGDISK,
-    "A telep\241t\213 form\240zza a merevlemezedet"},
+    "A telep\241t\213 form\240zza a merevlemezt"},
     {STRING_CHECKINGDISK,
-    "A telep\241t\213 ellen\213rzni a merevlemezedet"},
+    "A telep\241t\213 ellen\213rzni a merevlemezt"},
     {STRING_FORMATDISK1,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel (gyorsform\240z\240s) "},
     {STRING_FORMATDISK2,
@@ -1961,7 +1961,7 @@ MUI_STRING huHUStrings[] =
     {STRING_NEWPARTITION,
     "A telep\241t\213 egy \243j part\241ci\242t hozott l\202tre itt:"},
     {STRING_UNPSPACE,
-    "    %sNem part\241cion\240lt ter\201let%s           %6lu %s"},
+    "    %sNem particion\240lt ter\201let%s           %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
