@@ -26,30 +26,47 @@ extern "C" const GUID CLSID_SendToMenu;
 class CSendToMenu :
     public CComCoClass<CSendToMenu, &CLSID_SendToMenu>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IObjectWithSite,
     public IContextMenu3,
     public IShellExtInit
 {
 private:
     struct SENDTO_ITEM
     {
-        LPITEMIDLIST pidlChild;
+        SENDTO_ITEM *pNext;
+        PITEMID_CHILD pidlChild;
         LPWSTR pszText;
         HICON hIcon;
-        SENDTO_ITEM *pNext;
+
+        SENDTO_ITEM(PITEMID_CHILD child, LPWSTR text, HICON icon)
+            : pNext(NULL)
+            , pidlChild(child)
+            , pszText(text)
+            , hIcon(icon)
+        {
+        }
+
+        ~SENDTO_ITEM()
+        {
+            CoTaskMemFree(pidlChild);
+            CoTaskMemFree(pszText);
+            DestroyIcon(hIcon);
+        }
+
+    private:
+        SENDTO_ITEM();
+        SENDTO_ITEM(const SENDTO_ITEM&);
+        SENDTO_ITEM& operator=(const SENDTO_ITEM&);
     };
 
     HMENU m_hSubMenu;
     SENDTO_ITEM *m_pItems;
     UINT m_idCmdFirst;
 
-    CComPtr<IUnknown> m_pSite;
     CComPtr<IShellFolder> m_pDesktop;
     CComPtr<IShellFolder> m_pSendTo;
     CComPtr<IDataObject> m_pDataObject;
 
-    BOOL LoadAllItems(HWND hwnd);
-    void UnloadItem(SENDTO_ITEM *pItem);
+    HRESULT LoadAllItems(HWND hwnd);
     void UnloadAllItems();
 
     UINT InsertSendToItems(HMENU hMenu, UINT idFirst, UINT idMenu);
@@ -58,16 +75,13 @@ private:
     HRESULT DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpici);
 
     HRESULT DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget);
-    IShellFolder *GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl = NULL);
-    HRESULT GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);
+    HRESULT GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder, int csidl,
+                             PIDLIST_ABSOLUTE *ppidl = NULL);
+    HRESULT GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl, REFIID riid, LPVOID *ppvOut);
 
 public:
     CSendToMenu();
     ~CSendToMenu();
-
-    // IObjectWithSite
-    STDMETHODIMP SetSite(IUnknown *pUnkSite);
-    STDMETHODIMP GetSite(REFIID riid, void **ppvSite);
 
     // IContextMenu
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
@@ -88,7 +102,6 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CSendToMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)

@@ -19,23 +19,21 @@
  */
 
 #include "precomp.h"
-#define INITGUID
-#include <guiddef.h>
-
-#define MAX_ITEM_COUNT 64
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-DEFINE_GUID(CLSID_SendToMenu, 0x7BA4C740, 0x9E81, 0x11CF,
-            0x99, 0xD3, 0x00, 0xAA, 0x00, 0x4A, 0xE8, 0x37);
 
 CSendToMenu::CSendToMenu()
     : m_hSubMenu(NULL)
     , m_pItems(NULL)
     , m_idCmdFirst(0)
 {
-    SHGetDesktopFolder(&m_pDesktop);
-    m_pSendTo = GetSpecialFolder(NULL, CSIDL_SENDTO);
+    HRESULT hr = SHGetDesktopFolder(&m_pDesktop);
+    if (FAILED(hr))
+    {
+        ERR("SHGetDesktopFolder: %08lX\n", hr);
+    }
+
+    GetSpecialFolder(NULL, &m_pSendTo, CSIDL_SENDTO);
 }
 
 CSendToMenu::~CSendToMenu()
@@ -68,100 +66,82 @@ HRESULT CSendToMenu::DoDrop(IDataObject *pDataObject, IDropTarget *pDropTarget)
 
     POINTL ptl = { 0, 0 };
     HRESULT hr = pDropTarget->DragEnter(pDataObject, dwKeyState, ptl, &dwEffect);
-    if (SUCCEEDED(hr) && dwEffect != DROPEFFECT_NONE)
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
-        // (We have to translate a SendTo action to a Drop action)
-        if (bShift && bCtrl)
-            dwEffect = DROPEFFECT_LINK;
-        else if (!bShift)
-            dwEffect = DROPEFFECT_MOVE;
-        else
-            dwEffect = DROPEFFECT_COPY;
-
-        hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffect);
-    }
-    else
-    {
-        ERR("DragEnter: %08lX\n", hr);
         pDropTarget->DragLeave();
+        return hr;
     }
+
+    if (dwEffect == DROPEFFECT_NONE)
+    {
+        ERR("DROPEFFECT_NONE\n");
+        pDropTarget->DragLeave();
+        return E_FAIL;
+    }
+
+    // THIS CODE IS NOT HUMAN-FRIENDLY. SORRY.
+    // (We have to translate a SendTo action to a Drop action)
+    if (bShift && bCtrl)
+        dwEffect = DROPEFFECT_LINK;
+    else if (!bShift)
+        dwEffect = DROPEFFECT_MOVE;
+    else
+        dwEffect = DROPEFFECT_COPY;
+
+    hr = pDropTarget->Drop(pDataObject, dwKeyState, ptl, &dwEffect);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
 }
 
 // get an IShellFolder from CSIDL
-IShellFolder *
-CSendToMenu::GetSpecialFolder(HWND hwnd, int csidl, LPITEMIDLIST *ppidl)
+HRESULT
+CSendToMenu::GetSpecialFolder(HWND hwnd, IShellFolder **ppFolder,
+                              int csidl, PIDLIST_ABSOLUTE *ppidl)
 {
+    if (!ppFolder)
+        return E_POINTER;
+    *ppFolder = NULL;
+
     if (ppidl)
         *ppidl = NULL;
 
-    if (!m_pDesktop)
-    {
-        SHGetDesktopFolder(&m_pDesktop);
-        if (!m_pDesktop)
-        {
-            ERR("SHGetDesktopFolder\n");
-            return NULL;
-        }
-    }
-
-    LPITEMIDLIST pidl = NULL;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
     HRESULT hr = SHGetSpecialFolderLocation(hwnd, csidl, &pidl);
-    if (FAILED(hr))
-    {
-        ERR("SHGetSpecialFolderLocation: %08lX\n", hr);
-        return NULL;
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     IShellFolder *pFolder = NULL;
     hr = m_pDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
 
     if (ppidl)
-        *ppidl = pidl;
-    else
-        CoTaskMemFree(pidl);
+        *ppidl = pidl.Detach();
 
-    if (SUCCEEDED(hr))
-        return pFolder;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    ERR("BindToObject: %08lX\n", hr);
-    return NULL;
+    *ppFolder = pFolder;
+    return hr;
 }
 
 // get a UI object from PIDL
-HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, LPITEMIDLIST pidl,
+HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
                                          REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
 
-    LPCITEMIDLIST pidlLast;
+    PCITEMID_CHILD pidlLast;
     CComPtr<IShellFolder> pFolder;
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
-    if (FAILED(hr))
-    {
-        ERR("SHBindToParent: %08lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     hr = pFolder->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
-    if (FAILED(hr))
-    {
-        ERR("GetUIObjectOf: %08lX\n", hr);
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     return hr;
-}
-
-void CSendToMenu::UnloadItem(SENDTO_ITEM *pItem)
-{
-    if (!pItem)
-        return;
-
-    CoTaskMemFree(pItem->pidlChild);
-    CoTaskMemFree(pItem->pszText);
-    DestroyIcon(pItem->hIcon);
-    HeapFree(GetProcessHeap(), 0, pItem);
 }
 
 void CSendToMenu::UnloadAllItems()
@@ -172,118 +152,77 @@ void CSendToMenu::UnloadAllItems()
     {
         SENDTO_ITEM *pCurItem = pItems;
         pItems = pItems->pNext;
-        UnloadItem(pCurItem);
+        delete pCurItem;
     }
 }
 
-BOOL CSendToMenu::LoadAllItems(HWND hwnd)
+HRESULT CSendToMenu::LoadAllItems(HWND hwnd)
 {
     UnloadAllItems();
 
-    LPITEMIDLIST pidlSendTo;
-    m_pSendTo = GetSpecialFolder(hwnd, CSIDL_SENDTO, &pidlSendTo);
-    if (!m_pSendTo)
-    {
-        ERR("GetSpecialFolder\n");
-        return FALSE;
-    }
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlSendTo;
 
-    HRESULT hr;
+    m_pSendTo.Release();
+    HRESULT hr = GetSpecialFolder(hwnd, &m_pSendTo, CSIDL_SENDTO, &pidlSendTo);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     CComPtr<IEnumIDList> pEnumIDList;
     hr = m_pSendTo->EnumObjects(hwnd,
                                 SHCONTF_FOLDERS | SHCONTF_NONFOLDERS,
                                 &pEnumIDList);
-    if (FAILED(hr))
-    {
-        ERR("EnumObjects: %08lX\n", hr);
-        ILFree(pidlSendTo);
-        return FALSE;
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    BOOL bOK = TRUE;
-    LPITEMIDLIST pidlChild;
-    UINT nCount = 0;
-    while (pEnumIDList->Next(1, &pidlChild, NULL) == S_OK)
+    hr = S_OK;
+    PITEMID_CHILD child;
+    while (pEnumIDList->Next(1, &child, NULL) == S_OK)
     {
-        SENDTO_ITEM *pNewItem = (SENDTO_ITEM *)HeapAlloc(GetProcessHeap(),
-                                                         HEAP_ZERO_MEMORY,
-                                                         sizeof(SENDTO_ITEM));
-        if (!pNewItem)
-        {
-            ERR("HeapAlloc\n");
-            bOK = FALSE;
-            CoTaskMemFree(pidlChild);
-            break;
-        }
+        CComHeapPtr<ITEMID_CHILD> pidlChild(child);
 
         STRRET strret;
         hr = m_pSendTo->GetDisplayNameOf(pidlChild, SHGDN_NORMAL, &strret);
-        if (SUCCEEDED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
+            continue;
+
+        CComHeapPtr<WCHAR> pszText;
+        hr = StrRetToStrW(&strret, pidlChild, &pszText);
+        if (FAILED_UNEXPECTEDLY(hr))
+            continue;
+
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAbsolute;
+        pidlAbsolute.Attach(ILCombine(pidlSendTo, pidlChild));
+
+        SHFILEINFOW fi = { NULL };
+        const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
+                            SHGFI_ICON | SHGFI_SMALLICON;
+        SHGetFileInfoW(reinterpret_cast<LPWSTR>(static_cast<PIDLIST_ABSOLUTE>(pidlAbsolute)), 0,
+                       &fi, sizeof(fi), uFlags);
+
+        SENDTO_ITEM *pNewItem =
+            new SENDTO_ITEM(pidlChild.Detach(), pszText.Detach(), fi.hIcon);
+        if (m_pItems)
         {
-            LPWSTR pszText = NULL;
-            hr = StrRetToStrW(&strret, pidlChild, &pszText);
-            if (SUCCEEDED(hr))
-            {
-                LPITEMIDLIST pidlAbsolute = ILCombine(pidlSendTo, pidlChild);
-
-                SHFILEINFOW fi = { NULL };
-                const UINT uFlags = SHGFI_PIDL | SHGFI_TYPENAME |
-                                    SHGFI_ICON | SHGFI_SMALLICON;
-                SHGetFileInfoW((LPCWSTR)pidlAbsolute, 0, &fi, sizeof(fi), uFlags);
-
-                ILFree(pidlAbsolute);
-
-                pNewItem->pidlChild = pidlChild;
-                pNewItem->pszText = pszText;
-                pNewItem->hIcon = fi.hIcon;
-                if (m_pItems)
-                {
-                    pNewItem->pNext = m_pItems;
-                }
-                m_pItems = pNewItem;
-
-                // successful
-                ++nCount;
-                if (nCount >= MAX_ITEM_COUNT)
-                {
-                    break;
-                }
-                continue;
-            }
-            else
-            {
-                ERR("StrRetToStrW: %08lX\n", hr);
-            }
+            pNewItem->pNext = m_pItems;
         }
-        else
-        {
-            ERR("GetDisplayNameOf: %08lX\n", hr);
-        }
-
-        UnloadItem(pNewItem);
-        CoTaskMemFree(pidlChild);
+        m_pItems = pNewItem;
     }
 
-    ILFree(pidlSendTo);
-
-    return bOK;
+    return hr;
 }
 
 UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
 {
     if (m_pItems == NULL)
     {
-        if (!LoadAllItems(NULL))
-        {
-            ERR("LoadAllItems\n");
+        HRESULT hr = LoadAllItems(NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
             return 0;
-        }
     }
 
     m_idCmdFirst = idCmdFirst;
 
     UINT idCmd = idCmdFirst;
-    UINT nCount = 0;
     for (SENDTO_ITEM *pCurItem = m_pItems; pCurItem; pCurItem = pCurItem->pNext)
     {
         const UINT uFlags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
@@ -292,26 +231,19 @@ UINT CSendToMenu::InsertSendToItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
             MENUITEMINFOW mii;
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_DATA | MIIM_BITMAP;
-            mii.dwItemData = (ULONG_PTR)pCurItem;
+            mii.dwItemData = reinterpret_cast<ULONG_PTR>(pCurItem);
             mii.hbmpItem = HBMMENU_CALLBACK;
             SetMenuItemInfoW(hMenu, idCmd, FALSE, &mii);
             ++idCmd;
 
             // successful
-            ++nCount;
-            if (nCount >= MAX_ITEM_COUNT)
-            {
-                break;
-            }
         }
     }
 
     if (idCmd == idCmdFirst)
     {
-        WCHAR szNone[64] = L"(None)";
-        LoadStringW(shell32_hInstance, IDS_NONE, szNone, _countof(szNone));
-
-        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, szNone);
+        CStringW strNone(MAKEINTRESOURCEW(IDS_NONE));
+        AppendMenuW(hMenu, MF_GRAYED | MF_DISABLED | MF_STRING, idCmd, strNone);
     }
 
     return idCmd - idCmdFirst;
@@ -324,9 +256,9 @@ CSendToMenu::SENDTO_ITEM *CSendToMenu::FindItemFromIdOffset(UINT IdOffset)
     MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_DATA;
     if (GetMenuItemInfoW(m_hSubMenu, idCmd, FALSE, &mii))
-        return (SENDTO_ITEM *)mii.dwItemData;
+        return reinterpret_cast<SENDTO_ITEM *>(mii.dwItemData);
 
-    ERR("GetMenuItemInfoW\n");
+    ERR("GetMenuItemInfoW: %ld\n", GetLastError());
     return NULL;
 }
 
@@ -340,33 +272,16 @@ HRESULT CSendToMenu::DoSendToItem(SENDTO_ITEM *pItem, LPCMINVOKECOMMANDINFO lpic
 
     HRESULT hr;
     CComPtr<IDropTarget> pDropTarget;
-    LPITEMIDLIST pidlChild = pItem->pidlChild;
-    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pidlChild, IID_IDropTarget,
+    hr = m_pSendTo->GetUIObjectOf(NULL, 1, &pItem->pidlChild, IID_IDropTarget,
                                   NULL, (LPVOID *)&pDropTarget);
-    if (SUCCEEDED(hr))
-    {
-        hr = DoDrop(m_pDataObject, pDropTarget);
-    }
-    else
-    {
-        ERR("GetUIObjectOf: %08lX\n", hr);
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = DoDrop(m_pDataObject, pDropTarget);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
-}
-
-STDMETHODIMP CSendToMenu::SetSite(IUnknown *pUnkSite)
-{
-    m_pSite = pUnkSite;
-    return S_OK;
-}
-
-STDMETHODIMP CSendToMenu::GetSite(REFIID riid, void **ppvSite)
-{
-    if (!m_pSite)
-        return E_FAIL;
-
-    return m_pSite->QueryInterface(riid, ppvSite);
 }
 
 STDMETHODIMP
@@ -379,36 +294,28 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    WCHAR wszSendTo[64];
-    if (!LoadStringW(shell32_hInstance, IDS_SENDTO,
-                     wszSendTo, _countof(wszSendTo)))
-    {
-        ERR("IDS_SENDTO\n");
-        return E_FAIL;
-    }
-
     HMENU hSubMenu = CreateMenu();
     if (!hSubMenu)
     {
-        ERR("CreateMenu\n");
+        ERR("CreateMenu: %ld\n", GetLastError());
         return E_FAIL;
     }
 
     UINT cItems = InsertSendToItems(hSubMenu, idCmdFirst, 0);
 
-    MENUITEMINFOW mii;
-    ZeroMemory(&mii, sizeof(mii));
-    mii.cbSize = sizeof(mii);
+    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO));
+
+    MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
     mii.fType = MFT_STRING;
     mii.wID = -1;
-    mii.dwTypeData = wszSendTo;
+    mii.dwTypeData = strSendTo.GetBuffer();
     mii.cch = wcslen(mii.dwTypeData);
     mii.fState = MFS_ENABLED;
     mii.hSubMenu = hSubMenu;
     if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
-        ERR("InsertMenuItemW\n");
+        ERR("InsertMenuItemW: %ld\n", GetLastError());
         return E_FAIL;
     }
 
@@ -431,10 +338,6 @@ CSendToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     if (pItem)
     {
         hr = DoSendToItem(pItem, lpici);
-    }
-    else
-    {
-        ERR("FindItemFromIdOffset\n");
     }
 
     TRACE("CSendToMenu::InvokeCommand %x\n", hr);
@@ -491,17 +394,19 @@ CSendToMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam,
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            SENDTO_ITEM *pItem = (SENDTO_ITEM *)lpdis->itemData;
+            SENDTO_ITEM *pItem = reinterpret_cast<SENDTO_ITEM *>(lpdis->itemData);
             HICON hIcon = NULL;
             if (pItem)
                 hIcon = pItem->hIcon;
             if (!hIcon)
                 break;
 
-            RECT rcItem = lpdis->rcItem;
-            DrawIconEx(lpdis->hDC, 2,
-                       lpdis->rcItem.top + (rcItem.bottom - rcItem.top - 16) / 2,
-                       hIcon, cxSmall, cySmall, 0, NULL, DI_NORMAL);
+            const RECT& rcItem = lpdis->rcItem;
+            INT x = 4;
+            INT y = lpdis->rcItem.top;
+            y += (rcItem.bottom - rcItem.top - cySmall) / 2;
+            DrawIconEx(lpdis->hDC, x, y, hIcon, cxSmall, cySmall,
+                       0, NULL, DI_NORMAL);
 
             if (plResult)
                 *plResult = TRUE;
