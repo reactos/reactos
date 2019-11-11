@@ -880,7 +880,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Složka"
@@ -917,6 +916,7 @@ BEGIN
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"
     IDS_PRINT_VERB "Tisknout"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u souborů, %u složek"
     IDS_PRINTERS "Tiskárny"

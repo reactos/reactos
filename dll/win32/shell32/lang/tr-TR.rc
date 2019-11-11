@@ -876,7 +876,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dizin"
@@ -913,6 +912,7 @@ BEGIN
     IDS_EDIT_VERB "Düzenle"
     IDS_FIND_VERB "Bul"
     IDS_PRINT_VERB "Yazdır"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Kütük, %u Dizin"
     IDS_PRINTERS "Yazıcılar"

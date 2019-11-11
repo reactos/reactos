@@ -876,7 +876,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Eșec la inspecția proprietăților (Cod de eroare: %lu)."
     IDS_CANTDISCONNECT "Eșec la deconectare (Cod de eroare: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosar"
@@ -913,6 +912,7 @@ BEGIN
     IDS_EDIT_VERB "Editează"
     IDS_FIND_VERB "Caută"
     IDS_PRINT_VERB "Imprimă"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fișiere, %u dosare"
     IDS_PRINTERS "Imprimante"

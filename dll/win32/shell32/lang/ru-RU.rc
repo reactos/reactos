@@ -881,7 +881,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Не удалось вывести свойства (код ошибки: %lu)."
     IDS_CANTDISCONNECT "Не удалось отсоединить сетевой диск (код ошибки: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка с файлами"
@@ -918,6 +917,7 @@ BEGIN
     IDS_EDIT_VERB "Изменить"
     IDS_FIND_VERB "Поиск"
     IDS_PRINT_VERB "Печать"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u файлов, %u папок"
     IDS_PRINTERS "Принтеры"

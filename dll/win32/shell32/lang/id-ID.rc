@@ -874,7 +874,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Tidak bisa menampilkan properti (Error Code: %lu)."
     IDS_CANTDISCONNECT "Tidak bisa memutuskan (Error Code: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -911,6 +910,7 @@ BEGIN
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Cari"
     IDS_PRINT_VERB "Cetak"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Berkas, %u Folder"
     IDS_PRINTERS "Printer"

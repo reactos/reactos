@@ -871,7 +871,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "プロパティを表示できませんでした (エラーコード: %lu)."
     IDS_CANTDISCONNECT "接続を切れませんでした (エラーコード: %lu)."
     IDS_NONE "(なし)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "フォルダ"
@@ -908,6 +907,7 @@ BEGIN
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"
     IDS_PRINT_VERB "印刷"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
     IDS_PRINTERS "プリンタ"

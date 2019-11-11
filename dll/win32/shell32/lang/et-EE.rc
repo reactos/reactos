@@ -881,7 +881,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"
@@ -918,6 +917,7 @@ BEGIN
     IDS_EDIT_VERB "Muuda"
     IDS_FIND_VERB "Leia"
     IDS_PRINT_VERB "Prindi"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Faili, %u Kausta"
     IDS_PRINTERS "Printerid"

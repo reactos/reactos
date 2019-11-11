@@ -869,7 +869,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "गुण दिखाने में असमर्थ (एरर कोड: %lu)."
     IDS_CANTDISCONNECT "डिस्कनेक्ट करने में असमर्थ (एरर कोड: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "फोल्डर"
@@ -906,6 +905,7 @@ BEGIN
     IDS_EDIT_VERB "संपादित करें"
     IDS_FIND_VERB "ढूंढे"
     IDS_PRINT_VERB "प्रिंट"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u फ़ाइलें, %u फ़ोल्डर"
     IDS_PRINTERS "प्रिंटर"

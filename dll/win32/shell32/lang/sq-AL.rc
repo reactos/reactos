@@ -878,7 +878,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosje"
@@ -915,6 +914,7 @@ BEGIN
     IDS_EDIT_VERB "Modifiko"
     IDS_FIND_VERB "Gjej"
     IDS_PRINT_VERB "Printo"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Dokumenta, %u Dosje"
     IDS_PRINTERS "Printera"

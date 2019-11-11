@@ -874,7 +874,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mappe"
@@ -911,6 +910,7 @@ BEGIN
     IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Finn"
     IDS_PRINT_VERB "Skriv ut"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u filer, %u mapper"
     IDS_PRINTERS "Skrivere"

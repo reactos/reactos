@@ -875,7 +875,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Anzeigen der Eigenschaften nicht möglich (Fehlercode: %lu)."
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
@@ -912,6 +911,7 @@ BEGIN
     IDS_EDIT_VERB "Bearbeiten"
     IDS_FIND_VERB "Finden"
     IDS_PRINT_VERB "Drucken"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Dateien, %u Ordner"
     IDS_PRINTERS "Drucker"

@@ -141,7 +141,6 @@
 #define IDS_CANTSHOWPROPERTIES    159
 #define IDS_CANTDISCONNECT        160
 #define IDS_NONE                  161
-#define IDS_CMD_VERB              162
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
@@ -201,6 +200,7 @@
 #define IDS_EDIT_VERB    303
 #define IDS_FIND_VERB    304
 #define IDS_PRINT_VERB   305
+#define IDS_CMD_VERB     306
 
 #define IDS_FILE_FOLDER          308
 #define IDS_CREATELINK           309

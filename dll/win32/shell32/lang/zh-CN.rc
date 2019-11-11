@@ -884,7 +884,6 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
     IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
     IDS_NONE "(None)"
-    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
@@ -921,6 +920,7 @@ BEGIN
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 个文件，%u 个文件夹"
     IDS_PRINTERS "打印机"
