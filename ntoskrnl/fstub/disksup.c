@@ -277,7 +277,7 @@ HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
     }
 
     /* Check if that's a FT volume */
-    if (PartitionInfo.Mbr.PartitionType & PARTITION_NTFT)
+    if (IsFTPartition(PartitionInfo.Mbr.PartitionType))
     {
         *PartitionType = FtPartition;
         return STATUS_SUCCESS;
