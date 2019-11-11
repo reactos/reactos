@@ -106,6 +106,7 @@ private:
     HRESULT SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile);
     HICON CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex);
 
+    HRESULT DoOpen(LPCMINVOKECOMMANDINFO lpici);
     HRESULT DoOpenFileLocation();
 
 public:

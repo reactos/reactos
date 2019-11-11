@@ -2636,9 +2636,6 @@ HRESULT CShellLink::DoOpenFileLocation()
 
 HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
-    LPWSTR args = NULL;
-    LPWSTR path = NULL;
-
     TRACE("%p %p\n", this, lpici);
 
     if (lpici->cbSize < sizeof(CMINVOKECOMMANDINFO))
@@ -2661,14 +2658,19 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     switch (idCmd)
     {
     case IDCMD_OPEN:
-        break;
+        return DoOpen(lpici);
     case IDCMD_OPENFILELOCATION:
         return DoOpenFileLocation();
     default:
         return E_NOTIMPL;
     }
+}
 
-    path = strdupW(m_sPath);
+HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
+{
+    HRESULT hr;
+    LPWSTR args = NULL;
+    LPWSTR path = strdupW(m_sPath);
 
     if ( lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX) &&
         (lpici->fMask & CMIC_MASK_UNICODE) )
