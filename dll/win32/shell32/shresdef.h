@@ -141,6 +141,7 @@
 #define IDS_CANTSHOWPROPERTIES    159
 #define IDS_CANTDISCONNECT        160
 #define IDS_NONE                  161
+#define IDS_CMD_VERB              162
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200

@@ -879,6 +879,7 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Nie można pokazać właściwości (kod błędu: %lu)."
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
     IDS_NONE "(None)"
+    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Katalog"

@@ -874,6 +874,7 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Не вдалось відкрити властивості (код помилки: %lu)."
     IDS_CANTDISCONNECT "Не вдалось відключити (код помилки: %lu)."
     IDS_NONE "(None)"
+    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка"

@@ -876,6 +876,7 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Eșec la inspecția proprietăților (Cod de eroare: %lu)."
     IDS_CANTDISCONNECT "Eșec la deconectare (Cod de eroare: %lu)."
     IDS_NONE "(None)"
+    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosar"

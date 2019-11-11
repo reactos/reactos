@@ -26,6 +26,15 @@ HKCR,"Folder\shell\explore","BrowserFlags",0x00010001,"0x00000022"
 HKCR,"Folder\shell\explore","ExplorerFlags",0x00010001,"0x00000021"
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 
+; Directory
+HKCR,"Directory","",0x00000000,"File Folder"
+;HKCR,"Directory\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
+HKCR,"Directory","AlwaysShowExt",0x00000000,""
+HKCR,"Directory","NoRecentDocs",0x00000000,""
+HKCR,"Directory\shell\cmd","",0x00020000,"@%SystemRoot%\system32\shell32.dll,-162"
+HKCR,"Directory\shell\cmd","Extended",0x00000000,""
+HKCR,"Directory\shell\cmd\command","",0x00000000,"cmd /s /k cd ""%1"""
+
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
 HKCR,".clp","Content Type",0x00000000,"application/x-msclip"

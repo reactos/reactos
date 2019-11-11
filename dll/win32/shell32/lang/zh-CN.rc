@@ -884,6 +884,7 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
     IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
     IDS_NONE "(None)"
+    IDS_CMD_VERB "Command Prompt here"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
