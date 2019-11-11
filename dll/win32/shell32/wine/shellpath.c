@@ -2189,7 +2189,7 @@ CreateShellLink(
     return hr;
 }
 
-BOOL DoCreateSendToFiles(LPCWSTR pszSendTo)
+HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH];
     WCHAR szSendToFile[MAX_PATH];
@@ -2201,9 +2201,14 @@ BOOL DoCreateSendToFiles(LPCWSTR pszSendTo)
     PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
     lstrcatW(szSendToFile, L".lnk");
 
-    hr = CreateShellLink(szSendToFile, szTarget,
-                         NULL, NULL, NULL, -1, NULL);
-    return SUCCEEDED(hr);
+    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL, -1, NULL);
+    if (FAILED(hr))
+    {
+        ERR("CreateShellLink: %x\n", hr);
+        return hr;
+    }
+
+    return hr;
 }
 
 /*************************************************************************
