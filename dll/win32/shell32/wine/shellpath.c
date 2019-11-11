@@ -2159,38 +2159,37 @@ CreateShellLink(
     IPersistFile *ppf;
 
     HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = IShellLinkW_SetPath(psl, pszCmd);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        IShellLinkW_Release(psl);
+        return hr;
+    }
+
+    if (pszArg)
+        hr = IShellLinkW_SetArguments(psl, pszArg);
+
+    if (pszDir)
+        hr = IShellLinkW_SetWorkingDirectory(psl, pszDir);
+
+    if (pszIconPath)
+        hr = IShellLinkW_SetIconLocation(psl, pszIconPath, iIconNr);
+
+    if (pszComment)
+        hr = IShellLinkW_SetDescription(psl, pszComment);
+
+    hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
 
     if (SUCCEEDED(hr))
     {
-        hr = IShellLinkW_SetPath(psl, pszCmd);
-        if (FAILED_UNEXPECTEDLY(hr))
-        {
-            IShellLinkW_Release(psl);
-            return hr;
-        }
-
-        if (pszArg)
-            hr = IShellLinkW_SetArguments(psl, pszArg);
-
-        if (pszDir)
-            hr = IShellLinkW_SetWorkingDirectory(psl, pszDir);
-
-        if (pszIconPath)
-            hr = IShellLinkW_SetIconLocation(psl, pszIconPath, iIconNr);
-
-        if (pszComment)
-            hr = IShellLinkW_SetDescription(psl, pszComment);
-
-        hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
-
-        if (SUCCEEDED(hr))
-        {
-            hr = IPersistFile_Save(ppf, pszLinkPath, TRUE);
-            IPersistFile_Release(ppf);
-        }
-
-        IShellLinkW_Release(psl);
+        hr = IPersistFile_Save(ppf, pszLinkPath, TRUE);
+        IPersistFile_Release(ppf);
     }
+
+    IShellLinkW_Release(psl);
 
     return hr;
 }
