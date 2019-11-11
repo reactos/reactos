@@ -563,11 +563,16 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         mii.dwTypeData = pEntry->szVerb;
 
         WCHAR wszKey[256];
-        StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
+        HRESULT hr;
+        hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            pEntry = pEntry->pNext;
+            continue;
+        }
 
         BOOL Extended = FALSE;
         HKEY hkVerb;
-        LONG res;
         if (idResource > 0)
         {
             if (LoadStringW(shell32_hInstance, idResource, wszVerb, _countof(wszVerb)))
@@ -575,7 +580,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             else
                 ERR("Failed to load string\n");
 
-            res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
             if (res == ERROR_SUCCESS)
             {
                 res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
@@ -586,7 +591,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         }
         else
         {
-            res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
             if (res == ERROR_SUCCESS)
             {
                 DWORD cbVerb = sizeof(wszVerb);
