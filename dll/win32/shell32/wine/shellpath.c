@@ -2197,9 +2197,9 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_PERSONAL, TRUE);
 
-    lstrcpyW(szSendToFile, pszSendTo);
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
     PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
-    lstrcatW(szSendToFile, L".lnk");
+    StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
 
     hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL, -1, NULL);
     if (FAILED(hr))
