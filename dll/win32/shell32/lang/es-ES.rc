@@ -777,6 +777,7 @@ BEGIN
     IDS_PASTE "Insertar"
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"

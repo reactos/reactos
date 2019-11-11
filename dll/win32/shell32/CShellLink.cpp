@@ -278,9 +278,9 @@ CShellLink::CShellLink()
     m_pDBList = NULL;
     m_bInInit = FALSE;
     m_hIcon = NULL;
+    m_idCmdFirst = 0;
 
     m_sLinkPath = NULL;
-    m_iIdOpen = -1;
 
     /**/sProduct = sComponent = NULL;/**/
 }
@@ -2578,7 +2578,9 @@ HRESULT STDMETHODCALLTYPE CShellLink::Initialize(PCIDLIST_ABSOLUTE pidlFolder, I
 
 HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
-    int id = 1;
+    INT id = 0;
+
+    m_idCmdFirst = idCmdFirst;
 
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
@@ -2586,24 +2588,50 @@ HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMe
     if (!hMenu)
         return E_INVALIDARG;
 
-    WCHAR wszOpen[20];
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_VERB, wszOpen, _countof(wszOpen)))
-        *wszOpen = L'\0';
+    CStringW strOpen(MAKEINTRESOURCEW(IDS_OPEN_VERB));
+    CStringW strOpenFileLoc(MAKEINTRESOURCEW(IDS_OPENFILELOCATION));
 
     MENUITEMINFOW mii;
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-    mii.dwTypeData = wszOpen;
+    mii.dwTypeData = strOpen.GetBuffer();
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdFirst + id++;
     mii.fState = MFS_DEFAULT | MFS_ENABLED;
     mii.fType = MFT_STRING;
-    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
+    if (!InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii))
         return E_FAIL;
-    m_iIdOpen = 1;
+
+    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+    mii.dwTypeData = strOpenFileLoc.GetBuffer();
+    mii.cch = wcslen(mii.dwTypeData);
+    mii.wID = idCmdFirst + id++;
+    mii.fState = MFS_ENABLED;
+    mii.fType = MFT_STRING;
+    if (!InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii))
+        return E_FAIL;
+
+    UNREFERENCED_PARAMETER(indexMenu);
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, id);
+}
+
+HRESULT CShellLink::DoOpenFileLocation()
+{
+    WCHAR szParams[MAX_PATH + 64];
+    StringCbPrintfW(szParams, sizeof(szParams), L"/select,%s", m_sPath);
+
+    INT_PTR ret;
+    ret = reinterpret_cast<INT_PTR>(ShellExecuteW(NULL, NULL, L"explorer.exe", szParams,
+                                                  NULL, m_Header.nShowCommand));
+    if (ret <= 32)
+    {
+        ERR("ret: %08lX\n", ret);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
@@ -2625,6 +2653,19 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
         TRACE("failed to resolve component with error 0x%08x", hr);
         return hr;
+    }
+
+    UINT idCmd = LOWORD(lpici->lpVerb);
+    TRACE("idCmd: %d\n", idCmd);
+
+    switch (idCmd)
+    {
+    case IDCMD_OPEN:
+        break;
+    case IDCMD_OPENFILELOCATION:
+        return DoOpenFileLocation();
+    default:
+        return E_NOTIMPL;
     }
 
     path = strdupW(m_sPath);

@@ -769,6 +769,7 @@ BEGIN
     IDS_PASTE "Insérer"
     IDS_EJECT "Éjecter"
     IDS_DISCONNECT "Déconnecter"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le dossier '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossible de créer un dossier"
