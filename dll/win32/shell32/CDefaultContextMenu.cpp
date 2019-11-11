@@ -551,8 +551,8 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             idResource = IDS_FIND_VERB;
         else if (!wcsicmp(pEntry->szVerb, L"print"))
             idResource = IDS_PRINT_VERB;
-        else if (!wcsicmp(pEntry->szVerb, L"cmd"))
-            idResource = IDS_CMD_VERB;
+        //else if (!wcsicmp(pEntry->szVerb, L"cmd"))
+        //    idResource = IDS_CMD_VERB;
         else if (!wcsicmp(pEntry->szVerb, L"printto"))
         {
             pEntry = pEntry->pNext;
@@ -592,13 +592,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             if (res == ERROR_SUCCESS)
             {
                 DWORD cbVerb = sizeof(wszVerb);
-                res = RegLoadMUIStringW(hkVerb,
-                                        NULL,
-                                        wszVerb,
-                                        cbVerb,
-                                        NULL,
-                                        0,
-                                        NULL);
+                res = RegLoadMUIStringW(hkVerb, NULL, wszVerb, cbVerb, NULL, 0, NULL);
                 if (res == ERROR_SUCCESS)
                 {
                     /* use description for the menu entry */
