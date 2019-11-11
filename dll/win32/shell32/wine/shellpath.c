@@ -42,6 +42,7 @@
 #include <wine/unicode.h>
 
 #include <shlwapi_undoc.h>
+#include <shellutils.h>
 
 #include <userenv.h>
 
@@ -2148,11 +2149,11 @@ static HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,
     LPCWSTR pszCmd,
-    LPCWSTR pszArg,
-    LPCWSTR pszDir,
-    LPCWSTR pszIconPath,
-    INT iIconNr,
-    LPCWSTR pszComment)
+    LPCWSTR pszArg OPTIONAL,
+    LPCWSTR pszDir OPTIONAL,
+    LPCWSTR pszIconPath OPTIONAL,
+    INT iIconNr OPTIONAL,
+    LPCWSTR pszComment OPTIONAL)
 {
     IShellLinkW *psl;
     IPersistFile *ppf;
@@ -2162,6 +2163,11 @@ CreateShellLink(
     if (SUCCEEDED(hr))
     {
         hr = IShellLinkW_SetPath(psl, pszCmd);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            IShellLinkW_Release(psl);
+            return hr;
+        }
 
         if (pszArg)
             hr = IShellLinkW_SetArguments(psl, pszArg);
