@@ -2200,18 +2200,15 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     WCHAR szSendToFile[MAX_PATH];
     HRESULT hr;
 
-    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_PERSONAL, TRUE);
+    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
 
     StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
     PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
     StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
 
     hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL, -1, NULL);
-    if (FAILED(hr))
-    {
-        ERR("CreateShellLink: %x\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     return hr;
 }
