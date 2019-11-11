@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018 Katayama Hirofumi MZ
+ * Copyright 2018-2019 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2144,6 +2144,68 @@ cleanup:
     return hr;
 }
 
+static HRESULT
+CreateShellLink(
+    LPCWSTR pszLinkPath,
+    LPCWSTR pszCmd,
+    LPCWSTR pszArg,
+    LPCWSTR pszDir,
+    LPCWSTR pszIconPath,
+    INT iIconNr,
+    LPCWSTR pszComment)
+{
+    IShellLinkW *psl;
+    IPersistFile *ppf;
+
+    HRESULT hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = IShellLinkW_SetPath(psl, pszCmd);
+
+        if (pszArg)
+            hr = IShellLinkW_SetArguments(psl, pszArg);
+
+        if (pszDir)
+            hr = IShellLinkW_SetWorkingDirectory(psl, pszDir);
+
+        if (pszIconPath)
+            hr = IShellLinkW_SetIconLocation(psl, pszIconPath, iIconNr);
+
+        if (pszComment)
+            hr = IShellLinkW_SetDescription(psl, pszComment);
+
+        hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IPersistFile_Save(ppf, pszLinkPath, TRUE);
+            IPersistFile_Release(ppf);
+        }
+
+        IShellLinkW_Release(psl);
+    }
+
+    return hr;
+}
+
+BOOL DoCreateSendToFiles(LPCWSTR pszSendTo)
+{
+    WCHAR szTarget[MAX_PATH];
+    WCHAR szSendToFile[MAX_PATH];
+    HRESULT hr;
+
+    SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_PERSONAL, TRUE);
+
+    lstrcpyW(szSendToFile, pszSendTo);
+    PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
+    lstrcatW(szSendToFile, L".lnk");
+
+    hr = CreateShellLink(szSendToFile, szTarget,
+                         NULL, NULL, NULL, -1, NULL);
+    return SUCCEEDED(hr);
+}
+
 /*************************************************************************
  * SHGetFolderPathAndSubDirW		[SHELL32.@]
  */
@@ -2314,6 +2376,11 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     }
 
 end:
+    if (folder == CSIDL_SENDTO)
+    {
+        if (PathIsDirectoryEmptyW(szBuildPath))
+            DoCreateSendToFiles(szBuildPath);
+    }
     TRACE("returning 0x%08x (final path is %s)\n", hr, debugstr_w(szBuildPath));
     return hr;
 }
