@@ -770,6 +770,7 @@ BEGIN
     IDS_PASTE "Einfügen"
     IDS_EJECT "Auswerfen"
     IDS_DISCONNECT "Trennen"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
     IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."

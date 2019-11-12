@@ -777,6 +777,7 @@ BEGIN
     IDS_PASTE "贴上"
     IDS_EJECT "弹出"
     IDS_DISCONNECT "断开"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED "无法创建文件夹 '%1'"
     IDS_CREATEFOLDER_CAPTION "无法创建文件夹"

@@ -775,6 +775,7 @@ BEGIN
     IDS_PASTE "Vložit"
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"

@@ -769,6 +769,7 @@ BEGIN
     IDS_PASTE "Вставити"
     IDS_EJECT "Витягнути"
     IDS_DISCONNECT "Відключити"
+    IDS_OPENFILELOCATION "Open f&ile location"
 
     IDS_CREATEFOLDER_DENIED "Не вдалося створити папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Не вдалося створити папку"
