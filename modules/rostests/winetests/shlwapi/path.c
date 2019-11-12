@@ -1672,6 +1672,46 @@ static void test_PathStripPathA(void)
     PathStripPathA((char*)const_path);
 }
 
+static void test_PathUndecorate(void)
+{
+    static const struct {
+        const WCHAR *path;
+        const WCHAR *expect;
+    } tests[] = {
+        { L"c:\\test\\a[123]",          L"c:\\test\\a" },
+        { L"c:\\test\\a[123].txt",      L"c:\\test\\a.txt" },
+        { L"c:\\test\\a.txt[123]",      L"c:\\test\\a.txt[123]" },
+        { L"c:\\test\\a[123a].txt",     L"c:\\test\\a[123a].txt" },
+        { L"c:\\test\\a[a123].txt",     L"c:\\test\\a[a123].txt" },
+        { L"c:\\test\\a[12\x0660].txt", L"c:\\test\\a[12\x0660].txt" },
+        { L"c:\\test\\a[12]file",       L"c:\\test\\a[12]file" },
+        { L"c:\\test[123]\\a",          L"c:\\test[123]\\a" },
+        { L"c:\\test\\[123]",           L"c:\\test\\[123]" },
+        { L"a[123]",                    L"a" },
+        { L"a[]",                       L"a" },
+        { L"[123]",                     L"[123]" }
+    };
+    char bufa[MAX_PATH], expect[MAX_PATH];
+    WCHAR buf[MAX_PATH];
+    unsigned i;
+
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        wcscpy(buf, tests[i].path);
+        PathUndecorateW(buf);
+        ok(!wcscmp(buf, tests[i].expect), "PathUndecorateW returned %s, expected %s\n",
+           wine_dbgstr_w(buf), wine_dbgstr_w(tests[i].expect));
+
+        WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, tests[i].path, -1, bufa, ARRAY_SIZE(bufa), "?", NULL);
+        WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, tests[i].expect, -1, expect, ARRAY_SIZE(expect), "?", NULL);
+        PathUndecorateA(bufa);
+        ok(!strcmp(bufa, expect), "PathUndecorateA returned %s, expected %s\n", bufa, expect);
+    }
+
+    PathUndecorateA(NULL);
+    PathUndecorateW(NULL);
+}
+
 START_TEST(path)
 {
     HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
@@ -1718,4 +1758,5 @@ START_TEST(path)
     test_PathIsRelativeA();
     test_PathIsRelativeW();
     test_PathStripPathA();
+    test_PathUndecorate();
 }
