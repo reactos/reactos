@@ -2487,7 +2487,7 @@ BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax)
     if (!cchProgramMax)
         return FALSE;
 
-    StringCbCopyW(pszProgram, cchProgramMax, L"explorer.exe");
+    StringCchCopyW(pszProgram, cchProgramMax, L"explorer.exe");
 
     LONG err;
     HKEY hKey;
