@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt definition
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #pragma once
@@ -11,7 +12,8 @@ class CFontExt :
     public CComCoClass<CFontExt, &CLSID_CFontExt>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
 
@@ -51,6 +53,11 @@ public:
     // *** IPersist methods ***
     virtual STDMETHODIMP GetClassID(CLSID *lpClassId);
 
+    // *** IDropTarget methods ***
+    virtual STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    virtual STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    virtual STDMETHODIMP DragLeave();
+    virtual STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
 
 #if 0
     static HRESULT WINAPI log_stuff(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw)
@@ -79,6 +86,10 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         //COM_INTERFACE_ENTRY_FUNC_BLIND(0, log_stuff)
     END_COM_MAP()
+
+    HRESULT DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts);
+    HRESULT DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName);
 };

@@ -9,18 +9,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
-static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
-{
-    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
-}
-
-static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
-{
-    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
-}
-
 static CLIPFORMAT g_cfHIDA;
+
 HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
 {
     if (g_cfHIDA == NULL)

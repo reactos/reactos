@@ -27,6 +27,8 @@ extern LONG g_ModuleRefCnt;
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
 
+#define FONT_HIVE   HKEY_LOCAL_MACHINE
+#define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
 
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID* ppvOut);
 HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
@@ -34,6 +36,30 @@ HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY ap
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut);
 
+HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
 
+inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
+{
+    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
+}
+
+inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
+{
+    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
+}
+
+inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
+{
+    static const LPCWSTR array[] =
+    {
+        L".ttf", L".ttc", L".otf", L".otc", L".fon", L".fnt", NULL
+    };
+    for (const LPCWSTR *pp = array; *pp; ++pp)
+    {
+        if (!_wcsicmp(*pp, pchDotExt))
+            return TRUE;
+    }
+    return FALSE;
+}
 
 #endif /* FONTEXT_PRECOMP_H */

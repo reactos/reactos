@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -196,9 +197,10 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
 
     if (IsEqualIID(riid, IID_IDropTarget))
     {
-        // Needed to drop files into the fonts folder, we should probably install them?
         ERR("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
+        *ppvOut = static_cast<IDropTarget *>(this);
+        AddRef();
+        hr = S_OK;
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
@@ -363,3 +365,170 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
     return S_OK;
 }
 
+// *** IDropTarget methods ***
+STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    *pdwEffect = DROPEFFECT_NONE;
+
+    CComHeapPtr<CIDA> cida;
+    HRESULT hr = _GetCidlFromDataObject(pDataObj, &cida);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+#if 1   // Please implement DoGetFontTitle
+    return DRAGDROP_S_CANCEL;
+#else
+    *pdwEffect = DROPEFFECT_COPY;
+    return S_OK;
+#endif
+}
+
+STDMETHODIMP CFontExt::DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    return S_OK;
+}
+
+STDMETHODIMP CFontExt::DragLeave()
+{
+    return S_OK;
+}
+
+STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+    *pdwEffect = DROPEFFECT_NONE;
+
+    WCHAR szFontsDir[MAX_PATH];
+    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, szFontsDir);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_FAIL;
+
+    CComHeapPtr<CIDA> cida;
+    hr = _GetCidlFromDataObject(pDataObj, &cida);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
+    if (!pidlParent)
+    {
+        ERR("pidlParent is NULL\n");
+        return E_FAIL;
+    }
+
+    BOOL bOK = TRUE;
+    CAtlArray<CStringW> FontPaths;
+    for (UINT n = 0; n < cida->cidl; ++n)
+    {
+        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
+        if (!pidlRelative)
+            continue;
+
+        PIDLIST_ABSOLUTE pidl = ILCombine(pidlParent, pidlRelative);
+        if (!pidl)
+        {
+            ERR("ILCombine failed\n");
+            bOK = FALSE;
+            break;
+        }
+
+        WCHAR szPath[MAX_PATH];
+        BOOL ret = SHGetPathFromIDListW(pidl, szPath);
+        ILFree(pidl);
+
+        if (!ret)
+        {
+            ERR("SHGetPathFromIDListW failed\n");
+            bOK = FALSE;
+            break;
+        }
+
+        if (PathIsDirectoryW(szPath))
+        {
+            ERR("PathIsDirectory\n");
+            bOK = FALSE;
+            break;
+        }
+
+        LPCWSTR pchDotExt = PathFindExtensionW(szPath);
+        if (!IsFontDotExt(pchDotExt))
+        {
+            ERR("'%S' is not supported\n", pchDotExt);
+            bOK = FALSE;
+            break;
+        }
+
+        FontPaths.Add(szPath);
+    }
+
+    if (!bOK)
+        return E_FAIL;
+
+    CRegKey keyFonts;
+    if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
+    {
+        ERR("keyFonts.Open failed\n");
+        return E_FAIL;
+    }
+
+    for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
+    {
+        HRESULT hr = DoInstallFontFile(FontPaths[iItem], szFontsDir, keyFonts.m_hKey);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            bOK = FALSE;
+            break;
+        }
+    }
+
+    // TODO: update g_FontCache
+
+    SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+
+    // TODO: Show message
+
+    return bOK ? S_OK : E_FAIL;
+}
+
+HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts)
+{
+    WCHAR szDestFile[MAX_PATH];
+    LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
+
+    WCHAR szFontName[512];
+    if (!DoGetFontTitle(pszFontPath, szFontName))
+        return E_FAIL;
+
+    RemoveFontResourceW(pszFileTitle);
+
+    StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
+    PathAppendW(szDestFile, pszFileTitle);
+    if (!CopyFileW(pszFontPath, szDestFile, FALSE))
+    {
+        ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, szDestFile);
+        return E_FAIL;
+    }
+
+    if (!AddFontResourceW(pszFileTitle))
+    {
+        ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
+        DeleteFileW(szDestFile);
+        return E_FAIL;
+    }
+
+    DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
+    LONG nError = RegSetValueExW(hkeyFonts, szFontName, 0, REG_SZ, (const BYTE *)szFontName, cbData);
+    if (nError)
+    {
+        ERR("RegSetValueExW failed with %ld\n", nError);
+        RemoveFontResourceW(pszFileTitle);
+        DeleteFileW(szDestFile);
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+HRESULT CFontExt::DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName)
+{
+    // TODO:
+    return E_FAIL;
+}
