@@ -16,7 +16,8 @@ list(APPEND SOURCE
     CMenuSite.cpp
     CMenuToolbars.cpp
     CMergedFolder.cpp
-    CStartMenu.cpp)
+    CStartMenu.cpp
+    ShellProgram.cpp)
 
 add_library(shellmenu ${SOURCE})
 add_dependencies(shellmenu xdk psdk)
