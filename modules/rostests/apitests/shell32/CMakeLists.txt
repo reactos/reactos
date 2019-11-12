@@ -17,6 +17,7 @@ list(APPEND SOURCE
     CShellLink.cpp
     CUserNotification.cpp
     Control_RunDLLW.cpp
+    DragDrop.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathResolve.cpp
