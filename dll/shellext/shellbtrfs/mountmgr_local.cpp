@@ -48,7 +48,11 @@ void mountmgr::create_point(const wstring_view& symlink, const wstring_view& dev
     memcpy((uint8_t*)mcpi + mcpi->DeviceNameOffset, device.data(), device.length() * sizeof(WCHAR));
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_CREATE_POINT,
+#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), nullptr, 0);
+#else
+                                   &buf[0], (ULONG)buf.size(), nullptr, 0);
+#endif
 
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
@@ -103,13 +107,21 @@ void mountmgr::delete_points(const wstring_view& symlink, const wstring_view& un
 #endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_DELETE_POINTS,
+#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
+#else
+                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
+#endif
 
     if (Status == STATUS_BUFFER_OVERFLOW) {
         buf2.resize(mmps->Size);
 
         Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_DELETE_POINTS,
+#ifndef __REACTOS__
                                        buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
+#else
+                                       &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
+#endif
     }
 
     if (!NT_SUCCESS(Status))
@@ -166,7 +178,11 @@ vector<mountmgr_point> mountmgr::query_points(const wstring_view& symlink, const
 #endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
+#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
+#else
+                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
+#endif
 
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
         throw ntstatus_error(Status);
@@ -179,7 +195,11 @@ vector<mountmgr_point> mountmgr::query_points(const wstring_view& symlink, const
 #endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
+#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
+#else
+                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
+#endif
 
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
