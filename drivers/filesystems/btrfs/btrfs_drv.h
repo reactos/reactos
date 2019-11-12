@@ -1588,6 +1588,7 @@ void __stdcall check_system_root(PDRIVER_OBJECT DriverObject, PVOID Context, ULO
 // based on function in sys/sysmacros.h
 #define makedev(major, minor) (((minor) & 0xFF) | (((major) & 0xFFF) << 8) | (((uint64_t)((minor) & ~0xFF)) << 12) | (((uint64_t)((major) & ~0xFFF)) << 32))
 
+#ifndef __REACTOS__
 // not in mingw yet
 #ifndef _MSC_VER
 typedef struct {
@@ -1607,6 +1608,22 @@ typedef struct {
 
 #else
 #define FSRTL_ADVANCED_FCB_HEADER_NEW FSRTL_ADVANCED_FCB_HEADER
+#endif
+#else
+typedef struct {
+    FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+    PFAST_MUTEX FastMutex;
+    LIST_ENTRY FilterContexts;
+    EX_PUSH_LOCK PushLock;
+    PVOID* FileContextSupportPointer;
+    union {
+        OPLOCK Oplock;
+        PVOID ReservedForRemote;
+    };
+    PVOID ReservedContext;
+} FSRTL_ADVANCED_FCB_HEADER_NEW;
+
+#define FSRTL_FCB_HEADER_V2 2
 #endif
 
 static __inline POPLOCK fcb_oplock(fcb* fcb) {
