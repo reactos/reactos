@@ -386,11 +386,9 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_DEVID) == BST_CHECKED) {
-        int sel;
-
         opts->flags |= BTRFS_BALANCE_OPTS_DEVID;
 
-        sel = SendMessageW(GetDlgItem(hwndDlg, IDC_DEVID_COMBO), CB_GETCURSEL, 0, 0);
+        auto sel = SendMessageW(GetDlgItem(hwndDlg, IDC_DEVID_COMBO), CB_GETCURSEL, 0, 0);
 
         if (sel == CB_ERR)
             opts->flags &= ~BTRFS_BALANCE_OPTS_DEVID;
@@ -493,11 +491,9 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_CONVERT) == BST_CHECKED) {
-        int sel;
-
         opts->flags |= BTRFS_BALANCE_OPTS_CONVERT;
 
-        sel = SendMessageW(GetDlgItem(hwndDlg, IDC_CONVERT_COMBO), CB_GETCURSEL, 0, 0);
+        auto sel = SendMessageW(GetDlgItem(hwndDlg, IDC_CONVERT_COMBO), CB_GETCURSEL, 0, 0);
 
         if (sel == CB_ERR || (unsigned int)sel >= sizeof(convtypes2) / sizeof(convtypes2[0]))
             opts->flags &= ~BTRFS_BALANCE_OPTS_CONVERT;

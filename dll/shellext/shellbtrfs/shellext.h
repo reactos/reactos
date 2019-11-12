@@ -44,6 +44,10 @@
 #include <ndk/obfuncs.h>
 #endif
 #include <string>
+#ifdef __REACTOS__
+#define string_view string
+#define wstring_view wstring
+#endif
 #include <vector>
 #include <stdint.h>
 #ifndef __REACTOS__
@@ -105,35 +109,54 @@ NTSYSCALLAPI NTSTATUS NTAPI NtFsControlFile(HANDLE FileHandle, HANDLE Event, PIO
 
 NTSTATUS NTAPI NtReadFile(HANDLE FileHandle, HANDLE Event, PIO_APC_ROUTINE ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer,
                           ULONG Length, PLARGE_INTEGER ByteOffset, PULONG Key);
-#endif
 
-NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR UnicodeStringDestination, ULONG UnicodeStringMaxWCharCount,
-                                  PULONG UnicodeStringActualWCharCount, PCCH UTF8StringSource,
-                                  ULONG UTF8StringByteCount);
-
-NTSTATUS NTAPI RtlUnicodeToUTF8N(PCHAR UTF8StringDestination, ULONG UTF8StringMaxByteCount,
-                                  PULONG UTF8StringActualByteCount, PCWCH UnicodeStringSource,
-                                  ULONG UnicodeStringByteCount);
-
-#ifndef __REACTOS__
 NTSTATUS WINAPI NtSetEaFile(HANDLE FileHandle, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length);
 
 NTSTATUS WINAPI NtSetSecurityObject(HANDLE Handle, SECURITY_INFORMATION SecurityInformation, PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTSTATUS NTAPI NtQueryInformationFile(HANDLE hFile, PIO_STATUS_BLOCK io, PVOID ptr, ULONG len, FILE_INFORMATION_CLASS FileInformationClass);
+
+NTSTATUS NTAPI NtSetInformationFile(HANDLE hFile, PIO_STATUS_BLOCK io, PVOID ptr, ULONG len, FILE_INFORMATION_CLASS FileInformationClass);
+
+#ifdef _MSC_VER
+#define FileBasicInformation (FILE_INFORMATION_CLASS)4
+#define FileStandardInformation (FILE_INFORMATION_CLASS)5
+#define FileDispositionInformation (FILE_INFORMATION_CLASS)13
+#define FileEndOfFileInformation (FILE_INFORMATION_CLASS)20
+#define FileStreamInformation (FILE_INFORMATION_CLASS)22
+
+typedef enum _FSINFOCLASS {
+    FileFsVolumeInformation = 1,
+    FileFsLabelInformation,
+    FileFsSizeInformation,
+    FileFsDeviceInformation,
+    FileFsAttributeInformation,
+    FileFsControlInformation,
+    FileFsFullSizeInformation,
+    FileFsObjectIdInformation,
+    FileFsDriverPathInformation,
+    FileFsVolumeFlagsInformation,
+    FileFsSectorSizeInformation,
+    FileFsDataCopyInformation,
+    FileFsMetadataSizeInformation,
+    FileFsFullSizeInformationEx,
+    FileFsMaximumInformation
+} FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
+
+typedef struct _FILE_STREAM_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG StreamNameLength;
+    LARGE_INTEGER StreamSize;
+    LARGE_INTEGER StreamAllocationSize;
+    WCHAR StreamName[1];
+} FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
+#endif
+
+NTSTATUS NTAPI NtQueryVolumeInformationFile(HANDLE FileHandle, PIO_STATUS_BLOCK IoStatusBlock, PVOID FsInformation, ULONG Length,
+                                            FS_INFORMATION_CLASS FsInformationClass);
+#endif
 #ifdef __cplusplus
 }
-#endif
-#else
-BOOL
-WINAPI
-SetFileInformationByHandle(HANDLE hFile, FILE_INFO_BY_HANDLE_CLASS FileInformationClass, LPVOID lpFileInformation, DWORD dwBufferSize);
-BOOL
-WINAPI
-GetFileInformationByHandleEx(HANDLE hFile, FILE_INFO_BY_HANDLE_CLASS FileInformationClass, LPVOID lpFileInformation, DWORD dwBufferSize);
-#ifdef __cplusplus
-}
-#endif
 #endif
 
 #ifndef __REACTOS__
@@ -358,6 +381,8 @@ public:
         return msg.c_str();
     }
 
+    NTSTATUS Status;
+
 private:
     string msg;
 };
@@ -376,7 +401,6 @@ wstring format_message(ULONG last_error);
 wstring format_ntstatus(NTSTATUS Status);
 bool load_string(HMODULE module, UINT id, wstring& s);
 void wstring_sprintf(wstring& s, wstring fmt, ...);
-void command_line_to_args(LPWSTR cmdline, vector<wstring> args);
-void utf8_to_utf16(const string& utf8, wstring& utf16);
-void utf16_to_utf8(const wstring& utf16, string& utf8);
+void command_line_to_args(LPWSTR cmdline, vector<wstring>& args);
+wstring utf8_to_utf16(const string_view& utf8);
 void error_message(HWND hwnd, const char* msg);

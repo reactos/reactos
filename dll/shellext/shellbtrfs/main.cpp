@@ -298,7 +298,7 @@ static void write_reg_key(HKEY root, const wstring& keyname, const WCHAR* val, c
     if (l != ERROR_SUCCESS)
         throw string_error(IDS_REGCREATEKEY_FAILED, l);
 
-    l = RegSetValueExW(hk, val, 0, REG_SZ, (const BYTE*)data.c_str(), (data.length() + 1) * sizeof(WCHAR));
+    l = RegSetValueExW(hk, val, 0, REG_SZ, (const BYTE*)data.c_str(), (DWORD)((data.length() + 1) * sizeof(WCHAR)));
     if (l != ERROR_SUCCESS)
         throw string_error(IDS_REGSETVALUEEX_FAILED, l);
 
@@ -340,20 +340,71 @@ static void register_clsid(const GUID clsid, const WCHAR* description) {
     CoTaskMemFree(clsidstring);
 }
 
+// implementation of RegDeleteTreeW, only available from Vista on
+static void reg_delete_tree(HKEY hkey, const wstring& keyname) {
+    HKEY k;
+    LSTATUS ret;
+
+    ret = RegOpenKeyExW(hkey, keyname.c_str(), 0, KEY_READ, &k);
+
+    if (ret != ERROR_SUCCESS)
+        throw last_error(ret);
+
+    try {
+        WCHAR* buf;
+        ULONG bufsize;
+
+        ret = RegQueryInfoKeyW(k, nullptr, nullptr, nullptr, nullptr, &bufsize, nullptr,
+                               nullptr, nullptr, nullptr, nullptr, nullptr);
+        if (ret != ERROR_SUCCESS)
+            throw last_error(ret);
+
+        bufsize++;
+        buf = new WCHAR[bufsize];
+
+        try {
+            do {
+                ULONG size = bufsize;
+
+                ret = RegEnumKeyExW(k, 0, buf, &size, nullptr, nullptr, nullptr, nullptr);
+
+                if (ret == ERROR_NO_MORE_ITEMS)
+                    break;
+                else if (ret != ERROR_SUCCESS)
+                    throw last_error(ret);
+
+                reg_delete_tree(k, buf);
+            } while (true);
+
+            ret = RegDeleteKeyW(hkey, keyname.c_str());
+            if (ret != ERROR_SUCCESS)
+                throw last_error(ret);
+        } catch (...) {
+            delete[] buf;
+            throw;
+        }
+
+        delete[] buf;
+    } catch (...) {
+        RegCloseKey(k);
+        throw;
+    }
+
+    RegCloseKey(k);
+}
+
 static void unregister_clsid(const GUID clsid) {
     WCHAR* clsidstring;
 
     StringFromCLSID(clsid, &clsidstring);
 
     try {
-        WCHAR clsidkeyname[MAX_PATH];
-
-        wsprintfW(clsidkeyname, L"CLSID\\%s", clsidstring);
-
-        LONG l = RegDeleteTreeW(HKEY_CLASSES_ROOT, clsidkeyname);
-
-        if (l != ERROR_SUCCESS)
-            throw string_error(IDS_REGDELETETREE_FAILED, l);
+#ifndef __REACTOS__
+        reg_delete_tree(HKEY_CLASSES_ROOT, L"CLSID\\"s + clsidstring);
+#else
+        wstring path = wstring(L"CLSID\\") + clsidstring;
+        reg_delete_tree(HKEY_CLASSES_ROOT, path);
+#endif
     } catch (...) {
         CoTaskMemFree(clsidstring);
         throw;
@@ -385,15 +436,11 @@ static void reg_icon_overlay(const GUID clsid, const wstring& name) {
 
 static void unreg_icon_overlay(const wstring& name) {
 #ifndef __REACTOS__
-    wstring path = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers\\"s + name;
+    reg_delete_tree(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers\\"s + name);
 #else
     wstring path = wstring(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers\\") + name;
+    reg_delete_tree(HKEY_LOCAL_MACHINE, path);
 #endif
-
-    LONG l = RegDeleteTreeW(HKEY_LOCAL_MACHINE, path.c_str());
-
-    if (l != ERROR_SUCCESS)
-        throw string_error(IDS_REGDELETETREE_FAILED, l);
 }
 
 static void reg_context_menu_handler(const GUID clsid, const wstring& filetype, const wstring& name) {
@@ -417,15 +464,11 @@ static void reg_context_menu_handler(const GUID clsid, const wstring& filetype, 
 
 static void unreg_context_menu_handler(const wstring& filetype, const wstring& name) {
 #ifndef __REACTOS__
-    wstring path = filetype + L"\\ShellEx\\ContextMenuHandlers\\"s + name;
+    reg_delete_tree(HKEY_CLASSES_ROOT, filetype + L"\\ShellEx\\ContextMenuHandlers\\"s + name);
 #else
     wstring path = filetype + wstring(L"\\ShellEx\\ContextMenuHandlers\\") + name;
+    reg_delete_tree(HKEY_CLASSES_ROOT, path);
 #endif
-
-    LONG l = RegDeleteTreeW(HKEY_CLASSES_ROOT, path.c_str());
-
-    if (l != ERROR_SUCCESS)
-        throw string_error(IDS_REGDELETETREE_FAILED, l);
 }
 
 static void reg_prop_sheet_handler(const GUID clsid, const wstring& filetype, const wstring& name) {
@@ -449,15 +492,11 @@ static void reg_prop_sheet_handler(const GUID clsid, const wstring& filetype, co
 
 static void unreg_prop_sheet_handler(const wstring& filetype, const wstring& name) {
 #ifndef __REACTOS__
-    wstring path = filetype + L"\\ShellEx\\PropertySheetHandlers\\"s + name;
+    reg_delete_tree(HKEY_CLASSES_ROOT, filetype + L"\\ShellEx\\PropertySheetHandlers\\"s + name);
 #else
     wstring path = filetype + wstring(L"\\ShellEx\\PropertySheetHandlers\\") + name;
+    reg_delete_tree(HKEY_CLASSES_ROOT, path);
 #endif
-
-    LONG l = RegDeleteTreeW(HKEY_CLASSES_ROOT, path.c_str());
-
-    if (l != ERROR_SUCCESS)
-        throw string_error(IDS_REGDELETETREE_FAILED, l);
 }
 
 extern "C" STDAPI DllRegisterServer(void) {
@@ -522,7 +561,6 @@ static void create_subvol(const wstring& fn) {
     size_t found = fn.rfind(L"\\");
     wstring path, file;
     win_handle h;
-    ULONG bcslen;
     btrfs_create_subvol* bcs;
     IO_STATUS_BLOCK iosb;
 
@@ -540,7 +578,7 @@ static void create_subvol(const wstring& fn) {
     if (h == INVALID_HANDLE_VALUE)
         return;
 
-    bcslen = offsetof(btrfs_create_subvol, name[0]) + (file.length() * sizeof(WCHAR));
+    size_t bcslen = offsetof(btrfs_create_subvol, name[0]) + (file.length() * sizeof(WCHAR));
     bcs = (btrfs_create_subvol*)malloc(bcslen);
 
     bcs->readonly = false;
@@ -548,7 +586,7 @@ static void create_subvol(const wstring& fn) {
     bcs->namelen = (uint16_t)(file.length() * sizeof(WCHAR));
     memcpy(bcs->name, file.c_str(), bcs->namelen);
 
-    NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SUBVOL, bcs, bcslen, nullptr, 0);
+    NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SUBVOL, bcs, (ULONG)bcslen, nullptr, 0);
 }
 
 extern "C" void CALLBACK CreateSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
@@ -564,7 +602,6 @@ static void create_snapshot2(const wstring& source, const wstring& fn) {
     size_t found = fn.rfind(L"\\");
     wstring path, file;
     win_handle h, src;
-    ULONG bcslen;
     btrfs_create_snapshot* bcs;
     IO_STATUS_BLOCK iosb;
 
@@ -586,7 +623,7 @@ static void create_snapshot2(const wstring& source, const wstring& fn) {
     if (h == INVALID_HANDLE_VALUE)
         return;
 
-    bcslen = offsetof(btrfs_create_snapshot, name[0]) + (file.length() * sizeof(WCHAR));
+    size_t bcslen = offsetof(btrfs_create_snapshot, name[0]) + (file.length() * sizeof(WCHAR));
     bcs = (btrfs_create_snapshot*)malloc(bcslen);
 
     bcs->readonly = false;
@@ -595,7 +632,7 @@ static void create_snapshot2(const wstring& source, const wstring& fn) {
     memcpy(bcs->name, file.c_str(), bcs->namelen);
     bcs->subvol = src;
 
-    NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SNAPSHOT, bcs, bcslen, nullptr, 0);
+    NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_CREATE_SNAPSHOT, bcs, (ULONG)bcslen, nullptr, 0);
 }
 
 extern "C" void CALLBACK CreateSnapshotW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
@@ -607,7 +644,7 @@ extern "C" void CALLBACK CreateSnapshotW(HWND hwnd, HINSTANCE hinst, LPWSTR lpsz
         create_snapshot2(args[0], args[1]);
 }
 
-void command_line_to_args(LPWSTR cmdline, vector<wstring> args) {
+void command_line_to_args(LPWSTR cmdline, vector<wstring>& args) {
     LPWSTR* l;
     int num_args;
 
@@ -630,6 +667,38 @@ void command_line_to_args(LPWSTR cmdline, vector<wstring> args) {
     }
 
     LocalFree(l);
+}
+
+static string utf16_to_utf8(const wstring_view& utf16) {
+    string utf8;
+    char* buf;
+
+    if (utf16.empty())
+        return "";
+
+    auto utf8len = WideCharToMultiByte(CP_UTF8, 0, utf16.data(), static_cast<int>(utf16.length()), nullptr, 0, nullptr, nullptr);
+
+    if (utf8len == 0)
+        throw last_error(GetLastError());
+
+    buf = (char*)malloc(utf8len + sizeof(char));
+
+    if (!buf)
+        throw string_error(IDS_OUT_OF_MEMORY);
+
+    if (WideCharToMultiByte(CP_UTF8, 0, utf16.data(), static_cast<int>(utf16.length()), buf, utf8len, nullptr, nullptr) == 0) {
+        auto le = GetLastError();
+        free(buf);
+        throw last_error(le);
+    }
+
+    buf[utf8len] = 0;
+
+    utf8 = buf;
+
+    free(buf);
+
+    return utf8;
 }
 
 #ifdef _MSC_VER
@@ -657,65 +726,43 @@ string_error::string_error(int resno, ...) {
 
     va_end(args);
 
-    utf16_to_utf8(s, msg);
+    msg = utf16_to_utf8(s);
 }
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
-void utf8_to_utf16(const string& utf8, wstring& utf16) {
-    NTSTATUS Status;
-    ULONG utf16len;
+wstring utf8_to_utf16(const string_view& utf8) {
+    wstring ret;
     WCHAR* buf;
 
-    Status = RtlUTF8ToUnicodeN(nullptr, 0, &utf16len, utf8.c_str(), utf8.length());
-    if (!NT_SUCCESS(Status))
-        throw string_error(IDS_RECV_RTLUTF8TOUNICODEN_FAILED, Status, format_ntstatus(Status).c_str());
+    if (utf8.empty())
+        return L"";
 
-    buf = (WCHAR*)malloc(utf16len + sizeof(WCHAR));
+    auto utf16len = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.length(), nullptr, 0);
 
-    if (!buf)
-        throw string_error(IDS_OUT_OF_MEMORY);
+    if (utf16len == 0)
+        throw last_error(GetLastError());
 
-    Status = RtlUTF8ToUnicodeN(buf, utf16len, &utf16len, utf8.c_str(), utf8.length());
-    if (!NT_SUCCESS(Status)) {
-        free(buf);
-        throw string_error(IDS_RECV_RTLUTF8TOUNICODEN_FAILED, Status, format_ntstatus(Status).c_str());
-    }
-
-    buf[utf16len / sizeof(WCHAR)] = 0;
-
-    utf16 = buf;
-
-    free(buf);
-}
-
-void utf16_to_utf8(const wstring& utf16, string& utf8) {
-    NTSTATUS Status;
-    ULONG utf8len;
-    char* buf;
-
-    Status = RtlUnicodeToUTF8N(nullptr, 0, &utf8len, utf16.c_str(), utf16.length() * sizeof(WCHAR));
-    if (!NT_SUCCESS(Status))
-        throw string_error(IDS_RECV_RTLUNICODETOUTF8N_FAILED, Status, format_ntstatus(Status).c_str());
-
-    buf = (char*)malloc(utf8len + sizeof(char));
+    buf = (WCHAR*)malloc((utf16len + 1) * sizeof(WCHAR));
 
     if (!buf)
         throw string_error(IDS_OUT_OF_MEMORY);
 
-    Status = RtlUnicodeToUTF8N(buf, utf8len, &utf8len, utf16.c_str(), utf16.length() * sizeof(WCHAR));
-    if (!NT_SUCCESS(Status)) {
+    if (MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.length(), buf, utf16len) == 0) {
+        auto le = GetLastError();
         free(buf);
-        throw string_error(IDS_RECV_RTLUNICODETOUTF8N_FAILED, Status, format_ntstatus(Status).c_str());
+        throw last_error(le);
     }
 
-    buf[utf8len] = 0;
+    buf[utf16len] = 0;
 
-    utf8 = buf;
+    ret = buf;
 
     free(buf);
+
+    return ret;
 }
 
 last_error::last_error(DWORD errnum) {
@@ -726,7 +773,7 @@ last_error::last_error(DWORD errnum) {
         throw runtime_error("FormatMessage failed");
 
     try {
-        utf16_to_utf8(buf, msg);
+        msg = utf16_to_utf8(buf);
     } catch (...) {
         LocalFree(buf);
         throw;
@@ -736,16 +783,16 @@ last_error::last_error(DWORD errnum) {
 }
 
 void error_message(HWND hwnd, const char* msg) {
-    wstring title, wmsg;
+    wstring title;
 
     load_string(module, IDS_ERROR, title);
 
-    utf8_to_utf16(msg, wmsg);
+    auto wmsg = utf8_to_utf16(msg);
 
     MessageBoxW(hwnd, wmsg.c_str(), title.c_str(), MB_ICONERROR);
 }
 
-ntstatus_error::ntstatus_error(NTSTATUS Status) {
+ntstatus_error::ntstatus_error(NTSTATUS Status) : Status(Status) {
     _RtlNtStatusToDosError RtlNtStatusToDosError;
     HMODULE ntdll = LoadLibraryW(L"ntdll.dll");
     WCHAR* buf;
@@ -764,7 +811,7 @@ ntstatus_error::ntstatus_error(NTSTATUS Status) {
             throw runtime_error("FormatMessage failed");
 
         try {
-            utf16_to_utf8(buf, msg);
+            msg = utf16_to_utf8(buf);
         } catch (...) {
             LocalFree(buf);
             throw;
@@ -778,112 +825,3 @@ ntstatus_error::ntstatus_error(NTSTATUS Status) {
 
     FreeLibrary(ntdll);
 }
-
-#ifdef __REACTOS__
-NTSTATUS NTAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
-                                 ULONG *utf8_bytes_written,
-                                 const WCHAR *uni_src, ULONG uni_bytes)
-{
-    NTSTATUS status;
-    ULONG i;
-    ULONG written;
-    ULONG ch;
-    BYTE utf8_ch[4];
-    ULONG utf8_ch_len;
-
-    if (!uni_src)
-        return STATUS_INVALID_PARAMETER_4;
-    if (!utf8_bytes_written)
-        return STATUS_INVALID_PARAMETER;
-    if (utf8_dest && uni_bytes % sizeof(WCHAR))
-        return STATUS_INVALID_PARAMETER_5;
-
-    written = 0;
-    status = STATUS_SUCCESS;
-
-    for (i = 0; i < uni_bytes / sizeof(WCHAR); i++)
-    {
-        /* decode UTF-16 into ch */
-        ch = uni_src[i];
-        if (ch >= 0xdc00 && ch <= 0xdfff)
-        {
-            ch = 0xfffd;
-            status = STATUS_SOME_NOT_MAPPED;
-        }
-        else if (ch >= 0xd800 && ch <= 0xdbff)
-        {
-            if (i + 1 < uni_bytes / sizeof(WCHAR))
-            {
-                ch -= 0xd800;
-                ch <<= 10;
-                if (uni_src[i + 1] >= 0xdc00 && uni_src[i + 1] <= 0xdfff)
-                {
-                    ch |= uni_src[i + 1] - 0xdc00;
-                    ch += 0x010000;
-                    i++;
-                }
-                else
-                {
-                    ch = 0xfffd;
-                    status = STATUS_SOME_NOT_MAPPED;
-                }
-            }
-            else
-            {
-                ch = 0xfffd;
-                status = STATUS_SOME_NOT_MAPPED;
-            }
-        }
-
-        /* encode ch as UTF-8 */
-        if (ch < 0x80)
-        {
-            utf8_ch[0] = ch & 0x7f;
-            utf8_ch_len = 1;
-        }
-        else if (ch < 0x800)
-        {
-            utf8_ch[0] = 0xc0 | (ch >>  6 & 0x1f);
-            utf8_ch[1] = 0x80 | (ch >>  0 & 0x3f);
-            utf8_ch_len = 2;
-        }
-        else if (ch < 0x10000)
-        {
-            utf8_ch[0] = 0xe0 | (ch >> 12 & 0x0f);
-            utf8_ch[1] = 0x80 | (ch >>  6 & 0x3f);
-            utf8_ch[2] = 0x80 | (ch >>  0 & 0x3f);
-            utf8_ch_len = 3;
-        }
-        else if (ch < 0x200000)
-        {
-            utf8_ch[0] = 0xf0 | (ch >> 18 & 0x07);
-            utf8_ch[1] = 0x80 | (ch >> 12 & 0x3f);
-            utf8_ch[2] = 0x80 | (ch >>  6 & 0x3f);
-            utf8_ch[3] = 0x80 | (ch >>  0 & 0x3f);
-            utf8_ch_len = 4;
-        }
-
-        if (!utf8_dest)
-        {
-            written += utf8_ch_len;
-            continue;
-        }
-
-        if (utf8_bytes_max >= utf8_ch_len)
-        {
-            memcpy(utf8_dest, utf8_ch, utf8_ch_len);
-            utf8_dest += utf8_ch_len;
-            utf8_bytes_max -= utf8_ch_len;
-            written += utf8_ch_len;
-        }
-        else
-        {
-            utf8_bytes_max = 0;
-            status = STATUS_BUFFER_TOO_SMALL;
-        }
-    }
-
-    *utf8_bytes_written = written;
-    return status;
-}
-#endif

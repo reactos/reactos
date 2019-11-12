@@ -60,6 +60,13 @@ typedef struct _FILE_STANDARD_INFORMATION {
 
 #define FileStandardInformation (FILE_INFORMATION_CLASS)5
 
+typedef struct _FILE_FS_SIZE_INFORMATION {
+    LARGE_INTEGER TotalAllocationUnits;
+    LARGE_INTEGER AvailableAllocationUnits;
+    ULONG SectorsPerAllocationUnit;
+    ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
 #endif
 #endif
 
@@ -125,6 +132,7 @@ void BtrfsPropSheet::do_search(const wstring& fn) {
                         sizes[4] += bii2.disk_size_zstd;
                         totalsize += bii2.inline_length + bii2.disk_size_uncompressed + bii2.disk_size_zlib + bii2.disk_size_lzo + bii2.disk_size_zstd;
                         sparsesize += bii2.sparse_size;
+                        num_extents += bii2.num_extents == 0 ? 0 : (bii2.num_extents - 1);
                     }
 
                     FILE_STANDARD_INFORMATION fsi;
@@ -247,6 +255,7 @@ HRESULT BtrfsPropSheet::check_file(const wstring& fn, UINT i, UINT num_files, UI
         }
 
         sparsesize += bii2.sparse_size;
+        num_extents += bii2.num_extents == 0 ? 0 : (bii2.num_extents - 1);
 
         FILE_STANDARD_INFORMATION fsi;
 
@@ -287,6 +296,18 @@ HRESULT BtrfsPropSheet::check_file(const wstring& fn, UINT i, UINT num_files, UI
         if (bii2.type != BTRFS_TYPE_DIRECTORY && GetFileSizeEx(h, &filesize)) {
             if (filesize.QuadPart != 0)
                 can_change_nocow = false;
+        }
+
+        {
+            FILE_FS_SIZE_INFORMATION ffsi;
+
+            Status = NtQueryVolumeInformationFile(h, &iosb, &ffsi, sizeof(ffsi), FileFsSizeInformation);
+
+            if (NT_SUCCESS(Status))
+                sector_size = ffsi.BytesPerSector;
+
+            if (sector_size == 0)
+                sector_size = 4096;
         }
     } else
         return E_FAIL;
@@ -623,8 +644,9 @@ void BtrfsPropSheet::apply_changes_file(HWND hDlg, const wstring& fn) {
         else
             fbi.FileAttributes &= ~FILE_ATTRIBUTE_READONLY;
 
-        if (!SetFileInformationByHandle(h, FileBasicInfo, &fbi, sizeof(fbi)))
-            throw last_error(GetLastError());
+        Status = NtSetInformationFile(h, &iosb, &fbi, sizeof(FILE_BASIC_INFO), FileBasicInformation);
+        if (!NT_SUCCESS(Status))
+            throw ntstatus_error(Status);
     }
 
     if (flags_changed || perms_changed || uid_changed || gid_changed || compress_type_changed) {
@@ -693,7 +715,7 @@ void BtrfsPropSheet::apply_changes(HWND hDlg) {
 }
 
 void BtrfsPropSheet::set_size_on_disk(HWND hwndDlg) {
-    wstring s, size_on_disk, cr;
+    wstring s, size_on_disk, cr, frag;
     WCHAR old_text[1024];
     float ratio;
 
@@ -717,6 +739,21 @@ void BtrfsPropSheet::set_size_on_disk(HWND hwndDlg) {
 
     if (cr != old_text)
         SetDlgItemTextW(hwndDlg, IDC_COMPRESSION_RATIO, cr.c_str());
+
+    uint64_t extent_size = (allocsize - sparsesize - sizes[0]) / sector_size;
+
+    if (num_extents == 0 || extent_size <= 1)
+        ratio = 0.0f;
+    else
+        ratio = 100.0f * ((float)num_extents / (float)(extent_size - 1));
+
+    wstring_sprintf(frag, frag_format, ratio);
+
+    GetDlgItemTextW(hwndDlg, IDC_FRAGMENTATION, old_text, sizeof(old_text) / sizeof(WCHAR));
+
+
+    if (frag != old_text)
+        SetDlgItemTextW(hwndDlg, IDC_FRAGMENTATION, frag.c_str());
 }
 
 void BtrfsPropSheet::change_perm_flag(HWND hDlg, ULONG flag, UINT state) {
@@ -944,6 +981,9 @@ void BtrfsPropSheet::init_propsheet(HWND hwndDlg) {
 
     if (cr_format[0] == 0)
         GetDlgItemTextW(hwndDlg, IDC_COMPRESSION_RATIO, cr_format, sizeof(cr_format) / sizeof(WCHAR));
+
+    if (frag_format[0] == 0)
+        GetDlgItemTextW(hwndDlg, IDC_FRAGMENTATION, frag_format, sizeof(frag_format) / sizeof(WCHAR));
 
     set_size_on_disk(hwndDlg);
 
@@ -1180,7 +1220,7 @@ static INT_PTR CALLBACK PropSheetDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                         case CBN_SELCHANGE: {
                             switch (LOWORD(wParam)) {
                                 case IDC_COMPRESS_TYPE: {
-                                    int sel = SendMessageW(GetDlgItem(hwndDlg, LOWORD(wParam)), CB_GETCURSEL, 0, 0);
+                                    auto sel = SendMessageW(GetDlgItem(hwndDlg, LOWORD(wParam)), CB_GETCURSEL, 0, 0);
 
                                     if (bps->min_compression_type != bps->max_compression_type) {
                                         if (sel == 0)

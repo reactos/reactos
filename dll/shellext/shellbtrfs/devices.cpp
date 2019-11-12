@@ -30,11 +30,13 @@
 #ifndef __REACTOS__
 #include <algorithm>
 #include "../btrfs.h"
+#include "mountmgr.h"
 #else
 #include <ntddstor.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
 #include "btrfs.h"
+#include "mountmgr_local.h"
 #endif
 
 DEFINE_GUID(GUID_DEVINTERFACE_HIDDEN_VOLUME, 0x7f108a28L, 0x9833, 0x4b3b, 0xb7, 0x80, 0x2c, 0x6b, 0x5f, 0xa5, 0xc0, 0x62);
@@ -43,7 +45,6 @@ static wstring get_mountdev_name(const nt_handle& h ) {
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
     MOUNTDEV_NAME mdn, *mdn2;
-    ULONG mdnsize;
     wstring name;
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
@@ -51,12 +52,12 @@ static wstring get_mountdev_name(const nt_handle& h ) {
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
         return L"";
 
-    mdnsize = offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
+    size_t mdnsize = offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
 
     mdn2 = (MOUNTDEV_NAME*)malloc(mdnsize);
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                   nullptr, 0, mdn2, mdnsize);
+                                   nullptr, 0, mdn2, (ULONG)mdnsize);
     if (!NT_SUCCESS(Status)) {
         free(mdn2);
         return L"";
@@ -69,10 +70,10 @@ static wstring get_mountdev_name(const nt_handle& h ) {
     return name;
 }
 
-static void find_devices(HWND hwnd, const GUID* guid, const nt_handle& mountmgr, vector<device>& device_list) {
+static void find_devices(HWND hwnd, const GUID* guid, const mountmgr& mm, vector<device>& device_list) {
     HDEVINFO h;
 
-    static WCHAR dosdevices[] = L"\\DosDevices\\";
+    static const wstring dosdevices = L"\\DosDevices\\";
 
     h = SetupDiGetClassDevs(guid, nullptr, 0, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
 
@@ -204,7 +205,7 @@ static void find_devices(HWND hwnd, const GUID* guid, const nt_handle& mountmgr,
                                 if (ss > 0) {
                                     WCHAR* desc3 = (WCHAR*)malloc(ss * sizeof(WCHAR));
 
-                                    if (MultiByteToWideChar(CP_OEMCP, MB_PRECOMPOSED, desc2.c_str(), -1, desc3, ss * sizeof(WCHAR)))
+                                    if (MultiByteToWideChar(CP_OEMCP, MB_PRECOMPOSED, desc2.c_str(), -1, desc3, (int)(ss * sizeof(WCHAR))))
                                         dev.friendly_name = desc3;
 
                                     free(desc3);
@@ -235,53 +236,23 @@ static void find_devices(HWND hwnd, const GUID* guid, const nt_handle& mountmgr,
 
                     free(dli);
                 } else {
-                    ULONG mmpsize;
-                    MOUNTMGR_MOUNT_POINT* mmp;
-                    MOUNTMGR_MOUNT_POINTS mmps;
+                    try {
+                        auto v = mm.query_points(L"", L"", wstring_view(path.Buffer, path.Length / sizeof(WCHAR)));
 
-                    mmpsize = sizeof(MOUNTMGR_MOUNT_POINT) + path.Length;
+                        for (const auto& p : v) {
+                            if (p.symlink.length() == 14 && p.symlink.substr(0, dosdevices.length()) == dosdevices && p.symlink[13] == ':') {
+                                WCHAR dr[3];
 
-                    mmp = (MOUNTMGR_MOUNT_POINT*)malloc(mmpsize);
+                                dr[0] = p.symlink[12];
+                                dr[1] = ':';
+                                dr[2] = 0;
 
-                    RtlZeroMemory(mmp, sizeof(MOUNTMGR_MOUNT_POINT));
-                    mmp->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
-                    mmp->DeviceNameLength = path.Length;
-                    RtlCopyMemory(&mmp[1], path.Buffer, path.Length);
-
-                    Status = NtDeviceIoControlFile(mountmgr, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
-                                                   mmp, mmpsize, &mmps, sizeof(MOUNTMGR_MOUNT_POINTS));
-                    if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW) {
-                        MOUNTMGR_MOUNT_POINTS* mmps2;
-
-                        mmps2 = (MOUNTMGR_MOUNT_POINTS*)malloc(mmps.Size);
-
-                        Status = NtDeviceIoControlFile(mountmgr, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
-                                                    mmp, mmpsize, mmps2, mmps.Size);
-
-                        if (NT_SUCCESS(Status)) {
-                            ULONG i;
-
-                            for (i = 0; i < mmps2->NumberOfMountPoints; i++) {
-                                WCHAR* symlink = (WCHAR*)((uint8_t*)mmps2 + mmps2->MountPoints[i].SymbolicLinkNameOffset);
-
-                                if (mmps2->MountPoints[i].SymbolicLinkNameLength == 0x1c &&
-                                    RtlCompareMemory(symlink, dosdevices, wcslen(dosdevices) * sizeof(WCHAR)) == wcslen(dosdevices) * sizeof(WCHAR) &&
-                                    symlink[13] == ':'
-                                ) {
-                                    WCHAR dr[3];
-
-                                    dr[0] = symlink[12];
-                                    dr[1] = ':';
-                                    dr[2] = 0;
-
-                                    dev.drive = dr;
-                                    break;
-                                }
+                                dev.drive = dr;
+                                break;
                             }
                         }
+                    } catch (...) { // don't fail entirely if mountmgr refuses to co-operate
                     }
-
-                    free(mmp);
                 }
 
                 if (!dev.is_disk || !dev.has_parts) {
@@ -364,16 +335,7 @@ void BtrfsDeviceAdd::populate_device_tree(HWND tree) {
     device_list.clear();
 
     {
-        nt_handle mountmgr;
-
-        RtlInitUnicodeString(&us, MOUNTMGR_DEVICE_NAME);
-        InitializeObjectAttributes(&attr, &us, 0, nullptr, nullptr);
-
-        Status = NtOpenFile(&mountmgr, FILE_GENERIC_READ | FILE_GENERIC_WRITE, &attr, &iosb,
-                            FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT);
-
-        if (!NT_SUCCESS(Status))
-            throw string_error(IDS_CANT_OPEN_MOUNTMGR);
+        mountmgr mm;
 
         {
             nt_handle btrfsh;
@@ -409,9 +371,9 @@ void BtrfsDeviceAdd::populate_device_tree(HWND tree) {
             }
         }
 
-        find_devices(hwnd, &GUID_DEVINTERFACE_DISK, mountmgr, device_list);
-        find_devices(hwnd, &GUID_DEVINTERFACE_VOLUME, mountmgr, device_list);
-        find_devices(hwnd, &GUID_DEVINTERFACE_HIDDEN_VOLUME, mountmgr, device_list);
+        find_devices(hwnd, &GUID_DEVINTERFACE_DISK, mm, device_list);
+        find_devices(hwnd, &GUID_DEVINTERFACE_VOLUME, mm, device_list);
+        find_devices(hwnd, &GUID_DEVINTERFACE_HIDDEN_VOLUME, mm, device_list);
     }
 
 #ifndef __REACTOS__ // Disabled because building with our <algorithm> seems complex right now...
@@ -507,7 +469,7 @@ void BtrfsDeviceAdd::populate_device_tree(HWND tree) {
             name += L")";
 
             tis.itemex.pszText = (WCHAR*)name.c_str();
-            tis.itemex.cchTextMax = name.length();
+            tis.itemex.cchTextMax = (int)name.length();
             tis.itemex.lParam = (LPARAM)&device_list[i];
 
             item = (HTREEITEM)SendMessageW(tree, TVM_INSERTITEMW, 0, (LPARAM)&tis);
