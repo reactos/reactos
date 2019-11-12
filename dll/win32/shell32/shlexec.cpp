@@ -2045,9 +2045,12 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         WCHAR wExec[MAX_PATH];
         WCHAR * lpQuotedFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * (strlenW(lpFile) + 3));
 
+        WCHAR szExplorer[MAX_PATH];
+        Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
         if (lpQuotedFile)
         {
-            retval = SHELL_FindExecutable(sei_tmp.lpDirectory, L"explorer",
+            retval = SHELL_FindExecutable(sei_tmp.lpDirectory, szExplorer,
                                           wszOpen, wExec, MAX_PATH,
                                           NULL, &env, NULL, NULL);
             if (retval > 32)
