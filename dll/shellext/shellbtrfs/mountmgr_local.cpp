@@ -217,7 +217,11 @@ vector<mountmgr_point> mountmgr::query_points(const wstring_view& symlink, const
         if (mmps->MountPoints[i].DeviceNameLength)
             mpdn = wstring_view((WCHAR*)((uint8_t*)mmps + mmps->MountPoints[i].DeviceNameOffset), mmps->MountPoints[i].DeviceNameLength / sizeof(WCHAR));
 
+#ifndef __REACTOS__
         v.emplace_back(mpsl, mpuid, mpdn);
+#else
+        v.push_back(mountmgr_point(mpsl, mpuid, mpdn));
+#endif
     }
 
     return v;
