@@ -42,6 +42,7 @@
 #include <strsafe.h>
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
 #endif
 #include <string>
 #ifdef __REACTOS__
