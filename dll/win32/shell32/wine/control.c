@@ -733,7 +733,7 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 #else
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
-    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    WCHAR szExplorer[MAX_PATH];
     Shell_GetShellProgram(szExplorer, _countof(szExplorer));
 
     ShellExecuteW(NULL,

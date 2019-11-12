@@ -1826,7 +1826,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 {
-    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    WCHAR szExplorer[MAX_PATH];
 
     FIXME("params ignored: %p %p\n", pidlFolder, pidlSaveFile);
     if (SHRestricted(REST_NOFIND))

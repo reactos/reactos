@@ -2619,7 +2619,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMe
 
 HRESULT CShellLink::DoOpenFileLocation()
 {
-    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    WCHAR szExplorer[MAX_PATH];
     Shell_GetShellProgram(szExplorer, _countof(szExplorer));
 
     WCHAR szParams[MAX_PATH + 64];

@@ -65,7 +65,7 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
     }
     else if (_ILIsNetHood(apidl[0]))
     {
-        WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+        WCHAR szExplorer[MAX_PATH];
         Shell_GetShellProgram(szExplorer, _countof(szExplorer));
 
         // FIXME path!

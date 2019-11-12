@@ -1549,11 +1549,11 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
 
 static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters, DWORD parametersLen, LPWSTR wszApplicationName, DWORD dwApplicationNameLen)
 {
-    WCHAR wExplorer[] = L"explorer.exe";
+    WCHAR wExplorer[MAX_PATH];
+    Shell_GetShellProgram(wExplorer, _countof(wExplorer));
+
     WCHAR buffer[MAX_PATH];
     BOOL appKnownSingular = FALSE;
-
-    Shell_GetShellProgram(wExplorer, _countof(wExplorer));
 
     /* last chance to translate IDList: now also allow CLSID paths */
     if (SUCCEEDED(SHELL_GetPathFromIDListForExecuteW((LPCITEMIDLIST)sei->lpIDList, buffer, sizeof(buffer)/sizeof(WCHAR)))) {
@@ -2487,8 +2487,6 @@ BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax)
     if (!cchProgramMax)
         return FALSE;
 
-    StringCchCopyW(pszProgram, cchProgramMax, L"explorer.exe");
-
     LONG err;
     HKEY hKey;
     err = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -2497,6 +2495,7 @@ BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax)
     if (err)
     {
         ERR("err: %ld\n", err);
+        StringCchCopyW(pszProgram, cchProgramMax, L"explorer.exe");
         return FALSE;
     }
 
@@ -2504,6 +2503,7 @@ BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax)
     err = RegQueryValueExW(hKey, L"Shell", NULL, NULL, (LPBYTE)pszProgram, &cbData);
     if (err)
     {
+        StringCchCopyW(pszProgram, cchProgramMax, L"explorer.exe");
         ERR("err: %ld\n", err);
     }
 

@@ -426,7 +426,7 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    WCHAR szExplorer[MAX_PATH];
     Shell_GetShellProgram(szExplorer, _countof(szExplorer));
 
     WCHAR wszParams[MAX_PATH];

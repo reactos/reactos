@@ -240,7 +240,7 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
-        WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+        WCHAR szExplorer[MAX_PATH];
         Shell_GetShellProgram(szExplorer, _countof(szExplorer));
 
         // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
