@@ -33,14 +33,14 @@ HKCR,"Directory","AlwaysShowExt",0x00000000,""
 HKCR,"Directory","NoRecentDocs",0x00000000,""
 HKCR,"Directory\shell\cmd","",0x00020000,"@%SystemRoot%\system32\shell32.dll,-306"
 HKCR,"Directory\shell\cmd","Extended",0x00000000,""
-HKCR,"Directory\shell\cmd\command","",0x00000000,"cmd /s /k pushd ""%1"""
+HKCR,"Directory\shell\cmd\command","",0x00000000,"cmd /s /k pushd ""%V"""
 
 ; Drive
 HKCR,"Drive","",0x00000000,"Drive"
 ;HKCR,"Drive\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
 HKCR,"Drive\shell\cmd","",0x00020000,"@%SystemRoot%\system32\shell32.dll,-306"
 HKCR,"Drive\shell\cmd","Extended",0x00000000,""
-HKCR,"Drive\shell\cmd\command","",0x00000000,"cmd /s /k pushd ""%1"""
+HKCR,"Drive\shell\cmd\command","",0x00000000,"cmd /s /k pushd ""%V"""
 
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
