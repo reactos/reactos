@@ -33,7 +33,6 @@ list(APPEND FONT_FILES
     georgiaz.ttf
     lucon.ttf
     Marlett.ttf
-    micross.ttf
     pala.ttf
     palab.ttf
     palabi.ttf
