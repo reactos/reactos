@@ -178,11 +178,54 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
     return !GetCurrentDirectory(size,OutPath);
 }
 
+/* borrowed from shlwapi.dll */
+static BOOL WINAPI StrTrim(LPTSTR lpszStr, LPCTSTR lpszTrim)
+{
+  DWORD dwLen;
+  LPTSTR lpszRead = lpszStr;
+  BOOL bRet = FALSE;
+
+  if (lpszRead && *lpszRead)
+  {
+    while (*lpszRead && _tcschr(lpszTrim, *lpszRead)) lpszRead++;
+
+    dwLen = lstrlen(lpszRead);
+
+    if (lpszRead != lpszStr)
+    {
+      memmove(lpszStr, lpszRead, (dwLen + 1) * sizeof(TCHAR));
+      bRet = TRUE;
+    }
+    if (dwLen > 0)
+    {
+      lpszRead = lpszStr + dwLen;
+      while (_tcschr(lpszTrim, lpszRead[-1]))
+        lpszRead--; /* Skip trailing matches */
+
+      if (lpszRead != lpszStr + dwLen)
+      {
+        *lpszRead = 0;
+        bRet = TRUE;
+      }
+    }
+  }
+  return bRet;
+}
 
 BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
 {
     TCHAR OutPath[MAX_PATH];
     TCHAR OutPathTemp[MAX_PATH];
+    SIZE_T cch;
+
+    /* Unquote */
+    StrTrim(InPath, TEXT(" \t"));
+    cch = _tcslen(InPath);
+    if (InPath[0] == TEXT('"') && InPath[cch - 1] == TEXT('"'))
+    {
+        InPath[cch - 1] = 0;
+        MoveMemory(InPath, &InPath[1], cch * sizeof(TCHAR));
+    }
 
     /* Retrieve the full path name from the (possibly relative) InPath */
     if (GetFullPathName(InPath, MAX_PATH, OutPathTemp, NULL) == 0)
