@@ -432,7 +432,7 @@ static void get_top_level_sd(fcb* fcb) {
         goto end;
     }
 
-    RtlSetOwnerSecurityDescriptor(&sd, usersid, false);
+    Status = RtlSetOwnerSecurityDescriptor(&sd, usersid, false);
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlSetOwnerSecurityDescriptor returned %08x\n", Status);
@@ -442,11 +442,10 @@ static void get_top_level_sd(fcb* fcb) {
     gid_to_sid(fcb->inode_item.st_gid, &groupsid);
     if (!groupsid) {
         ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
         goto end;
     }
 
-    RtlSetGroupSecurityDescriptor(&sd, groupsid, false);
+    Status = RtlSetGroupSecurityDescriptor(&sd, groupsid, false);
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlSetGroupSecurityDescriptor returned %08x\n", Status);
@@ -486,7 +485,6 @@ static void get_top_level_sd(fcb* fcb) {
     fcb->sd = ExAllocatePoolWithTag(PagedPool, buflen, ALLOC_TAG);
     if (!fcb->sd) {
         ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
         goto end;
     }
 
@@ -494,6 +492,8 @@ static void get_top_level_sd(fcb* fcb) {
 
     if (!NT_SUCCESS(Status)) {
         ERR("RtlAbsoluteToSelfRelativeSD 2 returned %08x\n", Status);
+        ExFreePool(fcb->sd);
+        fcb->sd = NULL;
         goto end;
     }
 
@@ -528,6 +528,7 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, bool look_for_xattr, PIRP Irp) {
                                 &subjcont, IoGetFileObjectGenericMapping(), PagedPool);
     if (!NT_SUCCESS(Status)) {
         ERR("SeAssignSecurityEx returned %08x\n", Status);
+        return;
     }
 
     Status = uid_to_sid(fcb->inode_item.st_uid, &usersid);
@@ -541,6 +542,7 @@ void fcb_get_sd(fcb* fcb, struct _fcb* parent, bool look_for_xattr, PIRP Irp) {
     gid_to_sid(fcb->inode_item.st_gid, &groupsid);
     if (!groupsid) {
         ERR("out of memory\n");
+        ExFreePool(usersid);
         return;
     }
 
@@ -733,7 +735,7 @@ static NTSTATUS set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject
 
     mark_fcb_dirty(fcb);
 
-    send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_SECURITY, FILE_ACTION_MODIFIED, NULL);
+    queue_notification_fcb(fileref, FILE_NOTIFY_CHANGE_SECURITY, FILE_ACTION_MODIFIED, NULL);
 
 end:
     ExReleaseResourceLite(fcb->Header.Resource);

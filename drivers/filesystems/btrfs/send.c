@@ -3598,6 +3598,7 @@ NTSTATUS send_subvol(device_extension* Vcb, void* data, ULONG datalen, PFILE_OBJ
     send_info* send;
     ULONG num_clones = 0;
     root** clones = NULL;
+    OBJECT_ATTRIBUTES oa;
 
     if (!FileObject || !FileObject->FsContext || !FileObject->FsContext2 || FileObject->FsContext == Vcb->volume_fcb)
         return STATUS_INVALID_PARAMETER;
@@ -3810,7 +3811,9 @@ NTSTATUS send_subvol(device_extension* Vcb, void* data, ULONG datalen, PFILE_OBJ
 
     InterlockedIncrement(&Vcb->running_sends);
 
-    Status = PsCreateSystemThread(&send->thread, 0, NULL, NULL, NULL, send_thread, context);
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&send->thread, 0, &oa, NULL, NULL, send_thread, context);
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         ccb->send = NULL;

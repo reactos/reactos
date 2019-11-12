@@ -336,15 +336,33 @@ static NTSTATUS __stdcall fast_io_release_for_ccflush(PFILE_OBJECT FileObject, P
 
 _Function_class_(FAST_IO_WRITE)
 static BOOLEAN __stdcall fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, BOOLEAN Wait, ULONG LockKey, PVOID Buffer, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
-    if (FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject)) {
-        fcb* fcb = FileObject->FsContext;
+    fcb* fcb = FileObject->FsContext;
+    bool ret;
 
-        fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
+    FsRtlEnterFileSystem();
 
-        return true;
+    if (!ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, Wait)) {
+        FsRtlExitFileSystem();
+        return false;
     }
 
-    return false;
+    if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, Wait)) {
+        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+        FsRtlExitFileSystem();
+        return false;
+    }
+
+    ret = FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
+
+    if (ret)
+        fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
+
+    ExReleaseResourceLite(fcb->Header.Resource);
+    ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+
+    FsRtlExitFileSystem();
+
+    return ret;
 }
 
 _Function_class_(FAST_IO_LOCK)

@@ -212,6 +212,17 @@ static NTSTATUS probe_volume(void* data, ULONG length, KPROCESSOR_MODE processor
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS ioctl_unload(PIRP Irp) {
+    if (!SeSinglePrivilegeCheck(RtlConvertLongToLuid(SE_LOAD_DRIVER_PRIVILEGE), Irp->RequestorMode)) {
+        ERR("insufficient privileges\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    do_shutdown(Irp);
+
+    return STATUS_SUCCESS;
+}
+
 static NTSTATUS control_ioctl(PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -223,6 +234,10 @@ static NTSTATUS control_ioctl(PIRP Irp) {
 
         case IOCTL_BTRFS_PROBE_VOLUME:
             Status = probe_volume(Irp->AssociatedIrp.SystemBuffer, IrpSp->Parameters.FileSystemControl.InputBufferLength, Irp->RequestorMode);
+            break;
+
+        case IOCTL_BTRFS_UNLOAD:
+            Status = ioctl_unload(Irp);
             break;
 
         default:

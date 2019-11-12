@@ -29,7 +29,7 @@ IsEven(IN USHORT Digit)
     return ((Digit & 1) != 1);
 }
 
-NTSTATUS compat_FsRtlValidateReparsePointBuffer(IN ULONG BufferLength, IN PREPARSE_DATA_BUFFER ReparseBuffer)
+NTSTATUS __stdcall compat_FsRtlValidateReparsePointBuffer(IN ULONG BufferLength, IN PREPARSE_DATA_BUFFER ReparseBuffer)
 {
     USHORT DataLength;
     ULONG ReparseTag;

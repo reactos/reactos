@@ -52,6 +52,7 @@ static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0
 #define BTRFS_ROOT_CHUNK        3
 #define BTRFS_ROOT_DEVTREE      4
 #define BTRFS_ROOT_FSTREE       5
+#define BTRFS_ROOT_TREEDIR      6
 #define BTRFS_ROOT_CHECKSUM     7
 #define BTRFS_ROOT_UUID         9
 #define BTRFS_ROOT_FREE_SPACE   0xa

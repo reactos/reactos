@@ -414,8 +414,6 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         fcb = fileref->fcb;
     }
 
-    TRACE("%S\n", file_desc(FileObject));
-
     ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
 
@@ -425,7 +423,7 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         goto end;
     }
 
-    send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_ACTION_MODIFIED, NULL);
+    queue_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_ACTION_MODIFIED, NULL);
 
 end:
     if (NT_SUCCESS(Status))
@@ -487,8 +485,6 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
-
-    TRACE("%S\n", file_desc(FileObject));
 
     if (buflen < offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer)) {
         ERR("buffer was too short\n");
@@ -619,7 +615,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     Status = STATUS_SUCCESS;
 
-    send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_ACTION_MODIFIED, NULL);
+    queue_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_ACTION_MODIFIED, NULL);
 
 end:
     if (NT_SUCCESS(Status))
