@@ -426,6 +426,9 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
     WCHAR wszParams[MAX_PATH];
     wcscpy(wszParams, L"/select,");
     wcscat(wszParams, wszBuf);
@@ -434,7 +437,7 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
     memset(&sei, 0, sizeof sei);
     sei.cbSize = sizeof sei;
     sei.fMask = SEE_MASK_WAITFORINPUTIDLE;
-    sei.lpFile = L"explorer.exe";
+    sei.lpFile = szExplorer;
     sei.lpParameters = wszParams;
 
     if (ShellExecuteExW(&sei))

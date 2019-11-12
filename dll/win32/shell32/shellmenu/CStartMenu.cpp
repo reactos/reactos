@@ -240,15 +240,18 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
+        WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+        Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
         // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
         // FIXME: Change this back to using the path as the filename and the "open" verb, once ShellExecute can handle CLSID path components.
 
         if (psmd->uId == IDM_CONTROLPANEL)
-            ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL, SW_SHOWNORMAL);
+            ShellExecuteW(NULL, NULL, szExplorer, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_NETWORKCONNECTIONS)
-            ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
+            ShellExecuteW(NULL, NULL, szExplorer, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
         else if (psmd->uId == IDM_PRINTERSANDFAXES)
-            ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
+            ShellExecuteW(NULL, NULL, szExplorer, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}", NULL, SW_SHOWNORMAL);
         else
             PostMessageW(m_hwndTray, WM_COMMAND, psmd->uId, 0);
 

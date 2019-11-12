@@ -194,6 +194,8 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
 HRESULT WINAPI DoRegisterServer(void);
 HRESULT WINAPI DoUnregisterServer(void);
 
+BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

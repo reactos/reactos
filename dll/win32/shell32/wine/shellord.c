@@ -1826,14 +1826,19 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
  */
 BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
 {
+    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+
     FIXME("params ignored: %p %p\n", pidlFolder, pidlSaveFile);
     if (SHRestricted(REST_NOFIND))
     {
         return FALSE;
     }
+
+    Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
     /* Open the search results folder */
     /* FIXME: CSearchBar should be opened as well */
-    return ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{E17D4FC0-5564-11D1-83F2-00A0C90DC849}", NULL, SW_SHOWNORMAL) > (HINSTANCE)32;
+    return ShellExecuteW(NULL, NULL, szExplorer, L"::{E17D4FC0-5564-11D1-83F2-00A0C90DC849}", NULL, SW_SHOWNORMAL) > (HINSTANCE)32;
 }
 
 /*************************************************************************

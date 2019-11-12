@@ -54,6 +54,7 @@
 #include <shellutils.h>
 #include <rosctrls.h>
 #include "../shresdef.h"
+#include "../wine/shell32_main.h"
 
 #include <wine/debug.h>
 
@@ -102,5 +103,4 @@ HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
-
 }

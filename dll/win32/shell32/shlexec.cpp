@@ -1549,9 +1549,11 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
 
 static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters, DWORD parametersLen, LPWSTR wszApplicationName, DWORD dwApplicationNameLen)
 {
-    static const WCHAR wExplorer[] = L"explorer.exe";
+    WCHAR wExplorer[] = L"explorer.exe";
     WCHAR buffer[MAX_PATH];
     BOOL appKnownSingular = FALSE;
+
+    Shell_GetShellProgram(wExplorer, _countof(wExplorer));
 
     /* last chance to translate IDList: now also allow CLSID paths */
     if (SUCCEEDED(SHELL_GetPathFromIDListForExecuteW((LPCITEMIDLIST)sei->lpIDList, buffer, sizeof(buffer)/sizeof(WCHAR)))) {
@@ -2477,4 +2479,35 @@ HRESULT WINAPI ShellExecCmdLine(
     SHFree(lpCommand);
 
     return HRESULT_FROM_WIN32(dwError);
+}
+
+extern "C"
+BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax)
+{
+    if (!cchProgramMax)
+        return FALSE;
+
+    StringCbCopyW(pszProgram, cchProgramMax, L"explorer.exe");
+
+    LONG err;
+    HKEY hKey;
+    err = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                        0, KEY_READ, &hKey);
+    if (err)
+    {
+        ERR("err: %ld\n", err);
+        return FALSE;
+    }
+
+    DWORD cbData = cchProgramMax * sizeof(WCHAR);
+    err = RegQueryValueExW(hKey, L"Shell", NULL, NULL, (LPBYTE)pszProgram, &cbData);
+    if (err)
+    {
+        ERR("err: %ld\n", err);
+    }
+
+    RegCloseKey(hKey);
+
+    return !err;
 }

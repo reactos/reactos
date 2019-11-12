@@ -34,6 +34,9 @@
 
 #include "cpanel.h"
 #include "wine/unicode.h"
+#ifdef __REACTOS__
+BOOL Shell_GetShellProgram(LPWSTR pszProgram, SIZE_T cchProgramMax);
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -730,9 +733,12 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 #else
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
+    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
     ShellExecuteW(NULL,
                   L"open",
-                  L"explorer.exe",
+                  szExplorer,
                   L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
                   NULL,
                   SW_SHOWDEFAULT);

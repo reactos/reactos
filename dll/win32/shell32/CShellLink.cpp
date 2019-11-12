@@ -2619,11 +2619,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMe
 
 HRESULT CShellLink::DoOpenFileLocation()
 {
+    WCHAR szExplorer[MAX_PATH] = L"explorer.exe";
+    Shell_GetShellProgram(szExplorer, _countof(szExplorer));
+
     WCHAR szParams[MAX_PATH + 64];
     StringCbPrintfW(szParams, sizeof(szParams), L"/select,%s", m_sPath);
 
     INT_PTR ret;
-    ret = reinterpret_cast<INT_PTR>(ShellExecuteW(NULL, NULL, L"explorer.exe", szParams,
+    ret = reinterpret_cast<INT_PTR>(ShellExecuteW(NULL, NULL, szExplorer, szParams,
                                                   NULL, m_Header.nShowCommand));
     if (ret <= 32)
     {
