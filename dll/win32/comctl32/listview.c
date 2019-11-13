@@ -2127,12 +2127,12 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
         {
             vertInfo.nMax = infoPtr->nItemCount;
 
-           /* scroll by at least one page */
-           if (vertInfo.nPage < infoPtr->nItemHeight)
-               vertInfo.nPage = infoPtr->nItemHeight;
+            /* scroll by at least one page */
+            if (vertInfo.nPage < infoPtr->nItemHeight)
+                vertInfo.nPage = infoPtr->nItemHeight;
 
-          if (infoPtr->nItemHeight > 0)
-              vertInfo.nPage /= infoPtr->nItemHeight;
+            if (infoPtr->nItemHeight > 0)
+                vertInfo.nPage /= infoPtr->nItemHeight;
         }
 #else
 	vertInfo.nMax = infoPtr->nItemCount;
