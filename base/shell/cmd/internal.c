@@ -184,6 +184,8 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
     TCHAR OutPath[MAX_PATH];
     TCHAR OutPathTemp[MAX_PATH];
 
+    unquote(InPath);
+
     /* Retrieve the full path name from the (possibly relative) InPath */
     if (GetFullPathName(InPath, MAX_PATH, OutPathTemp, NULL) == 0)
         goto Fail;
