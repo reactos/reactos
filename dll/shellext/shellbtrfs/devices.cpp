@@ -237,9 +237,12 @@ static void find_devices(HWND hwnd, const GUID* guid, const mountmgr& mm, vector
                     free(dli);
                 } else {
                     try {
-                        auto v = mm.query_points(L"", L"", wstring_view(path.Buffer, path.Length / sizeof(WCHAR)));
+                        std::vector<mountmgr_point> v;
+                        v = mm.query_points(L"", L"", wstring_view(path.Buffer, path.Length / sizeof(WCHAR)));
 
-                        for (const auto& p : v) {
+                        for (size_t i = 0; i < v.size(); ++i)
+                        {
+                            const mountmgr_point& p = v[i];
                             if (p.symlink.length() == 14 && p.symlink.substr(0, dosdevices.length()) == dosdevices && p.symlink[13] == ':') {
                                 WCHAR dr[3];
 
