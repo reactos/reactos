@@ -47,9 +47,9 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     /* Debugger pre-initialization */
     DebugInit(0);
 
-    TRACE("BootMain() called.\n");
-
     MachInit(CmdLine);
+
+    TRACE("BootMain() called.\n");
 
     /* Check if the CPU is new enough */
     FrLdrCheckCpuCompatibility(); // FIXME: Should be done inside MachInit!
