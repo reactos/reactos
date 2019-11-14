@@ -912,6 +912,7 @@ BEGIN
     IDS_EDIT_VERB "Düzenle"
     IDS_FIND_VERB "Bul"
     IDS_PRINT_VERB "Yazdır"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Kütük, %u Dizin"
     IDS_PRINTERS "Yazıcılar"

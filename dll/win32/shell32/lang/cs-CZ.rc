@@ -916,6 +916,7 @@ BEGIN
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"
     IDS_PRINT_VERB "Tisknout"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u souborů, %u složek"
     IDS_PRINTERS "Tiskárny"

@@ -917,6 +917,7 @@ BEGIN
     IDS_EDIT_VERB "Muuda"
     IDS_FIND_VERB "Leia"
     IDS_PRINT_VERB "Prindi"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Faili, %u Kausta"
     IDS_PRINTERS "Printerid"

@@ -911,6 +911,7 @@ BEGIN
     IDS_EDIT_VERB "Обработка"
     IDS_FIND_VERB "Търсене"
     IDS_PRINT_VERB "Разпечатване"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u файла, %u папки"
     IDS_PRINTERS "Печатачи"

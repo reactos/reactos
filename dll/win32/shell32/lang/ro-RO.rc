@@ -912,6 +912,7 @@ BEGIN
     IDS_EDIT_VERB "Editează"
     IDS_FIND_VERB "Caută"
     IDS_PRINT_VERB "Imprimă"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fișiere, %u dosare"
     IDS_PRINTERS "Imprimante"

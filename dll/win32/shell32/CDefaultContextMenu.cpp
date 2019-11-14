@@ -562,49 +562,62 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         /* By default use verb for menu item name */
         mii.dwTypeData = pEntry->szVerb;
 
+        WCHAR wszKey[256];
+        HRESULT hr;
+        hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            pEntry = pEntry->pNext;
+            continue;
+        }
+
+        BOOL Extended = FALSE;
+        HKEY hkVerb;
         if (idResource > 0)
         {
             if (LoadStringW(shell32_hInstance, idResource, wszVerb, _countof(wszVerb)))
                 mii.dwTypeData = wszVerb; /* use translated verb */
             else
                 ERR("Failed to load string\n");
+
+            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            if (res == ERROR_SUCCESS)
+            {
+                res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
+                Extended = (res == ERROR_SUCCESS);
+
+                RegCloseKey(hkVerb);
+            }
         }
         else
         {
-            WCHAR wszKey[256];
-            HRESULT hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
-
-            if (SUCCEEDED(hr))
+            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+            if (res == ERROR_SUCCESS)
             {
-                HKEY hkVerb;
                 DWORD cbVerb = sizeof(wszVerb);
-                LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
+                res = RegLoadMUIStringW(hkVerb, NULL, wszVerb, cbVerb, NULL, 0, NULL);
                 if (res == ERROR_SUCCESS)
                 {
-                    res = RegLoadMUIStringW(hkVerb,
-                                            NULL,
-                                            wszVerb,
-                                            cbVerb,
-                                            NULL,
-                                            0,
-                                            NULL);
-                    if (res == ERROR_SUCCESS)
-                    {
-                        /* use description for the menu entry */
-                        mii.dwTypeData = wszVerb;
-                    }
-
-                    RegCloseKey(hkVerb);
+                    /* use description for the menu entry */
+                    mii.dwTypeData = wszVerb;
                 }
+
+                res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
+                Extended = (res == ERROR_SUCCESS);
+
+                RegCloseKey(hkVerb);
             }
         }
 
-        mii.cch = wcslen(mii.dwTypeData);
-        mii.fState = fState;
-        mii.wID = iIdCmdFirst + cIds;
-        InsertMenuItemW(hMenu, *pIndexMenu, TRUE, &mii);
-        (*pIndexMenu)++;
-        cIds++;
+        if (!Extended || GetAsyncKeyState(VK_SHIFT) < 0)
+        {
+            mii.cch = wcslen(mii.dwTypeData);
+            mii.fState = fState;
+            mii.wID = iIdCmdFirst + cIds;
+            InsertMenuItemW(hMenu, *pIndexMenu, TRUE, &mii);
+            (*pIndexMenu)++;
+            cIds++;
+        }
 
         pEntry = pEntry->pNext;
 

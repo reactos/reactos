@@ -910,6 +910,7 @@ BEGIN
     IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Finn"
     IDS_PRINT_VERB "Skriv ut"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u filer, %u mapper"
     IDS_PRINTERS "Skrivere"

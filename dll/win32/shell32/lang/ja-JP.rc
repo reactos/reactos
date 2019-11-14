@@ -907,6 +907,7 @@ BEGIN
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"
     IDS_PRINT_VERB "印刷"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 個のファイル、 %u 個のフォルダ"
     IDS_PRINTERS "プリンタ"

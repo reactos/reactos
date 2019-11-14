@@ -912,6 +912,7 @@ BEGIN
     IDS_EDIT_VERB "ערוך"
     IDS_FIND_VERB "מצא"
     IDS_PRINT_VERB "הדפס"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u קבצים, %u תיקיות"
     IDS_PRINTERS "מדפסות"

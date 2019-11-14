@@ -914,6 +914,7 @@ BEGIN
     IDS_EDIT_VERB "Modifiko"
     IDS_FIND_VERB "Gjej"
     IDS_PRINT_VERB "Printo"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Dokumenta, %u Dosje"
     IDS_PRINTERS "Printera"

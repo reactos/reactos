@@ -910,6 +910,7 @@ BEGIN
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Procurar"
     IDS_PRINT_VERB "Imprimir"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
     IDS_PRINTERS "Impressoras"

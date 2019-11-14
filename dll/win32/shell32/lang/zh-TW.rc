@@ -921,6 +921,7 @@ BEGIN
     IDS_EDIT_VERB "編輯"
     IDS_FIND_VERB "搜索"
     IDS_PRINT_VERB "列印"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
     IDS_PRINTERS "印表機"
