@@ -833,25 +833,15 @@ void BtrfsContextMenu::reflink_copy(HWND hwnd, const WCHAR* fn, const WCHAR* dir
                 streambufsize += 0x1000;
                 streambuf.resize(streambufsize);
 
-#ifndef __REACTOS__
                 memset(streambuf.data(), 0, streambufsize);
 
                 Status = NtQueryInformationFile(source, &iosb, streambuf.data(), streambufsize, FileStreamInformation);
-#else
-                memset(&streambuf[0], 0, streambufsize);
-
-                Status = NtQueryInformationFile(source, &iosb, &streambuf[0], streambufsize, FileStreamInformation);
-#endif
             } while (Status == STATUS_BUFFER_OVERFLOW);
 
             if (!NT_SUCCESS(Status))
                 throw ntstatus_error(Status);
 
-#ifndef __REACTOS__
             auto fsi = reinterpret_cast<FILE_STREAM_INFORMATION*>(streambuf.data());
-#else
-            auto fsi = reinterpret_cast<FILE_STREAM_INFORMATION*>(&streambuf[0]);
-#endif
 
             while (true) {
                 if (fsi->StreamNameLength > 0) {
@@ -1535,25 +1525,15 @@ static void reflink_copy2(const wstring& srcfn, const wstring& destdir, const ws
                 streambufsize += 0x1000;
                 streambuf.resize(streambufsize);
 
-#ifndef __REACTOS__
                 memset(streambuf.data(), 0, streambufsize);
 
                 Status = NtQueryInformationFile(source, &iosb, streambuf.data(), streambufsize, FileStreamInformation);
-#else
-                memset(&streambuf[0], 0, streambufsize);
-
-                Status = NtQueryInformationFile(source, &iosb, &streambuf[0], streambufsize, FileStreamInformation);
-#endif
             } while (Status == STATUS_BUFFER_OVERFLOW);
 
             if (!NT_SUCCESS(Status))
                 throw ntstatus_error(Status);
 
-#ifndef __REACTOS__
             auto fsi = reinterpret_cast<FILE_STREAM_INFORMATION*>(streambuf.data());
-#else
-            auto fsi = reinterpret_cast<FILE_STREAM_INFORMATION*>(&streambuf[0]);
-#endif
 
             while (true) {
                 if (fsi->StreamNameLength > 0) {
