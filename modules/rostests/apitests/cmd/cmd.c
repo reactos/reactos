@@ -73,6 +73,7 @@ static const TEST_ENTRY s_pushd_entries[] =
     { __LINE__, 1234,   "cmd /c pushd C:\\Program Files && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files/\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files\" && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:\\ \" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\\\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\\" && popd && exit 1234" },
