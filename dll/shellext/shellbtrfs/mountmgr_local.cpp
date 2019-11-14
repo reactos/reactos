@@ -33,11 +33,7 @@ void mountmgr::create_point(const wstring_view& symlink, const wstring_view& dev
     IO_STATUS_BLOCK iosb;
 
     vector<uint8_t> buf(sizeof(MOUNTMGR_CREATE_POINT_INPUT) + ((symlink.length() + device.length()) * sizeof(WCHAR)));
-#ifndef __REACTOS__
     auto mcpi = reinterpret_cast<MOUNTMGR_CREATE_POINT_INPUT*>(buf.data());
-#else
-    auto mcpi = reinterpret_cast<MOUNTMGR_CREATE_POINT_INPUT*>(&buf[0]);
-#endif
 
     mcpi->SymbolicLinkNameOffset = sizeof(MOUNTMGR_CREATE_POINT_INPUT);
     mcpi->SymbolicLinkNameLength = (USHORT)(symlink.length() * sizeof(WCHAR));
@@ -48,11 +44,7 @@ void mountmgr::create_point(const wstring_view& symlink, const wstring_view& dev
     memcpy((uint8_t*)mcpi + mcpi->DeviceNameOffset, device.data(), device.length() * sizeof(WCHAR));
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_CREATE_POINT,
-#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), nullptr, 0);
-#else
-                                   &buf[0], (ULONG)buf.size(), nullptr, 0);
-#endif
 
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
@@ -63,11 +55,7 @@ void mountmgr::delete_points(const wstring_view& symlink, const wstring_view& un
     IO_STATUS_BLOCK iosb;
 
     vector<uint8_t> buf(sizeof(MOUNTMGR_MOUNT_POINT) + ((symlink.length() + unique_id.length() + device_name.length()) * sizeof(WCHAR)));
-#ifndef __REACTOS__
     auto mmp = reinterpret_cast<MOUNTMGR_MOUNT_POINT*>(buf.data());
-#else
-    auto mmp = reinterpret_cast<MOUNTMGR_MOUNT_POINT*>(&buf[0]);
-#endif
 
     memset(mmp, 0, sizeof(MOUNTMGR_MOUNT_POINT));
 
@@ -100,28 +88,16 @@ void mountmgr::delete_points(const wstring_view& symlink, const wstring_view& un
     }
 
     vector<uint8_t> buf2(sizeof(MOUNTMGR_MOUNT_POINTS));
-#ifndef __REACTOS__
     auto mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(buf2.data());
-#else
-    auto mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(&buf2[0]);
-#endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_DELETE_POINTS,
-#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
-#else
-                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
-#endif
 
     if (Status == STATUS_BUFFER_OVERFLOW) {
         buf2.resize(mmps->Size);
 
         Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_DELETE_POINTS,
-#ifndef __REACTOS__
                                        buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
-#else
-                                       &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
-#endif
     }
 
     if (!NT_SUCCESS(Status))
@@ -134,11 +110,7 @@ vector<mountmgr_point> mountmgr::query_points(const wstring_view& symlink, const
     vector<mountmgr_point> v;
 
     vector<uint8_t> buf(sizeof(MOUNTMGR_MOUNT_POINT) + ((symlink.length() + unique_id.length() + device_name.length()) * sizeof(WCHAR)));
-#ifndef __REACTOS__
     auto mmp = reinterpret_cast<MOUNTMGR_MOUNT_POINT*>(buf.data());
-#else
-    auto mmp = reinterpret_cast<MOUNTMGR_MOUNT_POINT*>(&buf[0]);
-#endif
 
     memset(mmp, 0, sizeof(MOUNTMGR_MOUNT_POINT));
 
@@ -171,35 +143,19 @@ vector<mountmgr_point> mountmgr::query_points(const wstring_view& symlink, const
     }
 
     vector<uint8_t> buf2(sizeof(MOUNTMGR_MOUNT_POINTS));
-#ifndef __REACTOS__
     auto mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(buf2.data());
-#else
-    auto mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(&buf2[0]);
-#endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
-#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
-#else
-                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
-#endif
 
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
         throw ntstatus_error(Status);
 
     buf2.resize(mmps->Size);
-#ifndef __REACTOS__
     mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(buf2.data());
-#else
-    mmps = reinterpret_cast<MOUNTMGR_MOUNT_POINTS*>(&buf2[0]);
-#endif
 
     Status = NtDeviceIoControlFile(h, nullptr, nullptr, nullptr, &iosb, IOCTL_MOUNTMGR_QUERY_POINTS,
-#ifndef __REACTOS__
                                    buf.data(), (ULONG)buf.size(), buf2.data(), (ULONG)buf2.size());
-#else
-                                   &buf[0], (ULONG)buf.size(), &buf2[0], (ULONG)buf2.size());
-#endif
 
     if (!NT_SUCCESS(Status))
         throw ntstatus_error(Status);
