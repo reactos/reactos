@@ -20,7 +20,12 @@ typedef struct TEST_ENTRY
 
 static const TEST_ENTRY s_exit_entries[] =
 {
+    { __LINE__, 0,      "cmd /c exit" },
     { __LINE__, 0,      "cmd /c exit 0" },
+    { __LINE__, 0,      "cmd /c exit \"\"" },
+    { __LINE__, 0,      "cmd /c exit ABC" },
+    { __LINE__, 0,      "cmd /c exit \"ABC" },
+    { __LINE__, 0,      "cmd /c exit \"ABC\"" },
     { __LINE__, 1234,   "cmd /c exit 1234" },
 };
 
@@ -32,27 +37,45 @@ static const TEST_ENTRY s_echo_entries[] =
 
 static const TEST_ENTRY s_cd_entries[] =
 {
-    { __LINE__, 1234,   "cmd /c cd \\ && exit 1234" },
+    { __LINE__, 0,      "cmd /c cd \"C:\\ ", },
+    { __LINE__, 0,      "cmd /c cd C:/", },
+    { __LINE__, 0,      "cmd /c cd \"\"", TRUE, FALSE },
+    { __LINE__, 0,      "cmd /c cd", TRUE, FALSE },
+    { __LINE__, 1,      "cmd /c cd \" \" && exit 1234", FALSE, TRUE },
     { __LINE__, 1234,   "cmd /c cd C:\\Program Files && exit 1234" },
+    { __LINE__, 1234,   "cmd /c cd \"C:\\ \" && exit 1234", },
     { __LINE__, 1234,   "cmd /c cd \"C:\\Program Files\" && exit 1234", },
+    { __LINE__, 1234,   "cmd /c cd \"\" && exit 1234", TRUE, FALSE },
+    { __LINE__, 1234,   "cmd /c cd \\ && exit 1234" },
 };
 
 static const TEST_ENTRY s_pushd_entries[] =
 {
+    { __LINE__, 0,      "cmd /c pushd \"C:\\ " },
+    { __LINE__, 0,      "cmd /c pushd \"C:\\ \"" },
+    { __LINE__, 0,      "cmd /c pushd \"C:\\ \"\"" },
+    { __LINE__, 0,      "cmd /c pushd \"C:\\\"" },
+    { __LINE__, 1,      "cmd /c popd /?", TRUE, FALSE },
+    { __LINE__, 1,      "cmd /c popd ABC" },
+    { __LINE__, 1,      "cmd /c popd \" " },
+    { __LINE__, 1,      "cmd /c popd \"\"" },
+    { __LINE__, 1,      "cmd /c popd" },
+    { __LINE__, 1,      "cmd /c pushd ABC", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd C:/Program Files && popd && exit 1234", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd C:\\ C:\\ && popd && exit 1234", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd C:\\Invalid Directory && exit 1234", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd C:\\Invalid Directory && popd && exit 1234", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd \" C:\\ ", FALSE, TRUE },
+    { __LINE__, 1,      "cmd /c pushd \"C:\\ C:\\\" && popd && exit 1234", FALSE, TRUE },
     { __LINE__, 1234,   "cmd /c pushd && exit 1234 " },
     { __LINE__, 1234,   "cmd /c pushd C:\\ && popd && exit 1234" },
-    { __LINE__, 1,      "cmd /c pushd C:\\InvalidDirectory && exit 1234", FALSE, TRUE },
-    { __LINE__, 1,      "cmd /c pushd C:\\Invalid Directory && exit 1234", FALSE, TRUE },
-    { __LINE__, 1,      "cmd /c pushd C:\\InvalidDirectory && popd && exit 1234", FALSE, TRUE },
-    { __LINE__, 1,      "cmd /c pushd C:\\Invalid Directory && popd && exit 1234", FALSE, TRUE },
-    { __LINE__, 1234,   "cmd /c pushd C:\\Program Files && popd && exit 1234" },
-    { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\" && popd && exit 1234" },
-    { __LINE__, 1234,   "cmd /c pushd \"C:\\\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd C:\\ \"\" && popd && exit 1234" },
-    { __LINE__, 1,      "cmd /c pushd C:\\ C:\\ && popd && exit 1234", FALSE, TRUE },
-    { __LINE__, 1,      "cmd /c pushd \"C:\\ C:\\\" && popd && exit 1234", FALSE, TRUE },
-    { __LINE__, 0,      "cmd /c pushd \"C:\\ " },
-    { __LINE__, 1,      "cmd /c pushd \" C:\\ ", FALSE, TRUE },
+    { __LINE__, 1234,   "cmd /c pushd C:\\Program Files && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files/\" && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files\" && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\" && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\\\" && popd && exit 1234" },
+    { __LINE__, 1234,   "cmd /c pushd \"C:\\\" && popd && exit 1234" },
 };
 
 static BOOL MyDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
