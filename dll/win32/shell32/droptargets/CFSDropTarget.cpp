@@ -283,6 +283,10 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
                                         DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
+
+    if (*pdwEffect == DROPEFFECT_NONE)
+        return S_OK;
+
     FORMATETC fmt;
     FORMATETC fmt2;
     m_fAcceptFmt = FALSE;
