@@ -83,7 +83,8 @@ list(APPEND SOURCE
     wctomb.c
     wctype.c)
 
-add_library(unicode ${SOURCE})
+add_library(unicode STATIC ${SOURCE})
+target_link_libraries(unicode PRIVATE host_includes)
 
 if(MSVC)
     # Disable warning "'<': signed/unsigned mismatch"

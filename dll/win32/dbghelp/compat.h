@@ -200,7 +200,7 @@ typedef struct _EXCEPTION_RECORD {
   DWORD NumberParameters;
   ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD, *PEXCEPTION_RECORD;
-#if defined(_X86_)
+#if defined(TARGET_i386)
 #define SIZE_OF_80387_REGISTERS	80
 #define CONTEXT_i386	0x10000
 #define CONTEXT_i486	0x10000
@@ -257,7 +257,11 @@ typedef struct _CONTEXT {
   BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT, *PCONTEXT;
 
-#else /* ARM? */
+#elif defined TARGET_amd64
+
+#error "Please define the CONTEXT structure for amd64 platform"
+
+#elif defined TARGET_arm /* ARM? */
 
 /* The following flags control the contents of the CONTEXT structure. */
 
@@ -356,6 +360,10 @@ typedef struct _CONTEXT {
 BOOLEAN CDECL            RtlAddFunctionTable(RUNTIME_FUNCTION*,DWORD,DWORD);
 BOOLEAN CDECL            RtlDeleteFunctionTable(RUNTIME_FUNCTION*);
 PRUNTIME_FUNCTION WINAPI RtlLookupFunctionEntry(ULONG_PTR,DWORD*,UNWIND_HISTORY_TABLE*);
+#else
+
+#error "Unknown target platform"
+
 #endif
 
 typedef

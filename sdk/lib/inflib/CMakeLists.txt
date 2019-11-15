@@ -23,10 +23,11 @@ else()
 
     add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST -D_CRT_SECURE_NO_WARNINGS)
     add_library(inflibhost ${SOURCE})
+    target_include_directories(inflibhost INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
     if(NOT MSVC)
         add_target_compile_flags(inflibhost "-fshort-wchar -Wpointer-arith -Wwrite-strings")
     endif()
 
-    target_link_libraries(inflibhost unicode)
+    target_link_libraries(inflibhost PRIVATE host_includes)
 endif()

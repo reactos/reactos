@@ -88,8 +88,7 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/Dinline=__inline)
         endif()
     endif()
-
-    include_directories(sdk/include/host)
+    add_subdirectory(sdk/include/host)
 
     if(NOT MSVC)
         add_subdirectory(dll/win32/dbghelp)
