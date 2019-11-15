@@ -332,8 +332,13 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
     /* Mouse wheel */
     if (dwFlags & MOUSEEVENTF_WHEEL)
     {
+        WORD fwKeys = (WORD)pCurInfo->ButtonsDown;
+        if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+            fwKeys |= MK_SHIFT;
+        if (IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+            fwKeys |= MK_CONTROL;
         Msg.message = WM_MOUSEWHEEL;
-        Msg.wParam = MAKEWPARAM(pCurInfo->ButtonsDown, pmi->mouseData);
+        Msg.wParam = MAKEWPARAM(fwKeys, pmi->mouseData);
         co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
     }
 
