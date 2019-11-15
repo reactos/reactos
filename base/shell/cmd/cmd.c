@@ -1872,7 +1872,7 @@ Initialize(VOID)
     /* Initialize prompt support */
     InitPrompt();
 
-#ifdef FEATURE_DIR_STACK
+#ifdef FEATURE_DIRECTORY_STACK
     /* Initialize directory stack */
     InitDirectoryStack();
 #endif
