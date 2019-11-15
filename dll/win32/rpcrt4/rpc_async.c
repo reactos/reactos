@@ -158,3 +158,47 @@ RPC_STATUS WINAPI RpcAsyncCancelCall(PRPC_ASYNC_STATE pAsync, BOOL fAbortCall)
     FIXME("(%p, %s): stub\n", pAsync, fAbortCall ? "TRUE" : "FALSE");
     return RPC_S_INVALID_ASYNC_HANDLE;
 }
+
+/***********************************************************************
+ *           RpcGetAuthorizationContextForClient [RPCRT4.@]
+ * 
+ * Returns the Authz context for an RPC client.
+ * 
+ * PARAMS
+ *  ClientBinding       [I] Binding handle on the server that represents
+ *                          a binding to a client.
+ *  ImpersonateOnReturn [I] Directs the function to impersonate the client on return.
+ *  Reserved1           [I] Reserved. Must be null.
+ *  pExpirationTime     [I] Pointer to the expiration date and time of the token.
+ *  Reserved2           [I] Reserved. Must be a LUID structure with each member set to zero.
+ *  Reserved3           [I] Reserved. Must be zero.
+ *  Reserved4           [I] Reserved. Must be null.
+ *  pAuthzClientContext [I] Pointer to an AUTHZ_CLIENT_CONTEXT_HANDLE structure
+ *                          that can be passed directly to Authz functions.
+ * 
+ * RETURNS
+ *  Success: RPC_S_OK.
+ *  Failure: Any error code.
+ */
+RPC_STATUS
+WINAPI
+RpcGetAuthorizationContextForClient(RPC_BINDING_HANDLE ClientBinding,
+                                    BOOL ImpersonateOnReturn,
+                                    void * Reserved1,
+                                    PLARGE_INTEGER pExpirationTime,
+                                    LUID Reserved2,
+                                    DWORD Reserved3,
+                                    PVOID Reserved4,
+                                    PVOID *authz_client_context)
+{
+    FIXME("(%p, %s, %p, %p, %p, %d, %p, %p): stub\n",
+          ClientBinding,
+          ImpersonateOnReturn,
+          Reserved1,
+          pExpirationTime,
+          Reserved2,
+          Reserved3,
+          Reserved4,
+          authz_client_context);
+    return RPC_S_NO_CONTEXT_AVAILABLE;
+}
