@@ -725,44 +725,4 @@ INT FilePromptYNA (UINT resID)
 #endif
 }
 
-void unquote(LPTSTR psz)
-{
-    LPTSTR pchStart, pchEnd, pch = psz;
-    SIZE_T cchSpan;
-
-    while (_istspace(*pch))
-        ++pch;
-
-    if (!*pch)
-    {
-        *psz = 0;
-        return;
-    }
-
-    pchStart = pch;
-    cchSpan = _tcslen(pchStart);
-    pchEnd = pchStart + cchSpan;
-
-    --pchEnd;
-    while (pch < pchEnd && _istspace(*pchEnd))
-    {
-        --pchEnd;
-    }
-    ++pchEnd;
-    *pchEnd = 0;
-
-    --pchEnd;
-    if (*pchStart == TEXT('"') && *pchEnd == TEXT('"'))
-    {
-        ++pchStart;
-        *pchEnd = 0;
-    }
-    else
-    {
-        ++pchEnd;
-    }
-
-    memmove(psz, pchStart, (pchEnd - pchStart + 1) * sizeof(TCHAR));
-}
-
 /* EOF */

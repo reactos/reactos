@@ -272,7 +272,6 @@ BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
 VOID   GetPathCase(TCHAR *, TCHAR *);
-void unquote(LPTSTR psz);
 
 #define PROMPT_NO    0
 #define PROMPT_YES   1
