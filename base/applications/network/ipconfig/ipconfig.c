@@ -763,14 +763,18 @@ DisplayDnsRecord(
                         NULL);
     if (Status != ERROR_SUCCESS)
     {
-#if 0
-        if (wType != 0)
+        if (Status == DNS_ERROR_RCODE_NAME_ERROR)
+        {
+            _tprintf(_T("\t%S\n"), pszName);
+            _tprintf(_T("\t----------------------------------------\n"));
+            _tprintf(_T("\tName does not exist\n\n"));
+        }
+        else if (Status == DNS_INFO_NO_RECORDS)
         {
             _tprintf(_T("\t%S\n"), pszName);
             _tprintf(_T("\t----------------------------------------\n"));
             _tprintf(_T("\tNo records of type %hu\n\n"), wType);
         }
-#endif
         return;
     }
 
@@ -862,7 +866,9 @@ DisplayDns(VOID)
     {
         pNextEntry = pThisEntry->pNext;
 
-        DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType1);
+        if (pThisEntry->wType1 != 0)
+            DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType1);
+
         if (pThisEntry->wType2 != 0)
             DisplayDnsRecord(pThisEntry->pszName, pThisEntry->wType2);
 
