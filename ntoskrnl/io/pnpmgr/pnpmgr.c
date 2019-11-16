@@ -4240,6 +4240,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     GUID BusTypeGuid;
     POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
     BOOLEAN NullTerminate = FALSE;
+    DEVICE_REMOVAL_POLICY Policy;
 
     DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
@@ -4357,7 +4358,9 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case DevicePropertyRemovalPolicy:
-            PIP_RETURN_DATA(sizeof(UCHAR), &DeviceNode->RemovalPolicy);
+
+            Policy = DeviceNode->RemovalPolicy;
+            PIP_RETURN_DATA(sizeof(Policy), &Policy);
 
         /* Handle the registry-based properties */
         case DevicePropertyUINumber:
