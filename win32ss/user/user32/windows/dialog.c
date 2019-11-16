@@ -1185,39 +1185,37 @@ static void DEFDLG_Reposition(HWND hwnd)
     HMONITOR hMon;
     MONITORINFO mi = { sizeof(mi) };
     RECT rc;
-    SIZE siz;
+    LONG cx, cy;
 
     if (GetWindowLongW(hwnd, GWL_STYLE) & WS_CHILD)
         return;
 
-    hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+    hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 
     if (!GetMonitorInfoW(hMon, &mi) || !GetWindowRect(hwnd, &rc))
         return;
 
-    siz.cx = rc.right - rc.left;
-    siz.cy = rc.bottom - rc.top;
+    cx = rc.right - rc.left;
+    cy = rc.bottom - rc.top;
 
     if (rc.right > mi.rcWork.right)
     {
         rc.right = mi.rcWork.right;
-        rc.left = rc.right - siz.cx;
+        rc.left = rc.right - cx;
     }
     if (rc.bottom > mi.rcWork.bottom - 4)
     {
         rc.bottom = mi.rcWork.bottom - 4;
-        rc.top = rc.bottom - siz.cy;
+        rc.top = rc.bottom - cy;
     }
 
     if (rc.left < mi.rcWork.left)
     {
         rc.left = mi.rcWork.left;
-        rc.right = rc.left + siz.cx;
     }
     if (rc.top < mi.rcWork.top)
     {
         rc.top = mi.rcWork.top;
-        rc.bottom = rc.top + siz.cy;
     }
 
     SetWindowPos(hwnd, NULL, rc.left, rc.top, 0, 0,
