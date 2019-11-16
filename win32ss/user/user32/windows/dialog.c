@@ -1179,7 +1179,52 @@ static BOOL DEFDLG_SetDefButton( HWND hwndDlg, DIALOGINFO *dlgInfo, HWND hwndNew
     return TRUE;
 }
 
+#ifdef __REACTOS__
+static void DEFDLG_Reposition(HWND hwnd)
+{
+    HMONITOR hMon;
+    MONITORINFO mi = { sizeof(mi) };
+    RECT rc;
+    SIZE siz;
 
+    if (GetWindowLongW(hwnd, GWL_STYLE) & WS_CHILD)
+        return;
+
+    hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+
+    if (!GetMonitorInfoW(hMon, &mi) || !GetWindowRect(hwnd, &rc))
+        return;
+
+    siz.cx = rc.right - rc.left;
+    siz.cy = rc.bottom - rc.top;
+
+    if (rc.right > mi.rcWork.right)
+    {
+        rc.right = mi.rcWork.right;
+        rc.left = rc.right - siz.cx;
+    }
+    if (rc.bottom > mi.rcWork.bottom)
+    {
+        rc.bottom = mi.rcWork.bottom;
+        rc.top = rc.bottom - siz.cy;
+    }
+
+    if (rc.left < mi.rcWork.left)
+    {
+        rc.left = mi.rcWork.left;
+        rc.right = rc.left + siz.cx;
+    }
+    if (rc.top < mi.rcWork.top)
+    {
+        rc.top = mi.rcWork.top;
+        rc.bottom = rc.top + siz.cy;
+    }
+
+    SetWindowPos(hwnd, NULL, rc.left, rc.top, 0, 0,
+                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE |
+                 SWP_NOZORDER);
+}
+#endif
 /***********************************************************************
  *           DEFDLG_Proc
  *
@@ -1253,6 +1298,11 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             }
             return 0;
 
+#ifdef __REACTOS__
+        case DM_REPOSITION:
+            DEFDLG_Reposition(hwnd);
+            return 0;
+#endif
         case WM_NEXTDLGCTL:
             if (dlgInfo)
             {
@@ -1692,6 +1742,9 @@ DefDlgProcA(
             case WM_SETFOCUS:
             case DM_SETDEFID:
             case DM_GETDEFID:
+#ifdef __REACTOS__
+            case DM_REPOSITION:
+#endif
             case WM_NEXTDLGCTL:
             case WM_GETFONT:
             case WM_CLOSE:
@@ -1752,6 +1805,9 @@ DefDlgProcW(
             case WM_SETFOCUS:
             case DM_SETDEFID:
             case DM_GETDEFID:
+#ifdef __REACTOS__
+            case DM_REPOSITION:
+#endif
             case WM_NEXTDLGCTL:
             case WM_GETFONT:
             case WM_CLOSE:
