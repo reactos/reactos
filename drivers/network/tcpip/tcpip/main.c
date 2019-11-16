@@ -473,23 +473,26 @@ TiDispatchInternal(
 }
 
 
+/**
+ * @brief Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
+ * 
+ * @param[in] DeviceObject
+ *   Pointer to a device object for this driver
+ * @param[in] Irp
+ *   Pointer to a I/O request packet
+ * 
+ * @return
+ *   Status of the operation
+ */
 NTSTATUS NTAPI
 TiDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
-/*
- * FUNCTION: Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
- * ARGUMENTS:
- *     DeviceObject = Pointer to a device object for this driver
- *     Irp          = Pointer to a I/O request packet
- * RETURNS:
- *     Status of the operation
- */
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
 
-    IrpSp  = IoGetCurrentIrpStackLocation(Irp);
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Called. IRP is at (0x%X).\n", Irp));
 
@@ -497,51 +500,55 @@ TiDispatch(
 
 #if 0
     Status = TdiMapUserRequest(DeviceObject, Irp, IrpSp);
-    if (NT_SUCCESS(Status)) {
+    if (NT_SUCCESS(Status))
+    {
         TiDispatchInternal(DeviceObject, Irp);
         Status = STATUS_PENDING;
-    } else {
+    }
+    else
+    {
 #else
     if (TRUE) {
 #endif
-    /* See if this request is TCP/IP specific */
-    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
-    case IOCTL_TCP_QUERY_INFORMATION_EX:
-        TI_DbgPrint(MIN_TRACE, ("TCP_QUERY_INFORMATION_EX\n"));
-        Status = DispTdiQueryInformationEx(Irp, IrpSp);
-        break;
+        /* See if this request is TCP/IP specific */
+        switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
+        {
+            case IOCTL_TCP_QUERY_INFORMATION_EX:
+                TI_DbgPrint(MIN_TRACE, ("TCP_QUERY_INFORMATION_EX\n"));
+                Status = DispTdiQueryInformationEx(Irp, IrpSp);
+                break;
 
-    case IOCTL_TCP_SET_INFORMATION_EX:
-        TI_DbgPrint(MIN_TRACE, ("TCP_SET_INFORMATION_EX\n"));
-        Status = DispTdiSetInformationEx(Irp, IrpSp);
-        break;
+            case IOCTL_TCP_SET_INFORMATION_EX:
+                TI_DbgPrint(MIN_TRACE, ("TCP_SET_INFORMATION_EX\n"));
+                Status = DispTdiSetInformationEx(Irp, IrpSp);
+                break;
 
-    case IOCTL_SET_IP_ADDRESS:
-        TI_DbgPrint(MIN_TRACE, ("SET_IP_ADDRESS\n"));
-        Status = DispTdiSetIPAddress(Irp, IrpSp);
-        break;
+            case IOCTL_SET_IP_ADDRESS:
+                TI_DbgPrint(MIN_TRACE, ("SET_IP_ADDRESS\n"));
+                Status = DispTdiSetIPAddress(Irp, IrpSp);
+                break;
 
-    case IOCTL_DELETE_IP_ADDRESS:
-        TI_DbgPrint(MIN_TRACE, ("DELETE_IP_ADDRESS\n"));
-        Status = DispTdiDeleteIPAddress(Irp, IrpSp);
-        break;
+            case IOCTL_DELETE_IP_ADDRESS:
+                TI_DbgPrint(MIN_TRACE, ("DELETE_IP_ADDRESS\n"));
+                Status = DispTdiDeleteIPAddress(Irp, IrpSp);
+                break;
 
-    case IOCTL_QUERY_IP_HW_ADDRESS:
-        TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
-        Status = DispTdiQueryIpHwAddress(DeviceObject, Irp, IrpSp);
-        break;
+            case IOCTL_QUERY_IP_HW_ADDRESS:
+                TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
+                Status = DispTdiQueryIpHwAddress(DeviceObject, Irp, IrpSp);
+                break;
 
-    default:
-        TI_DbgPrint(MIN_TRACE, ("Unknown IOCTL 0x%X\n",
-            IrpSp->Parameters.DeviceIoControl.IoControlCode));
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
+            default:
+                TI_DbgPrint(MIN_TRACE, ("Unknown IOCTL 0x%X\n",
+                    IrpSp->Parameters.DeviceIoControl.IoControlCode));
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
         }
     }
 
     TI_DbgPrint(DEBUG_IRP, ("[TCPIP, TiDispatch] Leaving. Status = (0x%X).\n", Status));
 
-    return IRPFinish( Irp, Status );
+    return IRPFinish(Irp, Status);
 }
 
 
