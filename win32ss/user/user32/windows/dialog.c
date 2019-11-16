@@ -1203,9 +1203,9 @@ static void DEFDLG_Reposition(HWND hwnd)
         rc.right = mi.rcWork.right;
         rc.left = rc.right - siz.cx;
     }
-    if (rc.bottom > mi.rcWork.bottom)
+    if (rc.bottom > mi.rcWork.bottom - 4)
     {
-        rc.bottom = mi.rcWork.bottom;
+        rc.bottom = mi.rcWork.bottom - 4;
         rc.top = rc.bottom - siz.cy;
     }
 
