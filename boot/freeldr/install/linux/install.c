@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 {
 	if (argc < 3)
 	{
-		printf("syntax: install x: [fs_type]\nwhere fs_type is fat or fat32\n");
+		printf("syntax: install /dev/sdx\nwhere [x] is the letter of drive\n[fs_type]\nwhere fs_type is fat or fat32\n");
 		return -1;
 	}
 
