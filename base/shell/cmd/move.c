@@ -496,9 +496,14 @@ INT cmd_move (LPTSTR param)
             }
         }
         if (MoveStatus)
+        {
             ConOutResPrintf(STRING_MOVE_ERROR1);
+        }
         else
+        {
             ConOutResPrintf(STRING_MOVE_ERROR2);
+            nErrorLevel = 1;
+        }
     }
     while ((!OnlyOneFile || dwMoveStatusFlags & MOVE_SRC_CURRENT_IS_DIR ) &&
             !(dwMoveStatusFlags & MOVE_SOURCE_IS_DIR) &&
