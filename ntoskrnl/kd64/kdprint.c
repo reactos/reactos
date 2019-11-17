@@ -331,8 +331,19 @@ KdpPrint(IN ULONG ComponentId,
     /* Assume failure */
     *Handled = FALSE;
 
-    /* Validate the mask */
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    if ((ComponentId >= KdComponentTableSize) && (ComponentId < MAXULONG))
+    {
+        /* Use the default component ID */
+        Mask = &Kd_DEFAULT_Mask;
+        // Level = DPFLTR_INFO_LEVEL; // Override the Level.
+    }
+#endif
+    /* Convert Level to bit field if required */
     if (Level < 32) Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
+
+    /* Validate the mask */
     if (!(Kd_WIN2000_Mask & Level) ||
         ((ComponentId < KdComponentTableSize) &&
         !(*KdComponentTable[ComponentId] & Level)))

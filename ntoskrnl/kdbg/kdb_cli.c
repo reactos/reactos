@@ -222,7 +222,14 @@ KdbpGetComponentId(
     }
     ComponentTable[] =
     {
-        { "DEFAULT", MAXULONG },
+//
+// Default components
+//
+        { "WIN2000", MAXULONG },
+        { "DEFAULT", DPFLTR_DEFAULT_ID },
+//
+// Standard components
+//
         { "SYSTEM", DPFLTR_SYSTEM_ID },
         { "SMSS", DPFLTR_SMSS_ID },
         { "SETUP", DPFLTR_SETUP_ID },
@@ -327,6 +334,9 @@ KdbpGetComponentId(
         { "MM", DPFLTR_MM_ID },
         { "DFSC", DPFLTR_DFSC_ID },
         { "WOW64", DPFLTR_WOW64_ID },
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
         { "ALPC", DPFLTR_ALPC_ID },
         { "WDI", DPFLTR_WDI_ID },
         { "PERFLIB", DPFLTR_PERFLIB_ID },

@@ -2295,8 +2295,9 @@ KdRefreshDebuggerNotPresent(VOID)
  */
 NTSTATUS
 NTAPI
-NtQueryDebugFilterState(IN ULONG ComponentId,
-                        IN ULONG Level)
+NtQueryDebugFilterState(
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level)
 {
     PULONG Mask;
 
@@ -2316,16 +2317,22 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
     }
     else
     {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        /* Use the default component ID */
+        Mask = &Kd_DEFAULT_Mask;
+        // Level = DPFLTR_INFO_LEVEL; // Override the Level.
+#else
         /* Invalid ID, fail */
         return STATUS_INVALID_PARAMETER_1;
+#endif
     }
 
-    /* Convert Level to bit field if necessary */
+    /* Convert Level to bit field if required */
     if (Level < 32) Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
 
     /* Determine if this Level is filtered out */
-    if ((Kd_WIN2000_Mask & Level) ||
-        (*Mask & Level))
+    if ((Kd_WIN2000_Mask & Level) || (*Mask & Level))
     {
         /* This mask will get through to the debugger */
         return (NTSTATUS)TRUE;
@@ -2342,15 +2349,15 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
  */
 NTSTATUS
 NTAPI
-NtSetDebugFilterState(IN ULONG ComponentId,
-                      IN ULONG Level,
-                      IN BOOLEAN State)
+NtSetDebugFilterState(
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_ BOOLEAN State)
 {
     PULONG Mask;
 
     /* Modifying debug filters requires the debug privilege */
-    if (!SeSinglePrivilegeCheck(SeDebugPrivilege,
-                                ExGetPreviousMode()))
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege, ExGetPreviousMode()))
     {
         /* Fail */
         return STATUS_ACCESS_DENIED;
@@ -2372,25 +2379,24 @@ NtSetDebugFilterState(IN ULONG ComponentId,
     }
     else
     {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        /* Use the default component ID */
+        Mask = &Kd_DEFAULT_Mask;
+#else
         /* Invalid ID, fail */
         return STATUS_INVALID_PARAMETER_1;
+#endif
     }
 
     /* Convert Level to bit field if required */
     if (Level < 32) Level = 1 << Level;
+    Level &= ~DPFLTR_MASK;
 
-    /* Check what kind of operation this is */
+    /* Set or remove the Level */
     if (State)
-    {
-        /* Set the Level */
         *Mask |= Level;
-    }
     else
-    {
-        /* Remove the Level */
         *Mask &= ~Level;
-    }
 
-    /* Success */
     return STATUS_SUCCESS;
 }

@@ -57,17 +57,17 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDebugFilterState(
-     ULONG ComponentId,
-     ULONG Level
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDebugFilterState(
-    ULONG ComponentId,
-    ULONG Level,
-    BOOLEAN State
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_ BOOLEAN State
 );
 
 NTSYSCALLAPI
