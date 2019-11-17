@@ -31,7 +31,7 @@ KD_DISPATCH_TABLE DispatchTable[KdMax];
 
 PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpSerialInit,
-                                         KdpInitDebugLog,
+                                         KdpDebugLogInit,
                                          KdpBochsInit,
                                          KdpKdbgInit};
 
@@ -39,9 +39,9 @@ extern ANSI_STRING KdpLogFileName;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+INIT_FUNCTION
 PCHAR
 NTAPI
-INIT_FUNCTION
 KdpGetDebugMode(PCHAR Currentp2)
 {
     PCHAR p1, p2 = Currentp2;
@@ -135,9 +135,9 @@ KdpGetDebugMode(PCHAR Currentp2)
     return p2;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KdpCallInitRoutine(ULONG BootPhase)
 {
     PLIST_ENTRY CurrentEntry;
@@ -213,7 +213,7 @@ KdInitSystem(ULONG BootPhase,
         }
         else
         {
-            /* Called from a bugcheck or a re-enable. Unconditionally enable KD */
+            /* Called from a bugcheck or a re-enable. Unconditionally enable KD. */
             KdDebuggerEnabled = TRUE;
         }
 

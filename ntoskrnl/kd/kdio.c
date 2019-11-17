@@ -17,33 +17,33 @@
 /* GLOBALS *******************************************************************/
 
 #define KdpBufferSize  (1024 * 512)
-BOOLEAN KdpLoggingEnabled = FALSE;
-PCHAR KdpDebugBuffer = NULL;
-volatile ULONG KdpCurrentPosition = 0;
-volatile ULONG KdpFreeBytes = 0;
-KSPIN_LOCK KdpDebugLogSpinLock;
-KEVENT KdpLoggerThreadEvent;
-HANDLE KdpLogFileHandle;
+static BOOLEAN KdpLoggingEnabled = FALSE;
+static PCHAR KdpDebugBuffer = NULL;
+static volatile ULONG KdpCurrentPosition = 0;
+static volatile ULONG KdpFreeBytes = 0;
+static KSPIN_LOCK KdpDebugLogSpinLock;
+static KEVENT KdpLoggerThreadEvent;
+static HANDLE KdpLogFileHandle;
 ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
 
-KSPIN_LOCK KdpSerialSpinLock;
+static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
 CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 
-/* Current Port in use. FIXME: Do we support more then one? */
+/* Current Port in use. FIXME: Do we support more than one? */
 ULONG KdpPort;
 
 #define KdpScreenLineLengthDefault 80
-CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
-ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
+static CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
+static ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
 const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
 PCHAR KdpDmesgBuffer = NULL;
 volatile ULONG KdpDmesgCurrentPosition = 0;
 volatile ULONG KdpDmesgFreeBytes = 0;
 volatile ULONG KdbDmesgTotalWritten = 0;
-KSPIN_LOCK KdpDmesgLogSpinLock;
 volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
+static KSPIN_LOCK KdpDmesgLogSpinLock;
 
 /* UTILITY FUNCTIONS *********************************************************/
 
@@ -57,8 +57,8 @@ volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
  *
  * See also: kd64\kdinit.c
  */
-static SIZE_T
-INIT_FUNCTION
+static INIT_FUNCTION
+SIZE_T
 KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY ListEntry;
@@ -98,8 +98,8 @@ KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 /* See also: kd64\kdinit.c */
-static VOID
-INIT_FUNCTION
+static INIT_FUNCTION
+VOID
 KdpPrintBanner(IN SIZE_T MemSizeMBs)
 {
     DPRINT1("-----------------------------------------------------\n");
@@ -109,9 +109,50 @@ KdpPrintBanner(IN SIZE_T MemSizeMBs)
     DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName, KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
 }
 
-/* FILE DEBUG LOG FUNCTIONS **************************************************/
+/* LOCKING FUNCTIONS *********************************************************/
+
+KIRQL
+NTAPI
+KdpAcquireLock(IN PKSPIN_LOCK SpinLock)
+{
+    KIRQL OldIrql;
+
+    /* Acquire the spinlock without waiting at raised IRQL */
+    while (TRUE)
+    {
+        /* Loop until the spinlock becomes available */
+        while (!KeTestSpinLock(SpinLock));
+
+        /* Spinlock is free, raise IRQL to high level */
+        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+        /* Try to get the spinlock */
+        if (KeTryToAcquireSpinLockAtDpcLevel(SpinLock))
+            break;
+
+        /* Someone else got the spinlock, lower IRQL back */
+        KeLowerIrql(OldIrql);
+    }
+
+    return OldIrql;
+}
 
 VOID
+NTAPI
+KdpReleaseLock(IN PKSPIN_LOCK SpinLock,
+               IN KIRQL OldIrql)
+{
+    /* Release the spinlock */
+    KiReleaseSpinLock(SpinLock);
+    // KeReleaseSpinLockFromDpcLevel(SpinLock);
+
+    /* Restore the old IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+/* FILE DEBUG LOG FUNCTIONS **************************************************/
+
+static VOID
 NTAPI
 KdpLoggerThread(PVOID Context)
 {
@@ -122,7 +163,7 @@ KdpLoggerThread(PVOID Context)
 
     while (TRUE)
     {
-        KeWaitForSingleObject(&KdpLoggerThreadEvent, 0, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&KdpLoggerThreadEvent, Executive, KernelMode, FALSE, NULL);
 
         /* Bug */
         /* Keep KdpCurrentPosition and KdpFreeBytes values in local
@@ -158,32 +199,18 @@ KdpLoggerThread(PVOID Context)
     }
 }
 
-VOID
+static VOID
 NTAPI
-KdpPrintToLogFile(PCH String,
+KdpPrintToLogFile(PCHAR String,
                   ULONG StringLength)
 {
-    ULONG beg, end, num;
     KIRQL OldIrql;
+    ULONG beg, end, num;
 
     if (KdpDebugBuffer == NULL) return;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    while (TRUE)
-    {
-        /* Wait when the spinlock becomes available */
-        while (!KeTestSpinLock(&KdpDebugLogSpinLock));
-
-        /* Spinlock was free, raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Try to get the spinlock */
-        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebugLogSpinLock))
-            break;
-
-        /* Someone else got the spinlock, lower IRQL back */
-        KeLowerIrql(OldIrql);
-    }
+    OldIrql = KdpAcquireLock(&KdpDebugLogSpinLock);
 
     beg = KdpCurrentPosition;
     num = KdpFreeBytes;
@@ -207,21 +234,17 @@ KdpPrintToLogFile(PCH String,
         }
     }
 
-    /* Release spinlock */
-    KiReleaseSpinLock(&KdpDebugLogSpinLock);
-
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
 
     /* Signal the logger thread */
     if (OldIrql <= DISPATCH_LEVEL && KdpLoggingEnabled)
-        KeSetEvent(&KdpLoggerThreadEvent, 0, FALSE);
+        KeSetEvent(&KdpLoggerThreadEvent, IO_NO_INCREMENT, FALSE);
 }
 
 VOID
 NTAPI
-INIT_FUNCTION
-KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
+KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
                 ULONG BootPhase)
 {
     NTSTATUS Status;
@@ -239,12 +262,11 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
         KdComPortInUse = NULL;
 
         /* Write out the functions that we support for now */
-        DispatchTable->KdpInitRoutine = KdpInitDebugLog;
+        DispatchTable->KdpInitRoutine = KdpDebugLogInit;
         DispatchTable->KdpPrintRoutine = KdpPrintToLogFile;
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
-
     }
     else if (BootPhase == 1)
     {
@@ -272,7 +294,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &FileName,
-                                   0,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
 
@@ -291,7 +313,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
         RtlFreeUnicodeString(&FileName);
 
-        if (!NT_SUCCESS(Status)) return;
+        if (!NT_SUCCESS(Status))
+            return;
 
         KeInitializeEvent(&KdpLoggerThreadEvent, SynchronizationEvent, TRUE);
 
@@ -303,8 +326,11 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                                       NULL,
                                       KdpLoggerThread,
                                       NULL);
-
-        if (!NT_SUCCESS(Status)) return;
+        if (!NT_SUCCESS(Status))
+        {
+            NtClose(KdpLogFileHandle);
+            return;
+        }
 
         Priority = 7;
         NtSetInformationThread(ThreadHandle,
@@ -318,28 +344,14 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
 VOID
 NTAPI
-KdpSerialDebugPrint(LPSTR Message,
+KdpSerialDebugPrint(PCHAR Message,
                     ULONG Length)
 {
+    PCHAR pch = (PCHAR)Message;
     KIRQL OldIrql;
-    PCHAR pch = (PCHAR) Message;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    while (TRUE)
-    {
-        /* Wait when the spinlock becomes available */
-        while (!KeTestSpinLock(&KdpSerialSpinLock));
-
-        /* Spinlock was free, raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Try to get the spinlock */
-        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpSerialSpinLock))
-            break;
-
-        /* Someone else got the spinlock, lower IRQL back */
-        KeLowerIrql(OldIrql);
-    }
+    OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
 
     /* Output the message */
     while (pch < Message + Length && *pch != '\0')
@@ -352,11 +364,8 @@ KdpSerialDebugPrint(LPSTR Message,
         pch++;
     }
 
-    /* Release spinlock */
-    KiReleaseSpinLock(&KdpSerialSpinLock);
-
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
 }
 
 VOID
@@ -399,27 +408,58 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
 /* SCREEN FUNCTIONS **********************************************************/
 
+VOID
+KdpScreenAcquire(VOID)
+{
+    if (InbvIsBootDriverInstalled() /* &&
+        !InbvCheckDisplayOwnership() */)
+    {
+        /* Acquire ownership and reset the display */
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+        InbvSolidColorFill(0, 0, 639, 479, 0);
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
+        InbvSetScrollRegion(0, 0, 639, 479);
+    }
+}
+
+// extern VOID NTAPI InbvSetDisplayOwnership(IN BOOLEAN DisplayOwned);
+
+VOID
+KdpScreenRelease(VOID)
+{
+    if (InbvIsBootDriverInstalled()&&
+        InbvCheckDisplayOwnership())
+    {
+        /* Release the display */
+        // InbvSetDisplayOwnership(FALSE);
+        InbvNotifyDisplayOwnershipLost(NULL);
+    }
+}
+
 /*
  * Screen debug logger function KdpScreenPrint() writes text messages into
  * KdpDmesgBuffer, using it as a circular buffer. KdpDmesgBuffer contents could
  * be later (re)viewed using dmesg command of kdbg. KdpScreenPrint() protects
  * KdpDmesgBuffer from simultaneous writes by use of KdpDmesgLogSpinLock.
  */
-VOID
+static VOID
 NTAPI
-KdpScreenPrint(LPSTR Message,
+KdpScreenPrint(PCHAR Message,
                ULONG Length)
 {
-    ULONG beg, end, num;
+    PCHAR pch = (PCHAR)Message;
     KIRQL OldIrql;
-    PCHAR pch = (PCHAR) Message;
+    ULONG beg, end, num;
 
     while (pch < Message + Length && *pch)
     {
-        if(*pch == '\b')
+        if (*pch == '\b')
         {
             /* HalDisplayString does not support '\b'. Workaround it and use '\r' */
-            if(KdpScreenLineLength > 0)
+            if (KdpScreenLineLength > 0)
             {
                 /* Remove last character from buffer */
                 KdpScreenLineBuffer[--KdpScreenLineLength] = '\0';
@@ -436,10 +476,10 @@ KdpScreenPrint(LPSTR Message,
             KdpScreenLineBuffer[KdpScreenLineLength] = '\0';
         }
 
-        if(*pch == '\n' || KdpScreenLineLength == KdpScreenLineLengthDefault)
+        if (*pch == '\n' || KdpScreenLineLength == KdpScreenLineLengthDefault)
         {
             /* Print buffered characters */
-            if(KdpScreenLineBufferPos != KdpScreenLineLength)
+            if (KdpScreenLineBufferPos != KdpScreenLineLength)
                 HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
 
             /* Clear line buffer */
@@ -451,7 +491,7 @@ KdpScreenPrint(LPSTR Message,
     }
 
     /* Print buffered characters */
-    if(KdpScreenLineBufferPos != KdpScreenLineLength)
+    if (KdpScreenLineBufferPos != KdpScreenLineLength)
     {
         HalDisplayString(KdpScreenLineBuffer + KdpScreenLineBufferPos);
         KdpScreenLineBufferPos = KdpScreenLineLength;
@@ -465,21 +505,7 @@ KdpScreenPrint(LPSTR Message,
       return;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
-    while (TRUE)
-    {
-        /* Wait when the spinlock becomes available */
-        while (!KeTestSpinLock(&KdpDmesgLogSpinLock));
-
-        /* Spinlock was free, raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Try to get the spinlock */
-        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDmesgLogSpinLock))
-            break;
-
-        /* Someone else got the spinlock, lower IRQL back */
-        KeLowerIrql(OldIrql);
-    }
+    OldIrql = KdpAcquireLock(&KdpDmesgLogSpinLock);
 
     /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
      * set num to min(KdpDmesgFreeBytes, Length).
@@ -504,11 +530,8 @@ KdpScreenPrint(LPSTR Message,
         KdbDmesgTotalWritten += num;
     }
 
-    /* Release spinlock */
-    KiReleaseSpinLock(&KdpDmesgLogSpinLock);
-
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpDmesgLogSpinLock, OldIrql);
 
     /* Optional step(?): find out a way to notify about buffer exhaustion,
      * and possibly fall into kbd to use dmesg command: user will read
@@ -544,13 +567,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
         KdbDmesgTotalWritten = 0;
 
         /* Take control of the display */
-        InbvAcquireDisplayOwnership();
-        InbvResetDisplay();
-        InbvSolidColorFill(0, 0, 639, 479, 0);
-        InbvSetTextColor(15);
-        InbvSetScrollRegion(0, 0, 639, 479);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
+        KdpScreenAcquire();
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);

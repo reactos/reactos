@@ -1218,21 +1218,9 @@ KdbpInternalEnter(VOID)
 
     KbdDisableMouse();
 
-    if (KdpDebugMode.Screen &&
-        InbvIsBootDriverInstalled() &&
-        !InbvCheckDisplayOwnership())
-    {
-        /* Acquire ownership and reset the display */
-        InbvAcquireDisplayOwnership();
-        InbvResetDisplay();
-
-        /* Display debugger prompt */
-        InbvSolidColorFill(0, 0, 639, 479, 0);
-        InbvSetTextColor(15);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
-    }
+    /* Take control of the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenAcquire();
 
     /* Call the interface's main loop on a different stack */
     Thread = PsGetCurrentThread();
@@ -1244,7 +1232,7 @@ KdbpInternalEnter(VOID)
     Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
     Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-    /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/
+    // KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
 
     KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
 
@@ -1252,6 +1240,11 @@ KdbpInternalEnter(VOID)
     Thread->Tcb.StackBase = SavedStackBase;
     Thread->Tcb.StackLimit = SavedStackLimit;
     Thread->Tcb.KernelStack = SavedKernelStack;
+
+    /* Release the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenRelease();
+
     KbdEnableMouse();
 }
 
@@ -1363,7 +1356,7 @@ KdbEnterDebuggerException(
         EnterConditionMet = FALSE;
     }
 
-    /* If we stopped on one of our breakpoints then let the user know. */
+    /* If we stopped on one of our breakpoints then let the user know */
     KdbLastBreakPointNr = -1;
     KdbEnteredOnSingleStep = FALSE;
 
@@ -1374,7 +1367,7 @@ KdbEnterDebuggerException(
 
         if (ExceptionCode == STATUS_BREAKPOINT)
         {
-            /* ... and restore the original instruction. */
+            /* ... and restore the original instruction */
             if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address,
                                                      BreakPoint->Data.SavedInstruction, NULL)))
             {
@@ -1408,7 +1401,7 @@ KdbEnterDebuggerException(
         {
             ASSERT((TrapFrame->EFlags & EFLAGS_TF) == 0);
 
-            /* Delete the temporary breakpoint which was used to step over or into the instruction. */
+            /* Delete the temporary breakpoint which was used to step over or into the instruction */
             KdbpDeleteBreakPoint(-1, BreakPoint);
 
             if (--KdbNumSingleSteps > 0)
@@ -1626,7 +1619,7 @@ KdbEnterDebuggerException(
         return kdHandleException;
     }
 
-    /* Call the main loop. */
+    /* Call the main loop */
     KdbpInternalEnter();
 
     /* Check if we should single step */
@@ -1698,9 +1691,9 @@ continue_execution:
     return ContinueType;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KdbpGetCommandLineSettings(
     PCHAR p1)
 {

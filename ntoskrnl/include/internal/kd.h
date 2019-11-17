@@ -106,7 +106,7 @@ VOID
 typedef
 VOID
 (NTAPI*PKDP_PRINT_ROUTINE)(
-    LPSTR String,
+    PCHAR String,
     ULONG Length
 );
 
@@ -140,6 +140,12 @@ KdInitSystem(
 );
 
 VOID
+KdpScreenAcquire(VOID);
+
+VOID
+KdpScreenRelease(VOID);
+
+VOID
 NTAPI
 KdpScreenInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
@@ -155,7 +161,7 @@ KdpSerialInit(
 
 VOID
 NTAPI
-KdpInitDebugLog(
+KdpDebugLogInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
@@ -192,13 +198,6 @@ KdpPrintString(
 BOOLEAN
 NTAPI
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
-
-VOID
-NTAPI
-KdpBochsDebugPrint(
-    IN PCH Message,
-    IN ULONG Length
-);
 
 BOOLEAN
 NTAPI
