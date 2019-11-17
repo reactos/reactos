@@ -1557,7 +1557,7 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
         // Pretty-print the page
         //
         if (!StatusOnly)
-        DbgPrint("0x%08p:\t%20s\t(%04d.%04d)\t[%16s - %16s])\n",
+        DbgPrint("0x%08p:\t%20s\t(%04d.%04d)\t[%16s - %16s]\n",
                  i << PAGE_SHIFT,
                  Consumer,
                  Pfn1->u3.e2.ReferenceCount,
