@@ -29,10 +29,95 @@
 
 #include "resource.h"
 
+typedef struct _RECORDTYPE
+{
+    WORD wRecordType;
+    LPTSTR pszRecordName;
+} RECORDTYPE, *PRECORDTYPE;
+
 #define GUID_LEN 40
 
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
+
+RECORDTYPE TypeArray[] =
+{
+    {DNS_TYPE_ZERO,    _T("ZERO")},
+    {DNS_TYPE_A,       _T("A")},
+    {DNS_TYPE_NS,      _T("NS")},
+    {DNS_TYPE_MD,      _T("MD")},
+    {DNS_TYPE_MF,      _T("MF")},
+    {DNS_TYPE_CNAME,   _T("CNAME")},
+    {DNS_TYPE_SOA,     _T("SOA")},
+    {DNS_TYPE_MB,      _T("MB")},
+    {DNS_TYPE_MG,      _T("MG")},
+    {DNS_TYPE_MR,      _T("MR")},
+    {DNS_TYPE_NULL,    _T("NULL")},
+    {DNS_TYPE_WKS,     _T("WKS")},
+    {DNS_TYPE_PTR,     _T("PTR")},
+    {DNS_TYPE_HINFO,   _T("HINFO")},
+    {DNS_TYPE_MINFO,   _T("MINFO")},
+    {DNS_TYPE_MX,      _T("MX")},
+    {DNS_TYPE_TEXT,    _T("TXT")},
+    {DNS_TYPE_RP,      _T("RP")},
+    {DNS_TYPE_AFSDB,   _T("AFSDB")},
+    {DNS_TYPE_X25,     _T("X25")},
+    {DNS_TYPE_ISDN,    _T("ISDN")},
+    {DNS_TYPE_RT,      _T("RT")},
+    {DNS_TYPE_NSAP,    _T("NSAP")},
+    {DNS_TYPE_NSAPPTR, _T("NSAPPTR")},
+    {DNS_TYPE_SIG,     _T("SIG")},
+    {DNS_TYPE_KEY,     _T("KEY")},
+    {DNS_TYPE_PX,      _T("PX")},
+    {DNS_TYPE_GPOS,    _T("GPOS")},
+    {DNS_TYPE_AAAA,    _T("AAAA")},
+    {DNS_TYPE_LOC,     _T("LOC")},
+    {DNS_TYPE_NXT,     _T("NXT")},
+    {DNS_TYPE_EID,     _T("EID")},
+    {DNS_TYPE_NIMLOC,  _T("NIMLOC")},
+    {DNS_TYPE_SRV,     _T("SRV")},
+    {DNS_TYPE_ATMA,    _T("ATMA")},
+    {DNS_TYPE_NAPTR,   _T("NAPTR")},
+    {DNS_TYPE_KX,      _T("KX")},
+    {DNS_TYPE_CERT,    _T("CERT")},
+    {DNS_TYPE_A6,      _T("A6")},
+    {DNS_TYPE_DNAME,   _T("DNAME")},
+    {DNS_TYPE_SINK,    _T("SINK")},
+    {DNS_TYPE_OPT,     _T("OPT")},
+    {DNS_TYPE_UINFO,   _T("UINFO")},
+    {DNS_TYPE_UID,     _T("UID")},
+    {DNS_TYPE_GID,     _T("GID")},
+    {DNS_TYPE_UNSPEC,  _T("UNSPEC")},
+    {DNS_TYPE_ADDRS,   _T("ADDRS")},
+    {DNS_TYPE_TKEY,    _T("TKEY")},
+    {DNS_TYPE_TSIG,    _T("TSIG")},
+    {DNS_TYPE_IXFR,    _T("IXFR")},
+    {DNS_TYPE_AXFR,    _T("AXFR")},
+    {DNS_TYPE_MAILB,   _T("MAILB")},
+    {DNS_TYPE_MAILA,   _T("MAILA")},
+    {DNS_TYPE_ALL,     _T("ALL")},
+    {0, NULL}
+};
+
+LPTSTR
+GetRecordTypeName(WORD wType)
+{
+    static TCHAR szType[8];
+    INT i;
+
+    for (i = 0; ; i++)
+    {
+         if (TypeArray[i].pszRecordName == NULL)
+             break;
+
+         if (TypeArray[i].wRecordType == wType)
+             return TypeArray[i].pszRecordName;
+    }
+
+    _stprintf(szType, _T("%hu"), wType);
+
+    return szType;
+}
 
 int LoadStringAndOem(HINSTANCE hInst,
                      UINT uID,
@@ -773,7 +858,7 @@ DisplayDnsRecord(
         {
             _tprintf(_T("\t%S\n"), pszName);
             _tprintf(_T("\t----------------------------------------\n"));
-            _tprintf(_T("\tNo records of type %hu\n\n"), wType);
+            _tprintf(_T("\tNo records of type %s\n\n"), GetRecordTypeName(wType));
         }
         return;
     }
@@ -818,10 +903,6 @@ DisplayDnsRecord(
                 _tprintf(_T("\tA (Host) Record . . . : %S\n"), szBuffer);
                 break;
 
-            case DNS_TYPE_PTR:
-                _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
-                break;
-
             case DNS_TYPE_NS:
                 _tprintf(_T("\tNS Record . . . . . . : %S\n"), pThisRecord->Data.NS.pNameHost);
                 break;
@@ -830,10 +911,30 @@ DisplayDnsRecord(
                 _tprintf(_T("\tCNAME Record. . . . . : %S\n"), pThisRecord->Data.CNAME.pNameHost);
                 break;
 
+            case DNS_TYPE_SOA:
+                _tprintf(_T("\tSOA Record. . . . . . : \n"));
+                break;
+
+            case DNS_TYPE_PTR:
+                _tprintf(_T("\tPTR Record. . . . . . : %S\n"), pThisRecord->Data.PTR.pNameHost);
+                break;
+
+            case DNS_TYPE_MX:
+                _tprintf(_T("\tMX Record . . . . . . : \n"));
+                break;
+
             case DNS_TYPE_AAAA:
                 RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
                 RtlIpv6AddressToStringW(&Addr6, szBuffer);
                 _tprintf(_T("\tAAAA Record . . . . . : %S\n"), szBuffer);
+                break;
+
+            case DNS_TYPE_ATMA:
+                _tprintf(_T("\tATMA Record . . . . . : \n"));
+                break;
+
+            case DNS_TYPE_SRV:
+                _tprintf(_T("\tSRV Record. . . . . . : \n"));
                 break;
         }
         _tprintf(_T("\n\n"));
