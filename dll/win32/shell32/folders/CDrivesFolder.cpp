@@ -184,7 +184,7 @@ static unsigned __stdcall format_drive_thread(void *args)
 {
     THREAD_PARAMS *params = (THREAD_PARAMS *)args;
     UINT nDriveNumber = params->nDriveNumber;
-    LONG_PTR nProp = nDriveNumber;
+    LONG_PTR nProp = nDriveNumber | 0x7F00;
 
     // Search the stub windows that already exist.
     CSimpleArray<HWND> old_stubs;
