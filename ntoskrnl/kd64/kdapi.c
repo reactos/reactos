@@ -17,9 +17,10 @@
 
 VOID
 NTAPI
-KdpMoveMemory(IN PVOID Destination,
-              IN PVOID Source,
-              IN SIZE_T Length)
+KdpMoveMemory(
+    _In_ PVOID Destination,
+    _In_ PVOID Source,
+    _In_ SIZE_T Length)
 {
     PCHAR DestinationBytes, SourceBytes;
 
@@ -31,8 +32,9 @@ KdpMoveMemory(IN PVOID Destination,
 
 VOID
 NTAPI
-KdpZeroMemory(IN PVOID Destination,
-              IN SIZE_T Length)
+KdpZeroMemory(
+    _In_ PVOID Destination,
+    _In_ SIZE_T Length)
 {
     PCHAR DestinationBytes;
 
@@ -43,12 +45,13 @@ KdpZeroMemory(IN PVOID Destination,
 
 NTSTATUS
 NTAPI
-KdpCopyMemoryChunks(IN ULONG64 Address,
-                    IN PVOID Buffer,
-                    IN ULONG TotalSize,
-                    IN ULONG ChunkSize,
-                    IN ULONG Flags,
-                    OUT PULONG ActualSize OPTIONAL)
+KdpCopyMemoryChunks(
+    _In_ ULONG64 Address,
+    _In_ PVOID Buffer,
+    _In_ ULONG TotalSize,
+    _In_ ULONG ChunkSize,
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG ActualSize)
 {
     NTSTATUS Status;
     ULONG RemainingLength, CopyChunk;
@@ -94,10 +97,7 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
         }
 
         /* Do the copy */
-        Status = MmDbgCopyMemory(Address,
-                                 Buffer,
-                                 CopyChunk,
-                                 Flags);
+        Status = MmDbgCopyMemory(Address, Buffer, CopyChunk, Flags);
         if (!NT_SUCCESS(Status))
         {
             /* Copy failed, break out */
@@ -2147,15 +2147,16 @@ KdDisableDebugger(VOID)
  */
 NTSTATUS
 NTAPI
-KdSystemDebugControl(IN SYSDBG_COMMAND Command,
-                     IN PVOID InputBuffer,
-                     IN ULONG InputBufferLength,
-                     OUT PVOID OutputBuffer,
-                     IN ULONG OutputBufferLength,
-                     IN OUT PULONG ReturnLength,
-                     IN KPROCESSOR_MODE PreviousMode)
+KdSystemDebugControl(
+    _In_ SYSDBG_COMMAND Command,
+    _In_ PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_ PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _Inout_ PULONG ReturnLength,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
-    /* handle sime internal commands */
+    /* Handle some internal commands */
     if (Command == ' soR')
     {
         switch ((ULONG_PTR)InputBuffer)
@@ -2269,7 +2270,7 @@ KdRefreshDebuggerNotPresent(VOID)
     /* Check if the debugger is completely disabled */
     if (KdPitchDebugger)
     {
-        /* Don't try to refresh then -- fail early */
+        /* Don't try to refresh then, fail early */
         return TRUE;
     }
 

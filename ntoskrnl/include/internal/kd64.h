@@ -12,9 +12,9 @@
 // Default size of the DbgPrint log buffer
 //
 #if DBG
-#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x8000
+#define KD_DEFAULT_LOG_BUFFER_SIZE  0x8000
 #else
-#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x1000
+#define KD_DEFAULT_LOG_BUFFER_SIZE  0x1000
 #endif
 
 //
@@ -211,26 +211,26 @@ KdDisableDebuggerWithLock(
 NTSTATUS
 NTAPI
 KdpPrint(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN LPSTR String,
-    IN USHORT Length,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    OUT PBOOLEAN Handled
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_reads_bytes_(Length) PCHAR String,
+    _In_ USHORT Length,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PBOOLEAN Handled
 );
 
 USHORT
 NTAPI
 KdpPrompt(
-    IN LPSTR PromptString,
-    IN USHORT PromptLength,
-    OUT LPSTR ResponseString,
-    IN USHORT MaximumResponseLength,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
+    _In_reads_bytes_(PromptLength) PCHAR PromptString,
+    _In_ USHORT PromptLength,
+    _Out_writes_bytes_(MaximumResponseLength) PCHAR ResponseString,
+    _In_ USHORT MaximumResponseLength,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame
 );
 
 VOID
@@ -345,12 +345,12 @@ KdpAllowDisable(
 NTSTATUS
 NTAPI
 KdpCopyMemoryChunks(
-    IN ULONG64 Address,
-    IN PVOID Buffer,
-    IN ULONG TotalSize,
-    IN ULONG ChunkSize,
-    IN ULONG Flags,
-    OUT PULONG ActualSize OPTIONAL
+    _In_ ULONG64 Address,
+    _In_ PVOID Buffer,
+    _In_ ULONG TotalSize,
+    _In_ ULONG ChunkSize,
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG ActualSize
 );
 
 //
@@ -359,16 +359,16 @@ KdpCopyMemoryChunks(
 VOID
 NTAPI
 KdpMoveMemory(
-    IN PVOID Destination,
-    IN PVOID Source,
-    IN SIZE_T Length
+    _In_ PVOID Destination,
+    _In_ PVOID Source,
+    _In_ SIZE_T Length
 );
 
 VOID
 NTAPI
 KdpZeroMemory(
-    IN PVOID Destination,
-    IN SIZE_T Length
+    _In_ PVOID Destination,
+    _In_ SIZE_T Length
 );
 
 //
@@ -510,7 +510,7 @@ KdpSysCheckLowMemory(
 VOID
 __cdecl
 KdpDprintf(
-    IN PCHAR Format,
+    _In_ PCHAR Format,
     ...
 );
 
