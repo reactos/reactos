@@ -4,11 +4,12 @@
 #define __WINE_CONFIG_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H @HAVE_SYS_TYPES_H@
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if the system has the type `pid_t'. */
-#cmakedefine HAVE_PID_T 1
+#define HAVE_PID_T 1
 
+/* Define to 1 if you have the `spawnvp' function. */
 #define HAVE_SPAWNVP 1
 
 /* Define to 1 if you have the `z' library (-lz). */
