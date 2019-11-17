@@ -2379,9 +2379,6 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
     if (i == -1)
         return S_OK;
 
-    if(uFlags & SVSI_ENSUREVISIBLE)
-        m_ListView.EnsureVisible(i, FALSE);
-
     LVITEMW lvItem = {0};
     lvItem.mask = LVIF_STATE;
     lvItem.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
@@ -2396,17 +2393,25 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
                 lvItem.state &= ~LVIS_SELECTED;
 
             if (uFlags & SVSI_FOCUSED)
+                lvItem.state |= LVIS_FOCUSED;
+            else
                 lvItem.state &= ~LVIS_FOCUSED;
         }
         else
         {
             if (uFlags & SVSI_DESELECTOTHERS)
+            {
                 lvItem.state &= ~LVIS_SELECTED;
+            }
+            lvItem.state &= ~LVIS_FOCUSED;
         }
 
         m_ListView.SetItem(&lvItem);
         lvItem.iItem++;
     }
+
+    if (uFlags & SVSI_ENSUREVISIBLE)
+        m_ListView.EnsureVisible(i, FALSE);
 
     if((uFlags & SVSI_EDIT) == SVSI_EDIT)
         m_ListView.EditLabel(i);
