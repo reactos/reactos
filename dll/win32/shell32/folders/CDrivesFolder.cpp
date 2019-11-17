@@ -142,6 +142,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID
     return bResult;
 }
 
+// A callback function for finding the stub windows.
 static BOOL CALLBACK
 EnumStubProc(HWND hwnd, LPARAM lParam)
 {
@@ -158,6 +159,7 @@ EnumStubProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+// Another callback function to find the owned window of the stub window.
 static BOOL CALLBACK
 EnumStubProc2(HWND hwnd, LPARAM lParam)
 {
@@ -172,6 +174,7 @@ EnumStubProc2(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+// Parameters for format_drive_thread function below.
 struct THREAD_PARAMS
 {
     UINT nDriveNumber;
@@ -181,21 +184,26 @@ static unsigned __stdcall format_drive_thread(void *args)
 {
     THREAD_PARAMS *params = (THREAD_PARAMS *)args;
     UINT nDriveNumber = params->nDriveNumber;
-    LONG_PTR dummy = 0x7F00 | nDriveNumber;
+    LONG_PTR nProp = nDriveNumber;
 
+    // Search the stub windows that already exist.
     CSimpleArray<HWND> old_stubs;
     EnumWindows(EnumStubProc, (LPARAM)&old_stubs);
 
     for (INT n = 0; n < old_stubs.GetSize(); ++n)
     {
         HWND hwndStub = old_stubs[n];
-        if (GetPropW(hwndStub, L"DriveNumber") == (HANDLE)dummy)
+
+        // The target stub window has the prop.
+        if (GetPropW(hwndStub, L"DriveNumber") == (HANDLE)nProp)
         {
+            // Found.
             HWND ahwnd[2];
             ahwnd[0] = hwndStub;
             ahwnd[1] = NULL;
             EnumWindows(EnumStubProc2, (LPARAM)ahwnd);
 
+            // Activate.
             BringWindowToTop(ahwnd[1]);
 
             delete params;
@@ -203,6 +211,7 @@ static unsigned __stdcall format_drive_thread(void *args)
         }
     }
 
+    // Create a stub window.
     DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
     DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
     CStubWindow32 stub;
@@ -213,11 +222,13 @@ static unsigned __stdcall format_drive_thread(void *args)
         return 0;
     }
 
-    SetPropW(stub, L"DriveNumber", (HANDLE)dummy);
+    // Add prop to the target stub window.
+    SetPropW(stub, L"DriveNumber", (HANDLE)nProp);
 
-    /* do format */
+    // Do format.
     SHFormatDrive(stub, nDriveNumber, SHFMT_ID_DEFAULT, 0);
 
+    // Clean up.
     RemovePropW(stub, L"DriveNumber");
     stub.DestroyWindow();
     delete params;
@@ -230,6 +241,7 @@ static HRESULT DoFormatDrive(HWND hwnd, UINT nDriveNumber)
     THREAD_PARAMS *params = new THREAD_PARAMS;
     params->nDriveNumber = nDriveNumber;
 
+    // Create thread to avoid locked.
     unsigned tid;
     HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, format_drive_thread, params, 0, &tid);
     if (hThread == NULL)
