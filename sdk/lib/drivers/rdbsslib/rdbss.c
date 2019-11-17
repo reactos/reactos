@@ -6074,7 +6074,7 @@ RxFirstCanonicalize(
             }
         }
 
-        if (EndOfString - FirstSlash <= sizeof(WCHAR))
+        if (EndOfString - FirstSlash <= 1)
         {
             Status = STATUS_OBJECT_NAME_INVALID;
         }
