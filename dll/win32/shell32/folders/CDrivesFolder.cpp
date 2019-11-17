@@ -328,10 +328,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         {
             if (wParam == CMDID_FORMAT)
             {
-                if (!DoFormatDrive(hwnd, szDrive[0] - 'A'))
-                {
-                    hr = E_FAIL;
-                }
+                hr = DoFormatDrive(hwnd, szDrive[0] - 'A');
             }
             else if (wParam == CMDID_EJECT)
             {
