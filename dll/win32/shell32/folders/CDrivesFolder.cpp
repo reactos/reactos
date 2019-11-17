@@ -4,7 +4,7 @@
  *    Copyright 1997                Marcus Meissner
  *    Copyright 1998, 1999, 2002    Juergen Schmied
  *    Copyright 2009                Andrew Hill
- *    Copyright 2017-2018           Katayama Hirofumi MZ
+ *    Copyright 2017-2019           Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
  */
 
 #include <precomp.h>
+#include <process.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -141,6 +142,109 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID
     return bResult;
 }
 
+static BOOL CALLBACK
+EnumStubProc(HWND hwnd, LPARAM lParam)
+{
+    CSimpleArray<HWND> *pStubs = reinterpret_cast<CSimpleArray<HWND> *>(lParam);
+
+    WCHAR szClass[64];
+    GetClassNameW(hwnd, szClass, _countof(szClass));
+
+    if (lstrcmpiW(szClass, L"StubWindow32") == 0)
+    {
+        pStubs->Add(hwnd);
+    }
+
+    return TRUE;
+}
+
+static BOOL CALLBACK
+EnumStubProc2(HWND hwnd, LPARAM lParam)
+{
+    HWND *phwnd = reinterpret_cast<HWND *>(lParam);
+
+    if (phwnd[0] == GetWindow(hwnd, GW_OWNER))
+    {
+        phwnd[1] = hwnd;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+struct THREAD_PARAMS
+{
+    UINT nDriveNumber;
+};
+
+static unsigned __stdcall format_drive_thread(void *args)
+{
+    THREAD_PARAMS *params = (THREAD_PARAMS *)args;
+    UINT nDriveNumber = params->nDriveNumber;
+    LONG_PTR dummy = 0x7F00 | nDriveNumber;
+
+    CSimpleArray<HWND> old_stubs;
+    EnumWindows(EnumStubProc, (LPARAM)&old_stubs);
+
+    for (INT n = 0; n < old_stubs.GetSize(); ++n)
+    {
+        HWND hwndStub = old_stubs[n];
+        if (GetPropW(hwndStub, L"DriveNumber") == (HANDLE)dummy)
+        {
+            BringWindowToTop(hwndStub);
+
+            HWND ahwnd[2];
+            ahwnd[0] = hwndStub;
+            ahwnd[1] = NULL;
+            EnumWindows(EnumStubProc2, (LPARAM)ahwnd);
+
+            BringWindowToTop(ahwnd[1]);
+
+            delete params;
+            return 0;
+        }
+    }
+
+    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+    CStubWindow32 stub;
+    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
+    {
+        ERR("StubWindow32 creation failed\n");
+        delete params;
+        return 0;
+    }
+
+    SetPropW(stub, L"DriveNumber", (HANDLE)dummy);
+
+    /* do format */
+    SHFormatDrive(stub, nDriveNumber, SHFMT_ID_DEFAULT, 0);
+
+    RemovePropW(stub, L"DriveNumber");
+    stub.DestroyWindow();
+    delete params;
+
+    return 0;
+}
+
+static HRESULT DoFormatDrive(HWND hwnd, UINT nDriveNumber)
+{
+    THREAD_PARAMS *params = new THREAD_PARAMS;
+    params->nDriveNumber = nDriveNumber;
+
+    unsigned tid;
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, format_drive_thread, params, 0, &tid);
+    if (hThread == NULL)
+    {
+        delete params;
+        return E_FAIL;
+    }
+
+    CloseHandle(hThread);
+
+    return S_OK;
+}
+
 HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            HWND         hwnd,
                                            IDataObject  *pdtobj,
@@ -226,13 +330,9 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         {
             if (wParam == CMDID_FORMAT)
             {
-                /* do format */
-                DWORD dwRet = SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
-                switch (dwRet)
+                if (!DoFormatDrive(hwnd, szDrive[0] - 'A'))
                 {
-                case SHFMT_ERROR: case SHFMT_CANCEL: case SHFMT_NOFORMAT:
                     hr = E_FAIL;
-                    break;
                 }
             }
             else if (wParam == CMDID_EJECT)
