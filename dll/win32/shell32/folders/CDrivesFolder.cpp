@@ -191,8 +191,6 @@ static unsigned __stdcall format_drive_thread(void *args)
         HWND hwndStub = old_stubs[n];
         if (GetPropW(hwndStub, L"DriveNumber") == (HANDLE)dummy)
         {
-            BringWindowToTop(hwndStub);
-
             HWND ahwnd[2];
             ahwnd[0] = hwndStub;
             ahwnd[1] = NULL;
