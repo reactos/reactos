@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -120,6 +122,8 @@ KdpCopyMemoryChunks(
     if (ActualSize) *ActualSize = TotalSize - RemainingLength;
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
+
+#ifdef _WINKD_
 
 VOID
 NTAPI
@@ -2118,7 +2122,11 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
     return STATUS_SUCCESS;
 }
 
+#endif // _WINKD_
+
 /* PUBLIC FUNCTIONS **********************************************************/
+
+#ifdef _WINKD_
 
 /*
  * @implemented
@@ -2157,15 +2165,40 @@ KdSystemDebugControl(
     _In_ KPROCESSOR_MODE PreviousMode)
 {
     /* Handle some internal commands */
-    if (Command == ' soR')
+    switch (Command)
     {
-        switch ((ULONG_PTR)InputBuffer)
+#if DBG
+        case ' soR': /* ROS-INTERNAL */
         {
-            case 0x24:
-                MmDumpArmPfnDatabase(FALSE);
-                break;
+            switch ((ULONG_PTR)InputBuffer)
+            {
+                case 0x21: // DumpAllThreads:
+                    PspDumpThreads(TRUE);
+                    break;
+
+                case 0x22: // DumpUserThreads:
+                    PspDumpThreads(FALSE);
+                    break;
+
+                case 0x24: // KdSpare3:
+                    MmDumpArmPfnDatabase(FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            return STATUS_SUCCESS;
         }
-        return STATUS_SUCCESS;
+
+        /* Special case for stack frame dumps */
+        case 'DsoR':
+        {
+            KeRosDumpStackFrames((PULONG)InputBuffer, InputBufferLength);
+            break;
+        }
+#endif
+        default:
+            break;
     }
 
     /* Local kernel debugging is not yet supported */
@@ -2290,6 +2323,8 @@ KdRefreshDebuggerNotPresent(VOID)
     KdExitDebugger(Enable);
     return DebuggerNotPresent;
 }
+
+#endif // _WINKD_
 
 /*
  * @implemented

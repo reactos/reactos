@@ -585,40 +585,15 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
 /* GENERAL FUNCTIONS *********************************************************/
 
-ULONG
+BOOLEAN
 NTAPI
 KdpPrintString(
-    _In_reads_bytes_(Length) PCHAR UnsafeString,
-    _In_ ULONG Length,
-    _In_ KPROCESSOR_MODE PreviousMode)
+    _In_ PSTRING Output)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
-    PCHAR String;
-    CHAR StringBuffer[512];
 
-    if (!KdpDebugMode.Value) return 0;
-
-    Length = min(Length, sizeof(StringBuffer));
-
-    if (PreviousMode != KernelMode)
-    {
-        _SEH2_TRY
-        {
-            ProbeForRead(UnsafeString, Length, 1);
-            String = StringBuffer;
-            RtlCopyMemory(String, UnsafeString, Length);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            return 0;
-        }
-        _SEH2_END;
-    }
-    else
-    {
-        String = UnsafeString;
-    }
+    if (!KdpDebugMode.Value) return FALSE;
 
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;
@@ -630,7 +605,7 @@ KdpPrintString(
                                          KdProvidersList);
 
         /* Call it */
-        CurrentTable->KdpPrintRoutine(String, Length);
+        CurrentTable->KdpPrintRoutine(Output->Buffer, Output->Length);
 
         /* Next Table */
         CurrentEntry = CurrentEntry->Flink;
@@ -638,10 +613,116 @@ KdpPrintString(
 
     /* Call the Wrapper Routine */
     if (WrapperTable.KdpPrintRoutine)
-        WrapperTable.KdpPrintRoutine(String, Length);
+        WrapperTable.KdpPrintRoutine(Output->Buffer, Output->Length);
 
-    /* Return the Length */
-    return Length;
+    return FALSE;
+}
+
+extern STRING KdbPromptString;
+
+BOOLEAN
+NTAPI
+KdpPromptString(
+    _In_ PSTRING PromptString,
+    _In_ PSTRING ResponseString)
+{
+    KIRQL OldIrql;
+    STRING StringChar;
+    CHAR Response;
+    USHORT i;
+    ULONG DummyScanCode;
+
+    StringChar.Buffer = &Response;
+    StringChar.Length = StringChar.MaximumLength = sizeof(Response);
+
+    /* Display the string and print a new line for log neatness */
+    KdpPrintString(PromptString);
+    *StringChar.Buffer = '\n';
+    KdpPrintString(&StringChar);
+
+    /* Print the kdb prompt */
+    KdpPrintString(&KdbPromptString);
+
+    // TODO: Use an improved KdbpReadCommand() function for our purposes.
+
+    /* Acquire the printing spinlock without waiting at raised IRQL */
+    OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
+
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdDisableMouse();
+
+    /* Loop the whole string */
+    for (i = 0; i < ResponseString->MaximumLength; i++)
+    {
+        /* Check if this is serial debugging mode */
+        if (KdbDebugState & KD_DEBUG_KDSERIAL)
+        {
+            /* Get the character from serial */
+            do
+            {
+                Response = KdbpTryGetCharSerial(MAXULONG);
+            } while (Response == -1);
+        }
+        else
+        {
+            /* Get the response from the keyboard */
+            do
+            {
+                Response = KdbpTryGetCharKeyboard(&DummyScanCode, MAXULONG);
+            } while (Response == -1);
+        }
+
+        /* Check for return */
+        if (Response == '\r')
+        {
+            /*
+             * We might need to discard the next '\n'.
+             * Wait a bit to make sure we receive it.
+             */
+            KeStallExecutionProcessor(100000);
+
+            /* Check the mode */
+            if (KdbDebugState & KD_DEBUG_KDSERIAL)
+            {
+                /* Read and discard the next character, if any */
+                KdbpTryGetCharSerial(5);
+            }
+            else
+            {
+                /* Read and discard the next character, if any */
+                KdbpTryGetCharKeyboard(&DummyScanCode, 5);
+            }
+
+            /*
+             * Null terminate the output string -- documentation states that
+             * DbgPrompt does not null terminate, but it does
+             */
+            *(PCHAR)(ResponseString->Buffer + i) = 0;
+            break;
+        }
+
+        /* Write it back and print it to the log */
+        *(PCHAR)(ResponseString->Buffer + i) = Response;
+        KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+        KdpPrintString(&StringChar);
+        OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
+    }
+
+    /* Return the length */
+    ResponseString->Length = i;
+
+    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        KbdEnableMouse();
+
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
+
+    /* Print a new line */
+    *StringChar.Buffer = '\n';
+    KdpPrintString(&StringChar);
+
+    /* Success; we don't need to resend */
+    return FALSE;
 }
 
 /* EOF */

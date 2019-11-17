@@ -71,12 +71,15 @@ BOOLEAN KdpContextSent;
 //
 // Debug Trap Handlers
 //
+#ifdef _WINKD_
 PKDEBUG_ROUTINE KiDebugRoutine = KdpStub;
 PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
+#endif
 
 //
 // Debugger Configuration Settings
 //
+#ifdef _WINKD_
 BOOLEAN KdBreakAfterSymbolLoad;
 BOOLEAN KdPitchDebugger;
 BOOLEAN KdDebuggerNotPresent;
@@ -89,6 +92,7 @@ BOOLEAN KdpDebuggerStructuresInitialized;
 BOOLEAN KdEnteredDebugger;
 ULONG KdDisableCount;
 LARGE_INTEGER KdPerformanceCounterRate;
+#endif
 
 //
 // Breakpoint Data

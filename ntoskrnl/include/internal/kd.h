@@ -7,9 +7,6 @@
 //
 struct _KD_DISPATCH_TABLE;
 extern CPPORT GdbPortInfo;
-extern BOOLEAN KdBreakAfterSymbolLoad;
-extern BOOLEAN KdPitchDebugger;
-extern BOOLEAN KdIgnoreUmExceptions;
 
 BOOLEAN
 NTAPI
@@ -93,8 +90,7 @@ typedef enum _KD_CONTINUE_TYPE
     kdContinue = 0,
     kdDoNotHandleException,
     kdHandleException
-}
-KD_CONTINUE_TYPE;
+} KD_CONTINUE_TYPE;
 
 typedef
 VOID
@@ -120,14 +116,6 @@ KD_CONTINUE_TYPE
     PEXCEPTION_RECORD ExceptionRecord,
     PCONTEXT Context,
     PKTRAP_FRAME TrapFrame
-);
-
-BOOLEAN
-NTAPI
-KdIsThisAKdTrap(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN KPROCESSOR_MODE PreviousMode
 );
 
 /* INIT ROUTINES *************************************************************/
@@ -188,13 +176,6 @@ KdpKdbgInit(
 
 /* KD ROUTINES ***************************************************************/
 
-ULONG
-NTAPI
-KdpPrintString(
-    _In_reads_bytes_(Length) PCHAR UnsafeString,
-    _In_ ULONG Length,
-    _In_ KPROCESSOR_MODE PreviousMode);
-
 BOOLEAN
 NTAPI
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
@@ -215,37 +196,22 @@ KdpSafeWriteMemory(
     IN ULONGLONG Value
 );
 
-VOID
-NTAPI
-KdpEnableSafeMem(VOID);
-
 
 /* KD GLOBALS  ***************************************************************/
 
-typedef
-BOOLEAN
-(NTAPI *PKDEBUG_ROUTINE)(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN BOOLEAN SecondChance
-);
-
-/* serial debug connection */
+/* Serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
 #define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
 #define DEFAULT_DEBUG_COM2_IRQ  3 /* COM2 IRQ */
 #define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
 
 /* KD Native Modes */
-#define KdScreen 0
-#define KdSerial 1
-#define KdFile 2
-#define KdBochs 3
-#define KdKdbg 4
-#define KdMax 5
+#define KdScreen    0
+#define KdSerial    1
+#define KdFile      2
+#define KdBochs     3
+#define KdKdbg      4
+#define KdMax       5
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
@@ -268,8 +234,7 @@ typedef struct _KDP_DEBUG_MODE
         /* Generic Value */
         ULONG Value;
     };
-}
-KDP_DEBUG_MODE;
+} KDP_DEBUG_MODE;
 
 /* KD Internal Debug Services */
 typedef enum _KDP_DEBUG_SERVICE
@@ -286,8 +251,7 @@ typedef enum _KDP_DEBUG_SERVICE
     KdSpare3 = 0x24, /* j */
     EnterDebugger = 0x25,  /* k */
     ThatsWhatSheSaid = 69 /* FIGURE IT OUT */
-}
-KDP_DEBUG_SERVICE;
+} KDP_DEBUG_SERVICE;
 
 /* Dispatch Table for Wrapper Functions */
 typedef struct _KD_DISPATCH_TABLE
@@ -297,8 +261,7 @@ typedef struct _KD_DISPATCH_TABLE
     PKDP_PRINT_ROUTINE KdpPrintRoutine;
     PKDP_PROMPT_ROUTINE KdpPromptRoutine;
     PKDP_EXCEPTION_ROUTINE KdpExceptionRoutine;
-}
-KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
+} KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
 /* The current Debugging Mode */
 extern KDP_DEBUG_MODE KdpDebugMode;
@@ -327,10 +290,6 @@ extern KD_DISPATCH_TABLE WrapperTable;
 
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;
-
-extern PKDEBUG_ROUTINE KiDebugRoutine;
-extern KD_CONTEXT KdpContext;
-extern ULONG Kd_WIN2000_Mask;
 
 #endif
 

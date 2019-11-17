@@ -405,7 +405,10 @@ if(NOT _WINKD_)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdapi.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kddata.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdprint.c)
 
 else() # _WINKD_
 

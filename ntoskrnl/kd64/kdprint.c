@@ -15,6 +15,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef _WINKD_
+
 BOOLEAN
 NTAPI
 KdpPrintString(
@@ -210,6 +212,23 @@ KdpSymbol(IN PSTRING DllPath,
     KdExitDebugger(Enable);
 }
 
+#else
+
+extern
+BOOLEAN
+NTAPI
+KdpPrintString(
+    _In_ PSTRING Output);
+
+extern
+BOOLEAN
+NTAPI
+KdpPromptString(
+    _In_ PSTRING PromptString,
+    _In_ PSTRING ResponseString);
+
+#endif // _WINKD_
+
 USHORT
 NTAPI
 KdpPrompt(
@@ -262,7 +281,7 @@ KdpPrompt(
 
     /* Setup the prompt and response buffers */
     PromptBuffer.Buffer = PromptString;
-    PromptBuffer.Length = PromptLength;
+    PromptBuffer.Length = PromptBuffer.MaximumLength = PromptLength;
     ResponseBuffer.Buffer = SafeResponseString;
     ResponseBuffer.Length = 0;
     ResponseBuffer.MaximumLength = MaximumResponseLength;
@@ -322,7 +341,7 @@ KdpPrint(
     NTSTATUS Status;
     BOOLEAN Enable;
     STRING OutputString;
-    PVOID CapturedString;
+    CHAR CapturedString[512];
 
     /* Assume failure */
     *Handled = FALSE;
@@ -350,7 +369,7 @@ KdpPrint(
     }
 
     /* Normalize the length */
-    Length = min(Length, 512);
+    Length = min(Length, sizeof(CapturedString));
 
     /* Check if we need to verify the string */
     if (PreviousMode != KernelMode)
@@ -360,7 +379,6 @@ KdpPrint(
         {
             /* Probe and capture the string */
             ProbeForRead(String, Length, 1);
-            CapturedString = alloca(Length);
             KdpMoveMemory(CapturedString, String, Length);
             String = CapturedString;
         }
@@ -374,7 +392,7 @@ KdpPrint(
 
     /* Setup the output string */
     OutputString.Buffer = String;
-    OutputString.Length = Length;
+    OutputString.Length = OutputString.MaximumLength = Length;
 
     /* Log the print */
     //KdLogDbgPrint(&OutputString);
@@ -425,12 +443,12 @@ KdpDprintf(
                                 sizeof(Buffer),
                                 Format,
                                 ap);
+    va_end(ap);
 
     /* Set it up */
     String.Buffer = Buffer;
-    String.Length = Length + 1;
+    String.Length = String.MaximumLength = Length;
 
     /* Send it to the debugger directly */
     KdpPrintString(&String);
-    va_end(ap);
 }

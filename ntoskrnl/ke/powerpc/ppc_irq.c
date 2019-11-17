@@ -745,7 +745,10 @@ KeDisableInterrupts(VOID)
 
 ULONG
 NTAPI
-KdpServiceDispatcher(ULONG Service, PCHAR Buffer, ULONG Length);
+KdpServiceDispatcher(ULONG Service,
+                     PVOID Buffer1,
+                     ULONG Buffer1Length,
+                     KPROCESSOR_MODE PreviousMode);
 
 typedef ULONG (*PSYSCALL_FUN)
 (ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG,ULONG);
@@ -769,7 +772,8 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
 	trap_frame->gpr[3] = KdpServiceDispatcher
 	    (trap_frame->gpr[3],
 	     (PCHAR)trap_frame->gpr[4],
-	     trap_frame->gpr[5]);
+	     trap_frame->gpr[5],
+	     UserMode /*KernelMode*/);
 	break;
     case 0xf0000: /* Thread startup */
         /* XXX how to use UserThread (gpr[6]) */

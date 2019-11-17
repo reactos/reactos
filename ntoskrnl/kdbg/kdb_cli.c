@@ -133,6 +133,8 @@ extern volatile ULONG KdpDmesgCurrentPosition;
 extern volatile ULONG KdpDmesgFreeBytes;
 extern volatile ULONG KdbDmesgTotalWritten;
 
+STRING KdbPromptString = RTL_CONSTANT_STRING("kdb:> ");
+
 static const struct
 {
     PCHAR Name;
@@ -476,7 +478,7 @@ KdbpCmdEvalExpression(
     }
 
     /* Evaluate the expression */
-    Ok = KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result);
+    Ok = KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result);
     if (Ok)
     {
         if (Result > 0x00000000ffffffffLL)
@@ -785,7 +787,7 @@ KdbpCmdDisassembleX(
     /* Evaluate the expression */
     if (Argc > 1)
     {
-        if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
             return TRUE;
 
         if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
@@ -1164,7 +1166,7 @@ KdbpCmdBackTrace(
             Argv[1]++;
 
             /* Evaluate the expression */
-            if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+            if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
                 return TRUE;
 
             if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
@@ -1557,7 +1559,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 
     /* Evaluate the address expression */
     if (!KdbpEvaluateExpression(Argv[AddressArgIndex],
-                                sizeof("kdb:> ")-1 + (Argv[AddressArgIndex]-Argv[0]),
+                                KdbPromptString.Length + (Argv[AddressArgIndex]-Argv[0]),
                                 &Result))
     {
         return TRUE;
@@ -1922,7 +1924,7 @@ KdbpCmdMod(
             Argv[Argc][strlen(Argv[Argc])] = ' ';
 
         /* Evaluate the expression */
-        if (!KdbpEvaluateExpression(Argv[1], sizeof("kdb:> ")-1 + (Argv[1]-Argv[0]), &Result))
+        if (!KdbpEvaluateExpression(Argv[1], KdbPromptString.Length + (Argv[1]-Argv[0]), &Result))
         {
             return TRUE;
         }
@@ -3651,7 +3653,7 @@ KdbpCliMainLoop(
         KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
 
         /* Print the prompt */
-        KdbpPrint("kdb:> ");
+        KdbpPrint(KdbPromptString.Buffer);
 
         /* Read a command and remember it */
         KdbpReadCommand(Command, sizeof (Command));
@@ -3813,205 +3815,4 @@ KdbpCliInit(VOID)
     __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
-}
-
-VOID
-NTAPI
-KdpSerialDebugPrint(
-    LPSTR Message,
-    ULONG Length
-);
-
-STRING KdpPromptString = RTL_CONSTANT_STRING("kdb:> ");
-extern KSPIN_LOCK KdpSerialSpinLock;
-
-USHORT
-NTAPI
-KdpPrompt(
-    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
-    _In_ USHORT InStringLength,
-    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
-    _In_ USHORT OutStringLength,
-    _In_ KPROCESSOR_MODE PreviousMode,
-    _In_ PKTRAP_FRAME TrapFrame,
-    _In_ PKEXCEPTION_FRAME ExceptionFrame)
-{
-    USHORT i;
-    CHAR Response;
-    ULONG DummyScanCode;
-    KIRQL OldIrql;
-    PCHAR InString;
-    PCHAR OutString;
-    CHAR InStringBuffer[512];
-    CHAR OutStringBuffer[512];
-
-    /* Normalize the lengths */
-    InStringLength = min(InStringLength,
-                         sizeof(InStringBuffer));
-    OutStringLength = min(OutStringLength,
-                          sizeof(OutStringBuffer));
-
-    /* Check if we need to verify the string */
-    if (PreviousMode != KernelMode)
-    {
-        /* Handle user-mode buffers safely */
-        _SEH2_TRY
-        {
-            /* Probe the prompt */
-            ProbeForRead(UnsafeInString,
-                         InStringLength,
-                         1);
-
-            /* Capture prompt */
-            InString = InStringBuffer;
-            RtlCopyMemory(InString,
-                          UnsafeInString,
-                          InStringLength);
-
-            /* Probe and make room for response */
-            ProbeForWrite(UnsafeOutString,
-                          OutStringLength,
-                          1);
-            OutString = OutStringBuffer;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Bad string pointer, bail out */
-            _SEH2_YIELD(return 0);
-        }
-        _SEH2_END;
-    }
-    else
-    {
-        InString = UnsafeInString;
-        OutString = UnsafeOutString;
-    }
-
-    /* Acquire the printing spinlock without waiting at raised IRQL */
-    while (TRUE)
-    {
-        /* Wait when the spinlock becomes available */
-        while (!KeTestSpinLock(&KdpSerialSpinLock));
-
-        /* Spinlock was free, raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Try to get the spinlock */
-        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpSerialSpinLock))
-            break;
-
-        /* Someone else got the spinlock, lower IRQL back */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Loop the string to send */
-    for (i = 0; i < InStringLength; i++)
-    {
-        /* Print it to serial */
-        KdPortPutByteEx(&SerialPortInfo, *(PCHAR)(InString + i));
-    }
-
-    /* Print a new line for log neatness */
-    KdPortPutByteEx(&SerialPortInfo, '\r');
-    KdPortPutByteEx(&SerialPortInfo, '\n');
-
-    /* Print the kdb prompt */
-    for (i = 0; i < KdpPromptString.Length; i++)
-    {
-        /* Print it to serial */
-        KdPortPutByteEx(&SerialPortInfo,
-                        *(KdpPromptString.Buffer + i));
-    }
-
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdDisableMouse();
-
-    /* Loop the whole string */
-    for (i = 0; i < OutStringLength; i++)
-    {
-        /* Check if this is serial debugging mode */
-        if (KdbDebugState & KD_DEBUG_KDSERIAL)
-        {
-            /* Get the character from serial */
-            do
-            {
-                Response = KdbpTryGetCharSerial(MAXULONG);
-            } while (Response == -1);
-        }
-        else
-        {
-            /* Get the response from the keyboard */
-            do
-            {
-                Response = KdbpTryGetCharKeyboard(&DummyScanCode, MAXULONG);
-            } while (Response == -1);
-        }
-
-        /* Check for return */
-        if (Response == '\r')
-        {
-            /*
-             * We might need to discard the next '\n'.
-             * Wait a bit to make sure we receive it.
-             */
-            KeStallExecutionProcessor(100000);
-
-            /* Check the mode */
-            if (KdbDebugState & KD_DEBUG_KDSERIAL)
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharSerial(5);
-            }
-            else
-            {
-                /* Read and discard the next character, if any */
-                KdbpTryGetCharKeyboard(&DummyScanCode, 5);
-            }
-
-            /*
-             * Null terminate the output string -- documentation states that
-             * DbgPrompt does not null terminate, but it does
-             */
-            *(PCHAR)(OutString + i) = 0;
-            break;
-        }
-
-        /* Write it back and print it to the log */
-        *(PCHAR)(OutString + i) = Response;
-        KdPortPutByteEx(&SerialPortInfo, Response);
-    }
-
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdEnableMouse();
-
-    /* Print a new line */
-    KdPortPutByteEx(&SerialPortInfo, '\r');
-    KdPortPutByteEx(&SerialPortInfo, '\n');
-
-    /* Release spinlock */
-    KiReleaseSpinLock(&KdpSerialSpinLock);
-
-    /* Lower IRQL back */
-    KeLowerIrql(OldIrql);
-
-    /* Copy back response if required */
-    if (PreviousMode != KernelMode)
-    {
-        _SEH2_TRY
-        {
-            /* Safely copy back response to user mode */
-            RtlCopyMemory(UnsafeOutString,
-                          OutString,
-                          i);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* String became invalid after we exited, fail */
-            _SEH2_YIELD(return 0);
-        }
-        _SEH2_END;
-    }
-
-    /* Return the length  */
-    return i;
 }
