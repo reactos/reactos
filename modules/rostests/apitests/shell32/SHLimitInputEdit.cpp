@@ -279,6 +279,9 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     SendMessageW(hEdt1, WM_CHAR, L'/', 1);
     GetWindowTextW(hEdt1, szText, _countof(szText));
     ok_wstr(szText, L"A");
+    SendMessageW(hEdt1, WM_CHAR, L'/', 1);
+    GetWindowTextW(hEdt1, szText, _countof(szText));
+    ok_wstr(szText, L"A");
     SendMessageW(hEdt1, WM_CHAR, L'A', 1);
     GetWindowTextW(hEdt1, szText, _countof(szText));
     ok_wstr(szText, L"AA");
