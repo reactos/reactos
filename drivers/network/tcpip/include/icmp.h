@@ -7,12 +7,15 @@
 
 #pragma once
 
+#include <pshpack1.h>
 typedef struct ICMP_HEADER {
-    UCHAR Type;      /* ICMP message type */
-    UCHAR Code;      /* ICMP message code */
-    USHORT Checksum; /* ICMP message checksum */
-    ULONG Unused;    /* ICMP unused */
+    UINT8 Type;        /* ICMP message type */
+    UINT8 Code;        /* ICMP message code */
+    UINT16 Checksum;   /* ICMP message checksum */
+    UINT16 Identifier; /* ICMP Echo message identifier */
+    UINT16 Seq;        /* ICMP Echo message sequence num */
 } ICMP_HEADER, *PICMP_HEADER;
+#include <poppack.h>
 
 /* ICMP message types */
 #define ICMP_TYPE_ECHO_REPLY        0  /* Echo reply */
@@ -48,6 +51,12 @@ typedef struct ICMP_HEADER {
 /* ICMP codes for ICMP_TYPE_PARAMETER */
 #define ICMP_CODE_TP_POINTER 1 /* Pointer indicates the error */
 
+NTSTATUS
+DispEchoRequest(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
 NTSTATUS ICMPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -62,11 +71,6 @@ NTSTATUS ICMPShutdown(VOID);
 VOID ICMPReceive(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
-
-VOID ICMPTransmit(
-    PIP_PACKET IPPacket,
-    PIP_TRANSMIT_COMPLETE Complete,
-    PVOID Context);
 
 VOID ICMPReply(
     PIP_INTERFACE Interface,
