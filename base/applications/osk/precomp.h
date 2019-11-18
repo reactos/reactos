@@ -46,6 +46,14 @@ typedef struct
     INT        PosY;
 } OSK_GLOBALS;
 
+typedef struct
+{
+    INT vKey;
+    INT DlgResource;
+    WORD wScanCode;
+    BOOL bWasKeyPressed;
+} OSK_KEYLEDINDICATOR;
+
 /* PROTOTYPES *****************************************************************/
 
 /* main.c */
@@ -59,6 +67,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 VOID OSK_RestoreDlgPlacement(HWND hDlg);
+VOID OSK_RefreshLEDKeys(VOID);
 
 /* settings.c */
 BOOL LoadDataFromRegistry(VOID);
