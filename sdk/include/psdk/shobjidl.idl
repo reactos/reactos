@@ -4745,4 +4745,22 @@ interface IUserNotification2 : IUnknown
         [in, string] LPCWSTR pszSoundName);
 };
 
+/*****************************************************************************
+ * IItemNameLimits interface
+ */
+
+[
+    uuid(1df0d7f1-b267-4d28-8b10-12e23202a5c4)
+]
+interface IItemNameLimits : IUnknown 
+{
+    HRESULT GetValidCharacters(
+        [out, string] LPWSTR *ppwszValidChars,
+        [out, string] LPWSTR *ppwszInvalidChars);
+
+    HRESULT GetMaxLength(
+        [in, string] LPCWSTR pszName,
+        [out] int *piMaxNameLen);
+};
+
 #endif // __REACTOS__
