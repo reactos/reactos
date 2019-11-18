@@ -267,30 +267,6 @@ static BOOL HCR_RegGetIconW(HKEY hkey, LPWSTR szDest, LPCWSTR szName, DWORD len,
     return FALSE;
 }
 
-static BOOL HCR_RegGetIconA(HKEY hkey, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
-{
-	DWORD dwType;
-	char sTemp[MAX_PATH];
-	char  sNum[5];
-
-	if (!RegQueryValueExA(hkey, szName, 0, &dwType, (LPBYTE)szDest, &len))
-	{
-          if (dwType == REG_EXPAND_SZ)
-	  {
-	    ExpandEnvironmentStringsA(szDest, sTemp, MAX_PATH);
-	    lstrcpynA(szDest, sTemp, len);
-	  }
-	  if (ParseFieldA (szDest, 2, sNum, 5))
-             *picon_idx=atoi(sNum);
-          else
-             *picon_idx=0; /* sometimes the icon number is missing */
-	  ParseFieldA (szDest, 1, szDest, len);
-          PathUnquoteSpacesA(szDest);
-	  return TRUE;
-	}
-	return FALSE;
-}
-
 BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int* picon_idx)
 {
         static const WCHAR swDefaultIcon[] = {'\\','D','e','f','a','u','l','t','I','c','o','n',0};
@@ -314,25 +290,6 @@ BOOL HCR_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
         else
             TRACE("-- not found\n");
 
-	return ret;
-}
-
-BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* picon_idx)
-{
-	HKEY	hkey;
-	char	sTemp[MAX_PATH];
-	BOOL	ret = FALSE;
-
-	TRACE("%s\n",szClass );
-
-	sprintf(sTemp, "%s\\DefaultIcon",szClass);
-
-	if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
-	{
-	  ret = HCR_RegGetIconA(hkey, szDest, szName, len, picon_idx);
-	  RegCloseKey(hkey);
-	}
-	TRACE("-- %s %i\n", szDest, *picon_idx);
 	return ret;
 }
 
