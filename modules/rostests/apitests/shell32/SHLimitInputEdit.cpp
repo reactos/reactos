@@ -228,6 +228,16 @@ STDMETHODIMP CShellFolder::GetValidCharacters(
     return S_OK;
 }
 
+static BOOL CALLBACK
+PropEnumProc(
+    HWND hwnd,
+    LPCWSTR lpszString,
+    HANDLE hData)
+{
+    trace("PropEnumProc: '%S' --> %p\n", lpszString, hData);
+    return TRUE;
+}
+
 static INT_PTR CALLBACK
 DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -265,6 +275,8 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ok_long(sf.m_cRefs, 1);
 
         trace("GWLP_WNDPROC: %p\n", (void *)GetWindowLongPtr(hEdt1, GWLP_WNDPROC));
+
+        EnumPropsW(hEdt1, PropEnumProc);
 
         n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
         ok_int(n, 234);
