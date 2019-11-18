@@ -16,7 +16,7 @@ BOOL LoadDataFromRegistry(VOID)
     HKEY hKey;
     LONG lResult;
     DWORD dwValue;
-    DWORD cbData = sizeof(DWORD);
+    DWORD cbData = sizeof(dwValue);
 
     /* Initialize the registry application settings */
     Globals.bShowWarning = TRUE;
@@ -49,7 +49,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
@@ -67,7 +67,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
@@ -85,7 +85,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
@@ -103,7 +103,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
@@ -120,7 +120,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
@@ -137,7 +137,7 @@ BOOL LoadDataFromRegistry(VOID)
                                (BYTE *)&dwValue,
                                &cbData);
 
-    if (lResult != ERROR_SUCCESS)
+    if (lResult != ERROR_SUCCESS || cbData != sizeof(dwValue))
     {
         /* Bail out and return FALSE if we fail */
         RegCloseKey(hKey);
