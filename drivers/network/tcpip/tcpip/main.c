@@ -475,12 +475,12 @@ TiDispatchInternal(
 
 /**
  * @brief Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
- * 
+ *
  * @param[in] DeviceObject
  *   Pointer to a device object for this driver
  * @param[in] Irp
  *   Pointer to a I/O request packet
- * 
+ *
  * @return
  *   Status of the operation
  */
@@ -536,6 +536,11 @@ TiDispatch(
             case IOCTL_QUERY_IP_HW_ADDRESS:
                 TI_DbgPrint(MIN_TRACE, ("QUERY_IP_HW_ADDRESS\n"));
                 Status = DispTdiQueryIpHwAddress(DeviceObject, Irp, IrpSp);
+                break;
+
+            case IOCTL_ICMP_ECHO_REQUEST:
+                TI_DbgPrint(MIN_TRACE, ("ICMP_ECHO_REQUEST\n"));
+                Status = DispEchoRequest(DeviceObject, Irp, IrpSp);
                 break;
 
             default:
