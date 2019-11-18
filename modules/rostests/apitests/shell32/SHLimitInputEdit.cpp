@@ -287,6 +287,7 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     psf = new CShellFolder(4, FALSE);
 
     SetWindowTextW(hEdt1, L"ABC");
+    hr = SHLimitInputEdit(hEdt1, psf);
     SendMessageW(hEdt1, WM_CHAR, L'D', 1);
     GetWindowTextW(hEdt1, szText, _countof(szText));
     ok_wstr(szText, L"DABC");
