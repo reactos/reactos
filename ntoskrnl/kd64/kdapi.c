@@ -2193,7 +2193,7 @@ KdSystemDebugControl(
         /* Special case for stack frame dumps */
         case 'DsoR':
         {
-            KeRosDumpStackFrames((PULONG)InputBuffer, InputBufferLength);
+            KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
             break;
         }
 #endif

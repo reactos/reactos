@@ -131,7 +131,7 @@ KdpServiceDispatcher(ULONG Service,
         /* Special  case for stack frame dumps */
         case 'DsoR':
         {
-            KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
+            KeRosDumpStackFrames((PULONG_PTR)Buffer1, Buffer1Length);
             break;
         }
 
