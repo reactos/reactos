@@ -135,6 +135,177 @@ extern volatile ULONG KdbDmesgTotalWritten;
 
 STRING KdbPromptString = RTL_CONSTANT_STRING("kdb:> ");
 
+//
+// Debug Filter Component Table
+//
+static struct
+{
+    PCSTR Name;
+    ULONG Id;
+}
+ComponentTable[] =
+{
+//
+// Default components
+//
+    { "WIN2000", MAXULONG          },
+    { "DEFAULT", DPFLTR_DEFAULT_ID },
+//
+// Standard components
+//
+    { "SYSTEM",         DPFLTR_SYSTEM_ID        },
+    { "SMSS",           DPFLTR_SMSS_ID          },
+    { "SETUP",          DPFLTR_SETUP_ID         },
+    { "NTFS",           DPFLTR_NTFS_ID          },
+    { "FSTUB",          DPFLTR_FSTUB_ID         },
+    { "CRASHDUMP",      DPFLTR_CRASHDUMP_ID     },
+    { "CDAUDIO",        DPFLTR_CDAUDIO_ID       },
+    { "CDROM",          DPFLTR_CDROM_ID         },
+    { "CLASSPNP",       DPFLTR_CLASSPNP_ID      },
+    { "DISK",           DPFLTR_DISK_ID          },
+    { "REDBOOK",        DPFLTR_REDBOOK_ID       },
+    { "STORPROP",       DPFLTR_STORPROP_ID      },
+    { "SCSIPORT",       DPFLTR_SCSIPORT_ID      },
+    { "SCSIMINIPORT",   DPFLTR_SCSIMINIPORT_ID  },
+    { "CONFIG",         DPFLTR_CONFIG_ID        },
+    { "I8042PRT",       DPFLTR_I8042PRT_ID      },
+    { "SERMOUSE",       DPFLTR_SERMOUSE_ID      },
+    { "LSERMOUS",       DPFLTR_LSERMOUS_ID      },
+    { "KBDHID",         DPFLTR_KBDHID_ID        },
+    { "MOUHID",         DPFLTR_MOUHID_ID        },
+    { "KBDCLASS",       DPFLTR_KBDCLASS_ID      },
+    { "MOUCLASS",       DPFLTR_MOUCLASS_ID      },
+    { "TWOTRACK",       DPFLTR_TWOTRACK_ID      },
+    { "WMILIB",         DPFLTR_WMILIB_ID        },
+    { "ACPI",           DPFLTR_ACPI_ID          },
+    { "AMLI",           DPFLTR_AMLI_ID          },
+    { "HALIA64",        DPFLTR_HALIA64_ID       },
+    { "VIDEO",          DPFLTR_VIDEO_ID         },
+    { "SVCHOST",        DPFLTR_SVCHOST_ID       },
+    { "VIDEOPRT",       DPFLTR_VIDEOPRT_ID      },
+    { "TCPIP",          DPFLTR_TCPIP_ID         },
+    { "DMSYNTH",        DPFLTR_DMSYNTH_ID       },
+    { "NTOSPNP",        DPFLTR_NTOSPNP_ID       },
+    { "FASTFAT",        DPFLTR_FASTFAT_ID       },
+    { "SAMSS",          DPFLTR_SAMSS_ID         },
+    { "PNPMGR",         DPFLTR_PNPMGR_ID        },
+    { "NETAPI",         DPFLTR_NETAPI_ID        },
+    { "SCSERVER",       DPFLTR_SCSERVER_ID      },
+    { "SCCLIENT",       DPFLTR_SCCLIENT_ID      },
+    { "SERIAL",         DPFLTR_SERIAL_ID        },
+    { "SERENUM",        DPFLTR_SERENUM_ID       },
+    { "UHCD",           DPFLTR_UHCD_ID          },
+    { "RPCPROXY",       DPFLTR_RPCPROXY_ID      },
+    { "AUTOCHK",        DPFLTR_AUTOCHK_ID       },
+    { "DCOMSS",         DPFLTR_DCOMSS_ID        },
+    { "UNIMODEM",       DPFLTR_UNIMODEM_ID      },
+    { "SIS",            DPFLTR_SIS_ID           },
+    { "FLTMGR",         DPFLTR_FLTMGR_ID        },
+    { "WMICORE",        DPFLTR_WMICORE_ID       },
+    { "BURNENG",        DPFLTR_BURNENG_ID       },
+    { "IMAPI",          DPFLTR_IMAPI_ID         },
+    { "SXS",            DPFLTR_SXS_ID           },
+    { "FUSION",         DPFLTR_FUSION_ID        },
+    { "IDLETASK",       DPFLTR_IDLETASK_ID      },
+    { "SOFTPCI",        DPFLTR_SOFTPCI_ID       },
+    { "TAPE",           DPFLTR_TAPE_ID          },
+    { "MCHGR",          DPFLTR_MCHGR_ID         },
+    { "IDEP",           DPFLTR_IDEP_ID          },
+    { "PCIIDE",         DPFLTR_PCIIDE_ID        },
+    { "FLOPPY",         DPFLTR_FLOPPY_ID        },
+    { "FDC",            DPFLTR_FDC_ID           },
+    { "TERMSRV",        DPFLTR_TERMSRV_ID       },
+    { "W32TIME",        DPFLTR_W32TIME_ID       },
+    { "PREFETCHER",     DPFLTR_PREFETCHER_ID    },
+    { "RSFILTER",       DPFLTR_RSFILTER_ID      },
+    { "FCPORT",         DPFLTR_FCPORT_ID        },
+    { "PCI",            DPFLTR_PCI_ID           },
+    { "DMIO",           DPFLTR_DMIO_ID          },
+    { "DMCONFIG",       DPFLTR_DMCONFIG_ID      },
+    { "DMADMIN",        DPFLTR_DMADMIN_ID       },
+    { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
+    { "VSS",            DPFLTR_VSS_ID           },
+    { "PNPMEM",         DPFLTR_PNPMEM_ID        },
+    { "PROCESSOR",      DPFLTR_PROCESSOR_ID     },
+    { "DMSERVER",       DPFLTR_DMSERVER_ID      },
+    { "SR",             DPFLTR_SR_ID            },
+    { "INFINIBAND",     DPFLTR_INFINIBAND_ID    },
+    { "IHVDRIVER",      DPFLTR_IHVDRIVER_ID     },
+    { "IHVVIDEO",       DPFLTR_IHVVIDEO_ID      },
+    { "IHVAUDIO",       DPFLTR_IHVAUDIO_ID      },
+    { "IHVNETWORK",     DPFLTR_IHVNETWORK_ID    },
+    { "IHVSTREAMING",   DPFLTR_IHVSTREAMING_ID  },
+    { "IHVBUS",         DPFLTR_IHVBUS_ID        },
+    { "HPS",            DPFLTR_HPS_ID           },
+    { "RTLTHREADPOOL",  DPFLTR_RTLTHREADPOOL_ID },
+    { "LDR",            DPFLTR_LDR_ID           },
+    { "TCPIP6",         DPFLTR_TCPIP6_ID        },
+    { "ISAPNP",         DPFLTR_ISAPNP_ID        },
+    { "SHPC",           DPFLTR_SHPC_ID          },
+    { "STORPORT",       DPFLTR_STORPORT_ID      },
+    { "STORMINIPORT",   DPFLTR_STORMINIPORT_ID  },
+    { "PRINTSPOOLER",   DPFLTR_PRINTSPOOLER_ID  },
+    { "VSSDYNDISK",     DPFLTR_VSSDYNDISK_ID    },
+    { "VERIFIER",       DPFLTR_VERIFIER_ID      },
+    { "VDS",            DPFLTR_VDS_ID           },
+    { "VDSBAS",         DPFLTR_VDSBAS_ID        },
+    { "VDSDYN",         DPFLTR_VDSDYN_ID        },  // Specified in Vista+
+    { "VDSDYNDR",       DPFLTR_VDSDYNDR_ID      },
+    { "VDSLDR",         DPFLTR_VDSLDR_ID        },  // Specified in Vista+
+    { "VDSUTIL",        DPFLTR_VDSUTIL_ID       },
+    { "DFRGIFC",        DPFLTR_DFRGIFC_ID       },
+    { "MM",             DPFLTR_MM_ID            },
+    { "DFSC",           DPFLTR_DFSC_ID          },
+    { "WOW64",          DPFLTR_WOW64_ID         },
+//
+// Components specified in Vista+, some of which we also use in ReactOS
+//
+    { "ALPC",           DPFLTR_ALPC_ID          },
+    { "WDI",            DPFLTR_WDI_ID           },
+    { "PERFLIB",        DPFLTR_PERFLIB_ID       },
+    { "KTM",            DPFLTR_KTM_ID           },
+    { "IOSTRESS",       DPFLTR_IOSTRESS_ID      },
+    { "HEAP",           DPFLTR_HEAP_ID          },
+    { "WHEA",           DPFLTR_WHEA_ID          },
+    { "USERGDI",        DPFLTR_USERGDI_ID       },
+    { "MMCSS",          DPFLTR_MMCSS_ID         },
+    { "TPM",            DPFLTR_TPM_ID           },
+    { "THREADORDER",    DPFLTR_THREADORDER_ID   },
+    { "ENVIRON",        DPFLTR_ENVIRON_ID       },
+    { "EMS",            DPFLTR_EMS_ID           },
+    { "WDT",            DPFLTR_WDT_ID           },
+    { "FVEVOL",         DPFLTR_FVEVOL_ID        },
+    { "NDIS",           DPFLTR_NDIS_ID          },
+    { "NVCTRACE",       DPFLTR_NVCTRACE_ID      },
+    { "LUAFV",          DPFLTR_LUAFV_ID         },
+    { "APPCOMPAT",      DPFLTR_APPCOMPAT_ID     },
+    { "USBSTOR",        DPFLTR_USBSTOR_ID       },
+    { "SBP2PORT",       DPFLTR_SBP2PORT_ID      },
+    { "COVERAGE",       DPFLTR_COVERAGE_ID      },
+    { "CACHEMGR",       DPFLTR_CACHEMGR_ID      },
+    { "MOUNTMGR",       DPFLTR_MOUNTMGR_ID      },
+    { "CFR",            DPFLTR_CFR_ID           },
+    { "TXF",            DPFLTR_TXF_ID           },
+    { "KSECDD",         DPFLTR_KSECDD_ID        },
+    { "FLTREGRESS",     DPFLTR_FLTREGRESS_ID    },
+    { "MPIO",           DPFLTR_MPIO_ID          },
+    { "MSDSM",          DPFLTR_MSDSM_ID         },
+    { "UDFS",           DPFLTR_UDFS_ID          },
+    { "PSHED",          DPFLTR_PSHED_ID         },
+    { "STORVSP",        DPFLTR_STORVSP_ID       },
+    { "LSASS",          DPFLTR_LSASS_ID         },
+    { "SSPICLI",        DPFLTR_SSPICLI_ID       },
+    { "CNG",            DPFLTR_CNG_ID           },
+    { "EXFAT",          DPFLTR_EXFAT_ID         },
+    { "FILETRACE",      DPFLTR_FILETRACE_ID     },
+    { "XSAVE",          DPFLTR_XSAVE_ID         },
+    { "SE",             DPFLTR_SE_ID            },
+    { "DRIVEEXTENDER",  DPFLTR_DRIVEEXTENDER_ID },
+};
+
+//
+// Command Table
+//
 static const struct
 {
     PCHAR Name;
@@ -201,198 +372,6 @@ static const struct
 };
 
 /* FUNCTIONS *****************************************************************/
-
-/*!\brief Transform a component name to an integer
- *
- * \param ComponentName  The name of the component.
- * \param ComponentId    Receives the component id on success.
- *
- * \retval TRUE   Success.
- * \retval FALSE  Failure.
- */
-static BOOLEAN
-KdbpGetComponentId(
-    IN  PCCH ComponentName,
-    OUT PULONG ComponentId)
-{
-    ULONG i;
-
-    static struct
-    {
-        PCCH Name;
-        ULONG Id;
-    }
-    ComponentTable[] =
-    {
-//
-// Default components
-//
-        { "WIN2000", MAXULONG },
-        { "DEFAULT", DPFLTR_DEFAULT_ID },
-//
-// Standard components
-//
-        { "SYSTEM", DPFLTR_SYSTEM_ID },
-        { "SMSS", DPFLTR_SMSS_ID },
-        { "SETUP", DPFLTR_SETUP_ID },
-        { "NTFS", DPFLTR_NTFS_ID },
-        { "FSTUB", DPFLTR_FSTUB_ID },
-        { "CRASHDUMP", DPFLTR_CRASHDUMP_ID },
-        { "CDAUDIO", DPFLTR_CDAUDIO_ID },
-        { "CDROM", DPFLTR_CDROM_ID },
-        { "CLASSPNP", DPFLTR_CLASSPNP_ID },
-        { "DISK", DPFLTR_DISK_ID },
-        { "REDBOOK", DPFLTR_REDBOOK_ID },
-        { "STORPROP", DPFLTR_STORPROP_ID },
-        { "SCSIPORT", DPFLTR_SCSIPORT_ID },
-        { "SCSIMINIPORT", DPFLTR_SCSIMINIPORT_ID },
-        { "CONFIG", DPFLTR_CONFIG_ID },
-        { "I8042PRT", DPFLTR_I8042PRT_ID },
-        { "SERMOUSE", DPFLTR_SERMOUSE_ID },
-        { "LSERMOUS", DPFLTR_LSERMOUS_ID },
-        { "KBDHID", DPFLTR_KBDHID_ID },
-        { "MOUHID", DPFLTR_MOUHID_ID },
-        { "KBDCLASS", DPFLTR_KBDCLASS_ID },
-        { "MOUCLASS", DPFLTR_MOUCLASS_ID },
-        { "TWOTRACK", DPFLTR_TWOTRACK_ID },
-        { "WMILIB", DPFLTR_WMILIB_ID },
-        { "ACPI", DPFLTR_ACPI_ID },
-        { "AMLI", DPFLTR_AMLI_ID },
-        { "HALIA64", DPFLTR_HALIA64_ID },
-        { "VIDEO", DPFLTR_VIDEO_ID },
-        { "SVCHOST", DPFLTR_SVCHOST_ID },
-        { "VIDEOPRT", DPFLTR_VIDEOPRT_ID },
-        { "TCPIP", DPFLTR_TCPIP_ID },
-        { "DMSYNTH", DPFLTR_DMSYNTH_ID },
-        { "NTOSPNP", DPFLTR_NTOSPNP_ID },
-        { "FASTFAT", DPFLTR_FASTFAT_ID },
-        { "SAMSS", DPFLTR_SAMSS_ID },
-        { "PNPMGR", DPFLTR_PNPMGR_ID },
-        { "NETAPI", DPFLTR_NETAPI_ID },
-        { "SCSERVER", DPFLTR_SCSERVER_ID },
-        { "SCCLIENT", DPFLTR_SCCLIENT_ID },
-        { "SERIAL", DPFLTR_SERIAL_ID },
-        { "SERENUM", DPFLTR_SERENUM_ID },
-        { "UHCD", DPFLTR_UHCD_ID },
-        { "RPCPROXY", DPFLTR_RPCPROXY_ID },
-        { "AUTOCHK", DPFLTR_AUTOCHK_ID },
-        { "DCOMSS", DPFLTR_DCOMSS_ID },
-        { "UNIMODEM", DPFLTR_UNIMODEM_ID },
-        { "SIS", DPFLTR_SIS_ID },
-        { "FLTMGR", DPFLTR_FLTMGR_ID },
-        { "WMICORE", DPFLTR_WMICORE_ID },
-        { "BURNENG", DPFLTR_BURNENG_ID },
-        { "IMAPI", DPFLTR_IMAPI_ID },
-        { "SXS", DPFLTR_SXS_ID },
-        { "FUSION", DPFLTR_FUSION_ID },
-        { "IDLETASK", DPFLTR_IDLETASK_ID },
-        { "SOFTPCI", DPFLTR_SOFTPCI_ID },
-        { "TAPE", DPFLTR_TAPE_ID },
-        { "MCHGR", DPFLTR_MCHGR_ID },
-        { "IDEP", DPFLTR_IDEP_ID },
-        { "PCIIDE", DPFLTR_PCIIDE_ID },
-        { "FLOPPY", DPFLTR_FLOPPY_ID },
-        { "FDC", DPFLTR_FDC_ID },
-        { "TERMSRV", DPFLTR_TERMSRV_ID },
-        { "W32TIME", DPFLTR_W32TIME_ID },
-        { "PREFETCHER", DPFLTR_PREFETCHER_ID },
-        { "RSFILTER", DPFLTR_RSFILTER_ID },
-        { "FCPORT", DPFLTR_FCPORT_ID },
-        { "PCI", DPFLTR_PCI_ID },
-        { "DMIO", DPFLTR_DMIO_ID },
-        { "DMCONFIG", DPFLTR_DMCONFIG_ID },
-        { "DMADMIN", DPFLTR_DMADMIN_ID },
-        { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
-        { "VSS", DPFLTR_VSS_ID },
-        { "PNPMEM", DPFLTR_PNPMEM_ID },
-        { "PROCESSOR", DPFLTR_PROCESSOR_ID },
-        { "DMSERVER", DPFLTR_DMSERVER_ID },
-        { "SR", DPFLTR_SR_ID },
-        { "INFINIBAND", DPFLTR_INFINIBAND_ID },
-        { "IHVDRIVER", DPFLTR_IHVDRIVER_ID },
-        { "IHVVIDEO", DPFLTR_IHVVIDEO_ID },
-        { "IHVAUDIO", DPFLTR_IHVAUDIO_ID },
-        { "IHVNETWORK", DPFLTR_IHVNETWORK_ID },
-        { "IHVSTREAMING", DPFLTR_IHVSTREAMING_ID },
-        { "IHVBUS", DPFLTR_IHVBUS_ID },
-        { "HPS", DPFLTR_HPS_ID },
-        { "RTLTHREADPOOL", DPFLTR_RTLTHREADPOOL_ID },
-        { "LDR", DPFLTR_LDR_ID },
-        { "TCPIP6", DPFLTR_TCPIP6_ID },
-        { "ISAPNP", DPFLTR_ISAPNP_ID },
-        { "SHPC", DPFLTR_SHPC_ID },
-        { "STORPORT", DPFLTR_STORPORT_ID },
-        { "STORMINIPORT", DPFLTR_STORMINIPORT_ID },
-        { "PRINTSPOOLER", DPFLTR_PRINTSPOOLER_ID },
-        { "VSSDYNDISK", DPFLTR_VSSDYNDISK_ID },
-        { "VERIFIER", DPFLTR_VERIFIER_ID },
-        { "VDS", DPFLTR_VDS_ID },
-        { "VDSBAS", DPFLTR_VDSBAS_ID },
-        { "VDSDYN", DPFLTR_VDSDYN_ID },
-        { "VDSDYNDR", DPFLTR_VDSDYNDR_ID },
-        { "VDSLDR", DPFLTR_VDSLDR_ID },
-        { "VDSUTIL", DPFLTR_VDSUTIL_ID },
-        { "DFRGIFC", DPFLTR_DFRGIFC_ID },
-        { "MM", DPFLTR_MM_ID },
-        { "DFSC", DPFLTR_DFSC_ID },
-        { "WOW64", DPFLTR_WOW64_ID },
-//
-// Components specified in Vista+, some of which we also use in ReactOS
-//
-        { "ALPC", DPFLTR_ALPC_ID },
-        { "WDI", DPFLTR_WDI_ID },
-        { "PERFLIB", DPFLTR_PERFLIB_ID },
-        { "KTM", DPFLTR_KTM_ID },
-        { "IOSTRESS", DPFLTR_IOSTRESS_ID },
-        { "HEAP", DPFLTR_HEAP_ID },
-        { "WHEA", DPFLTR_WHEA_ID },
-        { "USERGDI", DPFLTR_USERGDI_ID },
-        { "MMCSS", DPFLTR_MMCSS_ID },
-        { "TPM", DPFLTR_TPM_ID },
-        { "THREADORDER", DPFLTR_THREADORDER_ID },
-        { "ENVIRON", DPFLTR_ENVIRON_ID },
-        { "EMS", DPFLTR_EMS_ID },
-        { "WDT", DPFLTR_WDT_ID },
-        { "FVEVOL", DPFLTR_FVEVOL_ID },
-        { "NDIS", DPFLTR_NDIS_ID },
-        { "NVCTRACE", DPFLTR_NVCTRACE_ID },
-        { "LUAFV", DPFLTR_LUAFV_ID },
-        { "APPCOMPAT", DPFLTR_APPCOMPAT_ID },
-        { "USBSTOR", DPFLTR_USBSTOR_ID },
-        { "SBP2PORT", DPFLTR_SBP2PORT_ID },
-        { "COVERAGE", DPFLTR_COVERAGE_ID },
-        { "CACHEMGR", DPFLTR_CACHEMGR_ID },
-        { "MOUNTMGR", DPFLTR_MOUNTMGR_ID },
-        { "CFR", DPFLTR_CFR_ID },
-        { "TXF", DPFLTR_TXF_ID },
-        { "KSECDD", DPFLTR_KSECDD_ID },
-        { "FLTREGRESS", DPFLTR_FLTREGRESS_ID },
-        { "MPIO", DPFLTR_MPIO_ID },
-        { "MSDSM", DPFLTR_MSDSM_ID },
-        { "UDFS", DPFLTR_UDFS_ID },
-        { "PSHED", DPFLTR_PSHED_ID },
-        { "STORVSP", DPFLTR_STORVSP_ID },
-        { "LSASS", DPFLTR_LSASS_ID },
-        { "SSPICLI", DPFLTR_SSPICLI_ID },
-        { "CNG", DPFLTR_CNG_ID },
-        { "EXFAT", DPFLTR_EXFAT_ID },
-        { "FILETRACE", DPFLTR_FILETRACE_ID },
-        { "XSAVE", DPFLTR_XSAVE_ID },
-        { "SE", DPFLTR_SE_ID },
-        { "DRIVEEXTENDER", DPFLTR_DRIVEEXTENDER_ID },
-    };
-
-    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
-    {
-        if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
-        {
-            *ComponentId = ComponentTable[i].Id;
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
 
 /*!\brief Evaluates an expression...
  *
@@ -647,7 +626,34 @@ end:
 }
 #endif
 
-/*!\brief Display list of active debug channels
+/*!\brief Retrieves the component ID corresponding to a given component name.
+ *
+ * \param ComponentName  The name of the component.
+ * \param ComponentId    Receives the component id on success.
+ *
+ * \retval TRUE   Success.
+ * \retval FALSE  Failure.
+ */
+static BOOLEAN
+KdbpGetComponentId(
+    IN  PCSTR ComponentName,
+    OUT PULONG ComponentId)
+{
+    ULONG i;
+
+    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+    {
+        if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
+        {
+            *ComponentId = ComponentTable[i].Id;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*!\brief Displays the list of active debug channels, or enable/disable debug channels.
  */
 static BOOLEAN
 KdbpCmdFilter(
@@ -657,26 +663,44 @@ KdbpCmdFilter(
     ULONG i, j, ComponentId, Level;
     ULONG set = DPFLTR_MASK, clear = DPFLTR_MASK;
     PCHAR pend;
-    LPCSTR opt, p;
+    PCSTR opt, p;
 
     static struct
     {
-        LPCSTR Name;
+        PCSTR Name;
         ULONG Level;
     }
     debug_classes[] =
     {
-        { "error", 1 << DPFLTR_ERROR_LEVEL },
+        { "error",   1 << DPFLTR_ERROR_LEVEL   },
         { "warning", 1 << DPFLTR_WARNING_LEVEL },
-        { "trace", 1 << DPFLTR_TRACE_LEVEL },
-        { "info", 1 << DPFLTR_INFO_LEVEL },
+        { "trace",   1 << DPFLTR_TRACE_LEVEL   },
+        { "info",    1 << DPFLTR_INFO_LEVEL    },
     };
+
+    if (Argc <= 1)
+    {
+        /* Display the list of available debug filter components */
+        KdbpPrint("REMARKS:\n"
+                  "- The 'WIN2000' system-wide debug filter component is used for DbgPrint()\n"
+                  "  messages without Component ID and Level.\n"
+                  "- The 'DEFAULT' debug filter component is used for DbgPrint() messages with\n"
+                  "  an unknown Component ID.\n\n");
+        KdbpPrint("The list of debug filter components currently available on your system is:\n\n");
+        KdbpPrint(" Component Name        Component ID\n"
+                  "================      ==============\n");
+        for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+        {
+            KdbpPrint("%16s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
+        }
+        return TRUE;
+    }
 
     for (i = 1; i < Argc; i++)
     {
         opt = Argv[i];
         p = opt + strcspn(opt, "+-");
-        if (!p[0]) p = opt; /* assume it's a debug channel name */
+        if (!p[0]) p = opt; /* Assume it's a debug channel name */
 
         if (p > opt)
         {
@@ -685,7 +709,7 @@ KdbpCmdFilter(
                 SIZE_T len = strlen(debug_classes[j].Name);
                 if (len != (p - opt))
                     continue;
-                if (_strnicmp(opt, debug_classes[j].Name, len) == 0) /* found it */
+                if (_strnicmp(opt, debug_classes[j].Name, len) == 0) /* Found it */
                 {
                     if (*p == '+')
                         set |= debug_classes[j].Level;
@@ -3521,7 +3545,7 @@ BOOLEAN
 KdbpInvokeCliCallbacks(
     IN PCHAR Command,
     IN ULONG Argc,
-    IN PCH Argv[])
+    IN PCHAR Argv[])
 {
     ULONG i;
 
@@ -3559,7 +3583,7 @@ KdbpDoCommand(
     PCHAR p;
     ULONG Argc;
     // FIXME: for what do we need a 1024 characters command line and 256 tokens?
-    static PCH Argv[256];
+    static PCHAR Argv[256];
     static CHAR OrigCommand[1024];
 
     RtlStringCbCopyA(OrigCommand, sizeof(OrigCommand), Command);
