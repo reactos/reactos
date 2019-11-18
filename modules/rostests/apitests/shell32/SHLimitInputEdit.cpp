@@ -45,6 +45,7 @@ public:
         PIDLIST_RELATIVE *ppidl,
         ULONG *pdwAttributes)
     {
+        trace("ParseDisplayName\n");
         return E_NOTIMPL;
     }
 
@@ -53,6 +54,7 @@ public:
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList)
     {
+        trace("EnumObjects\n");
         return E_NOTIMPL;
     }
 
@@ -62,6 +64,7 @@ public:
         REFIID riid,
         void **ppv)
     {
+        trace("BindToObject\n");
         return E_NOTIMPL;
     }
 
@@ -71,6 +74,7 @@ public:
         REFIID riid,
         void **ppv)
     {
+        trace("BindToStorage\n");
         return E_NOTIMPL;
     }
 
@@ -79,6 +83,7 @@ public:
         PCUIDLIST_RELATIVE pidl1,
         PCUIDLIST_RELATIVE pidl2)
     {
+        trace("CompareIDs\n");
         return E_NOTIMPL;
     }
 
@@ -87,6 +92,7 @@ public:
         REFIID riid,
         void **ppv)
     {
+        trace("CreateViewObject\n");
         return E_NOTIMPL;
     }
 
@@ -95,6 +101,7 @@ public:
         PCUITEMID_CHILD_ARRAY apidl,
         SFGAOF *rgfInOut)
     {
+        trace("GetAttributesOf\n");
         return E_NOTIMPL;
     }
 
@@ -106,6 +113,7 @@ public:
         UINT *rgfReserved,
         void **ppv)
     {
+        trace("GetUIObjectOf\n");
         return E_NOTIMPL;
     }
 
@@ -114,6 +122,7 @@ public:
         SHGDNF uFlags,
         STRRET *pName)
     {
+        trace("GetDisplayNameOf\n");
         return E_NOTIMPL;
     }
 
@@ -124,6 +133,7 @@ public:
         SHGDNF uFlags,
         PITEMID_CHILD *ppidlOut)
     {
+        trace("SetNameOf\n");
         return E_NOTIMPL;
     }
 
@@ -176,6 +186,7 @@ STDMETHODIMP_(ULONG) CShellFolder::AddRef()
 STDMETHODIMP_(ULONG) CShellFolder::Release()
 {
     trace("Release\n");
+
     if (--m_cRefs == 0)
     {
         //delete this;
