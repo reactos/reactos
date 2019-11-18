@@ -14,8 +14,10 @@ class CShellFolder
     , public IItemNameLimits
 {
 public:
+    LONG m_cRefs;
+
     CShellFolder(INT iMaxNameLen = 0, BOOL bDisabled = FALSE)
-        : m_nRefCount(1)
+        : m_cRefs(1)
         , m_iMaxNameLen(iMaxNameLen)
         , m_bDisabled(bDisabled)
     {
@@ -24,6 +26,7 @@ public:
 
     virtual ~CShellFolder()
     {
+        trace("~CShellFolder\n");
     }
 
     /*** IUnknown methods ***/
@@ -135,7 +138,6 @@ public:
         LPWSTR *ppwszInvalidChars);
 
 protected:
-    LONG m_nRefCount;
     INT m_iMaxNameLen;
     BOOL m_bDisabled;
 };
@@ -147,22 +149,18 @@ STDMETHODIMP CShellFolder::QueryInterface(REFIID riid, void **ppvObject)
     if (!ppvObject)
         return E_POINTER;
 
+    if (IsEqualIID(riid, IID_IShellFolder) || IsEqualIID(riid, IID_IUnknown))
+    {
+        trace("IID_IShellFolder\n");
+        *ppvObject = static_cast<IShellFolder *>(this);
+        AddRef();
+        return S_OK;
+    }
     if (IsEqualIID(riid, IID_IItemNameLimits))
     {
         trace("IID_IItemNameLimits\n");
         *ppvObject = static_cast<IItemNameLimits *>(this);
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_IShellFolder))
-    {
-        trace("IID_IShellFolder\n");
-        *ppvObject = static_cast<IShellFolder *>(this);
-        return S_OK;
-    }
-    if (IsEqualIID(riid, IID_IUnknown))
-    {
-        trace("IID_IUnknown\n");
-        *ppvObject = static_cast<IShellFolder *>(this);
+        AddRef();
         return S_OK;
     }
 
@@ -172,18 +170,18 @@ STDMETHODIMP CShellFolder::QueryInterface(REFIID riid, void **ppvObject)
 STDMETHODIMP_(ULONG) CShellFolder::AddRef()
 {
     trace("AddRef\n");
-    return ++m_nRefCount;
+    return ++m_cRefs;
 }
 
 STDMETHODIMP_(ULONG) CShellFolder::Release()
 {
     trace("Release\n");
-    if (--m_nRefCount == 0)
+    if (--m_cRefs == 0)
     {
-        delete this;
+        //delete this;
         return 0;
     }
-    return m_nRefCount;
+    return m_cRefs;
 }
 
 STDMETHODIMP CShellFolder::GetMaxLength(
@@ -241,62 +239,88 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     _SEH2_END;
     ok_int(hr, 0xDEAD);
 
-    CComPtr<IShellFolder> psf(new CShellFolder(123, FALSE));
+    {
+        CShellFolder sf(123, FALSE);
 
-    SendMessageW(hEdt1, EM_LIMITTEXT, 234, 0);
+        ok_long(sf.m_cRefs, 1);
 
-    hr = SHLimitInputEdit(hEdt1, psf);
-    ok_int(hr, S_OK);
+        SendMessageW(hEdt1, EM_LIMITTEXT, 234, 0);
 
-    n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
-    ok_int(n, 234);
+        trace("GWLP_WNDPROC: %p\n", (void *)GetWindowLongPtr(hEdt1, GWLP_WNDPROC));
 
-    psf.Release();
-    psf = new CShellFolder(345, TRUE);
+        hr = SHLimitInputEdit(hEdt1, &sf);
+        ok_int(hr, S_OK);
 
-    hr = SHLimitInputEdit(hEdt1, psf);
-    ok_int(hr, E_NOTIMPL);
+        ok_long(sf.m_cRefs, 1);
 
-    n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
-    ok_int(n, 234);
+        trace("GWLP_WNDPROC: %p\n", (void *)GetWindowLongPtr(hEdt1, GWLP_WNDPROC));
 
-    psf.Release();
-    psf = new CShellFolder(999, FALSE);
+        n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
+        ok_int(n, 234);
+    }
 
-    SetWindowTextW(hEdt1, L"TEST/TEST");
-    hr = SHLimitInputEdit(hEdt1, psf);
-    ok_int(hr, S_OK);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"TEST/TEST");
+    {
+        CShellFolder sf(345, TRUE);
 
-    n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
-    ok_int(n, 234);
+        hr = SHLimitInputEdit(hEdt1, &sf);
+        ok_int(hr, E_NOTIMPL);
 
-    SetWindowTextW(hEdt1, L"");
-    SendMessageW(hEdt1, WM_CHAR, L'A', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"A");
-    SendMessageW(hEdt1, WM_CHAR, L'/', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"A");
-    SendMessageW(hEdt1, WM_CHAR, L'/', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"A");
-    SendMessageW(hEdt1, WM_CHAR, L'A', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"AA");
+        n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
+        ok_int(n, 234);
+    }
 
-    psf.Release();
-    psf = new CShellFolder(4, FALSE);
+    {
+        CShellFolder sf(999, FALSE);
 
-    SetWindowTextW(hEdt1, L"ABC");
-    hr = SHLimitInputEdit(hEdt1, psf);
-    SendMessageW(hEdt1, WM_CHAR, L'D', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"DABC");
-    SendMessageW(hEdt1, WM_CHAR, L'E', 1);
-    GetWindowTextW(hEdt1, szText, _countof(szText));
-    ok_wstr(szText, L"DEABC");
+        ok_long(sf.m_cRefs, 1);
+
+        SetWindowTextW(hEdt1, L"TEST/TEST");
+        hr = SHLimitInputEdit(hEdt1, &sf);
+        ok_int(hr, S_OK);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"TEST/TEST");
+
+        ok_long(sf.m_cRefs, 1);
+
+        n = (INT)SendMessageW(hEdt1, EM_GETLIMITTEXT, 0, 0);
+        ok_int(n, 234);
+
+        SetWindowTextW(hEdt1, L"");
+        SendMessageW(hEdt1, WM_CHAR, L'A', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"A");
+
+        SendMessageW(hEdt1, WM_CHAR, L'/', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"A");
+
+        SendMessageW(hEdt1, WM_CHAR, L'/', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"A");
+
+        SendMessageW(hEdt1, WM_CHAR, L'A', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"AA");
+    }
+
+    {
+        CShellFolder sf(4, FALSE);
+
+        ok_long(sf.m_cRefs, 1);
+
+        SetWindowTextW(hEdt1, L"ABC");
+        hr = SHLimitInputEdit(hEdt1, &sf);
+
+        SendMessageW(hEdt1, WM_CHAR, L'D', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"DABC");
+
+        SendMessageW(hEdt1, WM_CHAR, L'E', 1);
+        GetWindowTextW(hEdt1, szText, _countof(szText));
+        ok_wstr(szText, L"DEABC");
+
+        ok_long(sf.m_cRefs, 1);
+    }
 
     EndDialog(hwnd, IDABORT);
     return TRUE;
