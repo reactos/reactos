@@ -24,7 +24,7 @@ typedef struct _IMGINFO
     HBITMAP hBitmap;
     INT cxSource;
     INT cySource;
-    INT iPLanes;
+    INT iPlanes;
     INT iBits;
 } IMGINFO, *PIMGINFO;
 
@@ -123,7 +123,7 @@ static VOID InitLogo(HWND hwndDlg)
     pImgInfo->cxSource = logoBitmap.bmWidth;
     pImgInfo->cySource = logoBitmap.bmHeight;
     pImgInfo->iBits = logoBitmap.bmBitsPixel;
-    pImgInfo->iPLanes = logoBitmap.bmPlanes;
+    pImgInfo->iPlanes = logoBitmap.bmPlanes;
 
     DeleteObject(hLogo);
     DeleteObject(hMask);
@@ -172,7 +172,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
                     iDevsHeight = rcCredits.bottom - rcCredits.top;
 
-                    hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPLanes, pImgInfo->iBits, NULL);
+                    hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
 
                     if(!hCreditsBitmap)
                         break;
