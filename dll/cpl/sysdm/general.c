@@ -28,8 +28,8 @@ typedef struct _IMGINFO
     INT iBits;
 } IMGINFO, *PIMGINFO;
 
-PIMGINFO pImgInfo = NULL;
-BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+static PIMGINFO pImgInfo;
+static const BLENDFUNCTION BlendFunc = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
 
 VOID ShowLastWin32Error(HWND hWndOwner)
 {
