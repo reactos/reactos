@@ -1904,11 +1904,17 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-       if (UserIsDesktopWindow(Window->spwndParent) &&
-           Window->spwndOwner == NULL &&
-           (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
-            (Window->ExStyle & WS_EX_APPWINDOW)))
-         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+      if (Window->spwndOwner == NULL ||
+          !(Window->spwndOwner->style & WS_VISIBLE) ||
+          (Window->spwndOwner->ExStyle & WS_EX_TOOLWINDOW))
+      {
+         if (UserIsDesktopWindow(Window->spwndParent) &&
+             (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
+              (Window->ExStyle & WS_EX_APPWINDOW)))
+         {
+            co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+         }
+      }
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
