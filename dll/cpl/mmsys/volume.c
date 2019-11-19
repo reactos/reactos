@@ -17,6 +17,10 @@ typedef struct _IMGINFO
     HBITMAP hBitmap;
     INT cxSource;
     INT cySource;
+    // FIXME: Add iPlanes, though unused here? Use it?
+    // INT iPlanes;
+    // FIXME: Add iBits, though unused here? Use it?
+    // INT iBits;
 } IMGINFO, *PIMGINFO;
 
 
