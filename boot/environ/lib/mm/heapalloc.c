@@ -664,9 +664,13 @@ BlMmFreeHeap (
     _In_ PVOID Buffer
     )
 {
+#if 0
+// See 'FIXME: r69142' below,
+
     PBL_BUSY_HEAP_ENTRY BusyEntry;
     PBL_HEAP_BOUNDARIES Heap;
     PLIST_ENTRY NextEntry;
+#endif
 
     /* If the heap is not initialized, fail */
     if (HapInitializationStatus != 1)
@@ -674,14 +678,26 @@ BlMmFreeHeap (
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Get the heap header */
-    //EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
-    if (Buffer)
+#if 0
+// FIXME: Is NULL possible? How should it be handled?
+
+    // ASSERT(Buffer);
+    if (!Buffer)
     {
-        /* Don't free heap until we discover the corruption */
+        // return STATUS_INVALID_PARAMETER;
         return STATUS_SUCCESS;
     }
+#endif
 
+    // EfiPrintf(L"Freeing entry at: %p\r\n", Buffer);
+
+#if 1
+// FIXME: r69142, 'Temporarily disable freeing from heap while [ion] figure out what's corrupting it.'.
+
+    /* Don't free heap until we discover the corruption */
+    return STATUS_SUCCESS;
+#else
+    /* Get the heap header */
     BusyEntry = CONTAINING_RECORD(Buffer, BL_BUSY_HEAP_ENTRY, Buffer);
 
     /* Loop all the heaps */
@@ -695,6 +711,7 @@ BlMmFreeHeap (
         if (((ULONG_PTR)Heap->HeapBase <= (ULONG_PTR)BusyEntry) &&
             ((ULONG_PTR)BusyEntry < (ULONG_PTR)Heap->HeapStart))
         {
+            // TODO: Couldn't this check be done before the loop?
             /* Ignore double-free */
             if (BusyEntry->BufferNext.BufferFree)
             {
@@ -712,5 +729,6 @@ BlMmFreeHeap (
 
     /* The entry is not on any valid heap */
     return STATUS_INVALID_PARAMETER;
+#endif
 }
 
