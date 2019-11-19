@@ -157,7 +157,7 @@ Quickie:
     }
 
     /* Check if we had a custom font directory allocated and free it */
-    if ((FontDirectory) && (CustomDirectory))
+    if (CustomDirectory) // FontDirectory is != NULL.
     {
         BlMmFreeHeap(FontDirectory);
     }
