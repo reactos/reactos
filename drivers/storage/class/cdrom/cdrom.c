@@ -731,6 +731,130 @@ Return Value:
     RtlFreeUnicodeString(&unicodeString);
 }
 
+
+VOID
+NTAPI
+ReportToMountMgr(
+    IN PDEVICE_OBJECT CdDeviceObject
+    )
+
+/*++
+
+Routine Description:
+
+    This routine reports the creation of a cdrom device object to the
+    MountMgr to fake PnP.
+
+Arguments:
+
+    CdDeviceObject - Pointer to the created cdrom device.
+
+Return Value:
+
+    VOID
+
+--*/
+{
+    NTSTATUS              status;
+    UNICODE_STRING        mountMgrDevice;
+    PDEVICE_OBJECT        deviceObject;
+    PFILE_OBJECT          fileObject;
+    PMOUNTMGR_TARGET_NAME mountTarget;
+    ULONG                 cdLen;
+    PDEVICE_EXTENSION     deviceExtension;
+    PIRP                  irp;
+    KEVENT                event;
+    IO_STATUS_BLOCK       ioStatus;
+
+    //
+    // First, get MountMgr DeviceObject.
+    //
+
+    RtlInitUnicodeString(&mountMgrDevice, MOUNTMGR_DEVICE_NAME);
+    status = IoGetDeviceObjectPointer(&mountMgrDevice, FILE_READ_ATTRIBUTES,
+                                      &fileObject, &deviceObject);
+
+    if (!NT_SUCCESS(status)) {
+
+        DebugPrint((1,
+                   "ReportToMountMgr: Can't get MountMgr pointers %lx\n",
+                   status));
+
+        return;
+    }
+
+    deviceExtension = CdDeviceObject->DeviceExtension;
+    cdLen = deviceExtension->DeviceName.Length;
+
+    //
+    // Allocate input buffer to report our partition device.
+    //
+
+    mountTarget = ExAllocatePool(NonPagedPool,
+                                 sizeof(MOUNTMGR_TARGET_NAME) + cdLen);
+
+    if (!mountTarget) {
+
+        DebugPrint((1,
+                   "ReportToMountMgr: Allocation of mountTarget failed\n"));
+
+        ObDereferenceObject(fileObject);
+        return;
+    }
+
+    mountTarget->DeviceNameLength = cdLen;
+    RtlCopyMemory(mountTarget->DeviceName, deviceExtension->DeviceName.Buffer, cdLen);
+
+    KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+    //
+    // Build the IRP used to communicate with the MountMgr.
+    //
+
+    irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
+                                        deviceObject,
+                                        mountTarget,
+                                        sizeof(MOUNTMGR_TARGET_NAME) + cdLen,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &event,
+                                        &ioStatus);
+
+    if (!irp) {
+
+        DebugPrint((1,
+                    "ReportToMountMgr: Allocation of irp failed\n"));
+
+        ExFreePool(mountTarget);
+        ObDereferenceObject(fileObject);
+        return;
+    }
+
+    //
+    // Call the MountMgr.
+    //
+
+    status = IoCallDriver(deviceObject, irp);
+
+    if (status == STATUS_PENDING) {
+        KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
+        status = ioStatus.Status;
+    }
+
+    //
+    // We're done.
+    //
+
+    DPRINT1("Reported to the MountMgr: %lx\n", status);
+
+    ExFreePool(mountTarget);
+    ObDereferenceObject(fileObject);
+
+    return;
+}
+
+
 NTSTATUS
 NTAPI
 CreateCdRomDeviceObject(
@@ -1322,6 +1446,8 @@ Return Value:
     }
 
     ExFreePool(buffer);
+
+    ReportToMountMgr(deviceObject);
 
     //
     // Start the timer now regardless of if Autorun is enabled.
