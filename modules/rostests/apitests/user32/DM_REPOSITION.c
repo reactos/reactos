@@ -10,10 +10,11 @@
 
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
-    RECT rc, rcWork;
-    INT cx, cy;
+    RECT rc, rc2, rcWork;
+    INT cx, cy, nBitsPixel;
     HMONITOR hMon;
     MONITORINFO mi = { sizeof(mi) };
+    HDC hdc;
 
     /* get monitor info */
     hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
@@ -60,6 +61,42 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
     ok_int(GetWindowRect(hwnd, &rc), TRUE);
     ok_long(rc.left, rcWork.right - cx);
     ok_long(rc.top, rcWork.bottom - cy - 4);
+    ok_long(rc.right, rc.left + cx);
+    ok_long(rc.bottom, rc.top + cy);
+
+    /* minimize */
+    ShowWindow(hwnd, SW_MINIMIZE);
+    ok_int(GetWindowRect(hwnd, &rc), TRUE);
+
+    /* reposition */
+    ok_int(SendMessageW(hwnd, DM_REPOSITION, 0, 0), 0);
+    ok_int(GetWindowRect(hwnd, &rc2), TRUE);
+    ok_int(EqualRect(&rc, &rc2), TRUE);
+
+    /* restore */
+    ShowWindow(hwnd, SW_RESTORE);
+
+    /* move */
+    ok_int(SetWindowPos(hwnd, NULL,
+                        rcWork.right - cx + 80, rcWork.bottom - cy + 80, 0, 0,
+                        SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOOWNERZORDER |
+                        SWP_NOZORDER), TRUE);
+    ok_int(GetWindowRect(hwnd, &rc), TRUE);
+    ok_long(rc.left, rcWork.right - cx + 80);
+    ok_long(rc.top, rcWork.bottom - cy + 80);
+    ok_long(rc.right, rc.left + cx);
+    ok_long(rc.bottom, rc.top + cy);
+
+    /* WM_DISPLAYCHANGE */
+    hdc = GetWindowDC(hwnd);
+    nBitsPixel = GetDeviceCaps(hdc, BITSPIXEL);
+    ReleaseDC(hwnd, hdc);
+    SendMessageW(hwnd, WM_DISPLAYCHANGE, nBitsPixel,
+                 MAKELONG(GetSystemMetrics(SM_CXSCREEN),
+                          GetSystemMetrics(SM_CYSCREEN)));
+    ok_int(GetWindowRect(hwnd, &rc), TRUE);
+    ok_long(rc.left, rcWork.right - cx + 80);
+    ok_long(rc.top, rcWork.bottom - cy + 80);
     ok_long(rc.right, rc.left + cx);
     ok_long(rc.bottom, rc.top + cy);
 
