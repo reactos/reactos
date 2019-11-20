@@ -1426,7 +1426,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
-    if (lParam != ~(LPARAM)0)
+    if (lParam != ~0)
     {
         x = GET_X_LPARAM(lParam);
         y = GET_Y_LPARAM(lParam);
@@ -1453,7 +1453,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         goto cleanup;
 
     /* There is no position requested, so try to find one */
-    if (lParam == ~(LPARAM)0)
+    if (lParam == ~0)
     {
         HWND hFocus = ::GetFocus();
         int lvIndex = -1;
