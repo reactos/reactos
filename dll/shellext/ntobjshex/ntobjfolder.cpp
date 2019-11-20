@@ -148,7 +148,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ResolveSymLink(
 
     if (link.Buffer[1] == L':' && isalphaW(link.Buffer[0]))
     {
-        StringCbCopyNW(path, _countof(path), link.Buffer, link.Length);
+        StringCbCopyNW(path, sizeof(path), link.Buffer, link.Length);
 
         CComPtr<IShellFolder> psfDesktop;
         hr = SHGetDesktopFolder(&psfDesktop);
@@ -158,7 +158,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ResolveSymLink(
         return psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, fullPidl, NULL);
     }
 
-    StringCbCopyW(path, _countof(path), L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{845B0FB2-66E0-416B-8F91-314E23F7C12D}");
+    StringCbCopyW(path, sizeof(path), L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{845B0FB2-66E0-416B-8F91-314E23F7C12D}");
     PathAppend(path, link.Buffer);
 
     CComPtr<IShellFolder> psfDesktop;
@@ -202,7 +202,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     m_shellPidl = ILClone(pidl);
 
-    StringCbCopy(m_NtPath, _countof(m_NtPath), L"\\");
+    StringCbCopyW(m_NtPath, sizeof(m_NtPath), L"\\");
 
     return S_OK;
 }
@@ -212,7 +212,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(PCIDLIST_ABSOLUTE pidl, PC
 {
     m_shellPidl = ILClone(pidl);
 
-    StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
+    StringCbCopyW(m_NtPath, sizeof(m_NtPath), ntPath);
 
     return S_OK;
 }
