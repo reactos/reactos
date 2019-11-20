@@ -1426,13 +1426,19 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
-    LV_HITTESTINFO hittest = { { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) } };
-    ScreenToClient(&hittest.pt);
-    m_ListView.HitTest(&hittest);
-    if ((hittest.flags & LVHT_ONITEM) &&
-        m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+    if (lParam != ~(LPARAM)0)
     {
-        SelectItem(hittest.iItem, SVSI_ENSUREVISIBLE | SVSI_SELECT | SVSI_DESELECTOTHERS);
+        x = GET_X_LPARAM(lParam);
+        y = GET_Y_LPARAM(lParam);
+
+        LV_HITTESTINFO hittest = { { x, y } };
+        ScreenToClient(&hittest.pt);
+        m_ListView.HitTest(&hittest);
+        if ((hittest.flags & LVHT_ONITEM) &&
+            m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+        {
+            SelectItem(hittest.iItem, SVSI_ENSUREVISIBLE | SVSI_SELECT | SVSI_DESELECTOTHERS);
+        }
     }
 
     m_cidl = m_ListView.GetSelectedCount();
@@ -1447,7 +1453,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         goto cleanup;
 
     /* There is no position requested, so try to find one */
-    if (lParam == ~0)
+    if (lParam == ~(LPARAM)0)
     {
         HWND hFocus = ::GetFocus();
         int lvIndex = -1;
@@ -1480,11 +1486,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         m_ListView.ClientToScreen(&pt);
         x = pt.x;
         y = pt.y;
-    }
-    else
-    {
-        x = GET_X_LPARAM(lParam);
-        y = GET_Y_LPARAM(lParam);
     }
 
     uCommand = TrackPopupMenu(m_hContextMenu,
