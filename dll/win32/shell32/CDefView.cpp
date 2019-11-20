@@ -1426,7 +1426,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
-    if (lParam != ~0)
+    if (lParam != ~0)   // unless app key (menu key) was pressed
     {
         x = GET_X_LPARAM(lParam);
         y = GET_Y_LPARAM(lParam);
@@ -1434,10 +1434,13 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         LV_HITTESTINFO hittest = { { x, y } };
         ScreenToClient(&hittest.pt);
         m_ListView.HitTest(&hittest);
+
+        // Right-Clicked item is selected? If selected, no selection change.
+        // If not selected, then reset the selection and select the item.
         if ((hittest.flags & LVHT_ONITEM) &&
             m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
         {
-            SelectItem(hittest.iItem, SVSI_ENSUREVISIBLE | SVSI_SELECT | SVSI_DESELECTOTHERS);
+            SelectItem(hittest.iItem, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE);
         }
     }
 
