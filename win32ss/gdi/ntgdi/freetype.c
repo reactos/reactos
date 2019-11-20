@@ -4412,7 +4412,10 @@ TextIntGetTextExtentPoint(PDC dc,
 
         if (EmuBold || EmuItalic || !realglyph)
         {
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6242,7 +6245,10 @@ IntExtTextOutW(
                                                RenderMode, pmxWorldToDevice);
             if (!realglyph)
             {
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+                if (EmuItalic)
+                    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+                else
+                    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
                 if (error)
                 {
                     DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6337,7 +6343,10 @@ IntExtTextOutW(
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6459,7 +6468,10 @@ IntExtTextOutW(
                                            RenderMode, pmxWorldToDevice);
         if (!realglyph)
         {
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
