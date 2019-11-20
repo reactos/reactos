@@ -1426,6 +1426,15 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
+    LV_HITTESTINFO hittest = { { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) } };
+    ScreenToClient(&hittest.pt);
+    m_ListView.HitTest(&hittest);
+    if ((hittest.flags & LVHT_ONITEM) &&
+        m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+    {
+        SelectItem(hittest.iItem, SVSI_ENSUREVISIBLE | SVSI_SELECT | SVSI_DESELECTOTHERS);
+    }
+
     m_cidl = m_ListView.GetSelectedCount();
 
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
