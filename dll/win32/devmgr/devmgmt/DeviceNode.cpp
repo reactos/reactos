@@ -131,7 +131,7 @@ CDeviceNode::SetupNode()
                               &m_ClassImage);
 
     // Get the description for the device
-    ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
+    ulLength = sizeof(m_DisplayName);
     cr = CM_Get_DevNode_Registry_PropertyW(m_DevInst,
                                            CM_DRP_FRIENDLYNAME,
                                            NULL,
@@ -140,7 +140,7 @@ CDeviceNode::SetupNode()
                                            0);
     if (cr != CR_SUCCESS)
     {
-        ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
+        ulLength = sizeof(m_DisplayName);
         cr = CM_Get_DevNode_Registry_PropertyW(m_DevInst,
                                                CM_DRP_DEVICEDESC,
                                                NULL,
