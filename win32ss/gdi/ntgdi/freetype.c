@@ -1228,28 +1228,26 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             FontGDI->OriginalWeight = FW_NORMAL;
             FontGDI->RequestWeight = FW_NORMAL;
 
+            IntLockFreeType();
             if (FT_IS_SFNT(Face))
             {
-                IntLockFreeType();
                 pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
                 if (pOS2)
                 {
                     FontGDI->OriginalItalic = !!(pOS2->fsSelection & 0x1);
                     FontGDI->OriginalWeight = pOS2->usWeightClass;
                 }
-                IntUnLockFreeType();
             }
             else
             {
-                IntLockFreeType();
                 Error = FT_Get_WinFNT_Header(Face, &WinFNT);
                 if (!Error)
                 {
                     FontGDI->OriginalItalic = !!WinFNT.italic;
                     FontGDI->OriginalWeight = WinFNT.weight;
                 }
-                IntUnLockFreeType();
             }
+            IntUnLockFreeType();
 
             /* Entry->FaceName */
             RtlInitAnsiString(&AnsiString, Face->family_name);
