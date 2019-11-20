@@ -682,7 +682,8 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFil
         // construct default 'FileExtensionFile' by formatting the uppercase extension
         // with IDS_FILE_EXT_TYPE, outputting something like a l18n 'INI File'
 
-        StringCbPrintf(Entry->FileDescription, sizeof(Entry->FileDescription), szFile, &Entry->FileExtension[1]);
+        StringCbPrintfW(Entry->FileDescription, sizeof(Entry->FileDescription),
+                        szFile, &Entry->FileExtension[1]);
     }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));

@@ -131,11 +131,11 @@ KmtLoadDriver(
     DWORD Error = ERROR_SUCCESS;
     WCHAR ServicePath[MAX_PATH];
 
-    StringCbCopy(ServicePath, sizeof ServicePath, ServiceName);
-    StringCbCat(ServicePath, sizeof ServicePath, L"_drv.sys");
+    StringCbCopyW(ServicePath, sizeof(ServicePath), ServiceName);
+    StringCbCatW(ServicePath, sizeof(ServicePath), L"_drv.sys");
 
-    StringCbCopy(TestServiceName, sizeof TestServiceName, L"Kmtest-");
-    StringCbCat(TestServiceName, sizeof TestServiceName, ServiceName);
+    StringCbCopyW(TestServiceName, sizeof(TestServiceName), L"Kmtest-");
+    StringCbCatW(TestServiceName, sizeof(TestServiceName), ServiceName);
 
     Error = KmtCreateAndStartService(TestServiceName, ServicePath, NULL, &TestServiceHandle, RestartIfRunning);
 
@@ -176,8 +176,8 @@ KmtOpenDriver(VOID)
     DWORD Error = ERROR_SUCCESS;
     WCHAR DevicePath[MAX_PATH];
 
-    StringCbCopy(DevicePath, sizeof DevicePath, L"\\\\.\\Global\\GLOBALROOT\\Device\\");
-    StringCbCat(DevicePath, sizeof DevicePath, TestServiceName);
+    StringCbCopyW(DevicePath, sizeof(DevicePath), L"\\\\.\\Global\\GLOBALROOT\\Device\\");
+    StringCbCatW(DevicePath, sizeof(DevicePath), TestServiceName);
 
     TestDeviceHandle = CreateFile(DevicePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (TestDeviceHandle == INVALID_HANDLE_VALUE)
