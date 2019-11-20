@@ -1043,62 +1043,6 @@ IntLoadSystemFonts(VOID)
     }
 }
 
-static BYTE
-ItalicFromStyle(const char *style_name)
-{
-    if (style_name == NULL || style_name[0] == 0)
-        return FALSE;
-    if (strstr(style_name, "Italic") != NULL)
-        return TRUE;
-    if (strstr(style_name, "Oblique") != NULL)
-        return TRUE;
-    return FALSE;
-}
-
-static LONG
-WeightFromStyle(const char *style_name)
-{
-    if (style_name == NULL || style_name[0] == 0)
-        return FW_NORMAL;
-    if (strstr(style_name, "Regular") != NULL)
-        return FW_REGULAR;
-    if (strstr(style_name, "Normal") != NULL)
-        return FW_NORMAL;
-    if (strstr(style_name, "SemiBold") != NULL)
-        return FW_SEMIBOLD;
-    if (strstr(style_name, "UltraBold") != NULL)
-        return FW_ULTRABOLD;
-    if (strstr(style_name, "DemiBold") != NULL)
-        return FW_DEMIBOLD;
-    if (strstr(style_name, "ExtraBold") != NULL)
-        return FW_EXTRABOLD;
-    if (strstr(style_name, "Bold") != NULL)
-        return FW_BOLD;
-    if (strstr(style_name, "UltraLight") != NULL)
-        return FW_ULTRALIGHT;
-    if (strstr(style_name, "ExtraLight") != NULL)
-        return FW_EXTRALIGHT;
-    if (strstr(style_name, "Light") != NULL)
-        return FW_LIGHT;
-    if (strstr(style_name, "Hairline") != NULL)
-        return 50;
-    if (strstr(style_name, "Book") != NULL)
-        return 350;
-    if (strstr(style_name, "ExtraBlack") != NULL)
-        return 950;
-    if (strstr(style_name, "UltraBlack") != NULL)
-        return 1000;
-    if (strstr(style_name, "Black") != NULL)
-        return FW_BLACK;
-    if (strstr(style_name, "Medium") != NULL)
-        return FW_MEDIUM;
-    if (strstr(style_name, "Thin") != NULL)
-        return FW_THIN;
-    if (strstr(style_name, "Heavy") != NULL)
-        return FW_HEAVY;
-    return FW_NORMAL;
-}
-
 static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
@@ -1279,10 +1223,33 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             /* Set face */
             FontGDI->SharedFace = SharedFace;
             FontGDI->CharSet = ANSI_CHARSET;
-            FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
+            FontGDI->OriginalItalic = FALSE;
             FontGDI->RequestItalic = FALSE;
-            FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
+            FontGDI->OriginalWeight = FW_NORMAL;
             FontGDI->RequestWeight = FW_NORMAL;
+
+            if (FT_IS_SFNT(Face))
+            {
+                IntLockFreeType();
+                pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
+                if (pOS2)
+                {
+                    FontGDI->OriginalItalic = !!(pOS2->fsSelection & 0x1);
+                    FontGDI->OriginalWeight = pOS2->usWeightClass;
+                }
+                IntUnLockFreeType();
+            }
+            else
+            {
+                IntLockFreeType();
+                Error = FT_Get_WinFNT_Header(Face, &WinFNT);
+                if (!Error)
+                {
+                    FontGDI->OriginalItalic = !!WinFNT.italic;
+                    FontGDI->OriginalWeight = WinFNT.weight;
+                }
+                IntUnLockFreeType();
+            }
 
             /* Entry->FaceName */
             RtlInitAnsiString(&AnsiString, Face->family_name);
@@ -5073,23 +5040,20 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         GOT_PENALTY("SizeSynth", 50);
     }
 
-    if (!!LogFont->lfItalic != !!TM->tmItalic)
+    if (!LogFont->lfItalic && TM->tmItalic)
     {
-        if (!LogFont->lfItalic && ItalicFromStyle(style_name))
-        {
-            /* Italic Penalty 4 */
-            /* Requested font and candidate font do not agree on italic status,
-               and the desired result cannot be simulated. */
-            /* Adjusted to 40 to satisfy (Oblique Penalty > Book Penalty). */
-            GOT_PENALTY("Italic", 40);
-        }
-        else if (LogFont->lfItalic && !ItalicFromStyle(style_name))
-        {
-            /* ItalicSim Penalty 1 */
-            /* Requested italic font but the candidate is not italic,
-               although italics can be simulated. */
-            GOT_PENALTY("ItalicSim", 1);
-        }
+        /* Italic Penalty 4 */
+        /* Requested font and candidate font do not agree on italic status,
+           and the desired result cannot be simulated. */
+        /* Adjusted to 40 to satisfy (Oblique Penalty > Book Penalty). */
+        GOT_PENALTY("Italic", 40);
+    }
+    else if (LogFont->lfItalic && !TM->tmItalic)
+    {
+        /* ItalicSim Penalty 1 */
+        /* Requested italic font but the candidate is not italic,
+           although italics can be simulated. */
+        GOT_PENALTY("ItalicSim", 1);
     }
 
     if (LogFont->lfOutPrecision == OUT_TT_PRECIS)
@@ -5347,7 +5311,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
     LOGFONTW SubstitutedLogFont;
-    FT_Face Face;
 
     if (!pTextObj)
     {
@@ -5438,13 +5401,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             FontGdi->RequestWeight = pLogFont->lfWeight;
         else
             FontGdi->RequestWeight = FW_NORMAL;
-
-        Face = FontGdi->SharedFace->Face;
-
-        //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
-
-        if (!FontGdi->OriginalItalic)
-            FontGdi->OriginalItalic = ItalicFromStyle(Face->style_name);
 
         TextObj->fl |= TEXTOBJECT_INIT;
         Status = STATUS_SUCCESS;
