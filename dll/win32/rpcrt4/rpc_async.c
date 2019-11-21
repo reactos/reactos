@@ -192,7 +192,7 @@ RpcGetAuthorizationContextForClient(RPC_BINDING_HANDLE ClientBinding,
                                     PVOID Reserved4,
                                     PVOID *authz_client_context)
 {
-    FIXME("(%p, %s, %p, %p, (%u, %d), %u, %p, %p): stub\n",
+    FIXME("(%p, %d, %p, %p, (%d, %u), %u, %p, %p): stub\n",
           ClientBinding,
           ImpersonateOnReturn,
           Reserved1,
