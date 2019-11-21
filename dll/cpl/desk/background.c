@@ -1012,7 +1012,7 @@ SetWallpaper(PBACKGROUND_DATA pData)
         return;
     }
 
-    if (FAILED(StringCbCat(szWallpaper, MAX_PATH, TEXT("\\Wallpaper1.bmp"))))
+    if (FAILED(StringCbCat(szWallpaper, sizeof(szWallpaper), TEXT("\\Wallpaper1.bmp"))))
     {
         return;
     }
