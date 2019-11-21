@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    16   /* Version 16 */
+#define _INC_MSGDUMP    17   /* Version 17 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -261,22 +261,12 @@ MD_OnShowWindow(HWND hwnd, BOOL fShow, UINT status)
                     MSGDUMP_PREFIX, (void *)hwnd, fShow, status);
 }
 
-static __inline void MSGDUMP_API
-MD_OnWinIniChange(HWND hwnd, LPCTSTR lpszSectionName)
+static __inline LRESULT MSGDUMP_API
+MD_OnSettingChange(HWND hwnd, UINT_PTR wFlag, LPCTSTR pszSection)
 {
-    if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sWM_WININICHANGE(hwnd:%p, lpszSectionName:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpszSectionName);
-    else
-        MSGDUMP_TPRINTF(TEXT("%sWM_WININICHANGE(hwnd:%p, lpszSectionName:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpszSectionName);
-}
-
-static __inline void MSGDUMP_API
-MD_OnSettingChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETTINGCHANGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_TPRINTF(TEXT("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%s)\n"),
+                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, pszSection);
+    return 0;
 }
 
 static __inline void MSGDUMP_API
@@ -5122,9 +5112,8 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_ERASEBKGND, MD_OnEraseBkgnd);
         HANDLE_MSG(hwnd, WM_SYSCOLORCHANGE, MD_OnSysColorChange);
         HANDLE_MSG(hwnd, WM_SHOWWINDOW, MD_OnShowWindow);
-        HANDLE_MSG(hwnd, WM_WININICHANGE, MD_OnWinIniChange);
-        /*HANDLE_MSG(hwnd, WM_SETTINGCHANGE, MD_OnSettingChange);*/
-            /* WM_SETTINGCHANGE duplicates WM_WININICHANGE */
+        /* HANDLE_MSG(hwnd, WM_WININICHANGE, MD_OnWinIniChange); */
+        HANDLE_MSG(hwnd, WM_SETTINGCHANGE, MD_OnSettingChange);
         HANDLE_MSG(hwnd, WM_DEVMODECHANGE, MD_OnDevModeChange);
         HANDLE_MSG(hwnd, WM_ACTIVATEAPP, MD_OnActivateApp);
         HANDLE_MSG(hwnd, WM_FONTCHANGE, MD_OnFontChange);
