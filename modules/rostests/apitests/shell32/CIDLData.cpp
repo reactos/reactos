@@ -60,16 +60,6 @@ static void TestAdviseAndCanonical(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUI
 }
 
 
-static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
-{
-    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
-}
-
-static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
-{
-    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
-}
-
 #define ok_wstri(x, y) \
     ok(wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
