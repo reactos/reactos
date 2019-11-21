@@ -38,16 +38,6 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
 
 HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
 
-inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
-{
-    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
-}
-
-inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
-{
-    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
-}
-
 inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
 {
     static const LPCWSTR array[] =

@@ -534,4 +534,16 @@ void DumpIdList(LPCITEMIDLIST pcidl)
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+
+static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
+{
+    return (PCUIDLIST_ABSOLUTE)(((LPBYTE)pida) + (pida)->aoffset[0]);
+}
+
+static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
+{
+    return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
+}
+
+
 #endif /* __ROS_SHELL_UTILS_H */
