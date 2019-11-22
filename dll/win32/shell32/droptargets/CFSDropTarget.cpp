@@ -351,7 +351,11 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
         ReleaseStgMedium(&medium);
     }
 
-    _QueryDrop(dwKeyState, pdwEffect);
+    if (!m_fAcceptFmt)
+        *pdwEffect = DROPEFFECT_NONE;
+    else
+        *pdwEffect = m_dwDefaultEffect;
+
     return S_OK;
 }
 
