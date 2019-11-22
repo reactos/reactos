@@ -209,6 +209,12 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","DevicePath",0x00020002,"%Syste
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","MediaPathUnexpanded",0x00020000,"%SystemRoot%\Media"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","WallPaperDir",0x00020002,"%SystemRoot%\Web\Wallpaper"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\pbrush.exe",,,"%SystemRoot%\system32\mspaint.exe"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\pbrush.exe","Path",,"%SystemRoot%\system32"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\wordpad.exe",,,"%SystemRoot%\system32\wordpad.exe"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\wordpad.exe","Path",,"%SystemRoot%\system32"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\write.exe",,,"%SystemRoot%\system32\wordpad.exe"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\write.exe","Path",,"%SystemRoot%\system32"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Applets",,0x00000012
 
 ; default shell
