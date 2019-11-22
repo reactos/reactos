@@ -322,6 +322,12 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
             else
                 m_dwDefaultEffect = D_MOVE;
             break;
+        case D_COPY | D_LINK:
+            if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == (MK_SHIFT | MK_CONTROL))
+                m_dwDefaultEffect = D_LINK;
+            else
+                m_dwDefaultEffect = D_COPY;
+            break;
         case D_MOVE | D_LINK:
             if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == (MK_SHIFT | MK_CONTROL))
                 m_dwDefaultEffect = D_LINK;
