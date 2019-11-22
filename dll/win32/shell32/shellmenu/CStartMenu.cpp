@@ -48,6 +48,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 #define IDM_DISCONNECT              5000
 #define IDM_SECURITY                5001
 
+static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu);
+
 /*
  * TODO:
  * 1. append the start menu contents from all users
@@ -75,6 +77,15 @@ private:
     {
         HMENU hmenu;
         HRESULT hr;
+        CComPtr<IShellFolder> psf;
+
+        hr = GetStartMenuFolder(&psf);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = m_pShellMenu->SetShellFolder(psf, NULL, NULL, 0);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         if (m_pTrayPriv.p)
             return S_OK;
