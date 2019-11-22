@@ -517,6 +517,7 @@ CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
     LPWSTR lpDomainName = NULL;
     WCHAR Buffer[MAX_PATH];
     WCHAR szValue[1024];
+    DWORD SessionId;
 
     DPRINT("CreateEnvironmentBlock() called\n");
 
@@ -587,6 +588,25 @@ CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
         SetUserEnvironmentVariable(Environment,
                                    L"USERPROFILE",
                                    Buffer,
+                                   TRUE);
+    }
+
+    /* Set 'SESSIONNAME' variable */
+    SessionId = WTSGetActiveConsoleSessionId();
+    if (GetSystemMetrics(SM_REMOTESESSION) && SessionId != 0xFFFFFFFF)
+    {
+        /* FIXME */
+        StringCbPrintfW(szValue, sizeof(szValue), L"RDP-#%lu", SessionId);
+        SetUserEnvironmentVariable(Environment,
+                                   L"SESSIONNAME",
+                                   szValue,
+                                   TRUE);
+    }
+    else
+    {
+        SetUserEnvironmentVariable(Environment,
+                                   L"SESSIONNAME",
+                                   L"Console",
                                    TRUE);
     }
 
