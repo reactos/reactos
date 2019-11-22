@@ -832,10 +832,10 @@ VOID DoCreateStatusBar(VOID)
     /* Check if status bar object already exists. */
     if (Globals.hStatusBar == NULL)
     {
-        const DWORD style = WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | SBS_SIZEGRIP;
-
         /* Try to create the status bar */
-        Globals.hStatusBar = CreateStatusWindow(style, NULL, Globals.hMainWnd,
+        Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE,
+                                                NULL,
+                                                Globals.hMainWnd,
                                                 CMD_STATUSBAR_WND_ID);
 
         if (Globals.hStatusBar == NULL)
