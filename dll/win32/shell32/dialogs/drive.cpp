@@ -591,6 +591,8 @@ static unsigned __stdcall DoFormatDrive(void *args)
     HWND hwndDlg = pParams->hwndDlg;
     PFORMAT_DRIVE_CONTEXT pContext = pParams->pContext;
 
+    HMENU hSysMenu = GetSystemMenu(hwndDlg, FALSE);
+    EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
     EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
     EnableWindow(GetDlgItem(hwndDlg, 28677), FALSE);
@@ -600,6 +602,7 @@ static unsigned __stdcall DoFormatDrive(void *args)
     EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
     EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), TRUE);
     EnableWindow(GetDlgItem(hwndDlg, 28677), TRUE);
+    EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_ENABLED);
     pContext->bFormattingNow = FALSE;
 
     delete pParams;
