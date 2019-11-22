@@ -571,7 +571,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             continue;
         }
 
-        BOOL Extended = FALSE;
         HKEY hkVerb;
         if (idResource > 0)
         {
@@ -579,15 +578,6 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                 mii.dwTypeData = wszVerb; /* use translated verb */
             else
                 ERR("Failed to load string\n");
-
-            LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
-            if (res == ERROR_SUCCESS)
-            {
-                res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
-                Extended = (res == ERROR_SUCCESS);
-
-                RegCloseKey(hkVerb);
-            }
         }
         else
         {
@@ -601,23 +591,16 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                     /* use description for the menu entry */
                     mii.dwTypeData = wszVerb;
                 }
-
-                res = RegQueryValueExW(hkVerb, L"Extended", NULL, NULL, NULL, NULL);
-                Extended = (res == ERROR_SUCCESS);
-
                 RegCloseKey(hkVerb);
             }
         }
 
-        if (!Extended || GetAsyncKeyState(VK_SHIFT) < 0)
-        {
-            mii.cch = wcslen(mii.dwTypeData);
-            mii.fState = fState;
-            mii.wID = iIdCmdFirst + cIds;
-            InsertMenuItemW(hMenu, *pIndexMenu, TRUE, &mii);
-            (*pIndexMenu)++;
-            cIds++;
-        }
+        mii.cch = wcslen(mii.dwTypeData);
+        mii.fState = fState;
+        mii.wID = iIdCmdFirst + cIds;
+        InsertMenuItemW(hMenu, *pIndexMenu, TRUE, &mii);
+        (*pIndexMenu)++;
+        cIds++;
 
         pEntry = pEntry->pNext;
 
