@@ -27,7 +27,7 @@ WINAPI
 DnsGetCacheDataTable(
     _Out_ PDNS_CACHE_ENTRY *DnsCache);
 
-DNS_STATUS
+DWORD
 WINAPI
 GetCurrentTimeInSeconds(VOID);
 

@@ -10,6 +10,9 @@
 cpp_quote("#ifndef _WINDNS_INCLUDED_")
 #include <windns.h>
 cpp_quote("#endif")
+cpp_quote("#ifndef _WINDNS_UNDOC_H_")
+#include <windns_undoc.h>
+cpp_quote("#endif")
 
 typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 

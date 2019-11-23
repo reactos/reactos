@@ -377,97 +377,6 @@ CHAR
     return p;
 }
 
-HANDLE
-OpenNetworkDatabase(LPCWSTR Name)
-{
-    PWSTR ExpandedPath;
-    PWSTR DatabasePath;
-    INT ErrorCode;
-    HKEY DatabaseKey;
-    DWORD RegType;
-    DWORD RegSize = 0;
-    size_t StringLength;
-    HANDLE ret;
-
-    ExpandedPath = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (!ExpandedPath)
-        return INVALID_HANDLE_VALUE;
-
-    /* Open the database path key */
-    ErrorCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                              L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                              0,
-                              KEY_READ,
-                              &DatabaseKey);
-    if (ErrorCode == NO_ERROR)
-    {
-        /* Read the actual path */
-        ErrorCode = RegQueryValueExW(DatabaseKey,
-                                     L"DatabasePath",
-                                     NULL,
-                                     &RegType,
-                                     NULL,
-                                     &RegSize);
-
-        DatabasePath = HeapAlloc(GetProcessHeap(), 0, RegSize);
-        if (!DatabasePath)
-        {
-            HeapFree(GetProcessHeap(), 0, ExpandedPath);
-            return INVALID_HANDLE_VALUE;
-        }
-
-        /* Read the actual path */
-        ErrorCode = RegQueryValueExW(DatabaseKey,
-                                     L"DatabasePath",
-                                     NULL,
-                                     &RegType,
-                                     (LPBYTE)DatabasePath,
-                                     &RegSize);
-
-        /* Close the key */
-        RegCloseKey(DatabaseKey);
-
-        /* Expand the name */
-        ExpandEnvironmentStringsW(DatabasePath, ExpandedPath, MAX_PATH);
-
-        HeapFree(GetProcessHeap(), 0, DatabasePath);
-    }
-    else
-    {
-        /* Use defalt path */
-        GetSystemDirectoryW(ExpandedPath, MAX_PATH);
-        StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
-        if (ExpandedPath[StringLength - 1] != L'\\')
-        {
-            /* It isn't, so add it ourselves */
-            StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
-        }
-        StringCchCatW(ExpandedPath, MAX_PATH, L"DRIVERS\\ETC\\");
-    }
-
-    /* Make sure that the path is backslash-terminated */
-    StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
-    if (ExpandedPath[StringLength - 1] != L'\\')
-    {
-        /* It isn't, so add it ourselves */
-        StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
-    }
-
-    /* Add the database name */
-    StringCchCatW(ExpandedPath, MAX_PATH, Name);
-
-    /* Return a handle to the file */
-    ret = CreateFileW(ExpandedPath,
-                      FILE_READ_DATA,
-                      FILE_SHARE_READ,
-                      NULL,
-                      OPEN_EXISTING,
-                      FILE_ATTRIBUTE_NORMAL,
-                      NULL);
-
-    HeapFree(GetProcessHeap(), 0, ExpandedPath);
-    return ret;
-}
 
 /* This function is far from perfect but it works enough */
 IP4_ADDRESS
@@ -609,118 +518,6 @@ again:
     return TRUE;
 }
 
-/* This function is far from perfect but it works enough */
-IP4_ADDRESS
-FindEntryInHosts(CONST CHAR * name)
-{
-    BOOL Found = FALSE;
-    HANDLE HostsFile;
-    CHAR HostsDBData[BUFSIZ] = { 0 };
-    PCHAR AddressStr, DnsName = NULL, AddrTerm, NameSt, NextLine, ThisLine, Comment;
-    UINT ValidData = 0;
-    DWORD ReadSize;
-    DWORD Address;
-
-    /* Open the network database */
-    HostsFile = OpenNetworkDatabase(L"hosts");
-    if (HostsFile == INVALID_HANDLE_VALUE)
-    {
-        WSASetLastError(WSANO_RECOVERY);
-        return 0;
-    }
-
-    while (!Found && ReadFile(HostsFile,
-        HostsDBData + ValidData,
-        sizeof(HostsDBData) - ValidData,
-        &ReadSize,
-        NULL))
-    {
-        ValidData += ReadSize;
-        ReadSize = 0;
-        NextLine = ThisLine = HostsDBData;
-
-        /* Find the beginning of the next line */
-        while ((NextLine < HostsDBData + ValidData) &&
-               (*NextLine != '\r') &&
-               (*NextLine != '\n'))
-        {
-            NextLine++;
-        }
-
-        /* Zero and skip, so we can treat what we have as a string */
-        if (NextLine > HostsDBData + ValidData)
-            break;
-
-        *NextLine = 0;
-        NextLine++;
-
-        Comment = strchr(ThisLine, '#');
-        if (Comment)
-            *Comment = 0; /* Terminate at comment start */
-
-        AddressStr = ThisLine;
-        /* Find the first space separating the IP address from the DNS name */
-        AddrTerm = strchr(ThisLine, ' ');
-        if (AddrTerm)
-        {
-            /* Terminate the address string */
-            *AddrTerm = 0;
-
-            /* Find the last space before the DNS name */
-            NameSt = strrchr(ThisLine, ' ');
-
-            /* If there is only one space (the one we removed above), then just use the address terminator */
-            if (!NameSt)
-                NameSt = AddrTerm;
-
-            /* Move from the space to the first character of the DNS name */
-            NameSt++;
-
-            DnsName = NameSt;
-
-            if (!stricmp(name, DnsName) || !stricmp(name, AddressStr))
-            {
-                Found = TRUE;
-                break;
-            }
-        }
-
-        /* Get rid of everything we read so far */
-        while (NextLine <= HostsDBData + ValidData &&
-            isspace(*NextLine))
-        {
-            NextLine++;
-        }
-
-        if (HostsDBData + ValidData - NextLine <= 0)
-            break;
-
-        memmove(HostsDBData, NextLine, HostsDBData + ValidData - NextLine);
-        ValidData -= NextLine - HostsDBData;
-    }
-
-    CloseHandle(HostsFile);
-
-    if (!Found)
-    {
-        WSASetLastError(WSANO_DATA);
-        return 0;
-    }
-
-    if (strstr(AddressStr, ":"))
-    {
-        WSASetLastError(WSAEINVAL);
-        return 0;
-    }
-
-    if (!ParseV4Address(AddressStr, &Address))
-    {
-        WSASetLastError(WSAEINVAL);
-        return 0;
-    }
-
-    return Address;
-}
 
 DNS_STATUS WINAPI
 DnsQuery_W(LPCWSTR Name,
@@ -856,29 +653,6 @@ Query_Main(LPCWSTR Name,
                 return DNS_ERROR_INVALID_NAME_CHAR;
             }
             i++;
-        }
-
-        if ((Options & DNS_QUERY_NO_HOSTS_FILE) == 0)
-        {
-            if ((Address = FindEntryInHosts(AnsiName)) != 0)
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-
-                if (NULL == *QueryResultSet)
-                {
-                    return ERROR_OUTOFMEMORY;
-                }
-
-                (*QueryResultSet)->pNext = NULL;
-                (*QueryResultSet)->wType = Type;
-                (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-                (*QueryResultSet)->Data.A.IpAddress = Address;
-
-                (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
-
-                return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
-            }
         }
 
         network_info_result = GetNetworkParams(NULL, &network_info_blen);
@@ -1122,7 +896,7 @@ DnsFlushResolverCache(VOID)
     return (Status == ERROR_SUCCESS);
 }
 
-DNS_STATUS
+DWORD
 WINAPI
 GetCurrentTimeInSeconds(VOID)
 {

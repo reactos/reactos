@@ -5,6 +5,7 @@ add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dnsrslvr.idl)
 list(APPEND SOURCE
     cache.c
     dnsrslvr.c
+    hostsfile.c
     rpcserver.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/dnsrslvr_s.c)

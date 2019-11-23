@@ -101,6 +101,8 @@ ServiceMain(
 
     DnsIntCacheInitialize();
 
+    ReadHostsFile();
+
     hThread = CreateThread(NULL,
                            0,
                            (LPTHREAD_START_ROUTINE)

@@ -41,30 +41,32 @@ RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
+/* Function: 0x04 */
 DWORD
 __stdcall
 R_ResolverFlushCache(
-    DNSRSLVR_HANDLE pwszServerName)
+    _In_ DNSRSLVR_HANDLE pwszServerName)
 {
     DPRINT("R_ResolverFlushCache()\n");
 
     // FIXME Should store (and flush) entries by server handle
     DnsIntCacheFlush();
-    return 0;
+    return ERROR_SUCCESS;
 }
 
+/* Function: 0x07 */
 DWORD
 __stdcall
 R_ResolverQuery(
-    DNSRSLVR_HANDLE pszServerName,
-    LPCWSTR pszName,
-    WORD wType,
-    DWORD dwFlags,
-    DWORD *dwRecords,
-    DNS_RECORDW **ppResultRecords)
+    _In_ DNSRSLVR_HANDLE pszServerName,
+    _In_ LPCWSTR pszName,
+    _In_ WORD wType,
+    _In_ DWORD dwFlags,
+    _Inout_ DWORD *dwRecords,
+    _Out_ DNS_RECORDW **ppResultRecords)
 {
     PDNS_RECORDW Record;
-    DNS_STATUS Status;
+    DNS_STATUS Status = ERROR_SUCCESS;
 
     DPRINT("R_ResolverQuery(%S %S %x %lx %p %p)\n",
            pszServerName, pszName, wType, dwFlags, dwRecords, ppResultRecords);
@@ -75,22 +77,41 @@ R_ResolverQuery(
     if ((dwFlags & DNS_QUERY_WIRE_ONLY) != 0 && (dwFlags & DNS_QUERY_NO_WIRE_QUERY) != 0)
         return ERROR_INVALID_PARAMETER;
 
-    if (DnsIntCacheGetEntryFromName(pszName, ppResultRecords))
-    {
-        DPRINT("DNS cache query successful!\n");
-        Status = ERROR_SUCCESS;
-    }
-    else
+    if (dwFlags & DNS_QUERY_WIRE_ONLY)
     {
         DPRINT("DNS query!\n");
         Status = Query_Main(pszName,
                             wType,
                             dwFlags,
                             ppResultRecords);
-        if (Status == ERROR_SUCCESS)
+    }
+    else if (dwFlags & DNS_QUERY_NO_WIRE_QUERY)
+    {
+        DPRINT("DNS cache query!\n");
+        Status = DnsIntCacheGetEntryByName(pszName,
+                                           wType,
+                                           dwFlags,
+                                           ppResultRecords);
+    }
+    else
+    {
+        DPRINT("DNS cache query!\n");
+        Status = DnsIntCacheGetEntryByName(pszName,
+                                           wType,
+                                           dwFlags,
+                                           ppResultRecords);
+        if (Status == DNS_INFO_NO_RECORDS)
         {
-            DPRINT("DNS query successful!\n");
-            DnsIntCacheAddEntry(*ppResultRecords);
+            DPRINT("DNS query!\n");
+            Status = Query_Main(pszName,
+                                wType,
+                                dwFlags,
+                                ppResultRecords);
+            if (Status == ERROR_SUCCESS)
+            {
+                DPRINT("DNS query successful!\n");
+                DnsIntCacheAddEntry(*ppResultRecords);
+            }
         }
     }
 
@@ -125,6 +146,6 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
     HeapFree(GetProcessHeap(), 0, ptr);
 }
 
-void __RPC_USER WLANSVC_RPC_HANDLE_rundown(DNSRSLVR_HANDLE hClientHandle)
+void __RPC_USER DNSRSLVR_RPC_HANDLE_rundown(DNSRSLVR_HANDLE hClientHandle)
 {
 }

@@ -2,6 +2,7 @@
 #define _DNSRSLVR_PCH_
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -9,14 +10,19 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
 #include <winsvc.h>
 #include <windns.h>
 #include <windns_undoc.h>
 
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
 
 #include <dnsrslvr_s.h>
+
+#include <strsafe.h>
 
 typedef struct _RESOLVER_CACHE_ENTRY
 {
@@ -37,10 +43,22 @@ VOID DnsIntCacheInitialize(VOID);
 VOID DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry);
 VOID DnsIntCacheFree(VOID);
 VOID DnsIntCacheFlush(VOID);
-BOOL DnsIntCacheGetEntryFromName(LPCWSTR Name,
-                                 PDNS_RECORDW *Record);
+
+DNS_STATUS
+DnsIntCacheGetEntryByName(
+    LPCWSTR Name,
+    WORD wType,
+    DWORD dwFlags,
+    PDNS_RECORDW *Record);
+
 VOID DnsIntCacheAddEntry(PDNS_RECORDW Record);
 BOOL DnsIntCacheRemoveEntryByName(LPCWSTR Name);
 
+
+
+/* hostsfile.c */
+
+BOOL
+ReadHostsFile(VOID);
 
 #endif /* _DNSRSLVR_PCH_ */

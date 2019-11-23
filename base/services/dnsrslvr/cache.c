@@ -20,7 +20,7 @@ static BOOL DnsCacheInitialized = FALSE;
 VOID
 DnsIntCacheInitialize(VOID)
 {
-    DPRINT("DnsIntCacheInitialize\n");
+    DPRINT("DnsIntCacheInitialize()\n");
 
     /* Check if we're initialized */
     if (DnsCacheInitialized)
@@ -35,7 +35,7 @@ DnsIntCacheInitialize(VOID)
 VOID
 DnsIntCacheFree(VOID)
 {
-    DPRINT("DnsIntCacheFree\n");
+    DPRINT("DnsIntCacheFree()\n");
 
     /* Check if we're initialized */
     if (!DnsCacheInitialized)
@@ -53,7 +53,7 @@ DnsIntCacheFree(VOID)
 VOID
 DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
 {
-    DPRINT("DnsIntCacheRemoveEntryItem %p\n", CacheEntry);
+    DPRINT("DnsIntCacheRemoveEntryItem(%p)\n", CacheEntry);
 
     /* Remove the entry from the list */
     RemoveEntryList(&CacheEntry->CacheLink);
@@ -71,7 +71,7 @@ DnsIntCacheFlush(VOID)
     PLIST_ENTRY Entry;
     PRESOLVER_CACHE_ENTRY CacheEntry;
 
-    DPRINT("DnsIntCacheFlush\n");
+    DPRINT("DnsIntCacheFlush()\n");
 
     /* Lock the cache */
     DnsCacheLock();
@@ -94,15 +94,19 @@ DnsIntCacheFlush(VOID)
     DnsCacheUnlock();
 }
 
-BOOL
-DnsIntCacheGetEntryFromName(LPCWSTR Name,
-                            PDNS_RECORDW *Record)
+DNS_STATUS
+DnsIntCacheGetEntryByName(
+    LPCWSTR Name,
+    WORD wType,
+    DWORD dwFlags,
+    PDNS_RECORDW *Record)
 {
-    BOOL Ret = FALSE;
+    DNS_STATUS Status = DNS_INFO_NO_RECORDS;
     PRESOLVER_CACHE_ENTRY CacheEntry;
     PLIST_ENTRY NextEntry;
 
-    DPRINT("DnsIntCacheGetEntryFromName %ws %p\n", Name, Record);
+    DPRINT("DnsIntCacheGetEntryByName(%S %hu 0x%lx %p)\n",
+           Name, wType, dwFlags, Record);
 
     /* Assume failure */
     *Record = NULL;
@@ -122,7 +126,7 @@ DnsIntCacheGetEntryFromName(LPCWSTR Name,
         {
             /* Copy the entry and return it */
             *Record = DnsRecordSetCopyEx(CacheEntry->Record, DnsCharSetUnicode, DnsCharSetUnicode);
-            Ret = TRUE;
+            Status = ERROR_SUCCESS;
             break;
         }
 
@@ -132,8 +136,7 @@ DnsIntCacheGetEntryFromName(LPCWSTR Name,
     /* Release the cache */
     DnsCacheUnlock();
 
-    /* Return */
-    return Ret;
+    return Status;
 }
 
 BOOL
@@ -143,7 +146,7 @@ DnsIntCacheRemoveEntryByName(LPCWSTR Name)
     PRESOLVER_CACHE_ENTRY CacheEntry;
     PLIST_ENTRY NextEntry;
 
-    DPRINT("DnsIntCacheRemoveEntryByName %ws\n", Name);
+    DPRINT("DnsIntCacheRemoveEntryByName(%S)\n", Name);
 
     /* Lock the cache */
     DnsCacheLock();
@@ -179,7 +182,10 @@ DnsIntCacheAddEntry(PDNS_RECORDW Record)
 {
     PRESOLVER_CACHE_ENTRY Entry;
 
-    DPRINT("DnsIntCacheRemoveEntryByName %p\n", Record);
+    DPRINT("DnsIntCacheAddEntry(%p)\n", Record);
+
+    DPRINT("Name: %S\n", Record->pName);
+    DPRINT("TTL: %lu\n", Record->dwTtl);
 
     /* Lock the cache */
     DnsCacheLock();
