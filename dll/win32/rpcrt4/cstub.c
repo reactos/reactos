@@ -19,9 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -178,6 +175,23 @@ static const DWORD opcodes[] =
     0xe08cc004,    /* add ip, ip, r4 */
     0xe49d4004,    /* pop {r4} */
     0xe59cf000     /* ldr pc, [ip] */
+};
+
+typedef struct
+{
+    DWORD opcodes[ARRAY_SIZE(opcodes)];
+    DWORD offset;
+} vtbl_method_t;
+
+#elif defined(__aarch64__)
+
+static const DWORD opcodes[] =
+{
+    0xf9401000,   /* ldr x0, [x0,#32] */
+    0xf9400010,   /* ldr x16, [x0] */
+    0x18000071,   /* ldr w17, offset */
+    0xf8716a10,   /* ldr x16, [x16,x17] */
+    0xd61f0200    /* br x16 */
 };
 
 typedef struct

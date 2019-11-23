@@ -110,6 +110,8 @@ RPC_STATUS WINAPI RpcAsyncGetCallStatus(PRPC_ASYNC_STATE pAsync)
  */
 RPC_STATUS WINAPI RpcAsyncCompleteCall(PRPC_ASYNC_STATE pAsync, void *Reply)
 {
+    struct async_call_data *data;
+
     TRACE("(%p, %p)\n", pAsync, Reply);
 
     if (!valid_async_handle(pAsync))
@@ -117,7 +119,13 @@ RPC_STATUS WINAPI RpcAsyncCompleteCall(PRPC_ASYNC_STATE pAsync, void *Reply)
 
     /* FIXME: check completed */
 
-    return NdrpCompleteAsyncClientCall(pAsync, Reply);
+    TRACE("pAsync %p, pAsync->StubInfo %p\n", pAsync, pAsync->StubInfo);
+
+    data = pAsync->StubInfo;
+    if (data->pStubMsg->IsClient)
+        return NdrpCompleteAsyncClientCall(pAsync, Reply);
+
+    return NdrpCompleteAsyncServerCall(pAsync, Reply);
 }
 
 /***********************************************************************
