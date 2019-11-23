@@ -68,11 +68,17 @@ LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 VOID OSK_RestoreDlgPlacement(HWND hDlg);
 VOID OSK_RefreshLEDKeys(VOID);
+INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /* settings.c */
-BOOL LoadDataFromRegistry(VOID);
-BOOL SaveDataToRegistry(VOID);
-INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+LONG LoadDataFromRegistry(IN LPCWSTR lpValueDataName,
+                          OUT PDWORD pdwValueData);
+
+LONG SaveDataToRegistry(IN LPCWSTR lpValueDataName,
+                        IN DWORD dwValueData);
+
+VOID LoadSettings(VOID);
+VOID SaveSettings(VOID);
 
 /* DEFINES ********************************************************************/
 
