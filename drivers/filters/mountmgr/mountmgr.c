@@ -42,6 +42,7 @@ KEVENT UnloadEvent;
 LONG Unloading;
 
 static const WCHAR Cunc[] = L"\\??\\C:";
+#define Cunc_LETTER_POSITION 4
 
 /*
  * @implemented
@@ -1106,7 +1107,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         /* Start checking all letters that could have been associated */
         for (Letter = L'D'; Letter <= L'Z'; Letter++)
         {
-            CSymLink.Buffer[LETTER_POSITION] = Letter;
+            CSymLink.Buffer[Cunc_LETTER_POSITION] = Letter;
 
             InitializeObjectAttributes(&ObjectAttributes,
                                        &CSymLink,
