@@ -1,0 +1,5 @@
+242.ico is made by milawynsrealm.
+Its source is available as the following files:
+
+svg/242-rename.svg
+svg/242-rename-small.svg
