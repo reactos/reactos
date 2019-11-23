@@ -21,8 +21,6 @@
 /*	At the moment, these are only empty stubs.
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
