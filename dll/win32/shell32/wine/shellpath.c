@@ -2198,6 +2198,7 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH];
     WCHAR szSendToFile[MAX_PATH];
+    WCHAR szShell32[MAX_PATH];
     HRESULT hr;
 
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
@@ -2206,7 +2207,11 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     PathAppendW(szSendToFile, PathFindFileNameW(szTarget));
     StringCbCatW(szSendToFile, sizeof(szSendToFile), L".lnk");
 
-    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL, -1, NULL);
+    GetSystemDirectoryW(szShell32, ARRAY_SIZE(szShell32));
+    PathAppendW(szShell32, L"shell32.dll");
+
+    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL,
+                         szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
