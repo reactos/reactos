@@ -19,7 +19,6 @@
  */
 
 #define COBJMACROS
-#include "config.h"
 
 #include <stdarg.h>
 
@@ -29,7 +28,6 @@
 #include "rpcproxy.h"
 #include "propsys.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/list.h"
 
 #include "initguid.h"

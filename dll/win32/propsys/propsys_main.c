@@ -20,9 +20,11 @@
  */
 
 #define COBJMACROS
-#include "config.h"
 
 #include <stdarg.h>
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -30,7 +32,6 @@
 #include "rpcproxy.h"
 #include "propsys.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "propsys_private.h"
 
@@ -307,7 +308,7 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
         return E_NOT_SUFFICIENT_BUFFER;
     }
 
-    sprintfW(psz, guid_fmtW, pkey->fmtid.Data1, pkey->fmtid.Data2,
+    swprintf(psz, guid_fmtW, pkey->fmtid.Data1, pkey->fmtid.Data2,
              pkey->fmtid.Data3, pkey->fmtid.Data4[0], pkey->fmtid.Data4[1],
              pkey->fmtid.Data4[2], pkey->fmtid.Data4[3], pkey->fmtid.Data4[4],
              pkey->fmtid.Data4[5], pkey->fmtid.Data4[6], pkey->fmtid.Data4[7]);
@@ -317,11 +318,11 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
     *p++ = ' ';
     cch -= GUIDSTRING_MAX - 1 + 1;
 
-    len = sprintfW(pidW, pid_fmtW, pkey->pid);
+    len = swprintf(pidW, pid_fmtW, pkey->pid);
 
     if (cch >= len + 1)
     {
-        strcpyW(p, pidW);
+        lstrcpyW(p, pidW);
         return S_OK;
     }
     else
@@ -497,7 +498,7 @@ HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
     }
 
     /* Overflow is not checked. */
-    while (isdigitW(*pszString))
+    while (iswdigit(*pszString))
     {
         pkey->pid *= 10;
         pkey->pid += (*pszString - '0');
@@ -508,4 +509,11 @@ HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR pszString, PROPERTYKEY *pkey)
         pkey->pid = ~pkey->pid + 1;
 
     return S_OK;
+}
+
+HRESULT WINAPI PSCreateMemoryPropertyStore(REFIID riid, void **ppv)
+{
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+
+    return PropertyStore_CreateInstance(NULL, riid, ppv);
 }
