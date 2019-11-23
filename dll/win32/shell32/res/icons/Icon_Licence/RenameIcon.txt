@@ -1,0 +1,7 @@
+242.ico is made by Lee Schroeder (@milawynsrealm).
+Its source is available as the following files:
+
+svg/242-rename.svg
+svg/242-rename-small.svg
+
+These files are in the public domain.
