@@ -51,7 +51,7 @@
 #include "wine/heap.h"
 #include "wine/list.h"
 
-#ifdef __i386__
+#if defined(__i386__) && !defined(__MINGW32__)
 extern const struct ITextHostVtbl itextHostStdcallVtbl DECLSPEC_HIDDEN;
 #endif /* __i386__ */
 
@@ -385,7 +385,7 @@ typedef struct tagME_TextEditor
 {
   HWND hWnd, hwndParent;
   ITextHost *texthost;
-  IRichEditOle *reOle;
+  IUnknown *reOle;
   BOOL bEmulateVersion10;
   ME_TextBuffer *pBuffer;
   ME_Cursor *pCursors;
@@ -442,6 +442,8 @@ typedef struct tagME_TextEditor
   /* Cache previously set scrollbar info */
   SCROLLINFO vert_si, horz_si;
 
+  int caret_height;
+  BOOL caret_hidden;
   BOOL bMouseCaptured;
   int wheel_remain;
   struct list style_list;
@@ -455,6 +457,8 @@ typedef struct tagME_Context
   RECT rcView;
   SIZE dpi;
   int nAvailWidth;
+  ME_Style *current_style;
+  HFONT orig_font;
 
   /* those are valid inside ME_WrapTextParagraph and related */
   ME_TextEditor *editor;

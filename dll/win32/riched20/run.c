@@ -464,7 +464,6 @@ int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BO
   ME_String *mask_text = NULL;
   WCHAR *str;
   int fit = 0;
-  HGDIOBJ hOldFont;
   SIZE sz, sz2, sz3;
   if (!run->len || cx <= 0)
     return 0;
@@ -503,7 +502,7 @@ int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BO
   else
     str = get_text( run, 0 );
 
-  hOldFont = ME_SelectStyleFont(c, run->style);
+  select_style(c, run->style);
   GetTextExtentExPointW(c->hDC, str, run->len,
                         cx, &fit, NULL, &sz);
   if (closest && fit != run->len)
@@ -516,7 +515,6 @@ int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BO
 
   ME_DestroyString( mask_text );
 
-  ME_UnselectStyleFont(c, run->style, hOldFont);
   return fit;
 }
 
@@ -538,15 +536,16 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run, BOOL closest, B
  */
 static void ME_GetTextExtent(ME_Context *c, LPCWSTR szText, int nChars, ME_Style *s, SIZE *size)
 {
-  HGDIOBJ hOldFont;
-  if (c->hDC) {
-    hOldFont = ME_SelectStyleFont(c, s);
-    GetTextExtentPoint32W(c->hDC, szText, nChars, size);
-    ME_UnselectStyleFont(c, s, hOldFont);
-  } else {
-    size->cx = 0;
-    size->cy = 0;
-  }
+    if (c->hDC)
+    {
+        select_style( c, s );
+        GetTextExtentPoint32W( c->hDC, szText, nChars, size );
+    }
+    else
+    {
+        size->cx = 0;
+        size->cy = 0;
+    }
 }
 
 /******************************************************************************
@@ -867,7 +866,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
     {
       if (!(tmp.dwMask & CFM_FACE))
         pFmt->dwMask &= ~CFM_FACE;
-      else if (lstrcmpW(pFmt->szFaceName, tmp.szFaceName) ||
+      else if (wcscmp(pFmt->szFaceName, tmp.szFaceName) ||
           pFmt->bPitchAndFamily != tmp.bPitchAndFamily)
         pFmt->dwMask &= ~CFM_FACE;
     }
