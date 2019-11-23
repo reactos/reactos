@@ -64,6 +64,13 @@ if(MSVC_VERSION GREATER 1899)
     add_compile_flags("/Zc:threadSafeInit-")
 endif ()
 
+# HACK: Disable use of __CxxFrameHandler4 on VS 16.3+ (x64 only)
+# See https://developercommunity.visualstudio.com/content/problem/746534/visual-c-163-runtime-uses-an-unsupported-api-for-u.html
+if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
+    add_compile_flags("/d2FH4-")
+    add_link_options("/d2:-FH4-")
+endif ()
+
 # Generate Warnings Level 3
 add_compile_flags("/W3")
 
