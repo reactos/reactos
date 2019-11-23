@@ -22,6 +22,10 @@
 #include <shtypes.h>
 #include <shlwapi.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum tagPROPVAR_CHANGE_FLAGS
 {
     PVCHF_DEFAULT           = 0x00000000,
@@ -71,6 +75,7 @@ HRESULT WINAPI VariantToGUID(const VARIANT *pvar, GUID *guid);
 INT WINAPI PropVariantCompareEx(REFPROPVARIANT propvar1, REFPROPVARIANT propvar2,
                                 PROPVAR_COMPARE_UNIT uint, PROPVAR_COMPARE_FLAGS flags);
 
+HRESULT WINAPI PropVariantToDouble(REFPROPVARIANT propvarIn, double *ret);
 HRESULT WINAPI PropVariantToInt16(REFPROPVARIANT propvarIn, SHORT *ret);
 HRESULT WINAPI PropVariantToInt32(REFPROPVARIANT propvarIn, LONG *ret);
 HRESULT WINAPI PropVariantToInt64(REFPROPVARIANT propvarIn, LONGLONG *ret);
@@ -78,6 +83,8 @@ HRESULT WINAPI PropVariantToUInt16(REFPROPVARIANT propvarIn, USHORT *ret);
 HRESULT WINAPI PropVariantToUInt32(REFPROPVARIANT propvarIn, ULONG *ret);
 HRESULT WINAPI PropVariantToUInt64(REFPROPVARIANT propvarIn, ULONGLONG *ret);
 HRESULT WINAPI PropVariantToBoolean(REFPROPVARIANT propvarIn, BOOL *ret);
+HRESULT WINAPI PropVariantToBuffer(REFPROPVARIANT propvarIn, void *ret, UINT cb);
+HRESULT WINAPI PropVariantToString(REFPROPVARIANT propvarIn, PWSTR ret, UINT cch);
 PCWSTR WINAPI PropVariantToStringWithDefault(REFPROPVARIANT propvarIn, LPCWSTR pszDefault);
 
 HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret);
@@ -117,7 +124,12 @@ inline HRESULT InitPropVariantFromInt64(LONGLONG llVal, PROPVARIANT *ppropvar)
     return S_OK;
 }
 
-#endif
+#endif /* NO_PROPVAR_INLINES */
+#endif /* __cplusplus */
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* __WINE_PROPVARUTIL_H */
