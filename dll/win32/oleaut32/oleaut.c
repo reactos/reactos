@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,7 +39,6 @@
 #include "oleaut32_oaidl.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(heap);
@@ -877,7 +874,7 @@ static HRESULT reg_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
     sprintf(typelibkey, "Typelib\\%s\\%s\\0\\win%u", tlguid, ver, sizeof(void *) == 8 ? 64 : 32);
 #else
     snprintf(typelibkey, sizeof(typelibkey), "Typelib\\%s\\%s\\0\\win%u", tlguid, ver, sizeof(void *) == 8 ? 64 : 32);
-#endif // __REACTOS__
+#endif /* __REACTOS__ */
     tlfnlen = sizeof(tlfn);
     if (RegQueryValueA(HKEY_CLASSES_ROOT, typelibkey, tlfn, &tlfnlen))
     {
@@ -927,7 +924,7 @@ static HRESULT get_typeinfo_for_iid(REFIID iid, ITypeInfo **typeinfo)
     return hr;
 }
 
-static HRESULT WINAPI typelib_ps_QueryInterface(IPSFactoryBuffer *iface, REFIID iid, void **out)
+static HRESULT WINAPI dispatch_typelib_ps_QueryInterface(IPSFactoryBuffer *iface, REFIID iid, void **out)
 {
     if (IsEqualIID(iid, &IID_IPSFactoryBuffer) || IsEqualIID(iid, &IID_IUnknown))
     {
@@ -940,135 +937,121 @@ static HRESULT WINAPI typelib_ps_QueryInterface(IPSFactoryBuffer *iface, REFIID 
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI typelib_ps_AddRef(IPSFactoryBuffer *iface)
+static ULONG WINAPI dispatch_typelib_ps_AddRef(IPSFactoryBuffer *iface)
 {
     return 2;
 }
 
-static ULONG WINAPI typelib_ps_Release(IPSFactoryBuffer *iface)
+static ULONG WINAPI dispatch_typelib_ps_Release(IPSFactoryBuffer *iface)
 {
     return 1;
 }
 
-static HRESULT WINAPI typelib_ps_CreateProxy(IPSFactoryBuffer *iface,
+static HRESULT dispatch_create_proxy(IUnknown *outer, IRpcProxyBuffer **proxy, void **out)
+{
+    IPSFactoryBuffer *factory;
+    HRESULT hr;
+
+    hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&factory);
+    if (FAILED(hr)) return hr;
+
+    hr = IPSFactoryBuffer_CreateProxy(factory, outer, &IID_IDispatch, proxy, out);
+    IPSFactoryBuffer_Release(factory);
+    return hr;
+}
+
+static HRESULT WINAPI dispatch_typelib_ps_CreateProxy(IPSFactoryBuffer *iface,
     IUnknown *outer, REFIID iid, IRpcProxyBuffer **proxy, void **out)
 {
     ITypeInfo *typeinfo;
+    TYPEATTR *attr;
     HRESULT hr;
+
+    if (IsEqualGUID(iid, &IID_IDispatch))
+        return dispatch_create_proxy(outer, proxy, out);
 
     hr = get_typeinfo_for_iid(iid, &typeinfo);
     if (FAILED(hr)) return hr;
 
-    hr = CreateProxyFromTypeInfo(typeinfo, outer, iid, proxy, out);
+    hr = ITypeInfo_GetTypeAttr(typeinfo, &attr);
+    if (FAILED(hr))
+    {
+        ITypeInfo_Release(typeinfo);
+        return hr;
+    }
+
+    if (attr->typekind == TKIND_INTERFACE || (attr->wTypeFlags & TYPEFLAG_FDUAL))
+        hr = CreateProxyFromTypeInfo(typeinfo, outer, iid, proxy, out);
+    else
+        hr = dispatch_create_proxy(outer, proxy, out);
+
     if (FAILED(hr))
         ERR("Failed to create proxy, hr %#x.\n", hr);
 
+    ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
     ITypeInfo_Release(typeinfo);
     return hr;
 }
 
-static HRESULT WINAPI typelib_ps_CreateStub(IPSFactoryBuffer *iface, REFIID iid,
-    IUnknown *server, IRpcStubBuffer **stub)
+static HRESULT dispatch_create_stub(IUnknown *server, IRpcStubBuffer **stub)
+{
+    IPSFactoryBuffer *factory;
+    HRESULT hr;
+
+    hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&factory);
+    if (FAILED(hr)) return hr;
+
+    hr = IPSFactoryBuffer_CreateStub(factory, &IID_IDispatch, server, stub);
+    IPSFactoryBuffer_Release(factory);
+    return hr;
+}
+
+static HRESULT WINAPI dispatch_typelib_ps_CreateStub(IPSFactoryBuffer *iface,
+    REFIID iid, IUnknown *server, IRpcStubBuffer **stub)
 {
     ITypeInfo *typeinfo;
+    TYPEATTR *attr;
     HRESULT hr;
+
+    if (IsEqualGUID(iid, &IID_IDispatch))
+        return dispatch_create_stub(server, stub);
 
     hr = get_typeinfo_for_iid(iid, &typeinfo);
     if (FAILED(hr)) return hr;
 
-    hr = CreateStubFromTypeInfo(typeinfo, iid, server, stub);
+    hr = ITypeInfo_GetTypeAttr(typeinfo, &attr);
     if (FAILED(hr))
-        ERR("Failed to create stub, hr %#x.\n", hr);
+    {
+        ITypeInfo_Release(typeinfo);
+        return hr;
+    }
 
+    if (attr->typekind == TKIND_INTERFACE || (attr->wTypeFlags & TYPEFLAG_FDUAL))
+        hr = CreateStubFromTypeInfo(typeinfo, iid, server, stub);
+    else
+        hr = dispatch_create_stub(server, stub);
+
+    if (FAILED(hr))
+        ERR("Failed to create proxy, hr %#x.\n", hr);
+
+    ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
     ITypeInfo_Release(typeinfo);
     return hr;
 }
 
-static const IPSFactoryBufferVtbl typelib_ps_vtbl =
+static const IPSFactoryBufferVtbl dispatch_typelib_ps_vtbl =
 {
-    typelib_ps_QueryInterface,
-    typelib_ps_AddRef,
-    typelib_ps_Release,
-    typelib_ps_CreateProxy,
-    typelib_ps_CreateStub,
+    dispatch_typelib_ps_QueryInterface,
+    dispatch_typelib_ps_AddRef,
+    dispatch_typelib_ps_Release,
+    dispatch_typelib_ps_CreateProxy,
+    dispatch_typelib_ps_CreateStub,
 };
 
-static IPSFactoryBuffer typelib_ps = { &typelib_ps_vtbl };
+static IPSFactoryBuffer dispatch_typelib_ps = { &dispatch_typelib_ps_vtbl };
 
 extern void _get_STDFONT_CF(LPVOID *);
 extern void _get_STDPIC_CF(LPVOID *);
-
-static HRESULT WINAPI PSDispatchFacBuf_QueryInterface(IPSFactoryBuffer *iface, REFIID riid, void **ppv)
-{
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IPSFactoryBuffer))
-    {
-        IPSFactoryBuffer_AddRef(iface);
-        *ppv = iface;
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI PSDispatchFacBuf_AddRef(IPSFactoryBuffer *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI PSDispatchFacBuf_Release(IPSFactoryBuffer *iface)
-{
-    return 1;
-}
-
-static HRESULT WINAPI PSDispatchFacBuf_CreateProxy(IPSFactoryBuffer *iface,
-    IUnknown *outer, REFIID iid, IRpcProxyBuffer **proxy, void **obj)
-{
-    IPSFactoryBuffer *factory;
-    HRESULT hr;
-
-    if (IsEqualIID(iid, &IID_IDispatch))
-    {
-        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&factory);
-        if (FAILED(hr)) return hr;
-
-        hr = IPSFactoryBuffer_CreateProxy(factory, outer, iid, proxy, obj);
-        IPSFactoryBuffer_Release(factory);
-        return hr;
-    }
-    else
-        return IPSFactoryBuffer_CreateProxy(&typelib_ps, outer, iid, proxy, obj);
-}
-
-static HRESULT WINAPI PSDispatchFacBuf_CreateStub(IPSFactoryBuffer *iface,
-    REFIID iid, IUnknown *server, IRpcStubBuffer **stub)
-{
-    IPSFactoryBuffer *factory;
-    HRESULT hr;
-
-    if (IsEqualIID(iid, &IID_IDispatch))
-    {
-        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&factory);
-        if (FAILED(hr)) return hr;
-
-        hr = IPSFactoryBuffer_CreateStub(factory, iid, server, stub);
-        IPSFactoryBuffer_Release(factory);
-        return hr;
-    }
-    else
-        return IPSFactoryBuffer_CreateStub(&typelib_ps, iid, server, stub);
-}
-
-static const IPSFactoryBufferVtbl PSDispatchFacBuf_Vtbl =
-{
-    PSDispatchFacBuf_QueryInterface,
-    PSDispatchFacBuf_AddRef,
-    PSDispatchFacBuf_Release,
-    PSDispatchFacBuf_CreateProxy,
-    PSDispatchFacBuf_CreateStub
-};
-
-/* This is the whole PSFactoryBuffer object, just the vtableptr */
-static const IPSFactoryBufferVtbl *pPSDispatchFacBuf = &PSDispatchFacBuf_Vtbl;
 
 /***********************************************************************
  *		DllGetClassObject (OLEAUT32.@)
@@ -1090,14 +1073,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	}
     }
-    if (IsEqualCLSID(rclsid, &CLSID_PSDispatch) && IsEqualIID(iid, &IID_IPSFactoryBuffer)) {
-        *ppv = &pPSDispatchFacBuf;
-        IPSFactoryBuffer_AddRef((IPSFactoryBuffer *)*ppv);
-        return S_OK;
-    }
 
-    if (IsEqualGUID(rclsid, &CLSID_PSOAInterface))
-        return IPSFactoryBuffer_QueryInterface(&typelib_ps, iid, ppv);
+    if (IsEqualGUID(rclsid, &CLSID_PSDispatch) || IsEqualGUID(rclsid, &CLSID_PSOAInterface))
+        return IPSFactoryBuffer_QueryInterface(&dispatch_typelib_ps, iid, ppv);
 
     if (IsEqualCLSID(rclsid, &CLSID_PSTypeComp) ||
         IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||

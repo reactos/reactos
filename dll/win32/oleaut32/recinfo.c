@@ -28,7 +28,6 @@
 #include "oleauto.h"
 #include "variant.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -402,7 +401,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetField(IRecordInfo *iface, PVOID pvData,
         return E_INVALIDARG;
 
     for(i=0; i<This->n_vars; i++)
-        if(!strcmpW(This->fields[i].name, szFieldName))
+        if(!wcscmp(This->fields[i].name, szFieldName))
             break;
     if(i == This->n_vars)
         return TYPE_E_FIELDNOTFOUND;
@@ -424,7 +423,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetFieldNoCopy(IRecordInfo *iface, PVOID p
         return E_INVALIDARG;
 
     for(i=0; i<This->n_vars; i++)
-        if(!strcmpW(This->fields[i].name, szFieldName))
+        if(!wcscmp(This->fields[i].name, szFieldName))
             break;
     if(i == This->n_vars)
         return TYPE_E_FIELDNOTFOUND;
@@ -455,7 +454,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutField(IRecordInfo *iface, ULONG wFlags,
     }
 
     for(i=0; i<This->n_vars; i++)
-        if(!strcmpW(This->fields[i].name, szFieldName))
+        if(!wcscmp(This->fields[i].name, szFieldName))
             break;
     if(i == This->n_vars)
         return TYPE_E_FIELDNOTFOUND;
@@ -477,7 +476,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutFieldNoCopy(IRecordInfo *iface, ULONG w
         return E_INVALIDARG;
 
     for(i=0; i<This->n_vars; i++)
-        if(!strcmpW(This->fields[i].name, szFieldName))
+        if(!wcscmp(This->fields[i].name, szFieldName))
             break;
     if(i == This->n_vars)
         return TYPE_E_FIELDNOTFOUND;
