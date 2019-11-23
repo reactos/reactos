@@ -543,7 +543,7 @@ static void test_LresultFromObject(const char *name)
     ok(SUCCEEDED(lres), "got %lx\n", lres);
     ok(Object_ref > 1, "Object_ref = %d\n", Object_ref);
 
-    sprintf(cmdline, "\"%s\" main ObjectFromLresult %lx", name, lres);
+    sprintf(cmdline, "\"%s\" main ObjectFromLresult %s", name, wine_dbgstr_longlong(lres));
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
     CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &proc);
@@ -992,7 +992,7 @@ START_TEST(main)
         HRESULT hres;
         LRESULT lres;
 
-        sscanf(argv[3], "%lx", &lres);
+        lres = _strtoi64( argv[3], NULL, 16 );
         hres = ObjectFromLresult(lres, &IID_IUnknown, 0, (void**)&unk);
         ok(hres == S_OK, "hres = %x\n", hres);
         IUnknown_Release(unk);
