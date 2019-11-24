@@ -310,7 +310,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
 
             if (!wcscmp(L"%1", wTemp)) /* icon is in the file */
             {
-                ILGetDisplayNameExW(psf, pidl, wTemp, 0);
+                ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
             }
 
