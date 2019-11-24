@@ -23,14 +23,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 CDeskLinkDropHandler::CDeskLinkDropHandler()
-    : sPathTarget(NULL)
 {
-    pclsid = (CLSID *)&CLSID_DeskLinkDropHandler;
 }
 
 CDeskLinkDropHandler::~CDeskLinkDropHandler()
 {
-    SHFree(sPathTarget);
 }
 
 // IDropTarget
@@ -60,6 +57,9 @@ HRESULT WINAPI CDeskLinkDropHandler::DragLeave()
 HRESULT WINAPI CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
+
+    if (!pDataObject)
+        return E_POINTER;
 
     FORMATETC fmt;
     InitFormatEtc(fmt, CF_HDROP, TYMED_HGLOBAL);
@@ -119,9 +119,6 @@ HRESULT WINAPI CDeskLinkDropHandler::IsDirty()
 
 HRESULT WINAPI CDeskLinkDropHandler::Load(LPCOLESTR pszFileName, DWORD dwMode)
 {
-    UINT len = strlenW(pszFileName);
-    sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-    memcpy(sPathTarget, pszFileName, (len + 1) * sizeof(WCHAR));
     return S_OK;
 }
 
@@ -147,7 +144,7 @@ HRESULT WINAPI CDeskLinkDropHandler::GetClassID(CLSID * lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = *pclsid;
+    *lpClassId = CLSID_DeskLinkDropHandler;
 
     return S_OK;
 }

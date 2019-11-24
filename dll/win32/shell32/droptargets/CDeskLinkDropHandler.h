@@ -27,9 +27,6 @@ class CDeskLinkDropHandler :
     public IDropTarget,
     public IPersistFile
 {
-private:
-    CLSID *pclsid;
-    LPWSTR sPathTarget;
 public:
     CDeskLinkDropHandler();
     ~CDeskLinkDropHandler();
