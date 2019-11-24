@@ -836,7 +836,7 @@ GreCreateCompatibleDC(HDC hdc, BOOL bAltDc)
 
         /* Get the pdev from the DC */
         ppdev = pdc->ppdev;
-        InterlockedIncrement(&ppdev->cPdevRefs);
+        PDEVOBJ_vReference(ppdev);
 
         /* Unlock the source DC */
         DC_UnlockDc(pdc);

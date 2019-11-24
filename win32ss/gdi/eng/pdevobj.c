@@ -630,7 +630,7 @@ EngpGetPDEV(
     if (ppdev)
     {
         /* Yes, reference the PDEV */
-        InterlockedIncrement(&ppdev->cPdevRefs);
+        PDEVOBJ_vReference(ppdev);
     }
     else
     {
