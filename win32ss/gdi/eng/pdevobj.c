@@ -90,15 +90,15 @@ PDEVOBJ_vDeletePDEV(
 
 VOID
 NTAPI
-PDEVOBJ_vRelease(PPDEVOBJ ppdev)
+PDEVOBJ_vRelease(
+    _Inout_ PPDEVOBJ ppdev)
 {
     /* Lock loader */
     EngAcquireSemaphore(ghsemPDEV);
 
     /* Decrease reference count */
-    --ppdev->cPdevRefs;
-
-    ASSERT(ppdev->cPdevRefs >= 0) ;
+    InterlockedDecrement(&ppdev->cPdevRefs);
+    ASSERT(ppdev->cPdevRefs >= 0);
 
     /* Check if references are left */
     if (ppdev->cPdevRefs == 0)
@@ -112,7 +112,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
         }
 
         /* Do we have a palette? */
-        if(ppdev->ppalSurf)
+        if (ppdev->ppalSurf)
         {
             PALETTE_ShareUnlockPalette(ppdev->ppalSurf);
         }
@@ -125,20 +125,22 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
         }
 
         /* Remove it from list */
-        if( ppdev == gppdevList )
-            gppdevList = ppdev->ppdevNext ;
+        if (ppdev == gppdevList)
+        {
+            gppdevList = ppdev->ppdevNext;
+        }
         else
         {
             PPDEVOBJ ppdevCurrent = gppdevList;
-            BOOL found = FALSE ;
+            BOOL found = FALSE;
             while (!found && ppdevCurrent->ppdevNext)
             {
                 if (ppdevCurrent->ppdevNext == ppdev)
                     found = TRUE;
                 else
-                    ppdevCurrent = ppdevCurrent->ppdevNext ;
+                    ppdevCurrent = ppdevCurrent->ppdevNext;
             }
-            if(found)
+            if (found)
                 ppdevCurrent->ppdevNext = ppdev->ppdevNext;
         }
 
@@ -152,7 +154,6 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemPDEV);
-
 }
 
 BOOL
@@ -320,7 +321,7 @@ PDEVOBJ_pdmMatchDevMode(
 
         /* Compare asked DEVMODE fields
          * Only compare those that are valid in both DEVMODE structs */
-        dwFields = pdmCurrent->dmFields & pdm->dmFields ;
+        dwFields = pdmCurrent->dmFields & pdm->dmFields;
 
         /* For now, we only need those */
         if ((dwFields & DM_BITSPERPEL) &&
@@ -348,6 +349,7 @@ EngpCreatePDEV(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PPDEVOBJ ppdev;
+
     DPRINT("EngpCreatePDEV(%wZ, %p)\n", pustrDeviceName, pdm);
 
     /* Try to find the GRAPHICS_DEVICE */
@@ -407,7 +409,7 @@ EngpCreatePDEV(
     ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
 
     // Should we change the ative mode of pGraphicsDevice ?
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
+    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
 
     /* FIXME! */
     ppdev->flFlags = PDEV_DISPLAY;
@@ -561,7 +563,7 @@ PDEVOBJ_bSwitchMode(
     PDEVOBJ_vRelease(ppdevTmp);
 
     /* Update primary display capabilities */
-    if(ppdev == gppdevPrimary)
+    if (ppdev == gppdevPrimary)
     {
         PDEVOBJ_vGetDeviceCaps(ppdev, &GdiHandleTable->DevCaps);
     }

@@ -557,7 +557,7 @@ UserEnumRegistryDisplaySettings(
         ZwClose(hkey);
         return STATUS_SUCCESS;
     }
-    return Status ;
+    return Status;
 }
 
 NTSTATUS
@@ -674,6 +674,7 @@ NtUserEnumDisplaySettings(
 
     return Status;
 }
+
 VOID
 UserUpdateFullscreen(
     DWORD flags)
@@ -1012,4 +1013,3 @@ NtUserChangeDisplaySettings(
 
     return lRet;
 }
-

@@ -51,8 +51,8 @@ EngpPopulateDeviceModeList(
      * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
-        TRACE("trying driver: %ls\n", pwsz);
         /* Try to load the display driver */
+        TRACE("Trying driver: %ls\n", pwsz);
         pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
         {
@@ -186,14 +186,14 @@ EngpRegisterGraphicsDevice(
         return NULL;
     }
 
-    /* Try to open the driver */
+    /* Try to open and enable the device */
     Status = IoGetDeviceObjectPointer(pustrDeviceName,
                                       FILE_READ_DATA | FILE_WRITE_DATA,
                                       &pFileObject,
                                       &pDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Could not open driver %wZ, 0x%lx\n", pustrDeviceName, Status);
+        ERR("Could not open device %wZ, 0x%lx\n", pustrDeviceName, Status);
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
@@ -225,13 +225,13 @@ EngpRegisterGraphicsDevice(
         return NULL;
     }
 
-    /* Copy display driver names */
+    /* Copy the display driver names */
     pGraphicsDevice->pDiplayDrivers = pwsz;
     RtlCopyMemory(pGraphicsDevice->pDiplayDrivers,
                   pustrDiplayDrivers->Buffer,
                   pustrDiplayDrivers->Length);
 
-    /* Copy description */
+    /* Copy the description */
     pGraphicsDevice->pwszDescription = pwsz + pustrDiplayDrivers->Length / sizeof(WCHAR);
     RtlCopyMemory(pGraphicsDevice->pwszDescription,
                   pustrDescription->Buffer,
@@ -265,7 +265,7 @@ EngpRegisterGraphicsDevice(
     if (!gpGraphicsDeviceFirst)
         gpGraphicsDeviceFirst = pGraphicsDevice;
 
-    /* Increment device number */
+    /* Increment the device number */
     giDevNum++;
 
     /* Unlock loader */
@@ -274,7 +274,6 @@ EngpRegisterGraphicsDevice(
 
     return pGraphicsDevice;
 }
-
 
 PGRAPHICS_DEVICE
 NTAPI
@@ -320,7 +319,6 @@ EngpFindGraphicsDevice(
 
     return pGraphicsDevice;
 }
-
 
 static
 NTSTATUS
