@@ -32,20 +32,22 @@ public:
     ~CDeskLinkDropHandler();
 
     // IDropTarget
-    virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    virtual HRESULT WINAPI DragLeave();
-    virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHODIMP DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
+                           POINTL pt, DWORD *pdwEffect);
+    STDMETHODIMP DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHODIMP DragLeave();
+    STDMETHODIMP Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt,
+                      DWORD *pdwEffect);
 
     // IPersist
-    virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
+    STDMETHODIMP GetClassID(CLSID *lpClassId);
 
     // IPersistFile
-    virtual HRESULT WINAPI GetCurFile(LPOLESTR *ppszFileName);
-    virtual HRESULT WINAPI IsDirty();
-    virtual HRESULT WINAPI Load(LPCOLESTR pszFileName, DWORD dwMode);
-    virtual HRESULT WINAPI Save(LPCOLESTR pszFileName, BOOL fRemember);
-    virtual HRESULT WINAPI SaveCompleted(LPCOLESTR pszFileName);
+    STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName);
+    STDMETHODIMP IsDirty();
+    STDMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode);
+    STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember);
+    STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_DESKLINK)
     DECLARE_NOT_AGGREGATABLE(CDeskLinkDropHandler)

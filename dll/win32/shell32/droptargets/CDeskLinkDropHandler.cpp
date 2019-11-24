@@ -31,7 +31,9 @@ CDeskLinkDropHandler::~CDeskLinkDropHandler()
 }
 
 // IDropTarget
-HRESULT WINAPI CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+STDMETHODIMP
+CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
+                                POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
     if (*pdwEffect == DROPEFFECT_NONE)
@@ -41,20 +43,23 @@ HRESULT WINAPI CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD d
     return S_OK;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+STDMETHODIMP
+CDeskLinkDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::DragLeave()
+STDMETHODIMP CDeskLinkDropHandler::DragLeave()
 {
     TRACE ("(%p)\n", this);
     return S_OK;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+STDMETHODIMP
+CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
+                           POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
 
@@ -105,36 +110,37 @@ HRESULT WINAPI CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyS
 }
 
 // IPersistFile
-HRESULT WINAPI CDeskLinkDropHandler::GetCurFile(LPOLESTR *ppszFileName)
+STDMETHODIMP CDeskLinkDropHandler::GetCurFile(LPOLESTR *ppszFileName)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::IsDirty()
+STDMETHODIMP CDeskLinkDropHandler::IsDirty()
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::Load(LPCOLESTR pszFileName, DWORD dwMode)
+STDMETHODIMP CDeskLinkDropHandler::Load(LPCOLESTR pszFileName, DWORD dwMode)
 {
     return S_OK;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::Save(LPCOLESTR pszFileName, BOOL fRemember)
+STDMETHODIMP CDeskLinkDropHandler::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::SaveCompleted(LPCOLESTR pszFileName)
+STDMETHODIMP CDeskLinkDropHandler::SaveCompleted(LPCOLESTR pszFileName)
 {
     FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CDeskLinkDropHandler::GetClassID(CLSID * lpClassId)
+// IPersist
+STDMETHODIMP CDeskLinkDropHandler::GetClassID(CLSID * lpClassId)
 {
     TRACE ("(%p)\n", this);
 
