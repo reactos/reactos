@@ -176,7 +176,7 @@ IntAgpReleasePhysical(
    }
 
    /* Free resources */
-   ExFreePool(AgpMapping);
+   ExFreePoolWithTag(AgpMapping, TAG_VIDEO_PORT);
 }
 
 PHYSICAL_ADDRESS NTAPI
@@ -230,7 +230,7 @@ IntAgpReservePhysical(
                                            &AgpMapping->PhysicalAddress);
    if (!NT_SUCCESS(Status) || AgpMapping->MapHandle == NULL)
    {
-      ExFreePool(AgpMapping);
+      ExFreePoolWithTag(AgpMapping, TAG_VIDEO_PORT);
       WARN_(VIDEOPRT, "Warning: AgpBusInterface->ReserveMemory failed (Status = 0x%x)\n",
               Status);
       return ZeroAddress;
@@ -412,7 +412,7 @@ IntAgpReleaseVirtual(
    }
 
    /* Free resources */
-   ExFreePool(VirtualMapping);
+   ExFreePoolWithTag(VirtualMapping, TAG_VIDEO_PORT);
 }
 
 PVOID NTAPI
@@ -447,7 +447,7 @@ IntAgpReserveVirtual(
    if (ProcessHandle == NULL)
    {
       /* FIXME: What to do in this case? */
-      ExFreePool(VirtualMapping);
+      ExFreePoolWithTag(VirtualMapping, TAG_VIDEO_PORT);
       return NULL;
    }
    else /* ProcessHandle != NULL */
@@ -459,7 +459,7 @@ IntAgpReserveVirtual(
                                        MEM_RESERVE, PAGE_NOACCESS);
       if (!NT_SUCCESS(Status))
       {
-         ExFreePool(VirtualMapping);
+         ExFreePoolWithTag(VirtualMapping, TAG_VIDEO_PORT);
          WARN_(VIDEOPRT, "ZwAllocateVirtualMemory() failed: Status = 0x%x\n", Status);
          return NULL;
       }

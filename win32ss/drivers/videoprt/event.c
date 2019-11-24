@@ -78,7 +78,7 @@ VideoPortDeleteEvent(
     if (!Event->pKEvent) return ERROR_INVALID_PARAMETER;
 
     /* Free storage */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, TAG_VIDEO_PORT);
 
     /* Indicate success */
     return NO_ERROR;
@@ -93,6 +93,7 @@ VideoPortSetEvent(
     _In_ PVOID HwDeviceExtension,
     _In_ PEVENT Event)
 {
+    ASSERT(Event);
     return KeSetEvent(Event->pKEvent, IO_NO_INCREMENT, FALSE);
 }
 
@@ -105,6 +106,7 @@ VideoPortClearEvent(
     _In_ PVOID HwDeviceExtension,
     _In_ PEVENT Event)
 {
+    ASSERT(Event);
     KeClearEvent(Event->pKEvent);
 }
 
