@@ -2199,6 +2199,7 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     WCHAR szTarget[MAX_PATH];
     WCHAR szSendToFile[MAX_PATH];
     WCHAR szShell32[MAX_PATH];
+    WCHAR szDesktopShortcut[MAX_PATH];
     HRESULT hr;
     HANDLE hFile;
 
@@ -2216,8 +2217,11 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    LoadStringW(shell32_hInstance, IDS_DESKTOPSHORTCUT, szDesktopShortcut,
+                ARRAY_SIZE(szDesktopShortcut));
+
     StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
-    PathAppendW(szSendToFile, L"Desktop (Create Shortcut).DeskLink");
+    PathAppendW(szSendToFile, szDesktopShortcut);
     hFile = CreateFileW(szSendToFile, GENERIC_WRITE, FILE_SHARE_READ,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     CloseHandle(hFile);

@@ -780,6 +780,7 @@ BEGIN
     IDS_DISCONNECT "中斷"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_SHORTCUT, " - Shortcut.lnk"
+    IDS_DESKTOPSHORTCUT "Desktop (Create Shortcut).DeskLink"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"

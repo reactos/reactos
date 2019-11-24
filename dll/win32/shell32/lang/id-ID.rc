@@ -771,6 +771,7 @@ BEGIN
     IDS_DISCONNECT "Putuskan"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_SHORTCUT, " - Shortcut.lnk"
+    IDS_DESKTOPSHORTCUT "Desktop (Create Shortcut).DeskLink"
 
     IDS_CREATEFOLDER_DENIED "Tidak bisa membuat folder folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Tidak bisa membuat folder"

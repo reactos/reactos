@@ -768,6 +768,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_SHORTCUT, " - Shortcut.lnk"
+    IDS_DESKTOPSHORTCUT "Desktop (Create Shortcut).DeskLink"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
