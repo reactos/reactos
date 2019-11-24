@@ -590,12 +590,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
         /* Allocate the IOPM save area */
         Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,
-                                                  PAGE_SIZE * 2,
+                                                  IOPM_SIZE,
                                                   '  eK');
         if (!Ki386IopmSaveArea)
         {
             /* Bugcheck. We need this for V86/VDM support. */
-            KeBugCheckEx(NO_PAGES_AVAILABLE, 2, PAGE_SIZE * 2, 0, 0);
+            KeBugCheckEx(NO_PAGES_AVAILABLE, 2, IOPM_SIZE, 0, 0);
         }
     }
 
