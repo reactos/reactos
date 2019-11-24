@@ -113,6 +113,19 @@ VideoPortClearEvent(
 /*
  * @implemented
  */
+LONG
+NTAPI
+VideoPortReadStateEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PEVENT Event)
+{
+    ASSERT(Event);
+    return KeReadStateEvent(Event->pKEvent);
+}
+
+/*
+ * @implemented
+ */
 VP_STATUS
 NTAPI
 VideoPortWaitForSingleObject(
