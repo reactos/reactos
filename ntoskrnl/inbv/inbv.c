@@ -495,7 +495,6 @@ InbvReleaseLock(VOID)
     if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
 }
 
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(IN BOOLEAN Enable)
