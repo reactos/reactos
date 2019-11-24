@@ -15,14 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// ROS Internal. Please deprecate.
-NTHALAPI
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(
-    VOID
-);
-
 /* NOTES ******************************************************************/
 /*
  *  [[character][attribute]][[character][attribute]]....
