@@ -588,7 +588,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
         Prcb->DpcStack = DpcStack;
 
-        /* Allocate the IOPM save area. */
+        /* Allocate the IOPM save area */
         Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,
                                                   PAGE_SIZE * 2,
                                                   '  eK');
@@ -600,8 +600,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
 
     /* Raise to Dispatch */
-    KeRaiseIrql(DISPATCH_LEVEL,
-                &DummyIrql);
+    KeRaiseIrql(DISPATCH_LEVEL, &DummyIrql);
 
     /* Set the Idle Priority to 0. This will jump into Phase 1 */
     KeSetPriorityThread(InitThread, 0);
@@ -612,8 +611,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     KiReleasePrcbLock(Prcb);
 
     /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
-    KeRaiseIrql(HIGH_LEVEL,
-                &DummyIrql);
+    KeRaiseIrql(HIGH_LEVEL, &DummyIrql);
     LoaderBlock->Prcb = 0;
 }
 
@@ -835,8 +833,7 @@ AppCpuInit:
     }
 
     /* Raise to HIGH_LEVEL */
-    KeRaiseIrql(HIGH_LEVEL,
-                &DummyIrql);
+    KeRaiseIrql(HIGH_LEVEL, &DummyIrql);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSwitchToBootStack(InitialStack & ~3);

@@ -73,7 +73,7 @@ KiInitMachineDependent(VOID)
         DPRINT("PAT support detected but not yet taken advantage of!\n");
     }
 
-        /* Allocate the IOPM save area. */
+//        /* Allocate the IOPM save area */
 //        Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,
 //                                                  PAGE_SIZE * 2,
 //                                                  TAG('K', 'e', ' ', ' '));
