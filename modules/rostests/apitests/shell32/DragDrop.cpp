@@ -272,6 +272,19 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     CoTaskMemFree(pidl);
     ok_long(hr, S_OK);
 
+    if (!pDropTarget)
+    {
+        skip("pDropTarget was NULL\n");
+
+        // clean up
+        DeleteFileW(s_szSrcTestFile);
+        DeleteFileW(s_szDestTestFile);
+        DoDeleteSpecW(s_szDestLinkSpec);
+        ILFree(pidlDesktop);
+
+        return;
+    }
+
     // DragEnter
     POINTL ptl = { 0, 0 };
     DWORD dwKeyState = pEntry->dwKeyState;
