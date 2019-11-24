@@ -772,6 +772,7 @@ BEGIN
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_SHORTCUT, " - Shortcut.lnk"
 
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"

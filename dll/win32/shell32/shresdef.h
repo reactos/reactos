@@ -229,6 +229,7 @@
 #define IDS_DISCONNECT           340
 
 #define IDS_OPENFILELOCATION     341
+#define IDS_SHORTCUT             342
 
 #define IDS_MENU_EMPTY           34561
 

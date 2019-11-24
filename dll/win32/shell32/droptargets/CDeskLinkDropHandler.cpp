@@ -67,6 +67,8 @@ HRESULT WINAPI CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyS
     WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
+    CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
+
     HRESULT hr = E_FAIL;
     STGMEDIUM medium;
     if (SUCCEEDED(pDataObject->GetData(&fmt, &medium)))
@@ -89,7 +91,7 @@ HRESULT WINAPI CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyS
             StringCbCopyW(szPath, sizeof(szPath), szDir);
             PathAppendW(szPath, pszFileTitle);
             *PathFindExtensionW(szPath) = 0;
-            StringCbCatW(szPath, sizeof(szPath), L" - Shortcut.lnk");
+            StringCbCatW(szPath, sizeof(szPath), strShortcut);
 
             hr = CreateShellLink(szPath, psz, NULL, NULL, NULL, -1, NULL);
             if (FAILED(hr))

@@ -767,6 +767,7 @@ BEGIN
     IDS_EJECT "取り出し"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_SHORTCUT, " - Shortcut.lnk"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"

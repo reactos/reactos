@@ -777,6 +777,7 @@ BEGIN
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
     IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_SHORTCUT, " - Shortcut.lnk"
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
