@@ -816,3 +816,4 @@
 #define IDR_SHELL               156
 #define IDR_ACTIVEDESKTOP       157
 #define IDR_SENDTOMENU          158
+#define IDR_DESKLINK            159

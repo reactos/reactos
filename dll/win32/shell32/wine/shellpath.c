@@ -2145,7 +2145,7 @@ cleanup:
     return hr;
 }
 
-static HRESULT
+HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,
     LPCWSTR pszCmd,
@@ -2200,6 +2200,7 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     WCHAR szSendToFile[MAX_PATH];
     WCHAR szShell32[MAX_PATH];
     HRESULT hr;
+    HANDLE hFile;
 
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
 
@@ -2214,6 +2215,12 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
                          szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    PathAppendW(szSendToFile, L"Desktop (Create Shortcut).DeskLink");
+    hFile = CreateFileW(szSendToFile, GENERIC_WRITE, FILE_SHARE_READ,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
 
     return hr;
 }

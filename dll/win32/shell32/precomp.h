@@ -76,6 +76,7 @@
 #include "folders/CPrinterFolder.h"
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
+#include "droptargets/CDeskLinkDropHandler.h"
 #include "droptargets/CexeDropHandler.h"
 #include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"

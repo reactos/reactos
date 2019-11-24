@@ -194,6 +194,16 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
 HRESULT WINAPI DoRegisterServer(void);
 HRESULT WINAPI DoUnregisterServer(void);
 
+HRESULT
+CreateShellLink(
+    LPCWSTR pszLinkPath,
+    LPCWSTR pszCmd,
+    LPCWSTR pszArg OPTIONAL,
+    LPCWSTR pszDir OPTIONAL,
+    LPCWSTR pszIconPath OPTIONAL,
+    INT iIconNr OPTIONAL,
+    LPCWSTR pszComment OPTIONAL);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
