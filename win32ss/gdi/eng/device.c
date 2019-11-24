@@ -83,8 +83,7 @@ EngpPopulateDeviceModeList(
 
             /* Some drivers like the VBox driver don't fill the dmDeviceName
                with the name of the display driver. So fix that here. */
-            wcsncpy(pdm->dmDeviceName, pwsz, CCHDEVICENAME);
-            pdm->dmDeviceName[CCHDEVICENAME - 1] = 0;
+            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
         }
 
         // FIXME: release the driver again until it's used?
@@ -205,14 +204,17 @@ EngpRegisterGraphicsDevice(
     pGraphicsDevice->DeviceObject = pDeviceObject;
     pGraphicsDevice->FileObject = pFileObject;
 
-    /* Copy device name */
+    /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
-                     sizeof(pGraphicsDevice->szNtDeviceName),
-                     pustrDeviceName->Buffer,
-                     pustrDeviceName->Length);
+                      sizeof(pGraphicsDevice->szNtDeviceName),
+                      pustrDeviceName->Buffer,
+                      pustrDeviceName->Length);
 
-    /* Create a win device name (FIXME: virtual devices!) */
-    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\DISPLAY%d", (int)giDevNum);
+    /* Create a Win32 device name (FIXME: virtual devices!) */
+    RtlStringCbPrintfW(pGraphicsDevice->szWinDeviceName,
+                       sizeof(pGraphicsDevice->szWinDeviceName),
+                       L"\\\\.\\DISPLAY%d",
+                       (int)giDevNum);
 
     /* Allocate a buffer for the strings */
     cj = pustrDiplayDrivers->Length + pustrDescription->Length + sizeof(WCHAR);
