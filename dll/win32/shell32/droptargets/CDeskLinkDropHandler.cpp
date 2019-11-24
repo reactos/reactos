@@ -134,9 +134,6 @@ HRESULT WINAPI CDeskLinkDropHandler::SaveCompleted(LPCOLESTR pszFileName)
     return E_NOTIMPL;
 }
 
-/************************************************************************
- * CFSFolder::GetClassID
- */
 HRESULT WINAPI CDeskLinkDropHandler::GetClassID(CLSID * lpClassId)
 {
     TRACE ("(%p)\n", this);
