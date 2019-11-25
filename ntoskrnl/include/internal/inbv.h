@@ -22,7 +22,6 @@ InbvDriverInitialize(
     IN ULONG Count
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(
