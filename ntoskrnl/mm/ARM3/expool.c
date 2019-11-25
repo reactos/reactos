@@ -22,10 +22,6 @@
 
 #define POOL_BIG_TABLE_ENTRY_FREE 0x1
 
-/* DEBUGGING ******************************************************************/
-
-//#define DBG_NUMBER_OF_FRAMES_TO_CAPTURE 5
-
 typedef struct _POOL_DPC_CONTEXT
 {
     PPOOL_TRACKER_TABLE PoolTrackTable;
@@ -1851,14 +1847,9 @@ ExReturnPoolQuota(IN PVOID P)
  */
 PVOID
 NTAPI
-#ifdef DBG_NUMBER_OF_FRAMES_TO_CAPTURE
-ExAllocatePoolWithTagInternal(
-#else
-ExAllocatePoolWithTag(
-#endif
-    _In_ POOL_TYPE PoolType,
-    _In_ SIZE_T NumberOfBytes,
-    _In_ ULONG Tag)
+ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
+                      IN SIZE_T NumberOfBytes,
+                      IN ULONG Tag)
 {
     PPOOL_DESCRIPTOR PoolDesc;
     PLIST_ENTRY ListHead;
@@ -1868,7 +1859,6 @@ ExAllocatePoolWithTag(
     ULONG OriginalType;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PGENERAL_LOOKASIDE LookasideList;
-    PVOID Allocation;
 
     //
     // Some sanity checks
@@ -1908,13 +1898,10 @@ ExAllocatePoolWithTag(
             if (MmUseSpecialPool(NumberOfBytes, Tag))
             {
                 //
-                // Try to allocate using special pool (initialized with random byte)
+                // Try to allocate using special pool
                 //
-                Allocation = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
-                if (Allocation != NULL)
-                {
-                    return Allocation;
-                }
+                Entry = MmAllocateSpecialPool(NumberOfBytes, Tag, PoolType, 2);
+                if (Entry) return Entry;
             }
         }
     }
@@ -1935,8 +1922,8 @@ ExAllocatePoolWithTag(
         //
         // Allocate pages for it
         //
-        Allocation = MiAllocatePoolPages(OriginalType, NumberOfBytes);
-        if (Allocation == NULL)
+        Entry = MiAllocatePoolPages(OriginalType, NumberOfBytes);
+        if (!Entry)
         {
 #if DBG
             //
@@ -2008,7 +1995,7 @@ ExAllocatePoolWithTag(
         // Add a tag for the big page allocation and switch to the generic "BIG"
         // tag if we failed to do so, then insert a tracker for this alloation.
         //
-        if (!ExpAddTagForBigPages(Allocation,
+        if (!ExpAddTagForBigPages(Entry,
                                   Tag,
                                   (ULONG)BYTES_TO_PAGES(NumberOfBytes),
                                   OriginalType))
@@ -2016,10 +2003,7 @@ ExAllocatePoolWithTag(
             Tag = ' GIB';
         }
         ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), OriginalType);
-#if DBG
-        RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
-#endif
-        return Allocation;
+        return Entry;
     }
 
     //
@@ -2089,11 +2073,7 @@ ExAllocatePoolWithTag(
             Entry->PoolTag = Tag;
             (POOL_FREE_BLOCK(Entry))->Flink = NULL;
             (POOL_FREE_BLOCK(Entry))->Blink = NULL;
-            Allocation = POOL_FREE_BLOCK(Entry);
-#if DBG
-            RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
-#endif
-            return Allocation;
+            return POOL_FREE_BLOCK(Entry);
         }
     }
 
@@ -2277,11 +2257,7 @@ ExAllocatePoolWithTag(
             Entry->PoolTag = Tag;
             (POOL_FREE_BLOCK(Entry))->Flink = NULL;
             (POOL_FREE_BLOCK(Entry))->Blink = NULL;
-            Allocation = POOL_FREE_BLOCK(Entry);
-#if DBG
-            RtlFillMemory(Allocation, NumberOfBytes, 0xCD);
-#endif
-            return Allocation;
+            return POOL_FREE_BLOCK(Entry);
         }
     } while (++ListHead != &PoolDesc->ListHeads[POOL_LISTS_PER_PAGE]);
 
@@ -2424,37 +2400,8 @@ ExAllocatePoolWithTag(
     //
     ExpCheckPoolBlocks(Entry);
     Entry->PoolTag = Tag;
-    Allocation = POOL_FREE_BLOCK(Entry);
-
-    return Allocation;
+    return POOL_FREE_BLOCK(Entry);
 }
-
-#ifdef DBG_NUMBER_OF_FRAMES_TO_CAPTURE
-PVOID
-NTAPI
-ExAllocatePoolWithTag(
-    _In_ POOL_TYPE PoolType,
-    _In_ SIZE_T NumberOfBytes,
-    _In_ ULONG Tag)
-{
-    SIZE_T FullSize;
-    PVOID Allocation, *DbgData;
-
-    /* Allocate a larger chunk to add the debug data */
-    FullSize = NumberOfBytes + (DBG_NUMBER_OF_FRAMES_TO_CAPTURE + 2) * sizeof(PVOID);
-    Allocation = ExAllocatePoolWithTagInternal(PoolType, FullSize, Tag);
-    if (Allocation == NULL)
-    {
-        return NULL;
-    }
-
-    /* Append the debug data, separated by a '####' */
-    DbgData = ALIGN_UP_POINTER_BY((PUCHAR)Allocation + NumberOfBytes, sizeof(PVOID));
-    DbgData[0] = (PVOID)(ULONG_PTR)'####';
-    RtlWalkFrameChain(&DbgData[1], DBG_NUMBER_OF_FRAMES_TO_CAPTURE, 0);
-    return Allocation;
-}
-#endif
 
 /*
  * @implemented
@@ -2597,10 +2544,6 @@ ExFreePoolWithTag(IN PVOID P,
             Tag &= ~PROTECTED_POOL;
         }
 
-#if DBG
-        RtlFillMemory(P, PageCount * PAGE_SIZE, 0xDD);
-#endif
-
         //
         // Check block tag
         //
@@ -2725,10 +2668,6 @@ ExFreePoolWithTag(IN PVOID P,
             ObDereferenceObject(Process);
         }
     }
-
-#if DBG
-    RtlFillMemory(P, BlockSize * POOL_BLOCK_SIZE - sizeof(*Entry), 0xDD);
-#endif
 
     //
     // Is this allocation small enough to have come from a lookaside list?
