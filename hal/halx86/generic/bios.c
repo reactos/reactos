@@ -400,7 +400,6 @@ HalpStoreAndClearIopm(VOID)
             //
             // Save it
             //
-            ASSERT(j < IOPM_SIZE / sizeof(USHORT));
             HalpSavedIoMapData[j][0] = i;
             HalpSavedIoMapData[j][1] = *Entry;
             j++;
