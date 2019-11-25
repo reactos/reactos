@@ -115,12 +115,5 @@ InbvSolidColorFill(
     _In_ ULONG Color
 );
 
-VOID
-NTAPI
-InbvSetProgressBarSubset(
-    _In_ ULONG Floor,
-    _In_ ULONG Ceiling
-);
-
 #endif
 #endif

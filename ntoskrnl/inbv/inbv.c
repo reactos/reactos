@@ -847,6 +847,7 @@ InbvScreenToBufferBlt(IN PUCHAR Buffer,
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(IN ULONG Left,
@@ -860,6 +861,7 @@ InbvSetProgressBarCoordinates(IN ULONG Left,
     ShowProgressBar = TRUE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,
