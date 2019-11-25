@@ -51,7 +51,6 @@ InbvNotifyDisplayOwnershipLost(
 //
 // Installation Functions
 //
-INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(
