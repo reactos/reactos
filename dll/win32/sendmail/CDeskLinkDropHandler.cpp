@@ -11,11 +11,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(sendmail);
 
 /* initialisation for FORMATETC */
 #define InitFormatEtc(fe, cf, med) do { \
-	(fe).cfFormat = (cf); \
-	(fe).dwAspect = DVASPECT_CONTENT; \
-	(fe).ptd = NULL; \
-	(fe).tymed = (med); \
-	(fe).lindex = -1; \
+    (fe).cfFormat = (cf); \
+    (fe).dwAspect = DVASPECT_CONTENT; \
+    (fe).ptd = NULL; \
+    (fe).tymed = (med); \
+    (fe).lindex = -1; \
 } while(0)
 
 CDeskLinkDropHandler::CDeskLinkDropHandler()
