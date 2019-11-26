@@ -244,6 +244,31 @@ Quit:
     return getDefaultIconLocation(szIconFile, cchMax, piIndex, uFlags);
 }
 
+// a callback for ExeFileHasAnyIcon
+static BOOL CALLBACK
+EnumResNameProc(
+    HMODULE hModule,
+    LPCWSTR lpszType,
+    LPWSTR lpszName,
+    LONG_PTR lParam)
+{
+    *(BOOL *)lParam = TRUE;
+    return FALSE;
+}
+
+static BOOL ExeFileHasAnyIcon(LPCWSTR pszFile)
+{
+    HINSTANCE hInst = LoadLibraryExW(pszFile, NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (!hInst)
+        return FALSE;
+
+    BOOL ret = FALSE;
+    EnumResourceNames(hInst, RT_GROUP_ICON, EnumResNameProc, (LPARAM)&ret);
+
+    FreeLibrary(hInst);
+    return ret;
+}
+
 HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
@@ -312,6 +337,16 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
             {
                 ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
+
+                LPCWSTR pchDotExt = PathFindExtension(wTemp);
+                if (lstrcmpiW(pchDotExt, L".ico") != 0 &&
+                    lstrcmpiW(pchDotExt, L".cur") != 0 &&
+                    lstrcmpiW(pchDotExt, L".ani") != 0 &&
+                    !ExeFileHasAnyIcon(wTemp))
+                {
+                    StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
+                    icon_idx = -IDI_SHELL_EXE;
+                }
             }
 
             initIcon->SetNormalIcon(wTemp, icon_idx);

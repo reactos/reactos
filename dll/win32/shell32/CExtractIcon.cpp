@@ -138,21 +138,6 @@ HRESULT STDMETHODCALLTYPE CExtractIcon::SetNormalIcon(
 {
     TRACE("(%p, %s, %d)\n", this, debugstr_w(pszFile), iIcon);
 
-    if (lstrcmpiW(PathFindExtensionW(pszFile), L".exe") == 0)
-    {
-        if (!PrivateExtractIconExW(pszFile, 0, NULL, NULL, 1))
-        {
-            WCHAR szPath[MAX_PATH];
-            GetModuleFileNameW(shell32_hInstance, szPath, _countof(szPath));
-            DuplicateString(szPath, &normalIcon.file);
-            if (!normalIcon.file)
-                return E_OUTOFMEMORY;
-
-            normalIcon.index = -IDI_SHELL_EXE;
-            return S_OK;
-        }
-    }
-
     DuplicateString(pszFile, &normalIcon.file);
     if (!normalIcon.file)
         return E_OUTOFMEMORY;
