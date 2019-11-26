@@ -256,7 +256,7 @@ static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG
  *  nIcons = 0: returns number of Icons in file
  *
  * returns
- *  invalid file: 0;
+ *  invalid file: -1
  *  failure:0;
  *  success: number of icons in file (nIcons = 0) or nr of icons retrieved
  */
@@ -299,7 +299,7 @@ static UINT ICO_ExtractIconExW(
         if ((dwSearchReturn == 0) || (dwSearchReturn > ARRAY_SIZE(szExePath)))
         {
             WARN("File %s not found or path too long\n", debugstr_w(lpszExeFileName));
-            return 0;
+            return -1;
         }
 
 	hFile = CreateFileW(szExePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
