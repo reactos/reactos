@@ -97,9 +97,12 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
             hr = CreateShellLink(szPath, psz, NULL, NULL, NULL, -1, NULL);
             if (FAILED(hr))
+            {
+                ERR("CreateShellLink failed\n");
                 break;
+            }
 
-            psz += lstrlenW(psz) + 1;
+            psz += wcslen(psz) + 1;
         }
     }
 
