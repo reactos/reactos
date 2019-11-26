@@ -285,6 +285,45 @@ InitVideo(VOID)
     return STATUS_SUCCESS;
 }
 
+VOID
+UserRefreshDisplay(IN PPDEVOBJ ppdev)
+{
+    ULONG_PTR ulResult;
+    // PVOID pvOldCursor;
+
+    // TODO: Re-enable the cursor reset code once this function becomes called
+    // from within a Win32 thread... Indeed UserSetCursor() requires this, but
+    // at the moment this function is directly called from a separate thread
+    // from within videoprt, instead of by a separate win32k system thread.
+
+    if (!ppdev)
+        return;
+
+    PDEVOBJ_vReference(ppdev);
+
+    /* Remove mouse pointer */
+    // pvOldCursor = UserSetCursor(NULL, TRUE);
+
+    /* Do the mode switch -- Use the actual same current mode */
+    ulResult = PDEVOBJ_bSwitchMode(ppdev, ppdev->pdmwDev);
+    ASSERT(ulResult);
+
+    /* Restore mouse pointer, no hooks called */
+    // pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
+    // ASSERT(pvOldCursor == NULL);
+
+    /* Update the system metrics */
+    InitMetrics();
+
+    /* Set new size of the monitor */
+    // UserUpdateMonitorSize((HDEV)ppdev);
+
+    //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
+    UserRedrawDesktop();
+
+    PDEVOBJ_vRelease(ppdev);
+}
+
 NTSTATUS
 NTAPI
 UserEnumDisplayDevices(

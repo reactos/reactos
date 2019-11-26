@@ -8,7 +8,9 @@
  */
 
 #include <win32k.h>
-DBG_DEFAULT_CHANNEL(EngDev)
+#include <ntddvdeo.h>
+
+DBG_DEFAULT_CHANNEL(EngDev);
 
 PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 PGRAPHICS_DEVICE gpVgaGraphicsDevice;
@@ -156,6 +158,70 @@ EngpPopulateDeviceModeList(
     return TRUE;
 }
 
+extern VOID
+UserRefreshDisplay(IN PPDEVOBJ ppdev);
+
+// PVIDEO_WIN32K_CALLOUT
+VOID
+NTAPI
+VideoPortCallout(
+    _In_ PVOID Params)
+{
+/*
+ * IMPORTANT NOTICE!! On Windows XP/2003 this function triggers the creation of
+ * a specific VideoPortCalloutThread() system thread using the same mechanism
+ * as the RIT/desktop/Ghost system threads.
+ */
+
+    PVIDEO_WIN32K_CALLBACKS_PARAMS CallbackParams = (PVIDEO_WIN32K_CALLBACKS_PARAMS)Params;
+
+    TRACE("VideoPortCallout(0x%p, 0x%x)\n",
+          CallbackParams, CallbackParams ? CallbackParams->CalloutType : -1);
+
+    if (!CallbackParams)
+        return;
+
+    switch (CallbackParams->CalloutType)
+    {
+        case VideoFindAdapterCallout:
+        {
+            TRACE("VideoPortCallout: VideoFindAdapterCallout called - Param = %s\n",
+                  CallbackParams->Param ? "TRUE" : "FALSE");
+            if (CallbackParams->Param == TRUE)
+            {
+                /* Re-enable the display */
+                UserRefreshDisplay(gppdevPrimary);
+            }
+            else
+            {
+                /* Disable the display */
+                NOTHING; // Nothing to do for the moment...
+            }
+
+            CallbackParams->Status = STATUS_SUCCESS;
+            break;
+        }
+
+        case VideoPowerNotifyCallout:
+        case VideoDisplaySwitchCallout:
+        case VideoEnumChildPdoNotifyCallout:
+        case VideoWakeupCallout:
+        case VideoChangeDisplaySettingsCallout:
+        case VideoPnpNotifyCallout:
+        case VideoDxgkDisplaySwitchCallout:
+        case VideoDxgkMonitorEventCallout:
+        case VideoDxgkFindAdapterTdrCallout:
+            ERR("VideoPortCallout: CalloutType 0x%x is UNIMPLEMENTED!\n", CallbackParams->CalloutType);
+            CallbackParams->Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            ERR("VideoPortCallout: Unknown CalloutType 0x%x\n", CallbackParams->CalloutType);
+            CallbackParams->Status = STATUS_UNSUCCESSFUL;
+            break;
+    }
+}
+
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
@@ -168,10 +234,10 @@ EngpRegisterGraphicsDevice(
     PDEVICE_OBJECT pDeviceObject;
     PFILE_OBJECT pFileObject;
     NTSTATUS Status;
+    VIDEO_WIN32K_CALLBACKS Win32kCallbacks;
+    ULONG ulReturn;
     PWSTR pwsz;
     ULONG cj;
-    SIZE_T cjWritten;
-    BOOL bEnable = TRUE;
 
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
@@ -197,12 +263,33 @@ EngpRegisterGraphicsDevice(
         return NULL;
     }
 
-    /* Enable the device */
-    EngFileWrite(pFileObject, &bEnable, sizeof(BOOL), &cjWritten);
-
     /* Copy the device and file object pointers */
     pGraphicsDevice->DeviceObject = pDeviceObject;
     pGraphicsDevice->FileObject = pFileObject;
+
+    /* Initialize and register the device with videoprt for Win32k callbacks */
+    Win32kCallbacks.PhysDisp = pGraphicsDevice;
+    Win32kCallbacks.Callout = VideoPortCallout;
+    // Reset the data being returned prior to the call.
+    Win32kCallbacks.bACPI = FALSE;
+    Win32kCallbacks.pPhysDeviceObject = NULL;
+    Win32kCallbacks.DualviewFlags = 0;
+    Status = (NTSTATUS)EngDeviceIoControl((HANDLE)pDeviceObject,
+                                          IOCTL_VIDEO_INIT_WIN32K_CALLBACKS,
+                                          &Win32kCallbacks,
+                                          sizeof(Win32kCallbacks),
+                                          &Win32kCallbacks,
+                                          sizeof(Win32kCallbacks),
+                                          &ulReturn);
+    if (Status != ERROR_SUCCESS)
+    {
+        ERR("EngDeviceIoControl(0x%p, IOCTL_VIDEO_INIT_WIN32K_CALLBACKS) failed, Status 0x%lx\n",
+            pDeviceObject, Status);
+    }
+    // TODO: Set flags according to the results.
+    // if (Win32kCallbacks.bACPI)
+    // if (Win32kCallbacks.DualviewFlags & ???)
+    // Win32kCallbacks.pPhysDeviceObject;
 
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
