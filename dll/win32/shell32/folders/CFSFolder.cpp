@@ -353,7 +353,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                     icon_idx = -IDI_SHELL_EXE;
                 }
 #else
-                if (ExtractIconExW(wTemp, -1, NULL, NULL, 0) == 0)
+                if (PrivateExtractIconExW(wTemp, -1, NULL, NULL, 0) == 0)
                 {
                     StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
                     icon_idx = -IDI_SHELL_EXE;
