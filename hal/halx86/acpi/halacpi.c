@@ -230,7 +230,6 @@ HalpAcpiGetTableFromBios(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (!Xsdt) return NULL;
 
             /* Won't be using the RSDT */
-            Rsdt = NULL;
         }
 
         /* Smallest RSDT/XSDT is one without table entries */
@@ -673,15 +672,15 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Use an I/O map */
         MappedAddress = MmMapIoSpace(PhysicalAddress, PAGE_SIZE * 2, MmNonCached);
     }
-
-    /* Get the RSDT */
-    Rsdt = MappedAddress;
     if (!MappedAddress)
     {
         /* Fail, no memory */
         DPRINT1("HAL: Failed to map RSDT\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    /* Get the RSDT */
+    Rsdt = MappedAddress;
 
     /* Validate it */
     if ((Rsdt->Header.Signature != RSDT_SIGNATURE) &&
@@ -712,15 +711,15 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             HalpUnmapVirtualAddress(MappedAddress, 2);
             MappedAddress = HalpMapPhysicalMemory64(PhysicalAddress, TableLength);
         }
-
-        /* Get the remapped table */
-        Rsdt = MappedAddress;
         if (!MappedAddress)
         {
             /* Fail, no memory */
             DPRINT1("HAL: Couldn't remap RSDT\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        /* Get the remapped table */
+        Rsdt = MappedAddress;
     }
 
     /* Now take the BIOS copy and make our own local copy */
