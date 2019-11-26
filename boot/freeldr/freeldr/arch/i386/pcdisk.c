@@ -229,24 +229,30 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(UCHAR DriveNumber, ULONGLONG SectorNu
 
 static BOOLEAN PcDiskReadLogicalSectorsCHS(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
+    static UCHAR LastDriveNumber = 0xFF;
+    static GEOMETRY DriveGeometry;
     UCHAR PhysicalSector;
     UCHAR PhysicalHead;
     ULONG PhysicalTrack;
-    GEOMETRY DriveGeometry;
+    GEOMETRY DriveGeometryTemp;
     ULONG NumberOfSectorsToRead;
     REGS RegsIn, RegsOut;
     ULONG RetryCount;
 
     TRACE("PcDiskReadLogicalSectorsCHS()\n");
 
-    /* Get the drive geometry */
-    //
-    // TODO: Cache this information for the given drive.
-    //
-    if (!PcDiskGetDriveGeometry(DriveNumber, &DriveGeometry) ||
-        DriveGeometry.Sectors == 0 || DriveGeometry.Heads == 0)
+    /* Update cached information */
+    if (DriveNumber != LastDriveNumber)
     {
-        return FALSE;
+        /* Get the drive geometry */
+        if (!PcDiskGetDriveGeometry(DriveNumber, &DriveGeometryTemp) ||
+            DriveGeometryTemp.Sectors == 0 || DriveGeometryTemp.Heads == 0)
+        {
+            return FALSE;
+        }
+
+        DriveGeometry = DriveGeometryTemp;
+        LastDriveNumber = DriveNumber;
     }
 
     while (SectorCount)
