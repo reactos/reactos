@@ -312,6 +312,13 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
             {
                 ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
+
+                INT ret = ExtractIconExW(wTemp, -1, NULL, NULL, 0);
+                if (ret <= 0)
+                {
+                    StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
+                    icon_idx = -IDI_SHELL_EXE;
+                }
             }
 
             initIcon->SetNormalIcon(wTemp, icon_idx);
