@@ -1,0 +1,7 @@
+#include "sendmail_version.h"
+
+#define WINE_OLESELFREGISTER
+#define WINE_FILEVERSION WINE_FILEVERSION_MAJOR,WINE_FILEVERSION_MINOR,WINE_FILEVERSION_BUILD,WINE_FILEVERSION_PLATFORMID
+#define WINE_FILENAME_STR "sendmail.dll"
+
+#include <wine/wine_common_ver.rc>
