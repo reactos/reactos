@@ -32,12 +32,16 @@ HKCR,"Directory","",0x00000000,"File Folder"
 HKCR,"Directory","AlwaysShowExt",0x00000000,""
 HKCR,"Directory","NoRecentDocs",0x00000000,""
 HKCR,"Directory\shell\cmd","",0x00020000,"@%SystemRoot%\system32\shell32.dll,-306"
+; Uncomment 'Extended' key to restore default (Shift-Right-Click) display of 'Command Prompt here'. (See CORE-16519.)
+; HKCR,"Directory\shell\cmd","Extended",0x00000000,""
 HKCR,"Directory\shell\cmd\command","",0x00000000,"cmd.exe /s /k pushd ""%V"""
 
 ; Drive
 HKCR,"Drive","",0x00000000,"Drive"
 ;HKCR,"Drive\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
 HKCR,"Drive\shell\cmd","",0x00020000,"@%SystemRoot%\system32\shell32.dll,-306"
+; Uncomment 'Extended' key to restore default (Shift-Right-Click) display of 'Command Prompt here'. (See CORE-16519.)
+; HKCR,"Drive\shell\cmd","Extended",0x00000000,""
 HKCR,"Drive\shell\cmd\command","",0x00000000,"cmd.exe /s /k pushd ""%V"""
 
 ; Clipboard Element
