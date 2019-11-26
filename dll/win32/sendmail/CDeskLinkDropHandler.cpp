@@ -69,6 +69,7 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
     CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
+    strShortcut += L".lnk";
 
     HRESULT hr = E_FAIL;
     STGMEDIUM medium;

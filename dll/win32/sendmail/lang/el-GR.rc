@@ -2,5 +2,5 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_SHORTCUT, " - Shortcut.lnk"
+    IDS_SHORTCUT, " - Shortcut"
 }
