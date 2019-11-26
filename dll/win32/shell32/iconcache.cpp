@@ -873,7 +873,7 @@ EXTERN_C INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT b
 UINT WINAPI ExtractIconExW(LPCWSTR lpszFile, INT nIconIndex, HICON * phiconLarge, HICON * phiconSmall, UINT nIcons)
 {
     /* get entry point of undocumented function PrivateExtractIconExW() in user32 */
-#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
+#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER) || defined(__REACTOS__)
     static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
 
     if (!PrivateExtractIconExW) {
