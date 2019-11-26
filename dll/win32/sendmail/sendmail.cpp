@@ -9,38 +9,6 @@ END_OBJECT_MAP()
 CComModule gModule;
 HINSTANCE sendmail_hInstance = NULL;
 
-STDAPI DllGetVersion(DLLVERSIONINFO *pdvi)
-{
-    /* FIXME: shouldn't these values come from the version resource? */
-    if (pdvi->cbSize == sizeof(DLLVERSIONINFO) ||
-        pdvi->cbSize == sizeof(DLLVERSIONINFO2))
-    {
-        pdvi->dwMajorVersion = WINE_FILEVERSION_MAJOR;
-        pdvi->dwMinorVersion = WINE_FILEVERSION_MINOR;
-        pdvi->dwBuildNumber = WINE_FILEVERSION_BUILD;
-        pdvi->dwPlatformID = WINE_FILEVERSION_PLATFORMID;
-        if (pdvi->cbSize == sizeof(DLLVERSIONINFO2))
-        {
-            DLLVERSIONINFO2 *pdvi2 = (DLLVERSIONINFO2 *)pdvi;
-
-            pdvi2->dwFlags = 0;
-            pdvi2->ullVersion = MAKEDLLVERULL(WINE_FILEVERSION_MAJOR,
-                                              WINE_FILEVERSION_MINOR,
-                                              WINE_FILEVERSION_BUILD,
-                                              WINE_FILEVERSION_PLATFORMID);
-        }
-        TRACE("%u.%u.%u.%u\n",
-              pdvi->dwMajorVersion, pdvi->dwMinorVersion,
-              pdvi->dwBuildNumber, pdvi->dwPlatformID);
-        return S_OK;
-    }
-    else
-    {
-        WARN("wrong DLLVERSIONINFO size from app\n");
-        return E_INVALIDARG;
-    }
-}
-
 STDAPI DllCanUnloadNow()
 {
     return gModule.DllCanUnloadNow();
@@ -48,20 +16,18 @@ STDAPI DllCanUnloadNow()
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    HRESULT                                hResult;
-
     TRACE("CLSID:%s,IID:%s\n", wine_dbgstr_guid(&rclsid), wine_dbgstr_guid(&riid));
 
-    hResult = gModule.DllGetClassObject(rclsid, riid, ppv);
+    HRESULT hr = gModule.DllGetClassObject(rclsid, riid, ppv);
+
     TRACE("-- pointer to class factory: %p\n", *ppv);
-    return hResult;
+
+    return hr;
 }
 
-STDAPI DllRegisterServer()
+STDAPI DllRegisterServer(void)
 {
-    HRESULT hr;
-
-    hr = gModule.DllRegisterServer(TRUE);
+    HRESULT hr = gModule.DllRegisterServer(TRUE);
     if (FAILED(hr))
         return hr;
 
@@ -72,11 +38,9 @@ STDAPI DllRegisterServer()
     return S_OK;
 }
 
-STDAPI DllUnregisterServer()
+STDAPI DllUnregisterServer(void)
 {
-    HRESULT hr;
-
-    hr = gModule.DllUnregisterServer(TRUE);
+    HRESULT hr = gModule.DllUnregisterServer(TRUE);
     if (FAILED(hr))
         return hr;
 
@@ -85,12 +49,6 @@ STDAPI DllUnregisterServer()
         return hr;
 
     return S_OK;
-}
-
-HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
-{
-    FIXME("%s %s: stub\n", bInstall ? "TRUE":"FALSE", debugstr_w(cmdline));
-    return S_OK;        /* indicate success */
 }
 
 HRESULT
