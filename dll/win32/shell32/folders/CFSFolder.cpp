@@ -338,10 +338,12 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                 ILGetDisplayNameExW(psf, pidl, wTemp, ILGDN_FORPARSING);
                 icon_idx = 0;
 
-                LPCWSTR pchDotExt = PathFindExtension(wTemp);
-                if (lstrcmpiW(pchDotExt, L".ico") != 0 &&
-                    lstrcmpiW(pchDotExt, L".cur") != 0 &&
-                    lstrcmpiW(pchDotExt, L".ani") != 0 &&
+                // NOTE: Our ExtractIconExW returns 1 even if exe has no icon.
+                DWORD dwType;
+                LPCWSTR pchDotExt = PathFindExtensionW(wTemp);
+                if ((lstrcmpiW(pchDotExt, L".exe") == 0 ||
+                     lstrcmpiW(pchDotExt, L".scr") == 0 ||
+                     GetBinaryType(wTemp, &dwType)) &&
                     !ExeFileHasAnyIcon(wTemp))
                 {
                     StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
