@@ -31,20 +31,12 @@ STDAPI DllRegisterServer(void)
     if (FAILED(hr))
         return hr;
 
-    hr = gModule.UpdateRegistryFromResource(IDR_DESKLINK, TRUE, NULL);
-    if (FAILED(hr))
-        return hr;
-
     return S_OK;
 }
 
 STDAPI DllUnregisterServer(void)
 {
     HRESULT hr = gModule.DllUnregisterServer(TRUE);
-    if (FAILED(hr))
-        return hr;
-
-    hr = gModule.UpdateRegistryFromResource(IDR_DESKLINK, FALSE, NULL);
     if (FAILED(hr))
         return hr;
 
@@ -62,8 +54,6 @@ CreateShellLink(
     LPCWSTR pszComment OPTIONAL)
 {
     CComPtr<IShellLinkW> psl;
-    CComPtr<IPersistFile> ppf;
-
     HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL,
                                   CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARG(IShellLinkW, &psl));
@@ -86,6 +76,7 @@ CreateShellLink(
     if (pszComment)
         hr = psl->SetDescription(pszComment);
 
+    CComPtr<IPersistFile> ppf;
     hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
     if (SUCCEEDED(hr))
     {
@@ -102,7 +93,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     {
         sendmail_hInstance = hInstance;
         gModule.Init(ObjectMap, hInstance, &LIBID_SendMail);
-
         DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
