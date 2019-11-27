@@ -53,7 +53,8 @@ STDAPI DllUnregisterServer(void)
 HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,
-    LPCWSTR pszCmd,
+    LPCWSTR pszTargetPath OPTIONAL,
+    LPCITEMIDLIST pidlTarget OPTIONAL,
     LPCWSTR pszArg OPTIONAL,
     LPCWSTR pszDir OPTIONAL,
     LPCWSTR pszIconPath OPTIONAL,
@@ -67,54 +68,23 @@ CreateShellLink(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = psl->SetPath(pszCmd);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    if (pszArg)
-        hr = psl->SetArguments(pszArg);
-
-    if (pszDir)
-        hr = psl->SetWorkingDirectory(pszDir);
-
-    if (pszIconPath)
-        hr = psl->SetIconLocation(pszIconPath, iIconNr);
-
-    if (pszComment)
-        hr = psl->SetDescription(pszComment);
-
-    CComPtr<IPersistFile> ppf;
-    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = ppf->Save(pszLinkPath, TRUE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return hr;
-}
-
-HRESULT
-CreateShellLinkFromPIDL(
-    LPCWSTR pszLinkPath,
-    LPCITEMIDLIST pidl,
-    LPCWSTR pszArg OPTIONAL,
-    LPCWSTR pszDir OPTIONAL,
-    LPCWSTR pszIconPath OPTIONAL,
-    INT iIconNr OPTIONAL,
-    LPCWSTR pszComment OPTIONAL)
-{
-    CComPtr<IShellLinkW> psl;
-    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL,
-                                  CLSCTX_INPROC_SERVER,
-                                  IID_PPV_ARG(IShellLinkW, &psl));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = psl->SetIDList(pidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (pszTargetPath)
+    {
+        hr = psl->SetPath(pszTargetPath);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    else if (pidlTarget)
+    {
+        hr = psl->SetIDList(pidlTarget);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    else
+    {
+        ERR("invalid argument\n");
+        return E_INVALIDARG;
+    }
 
     if (pszArg)
         hr = psl->SetArguments(pszArg);

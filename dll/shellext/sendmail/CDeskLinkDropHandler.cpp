@@ -114,7 +114,7 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             PathRemoveExtensionW(szDest);
             StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
-            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, -1, NULL);
+            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, NULL, -1, NULL);
         }
         else
         {
@@ -134,7 +134,7 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             PathRemoveExtensionW(szDest);
             StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
-            hr = CreateShellLinkFromPIDL(szDest, pidl, NULL, NULL, NULL, -1, NULL);
+            hr = CreateShellLink(szDest, NULL, pidl, NULL, NULL, NULL, -1, NULL);
         }
 
         if (FAILED_UNEXPECTEDLY(hr))

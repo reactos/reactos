@@ -31,17 +31,8 @@ extern HINSTANCE sendmail_hInstance;
 HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,
-    LPCWSTR pszCmd,
-    LPCWSTR pszArg OPTIONAL,
-    LPCWSTR pszDir OPTIONAL,
-    LPCWSTR pszIconPath OPTIONAL,
-    INT iIconNr OPTIONAL,
-    LPCWSTR pszComment OPTIONAL);
-
-HRESULT
-CreateShellLinkFromPIDL(
-    LPCWSTR pszLinkPath,
-    LPCITEMIDLIST pidl,
+    LPCWSTR pszTargetPath OPTIONAL,
+    LPCITEMIDLIST pidlTarget OPTIONAL,
     LPCWSTR pszArg OPTIONAL,
     LPCWSTR pszDir OPTIONAL,
     LPCWSTR pszIconPath OPTIONAL,
