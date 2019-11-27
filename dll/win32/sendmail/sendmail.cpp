@@ -27,7 +27,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer(void)
 {
-    HRESULT hr = gModule.DllRegisterServer(TRUE);
+    HRESULT hr = gModule.DllRegisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -36,7 +36,7 @@ STDAPI DllRegisterServer(void)
 
 STDAPI DllUnregisterServer(void)
 {
-    HRESULT hr = gModule.DllUnregisterServer(TRUE);
+    HRESULT hr = gModule.DllUnregisterServer(FALSE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
