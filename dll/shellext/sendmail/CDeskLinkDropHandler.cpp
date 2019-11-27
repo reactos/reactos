@@ -11,10 +11,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(sendmail);
 
 CDeskLinkDropHandler::CDeskLinkDropHandler()
 {
+    InterlockedIncrement(&g_ModuleRefCnt);
 }
 
 CDeskLinkDropHandler::~CDeskLinkDropHandler()
 {
+    InterlockedDecrement(&g_ModuleRefCnt);
 }
 
 // IDropTarget

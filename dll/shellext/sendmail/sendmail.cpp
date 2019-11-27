@@ -14,9 +14,12 @@ BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
 CComModule gModule;
+LONG g_ModuleRefCnt = 0;
 
 STDAPI DllCanUnloadNow(void)
 {
+    if (g_ModuleRefCnt)
+        return S_FALSE;
     return gModule.DllCanUnloadNow();
 }
 

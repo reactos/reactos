@@ -26,6 +26,8 @@
 #include "sendmail_version.h"
 #include "resource.h"
 
+extern LONG g_ModuleRefCnt;
+
 HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,
