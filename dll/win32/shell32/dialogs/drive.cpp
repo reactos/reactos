@@ -591,17 +591,27 @@ static unsigned __stdcall DoFormatDrive(void *args)
     HWND hwndDlg = pParams->hwndDlg;
     PFORMAT_DRIVE_CONTEXT pContext = pParams->pContext;
 
+	/* Disable controls during format */
     HMENU hSysMenu = GetSystemMenu(hwndDlg, FALSE);
     EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
     EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, 28673), FALSE);
     EnableWindow(GetDlgItem(hwndDlg, 28677), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, 28680), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, 28679), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, 28674), FALSE);
 
     FormatDrive(hwndDlg, pContext);
 
+	/* Re-enable controls after format */
     EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
     EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), TRUE);
+    EnableWindow(GetDlgItem(hwndDlg, 28673), TRUE);
     EnableWindow(GetDlgItem(hwndDlg, 28677), TRUE);
+    EnableWindow(GetDlgItem(hwndDlg, 28680), TRUE);
+    EnableWindow(GetDlgItem(hwndDlg, 28679), TRUE);
+    EnableWindow(GetDlgItem(hwndDlg, 28674), TRUE);
     EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | MF_ENABLED);
     pContext->bFormattingNow = FALSE;
 
