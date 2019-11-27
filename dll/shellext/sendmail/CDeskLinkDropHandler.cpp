@@ -91,7 +91,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_FAIL;
     }
 
-    CStringW strShortcutTo(MAKEINTRESOURCEW(IDS_SHORTCUT));
     LPBYTE pb = reinterpret_cast<LPBYTE>(pida);
     LPCITEMIDLIST pidlParent = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[0]);
     for (UINT i = 1; i <= pida->cidl; ++i)
@@ -106,11 +105,10 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         }
 
         StringCbCopyW(szDest, sizeof(szDest), szDir);
-        CStringW strTitle = strShortcutTo;
-
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            strTitle += PathFindFileNameW(szSrc);
+            CStringW strTitle;
+            strTitle.Format(IDS_SHORTCUT, PathFindFileNameW(szSrc));
 
             PathAppendW(szDest, strTitle);
             PathRemoveExtensionW(szDest);
@@ -129,7 +127,8 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             if (FAILED_UNEXPECTEDLY(hr))
                 break;
 
-            strTitle += szSrc;
+            CStringW strTitle;
+            strTitle.Format(IDS_SHORTCUT, szSrc);
 
             PathAppendW(szDest, strTitle);
             PathRemoveExtensionW(szDest);

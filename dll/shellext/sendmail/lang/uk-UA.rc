@@ -2,5 +2,5 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_SHORTCUT, "Shortcut to "
+    IDS_SHORTCUT, "Shortcut to %s"
 }
