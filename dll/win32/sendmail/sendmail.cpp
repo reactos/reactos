@@ -16,7 +16,7 @@ END_OBJECT_MAP()
 CComModule gModule;
 HINSTANCE sendmail_hInstance = NULL;
 
-STDAPI DllCanUnloadNow()
+STDAPI DllCanUnloadNow(void)
 {
     return gModule.DllCanUnloadNow();
 }
