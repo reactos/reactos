@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     sendmail
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     DeskLink implementation
+ * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
 #define COBJMACROS
 #define WIN32_NO_STATUS
 #include <windows.h>
