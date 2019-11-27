@@ -414,6 +414,7 @@ bool CCabinet::SetCabinetReservedFile(char* FileName)
     if (CabinetReservedFileSize == (ULONG)-1)
     {
         DPRINT(MIN_TRACE, ("Cannot read from cabinet reserved file.\n"));
+        fclose(FileHandle);
         return false;
     }
 
@@ -1761,6 +1762,7 @@ bool CCabinet::CreateSimpleCabinet()
                 if(Status != CAB_STATUS_SUCCESS)
                 {
                     DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%u).\n", (UINT)Status));
+                    FindClose(hFind);
                     goto cleanup;
                 }
             }
