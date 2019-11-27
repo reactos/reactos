@@ -23,8 +23,6 @@ CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
                                 POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
-    if (*pdwEffect == DROPEFFECT_NONE)
-        return S_OK;
 
     if (*pdwEffect & DROPEFFECT_LINK)
         *pdwEffect = DROPEFFECT_LINK;
@@ -72,10 +70,8 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     fmt.lindex = -1;
     fmt.tymed = TYMED_HGLOBAL;
 
-    WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];;
+    WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
-
-    CStringW strShortcutTo(MAKEINTRESOURCEW(IDS_SHORTCUT));
 
     CComPtr<IShellFolder> pDesktop;
     HRESULT hr = SHGetDesktopFolder(&pDesktop);
@@ -95,9 +91,9 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_FAIL;
     }
 
+    CStringW strShortcutTo(MAKEINTRESOURCEW(IDS_SHORTCUT));
     LPBYTE pb = reinterpret_cast<LPBYTE>(pida);
     LPCITEMIDLIST pidlParent = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[0]);
-
     for (UINT i = 1; i <= pida->cidl; ++i)
     {
         LPCITEMIDLIST pidlChild = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[i]);
@@ -110,10 +106,10 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         }
 
         StringCbCopyW(szDest, sizeof(szDest), szDir);
+        CStringW strTitle = strShortcutTo;
 
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            CStringW strTitle = strShortcutTo;
             strTitle += PathFindFileNameW(szSrc);
 
             PathAppendW(szDest, strTitle);
@@ -133,7 +129,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             if (FAILED_UNEXPECTEDLY(hr))
                 break;
 
-            CStringW strTitle = strShortcutTo;
             strTitle += szSrc;
 
             PathAppendW(szDest, strTitle);
