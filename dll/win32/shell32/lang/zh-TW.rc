@@ -779,6 +779,7 @@ BEGIN
     IDS_EJECT "退出"
     IDS_DISCONNECT "中斷"
     IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"

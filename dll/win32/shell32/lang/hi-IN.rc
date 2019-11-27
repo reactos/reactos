@@ -770,6 +770,7 @@ BEGIN
     IDS_EJECT "इजेक्ट"
     IDS_DISCONNECT "डिस्कनेक्ट"
     IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
 
     IDS_CREATEFOLDER_DENIED "फ़ोल्डर '%1' बनाने में असमर्थ"
     IDS_CREATEFOLDER_CAPTION "फ़ोल्डर बनाने में असमर्थ"
