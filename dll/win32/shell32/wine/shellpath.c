@@ -2200,7 +2200,9 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     WCHAR szSendToFile[MAX_PATH];
     WCHAR szShell32[MAX_PATH];
     HRESULT hr;
+    HANDLE hFile;
 
+    /* create my documents */
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
 
     StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
@@ -2209,11 +2211,19 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 
     GetSystemDirectoryW(szShell32, ARRAY_SIZE(szShell32));
     PathAppendW(szShell32, L"shell32.dll");
-
     hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL,
                          szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    /* create desklink */
+    StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+    LoadStringW(shell32_hInstance, IDS_DESKLINK, szTarget, _countof(szTarget));
+    StringCbCatW(szTarget, sizeof(szTarget), L".DeskLink");
+    PathAppendW(szSendToFile, szTarget);
+    hFile = CreateFileW(szSendToFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    CloseHandle(hFile);
 
     return hr;
 }
