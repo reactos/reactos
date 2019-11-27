@@ -75,8 +75,7 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];;
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
-    CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
-    strShortcut += L".lnk";
+    CStringW strShortcutTo(MAKEINTRESOURCEW(IDS_SHORTCUT));
 
     CComPtr<IShellFolder> pDesktop;
     HRESULT hr = SHGetDesktopFolder(&pDesktop);
@@ -110,12 +109,16 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             break;
         }
 
+        StringCbCopyW(szDest, sizeof(szDest), szDir);
+
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            StringCbCopyW(szDest, sizeof(szDest), szDir);
-            PathAppendW(szDest, PathFindFileNameW(szSrc));
-            *PathFindExtensionW(szDest) = 0;
-            StringCbCatW(szDest, sizeof(szDest), strShortcut);
+            CStringW strTitle = strShortcutTo;
+            strTitle += PathFindFileNameW(szSrc);
+
+            PathAppendW(szDest, strTitle);
+            PathRemoveExtensionW(szDest);
+            StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
             hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, -1, NULL);
         }
@@ -130,10 +133,12 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             if (FAILED_UNEXPECTEDLY(hr))
                 break;
 
-            StringCbCopyW(szDest, sizeof(szDest), szDir);
-            PathAppendW(szDest, szSrc);
-            *PathFindExtensionW(szDest) = 0;
-            StringCbCatW(szDest, sizeof(szDest), strShortcut);
+            CStringW strTitle = strShortcutTo;
+            strTitle += szSrc;
+
+            PathAppendW(szDest, strTitle);
+            PathRemoveExtensionW(szDest);
+            StringCbCatW(szDest, sizeof(szDest), L".lnk");
 
             hr = CreateShellLinkFromPIDL(szDest, pidl, NULL, NULL, NULL, -1, NULL);
         }
