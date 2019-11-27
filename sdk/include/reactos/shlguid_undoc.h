@@ -206,6 +206,4 @@ DEFINE_GUID(IID_IPinnedList,               0xBBD20037, 0xBC0E, 0x42F1, 0x91, 0x3
 #define SID_IFolderView IID_IFolderView
 #define SID_IShellBrowser IID_IShellBrowser
 
-DEFINE_GUID(LIBID_SendMail, 0xc4404f0c, 0x77ca, 0x4a20, 0x92, 0x09, 0x3f, 0x86, 0x1a, 0x70, 0x68, 0xde);
-
 #endif // __SHLGUID_UNDOC_H

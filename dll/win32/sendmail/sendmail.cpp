@@ -28,7 +28,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 STDAPI DllRegisterServer(void)
 {
     HRESULT hr = gModule.DllRegisterServer(TRUE);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return S_OK;
@@ -37,7 +37,7 @@ STDAPI DllRegisterServer(void)
 STDAPI DllUnregisterServer(void)
 {
     HRESULT hr = gModule.DllUnregisterServer(TRUE);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return S_OK;
@@ -78,10 +78,12 @@ CreateShellLink(
 
     CComPtr<IPersistFile> ppf;
     hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (SUCCEEDED(hr))
-    {
-        hr = ppf->Save(pszLinkPath, TRUE);
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = ppf->Save(pszLinkPath, TRUE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
 }
@@ -92,7 +94,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         sendmail_hInstance = hInstance;
-        gModule.Init(ObjectMap, hInstance, &LIBID_SendMail);
+        gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)

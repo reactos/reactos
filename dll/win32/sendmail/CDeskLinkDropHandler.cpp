@@ -60,7 +60,10 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     TRACE("(%p)\n", this);
 
     if (!pDataObject)
+    {
+        ERR("pDataObject is NULL\n");
         return E_POINTER;
+    }
 
     FORMATETC fmt;
     InitFormatEtc(fmt, CF_HDROP, TYMED_HGLOBAL);
@@ -71,39 +74,36 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
     strShortcut += L".lnk";
 
-    HRESULT hr = E_FAIL;
     STGMEDIUM medium;
-    if (SUCCEEDED(pDataObject->GetData(&fmt, &medium)))
+    HRESULT hr = pDataObject->GetData(&fmt, &medium);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPDROPFILES lpdf = (LPDROPFILES)GlobalLock(medium.hGlobal);
+    if (!lpdf)
     {
-        LPDROPFILES lpdf = (LPDROPFILES) GlobalLock(medium.hGlobal);
-        if (!lpdf)
-        {
-            ERR("Error locking global\n");
-            return E_FAIL;
-        }
+        ERR("Error locking global\n");
+        return E_FAIL;
+    }
 
-        LPBYTE pb = reinterpret_cast<LPBYTE>(lpdf);
-        pb += lpdf->pFiles;
+    LPBYTE pb = reinterpret_cast<LPBYTE>(lpdf);
+    pb += lpdf->pFiles;
 
-        LPWSTR psz = reinterpret_cast<LPWSTR>(pb);
-        while (*psz)
-        {
-            LPWSTR pszFileTitle = PathFindFileNameW(psz);
+    LPWSTR psz = reinterpret_cast<LPWSTR>(pb);
+    while (*psz)
+    {
+        LPWSTR pszFileTitle = PathFindFileNameW(psz);
 
-            StringCbCopyW(szPath, sizeof(szPath), szDir);
-            PathAppendW(szPath, pszFileTitle);
-            *PathFindExtensionW(szPath) = 0;
-            StringCbCatW(szPath, sizeof(szPath), strShortcut);
+        StringCbCopyW(szPath, sizeof(szPath), szDir);
+        PathAppendW(szPath, pszFileTitle);
+        *PathFindExtensionW(szPath) = 0;
+        StringCbCatW(szPath, sizeof(szPath), strShortcut);
 
-            hr = CreateShellLink(szPath, psz, NULL, NULL, NULL, -1, NULL);
-            if (FAILED(hr))
-            {
-                ERR("CreateShellLink failed\n");
-                break;
-            }
+        hr = CreateShellLink(szPath, psz, NULL, NULL, NULL, -1, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            break;
 
-            psz += wcslen(psz) + 1;
-        }
+        psz += wcslen(psz) + 1;
     }
 
     return hr;
@@ -145,7 +145,10 @@ STDMETHODIMP CDeskLinkDropHandler::GetClassID(CLSID * lpClassId)
     TRACE("(%p)\n", this);
 
     if (!lpClassId)
+    {
+        ERR("lpClassId is NULL\n");
         return E_POINTER;
+    }
 
     *lpClassId = CLSID_DeskLinkDropHandler;
 
