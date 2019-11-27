@@ -9,15 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(sendmail);
 
-/* initialisation for FORMATETC */
-#define InitFormatEtc(fe, cf, med) do { \
-    (fe).cfFormat = (cf); \
-    (fe).dwAspect = DVASPECT_CONTENT; \
-    (fe).ptd = NULL; \
-    (fe).tymed = (med); \
-    (fe).lindex = -1; \
-} while(0)
-
 CDeskLinkDropHandler::CDeskLinkDropHandler()
 {
 }
@@ -66,9 +57,13 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     }
 
     FORMATETC fmt;
-    InitFormatEtc(fmt, CF_HDROP, TYMED_HGLOBAL);
+    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    fmt.tymed = TYMED_HGLOBAL;
 
-    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+    WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];;
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
     CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
@@ -79,32 +74,45 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    const DROPFILES *lpdf = reinterpret_cast<LPDROPFILES>(GlobalLock(medium.hGlobal));
-    if (!lpdf)
+    LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
+    if (!pida)
     {
         ERR("Error locking global\n");
         ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
-    const BYTE *pb = reinterpret_cast<const BYTE *>(lpdf);
-    pb += lpdf->pFiles;
+    LPBYTE pb = reinterpret_cast<LPBYTE>(pida);
+    LPCITEMIDLIST pidlParent = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[0]);
 
-    LPCWSTR psz = reinterpret_cast<LPCWSTR>(pb);
-    while (*psz)
+    for (UINT i = 1; i <= pida->cidl; ++i)
     {
-        LPWSTR pszFileTitle = PathFindFileNameW(psz);
+        LPCITEMIDLIST pidlChild = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[i]);
 
-        StringCbCopyW(szPath, sizeof(szPath), szDir);
-        PathAppendW(szPath, pszFileTitle);
-        *PathFindExtensionW(szPath) = 0;
-        StringCbCatW(szPath, sizeof(szPath), strShortcut);
-
-        hr = CreateShellLink(szPath, psz, NULL, NULL, NULL, -1, NULL);
-        if (FAILED_UNEXPECTEDLY(hr))
+        CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
+        if (!pidl)
+        {
+            ERR("Out of memory\n");
             break;
+        }
 
-        psz += wcslen(psz) + 1;
+        if (SHGetPathFromIDListW(pidl, szSrc))
+        {
+            LPWSTR pchFileTitle = PathFindFileNameW(szSrc);
+
+            StringCbCopyW(szDest, sizeof(szDest), szDir);
+            PathAppendW(szDest, pchFileTitle);
+            *PathFindExtensionW(szDest) = 0;
+            StringCbCatW(szDest, sizeof(szDest), strShortcut);
+
+            hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, -1, NULL);
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+        }
+        else
+        {
+            // FIXME
+        }
     }
 
     GlobalUnlock(medium.hGlobal);
