@@ -37,3 +37,13 @@ CreateShellLink(
     LPCWSTR pszIconPath OPTIONAL,
     INT iIconNr OPTIONAL,
     LPCWSTR pszComment OPTIONAL);
+
+HRESULT
+CreateShellLinkFromPIDL(
+    LPCWSTR pszLinkPath,
+    LPCITEMIDLIST pidl,
+    LPCWSTR pszArg OPTIONAL,
+    LPCWSTR pszDir OPTIONAL,
+    LPCWSTR pszIconPath OPTIONAL,
+    INT iIconNr OPTIONAL,
+    LPCWSTR pszComment OPTIONAL);

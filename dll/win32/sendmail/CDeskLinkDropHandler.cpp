@@ -26,7 +26,11 @@ CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
     if (*pdwEffect == DROPEFFECT_NONE)
         return S_OK;
 
-    *pdwEffect = DROPEFFECT_COPY;
+    if (*pdwEffect & DROPEFFECT_LINK)
+        *pdwEffect = DROPEFFECT_LINK;
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
     return S_OK;
 }
 
@@ -34,7 +38,12 @@ STDMETHODIMP
 CDeskLinkDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
-    *pdwEffect = DROPEFFECT_COPY;
+
+    if (*pdwEffect & DROPEFFECT_LINK)
+        *pdwEffect = DROPEFFECT_LINK;
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
     return S_OK;
 }
 
@@ -69,8 +78,13 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     CStringW strShortcut(MAKEINTRESOURCEW(IDS_SHORTCUT));
     strShortcut += L".lnk";
 
+    CComPtr<IShellFolder> pDesktop;
+    HRESULT hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     STGMEDIUM medium;
-    HRESULT hr = pDataObject->GetData(&fmt, &medium);
+    hr = pDataObject->GetData(&fmt, &medium);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -98,21 +112,34 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
         if (SHGetPathFromIDListW(pidl, szSrc))
         {
-            LPWSTR pchFileTitle = PathFindFileNameW(szSrc);
-
             StringCbCopyW(szDest, sizeof(szDest), szDir);
-            PathAppendW(szDest, pchFileTitle);
+            PathAppendW(szDest, PathFindFileNameW(szSrc));
             *PathFindExtensionW(szDest) = 0;
             StringCbCatW(szDest, sizeof(szDest), strShortcut);
 
             hr = CreateShellLink(szDest, szSrc, NULL, NULL, NULL, -1, NULL);
-            if (FAILED_UNEXPECTEDLY(hr))
-                break;
         }
         else
         {
-            // FIXME
+            STRRET strret;
+            hr = pDesktop->GetDisplayNameOf(pidl, SHGDN_INFOLDER, &strret);
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+
+            hr = StrRetToBufW(&strret, pidl, szSrc, _countof(szSrc));
+            if (FAILED_UNEXPECTEDLY(hr))
+                break;
+
+            StringCbCopyW(szDest, sizeof(szDest), szDir);
+            PathAppendW(szDest, szSrc);
+            *PathFindExtensionW(szDest) = 0;
+            StringCbCatW(szDest, sizeof(szDest), strShortcut);
+
+            hr = CreateShellLinkFromPIDL(szDest, pidl, NULL, NULL, NULL, -1, NULL);
         }
+
+        if (FAILED_UNEXPECTEDLY(hr))
+            break;
     }
 
     GlobalUnlock(medium.hGlobal);
