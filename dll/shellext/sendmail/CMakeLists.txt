@@ -1,5 +1,5 @@
 set_cpp(WITH_RUNTIME)
-spec2def(sendmail.dll sendmail.spec ADD_IMPORTLIB)
+spec2def(sendmail.dll sendmail.spec)
 
 add_definitions(
     -D_WINE
