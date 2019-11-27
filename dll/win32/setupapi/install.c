@@ -1110,8 +1110,11 @@ profile_items_callback(
                             if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
                                 wcscat(FullLinkName, BackSlash);
                         }
-                        wcscat(FullLinkName, LinkName);
-                        wcscat(FullLinkName, DotLnk);
+                        if (LinkName)
+                        {
+                            wcscat(FullLinkName, LinkName);
+                            wcscat(FullLinkName, DotLnk);
+                        }
                         hr = IPersistFile_Save(ppf, FullLinkName, TRUE);
                     }
                     else
