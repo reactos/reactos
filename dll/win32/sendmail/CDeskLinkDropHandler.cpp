@@ -79,17 +79,18 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    LPDROPFILES lpdf = (LPDROPFILES)GlobalLock(medium.hGlobal);
+    const DROPFILES *lpdf = reinterpret_cast<LPDROPFILES>(GlobalLock(medium.hGlobal));
     if (!lpdf)
     {
         ERR("Error locking global\n");
+        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
-    LPBYTE pb = reinterpret_cast<LPBYTE>(lpdf);
+    const BYTE *pb = reinterpret_cast<const BYTE *>(lpdf);
     pb += lpdf->pFiles;
 
-    LPWSTR psz = reinterpret_cast<LPWSTR>(pb);
+    LPCWSTR psz = reinterpret_cast<LPCWSTR>(pb);
     while (*psz)
     {
         LPWSTR pszFileTitle = PathFindFileNameW(psz);
@@ -105,6 +106,9 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
 
         psz += wcslen(psz) + 1;
     }
+
+    GlobalUnlock(medium.hGlobal);
+    ReleaseStgMedium(&medium);
 
     return hr;
 }
