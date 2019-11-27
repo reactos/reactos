@@ -26,8 +26,6 @@
 #include "sendmail_version.h"
 #include "resource.h"
 
-extern HINSTANCE sendmail_hInstance;
-
 HRESULT
 CreateShellLink(
     LPCWSTR pszLinkPath,

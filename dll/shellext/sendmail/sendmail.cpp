@@ -14,7 +14,6 @@ BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
 CComModule gModule;
-HINSTANCE sendmail_hInstance = NULL;
 
 STDAPI DllCanUnloadNow(void)
 {
@@ -115,14 +114,12 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
     if (dwReason == DLL_PROCESS_ATTACH)
     {
-        sendmail_hInstance = hInstance;
         gModule.Init(ObjectMap, hInstance, NULL);
         DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
         gModule.Term();
-        sendmail_hInstance = NULL;
     }
     return TRUE;
 }
