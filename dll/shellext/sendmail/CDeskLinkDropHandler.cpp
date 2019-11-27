@@ -26,10 +26,7 @@ CDeskLinkDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
 {
     TRACE("(%p)\n", this);
 
-    if (*pdwEffect & DROPEFFECT_LINK)
-        *pdwEffect = DROPEFFECT_LINK;
-    else
-        *pdwEffect = DROPEFFECT_NONE;
+    *pdwEffect &= DROPEFFECT_LINK;
 
     return S_OK;
 }
@@ -39,10 +36,7 @@ CDeskLinkDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)\n", this);
 
-    if (*pdwEffect & DROPEFFECT_LINK)
-        *pdwEffect = DROPEFFECT_LINK;
-    else
-        *pdwEffect = DROPEFFECT_NONE;
+    *pdwEffect &= DROPEFFECT_LINK;
 
     return S_OK;
 }
