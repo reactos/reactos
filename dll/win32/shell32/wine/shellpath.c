@@ -901,7 +901,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Cookies,
         CSIDL_Type_User,
         CookiesW,
-        MAKEINTRESOURCEW(IDS_COOKIES)
+        MAKEINTRESOURCEW(IDS_COOKIES),
     },
     { /* 0x22 - CSIDL_HISTORY */
         &FOLDERID_History,
@@ -974,7 +974,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_ProgramFilesCommonX86,
         CSIDL_Type_CurrVer,
         CommonFilesDirX86W,
-        Program_Files_x86_Common_FilesW
+        Program_Files_x86_Common_FilesW,
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2d - CSIDL_COMMON_TEMPLATES */
         &FOLDERID_CommonTemplates,
@@ -2366,8 +2367,10 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
 
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
 
+end:
     /* create desktop.ini for custom icon */
-    if (CSIDL_Data[folder].nShell32IconIndex)
+    if ((nFolder & CSIDL_FLAG_CREATE) &&
+        CSIDL_Data[folder].nShell32IconIndex)
     {
         static const WCHAR s_szFormat[] = L"%%SystemRoot%%\\system32\\shell32.dll,%d";
         WCHAR szIconLocation[MAX_PATH];
@@ -2397,7 +2400,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         SetFileAttributesW(szBuildPath, dwAttributes);
     }
 
-end:
     if (folder == CSIDL_SENDTO)
     {
         if (PathIsDirectoryEmptyW(szBuildPath))
