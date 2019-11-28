@@ -919,7 +919,7 @@ HRESULT CDefView::FillList()
     SHGetValueW(HKEY_CURRENT_USER,
                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
                 L"Hidden", NULL, &dwValue, &cbValue);
-    if (dwValue == 0)
+    if (dwValue == 1)
     {
         dFlags |= SHCONTF_INCLUDEHIDDEN;
         m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
