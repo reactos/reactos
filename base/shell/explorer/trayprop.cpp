@@ -46,7 +46,7 @@ static void SetBitmap(HWND hwnd, HBITMAP* hbmp, UINT uImageId)
 
 class CTaskBarSettingsPage : public CPropertyPageImpl<CTaskBarSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpTaskbar;
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
@@ -85,7 +85,7 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
@@ -107,7 +107,7 @@ private:
             uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
         else if (!bHideInactive && !bShowClock)
             uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
@@ -283,13 +283,13 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
             RECT rcWork;
             hIcon = LoadIconW(hExplorerInstance, MAKEINTRESOURCEW(IDI_STARTMENU));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
- 
-            GetWindowRect(hwndDlg,&pos);
+
+            GetWindowRect(hwndDlg, &pos);
             SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0);
-            if (pos.bottom > rcWork.bottom) 
-                pos.top -= (pos.bottom - rcWork.bottom + 2);
+            if (pos.bottom > rcWork.bottom)
+                pos.top -= (pos.bottom - rcWork.bottom);
             if (pos.right > rcWork.right)
-                pos.left -= (pos.right - rcWork.right + 2);
+                pos.left -= (pos.right - rcWork.right);
             SetWindowPos(hwndDlg, 0, pos.left, pos.top, 0, 0, SWP_NOSIZE);
             break;
         }
