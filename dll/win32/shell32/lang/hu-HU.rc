@@ -817,7 +817,7 @@ BEGIN
     IDS_FAVORITES "Kedvencek"
     IDS_STARTUP "Start Menu\\Programs\\Automatikus indítás" /* MS style: Indítópult */
     IDS_RECENT "Recent"
-    IDS_SENDTO "Se&nd To"
+    IDS_SENDTO "Send To"
     IDS_STARTMENU "Start Menu"
     IDS_MYMUSIC "Zenék"
     IDS_MYVIDEO "Videók"

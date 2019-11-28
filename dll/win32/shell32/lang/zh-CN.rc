@@ -827,7 +827,7 @@ BEGIN
     IDS_FAVORITES "收藏夹"
     IDS_STARTUP "「开始」菜单\\程序\\启动"
     IDS_RECENT "Recent"
-    IDS_SENDTO "Se&nd To"
+    IDS_SENDTO "Send To"
     IDS_STARTMENU "「开始」菜单"
     IDS_MYMUSIC "我的音乐"
     IDS_MYVIDEO "我的视频"
