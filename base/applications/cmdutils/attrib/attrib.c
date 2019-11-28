@@ -145,9 +145,6 @@ PrintAttribute(
 
     do
     {
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            continue;
-
         wcscpy(pszFileName, findData.cFileName);
 
         ConPrintf(StdOut,
@@ -229,9 +226,6 @@ ChangeAttribute(
 
     do
     {
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            continue;
-
         wcscpy(pszFileName, findData.cFileName);
 
         dwAttribute = GetFileAttributes (szFullName);
