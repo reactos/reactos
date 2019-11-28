@@ -768,6 +768,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"

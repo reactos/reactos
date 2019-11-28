@@ -771,6 +771,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"
@@ -817,7 +818,7 @@ BEGIN
     IDS_FAVORITES "Kedvencek"
     IDS_STARTUP "Start Menu\\Programs\\Automatikus indítás" /* MS style: Indítópult */
     IDS_RECENT "Recent"
-    IDS_SENDTO "Send To"
+    IDS_SENDTO "SendTo"
     IDS_STARTMENU "Start Menu"
     IDS_MYMUSIC "Zenék"
     IDS_MYVIDEO "Videók"

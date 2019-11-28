@@ -780,6 +780,7 @@ BEGIN
     IDS_DISCONNECT "中斷"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
@@ -828,7 +829,7 @@ BEGIN
     IDS_FAVORITES "我的最愛"
     IDS_STARTUP "「開始」功能表\\程式\\啟動"
     IDS_RECENT "Recent"
-    IDS_SENDTO "Send To"
+    IDS_SENDTO "SendTo"
     IDS_STARTMENU "「開始」功能表"
     IDS_MYMUSIC "我的音樂"
     IDS_MYVIDEO "我的影片"

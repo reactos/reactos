@@ -303,7 +303,7 @@ CSendToMenu::QueryContextMenu(HMENU hMenu,
 
     UINT cItems = InsertSendToItems(hSubMenu, idCmdFirst, 0);
 
-    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO));
+    CStringW strSendTo(MAKEINTRESOURCEW(IDS_SENDTO_MENU));
 
     MENUITEMINFOW mii = { sizeof(mii) };
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE | MIIM_SUBMENU;
