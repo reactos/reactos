@@ -2368,6 +2368,11 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
 
 end:
+    if ((nFolder & CSIDL_FLAG_CREATE) && folder == CSIDL_SENDTO)
+    {
+        DoCreateSendToFiles(szBuildPath);
+    }
+
     /* create desktop.ini for custom icon */
     if ((nFolder & CSIDL_FLAG_CREATE) &&
         CSIDL_Data[folder].nShell32IconIndex)
@@ -2400,11 +2405,6 @@ end:
         SetFileAttributesW(szBuildPath, dwAttributes);
     }
 
-    if (folder == CSIDL_SENDTO)
-    {
-        if (PathIsDirectoryEmptyW(szBuildPath))
-            DoCreateSendToFiles(szBuildPath);
-    }
     TRACE("returning 0x%08x (final path is %s)\n", hr, debugstr_w(szBuildPath));
     return hr;
 }
