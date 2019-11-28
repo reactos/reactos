@@ -2481,9 +2481,13 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
             szValueName = &buffer[0];
         }
 
-        if (RegQueryValueExW(hUserKey, szValueName, NULL,
-         &dwType, (LPBYTE)path, &dwPathLen) || (dwType != REG_SZ &&
-         dwType != REG_EXPAND_SZ))
+        if (!RegQueryValueExW(hUserKey, szValueName, NULL,
+                             &dwType, (LPBYTE)path, &dwPathLen))
+        {
+            hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
+                                  hToken, SHGFP_TYPE_DEFAULT, path);
+        }
+        else if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
         {
             *path = '\0';
             if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
