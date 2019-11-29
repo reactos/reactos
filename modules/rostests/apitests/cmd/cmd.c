@@ -16,6 +16,10 @@ typedef struct TEST_ENTRY
     const char *cmdline;
     BOOL bStdOutput;
     BOOL bStdError;
+    const char *OutputContains;
+    const char *ErrorContains;
+    const char *OutputNotContains;
+    const char *ErrorNotContains;
 } TEST_ENTRY;
 
 static const TEST_ENTRY s_exit_entries[] =
@@ -31,19 +35,20 @@ static const TEST_ENTRY s_exit_entries[] =
 
 static const TEST_ENTRY s_echo_entries[] =
 {
-    { __LINE__, 0,      "cmd /c echo", TRUE, FALSE },
-    { __LINE__, 0,      "cmd /c echo.", TRUE, FALSE },
+    { __LINE__, 0,      "cmd /c echo", TRUE, FALSE, NULL, "ECHO" },
+    { __LINE__, 0,      "cmd /c echo.", TRUE, FALSE, "\r\n" },
+    { __LINE__, 0,      "cmd /c echo ABC", TRUE, FALSE, "ABC\r\n" },
 };
 
 static const TEST_ENTRY s_cd_entries[] =
 {
-    { __LINE__, 0,      "cmd /c cd \"C:\\ ", },
-    { __LINE__, 0,      "cmd /c cd C:/", },
+    { __LINE__, 0,      "cmd /c cd \"C:\\ " },
+    { __LINE__, 0,      "cmd /c cd C:/" },
     { __LINE__, 0,      "cmd /c cd \"\"", TRUE, FALSE },
     { __LINE__, 0,      "cmd /c cd", TRUE, FALSE },
     { __LINE__, 1234,   "cmd /c cd C:\\Program Files && exit 1234" },
-    { __LINE__, 1234,   "cmd /c cd \"C:\\ \" && exit 1234", },
-    { __LINE__, 1234,   "cmd /c cd \"C:\\Program Files\" && exit 1234", },
+    { __LINE__, 1234,   "cmd /c cd \"C:\\ \" && exit 1234" },
+    { __LINE__, 1234,   "cmd /c cd \"C:\\Program Files\" && exit 1234" },
     { __LINE__, 1234,   "cmd /c cd \"\" && exit 1234", TRUE, FALSE },
     { __LINE__, 1234,   "cmd /c cd \\ && exit 1234" },
 };
@@ -117,6 +122,169 @@ static const TEST_ENTRY s_pushd_entries[] =
     { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\Program Files\\\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\\" && popd && exit 1234" },
+};
+
+static const TEST_ENTRY s_attrib_entries[] =
+{
+    /* invalid-path.txt */
+    { __LINE__, 0,      "attrib invalid-path.txt", TRUE, FALSE },
+    { __LINE__, 0,      "attrib +H invalid-path.txt", TRUE, FALSE },
+    { __LINE__, 0,      "attrib -H invalid-path.txt", TRUE, FALSE },
+
+    /* attr-test.txt */
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+    { __LINE__, 0,      "cmd /c copy NUL attr-test.txt ", TRUE, FALSE },
+    { __LINE__, 0,      "attrib attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib -H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-te*.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib -H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+
+    /* /S attr-test.txt */
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+    { __LINE__, 0,      "cmd /c copy NUL attr-test.txt ", TRUE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+
+    /* /S /D attr-test.txt */
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+    { __LINE__, 0,      "cmd /c copy NUL attr-test.txt ", TRUE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-te*.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-te*.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
+
+    /* attr-dir, attr-dir/test.txt */
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/test.txt attrib -H attr-dir/test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/test.txt del /Q attr-dir/test.txt" },
+    { __LINE__, 1,      "cmd /c copy NUL attr-dir/test.txt ", TRUE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir/test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-dir/test.txt", TRUE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir/test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir/test.txt", TRUE, FALSE, "test.txt" },
+    { __LINE__, 0,      "attrib attr-dir/test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-dir", FALSE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib attr-dir", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib attr-dir/test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir", FALSE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib attr-dir", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/test.txt attrib -H attr-dir/test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/test.txt del /Q attr-dir/test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+
+    /* attr-dir, attr-dir\\dir1 */
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir\\dir1 echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-d*", TRUE, FALSE, "attr-d*" },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-d*", TRUE, FALSE, "attr-d*" },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib +H attr-dir\\d*", TRUE, FALSE, "attr-dir\\d*" },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir\\d*", TRUE, FALSE, "attr-dir\\d*" },
+    { __LINE__, 0,      "attrib attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib -H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib -H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+
+    /* /S attr-dir, attr-dir\\dir1 */
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-dir", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir\\dir1 echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-dir\\dir1", TRUE, FALSE, "attr-dir\\dir1", },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, "attr-dir\\dir1" },
+    { __LINE__, 0,      "attrib /S -H attr-dir\\dir1", TRUE, FALSE, "attr-dir\\dir1" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-dir", TRUE, FALSE, "attr-dir" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-dir", TRUE, FALSE, "attr-dir" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-d*", TRUE, FALSE, "attr-d*" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-d*", TRUE, FALSE, "attr-d*" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-dir\\d*", TRUE, FALSE, "attr-dir\\d*" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-dir\\d*", TRUE, FALSE, "attr-dir\\d*" },
+    { __LINE__, 0,      "attrib /S attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-dir\\dir1", TRUE, FALSE, "attr-dir\\dir1" },
+    { __LINE__, 0,      "attrib /S -H attr-dir", TRUE, FALSE, "attr-dir" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+
+    /* /S /D attr-dir, attr-dir\\dir1 */
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir\\dir1 echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-d*", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-d*", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D +H attr-dir\\d*", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-dir\\d*", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir\\dir1", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S /D -H attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D -H attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
 };
 
 static BOOL MyDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
@@ -207,9 +375,9 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     DWORD dwExitCode, dwWait;
     HANDLE hOutputRead = NULL;
     HANDLE hErrorRead = NULL;
-    BYTE b;
     DWORD dwRead;
     BOOL bStdOutput, bStdError;
+    CHAR szOut[512], szErr[512];
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
@@ -238,9 +406,14 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
         dwExitCode = 8888;
     }
 
-    PeekNamedPipe(hOutputRead, &b, 1, &dwRead, NULL, NULL);
+    ZeroMemory(szOut, sizeof(szOut));
+    PeekNamedPipe(hOutputRead, szOut, ARRAYSIZE(szOut), &dwRead, NULL, NULL);
+    szOut[ARRAYSIZE(szOut) - 1] = 0;
     bStdOutput = dwRead != 0;
-    PeekNamedPipe(hErrorRead, &b, 1, &dwRead, NULL, NULL);
+
+    ZeroMemory(szErr, sizeof(szErr));
+    PeekNamedPipe(hErrorRead, szErr, ARRAYSIZE(szErr), &dwRead, NULL, NULL);
+    szErr[ARRAYSIZE(szErr) - 1] = 0;
     bStdError = dwRead != 0;
 
     if (si.hStdInput)
@@ -261,6 +434,34 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     ok(pEntry->dwExitCode == dwExitCode,
        "Line %u: dwExitCode %ld vs %ld\n",
        pEntry->line, pEntry->dwExitCode, dwExitCode);
+
+    if (pEntry->OutputContains)
+    {
+        ok(strstr(szOut, pEntry->OutputContains) != NULL,
+           "Line %u: szOut was '%s'\n",
+           pEntry->line, szOut);
+    }
+
+    if (pEntry->ErrorContains)
+    {
+        ok(strstr(szErr, pEntry->ErrorContains) != NULL,
+           "Line %u: szErr was '%s'\n",
+           pEntry->line, szErr);
+    }
+
+    if (pEntry->OutputNotContains)
+    {
+        ok(strstr(szOut, pEntry->OutputNotContains) == NULL,
+           "Line %u: szOut was '%s'\n",
+           pEntry->line, szOut);
+    }
+
+    if (pEntry->ErrorNotContains)
+    {
+        ok(strstr(szErr, pEntry->ErrorNotContains) == NULL,
+           "Line %u: szErr was '%s'\n",
+           pEntry->line, szErr);
+    }
 }
 
 START_TEST(exit)
@@ -296,5 +497,14 @@ START_TEST(pushd)
     for (i = 0; i < ARRAYSIZE(s_pushd_entries); ++i)
     {
         DoTestEntry(&s_pushd_entries[i]);
+    }
+}
+
+START_TEST(attrib)
+{
+    SIZE_T i;
+    for (i = 0; i < ARRAYSIZE(s_attrib_entries); ++i)
+    {
+        DoTestEntry(&s_attrib_entries[i]);
     }
 }
