@@ -391,10 +391,16 @@ HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR lpszPath, DWORD dwFlags)
     {
         BOOL findFinished = FALSE;
 
+#define HIDDEN FILE_ATTRIBUTE_HIDDEN
+#define SUPER_HIDDEN (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
+
         do
         {
-            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-             || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
+            if ((stffile.dwFileAttributes & HIDDEN) == 0 ||
+                ((dwFlags & SHCONTF_INCLUDEHIDDEN) &&
+                 (stffile.dwFileAttributes & SUPER_HIDDEN) == HIDDEN) ||
+                ((dwFlags & SHCONTF_INCLUDESUPERHIDDEN) &&
+                 (stffile.dwFileAttributes & SUPER_HIDDEN) == SUPER_HIDDEN))
             {
                 LPITEMIDLIST pidl = NULL;
 

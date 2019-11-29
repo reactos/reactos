@@ -908,29 +908,32 @@ HRESULT CDefView::FillList()
     DWORD         dwFetched;
     HRESULT       hRes;
     HDPA          hdpa;
-    HKEY          hKey;
     DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
+    DWORD dwValue, cbValue;
 
     TRACE("%p\n", this);
 
     /* determine if there is a setting to show all the hidden files/folders */
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    dwValue = 1;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"Hidden", NULL, &dwValue, &cbValue);
+    if (dwValue == 1)
     {
-        DWORD dataLength, flagVal;
+        dFlags |= SHCONTF_INCLUDEHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
+    }
 
-        dataLength = sizeof(flagVal);
-        if (RegQueryValueExW(hKey, L"Hidden", NULL, NULL, (LPBYTE)&flagVal, &dataLength) == ERROR_SUCCESS)
-        {
-            /* if the value is 1, then show all hidden files/folders */
-            if (flagVal == 1)
-            {
-                dFlags |= SHCONTF_INCLUDEHIDDEN;
-                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
-            }
-        }
-
-        /* close the key */
-        RegCloseKey(hKey);
+    dwValue = 0;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"ShowSuperHidden", NULL, &dwValue, &cbValue);
+    if (dwValue)
+    {
+        dFlags |= SHCONTF_INCLUDESUPERHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
     }
 
     /* get the itemlist from the shfolder */
