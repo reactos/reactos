@@ -283,7 +283,6 @@ int wmain(int argc, WCHAR *argv[])
     DWORD  dwAttrib = 0;
     DWORD  dwMask = 0;
     LPWSTR p;
-    WCHAR  szText[MAX_PATH];
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
