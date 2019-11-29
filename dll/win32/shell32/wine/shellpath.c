@@ -2492,10 +2492,10 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
         {
             *path = '\0';
             if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
-                _SHGetUserProfilePath(hToken, SHGFP_TYPE_DEFAULT, folders[i],
+                _SHGetUserProfilePath(hToken, SHGFP_TYPE_CURRENT, folders[i],
                  path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
-                _SHGetAllUsersProfilePath(SHGFP_TYPE_DEFAULT, folders[i], path);
+                _SHGetAllUsersProfilePath(SHGFP_TYPE_CURRENT, folders[i], path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_WindowsPath)
             {
                 GetWindowsDirectoryW(path, MAX_PATH);
