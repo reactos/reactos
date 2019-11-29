@@ -199,23 +199,29 @@ ChangeAttribute(
         {
             dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
             SetFileAttributes(szFullName, dwAttribute);
-            if (!bRecurse && !bDirectories)
+            if (bRecurse)
             {
-                ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                bRecurse, FALSE);
-            }
-            if (bRecurse && !bDirectories)
-            {
-                if (!ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                     bRecurse, FALSE))
+                if (bDirectories)
                 {
-                    return FALSE;
+                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                    bRecurse, bDirectories);
+                }
+                else
+                {
+                    if (!ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                         bRecurse, FALSE))
+                    {
+                        return FALSE;
+                    }
                 }
             }
-            if (bRecurse && bDirectories)
+            else
             {
-                ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                bRecurse, bDirectories);
+                if (!bDirectories)
+                {
+                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                    bRecurse, FALSE);
+                }
             }
             return TRUE;
         }
