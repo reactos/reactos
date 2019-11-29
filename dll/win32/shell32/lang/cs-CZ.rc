@@ -777,6 +777,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
 
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"
@@ -823,7 +824,7 @@ BEGIN
     IDS_FAVORITES "Oblíbené"
     IDS_STARTUP "Nabídka Start\\Programy\\Po spuštění"
     IDS_RECENT "Poslední dokumenty"
-    IDS_SENDTO "Se&nd To"
+    IDS_SENDTO "SendTo"
     IDS_STARTMENU "Nabídka Start"
     IDS_MYMUSIC "Hudba"
     IDS_MYVIDEO "Filmy"

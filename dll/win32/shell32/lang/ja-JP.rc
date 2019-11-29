@@ -768,6 +768,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
@@ -814,7 +815,7 @@ BEGIN
     IDS_FAVORITES "お気に入り"
     IDS_STARTUP "スタート メニュー\\プログラム\\スタートアップ"
     IDS_RECENT "最近使ったドキュメント"
-    IDS_SENDTO "送る(&N)"
+    IDS_SENDTO "送る"
     IDS_STARTMENU "スタート メニュー"
     IDS_MYMUSIC "マイ ミュージック"
     IDS_MYVIDEO "マイ ビデオ"
