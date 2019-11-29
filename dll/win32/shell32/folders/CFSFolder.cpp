@@ -396,7 +396,7 @@ HRESULT WINAPI CFileSysEnum::Initialize(LPWSTR lpszPath, DWORD dwFlags)
 
         do
         {
-            if ((stffile.dwFileAttributes & SUPER_HIDDEN) == 0 ||
+            if ((stffile.dwFileAttributes & HIDDEN) == 0 ||
                 ((dwFlags & SHCONTF_INCLUDEHIDDEN) &&
                  (stffile.dwFileAttributes & SUPER_HIDDEN) == HIDDEN) ||
                 ((dwFlags & SHCONTF_INCLUDESUPERHIDDEN) &&
