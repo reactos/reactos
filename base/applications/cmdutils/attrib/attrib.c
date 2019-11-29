@@ -197,8 +197,14 @@ ChangeAttribute(
         FindClose(hFind);
         if (dwAttribute & FILE_ATTRIBUTE_DIRECTORY)
         {
-            return ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                   bRecurse, FALSE);
+            dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
+            SetFileAttributes(szFullName, dwAttribute);
+            if (bRecurse)
+            {
+                ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                bRecurse, FALSE);
+            }
+            return TRUE;
         }
         else
         {
