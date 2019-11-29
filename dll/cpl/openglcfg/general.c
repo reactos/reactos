@@ -48,14 +48,14 @@ static VOID InitSettings(HWND hWndDlg)
     if (dwType == REG_SZ)
     {
         DWORD ret;
-        INT iKey;
+        DWORD iKey;
 
         if (wcsncmp(szBultin, szDriver, MAX_KEY_LENGTH) == 0)
             SendDlgItemMessageW(hWndDlg, IDC_RENDERER, CB_SETCURSEL, RENDERER_RSWR, 0);
 
         ret = RegQueryInfoKeyW(hKeyDrivers, NULL, NULL, NULL, &dwNumDrivers, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-        if (ret != ERROR_SUCCESS || dwNumDrivers <= 0)
+        if (ret != ERROR_SUCCESS || dwNumDrivers == 0)
         {
             RegCloseKey(hKeyDrivers);
             RegCloseKey(hKeyRenderer);
@@ -139,7 +139,7 @@ static VOID SaveSettings(HWND hWndDlg)
         {
             WCHAR szBuffer[MAX_KEY_LENGTH];
             LoadString(hApplet, IDS_RENDERER_RSWR, (LPTSTR)szBuffer, 127);
-            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+            RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)szBuffer, (DWORD)((wcslen(szBuffer) + 1) * sizeof(WCHAR)));
             break;
         }
 
@@ -148,8 +148,8 @@ static VOID SaveSettings(HWND hWndDlg)
             /* Adjustment for DEFAULT and RSWR renderers */
             iSel -= 2;
 
-            if (iSel >= 0 && iSel <= dwNumDrivers)
-                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR));
+            if (iSel >= 0 && iSel < dwNumDrivers)
+                RegSetValueExW(hKeyRenderer, L"", 0, REG_SZ, (PBYTE)pOglDrivers[iSel], (DWORD)((wcslen(pOglDrivers[iSel]) + 1) * sizeof(WCHAR)));
 
             break;
         }
@@ -192,8 +192,9 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         case WM_DESTROY:
             if (pOglDrivers != NULL)
             {
-                INT iKey;
-                for (iKey = 0; iKey <= dwNumDrivers; iKey++)
+                DWORD iKey;
+
+                for (iKey = 0; iKey < dwNumDrivers; ++iKey)
                     HeapFree(GetProcessHeap(), 0, pOglDrivers[iKey]);
 
                 HeapFree(GetProcessHeap(), 0, pOglDrivers);
