@@ -147,6 +147,9 @@ VOID
 WINAPI
 GetSystemTimePreciseAsFileTime(OUT PFILETIME lpFileTime)
 {
+    /* HACK: Call GetSystemTimeAsFileTime() for the time being */
+    GetSystemTimeAsFileTime(lpFileTime);
+
     STUB;
 }
 
