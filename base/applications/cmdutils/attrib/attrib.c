@@ -215,6 +215,9 @@ ChangeAttribute(
     }
     else
     {
+        if ((dwAttribute & FILE_ATTRIBUTE_DIRECTORY) && (!bRecurse || !bDirectories))
+            return FALSE;
+
         do
         {
             dwAttribute = findData.dwFileAttributes;
