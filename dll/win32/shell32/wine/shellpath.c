@@ -901,7 +901,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Cookies,
         CSIDL_Type_User,
         CookiesW,
-        MAKEINTRESOURCEW(IDS_COOKIES),
+        MAKEINTRESOURCEW(IDS_COOKIES)
     },
     { /* 0x22 - CSIDL_HISTORY */
         &FOLDERID_History,
@@ -2482,7 +2482,7 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
         }
 
         if (!RegQueryValueExW(hUserKey, szValueName, NULL,
-                             &dwType, (LPBYTE)path, &dwPathLen) &&
+                              &dwType, (LPBYTE)path, &dwPathLen) &&
             (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
         {
             hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
