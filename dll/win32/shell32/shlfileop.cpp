@@ -1273,6 +1273,19 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     else
         lstrcpyW(szTo, szDestPath);
 
+#ifdef __REACTOS__
+    if (PathFileExistsW(szTo))
+    {
+        if (op->req->fFlags & FOF_RENAMEONCOLLISION)
+        {
+            CStringW newPath = try_find_new_name(szTo);
+            if (!newPath.IsEmpty())
+            {
+                StringCchCopyW(szTo, _countof(szTo), newPath);
+            }
+        }
+        else if (!(op->req->fFlags & FOF_NOCONFIRMATION))
+#else
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
         CStringW newPath;
@@ -1281,6 +1294,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
             StringCchCopyW(szTo, _countof(szTo), newPath);
         }
         else
+#endif
         {
             if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
             {
@@ -1311,6 +1325,23 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
 
 static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
 {
+#ifdef __REACTOS__
+    if (PathFileExistsW(szTo))
+    {
+        if (op->req->fFlags & FOF_RENAMEONCOLLISION)
+        {
+            CStringW newPath = try_find_new_name(szTo);
+            if (!newPath.IsEmpty())
+            {
+                return SHNotifyCopyFileW(op, szFrom, newPath, FALSE) == 0;
+            }
+        }
+        else if (!(op->req->fFlags & FOF_NOCONFIRMATION))
+        {
+            if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
+                return FALSE;
+        }
+#else
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
         CStringW newPath;
@@ -1321,6 +1352,7 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
 
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
             return FALSE;
+#endif
     }
 
     return SHNotifyCopyFileW(op, szFrom, szTo, FALSE) == 0;
@@ -1768,12 +1800,111 @@ static void check_flags(FILEOP_FLAGS fFlags)
 {
     WORD wUnsupportedFlags = FOF_NO_CONNECTED_ELEMENTS |
         FOF_NOCOPYSECURITYATTRIBS | FOF_NORECURSEREPARSE |
+#ifdef __REACTOS__
+        FOF_WANTMAPPINGHANDLE;
+#else
         FOF_RENAMEONCOLLISION | FOF_WANTMAPPINGHANDLE;
+#endif
 
     if (fFlags & wUnsupportedFlags)
         FIXME("Unsupported flags: %04x\n", fFlags);
 }
 
+#ifdef __REACTOS__
+static DWORD
+validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
+{
+    DWORD i, k, dwNumDest;
+    WCHAR szFrom[MAX_PATH], szTo[MAX_PATH], szText[MAX_PATH];
+    const FILE_ENTRY *feFrom;
+    const FILE_ENTRY *feTo;
+    UINT wFunc = lpFileOp->wFunc;
+    HWND hwnd = lpFileOp->hwnd;
+
+    dwNumDest = ((lpFileOp->fFlags & FOF_MULTIDESTFILES) ? flTo->dwNumFiles : 1);
+
+    if (wFunc != FO_COPY && wFunc != FO_MOVE)
+        return ERROR_SUCCESS;
+
+    for (k = 0; k < dwNumDest; ++k)
+    {
+        feTo = &flTo->feFiles[k];
+        for (i = 0; i < flFrom->dwNumFiles; ++i)
+        {
+            feFrom = &flFrom->feFiles[i];
+            StringCbCopyW(szFrom, sizeof(szFrom), feFrom->szFullPath);
+
+            StringCbCopyW(szTo, sizeof(szTo), feTo->szFullPath);
+            if (IsAttribDir(feTo->attributes))
+            {
+                PathAppendW(szTo, feFrom->szFilename);
+            }
+
+            // same path?
+            if (lstrcmpiW(szFrom, szTo) == 0 &&
+                (wFunc == FO_MOVE || !(lpFileOp->fFlags & FOF_RENAMEONCOLLISION)))
+            {
+                if (!(lpFileOp->fFlags & FOF_SILENT))
+                {
+                    if (wFunc == FO_MOVE)
+                    {
+                        CStringW strTitle(MAKEINTRESOURCEW(IDS_MOVEERRORTITLE));
+                        CStringW strText(MAKEINTRESOURCEW(IDS_MOVEERRORSAME));
+                        StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
+                        MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                    }
+                    else
+                    {
+                        CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYERRORTITLE));
+                        CStringW strText(MAKEINTRESOURCEW(IDS_COPYERRORSAME));
+                        StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
+                        MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                    }
+                }
+                return ERROR_SHARING_VIOLATION;
+            }
+
+            // subfolder?
+            if (IsAttribDir(feFrom->attributes))
+            {
+                size_t cchFrom = PathAddBackslashW(szFrom) - szFrom;
+                size_t cchTo = PathAddBackslashW(szTo) - szTo;
+                if (cchFrom <= cchTo)
+                {
+                    WCHAR ch = szTo[cchFrom];
+                    szTo[cchFrom] = 0;
+                    int compare = lstrcmpiW(szFrom, szTo);
+                    szTo[cchFrom] = ch;
+
+                    if (compare == 0)
+                    {
+                        if (!(lpFileOp->fFlags & FOF_SILENT))
+                        {
+                            if (wFunc == FO_MOVE)
+                            {
+                                CStringW strTitle(MAKEINTRESOURCEW(IDS_MOVEERRORTITLE));
+                                CStringW strText(MAKEINTRESOURCEW(IDS_MOVEERRORSUBF));
+                                StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
+                                MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                            }
+                            else
+                            {
+                                CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYERRORTITLE));
+                                CStringW strText(MAKEINTRESOURCEW(IDS_COPYERRORSUBF));
+                                StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
+                                MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                            }
+                        }
+                        return ERROR_SHARING_VIOLATION;
+                    }
+                }
+            }
+        }
+    }
+
+    return ERROR_SUCCESS;
+}
+#endif
 /*************************************************************************
  * SHFileOperationW          [SHELL32.@]
  *
@@ -1810,6 +1941,11 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     op.completedSize.QuadPart = 0ull;
     op.bManyItems = (flFrom.dwNumFiles > 1);
 
+#ifdef __REACTOS__
+    ret = validate_operation(lpFileOp, &flFrom, &flTo);
+    if (ret)
+        goto cleanup;
+#endif
     if (lpFileOp->wFunc != FO_RENAME && !(lpFileOp->fFlags & FOF_SILENT)) {
         ret = CoCreateInstance(CLSID_ProgressDialog, 
                                NULL, 
