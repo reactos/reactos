@@ -8,7 +8,7 @@
 @ stub GetCurrentApplicationUserModelId
 @ stub GetCurrentPackageFamilyName
 @ stub GetCurrentPackageFullName
-@ stub GetCurrentPackageId
+@ stdcall -version=0x602+ GetCurrentPackageId(ptr ptr) kernel32.GetCurrentPackageId
 @ stub GetCurrentPackageInfo
 @ stub GetCurrentPackagePath
 @ stub GetPackageApplicationIds
