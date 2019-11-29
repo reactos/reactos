@@ -42,8 +42,6 @@ CClassNode::SetupNode()
                                      0);
     if (hKey != INVALID_HANDLE_VALUE)
     {
-        Type = REG_SZ;
-
         // Lookup the class description (win7+)
         Size = sizeof(m_DisplayName);
         Success = RegQueryValueExW(hKey,
@@ -54,8 +52,12 @@ CClassNode::SetupNode()
                                    &Size);
         if (Success == ERROR_SUCCESS)
         {
+            if (Type != REG_SZ)
+            {
+                Success = ERROR_INVALID_DATA;
+            }
             // Check if the string starts with an @
-            if (m_DisplayName[0] == L'@')
+            else if (m_DisplayName[0] == L'@')
             {
                 // The description is located in a module resource
                 Success = ConvertResourceDescriptorToString(m_DisplayName, sizeof(m_DisplayName));
@@ -71,6 +73,10 @@ CClassNode::SetupNode()
                                        &Type,
                                        (LPBYTE)m_DisplayName,
                                        &Size);
+            if (Success == ERROR_SUCCESS && Type != REG_SZ)
+            {
+                Success = ERROR_INVALID_DATA;
+            }
         }
 
         // Close the registry key
