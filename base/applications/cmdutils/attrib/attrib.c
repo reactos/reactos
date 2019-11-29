@@ -72,7 +72,7 @@ ErrorMessage(
                        NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                        (LPWSTR)&szError, 0, NULL))
     {
-        ConPrintf(StdErr, L"%s %s\n", szError, szMessage);
+        ConPrintf(StdOut, L"%s %s\n", szError, szMessage);
         if (szError)
             LocalFree(szError);
         return;
@@ -81,9 +81,9 @@ ErrorMessage(
     /* Fall back just in case the error is not defined */
     LoadStringW(GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
     if (szFormat)
-        ConPrintf(StdErr, L"%s -- %s\n", szMsg, szMessage);
+        ConPrintf(StdOut, L"%s -- %s\n", szMsg, szMessage);
     else
-        ConPrintf(StdErr, L"%s\n", szMsg);
+        ConPrintf(StdOut, L"%s\n", szMsg);
 }
 
 static
@@ -145,9 +145,6 @@ PrintAttribute(
 
     do
     {
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            continue;
-
         wcscpy(pszFileName, findData.cFileName);
 
         ConPrintf(StdOut,
@@ -166,7 +163,7 @@ PrintAttribute(
 
 
 static
-INT
+BOOL
 ChangeAttribute(
     LPWSTR pszPath,
     LPWSTR pszFile,
@@ -180,74 +177,101 @@ ChangeAttribute(
     DWORD  dwAttribute;
     WCHAR  szFullName[MAX_PATH];
     LPWSTR pszFileName;
+    BOOL bWildcard = (wcschr(pszFile, L'*') || wcschr(pszFile, L'?'));
 
     /* prepare full file name buffer */
     wcscpy(szFullName, pszPath);
     pszFileName = szFullName + wcslen(szFullName);
-
-    /* change all subdirectories */
-    if (bRecurse)
-    {
-        /* append file name */
-        wcscpy(pszFileName, L"*.*");
-
-        hFind = FindFirstFileW(szFullName, &findData);
-        if (hFind == INVALID_HANDLE_VALUE)
-        {
-            ErrorMessage(GetLastError(), pszFile);
-            return 1;
-        }
-
-        do
-        {
-            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            {
-                if (!wcscmp(findData.cFileName, L".") ||
-                    !wcscmp(findData.cFileName, L".."))
-                    continue;
-
-                wcscpy(pszFileName, findData.cFileName);
-                wcscat(pszFileName, L"\\");
-
-                ChangeAttribute(szFullName, pszFile, dwMask,
-                                dwAttrib, bRecurse, bDirectories);
-            }
-        }
-        while (FindNextFileW(hFind, &findData));
-        FindClose(hFind);
-    }
 
     /* append file name */
     wcscpy(pszFileName, pszFile);
 
     hFind = FindFirstFileW(szFullName, &findData);
     if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    dwAttribute = findData.dwFileAttributes;
+
+    if (!bWildcard)
     {
-        ErrorMessage(GetLastError(), pszFile);
-        return 1;
-    }
-
-    do
-    {
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            continue;
-
-        wcscpy(pszFileName, findData.cFileName);
-
-        dwAttribute = GetFileAttributes (szFullName);
-
-        if (dwAttribute != 0xFFFFFFFF)
+        FindClose(hFind);
+        if (dwAttribute & FILE_ATTRIBUTE_DIRECTORY)
         {
             dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
             SetFileAttributes(szFullName, dwAttribute);
+            if (bRecurse)
+            {
+                if (bDirectories)
+                {
+                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                    bRecurse, bDirectories);
+                }
+                else
+                {
+                    if (!ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                         bRecurse, FALSE))
+                    {
+                        return FALSE;
+                    }
+                }
+            }
+            else
+            {
+                if (!bDirectories)
+                {
+                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                    bRecurse, FALSE);
+                }
+            }
+            return TRUE;
+        }
+        else
+        {
+            dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
+            SetFileAttributes(szFullName, dwAttribute);
+            return TRUE;
         }
     }
-    while (FindNextFileW(hFind, &findData));
-    FindClose(hFind);
+    else
+    {
+        if ((dwAttribute & FILE_ATTRIBUTE_DIRECTORY) && (!bRecurse || !bDirectories))
+            return FALSE;
 
-    return 0;
+        do
+        {
+            dwAttribute = findData.dwFileAttributes;
+            if (dwAttribute & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                if (!bDirectories)
+                    continue;
+
+                if (!wcscmp(findData.cFileName, L".") ||
+                    !wcscmp(findData.cFileName, L".."))
+                    continue;
+
+                wcscpy(pszFileName, findData.cFileName);
+                dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
+                SetFileAttributes(szFullName, dwAttribute);
+
+                if (bRecurse)
+                {
+                    ChangeAttribute(szFullName, findData.cFileName, dwMask,
+                                    dwAttrib, bRecurse, FALSE);
+                }
+            }
+            else
+            {
+                wcscpy(pszFileName, findData.cFileName);
+                dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
+                SetFileAttributes(szFullName, dwAttribute);
+            }
+        } while (FindNextFileW(hFind, &findData));
+
+        FindClose(hFind);
+    }
+
+    return TRUE;
 }
-
 
 int wmain(int argc, WCHAR *argv[])
 {
@@ -258,6 +282,8 @@ int wmain(int argc, WCHAR *argv[])
     BOOL   bDirectories = FALSE;
     DWORD  dwAttrib = 0;
     DWORD  dwMask = 0;
+    LPWSTR p;
+    WCHAR  szText[MAX_PATH];
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -285,7 +311,7 @@ int wmain(int argc, WCHAR *argv[])
         {
             if (wcslen(argv[i]) != 2)
             {
-                ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                 return -1;
             }
 
@@ -312,7 +338,7 @@ int wmain(int argc, WCHAR *argv[])
                     break;
 
                 default:
-                    ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                    ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                     return -1;
             }
         }
@@ -320,7 +346,7 @@ int wmain(int argc, WCHAR *argv[])
         {
             if (wcslen(argv[i]) != 2)
             {
-                ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                 return -1;
             }
 
@@ -347,7 +373,7 @@ int wmain(int argc, WCHAR *argv[])
                     break;
 
                 default:
-                    ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
+                    ConResPrintf(StdOut, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
                     return -1;
             }
         }
@@ -371,20 +397,21 @@ int wmain(int argc, WCHAR *argv[])
     /* get full file name */
     for (i = 1; i < argc; i++)
     {
-        if ((*argv[i] != L'+') && (*argv[i] != L'-') && (*argv[i] != L'/'))
+        if (*argv[i] == L'+' || *argv[i] == L'-' || *argv[i] == L'/')
+            continue;
+
+        GetFullPathNameW(argv[i], MAX_PATH, szPath, &p);
+        wcscpy(szFileName, p);
+        *p = 0;
+
+        if (dwMask == 0)
         {
-            LPWSTR p;
-
-            GetFullPathName(argv[i], MAX_PATH, szPath, NULL);
-            p = wcsrchr(szPath, L'\\') + 1;
-            wcscpy(szFileName, p);
-            *p = L'\0';
-
-            if (dwMask == 0)
-                PrintAttribute(szPath, szFileName, bRecurse);
-            else
-                ChangeAttribute(szPath, szFileName, dwMask,
-                         dwAttrib, bRecurse, bDirectories);
+            PrintAttribute(szPath, szFileName, bRecurse);
+        }
+        else if (!ChangeAttribute(szPath, szFileName, dwMask,
+                                  dwAttrib, bRecurse, bDirectories))
+        {
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
         }
     }
 
