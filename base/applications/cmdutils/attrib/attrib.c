@@ -411,8 +411,7 @@ int wmain(int argc, WCHAR *argv[])
         else if (!ChangeAttribute(szPath, szFileName, dwMask,
                                   dwAttrib, bRecurse, bDirectories))
         {
-            LoadStringW(NULL, STRING_FILE_NOT_FOUND, szText, ARRAYSIZE(szText));
-            ConPrintf(StdOut, szText, argv[i]);
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
         }
     }
 
