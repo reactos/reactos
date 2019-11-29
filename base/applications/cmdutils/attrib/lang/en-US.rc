@@ -2,6 +2,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Displays or changes file attributes.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\

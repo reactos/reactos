@@ -199,10 +199,23 @@ ChangeAttribute(
         {
             dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
             SetFileAttributes(szFullName, dwAttribute);
-            if (bRecurse)
+            if (!bRecurse && !bDirectories)
             {
                 ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
                                 bRecurse, FALSE);
+            }
+            if (bRecurse && !bDirectories)
+            {
+                if (!ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                     bRecurse, FALSE))
+                {
+                    return FALSE;
+                }
+            }
+            if (bRecurse && bDirectories)
+            {
+                ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
+                                bRecurse, bDirectories);
             }
             return TRUE;
         }
@@ -263,6 +276,8 @@ int wmain(int argc, WCHAR *argv[])
     BOOL   bDirectories = FALSE;
     DWORD  dwAttrib = 0;
     DWORD  dwMask = 0;
+    LPWSTR p;
+    WCHAR  szText[MAX_PATH];
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -376,26 +391,22 @@ int wmain(int argc, WCHAR *argv[])
     /* get full file name */
     for (i = 1; i < argc; i++)
     {
-        if ((*argv[i] != L'+') && (*argv[i] != L'-') && (*argv[i] != L'/'))
+        if (*argv[i] == L'+' || *argv[i] == L'-' || *argv[i] == L'/')
+            continue;
+
+        GetFullPathNameW(argv[i], MAX_PATH, szPath, &p);
+        wcscpy(szFileName, p);
+        *p = 0;
+
+        if (dwMask == 0)
         {
-            LPWSTR p;
-
-            GetFullPathNameW(argv[i], MAX_PATH, szPath, &p);
-            wcscpy(szFileName, p);
-            *p = 0;
-
-            if (dwMask == 0)
-            {
-                PrintAttribute(szPath, szFileName, bRecurse);
-            }
-            else
-            {
-                if (!ChangeAttribute(szPath, szFileName, dwMask,
-                                     dwAttrib, bRecurse, bDirectories))
-                {
-                    ConPrintf(StdOut, L"NOT FOUND - %s\n", argv[i]);
-                }
-            }
+            PrintAttribute(szPath, szFileName, bRecurse);
+        }
+        else if (!ChangeAttribute(szPath, szFileName, dwMask,
+                                  dwAttrib, bRecurse, bDirectories))
+        {
+            LoadStringW(NULL, STRING_FILE_NOT_FOUND, szText, ARRAYSIZE(szText));
+            ConPrintf(StdOut, szText, argv[i]);
         }
     }
 

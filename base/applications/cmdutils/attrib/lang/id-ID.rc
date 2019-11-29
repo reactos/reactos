@@ -4,6 +4,7 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Menampilkan atau mengubah atribut file.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
