@@ -973,6 +973,61 @@ static void test_GetFolder(void)
     IFolder_Release(folder);
 }
 
+static void _test_clone(IEnumVARIANT *enumvar, BOOL position_inherited, LONG count, int line)
+{
+    HRESULT hr;
+    IEnumVARIANT *clone;
+    ULONG fetched;
+    VARIANT var, var2;
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+
+    VariantInit(&var);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+    ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+    ok(fetched == 1, "%d: got %d\n", line, fetched);
+
+    /* clone enumerator */
+    hr = IEnumVARIANT_Clone(enumvar, &clone);
+    ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+    ok(clone != enumvar, "%d: got %p, %p\n", line, enumvar, clone);
+
+    /* check if clone inherits position */
+    VariantInit(&var2);
+    fetched = -1;
+    hr = IEnumVARIANT_Next(clone, 1, &var2, &fetched);
+    if (position_inherited && count == 1)
+    {
+        ok(hr == S_FALSE, "%d: got 0x%08x\n", line, hr);
+        ok(fetched == 0, "%d: got %d\n", line, fetched);
+    }
+    else
+    {
+        ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+        ok(fetched == 1, "%d: got %d\n", line, fetched);
+        if (!position_inherited)
+            todo_wine ok(V_DISPATCH(&var) == V_DISPATCH(&var2), "%d: values don't match\n", line);
+        else
+        {
+            fetched = -1;
+            hr = IEnumVARIANT_Next(enumvar, 1, &var, &fetched);
+            ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+            ok(fetched == 1, "%d: got %d\n", line, fetched);
+            todo_wine ok(V_DISPATCH(&var) == V_DISPATCH(&var2), "%d: values don't match\n", line);
+        }
+    }
+
+    VariantClear(&var2);
+    VariantClear(&var);
+    IEnumVARIANT_Release(clone);
+
+    hr = IEnumVARIANT_Reset(enumvar);
+    ok(hr == S_OK, "%d: got 0x%08x\n", line, hr);
+}
+#define test_clone(a, b, c) _test_clone(a, b, c, __LINE__)
+
 /* Please keep the tests for IFolderCollection and IFileCollection in sync */
 static void test_FolderCollection(void)
 {
@@ -982,7 +1037,7 @@ static void test_FolderCollection(void)
     static const WCHAR cW[] = {'\\','c',0};
     IFolderCollection *folders;
     WCHAR buffW[MAX_PATH], pathW[MAX_PATH];
-    IEnumVARIANT *enumvar, *clone;
+    IEnumVARIANT *enumvar;
     LONG count, ref, ref2, i;
     IUnknown *unk, *unk2;
     IFolder *folder;
@@ -1068,14 +1123,7 @@ static void test_FolderCollection(void)
     ref2 = GET_REFCOUNT(folders);
     ok(ref2 == ref, "got %d, %d\n", ref2, ref);
 
-    /* clone enumerator */
-    hr = IEnumVARIANT_Clone(enumvar, &clone);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(clone != enumvar, "got %p, %p\n", enumvar, clone);
-    IEnumVARIANT_Release(clone);
-
-    hr = IEnumVARIANT_Reset(enumvar);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    test_clone(enumvar, FALSE, count);
 
     for (i = 0; i < 3; i++)
     {
@@ -1165,7 +1213,7 @@ static void test_FileCollection(void)
     IFolder *folder;
     IFileCollection *files;
     IFile *file;
-    IEnumVARIANT *enumvar, *clone;
+    IEnumVARIANT *enumvar;
     LONG count, ref, ref2, i;
     IUnknown *unk, *unk2;
     ULONG fetched;
@@ -1245,14 +1293,7 @@ static void test_FileCollection(void)
     ref2 = GET_REFCOUNT(files);
     ok(ref2 == ref, "got %d, %d\n", ref2, ref);
 
-    /* clone enumerator */
-    hr = IEnumVARIANT_Clone(enumvar, &clone);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(clone != enumvar, "got %p, %p\n", enumvar, clone);
-    IEnumVARIANT_Release(clone);
-
-    hr = IEnumVARIANT_Reset(enumvar);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    test_clone(enumvar, FALSE, count);
 
     for (i = 0; i < 3; i++)
     {
@@ -1366,9 +1407,7 @@ static void test_DriveCollection(void)
     hr = IEnumVARIANT_Skip(enumvar, 1);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
 
-    /* reset and iterate again */
-    hr = IEnumVARIANT_Reset(enumvar);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    test_clone(enumvar, TRUE, count);
 
     while (IEnumVARIANT_Next(enumvar, 1, &var, &fetched) == S_OK) {
         IDrive *drive = (IDrive*)V_DISPATCH(&var);
@@ -1855,6 +1894,127 @@ todo_wine {
 todo_wine
     ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
+    ITextStream_Release(stream);
+
+    /* default read will use Unicode */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    lstrcpyW(buffW, nameW);
+    lstrcatW(buffW, crlfW);
+    lstrcatW(buffW, secondlineW);
+    lstrcatW(buffW, crlfW);
+    str = NULL;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    /* default append will use Unicode */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForAppending, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(L"123");
+    hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got %08x\n", hr);
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateTrue, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    lstrcatW(buffW, L"123");
+    str = NULL;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    /* default write will use ASCII */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForWriting, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(L"123");
+    hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got %08x\n", hr);
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!wcscmp(str, L"123"), "got %s\n", wine_dbgstr_w(str));
+
+    ITextStream_Release(stream);
+    /* ASCII file, read with default stream */
+    hr = IFileSystem3_CreateTextFile(fs3, nameW, VARIANT_TRUE, VARIANT_FALSE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    str = SysAllocString(L"test");
+    hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    SysFreeString(str);
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!wcscmp(str, L"test"), "got %s\n", wine_dbgstr_w(str));
+
+    ITextStream_Release(stream);
+
+    /* default append will use Unicode */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForAppending, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(L"123");
+    hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got %08x\n", hr);
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = NULL;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(L"test123", str), "got %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    /* default write will use ASCII as well */
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForWriting, VARIANT_FALSE, TristateUseDefault, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = SysAllocString(L"test string");
+    hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got %08x\n", hr);
+    SysFreeString(str);
+
+    ITextStream_Release(stream);
+
+    hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    str = (void*)0xdeadbeef;
+    hr = ITextStream_Read(stream, 500, &str);
+    ok(hr == S_FALSE || broken(hr == S_OK) /* win2003 */, "got 0x%08x\n", hr);
+    ok(!wcscmp(str, L"test string"), "got %s\n", wine_dbgstr_w(str));
+
     ITextStream_Release(stream);
 
     /* ASCII file, read with Unicode stream */
