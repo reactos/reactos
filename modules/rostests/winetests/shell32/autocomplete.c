@@ -494,7 +494,7 @@ static void check_dropdown_(const char *file, UINT line, IAutoCompleteDropDown *
     }
 }
 
-static void test_aclist_expand(HWND hwnd_edit, void *enumerator)
+static void test_aclist_expand(HWND hwnd_edit, void *enumerator, IAutoCompleteDropDown *acdropdown)
 {
     struct string_enumerator *obj = (struct string_enumerator*)enumerator;
     static WCHAR str1[] = {'t','e','s','t',0};
@@ -502,6 +502,7 @@ static void test_aclist_expand(HWND hwnd_edit, void *enumerator)
     static WCHAR str2[] = {'t','e','s','t','\\','f','o','o','\\','b','a','r','\\','b','a',0};
     static WCHAR str2a[] = {'t','e','s','t','\\','f','o','o','\\','b','a','r','\\',0};
     static WCHAR str2b[] = {'t','e','s','t','\\','f','o','o','\\','b','a','r','\\','b','a','z','_','b','b','q','\\',0};
+    HRESULT hr;
     obj->num_resets = 0;
 
     ok(obj->num_expand == 0, "Expected 0 expansions, got %u\n", obj->num_expand);
@@ -546,6 +547,20 @@ static void test_aclist_expand(HWND hwnd_edit, void *enumerator)
     dispatch_messages();
     ok(obj->num_expand == 4, "Expected 4 expansions, got %u\n", obj->num_expand);
     ok(obj->num_resets == 5, "Expected 5 resets, got %u\n", obj->num_resets);
+    SendMessageW(hwnd_edit, WM_SETTEXT, 0, (LPARAM)str1a);
+    SendMessageW(hwnd_edit, EM_SETSEL, ARRAY_SIZE(str1a) - 1, ARRAY_SIZE(str1a) - 1);
+    SendMessageW(hwnd_edit, WM_CHAR, 'f', 1);
+    dispatch_messages();
+    ok(obj->num_expand == 5, "Expected 5 expansions, got %u\n", obj->num_expand);
+    ok(lstrcmpW(obj->last_expand, str1a) == 0, "Expected %s, got %s\n", wine_dbgstr_w(str1a), wine_dbgstr_w(obj->last_expand));
+    ok(obj->num_resets == 6, "Expected 6 resets, got %u\n", obj->num_resets);
+    hr = IAutoCompleteDropDown_ResetEnumerator(acdropdown);
+    ok(hr == S_OK, "IAutoCompleteDropDown_ResetEnumerator failed: %x\n", hr);
+    SendMessageW(hwnd_edit, WM_CHAR, 'o', 1);
+    dispatch_messages();
+    ok(obj->num_expand == 6, "Expected 6 expansions, got %u\n", obj->num_expand);
+    ok(lstrcmpW(obj->last_expand, str1a) == 0, "Expected %s, got %s\n", wine_dbgstr_w(str1a), wine_dbgstr_w(obj->last_expand));
+    ok(obj->num_resets == 7, "Expected 7 resets, got %u\n", obj->num_resets);
 }
 
 static void test_prefix_filtering(HWND hwnd_edit)
@@ -775,7 +790,7 @@ static void test_custom_source(void)
     SendMessageW(hwnd_edit, WM_GETTEXT, ARRAY_SIZE(buffer), (LPARAM)buffer);
     ok(lstrcmpW(str_aut, buffer) == 0, "Expected %s, got %s\n", wine_dbgstr_w(str_aut), wine_dbgstr_w(buffer));
 
-    test_aclist_expand(hwnd_edit, enumerator);
+    test_aclist_expand(hwnd_edit, enumerator, acdropdown);
     obj->num_resets = 0;
 
     hr = IAutoCompleteDropDown_ResetEnumerator(acdropdown);

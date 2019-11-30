@@ -119,15 +119,15 @@ static char* decodeA(const char* str)
     return ptr;
 }
 
-static void WINETEST_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
+static void WINAPIV WINETEST_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
 {
-    va_list     valist;
+    __ms_va_list valist;
     char        buffer[1024];
     DWORD       w;
 
-    va_start(valist, fmt);
+    __ms_va_start(valist, fmt);
     vsprintf(buffer, fmt, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     WriteFile(h, buffer, strlen(buffer), &w, NULL);
 }
 
@@ -353,16 +353,16 @@ static void dump_child_(const char* file, int line)
  ***/
 
 static char shell_call[2048];
-static void WINETEST_PRINTF_ATTR(2,3) _okShell(int condition, const char *msg, ...)
+static void WINAPIV WINETEST_PRINTF_ATTR(2,3) _okShell(int condition, const char *msg, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     char buffer[2048];
 
     strcpy(buffer, shell_call);
     strcat(buffer, " ");
-    va_start(valist, msg);
+    __ms_va_start(valist, msg);
     vsprintf(buffer+strlen(buffer), msg, valist);
-    va_end(valist);
+    __ms_va_end(valist);
     winetest_ok(condition, "%s", buffer);
 }
 #define okShell_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : _okShell
@@ -2831,7 +2831,7 @@ static void test_directory(void)
     okShell(rc > 32, "returned %lu\n", rc);
     okChildInt("argcA", 4);
     okChildString("argvA3", "Exec");
-    todo_wine okChildPath("longPath", path);
+    okChildPath("longPath", path);
     SetCurrentDirectoryA(curdir);
 
     rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_FLAG_NO_UI,
@@ -2844,7 +2844,7 @@ static void test_directory(void)
     okShell(rc > 32, "returned %lu\n", rc);
     okChildInt("argcA", 4);
     okChildString("argvA3", "Exec");
-    todo_wine okChildPath("longPath", path);
+    okChildPath("longPath", path);
 
     /* Specify it through an environment variable */
     rc=shell_execute_ex(SEE_MASK_NOZONECHECKS|SEE_MASK_FLAG_NO_UI,
@@ -2856,7 +2856,7 @@ static void test_directory(void)
     okShell(rc > 32, "returned %lu\n", rc);
     okChildInt("argcA", 4);
     okChildString("argvA3", "Exec");
-    todo_wine okChildPath("longPath", path);
+    okChildPath("longPath", path);
 
     /* Not a colon-separated directory list */
     sprintf(dirpath, "%s:%s", curdir, tmpdir);

@@ -747,6 +747,7 @@ static void test_SHCreateQueryCancelAutoPlayMoniker(void)
     IMoniker_Release(mon);
 }
 
+#define WM_EXPECTED_VALUE WM_APP
 #define DROPTEST_FILENAME "c:\\wintest.bin"
 struct DragParam {
     HWND hwnd;
@@ -755,11 +756,20 @@ struct DragParam {
 
 static LRESULT WINAPI drop_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+    static BOOL expected;
+
     switch (msg) {
+    case WM_EXPECTED_VALUE:
+    {
+        expected = lparam;
+        break;
+    }
     case WM_DROPFILES:
     {
         HDROP hDrop = (HDROP)wparam;
         char filename[MAX_PATH] = "dummy";
+        POINT pt;
+        BOOL r;
         UINT num;
         num = DragQueryFileA(hDrop, 0xffffffff, NULL, 0);
         ok(num == 1, "expected 1, got %u\n", num);
@@ -768,6 +778,10 @@ static LRESULT WINAPI drop_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         num = DragQueryFileA(hDrop, 0, filename, sizeof(filename));
         ok(num == strlen(DROPTEST_FILENAME), "got %u\n", num);
         ok(!strcmp(filename, DROPTEST_FILENAME), "got %s\n", filename);
+        r = DragQueryPoint(hDrop, &pt);
+        ok(r == expected, "expected %d, got %d\n", expected, r);
+        ok(pt.x == 10, "expected 10, got %d\n", pt.x);
+        ok(pt.y == 20, "expected 20, got %d\n", pt.y);
         DragFinish(hDrop);
         return 0;
     }
@@ -822,7 +836,7 @@ static DWORD WINAPI drop_window_therad(void *arg)
     return 0;
 }
 
-static void test_DragQueryFile(void)
+static void test_DragQueryFile(BOOL non_client_flag)
 {
     struct DragParam param;
     HANDLE hThread;
@@ -841,12 +855,18 @@ static void test_DragQueryFile(void)
 
     hDrop = GlobalAlloc(GHND, sizeof(DROPFILES) + (strlen(DROPTEST_FILENAME) + 2) * sizeof(WCHAR));
     pDrop = GlobalLock(hDrop);
+    pDrop->pt.x = 10;
+    pDrop->pt.y = 20;
+    pDrop->fNC = non_client_flag;
     pDrop->pFiles = sizeof(DROPFILES);
     ret = MultiByteToWideChar(CP_ACP, 0, DROPTEST_FILENAME, -1,
                               (LPWSTR)(pDrop + 1), strlen(DROPTEST_FILENAME) + 1);
     ok(ret > 0, "got %d\n", ret);
     pDrop->fWide = TRUE;
     GlobalUnlock(hDrop);
+
+    r = PostMessageA(param.hwnd, WM_EXPECTED_VALUE, 0, !non_client_flag);
+    ok(r, "got %d\n", r);
 
     r = PostMessageA(param.hwnd, WM_DROPFILES, (WPARAM)hDrop, 0);
     ok(r, "got %d\n", r);
@@ -860,6 +880,7 @@ static void test_DragQueryFile(void)
     CloseHandle(param.ready);
     CloseHandle(hThread);
 }
+#undef WM_EXPECTED_VALUE
 #undef DROPTEST_FILENAME
 
 static void test_SHCreateSessionKey(void)
@@ -938,7 +959,8 @@ START_TEST(shellole)
 
     test_SHPropStg_functions();
     test_SHCreateQueryCancelAutoPlayMoniker();
-    test_DragQueryFile();
+    test_DragQueryFile(TRUE);
+    test_DragQueryFile(FALSE);
     test_SHCreateSessionKey();
     test_dragdrophelper();
 

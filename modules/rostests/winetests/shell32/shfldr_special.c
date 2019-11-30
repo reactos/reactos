@@ -31,6 +31,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "shellapi.h"
+#include "shlwapi.h"
 #include "shlobj.h"
 
 #include "wine/test.h"
@@ -240,10 +241,64 @@ static void test_desktop_folder(void)
     IShellFolder_Release(psf);
 }
 
+static void test_desktop_displaynameof(void)
+{
+    static WCHAR MyComputer[]  = { ':',':','{','2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-','A','2','D','8','-','0','8','0','0','2','B','3','0','3','0','9','D','}', 0 };
+    static WCHAR MyDocuments[] = { ':',':','{','4','5','0','D','8','F','B','A','-','A','D','2','5','-','1','1','D','0','-','9','8','A','8','-','0','8','0','0','3','6','1','B','1','1','0','3','}', 0 };
+    static WCHAR RecycleBin[]  = { ':',':','{','6','4','5','F','F','0','4','0','-','5','0','8','1','-','1','0','1','B','-','9','F','0','8','-','0','0','A','A','0','0','2','F','9','5','4','E','}', 0 };
+    static WCHAR ControlPanel[]= { ':',':','{','2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-','A','2','D','8','-','0','8','0','0','2','B','3','0','3','0','9','D','}','\\',
+                                   ':',':','{','2','1','E','C','2','0','2','0','-','3','A','E','A','-','1','0','6','9','-','A','2','D','D','-','0','8','0','0','2','B','3','0','3','0','9','D','}', 0 };
+    static WCHAR *folders[] = { MyComputer, MyDocuments, RecycleBin, ControlPanel };
+    IShellFolder *desktop;
+    ITEMIDLIST *pidl;
+    STRRET strret;
+    DWORD eaten;
+    HRESULT hr;
+    UINT i;
+
+    hr = SHGetDesktopFolder(&desktop);
+    ok(hr == S_OK, "SHGetDesktopFolder failed with error 0x%08x\n", hr);
+    if (FAILED(hr)) return;
+
+    for (i = 0; i < ARRAY_SIZE(folders); i++)
+    {
+        WCHAR name1[MAX_PATH], name2[MAX_PATH];
+
+        hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, folders[i], &eaten, &pidl, NULL);
+        ok(hr == S_OK, "IShellFolder::ParseDisplayName failed with error 0x%08x\n", hr);
+        if (FAILED(hr)) continue;
+
+        hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_INFOLDER, &strret);
+        ok(hr == S_OK, "IShellFolder::GetDisplayNameOf failed with error 0x%08x\n", hr);
+        hr = StrRetToBufW(&strret, pidl, name1, ARRAY_SIZE(name1));
+        ok(hr == S_OK, "StrRetToBuf failed with error 0x%08x\n", hr);
+
+        hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_INFOLDER | SHGDN_FORPARSING | SHGDN_FORADDRESSBAR, &strret);
+        ok(hr == S_OK, "IShellFolder::GetDisplayNameOf failed with error 0x%08x\n", hr);
+        hr = StrRetToBufW(&strret, pidl, name2, ARRAY_SIZE(name2));
+        ok(hr == S_OK, "StrRetToBuf failed with error 0x%08x\n", hr);
+
+        ok(!lstrcmpW(name1, name2), "the display names are not equal: %s vs %s\n", wine_dbgstr_w(name1), wine_dbgstr_w(name2));
+        ok(name1[0] != ':' || name1[1] != ':', "display name is a GUID: %s\n", wine_dbgstr_w(name1));
+
+        hr = IShellFolder_GetDisplayNameOf(desktop, pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, &strret);
+        ok(hr == S_OK, "IShellFolder::GetDisplayNameOf failed with error 0x%08x\n", hr);
+        hr = StrRetToBufW(&strret, pidl, name1, ARRAY_SIZE(name1));
+        ok(hr == S_OK, "StrRetToBuf failed with error 0x%08x\n", hr);
+
+        ok(lstrcmpW(name1, name2), "the display names are equal: %s\n", wine_dbgstr_w(name1));
+        ok(name1[0] == ':' && name1[1] == ':', "display name is not a GUID: %s\n", wine_dbgstr_w(name1));
+
+        ILFree(pidl);
+    }
+    IShellFolder_Release(desktop);
+}
+
 START_TEST(shfldr_special)
 {
     test_parse_for_entire_network();
     test_parse_for_control_panel();
     test_printers_folder();
     test_desktop_folder();
+    test_desktop_displaynameof();
 }
