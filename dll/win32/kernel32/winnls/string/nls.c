@@ -654,14 +654,9 @@ IntMultiByteToWideCharCP(UINT CodePage,
                 continue;
             }
 
-            if (MultiByteString == MbsEnd)
+            if (MultiByteString == MbsEnd || *MultiByteString == 0)
             {
                 *WideCharString++ = CodePageTable->UniDefaultChar;
-            }
-            else if (*MultiByteString == 0)
-            {
-                *WideCharString++ = CodePageTable->UniDefaultChar;
-                MultiByteString++;
             }
             else
             {
