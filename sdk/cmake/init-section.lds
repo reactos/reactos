@@ -8,4 +8,4 @@ SECTIONS
     __init_end__ = . ;
   }
 }
-INSERT AFTER .reloc;
+INSERT AFTER .rsrc;
