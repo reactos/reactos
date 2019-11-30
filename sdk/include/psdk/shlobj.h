@@ -320,6 +320,14 @@ SHObjectProperties(
   _In_ LPCWSTR,
   _In_opt_ LPCWSTR);
 
+HRESULT
+WINAPI
+SHOpenFolderAndSelectItems(
+  _In_ PCIDLIST_ABSOLUTE pidlFolder,
+  _In_ UINT cidl,
+  _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY,
+  _In_ DWORD);
+
 #define PCS_FATAL           0x80000000
 #define PCS_REPLACEDCHAR    0x00000001
 #define PCS_REMOVEDCHAR     0x00000002

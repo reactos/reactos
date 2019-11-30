@@ -10,14 +10,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
-// FIXME: Remove this declaration after the function has been fully implemented
-EXTERN_C HRESULT
-WINAPI
-SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
-                           UINT cidl,
-                           PCUITEMID_CHILD_ARRAY apidl,
-                           DWORD dwFlags);
-
 static HRESULT SHELL32_CoCreateInitSF(LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
                                 LPCITEMIDLIST pidlChild, const GUID* clsid, REFIID riid, LPVOID *ppvOut)
 {
