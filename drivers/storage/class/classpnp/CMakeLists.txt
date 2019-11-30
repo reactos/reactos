@@ -1,5 +1,5 @@
 
-include_directories(../inc)
+include_directories(../../inc)
 spec2def(classpnp.sys classpnp.spec ADD_IMPORTLIB)
 
 add_definitions(
