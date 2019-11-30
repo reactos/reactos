@@ -18,6 +18,7 @@ list(APPEND SOURCE
     CUserNotification.cpp
     Control_RunDLLW.cpp
     DragDrop.cpp
+    ExtractIconEx.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathResolve.cpp
