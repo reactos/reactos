@@ -1,0 +1,101 @@
+/*
+ * PROJECT:   ReactOS Zip Shell Extension
+ * LICENSE:   GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:   SendTo handler
+ * COPYRIGHT: Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ *            Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#include "precomp.h"
+
+STDMETHODIMP
+CSendToZip::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
+                      DWORD *pdwEffect)
+{
+    if (!pdwEffect)
+        return E_POINTER;
+
+    m_pDataObject = pDataObj;
+
+    FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    m_fCanDragDrop = SUCCEEDED(pDataObj->QueryGetData(&etc));
+
+    if (m_fCanDragDrop)
+        *pdwEffect &= DROPEFFECT_COPY;
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
+    return S_OK;
+}
+
+STDMETHODIMP CSendToZip::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    if (!pdwEffect)
+        return E_POINTER;
+
+    if (m_fCanDragDrop)
+        *pdwEffect &= DROPEFFECT_COPY;
+    else
+        *pdwEffect = DROPEFFECT_NONE;
+
+    return S_OK;
+}
+
+STDMETHODIMP CSendToZip::DragLeave()
+{
+    m_pDataObject.Release();
+    return S_OK;
+}
+
+STDMETHODIMP
+CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
+                 DWORD *pdwEffect)
+{
+    m_pDataObject = pDataObj;
+
+    if (!pDataObj)
+    {
+        *pdwEffect = 0;
+        DragLeave();
+        return E_POINTER;
+    }
+
+    *pdwEffect &= DROPEFFECT_COPY;
+
+    if (!m_fCanDragDrop && !*pdwEffect)
+    {
+        *pdwEffect = 0;
+        DragLeave();
+        return E_FAIL;
+    }
+
+    STGMEDIUM stg;
+    FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    HRESULT hr = pDataObj->GetData(&etc, &stg);
+    if (FAILED(hr))
+    {
+        *pdwEffect = 0;
+        DragLeave();
+        return E_FAIL;
+    }
+
+    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
+    UINT cFiles = ::DragQueryFileW(hDrop, -1, NULL, 0);
+
+    CZipCreator *pCreater = CZipCreator::DoCreate();
+
+    for (UINT iFile = 0; iFile < cFiles; ++iFile)
+    {
+        WCHAR szPath[MAX_PATH];
+        DragQueryFileW(hDrop, iFile, szPath, _countof(szPath));
+
+        pCreater->DoAddFile(szPath);
+    }
+
+    ::ReleaseStgMedium(&stg);
+
+    CZipCreator::runThread(pCreater);   // pCreater is freed in runThread
+
+    DragLeave();
+    return hr;
+}
