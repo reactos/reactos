@@ -111,7 +111,7 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
         return;
     }
 
-    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
     StringCbCopyW(szPath, sizeof(szPath), item);
     PathAppendW(szPath, L"*");
 
@@ -119,8 +119,6 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
         return;
-
-    StringCbCopyW(szDir, sizeof(szDir), item);
 
     do
     {
@@ -130,7 +128,7 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
             continue;
         }
 
-        StringCbCopyW(szPath, sizeof(szPath), szDir);
+        StringCbCopyW(szPath, sizeof(szPath), item);
         PathAppendW(szPath, find.cFileName);
 
         if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
