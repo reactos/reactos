@@ -398,9 +398,9 @@ public:
             {
                 CComHeapPtr<WCHAR> pathW;
 
-                int len = MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, NULL, 0);
+                int len = MultiByteToWideChar(CP_UTF8, 0, zipEntry->Name, -1, NULL, 0);
                 pathW.Allocate(len);
-                MultiByteToWideChar(CP_ACP, 0, zipEntry->Name, -1, pathW, len);
+                MultiByteToWideChar(CP_UTF8, 0, zipEntry->Name, -1, pathW, len);
 
                 DWORD dwAttributes = (zipEntry->ZipType == ZIP_PIDL_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
                 return SHCreateFileExtractIconW(pathW, dwAttributes, riid, ppvOut);
@@ -448,7 +448,9 @@ public:
         if (!zipEntry)
             return E_FAIL;
 
-        return SHSetStrRet(strRet, (LPCSTR)zipEntry->Name);
+        WCHAR szName[MAX_PATH];
+        MultiByteToWideChar(CP_UTF8, 0, zipEntry->Name, -1, szName, _countof(szName));
+        return SHSetStrRet(strRet, szName);
     }
     STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
     {
