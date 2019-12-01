@@ -25,10 +25,10 @@ static CStringW DoGetZipName(const CStringW& filename)
     UINT i = 2;
     while (PathFileExistsW(ret))
     {
-        ret = szPath;
-
         CStringW str;
         str.Format(L" (%u).zip", i++);
+
+        ret = szPath;
         ret += str;
     }
 
