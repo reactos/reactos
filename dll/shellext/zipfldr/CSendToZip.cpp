@@ -51,6 +51,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
 
     if (!pDataObj || !m_fCanDragDrop || !*pdwEffect)
     {
+        DPRINT1("Drop failed\n");
         *pdwEffect = 0;
         DragLeave();
         return E_FAIL;
@@ -59,7 +60,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
     STGMEDIUM stg;
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = pDataObj->GetData(&etc, &stg);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         *pdwEffect = 0;
         DragLeave();
