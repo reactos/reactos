@@ -2195,6 +2195,28 @@ CreateShellLink(
     return hr;
 }
 
+static HRESULT
+CreateShellLinkCoInit(
+    LPCWSTR pszLinkPath,
+    LPCWSTR pszCmd,
+    LPCWSTR pszArg OPTIONAL,
+    LPCWSTR pszDir OPTIONAL,
+    LPCWSTR pszIconPath OPTIONAL,
+    INT iIconNr OPTIONAL,
+    LPCWSTR pszComment OPTIONAL)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    BOOL bCoInit = (hr == S_OK);
+
+    hr = CreateShellLink(pszLinkPath, pszCmd, pszArg, pszDir,
+                         pszIconPath, iIconNr, pszComment);
+
+    if (bCoInit)
+        CoUninitialize();
+
+    return hr;
+}
+
 HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 {
     WCHAR szTarget[MAX_PATH];
@@ -2212,8 +2234,8 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
 
     GetSystemDirectoryW(szShell32, ARRAY_SIZE(szShell32));
     PathAppendW(szShell32, L"shell32.dll");
-    hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL,
-                         szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
+    hr = CreateShellLinkCoInit(szSendToFile, szTarget, NULL, NULL,
+                               szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
