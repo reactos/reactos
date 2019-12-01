@@ -8,11 +8,14 @@
  */
 
 #include "precomp.h"
+#include <inaddr.h>
+#include <in6addr.h>
 
 
 #define NDEBUG
 #include <debug.h>
 
+static WCHAR szHexChar[] = L"0123456789abcdef";
 
 static
 PWSTR
@@ -50,104 +53,51 @@ AnsiToUnicode(
 
 static
 BOOL
-ParseV4Address(
-    LPCSTR AddressString,
-    OUT PDWORD pAddress)
+ParseIpv4Address(
+    _In_ PCSTR AddressString,
+    _Out_ PIN_ADDR pAddress)
 {
-    CHAR *cp;
-    DWORD val, base;
-    unsigned char c;
-    DWORD parts[4], *pp = parts;
+    PCSTR pTerminator = NULL;
+    NTSTATUS Status;
 
-    cp = (CHAR *)AddressString;
+    Status = RtlIpv4StringToAddressA(AddressString,
+                                     TRUE,
+                                     &pTerminator,
+                                     pAddress);
+    if (NT_SUCCESS(Status) && pTerminator != NULL && *pTerminator == '\0')
+        return TRUE;
 
-    if (!AddressString)
-        return FALSE;
+    return FALSE;
+}
 
-    if (!isdigit(*cp))
-        return FALSE;
 
-again:
-    /*
-    * Collect number up to ``.''.
-    * Values are specified as for C:
-    * 0x=hex, 0=octal, other=decimal.
-    */
-    val = 0; base = 10;
-    if (*cp == '0')
-    {
-        if (*++cp == 'x' || *cp == 'X')
-            base = 16, cp++;
-        else
-            base = 8;
-    }
+static
+BOOL
+ParseIpv6Address(
+    _In_ LPCSTR AddressString,
+    _Out_ PIN6_ADDR pAddress)
+{
+    PCSTR pTerminator = NULL;
+    NTSTATUS Status;
 
-    while ((c = *cp))
-    {
-        if (isdigit(c))
-        {
-            val = (val * base) + (c - '0');
-            cp++;
-            continue;
-        }
+    Status = RtlIpv6StringToAddressA(AddressString,
+                                     &pTerminator,
+                                     pAddress);
+    if (NT_SUCCESS(Status) && pTerminator != NULL && *pTerminator == '\0')
+        return TRUE;
 
-        if (base == 16 && isxdigit(c))
-        {
-            val = (val << 4) + (c + 10 - (islower(c) ? 'a' : 'A'));
-            cp++;
-            continue;
-        }
-        break;
-    }
-
-    if (*cp == '.')
-    {
-        /*
-        * Internet format:
-        *    a.b.c.d
-        */
-        if (pp >= parts + 4)
-            return FALSE;
-        *pp++ = val;
-        cp++;
-        goto again;
-    }
-
-    /* Check for trailing characters */
-    if (*cp && *cp > ' ')
-        return FALSE;
-
-    if (pp >= parts + 4)
-        return FALSE;
-
-    *pp++ = val;
-    /*
-    * Concoct the address according to
-    * the number of parts specified.
-    */
-    if ((DWORD)(pp - parts) != 4)
-        return FALSE;
-
-    if (parts[0] > 0xff || parts[1] > 0xff || parts[2] > 0xff || parts[3] > 0xff)
-        return FALSE;
-
-    val = (parts[3] << 24) | (parts[2] << 16) | (parts[1] << 8) | parts[0];
-
-    if (pAddress)
-        *pAddress = val;
-
-    return TRUE;
+    return FALSE;
 }
 
 
 static
 VOID
-AddV4HostEntries(
+AddIpv4HostEntries(
     PWSTR pszHostName,
-    DWORD dwIpAddress)
+    PIN_ADDR pAddress)
 {
     DNS_RECORDW ARecord, PtrRecord;
-    WCHAR szInAddrArpaName[32];
+    WCHAR szReverseName[32];
 
     /* Prepare the A record */
     ZeroMemory(&ARecord, sizeof(DNS_RECORDW));
@@ -157,19 +107,19 @@ AddV4HostEntries(
     ARecord.wDataLength = sizeof(DNS_A_DATA);
     ARecord.dwTtl = 86400;
 
-    ARecord.Data.A.IpAddress = dwIpAddress;
-
-    swprintf(szInAddrArpaName,
-             L"%u.%u.%u.%u.in-addr.arpa",
-             (dwIpAddress >> 24) & 0xFF,
-             (dwIpAddress >> 16) & 0xFF,
-             (dwIpAddress >> 8) & 0xFF,
-             dwIpAddress & 0xFF);
+    ARecord.Data.A.IpAddress = pAddress->S_un.S_addr;
 
     /* Prepare the PTR record */
+    swprintf(szReverseName,
+             L"%u.%u.%u.%u.in-addr.arpa",
+             pAddress->S_un.S_un_b.s_b4,
+             pAddress->S_un.S_un_b.s_b3,
+             pAddress->S_un.S_un_b.s_b2,
+             pAddress->S_un.S_un_b.s_b1);
+
     ZeroMemory(&PtrRecord, sizeof(DNS_RECORDW));
 
-    PtrRecord.pName = szInAddrArpaName;
+    PtrRecord.pName = szReverseName;
     PtrRecord.wType = DNS_TYPE_PTR;
     PtrRecord.wDataLength = sizeof(DNS_PTR_DATA);
     PtrRecord.dwTtl = 86400;
@@ -177,6 +127,56 @@ AddV4HostEntries(
     PtrRecord.Data.PTR.pNameHost = pszHostName;
 
     DnsIntCacheAddEntry(&ARecord);
+    DnsIntCacheAddEntry(&PtrRecord);
+}
+
+
+static
+VOID
+AddIpv6HostEntries(
+    PWSTR pszHostName,
+    PIN6_ADDR pAddress)
+{
+    DNS_RECORDW AAAARecord, PtrRecord;
+    WCHAR szReverseName[80];
+    DWORD i, j, k;
+
+    /* Prepare the AAAA record */
+    ZeroMemory(&AAAARecord, sizeof(DNS_RECORDW));
+
+    AAAARecord.pName = pszHostName;
+    AAAARecord.wType = DNS_TYPE_AAAA;
+    AAAARecord.wDataLength = sizeof(DNS_AAAA_DATA);
+    AAAARecord.dwTtl = 86400;
+
+    CopyMemory(&AAAARecord.Data.AAAA.Ip6Address,
+               &pAddress->u.Byte,
+               sizeof(IN6_ADDR));
+
+    /* Prepare the PTR record */
+    ZeroMemory(szReverseName, sizeof(szReverseName));
+
+    for (i = 0; i < sizeof(IN6_ADDR); i++)
+    {
+        j = 4 * i;
+        k = sizeof(IN6_ADDR) - 1 - i;
+        szReverseName[j] = szHexChar[pAddress->u.Byte[k] & 0xF];
+        szReverseName[j + 1] = L'.';
+        szReverseName[j + 2] = szHexChar[(pAddress->u.Byte[k] >> 4) & 0xF];
+        szReverseName[j + 3] = L'.';
+    }
+    wcscat(szReverseName, L"ip6.arpa");
+
+    ZeroMemory(&PtrRecord, sizeof(DNS_RECORDW));
+
+    PtrRecord.pName = szReverseName;
+    PtrRecord.wType = DNS_TYPE_PTR;
+    PtrRecord.wDataLength = sizeof(DNS_PTR_DATA);
+    PtrRecord.dwTtl = 86400;
+
+    PtrRecord.Data.PTR.pNameHost = pszHostName;
+
+    DnsIntCacheAddEntry(&AAAARecord);
     DnsIntCacheAddEntry(&PtrRecord);
 }
 
@@ -285,7 +285,8 @@ ReadHostsFile(VOID)
     CHAR szLineBuffer[512];
     FILE *pHostFile = NULL;
     CHAR *Ptr, *NameStart, *NameEnd, *AddressStart, *AddressEnd;
-    DWORD Address;
+    struct in_addr Ipv4Address;
+    struct in6_addr Ipv6Address;
     PWSTR pszHostName;
 
     pHostFile = OpenHostsFile();
@@ -374,15 +375,25 @@ ReadHostsFile(VOID)
 
         DPRINT("%s ==> %s\n", NameStart, AddressStart);
 
-        if (ParseV4Address(AddressStart, &Address))
+        if (ParseIpv4Address(AddressStart, &Ipv4Address))
         {
-            DPRINT("IP4: %s ==> 0x%08lx\n", AddressStart, Address);
+            DPRINT("IPv4: %s\n", AddressStart);
 
             pszHostName = AnsiToUnicode(NameStart);
             if (pszHostName != NULL)
             {
-                AddV4HostEntries(pszHostName, Address);
+                AddIpv4HostEntries(pszHostName, &Ipv4Address);
+                HeapFree(GetProcessHeap(), 0, pszHostName);
+            }
+        }
+        else if (ParseIpv6Address(AddressStart, &Ipv6Address))
+        {
+            DPRINT("IPv6: %s\n", AddressStart);
 
+            pszHostName = AnsiToUnicode(NameStart);
+            if (pszHostName != NULL)
+            {
+                AddIpv6HostEntries(pszHostName, &Ipv6Address);
                 HeapFree(GetProcessHeap(), 0, pszHostName);
             }
         }
