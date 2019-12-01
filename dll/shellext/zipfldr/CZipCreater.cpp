@@ -54,16 +54,15 @@ static CStringW DoGetBaseName(const CStringW& filename)
 static CStringA
 DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 {
-    CStringW ret = filename;
-
-    CStringW basenameI = basename;
+    CStringW basenameI = basename, filenameI = filename;
     basenameI.MakeUpper();
-
-    CStringW filenameI = filename;
     filenameI.MakeUpper();
 
+    CStringW ret;
     if (filenameI.Find(basenameI) == 0)
-        ret = ret.Mid(basename.GetLength());
+        ret = filename.Mid(basename.GetLength());
+    else
+        ret = filename;
 
     ret.Replace(L'\\', L'/');
 
