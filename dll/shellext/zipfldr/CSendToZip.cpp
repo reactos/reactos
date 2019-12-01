@@ -48,18 +48,11 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
     m_pDataObject = pDataObj;
     *pdwEffect &= DROPEFFECT_COPY;
 
-    if (!pDataObj)
+    if (!pDataObj || !m_fCanDragDrop || !*pdwEffect)
     {
         *pdwEffect = 0;
         DragLeave();
         return E_POINTER;
-    }
-
-    if (!m_fCanDragDrop && !*pdwEffect)
-    {
-        *pdwEffect = 0;
-        DragLeave();
-        return E_FAIL;
     }
 
     STGMEDIUM stg;
