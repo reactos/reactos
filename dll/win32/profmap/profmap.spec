@@ -1,0 +1,5 @@
+@ stdcall -stub InitializeProfileMappingApi()
+@ stdcall RemapAndMoveUserA(str long str str)
+@ stdcall RemapAndMoveUserW(wstr long wstr wstr)
+@ stdcall -stub RemapUserProfileA()
+@ stdcall -stub RemapUserProfileW()
