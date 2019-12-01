@@ -10,7 +10,8 @@
 #include "atlsimpcoll.h"
 #include "minizip/zip.h"
 #include "minizip/iowin32.h"
-#include "process.h"
+#include <process.h>
+#include <sys/stat.h>
 
 static CStringW DoGetZipName(const CStringW& filename)
 {
@@ -64,9 +65,16 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 }
 
 static BOOL
-DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents)
+DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
+                zip_fileinfo *pzi)
 {
     contents.RemoveAll();
+
+    struct _stat st;
+    if (!_wstat(filename, &st))
+        pzi->dosDate = st.st_mtime;
+    else
+        pzi->dosDate = 0;
 
     FILE *fp = _wfopen(filename, L"rb");
     if (fp == NULL)
@@ -232,6 +240,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     int zip64 = 1; // always zip64
 
+    // TODO: password
     const char *password = NULL;
 
     int err = 0;
@@ -239,16 +248,18 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         CStringW& strFile = files[iFile];
         unsigned long crc = 0;
+        if (password)
+        {
+            // TODO: crc = ...;
+        }
 
         CSimpleArray<BYTE> contents;
-        if (!DoReadAllOfFile(strFile, contents))
+        if (!DoReadAllOfFile(strFile, contents, &zi))
         {
             DPRINT1("DoReadAllOfFile failed\n");
             err = 9999;
             break;
         }
-
-        // TODO: Initialize zip_fileinfo.
 
         CStringA strNameInZip = DoGetNameInZip(szBaseName, strFile);
         err = zipOpenNewFileInZip3_64(zf,
@@ -290,6 +301,11 @@ unsigned CZipCreatorImpl::JustDoIt()
     }
 
     zipClose(zf, NULL);
+
+    if (err)
+    {
+        DeleteFileW(strZipName);
+    }
 
     return err;
 }
