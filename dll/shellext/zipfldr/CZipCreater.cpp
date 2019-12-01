@@ -34,10 +34,10 @@ static CStringW DoGetZipName(const CStringW& filename)
     return ret;
 }
 
-static CStringA DoGetUTF8Name(const CStringW& filename)
+static CStringA DoGetAnsiName(const CStringW& filename)
 {
-    CHAR buf[MAX_PATH * 3 + 1];
-    WideCharToMultiByte(CP_UTF8, 0, filename, -1, buf, _countof(buf), NULL, NULL);
+    CHAR buf[MAX_PATH];
+    WideCharToMultiByte(CP_ACP, 0, filename, -1, buf, _countof(buf), NULL, NULL);
     return buf;
 }
 
@@ -65,7 +65,7 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 
     ret.Replace(L'\\', L'/');
 
-    return DoGetUTF8Name(ret);
+    return DoGetAnsiName(ret);
 }
 
 static BOOL
