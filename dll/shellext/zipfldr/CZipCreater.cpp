@@ -12,7 +12,7 @@
 #include "minizip/iowin32.h"
 #include <process.h>
 
-static CStringW DoGetZipName(const CStringW& filename)
+static CStringW DoGetZipName(LPCWSTR filename)
 {
     WCHAR szPath[MAX_PATH];
     StringCbCopyW(szPath, sizeof(szPath), filename);
@@ -34,14 +34,14 @@ static CStringW DoGetZipName(const CStringW& filename)
     return ret;
 }
 
-static CStringA DoGetAnsiName(const CStringW& filename)
+static CStringA DoGetAnsiName(LPCWSTR filename)
 {
     CHAR buf[MAX_PATH];
     WideCharToMultiByte(CP_ACP, 0, filename, -1, buf, _countof(buf), NULL, NULL);
     return buf;
 }
 
-static CStringW DoGetBaseName(const CStringW& filename)
+static CStringW DoGetBaseName(LPCWSTR filename)
 {
     WCHAR szBaseName[MAX_PATH];
     StringCbCopyW(szBaseName, sizeof(szBaseName), filename);
@@ -69,7 +69,7 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 }
 
 static BOOL
-DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
+DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
                 zip_fileinfo *pzi)
 {
     contents.RemoveAll();
@@ -78,7 +78,10 @@ DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
                                NULL, OPEN_EXISTING,
                                FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("%S: cannot open\n", filename);
         return FALSE;
+    }
 
     ZeroMemory(pzi, sizeof(*pzi));
 
@@ -96,28 +99,35 @@ DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
         pzi->tmz_date.tm_year = st.wYear;
     }
 
-    char buf[512];
-    DWORD cbRead;
+    DWORD cbBuff = 0x7FFF;
+    LPBYTE pbBuff = reinterpret_cast<LPBYTE>(CoTaskMemAlloc(cbBuff));
+    if (!pbBuff)
+    {
+        DPRINT1("Out of memory\n");
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
     for (;;)
     {
-        if (!ReadFile(hFile, buf, sizeof(buf), &cbRead, NULL) || !cbRead)
-        {
+        DWORD cbRead;
+        if (!ReadFile(hFile, pbBuff, cbBuff, &cbRead, NULL) || !cbRead)
             break;
-        }
 
         for (DWORD i = 0; i < cbRead; ++i)
         {
-            contents.Add(buf[i]);
+            contents.Add(pbBuff[i]);
         }
     }
 
+    CoTaskMemFree(pbBuff);
     CloseHandle(hFile);
 
     return TRUE;
 }
 
 static void
-DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
+DoAddFilesFromItem(CSimpleArray<CStringW>& files, LPCWSTR item)
 {
     if (!PathIsDirectoryW(item))
     {
@@ -146,13 +156,9 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
         PathAppendW(szPath, find.cFileName);
 
         if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
             DoAddFilesFromItem(files, szPath);
-        }
         else
-        {
             files.Add(szPath);
-        }
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind);
