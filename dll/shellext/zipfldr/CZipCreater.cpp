@@ -198,7 +198,11 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
 
 void CZipCreator::DoAddItem(LPCWSTR pszFile)
 {
-    m_pimpl->m_items.Add(pszFile);
+    // canonicalize path
+    WCHAR szPath[MAX_PATH], *pch;
+    GetFullPathNameW(pszFile, _countof(szPath), szPath, &pch);
+
+    m_pimpl->m_items.Add(szPath);
 }
 
 unsigned CZipCreatorImpl::JustDoIt()
