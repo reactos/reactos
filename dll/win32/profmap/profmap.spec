@@ -1,5 +1,6 @@
-@ stdcall -stub InitializeProfileMappingApi()
+@ stdcall DllMain(ptr long ptr)
+@ stub InitializeProfileMappingApi
 @ stdcall RemapAndMoveUserA(str long str str)
 @ stdcall RemapAndMoveUserW(wstr long wstr wstr)
-@ stdcall -stub RemapUserProfileA()
-@ stdcall -stub RemapUserProfileW()
+@ stub RemapUserProfileA
+@ stub RemapUserProfileW

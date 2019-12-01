@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS User Profile Mapping API
+ * PROJECT:         ReactOS system libraries
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/profmap/profmap_main.c
- * PURPOSE:         Main source file for user profile mapping functions
+ * PURPOSE:         ReactOS User Profile Mapping API
  * PROGRAMMER:      Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
@@ -52,7 +52,7 @@ RemapAndMoveUserA(IN LPCSTR pComputer,
                   IN LPCSTR pCurrentUser,
                   IN LPCSTR pNewUser)
 {
-    DPRINT1("RemapAndMoveUserA is unimplemented\n");
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -70,7 +70,7 @@ RemapAndMoveUserW(IN LPCWSTR pComputer,
                   IN LPCWSTR pCurrentUser,
                   IN LPCWSTR pNewUser)
 {
-    DPRINT1("RemapAndMoveUserW is unimplemented\n");
+    UNIMPLEMENTED;
     return FALSE;
 }
 

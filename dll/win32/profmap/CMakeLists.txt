@@ -1,5 +1,5 @@
 
-spec2def(profmap.dll profmap.spec ADD_IMPORTLIB)
+spec2def(profmap.dll profmap.spec)
 
 list(APPEND SOURCE
     profmap_main.c
@@ -9,5 +9,5 @@ list(APPEND SOURCE
 
 add_library(profmap MODULE ${SOURCE})
 set_module_type(profmap win32dll)
-add_importlibs(profmap userenv netapi32 user32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(profmap msvcrt kernel32 ntdll)
 add_cd_file(TARGET profmap DESTINATION reactos/system32 FOR all)
