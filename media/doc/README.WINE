@@ -193,7 +193,7 @@ dll/win32/urlmon              # Synced to WineStaging-4.18
 dll/win32/usp10               # Synced to WineStaging-4.18
 dll/win32/uxtheme             # Forked
 dll/win32/vbscript            # Synced to WineStaging-4.18
-dll/win32/version             # Synced to WineStaging-4.0
+dll/win32/version             # Synced to WineStaging-4.18
 dll/win32/vssapi              # Synced to WineStaging-2.9
 dll/win32/wbemdisp            # Synced to WineStaging-4.0
 dll/win32/wbemprox            # Synced to WineStaging-4.0
