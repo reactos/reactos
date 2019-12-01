@@ -70,19 +70,19 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
     HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
     UINT cItems = ::DragQueryFileW(hDrop, -1, NULL, 0);
 
-    CZipCreator *pCreater = CZipCreator::DoCreate();
+    CZipCreator *pCreator = CZipCreator::DoCreate();
 
     for (UINT iItem = 0; iItem < cItems; ++iItem)
     {
         WCHAR szPath[MAX_PATH];
         DragQueryFileW(hDrop, iItem, szPath, _countof(szPath));
 
-        pCreater->DoAddItem(szPath);
+        pCreator->DoAddItem(szPath);
     }
 
     ::ReleaseStgMedium(&stg);
 
-    CZipCreator::runThread(pCreater);   // pCreater is deleted in runThread
+    CZipCreator::runThread(pCreator);   // pCreator is deleted in runThread
 
     DragLeave();
     return hr;

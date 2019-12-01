@@ -5,8 +5,8 @@
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
  *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-#ifndef CZIPCREATER_HPP_
-#define CZIPCREATER_HPP_
+#ifndef CZIPCREATOR_HPP_
+#define CZIPCREATOR_HPP_
 
 struct CZipCreatorImpl;
 
@@ -23,7 +23,7 @@ public:
     }
 
     virtual void DoAddItem(LPCWSTR pszFile);
-    static BOOL runThread(CZipCreator* pCreater);
+    static BOOL runThread(CZipCreator* pCreator);
 
 protected:
     CZipCreator();

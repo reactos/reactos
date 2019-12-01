@@ -29,7 +29,7 @@ list(APPEND SOURCE
     CEnumZipContents.cpp
     CFolderViewCB.cpp
     CSendToZip.cpp
-    CZipCreater.cpp
+    CZipCreator.cpp
     CZipEnumerator.hpp
     CZipExtract.cpp
     CZipFolder.hpp
