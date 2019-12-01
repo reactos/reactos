@@ -47,7 +47,6 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
                  DWORD *pdwEffect)
 {
     m_pDataObject = pDataObj;
-    *pdwEffect = DROPEFFECT_COPY;
 
     if (!pDataObj || !m_fCanDragDrop)
     {
