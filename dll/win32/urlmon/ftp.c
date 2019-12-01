@@ -28,7 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    IUnknown            IUnknown_outer;
+    IUnknown            IUnknown_inner;
     IInternetProtocolEx IInternetProtocolEx_iface;
     IInternetPriority   IInternetPriority_iface;
     IWinInetHttpInfo    IWinInetHttpInfo_iface;
@@ -39,7 +39,7 @@ typedef struct {
 
 static inline FtpProtocol *impl_from_IUnknown(IUnknown *iface)
 {
-    return CONTAINING_RECORD(iface, FtpProtocol, IUnknown_outer);
+    return CONTAINING_RECORD(iface, FtpProtocol, IUnknown_inner);
 }
 
 static inline FtpProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
@@ -66,6 +66,7 @@ static HRESULT FtpProtocol_open_request(Protocol *prot, IUri *uri, DWORD request
         HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     FtpProtocol *This = impl_from_Protocol(prot);
+    DWORD path_size = 0;
     BSTR url;
     HRESULT hres;
 
@@ -73,16 +74,18 @@ static HRESULT FtpProtocol_open_request(Protocol *prot, IUri *uri, DWORD request
     if(FAILED(hres))
         return hres;
 
-    This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
-            request_flags|INTERNET_FLAG_EXISTING_CONNECT|INTERNET_FLAG_PASSIVE,
-            (DWORD_PTR)&This->base);
-    SysFreeString(url);
-    if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
-        WARN("InternetOpenUrl failed: %d\n", GetLastError());
-        return INET_E_RESOURCE_NOT_FOUND;
+    hres = UrlUnescapeW(url, NULL, &path_size, URL_UNESCAPE_INPLACE);
+    if(SUCCEEDED(hres)) {
+        This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
+                request_flags|INTERNET_FLAG_EXISTING_CONNECT|INTERNET_FLAG_PASSIVE,
+                (DWORD_PTR)&This->base);
+        if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
+            WARN("InternetOpenUrl failed: %d\n", GetLastError());
+            hres = INET_E_RESOURCE_NOT_FOUND;
+        }
     }
-
-    return S_OK;
+    SysFreeString(url);
+    return hres;
 }
 
 static HRESULT FtpProtocol_end_request(Protocol *prot)
@@ -128,7 +131,7 @@ static HRESULT WINAPI FtpProtocolUnk_QueryInterface(IUnknown *iface, REFIID riid
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IUnknown_outer;
+        *ppv = &This->IUnknown_inner;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
         *ppv = &This->IInternetProtocolEx_iface;
@@ -459,13 +462,13 @@ HRESULT FtpProtocol_Construct(IUnknown *outer, void **ppv)
     ret = heap_alloc_zero(sizeof(FtpProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->IUnknown_outer.lpVtbl            = &FtpProtocolUnkVtbl;
+    ret->IUnknown_inner.lpVtbl            = &FtpProtocolUnkVtbl;
     ret->IInternetProtocolEx_iface.lpVtbl = &FtpProtocolVtbl;
     ret->IInternetPriority_iface.lpVtbl   = &FtpPriorityVtbl;
     ret->IWinInetHttpInfo_iface.lpVtbl    = &WinInetHttpInfoVtbl;
     ret->ref = 1;
-    ret->outer = outer ? outer : &ret->IUnknown_outer;
+    ret->outer = outer ? outer : &ret->IUnknown_inner;
 
-    *ppv = &ret->IUnknown_outer;
+    *ppv = &ret->IUnknown_inner;
     return S_OK;
 }
