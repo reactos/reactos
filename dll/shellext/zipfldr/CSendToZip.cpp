@@ -52,7 +52,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
     {
         *pdwEffect = 0;
         DragLeave();
-        return E_POINTER;
+        return E_FAIL;
     }
 
     STGMEDIUM stg;
