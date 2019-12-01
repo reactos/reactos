@@ -239,7 +239,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        strText.Format(IDS_CANTOPENFILE, static_cast<LPCWSTR>(strZipName));
+        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
         return -1;

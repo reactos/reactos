@@ -38,8 +38,7 @@
 #define IDS_ERRORTITLE      109
 #define IDS_CANTSTARTTHREAD 110
 #define IDS_NOFILES         111
-#define IDS_CANTOPENFILE    112
-#define IDS_CANTCREATEZIP   113
+#define IDS_CANTCREATEZIP   112
 
 /* Wizard titles */
 #define IDS_WIZ_TITLE           8000
