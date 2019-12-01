@@ -705,7 +705,7 @@ BEGIN
     LTEXT "プレビュー:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "フォルダのアイコン", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    LTEXT "サムネイル以外のすべてのビューについて、標準の「フォルダ」アイコンを別のアイコンに変更可能です。", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
     PUSHBUTTON "アイコン変更(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
@@ -765,16 +765,16 @@ BEGIN
     IDS_RENAME "名前の変更"
     IDS_PASTE "挿入"
     IDS_EJECT "取り出し"
-    IDS_DISCONNECT "Disconnect"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_DISCONNECT "接続の切断"
+    IDS_OPENFILELOCATION "ファイルの場所を開く(&I)"
+    IDS_DESKLINK "デスクトップ (ショートカットの作成)"
+    IDS_SENDTO_MENU "送る(&N)"
+    IDS_MOVEERRORTITLE "ファイルまたはフォルダの移動のエラー"
+    IDS_COPYERRORTITLE "ファイルまたはフォルダのコピーのエラー"
+    IDS_MOVEERRORSAME "移動できません '%s': 移動先のフォルダは移動元のフォルダと同じです。"
+    IDS_COPYERRORSAME "コピーできません '%s': コピー元とコピー先のファイル名が同じです。"
+    IDS_MOVEERRORSUBF "移動できません '%s': 移動先のフォルダは移動元のフォルダのサブフォルダです。"
+    IDS_COPYERRORSUBF "コピーできません '%s': コピー先のフォルダはコピー元のフォルダのサブフォルダです。"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
@@ -796,7 +796,7 @@ BEGIN
     IDS_FILEOOP_DELETING "削除中..."
     IDS_FILEOOP_FROM_TO "%1 から %2 へ"
     IDS_FILEOOP_FROM "%1 から"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_PREFLIGHT "準備中"
 
     /* message box strings */
     IDS_RESTART_TITLE "再起動"
@@ -813,7 +813,7 @@ BEGIN
     IDS_RUNDLG_ERROR "「ファイルの実行」ダイアログを表示できませんでした (内部エラー)"
     IDS_RUNDLG_BROWSE_ERROR "「閲覧」ダイアログを表示できませんでした (内部エラー)"
     IDS_RUNDLG_BROWSE_CAPTION "参照"
-    IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル Files (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS "スタート メニュー\\プログラム"
@@ -826,10 +826,10 @@ BEGIN
     IDS_MYMUSIC "マイ ミュージック"
     IDS_MYVIDEO "マイ ビデオ"
     IDS_DESKTOPDIRECTORY "デスクトップ"
-    IDS_NETHOOD "NetHood"
+    IDS_NETHOOD "近くのネットワーク"
     IDS_TEMPLATES "テンプレート"
     IDS_APPDATA "Application Data"
-    IDS_PRINTHOOD "PrintHood"
+    IDS_PRINTHOOD "近くのプリンタ"
     IDS_LOCAL_APPDATA "Local Settings\\Application Data"
     IDS_INTERNET_CACHE "インターネット一時ファイル"
     IDS_COOKIES "クッキー"
@@ -852,7 +852,7 @@ BEGIN
     IDS_DRIVE_NETWORK "ネットワーク ディスク"
     IDS_DRIVE_FLOPPY "3.5フロッピー"
     IDS_DRIVE_REMOVABLE "リムーバブル ディスク"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_FS_UNKNOWN "未知の形式"
 
     /* Open With */
     IDS_OPEN_WITH "プログラムから開く"
