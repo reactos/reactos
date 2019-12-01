@@ -98,7 +98,7 @@ DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
 }
 
 static void
-DoAddItem(CSimpleArray<CStringW>& files, const CStringW& item)
+DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
 {
     if (!PathIsDirectoryW(item))
     {
@@ -130,7 +130,7 @@ DoAddItem(CSimpleArray<CStringW>& files, const CStringW& item)
 
         if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            DoAddItem(files, szPath);
+            DoAddFilesFromItem(files, szPath);
         }
         else
         {
@@ -216,7 +216,7 @@ unsigned CZipCreatorImpl::JustDoIt()
     CSimpleArray<CStringW> files;
     for (INT iItem = 0; iItem < m_items.GetSize(); ++iItem)
     {
-        DoAddItem(files, m_items[iItem]);
+        DoAddFilesFromItem(files, m_items[iItem]);
     }
 
     if (files.GetSize() <= 0)
