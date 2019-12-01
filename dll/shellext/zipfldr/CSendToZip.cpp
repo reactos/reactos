@@ -47,12 +47,11 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
                  DWORD *pdwEffect)
 {
     m_pDataObject = pDataObj;
-    *pdwEffect &= DROPEFFECT_COPY;
+    *pdwEffect = DROPEFFECT_COPY;
 
-    if (!pDataObj || !m_fCanDragDrop || !*pdwEffect)
+    if (!pDataObj || !m_fCanDragDrop)
     {
-        DPRINT1("Drop failed: %d %d %d\n",
-                !pDataObj, !m_fCanDragDrop, !*pdwEffect);
+        DPRINT1("Drop failed: %d %d\n", !pDataObj, !m_fCanDragDrop);
         *pdwEffect = 0;
         DragLeave();
         return E_FAIL;
