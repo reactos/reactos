@@ -80,14 +80,14 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
     }
 
     HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
-    UINT cFiles = ::DragQueryFileW(hDrop, -1, NULL, 0);
+    UINT cItems = ::DragQueryFileW(hDrop, -1, NULL, 0);
 
     CZipCreator *pCreater = CZipCreator::DoCreate();
 
-    for (UINT iFile = 0; iFile < cFiles; ++iFile)
+    for (UINT iItem = 0; iItem < cItems; ++iItem)
     {
         WCHAR szPath[MAX_PATH];
-        DragQueryFileW(hDrop, iFile, szPath, _countof(szPath));
+        DragQueryFileW(hDrop, iItem, szPath, _countof(szPath));
 
         pCreater->DoAddItem(szPath);
     }
