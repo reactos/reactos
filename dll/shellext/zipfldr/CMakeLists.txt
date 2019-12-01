@@ -28,6 +28,8 @@ list(APPEND SOURCE
     CExplorerCommand.cpp
     CEnumZipContents.cpp
     CFolderViewCB.cpp
+    CSendToZip.cpp
+    CZipCreater.cpp
     CZipEnumerator.hpp
     CZipExtract.cpp
     CZipFolder.hpp
