@@ -35,7 +35,9 @@
 #define IDS_COL_DATE_MOD    106
 #define IDS_YES             107
 #define IDS_NO              108
-
+#define IDS_ERRORTITLE      109
+#define IDS_CANTSTARTTHREAD 110
+#define IDS_NOFILES         112
 
 /* Wizard titles */
 #define IDS_WIZ_TITLE           8000

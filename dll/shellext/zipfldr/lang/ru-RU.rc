@@ -68,6 +68,9 @@ BEGIN
     IDS_COL_DATE_MOD "Дата изменения"
     IDS_YES "Да"
     IDS_NO "Нет"
+    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
+    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
+    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
 
     IDS_WIZ_TITLE "Мастер извлечения архивов"
     IDS_WIZ_DEST_TITLE "Укажите путь"

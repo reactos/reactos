@@ -68,6 +68,9 @@ BEGIN
     IDS_COL_DATE_MOD "修改日期"
     IDS_YES "是"
     IDS_NO "否"
+    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
+    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
+    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
 
     IDS_WIZ_TITLE "解压向导"
     IDS_WIZ_DEST_TITLE "选择一个目标文件夹"

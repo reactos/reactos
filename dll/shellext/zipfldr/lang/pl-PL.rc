@@ -67,6 +67,9 @@ BEGIN
     IDS_COL_DATE_MOD "Data modyfikacji"
     IDS_YES "Tak"
     IDS_NO "Nie"
+    IDS_ERRORTITLE "Compressed (zipped) Folders Error"
+    IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
+    IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
 
     IDS_WIZ_TITLE "Kreator wyodrębniania"
     IDS_WIZ_DEST_TITLE "Wybierz miejsce docelowe"

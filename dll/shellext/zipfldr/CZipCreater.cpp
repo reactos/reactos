@@ -187,8 +187,9 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
 
     DPRINT1("hThread == NULL\n");
 
-    // TODO: Localize.
-    MessageBoxW(NULL, L"Cannot start thread to compress!", NULL, MB_ICONERROR);
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+    CStringW strText(MAKEINTRESOURCEW(IDS_CANTSTARTTHREAD));
+    MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
     delete pCreater;
     return FALSE;
@@ -220,8 +221,13 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     if (files.GetSize() <= 0)
     {
-        // TODO: Localize.
-        MessageBoxW(NULL, L"No file!", NULL, MB_ICONERROR);
+        DPRINT1("files.GetSize() <= 0\n");
+
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strText;
+        strText.Format(IDS_NOFILES, static_cast<LPCWSTR>(m_items[0]));
+        MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
+
         return -2;
     }
 
