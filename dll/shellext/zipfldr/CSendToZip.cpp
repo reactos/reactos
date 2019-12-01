@@ -89,7 +89,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
         WCHAR szPath[MAX_PATH];
         DragQueryFileW(hDrop, iFile, szPath, _countof(szPath));
 
-        pCreater->DoAddFile(szPath);
+        pCreater->DoAddItem(szPath);
     }
 
     ::ReleaseStgMedium(&stg);

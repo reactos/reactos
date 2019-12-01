@@ -181,7 +181,7 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
     return FALSE;
 }
 
-void CZipCreator::DoAddFile(LPCWSTR pszFile)
+void CZipCreator::DoAddItem(LPCWSTR pszFile)
 {
     m_pimpl->m_items.Add(pszFile);
 }

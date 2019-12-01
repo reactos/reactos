@@ -18,7 +18,7 @@ public:
     virtual ~CZipCreator();
 
     static CZipCreator* DoCreate();
-    virtual void DoAddFile(LPCWSTR pszFile);
+    virtual void DoAddItem(LPCWSTR pszFile);
     static BOOL runThread(CZipCreator* pCreater);
 
 protected:
