@@ -12,9 +12,6 @@ STDMETHODIMP
 CSendToZip::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
                       DWORD *pdwEffect)
 {
-    if (!pdwEffect)
-        return E_POINTER;
-
     m_pDataObject = pDataObj;
 
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -30,9 +27,6 @@ CSendToZip::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
 
 STDMETHODIMP CSendToZip::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    if (!pdwEffect)
-        return E_POINTER;
-
     if (m_fCanDragDrop)
         *pdwEffect &= DROPEFFECT_COPY;
     else
@@ -52,6 +46,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
                  DWORD *pdwEffect)
 {
     m_pDataObject = pDataObj;
+    *pdwEffect &= DROPEFFECT_COPY;
 
     if (!pDataObj)
     {
@@ -59,8 +54,6 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
         DragLeave();
         return E_POINTER;
     }
-
-    *pdwEffect &= DROPEFFECT_COPY;
 
     if (!m_fCanDragDrop && !*pdwEffect)
     {
@@ -94,7 +87,7 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
 
     ::ReleaseStgMedium(&stg);
 
-    CZipCreator::runThread(pCreater);   // pCreater is freed in runThread
+    CZipCreator::runThread(pCreater);   // pCreater is deleted in runThread
 
     DragLeave();
     return hr;

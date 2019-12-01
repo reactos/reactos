@@ -174,7 +174,6 @@ create_zip_function(void *arg)
 BOOL CZipCreator::runThread(CZipCreator *pCreater)
 {
     unsigned tid = 0;
-
     HANDLE hThread = reinterpret_cast<HANDLE>(
         _beginthreadex(NULL, 0, create_zip_function, pCreater, 0, &tid));
 
