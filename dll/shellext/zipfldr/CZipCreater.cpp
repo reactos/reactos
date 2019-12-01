@@ -99,7 +99,7 @@ DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
         pzi->tmz_date.tm_year = st.wYear;
     }
 
-    DWORD cbBuff = 0x7FFF;
+    const DWORD cbBuff = 0x7FFF;
     LPBYTE pbBuff = reinterpret_cast<LPBYTE>(CoTaskMemAlloc(cbBuff));
     if (!pbBuff)
     {
@@ -283,7 +283,6 @@ unsigned CZipCreatorImpl::JustDoIt()
     }
 
     zip_fileinfo zi;
-    memset(&zi, 0, sizeof(zi));
 
     // TODO: password
     const char *password = NULL;
@@ -356,15 +355,13 @@ unsigned CZipCreatorImpl::JustDoIt()
         DeleteFileW(strZipName);
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+
         CStringW strText;
         if (err < 0)
-        {
             strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName), err);
-        }
         else
-        {
             strText.Format(IDS_CANTREADFILE, static_cast<LPCWSTR>(strTarget));
-        }
+
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }
 
