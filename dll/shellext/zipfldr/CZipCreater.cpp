@@ -315,6 +315,11 @@ unsigned CZipCreatorImpl::JustDoIt()
     if (err)
     {
         DeleteFileW(strZipName);
+
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strText;
+        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
+        MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }
 
     return err;

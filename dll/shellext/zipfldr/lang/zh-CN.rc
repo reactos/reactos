@@ -72,6 +72,7 @@ BEGIN
     IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
     IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
     IDS_CANTOPENFILE "Unable to open file '%s'."
+    IDS_CANTCREATEZIP, "Failed to create ZIP file '%s'."
 
     IDS_WIZ_TITLE "解压向导"
     IDS_WIZ_DEST_TITLE "选择一个目标文件夹"
