@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.  */
+/* A Bison parser, made by GNU Bison 3.4.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,6 +31,9 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
 #ifndef YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
 # define YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
@@ -45,83 +49,82 @@ extern int parser_debug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    tEOF = 258,
-    tNL = 259,
-    tREM = 260,
+    tEXPRESSION = 258,
+    tEOF = 259,
+    tNL = 260,
     tEMPTYBRACKETS = 261,
-    tTRUE = 262,
-    tFALSE = 263,
-    tNOT = 264,
-    tAND = 265,
-    tOR = 266,
-    tXOR = 267,
-    tEQV = 268,
-    tIMP = 269,
-    tNEQ = 270,
-    tIS = 271,
-    tLTEQ = 272,
-    tGTEQ = 273,
-    tMOD = 274,
-    tCALL = 275,
-    tDIM = 276,
-    tSUB = 277,
-    tFUNCTION = 278,
-    tPROPERTY = 279,
-    tGET = 280,
-    tLET = 281,
-    tCONST = 282,
-    tIF = 283,
-    tELSE = 284,
-    tELSEIF = 285,
-    tEND = 286,
-    tTHEN = 287,
-    tEXIT = 288,
-    tWHILE = 289,
-    tWEND = 290,
-    tDO = 291,
-    tLOOP = 292,
-    tUNTIL = 293,
-    tFOR = 294,
-    tTO = 295,
-    tSTEP = 296,
-    tEACH = 297,
-    tIN = 298,
-    tSELECT = 299,
-    tCASE = 300,
-    tBYREF = 301,
-    tBYVAL = 302,
-    tOPTION = 303,
-    tEXPLICIT = 304,
-    tSTOP = 305,
-    tNOTHING = 306,
-    tEMPTY = 307,
-    tNULL = 308,
-    tCLASS = 309,
-    tSET = 310,
-    tNEW = 311,
-    tPUBLIC = 312,
-    tPRIVATE = 313,
-    tDEFAULT = 314,
-    tME = 315,
-    tERROR = 316,
-    tNEXT = 317,
-    tON = 318,
-    tRESUME = 319,
-    tGOTO = 320,
-    tIdentifier = 321,
-    tString = 322,
-    tLong = 323,
-    tShort = 324,
+    tLTEQ = 262,
+    tGTEQ = 263,
+    tNEQ = 264,
+    tSTOP = 265,
+    tME = 266,
+    tREM = 267,
+    tTRUE = 268,
+    tFALSE = 269,
+    tNOT = 270,
+    tAND = 271,
+    tOR = 272,
+    tXOR = 273,
+    tEQV = 274,
+    tIMP = 275,
+    tIS = 276,
+    tMOD = 277,
+    tCALL = 278,
+    tDIM = 279,
+    tSUB = 280,
+    tFUNCTION = 281,
+    tGET = 282,
+    tLET = 283,
+    tCONST = 284,
+    tIF = 285,
+    tELSE = 286,
+    tELSEIF = 287,
+    tEND = 288,
+    tTHEN = 289,
+    tEXIT = 290,
+    tWHILE = 291,
+    tWEND = 292,
+    tDO = 293,
+    tLOOP = 294,
+    tUNTIL = 295,
+    tFOR = 296,
+    tTO = 297,
+    tEACH = 298,
+    tIN = 299,
+    tSELECT = 300,
+    tCASE = 301,
+    tBYREF = 302,
+    tBYVAL = 303,
+    tOPTION = 304,
+    tNOTHING = 305,
+    tEMPTY = 306,
+    tNULL = 307,
+    tCLASS = 308,
+    tSET = 309,
+    tNEW = 310,
+    tPUBLIC = 311,
+    tPRIVATE = 312,
+    tNEXT = 313,
+    tON = 314,
+    tRESUME = 315,
+    tGOTO = 316,
+    tIdentifier = 317,
+    tString = 318,
+    tDEFAULT = 319,
+    tERROR = 320,
+    tEXPLICIT = 321,
+    tPROPERTY = 322,
+    tSTEP = 323,
+    tInt = 324,
     tDouble = 325
   };
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 88 "parser.y" /* yacc.c:1909  */
+#line 87 "parser.y"
 
     const WCHAR *string;
     statement_t *statement;
@@ -136,12 +139,14 @@ union YYSTYPE
     const_decl_t *const_decl;
     case_clausule_t *case_clausule;
     unsigned uint;
-    LONG lng;
+    LONG integer;
     BOOL boolean;
     double dbl;
 
-#line 144 "parser.tab.h" /* yacc.c:1909  */
+#line 147 "parser.tab.h"
+
 };
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

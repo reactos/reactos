@@ -47,7 +47,7 @@ static BOOL get_func_id(vbdisp_t *This, const WCHAR *name, vbdisp_invoke_type_t 
                 continue;
         }
 
-        if(!strcmpiW(This->desc->funcs[i].name, name)) {
+        if(!wcsicmp(This->desc->funcs[i].name, name)) {
             *id = i;
             return TRUE;
         }
@@ -67,18 +67,10 @@ HRESULT vbdisp_get_id(vbdisp_t *This, BSTR name, vbdisp_invoke_type_t invoke_typ
         if(!search_private && !This->desc->props[i].is_public)
             continue;
 
-        if(!strcmpiW(This->desc->props[i].name, name)) {
+        if(!wcsicmp(This->desc->props[i].name, name)) {
             *id = i + This->desc->func_cnt;
             return S_OK;
         }
-    }
-
-    if(This->desc->typeinfo) {
-        HRESULT hres;
-
-        hres = ITypeInfo_GetIDsOfNames(This->desc->typeinfo, &name, 1, id);
-        if(SUCCEEDED(hres))
-            return S_OK;
     }
 
     *id = -1;
@@ -169,83 +161,76 @@ static HRESULT invoke_variant_prop(script_ctx_t *ctx, VARIANT *v, WORD flags, DI
     return hres;
 }
 
-static HRESULT invoke_builtin(vbdisp_t *This, const builtin_prop_t *prop, WORD flags, DISPPARAMS *dp, VARIANT *res)
+static HRESULT invoke_vbdisp(vbdisp_t *This, DISPID id, DWORD flags, BOOL extern_caller, DISPPARAMS *params, VARIANT *res)
 {
-    VARIANT args[8];
-    unsigned argn, i;
+    if(id < 0)
+        return DISP_E_MEMBERNOTFOUND;
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET:
-        if(!(prop->flags & (BP_GET|BP_GETPUT))) {
-            FIXME("property does not support DISPATCH_PROPERTYGET\n");
-            return E_FAIL;
-        }
-        break;
-    case DISPATCH_PROPERTYGET|DISPATCH_METHOD:
-        if(!prop->proc && prop->flags == BP_GET) {
-            const int vt = prop->min_args, val = prop->max_args;
-            switch(vt) {
-            case VT_I2:
-                V_VT(res) = VT_I2;
-                V_I2(res) = val;
-                break;
-            case VT_I4:
-                V_VT(res) = VT_I4;
-                V_I4(res) = val;
-                break;
-            case VT_BSTR: {
-                const string_constant_t *str = (const string_constant_t*)prop->max_args;
-                BSTR ret;
+    if(is_func_id(This, id)) {
+        function_t *func;
 
-                ret = SysAllocStringLen(str->buf, str->len);
-                if(!ret)
-                    return E_OUTOFMEMORY;
+        TRACE("%p->%s\n", This, debugstr_w(This->desc->funcs[id].name));
 
-                V_VT(res) = VT_BSTR;
-                V_BSTR(res) = ret;
-                break;
+        switch(flags) {
+        case DISPATCH_PROPERTYGET:
+            func = This->desc->funcs[id].entries[VBDISP_CALLGET];
+            if(!func || (func->type != FUNC_PROPGET && func->type != FUNC_DEFGET)) {
+                WARN("no getter\n");
+                return DISP_E_MEMBERNOTFOUND;
             }
-            DEFAULT_UNREACHABLE;
+
+            return exec_script(This->desc->ctx, extern_caller, func, This, params, res);
+
+        case DISPATCH_METHOD:
+        case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
+            func = This->desc->funcs[id].entries[VBDISP_CALLGET];
+            if(!func) {
+                FIXME("no invoke/getter\n");
+                return DISP_E_MEMBERNOTFOUND;
             }
-            return S_OK;
-        }
-        break;
-    case DISPATCH_METHOD:
-        if(prop->flags & (BP_GET|BP_GETPUT)) {
-            FIXME("Call on property\n");
-            return E_FAIL;
-        }
-        break;
-    case DISPATCH_PROPERTYPUT:
-        if(!(prop->flags & BP_GETPUT)) {
-            FIXME("property does not support DISPATCH_PROPERTYPUT\n");
-            return E_FAIL;
-        }
 
-        FIXME("call put\n");
-        return E_NOTIMPL;
-    default:
-        FIXME("unsupported flags %x\n", flags);
-        return E_NOTIMPL;
+            return exec_script(This->desc->ctx, extern_caller, func, This, params, res);
+
+        case DISPATCH_PROPERTYPUT:
+        case DISPATCH_PROPERTYPUTREF:
+        case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF: {
+            DISPPARAMS dp = {NULL, NULL, 1, 0};
+            BOOL needs_release;
+            VARIANT put_val;
+            HRESULT hres;
+
+            if(arg_cnt(params)) {
+                FIXME("arguments not implemented\n");
+                return E_NOTIMPL;
+            }
+
+            hres = get_propput_arg(This->desc->ctx, params, flags, &put_val, &needs_release);
+            if(FAILED(hres))
+                return hres;
+
+            dp.rgvarg = &put_val;
+            func = This->desc->funcs[id].entries[V_VT(&put_val) == VT_DISPATCH ? VBDISP_SET : VBDISP_LET];
+            if(!func) {
+                FIXME("no letter/setter\n");
+                return DISP_E_MEMBERNOTFOUND;
+            }
+
+            hres = exec_script(This->desc->ctx, extern_caller, func, This, &dp, NULL);
+            if(needs_release)
+                VariantClear(&put_val);
+            return hres;
+        }
+        default:
+            FIXME("flags %x\n", flags);
+            return DISP_E_MEMBERNOTFOUND;
+        }
     }
 
-    argn = arg_cnt(dp);
+    if(id >= This->desc->prop_cnt + This->desc->func_cnt)
+        return DISP_E_MEMBERNOTFOUND;
 
-    if(argn < prop->min_args || argn > (prop->max_args ? prop->max_args : prop->min_args)) {
-        FIXME("invalid number of arguments\n");
-        return E_FAIL;
-    }
-
-    assert(argn < ARRAY_SIZE(args));
-
-    for(i=0; i < argn; i++) {
-        if(V_VT(dp->rgvarg+dp->cArgs-i-1) == (VT_BYREF|VT_VARIANT))
-            args[i] = *V_VARIANTREF(dp->rgvarg+dp->cArgs-i-1);
-        else
-            args[i] = dp->rgvarg[dp->cArgs-i-1];
-    }
-
-    return prop->proc(This, args, dp->cArgs, res);
+    TRACE("%p->%s\n", This, debugstr_w(This->desc->props[id - This->desc->func_cnt].name));
+    return invoke_variant_prop(This->desc->ctx, This->props+(id-This->desc->func_cnt), flags, params, res);
 }
 
 static BOOL run_terminator(vbdisp_t *This)
@@ -260,7 +245,7 @@ static BOOL run_terminator(vbdisp_t *This)
         return TRUE;
 
     This->ref++;
-    exec_script(This->desc->ctx, This->desc->funcs[This->desc->class_terminate_id].entries[VBDISP_CALLGET],
+    exec_script(This->desc->ctx, FALSE, This->desc->funcs[This->desc->class_terminate_id].entries[VBDISP_CALLGET],
             This, &dp, NULL);
     return !--This->ref;
 }
@@ -412,84 +397,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     if(pvarRes)
         V_VT(pvarRes) = VT_EMPTY;
 
-    if(id < 0)
-        return DISP_E_MEMBERNOTFOUND;
-
-    if(is_func_id(This, id)) {
-        function_t *func;
-
-        switch(wFlags) {
-        case DISPATCH_PROPERTYGET:
-            func = This->desc->funcs[id].entries[VBDISP_CALLGET];
-            if(!func || (func->type != FUNC_PROPGET && func->type != FUNC_DEFGET)) {
-                WARN("no getter\n");
-                return DISP_E_MEMBERNOTFOUND;
-            }
-
-            return exec_script(This->desc->ctx, func, This, pdp, pvarRes);
-
-        case DISPATCH_METHOD:
-        case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
-            func = This->desc->funcs[id].entries[VBDISP_CALLGET];
-            if(!func) {
-                FIXME("no invoke/getter\n");
-                return DISP_E_MEMBERNOTFOUND;
-            }
-
-            return exec_script(This->desc->ctx, func, This, pdp, pvarRes);
-        case DISPATCH_PROPERTYPUT:
-        case DISPATCH_PROPERTYPUTREF:
-        case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF: {
-            DISPPARAMS dp = {NULL, NULL, 1, 0};
-            BOOL needs_release;
-            VARIANT put_val;
-            HRESULT hres;
-
-            if(arg_cnt(pdp)) {
-                FIXME("arguments not implemented\n");
-                return E_NOTIMPL;
-            }
-
-            hres = get_propput_arg(This->desc->ctx, pdp, wFlags, &put_val, &needs_release);
-            if(FAILED(hres))
-                return hres;
-
-            dp.rgvarg = &put_val;
-            func = This->desc->funcs[id].entries[V_VT(&put_val) == VT_DISPATCH ? VBDISP_SET : VBDISP_LET];
-            if(!func) {
-                FIXME("no letter/setter\n");
-                return DISP_E_MEMBERNOTFOUND;
-            }
-
-            hres = exec_script(This->desc->ctx, func, This, &dp, NULL);
-            if(needs_release)
-                VariantClear(&put_val);
-            return hres;
-        }
-        default:
-            FIXME("flags %x\n", wFlags);
-            return DISP_E_MEMBERNOTFOUND;
-        }
-    }
-
-    if(id < This->desc->prop_cnt + This->desc->func_cnt)
-        return invoke_variant_prop(This->desc->ctx, This->props+(id-This->desc->func_cnt), wFlags, pdp, pvarRes);
-
-    if(This->desc->builtin_prop_cnt) {
-        unsigned min = 0, max = This->desc->builtin_prop_cnt-1, i;
-
-        while(min <= max) {
-            i = (min+max)/2;
-            if(This->desc->builtin_props[i].id == id)
-                return invoke_builtin(This, This->desc->builtin_props+i, wFlags, pdp, pvarRes);
-            if(This->desc->builtin_props[i].id < id)
-                min = i+1;
-            else
-                max = i-1;
-        }
-    }
-
-    return DISP_E_MEMBERNOTFOUND;
+    return invoke_vbdisp(This, id, wFlags, TRUE, pdp, pvarRes);
 }
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
@@ -605,7 +513,7 @@ HRESULT create_vbdisp(const class_desc_t *desc, vbdisp_t **ret)
 
     if(SUCCEEDED(hres) && desc->class_initialize_id) {
         DISPPARAMS dp = {0};
-        hres = exec_script(desc->ctx, desc->funcs[desc->class_initialize_id].entries[VBDISP_CALLGET],
+        hres = exec_script(desc->ctx, FALSE, desc->funcs[desc->class_initialize_id].entries[VBDISP_CALLGET],
                            vbdisp, &dp, NULL);
     }
 
@@ -615,52 +523,6 @@ HRESULT create_vbdisp(const class_desc_t *desc, vbdisp_t **ret)
     }
 
     *ret = vbdisp;
-    return S_OK;
-}
-
-static HRESULT Procedure_invoke(vbdisp_t *This, VARIANT *args, unsigned args_cnt, VARIANT *res)
-{
-    script_ctx_t *ctx = This->desc->ctx;
-    HRESULT hres;
-
-    TRACE("\n");
-
-    IActiveScriptSite_OnEnterScript(ctx->site);
-    hres = exec_script(ctx, This->desc->value_func, NULL, NULL, NULL);
-    IActiveScriptSite_OnLeaveScript(ctx->site);
-
-    return hres;
-}
-
-static const builtin_prop_t procedure_props[] = {
-    {DISPID_VALUE,  Procedure_invoke, 0}
-};
-
-HRESULT create_procedure_disp(script_ctx_t *ctx, vbscode_t *code, IDispatch **ret)
-{
-    class_desc_t *desc;
-    vbdisp_t *vbdisp;
-    HRESULT hres;
-
-    desc = heap_alloc_zero(sizeof(*desc));
-    if(!desc)
-        return E_OUTOFMEMORY;
-
-    desc->ctx = ctx;
-    desc->builtin_prop_cnt = ARRAY_SIZE(procedure_props);
-    desc->builtin_props = procedure_props;
-    desc->value_func = &code->main_code;
-
-    hres = create_vbdisp(desc, &vbdisp);
-    if(FAILED(hres)) {
-        heap_free(desc);
-        return hres;
-    }
-
-    desc->next = ctx->procs;
-    ctx->procs = desc;
-
-    *ret = (IDispatch*)&vbdisp->IDispatchEx_iface;
     return S_OK;
 }
 
@@ -823,14 +685,14 @@ static HRESULT WINAPI ScriptDisp_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
         return E_UNEXPECTED;
 
     for(ident = This->ident_map; ident < This->ident_map+This->ident_map_cnt; ident++) {
-        if(!strcmpiW(ident->name, bstrName)) {
+        if(!wcsicmp(ident->name, bstrName)) {
             *pid = ident_to_id(This, ident);
             return S_OK;
         }
     }
 
     for(var = This->ctx->global_vars; var; var = var->next) {
-        if(!strcmpiW(var->name, bstrName)) {
+        if(!wcsicmp(var->name, bstrName)) {
             ident = add_ident(This, var->name);
             if(!ident)
                 return E_OUTOFMEMORY;
@@ -843,7 +705,7 @@ static HRESULT WINAPI ScriptDisp_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     }
 
     for(func = This->ctx->global_funcs; func; func = func->next) {
-        if(!strcmpiW(func->name, bstrName)) {
+        if(!wcsicmp(func->name, bstrName)) {
             ident = add_ident(This, func->name);
             if(!ident)
                 return E_OUTOFMEMORY;
@@ -884,9 +746,7 @@ static HRESULT WINAPI ScriptDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     switch(wFlags) {
     case DISPATCH_METHOD:
     case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
-        IActiveScriptSite_OnEnterScript(This->ctx->site);
-        hres = exec_script(This->ctx, ident->u.func, NULL, pdp, pvarRes);
-        IActiveScriptSite_OnLeaveScript(This->ctx->site);
+        hres = exec_script(This->ctx, TRUE, ident->u.func, NULL, pdp, pvarRes);
         break;
     default:
         FIXME("Unsupported flags %x\n", wFlags);
@@ -1079,12 +939,17 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, DISPPARAMS *dp,
 {
     const WORD flags = DISPATCH_METHOD|(retv ? DISPATCH_PROPERTYGET : 0);
     IDispatchEx *dispex;
+    vbdisp_t *vbdisp;
     EXCEPINFO ei;
     HRESULT hres;
 
     memset(&ei, 0, sizeof(ei));
     if(retv)
         V_VT(retv) = VT_EMPTY;
+
+    vbdisp = unsafe_impl_from_IDispatch(disp);
+    if(vbdisp && vbdisp->desc && vbdisp->desc->ctx == ctx)
+        return invoke_vbdisp(vbdisp, id, flags, FALSE, dp, retv);
 
     hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     if(FAILED(hres)) {
@@ -1102,14 +967,21 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, DISPPARAMS *dp,
 HRESULT get_disp_value(script_ctx_t *ctx, IDispatch *disp, VARIANT *v)
 {
     DISPPARAMS dp = {NULL};
+    if(!disp)
+        return MAKE_VBSERROR(VBSE_OBJECT_VARIABLE_NOT_SET);
     return disp_call(ctx, disp, DISPID_VALUE, &dp, v);
 }
 
 HRESULT disp_propput(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, DISPPARAMS *dp)
 {
     IDispatchEx *dispex;
+    vbdisp_t *vbdisp;
     EXCEPINFO ei = {0};
     HRESULT hres;
+
+    vbdisp = unsafe_impl_from_IDispatch(disp);
+    if(vbdisp && vbdisp->desc && vbdisp->desc->ctx == ctx)
+        return invoke_vbdisp(vbdisp, id, flags, FALSE, dp, NULL);
 
     hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     if(SUCCEEDED(hres)) {
