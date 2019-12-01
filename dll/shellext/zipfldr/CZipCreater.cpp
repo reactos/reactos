@@ -11,7 +11,6 @@
 #include "minizip/zip.h"
 #include "minizip/iowin32.h"
 #include <process.h>
-#include <sys/stat.h>
 
 static CStringW DoGetZipName(const CStringW& filename)
 {
@@ -75,30 +74,45 @@ DoReadAllOfFile(const CStringW& filename, CSimpleArray<BYTE>& contents,
 {
     contents.RemoveAll();
 
-    struct _stat st;
-    if (!_wstat(filename, &st))
-        pzi->dosDate = st.st_mtime;
-    else
-        pzi->dosDate = 0;
-
-    FILE *fp = _wfopen(filename, L"rb");
-    if (fp == NULL)
+    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ,
+                               NULL, OPEN_EXISTING,
+                               FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
         return FALSE;
 
+    ZeroMemory(pzi, sizeof(*pzi));
+
+    FILETIME ft, ftLocal;
+    if (GetFileTime(hFile, NULL, NULL, &ft))
+    {
+        SYSTEMTIME st;
+        FileTimeToLocalFileTime(&ft, &ftLocal);
+        FileTimeToSystemTime(&ftLocal, &st);
+        pzi->tmz_date.tm_sec = st.wSecond;
+        pzi->tmz_date.tm_min = st.wMinute;
+        pzi->tmz_date.tm_hour = st.wHour;
+        pzi->tmz_date.tm_mday = st.wDay;
+        pzi->tmz_date.tm_mon = st.wMonth - 1;
+        pzi->tmz_date.tm_year = st.wYear;
+    }
+
     char buf[512];
+    DWORD cbRead;
     for (;;)
     {
-        SIZE_T count = fread(buf, 1, sizeof(buf), fp);
-        if (count == 0)
+        if (!ReadFile(hFile, buf, sizeof(buf), &cbRead, NULL) || !cbRead)
+        {
             break;
+        }
 
-        for (SIZE_T i = 0; i < count; ++i)
+        for (DWORD i = 0; i < cbRead; ++i)
         {
             contents.Add(buf[i]);
         }
     }
 
-    fclose(fp);
+    CloseHandle(hFile);
+
     return TRUE;
 }
 
