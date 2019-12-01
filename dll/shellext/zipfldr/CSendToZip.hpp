@@ -46,21 +46,22 @@ public:
     }
     STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember)
     {
-        return E_FAIL;
+        return E_NOTIMPL;
     }
     STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName)
     {
-        return E_FAIL;
+        return E_NOTIMPL;
     }
     STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName)
     {
-        return E_FAIL;
+        return E_NOTIMPL;
     }
 
     // *** IPersist methods ***
     STDMETHODIMP GetClassID(CLSID *pclsid)
     {
-        return E_FAIL;
+        *pclsid = CLSID_ZipFolderSendTo;
+        return S_OK;
     }
 
 public:

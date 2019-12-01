@@ -182,15 +182,15 @@ CZipCreator::~CZipCreator()
 static unsigned __stdcall
 create_zip_function(void *arg)
 {
-    CZipCreator *pCreater = reinterpret_cast<CZipCreator *>(arg);
-    return pCreater->m_pimpl->JustDoIt();
+    CZipCreator *pCreator = reinterpret_cast<CZipCreator *>(arg);
+    return pCreator->m_pimpl->JustDoIt();
 }
 
-BOOL CZipCreator::runThread(CZipCreator *pCreater)
+BOOL CZipCreator::runThread(CZipCreator *pCreator)
 {
     unsigned tid = 0;
     HANDLE hThread = reinterpret_cast<HANDLE>(
-        _beginthreadex(NULL, 0, create_zip_function, pCreater, 0, &tid));
+        _beginthreadex(NULL, 0, create_zip_function, pCreator, 0, &tid));
 
     if (hThread)
     {
@@ -204,7 +204,7 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
     CStringW strText(MAKEINTRESOURCEW(IDS_CANTSTARTTHREAD));
     MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
-    delete pCreater;
+    delete pCreator;
     return FALSE;
 }
 

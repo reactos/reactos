@@ -2224,6 +2224,7 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
     WCHAR szShell32[MAX_PATH];
     HRESULT hr;
     HANDLE hFile;
+    HINSTANCE hZipFldr;
 
     /* create my documents */
     SHGetSpecialFolderPathW(NULL, szTarget, CSIDL_MYDOCUMENTS, TRUE);
@@ -2248,7 +2249,24 @@ HRESULT DoCreateSendToFiles(LPCWSTR pszSendTo)
                         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     CloseHandle(hFile);
 
-    return hr;
+    /* create zipped compressed folder */
+    hZipFldr = LoadLibraryW(L"zipfldr.dll");
+    if (hZipFldr)
+    {
+#define IDS_FRIENDLYNAME 10195
+        LoadStringW(hZipFldr, IDS_FRIENDLYNAME, szTarget, _countof(szTarget));
+#undef IDS_FRIENDLYNAME
+        FreeLibrary(hZipFldr);
+
+        StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
+        PathAppendW(szSendToFile, szTarget);
+        StringCbCatW(szSendToFile, sizeof(szSendToFile), L".ZFSendToTarget");
+        hFile = CreateFileW(szSendToFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        CloseHandle(hFile);
+    }
+
+    return S_OK;
 }
 
 /*************************************************************************
