@@ -291,8 +291,8 @@ Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame)
     if (!(TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Bias the stack for the V86 segments */
-        Stack -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) -
-                  FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
+        Stack -= sizeof(KTRAP_FRAME) -
+                 FIELD_OFFSET(KTRAP_FRAME, V86Es);
     }
 
     /* Bias the stack for the FPU area */

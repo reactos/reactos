@@ -369,7 +369,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     Pcr->TSS->Esp0 = (ULONG_PTR)NewThread->InitialStack;
     if (!((KeGetTrapFrame(NewThread))->EFlags & EFLAGS_V86_MASK))
     {
-        Pcr->TSS->Esp0 -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) - FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
+        Pcr->TSS->Esp0 -= sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, V86Es);
     }
     Pcr->TSS->Esp0 -= NPX_FRAME_LENGTH;
     Pcr->TSS->IoMapBase = NewProcess->IopmOffset;

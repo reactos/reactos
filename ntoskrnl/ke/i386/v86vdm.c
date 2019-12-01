@@ -467,17 +467,16 @@ ULONG_PTR
 FASTCALL
 KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 {
+    PKPCR Pcr = KeGetPcr();
     ULONG_PTR StackFrameUnaligned;
     PKV8086_STACK_FRAME StackFrame;
     PKTHREAD Thread;
-    PKTRAP_FRAME PmTrapFrame;
     PKV86_FRAME V86Frame;
     PFX_SAVE_AREA NpxFrame;
 
     /* Get the stack frame back */
     StackFrameUnaligned = TrapFrame->Esi;
     StackFrame = (PKV8086_STACK_FRAME)(ROUND_UP(StackFrameUnaligned - 4, 16) + 4);
-    PmTrapFrame = &StackFrame->TrapFrame;
     V86Frame = &StackFrame->V86Frame;
     NpxFrame = &StackFrame->NpxArea;
     ASSERT((ULONG_PTR)NpxFrame % 16 == 0);
@@ -490,7 +489,9 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
     Thread->InitialStack = (PVOID)((ULONG_PTR)V86Frame->ThreadStack + sizeof(FX_SAVE_AREA));
 
     /* Set ESP0 back in the KTSS */
-    KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&PmTrapFrame->V86Es;
+    Pcr->TSS->Esp0 = (ULONG_PTR)Thread->InitialStack;
+    Pcr->TSS->Esp0 -= sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, V86Es);
+    Pcr->TSS->Esp0 -= NPX_FRAME_LENGTH;
 
     /* Restore TEB addresses */
     Thread->Teb = V86Frame->ThreadTeb;
