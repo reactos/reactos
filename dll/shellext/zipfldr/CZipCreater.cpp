@@ -260,11 +260,6 @@ unsigned CZipCreatorImpl::JustDoIt()
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         CStringW& strFile = files[iFile];
-        unsigned long crc = 0;
-        if (password)
-        {
-            // TODO: crc = ...;
-        }
 
         CSimpleArray<BYTE> contents;
         if (!DoReadAllOfFile(strFile, contents, &zi))
@@ -272,6 +267,12 @@ unsigned CZipCreatorImpl::JustDoIt()
             DPRINT1("DoReadAllOfFile failed\n");
             err = 9999;
             break;
+        }
+
+        unsigned long crc = 0;
+        if (password)
+        {
+            // TODO: crc = ...;
         }
 
         CStringA strNameInZip = DoGetNameInZip(szBaseName, strFile);
