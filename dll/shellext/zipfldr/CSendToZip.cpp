@@ -37,6 +37,7 @@ STDMETHODIMP CSendToZip::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect
 
 STDMETHODIMP CSendToZip::DragLeave()
 {
+    m_fCanDragDrop = FALSE;
     m_pDataObject.Release();
     return S_OK;
 }

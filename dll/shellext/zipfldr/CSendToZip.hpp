@@ -6,8 +6,8 @@
  *            Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifndef CSendToZipZIP_HPP_
-#define CSendToZipZIP_HPP_
+#ifndef CSENDTOZIP_HPP_
+#define CSENDTOZIP_HPP_
 
 class CSendToZip :
     public CComCoClass<CSendToZip, &CLSID_ZipFolderSendTo>,
