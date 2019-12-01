@@ -205,6 +205,14 @@ void CZipCreator::DoAddItem(LPCWSTR pszFile)
     m_pimpl->m_items.Add(szPath);
 }
 
+enum CZC_ERROR
+{
+    CZCERR_ZEROITEMS = 1,
+    CZCERR_NOFILES,
+    CZCERR_CREATE,
+    CZCERR_READ
+};
+
 unsigned CZipCreatorImpl::JustDoIt()
 {
     // TODO: Show progress.
@@ -212,10 +220,10 @@ unsigned CZipCreatorImpl::JustDoIt()
     if (m_items.GetSize() <= 0)
     {
         DPRINT1("GetSize() <= 0\n");
-        return -1;
+        return CZCERR_ZEROITEMS;
     }
 
-    CStringW szBaseName = DoGetBaseName(m_items[0]);
+    CStringW strBaseName = DoGetBaseName(m_items[0]);
     CStringW strZipName = DoGetZipName(m_items[0]);
 
     CSimpleArray<CStringW> files;
@@ -233,7 +241,7 @@ unsigned CZipCreatorImpl::JustDoIt()
         strText.Format(IDS_NOFILES, static_cast<LPCWSTR>(m_items[0]));
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
-        return -2;
+        return CZCERR_NOFILES;
     }
 
     zlib_filefunc64_def ffunc;
@@ -244,12 +252,14 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         DPRINT1("zf == 0\n");
 
+        int err = CZCERR_CREATE;
+
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
+        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName), err);
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
-        return -3;
+        return err;
     }
 
     zip_fileinfo zi;
@@ -269,7 +279,7 @@ unsigned CZipCreatorImpl::JustDoIt()
         if (!DoReadAllOfFile(strFile, contents, &zi))
         {
             DPRINT1("DoReadAllOfFile failed\n");
-            err = -4;
+            err = CZCERR_READ;
             strTarget = strFile;
             break;
         }
@@ -280,7 +290,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
-        CStringA strNameInZip = DoGetNameInZip(szBaseName, strFile);
+        CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile);
         err = zipOpenNewFileInZip3_64(zf,
                                       strNameInZip,
                                       &zi,
@@ -327,13 +337,13 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        if (err == -4)
+        if (err < 0)
         {
-            strText.Format(IDS_CANTREADFILE, static_cast<LPCWSTR>(strTarget));
+            strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName), err);
         }
         else
         {
-            strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
+            strText.Format(IDS_CANTREADFILE, static_cast<LPCWSTR>(strTarget));
         }
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }

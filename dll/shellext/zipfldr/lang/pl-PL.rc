@@ -70,7 +70,7 @@ BEGIN
     IDS_ERRORTITLE "Compressed (zipped) Folders Error"
     IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
     IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
-    IDS_CANTCREATEZIP "Failed to create ZIP file '%s'."
+    IDS_CANTCREATEZIP "Failed to create a compressed folder '%s' (Error Code: %d)."
     IDS_CANTREADFILE "Cannot read file '%s'."
 
     IDS_WIZ_TITLE "Kreator wyodrębniania"
