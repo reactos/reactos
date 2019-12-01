@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS User Profile Mapping API
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/profmap/profmap_main.c
- * PURPOSE:         ReactOS Userenv
+ * PURPOSE:         Main source file for user profile mapping functions
  * PROGRAMMER:      Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
