@@ -803,7 +803,7 @@ ULONG GetLinearAddress(USHORT Segment,ULONG Offset)
 		__asm__("\n\t \
 			sldt %%ax\n\t \
 			mov %%ax,%0"
-			:"=m" (Segment));
+			:"=m" (Segment) : : "ax");
 		if(Segment)
 		{
 			DPRINT((0,"GetLinearAddress(): no LDT\n"));
