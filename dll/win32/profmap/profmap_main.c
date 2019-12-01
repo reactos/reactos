@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS profmap.dll
+ * PROJECT:         ReactOS User Profile Mapping API
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/profmap/profmap_main.c
  * PURPOSE:         ReactOS Userenv
