@@ -177,6 +177,11 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
         return TRUE;
     }
 
+    DPRINT1("hThread == NULL\n");
+
+    // TODO: Localize.
+    MessageBoxW(NULL, L"Cannot start thread to compress!", NULL, MB_ICONERROR);
+
     delete pCreater;
     return FALSE;
 }
@@ -207,6 +212,7 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     if (files.GetSize() <= 0)
     {
+        // TODO: Localize.
         MessageBoxW(NULL, L"No file!", NULL, MB_ICONERROR);
         return -2;
     }
