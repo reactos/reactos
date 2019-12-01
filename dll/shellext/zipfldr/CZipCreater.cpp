@@ -144,7 +144,6 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, const CStringW& item)
 struct CZipCreatorImpl
 {
     CSimpleArray<CStringW> m_items;
-    CStringW m_strBaseName;
 
     unsigned JustDoIt();
 };
