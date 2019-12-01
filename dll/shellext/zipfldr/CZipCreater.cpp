@@ -211,8 +211,8 @@ BOOL CZipCreator::runThread(CZipCreator *pCreater)
 void CZipCreator::DoAddItem(LPCWSTR pszFile)
 {
     // canonicalize path
-    WCHAR szPath[MAX_PATH], *pch;
-    GetFullPathNameW(pszFile, _countof(szPath), szPath, &pch);
+    WCHAR szPath[MAX_PATH];
+    GetFullPathNameW(pszFile, _countof(szPath), szPath, NULL);
 
     m_pimpl->m_items.Add(szPath);
 }
@@ -235,9 +235,6 @@ unsigned CZipCreatorImpl::JustDoIt()
         return CZCERR_ZEROITEMS;
     }
 
-    CStringW strBaseName = DoGetBaseName(m_items[0]);
-    CStringW strZipName = DoGetZipName(m_items[0]);
-
     CSimpleArray<CStringW> files;
     for (INT iItem = 0; iItem < m_items.GetSize(); ++iItem)
     {
@@ -259,6 +256,7 @@ unsigned CZipCreatorImpl::JustDoIt()
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64W(&ffunc);
 
+    CStringW strZipName = DoGetZipName(m_items[0]);
     zipFile zf = zipOpen2_64(strZipName, APPEND_STATUS_CREATE, NULL, &ffunc);
     if (zf == 0)
     {
@@ -280,7 +278,7 @@ unsigned CZipCreatorImpl::JustDoIt()
     zip_fileinfo zi;
 
     int err = 0;
-    CString strTarget;
+    CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         const CStringW& strFile = files[iFile];

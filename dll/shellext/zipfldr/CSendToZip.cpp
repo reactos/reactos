@@ -51,7 +51,8 @@ CSendToZip::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt,
 
     if (!pDataObj || !m_fCanDragDrop || !*pdwEffect)
     {
-        DPRINT1("Drop failed\n");
+        DPRINT1("Drop failed: %d %d %d\n",
+                !pDataObj, !m_fCanDragDrop, !*pdwEffect);
         *pdwEffect = 0;
         DragLeave();
         return E_FAIL;
