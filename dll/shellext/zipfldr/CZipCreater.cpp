@@ -249,18 +249,18 @@ unsigned CZipCreatorImpl::JustDoIt()
         strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
 
-        return -1;
+        return -3;
     }
 
     zip_fileinfo zi;
     memset(&zi, 0, sizeof(zi));
 
-    int zip64 = 1; // always zip64
-
     // TODO: password
     const char *password = NULL;
+    int zip64 = 1; // always zip64
 
     int err = 0;
+    CString strTarget;
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
         CStringW& strFile = files[iFile];
@@ -269,7 +269,8 @@ unsigned CZipCreatorImpl::JustDoIt()
         if (!DoReadAllOfFile(strFile, contents, &zi))
         {
             DPRINT1("DoReadAllOfFile failed\n");
-            err = 9999;
+            err = -4;
+            strTarget = strFile;
             break;
         }
 
@@ -326,7 +327,14 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
         CStringW strText;
-        strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
+        if (err == -4)
+        {
+            strText.Format(IDS_CANTREADFILE, static_cast<LPCWSTR>(strTarget));
+        }
+        else
+        {
+            strText.Format(IDS_CANTCREATEZIP, static_cast<LPCWSTR>(strZipName));
+        }
         MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
     }
 
