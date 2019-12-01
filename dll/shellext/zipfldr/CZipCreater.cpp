@@ -56,7 +56,13 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename)
 {
     CStringW ret = filename;
 
-    if (filename.Find(basename) == 0)
+    CStringW basenameI = basename;
+    basenameI.MakeUpper();
+
+    CStringW filenameI = filename;
+    filenameI.MakeUpper();
+
+    if (filenameI.Find(basenameI) == 0)
         ret = ret.Mid(basename.GetLength());
 
     ret.Replace(L'\\', L'/');
