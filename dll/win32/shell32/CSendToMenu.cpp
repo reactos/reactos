@@ -173,7 +173,7 @@ BOOL CSendToMenu::FolderHasAnyItems() const
     {
         if (wcscmp(find.cFileName, L".") == 0 ||
             wcscmp(find.cFileName, L"..") == 0 ||
-            wcscmp(find.cFileName, L"desktop.ini") == 0)
+            _wcsicmp(find.cFileName, L"desktop.ini") == 0)
         {
             continue;
         }
