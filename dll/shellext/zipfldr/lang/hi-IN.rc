@@ -58,6 +58,7 @@ BEGIN
     IDS_ERRORTITLE "Compressed (zipped) Folders Error"
     IDS_CANTSTARTTHREAD "Cannot start thread to compress files."
     IDS_NOFILES "The specified directory '%s' is empty, so Compressed (zipped) Folders cannot add it to the archive."
+    IDS_CANTOPENFILE "Unable to open file '%s'."
 
     IDS_WIZ_TITLE "निष्कर्षण विज़ार्ड"
     IDS_WIZ_DEST_TITLE "एक गंतव्य चुनें"

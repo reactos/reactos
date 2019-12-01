@@ -238,6 +238,12 @@ unsigned CZipCreatorImpl::JustDoIt()
     if (zf == 0)
     {
         DPRINT1("zf == 0\n");
+
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
+        CStringW strText;
+        strText.Format(IDS_CANTOPENFILE, static_cast<LPCWSTR>(strZipName));
+        MessageBoxW(NULL, strText, strTitle, MB_ICONERROR);
+
         return -1;
     }
 
