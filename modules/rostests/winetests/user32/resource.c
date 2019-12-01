@@ -50,7 +50,7 @@ static void test_LoadStringW(void)
             win_skip( "LoadStringW does not return a pointer to the resource\n" );
         return;
     }
-    length2 = LoadStringW(hInst, 2, returnedstringw, sizeof(returnedstringw) /sizeof(WCHAR)); /* get resource string */
+    length2 = LoadStringW(hInst, 2, returnedstringw, ARRAY_SIZE(returnedstringw)); /* get resource string */
     ok(length2 > 0, "LoadStringW failed to load resource 2, ret %d, err %d\n", length2, GetLastError());
     ok(length1 == length2, "LoadStringW returned different values dependent on buflen. ret1 %d, ret2 %d\n",
         length1, length2);
@@ -93,7 +93,7 @@ static void test_LoadStringA (void)
     int ret, ret2;
 
     assert (sizeof str < sizeof buf);
-    for (i = 0; i < sizeof tests / sizeof tests[0]; i++) {
+    for (i = 0; i < ARRAY_SIZE(tests); i++) {
         const unsigned int bufsiz = tests[i].bufsiz;
         const unsigned int expected = tests[i].expected;
         const int len = LoadStringA (hInst, 0, buf, bufsiz);
