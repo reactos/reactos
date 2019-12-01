@@ -264,7 +264,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
         CoTaskMemFree(pidl);
         pidl = NULL;
     }
-    ok(pidl != NULL, "pidl is NULL\n");
+    ok(pidl != NULL, "Line %d: pidl is NULL\n", line);
     pDropTarget = NULL;
     PITEMID_CHILD pidlLast = ILFindLastID(pidl);
     hr = s_pDesktop->GetUIObjectOf(NULL, 1, &pidlLast, IID_IDropTarget,
@@ -274,7 +274,7 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     if (!pDropTarget)
     {
-        skip("pDropTarget was NULL\n");
+        skip("Line %d: pDropTarget was NULL\n", line);
 
         // clean up
         DeleteFileW(s_szSrcTestFile);
