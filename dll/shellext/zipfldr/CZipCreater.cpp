@@ -83,9 +83,8 @@ DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
         return FALSE;
     }
 
-    ZeroMemory(pzi, sizeof(*pzi));
-
     FILETIME ft, ftLocal;
+    ZeroMemory(pzi, sizeof(*pzi));
     if (GetFileTime(hFile, NULL, NULL, &ft))
     {
         SYSTEMTIME st;
@@ -115,9 +114,7 @@ DoReadAllOfFile(LPCWSTR filename, CSimpleArray<BYTE>& contents,
             break;
 
         for (DWORD i = 0; i < cbRead; ++i)
-        {
             contents.Add(pbBuff[i]);
-        }
     }
 
     CoTaskMemFree(pbBuff);
@@ -180,11 +177,6 @@ CZipCreator::~CZipCreator()
 {
     InterlockedDecrement(&g_ModuleRefCnt);
     delete m_pimpl;
-}
-
-CZipCreator* CZipCreator::DoCreate()
-{
-    return new CZipCreator();
 }
 
 static unsigned __stdcall
@@ -282,17 +274,16 @@ unsigned CZipCreatorImpl::JustDoIt()
         return err;
     }
 
-    zip_fileinfo zi;
-
     // TODO: password
     const char *password = NULL;
     int zip64 = 1; // always zip64
+    zip_fileinfo zi;
 
     int err = 0;
     CString strTarget;
     for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
     {
-        CStringW& strFile = files[iFile];
+        const CStringW& strFile = files[iFile];
 
         CSimpleArray<BYTE> contents;
         if (!DoReadAllOfFile(strFile, contents, &zi))

@@ -24,7 +24,7 @@ public:
         InterlockedIncrement(&g_ModuleRefCnt);
     }
 
-    ~CSendToZip()
+    virtual ~CSendToZip()
     {
         InterlockedDecrement(&g_ModuleRefCnt);
     }
