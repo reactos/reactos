@@ -104,6 +104,7 @@ DEFINE_EXPECT(OnResponse);
 DEFINE_EXPECT(Switch);
 DEFINE_EXPECT(Continue);
 DEFINE_EXPECT(CreateInstance);
+DEFINE_EXPECT(CreateInstance_no_aggregation);
 DEFINE_EXPECT(Start);
 DEFINE_EXPECT(StartEx);
 DEFINE_EXPECT(Terminate);
@@ -159,6 +160,7 @@ static DWORD prot_read, filter_state, http_post_test, thread_id;
 static BOOL security_problem, test_async_req, impl_protex;
 static BOOL async_read_pending, mimefilter_test, direct_read, wait_for_switch, emulate_prot, short_read, test_abort;
 static BOOL empty_file, no_mime, bind_from_cache, file_with_hash, reuse_protocol_thread;
+static BOOL no_aggregation;
 
 enum {
     STATE_CONNECTING,
@@ -213,6 +215,12 @@ static const WCHAR binding_urls[][130] = {
 };
 
 static const CHAR post_data[] = "mode=Test";
+
+static LONG obj_refcount(void *obj)
+{
+    IUnknown_AddRef((IUnknown *)obj);
+    return IUnknown_Release((IUnknown *)obj);
+}
 
 static int strcmp_wa(LPCWSTR strw, const char *stra)
 {
@@ -1538,15 +1546,23 @@ static HRESULT WINAPI InternetPriority_QueryInterface(IInternetPriority *iface,
 static ULONG WINAPI InternetPriority_AddRef(IInternetPriority *iface)
 {
     Protocol *This = impl_from_IInternetPriority(iface);
-    This->outer_ref++;
-    return IUnknown_AddRef(This->outer);
+    if (This->outer)
+    {
+        This->outer_ref++;
+        return IUnknown_AddRef(This->outer);
+    }
+    return IUnknown_AddRef(&This->IUnknown_inner);
 }
 
 static ULONG WINAPI InternetPriority_Release(IInternetPriority *iface)
 {
     Protocol *This = impl_from_IInternetPriority(iface);
-    This->outer_ref--;
-    return IUnknown_Release(This->outer);
+    if (This->outer)
+    {
+        This->outer_ref--;
+        return IUnknown_Release(This->outer);
+    }
+    return IUnknown_Release(&This->IUnknown_inner);
 }
 
 static HRESULT WINAPI InternetPriority_SetPriority(IInternetPriority *iface, LONG nPriority)
@@ -1627,6 +1643,12 @@ static HRESULT WINAPI ProtocolEmul_QueryInterface(IInternetProtocolEx *iface, RE
     static const IID unknown_iid = {0x7daf9908,0x8415,0x4005,{0x95,0xae, 0xbd,0x27,0xf6,0xe3,0xdc,0x00}};
     static const IID unknown_iid2 = {0x5b7ebc0c,0xf630,0x4cea,{0x89,0xd3,0x5a,0xf0,0x38,0xed,0x05,0x5c}};
 
+    if(IsEqualGUID(riid, &IID_IInternetProtocolEx)) {
+        *ppv = &This->IInternetProtocolEx_iface;
+        IInternetProtocolEx_AddRef(&This->IInternetProtocolEx_iface);
+        return S_OK;
+    }
+
     /* FIXME: Why is it calling here instead of outer IUnknown? */
     if(IsEqualGUID(riid, &IID_IInternetPriority)) {
         *ppv = &This->IInternetPriority_iface;
@@ -1642,15 +1664,23 @@ static HRESULT WINAPI ProtocolEmul_QueryInterface(IInternetProtocolEx *iface, RE
 static ULONG WINAPI ProtocolEmul_AddRef(IInternetProtocolEx *iface)
 {
     Protocol *This = impl_from_IInternetProtocolEx(iface);
-    This->outer_ref++;
-    return IUnknown_AddRef(This->outer);
+    if (This->outer)
+    {
+        This->outer_ref++;
+        return IUnknown_AddRef(This->outer);
+    }
+    return IUnknown_AddRef(&This->IUnknown_inner);
 }
 
 static ULONG WINAPI ProtocolEmul_Release(IInternetProtocolEx *iface)
 {
     Protocol *This = impl_from_IInternetProtocolEx(iface);
-    This->outer_ref--;
-    return IUnknown_Release(This->outer);
+    if (This->outer)
+    {
+        This->outer_ref--;
+        return IUnknown_Release(This->outer);
+    }
+    return IUnknown_Release(&This->IUnknown_inner);
 }
 
 static DWORD WINAPI thread_proc(PVOID arg)
@@ -2221,6 +2251,7 @@ static Protocol *impl_from_IUnknown(IUnknown *iface)
 
 static HRESULT WINAPI ProtocolUnk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
+    static const IID IID_undocumentedIE10 = {0x7daf9908,0x8415,0x4005,{0x95,0xae,0xbd,0x27,0xf6,0xe3,0xdc,0x00}};
     Protocol *This = impl_from_IUnknown(iface);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
@@ -2247,6 +2278,10 @@ static HRESULT WINAPI ProtocolUnk_QueryInterface(IUnknown *iface, REFIID riid, v
     }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
         trace("QI(IWinInetHttpInfo)\n");
         CHECK_EXPECT(QueryInterface_IWinInetHttpInfo);
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }else if(IsEqualGUID(&IID_undocumentedIE10, riid)) {
+        trace("QI(%s)\n", wine_dbgstr_guid(riid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }else {
@@ -2575,11 +2610,20 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown
 {
     Protocol *ret;
 
-    CHECK_EXPECT(CreateInstance);
-
-    ok(pOuter == (IUnknown*)prot_bind_info, "pOuter != protocol_unk\n");
-    ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
     ok(ppv != NULL, "ppv == NULL\n");
+
+    if(!pOuter) {
+        CHECK_EXPECT(CreateInstance_no_aggregation);
+        ok(IsEqualGUID(&IID_IInternetProtocol, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
+    }else {
+        CHECK_EXPECT(CreateInstance);
+        ok(pOuter == (IUnknown*)prot_bind_info, "pOuter != protocol_unk\n");
+        ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
+        if (no_aggregation) {
+            *ppv = NULL;
+            return CLASS_E_NOAGGREGATION;
+        }
+    }
 
     ret = heap_alloc(sizeof(*ret));
     ret->IUnknown_inner.lpVtbl = &ProtocolUnkVtbl;
@@ -2590,7 +2634,10 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown
     ret->outer_ref = 0;
 
     protocol_emul = ret;
-    *ppv = &ret->IUnknown_inner;
+    if (!pOuter)
+        *ppv = &ret->IInternetProtocolEx_iface;
+    else
+        *ppv = &ret->IUnknown_inner;
     return S_OK;
 }
 
@@ -3769,7 +3816,7 @@ static void test_CreateBinding(void)
         {'t','e','s','t',':','/','/','f','i','l','e','.','h','t','m','l',0};
     static const WCHAR wsz_test[] = {'t','e','s','t',0};
 
-    trace("Testing CreateBinding...\n");
+    trace("Testing CreateBinding%s...\n", no_aggregation ? "(no aggregation)" : "");
     init_test(BIND_TEST, TEST_BINDING);
 
     hres = pCoInternetGetSession(0, &session, 0);
@@ -3817,10 +3864,19 @@ static void test_CreateBinding(void)
     ok(hres == E_NOINTERFACE, "Could not get IWinInetInfo protocol: %08x\n", hres);
 
     SET_EXPECT(QueryService_InternetProtocol);
+
     SET_EXPECT(CreateInstance);
+    if(no_aggregation) {
+        SET_EXPECT(CreateInstance_no_aggregation);
+        SET_EXPECT(StartEx);
+    }else {
+        SET_EXPECT(Start);
+    }
+
     SET_EXPECT(ReportProgress_PROTOCOLCLASSID);
     SET_EXPECT(SetPriority);
-    SET_EXPECT(Start);
+
+    ok(obj_refcount(protocol) == 4, "wrong protocol refcount %d\n", obj_refcount(protocol));
 
     trace("Start >\n");
     expect_hrResult = S_OK;
@@ -3829,25 +3885,46 @@ static void test_CreateBinding(void)
     trace("Start <\n");
 
     CHECK_CALLED(QueryService_InternetProtocol);
+
     CHECK_CALLED(CreateInstance);
+    if(no_aggregation) {
+        CHECK_CALLED(CreateInstance_no_aggregation);
+        ok(obj_refcount(protocol) == 4, "wrong protocol refcount %d\n", obj_refcount(protocol));
+        ok(protocol_emul->outer_ref == 0, "protocol_outer_ref = %u\n", protocol_emul->outer_ref);
+    }else {
+        ok(obj_refcount(protocol) == 5 || broken(obj_refcount(protocol) == 4) /* before win7 */, "wrong protocol refcount %d\n",
+           obj_refcount(protocol));
+        ok(protocol_emul->outer_ref == 1 || broken(protocol_emul->outer_ref == 0) /* before win7 */, "protocol_outer_ref = %u\n",
+           protocol_emul->outer_ref);
+    }
+
     CHECK_CALLED(ReportProgress_PROTOCOLCLASSID);
     CHECK_CALLED(SetPriority);
-    CHECK_CALLED(Start);
+    if(no_aggregation)
+        CHECK_CALLED(StartEx);
+    else
+        CHECK_CALLED(Start);
 
-    SET_EXPECT(QueryInterface_IWinInetInfo);
+    if(!no_aggregation)
+        SET_EXPECT(QueryInterface_IWinInetInfo);
     hres = IInternetProtocol_QueryInterface(protocol, &IID_IWinInetInfo, (void**)&inet_info);
     ok(hres == E_NOINTERFACE, "Could not get IWinInetInfo protocol: %08x\n", hres);
-    CHECK_CALLED(QueryInterface_IWinInetInfo);
+    if(!no_aggregation)
+        CHECK_CALLED(QueryInterface_IWinInetInfo);
 
-    SET_EXPECT(QueryInterface_IWinInetInfo);
+    if(!no_aggregation)
+        SET_EXPECT(QueryInterface_IWinInetInfo);
     hres = IInternetProtocol_QueryInterface(protocol, &IID_IWinInetInfo, (void**)&inet_info);
     ok(hres == E_NOINTERFACE, "Could not get IWinInetInfo protocol: %08x\n", hres);
-    CHECK_CALLED(QueryInterface_IWinInetInfo);
+    if(!no_aggregation)
+        CHECK_CALLED(QueryInterface_IWinInetInfo);
 
-    SET_EXPECT(QueryInterface_IWinInetHttpInfo);
+    if(!no_aggregation)
+        SET_EXPECT(QueryInterface_IWinInetHttpInfo);
     hres = IInternetProtocol_QueryInterface(protocol, &IID_IWinInetHttpInfo, (void**)&http_info);
     ok(hres == E_NOINTERFACE, "Could not get IWinInetInfo protocol: %08x\n", hres);
-    CHECK_CALLED(QueryInterface_IWinInetHttpInfo);
+    if(!no_aggregation)
+        CHECK_CALLED(QueryInterface_IWinInetHttpInfo);
 
     SET_EXPECT(Read);
     read = 0xdeadbeef;
@@ -3871,11 +3948,20 @@ static void test_CreateBinding(void)
     hres = IInternetPriority_SetPriority(priority, 101);
     ok(hres == S_OK, "SetPriority failed: %08x\n", hres);
 
+    if(no_aggregation) {
+        ok(obj_refcount(protocol) == 4, "wrong protocol refcount %d\n", obj_refcount(protocol));
+        ok(protocol_emul->outer_ref == 0, "protocol_outer_ref = %u\n", protocol_emul->outer_ref);
+    }else {
+        ok(obj_refcount(protocol) == 5 || broken(obj_refcount(protocol) == 4) /* before win7 */, "wrong protocol refcount %d\n", obj_refcount(protocol));
+        ok(protocol_emul->outer_ref == 1 || broken(protocol_emul->outer_ref == 0) /* before win7 */, "protocol_outer_ref = %u\n", protocol_emul->outer_ref);
+    }
+
     SET_EXPECT(Terminate);
     hres = IInternetProtocol_Terminate(protocol, 0xdeadbeef);
     ok(hres == S_OK, "Terminate failed: %08x\n", hres);
     CHECK_CALLED(Terminate);
 
+    ok(obj_refcount(protocol) == 4, "wrong protocol refcount %d\n", obj_refcount(protocol));
     ok(protocol_emul->outer_ref == 0, "protocol_outer_ref = %u\n", protocol_emul->outer_ref);
 
     SET_EXPECT(Continue);
@@ -3886,12 +3972,18 @@ static void test_CreateBinding(void)
     SET_EXPECT(Read);
     read = 0xdeadbeef;
     hres = IInternetProtocol_Read(protocol, expect_pv = buf, sizeof(buf), &read);
-    todo_wine
-    ok(hres == E_ABORT, "Read failed: %08x\n", hres);
-    todo_wine
-    ok(read == 0, "read = %d\n", read);
-    todo_wine
-    CHECK_NOT_CALLED(Read);
+    if(no_aggregation) {
+        ok(hres == S_OK, "Read failed: %08x\n", hres);
+        ok(read == 100, "read = %d\n", read);
+        CHECK_CALLED(Read);
+    }else {
+        todo_wine
+        ok(hres == E_ABORT, "Read failed: %08x\n", hres);
+        todo_wine
+        ok(read == 0, "read = %d\n", read);
+        todo_wine
+        CHECK_NOT_CALLED(Read);
+    }
 
     hres = IInternetProtocolSink_ReportProgress(binding_sink,
             BINDSTATUS_CACHEFILENAMEAVAILABLE, expect_wsz = emptyW);
@@ -3906,6 +3998,8 @@ static void test_CreateBinding(void)
     IInternetProtocolSink_Release(binding_sink);
     IInternetPriority_Release(priority);
     IInternetBindInfo_Release(prot_bind_info);
+
+    ok(obj_refcount(protocol) == 1, "wrong protocol refcount %d\n", obj_refcount(protocol));
 
     SET_EXPECT(Protocol_destructor);
     IInternetProtocol_Release(protocol);
@@ -4192,6 +4286,9 @@ START_TEST(protocol)
     test_gopher_protocol();
     test_mk_protocol();
     test_CreateBinding();
+    no_aggregation = TRUE;
+    test_CreateBinding();
+    no_aggregation = FALSE;
 
     bindf &= ~BINDF_FROMURLMON;
     trace("Testing file binding (mime verification, emulate prot)...\n");
