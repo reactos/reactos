@@ -2,7 +2,7 @@
 spec2def(profmap.dll profmap.spec)
 
 list(APPEND SOURCE
-    profmap_main.c
+    profmap.c
     profmap.rc
     ${CMAKE_CURRENT_BINARY_DIR}/profmap_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/profmap.def)

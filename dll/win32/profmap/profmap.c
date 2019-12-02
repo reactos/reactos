@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS system libraries
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/profmap/profmap_main.c
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * FILE:            dll/win32/profmap/profmap.c
  * PURPOSE:         ReactOS User Profile Mapping API
- * PROGRAMMER:      Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  */
 
 /* INCLUDES *******************************************************************/
