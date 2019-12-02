@@ -142,18 +142,16 @@ PopProcessShutDownLists(VOID)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 PopShutdownHandler(VOID)
 {
-    PUCHAR Logo1, Logo2;
-    ULONG i;
-
     /* Stop all interrupts */
     KeRaiseIrqlToDpcLevel();
     _disable();
 
-    /* Do we have boot video */
+    /* Do we have boot video? */
     if (InbvIsBootDriverInstalled())
     {
         /* Yes we do, cleanup for shutdown screen */
@@ -164,17 +162,14 @@ PopShutdownHandler(VOID)
         InbvSetScrollRegion(0, 0, 639, 479);
 
         /* Display shutdown logo and message */
-        Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
-        Logo2 = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
-        if ((Logo1) && (Logo2))
-        {
-            /* 16px space between logo and message */
-            InbvBitBlt(Logo1, 213, 354);
-            InbvBitBlt(Logo2, 225, 114);
-        }
+        InbvBitBlt(InbvGetResourceAddress(IDB_LOGO_DEFAULT), 225, 114);
+        /* 16px space between logo and message */
+        InbvBitBlt(InbvGetResourceAddress(IDB_SHUTDOWN_MSG), 213, 354);
     }
     else
     {
+        UINT i;
+
         /* Do it in text-mode */
         for (i = 0; i < 25; i++) InbvDisplayString("\r\n");
         InbvDisplayString("                       ");
@@ -182,7 +177,10 @@ PopShutdownHandler(VOID)
     }
 
     /* Hang the system */
-    for (;;) HalHaltSystem();
+    while (TRUE) // 'noreturn' function.
+    {
+        HalHaltSystem();
+    }
 }
 
 VOID
