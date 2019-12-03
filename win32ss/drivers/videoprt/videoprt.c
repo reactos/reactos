@@ -33,6 +33,7 @@
 PKPROCESS CsrProcess = NULL;
 ULONG VideoPortDeviceNumber = 0;
 KMUTEX VideoPortInt10Mutex;
+KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -410,8 +411,9 @@ IntVideoPortFindAdapter(
     InitializeListHead(&DeviceExtension->HwResetListEntry);
     if (DriverExtension->InitializationData.HwResetHw != NULL)
     {
-        InsertTailList(&HwResetAdaptersList,
-                       &DeviceExtension->HwResetListEntry);
+        ExInterlockedInsertTailList(&HwResetAdaptersList,
+                                    &DeviceExtension->HwResetListEntry,
+                                    &HwResetAdaptersLock);
     }
 
     /* Query children of the device. */
@@ -471,14 +473,15 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
-    static BOOLEAN Int10MutexInitialized;
+    static BOOLEAN FirstInitialization;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
-    if (!Int10MutexInitialized)
+    if (!FirstInitialization)
     {
         KeInitializeMutex(&VideoPortInt10Mutex, 0);
-        Int10MutexInitialized = TRUE;
+        KeInitializeSpinLock(&HwResetAdaptersLock);
+        FirstInitialization = TRUE;
     }
 
     /* As a first thing do parameter checks. */

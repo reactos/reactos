@@ -74,22 +74,35 @@ IntVideoPortResetDisplayParametersEx(
     _In_ ULONG Rows,
     _In_ BOOLEAN CalledByInbv)
 {
-    BOOLEAN Success = TRUE;
+    BOOLEAN Success = TRUE; // Suppose we don't need to perform a full reset.
+    KIRQL OldIrql;
     PLIST_ENTRY PrevEntry, Entry;
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
 
-    if (IsListEmpty(&HwResetAdaptersList))
-        return FALSE;
-
-    if (CalledByInbv)
+    /* Check if we are at dispatch level or lower, and acquire the lock */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql <= DISPATCH_LEVEL)
     {
-        /*
-         * We have been unexpectedly called via a callback from
-         * InbvAcquireDisplayOwnership(): start monitoring INBV.
-         */
-        InbvMonitoring = TRUE;
+        /* Loop until the lock is free, then raise IRQL to dispatch level */
+        while (!KeTestSpinLock(&HwResetAdaptersLock));
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     }
+    KeAcquireSpinLockAtDpcLevel(&HwResetAdaptersLock);
+
+    /* Bail out early if we don't have any resettable adapter */
+    if (IsListEmpty(&HwResetAdaptersList))
+    {
+        Success = FALSE; // No adapter found: request HAL to perform a full reset.
+        goto Quit;
+    }
+
+    /*
+     * If we have been unexpectedly called via a callback from
+     * InbvAcquireDisplayOwnership(), start monitoring INBV.
+     */
+    if (CalledByInbv)
+        InbvMonitoring = TRUE;
 
     for (PrevEntry = &HwResetAdaptersList, Entry = PrevEntry->Flink;
          Entry != &HwResetAdaptersList;
@@ -102,7 +115,10 @@ IntVideoPortResetDisplayParametersEx(
          */
 // #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
         if (((ULONG_PTR)Entry & (sizeof(ULONG_PTR) - 1)) != 0)
-            return FALSE;
+        {
+            Success = FALSE; // We failed: request HAL to perform a full reset.
+            goto Quit;
+        }
 
         DeviceExtension = CONTAINING_RECORD(Entry,
                                             VIDEO_PORT_DEVICE_EXTENSION,
@@ -118,7 +134,10 @@ IntVideoPortResetDisplayParametersEx(
             ASSERT(DriverExtension);
 
             if (DeviceExtension->HwResetListEntry.Blink != PrevEntry)
-                _SEH2_YIELD(return FALSE);
+            {
+                Success = FALSE; // We failed: request HAL to perform a full reset.
+                _SEH2_YIELD(goto Quit);
+            }
 
             if ((DeviceExtension->DeviceOpened >= 1) &&
                 (DriverExtension->InitializationData.HwResetHw != NULL))
@@ -133,6 +152,12 @@ IntVideoPortResetDisplayParametersEx(
         }
         _SEH2_END;
     }
+
+Quit:
+    /* Release the lock and restore the old IRQL if we were at dispatch level or lower */
+    KeReleaseSpinLockFromDpcLevel(&HwResetAdaptersLock);
+    if (OldIrql <= DISPATCH_LEVEL)
+        KeLowerIrql(OldIrql);
 
     return Success;
 }
