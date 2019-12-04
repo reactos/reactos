@@ -65,15 +65,14 @@ extern void winetest_set_location( const char* file, int line );
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
+extern void winetest_start_nocount(unsigned int flags);
+extern int winetest_loop_nocount(void);
+extern void winetest_end_nocount(void);
 extern int winetest_get_mainargs( char*** pargv );
 extern LONG winetest_get_failures(void);
 extern LONG winetest_get_successes(void);
 extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
-extern void winetest_disable_success_count_start();
-extern int winetest_disable_success_count_end();
-extern int winetest_disable_success_count_get();
-extern int winetest_disable_success_count_set();
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
@@ -164,13 +163,13 @@ extern void __winetest_cdecl winetest_print(const char* msg, ...);
 #define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
 
-#define ros_skip_flaky          for (winetest_print("Skipping flaky test\n");0;)
+#define ros_skip_flaky          for (winetest_start_nocount(3); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
 
-#define disable_success_count   for (winetest_disable_success_count_start(); \
-                                     (winetest_disable_success_count_get() ? \
-                                         winetest_disable_success_count_end() : \
-                                         winetest_disable_success_count_set()); \
-                                     )
+#define disable_success_count   for (winetest_start_nocount(1); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -374,6 +373,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             fprintf( stdout, __winetest_file_line_prefix ": Test succeeded inside todo block: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&todo_failures);
             return 0;
         }
@@ -386,7 +386,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
                          data->current_file, data->current_line );
                 vfprintf(stdout, msg, args);
             }
-            if (data->nocount_level == 0)
+            if ((data->nocount_level & 1) == 0)
             InterlockedIncrement(&todo_successes);
             return 1;
         }
@@ -398,15 +398,16 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             fprintf( stdout, __winetest_file_line_prefix ": Test failed: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&failures);
             return 0;
         }
         else
         {
-            if (report_success && data->nocount_level == 0)
+            if (report_success && (data->nocount_level & 1) == 0)
                 fprintf( stdout, __winetest_file_line_prefix ": Test succeeded\n",
                          data->current_file, data->current_line);
-            if (data->nocount_level == 0)
+            if ((data->nocount_level & 1) == 0)
             InterlockedIncrement(&successes);
             return 1;
         }
@@ -500,6 +501,34 @@ void winetest_end_todo(void)
     data->todo_level >>= 1;
 }
 
+void winetest_start_nocount(unsigned int flags)
+{
+    tls_data* data = get_tls_data();
+
+    /* The lowest 2 bits of nocount_level specify whether counting of successes
+       and/or failures is disabled. For each nested level the bits are shifted
+       left, the new lowest 2 bits are copied from the previous state and ored
+       with the new mask. This allows nested handling of both states up tp a
+       level of 16. */
+    flags |= data->nocount_level & 3;
+    data->nocount_level = (data->nocount_level << 2) | flags;
+    data->todo_do_loop = 1;
+}
+
+int winetest_loop_nocount(void)
+{
+    tls_data* data = get_tls_data();
+    int do_loop = data->todo_do_loop;
+    data->todo_do_loop = 0;
+    return do_loop;
+}
+
+void winetest_end_nocount(void)
+{
+    tls_data* data = get_tls_data();
+    data->nocount_level >>= 2;
+}
+
 int winetest_get_mainargs( char*** pargv )
 {
     *pargv = winetest_argv;
@@ -546,28 +575,6 @@ void winetest_wait_child_process( HANDLE process )
                 InterlockedIncrement(&failures);
         }
     }
-}
-
-void winetest_disable_success_count_start()
-{
-    get_tls_data()->nocount_level <<= 1;
-}
-
-int winetest_disable_success_count_end()
-{
-    get_tls_data()->nocount_level >>= 1;
-    return 0;
-}
-
-int winetest_disable_success_count_get()
-{
-    return get_tls_data()->nocount_level & 1;
-}
-
-int winetest_disable_success_count_set()
-{
-    get_tls_data()->nocount_level |= 1;
-    return 1;
 }
 
 const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
