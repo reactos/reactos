@@ -410,7 +410,8 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, ideograph_space, csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+        ok(len == csbi.dwSize.X * csbi.dwSize.Y ||
+           len == csbi.dwSize.X * csbi.dwSize.Y / 2, "len was: %ld\n", len);
 
         /* Read characters at (0,0) */
         c.X = c.Y = 0;
@@ -450,10 +451,10 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 4, "len was: %ld\n", len);
-        ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
+        ok(len == 3 || len == 4, "len was: %ld\n", len);
+        ok(str[0] == L' ' || str[0] == 0x3000, "str[0] was: 0x%04X\n", str[0]);
         ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == L' ', "str[2] was: 0x%04X\n", str[2]);
+        ok(str[2] == L' ' || str[2] == 0x3000, "str[2] was: 0x%04X\n", str[2]);
     }
 
     /* Restore code page */
