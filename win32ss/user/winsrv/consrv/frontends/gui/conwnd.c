@@ -149,7 +149,7 @@ RegisterConWndClass(IN HINSTANCE hInstance)
     WndClass.hIcon = ghDefaultIcon;
     WndClass.hIconSm = ghDefaultIconSm;
     WndClass.hCursor = ghDefaultCursor;
-    WndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH); // The color of a terminal when it is switched off.
+    WndClass.hbrBackground = NULL;
     WndClass.lpszMenuName = NULL;
     WndClass.cbClsExtra = 0;
     WndClass.cbWndExtra = GWLP_CONWND_ALLOC;
@@ -2213,6 +2213,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             if (OnClose(GuiData)) goto Default;
             break;
+
+        case WM_ERASEBKGND:
+            return TRUE;
 
         case WM_PAINT:
             OnPaint(GuiData);
