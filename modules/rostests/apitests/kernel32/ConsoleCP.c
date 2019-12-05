@@ -21,8 +21,9 @@
 static const WCHAR u0414[] = { 0x0414, 0 };             /* Д */
 static const WCHAR u9580[] = { 0x9580, 0 };             /* 門 */
 static const WCHAR ideograph_space = (WCHAR)0x3000;     /* fullwidth space */
-LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
-LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
+static LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
+static LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
+static BOOL s_bIsVistaPlus;
 
 static BOOL IsCJKCodePage(void)
 {
@@ -410,7 +411,10 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, ideograph_space, csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+        if (s_bIsVistaPlus)
+            ok(len == csbi.dwSize.X * csbi.dwSize.Y / 2, "len was: %ld\n", len);
+        else
+            ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
 
         /* Read characters at (0,0) */
         c.X = c.Y = 0;
@@ -450,10 +454,20 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 4, "len was: %ld\n", len);
-        ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == L' ', "str[2] was: 0x%04X\n", str[2]);
+        if (s_bIsVistaPlus)
+        {
+            ok(len == 3, "len was: %ld\n", len);
+            ok(str[0] == 0x3000, "str[0] was: 0x%04X\n", str[0]);
+            ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
+            ok(str[2] == 0x3000, "str[2] was: 0x%04X\n", str[2]);
+        }
+        else
+        {
+            ok(len == 4, "len was: %ld\n", len);
+            ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
+            ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
+            ok(str[2] == L' ', "str[2] was: 0x%04X\n", str[2]);
+        }
     }
 
     /* Restore code page */
@@ -463,6 +477,11 @@ static void test_cp932(HANDLE hConOut)
 START_TEST(ConsoleCP)
 {
     HANDLE hConIn, hConOut;
+    OSVERSIONINFOA osver = { sizeof(osver) };
+
+    GetVersionExA(&osver);
+    s_bIsVistaPlus = (osver.dwMajorVersion >= 6);
+
     FreeConsole();
     ok(AllocConsole(), "Couldn't alloc console\n");
 
