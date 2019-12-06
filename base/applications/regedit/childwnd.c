@@ -416,9 +416,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnArrow = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
+        g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
                                                           IMAGE_ICON, 16, 16, 0);
-        SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hAddressBtnArrow);
+        SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hArrowIcon);
 
         GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
@@ -472,7 +472,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
-        DestroyIcon(g_pChildWnd->hAddressBtnArrow);
+        DestroyIcon(g_pChildWnd->hArrowIcon);
         HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);
