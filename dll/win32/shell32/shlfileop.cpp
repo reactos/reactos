@@ -1833,7 +1833,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
     UINT wFunc = lpFileOp->wFunc;
     HWND hwnd = lpFileOp->hwnd;
 
-    dwNumDest = ((lpFileOp->fFlags & FOF_MULTIDESTFILES) ? flTo->dwNumFiles : 1);
+    dwNumDest = flTo->dwNumFiles;
 
     if (wFunc != FO_COPY && wFunc != FO_MOVE)
         return ERROR_SUCCESS;
