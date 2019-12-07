@@ -14,19 +14,19 @@ static MUI_ENTRY huHUSetupInitPageEntries[] =
     {
         0,
         20,
-        "K\202rlek v\240rj am\241g a Reactos telep\241t\213 inicializ\240lja mag\240t",
+        "K\202rem v\240rjon am\241g a Reactos telep\241t\213 inicializ\240lja mag\240t",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         21,
-        "\202s felt\202rk\202pezi az eszk\224zeidet...",
+        "\202s felt\202rk\202pezi az eszk\224zeit...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         0,
-        "K\202rlek v\240rj...",
+        "K\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -54,13 +54,13 @@ static MUI_ENTRY huHULanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  K\202rlek v\240laszd ki a telep\241t\202s folyam\240n haszn\240lni k\241v\240nt nyelvet.",
+        "\x07  K\202rj\201k v\240lassza ki a telep\241t\202s folyam\240n haszn\240lni k\241v\240nt nyelvet.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Majd nyomj ENTER-t.",
+        "   Majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -94,7 +94,7 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         6,
         8,
-        "\232dv\224zl\201nk a ReactOS telep\241t\213ben",
+        "\232dv\224z\224lj\201k a ReactOS telep\241t\213ben",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -112,31 +112,31 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Nyomj ENTER-t a ReactOS telep\241t\202s\202hez vagy friss\241t\202s\202hez.",
+        "\x07  Nyomjon ENTER-t a ReactOS telep\241t\202s\202hez vagy friss\241t\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Nyomj R-t egy megl\202v\213, m\240r telep\241tett ReactOS helyre\240ll\241t\240s\240hoz.",
+        "\x07  Nyomjon R-t egy megl\202v\213, m\240r telep\241tett ReactOS helyre\240ll\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Nyomj L-t a licencfelt\202telek megtekint\202s\202hez.",
+        "\x07  Nyomjon L-t a licencfelt\202telek megtekint\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Tov\240bbi inform\240ci\242k\202rt l\240togass el a",
+        "Tov\240bbi inform\240ci\242k\202rt l\240togasson el a",
         TEXT_STYLE_NORMAL
     },
     {
@@ -194,25 +194,25 @@ static MUI_ENTRY huHUIntroPageEntries[] =
     {
         6,
         15,
-        "Amennyiben nem virtu\240lis g\202pre telep\241ted, mentsd le el\213tte az adataidat,",
+        "Amennyiben nem virtu\240lis g\202pre telep\241ti, mentse le el\213tte az adatait,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "vagy teszteld egy m\240sodlagos, nem akt\241van haszn\240lt sz\240m\241t\242g\202pen.",
+        "vagy tesztelje egy m\240sodlagos, nem akt\241van haszn\240lt sz\240m\241t\242g\202pen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Nyomj ENTER-t a telep\241t\202s folytat\240s\240hoz.",
+        "\x07  Nyomjon ENTER-t a telep\241t\202s folytat\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -300,13 +300,13 @@ static MUI_ENTRY huHULicensePageEntries[] =
     {
         8,
         18,
-        "terjeszt\202sekre vonatkozik. Ha valamilyen okb\242l nem kaptad meg",
+        "terjeszt\202sekre vonatkozik. Ha valamilyen okb\242l nem kapta meg",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "a GNU General Public License egy p\202ld\240ny\240t, k\202rj\201k l\240togass el",
+        "a GNU General Public License egy p\202ld\240ny\240t, k\202rj\201k l\240togasson el",
         TEXT_STYLE_NORMAL
     },
     {
@@ -412,25 +412,25 @@ static MUI_ENTRY huHUDevicePageEntries[] =
     {
         6,
         19,
-        "A LE / FEL gombokkal tudsz kijel\224lni egy elemet \202s az ENTER lenyom\240s\240val",
+        "A LE / FEL gombokkal tud kijel\224lni egy elemet \202s az ENTER lenyom\240s\240val",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "tudsz kiv\240lasztani egy alternat\241v be\240ll\241t\240st.",
+        "tud kiv\240lasztani egy alternat\241v be\240ll\241t\240st.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Ha az \224sszes be\240ll\241t\240s megfelel\213, jel\224ld ki a \"Be\240ll\241t\240sok elfogad\240sa\"",
+        "Ha az \224sszes be\240ll\241t\240s megfelel\213, jel\224lje ki a \"Be\240ll\241t\240sok elfogad\240sa\"",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "sort, majd nyomj ENTER-t.",
+        "sort, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -476,25 +476,25 @@ static MUI_ENTRY huHURepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Nyomj U-t az oper\240ci\242s rendszer friss\241t\202s\202hez.",
+        "\x07  Nyomjon U-t az oper\240ci\242s rendszer friss\241t\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Nyomj R-t a helyre\240ll\241t\240si konzol ind\241t\240s\240hoz.",
+        "\x07  Nyomjon R-t a helyre\240ll\241t\240si konzol ind\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Nyomj ESC-et a f\213oldalra val\242 visszat\202r\202shez.",
+        "\x07  Nyomjon ESC-et a f\213oldalra val\242 visszat\202r\202shez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
+        "\x07  Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -546,25 +546,25 @@ static MUI_ENTRY huHUUpgradePageEntries[] =
     {
         8,
         15,
-        "\x07  Haszn\240ld a FEL / LE gombokat egy rendszer kijel\224l\202s\202hez.",
+        "\x07  Haszn\240lja a FEL / LE gombokat egy rendszer kijel\224l\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Nyomj U-t a kiv\240lasztott rendszer friss\241t\202s\202hez.",
+        "\x07  Nyomjon U-t a kiv\240lasztott rendszer friss\241t\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Nyomj ESC-et egy \243j telep\241t\202s ind\241t\240s\240hoz.",
+        "\x07  Nyomjon ESC-et egy \243j telep\241t\202s ind\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
+        "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -598,19 +598,19 @@ static MUI_ENTRY huHUComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Haszn\240ld a FEL / LE gombokat a sz\240m\241t\242g\202p t\241pus\240nak",
+        "\x07  Haszn\240lja a FEL / LE gombokat a sz\240m\241t\242g\202p t\241pus\240nak",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   kiv\240laszt\240s\240hoz, majd nyomj ENTER-t.",
+        "   kiv\240laszt\240s\240hoz, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Nyomj ESC-et az el\213z\213 oldalra visszat\202r\202shez a sz\240m\241t\242g\202p",
+        "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a sz\240m\241t\242g\202p",
         TEXT_STYLE_NORMAL
     },
     {
@@ -696,7 +696,7 @@ static MUI_ENTRY huHUQuitPageEntries[] =
     {
         10,
         8,
-        "T\240vol\241tsd el a floppy lemezt az A: meghajt\242b\242l \202s",
+        "T\240vol\241tsa el a floppy lemezt az A: meghajt\242b\242l \202s",
         TEXT_STYLE_NORMAL
     },
     {
@@ -708,13 +708,13 @@ static MUI_ENTRY huHUQuitPageEntries[] =
     {
         10,
         11,
-        "Nyomj ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
+        "Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "K\202rlek v\240rj...",
+        "K\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -741,19 +741,19 @@ static MUI_ENTRY huHUDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Haszn\240ld a FEL / LE gombokat a kijelz\213 t\241pus\240nak kijel\224l\202s\202hez.",
+         "\x07  Haszn\240lja a FEL / LE gombokat a kijelz\213 t\241pus\240nak kijel\224l\202s\202hez.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Majd nyomj ENTER-t.",
+        "   Majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Nyomj ESC-et az el\213z\213 oldalra visszat\202r\202shez a kijelz\213 t\241pus\240nak",
+        "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a kijelz\213 t\241pus\240nak",
         TEXT_STYLE_NORMAL
     },
     {
@@ -793,7 +793,7 @@ static MUI_ENTRY huHUSuccessPageEntries[] =
     {
         10,
         8,
-        "T\240vol\241tsd el a floppy lemezt az A: meghajt\242b\242l \202s",
+        "T\240vol\241tsa el a floppy lemezt az A: meghajt\242b\242l \202s",
         TEXT_STYLE_NORMAL
     },
     {
@@ -805,7 +805,7 @@ static MUI_ENTRY huHUSuccessPageEntries[] =
     {
         10,
         11,
-        "Nyomj ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
+        "Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -845,13 +845,13 @@ static MUI_ENTRY huHUBootPageEntries[] =
     {
         6,
         13,
-        "K\202rlek helyezz be egy megform\240zott floppy lemezt",
+        "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "az A: meghajt\242ba, majd nyomj ENTER-t.",
+        "az A: meghajt\242ba, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -892,43 +892,43 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Haszn\240ld a FEL / LE gombokat egy elem kijel\224l\202s\202hez.",
+        "\x07  Haszn\240lja a FEL / LE gombokat egy elem kijel\224l\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Nyomj ENTER-t a ReactOS kijel\224lt part\241ci\242ra t\224rt\202n\213 telep\241t\202s\202hez.",
+        "\x07  Nyomjon ENTER-t a ReactOS kijel\224lt part\241ci\242ra val\242 telep\241t\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Nyomj P-t egy els\213dleges part\241ci\242 l\202trehoz\240s\240hoz.",
+        "\x07  Nyomjon P-t egy els\213dleges part\241ci\242 l\202trehoz\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Nyomj E-t egy kiterjesztett part\241ci\242 l\202trehoz\240s\240hoz.",
+        "\x07  Nyomjon E-t egy kiterjesztett part\241ci\242 l\202trehoz\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Nyomj L-t egy logikai part\241ci\242 l\202trehoz\240s\240hoz.",
+        "\x07  Nyomjon L-t egy logikai part\241ci\242 l\202trehoz\240s\240hoz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj D-t egy megl\202v\213 part\241ci\242 t\224rl\202s\202hez.",
+        "\x07  Nyomjon D-t egy megl\202v\213 part\241ci\242 t\224rl\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "K\202rlek v\240rj...",
+        "K\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -950,7 +950,7 @@ static MUI_ENTRY huHUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "A rendszerpart\241ci\242 t\224rl\202s\202t v\240lasztottad.",
+        "A rendszerpart\241ci\242 t\224rl\202s\202t v\240lasztotta.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -980,43 +980,43 @@ static MUI_ENTRY huHUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         15,
-        "Csak akkor t\224r\224lj egy rendszerpart\241ci\242t, ha biztos vagy benne hogy",
+        "Csak akkor t\224r\224lj\224n egy rendszerpart\241ci\242t, ha biztos benne hogy",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "nincsenek rajta ilyen programok, vagy ha biztos vagy benne hogy t\224r\224lni",
+        "nincsenek rajta ilyen programok, vagy ha biztos benne hogy t\224r\224lni",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "szeretn\202d. Ha t\224rl\224d a part\241ci\242t, lehet hogy nem fogod tudni elind\241tani",
+        "szeretn\202. Ha t\224rli a part\241ci\242t, lehet hogy nem fogja tudni elind\241tani",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         18,
-        "a sz\240m\241t\242g\202pet a merevlemezr\213l am\241g nem v\202gzel a ReactOS telep\241t\202s\202vel.",
+        "a sz\240m\241t\242g\202pet a merevlemezr\213l am\241g nem v\202gez a ReactOS telep\241t\202s\202vel.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Nyomj ENTER-t a rendszerpart\241ci\242 t\224rl\202s\202hez.",
+        "\x07  Nyomjon ENTER-t a rendszerpart\241ci\242 t\224rl\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         22,
-        "   K\202s\213bb \243jra meg kell er\213s\241tened a part\241ci\242 t\224rl\202s\202t.",
+        "   K\202s\213bb \243jra meg kell er\213s\241tenie a part\241ci\242 t\224rl\202s\202t.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  Nyomj ESC-et az el\213z\213 oldalra val\242 visszat\202r\202shez.",
+        "\x07  Nyomjon ESC-et az el\213z\213 oldalra val\242 visszat\202r\202shez.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1062,7 +1062,7 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     {
         6,
         11,
-        "Nyomj ENTER-t a folytat\240shoz.",
+        "Nyomjon ENTER-t a folytat\240shoz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1096,25 +1096,25 @@ static MUI_ENTRY huHUInstallDirectoryEntries[] =
     {
         6,
         9,
-        "V\240lassz egy mapp\240t ahov\240 a ReactOS-t telep\241teni szeretn\202d:",
+        "V\240lasszon egy mapp\240t ahov\240 a ReactOS-t telep\241teni szeretn\202:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Az aj\240nlott mappa megv\240ltoztat\240s\240hoz nyomj BACKSPACE-t, hogy",
+        "Az aj\240nlott mappa megv\240ltoztat\240s\240hoz nyomjon BACKSPACE-t, hogy",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "kit\224r\224ld a karaktereket, majd g\202peld be a k\241v\240nt mappa nev\202t ahov\240",
+        "kit\224r\224lje a karaktereket, majd g\202pelje be a k\241v\240nt mappa nev\202t ahov\240",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "a ReactOS-t telep\241teni szeretn\202d.",
+        "a ReactOS-t telep\241teni szeretn\202.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1142,7 +1142,7 @@ static MUI_ENTRY huHUFileCopyEntries[] =
     {
         0,
         12,
-        "K\202rlek v\240rj, am\241g a ReactOS telep\241t\213 felm\240solja a f\240jlokat a ReactOS",
+        "K\202rem v\240rjon, am\241g a ReactOS telep\241t\213 felm\240solja a f\240jlokat a ReactOS",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1160,7 +1160,7 @@ static MUI_ENTRY huHUFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 K\202rlek v\240rj...    ",
+        "\xB3 K\202rem v\240rjon...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1240,19 +1240,19 @@ static MUI_ENTRY huHUKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Haszn\240ld a FEL / LE gombokat a billenty\373zet t\241pus\240nak",
+        "\x07  Haszn\240lja a FEL / LE gombokat a billenty\373zet t\241pus\240nak",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   kijel\224l\202s\202hez, majd nyomj ENTER-t.",
+        "   kijel\224l\202s\202hez, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Nyomj ESC-et az el\213z\213 oldalra visszat\202r\202shez a billenty\373zet",
+        "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a billenty\373zet",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1286,25 +1286,25 @@ static MUI_ENTRY huHULayoutSettingsEntries[] =
     {
         6,
         8,
-        "K\202rlek v\240laszd ki az alap\202rtelmezett billenty\373zetkioszt\240st.",
+        "K\202rj\201k v\240lassza ki az alap\202rtelmezett billenty\373zetkioszt\240st.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Haszn\240ld a FEL / LE gombokat a v\240lasztott billenty\373zetkioszt\240s",
+        "\x07  Haszn\240lja a FEL / LE gombokat a v\240lasztott billenty\373zetkioszt\240s",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   kijel\213l\202s\202hez, majd nyomj ENTER-t.",
+        "   kijel\213l\202s\202hez, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Nyomj ESC-et az el\213z\213 oldalra visszat\202r\202shez",
+        "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1368,25 +1368,25 @@ static MUI_ENTRY huHUSelectFSEntries[] =
     {
         6,
         17,
-        "V\240lassz egy f\240jlrendszert az al\240bbi list\240b\242l.",
+        "V\240lasszon egy f\240jlrendszert az al\240bbi list\240b\242l.",
         0
     },
     {
         8,
         19,
-        "\x07  Haszn\240ld a FEL / LE gombokat egy f\240jlrendszer kijel\224l\202s\202hez.",
+        "\x07  Haszn\240lja a FEL / LE gombokat egy f\240jlrendszer kijel\224l\202s\202hez.",
         0
     },
     {
         8,
         21,
-        "\x07  Nyomj ENTER-t a part\241ci\242 form\240z\240s\240hoz.",
+        "\x07  Nyomjon ENTER-t a part\241ci\242 form\240z\240s\240hoz.",
         0
     },
     {
         8,
         23,
-        "\x07  Nyomj ESC-et egy m\240sik part\241ci\242 kijel\224l\202s\202hez.",
+        "\x07  Nyomjon ESC-et egy m\240sik part\241ci\242 kijel\224l\202s\202hez.",
         0
     },
     {
@@ -1415,13 +1415,13 @@ static MUI_ENTRY huHUDeletePartitionEntries[] =
     {
         6,
         8,
-        "A part\241ci\242 t\224rl\202s\202t v\240lasztottad",
+        "A part\241ci\242 t\224rl\202s\202t v\240lasztotta",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Nyomj L-t a part\241ci\242 t\224rl\202s\202hez.",
+        "\x07  Nyomjon L-t a part\241ci\242 t\224rl\202s\202hez.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1433,7 +1433,7 @@ static MUI_ENTRY huHUDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Nyomj ESC-et ha m\202gsem szeretn\202d t\224r\224lni.",
+        "\x07  Nyomjon ESC-et ha m\202gsem szeretn\202 t\224r\224lni.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1487,11 +1487,11 @@ MUI_ERROR huHUErrorEntries[] =
     {
         // ERROR_NOT_INSTALLED
         "A ReactOS nincs teljesen telep\241tve a sz\240m\241t\242g\202pre.\n"
-        "Ha most kil\202psz a telep\241t\213b\213l, \243jra futtatnod kell azt\n"
+        "Ha most kil\202p a telep\241t\213b\213l, \243jra futtatnia kell azt\n"
         "a ReactOS telep\241t\202s\202hez.\n"
         "\n"
-        "  \x07 Nyomj ENTER-t a telep\241t\202s folytat\240s\240hoz.\n"
-        "  \x07 Nyomj F3-at a kil\202p\202shez.\n",
+        "  \x07 Nyomjon ENTER-t a telep\241t\202s folytat\240s\240hoz.\n"
+        "  \x07 Nyomjon F3-at a kil\202p\202shez.\n",
         "F3 = Kil\202p\202s  ENTER = Folytat\240s"
     },
     {
@@ -1501,12 +1501,12 @@ MUI_ERROR huHUErrorEntries[] =
     },
     {
         // ERROR_SOURCE_PATH
-        "Nem tudod t\224r\224lni a telep\241t\202si forr\240st tartalmaz\242 part\241ci\242t!\n"
+        "Nem lehet a telep\241t\202si forr\240st tartalmaz\242 part\241ci\242t t\224r\224lni!\n"
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
     },
     {
         // ERROR_SOURCE_DIR
-        "Nem tudod telep\241teni a ReactOS-t a telep\241t\202si forr\240s mapp\240j\240ba!\n"
+        "Nem lehet a ReactOS-t a telep\241t\202si forr\240s mapp\240j\240ba telep\241teni!\n"
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
     },
     {
@@ -1571,23 +1571,23 @@ MUI_ERROR huHUErrorEntries[] =
         "\n"
         "Part\241ci\242k l\202trehoz\240sa vagy t\224rl\202se t\224nkreteheti a part\241ci\242s t\240bl\240t.\n"
         "\n"
-        "  \x07  Nyomj F3-at a telep\241t\213b\213l val\242 kil\202p\202shez.\n"
-        "  \x07  Nyomj ENTER-t a folytat\240shoz.",
+        "  \x07  Nyomjon F3-at a telep\241t\213b\213l val\242 kil\202p\202shez.\n"
+        "  \x07  Nyomjon ENTER-t a folytat\240shoz.",
         "F3 = Kil\202p\202s  ENTER = Folytat\240s"
     },
     {
         // ERROR_NEW_PARTITION,
-        "Nem tudsz l\202trehozni \243j part\241ci\242t\n"
+        "Nem tud l\202trehozni \243j part\241ci\242t\n"
         "egy m\240r l\202tez\213 part\241ci\242n bel\201l!\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz.",
+        "  * Nyomjon meg egy gombot a folytat\240shoz.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
-        "Nem tudsz t\224r\224lni particion\240latlan lemezter\201letet!\n"
+        "Nem tud t\224r\224lni particion\240latlan lemezter\201letet!\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz.",
+        "  * Nyomjon meg egy gombot a folytat\240shoz.",
         NULL
     },
     {
@@ -1702,28 +1702,28 @@ MUI_ERROR huHUErrorEntries[] =
         // ERROR_DIRECTORY_NAME,
         "\220rv\202nytelen mappa n\202v.\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz."
+        "  * Nyomjon meg egy gombot a folytat\240shoz."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "A kijel\224lt part\241ci\242 nem el\202g nagy a ReactOS telep\241t\202s\202hez.\n"
         "A telep\241t\202si part\241ci\242nak legal\240bb %lu MB-nak kell lennie.\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz.",
+        "  * Nyomjon meg egy gombot a folytat\240shoz.",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "Nem tudsz \243j els\213dleges vagy kiterjesztett part\241ci\242t l\202trehozni\n"
+        "Nem lehet \243j els\213dleges vagy kiterjesztett part\241ci\242t l\202trehozni\n"
         "ezen a lemezen, mert megtelt a part\241ci\242s t\240bla.\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz."
+        "  * Nyomjon meg egy gombot a folytat\240shoz."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "Nem tudsz egyn\202l t\224bb kiterjesztett part\241ci\242t l\202trehozni lemezenk\202nt.\n"
+        "Nem lehet egyn\202l t\224bb kiterjesztett part\241ci\242t l\202trehozni lemezenk\202nt.\n"
         "\n"
-        "  * Nyomj meg egy gombot a folytat\240shoz."
+        "  * Nyomjon meg egy gombot a folytat\240shoz."
     },
     {
         // ERROR_FORMATTING_PARTITION,
@@ -1853,7 +1853,7 @@ MUI_PAGE huHUPages[] =
 MUI_STRING huHUStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   K\202rlek v\240rj..."},
+     "   K\202rem v\240rjon..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Telep\241t\202s   P = \351j els\213dleges   E = \351j kiterjesztett   F3 = Kil\202p\202s"},
     {STRING_INSTALLCREATELOGICAL,
@@ -1865,19 +1865,19 @@ MUI_STRING huHUStrings[] =
     {STRING_PARTITIONSIZE,
      "Az \243j part\241ci\242 m\202rete:"},
     {STRING_CHOOSENEWPARTITION,
-     "Egy els\213dleges part\241ci\242 l\202trehoz\240s\240t v\240lasztottad itt:"},
+     "Egy els\213dleges part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Egy kiterjesztett part\241ci\242 l\202trehoz\240s\240t v\240lasztottad itt:"},
+     "Egy kiterjesztett part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Egy logikai part\241ci\242 l\202trehoz\240s\240t v\240lasztottad itt:"},
+     "Egy logikai part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
     {STRING_HDDSIZE,
-    "K\202rlek \241rd be az \243j part\241ci\242 m\202ret\202t megab\240jtban."},
+    "K\202rem \241rja be az \243j part\241ci\242 m\202ret\202t megab\240jtban."},
     {STRING_CREATEPARTITION,
      "   ENTER = Part\241ci\242 l\202trehoz\240sa   ESC = M\202gse   F3 = Kil\202p\202s"},
     {STRING_PARTFORMAT,
     "K\224vetkez\213 l\202p\202sk\202nt ez a part\241ci\242 form\240zva lesz."},
     {STRING_NONFORMATTEDPART,
-    "A ReactOS egy \243j / nem form\240zott part\241ci\242ra telep\241t\202s\202t v\240lasztottad."},
+    "A ReactOS egy \243j / nem form\240zott part\241ci\242ra telep\241t\202s\202t v\240lasztotta."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "A rendszerpart\241ci\242 m\202g nincs form\240zva."},
     {STRING_NONFORMATTEDOTHERPART,
