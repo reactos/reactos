@@ -1032,7 +1032,7 @@ CSR_API(SrvSetConsoleWindowInfo)
     // PCONSOLE_SCREEN_BUFFER Buffer;
     PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT1("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
+    DPRINT("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
             SetWindowInfoRequest->OutputHandle, SetWindowInfoRequest->Absolute,
             SetWindowInfoRequest->WindowRect.Left ,
             SetWindowInfoRequest->WindowRect.Top  ,
