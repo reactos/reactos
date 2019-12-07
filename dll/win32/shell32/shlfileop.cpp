@@ -1873,7 +1873,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                         MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
                     }
                 }
-                return DE_SAMEFILE;
+                return DE_OPCANCELLED;
             }
 
             // subfolder?
