@@ -3,11 +3,6 @@ add_definitions(
     -DUSE_WINE_TODOS
     -DWINETEST_USE_DBGSTR_LONGLONG)
 
-# to be removed after synching with newer Wine
-if(GCC AND GCC_VERSION VERSION_GREATER 7)
-    add_compile_flags("-Wno-stringop-overflow")
-endif()
-
 list(APPEND SOURCE
     bitmap.c
     bmpformat.c
