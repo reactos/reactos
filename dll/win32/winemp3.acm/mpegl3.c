@@ -89,9 +89,6 @@ static const Format MPEG3_Formats[] =
     {1,  0, 48000}, {2,  0, 48000}
 };
 
-#define	NUM_PCM_FORMATS		(sizeof(PCM_Formats) / sizeof(PCM_Formats[0]))
-#define	NUM_MPEG3_FORMATS	(sizeof(MPEG3_Formats) / sizeof(MPEG3_Formats[0]))
-
 /***********************************************************************
  *           MPEG3_GetFormatIndex
  */
@@ -103,12 +100,12 @@ static	DWORD	MPEG3_GetFormatIndex(LPWAVEFORMATEX wfx)
     switch (wfx->wFormatTag)
     {
     case WAVE_FORMAT_PCM:
-	hi = NUM_PCM_FORMATS;
+	hi = ARRAY_SIZE(PCM_Formats);
 	fmts = PCM_Formats;
 	break;
     case WAVE_FORMAT_MPEG:
     case WAVE_FORMAT_MPEGLAYER3:
-	hi = NUM_MPEG3_FORMATS;
+	hi = ARRAY_SIZE(MPEG3_Formats);
 	fmts = MPEG3_Formats;
 	break;
     default:
@@ -692,13 +689,13 @@ static	LRESULT MPEG3_DriverDetails(PACMDRIVERDETAILSW add)
     add->cFilterTags = 0;
     add->hicon = NULL;
     MultiByteToWideChar( CP_ACP, 0, "MPEG Layer-3 Codec", -1,
-                         add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
+                         add->szShortName, ARRAY_SIZE( add->szShortName ));
     MultiByteToWideChar( CP_ACP, 0, "Wine MPEG3 decoder", -1,
-                         add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
+                         add->szLongName, ARRAY_SIZE( add->szLongName ));
     MultiByteToWideChar( CP_ACP, 0, "Brought to you by the Wine team...", -1,
-                         add->szCopyright, sizeof(add->szCopyright)/sizeof(WCHAR) );
+                         add->szCopyright, ARRAY_SIZE( add->szCopyright ));
     MultiByteToWideChar( CP_ACP, 0, "Refer to LICENSE file", -1,
-                         add->szLicensing, sizeof(add->szLicensing)/sizeof(WCHAR) );
+                         add->szLicensing, ARRAY_SIZE( add->szLicensing ));
     add->szFeatures[0] = 0;
 
     return MMSYSERR_NOERROR;
@@ -746,7 +743,7 @@ static	LRESULT	MPEG3_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
     case 0:
 	aftd->dwFormatTag = WAVE_FORMAT_PCM;
 	aftd->cbFormatSize = sizeof(PCMWAVEFORMAT);
-	aftd->cStandardFormats = NUM_PCM_FORMATS;
+	aftd->cStandardFormats = ARRAY_SIZE(PCM_Formats);
         lstrcpyW(aftd->szFormatTag, szPcm);
         break;
     case 1:
@@ -781,7 +778,7 @@ static	LRESULT	MPEG3_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	switch (afd->dwFormatTag)
         {
 	case WAVE_FORMAT_PCM:
-	    if (afd->dwFormatIndex >= NUM_PCM_FORMATS) return ACMERR_NOTPOSSIBLE;
+	    if (afd->dwFormatIndex >= ARRAY_SIZE(PCM_Formats)) return ACMERR_NOTPOSSIBLE;
 	    afd->pwfx->nChannels = PCM_Formats[afd->dwFormatIndex].nChannels;
 	    afd->pwfx->nSamplesPerSec = PCM_Formats[afd->dwFormatIndex].rate;
 	    afd->pwfx->wBitsPerSample = PCM_Formats[afd->dwFormatIndex].nBits;
