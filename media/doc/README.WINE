@@ -212,7 +212,7 @@ dll/win32/wldap32             # Synced to WineStaging-4.18
 dll/win32/wmi                 # Synced to WineStaging-2.9
 dll/win32/wmiutils            # Synced to WineStaging-4.18
 dll/win32/wmvcore             # Synced to WineStaging-4.18
-dll/win32/wshom.ocx           # Synced to WineStaging-3.3
+dll/win32/wshom.ocx           # Synced to WineStaging-4.18
 dll/win32/wtsapi32            # Synced to WineStaging-3.9
 dll/win32/wuapi               # Synced to WineStaging-3.3
 dll/win32/xinput1_1           # Synced to WineStaging-2.9
