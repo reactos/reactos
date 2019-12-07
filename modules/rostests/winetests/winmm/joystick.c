@@ -139,7 +139,7 @@ static void test_api(void)
     /* Try some unusual period values for joySetCapture and unusual threshold values for joySetThreshold.
      * Windows XP allows almost all test values, Windows 8 will return error on most test values, Windows
      * 98 allows anything but cuts the values to their maximum supported values internally. */
-    for (i = 0; i < sizeof(period) / sizeof(period[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(period); i++)
     {
         ret = joySetCapture(window, joyid, period[i], FALSE);
         if (win8 && ((1 << i) & period_win8_error))
@@ -190,7 +190,7 @@ static void test_api(void)
     ok(ret == JOYERR_NOERROR, "Expected %d, got %d\n", JOYERR_NOERROR, ret);
 
     infoex.ex.dwSize = sizeof(infoex.ex);
-    for (i = 0; i < sizeof(flags) / sizeof(flags[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(flags); i++)
     {
         infoex.ex.dwFlags = flags[i];
         ret = joyGetPosEx(joyid, &infoex.ex);

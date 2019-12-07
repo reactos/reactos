@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     capture.c
+    generated.c
     joystick.c
     mci.c
     mcicda.c
