@@ -1811,6 +1811,18 @@ static void check_flags(FILEOP_FLAGS fFlags)
 }
 
 #ifdef __REACTOS__
+
+/* Error codes could be pre-Win32 */
+#define DE_SAMEFILE      0x71
+#define DE_MANYSRC1DEST  0x72
+#define DE_DIFFDIR       0x73
+#define DE_OPCANCELLED   0x75
+#define DE_DESTSUBTREE   0x76
+#define DE_INVALIDFILES  0x7C
+#define DE_DESTSAMETREE  0x7D
+#define DE_FLDDESTISFILE 0x7E
+#define DE_FILEDESTISFLD 0x80
+
 static DWORD
 validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
 {
@@ -1844,7 +1856,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
             if (lstrcmpiW(szFrom, szTo) == 0 &&
                 (wFunc == FO_MOVE || !(lpFileOp->fFlags & FOF_RENAMEONCOLLISION)))
             {
-                if (!(lpFileOp->fFlags & FOF_SILENT))
+                if (!(lpFileOp->fFlags & (FOF_NOERRORUI | FOF_SILENT)))
                 {
                     if (wFunc == FO_MOVE)
                     {
@@ -1861,7 +1873,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                         MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
                     }
                 }
-                return ERROR_SHARING_VIOLATION;
+                return DE_SAMEFILE;
             }
 
             // subfolder?
@@ -1878,7 +1890,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
 
                     if (compare == 0)
                     {
-                        if (!(lpFileOp->fFlags & FOF_SILENT))
+                        if (!(lpFileOp->fFlags & (FOF_NOERRORUI | FOF_SILENT)))
                         {
                             if (wFunc == FO_MOVE)
                             {
@@ -1895,7 +1907,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                                 MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
                             }
                         }
-                        return ERROR_SHARING_VIOLATION;
+                        return DE_DESTSUBTREE;
                     }
                 }
             }
