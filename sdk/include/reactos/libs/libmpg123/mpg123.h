@@ -1,5 +1,5 @@
 /*
-	libmpg123: MPEG Audio Decoder library (version 1.25.12)
+	libmpg123: MPEG Audio Decoder library (version 1.25.13)
 
 	copyright 1995-2015 by the mpg123 project
 	free software under the terms of the LGPL 2.1
