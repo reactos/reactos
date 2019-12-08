@@ -245,6 +245,11 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.iMouseHoverWidth = SpiLoadMouse(VAL_HOVERWIDTH, 4);
     gspv.iMouseHoverHeight = SpiLoadMouse(VAL_HOVERHEIGHT, 4);
 
+    /* Load keyboard settings */
+    gspv.dwKbdSpeed = SpiLoadInt(KEY_KBD, VAL_KBDSPD, 31);
+    gspv.iKbdDelay = SpiLoadInt(KEY_KBD, VAL_KBDDELAY, 1);
+    gspv.iScrSaverTimeout = SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 600);
+
     /* Load NONCLIENTMETRICS */
     gspv.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
     gspv.ncm.iBorderWidth = SpiLoadMetric(VAL_BORDER, 1);
