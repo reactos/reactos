@@ -253,7 +253,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.ncm.iCaptionWidth = SpiLoadMetric(L"CaptionWidth", 19);
     gspv.ncm.iCaptionHeight = SpiLoadMetric(L"CaptionHeight", 19);
     gspv.ncm.iSmCaptionWidth = SpiLoadMetric(L"SmCaptionWidth", 12);
-    gspv.ncm.iSmCaptionHeight =  SpiLoadMetric(L"SmCaptionHeight", 15);
+    gspv.ncm.iSmCaptionHeight = SpiLoadMetric(L"SmCaptionHeight", 15);
     gspv.ncm.iMenuWidth = SpiLoadMetric(L"MenuWidth", 18);
     gspv.ncm.iMenuHeight = SpiLoadMetric(L"MenuHeight", 18);
 #if (WINVER >= 0x0600)
