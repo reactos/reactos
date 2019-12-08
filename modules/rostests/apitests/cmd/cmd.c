@@ -162,6 +162,10 @@ static const TEST_ENTRY s_attrib_entries[] =
     { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, " H " },
     { __LINE__, 0,      "attrib /S -H attr-te*.txt", FALSE, FALSE },
     { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
     { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
     { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
 
@@ -285,6 +289,34 @@ static const TEST_ENTRY s_attrib_entries[] =
     { __LINE__, 0,      "attrib /S /D -H attr-dir\\dir1", FALSE, FALSE },
     { __LINE__, 0,      "attrib /S /D -H attr-dir", FALSE, FALSE },
     { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+
+    /* /S attr-dir, attr-dir\\dir1\\file.txt */
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S /D attr-dir", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "cmd /c mkdir attr-dir\\dir1", FALSE, FALSE },
+    { __LINE__, 0,      "cmd /c if exist attr-dir\\dir1 echo OK", TRUE, FALSE, "OK" },
+    { __LINE__, 0,      "cmd /c copy NUL attr-dir\\dir1\\attr-test.txt ", TRUE, FALSE },
+    { __LINE__, 0,      "attrib attr-dir\\dir1\\attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-dir\\dir1\\attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-dir\\dir1\\attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H attr-test.txt", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S +H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S attr-tes*.*", TRUE, FALSE, " H " },
+    { __LINE__, 0,      "attrib /S -H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "attrib /S attr-tes*.*", TRUE, FALSE, NULL, NULL, " H " },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/dir1/test.txt attrib -H attr-dir/dir1/test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir/dir1/test.txt del /Q attr-dir/dir1/test.txt" },
+    { __LINE__, 0,      "cmd /c if exist attr-dir rmdir /s /q attr-dir" },
+
 };
 
 static BOOL MyDuplicateHandle(HANDLE hFile, PHANDLE phFile, BOOL bInherit)
