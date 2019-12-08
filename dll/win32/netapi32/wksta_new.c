@@ -139,6 +139,70 @@ WKSSVC_IMPERSONATE_HANDLE_unbind(WKSSVC_IMPERSONATE_HANDLE pszSystemName,
 
 
 NET_API_STATUS
+NetpBind(
+    LPCWSTR pszServerName,
+    handle_t *pBindingHandle)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    FIXME("NetpBind(%S)\n", pszServerName);
+
+    *pBindingHandle = NULL;
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      (LPWSTR)pszServerName,
+                                      L"\\pipe\\wkssvc",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        FIXME("RpcStringBindingCompose returned 0x%x\n", status);
+        return NetpNtStatusToApiStatus(status);
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        FIXME("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+        FIXME("RpcStringFree returned 0x%x\n", status);
+    }
+
+    *pBindingHandle = hBinding;
+
+    return NetpNtStatusToApiStatus(status);
+}
+
+
+NET_API_STATUS
+NetpUnbind(
+    handle_t BindingHandle)
+{
+    RPC_STATUS status;
+
+    FIXME("NetpUnbind(%p)\n", BindingHandle);
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+        TRACE("RpcBindingFree returned 0x%x\n", status);
+        return NetpNtStatusToApiStatus(status);
+    }
+
+    return NERR_Success;
+}
+
+
+NET_API_STATUS
 WINAPI
 NetAddAlternateComputerName(
     _In_opt_ LPCWSTR Server,
@@ -318,24 +382,30 @@ NetGetJoinableOUs(
 NET_API_STATUS
 WINAPI
 NetJoinDomain(
-    _In_ LPCWSTR lpServer,
+    _In_opt_ LPCWSTR lpServer,
     _In_ LPCWSTR lpDomain,
-    _In_ LPCWSTR lpAccountOU,
-    _In_ LPCWSTR lpAccount,
-    _In_ LPCWSTR lpPassword,
+    _In_opt_ LPCWSTR lpAccountOU,
+    _In_opt_ LPCWSTR lpAccount,
+    _In_opt_ LPCWSTR lpPassword,
     _In_ DWORD fJoinOptions)
 {
-    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
-    handle_t BindingHandle;
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword = NULL;
+    handle_t BindingHandle = NULL;
     NET_API_STATUS status;
 
-    TRACE("NetJoinDomain(%s %s %s %s 0x%lx)\n",
+    FIXME("NetJoinDomain(%s %s %s %s 0x%lx)\n",
           debugstr_w(lpServer), debugstr_w(lpDomain), debugstr_w(lpAccountOU),
           debugstr_w(lpAccount), debugstr_w(lpPassword), fJoinOptions);
 
     /* FIXME */
-    BindingHandle = NULL;
-    EncryptedPassword = NULL;
+
+    status = NetpBind(lpServer,
+                      &BindingHandle);
+    if (status != NERR_Success)
+    {
+        ERR("NetpBind() failed (status 0x%lx)\n", status);
+        return status;
+    }
 
     RpcTryExcept
     {
@@ -349,9 +419,13 @@ NetJoinDomain(
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        status = I_RpcMapWin32Status(RpcExceptionCode());
+        RPC_STATUS rpcStatus = RpcExceptionCode();
+        FIXME("Exception 0x%lx\n", rpcStatus);
+        status = I_RpcMapWin32Status(rpcStatus);
     }
     RpcEndExcept;
+
+    NetpUnbind(BindingHandle);
 
     return status;
 }
@@ -481,12 +555,12 @@ NET_API_STATUS
 WINAPI
 NetUnjoinDomain(
     _In_ LPCWSTR lpServer,
-    _In_ LPCWSTR lpAccount,
-    _In_ LPCWSTR lpPassword,
+    _In_opt_ LPCWSTR lpAccount,
+    _In_opt_ LPCWSTR lpPassword,
     _In_ DWORD fUnjoinOptions)
 {
-    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
-    handle_t BindingHandle;
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword = NULL;
+    handle_t BindingHandle = NULL;
     NET_API_STATUS status;
 
     TRACE("NetUnjoinDomain(%s %s %s %s 0x%lx)\n",
@@ -494,8 +568,14 @@ NetUnjoinDomain(
           debugstr_w(lpPassword), fUnjoinOptions);
 
     /* FIXME */
-    BindingHandle = NULL;
-    EncryptedPassword = NULL;
+
+    status = NetpBind(lpServer,
+                      &BindingHandle);
+    if (status != NERR_Success)
+    {
+        ERR("NetpBind() failed (status 0x%lx)\n", status);
+        return status;
+    }
 
     RpcTryExcept
     {
@@ -510,6 +590,8 @@ NetUnjoinDomain(
         status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    NetpUnbind(BindingHandle);
 
     return status;
 }
@@ -691,14 +773,14 @@ NetUseGetInfo(
 NET_API_STATUS
 WINAPI
 NetValidateName(
-    _In_ LPCWSTR lpServer,
+    _In_opt_ LPCWSTR lpServer,
     _In_ LPCWSTR lpName,
-    _In_ LPCWSTR lpAccount,
-    _In_ LPCWSTR lpPassword,
+    _In_opt_ LPCWSTR lpAccount,
+    _In_opt_ LPCWSTR lpPassword,
     _In_ NETSETUP_NAME_TYPE NameType)
 {
-    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
-    handle_t BindingHandle;
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword = NULL;
+    handle_t BindingHandle = NULL;
     NET_API_STATUS status;
 
     TRACE("NetValidateName(%s %s %s %s %u)\n",
@@ -706,8 +788,14 @@ NetValidateName(
           debugstr_w(lpPassword), NameType);
 
     /* FIXME */
-    BindingHandle = NULL;
-    EncryptedPassword = NULL;
+
+    status = NetpBind(lpServer,
+                      &BindingHandle);
+    if (status != NERR_Success)
+    {
+        ERR("NetpBind() failed (status 0x%lx)\n", status);
+        return status;
+    }
 
     RpcTryExcept
     {
@@ -723,6 +811,8 @@ NetValidateName(
         status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    NetpUnbind(BindingHandle);
 
     return status;
 }
