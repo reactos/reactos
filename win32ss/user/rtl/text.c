@@ -1263,8 +1263,8 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 	if (flags & DT_SINGLELINE)
 	{
 #ifdef __REACTOS__
-        if (flags & DT_VCENTER)
-            y = (rect->top + rect->bottom + (invert_y ? size.cy : -size.cy)) / 2;
+        if (flags & DT_VCENTER) y = rect->top +
+            (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
         else if (flags & DT_BOTTOM)
             y = rect->bottom + (invert_y ? 0 : -size.cy);
 #else
