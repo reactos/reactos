@@ -45,9 +45,55 @@ float geINF;
 float geIND;
 float geQNAN;
 
+FLOAT
+GetMaxValue(unsigned int Parameter, unsigned int Field)
+{
+    XFORM xform1, xform2, xform3;
+    FLOAT fmin, fmax, fmid;
+    PFLOAT target;
+
+    if (Parameter == 0)
+    {
+        target = &xform1.eM11 + Field;
+    }
+    else
+    {
+        target = &xform2.eM11 + Field;
+    }
+
+    fmin = 0;
+    fmax = 4294967296.0f;
+    fmid = (fmin + fmax) / 2;
+    while (fmin < fmax)
+    {
+        fmid = (fmin + fmax) / 2;
+
+        //printf("fmin = %f, fmid = %f, fmax = %f\n", (double)fmin, (double)fmid, (double)fmax);
+        set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        *target = fmid;
+
+        if (CombineTransform(&xform3, &xform1, &xform2))
+        {
+            if (fmid == fmin) break;
+            fmin = fmid;
+        }
+        else
+        {
+            if (fmid == fmax) break;
+            fmax = fmid;
+        }
+    }
+    //printf("fmin = %f, fmid = %f, fmax = %f\n", (double)fmin, (double)fmid, (double)fmax);
+    return fmin;
+}
+
+
 void Test_CombineTransform()
 {
     XFORM xform1, xform2, xform3;
+    BOOL IsWow64;
 
     /* Test NULL paramters */
     set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
@@ -108,78 +154,57 @@ void Test_CombineTransform()
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
     ok_xform(xform3, 8.0, -2.0, 2.25, 0.0, -670.0, -340.0);
 
-    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
-    set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
-    set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = (FLOAT)4294967167.999999761;
-    ok(xform1.eDx == 4294967040.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_xform(xform3, 1.0, 0.0, 0.0, 1.0, 4294967040.0, 0.0);
+    if (IsWow64Process(GetCurrentProcess(), &IsWow64) && IsWow64)
+    {
+        ok_flt(GetMaxValue(0, 0), 4294967296.0);
+        ok_flt(GetMaxValue(0, 1), 4294967296.0);
+        ok_flt(GetMaxValue(0, 2), 4294967296.0);
+        ok_flt(GetMaxValue(0, 3), 4294967296.0);
+        ok_flt(GetMaxValue(0, 4), 4294967040.0);
+        ok_flt(GetMaxValue(0, 5), 4294967040.0);
 
-    set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = (FLOAT)4294967167.999999762;
-    ok(xform1.eDx == 4294967296.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
-    ok_xform(xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        ok_flt(GetMaxValue(1, 0), 4294967296.0);
+        ok_flt(GetMaxValue(1, 1), 4294967296.0);
+        ok_flt(GetMaxValue(1, 2), 4294967296.0);
+        ok_flt(GetMaxValue(1, 3), 4294967296.0);
+        ok_flt(GetMaxValue(1, 4), 4294967296.0);
+        ok_flt(GetMaxValue(1, 5), 4294967296.0);
+    }
+    else
+    {
+        ok_flt(GetMaxValue(0, 0), 4294967296.0);
+        ok_flt(GetMaxValue(0, 1), 4294967296.0);
+        ok_flt(GetMaxValue(0, 2), 4294967296.0);
+        ok_flt(GetMaxValue(0, 3), 4294967296.0);
+        ok_flt(GetMaxValue(0, 4), 2147483520.0);
+        ok_flt(GetMaxValue(0, 5), 2147483520.0);
 
-    xform1.eDx = (FLOAT)-4294967167.999999761;
-    ok(xform1.eDx == -4294967040.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-
-    xform1.eDx = (FLOAT)-4294967167.999999762;
-    ok(xform1.eDx == -4294967296.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
-
-    xform1.eDx = 0;
-    xform1.eDy = (FLOAT)4294967167.999999761;
-    ok(xform1.eDy == 4294967040.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-
-    xform2.eDy = 1;
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_flt(xform3.eDy, 4294967040.0);
-
-    xform1.eDy = (FLOAT)4294967167.999999762;
-    ok(xform1.eDy == 4294967296.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
-
-    xform1.eDy = (FLOAT)-4294967167.999999761;
-    ok(xform1.eDy == -4294967040.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-
-    xform1.eDy = (FLOAT)-4294967167.999999762;
-    ok(xform1.eDy == -4294967296.0, "float rounding error.\n");
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
-
-    xform2.eDy = 10000;
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-
-    set_xform(&xform1, 1000.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = (FLOAT)-4294967167.999999762;
-    xform2.eM11 = 1000.0;
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
-
-    xform1.eDx = 100000.0;
-    xform2.eM11 = 100000.0;
-    ok_int(CombineTransform(&xform3, &xform1, &xform2), 0);
-    ok_int(GetLastError(), ERROR_SUCCESS);
+        ok_flt(GetMaxValue(1, 0), 4294967296.0);
+        ok_flt(GetMaxValue(1, 1), 4294967296.0);
+        ok_flt(GetMaxValue(1, 2), 4294967296.0);
+        ok_flt(GetMaxValue(1, 3), 4294967296.0);
+        ok_flt(GetMaxValue(1, 4), 4294967296.0);
+        ok_flt(GetMaxValue(1, 5), 4294967296.0);
+    }
 
     /* Some undefined values */
-    set_xform(&xform1, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
-    xform2 = xform1;
+    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    set_xform(&xform2, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     SetLastError(ERROR_SUCCESS);
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
     ok_xform(xform3, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
+    set_xform(&xform1, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     set_xform(&xform2, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0);
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
     ok_xform(xform3, geIND, geIND, geINF, geINF, 0.0, 0.0);
+    ok_int(GetLastError(), ERROR_SUCCESS);
+
+    set_xform(&xform1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0);
+    set_xform(&xform2, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
+    ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
+    ok_xform(xform3, geIND, geINF, geIND, geINF, 0.0, 0.0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
     set_xform(&xform1, (FLOAT)18446743500000000000.0, 0.0, 1.0, 0.0, 0.0, 0.0);
@@ -193,7 +218,7 @@ void Test_CombineTransform()
 
     xform1.eM11 = (FLOAT)18446746000000000000.0;
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_long(*(DWORD*)&xform3.eM11, 0x7f800000);
+    ok_long(*(DWORD*)&xform3.eM11, IsWow64 ? 0x7f800000 : 0x7f800001);
 
     /* zero matrix + 1 invalid */
     set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -212,8 +237,7 @@ void Test_CombineTransform()
     set_xform(&xform1, 0.0, geIND, 0.0, 0.0, 0.0, 0.0);
     set_xform(&xform2, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     ok_int(CombineTransform(&xform3, &xform1, &xform2), 1);
-    ok_xform(xform3, geIND, geIND, geIND, geIND, 0.0, 0.0);
-
+    ok_xform(xform3, IsWow64 ? geIND : 0.000000, IsWow64 ? geIND : -1.500000, geIND, geIND, 0.0, 0.0);
 }
 
 void Test_CombineTransform_Inval(float eInval, float eOut)

@@ -88,12 +88,20 @@ START_TEST(sprintf)
     StartSeh()
         Length = sprintf(NULL, "");
         ok_int(Length, 0);
+#if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
+#else
+    EndSeh(STATUS_SUCCESS);
+#endif
 
     StartSeh()
         Length = sprintf(NULL, "Hello");
         ok_int(Length, 5);
+#if TEST_CRTDLL || TEST_USER32
     EndSeh(STATUS_ACCESS_VIOLATION);
+#else
+    EndSeh(STATUS_SUCCESS);
+#endif
 
     /* some basic formats */
     Length = sprintf(Buffer, "abcde");

@@ -260,7 +260,7 @@ MSG_ENTRY resize1_chain[]={
     {1,WM_NCCALCSIZE},
     {1,WM_WINDOWPOSCHANGED, SENT, 0, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE|SWP_NOOWNERZORDER | SWP_NOCLIENTMOVE},
     {1,WM_SIZE},
-    {1,WM_NCCALCSIZE},
+//    {1,WM_NCCALCSIZE}, // This doesn't occur on either WHS testbot or Windows 10
     {0,0}};
 
 MSG_ENTRY move1_2_chain[]={
