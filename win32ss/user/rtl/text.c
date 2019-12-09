@@ -1374,7 +1374,8 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 #ifndef _WIN32K_
     if (!(flags & DT_NOCLIP) )
     {
-       SelectClipRgn(hdc, hrgn);
+       SelectClipRgn(hdc, hrgn); // This should be NtGdiExtSelectClipRgn, but due to ReactOS build rules this option is next:
+       GdiFlush();               // Flush the batch and level up! See CORE-16498.
        if (hrgn)
        {
           DeleteObject(hrgn);
