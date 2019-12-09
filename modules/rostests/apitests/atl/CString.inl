@@ -17,75 +17,75 @@ TEST_NAMEX(operators_init)
     CStringX first(_X("First "));
     ok(first.IsEmpty() != true, "Expected first to not be empty\n");
     ok(first.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", first.GetLength());
-    ok(first.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(7, 6), first.GetAllocLength());
+    ok_int(first.GetAllocLength(), 6);
 
     CStringX second(_X("Second"));
     ok(second.IsEmpty() != true, "Expected second to not be empty\n");
     ok(second.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", second.GetLength());
-    ok(second.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(7, 6), second.GetAllocLength());
+    ok_int(second.GetAllocLength(), 6);
 
     test = first;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(7, 6), test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 6);
 
     test.Empty();
     ok(test.IsEmpty() == true, "Expected test to be empty\n");
     ok(test.GetLength() == 0, "Expected GetLength() to be 0, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == 0, "Expected GetAllocLength() to be 0, was: %i\n", test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 0);
 
     test = _X("First ");
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(7, 6), test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 6);
 
     test += second;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 12, "Expected GetLength() to be 12, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(15, 12), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(15, 12), test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 12);
 
     test = first + second;
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 12, "Expected GetLength() to be 12, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(15, 12), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(15, 12), test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 12);
 
     test = first + second + _X(".");
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 13, "Expected GetLength() to be 13, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(15, 18), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(15, 18), test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 13);
 
     CStringX test2(test);
     ok(test2.IsEmpty() != true, "Expected test2 to not be empty\n");
     ok(test2.GetLength() == 13, "Expected GetLength() to be 13, was: %i\n", test2.GetLength());
-    ok(test2.GetAllocLength() == ALLOC_EXPECT(15, 18), "Expected GetAllocLength() to be %i, was: %i\n", ALLOC_EXPECT(15, 18), test2.GetAllocLength());
+    ok_int(test2.GetAllocLength(), 13);
 
     // Clear it again
     test.Empty();
     ok(test.IsEmpty() == true, "Expected test to be empty\n");
     ok(test.GetLength() == 0, "Expected GetLength() to be 0, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == 0, "Expected GetAllocLength() to be 0, was: %i\n", test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 0);
 
     // Assign string
     test = "First ";
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be 7, was: %i\n", test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 6);
 
     CStringA testA = test;
     ok(testA.IsEmpty() != true, "Expected testA to not be empty\n");
     ok(testA.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", testA.GetLength());
-    ok(testA.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be 7, was: %i\n", testA.GetAllocLength());
+    ok_int(testA.GetAllocLength(), 6);
 
     CStringW testW = test;
     ok(testW.IsEmpty() != true, "Expected testW to not be empty\n");
     ok(testW.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", testW.GetLength());
-    ok(testW.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be 7, was: %i\n", testW.GetAllocLength());
+    ok_int(testW.GetAllocLength(), 6);
 
     // Assign wstring
     test = L"First ";
     ok(test.IsEmpty() != true, "Expected test to not be empty\n");
     ok(test.GetLength() == 6, "Expected GetLength() to be 6, was: %i\n", test.GetLength());
-    ok(test.GetAllocLength() == ALLOC_EXPECT(7, 6), "Expected GetAllocLength() to be 7, was: %i\n", test.GetAllocLength());
+    ok_int(test.GetAllocLength(), 6);
 }
 
 

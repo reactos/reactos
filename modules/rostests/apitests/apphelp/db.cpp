@@ -223,7 +223,8 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
             if (g_WinVersion >= _WIN32_WINNT_VISTA)
                 ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
             else
-                ok(pInfo->dwMinor == 190915, "Expected pInfo->dwMinor to be 190915, was: %d\n", pInfo->dwMinor);
+                ok(pInfo->dwMinor >= 190915 && pInfo->dwMinor <= 191300,
+                   "Expected pInfo->dwMinor to be between 190915 and 191300, was: %d\n", pInfo->dwMinor);
 
             ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);

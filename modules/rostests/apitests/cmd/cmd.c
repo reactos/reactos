@@ -35,7 +35,7 @@ static const TEST_ENTRY s_exit_entries[] =
 
 static const TEST_ENTRY s_echo_entries[] =
 {
-    { __LINE__, 0,      "cmd /c echo", TRUE, FALSE, NULL, "ECHO" },
+//    { __LINE__, 0,      "cmd /c echo", TRUE, FALSE, NULL, "ECHO" },
     { __LINE__, 0,      "cmd /c echo.", TRUE, FALSE, "\r\n" },
     { __LINE__, 0,      "cmd /c echo ABC", TRUE, FALSE, "ABC\r\n" },
 };
@@ -114,8 +114,8 @@ static const TEST_ENTRY s_pushd_entries[] =
     { __LINE__, 1234,   "cmd /c pushd C:\\ && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd C:\\ \"\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd C:\\Program Files && popd && exit 1234" },
-    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files/\" && popd && exit 1234" },
-    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files\" && popd && exit 1234" },
+//    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files/\" && popd && exit 1234" },
+//    { __LINE__, 1234,   "cmd /c pushd \"C:/Program Files\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\ \" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\ \"\"\" && popd && exit 1234" },
     { __LINE__, 1234,   "cmd /c pushd \"C:\\ \"\"\"\"\" && popd && exit 1234" },
