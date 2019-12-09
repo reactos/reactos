@@ -949,9 +949,6 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE hobj)
 {
-    /* Complete all pending operations */
-    //NtGdiFlushUserBatch(); // FIXME: We shouldn't need this
-
     if (GDI_HANDLE_IS_STOCKOBJ(hobj)) return TRUE;
 
     if (GreGetObjectOwner(hobj) != GDI_OBJ_HMGR_POWNED)
