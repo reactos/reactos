@@ -153,7 +153,7 @@ SpiLoadTimeOut(VOID)
         return 0;
     }
     if (wcslen(szApplicationName) == 0) return 0;
-    return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 0);
+    return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 600);
 }
 
 static
@@ -244,6 +244,10 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.iMouseHoverTime = SpiLoadMouse(VAL_HOVERTIME, 400);
     gspv.iMouseHoverWidth = SpiLoadMouse(VAL_HOVERWIDTH, 4);
     gspv.iMouseHoverHeight = SpiLoadMouse(VAL_HOVERHEIGHT, 4);
+
+    /* Load keyboard settings */
+    gspv.dwKbdSpeed = SpiLoadInt(KEY_KBD, VAL_KBDSPD, 31);
+    gspv.iKbdDelay = SpiLoadInt(KEY_KBD, VAL_KBDDELAY, 1);
 
     /* Load NONCLIENTMETRICS */
     gspv.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
