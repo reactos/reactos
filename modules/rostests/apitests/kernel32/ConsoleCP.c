@@ -23,7 +23,7 @@ static const WCHAR u9580[] = { 0x9580, 0 };             /* 門 */
 static const WCHAR ideograph_space = (WCHAR)0x3000;     /* fullwidth space */
 static LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
 static LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
-static BOOL s_bIsVistaPlus;
+static BOOL s_bIs8Plus;
 
 static BOOL IsCJKCodePage(void)
 {
@@ -411,7 +411,7 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, ideograph_space, csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        if (s_bIsVistaPlus)
+        if (s_bIs8Plus)
             ok(len == csbi.dwSize.X * csbi.dwSize.Y / 2, "len was: %ld\n", len);
         else
             ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
@@ -454,7 +454,7 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        if (s_bIsVistaPlus)
+        if (s_bIs8Plus)
         {
             ok(len == 3, "len was: %ld\n", len);
             ok(str[0] == 0x3000, "str[0] was: 0x%04X\n", str[0]);
@@ -479,8 +479,10 @@ START_TEST(ConsoleCP)
     HANDLE hConIn, hConOut;
     OSVERSIONINFOA osver = { sizeof(osver) };
 
+    // https://github.com/reactos/reactos/pull/2131#issuecomment-563189380
     GetVersionExA(&osver);
-    s_bIsVistaPlus = (osver.dwMajorVersion >= 6);
+    s_bIs8Plus = (osver.dwMajorVersion > 6) ||
+                 (osver.dwMajorVersion == 6 && osver.dwMinorVersion >= 2);
 
     FreeConsole();
     ok(AllocConsole(), "Couldn't alloc console\n");
