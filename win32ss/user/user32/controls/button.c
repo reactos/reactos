@@ -773,7 +773,7 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
           }
 
           if ((hFont = get_button_font( hwnd ))) hPrevFont = SelectObject( hdc, hFont );
-          DrawTextW(hdc, text, -1, &r, dtStyle | DT_CALCRECT);
+          DrawTextW(hdc, text, -1, &r, ((dtStyle | DT_CALCRECT) & ~(DT_VCENTER | DT_BOTTOM)));
           if (hPrevFont) SelectObject( hdc, hPrevFont );
           HeapFree( GetProcessHeap(), 0, text );
 #ifdef __REACTOS__

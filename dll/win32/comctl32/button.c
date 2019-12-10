@@ -1211,7 +1211,7 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
           }
 
           if ((hFont = infoPtr->font)) hPrevFont = SelectObject( hdc, hFont );
-          DrawTextW(hdc, text, -1, &r, dtStyle | DT_CALCRECT);
+          DrawTextW(hdc, text, -1, &r, ((dtStyle | DT_CALCRECT) & ~(DT_VCENTER | DT_BOTTOM)));
           if (hPrevFont) SelectObject( hdc, hPrevFont );
           heap_free( text );
 #ifdef __REACTOS__
