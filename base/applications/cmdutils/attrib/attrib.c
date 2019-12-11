@@ -86,14 +86,14 @@ ErrorMessage(
         ConPrintf(StdOut, L"%s\n", szMsg);
 }
 
-/* Returns TRUE if anything found and listed, FALSE otherwise */
+/* Returns TRUE if anything is printed, FALSE otherwise */
 static
 BOOL
 PrintAttribute(
     LPWSTR pszPath,
     LPWSTR pszFile,
-    BOOL  bRecurse,
-    BOOL  bDirectories)
+    BOOL   bRecurse,
+    BOOL   bDirectories)
 {
     WIN32_FIND_DATAW findData;
     HANDLE hFind;
@@ -102,6 +102,7 @@ PrintAttribute(
     BOOL   bFound = FALSE;
     BOOL   bIsDir;
     BOOL   bExactMatch;
+    DWORD  Error;
 
     /* prepare full file name buffer */
     wcscpy(szFullName, pszPath);
@@ -116,9 +117,10 @@ PrintAttribute(
         hFind = FindFirstFileW(szFullName, &findData);
         if (hFind == INVALID_HANDLE_VALUE)
         {
-            if ((GetLastError() != ERROR_DIRECTORY) && (GetLastError() != ERROR_SHARING_VIOLATION)
-                  && (GetLastError() != ERROR_FILE_NOT_FOUND))
-                ErrorMessage(GetLastError(), pszFile);
+            Error = GetLastError();
+            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
+                  && (Error != ERROR_FILE_NOT_FOUND))
+                ErrorMessage(Error, pszFile);
             return FALSE;
         }
 
@@ -197,6 +199,7 @@ ChangeAttribute(
     BOOL   bIsDir;
     BOOL   bExactMatch;
     DWORD  dwAttribute;
+    DWORD  Error;
 
     /* prepare full file name buffer */
     wcscpy(szFullName, pszPath);
@@ -211,9 +214,10 @@ ChangeAttribute(
         hFind = FindFirstFileW(szFullName, &findData);
         if (hFind == INVALID_HANDLE_VALUE)
         {
-            if ((GetLastError() != ERROR_DIRECTORY) && (GetLastError() != ERROR_SHARING_VIOLATION)
-                  && (GetLastError() != ERROR_FILE_NOT_FOUND))
-                ErrorMessage(GetLastError(), pszFile);
+            Error = GetLastError();
+            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
+                  && (Error != ERROR_FILE_NOT_FOUND))
+                ErrorMessage(Error, pszFile);
             return FALSE;
         }
 
