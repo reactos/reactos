@@ -417,19 +417,19 @@ int wmain(int argc, WCHAR *argv[])
 // Code below handles the special case of 'attrib +h /s' and similar
 
     if (bRecurse && dwMask && (wcscmp(szPath, L"") == 0))
-        {
-            DWORD len;
+    {
+        DWORD len;
 
-            len = GetCurrentDirectory(MAX_PATH, szPath);
-            if (szPath[len-1] != L'\\')
-            {
-                szPath[len] = L'\\';
-                szPath[len + 1] = UNICODE_NULL;
-            }
-            wcscpy(szFileName, L"*.*");
-            if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
-                ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, szFileName);
+        len = GetCurrentDirectory(MAX_PATH, szPath);
+        if (szPath[len-1] != L'\\')
+        {
+            szPath[len] = L'\\';
+            szPath[len + 1] = UNICODE_NULL;
         }
+        wcscpy(szFileName, L"*.*");
+        if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, szFileName);
+    }
 
     return 0;
 }
