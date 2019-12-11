@@ -257,7 +257,7 @@ int OSK_DlgInitDialog(HWND hDlg)
  */
 VOID OSK_RestoreDlgPlacement(HWND hDlg)
 {
-    LoadDataFromRegistry();
+    LoadSettings();
     SetWindowPos(hDlg, (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST), Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
 }
 
@@ -282,8 +282,8 @@ int OSK_DlgClose(void)
     /* delete GDI objects */
     if (Globals.hBrushGreenLed) DeleteObject(Globals.hBrushGreenLed);
 
-    /* Save the settings to the registry hive */
-    SaveDataToRegistry();
+    /* Save the application's settings on registry */
+    SaveSettings();
 
     return TRUE;
 }
@@ -633,7 +633,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         */
                         Globals.bIsEnhancedKeyboard = TRUE;
                         EndDialog(hDlg, FALSE);
-                        SaveDataToRegistry();
+                        SaveSettings();
 
                         /* Change the condition of enhanced keyboard item menu to checked */
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
@@ -666,7 +666,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         */
                         Globals.bIsEnhancedKeyboard = FALSE;
                         EndDialog(hDlg, FALSE);
-                        SaveDataToRegistry();
+                        SaveSettings();
 
                         /* Change the condition of standard keyboard item menu to checked */
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
@@ -805,8 +805,8 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
 
-    /* Load the settings from the registry hive */
-    LoadDataFromRegistry();
+    /* Load the application's settings from the registry */
+    LoadSettings();
 
     /* If the member of the struct (bShowWarning) is set then display the dialog box */
     if (Globals.bShowWarning)
