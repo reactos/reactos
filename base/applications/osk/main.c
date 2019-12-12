@@ -139,7 +139,12 @@ int OSK_DlgInitDialog(HWND hDlg)
     Globals.hMainWnd = hDlg;
 
     /* Check the checked menu item before displaying the modal box */
-    if (Globals.bIsEnhancedKeyboard)
+    /*
+        TODO: In the future, when we'll support more keyboard layouts,
+        the menu keyboard layout items must be updated within a separate
+        routine.
+    */
+    if (Globals.KeyboardLayout == KB_ENHANCED_REGULAR_101KEYS)
     {
         /* Enhanced keyboard dialog chosen, set the respective menu item as checked */
         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
@@ -259,6 +264,108 @@ VOID OSK_RestoreDlgPlacement(HWND hDlg)
 {
     LoadSettings();
     SetWindowPos(hDlg, (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST), Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
+}
+
+/***********************************************************************
+ *
+ *           OSK_UpdateKeyboardLayout
+ *
+ *  Update (change) the keyboard resource layout
+ */
+INT OSK_UpdateKeyboardLayout(INT nEnumType)
+{
+    /*
+        Before updating the keyboard dialog, ensure that we do not lose
+        the current changed settings (if any) as well as the current dialog
+        placement position.
+    */
+    EndDialog(Globals.hMainWnd, FALSE);
+    SaveSettings();
+    OSK_RestoreDlgPlacement(Globals.hMainWnd);
+
+    /* Iterate over the keyboard dialog types */
+    switch (nEnumType)
+    {
+        case KB_ENHANCED_REGULAR_101KEYS:
+        {
+            /* Save the keyboard layout setting first */
+            Globals.KeyboardLayout = KB_ENHANCED_REGULAR_101KEYS;
+
+            /* Change the condition of standard keyboard item menu to checked */
+            CheckMenuItem(GetMenu(Globals.hMainWnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+            CheckMenuItem(GetMenu(Globals.hMainWnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+
+            /* Update the dialog */
+            DialogBoxW(Globals.hInstance,
+                       MAKEINTRESOURCEW(MAIN_DIALOG_ENHANCED_KB),
+                       GetDesktopWindow(),
+                       OSK_DlgProc);
+            break;
+        }
+
+        case KB_STANDARD_REGULAR_101KEYS:
+        {
+            /* Save the keyboard layout setting first */
+            Globals.KeyboardLayout = KB_STANDARD_REGULAR_101KEYS;
+
+            /* Change the condition of standard keyboard item menu to checked */
+            CheckMenuItem(GetMenu(Globals.hMainWnd), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+            CheckMenuItem(GetMenu(Globals.hMainWnd), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+
+            /* Update the dialog */
+            DialogBoxW(Globals.hInstance,
+                       MAKEINTRESOURCEW(MAIN_DIALOG_STANDARD_KB),
+                       GetDesktopWindow(),
+                       OSK_DlgProc);
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+/***********************************************************************
+ *
+ *           OSK_LoadKeyboardResource
+ *
+ *  Loads the keyboard layout resource on dialog instance initialization
+ */
+INT OSK_LoadKeyboardLayout(VOID)
+{
+    INT LayoutResource;
+
+    /*
+        The user may have changed the keyboard layout setting manually by setting a random value.
+        We should not expect values lower or higher based on the current supported keyboard layouts
+        we have. Otherwise it could lead to a undefined behaviour and to avoid this we silently
+        load the default keyboard layout.
+    */
+    if (Globals.KeyboardLayout < KB_ENHANCED_REGULAR_101KEYS || Globals.KeyboardLayout > KB_STANDARD_REGULAR_101KEYS)
+    {
+        Globals.KeyboardLayout = KB_ENHANCED_REGULAR_101KEYS;
+        LayoutResource = MAIN_DIALOG_ENHANCED_KB;
+        return LayoutResource;
+    }
+
+    /* Iterate over the keyboard layout setting so that we can load the specific keyboard resource */
+    switch (Globals.KeyboardLayout)
+    {
+        case KB_ENHANCED_REGULAR_101KEYS:
+            LayoutResource = MAIN_DIALOG_ENHANCED_KB;
+        break;
+
+        case KB_STANDARD_REGULAR_101KEYS:
+            LayoutResource = MAIN_DIALOG_STANDARD_KB;
+        break;
+
+        default:
+            break;
+    }
+
+    return LayoutResource;
 }
 
 /***********************************************************************
@@ -625,67 +732,13 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_ENHANCED_KB:
                 {
-                    if (!Globals.bIsEnhancedKeyboard)
-                    {
-                        /*
-                            The user attempted to switch to enhanced keyboard dialog type.
-                            Set the member value as TRUE, destroy the dialog and save the data configuration into the registry.
-                        */
-                        Globals.bIsEnhancedKeyboard = TRUE;
-                        EndDialog(hDlg, FALSE);
-                        SaveSettings();
-
-                        /* Change the condition of enhanced keyboard item menu to checked */
-                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
-                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
-
-                        /*
-                            Before creating the dialog box restore the coordinates. The user can
-                            move the dialog around before choosing a different dialog layout therefore
-                            we must create the dialog with the new coordinates.
-                        */
-                        OSK_RestoreDlgPlacement(hDlg);
-
-                        /* Finally, display the dialog modal box with the enhanced keyboard dialog */
-                        DialogBoxW(Globals.hInstance,
-                                   MAKEINTRESOURCEW(MAIN_DIALOG_ENHANCED_KB),
-                                   GetDesktopWindow(),
-                                   OSK_DlgProc);
-                    }
-
+                    OSK_UpdateKeyboardLayout(KB_ENHANCED_REGULAR_101KEYS);
                     break;
                 }
 
                 case IDM_STANDARD_KB:
                 {
-                    if (Globals.bIsEnhancedKeyboard)
-                    {
-                        /*
-                            The user attempted to switch to standard keyboard dialog type.
-                            Set the member value as FALSE, destroy the dialog and save the data configuration into the registry.
-                        */
-                        Globals.bIsEnhancedKeyboard = FALSE;
-                        EndDialog(hDlg, FALSE);
-                        SaveSettings();
-
-                        /* Change the condition of standard keyboard item menu to checked */
-                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
-                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
-
-                        /*
-                            Before creating the dialog box restore the coordinates. The user can
-                            move the dialog around before choosing a different dialog layout therefore
-                            we must create the dialog with the new coordinates.
-                        */
-                        OSK_RestoreDlgPlacement(hDlg);
-
-                        /* Finally, display the dialog modal box with the standard keyboard dialog */
-                        DialogBoxW(Globals.hInstance,
-                                   MAKEINTRESOURCEW(MAIN_DIALOG_STANDARD_KB),
-                                   GetDesktopWindow(),
-                                   OSK_DlgProc);
-                    }
-
+                    OSK_UpdateKeyboardLayout(KB_STANDARD_REGULAR_101KEYS);
                     break;
                 }
 
@@ -767,7 +820,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 {
     HANDLE hMutex;
     DWORD dwError;
-    INT LayoutResource;
+    INT KeyboardResource;
     INITCOMMONCONTROLSEX iccex;
 
     UNREFERENCED_PARAMETER(prev);
@@ -814,19 +867,12 @@ int WINAPI wWinMain(HINSTANCE hInstance,
         DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
     }
 
-    /* Before initializing the dialog execution, check if the chosen keyboard type is standard or enhanced */
-    if (Globals.bIsEnhancedKeyboard)
-    {
-        LayoutResource = MAIN_DIALOG_ENHANCED_KB;
-    }
-    else
-    {
-        LayoutResource = MAIN_DIALOG_STANDARD_KB;
-    }
+    /* Load the keyboard resource */
+    KeyboardResource = OSK_LoadKeyboardLayout();
 
     /* Create the modal box based on the configuration registry */
     DialogBoxW(hInstance,
-               MAKEINTRESOURCEW(LayoutResource),
+               MAKEINTRESOURCEW(KeyboardResource),
                GetDesktopWindow(),
                OSK_DlgProc);
 

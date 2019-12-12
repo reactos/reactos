@@ -118,9 +118,9 @@ VOID LoadSettings(VOID)
 
     /* Initialize the registry application settings */
     Globals.bShowWarning = TRUE;
-    Globals.bIsEnhancedKeyboard = TRUE;
     Globals.bAlwaysOnTop = TRUE;
     Globals.bSoundClick = FALSE;
+    Globals.KeyboardLayout = KB_ENHANCED_REGULAR_101KEYS;
 
     /* Set the coordinate values to default */
     Globals.PosX = CW_USEDEFAULT;
@@ -132,9 +132,9 @@ VOID LoadSettings(VOID)
         Globals.bShowWarning = (dwValue != 0);
 
     /* Enhanced keyboard switch dialog registry setting */
-    lResult = LoadDataFromRegistry(L"IsEnhancedKeyboard", &dwValue);
+    lResult = LoadDataFromRegistry(L"KeyboardLayout", &dwValue);
     if (lResult == NO_ERROR)
-        Globals.bIsEnhancedKeyboard = (dwValue != 0);
+        Globals.KeyboardLayout = dwValue;
 
     /* Sound on click event registry setting */
     lResult = LoadDataFromRegistry(L"ClickSound", &dwValue);
@@ -169,7 +169,7 @@ VOID SaveSettings(VOID)
     SaveDataToRegistry(L"ShowWarning", Globals.bShowWarning);
 
     /* Enhanced keyboard switch dialog registry setting */
-    SaveDataToRegistry(L"IsEnhancedKeyboard", Globals.bIsEnhancedKeyboard);
+    SaveDataToRegistry(L"KeyboardLayout", Globals.KeyboardLayout);
 
     /* Sound on click event registry setting */
     SaveDataToRegistry(L"ClickSound", Globals.bSoundClick);

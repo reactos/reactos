@@ -39,11 +39,11 @@ typedef struct
 
     /* On-Screen Keyboard registry settings */
     BOOL       bShowWarning;
-    BOOL       bIsEnhancedKeyboard;
     BOOL       bSoundClick;
     BOOL       bAlwaysOnTop;
     INT        PosX;
     INT        PosY;
+    INT        KeyboardLayout;
 } OSK_GLOBALS;
 
 typedef struct
@@ -53,6 +53,14 @@ typedef struct
     WORD wScanCode;
     BOOL bWasKeyPressed;
 } OSK_KEYLEDINDICATOR;
+
+/* ENUMERATIONS ****************************************************************/
+
+enum
+{
+    KB_ENHANCED_REGULAR_101KEYS,
+    KB_STANDARD_REGULAR_101KEYS
+};
 
 /* PROTOTYPES *****************************************************************/
 
@@ -69,6 +77,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 VOID OSK_RestoreDlgPlacement(HWND hDlg);
 VOID OSK_RefreshLEDKeys(VOID);
 INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+INT OSK_UpdateKeyboardLayout(INT nEnumType);
+INT OSK_LoadKeyboardLayout(VOID);
 
 /* settings.c */
 LONG LoadDataFromRegistry(IN LPCWSTR lpValueDataName,
