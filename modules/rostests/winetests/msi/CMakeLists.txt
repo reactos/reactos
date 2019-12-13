@@ -32,6 +32,10 @@ list(APPEND SOURCE
     suminfo.c
     precomp.h)
 
+# CMake 3.9 and higher requires to specify this dependency manually
+# see https://gitlab.kitware.com/cmake/cmake/issues/19933
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
+
 add_executable(msi_winetest ${SOURCE} testlist.c msi_winetest.rc)
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)
