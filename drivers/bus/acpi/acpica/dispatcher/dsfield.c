@@ -305,7 +305,7 @@ Cleanup:
  * FUNCTION:    AcpiDsGetFieldNames
  *
  * PARAMETERS:  Info            - CreateField info structure
- *  `           WalkState       - Current method state
+ *              WalkState       - Current method state
  *              Arg             - First parser arg for the field name list
  *
  * RETURN:      Status
