@@ -11,6 +11,7 @@
 
 #include <apitest.h>
 #include <atlbase.h>
+#include <versionhelpers.h>
 
 void expect_bool_imp(const CComVariant& ccv, bool value)
 {
@@ -46,7 +47,8 @@ void expect_error_imp(const CComVariant& ccv, SCODE value)
 void expect_empty_imp(const CComVariant& ccv)
 {
     winetest_ok(V_VT(&ccv) == VT_EMPTY, "Expected .vt to be VT_EMPTY, was %u\n", V_VT(&ccv));
-    winetest_ok(V_I8(&ccv) == 0ll, "Expected value to be 0, was: %I64d\n", V_I8(&ccv));
+    if (IsWindows8OrGreater())
+        winetest_ok(V_I8(&ccv) == 0ll, "Expected value to be 0, was: %I64d\n", V_I8(&ccv));
 }
 
 #define expect_bool         (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : expect_bool_imp
