@@ -9,7 +9,7 @@
 #ifndef _BLUE_PCH_
 #define _BLUE_PCH_
 
-#include <wdm.h>
+#include <ntifs.h>
 
 #define TAG_BLUE    'EULB'
 
@@ -54,7 +54,6 @@ typedef struct tagCONSOLE_CURSOR_INFO
 #define ENABLE_WRAP_AT_EOL_OUTPUT               0x0002
 
 #include <blue/ntddblue.h>
-#include <ndk/inbvfuncs.h>
 
 /*
  * Color attributes for text and screen background

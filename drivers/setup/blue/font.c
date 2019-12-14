@@ -10,8 +10,7 @@
 /* INCLUDES ***************************************************************/
 
 #include "blue.h"
-
-#include <ntddk.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
