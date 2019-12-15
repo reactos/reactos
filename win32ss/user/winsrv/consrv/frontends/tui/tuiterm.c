@@ -375,7 +375,7 @@ TuiConsoleThread(PVOID Param)
 static BOOL
 TuiInit(DWORD OemCP)
 {
-    BOOL Ret = FALSE;
+    BOOL Success;
     CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
     DWORD BytesReturned;
     WNDCLASSEXW wc;
@@ -388,6 +388,7 @@ TuiInit(DWORD OemCP)
     /*
      * Initialize the TUI front-end:
      * - load the console driver,
+     * - open BlueScreen device and enable it,
      * - set default screen attributes,
      * - grab the console size.
      */
@@ -404,6 +405,16 @@ TuiInit(DWORD OemCP)
         return FALSE;
     }
 
+    Success = TRUE;
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_RESET_SCREEN,
+                         &Success, sizeof(Success), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to enable the screen.\n");
+        CloseHandle(ConsoleDeviceHandle);
+        return FALSE;
+    }
+
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
                          &OemCP, sizeof(OemCP), NULL, 0,
                          &BytesReturned, NULL))
@@ -416,7 +427,7 @@ TuiInit(DWORD OemCP)
                          &TextAttribute, sizeof(TextAttribute), NULL, 0,
                          &BytesReturned, NULL))
     {
-        DPRINT1("Failed to set text attribute\n");
+        DPRINT1("Failed to set text attribute.\n");
     }
 
     ActiveConsole = NULL;
@@ -426,8 +437,8 @@ TuiInit(DWORD OemCP)
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
                          NULL, 0, &ScrInfo, sizeof(ScrInfo), &BytesReturned, NULL))
     {
-        DPRINT1("Failed to get console info\n");
-        Ret = FALSE;
+        DPRINT1("Failed to get console info.\n");
+        Success = FALSE;
         goto Quit;
     }
     PhysicalConsoleSize = ScrInfo.dwSize;
@@ -443,23 +454,23 @@ TuiInit(DWORD OemCP)
     ConsoleClassAtom = RegisterClassExW(&wc);
     if (ConsoleClassAtom == 0)
     {
-        DPRINT1("Failed to register TUI console wndproc\n");
-        Ret = FALSE;
+        DPRINT1("Failed to register TUI console wndproc.\n");
+        Success = FALSE;
     }
     else
     {
-        Ret = TRUE;
+        Success = TRUE;
     }
 
 Quit:
-    if (!Ret)
+    if (!Success)
     {
         DeleteCriticalSection(&ActiveVirtConsLock);
         CloseHandle(ConsoleDeviceHandle);
     }
 
-    ConsInitialized = Ret;
-    return Ret;
+    ConsInitialized = Success;
+    return Success;
 }
 
 
