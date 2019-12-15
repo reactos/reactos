@@ -56,7 +56,7 @@ ScrLoadFontTable(
     }
 
     MmUnmapIoSpace(Bitplane, 0xFFFF);
-    ExFreePool(FontBitfield);
+    ExFreePoolWithTag(FontBitfield, TAG_BLUE);
 
     /* close bit plane */
     CloseBitPlane();
