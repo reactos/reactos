@@ -31,11 +31,14 @@ if(CMAKE_CROSSCOMPILING)
     include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 endif()
 
+add_bison_files(ppy.y)
+add_flex_files(ppl.l)
+
 list(APPEND SOURCE
     preproc.c
     wpp.c
-    ppl.yy.c
-    ppy.tab.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/ppl.yy.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ppy.tab.c)
 
 if(CMAKE_CROSSCOMPILING)
     add_library(wpp ${SOURCE})

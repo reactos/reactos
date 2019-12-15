@@ -10,6 +10,9 @@ if(MSVC)
     endif()
 endif()
 
+add_bison_files(parser.y)
+add_flex_files(parser.l)
+
 list(APPEND SOURCE
     client.c
     expr.c
@@ -25,8 +28,8 @@ list(APPEND SOURCE
     widl.c
     write_msft.c
     write_sltg.c
-    parser.yy.c
-    parser.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/parser.yy.c
+    ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c
     ../port/getopt.c
     ../port/getopt1.c
     ../port/mkstemps.c)

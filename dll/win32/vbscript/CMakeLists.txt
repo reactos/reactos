@@ -2,6 +2,7 @@
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(vbscript.dll vbscript.spec)
+add_bison_files(parser.y)
 
 list(APPEND SOURCE
     compile.c
@@ -16,10 +17,7 @@ list(APPEND SOURCE
     vbscript_main.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    parser.tab.c)
-
-# parser.tab.c has been generated with relative file paths...
-set_source_files_properties(parser.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+    ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c)
 
 list(APPEND vbscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/vbscript_classes.rgs

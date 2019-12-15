@@ -16,6 +16,8 @@ include_directories(
 
 spec2def(msxml3.dll msxml3.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 add_typelib(msxml3_v1.idl)
+add_bison_files(xslpattern.y)
+add_flex_files(xslpattern.l)
 
 list(APPEND SOURCE
     attribute.c
@@ -52,11 +54,8 @@ list(APPEND SOURCE
 list(APPEND PCH_SKIP_SOURCE
     factory.c
     uuid.c
-    xslpattern.tab.c
-    xslpattern.yy.c)
-
-# xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
-set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+    ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.yy.c)
 
 list(APPEND msxml3_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.manifest

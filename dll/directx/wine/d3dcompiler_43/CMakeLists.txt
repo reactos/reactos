@@ -7,6 +7,9 @@ add_definitions(
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
+add_bison_files(asmshader.y hlsl.y ppy.y)
+add_flex_files(asmshader.l hlsl.l ppl.l)
+
 list(APPEND SOURCE
     asmparser.c
     blob.c
@@ -18,12 +21,12 @@ list(APPEND SOURCE
     utils.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    asmshader.tab.c
-    asmshader.yy.c
-    hlsl.tab.c
-    hlsl.yy.c
-    ppy.tab.c
-    ppl.yy.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/asmshader.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/asmshader.yy.c
+    ${CMAKE_CURRENT_BINARY_DIR}/hlsl.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/hlsl.yy.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ppy.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ppl.yy.c)
 
 add_library(d3dcompiler_43 MODULE
     ${SOURCE}
@@ -31,16 +34,6 @@ add_library(d3dcompiler_43 MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43.def)
-
-# some files have been generated with relative file paths...
-set_source_files_properties(
-    asmshader.tab.c
-    asmshader.yy.c
-    hlsl.tab.c
-    hlsl.yy.c
-    ppy.tab.c
-    ppl.yy.c
-    PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
 
 set_module_type(d3dcompiler_43 win32dll)
 target_link_libraries(d3dcompiler_43 dx10guid uuid wine wpp)

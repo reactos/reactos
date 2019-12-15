@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__ -DMSIRUNMODE=MSIRUNMODE_T)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
+add_bison_files(cond.y sql.y)
 
 if(MSVC)
     #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
@@ -57,13 +58,10 @@ list(APPEND SOURCE
     where.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    cond.tab.c
-    sql.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
-
-# cond.tab.c/sql.tab.c have been generated with relative file paths...
-set_source_files_properties(cond.tab.c sql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
 
 add_library(msi MODULE
     ${SOURCE}
