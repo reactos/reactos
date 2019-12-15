@@ -28,6 +28,11 @@ NET_API_STATUS
 NetpJoinWorkgroup(
     _In_ LPCWSTR WorkgroupName);
 
+NET_API_STATUS
+NetpGetJoinInformation(
+    LPWSTR *NameBuffer,
+    PNETSETUP_JOIN_STATUS BufferType);
+
 
 /* rpcserver.c */
 

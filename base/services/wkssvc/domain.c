@@ -66,4 +66,63 @@ NetpJoinWorkgroup(
     return NERR_Success;
 }
 
+
+NET_API_STATUS
+NetpGetJoinInformation(
+    LPWSTR *NameBuffer,
+    PNETSETUP_JOIN_STATUS BufferType)
+{
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    PPOLICY_PRIMARY_DOMAIN_INFO PrimaryDomainInfo = NULL;
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
+
+    *BufferType = NetSetupUnknownStatus;
+    *NameBuffer = NULL;
+
+    ZeroMemory(&ObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION,
+                           &PolicyHandle);
+    if (!LSA_SUCCESS(Status))
+        return LsaNtStatusToWinError(Status);
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyPrimaryDomainInformation,
+                                       (PVOID*)&PrimaryDomainInfo);
+    if (LSA_SUCCESS(Status))
+    {
+        TRACE("Sid: %p\n", PrimaryDomainInfo->Sid);
+        TRACE("Name: %S\n", PrimaryDomainInfo->Name.Buffer);
+
+        if (PrimaryDomainInfo->Name.Length > 0)
+        {
+            if (PrimaryDomainInfo->Sid != NULL)
+                *BufferType = NetSetupDomainName;
+            else
+                *BufferType = NetSetupWorkgroupName;
+
+            *NameBuffer = midl_user_allocate(PrimaryDomainInfo->Name.Length + sizeof(WCHAR));
+            if (*NameBuffer)
+                wcscpy(*NameBuffer, PrimaryDomainInfo->Name.Buffer);
+        }
+        else
+        {
+            *BufferType = NetSetupUnjoined;
+        }
+
+        if (PrimaryDomainInfo->Sid)
+            LsaFreeMemory(PrimaryDomainInfo->Sid);
+
+        LsaFreeMemory(PrimaryDomainInfo);
+    }
+
+    LsaClose(PolicyHandle);
+
+    return LsaNtStatusToWinError(Status);
+}
+
 /* EOF */

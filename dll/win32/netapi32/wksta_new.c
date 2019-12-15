@@ -312,7 +312,6 @@ NetEnumerateComputerNames(
 }
 
 
-#if 0
 NET_API_STATUS
 WINAPI
 NetGetJoinInformation(
@@ -342,7 +341,6 @@ NetGetJoinInformation(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS
@@ -594,7 +592,7 @@ NetSetPrimaryComputerName(
 NET_API_STATUS
 WINAPI
 NetUnjoinDomain(
-    _In_ LPCWSTR lpServer,
+    _In_opt_ LPCWSTR lpServer,
     _In_opt_ LPCWSTR lpAccount,
     _In_opt_ LPCWSTR lpPassword,
     _In_ DWORD fUnjoinOptions)

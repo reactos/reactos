@@ -364,12 +364,14 @@ NetrGetJoinInformation(
     wchar_t **NameBuffer,
     PNETSETUP_JOIN_STATUS BufferType)
 {
-    TRACE("NetrGetJoinInformation()\n");
+    TRACE("NetrGetJoinInformation(%p %p %p)\n",
+          ServerName, NameBuffer, BufferType);
 
-    *NameBuffer = NULL;
-    *BufferType = NetSetupUnjoined;
+    if (NameBuffer == NULL)
+        return ERROR_INVALID_PARAMETER;
 
-    return NERR_Success;
+    return NetpGetJoinInformation(NameBuffer,
+                                  BufferType);
 }
 
 
