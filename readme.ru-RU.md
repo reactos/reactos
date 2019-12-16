@@ -8,22 +8,22 @@
 
 <p align=center>
   <a href="https://reactos.org/project-news/reactos-0412-released">
-    <img alt="ReactOS 0.4.12" src="https://img.shields.io/badge/release-0.4.12-0688CB.svg">
+    <img alt="ReactOS 0.4.12" src="https://img.shields.io/badge/%D0%A0%D0%B5%D0%BB%D0%B8%D0%B7-0.4.12-blue">
   </a>
   <a href="https://reactos.org/download">
-    <img alt="Загрузить ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
+    <img alt="Загрузить ReactOS" src="https://img.shields.io/badge/%D0%A1%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C-%D0%BF%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9%20%D1%80%D0%B5%D0%BB%D0%B8%D0%B7-blue">
   </a>
   <a href="https://sourceforge.net/projects/reactos">
-    <img alt="Загрузить через SourceForge" src="https://img.shields.io/sourceforge/dm/reactos.svg?colorB=0688CB">
+    <img alt="Загрузить через SourceForge" src="https://img.shields.io/badge/%D0%9A%D0%BE%D0%BB--%D0%B2%D0%BE%20%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BE%D0%BA-26%20%D1%82%D1%8B%D1%81.%2F%D0%BC%D0%B5%D1%81%D1%8F%D1%86-blue">
   </a>
   <a href="https://github.com/reactos/reactos/blob/master/COPYING">
-    <img alt="Лицензия" src="https://img.shields.io/badge/license-GNU_GPL_2.0-0688CB.svg">
+    <img alt="Лицензия" src="https://img.shields.io/badge/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-GNU%20GPL%202.0-blue">
   </a>
   <a href="https://reactos.org/donating">
-    <img alt="Сделать пожертвование" src="https://img.shields.io/badge/%24-donate-E44E4A.svg">
+    <img alt="Сделать пожертвование" src="https://img.shields.io/badge/%24-%D0%BF%D0%BE%D0%B6%D0%B5%D1%80%D1%82%D0%B2%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-red">
   </a>
   <a href="https://twitter.com/reactos">
-    <img alt="Следите за нами на Twitter" src="https://img.shields.io/twitter/follow/reactos.svg?style=social&label=Follow%20%40reactos">
+    <img alt="Следите за нами на Twitter" src="https://img.shields.io/twitter/follow/reactos.svg?label=%D0%A1%D0%BB%D0%B5%D0%B4%D0%B8%D1%82%D0%B5%20%D0%B7%D0%B0%20%D0%BD%D0%B0%D0%BC%D0%B8%20%D0%BD%D0%B0%20@reactos">
   </a>
 </p>
 
