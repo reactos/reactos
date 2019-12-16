@@ -540,8 +540,8 @@ OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension,
     OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
     OHCI_REG_COMMAND_STATUS CommandStatus;
     OHCI_REG_INTERRUPT_STATUS IntStatus;
-    LARGE_INTEGER EndTime;
-    LARGE_INTEGER SystemTime;
+    LARGE_INTEGER StartTicks, CurrentTicks;
+    UINT32 TicksDiff;
 
     DPRINT("OHCI_TakeControlHC: ...\n");
 
@@ -596,8 +596,8 @@ OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension,
     /* Monitoring the InterruptRouting bit
        to determine when the ownership change has taken effect. */
 
-    KeQuerySystemTime(&EndTime);
-    EndTime.QuadPart += 500 * 10000; // 0.5 sec;
+    TicksDiff = (500 * 10000) / KeQueryTimeIncrement(); // 500 ms
+    KeQueryTickCount(&StartTicks);
 
     do
     {
@@ -618,9 +618,9 @@ OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension,
             return MP_STATUS_SUCCESS;
         }
 
-        KeQuerySystemTime(&SystemTime);
+        KeQueryTickCount(&CurrentTicks);
     }
-    while (SystemTime.QuadPart < EndTime.QuadPart);
+    while (CurrentTicks.QuadPart - StartTicks.QuadPart < TicksDiff);
 
     return MP_STATUS_HW_ERROR;
 }
@@ -647,8 +647,8 @@ OHCI_StartController(IN PVOID ohciExtension,
     POHCI_ENDPOINT_DESCRIPTOR IntED;
     ULONG_PTR IntEdPA;
     POHCI_HCCA OhciHCCA;
-    LARGE_INTEGER SystemTime;
-    LARGE_INTEGER EndTime;
+    LARGE_INTEGER StartTicks, CurrentTicks;
+    UINT32 TicksDiff;
     ULONG ix;
     ULONG jx;
     MPSTATUS MPStatus = MP_STATUS_SUCCESS;
@@ -791,17 +791,17 @@ OHCI_StartController(IN PVOID ohciExtension,
 
     WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
 
-    KeQuerySystemTime(&EndTime);
-    EndTime.QuadPart += 500 * 10000; // 0.5 sec
+    TicksDiff = (500 * 10000) / KeQueryTimeIncrement(); // 500 ms
+    KeQueryTickCount(&StartTicks);
 
     while (TRUE)
     {
         WRITE_REGISTER_ULONG(FmIntervalReg, OhciExtension->FrameInterval.AsULONG);
         FrameInterval.AsULONG = READ_REGISTER_ULONG(FmIntervalReg);
 
-        KeQuerySystemTime(&SystemTime);
+        KeQueryTickCount(&CurrentTicks);
 
-        if (SystemTime.QuadPart >= EndTime.QuadPart)
+        if (CurrentTicks.QuadPart - StartTicks.QuadPart >= TicksDiff)
         {
             MPStatus = MP_STATUS_HW_ERROR;
             break;
