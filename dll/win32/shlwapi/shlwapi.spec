@@ -551,11 +551,11 @@
 551 stub -noname IShellFolder_CompareIDs
 552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
-554 stdcall -noname -stub SHGetAllAccessSA()
+554 stdcall -stub -noname -version=0x502 SHGetAllAccessSA()
 555 stdcall AssocQueryStringByKeyA(long long ptr str ptr ptr)
-556 stub -noname SHCoExtensionAllowed
-557 stub -noname SHCoCreateExtension
-558 stub -noname SHCoExtensionCollectStats
+556 stub -noname -version=0x502 SHCoExtensionAllowed
+557 stub -noname -version=0x502 SHCoCreateExtension
+558 stub -noname -version=0x501-0x502 SHCoExtensionCollectStats
 559 stub -noname SHGetSignatureInfo
 560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
