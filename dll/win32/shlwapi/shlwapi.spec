@@ -728,7 +728,7 @@
 728 stdcall SHRegDeleteEmptyUSKeyW(long wstr long)
 729 stdcall SHRegDeleteUSValueA(long str long)
 730 stdcall SHRegDeleteUSValueW(long wstr long)
-731 stdcall SHRegDuplicateHKey(long)
+731 stdcall SHRegDuplicateHKey(ptr)
 732 stdcall SHRegEnumUSKeyA(long long str ptr long)
 733 stdcall SHRegEnumUSKeyW(long long wstr ptr long)
 734 stdcall SHRegEnumUSValueA(long long ptr ptr ptr ptr ptr long)

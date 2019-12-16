@@ -2200,6 +2200,9 @@ BOOL WINAPI UnregisterExtensionForMIMETypeW(LPCWSTR lpszType)
   return TRUE;
 }
 
+#ifdef __REACTOS__
+// This code lives in Wine dlls/shcore/main.c now.
+
 /*************************************************************************
  * SHRegDuplicateHKey   [SHLWAPI.@]
  *
@@ -2211,7 +2214,7 @@ BOOL WINAPI UnregisterExtensionForMIMETypeW(LPCWSTR lpszType)
  * RETURNS
  *  A new handle pointing to the same key as hKey.
  */
-HKEY WINAPI SHRegDuplicateHKey(HKEY hKey)
+HKEY WINAPI SHRegDuplicateHKey(_In_ HKEY hKey)
 {
     HKEY newKey = 0;
 
@@ -2220,6 +2223,7 @@ HKEY WINAPI SHRegDuplicateHKey(HKEY hKey)
     return newKey;
 }
 
+#endif // __REACTOS__
 
 /*************************************************************************
  * SHCopyKeyA	[SHLWAPI.@]

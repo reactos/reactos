@@ -233,7 +233,7 @@ SHCopyKeyW(
 
 #define SHCopyKey WINELIB_NAME_AW(SHCopyKey)
 
-HKEY WINAPI  SHRegDuplicateHKey(_In_ HKEY);
+HKEY WINAPI SHRegDuplicateHKey(_In_ HKEY hKey);
 
 /* SHRegGetValue flags */
 typedef INT SRRF;
