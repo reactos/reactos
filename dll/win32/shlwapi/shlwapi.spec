@@ -559,11 +559,11 @@
 559 stub -noname SHGetSignatureInfo
 560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
-562 stub -noname SHGetPrivateProfileInt
-563 stdcall -stub -noname SHGetPrivateProfileSection(wstr ptr long ptr)
-564 stub -noname SHGetPrivateProfileSectionNames
-565 stub -noname SHGetPrivateProfileString
-566 stub -noname SHGetPrivateProfileStruct
+562 stub -noname -version=0x502 SHGetPrivateProfileInt
+563 stdcall -stub -noname -version=0x502 SHGetPrivateProfileSection(wstr ptr long ptr)
+564 stub -noname -version=0x502 SHGetPrivateProfileSectionNames
+565 stub -noname -version=0x502 SHGetPrivateProfileString
+566 stub -noname -version=0x502 SHGetPrivateProfileStruct
 567 stdcall AssocQueryStringByKeyW(long long ptr wstr ptr ptr)
 568 stdcall AssocQueryStringW(long long wstr wstr ptr ptr)
 569 stdcall ChrCmpIA(long long)
