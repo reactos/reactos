@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 9, 2004, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -512,7 +512,7 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
  *
  * Paint an item.
  */
-static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect, 
+static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
 			       INT index, UINT action, BOOL ignoreFocus )
 {
     LB_ITEMDATA *item = NULL;
@@ -1070,7 +1070,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
         /* keep the focus rect, to paint the focus item after */
         if (i == descr->focus_item)
             focusRect = rect;
-    
+
         LISTBOX_PaintItem( descr, hdc, &rect, i, ODA_DRAWENTIRE, TRUE );
         rect.top = rect.bottom;
 
@@ -2621,8 +2621,8 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
              return 0;
           }
        }
-    }    
-#endif    
+    }
+#endif
 
     if (!descr)
     {
@@ -3042,9 +3042,9 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
 
     case LB_GETLISTBOXINFO:
         if (descr->style & LBS_MULTICOLUMN) //// ReactOS
-           return descr->page_size * descr->column_width;
+            return descr->page_size * (descr->width/descr->column_width);
         else
-           return descr->page_size;
+            return descr->page_size;
 
     case WM_DESTROY:
         return LISTBOX_Destroy( descr );
@@ -3137,7 +3137,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_HandleMouseMove( descr, mousePos.x, mousePos.y);
 
             descr->captured = captured;
-        } 
+        }
         else if (GetCapture() == descr->self)
         {
             LISTBOX_HandleMouseMove( descr, (INT16)LOWORD(lParam),
