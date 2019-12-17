@@ -3042,7 +3042,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
 
     case LB_GETLISTBOXINFO:
         if (descr->style & LBS_MULTICOLUMN) //// ReactOS
-            return descr->page_size * (descr->width/descr->column_width);
+            return descr->page_size * (descr->width / descr->column_width);
         else
             return descr->page_size;
 
