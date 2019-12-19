@@ -343,30 +343,15 @@ KdpPrint(
     STRING OutputString;
     CHAR CapturedString[512];
 
-    /* Assume failure */
-    *Handled = FALSE;
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-    if ((ComponentId >= KdComponentTableSize) && (ComponentId < MAXULONG))
-    {
-        /* Use the default component ID */
-        Mask = &Kd_DEFAULT_Mask;
-        // Level = DPFLTR_INFO_LEVEL; // Override the Level.
-    }
-#endif
-    /* Convert Level to bit field if required */
-    if (Level < 32) Level = 1 << Level;
-    Level &= ~DPFLTR_MASK;
-
-    /* Validate the mask */
-    if (!(Kd_WIN2000_Mask & Level) ||
-        ((ComponentId < KdComponentTableSize) &&
-        !(*KdComponentTable[ComponentId] & Level)))
+    if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
         /* Mask validation failed */
         *Handled = TRUE;
         return STATUS_SUCCESS;
     }
+
+    /* Assume failure */
+    *Handled = FALSE;
 
     /* Normalize the length */
     Length = min(Length, sizeof(CapturedString));
