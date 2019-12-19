@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 9, 2004, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -321,14 +321,15 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
         }
         else
             diff = (descr->top_item - index) * descr->item_height;
+
 #ifdef __REACTOS__
         if (descr->style & LBS_MULTICOLUMN)
             ScrollWindowEx(descr->self, diff, 0, NULL, NULL, 0, NULL,
                            SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN);
         else
 #endif
-            ScrollWindowEx(descr->self, 0, diff, NULL, NULL, 0, NULL,
-                           SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN);
+        ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
+                        SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
     else
         InvalidateRect( descr->self, NULL, TRUE );
@@ -517,7 +518,7 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
  *
  * Paint an item.
  */
-static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
+static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect, 
 			       INT index, UINT action, BOOL ignoreFocus )
 {
     LB_ITEMDATA *item = NULL;
@@ -1075,7 +1076,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
         /* keep the focus rect, to paint the focus item after */
         if (i == descr->focus_item)
             focusRect = rect;
-
+    
         LISTBOX_PaintItem( descr, hdc, &rect, i, ODA_DRAWENTIRE, TRUE );
         rect.top = rect.bottom;
 
@@ -2034,6 +2035,10 @@ static LRESULT LISTBOX_HandleMouseWheel(LB_DESCR *descr, SHORT delta )
         pulScrollLines = min((UINT) descr->page_size, pulScrollLines);
         cLineScroll = pulScrollLines * (float)descr->wheel_remain / WHEEL_DELTA;
         descr->wheel_remain -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+#ifdef __REACTOS__
+        if (cLineScroll < 0)
+            cLineScroll -= descr->page_size;
+#endif
         LISTBOX_SetTopItem( descr, descr->top_item - cLineScroll, TRUE );
     }
     return 0;
@@ -2626,8 +2631,8 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
              return 0;
           }
        }
-    }
-#endif
+    }    
+#endif    
 
     if (!descr)
     {
@@ -3142,7 +3147,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_HandleMouseMove( descr, mousePos.x, mousePos.y);
 
             descr->captured = captured;
-        }
+        } 
         else if (GetCapture() == descr->self)
         {
             LISTBOX_HandleMouseMove( descr, (INT16)LOWORD(lParam),
