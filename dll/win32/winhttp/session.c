@@ -240,6 +240,10 @@ static const struct object_vtbl session_vtbl =
     session_set_option
 };
 
+#ifdef __REACTOS__
+void winsock_init(void);
+#endif
+
 /***********************************************************************
  *          WinHttpOpen (winhttp.@)
  */
@@ -296,6 +300,10 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR agent, DWORD access, LPCWSTR proxy, LPCWST
 
     if (!(handle = alloc_handle( &session->hdr ))) goto end;
     session->hdr.handle = handle;
+
+#ifdef __REACTOS__
+    winsock_init();
+#endif
 
 end:
     release_object( &session->hdr );
