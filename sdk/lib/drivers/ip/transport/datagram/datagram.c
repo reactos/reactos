@@ -74,8 +74,6 @@ DGDeliverData(
  */
 {
     KIRQL OldIrql;
-    PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler;
-    PVOID HandlerContext;
     LONG AddressLength;
     PVOID SourceAddress;
     ULONG BytesTaken;
@@ -164,15 +162,22 @@ DGDeliverData(
     }
     else if (AddrFile->RegisteredReceiveDatagramHandler)
     {
-        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
+        PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler = AddrFile->ReceiveDatagramHandler;
+        PVOID HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
+        PVOID OptionsData = NULL;
+        INT32 OptionsSize = 0;
 
-        ReceiveHandler = AddrFile->ReceiveDatagramHandler;
-        HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
+        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
 
         if (SrcAddress->Type == IP_ADDRESS_V4)
         {
             AddressLength = sizeof(IPv4_RAW_ADDRESS);
             SourceAddress = &SrcAddress->Address.IPv4Address;
+            OptionsSize = IPPacket->HeaderSize - sizeof(IPv4_HEADER);
+            if (OptionsSize > 0)
+            {
+                OptionsData = (PUCHAR)IPPacket->Header + sizeof(IPv4_HEADER);
+            }
         }
         else /* (Address->Type == IP_ADDRESS_V6) */
         {
@@ -183,11 +188,13 @@ DGDeliverData(
         ReferenceObject(AddrFile);
         UnlockObject(AddrFile, OldIrql);
 
+        TI_DbgPrint(MIN_TRACE, ("OptionsSize %d DataSize: %u\n", OptionsSize, DataSize));
+
         Status = (*ReceiveHandler)(HandlerContext,
             AddressLength,
             SourceAddress,
-            0,
-            NULL,
+            OptionsSize,
+            OptionsData,
             TDI_RECEIVE_ENTIRE_MESSAGE,
             DataSize,
             DataSize,
@@ -208,7 +215,6 @@ DGDeliverData(
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
-
 
 VOID DGReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
     PDATAGRAM_RECEIVE_REQUEST ReceiveRequest =
