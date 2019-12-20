@@ -335,10 +335,10 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
 
     if (fmt->block_width != 1 || fmt->block_height != 1)
     {
-        if (w % fmt->block_width)
-            w += fmt->block_width - w % fmt->block_width;
-        if (h % fmt->block_height)
-            h += fmt->block_height - h % fmt->block_height;
+        if (w < fmt->block_width)
+            w = fmt->block_width;
+        if (h < fmt->block_height)
+            h = fmt->block_height;
     }
 
     if ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) && (!is_pow2(w)))
@@ -1892,7 +1892,10 @@ HRESULT WINAPI D3DXSaveTextureToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     if (!dst_buffer || !src_texture) return D3DERR_INVALIDCALL;
 
     if (file_format == D3DXIFF_DDS)
-        return save_dds_texture_to_memory(dst_buffer, src_texture, src_palette);
+    {
+        FIXME("DDS file format isn't supported yet\n");
+        return E_NOTIMPL;
+    }
 
     type = IDirect3DBaseTexture9_GetType(src_texture);
     switch (type)
