@@ -1082,6 +1082,10 @@ AcpiTbLoadTable (
     }
 
     Status = AcpiNsLoadTable (TableIndex, ParentNode);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
 
     /*
      * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is

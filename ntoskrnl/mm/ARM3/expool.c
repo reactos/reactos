@@ -463,21 +463,13 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
 }
 
 #if DBG
-FORCEINLINE
-BOOLEAN
-ExpTagAllowPrint(CHAR Tag)
-{
-    if ((Tag >= 'a' && Tag <= 'z') ||
-        (Tag >= 'A' && Tag <= 'Z') ||
-        (Tag >= '0' && Tag <= '9') ||
-        Tag == ' ' || Tag == '=' ||
-        Tag == '?' || Tag == '@')
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
+/*
+ * FORCEINLINE
+ * BOOLEAN
+ * ExpTagAllowPrint(CHAR Tag);
+ */
+#define ExpTagAllowPrint(Tag)   \
+    ((Tag) >= 0x20 /* Space */ && (Tag) <= 0x7E /* Tilde */)
 
 #ifdef KDBG
 #define MiDumperPrint(dbg, fmt, ...)        \
@@ -587,7 +579,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                 {
                     if (Verbose)
                     {
-                        MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                        MiDumperPrint(CalledFromDbg, "0x%08x\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedFrees,
                                       (TableEntry->NonPagedAllocs - TableEntry->NonPagedFrees), TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedFrees,
@@ -595,7 +587,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                     }
                     else
                     {
-                        MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                        MiDumperPrint(CalledFromDbg, "0x%08x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedBytes);
                     }

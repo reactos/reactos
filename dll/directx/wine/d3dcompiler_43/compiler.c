@@ -18,13 +18,12 @@
  */
 
 #define COBJMACROS
-#include "config.h"
-#include "wine/port.h"
+#include <stdarg.h>
+#include <time.h>
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "d3dcompiler_private.h"
-#include "wine/wpp.h"
+#include "wpp_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dcompiler);
 
@@ -61,6 +60,15 @@ static int wpp_output_capacity, wpp_output_size;
 static char *wpp_messages;
 static int wpp_messages_capacity, wpp_messages_size;
 
+struct define
+{
+    struct define *next;
+    char          *name;
+    char          *value;
+};
+
+static struct define *cmdline_defines;
+
 /* Mutex used to guarantee a single invocation
    of the D3DXAssembleShader function (or its variants) at a time.
    This is needed as wpp isn't thread-safe */
@@ -75,7 +83,7 @@ static CRITICAL_SECTION_DEBUG wpp_mutex_debug =
 static CRITICAL_SECTION wpp_mutex = { &wpp_mutex_debug, -1, 0, 0, 0, 0 };
 
 /* Preprocessor error reporting functions */
-static void wpp_write_message(const char *fmt, va_list args)
+static void wpp_write_message(const char *fmt, __ms_va_list args)
 {
     char* newbuffer;
     int rc, newsize;
@@ -115,35 +123,43 @@ static void wpp_write_message(const char *fmt, va_list args)
     }
 }
 
-static void PRINTF_ATTR(1,2) wpp_write_message_var(const char *fmt, ...)
+static void WINAPIV PRINTF_ATTR(1,2) wpp_write_message_var(const char *fmt, ...)
 {
-    va_list args;
+    __ms_va_list args;
 
-    va_start(args, fmt);
+    __ms_va_start(args, fmt);
     wpp_write_message(fmt, args);
-    va_end(args);
+    __ms_va_end(args);
 }
 
-static void wpp_error(const char *file, int line, int col, const char *_near,
-                      const char *msg, va_list ap)
+int WINAPIV ppy_error(const char *msg, ...)
 {
-    wpp_write_message_var("%s:%d:%d: %s: ", file ? file : "'main file'",
-                          line, col, "Error");
+    __ms_va_list ap;
+    __ms_va_start(ap, msg);
+    wpp_write_message_var("%s:%d:%d: %s: ",
+                          pp_status.input ? pp_status.input : "'main file'",
+                          pp_status.line_number, pp_status.char_number, "Error");
     wpp_write_message(msg, ap);
     wpp_write_message_var("\n");
+    __ms_va_end(ap);
+    pp_status.state = 1;
+    return 1;
 }
 
-static void wpp_warning(const char *file, int line, int col, const char *_near,
-                        const char *msg, va_list ap)
+int WINAPIV ppy_warning(const char *msg, ...)
 {
-    wpp_write_message_var("%s:%d:%d: %s: ", file ? file : "'main file'",
-                          line, col, "Warning");
+    __ms_va_list ap;
+    __ms_va_start(ap, msg);
+    wpp_write_message_var("%s:%d:%d: %s: ",
+                          pp_status.input ? pp_status.input : "'main file'",
+                          pp_status.line_number, pp_status.char_number, "Warning");
     wpp_write_message(msg, ap);
     wpp_write_message_var("\n");
+    __ms_va_end(ap);
+    return 0;
 }
 
-static char *wpp_lookup_mem(const char *filename, int type, const char *parent_name,
-                            char **include_path, int include_path_count)
+char *wpp_lookup(const char *filename, int type, const char *parent_name)
 {
     /* We don't check for file existence here. We will potentially fail on
      * the following wpp_open_mem(). */
@@ -176,7 +192,7 @@ static char *wpp_lookup_mem(const char *filename, int type, const char *parent_n
     return path;
 }
 
-static void *wpp_open_mem(const char *filename, int type)
+void *wpp_open(const char *filename, int type)
 {
     struct mem_file_desc *desc;
     HRESULT hr;
@@ -239,7 +255,7 @@ error:
     return NULL;
 }
 
-static void wpp_close_mem(void *file)
+void wpp_close(void *file)
 {
     struct mem_file_desc *desc = file;
 
@@ -255,7 +271,7 @@ static void wpp_close_mem(void *file)
     }
 }
 
-static int wpp_read_mem(void *file, char *buffer, unsigned int len)
+int wpp_read(void *file, char *buffer, unsigned int len)
 {
     struct mem_file_desc *desc = file;
 
@@ -265,7 +281,7 @@ static int wpp_read_mem(void *file, char *buffer, unsigned int len)
     return len;
 }
 
-static void wpp_write_mem(const char *buffer, unsigned int len)
+void wpp_write(const char *buffer, unsigned int len)
 {
     char *new_wpp_output;
 
@@ -307,23 +323,170 @@ static int wpp_close_output(void)
     return 1;
 }
 
+static void add_cmdline_defines(void)
+{
+    struct define *def;
+
+    for (def = cmdline_defines; def; def = def->next)
+    {
+        if (def->value) pp_add_define( def->name, def->value );
+    }
+}
+
+static void del_cmdline_defines(void)
+{
+    struct define *def;
+
+    for (def = cmdline_defines; def; def = def->next)
+    {
+        if (def->value) pp_del_define( def->name );
+    }
+}
+
+static void add_special_defines(void)
+{
+    time_t now = time(NULL);
+    pp_entry_t *ppp;
+    char buf[32];
+
+    strftime(buf, sizeof(buf), "\"%b %d %Y\"", localtime(&now));
+    pp_add_define( "__DATE__", buf );
+
+    strftime(buf, sizeof(buf), "\"%H:%M:%S\"", localtime(&now));
+    pp_add_define( "__TIME__", buf );
+
+    ppp = pp_add_define( "__FILE__", "" );
+    if(ppp)
+        ppp->type = def_special;
+
+    ppp = pp_add_define( "__LINE__", "" );
+    if(ppp)
+        ppp->type = def_special;
+}
+
+static void del_special_defines(void)
+{
+    pp_del_define( "__DATE__" );
+    pp_del_define( "__TIME__" );
+    pp_del_define( "__FILE__" );
+    pp_del_define( "__LINE__" );
+}
+
+
+/* add a define to the preprocessor list */
+int wpp_add_define( const char *name, const char *value )
+{
+    struct define *def;
+
+    if (!value) value = "";
+
+    for (def = cmdline_defines; def; def = def->next)
+    {
+        if (!strcmp( def->name, name ))
+        {
+            char *new_value = pp_xstrdup(value);
+            if(!new_value)
+                return 1;
+            free( def->value );
+            def->value = new_value;
+
+            return 0;
+        }
+    }
+
+    def = pp_xmalloc( sizeof(*def) );
+    if(!def)
+        return 1;
+    def->next  = cmdline_defines;
+    def->name  = pp_xstrdup(name);
+    if(!def->name)
+    {
+        free(def);
+        return 1;
+    }
+    def->value = pp_xstrdup(value);
+    if(!def->value)
+    {
+        free(def->name);
+        free(def);
+        return 1;
+    }
+    cmdline_defines = def;
+    return 0;
+}
+
+
+/* undefine a previously added definition */
+void wpp_del_define( const char *name )
+{
+    struct define *def;
+
+    for (def = cmdline_defines; def; def = def->next)
+    {
+        if (!strcmp( def->name, name ))
+        {
+            free( def->value );
+            def->value = NULL;
+            return;
+        }
+    }
+}
+
+
+/* the main preprocessor parsing loop */
+int wpp_parse( const char *input, FILE *output )
+{
+    int ret;
+
+    pp_status.input = NULL;
+    pp_status.line_number = 1;
+    pp_status.char_number = 1;
+    pp_status.state = 0;
+
+    ret = pp_push_define_state();
+    if(ret)
+        return ret;
+    add_cmdline_defines();
+    add_special_defines();
+
+    if (!input) pp_status.file = stdin;
+    else if (!(pp_status.file = wpp_open(input, 1)))
+    {
+        ppy_error("Could not open %s\n", input);
+        del_special_defines();
+        del_cmdline_defines();
+        pp_pop_define_state();
+        return 2;
+    }
+
+    pp_status.input = input ? pp_xstrdup(input) : NULL;
+
+    ppy_out = output;
+    pp_writestring("# 1 \"%s\" 1\n", input ? input : "");
+
+    ret = ppy_parse();
+    /* If there were errors during processing, return an error code */
+    if (!ret && pp_status.state) ret = pp_status.state;
+
+    if (input)
+    {
+	wpp_close(pp_status.file);
+	free(pp_status.input);
+    }
+    /* Clean if_stack, it could remain dirty on errors */
+    while (pp_get_if_depth()) pp_pop_if();
+    del_special_defines();
+    del_cmdline_defines();
+    pp_pop_define_state();
+    return ret;
+}
+
 static HRESULT preprocess_shader(const void *data, SIZE_T data_size, const char *filename,
         const D3D_SHADER_MACRO *defines, ID3DInclude *include, ID3DBlob **error_messages)
 {
     int ret;
     HRESULT hr = S_OK;
     const D3D_SHADER_MACRO *def = defines;
-
-    static const struct wpp_callbacks wpp_callbacks =
-    {
-        wpp_lookup_mem,
-        wpp_open_mem,
-        wpp_close_mem,
-        wpp_read_mem,
-        wpp_write_mem,
-        wpp_error,
-        wpp_warning,
-    };
 
     if (def != NULL)
     {
@@ -339,7 +502,6 @@ static HRESULT preprocess_shader(const void *data, SIZE_T data_size, const char 
     wpp_output_size = wpp_output_capacity = 0;
     wpp_output = NULL;
 
-    wpp_set_callbacks(&wpp_callbacks);
     wpp_messages_size = wpp_messages_capacity = 0;
     wpp_messages = NULL;
     current_shader.buffer = data;

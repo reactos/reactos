@@ -792,6 +792,13 @@ typedef struct _OVERLAPPED {
 	HANDLE hEvent;
 } OVERLAPPED, *POVERLAPPED, *LPOVERLAPPED;
 
+typedef struct _OVERLAPPED_ENTRY {
+    ULONG_PTR lpCompletionKey;
+    LPOVERLAPPED lpOverlapped;
+    ULONG_PTR Internal;
+    DWORD dwNumberOfBytesTransferred;
+} OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
+
 typedef struct _STARTUPINFOA {
 	DWORD	cb;
 	LPSTR	lpReserved;
@@ -2362,6 +2369,16 @@ VOID WINAPI GetStartupInfoW(LPSTARTUPINFOW);
 HANDLE WINAPI GetStdHandle(_In_ DWORD);
 UINT WINAPI GetSystemDirectoryA(LPSTR,UINT);
 UINT WINAPI GetSystemDirectoryW(LPWSTR,UINT);
+
+WINBASEAPI
+UINT
+WINAPI
+GetSystemFirmwareTable(
+  _In_ DWORD FirmwareTableProviderSignature,
+  _In_ DWORD FirmwareTableID,
+  _Out_writes_bytes_to_opt_(BufferSize,return) PVOID pFirmwareTableBuffer,
+  _In_ DWORD BufferSize);
+
 VOID WINAPI GetSystemInfo(LPSYSTEM_INFO);
 BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
 #if (_WIN32_WINNT >= 0x0502)

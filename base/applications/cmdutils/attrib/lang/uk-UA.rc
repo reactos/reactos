@@ -10,6 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
     STRING_ATTRIB_HELP "Відображення або зміна атрибутів файлу.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
        [/S [/D]]\n\n\

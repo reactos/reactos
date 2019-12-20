@@ -40,6 +40,7 @@ IDI_STRING ICON "res/string.ico"
 IDI_BIN ICON "res/bin.ico"
 IDI_REGEDIT ICON "res/regedit.ico"
 IDI_REGFILE ICON "res/regfile.ico"
+IDI_ARROW ICON "res/arrow.ico"
 
 /* UTF-8 */
 #pragma code_page(65001)

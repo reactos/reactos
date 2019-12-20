@@ -420,6 +420,7 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
     size = GetPath(hdc, pnt, types, size);
     assert(size > 0);
 
+    ros_skip_flaky
     ok( size == expected_size, "%s: Path size %d does not match expected size %d\n",
         path_name, size, expected_size);
 
@@ -429,11 +430,13 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
          * floating point to integer conversion */
         static const int fudge = 2;
 
+        ros_skip_flaky
         ok( types[idx] == expected[idx].type, "%s: Expected #%d: %s (%d,%d) but got %s (%d,%d)\n",
             path_name, idx, type_string[expected[idx].type], expected[idx].x, expected[idx].y,
             type_string[types[idx]], pnt[idx].x, pnt[idx].y);
 
         if (types[idx] == expected[idx].type)
+            ros_skip_flaky
             ok( (pnt[idx].x >= expected[idx].x - fudge && pnt[idx].x <= expected[idx].x + fudge) &&
                 (pnt[idx].y >= expected[idx].y - fudge && pnt[idx].y <= expected[idx].y + fudge),
                 "%s: Expected #%d: %s  position (%d,%d) but got (%d,%d)\n", path_name, idx,

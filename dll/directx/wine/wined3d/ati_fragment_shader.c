@@ -341,8 +341,9 @@ static GLuint find_tmpreg(const struct texture_stage_op op[MAX_TEXTURES])
             lowest_read = i;
         }
 
-        if (lowest_write == -1 && op[i].tmp_dst)
+        if(lowest_write == -1 && op[i].dst == tempreg) {
             lowest_write = i;
+        }
 
         if(op[i].carg1 == WINED3DTA_TEXTURE || op[i].carg2 == WINED3DTA_TEXTURE || op[i].carg0 == WINED3DTA_TEXTURE ||
            op[i].aarg1 == WINED3DTA_TEXTURE || op[i].aarg2 == WINED3DTA_TEXTURE || op[i].aarg0 == WINED3DTA_TEXTURE) {
@@ -504,13 +505,16 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES],
 
         TRACE("glSampleMapATI(GL_REG_%d_ATI, GL_TEXTURE_%d_ARB, GL_SWIZZLE_STR_ATI)\n",
               stage, stage);
-        GL_EXTCALL(glSampleMapATI(GL_REG_0_ATI + stage, GL_TEXTURE0_ARB + stage, GL_SWIZZLE_STR_ATI));
-        if (op[stage + 1].projected == WINED3D_PROJECTION_NONE)
+        GL_EXTCALL(glSampleMapATI(GL_REG_0_ATI + stage,
+                   GL_TEXTURE0_ARB + stage,
+                   GL_SWIZZLE_STR_ATI));
+        if(op[stage + 1].projected == proj_none) {
             swizzle = GL_SWIZZLE_STR_ATI;
-        else if (op[stage + 1].projected == WINED3D_PROJECTION_COUNT4)
+        } else if(op[stage + 1].projected == proj_count4) {
             swizzle = GL_SWIZZLE_STQ_DQ_ATI;
-        else
+        } else {
             swizzle = GL_SWIZZLE_STR_DR_ATI;
+        }
         TRACE("glPassTexCoordATI(GL_REG_%d_ATI, GL_TEXTURE_%d_ARB, %s)\n",
               stage + 1, stage + 1, debug_swizzle(swizzle));
         GL_EXTCALL(glPassTexCoordATI(GL_REG_0_ATI + stage + 1,
@@ -575,12 +579,13 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES],
         if (op[stage].cop == WINED3D_TOP_DISABLE)
             break;
 
-        if (op[stage].projected == WINED3D_PROJECTION_NONE)
+        if(op[stage].projected == proj_none) {
             swizzle = GL_SWIZZLE_STR_ATI;
-        else if (op[stage].projected == WINED3D_PROJECTION_COUNT3)
+        } else if(op[stage].projected == proj_count3) {
             swizzle = GL_SWIZZLE_STR_DR_ATI;
-        else
+        } else {
             swizzle = GL_SWIZZLE_STQ_DQ_ATI;
+        }
 
         if (op_reads_texture(&op[stage]))
         {
@@ -619,18 +624,14 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES],
             break;
         }
 
-        if (op[stage].tmp_dst)
-        {
-            /* If we're writing to D3DTA_TEMP, but never reading from it we
-             * don't have to write there in the first place. Skip the entire
-             * stage, this saves some GPU time. */
-            if (tmparg == GL_NONE)
-                continue;
+        if(op[stage].dst == tempreg) {
+            /* If we're writing to D3DTA_TEMP, but never reading from it we don't have to write there in the first place.
+             * skip the entire stage, this saves some GPU time
+             */
+            if(tmparg == GL_NONE) continue;
 
             dstreg = tmparg;
-        }
-        else
-        {
+        } else {
             dstreg = GL_REG_0_ATI;
         }
 

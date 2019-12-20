@@ -71,13 +71,15 @@ typedef enum
 //
 #define RPL_MASK                0x0003
 #define MODE_MASK               0x0001
-#define KGDT_R0_CODE            0x8
+#define KGDT_NULL               0x00
+#define KGDT_R0_CODE            0x08
 #define KGDT_R0_DATA            0x10
 #define KGDT_R3_CODE            0x18
 #define KGDT_R3_DATA            0x20
 #define KGDT_TSS                0x28
 #define KGDT_R0_PCR             0x30
 #define KGDT_R3_TEB             0x38
+#define KGDT_VDM_TILE           0x40
 #define KGDT_LDT                0x48
 #define KGDT_DF_TSS             0x50
 #define KGDT_NMI_TSS            0x58

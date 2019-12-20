@@ -61,7 +61,7 @@ FsRtlStackOverflowRead(IN PVOID Context)
     /* Otherwise, free the work item */
     else
     {
-        ExFreePoolWithTag(WorkItem, 'FSrs');
+        ExFreePoolWithTag(WorkItem, 'srSF');
     }
 
     /* Reset top level */
@@ -81,7 +81,7 @@ FsRtlpPostStackOverflow(IN PVOID Context,
     PSTACK_OVERFLOW_WORK_ITEM WorkItem;
 
     /* Try to allocate a work item */
-    WorkItem = ExAllocatePoolWithTag(NonPagedPool, sizeof(STACK_OVERFLOW_WORK_ITEM), 'FSrs');
+    WorkItem = ExAllocatePoolWithTag(NonPagedPool, sizeof(STACK_OVERFLOW_WORK_ITEM), 'srSF');
     if (WorkItem == NULL)
     {
         /* If we failed, and we are not a paging file, just raise an error */

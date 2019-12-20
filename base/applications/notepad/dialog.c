@@ -81,13 +81,16 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     /* When a file is being opened or created, there is no need to have the edited flag shown
        when the new or opened file has not been edited yet */
     if (clearModifyAlert)
-        StringCbPrintf(szCaption, ARRAY_SIZE(szCaption), _T("%s - %s"), szFilename, szNotepad);
+    {
+        StringCbPrintf(szCaption, sizeof(szCaption), _T("%s - %s"),
+                       szFilename, szNotepad);
+    }
     else
     {
         BOOL isModified = (SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0) ? TRUE : FALSE);
 
         /* Update the caption based upon if the user has modified the contents of the file or not */
-        StringCbPrintf(szCaption, ARRAY_SIZE(szCaption), _T("%s%s - %s"),
+        StringCbPrintf(szCaption, sizeof(szCaption), _T("%s%s - %s"),
             (isModified ? _T("*") : _T("")), szFilename, szNotepad);
     }
 

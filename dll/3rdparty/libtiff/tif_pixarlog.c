@@ -90,8 +90,8 @@
 #include "tif_predict.h"
 #include "zlib.h"
 
-//#include <stdio.h>
-//#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 /* Tables for converting to/from 11 bit coded values */
@@ -634,20 +634,16 @@ PixarLogGuessDataFmt(TIFFDirectory *td)
 	return guess;
 }
 
-#define TIFF_SIZE_T_MAX ((size_t) ~ ((size_t)0))
-#define TIFF_TMSIZE_T_MAX (tmsize_t)(TIFF_SIZE_T_MAX >> 1)
-
 static tmsize_t
 multiply_ms(tmsize_t m1, tmsize_t m2)
 {
-        if( m1 == 0 || m2 > TIFF_TMSIZE_T_MAX / m1 )
-            return 0;
-        return m1 * m2;
+        return _TIFFMultiplySSize(NULL, m1, m2, NULL);
 }
 
 static tmsize_t
 add_ms(tmsize_t m1, tmsize_t m2)
 {
+        assert(m1 >= 0 && m2 >= 0);
 	/* if either input is zero, assume overflow already occurred */
 	if (m1 == 0 || m2 == 0)
 		return 0;
@@ -817,9 +813,7 @@ PixarLogDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 			TIFFErrorExt(tif->tif_clientdata, module,
 			    "Decoding error at scanline %lu, %s",
 			    (unsigned long) tif->tif_row, sp->stream.msg ? sp->stream.msg : "(null)");
-			if (inflateSync(&sp->stream) != Z_OK)
-				return (0);
-			continue;
+			return (0);
 		}
 		if (state != Z_OK) {
 			TIFFErrorExt(tif->tif_clientdata, module, "ZLib error: %s",
@@ -1153,7 +1147,7 @@ PixarLogEncode(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 
 	llen = sp->stride * td->td_imagewidth;
     /* Check against the number of elements (of size uint16) of sp->tbuf */
-    if( n > (tmsize_t)(td->td_rowsperstrip * llen) )
+    if( n > ((tmsize_t)td->td_rowsperstrip * llen) )
     {
         TIFFErrorExt(tif->tif_clientdata, module,
                      "Too many input bytes provided");

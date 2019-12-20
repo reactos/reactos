@@ -26,7 +26,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
@@ -70,7 +69,7 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
     if(str) {
         DWORD size;
 
-        size = (strlenW(str)+1)*sizeof(WCHAR);
+        size = (lstrlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
         if(ret)
             memcpy(ret, str, size);
@@ -83,20 +82,20 @@ static HRESULT parse_mhtml_url(const WCHAR *url, mhtml_url_t *r)
 {
     const WCHAR *p;
 
-    if(strncmpiW(url, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW)))
+    if(_wcsnicmp(url, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW)))
         return E_FAIL;
 
     r->mhtml = url + ARRAY_SIZE(mhtml_prefixW);
-    p = strchrW(r->mhtml, '!');
+    p = wcschr(r->mhtml, '!');
     if(p) {
         r->mhtml_len = p - r->mhtml;
         /* FIXME: We handle '!' and '!x-usc:' in URLs as the same thing. Those should not be the same. */
-        if(!strncmpW(p, mhtml_separatorW, ARRAY_SIZE(mhtml_separatorW)))
+        if(!wcsncmp(p, mhtml_separatorW, ARRAY_SIZE(mhtml_separatorW)))
             p += ARRAY_SIZE(mhtml_separatorW);
         else
             p++;
     }else {
-        r->mhtml_len = strlenW(r->mhtml);
+        r->mhtml_len = lstrlenW(r->mhtml);
     }
 
     r->location = p;
@@ -142,7 +141,7 @@ static HRESULT on_mime_message_available(MimeHtmlProtocol *protocol, IMimeMessag
             if(FAILED(hres))
                 return report_result(protocol, hres);
 
-            found = !strcmpW(protocol->location, value.u.pwszVal);
+            found = !lstrcmpW(protocol->location, value.u.pwszVal);
             PropVariantClear(&value);
         }while(!found);
     }else {
@@ -670,14 +669,14 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
     if(FAILED(hres))
         return hres;
 
-    if(!strncmpiW(pwzRelativeUrl, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW))) {
+    if(!_wcsnicmp(pwzRelativeUrl, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW))) {
         FIXME("Relative URL is mhtml protocol\n");
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
 
     len += url.mhtml_len;
     if(*pwzRelativeUrl)
-        len += strlenW(pwzRelativeUrl) + ARRAY_SIZE(mhtml_separatorW);
+        len += lstrlenW(pwzRelativeUrl) + ARRAY_SIZE(mhtml_separatorW);
     if(len >= cchResult) {
         *pcchResult = 0;
         return E_FAIL;
@@ -690,7 +689,7 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
     if(*pwzRelativeUrl) {
         memcpy(p, mhtml_separatorW, sizeof(mhtml_separatorW));
         p += ARRAY_SIZE(mhtml_separatorW);
-        strcpyW(p, pwzRelativeUrl);
+        lstrcpyW(p, pwzRelativeUrl);
     }else {
         *p = 0;
     }

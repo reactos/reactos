@@ -19,6 +19,8 @@ add_host_tool(gendib gendib/gendib.c)
 add_host_tool(geninc geninc/geninc.c)
 add_host_tool(mkshelllink mkshelllink/mkshelllink.c)
 add_host_tool(obj2bin obj2bin/obj2bin.c)
+target_link_libraries(obj2bin PRIVATE host_includes)
+
 add_host_tool(spec2def spec2def/spec2def.c)
 add_host_tool(utf16le utf16le/utf16le.cpp)
 

@@ -21,9 +21,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdio.h>
 
 #include "d3dcompiler_private.h"
@@ -719,7 +716,7 @@ HRESULT dxbc_write_blob(struct dxbc *dxbc, ID3DBlob **blob)
     return S_OK;
 }
 
-void compilation_message(struct compilation_messages *msg, const char *fmt, va_list args)
+void compilation_message(struct compilation_messages *msg, const char *fmt, __ms_va_list args)
 {
     char* buffer;
     int rc, size;
@@ -1280,19 +1277,10 @@ static struct hlsl_type *expr_common_type(struct hlsl_type *t1, struct hlsl_type
 static struct hlsl_ir_node *implicit_conversion(struct hlsl_ir_node *node, struct hlsl_type *type,
         struct source_location *loc)
 {
-    struct hlsl_ir_expr *cast;
-    struct hlsl_ir_node *operands[3];
-
     if (compare_hlsl_types(node->data_type, type))
         return node;
     TRACE("Implicit conversion of expression to %s\n", debug_hlsl_type(type));
-    operands[0] = node;
-    operands[1] = operands[2] = NULL;
-    cast = new_expr(HLSL_IR_UNOP_CAST, operands, loc);
-    if (!cast)
-        return NULL;
-    cast->node.data_type = type;
-    return &cast->node;
+    return &new_cast(node, type, loc)->node;
 }
 
 struct hlsl_ir_expr *new_expr(enum hlsl_ir_expr_op op, struct hlsl_ir_node **operands,
@@ -1355,158 +1343,12 @@ struct hlsl_ir_expr *new_expr(enum hlsl_ir_expr_op op, struct hlsl_ir_node **ope
 struct hlsl_ir_expr *new_cast(struct hlsl_ir_node *node, struct hlsl_type *type,
         struct source_location *loc)
 {
-    struct hlsl_ir_expr *cast;
-    struct hlsl_ir_node *operands[3];
+    struct hlsl_ir_node *cast;
 
-    operands[0] = node;
-    operands[1] = operands[2] = NULL;
-    cast = new_expr(HLSL_IR_UNOP_CAST, operands, loc);
+    cast = new_unary_expr(HLSL_IR_UNOP_CAST, node, *loc);
     if (cast)
-        cast->node.data_type = type;
-    return cast;
-}
-
-struct hlsl_ir_expr *hlsl_mul(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_MUL, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_div(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_DIV, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_mod(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_MOD, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_add(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_ADD, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_sub(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_SUB, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_lt(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_LESS, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_gt(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_GREATER, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_le(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_LEQUAL, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_ge(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_GEQUAL, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_eq(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_EQUAL, ops, loc);
-    return expr;
-}
-
-struct hlsl_ir_expr *hlsl_ne(struct hlsl_ir_node *op1, struct hlsl_ir_node *op2,
-        struct source_location *loc)
-{
-    struct hlsl_ir_expr *expr;
-    struct hlsl_ir_node *ops[3];
-
-    ops[0] = op1;
-    ops[1] = op2;
-    ops[2] = NULL;
-    expr = new_expr(HLSL_IR_BINOP_NEQUAL, ops, loc);
-    return expr;
+        cast->data_type = type;
+    return expr_from_node(cast);
 }
 
 struct hlsl_ir_deref *new_var_deref(struct hlsl_ir_var *var)
@@ -1519,7 +1361,7 @@ struct hlsl_ir_deref *new_var_deref(struct hlsl_ir_var *var)
         return NULL;
     }
     deref->node.type = HLSL_IR_DEREF;
-    deref->node.data_type = var->node.data_type;
+    deref->node.data_type = var->data_type;
     deref->type = HLSL_IR_DEREF_VAR;
     deref->v.var = var;
     return deref;
@@ -1537,10 +1379,7 @@ struct hlsl_ir_deref *new_record_deref(struct hlsl_ir_node *record, struct hlsl_
     deref->node.type = HLSL_IR_DEREF;
     deref->node.data_type = field->type;
     deref->type = HLSL_IR_DEREF_RECORD;
-    if (record->type == HLSL_IR_VAR)
-        deref->v.record.record = &new_var_deref(var_from_node(record))->node;
-    else
-        deref->v.record.record = record;
+    deref->v.record.record = record;
     deref->v.record.field = field;
     return deref;
 }
@@ -1568,7 +1407,6 @@ static enum hlsl_ir_expr_op op_from_assignment(enum parse_assign_op op)
 struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assign_op assign_op,
         DWORD writemask, struct hlsl_ir_node *right)
 {
-    struct hlsl_ir_expr *expr;
     struct hlsl_ir_assignment *assign = d3dcompiler_alloc(sizeof(*assign));
     struct hlsl_type *type;
     struct hlsl_ir_node *lhs, *rhs;
@@ -1618,11 +1456,6 @@ struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assig
     FIXME("Check for casts in the lhs.\n");
 
     lhs = left;
-    if (lhs->type == HLSL_IR_VAR)
-    {
-        struct hlsl_ir_deref *lhs_deref = new_var_deref(var_from_node(lhs));
-        lhs = &lhs_deref->node;
-    }
     /* FIXME: check for invalid writemasks on the lhs. */
 
     if (!compare_hlsl_types(type, rhs->data_type))
@@ -1658,8 +1491,8 @@ struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assig
     assign->lhs = lhs;
     if (assign_op != ASSIGN_OP_ASSIGN)
     {
-        struct hlsl_ir_node *operands[3];
         enum hlsl_ir_expr_op op = op_from_assignment(assign_op);
+        struct hlsl_ir_node *expr;
 
         if (lhs->type != HLSL_IR_DEREF || deref_from_node(lhs)->type != HLSL_IR_DEREF_VAR)
         {
@@ -1672,11 +1505,8 @@ struct hlsl_ir_node *make_assignment(struct hlsl_ir_node *left, enum parse_assig
 
             TRACE("Adding an expression for the compound assignment.\n");
             new_deref = new_var_deref(lhs_deref->v.var);
-            operands[0] = &new_deref->node;
-            operands[1] = rhs;
-            operands[2] = NULL;
-            expr = new_expr(op, operands, &left->loc);
-            assign->rhs = &expr->node;
+            expr = new_binary_expr(op, &new_deref->node, rhs, left->loc);
+            assign->rhs = expr;
         }
     }
     else
@@ -1739,8 +1569,7 @@ struct hlsl_ir_function_decl *new_func_decl(struct hlsl_type *return_type, struc
         ERR("Out of memory.\n");
         return NULL;
     }
-    decl->node.type = HLSL_IR_FUNCTION_DECL;
-    decl->node.data_type = return_type;
+    decl->return_type = return_type;
     decl->parameters = parameters;
 
     return decl;
@@ -1812,9 +1641,9 @@ static int compare_function_decl_rb(const void *key, const struct wine_rb_entry 
     while (p1cur && p2cur)
     {
         struct hlsl_ir_var *p1, *p2;
-        p1 = LIST_ENTRY(p1cur, struct hlsl_ir_var, node.entry);
-        p2 = LIST_ENTRY(p2cur, struct hlsl_ir_var, node.entry);
-        if ((r = compare_param_hlsl_types(p1->node.data_type, p2->node.data_type)))
+        p1 = LIST_ENTRY(p1cur, struct hlsl_ir_var, param_entry);
+        p2 = LIST_ENTRY(p2cur, struct hlsl_ir_var, param_entry);
+        if ((r = compare_param_hlsl_types(p1->data_type, p2->data_type)))
             return r;
         p1cur = list_next(params, p1cur);
         p2cur = list_next(decl->parameters, p2cur);
@@ -1931,13 +1760,11 @@ static const char *debug_node_type(enum hlsl_ir_node_type type)
 {
     static const char * const names[] =
     {
-        "HLSL_IR_VAR",
         "HLSL_IR_ASSIGNMENT",
         "HLSL_IR_CONSTANT",
         "HLSL_IR_CONSTRUCTOR",
         "HLSL_IR_DEREF",
         "HLSL_IR_EXPR",
-        "HLSL_IR_FUNCTION_DECL",
         "HLSL_IR_IF",
         "HLSL_IR_JUMP",
         "HLSL_IR_SWIZZLE",
@@ -1965,7 +1792,7 @@ static void debug_dump_ir_var(const struct hlsl_ir_var *var)
 {
     if (var->modifiers)
         TRACE("%s ", debug_modifiers(var->modifiers));
-    TRACE("%s %s", debug_hlsl_type(var->node.data_type), var->name);
+    TRACE("%s %s", debug_hlsl_type(var->data_type), var->name);
     if (var->semantic)
         TRACE(" : %s", debugstr_a(var->semantic));
 }
@@ -2125,12 +1952,12 @@ static void debug_dump_ir_expr(const struct hlsl_ir_expr *expr)
 
 static void debug_dump_ir_constructor(const struct hlsl_ir_constructor *constructor)
 {
-    struct hlsl_ir_node *arg;
+    unsigned int i;
 
     TRACE("%s (", debug_hlsl_type(constructor->node.data_type));
-    LIST_FOR_EACH_ENTRY(arg, constructor->arguments, struct hlsl_ir_node, entry)
+    for (i = 0; i < constructor->args_count; ++i)
     {
-        debug_dump_instr(arg);
+        debug_dump_instr(constructor->args[i]);
         TRACE(" ");
     }
     TRACE(")");
@@ -2262,7 +2089,7 @@ void debug_dump_ir_function_decl(const struct hlsl_ir_function_decl *func)
 
     TRACE("Dumping function %s.\n", debugstr_a(func->func->name));
     TRACE("Function parameters:\n");
-    LIST_FOR_EACH_ENTRY(param, func->parameters, struct hlsl_ir_var, node.entry)
+    LIST_FOR_EACH_ENTRY(param, func->parameters, struct hlsl_ir_var, param_entry)
     {
         debug_dump_ir_var(param);
         TRACE("\n");
@@ -2352,7 +2179,9 @@ static void free_ir_swizzle(struct hlsl_ir_swizzle *swizzle)
 
 static void free_ir_constructor(struct hlsl_ir_constructor *constructor)
 {
-    free_instr_list(constructor->arguments);
+    unsigned int i;
+    for (i = 0; i < constructor->args_count; ++i)
+        free_instr(constructor->args[i]);
     d3dcompiler_free(constructor);
 }
 
@@ -2396,9 +2225,6 @@ void free_instr(struct hlsl_ir_node *node)
 {
     switch (node->type)
     {
-        case HLSL_IR_VAR:
-            /* These are freed later on from the scopes. */
-            break;
         case HLSL_IR_CONSTANT:
             free_ir_constant(constant_from_node(node));
             break;

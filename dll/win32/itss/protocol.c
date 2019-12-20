@@ -31,7 +31,6 @@
 #include "chm_lib.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(itss);
 
@@ -153,11 +152,11 @@ static LPCWSTR skip_schema(LPCWSTR url)
     static const WCHAR msits_schema[] = {'m','s','-','i','t','s',':'};
     static const WCHAR mk_schema[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':'};
 
-    if(!strncmpiW(its_schema, url, ARRAY_SIZE(its_schema)))
+    if(!_wcsnicmp(its_schema, url, ARRAY_SIZE(its_schema)))
         return url + ARRAY_SIZE(its_schema);
-    if(!strncmpiW(msits_schema, url, ARRAY_SIZE(msits_schema)))
+    if(!_wcsnicmp(msits_schema, url, ARRAY_SIZE(msits_schema)))
         return url + ARRAY_SIZE(msits_schema);
-    if(!strncmpiW(mk_schema, url, ARRAY_SIZE(mk_schema)))
+    if(!_wcsnicmp(mk_schema, url, ARRAY_SIZE(mk_schema)))
         return url + ARRAY_SIZE(mk_schema);
 
     return NULL;
@@ -251,7 +250,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     ReleaseBindInfo(&bindinfo);
 
-    len = strlenW(ptr)+3;
+    len = lstrlenW(ptr)+3;
     file_name = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
     memcpy(file_name, ptr, len*sizeof(WCHAR));
     hres = UrlUnescapeW(file_name, NULL, &len, URL_UNESCAPE_INPLACE);
@@ -261,7 +260,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         return hres;
     }
 
-    p = strstrW(file_name, separator);
+    p = wcsstr(file_name, separator);
     if(!p) {
         WARN("invalid url\n");
         HeapFree(GetProcessHeap(), 0, file_name);
@@ -277,7 +276,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     object_name = p+2;
-    len = strlenW(object_name);
+    len = lstrlenW(object_name);
 
     if(*object_name != '/' && *object_name != '\\') {
         memmove(object_name+1, object_name, (len+1)*sizeof(WCHAR));
@@ -307,7 +306,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST,
-                                         strrchrW(object_name, '/')+1);
+                                         wcsrchr(object_name, '/')+1);
 
     /* FIXME: Native doesn't use FindMimeFromData */
     hres = FindMimeFromData(NULL, object_name, NULL, 0, NULL, 0, &mime, 0);
@@ -487,7 +486,7 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
             debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult,
             pcchResult, dwReserved);
 
-    base_end = strstrW(pwzBaseUrl, separator);
+    base_end = wcsstr(pwzBaseUrl, separator);
     if(!base_end)
         return 0x80041001;
     base_end += 2;
@@ -495,20 +494,20 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
     if(!skip_schema(pwzBaseUrl))
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
 
-    if(strchrW(pwzRelativeUrl, ':'))
+    if(wcschr(pwzRelativeUrl, ':'))
         return STG_E_INVALIDNAME;
 
     if(pwzRelativeUrl[0] == '#') {
-        base_end += strlenW(base_end);
+        base_end += lstrlenW(base_end);
     }else if(pwzRelativeUrl[0] != '/') {
-        ptr = strrchrW(base_end, '/');
+        ptr = wcsrchr(base_end, '/');
         if(ptr)
             base_end = ptr+1;
         else
-            base_end += strlenW(base_end);
+            base_end += lstrlenW(base_end);
     }
 
-    rel_len = strlenW(pwzRelativeUrl)+1;
+    rel_len = lstrlenW(pwzRelativeUrl)+1;
 
     *pcchResult = rel_len + (base_end-pwzBaseUrl);
 
@@ -516,7 +515,7 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
         return E_OUTOFMEMORY;
 
     memcpy(pwzResult, pwzBaseUrl, (base_end-pwzBaseUrl)*sizeof(WCHAR));
-    strcpyW(pwzResult + (base_end-pwzBaseUrl), pwzRelativeUrl);
+    lstrcpyW(pwzResult + (base_end-pwzBaseUrl), pwzRelativeUrl);
 
     return S_OK;
 }

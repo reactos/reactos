@@ -6,6 +6,7 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 *                  Eric Kohl
 *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+*                  Pierre Schweitzer
 */
 
 /* INCLUDES ******************************************************************/
@@ -15,9 +16,6 @@
 #include <debug.h>
 #include <internal/hal.h>
 
-/* DEPRECATED FUNCTIONS ******************************************************/
-
-#if 1
 const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
 #define AUTO_DRIVE         MAXULONG
@@ -43,371 +41,870 @@ typedef enum _DISK_MANAGER
     EZ_Drive
 } DISK_MANAGER;
 
-static BOOLEAN
-HalpAssignDrive(IN PUNICODE_STRING PartitionName,
-                IN ULONG DriveNumber,
-                IN UCHAR DriveType,
-                IN ULONG Signature,
-                IN LARGE_INTEGER StartingOffset,
-                IN HANDLE hKey,
-                IN PUNICODE_STRING BootDevice,
-                OUT PUCHAR NtSystemPath)
+typedef enum _PARTITION_TYPE
 {
-    WCHAR DriveNameBuffer[16];
-    UNICODE_STRING DriveName;
-    ULONG i;
-    NTSTATUS Status;
-    REG_DISK_MOUNT_INFO DiskMountInfo;
-
-    DPRINT("HalpAssignDrive()\n");
-
-    if ((DriveNumber != AUTO_DRIVE) && (DriveNumber < 26))
-    {
-        /* Force assignment */
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-        if ((ObSystemDeviceMap->DriveMap & (1 << DriveNumber)) != 0)
-        {
-            DbgPrint("Drive letter already used!\n");
-            KeReleaseGuardedMutex(&ObpDeviceMapLock);
-            return FALSE;
-        }
-        KeReleaseGuardedMutex(&ObpDeviceMapLock);
-    }
-    else
-    {
-        /* Automatic assignment */
-        DriveNumber = AUTO_DRIVE;
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-        for (i = 2; i < 26; i++)
-        {
-            if ((ObSystemDeviceMap->DriveMap & (1 << i)) == 0)
-            {
-                DriveNumber = i;
-                break;
-            }
-        }
-        KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-        if (DriveNumber == AUTO_DRIVE)
-        {
-            DbgPrint("No drive letter available!\n");
-            return FALSE;
-        }
-    }
-
-    DPRINT("DriveNumber %lu\n", DriveNumber);
-
-    /* Build drive name */
-    swprintf(DriveNameBuffer,
-        L"\\??\\%C:",
-        'A' + DriveNumber);
-    RtlInitUnicodeString(&DriveName,
-        DriveNameBuffer);
-
-    DPRINT("  %wZ ==> %wZ\n",
-        &DriveName,
-        PartitionName);
-
-    /* Create symbolic link */
-    Status = IoCreateSymbolicLink(&DriveName,
-        PartitionName);
-
-    if (hKey &&
-        DriveType == DOSDEVICE_DRIVE_FIXED &&
-        Signature)
-    {
-        DiskMountInfo.Signature = Signature;
-        DiskMountInfo.StartingOffset = StartingOffset;
-        swprintf(DriveNameBuffer, DiskMountString, L'A' + DriveNumber);
-        RtlInitUnicodeString(&DriveName, DriveNameBuffer);
-
-        Status = ZwSetValueKey(hKey,
-            &DriveName,
-            0,
-            REG_BINARY,
-            &DiskMountInfo,
-            sizeof(DiskMountInfo));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ZwCreateValueKey failed for %wZ, status=%x\n", &DriveName, Status);
-        }
-    }
-
-    /* Check if this is a boot partition */
-    if (RtlCompareUnicodeString(PartitionName, BootDevice, FALSE) == 0)
-    {
-        /* Set NtSystemPath to that partition's disk letter */
-        *NtSystemPath = (UCHAR)('A' + DriveNumber);
-    }
-
-    return TRUE;
-}
-
-ULONG
-xHalpGetRDiskCount(VOID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING ArcName;
-    PWCHAR ArcNameBuffer;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE DirectoryHandle;
-    POBJECT_DIRECTORY_INFORMATION DirectoryInfo;
-    ULONG Skip;
-    ULONG ResultLength;
-    ULONG CurrentRDisk;
-    ULONG RDiskCount;
-    BOOLEAN First = TRUE;
-    ULONG Count;
-
-    DirectoryInfo = ExAllocatePoolWithTag(PagedPool, 2 * PAGE_SIZE, TAG_FILE_SYSTEM);
-    if (DirectoryInfo == NULL)
-    {
-        return 0;
-    }
-
-    RtlInitUnicodeString(&ArcName, L"\\ArcName");
-    InitializeObjectAttributes(&ObjectAttributes,
-        &ArcName,
-        0,
-        NULL,
-        NULL);
-
-    Status = ZwOpenDirectoryObject (&DirectoryHandle,
-        DIRECTORY_ALL_ACCESS,
-        &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwOpenDirectoryObject for %wZ failed, status=%lx\n", &ArcName, Status);
-        ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
-        return 0;
-    }
-
-    RDiskCount = 0;
-    Skip = 0;
-    while (NT_SUCCESS(Status))
-    {
-        Status = ZwQueryDirectoryObject (DirectoryHandle,
-            DirectoryInfo,
-            2 * PAGE_SIZE,
-            FALSE,
-            First,
-            &Skip,
-            &ResultLength);
-        First = FALSE;
-        if (NT_SUCCESS(Status))
-        {
-            Count = 0;
-            while (DirectoryInfo[Count].Name.Buffer)
-            {
-                DPRINT("Count %x\n", Count);
-                DirectoryInfo[Count].Name.Buffer[DirectoryInfo[Count].Name.Length / sizeof(WCHAR)] = 0;
-                ArcNameBuffer = DirectoryInfo[Count].Name.Buffer;
-                if (DirectoryInfo[Count].Name.Length >= sizeof(L"multi(0)disk(0)rdisk(0)") - sizeof(WCHAR) &&
-                    !_wcsnicmp(ArcNameBuffer, L"multi(0)disk(0)rdisk(", (sizeof(L"multi(0)disk(0)rdisk(") - sizeof(WCHAR)) / sizeof(WCHAR)))
-                {
-                    DPRINT("%S\n", ArcNameBuffer);
-                    ArcNameBuffer += (sizeof(L"multi(0)disk(0)rdisk(") - sizeof(WCHAR)) / sizeof(WCHAR);
-                    CurrentRDisk = 0;
-                    while (iswdigit(*ArcNameBuffer))
-                    {
-                        CurrentRDisk = CurrentRDisk * 10 + *ArcNameBuffer - L'0';
-                        ArcNameBuffer++;
-                    }
-                    if (!_wcsicmp(ArcNameBuffer, L")") &&
-                        CurrentRDisk >= RDiskCount)
-                    {
-                        RDiskCount = CurrentRDisk + 1;
-                    }
-                }
-                Count++;
-            }
-        }
-    }
-
-    ZwClose(DirectoryHandle);
-
-    ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
-    return RDiskCount;
-}
-
-NTSTATUS
-xHalpGetDiskNumberFromRDisk(ULONG RDisk, PULONG DiskNumber)
-{
-    WCHAR NameBuffer[80];
-    UNICODE_STRING ArcName;
-    UNICODE_STRING LinkName;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE LinkHandle;
-    NTSTATUS Status;
-
-    swprintf(NameBuffer,
-        L"\\ArcName\\multi(0)disk(0)rdisk(%lu)",
-        RDisk);
-
-    RtlInitUnicodeString(&ArcName, NameBuffer);
-    InitializeObjectAttributes(&ObjectAttributes,
-        &ArcName,
-        0,
-        NULL,
-        NULL);
-    Status = ZwOpenSymbolicLinkObject(&LinkHandle,
-        SYMBOLIC_LINK_ALL_ACCESS,
-        &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwOpenSymbolicLinkObject failed for %wZ, status=%lx\n", &ArcName, Status);
-        return Status;
-    }
-
-    LinkName.Buffer = NameBuffer;
-    LinkName.Length = 0;
-    LinkName.MaximumLength = sizeof(NameBuffer);
-    Status = ZwQuerySymbolicLinkObject(LinkHandle,
-        &LinkName,
-        NULL);
-    ZwClose(LinkHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwQuerySymbolicLinkObject failed, status=%lx\n", Status);
-        return Status;
-    }
-    if (LinkName.Length < sizeof(L"\\Device\\Harddisk0\\Partition0") - sizeof(WCHAR) ||
-        LinkName.Length >= sizeof(NameBuffer))
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    NameBuffer[LinkName.Length / sizeof(WCHAR)] = 0;
-    if (_wcsnicmp(NameBuffer, L"\\Device\\Harddisk", (sizeof(L"\\Device\\Harddisk") - sizeof(WCHAR)) / sizeof(WCHAR)))
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-    LinkName.Buffer += (sizeof(L"\\Device\\Harddisk") - sizeof(WCHAR)) / sizeof(WCHAR);
-
-    if (!iswdigit(*LinkName.Buffer))
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-    *DiskNumber = 0;
-    while (iswdigit(*LinkName.Buffer))
-    {
-        *DiskNumber = *DiskNumber * 10 + *LinkName.Buffer - L'0';
-        LinkName.Buffer++;
-    }
-    if (_wcsicmp(LinkName.Buffer, L"\\Partition0"))
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-    return STATUS_SUCCESS;
-}
+    BootablePartition,
+    PrimaryPartition,
+    LogicalPartition,
+    FtPartition,
+    UnknownPartition,
+    DataPartition
+} PARTITION_TYPE, *PPARTITION_TYPE;
 
 NTSTATUS
 FASTCALL
-xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
+HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
                      OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
 {
     IO_STATUS_BLOCK StatusBlock;
-    DISK_GEOMETRY DiskGeometry;
     PDEVICE_OBJECT DeviceObject = NULL;
     PFILE_OBJECT FileObject;
     KEVENT Event;
     PIRP Irp;
     NTSTATUS Status;
+    ULONG BufferSize;
+    PDRIVE_LAYOUT_INFORMATION Buffer;
+    PAGED_CODE();
 
-    DPRINT("xHalpQueryDriveLayout %wZ %p\n",
-        DeviceName,
-        LayoutInfo);
-
-    /* Get the drives sector size */
+    /* Get device pointers */
     Status = IoGetDeviceObjectPointer(DeviceName,
-        FILE_READ_ATTRIBUTES,
-        &FileObject,
-        &DeviceObject);
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Status %x\n", Status);
-        return(Status);
+        return Status;
     }
 
-    KeInitializeEvent(&Event,
-        NotificationEvent,
-        FALSE);
+    /* Get attached device object */
+    DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
+    ObDereferenceObject(FileObject);
 
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
-        DeviceObject,
-        NULL,
-        0,
-        &DiskGeometry,
-        sizeof(DISK_GEOMETRY),
-        FALSE,
-        &Event,
-        &StatusBlock);
+    /* Do not handle removable media */
+    if (BooleanFlagOn(DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA))
+    {
+        ObDereferenceObject(DeviceObject);
+        return STATUS_NO_MEDIA;
+    }
+
+    /* We'll loop until our buffer is big enough */
+    Buffer = NULL;
+    BufferSize = 0x1000;
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    do
+    {
+        /* If we already had a buffer, it means it's not big
+         * enough, so free and multiply size by two
+         */
+        if (Buffer != NULL)
+        {
+            ExFreePoolWithTag(Buffer, TAG_FSTUB);
+            BufferSize *= 2;
+        }
+
+        /* Allocate buffer for output buffer */
+        Buffer = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_FSTUB);
+        if (Buffer == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            break;
+        }
+
+        /* Build the IRP to query drive layout */
+        Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_LAYOUT,
+                                            DeviceObject,
+                                            NULL,
+                                            0,
+                                            Buffer,
+                                            BufferSize,
+                                            FALSE,
+                                            &Event,
+                                            &StatusBlock);
+        if (Irp == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        /* Call the driver and wait if appropriate */
+        Status = IoCallDriver(DeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+            Status = StatusBlock.Status;
+        }
+        /* If buffer is too small, keep looping */
+    } while (Status == STATUS_BUFFER_TOO_SMALL);
+
+    /* We're done with the device */
+    ObDereferenceObject(DeviceObject);
+
+    /* If querying worked, then return the buffer to the caller */
+    if (NT_SUCCESS(Status))
+    {
+        ASSERT(Buffer != NULL);
+        *LayoutInfo = Buffer;
+    }
+    /* Else, release the buffer if still allocated and fail */
+    else
+    {
+        if (Buffer != NULL)
+        {
+            ExFreePoolWithTag(Buffer, TAG_FSTUB);
+        }
+    }
+
+    return Status;
+}
+
+NTSTATUS
+HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
+                       IN PDRIVE_LAYOUT_INFORMATION LayoutInfo,
+                       OUT PPARTITION_TYPE PartitionType)
+{
+    USHORT i;
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PARTITION_INFORMATION_EX PartitionInfo;
+
+    PAGED_CODE();
+
+    /* Get device pointers */
+    Status = IoGetDeviceObjectPointer(DeviceName,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get attached device object */
+    DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
+    ObDereferenceObject(FileObject);
+
+    /* Assume logical partition for removable devices */
+    if (BooleanFlagOn(DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA))
+    {
+        ObDereferenceObject(DeviceObject);
+        *PartitionType = LogicalPartition;
+        return STATUS_SUCCESS;
+    }
+
+    /* For the others, query partition info */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        &PartitionInfo,
+                                        sizeof(PartitionInfo),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
     if (Irp == NULL)
     {
-        ObDereferenceObject(FileObject);
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        ObDereferenceObject(DeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = IoCallDriver(DeviceObject,
-        Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event,
-            Executive,
-            KernelMode,
-            FALSE,
-            NULL);
-        Status = StatusBlock.Status;
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
     }
+
+    /* We're done with the device */
+    ObDereferenceObject(DeviceObject);
+
+    /* If we failed querying partition info, try to return something
+     * if caller didn't provide a precise layout, assume logical
+     * partition and fake success. Otherwise, just fail.
+     */
     if (!NT_SUCCESS(Status))
     {
-        if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+        if (LayoutInfo == NULL)
         {
-            DiskGeometry.BytesPerSector = 512;
+            *PartitionType = LogicalPartition;
+            return STATUS_SUCCESS;
         }
-        else
-        {
-            ObDereferenceObject(FileObject);
-            return(Status);
-        }
+
+        return Status;
     }
 
-    DPRINT("DiskGeometry.BytesPerSector: %lu\n",
-        DiskGeometry.BytesPerSector);
-
-    if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+    /* First, handle non MBR style (easy cases) */
+    if (PartitionInfo.PartitionStyle != PARTITION_STYLE_MBR)
     {
-        PDRIVE_LAYOUT_INFORMATION Buffer;
-
-        /* Allocate a partition list for a single entry. */
-        Buffer = ExAllocatePoolWithTag(NonPagedPool,
-            sizeof(DRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
-        if (Buffer != NULL)
+        /* If not GPT, we don't know what it is */
+        if (PartitionInfo.PartitionStyle != PARTITION_STYLE_GPT)
         {
-            RtlZeroMemory(Buffer,
-                sizeof(DRIVE_LAYOUT_INFORMATION));
-            Buffer->PartitionCount = 1;
-            *LayoutInfo = Buffer;
-
-            Status = STATUS_SUCCESS;
+            *PartitionType = UnknownPartition;
+            return STATUS_SUCCESS;
         }
-        else
+
+        /* Check whether that's data partition */
+        if (RtlCompareMemory(&PartitionInfo.Gpt.PartitionType,
+                             &PARTITION_BASIC_DATA_GUID,
+                             sizeof(GUID)) == sizeof(GUID))
         {
-            Status = STATUS_UNSUCCESSFUL;
+            *PartitionType = DataPartition;
+            return STATUS_SUCCESS;
+        }
+
+        /* Otherwise, we don't know */
+        *PartitionType = UnknownPartition;
+        return STATUS_SUCCESS;
+    }
+
+    /* If we don't recognize partition type, return unknown */
+    if (!IsRecognizedPartition(PartitionInfo.Mbr.PartitionType))
+    {
+        *PartitionType = UnknownPartition;
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if that's a FT volume */
+    if (IsFTPartition(PartitionInfo.Mbr.PartitionType))
+    {
+        *PartitionType = FtPartition;
+        return STATUS_SUCCESS;
+    }
+
+    /* If the caller didn't provide the complete layout, just return */
+    if (LayoutInfo == NULL)
+    {
+        *PartitionType = LogicalPartition;
+        return STATUS_SUCCESS;
+    }
+
+    /* Now, evaluate the partition to the 4 in the input layout */
+    for (i = 0; i < 4; ++i)
+    {
+        /* If we find a partition matching */
+        if (LayoutInfo->PartitionEntry[i].StartingOffset.QuadPart == PartitionInfo.StartingOffset.QuadPart)
+        {
+            /* Return boot if boot flag is set */
+            if (PartitionInfo.Mbr.BootIndicator)
+            {
+                *PartitionType = BootablePartition;
+            }
+            /* Primary otherwise */
+            else
+            {
+                *PartitionType = PrimaryPartition;
+            }
+
+            return STATUS_SUCCESS;
         }
     }
+
+    /* Otherwise, assume logical */
+    *PartitionType = LogicalPartition;
+    return STATUS_SUCCESS;
+}
+
+PULONG
+IopComputeHarddiskDerangements(IN ULONG DiskCount)
+{
+    PIRP Irp;
+    KEVENT Event;
+    ULONG i, j, k;
+    PULONG Devices;
+    NTSTATUS Status;
+    WCHAR Buffer[100];
+    UNICODE_STRING ArcName;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    STORAGE_DEVICE_NUMBER DeviceNumber;
+
+    /* No disks, nothing to do */
+    if (DiskCount == 0)
+    {
+        return NULL;
+    }
+
+    /* Allocate a buffer big enough to hold all the disks */
+    Devices = ExAllocatePoolWithTag(PagedPool | POOL_COLD_ALLOCATION,
+                                    sizeof(ULONG) * DiskCount,
+                                    TAG_FSTUB);
+    if (Devices == NULL)
+    {
+        return NULL;
+    }
+
+    /* Now, we'll query all the disks */
+    for (i = 0; i < DiskCount; ++i)
+    {
+        /* Using their ARC name */
+        swprintf(Buffer, L"\\ArcName\\multi(0)disk(0)rdisk(%d)", i);
+        RtlInitUnicodeString(&ArcName, Buffer);
+        /* Get the attached DeviceObject */
+        if (NT_SUCCESS(IoGetDeviceObjectPointer(&ArcName, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject)))
+        {
+            DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
+            ObDereferenceObject(FileObject);
+
+            /* And query it for device number */
+            KeInitializeEvent(&Event, NotificationEvent, FALSE);
+            Irp = IoBuildDeviceIoControlRequest(IOCTL_STORAGE_GET_DEVICE_NUMBER,
+                                                DeviceObject,
+                                                NULL,
+                                                0,
+                                                &DeviceNumber,
+                                                sizeof(DeviceNumber),
+                                                FALSE,
+                                                &Event,
+                                                &IoStatusBlock);
+            if (Irp != NULL)
+            {
+                Status = IoCallDriver(DeviceObject, Irp);
+                if (Status == STATUS_PENDING)
+                {
+                    KeWaitForSingleObject(&Event,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                    Status = IoStatusBlock.Status;
+                }
+
+                ObDereferenceObject(DeviceObject);
+
+                /* In case of a success remember device number */
+                if (NT_SUCCESS(Status))
+                {
+                    Devices[i] = DeviceNumber.DeviceNumber;
+                    /* Move on, not to fall into our default case */
+                    continue;
+                }
+            }
+            else
+            {
+                ObDereferenceObject(DeviceObject);
+            }
+
+            /* Default case, for failures, set -1 */
+            Devices[i] = -1;
+        }
+    }
+
+    /* Now, we'll check all device numbers */
+    for (i = 0; i < DiskCount; ++i)
+    {
+        /* First of all, check if we're at the right place */
+        for (j = 0; j < DiskCount; ++j)
+        {
+            if (Devices[j] == i)
+            {
+                break;
+            }
+        }
+
+        /* If not, perform the change */
+        if (j >= DiskCount)
+        {
+            k = 0;
+            while (Devices[k] != -1)
+            {
+                if (++k >= DiskCount)
+                {
+                    break;
+                }
+            }
+
+            if (k < DiskCount)
+            {
+                Devices[k] = i;
+            }
+        }
+    }
+
+    /* Return our device derangement map */
+    return Devices;
+}
+
+NTSTATUS
+HalpNextMountLetter(IN PUNICODE_STRING DeviceName,
+                    OUT PUCHAR DriveLetter)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    UNICODE_STRING MountMgr;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PMOUNTMGR_DRIVE_LETTER_TARGET Target;
+    MOUNTMGR_DRIVE_LETTER_INFORMATION LetterInfo;
+
+    /* To get next mount letter, we need the MountMgr */
+    RtlInitUnicodeString(&MountMgr, L"\\Device\\MountPointManager");
+    Status = IoGetDeviceObjectPointer(&MountMgr,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Allocate our input buffer */
+    Target = ExAllocatePoolWithTag(PagedPool,
+                                   DeviceName->Length + FIELD_OFFSET(MOUNTMGR_DRIVE_LETTER_TARGET, DeviceName),
+                                   TAG_FSTUB);
+    if (Target == NULL)
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* And fill it with the device hat needs a drive letter */
+    Target->DeviceNameLength = DeviceName->Length;
+    RtlCopyMemory(&Target->DeviceName[0], DeviceName->Buffer, DeviceName->Length);
+
+    /* Call the mount manager */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER,
+                                        DeviceObject,
+                                        Target,
+                                        DeviceName->Length + FIELD_OFFSET(MOUNTMGR_DRIVE_LETTER_TARGET, DeviceName),
+                                        &LetterInfo,
+                                        sizeof(LetterInfo),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp == NULL)
+    {
+        ExFreePoolWithTag(Target, TAG_FSTUB);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    ExFreePoolWithTag(Target, TAG_FSTUB);
+    ObDereferenceObject(FileObject);
+
+    DPRINT("Done: %d %c\n", LetterInfo.DriveLetterWasAssigned,
+                            LetterInfo.CurrentDriveLetter);
+
+    /* Return the drive letter the MountMgr potentially assigned */
+    *DriveLetter = LetterInfo.CurrentDriveLetter;
+
+    /* Also return the success */
+    return Status;
+}
+
+NTSTATUS
+HalpSetMountLetter(IN PUNICODE_STRING DeviceName,
+                   UCHAR DriveLetter)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    WCHAR Buffer[30];
+    ULONG InputBufferLength;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING DosDevice, MountMgr;
+    PMOUNTMGR_CREATE_POINT_INPUT InputBuffer;
+
+    /* Setup the DosDevice name */
+    swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
+    RtlInitUnicodeString(&DosDevice, Buffer);
+
+    /* Allocate the input buffer for the MountMgr */
+    InputBufferLength = DosDevice.Length + DeviceName->Length + sizeof(MOUNTMGR_CREATE_POINT_INPUT);
+    InputBuffer = ExAllocatePoolWithTag(PagedPool, InputBufferLength, TAG_FSTUB);
+    if (InputBuffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Fill the input buffer */
+    InputBuffer->SymbolicLinkNameOffset = sizeof(MOUNTMGR_CREATE_POINT_INPUT);
+    InputBuffer->SymbolicLinkNameLength = DosDevice.Length;
+    InputBuffer->DeviceNameOffset = DosDevice.Length + sizeof(MOUNTMGR_CREATE_POINT_INPUT);
+    InputBuffer->DeviceNameLength = DeviceName->Length;
+    RtlCopyMemory(&InputBuffer[1], DosDevice.Buffer, DosDevice.Length);
+    RtlCopyMemory((PVOID)((ULONG_PTR)InputBuffer + InputBuffer->DeviceNameOffset),
+                  DeviceName->Buffer,
+                  DeviceName->Length);
+
+    /* Get the MountMgr device pointer, to send the IOCTL */
+    RtlInitUnicodeString(&MountMgr, L"\\Device\\MountPointManager");
+    Status = IoGetDeviceObjectPointer(&MountMgr,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+        return Status;
+    }
+
+    /* Call the MountMgr */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_CREATE_POINT,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp == NULL)
+    {
+        ObDereferenceObject(FileObject);
+        ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    ObDereferenceObject(FileObject);
+    ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+
+    /* Return the MountMgr status */
+    return Status;
+}
+
+UCHAR
+HalpNextDriveLetter(IN PUNICODE_STRING DeviceName,
+                    IN PSTRING NtDeviceName,
+                    OUT PUCHAR NtSystemPath,
+                    BOOLEAN IsRemovable)
+{
+    UCHAR i;
+    WCHAR Buffer[40];
+    UCHAR DriveLetter;
+    UNICODE_STRING FloppyString, CdString, NtDeviceNameU, DosDevice;
+
+    /* Quick path, ask directly the mount manager to assign the next
+     * free drive letter
+     */
+    if (NT_SUCCESS(HalpNextMountLetter(DeviceName, &DriveLetter)))
+    {
+        return DriveLetter;
+    }
+
+    /* We'll allow MountMgr to fail only for non vital path */
+    if (NtDeviceName == NULL || NtSystemPath == NULL)
+    {
+        return -1;
+    }
+
+    /* And for removable devices */
+    if (!IsRemovable)
+    {
+        return 0;
+    }
+
+    /* Removable might be floppy or cdrom */
+    RtlInitUnicodeString(&FloppyString, L"\\Device\\Floppy");
+    RtlInitUnicodeString(&CdString, L"\\Device\\CdRom");
+
+    /* If floppy, start at A */
+    if (RtlPrefixUnicodeString(&FloppyString, DeviceName, TRUE))
+    {
+        DriveLetter = 'A';
+    }
+    /* If CD start C */
+    else if (RtlPrefixUnicodeString(&CdString, DeviceName, TRUE))
+    {
+        DriveLetter = 'D';
+    }
+    /* For the rest start at C */
     else
     {
-        /* Read the partition table */
-        Status = IoReadPartitionTable(DeviceObject,
-            DiskGeometry.BytesPerSector,
-            TRUE,
-            LayoutInfo);
+        DriveLetter = 'C';
+    }
+
+    /* Now, try to assign a drive letter manually with the MountMgr */
+    for (i = DriveLetter; i <= 'Z'; ++i)
+    {
+        if (NT_SUCCESS(HalpSetMountLetter(DeviceName, i)))
+        {
+            /* If it worked, if we were managing system path, update manually */
+            if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&NtDeviceNameU, NtDeviceName, TRUE)))
+            {
+                if (RtlEqualUnicodeString(&NtDeviceNameU, DeviceName, TRUE))
+                {
+                    *NtSystemPath = i;
+                }
+
+                RtlFreeUnicodeString(&NtDeviceNameU);
+            }
+
+            return i;
+        }
+    }
+
+    /* Last fall back, we're not on a PnP device... */
+    for (i = DriveLetter; i <= 'Z'; ++i)
+    {
+        /* We'll link manually, without MountMgr knowing anything about the device */
+        swprintf(Buffer, L"\\DosDevices\\%c:", i);
+        RtlInitUnicodeString(&DosDevice, Buffer);
+
+        /* If linking worked, then the letter was free ;-) */
+        if (NT_SUCCESS(IoCreateSymbolicLink(&DosDevice, DeviceName)))
+        {
+            /* If it worked, if we were managing system path, update manually */
+            if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&NtDeviceNameU, NtDeviceName, TRUE)))
+            {
+                if (RtlEqualUnicodeString(&NtDeviceNameU, DeviceName, TRUE))
+                {
+                    *NtSystemPath = i;
+                }
+
+                RtlFreeUnicodeString(&NtDeviceNameU);
+            }
+
+            return i;
+        }
+    }
+
+    /* We're done, nothing happened */
+    return 0;
+}
+
+BOOLEAN
+HalpIsOldStyleFloppy(PUNICODE_STRING DeviceName)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    MOUNTDEV_NAME DevName;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PAGED_CODE();
+
+    /* Get the attached device object to our device */
+    if (!NT_SUCCESS(IoGetDeviceObjectPointer(DeviceName,
+                                             FILE_READ_ATTRIBUTES,
+                                             &FileObject,
+                                             &DeviceObject)))
+    {
+        return FALSE;
+    }
+
+    DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
+    ObDereferenceObject(FileObject);
+
+    /* Query its device name (ie, check floppy.sys implements MountMgr interface) */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        &DevName,
+                                        sizeof(DevName),
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp == NULL)
+    {
+        ObDereferenceObject(DeviceObject);
+        return FALSE;
+    }
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    /* If status is not STATUS_BUFFER_OVERFLOW, it means
+     * it's pre-mountmgr driver, aka "Old style".
+     */
+    ObDereferenceObject(DeviceObject);
+    return (Status != STATUS_BUFFER_OVERFLOW);
+}
+
+NTSTATUS
+HalpDeleteMountLetter(UCHAR DriveLetter)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    WCHAR Buffer[30];
+    ULONG InputBufferLength;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PMOUNTMGR_MOUNT_POINT InputBuffer;
+    UNICODE_STRING DosDevice, MountMgr;
+    PMOUNTMGR_MOUNT_POINTS OutputBuffer;
+
+    /* Setup the device name of the letter to delete */
+    swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
+    RtlInitUnicodeString(&DosDevice, Buffer);
+
+    /* Allocate the input buffer for MountMgr */
+    InputBufferLength = DosDevice.Length + sizeof(MOUNTMGR_MOUNT_POINT);
+    InputBuffer = ExAllocatePoolWithTag(PagedPool, InputBufferLength, TAG_FSTUB);
+    if (InputBuffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Fill it in */
+    RtlZeroMemory(InputBuffer, InputBufferLength);
+    InputBuffer->SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
+    InputBuffer->SymbolicLinkNameLength = DosDevice.Length;
+    RtlCopyMemory(&InputBuffer[1], DosDevice.Buffer, DosDevice.Length);
+
+    /* Allocate big enough output buffer (we don't care about the output) */
+    OutputBuffer = ExAllocatePoolWithTag(PagedPool, 0x1000, TAG_FSTUB);
+    if (OutputBuffer == NULL)
+    {
+        ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Get the device pointer to the MountMgr */
+    RtlInitUnicodeString(&MountMgr, L"\\Device\\MountPointManager");
+    Status = IoGetDeviceObjectPointer(&MountMgr,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(OutputBuffer, TAG_FSTUB);
+        ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+        return Status;
+    }
+
+    /* Call the mount manager to delete the drive letter */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_DELETE_POINTS,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        OutputBuffer,
+                                        0x1000,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp == NULL)
+    {
+        ObDereferenceObject(FileObject);
+        ExFreePoolWithTag(OutputBuffer, TAG_FSTUB);
+        ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    ObDereferenceObject(FileObject);
+    ExFreePoolWithTag(OutputBuffer, TAG_FSTUB);
+    ExFreePoolWithTag(InputBuffer, TAG_FSTUB);
+
+    return Status;
+}
+
+VOID
+HalpEnableAutomaticDriveLetterAssignment(VOID)
+{
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
+    UNICODE_STRING MountMgr;
+    PFILE_OBJECT FileObject;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    /* Get the device pointer to the MountMgr */
+    RtlInitUnicodeString(&MountMgr, L"\\Device\\MountPointManager");
+    Status = IoGetDeviceObjectPointer(&MountMgr,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    /* Just send an IOCTL to enable the feature */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS,
+                                        DeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp == NULL)
+    {
+        return;
+    }
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
     }
 
     ObDereferenceObject(FileObject);
 
-    return(Status);
+    return;
 }
 
 VOID
@@ -417,531 +914,473 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          OUT PUCHAR NtSystemPath,
                          OUT PSTRING NtSystemPathString)
 {
-    PDRIVE_LAYOUT_INFORMATION *LayoutArray;
-    PCONFIGURATION_INFORMATION ConfigInfo;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK StatusBlock;
-    UNICODE_STRING UnicodeString1;
-    UNICODE_STRING UnicodeString2;
-    HANDLE FileHandle;
-    PWSTR Buffer1;
-    PWSTR Buffer2;
-    ULONG i, j, k;
-    ULONG DiskNumber;
-    ULONG RDisk;
+    USHORT i;
+    PULONG Devices;
     NTSTATUS Status;
-    HANDLE hKey;
-    ULONG Length;
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
-    PREG_DISK_MOUNT_INFO DiskMountInfo;
-    ULONG RDiskCount;
-    UNICODE_STRING BootDevice;
+    WCHAR Buffer[50];
+    HANDLE FileHandle;
+    UCHAR DriveLetter;
+    BOOLEAN SystemFound;
+    IO_STATUS_BLOCK StatusBlock;
+    PARTITION_TYPE PartitionType;
+    ANSI_STRING StringA1, StringA2;
+    PSTR Buffer1, Buffer2, LoadOptions;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PDRIVE_LAYOUT_INFORMATION LayoutInfo;
+    PCONFIGURATION_INFORMATION ConfigInfo;
+    UNICODE_STRING StringU1, StringU2, StringU3;
+    ULONG Increment, DiskCount, RealDiskCount, HarddiskCount, PartitionCount, SystemPartition;
 
-    Status = RtlAnsiStringToUnicodeString(&BootDevice,
-                                          NtDeviceName,
-                                          TRUE);
+    PAGED_CODE();
 
-    DPRINT("xHalIoAssignDriveLetters()\n");
-
+    /* Get our disk count */
     ConfigInfo = IoGetConfigurationInformation();
+    DiskCount = ConfigInfo->DiskCount;
+    RealDiskCount = 0;
 
-    RDiskCount = xHalpGetRDiskCount();
-
-    DPRINT("RDiskCount %lu\n", RDiskCount);
-
-    Buffer1 = ExAllocatePoolWithTag(PagedPool,
-        64 * sizeof(WCHAR),
-        TAG_FILE_SYSTEM);
-    if (!Buffer1) return;
-
-    Buffer2 = ExAllocatePoolWithTag(PagedPool,
-        32 * sizeof(WCHAR),
-        TAG_FILE_SYSTEM);
-    if (!Buffer2)
+    /* Allocate two generic string buffers we'll use and reuser later on */
+    Buffer1 = ExAllocatePoolWithTag(NonPagedPool, 128, TAG_FSTUB);
+    Buffer2 = ExAllocatePoolWithTag(NonPagedPool, 64, TAG_FSTUB);
+    if (Buffer1 == NULL || Buffer2 == NULL)
     {
-        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-        return;
+        KeBugCheck(ASSIGN_DRIVE_LETTERS_FAILED);
     }
 
-    PartialInformation = ExAllocatePoolWithTag(PagedPool,
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO),
-        TAG_FILE_SYSTEM);
-    if (!PartialInformation)
+    /* In case of a remote boot, setup system path */
+    if (IoRemoteBootClient)
     {
-        ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
-        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-        return;
-    }
+        PSTR Last, Saved;
 
-    DiskMountInfo = (PREG_DISK_MOUNT_INFO) PartialInformation->Data;
-
-    /* Create or open the 'MountedDevices' key */
-    RtlInitUnicodeString(&UnicodeString1, L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
-    InitializeObjectAttributes(&ObjectAttributes,
-        &UnicodeString1,
-        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-        NULL,
-        NULL);
-    Status = ZwCreateKey(&hKey,
-        KEY_ALL_ACCESS,
-        &ObjectAttributes,
-        0,
-        NULL,
-        REG_OPTION_NON_VOLATILE,
-        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        hKey = NULL;
-        DPRINT("ZwCreateKey failed for %wZ, status=%x\n", &UnicodeString1, Status);
-    }
-
-    /* Create PhysicalDrive links */
-    DPRINT("Physical disk drives: %lu\n", ConfigInfo->DiskCount);
-    for (i = 0; i < ConfigInfo->DiskCount; i++)
-    {
-        swprintf(Buffer1, L"\\Device\\Harddisk%lu\\Partition0", i);
-        RtlInitUnicodeString(&UnicodeString1, Buffer1);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-            &UnicodeString1,
-            0,
-            NULL,
-            NULL);
-
-        Status = ZwOpenFile(&FileHandle,
-            FILE_READ_DATA | SYNCHRONIZE,
-            &ObjectAttributes,
-            &StatusBlock,
-            FILE_SHARE_READ,
-            FILE_SYNCHRONOUS_IO_NONALERT);
-        if (NT_SUCCESS(Status))
+        /* Find last \ */
+        Last = strrchr(LoaderBlock->NtBootPathName, '\\');
+        Saved = NULL;
+        /* Misformed name, fail */
+        if (Last == NULL)
         {
-            ZwClose(FileHandle);
-
-            swprintf(Buffer2, L"\\??\\PhysicalDrive%lu", i);
-            RtlInitUnicodeString(&UnicodeString2, Buffer2);
-
-            DPRINT("Creating link: %S ==> %S\n",
-                Buffer2,
-                Buffer1);
-
-            IoCreateSymbolicLink(&UnicodeString2,
-                &UnicodeString1);
+            KeBugCheck(ASSIGN_DRIVE_LETTERS_FAILED);
         }
-    }
 
-    /* Initialize layout array */
-    if (ConfigInfo->DiskCount == 0)
-        goto end_assign_disks;
-    LayoutArray = ExAllocatePoolWithTag(NonPagedPool,
-        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION), TAG_FILE_SYSTEM);
-    if (!LayoutArray)
-    {
-        ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
-        ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
-        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-        if (hKey) ObCloseHandle(hKey, KernelMode);
-        return;
-    }
-
-    RtlZeroMemory(LayoutArray,
-        ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
-    for (i = 0; i < ConfigInfo->DiskCount; i++)
-    {
-        swprintf(Buffer1, L"\\Device\\Harddisk%lu\\Partition0", i);
-        RtlInitUnicodeString(&UnicodeString1, Buffer1);
-
-        Status = xHalQueryDriveLayout(&UnicodeString1, &LayoutArray[i]);
-        if (!NT_SUCCESS(Status))
+        /* In case the name was terminated by a \... */
+        if (Last[1] == ANSI_NULL)
         {
-            DbgPrint("xHalQueryDriveLayout() failed (Status = 0x%lx)\n",
-                Status);
-            LayoutArray[i] = NULL;
-            continue;
+            /* Erase it, save position and find the previous \ */
+            *Last = ANSI_NULL;
+            Saved = Last;
+            Last = strrchr(LoaderBlock->NtBootPathName, '\\');
+            *Saved = '\\';
         }
-        /* We don't use the RewritePartition value while mounting the disks.
-        * We use this value for marking pre-assigned (registry) partitions.
-        */
-        for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
+
+        /* Misformed name, fail */
+        if (Last == NULL)
         {
-            LayoutArray[i]->PartitionEntry[j].RewritePartition = FALSE;
+            KeBugCheck(ASSIGN_DRIVE_LETTERS_FAILED);
         }
+
+        /* For a remote boot, assign X drive letter */
+        NtSystemPath[0] = 'X';
+        NtSystemPath[1] = ':';
+        /* And copy the end of the boot path */
+        strcpy((PSTR)&NtSystemPath[2], Last);
+
+        /* If we had to remove the trailing \, remove it here too */
+        if (Saved != NULL)
+        {
+            NtSystemPath[strlen((PSTR)NtSystemPath) - 1] = ANSI_NULL;
+        }
+
+        /* Setup output string */
+        RtlInitString(NtSystemPathString, (PSTR)NtSystemPath);
     }
 
-#ifndef NDEBUG
-    /* Dump layout array */
-    for (i = 0; i < ConfigInfo->DiskCount; i++)
+    /* For each of our disks, create the physical device DOS device */
+    Increment = 0;
+    if (DiskCount != 0)
     {
-        DPRINT("Harddisk %d:\n",
-            i);
-
-        if (LayoutArray[i] == NULL)
-            continue;
-
-        DPRINT("Logical partitions: %d\n",
-            LayoutArray[i]->PartitionCount);
-
-        for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
+        for (i = 0; i < DiskCount; ++i)
         {
-            DPRINT("  %d: nr:%x boot:%x type:%x startblock:%I64u count:%I64u\n",
-                j,
-                LayoutArray[i]->PartitionEntry[j].PartitionNumber,
-                LayoutArray[i]->PartitionEntry[j].BootIndicator,
-                LayoutArray[i]->PartitionEntry[j].PartitionType,
-                LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart,
-                LayoutArray[i]->PartitionEntry[j].PartitionLength.QuadPart);
-        }
-    }
-#endif
-
-    /* Assign pre-assigned (registry) partitions */
-    if (hKey)
-    {
-        for (k = 2; k < 26; k++)
-        {
-            swprintf(Buffer1, DiskMountString, L'A' + k);
-            RtlInitUnicodeString(&UnicodeString1, Buffer1);
-            Status = ZwQueryValueKey(hKey,
-                &UnicodeString1,
-                KeyValuePartialInformation,
-                PartialInformation,
-                sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO),
-                &Length);
-            if (NT_SUCCESS(Status) &&
-                PartialInformation->Type == REG_BINARY &&
-                PartialInformation->DataLength == sizeof(REG_DISK_MOUNT_INFO))
+            /* Setup the origin name */
+            sprintf(Buffer1, "\\Device\\Harddisk%d\\Partition%d", i, 0);
+            RtlInitAnsiString(&StringA1, Buffer1);
+            if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&StringU1, &StringA1, TRUE)))
             {
-                DPRINT("%wZ => %08x:%08x%08x\n", &UnicodeString1, DiskMountInfo->Signature,
-                    DiskMountInfo->StartingOffset.u.HighPart, DiskMountInfo->StartingOffset.u.LowPart);
-                {
-                    BOOLEAN Found = FALSE;
-                    for (i = 0; i < ConfigInfo->DiskCount; i++)
-                    {
-                        DPRINT("%x\n", LayoutArray[i]->Signature);
-                        if (LayoutArray[i] &&
-                            LayoutArray[i]->Signature &&
-                            LayoutArray[i]->Signature == DiskMountInfo->Signature)
-                        {
-                            for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
-                            {
-                                if (LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart == DiskMountInfo->StartingOffset.QuadPart)
-                                {
-                                    if (IsRecognizedPartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
-                                        LayoutArray[i]->PartitionEntry[j].RewritePartition == FALSE)
-                                    {
-                                        swprintf(Buffer2,
-                                                 L"\\Device\\Harddisk%lu\\Partition%lu",
-                                                 i,
-                                                 LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-                                        RtlInitUnicodeString(&UnicodeString2, Buffer2);
+                /* We cannot fail */
+                KeBugCheck(ASSIGN_DRIVE_LETTERS_FAILED);
+            }
 
-                                        /* Assign drive */
-                                        DPRINT("  %wZ\n", &UnicodeString2);
-                                        Found = HalpAssignDrive(&UnicodeString2,
-                                            k,
-                                            DOSDEVICE_DRIVE_FIXED,
-                                            DiskMountInfo->Signature,
-                                            DiskMountInfo->StartingOffset,
-                                            NULL,
-                                            &BootDevice,
-                                            NtSystemPath);
-                                        /* Mark the partition as assigned */
-                                        LayoutArray[i]->PartitionEntry[j].RewritePartition = TRUE;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (Found == FALSE)
-                    {
-                        /* We didn't find a partition for this entry, remove them. */
-                        Status = ZwDeleteValueKey(hKey, &UnicodeString1);
-                    }
+            /* Open the device */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &StringU1,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+            Status = ZwOpenFile(&FileHandle,
+                                SYNCHRONIZE | FILE_READ_DATA,
+                                &ObjectAttributes,
+                                &StatusBlock,
+                                FILE_SHARE_READ,
+                                FILE_SYNCHRONOUS_IO_NONALERT);
+            if (NT_SUCCESS(Status))
+            {
+                /* If we managed, create the link */
+                sprintf(Buffer2, "\\DosDevices\\PhysicalDrive%d", i);
+                RtlInitAnsiString(&StringA2, Buffer2);
+                Status = RtlAnsiStringToUnicodeString(&StringU2, &StringA2, TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    IoCreateSymbolicLink(&StringU2, &StringU1);
+                    RtlFreeUnicodeString(&StringU2);
+                }
+
+                ZwClose(FileHandle);
+
+                RealDiskCount = i + 1;
+            }
+
+            RtlFreeUnicodeString(&StringU1);
+
+            if (!NT_SUCCESS(Status))
+            {
+                if (Increment < 50)
+                {
+                    ++Increment;
+                    ++DiskCount;
                 }
             }
         }
     }
 
-    /* Assign bootable partition on first harddisk */
-    DPRINT("Assigning bootable primary partition on first harddisk:\n");
-    if (RDiskCount > 0)
-    {
-        Status = xHalpGetDiskNumberFromRDisk(0, &DiskNumber);
-        if (NT_SUCCESS(Status) &&
-            DiskNumber < ConfigInfo->DiskCount &&
-            LayoutArray[DiskNumber])
-        {
-            /* Search for bootable partition */
-            for (j = 0; j < NUM_PARTITION_TABLE_ENTRIES && j < LayoutArray[DiskNumber]->PartitionCount; j++)
-            {
-                if ((LayoutArray[DiskNumber]->PartitionEntry[j].BootIndicator != FALSE) &&
-                    IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
-                {
-                    if (LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE)
-                    {
-                        swprintf(Buffer2,
-                                 L"\\Device\\Harddisk%lu\\Partition%lu",
-                                 DiskNumber,
-                                 LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                        RtlInitUnicodeString(&UnicodeString2, Buffer2);
+    /* We done for our buffers */
+    ExFreePoolWithTag(Buffer1, TAG_FSTUB);
+    ExFreePoolWithTag(Buffer2, TAG_FSTUB);
 
-                        /* Assign drive */
-                        DPRINT("  %wZ\n", &UnicodeString2);
-                        HalpAssignDrive(&UnicodeString2,
-                            AUTO_DRIVE,
-                            DOSDEVICE_DRIVE_FIXED,
-                            LayoutArray[DiskNumber]->Signature,
-                            LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                            hKey,
-                            &BootDevice,
-                            NtSystemPath);
-                        /* Mark the partition as assigned */
-                        LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
-                    }
+    /* Upcase our load options, if any */
+    if (LoaderBlock->LoadOptions != NULL)
+    {
+        LoadOptions = _strupr(LoaderBlock->LoadOptions);
+    }
+    else
+    {
+        LoadOptions = NULL;
+    }
+
+    /* If we boot with /MININT (system hive as volatile) option, assign X letter to boot device */
+    if (LoadOptions != NULL &&
+        strstr(LoadOptions, "MININT") != 0 &&
+        NT_SUCCESS(RtlAnsiStringToUnicodeString(&StringU1, NtDeviceName, TRUE)))
+    {
+        if (NT_SUCCESS(HalpSetMountLetter(&StringU1, 'X')))
+        {
+            *NtSystemPath = 'X';
+        }
+
+        RtlFreeUnicodeString(&StringU1);
+    }
+
+    /* Compute our disks derangements */
+    DiskCount -= Increment;
+    if (RealDiskCount > DiskCount)
+    {
+        DiskCount = RealDiskCount;
+    }
+    Devices = IopComputeHarddiskDerangements(DiskCount);
+
+    /* Now, start browsing all our disks for assigning drive letters
+     * Here, we'll only handle boot partition and primary partitions
+     */
+    HarddiskCount = 0;
+    for (i = 0; i < DiskCount; ++i)
+    {
+        /* Get device ID according to derangements map */
+        if (Devices != NULL)
+        {
+            HarddiskCount = Devices[i];
+        }
+
+        /* Query disk layout */
+        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        if (!NT_SUCCESS(HalpQueryDriveLayout(&StringU1, &LayoutInfo)))
+        {
+            LayoutInfo = NULL;
+        }
+
+        /* Assume we didn't find system */
+        SystemFound = FALSE;
+        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, 1);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        /* Query partition info for our disk */
+        if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+        {
+            /* It failed, retry for all the partitions */
+            for (PartitionCount = 1; ; ++PartitionCount)
+            {
+                swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+                RtlInitUnicodeString(&StringU1, Buffer);
+                if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+                {
+                    break;
+                }
+
+                /* We found a primary partition, assign a drive letter */
+                if (PartitionType == PrimaryPartition)
+                {
+                    HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, 0);
                     break;
                 }
             }
         }
+        else
+        {
+            /* All right */
+            for (PartitionCount = 2; ; ++PartitionCount)
+            {
+                /* If our partition is bootable (MBR) or data (GPT), that's system partition */
+                if (PartitionType == BootablePartition || PartitionType == DataPartition)
+                {
+                    SystemFound = TRUE;
+
+                    /* Assign a drive letter and stop here if MBR */
+                    HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, 0);
+                    if (PartitionType == BootablePartition)
+                    {
+                        break;
+                    }
+                }
+
+                /* Keep looping on all the partitions */
+                swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+                RtlInitUnicodeString(&StringU1, Buffer);
+                if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+                {
+                    /* Mount every primary partition if we didn't find system */
+                    if (!SystemFound)
+                    {
+                        for (PartitionCount = 1; ; ++PartitionCount)
+                        {
+                            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+                            RtlInitUnicodeString(&StringU1, Buffer);
+                            if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+                            {
+                                break;
+                            }
+
+                            if (PartitionType == PrimaryPartition)
+                            {
+                                HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, 0);
+                                break;
+                            }
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        /* Free layout, we'll reallocate it for next device */
+        if (LayoutInfo != NULL)
+        {
+            ExFreePoolWithTag(LayoutInfo, TAG_FSTUB);
+        }
+
+        HarddiskCount = i + 1;
     }
 
-    /* Assign remaining primary partitions */
-    DPRINT("Assigning remaining primary partitions:\n");
-    for (RDisk = 0; RDisk < RDiskCount; RDisk++)
+    /* Now, assign logical partitions */
+    for (i = 0; i < DiskCount; ++i)
     {
-        Status = xHalpGetDiskNumberFromRDisk(RDisk, &DiskNumber);
-        if (NT_SUCCESS(Status) &&
-            DiskNumber < ConfigInfo->DiskCount &&
-            LayoutArray[DiskNumber])
+        /* Get device ID according to derangements map */
+        if (Devices != NULL)
         {
-            /* Search for primary partitions */
-            for (j = 0; (j < NUM_PARTITION_TABLE_ENTRIES) && (j < LayoutArray[DiskNumber]->PartitionCount); j++)
-            {
-                if (LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE &&
-                    IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
-                {
-                    swprintf(Buffer2,
-                             L"\\Device\\Harddisk%lu\\Partition%lu",
-                             DiskNumber,
-                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
+            HarddiskCount = Devices[i];
+        }
+        else
+        {
+            HarddiskCount = i;
+        }
 
-                    /* Assign drive */
-                    DPRINT("  %wZ\n",
-                        &UnicodeString2);
-                    HalpAssignDrive(&UnicodeString2,
-                        AUTO_DRIVE,
-                        DOSDEVICE_DRIVE_FIXED,
-                        LayoutArray[DiskNumber]->Signature,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey,
-                        &BootDevice,
-                        NtSystemPath);
-                    /* Mark the partition as assigned */
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
+        /* Query device layout */
+        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        if (!NT_SUCCESS(HalpQueryDriveLayout(&StringU1, &LayoutInfo)))
+        {
+            LayoutInfo = NULL;
+        }
+
+        /* And assign drive letter to logical partitions */
+        for (PartitionCount = 1; ; ++PartitionCount)
+        {
+            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            RtlInitUnicodeString(&StringU1, Buffer);
+            if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+            {
+                break;
+            }
+
+            if (PartitionType == LogicalPartition)
+            {
+                HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, 0);
+            }
+        }
+
+        /* Free layout, we'll reallocate it for next device */
+        if (LayoutInfo != NULL)
+        {
+            ExFreePoolWithTag(LayoutInfo, 0);
+        }
+    }
+
+    /* Now, assign drive letters to everything else */
+    for (i = 0; i < DiskCount; ++i)
+    {
+        /* Get device ID according to derangements map */
+        if (Devices != NULL)
+        {
+            HarddiskCount = Devices[i];
+        }
+        else
+        {
+            HarddiskCount = i;
+        }
+
+        /* Query device layout */
+        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        if (!NT_SUCCESS(HalpQueryDriveLayout(&StringU1, &LayoutInfo)))
+        {
+            LayoutInfo = NULL;
+        }
+
+        /* Save system partition if any */
+        SystemPartition = 0;
+        for (PartitionCount = 1; ; ++PartitionCount)
+        {
+            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            RtlInitUnicodeString(&StringU1, Buffer);
+            if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+            {
+                break;
+            }
+
+            if ((PartitionType == BootablePartition || PartitionType == PrimaryPartition) && (SystemPartition == 0))
+            {
+                SystemPartition = PartitionCount;
+            }
+        }
+
+        /* And assign drive letter to anything but system partition */
+        for (PartitionCount = 1; ; ++PartitionCount)
+        {
+            if (PartitionCount != SystemPartition)
+            {
+                swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+                RtlInitUnicodeString(&StringU1, Buffer);
+                if (!NT_SUCCESS(HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType)))
+                {
+                    if (LayoutInfo != NULL)
+                    {
+                        ExFreePoolWithTag(LayoutInfo, 0);
+                    }
+
+                    break;
+                }
+
+                if (PartitionType == PrimaryPartition || PartitionType == FtPartition)
+                {
+                    HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, 0);
                 }
             }
         }
     }
 
-    /* Assign extended (logical) partitions */
-    DPRINT("Assigning extended (logical) partitions:\n");
-    for (RDisk = 0; RDisk < RDiskCount; RDisk++)
+    /* We're done with disks, if we have a device map, free it */
+    if (Devices != NULL)
     {
-        Status = xHalpGetDiskNumberFromRDisk(RDisk, &DiskNumber);
-        if (NT_SUCCESS(Status) &&
-            DiskNumber < ConfigInfo->DiskCount &&
-            LayoutArray[DiskNumber])
-        {
-            /* Search for extended partitions */
-            for (j = NUM_PARTITION_TABLE_ENTRIES; j < LayoutArray[DiskNumber]->PartitionCount; j++)
-            {
-                if (IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType) &&
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE &&
-                    LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber != 0)
-                {
-                    swprintf(Buffer2,
-                             L"\\Device\\Harddisk%lu\\Partition%lu",
-                             DiskNumber,
-                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
+        ExFreePoolWithTag(Devices, TAG_FSTUB);
+    }
 
-                    /* Assign drive */
-                    DPRINT("  %wZ\n",
-                        &UnicodeString2);
-                    HalpAssignDrive(&UnicodeString2,
-                        AUTO_DRIVE,
-                        DOSDEVICE_DRIVE_FIXED,
-                        LayoutArray[DiskNumber]->Signature,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey,
-                        &BootDevice,
-                        NtSystemPath);
-                    /* Mark the partition as assigned */
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
+    /* Now, assign drive letter to floppy drives */
+    for (i = 0; i < ConfigInfo->FloppyCount; ++i)
+    {
+        swprintf(Buffer, L"\\Device\\Floppy%d", i);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        if (HalpIsOldStyleFloppy(&StringU1))
+        {
+            HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, TRUE);
+        }
+    }
+
+    /* And CD drives */
+    for (i = 0; i < ConfigInfo->CdRomCount; ++i)
+    {
+        swprintf(Buffer, L"\\Device\\CdRom%d", i);
+        RtlInitUnicodeString(&StringU1, Buffer);
+        HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, TRUE);
+    }
+
+    /* If not remote boot, handle NtDeviceName */
+    if (!IoRemoteBootClient && NT_SUCCESS(RtlAnsiStringToUnicodeString(&StringU1, NtDeviceName, TRUE)))
+    {
+        /* Assign it a drive letter */
+        DriveLetter = HalpNextDriveLetter(&StringU1, NULL, NULL, TRUE);
+        if (DriveLetter != 0)
+        {
+            if (DriveLetter != 0xFF)
+            {
+                *NtSystemPath = DriveLetter;
+            }
+        }
+        /* If it fails through mount manager, retry manually */
+        else
+        {
+            RtlInitUnicodeString(&StringU2, L"\\Device\\Floppy");
+            RtlInitUnicodeString(&StringU3, L"\\Device\\CdRom");
+
+            if (RtlPrefixUnicodeString(&StringU2, &StringU1, TRUE))
+            {
+                DriveLetter = 'A';
+            }
+            else if (RtlPrefixUnicodeString(&StringU3, &StringU1, TRUE))
+            {
+                DriveLetter = 'D';
+            }
+            else
+            {
+                DriveLetter = 'C';
+            }
+
+            /* Try any drive letter */
+            while (HalpSetMountLetter(&StringU1, DriveLetter) != STATUS_SUCCESS)
+            {
+                ++DriveLetter;
+
+                if (DriveLetter > 'Z')
+                {
+                    break;
                 }
             }
-        }
-    }
 
-    /* Assign remaining primary partitions without an arc-name */
-    DPRINT("Assigning remaining primary partitions:\n");
-    for (DiskNumber = 0; DiskNumber < ConfigInfo->DiskCount; DiskNumber++)
-    {
-        if (LayoutArray[DiskNumber])
-        {
-            /* Search for primary partitions */
-            for (j = 0; (j < NUM_PARTITION_TABLE_ENTRIES) && (j < LayoutArray[DiskNumber]->PartitionCount); j++)
+            /* If we're beyond Z (ie, no slot left) */
+            if (DriveLetter > 'Z')
             {
-                if (LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE &&
-                    IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType))
-                {
-                    swprintf(Buffer2,
-                             L"\\Device\\Harddisk%lu\\Partition%lu",
-                             DiskNumber,
-                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
-
-                    /* Assign drive */
-                    DPRINT("  %wZ\n",
-                        &UnicodeString2);
-                    HalpAssignDrive(&UnicodeString2,
-                        AUTO_DRIVE,
-                        DOSDEVICE_DRIVE_FIXED,
-                        LayoutArray[DiskNumber]->Signature,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey,
-                        &BootDevice,
-                        NtSystemPath);
-                    /* Mark the partition as assigned */
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
-                }
+                /* Delete Z, and reuse it for system */
+                HalpDeleteMountLetter('Z');
+                HalpSetMountLetter(&StringU1, 'Z');
+                *NtSystemPath = 'Z';
+            }
+            else
+            {
+                /* Return matching drive letter */
+                *NtSystemPath = DriveLetter;
             }
         }
+
+        RtlFreeUnicodeString(&StringU1);
     }
 
-    /* Assign extended (logical) partitions without an arc-name */
-    DPRINT("Assigning extended (logical) partitions:\n");
-    for (DiskNumber = 0; DiskNumber < ConfigInfo->DiskCount; DiskNumber++)
-    {
-        if (LayoutArray[DiskNumber])
-        {
-            /* Search for extended partitions */
-            for (j = NUM_PARTITION_TABLE_ENTRIES; j < LayoutArray[DiskNumber]->PartitionCount; j++)
-            {
-                if (IsRecognizedPartition(LayoutArray[DiskNumber]->PartitionEntry[j].PartitionType) &&
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition == FALSE &&
-                    LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber != 0)
-                {
-                    swprintf(Buffer2,
-                             L"\\Device\\Harddisk%lu\\Partition%lu",
-                             DiskNumber,
-                             LayoutArray[DiskNumber]->PartitionEntry[j].PartitionNumber);
-                    RtlInitUnicodeString(&UnicodeString2, Buffer2);
-
-                    /* Assign drive */
-                    DPRINT("  %wZ\n",
-                        &UnicodeString2);
-                    HalpAssignDrive(&UnicodeString2,
-                        AUTO_DRIVE,
-                        DOSDEVICE_DRIVE_FIXED,
-                        LayoutArray[DiskNumber]->Signature,
-                        LayoutArray[DiskNumber]->PartitionEntry[j].StartingOffset,
-                        hKey,
-                        &BootDevice,
-                        NtSystemPath);
-                    /* Mark the partition as assigned */
-                    LayoutArray[DiskNumber]->PartitionEntry[j].RewritePartition = TRUE;
-                }
-            }
-        }
-    }
-
-    /* Assign removable disk drives */
-    DPRINT("Assigning removable disk drives:\n");
-    for (i = 0; i < ConfigInfo->DiskCount; i++)
-    {
-        if (LayoutArray[i])
-        {
-            /* Search for virtual partitions */
-            if (LayoutArray[i]->PartitionCount == 1 &&
-                LayoutArray[i]->PartitionEntry[0].PartitionType == 0)
-            {
-                swprintf(Buffer2, L"\\Device\\Harddisk%lu\\Partition1", i);
-                RtlInitUnicodeString(&UnicodeString2, Buffer2);
-
-                /* Assign drive */
-                DPRINT("  %wZ\n",
-                    &UnicodeString2);
-                HalpAssignDrive(&UnicodeString2,
-                    AUTO_DRIVE,
-                    DOSDEVICE_DRIVE_REMOVABLE,
-                    0,
-                    RtlConvertLongToLargeInteger(0),
-                    hKey,
-                    &BootDevice,
-                    NtSystemPath);
-            }
-        }
-    }
-
-    /* Free layout array */
-    for (i = 0; i < ConfigInfo->DiskCount; i++)
-    {
-        if (LayoutArray[i] != NULL)
-            ExFreePoolWithTag(LayoutArray[i], TAG_FILE_SYSTEM);
-    }
-    ExFreePoolWithTag(LayoutArray, TAG_FILE_SYSTEM);
-end_assign_disks:
-
-    /* Assign floppy drives */
-    DPRINT("Floppy drives: %lu\n", ConfigInfo->FloppyCount);
-    for (i = 0; i < ConfigInfo->FloppyCount; i++)
-    {
-        swprintf(Buffer1, L"\\Device\\Floppy%lu", i);
-        RtlInitUnicodeString(&UnicodeString1, Buffer1);
-
-        /* Assign drive letters A: or B: or first free drive letter */
-        DPRINT("  %wZ\n",
-            &UnicodeString1);
-        HalpAssignDrive(&UnicodeString1,
-            (i < 2) ? i : AUTO_DRIVE,
-            DOSDEVICE_DRIVE_REMOVABLE,
-            0,
-            RtlConvertLongToLargeInteger(0),
-            hKey,
-            &BootDevice,
-            NtSystemPath);
-    }
-
-    /* Assign cdrom drives */
-    DPRINT("CD-Rom drives: %lu\n", ConfigInfo->CdRomCount);
-    for (i = 0; i < ConfigInfo->CdRomCount; i++)
-    {
-        swprintf(Buffer1, L"\\Device\\CdRom%lu", i);
-        RtlInitUnicodeString(&UnicodeString1, Buffer1);
-
-        /* Assign first free drive letter */
-        DPRINT("  %wZ\n", &UnicodeString1);
-        HalpAssignDrive(&UnicodeString1,
-            AUTO_DRIVE,
-            DOSDEVICE_DRIVE_CDROM,
-            0,
-            RtlConvertLongToLargeInteger(0),
-            hKey,
-            &BootDevice,
-            NtSystemPath);
-    }
-
-    /* Anything else to do? */
-
-    ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
-    ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
-    ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-    if (hKey) ObCloseHandle(hKey, KernelMode);
+    /* Enable auto assignement for mountmgr */
+    HalpEnableAutomaticDriveLetterAssignment();
 }
-
-#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

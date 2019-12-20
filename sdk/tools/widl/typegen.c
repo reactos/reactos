@@ -3639,6 +3639,7 @@ static unsigned int write_type_tfs(FILE *file, int indent,
     case TGT_POINTER:
     {
         enum type_context ref_context;
+        unsigned int toplevel_offset = *typeformat_offset;
         type_t *ref = type_pointer_get_ref(type);
 
         if (context == TYPE_CONTEXT_TOPLEVELPARAM)
@@ -3656,7 +3657,7 @@ static unsigned int write_type_tfs(FILE *file, int indent,
             offset = write_type_tfs(file, indent, attrs, ref, name, ref_context, typeformat_offset);
             if (context == TYPE_CONTEXT_CONTAINER_NO_POINTERS)
                 return 0;
-            return offset;
+            return (context == TYPE_CONTEXT_TOPLEVELPARAM) ? toplevel_offset : offset;
         }
 
         offset = write_type_tfs( file, indent, attrs, type_pointer_get_ref(type), name,

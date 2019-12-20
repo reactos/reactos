@@ -750,7 +750,8 @@ static void test_tiff_24bpp(void)
     static const BYTE expected_data[] = { 0x33,0x22,0x11 };
 
     hr = create_decoder(&tiff_24bpp_data, sizeof(tiff_24bpp_data), &decoder);
-    ok(hr == S_OK, "got %#x\n", hr);
+    ok(hr == S_OK, "Failed to load TIFF image data %#x\n", hr);
+    if (hr != S_OK) return;
     ok(decoder != NULL, "Failed to load TIFF image data\n");
 
     hr = IWICBitmapDecoder_GetFrameCount(decoder, &count);

@@ -33,7 +33,6 @@
 #include "iads.h"
 #include "adshlp.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(activeds);

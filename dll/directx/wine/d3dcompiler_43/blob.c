@@ -19,9 +19,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "d3dcompiler_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dcompiler);
@@ -466,9 +463,55 @@ HRESULT WINAPI D3DStripShader(const void *data, SIZE_T data_size, UINT flags, ID
 
 HRESULT WINAPI D3DReadFileToBlob(const WCHAR *filename, ID3DBlob **contents)
 {
-    FIXME("filename %s, contents %p\n", debugstr_w(filename), contents);
+    struct d3dcompiler_blob *object;
+    SIZE_T data_size;
+    DWORD read_size;
+    HANDLE file;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("filename %s, contents %p.\n", debugstr_w(filename), contents);
+
+    file = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    data_size = GetFileSize(file, NULL);
+    if (data_size == INVALID_FILE_SIZE)
+    {
+        CloseHandle(file);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    if (!(object = heap_alloc_zero(sizeof(*object))))
+    {
+        CloseHandle(file);
+        return E_OUTOFMEMORY;
+    }
+
+    if (FAILED(hr = d3dcompiler_blob_init(object, data_size)))
+    {
+        WARN("Failed to initialize blob, hr %#x.\n", hr);
+        CloseHandle(file);
+        heap_free(object);
+        return hr;
+    }
+
+    if (!ReadFile(file, object->data, data_size, &read_size, NULL) || (read_size != data_size))
+    {
+        WARN("Failed to read file contents.\n");
+        CloseHandle(file);
+        heap_free(object->data);
+        heap_free(object);
+        return E_FAIL;
+    }
+    CloseHandle(file);
+    object->size = read_size;
+
+    *contents = &object->ID3DBlob_iface;
+
+    TRACE("Returning ID3DBlob %p.\n", *contents);
+
+    return S_OK;
 }
 
 HRESULT WINAPI D3DWriteBlobToFile(ID3DBlob* blob, const WCHAR *filename, BOOL overwrite)

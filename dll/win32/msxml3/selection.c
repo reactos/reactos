@@ -831,7 +831,7 @@ HRESULT create_selection(xmlNodePtr node, xmlChar* query, IXMLDOMNodeList **out)
     TRACE("found %d matches\n", xmlXPathNodeSetGetLength(This->result->nodesetval));
 
 cleanup:
-    if (This && FAILED(hr))
+    if (FAILED(hr))
         IXMLDOMSelection_Release( &This->IXMLDOMSelection_iface );
     xmlXPathFreeContext(ctxt);
     return hr;

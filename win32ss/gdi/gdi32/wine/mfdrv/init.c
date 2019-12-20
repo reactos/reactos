@@ -136,6 +136,7 @@ static const struct gdi_dc_funcs MFDRV_Funcs =
     NULL,                            /* pGetCharABCWidths */
     NULL,                            /* pGetCharABCWidthsI */
     NULL,                            /* pGetCharWidth */
+    NULL,                            /* pGetCharWidthInfo */
     MFDRV_GetDeviceCaps,             /* pGetDeviceCaps */
     NULL,                            /* pGetDeviceGammaRamp */
     NULL,                            /* pGetFontData */

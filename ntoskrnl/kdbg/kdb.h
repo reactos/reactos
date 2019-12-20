@@ -12,11 +12,12 @@
 /* from kdb.c */
 typedef struct _KDB_KTRAP_FRAME
 {
-   CONTEXT Tf;
-   ULONG Cr0;
-   ULONG Cr2;
-   ULONG Cr3;
-   ULONG Cr4;
+   KTRAP_FRAME  Tf;
+   ULONG        Cr0;
+   ULONG        Cr1; /* reserved/unused */
+   ULONG        Cr2;
+   ULONG        Cr3;
+   ULONG        Cr4;
 } KDB_KTRAP_FRAME, *PKDB_KTRAP_FRAME;
 
 typedef enum _KDB_BREAKPOINT_TYPE

@@ -209,7 +209,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
             le = le->Flink;
         }
 
-        if (r && r->parent != fcb->subvol->id)
+        if (r && r->parent != fcb->subvol->id && (!de->dc || !de->dc->root_dir))
             r = NULL;
 
         inode = SUBVOL_ROOT_INODE;
@@ -1115,7 +1115,7 @@ static NTSTATUS notify_change_directory(device_extension* Vcb, PIRP Irp) {
 
     // FIXME - raise exception if FCB marked for deletion?
 
-    TRACE("%S\n", file_desc(FileObject));
+    TRACE("FileObject %p\n", FileObject);
 
     if (ccb->filename.Length == 0) {
         ULONG reqlen;

@@ -141,7 +141,8 @@ static void wave_in_test_deviceIn(int device, WAVEFORMATEX *pwfx, DWORD format, 
     DWORD nSamplesPerSec = pwfx->nSamplesPerSec;
 
     win=NULL;
-    rc=waveInOpen(&win,device,pwfx,(DWORD_PTR)hevent,0,CALLBACK_EVENT|flags);
+    flags |= CALLBACK_EVENT;
+    rc=waveInOpen(&win,device,pwfx,(DWORD_PTR)hevent,0,flags);
     /* Note: Win9x doesn't know WAVE_FORMAT_DIRECT */
     ok(rc==MMSYSERR_NOERROR || rc==MMSYSERR_BADDEVICEID ||
        rc==MMSYSERR_NOTENABLED || rc==MMSYSERR_NODRIVER ||
@@ -154,8 +155,7 @@ static void wave_in_test_deviceIn(int device, WAVEFORMATEX *pwfx, DWORD format, 
        (rc==MMSYSERR_INVALFLAG && (flags & WAVE_FORMAT_DIRECT)),
        "waveInOpen(%s): format=%dx%2dx%d flags=%x(%s) rc=%s\n",
        dev_name(device),pwfx->nSamplesPerSec,pwfx->wBitsPerSample,
-       pwfx->nChannels,CALLBACK_EVENT|flags,
-       wave_open_flags(CALLBACK_EVENT|flags),wave_in_error(rc));
+       pwfx->nChannels,flags,wave_open_flags(flags),wave_in_error(rc));
     if ((rc==WAVERR_BADFORMAT || rc==MMSYSERR_NOTSUPPORTED) &&
        (flags & WAVE_FORMAT_DIRECT) && (pcaps->dwFormats & format))
         trace(" Reason: The device lists this format as supported in its "
@@ -261,10 +261,9 @@ static void wave_in_test_deviceIn(int device, WAVEFORMATEX *pwfx, DWORD format, 
            rc==MMSYSERR_ALLOCATED ||
            ((rc==WAVERR_BADFORMAT || rc==MMSYSERR_NOTSUPPORTED) &&
             !(pcaps->dwFormats & format)),
-           "waveOutOpen(%s) format=%dx%2dx%d flags=%x(%s) rc=%s\n",
+           "waveOutOpen(%s) format=%dx%2dx%d flags=CALLBACK_EVENT rc=%s\n",
            dev_name(device),pwfx->nSamplesPerSec,pwfx->wBitsPerSample,
-           pwfx->nChannels,CALLBACK_EVENT|flags,
-           wave_open_flags(CALLBACK_EVENT),wave_out_error(rc));
+           pwfx->nChannels,wave_out_error(rc));
         if (rc==MMSYSERR_NOERROR)
         {
             rc=waveOutPrepareHeader(wout, &frag, sizeof(frag));
@@ -398,7 +397,7 @@ static void wave_in_test_device(UINT_PTR device)
 
     HeapFree(GetProcessHeap(), 0, nameA);
 
-    for (f=0;f<NB_WIN_FORMATS;f++) {
+    for (f = 0; f < ARRAY_SIZE(win_formats); f++) {
         format.wFormatTag=WAVE_FORMAT_PCM;
         format.nChannels=win_formats[f][3];
         format.wBitsPerSample=win_formats[f][2];
@@ -660,6 +659,16 @@ static void wave_in_tests(void)
     if(rc != MMSYSERR_NOTSUPPORTED)
         ok((ndev == 0 && (preferred == -1 || broken(preferred != -1))) ||
                 preferred < ndev, "Got invalid preferred device: 0x%x\n", preferred);
+
+    rc = waveInMessage((HWAVEIN)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+         (DWORD_PTR)-1  , 0);
+    ok(rc == MMSYSERR_INVALPARAM || rc == MMSYSERR_BADDEVICEID, /* w2008+wvista */
+       "waveInMessage(DRVM_MAPPER_PREFERRED_GET) failed: %u\n", rc);
+
+    rc = waveInMessage((HWAVEIN)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+         0, (DWORD_PTR)&status);
+    ok(rc == MMSYSERR_INVALPARAM || rc == MMSYSERR_BADDEVICEID, /* w2008+wvista */
+       "waveInMessage(DRVM_MAPPER_PREFERRED_GET) failed: %u\n", rc);
 
     rc=waveInGetDevCapsA(ndev+1,&capsA,sizeof(capsA));
     ok(rc==MMSYSERR_BADDEVICEID,

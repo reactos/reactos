@@ -157,8 +157,8 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
     ULONG Length, TotalSectors, MaxSectors, ReadSectors;
-    BOOLEAN ret;
     ULONGLONG SectorOffset;
+    BOOLEAN ret;
 
     ASSERT(DiskReadBufferSize > 0);
 
@@ -197,7 +197,8 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         TotalSectors -= ReadSectors;
     }
 
-    *Count = (ULONG)(Ptr - (UCHAR*)Buffer);
+    *Count = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)Buffer);
+    Context->SectorNumber = SectorOffset - Context->SectorOffset;
 
     return (!ret) ? EIO : ESUCCESS;
 }

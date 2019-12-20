@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
+
 #define NONAMELESSUNION
 
 #include "ieframe.h"
@@ -111,7 +115,7 @@ static void set_status_text(BindStatusCallback *This, ULONG statuscode, LPCWSTR 
         fmt[0] = 0;
         /* the format string must have one "%s" for the str */
         LoadStringW(ieframe_instance, IDS_STATUSFMT_FIRST + statuscode, fmt, IDS_STATUSFMT_MAXLEN);
-        snprintfW(buffer, ARRAY_SIZE(buffer), fmt, str);
+        swprintf(buffer, fmt, str);
     }
 
     V_VT(&arg) = VT_BSTR;
@@ -150,6 +154,7 @@ void notify_download_state(DocHost *dochost, BOOL is_downloading)
 {
     DISPPARAMS dwl_dp = {NULL};
     TRACE("(%x)\n", is_downloading);
+    dochost->busy = is_downloading ? VARIANT_TRUE : VARIANT_FALSE;
     call_sink(dochost->cps.wbe2, is_downloading ? DISPID_DOWNLOADBEGIN : DISPID_DOWNLOADCOMPLETE, &dwl_dp);
 }
 
@@ -465,7 +470,7 @@ static HRESULT WINAPI HttpNegotiate_BeginningTransaction(IHttpNegotiate *iface,
           dwReserved, pszAdditionalHeaders);
 
     if(This->headers) {
-        int size = (strlenW(This->headers)+1)*sizeof(WCHAR);
+        int size = (lstrlenW(This->headers)+1)*sizeof(WCHAR);
         *pszAdditionalHeaders = CoTaskMemAlloc(size);
         memcpy(*pszAdditionalHeaders, This->headers, size);
     }
@@ -582,8 +587,6 @@ static void on_before_navigate2(DocHost *This, LPCWSTR url, SAFEARRAY *post_data
     dispparams.cNamedArgs = 0;
     dispparams.rgdispidNamedArgs = NULL;
     dispparams.rgvarg = params;
-
-    This->busy = VARIANT_TRUE;
 
     V_VT(params) = VT_BOOL|VT_BYREF;
     V_BOOLREF(params) = cancel;
@@ -888,6 +891,8 @@ static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mo
     }
 
     notify_download_state(This, TRUE);
+    This->busy = VARIANT_FALSE;
+
     on_commandstate_change(This, CSC_NAVIGATEBACK, FALSE);
     on_commandstate_change(This, CSC_NAVIGATEFORWARD, FALSE);
 

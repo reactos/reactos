@@ -1544,6 +1544,11 @@ static LRESULT CompressEnd(CodecInfo *pi)
     pi->pCurFrame  = NULL;
     pi->nPrevFrame = -1;
     pi->bCompress  = FALSE;
+
+    if (pi->palette_map != NULL) {
+        LocalFree(pi->palette_map);
+        pi->palette_map = NULL;
+    }
   }
 
   return ICERR_OK;

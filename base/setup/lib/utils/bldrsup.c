@@ -1150,7 +1150,7 @@ QueryBootStoreOptions(
     //
 
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-    if (BootStore->Type != FreeLdr || BootStore->Type != NtLdr)
+    if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
     {
         DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
         return STATUS_NOT_SUPPORTED;

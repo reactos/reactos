@@ -46,5 +46,8 @@ IDI_ICON_UTILMAN ICON "res/utilman.ico"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
 
 /* EOF */

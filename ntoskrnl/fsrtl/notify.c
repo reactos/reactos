@@ -681,7 +681,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                 }
 
                 /* Finally, free the notification, as it's not needed anymore */
-                ExFreePoolWithTag(NotifyChange, 'FSrN');
+                ExFreePoolWithTag(NotifyChange, 'NrSF');
             }
         }
     }
@@ -842,7 +842,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
 
         /* Allocate new notification */
         NotifyChange = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                             sizeof(NOTIFY_CHANGE), 'FSrN');
+                                             sizeof(NOTIFY_CHANGE), 'NrSF');
         RtlZeroMemory(NotifyChange, sizeof(NOTIFY_CHANGE));
 
         /* Set basic information */
@@ -1565,7 +1565,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
     *NotifySync = NULL;
 
     RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                           sizeof(REAL_NOTIFY_SYNC), 'FSNS');
+                                           sizeof(REAL_NOTIFY_SYNC), 'SNSF');
     ExInitializeFastMutex(&(RealNotifySync->FastMutex));
     RealNotifySync->OwningThread = 0;
     RealNotifySync->OwnerCount = 0;
@@ -1640,7 +1640,7 @@ FsRtlNotifyUninitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
     if (*NotifySync)
     {
-        ExFreePoolWithTag(*NotifySync, 'FSNS');
+        ExFreePoolWithTag(*NotifySync, 'SNSF');
         *NotifySync = NULL;
     }
 }

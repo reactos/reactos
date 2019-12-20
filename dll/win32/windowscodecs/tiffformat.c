@@ -289,6 +289,7 @@ static HRESULT tiff_get_decode_info(TIFF *tiff, tiff_decode_info *decode_info)
     decode_info->reverse_bgr = 0;
     decode_info->invert_grayscale = 0;
     decode_info->tiled = 0;
+    decode_info->source_bpp = 0;
 
     ret = pTIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &photometric);
     if (!ret)

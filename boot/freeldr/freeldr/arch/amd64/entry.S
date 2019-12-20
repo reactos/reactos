@@ -1,6 +1,7 @@
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
+#include <arch/pc/pcbios.h>
 
 EXTERN BootMain:PROC
 // EXTERN cmdline:DWORD
@@ -75,50 +76,71 @@ Reboot:
     /* Stop the floppy drive motor */
     call DiskStopFloppyMotor
 
-    /* Set the function ID */
+    /* Set the function ID and switch to real mode (we don't return) */
     mov bx, FNID_Reboot
-
-    /* Switch to real mode (we don't return) */
     jmp SwitchToReal
 
 
 /*
- * VOID __cdecl ChainLoadBiosBootSectorCode(
- *     IN UCHAR BootDrive OPTIONAL,
- *     IN ULONG BootPartition OPTIONAL);
+ * VOID __cdecl Relocator16Boot(
+ *     IN REGS*  In<rcx>,
+ *     IN USHORT StackSegment<dx>,
+ *     IN USHORT StackPointer<r8w>,
+ *     IN USHORT CodeSegment<r9w>,
+ *     IN USHORT CodePointer<rsp+40>);
  *
- * RETURNS: Nothing
+ * RETURNS: Nothing.
+ *
+ * NOTE: The implementation of this function is similar to that of Int386(),
+ * with the proviso that no attempt is done to save the original values of
+ * the registers since we will not need them anyway, as we do not return back
+ * to the caller but instead place the machine in a permanent new CPU state.
  */
-PUBLIC ChainLoadBiosBootSectorCode
-ChainLoadBiosBootSectorCode:
-    /* Set the boot drive */
-    mov dl, [esp + 4]
-    test dl, dl
-    jnz set_part
-    mov dl, byte ptr [FrldrBootDrive]
+PUBLIC Relocator16Boot
+Relocator16Boot:
 
-    /* Set the boot partition */
-set_part:
-    mov eax, [esp + 8]
-    test eax, eax
-    jnz continue
-    mov eax, dword ptr [FrldrBootPartition]
-continue:
-    /* Store the 1-byte truncated partition number in DH */
-    mov dh, al
+    /* Save home registers */
+    mov qword ptr [rsp +  8], rcx
+    mov  word ptr [rsp + 16], dx
+    mov  word ptr [rsp + 24], r8w
+    mov  word ptr [rsp + 32], r9w
+
+#if 0
+    /* Save non-volatile registers */
+    push rbx
+    push rsi
+    push rdi
+#endif
+
+    /* Copy input registers */
+    mov rsi, qword ptr [rsp + 8]
+    mov rdi, BSS_RegisterSet
+    mov rcx, REGS_SIZE / 4
+    rep movsd
+
+    /* Set the stack segment/offset */
+    // Since BSS_CallbackReturn contains a ULONG, store in its high word
+    // the stack segment and in its low word the stack offset.
+    mov ax, word ptr [rsp + 16]
+    shl eax, 16
+    mov ax, word ptr [rsp + 24]
+    mov dword ptr [BSS_CallbackReturn], eax
 
     /*
-     * Don't stop the floppy drive motor when we are just booting a bootsector,
-     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
-     * wouldn't be informed and if the next read is to a floppy then the BIOS
-     * will still think the motor is on and this will result in a read error.
+     * Set the code segment/offset (Copy entry point)
+     * NOTE: We permanently *ERASE* the contents of ds:[BSS_RealModeEntry]
+     * but it is not a problem since we are going to place the machine in
+     * a permanent new CPU state.
      */
-    // call DiskStopFloppyMotor
+    // Since BSS_RealModeEntry contains a ULONG, store in its high word
+    // the code segment and in its low word the code offset.
+    mov ax, word ptr [rsp + 32]
+    shl eax, 16
+    mov ax, word ptr [rsp + 40]
+    mov dword ptr [BSS_RealModeEntry], eax
 
-    /* Set the function ID */
-    mov bx, FNID_ChainLoadBiosBootSectorCode
-
-    /* Switch to real mode (we don't return) */
+    /* Set the function ID and switch to real mode (we don't return) */
+    mov bx, FNID_Relocator16Boot
     jmp SwitchToReal
 
 
@@ -166,7 +188,7 @@ jumpvector:
     .word CMODE_CS
 
 SwitchToRealCompSegment:
-    /* Note: In fact the CPU is in 32 bit mode here. But it will interprete
+    /* Note: In fact the CPU is in 32 bit mode here. But it will interpret
        the generated instructions accordingly. rax will become eax */
 
     /* Step 2 - deactivate long mode, by disabling paging */
@@ -191,16 +213,28 @@ CallRealMode_return:
 /////////////////////////////////////////
 
 
-//void __lgdt(void *Source);
+// void __fastfail(unsigned int Code<rcx>);
+PUBLIC __fastfail
+__fastfail:
+    // mov ecx, [rsp + 4]
+    int HEX(29)
+
+// void __lgdt(void *Source<rcx>);
 PUBLIC __lgdt
 __lgdt:
     lgdt fword ptr [rcx]
     ret
 
-//void __ltr(unsigned short Source);
+// void __ltr(unsigned short Source<rcx>);
 PUBLIC __ltr
 __ltr:
     ltr cx
+    ret
+
+// void _sgdt(void *Destination<rcx>);
+PUBLIC __sgdt
+__sgdt:
+    sgdt fword ptr [rcx]
     ret
 
 

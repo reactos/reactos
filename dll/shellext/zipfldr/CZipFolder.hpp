@@ -370,7 +370,7 @@ public:
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
-            pqcminfo->indexMenu += HRESULT_CODE(hr);
+            pqcminfo->idCmdFirst += HRESULT_CODE(hr);
             return S_OK;
         }
         case DFM_INVOKECOMMAND:
@@ -523,7 +523,7 @@ public:
     }
     STDMETHODIMP QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
-        int Entries = 0;
+        UINT idCmd = idCmdFirst;
 
         if (!(uFlags & CMF_DEFAULTONLY))
         {
@@ -532,17 +532,15 @@ public:
             if (indexMenu)
             {
                 InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-                Entries++;
             }
-            InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_STRING, idCmdFirst++, menuText);
-            Entries++;
+            InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_STRING, idCmd++, menuText);
         }
 
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Entries);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, idCmd - idCmdFirst);
     }
 
     // *** IShellExtInit methods ***
-    STDMETHODIMP Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID)
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID)
     {
         FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
         STGMEDIUM stg;

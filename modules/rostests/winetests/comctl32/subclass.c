@@ -273,6 +273,9 @@ static void test_subclass(void)
     ret = pSetWindowSubclass(hwnd, NULL, 1, 0);
     ok(ret == FALSE, "Expected FALSE\n");
 
+    pRemoveWindowSubclass(hwnd, wnd_proc_sub, 2);
+    pRemoveWindowSubclass(hwnd, wnd_proc_sub, 5);
+
     DestroyWindow(hwnd);
 }
 

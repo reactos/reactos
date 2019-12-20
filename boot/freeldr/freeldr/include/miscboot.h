@@ -19,7 +19,7 @@
 
 #pragma once
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 ARC_STATUS
 LoadAndBootDevice(
@@ -27,4 +27,4 @@ LoadAndBootDevice(
     IN PCHAR Argv[],
     IN PCHAR Envp[]);
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */

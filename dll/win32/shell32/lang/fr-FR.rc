@@ -769,6 +769,15 @@ BEGIN
     IDS_PASTE "Insérer"
     IDS_EJECT "Éjecter"
     IDS_DISCONNECT "Déconnecter"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le dossier '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossible de créer un dossier"
@@ -814,8 +823,8 @@ BEGIN
     IDS_PERSONAL "Mes documents"
     IDS_FAVORITES "Favoris"
     IDS_STARTUP "Menu Démarrer\\Programmes\\Démarrage"
-    IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
+    IDS_RECENT "Récent"
+    IDS_SENDTO "Envoyer vers"
     IDS_STARTMENU "Menu Démarrer"
     IDS_MYMUSIC "Ma musique"
     IDS_MYVIDEO "Mes vidéos"
@@ -872,6 +881,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Impossible d'éjecter le média (code d'erreur : %lu)."
     IDS_CANTSHOWPROPERTIES "Impossible de montrer les propriétés (code d'erreur : %lu)."
     IDS_CANTDISCONNECT "Impossible de déconnecter (code d'erreur : %lu)."
+    IDS_NONE "(aucun)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dossier"
@@ -908,6 +918,7 @@ BEGIN
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"
     IDS_PRINT_VERB "Imprimer"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fichiers, %u répertoires"
     IDS_PRINTERS "Imprimantes"

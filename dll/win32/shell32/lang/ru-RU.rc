@@ -776,6 +776,15 @@ BEGIN
     IDS_PASTE "Вставить"
     IDS_EJECT "Извлечь"
     IDS_DISCONNECT "Отсоединить"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
     IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
@@ -879,6 +888,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Не удалось извлечь носитель (код ошибки: %lu)."
     IDS_CANTSHOWPROPERTIES "Не удалось вывести свойства (код ошибки: %lu)."
     IDS_CANTDISCONNECT "Не удалось отсоединить сетевой диск (код ошибки: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка с файлами"
@@ -915,6 +925,7 @@ BEGIN
     IDS_EDIT_VERB "Изменить"
     IDS_FIND_VERB "Поиск"
     IDS_PRINT_VERB "Печать"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u файлов, %u папок"
     IDS_PRINTERS "Принтеры"

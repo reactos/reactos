@@ -71,13 +71,15 @@ static void test_connect(HINTERNET hInternet)
      */
 
     SetLastError(0xdeadbeef);
-    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", NULL, INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
+    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     if (hFtp)  /* some servers accept an empty password */
     {
+        ros_skip_flaky
         ok ( GetLastError() == ERROR_SUCCESS, "ERROR_SUCCESS, got %d\n", GetLastError());
         InternetCloseHandle(hFtp);
     }
     else
+        ros_skip_flaky
         ok ( GetLastError() == ERROR_INTERNET_LOGIN_FAILURE,
              "Expected ERROR_INTERNET_LOGIN_FAILURE, got %d\n", GetLastError());
 
@@ -109,7 +111,9 @@ static void test_connect(HINTERNET hInternet)
         SetLastError(0xdeadbeef);
         hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     }
+    ros_skip_flaky
     ok ( hFtp != NULL, "InternetConnect failed : %d\n", GetLastError());
+    ros_skip_flaky
     ok ( GetLastError() == ERROR_SUCCESS,
         "ERROR_SUCCESS, got %d\n", GetLastError());
     InternetCloseHandle(hFtp);
@@ -119,11 +123,13 @@ static void test_connect(HINTERNET hInternet)
             INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     if (!hFtp)
     {
+        ros_skip_flaky
         ok(GetLastError() == ERROR_INTERNET_LOGIN_FAILURE,
                 "Expected ERROR_INTERNET_LOGIN_FAILURE, got %d\n", GetLastError());
     }
     else
     {
+        ros_skip_flaky
         ok(GetLastError() == ERROR_SUCCESS,
                 "Expected ERROR_SUCCESS, got %d\n", GetLastError());
         InternetCloseHandle(hFtp);
@@ -701,7 +707,7 @@ static void test_renamefile(HINTERNET hFtp, HINTERNET hConnect)
         "Expected ERROR_INTERNET_INCORRECT_HANDLE_TYPE, got %d\n", GetLastError());
 }
 
-static void test_command(HINTERNET hFtp, HINTERNET hConnect)
+static void test_command(HINTERNET hFtp)
 {
     BOOL ret;
     DWORD error;
@@ -716,17 +722,18 @@ static void test_command(HINTERNET hFtp, HINTERNET hConnect)
     {
         { FALSE, ERROR_INVALID_PARAMETER,       NULL },
         { FALSE, ERROR_INVALID_PARAMETER,       "" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "HELO" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "SIZE " },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, " SIZE" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "SIZE " },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "SIZE /welcome.msg /welcome.msg" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "SIZE  /welcome.msg" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "SIZE /welcome.msg " },
-        { TRUE,  ERROR_SUCCESS,                 "SIZE\t/welcome.msg" },
-        { TRUE,  ERROR_SUCCESS,                 "SIZE /welcome.msg" },
-        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "PWD /welcome.msg" },
-        { TRUE,  ERROR_SUCCESS,                 "PWD" }
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "invalid" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size" },
+        { TRUE,  ERROR_SUCCESS,                 "type i" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size " },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, " size" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size " },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size welcome.msg welcome.msg" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size  welcome.msg" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "size welcome.msg " },
+        { TRUE,  ERROR_SUCCESS,                 "size welcome.msg" },
+        { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "pwd welcome.msg" },
+        { TRUE,  ERROR_SUCCESS,                 "pwd" }
     };
 
     if (!pFtpCommandA)
@@ -735,7 +742,7 @@ static void test_command(HINTERNET hFtp, HINTERNET hConnect)
         return;
     }
 
-    for (i = 0; i < sizeof(command_test) / sizeof(command_test[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(command_test); i++)
     {
         SetLastError(0xdeadbeef);
         ret = pFtpCommandA(hFtp, FALSE, FTP_TRANSFER_TYPE_ASCII, command_test[i].cmd, 0, NULL);
@@ -964,7 +971,7 @@ static void test_status_callbacks(HINTERNET hInternet)
     cb = pInternetSetStatusCallbackA(hInternet, status_callback);
     ok(cb == NULL, "expected NULL got %p\n", cb);
 
-    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", NULL,
+    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@",
                            INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 1);
     if (!hFtp)
     {
@@ -998,7 +1005,7 @@ START_TEST(ftp)
     hInternet = InternetOpenA("winetest", 0, NULL, NULL, 0);
     ok(hInternet != NULL, "InternetOpen failed: %u\n", GetLastError());
 
-    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", NULL, INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
+    hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
     if (!hFtp)
     {
         InternetCloseHandle(hInternet);
@@ -1031,7 +1038,7 @@ START_TEST(ftp)
     test_putfile(hFtp, hHttp);
     test_removedir(hFtp, hHttp);
     test_renamefile(hFtp, hHttp);
-    test_command(hFtp, hHttp);
+    test_command(hFtp);
     test_find_first_file(hFtp, hHttp);
     test_get_current_dir(hFtp, hHttp);
     test_status_callbacks(hInternet);

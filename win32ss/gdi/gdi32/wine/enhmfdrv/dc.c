@@ -858,6 +858,7 @@ static const struct gdi_dc_funcs emfpath_driver =
     NULL,                               /* pGetCharABCWidths */
     NULL,                               /* pGetCharABCWidthsI */
     NULL,                               /* pGetCharWidth */
+    NULL,                               /* pGetCharWidthInfo */
 #ifdef __REACTOS__
     EMFDRV_GetDeviceCaps, //// Work around HACK.
 #else

@@ -160,6 +160,7 @@ struct _SearchData
     CStringW szFileName;
     CStringA szQueryA;
     CStringW szQueryW;
+    BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
 };
 
@@ -235,6 +236,33 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     return uMatches;
 }
 
+static BOOL FileNameMatch(LPCWSTR FindDataFileName, _SearchData *pSearchData)
+{
+    if (pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindDataFileName, pSearchData->szFileName))
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static BOOL ContentsMatch(LPCWSTR szPath, _SearchData *pSearchData)
+{
+    if (pSearchData->szQueryA.IsEmpty() || SearchFile(szPath, pSearchData))
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static BOOL AttribHiddenMatch(DWORD FileAttributes, _SearchData *pSearchData)
+{
+    if (!(FileAttributes & FILE_ATTRIBUTE_HIDDEN) || (pSearchData->SearchHidden))
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 {
     if (WaitForSingleObject(pSearchData->hStopEvent, 0) != WAIT_TIMEOUT)
@@ -260,13 +288,20 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             CStringW status;
+            if (FileNameMatch(FindData.cFileName, pSearchData)
+                && AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
+            {
+                PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
+                uTotalFound++;
+            }
             status.Format(IDS_SEARCH_FOLDER, FindData.cFileName);
             PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
 
             uTotalFound += RecursiveFind(szPath, pSearchData);
         }
-        else if ((pSearchData->szFileName.IsEmpty() || PathMatchSpecW(FindData.cFileName, pSearchData->szFileName))
-                && (pSearchData->szQueryA.IsEmpty() || SearchFile(szPath, pSearchData)))
+        else if (FileNameMatch(FindData.cFileName, pSearchData)
+                && AttribHiddenMatch(FindData.dwFileAttributes, pSearchData)
+                && ContentsMatch(szPath, pSearchData))
         {
             uTotalFound++;
             PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
@@ -319,6 +354,11 @@ void CFindFolder::NotifyConnections(DISPID id)
 
 LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    HKEY hkey;
+    DWORD size = sizeof(DWORD);
+    DWORD result;
+    DWORD SearchHiddenValue = 0;
+
     if (!lParam)
         return 0;
 
@@ -335,7 +375,35 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     pSearchData->szFileName = pSearchParams->szFileName;
     pSearchData->szQueryA = pSearchParams->szQuery;
     pSearchData->szQueryW = pSearchParams->szQuery;
+    pSearchData->SearchHidden = pSearchParams->SearchHidden;
     SHFree(pSearchParams);
+
+    TRACE("pSearchParams->SearchHidden is '%d'.\n", pSearchData->SearchHidden);
+
+    if (pSearchData->SearchHidden)
+        SearchHiddenValue = 1;
+    else
+        SearchHiddenValue = 0;
+
+    /* Placing the code to save the changed settings to the registry here has the effect of not saving any changes */
+    /* to the registry unless the user clicks on the "Search" button. This is the same as what we see in Windows.  */
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", 0, KEY_SET_VALUE, &hkey);
+    if (result == ERROR_SUCCESS)
+    {
+        if (RegSetValueExW(hkey, L"SearchHidden", NULL, REG_DWORD, (const BYTE*)&SearchHiddenValue, size) == ERROR_SUCCESS)
+        {
+            TRACE("SearchHidden is '%d'.\n", SearchHiddenValue);
+        }
+        else
+        {
+            ERR("RegSetValueEx for \"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SearchHidden\" Failed.\n");
+        }
+        RegCloseKey(hkey);
+    }
+    else
+    {
+        ERR("RegOpenKey for \"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" Failed.\n");
+    }
 
     if (m_hStopEvent)
         SetEvent(m_hStopEvent);
@@ -550,8 +618,10 @@ class CFindFolderContextMenu :
                 CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(_ILGetPath(apidl[i])));
                 if (!folderPidl)
                     return E_OUTOFMEMORY;
-                LPCITEMIDLIST pidl = _ILGetFSPidl(apidl[i]);
-                SHOpenFolderAndSelectItems(folderPidl, 1, &pidl, 0);
+                CComHeapPtr<ITEMIDLIST> filePidl(ILCombine(folderPidl, _ILGetFSPidl(apidl[i])));
+                if (!filePidl)
+                    return E_OUTOFMEMORY;
+                SHOpenFolderAndSelectItems(folderPidl, 1, &filePidl, 0);
             }
             return S_OK;
         }

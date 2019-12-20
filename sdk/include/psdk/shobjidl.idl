@@ -83,8 +83,8 @@ interface IPersistFolder2 : IPersistFolder
 ]
 interface IPersistIDList : IPersist
 {
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
-    HRESULT GetIDList( [out] LPITEMIDLIST *ppidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE *ppidl );
 }
 
 
@@ -176,7 +176,12 @@ interface IShellFolder : IUnknown
         SHCONTF_INIT_ON_FIRST_NEXT = 256,
         SHCONTF_NETPRINTERSRCH = 512,
         SHCONTF_SHAREABLE = 1024,
-        SHCONTF_STORAGE = 2048
+        SHCONTF_STORAGE = 2048,
+        SHCONTF_NAVIGATION_ENUM = 0x01000,
+        SHCONTF_FASTITEMS = 0x02000,
+        SHCONTF_FLATLIST = 0x04000,
+        SHCONTF_ENABLE_ASYNC = 0x08000,
+        SHCONTF_INCLUDESUPERHIDDEN = 0x10000
     };
 
     typedef DWORD SHCONTF;
@@ -1139,9 +1144,9 @@ interface IShellLinkA : IUnknown
         [in, out, unique] WIN32_FIND_DATAA *pfd,
         [in] DWORD fFlags);
 
-    HRESULT GetIDList( [out] LPITEMIDLIST * ppidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE * ppidl );
 
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
 
     HRESULT GetDescription(
         [out, size_is(cch)] LPSTR pszName,
@@ -1206,9 +1211,9 @@ interface IShellLinkW : IUnknown
         [in, out] WIN32_FIND_DATAW *pfd,
         [in] DWORD fFlags);
 
-    HRESULT GetIDList( [out] LPITEMIDLIST * ppidl );
+    HRESULT GetIDList( [out] PIDLIST_ABSOLUTE * ppidl );
 
-    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
+    HRESULT SetIDList( [in] PCIDLIST_ABSOLUTE pidl );
 
     HRESULT GetDescription(
         [out, size_is(cch)] LPWSTR pszName,
@@ -1273,7 +1278,7 @@ interface IShellExtInit : IUnknown
     typedef IShellExtInit *LPSHELLEXTINIT;
 
     HRESULT Initialize(
-        [in] LPCITEMIDLIST pidlFolder,
+        [in] PCIDLIST_ABSOLUTE pidlFolder,
         [in] IDataObject *pdtobj,
         [in] HKEY hkeyProgID);
 }
@@ -4743,6 +4748,24 @@ interface IUserNotification2 : IUnknown
 
     HRESULT PlaySound(
         [in, string] LPCWSTR pszSoundName);
+};
+
+/*****************************************************************************
+ * IItemNameLimits interface
+ */
+
+[
+    uuid(1df0d7f1-b267-4d28-8b10-12e23202a5c4)
+]
+interface IItemNameLimits : IUnknown 
+{
+    HRESULT GetValidCharacters(
+        [out, string] LPWSTR *ppwszValidChars,
+        [out, string] LPWSTR *ppwszInvalidChars);
+
+    HRESULT GetMaxLength(
+        [in, string] LPCWSTR pszName,
+        [out] int *piMaxNameLen);
 };
 
 #endif // __REACTOS__

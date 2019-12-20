@@ -285,6 +285,45 @@ InitVideo(VOID)
     return STATUS_SUCCESS;
 }
 
+VOID
+UserRefreshDisplay(IN PPDEVOBJ ppdev)
+{
+    ULONG_PTR ulResult;
+    // PVOID pvOldCursor;
+
+    // TODO: Re-enable the cursor reset code once this function becomes called
+    // from within a Win32 thread... Indeed UserSetCursor() requires this, but
+    // at the moment this function is directly called from a separate thread
+    // from within videoprt, instead of by a separate win32k system thread.
+
+    if (!ppdev)
+        return;
+
+    PDEVOBJ_vReference(ppdev);
+
+    /* Remove mouse pointer */
+    // pvOldCursor = UserSetCursor(NULL, TRUE);
+
+    /* Do the mode switch -- Use the actual same current mode */
+    ulResult = PDEVOBJ_bSwitchMode(ppdev, ppdev->pdmwDev);
+    ASSERT(ulResult);
+
+    /* Restore mouse pointer, no hooks called */
+    // pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
+    // ASSERT(pvOldCursor == NULL);
+
+    /* Update the system metrics */
+    InitMetrics();
+
+    /* Set new size of the monitor */
+    // UserUpdateMonitorSize((HDEV)ppdev);
+
+    //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
+    UserRedrawDesktop();
+
+    PDEVOBJ_vRelease(ppdev);
+}
+
 NTSTATUS
 NTAPI
 UserEnumDisplayDevices(
@@ -557,7 +596,7 @@ UserEnumRegistryDisplaySettings(
         ZwClose(hkey);
         return STATUS_SUCCESS;
     }
-    return Status ;
+    return Status;
 }
 
 NTSTATUS
@@ -674,6 +713,7 @@ NtUserEnumDisplaySettings(
 
     return Status;
 }
+
 VOID
 UserUpdateFullscreen(
     DWORD flags)
@@ -781,6 +821,13 @@ UserChangeDisplaySettings(
             ERR("Could not open registry key\n");
             lResult = DISP_CHANGE_NOTUPDATED;
         }
+    }
+
+    /* Check if DEVMODE matches the current mode */
+    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
+    {
+        ERR("DEVMODE matches, nothing to do\n");
+        goto leave;
     }
 
     /* Shall we apply the settings? */
@@ -926,6 +973,11 @@ NtUserChangeDisplaySettings(
         return DISP_CHANGE_BADFLAGS;
     }
 
+    if ((dwflags & CDS_RESET) && (dwflags & CDS_NORESET))
+    {
+        return DISP_CHANGE_BADFLAGS;
+    }
+
     /* Copy the device name */
     if (pustrDevice)
     {
@@ -1000,4 +1052,3 @@ NtUserChangeDisplaySettings(
 
     return lRet;
 }
-

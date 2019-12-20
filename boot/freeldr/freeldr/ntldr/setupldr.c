@@ -17,7 +17,10 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 #define TAG_BOOT_OPTIONS 'pOtB'
 
 // TODO: Move to .h
-VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
+VOID
+AllocateAndInitLPB(
+    IN USHORT VersionToBoot,
+    OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock);
 
 static VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
@@ -74,6 +77,48 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR S
 
     /* TODO: Load OEM HAL font */
     // Value "OemHalFont"
+}
+
+static
+BOOLEAN
+SetupLdrInitErrataInf(
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN HINF InfHandle,
+    IN PCSTR SystemRoot)
+{
+    INFCONTEXT InfContext;
+    PCSTR FileName;
+    ULONG FileSize;
+    PVOID PhysicalBase;
+    CHAR ErrataFilePath[MAX_PATH];
+
+    /* Retrieve the INF file name value */
+    if (!InfFindFirstLine(InfHandle, "BiosInfo", "InfName", &InfContext))
+    {
+        WARN("Failed to find 'BiosInfo/InfName'\n");
+        return FALSE;
+    }
+    if (!InfGetDataField(&InfContext, 1, &FileName))
+    {
+        WARN("Failed to read 'InfName' value\n");
+        return FALSE;
+    }
+
+    RtlStringCbCopyA(ErrataFilePath, sizeof(ErrataFilePath), SystemRoot);
+    RtlStringCbCatA(ErrataFilePath, sizeof(ErrataFilePath), FileName);
+
+    /* Load the INF file */
+    PhysicalBase = WinLdrLoadModule(ErrataFilePath, &FileSize, LoaderRegistryData);
+    if (!PhysicalBase)
+    {
+        WARN("Could not load '%s'\n", ErrataFilePath);
+        return FALSE;
+    }
+
+    LoaderBlock->Extension->EmInfFileImage = PaToVa(PhysicalBase);
+    LoaderBlock->Extension->EmInfFileSize  = FileSize;
+
+    return TRUE;
 }
 
 static VOID
@@ -239,17 +284,13 @@ LoadReactOSSetup(
     File = strstr(BootOptions2, "/RDPATH=");
     if (File)
     {
-        /* Copy the file name and everything else after it */
-        RtlStringCbCopyA(FileName, sizeof(FileName), File + 8);
-
-        /* Null-terminate */
-        *strstr(FileName, " ") = ANSI_NULL;
-
         /* Load the ramdisk */
-        Status = RamDiskLoadVirtualFile(FileName, SystemPartition);
+        Status = RamDiskInitialize(FALSE, BootOptions2, SystemPartition);
         if (Status != ESUCCESS)
         {
-            UiMessageBox("Failed to load RAM disk file %s", FileName);
+            File += 8;
+            UiMessageBox("Failed to load RAM disk file '%.*s'",
+                         strcspn(File, " \t"), File);
             return Status;
         }
     }
@@ -278,7 +319,7 @@ LoadReactOSSetup(
 
     TRACE("BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
-    /* Get Load options - debug and non-debug */
+    /* Get load options - debug and non-debug */
     if (!InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
     {
         ERR("Failed to find 'SetupData/OsLoadOptions'\n");
@@ -309,8 +350,8 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    /* Allocate and minimalist-initialize LPB */
-    AllocateAndInitLPB(&LoaderBlock);
+    /* Allocate and minimally-initialize the Loader Parameter Block */
+    AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
 
     /* Allocate and initialize setup loader block */
     SetupBlock = &WinLdrSystemBlock->SetupBlock;
@@ -332,6 +373,11 @@ LoadReactOSSetup(
     RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
     RtlStringCbCatA(FileName, sizeof(FileName), "system32\\");
     SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
+
+    /* Load the Firmware Errata file from the installation medium */
+    Success = SetupLdrInitErrataInf(LoaderBlock, InfHandle, BootPath);
+    TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
+    /* Not necessarily fatal if not found - carry on going */
 
     // UiDrawStatusText("Press F6 if you need to install a 3rd-party SCSI or RAID driver...");
 

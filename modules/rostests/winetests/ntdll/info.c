@@ -353,6 +353,7 @@ static void test_query_process(void)
 
         last_pid = (DWORD_PTR)spi->UniqueProcessId;
 
+        disable_success_count
         ok( spi->dwThreadCount > 0, "Expected some threads for this process, got 0\n");
 
         /* Loop through the threads, skip NT4 for now */
@@ -363,6 +364,7 @@ static void test_query_process(void)
             for ( j = 0; j < spi->dwThreadCount; j++) 
             {
                 k++;
+                disable_success_count
                 ok ( spi->ti[j].ClientId.UniqueProcess == spi->UniqueProcessId,
                      "The owning pid of the thread (%p) doesn't equal the pid (%p) of the process\n",
                      spi->ti[j].ClientId.UniqueProcess, spi->UniqueProcessId);
@@ -1691,12 +1693,14 @@ static void test_query_process_debug_flags(int argc, char **argv)
             for (;;)
             {
                 ret = WaitForDebugEvent(&ev, 1000);
+                disable_success_count
                 ok(ret, "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
                 if (!ret) break;
 
                 if (ev.dwDebugEventCode == LOAD_DLL_DEBUG_EVENT) break;
 
                 ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+                disable_success_count
                 ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
                 if (!ret) break;
             }
@@ -1733,6 +1737,7 @@ static void test_query_process_debug_flags(int argc, char **argv)
         for (j = 0; j < 100; j++)
         {
             ret = WaitForDebugEvent(&ev, 1000);
+            disable_success_count
             ok(ret || broken(GetLastError() == ERROR_SEM_TIMEOUT),
                 "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
             if (!ret) break;
@@ -1740,6 +1745,7 @@ static void test_query_process_debug_flags(int argc, char **argv)
             if (ev.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) break;
 
             ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+            disable_success_count
             ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
             if (!ret) break;
         }
@@ -1891,9 +1897,14 @@ static void test_queryvirtualmemory(void)
     char stackbuf[42];
     HMODULE module;
     char buffer_name[sizeof(MEMORY_SECTION_NAME) + MAX_PATH * sizeof(WCHAR)];
+#ifndef __REACTOS__
     MEMORY_SECTION_NAME *msn = (MEMORY_SECTION_NAME *)buffer_name;
+#endif
     BOOL found;
     int i;
+#ifdef __REACTOS__
+    MEMORY_SECTION_NAME *msn = HeapAlloc(GetProcessHeap(), 0, sizeof(buffer_name));
+#endif
 
     module = GetModuleHandleA( "ntdll.dll" );
     trace("Check flags of the PE header of NTDLL.DLL at %p\n", module);
@@ -2003,11 +2014,15 @@ static void test_queryvirtualmemory(void)
     ok( found, "Section name does not contain \"Windows\"\n");
 
     trace("Check section name of non mapped memory\n");
-    memset(msn, 0, sizeof(*msn));
+    memset(msn, 0, sizeof(buffer_name));
     readcount = 0;
     status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
     ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
+
+#ifdef __REACTOS__
+    HeapFree(GetProcessHeap(), 0, msn);
+#endif
 }
 
 static void test_affinity(void)
@@ -2239,11 +2254,11 @@ START_TEST(info)
     char **argv;
     int argc;
 
-    if(!InitFunctionPtrs())
-        return;
-
     argc = winetest_get_mainargs(&argv);
     if (argc >= 3) return; /* Child */
+
+    if (!InitFunctionPtrs())
+        return;
 
     /* NtQuerySystemInformation */
 

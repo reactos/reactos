@@ -83,7 +83,7 @@ typedef struct {
 static BOOL lookup_dynamic_vars(dynamic_var_t *var, const WCHAR *name, ref_t *ref)
 {
     while(var) {
-        if(!strcmpiW(var->name, name)) {
+        if(!wcsicmp(var->name, name)) {
             ref->type = var->is_const ? REF_CONST : REF_VAR;
             ref->u.v = &var->v;
             return TRUE;
@@ -104,18 +104,16 @@ static HRESULT lookup_identifier(exec_ctx_t *ctx, BSTR name, vbdisp_invoke_type_
     DISPID id;
     HRESULT hres;
 
-    static const WCHAR errW[] = {'e','r','r',0};
-
     if(invoke_type == VBDISP_LET
             && (ctx->func->type == FUNC_FUNCTION || ctx->func->type == FUNC_PROPGET || ctx->func->type == FUNC_DEFGET)
-            && !strcmpiW(name, ctx->func->name)) {
+            && !wcsicmp(name, ctx->func->name)) {
         ref->type = REF_VAR;
         ref->u.v = &ctx->ret_val;
         return S_OK;
     }
 
     for(i=0; i < ctx->func->var_cnt; i++) {
-        if(!strcmpiW(ctx->func->vars[i].name, name)) {
+        if(!wcsicmp(ctx->func->vars[i].name, name)) {
             ref->type = REF_VAR;
             ref->u.v = ctx->vars+i;
             return TRUE;
@@ -123,7 +121,7 @@ static HRESULT lookup_identifier(exec_ctx_t *ctx, BSTR name, vbdisp_invoke_type_
     }
 
     for(i=0; i < ctx->func->arg_cnt; i++) {
-        if(!strcmpiW(ctx->func->args[i].name, name)) {
+        if(!wcsicmp(ctx->func->args[i].name, name)) {
             ref->type = REF_VAR;
             ref->u.v = ctx->args+i;
             return S_OK;
@@ -137,7 +135,7 @@ static HRESULT lookup_identifier(exec_ctx_t *ctx, BSTR name, vbdisp_invoke_type_
         if(ctx->vbthis) {
             /* FIXME: Bind such identifier while generating bytecode. */
             for(i=0; i < ctx->vbthis->desc->prop_cnt; i++) {
-                if(!strcmpiW(ctx->vbthis->desc->props[i].name, name)) {
+                if(!wcsicmp(ctx->vbthis->desc->props[i].name, name)) {
                     ref->type = REF_VAR;
                     ref->u.v = ctx->vbthis->props+i;
                     return S_OK;
@@ -168,23 +166,17 @@ static HRESULT lookup_identifier(exec_ctx_t *ctx, BSTR name, vbdisp_invoke_type_
         return S_OK;
 
     for(func = ctx->script->global_funcs; func; func = func->next) {
-        if(!strcmpiW(func->name, name)) {
+        if(!wcsicmp(func->name, name)) {
             ref->type = REF_FUNC;
             ref->u.f = func;
             return S_OK;
         }
     }
 
-    if(!strcmpiW(name, errW)) {
-        ref->type = REF_OBJ;
-        ref->u.obj = (IDispatch*)&ctx->script->err_obj->IDispatchEx_iface;
-        return S_OK;
-    }
-
-    hres = vbdisp_get_id(ctx->script->global_obj, name, invoke_type, TRUE, &id);
+    hres = get_builtin_id(ctx->script->global_obj, name, &id);
     if(SUCCEEDED(hres)) {
         ref->type = REF_DISP;
-        ref->u.d.disp = (IDispatch*)&ctx->script->global_obj->IDispatchEx_iface;
+        ref->u.d.disp = &ctx->script->global_obj->IDispatch_iface;
         ref->u.d.id = id;
         return S_OK;
     }
@@ -226,7 +218,7 @@ static HRESULT add_dynamic_var(exec_ctx_t *ctx, const WCHAR *name,
     if(!new_var)
         return E_OUTOFMEMORY;
 
-    size = (strlenW(name)+1)*sizeof(WCHAR);
+    size = (lstrlenW(name)+1)*sizeof(WCHAR);
     str = heap_pool_alloc(heap, size);
     if(!str)
         return E_OUTOFMEMORY;
@@ -245,6 +237,14 @@ static HRESULT add_dynamic_var(exec_ctx_t *ctx, const WCHAR *name,
 
     *out_var = &new_var->v;
     return S_OK;
+}
+
+void clear_ei(EXCEPINFO *ei)
+{
+    SysFreeString(ei->bstrSource);
+    SysFreeString(ei->bstrDescription);
+    SysFreeString(ei->bstrHelpFile);
+    memset(ei, 0, sizeof(*ei));
 }
 
 static inline VARIANT *stack_pop(exec_ctx_t *ctx)
@@ -319,7 +319,7 @@ static HRESULT stack_pop_val(exec_ctx_t *ctx, variant_val_t *r)
         HRESULT hres;
 
         hres = get_disp_value(ctx->script, V_DISPATCH(r->v), &r->store);
-        if(r->owned)
+        if(r->owned && V_DISPATCH(r->v))
             IDispatch_Release(V_DISPATCH(r->v));
         if(FAILED(hres))
             return hres;
@@ -350,7 +350,8 @@ static HRESULT stack_assume_val(exec_ctx_t *ctx, unsigned n)
 
         disp = V_DISPATCH(v);
         hres = get_disp_value(ctx->script, disp, v);
-        IDispatch_Release(disp);
+        if(disp)
+            IDispatch_Release(disp);
         if(FAILED(hres))
             return hres;
     }
@@ -580,7 +581,7 @@ static HRESULT do_icall(exec_ctx_t *ctx, VARIANT *res)
         break;
     case REF_FUNC:
         vbstack_to_dp(ctx, arg_cnt, FALSE, &dp);
-        hres = exec_script(ctx->script, ref.u.f, NULL, &dp, res);
+        hres = exec_script(ctx->script, FALSE, ref.u.f, NULL, &dp, res);
         if(FAILED(hres))
             return hres;
         break;
@@ -688,23 +689,27 @@ static HRESULT interp_mcallv(exec_ctx_t *ctx)
 
 static HRESULT assign_value(exec_ctx_t *ctx, VARIANT *dst, VARIANT *src, WORD flags)
 {
+    VARIANT value;
     HRESULT hres;
 
-    hres = VariantCopyInd(dst, src);
+    V_VT(&value) = VT_EMPTY;
+    hres = VariantCopyInd(&value, src);
     if(FAILED(hres))
         return hres;
 
-    if(V_VT(dst) == VT_DISPATCH && !(flags & DISPATCH_PROPERTYPUTREF)) {
-        VARIANT value;
+    if(V_VT(&value) == VT_DISPATCH && !(flags & DISPATCH_PROPERTYPUTREF)) {
+        IDispatch *disp = V_DISPATCH(&value);
 
-        hres = get_disp_value(ctx->script, V_DISPATCH(dst), &value);
-        IDispatch_Release(V_DISPATCH(dst));
+        V_VT(&value) = VT_EMPTY;
+        hres = get_disp_value(ctx->script, disp, &value);
+        if(disp)
+            IDispatch_Release(disp);
         if(FAILED(hres))
             return hres;
-
-        *dst = value;
     }
 
+    VariantClear(dst);
+    *dst = value;
     return S_OK;
 }
 
@@ -988,7 +993,7 @@ static HRESULT interp_new(exec_ctx_t *ctx)
 
     TRACE("%s\n", debugstr_w(arg));
 
-    if(!strcmpiW(arg, regexpW)) {
+    if(!wcsicmp(arg, regexpW)) {
         V_VT(&v) = VT_DISPATCH;
         hres = create_regexp(&V_DISPATCH(&v));
         if(FAILED(hres))
@@ -998,7 +1003,7 @@ static HRESULT interp_new(exec_ctx_t *ctx)
     }
 
     for(class_desc = ctx->script->classes; class_desc; class_desc = class_desc->next) {
-        if(!strcmpiW(class_desc->name, arg))
+        if(!wcsicmp(class_desc->name, arg))
             break;
     }
     if(!class_desc) {
@@ -1258,6 +1263,30 @@ static HRESULT interp_ret(exec_ctx_t *ctx)
     return S_OK;
 }
 
+static HRESULT interp_retval(exec_ctx_t *ctx)
+{
+    variant_val_t val;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = stack_pop_val(ctx, &val);
+    if(FAILED(hres))
+        return hres;
+
+    if(val.owned) {
+        VariantClear(&ctx->ret_val);
+        ctx->ret_val = *val.v;
+    }
+    else {
+        hres = VariantCopy(&ctx->ret_val, val.v);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    return S_OK;
+}
+
 static HRESULT interp_stop(exec_ctx_t *ctx)
 {
     WARN("\n");
@@ -1297,7 +1326,7 @@ static HRESULT interp_errmode(exec_ctx_t *ctx)
     TRACE("%d\n", err_mode);
 
     ctx->resume_next = err_mode;
-    ctx->script->err_number = S_OK;
+    clear_ei(&ctx->script->ei);
     return S_OK;
 }
 
@@ -1315,27 +1344,20 @@ static HRESULT interp_string(exec_ctx_t *ctx)
     return stack_push(ctx, &v);
 }
 
-static HRESULT interp_long(exec_ctx_t *ctx)
+static HRESULT interp_int(exec_ctx_t *ctx)
 {
     const LONG arg = ctx->instr->arg1.lng;
     VARIANT v;
 
     TRACE("%d\n", arg);
 
-    V_VT(&v) = VT_I4;
-    V_I4(&v) = arg;
-    return stack_push(ctx, &v);
-}
-
-static HRESULT interp_short(exec_ctx_t *ctx)
-{
-    const LONG arg = ctx->instr->arg1.lng;
-    VARIANT v;
-
-    TRACE("%d\n", arg);
-
-    V_VT(&v) = VT_I2;
-    V_I2(&v) = arg;
+    if(arg == (INT16)arg) {
+        V_VT(&v) = VT_I2;
+        V_I2(&v) = arg;
+    }else {
+        V_VT(&v) = VT_I4;
+        V_I4(&v) = arg;
+    }
     return stack_push(ctx, &v);
 }
 
@@ -2061,7 +2083,7 @@ static void release_exec(exec_ctx_t *ctx)
     heap_free(ctx->stack);
 }
 
-HRESULT exec_script(script_ctx_t *ctx, function_t *func, vbdisp_t *vbthis, DISPPARAMS *dp, VARIANT *res)
+HRESULT exec_script(script_ctx_t *ctx, BOOL extern_caller, function_t *func, vbdisp_t *vbthis, DISPPARAMS *dp, VARIANT *res)
 {
     exec_ctx_t exec = {func->code_ctx};
     vbsop_t op;
@@ -2123,6 +2145,9 @@ HRESULT exec_script(script_ctx_t *ctx, function_t *func, vbdisp_t *vbthis, DISPP
         return E_OUTOFMEMORY;
     }
 
+    if(extern_caller)
+        IActiveScriptSite_OnEnterScript(ctx->site);
+
     if(vbthis) {
         exec.this_obj = (IDispatch*)&vbthis->IDispatchEx_iface;
         exec.vbthis = vbthis;
@@ -2141,7 +2166,15 @@ HRESULT exec_script(script_ctx_t *ctx, function_t *func, vbdisp_t *vbthis, DISPP
         op = exec.instr->op;
         hres = op_funcs[op](&exec);
         if(FAILED(hres)) {
-            ctx->err_number = hres = map_hres(hres);
+            if(hres != SCRIPT_E_RECORDED) {
+                clear_ei(&ctx->ei);
+
+                ctx->ei.scode = hres = map_hres(hres);
+                ctx->ei.bstrSource = get_vbscript_string(VBS_RUNTIME_ERROR);
+                ctx->ei.bstrDescription = get_vbscript_error_string(hres);
+            }else {
+                hres = ctx->ei.scode;
+            }
 
             if(exec.resume_next) {
                 unsigned stack_off;
@@ -2186,8 +2219,15 @@ HRESULT exec_script(script_ctx_t *ctx, function_t *func, vbdisp_t *vbthis, DISPP
     }
 
     assert(!exec.top);
-    if(func->type != FUNC_FUNCTION && func->type != FUNC_PROPGET && func->type != FUNC_DEFGET)
-        assert(V_VT(&exec.ret_val) == VT_EMPTY);
+
+    if(extern_caller) {
+        IActiveScriptSite_OnLeaveScript(ctx->site);
+        if(FAILED(hres)) {
+            if(!ctx->ei.scode)
+                ctx->ei.scode = hres;
+            hres = report_script_error(ctx);
+        }
+    }
 
     if(SUCCEEDED(hres) && res) {
         *res = exec.ret_val;

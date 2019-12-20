@@ -191,16 +191,18 @@ typedef struct WLDAP32_berval
 } LDAP_BERVAL, *PLDAP_BERVAL, BERVAL, *PBERVAL, WLDAP32_BerValue;
 
 #define LDAP_PAGED_RESULT_OID_STRING "1.2.840.113556.1.4.319"
-#define LDAP_PAGED_RESULT_OID_STRING_W (const WCHAR []){'1','.','2','.', \
-        '8','4','0','.','1','1','3','5','5','6','.','1','.','4','.','3','1','9',0}
-
 #define LDAP_SERVER_RESP_SORT_OID "1.2.840.113556.1.4.474"
-#define LDAP_SERVER_RESP_SORT_OID_W (const WCHAR []){'1','.','2','.', \
-        '8','4','0','.','1','1','3','5','5','6','.','1','.','4','.','4','7','4',0}
-
 #define LDAP_CONTROL_VLVRESPONSE "2.16.840.1.113730.3.4.10"
-#define LDAP_CONTROL_VLVRESPONSE_W (const WCHAR []){'2','.','1','6','.', \
-        '8','4','0','.','1','.','1','1','3','7','3','0','.','3','.','4','.','1','0',0}
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#define LDAP_PAGED_RESULT_OID_STRING_W L"1.2.840.113556.1.4.319"
+#define LDAP_SERVER_RESP_SORT_OID_W L"1.2.840.113556.1.4.474"
+#define LDAP_CONTROL_VLVRESPONSE_W L"2.16.840.1.113730.3.4.10"
+#else
+static const WCHAR LDAP_PAGED_RESULT_OID_STRING_W[] = {'1','.','2','.','8','4','0','.','1','1','3','5','5','6','.','1','.','4','.','3','1','9',0};
+static const WCHAR LDAP_SERVER_RESP_SORT_OID_W[] = {'1','.','2','.','8','4','0','.','1','1','3','5','5','6','.','1','.','4','.','4','7','4',0};
+static const WCHAR LDAP_CONTROL_VLVRESPONSE_W[] = {'2','.','1','6','.','8','4','0','.','1','.','1','1','3','7','3','0','.','3','.','4','.','1','0',0};
+#endif
 
 typedef struct ldapcontrolA
 {

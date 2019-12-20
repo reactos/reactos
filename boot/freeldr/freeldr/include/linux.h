@@ -23,7 +23,7 @@
 #ifndef __LINUX_H
 #define __LINUX_H
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 #define LINUX_LOADER_TYPE_LILO          0x01
 #define LINUX_LOADER_TYPE_LOADLIN       0x11
@@ -128,8 +128,13 @@ typedef struct
 } LINUX_SETUPSECTOR, *PLINUX_SETUPSECTOR;
 #include <poppack.h>
 
-VOID    __cdecl BootNewLinuxKernel(VOID);                // Implemented in linux.S
-VOID    __cdecl BootOldLinuxKernel(ULONG KernelSize);        // Implemented in linux.S
+// Implemented in linux.S
+VOID __cdecl BootLinuxKernel(
+    IN ULONG KernelSize,
+    IN PVOID KernelCurrentLoadAddress,
+    IN PVOID KernelTargetLoadAddress,
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber);
 
 ARC_STATUS
 LoadAndBootLinux(
@@ -137,6 +142,6 @@ LoadAndBootLinux(
     IN PCHAR Argv[],
     IN PCHAR Envp[]);
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */
 
 #endif // defined __LINUX_H

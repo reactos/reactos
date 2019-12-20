@@ -231,9 +231,11 @@ static HRESULT WINAPI xmlhttprequest_onreadystatechange(IDispatchEx *iface, DISP
     LONG val;
     HRESULT hres;
 
+    if (!expect_xmlhttprequest_onreadystatechange_loading)
     test_event_args(&DIID_DispHTMLXMLHttpRequest, id, wFlags, pdp, pvarRes, pei, pspCaller);
 
     hres = IHTMLXMLHttpRequest_get_readyState(xhr, &val);
+    disable_success_count
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     readystatechange_cnt++;
 
@@ -246,6 +248,7 @@ static HRESULT WINAPI xmlhttprequest_onreadystatechange(IDispatchEx *iface, DISP
             break;
         case 3:
             loading_cnt++;
+            disable_success_count
             CHECK_EXPECT2(xmlhttprequest_onreadystatechange_loading);
             break;
         case 4:

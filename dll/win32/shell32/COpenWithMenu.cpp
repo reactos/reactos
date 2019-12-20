@@ -1327,7 +1327,7 @@ HRESULT WINAPI COpenWithMenu::HandleMenuMsg(
 }
 
 HRESULT WINAPI
-COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
+COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                           IDataObject *pdtobj,
                           HKEY hkeyProgID)
 {
@@ -1369,14 +1369,14 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     {
         TRACE("pidl is not a file\n");
         GlobalUnlock(medium.hGlobal);
-        GlobalFree(medium.hGlobal);
+        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
     pidl = ILCombine(pidlFolder2, pidlChild);
 
     GlobalUnlock(medium.hGlobal);
-    GlobalFree(medium.hGlobal);
+    ReleaseStgMedium(&medium);
 
     if (!pidl)
     {

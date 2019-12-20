@@ -63,7 +63,7 @@ DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len) DECLS
 /****************************************************************************
  * Class constructors
  */
-HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, PCUITEMID_CHILD_ARRAY apidl, UINT cidl, IDataObject **dataObject);
+HRESULT IDataObject_Constructor(HWND hwndOwner, LPCITEMIDLIST pMyPidl, PCUITEMID_CHILD_ARRAY apidl, UINT cidl, BOOL bExtendedObject, IDataObject **dataObject);
 HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMATETC **enumerator);
 
 LPCLASSFACTORY	IClassFactory_Constructor(REFCLSID);

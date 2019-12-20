@@ -18,10 +18,9 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
+#include "initguid.h"
 #include "d3dcompiler_private.h"
+#include "wine/winternl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dcompiler);
 
@@ -52,6 +51,7 @@ struct d3dcompiler_shader_reflection_type
 
     D3D11_SHADER_TYPE_DESC desc;
     struct d3dcompiler_shader_reflection_type_member *members;
+    char *name;
 };
 
 struct d3dcompiler_shader_reflection_type_member
@@ -223,6 +223,7 @@ static void d3dcompiler_shader_reflection_type_destroy(struct wine_rb_entry *ent
         HeapFree(GetProcessHeap(), 0, t->members);
     }
 
+    heap_free(t->name);
     HeapFree(GetProcessHeap(), 0, t);
 }
 
@@ -665,6 +666,14 @@ static UINT STDMETHODCALLTYPE d3dcompiler_shader_reflection_GetThreadGroupSize(
     return 0;
 }
 
+static UINT64 STDMETHODCALLTYPE d3dcompiler_shader_reflection_GetRequiresFlags(
+        ID3D11ShaderReflection *iface)
+{
+    FIXME("iface %p stub!\n", iface);
+
+    return 0;
+}
+
 static const struct ID3D11ShaderReflectionVtbl d3dcompiler_shader_reflection_vtbl =
 {
     /* IUnknown methods */
@@ -690,6 +699,7 @@ static const struct ID3D11ShaderReflectionVtbl d3dcompiler_shader_reflection_vtb
     d3dcompiler_shader_reflection_GetNumInterfaceSlots,
     d3dcompiler_shader_reflection_GetMinFeatureLevel,
     d3dcompiler_shader_reflection_GetThreadGroupSize,
+    d3dcompiler_shader_reflection_GetRequiresFlags,
 };
 
 /* ID3D11ShaderReflectionConstantBuffer methods */
@@ -1107,16 +1117,29 @@ static HRESULT d3dcompiler_parse_stat(struct d3dcompiler_shader_reflection *r, c
 
     skip_dword_unknown(&ptr, 1);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->input_primitive);
+#else
     read_dword(&ptr, &r->input_primitive);
+#endif
     TRACE("InputPrimitive: %x\n", r->input_primitive);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->gs_output_topology);
+#else
     read_dword(&ptr, &r->gs_output_topology);
+#endif
     TRACE("GSOutputTopology: %x\n", r->gs_output_topology);
 
     read_dword(&ptr, &r->gs_max_output_vertex_count);
     TRACE("GSMaxOutputVertexCount: %u\n", r->gs_max_output_vertex_count);
 
-    skip_dword_unknown(&ptr, 3);
+    skip_dword_unknown(&ptr, 2);
+
+    /* old dx10 stat size */
+    if (size == 28) return S_OK;
+
+    skip_dword_unknown(&ptr, 1);
 
     /* dx10 stat size */
     if (size == 29) return S_OK;
@@ -1126,13 +1149,25 @@ static HRESULT d3dcompiler_parse_stat(struct d3dcompiler_shader_reflection *r, c
     read_dword(&ptr, &r->c_control_points);
     TRACE("cControlPoints: %u\n", r->c_control_points);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->hs_output_primitive);
+#else
     read_dword(&ptr, &r->hs_output_primitive);
+#endif
     TRACE("HSOutputPrimitive: %x\n", r->hs_output_primitive);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->hs_prtitioning);
+#else
     read_dword(&ptr, &r->hs_prtitioning);
+#endif
     TRACE("HSPartitioning: %x\n", r->hs_prtitioning);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+    read_dword(&ptr, (DWORD*)&r->tessellator_domain);
+#else
     read_dword(&ptr, &r->tessellator_domain);
+#endif
     TRACE("TessellatorDomain: %x\n", r->tessellator_domain);
 
     skip_dword_unknown(&ptr, 3);
@@ -1229,6 +1264,19 @@ static HRESULT d3dcompiler_parse_type(struct d3dcompiler_shader_reflection_type 
                 goto err_out;
             }
         }
+    }
+
+    if ((type->reflection->target & D3DCOMPILER_SHADER_TARGET_VERSION_MASK) >= 0x500)
+    {
+        read_dword(&ptr, &offset);
+        if (!copy_name(data + offset, &type->name))
+        {
+            ERR("Failed to copy name.\n");
+            heap_free(members);
+            return E_OUTOFMEMORY;
+        }
+        desc->Name = type->name;
+        TRACE("Type name: %s.\n", debugstr_a(type->name));
     }
 
     type->members = members;
@@ -1438,13 +1486,25 @@ static HRESULT d3dcompiler_parse_rdef(struct d3dcompiler_shader_reflection *r, c
             desc->Name = string_data + (offset - string_data_offset);
             TRACE("Input bind Name: %s\n", debugstr_a(desc->Name));
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->Type);
+#else
             read_dword(&ptr, &desc->Type);
+#endif
             TRACE("Input bind Type: %#x\n", desc->Type);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->ReturnType);
+#else
             read_dword(&ptr, &desc->ReturnType);
+#endif
             TRACE("Input bind ReturnType: %#x\n", desc->ReturnType);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&desc->Dimension);
+#else
             read_dword(&ptr, &desc->Dimension);
+#endif
             TRACE("Input bind Dimension: %#x\n", desc->Dimension);
 
             read_dword(&ptr, &desc->NumSamples);
@@ -1507,7 +1567,11 @@ static HRESULT d3dcompiler_parse_rdef(struct d3dcompiler_shader_reflection *r, c
             read_dword(&ptr, &cb->flags);
             TRACE("Cbuffer flags: %u\n", cb->flags);
 
+#ifdef __REACTOS__ /* DWORD* cast added */
+            read_dword(&ptr, (DWORD*)&cb->type);
+#else
             read_dword(&ptr, &cb->type);
+#endif
             TRACE("Cbuffer type: %#x\n", cb->type);
         }
     }
@@ -1603,8 +1667,13 @@ static HRESULT d3dcompiler_parse_signature(struct d3dcompiler_shader_signature *
         read_dword(&ptr, &name_offset);
         d[i].SemanticName = string_data + (name_offset - string_data_offset);
         read_dword(&ptr, &d[i].SemanticIndex);
+#ifdef __REACTOS__ /* DWORD* casts added */
+        read_dword(&ptr, (DWORD*)&d[i].SystemValueType);
+        read_dword(&ptr, (DWORD*)&d[i].ComponentType);
+#else
         read_dword(&ptr, &d[i].SystemValueType);
         read_dword(&ptr, &d[i].ComponentType);
+#endif
         read_dword(&ptr, &d[i].Register);
         read_dword(&ptr, &mask);
         d[i].ReadWriteMask = (mask >> 8) & 0xff;
@@ -1617,10 +1686,14 @@ static HRESULT d3dcompiler_parse_signature(struct d3dcompiler_shader_signature *
 
             if (d[i].Register == 0xffffffff)
             {
-                if (!strcasecmp(d[i].SemanticName, "sv_depth")) d[i].SystemValueType = D3D_NAME_DEPTH;
-                if (!strcasecmp(d[i].SemanticName, "sv_coverage")) d[i].SystemValueType = D3D_NAME_COVERAGE;
-                if (!strcasecmp(d[i].SemanticName, "sv_depthgreaterequal")) d[i].SystemValueType = D3D_NAME_DEPTH_GREATER_EQUAL;
-                if (!strcasecmp(d[i].SemanticName, "sv_depthlessequal")) d[i].SystemValueType = D3D_NAME_DEPTH_LESS_EQUAL;
+                if (!_strnicmp(d[i].SemanticName, "sv_depth", -1))
+                    d[i].SystemValueType = D3D_NAME_DEPTH;
+                else if (!_strnicmp(d[i].SemanticName, "sv_coverage", -1))
+                    d[i].SystemValueType = D3D_NAME_COVERAGE;
+                else if (!_strnicmp(d[i].SemanticName, "sv_depthgreaterequal", -1))
+                    d[i].SystemValueType = D3D_NAME_DEPTH_GREATER_EQUAL;
+                else if (!_strnicmp(d[i].SemanticName, "sv_depthlessequal", -1))
+                    d[i].SystemValueType = D3D_NAME_DEPTH_LESS_EQUAL;
             }
             else
             {

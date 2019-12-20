@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018 Katayama Hirofumi MZ
+ * Copyright 2018-2019 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,7 @@
 #include <wine/unicode.h>
 
 #include <shlwapi_undoc.h>
+#include <shellutils.h>
 
 #include <userenv.h>
 
@@ -973,7 +974,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_ProgramFilesCommonX86,
         CSIDL_Type_CurrVer,
         CommonFilesDirX86W,
-        Program_Files_x86_Common_FilesW
+        Program_Files_x86_Common_FilesW,
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2d - CSIDL_COMMON_TEMPLATES */
         &FOLDERID_CommonTemplates,
@@ -2282,8 +2284,10 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
 
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
 
+end:
     /* create desktop.ini for custom icon */
-    if (CSIDL_Data[folder].nShell32IconIndex)
+    if ((nFolder & CSIDL_FLAG_CREATE) &&
+        CSIDL_Data[folder].nShell32IconIndex)
     {
         static const WCHAR s_szFormat[] = L"%%SystemRoot%%\\system32\\shell32.dll,%d";
         WCHAR szIconLocation[MAX_PATH];
@@ -2313,7 +2317,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         SetFileAttributesW(szBuildPath, dwAttributes);
     }
 
-end:
     TRACE("returning 0x%08x (final path is %s)\n", hr, debugstr_w(szBuildPath));
     return hr;
 }
@@ -2390,16 +2393,21 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
             szValueName = &buffer[0];
         }
 
-        if (RegQueryValueExW(hUserKey, szValueName, NULL,
-         &dwType, (LPBYTE)path, &dwPathLen) || (dwType != REG_SZ &&
-         dwType != REG_EXPAND_SZ))
+        if (!RegQueryValueExW(hUserKey, szValueName, NULL,
+                              &dwType, (LPBYTE)path, &dwPathLen) &&
+            (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
+        {
+            hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
+                                  hToken, SHGFP_TYPE_CURRENT, path);
+        }
+        else
         {
             *path = '\0';
             if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
-                _SHGetUserProfilePath(hToken, SHGFP_TYPE_DEFAULT, folders[i],
+                _SHGetUserProfilePath(hToken, SHGFP_TYPE_CURRENT, folders[i],
                  path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
-                _SHGetAllUsersProfilePath(SHGFP_TYPE_DEFAULT, folders[i], path);
+                _SHGetAllUsersProfilePath(SHGFP_TYPE_CURRENT, folders[i], path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_WindowsPath)
             {
                 GetWindowsDirectoryW(path, MAX_PATH);
@@ -2421,7 +2429,7 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
                 else
                 {
                     hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
-                     hToken, SHGFP_TYPE_DEFAULT, path);
+                     hToken, SHGFP_TYPE_CURRENT, path);
                     ret = RegSetValueExW(hKey, szValueName, 0, REG_SZ,
                      (LPBYTE)path, (strlenW(path) + 1) * sizeof(WCHAR));
                     if (ret)

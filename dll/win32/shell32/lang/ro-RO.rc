@@ -771,6 +771,15 @@ BEGIN
     IDS_PASTE "&Lipește"
     IDS_EJECT "S&coate"
     IDS_DISCONNECT "Deconectea&ză"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Nu poate fi creat un dosar cu numele „%1”"
     IDS_CREATEFOLDER_CAPTION "Nu poate fi creat dosar"
@@ -874,6 +883,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Eșec la scoaterea mediului de stocare (Cod de eroare: %lu)."
     IDS_CANTSHOWPROPERTIES "Eșec la inspecția proprietăților (Cod de eroare: %lu)."
     IDS_CANTDISCONNECT "Eșec la deconectare (Cod de eroare: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosar"
@@ -910,6 +920,7 @@ BEGIN
     IDS_EDIT_VERB "Editează"
     IDS_FIND_VERB "Caută"
     IDS_PRINT_VERB "Imprimă"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u fișiere, %u dosare"
     IDS_PRINTERS "Imprimante"

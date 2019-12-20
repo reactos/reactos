@@ -1373,8 +1373,8 @@ RfsdInitializeVcb( IN PRFSD_IRP_CONTEXT IrpContext,
             Vcb->StreamObj->ReadAccess = TRUE;
             if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY))
             {
-                Vcb->StreamObj->WriteAccess = TRUE;
-                Vcb->StreamObj->DeleteAccess = TRUE;
+                Vcb->StreamObj->WriteAccess = FALSE;
+                Vcb->StreamObj->DeleteAccess = FALSE;
             }
             else
             {

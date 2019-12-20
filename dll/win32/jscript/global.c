@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#ifdef __REACTOS__
+#include <wine/config.h>
+#include <wine/port.h>
+#endif
 
 #include <math.h>
 #include <limits.h>
@@ -181,7 +183,7 @@ static HRESULT JSGlobal_escape(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    call_frame_t *frame;
+    call_frame_t *frame = ctx->call_ctx;
     DWORD exec_flags = EXEC_EVAL;
     bytecode_t *code;
     const WCHAR *src;
@@ -201,11 +203,6 @@ HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned a
         return S_OK;
     }
 
-    if(!(frame = ctx->call_ctx)) {
-        FIXME("No active exec_ctx\n");
-        return E_UNEXPECTED;
-    }
-
     src = jsstr_flatten(get_string(argv[0]));
     if(!src)
         return E_OUTOFMEMORY;
@@ -217,12 +214,12 @@ HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned a
         return throw_syntax_error(ctx, hres, NULL);
     }
 
-    if(frame->flags & EXEC_GLOBAL)
+    if(!frame || (frame->flags & EXEC_GLOBAL))
         exec_flags |= EXEC_GLOBAL;
     if(flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE)
         exec_flags |= EXEC_RETURN_TO_INTERP;
-    hres = exec_source(ctx, exec_flags, code, &code->global_code, frame->scope,
-            frame->this_obj, NULL, frame->variable_obj, 0, NULL, r);
+    hres = exec_source(ctx, exec_flags, code, &code->global_code, frame ? frame->scope : NULL,
+            frame ? frame->this_obj : NULL, NULL, frame ? frame->variable_obj : ctx->global, 0, NULL, r);
     release_bytecode(code);
     return hres;
 }
@@ -317,7 +314,7 @@ static HRESULT JSGlobal_parseInt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
     if(FAILED(hres))
         return hres;
 
-    while(isspaceW(*ptr))
+    while(iswspace(*ptr))
         ptr++;
 
     switch(*ptr) {
@@ -343,6 +340,8 @@ static HRESULT JSGlobal_parseInt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         }else {
             radix = 10;
         }
+    }else if(radix == 16 && *ptr == '0' && (ptr[1] == 'x' || ptr[1] == 'X')) {
+        ptr += 2;
     }
 
     i = char_to_int(*ptr++);
@@ -385,7 +384,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
     if(FAILED(hres))
         return hres;
 
-    while(isspaceW(*str)) str++;
+    while(iswspace(*str)) str++;
 
     if(*str == '+')
         str++;
@@ -394,10 +393,10 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         str++;
     }
 
-    if(isdigitW(*str))
+    if(iswdigit(*str))
         ret_nan = FALSE;
 
-    while(isdigitW(*str)) {
+    while(iswdigit(*str)) {
         hlp = d*10 + *(str++) - '0';
         if(d>MAXLONGLONG/10 || hlp<0) {
             exp++;
@@ -406,17 +405,17 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         else
             d = hlp;
     }
-    while(isdigitW(*str)) {
+    while(iswdigit(*str)) {
         exp++;
         str++;
     }
 
     if(*str == '.') str++;
 
-    if(isdigitW(*str))
+    if(iswdigit(*str))
         ret_nan = FALSE;
 
-    while(isdigitW(*str)) {
+    while(iswdigit(*str)) {
         hlp = d*10 + *(str++) - '0';
         if(d>MAXLONGLONG/10 || hlp<0)
             break;
@@ -424,7 +423,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         d = hlp;
         exp--;
     }
-    while(isdigitW(*str))
+    while(iswdigit(*str))
         str++;
 
     if(*str && !ret_nan && (*str=='e' || *str=='E')) {
@@ -438,7 +437,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
             str++;
         }
 
-        while(isdigitW(*str)) {
+        while(iswdigit(*str)) {
             if(e>INT_MAX/10 || (e = e*10 + *str++ - '0')<0)
                 e = INT_MAX;
         }
@@ -465,8 +464,8 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 }
 
 static inline int hex_to_int(const WCHAR wch) {
-    if(toupperW(wch)>='A' && toupperW(wch)<='F') return toupperW(wch)-'A'+10;
-    if(isdigitW(wch)) return wch-'0';
+    if(towupper(wch)>='A' && towupper(wch)<='F') return towupper(wch)-'A'+10;
+    if(iswdigit(wch)) return wch-'0';
     return -1;
 }
 

@@ -41,8 +41,6 @@
  * has been modified.
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdlib.h>
 #include "windef.h"
@@ -50,7 +48,6 @@
 #include "wingdi.h"
 #include "winnls.h"
 #include "usp10.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 #include "wine/list.h"
@@ -58,6 +55,7 @@
 #include "usp10_internal.h"
 
 extern const unsigned short bidi_bracket_table[] DECLSPEC_HIDDEN;
+extern const unsigned short bidi_direction_table[] DECLSPEC_HIDDEN;
 
 WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
@@ -162,56 +160,14 @@ static inline void dump_types(const char* header, WORD *types, int start, int en
 /* Convert the libwine information to the direction enum */
 static void classify(const WCHAR *string, WORD *chartype, DWORD count, const SCRIPT_CONTROL *c)
 {
-    static const enum directions dir_map[16] =
-    {
-        L,  /* unassigned defaults to L */
-        L,
-        R,
-        EN,
-        ES,
-        ET,
-        AN,
-        CS,
-        B,
-        S,
-        WS,
-        ON,
-        AL,
-        NSM,
-        BN,
-        PDF  /* also LRE, LRO, RLE, RLO */
-    };
-
     unsigned i;
 
     for (i = 0; i < count; ++i)
     {
-        chartype[i] = dir_map[get_char_typeW(string[i]) >> 12];
-        switch (chartype[i])
+        chartype[i] = get_table_entry( bidi_direction_table, string[i] );
+        if (c->fLegacyBidiClass && chartype[i] == ES)
         {
-        case ES:
-            if (!c->fLegacyBidiClass) break;
-            switch (string[i])
-            {
-            case '-':
-            case '+': chartype[i] = NI; break;
-            case '/': chartype[i] = CS; break;
-            }
-            break;
-        case PDF:
-            switch (string[i])
-            {
-            case 0x202A: chartype[i] = LRE; break;
-            case 0x202B: chartype[i] = RLE; break;
-            case 0x202C: chartype[i] = PDF; break;
-            case 0x202D: chartype[i] = LRO; break;
-            case 0x202E: chartype[i] = RLO; break;
-            case 0x2066: chartype[i] = LRI; break;
-            case 0x2067: chartype[i] = RLI; break;
-            case 0x2068: chartype[i] = FSI; break;
-            case 0x2069: chartype[i] = PDI; break;
-            }
-            break;
+            if (string[i] == '+' || string[i] == '-') chartype[i] = NI;
         }
     }
 }
@@ -682,7 +638,7 @@ typedef struct tagBracketPair
     int end;
 } BracketPair;
 
-static int compr(const void *a, const void* b)
+static int __cdecl compr(const void *a, const void* b)
 {
     return ((BracketPair*)a)->start - ((BracketPair*)b)->start;
 }

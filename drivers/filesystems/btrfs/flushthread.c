@@ -545,6 +545,9 @@ nextdev:
         for (num = 0; num < total_num; num++) {
             if (context.stripes[num].dmdsa)
                 ExFreePool(context.stripes[num].dmdsa);
+
+            if (context.stripes[num].Irp)
+                IoFreeIrp(context.stripes[num].Irp);
         }
 
         ExFreePool(context.stripes);
@@ -1633,13 +1636,14 @@ NTSTATUS do_tree_writes(device_extension* Vcb, LIST_ENTRY* tree_writes, bool no_
                 RtlCopyMemory(data, tw2->data, tw2->length);
                 RtlCopyMemory(&data[tw2->length], tw->data, tw->length);
 
-                if (!no_free)
+                if (!no_free || tw2->allocated)
                     ExFreePool(tw2->data);
 
                 tw2->data = data;
                 tw2->length += tw->length;
+                tw2->allocated = true;
 
-                if (!no_free) // FIXME - what if we allocated this just now?
+                if (!no_free || tw->allocated)
                     ExFreePool(tw->data);
 
                 RemoveEntryList(&tw->list_entry);
@@ -2025,6 +2029,7 @@ static NTSTATUS write_trees(device_extension* Vcb, PIRP Irp) {
             tw->address = t->new_address;
             tw->length = Vcb->superblock.node_size;
             tw->data = data;
+            tw->allocated = false;
 
             if (IsListEmpty(&tree_writes))
                 InsertTailList(&tree_writes, &tw->list_entry);
@@ -6482,8 +6487,6 @@ static NTSTATUS flush_fileref(file_ref* fileref, LIST_ENTRY* batchlist, PIRP Irp
 
         crc32 = calc_crc32c(0xfffffffe, (uint8_t*)name->Buffer, name->Length);
 
-        TRACE("deleting %.*S\n", file_desc_fileref(fileref));
-
         di = ExAllocatePoolWithTag(PagedPool, sizeof(DIR_ITEM) - 1 + name->Length, ALLOC_TAG);
         if (!di) {
             ERR("out of memory\n");
@@ -6750,6 +6753,9 @@ static void flush_disk_caches(device_extension* Vcb) {
     LIST_ENTRY* le;
     ioctl_context context;
     ULONG num;
+#ifdef __REACTOS__
+    unsigned int i;
+#endif
 
     context.left = 0;
 
@@ -6826,6 +6832,15 @@ nextdev:
     }
 
     KeWaitForSingleObject(&context.Event, Executive, KernelMode, false, NULL);
+
+#ifndef __REACTOS__
+    for (unsigned int i = 0; i < num; i++) {
+#else
+    for (i = 0; i < num; i++) {
+#endif
+        if (context.stripes[i].Irp)
+            IoFreeIrp(context.stripes[i].Irp);
+    }
 
     ExFreePool(context.stripes);
 }

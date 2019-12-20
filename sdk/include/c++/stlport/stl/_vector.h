@@ -210,6 +210,9 @@ public:
   reference at(size_type __n) { _M_range_check(__n); return (*this)[__n]; }
   const_reference at(size_type __n) const { _M_range_check(__n); return (*this)[__n]; }
 
+  _Tp* data()                   { return this->_M_start; }
+  const _Tp* data() const       { return this->_M_start; }
+
 #if !defined (_STLP_DONT_SUP_DFLT_PARAM)
   explicit vector(const allocator_type& __a = allocator_type())
 #else

@@ -394,6 +394,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         WNDPROC oldproc;
         HFONT hFont;
         WCHAR buffer[MAX_PATH];
+        DWORD style;
 
         /* Load "My Computer" string */
         LoadStringW(hInst, IDS_MY_COMPUTER, buffer, COUNT_OF(buffer));
@@ -404,12 +405,21 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         wcsncpy(g_pChildWnd->szPath, buffer, MAX_PATH);
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
-        g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
+
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
+
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_ICON | BS_CENTER |
+                BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON;
+        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"\x00BB", style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
+        g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
+                                                    IMAGE_ICON, 12, 12, 0);
+        SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hArrowIcon);
+
         GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
         g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW, rc.right - g_pChildWnd->nSplitPos);
@@ -462,6 +472,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
+        DestroyIcon(g_pChildWnd->hArrowIcon);
         HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);

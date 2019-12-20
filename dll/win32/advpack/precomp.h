@@ -12,11 +12,11 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <winternl.h>
 #include <advpub.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "advpack_private.h"
 

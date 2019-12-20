@@ -2,9 +2,23 @@
 list(APPEND HAL_XBOX_ASM_SOURCE
     generic/systimer.S
     generic/trap.S
+    generic/v86.S
     up/pic.S)
 
 list(APPEND HAL_XBOX_SOURCE
+    generic/beep.c
+    generic/cmos.c
+    generic/display.c
+    generic/dma.c
+    generic/drive.c
+    generic/halinit.c
+    generic/memory.c
+    generic/misc.c
+    generic/pic.c
+    generic/sysinfo.c
+    generic/usage.c
+    generic/bios.c
+    generic/portio.c
     legacy/bus/bushndlr.c
     legacy/bus/cmosbus.c
     legacy/bus/isabus.c
@@ -19,6 +33,7 @@ list(APPEND HAL_XBOX_SOURCE
     generic/timer.c
     xbox/part_xbox.c
     xbox/halinit_xbox.c
+    xbox/reboot.c
     up/pic.c)
 
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})

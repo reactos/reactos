@@ -82,7 +82,7 @@ class CRecycleBin :
         virtual HRESULT WINAPI ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pfnReplaceWith, LPARAM lParam);
 
         // IShellExtInit
-        virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+        virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_RECYCLEBIN)
         DECLARE_NOT_AGGREGATABLE(CRecycleBin)

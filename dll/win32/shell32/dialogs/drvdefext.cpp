@@ -571,7 +571,7 @@ CDrvDefExt::~CDrvDefExt()
 }
 
 HRESULT WINAPI
-CDrvDefExt::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID)
+CDrvDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID)
 {
     FORMATETC format;
     STGMEDIUM stgm;

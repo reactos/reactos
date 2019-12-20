@@ -45,9 +45,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -78,9 +75,11 @@
 #include "filedlgbrowser.h"
 #include "shlwapi.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -324,7 +323,7 @@ static void filedlg_collect_places_pidls(FileOpenDlgInfos *fodInfos)
             HRESULT hr;
             WCHAR *str;
 
-            sprintfW(nameW, placeW, i);
+            swprintf(nameW, placeW, i);
             if (get_config_key_dword(hkey, nameW, &value))
             {
                 hr = SHGetSpecialFolderLocation(NULL, value, &fodInfos->places[i]);
@@ -1032,13 +1031,13 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID result
     COMDLG32_GetDisplayNameOf( fodInfos->ShellInfos.pidlAbsCurrent, buffer );
     if (len)
     {
-        p = buffer + strlenW(buffer);
+        p = buffer + lstrlenW(buffer);
         *p++ = '\\';
         SendMessageW( fodInfos->DlgInfos.hwndFileName, WM_GETTEXT, len + 1, (LPARAM)p );
     }
     if (fodInfos->unicode)
     {
-        total = strlenW( buffer) + 1;
+        total = lstrlenW( buffer) + 1;
         if (result) lstrcpynW( result, buffer, size );
         TRACE( "CDM_GETFILEPATH: returning %u %s\n", total, debugstr_w(result));
     }
@@ -1690,7 +1689,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   {
       /* 1. If win2000 or higher and filename contains a path, use it
          in preference over the lpstrInitialDir                       */
-      if (win2000plus && *fodInfos->filename && strpbrkW(fodInfos->filename, szwSlash)) {
+      if (win2000plus && *fodInfos->filename && wcspbrk(fodInfos->filename, szwSlash)) {
          WCHAR tmpBuf[MAX_PATH];
          WCHAR *nameBit;
          DWORD result;
@@ -1783,7 +1782,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
       /* 3. All except w2k+: if filename contains a path use it */
       if (!win2000plus && fodInfos->filename &&
           *fodInfos->filename &&
-          strpbrkW(fodInfos->filename, szwSlash)) {
+          wcspbrk(fodInfos->filename, szwSlash)) {
          WCHAR tmpBuf[MAX_PATH];
          WCHAR *nameBit;
          DWORD result;
@@ -2346,7 +2345,7 @@ static WCHAR FILEDLG95_MRU_get_slot(LPCWSTR module_name, LPWSTR stored_path, PHK
             continue;
         }
 
-        if(!strcmpiW(module_name, value_data)){
+        if(!wcsicmp(module_name, value_data)){
             if(!hkey_ret)
                 RegCloseKey(*hkey);
             if(stored_path)
@@ -2384,7 +2383,7 @@ static void FILEDLG95_MRU_save_filename(LPCWSTR filename)
         WARN("GotModuleFileName failed: %d\n", GetLastError());
         return;
     }
-    module_name = strrchrW(module_path, '\\');
+    module_name = wcsrchr(module_path, '\\');
     if(!module_name)
         module_name = module_path;
     else
@@ -2400,7 +2399,7 @@ static void FILEDLG95_MRU_save_filename(LPCWSTR filename)
         DWORD path_len, final_len;
 
         /* use only the path segment of `filename' */
-        path_ends = strrchrW(filename, '\\');
+        path_ends = wcsrchr(filename, '\\');
         path_len = path_ends - filename;
 
         final_len = path_len + lstrlenW(module_name) + 2;
@@ -2472,7 +2471,7 @@ static void FILEDLG95_MRU_load_filename(LPWSTR stored_path)
         WARN("GotModuleFileName failed: %d\n", GetLastError());
         return;
     }
-    module_name = strrchrW(module_path, '\\');
+    module_name = wcsrchr(module_path, '\\');
     if(!module_name)
         module_name = module_path;
     else
@@ -2482,6 +2481,7 @@ static void FILEDLG95_MRU_load_filename(LPWSTR stored_path)
     TRACE("got MRU path: %s\n", wine_dbgstr_w(stored_path));
 }
 #ifdef __REACTOS__
+
 static const WCHAR s_subkey[] =
 {
     'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
@@ -2699,7 +2699,8 @@ static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
         RegCloseKey(hOpenSaveMRT);
     }
 }
-#endif
+
+#endif /* __REACTOS__ */
 
 void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText)
 {
@@ -2722,7 +2723,7 @@ int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
     static const WCHAR szwInvalid[] = { '/',':','<','>','|', 0};
 
     /* check for invalid chars */
-    if((strpbrkW(lpstrPathAndFile+3, szwInvalid) != NULL) && !(flags & OFN_NOVALIDATE))
+    if((wcspbrk(lpstrPathAndFile+3, szwInvalid) != NULL) && !(flags & OFN_NOVALIDATE))
     {
         FILEDLG95_OnOpenMessage(hwnd, IDS_INVALID_FILENAME_TITLE, IDS_INVALID_FILENAME);
         return FALSE;
@@ -2751,7 +2752,7 @@ int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
         {
             static const WCHAR wszWild[] = { '*', '?', 0 };
             /* if the last element is a wildcard do a search */
-            if(strpbrkW(lpszTemp1, wszWild) != NULL)
+            if(wcspbrk(lpszTemp1, wszWild) != NULL)
             {
                 nOpenAction = ONOPEN_SEARCH;
                 break;
@@ -2799,7 +2800,7 @@ int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
         else if (!(flags & OFN_NOVALIDATE))
         {
             if(*lpszTemp ||	/* points to trailing null for last path element */
-               (lpwstrTemp[strlenW(lpwstrTemp)-1] == '\\')) /* or if last element ends in '\' */
+               (lpwstrTemp[lstrlenW(lpwstrTemp)-1] == '\\')) /* or if last element ends in '\' */
             {
                 if(flags & OFN_PATHMUSTEXIST)
                 {
@@ -3080,7 +3081,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
         /* update dialog data */
         SetWindowTextW(fodInfos->DlgInfos.hwndFileName, PathFindFileNameW(lpstrPathAndFile));
-#else
+#else /* __REACTOS__ */
         if (! *ext && fodInfos->defext)
         {
             /* if no extension is specified with file name, then */
@@ -3099,12 +3100,12 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             {
                 WCHAR* filterSearchIndex;
                 filterExt = heap_alloc((lstrlenW(lpstrFilter) + 1) * sizeof(WCHAR));
-                strcpyW(filterExt, lpstrFilter);
+                lstrcpyW(filterExt, lpstrFilter);
 
                 /* if a semicolon-separated list of file extensions was given, do not include the
                    semicolon or anything after it in the extension.
                    example: if filterExt was "*.abc;*.def", it will become "*.abc" */
-                filterSearchIndex = strchrW(filterExt, ';');
+                filterSearchIndex = wcschr(filterExt, ';');
                 if (filterSearchIndex)
                 {
                     filterSearchIndex[0] = '\0';
@@ -3113,10 +3114,10 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                 /* find the file extension by searching for the first dot in filterExt */
                 /* strip the * or anything else from the extension, "*.abc" becomes "abc" */
                 /* if the extension is invalid or contains a glob, ignore it */
-                filterSearchIndex = strchrW(filterExt, '.');
-                if (filterSearchIndex++ && !strchrW(filterSearchIndex, '*') && !strchrW(filterSearchIndex, '?'))
+                filterSearchIndex = wcschr(filterExt, '.');
+                if (filterSearchIndex++ && !wcschr(filterSearchIndex, '*') && !wcschr(filterSearchIndex, '?'))
                 {
-                    strcpyW(filterExt, filterSearchIndex);
+                    lstrcpyW(filterExt, filterSearchIndex);
                 }
                 else
                 {
@@ -3129,7 +3130,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             {
                 /* use the default file extension */
                 filterExt = heap_alloc((lstrlenW(fodInfos->defext) + 1) * sizeof(WCHAR));
-                strcpyW(filterExt, fodInfos->defext);
+                lstrcpyW(filterExt, fodInfos->defext);
             }
 
             if (*filterExt) /* ignore filterExt="" */
@@ -3154,7 +3155,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
             else
                 fodInfos->ofnInfos->Flags |= OFN_EXTENSIONDIFFERENT;
 	}
-#endif
+#endif /* __REACTOS__ */
 
 	/* In Save dialog: check if the file already exists */
 	if (fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG
@@ -4695,7 +4696,7 @@ short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, WORD cbBuf)
 	if (len == 0)
 		return -1;
 
-	if(strpbrkW(lpFile, brkpoint))
+	if(wcspbrk(lpFile, brkpoint))
 		return -1;
 
 	len--;

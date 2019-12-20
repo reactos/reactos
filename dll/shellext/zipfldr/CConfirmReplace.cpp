@@ -14,8 +14,8 @@ private:
 public:
 
     CConfirmReplace(const char* filename)
+        : m_Filename(filename)
     {
-        m_Filename = filename;
     }
 
     LRESULT OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

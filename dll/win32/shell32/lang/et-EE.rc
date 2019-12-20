@@ -776,6 +776,15 @@ BEGIN
     IDS_PASTE "Kleebi"
     IDS_EJECT "Väljuta"
     IDS_DISCONNECT "Katkesta ühendus"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "Ei saa luua kausta '%1'"
     IDS_CREATEFOLDER_CAPTION "Ei saa kausta luua"
@@ -879,6 +888,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Ei saa meediumit väljutada (Veateade: %lu)."
     IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"
@@ -915,6 +925,7 @@ BEGIN
     IDS_EDIT_VERB "Muuda"
     IDS_FIND_VERB "Leia"
     IDS_PRINT_VERB "Prindi"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u Faili, %u Kausta"
     IDS_PRINTERS "Printerid"

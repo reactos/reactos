@@ -769,6 +769,15 @@ BEGIN
     IDS_PASTE "पैस्ट"
     IDS_EJECT "इजेक्ट"
     IDS_DISCONNECT "डिस्कनेक्ट"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "फ़ोल्डर '%1' बनाने में असमर्थ"
     IDS_CREATEFOLDER_CAPTION "फ़ोल्डर बनाने में असमर्थ"
@@ -867,6 +876,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "मीडिया को इजेक्ट करने में असमर्थ (एरर कोड: %lu)."
     IDS_CANTSHOWPROPERTIES "गुण दिखाने में असमर्थ (एरर कोड: %lu)."
     IDS_CANTDISCONNECT "डिस्कनेक्ट करने में असमर्थ (एरर कोड: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "फोल्डर"
@@ -903,6 +913,7 @@ BEGIN
     IDS_EDIT_VERB "संपादित करें"
     IDS_FIND_VERB "ढूंढे"
     IDS_PRINT_VERB "प्रिंट"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u फ़ाइलें, %u फ़ोल्डर"
     IDS_PRINTERS "प्रिंटर"

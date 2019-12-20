@@ -1037,6 +1037,7 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
                 tw->address = mr->new_address;
                 tw->length = Vcb->superblock.node_size;
                 tw->data = (uint8_t*)mr->data;
+                tw->allocated = false;
 
                 if (IsListEmpty(&tree_writes))
                     InsertTailList(&tree_writes, &tw->list_entry);
@@ -1089,6 +1090,10 @@ static NTSTATUS write_metadata_items(_Requires_exclusive_lock_held_(_Curr_->tree
 end:
     while (!IsListEmpty(&tree_writes)) {
         tree_write* tw = CONTAINING_RECORD(RemoveHeadList(&tree_writes), tree_write, list_entry);
+
+        if (tw->allocated)
+            ExFreePool(tw->data);
+
         ExFreePool(tw);
     }
 
@@ -1202,6 +1207,9 @@ end:
 
             ExFreePool(ref);
         }
+
+        if (mr->data)
+            ExFreePool(mr->data);
 
         ExFreePool(mr);
     }
@@ -2186,6 +2194,9 @@ end:
 
             ExFreePool(ref);
         }
+
+        if (mr->data)
+            ExFreePool(mr->data);
 
         ExFreePool(mr);
     }
@@ -3499,6 +3510,7 @@ end:
 NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESSOR_MODE processor_mode) {
     NTSTATUS Status;
     btrfs_start_balance* bsb = (btrfs_start_balance*)data;
+    OBJECT_ATTRIBUTES oa;
     uint8_t i;
 
     if (length < sizeof(btrfs_start_balance) || !data)
@@ -3599,7 +3611,9 @@ NTSTATUS start_balance(device_extension* Vcb, void* data, ULONG length, KPROCESS
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
-    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         return Status;
@@ -3613,6 +3627,7 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
     traverse_ptr tp;
     NTSTATUS Status;
     BALANCE_ITEM* bi;
+    OBJECT_ATTRIBUTES oa;
     int i;
 
     searchkey.obj_id = BALANCE_ITEM_ID;
@@ -3679,7 +3694,9 @@ NTSTATUS look_for_balance_item(_Requires_lock_held_(_Curr_->tree_lock) device_ex
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
-    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         return Status;
@@ -3783,6 +3800,7 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
     NTSTATUS Status;
     int i;
     uint64_t num_rw_devices;
+    OBJECT_ATTRIBUTES oa;
 
     TRACE("(%p, %p, %x)\n", Vcb, data, length);
 
@@ -3876,7 +3894,9 @@ NTSTATUS remove_device(device_extension* Vcb, void* data, ULONG length, KPROCESS
     Vcb->balance.status = STATUS_SUCCESS;
     KeInitializeEvent(&Vcb->balance.event, NotificationEvent, !Vcb->balance.paused);
 
-    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, NULL, NULL, NULL, balance_thread, Vcb);
+    InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = PsCreateSystemThread(&Vcb->balance.thread, 0, &oa, NULL, NULL, balance_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
         ERR("PsCreateSystemThread returned %08x\n", Status);
         dev->reloc = false;

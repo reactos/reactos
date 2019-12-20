@@ -562,5 +562,5 @@ AcpiNsConvertToReference (
 ErrorExit:
     ACPI_FREE (Name);
     *ReturnObject = NewObject;
-    return (AE_OK);
+    return (Status);
 }

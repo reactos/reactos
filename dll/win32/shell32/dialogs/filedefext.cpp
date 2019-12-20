@@ -1172,7 +1172,7 @@ CFileDefExt::~CFileDefExt()
 }
 
 HRESULT WINAPI
-CFileDefExt::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID)
+CFileDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID)
 {
     FORMATETC format;
     STGMEDIUM stgm;
@@ -1190,7 +1190,7 @@ CFileDefExt::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pDataObj, HKEY hk
     format.tymed = TYMED_HGLOBAL;
 
     hr = pDataObj->GetData(&format, &stgm);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!DragQueryFileW((HDROP)stgm.hGlobal, 0, m_wszPath, _countof(m_wszPath)))

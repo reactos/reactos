@@ -1067,9 +1067,9 @@ InfFindFirstLine (
 
     /* Iterate through list of sections */
     CacheSection = Cache->FirstSection;
-    while (Section != NULL)
+    while (CacheSection != NULL)
     {
-//      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
+//      DPRINT("Comparing '%s' and '%s'\n", CacheSection->Name, Section);
 
         /* Are the section names the same? */
         if (_stricmp(CacheSection->Name, Section) == 0)
@@ -1223,9 +1223,9 @@ InfGetLineCount(
 
     /* Iterate through list of sections */
     CacheSection = Cache->FirstSection;
-    while (Section != NULL)
+    while (CacheSection != NULL)
     {
-//      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
+//      DPRINT("Comparing '%s' and '%s'\n", CacheSection->Name, Section);
 
         /* Are the section names the same? */
         if (_stricmp(CacheSection->Name, Section) == 0)

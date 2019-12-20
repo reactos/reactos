@@ -4164,7 +4164,7 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
     TRACE("(%p, %p, %I64x, %p, %x, %u, %u)\n", Vcb, FileObject, offset.QuadPart, buf, *length, paging_io, no_cache);
 
     if (*length == 0) {
-        WARN("returning success for zero-length write\n");
+        TRACE("returning success for zero-length write\n");
         return STATUS_SUCCESS;
     }
 
@@ -4231,20 +4231,18 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
             acquired_tree_lock = true;
     }
 
-    if (no_cache) {
-        if (pagefile) {
-            if (!ExAcquireResourceSharedLite(fcb->Header.Resource, wait)) {
-                Status = STATUS_PENDING;
-                goto end;
-            } else
-                acquired_fcb_lock = true;
-        } else if (!ExIsResourceAcquiredExclusiveLite(fcb->Header.Resource)) {
-            if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, wait)) {
-                Status = STATUS_PENDING;
-                goto end;
-            } else
-                acquired_fcb_lock = true;
-        }
+    if (pagefile) {
+        if (!ExAcquireResourceSharedLite(fcb->Header.Resource, wait)) {
+            Status = STATUS_PENDING;
+            goto end;
+        } else
+            acquired_fcb_lock = true;
+    } else if (!ExIsResourceAcquiredExclusiveLite(fcb->Header.Resource)) {
+        if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, wait)) {
+            Status = STATUS_PENDING;
+            goto end;
+        } else
+            acquired_fcb_lock = true;
     }
 
     newlength = fcb->ads ? fcb->adsdata.Length : fcb->inode_item.st_size;
@@ -4258,7 +4256,6 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
         if (paging_io) {
             if (off64 >= newlength) {
                 TRACE("paging IO tried to write beyond end of file (file size = %I64x, offset = %I64x, length = %x)\n", newlength, off64, *length);
-                TRACE("filename %S\n", file_desc(FileObject));
                 TRACE("FileObject: AllocationSize = %I64x, FileSize = %I64x, ValidDataLength = %I64x\n",
                     fcb->Header.AllocationSize.QuadPart, fcb->Header.FileSize.QuadPart, fcb->Header.ValidDataLength.QuadPart);
                 Status = STATUS_SUCCESS;
@@ -4354,8 +4351,8 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
         } _SEH2_END;
 
         if (changed_length) {
-            send_notification_fcb(fcb->ads ? fileref->parent : fileref, fcb->ads ? FILE_NOTIFY_CHANGE_STREAM_SIZE : FILE_NOTIFY_CHANGE_SIZE,
-                                  fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED, fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
+            queue_notification_fcb(fcb->ads ? fileref->parent : fileref, fcb->ads ? FILE_NOTIFY_CHANGE_STREAM_SIZE : FILE_NOTIFY_CHANGE_SIZE,
+                                   fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED, fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
         }
 
         goto end;
@@ -4609,8 +4606,8 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
     Status = STATUS_SUCCESS;
 
     if (filter != 0)
-        send_notification_fcb(fcb->ads ? fileref->parent : fileref, filter, fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED,
-                              fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
+        queue_notification_fcb(fcb->ads ? fileref->parent : fileref, filter, fcb->ads ? FILE_ACTION_MODIFIED_STREAM : FILE_ACTION_MODIFIED,
+                               fcb->ads && fileref->dc ? &fileref->dc->name : NULL);
 
 end:
     if (NT_SUCCESS(Status) && FileObject->Flags & FO_SYNCHRONOUS_IO && !paging_io) {
@@ -4779,6 +4776,9 @@ NTSTATUS __stdcall drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
             Irp->MdlAddress = NULL;
             Status = STATUS_SUCCESS;
         } else {
+            if (!(Irp->Flags & IRP_PAGING_IO))
+                FsRtlCheckOplock(fcb_oplock(fcb), Irp, NULL, NULL, NULL);
+
             // Don't offload jobs when doing paging IO - otherwise this can lead to
             // deadlocks in CcCopyWrite.
             if (Irp->Flags & IRP_PAGING_IO)

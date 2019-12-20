@@ -19,8 +19,8 @@ BEGIN
     PUSHBUTTON "&Karaktiristsikat", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Përshkrimi", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Përshkrimi Komponenteve shkon këtu...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Shfaq Ikonat në tabelen e punës gjatë lidhjes", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Më njofto kur kjo linjë ka kufizim ose ska lidhje", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    AUTOCHECKBOX "&Shfaq Ikonat në tabelen e punës gjatë lidhjes", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Më njofto kur kjo linjë ka kufizim ose ska lidhje", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280

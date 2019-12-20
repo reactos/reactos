@@ -2581,8 +2581,7 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
 lerror:
     if (!bSuccess)
     {
-        if(lpwfs)
-            WININET_Release( &lpwfs->hdr );
+        WININET_Release(&lpwfs->hdr);
         return NULL;
     }
 
@@ -3746,7 +3745,7 @@ static BOOL FTP_ParseNextFile(INT nSocket, LPCWSTR lpszSearchFile, LPFILEPROPERT
 
             pszToken = strtok(NULL, szSpace);
             if(!pszToken) continue;
-            if(!strcasecmp(pszToken, "<DIR>")) {
+            if(!_strnicmp(pszToken, "<DIR>", -1)) {
                 lpfp->bIsDirectory = TRUE;
                 lpfp->nSize = 0;
                 TRACE("Is directory\n");

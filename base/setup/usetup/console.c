@@ -47,11 +47,12 @@ BOOL
 WINAPI
 AllocConsole(VOID)
 {
+    NTSTATUS Status;
     UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
     UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    NTSTATUS Status;
+    ULONG Enable;
 
     /* Open the screen */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -68,6 +69,24 @@ AllocConsole(VOID)
     if (!NT_SUCCESS(Status))
         return FALSE;
 
+    /* Enable it */
+    Enable = TRUE;
+    Status = NtDeviceIoControlFile(StdOutput,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_CONSOLE_RESET_SCREEN,
+                                   &Enable,
+                                   sizeof(Enable),
+                                   NULL,
+                                   0);
+    if (!NT_SUCCESS(Status))
+    {
+        NtClose(StdOutput);
+        return FALSE;
+    }
+
     /* Open the keyboard */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyboardName,
@@ -81,7 +100,10 @@ AllocConsole(VOID)
                         FILE_OPEN,
                         0);
     if (!NT_SUCCESS(Status))
+    {
+        NtClose(StdOutput);
         return FALSE;
+    }
 
     /* Reset the queue state */
     InputQueueEmpty = TRUE;

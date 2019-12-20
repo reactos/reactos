@@ -220,7 +220,10 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
         else
         {
             ok(pInfo->dwMajor == 2, "Expected pInfo->dwMajor to be 2, was: %d\n", pInfo->dwMajor);
-            ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
+            if (g_WinVersion >= _WIN32_WINNT_VISTA)
+                ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
+            else
+                ok(pInfo->dwMinor == 190915, "Expected pInfo->dwMinor to be 190915, was: %d\n", pInfo->dwMinor);
 
             ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
@@ -1517,12 +1520,25 @@ static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
         ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
         DWORD exe_count = Succeed ? 1 : 0;
 
-        if (Succeed)
-            ok(ret, "SdbGetMatchingExe should not fail for %s.\n", wine_dbgstr_w(TestName));
+        if (Succeed && !ret && g_WinVersion == _WIN32_WINNT_WS03)
+        {
+            skip("As long as we do not have indexes, we will hit a bug in W2k3\n");
+#if 0
+[Info][SdbGetIndex         ] index 0x7007(0x600b) was not found in the index table
+[Info][SdbGetIndex         ] index 0x7007(0x6001) was not found in the index table
+[Info][SdbpSearchDB        ] Searching database with no index.
+[Err ][SdbpSearchDB        ] No DATABASE tag found.
+#endif
+        }
         else
-            ok(!ret, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
+        {
+            if (Succeed)
+                ok(ret, "SdbGetMatchingExe should not fail for %s.\n", wine_dbgstr_w(TestName));
+            else
+                ok(!ret, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
 
-        ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %s\n", exe_count, query.dwExeCount, wine_dbgstr_w(TestName));
+            ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %s\n", exe_count, query.dwExeCount, wine_dbgstr_w(TestName));
+        }
         DeleteFileW(exename);
     }
 }
@@ -1772,12 +1788,14 @@ static void test_DataTags(HSDB hsdb)
     ok_hex(dwBufferSize, sizeof(DWORD));
     ok_hex(*(DWORD*)Buffer, 3333);
 
-    /* This succeeds on 2k3.. */
-    memset(Buffer, 0xaa, sizeof(Buffer));
-    dwBufferSize = sizeof(Buffer);
-    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, Buffer, NULL, NULL);
-    ok_hex(dwRet, ERROR_INSUFFICIENT_BUFFER);
-    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+    if (g_WinVersion > _WIN32_WINNT_WS03)
+    {
+        memset(Buffer, 0xaa, sizeof(Buffer));
+        dwBufferSize = sizeof(Buffer);
+        dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, Buffer, NULL, NULL);
+        ok_hex(dwRet, ERROR_INSUFFICIENT_BUFFER);
+        ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+    }
 
     memset(Buffer, 0xaa, sizeof(Buffer));
     dwBufferSize = 1;
@@ -1877,7 +1895,10 @@ static void test_DataTags(HSDB hsdb)
     ok_hex(dwDataType, 0x12345);
     ok_hex(dwBufferSize, sizeof(Buffer));
     ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
-    ok(trData == 0x111111, "Expected 0x111111, got 0x%x\n", trData);
+    if (g_WinVersion == _WIN32_WINNT_WS03)
+        ok(trData == 0, "Expected 0, got 0x%x\n", trData);
+    else
+        ok(trData == 0x111111, "Expected 0x111111, got 0x%x\n", trData);
 
     /* And SdbQueryData as well */
     memset(Buffer, 0xaa, sizeof(Buffer));
@@ -2062,9 +2083,9 @@ static int validate_SDBQUERYRESULT_size()
 
 START_TEST(db)
 {
-    //SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");
-    //SetEnvironmentVariable("SHIMENG_DEBUG_LEVEL", "4");
-    //SetEnvironmentVariable("DEBUGCHANNEL", "+apphelp");
+    //SetEnvironmentVariableA("SHIM_DEBUG_LEVEL", "4");
+    //SetEnvironmentVariableA("SHIMENG_DEBUG_LEVEL", "4");
+    //SetEnvironmentVariableA("DEBUGCHANNEL", "+apphelp");
 
     silence_debug_output();
     hdll = LoadLibraryA("apphelp.dll");

@@ -459,7 +459,7 @@ static BOOL transfer_file_local(BackgroundCopyFileImpl *file, const WCHAR *tmpna
 
     transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRING);
 
-    if (strlenW(file->info.RemoteName) > 7 && !memicmpW(file->info.RemoteName, fileW, 7))
+    if (lstrlenW(file->info.RemoteName) > 7 && !_wcsnicmp(file->info.RemoteName, fileW, 7))
         ptr = file->info.RemoteName + 7;
     else
         ptr = file->info.RemoteName;

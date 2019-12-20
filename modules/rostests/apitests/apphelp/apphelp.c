@@ -1,10 +1,10 @@
 /*
  * PROJECT:     apphelp_apitest
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Misc apphelp tests
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -94,6 +94,7 @@ static BOOL (WINAPI *pSdbGetStandardDatabaseGUID)(DWORD Flags, GUID* Guid);
 static BOOL (WINAPI *pSdbGetFileAttributes)(LPCWSTR wszPath, PATTRINFO *ppAttrInfo, LPDWORD pdwAttrCount);
 static BOOL (WINAPI *pSdbFreeFileAttributes)(PATTRINFO AttrInfo);
 static HRESULT (WINAPI* pSdbGetAppPatchDir)(PVOID hsdb, LPWSTR path, DWORD size);
+static DWORD g_AttrInfoSize;
 
 /* 'Known' database guids */
 DEFINE_GUID(GUID_DATABASE_MSI,0xd8ff6d16,0x6a3a,0x468a,0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea);
@@ -490,40 +491,156 @@ static void test_GuidFunctions(void)
     ok(IsEqualGUID(&GUID_DATABASE_DRIVERS, &guid), "Expected guid to equal GUID_DATABASE_DRIVERS, was: %s\n", wine_dbgstr_guid(&guid));
 }
 
-static void expect_tag_skip_imp(PATTRINFO pattr, DWORD num)
+static TAG g_Tags_26[] = {
+    TAG_SIZE,
+    TAG_CHECKSUM,
+    TAG_BIN_FILE_VERSION,
+    TAG_BIN_PRODUCT_VERSION,
+    TAG_PRODUCT_VERSION,
+    TAG_FILE_DESCRIPTION,
+    TAG_COMPANY_NAME,
+    TAG_PRODUCT_NAME,
+    TAG_FILE_VERSION,
+    TAG_ORIGINAL_FILENAME,
+    TAG_INTERNAL_NAME,
+    TAG_LEGAL_COPYRIGHT,
+    TAG_VERDATEHI,  /* TAG_VERFILEDATEHI */
+    TAG_VERDATELO,  /* TAG_VERFILEDATELO */
+    TAG_VERFILEOS,
+    TAG_VERFILETYPE,
+    TAG_MODULE_TYPE,
+    TAG_PE_CHECKSUM,
+    TAG_LINKER_VERSION,
+    TAG_16BIT_DESCRIPTION,  /* CHECKME! */
+    TAG_16BIT_MODULE_NAME,  /* CHECKME! */
+    TAG_UPTO_BIN_FILE_VERSION,
+    TAG_UPTO_BIN_PRODUCT_VERSION,
+    TAG_LINK_DATE,
+    TAG_UPTO_LINK_DATE,
+    TAG_VER_LANGUAGE,
+    0
+};
+
+static TAG g_Tags_28[] = {
+    TAG_SIZE,
+    TAG_CHECKSUM,
+    TAG_BIN_FILE_VERSION,
+    TAG_BIN_PRODUCT_VERSION,
+    TAG_PRODUCT_VERSION,
+    TAG_FILE_DESCRIPTION,
+    TAG_COMPANY_NAME,
+    TAG_PRODUCT_NAME,
+    TAG_FILE_VERSION,
+    TAG_ORIGINAL_FILENAME,
+    TAG_INTERNAL_NAME,
+    TAG_LEGAL_COPYRIGHT,
+    TAG_VERDATEHI,
+    TAG_VERDATELO,
+    TAG_VERFILEOS,
+    TAG_VERFILETYPE,
+    TAG_MODULE_TYPE,
+    TAG_PE_CHECKSUM,
+    TAG_LINKER_VERSION,
+    TAG_16BIT_DESCRIPTION,
+    TAG_16BIT_MODULE_NAME,
+    TAG_UPTO_BIN_FILE_VERSION,
+    TAG_UPTO_BIN_PRODUCT_VERSION,
+    TAG_LINK_DATE,
+    TAG_UPTO_LINK_DATE,
+    TAG_EXPORT_NAME,
+    TAG_VER_LANGUAGE,
+    TAG_EXE_WRAPPER,
+    0
+};
+
+static DWORD find_tag(TAG tag)
 {
-    PATTRINFO p = &pattr[num];
+    DWORD n;
+    TAG* allTags;
+    switch (g_AttrInfoSize)
+    {
+    case 26:
+        allTags = g_Tags_26;
+        break;
+    case 28:
+        allTags = g_Tags_28;
+        break;
+    default:
+        return ~0;
+    }
+
+    for (n = 0; n < allTags[n]; ++n)
+    {
+        if (allTags[n] == tag)
+            return n;
+    }
+    return ~0;
+}
+
+static void expect_tag_skip_imp(PATTRINFO pattr, TAG tag)
+{
+    DWORD num = find_tag(tag);
+    PATTRINFO p;
+
+    if (num == ~0)
+        return;
+
+    p = &pattr[num];
     winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
     winetest_ok(p->flags == ATTRIBUTE_FAILED, "expected entry #%d to be failed, was %d\n", num, p->flags);
     winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
 }
-static void expect_tag_empty_imp(PATTRINFO pattr, DWORD num)
+static void expect_tag_empty_imp(PATTRINFO pattr, TAG tag)
 {
-    PATTRINFO p = &pattr[num];
+    DWORD num = find_tag(tag);
+    PATTRINFO p;
+
+    if (num == ~0)
+        return;
+
+    p = &pattr[num];
     winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
     winetest_ok(p->flags == 0, "expected entry #%d to be 0, was %d\n", num, p->flags);
     winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
 }
 
-static void expect_tag_dword_imp(PATTRINFO pattr, DWORD num, TAG tag, DWORD value)
+static void expect_tag_dword_imp(PATTRINFO pattr, TAG tag, DWORD value)
 {
-    PATTRINFO p = &pattr[num];
+    DWORD num = find_tag(tag);
+    PATTRINFO p;
+
+    if (num == ~0)
+        return;
+
+    p = &pattr[num];
     winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
     winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
     winetest_ok(p->dwattr == value, "expected entry #%d to be 0x%x, was 0x%x\n", num, value, p->dwattr);
 }
 
-static void expect_tag_qword_imp(PATTRINFO pattr, DWORD num, TAG tag, QWORD value)
+static void expect_tag_qword_imp(PATTRINFO pattr, TAG tag, QWORD value)
 {
-    PATTRINFO p = &pattr[num];
+    DWORD num = find_tag(tag);
+    PATTRINFO p;
+
+    if (num == ~0)
+        return;
+
+    p = &pattr[num];
     winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
     winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
     winetest_ok(p->qwattr == value, "expected entry #%d to be 0x%I64x, was 0x%I64x\n", num, value, p->qwattr);
 }
 
-static void expect_tag_str_imp(PATTRINFO pattr, DWORD num, TAG tag, const WCHAR* value)
+static void expect_tag_str_imp(PATTRINFO pattr, TAG tag, const WCHAR* value)
 {
-    PATTRINFO p = &pattr[num];
+    DWORD num = find_tag(tag);
+    PATTRINFO p;
+
+    if (num == ~0)
+        return;
+
+    p = &pattr[num];
     winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
     winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
     winetest_ok(p->lpattr && wcscmp(p->lpattr, value) == 0, "expected entry #%d to be %s, was %s\n", num, wine_dbgstr_w(value), wine_dbgstr_w(p->lpattr));
@@ -596,11 +713,11 @@ static void test_crc_imp(size_t len, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == 28, "expected 28 items, got %d.\n", num);
+    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword_imp(pattrinfo, 1, TAG_CHECKSUM, expected);
+        expect_tag_dword_imp(pattrinfo, TAG_CHECKSUM, expected);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -623,12 +740,12 @@ static void test_crc2_imp(DWORD len, int fill, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == 28, "expected 28 items, got %d.\n", num);
+    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword_imp(pattrinfo, 0, TAG_SIZE, len);
-        expect_tag_dword_imp(pattrinfo, 1, TAG_CHECKSUM, expected);
+        expect_tag_dword_imp(pattrinfo, TAG_SIZE, len);
+        expect_tag_dword_imp(pattrinfo, TAG_CHECKSUM, expected);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -672,38 +789,59 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
 
-    if (num == 28 && ret)
+    //for (UINT n = 0; n < num; ++n)
+    //{
+    //    trace("%S\n", pSdbTagToString(pattrinfo[n].type));
+    //}
+
+    switch (num)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0x800);
-        expect_tag_dword(pattrinfo, 1, TAG_CHECKSUM, 0x178bd629);
-        expect_tag_qword(pattrinfo, 2, TAG_BIN_FILE_VERSION, 0x1000000000000ull);
-        expect_tag_qword(pattrinfo, 3, TAG_BIN_PRODUCT_VERSION, 0x1000000000001ull);
-        expect_tag_str(pattrinfo, 4, TAG_PRODUCT_VERSION, PRODUCT_VERSION);
-        expect_tag_str(pattrinfo, 5, TAG_FILE_DESCRIPTION, FILE_DESCRIPTION);
-        expect_tag_str(pattrinfo, 6, TAG_COMPANY_NAME, COMPANY_NAME);
-        expect_tag_str(pattrinfo, 7, TAG_PRODUCT_NAME, PRODUCT_NAME);
-        expect_tag_str(pattrinfo, 8, TAG_FILE_VERSION, FILE_VERSION);
-        expect_tag_str(pattrinfo, 9, TAG_ORIGINAL_FILENAME, ORIGINAL_FILENAME);
-        expect_tag_str(pattrinfo, 10, TAG_INTERNAL_NAME, INTERNAL_NAME);
-        expect_tag_str(pattrinfo, 11, TAG_LEGAL_COPYRIGHT, LEGAL_COPYRIGHT);
-        expect_tag_dword(pattrinfo, 12, TAG_VERDATEHI, 0x1d1a019);
-        expect_tag_dword(pattrinfo, 13, TAG_VERDATELO, 0xac754c50);
-        expect_tag_dword(pattrinfo, 14, TAG_VERFILEOS, VOS__WINDOWS32);
-        expect_tag_dword(pattrinfo, 15, TAG_VERFILETYPE, VFT_APP);
-        expect_tag_dword(pattrinfo, 16, TAG_MODULE_TYPE, 0x3); /* Win32 */
-        expect_tag_dword(pattrinfo, 17, TAG_PE_CHECKSUM, 0xBAAD);
-        expect_tag_dword(pattrinfo, 18, TAG_LINKER_VERSION, 0x40002);
-        expect_tag_skip(pattrinfo, 19); /* TAG_16BIT_DESCRIPTION */
-        expect_tag_skip(pattrinfo, 20); /* TAG_16BIT_MODULE_NAME */
-        expect_tag_qword(pattrinfo, 21, TAG_UPTO_BIN_FILE_VERSION, 0x1000000000000ull);
-        expect_tag_qword(pattrinfo, 22, TAG_UPTO_BIN_PRODUCT_VERSION, 0x1000000000001ull);
-        expect_tag_dword(pattrinfo, 23, TAG_LINK_DATE, 0x12345);
-        expect_tag_dword(pattrinfo, 24, TAG_UPTO_LINK_DATE, 0x12345);
-        expect_tag_str(pattrinfo, 25, TAG_EXPORT_NAME, EXPORT_NAME);
-        expect_tag_dword(pattrinfo, 26, TAG_VER_LANGUAGE, 0xffff);
-        expect_tag_dword(pattrinfo, 27, TAG_EXE_WRAPPER, 0x0);
+    case 26:
+        // 2k3
+        g_AttrInfoSize = 26;
+        break;
+    case 28:
+        // Win7+ (and maybe vista, but who cares about that?)
+        g_AttrInfoSize = 28;
+        break;
+    default:
+        ok(0, "Unknown attrinfo size: %u\n", num);
+        break;
+    }
+
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+
+    if (num == g_AttrInfoSize && ret)
+    {
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
+        expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0x178bd629);
+        expect_tag_qword(pattrinfo, TAG_BIN_FILE_VERSION, 0x1000000000000ull);
+        expect_tag_qword(pattrinfo, TAG_BIN_PRODUCT_VERSION, 0x1000000000001ull);
+        expect_tag_str(pattrinfo, TAG_PRODUCT_VERSION, PRODUCT_VERSION);
+        expect_tag_str(pattrinfo, TAG_FILE_DESCRIPTION, FILE_DESCRIPTION);
+        expect_tag_str(pattrinfo, TAG_COMPANY_NAME, COMPANY_NAME);
+        expect_tag_str(pattrinfo, TAG_PRODUCT_NAME, PRODUCT_NAME);
+        expect_tag_str(pattrinfo, TAG_FILE_VERSION, FILE_VERSION);
+        expect_tag_str(pattrinfo, TAG_ORIGINAL_FILENAME, ORIGINAL_FILENAME);
+        expect_tag_str(pattrinfo, TAG_INTERNAL_NAME, INTERNAL_NAME);
+        expect_tag_str(pattrinfo, TAG_LEGAL_COPYRIGHT, LEGAL_COPYRIGHT);
+        expect_tag_dword(pattrinfo, TAG_VERDATEHI, 0x1d1a019);
+        expect_tag_dword(pattrinfo, TAG_VERDATELO, 0xac754c50);
+        expect_tag_dword(pattrinfo, TAG_VERFILEOS, VOS__WINDOWS32);
+        expect_tag_dword(pattrinfo, TAG_VERFILETYPE, VFT_APP);
+        expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x3); /* Win32 */
+        expect_tag_dword(pattrinfo, TAG_PE_CHECKSUM, 0xBAAD);
+        expect_tag_dword(pattrinfo, TAG_LINKER_VERSION, 0x40002);
+        expect_tag_skip(pattrinfo, TAG_16BIT_DESCRIPTION);
+        expect_tag_skip(pattrinfo, TAG_16BIT_MODULE_NAME);
+        expect_tag_qword(pattrinfo, TAG_UPTO_BIN_FILE_VERSION, 0x1000000000000ull);
+        expect_tag_qword(pattrinfo, TAG_UPTO_BIN_PRODUCT_VERSION, 0x1000000000001ull);
+        expect_tag_dword(pattrinfo, TAG_LINK_DATE, 0x12345);
+        expect_tag_dword(pattrinfo, TAG_UPTO_LINK_DATE, 0x12345);
+        expect_tag_str(pattrinfo, TAG_EXPORT_NAME, EXPORT_NAME);
+        expect_tag_dword(pattrinfo, TAG_VER_LANGUAGE, 0xffff);
+        expect_tag_dword(pattrinfo, TAG_EXE_WRAPPER, 0x0);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -715,22 +853,22 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0x800);
-        expect_tag_dword(pattrinfo, 1, TAG_CHECKSUM, 0xea7caffd);
-        expect_tag_skip_range(pattrinfo, 2, 16);
-        expect_tag_dword(pattrinfo, 16, TAG_MODULE_TYPE, 0x3); /* Win32 */
-        expect_tag_dword(pattrinfo, 17, TAG_PE_CHECKSUM, 0xBAAD);
-        expect_tag_dword(pattrinfo, 18, TAG_LINKER_VERSION, 0x40002);
-        expect_tag_skip_range(pattrinfo, 19, 23);
-        expect_tag_dword(pattrinfo, 23, TAG_LINK_DATE, 0x12345);
-        expect_tag_dword(pattrinfo, 24, TAG_UPTO_LINK_DATE, 0x12345);
-        expect_tag_skip(pattrinfo, 25); /* TAG_EXPORT_NAME */
-        expect_tag_empty(pattrinfo, 26); /* TAG_VER_LANGUAGE */
-        expect_tag_dword(pattrinfo, 27, TAG_EXE_WRAPPER, 0x0);
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
+        expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7caffd);
+        //expect_tag_skip_range(pattrinfo, 2, 16);
+        expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x3); /* Win32 */
+        expect_tag_dword(pattrinfo, TAG_PE_CHECKSUM, 0xBAAD);
+        expect_tag_dword(pattrinfo, TAG_LINKER_VERSION, 0x40002);
+        //expect_tag_skip_range(pattrinfo, 19, 23);
+        expect_tag_dword(pattrinfo, TAG_LINK_DATE, 0x12345);
+        expect_tag_dword(pattrinfo, TAG_UPTO_LINK_DATE, 0x12345);
+        expect_tag_skip(pattrinfo, TAG_EXPORT_NAME);
+        expect_tag_empty(pattrinfo, TAG_VER_LANGUAGE);
+        expect_tag_dword(pattrinfo, TAG_EXE_WRAPPER, 0x0);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -741,17 +879,17 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0x2);
-        expect_tag_dword(pattrinfo, 1, TAG_CHECKSUM, 0);
-        expect_tag_skip_range(pattrinfo, 2, 16);
-        expect_tag_dword(pattrinfo, 16, TAG_MODULE_TYPE, 0x1);
-        expect_tag_skip_range(pattrinfo, 17, 26);
-        expect_tag_empty(pattrinfo, 26); /* TAG_VER_LANGUAGE */
-        expect_tag_skip(pattrinfo, 27); /* TAG_EXE_WRAPPER */
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0x2);
+        expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0);
+        //expect_tag_skip_range(pattrinfo, 2, 16);
+        expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x1);
+        //expect_tag_skip_range(pattrinfo, 17, 26);
+        expect_tag_empty(pattrinfo, TAG_VER_LANGUAGE);
+        expect_tag_skip(pattrinfo, TAG_EXE_WRAPPER);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -762,14 +900,14 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0);
-        expect_tag_skip_range(pattrinfo, 1, 26);
-        expect_tag_empty(pattrinfo, 26); /* TAG_VER_LANGUAGE */
-        expect_tag_skip(pattrinfo, 27); /* TAG_EXE_WRAPPER */
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0);
+        //expect_tag_skip_range(pattrinfo, 1, 26);
+        expect_tag_empty(pattrinfo, TAG_VER_LANGUAGE);
+        expect_tag_skip(pattrinfo, TAG_EXE_WRAPPER);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -780,21 +918,21 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0xa8);
-        expect_tag_dword(pattrinfo, 1, TAG_CHECKSUM, 0xf2abe4e9);
-        expect_tag_skip_range(pattrinfo, 2, 16);
-        expect_tag_dword(pattrinfo, 16, TAG_MODULE_TYPE, 0x2);
-        expect_tag_skip(pattrinfo, 17); /* TAG_PE_CHECKSUM */
-        expect_tag_skip(pattrinfo, 18); /* TAG_LINKER_VERSION */
-        expect_tag_str(pattrinfo, 19, TAG_16BIT_DESCRIPTION, OS2_DESCRIPTION);
-        expect_tag_str(pattrinfo, 20, TAG_16BIT_MODULE_NAME, OS2_EXPORT_NAME);
-        expect_tag_skip_range(pattrinfo, 21, 26);
-        expect_tag_empty(pattrinfo, 26); /* TAG_VER_LANGUAGE */
-        expect_tag_skip(pattrinfo, 27); /* TAG_EXE_WRAPPER */
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0xa8);
+        expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xf2abe4e9);
+        //expect_tag_skip_range(pattrinfo, 2, 16);
+        expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x2);
+        expect_tag_skip(pattrinfo, TAG_PE_CHECKSUM);
+        expect_tag_skip(pattrinfo, TAG_LINKER_VERSION);
+        expect_tag_str(pattrinfo, TAG_16BIT_DESCRIPTION, OS2_DESCRIPTION);
+        expect_tag_str(pattrinfo, TAG_16BIT_MODULE_NAME, OS2_EXPORT_NAME);
+        //expect_tag_skip_range(pattrinfo, 21, 26);
+        expect_tag_empty(pattrinfo, TAG_VER_LANGUAGE);
+        expect_tag_skip(pattrinfo, TAG_EXE_WRAPPER);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
@@ -805,21 +943,21 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == 28, "expected 28 items, got %d.\n", num);
+    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
 
-    if (num == 28 && ret)
+    if (num == g_AttrInfoSize && ret)
     {
-        expect_tag_dword(pattrinfo, 0, TAG_SIZE, 0xa8);
-        expect_tag_dword(pattrinfo, 1, TAG_CHECKSUM, 0xddcbe4c9);
-        expect_tag_skip_range(pattrinfo, 2, 16);
-        expect_tag_dword(pattrinfo, 16, TAG_MODULE_TYPE, 0x2);
-        expect_tag_skip(pattrinfo, 17); /* TAG_PE_CHECKSUM */
-        expect_tag_skip(pattrinfo, 18); /* TAG_LINKER_VERSION */
-        expect_tag_str(pattrinfo, 19, TAG_16BIT_DESCRIPTION, OS2_DESCRIPTION_broken);   /* the 'Z' from 'MZ' */
-        expect_tag_str(pattrinfo, 20, TAG_16BIT_MODULE_NAME, OS2_EXPORT_NAME_broken);   /* the 'E' from 'NE' */
-        expect_tag_skip_range(pattrinfo, 21, 26);
-        expect_tag_empty(pattrinfo, 26); /* TAG_VER_LANGUAGE */
-        expect_tag_skip(pattrinfo, 27); /* TAG_EXE_WRAPPER */
+        expect_tag_dword(pattrinfo, TAG_SIZE, 0xa8);
+        expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xddcbe4c9);
+        //expect_tag_skip_range(pattrinfo, 2, 16);
+        expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x2);
+        expect_tag_skip(pattrinfo, TAG_PE_CHECKSUM);
+        expect_tag_skip(pattrinfo, TAG_LINKER_VERSION);
+        expect_tag_str(pattrinfo, TAG_16BIT_DESCRIPTION, OS2_DESCRIPTION_broken);   /* the 'Z' from 'MZ' */
+        expect_tag_str(pattrinfo, TAG_16BIT_MODULE_NAME, OS2_EXPORT_NAME_broken);   /* the 'E' from 'NE' */
+        //expect_tag_skip_range(pattrinfo, 21, 26);
+        expect_tag_empty(pattrinfo, TAG_VER_LANGUAGE);
+        expect_tag_skip(pattrinfo, TAG_EXE_WRAPPER);
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);

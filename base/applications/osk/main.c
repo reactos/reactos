@@ -14,6 +14,13 @@
 
 OSK_GLOBALS Globals;
 
+OSK_KEYLEDINDICATOR LedKey[] =
+{
+    {VK_NUMLOCK, IDC_LED_NUM, 0x0145, FALSE},
+    {VK_CAPITAL, IDC_LED_CAPS, 0x013A, FALSE},
+    {VK_SCROLL, IDC_LED_SCROLL, 0x0146, FALSE}
+};
+
 /* FUNCTIONS ******************************************************************/
 
 /***********************************************************************
@@ -237,7 +244,7 @@ int OSK_DlgInitDialog(HWND hDlg)
     Globals.hBrushGreenLed = CreateSolidBrush(RGB(0, 255, 0));
 
     /* Set a timer for periodics tasks */
-    Globals.iTimer = SetTimer(hDlg, 0, 200, NULL);
+    Globals.iTimer = SetTimer(hDlg, 0, 50, NULL);
 
     return TRUE;
 }
@@ -250,7 +257,7 @@ int OSK_DlgInitDialog(HWND hDlg)
  */
 VOID OSK_RestoreDlgPlacement(HWND hDlg)
 {
-    LoadDataFromRegistry();
+    LoadSettings();
     SetWindowPos(hDlg, (Globals.bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST), Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
 }
 
@@ -275,10 +282,33 @@ int OSK_DlgClose(void)
     /* delete GDI objects */
     if (Globals.hBrushGreenLed) DeleteObject(Globals.hBrushGreenLed);
 
-    /* Save the settings to the registry hive */
-    SaveDataToRegistry();
+    /* Save the application's settings on registry */
+    SaveSettings();
 
     return TRUE;
+}
+
+/***********************************************************************
+ *
+ *           OSK_RefreshLEDKeys
+ *
+ *  Updates (invalidates) the LED icon resources then the respective
+ *  keys (Caps Lock, Scroll Lock or Num Lock) are being held down
+ */
+VOID OSK_RefreshLEDKeys(VOID)
+{
+    INT i;
+    BOOL bKeyIsPressed;
+
+    for (i = 0; i < _countof(LedKey); i++)
+    {
+        bKeyIsPressed = (GetAsyncKeyState(LedKey[i].vKey) & 0x8000) != 0;
+        if (LedKey[i].bWasKeyPressed != bKeyIsPressed)
+        {
+            LedKey[i].bWasKeyPressed = bKeyIsPressed;
+            InvalidateRect(GetDlgItem(Globals.hMainWnd, LedKey[i].DlgResource), NULL, FALSE);
+        }
+    }
 }
 
 /***********************************************************************
@@ -298,10 +328,11 @@ int OSK_DlgTimer(void)
         Globals.hActiveWnd = hWndActiveWindow;
     }
 
-    /* Always redraw leds because it can be changed by the real keyboard) */
-    InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_NUM), NULL, TRUE);
-    InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_CAPS), NULL, TRUE);
-    InvalidateRect(GetDlgItem(Globals.hMainWnd, IDC_LED_SCROLL), NULL, TRUE);
+    /*
+        Update the LED key indicators accordingly to their state (if one
+        of the specific keys is held down).
+    */
+    OSK_RefreshLEDKeys();
 
     return TRUE;
 }
@@ -320,6 +351,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyDown;
     BOOL bKeyUp;
     LONG WindowStyle;
+    INT i;
 
     /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     if (Globals.hActiveWnd)
@@ -357,8 +389,23 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
         bKeyUp = TRUE;
     }
 
-    /* Extended key ? */
+    /* Get the key from dialog control key command */
     ScanCode = wCommand;
+
+    /*
+        The user could've pushed one of the key buttons of the dialog that
+        can trigger particular function toggling (Caps Lock, Num Lock or Scroll Lock). Update
+        (invalidate) the LED icon resources accordingly.
+    */
+    for (i = 0; i < _countof(LedKey); i++)
+    {
+        if (LedKey[i].wScanCode == ScanCode)
+        {
+            InvalidateRect(GetDlgItem(Globals.hMainWnd, LedKey[i].DlgResource), NULL, FALSE);
+        }
+    }
+
+    /* Extended key ? */
     if (ScanCode & 0x0200)
         bExtendedKey = TRUE;
     else
@@ -586,7 +633,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         */
                         Globals.bIsEnhancedKeyboard = TRUE;
                         EndDialog(hDlg, FALSE);
-                        SaveDataToRegistry();
+                        SaveSettings();
 
                         /* Change the condition of enhanced keyboard item menu to checked */
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
@@ -619,7 +666,7 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         */
                         Globals.bIsEnhancedKeyboard = FALSE;
                         EndDialog(hDlg, FALSE);
-                        SaveDataToRegistry();
+                        SaveSettings();
 
                         /* Change the condition of standard keyboard item menu to checked */
                         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
@@ -758,8 +805,8 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
 
-    /* Load the settings from the registry hive */
-    LoadDataFromRegistry();
+    /* Load the application's settings from the registry */
+    LoadSettings();
 
     /* If the member of the struct (bShowWarning) is set then display the dialog box */
     if (Globals.bShowWarning)

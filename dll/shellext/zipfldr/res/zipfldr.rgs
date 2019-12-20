@@ -12,9 +12,25 @@ HKCR
                 val UseDropHandler = s ''
             }
         }
-        '{b8cdcb65-b1bf-4b42-9428-1dfdb7ee92af}' = s 'Compressed (zipped) Folder Menu'
+        '{B8CDCB65-B1BF-4B42-9428-1DFDB7EE92AF}' = s 'Compressed (zipped) Folder Menu'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+        '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}' = s 'Compressed (zipped) Folder SendTo Target'
+        {
+            val EditFlags = d '0x01'
+            val FriendlyTypeName = s '%MODULE%,-10226'
+            val NeverShowExt = s ''
+            val NoOpen = s 'Drag Files onto this icon to compress them.'
+            DefaultIcon = s '%MODULE%' { }
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            ShellEx
+            {
+                DropHandler = s '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}' { }
+            }
         }
     }
     NoRemove Applications
@@ -24,7 +40,7 @@ HKCR
     NoRemove CompressedFolder
     {
         FriendlyTypeName = s '%MODULE%,-10195'
-        CLSID = s '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}'
+        CLSID = s '{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}'
         DefaultIcon = s '%MODULE%'
 
         NoRemove Shell
@@ -41,7 +57,7 @@ HKCR
         {
             NoRemove ContextMenuHandlers
             {
-                ForceRemove '{b8cdcb65-b1bf-4b42-9428-1dfdb7ee92af}' = s 'Compressed (zipped) Folder Menu'
+                ForceRemove '{B8CDCB65-B1BF-4B42-9428-1DFDB7EE92AF}' = s 'Compressed (zipped) Folder Menu'
                 {
                 }
             }
@@ -50,5 +66,15 @@ HKCR
     NoRemove '.zip' = s 'CompressedFolder'
     {
         val 'Content Type' = s 'application/x-zip-compressed'
+    }
+}
+HKLM
+{
+    NoRemove Software
+    {
+        NoRemove Classes
+        {
+            '.ZFSendToTarget' = s 'CLSID\{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}'
+        }
     }
 }

@@ -2,8 +2,6 @@
 #ifndef _WINTRUST_PRECOMP_H
 #define _WINTRUST_PRECOMP_H
 
-#include <wine/config.h>
-
 #include <stdio.h>
 
 #define _INC_WINDOWS
@@ -15,12 +13,12 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <winreg.h>
+#include <winnls.h>
 #include <winternl.h>
 #include <softpub.h>
 #include <mscat.h>
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #include "wintrust_priv.h"
 

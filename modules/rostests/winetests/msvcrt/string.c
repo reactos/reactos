@@ -88,6 +88,7 @@ static errno_t (__cdecl *p_mbsupr_s)(unsigned char *str, size_t numberOfElements
 static errno_t (__cdecl *p_mbslwr_s)(unsigned char *str, size_t numberOfElements);
 static int (__cdecl *p_wctob)(wint_t);
 static size_t (__cdecl *p_wcrtomb)(char*, wchar_t, mbstate_t*);
+static int (__cdecl *p_wcrtomb_s)(size_t*, char*, size_t, wchar_t, mbstate_t*);
 static int (__cdecl *p_tolower)(int);
 static int (__cdecl *p_towlower)(wint_t);
 static int (__cdecl *p__towlower_l)(wint_t, _locale_t);
@@ -101,6 +102,7 @@ static int (__cdecl *p__atodbl_l)(_CRT_DOUBLE*,char*,_locale_t);
 static double (__cdecl *p__atof_l)(const char*,_locale_t);
 static double (__cdecl *p__strtod_l)(const char *,char**,_locale_t);
 static int (__cdecl *p__strnset_s)(char*,size_t,int,size_t);
+static int (__cdecl *p__wcsnset_s)(wchar_t*,size_t,wchar_t,size_t);
 static int (__cdecl *p__wcsset_s)(wchar_t*,size_t,wchar_t);
 static size_t (__cdecl *p__mbsnlen)(const unsigned char*, size_t);
 static int (__cdecl *p__mbccpy_s)(unsigned char*, size_t, int*, const unsigned char*);
@@ -515,13 +517,32 @@ static void test_mbsspn( void)
     unsigned char str2[]="shiraz";
     unsigned char set[]="abc";
     unsigned char empty[]="";
-    int ret;
+    unsigned char mbstr[]=" 2019\x94\x4e" "6\x8c\x8e" "29\x93\xfa";
+    unsigned char mbset1[]="0123456789 \x94\x4e";
+    unsigned char mbset2[]=" \x94\x4e\x8c\x8e";
+    unsigned char mbset3[]="\x8e";
+    int ret, cp = _getmbcp();
+
     ret=_mbsspn( str1, set);
     ok( ret==3, "_mbsspn returns %d should be 3\n", ret);
     ret=_mbsspn( str2, set);
     ok( ret==0, "_mbsspn returns %d should be 0\n", ret);
     ret=_mbsspn( str1, empty);
     ok( ret==0, "_mbsspn returns %d should be 0\n", ret);
+
+    _setmbcp( 932);
+    ret=_mbsspn( mbstr, mbset1);
+    ok( ret==8, "_mbsspn returns %d should be 8\n", ret);
+    ret=_mbsspn( mbstr, mbset2);
+    ok( ret==1, "_mbsspn returns %d should be 1\n", ret);
+    ret=_mbsspn( mbstr+8, mbset1);
+    ok( ret==0, "_mbsspn returns %d should be 0\n", ret);
+    ret=_mbsspn( mbstr+8, mbset2);
+    ok( ret==2, "_mbsspn returns %d should be 2\n", ret);
+    ret=_mbsspn( mbstr, mbset3);
+    ok( ret==14, "_mbsspn returns %d should be 14\n", ret);
+
+    _setmbcp( cp);
 }
 
 static void test_mbsspnp( void)
@@ -531,7 +552,12 @@ static void test_mbsspnp( void)
     unsigned char set[]="abc";
     unsigned char empty[]="";
     unsigned char full[]="abcenrt";
+    unsigned char mbstr[]=" 2019\x94\x4e" "6\x8c\x8e" "29\x93\xfa";
+    unsigned char mbset1[]="0123456789 \x94\x4e";
+    unsigned char mbset2[]=" \x94\x4e\x8c\x8e";
     unsigned char* ret;
+    int cp = _getmbcp();
+
     ret=_mbsspnp( str1, set);
     ok( ret[0]=='e', "_mbsspnp returns %c should be e\n", ret[0]);
     ret=_mbsspnp( str2, set);
@@ -540,6 +566,18 @@ static void test_mbsspnp( void)
     ok( ret[0]=='c', "_mbsspnp returns %c should be c\n", ret[0]);
     ret=_mbsspnp( str1, full);
     ok( ret==NULL, "_mbsspnp returns %p should be NULL\n", ret);
+
+    _setmbcp( 932);
+    ret=_mbsspnp( mbstr, mbset1);
+    ok( ret==mbstr+8, "_mbsspnp returns %p should be %p\n", ret, mbstr+8);
+    ret=_mbsspnp( mbstr, mbset2);
+    ok( ret==mbstr+1, "_mbsspnp returns %p should be %p\n", ret, mbstr+1);
+    ret=_mbsspnp( mbstr+8, mbset1);
+    ok( ret==mbstr+8, "_mbsspnp returns %p should be %p\n", ret, mbstr+8);
+    ret=_mbsspnp( mbstr+8, mbset2);
+    ok( ret==mbstr+10, "_mbsspnp returns %p should be %p\n", ret, mbstr+10);
+
+    _setmbcp( cp);
 }
 
 static void test_strdup(void)
@@ -1016,6 +1054,11 @@ static void test_wcscpy_s(void)
 
     /* Copy same buffer size */
     ret = p_wcscpy_s(szDest, 18, szLongText);
+    ok(ret == 0, "expected 0 got %d\n", ret);
+    ok(lstrcmpW(szDest, szLongText) == 0, "szDest != szLongText\n");
+
+    /* dest == source */
+    ret = p_wcscpy_s(szDest, 18, szDest);
     ok(ret == 0, "expected 0 got %d\n", ret);
     ok(lstrcmpW(szDest, szLongText) == 0, "szDest != szLongText\n");
 
@@ -2701,7 +2744,7 @@ static void test__ultoa_s(void)
 
 static void test_wctob(void)
 {
-    int ret;
+    int ret, cp = _getmbcp();
 
     if(!p_wctob || !setlocale(LC_ALL, "chinese-traditional")) {
         win_skip("Skipping wctob tests\n");
@@ -2733,12 +2776,16 @@ static void test_wctob(void)
 
     ret = p_wctob(0xe0);
     ok(ret == (int)(char)0xe0, "ret = %x\n", ret);
+
+    _setmbcp(cp);
 }
+
 static void test_wctomb(void)
 {
     mbstate_t state;
     unsigned char dst[10];
     size_t ret;
+    int err;
 
     if(!p_wcrtomb || !setlocale(LC_ALL, "Japanese_Japan.932")) {
         win_skip("wcrtomb tests\n");
@@ -2770,6 +2817,43 @@ static void test_wctomb(void)
     ok(ret == -1, "wcrtomb did not return -1\n");
     ok(dst[0] == 0x3f, "dst[0] = %x, expected 0x3f\n", dst[0]);
 
+    if(!p_wcrtomb_s) {
+        win_skip("wcrtomb_s tests\n");
+        setlocale(LC_ALL, "C");
+        return;
+    }
+
+    state = 1;
+    dst[2] = 'a';
+    err = p_wcrtomb_s(&ret, (char*)dst, sizeof(dst), 0x3042, &state);
+    ok(!err, "err = %d\n", err);
+    ok(ret == 2, "ret != 2\n");
+    ok(!state, "state != 0\n");
+    ok(dst[0] == 0x82, "dst[0] = %x, expected 0x82\n", dst[0]);
+    ok(dst[1] == 0xa0, "dst[1] = %x, expected 0xa0\n", dst[1]);
+    ok(dst[2] == 'a', "dst[2] != 'a'\n");
+
+    err = p_wcrtomb_s(&ret, (char*)dst, sizeof(dst), 0x3042, NULL);
+    ok(!err, "err = %d\n", err);
+    ok(ret == 2, "ret != 2\n");
+    ok(!state, "state != 0\n");
+    ok(dst[0] == 0x82, "dst[0] = %x, expected 0x82\n", dst[0]);
+    ok(dst[1] == 0xa0, "dst[1] = %x, expected 0xa0\n", dst[1]);
+
+    err = p_wcrtomb_s(&ret, (char*)dst, sizeof(dst), 0x20, NULL);
+    ok(!err, "err = %d\n", err);
+    ok(ret == 1, "ret != 1\n");
+    ok(dst[0] == 0x20, "dst[0] = %x, expected 0x20\n", dst[0]);
+
+    err = p_wcrtomb_s(&ret, NULL, 0, 0x20, NULL);
+    ok(!err, "err = %d\n", err);
+    ok(ret == 1, "ret != 1\n");
+
+    err = p_wcrtomb_s(&ret, (char*)dst, sizeof(dst), 0xffff, NULL);
+    ok(err == EILSEQ, "err = %d\n", err);
+    ok(ret == -1, "wcrtomb did not return -1\n");
+    ok(dst[0] == 0x3f, "dst[0] = %x, expected 0x3f\n", dst[0]);
+
     setlocale(LC_ALL, "C");
 }
 
@@ -2788,13 +2872,19 @@ static void test_tolower(void)
 
     errno = 0xdeadbeef;
     ret = p_tolower((char)0xF4);
-    todo_wine ok(ret == (char)0xF4, "ret = %x\n", ret);
-    todo_wine ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    ok(ret == (char)0xF4, "ret = %x\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
 
     errno = 0xdeadbeef;
     ret = p_tolower((char)0xD0);
-    todo_wine ok(ret == (char)0xD0, "ret = %x\n", ret);
-    todo_wine ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    ok(ret == (char)0xD0, "ret = %x\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    setlocale(LC_ALL, "C");
+    errno = 0xdeadbeef;
+    ret = p_tolower((char)0xF4);
+    ok(ret == (char)0xF4, "ret = %x\n", ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
 
     /* test C locale after setting locale */
     if(!setlocale(LC_ALL, "us")) {
@@ -3041,6 +3131,23 @@ static void test_atoi(void)
     ok(r == 0, "atoi(4294967296) = %d\n", r);
 }
 
+static void test_atol(void)
+{
+    int r;
+
+    r = atol("0");
+    ok(r == 0, "atol(0) = %d\n", r);
+
+    r = atol("-1");
+    ok(r == -1, "atol(-1) = %d\n", r);
+
+    r = atol("1");
+    ok(r == 1, "atol(1) = %d\n", r);
+
+    r = atol("4294967296");
+    ok(r == 0, "atol(4294967296) = %d\n", r);
+}
+
 static void test_atof(void)
 {
     double d;
@@ -3074,29 +3181,33 @@ static void test_atof(void)
 static void test_strncpy(void)
 {
 #define TEST_STRNCPY_LEN 10
+    /* use function pointer to bypass gcc builtin */
+    char *(__cdecl *p_strncpy)(char*,const char*,size_t);
     char *ret;
     char dst[TEST_STRNCPY_LEN + 1];
     char not_null_terminated[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
 
+    p_strncpy = (void *)GetProcAddress( GetModuleHandleA("msvcrt.dll"), "strncpy");
+
     /* strlen(src) > TEST_STRNCPY_LEN */
-    ret = strncpy(dst, "01234567890123456789", TEST_STRNCPY_LEN);
+    ret = p_strncpy(dst, "01234567890123456789", TEST_STRNCPY_LEN);
     ok(ret == dst, "ret != dst\n");
     ok(!strncmp(dst, "0123456789", TEST_STRNCPY_LEN), "dst != 0123456789\n");
 
     /* without null-terminated */
-    ret = strncpy(dst, not_null_terminated, TEST_STRNCPY_LEN);
+    ret = p_strncpy(dst, not_null_terminated, TEST_STRNCPY_LEN);
     ok(ret == dst, "ret != dst\n");
     ok(!strncmp(dst, "0123456789", TEST_STRNCPY_LEN), "dst != 0123456789\n");
 
     /* strlen(src) < TEST_STRNCPY_LEN */
     strcpy(dst, "0123456789");
-    ret = strncpy(dst, "012345", TEST_STRNCPY_LEN);
+    ret = p_strncpy(dst, "012345", TEST_STRNCPY_LEN);
     ok(ret == dst, "ret != dst\n");
     ok(!strcmp(dst, "012345"), "dst != 012345\n");
     ok(dst[TEST_STRNCPY_LEN - 1] == '\0', "dst[TEST_STRNCPY_LEN - 1] != 0\n");
 
     /* strlen(src) == TEST_STRNCPY_LEN */
-    ret = strncpy(dst, "0123456789", TEST_STRNCPY_LEN);
+    ret = p_strncpy(dst, "0123456789", TEST_STRNCPY_LEN);
     ok(ret == dst, "ret != dst\n");
     ok(!strncmp(dst, "0123456789", TEST_STRNCPY_LEN), "dst != 0123456789\n");
 }
@@ -3198,6 +3309,45 @@ static void test__strnset_s(void)
     ok(!buf[0] && buf[1]=='c' && buf[2]=='b', "buf = %s\n", buf);
 }
 
+static void test__wcsnset_s(void)
+{
+    wchar_t text[] = { 't','e','x','t',0 };
+    int r;
+
+    if(!p__wcsnset_s) {
+        win_skip("_wcsnset_s not available\n");
+        return;
+    }
+
+    r = p__wcsnset_s(NULL, 0, 'a', 0);
+    ok(r == 0, "r = %d\n", r);
+
+    r = p__wcsnset_s(text, 0, 'a', 1);
+    ok(r == EINVAL, "r = %d\n", r);
+    ok(text[0] == 't', "text[0] = %d\n", text[0]);
+
+    r = p__wcsnset_s(NULL, 2, 'a', 1);
+    ok(r == EINVAL, "r = %d\n", r);
+
+    r = p__wcsnset_s(text, 2, 'a', 3);
+    ok(r == EINVAL, "r = %d\n", r);
+    ok(text[0] == 0, "text[0] = %d\n", text[0]);
+    ok(text[1] == 'e', "text[1] = %d\n", text[1]);
+
+    text[0] = 't';
+    r = p__wcsnset_s(text, 5, 'a', 1);
+    ok(r == 0, "r = %d\n", r);
+    ok(text[0] == 'a', "text[0] = %d\n", text[0]);
+    ok(text[1] == 'e', "text[1] = %d\n", text[1]);
+
+    text[1] = 0;
+    r = p__wcsnset_s(text, 5, 'b', 3);
+    ok(r == 0, "r = %d\n", r);
+    ok(text[0] == 'b', "text[0] = %d\n", text[0]);
+    ok(text[1] == 0, "text[1] = %d\n", text[1]);
+    ok(text[2] == 'x', "text[2] = %d\n", text[2]);
+}
+
 static void test__wcsset_s(void)
 {
     wchar_t str[10];
@@ -3227,6 +3377,7 @@ static void test__wcsset_s(void)
     str[1] = 0;
     str[2] = 'b';
     r = p__wcsset_s(str, 3, 'c');
+    ok(r == 0, "r = %d\n", r);
     ok(str[0] == 'c', "str[0] = %d\n", str[0]);
     ok(str[1] == 0, "str[1] = %d\n", str[1]);
     ok(str[2] == 'b', "str[2] = %d\n", str[2]);
@@ -3264,14 +3415,26 @@ static void test__mbscmp(void)
 
 static void test__ismbclx(void)
 {
-    int cp, ret;
+    int ret, cp = _getmbcp();
 
     ret = _ismbcl0(0);
     ok(!ret, "got %d\n", ret);
 
-    cp = _setmbcp(1252);
+    ret = _ismbcl1(0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl2(0);
+    ok(!ret, "got %d\n", ret);
+
+    _setmbcp(1252);
 
     ret = _ismbcl0(0x8140);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl1(0x889f);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl2(0x989f);
     ok(!ret, "got %d\n", ret);
 
     _setmbcp(932);
@@ -3281,6 +3444,27 @@ static void test__ismbclx(void)
 
     ret = _ismbcl0(0x8140);
     ok(ret, "got %d\n", ret);
+
+    ret = _ismbcl0(0x817f);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl1(0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl1(0x889f);
+    ok(ret, "got %d\n", ret);
+
+    ret = _ismbcl1(0x88fd);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl2(0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = _ismbcl2(0x989f);
+    ok(ret, "got %d\n", ret);
+
+    ret = _ismbcl2(0x993f);
+    ok(!ret, "got %d\n", ret);
 
     _setmbcp(cp);
 }
@@ -3627,7 +3811,6 @@ static void test_C_locale(void)
             ok(ret == exp, "expected %x, got %x for C locale\n", exp, ret);
         }
         else
-        todo_wine_if(ret != i)
             ok(ret == i, "expected self %x, got %x for C locale\n", i, ret);
 
         ret = p_towupper(i);
@@ -3637,7 +3820,6 @@ static void test_C_locale(void)
             ok(ret == exp, "expected %x, got %x for C locale\n", exp, ret);
         }
         else
-        todo_wine_if(ret != i)
             ok(ret == i, "expected self %x, got %x for C locale\n", i, ret);
     }
 
@@ -3658,7 +3840,6 @@ static void test_C_locale(void)
                 ok(ret == exp, "expected %x, got %x for C locale\n", exp, ret);
             }
             else
-            todo_wine_if(ret != j)
                 ok(ret == j, "expected self %x, got %x for C locale\n", j, ret);
 
             ret = p__towupper_l(j, locale);
@@ -3668,7 +3849,6 @@ static void test_C_locale(void)
                 ok(ret == exp, "expected %x, got %x for C locale\n", exp, ret);
             }
             else
-            todo_wine_if(ret != j)
                 ok(ret == j, "expected self %x, got %x for C locale\n", j, ret);
         }
 
@@ -3720,6 +3900,7 @@ START_TEST(string)
     p_mbslwr_s = (void*)GetProcAddress(hMsvcrt, "_mbslwr_s");
     p_wctob = (void*)GetProcAddress(hMsvcrt, "wctob");
     p_wcrtomb = (void*)GetProcAddress(hMsvcrt, "wcrtomb");
+    p_wcrtomb_s = (void*)GetProcAddress(hMsvcrt, "wcrtomb_s");
     p_tolower = (void*)GetProcAddress(hMsvcrt, "tolower");
     p_towlower = (void*)GetProcAddress(hMsvcrt, "towlower");
     p__towlower_l = (void*)GetProcAddress(hMsvcrt, "_towlower_l");
@@ -3735,6 +3916,7 @@ START_TEST(string)
     p__atof_l = (void*)GetProcAddress(hMsvcrt, "_atof_l");
     p__strtod_l = (void*)GetProcAddress(hMsvcrt, "_strtod_l");
     p__strnset_s = (void*)GetProcAddress(hMsvcrt, "_strnset_s");
+    p__wcsnset_s = (void*)GetProcAddress(hMsvcrt, "_wcsnset_s");
     p__wcsset_s = (void*)GetProcAddress(hMsvcrt, "_wcsset_s");
     p__mbsnlen = (void*)GetProcAddress(hMsvcrt, "_mbsnlen");
     p__mbccpy_s = (void*)GetProcAddress(hMsvcrt, "_mbccpy_s");
@@ -3796,10 +3978,12 @@ START_TEST(string)
     test__stricmp();
     test__wcstoi64();
     test_atoi();
+    test_atol();
     test_atof();
     test_strncpy();
     test_strxfrm();
     test__strnset_s();
+    test__wcsnset_s();
     test__wcsset_s();
     test__mbscmp();
     test__ismbclx();

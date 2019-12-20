@@ -27,7 +27,7 @@
 VOID OptionMenuCustomBoot(VOID);
 #endif
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 VOID
 EditCustomBootDisk(
@@ -45,7 +45,7 @@ VOID
 EditCustomBootLinux(
     IN OUT OperatingSystemItem* OperatingSystem);
 
-#endif // _M_IX86
+#endif /* _M_IX86 || _M_AMD64 */
 
 VOID
 EditCustomBootReactOS(

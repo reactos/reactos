@@ -647,11 +647,11 @@ HRESULT create_regexp(script_ctx_t *ctx, jsstr_t *src, DWORD flags, jsdisp_t **r
     const WCHAR *str;
     HRESULT hres;
 
-    TRACE("%s %x\n", debugstr_jsstr(src), flags);
-
     str = jsstr_flatten(src);
     if(!str)
         return E_OUTOFMEMORY;
+
+    TRACE("%s %x\n", debugstr_wn(str, jsstr_length(src)), flags);
 
     hres = alloc_regexp(ctx, NULL, &regexp);
     if(FAILED(hres))

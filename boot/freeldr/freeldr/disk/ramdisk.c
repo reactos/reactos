@@ -1,51 +1,48 @@
 /*
- * PROJECT:         ReactOS Boot Loader
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/freeldr/disk/ramdisk.c
- * PURPOSE:         Implements routines to support booting from a RAM Disk
- * PROGRAMMERS:     ReactOS Portable Systems Group
- *                  Hervé Poussineau
+ * PROJECT:     FreeLoader
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Implements routines to support booting from a RAM Disk.
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group
+ *              Copyright 2009 HervÃ© Poussineau
+ *              Copyright 2019 Hermes Belusca-Maito
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
 
-#include <debug.h>
-
 /* GLOBALS ********************************************************************/
 
-PVOID gRamDiskBase;
-ULONG gRamDiskSize;
-ULONG gRamDiskOffset;
+PVOID gInitRamDiskBase = NULL;
+ULONG gInitRamDiskSize = 0;
+
+static BOOLEAN   RamDiskDeviceRegistered = FALSE;
+static PVOID     RamDiskBase;
+static ULONGLONG RamDiskFileSize;    // FIXME: RAM disks currently limited to 4GB.
+static ULONGLONG RamDiskImageLength; // Size of valid data in the Ramdisk (usually == RamDiskFileSize - RamDiskImageOffset)
+static ULONG     RamDiskImageOffset; // Starting offset from the Ramdisk base.
+static ULONGLONG RamDiskOffset;      // Current position in the Ramdisk.
 
 /* FUNCTIONS ******************************************************************/
 
 static ARC_STATUS RamDiskClose(ULONG FileId)
 {
-    //
-    // Nothing to do
-    //
+    /* Nothing to do */
     return ESUCCESS;
 }
 
 static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    //
-    // Give current seek offset and ram disk size to caller
-    //
     RtlZeroMemory(Information, sizeof(*Information));
-    Information->EndingAddress.LowPart = gRamDiskSize;
-    Information->CurrentAddress.LowPart = gRamDiskOffset;
+    Information->EndingAddress.QuadPart = RamDiskImageLength;
+    Information->CurrentAddress.QuadPart = RamDiskOffset;
 
     return ESUCCESS;
 }
 
 static ARC_STATUS RamDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
-    //
-    // Always return success, as contents are already in memory
-    //
+    /* Always return success, as contents are already in memory */
     return ESUCCESS;
 }
 
@@ -53,24 +50,20 @@ static ARC_STATUS RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PVOID StartAddress;
 
-    //
-    // Get actual pointer
-    //
-    StartAddress = (PVOID)((ULONG_PTR)gRamDiskBase + gRamDiskOffset);
-
-    //
-    // Don't allow reads past our image
-    //
-    if (gRamDiskOffset + N > gRamDiskSize)
+    /* Don't allow reads past our image */
+    if (RamDiskOffset >= RamDiskImageLength || RamDiskOffset + N > RamDiskImageLength)
     {
         *Count = 0;
         return EIO;
     }
+    // N = min(N, RamdiskImageLength - RamDiskOffset);
 
-    //
-    // Do the read
-    //
+    /* Get actual pointer */
+    StartAddress = (PVOID)((ULONG_PTR)RamDiskBase + RamDiskImageOffset + (ULONG_PTR)RamDiskOffset);
+
+    /* Do the read */
     RtlCopyMemory(Buffer, StartAddress, N);
+    RamDiskOffset += N;
     *Count = N;
 
     return ESUCCESS;
@@ -78,29 +71,29 @@ static ARC_STATUS RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 
 static ARC_STATUS RamDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    //
-    // Only accept absolute mode now
-    //
-    if (SeekMode != SeekAbsolute)
+    LARGE_INTEGER NewPosition = *Position;
+
+    switch (SeekMode)
+    {
+        case SeekAbsolute:
+            break;
+        case SeekRelative:
+            NewPosition.QuadPart += RamDiskOffset;
+            break;
+        default:
+            ASSERT(FALSE);
+            return EINVAL;
+    }
+
+    if (NewPosition.QuadPart >= RamDiskImageLength)
         return EINVAL;
 
-    //
-    // Check if we're in the ramdisk
-    //
-    if (Position->HighPart != 0)
-        return EINVAL;
-    if (Position->LowPart >= gRamDiskSize)
-        return EINVAL;
-
-    //
-    // OK, remember seek position
-    //
-    gRamDiskOffset = Position->LowPart;
-
+    RamDiskOffset = NewPosition.QuadPart;
     return ESUCCESS;
 }
 
-static const DEVVTBL RamDiskVtbl = {
+static const DEVVTBL RamDiskVtbl =
+{
     RamDiskClose,
     RamDiskGetFileInformation,
     RamDiskOpen,
@@ -108,21 +101,15 @@ static const DEVVTBL RamDiskVtbl = {
     RamDiskSeek,
 };
 
-VOID
-RamDiskInitialize(VOID)
-{
-    /* Register the RAMDISK device */
-    FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
-}
-
-ARC_STATUS
+static ARC_STATUS
 RamDiskLoadVirtualFile(
     IN PCSTR FileName,
     IN PCSTR DefaultPath OPTIONAL)
 {
     ARC_STATUS Status;
     ULONG RamFileId;
-    ULONG TotalRead, ChunkSize, Count;
+    ULONG ChunkSize, Count;
+    ULONGLONG TotalRead;
     PCHAR MsgBuffer = "Loading RamDisk...";
     ULONG PercentPerChunk, Percent;
     FILEINFORMATION Information;
@@ -132,7 +119,7 @@ RamDiskLoadVirtualFile(
     UiDrawBackdrop();
     UiDrawProgressBarCenter(1, 100, MsgBuffer);
 
-    /* Try opening the ramdisk file */
+    /* Try opening the Ramdisk file */
     Status = FsOpenFile(FileName, DefaultPath, OpenReadOnly, &RamFileId);
     if (Status != ESUCCESS)
         return Status;
@@ -145,23 +132,24 @@ RamDiskLoadVirtualFile(
         return Status;
     }
 
-    /* For now, limit RAM disks to 4GB */
+    /* FIXME: For now, limit RAM disks to 4GB */
     if (Information.EndingAddress.HighPart != 0)
     {
         UiMessageBox("RAM disk too big.");
         ArcClose(RamFileId);
         return ENOMEM;
     }
-    gRamDiskSize = Information.EndingAddress.LowPart;
+    RamDiskFileSize = Information.EndingAddress.QuadPart;
+    ASSERT(RamDiskFileSize < 0x100000000); // See FIXME above.
 
     /* Allocate memory for it */
     ChunkSize = 8 * 1024 * 1024;
-    if (gRamDiskSize < ChunkSize)
+    if (RamDiskFileSize < ChunkSize)
         Percent = PercentPerChunk = 0;
     else
-        Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
-    gRamDiskBase = MmAllocateMemoryWithType(gRamDiskSize, LoaderXIPRom);
-    if (!gRamDiskBase)
+        Percent = PercentPerChunk = 100 / (RamDiskFileSize / ChunkSize);
+    RamDiskBase = MmAllocateMemoryWithType(RamDiskFileSize, LoaderXIPRom);
+    if (!RamDiskBase)
     {
         UiMessageBox("Failed to allocate memory for RAM disk.");
         ArcClose(RamFileId);
@@ -171,13 +159,13 @@ RamDiskLoadVirtualFile(
     /*
      * Read it in chunks
      */
-    for (TotalRead = 0; TotalRead < gRamDiskSize; TotalRead += ChunkSize)
+    for (TotalRead = 0; TotalRead < RamDiskFileSize; TotalRead += ChunkSize)
     {
         /* Check if we're at the last chunk */
-        if ((gRamDiskSize - TotalRead) < ChunkSize)
+        if ((RamDiskFileSize - TotalRead) < ChunkSize)
         {
             /* Only need the actual data required */
-            ChunkSize = gRamDiskSize - TotalRead;
+            ChunkSize = (ULONG)(RamDiskFileSize - TotalRead);
         }
 
         /* Draw progress */
@@ -185,13 +173,12 @@ RamDiskLoadVirtualFile(
         Percent += PercentPerChunk;
 
         /* Copy the contents */
-        Position.HighPart = 0;
-        Position.LowPart = TotalRead;
+        Position.QuadPart = TotalRead;
         Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
         if (Status == ESUCCESS)
         {
             Status = ArcRead(RamFileId,
-                             (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead),
+                             (PVOID)((ULONG_PTR)RamDiskBase + (ULONG_PTR)TotalRead),
                              ChunkSize,
                              &Count);
         }
@@ -199,9 +186,9 @@ RamDiskLoadVirtualFile(
         /* Check for success */
         if ((Status != ESUCCESS) || (Count != ChunkSize))
         {
-            MmFreeMemory(gRamDiskBase);
-            gRamDiskBase = NULL;
-            gRamDiskSize = 0;
+            MmFreeMemory(RamDiskBase);
+            RamDiskBase = NULL;
+            RamDiskFileSize = 0;
             ArcClose(RamFileId);
             UiMessageBox("Failed to read RAM disk.");
             return ((Status != ESUCCESS) ? Status : EIO);
@@ -210,8 +197,95 @@ RamDiskLoadVirtualFile(
 
     ArcClose(RamFileId);
 
-    /* Setup the RAMDISK device */
-    RamDiskInitialize();
+    return ESUCCESS;
+}
+
+ARC_STATUS
+RamDiskInitialize(
+    IN BOOLEAN InitRamDisk,
+    IN PCSTR LoadOptions OPTIONAL,
+    IN PCSTR DefaultPath OPTIONAL)
+{
+    /* Reset the RAMDISK device */
+    if ((RamDiskBase != gInitRamDiskBase) &&
+        (RamDiskFileSize != gInitRamDiskSize) &&
+        (gInitRamDiskSize != 0))
+    {
+        /* This is not the initial Ramdisk, so we can free the allocated memory */
+        MmFreeMemory(RamDiskBase);
+    }
+    RamDiskBase = NULL;
+    RamDiskFileSize = 0;
+    RamDiskImageLength = 0;
+    RamDiskImageOffset = 0;
+    RamDiskOffset = 0;
+
+    if (InitRamDisk)
+    {
+        /* We initialize the initial Ramdisk: it should be present in memory */
+        if (!gInitRamDiskBase || gInitRamDiskSize == 0)
+            return ENODEV;
+
+        // TODO: Handle SDI image.
+
+        RamDiskBase = gInitRamDiskBase;
+        RamDiskFileSize = gInitRamDiskSize;
+        ASSERT(RamDiskFileSize < 0x100000000); // See FIXME about 4GB support in RamDiskLoadVirtualFile().
+    }
+    else
+    {
+        /* We initialize the Ramdisk from the load options */
+        ARC_STATUS Status;
+        CHAR FileName[MAX_PATH] = "";
+
+        /* If we don't have any load options, initialize an empty Ramdisk */
+        if (LoadOptions)
+        {
+            PCHAR Option;
+
+            /* Ramdisk image file name */
+            Option = strstr(LoadOptions, "/RDPATH=");
+            if (Option)
+            {
+                /* Copy the file name - everything until the next separator */
+                Option += 8;
+                RtlStringCbCopyNA(FileName, sizeof(FileName),
+                                  Option, strcspn(Option, " \t") * sizeof(CHAR));
+            }
+
+            /* Ramdisk image length */
+            Option = strstr(LoadOptions, "/RDIMAGELENGTH=");
+            if (Option)
+            {
+                RamDiskImageLength = _atoi64(Option + 15);
+            }
+
+            /* Ramdisk image offset */
+            Option = strstr(LoadOptions, "/RDIMAGEOFFSET=");
+            if (Option)
+            {
+                RamDiskImageOffset = atol(Option + 15);
+            }
+        }
+
+        if (*FileName)
+        {
+            Status = RamDiskLoadVirtualFile(FileName, DefaultPath);
+            if (Status != ESUCCESS)
+                return Status;
+        }
+    }
+
+    /* Adjust the Ramdisk image length if needed */
+    if (!RamDiskImageLength || (RamDiskImageLength > RamDiskFileSize - RamDiskImageOffset))
+        RamDiskImageLength = RamDiskFileSize - RamDiskImageOffset;
+
+    /* Register the RAMDISK device */
+    if (!RamDiskDeviceRegistered)
+    {
+        FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
+        RamDiskDeviceRegistered = TRUE;
+    }
 
     return ESUCCESS;
 }

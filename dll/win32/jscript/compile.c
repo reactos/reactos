@@ -48,7 +48,7 @@ typedef struct {
     int ref;
 } function_local_t;
 
-typedef struct {
+typedef struct _compiler_ctx_t {
     parser_ctx_t *parser;
     bytecode_t *code;
 
@@ -130,7 +130,7 @@ static inline void *compiler_alloc(bytecode_t *code, size_t size)
     return heap_pool_alloc(&code->heap, size);
 }
 
-static jsstr_t *compiler_alloc_string_len(compiler_ctx_t *ctx, const WCHAR *str, unsigned len)
+jsstr_t *compiler_alloc_string_len(compiler_ctx_t *ctx, const WCHAR *str, unsigned len)
 {
     jsstr_t *new_str;
 
@@ -160,7 +160,7 @@ static jsstr_t *compiler_alloc_string_len(compiler_ctx_t *ctx, const WCHAR *str,
 
 static jsstr_t *compiler_alloc_string(compiler_ctx_t *ctx, const WCHAR *str)
 {
-    return compiler_alloc_string_len(ctx, str, strlenW(str));
+    return compiler_alloc_string_len(ctx, str, lstrlenW(str));
 }
 
 static BOOL ensure_bstr_slot(compiler_ctx_t *ctx)
@@ -245,20 +245,28 @@ static HRESULT push_instr_int(compiler_ctx_t *ctx, jsop_t op, LONG arg)
     return S_OK;
 }
 
-static HRESULT push_instr_str(compiler_ctx_t *ctx, jsop_t op, const WCHAR *arg)
+static HRESULT push_instr_str(compiler_ctx_t *ctx, jsop_t op, jsstr_t *str)
 {
     unsigned instr;
-    jsstr_t *str;
-
-    str = compiler_alloc_string(ctx, arg);
-    if(!str)
-        return E_OUTOFMEMORY;
 
     instr = push_instr(ctx, op);
     if(!instr)
         return E_OUTOFMEMORY;
 
     instr_ptr(ctx, instr)->u.arg->str = str;
+    return S_OK;
+}
+
+static HRESULT push_instr_str_uint(compiler_ctx_t *ctx, jsop_t op, jsstr_t *str, unsigned arg2)
+{
+    unsigned instr;
+
+    instr = push_instr(ctx, op);
+    if(!instr)
+        return E_OUTOFMEMORY;
+
+    instr_ptr(ctx, instr)->u.arg[0].str = str;
+    instr_ptr(ctx, instr)->u.arg[1].uint = arg2;
     return S_OK;
 }
 
@@ -477,13 +485,18 @@ static HRESULT compile_memberid_expression(compiler_ctx_t *ctx, expression_t *ex
     }
     case EXPR_MEMBER: {
         member_expression_t *member_expr = (member_expression_t*)expr;
+        jsstr_t *jsstr;
 
         hres = compile_expression(ctx, member_expr->expression, TRUE);
         if(FAILED(hres))
             return hres;
 
         /* FIXME: Potential optimization */
-        hres = push_instr_str(ctx, OP_str, member_expr->identifier);
+        jsstr = compiler_alloc_string(ctx, member_expr->identifier);
+        if(!jsstr)
+            return E_OUTOFMEMORY;
+
+        hres = push_instr_str(ctx, OP_str, jsstr);
         if(FAILED(hres))
             return hres;
 
@@ -676,13 +689,18 @@ static HRESULT compile_delete_expression(compiler_ctx_t *ctx, unary_expression_t
     }
     case EXPR_MEMBER: {
         member_expression_t *member_expr = (member_expression_t*)expr->expression;
+        jsstr_t *jsstr;
 
         hres = compile_expression(ctx, member_expr->expression, TRUE);
         if(FAILED(hres))
             return hres;
 
         /* FIXME: Potential optimization */
-        hres = push_instr_str(ctx, OP_str, member_expr->identifier);
+        jsstr = compiler_alloc_string(ctx, member_expr->identifier);
+        if(!jsstr)
+            return E_OUTOFMEMORY;
+
+        hres = push_instr_str(ctx, OP_str, jsstr);
         if(FAILED(hres))
             return hres;
 
@@ -718,11 +736,6 @@ static HRESULT compile_assign_expression(compiler_ctx_t *ctx, binary_expression_
         call_expression_t *call_expr = (call_expression_t*)expr->expression1;
         argument_t *arg;
 
-        if(op != OP_LAST) {
-            FIXME("op %d not supported on parametrized assign expressions\n", op);
-            return E_NOTIMPL;
-        }
-
         if(is_memberid_expr(call_expr->expression->type) && call_expr->argument_list) {
             hres = compile_memberid_expression(ctx, call_expr->expression, fdexNameEnsure);
             if(FAILED(hres))
@@ -734,6 +747,23 @@ static HRESULT compile_assign_expression(compiler_ctx_t *ctx, binary_expression_
                     return hres;
                 arg_cnt++;
             }
+
+            if(op != OP_LAST) {
+                unsigned instr;
+
+                /* We need to call the functions twice: to get the value and to set it.
+                 * JavaScript interpreted functions may to modify value on the stack,
+                 * but assignment calls are allowed only on external functions, so we
+                 * may reuse the stack here. */
+                instr = push_instr(ctx, OP_call_member);
+                if(!instr)
+                    return E_OUTOFMEMORY;
+                instr_ptr(ctx, instr)->u.arg[0].uint = arg_cnt;
+                instr_ptr(ctx, instr)->u.arg[1].lng = 1;
+
+                if(!push_instr(ctx, OP_push_acc))
+                    return E_OUTOFMEMORY;
+            }
         }else {
             use_throw_path = TRUE;
         }
@@ -741,6 +771,8 @@ static HRESULT compile_assign_expression(compiler_ctx_t *ctx, binary_expression_
         hres = compile_memberid_expression(ctx, expr->expression1, fdexNameEnsure);
         if(FAILED(hres))
             return hres;
+        if(op != OP_LAST && !push_instr(ctx, OP_refval))
+            return E_OUTOFMEMORY;
     }else {
         use_throw_path = TRUE;
     }
@@ -760,9 +792,6 @@ static HRESULT compile_assign_expression(compiler_ctx_t *ctx, binary_expression_
 
         return push_instr_uint(ctx, OP_throw_ref, JS_E_ILLEGAL_ASSIGN);
     }
-
-    if(op != OP_LAST && !push_instr(ctx, OP_refval))
-        return E_OUTOFMEMORY;
 
     hres = compile_expression(ctx, expr->expression2, TRUE);
     if(FAILED(hres))
@@ -811,48 +840,22 @@ static HRESULT compile_literal(compiler_ctx_t *ctx, literal_t *literal)
     case LT_NULL:
         return push_instr(ctx, OP_null) ? S_OK : E_OUTOFMEMORY;
     case LT_STRING:
-        return push_instr_str(ctx, OP_str, literal->u.wstr);
-    case LT_REGEXP: {
-        unsigned instr;
-        jsstr_t *str;
-
-        str = compiler_alloc_string_len(ctx, literal->u.regexp.str, literal->u.regexp.str_len);
-        if(!str)
-            return E_OUTOFMEMORY;
-
-        instr = push_instr(ctx, OP_regexp);
-        if(!instr)
-            return E_OUTOFMEMORY;
-
-        instr_ptr(ctx, instr)->u.arg[0].str = str;
-        instr_ptr(ctx, instr)->u.arg[1].uint = literal->u.regexp.flags;
-        return S_OK;
-    }
+        return push_instr_str(ctx, OP_str, literal->u.str);
+    case LT_REGEXP:
+        return push_instr_str_uint(ctx, OP_regexp, literal->u.regexp.str, literal->u.regexp.flags);
     DEFAULT_UNREACHABLE;
     }
     return E_FAIL;
 }
 
-static HRESULT literal_as_bstr(compiler_ctx_t *ctx, literal_t *literal, BSTR *str)
+static HRESULT literal_as_string(compiler_ctx_t *ctx, literal_t *literal, jsstr_t **str)
 {
     switch(literal->type) {
     case LT_STRING:
-        *str = compiler_alloc_bstr(ctx, literal->u.wstr);
+        *str = literal->u.str;
         break;
-    case LT_DOUBLE: {
-        jsstr_t *jsstr;
-        HRESULT hres;
-
-        hres = double_to_string(literal->u.dval, &jsstr);
-        if(FAILED(hres))
-            return hres;
-
-        *str = compiler_alloc_bstr_len(ctx, NULL, jsstr_length(jsstr));
-        if(*str)
-            jsstr_flush(jsstr, *str);
-        jsstr_release(jsstr);
-        break;
-    }
+    case LT_DOUBLE:
+        return double_to_string(literal->u.dval, str);
     DEFAULT_UNREACHABLE;
     }
 
@@ -889,14 +892,14 @@ static HRESULT compile_array_literal(compiler_ctx_t *ctx, array_literal_expressi
 static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expression_t *expr)
 {
     property_definition_t *iter;
-    BSTR name;
+    jsstr_t *name;
     HRESULT hres;
 
     if(!push_instr(ctx, OP_new_obj))
         return E_OUTOFMEMORY;
 
     for(iter = expr->property_list; iter; iter = iter->next) {
-        hres = literal_as_bstr(ctx, iter->name, &name);
+        hres = literal_as_string(ctx, iter->name, &name);
         if(FAILED(hres))
             return hres;
 
@@ -904,7 +907,7 @@ static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expres
         if(FAILED(hres))
             return hres;
 
-        hres = push_instr_bstr_uint(ctx, OP_obj_prop, name, iter->type);
+        hres = push_instr_str_uint(ctx, OP_obj_prop, name, iter->type);
         if(FAILED(hres))
             return hres;
     }
@@ -1427,7 +1430,7 @@ static HRESULT compile_continue_statement(compiler_ctx_t *ctx, branch_statement_
         for(iter = ctx->stat_ctx; iter; iter = iter->next) {
             if(iter->continue_label)
                 pop_ctx = iter;
-            if(iter->labelled_stat && !strcmpW(iter->labelled_stat->identifier, stat->identifier))
+            if(iter->labelled_stat && !wcscmp(iter->labelled_stat->identifier, stat->identifier))
                 break;
         }
 
@@ -1473,7 +1476,7 @@ static HRESULT compile_break_statement(compiler_ctx_t *ctx, branch_statement_t *
 
     if(stat->identifier) {
         for(pop_ctx = ctx->stat_ctx; pop_ctx; pop_ctx = pop_ctx->next) {
-            if(pop_ctx->labelled_stat && !strcmpW(pop_ctx->labelled_stat->identifier, stat->identifier)) {
+            if(pop_ctx->labelled_stat && !wcscmp(pop_ctx->labelled_stat->identifier, stat->identifier)) {
                 assert(pop_ctx->break_label);
                 break;
             }
@@ -1557,7 +1560,7 @@ static HRESULT compile_labelled_statement(compiler_ctx_t *ctx, labelled_statemen
     HRESULT hres;
 
     for(iter = ctx->stat_ctx; iter; iter = iter->next) {
-        if(iter->labelled_stat && !strcmpW(iter->labelled_stat->identifier, stat->identifier)) {
+        if(iter->labelled_stat && !wcscmp(iter->labelled_stat->identifier, stat->identifier)) {
             WARN("Label %s redefined\n", debugstr_w(stat->identifier));
             return JS_E_LABEL_REDEFINED;
         }
@@ -1833,7 +1836,7 @@ static HRESULT compile_statement(compiler_ctx_t *ctx, statement_ctx_t *stat_ctx,
 static int function_local_cmp(const void *key, const struct wine_rb_entry *entry)
 {
     function_local_t *local = WINE_RB_ENTRY_VALUE(entry, function_local_t, entry);
-    return strcmpW(key, local->name);
+    return wcscmp(key, local->name);
 }
 
 static inline function_local_t *find_local(compiler_ctx_t *ctx, const WCHAR *name)
@@ -2390,7 +2393,7 @@ static HRESULT parse_arguments(compiler_ctx_t *ctx, const WCHAR *args, BSTR *arg
     const WCHAR *ptr = args, *ptr2;
     unsigned arg_cnt = 0;
 
-    while(isspaceW(*ptr))
+    while(iswspace(*ptr))
         ptr++;
     if(!*ptr) {
         if(args_size)
@@ -2399,16 +2402,16 @@ static HRESULT parse_arguments(compiler_ctx_t *ctx, const WCHAR *args, BSTR *arg
     }
 
     while(1) {
-        if(!isalphaW(*ptr) && *ptr != '_') {
+        if(!iswalpha(*ptr) && *ptr != '_') {
             FIXME("expected alpha or '_': %s\n", debugstr_w(ptr));
             return E_FAIL;
         }
 
         ptr2 = ptr;
-        while(isalnumW(*ptr) || *ptr == '_')
+        while(iswalnum(*ptr) || *ptr == '_')
             ptr++;
 
-        if(*ptr && *ptr != ',' && !isspaceW(*ptr)) {
+        if(*ptr && *ptr != ',' && !iswspace(*ptr)) {
             FIXME("unexpected har %s\n", debugstr_w(ptr));
             return E_FAIL;
         }
@@ -2420,7 +2423,7 @@ static HRESULT parse_arguments(compiler_ctx_t *ctx, const WCHAR *args, BSTR *arg
         }
         arg_cnt++;
 
-        while(isspaceW(*ptr))
+        while(iswspace(*ptr))
             ptr++;
         if(!*ptr)
             break;
@@ -2430,7 +2433,7 @@ static HRESULT parse_arguments(compiler_ctx_t *ctx, const WCHAR *args, BSTR *arg
         }
 
         ptr++;
-        while(isspaceW(*ptr))
+        while(iswspace(*ptr))
             ptr++;
     }
 
@@ -2479,7 +2482,7 @@ HRESULT compile_script(script_ctx_t *ctx, const WCHAR *code, const WCHAR *args, 
         }
     }
 
-    hres = script_parse(ctx, compiler.code->source, delimiter, from_eval, &compiler.parser);
+    hres = script_parse(ctx, &compiler, compiler.code->source, delimiter, from_eval, &compiler.parser);
     if(FAILED(hres)) {
         release_bytecode(compiler.code);
         return hres;

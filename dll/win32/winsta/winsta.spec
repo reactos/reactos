@@ -69,6 +69,7 @@
 @ stdcall WinStationQueryLicense(ptr ptr ptr)
 @ stdcall WinStationQueryLogonCredentialsW(ptr)
 @ stdcall WinStationQueryUpdateRequired(ptr ptr)
+@ stdcall WinStationRedirectErrorMessage(ptr ptr)
 @ stdcall WinStationRegisterConsoleNotification(ptr ptr ptr)
 @ stdcall WinStationRegisterConsoleNotificationEx(ptr ptr ptr ptr)
 @ stdcall WinStationRegisterNotificationEvent(ptr ptr ptr ptr)

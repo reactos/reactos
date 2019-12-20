@@ -329,7 +329,7 @@ static HRESULT WINAPI Test_IClassFactory_CreateInstance(
     LPVOID *ppvObj)
 {
     if (pUnkOuter) return CLASS_E_NOAGGREGATION;
-    return IUnknown_QueryInterface((IUnknown*)&Test_Unknown, riid, ppvObj);
+    return IUnknown_QueryInterface(&Test_Unknown, riid, ppvObj);
 }
 
 static HRESULT WINAPI Test_IClassFactory_LockServer(
@@ -1205,7 +1205,9 @@ static void test_marshal_proxy_apartment_shutdown(void)
 {
     HRESULT hr;
     IStream *pStream = NULL;
-    IUnknown *pProxy = NULL;
+    IClassFactory *proxy;
+    IUnknown *unk;
+    ULONG ref;
     DWORD tid;
     HANDLE thread;
 
@@ -1220,7 +1222,7 @@ static void test_marshal_proxy_apartment_shutdown(void)
     ok_non_zero_external_conn();
     
     IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
-    hr = CoUnmarshalInterface(pStream, &IID_IClassFactory, (void **)&pProxy);
+    hr = CoUnmarshalInterface(pStream, &IID_IClassFactory, (void **)&proxy);
     ok_ole_success(hr, CoUnmarshalInterface);
     IStream_Release(pStream);
 
@@ -1233,7 +1235,11 @@ static void test_marshal_proxy_apartment_shutdown(void)
     ok_zero_external_conn();
     ok_last_release_closes(TRUE);
 
-    IUnknown_Release(pProxy);
+    hr = IClassFactory_CreateInstance(proxy, NULL, &IID_IUnknown, (void **)&unk);
+    ok(hr == CO_E_OBJNOTCONNECTED, "got %#x\n", hr);
+
+    ref = IClassFactory_Release(proxy);
+    ok(!ref, "got %d refs\n", ref);
 
     ok_no_locks();
 

@@ -1,0 +1,24 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        ForceRemove {9E56BE61-C50F-11CF-9A2C-00A0C90A90CE} = s 'DeskLink'
+        {
+            val 'NeverShowExt' = s ''
+            DefaultIcon = e '%%SystemRoot%%\explorer.exe,-103'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            'shellex'
+            {
+                'DropHandler' = s '{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}'
+                {
+                }
+            }
+        }
+    }
+    ForceRemove .DeskLink = s 'CLSID\{9E56BE61-C50F-11CF-9A2C-00A0C90A90CE}'
+    {
+    }
+}

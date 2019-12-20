@@ -77,7 +77,7 @@ KspCreatePDO(
     DeviceEntry->DeviceState = NotStarted;
 
     /* get current time */
-    KeQuerySystemTime(&DeviceEntry->TimeCreated);
+    KeQueryTickCount(&DeviceEntry->TimeCreated);
 
     /* setup flags */
     DeviceObject->Flags |= DO_POWER_PAGABLE;
@@ -807,7 +807,7 @@ KspStartBusDevice(
     DeviceEntry->DeviceState = Started;
 
     /* reference start time */
-    KeQuerySystemTime(&DeviceEntry->TimeCreated);
+    KeQueryTickCount(&DeviceEntry->TimeCreated);
 
     DPRINT1("KspStartBusDevice Name %S DeviceName %S Instance %S Started\n", Name, DeviceEntry->DeviceName, DeviceEntry->Instance);
 
@@ -1193,7 +1193,7 @@ KspBusWorkerRoutine(
     KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
 
     /* get current time */
-    KeQuerySystemTime(&Time);
+    KeQueryTickCount(&Time);
 
     /* enumerate all device entries */
     Entry = BusDeviceExtension->Common.Entry.Flink;
@@ -1211,14 +1211,20 @@ KspBusWorkerRoutine(
         {
             if (DeviceEntry->DeviceState == NotStarted)
             {
-                Diff.QuadPart = Time.QuadPart - DeviceEntry->TimeCreated.QuadPart;
+                Diff.QuadPart = (Time.QuadPart - DeviceEntry->TimeCreated.QuadPart) * KeQueryTimeIncrement();
 
+                /* wait for 15 sec */
                 if (Diff.QuadPart > Int32x32To64(15000, 10000))
                 {
                      /* release spin lock */
                      KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
 
-                     DPRINT1("DeviceID %S Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
+                     DPRINT1("DeviceID %S Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n",
+                        DeviceEntry->DeviceName,
+                        DeviceEntry->Instance,
+                        DeviceEntry->TimeCreated.QuadPart * KeQueryTimeIncrement(),
+                        Time.QuadPart * KeQueryTimeIncrement(),
+                        Diff.QuadPart);
 
                      /* deactivate interfaces */
                      //KspEnableBusDeviceInterface(DeviceEntry, FALSE);

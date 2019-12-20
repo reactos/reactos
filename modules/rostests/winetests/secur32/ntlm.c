@@ -929,7 +929,9 @@ static void testAuth(ULONG data_rep, BOOL fake)
         ok(pi->fCapabilities == NTLM_BASE_CAPS ||
            pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_READONLY_WITH_CHECKSUM) ||
            pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS) ||
-           pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS|
+           pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS|SECPKG_FLAG_APPCONTAINER_CHECKS) ||
+           pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS|SECPKG_FLAG_APPLY_LOOPBACK) ||
+           pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS|SECPKG_FLAG_APPLY_LOOPBACK|
                                  SECPKG_FLAG_APPCONTAINER_CHECKS),
            "got %08x\n", pi->fCapabilities);
         ok(pi->wVersion == 1, "got %u\n", pi->wVersion);

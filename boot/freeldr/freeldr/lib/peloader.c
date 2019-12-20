@@ -82,6 +82,7 @@ PeLdrpLoadAndScanReferencedDll(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH DirectoryPath,
     IN PCH ImportName,
+    IN PLIST_ENTRY Parent OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry);
 
 static BOOLEAN
@@ -93,7 +94,8 @@ PeLdrpBindImportName(
     IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
     IN ULONG ExportSize,
     IN BOOLEAN ProcessForwards,
-    IN PCSTR DirectoryPath)
+    IN PCSTR DirectoryPath,
+    IN PLIST_ENTRY Parent)
 {
     ULONG Ordinal;
     PULONG NameTable, FunctionTable;
@@ -269,6 +271,7 @@ PeLdrpBindImportName(
             Success = PeLdrpLoadAndScanReferencedDll(ModuleListHead,
                                                      DirectoryPath,
                                                      ForwardDllName,
+                                                     Parent,
                                                      &DataTableEntry);
             if (!Success)
             {
@@ -315,7 +318,8 @@ PeLdrpBindImportName(
                                            RefExportDirectory,
                                            RefExportSize,
                                            TRUE,
-                                           DirectoryPath);
+                                           DirectoryPath,
+                                           Parent);
 
             /* Fill out the ThunkData with data from RefThunkData */
             ThunkData->u1 = RefThunkData.u1;
@@ -339,6 +343,7 @@ PeLdrpLoadAndScanReferencedDll(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH DirectoryPath,
     IN PCH ImportName,
+    IN PLIST_ENTRY Parent OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry)
 {
     CHAR FullDllName[256];
@@ -360,7 +365,7 @@ PeLdrpLoadAndScanReferencedDll(
     }
 
     /* Allocate DTE for newly loaded DLL */
-    Success = PeLdrAllocateDataTableEntry(ModuleListHead,
+    Success = PeLdrAllocateDataTableEntry(Parent ? Parent->Blink : ModuleListHead,
                                           ImportName,
                                           FullDllName,
                                           BasePA,
@@ -370,6 +375,8 @@ PeLdrpLoadAndScanReferencedDll(
         ERR("PeLdrAllocateDataTableEntry() failed\n");
         return Success;
     }
+
+    (*DataTableEntry)->Flags |= LDRP_DRIVER_DEPENDENT_DLL;
 
     /* Scan its dependencies too */
     TRACE("PeLdrScanImportDescriptorTable() calling ourselves for %S\n",
@@ -390,7 +397,8 @@ PeLdrpScanImportAddressTable(
     IN PVOID DllBase,
     IN PVOID ImageBase,
     IN PIMAGE_THUNK_DATA ThunkData,
-    IN PCSTR DirectoryPath)
+    IN PCSTR DirectoryPath,
+    IN PLIST_ENTRY Parent)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
     BOOLEAN Success;
@@ -434,7 +442,8 @@ PeLdrpScanImportAddressTable(
                                        ExportDirectory,
                                        ExportSize,
                                        FALSE,
-                                       DirectoryPath);
+                                       DirectoryPath,
+                                       Parent);
 
         /* Move to the next entry */
         ThunkData++;
@@ -544,6 +553,7 @@ PeLdrScanImportDescriptorTable(
             Success = PeLdrpLoadAndScanReferencedDll(ModuleListHead,
                                                      DirectoryPath,
                                                      ImportName,
+                                                     &ScanDTE->InLoadOrderLinks,
                                                      &DataTableEntry);
             if (!Success)
             {
@@ -557,7 +567,8 @@ PeLdrScanImportDescriptorTable(
                                                DataTableEntry->DllBase,
                                                ScanDTE->DllBase,
                                                (PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk),
-                                               DirectoryPath);
+                                               DirectoryPath,
+                                               &ScanDTE->InLoadOrderLinks);
 
         if (!Success)
         {
@@ -646,6 +657,24 @@ PeLdrAllocateDataTableEntry(
        we know this entry is processed */
     DataTableEntry->Flags = LDRP_ENTRY_PROCESSED;
     DataTableEntry->LoadCount = 1;
+
+    /* Honour the FORCE_INTEGRITY flag */
+    if (NtHeaders->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY)
+    {
+        /*
+         * On Vista and above, the LDRP_IMAGE_INTEGRITY_FORCED flag must be set
+         * if IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY is set in the image header.
+         * This is done after the image has been loaded and the digital signature
+         * check has passed successfully. (We do not do it yet!)
+         *
+         * Several OS functionality depend on the presence of this flag.
+         * For example, when using Object-Manager callbacks the latter will call
+         * MmVerifyCallbackFunction() to verify whether the flag is present.
+         * If not callbacks will not work.
+         * (See Windows Internals Part 1, 6th edition, p. 176.)
+         */
+        DataTableEntry->Flags |= LDRP_IMAGE_INTEGRITY_FORCED;
+    }
 
     /* Insert this DTE to a list in the LPB */
     InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
@@ -771,6 +800,12 @@ PeLdrLoadImage(
         ArcClose(FileId);
         return FALSE;
     }
+
+    /*
+     * On Vista and above, a digital signature check is performed when the image
+     * has the IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY flag set in its header.
+     * (We of course do not perform this check yet!)
+     */
 
     /* Reload the NT Header */
     NtHeaders = RtlImageNtHeader(PhysicalBase);

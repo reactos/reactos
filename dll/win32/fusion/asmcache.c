@@ -22,6 +22,9 @@
 #include <stdio.h>
 
 #define COBJMACROS
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -37,7 +40,6 @@
 
 #include "fusionpriv.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
@@ -63,11 +65,11 @@ static BOOL create_full_path(LPCWSTR path)
     BOOL ret = TRUE;
     int len;
 
-    if (!(new_path = heap_alloc((strlenW(path) + 1) * sizeof(WCHAR)))) return FALSE;
+    if (!(new_path = heap_alloc((lstrlenW(path) + 1) * sizeof(WCHAR)))) return FALSE;
 
-    strcpyW(new_path, path);
+    lstrcpyW(new_path, path);
 
-    while ((len = strlenW(new_path)) && new_path[len - 1] == '\\')
+    while ((len = lstrlenW(new_path)) && new_path[len - 1] == '\\')
         new_path[len - 1] = 0;
 
     while (!CreateDirectoryW(new_path, NULL))
@@ -84,7 +86,7 @@ static BOOL create_full_path(LPCWSTR path)
             break;
         }
 
-        if(!(slash = strrchrW(new_path, '\\')))
+        if(!(slash = wcsrchr(new_path, '\\')))
         {
             ret = FALSE;
             break;
@@ -116,14 +118,14 @@ static BOOL get_assembly_directory(LPWSTR dir, DWORD size, const char *version, 
 
     if (!strcmp(version, "v4.0.30319"))
     {
-        strcpyW(dir + len, dotnet);
+        lstrcpyW(dir + len, dotnet);
         len += ARRAY_SIZE(dotnet) - 1;
-        strcpyW(dir + len, gac + 1);
+        lstrcpyW(dir + len, gac + 1);
         len += ARRAY_SIZE(gac) - 2;
     }
     else
     {
-        strcpyW(dir + len, gac);
+        lstrcpyW(dir + len, gac);
         len += ARRAY_SIZE(gac) - 1;
     }
     switch (architecture)
@@ -132,15 +134,15 @@ static BOOL get_assembly_directory(LPWSTR dir, DWORD size, const char *version, 
             break;
 
         case peMSIL:
-            strcpyW(dir + len, msil);
+            lstrcpyW(dir + len, msil);
             break;
 
         case peI386:
-            strcpyW(dir + len, x86);
+            lstrcpyW(dir + len, x86);
             break;
 
         case peAMD64:
-            strcpyW(dir + len, amd64);
+            lstrcpyW(dir + len, amd64);
             break;
 
         default:
@@ -267,11 +269,11 @@ static HRESULT WINAPI IAssemblyCacheImpl_UninstallAssembly(IAssemblyCache *iface
 
     if (DeleteFileW( path ))
     {
-        if ((p = strrchrW( path, '\\' )))
+        if ((p = wcsrchr( path, '\\' )))
         {
             *p = 0;
             RemoveDirectoryW( path );
-            if ((p = strrchrW( path, '\\' )))
+            if ((p = wcsrchr( path, '\\' )))
             {
                 *p = 0;
                 RemoveDirectoryW( path );
@@ -393,13 +395,13 @@ static HRESULT copy_file( const WCHAR *src_dir, DWORD src_len, const WCHAR *dst_
                           const WCHAR *filename )
 {
     WCHAR *src_file, *dst_file;
-    DWORD len = strlenW( filename );
+    DWORD len = lstrlenW( filename );
     HRESULT hr = S_OK;
 
     if (!(src_file = heap_alloc( (src_len + len + 1) * sizeof(WCHAR) )))
         return E_OUTOFMEMORY;
     memcpy( src_file, src_dir, src_len * sizeof(WCHAR) );
-    strcpyW( src_file + src_len, filename );
+    lstrcpyW( src_file + src_len, filename );
 
     if (!(dst_file = heap_alloc( (dst_len + len + 1) * sizeof(WCHAR) )))
     {
@@ -407,7 +409,7 @@ static HRESULT copy_file( const WCHAR *src_dir, DWORD src_len, const WCHAR *dst_
         return E_OUTOFMEMORY;
     }
     memcpy( dst_file, dst_dir, dst_len * sizeof(WCHAR) );
-    strcpyW( dst_file + dst_len, filename );
+    lstrcpyW( dst_file + dst_len, filename );
 
     if (!CopyFileW( src_file, dst_file, FALSE )) hr = HRESULT_FROM_WIN32( GetLastError() );
     heap_free( src_file );
@@ -442,7 +444,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (!pszManifestFilePath || !*pszManifestFilePath)
         return E_INVALIDARG;
 
-    if (!(extension = strrchrW(pszManifestFilePath, '.')))
+    if (!(extension = wcsrchr(pszManifestFilePath, '.')))
         return HRESULT_FROM_WIN32(ERROR_INVALID_NAME);
 
     if (lstrcmpiW(extension, ext_exe) && lstrcmpiW(extension, ext_dll))
@@ -483,16 +485,16 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     architecture = assembly_get_architecture(assembly);
     get_assembly_directory(asmdir, MAX_PATH, clr_version, architecture);
 
-    dst_len += strlenW(asmdir) + strlenW(name) + strlenW(version) + strlenW(token);
+    dst_len += lstrlenW(asmdir) + lstrlenW(name) + lstrlenW(version) + lstrlenW(token);
     if (!(dst_dir = heap_alloc(dst_len * sizeof(WCHAR))))
     {
         hr = E_OUTOFMEMORY;
         goto done;
     }
     if (!strcmp(clr_version, "v4.0.30319"))
-        dst_len = sprintfW(dst_dir, format_v40, asmdir, name, version, token);
+        dst_len = swprintf(dst_dir, format_v40, asmdir, name, version, token);
     else
-        dst_len = sprintfW(dst_dir, format, asmdir, name, version, token);
+        dst_len = swprintf(dst_dir, format, asmdir, name, version, token);
 
     create_full_path(dst_dir);
 
@@ -500,7 +502,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (FAILED(hr))
         goto done;
 
-    if ((p = strrchrW(asmpath, '\\')))
+    if ((p = wcsrchr(asmpath, '\\')))
     {
         filename = p + 1;
         src_dir  = asmpath;

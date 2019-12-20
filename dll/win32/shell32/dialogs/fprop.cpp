@@ -67,17 +67,6 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
     return cPages;
 }
 
-// CStubWindow32 --- The owner window of file property sheets.
-// This window hides taskbar button of property sheet.
-class CStubWindow32 : public CWindowImpl<CStubWindow32>
-{
-public:
-    DECLARE_WND_CLASS_EX(_T("StubWindow32"), 0, COLOR_WINDOWTEXT)
-
-    BEGIN_MSG_MAP(CStubWindow32)
-    END_MSG_MAP()
-};
-
 /*************************************************************************
  *
  * SH_ShowPropertiesDialog

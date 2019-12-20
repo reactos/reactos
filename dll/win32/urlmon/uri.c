@@ -18,6 +18,7 @@
  */
 
 #include <limits.h>
+#include <wchar.h>
 
 #include "urlmon_main.h"
 #include "wine/debug.h"
@@ -518,7 +519,7 @@ static inline void pct_encode_val(WCHAR val, WCHAR *dest) {
  */
 void find_domain_name(const WCHAR *host, DWORD host_len,
                              INT *domain_start) {
-    const WCHAR *last_tld, *sec_last_tld, *end;
+    const WCHAR *last_tld, *sec_last_tld, *end, *p;
 
     end = host+host_len-1;
 
@@ -530,12 +531,18 @@ void find_domain_name(const WCHAR *host, DWORD host_len,
     if(host_len < 4)
         return;
 
-    last_tld = memrchrW(host, '.', host_len);
+    for (last_tld = sec_last_tld = NULL, p = host; p <= end; p++)
+    {
+        if (*p == '.')
+        {
+            sec_last_tld = last_tld;
+            last_tld = p;
+        }
+    }
     if(!last_tld)
         /* http://hostname -> has no domain name. */
         return;
 
-    sec_last_tld = memrchrW(host, '.', last_tld-host);
     if(!sec_last_tld) {
         /* If the '.' is at the beginning of the host there
          * has to be at least 3 characters in the TLD for it
@@ -586,12 +593,8 @@ void find_domain_name(const WCHAR *host, DWORD host_len,
         if(last_tld - (sec_last_tld+1) == 3) {
             for(i = 0; i < ARRAY_SIZE(recognized_tlds); ++i) {
                 if(!StrCmpNIW(sec_last_tld+1, recognized_tlds[i].tld_name, 3)) {
-                    const WCHAR *domain = memrchrW(host, '.', sec_last_tld-host);
-
-                    if(!domain)
-                        *domain_start = 0;
-                    else
-                        *domain_start = (domain+1) - host;
+                    for (p = sec_last_tld; p > host; p--) if (p[-1] == '.') break;
+                    *domain_start = p - host;
                     TRACE("Found domain name %s\n", debugstr_wn(host+*domain_start,
                                                         (host+host_len)-(host+*domain_start)));
                     return;
@@ -604,12 +607,8 @@ void find_domain_name(const WCHAR *host, DWORD host_len,
              * part of the TLD.
              *  Ex: www.google.fo.uk -> google.fo.uk as the domain name.
              */
-            const WCHAR *domain = memrchrW(host, '.', sec_last_tld-host);
-
-            if(!domain)
-                *domain_start = 0;
-            else
-                *domain_start = (domain+1) - host;
+            for (p = sec_last_tld; p > host; p--) if (p[-1] == '.') break;
+            *domain_start = p - host;
         }
     } else {
         /* The second to last TLD has more than 3 characters making it
@@ -773,18 +772,18 @@ static BSTR pre_process_uri(LPCWSTR uri) {
 
     start = uri;
     /* Skip leading controls and whitespace. */
-    while(*start && (iscntrlW(*start) || isspaceW(*start))) ++start;
+    while(*start && (iswcntrl(*start) || iswspace(*start))) ++start;
 
     /* URI consisted only of control/whitespace. */
     if(!*start)
         return SysAllocStringLen(NULL, 0);
 
-    end = start + strlenW(start);
-    while(--end > start && (iscntrlW(*end) || isspaceW(*end)));
+    end = start + lstrlenW(start);
+    while(--end > start && (iswcntrl(*end) || iswspace(*end)));
 
     len = ++end - start;
     for(ptr = start; ptr < end; ptr++) {
-        if(iscntrlW(*ptr))
+        if(iswcntrl(*ptr))
             len--;
     }
 
@@ -793,7 +792,7 @@ static BSTR pre_process_uri(LPCWSTR uri) {
         return NULL;
 
     for(ptr = start, ptr2=ret; ptr < end; ptr++) {
-        if(!iscntrlW(*ptr))
+        if(!iswcntrl(*ptr))
             *ptr2++ = *ptr;
     }
 
@@ -845,9 +844,9 @@ static DWORD ui2ipv4(WCHAR *dest, UINT address) {
 
     if(!dest) {
         WCHAR tmp[16];
-        ret = sprintfW(tmp, formatW, digits[0], digits[1], digits[2], digits[3]);
+        ret = swprintf(tmp, formatW, digits[0], digits[1], digits[2], digits[3]);
     } else
-        ret = sprintfW(dest, formatW, digits[0], digits[1], digits[2], digits[3]);
+        ret = swprintf(dest, formatW, digits[0], digits[1], digits[2], digits[3]);
 
     return ret;
 }
@@ -858,9 +857,9 @@ static DWORD ui2str(WCHAR *dest, UINT value) {
 
     if(!dest) {
         WCHAR tmp[11];
-        ret = sprintfW(tmp, formatW, value);
+        ret = swprintf(tmp, formatW, value);
     } else
-        ret = sprintfW(dest, formatW, value);
+        ret = swprintf(dest, formatW, value);
 
     return ret;
 }
@@ -1987,7 +1986,7 @@ static BOOL parse_hierpart(const WCHAR **ptr, parse_data *data, DWORD flags) {
     /* For javascript: URIs, simply set everything as a path */
     if(data->scheme_type == URL_SCHEME_JAVASCRIPT) {
         data->path = *ptr;
-        data->path_len = strlenW(*ptr);
+        data->path_len = lstrlenW(*ptr);
         data->is_opaque = TRUE;
         *ptr += data->path_len;
         return TRUE;
@@ -2339,9 +2338,9 @@ static BOOL canonicalize_reg_name(const parse_data *data, Uri *uri,
                 /* If NO_CANONICALIZE is not set, then windows lower cases the
                  * decoded value.
                  */
-                if(!(flags & Uri_CREATE_NO_CANONICALIZE) && isupperW(val)) {
+                if(!(flags & Uri_CREATE_NO_CANONICALIZE) && iswupper(val)) {
                     if(!computeOnly)
-                        uri->canon_uri[uri->canon_len] = tolowerW(val);
+                        uri->canon_uri[uri->canon_len] = towlower(val);
                 } else {
                     if(!computeOnly)
                         uri->canon_uri[uri->canon_len] = val;
@@ -2369,8 +2368,8 @@ static BOOL canonicalize_reg_name(const parse_data *data, Uri *uri,
 
                 /* The percent encoded value gets lower cased also. */
                 if(!(flags & Uri_CREATE_NO_CANONICALIZE)) {
-                    uri->canon_uri[uri->canon_len+1] = tolowerW(uri->canon_uri[uri->canon_len+1]);
-                    uri->canon_uri[uri->canon_len+2] = tolowerW(uri->canon_uri[uri->canon_len+2]);
+                    uri->canon_uri[uri->canon_len+1] = towlower(uri->canon_uri[uri->canon_len+1]);
+                    uri->canon_uri[uri->canon_len+2] = towlower(uri->canon_uri[uri->canon_len+2]);
                 }
             }
 
@@ -2378,7 +2377,7 @@ static BOOL canonicalize_reg_name(const parse_data *data, Uri *uri,
         } else {
             if(!computeOnly) {
                 if(!(flags & Uri_CREATE_NO_CANONICALIZE) && known_scheme)
-                    uri->canon_uri[uri->canon_len] = tolowerW(*ptr);
+                    uri->canon_uri[uri->canon_len] = towlower(*ptr);
                 else
                     uri->canon_uri[uri->canon_len] = *ptr;
             }
@@ -2645,11 +2644,11 @@ static BOOL canonicalize_ipv6address(const parse_data *data, Uri *uri,
                     static const WCHAR formatW[] = {'%','x',0};
 
                     if(!computeOnly)
-                        uri->canon_len += sprintfW(uri->canon_uri+uri->canon_len,
+                        uri->canon_len += swprintf(uri->canon_uri+uri->canon_len,
                                             formatW, values[i]);
                     else {
                         WCHAR tmp[5];
-                        uri->canon_len += sprintfW(tmp, formatW, values[i]);
+                        uri->canon_len += swprintf(tmp, formatW, values[i]);
                     }
                 }
             }
@@ -3307,7 +3306,7 @@ static BOOL canonicalize_scheme(const parse_data *data, Uri *uri, DWORD flags, B
 
             for(i = 0; i < data->scheme_len; ++i) {
                 /* Scheme name must be lower case after canonicalization. */
-                uri->canon_uri[i + pos] = tolowerW(data->scheme[i]);
+                uri->canon_uri[i + pos] = towlower(data->scheme[i]);
             }
 
             uri->canon_uri[i + pos] = ':';
@@ -3889,7 +3888,7 @@ static HRESULT compare_file_paths(const Uri *a, const Uri *b, BOOL *ret)
     }
 
     /* Fast path */
-    if(a->path_len == b->path_len && !memicmpW(a->canon_uri+a->path_start, b->canon_uri+b->path_start, a->path_len)) {
+    if(a->path_len == b->path_len && !_wcsnicmp(a->canon_uri+a->path_start, b->canon_uri+b->path_start, a->path_len)) {
         *ret = TRUE;
         return S_OK;
     }
@@ -3909,7 +3908,7 @@ static HRESULT compare_file_paths(const Uri *a, const Uri *b, BOOL *ret)
     len_a = canonicalize_path_hierarchical(a->canon_uri+a->path_start, a->path_len, a->scheme_type, FALSE, 0, FALSE, canon_path_a);
     len_b = canonicalize_path_hierarchical(b->canon_uri+b->path_start, b->path_len, b->scheme_type, FALSE, 0, FALSE, canon_path_b);
 
-    *ret = len_a == len_b && !memicmpW(canon_path_a, canon_path_b, len_a);
+    *ret = len_a == len_b && !_wcsnicmp(canon_path_a, canon_path_b, len_a);
 
     heap_free(canon_path_a);
     heap_free(canon_path_b);
@@ -6417,21 +6416,18 @@ static HRESULT merge_paths(parse_data *data, const WCHAR *base, DWORD base_len, 
 
             /* If not found, try finding the end of @xxx: */
             if(end == base+base_len-1)
-                end = *base == '@' ? memchr(base, ':', base_len) : NULL;
+                end = *base == '@' ? wmemchr(base, ':', base_len) : NULL;
         }else {
             /* Find the characters that will be copied over from the base path. */
-            end = memrchrW(base, '/', base_len);
-            if(!end && data->scheme_type == URL_SCHEME_FILE)
+            for (end = base + base_len - 1; end >= base; end--) if (*end == '/') break;
+            if(end < base && data->scheme_type == URL_SCHEME_FILE)
                 /* Try looking for a '\\'. */
-                end = memrchrW(base, '\\', base_len);
+                for (end = base + base_len - 1; end >= base; end--) if (*end == '\\') break;
         }
     }
 
-    if(end) {
-        base_copy_len = (end+1)-base;
-        *result = heap_alloc((base_copy_len+relative_len+1)*sizeof(WCHAR));
-    } else
-        *result = heap_alloc((relative_len+1)*sizeof(WCHAR));
+    if (end) base_copy_len = (end+1)-base;
+    *result = heap_alloc((base_copy_len+relative_len+1)*sizeof(WCHAR));
 
     if(!(*result)) {
         *result_len = 0;
@@ -6439,10 +6435,8 @@ static HRESULT merge_paths(parse_data *data, const WCHAR *base, DWORD base_len, 
     }
 
     ptr = *result;
-    if(end) {
-        memcpy(ptr, base, base_copy_len*sizeof(WCHAR));
-        ptr += base_copy_len;
-    }
+    memcpy(ptr, base, base_copy_len*sizeof(WCHAR));
+    ptr += base_copy_len;
 
     memcpy(ptr, relative, relative_len*sizeof(WCHAR));
     ptr += relative_len;

@@ -95,6 +95,10 @@
 
 #define DEBUGGER_THREADING  0   /* integrated with DDB */
 
+#ifdef INVARIANTS
+#define ACPI_MUTEX_DEBUG
+#endif
+
 #else /* _KERNEL */
 
 #if __STDC_HOSTED__

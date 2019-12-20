@@ -364,12 +364,14 @@ NetrGetJoinInformation(
     wchar_t **NameBuffer,
     PNETSETUP_JOIN_STATUS BufferType)
 {
-    TRACE("NetrGetJoinInformation()\n");
+    TRACE("NetrGetJoinInformation(%p %p %p)\n",
+          ServerName, NameBuffer, BufferType);
 
-    *NameBuffer = NULL;
-    *BufferType = NetSetupUnjoined;
+    if (NameBuffer == NULL)
+        return ERROR_INVALID_PARAMETER;
 
-    return NERR_Success;
+    return NetpGetJoinInformation(NameBuffer,
+                                  BufferType);
 }
 
 
@@ -395,8 +397,26 @@ NetrJoinDomain2(
     PJOINPR_ENCRYPTED_USER_PASSWORD Password,
     unsigned long Options)
 {
-    UNIMPLEMENTED;
-    return 0;
+    NET_API_STATUS status;
+
+    FIXME("NetrJoinDomain2(%p %S %S %S %S %p 0x%lx)\n",
+          RpcBindingHandle, ServerName, DomainNameParam, MachineAccountOU,
+          AccountName, Password, Options);
+
+    if (DomainNameParam == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    if (Options & NETSETUP_JOIN_DOMAIN)
+    {
+        FIXME("NetrJoinDomain2: NETSETUP_JOIN_DOMAIN is not supported yet!\n");
+        status = ERROR_CALL_NOT_IMPLEMENTED;
+    }
+    else
+    {
+        status = NetpJoinWorkgroup(DomainNameParam);
+    }
+
+    return status;
 }
 
 

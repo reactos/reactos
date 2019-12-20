@@ -1,4 +1,4 @@
-//{{NO_DEPENDENCIES}}
+﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by shellbtrfs.rc
 //
@@ -92,6 +92,7 @@
 #define IDS_PARTITION                   174
 #define IDS_WHOLE_DISK                  175
 #define IDS_CANNOT_REMOVE_RAID          176
+#define IDD_DRIVE_LETTER                176
 #define IDS_REMOVE_DEVICE_CONFIRMATION  177
 #define IDS_CONFIRMATION_TITLE          178
 #define IDS_ADD_DEVICE_CONFIRMATION     179
@@ -133,7 +134,6 @@
 #define IDS_OUT_OF_MEMORY               215
 #define IDS_RECV_UNKNOWN_COMMAND        216
 #define IDS_RECV_CANT_OPEN_PATH         217
-#define IDS_RECV_RTLUTF8TOUNICODEN_FAILED 218
 #define IDS_RECV_CREATE_SUBVOL_FAILED   219
 #define IDS_RECV_MISSING_PARAM          220
 #define IDS_RECV_SHORT_PARAM            221
@@ -145,7 +145,6 @@
 #define IDS_RECV_CREATEHARDLINK_FAILED  227
 #define IDS_RECV_SETENDOFFILE_FAILED    228
 #define IDS_RECV_CANT_CREATE_FILE       229
-#define IDS_RECV_SETFILEINFO_FAILED     230
 #define IDS_RECV_SETINODEINFO_FAILED    231
 #define IDS_RECV_SUCCESS                232
 #define IDS_RECV_BUTTON_OK              233
@@ -197,11 +196,9 @@
 #define IDS_BALANCE_COMPLETE_SHRINK     279
 #define IDS_BALANCE_FAILED_SHRINK       280
 #define IDS_COMPRESS_ZSTD               281
-#define IDS_RECV_RTLUNICODETOUTF8N_FAILED 282
 #define IDS_REGCREATEKEY_FAILED         283
 #define IDS_REGSETVALUEEX_FAILED        284
 #define IDS_REGCLOSEKEY_FAILED          285
-#define IDS_REGDELETETREE_FAILED        286
 #define IDS_CANT_REFLINK_DIFFERENT_FS   287
 #define IDS_INITCOMMONCONTROLSEX_FAILED 288
 #define IDS_CANT_OPEN_MOUNTMGR          289
@@ -240,6 +237,7 @@
 #define IDC_SIZE_ZSTD                   1023
 #define IDC_COMPRESSION_RATIO           1023
 #define IDC_PROFILES                    1024
+#define IDC_FRAGMENTATION               1024
 #define IDC_PROFILES_SINGLE             1025
 #define IDC_PROFILES_DUP                1026
 #define IDC_VOL_DEVICES                 1026
@@ -332,14 +330,16 @@
 #define IDC_RESIZE_CURSIZE              1071
 #define IDC_RESIZE_SLIDER               1072
 #define IDC_RESIZE_NEWSIZE              1073
+#define IDC_VOL_CHANGE_DRIVE_LETTER     1073
+#define IDC_DRIVE_LETTER_COMBO          1074
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        175
+#define _APS_NEXT_RESOURCE_VALUE        178
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1073
+#define _APS_NEXT_CONTROL_VALUE         1075
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

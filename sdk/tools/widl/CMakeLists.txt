@@ -34,7 +34,7 @@ list(APPEND SOURCE
 # Taken from widl.rbuild
 add_definitions(-DINT16=SHORT)
 add_host_tool(widl ${SOURCE})
-target_link_libraries(widl wpphost)
+target_link_libraries(widl PRIVATE host_includes wpphost)
 
 if(MSVC)
     # Disable warning "'>': signed/unsigned mismatch"

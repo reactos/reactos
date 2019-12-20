@@ -1047,8 +1047,8 @@ HRESULT
 WINAPI
 RegisterTypeLib(
   ITypeLib*,
-  _In_ OLECHAR*,
-  _In_opt_ OLECHAR*);
+  _In_ LPCOLESTR,
+  _In_opt_ LPCOLESTR);
 
 _Check_return_
 HRESULT

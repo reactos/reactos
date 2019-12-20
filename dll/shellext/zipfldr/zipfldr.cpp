@@ -31,6 +31,7 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ZipFolderStorageHandler, CZipFolder)
     OBJECT_ENTRY(CLSID_ZipFolderContextMenu, CZipFolder)
+    OBJECT_ENTRY(CLSID_ZipFolderSendTo, CSendToZip)
 END_OBJECT_MAP()
 
 CZipFldrModule gModule;

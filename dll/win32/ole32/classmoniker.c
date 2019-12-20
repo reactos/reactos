@@ -31,7 +31,6 @@
 #include "winuser.h"
 #include "wine/debug.h"
 #include "ole2.h"
-#include "wine/unicode.h"
 #include "moniker.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -402,7 +401,7 @@ static HRESULT WINAPI ClassMoniker_IsEqual(IMoniker* iface,IMoniker* pmkOtherMon
     if(SUCCEEDED ((res = CreateBindCtx(0,&bind)))) {
         if(SUCCEEDED (IMoniker_GetDisplayName(iface,bind,NULL,&dispName1))) {
 	    if(SUCCEEDED (IMoniker_GetDisplayName(pmkOtherMoniker,bind,NULL,&dispName2))) {
-                if(lstrcmpW(dispName1,dispName2)==0) res = S_OK;
+                if(wcscmp(dispName1,dispName2)==0) res = S_OK;
                 CoTaskMemFree(dispName2);
             }
             CoTaskMemFree(dispName1);
@@ -727,7 +726,7 @@ HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName, LP
                                            IMoniker **ppmk)
 {
     HRESULT hr;
-    LPCWSTR s = strchrW(szDisplayName, ':');
+    LPCWSTR s = wcschr(szDisplayName, ':');
     LPCWSTR end;
     CLSID clsid;
     BYTE table[256];

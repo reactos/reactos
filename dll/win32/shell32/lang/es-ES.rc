@@ -777,6 +777,15 @@ BEGIN
     IDS_PASTE "Insertar"
     IDS_EJECT "Extraer"
     IDS_DISCONNECT "Desconectar"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "No se pudo crear la carpeta '%1'"
     IDS_CREATEFOLDER_CAPTION "No se pudo crear la carpeta"
@@ -880,6 +889,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "No se pudo extraer la unidad (Error Code: %lu)."
     IDS_CANTSHOWPROPERTIES "No se puede mostrar las propiedades (Error Code: %lu)."
     IDS_CANTDISCONNECT "No se pudo desconectar (Error Code: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Directorio"
@@ -916,6 +926,7 @@ BEGIN
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Buscar"
     IDS_PRINT_VERB "Imprimir"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u archivos, %u carpetas"
     IDS_PRINTERS "Impresoras"

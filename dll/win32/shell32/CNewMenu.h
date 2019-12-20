@@ -54,7 +54,6 @@ private:
     };
 
     LPITEMIDLIST m_pidlFolder;
-    LPWSTR m_wszPath;
     SHELLNEW_ITEM *m_pItems;
     SHELLNEW_ITEM *m_pLinkItem; // Points to the link handler item in the m_pItems list.
     CComPtr<IUnknown> m_pSite;
@@ -97,7 +96,7 @@ public:
     virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // IShellExtInit
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_NEWMENU)
 DECLARE_NOT_AGGREGATABLE(CNewMenu)

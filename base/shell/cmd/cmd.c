@@ -1605,7 +1605,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
     DWORD dwType, len;
     /*
      * Buffer big enough to hold the string L"4294967295",
-     * corresponding to the literal 0xFFFFFFFF (MAX_ULONG) in decimal.
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
     DWORD Buffer[6];
 
@@ -1872,7 +1872,7 @@ Initialize(VOID)
     /* Initialize prompt support */
     InitPrompt();
 
-#ifdef FEATURE_DIR_STACK
+#ifdef FEATURE_DIRECTORY_STACK
     /* Initialize directory stack */
     InitDirectoryStack();
 #endif

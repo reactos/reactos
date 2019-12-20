@@ -23,7 +23,6 @@
 #include "parser.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
@@ -89,14 +88,14 @@ static HRESULT parse_json_string(json_parse_ctx_t *ctx, WCHAR **r)
         return E_OUTOFMEMORY;
     if(len)
         memcpy(buf, ptr, len*sizeof(WCHAR));
-    buf[len] = 0;
 
-    if(!unescape(buf)) {
+    if(!unescape(buf, &len)) {
         FIXME("unescape failed\n");
         heap_free(buf);
         return E_FAIL;
     }
 
+    buf[len] = 0;
     ctx->ptr++;
     *r = buf;
     return S_OK;
@@ -261,19 +260,12 @@ static HRESULT parse_json_value(json_parse_ctx_t *ctx, jsval_t *r)
             skip_spaces(ctx);
         }
 
-        if(!isdigitW(*ctx->ptr))
+        if(*ctx->ptr == '0' && ctx->ptr + 1 < ctx->end && iswdigit(ctx->ptr[1]))
             break;
 
-        if(*ctx->ptr == '0') {
-            ctx->ptr++;
-            n = 0;
-            if(is_identifier_char(*ctx->ptr))
-                break;
-        }else {
-            hres = parse_decimal(&ctx->ptr, ctx->end, &n);
-            if(FAILED(hres))
-                return hres;
-        }
+        hres = parse_decimal(&ctx->ptr, ctx->end, &n);
+        if(FAILED(hres))
+            break;
 
         *r = jsval_number(sign*n);
         return S_OK;
@@ -402,7 +394,7 @@ static BOOL append_string_len(stringify_ctx_t *ctx, const WCHAR *str, size_t len
 
 static inline BOOL append_string(stringify_ctx_t *ctx, const WCHAR *str)
 {
-    return append_string_len(ctx, str, strlenW(str));
+    return append_string_len(ctx, str, lstrlenW(str));
 }
 
 static inline BOOL append_char(stringify_ctx_t *ctx, WCHAR c)
@@ -489,7 +481,7 @@ static HRESULT json_quote(stringify_ctx_t *ctx, const WCHAR *ptr, size_t len)
             if(*ptr < ' ') {
                 static const WCHAR formatW[] = {'\\','u','%','0','4','x',0};
                 WCHAR buf[7];
-                sprintfW(buf, formatW, *ptr);
+                swprintf(buf, formatW, *ptr);
                 if(!append_string(ctx, buf))
                     return E_OUTOFMEMORY;
             }else {

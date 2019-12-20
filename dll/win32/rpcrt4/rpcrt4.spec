@@ -378,7 +378,7 @@
 378 stdcall RpcErrorStartEnumeration(ptr)
 379 stub RpcFreeAuthorizationContext
 380 stdcall RpcGetAsyncCallStatus(ptr) RpcAsyncGetCallStatus
-# RpcGetAuthorizationContextForClient
+381 stdcall RpcGetAuthorizationContextForClient(ptr long ptr ptr int64 long ptr ptr)
 382 stub RpcIfIdVectorFree
 383 stub RpcIfInqId
 384 stdcall RpcImpersonateClient(ptr)

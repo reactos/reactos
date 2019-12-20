@@ -14,4 +14,4 @@ list(APPEND SOURCE
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/tools/rsym)
 add_host_tool(log2lines ${SOURCE})
-target_link_libraries(log2lines rsym_common)
+target_link_libraries(log2lines PRIVATE host_includes rsym_common)

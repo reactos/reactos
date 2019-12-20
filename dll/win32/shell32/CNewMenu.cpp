@@ -27,7 +27,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 CNewMenu::CNewMenu() :
     m_pidlFolder(NULL),
-    m_wszPath(NULL),
     m_pItems(NULL),
     m_pLinkItem(NULL),
     m_pSite(NULL),
@@ -767,7 +766,7 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
 }
 
 HRESULT WINAPI
-CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
+CNewMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
     m_pidlFolder = ILClone(pidlFolder);

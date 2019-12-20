@@ -113,10 +113,17 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 continue;
             }
 
-            /* Set invalid stack and return false */
+            /* Set invalid stack and bail out */
             ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
             return FALSE;
         }
+
+        //
+        // TODO: Implement and call here RtlIsValidHandler(RegistrationFrame->Handler)
+        // for supporting SafeSEH functionality, see the following articles:
+        // https://www.optiv.com/blog/old-meets-new-microsoft-windows-safeseh-incompatibility
+        // https://msrc-blog.microsoft.com/2012/01/10/more-information-on-the-impact-of-ms12-001/
+        //
 
         /* Check if logging is enabled */
         RtlpCheckLogException(ExceptionRecord,
@@ -144,7 +151,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         {
             /* Continue execution */
             case ExceptionContinueExecution:
-
+            {
                 /* Check if it was non-continuable */
                 if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
                 {
@@ -161,20 +168,25 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 else
                 {
                     /* In user mode, call any registered vectored continue handlers */
-                    RtlCallVectoredContinueHandlers(ExceptionRecord,
-                                                    Context);
+                    RtlCallVectoredContinueHandlers(ExceptionRecord, Context);
 
                     /* Execution continues */
                     return TRUE;
                 }
+            }
 
             /* Continue searching */
             case ExceptionContinueSearch:
+                if (ExceptionRecord->ExceptionFlags & EXCEPTION_STACK_INVALID)
+                {
+                    /* We have an invalid stack, bail out */
+                    return FALSE;
+                }
                 break;
 
             /* Nested exception */
             case ExceptionNestedException:
-
+            {
                 /* Turn the nested flag on */
                 ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
 
@@ -185,10 +197,11 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     NestedFrame = DispatcherContext.RegistrationPointer;
                 }
                 break;
+            }
 
             /* Anything else */
             default:
-
+            {
                 /* Set up the exception record */
                 ExceptionRecord2.ExceptionRecord = ExceptionRecord;
                 ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
@@ -198,13 +211,14 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 /* Raise the exception */
                 RtlRaiseException(&ExceptionRecord2);
                 break;
+            }
         }
 
         /* Go to the next frame */
         RegistrationFrame = RegistrationFrame->Next;
     }
 
-    /* Unhandled, return false */
+    /* Unhandled, bail out */
     return FALSE;
 }
 
@@ -335,22 +349,24 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
                                                       Context,
                                                       &DispatcherContext,
                                                       RegistrationFrame->Handler);
+
             switch(Disposition)
             {
                 /* Continue searching */
                 case ExceptionContinueSearch:
                     break;
 
-                /* Collission */
-                case ExceptionCollidedUnwind :
-
+                /* Collision */
+                case ExceptionCollidedUnwind:
+                {
                     /* Get the original frame */
                     RegistrationFrame = DispatcherContext.RegistrationPointer;
                     break;
+                }
 
                 /* Anything else */
                 default:
-
+                {
                     /* Set up the exception record */
                     ExceptionRecord2.ExceptionRecord = ExceptionRecord;
                     ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
@@ -360,6 +376,7 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
                     /* Raise the exception */
                     RtlRaiseException(&ExceptionRecord2);
                     break;
+                }
             }
 
             /* Go to the next frame */

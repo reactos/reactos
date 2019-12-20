@@ -8,6 +8,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "fontext.dll"
 #include <reactos/version.rc>
 
+IDR_FONTEXT REGISTRY "res/fontext.rgs"
+
 /* UTF-8 */
 #pragma code_page(65001)
 

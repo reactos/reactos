@@ -593,7 +593,7 @@ GAMES=משחקים
 
 CMD_TITLE=שורת הפקודה
 CMD_DESC=שורת הפקודה
-EXPLORER_TITLE=ReactOS סייר
+EXPLORER_TITLE=סייר ReactOS 
 EXPLORER_DESC=סייר
 RAPPS_TITLE=מנהל היישומים של ReactOS
 RAPPS_TITLE_SHORT=מנהל היישומים
@@ -1473,6 +1473,8 @@ WINMINE_TITLE=WineMine
 WINMINE_DESC=Сапер
 SPIDER_TITLE=Пас'янс Павук
 SPIDER_DESC=Пас'янс Павук
+UTILMAN_TITLE=Диспетчер службових програм
+UTILMAN_DESC=Забезпечує запуск і настройку програм підтримки спеціальних можливостей.
 
 ; Simplified Chinese
 [Strings.0804]

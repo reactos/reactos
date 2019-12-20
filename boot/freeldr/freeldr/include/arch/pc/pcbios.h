@@ -1,6 +1,12 @@
 #ifndef _PCBIOS_H_
 #define _PCBIOS_H_
 
+#ifdef __ASM__
+#define EFLAGS_CF HEX(01)
+#define EFLAGS_ZF HEX(40)
+#define EFLAGS_SF HEX(80)
+#endif
+
 #ifndef __ASM__
 
 #define MAX_BIOS_DESCRIPTORS 80
@@ -160,12 +166,19 @@ int __cdecl Int386(int ivec, REGS* in, REGS* out);
 // If CF is set then the call failed (usually)
 #define INT386_SUCCESS(regs)    ((regs.x.eflags & EFLAGS_CF) == 0)
 
-VOID __cdecl ChainLoadBiosBootSectorCode(   // Implemented in boot.S
+VOID __cdecl ChainLoadBiosBootSectorCode(
     IN UCHAR BootDrive OPTIONAL,
     IN ULONG BootPartition OPTIONAL);
 
-VOID __cdecl Reboot(VOID);                  // Implemented in boot.S
-VOID DetectHardware(VOID);                  // Implemented in hardware.c
+VOID __cdecl Relocator16Boot(
+    IN REGS*  In,
+    IN USHORT StackSegment,
+    IN USHORT StackPointer,
+    IN USHORT CodeSegment,
+    IN USHORT CodePointer);
+
+VOID __cdecl Reboot(VOID);
+VOID DetectHardware(VOID);
 
 #endif /* ! __ASM__ */
 

@@ -31,7 +31,7 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "分間", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL "レジューム時にパスワードを確認する(&P)", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 137, 19
     GROUPBOX "モニタの省電力機能(&E)", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "モニタの電源設定を変更するには、[電源] を クリックしてください。", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "電源(&O)...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15

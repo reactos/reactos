@@ -29,7 +29,6 @@
 #include "wine/atlwin.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
@@ -314,7 +313,7 @@ ATOM WINAPI AtlModuleRegisterWndClassInfoA(_ATL_MODULEA *pm, _ATL_WNDCLASSINFOA 
 
         if (!wci->m_wc.lpszClassName)
         {
-            snprintf(wci->m_szAutoName, sizeof(wci->m_szAutoName), "ATL%08lx", (UINT_PTR)wci);
+            sprintf(wci->m_szAutoName, "ATL%08lx", (UINT_PTR)wci);
             TRACE("auto-generated class name %s\n", wci->m_szAutoName);
             wci->m_wc.lpszClassName = wci->m_szAutoName;
         }
@@ -374,7 +373,7 @@ ATOM WINAPI AtlModuleRegisterWndClassInfoW(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOW 
         if (!wci->m_wc.lpszClassName)
         {
             static const WCHAR szFormat[] = {'A','T','L','%','0','8','l','x',0};
-            snprintfW(wci->m_szAutoName, ARRAY_SIZE(wci->m_szAutoName), szFormat, (UINT_PTR)wci);
+            swprintf(wci->m_szAutoName, szFormat, (UINT_PTR)wci);
             TRACE("auto-generated class name %s\n", debugstr_w(wci->m_szAutoName));
             wci->m_wc.lpszClassName = wci->m_szAutoName;
         }

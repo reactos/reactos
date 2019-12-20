@@ -66,12 +66,12 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "選択(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "インストール後にプログラムのインストーラを削除する(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    GROUPBOX "プロキシ", -1, 4, 116, 240, 76
+    CONTROL "システム プロキシ設定", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "直接 (プロキシなし)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "プロキシ", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "次のはプロキシなし", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "デフォルト", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
@@ -83,7 +83,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "プログラムのインストール"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "ディスクからインストール (CD や DVD)(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "ダウンロードしてインストール(&D)", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "ダウンロード %ls…"
+CAPTION "ダウンロード %ls..."
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -152,7 +152,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION       "\nバージョン: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\n利用可能なバージョン: "
     IDS_AINFO_DESCRIPTION   "\n概要: "
     IDS_AINFO_SIZE          "\nサイズ: "
     IDS_AINFO_URLSITE       "\nホームページ: "
@@ -178,13 +178,13 @@ BEGIN
     IDS_CAT_SCIENCE         "科学"
     IDS_CAT_TOOLS           "ツール"
     IDS_CAT_VIDEO           "ビデオ"
-    IDS_CAT_THEMES          "Themes"
+    IDS_CAT_THEMES          "テーマ"
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS アプリケーション マネージャ"
-    IDS_SEARCH_TEXT         "検索…"
+    IDS_SEARCH_TEXT         "検索..."
     IDS_INSTALL             "インストール"
     IDS_UNINSTALL           "アンインストール"
     IDS_MODIFY              "変更"
@@ -200,52 +200,52 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません!"
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
     IDS_INFORMATION "情報"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD "パッケージをダウンロードできません! アドレスが見つからない!"
+    IDS_UNABLE_TO_DOWNLOAD2 "パッケージをダウンロードできません! インターネット接続を確認して!"
     IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_INSTALL "インストーラを開けません!"
+    IDS_UNABLE_TO_QUERY_CERT "証明書情報を取得できません。\n\nそれでも続けますか？"
+    IDS_INTEG_CHECK_TITLE "パッケージの構成を確認しています..."
+    IDS_INTEG_CHECK_FAIL "このパッケージは構成チェックに失格しました。おそらく壊れているか、インストール中に破損したと考えられます。このソフトを実行するのはお勧めできません。"
+    IDS_INTERRUPTED_DOWNLOAD "ダウンロードは中断しました。インターネット接続を確認して下さい。"
+    IDS_UNABLE_TO_WRITE "ディスクへの書き込みができません。容量を確認して下さい。"
+    IDS_SELECT_ALL "すべて選択/非選択"
+    IDS_INSTALL_SELECTED "選択をインストール"
+    IDS_SELECTEDFORINST "インストールを選択済み"
+    IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\nSubject: %s\nIssuer: %s\nそれでも続けますか？"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "インストール済み"
+    IDS_STATUS_NOTINSTALLED "未インストール"
+    IDS_STATUS_DOWNLOADED "ダウンロード完了"
+    IDS_STATUS_UPDATE_AVAILABLE "更新があります"
+    IDS_STATUS_DOWNLOADING "ダウンロード中..."
+    IDS_STATUS_INSTALLING "インストール中..."
+    IDS_STATUS_WAITING "インストール待ち..."
+    IDS_STATUS_FINISHED "完了"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
-    IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_OPENSOURCE "オープンソース"
+    IDS_LICENSE_FREEWARE "フリーソフト"
+    IDS_LICENSE_TRIAL "試用/デモ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "あなたの言語をサポート"
+    IDS_LANGUAGE_NO_TRANSLATION "他の言語をサポート"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "英語をサポート"
+    IDS_LANGUAGE_SINGLE "単一言語"
     IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
+    IDS_DL_DIALOG_DB_DISP "アプリのデータベース"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "データベースを更新中..."
 END

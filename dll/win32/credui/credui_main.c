@@ -19,6 +19,9 @@
  */
 
 #include <stdarg.h>
+#ifdef __REACTOS__
+#include <wchar.h>
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -32,7 +35,6 @@
 #include "credui_resources.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(credui);
@@ -89,7 +91,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             HeapFree(GetProcessHeap(), 0, entry->pszTargetName);
             HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-            SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
+            SecureZeroMemory(entry->pszPassword, lstrlenW(entry->pszPassword) * sizeof(WCHAR));
             HeapFree(GetProcessHeap(), 0, entry->pszPassword);
             HeapFree(GetProcessHeap(), 0, entry);
         }
@@ -111,7 +113,7 @@ static DWORD save_credentials(PCWSTR pszTargetName, PCWSTR pszUsername,
     cred.Type = generic ? CRED_TYPE_GENERIC : CRED_TYPE_DOMAIN_PASSWORD;
     cred.TargetName = (LPWSTR)pszTargetName;
     cred.Comment = NULL;
-    cred.CredentialBlobSize = strlenW(pszPassword) * sizeof(WCHAR);
+    cred.CredentialBlobSize = lstrlenW(pszPassword) * sizeof(WCHAR);
     cred.CredentialBlob = (LPBYTE)pszPassword;
     cred.Persist = CRED_PERSIST_ENTERPRISE;
     cred.AttributeCount = 0;
@@ -180,7 +182,7 @@ static void CredDialogFillUsernameCombo(HWND hwndUsername, const struct cred_dia
         /* don't add another item with the same name if we've already added it */
         for (j = 0; j < i; j++)
             if (credentials[j]->UserName
-                && !strcmpW(credentials[i]->UserName, credentials[j]->UserName))
+                && !lstrcmpW(credentials[i]->UserName, credentials[j]->UserName))
             {
                 duplicate = TRUE;
                 break;
@@ -391,7 +393,7 @@ static BOOL CredDialogInit(HWND hwndDlg, struct cred_dialog_params *params)
         WCHAR format[256];
         WCHAR message[256];
         LoadStringW(hinstCredUI, IDS_MESSAGEFORMAT, format, ARRAY_SIZE(format));
-        snprintfW(message, ARRAY_SIZE(message), format, params->pszTargetName);
+        swprintf(message, format, params->pszTargetName);
         SetDlgItemTextW(hwndDlg, IDC_MESSAGE, message);
     }
     SetWindowTextW(hwndUsername, params->pszUsername);
@@ -416,7 +418,7 @@ static BOOL CredDialogInit(HWND hwndDlg, struct cred_dialog_params *params)
         WCHAR format[256];
         WCHAR title[256];
         LoadStringW(hinstCredUI, IDS_TITLEFORMAT, format, ARRAY_SIZE(format));
-        snprintfW(title, ARRAY_SIZE(title), format, params->pszTargetName);
+        swprintf(title, format, params->pszTargetName);
         SetWindowTextW(hwndDlg, title);
     }
 
@@ -455,9 +457,9 @@ static void CredDialogCommandOk(HWND hwndDlg, struct cred_dialog_params *params)
         return;
     }
 
-    if (!strchrW(user, '\\') && !strchrW(user, '@'))
+    if (!wcschr(user, '\\') && !wcschr(user, '@'))
     {
-        ULONG len_target = strlenW(params->pszTargetName);
+        ULONG len_target = lstrlenW(params->pszTargetName);
         memcpy(params->pszUsername, params->pszTargetName,
                min(len_target, params->ulUsernameMaxChars) * sizeof(WCHAR));
         if (len_target + 1 < params->ulUsernameMaxChars)
@@ -468,7 +470,7 @@ static void CredDialogCommandOk(HWND hwndDlg, struct cred_dialog_params *params)
     else if (params->ulUsernameMaxChars > 0)
         params->pszUsername[0] = '\0';
 
-    len2 = strlenW(params->pszUsername);
+    len2 = lstrlenW(params->pszUsername);
     memcpy(params->pszUsername + len2, user, min(len, params->ulUsernameMaxChars - len2) * sizeof(WCHAR));
     if (params->ulUsernameMaxChars)
         params->pszUsername[len2 + min(len, params->ulUsernameMaxChars - len2 - 1)] = '\0';
@@ -573,13 +575,13 @@ static BOOL find_existing_credential(const WCHAR *target, WCHAR *username, ULONG
             FIXME("no support for type %u credentials\n", credentials[i]->Type);
             continue;
         }
-        if ((!*username || !strcmpW(username, credentials[i]->UserName)) &&
-            strlenW(credentials[i]->UserName) < len_username &&
+        if ((!*username || !lstrcmpW(username, credentials[i]->UserName)) &&
+            lstrlenW(credentials[i]->UserName) < len_username &&
             credentials[i]->CredentialBlobSize / sizeof(WCHAR) < len_password)
         {
             TRACE("found existing credential for %s\n", debugstr_w(credentials[i]->UserName));
 
-            strcpyW(username, credentials[i]->UserName);
+            lstrcpyW(username, credentials[i]->UserName);
             memcpy(password, credentials[i]->CredentialBlob, credentials[i]->CredentialBlobSize);
             password[credentials[i]->CredentialBlobSize / sizeof(WCHAR)] = 0;
 
@@ -676,27 +678,27 @@ DWORD WINAPI CredUIPromptForCredentialsW(PCREDUI_INFOW pUIInfo,
             /* find existing pending credentials for the same target and overwrite */
             /* FIXME: is this correct? */
             LIST_FOR_EACH_ENTRY(entry, &pending_credentials_list, struct pending_credentials, entry)
-                if (!strcmpW(pszTargetName, entry->pszTargetName))
+                if (!lstrcmpW(pszTargetName, entry->pszTargetName))
                 {
                     found = TRUE;
                     HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-                    SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
+                    SecureZeroMemory(entry->pszPassword, lstrlenW(entry->pszPassword) * sizeof(WCHAR));
                     HeapFree(GetProcessHeap(), 0, entry->pszPassword);
                 }
 
             if (!found)
             {
                 entry = HeapAlloc(GetProcessHeap(), 0, sizeof(*entry));
-                len = strlenW(pszTargetName);
+                len = lstrlenW(pszTargetName);
                 entry->pszTargetName = HeapAlloc(GetProcessHeap(), 0, (len + 1)*sizeof(WCHAR));
                 memcpy(entry->pszTargetName, pszTargetName, (len + 1)*sizeof(WCHAR));
                 list_add_tail(&pending_credentials_list, &entry->entry);
             }
 
-            len = strlenW(params.pszUsername);
+            len = lstrlenW(params.pszUsername);
             entry->pszUsername = HeapAlloc(GetProcessHeap(), 0, (len + 1)*sizeof(WCHAR));
             memcpy(entry->pszUsername, params.pszUsername, (len + 1)*sizeof(WCHAR));
-            len = strlenW(params.pszPassword);
+            len = lstrlenW(params.pszPassword);
             entry->pszPassword = HeapAlloc(GetProcessHeap(), 0, (len + 1)*sizeof(WCHAR));
             memcpy(entry->pszPassword, params.pszPassword, (len + 1)*sizeof(WCHAR));
             entry->generic = (dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS) != 0;
@@ -728,7 +730,7 @@ DWORD WINAPI CredUIConfirmCredentialsW(PCWSTR pszTargetName, BOOL bConfirm)
 
     LIST_FOR_EACH_ENTRY(entry, &pending_credentials_list, struct pending_credentials, entry)
     {
-        if (!strcmpW(pszTargetName, entry->pszTargetName))
+        if (!lstrcmpW(pszTargetName, entry->pszTargetName))
         {
             if (bConfirm)
                 result = save_credentials(entry->pszTargetName, entry->pszUsername,
@@ -740,7 +742,7 @@ DWORD WINAPI CredUIConfirmCredentialsW(PCWSTR pszTargetName, BOOL bConfirm)
 
             HeapFree(GetProcessHeap(), 0, entry->pszTargetName);
             HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-            SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
+            SecureZeroMemory(entry->pszPassword, lstrlenW(entry->pszPassword) * sizeof(WCHAR));
             HeapFree(GetProcessHeap(), 0, entry->pszPassword);
             HeapFree(GetProcessHeap(), 0, entry);
 
@@ -771,37 +773,37 @@ DWORD WINAPI CredUIParseUserNameW(PCWSTR pszUserName, PWSTR pszUser,
 
     /* FIXME: handle marshaled credentials */
 
-    p = strchrW(pszUserName, '\\');
+    p = wcschr(pszUserName, '\\');
     if (p)
     {
         if (p - pszUserName > ulMaxDomainChars - 1)
             return ERROR_INSUFFICIENT_BUFFER;
-        if (strlenW(p + 1) > ulMaxUserChars - 1)
+        if (lstrlenW(p + 1) > ulMaxUserChars - 1)
             return ERROR_INSUFFICIENT_BUFFER;
-        strcpyW(pszUser, p + 1);
+        lstrcpyW(pszUser, p + 1);
         memcpy(pszDomain, pszUserName, (p - pszUserName)*sizeof(WCHAR));
         pszDomain[p - pszUserName] = '\0';
 
         return ERROR_SUCCESS;
     }
 
-    p = strrchrW(pszUserName, '@');
+    p = wcsrchr(pszUserName, '@');
     if (p)
     {
         if (p + 1 - pszUserName > ulMaxUserChars - 1)
             return ERROR_INSUFFICIENT_BUFFER;
-        if (strlenW(p + 1) > ulMaxDomainChars - 1)
+        if (lstrlenW(p + 1) > ulMaxDomainChars - 1)
             return ERROR_INSUFFICIENT_BUFFER;
-        strcpyW(pszDomain, p + 1);
+        lstrcpyW(pszDomain, p + 1);
         memcpy(pszUser, pszUserName, (p - pszUserName)*sizeof(WCHAR));
         pszUser[p - pszUserName] = '\0';
 
         return ERROR_SUCCESS;
     }
 
-    if (strlenW(pszUserName) > ulMaxUserChars - 1)
+    if (lstrlenW(pszUserName) > ulMaxUserChars - 1)
         return ERROR_INSUFFICIENT_BUFFER;
-    strcpyW(pszUser, pszUserName);
+    lstrcpyW(pszUser, pszUserName);
     pszDomain[0] = '\0';
 
     return ERROR_SUCCESS;
@@ -884,8 +886,8 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
            error, debugstr_w(package), input_id, output_id, save, sspi_flags );
 
     if (!target) return ERROR_INVALID_PARAMETER;
-    if (!package || (strcmpiW( package, basicW ) && strcmpiW( package, ntlmW ) &&
-                     strcmpiW( package, negotiateW )))
+    if (!package || (wcsicmp( package, basicW ) && wcsicmp( package, ntlmW ) &&
+                     wcsicmp( package, negotiateW )))
     {
         FIXME( "package %s not supported\n", debugstr_w(package) );
         return ERROR_NO_SUCH_PACKAGE;
@@ -920,19 +922,19 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
         DWORD size = sizeof(*id), len_domain = 0;
         WCHAR *ptr, *user = username, *domain = NULL;
 
-        if ((ptr = strchrW( username, '\\' )))
+        if ((ptr = wcschr( username, '\\' )))
         {
             user = ptr + 1;
-            len_username = strlenW( user );
-            if (!strcmpiW( package, ntlmW ) || !strcmpiW( package, negotiateW ))
+            len_username = lstrlenW( user );
+            if (!wcsicmp( package, ntlmW ) || !wcsicmp( package, negotiateW ))
             {
                 domain = username;
                 len_domain = ptr - username;
             }
             *ptr = 0;
         }
-        else len_username = strlenW( username );
-        len_password = strlenW( password );
+        else len_username = lstrlenW( username );
+        len_password = lstrlenW( password );
 
         size += (len_username + 1) * sizeof(WCHAR);
         size += (len_domain + 1) * sizeof(WCHAR);

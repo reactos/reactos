@@ -862,7 +862,7 @@ HRESULT WINAPI CRecycleBin::ReplacePage(EXPPS uPageID, LPFNSVADDPROPSHEETPAGE pf
  * RecycleBin IShellExtInit interface
  */
 
-HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+HRESULT WINAPI CRecycleBin::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
 {
     TRACE("%p %p %p %p\n", this, pidlFolder, pdtobj, hkeyProgID );
     return S_OK;
@@ -891,7 +891,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
 
     // Copy and retrieve the root path from get given string
     WCHAR wszRootPathName[MAX_PATH];
-    StringCbCopy(wszRootPathName, sizeof(wszRootPathName), wszPath);
+    StringCbCopyW(wszRootPathName, sizeof(wszRootPathName), wszPath);
     PathStripToRootW(wszRootPathName);
 
     // Test to see if the drive is fixed (non removable)

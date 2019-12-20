@@ -242,10 +242,10 @@ static void enum_gac_assembly_dirs(struct list *assemblies, const char *parent, 
 
         *end = 0;
         /* Directories with no dll or exe will not be enumerated */
-        snprintf(end, path + MAX_PATH - end, "%s\\%s.dll", ffd.cFileName, parent);
+        sprintf(end, "%s\\%s.dll", ffd.cFileName, parent);
         if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES)
         {
-            snprintf(end, path + MAX_PATH - end, "%s\\%s.exe", ffd.cFileName, parent);
+            sprintf(end, "%s\\%s.exe", ffd.cFileName, parent);
             if (GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES) continue;
         }
 

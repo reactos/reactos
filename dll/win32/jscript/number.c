@@ -332,7 +332,7 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
                     ch = '-';
                 }
                 else ch = '+';
-                sprintfW(&buf[idx], formatW, ch, (int)log_radix);
+                swprintf(&buf[idx], formatW, ch, (int)log_radix);
             }
         }
         else buf[idx] = '\0';

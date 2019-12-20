@@ -3,7 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
- * Copyright 2018 Katayama Hirofumi MZ
+ * Copyright 2018-2019 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -167,6 +167,8 @@ static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used,
  * %I address of a global item ID (explorer switch /idlist)
  * %L seems to be %1 as long filename followed by the 8+3 variation
  * %S ???
+ * %W Working directory
+ * %V Use either %L or %W
  * %* all following parameters (see batfile)
  *
  * The way we parse the command line arguments was determined through extensive
@@ -300,6 +302,42 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                         }
                     }
                     found_p1 = TRUE;
+                    break;
+
+                case 'w':
+                case 'W':
+                    if (lpDir)
+                    {
+                        used += wcslen(lpDir);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpDir);
+                            res += wcslen(lpDir);
+                        }
+                    }
+                    break;
+
+                case 'v':
+                case 'V':
+                    if (lpFile)
+                    {
+                        used += wcslen(lpFile);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpFile);
+                            res += wcslen(lpFile);
+                        }
+                        found_p1 = TRUE;
+                    }
+                    else if (lpDir)
+                    {
+                        used += wcslen(lpDir);
+                        if (used < len)
+                        {
+                            wcscpy(res, lpDir);
+                            res += wcslen(lpDir);
+                        }
+                    }
                     break;
 
                 case 'i':

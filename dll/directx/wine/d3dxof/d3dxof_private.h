@@ -130,7 +130,7 @@ typedef struct {
   BOOL list_separator;
   ULONG cur_pos_data;
   LPBYTE cur_pstrings;
-  BYTE value[100];
+  BYTE value[512];
   xobject** pxo_globals;
   ULONG nb_pxo_globals;
   xobject* pxo_tab;

@@ -544,7 +544,7 @@ AcpiPsCompleteOp (
             WalkState->Opcode = (*Op)->Common.AmlOpcode;
 
             Status = WalkState->AscendingCallback (WalkState);
-            Status = AcpiPsNextParseState (WalkState, *Op, Status);
+            (void) AcpiPsNextParseState (WalkState, *Op, Status);
 
             Status2 = AcpiPsCompleteThisOp (WalkState, *Op);
             if (ACPI_FAILURE (Status2))
@@ -553,7 +553,6 @@ AcpiPsCompleteOp (
             }
         }
 
-        Status = AE_OK;
         break;
 
     case AE_CTRL_BREAK:
@@ -574,7 +573,7 @@ AcpiPsCompleteOp (
         WalkState->Opcode = (*Op)->Common.AmlOpcode;
 
         Status = WalkState->AscendingCallback (WalkState);
-        Status = AcpiPsNextParseState (WalkState, *Op, Status);
+        (void) AcpiPsNextParseState (WalkState, *Op, Status);
 
         Status2 = AcpiPsCompleteThisOp (WalkState, *Op);
         if (ACPI_FAILURE (Status2))
@@ -582,7 +581,6 @@ AcpiPsCompleteOp (
             return_ACPI_STATUS (Status2);
         }
 
-        Status = AE_OK;
         break;
 
     case AE_CTRL_TERMINATE:

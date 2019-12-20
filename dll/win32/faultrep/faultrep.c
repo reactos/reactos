@@ -24,7 +24,6 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "errorrep.h"
 
@@ -62,7 +61,7 @@ BOOL WINAPI AddERExcludedApplicationW(LPCWSTR lpAppFileName)
     LONG res;
 
     TRACE("(%s)\n", wine_dbgstr_w(lpAppFileName));
-    bslash = strrchrW(lpAppFileName, '\\');
+    bslash = wcsrchr(lpAppFileName, '\\');
     if (bslash != NULL)
         lpAppFileName = bslash + 1;
     if (*lpAppFileName == '\0')

@@ -4,14 +4,14 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "Perintah ini tidak didukung oleh utilitas bantuan.\nCoba ""%s /?""\n."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Menyediakan Informasi Bantuan untuk perintah ReactOS.\n\n\
 HELP [command]\n\n\
-  command - Display help information for this command.\n"
+  command - Menampilkan informasi bantuan untuk perintah ini.\n"
     IDS_HELP1 "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
   help command\n\
   command /?     Untuk informasi lengkap pada perintah tertentu\n\n\
@@ -26,7 +26,7 @@ CHOICE   Menunggu pengguna untuk memilih satu dari set pilihan.\n\
 CLS      Membersihkan layar.\n\
 CMD      Memulai instan interpreter perintah ReactOS baru.\n\
 COLOR    Menyetel warna standar latar belakang dan depan konsol.\n\
-COPY     Mengcopy satu atau lebih file ke lokasi lain.\n\
+COPY     Menyalin satu atau lebih file ke lokasi lain.\n\
 DATE     Menampilkan atau menyetel tanggal.\n\
 DELETE   Menghapus satu atau lebih file.\n\
 DIR      Menampilkan daftar file dan subdirektori dalam sebuah direktori.\n\
@@ -43,7 +43,7 @@ IF       Melakukan pemrosesan kondisional dalam program batch.\n\
 LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
 MD       Membuat sebuah direktori.\n\
 MKDIR    Membuat sebuah direktori.\n\
-MKLINK   Creates a filesystem link object.\n\
+MKLINK   Membuat obyek tautan berkas sistem.\n\
 MOVE     Memindahkan satu atau lebih file dari satu direktori ke yang lainnya\n\
          directory.\n\
 PATH     Menampilkan atau menyetel path pencarian untuk file executable.\n\

@@ -22,6 +22,7 @@
 #include "videoprt.h"
 
 #include <ndk/inbvfuncs.h>
+#include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 
 #define NDEBUG
@@ -29,39 +30,304 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
-PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
-PVIDEO_WIN32K_CALLOUT Win32kCallout;
+static PVIDEO_WIN32K_CALLOUT Win32kCallout = NULL;
+static HANDLE InbvThreadHandle = NULL;
+static BOOLEAN InbvMonitoring = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static VOID
+VideoPortWin32kCallout(
+    _In_ PVIDEO_WIN32K_CALLBACKS_PARAMS CallbackParams)
+{
+    if (!Win32kCallout)
+        return;
+
+    /* Perform the call in the context of CSRSS */
+    if (!CsrProcess)
+        return;
+
+    KeAttachProcess(CsrProcess);
+    Win32kCallout(CallbackParams);
+    KeDetachProcess();
+}
+
 /*
- * Reset display to blue screen
+ * Reinitialize the display to base VGA mode.
+ *
+ * Returns TRUE if it completely resets the adapter to the given character mode.
+ * Returns FALSE otherwise, indicating that the HAL should perform the VGA mode
+ * reset itself after HwVidResetHw() returns control.
+ *
+ * This callback has been registered with InbvNotifyDisplayOwnershipLost()
+ * and is called by InbvAcquireDisplayOwnership(), typically when the bugcheck
+ * code regains display access. Therefore this routine can be called at any
+ * IRQL, and in particular at IRQL = HIGH_LEVEL. This routine must also reside
+ * completely in non-paged pool, and cannot perform the following actions:
+ * Allocate memory, access pageable memory, use any synchronization mechanisms
+ * or call any routine that must execute at IRQL = DISPATCH_LEVEL or below.
  */
-BOOLEAN
+static BOOLEAN
+NTAPI
+IntVideoPortResetDisplayParametersEx(
+    _In_ ULONG Columns,
+    _In_ ULONG Rows,
+    _In_ BOOLEAN CalledByInbv)
+{
+    BOOLEAN Success = TRUE; // Suppose we don't need to perform a full reset.
+    KIRQL OldIrql;
+    PLIST_ENTRY PrevEntry, Entry;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+
+    /* Check if we are at dispatch level or lower, and acquire the lock */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql <= DISPATCH_LEVEL)
+    {
+        /* Loop until the lock is free, then raise IRQL to dispatch level */
+        while (!KeTestSpinLock(&HwResetAdaptersLock));
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    }
+    KeAcquireSpinLockAtDpcLevel(&HwResetAdaptersLock);
+
+    /* Bail out early if we don't have any resettable adapter */
+    if (IsListEmpty(&HwResetAdaptersList))
+    {
+        Success = FALSE; // No adapter found: request HAL to perform a full reset.
+        goto Quit;
+    }
+
+    /*
+     * If we have been unexpectedly called via a callback from
+     * InbvAcquireDisplayOwnership(), start monitoring INBV.
+     */
+    if (CalledByInbv)
+        InbvMonitoring = TRUE;
+
+    for (PrevEntry = &HwResetAdaptersList, Entry = PrevEntry->Flink;
+         Entry != &HwResetAdaptersList;
+         PrevEntry = Entry, Entry = Entry->Flink)
+    {
+        /*
+         * Check whether the entry address is properly aligned,
+         * the device and driver extensions must be readable and
+         * the device extension properly back-linked to the last entry.
+         */
+// #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
+        if (((ULONG_PTR)Entry & (sizeof(ULONG_PTR) - 1)) != 0)
+        {
+            Success = FALSE; // We failed: request HAL to perform a full reset.
+            goto Quit;
+        }
+
+        DeviceExtension = CONTAINING_RECORD(Entry,
+                                            VIDEO_PORT_DEVICE_EXTENSION,
+                                            HwResetListEntry);
+        /*
+         * As this function can be called as part of the INBV initialization
+         * by the bugcheck code, avoid any problems and protect all accesses
+         * within SEH.
+         */
+        _SEH2_TRY
+        {
+            DriverExtension = DeviceExtension->DriverExtension;
+            ASSERT(DriverExtension);
+
+            if (DeviceExtension->HwResetListEntry.Blink != PrevEntry)
+            {
+                Success = FALSE; // We failed: request HAL to perform a full reset.
+                _SEH2_YIELD(goto Quit);
+            }
+
+            if ((DeviceExtension->DeviceOpened >= 1) &&
+                (DriverExtension->InitializationData.HwResetHw != NULL))
+            {
+                Success &= DriverExtension->InitializationData.HwResetHw(
+                                &DeviceExtension->MiniPortDeviceExtension,
+                                Columns, Rows);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+        _SEH2_END;
+    }
+
+Quit:
+    /* Release the lock and restore the old IRQL if we were at dispatch level or lower */
+    KeReleaseSpinLockFromDpcLevel(&HwResetAdaptersLock);
+    if (OldIrql <= DISPATCH_LEVEL)
+        KeLowerIrql(OldIrql);
+
+    return Success;
+}
+
+/* This callback is registered with InbvNotifyDisplayOwnershipLost() */
+static BOOLEAN
 NTAPI
 IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
 {
-    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+    /* Call the extended function, specifying we were called by INBV */
+    return IntVideoPortResetDisplayParametersEx(Columns, Rows, TRUE);
+}
 
-    if (ResetDisplayParametersDeviceExtension == NULL)
-        return FALSE;
+/*
+ * (Adapted for ReactOS/Win2k3 from an original comment
+ *  by Gé van Geldorp, June 2003, r4937)
+ *
+ * DISPLAY OWNERSHIP
+ *
+ * So, who owns the physical display and is allowed to write to it?
+ *
+ * In NT 5.x (Win2k/Win2k3), upon boot INBV/BootVid owns the display, unless
+ * /NOGUIBOOT has been specified in the boot command line. Later in the boot
+ * sequence, WIN32K.SYS opens the DISPLAY device. This open call ends up in
+ * VIDEOPRT.SYS. This component takes ownership of the display by calling
+ * InbvNotifyDisplayOwnershipLost() -- effectively telling INBV to release
+ * ownership of the display it previously had. From that moment on, the display
+ * is owned by that component and can be switched to graphics mode. The display
+ * is not supposed to return to text mode, except in case of a bugcheck.
+ * The bugcheck code calls InbvAcquireDisplayOwnership() so as to make INBV
+ * re-take display ownership, and calls back the function previously registered
+ * by VIDEOPRT.SYS with InbvNotifyDisplayOwnershipLost(). After the bugcheck,
+ * execution is halted. So, under NT, the only possible sequence of display
+ * modes is text mode -> graphics mode -> text mode (the latter hopefully
+ * happening very infrequently).
+ *
+ * In ReactOS things are a little bit different. We want to have a functional
+ * interactive text mode. We should be able to switch back and forth from
+ * text mode to graphics mode when a GUI app is started and then finished.
+ * Also, when the system bugchecks in graphics mode we want to switch back to
+ * text mode and show the bugcheck information. Last but not least, when using
+ * KDBG in /DEBUGPORT=SCREEN mode, breaking into the debugger would trigger a
+ * switch to text mode, and the user would expect that by continuing execution
+ * a switch back to graphics mode is done.
+ */
+static VOID
+NTAPI
+InbvMonitorThread(
+    _In_ PVOID Context)
+{
+    VIDEO_WIN32K_CALLBACKS_PARAMS CallbackParams;
+    LARGE_INTEGER Delay;
+    USHORT i;
 
-    DriverExtension = ResetDisplayParametersDeviceExtension->DriverExtension;
+    KeSetPriorityThread(KeGetCurrentThread(), LOW_REALTIME_PRIORITY);
 
-    if (DriverExtension->InitializationData.HwResetHw != NULL)
+    while (TRUE)
     {
-        if (DriverExtension->InitializationData.HwResetHw(
-                    &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
-                    Columns, Rows))
+        /*
+         * During one second, check the INBV status each 100 milliseconds,
+         * then revert to 1 second delay.
+         */
+        i = 10;
+        Delay.QuadPart = (LONGLONG)-100*1000*10; // 100 millisecond delay
+        while (!InbvMonitoring)
         {
-            ResetDisplayParametersDeviceExtension = NULL;
-            return TRUE;
+            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+
+            if ((i > 0) && (--i == 0))
+                Delay.QuadPart = (LONGLONG)-1*1000*1000*10; // 1 second delay
         }
+
+        /*
+         * Loop while the display is owned by INBV. We cannot do anything else
+         * than polling since INBV does not offer a proper notification system.
+         *
+         * During one second, check the INBV status each 100 milliseconds,
+         * then revert to 1 second delay.
+         */
+        i = 10;
+        Delay.QuadPart = (LONGLONG)-100*1000*10; // 100 millisecond delay
+        while (InbvCheckDisplayOwnership())
+        {
+            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+
+            if ((i > 0) && (--i == 0))
+                Delay.QuadPart = (LONGLONG)-1*1000*1000*10; // 1 second delay
+        }
+
+        /* Reset the monitoring */
+        InbvMonitoring = FALSE;
+
+        /*
+         * Somebody released INBV display ownership, usually by invoking
+         * InbvNotifyDisplayOwnershipLost(). However the caller of this
+         * function certainly specified a different callback than ours.
+         * As we are going to be the only owner of the active display,
+         * we need to re-register our own display reset callback.
+         */
+        InbvNotifyDisplayOwnershipLost(IntVideoPortResetDisplayParameters);
+
+        /* Tell Win32k to reset the display */
+        CallbackParams.CalloutType = VideoFindAdapterCallout;
+        // CallbackParams.PhysDisp = NULL;
+        CallbackParams.Param = (ULONG_PTR)TRUE; // TRUE: Re-enable display; FALSE: Disable display.
+        VideoPortWin32kCallout(&CallbackParams);
     }
 
-    ResetDisplayParametersDeviceExtension = NULL;
-    return FALSE;
+    // FIXME: See IntVideoPortInbvCleanup().
+    // PsTerminateSystemThread(STATUS_SUCCESS);
 }
+
+static NTSTATUS
+IntVideoPortInbvInitialize(VOID)
+{
+    /* Create the INBV monitoring thread if needed */
+    if (!InbvThreadHandle)
+    {
+        NTSTATUS Status;
+        OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(NULL, OBJ_KERNEL_HANDLE);
+
+        Status = PsCreateSystemThread(&InbvThreadHandle,
+                                      0,
+                                      &ObjectAttributes,
+                                      NULL,
+                                      NULL,
+                                      InbvMonitorThread,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+            InbvThreadHandle = NULL;
+    }
+
+    /* Re-register the display reset callback with INBV */
+    InbvNotifyDisplayOwnershipLost(IntVideoPortResetDisplayParameters);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+IntVideoPortInbvCleanup(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+    // HANDLE ThreadHandle;
+
+    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    if ((DeviceExtension->DeviceOpened >= 1) &&
+        (InterlockedDecrement((PLONG)&DeviceExtension->DeviceOpened) == 0))
+    {
+        // RemoveEntryList(&DeviceExtension->HwResetListEntry);
+        InbvNotifyDisplayOwnershipLost(NULL);
+        IntVideoPortResetDisplayParametersEx(80, 50, FALSE);
+        // or InbvAcquireDisplayOwnership(); ?
+    }
+
+#if 0
+    // TODO: Find the best way to communicate the request.
+    /* Signal the INBV monitoring thread and wait for it to terminate */
+    ThreadHandle = InterlockedExchangePointer((PVOID*)&InbvThreadHandle, NULL);
+    if (ThreadHandle)
+    {
+        KeWaitForSingleObject(&ThreadHandle, Executive, KernelMode, FALSE, NULL);
+        /* Close its handle */
+        ObCloseHandle(ThreadHandle, KernelMode);
+    }
+#endif
+
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -101,35 +367,38 @@ IntVideoPortDispatchOpen(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    NTSTATUS Status;
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
-    NTSTATUS Status;
 
     TRACE_(VIDEOPRT, "IntVideoPortDispatchOpen\n");
 
-    if (CsrssInitialized == FALSE)
+    if (!CsrProcess)
     {
         /*
          * We know the first open call will be from the CSRSS process
          * to let us know its handle.
          */
-
         INFO_(VIDEOPRT, "Referencing CSRSS\n");
-        Csrss = (PKPROCESS)PsGetCurrentProcess();
-        INFO_(VIDEOPRT, "Csrss %p\n", Csrss);
+        CsrProcess = (PKPROCESS)PsGetCurrentProcess();
+        ObReferenceObject(CsrProcess);
+        INFO_(VIDEOPRT, "CsrProcess 0x%p\n", CsrProcess);
 
         Status = IntInitializeVideoAddressSpace();
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "IntInitializeVideoAddressSpace() failed: 0x%lx\n", Status);
+            ObDereferenceObject(CsrProcess);
+            CsrProcess = NULL;
             return Status;
         }
-
-        CsrssInitialized = TRUE;
     }
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     DriverExtension = DeviceExtension->DriverExtension;
+
+    // FIXME: (Re-)initialize INBV only if DeviceObject doesn't belong to a mirror driver.
+    IntVideoPortInbvInitialize();
 
     if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
     {
@@ -161,30 +430,19 @@ IntVideoPortDispatchClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-
     TRACE_(VIDEOPRT, "IntVideoPortDispatchClose\n");
 
-    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    if ((DeviceExtension->DeviceOpened >= 1) &&
-        (InterlockedDecrement((PLONG)&DeviceExtension->DeviceOpened) == 0))
-    {
-        ResetDisplayParametersDeviceExtension = NULL;
-        InbvNotifyDisplayOwnershipLost(NULL);
-        ResetDisplayParametersDeviceExtension = DeviceExtension;
-        IntVideoPortResetDisplayParameters(80, 50);
-    }
+    IntVideoPortInbvCleanup(DeviceObject);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
     return STATUS_SUCCESS;
 }
 
 PSTR
 IoctlName(ULONG Ioctl)
 {
-    switch(Ioctl)
+    switch (Ioctl)
     {
         case IOCTL_VIDEO_ENABLE_VDM:
             return "IOCTL_VIDEO_ENABLE_VDM"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x00, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -296,7 +554,7 @@ IoctlName(ULONG Ioctl)
             return "IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS"; // CTL_CODE(FILE_DEVICE_VIDEO, 0x127, METHOD_BUFFERED, FILE_ANY_ACCESS)
     }
 
-    return "<unknown ioctl code";
+    return "<unknown ioctl code>";
 }
 
 static
@@ -376,7 +634,7 @@ VideoPortInitWin32kCallbacks(
     /* Save the callout function globally */
     Win32kCallout = Win32kCallbacks->Callout;
 
-    /* Return reasonable values to win32k */
+    /* Return reasonable values to Win32k */
     Win32kCallbacks->bACPI = FALSE;
     Win32kCallbacks->pPhysDeviceObject = DeviceObject;
     Win32kCallbacks->DualviewFlags = 0;
@@ -465,18 +723,75 @@ IntVideoPortDispatchDeviceControl(
 
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
+    switch (IrpStack->MajorFunction)
+    {
+        case IRP_MJ_DEVICE_CONTROL:
+            /* This is the main part of this function and is handled below */
+            break;
+
+        case IRP_MJ_SHUTDOWN:
+        {
+            /* Dereference CSRSS */
+            PKPROCESS OldCsrProcess;
+            OldCsrProcess = InterlockedExchangePointer((PVOID*)&CsrProcess, NULL);
+            if (OldCsrProcess)
+                ObDereferenceObject(OldCsrProcess);
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+
+        default:
+            ERR_(VIDEOPRT, "- Unknown MajorFunction 0x%x\n", IrpStack->MajorFunction);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+    }
+
     IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
-    INFO_(VIDEOPRT, "- IoControlCode: %x: %s\n", IoControlCode, IoctlName(IoControlCode));
+    INFO_(VIDEOPRT, "- IoControlCode: 0x%x: %s\n", IoControlCode, IoctlName(IoControlCode));
 
-    switch(IoControlCode)
+    switch (IoControlCode)
     {
+        case IOCTL_VIDEO_ENABLE_VDM:
+        case IOCTL_VIDEO_DISABLE_VDM:
+        case IOCTL_VIDEO_REGISTER_VDM:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_*_VDM are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_VIDEO_SET_OUTPUT_DEVICE_POWER_STATE:
+        case IOCTL_VIDEO_GET_OUTPUT_DEVICE_POWER_STATE:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_GET/SET_OUTPUT_DEVICE_POWER_STATE are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_VIDEO_SET_POWER_MANAGEMENT:
+        case IOCTL_VIDEO_GET_POWER_MANAGEMENT:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_GET/SET_POWER_MANAGEMENT are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_VIDEO_QUERY_SUPPORTED_BRIGHTNESS:
+        case IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS:
+        case IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_*_BRIGHTNESS are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case IOCTL_VIDEO_INIT_WIN32K_CALLBACKS:
             INFO_(VIDEOPRT, "- IOCTL_VIDEO_INIT_WIN32K_CALLBACKS\n");
             Status = VideoPortInitWin32kCallbacks(DeviceObject,
                                                   Irp->AssociatedIrp.SystemBuffer,
                                                   IrpStack->Parameters.DeviceIoControl.InputBufferLength,
                                                   &Irp->IoStatus.Information);
+            break;
+
+        case IOCTL_VIDEO_IS_VGA_DEVICE:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_IS_VGA_DEVICE is UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         case IOCTL_VIDEO_USE_DEVICE_IN_SESSION:
@@ -487,69 +802,33 @@ IntVideoPortDispatchDeviceControl(
                                                  &Irp->IoStatus.Information);
             break;
 
+        case IOCTL_VIDEO_PREPARE_FOR_EARECOVERY:
+            INFO_(VIDEOPRT, "- IOCTL_VIDEO_PREPARE_FOR_EARECOVERY\n");
+            /*
+             * The Win32k Watchdog Timer detected that a thread spent more time
+             * in a display driver than the allotted time its threshold specified,
+             * and thus is going to attempt to recover by switching to VGA mode.
+             * If this attempt fails, the watchdog generates bugcheck 0xEA
+             * "THREAD_STUCK_IN_DEVICE_DRIVER".
+             *
+             * Prepare the recovery by resetting the display adapters to
+             * standard VGA 80x25 text mode.
+             */
+            IntVideoPortResetDisplayParametersEx(80, 25, FALSE);
+            Status = STATUS_SUCCESS;
+            break;
+
         default:
             /* Forward to the Miniport Driver */
             Status = VideoPortForwardDeviceControl(DeviceObject, Irp);
             break;
     }
 
-    INFO_(VIDEOPRT, "- Returned status: %x\n", Irp->IoStatus.Status);
+    INFO_(VIDEOPRT, "- Returned status: 0x%x\n", Status);
 
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
     return Status;
-}
-
-/*
- * IntVideoPortWrite
- *
- * This is a bit of a hack. We want to take ownership of the display as late
- * as possible, just before the switch to graphics mode. Win32k knows when
- * this happens, we don't. So we need Win32k to inform us. This could be done
- * using an IOCTL, but there's no way of knowing which IOCTL codes are unused
- * in the communication between GDI driver and miniport driver. So we use
- * IRP_MJ_WRITE as the signal that win32k is ready to switch to graphics mode,
- * since we know for certain that there is no read/write activity going on
- * between GDI and miniport drivers.
- * We don't actually need the data that is passed, we just trigger on the fact
- * that an IRP_MJ_WRITE was sent.
- *
- * Run Level
- *    PASSIVE_LEVEL
- */
-NTSTATUS
-NTAPI
-IntVideoPortDispatchWrite(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
-    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS nErrCode;
-
-    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    /*
-     * Storing the device extension pointer in a static variable is an
-     * ugly hack. Unfortunately, we need it in IntVideoPortResetDisplayParameters
-     * and InbvNotifyDisplayOwnershipLost doesn't allow us to pass a userdata
-     * parameter. On the bright side, the DISPLAY device is opened
-     * exclusively, so there can be only one device extension active at
-     * any point in time.
-     *
-     * FIXME: We should process all opened display devices in
-     * IntVideoPortResetDisplayParameters.
-     */
-    ResetDisplayParametersDeviceExtension = DeviceExtension;
-    InbvNotifyDisplayOwnershipLost(IntVideoPortResetDisplayParameters);
-
-    nErrCode = STATUS_SUCCESS;
-    Irp->IoStatus.Information = piosStack->Parameters.Write.Length;
-    Irp->IoStatus.Status = nErrCode;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return nErrCode;
 }
 
 NTSTATUS

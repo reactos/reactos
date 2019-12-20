@@ -27,7 +27,6 @@
 #include "winuser.h"
 #include "ddk/compstui.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(compstui);

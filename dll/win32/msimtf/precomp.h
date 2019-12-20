@@ -2,8 +2,6 @@
 #ifndef _MSIMTF_PCH_
 #define _MSIMTF_PCH_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

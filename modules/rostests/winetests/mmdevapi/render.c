@@ -747,7 +747,7 @@ static void test_padding(void)
         /* win10 appears not to clear the buffer */
         for(i = 0; i < psize * pwfx->nBlockAlign; ++i){
             if(buf[i] != silence){
-                ok(0, "buffer has data in it already, i: %u, valu: %f\n", i, *((float*)buf));
+                ok(0, "buffer has data in it already, i: %u, value: %f\n", i, *((float*)buf));
                 break;
             }
         }

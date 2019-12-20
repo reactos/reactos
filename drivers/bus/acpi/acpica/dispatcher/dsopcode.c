@@ -266,6 +266,7 @@ AcpiDsInitBufferField (
     }
 
     ObjDesc->BufferField.BufferObj = BufferDesc;
+    ObjDesc->BufferField.IsCreateField = AmlOpcode == AML_CREATE_FIELD_OP;
 
     /* Reference count for BufferDesc inherits ObjDesc count */
 

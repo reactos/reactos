@@ -73,6 +73,7 @@ static const struct gdi_dc_funcs emfdrv_driver =
     NULL,                            /* pGetCharABCWidths */
     NULL,                            /* pGetCharABCWidthsI */
     NULL,                            /* pGetCharWidth */
+    NULL,                            /* pGetCharWidthInfo */
     EMFDRV_GetDeviceCaps,            /* pGetDeviceCaps */
     NULL,                            /* pGetDeviceGammaRamp */
     NULL,                            /* pGetFontData */

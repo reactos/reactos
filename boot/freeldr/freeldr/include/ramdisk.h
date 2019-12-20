@@ -1,23 +1,19 @@
 /*
- * PROJECT:         ReactOS Boot Loader
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/freeldr/include/ramdisk.h
- * PURPOSE:         Header file for ramdisk support
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     FreeLoader
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Header file for ramdisk support.
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group
+ *              Copyright 2009 Hervé Poussineau
+ *              Copyright 2019 Hermes Belusca-Maito
  */
 
 #pragma once
 
-//
-// Ramdisk Routines
-//
 ARC_STATUS
-RamDiskLoadVirtualFile(
-    IN PCSTR FileName,
+RamDiskInitialize(
+    IN BOOLEAN InitRamDisk,
+    IN PCSTR LoadOptions OPTIONAL,
     IN PCSTR DefaultPath OPTIONAL);
 
-VOID
-RamDiskInitialize(VOID);
-
-extern PVOID gRamDiskBase;
-extern ULONG gRamDiskSize;
+extern PVOID gInitRamDiskBase;
+extern ULONG gInitRamDiskSize;

@@ -386,9 +386,8 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
     }
 
     //
-    // If they are trying to read past the
-    // end of the file then return success
-    // with BytesRead == 0
+    // If the user is trying to read past the end of
+    // the file then return success with BytesRead == 0.
     //
     if (Ext2FileInfo->FilePointer >= Ext2FileInfo->FileSize)
     {
@@ -396,8 +395,8 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
     }
 
     //
-    // If they are trying to read more than there is to read
-    // then adjust the amount to read
+    // If the user is trying to read more than there is to read
+    // then adjust the amount to read.
     //
     if ((Ext2FileInfo->FilePointer + BytesToRead) > Ext2FileInfo->FileSize)
     {
@@ -418,6 +417,7 @@ BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULO
         {
             *BytesRead = BytesToRead;
         }
+        // Ext2FileInfo->FilePointer += BytesToRead;
 
         return TRUE;
     }

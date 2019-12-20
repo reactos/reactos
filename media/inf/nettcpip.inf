@@ -11,22 +11,23 @@ ClassGUID  = {4D36E975-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
 DriverVer  = 04/12/2006,1.00
 
+[Manufacturer]
+%ReactOS% = ReactOS
+
+[ReactOS]
+%MS_TCPIP.DisplayName% = MS_TCPIP.PrimaryInstall, MS_TCPIP
+
 ;----------------------------- TCP/IPv4 DRIVER ----------------------------
 
 [MS_TCPIP.PrimaryInstall]
+Characteristics = 0xA0
 AddReg = TCPIP_AddReg_Global.NT
 
 [TCPIP_AddReg_Global.NT]
-; The following entries should be generated from .inf files during installation
-; TCPIPv4 Protocol
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Characteristics",0x00010001,0x00000080
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","ComponentId",0x00000000,"ms_tcpip"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Description",0x00000000,"Internet Protocol Version 4 (TCP/IPv4)"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfPath",0x00000000,"BUGBUG_Create from Inffile.inf"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfSection",0x00000000,"BUGBUG_Create from Inffile.inf"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","HelpText",0x00000000,"Transmission Control Protocol/Internet Protocol"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","Service",0x00000000,"Tcpip"
+HKR,"Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
+HKR,"Ndi","HelpText",0x00000000,"Transmission Control Protocol/Internet Protocol"
+HKR,"Ndi","Service",0x00000000,"Tcpip"
+HKR,"Ndi","CoServices",0x00010000,"Tcpip","Dhcp","Dnscache"
 
 ; TCP/IPv4 driver
 ; NOTE: These settings should be added by the network setup
@@ -235,6 +236,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9\Ca
 [MS_TCPIP.PrimaryInstall.Services]
 AddService = Tcpip, , tcpip_Service_Inst
 AddService = DHCP, , dhcp_Service_Inst
+AddService = Dnscache, , dns_Service_Inst
 
 [tcpip_Service_Inst]
 ServiceType   = 1
@@ -268,16 +270,31 @@ StartType     = 2
 ErrorControl  = 1
 ServiceBinary = "%11%\svchost.exe -k netsvcs"
 LoadOrderGroup = TDI
+StartName     = "LocalSystem"
 AddReg=dhcp_AddReg
 
 [dhcp_AddReg]
-HKR,,"ObjectName",0x00000000,"LocalSystem"
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
+
+[dns_Service_Inst]
+DisplayName   = "DNS Client"
+Description   = "Service that caches local DNS queries"
+ServiceType   = 0x20
+StartType     = 2
+ErrorControl  = 1
+ServiceBinary = "%11%\svchost.exe -k NetworkService"
+LoadOrderGroup = TDI
+StartName     = "NT AUTHORITY\NetworkService"
+AddReg=dns_AddReg
+
+[dns_AddReg]
+HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dnsrslvr.dll"
 
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ReactOS = "ReactOS Team"
+MS_TCPIP.DisplayName = "Internet Protocol Version 4 (TCP/IPv4)"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"

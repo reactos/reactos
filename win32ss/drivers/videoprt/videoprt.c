@@ -30,10 +30,11 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
-ULONG CsrssInitialized = FALSE;
-PKPROCESS Csrss = NULL;
+PKPROCESS CsrProcess = NULL;
 ULONG VideoPortDeviceNumber = 0;
 KMUTEX VideoPortInt10Mutex;
+KSPIN_LOCK HwResetAdaptersLock;
+RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -406,6 +407,15 @@ IntVideoPortFindAdapter(
         goto Failure;
     }
 
+    /* If the device can be reset, insert it in the list of resettable adapters */
+    InitializeListHead(&DeviceExtension->HwResetListEntry);
+    if (DriverExtension->InitializationData.HwResetHw != NULL)
+    {
+        ExInterlockedInsertTailList(&HwResetAdaptersList,
+                                    &DeviceExtension->HwResetListEntry,
+                                    &HwResetAdaptersLock);
+    }
+
     /* Query children of the device. */
     VideoPortEnumerateChildren(&DeviceExtension->MiniPortDeviceExtension, NULL);
 
@@ -427,9 +437,9 @@ IntAttachToCSRSS(
     PKAPC_STATE ApcState)
 {
     *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
-    if (*CallingProcess != Csrss)
+    if (*CallingProcess != CsrProcess)
     {
-        KeStackAttachProcess(Csrss, ApcState);
+        KeStackAttachProcess(CsrProcess, ApcState);
     }
 }
 
@@ -439,7 +449,7 @@ IntDetachFromCSRSS(
     PKPROCESS *CallingProcess,
     PKAPC_STATE ApcState)
 {
-    if (*CallingProcess != Csrss)
+    if (*CallingProcess != CsrProcess)
     {
         KeUnstackDetachProcess(ApcState);
     }
@@ -463,14 +473,15 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
-    static BOOLEAN Int10MutexInitialized;
+    static BOOLEAN FirstInitialization;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
-    if (!Int10MutexInitialized)
+    if (!FirstInitialization)
     {
         KeInitializeMutex(&VideoPortInt10Mutex, 0);
-        Int10MutexInitialized = TRUE;
+        KeInitializeSpinLock(&HwResetAdaptersLock);
+        FirstInitialization = TRUE;
     }
 
     /* As a first thing do parameter checks. */
@@ -516,10 +527,8 @@ VideoPortInitialize(
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
         IntVideoPortDispatchDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] =
         IntVideoPortDispatchDeviceControl;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] =
-        IntVideoPortDispatchWrite; // ReactOS-specific hack
     DriverObject->DriverUnload = IntVideoPortUnload;
 
     /* Determine type of the miniport driver */
@@ -608,8 +617,8 @@ VideoPortInitialize(
     DriverExtension->HwContext = HwContext;
 
     /*
-     * Plug & Play drivers registers the device in AddDevice routine. For
-     * legacy drivers we must do it now.
+     * Plug & Play drivers registers the device in AddDevice routine.
+     * For legacy drivers we must do it now.
      */
     if (LegacyDetection)
     {
@@ -617,7 +626,7 @@ VideoPortInitialize(
 
         if (HwInitializationData->HwInitDataSize != SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
         {
-            /* power management */
+            /* Power management */
             DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
         }
 

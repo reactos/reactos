@@ -2768,6 +2768,7 @@ extern "C" {
 #define MONITOR_DEFAULTTOPRIMARY 1
 #define MONITOR_DEFAULTTONEAREST 2
 #define MONITORINFOF_PRIMARY 1
+#define EDD_GET_DEVICE_INTERFACE_NAME 0x00000001
 #define EDS_RAWMODE 0x00000002
 #define EDS_ROTATEDMODE 0x00000004
 #define ISMEX_NOSEND 0x00000000
@@ -3932,6 +3933,41 @@ typedef struct tagRAWINPUTDEVICELIST {
 	HANDLE hDevice;
 	DWORD dwType;
 } RAWINPUTDEVICELIST,*PRAWINPUTDEVICELIST;
+
+typedef struct tagRID_DEVICE_INFO_MOUSE {
+  DWORD dwId;
+  DWORD dwNumberOfButtons;
+  DWORD dwSampleRate;
+  BOOL fHasHorizontalWheel;
+} RID_DEVICE_INFO_MOUSE, *PRID_DEVICE_INFO_MOUSE;
+
+typedef struct tagRID_DEVICE_INFO_KEYBOARD {
+  DWORD dwType;
+  DWORD dwSubType;
+  DWORD dwKeyboardMode;
+  DWORD dwNumberOfFunctionKeys;
+  DWORD dwNumberOfIndicators;
+  DWORD dwNumberOfKeysTotal;
+} RID_DEVICE_INFO_KEYBOARD, *PRID_DEVICE_INFO_KEYBOARD;
+
+typedef struct tagRID_DEVICE_INFO_HID {
+  DWORD dwVendorId;
+  DWORD dwProductId;
+  DWORD dwVersionNumber;
+  USHORT usUsagePage;
+  USHORT usUsage;
+} RID_DEVICE_INFO_HID, *PRID_DEVICE_INFO_HID;
+
+typedef struct tagRID_DEVICE_INFO {
+  DWORD cbSize;
+  DWORD dwType;
+  union {
+    RID_DEVICE_INFO_MOUSE mouse;
+    RID_DEVICE_INFO_KEYBOARD keyboard;
+    RID_DEVICE_INFO_HID hid;
+  } DUMMYUNIONNAME;
+} RID_DEVICE_INFO, *PRID_DEVICE_INFO, *LPRID_DEVICE_INFO;
+
 #endif /* (_WIN32_WINNT >= 0x0501) */
 
 #define AnsiToOem CharToOemA
@@ -3952,6 +3988,44 @@ typedef struct tagRAWINPUTDEVICELIST {
   (p).y=HIWORD(*(DWORD *)&ps); \
 }
 #define POINTTOPOINTS(p) ((POINTS)MAKELONG((p).x,(p).y))
+
+#if (WINVER >= 0x0601)
+
+typedef enum tagINPUT_MESSAGE_DEVICE_TYPE {
+  IMDT_UNAVAILABLE = 0x00,
+  IMDT_KEYBOARD = 0x01,
+  IMDT_MOUSE = 0x02,
+  IMDT_TOUCH = 0x04,
+  IMDT_PEN = 0x08,
+  IMDT_TOUCHPAD = 0x10
+} INPUT_MESSAGE_DEVICE_TYPE;
+
+typedef enum tagINPUT_MESSAGE_ORIGIN_ID {
+  IMO_UNAVAILABLE = 0x00,
+  IMO_HARDWARE = 0x01,
+  IMO_INJECTED = 0x02,
+  IMO_SYSTEM = 0x04
+} INPUT_MESSAGE_ORIGIN_ID;
+
+typedef struct tagINPUT_MESSAGE_SOURCE {
+  INPUT_MESSAGE_DEVICE_TYPE deviceType;
+  INPUT_MESSAGE_ORIGIN_ID originId;
+} INPUT_MESSAGE_SOURCE;
+
+#endif /* WINVER >= 0x0601 */
+
+#if(WINVER >= 0x0602)
+
+enum tagPOINTER_INPUT_TYPE {
+  PT_POINTER = 1,
+  PT_TOUCH,
+  PT_PEN,
+  PT_MOUSE,
+  PT_TOUCHPAD
+};
+typedef DWORD POINTER_INPUT_TYPE;
+
+#endif /* WINVER >= 0x0602 */
 
 HKL WINAPI ActivateKeyboardLayout(_In_ HKL, _In_ UINT);
 BOOL WINAPI AdjustWindowRect(_Inout_ LPRECT, _In_ DWORD, _In_ BOOL);

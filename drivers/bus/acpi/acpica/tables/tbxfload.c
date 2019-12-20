@@ -337,6 +337,8 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiInstallTable)
  *
  * PARAMETERS:  Table               - Pointer to a buffer containing the ACPI
  *                                    table to be loaded.
+ *              TableIdx            - Pointer to a UINT32 for storing the table
+ *                                    index, might be NULL
  *
  * RETURN:      Status
  *
@@ -350,7 +352,8 @@ ACPI_EXPORT_SYMBOL_INIT (AcpiInstallTable)
 
 ACPI_STATUS
 AcpiLoadTable (
-    ACPI_TABLE_HEADER       *Table)
+    ACPI_TABLE_HEADER       *Table,
+    UINT32                  *TableIdx)
 {
     ACPI_STATUS             Status;
     UINT32                  TableIndex;
@@ -371,6 +374,11 @@ AcpiLoadTable (
     ACPI_INFO (("Host-directed Dynamic ACPI Table Load:"));
     Status = AcpiTbInstallAndLoadTable (ACPI_PTR_TO_PHYSADDR (Table),
         ACPI_TABLE_ORIGIN_EXTERNAL_VIRTUAL, FALSE, &TableIndex);
+    if (TableIdx)
+    {
+        *TableIdx = TableIndex;
+    }
+
     if (ACPI_SUCCESS (Status))
     {
         /* Complete the initialization/resolution of new objects */
@@ -474,3 +482,42 @@ AcpiUnloadParentTable (
 }
 
 ACPI_EXPORT_SYMBOL (AcpiUnloadParentTable)
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUnloadTable
+ *
+ * PARAMETERS:  TableIndex          - Index as returned by AcpiLoadTable
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Via the TableIndex representing an SSDT or OEMx table, unloads
+ *              the table and deletes all namespace objects associated with
+ *              that table. Unloading of the DSDT is not allowed.
+ *              Note: Mainly intended to support hotplug removal of SSDTs.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiUnloadTable (
+    UINT32                  TableIndex)
+{
+    ACPI_STATUS             Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiUnloadTable);
+
+
+    if (TableIndex == 1)
+    {
+        /* TableIndex==1 means DSDT is the owner. DSDT cannot be unloaded */
+
+        return_ACPI_STATUS (AE_TYPE);
+    }
+
+    Status = AcpiTbUnloadTable (TableIndex);
+    return_ACPI_STATUS (Status);
+}
+
+ACPI_EXPORT_SYMBOL (AcpiUnloadTable)

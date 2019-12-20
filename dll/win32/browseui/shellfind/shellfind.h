@@ -36,6 +36,7 @@ struct SearchStart
     WCHAR szPath[MAX_PATH];
     WCHAR szFileName[MAX_PATH];
     WCHAR szQuery[MAX_PATH];
+    BOOL  SearchHidden;
 };
 
 #endif /* _SHELLFIND_PCH_ */

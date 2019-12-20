@@ -120,8 +120,8 @@ ArmHwDetect(VOID)
     SecondLevelIcacheSize =
     SecondLevelIcacheFillSize = 0;
 
-    /* Register RAMDISK Device */
-    RamDiskInitialize();
+    /* Initialize the RAMDISK Device */
+    RamDiskInitialize(TRUE, NULL, NULL);
 
     /* Fill out the ARC disk block */
     AddReactOSArcDiskInfo("ramdisk(0)", 0xBADAB00F, 0xDEADBABE, TRUE);

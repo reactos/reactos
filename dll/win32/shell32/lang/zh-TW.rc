@@ -778,6 +778,15 @@ BEGIN
     IDS_PASTE "插入"
     IDS_EJECT "退出"
     IDS_DISCONNECT "中斷"
+    IDS_OPENFILELOCATION "Open f&ile location"
+    IDS_DESKLINK "Desktop (Create shortcut)"
+    IDS_SENDTO_MENU "Se&nd To"
+    IDS_MOVEERRORTITLE "Error Moving File or Folder"
+    IDS_COPYERRORTITLE "Error Copying File or Folder"
+    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
+    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
@@ -883,6 +892,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "無法退出媒體 (錯誤碼: %lu)."
     IDS_CANTSHOWPROPERTIES "無法顯示內容 (錯誤碼: %lu)."
     IDS_CANTDISCONNECT "無法中斷 (錯誤碼: %lu)."
+    IDS_NONE "(None)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"
@@ -919,6 +929,7 @@ BEGIN
     IDS_EDIT_VERB "編輯"
     IDS_FIND_VERB "搜索"
     IDS_PRINT_VERB "列印"
+    IDS_CMD_VERB "Command Prompt here"
 
     IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
     IDS_PRINTERS "印表機"

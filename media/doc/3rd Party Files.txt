@@ -38,10 +38,6 @@ Title: GNU adns
 Used Version: 1.0 REV 5
 Website: http://www.gnu.org/software/adns/ | http://adns.jgaa.com
 
-Title: BZip2
-Used Version: 1.0.6
-Website: http://www.bzip.org
-
 Title: LibXML
 Used Version: 2.9.9
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
@@ -67,7 +63,7 @@ Used Version: 0.1.9
 Website: http://www.mega-nerd.com/SRC/download.html
 
 Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.25.10
+Used Version: 1.25.13
 Website: http://www.mpg123.de/
 
 Title:  STLport
@@ -83,11 +79,11 @@ Used Version: 9c
 Website: http://www.ijg.org/
 
 Title: libtiff
-Used Version: 4.0.10
+Used Version: 4.1.0
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS
-Used Version: 2.7.11
+Used Version: 2.7.12
 Website: https://tls.mbed.org/
 
 Title: libpng
@@ -95,5 +91,5 @@ Used Version: 1.6.37
 Website: http://libpng.sourceforge.net/
 
 Title: ACPICA
-Used Version: 20190509
+Used Version: 20191018
 Website: https://acpica.org/

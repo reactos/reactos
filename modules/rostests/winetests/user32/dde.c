@@ -2396,7 +2396,7 @@ static WCHAR test_cmd_w_to_w[][32] = {
     { 0x4efa, 0x4efc, 0x0061, 0x4efe, 0 },  /* some Chinese chars */
     { 0x0061, 0x0062, 0x0063, 0x9152, 0 },  /* Chinese with latin characters begin */
 };
-static const int nb_callbacks = 5 + sizeof(test_cmd_w_to_w)/sizeof(test_cmd_w_to_w[0]);
+static const int nb_callbacks = 5 + ARRAY_SIZE(test_cmd_w_to_w);
 
 static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV hconv,
                                                HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
@@ -2480,7 +2480,7 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
         size_a = strlen(test_cmd_a_to_a) + 1;
         size_w = (lstrlenW(cmd_w) + 1) * sizeof(WCHAR);
         size_a_to_w = MultiByteToWideChar( CP_ACP, 0, test_cmd_a_to_a, -1, test_cmd_a_to_w,
-                                           sizeof(test_cmd_a_to_w)/sizeof(WCHAR) ) * sizeof(WCHAR);
+                                           ARRAY_SIZE(test_cmd_a_to_w)) * sizeof(WCHAR);
         size_w_to_a = WideCharToMultiByte( CP_ACP, 0, cmd_w, -1,
                                            test_cmd_w_to_a, sizeof(test_cmd_w_to_a), NULL, NULL );
         switch (str_index)
@@ -2528,7 +2528,7 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                 /* double A->W mapping */
                 /* NT uses the full size, XP+ only until the first null */
                 DWORD nt_size = MultiByteToWideChar( CP_ACP, 0, (char *)cmd_w, size_w, test_cmd_a_to_w,
-                                                     sizeof(test_cmd_a_to_w)/sizeof(WCHAR) ) * sizeof(WCHAR);
+                                                     ARRAY_SIZE(test_cmd_a_to_w)) * sizeof(WCHAR);
                 DWORD xp_size = MultiByteToWideChar( CP_ACP, 0, (char *)cmd_w, -1, NULL, 0 ) * sizeof(WCHAR);
                 ok(size == xp_size || broken(size == nt_size) ||
                    broken(str_index == 4 && IsDBCSLeadByte(cmd_w[0])) /* East Asian */,
@@ -2554,7 +2554,7 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
             {
                 todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
                 MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
-                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                                    ARRAY_SIZE(test_cmd_a_to_w));
                 todo_wine ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
                              "Expected %s got %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), wine_dbgstr_w((WCHAR *)buffer), msg_index);
             }
@@ -2562,7 +2562,7 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
             {
                 todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
                 MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
-                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                                    ARRAY_SIZE(test_cmd_a_to_w));
                 if (!is_cjk())
                     todo_wine ok(!lstrcmpW((WCHAR*)buffer, test_cmd_a_to_w), "Expected %s, got %s, msg_index=%d\n",
                                  wine_dbgstr_w(test_cmd_a_to_w), wine_dbgstr_w((WCHAR*)buffer), msg_index);
@@ -2663,7 +2663,7 @@ static void test_end_to_end_client(BOOL type_a)
     err = DdeGetLastError(client_pid);
     ok(err == DMLERR_NO_ERROR, "wrong dde error %x\n", err);
 
-    for (i = 0; i < sizeof(test_cmd_w_to_w)/sizeof(test_cmd_w_to_w[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(test_cmd_w_to_w); i++)
     {
         hdata = DdeClientTransaction((LPBYTE)test_cmd_w_to_w[i],
                                      (lstrlenW(test_cmd_w_to_w[i]) + 1) * sizeof(WCHAR),

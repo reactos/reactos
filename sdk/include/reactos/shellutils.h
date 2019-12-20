@@ -378,6 +378,28 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
     return hResult;
 }
 
+template<class T, class T1, class T2, class T3, class T4, class T5>
+HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, T5 initArg5, REFIID riid, void ** ppv)
+{
+    _CComObject<T> *pobj;
+    HRESULT hResult;
+
+    hResult = _CComObject<T>::CreateInstance(&pobj);
+    if (FAILED(hResult))
+        return hResult;
+
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
+
+    hResult = pobj->Initialize(initArg1, initArg2, initArg3, initArg4, initArg5);
+
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
+}
+
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 {
     pStrRet->uType = STRRET_CSTR;

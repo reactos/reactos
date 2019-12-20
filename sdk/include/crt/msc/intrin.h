@@ -268,6 +268,7 @@ extern "C" {
 #if (_MSC_VER >= 1700)
 #pragma intrinsic(__fastfail)
 #else
+#if defined(_M_IX86)
 __declspec(noreturn) __forceinline
 void __fastfail(unsigned int Code)
 {
@@ -277,6 +278,9 @@ void __fastfail(unsigned int Code)
         int 29h
     }
 }
+#else
+void __fastfail(unsigned int Code);
+#endif // defined(_M_IX86)
 #endif
 #endif
 #if defined(_M_ARM)
@@ -341,6 +345,7 @@ void  __forceinline __invlpg_fixed(void * Address)
 #if (_MSC_VER >= 1800)
 #pragma intrinsic(_sgdt)
 #else
+#if defined(_M_IX86)
 __forceinline
 void _sgdt(void *Destination)
 {
@@ -350,6 +355,9 @@ void _sgdt(void *Destination)
         sgdt [eax]
     }
 }
+#else
+void _sgdt(void *Destination);
+#endif // defined(_M_IX86)
 #endif
 #pragma intrinsic(_mm_pause)
 #endif

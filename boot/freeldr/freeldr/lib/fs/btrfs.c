@@ -619,7 +619,7 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
         name_buf = (char *) item + sizeof(*item);
         TRACE("Compare names %.*s and %.*s\n", name_len, name, item->name_len, name_buf);
 
-        if (_strnicmp(name, name_buf, name_len) == 0)
+        if (name_len == item->name_len && _strnicmp(name, name_buf, name_len) == 0)
         {
             *ret_item = *item;
             result = TRUE;
@@ -687,6 +687,13 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     if (size > dlen - offset)
         size = dlen - offset;
 
+    /* Handle sparse extent */
+    if (extent->disk_bytenr == 0 && extent->disk_num_bytes == 0)
+    {
+        RtlZeroMemory(out, size);
+        return size;
+    }
+
     physical = logical_physical(extent->disk_bytenr);
     if (physical == INVALID_ADDRESS)
     {
@@ -697,20 +704,34 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     if (extent->compression == BTRFS_COMPRESS_NONE)
     {
         physical += extent->offset + offset;
-        if (physical & (512 - 1))
-        {
-            /* If somebody tried to do unaligned access */
-            physical -= offset;
-            temp_out = FrLdrTempAlloc(size + offset, TAG_BTRFS_FILE);
 
-            if (!disk_read(physical, temp_out, size + offset))
+        /* If somebody tried to do unaligned access */
+        if (physical & (SECTOR_SIZE - 1))
+        {
+            u32 shift;
+
+            temp_out = FrLdrTempAlloc(SECTOR_SIZE, TAG_BTRFS_FILE);
+
+            if (!disk_read(ALIGN_DOWN_BY(physical, SECTOR_SIZE), temp_out, SECTOR_SIZE))
             {
                 FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
                 return READ_ERROR;
             }
 
-            memcpy(out, temp_out + offset, size);
+            shift = (u32)(physical & (SECTOR_SIZE - 1));
+
+            if (size <= SECTOR_SIZE - shift)
+            {
+                memcpy(out, temp_out + shift, size);
+                FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
+                return size;
+            }
+
+            memcpy(out, temp_out + shift, SECTOR_SIZE - shift);
             FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
+
+            if (!disk_read(physical + SECTOR_SIZE - shift, out + SECTOR_SIZE - shift, size - SECTOR_SIZE + shift))
+                return READ_ERROR;
         } else
         {
             if (!disk_read(physical, out, size))
@@ -1194,6 +1215,7 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
         return ENOENT;
     }
 
+    phandle->position += rd;
     *BytesRead = rd;
     return ESUCCESS;
 }

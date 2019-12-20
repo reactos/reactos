@@ -33,7 +33,6 @@
 #include "objbase.h"
 #include "shlwapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "mapival.h"
 #include "xcmc.h"
 #include "msi.h"
@@ -404,7 +403,7 @@ VOID WINAPI SwapPword(PUSHORT lpData, ULONG ulLen)
 ULONG WINAPI MNLS_lstrlenW(LPCWSTR lpszStr)
 {
     TRACE("(%s)\n", debugstr_w(lpszStr));
-    return strlenW(lpszStr);
+    return lstrlenW(lpszStr);
 }
 
 /*************************************************************************
@@ -423,7 +422,7 @@ ULONG WINAPI MNLS_lstrlenW(LPCWSTR lpszStr)
 INT WINAPI MNLS_lstrcmpW(LPCWSTR lpszLeft, LPCWSTR lpszRight)
 {
     TRACE("(%s,%s)\n", debugstr_w(lpszLeft), debugstr_w(lpszRight));
-    return strcmpW(lpszLeft, lpszRight);
+    return lstrcmpW(lpszLeft, lpszRight);
 }
 
 /*************************************************************************
@@ -443,7 +442,7 @@ ULONG WINAPI MNLS_lstrcpyW(LPWSTR lpszDest, LPCWSTR lpszSrc)
     ULONG len;
 
     TRACE("(%p,%s)\n", lpszDest, debugstr_w(lpszSrc));
-    len = (strlenW(lpszSrc) + 1) * sizeof(WCHAR);
+    len = (lstrlenW(lpszSrc) + 1) * sizeof(WCHAR);
     memcpy(lpszDest, lpszSrc, len);
     return len;
 }
@@ -494,7 +493,7 @@ BOOL WINAPI FEqualNames(LPMAPINAMEID lpName1, LPMAPINAMEID lpName2)
         return FALSE;
 
     if (lpName1->ulKind == MNID_STRING)
-        return !strcmpW(lpName1->Kind.lpwstrName, lpName2->Kind.lpwstrName);
+        return !lstrcmpW(lpName1->Kind.lpwstrName, lpName2->Kind.lpwstrName);
 
     return lpName1->Kind.lID == lpName2->Kind.lID;
 }

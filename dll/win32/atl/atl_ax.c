@@ -38,7 +38,6 @@
 #include "wine/atlwin.h"
 #include "shlwapi.h"
 
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
@@ -1023,7 +1022,7 @@ static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
         return IsURL;
     }
 
-    if (!strncmpiW(name, mshtml_prefixW, 7))
+    if (!_wcsnicmp(name, mshtml_prefixW, 7))
     {
         FIXME("mshtml prefix not implemented\n");
         *control_id = CLSID_WebBrowser;
@@ -1211,16 +1210,16 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
         if ( GET_WORD(src) == 0xFFFF ) /* menu */
             src += 2;
         else
-            src += strlenW(src) + 1;
+            src += lstrlenW(src) + 1;
         if ( GET_WORD(src) == 0xFFFF ) /* class */
             src += 2;
         else
-            src += strlenW(src) + 1;
-        src += strlenW(src) + 1; /* title */
+            src += lstrlenW(src) + 1;
+        src += lstrlenW(src) + 1; /* title */
         if ( style & (DS_SETFONT | DS_SHELLFONT) )
         {
             src += 3;
-            src += strlenW(src) + 1;
+            src += lstrlenW(src) + 1;
         }
     } else {
         ext = FALSE;
@@ -1231,16 +1230,16 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
         if ( GET_WORD(src) == 0xFFFF ) /* menu */
             src += 2;
         else
-            src += strlenW(src) + 1;
+            src += lstrlenW(src) + 1;
         if ( GET_WORD(src) == 0xFFFF ) /* class */
             src += 2;
         else
-            src += strlenW(src) + 1;
-        src += strlenW(src) + 1; /* title */
+            src += lstrlenW(src) + 1;
+        src += lstrlenW(src) + 1; /* title */
         if ( style & DS_SETFONT )
         {
             src++;
-            src += strlenW(src) + 1;
+            src += lstrlenW(src) + 1;
         }
     }
     PUT_BLOCK(tmp, src-tmp);
@@ -1263,14 +1262,14 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
             src += 2;
         } else
         {
-            src += strlenW(src) + 1;
+            src += lstrlenW(src) + 1;
         }
-        src += strlenW(src) + 1; /* title */
+        src += lstrlenW(src) + 1; /* title */
         if ( GET_WORD(tmp) == '{' ) /* all this mess created because of this line */
         {
             static const WCHAR AtlAxWin[] = {'A','t','l','A','x','W','i','n', 0};
             PUT_BLOCK(AtlAxWin, ARRAY_SIZE(AtlAxWin));
-            PUT_BLOCK(tmp, strlenW(tmp)+1);
+            PUT_BLOCK(tmp, lstrlenW(tmp)+1);
         } else
             PUT_BLOCK(tmp, src-tmp);
 

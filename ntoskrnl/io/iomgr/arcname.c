@@ -18,7 +18,6 @@
 
 UNICODE_STRING IoArcHalDeviceName, IoArcBootDeviceName;
 PCHAR IoLoaderArcBootDeviceName;
-extern BOOLEAN IoRemoteBootClient;
 
 /* FUNCTIONS *****************************************************************/
 

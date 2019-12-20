@@ -18,14 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include "wine/debug.h"
 
 #define COBJMACROS
 
 #include "winbase.h"
 #include "wingdi.h"
+#include "wine/winternl.h"
 
 #include "d3dxof_private.h"
 #include "dxfile.h"
@@ -132,38 +131,38 @@ static void dump_template(xtemplate* templates_array, xtemplate* ptemplate)
 
   clsid = &ptemplate->class_id;
 
-  DPRINTF("template %s\n", ptemplate->name);
-  DPRINTF("{\n");
-  DPRINTF(CLSIDFMT "\n", clsid->Data1, clsid->Data2, clsid->Data3, clsid->Data4[0],
+  wine_dbg_printf("template %s\n", ptemplate->name);
+  wine_dbg_printf("{\n");
+  wine_dbg_printf(CLSIDFMT "\n", clsid->Data1, clsid->Data2, clsid->Data3, clsid->Data4[0],
   clsid->Data4[1], clsid->Data4[2], clsid->Data4[3], clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7]);
   for (j = 0; j < ptemplate->nb_members; j++)
   {
     if (ptemplate->members[j].nb_dims)
-      DPRINTF("array ");
+      wine_dbg_printf("array ");
     if (ptemplate->members[j].type == TOKEN_NAME)
-      DPRINTF("%s ", templates_array[ptemplate->members[j].idx_template].name);
+      wine_dbg_printf("%s ", templates_array[ptemplate->members[j].idx_template].name);
     else
-      DPRINTF("%s ", get_primitive_string(ptemplate->members[j].type));
-    DPRINTF("%s", ptemplate->members[j].name);
+      wine_dbg_printf("%s ", get_primitive_string(ptemplate->members[j].type));
+    wine_dbg_printf("%s", ptemplate->members[j].name);
     for (k = 0; k < ptemplate->members[j].nb_dims; k++)
     {
       if (ptemplate->members[j].dim_fixed[k])
-        DPRINTF("[%d]", ptemplate->members[j].dim_value[k]);
+        wine_dbg_printf("[%d]", ptemplate->members[j].dim_value[k]);
       else
-        DPRINTF("[%s]", ptemplate->members[ptemplate->members[j].dim_value[k]].name);
+        wine_dbg_printf("[%s]", ptemplate->members[ptemplate->members[j].dim_value[k]].name);
     }
-    DPRINTF(";\n");
+    wine_dbg_printf(";\n");
   }
   if (ptemplate->open)
-    DPRINTF("[...]\n");
+    wine_dbg_printf("[...]\n");
   else if (ptemplate->nb_children)
   {
-    DPRINTF("[%s", ptemplate->children[0]);
+    wine_dbg_printf("[%s", ptemplate->children[0]);
     for (j = 1; j < ptemplate->nb_children; j++)
-      DPRINTF(",%s", ptemplate->children[j]);
-    DPRINTF("]\n");
+      wine_dbg_printf(",%s", ptemplate->children[j]);
+    wine_dbg_printf("]\n");
   }
-  DPRINTF("}\n");
+  wine_dbg_printf("}\n");
 }
 
 static BOOL read_bytes(parse_buffer * buf, LPVOID data, DWORD size)
@@ -405,7 +404,7 @@ static BOOL is_keyword(parse_buffer* buf, const char* keyword)
 
   if (!read_bytes(buf, tmp, len))
     return FALSE;
-  if (strncasecmp(tmp, keyword, len))
+  if (_strnicmp(tmp, keyword, len))
   {
     rewind_bytes(buf, len);
     return FALSE;
@@ -972,7 +971,7 @@ static BOOL parse_template_members_list(parse_buffer * buf)
         cur_member->idx_template = 1;
         while (cur_member->idx_template < buf->pdxf->nb_xtemplates)
         {
-          if (!strcasecmp((char*)buf->value, buf->pdxf->xtemplates[cur_member->idx_template].name))
+          if (!_strnicmp((char*)buf->value, buf->pdxf->xtemplates[cur_member->idx_template].name, -1))
             break;
           cur_member->idx_template++;
         }
@@ -1176,7 +1175,7 @@ static BOOL parse_object_members_list(parse_buffer * buf)
         /* To do template lookup */
         for (j = 0; j < buf->pdxf->nb_xtemplates; j++)
         {
-          if (!strcasecmp(buf->pdxf->xtemplates[pt->members[i].idx_template].name, buf->pdxf->xtemplates[j].name))
+          if (!_strnicmp(buf->pdxf->xtemplates[pt->members[i].idx_template].name, buf->pdxf->xtemplates[j].name, -1))
           {
             buf->pxt[buf->level] = &buf->pdxf->xtemplates[j];
             break;
@@ -1208,13 +1207,13 @@ static BOOL parse_object_members_list(parse_buffer * buf)
             return FALSE;
           if (pt->members[i].type == TOKEN_WORD)
           {
-            *(((WORD*)(buf->pdata + buf->cur_pos_data))) = (WORD)(*(DWORD*)buf->value);
-            buf->cur_pos_data += 2;
+              *(WORD *)(buf->pdata + buf->cur_pos_data) = *(DWORD *)buf->value;
+              buf->cur_pos_data += 2;
           }
           else if (pt->members[i].type == TOKEN_DWORD)
           {
-            *(((DWORD*)(buf->pdata + buf->cur_pos_data))) = (DWORD)(*(DWORD*)buf->value);
-            buf->cur_pos_data += 4;
+              *(DWORD *)(buf->pdata + buf->cur_pos_data) = *(DWORD *)buf->value;
+              buf->cur_pos_data += 4;
           }
           else
           {
@@ -1230,8 +1229,8 @@ static BOOL parse_object_members_list(parse_buffer * buf)
             return FALSE;
           if (pt->members[i].type == TOKEN_FLOAT)
           {
-            *(((float*)(buf->pdata + buf->cur_pos_data))) = (float)(*(float*)buf->value);
-            buf->cur_pos_data += 4;
+              *(float *)(buf->pdata + buf->cur_pos_data) = *(float *)buf->value;
+              buf->cur_pos_data += 4;
           }
           else
           {
@@ -1392,7 +1391,7 @@ BOOL parse_object(parse_buffer * buf)
   /* To do template lookup */
   for (i = 0; i < buf->pdxf->nb_xtemplates; i++)
   {
-    if (!strcasecmp((char*)buf->value, buf->pdxf->xtemplates[i].name))
+    if (!_strnicmp((char*)buf->value, buf->pdxf->xtemplates[i].name, -1))
     {
       buf->pxt[buf->level] = &buf->pdxf->xtemplates[i];
       memcpy(&buf->pxo->type, &buf->pdxf->xtemplates[i].class_id, 16);

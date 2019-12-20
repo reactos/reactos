@@ -533,11 +533,13 @@ void WRITE_PORT_UCHAR(PUCHAR Address, UCHAR Value) {
     SetPhysByte(((ULONG)Address)+0x80000000, Value);
 }
 
-void BootOldLinuxKernel( unsigned long size ) {
-    ofw_exit();
-}
-
-void BootNewLinuxKernel() {
+VOID __cdecl BootLinuxKernel(
+    IN ULONG KernelSize,
+    IN PVOID KernelCurrentLoadAddress,
+    IN PVOID KernelTargetLoadAddress,
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber)
+{
     ofw_exit();
 }
 

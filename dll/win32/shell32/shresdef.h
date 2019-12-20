@@ -140,6 +140,7 @@
 #define IDS_CANTEJECTMEDIA        158
 #define IDS_CANTSHOWPROPERTIES    159
 #define IDS_CANTDISCONNECT        160
+#define IDS_NONE                  161
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
@@ -199,6 +200,7 @@
 #define IDS_EDIT_VERB    303
 #define IDS_FIND_VERB    304
 #define IDS_PRINT_VERB   305
+#define IDS_CMD_VERB     306
 
 #define IDS_FILE_FOLDER          308
 #define IDS_CREATELINK           309
@@ -225,6 +227,16 @@
 
 #define IDS_EJECT                339
 #define IDS_DISCONNECT           340
+
+#define IDS_OPENFILELOCATION     341
+#define IDS_DESKLINK             342
+#define IDS_SENDTO_MENU          343
+#define IDS_MOVEERRORTITLE       344
+#define IDS_COPYERRORTITLE       345
+#define IDS_MOVEERRORSAME        346
+#define IDS_COPYERRORSAME        347
+#define IDS_MOVEERRORSUBF        348
+#define IDS_COPYERRORSUBF        349
 
 #define IDS_MENU_EMPTY           34561
 
@@ -811,3 +823,4 @@
 #define IDR_USERNOTIFICATION    155
 #define IDR_SHELL               156
 #define IDR_ACTIVEDESKTOP       157
+#define IDR_SENDTOMENU          158
