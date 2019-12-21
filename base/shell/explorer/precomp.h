@@ -316,8 +316,15 @@ CreateStartMenu(IN ITrayWindow *Tray,
 /*
  * startmnucust.cpp
  */
-VOID
+
+INT
 ShowCustomizeClassic(HINSTANCE, HWND);
+
+DWORD LoadUserConfData(INT *dwLength);
+
+DWORD UpLoadUserConfData(DWORD &dwUserData);
+
+VOID UpdateClassicMenuOptions(HWND);
 
 /*
 * startmnusite.cpp
