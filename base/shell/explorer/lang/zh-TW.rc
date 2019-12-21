@@ -133,8 +133,8 @@ BEGIN
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
     LTEXT            "要刪除最近訪問過的檔案、程式和網站記錄，請按［清除］。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "開始功能表中的進階選項(&T)：", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "開始功能表設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    LTEXT            "開始功能表中的高階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "開始功能表設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysListView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "確定", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "取消", IDCANCEL, 176, 220, 50, 14
 END
@@ -204,4 +204,20 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "工作列及開始功能表"
     IDS_RESTORE_ALL "顯示開啟的視窗(&S)"
+END
+
+STRINGTABLE
+BEGIN
+     IDS_DRAG_DROP "Enable drag and drop"
+     IDS_SHOW_RUN  "Display ""Run"" command"
+     IDS_SCROOL_PROG_MENU "Scroll through the ""Programs"" menu"
+     IDS_EXP_MYIMAGES "Expand ""My pictures"""
+     IDS_EXP_PRINTERS "Expand ""Printers"""
+     IDS_EXP_WEB_CONNECT "Expand ""Network connections"""
+     IDS_EXP_MYDOCUMENTS "Expand ""My documents"""
+     IDS_EXP_CONTROL_PANEL "Expand ""Control panel"""
+     IDS_SHOW_FAVORITES    "Show favorites"
+     IDS_SHOW_TOOLS        "Show administrative tools"
+     IDS_SHOW_SMALL_ICO    "Show small icons in start menu"
+     IDS_CUST_MENUS        "Use custom menus"
 END
