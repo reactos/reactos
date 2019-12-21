@@ -95,7 +95,7 @@ ClassicOption[] =
     {NULL, FALSE}     // Last.IsDirty stores all current checkBtn state
 };
 
-DWORD LoadUserConfData()
+DWORD LoadUserConfData(INT *dwLength)
 {
     HKEY hKey;
     int iItem;
@@ -143,6 +143,7 @@ DWORD LoadUserConfData()
             }
         }
     }
+    *dwLength = iItem;
            //  Save Current User options
     ClassicOption[iItem].IsDirty = dwStatus;
     RegCloseKey(hKey);

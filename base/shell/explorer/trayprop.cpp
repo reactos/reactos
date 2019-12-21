@@ -46,7 +46,7 @@ static void SetBitmap(HWND hwnd, HBITMAP* hbmp, UINT uImageId)
 
 class CTaskBarSettingsPage : public CPropertyPageImpl<CTaskBarSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpTaskbar;
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
@@ -85,7 +85,7 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
@@ -107,7 +107,7 @@ private:
             uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
         else if (!bHideInactive && !bShowClock)
             uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
@@ -129,7 +129,7 @@ public:
         m_hwndTaskbar(hwnd)
     {
     }
-    
+
     ~CTaskBarSettingsPage()
     {
         if (m_hbmpTaskbar)
@@ -186,10 +186,79 @@ public:
     }
 };
 
+
+void EnableDragDrop(DWORD dwItem, DWORD dwState)
+{
+    WCHAR buf[128];
+    if (dwItem == dwState)
+        wsprintf(buf, L"EnableDragDrop OFF");
+    else
+        wsprintf(buf, L"EnableDragDrop ON");
+    MessageBoxW(0, buf, L"Unimplemented", MB_OK);
+}
+
+void ScroolProg(DWORD dwItem, DWORD dwState)
+{
+    WCHAR buf[128];
+    if (dwItem == dwState)
+        wsprintf(buf, L"ScroolProg OFF");
+    else
+        wsprintf(buf, L"ScroolProg ON");
+    MessageBoxW(0, buf, L"Unimplemented", MB_OK);
+}
+
+void ExpandMenu(DWORD dwItem, DWORD dwState, DWORD sz)
+{
+    WCHAR buf[512];
+    buf[0] = '\0';
+    for (DWORD i = 0; i < sz; i++)
+    {
+        const WCHAR *ptr = ((dwState >> i) & 0x01) ? L"OFF" : L"ON";
+        if ((dwItem >> i) & 0x01)
+            wsprintf(buf + lstrlenW(buf), L" item %d  -> %s\n", i, ptr);
+    }
+    MessageBoxW(0 , buf, L"Unimplemented", MB_OK);
+}
+
+void ShowMenuItem(DWORD dwItem, DWORD dwState, DWORD sz)
+{
+    WCHAR buf[512];
+    buf[0] = '\0';
+    for (DWORD i = 0; i < sz; i++)
+    {
+        const WCHAR *ptr = ((dwState >> i) & 0x01) ? L"OFF" : L"ON";
+        if ((dwItem >> i) & 0x01)
+             wsprintf(buf + lstrlenW(buf), L"  item %d -> %s\n", i, ptr);
+    }
+    MessageBoxW(0 , buf, L"Unimplemented", MB_OK);
+}
+
+void ShowSmallIcons(DWORD dwItem, DWORD dwState)
+{
+    WCHAR buf[128];
+    if (dwItem == dwState)
+        wsprintf(buf, L"ShowSmallIcons OFF");
+    else
+        wsprintf(buf, L"ShowSmallIcons ON");
+    MessageBoxW(0, buf, L"Unimplemented", MB_OK);
+}
+
+void CustomMenus(DWORD dwItem, DWORD dwState)
+{
+    WCHAR buf[128];
+    if (dwItem == dwState)
+        wsprintf(buf, L"CustomMenus OFF");
+    else
+        wsprintf(buf, L"CustomMenus ON");
+    MessageBoxW(0, buf, L"CustomMenus", MB_OK);
+}
+
 class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpStartBitmap;
+    DWORD dwUserOptions;
+    INT dwOptSize;
 
     void UpdateDialog()
     {
@@ -238,14 +307,16 @@ public:
     END_MSG_MAP()
 
     CStartMenuSettingsPage():
-        m_hbmpStartBitmap(NULL)
+        m_hbmpStartBitmap(NULL), dwOptSize(0)
     {
+         dwUserOptions = LoadUserConfData(&dwOptSize);
     }
 
     ~CStartMenuSettingsPage()
     {
         if (m_hbmpStartBitmap)
             DeleteObject(m_hbmpStartBitmap);
+        dwOptSize = 0;
     }
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -253,19 +324,39 @@ public:
         // fix me: start menu style (classic/modern) should be read somewhere from the registry.
         CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         UpdateDialog();
-    
+
         return TRUE;
     }
 
     LRESULT OnStartMenuCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        ShowCustomizeClassic(hExplorerInstance, m_hWnd);
+        if(ShowCustomizeClassic(hExplorerInstance, m_hWnd) == IDOK)
+            SetModified(TRUE);
         return 0;
     }
 
     int OnApply()
     {
         //TODO
+        DWORD dwRes = UpLoadUserConfData(dwUserOptions);
+        DWORD dwItem = dwRes ^ dwUserOptions;
+
+
+        if (dwItem & 0x01)
+            EnableDragDrop((dwItem & 0x01), (dwUserOptions & 0x01));
+        if (dwItem & 0x04)
+            ScroolProg((dwItem & 0x04), (dwUserOptions & 0x04));
+        if (dwItem & 0xf8)
+            ExpandMenu((dwItem & 0xf8), (dwUserOptions & 0xf8), dwOptSize);
+        if (dwItem & 0x302)
+            ShowMenuItem((dwItem & 0x302), (dwUserOptions & 0x302), dwOptSize);
+        if (dwItem & 0x400)
+           ShowSmallIcons((dwItem & 0x400), (dwUserOptions & 0x400));
+        if (dwItem & 0x800)
+            CustomMenus((dwItem & 0x800), (dwUserOptions & 0x800));
+
+        dwUserOptions = dwRes;
+
         return PSNRET_NOERROR;
     }
 };
@@ -295,9 +386,9 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
     CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
     CStartMenuSettingsPage smSettingsPage;
     CStringW caption;
-    
+
     caption.LoadStringW(IDS_TASKBAR_STARTMENU_PROP_CAPTION);
-    
+
     hpsp[0] = tbSettingsPage.Create();
     hpsp[1] = smSettingsPage.Create();
 

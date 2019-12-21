@@ -68,7 +68,7 @@ extern BOOL bExplorerIsShell;
  * explorer.c
  */
 
-static inline 
+static inline
 LONG
 SetWindowStyle(IN HWND hWnd,
                IN LONG dwStyleMask,
@@ -312,14 +312,20 @@ CreateStartMenu(IN ITrayWindow *Tray,
 /*
  * startmnucust.cpp
  */
-VOID 
+INT
 ShowCustomizeClassic(HINSTANCE, HWND);
+
+DWORD LoadUserConfData(INT *dwLength);
+
+DWORD UpLoadUserConfData(DWORD &dwUserData);
+
+VOID UpdateClassicMenuOptions(HWND);
 
 /*
 * startmnusite.cpp
 */
 
-HRESULT 
+HRESULT
 CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
