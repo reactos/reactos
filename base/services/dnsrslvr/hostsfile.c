@@ -105,6 +105,8 @@ AddIpv4HostEntries(
     ARecord.pName = pszHostName;
     ARecord.wType = DNS_TYPE_A;
     ARecord.wDataLength = sizeof(DNS_A_DATA);
+    ARecord.Flags.S.Section = DnsSectionAnswer;
+    ARecord.Flags.S.CharSet = DnsCharSetUnicode;
     ARecord.dwTtl = 86400;
 
     ARecord.Data.A.IpAddress = pAddress->S_un.S_addr;
@@ -122,6 +124,8 @@ AddIpv4HostEntries(
     PtrRecord.pName = szReverseName;
     PtrRecord.wType = DNS_TYPE_PTR;
     PtrRecord.wDataLength = sizeof(DNS_PTR_DATA);
+    PtrRecord.Flags.S.Section = DnsSectionAnswer;
+    PtrRecord.Flags.S.CharSet = DnsCharSetUnicode;
     PtrRecord.dwTtl = 86400;
 
     PtrRecord.Data.PTR.pNameHost = pszHostName;
@@ -147,6 +151,8 @@ AddIpv6HostEntries(
     AAAARecord.pName = pszHostName;
     AAAARecord.wType = DNS_TYPE_AAAA;
     AAAARecord.wDataLength = sizeof(DNS_AAAA_DATA);
+    AAAARecord.Flags.S.Section = DnsSectionAnswer;
+    AAAARecord.Flags.S.CharSet = DnsCharSetUnicode;
     AAAARecord.dwTtl = 86400;
 
     CopyMemory(&AAAARecord.Data.AAAA.Ip6Address,
@@ -172,6 +178,8 @@ AddIpv6HostEntries(
     PtrRecord.pName = szReverseName;
     PtrRecord.wType = DNS_TYPE_PTR;
     PtrRecord.wDataLength = sizeof(DNS_PTR_DATA);
+    PtrRecord.Flags.S.Section = DnsSectionAnswer;
+    PtrRecord.Flags.S.CharSet = DnsCharSetUnicode;
     PtrRecord.dwTtl = 86400;
 
     PtrRecord.Data.PTR.pNameHost = pszHostName;
