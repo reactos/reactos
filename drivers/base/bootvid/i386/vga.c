@@ -23,14 +23,13 @@ static UCHAR lMaskTable[8] =
 static UCHAR rMaskTable[8] =
 {
     (1 << 7),
-    (1 << 7)+ (1 << 6),
-    (1 << 7)+ (1 << 6) + (1 << 5),
-    (1 << 7)+ (1 << 6) + (1 << 5) + (1 << 4),
-    (1 << 7)+ (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3),
-    (1 << 7)+ (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2),
-    (1 << 7)+ (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1),
-    (1 << 7)+ (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1) +
-    (1 << 0),
+    (1 << 7) + (1 << 6),
+    (1 << 7) + (1 << 6) + (1 << 5),
+    (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4),
+    (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3),
+    (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2),
+    (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1),
+    (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1) + (1 << 0),
 };
 UCHAR PixelMask[8] =
 {
@@ -96,15 +95,14 @@ SetPixel(IN ULONG Left,
 {
     PUCHAR PixelPosition;
 
-    /* Calculate the pixel position. */
+    /* Calculate the pixel position */
     PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Select the bitmask register and write the mask */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (PixelMask[Left & 7] << 8) | IND_BIT_MASK);
 
     /* Read the current pixel value and add our color */
-    WRITE_REGISTER_UCHAR(PixelPosition,
-                         READ_REGISTER_UCHAR(PixelPosition) & Color);
+    WRITE_REGISTER_UCHAR(PixelPosition, READ_REGISTER_UCHAR(PixelPosition) & Color);
 }
 
 #define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor)       \
@@ -152,13 +150,12 @@ DisplayCharacter(IN CHAR Character,
     PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Loop all pixel rows */
-    Height = BOOTCHAR_HEIGHT;
-    do
+    for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
     {
         SET_PIXELS(PixelPtr, *FontChar >> Shift, TextColor);
         PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
-    } while (--Height);
+    }
 
     /* Check if we need to update neighbor bytes */
     if (Shift)
@@ -171,13 +168,12 @@ DisplayCharacter(IN CHAR Character,
         PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
 
         /* Loop all pixel rows */
-        Height = BOOTCHAR_HEIGHT;
-        do
+        for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
         {
             SET_PIXELS(PixelPtr, *FontChar << Shift, TextColor);
             PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
-        } while (--Height);
+        }
     }
 
     /* Check if the background color is transparent */
@@ -195,13 +191,12 @@ DisplayCharacter(IN CHAR Character,
     PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Loop all pixel rows */
-    Height = BOOTCHAR_HEIGHT;
-    do
+    for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
     {
         SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
         PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
-    } while (--Height);
+    }
 
     /* Check if we need to update neighbor bytes */
     if (Shift)
@@ -214,13 +209,12 @@ DisplayCharacter(IN CHAR Character,
         PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
 
         /* Loop all pixel rows */
-        Height = BOOTCHAR_HEIGHT;
-        do
+        for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
         {
             SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
             PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
-        } while (--Height);
+        }
     }
 }
 
@@ -232,15 +226,11 @@ DisplayStringXY(IN PUCHAR String,
                 IN ULONG TextColor,
                 IN ULONG BackColor)
 {
-    /* Loop every character */
-    while (*String)
+    /* Loop every character and adjust the position */
+    for (; *String; ++String, Left += 8)
     {
         /* Display a character */
         DisplayCharacter(*String, Left, Top, TextColor, BackColor);
-
-        /* Move to next character and next position */
-        String++;
-        Left += 8;
     }
 }
 
@@ -374,15 +364,14 @@ PreserveRow(IN ULONG CurrentTop,
     ReadWriteMode(1);
 
     /* Check which way we're preserving */
+    /* Calculate the position in memory for the row */
     if (Direction)
     {
-        /* Calculate the position in memory for the row */
         Position1 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
         Position2 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
     }
     else
     {
-        /* Calculate the position in memory for the row */
         Position1 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
         Position2 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
     }
@@ -448,8 +437,7 @@ BitBlt(IN ULONG Left,
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* 4bpp blitting */
-    dy = Top;
-    do
+    for (dy = Top; dy < Bottom; ++dy)
     {
         sx = 0;
         do
@@ -467,8 +455,7 @@ BitBlt(IN ULONG Left,
             sx++;
         } while (dx < Right);
         offset += Delta;
-        dy++;
-    } while (dy < Bottom);
+    }
 }
 
 static VOID
@@ -536,8 +523,7 @@ RleBitBlt(IN ULONG Left,
             if (RleValue > 1)
             {
                 /* Set loop variables */
-                i = (RleValue - 2) / 2 + 1;
-                do
+                for (i = (RleValue - 2) / 2 + 1; i > 0; --i)
                 {
                     /* Set the pixels */
                     SetPixel(x, YDelta, (UCHAR)Color);
@@ -547,7 +533,7 @@ RleBitBlt(IN ULONG Left,
 
                     /* Decrease pixel value */
                     RleValue -= 2;
-                } while (--i);
+                }
             }
 
             /* Check if there is any value at all */
@@ -623,8 +609,7 @@ RleBitBlt(IN ULONG Left,
         if (RleValue > 1)
         {
             /* Set loop variables */
-            j = (RleValue - 2) / 2 + 1;
-            do
+            for (j = (RleValue - 2) / 2 + 1; j > 0; --j)
             {
                 /* Get the new value */
                 NewRleValue = *Buffer;
@@ -644,7 +629,7 @@ RleBitBlt(IN ULONG Left,
 
                 /* Decrease pixel value */
                 RleValue -= 2;
-            } while (--j);
+            }
         }
 
         /* Check if there is any value at all */
@@ -776,7 +761,7 @@ VidDisplayString(IN PUCHAR String)
     ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
-    while (*String)
+    for (; *String; ++String)
     {
         /* Treat new-line separately */
         if (*String == '\n')
@@ -844,9 +829,6 @@ VidDisplayString(IN PUCHAR String)
                 curr_x = ScrollRegion[0];
             }
         }
-
-        /* Get the next character */
-        String++;
     }
 }
 
@@ -954,9 +936,6 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
     /* Calculate total distance to copy on X */
     XDistance = Left + Width - 1;
 
-    /* Start at plane 0 */
-    Plane = 0;
-
     /* Calculate the 8-byte left and right deltas */
     LeftDelta = Left & 7;
     RightDelta = 8 - LeftDelta;
@@ -969,7 +948,7 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
     XDistance >>= 3;
 
     /* Loop the 4 planes */
-    do
+    for (Plane = 0; Plane < 4; ++Plane)
     {
         /* Set the current pixel position and reset buffer loop variable */
         PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
@@ -981,58 +960,52 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
         /* Set the current plane */
         __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
 
-        /* Make sure we have a height */
-        if (Height > 0)
+        /* Start the outer Y height loop */
+        for (y = Height; y > 0; --y)
         {
-            /* Start the outer Y loop */
-            y = Height;
-            do
+            /* Read the current value */
+            m = (PULONG)i;
+            Value = READ_REGISTER_UCHAR(PixelPosition);
+
+            /* Set Pixel Position loop variable */
+            k = PixelPosition + 1;
+
+            /* Check if we're still within bounds */
+            if (Left <= XDistance)
             {
-                /* Read the current value */
-                m = (PULONG)i;
-                Value = READ_REGISTER_UCHAR(PixelPosition);
-
-                /* Set Pixel Position loop variable */
-                k = PixelPosition + 1;
-
-                /* Check if we're still within bounds */
-                if (Left <= XDistance)
+                /* Start the X inner loop */
+                for (x = (XDistance - Left) + 1; x > 0; --x)
                 {
-                    /* Start X Inner loop */
-                    x = (XDistance - Left) + 1;
-                    do
-                    {
-                        /* Read the current value */
-                        Value2 = READ_REGISTER_UCHAR(k);
+                    /* Read the current value */
+                    Value2 = READ_REGISTER_UCHAR(k);
 
-                        /* Increase pixel position */
-                        k++;
+                    /* Increase pixel position */
+                    k++;
 
-                        /* Do the blt */
-                        a = Value2 >> (UCHAR)RightDelta;
-                        a |= Value << (UCHAR)LeftDelta;
-                        b = lookup[a & 0xF];
-                        a >>= 4;
-                        b <<= 16;
-                        b |= lookup[a];
+                    /* Do the blt */
+                    a = Value2 >> (UCHAR)RightDelta;
+                    a |= Value << (UCHAR)LeftDelta;
+                    b = lookup[a & 0xF];
+                    a >>= 4;
+                    b <<= 16;
+                    b |= lookup[a];
 
-                        /* Save new value to buffer */
-                        *m |= (b << Plane);
+                    /* Save new value to buffer */
+                    *m |= (b << Plane);
 
-                        /* Move to next destination location */
-                        m++;
+                    /* Move to next destination location */
+                    m++;
 
-                        /* Write new value */
-                        Value = Value2;
-                    } while (--x);
+                    /* Write new value */
+                    Value = Value2;
                 }
+            }
 
-                /* Update pixel position */
-                PixelPosition += (SCREEN_WIDTH / 8);
-                i += Delta;
-            } while (--y);
+            /* Update pixel position */
+            PixelPosition += (SCREEN_WIDTH / 8);
+            i += Delta;
         }
-   } while (++Plane < 4);
+    }
 }
 
 /*
@@ -1080,19 +1053,18 @@ VidSolidColorFill(IN ULONG Left,
     if (Top <= Bottom)
     {
         /* Start looping each line */
-        i = (Bottom - Top) + 1;
-        do
+        for (i = (Bottom - Top) + 1; i > 0; --i)
         {
             /* Read the previous value and add our color */
             WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
 
             /* Move to the next line */
             Offset += (SCREEN_WIDTH / 8);
-        } while (--i);
+        }
     }
 
     /* Check if we have a delta */
-    if (Distance)
+    if (Distance > 0)
     {
         /* Calculate new pixel position */
         Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + RightOffset);
@@ -1105,20 +1077,18 @@ VidSolidColorFill(IN ULONG Left,
         if (Top <= Bottom)
         {
             /* Start looping each line */
-            i = (Bottom - Top) + 1;
-            do
+            for (i = (Bottom - Top) + 1; i > 0; --i)
             {
                 /* Read the previous value and add our color */
-                WRITE_REGISTER_UCHAR(Offset,
-                                     READ_REGISTER_UCHAR(Offset) & Color);
+                WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
 
                 /* Move to the next line */
                 Offset += (SCREEN_WIDTH / 8);
-            } while (--i);
+            }
         }
 
         /* Check if we still have a delta */
-        if (Distance)
+        if (Distance > 0)
         {
             /* Calculate new pixel position */
             Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset + 1);
@@ -1130,22 +1100,18 @@ VidSolidColorFill(IN ULONG Left,
             if (Top <= Bottom)
             {
                 /* Start looping each line */
-                i = (Bottom - Top) + 1;
-                do
+                for (i = (Bottom - Top) + 1; i > 0; --i)
                 {
                     /* Loop the shift delta */
-                    if (Distance > 0)
+                    for (j = Distance; j > 0; Offset++, --j)
                     {
-                        for (j = Distance; j; Offset++, j--)
-                        {
-                            /* Write the color */
-                            WRITE_REGISTER_UCHAR(Offset, Color);
-                        }
+                        /* Write the color */
+                        WRITE_REGISTER_UCHAR(Offset, Color);
                     }
 
                     /* Update position in memory */
                     Offset += ((SCREEN_WIDTH / 8) - Distance);
-                } while (--i);
+                }
             }
         }
     }

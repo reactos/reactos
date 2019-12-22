@@ -66,42 +66,33 @@ VGA_COLOR VidpVga8To16BitTransform[16] =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-USHORT
 FORCEINLINE
+USHORT
 VidpBuildColor(IN UCHAR Color)
 {
     UCHAR Red, Green, Blue;
 
-    //
-    // Extract color components
-    //
-    Red = VidpVga8To16BitTransform[Color].Red;
+    /* Extract color components */
+    Red   = VidpVga8To16BitTransform[Color].Red;
     Green = VidpVga8To16BitTransform[Color].Green;
-    Blue = VidpVga8To16BitTransform[Color].Blue;
+    Blue  = VidpVga8To16BitTransform[Color].Blue;
 
-    //
-    // Build the 16-bit color mask
-    //
+    /* Build the 16-bit color mask */
     return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
 }
 
-
-VOID
 FORCEINLINE
+VOID
 VidpSetPixel(IN ULONG Left,
              IN ULONG Top,
              IN UCHAR Color)
 {
     PUSHORT PixelPosition;
 
-    //
-    // Calculate the pixel position
-    //
+    /* Calculate the pixel position */
     PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
 
-    //
-    // Set our color
-    //
+    /* Set our color */
     WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
 }
 
@@ -111,7 +102,7 @@ DisplayCharacter(IN CHAR Character,
                  IN ULONG Left,
                  IN ULONG Top,
                  IN ULONG TextColor,
-                 IN ULONG BackTextColor)
+                 IN ULONG BackColor)
 {
     PUCHAR FontChar;
     ULONG i, j, XOffset;
@@ -120,13 +111,11 @@ DisplayCharacter(IN CHAR Character,
     FontChar = &FontData[Character * BOOTCHAR_HEIGHT - Top];
 
     /* Loop each pixel height */
-    i = BOOTCHAR_HEIGHT;
-    do
+    for (i = BOOTCHAR_HEIGHT; i > 0; --i)
     {
         /* Loop each pixel width */
-        j = 128;
         XOffset = Left;
-        do
+        for (j = (1 << 7); j > 0; j >>= 1)
         {
             /* Check if we should draw this pixel */
             if (FontChar[Top] & (UCHAR)j)
@@ -134,20 +123,22 @@ DisplayCharacter(IN CHAR Character,
                 /* We do, use the given Text Color */
                 VidpSetPixel(XOffset, Top, (UCHAR)TextColor);
             }
-            else if (BackTextColor < 16)
+            else if (BackColor < 16)
             {
-                /* This is a background pixel. We're drawing it unless it's */
-                /* transparent. */
-                VidpSetPixel(XOffset, Top, (UCHAR)BackTextColor);
+                /*
+                 * This is a background pixel. We're drawing it
+                 * unless it's transparent.
+                 */
+                VidpSetPixel(XOffset, Top, (UCHAR)BackColor);
             }
 
             /* Increase X Offset */
             XOffset++;
-        } while (j >>= 1);
+        }
 
         /* Move to the next Y ordinate */
         Top++;
-    } while (--i);
+    }
 }
 
 VOID
@@ -162,12 +153,8 @@ VgaScroll(IN ULONG Scroll)
     SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * (SCREEN_WIDTH / 8)) + (VidpScrollRegion[0] >> 3)];
     DestOffset = &SourceOffset[Scroll * (SCREEN_WIDTH / 8)];
 
-    /* Save top and check if it's above the bottom */
-    Top = VidpScrollRegion[1];
-    if (Top > VidpScrollRegion[3]) return;
-
     /* Start loop */
-    do
+    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
     {
         /* Set number of bytes to loop and start offset */
         Offset = VidpScrollRegion[0] >> 3;
@@ -198,12 +185,7 @@ VgaScroll(IN ULONG Scroll)
         /* Move to the next line */
         SourceOffset += (SCREEN_WIDTH / 8);
         DestOffset += (SCREEN_WIDTH / 8);
-
-        /* Increase top */
-        Top++;
-
-        /* Make sure we don't go past the scroll region */
-    } while (Top <= VidpScrollRegion[3]);
+    }
 }
 
 VOID
@@ -216,15 +198,14 @@ PreserveRow(IN ULONG CurrentTop,
     ULONG Count;
 
     /* Check which way we're preserving */
+    /* Calculate the position in memory for the row */
     if (Direction)
     {
-        /* Calculate the position in memory for the row */
         Position1 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
         Position2 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
     }
     else
     {
-        /* Calculate the position in memory for the row */
         Position1 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
         Position2 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
     }
@@ -427,7 +408,7 @@ VidDisplayString(IN PUCHAR String)
     ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
-    while (*String)
+    for (; *String; ++String)
     {
         /* Treat new-line separately */
         if (*String == '\n')
@@ -495,9 +476,6 @@ VidDisplayString(IN PUCHAR String)
                 VidpCurrentX = VidpScrollRegion[0];
             }
         }
-
-        /* Get the next character */
-        String++;
     }
 }
 
