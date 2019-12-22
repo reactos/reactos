@@ -591,6 +591,7 @@ ImageView_DrawImage(HWND hwnd)
     HDC hdc;
     HBRUSH white;
     HGDIOBJ hbrOld;
+    UINT uFlags;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -652,9 +653,22 @@ ImageView_DrawImage(HWND hwnd)
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-        SelectObject(hdc, hbrOld);
+        uFlags = 0;
+        GdipGetImageFlags(image, &uFlags);
+
+        if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
+        {
+            hbrOld = SelectObject(hdc, white);
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+        }
+        else
+        {
+            hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+            SelectObject(hdc, hbrOld);
+        }
+
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
