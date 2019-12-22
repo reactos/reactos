@@ -147,7 +147,7 @@ DWORD
 SpiLoadTimeOut(VOID)
 {   // Must have the string!
     WCHAR szApplicationName[MAX_PATH];
-    szApplicationName[0] = 0;
+    RtlZeroMemory(&szApplicationName, sizeof(szApplicationName));
     if (!RegReadUserSetting(KEY_DESKTOP, VAL_SCRNSV, REG_SZ, &szApplicationName, sizeof(szApplicationName)))
     {
         return 0;
