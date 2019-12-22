@@ -317,10 +317,6 @@ SpiUpdatePerUserSystemParameters(VOID)
 #endif
 
     gspv.bFastTaskSwitch = TRUE;
-    gspv.iLowPwrTimeout = SpiLoadInt(KEY_DESKTOP, L"LowPowerTimeout", 1200);
-    gspv.bLowPwrActive = SpiLoadInt(KEY_DESKTOP, L"LowPowerActive", 1);
-    gspv.iPwrOffTimeout = SpiLoadInt(KEY_DESKTOP, L"PowerOffTimeout", 1200);
-    gspv.bPwrOffActive = SpiLoadInt(KEY_DESKTOP, L"PowerOffActive", 1);
 
     gspv.accesstimeout.cbSize = sizeof(ACCESSTIMEOUT);
     gspv.filterkeys.cbSize = sizeof(FILTERKEYS);
