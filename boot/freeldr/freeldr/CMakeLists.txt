@@ -66,6 +66,7 @@ list(APPEND FREELDR_NTLDR_SOURCE
 
 list(APPEND FREELDR_ARC_SOURCE
     arcname.c
+    arch/drivers/hwide.c
     arch/arcemul.c
     arch/archwsup.c
     disk/disk.c

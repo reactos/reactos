@@ -299,8 +299,9 @@ XboxMachInit(const char *CmdLine)
 VOID
 XboxPrepareForReactOS(VOID)
 {
-    /* On XBOX, prepare video and turn off the floppy motor */
+    /* On Xbox, prepare video and disk support */
     XboxVideoPrepareForReactOS();
+    XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
 }
 
