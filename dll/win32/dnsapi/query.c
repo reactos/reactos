@@ -223,9 +223,15 @@ DnsQuery_CodePage(UINT CodePage,
         }
 
         if (CodePage == CP_ACP)
+        {
             ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
+            ConvertedRecord->Flags.S.CharSet = DnsCharSetAnsi;
+        }
         else
+        {
             ConvertedRecord->pName = DnsWToUTF8((PWCHAR)QueryResultWide->pName);
+            ConvertedRecord->Flags.S.CharSet = DnsCharSetUtf8;
+        }
 
         ConvertedRecord->wType = QueryResultWide->wType;
 
@@ -625,6 +631,8 @@ Query_Main(LPCWSTR Name,
             (*QueryResultSet)->pNext = NULL;
             (*QueryResultSet)->wType = Type;
             (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+            (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
+            (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
             (*QueryResultSet)->Data.A.IpAddress = Address;
 
             (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
@@ -696,6 +704,8 @@ Query_Main(LPCWSTR Name,
             (*QueryResultSet)->pNext = NULL;
             (*QueryResultSet)->wType = Type;
             (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+            (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
+            (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
             (*QueryResultSet)->Data.A.IpAddress = Address;
 
             (*QueryResultSet)->pName = (LPSTR)DnsCToW(HostWithDomainName);
@@ -787,6 +797,8 @@ Query_Main(LPCWSTR Name,
                 (*QueryResultSet)->pNext = NULL;
                 (*QueryResultSet)->wType = Type;
                 (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+                (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
+                (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
                 (*QueryResultSet)->Data.A.IpAddress = answer->rrs.addr->addr.inet.sin_addr.s_addr;
 
                 adns_finish(astate);
