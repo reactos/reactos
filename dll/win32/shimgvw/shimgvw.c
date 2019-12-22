@@ -659,15 +659,13 @@ ImageView_DrawImage(HWND hwnd)
         if (uFlags & (ImageFlagsHasAlpha | ImageFlagsHasTranslucent))
         {
             hbrOld = SelectObject(hdc, white);
-            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-            SelectObject(hdc, hbrOld);
         }
         else
         {
             hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-            Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
-            SelectObject(hdc, hbrOld);
         }
+        Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+        SelectObject(hdc, hbrOld);
 
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
