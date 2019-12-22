@@ -224,7 +224,7 @@ dll/win32/xolehlp             # Synced to WineStaging-3.21
 
 dll/cpl/inetcpl               # Synced to WineStaging-4.18
 
-win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-3.3 (known there as /dll/win32/localui)
+win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-4.18 (known there as /dll/win32/localui)
 
 ReactOS shares the following programs with Winehq.
 
