@@ -75,10 +75,10 @@ HKCU,"Control Panel\Desktop","ForegroundLockTimeout",0x00010003,0x00030d40
 HKCU,"Control Panel\Desktop","GridGranularity",2,"0"
 HKCU,"Control Panel\Desktop","SmoothScroll",3,00,00,00,00
 HKCU,"Control Panel\Desktop","UserPreferencesMask",3,10,00,00,80
-HKCU,"Control Panel\Desktop","LowPowerActive",2,"0"
-HKCU,"Control Panel\Desktop","LowPowerTimeOut",2,"0"
-HKCU,"Control Panel\Desktop","PowerOffActive",2,"0"
-HKCU,"Control Panel\Desktop","PowerOffTimeOut",2,"0"
+HKCU,"Control Panel\Desktop","LowPowerActive",2,"1"
+HKCU,"Control Panel\Desktop","LowPowerTimeOut",2,"1200"
+HKCU,"Control Panel\Desktop","PowerOffActive",2,"1"
+HKCU,"Control Panel\Desktop","PowerOffTimeOut",2,"1200"
 HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
@@ -94,6 +94,7 @@ HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconSpacing",2,"75"
+HKCU,"Control Panel\Desktop\WindowMetrics","IconTitleWrap",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconVerticalspacing",2,"75"
 HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000003,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\

@@ -147,12 +147,12 @@ DWORD
 SpiLoadTimeOut(VOID)
 {   // Must have the string!
     WCHAR szApplicationName[MAX_PATH];
-    RtlZeroMemory(&szApplicationName, sizeof(szApplicationName));
+    szApplicationName[0] = 0;
     if (!RegReadUserSetting(KEY_DESKTOP, VAL_SCRNSV, REG_SZ, &szApplicationName, sizeof(szApplicationName)))
     {
         return 0;
     }
-    if (wcslen(szApplicationName) == 0) return 0;
+    if (szApplicationName[0] == 0) return 0;
     return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 600);
 }
 
@@ -280,7 +280,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.im.cbSize = sizeof(ICONMETRICSW);
     gspv.im.iHorzSpacing = SpiLoadMetric(VAL_ICONSPC, 64);
     gspv.im.iVertSpacing = SpiLoadMetric(VAL_ICONVSPC, 64);
-    gspv.im.iTitleWrap = SpiLoadMetric(VAL_ITWRAP, 0);
+    gspv.im.iTitleWrap = SpiLoadMetric(VAL_ITWRAP, 1);
     SpiLoadFont(&gspv.im.lfFont, L"IconFont", &lf1);
 
     /* Load desktop settings */
@@ -306,7 +306,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.uiFocusBorderWidth = 1;
     gspv.uiFocusBorderHeight = 1;
     gspv.bMenuDropAlign = 0;
-    gspv.dwMenuShowDelay = 100;
+    gspv.dwMenuShowDelay = SpiLoadInt(KEY_DESKTOP, L"MenuShowDelay", 400);
     gspv.dwForegroundFlashCount = 3;
 
     gspv.iScrSaverTimeout = SpiLoadTimeOut();
@@ -315,6 +315,12 @@ SpiUpdatePerUserSystemParameters(VOID)
 #if(WINVER >= 0x0600)
     gspv.bScrSaverSecure = FALSE;
 #endif
+
+    gspv.bFastTaskSwitch = TRUE;
+    gspv.iLowPwrTimeout = SpiLoadInt(KEY_DESKTOP, L"LowPowerTimeout", 1200);
+    gspv.bLowPwrActive = SpiLoadInt(KEY_DESKTOP, L"LowPowerActive", 1);
+    gspv.iPwrOffTimeout = SpiLoadInt(KEY_DESKTOP, L"PowerOffTimeout", 1200);
+    gspv.bPwrOffActive = SpiLoadInt(KEY_DESKTOP, L"PowerOffActive", 1);
 
     gspv.accesstimeout.cbSize = sizeof(ACCESSTIMEOUT);
     gspv.filterkeys.cbSize = sizeof(FILTERKEYS);
