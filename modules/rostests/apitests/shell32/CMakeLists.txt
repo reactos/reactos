@@ -27,6 +27,7 @@ list(APPEND SOURCE
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
+    ShellExecuteW.cpp
     ShellState.cpp
     SHLimitInputEdit.cpp
     menu.cpp
