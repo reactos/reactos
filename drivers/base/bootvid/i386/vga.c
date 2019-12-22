@@ -6,8 +6,8 @@ static ULONG ScrollRegion[4] =
 {
     0,
     0,
-    640 - 1,
-    480 - 1
+    SCREEN_WIDTH  - 1,
+    SCREEN_HEIGHT - 1
 };
 static UCHAR lMaskTable[8] =
 {
@@ -97,7 +97,7 @@ SetPixel(IN ULONG Left,
     PUCHAR PixelPosition;
 
     /* Calculate the pixel position. */
-    PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
+    PixelPosition = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Select the bitmask register and write the mask */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (PixelMask[Left & 7] << 8) | IND_BIT_MASK);
@@ -149,14 +149,14 @@ DisplayCharacter(IN CHAR Character,
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
+    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Loop all pixel rows */
     Height = BOOTCHAR_HEIGHT;
     do
     {
         SET_PIXELS(PixelPtr, *FontChar >> Shift, TextColor);
-        PixelPtr += 80;
+        PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
     } while (--Height);
 
@@ -168,14 +168,14 @@ DisplayCharacter(IN CHAR Character,
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80) + 1);
+        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
 
         /* Loop all pixel rows */
         Height = BOOTCHAR_HEIGHT;
         do
         {
             SET_PIXELS(PixelPtr, *FontChar << Shift, TextColor);
-            PixelPtr += 80;
+            PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
         } while (--Height);
     }
@@ -192,14 +192,14 @@ DisplayCharacter(IN CHAR Character,
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80));
+    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
 
     /* Loop all pixel rows */
     Height = BOOTCHAR_HEIGHT;
     do
     {
         SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
-        PixelPtr += 80;
+        PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
     } while (--Height);
 
@@ -211,14 +211,14 @@ DisplayCharacter(IN CHAR Character,
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * 80) + 1);
+        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
 
         /* Loop all pixel rows */
         Height = BOOTCHAR_HEIGHT;
         do
         {
             SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
-            PixelPtr += 80;
+            PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
         } while (--Height);
     }
@@ -335,8 +335,8 @@ VgaScroll(IN ULONG Scroll)
     RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
 
     /* Calculate the position in memory for the row */
-    OldPosition = (PUCHAR)(VgaBase + (ScrollRegion[1] + Scroll) * 80 + ScrollRegion[0] / 8);
-    NewPosition = (PUCHAR)(VgaBase + ScrollRegion[1] * 80 + ScrollRegion[0] / 8);
+    OldPosition = (PUCHAR)(VgaBase + (ScrollRegion[1] + Scroll) * (SCREEN_WIDTH / 8) + ScrollRegion[0] / 8);
+    NewPosition = (PUCHAR)(VgaBase + ScrollRegion[1] * (SCREEN_WIDTH / 8) + ScrollRegion[0] / 8);
 
     /* Start loop */
     for (Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
@@ -350,8 +350,8 @@ VgaScroll(IN ULONG Scroll)
         for (i = 0; i < RowSize; ++i)
             WRITE_REGISTER_UCHAR(NewPosition + i, READ_REGISTER_UCHAR(OldPosition + i));
 #endif
-        OldPosition += 80;
-        NewPosition += 80;
+        OldPosition += (SCREEN_WIDTH / 8);
+        NewPosition += (SCREEN_WIDTH / 8);
     }
 }
 
@@ -377,19 +377,18 @@ PreserveRow(IN ULONG CurrentTop,
     if (Direction)
     {
         /* Calculate the position in memory for the row */
-        Position1 = (PUCHAR)(VgaBase + CurrentTop * 80);
-        Position2 = (PUCHAR)(VgaBase + 0x9600);
+        Position1 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
+        Position2 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
     }
     else
     {
         /* Calculate the position in memory for the row */
-        Position1 = (PUCHAR)(VgaBase + 0x9600);
-        Position2 = (PUCHAR)(VgaBase + CurrentTop * 80);
+        Position1 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
+        Position2 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
     }
 
     /* Set the count and loop every pixel */
-    Count = TopDelta * 80;
-
+    Count = TopDelta * (SCREEN_WIDTH / 8);
 #if defined(_M_IX86) || defined(_M_AMD64)
     __movsb(Position1, Position2, Count);
 #else
@@ -966,7 +965,7 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
     RtlZeroMemory(Buffer, Delta * Height);
 
     /* Calculate the pixel offset and convert the X distance into byte form */
-    PixelOffset = Top * 80 + (Left >> 3);
+    PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
     XDistance >>= 3;
 
     /* Loop the 4 planes */
@@ -1029,7 +1028,7 @@ VidScreenToBufferBlt(IN PUCHAR Buffer,
                 }
 
                 /* Update pixel position */
-                PixelPosition += 80;
+                PixelPosition += (SCREEN_WIDTH / 8);
                 i += Delta;
             } while (--y);
         }
@@ -1072,7 +1071,7 @@ VidSolidColorFill(IN ULONG Left,
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 
     /* Calculate pixel position for the read */
-    Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset);
+    Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset);
 
     /* Select the bitmask register and write the mask */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)lMask);
@@ -1088,7 +1087,7 @@ VidSolidColorFill(IN ULONG Left,
             WRITE_REGISTER_UCHAR(Offset, READ_REGISTER_UCHAR(Offset) & Color);
 
             /* Move to the next line */
-            Offset += 80;
+            Offset += (SCREEN_WIDTH / 8);
         } while (--i);
     }
 
@@ -1096,7 +1095,7 @@ VidSolidColorFill(IN ULONG Left,
     if (Distance)
     {
         /* Calculate new pixel position */
-        Offset = (PUCHAR)(VgaBase + (Top * 80) + RightOffset);
+        Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + RightOffset);
         Distance--;
 
         /* Select the bitmask register and write the mask */
@@ -1114,7 +1113,7 @@ VidSolidColorFill(IN ULONG Left,
                                      READ_REGISTER_UCHAR(Offset) & Color);
 
                 /* Move to the next line */
-                Offset += 80;
+                Offset += (SCREEN_WIDTH / 8);
             } while (--i);
         }
 
@@ -1122,7 +1121,7 @@ VidSolidColorFill(IN ULONG Left,
         if (Distance)
         {
             /* Calculate new pixel position */
-            Offset = (PUCHAR)(VgaBase + (Top * 80) + LeftOffset + 1);
+            Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset + 1);
 
             /* Set the bitmask to 0xFF for all 4 planes */
             __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
@@ -1145,7 +1144,7 @@ VidSolidColorFill(IN ULONG Left,
                     }
 
                     /* Update position in memory */
-                    Offset += (80 - Distance);
+                    Offset += ((SCREEN_WIDTH / 8) - Distance);
                 } while (--i);
             }
         }

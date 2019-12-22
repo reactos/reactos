@@ -33,8 +33,8 @@ ULONG VidpScrollRegion[4] =
 {
     0,
     0,
-    640 - 1,
-    480 - 1
+    SCREEN_WIDTH  - 1,
+    SCREEN_HEIGHT - 1
 };
 
 typedef struct _VGA_COLOR
@@ -97,7 +97,7 @@ VidpSetPixel(IN ULONG Left,
     //
     // Calculate the pixel position
     //
-    PixelPosition = &VgaArmBase[Left + (Top * 640)];
+    PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
 
     //
     // Set our color
@@ -117,10 +117,10 @@ DisplayCharacter(IN CHAR Character,
     ULONG i, j, XOffset;
 
     /* Get the font line for this character */
-    FontChar = &FontData[Character * 13 - Top];
+    FontChar = &FontData[Character * BOOTCHAR_HEIGHT - Top];
 
     /* Loop each pixel height */
-    i = 13;
+    i = BOOTCHAR_HEIGHT;
     do
     {
         /* Loop each pixel width */
@@ -159,8 +159,8 @@ VgaScroll(IN ULONG Scroll)
     PUSHORT i, j;
 
     /* Set memory positions of the scroll */
-    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * 80) + (VidpScrollRegion[0] >> 3)];
-    DestOffset = &SourceOffset[Scroll * 80];
+    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * (SCREEN_WIDTH / 8)) + (VidpScrollRegion[0] >> 3)];
+    DestOffset = &SourceOffset[Scroll * (SCREEN_WIDTH / 8)];
 
     /* Save top and check if it's above the bottom */
     Top = VidpScrollRegion[1];
@@ -196,8 +196,8 @@ VgaScroll(IN ULONG Scroll)
         }
 
         /* Move to the next line */
-        SourceOffset += 80;
-        DestOffset += 80;
+        SourceOffset += (SCREEN_WIDTH / 8);
+        DestOffset += (SCREEN_WIDTH / 8);
 
         /* Increase top */
         Top++;
@@ -219,18 +219,18 @@ PreserveRow(IN ULONG CurrentTop,
     if (Direction)
     {
         /* Calculate the position in memory for the row */
-        Position1 = &VgaArmBase[CurrentTop * 80];
-        Position2 = &VgaArmBase[0x9600];
+        Position1 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
+        Position2 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
     }
     else
     {
         /* Calculate the position in memory for the row */
-        Position1 = &VgaArmBase[0x9600];
-        Position2 = &VgaArmBase[CurrentTop * 80];
+        Position1 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
+        Position2 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
     }
 
     /* Set the count and loop every pixel */
-    Count = TopDelta * 80;
+    Count = TopDelta * (SCREEN_WIDTH / 8);
     while (Count--)
     {
         /* Write the data back on the other position */
@@ -255,8 +255,8 @@ VidpInitializeDisplay(VOID)
     //
     // Initialize timings to 640x480
     //
-    WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(640));
-    WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(480));
+    WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(SCREEN_WIDTH));
+    WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(SCREEN_HEIGHT));
 
     //
     // Enable the LCD Display
@@ -327,7 +327,7 @@ VidResetDisplay(IN BOOLEAN HalReset)
     // Re-initialize the palette and fill the screen black
     //
     //InitializePalette();
-    VidSolidColorFill(0, 0, 639, 479, 0);
+    VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
 }
 
 /*
@@ -424,7 +424,7 @@ VOID
 NTAPI
 VidDisplayString(IN PUCHAR String)
 {
-    ULONG TopDelta = 14;
+    ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
     while (*String)
