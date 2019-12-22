@@ -87,6 +87,19 @@ ReadWriteMode(IN UCHAR Mode)
     __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, Mode | Value);
 }
 
+static VOID
+PrepareForSetPixel(VOID)
+{
+    /* Switch to mode 10 */
+    ReadWriteMode(10);
+
+    /* Clear the 4 planes (we're already in unchained mode here) */
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
+
+    /* Select the color don't care register */
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
+}
+
 FORCEINLINE
 VOID
 SetPixel(IN ULONG Left,
@@ -133,14 +146,7 @@ DisplayCharacter(IN CHAR Character,
     ULONG Height;
     UCHAR Shift;
 
-    /* Switch to mode 10 */
-    ReadWriteMode(10);
-
-    /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
-
-    /* Select the color don't care register */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
+    PrepareForSetPixel();
 
     /* Calculate shift */
     Shift = Left & 7;
@@ -427,14 +433,7 @@ BitBlt(IN ULONG Left,
         return;
     }
 
-    /* Switch to mode 10 */
-    ReadWriteMode(10);
-
-    /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
-
-    /* Select the color don't care register */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
+    PrepareForSetPixel();
 
     /* 4bpp blitting */
     for (dy = Top; dy < Bottom; ++dy)
@@ -473,14 +472,7 @@ RleBitBlt(IN ULONG Left,
     ULONG i, j;
     ULONG Code;
 
-    /* Switch to mode 10 */
-    ReadWriteMode(10);
-
-    /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
-
-    /* Select the color don't care register */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
+    PrepareForSetPixel();
 
     /* Set Y height and current X value and start loop */
     YDelta = Top + Height - 1;
@@ -1034,14 +1026,7 @@ VidSolidColorFill(IN ULONG Left,
     /* If there is no distance, then combine the right and left masks */
     if (!Distance) lMask &= rMask;
 
-    /* Switch to mode 10 */
-    ReadWriteMode(10);
-
-    /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
-
-    /* Select the color don't care register */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
+    PrepareForSetPixel();
 
     /* Calculate pixel position for the read */
     Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset);
