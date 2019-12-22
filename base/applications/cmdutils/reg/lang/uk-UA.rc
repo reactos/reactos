@@ -40,6 +40,4 @@ STRINGTABLE
     STRING_EXPORT_USAGE, "REG EXPORT key_name file.reg [/y]\n"
     STRING_INVALID_SYSTEM_KEY, "reg: Invalid system key [%1]\n"
     STRING_OVERWRITE_FILE, "The file '%1' already exists. Do you want to overwrite it?"
-    STRING_SAVE_USAGE, "REG SAVE key_name file_name [/y]"
-    STRING_RESTORE_USAGE, "REG RESTORE key_name file_name"
 }

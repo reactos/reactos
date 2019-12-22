@@ -40,6 +40,4 @@ STRINGTABLE
     STRING_EXPORT_USAGE, "REG EXPORT nazwa_klucza plik.reg [/y]\n"
     STRING_INVALID_SYSTEM_KEY, "reg: Nieprawidłowy klucz systemowy [%1]\n"
     STRING_OVERWRITE_FILE, "Plik '%1' już istnieje. Czy chcesz go zastąpić?"
-    STRING_SAVE_USAGE, "REG SAVE nazwa_klucza nazwa_pliku [/y]"
-    STRING_RESTORE_USAGE, "REG RESTORE nazwa_klucza nazwa_pliku"
 }
