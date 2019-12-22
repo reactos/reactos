@@ -41,6 +41,21 @@ RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
+
+/* Function: 0x00 */
+DWORD
+__stdcall
+CRrReadCache(
+    _In_ DNSRSLVR_HANDLE pwszServerName,
+    _Out_ DNS_CACHE_ENTRY **ppCacheEntries)
+{
+    DPRINT("CRrReadCache(%S %p)\n",
+           pwszServerName, ppCacheEntries);
+
+    return DnsIntCacheGetEntries(ppCacheEntries);
+}
+
+
 /* Function: 0x04 */
 DWORD
 __stdcall
@@ -53,6 +68,7 @@ R_ResolverFlushCache(
     DnsIntCacheFlush();
     return ERROR_SUCCESS;
 }
+
 
 /* Function: 0x07 */
 DWORD

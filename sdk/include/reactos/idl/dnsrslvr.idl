@@ -28,7 +28,11 @@ typedef [handle, string] LPWSTR DNSRSLVR_HANDLE;
 interface DnsResolver
 {
     /* Function: 0x00 */
-    /* CRrReadCache */
+    DWORD
+    __stdcall
+    CRrReadCache(
+        [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
+        [out] DNS_CACHE_ENTRY **ppCacheEntries);
 
     /* Function: 0x01 */
     /* CRrReadCacheEntry */
@@ -56,10 +60,10 @@ interface DnsResolver
     __stdcall
     R_ResolverQuery(
         [in, unique, string] DNSRSLVR_HANDLE pwszServerName,
-        [in, unique, string] LPCWSTR pwsName, 
-        [in] WORD wType, 
-        [in] DWORD Flags, 
-        [in, out] DWORD *dwRecords, 
+        [in, unique, string] LPCWSTR pwsName,
+        [in] WORD wType,
+        [in] DWORD Flags,
+        [in, out] DWORD *dwRecords,
         [out] DNS_RECORDW **ppResultRecords);
 
     /* Function: 0x08 */

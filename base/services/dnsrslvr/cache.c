@@ -203,3 +203,60 @@ DnsIntCacheAddEntry(PDNS_RECORDW Record)
     /* Release the cache */
     DnsCacheUnlock();
 }
+
+DNS_STATUS
+DnsIntCacheGetEntries(
+    _Out_ DNS_CACHE_ENTRY **ppCacheEntries)
+{
+    PRESOLVER_CACHE_ENTRY CacheEntry;
+    PLIST_ENTRY NextEntry;
+    PDNS_CACHE_ENTRY pLastEntry = NULL, pNewEntry;
+
+    /* Lock the cache */
+    DnsCacheLock();
+
+    *ppCacheEntries = NULL;
+
+    NextEntry = DnsCache.RecordList.Flink;
+    while (NextEntry != &DnsCache.RecordList)
+    {
+        /* Get the Current Entry */
+        CacheEntry = CONTAINING_RECORD(NextEntry, RESOLVER_CACHE_ENTRY, CacheLink);
+
+        DPRINT("1 %S %lu\n", CacheEntry->Record->pName, CacheEntry->Record->wType);
+        if (CacheEntry->Record->pNext)
+        {
+            DPRINT("2 %S %lu\n", CacheEntry->Record->pNext->pName, CacheEntry->Record->pNext->wType);
+        }
+
+        pNewEntry = midl_user_allocate(sizeof(DNS_CACHE_ENTRY));
+        if (pNewEntry == NULL)
+        {
+            return ERROR_OUTOFMEMORY;
+        }
+
+        pNewEntry->pszName = midl_user_allocate((wcslen(CacheEntry->Record->pName) + 1) * sizeof(WCHAR));
+        if (pNewEntry->pszName == NULL)
+        {
+            return ERROR_OUTOFMEMORY;
+        }
+
+        wcscpy(pNewEntry->pszName, CacheEntry->Record->pName);
+        pNewEntry->wType1 = CacheEntry->Record->wType;
+        pNewEntry->wType2 = 0;
+        pNewEntry->wFlags = 0;
+
+        if (pLastEntry == NULL)
+            *ppCacheEntries = pNewEntry;
+        else
+            pLastEntry->pNext = pNewEntry;
+        pLastEntry = pNewEntry;
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the cache */
+    DnsCacheUnlock();
+
+    return ERROR_SUCCESS;
+}

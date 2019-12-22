@@ -8,7 +8,11 @@ extern "C" {
 typedef struct _DNS_CACHE_ENTRY
 {
     struct _DNS_CACHE_ENTRY *pNext; /* Pointer to next entry */
+#if defined(__midl) || defined(__WIDL__)
+    [string] PWSTR pszName;         /* DNS Record Name */
+#else
     PWSTR pszName;                  /* DNS Record Name */
+#endif
     unsigned short wType1;          /* DNS Record Type 1 */
     unsigned short wType2;          /* DNS Record Type 2 */
     unsigned short wFlags;          /* DNS Record Flags */

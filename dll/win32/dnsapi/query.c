@@ -896,6 +896,41 @@ DnsFlushResolverCache(VOID)
     return (Status == ERROR_SUCCESS);
 }
 
+BOOL
+WINAPI
+DnsGetCacheDataTable(
+    _Out_ PDNS_CACHE_ENTRY *DnsCache)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+    PDNS_CACHE_ENTRY CacheEntries = NULL;
+
+    if (DnsCache == NULL)
+        return FALSE;
+
+    RpcTryExcept
+    {
+        Status = CRrReadCache(NULL,
+                              &CacheEntries);
+        DPRINT("CRrReadCache() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT1("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    if (Status != ERROR_SUCCESS)
+        return FALSE;
+
+    if (CacheEntries == NULL)
+        return FALSE;
+
+    *DnsCache = CacheEntries;
+
+    return TRUE;
+}
+
 DWORD
 WINAPI
 GetCurrentTimeInSeconds(VOID)

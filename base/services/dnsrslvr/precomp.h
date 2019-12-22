@@ -54,6 +54,9 @@ DnsIntCacheGetEntryByName(
 VOID DnsIntCacheAddEntry(PDNS_RECORDW Record);
 BOOL DnsIntCacheRemoveEntryByName(LPCWSTR Name);
 
+DNS_STATUS
+DnsIntCacheGetEntries(
+    _Out_ DNS_CACHE_ENTRY **ppCacheEntries);
 
 
 /* hostsfile.c */

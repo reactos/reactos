@@ -266,15 +266,6 @@ DnsGetBufferLengthForStringCopy()
     return ERROR_OUTOFMEMORY;
 }
 
-BOOL
-WINAPI
-DnsGetCacheDataTable(
-    _Out_ PDNS_CACHE_ENTRY *DnsCache)
-{
-    UNIMPLEMENTED;
-    return TRUE;
-}
-
 DNS_STATUS WINAPI
 DnsGetDnsServerList()
 {
