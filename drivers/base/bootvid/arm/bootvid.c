@@ -25,7 +25,7 @@
 
 PUSHORT VgaArmBase;
 PHYSICAL_ADDRESS VgaPhysical;
-BOOLEAN NextLine = FALSE;
+BOOLEAN ClearRow = FALSE;
 UCHAR VidpTextColor = 0xF;
 ULONG VidpCurrentX = 0;
 ULONG VidpCurrentY = 0;
@@ -192,20 +192,21 @@ VOID
 NTAPI
 PreserveRow(IN ULONG CurrentTop,
             IN ULONG TopDelta,
-            IN BOOLEAN Direction)
+            IN BOOLEAN Restore)
 {
     PUSHORT Position1, Position2;
     ULONG Count;
 
-    /* Check which way we're preserving */
     /* Calculate the position in memory for the row */
-    if (Direction)
+    if (Restore)
     {
+        /* Restore the row by copying back the contents saved off-screen */
         Position1 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
         Position2 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
     }
     else
     {
+        /* Preserve the row by saving its contents off-screen */
         Position1 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
         Position2 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
     }
@@ -415,38 +416,40 @@ VidDisplayString(IN PUCHAR String)
         {
             /* Modify Y position */
             VidpCurrentY += TopDelta;
-            if (VidpCurrentY >= VidpScrollRegion[3])
+            if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
             {
-                /* Scroll the view */
+                /* Scroll the view and clear the current row */
                 VgaScroll(TopDelta);
                 VidpCurrentY -= TopDelta;
-
-                /* Preserve row */
                 PreserveRow(VidpCurrentY, TopDelta, TRUE);
+            }
+            else
+            {
+                /* Preserve the current row */
+                PreserveRow(VidpCurrentY, TopDelta, FALSE);
             }
 
             /* Update current X */
             VidpCurrentX = VidpScrollRegion[0];
 
-            /* Preserve the current row */
-            PreserveRow(VidpCurrentY, TopDelta, FALSE);
+            /* No need to clear this row */
+            ClearRow = FALSE;
         }
         else if (*String == '\r')
         {
             /* Update current X */
             VidpCurrentX = VidpScrollRegion[0];
 
-            /* Check if we're being followed by a new line */
-            if (String[1] != '\n') NextLine = TRUE;
+            /* If a new-line does not follow we will clear the current row */
+            if (String[1] != '\n') ClearRow = TRUE;
         }
         else
         {
-            /* Check if we had a \n\r last time */
-            if (NextLine)
+            /* Clear the current row if we had a return-carriage without a new-line */
+            if (ClearRow)
             {
-                /* We did, preserve the current row */
                 PreserveRow(VidpCurrentY, TopDelta, TRUE);
-                NextLine = FALSE;
+                ClearRow = FALSE;
             }
 
             /* Display this character */
@@ -458,21 +461,24 @@ VidDisplayString(IN PUCHAR String)
             VidpCurrentX += 8;
 
             /* Check if we should scroll */
-            if (VidpCurrentX > VidpScrollRegion[2])
+            if (VidpCurrentX + 7 > VidpScrollRegion[2])
             {
                 /* Update Y position and check if we should scroll it */
                 VidpCurrentY += TopDelta;
-                if (VidpCurrentY > VidpScrollRegion[3])
+                if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
                 {
-                    /* Do the scroll */
+                    /* Scroll the view and clear the current row */
                     VgaScroll(TopDelta);
                     VidpCurrentY -= TopDelta;
-
-                    /* Save the row */
                     PreserveRow(VidpCurrentY, TopDelta, TRUE);
                 }
+                else
+                {
+                    /* Preserve the current row */
+                    PreserveRow(VidpCurrentY, TopDelta, FALSE);
+                }
 
-                /* Update X */
+                /* Update current X */
                 VidpCurrentX = VidpScrollRegion[0];
             }
         }

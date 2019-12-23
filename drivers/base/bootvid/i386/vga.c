@@ -67,7 +67,7 @@ ULONG_PTR VgaBase = 0;
 ULONG curr_x = 0;
 ULONG curr_y = 0;
 static ULONG VidTextColor = 0xF;
-static BOOLEAN CarriageReturn = FALSE;
+static BOOLEAN ClearRow = FALSE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -355,7 +355,7 @@ static VOID
 NTAPI
 PreserveRow(IN ULONG CurrentTop,
             IN ULONG TopDelta,
-            IN BOOLEAN Direction)
+            IN BOOLEAN Restore)
 {
     PUCHAR Position1, Position2;
     ULONG Count;
@@ -369,15 +369,16 @@ PreserveRow(IN ULONG CurrentTop,
     /* Set Mode 1 */
     ReadWriteMode(1);
 
-    /* Check which way we're preserving */
     /* Calculate the position in memory for the row */
-    if (Direction)
+    if (Restore)
     {
+        /* Restore the row by copying back the contents saved off-screen */
         Position1 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
         Position2 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
     }
     else
     {
+        /* Preserve the row by saving its contents off-screen */
         Position1 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
         Position2 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
     }
@@ -760,40 +761,40 @@ VidDisplayString(IN PUCHAR String)
         {
             /* Modify Y position */
             curr_y += TopDelta;
-            if (curr_y + TopDelta >= ScrollRegion[3])
+            if (curr_y + TopDelta - 1 > ScrollRegion[3])
             {
-                /* Scroll the view */
+                /* Scroll the view and clear the current row */
                 VgaScroll(TopDelta);
                 curr_y -= TopDelta;
+                PreserveRow(curr_y, TopDelta, TRUE);
             }
             else
             {
-                /* Preserve row */
+                /* Preserve the current row */
                 PreserveRow(curr_y, TopDelta, FALSE);
             }
 
             /* Update current X */
             curr_x = ScrollRegion[0];
 
-            /* Do not clear line if "\r\n" is given */
-            CarriageReturn = FALSE;
+            /* No need to clear this row */
+            ClearRow = FALSE;
         }
         else if (*String == '\r')
         {
             /* Update current X */
             curr_x = ScrollRegion[0];
 
-            /* Check if we're being followed by a new line */
-            CarriageReturn = TRUE;
+            /* If a new-line does not follow we will clear the current row */
+            if (String[1] != '\n') ClearRow = TRUE;
         }
         else
         {
-            /* check if we had a '\r' last time */
-            if (CarriageReturn)
+            /* Clear the current row if we had a return-carriage without a new-line */
+            if (ClearRow)
             {
-                /* We did, clear the current row */
                 PreserveRow(curr_y, TopDelta, TRUE);
-                CarriageReturn = FALSE;
+                ClearRow = FALSE;
             }
 
             /* Display this character */
@@ -801,15 +802,16 @@ VidDisplayString(IN PUCHAR String)
             curr_x += 8;
 
             /* Check if we should scroll */
-            if (curr_x + 8 > ScrollRegion[2])
+            if (curr_x + 7 > ScrollRegion[2])
             {
                 /* Update Y position and check if we should scroll it */
                 curr_y += TopDelta;
-                if (curr_y + TopDelta > ScrollRegion[3])
+                if (curr_y + TopDelta - 1 > ScrollRegion[3])
                 {
-                    /* Do the scroll */
+                    /* Scroll the view and clear the current row */
                     VgaScroll(TopDelta);
                     curr_y -= TopDelta;
+                    PreserveRow(curr_y, TopDelta, TRUE);
                 }
                 else
                 {
@@ -817,7 +819,7 @@ VidDisplayString(IN PUCHAR String)
                     PreserveRow(curr_y, TopDelta, FALSE);
                 }
 
-                /* Update X */
+                /* Update current X */
                 curr_x = ScrollRegion[0];
             }
         }
