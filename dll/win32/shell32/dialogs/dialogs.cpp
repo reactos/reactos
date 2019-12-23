@@ -324,12 +324,6 @@ INT_PTR CALLBACK PickIconProc(
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
                 {
-                    // Do not draw hidden icons
-                    UINT Visible = SendMessageW(pIconContext->hDlgCtrl, LB_GETLISTBOXINFO, 0, 0);
-                    Visible += SendMessageW(pIconContext->hDlgCtrl, LB_GETTOPINDEX, 0, 0);
-                    if (lpdis->itemID >= Visible)
-                        break;
-
                     index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
                     hIcon = pIconContext->phIcons[lpdis->itemID];
 
