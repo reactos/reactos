@@ -1,6 +1,4 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/psdk)
-
 add_definitions(-DDECLSPEC_HIDDEN=)
 
 list(APPEND SOURCE

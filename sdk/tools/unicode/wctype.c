@@ -1,7 +1,11 @@
 /* Unicode ctype tables */
 /* Automatically generated; DO NOT EDIT!! */
 
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#else
 #include "windef.h"
+#endif
 
 const unsigned short wine_wctype_table[17152] =
 {

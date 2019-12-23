@@ -2,7 +2,11 @@
 /* generated from http://www.unicode.org/Public/12.0.0/ucd/UnicodeData.txt */
 /* DO NOT EDIT!! */
 
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#else
 #include "windef.h"
+#endif
 
 static const WCHAR table[0x85e] =
 {

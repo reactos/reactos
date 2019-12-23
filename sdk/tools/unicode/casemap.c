@@ -2,7 +2,11 @@
 /* generated from http://www.unicode.org/Public/12.0.0/ucd/UnicodeData.txt */
 /* DO NOT EDIT!! */
 
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#else
 #include "windef.h"
+#endif
 
 const WCHAR wine_casemap_lower[4259] =
 {

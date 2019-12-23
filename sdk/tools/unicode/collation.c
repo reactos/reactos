@@ -2,7 +2,11 @@
 /* generated from http://www.unicode.org/reports/tr10/allkeys.txt */
 /* DO NOT EDIT!! */
 
+#ifdef __REACTOS__
+#include "wine/unicode.h"
+#else
 #include "windef.h"
+#endif
 
 const unsigned int DECLSPEC_HIDDEN collation_table[12800] =
 {
