@@ -5,7 +5,7 @@
 @ stub AppPolicyGetCreateFileAccess
 @ stub AppPolicyGetLifecycleManagement
 @ stub AppPolicyGetMediaFoundationCodecLoading
-@ stub AppPolicyGetProcessTerminationMethod
+@ stdcall -stub AppPolicyGetProcessTerminationMethod(long ptr)
 @ stub AppPolicyGetShowDeveloperDiagnostic
 @ stdcall -stub AppPolicyGetThreadInitializationType(long ptr)
 @ stub AppPolicyGetWindowingModel
