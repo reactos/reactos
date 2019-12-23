@@ -20,7 +20,11 @@ void
 updateCanvasAndScrollbars()
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, imageModel.GetWidth() * toolsModel.GetZoom() / 1000, imageModel.GetHeight() * toolsModel.GetZoom() / 1000, FALSE);
+
+    int zoomedWidth = imageModel.GetWidth() * toolsModel.GetZoom() / 1000;
+    int zoomedHeight = imageModel.GetHeight() * toolsModel.GetZoom() / 1000;
+    imageArea.MoveWindow(3, 3, zoomedWidth, zoomedHeight, FALSE);
+
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 
