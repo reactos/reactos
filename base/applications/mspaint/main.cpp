@@ -162,6 +162,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* init font for text tool */
     ZeroMemory(&lfTextFont, sizeof(lfTextFont));
+    lfTextFont.lfHeight = 0;
     lfTextFont.lfWeight = FW_NORMAL;
     lfTextFont.lfCharSet = DEFAULT_CHARSET;
     hfontTextFont = CreateFontIndirect(&lfTextFont);
@@ -315,15 +316,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     }
 
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
+    ZeroMemory(&choosecolor, sizeof(choosecolor));
     choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
     choosecolor.hwndOwner      = hwnd;
-    choosecolor.hInstance      = NULL;
     choosecolor.rgbResult      = 0x00ffffff;
     choosecolor.lpCustColors   = custColors;
-    choosecolor.Flags          = 0;
-    choosecolor.lCustData      = 0;
-    choosecolor.lpfnHook       = NULL;
-    choosecolor.lpTemplateName = NULL;
 
     /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
     CopyMemory(ofnFilename, filepathname, sizeof(filepathname));
