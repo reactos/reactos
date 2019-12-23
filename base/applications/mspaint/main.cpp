@@ -155,7 +155,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     TCHAR ofnFilename[1000];
     TCHAR ofnFiletitle[256];
     TCHAR miniaturetitle[100];
-    static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
+    static COLORREF custColors[16] = {
+        0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
 
@@ -329,7 +330,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     choosecolor.hwndOwner      = hwnd;
     choosecolor.hInstance      = NULL;
     choosecolor.rgbResult      = 0x00ffffff;
-    choosecolor.lpCustColors   = (COLORREF*) &custColors;
+    choosecolor.lpCustColors   = custColors;
     choosecolor.Flags          = 0;
     choosecolor.lCustData      = 0;
     choosecolor.lpfnHook       = NULL;
