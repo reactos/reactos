@@ -24,8 +24,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-EXTERN_C HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
-    IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi);
+EXTERN_C HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
+    IShellFolder *psfParent, PCUITEMID_CHILD pidl, IShellItem **ppsi);
 
 CShellItem::CShellItem() :
     m_pidl(NULL)
@@ -261,8 +261,8 @@ HRESULT WINAPI CShellItem::GetIDList(PIDLIST_ABSOLUTE *ppidl)
         return E_OUTOFMEMORY;
 }
 
-HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
-    IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi)
+HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
+    IShellFolder *psfParent, PCUITEMID_CHILD pidl, IShellItem **ppsi)
 {
     HRESULT hr;
     CComPtr<IShellItem> newShellItem;

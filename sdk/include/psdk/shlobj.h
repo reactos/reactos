@@ -135,9 +135,9 @@ HRESULT      WINAPI SHCreateQueryCancelAutoPlayMoniker(IMoniker**);
 HRESULT
 WINAPI
 SHCreateShellItem(
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCIDLIST_ABSOLUTE,
   _In_opt_ IShellFolder*,
-  _In_ LPCITEMIDLIST,
+  _In_ PCUITEMID_CHILD,
   _Outptr_ IShellItem**);
 
 DWORD        WINAPI SHCLSIDFromStringA(_In_ LPCSTR, _Out_ CLSID*);
@@ -152,7 +152,7 @@ SHCreateStdEnumFmtEtc(
   _Outptr_ IEnumFORMATETC**);
 
 void         WINAPI SHDestroyPropSheetExtArray(_In_ HPSXA);
-BOOL         WINAPI SHFindFiles(_In_opt_ LPCITEMIDLIST, _In_opt_ LPCITEMIDLIST);
+BOOL         WINAPI SHFindFiles(_In_opt_ PCIDLIST_ABSOLUTE, _In_opt_ PCIDLIST_ABSOLUTE);
 DWORD        WINAPI SHFormatDrive(_In_ HWND, UINT, UINT, UINT);
 void         WINAPI SHFree(_In_opt_ LPVOID);
 
@@ -196,25 +196,25 @@ _Success_(return != 0)
 BOOL
 WINAPI
 SHGetPathFromIDListA(
-  _In_ LPCITEMIDLIST,
+  _In_ PCIDLIST_ABSOLUTE,
   _Out_writes_(MAX_PATH) LPSTR);
 
 _Success_(return != 0)
 BOOL
 WINAPI
 SHGetPathFromIDListW(
-  _In_ LPCITEMIDLIST,
+  _In_ PCIDLIST_ABSOLUTE,
   _Out_writes_(MAX_PATH) LPWSTR);
 
 #define SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
 
-INT          WINAPI SHHandleUpdateImage(_In_ LPCITEMIDLIST);
+INT          WINAPI SHHandleUpdateImage(_In_ PCIDLIST_ABSOLUTE);
 
 HRESULT
 WINAPI
 SHILCreateFromPath(
-  _In_ LPCWSTR,
-  _Outptr_ LPITEMIDLIST*,
+  _In_ PCWSTR,
+  _Outptr_ PIDLIST_ABSOLUTE*,
   _Inout_opt_ DWORD*);
 
 HRESULT      WINAPI SHLoadOLE(LPARAM);
@@ -222,9 +222,9 @@ HRESULT      WINAPI SHLoadOLE(LPARAM);
 HRESULT
 WINAPI
 SHParseDisplayName(
-  _In_ LPCWSTR,
+  _In_ PCWSTR,
   _In_opt_ IBindCtx*,
-  _Outptr_ LPITEMIDLIST*,
+  _Outptr_ PIDLIST_ABSOLUTE*,
   _In_ SFGAOF,
   _Out_opt_ SFGAOF*);
 
@@ -252,13 +252,13 @@ SHReplaceFromPropSheetExtArray(
   _In_ LPFNADDPROPSHEETPAGE,
   LPARAM);
 
-LPITEMIDLIST WINAPI SHSimpleIDListFromPath(LPCWSTR);
+PIDLIST_ABSOLUTE WINAPI SHSimpleIDListFromPath(PCWSTR);
 
 int
 WINAPI
 SHMapPIDLToSystemImageListIndex(
   _In_ IShellFolder*,
-  _In_ LPCITEMIDLIST,
+  _In_ PCUITEMID_CHILD,
   _Out_opt_ int*);
 
 HRESULT      WINAPI SHStartNetConnectionDialog(HWND,LPCSTR,DWORD);
@@ -1104,25 +1104,25 @@ typedef INT (CALLBACK *BFFCALLBACK)(HWND,UINT,LPARAM,LPARAM);
 #include <pshpack8.h>
 
 typedef struct tagBROWSEINFOA {
-    HWND        hwndOwner;
-    LPCITEMIDLIST pidlRoot;
-    LPSTR         pszDisplayName;
-    LPCSTR        lpszTitle;
-    UINT        ulFlags;
-    BFFCALLBACK   lpfn;
-    LPARAM        lParam;
-    INT         iImage;
+    HWND                hwndOwner;
+    PCIDLIST_ABSOLUTE   pidlRoot;
+    LPSTR               pszDisplayName;
+    LPCSTR              lpszTitle;
+    UINT                ulFlags;
+    BFFCALLBACK         lpfn;
+    LPARAM              lParam;
+    INT                 iImage;
 } BROWSEINFOA, *PBROWSEINFOA, *LPBROWSEINFOA;
 
 typedef struct tagBROWSEINFOW {
-    HWND        hwndOwner;
-    LPCITEMIDLIST pidlRoot;
-    LPWSTR        pszDisplayName;
-    LPCWSTR       lpszTitle;
-    UINT        ulFlags;
-    BFFCALLBACK   lpfn;
-    LPARAM        lParam;
-    INT         iImage;
+    HWND                hwndOwner;
+    PCIDLIST_ABSOLUTE   pidlRoot;
+    LPWSTR              pszDisplayName;
+    LPCWSTR             lpszTitle;
+    UINT                ulFlags;
+    BFFCALLBACK         lpfn;
+    LPARAM              lParam;
+    INT                 iImage;
 } BROWSEINFOW, *PBROWSEINFOW, *LPBROWSEINFOW;
 
 #define BROWSEINFO   WINELIB_NAME_AW(BROWSEINFO)
@@ -1166,8 +1166,8 @@ typedef struct tagBROWSEINFOW {
 #define BFFM_SETOKTEXT          (WM_USER+105)
 #define BFFM_SETEXPANDED        (WM_USER+106)
 
-LPITEMIDLIST WINAPI SHBrowseForFolderA(_In_ LPBROWSEINFOA lpbi);
-LPITEMIDLIST WINAPI SHBrowseForFolderW(_In_ LPBROWSEINFOW lpbi);
+PIDLIST_ABSOLUTE WINAPI SHBrowseForFolderA(_In_ LPBROWSEINFOA lpbi);
+PIDLIST_ABSOLUTE WINAPI SHBrowseForFolderW(_In_ LPBROWSEINFOW lpbi);
 #define SHBrowseForFolder WINELIB_NAME_AW(SHBrowseForFolder)
 
 #define BFFM_SETSTATUSTEXT  WINELIB_NAME_AW(BFFM_SETSTATUSTEXT)
@@ -1191,13 +1191,13 @@ typedef HRESULT
 
 typedef struct _CSFV
 {
-  UINT             cbSize;
-  IShellFolder*    pshf;
-  IShellView*      psvOuter;
-  LPCITEMIDLIST    pidl;
-  LONG             lEvents;
-  LPFNVIEWCALLBACK pfnCallback;
-  FOLDERVIEWMODE   fvm;
+  UINT                 cbSize;
+  IShellFolder*        pshf;
+  IShellView*          psvOuter;
+  PCIDLIST_ABSOLUTE    pidl;
+  LONG                 lEvents;
+  LPFNVIEWCALLBACK     pfnCallback;
+  FOLDERVIEWMODE       fvm;
 } CSFV, *LPCSFV;
 
 #include <poppack.h>
@@ -1403,7 +1403,7 @@ HRESULT
 WINAPI
 SHGetDataFromIDListA(
   _In_ LPSHELLFOLDER psf,
-  _In_ LPCITEMIDLIST pidl,
+  _In_ PCUITEMID_CHILD pidl,
   int nFormat,
   _Out_writes_bytes_(cb) LPVOID pv,
   int cb);
@@ -1412,14 +1412,14 @@ HRESULT
 WINAPI
 SHGetDataFromIDListW(
   _In_ LPSHELLFOLDER psf,
-  _In_ LPCITEMIDLIST pidl,
+  _In_ PCUITEMID_CHILD pidl,
   int nFormat,
   _Out_writes_bytes_(cb) LPVOID pv,
   int cb);
 
 #define SHGetDataFromIDList WINELIB_NAME_AW(SHGetDataFromIDList)
 
-LPITEMIDLIST
+PIDLIST_ABSOLUTE
 WINAPI
 SHCloneSpecialIDList(
   _Reserved_ HWND hwnd,
@@ -1454,37 +1454,37 @@ _Check_return_ HRESULT WINAPI SHGetMalloc(_Outptr_ LPMALLOC *lpmal);
 
 typedef struct
 {
-    BOOL fShowAllObjects : 1;
-    BOOL fShowExtensions : 1;
-    BOOL fNoConfirmRecycle : 1;
+    BOOL  fShowAllObjects : 1;
+    BOOL  fShowExtensions : 1;
+    BOOL  fNoConfirmRecycle : 1;
 
-    BOOL fShowSysFiles : 1;
-    BOOL fShowCompColor : 1;
-    BOOL fDoubleClickInWebView : 1;
-    BOOL fDesktopHTML : 1;
-    BOOL fWin95Classic : 1;
-    BOOL fDontPrettyPath : 1;
-    BOOL fShowAttribCol : 1;
-    BOOL fMapNetDrvBtn : 1;
-    BOOL fShowInfoTip : 1;
-    BOOL fHideIcons : 1;
-    BOOL fWebView : 1;
-    BOOL fFilter : 1;
-    BOOL fShowSuperHidden : 1;
-    BOOL fNoNetCrawling : 1;
+    BOOL  fShowSysFiles : 1;
+    BOOL  fShowCompColor : 1;
+    BOOL  fDoubleClickInWebView : 1;
+    BOOL  fDesktopHTML : 1;
+    BOOL  fWin95Classic : 1;
+    BOOL  fDontPrettyPath : 1;
+    BOOL  fShowAttribCol : 1;
+    BOOL  fMapNetDrvBtn : 1;
+    BOOL  fShowInfoTip : 1;
+    BOOL  fHideIcons : 1;
+    BOOL  fWebView : 1;
+    BOOL  fFilter : 1;
+    BOOL  fShowSuperHidden : 1;
+    BOOL  fNoNetCrawling : 1;
 
-    UINT :15; /* Required for proper binary layout with gcc */
+    UINT  :15; /* Required for proper binary layout with gcc */
     DWORD dwWin95Unused;
     UINT  uWin95Unused;
-    LONG   lParamSort;
-    int    iSortDirection;
-    UINT   version;
-    UINT uNotUsed;
-    BOOL fSepProcess: 1;
-    BOOL fStartPanelOn: 1;
-    BOOL fShowStartPage: 1;
-    UINT fSpareFlags : 13;
-    UINT :15; /* Required for proper binary layout with gcc */
+    LONG  lParamSort;
+    int   iSortDirection;
+    UINT  version;
+    UINT  uNotUsed;
+    BOOL  fSepProcess: 1;
+    BOOL  fStartPanelOn: 1;
+    BOOL  fShowStartPage: 1;
+    UINT  fSpareFlags : 13;
+    UINT  :15; /* Required for proper binary layout with gcc */
 } SHELLSTATE, *LPSHELLSTATE;
 
 VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet);
@@ -1713,7 +1713,7 @@ DWORD WINAPI SHRestricted(RESTRICTIONS rest);
 */
 typedef struct _SHChangeNotifyEntry
 {
-    LPCITEMIDLIST pidl;
+    PCIDLIST_ABSOLUTE pidl;
     BOOL   fRecursive;
 } SHChangeNotifyEntry;
 
@@ -1824,25 +1824,25 @@ typedef struct tagDATABLOCKHEADER
 #ifdef LF_FACESIZE
 typedef struct {
     DATABLOCK_HEADER dbh;
-    WORD wFillAttribute;
-    WORD wPopupFillAttribute;
+    WORD  wFillAttribute;
+    WORD  wPopupFillAttribute;
     COORD dwScreenBufferSize;
     COORD dwWindowSize;
     COORD dwWindowOrigin;
     DWORD nFont;
     DWORD nInputBufferSize;
     COORD dwFontSize;
-    UINT uFontFamily;
-    UINT uFontWeight;
+    UINT  uFontFamily;
+    UINT  uFontWeight;
     WCHAR FaceName[LF_FACESIZE];
-    UINT uCursorSize;
-    BOOL bFullScreen;
-    BOOL bQuickEdit;
-    BOOL bInsertMode;
-    BOOL bAutoPosition;
-    UINT uHistoryBufferSize;
-    UINT uNumberOfHistoryBuffers;
-    BOOL bHistoryNoDup;
+    UINT  uCursorSize;
+    BOOL  bFullScreen;
+    BOOL  bQuickEdit;
+    BOOL  bInsertMode;
+    BOOL  bAutoPosition;
+    UINT  uHistoryBufferSize;
+    UINT  uNumberOfHistoryBuffers;
+    BOOL  bHistoryNoDup;
     COLORREF ColorTable[16];
 } NT_CONSOLE_PROPS, *LPNT_CONSOLE_PROPS;
 #endif
@@ -1875,7 +1875,7 @@ typedef struct {
 typedef struct {
     DWORD cbSize;
     DWORD dwSignature;
-    BYTE abPropertyStorage[1];
+    BYTE  abPropertyStorage[1];
 } EXP_PROPERTYSTORAGE;
 
 #define EXP_SZ_LINK_SIG         0xA0000001 /* EXP_SZ_LINK */
@@ -1919,7 +1919,7 @@ WINAPI
 SHChangeNotification_Lock(
   _In_ HANDLE hChangeNotification,
   DWORD dwProcessId,
-  _Outptr_opt_result_buffer_(2)_Outptr_opt_result_buffer_(2) LPITEMIDLIST **pppidl,
+  _Outptr_opt_result_buffer_(2)_Outptr_opt_result_buffer_(2) PIDLIST_ABSOLUTE **pppidl,
   _Out_opt_ LONG *plEvent);
 
 BOOL WINAPI SHChangeNotification_Unlock(_In_ HANDLE hLock);
@@ -1928,8 +1928,8 @@ HRESULT
 WINAPI
 SHGetRealIDL(
   _In_ IShellFolder *psf,
-  _In_ LPCITEMIDLIST pidlSimple,
-  _Outptr_ LPITEMIDLIST * ppidlReal);
+  _In_ PCUITEMID_CHILD pidlSimple,
+  _Outptr_ PITEMID_CHILD * ppidlReal);
 
 /****************************************************************************
 * SHCreateDirectory API
@@ -1961,7 +1961,7 @@ WINAPI
 SHGetSpecialFolderLocation(
   _Reserved_ HWND hwndOwner,
   _In_ int nFolder,
-  _Outptr_ LPITEMIDLIST *ppidl);
+  _Outptr_ PIDLIST_ABSOLUTE *ppidl);
 
 HRESULT
 WINAPI
@@ -1970,7 +1970,7 @@ SHGetFolderLocation(
   _In_ int nFolder,
   _In_opt_ HANDLE hToken,
   _In_ DWORD dwReserved,
-  _Outptr_ LPITEMIDLIST *ppidl);
+  _Outptr_ PIDLIST_ABSOLUTE *ppidl);
 
 /****************************************************************************
 * SHGetFolderPath API
@@ -2077,10 +2077,10 @@ _Check_return_ HRESULT WINAPI SHGetDesktopFolder(_Outptr_ IShellFolder * *);
 HRESULT
 WINAPI
 SHBindToParent(
-  _In_ LPCITEMIDLIST pidl,
+  _In_ PCIDLIST_ABSOLUTE pidl,
   _In_ REFIID riid,
   _Outptr_ LPVOID *ppv,
-  _Outptr_opt_ LPCITEMIDLIST *ppidlLast);
+  _Outptr_opt_ PCUITEMID_CHILD *ppidlLast);
 
 /****************************************************************************
 * SHDefExtractIcon API
@@ -2289,25 +2289,25 @@ SHDoDragDrop(
 #define PID_IS_COMMENT     13
 
 
-LPITEMIDLIST WINAPI ILAppendID(_In_opt_ LPITEMIDLIST, _In_ LPCSHITEMID, BOOL);
-LPITEMIDLIST WINAPI ILClone(_In_ LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILCloneFirst(_In_ LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILCreateFromPathA(_In_ LPCSTR);
-LPITEMIDLIST WINAPI ILCreateFromPathW(_In_ LPCWSTR);
+PIDLIST_RELATIVE WINAPI ILAppendID(_In_opt_ PIDLIST_RELATIVE, _In_ LPCSHITEMID, BOOL);
+PIDLIST_RELATIVE WINAPI ILClone(_In_ PCUIDLIST_RELATIVE);
+PITEMID_CHILD WINAPI ILCloneFirst(_In_ PCUIDLIST_RELATIVE);
+PIDLIST_ABSOLUTE WINAPI ILCreateFromPathA(_In_ PCSTR);
+PIDLIST_ABSOLUTE WINAPI ILCreateFromPathW(_In_ PCWSTR);
 #define             ILCreateFromPath WINELIB_NAME_AW(ILCreateFromPath)
-LPITEMIDLIST WINAPI ILCombine(_In_opt_ LPCITEMIDLIST, _In_opt_ LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILFindChild(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST);
-LPITEMIDLIST WINAPI ILFindLastID(_In_ LPCITEMIDLIST);
-void         WINAPI ILFree(_In_opt_ LPITEMIDLIST);
-LPITEMIDLIST WINAPI ILGetNext(_In_opt_ LPCITEMIDLIST);
-UINT         WINAPI ILGetSize(_In_opt_ LPCITEMIDLIST);
-BOOL         WINAPI ILIsEqual(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST);
-BOOL         WINAPI ILIsParent(_In_ LPCITEMIDLIST, _In_ LPCITEMIDLIST, BOOL);
-HRESULT      WINAPI ILLoadFromStream(_In_ LPSTREAM, _Inout_ LPITEMIDLIST*);
-BOOL         WINAPI ILRemoveLastID(_Inout_opt_ LPITEMIDLIST);
-HRESULT      WINAPI ILSaveToStream(_In_ LPSTREAM, _In_ LPCITEMIDLIST);
+PIDLIST_ABSOLUTE WINAPI ILCombine(_In_opt_ PCIDLIST_ABSOLUTE, _In_opt_ PCUIDLIST_RELATIVE);
+PUIDLIST_RELATIVE WINAPI ILFindChild(_In_ PIDLIST_ABSOLUTE, _In_ PCIDLIST_ABSOLUTE);
+PUITEMID_CHILD WINAPI ILFindLastID(_In_ PCUIDLIST_RELATIVE);
+void         WINAPI ILFree(_In_opt_ PIDLIST_RELATIVE);
+PUIDLIST_RELATIVE WINAPI ILGetNext(_In_opt_ PCUIDLIST_RELATIVE);
+UINT         WINAPI ILGetSize(_In_opt_ PCUIDLIST_RELATIVE);
+BOOL         WINAPI ILIsEqual(_In_ PCIDLIST_ABSOLUTE, _In_ PCIDLIST_ABSOLUTE);
+BOOL         WINAPI ILIsParent(_In_ PCIDLIST_ABSOLUTE, _In_ PCIDLIST_ABSOLUTE, BOOL);
+HRESULT      WINAPI ILLoadFromStream(_In_ LPSTREAM, _Inout_ PIDLIST_RELATIVE*);
+BOOL         WINAPI ILRemoveLastID(_Inout_opt_ PUIDLIST_RELATIVE);
+HRESULT      WINAPI ILSaveToStream(_In_ LPSTREAM, _In_ PCUIDLIST_RELATIVE);
 
-static inline BOOL ILIsEmpty(_In_opt_ LPCITEMIDLIST pidl)
+static inline BOOL ILIsEmpty(_In_opt_ PCUIDLIST_RELATIVE pidl)
 {
     return !(pidl && pidl->mkid.cb);
 }

@@ -743,7 +743,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 	if (SUCCEEDED(SHGetSpecialFolderLocation(hwnd, CSIDL_RECENT,
 						 &pidl))) {
 	    SHGetPathFromIDListA(pidl, link_dir);
-	    IMalloc_Free(ppM, pidl);
+	    IMalloc_Free(ppM,pidl);
 	}
 	else {
 	    /* serious issues */
@@ -1824,7 +1824,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 /*************************************************************************
  *		SHFindFiles (SHELL32.90)
  */
-BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
+BOOL WINAPI SHFindFiles( PCIDLIST_ABSOLUTE pidlFolder, PCIDLIST_ABSOLUTE pidlSaveFile )
 {
     FIXME("params ignored: %p %p\n", pidlFolder, pidlSaveFile);
     if (SHRestricted(REST_NOFIND))
@@ -1870,7 +1870,7 @@ VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iIma
     FIXME("%s, %d, 0x%x, %d - stub\n", debugstr_a(pszHashItem), iIndex, uFlags, iImageIndex);
 }
 
-INT WINAPI SHHandleUpdateImage(LPCITEMIDLIST pidlExtra)
+INT WINAPI SHHandleUpdateImage(PCIDLIST_ABSOLUTE pidlExtra)
 {
     FIXME("%p - stub\n", pidlExtra);
 
