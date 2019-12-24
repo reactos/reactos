@@ -2272,6 +2272,10 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
         return;
     }
 
+    ASSERT(pOS2);
+    if (!pOS2)
+        return;
+
     if ((FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent == 0)
     {
         Ascent = pHori->Ascender;
