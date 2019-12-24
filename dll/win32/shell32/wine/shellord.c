@@ -743,7 +743,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 	if (SUCCEEDED(SHGetSpecialFolderLocation(hwnd, CSIDL_RECENT,
 						 &pidl))) {
 	    SHGetPathFromIDListA(pidl, link_dir);
-	    IMalloc_Free(ppM,pidl);
+	    IMalloc_Free(ppM, pidl);
 	}
 	else {
 	    /* serious issues */
