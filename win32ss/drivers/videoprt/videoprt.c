@@ -23,12 +23,16 @@
 
 #include <stdio.h>
 #include <ndk/exfuncs.h>
+#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
+
+BOOLEAN VpBaseVideo = FALSE;
+BOOLEAN VpNoVesa = FALSE;
 
 PKPROCESS CsrProcess = NULL;
 ULONG VideoPortDeviceNumber = 0;
@@ -455,6 +459,125 @@ IntDetachFromCSRSS(
     }
 }
 
+VOID
+FASTCALL
+IntLoadRegistryParameters(VOID)
+{
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    ULONG Length, NewLength;
+
+    /* Initialize object attributes with the path we want */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Path,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    /* Open the key */
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        VideoPortDebugPrint(Error, "ZwOpenKey failed (0x%x)\n", Status);
+        return;
+    }
+
+    /* Find out how large our buffer should be */
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             NULL,
+                             0,
+                             &Length);
+    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
+        ObCloseHandle(KeyHandle, KernelMode);
+        return;
+    }
+
+    /* Allocate it */
+    KeyInfo = ExAllocatePoolWithTag(PagedPool, Length, TAG_VIDEO_PORT);
+    if (!KeyInfo)
+    {
+        VideoPortDebugPrint(Error, "Out of memory\n");
+        ObCloseHandle(KeyHandle, KernelMode);
+        return;
+    }
+
+    /* Now for real this time */
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             KeyInfo,
+                             Length,
+                             &NewLength);
+    ObCloseHandle(KeyHandle, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
+        ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
+        return;
+    }
+
+    /* Sanity check */
+    if (KeyInfo->Type != REG_SZ)
+    {
+        VideoPortDebugPrint(Error, "Invalid type for SystemStartOptions\n");
+        ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
+        return;
+    }
+
+    /* Check if BASEVIDEO or NOVESA is present in the start options */
+    if (wcsstr((PWCHAR)KeyInfo->Data, L"BASEVIDEO"))
+        VpBaseVideo = TRUE;
+    if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA"))
+        VpNoVesa = TRUE;
+
+    ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
+
+    /* FIXME: Old ReactOS-compatibility... */
+    if (VpBaseVideo) VpNoVesa = TRUE;
+
+    if (VpNoVesa)
+        VideoPortDebugPrint(Info, "VESA mode disabled\n");
+    else
+        VideoPortDebugPrint(Info, "VESA mode enabled\n");
+
+    /* If we are in BASEVIDEO, create the volatile registry key for Win32k */
+    if (VpBaseVideo)
+    {
+        RtlInitUnicodeString(&Path, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo");
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &Path,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+
+        Status = ZwCreateKey(&KeyHandle,
+                             KEY_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             NULL);
+        if (NT_SUCCESS(Status))
+            ObCloseHandle(KeyHandle, KernelMode);
+        else
+            ERR_(VIDEOPRT, "Failed to create the BaseVideo key (0x%x)\n", Status);
+    }
+
+    return;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -479,9 +602,10 @@ VideoPortInitialize(
 
     if (!FirstInitialization)
     {
+        FirstInitialization = TRUE;
         KeInitializeMutex(&VideoPortInt10Mutex, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
-        FirstInitialization = TRUE;
+        IntLoadRegistryParameters();
     }
 
     /* As a first thing do parameter checks. */
@@ -1344,7 +1468,8 @@ VideoPortAcquireDeviceLock(
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
-    (void)Status;
+
+    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortAcquireDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
@@ -1363,7 +1488,8 @@ VideoPortReleaseDeviceLock(
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     LONG Status;
-    (void)Status;
+
+    UNREFERENCED_LOCAL_VARIABLE(Status);
 
     TRACE_(VIDEOPRT, "VideoPortReleaseDeviceLock\n");
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
@@ -1394,7 +1520,6 @@ VideoPortAllocateContiguousMemory(
     IN PHYSICAL_ADDRESS HighestAcceptableAddress
 )
 {
-
     return MmAllocateContiguousMemory(NumberOfBytes, HighestAcceptableAddress);
 }
 
@@ -1405,92 +1530,5 @@ BOOLEAN
 NTAPI
 VideoPortIsNoVesa(VOID)
 {
-    NTSTATUS Status;
-    HANDLE KeyHandle;
-    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
-    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
-    ULONG Length, NewLength;
-
-    /* Initialize object attributes with the path we want */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Path,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
-
-    /* Open the key */
-    Status = ZwOpenKey(&KeyHandle,
-                       KEY_QUERY_VALUE,
-                       &ObjectAttributes);
-
-    if (!NT_SUCCESS(Status))
-    {
-        VideoPortDebugPrint(Error, "ZwOpenKey failed (0x%x)\n", Status);
-        return FALSE;
-    }
-
-    /* Find out how large our buffer should be */
-    Status = ZwQueryValueKey(KeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             NULL,
-                             0,
-                             &Length);
-    if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
-        ZwClose(KeyHandle);
-        return FALSE;
-    }
-
-    /* Allocate it */
-    KeyInfo = ExAllocatePool(PagedPool, Length);
-    if (!KeyInfo)
-    {
-        VideoPortDebugPrint(Error, "Out of memory\n");
-        ZwClose(KeyHandle);
-        return FALSE;
-    }
-
-    /* Now for real this time */
-    Status = ZwQueryValueKey(KeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             KeyInfo,
-                             Length,
-                             &NewLength);
-
-    ZwClose(KeyHandle);
-
-    if (!NT_SUCCESS(Status))
-    {
-        VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
-        ExFreePool(KeyInfo);
-        return FALSE;
-    }
-
-    /* Sanity check */
-    if (KeyInfo->Type != REG_SZ)
-    {
-        VideoPortDebugPrint(Error, "Invalid type for SystemStartOptions\n");
-        ExFreePool(KeyInfo);
-        return FALSE;
-    }
-
-    /* Check if NOVESA or BASEVIDEO is present in the start options */
-    if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA") ||
-            wcsstr((PWCHAR)KeyInfo->Data, L"BASEVIDEO"))
-    {
-        VideoPortDebugPrint(Info, "VESA mode disabled\n");
-        ExFreePool(KeyInfo);
-        return TRUE;
-    }
-
-    ExFreePool(KeyInfo);
-
-    VideoPortDebugPrint(Info, "VESA mode enabled\n");
-
-    return FALSE;
+    return VpNoVesa;
 }

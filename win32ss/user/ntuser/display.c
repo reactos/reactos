@@ -9,7 +9,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
-BOOL gbBaseVideo = 0;
+BOOL gbBaseVideo = FALSE;
 static PPROCESSINFO gpFullscreen = NULL;
 
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
@@ -165,24 +165,13 @@ InitVideo(VOID)
 
     TRACE("----------------------------- InitVideo() -------------------------------\n");
 
-    /* Open the key for the boot command line */
-    Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
+    /* Check if VGA mode is requested, by finding the special volatile key created by VIDEOPRT */
+    Status = RegOpenKey(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo", &hkey);
     if (NT_SUCCESS(Status))
-    {
-        cbValue = sizeof(awcBuffer);
-        Status = RegQueryValue(hkey, L"SystemStartOptions", REG_SZ, awcBuffer, &cbValue);
-        if (NT_SUCCESS(Status))
-        {
-            /* Check if VGA mode is requested. */
-            if (wcsstr(awcBuffer, L"BASEVIDEO") != 0)
-            {
-                ERR("VGA mode requested.\n");
-                gbBaseVideo = TRUE;
-            }
-        }
-
         ZwClose(hkey);
-    }
+    gbBaseVideo = NT_SUCCESS(Status);
+    if (gbBaseVideo)
+        ERR("VGA mode requested.\n");
 
     /* Open the key for the adapters */
     Status = RegOpenKey(KEY_VIDEO, &hkey);
