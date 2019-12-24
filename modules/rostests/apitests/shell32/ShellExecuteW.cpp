@@ -44,7 +44,7 @@ TestShellExecuteW()
         LPCWSTR lpWinTitle = L"Display Properties";
         Sleep(1000);
         hWnd = FindWindowW(NULL, lpWinTitle);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #1 - Open Control Panel
 
@@ -65,7 +65,7 @@ TestShellExecuteW()
         LPCWSTR lpWinTitle = L"Untitled - Notepad";
         Sleep(1000);
         hWnd = FindWindowW(lpWinClass, lpWinTitle);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #2 - Open notepad.exe
 
@@ -97,7 +97,7 @@ TestShellExecuteW()
             hWnd = FindWindowW(lpWinClass, lpWinTitleReactOS);
         else
             hWnd = FindWindowW(lpWinClass, lpWinTitleWindows);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #3 - Open C:\Windows
 
@@ -124,7 +124,7 @@ TestShellExecuteW()
         LPCWSTR lpWinTitle = L"C:\\Windows\\system32";
         Sleep(1000);
         hWnd = FindWindowW(lpWinClass, lpWinTitle);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #4 - Open C:\Windows\system32
 
@@ -145,7 +145,7 @@ TestShellExecuteW()
         LPCWSTR lpWinTitle = L"C:\\";
         Sleep(1000);
         hWnd = FindWindowW(lpWinClass, lpWinTitle);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #5 - explore C:
 
@@ -166,7 +166,7 @@ TestShellExecuteW()
         LPCWSTR lpWinTitle = L"Search Results";
         Sleep(1000);
         hWnd = FindWindowW(lpWinClass, lpWinTitle);
-        PostMessage(hWnd, WM_SYSCOMMAND, 0xF060, 0);  // Terminate Window
+        PostMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);  // Terminate Window
     }
 // End of test #6 - find
 }
