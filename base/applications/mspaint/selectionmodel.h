@@ -55,7 +55,7 @@ public:
     HBITMAP GetBitmap();
     int PtStackSize();
     void DrawFramePoly(HDC hDCImage);
-    void SetSrcAndDestRectFromPoints(POINT& ptFrom, POINT& ptTo);
+    void SetSrcAndDestRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
     void SetSrcRectSizeToZero();
     BOOL IsSrcRectSizeNonzero();
     void ModifyDestRect(POINT& ptDelta, int iAction);

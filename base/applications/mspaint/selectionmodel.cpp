@@ -221,7 +221,7 @@ void SelectionModel::DrawFramePoly(HDC hDCImage)
     Poly(hDCImage, m_ptStack, m_iPtSP, 0, 0, 2, 0, FALSE, TRUE); /* draw the freehand selection inverted/xored */
 }
 
-void SelectionModel::SetSrcAndDestRectFromPoints(POINT& ptFrom, POINT& ptTo)
+void SelectionModel::SetSrcAndDestRectFromPoints(const POINT& ptFrom, const POINT& ptTo)
 {
     m_rcDest.left = m_rcSrc.left = min(ptFrom.x, ptTo.x);
     m_rcDest.top = m_rcSrc.top = min(ptFrom.y, ptTo.y);
