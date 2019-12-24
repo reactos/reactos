@@ -3411,7 +3411,7 @@ static unsigned int get_native_glyph_outline(FT_Outline *outline, unsigned int b
         while (point <= outline->contours[contour])
         {
             ppc = (TTPOLYCURVE *)(buf + needed);
-            type = outline->tags[point] & FT_Curve_Tag_On ?
+            type = (outline->tags[point] & FT_Curve_Tag_On) ?
                 TT_PRIM_LINE : TT_PRIM_QSPLINE;
             cpfx = 0;
             do
@@ -3494,7 +3494,7 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
         while (point <= outline->contours[contour])
         {
             ppc = (TTPOLYCURVE *)(buf + needed);
-            type = outline->tags[point] & FT_Curve_Tag_On ?
+            type = (outline->tags[point] & FT_Curve_Tag_On) ?
                 TT_PRIM_LINE : TT_PRIM_CSPLINE;
             cpfx = 0;
             do
@@ -6175,7 +6175,7 @@ IntExtTextOutW(
     /*
      * Process the horizontal alignment and modify XStart accordingly.
      */
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
+    DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     if (pdcattr->flTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
@@ -6768,7 +6768,7 @@ NtGdiExtTextOutW(
         if (UnsafeDx)
         {
             /* If ETO_PDY is specified, we have pairs of INTs */
-            DxSize = (Count * sizeof(INT)) * (fuOptions & ETO_PDY ? 2 : 1);
+            DxSize = (Count * sizeof(INT)) * ((fuOptions & ETO_PDY) ? 2 : 1);
             BufSize += DxSize;
         }
 
