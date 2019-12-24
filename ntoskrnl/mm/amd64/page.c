@@ -552,13 +552,10 @@ MmCreateVirtualMappingUnsafe(
 
         Pte = MiGetPteForProcess(Process, Address, TRUE);
 
-DPRINT("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
-        Address, TmplPte.u.Long, Pte);
+        DPRINT("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
+                Address, TmplPte.u.Long, Pte);
 
-        if (InterlockedExchangePte(Pte, TmplPte))
-        {
-            KeInvalidateTlbEntry(Address);
-        }
+        MI_WRITE_VALID_PTE(Pte, TmplPte);
 
         if (MiIsHyperspaceAddress(Pte))
             MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
