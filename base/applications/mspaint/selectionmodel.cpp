@@ -14,7 +14,7 @@
 /* FUNCTIONS ********************************************************/
 
 SelectionModel::SelectionModel()
-    : m_hDC(CreateCompatibleDC(NULL)),
+    : m_hDC(CreateCompatibleDC(NULL))
     , m_hBm(NULL)
     , m_hMask(NULL)
     , m_ptStack(NULL)
@@ -28,17 +28,14 @@ SelectionModel::~SelectionModel()
     if (m_ptStack)
     {
         HeapFree(GetProcessHeap(), 0, m_ptStack);
-        m_ptStack = NULL;
     }
     if (m_hBm)
     {
         DeleteObject(m_hBm);
-        m_hBm = NULL;
     }
     if (m_hMask)
     {
         DeleteObject(m_hMask);
-        m_hMask = NULL;
     }
 }
 
