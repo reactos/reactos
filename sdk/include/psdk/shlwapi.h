@@ -1738,14 +1738,14 @@ HRESULT
 WINAPI
 StrRetToStrA(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ LPSTR*);
 
 HRESULT
 WINAPI
 StrRetToStrW(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ LPWSTR*);
 
 #define StrRetToStr WINELIB_NAME_AW(StrRetToStr)
@@ -1754,7 +1754,7 @@ HRESULT
 WINAPI
 StrRetToBufA(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Out_writes_(cchBuf) LPSTR,
   UINT cchBuf);
 
@@ -1762,7 +1762,7 @@ HRESULT
 WINAPI
 StrRetToBufW(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Out_writes_(cchBuf) LPWSTR,
   UINT cchBuf);
 
@@ -1772,7 +1772,7 @@ HRESULT
 WINAPI
 StrRetToBSTR(
   _Inout_ STRRET*,
-  _In_opt_ LPCITEMIDLIST,
+  _In_opt_ PCUITEMID_CHILD,
   _Outptr_ BSTR*);
 
 BOOL WINAPI IsCharSpaceA(CHAR);
@@ -2002,7 +2002,7 @@ HRESULT WINAPI DllInstall(BOOL, _In_opt_ LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT
 WINAPI
 SHGetViewStatePropertyBag(
-  _In_opt_ LPCITEMIDLIST pidl,
+  _In_opt_ PCIDLIST_ABSOLUTE pidl,
   _In_opt_ LPWSTR bag_name,
   DWORD flags,
   _In_ REFIID riid,
