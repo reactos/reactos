@@ -1812,22 +1812,12 @@ static void check_flags(FILEOP_FLAGS fFlags)
 
 #ifdef __REACTOS__
 
-/* Error codes could be pre-Win32 */
-#define DE_SAMEFILE      0x71
-#define DE_MANYSRC1DEST  0x72
-#define DE_DIFFDIR       0x73
-#define DE_OPCANCELLED   0x75
-#define DE_DESTSUBTREE   0x76
-#define DE_INVALIDFILES  0x7C
-#define DE_DESTSAMETREE  0x7D
-#define DE_FLDDESTISFILE 0x7E
-#define DE_FILEDESTISFLD 0x80
-
 static DWORD
 validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flTo)
 {
     DWORD i, k, dwNumDest;
-    WCHAR szFrom[MAX_PATH], szTo[MAX_PATH], szText[MAX_PATH];
+    WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
+    CStringW strTitle, strText;
     const FILE_ENTRY *feFrom;
     const FILE_ENTRY *feTo;
     UINT wFunc = lpFileOp->wFunc;
@@ -1845,7 +1835,6 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
         {
             feFrom = &flFrom->feFiles[i];
             StringCbCopyW(szFrom, sizeof(szFrom), feFrom->szFullPath);
-
             StringCbCopyW(szTo, sizeof(szTo), feTo->szFullPath);
             if (IsAttribDir(feTo->attributes))
             {
@@ -1860,18 +1849,20 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                 {
                     if (wFunc == FO_MOVE)
                     {
-                        CStringW strTitle(MAKEINTRESOURCEW(IDS_MOVEERRORTITLE));
-                        CStringW strText(MAKEINTRESOURCEW(IDS_MOVEERRORSAME));
-                        StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
-                        MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                        strTitle.LoadStringW(IDS_MOVEERRORTITLE);
+                        if (IsAttribDir(feFrom->attributes))
+                            strText.Format(IDS_MOVEERRORSAMEFOLDER, feFrom->szFilename);
+                        else
+                            strText.Format(IDS_MOVEERRORSAME, feFrom->szFilename);
                     }
                     else
                     {
-                        CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYERRORTITLE));
-                        CStringW strText(MAKEINTRESOURCEW(IDS_COPYERRORSAME));
-                        StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
-                        MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                        strTitle.LoadStringW(IDS_COPYERRORTITLE);
+                        strText.Format(IDS_COPYERRORSAME, feFrom->szFilename);
+                        return ERROR_SUCCESS;
                     }
+                    MessageBoxW(hwnd, strText, strTitle, MB_ICONERROR);
+                    return DE_SAMEFILE;
                 }
                 return DE_OPCANCELLED;
             }
@@ -1894,20 +1885,18 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
                         {
                             if (wFunc == FO_MOVE)
                             {
-                                CStringW strTitle(MAKEINTRESOURCEW(IDS_MOVEERRORTITLE));
-                                CStringW strText(MAKEINTRESOURCEW(IDS_MOVEERRORSUBF));
-                                StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
-                                MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                                strTitle.LoadStringW(IDS_MOVEERRORTITLE);
+                                strText.Format(IDS_MOVEERRORSUBFOLDER, feFrom->szFilename);
                             }
                             else
                             {
-                                CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYERRORTITLE));
-                                CStringW strText(MAKEINTRESOURCEW(IDS_COPYERRORSUBF));
-                                StringCchPrintfW(szText, sizeof(szText), strText, feFrom->szFilename);
-                                MessageBoxW(hwnd, szText, strTitle, MB_ICONERROR);
+                                strTitle.LoadStringW(IDS_COPYERRORTITLE);
+                                strText.Format(IDS_COPYERRORSUBFOLDER, feFrom->szFilename);
                             }
+                            MessageBoxW(hwnd, strText, strTitle, MB_ICONERROR);
+                            return DE_DESTSUBTREE;
                         }
-                        return ERROR_SUCCESS;
+                        return DE_OPCANCELLED;
                     }
                 }
             }

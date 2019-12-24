@@ -769,12 +769,14 @@ BEGIN
     IDS_OPENFILELOCATION "ファイルの場所を開く(&I)"
     IDS_DESKLINK "デスクトップ (ショートカットの作成)"
     IDS_SENDTO_MENU "送る(&N)"
+
     IDS_MOVEERRORTITLE "ファイルまたはフォルダの移動のエラー"
     IDS_COPYERRORTITLE "ファイルまたはフォルダのコピーのエラー"
-    IDS_MOVEERRORSAME "移動できません '%s': 移動先のフォルダは移動元のフォルダと同じです。"
+    IDS_MOVEERRORSAMEFOLDER "移動できません '%s': 移動先のフォルダは移動元のフォルダと同じです。"
+    IDS_MOVEERRORSAME "移動できません '%s': コピー元とコピー先のファイル名が同じです。"
     IDS_COPYERRORSAME "コピーできません '%s': コピー元とコピー先のファイル名が同じです。"
-    IDS_MOVEERRORSUBF "移動できません '%s': 移動先のフォルダは移動元のフォルダのサブフォルダです。"
-    IDS_COPYERRORSUBF "コピーできません '%s': コピー先のフォルダはコピー元のフォルダのサブフォルダです。"
+    IDS_MOVEERRORSUBFOLDER "移動できません '%s': 移動先のフォルダは移動元のフォルダのサブフォルダです。"
+    IDS_COPYERRORSUBFOLDER "コピーできません '%s': コピー先のフォルダはコピー元のフォルダのサブフォルダです。"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"

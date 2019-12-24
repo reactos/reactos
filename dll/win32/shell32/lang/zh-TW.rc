@@ -781,12 +781,14 @@ BEGIN
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
     IDS_SENDTO_MENU "Se&nd To"
+
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAME "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
+    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
     IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBF "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBF "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
+    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
 
     IDS_CREATEFOLDER_DENIED "無法建立資料夾 '%1'"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"

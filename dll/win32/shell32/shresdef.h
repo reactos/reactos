@@ -217,7 +217,7 @@
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
 
-/* Strings for file operations*/
+/* Strings for file operations */
 #define IDS_FILEOOP_COPYING      333
 #define IDS_FILEOOP_MOVING       334
 #define IDS_FILEOOP_DELETING     335
@@ -231,12 +231,14 @@
 #define IDS_OPENFILELOCATION     341
 #define IDS_DESKLINK             342
 #define IDS_SENDTO_MENU          343
+
 #define IDS_MOVEERRORTITLE       344
 #define IDS_COPYERRORTITLE       345
-#define IDS_MOVEERRORSAME        346
-#define IDS_COPYERRORSAME        347
-#define IDS_MOVEERRORSUBF        348
-#define IDS_COPYERRORSUBF        349
+#define IDS_MOVEERRORSAMEFOLDER  346
+#define IDS_MOVEERRORSAME        347
+#define IDS_COPYERRORSAME        348
+#define IDS_MOVEERRORSUBFOLDER   349
+#define IDS_COPYERRORSUBFOLDER   350
 
 #define IDS_MENU_EMPTY           34561
 

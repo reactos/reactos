@@ -772,12 +772,14 @@ BEGIN
     IDS_OPENFILELOCATION "Abrir localização do f&icheiro"
     IDS_DESKLINK "Área de trabalho (Criar atalho)"
     IDS_SENDTO_MENU "&Enviar para"
+
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"
     IDS_COPYERRORTITLE "Erro ao copiar pasta ou ficheiro"
-    IDS_MOVEERRORSAME "Impossivel mover '%s': A paste de destino é a mesma da origem."
+    IDS_MOVEERRORSAMEFOLDER "Impossivel mover '%s': A paste de destino é a mesma da origem."
+    IDS_MOVEERRORSAME "Impossivel mover '%s': Os nomes dos arquivos de origem e de destino são os mesmos."
     IDS_COPYERRORSAME "Impossivel copiar '%s': Os nomes dos arquivos de origem e de destino são os mesmos."
-    IDS_MOVEERRORSUBF "Impossivel mover '%s': A pasta de destino é uma subpasta da pasta de origem."
-    IDS_COPYERRORSUBF "Impossivel copiar '%s': A pasta de destino é uma subpasta da pasta de origem."
+    IDS_MOVEERRORSUBFOLDER "Impossivel mover '%s': A pasta de destino é uma subpasta da pasta de origem."
+    IDS_COPYERRORSUBFOLDER "Impossivel copiar '%s': A pasta de destino é uma subpasta da pasta de origem."
 
     IDS_CREATEFOLDER_DENIED "Impossivel criar pasta '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossivel criar pasta"
