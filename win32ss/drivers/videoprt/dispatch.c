@@ -827,7 +827,7 @@ IntVideoPortDispatchDeviceControl(
     INFO_(VIDEOPRT, "- Returned status: 0x%x\n", Status);
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_VIDEO_INCREMENT);
     return Status;
 }
 
