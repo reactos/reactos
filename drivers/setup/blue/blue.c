@@ -279,9 +279,12 @@ ScrInbvCleanup(VOID)
     // HANDLE ThreadHandle;
 
     // ResetDisplayParametersDeviceExtension = NULL;
-    InbvNotifyDisplayOwnershipLost(NULL);
-    ScrResetDisplayParametersEx(80, 50, FALSE);
-    // or InbvAcquireDisplayOwnership(); ?
+    if (ResetDisplayParametersDeviceExtension)
+    {
+        InbvNotifyDisplayOwnershipLost(NULL);
+        ScrResetDisplayParametersEx(80, 50, FALSE);
+        // or InbvAcquireDisplayOwnership(); ?
+    }
 
 #if 0
     // TODO: Find the best way to communicate the request.
@@ -1323,9 +1326,10 @@ DriverEntry(
     Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
     if (NT_SUCCESS(Status))
     {
-        /* By default disable the screen */
-        ResetDisplayParametersDeviceExtension = DeviceObject->DeviceExtension;
+        /* By default disable the screen (but don't touch INBV: ResetDisplayParametersDeviceExtension is still NULL) */
         ScrResetScreen(DeviceObject->DeviceExtension, TRUE, FALSE);
+        /* Now set ResetDisplayParametersDeviceExtension to enable synchronizing with INBV */
+        ResetDisplayParametersDeviceExtension = DeviceObject->DeviceExtension;
         DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     }
     else
