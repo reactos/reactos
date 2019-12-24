@@ -20,6 +20,8 @@ SelectionModel::SelectionModel()
     , m_ptStack(NULL)
     , m_iPtSP(0)
 {
+    SetRectEmpty(&m_rcSrc);
+    SetRectEmpty(&m_rcDest);
 }
 
 SelectionModel::~SelectionModel()
