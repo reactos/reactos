@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selectionmodel.h
  * PURPOSE:     Keep track of selection parameters, notify listeners
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 #pragma once
@@ -39,6 +40,7 @@ private:
 
 public:
     SelectionModel();
+    ~SelectionModel();
     void ResetPtStack();
     void PushToPtStack(LONG x, LONG y);
     void CalculateBoundingBoxAndContents(HDC hDCImage);
@@ -64,4 +66,8 @@ public:
     LONG GetDestRectLeft();
     LONG GetDestRectTop();
     void DrawTextToolText(HDC hDCImage, COLORREF crFg, COLORREF crBg, BOOL bBgTransparent = FALSE);
+
+private:
+    SelectionModel(const SelectionModel&);
+    SelectionModel& operator=(const SelectionModel&);
 };

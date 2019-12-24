@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/selectionmodel.cpp
  * PURPOSE:     Keep track of selection parameters, notify listeners
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -13,11 +14,32 @@
 /* FUNCTIONS ********************************************************/
 
 SelectionModel::SelectionModel()
+    : m_hDC(CreateCompatibleDC(NULL)),
+    , m_hBm(NULL)
+    , m_hMask(NULL)
+    , m_ptStack(NULL)
+    , m_iPtSP(0)
 {
-    m_ptStack = NULL;
-    m_iPtSP = 0;
+}
 
-    m_hDC = CreateCompatibleDC(NULL);
+SelectionModel::~SelectionModel()
+{
+    DeleteDC(m_hDC);
+    if (m_ptStack)
+    {
+        HeapFree(GetProcessHeap(), 0, m_ptStack);
+        m_ptStack = NULL;
+    }
+    if (m_hBm)
+    {
+        DeleteObject(m_hBm);
+        m_hBm = NULL;
+    }
+    if (m_hMask)
+    {
+        DeleteObject(m_hMask);
+        m_hMask = NULL;
+    }
 }
 
 void SelectionModel::ResetPtStack()
