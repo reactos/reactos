@@ -24,7 +24,7 @@
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
-#define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
+#define KIP0PCRADDRESS                      0xFFFFFFFFFFDFF000ULL /* CHECKME!!! */
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
