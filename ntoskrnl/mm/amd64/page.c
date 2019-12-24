@@ -162,21 +162,21 @@ MiGetPteForProcess(
         Pte = MiAddressToPxe(Address);
         if (Pte->u.Long == 0)
         {
-            MI_WRITE_INVALID_PTE(Pte, DemandZeroPde);
+            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
         }
 
         /* Get the PPE */
         Pte = MiAddressToPpe(Address);
         if (Pte->u.Long == 0)
         {
-            MI_WRITE_INVALID_PTE(Pte, DemandZeroPde);
+            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
         }
 
         /* Get the PDE */
         Pte = MiAddressToPde(Address);
         if (Pte->u.Long == 0)
         {
-            MI_WRITE_INVALID_PTE(Pte, DemandZeroPde);
+            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
         }
     }
     else
@@ -429,7 +429,7 @@ MmDeleteVirtualMapping(
         /* Atomically set the entry to zero and get the old value. */
         OldPte.u.Long = InterlockedExchange64((LONG64*)&Pte->u.Long, 0);
 
-        if (OldPte.u.Hard.Valid)
+        if (OldPte.u.Hard.Valid || !OldPte.u.Trans.Transition)
         {
             Pfn = OldPte.u.Hard.PageFrameNumber;
         }
