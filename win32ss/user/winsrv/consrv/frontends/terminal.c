@@ -491,6 +491,23 @@ ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT Scroll
     UpdateRect->Bottom = Buff->CursorPosition.Y;
 }
 
+/* Chinese, Japanese or Korean? */
+BOOL FASTCALL
+IsCodePageCJK(UINT CodePage)
+{
+    switch (CodePage)
+    {
+        case 936: /* Chinese Simplified (GB2312)*/
+        case 932: /* Japanese (Shift-JIS) */
+        case 949: /* Korean */
+        case 950: /* Chinese Traditional (Big5) */
+            return TRUE;
+    }
+    return FALSE;
+}
+
+int mk_wcwidth_cjk(wchar_t ucs);
+
 static NTSTATUS
 ConioWriteConsole(PFRONTEND FrontEnd,
                   PTEXTMODE_SCREEN_BUFFER Buff,
@@ -505,6 +522,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
+    const BOOL bCJK = IsCodePageCJK(Console->OutputCodePage);
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
@@ -604,6 +622,13 @@ ConioWriteConsole(PFRONTEND FrontEnd,
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
         Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
+        if (bCJK && Buffer[i] >= 0x80 && mk_wcwidth_cjk(Buffer[i]) == 2)
+        {
+            /* Buffer[i] is a fullwidth character */
+            /* FIXME */
+        }
+
         Ptr->Char.UnicodeChar = Buffer[i];
         if (Attrib) Ptr->Attributes = Buff->ScreenDefaultAttrib;
 
