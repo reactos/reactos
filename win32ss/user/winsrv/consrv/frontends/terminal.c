@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
+#include "concfg/font.h"
 
 // #include "frontends/gui/guiterm.h"
 #ifdef TUITERM_COMPILE
@@ -491,6 +492,8 @@ ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT Scroll
     UpdateRect->Bottom = Buff->CursorPosition.Y;
 }
 
+int mk_wcwidth_cjk(wchar_t ucs);
+
 static NTSTATUS
 ConioWriteConsole(PFRONTEND FrontEnd,
                   PTEXTMODE_SCREEN_BUFFER Buff,
@@ -505,6 +508,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
+    BOOL bCJK = IsCJKCodePage(Console->OutputCodePage);
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
@@ -604,6 +608,13 @@ ConioWriteConsole(PFRONTEND FrontEnd,
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
         Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
+        if (bCJK && Buffer[i] >= 0x80 && mk_wcwidth_cjk(Buffer[i]) == 2)
+        {
+            /* Buffer[i] is a fullwidth character */
+            /* FIXME */
+        }
+
         Ptr->Char.UnicodeChar = Buffer[i];
         if (Attrib) Ptr->Attributes = Buff->ScreenDefaultAttrib;
 
