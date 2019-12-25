@@ -522,7 +522,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
-    const BOOL bCJK = IsCodePageCJK(Console->OutputCodePage);
+    BOOL bCJK = IsCodePageCJK(Console->OutputCodePage);
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
