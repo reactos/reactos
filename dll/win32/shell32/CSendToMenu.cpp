@@ -274,7 +274,7 @@ HRESULT CSendToMenu::CreateSendToFiles(LPCWSTR pszSendTo)
     hr = CreateShellLink(szSendToFile, szTarget, NULL, NULL, NULL,
                          szShell32, -IDI_SHELL_MY_DOCUMENTS, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
-        ;
+        ERR("CreateShellLink(%S, %S) failed!\n", szSendToFile, szTarget);
 
     /* create desklink */
     StringCbCopyW(szSendToFile, sizeof(szSendToFile), pszSendTo);
