@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
+#include "concfg/font.h"
 
 // #include "frontends/gui/guiterm.h"
 #ifdef TUITERM_COMPILE
@@ -491,21 +492,6 @@ ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT Scroll
     UpdateRect->Bottom = Buff->CursorPosition.Y;
 }
 
-/* Chinese, Japanese or Korean? */
-BOOL FASTCALL
-IsCodePageCJK(UINT CodePage)
-{
-    switch (CodePage)
-    {
-        case 936: /* Chinese Simplified (GB2312)*/
-        case 932: /* Japanese (Shift-JIS) */
-        case 949: /* Korean */
-        case 950: /* Chinese Traditional (Big5) */
-            return TRUE;
-    }
-    return FALSE;
-}
-
 int mk_wcwidth_cjk(wchar_t ucs);
 
 static NTSTATUS
@@ -522,7 +508,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
-    BOOL bCJK = IsCodePageCJK(Console->OutputCodePage);
+    BOOL bCJK = IsCJKCodePage(Console->OutputCodePage);
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;

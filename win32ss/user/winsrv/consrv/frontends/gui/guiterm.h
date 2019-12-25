@@ -127,6 +127,5 @@ GuiPaintTextModeBufferCJK(PTEXTMODE_SCREEN_BUFFER Buffer,
                           PGUI_CONSOLE_DATA GuiData,
                           PRECT rcView,
                           PRECT rcFramebuffer);
-BOOL FASTCALL IsCodePageCJK(UINT CodePage);
 
 /* EOF */
