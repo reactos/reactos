@@ -27,10 +27,7 @@ SelectionModel::SelectionModel()
 SelectionModel::~SelectionModel()
 {
     DeleteDC(m_hDC);
-    if (m_ptStack)
-    {
-        HeapFree(GetProcessHeap(), 0, m_ptStack);
-    }
+    ResetPtStack();
     if (m_hBm)
     {
         DeleteObject(m_hBm);
