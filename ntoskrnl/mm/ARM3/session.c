@@ -481,7 +481,11 @@ MiSessionInitializeWorkingSetList(VOID)
 
     /* Fill out the two pointers */
     MmSessionSpace->Vm.VmWorkingSetList = WorkingSetList;
+#ifdef _M_AMD64
+    MmSessionSpace->Wsle = (PMMWSLE)&WorkingSetList[1];
+#else
     MmSessionSpace->Wsle = (PMMWSLE)WorkingSetList->UsedPageTableEntries;
+#endif
 
     /* Get the PDE for the working set, and check if it's already allocated */
     PointerPde = MiAddressToPde(WorkingSetList);

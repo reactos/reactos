@@ -751,11 +751,37 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         {
             if (PointerPde->u.Long != 0)
             {
-                /* Delete the PTE proper */
+                /* Delete the PDE proper */
                 MiDeletePte(PointerPde,
                             MiPteToAddress(PointerPde),
                             CurrentProcess,
                             NULL);
+#if (_MI_PAGING_LEVELS >= 3)
+                if (MiDecrementPageTableReferences(MiPteToAddress(PointerPde)) == 0)
+                {
+                    /* No PDE relies on this PPE. Release it */
+                    PMMPPE PointerPpe = MiAddressToPpe((PVOID)Va);
+                    ASSERT(PointerPpe->u.Hard.Valid == 1);
+                    MiDeletePte(PointerPpe,
+                                MiPteToAddress(PointerPpe),
+                                CurrentProcess,
+                                NULL);
+                    ASSERT(PointerPpe->u.Hard.Valid == 0);
+#if (_MI_PAGING_LEVELS >= 4)
+                    if (MiDecrementPageTableReferences(PointerPde) == 0)
+                    {
+                        /* No PPE relies on this PXE. Release it */
+                        PMMPXE PointerPxe = MiAddressToPxe((PVOID)Va);
+                        ASSERT(PointerPxe->u.Hard.Valid == 1);
+                        MiDeletePte(PointerPxe,
+                                    MiPteToAddress(PointerPxe),
+                                    CurrentProcess,
+                                    NULL);
+                        ASSERT(PointerPxe->u.Hard.Valid == 0);
+                    }
+#endif
+                }
+#endif
             }
         }
 

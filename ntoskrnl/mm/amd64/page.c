@@ -145,6 +145,9 @@ MiGetPteForProcess(
     BOOLEAN Create)
 {
     PMMPTE Pte;
+    PMMPDE Pde;
+    PMMPPE Ppe;
+    PMMPXE Pxe;
 
     /* Make sure the process is correct */
     if (Address < MmSystemRangeStart)
@@ -156,48 +159,54 @@ MiGetPteForProcess(
         ASSERT((Process == NULL) || (Process == PsGetCurrentProcess()));
     }
 
+    Pxe = MiAddressToPxe(Address);
+    Ppe = MiAddressToPpe(Address);
+    Pde = MiAddressToPde(Address);
+    Pte = MiAddressToPte(Address);
+
     if (Create)
     {
-        /* Get the PXE */
-        Pte = MiAddressToPxe(Address);
-        if (Pte->u.Long == 0)
+        /* Check the PXE */
+        if (Pxe->u.Long == 0)
         {
-            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
+            /* Make it demand zero (we don't count PML4 entries!) */
+            MI_WRITE_INVALID_PDE(Pxe, DemandZeroPde);
         }
 
-        /* Get the PPE */
-        Pte = MiAddressToPpe(Address);
-        if (Pte->u.Long == 0)
+        /* Check the PPE */
+        if (Ppe->u.Long == 0)
         {
-            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
+            /* Make it demand zero and reference to the PDPT */
+            MI_WRITE_INVALID_PDE(Ppe, DemandZeroPde);
+            if (Address < MmSystemRangeStart)
+                MiIncrementPageTableReferences(Pde);
         }
 
-        /* Get the PDE */
-        Pte = MiAddressToPde(Address);
-        if (Pte->u.Long == 0)
+        /* Check the PDE */
+        if (Pde->u.Long == 0)
         {
-            MI_WRITE_INVALID_PDE(Pte, DemandZeroPde);
+            /* Make it demand zero and reference to the PDT */
+            MI_WRITE_INVALID_PDE(Pde, DemandZeroPde);
+            if (Address < MmSystemRangeStart)
+                MiIncrementPageTableReferences(Pte);
         }
     }
     else
     {
-        /* Get the PXE */
-        Pte = MiAddressToPxe(Address);
-        if (!Pte->u.Hard.Valid)
+        /* Check the PXE */
+        if (!Pxe->u.Hard.Valid)
             return NULL;
 
-        /* Get the PPE */
-        Pte = MiAddressToPpe(Address);
-        if (!Pte->u.Hard.Valid)
+        /* Check the PPE */
+        if (!Ppe->u.Hard.Valid)
             return NULL;
 
-        /* Get the PDE */
-        Pte = MiAddressToPde(Address);
-        if (!Pte->u.Hard.Valid)
+        /* Check the PDE */
+        if (!Pde->u.Hard.Valid)
             return NULL;
     }
 
-    return MiAddressToPte(Address);
+    return Pte;
 }
 
 static
@@ -429,8 +438,21 @@ MmDeleteVirtualMapping(
         /* Atomically set the entry to zero and get the old value. */
         OldPte.u.Long = InterlockedExchange64((LONG64*)&Pte->u.Long, 0);
 
-        if (OldPte.u.Hard.Valid || !OldPte.u.Trans.Transition)
+        if (OldPte.u.Hard.Valid || 
+            (OldPte.u.Hard.PageFrameNumber && !OldPte.u.Trans.Transition))
         {
+            /* Flush the TLB since we transitioned this PTE
+             * from valid to invalid so any stale translations
+             * are removed from the cache */
+            MiFlushTlb(Pte, Address);
+
+            if (Address < MmSystemRangeStart)
+            {
+                /* Remove PDE reference */
+                NT_ASSERT(Process == PsGetCurrentProcess());
+                MiDecrementPageTableReferences(Address);
+            }
+
             Pfn = OldPte.u.Hard.PageFrameNumber;
         }
         else
@@ -474,6 +496,13 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 
     *SwapEntry = Pte->u.Long >> 1;
     MI_ERASE_PTE(Pte);
+
+    if (Address < MmSystemRangeStart)
+    {
+        /* Remove PDE reference */
+        NT_ASSERT(Process == PsGetCurrentProcess());
+        MiDecrementPageTableReferences(Address);
+    }
 }
 
 NTSTATUS
@@ -511,6 +540,13 @@ MmCreatePageFileMapping(PEPROCESS Process,
     NT_ASSERT(Pte->u.Long == 0);
     PteValue.u.Long = SwapEntry << 1;
     MI_WRITE_INVALID_PTE(Pte, PteValue);
+
+    if (Address < MmSystemRangeStart)
+    {
+        /* Add PDE reference */
+        NT_ASSERT(Process == PsGetCurrentProcess());
+        MiIncrementPageTableReferences(Address);
+    }
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -559,6 +595,13 @@ MmCreateVirtualMappingUnsafe(
 
         if (MiIsHyperspaceAddress(Pte))
             MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
+
+        if (Address < MmSystemRangeStart)
+        {
+            /* Add PDE reference */
+            NT_ASSERT(Process == PsGetCurrentProcess());
+            MiIncrementPageTableReferences(Address);
+        }
 
         Address = (PVOID)((ULONG64)Address + PAGE_SIZE);
     }

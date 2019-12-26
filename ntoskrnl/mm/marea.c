@@ -323,7 +323,7 @@ MmFreeMemoryArea(
                 FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                          Page, SwapEntry, (BOOLEAN)Dirty);
             }
-#if (_MI_PAGING_LEVELS == 2)
+
             /* Remove page table reference */
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
             if ((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
@@ -337,10 +337,35 @@ MmFreeMemoryArea(
                     ASSERT(PointerPde->u.Hard.Valid == 1);
                     MiDeletePte(PointerPde, MiPdeToPte(PointerPde), Process, NULL);
                     ASSERT(PointerPde->u.Hard.Valid == 0);
+#if (_MI_PAGING_LEVELS >= 3)
+                    if (MiDecrementPageTableReferences(MiAddressToPte((PVOID)Address)) == 0)
+                    {
+                        /* No PDE relies on this PPE. Release it */
+                        PMMPPE PointerPpe = MiAddressToPpe((PVOID)Address);
+                        ASSERT(PointerPpe->u.Hard.Valid == 1);
+                        MiDeletePte(PointerPpe,
+                                    MiPteToAddress(PointerPpe),
+                                    Process,
+                                    NULL);
+                        ASSERT(PointerPpe->u.Hard.Valid == 0);
+#if (_MI_PAGING_LEVELS >= 4)
+                        if (MiDecrementPageTableReferences(PointerPde) == 0)
+                        {
+                            /* No PPE relies on this PXE. Release it */
+                            PMMPXE PointerPxe = MiAddressToPxe((PVOID)Address);
+                            ASSERT(PointerPxe->u.Hard.Valid == 1);
+                            MiDeletePte(PointerPxe,
+                                        MiPteToAddress(PointerPxe),
+                                        Process,
+                                        NULL);
+                            ASSERT(PointerPxe->u.Hard.Valid == 0);
+                        }
+#endif
+                    }
+#endif
                     MiReleasePfnLock(OldIrql);
                 }
             }
-#endif
         }
 
         if (Process != NULL &&

@@ -2139,6 +2139,10 @@ UserFault:
 
         /* We should come back with a valid PPE */
         ASSERT(PointerPpe->u.Hard.Valid == 1);
+
+        /* Add an additional page table reference */
+        if (MiIsUserPde(PointerPde))
+            MiIncrementPageTableReferences(PointerPde);
     }
 #endif
 
@@ -2184,6 +2188,10 @@ UserFault:
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
         ASSERT(PointerPde->u.Hard.Valid == 1);
+
+        /* Add an additional page table reference */
+        if (MiIsUserPte(PointerPte))
+            MiIncrementPageTableReferences(PointerPte);
     }
     else
     {
@@ -2262,7 +2270,8 @@ UserFault:
     }
 
     /* Quick check for demand-zero */
-    if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
+    if ((TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)) ||
+        (TempPte.u.Long == (MM_EXECUTE_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)))
     {
         /* Resolve the fault */
         MiResolveDemandZeroFault(Address,
@@ -2296,10 +2305,9 @@ UserFault:
         }
 
         /*
-         * Check if this is a real user-mode address or actually a kernel-mode
-         * page table for a user mode address
+         * Check if this is actually a user-mode address 
          */
-        if (Address <= MM_HIGHEST_USER_ADDRESS)
+        if (MiIsUserAddressOrPageTable(Address))
         {
             /* Add an additional page table reference */
             MiIncrementPageTableReferences(Address);

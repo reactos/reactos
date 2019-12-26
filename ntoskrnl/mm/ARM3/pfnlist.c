@@ -625,6 +625,9 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
     ASSERT(Pfn1->u4.VerifierAllocation == 0);
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+#ifdef _M_AMD64
+    ASSERT(Pfn1->UsedPageTableEntries == 0);
+#endif
 
     /* HACK HACK HACK : Feed the page to legacy Mm */
     if (MmRosNotifyAvailablePage(PageFrameIndex))
