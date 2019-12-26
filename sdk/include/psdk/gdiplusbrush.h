@@ -27,6 +27,11 @@ public:
   friend class Graphics;
   friend class Pen;
 
+  virtual ~Brush()
+  {
+    DllExports::GdipDeleteBrush(brush);
+  }
+
   Brush *Clone(VOID) const
   {
     return NULL;
