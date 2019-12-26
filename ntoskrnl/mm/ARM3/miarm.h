@@ -2549,57 +2549,13 @@ USHORT
 MiQueryPageTableReferences(IN PVOID Address)
 {
     PMMPDE PointerPde;
-    PMMPPE PointerPpe;
-#if _MI_PAGING_LEVELS == 4
-    PMMPXE PointerPxe;
-#endif
     PMMPFN Pfn;
 
     /* Make sure we're locked */
     ASSERT((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) || (PsGetCurrentThread()->OwnsProcessWorkingSetShared));
 
-    /* Check if PXE or PPE have references first. */
-#if _MI_PAGING_LEVELS == 4
-    PointerPxe = MiAddressToPxe(Address);
-    if ((PointerPxe->u.Hard.Valid == 1) || (PointerPxe->u.Soft.Transition == 1))
-    {
-        Pfn = MiGetPfnEntry(PFN_FROM_PXE(PointerPxe));
-        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
-            return 0;
-    }
-    else if (PointerPxe->u.Soft.UsedPageTableEntries == 0)
-    {
-        return 0;
-    }
-
-    if (PointerPxe->u.Hard.Valid == 0)
-    {
-        MiMakeSystemAddressValid(MiPteToAddress(PointerPxe), PsGetCurrentProcess());
-    }
-#endif
-
-    PointerPpe = MiAddressToPpe(Address);
-    if ((PointerPpe->u.Hard.Valid == 1) || (PointerPpe->u.Soft.Transition == 1))
-    {
-        Pfn = MiGetPfnEntry(PFN_FROM_PPE(PointerPpe));
-        if (Pfn->OriginalPte.u.Soft.UsedPageTableEntries == 0)
-            return 0;
-    }
-    else if (PointerPpe->u.Soft.UsedPageTableEntries == 0)
-    {
-        return 0;
-    }
-
-    if (PointerPpe->u.Hard.Valid == 0)
-    {
-        MiMakeSystemAddressValid(MiPteToAddress(PointerPpe), PsGetCurrentProcess());
-    }
-
     PointerPde = MiAddressToPde(Address);
-    if ((PointerPde->u.Hard.Valid == 0) && (PointerPde->u.Soft.Transition == 0))
-    {
-        return PointerPde->u.Soft.UsedPageTableEntries;
-    }
+    ASSERT(PointerPde->u.Hard.Valid);
 
     /* This lies on the PFN */
     Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
