@@ -54,6 +54,11 @@ public:
   {
   }
 
+  ~Graphics()
+  {
+    DllExports::GdipDeleteGraphics(graphics);
+  }
+
   Status AddMetafileComment(const BYTE *data, UINT sizeData)
   {
     return SetStatus(DllExports::GdipComment(graphics, sizeData, data));
