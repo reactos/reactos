@@ -423,9 +423,11 @@ KdpScreenAcquire(VOID)
         InbvEnableDisplayString(TRUE);
         InbvSetScrollRegion(0, 0, 639, 479);
     }
+    else
+    {
+        DbgPrint("********* -----> Could NOT acquire SCREEN!! <----- *********\n");
+    }
 }
-
-// extern VOID NTAPI InbvSetDisplayOwnership(IN BOOLEAN DisplayOwned);
 
 VOID
 KdpScreenRelease(VOID)
@@ -434,7 +436,6 @@ KdpScreenRelease(VOID)
         InbvCheckDisplayOwnership())
     {
         /* Release the display */
-        // InbvSetDisplayOwnership(FALSE);
         InbvNotifyDisplayOwnershipLost(NULL);
     }
 }
@@ -632,6 +633,14 @@ KdpPromptString(
     USHORT i;
     ULONG DummyScanCode;
 
+/*************************/
+    /**/if (!(KdbDebugState & KD_DEBUG_KDSERIAL))/**/
+    KbdDisableMouse();
+    /* Take control of the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenAcquire();
+/*************************/
+
     StringChar.Buffer = &Response;
     StringChar.Length = StringChar.MaximumLength = sizeof(Response);
 
@@ -648,8 +657,8 @@ KdpPromptString(
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdpAcquireLock(&KdpSerialSpinLock);
 
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdDisableMouse();
+    // if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        // KbdDisableMouse();
 
     /* Loop the whole string */
     for (i = 0; i < ResponseString->MaximumLength; i++)
@@ -711,8 +720,8 @@ KdpPromptString(
     /* Return the length */
     ResponseString->Length = i;
 
-    if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
-        KbdEnableMouse();
+    // if (!(KdbDebugState & KD_DEBUG_KDSERIAL))
+        // KbdEnableMouse();
 
     /* Release the spinlock */
     KdpReleaseLock(&KdpSerialSpinLock, OldIrql);
@@ -720,6 +729,14 @@ KdpPromptString(
     /* Print a new line */
     *StringChar.Buffer = '\n';
     KdpPrintString(&StringChar);
+
+/*************************/
+    /* Release the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenRelease();
+    /**/if (!(KdbDebugState & KD_DEBUG_KDSERIAL))/**/
+    KbdEnableMouse();
+/*************************/
 
     /* Success; we don't need to resend */
     return FALSE;
