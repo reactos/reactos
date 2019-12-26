@@ -1216,11 +1216,11 @@ KdbpInternalEnter(VOID)
     PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
     ULONG SavedStackLimit;
 
-    // KbdDisableMouse();
+    KbdDisableMouse();
 
-    // /* Take control of the display */
-    // if (KdpDebugMode.Screen)
-        // KdpScreenAcquire();
+    /* Take control of the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenAcquire();
 
     /* Call the interface's main loop on a different stack */
     Thread = PsGetCurrentThread();
@@ -1241,11 +1241,11 @@ KdbpInternalEnter(VOID)
     Thread->Tcb.StackLimit = SavedStackLimit;
     Thread->Tcb.KernelStack = SavedKernelStack;
 
-    // /* Release the display */
-    // if (KdpDebugMode.Screen)
-        // KdpScreenRelease();
+    /* Release the display */
+    if (KdpDebugMode.Screen)
+        KdpScreenRelease();
 
-    // KbdEnableMouse();
+    KbdEnableMouse();
 }
 
 static ULONG
@@ -1355,13 +1355,6 @@ KdbEnterDebuggerException(
     {
         EnterConditionMet = FALSE;
     }
-
-/*************************/
-    KbdDisableMouse();
-    /* Take control of the display */
-    if (KdpDebugMode.Screen)
-        KdpScreenAcquire();
-/*************************/
 
     /* If we stopped on one of our breakpoints then let the user know */
     KdbLastBreakPointNr = -1;
@@ -1538,9 +1531,7 @@ KdbEnterDebuggerException(
         {
             if (!EnterConditionMet)
             {
-                // return kdHandleException;
-                ContinueType = kdHandleException;
-                goto cleanup_quit;
+                return kdHandleException;
             }
 
             KdbpPrint("\nEntered debugger on unexpected debug trap!\n");
@@ -1555,9 +1546,7 @@ KdbEnterDebuggerException(
         }
         if (!EnterConditionMet)
         {
-            // return kdHandleException;
-            ContinueType = kdHandleException;
-            goto cleanup_quit;
+            return kdHandleException;
         }
 
         KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
@@ -1571,8 +1560,7 @@ KdbEnterDebuggerException(
 
         if (!EnterConditionMet)
         {
-            // return ContinueType;
-            goto cleanup_quit;
+            return ContinueType;
         }
 
         KdbpPrint("\nEntered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
@@ -1628,9 +1616,7 @@ KdbEnterDebuggerException(
     if (InterlockedIncrement(&KdbEntryCount) > 1)
     {
         __writeeflags(OldEflags);
-        // return kdHandleException;
-        ContinueType = kdHandleException;
-        goto cleanup_quit;
+        return kdHandleException;
     }
 
     /* Call the main loop */
@@ -1683,14 +1669,6 @@ KdbEnterDebuggerException(
     }
 
 continue_execution:
-
-/*************************/
-    /* Release the display */
-    if (KdpDebugMode.Screen)
-        KdpScreenRelease();
-    KbdEnableMouse();
-/*************************/
-
     /* Clear debug status */
     if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
     {
@@ -1711,17 +1689,6 @@ continue_execution:
     }
 
     return ContinueType;
-
-cleanup_quit:
-
-/*************************/
-    /* Release the display */
-    if (KdpDebugMode.Screen)
-        KdpScreenRelease();
-    KbdEnableMouse();
-/*************************/
-
-    return ContinueType;
 }
 
 INIT_FUNCTION
@@ -1732,8 +1699,7 @@ KdbpGetCommandLineSettings(
 {
 #define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
 
-    /* Loop through the switches */
-    for (; p1 && *p1; p1 = strchr(p1, ' '))
+    while (p1 && (p1 = strchr(p1, ' ')))
     {
         /* Skip other spaces */
         while (*p1 == ' ') ++p1;
