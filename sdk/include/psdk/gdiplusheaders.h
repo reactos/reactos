@@ -47,6 +47,11 @@ public:
     return newImage;
   }
 
+  virtual ~Image()
+  {
+    DllExports::GdipDisposeImage(image);
+  }
+
   static Image *FromFile(const WCHAR *filename, BOOL useEmbeddedColorManagement = FALSE)
   {
     return new Image(filename, useEmbeddedColorManagement);
