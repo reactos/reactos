@@ -1,6 +1,10 @@
-// fathelp.S
-// FAT12/16 Boot Sector Helper Code
-// Copyright (c) 1998, 2001, 2002, 2003 Brian Palmer
+/*
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     FAT12/16 boot sector helper code
+ * COPYRIGHT:   Copyright 1998-2003 Brian Palmer (brianp@reactos.org)
+ * COPYRIGHT:   Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
+ */
 
 //#include <asm.inc>
 
@@ -68,6 +72,8 @@ FatHelperEntryPoint:
     mov si, offset msgLoading
     call word ptr [bp-PutCharsOffset]
 
+    /* Reads two sectors of FAT table into the cache */
+    mov cx, 0
     call ReadFatIntoMemory
 
     /* Restore AX (start cluster) */
@@ -123,19 +129,109 @@ LoadFile_Done:
     jmp start
 
 
-// Reads the entire FAT into memory at 7000:0000
+/*
+ * Reads two blocks of FAT table into [0000:((FREELDR_BASE - BPS * 2) >> 4)]
+ *
+ * Call with:
+ *
+ * CX - value of start LBA
+ */
 ReadFatIntoMemory:
-    mov ax, [bp+HiddenSectors]
-    mov dx, [bp+HiddenSectors+2]
-    add ax, [bp+ReservedSectors]
+    pusha
+
+    /* Save the initial LBA */
+    mov word ptr [bp + CacheTableStartLBA], cx
+
+    /* Calculate and save the starting address of cached blocks */
+    mov ax, word ptr [bp + BytesPerSector]
+    mul cx
+    mov word ptr [bp + CacheTableStartOffset], ax
+
+    /* Calculate LBA of a FAT table */
+    mov ax, [bp + HiddenSectors]
+    mov dx, [bp + HiddenSectors + 2]
+    add ax, [bp + ReservedSectors]
+    add ax, cx
     adc dx, 0
-    mov cx, [bp+SectorsPerFat]
-    mov bx, HEX(7000)
-    mov es,bx
-    xor bx,bx
-    call word ptr [bp-ReadSectorsOffset]
+
+    /* Calculate the output buffer address */
+    mov  bx, FREELDR_BASE / 16
+    mov cx, word ptr [bp + BytesPerSector]
+    add cx, word ptr [bp + BytesPerSector]
+    shr cx, 4
+    sub bx, cx
+    mov es, bx
+    xor bx, bx
+
+    /* Read two blocks */
+    mov cx, 2
+    call word ptr [bp - ReadSectorsOffset]
+
+    popa
     ret
 
+/*
+ * Checks the cache and converts AX to a pointer to the cached data
+ *
+ * Call with:
+ *
+ * AX - pointer to FAT table
+ */
+ValidateCache:
+    push ax
+
+    /* Now check all the cache boundaries */
+
+    /* Case 1: If AX < CacheTableStartOffset */
+    cmp eax, dword ptr [bp + CacheTableStartOffset]
+    jnb ValidateCache1
+
+    /* Load a new data into the cache for this offset */
+    xor dx, dx
+    div word ptr [bp + BytesPerSector]
+    mov cx, ax
+    call ReadFatIntoMemory
+
+    jmp short ValidateCacheBoundariesOk
+
+ValidateCache1:
+    /* CacheTableEndOffset = CacheTableStartOffset + (BPS * 2) */
+    mov dx, word ptr [bp + CacheTableStartOffset]
+    add dx, word ptr [bp + BytesPerSector]
+    add dx, word ptr [bp + BytesPerSector]
+    mov word ptr [bp + CacheTableEndOffset], dx
+
+    /* Case 2: If AX >= CacheTableEndOffset */
+    cmp eax, dword ptr [bp + CacheTableEndOffset]
+    jl ValidateCache2
+
+    /* Load a new data into the cache for this offset */
+    xor dx, dx
+    div word ptr [bp + BytesPerSector]
+    mov cx, ax
+    call ReadFatIntoMemory
+
+    jmp short ValidateCacheBoundariesOk
+
+ValidateCache2:
+    /* Case 3: If AX == CacheTableEndOffset - 1 */
+    mov dx, word ptr [bp + CacheTableEndOffset]
+    dec dx
+    cmp eax, edx
+    jne ValidateCacheBoundariesOk
+
+    /* Scroll up one */
+    mov cx, word ptr [bp + CacheTableStartLBA]
+    inc cx
+    call ReadFatIntoMemory
+
+ValidateCacheBoundariesOk:
+    pop ax
+
+    /* Convert pointer to FAT table to pointer to the cached data  */
+    sub ax, word ptr [bp + CacheTableStartOffset]
+
+    ret
 
 // Returns the FAT entry for a given cluster number for 16-bit FAT
 // On entry AX has cluster number
@@ -145,14 +241,27 @@ GetFatEntry16:
     mul cx
     shl dx,12
 
-    mov bx, HEX(7000)
-    add bx,dx
-    mov es,bx
-    mov bx,ax                       // Restore FAT entry offset
+    push dx
+    call ValidateCache
+    pop dx
+
+    /* Calculate the FAT entry offset
+     *
+     * ES = (FREELDR_BASE - BPS * 2) >> 4 + DX
+     * BX = AX
+     */
+    mov bx, FREELDR_BASE / 16
+    mov cx, word ptr [bp + BytesPerSector]
+    add cx, word ptr [bp + BytesPerSector]
+    shr cx, 4
+    sub bx, cx
+    add bx, dx
+    mov es, bx
+    mov bx, ax
+
     mov ax, es:[bx]                 // Get FAT entry
 
     ret
-
 
 // Returns the FAT entry for a given cluster number for 12-bit FAT
 // On entry AX has cluster number
@@ -163,10 +272,23 @@ GetFatEntry12:
     shr   ax,1
     add   ax,cx                     // AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
 
-    mov   bx, HEX(7000)
-    mov   es,bx
-    mov   bx,ax                     // Put FAT entry offset into BX
+    call ValidateCache
+
+    /* Calculate the FAT entry offset
+     *
+     * ES = (FREELDR_BASE - BPS * 2) >> 4
+     * BX = AX
+     */
+    mov bx, FREELDR_BASE / 16
+    mov cx, word ptr [bp + BytesPerSector]
+    add cx, word ptr [bp + BytesPerSector]
+    shr cx, 4
+    sub bx, cx
+    mov es, bx
+    mov bx, ax
+
     mov   ax, es:[bx]               // Get FAT entry
+
     pop   cx                        // Get cluster number from stack
     and   cx,1
     jz    UseLow12Bits
@@ -216,10 +338,15 @@ IsFat12_2:
 IsFat12_Done:
     ret
 
+CacheTableStartLBA:
+    .word 0
+CacheTableStartOffset:
+    .long 0
+CacheTableEndOffset:
+    .long 0
 
 msgLoading:
     .ascii "Loading FreeLoader...", CR, LF, NUL
 
     .org 510                // Pad to 510 bytes
     .word HEX(0aa55)        // BootSector signature
-
