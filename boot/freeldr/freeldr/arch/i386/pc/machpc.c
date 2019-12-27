@@ -1348,6 +1348,8 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more ISA devices */
 }
 
+/* FIXME: Abstract things better so we don't need to place define here */
+#if !defined(SARCH_XBOX)
 static
 UCHAR
 PcGetFloppyCount(VOID)
@@ -1359,6 +1361,7 @@ PcGetFloppyCount(VOID)
 
     return ((Data & 0xF0) ? 1 : 0) + ((Data & 0x0F) ? 1 : 0);
 }
+#endif
 
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(VOID)
@@ -1416,9 +1419,13 @@ PcHwIdle(VOID)
 
 /******************************************************************************/
 
+/* FIXME: Abstract things better so we don't need to place define here */
+#if !defined(SARCH_XBOX)
 VOID
-PcMachInit(const char *CmdLine)
+MachInit(const char *CmdLine)
 {
+    memset(&MachVtbl, 0, sizeof(MACHVTBL));
+
     /* Setup vtbl */
     MachVtbl.ConsPutChar = PcConsPutChar;
     MachVtbl.ConsKbHit = PcConsKbHit;
@@ -1448,6 +1455,8 @@ PcMachInit(const char *CmdLine)
     MachVtbl.InitializeBootDevices = PcInitializeBootDevices;
     MachVtbl.HwDetect = PcHwDetect;
     MachVtbl.HwIdle = PcHwIdle;
+
+    HalpCalibrateStallExecution();
 }
 
 VOID
@@ -1457,5 +1466,6 @@ PcPrepareForReactOS(VOID)
     PcVideoPrepareForReactOS();
     DiskStopFloppyMotor();
 }
+#endif
 
 /* EOF */

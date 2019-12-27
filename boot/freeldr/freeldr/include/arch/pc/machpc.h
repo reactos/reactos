@@ -24,8 +24,6 @@
 #include "mm.h"
 #endif
 
-VOID PcMachInit(const char *CmdLine);
-
 VOID PcBeep(VOID);
 
 VOID PcConsPutChar(int Ch);

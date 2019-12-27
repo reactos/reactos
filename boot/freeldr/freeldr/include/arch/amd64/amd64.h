@@ -39,7 +39,6 @@
 #ifndef ASM
 
 VOID FrLdrSetupGdtIdt(VOID);
-#define MachInit PcMachInit
 #endif
 
 /* EOF */
