@@ -124,20 +124,20 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386idt.c
         arch/i386/i386rtl.c
         arch/i386/i386vid.c
-        arch/i386/machpc.c
-        arch/i386/pccons.c
-        arch/i386/pcdisk.c
-        arch/i386/pcmem.c
-        arch/i386/pcrtc.c
-        arch/i386/pcvideo.c
-        arch/i386/machxbox.c
-        arch/i386/xboxcons.c
-        arch/i386/xboxdisk.c
-        arch/i386/xboxfont.c
-        arch/i386/xboxi2c.c
-        arch/i386/xboxmem.c
-        arch/i386/xboxrtc.c
-        arch/i386/xboxvideo.c
+        arch/i386/pc/machpc.c
+        arch/i386/pc/pccons.c
+        arch/i386/pc/pcdisk.c
+        arch/i386/pc/pcmem.c
+        arch/i386/pc/pcrtc.c
+        arch/i386/pc/pcvideo.c
+        arch/i386/xbox/machxbox.c
+        arch/i386/xbox/xboxcons.c
+        arch/i386/xbox/xboxdisk.c
+        arch/i386/xbox/xboxfont.c
+        arch/i386/xbox/xboxi2c.c
+        arch/i386/xbox/xboxmem.c
+        arch/i386/xbox/xboxrtc.c
+        arch/i386/xbox/xboxvideo.c
         disk/scsiport.c)
 
 elseif(ARCH STREQUAL "amd64")
@@ -162,12 +162,12 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/i386bug.c
         arch/i386/i386rtl.c
         arch/i386/i386vid.c
-        arch/i386/machpc.c
-        arch/i386/pccons.c
-        arch/i386/pcdisk.c
-        arch/i386/pcmem.c
-        arch/i386/pcrtc.c
-        arch/i386/pcvideo.c)
+        arch/i386/pc/machpc.c
+        arch/i386/pc/pccons.c
+        arch/i386/pc/pcdisk.c
+        arch/i386/pc/pcmem.c
+        arch/i386/pc/pcrtc.c
+        arch/i386/pc/pcvideo.c)
 
 elseif(ARCH STREQUAL "arm")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -198,7 +198,7 @@ if(USE_CLANG_CL)
 endif()
 if(NOT MSVC AND ARCH STREQUAL "i386")
   # Prevent a warning when doing a memcmp with address 0
-  set_source_files_properties(arch/i386/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
+  set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
 endif()
 
 set(PCH_SOURCE
