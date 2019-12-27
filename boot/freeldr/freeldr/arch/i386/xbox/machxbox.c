@@ -253,8 +253,27 @@ VOID XboxHwIdle(VOID)
 /******************************************************************************/
 
 VOID
-XboxMachInit(const char *CmdLine)
+MachInit(const char *CmdLine)
 {
+    ULONG PciId;
+
+    memset(&MachVtbl, 0, sizeof(MACHVTBL));
+
+    /* Check for Xbox by identifying device at PCI 0:0:0, if it's
+     * 0x10DE/0x02A5 then we're running on an Xbox */
+    WRITE_PORT_ULONG((ULONG *)0xCF8, CONFIG_CMD(0, 0, 0));
+    PciId = READ_PORT_ULONG((ULONG *)0xCFC);
+    if (PciId != 0x02A510DE)
+    {
+        ERR("This is not original Xbox!\n");
+
+        /* Disable and halt the CPU */
+        _disable();
+        __halt();
+
+        while (TRUE);
+    }
+
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
 
@@ -294,6 +313,8 @@ XboxMachInit(const char *CmdLine)
 
     /* Set LEDs to orange after init */
     XboxSetLED("oooo");
+
+    HalpCalibrateStallExecution();
 }
 
 VOID
