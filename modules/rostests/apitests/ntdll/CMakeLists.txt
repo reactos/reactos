@@ -78,7 +78,8 @@ if(ARCH STREQUAL "i386")
         i386/NtContinue.S)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND RTL_SOURCE
-        amd64/RtlCaptureContext.c)
+        amd64/RtlCaptureContext.c
+        amd64/RtlVirtualUnwind.c)
     add_asm_files(ntdll_apitest_asm
         amd64/UnwindStubs.S
         amd64/RtlCaptureContext.S)
