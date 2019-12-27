@@ -4,7 +4,19 @@ LICENSE:     MIT (https://spdx.org/licenses/MIT)
 PURPOSE:     Update baseaddresses of all modules
 COPYRIGHT:   Copyright 2017,2018 Mark Jansen (mark.jansen@reactos.org)
 '''
+
 from __future__ import print_function, absolute_import, division
+
+USAGE = """
+This script will update the baseaddresses of all modules, based on the build output.
+
+Specify the build output dir as commandline argument to the script:
+`python gen_baseaddress.py C:\\Users\\Mark\\reactos\\output-MinGW-i386`
+
+Multiple directories can be specified:
+`python gen_baseaddress r:/build/msvc r:/build/gcc`
+"""
+
 import os
 import struct
 import sys
@@ -14,6 +26,7 @@ try:
 except ImportError:
     print('# Please install pefile from pip or https://github.com/erocarrera/pefile')
     sys.exit(-1)
+
 
 ALL_EXTENSIONS = (
     '.dll', '.acm', '.ax', '.cpl', '.drv', '.ocx'
@@ -365,10 +378,14 @@ def main():
     dirs = sys.argv[1:]
     if len(dirs) < 1:
         trydir = os.getcwd()
-        print('# No path specified, trying', trydir)
+        print(USAGE)
+        print('No path specified, trying the working directory: ', trydir)
         dirs = [trydir]
     for onedir in dirs:
-        run_dir(onedir)
+        if onedir.lower() in ['-help', '/help', '/h', '-h', '/?', '-?']:
+            print(USAGE)
+        else:
+            run_dir(onedir)
 
 
 if __name__ == '__main__':
