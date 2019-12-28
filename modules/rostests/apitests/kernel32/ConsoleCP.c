@@ -74,7 +74,7 @@ static void test_cp855(HANDLE hConOut)
     ret = GetConsoleScreenBufferInfo(hConOut, &csbi);
     ok(ret, "GetConsoleScreenBufferInfo failed\n");
     trace("csbi.dwSize.X:%d, csbi.dwSize.Y:%d\n", csbi.dwSize.X, csbi.dwSize.Y);
-    count = csbi.dwSize.X * 3 / 2;
+    count = 200;
     trace("count: %d\n", count);
 
     /* "\u0414" */
@@ -292,7 +292,7 @@ static void test_cp932(HANDLE hConOut)
     ret = GetConsoleScreenBufferInfo(hConOut, &csbi);
     ok(ret, "GetConsoleScreenBufferInfo failed\n");
     trace("csbi.dwSize.X:%d, csbi.dwSize.Y:%d\n", csbi.dwSize.X, csbi.dwSize.Y);
-    count = csbi.dwSize.X * 3 / 2;
+    count = 200;
     trace("count: %d\n", count);
 
     /* "\u0414" */
