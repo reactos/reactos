@@ -772,6 +772,25 @@ static void test_cp932(HANDLE hConOut)
         ok_int(buff[3].Attributes, ATTR);
         ok_int(buff[4].Char.UnicodeChar, 'A');
         ok_int(buff[4].Attributes, ATTR);
+
+        /* read attrs */
+        c.X = 0;
+        c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, ARRAYSIZE(attrs));
+        ok_int(attrs[0], ATTR);
+        if (s_bIs8Plus)
+        {
+            ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+        }
+        else
+        {
+            ok_int(attrs[1], ATTR);
+            ok_int(attrs[2], ATTR);
+        }
+        ok_int(attrs[3], ATTR);
     }
 
     /* COMMON_LVB_LEADING_BYTE and COMMON_LVB_TRAILING_BYTE for u9580 */
@@ -1060,6 +1079,25 @@ static void test_cp932(HANDLE hConOut)
         ok_int(buff[3].Attributes, ATTR);
         ok_int(buff[4].Char.UnicodeChar, 'A');
         ok_int(buff[4].Attributes, ATTR);
+
+        /* read attrs */
+        c.X = 0;
+        c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, ARRAYSIZE(attrs));
+        ok_int(attrs[0], ATTR);
+        if (s_bIs8Plus)
+        {
+            ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+        }
+        else
+        {
+            ok_int(attrs[1], ATTR);
+            ok_int(attrs[2], ATTR);
+        }
+        ok_int(attrs[3], ATTR);
     }
 
     /* Restore code page */
