@@ -18,10 +18,10 @@
 #define ATTR \
     (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 
-static const WCHAR u0414[] = {0x0414, 0};             /* Д */
-static const WCHAR u9580[] = {0x9580, 0};             /* 門 */
+static const WCHAR u0414[] = {0x0414, 0}; /* Д */
+static const WCHAR u9580[] = {0x9580, 0}; /* 門 */
 static const WCHAR space[] = {L' ', 0};
-static const WCHAR ideograph_space = (WCHAR)0x3000;     /* fullwidth space */
+static const WCHAR ideograph_space = (WCHAR)0x3000; /* fullwidth space */
 static LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
 static LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
 static BOOL s_bIs8Plus;
