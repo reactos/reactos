@@ -510,13 +510,13 @@ static void test_cp932(HANDLE hConOut)
         ok_long(len, 1);
 
         /* read char */
+        c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
         ok_int(ret, 1);
         ok_int(str[0], L'A');
 
         /* set cursor */
-        c.X = 0;
-        c.Y = 0;
+        c.X = c.Y = 0;
         SetConsoleCursorPosition(hConOut, c);
         okCURSOR(hConOut, c);
 
@@ -641,6 +641,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(attrs[3], ATTR);
 
         /* read char */
+        c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
         ok_int(ret, 1);
         ok_int(str[0], L' ');
