@@ -481,12 +481,9 @@ static void test_cp932(HANDLE hConOut)
         okCURSOR(hConOut, c);
 
         /* fill by space */
-        for (n = 0; n < csbi.dwSize.X * 2; ++n)
-        {
-            ret = WriteConsoleW(hConOut, space, 1, &len, NULL);
-            ok_int(ret, 1);
-            ok_long(len, 1);
-        }
+        ret = FillConsoleOutputCharacterW(hConOut, L'A', csbi.dwSize.X * 2, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, csbi.dwSize.X * 2);
 
         /* clear buff */
         buffSize.X = ARRAYSIZE(buff);
@@ -505,7 +502,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, L' ');
+        ok_int(buff[0].Char.UnicodeChar, L'A');
         ok_int(buff[0].Attributes, ATTR);
 
         /* read attr */
@@ -552,12 +549,12 @@ static void test_cp932(HANDLE hConOut)
         else
         {
             ok_int(buff[0].Attributes, ATTR);
-            ok_int(buff[1].Char.UnicodeChar, L' ');
+            ok_int(buff[1].Char.UnicodeChar, L'A');
             ok_int(buff[1].Attributes, ATTR);
         }
-        ok_int(buff[2].Char.UnicodeChar, L' ');
+        ok_int(buff[2].Char.UnicodeChar, L'A');
         ok_int(buff[2].Attributes, ATTR);
-        ok_int(buff[3].Char.UnicodeChar, L' ');
+        ok_int(buff[3].Char.UnicodeChar, L'A');
         ok_int(buff[3].Attributes, ATTR);
 
         /* read attr */
@@ -609,10 +606,10 @@ static void test_cp932(HANDLE hConOut)
             ok_int(buff[0].Attributes, ATTR);
             ok_int(buff[1].Char.UnicodeChar, 0x0414);
             ok_int(buff[1].Attributes, ATTR);
-            ok_int(buff[2].Char.UnicodeChar, L' ');
+            ok_int(buff[2].Char.UnicodeChar, L'A');
             ok_int(buff[2].Attributes, ATTR);
         }
-        ok_int(buff[3].Char.UnicodeChar, L' ');
+        ok_int(buff[3].Char.UnicodeChar, L'A');
         ok_int(buff[3].Attributes, ATTR);
 
         /* read attr */
@@ -660,9 +657,9 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, ' ');
+        ok_int(buff[0].Char.UnicodeChar, L'A');
         ok_int(buff[0].Attributes, ATTR);
-        ok_int(buff[1].Char.UnicodeChar, ' ');
+        ok_int(buff[1].Char.UnicodeChar, L'A');
         ok_int(buff[1].Attributes, ATTR);
 
         /* read attr */
