@@ -509,6 +509,11 @@ static void test_cp932(HANDLE hConOut)
         ok_int(attr, ATTR);
         ok_long(len, 1);
 
+        /* read char */
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], L'A');
+
         /* set cursor */
         c.X = 0;
         c.Y = 0;
@@ -560,11 +565,23 @@ static void test_cp932(HANDLE hConOut)
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
         ok_long(len, ARRAYSIZE(attrs));
-
         ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
         ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
         ok_int(attrs[2], ATTR);
         ok_int(attrs[3], ATTR);
+
+        /* read char */
+        c.X = c.Y = 0;
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], 0x0414);
+        ok_int(str[1], L'A');
+        ok_int(str[2], L'A');
+        if (s_bIs8Plus)
+            ok_int(str[3], 0);
+        else
+            ok_int(str[3], 0x7F7F);
 
         /* set cursor */
         c.X = 1;
@@ -615,7 +632,6 @@ static void test_cp932(HANDLE hConOut)
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
         ok_long(len, ARRAYSIZE(attrs));
-
         if (s_bIs8Plus)
             ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
         else
@@ -623,6 +639,11 @@ static void test_cp932(HANDLE hConOut)
         ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
         ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
         ok_int(attrs[3], ATTR);
+
+        /* read char */
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], L' ');
 
         /* set cursor */
         c.X = csbi.dwSize.X - 1;
@@ -665,9 +686,14 @@ static void test_cp932(HANDLE hConOut)
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
         ok_long(len, ARRAYSIZE(attrs));
-
         ok_int(attrs[0], ATTR);
         ok_int(attrs[1], ATTR);
+
+        /* read char */
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], L'A');
+        ok_int(str[1], L'A');
     }
 
     /* COMMON_LVB_LEADING_BYTE and COMMON_LVB_TRAILING_BYTE for u9580 */
@@ -707,6 +733,12 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_int(attr, ATTR);
         ok_long(len, 1);
+
+        /* read char */
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], L'A');
 
         /* set cursor */
         c.X = 0;
@@ -764,6 +796,19 @@ static void test_cp932(HANDLE hConOut)
         ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
         ok_int(attrs[2], ATTR);
         ok_int(attrs[3], ATTR);
+
+        /* read char */
+        c.X = c.Y = 0;
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], 0x9580);
+        ok_int(str[1], L'A');
+        ok_int(str[2], L'A');
+        if (s_bIs8Plus)
+            ok_int(str[3], 0);
+        else
+            ok_int(str[3], 0x7F7F);
 
         /* set cursor */
         c.X = 1;
@@ -868,9 +913,15 @@ static void test_cp932(HANDLE hConOut)
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
         ok_long(len, ARRAYSIZE(attrs));
-
         ok_int(attrs[0], ATTR);
         ok_int(attrs[1], ATTR);
+
+        /* read char */
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
+        ok_int(ret, 1);
+        ok_int(str[0], L'A');
+        ok_int(str[1], L'A');
     }
 
     /* Restore code page */
