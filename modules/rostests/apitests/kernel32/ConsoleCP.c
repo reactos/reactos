@@ -714,11 +714,6 @@ static void test_cp932(HANDLE hConOut)
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
 
-        /* fill by space */
-        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
-        ok_int(ret, 1);
-        ok_long(len, 10);
-
         /* fill by 'A' */
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
@@ -1020,11 +1015,6 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
-
-        /* fill by space */
-        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
-        ok_int(ret, 1);
-        ok_long(len, 10);
 
         /* fill by 'A' */
         c.X = c.Y = 0;
