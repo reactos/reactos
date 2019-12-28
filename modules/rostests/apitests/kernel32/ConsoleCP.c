@@ -813,7 +813,6 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         if (s_bIs8Plus)
@@ -868,7 +867,6 @@ static void test_cp932(HANDLE hConOut)
         c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         ok_int(attrs[0], ATTR);
