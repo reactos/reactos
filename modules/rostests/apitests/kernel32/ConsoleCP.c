@@ -478,7 +478,7 @@ static void test_cp932(HANDLE hConOut)
         SetConsoleCursorPosition(hConOut, c);
         okCURSOR(hConOut, c);
 
-        /* fill by space */
+        /* fill by 'A' */
         ret = FillConsoleOutputCharacterW(hConOut, L'A', csbi.dwSize.X * 2, c, &len);
         ok_int(ret, 1);
         ok_long(len, csbi.dwSize.X * 2);
@@ -713,6 +713,65 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
+
+        /* fill by space */
+        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 10);
+
+        /* fill by 'A' */
+        c.X = c.Y = 0;
+        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 10);
+
+        /* fill by u0414 */
+        c.X = 1;
+        c.Y = 0;
+        ret = FillConsoleOutputCharacterW(hConOut, 0x0414, 1, c, &len);
+        c.X = c.Y = 0;
+        ok_int(ret, 1);
+        ok_long(len, 1);
+
+        /* clear buff */
+        buffSize.X = ARRAYSIZE(buff);
+        buffSize.Y = 1;
+        memset(buff, 0x7F, sizeof(buff));
+
+        /* read output */
+        c.X = c.Y = 0;
+        sr.Left = 0;
+        sr.Top = 0;
+        sr.Right = 4;
+        sr.Bottom = 0;
+        ret = ReadConsoleOutputW(hConOut, buff, buffSize, c, &sr);
+        ok_int(ret, 1);
+        ok_int(sr.Left, 0);
+        ok_int(sr.Top, 0);
+        ok_int(sr.Right, 4);
+        ok_int(sr.Bottom, 0);
+
+        /* check buff */
+        ok_int(buff[0].Char.UnicodeChar, 'A');
+        ok_int(buff[0].Attributes, ATTR);
+        if (s_bIs8Plus)
+        {
+            ok_int(buff[1].Char.UnicodeChar, 0x0414);
+            ok_int(buff[1].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(buff[2].Char.UnicodeChar, 0x0414);
+            ok_int(buff[2].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
+        }
+        else
+        {
+            ok_int(buff[1].Char.UnicodeChar, L' ');
+            ok_int(buff[1].Attributes, ATTR);
+            ok_int(buff[2].Char.UnicodeChar, 'A');
+            ok_int(buff[2].Attributes, ATTR);
+        }
+        ok_int(buff[3].Char.UnicodeChar, 'A');
+        ok_int(buff[3].Attributes, ATTR);
+        ok_int(buff[4].Char.UnicodeChar, 'A');
+        ok_int(buff[4].Attributes, ATTR);
     }
 
     /* COMMON_LVB_LEADING_BYTE and COMMON_LVB_TRAILING_BYTE for u9580 */
@@ -722,7 +781,7 @@ static void test_cp932(HANDLE hConOut)
         SetConsoleCursorPosition(hConOut, c);
         okCURSOR(hConOut, c);
 
-        /* fill by space */
+        /* fill by 'A' */
         ret = FillConsoleOutputCharacterW(hConOut, L'A', csbi.dwSize.X * 2, c, &len);
         ok_int(ret, 1);
         ok_long(len, csbi.dwSize.X * 2);
@@ -942,6 +1001,65 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
+
+        /* fill by space */
+        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 10);
+
+        /* fill by 'A' */
+        c.X = c.Y = 0;
+        ret = FillConsoleOutputCharacterW(hConOut, L'A', 10, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 10);
+
+        /* fill by u9580 */
+        c.X = 1;
+        c.Y = 0;
+        ret = FillConsoleOutputCharacterW(hConOut, 0x9580, 1, c, &len);
+        c.X = c.Y = 0;
+        ok_int(ret, 1);
+        ok_long(len, 1);
+
+        /* clear buff */
+        buffSize.X = ARRAYSIZE(buff);
+        buffSize.Y = 1;
+        memset(buff, 0x7F, sizeof(buff));
+
+        /* read output */
+        c.X = c.Y = 0;
+        sr.Left = 0;
+        sr.Top = 0;
+        sr.Right = 4;
+        sr.Bottom = 0;
+        ret = ReadConsoleOutputW(hConOut, buff, buffSize, c, &sr);
+        ok_int(ret, 1);
+        ok_int(sr.Left, 0);
+        ok_int(sr.Top, 0);
+        ok_int(sr.Right, 4);
+        ok_int(sr.Bottom, 0);
+
+        /* check buff */
+        ok_int(buff[0].Char.UnicodeChar, 'A');
+        ok_int(buff[0].Attributes, ATTR);
+        if (s_bIs8Plus)
+        {
+            ok_int(buff[1].Char.UnicodeChar, 0x9580);
+            ok_int(buff[1].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(buff[2].Char.UnicodeChar, 0x9580);
+            ok_int(buff[2].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
+        }
+        else
+        {
+            ok_int(buff[1].Char.UnicodeChar, L' ');
+            ok_int(buff[1].Attributes, ATTR);
+            ok_int(buff[2].Char.UnicodeChar, 'A');
+            ok_int(buff[2].Attributes, ATTR);
+        }
+        ok_int(buff[3].Char.UnicodeChar, 'A');
+        ok_int(buff[3].Attributes, ATTR);
+        ok_int(buff[4].Char.UnicodeChar, 'A');
+        ok_int(buff[4].Attributes, ATTR);
     }
 
     /* Restore code page */
