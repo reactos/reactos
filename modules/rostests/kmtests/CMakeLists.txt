@@ -16,15 +16,15 @@ add_subdirectory(tcpip)
 
 list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
-    rtl/RtlAvlTree.c
-    rtl/RtlException.c
-    rtl/RtlIntSafe.c
-    rtl/RtlMemory.c
-    rtl/RtlRegistry.c
-    rtl/RtlSplayTree.c
-    rtl/RtlStack.c
-    rtl/RtlStrSafe.c
-    rtl/RtlUnicodeString.c)
+    ../apitests/rtl/RtlAvlTree.c
+    ../apitests/rtl/RtlException.c
+    ../apitests/rtl/RtlIntSafe.c
+    ../apitests/rtl/RtlMemory.c
+    ../apitests/rtl/RtlRegistry.c
+    ../apitests/rtl/RtlSplayTree.c
+    ../apitests/rtl/RtlStack.c
+    ../apitests/rtl/RtlStrSafe.c
+    ../apitests/rtl/RtlUnicodeString.c)
 
 #
 # kmtest_drv.sys driver
@@ -96,7 +96,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_se/SeHelpers.c
     ntos_se/SeInheritance.c
     ntos_se/SeQueryInfoToken.c
-    rtl/RtlIsValidOemCharacter.c
+    ../apitests/rtl/RtlIsValidOemCharacter.c
     ${COMMON_SOURCE}
 
     kmtest_drv/kmtest_drv.rc)
