@@ -511,9 +511,13 @@ static void test_cp932(HANDLE hConOut)
 
         /* read char */
         c.X = c.Y = 0;
-        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
         ok_int(str[0], L'A');
+        ok_int(str[1], L'A');
+        ok_int(str[2], L'A');
+        ok_int(str[3], L'A');
 
         /* set cursor */
         c.X = c.Y = 0;
@@ -642,9 +646,23 @@ static void test_cp932(HANDLE hConOut)
 
         /* read char */
         c.X = c.Y = 0;
-        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        memset(str, 0x7F, sizeof(str));
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
-        ok_int(str[0], L' ');
+        if (s_bIs8Plus)
+        {
+            ok_int(str[0], 0x0414);
+            ok_int(str[1], 0x0414);
+            ok_int(str[2], L'A');
+            ok_int(str[3], 0);
+        }
+        else
+        {
+            ok_int(str[0], L' ');
+            ok_int(str[1], 0x0414);
+            ok_int(str[2], L'A');
+            ok_int(str[3], 0x7F7F);
+        }
 
         /* set cursor */
         c.X = csbi.dwSize.X - 1;
@@ -737,9 +755,10 @@ static void test_cp932(HANDLE hConOut)
 
         /* read char */
         memset(str, 0x7F, sizeof(str));
-        ret = ReadConsoleOutputCharacterW(hConOut, str, 1, c, &len);
+        ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
         ok_int(ret, 1);
         ok_int(str[0], L'A');
+        ok_int(str[1], L'A');
 
         /* set cursor */
         c.X = 0;
