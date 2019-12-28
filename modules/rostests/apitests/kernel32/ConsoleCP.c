@@ -537,15 +537,16 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, 0x0414);
         if (s_bIs8Plus)
         {
+            ok_int(buff[0].Char.UnicodeChar, 0x0414);
             ok_int(buff[0].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
             ok_int(buff[1].Char.UnicodeChar, 0x0414);
             ok_int(buff[1].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
         }
         else
         {
+            ok_int(buff[0].Char.UnicodeChar, 0x0414);
             ok_int(buff[0].Attributes, ATTR);
             ok_int(buff[1].Char.UnicodeChar, L'A');
             ok_int(buff[1].Attributes, ATTR);
