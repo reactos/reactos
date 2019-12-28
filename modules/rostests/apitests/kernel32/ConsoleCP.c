@@ -559,7 +559,6 @@ static void test_cp932(HANDLE hConOut)
         /* read attr */
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
@@ -615,7 +614,6 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         if (s_bIs8Plus)
@@ -661,12 +659,11 @@ static void test_cp932(HANDLE hConOut)
         ok_int(buff[1].Char.UnicodeChar, L'A');
         ok_int(buff[1].Attributes, ATTR);
 
-        /* read attr */
+        /* read attrs */
         c.X = csbi.dwSize.X - 2;
         c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         ok_int(attrs[0], ATTR);
