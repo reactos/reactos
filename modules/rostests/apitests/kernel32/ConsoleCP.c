@@ -758,7 +758,6 @@ static void test_cp932(HANDLE hConOut)
         /* read attr */
         ret = ReadConsoleOutputAttribute(hConOut, attrs, ARRAYSIZE(attrs), c, &len);
         ok_int(ret, 1);
-        ok_long(attr, ATTR);
         ok_long(len, ARRAYSIZE(attrs));
 
         ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
