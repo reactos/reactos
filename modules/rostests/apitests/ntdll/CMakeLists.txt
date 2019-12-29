@@ -35,6 +35,7 @@ list(APPEND SOURCE
     NtSetInformationFile.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
+    NtUnloadDriver.c
     NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c
