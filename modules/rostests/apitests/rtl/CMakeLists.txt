@@ -1,6 +1,9 @@
 
+#include_directories(${REACTOS_SOURCE_DIR}/modules/rostests/kmtests/include)
+
 list(APPEND RTL_SOURCE
     RtlAllocateHeap.c
+    #RtlAvlTree.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
     RtlCopyMappedMemory.c
@@ -11,6 +14,7 @@ list(APPEND RTL_SOURCE
     RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
+    #RtlException.c
     RtlFirstFreeAce.c
     RtlGenerate8dot3Name.c
     RtlGetFullPathName_U.c
@@ -20,12 +24,20 @@ list(APPEND RTL_SOURCE
     RtlGetLongestNtPathLength.c
     RtlHandle.c
     RtlImageRvaToVa.c
+    RtlIntSafe.c
     RtlIsNameLegalDOS8Dot3.c
+    RtlIsValidOemCharacter.c
+    #RtlMemory.c
     RtlMemoryStream.c
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
+    RtlRegistry.c
+    #RtlSplayTree.c
+    RtlStack.c
+    RtlStrSafe.c
+    RtlUnicodeString.c
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c)
 
@@ -46,5 +58,6 @@ add_target_compile_flags(rtl_apitest "-D_RTL_TEST -D_NTSYSTEM_")
 target_link_libraries(rtl_apitest wine uuid ${PSEH_LIB} rtl)
 set_module_type(rtl_apitest win32cui)
 add_importlibs(rtl_apitest msvcrt advapi32 kernel32 ntdll)
+add_target_compile_definitions(rtl_apitest KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 
 add_rostests_file(TARGET rtl_apitest)
