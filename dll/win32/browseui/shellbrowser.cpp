@@ -23,7 +23,6 @@
 #include <shellapi.h>
 #include <htiframe.h>
 #include <strsafe.h>
-#include <undocshell.h>
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
