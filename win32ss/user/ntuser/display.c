@@ -596,6 +596,7 @@ NtUserEnumDisplaySettings(
     OUT LPDEVMODEW lpDevMode,
     IN DWORD dwFlags)
 {
+    UNICODE_STRING ustrDeviceUser;
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
     NTSTATUS Status;
@@ -633,15 +634,17 @@ NtUserEnumDisplaySettings(
         _SEH2_TRY
         {
             /* Probe the UNICODE_STRING and the buffer */
-            ProbeForReadUnicodeString(pustrDevice);
+            ustrDeviceUser = ProbeForReadUnicodeString(pustrDevice);
 
-            if (!pustrDevice->Length || !pustrDevice->Buffer)
+            if (!ustrDeviceUser.Length || !ustrDeviceUser.Buffer)
                 ExRaiseStatus(STATUS_NO_MEMORY);
 
-            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, sizeof(UCHAR));
+            ProbeForRead(ustrDeviceUser.Buffer,
+                         ustrDeviceUser.Length,
+                         sizeof(UCHAR));
 
             /* Copy the string */
-            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
+            RtlCopyUnicodeString(&ustrDevice, &ustrDeviceUser);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
