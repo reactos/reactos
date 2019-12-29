@@ -108,16 +108,33 @@ VOID PrintInfoLine(VOID)
  */
 VOID PrintPrompt(VOID)
 {
-    LPTSTR pr;
+    LPTSTR pr, Prompt;
     TCHAR szPrompt[256];
     TCHAR szPath[MAX_PATH];
 
     if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, _countof(szPrompt)))
-        pr = szPrompt;
+        Prompt = szPrompt;
     else
-        pr = DefaultPrompt;
+        Prompt = DefaultPrompt;
 
-    while (*pr)
+    /*
+     * Special pre-handling for $I: If the information line is displayed
+     * on top of the screen, ensure that the prompt won't be hidden below it.
+     */
+    for (pr = Prompt; *pr;)
+    {
+        if (*pr++ != _T('$'))
+            continue;
+        if (!*pr || _totupper(*pr++) != _T('I'))
+            continue;
+
+        if (GetCursorY() == 0)
+            ConOutChar(_T('\n'));
+        break;
+    }
+
+    /* Parse the prompt string */
+    for (pr = Prompt; *pr; ++pr)
     {
         if (*pr != _T('$'))
         {
@@ -125,8 +142,8 @@ VOID PrintPrompt(VOID)
         }
         else
         {
-            pr++;
-
+            ++pr;
+            if (!*pr) break;
             switch (_totupper(*pr))
             {
                 case _T('A'):
@@ -158,9 +175,7 @@ VOID PrintPrompt(VOID)
                     break;
 
                 case _T('H'):
-                    ConOutChar(_T('\x08'));
-                    ConOutChar(_T(' '));
-                    ConOutChar(_T('\x08'));
+                    ConOutPuts(_T("\x08 \x08"));
                     break;
 
                 case _T('I'):
@@ -205,12 +220,12 @@ VOID PrintPrompt(VOID)
                     ConOutChar(_T('\n'));
                     break;
 
-                case '$':
+                case _T('$'):
                     ConOutChar(_T('$'));
                     break;
 
 #ifdef FEATURE_DIRECTORY_STACK
-                case '+':
+                case _T('+'):
                 {
                     INT i;
                     for (i = 0; i < GetDirectoryStackDepth(); i++)
@@ -220,7 +235,6 @@ VOID PrintPrompt(VOID)
 #endif
             }
         }
-        pr++;
     }
 }
 
