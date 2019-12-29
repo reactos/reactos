@@ -21,108 +21,150 @@
 
 class Metafile : public Image
 {
-public:
-  Metafile(HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+  public:
+    Metafile(HDC referenceHdc, EmfType type, const WCHAR *description)
+    {
+    }
 
-  Metafile(const WCHAR *filename)
-  {
-  }
+    Metafile(const WCHAR *filename)
+    {
+    }
 
-  Metafile(HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  Metafile(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, BOOL deleteWmf)
-  {
-  }
+    Metafile(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, BOOL deleteWmf)
+    {
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        const WCHAR *fileName,
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        IStream *stream,
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(IStream *stream, HDC referenceHdc, EmfType type, const WCHAR *description)
+    {
+    }
 
-  Metafile(IStream *stream, HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        IStream *stream,
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, const RectF &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        const WCHAR *fileName,
+        HDC referenceHdc,
+        const RectF &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  Metafile(const WCHAR *fileName, HDC referenceHdc, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(const WCHAR *fileName, HDC referenceHdc, EmfType type, const WCHAR *description)
+    {
+    }
 
-  Metafile(IStream *stream)
-  {
-  }
+    Metafile(IStream *stream)
+    {
+    }
 
-  Metafile(HENHMETAFILE hEmf, BOOL deleteEmf)
-  {
-  }
+    Metafile(HENHMETAFILE hEmf, BOOL deleteEmf)
+    {
+    }
 
-  Metafile(HDC referenceHdc, const Rect &frameRect, MetafileFrameUnit frameUnit, EmfType type, const WCHAR *description)
-  {
-  }
+    Metafile(
+        HDC referenceHdc,
+        const Rect &frameRect,
+        MetafileFrameUnit frameUnit,
+        EmfType type,
+        const WCHAR *description)
+    {
+    }
 
-  static UINT EmfToWmfBits(HENHMETAFILE hemf, UINT cbData16, LPBYTE pData16, INT iMapMode, EmfToWmfBitsFlags eFlags)
-  {
-    return 0;
-  }
+    static UINT
+    EmfToWmfBits(HENHMETAFILE hemf, UINT cbData16, LPBYTE pData16, INT iMapMode, EmfToWmfBitsFlags eFlags)
+    {
+        return 0;
+    }
 
-  UINT GetDownLevelRasterizationLimit(VOID)
-  {
-    return 0;
-  }
+    UINT GetDownLevelRasterizationLimit(VOID)
+    {
+        return 0;
+    }
 
-  HENHMETAFILE GetHENHMETAFILE(VOID)
-  {
-    return NULL;
-  }
+    HENHMETAFILE GetHENHMETAFILE(VOID)
+    {
+        return NULL;
+    }
 
-  static Status GetMetafileHeader(const WCHAR *filename, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(const WCHAR *filename, MetafileHeader *header)
+    {
+        return NotImplemented;
+    }
 
-  static Status GetMetafileHeader(HENHMETAFILE *hEmf, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(HENHMETAFILE *hEmf, MetafileHeader *header)
+    {
+        return NotImplemented;
+    }
 
-  static Status GetMetafileHeader(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(HMETAFILE hWmf, const WmfPlaceableFileHeader *wmfPlaceableFileHeader, MetafileHeader *header)
+    {
+        return NotImplemented;
+    }
 
-  Status GetMetafileHeader(MetafileHeader *header) const
-  {
-    return NotImplemented;
-  }
+    Status
+    GetMetafileHeader(MetafileHeader *header) const
+    {
+        return NotImplemented;
+    }
 
-  static Status GetMetafileHeader(IStream *stream, MetafileHeader *header)
-  {
-    return NotImplemented;
-  }
+    static Status
+    GetMetafileHeader(IStream *stream, MetafileHeader *header)
+    {
+        return NotImplemented;
+    }
 
-  Status PlayRecord(EmfPlusRecordType recordType, UINT flags, UINT dataSize, const BYTE *data)
-  {
-    return NotImplemented;
-  }
+    Status
+    PlayRecord(EmfPlusRecordType recordType, UINT flags, UINT dataSize, const BYTE *data)
+    {
+        return NotImplemented;
+    }
 
-  Status SetDownLevelRasterizationLimit(UINT metafileRasterizationLimitDpi)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetDownLevelRasterizationLimit(UINT metafileRasterizationLimitDpi)
+    {
+        return NotImplemented;
+    }
 };
 
 #endif /* _GDIPLUSMETAFILE_H */

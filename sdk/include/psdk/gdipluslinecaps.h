@@ -19,137 +19,136 @@
 #ifndef _GDIPLUSLINECAPS_H
 #define _GDIPLUSLINECAPS_H
 
-inline
-CustomLineCap::CustomLineCap(const GraphicsPath *fillPath,
-  const GraphicsPath *strokePath, LineCap baseCap, REAL baseInset)
+inline CustomLineCap::CustomLineCap(
+    const GraphicsPath *fillPath,
+    const GraphicsPath *strokePath,
+    LineCap baseCap,
+    REAL baseInset)
 {
 }
 
-inline CustomLineCap *
-CustomLineCap::Clone(VOID)
+inline CustomLineCap *CustomLineCap::Clone(VOID)
 {
-  return NULL;
+    return NULL;
 }
 
-inline LineCap
-CustomLineCap::GetBaseCap(VOID)
+inline LineCap CustomLineCap::GetBaseCap(VOID)
 {
-  return LineCapFlat;
+    return LineCapFlat;
 }
 
-inline REAL
-CustomLineCap::GetBaseInset(VOID)
+inline REAL CustomLineCap::GetBaseInset(VOID)
 {
-  return 0;
+    return 0;
 }
 
-inline Status
-CustomLineCap::GetLastStatus(VOID)
+inline Status CustomLineCap::GetLastStatus(VOID)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::GetStrokeCaps(LineCap *startCap, LineCap *endCap)
 {
-  return Ok;
+    return Ok;
 }
 
-inline LineJoin
-CustomLineCap::GetStrokeJoin(VOID)
+inline LineJoin CustomLineCap::GetStrokeJoin(VOID)
 {
-  return LineJoinMiter;
+    return LineJoinMiter;
 }
 
-inline REAL
-CustomLineCap::GetWidthScale(VOID)
+inline REAL CustomLineCap::GetWidthScale(VOID)
 {
-  return 0;
+    return 0;
 }
 
 inline Status
 CustomLineCap::SetBaseCap(LineCap baseCap)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::SetBaseInset(REAL inset)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::SetStrokeCap(LineCap strokeCap)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::SetStrokeCaps(LineCap startCap, LineCap endCap)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::SetStrokeJoin(LineJoin lineJoin)
 {
-  return Ok;
+    return Ok;
 }
 
 inline Status
 CustomLineCap::SetWidthScale(IN REAL widthScale)
 {
-  return Ok;
+    return Ok;
 }
-
 
 class AdjustableArrowCap : public CustomLineCap
 {
-public:
-  AdjustableArrowCap(REAL height, REAL width, BOOL isFilled)
-  {
-  }
+  public:
+    AdjustableArrowCap(REAL height, REAL width, BOOL isFilled)
+    {
+    }
 
-  REAL GetHeight(VOID)
-  {
-    return 0;
-  }
+    REAL GetHeight(VOID)
+    {
+        return 0;
+    }
 
-  REAL GetMiddleInset(VOID)
-  {
-    return 0;
-  }
+    REAL GetMiddleInset(VOID)
+    {
+        return 0;
+    }
 
-  REAL GetWidth(VOID)
-  {
-    return 0;
-  }
+    REAL GetWidth(VOID)
+    {
+        return 0;
+    }
 
-  BOOL IsFilled(VOID)
-  {
-    return FALSE;
-  }
+    BOOL IsFilled(VOID)
+    {
+        return FALSE;
+    }
 
-  Status SetFillState(BOOL isFilled)
-  {
-    return Ok;
-  }
+    Status
+    SetFillState(BOOL isFilled)
+    {
+        return Ok;
+    }
 
-  Status SetHeight(REAL height)
-  {
-    return Ok;
-  }
+    Status
+    SetHeight(REAL height)
+    {
+        return Ok;
+    }
 
-  Status SetMiddleInset(REAL middleInset)
-  {
-    return Ok;
-  }
+    Status
+    SetMiddleInset(REAL middleInset)
+    {
+        return Ok;
+    }
 
-  Status SetWidth(REAL width)
-  {
-    return Ok;
-  }
+    Status
+    SetWidth(REAL width)
+    {
+        return Ok;
+    }
 };
 
 #endif /* _GDIPLUSLINECAPS_H */

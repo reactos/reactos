@@ -19,27 +19,32 @@
 #ifndef _GDIPLUSBASE_H
 #define _GDIPLUSBASE_H
 
-class GdiplusBase {
-public:
-  void operator delete(void *in_pVoid)
-  {
-    DllExports::GdipFree(in_pVoid);
-  }
+class GdiplusBase
+{
+  public:
+    void
+    operator delete(void *in_pVoid)
+    {
+        DllExports::GdipFree(in_pVoid);
+    }
 
-  void operator delete[](void *in_pVoid)
-  {
-    DllExports::GdipFree(in_pVoid);
-  }
+    void
+    operator delete[](void *in_pVoid)
+    {
+        DllExports::GdipFree(in_pVoid);
+    }
 
-  void *operator new(size_t in_size)
-  {
-    return DllExports::GdipAlloc(in_size);
-  }
+    void *
+    operator new(size_t in_size)
+    {
+        return DllExports::GdipAlloc(in_size);
+    }
 
-  void *operator new[](size_t in_size)
-  {
-    return DllExports::GdipAlloc(in_size);
-  }
+    void *
+    operator new[](size_t in_size)
+    {
+        return DllExports::GdipAlloc(in_size);
+    }
 };
 
 #endif /* _GDIPLUSBASE_H */

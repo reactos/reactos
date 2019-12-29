@@ -21,124 +21,133 @@
 
 class StringFormat : public GdiplusBase
 {
-public:
-  StringFormat(INT formatFlags, LANGID language)
-  {
-  }
+  public:
+    StringFormat(INT formatFlags, LANGID language)
+    {
+    }
 
-  StringFormat(const StringFormat *format)
-  {
-  }
+    StringFormat(const StringFormat *format)
+    {
+    }
 
-  StringFormat *Clone(VOID)
-  {
-    return NULL;
-  }
+    StringFormat *Clone(VOID)
+    {
+        return NULL;
+    }
 
-  static const StringFormat *GenericDefault(VOID)
-  {
-    return NULL;
-  }
+    static const StringFormat *GenericDefault(VOID)
+    {
+        return NULL;
+    }
 
-  static const StringFormat *GenericTypographic(VOID)
-  {
-    return NULL;
-  }
+    static const StringFormat *GenericTypographic(VOID)
+    {
+        return NULL;
+    }
 
-  StringAlignment GetAlignment(VOID) const
-  {
-    return StringAlignmentNear;
-  }
+    StringAlignment GetAlignment(VOID) const
+    {
+        return StringAlignmentNear;
+    }
 
-  LANGID GetDigitSubstitutionLanguage(VOID) const
-  {
-    return 0;
-  }
+    LANGID GetDigitSubstitutionLanguage(VOID) const
+    {
+        return 0;
+    }
 
-  StringDigitSubstitute GetDigitSubstitutionMethod(VOID) const
-  {
-    return StringDigitSubstituteNone;
-  }
+    StringDigitSubstitute GetDigitSubstitutionMethod(VOID) const
+    {
+        return StringDigitSubstituteNone;
+    }
 
-  INT GetFormatFlags(VOID) const
-  {
-    return 0;
-  }
+    INT GetFormatFlags(VOID) const
+    {
+        return 0;
+    }
 
-  HotkeyPrefix GetHotkeyPrefix(VOID) const
-  {
-    return HotkeyPrefixNone;
-  }
+    HotkeyPrefix GetHotkeyPrefix(VOID) const
+    {
+        return HotkeyPrefixNone;
+    }
 
-  Status GetLastStatus(VOID) const
-  {
-    return NotImplemented;
-  }
+    Status GetLastStatus(VOID) const
+    {
+        return NotImplemented;
+    }
 
-  StringAlignment GetLineAlignment(VOID) const
-  {
-    return StringAlignmentNear;
-  }
+    StringAlignment GetLineAlignment(VOID) const
+    {
+        return StringAlignmentNear;
+    }
 
-  INT GetMeasurableCharacterRangeCount(VOID) const
-  {
-    return 0;
-  }
+    INT GetMeasurableCharacterRangeCount(VOID) const
+    {
+        return 0;
+    }
 
-  INT GetTabStopCount(VOID) const
-  {
-    return 0;
-  }
+    INT GetTabStopCount(VOID) const
+    {
+        return 0;
+    }
 
-  Status GetTabStops(INT count, REAL *firstTabOffset, REAL *tabStops) const
-  {
-    return NotImplemented;
-  }
+    Status
+    GetTabStops(INT count, REAL *firstTabOffset, REAL *tabStops) const
+    {
+        return NotImplemented;
+    }
 
-  StringTrimming GetTrimming(VOID) const
-  {
-    return StringTrimmingNone;
-  }
+    StringTrimming GetTrimming(VOID) const
+    {
+        return StringTrimmingNone;
+    }
 
-  Status SetAlignment(StringAlignment align)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetAlignment(StringAlignment align)
+    {
+        return NotImplemented;
+    }
 
-  Status SetDigitSubstitution(LANGID language, StringDigitSubstitute substitute)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetDigitSubstitution(LANGID language, StringDigitSubstitute substitute)
+    {
+        return NotImplemented;
+    }
 
-  Status SetFormatFlags(INT flags)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetFormatFlags(INT flags)
+    {
+        return NotImplemented;
+    }
 
-  Status SetHotkeyPrefix(HotkeyPrefix hotkeyPrefix)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetHotkeyPrefix(HotkeyPrefix hotkeyPrefix)
+    {
+        return NotImplemented;
+    }
 
-  Status SetLineAlignment(StringAlignment align)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetLineAlignment(StringAlignment align)
+    {
+        return NotImplemented;
+    }
 
-  Status SetMeasurableCharacterRanges(INT rangeCount, const CharacterRange *ranges)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetMeasurableCharacterRanges(INT rangeCount, const CharacterRange *ranges)
+    {
+        return NotImplemented;
+    }
 
-  Status SetTabStops(REAL firstTabOffset, INT count, const REAL *tabStops)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetTabStops(REAL firstTabOffset, INT count, const REAL *tabStops)
+    {
+        return NotImplemented;
+    }
 
-  Status SetTrimming(StringTrimming trimming)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetTrimming(StringTrimming trimming)
+    {
+        return NotImplemented;
+    }
 };
 
 #endif /* _GDIPLUSSTRINGFORMAT_H */

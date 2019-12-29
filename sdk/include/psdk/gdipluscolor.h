@@ -33,7 +33,7 @@ enum ColorChannelFlags
 
 class Color
 {
-public:
+  public:
     Color(VOID)
     {
         Argb = 0xff000000;
@@ -99,17 +99,20 @@ public:
         return Argb;
     }
 
-    static ARGB MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
+    static ARGB
+    MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
     {
         return a << 24 | r << 16 | g << 8 | b;
     }
 
-    VOID SetFromCOLORREF(COLORREF rgb)
+    VOID
+    SetFromCOLORREF(COLORREF rgb)
     {
         Argb = 0xff000000 | (rgb & 0x000000ff) << 16 | (rgb & 0x0000ff00) | (rgb & 0x00ff0000) >> 16;
     }
 
-    VOID SetValue(ARGB argb)
+    VOID
+    SetValue(ARGB argb)
     {
         Argb = argb;
     }
@@ -119,7 +122,7 @@ public:
         return (Argb & 0x000000ff) << 16 | (Argb & 0x0000ff00) | (Argb & 0x00ff0000) >> 16;
     }
 
-protected:
+  protected:
     ARGB Argb;
 };
 
@@ -132,6 +135,6 @@ typedef struct Color
 
 typedef enum ColorChannelFlags ColorChannelFlags;
 
-#endif  /* end of c typedefs */
+#endif /* end of c typedefs */
 
-#endif  /* _GDIPLUSCOLOR_H */
+#endif /* _GDIPLUSCOLOR_H */
