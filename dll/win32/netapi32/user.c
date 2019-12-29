@@ -2230,7 +2230,7 @@ OpenUserByName(SAM_HANDLE DomainHandle,
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", UserName, Status);
         return NetpNtStatusToApiStatus(Status);
     }
 
@@ -2588,7 +2588,7 @@ NetUserDel(LPCWSTR servername,
                                &UserHandle);
     if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
     {
-        TRACE("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+        TRACE("OpenUserByName(%wZ) failed (ApiStatus %lu)\n", &UserName, ApiStatus);
         goto done;
     }
 
@@ -2619,7 +2619,7 @@ NetUserDel(LPCWSTR servername,
                                    &UserHandle);
         if (ApiStatus != NERR_Success)
         {
-            ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+            ERR("OpenUserByName(%wZ) failed (ApiStatus %lu)\n", &UserName, ApiStatus);
             if (ApiStatus == ERROR_NONE_MAPPED)
                 ApiStatus = NERR_UserNotFound;
             goto done;
@@ -3039,7 +3039,7 @@ NetUserGetGroups(LPCWSTR servername,
                            &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -3052,7 +3052,7 @@ NetUserGetGroups(LPCWSTR servername,
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", &UserName, Status);
         if (Status == STATUS_NONE_MAPPED)
             ApiStatus = NERR_UserNotFound;
         else
@@ -3226,7 +3226,7 @@ NetUserGetInfo(LPCWSTR servername,
                            &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -3239,7 +3239,7 @@ NetUserGetInfo(LPCWSTR servername,
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", &UserName, Status);
         if (Status == STATUS_NONE_MAPPED)
             ApiStatus = NERR_UserNotFound;
         else
@@ -3414,7 +3414,7 @@ NetUserGetLocalGroups(LPCWSTR servername,
                            &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -3427,7 +3427,7 @@ NetUserGetLocalGroups(LPCWSTR servername,
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ERR("SamLookupNamesInDomain(%wZ) failed (Status %08lx)\n", &UserName, Status);
         if (Status == STATUS_NONE_MAPPED)
             ApiStatus = NERR_UserNotFound;
         else
@@ -4063,7 +4063,7 @@ NetUserSetInfo(LPCWSTR servername,
                                &UserHandle);
     if (ApiStatus != NERR_Success)
     {
-        ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+        ERR("OpenUserByName(%wZ) failed (ApiStatus %lu)\n", &UserName, ApiStatus);
         goto done;
     }
 
