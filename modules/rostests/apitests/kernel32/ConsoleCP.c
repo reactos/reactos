@@ -483,7 +483,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, csbi.dwSize.X * 2);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -529,7 +529,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -675,7 +675,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -728,7 +728,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -800,7 +800,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, csbi.dwSize.X * 2);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -844,7 +844,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -976,7 +976,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
@@ -1030,7 +1030,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(ret, 1);
         ok_long(len, 1);
 
-        /* clear buff */
+        /* reset buff */
         buffSize.X = ARRAYSIZE(buff);
         buffSize.Y = 1;
         memset(buff, 0x7F, sizeof(buff));
