@@ -2706,6 +2706,10 @@ NtUserGetClassInfo(
     {
         ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
         RtlCopyMemory( &Safewcexw, lpWndClassEx, sizeof(WNDCLASSEXW));
+        if (ppszMenuName)
+        {
+            ProbeForWrite(ppszMenuName, sizeof(*ppszMenuName), sizeof(PVOID));
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
