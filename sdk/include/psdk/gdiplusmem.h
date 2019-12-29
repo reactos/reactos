@@ -22,11 +22,13 @@
 #define WINGDIPAPI __stdcall
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void* WINGDIPAPI GdipAlloc(SIZE_T) __WINE_ALLOC_SIZE(1);
-void WINGDIPAPI GdipFree(void*);
+    void *WINGDIPAPI GdipAlloc(SIZE_T) __WINE_ALLOC_SIZE(1);
+    void WINGDIPAPI
+    GdipFree(void *);
 
 #ifdef __cplusplus
 }
