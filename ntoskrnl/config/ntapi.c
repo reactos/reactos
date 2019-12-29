@@ -1395,7 +1395,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pPrivateVer, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pPrivateVer);
             }
 
             /* Return the expected version */
@@ -1408,7 +1408,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pSafeMode, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pSafeMode);
             }
 
             /* Return the safe boot mode state */
