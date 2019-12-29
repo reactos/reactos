@@ -390,8 +390,12 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LPVOID lpEnvironment;
-    RegenerateUserEnvironment(&lpEnvironment, TRUE);
+    if (uMsg == WM_SETTINGCHANGE /* == WM_WININICHANGE */ &&
+        lstrcmpiW((LPCWSTR)lParam, L"Environment") == 0)
+    {
+        LPVOID lpEnvironment;
+        RegenerateUserEnvironment(&lpEnvironment, TRUE);
+    }
 
     if (m_hWndShellView)
     {
