@@ -2815,6 +2815,12 @@ NtUserGetClassName (IN HWND hWnd,
         {
             ProbeForWriteUnicodeString(ClassName);
             CapturedClassName = *ClassName;
+            if (CapturedClassName.Length != 0)
+            {
+                ProbeForRead(CapturedClassName.Buffer,
+                             CapturedClassName.Length,
+                             sizeof(WCHAR));
+            }
 
             /* Get the class name */
             Ret = UserGetClassName(Window->pcls,
