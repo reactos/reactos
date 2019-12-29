@@ -4057,7 +4057,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD_PTR)MsqIsHung(pWnd->head.pti);
+         Result = (DWORD_PTR)MsqIsHung(pWnd->head.pti, MSQ_HUNG);
          break;
 
       case QUERY_WINDOW_REAL_ID:

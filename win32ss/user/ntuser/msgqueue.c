@@ -2089,8 +2089,8 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
             {
                pti->TIF_flags |= TIF_MSGPOSCHANGED;
             }
-            pti->ptLast   = msg.pt;
             pti->timeLast = msg.time;
+            pti->ptLast   = msg.pt;
             MessageQueue->ExtraInfo = ExtraInfo;
             Ret = TRUE;
             break;
@@ -2191,13 +2191,32 @@ co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
 }
 
 BOOL FASTCALL
-MsqIsHung(PTHREADINFO pti)
+MsqIsHung(PTHREADINFO pti, DWORD TimeOut)
 {
-    if (EngGetTickCount32() - pti->timeLast > MSQ_HUNG &&
+    DWORD dwTimeStamp = EngGetTickCount32();
+    if (dwTimeStamp - pti->pcti->timeLastRead > TimeOut &&
        !(pti->pcti->fsWakeMask & QS_INPUT) &&
        !PsGetThreadFreezeCount(pti->pEThread) &&
        !(pti->ppi->W32PF_flags & W32PF_APPSTARTING))
-       return TRUE;
+    {
+        ERR("\nMsqIsHung(pti %p, TimeOut %lu)\n"
+            "pEThread %p, ThreadsProcess %p, ImageFileName '%s'\n"
+            "dwTimeStamp = %lu\n"
+            "pti->pcti->timeLastRead = %lu\n"
+            "pti->timeLast = %lu\n"
+            "PsGetThreadFreezeCount(pti->pEThread) = %lu\n",
+            pti, TimeOut,
+            pti->pEThread,
+            pti->pEThread ? pti->pEThread->ThreadsProcess : NULL,
+            (pti->pEThread && pti->pEThread->ThreadsProcess)
+                ? pti->pEThread->ThreadsProcess->ImageFileName : "(None)",
+            dwTimeStamp,
+            pti->pcti->timeLastRead,
+            pti->timeLast,
+            PsGetThreadFreezeCount(pti->pEThread));
+
+        return TRUE;
+    }
 
    return FALSE;
 }

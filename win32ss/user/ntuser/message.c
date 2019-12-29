@@ -829,8 +829,8 @@ co_IntPeekMessage( PMSG Msg,
 
     do
     {
-        pti->timeLast = EngGetTickCount32();
-        pti->pcti->tickLastMsgChecked = pti->timeLast;
+        /* Update the last message-queue access time */
+        pti->pcti->timeLastRead = EngGetTickCount32();
 
         // Post mouse moves while looping through peek messages.
         if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
@@ -874,7 +874,7 @@ co_IntPeekMessage( PMSG Msg,
                             0,
                             Msg ))
         {
-            return TRUE;
+            goto GotMessage;
         }
 
         /* Only check for quit messages if not posted messages pending. */
@@ -893,7 +893,7 @@ co_IntPeekMessage( PMSG Msg,
                 pti->pcti->fsWakeBits &= ~QS_ALLPOSTMESSAGE;
                 pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
             }
-            return TRUE;
+            goto GotMessage;
         }
 
         /* Check for hardware events. */
@@ -906,7 +906,7 @@ co_IntPeekMessage( PMSG Msg,
                                        ProcessMask,
                                        Msg))
         {
-            return TRUE;
+            goto GotMessage;
         }
 
         /* Now check for System Event messages. */
@@ -946,7 +946,7 @@ co_IntPeekMessage( PMSG Msg,
                                 Msg,
                                 RemoveMessages))
         {
-            return TRUE;
+            goto GotMessage;
         }
 
        /* This is correct, check for the current threads timers waiting to be
@@ -962,6 +962,9 @@ co_IntPeekMessage( PMSG Msg,
     }
     while (TRUE);
 
+GotMessage:
+    /* Update the last message-queue access time */
+    pti->pcti->timeLastRead = EngGetTickCount32();
     return TRUE;
 }
 
@@ -1423,20 +1426,18 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (MsqIsHung(ptiSendTo))
-    {
-        if (uFlags & SMTO_ABORTIFHUNG)
-        {
-            // FIXME: Set window hung and add to a list.
-            /* FIXME: Set a LastError? */
-            RETURN( FALSE);
-        }
-    }
-
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: Last error? */
         ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
+        RETURN( FALSE);
+    }
+
+    if ((uFlags & SMTO_ABORTIFHUNG) && MsqIsHung(ptiSendTo, 4 * MSQ_HUNG))
+    {
+        // FIXME: Set window hung and add to a list.
+        /* FIXME: Set a LastError? */
+        ERR("Window %p (%p) (pti %p) is hung!\n", hWnd, Window, ptiSendTo);
         RETURN( FALSE);
     }
 
@@ -1452,13 +1453,13 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
                                     MSQ_NORMAL,
                                     uResult );
     }
-    while ((STATUS_TIMEOUT == Status) &&
+    while ((Status == STATUS_TIMEOUT) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(ptiSendTo)); // FIXME: Set window hung and add to a list.
+           !MsqIsHung(ptiSendTo, MSQ_HUNG)); // FIXME: Set window hung and add to a list.
 
     if (Status == STATUS_TIMEOUT)
     {
-        if (0 && MsqIsHung(ptiSendTo))
+        if (0 && MsqIsHung(ptiSendTo, MSQ_HUNG))
         {
             TRACE("Let's go Ghost!\n");
             IntMakeHungWindowGhosted(hWnd);

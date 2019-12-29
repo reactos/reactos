@@ -167,7 +167,7 @@ typedef struct _CLIENTTHREADINFO
     WORD fsWakeBits;
     WORD fsWakeBitsJournal;
     WORD fsWakeMask;
-    ULONG tickLastMsgChecked;
+    ULONG timeLastRead; // Last time the message queue was read.
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 

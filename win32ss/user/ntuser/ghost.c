@@ -162,7 +162,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         return FALSE;   // not a window
     }
 
-    if (!MsqIsHung(pHungWnd->head.pti))
+    if (!MsqIsHung(pHungWnd->head.pti, MSQ_HUNG))
     {
         DPRINT1("Not hung window\n");
         return FALSE;   // not hung window
