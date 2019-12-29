@@ -621,7 +621,7 @@ NtUserEnumDisplaySettings(
     }
     _SEH2_END;
 
-    if (lpDevMode->dmSize != sizeof(DEVMODEW))
+    if (cbSize != sizeof(DEVMODEW))
     {
         return STATUS_BUFFER_TOO_SMALL;
     }
