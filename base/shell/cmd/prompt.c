@@ -52,7 +52,7 @@
 static TCHAR DefaultPrompt[] = _T("$P$G");
 
 /*
- * Initialize prompt support
+ * Initialize prompt support.
  */
 VOID InitPrompt(VOID)
 {
@@ -62,12 +62,12 @@ VOID InitPrompt(VOID)
      * Set the PROMPT environment variable if it doesn't exist already.
      * You can change the PROMPT environment variable before cmd starts.
      */
-    if (GetEnvironmentVariable(_T("PROMPT"), Buffer, ARRAYSIZE(Buffer)) == 0)
+    if (GetEnvironmentVariable(_T("PROMPT"), Buffer, _countof(Buffer)) == 0)
         SetEnvironmentVariable(_T("PROMPT"), DefaultPrompt);
 }
 
 /*
- * Print an information line on top of the screen
+ * Print an information line on top of the screen.
  */
 VOID PrintInfoLine(VOID)
 {
@@ -104,14 +104,15 @@ VOID PrintInfoLine(VOID)
 }
 
 /*
- * Print the command-line prompt
+ * Print the command-line prompt.
  */
 VOID PrintPrompt(VOID)
 {
-    TCHAR  szPrompt[256];
     LPTSTR pr;
+    TCHAR szPrompt[256];
+    TCHAR szPath[MAX_PATH];
 
-    if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, 256))
+    if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, _countof(szPrompt)))
         pr = szPrompt;
     else
         pr = DefaultPrompt;
@@ -171,20 +172,18 @@ VOID PrintPrompt(VOID)
                     break;
 
                 case _T('N'):
-                    {
-                        TCHAR szPath[MAX_PATH];
-                        GetCurrentDirectory(MAX_PATH, szPath);
-                        ConOutChar(szPath[0]);
-                    }
+                {
+                    GetCurrentDirectory(_countof(szPath), szPath);
+                    ConOutChar(szPath[0]);
                     break;
+                }
 
                 case _T('P'):
-                    {
-                        TCHAR szPath[MAX_PATH];
-                        GetCurrentDirectory(MAX_PATH, szPath);
-                        ConOutPrintf(_T("%s"), szPath);
-                    }
+                {
+                    GetCurrentDirectory(_countof(szPath), szPath);
+                    ConOutPrintf(_T("%s"), szPath);
                     break;
+                }
 
                 case _T('Q'):
                     ConOutChar(_T('='));
@@ -212,12 +211,12 @@ VOID PrintPrompt(VOID)
 
 #ifdef FEATURE_DIRECTORY_STACK
                 case '+':
-                    {
-                        INT i;
-                        for (i = 0; i < GetDirectoryStackDepth (); i++)
-                            ConOutChar(_T('+'));
-                    }
+                {
+                    INT i;
+                    for (i = 0; i < GetDirectoryStackDepth(); i++)
+                        ConOutChar(_T('+'));
                     break;
+                }
 #endif
             }
         }
