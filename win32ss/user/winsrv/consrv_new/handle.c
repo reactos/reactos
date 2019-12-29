@@ -679,6 +679,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepOpenConsole */
 CSR_API(SrvOpenConsole)
 {
     /*
@@ -742,6 +743,7 @@ CSR_API(SrvOpenConsole)
     return Status;
 }
 
+/* API_NUMBER: ConsolepCloseHandle */
 CSR_API(SrvCloseHandle)
 {
     NTSTATUS Status;
@@ -762,6 +764,7 @@ CSR_API(SrvCloseHandle)
     return Status;
 }
 
+/* API_NUMBER: ConsolepVerifyIoHandle */
 CSR_API(SrvVerifyConsoleIoHandle)
 {
     NTSTATUS Status;
@@ -795,6 +798,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
     return Status;
 }
 
+/* API_NUMBER: ConsolepDuplicateHandle */
 CSR_API(SrvDuplicateHandle)
 {
     NTSTATUS Status;

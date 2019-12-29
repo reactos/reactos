@@ -445,6 +445,7 @@ IntDeleteAllAliases(PCONSRV_CONSOLE Console)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepAddAlias */
 CSR_API(SrvAddConsoleAlias)
 {
     NTSTATUS Status;
@@ -535,6 +536,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetAlias */
 CSR_API(SrvGetConsoleAlias)
 {
     NTSTATUS Status;
@@ -627,6 +629,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetAliases */
 CSR_API(SrvGetConsoleAliases)
 {
     NTSTATUS Status;
@@ -733,6 +736,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetAliasesLength */
 CSR_API(SrvGetConsoleAliasesLength)
 {
     NTSTATUS Status;
@@ -774,6 +778,7 @@ CSR_API(SrvGetConsoleAliasesLength)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetAliasExes */
 CSR_API(SrvGetConsoleAliasExes)
 {
     NTSTATUS Status;
@@ -861,6 +866,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetAliasExesLength */
 CSR_API(SrvGetConsoleAliasExesLength)
 {
     NTSTATUS Status;

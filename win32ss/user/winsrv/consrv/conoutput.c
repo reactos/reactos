@@ -30,6 +30,7 @@ NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region);
+/* API_NUMBER: ConsolepInvalidateBitMapRect */
 CSR_API(SrvInvalidateBitMapRect)
 {
     NTSTATUS Status;
@@ -69,6 +70,7 @@ ConDrvSetConsolePalette(IN PCONSOLE Console,
                         IN PCONSOLE_SCREEN_BUFFER Buffer,
                         IN HPALETTE PaletteHandle,
                         IN UINT PaletteUsage);
+/* API_NUMBER: ConsolepSetPalette */
 CSR_API(SrvSetConsolePalette)
 {
     NTSTATUS Status;
@@ -116,6 +118,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            OUT PCONSOLE_CURSOR_INFO CursorInfo);
+/* API_NUMBER: ConsolepGetCursorInfo */
 CSR_API(SrvGetConsoleCursorInfo)
 {
     NTSTATUS Status;
@@ -141,6 +144,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            IN PCONSOLE_CURSOR_INFO CursorInfo);
+/* API_NUMBER: ConsolepSetCursorInfo */
 CSR_API(SrvSetConsoleCursorInfo)
 {
     NTSTATUS Status;
@@ -166,6 +170,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                IN PCOORD Position);
+/* API_NUMBER: ConsolepSetCursorPosition */
 CSR_API(SrvSetConsoleCursorPosition)
 {
     NTSTATUS Status;
@@ -187,6 +192,7 @@ CSR_API(SrvSetConsoleCursorPosition)
     return Status;
 }
 
+/* API_NUMBER: ConsolepCreateScreenBuffer */
 CSR_API(SrvCreateConsoleScreenBuffer)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
@@ -316,6 +322,7 @@ Quit:
 NTSTATUS NTAPI
 ConDrvSetConsoleActiveScreenBuffer(IN PCONSOLE Console,
                                    IN PCONSOLE_SCREEN_BUFFER Buffer);
+/* API_NUMBER: ConsolepSetActiveScreenBuffer */
 CSR_API(SrvSetConsoleActiveScreenBuffer)
 {
     NTSTATUS Status;
@@ -478,6 +485,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                         IN BOOLEAN Unicode,
                         OUT PCHAR_INFO CharInfo/*Buffer*/,
                         IN OUT PSMALL_RECT ReadRegion);
+/* API_NUMBER: ConsolepReadConsoleOutput */
 CSR_API(SrvReadConsoleOutput)
 {
     NTSTATUS Status;
@@ -541,6 +549,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
                          IN BOOLEAN Unicode,
                          IN PCHAR_INFO CharInfo/*Buffer*/,
                          IN OUT PSMALL_RECT WriteRegion);
+/* API_NUMBER: ConsolepWriteConsoleOutput */
 CSR_API(SrvWriteConsoleOutput)
 {
     NTSTATUS Status;
@@ -639,6 +648,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepWriteConsole */
 CSR_API(SrvWriteConsole)
 {
     NTSTATUS Status;
@@ -688,6 +698,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               IN PCOORD ReadCoord,
                               // OUT PCOORD EndCoord,
                               OUT PULONG NumCodesRead OPTIONAL);
+/* API_NUMBER: ConsolepReadConsoleOutputString */
 CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
@@ -776,6 +787,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                IN PCOORD WriteCoord,
                                // OUT PCOORD EndCoord,
                                OUT PULONG NumCodesWritten OPTIONAL);
+/* API_NUMBER: ConsolepWriteConsoleOutputString */
 CSR_API(SrvWriteConsoleOutputString)
 {
     NTSTATUS Status;
@@ -863,6 +875,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN ULONG NumCodesToWrite,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL);
+/* API_NUMBER: ConsolepFillConsoleOutput */
 CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
@@ -909,6 +922,7 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
                                  OUT PCOORD ViewSize,
                                  OUT PCOORD MaximumViewSize,
                                  OUT PWORD  Attributes);
+/* API_NUMBER: ConsolepGetScreenBufferInfo */
 CSR_API(SrvGetConsoleScreenBufferInfo)
 {
     NTSTATUS Status;
@@ -939,6 +953,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
                               IN WORD Attributes);
+/* API_NUMBER: ConsolepSetTextAttribute */
 CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
@@ -964,6 +979,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
                                  IN PTEXTMODE_SCREEN_BUFFER Buffer,
                                  IN PCOORD Size);
+/* API_NUMBER: ConsolepSetScreenBufferSize */
 CSR_API(SrvSetConsoleScreenBufferSize)
 {
     NTSTATUS Status;
@@ -994,6 +1010,7 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
                                 IN PSMALL_RECT ClipRectangle OPTIONAL,
                                 IN PCOORD DestinationOrigin,
                                 IN CHAR_INFO FillChar);
+/* API_NUMBER: ConsolepScrollScreenBuffer */
 CSR_API(SrvScrollConsoleScreenBuffer)
 {
     NTSTATUS Status;
@@ -1025,6 +1042,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            IN BOOLEAN Absolute,
                            IN PSMALL_RECT WindowRect);
+/* API_NUMBER: ConsolepSetWindowInfo */
 CSR_API(SrvSetConsoleWindowInfo)
 {
     NTSTATUS Status;
