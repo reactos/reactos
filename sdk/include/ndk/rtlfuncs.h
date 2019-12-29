@@ -2106,6 +2106,16 @@ RtlDuplicateUnicodeString(
     _Out_ PUNICODE_STRING DestinationString
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindCharInUnicodeString(
+    _In_ ULONG Flags,
+    _In_ PCUNICODE_STRING SearchString,
+    _In_ PCUNICODE_STRING MatchString,
+    _Out_ PUSHORT Position
+);
+
 //
 // Memory Functions
 //
@@ -2163,16 +2173,6 @@ RtlEqualUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlFindCharInUnicodeString(
-    _In_ ULONG Flags,
-    _In_ PCUNICODE_STRING SearchString,
-    _In_ PCUNICODE_STRING MatchString,
-    _Out_ PUSHORT Position
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
