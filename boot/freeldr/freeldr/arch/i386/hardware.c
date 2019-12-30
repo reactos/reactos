@@ -27,8 +27,13 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 #define MILLISEC     (10)
 #define PRECISION    (8)
 
+#if defined(SARCH_XBOX)
+#define CLOCK_TICK_RATE 1125000
+#else
+#define CLOCK_TICK_RATE 1193182
+#endif
+
 #define HZ (100)
-#define CLOCK_TICK_RATE (1193182)
 #define LATCH (CLOCK_TICK_RATE / HZ)
 
 static unsigned int delay_count = 1;
