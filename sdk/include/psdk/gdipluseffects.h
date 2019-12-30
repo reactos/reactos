@@ -19,59 +19,87 @@
 #ifndef _GDIPLUSEFFECTS_H
 #define _GDIPLUSEFFECTS_H
 
-typedef struct
+typedef enum CurveAdjustments
 {
-    float radius;
+    AdjustExposure = 0,
+    AdjustDensity = 1,
+    AdjustContrast = 2,
+    AdjustHighlight = 3,
+    AdjustShadow = 4,
+    AdjustMidtone = 5,
+    AdjustWhiteSaturation = 6,
+    AdjustBlackSaturation = 7
+} CurveAdjustments;
+
+typedef enum CurveChannel
+{
+    CurveChannelAll = 0,
+    CurveChannelRed = 1,
+    CurveChannelGreen = 2,
+    CurveChannelBlue = 3
+} CurveChannel;
+
+typedef struct BlurParams
+{
+    REAL radius;
     BOOL expandEdge;
 } BlurParams;
 
-typedef struct
+typedef struct BrightnessContrastParams
 {
     INT brightnessLevel;
     INT contrastLevel;
 } BrightnessContrastParams;
 
-typedef struct
+typedef struct ColorBalanceParams
 {
     INT cyanRed;
     INT magentaGreen;
     INT yellowBlue;
 } ColorBalanceParams;
 
-typedef struct
+typedef struct ColorCurveParams
 {
     CurveAdjustments adjustment;
     CurveChannel channel;
     INT adjustValue;
 } ColorCurveParams;
 
-typedef struct
+typedef struct ColorLUTParams
+{
+    ColorChannelLUT lutB;
+    ColorChannelLUT lutG;
+    ColorChannelLUT lutR;
+    ColorChannelLUT lutA;
+} ColorLUTParams;
+
+typedef struct HueSaturationLightnessParams
 {
     INT hueLevel;
     INT saturationLevel;
     INT lightnessLevel;
 } HueSaturationLightnessParams;
 
-typedef struct
+typedef struct LevelsParams
 {
     INT highlight;
     INT midtone;
     INT shadow;
 } LevelsParams;
 
-typedef struct
+typedef struct RedEyeCorrectionParams
 {
     UINT numberOfAreas;
     RECT *areas;
 } RedEyeCorrectionParams;
 
-typedef struct
+typedef struct SharpenParams
 {
     REAL radius;
     REAL amount;
 } SharpenParams;
 
-typedef struct
+typedef struct TintParams
 {
     INT hue;
     INT amount;
@@ -80,16 +108,16 @@ typedef struct
 class Effect
 {
   public:
-    Effect(VOID)
+    Effect()
     {
     }
 
-    VOID *GetAuxData(VOID) const
+    VOID *GetAuxData() const
     {
         return NULL;
     }
 
-    INT GetAuxDataSize(VOID)
+    INT GetAuxDataSize()
     {
         return 0;
     }
@@ -109,7 +137,7 @@ class Effect
 class Blur : public Effect
 {
   public:
-    Blur(VOID)
+    Blur()
     {
     }
 
@@ -129,7 +157,7 @@ class Blur : public Effect
 class BrightnessContrast : public Effect
 {
   public:
-    BrightnessContrast(VOID)
+    BrightnessContrast()
     {
     }
 
@@ -149,7 +177,7 @@ class BrightnessContrast : public Effect
 class ColorBalance : public Effect
 {
   public:
-    ColorBalance(VOID)
+    ColorBalance()
     {
     }
 
@@ -169,7 +197,7 @@ class ColorBalance : public Effect
 class ColorCurve : public Effect
 {
   public:
-    ColorCurve(VOID)
+    ColorCurve()
     {
     }
 
@@ -189,7 +217,7 @@ class ColorCurve : public Effect
 class ColorMatrixEffect : public Effect
 {
   public:
-    ColorMatrixEffect(VOID)
+    ColorMatrixEffect()
     {
     }
 
@@ -209,7 +237,7 @@ class ColorMatrixEffect : public Effect
 class HueSaturationLightness : public Effect
 {
   public:
-    HueSaturationLightness(VOID)
+    HueSaturationLightness()
     {
     }
 
@@ -229,7 +257,7 @@ class HueSaturationLightness : public Effect
 class Levels : public Effect
 {
   public:
-    Levels(VOID)
+    Levels()
     {
     }
 
@@ -249,7 +277,7 @@ class Levels : public Effect
 class RedEyeCorrection : public Effect
 {
   public:
-    RedEyeCorrection(VOID)
+    RedEyeCorrection()
     {
     }
 
@@ -269,7 +297,7 @@ class RedEyeCorrection : public Effect
 class Sharpen
 {
   public:
-    Sharpen(VOID)
+    Sharpen()
     {
     }
 
@@ -289,7 +317,7 @@ class Sharpen
 class Tint : Effect
 {
   public:
-    Tint(VOID)
+    Tint()
     {
     }
 
