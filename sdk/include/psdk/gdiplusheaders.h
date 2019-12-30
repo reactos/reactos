@@ -877,15 +877,15 @@ class Region : public GdiplusBase
     Status
     Complement(const GraphicsPath *path)
     {
-        return SetStatus(
-            DllExports::GdipCombineRegionPath(region, path ? path->nativePath : NULL, CombineModeComplement));
+        GpPath *thePath = path ? path->nativePath : NULL;
+        return SetStatus(DllExports::GdipCombineRegionPath(region, thePath, CombineModeComplement));
     }
 
     Status
     Complement(const Region *region)
     {
-        return SetStatus(
-            DllExports::GdipCombineRegionRegion(this->region, region ? region->region : NULL, CombineModeComplement));
+        GpRegion *theRegion = region ? region->region : NULL;
+        return SetStatus(DllExports::GdipCombineRegionRegion(this->region, theRegion, CombineModeComplement));
     }
 
     Status
@@ -1007,8 +1007,8 @@ class Region : public GdiplusBase
     Status
     Intersect(const GraphicsPath *path)
     {
-        return SetStatus(
-            DllExports::GdipCombineRegionPath(region, path ? path->nativePath : NULL, CombineModeIntersect));
+        GpPath *thePath = path ? path->nativePath : NULL;
+        return SetStatus(DllExports::GdipCombineRegionPath(region, thePath, CombineModeIntersect));
     }
 
     Status
