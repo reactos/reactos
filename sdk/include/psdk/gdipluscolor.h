@@ -114,9 +114,9 @@ class Color
     VOID
     SetFromCOLORREF(COLORREF rgb)
     {
-        BYTE r = (BYTE) rgb;
-        BYTE g = (BYTE) (rgb >> 8);
-        BYTE b = (BYTE) (rgb >> 16);
+        BYTE r = (BYTE)rgb;
+        BYTE g = (BYTE)(rgb >> 8);
+        BYTE b = (BYTE)(rgb >> 16);
         Argb = MakeARGB(0xFF, r, g, b);
     }
 
