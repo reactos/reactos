@@ -625,19 +625,19 @@ class GraphicsPathIterator : public GdiplusBase
     }
 
     Status
-    GetLastStatus()
+    GetLastStatus() const
     {
         return NotImplemented;
     }
 
     INT
-    GetSubpathCount()
+    GetSubpathCount() const
     {
         return 0;
     }
 
     BOOL
-    HasCurve()
+    HasCurve() const
     {
         return FALSE;
     }
