@@ -385,6 +385,46 @@ class Bitmap : public Image
     friend class CachedBitmap;
 
   public:
+    // Bitmap(IDirectDrawSurface7 *surface)  // <-- FIXME: compiler does not like this
+    // {
+    //   lastStatus = DllExports::GdipCreateBitmapFromDirectDrawSurface(surface, &bitmap);
+    // }
+
+    Bitmap(INT width, INT height, Graphics *target)
+    {
+        GpBitmap *bitmap = NULL;
+        lastStatus = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
+        SetNativeImage(bitmap);
+    }
+
+    Bitmap(const BITMAPINFO *gdiBitmapInfo, VOID *gdiBitmapData)
+    {
+        GpBitmap *bitmap = NULL;
+        lastStatus = DllExports::GdipCreateBitmapFromGdiDib(gdiBitmapInfo, gdiBitmapData, &bitmap);
+        SetNativeImage(bitmap);
+    }
+
+    Bitmap(INT width, INT height, PixelFormat format)
+    {
+        GpBitmap *bitmap = NULL;
+        lastStatus = DllExports::GdipCreateBitmapFromScan0(width, height, 0, format, NULL, &bitmap);
+        SetNativeImage(bitmap);
+    }
+
+    Bitmap(HBITMAP hbm, HPALETTE hpal)
+    {
+        GpBitmap *bitmap = NULL;
+        lastStatus = DllExports::GdipCreateBitmapFromHBITMAP(hbm, hpal, &bitmap);
+        SetNativeImage(bitmap);
+    }
+
+    Bitmap(INT width, INT height, INT stride, PixelFormat format, BYTE *scan0)
+    {
+        GpBitmap *bitmap = NULL;
+        lastStatus = DllExports::GdipCreateBitmapFromScan0(width, height, stride, format, scan0, &bitmap);
+        SetNativeImage(bitmap);
+    }
+
     Bitmap(const WCHAR *filename, BOOL useIcm)
     {
         GpBitmap *bitmap = NULL;
@@ -397,43 +437,10 @@ class Bitmap : public Image
         SetNativeImage(bitmap);
     }
 
-    Bitmap(INT width, INT height, INT stride, PixelFormat format, BYTE *scan0)
+    Bitmap(HINSTANCE hInstance, const WCHAR *bitmapName)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromScan0(width, height, stride, format, scan0, &bitmap);
-        SetNativeImage(bitmap);
-    }
-
-    Bitmap(INT width, INT height, PixelFormat format)
-    {
-        GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromScan0(width, height, 0, format, NULL, &bitmap);
-        SetNativeImage(bitmap);
-    }
-
-    Bitmap(INT width, INT height, Graphics *target)
-    {
-        GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
-        SetNativeImage(bitmap);
-    }
-
-    // Bitmap(IDirectDrawSurface7 *surface)  // <-- FIXME: compiler does not like this
-    // {
-    //   lastStatus = DllExports::GdipCreateBitmapFromDirectDrawSurface(surface, &bitmap);
-    // }
-
-    Bitmap(const BITMAPINFO *gdiBitmapInfo, VOID *gdiBitmapData)
-    {
-        GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromGdiDib(gdiBitmapInfo, gdiBitmapData, &bitmap);
-        SetNativeImage(bitmap);
-    }
-
-    Bitmap(HBITMAP hbm, HPALETTE hpal)
-    {
-        GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromHBITMAP(hbm, hpal, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromResource(hInstance, bitmapName, &bitmap);
         SetNativeImage(bitmap);
     }
 
@@ -441,13 +448,6 @@ class Bitmap : public Image
     {
         GpBitmap *bitmap = NULL;
         lastStatus = DllExports::GdipCreateBitmapFromHICON(hicon, &bitmap);
-        SetNativeImage(bitmap);
-    }
-
-    Bitmap(HINSTANCE hInstance, const WCHAR *bitmapName)
-    {
-        GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromResource(hInstance, bitmapName, &bitmap);
         SetNativeImage(bitmap);
     }
 
@@ -461,19 +461,6 @@ class Bitmap : public Image
         SetNativeImage(bitmap);
     }
 
-    Status
-    GetHBITMAP(const Color &colorBackground, HBITMAP *hbmReturn)
-    {
-        return SetStatus(
-            DllExports::GdipCreateHBITMAPFromBitmap(GetNativeBitmap(), hbmReturn, colorBackground.GetValue()));
-    }
-
-    Status
-    GetHICON(HICON *hicon)
-    {
-        return SetStatus(DllExports::GdipCreateHICONFromBitmap(GetNativeBitmap(), hicon));
-    }
-
     Bitmap *
     Clone(const Rect &rect, PixelFormat format)
     {
@@ -481,10 +468,16 @@ class Bitmap : public Image
     }
 
     Bitmap *
-    Clone(INT x, INT y, INT width, INT height, PixelFormat format)
+    Clone(const RectF &rect, PixelFormat format)
+    {
+        return Clone(rect.X, rect.Y, rect.Width, rect.Height, format);
+    }
+
+    Bitmap *
+    Clone(REAL x, REAL y, REAL width, REAL height, PixelFormat format)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCloneBitmapAreaI(x, y, width, height, format, GetNativeBitmap(), &bitmap);
+        lastStatus = DllExports::GdipCloneBitmapArea(x, y, width, height, format, GetNativeBitmap(), &bitmap);
 
         if (lastStatus != Ok)
             return NULL;
@@ -499,16 +492,10 @@ class Bitmap : public Image
     }
 
     Bitmap *
-    Clone(const RectF &rect, PixelFormat format)
-    {
-        return Clone(rect.X, rect.Y, rect.Width, rect.Height, format);
-    }
-
-    Bitmap *
-    Clone(REAL x, REAL y, REAL width, REAL height, PixelFormat format)
+    Clone(INT x, INT y, INT width, INT height, PixelFormat format)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCloneBitmapArea(x, y, width, height, format, GetNativeBitmap(), &bitmap);
+        lastStatus = DllExports::GdipCloneBitmapAreaI(x, y, width, height, format, GetNativeBitmap(), &bitmap);
 
         if (lastStatus != Ok)
             return NULL;
@@ -561,6 +548,19 @@ class Bitmap : public Image
     FromStream(IStream *stream, BOOL useEmbeddedColorManagement)
     {
         return new Bitmap(stream, useEmbeddedColorManagement);
+    }
+
+    Status
+    GetHBITMAP(const Color &colorBackground, HBITMAP *hbmReturn)
+    {
+        return SetStatus(
+            DllExports::GdipCreateHBITMAPFromBitmap(GetNativeBitmap(), hbmReturn, colorBackground.GetValue()));
+    }
+
+    Status
+    GetHICON(HICON *hicon)
+    {
+        return SetStatus(DllExports::GdipCreateHICONFromBitmap(GetNativeBitmap(), hicon));
     }
 
     Status
