@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2008 Google (Lei Zhang)
  *               2015 Benedikt Freisen
+ *               2019 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,81 +21,86 @@
 #ifndef _GDIPLUSCOLOR_H
 #define _GDIPLUSCOLOR_H
 
-enum ColorChannelFlags
+typedef enum ColorChannelFlags
 {
     ColorChannelFlagsC,
     ColorChannelFlagsM,
     ColorChannelFlagsY,
     ColorChannelFlagsK,
     ColorChannelFlagsLast
-};
+} ColorChannelFlags;
 
 #ifdef __cplusplus
 
 class Color
 {
   public:
-    Color(VOID)
+    Color() : Argb(0xff000000)
     {
-        Argb = 0xff000000;
     }
 
-    Color(ARGB argb)
+    Color(ARGB argb) : Argb(argb)
     {
-        Argb = argb;
     }
 
-    Color(BYTE r, BYTE g, BYTE b)
+    Color(BYTE r, BYTE g, BYTE b) : Argb(MakeARGB(0xFF, r, g, b))
     {
-        Argb = 0xff << 24 | r << 16 | g << 8 | b;
     }
 
-    Color(BYTE a, BYTE r, BYTE g, BYTE b)
+    Color(BYTE a, BYTE r, BYTE g, BYTE b) : Argb(MakeARGB(a, r, g, b))
     {
-        Argb = a << 24 | r << 16 | g << 8 | b;
     }
 
-    BYTE GetA(VOID) const
+    BYTE
+    GetA() const
     {
-        return (Argb >> 24) & 0xff;
+        return (BYTE)(Argb >> 24);
     }
 
-    BYTE GetAlpha(VOID) const
+    BYTE
+    GetAlpha() const
     {
-        return (Argb >> 24) & 0xff;
+        return (BYTE)(Argb >> 24);
     }
 
-    BYTE GetB(VOID) const
+    BYTE
+    GetB() const
     {
-        return Argb & 0xff;
+        return (BYTE)Argb;
     }
 
-    BYTE GetBlue(VOID) const
+    BYTE
+    GetBlue() const
     {
-        return Argb & 0xff;
+        return (BYTE)Argb;
     }
 
-    BYTE GetG(VOID) const
+    BYTE
+    GetG() const
     {
-        return (Argb >> 8) & 0xff;
+        return (BYTE)(Argb >> 8);
     }
 
-    BYTE GetGreen(VOID) const
+    BYTE
+    GetGreen() const
     {
-        return (Argb >> 8) & 0xff;
+        return (BYTE)(Argb >> 8);
     }
 
-    BYTE GetR(VOID) const
+    BYTE
+    GetR() const
     {
-        return (Argb >> 16) & 0xff;
+        return (BYTE)(Argb >> 16);
     }
 
-    BYTE GetRed(VOID) const
+    BYTE
+    GetRed() const
     {
-        return (Argb >> 16) & 0xff;
+        return (BYTE)(Argb >> 16);
     }
 
-    ARGB GetValue(VOID) const
+    ARGB
+    GetValue() const
     {
         return Argb;
     }
@@ -108,7 +114,10 @@ class Color
     VOID
     SetFromCOLORREF(COLORREF rgb)
     {
-        Argb = 0xff000000 | (rgb & 0x000000ff) << 16 | (rgb & 0x0000ff00) | (rgb & 0x00ff0000) >> 16;
+        BYTE r = (BYTE) rgb;
+        BYTE g = (BYTE) (rgb >> 8);
+        BYTE b = (BYTE) (rgb >> 16);
+        Argb = MakeARGB(0xFF, r, g, b);
     }
 
     VOID
@@ -117,10 +126,155 @@ class Color
         Argb = argb;
     }
 
-    COLORREF ToCOLORREF(VOID) const
+    COLORREF
+    ToCOLORREF() const
     {
         return (Argb & 0x000000ff) << 16 | (Argb & 0x0000ff00) | (Argb & 0x00ff0000) >> 16;
     }
+
+    static const ARGB AlphaMask = 0xFF000000;
+
+    static const ARGB AliceBlue = 0xFFF0F8FF;
+    static const ARGB AntiqueWhite = 0xFFFAEBD7;
+    static const ARGB Aqua = 0xFF00FFFF;
+    static const ARGB Aquamarine = 0xFF7FFFD4;
+    static const ARGB Azure = 0xFFF0FFFF;
+    static const ARGB Beige = 0xFFF5F5DC;
+    static const ARGB Bisque = 0xFFFFE4C4;
+    static const ARGB Black = 0xFF000000;
+    static const ARGB BlanchedAlmond = 0xFFFFEBCD;
+    static const ARGB Blue = 0xFF0000FF;
+    static const ARGB BlueViolet = 0xFF8A2BE2;
+    static const ARGB Brown = 0xFFA52A2A;
+    static const ARGB BurlyWood = 0xFFDEB887;
+    static const ARGB CadetBlue = 0xFF5F9EA0;
+    static const ARGB Chartreuse = 0xFF7FFF00;
+    static const ARGB Chocolate = 0xFFD2691E;
+    static const ARGB Coral = 0xFFFF7F50;
+    static const ARGB CornflowerBlue = 0xFF6495ED;
+    static const ARGB Cornsilk = 0xFFFFF8DC;
+    static const ARGB Crimson = 0xFFDC143C;
+    static const ARGB Cyan = 0xFF00FFFF;
+    static const ARGB DarkBlue = 0xFF00008B;
+    static const ARGB DarkCyan = 0xFF008B8B;
+    static const ARGB DarkGoldenrod = 0xFFB8860B;
+    static const ARGB DarkGray = 0xFFA9A9A9;
+    static const ARGB DarkGreen = 0xFF006400;
+    static const ARGB DarkKhaki = 0xFFBDB76B;
+    static const ARGB DarkMagenta = 0xFF8B008B;
+    static const ARGB DarkOliveGreen = 0xFF556B2F;
+    static const ARGB DarkOrange = 0xFFFF8C00;
+    static const ARGB DarkOrchid = 0xFF9932CC;
+    static const ARGB DarkRed = 0xFF8B0000;
+    static const ARGB DarkSalmon = 0xFFE9967A;
+    static const ARGB DarkSeaGreen = 0xFF8FBC8F;
+    static const ARGB DarkSlateBlue = 0xFF483D8B;
+    static const ARGB DarkSlateGray = 0xFF2F4F4F;
+    static const ARGB DarkTurquoise = 0xFF00CED1;
+    static const ARGB DarkViolet = 0xFF9400D3;
+    static const ARGB DeepPink = 0xFFFF1493;
+    static const ARGB DeepSkyBlue = 0xFF00BFFF;
+    static const ARGB DimGray = 0xFF696969;
+    static const ARGB DodgerBlue = 0xFF1E90FF;
+    static const ARGB Firebrick = 0xFFB22222;
+    static const ARGB FloralWhite = 0xFFFFFAF0;
+    static const ARGB ForestGreen = 0xFF228B22;
+    static const ARGB Fuchsia = 0xFFFF00FF;
+    static const ARGB Gainsboro = 0xFFDCDCDC;
+    static const ARGB GhostWhite = 0xFFF8F8FF;
+    static const ARGB Gold = 0xFFFFD700;
+    static const ARGB Goldenrod = 0xFFDAA520;
+    static const ARGB Gray = 0xFF808080;
+    static const ARGB Green = 0xFF008000;
+    static const ARGB GreenYellow = 0xFFADFF2F;
+    static const ARGB Honeydew = 0xFFF0FFF0;
+    static const ARGB HotPink = 0xFFFF69B4;
+    static const ARGB IndianRed = 0xFFCD5C5C;
+    static const ARGB Indigo = 0xFF4B0082;
+    static const ARGB Ivory = 0xFFFFFFF0;
+    static const ARGB Khaki = 0xFFF0E68C;
+    static const ARGB Lavender = 0xFFE6E6FA;
+    static const ARGB LavenderBlush = 0xFFFFF0F5;
+    static const ARGB LawnGreen = 0xFF7CFC00;
+    static const ARGB LemonChiffon = 0xFFFFFACD;
+    static const ARGB LightBlue = 0xFFADD8E6;
+    static const ARGB LightCoral = 0xFFF08080;
+    static const ARGB LightCyan = 0xFFE0FFFF;
+    static const ARGB LightGoldenrodYellow = 0xFFFAFAD2;
+    static const ARGB LightGray = 0xFFD3D3D3;
+    static const ARGB LightGreen = 0xFF90EE90;
+    static const ARGB LightPink = 0xFFFFB6C1;
+    static const ARGB LightSalmon = 0xFFFFA07A;
+    static const ARGB LightSeaGreen = 0xFF20B2AA;
+    static const ARGB LightSkyBlue = 0xFF87CEFA;
+    static const ARGB LightSlateGray = 0xFF778899;
+    static const ARGB LightSteelBlue = 0xFFB0C4DE;
+    static const ARGB LightYellow = 0xFFFFFFE0;
+    static const ARGB Lime = 0xFF00FF00;
+    static const ARGB LimeGreen = 0xFF32CD32;
+    static const ARGB Linen = 0xFFFAF0E6;
+    static const ARGB Magenta = 0xFFFF00FF;
+    static const ARGB Maroon = 0xFF800000;
+    static const ARGB MediumAquamarine = 0xFF66CDAA;
+    static const ARGB MediumBlue = 0xFF0000CD;
+    static const ARGB MediumOrchid = 0xFFBA55D3;
+    static const ARGB MediumPurple = 0xFF9370DB;
+    static const ARGB MediumSeaGreen = 0xFF3CB371;
+    static const ARGB MediumSlateBlue = 0xFF7B68EE;
+    static const ARGB MediumSpringGreen = 0xFF00FA9A;
+    static const ARGB MediumTurquoise = 0xFF48D1CC;
+    static const ARGB MediumVioletRed = 0xFFC71585;
+    static const ARGB MidnightBlue = 0xFF191970;
+    static const ARGB MintCream = 0xFFF5FFFA;
+    static const ARGB MistyRose = 0xFFFFE4E1;
+    static const ARGB Moccasin = 0xFFFFE4B5;
+    static const ARGB NavajoWhite = 0xFFFFDEAD;
+    static const ARGB Navy = 0xFF000080;
+    static const ARGB OldLace = 0xFFFDF5E6;
+    static const ARGB Olive = 0xFF808000;
+    static const ARGB OliveDrab = 0xFF6B8E23;
+    static const ARGB Orange = 0xFFFFA500;
+    static const ARGB OrangeRed = 0xFFFF4500;
+    static const ARGB Orchid = 0xFFDA70D6;
+    static const ARGB PaleGoldenrod = 0xFFEEE8AA;
+    static const ARGB PaleGreen = 0xFF98FB98;
+    static const ARGB PaleTurquoise = 0xFFAFEEEE;
+    static const ARGB PaleVioletRed = 0xFFDB7093;
+    static const ARGB PapayaWhip = 0xFFFFEFD5;
+    static const ARGB PeachPuff = 0xFFFFDAB9;
+    static const ARGB Peru = 0xFFCD853F;
+    static const ARGB Pink = 0xFFFFC0CB;
+    static const ARGB Plum = 0xFFDDA0DD;
+    static const ARGB PowderBlue = 0xFFB0E0E6;
+    static const ARGB Purple = 0xFF800080;
+    static const ARGB Red = 0xFFFF0000;
+    static const ARGB RosyBrown = 0xFFBC8F8F;
+    static const ARGB RoyalBlue = 0xFF4169E1;
+    static const ARGB SaddleBrown = 0xFF8B4513;
+    static const ARGB Salmon = 0xFFFA8072;
+    static const ARGB SandyBrown = 0xFFF4A460;
+    static const ARGB SeaGreen = 0xFF2E8B57;
+    static const ARGB SeaShell = 0xFFFFF5EE;
+    static const ARGB Sienna = 0xFFA0522D;
+    static const ARGB Silver = 0xFFC0C0C0;
+    static const ARGB SkyBlue = 0xFF87CEEB;
+    static const ARGB SlateBlue = 0xFF6A5ACD;
+    static const ARGB SlateGray = 0xFF708090;
+    static const ARGB Snow = 0xFFFFFAFA;
+    static const ARGB SpringGreen = 0xFF00FF7F;
+    static const ARGB SteelBlue = 0xFF4682B4;
+    static const ARGB Tan = 0xFFD2B48C;
+    static const ARGB Teal = 0xFF008080;
+    static const ARGB Thistle = 0xFFD8BFD8;
+    static const ARGB Tomato = 0xFFFF6347;
+    static const ARGB Transparent = 0x00FFFFFF;
+    static const ARGB Turquoise = 0xFF40E0D0;
+    static const ARGB Violet = 0xFFEE82EE;
+    static const ARGB Wheat = 0xFFF5DEB3;
+    static const ARGB White = 0xFFFFFFFF;
+    static const ARGB WhiteSmoke = 0xFFF5F5F5;
+    static const ARGB Yellow = 0xFFFFFF00;
+    static const ARGB YellowGreen = 0xFF9ACD32;
 
   protected:
     ARGB Argb;
@@ -132,8 +286,6 @@ typedef struct Color
 {
     ARGB Argb;
 } Color;
-
-typedef enum ColorChannelFlags ColorChannelFlags;
 
 #endif /* end of c typedefs */
 
