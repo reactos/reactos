@@ -65,6 +65,8 @@ extern "C"
 
 #ifdef __cplusplus
 
+class Size;
+
 class Point
 {
   public:
@@ -109,6 +111,8 @@ class Point
     INT X;
     INT Y;
 };
+
+class SizeF;
 
 class PointF
 {
