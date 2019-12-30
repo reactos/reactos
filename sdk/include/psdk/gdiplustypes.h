@@ -102,7 +102,7 @@ class Point
     }
 
     BOOL
-    Equals(IN const Point &pt)
+    Equals(IN const Point &pt) const
     {
         return (X == pt.X) && (Y == pt.Y);
     }
@@ -149,7 +149,7 @@ class PointF
     }
 
     BOOL
-    Equals(IN const PointF &pt)
+    Equals(IN const PointF &pt) const
     {
         return (X == pt.X) && (Y == pt.Y);
     }
