@@ -180,7 +180,7 @@ class Pen : public GdiplusBase
     MultiplyTransform(Matrix *matrix, MatrixOrder order)
     {
         return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipMultiplyPenTransform(pen, matrix ?
-                               // matrix->matrix : NULL, order));
+                               // matrix->nativeMatrix : NULL, order));
     }
 
     Status ResetTransform(VOID)
@@ -294,7 +294,7 @@ class Pen : public GdiplusBase
     Status
     SetTransform(const Matrix *matrix)
     {
-        return SetStatus(DllExports::GdipSetPenTransform(pen, matrix ? matrix->matrix : NULL));
+        return SetStatus(DllExports::GdipSetPenTransform(pen, matrix ? matrix->nativeMatrix : NULL));
     }
 
     Status

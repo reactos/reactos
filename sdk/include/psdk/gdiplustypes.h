@@ -190,6 +190,26 @@ class PathData
 };
 
 /* FIXME: missing the methods. */
+class SizeF
+{
+  public:
+    REAL Width;
+    REAL Height;
+
+    SizeF() : Width(0), Height(0)
+    {
+    }
+
+    SizeF(const SizeF &size) : Width(size.Width), Height(size.Height)
+    {
+    }
+
+    SizeF(REAL width, REAL height) : Width(width), Height(height)
+    {
+    }
+};
+
+/* FIXME: missing the methods. */
 class RectF
 {
   public:
@@ -197,6 +217,39 @@ class RectF
     REAL Y;
     REAL Width;
     REAL Height;
+
+    RectF() : X(0), Y(0), Width(0), Height(0)
+    {
+    }
+
+    RectF(const PointF &location, const SizeF &size)
+        : X(location.X), Y(location.Y), Width(size.Width), Height(size.Height)
+    {
+    }
+
+    RectF(REAL x, REAL y, REAL width, REAL height) : X(x), Y(y), Width(width), Height(height)
+    {
+    }
+};
+
+/* FIXME: missing the methods. */
+class Size
+{
+  public:
+    INT Width;
+    INT Height;
+
+    Size() : Width(0), Height(0)
+    {
+    }
+
+    Size(const Size &size) : Width(size.Width), Height(size.Height)
+    {
+    }
+
+    Size(INT width, INT height) : Width(width), Height(height)
+    {
+    }
 };
 
 /* FIXME: missing the methods. */
@@ -207,6 +260,18 @@ class Rect
     INT Y;
     INT Width;
     INT Height;
+
+    Rect() : X(0), Y(0), Width(0), Height(0)
+    {
+    }
+
+    Rect(const Point &location, const Size &size) : X(location.X), Y(location.Y), Width(size.Width), Height(size.Height)
+    {
+    }
+
+    Rect(INT x, INT y, INT width, INT height) : X(x), Y(y), Width(width), Height(height)
+    {
+    }
 };
 
 class CharacterRange
@@ -234,14 +299,6 @@ class CharacterRange
   public:
     INT First;
     INT Length;
-};
-
-/* FIXME: missing the methods. */
-class SizeF
-{
-  public:
-    REAL Width;
-    REAL Height;
 };
 
 #else /* end of c++ typedefs */

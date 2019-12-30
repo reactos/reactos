@@ -27,262 +27,275 @@ class GraphicsPath : public GdiplusBase
     friend class Region;
 
   public:
-    GraphicsPath(const Point *points, const BYTE *types, INT count, FillMode fillMode)
+    GraphicsPath(const Point *points, const BYTE *types, INT count, FillMode fillMode) : nativePath(NULL)
     {
+        lastStatus = DllExports::GdipCreatePath2I(points, types, count, fillMode, &nativePath);
     }
 
-    GraphicsPath(FillMode fillMode)
+    GraphicsPath(FillMode fillMode = FillModeAlternate) : nativePath(NULL)
     {
+        lastStatus = DllExports::GdipCreatePath(fillMode, &nativePath);
     }
 
-    GraphicsPath(const PointF *points, const BYTE *types, INT count, FillMode fillMode)
+    GraphicsPath(const PointF *points, const BYTE *types, INT count, FillMode fillMode = FillModeAlternate)
+        : nativePath(NULL)
     {
+        lastStatus = DllExports::GdipCreatePath2(points, types, count, fillMode, &nativePath);
+    }
+
+    ~GraphicsPath()
+    {
+        DllExports::GdipDeletePath(nativePath);
     }
 
     Status
     AddArc(const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return AddArc(rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle);
     }
 
     Status
     AddArc(const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return AddArc(rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle);
     }
 
     Status
     AddArc(INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathArcI(nativePath, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     AddArc(REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathArc(nativePath, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     AddBezier(const Point &pt1, const Point &pt2, const Point &pt3, const Point &pt4)
     {
-        return NotImplemented;
+        return AddBezier(pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y);
     }
 
     Status
     AddBezier(REAL x1, REAL y1, REAL x2, REAL y2, REAL x3, REAL y3, REAL x4, REAL y4)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathBezier(nativePath, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     AddBezier(const PointF &pt1, const PointF &pt2, const PointF &pt3, const PointF &pt4)
     {
-        return NotImplemented;
+        return AddBezier(pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y);
     }
 
     Status
     AddBezier(INT x1, INT y1, INT x2, INT y2, INT x3, INT y3, INT x4, INT y4)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathBezierI(nativePath, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     AddBeziers(const Point *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathBeziersI(nativePath, points, count));
     }
 
     Status
     AddBeziers(const PointF *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathBeziers(nativePath, points, count));
     }
 
     Status
     AddClosedCurve(const Point *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathClosedCurveI(nativePath, points, count));
     }
 
     Status
     AddClosedCurve(const Point *points, INT count, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathClosedCurve2I(nativePath, points, count, tension));
     }
 
     Status
     AddClosedCurve(const PointF *points, INT count, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathClosedCurve2(nativePath, points, count, tension));
     }
 
     Status
     AddClosedCurve(const PointF *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathClosedCurve(nativePath, points, count));
     }
 
     Status
     AddCurve(const Point *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurveI(nativePath, points, count));
     }
 
     Status
     AddCurve(const PointF *points, INT count, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurve2(nativePath, points, count, tension));
     }
 
     Status
     AddCurve(const PointF *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurve(nativePath, points, count));
     }
 
     Status
     AddCurve(const Point *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurve3I(nativePath, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     AddCurve(const Point *points, INT count, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurve2I(nativePath, points, count, tension));
     }
 
     Status
     AddCurve(const PointF *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathCurve3(nativePath, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     AddEllipse(const Rect &rect)
     {
-        return NotImplemented;
+        return AddEllipse(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
     Status
     AddEllipse(const RectF &rect)
     {
-        return NotImplemented;
+        return AddEllipse(rect.X, rect.Y, rect.Width, rect.Height);
     }
 
     Status
     AddEllipse(INT x, INT y, INT width, INT height)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathEllipseI(nativePath, x, y, width, height));
     }
 
     Status
     AddEllipse(REAL x, REAL y, REAL width, REAL height)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathEllipse(nativePath, x, y, width, height));
     }
 
     Status
     AddLine(const Point &pt1, const Point &pt2)
     {
-        return NotImplemented;
+        return AddLine(pt1.X, pt1.Y, pt2.X, pt2.Y);
     }
 
     Status
     AddLine(const PointF &pt1, const PointF &pt2)
     {
-        return NotImplemented;
+        return AddLine(pt1.X, pt1.Y, pt2.X, pt2.Y);
     }
 
     Status
     AddLine(REAL x1, REAL y1, REAL x2, REAL y2)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathLine(nativePath, x1, y1, x2, y2));
     }
 
     Status
     AddLine(INT x1, INT y1, INT x2, INT y2)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathLineI(nativePath, x1, y1, x2, y2));
     }
 
     Status
     AddLines(const Point *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathLine2I(nativePath, points, count));
     }
 
     Status
     AddLines(const PointF *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathLine2(nativePath, points, count));
     }
 
     Status
     AddPath(const GraphicsPath *addingPath, BOOL connect)
     {
-        return NotImplemented;
+        GpPath *nativePath2 = NULL;
+        if (addingPath)
+            nativePath2 = addingPath->nativePath;
+
+        return SetStatus(DllExports::GdipAddPathPath(nativePath, nativePath2, connect));
     }
 
     Status
     AddPie(const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return AddPie(rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle);
     }
 
     Status
     AddPie(INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathPieI(nativePath, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     AddPie(REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathPie(nativePath, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     AddPie(const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
-        return NotImplemented;
+        return AddPie(rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle);
     }
 
     Status
     AddPolygon(const Point *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathPolygonI(nativePath, points, count));
     }
 
     Status
     AddPolygon(const PointF *points, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathPolygon(nativePath, points, count));
     }
 
     Status
     AddRectangle(const Rect &rect)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathRectangleI(nativePath, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     AddRectangle(const RectF &rect)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathRectangle(nativePath, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     AddRectangles(const Rect *rects, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathRectanglesI(nativePath, rects, count));
     }
 
     Status
     AddRectangles(const RectF *rects, INT count)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipAddPathRectangles(nativePath, rects, count));
     }
 
     Status
@@ -295,7 +308,7 @@ class GraphicsPath : public GdiplusBase
         const Rect &layoutRect,
         const StringFormat *format)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -308,7 +321,7 @@ class GraphicsPath : public GdiplusBase
         const PointF &origin,
         const StringFormat *format)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -321,7 +334,7 @@ class GraphicsPath : public GdiplusBase
         const Point &origin,
         const StringFormat *format)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -334,61 +347,77 @@ class GraphicsPath : public GdiplusBase
         const RectF &layoutRect,
         const StringFormat *format)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
-    Status ClearMarkers(VOID)
+    Status
+    ClearMarkers()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipClearPathMarkers(nativePath));
     }
 
-    GraphicsPath *Clone(VOID)
+    GraphicsPath *
+    Clone()
     {
-        return NULL;
+        GpPath *clonepath = NULL;
+        SetStatus(DllExports::GdipClonePath(nativePath, &clonepath));
+        return new GraphicsPath(clonepath);
     }
 
-    Status CloseAllFigures(VOID)
+    Status
+    CloseAllFigures()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipClosePathFigures(nativePath));
     }
 
-    Status CloseFigure(VOID)
+    Status
+    CloseFigure()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipClosePathFigure(nativePath));
     }
 
     Status
     Flatten(const Matrix *matrix, REAL flatness)
     {
-        return NotImplemented;
+        GpMatrix *nativeMatrix = NULL;
+        if (matrix)
+        {
+            nativeMatrix = matrix->nativeMatrix;
+        }
+
+        return SetStatus(DllExports::GdipFlattenPath(nativePath, nativeMatrix, flatness));
     }
 
     Status
     GetBounds(Rect *bounds, const Matrix *matrix, const Pen *pen)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
     GetBounds(RectF *bounds, const Matrix *matrix, const Pen *pen)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
-    FillMode GetFillMode(VOID)
+    FillMode
+    GetFillMode()
     {
-        return FillModeAlternate;
+        FillMode fillmode = FillModeAlternate;
+        SetStatus(DllExports::GdipGetPathFillMode(nativePath, &fillmode));
+        return fillmode;
     }
 
     Status
-    GetLastPoint(PointF *lastPoint)
+    GetLastPoint(PointF *lastPoint) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathLastPoint(nativePath, lastPoint));
     }
 
-    Status GetLastStatus(VOID)
+    Status
+    GetLastStatus()
     {
-        return NotImplemented;
+        return lastStatus;
     }
 
     Status
@@ -415,7 +444,8 @@ class GraphicsPath : public GdiplusBase
         return NotImplemented;
     }
 
-    INT GetPointCount(VOID)
+    INT
+    GetPointCount()
     {
         return 0;
     }
@@ -453,7 +483,7 @@ class GraphicsPath : public GdiplusBase
     BOOL
     IsVisible(const PointF &point, const Graphics *g)
     {
-        return FALSE;
+        return IsVisible(point.X, point.Y, g);
     }
 
     BOOL
@@ -465,7 +495,7 @@ class GraphicsPath : public GdiplusBase
     BOOL
     IsVisible(const Point &point, const Graphics *g)
     {
-        return NotImplemented;
+        return IsVisible(point.X, point.Y, g);
     }
 
     Status
@@ -474,36 +504,42 @@ class GraphicsPath : public GdiplusBase
         return NotImplemented;
     }
 
-    Status Reset(VOID)
+    Status
+    Reset()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipResetPath(nativePath));
     }
 
-    Status Reverse(VOID)
+    Status
+    Reverse()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipReversePath(nativePath));
     }
 
     Status
     SetFillMode(FillMode fillmode)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathFillMode(nativePath, fillmode));
     }
 
-    Status SetMarker(VOID)
+    Status
+    SetMarker()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathMarker(nativePath));
     }
 
-    Status StartFigure(VOID)
+    Status
+    StartFigure()
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipStartPathFigure(nativePath));
     }
 
     Status
     Transform(const Matrix *matrix)
     {
-        return NotImplemented;
+        if (!matrix)
+            return Ok;
+        return SetStatus(DllExports::GdipTransformPath(nativePath, matrix->nativeMatrix));
     }
 
     Status
@@ -515,17 +551,46 @@ class GraphicsPath : public GdiplusBase
         WarpMode warpMode,
         REAL flatness)
     {
-        return NotImplemented;
+        GpMatrix *nativeMatrix = NULL;
+        if (matrix)
+            nativeMatrix = matrix->nativeMatrix;
+
+        return SetStatus(DllExports::GdipWarpPath(
+            nativePath, nativeMatrix, destPoints, count, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, warpMode,
+            flatness));
     }
 
     Status
     Widen(const Pen *pen, const Matrix *matrix, REAL flatness)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
-  private:
-    GpPath *path;
+  protected:
+    GpPath *nativePath;
+    mutable Status lastStatus;
+
+    GraphicsPath()
+    {
+    }
+
+    GraphicsPath(GpPath *path) : nativePath(path), lastStatus(Ok)
+    {
+    }
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
+    }
+
+    void
+    SetNativePath(GpPath *path)
+    {
+        nativePath = path;
+    }
 };
 
 class GraphicsPathIterator : public GdiplusBase
@@ -547,22 +612,26 @@ class GraphicsPathIterator : public GdiplusBase
         return 0;
     }
 
-    INT GetCount(VOID)
+    INT
+    GetCount()
     {
         return 0;
     }
 
-    Status GetLastStatus(VOID)
+    Status
+    GetLastStatus()
     {
         return NotImplemented;
     }
 
-    INT GetSubpathCount(VOID)
+    INT
+    GetSubpathCount()
     {
         return 0;
     }
 
-    BOOL HasCurve(VOID)
+    BOOL
+    HasCurve()
     {
         return FALSE;
     }
@@ -597,7 +666,8 @@ class GraphicsPathIterator : public GdiplusBase
         return 0;
     }
 
-    VOID Rewind(VOID)
+    VOID
+    Rewind()
     {
     }
 };
@@ -617,7 +687,8 @@ class PathGradientBrush : public Brush
     {
     }
 
-    INT GetBlendCount(VOID)
+    INT
+    GetBlendCount()
     {
         return 0;
     }
@@ -652,7 +723,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    BOOL GetGammaCorrection(VOID)
+    BOOL
+    GetGammaCorrection()
     {
         return FALSE;
     }
@@ -663,7 +735,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    INT GetInterpolationColorCount(VOID)
+    INT
+    GetInterpolationColorCount()
     {
         return 0;
     }
@@ -674,7 +747,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    INT GetPointCount(VOID)
+    INT
+    GetPointCount()
     {
         return 0;
     }
@@ -691,7 +765,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    INT GetSurroundColorCount(VOID)
+    INT
+    GetSurroundColorCount()
     {
         return 0;
     }
@@ -708,7 +783,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    WrapMode GetWrapMode(VOID)
+    WrapMode
+    GetWrapMode()
     {
         return WrapModeTile;
     }
@@ -719,7 +795,8 @@ class PathGradientBrush : public Brush
         return NotImplemented;
     }
 
-    Status ResetTransform(VOID)
+    Status
+    ResetTransform()
     {
         return NotImplemented;
     }
