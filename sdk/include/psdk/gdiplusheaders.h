@@ -42,7 +42,8 @@ class Image : public GdiplusBase
             lastStatus = DllExports::GdipLoadImageFromFile(filename, &nativeImage);
     }
 
-    Image *Clone()
+    Image *
+    Clone()
     {
         GpImage *cloneimage = NULL;
         SetStatus(DllExports::GdipCloneImage(nativeImage, &cloneimage));
@@ -104,7 +105,8 @@ class Image : public GdiplusBase
 #endif
     }
 
-    UINT GetFlags()
+    UINT
+    GetFlags()
     {
         UINT flags = 0;
         SetStatus(DllExports::GdipGetImageFlags(nativeImage, &flags));
@@ -119,7 +121,8 @@ class Image : public GdiplusBase
         return count;
     }
 
-    UINT GetFrameDimensionsCount()
+    UINT
+    GetFrameDimensionsCount()
     {
         UINT count = 0;
         SetStatus(DllExports::GdipImageGetFrameDimensionsCount(nativeImage, &count));
@@ -132,21 +135,24 @@ class Image : public GdiplusBase
         return SetStatus(DllExports::GdipImageGetFrameDimensionsList(nativeImage, dimensionIDs, count));
     }
 
-    UINT GetHeight()
+    UINT
+    GetHeight()
     {
         UINT height = 0;
         SetStatus(DllExports::GdipGetImageHeight(nativeImage, &height));
         return height;
     }
 
-    REAL GetHorizontalResolution()
+    REAL
+    GetHorizontalResolution()
     {
         REAL resolution = 0.0f;
         SetStatus(DllExports::GdipGetImageHorizontalResolution(nativeImage, &resolution));
         return resolution;
     }
 
-    Status GetLastStatus()
+    Status
+    GetLastStatus()
     {
         return lastStatus;
     }
@@ -157,7 +163,8 @@ class Image : public GdiplusBase
         return SetStatus(DllExports::GdipGetImagePalette(nativeImage, palette, size));
     }
 
-    INT GetPaletteSize()
+    INT
+    GetPaletteSize()
     {
         INT size = 0;
         SetStatus(DllExports::GdipGetImagePaletteSize(nativeImage, &size));
@@ -167,20 +174,22 @@ class Image : public GdiplusBase
     Status
     GetPhysicalDimension(SizeF *size)
     {
-        if (size == NULL) 
+        if (size == NULL)
             return SetStatus(InvalidParameter);
 
         return SetStatus(DllExports::GdipGetImageDimension(nativeImage, &size->Width, &size->Height));
     }
 
-    PixelFormat GetPixelFormat()
+    PixelFormat
+    GetPixelFormat()
     {
         PixelFormat format;
         SetStatus(DllExports::GdipGetImagePixelFormat(nativeImage, &format));
         return format;
     }
 
-    UINT GetPropertyCount()
+    UINT
+    GetPropertyCount()
     {
         UINT numOfProperty = 0;
         SetStatus(DllExports::GdipGetPropertyCount(nativeImage, &numOfProperty));
@@ -226,28 +235,31 @@ class Image : public GdiplusBase
         SetStatus(DllExports::GdipGetImageThumbnail(
             nativeImage, thumbWidth, thumbHeight, &thumbImage, callback, callbackData));
         Image *newImage = new Image(thumbImage, lastStatus);
-        if (newImage == NULL) 
+        if (newImage == NULL)
         {
             DllExports::GdipDisposeImage(thumbImage);
         }
         return newImage;
     }
 
-    ImageType GetType()
+    ImageType
+    GetType()
     {
         ImageType type;
         SetStatus(DllExports::GdipGetImageType(nativeImage, &type));
         return type;
     }
 
-    REAL GetVerticalResolution()
+    REAL
+    GetVerticalResolution()
     {
         REAL resolution = 0.0f;
         SetStatus(DllExports::GdipGetImageVerticalResolution(nativeImage, &resolution));
         return resolution;
     }
 
-    UINT GetWidth()
+    UINT
+    GetWidth()
     {
         UINT width = 0;
         SetStatus(DllExports::GdipGetImageWidth(nativeImage, &width));
@@ -343,8 +355,7 @@ class Image : public GdiplusBase
     {
     }
 
-    Image(GpImage *image, Status status)
-        : nativeImage(image), lastStatus(status)
+    Image(GpImage *image, Status status) : nativeImage(image), lastStatus(status)
     {
     }
 
@@ -356,15 +367,17 @@ class Image : public GdiplusBase
         return status;
     }
 
-    void SetNativeImage(GpImage *image)
+    void
+    SetNativeImage(GpImage *image)
     {
         nativeImage = image;
     }
 
   private:
     // Image is not copyable
-    Image(const Image&);
-    Image& operator=(const Image&);
+    Image(const Image &);
+    Image &
+    operator=(const Image &);
 };
 
 class Bitmap : public Image
@@ -451,8 +464,8 @@ class Bitmap : public Image
     Status
     GetHBITMAP(const Color &colorBackground, HBITMAP *hbmReturn)
     {
-        return SetStatus(DllExports::GdipCreateHBITMAPFromBitmap(
-            GetNativeBitmap(), hbmReturn, colorBackground.GetValue()));
+        return SetStatus(
+            DllExports::GdipCreateHBITMAPFromBitmap(GetNativeBitmap(), hbmReturn, colorBackground.GetValue()));
     }
 
     Status
@@ -471,13 +484,12 @@ class Bitmap : public Image
     Clone(INT x, INT y, INT width, INT height, PixelFormat format)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCloneBitmapAreaI(x, y,
-            width, height, format, GetNativeBitmap(), &bitmap);
+        lastStatus = DllExports::GdipCloneBitmapAreaI(x, y, width, height, format, GetNativeBitmap(), &bitmap);
 
         if (lastStatus != Ok)
             return NULL;
 
-        Bitmap* newBitmap = new Bitmap(bitmap);
+        Bitmap *newBitmap = new Bitmap(bitmap);
         if (newBitmap == NULL)
         {
             DllExports::GdipDisposeImage(bitmap);
@@ -496,13 +508,12 @@ class Bitmap : public Image
     Clone(REAL x, REAL y, REAL width, REAL height, PixelFormat format)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCloneBitmapArea(x, y,
-            width, height, format, GetNativeBitmap(), &bitmap);
+        lastStatus = DllExports::GdipCloneBitmapArea(x, y, width, height, format, GetNativeBitmap(), &bitmap);
 
         if (lastStatus != Ok)
             return NULL;
 
-        Bitmap* newBitmap = new Bitmap(bitmap);
+        Bitmap *newBitmap = new Bitmap(bitmap);
         if (newBitmap == NULL)
         {
             DllExports::GdipDisposeImage(bitmap);
@@ -565,8 +576,7 @@ class Bitmap : public Image
     Status
     LockBits(const Rect *rect, UINT flags, PixelFormat format, BitmapData *lockedBitmapData)
     {
-        return SetStatus(DllExports::GdipBitmapLockBits(
-            GetNativeBitmap(), rect, flags, format, lockedBitmapData));
+        return SetStatus(DllExports::GdipBitmapLockBits(GetNativeBitmap(), rect, flags, format, lockedBitmapData));
     }
 
     Status
@@ -598,7 +608,8 @@ class Bitmap : public Image
         SetNativeImage(nativeBitmap);
     }
 
-    GpBitmap *GetNativeBitmap() const
+    GpBitmap *
+    GetNativeBitmap() const
     {
         return static_cast<GpBitmap *>(nativeImage);
     }
@@ -610,9 +621,8 @@ class CachedBitmap : public GdiplusBase
     CachedBitmap(Bitmap *bitmap, Graphics *graphics)
     {
         nativeCachedBitmap = NULL;
-        lastStatus =
-            DllExports::GdipCreateCachedBitmap(
-                bitmap->GetNativeBitmap(), graphics ? graphics->graphics : NULL, &nativeCachedBitmap);
+        lastStatus = DllExports::GdipCreateCachedBitmap(
+            bitmap->GetNativeBitmap(), graphics ? graphics->graphics : NULL, &nativeCachedBitmap);
     }
 
     ~CachedBitmap()
@@ -620,7 +630,8 @@ class CachedBitmap : public GdiplusBase
         DllExports::GdipDeleteCachedBitmap(nativeCachedBitmap);
     }
 
-    Status GetLastStatus()
+    Status
+    GetLastStatus()
     {
         return lastStatus;
     }
@@ -631,8 +642,9 @@ class CachedBitmap : public GdiplusBase
 
   private:
     // CachedBitmap is not copyable
-    CachedBitmap(const CachedBitmap&);
-    CachedBitmap& operator=(const CachedBitmap&);
+    CachedBitmap(const CachedBitmap &);
+    CachedBitmap &
+    operator=(const CachedBitmap &);
 };
 
 class FontCollection : public GdiplusBase
@@ -650,12 +662,14 @@ class FontCollection : public GdiplusBase
         return NotImplemented;
     }
 
-    INT GetFamilyCount() const
+    INT
+    GetFamilyCount() const
     {
         return 0;
     }
 
-    Status GetLastStatus()
+    Status
+    GetLastStatus()
     {
         return NotImplemented;
     }
@@ -679,12 +693,14 @@ class FontFamily : public GdiplusBase
             name, fontCollection ? fontCollection->fontCollection : NULL, &fontFamily);
     }
 
-    FontFamily *Clone()
+    FontFamily *
+    Clone()
     {
         return NULL;
     }
 
-    static const FontFamily *GenericMonospace()
+    static const FontFamily *
+    GenericMonospace()
     {
         FontFamily *genericMonospace = new FontFamily();
         genericMonospace->status =
@@ -692,7 +708,8 @@ class FontFamily : public GdiplusBase
         return genericMonospace;
     }
 
-    static const FontFamily *GenericSansSerif()
+    static const FontFamily *
+    GenericSansSerif()
     {
         FontFamily *genericSansSerif = new FontFamily();
         genericSansSerif->status =
@@ -700,7 +717,8 @@ class FontFamily : public GdiplusBase
         return genericSansSerif;
     }
 
-    static const FontFamily *GenericSerif()
+    static const FontFamily *
+    GenericSerif()
     {
         FontFamily *genericSerif = new FontFamily();
         genericSerif->status =
@@ -738,7 +756,8 @@ class FontFamily : public GdiplusBase
         return SetStatus(DllExports::GdipGetFamilyName(fontFamily, name, language));
     }
 
-    Status GetLastStatus() const
+    Status
+    GetLastStatus() const
     {
         return status;
     }
@@ -751,7 +770,8 @@ class FontFamily : public GdiplusBase
         return LineSpacing;
     }
 
-    BOOL IsAvailable() const
+    BOOL
+    IsAvailable() const
     {
         return FALSE;
     }
@@ -841,7 +861,8 @@ class Font : public GdiplusBase
         status = DllExports::GdipCreateFontFromDC(hdc, &font);
     }
 
-    Font *Clone() const
+    Font *
+    Clone() const
     {
         Font *cloneFont = new Font();
         cloneFont->status = DllExports::GdipCloneFont(font, cloneFont ? &cloneFont->font : NULL);
@@ -870,7 +891,8 @@ class Font : public GdiplusBase
         return height;
     }
 
-    Status GetLastStatus() const
+    Status
+    GetLastStatus() const
     {
         return status;
     }
@@ -887,28 +909,32 @@ class Font : public GdiplusBase
         return SetStatus(DllExports::GdipGetLogFontW(font, g ? g->graphics : NULL, logfontW));
     }
 
-    REAL GetSize() const
+    REAL
+    GetSize() const
     {
         REAL size;
         SetStatus(DllExports::GdipGetFontSize(font, &size));
         return size;
     }
 
-    INT GetStyle() const
+    INT
+    GetStyle() const
     {
         INT style;
         SetStatus(DllExports::GdipGetFontStyle(font, &style));
         return style;
     }
 
-    Unit GetUnit() const
+    Unit
+    GetUnit() const
     {
         Unit unit;
         SetStatus(DllExports::GdipGetFontUnit(font, &unit));
         return unit;
     }
 
-    BOOL IsAvailable() const
+    BOOL
+    IsAvailable() const
     {
         return FALSE;
     }
@@ -969,7 +995,8 @@ class Region : public GdiplusBase
         status = DllExports::GdipCreateRegionRect(&rect, &region);
     }
 
-    Region *Clone()
+    Region *
+    Clone()
     {
         Region *cloneRegion = new Region();
         cloneRegion->status = DllExports::GdipCloneRegion(region, cloneRegion ? &cloneRegion->region : NULL);
@@ -1059,7 +1086,8 @@ class Region : public GdiplusBase
         return SetStatus(DllExports::GdipGetRegionData(region, buffer, bufferSize, sizeFilled));
     }
 
-    UINT GetDataSize() const
+    UINT
+    GetDataSize() const
     {
         UINT bufferSize;
         SetStatus(DllExports::GdipGetRegionDataSize(region, &bufferSize));
@@ -1074,7 +1102,8 @@ class Region : public GdiplusBase
         return hRgn;
     }
 
-    Status GetLastStatus()
+    Status
+    GetLastStatus()
     {
         return status;
     }
@@ -1206,12 +1235,14 @@ class Region : public GdiplusBase
         return result;
     }
 
-    Status MakeEmpty()
+    Status
+    MakeEmpty()
     {
         return SetStatus(DllExports::GdipSetEmpty(region));
     }
 
-    Status MakeInfinite()
+    Status
+    MakeInfinite()
     {
         return SetStatus(DllExports::GdipSetInfinite(region));
     }
@@ -1302,16 +1333,22 @@ class CustomLineCap : public GdiplusBase
 {
   public:
     CustomLineCap(const GraphicsPath *fillPath, const GraphicsPath *strokePath, LineCap baseCap, REAL baseInset);
-    CustomLineCap *Clone();
-    LineCap GetBaseCap();
-    REAL GetBaseInset();
-    Status GetLastStatus();
+    CustomLineCap *
+    Clone();
+    LineCap
+    GetBaseCap();
+    REAL
+    GetBaseInset();
+    Status
+    GetLastStatus();
 
     Status
     GetStrokeCaps(LineCap *startCap, LineCap *endCap);
 
-    LineJoin GetStrokeJoin();
-    REAL GetWidthScale();
+    LineJoin
+    GetStrokeJoin();
+    REAL
+    GetWidthScale();
 
     Status
     SetBaseCap(LineCap baseCap);
