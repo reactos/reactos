@@ -79,7 +79,7 @@ class Point
         Y = pt.Y;
     }
 
-    /* FIXME: missing constructor that takes a Size */
+    Point(const Size &size);
 
     Point(IN INT x, IN INT y)
     {
@@ -124,7 +124,7 @@ class PointF
         Y = pt.Y;
     }
 
-    /* FIXME: missing constructor that takes a SizeF */
+    PointF(const SizeF &size);
 
     PointF(IN REAL x, IN REAL y)
     {
@@ -622,6 +622,14 @@ class CharacterRange
     INT First;
     INT Length;
 };
+
+inline Point::Point(const Size &size) : X(size.Width), Y(size.Height)
+{
+}
+
+inline PointF::PointF(const SizeF &size) : X(size.Width), Y(size.Height)
+{
+}
 
 #else /* end of c++ typedefs */
 
