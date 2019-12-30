@@ -27,29 +27,29 @@ class Image : public GdiplusBase
     Image(IStream *stream, BOOL useEmbeddedColorManagement = FALSE)
     {
         if (useEmbeddedColorManagement)
-            status = DllExports::GdipLoadImageFromStreamICM(stream, &image);
+            status = DllExports::GdipLoadImageFromStreamICM(stream, &nativeImage);
         else
-            status = DllExports::GdipLoadImageFromStream(stream, &image);
+            status = DllExports::GdipLoadImageFromStream(stream, &nativeImage);
     }
 
     Image(const WCHAR *filename, BOOL useEmbeddedColorManagement = FALSE)
     {
         if (useEmbeddedColorManagement)
-            status = DllExports::GdipLoadImageFromFileICM(filename, &image);
+            status = DllExports::GdipLoadImageFromFileICM(filename, &nativeImage);
         else
-            status = DllExports::GdipLoadImageFromFile(filename, &image);
+            status = DllExports::GdipLoadImageFromFile(filename, &nativeImage);
     }
 
     Image *Clone(VOID)
     {
         Image *newImage = new Image();
-        SetStatus(DllExports::GdipCloneImage(image, newImage ? &newImage->image : NULL));
+        SetStatus(DllExports::GdipCloneImage(nativeImage, newImage ? &newImage->nativeImage : NULL));
         return newImage;
     }
 
     virtual ~Image()
     {
-        DllExports::GdipDisposeImage(image);
+        DllExports::GdipDisposeImage(nativeImage);
     }
 
     static Image *
@@ -67,19 +67,19 @@ class Image : public GdiplusBase
     Status
     GetAllPropertyItems(UINT totalBufferSize, UINT numProperties, PropertyItem *allItems)
     {
-        return SetStatus(DllExports::GdipGetAllPropertyItems(image, totalBufferSize, numProperties, allItems));
+        return SetStatus(DllExports::GdipGetAllPropertyItems(nativeImage, totalBufferSize, numProperties, allItems));
     }
 
     Status
     GetBounds(RectF *srcRect, Unit *srcUnit)
     {
-        return SetStatus(DllExports::GdipGetImageBounds(image, srcRect, srcUnit));
+        return SetStatus(DllExports::GdipGetImageBounds(nativeImage, srcRect, srcUnit));
     }
 
     Status
     GetEncoderParameterList(const CLSID *clsidEncoder, UINT size, EncoderParameters *buffer)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetEncoderParameterList(image,
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetEncoderParameterList(nativeImage,
                                // clsidEncoder, size, buffer));
     }
 
@@ -88,14 +88,14 @@ class Image : public GdiplusBase
     {
         return 0; // FIXME: not available:
                   //     UINT size;
-                  //     SetStatus(DllExports::GdipGetEncoderParameterListSize(image, clsidEncoder, &size));
+                  //     SetStatus(DllExports::GdipGetEncoderParameterListSize(nativeImage, clsidEncoder, &size));
                   //     return size;
     }
 
     UINT GetFlags(VOID)
     {
         UINT flags;
-        SetStatus(DllExports::GdipGetImageFlags(image, &flags));
+        SetStatus(DllExports::GdipGetImageFlags(nativeImage, &flags));
         return flags;
     }
 
@@ -103,34 +103,34 @@ class Image : public GdiplusBase
     GetFrameCount(const GUID *dimensionID)
     {
         UINT count;
-        SetStatus(DllExports::GdipImageGetFrameCount(image, dimensionID, &count));
+        SetStatus(DllExports::GdipImageGetFrameCount(nativeImage, dimensionID, &count));
         return count;
     }
 
     UINT GetFrameDimensionsCount(VOID)
     {
         UINT count;
-        SetStatus(DllExports::GdipImageGetFrameDimensionsCount(image, &count));
+        SetStatus(DllExports::GdipImageGetFrameDimensionsCount(nativeImage, &count));
         return count;
     }
 
     Status
     GetFrameDimensionsList(GUID *dimensionIDs, UINT count)
     {
-        return SetStatus(DllExports::GdipImageGetFrameDimensionsList(image, dimensionIDs, count));
+        return SetStatus(DllExports::GdipImageGetFrameDimensionsList(nativeImage, dimensionIDs, count));
     }
 
     UINT GetHeight(VOID)
     {
         UINT height;
-        SetStatus(DllExports::GdipGetImageHeight(image, &height));
+        SetStatus(DllExports::GdipGetImageHeight(nativeImage, &height));
         return height;
     }
 
     REAL GetHorizontalResolution(VOID)
     {
         REAL resolution;
-        SetStatus(DllExports::GdipGetImageHorizontalResolution(image, &resolution));
+        SetStatus(DllExports::GdipGetImageHorizontalResolution(nativeImage, &resolution));
         return resolution;
     }
 
@@ -142,67 +142,69 @@ class Image : public GdiplusBase
     Status
     GetPalette(ColorPalette *palette, INT size)
     {
-        return SetStatus(DllExports::GdipGetImagePalette(image, palette, size));
+        return SetStatus(DllExports::GdipGetImagePalette(nativeImage, palette, size));
     }
 
     INT GetPaletteSize(VOID)
     {
         INT size;
-        SetStatus(DllExports::GdipGetImagePaletteSize(image, &size));
+        SetStatus(DllExports::GdipGetImagePaletteSize(nativeImage, &size));
         return size;
     }
 
     Status
     GetPhysicalDimension(SizeF *size)
     {
-        return SetStatus(
-            DllExports::GdipGetImageDimension(image, size ? &size->Width : NULL, size ? &size->Height : NULL));
+        if (size)
+            return SetStatus(DllExports::GdipGetImageDimension(nativeImage, &size->Width, &size->Height));
+        else
+            return SetStatus(DllExports::GdipGetImageDimension(nativeImage, NULL, NULL));
     }
 
     PixelFormat GetPixelFormat(VOID)
     {
         PixelFormat format;
-        SetStatus(DllExports::GdipGetImagePixelFormat(image, &format));
+        SetStatus(DllExports::GdipGetImagePixelFormat(nativeImage, &format));
         return format;
     }
 
     UINT GetPropertyCount(VOID)
     {
         UINT numOfProperty;
-        SetStatus(DllExports::GdipGetPropertyCount(image, &numOfProperty));
+        SetStatus(DllExports::GdipGetPropertyCount(nativeImage, &numOfProperty));
         return numOfProperty;
     }
 
     Status
     GetPropertyIdList(UINT numOfProperty, PROPID *list)
     {
-        return SetStatus(DllExports::GdipGetPropertyIdList(image, numOfProperty, list));
+        return SetStatus(DllExports::GdipGetPropertyIdList(nativeImage, numOfProperty, list));
     }
 
     Status
     GetPropertyItem(PROPID propId, UINT propSize, PropertyItem *buffer)
     {
-        return SetStatus(DllExports::GdipGetPropertyItem(image, propId, propSize, buffer));
+        return SetStatus(DllExports::GdipGetPropertyItem(nativeImage, propId, propSize, buffer));
     }
 
     UINT
     GetPropertyItemSize(PROPID propId)
     {
         UINT size;
-        SetStatus(DllExports::GdipGetPropertyItemSize(image, propId, &size));
+        SetStatus(DllExports::GdipGetPropertyItemSize(nativeImage, propId, &size));
         return size;
     }
 
     Status
     GetPropertySize(UINT *totalBufferSize, UINT *numProperties)
     {
-        return SetStatus(DllExports::GdipGetPropertySize(image, totalBufferSize, numProperties));
+        return SetStatus(DllExports::GdipGetPropertySize(nativeImage, totalBufferSize, numProperties));
     }
 
     Status
     GetRawFormat(GUID *format)
     {
-        return SetStatus(DllExports::GdipGetImageRawFormat(image, format));
+        return SetStatus(DllExports::GdipGetImageRawFormat(nativeImage, format));
     }
 
     Image *
@@ -210,84 +212,85 @@ class Image : public GdiplusBase
     {
         Image *thumbImage = new Image();
         SetStatus(DllExports::GdipGetImageThumbnail(
-            image, thumbWidth, thumbHeight, thumbImage ? &thumbImage->image : NULL, callback, callbackData));
+            nativeImage, thumbWidth, thumbHeight, thumbImage ? &thumbImage->nativeImage : NULL, callback,
+            callbackData));
         return thumbImage;
     }
 
     ImageType GetType(VOID)
     {
         ImageType type;
-        SetStatus(DllExports::GdipGetImageType(image, &type));
+        SetStatus(DllExports::GdipGetImageType(nativeImage, &type));
         return type;
     }
 
     REAL GetVerticalResolution(VOID)
     {
         REAL resolution;
-        SetStatus(DllExports::GdipGetImageVerticalResolution(image, &resolution));
+        SetStatus(DllExports::GdipGetImageVerticalResolution(nativeImage, &resolution));
         return resolution;
     }
 
     UINT GetWidth(VOID)
     {
         UINT width;
-        SetStatus(DllExports::GdipGetImageWidth(image, &width));
+        SetStatus(DllExports::GdipGetImageWidth(nativeImage, &width));
         return width;
     }
 
     Status
     RemovePropertyItem(PROPID propId)
     {
-        return SetStatus(DllExports::GdipRemovePropertyItem(image, propId));
+        return SetStatus(DllExports::GdipRemovePropertyItem(nativeImage, propId));
     }
 
     Status
     RotateFlip(RotateFlipType rotateFlipType)
     {
-        return SetStatus(DllExports::GdipImageRotateFlip(image, rotateFlipType));
+        return SetStatus(DllExports::GdipImageRotateFlip(nativeImage, rotateFlipType));
     }
 
     Status
     Save(IStream *stream, const CLSID *clsidEncoder, const EncoderParameters *encoderParams)
     {
-        return SetStatus(DllExports::GdipSaveImageToStream(image, stream, clsidEncoder, encoderParams));
+        return SetStatus(DllExports::GdipSaveImageToStream(nativeImage, stream, clsidEncoder, encoderParams));
     }
 
     Status
     Save(const WCHAR *filename, const CLSID *clsidEncoder, const EncoderParameters *encoderParams)
     {
-        return SetStatus(DllExports::GdipSaveImageToFile(image, filename, clsidEncoder, encoderParams));
+        return SetStatus(DllExports::GdipSaveImageToFile(nativeImage, filename, clsidEncoder, encoderParams));
     }
 
     Status
     SaveAdd(const EncoderParameters *encoderParams)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipSaveAdd(image, encoderParams));
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipSaveAdd(nativeImage, encoderParams));
     }
 
     Status
     SaveAdd(Image *newImage, const EncoderParameters *encoderParams)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipSaveAddImage(image, newImage ?
-                               // newImage->image : NULL, encoderParams));
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipSaveAddImage(nativeImage, newImage ?
+                               // newImage->nativeImage : NULL, encoderParams));
     }
 
     Status
     SelectActiveFrame(const GUID *dimensionID, UINT frameIndex)
     {
-        return SetStatus(DllExports::GdipImageSelectActiveFrame(image, dimensionID, frameIndex));
+        return SetStatus(DllExports::GdipImageSelectActiveFrame(nativeImage, dimensionID, frameIndex));
     }
 
     Status
     SetPalette(const ColorPalette *palette)
     {
-        return SetStatus(DllExports::GdipSetImagePalette(image, palette));
+        return SetStatus(DllExports::GdipSetImagePalette(nativeImage, palette));
     }
 
     Status
     SetPropertyItem(const PropertyItem *item)
     {
-        return SetStatus(DllExports::GdipSetPropertyItem(image, item));
+        return SetStatus(DllExports::GdipSetPropertyItem(nativeImage, item));
     }
 
   protected:
@@ -297,7 +300,7 @@ class Image : public GdiplusBase
 
   private:
     mutable Status status;
-    GpImage *image;
+    GpImage *nativeImage;
 
     Status
     SetStatus(Status status) const
@@ -1201,20 +1204,28 @@ class CustomLineCap : public GdiplusBase
     LineCap GetBaseCap(VOID);
     REAL GetBaseInset(VOID);
     Status GetLastStatus(VOID);
+
     Status
     GetStrokeCaps(LineCap *startCap, LineCap *endCap);
+
     LineJoin GetStrokeJoin(VOID);
     REAL GetWidthScale(VOID);
+
     Status
     SetBaseCap(LineCap baseCap);
+
     Status
     SetBaseInset(REAL inset);
+
     Status
     SetStrokeCap(LineCap strokeCap);
+
     Status
     SetStrokeCaps(LineCap startCap, LineCap endCap);
+
     Status
     SetStrokeJoin(LineJoin lineJoin);
+
     Status
     SetWidthScale(IN REAL widthScale);
 
