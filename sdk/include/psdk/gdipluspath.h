@@ -415,7 +415,7 @@ class GraphicsPath : public GdiplusBase
     }
 
     Status
-    GetLastStatus()
+    GetLastStatus() const
     {
         return lastStatus;
     }
