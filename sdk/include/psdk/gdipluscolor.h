@@ -129,7 +129,7 @@ class Color
     COLORREF
     ToCOLORREF() const
     {
-        return (Argb & 0x000000ff) << 16 | (Argb & 0x0000ff00) | (Argb & 0x00ff0000) >> 16;
+        return RGB(GetRed(), GetGreen(), GetBlue());
     }
 
     static const ARGB AlphaMask = 0xFF000000;
