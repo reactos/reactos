@@ -157,17 +157,18 @@ KiReleaseDispatcherLock(IN KIRQL OldIrql)
 
 FORCEINLINE
 VOID
-KiAcquireDispatcherLockAtDpcLevel(VOID)
+KiAcquireDispatcherLockAtSynchLevel(VOID)
 {
-    /* This is a no-op at DPC Level for UP systems */
+    /* This is a no-op at SYNCH_LEVEL for UP systems */
+    ASSERT(KeGetCurrentIrql() >= SYNCH_LEVEL);
     return;
 }
 
 FORCEINLINE
 VOID
-KiReleaseDispatcherLockFromDpcLevel(VOID)
+KiReleaseDispatcherLockFromSynchLevel(VOID)
 {
-    /* This is a no-op at DPC Level for UP systems */
+    /* This is a no-op at SYNCH_LEVEL for UP systems */
     return;
 }
 
@@ -360,16 +361,17 @@ KiReleaseDispatcherLock(IN KIRQL OldIrql)
 
 FORCEINLINE
 VOID
-KiAcquireDispatcherLockAtDpcLevel(VOID)
+KiAcquireDispatcherLockAtSynchLevel(VOID)
 {
     /* Acquire the dispatcher lock */
+    ASSERT(KeGetCurrentIrql() >= SYNCH_LEVEL);
     KeAcquireQueuedSpinLockAtDpcLevel(&KeGetCurrentPrcb()->
                                       LockQueue[LockQueueDispatcherLock]);
 }
 
 FORCEINLINE
 VOID
-KiReleaseDispatcherLockFromDpcLevel(VOID)
+KiReleaseDispatcherLockFromSynchLevel(VOID)
 {
     /* Release the dispatcher lock */
     KeReleaseQueuedSpinLockFromDpcLevel(&KeGetCurrentPrcb()->
@@ -597,7 +599,7 @@ KiReleaseTimerLock(IN PKSPIN_LOCK_QUEUE LockQueue)
 
 FORCEINLINE
 VOID
-KiAcquireApcLock(IN PKTHREAD Thread,
+KiAcquireApcLockRaiseToSynch(IN PKTHREAD Thread,
                  IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Acquire the lock and raise to synchronization level */
@@ -606,16 +608,17 @@ KiAcquireApcLock(IN PKTHREAD Thread,
 
 FORCEINLINE
 VOID
-KiAcquireApcLockAtDpcLevel(IN PKTHREAD Thread,
+KiAcquireApcLockAtSynchLevel(IN PKTHREAD Thread,
                            IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Acquire the lock */
+    ASSERT(KeGetCurrentIrql() >= SYNCH_LEVEL);
     KeAcquireInStackQueuedSpinLockAtDpcLevel(&Thread->ApcQueueLock, Handle);
 }
 
 FORCEINLINE
 VOID
-KiAcquireApcLockAtApcLevel(IN PKTHREAD Thread,
+KiAcquireApcLockRaiseToDpc(IN PKTHREAD Thread,
                            IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Acquire the lock */
@@ -632,7 +635,7 @@ KiReleaseApcLock(IN PKLOCK_QUEUE_HANDLE Handle)
 
 FORCEINLINE
 VOID
-KiReleaseApcLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
+KiReleaseApcLockFromSynchLevel(IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Release the lock */
     KeReleaseInStackQueuedSpinLockFromDpcLevel(Handle);
@@ -640,7 +643,7 @@ KiReleaseApcLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
 
 FORCEINLINE
 VOID
-KiAcquireProcessLock(IN PKPROCESS Process,
+KiAcquireProcessLockRaiseToSynch(IN PKPROCESS Process,
                      IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Acquire the lock and raise to synchronization level */
@@ -651,15 +654,15 @@ FORCEINLINE
 VOID
 KiReleaseProcessLock(IN PKLOCK_QUEUE_HANDLE Handle)
 {
-    /* Release the lock */
+    /* Release the lock and restore previous IRQL */
     KeReleaseInStackQueuedSpinLock(Handle);
 }
 
 FORCEINLINE
 VOID
-KiReleaseProcessLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
+KiReleaseProcessLockFromSynchLevel(IN PKLOCK_QUEUE_HANDLE Handle)
 {
-    /* Release the lock */
+    /* Release the lock without lowering IRQL */
     KeReleaseInStackQueuedSpinLockFromDpcLevel(Handle);
 }
 
@@ -916,10 +919,11 @@ KxInsertTimer(IN PKTIMER Timer,
               IN ULONG Hand)
 {
     PKSPIN_LOCK_QUEUE LockQueue;
+    ASSERT(KeGetCurrentIrql() >= SYNCH_LEVEL);
 
     /* Acquire the lock and release the dispatcher lock */
     LockQueue = KiAcquireTimerLock(Hand);
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
 
     /* Try to insert the timer */
     if (KiInsertTimerTable(Timer, Hand))

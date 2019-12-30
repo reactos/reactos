@@ -265,7 +265,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
         /* Raise IRQL to synch, prepare the wait, then lock the database */
         Thread->WaitIrql = KeRaiseIrqlToSynchLevel();
         KxQueueThreadWait();
-        KiAcquireDispatcherLockAtDpcLevel();
+        KiAcquireDispatcherLockAtSynchLevel();
     }
 
     /*
@@ -339,7 +339,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             {
                 /* Increment the count and unlock the dispatcher */
                 Queue->CurrentCount++;
-                KiReleaseDispatcherLockFromDpcLevel();
+                KiReleaseDispatcherLockFromSynchLevel();
                 KiExitDispatcher(Thread->WaitIrql);
             }
             else
@@ -394,7 +394,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 else
                 {
                     /* Otherwise, unlock the dispatcher */
-                    KiReleaseDispatcherLockFromDpcLevel();
+                    KiReleaseDispatcherLockFromSynchLevel();
                 }
 
                 /* Do the actual swap */
@@ -419,13 +419,13 @@ KeRemoveQueue(IN PKQUEUE Queue,
             /* Start another wait */
             Thread->WaitIrql = KeRaiseIrqlToSynchLevel();
             KxQueueThreadWait();
-            KiAcquireDispatcherLockAtDpcLevel();
+            KiAcquireDispatcherLockAtSynchLevel();
             Queue->CurrentCount--;
         }
     }
 
     /* Unlock Database and return */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
     KiExitDispatcher(Thread->WaitIrql);
     return QueueEntry;
 }
@@ -477,7 +477,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     }
 
     /* Release the dispatcher lock */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
  
     /* Exit the dispatcher and return the first entry (if any) */
     KiExitDispatcher(OldIrql);
