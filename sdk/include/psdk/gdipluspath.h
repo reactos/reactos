@@ -383,9 +383,7 @@ class GraphicsPath : public GdiplusBase
     {
         GpMatrix *nativeMatrix = NULL;
         if (matrix)
-        {
             nativeMatrix = matrix->nativeMatrix;
-        }
 
         return SetStatus(DllExports::GdipFlattenPath(nativePath, nativeMatrix, flatness));
     }
@@ -593,6 +591,12 @@ class GraphicsPath : public GdiplusBase
     {
         nativePath = path;
     }
+
+  private:
+    // GraphicsPath is not copyable
+    GraphicsPath(const GraphicsPath &);
+    GraphicsPath &
+    operator=(const GraphicsPath &);
 };
 
 class GraphicsPathIterator : public GdiplusBase
