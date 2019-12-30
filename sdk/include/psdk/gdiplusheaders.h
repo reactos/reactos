@@ -24,18 +24,16 @@ class Image : public GdiplusBase
   public:
     friend class Graphics;
 
-    Image(IStream *stream, BOOL useEmbeddedColorManagement = FALSE)
+    Image(IStream *stream, BOOL useEmbeddedColorManagement = FALSE) : nativeImage(NULL)
     {
-        nativeImage = NULL;
         if (useEmbeddedColorManagement)
             lastStatus = DllExports::GdipLoadImageFromStreamICM(stream, &nativeImage);
         else
             lastStatus = DllExports::GdipLoadImageFromStream(stream, &nativeImage);
     }
 
-    Image(const WCHAR *filename, BOOL useEmbeddedColorManagement = FALSE)
+    Image(const WCHAR *filename, BOOL useEmbeddedColorManagement = FALSE) : nativeImage(NULL)
     {
-        nativeImage = NULL;
         if (useEmbeddedColorManagement)
             lastStatus = DllExports::GdipLoadImageFromFileICM(filename, &nativeImage);
         else
