@@ -112,12 +112,14 @@ class Effect
     {
     }
 
-    VOID *GetAuxData() const
+    VOID *
+    GetAuxData() const
     {
         return NULL;
     }
 
-    INT GetAuxDataSize()
+    INT
+    GetAuxDataSize()
     {
         return 0;
     }
