@@ -361,6 +361,8 @@ class GraphicsPath : public GdiplusBase
     {
         GpPath *clonepath = NULL;
         SetStatus(DllExports::GdipClonePath(nativePath, &clonepath));
+        if (lastStatus != Ok)
+            return NULL;
         return new GraphicsPath(clonepath);
     }
 
