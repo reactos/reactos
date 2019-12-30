@@ -108,7 +108,8 @@ class Color
     static ARGB
     MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
     {
-        return a << 24 | r << 16 | g << 8 | b;
+        ARGB a0 = a, r0 = r, g0 = g, b0 = b;
+        return (a0 << AlphaShift) | (r0 << RedShift) | (g0 << GreenShift) | (b0 << BlueShift);
     }
 
     VOID
@@ -140,9 +141,9 @@ class Color
     enum
     {
         AlphaMask = 0xFF000000,
-        RedMask = 0x00ff0000,
-        GreenMask = 0x0000ff00,
-        BlueMask = 0x000000ff
+        RedMask = 0x00FF0000,
+        GreenMask = 0x0000FF00,
+        BlueMask = 0x000000FF
     };
 
     enum
