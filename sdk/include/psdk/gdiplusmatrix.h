@@ -28,43 +28,46 @@ class Matrix : public GdiplusBase
   public:
     Matrix(const RectF &rect, const PointF *dstplg)
     {
-        status = DllExports::GdipCreateMatrix3(&rect, dstplg, &nativeMatrix);
+        lastStatus = DllExports::GdipCreateMatrix3(&rect, dstplg, &nativeMatrix);
     }
 
     Matrix(const Rect &rect, const Point *dstplg)
     {
-        status = DllExports::GdipCreateMatrix3I(&rect, dstplg, &nativeMatrix);
+        lastStatus = DllExports::GdipCreateMatrix3I(&rect, dstplg, &nativeMatrix);
     }
 
-    Matrix(VOID)
+    Matrix()
     {
-        status = DllExports::GdipCreateMatrix(&nativeMatrix);
+        lastStatus = DllExports::GdipCreateMatrix(&nativeMatrix);
     }
 
     Matrix(REAL m11, REAL m12, REAL m21, REAL m22, REAL dx, REAL dy)
     {
-        status = DllExports::GdipCreateMatrix2(m11, m12, m21, m22, dx, dy, &nativeMatrix);
+        lastStatus = DllExports::GdipCreateMatrix2(m11, m12, m21, m22, dx, dy, &nativeMatrix);
     }
 
-    Matrix *Clone(VOID)
+    Matrix *
+    Clone()
     {
-        Matrix *cloneMatrix = new Matrix(); // FIXME: Matrix::nativeMatrix already initialized --> potential memory leak
-        cloneMatrix->status =
-            DllExports::GdipCloneMatrix(nativeMatrix, cloneMatrix ? &cloneMatrix->nativeMatrix : NULL);
-        return cloneMatrix;
+        GpMatrix *cloneMatrix = NULL;
+        SetStatus(DllExports::GdipCloneMatrix(nativeMatrix, &cloneMatrix));
+
+        if (lastStatus != Ok)
+            return NULL;
+
+        return new Matrix(cloneMatrix);
     }
 
-    ~Matrix(VOID)
+    ~Matrix()
     {
         DllExports::GdipDeleteMatrix(nativeMatrix);
     }
 
     BOOL
-    Equals(const Matrix *nativeMatrix)
+    Equals(const Matrix *matrix)
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsMatrixEqual(
-            this->nativeMatrix, nativeMatrix ? nativeMatrix->nativeMatrix : NULL, &result));
+        SetStatus(DllExports::GdipIsMatrixEqual(nativeMatrix, matrix ? matrix->nativeMatrix : NULL, &result));
         return result;
     }
 
@@ -74,24 +77,28 @@ class Matrix : public GdiplusBase
         return SetStatus(DllExports::GdipGetMatrixElements(nativeMatrix, m));
     }
 
-    Status GetLastStatus(VOID)
+    Status
+    GetLastStatus()
     {
-        return status;
+        return lastStatus;
     }
 
-    Status Invert(VOID)
+    Status
+    Invert()
     {
         return SetStatus(DllExports::GdipInvertMatrix(nativeMatrix));
     }
 
-    BOOL IsIdentity(VOID)
+    BOOL
+    IsIdentity()
     {
         BOOL result;
         SetStatus(DllExports::GdipIsMatrixIdentity(nativeMatrix, &result));
         return result;
     }
 
-    BOOL IsInvertible(VOID)
+    BOOL
+    IsInvertible()
     {
         BOOL result;
         SetStatus(DllExports::GdipIsMatrixInvertible(nativeMatrix, &result));
@@ -99,10 +106,9 @@ class Matrix : public GdiplusBase
     }
 
     Status
-    Multiply(const Matrix *nativeMatrix, MatrixOrder order)
+    Multiply(const Matrix *matrix, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipMultiplyMatrix(
-            this->nativeMatrix, nativeMatrix ? nativeMatrix->nativeMatrix : NULL, order));
+        return SetStatus(DllExports::GdipMultiplyMatrix(nativeMatrix, matrix ? matrix->nativeMatrix : NULL, order));
     }
 
     REAL OffsetX(VOID)
@@ -180,16 +186,19 @@ class Matrix : public GdiplusBase
         return SetStatus(DllExports::GdipTranslateMatrix(nativeMatrix, offsetX, offsetY, order));
     }
 
-  private:
-    mutable Status status;
+  protected:
     GpMatrix *nativeMatrix;
+    mutable Status lastStatus;
+
+    Matrix(GpMatrix *matrix) : nativeMatrix(matrix), lastStatus(Ok)
+    {
+    }
 
     Status
     SetStatus(Status status) const
     {
-        if (status == Ok)
-            return status;
-        this->status = status;
+        if (status != Ok)
+            lastStatus = status;
         return status;
     }
 };
