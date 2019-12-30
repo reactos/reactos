@@ -27,17 +27,17 @@ class Image : public GdiplusBase
     Image(IStream *stream, BOOL useEmbeddedColorManagement = FALSE)
     {
         if (useEmbeddedColorManagement)
-            status = DllExports::GdipLoadImageFromStreamICM(stream, &nativeImage);
+            lastStatus = DllExports::GdipLoadImageFromStreamICM(stream, &nativeImage);
         else
-            status = DllExports::GdipLoadImageFromStream(stream, &nativeImage);
+            lastStatus = DllExports::GdipLoadImageFromStream(stream, &nativeImage);
     }
 
     Image(const WCHAR *filename, BOOL useEmbeddedColorManagement = FALSE)
     {
         if (useEmbeddedColorManagement)
-            status = DllExports::GdipLoadImageFromFileICM(filename, &nativeImage);
+            lastStatus = DllExports::GdipLoadImageFromFileICM(filename, &nativeImage);
         else
-            status = DllExports::GdipLoadImageFromFile(filename, &nativeImage);
+            lastStatus = DllExports::GdipLoadImageFromFile(filename, &nativeImage);
     }
 
     Image *Clone(VOID)
@@ -136,7 +136,7 @@ class Image : public GdiplusBase
 
     Status GetLastStatus(VOID)
     {
-        return status;
+        return lastStatus;
     }
 
     Status
@@ -299,7 +299,7 @@ class Image : public GdiplusBase
     }
 
   private:
-    mutable Status status;
+    mutable Status lastStatus;
     GpImage *nativeImage;
 
     Status
@@ -307,7 +307,7 @@ class Image : public GdiplusBase
     {
         if (status == Ok)
             return status;
-        this->status = status;
+        lastStatus = status;
         return status;
     }
 };
@@ -319,17 +319,17 @@ class Bitmap : public Image
   public:
     //   Bitmap(IDirectDrawSurface7 *surface)  // <-- FIXME: compiler does not like this
     //   {
-    //     status = DllExports::GdipCreateBitmapFromDirectDrawSurface(surface, &bitmap);
+    //     lastStatus = DllExports::GdipCreateBitmapFromDirectDrawSurface(surface, &bitmap);
     //   }
 
     Bitmap(INT width, INT height, Graphics *target)
     {
-        status = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
     }
 
     Bitmap(const BITMAPINFO *gdiBitmapInfo, VOID *gdiBitmapData)
     {
-        status = DllExports::GdipCreateBitmapFromGdiDib(gdiBitmapInfo, gdiBitmapData, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromGdiDib(gdiBitmapInfo, gdiBitmapData, &bitmap);
     }
 
     Bitmap(INT width, INT height, PixelFormat format)
@@ -338,38 +338,38 @@ class Bitmap : public Image
 
     Bitmap(HBITMAP hbm, HPALETTE hpal)
     {
-        status = DllExports::GdipCreateBitmapFromHBITMAP(hbm, hpal, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromHBITMAP(hbm, hpal, &bitmap);
     }
 
     Bitmap(INT width, INT height, INT stride, PixelFormat format, BYTE *scan0)
     {
-        status = DllExports::GdipCreateBitmapFromScan0(width, height, stride, format, scan0, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromScan0(width, height, stride, format, scan0, &bitmap);
     }
 
     Bitmap(const WCHAR *filename, BOOL useIcm)
     {
         if (useIcm)
-            status = DllExports::GdipCreateBitmapFromFileICM(filename, &bitmap);
+            lastStatus = DllExports::GdipCreateBitmapFromFileICM(filename, &bitmap);
         else
-            status = DllExports::GdipCreateBitmapFromFile(filename, &bitmap);
+            lastStatus = DllExports::GdipCreateBitmapFromFile(filename, &bitmap);
     }
 
     Bitmap(HINSTANCE hInstance, const WCHAR *bitmapName)
     {
-        status = DllExports::GdipCreateBitmapFromResource(hInstance, bitmapName, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromResource(hInstance, bitmapName, &bitmap);
     }
 
     Bitmap(HICON hicon)
     {
-        status = DllExports::GdipCreateBitmapFromHICON(hicon, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromHICON(hicon, &bitmap);
     }
 
     Bitmap(IStream *stream, BOOL useIcm)
     {
         if (useIcm)
-            status = DllExports::GdipCreateBitmapFromStreamICM(stream, &bitmap);
+            lastStatus = DllExports::GdipCreateBitmapFromStreamICM(stream, &bitmap);
         else
-            status = DllExports::GdipCreateBitmapFromStream(stream, &bitmap);
+            lastStatus = DllExports::GdipCreateBitmapFromStream(stream, &bitmap);
     }
 
     Bitmap *
@@ -501,7 +501,7 @@ class Bitmap : public Image
     }
 
   private:
-    mutable Status status;
+    mutable Status lastStatus;
     GpBitmap *bitmap;
 
     Status
@@ -509,7 +509,7 @@ class Bitmap : public Image
     {
         if (status == Ok)
             return status;
-        this->status = status;
+        lastStatus = status;
         return status;
     }
 };
@@ -519,17 +519,17 @@ class CachedBitmap : public GdiplusBase
   public:
     CachedBitmap(Bitmap *bitmap, Graphics *graphics)
     {
-        status =
+        lastStatus =
             DllExports::GdipCreateCachedBitmap(bitmap->bitmap, graphics ? graphics->graphics : NULL, &cachedBitmap);
     }
 
     Status GetLastStatus(VOID)
     {
-        return status;
+        return lastStatus;
     }
 
   private:
-    mutable Status status;
+    mutable Status lastStatus;
     GpCachedBitmap *cachedBitmap;
 };
 
