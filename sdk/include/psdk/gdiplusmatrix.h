@@ -78,7 +78,7 @@ class Matrix : public GdiplusBase
     }
 
     Status
-    GetLastStatus()
+    GetLastStatus() const
     {
         return lastStatus;
     }
