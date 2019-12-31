@@ -49,7 +49,7 @@ class Brush : public GdiplusBase
     }
 
     Status
-    GetLastStatus()
+    GetLastStatus() const
     {
         return lastStatus;
     }
