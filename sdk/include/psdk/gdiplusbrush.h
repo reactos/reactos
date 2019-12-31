@@ -55,7 +55,7 @@ class Brush : public GdiplusBase
     }
 
     BrushType
-    GetType()
+    GetType() const
     {
         BrushType type;
         SetStatus(DllExports::GdipGetBrushType(nativeBrush, &type));
