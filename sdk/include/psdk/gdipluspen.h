@@ -21,6 +21,7 @@
 
 class CustomLineCap;
 
+// get native
 GpCustomLineCap *&
 getNat(const CustomLineCap *cap);
 
