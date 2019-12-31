@@ -495,18 +495,70 @@ class SolidBrush : Brush
     }
 };
 
+// get native
+GpImage *&
+getNat(const Image *image);
+
 class TextureBrush : Brush
 {
   public:
-    // Defined in "gdiplusheaders.h":
-    TextureBrush(Image *image, WrapMode wrapMode, const RectF &dstRect);
-    TextureBrush(Image *image, Rect &dstRect, ImageAttributes *imageAttributes);
-    TextureBrush(Image *image, WrapMode wrapMode, INT dstX, INT dstY, INT dstWidth, INT dstHeight);
-    TextureBrush(Image *image, WrapMode wrapMode, REAL dstX, REAL dstY, REAL dstWidth, REAL dstHeight);
-    TextureBrush(Image *image, RectF &dstRect, ImageAttributes *imageAttributes);
-    TextureBrush(Image *image, WrapMode wrapMode);
-    TextureBrush(Image *image, WrapMode wrapMode, const Rect &dstRect);
+    TextureBrush(Image *image, WrapMode wrapMode, const RectF &dstRect)
+    {
+        GpTexture *texture = NULL;
+        lastStatus = DllExports::GdipCreateTexture2(
+            getNat(image), wrapMode, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
+        SetNativeBrush(texture);
+    }
 
+    TextureBrush(Image *image, Rect &dstRect, ImageAttributes *imageAttributes)
+    {
+        GpTexture *texture = NULL;
+        GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
+        lastStatus = DllExports::GdipCreateTextureIA(
+            getNat(image), attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
+        SetNativeBrush(texture);
+    }
+
+    TextureBrush(Image *image, WrapMode wrapMode, INT dstX, INT dstY, INT dstWidth, INT dstHeight)
+    {
+        GpTexture *texture = NULL;
+        lastStatus =
+            DllExports::GdipCreateTexture2I(getNat(image), wrapMode, dstX, dstY, dstWidth, dstHeight, &texture);
+        SetNativeBrush(texture);
+    }
+
+    TextureBrush(Image *image, WrapMode wrapMode, REAL dstX, REAL dstY, REAL dstWidth, REAL dstHeight)
+    {
+        GpTexture *texture = NULL;
+        lastStatus = DllExports::GdipCreateTexture2(getNat(image), wrapMode, dstX, dstY, dstWidth, dstHeight, &texture);
+        SetNativeBrush(texture);
+    }
+
+    TextureBrush(Image *image, RectF &dstRect, ImageAttributes *imageAttributes)
+    {
+        GpTexture *texture = NULL;
+        GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
+        lastStatus = DllExports::GdipCreateTextureIA(
+            getNat(image), attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
+        SetNativeBrush(texture);
+    }
+
+    TextureBrush(Image *image, WrapMode wrapMode)
+    {
+        GpTexture *texture = NULL;
+        lastStatus = DllExports::GdipCreateTexture(getNat(image), wrapMode, &texture);
+        SetNativeBrush(texture);
+    }
+
+    TextureBrush(Image *image, WrapMode wrapMode, const Rect &dstRect)
+    {
+        GpTexture *texture = NULL;
+        lastStatus = DllExports::GdipCreateTexture2I(
+            getNat(image), wrapMode, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
+        SetNativeBrush(texture);
+    }
+
+    // Defined in "gdiplusheaders.h":
     Image *
     GetImage() const;
 
