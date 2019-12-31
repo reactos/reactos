@@ -32,6 +32,8 @@
 
 extern "C" {
 
+#include "FxDynamics.h"
+
 //-----------------------------------------------------------------------------
 // local prototype definitions
 //-----------------------------------------------------------------------------
@@ -48,6 +50,8 @@ ULONG    WdfLdrDbgPrintOn = 0;
 PCCH WdfLdrType = "Wdf01000";
 
 FxLibraryGlobalsType FxLibraryGlobals = { 0 };
+
+WDFVERSION WdfVersion;
 
 }
 
@@ -166,6 +170,7 @@ FxLibraryCleanup(
 
 extern "C"
 VOID
+NTAPI
 DriverUnload(
 	__in PDRIVER_OBJECT   DriverObject
 )
@@ -255,7 +260,6 @@ WDF_LIBRARY_REGISTER_CLIENT(
 
 	if (!NT_SUCCESS(status))
 	{
-
 		NTSTATUS status2;
 		status2 = RtlStringCchPrintfW(insertString,
 			RTL_NUMBER_OF(insertString),
@@ -369,6 +373,7 @@ FxLibraryCreateDevice(
 }
 
 NTSTATUS
+NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT   DriverObject,
 	PUNICODE_STRING  RegistryPath

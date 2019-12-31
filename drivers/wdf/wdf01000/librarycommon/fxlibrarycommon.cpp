@@ -1,5 +1,11 @@
 #include "fxlibrarycommon.h"
-#include "common/fxglobals.h" 
+#include "common/fxglobals.h"
+#include "common/fxverifier.h"
+#include "common/fxregkey.h"
+#include "common/fxautoregistry.h"
+#include "common/fxpool.h"
+#include "fxdynamics.h"
+
 
 NTSTATUS
 FxLibraryCommonCommission(VOID)
@@ -90,9 +96,86 @@ FxLibraryCommonRegisterClient(
 
 	ASSERT(Info->FuncCount);
 
-
 	*WdfDriverGlobals = NULL;
 
+	if (Info->FuncCount > WdfVersion.FuncCount)
+	{
+        __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                 ": version mismatch detected in function table count: client"
+                 "has 0x%x,  library has 0x%x\n",
+                 Info->FuncCount, WdfVersion.FuncCount));
+        goto Done;
+    }
+
+	if (Info->FuncCount <= 396)
+	{
+        //
+        // Make sure table count matches exactly with previously
+        // released framework version table sizes.
+        //
+        switch (Info->FuncCount)
+		{
+
+        //case WdfFunctionTableNumEntries_V1_25: // 453 - win10 1803 RS4
+        //case WdfFunctionTableNumEntries_V1_23: // 451 - win10 1709 RS3
+        //case WdfFunctionTableNumEntries_V1_21: // 448 - win10 1703 RS2
+        //case WdfFunctionTableNumEntries_V1_19: // 446 - win10 1607 RS1
+     // case WdfFunctionTableNumEntries_V1_17: // 444 - win10 1511 TH2
+        //case WdfFunctionTableNumEntries_V1_15: // 444 - win10 1507 TH1
+        //case WdfFunctionTableNumEntries_V1_13: // 438 - win8.1
+        //case WdfFunctionTableNumEntries_V1_11: // 432 - win8
+        case 396:  // 396 - win7
+     // case WdfFunctionTableNumEntries_V1_7:  // 387 - vista sp1
+        case 387:  // 387 - vista
+        case 386:  // 386
+        case 383:  // 383
+            break;
+
+        default:
+            __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                     ": Function table count 0x%x doesn't match any previously "
+                     "released framework version table size\n",
+                     Info->FuncCount));
+            goto Done;
+        }
+    }
+	else
+	{
+		goto Done;
+	}
+	
+	//
+    // Allocate an new FxDriverGlobals area for this driver.
+    //
+    *WdfDriverGlobals = FxAllocateDriverGlobals();
+
+	if (*WdfDriverGlobals) 
+	{
+		BOOLEAN isFunctinTableHookingOn = FALSE;
+		PFX_DRIVER_GLOBALS fxDriverGlobals = NULL;
+
+        //
+        // Check the registry to see if Enhanced verifier is on for this driver.
+        // if registry read fails, options value remains unchanged.
+        // store enhanced verifier options in driver globals
+        //
+        fxDriverGlobals = GetFxDriverGlobals(*WdfDriverGlobals);
+		GetEnhancedVerifierOptions(ClientInfo, &fxDriverGlobals->FxEnhancedVerifierOptions);
+		isFunctinTableHookingOn = IsFxVerifierFunctionTableHooking(fxDriverGlobals);
+
+		if (isFunctinTableHookingOn)
+		{
+			__Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                     ": Enhanced Verification is ON \n"));
+			
+			//copy verifyed func table
+			status = STATUS_UNSUCCESSFUL;
+		}
+		else
+		{
+			RtlCopyMemory(Info->FuncTable, &WdfVersion.Functions, sizeof(size_t) * WdfVersion.FuncCount);
+		}
+	}
 	
 Done:
 	__Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
@@ -122,4 +205,75 @@ FxLibraryCommonUnregisterClient(
 		": exit: status %X\n", status));
 
 	return status;
+}
+
+BOOLEAN
+IsClientInfoValid(
+    _In_ PCLIENT_INFO ClientInfo
+    )
+{
+    if (ClientInfo == NULL ||
+        ClientInfo->Size != sizeof(CLIENT_INFO) ||
+        ClientInfo->RegistryPath == NULL ||
+        ClientInfo->RegistryPath->Length == 0 ||
+        ClientInfo->RegistryPath->Buffer == NULL)
+	{
+        return FALSE;
+    }
+    return TRUE;
+}
+
+VOID
+GetEnhancedVerifierOptions(
+    __in PCLIENT_INFO ClientInfo,
+    __out PULONG Options
+    )
+{
+    NTSTATUS status;
+    ULONG value;
+    FxAutoRegKey hKey, hWdf;
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
+    DECLARE_CONST_UNICODE_STRING(valueName, WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME);
+
+    *Options = 0;
+    if (!IsClientInfoValid(ClientInfo) ||
+        Options == NULL)
+	{
+
+        __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                 ": Invalid ClientInfo received from wdfldr \n"));
+        return;
+    }
+
+    status = FxRegKey::_OpenKey(NULL,
+                                ClientInfo->RegistryPath,
+                                &hWdf.m_Key,
+                                KEY_READ);
+    if (!NT_SUCCESS(status))
+	{
+        return;
+    }
+
+    status = FxRegKey::_OpenKey(hWdf.m_Key,
+                                &parametersPath,
+                                &hKey.m_Key,
+                                KEY_READ);
+
+    if (!NT_SUCCESS(status))
+	{
+        return;
+    }
+
+    status = FxRegKey::_QueryULong(hKey.m_Key, &valueName, &value);
+
+    //
+    // Examine key values and set Options only on success.
+    //
+    if (NT_SUCCESS(status))
+	{
+        if (value)
+		{
+            *Options = value;
+        }
+    }
 }

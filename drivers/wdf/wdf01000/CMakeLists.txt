@@ -9,6 +9,8 @@ list(APPEND SOURCE
     wdf01000.cpp
     librarycommon/fxlibrarycommon.cpp
     object/globals.cpp
+    support/fxregkey.cpp
+    core/fxbugcheckcallback.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})

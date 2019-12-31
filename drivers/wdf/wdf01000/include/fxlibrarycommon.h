@@ -5,6 +5,7 @@
 
 #include "wdf.h"
 #include "common/fxldr.h"
+#include "fxdynamics.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +14,7 @@ extern "C" {
 extern RTL_OSVERSIONINFOW  gOsVersion;
 extern ULONG WdfLdrDbgPrintOn;
 extern PCCH WdfLdrType;
+extern WDFVERSION WdfVersion;
 
 #define _LIT_(a)    # a
 #define LITERAL(a) _LIT_(a)
@@ -27,6 +29,8 @@ extern PCCH WdfLdrType;
         __PrintUnfiltered _x_                                                  \
     }                                                                          \
 }
+
+#define WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME      L"EnhancedVerifierOptions"
 
 typedef
 	NTSTATUS
@@ -55,6 +59,12 @@ NTSTATUS
 FxLibraryCommonUnregisterClient(
 	__in PWDF_BIND_INFO        Info,
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
+);
+
+VOID
+GetEnhancedVerifierOptions(
+    __in PCLIENT_INFO ClientInfo,
+    __out PULONG Options
 );
 
 #ifdef __cplusplus

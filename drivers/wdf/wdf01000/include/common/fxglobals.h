@@ -6,6 +6,8 @@
 #include <ntddk.h>
 #include "wdf.h"
 #include "common/fxldr.h"
+#include "fxbugcheck.h"
+#include "common/mxlock.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,12 +15,19 @@ extern "C" {
 
 struct FxLibraryGlobalsType;
 extern RTL_OSVERSIONINFOW  gOsVersion;
+extern PCCH WdfLdrType;
 
 NTSTATUS
 FxLibraryGlobalsCommission(VOID);
 
 VOID
 FxLibraryGlobalsDecommission(VOID);
+
+VOID
+FxInitializeBugCheckDriverInfo();
+
+VOID
+FxUninitializeBugCheckDriverInfo();
 
 typedef struct _FX_DRIVER_GLOBALS
 {
@@ -182,6 +191,169 @@ enum FxMachineSleepStates
     FxMachineSleepStatesMax,
 };
 
+typedef
+BOOLEAN
+(*PFNKDREFRESH)(
+	VOID
+	);
+
+typedef
+VOID
+(*PFNKEFLUSHQUEUEDDPCS)(
+	VOID
+	);
+
+typedef
+NTSTATUS
+(*PFNIOSETCOMPLETIONROUTINEEX)(
+	PDEVICE_OBJECT, PIRP, PIO_COMPLETION_ROUTINE, PVOID, BOOLEAN, BOOLEAN, BOOLEAN
+	);
+
+typedef
+KIRQL
+(*PFNKEACQUIREINTERRRUPTSPINLOCK)(
+	PKINTERRUPT
+	);
+
+typedef
+VOID
+(*PFNKERELEASEINTERRUPTSPINLOCK)(
+	PKINTERRUPT, KIRQL
+	);
+
+typedef
+NTSTATUS
+(*PFNIOCONNECTINTERRUPTEX)(
+	PIO_CONNECT_INTERRUPT_PARAMETERS
+	);
+
+typedef
+VOID
+(*PFNIODISCONNECTINTERRUPTEX)(
+	PIO_DISCONNECT_INTERRUPT_PARAMETERS
+	);
+
+typedef
+KIRQL
+(*PFNKFRAISEIRQL)(
+	KIRQL
+	);
+
+typedef
+VOID
+(FASTCALL *PFNKKFLOWERIRQL)(
+	KIRQL
+	);
+
+typedef
+PSINGLE_LIST_ENTRY
+(FASTCALL *PFNINTERLOCKEDPOPENTRYSLIST)(
+	PSLIST_HEADER
+	);
+
+typedef
+BOOLEAN
+(FASTCALL *PFNINTERLOCKEDPUSHENTRYSLIST)(
+	PSLIST_HEADER, PSINGLE_LIST_ENTRY
+	);
+
+typedef
+PSINGLE_LIST_ENTRY
+(*PFNPOGETSYSTEMWAKE)(
+	PIRP
+	);
+
+typedef
+VOID
+(*PFNPOSETSYSTEMWAKE)(
+	PIRP
+	);
+
+typedef
+KAFFINITY
+(*PFNKEQUERYACTIVEPROCESSORS)(
+	VOID
+	);
+
+typedef
+VOID
+(*PFNKESETTARGETPROCESSORDPC)(
+	PKDPC, CCHAR
+	);
+
+typedef
+BOOLEAN
+(*PFNKESETCOALESCABLETIMER)(
+	PKTIMER, LARGE_INTEGER, ULONG, ULONG, PKDPC
+	);
+
+typedef
+BOOLEAN
+(*PFNKEAREAPCSDISABLED)(
+	VOID
+	);
+
+typedef
+NTSTATUS
+(*PFNIOUNREGISTERPLUGPLAYNOTIFICATIONEX)(
+	PVOID
+	);
+
+typedef
+NTSTATUS
+(*PFNNTWWIQUERYTRACEINFORMATION)(
+	TRACE_INFORMATION_CLASS, PVOID, ULONG, PULONG, PVOID
+	);
+
+typedef
+NTSTATUS
+(*PFNWMITRACEMESSAGEVA)(
+	TRACEHANDLE, ULONG, LPCGUID, USHORT, va_list
+	);
+
+typedef struct _FX_DRIVER_TRACKER_CACHE_AWARE {
+	//
+    // Internal data types.
+    //
+private:
+    typedef struct _FX_DRIVER_TRACKER_ENTRY {
+         volatile PFX_DRIVER_GLOBALS FxDriverGlobals;
+    } FX_DRIVER_TRACKER_ENTRY, *PFX_DRIVER_TRACKER_ENTRY;
+
+public:
+    _Must_inspect_result_
+    NTSTATUS
+    Initialize();
+
+	VOID
+    Uninitialize();
+
+	//
+    // Data members.
+    //
+private:
+    //
+    // Pointer to array of cache-line aligned tracking driver structures.
+    //
+    PFX_DRIVER_TRACKER_ENTRY    m_DriverUsage;
+
+    //
+    // Points to pool of per-proc tracking entries that needs to be freed.
+    //
+    PVOID                       m_PoolToFree;
+
+    //
+    // Size of each padded tracking driver structure.
+    //
+    ULONG                       m_EntrySize;
+
+    //
+    // Indicates # of entries in the array of tracking driver structures.
+    //
+    ULONG                       m_Number;
+} FX_DRIVER_TRACKER_CACHE_AWARE, *PFX_DRIVER_TRACKER_CACHE_AWARE;
+
+
 struct FxLibraryGlobalsType
 {
 	int FxInitialized;
@@ -199,30 +371,29 @@ struct FxLibraryGlobalsType
     //
 	PDEVICE_OBJECT LibraryDeviceObject;
 
-	BOOLEAN(* pfn_KdRefresh)(VOID);
-	VOID(* pfn_KeFlushQueuedDpcs)(VOID);
-	NTSTATUS(* pfn_IoSetCompletionRoutineEx)(PDEVICE_OBJECT, PIRP, PIO_COMPLETION_ROUTINE, PVOID, BOOLEAN, BOOLEAN, BOOLEAN);
-	KIRQL(* pfn_KeAcquireInterruptSpinLock)(PKINTERRUPT);
-	VOID(* pfn_KeReleaseInterruptSpinLock)(PKINTERRUPT, KIRQL);
-	NTSTATUS(* pfn_IoConnectInterruptEx)(PIO_CONNECT_INTERRUPT_PARAMETERS);
-	VOID(* pfn_IoDisconnectInterruptEx)(PIO_DISCONNECT_INTERRUPT_PARAMETERS);
-	KIRQL(FASTCALL* pfn_KfRaiseIrql)(KIRQL);
-	VOID(FASTCALL* pfn_KfLowerIrql)(KIRQL);
-	PSINGLE_LIST_ENTRY(FASTCALL* pfn_FxInterlockedPopEntrySList)(PSLIST_HEADER);
-	PSINGLE_LIST_ENTRY(FASTCALL* pfn_FxInterlockedPushEntrySList)(PSLIST_HEADER, PSINGLE_LIST_ENTRY);
-	BOOLEAN(* pfn_PoGetSystemWake)(PIRP);
-	VOID(* pfn_PoSetSystemWake)(PIRP);
-	KAFFINITY(* pfn_KeQueryActiveProcessors)(VOID);
-	VOID(* pfn_KeSetTargetProcessorDpc)(PKDPC, CCHAR);
-	BOOLEAN(* pfn_KeSetCoalescableTimer)(PKTIMER, LARGE_INTEGER, ULONG, ULONG, PKDPC);
-	BOOLEAN(* pfn_KeAreApcsDisabled)(VOID);
-	NTSTATUS(* pfn_IoUnregisterPlugPlayNotificationEx)(PVOID);
-	NTSTATUS(* pfn_NtWmiQueryTraceInformation)(TRACE_INFORMATION_CLASS, PVOID, ULONG, PULONG, PVOID);
-	NTSTATUS(* pfn_WmiTraceMessageVa)(TRACEHANDLE, ULONG, LPCGUID, USHORT, va_list);
+	PFNKDREFRESH pfn_KdRefresh;
+	PFNKEFLUSHQUEUEDDPCS pfn_KeFlushQueuedDpcs;
+	PFNIOSETCOMPLETIONROUTINEEX pfn_IoSetCompletionRoutineEx;
+	PFNKEACQUIREINTERRRUPTSPINLOCK pfn_KeAcquireInterruptSpinLock;
+	PFNKERELEASEINTERRUPTSPINLOCK pfn_KeReleaseInterruptSpinLock;
+	PFNIOCONNECTINTERRUPTEX pfn_IoConnectInterruptEx;
+	PFNIODISCONNECTINTERRUPTEX pfn_IoDisconnectInterruptEx;
+	PFNKFRAISEIRQL pfn_KfRaiseIrql;
+	PFNKKFLOWERIRQL pfn_KfLowerIrql;
+	PFNINTERLOCKEDPOPENTRYSLIST pfn_FxInterlockedPopEntrySList;
+	PFNINTERLOCKEDPUSHENTRYSLIST pfn_FxInterlockedPushEntrySList;
+	PFNPOGETSYSTEMWAKE pfn_PoGetSystemWake;
+	PFNPOSETSYSTEMWAKE pfn_PoSetSystemWake;
+	PFNKEQUERYACTIVEPROCESSORS pfn_KeQueryActiveProcessors;
+	PFNKESETTARGETPROCESSORDPC pfn_KeSetTargetProcessorDpc;
+	PFNKESETCOALESCABLETIMER pfn_KeSetCoalescableTimer;
+	PFNKEAREAPCSDISABLED pfn_KeAreApcsDisabled;
+	PFNIOUNREGISTERPLUGPLAYNOTIFICATIONEX pfn_IoUnregisterPlugPlayNotificationEx;
+	PFNNTWWIQUERYTRACEINFORMATION pfn_NtWmiQueryTraceInformation;
+	PFNWMITRACEMESSAGEVA pfn_WmiTraceMessageVa;
 
 	OSVERSIONINFOEXW OsVersionInfo;
-	//MxLockNoDynam FxDriverGlobalsListLock;
-	KSPIN_LOCK FxDriverGlobalsListLock;
+	MxLockNoDynam FxDriverGlobalsListLock;
 	LIST_ENTRY FxDriverGlobalsList;
 	
 	//
@@ -239,7 +410,7 @@ struct FxLibraryGlobalsType
     // Array of info about loaded driver. The library bugcheck callback
     // writes this data into the minidump.
     //
-	//_FX_DUMP_DRIVER_INFO_ENTRY* BugCheckDriverInfo;
+	PFX_DUMP_DRIVER_INFO_ENTRY BugCheckDriverInfo;
 
 	//
     // Library bug-check callback record for processing bugchecks.
@@ -253,7 +424,7 @@ struct FxLibraryGlobalsType
     // finding which driver's dump log file to write in the minidump if an
     // exact match is not found.
     //
-	//_FX_DRIVER_TRACKER_CACHE_AWARE DriverTracker;
+	FX_DRIVER_TRACKER_CACHE_AWARE DriverTracker;
 
 	//
     // Best driver match for the mini-dump log.
@@ -269,6 +440,21 @@ struct FxLibraryGlobalsType
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;
+
+typedef
+BOOLEAN
+(*PFN_KE_REGISTER_BUGCHECK_REASON_CALLBACK) (
+    __in PKBUGCHECK_REASON_CALLBACK_RECORD  CallbackRecord,
+    __in PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
+    __in KBUGCHECK_CALLBACK_REASON Reason,
+    __in PUCHAR Component
+    );
+
+typedef
+BOOLEAN
+(*PFN_KE_DEREGISTER_BUGCHECK_REASON_CALLBACK) (
+    __in PKBUGCHECK_REASON_CALLBACK_RECORD  CallbackRecords
+    );
 
 
 //

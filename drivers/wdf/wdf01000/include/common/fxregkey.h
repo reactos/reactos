@@ -1,0 +1,42 @@
+#ifndef _FXREGKEY_H_
+#define _FXREGKEY_H_
+
+#include <ntddk.h>
+#include "fxpagedobject.h"
+
+class FxRegKey : public FxPagedObject {
+
+public:
+
+
+    static
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    _OpenKey(
+        __in_opt HANDLE ParentKey,
+        __in     PCUNICODE_STRING KeyName,
+        __out    HANDLE* Key,
+        __in     ACCESS_MASK DesiredAccess = KEY_ALL_ACCESS
+        );
+
+    static
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    _Close(
+        __in HANDLE Key
+        );
+
+    static
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    _QueryULong(
+        __in  HANDLE Key,
+        __in  PCUNICODE_STRING ValueName,
+        __out PULONG Value
+        );
+
+};
+
+#endif //_FXREGKEY_H_
