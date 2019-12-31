@@ -386,6 +386,7 @@ class Image : public GdiplusBase
     }
 };
 
+// get native
 GpGraphics *&
 getNat(const Graphics *graph);
 
