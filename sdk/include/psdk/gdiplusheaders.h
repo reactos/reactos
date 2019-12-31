@@ -1438,7 +1438,8 @@ class CustomLineCap : public GdiplusBase
     CustomLineCap &
     operator=(const CustomLineCap &);
 
-    friend inline GpCustomLineCap*& getNat(const CustomLineCap *cap)
+    friend inline GpCustomLineCap *&
+    getNat(const CustomLineCap *cap)
     {
         return const_cast<CustomLineCap *>(cap)->nativeCap;
     }

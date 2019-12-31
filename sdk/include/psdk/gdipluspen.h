@@ -21,7 +21,8 @@
 
 class CustomLineCap;
 
-GpCustomLineCap*& getNat(const CustomLineCap *cap);
+GpCustomLineCap *&
+getNat(const CustomLineCap *cap);
 
 class Pen : public GdiplusBase
 {
