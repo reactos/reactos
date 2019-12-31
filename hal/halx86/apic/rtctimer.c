@@ -33,7 +33,7 @@ ULONG
 RtcClockRateToIncrement(UCHAR Rate)
 {
     ULONG Freqency = ((32768 << 1) >> Rate);
-    return (1000000 + (Freqency/2)) / Freqency;
+    return (10000000 + (Freqency/2)) / Freqency;
 }
 
 VOID
