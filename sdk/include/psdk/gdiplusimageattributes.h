@@ -73,7 +73,8 @@ class ImageAttributes : public GdiplusBase
     Status
     ClearOutputChannel(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipSetImageAttributesOutputChannel(nativeImageAttr, type, FALSE, ColorChannelFlagsLast));
     }
 
     Status
