@@ -650,30 +650,51 @@ class FontCollection : public GdiplusBase
     friend class FontFamily;
 
   public:
-    FontCollection()
+    FontCollection() : nativeFontCollection(NULL), lastStatus(Ok)
+    {
+    }
+
+    virtual ~FontCollection()
     {
     }
 
     Status
     GetFamilies(INT numSought, FontFamily *gpfamilies, INT *numFound) const
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     INT
     GetFamilyCount() const
     {
-        return 0;
+        INT numFound = 0;
+        lastStatus = DllExports::GdipGetFontCollectionFamilyCount(nativeFontCollection, &numFound);
+        return numFound;
     }
 
     Status
-    GetLastStatus()
+    GetLastStatus() const
     {
-        return NotImplemented;
+        return lastStatus;
+    }
+
+  protected:
+    GpFontCollection *nativeFontCollection;
+    mutable Status lastStatus;
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
     }
 
   private:
-    GpFontCollection *fontCollection;
+    // FontCollection is not copyable
+    FontCollection(const FontCollection &);
+    FontCollection &
+    operator=(const FontCollection &);
 };
 
 class FontFamily : public GdiplusBase
@@ -687,8 +708,8 @@ class FontFamily : public GdiplusBase
 
     FontFamily(const WCHAR *name, const FontCollection *fontCollection)
     {
-        status = DllExports::GdipCreateFontFamilyFromName(
-            name, fontCollection ? fontCollection->fontCollection : NULL, &fontFamily);
+        GpFontCollection *theCollection = fontCollection ? fontCollection->nativeFontCollection : NULL;
+        status = DllExports::GdipCreateFontFamilyFromName(name, theCollection, &fontFamily);
     }
 
     FontFamily *
@@ -809,18 +830,25 @@ class PrivateFontCollection : public FontCollection
   public:
     PrivateFontCollection()
     {
+        nativeFontCollection = NULL;
+        lastStatus = DllExports::GdipNewPrivateFontCollection(&nativeFontCollection);
+    }
+
+    virtual ~PrivateFontCollection()
+    {
+        DllExports::GdipDeletePrivateFontCollection(&nativeFontCollection);
     }
 
     Status
     AddFontFile(const WCHAR *filename)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipPrivateAddFontFile(nativeFontCollection, filename));
     }
 
     Status
     AddMemoryFont(const VOID *memory, INT length)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipPrivateAddMemoryFont(nativeFontCollection, memory, length));
     }
 };
 
