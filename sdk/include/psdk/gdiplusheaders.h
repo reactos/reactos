@@ -377,6 +377,13 @@ class Image : public GdiplusBase
     Image(const Image &);
     Image &
     operator=(const Image &);
+
+    // get native
+    friend inline GpImage *&
+    getNat(const Image *image)
+    {
+        return const_cast<Image *>(image)->nativeImage;
+    }
 };
 
 class Bitmap : public Image
@@ -1445,63 +1452,6 @@ class CustomLineCap : public GdiplusBase
         return const_cast<CustomLineCap *>(cap)->nativeCap;
     }
 };
-
-inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode, const RectF &dstRect)
-{
-    GpTexture *texture = NULL;
-    lastStatus = DllExports::GdipCreateTexture2(
-        image->nativeImage, wrapMode, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, Rect &dstRect, ImageAttributes *imageAttributes)
-{
-    GpTexture *texture = NULL;
-    GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
-    lastStatus = DllExports::GdipCreateTextureIA(
-        image->nativeImage, attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode, INT dstX, INT dstY, INT dstWidth, INT dstHeight)
-{
-    GpTexture *texture = NULL;
-    lastStatus =
-        DllExports::GdipCreateTexture2I(image->nativeImage, wrapMode, dstX, dstY, dstWidth, dstHeight, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode, REAL dstX, REAL dstY, REAL dstWidth, REAL dstHeight)
-{
-    GpTexture *texture = NULL;
-    lastStatus =
-        DllExports::GdipCreateTexture2(image->nativeImage, wrapMode, dstX, dstY, dstWidth, dstHeight, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, RectF &dstRect, ImageAttributes *imageAttributes)
-{
-    GpTexture *texture = NULL;
-    GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
-    lastStatus = DllExports::GdipCreateTextureIA(
-        image->nativeImage, attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode)
-{
-    GpTexture *texture = NULL;
-    lastStatus = DllExports::GdipCreateTexture(image->nativeImage, wrapMode, &texture);
-    SetNativeBrush(texture);
-}
-
-inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode, const Rect &dstRect)
-{
-    GpTexture *texture = NULL;
-    lastStatus = DllExports::GdipCreateTexture2I(
-        image->nativeImage, wrapMode, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
-    SetNativeBrush(texture);
-}
 
 inline Image *
 TextureBrush::GetImage() const
