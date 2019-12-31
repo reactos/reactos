@@ -396,6 +396,13 @@ class Pen : public GdiplusBase
     Pen(const Pen &);
     Pen &
     operator=(const Pen &);
+
+    // get native
+    friend inline GpPen *&
+    getNat(const Pen *pen)
+    {
+        return const_cast<Pen *>(pen)->nativePen;
+    }
 };
 
 #endif /* _GDIPLUSPEN_H */

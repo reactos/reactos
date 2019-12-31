@@ -243,6 +243,13 @@ class ImageAttributes : public GdiplusBase
     ImageAttributes(const ImageAttributes &);
     ImageAttributes &
     operator=(const ImageAttributes &);
+
+    // get native
+    friend inline GpImageAttributes *&
+    getNat(const ImageAttributes *ia)
+    {
+        return const_cast<ImageAttributes *>(ia)->nativeImageAttr;
+    }
 };
 
 #endif /* _GDIPLUSIMAGEATTRIBUTES_H */
