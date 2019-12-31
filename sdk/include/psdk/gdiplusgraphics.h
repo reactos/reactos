@@ -87,66 +87,68 @@ class Graphics : public GdiplusBase
     DrawArc(const Pen *pen, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArcI(
-            graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArcI(
-            graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
-        return SetStatus(
-            DllExports::GdipDrawArc(graphics, pen ? pen->pen : NULL, x, y, width, height, startAngle, sweepAngle));
+        return SetStatus(DllExports::GdipDrawArc(
+            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
-        return SetStatus(
-            DllExports::GdipDrawArcI(graphics, pen ? pen->pen : NULL, x, y, width, height, startAngle, sweepAngle));
+        return SetStatus(DllExports::GdipDrawArcI(
+            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawBezier(const Pen *pen, const Point &pt1, const Point &pt2, const Point &pt3, const Point &pt4)
     {
         return SetStatus(DllExports::GdipDrawBezierI(
-            graphics, pen ? pen->pen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
+            graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
     }
 
     Status
     DrawBezier(const Pen *pen, const PointF &pt1, const PointF &pt2, const PointF &pt3, const PointF &pt4)
     {
         return SetStatus(DllExports::GdipDrawBezier(
-            graphics, pen ? pen->pen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
+            graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
     }
 
     Status
     DrawBezier(const Pen *pen, REAL x1, REAL y1, REAL x2, REAL y2, REAL x3, REAL y3, REAL x4, REAL y4)
     {
-        return SetStatus(DllExports::GdipDrawBezier(graphics, pen ? pen->pen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
+        return SetStatus(
+            DllExports::GdipDrawBezier(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     DrawBezier(const Pen *pen, INT x1, INT y1, INT x2, INT y2, INT x3, INT y3, INT x4, INT y4)
     {
-        return SetStatus(DllExports::GdipDrawBezierI(graphics, pen ? pen->pen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
+        return SetStatus(
+            DllExports::GdipDrawBezierI(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     DrawBeziers(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawBeziersI(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawBeziersI(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawBeziers(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawBeziers(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawBeziers(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
@@ -158,63 +160,65 @@ class Graphics : public GdiplusBase
     Status
     DrawClosedCurve(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurveI(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawClosedCurveI(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurve(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawClosedCurve(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const PointF *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurve2(graphics, pen ? pen->pen : NULL, points, count, tension));
+        return SetStatus(
+            DllExports::GdipDrawClosedCurve2(graphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const Point *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurve2I(graphics, pen ? pen->pen : NULL, points, count, tension));
+        return SetStatus(
+            DllExports::GdipDrawClosedCurve2I(graphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawCurveI(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawCurveI(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawCurve(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawCurve(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawCurve2(graphics, pen ? pen->pen : NULL, points, count, tension));
+        return SetStatus(DllExports::GdipDrawCurve2(graphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
         return SetStatus(DllExports::GdipDrawCurve3I(
-            graphics, pen ? pen->pen : NULL, points, count, offset, numberOfSegments, tension));
+            graphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
         return SetStatus(DllExports::GdipDrawCurve3(
-            graphics, pen ? pen->pen : NULL, points, count, offset, numberOfSegments, tension));
+            graphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawCurve2I(graphics, pen ? pen->pen : NULL, points, count, tension));
+        return SetStatus(DllExports::GdipDrawCurve2I(graphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
@@ -233,27 +237,27 @@ class Graphics : public GdiplusBase
     Status
     DrawEllipse(const Pen *pen, const Rect &rect)
     {
-        return SetStatus(
-            DllExports::GdipDrawEllipseI(graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+        return SetStatus(DllExports::GdipDrawEllipseI(
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawEllipse(const Pen *pen, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipDrawEllipse(graphics, pen ? pen->pen : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipDrawEllipse(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawEllipse(const Pen *pen, const RectF &rect)
     {
-        return SetStatus(
-            DllExports::GdipDrawEllipse(graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+        return SetStatus(DllExports::GdipDrawEllipse(
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawEllipse(const Pen *pen, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipDrawEllipseI(graphics, pen ? pen->pen : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipDrawEllipseI(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
@@ -397,37 +401,37 @@ class Graphics : public GdiplusBase
     Status
     DrawLine(const Pen *pen, const Point &pt1, const Point &pt2)
     {
-        return SetStatus(DllExports::GdipDrawLineI(graphics, pen ? pen->pen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
+        return SetStatus(DllExports::GdipDrawLineI(graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
     }
 
     Status
     DrawLine(const Pen *pen, const PointF &pt1, const Point &pt2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->pen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
+        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
     }
 
     Status
     DrawLine(const Pen *pen, REAL x1, REAL y1, REAL x2, REAL y2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->pen : NULL, x1, y1, x2, y2));
+        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
     }
 
     Status
     DrawLine(const Pen *pen, INT x1, INT y1, INT x2, INT y2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->pen : NULL, x1, y1, x2, y2));
+        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
     }
 
     Status
     DrawLines(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawLinesI(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawLinesI(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawLines(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawLines(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawLines(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
@@ -440,78 +444,78 @@ class Graphics : public GdiplusBase
     DrawPie(const Pen *pen, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPieI(
-            graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
-        return SetStatus(
-            DllExports::GdipDrawPieI(graphics, pen ? pen->pen : NULL, x, y, width, height, startAngle, sweepAngle));
+        return SetStatus(DllExports::GdipDrawPieI(
+            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
-        return SetStatus(
-            DllExports::GdipDrawPie(graphics, pen ? pen->pen : NULL, x, y, width, height, startAngle, sweepAngle));
+        return SetStatus(DllExports::GdipDrawPie(
+            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPie(
-            graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
     }
 
     Status
     DrawPolygon(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawPolygonI(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawPolygonI(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawPolygon(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawPolygon(graphics, pen ? pen->pen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawPolygon(graphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawRectangle(const Pen *pen, const Rect &rect)
     {
-        return SetStatus(
-            DllExports::GdipDrawRectangleI(graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+        return SetStatus(DllExports::GdipDrawRectangleI(
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawRectangle(const Pen *pen, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipDrawRectangleI(graphics, pen ? pen->pen : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipDrawRectangleI(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawRectangle(const Pen *pen, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipDrawRectangle(graphics, pen ? pen->pen : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipDrawRectangle(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawRectangle(const Pen *pen, const RectF &rect)
     {
-        return SetStatus(
-            DllExports::GdipDrawRectangleI(graphics, pen ? pen->pen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+        return SetStatus(DllExports::GdipDrawRectangleI(
+            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawRectangles(const Pen *pen, const Rect *rects, INT count)
     {
-        return SetStatus(DllExports::GdipDrawRectanglesI(graphics, pen ? pen->pen : NULL, rects, count));
+        return SetStatus(DllExports::GdipDrawRectanglesI(graphics, pen ? pen->nativePen : NULL, rects, count));
     }
 
     Status
     DrawRectangles(const Pen *pen, const RectF *rects, INT count)
     {
-        return SetStatus(DllExports::GdipDrawRectangles(graphics, pen ? pen->pen : NULL, rects, count));
+        return SetStatus(DllExports::GdipDrawRectangles(graphics, pen ? pen->nativePen : NULL, rects, count));
     }
 
     Status

@@ -33,8 +33,8 @@ class Pen : public GdiplusBase
     Pen(const Color &color, REAL width = 1.0f)
     {
         Unit unit = UnitWorld;
-        pen = NULL;
-        status = DllExports::GdipCreatePen1(color.GetValue(), width, unit, &pen);
+        nativePen = NULL;
+        status = DllExports::GdipCreatePen1(color.GetValue(), width, unit, &nativePen);
     }
 
     Pen *Clone(VOID)
@@ -45,7 +45,7 @@ class Pen : public GdiplusBase
     PenAlignment GetAlignment(VOID)
     {
         PenAlignment penAlignment;
-        SetStatus(DllExports::GdipGetPenMode(pen, &penAlignment));
+        SetStatus(DllExports::GdipGetPenMode(nativePen, &penAlignment));
         return penAlignment;
     }
 
@@ -58,7 +58,7 @@ class Pen : public GdiplusBase
     GetColor(Color *color)
     {
         ARGB argb;
-        Status status = SetStatus(DllExports::GdipGetPenColor(pen, &argb));
+        Status status = SetStatus(DllExports::GdipGetPenColor(nativePen, &argb));
         if (color)
             color->SetValue(argb);
         return status;
@@ -67,13 +67,14 @@ class Pen : public GdiplusBase
     Status
     GetCompoundArray(REAL *compoundArray, INT count)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetPenCompoundArray(pen, count));
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetPenCompoundArray(nativePen,
+                               // count));
     }
 
     INT GetCompoundArrayCount(VOID)
     {
         INT count;
-        SetStatus(DllExports::GdipGetPenCompoundCount(pen, &count));
+        SetStatus(DllExports::GdipGetPenCompoundCount(nativePen, &count));
         return count;
     }
 
@@ -92,41 +93,41 @@ class Pen : public GdiplusBase
     DashCap GetDashCap(VOID)
     {
         DashCap dashCap;
-        SetStatus(DllExports::GdipGetPenDashCap197819(pen, &dashCap));
+        SetStatus(DllExports::GdipGetPenDashCap197819(nativePen, &dashCap));
         return dashCap;
     }
 
     REAL GetDashOffset(VOID)
     {
         REAL offset;
-        SetStatus(DllExports::GdipGetPenDashOffset(pen, &offset));
+        SetStatus(DllExports::GdipGetPenDashOffset(nativePen, &offset));
         return offset;
     }
 
     Status
     GetDashPattern(REAL *dashArray, INT count)
     {
-        return SetStatus(DllExports::GdipGetPenDashArray(pen, dashArray, count));
+        return SetStatus(DllExports::GdipGetPenDashArray(nativePen, dashArray, count));
     }
 
     INT GetDashPatternCount(VOID)
     {
         INT count;
-        SetStatus(DllExports::GdipGetPenDashCount(pen, &count));
+        SetStatus(DllExports::GdipGetPenDashCount(nativePen, &count));
         return count;
     }
 
     DashStyle GetDashStyle(VOID)
     {
         DashStyle dashStyle;
-        SetStatus(DllExports::GdipGetPenDashStyle(pen, &dashStyle));
+        SetStatus(DllExports::GdipGetPenDashStyle(nativePen, &dashStyle));
         return dashStyle;
     }
 
     LineCap GetEndCap(VOID)
     {
         LineCap endCap;
-        SetStatus(DllExports::GdipGetPenEndCap(pen, &endCap));
+        SetStatus(DllExports::GdipGetPenEndCap(nativePen, &endCap));
         return endCap;
     }
 
@@ -138,28 +139,28 @@ class Pen : public GdiplusBase
     LineJoin GetLineJoin(VOID)
     {
         LineJoin lineJoin;
-        SetStatus(DllExports::GdipGetPenLineJoin(pen, &lineJoin));
+        SetStatus(DllExports::GdipGetPenLineJoin(nativePen, &lineJoin));
         return lineJoin;
     }
 
     REAL GetMiterLimit(VOID)
     {
         REAL miterLimit;
-        SetStatus(DllExports::GdipGetPenMiterLimit(pen, &miterLimit));
+        SetStatus(DllExports::GdipGetPenMiterLimit(nativePen, &miterLimit));
         return miterLimit;
     }
 
     PenType GetPenType(VOID)
     {
         PenType type;
-        SetStatus(DllExports::GdipGetPenFillType(pen, &type));
+        SetStatus(DllExports::GdipGetPenFillType(nativePen, &type));
         return type;
     }
 
     LineCap GetStartCap(VOID)
     {
         LineCap startCap;
-        SetStatus(DllExports::GdipGetPenStartCap(pen, &startCap));
+        SetStatus(DllExports::GdipGetPenStartCap(nativePen, &startCap));
         return startCap;
     }
 
@@ -172,57 +173,57 @@ class Pen : public GdiplusBase
     REAL GetWidth(VOID)
     {
         REAL width;
-        SetStatus(DllExports::GdipGetPenWidth(pen, &width));
+        SetStatus(DllExports::GdipGetPenWidth(nativePen, &width));
         return width;
     }
 
     Status
     MultiplyTransform(Matrix *matrix, MatrixOrder order)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipMultiplyPenTransform(pen, matrix ?
-                               // matrix->nativeMatrix : NULL, order));
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, matrix
+                               // ? matrix->nativeMatrix : NULL, order));
     }
 
     Status ResetTransform(VOID)
     {
-        return SetStatus(DllExports::GdipResetPenTransform(pen));
+        return SetStatus(DllExports::GdipResetPenTransform(nativePen));
     }
 
     Status
     RotateTransform(REAL angle, MatrixOrder order)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipRotatePenTransform(pen, angle,
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipRotatePenTransform(nativePen, angle,
                                // order));
     }
 
     Status
     ScaleTransform(REAL sx, REAL sy, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipScalePenTransform(pen, sx, sy, order));
+        return SetStatus(DllExports::GdipScalePenTransform(nativePen, sx, sy, order));
     }
 
     Status
     SetAlignment(PenAlignment penAlignment)
     {
-        return SetStatus(DllExports::GdipSetPenMode(pen, penAlignment));
+        return SetStatus(DllExports::GdipSetPenMode(nativePen, penAlignment));
     }
 
     Status
     SetBrush(const Brush *brush)
     {
-        return SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->nativeBrush : NULL));
+        return SetStatus(DllExports::GdipSetPenBrushFill(nativePen, brush ? brush->nativeBrush : NULL));
     }
 
     Status
     SetColor(const Color &color)
     {
-        return SetStatus(DllExports::GdipSetPenColor(pen, color.GetValue()));
+        return SetStatus(DllExports::GdipSetPenColor(nativePen, color.GetValue()));
     }
 
     Status
     SetCompoundArray(const REAL *compoundArray, INT count)
     {
-        return SetStatus(DllExports::GdipSetPenCompoundArray(pen, compoundArray, count));
+        return SetStatus(DllExports::GdipSetPenCompoundArray(nativePen, compoundArray, count));
     }
 
     Status
@@ -240,71 +241,71 @@ class Pen : public GdiplusBase
     Status
     SetDashCap(DashCap dashCap)
     {
-        return SetStatus(DllExports::GdipSetPenDashCap197819(pen, dashCap));
+        return SetStatus(DllExports::GdipSetPenDashCap197819(nativePen, dashCap));
     }
 
     Status
     SetDashOffset(REAL dashOffset)
     {
-        return SetStatus(DllExports::GdipSetPenDashOffset(pen, dashOffset));
+        return SetStatus(DllExports::GdipSetPenDashOffset(nativePen, dashOffset));
     }
 
     Status
     SetDashPattern(const REAL *dashArray, INT count)
     {
-        return SetStatus(DllExports::GdipSetPenDashArray(pen, dashArray, count));
+        return SetStatus(DllExports::GdipSetPenDashArray(nativePen, dashArray, count));
     }
 
     Status
     SetDashStyle(DashStyle dashStyle)
     {
-        return SetStatus(DllExports::GdipSetPenDashStyle(pen, dashStyle));
+        return SetStatus(DllExports::GdipSetPenDashStyle(nativePen, dashStyle));
     }
 
     Status
     SetEndCap(LineCap endCap)
     {
-        return SetStatus(DllExports::GdipSetPenEndCap(pen, endCap));
+        return SetStatus(DllExports::GdipSetPenEndCap(nativePen, endCap));
     }
 
     Status
     SetLineCap(LineCap startCap, LineCap endCap, DashCap dashCap)
     {
-        return SetStatus(DllExports::GdipSetPenLineCap197819(pen, startCap, endCap, dashCap));
+        return SetStatus(DllExports::GdipSetPenLineCap197819(nativePen, startCap, endCap, dashCap));
     }
 
     Status
     SetLineJoin(LineJoin lineJoin)
     {
-        return SetStatus(DllExports::GdipSetPenLineJoin(pen, lineJoin));
+        return SetStatus(DllExports::GdipSetPenLineJoin(nativePen, lineJoin));
     }
 
     Status
     SetMiterLimit(REAL miterLimit)
     {
-        return SetStatus(DllExports::GdipSetPenMiterLimit(pen, miterLimit));
+        return SetStatus(DllExports::GdipSetPenMiterLimit(nativePen, miterLimit));
     }
 
     Status
     SetStartCap(LineCap startCap)
     {
-        return SetStatus(DllExports::GdipSetPenStartCap(pen, startCap));
+        return SetStatus(DllExports::GdipSetPenStartCap(nativePen, startCap));
     }
 
     Status
     SetTransform(const Matrix *matrix)
     {
-        return SetStatus(DllExports::GdipSetPenTransform(pen, matrix ? matrix->nativeMatrix : NULL));
+        return SetStatus(DllExports::GdipSetPenTransform(nativePen, matrix ? matrix->nativeMatrix : NULL));
     }
 
     Status
     SetWidth(REAL width)
     {
-        return SetStatus(DllExports::GdipSetPenWidth(pen, width));
+        return SetStatus(DllExports::GdipSetPenWidth(nativePen, width));
     }
 
   private:
-    GpPen *pen;
+    GpPen *nativePen;
 
   private:
     mutable Status status;
