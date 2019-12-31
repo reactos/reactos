@@ -40,13 +40,13 @@ class Brush : public GdiplusBase
     BrushType GetType(VOID)
     {
         BrushType type;
-        SetStatus(DllExports::GdipGetBrushType(brush, &type));
+        SetStatus(DllExports::GdipGetBrushType(nativeBrush, &type));
         return type;
     }
 
   private:
     mutable Status status;
-    GpBrush *brush;
+    GpBrush *nativeBrush;
 
     Status
     SetStatus(Status status) const
