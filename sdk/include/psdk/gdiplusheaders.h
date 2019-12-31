@@ -386,6 +386,10 @@ class Image : public GdiplusBase
     }
 };
 
+// get native
+GpGraphics *&
+getNat(const Graphics *graph);
+
 class Bitmap : public Image
 {
     friend class CachedBitmap;
@@ -399,7 +403,7 @@ class Bitmap : public Image
     Bitmap(INT width, INT height, Graphics *target)
     {
         GpBitmap *bitmap = NULL;
-        lastStatus = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? target->graphics : NULL, &bitmap);
+        lastStatus = DllExports::GdipCreateBitmapFromGraphics(width, height, target ? getNat(target) : NULL, &bitmap);
         SetNativeImage(bitmap);
     }
 
@@ -628,7 +632,7 @@ class CachedBitmap : public GdiplusBase
     {
         nativeCachedBitmap = NULL;
         lastStatus = DllExports::GdipCreateCachedBitmap(
-            bitmap->GetNativeBitmap(), graphics ? graphics->graphics : NULL, &nativeCachedBitmap);
+            bitmap->GetNativeBitmap(), graphics ? getNat(graphics) : NULL, &nativeCachedBitmap);
     }
 
     ~CachedBitmap()
@@ -913,7 +917,7 @@ class Font : public GdiplusBase
     GetHeight(const Graphics *graphics) const
     {
         REAL height;
-        SetStatus(DllExports::GdipGetFontHeight(font, graphics ? graphics->graphics : NULL, &height));
+        SetStatus(DllExports::GdipGetFontHeight(font, graphics ? getNat(graphics) : NULL, &height));
         return height;
     }
 
@@ -934,13 +938,13 @@ class Font : public GdiplusBase
     Status
     GetLogFontA(const Graphics *g, LOGFONTA *logfontA) const
     {
-        return SetStatus(DllExports::GdipGetLogFontA(font, g ? g->graphics : NULL, logfontA));
+        return SetStatus(DllExports::GdipGetLogFontA(font, g ? getNat(g) : NULL, logfontA));
     }
 
     Status
     GetLogFontW(const Graphics *g, LOGFONTW *logfontW) const
     {
-        return SetStatus(DllExports::GdipGetLogFontW(font, g ? g->graphics : NULL, logfontW));
+        return SetStatus(DllExports::GdipGetLogFontW(font, g ? getNat(g) : NULL, logfontW));
     }
 
     REAL
@@ -1067,8 +1071,8 @@ class Region : public GdiplusBase
     Equals(const Region *region, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsEqualRegion(
-            this->region, region ? region->region : NULL, g ? g->graphics : NULL, &result));
+        SetStatus(
+            DllExports::GdipIsEqualRegion(this->region, region ? region->region : NULL, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1106,13 +1110,13 @@ class Region : public GdiplusBase
     Status
     GetBounds(Rect *rect, const Graphics *g) const
     {
-        return SetStatus(DllExports::GdipGetRegionBoundsI(region, g ? g->graphics : NULL, rect));
+        return SetStatus(DllExports::GdipGetRegionBoundsI(region, g ? getNat(g) : NULL, rect));
     }
 
     Status
     GetBounds(RectF *rect, const Graphics *g) const
     {
-        return SetStatus(DllExports::GdipGetRegionBounds(region, g ? g->graphics : NULL, rect));
+        return SetStatus(DllExports::GdipGetRegionBounds(region, g ? getNat(g) : NULL, rect));
     }
 
     Status
@@ -1133,7 +1137,7 @@ class Region : public GdiplusBase
     GetHRGN(const Graphics *g) const
     {
         HRGN hRgn;
-        SetStatus(DllExports::GdipGetRegionHRgn(region, g ? g->graphics : NULL, &hRgn));
+        SetStatus(DllExports::GdipGetRegionHRgn(region, g ? getNat(g) : NULL, &hRgn));
         return hRgn;
     }
 
@@ -1193,7 +1197,7 @@ class Region : public GdiplusBase
     IsEmpty(const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsEmptyRegion(region, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsEmptyRegion(region, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1201,7 +1205,7 @@ class Region : public GdiplusBase
     IsInfinite(const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsInfiniteRegion(region, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsInfiniteRegion(region, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1209,7 +1213,7 @@ class Region : public GdiplusBase
     IsVisible(const PointF &point, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionPoint(region, point.X, point.Y, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionPoint(region, point.X, point.Y, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1218,7 +1222,7 @@ class Region : public GdiplusBase
     {
         BOOL result;
         SetStatus(DllExports::GdipIsVisibleRegionRect(
-            region, rect.X, rect.Y, rect.Width, rect.Height, g ? g->graphics : NULL, &result));
+            region, rect.X, rect.Y, rect.Width, rect.Height, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1227,7 +1231,7 @@ class Region : public GdiplusBase
     {
         BOOL result;
         SetStatus(DllExports::GdipIsVisibleRegionRectI(
-            region, rect.X, rect.Y, rect.Width, rect.Height, g ? g->graphics : NULL, &result));
+            region, rect.X, rect.Y, rect.Width, rect.Height, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1235,7 +1239,7 @@ class Region : public GdiplusBase
     IsVisible(INT x, INT y, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionPointI(region, x, y, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionPointI(region, x, y, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1243,7 +1247,7 @@ class Region : public GdiplusBase
     IsVisible(REAL x, REAL y, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionPoint(region, x, y, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionPoint(region, x, y, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1251,7 +1255,7 @@ class Region : public GdiplusBase
     IsVisible(INT x, INT y, INT width, INT height, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionRectI(region, x, y, width, height, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionRectI(region, x, y, width, height, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1259,7 +1263,7 @@ class Region : public GdiplusBase
     IsVisible(const Point &point, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionPointI(region, point.X, point.Y, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionPointI(region, point.X, point.Y, g ? getNat(g) : NULL, &result));
         return result;
     }
 
@@ -1267,7 +1271,7 @@ class Region : public GdiplusBase
     IsVisible(REAL x, REAL y, REAL width, REAL height, const Graphics *g) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRegionRect(region, x, y, width, height, g ? g->graphics : NULL, &result));
+        SetStatus(DllExports::GdipIsVisibleRegionRect(region, x, y, width, height, g ? getNat(g) : NULL, &result));
         return result;
     }
 

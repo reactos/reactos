@@ -57,7 +57,7 @@ class Graphics : public GdiplusBase
     Status
     AddMetafileComment(const BYTE *data, UINT sizeData)
     {
-        return SetStatus(DllExports::GdipComment(graphics, sizeData, data));
+        return SetStatus(DllExports::GdipComment(nativeGraphics, sizeData, data));
     }
 
     GraphicsContainer BeginContainer(VOID)
@@ -80,75 +80,77 @@ class Graphics : public GdiplusBase
     Status
     Clear(const Color &color)
     {
-        return SetStatus(DllExports::GdipGraphicsClear(graphics, color.GetValue()));
+        return SetStatus(DllExports::GdipGraphicsClear(nativeGraphics, color.GetValue()));
     }
 
     Status
     DrawArc(const Pen *pen, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArcI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArcI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArc(
-            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawArc(const Pen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawArcI(
-            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawBezier(const Pen *pen, const Point &pt1, const Point &pt2, const Point &pt3, const Point &pt4)
     {
         return SetStatus(DllExports::GdipDrawBezierI(
-            graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
+            nativeGraphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
     }
 
     Status
     DrawBezier(const Pen *pen, const PointF &pt1, const PointF &pt2, const PointF &pt3, const PointF &pt4)
     {
         return SetStatus(DllExports::GdipDrawBezier(
-            graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
+            nativeGraphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y, pt3.X, pt3.Y, pt4.X, pt4.Y));
     }
 
     Status
     DrawBezier(const Pen *pen, REAL x1, REAL y1, REAL x2, REAL y2, REAL x3, REAL y3, REAL x4, REAL y4)
     {
         return SetStatus(
-            DllExports::GdipDrawBezier(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
+            DllExports::GdipDrawBezier(nativeGraphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     DrawBezier(const Pen *pen, INT x1, INT y1, INT x2, INT y2, INT x3, INT y3, INT x4, INT y4)
     {
         return SetStatus(
-            DllExports::GdipDrawBezierI(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
+            DllExports::GdipDrawBezierI(nativeGraphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2, x3, y3, x4, y4));
     }
 
     Status
     DrawBeziers(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawBeziersI(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawBeziersI(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawBeziers(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawBeziers(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawBeziers(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
@@ -160,65 +162,67 @@ class Graphics : public GdiplusBase
     Status
     DrawClosedCurve(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurveI(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawClosedCurveI(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawClosedCurve(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawClosedCurve(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const PointF *points, INT count, REAL tension)
     {
         return SetStatus(
-            DllExports::GdipDrawClosedCurve2(graphics, pen ? pen->nativePen : NULL, points, count, tension));
+            DllExports::GdipDrawClosedCurve2(nativeGraphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawClosedCurve(const Pen *pen, const Point *points, INT count, REAL tension)
     {
         return SetStatus(
-            DllExports::GdipDrawClosedCurve2I(graphics, pen ? pen->nativePen : NULL, points, count, tension));
+            DllExports::GdipDrawClosedCurve2I(nativeGraphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawCurveI(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawCurveI(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawCurve(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawCurve(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawCurve2(graphics, pen ? pen->nativePen : NULL, points, count, tension));
+        return SetStatus(
+            DllExports::GdipDrawCurve2(nativeGraphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
         return SetStatus(DllExports::GdipDrawCurve3I(
-            graphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
+            nativeGraphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const PointF *points, INT count, INT offset, INT numberOfSegments, REAL tension)
     {
         return SetStatus(DllExports::GdipDrawCurve3(
-            graphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
+            nativeGraphics, pen ? pen->nativePen : NULL, points, count, offset, numberOfSegments, tension));
     }
 
     Status
     DrawCurve(const Pen *pen, const Point *points, INT count, REAL tension)
     {
-        return SetStatus(DllExports::GdipDrawCurve2I(graphics, pen ? pen->nativePen : NULL, points, count, tension));
+        return SetStatus(
+            DllExports::GdipDrawCurve2I(nativeGraphics, pen ? pen->nativePen : NULL, points, count, tension));
     }
 
     Status
@@ -238,26 +242,27 @@ class Graphics : public GdiplusBase
     DrawEllipse(const Pen *pen, const Rect &rect)
     {
         return SetStatus(DllExports::GdipDrawEllipseI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawEllipse(const Pen *pen, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipDrawEllipse(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipDrawEllipse(nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawEllipse(const Pen *pen, const RectF &rect)
     {
         return SetStatus(DllExports::GdipDrawEllipse(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawEllipse(const Pen *pen, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipDrawEllipseI(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipDrawEllipseI(nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
@@ -401,37 +406,39 @@ class Graphics : public GdiplusBase
     Status
     DrawLine(const Pen *pen, const Point &pt1, const Point &pt2)
     {
-        return SetStatus(DllExports::GdipDrawLineI(graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
+        return SetStatus(
+            DllExports::GdipDrawLineI(nativeGraphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
     }
 
     Status
     DrawLine(const Pen *pen, const PointF &pt1, const Point &pt2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
+        return SetStatus(
+            DllExports::GdipDrawLine(nativeGraphics, pen ? pen->nativePen : NULL, pt1.X, pt1.Y, pt2.X, pt2.Y));
     }
 
     Status
     DrawLine(const Pen *pen, REAL x1, REAL y1, REAL x2, REAL y2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
+        return SetStatus(DllExports::GdipDrawLine(nativeGraphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
     }
 
     Status
     DrawLine(const Pen *pen, INT x1, INT y1, INT x2, INT y2)
     {
-        return SetStatus(DllExports::GdipDrawLine(graphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
+        return SetStatus(DllExports::GdipDrawLine(nativeGraphics, pen ? pen->nativePen : NULL, x1, y1, x2, y2));
     }
 
     Status
     DrawLines(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawLinesI(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawLinesI(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawLines(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawLines(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawLines(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
@@ -444,78 +451,82 @@ class Graphics : public GdiplusBase
     DrawPie(const Pen *pen, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPieI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPieI(
-            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPie(
-            graphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     DrawPie(const Pen *pen, const RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipDrawPie(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     DrawPolygon(const Pen *pen, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawPolygonI(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawPolygonI(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawPolygon(const Pen *pen, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipDrawPolygon(graphics, pen ? pen->nativePen : NULL, points, count));
+        return SetStatus(DllExports::GdipDrawPolygon(nativeGraphics, pen ? pen->nativePen : NULL, points, count));
     }
 
     Status
     DrawRectangle(const Pen *pen, const Rect &rect)
     {
         return SetStatus(DllExports::GdipDrawRectangleI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawRectangle(const Pen *pen, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipDrawRectangleI(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipDrawRectangleI(nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawRectangle(const Pen *pen, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipDrawRectangle(graphics, pen ? pen->nativePen : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipDrawRectangle(nativeGraphics, pen ? pen->nativePen : NULL, x, y, width, height));
     }
 
     Status
     DrawRectangle(const Pen *pen, const RectF &rect)
     {
         return SetStatus(DllExports::GdipDrawRectangleI(
-            graphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, pen ? pen->nativePen : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     DrawRectangles(const Pen *pen, const Rect *rects, INT count)
     {
-        return SetStatus(DllExports::GdipDrawRectanglesI(graphics, pen ? pen->nativePen : NULL, rects, count));
+        return SetStatus(DllExports::GdipDrawRectanglesI(nativeGraphics, pen ? pen->nativePen : NULL, rects, count));
     }
 
     Status
     DrawRectangles(const Pen *pen, const RectF *rects, INT count)
     {
-        return SetStatus(DllExports::GdipDrawRectangles(graphics, pen ? pen->nativePen : NULL, rects, count));
+        return SetStatus(DllExports::GdipDrawRectangles(nativeGraphics, pen ? pen->nativePen : NULL, rects, count));
     }
 
     Status
@@ -551,7 +562,7 @@ class Graphics : public GdiplusBase
     Status
     EndContainer(GraphicsContainer state)
     {
-        return SetStatus(DllExports::GdipEndContainer(graphics, state));
+        return SetStatus(DllExports::GdipEndContainer(nativeGraphics, state));
     }
 
     Status
@@ -723,54 +734,57 @@ class Graphics : public GdiplusBase
     Status
     FillClosedCurve(const Brush *brush, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillClosedCurveI(graphics, brush ? brush->nativeBrush : NULL, points, count));
+        return SetStatus(
+            DllExports::GdipFillClosedCurveI(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const Point *points, INT count, FillMode fillMode, REAL tension)
     {
         return SetStatus(DllExports::GdipFillClosedCurve2I(
-            graphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillClosedCurve(graphics, brush ? brush->nativeBrush : NULL, points, count));
+        return SetStatus(
+            DllExports::GdipFillClosedCurve(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const PointF *points, INT count, FillMode fillMode, REAL tension)
     {
         return SetStatus(DllExports::GdipFillClosedCurve2(
-            graphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
     }
 
     Status
     FillEllipse(const Brush *brush, const Rect &rect)
     {
         return SetStatus(DllExports::GdipFillEllipseI(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillEllipse(const Brush *brush, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipFillEllipse(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipFillEllipse(nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillEllipse(const Brush *brush, const RectF &rect)
     {
         return SetStatus(DllExports::GdipFillEllipse(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillEllipse(const Brush *brush, INT x, INT y, INT width, INT height)
     {
         return SetStatus(
-            DllExports::GdipFillEllipseI(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
+            DllExports::GdipFillEllipseI(nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
@@ -783,7 +797,7 @@ class Graphics : public GdiplusBase
     FillPie(const Brush *brush, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPieI(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
             sweepAngle));
     }
 
@@ -791,88 +805,92 @@ class Graphics : public GdiplusBase
     FillPie(const Brush *brush, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPieI(
-            graphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     FillPie(const Brush *brush, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPie(
-            graphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     FillPie(const Brush *brush, RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPie(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
             sweepAngle));
     }
 
     Status
     FillPolygon(const Brush *brush, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillPolygon2I(graphics, brush ? brush->nativeBrush : NULL, points, count));
+        return SetStatus(
+            DllExports::GdipFillPolygon2I(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillPolygon(const Brush *brush, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillPolygon2(graphics, brush ? brush->nativeBrush : NULL, points, count));
+        return SetStatus(
+            DllExports::GdipFillPolygon2(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillPolygon(const Brush *brush, const Point *points, INT count, FillMode fillMode)
     {
         return SetStatus(
-            DllExports::GdipFillPolygonI(graphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
+            DllExports::GdipFillPolygonI(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
     }
 
     Status
     FillPolygon(const Brush *brush, const PointF *points, INT count, FillMode fillMode)
     {
         return SetStatus(
-            DllExports::GdipFillPolygon(graphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
+            DllExports::GdipFillPolygon(nativeGraphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
     }
 
     Status
     FillRectangle(const Brush *brush, const Rect &rect)
     {
         return SetStatus(DllExports::GdipFillRectangleI(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillRectangle(const Brush *brush, const RectF &rect)
     {
         return SetStatus(DllExports::GdipFillRectangle(
-            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            nativeGraphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillRectangle(const Brush *brush, REAL x, REAL y, REAL width, REAL height)
     {
         return SetStatus(
-            DllExports::GdipFillRectangle(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
+            DllExports::GdipFillRectangle(nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillRectangle(const Brush *brush, INT x, INT y, INT width, INT height)
     {
         return SetStatus(
-            DllExports::GdipFillRectangleI(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
+            DllExports::GdipFillRectangleI(nativeGraphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillRectangles(const Brush *brush, const Rect *rects, INT count)
     {
-        return SetStatus(DllExports::GdipFillRectanglesI(graphics, brush ? brush->nativeBrush : NULL, rects, count));
+        return SetStatus(
+            DllExports::GdipFillRectanglesI(nativeGraphics, brush ? brush->nativeBrush : NULL, rects, count));
     }
 
     Status
     FillRectangles(const Brush *brush, const RectF *rects, INT count)
     {
-        return SetStatus(DllExports::GdipFillRectangles(graphics, brush ? brush->nativeBrush : NULL, rects, count));
+        return SetStatus(
+            DllExports::GdipFillRectangles(nativeGraphics, brush ? brush->nativeBrush : NULL, rects, count));
     }
 
     Status
@@ -919,40 +937,40 @@ class Graphics : public GdiplusBase
     Status
     GetClipBounds(Rect *rect) const
     {
-        return SetStatus(DllExports::GdipGetClipBoundsI(graphics, rect));
+        return SetStatus(DllExports::GdipGetClipBoundsI(nativeGraphics, rect));
     }
 
     Status
     GetClipBounds(RectF *rect) const
     {
-        return SetStatus(DllExports::GdipGetClipBounds(graphics, rect));
+        return SetStatus(DllExports::GdipGetClipBounds(nativeGraphics, rect));
     }
 
     CompositingMode GetCompositingMode(VOID)
     {
         CompositingMode compositingMode;
-        SetStatus(DllExports::GdipGetCompositingMode(graphics, &compositingMode));
+        SetStatus(DllExports::GdipGetCompositingMode(nativeGraphics, &compositingMode));
         return compositingMode;
     }
 
     CompositingQuality GetCompositingQuality(VOID)
     {
         CompositingQuality compositingQuality;
-        SetStatus(DllExports::GdipGetCompositingQuality(graphics, &compositingQuality));
+        SetStatus(DllExports::GdipGetCompositingQuality(nativeGraphics, &compositingQuality));
         return compositingQuality;
     }
 
     REAL GetDpiX(VOID)
     {
         REAL dpi;
-        SetStatus(DllExports::GdipGetDpiX(graphics, &dpi));
+        SetStatus(DllExports::GdipGetDpiX(nativeGraphics, &dpi));
         return dpi;
     }
 
     REAL GetDpiY(VOID)
     {
         REAL dpi;
-        SetStatus(DllExports::GdipGetDpiY(graphics, &dpi));
+        SetStatus(DllExports::GdipGetDpiY(nativeGraphics, &dpi));
         return dpi;
     }
 
@@ -969,7 +987,7 @@ class Graphics : public GdiplusBase
     InterpolationMode GetInterpolationMode(VOID)
     {
         InterpolationMode interpolationMode;
-        SetStatus(DllExports::GdipGetInterpolationMode(graphics, &interpolationMode));
+        SetStatus(DllExports::GdipGetInterpolationMode(nativeGraphics, &interpolationMode));
         return interpolationMode;
     }
 
@@ -987,48 +1005,49 @@ class Graphics : public GdiplusBase
     REAL GetPageScale(VOID)
     {
         REAL scale;
-        SetStatus(DllExports::GdipGetPageScale(graphics, &scale));
+        SetStatus(DllExports::GdipGetPageScale(nativeGraphics, &scale));
         return scale;
     }
 
     Unit GetPageUnit(VOID)
     {
         Unit unit;
-        SetStatus(DllExports::GdipGetPageUnit(graphics, &unit));
+        SetStatus(DllExports::GdipGetPageUnit(nativeGraphics, &unit));
         return unit;
     }
 
     PixelOffsetMode GetPixelOffsetMode(VOID)
     {
         PixelOffsetMode pixelOffsetMode;
-        SetStatus(DllExports::GdipGetPixelOffsetMode(graphics, &pixelOffsetMode));
+        SetStatus(DllExports::GdipGetPixelOffsetMode(nativeGraphics, &pixelOffsetMode));
         return pixelOffsetMode;
     }
 
     Status
     GetRenderingOrigin(INT *x, INT *y)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetRenderingOrigin(graphics, x, y));
+        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetRenderingOrigin(nativeGraphics, x,
+                               // y));
     }
 
     SmoothingMode GetSmoothingMode(VOID) const
     {
         SmoothingMode smoothingMode;
-        SetStatus(DllExports::GdipGetSmoothingMode(graphics, &smoothingMode));
+        SetStatus(DllExports::GdipGetSmoothingMode(nativeGraphics, &smoothingMode));
         return smoothingMode;
     }
 
     UINT GetTextContrast(VOID) const
     {
         UINT contrast;
-        SetStatus(DllExports::GdipGetTextContrast(graphics, &contrast));
+        SetStatus(DllExports::GdipGetTextContrast(nativeGraphics, &contrast));
         return contrast;
     }
 
     TextRenderingHint GetTextRenderingHint(VOID) const
     {
         TextRenderingHint mode;
-        SetStatus(DllExports::GdipGetTextRenderingHint(graphics, &mode));
+        SetStatus(DllExports::GdipGetTextRenderingHint(nativeGraphics, &mode));
         return mode;
     }
 
@@ -1041,13 +1060,13 @@ class Graphics : public GdiplusBase
     Status
     GetVisibleClipBounds(Rect *rect) const
     {
-        return SetStatus(DllExports::GdipGetVisibleClipBoundsI(graphics, rect));
+        return SetStatus(DllExports::GdipGetVisibleClipBoundsI(nativeGraphics, rect));
     }
 
     Status
     GetVisibleClipBounds(RectF *rect) const
     {
-        return SetStatus(DllExports::GdipGetVisibleClipBounds(graphics, rect));
+        return SetStatus(DllExports::GdipGetVisibleClipBounds(nativeGraphics, rect));
     }
 
     Status
@@ -1071,7 +1090,7 @@ class Graphics : public GdiplusBase
     BOOL IsClipEmpty(VOID) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsClipEmpty(graphics, &result));
+        SetStatus(DllExports::GdipIsClipEmpty(nativeGraphics, &result));
         return result;
     }
 
@@ -1079,7 +1098,7 @@ class Graphics : public GdiplusBase
     IsVisible(const Point &point) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisiblePointI(graphics, point.X, point.Y, &result));
+        SetStatus(DllExports::GdipIsVisiblePointI(nativeGraphics, point.X, point.Y, &result));
         return result;
     }
 
@@ -1087,7 +1106,7 @@ class Graphics : public GdiplusBase
     IsVisible(const Rect &rect) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRectI(graphics, rect.X, rect.Y, rect.Width, rect.Height, &result));
+        SetStatus(DllExports::GdipIsVisibleRectI(nativeGraphics, rect.X, rect.Y, rect.Width, rect.Height, &result));
         return result;
     }
 
@@ -1095,7 +1114,7 @@ class Graphics : public GdiplusBase
     IsVisible(REAL x, REAL y) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisiblePoint(graphics, x, y, &result));
+        SetStatus(DllExports::GdipIsVisiblePoint(nativeGraphics, x, y, &result));
         return result;
     }
 
@@ -1103,7 +1122,7 @@ class Graphics : public GdiplusBase
     IsVisible(const RectF &rect) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRect(graphics, rect.X, rect.Y, rect.Width, rect.Height, &result));
+        SetStatus(DllExports::GdipIsVisibleRect(nativeGraphics, rect.X, rect.Y, rect.Width, rect.Height, &result));
         return result;
     }
 
@@ -1111,7 +1130,7 @@ class Graphics : public GdiplusBase
     IsVisible(INT x, INT y, INT width, INT height) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRectI(graphics, x, y, width, height, &result));
+        SetStatus(DllExports::GdipIsVisibleRectI(nativeGraphics, x, y, width, height, &result));
         return result;
     }
 
@@ -1119,7 +1138,7 @@ class Graphics : public GdiplusBase
     IsVisible(INT x, INT y) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisiblePointI(graphics, x, y, &result));
+        SetStatus(DllExports::GdipIsVisiblePointI(nativeGraphics, x, y, &result));
         return result;
     }
 
@@ -1127,7 +1146,7 @@ class Graphics : public GdiplusBase
     IsVisible(const PointF &point) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisiblePoint(graphics, point.X, point.Y, &result));
+        SetStatus(DllExports::GdipIsVisiblePoint(nativeGraphics, point.X, point.Y, &result));
         return result;
     }
 
@@ -1135,7 +1154,7 @@ class Graphics : public GdiplusBase
     IsVisible(REAL x, REAL y, REAL width, REAL height) const
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsVisibleRect(graphics, x, y, width, height, &result));
+        SetStatus(DllExports::GdipIsVisibleRect(nativeGraphics, x, y, width, height, &result));
         return result;
     }
 
@@ -1143,7 +1162,7 @@ class Graphics : public GdiplusBase
     {
         return FALSE; /* FIXME: not available:
        BOOL result;
-       SetStatus(DllExports::GdipIsVisibleClipEmpty(graphics, &result));
+       SetStatus(DllExports::GdipIsVisibleClipEmpty(nativeGraphics, &result));
        return result;*/
     }
 
@@ -1238,12 +1257,12 @@ class Graphics : public GdiplusBase
 
     Status ResetClip(VOID)
     {
-        return SetStatus(DllExports::GdipResetClip(graphics));
+        return SetStatus(DllExports::GdipResetClip(nativeGraphics));
     }
 
     Status ResetTransform(VOID)
     {
-        return SetStatus(DllExports::GdipResetWorldTransform(graphics));
+        return SetStatus(DllExports::GdipResetWorldTransform(nativeGraphics));
     }
 
     Status
@@ -1255,7 +1274,7 @@ class Graphics : public GdiplusBase
     Status
     RotateTransform(REAL angle, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipRotateWorldTransform(graphics, angle, order));
+        return SetStatus(DllExports::GdipRotateWorldTransform(nativeGraphics, angle, order));
     }
 
     GraphicsState Save(VOID)
@@ -1266,13 +1285,13 @@ class Graphics : public GdiplusBase
     Status
     ScaleTransform(REAL sx, REAL sy, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipScaleWorldTransform(graphics, sx, sy, order));
+        return SetStatus(DllExports::GdipScaleWorldTransform(nativeGraphics, sx, sy, order));
     }
 
     Status
     SetClip(const Graphics *g, CombineMode combineMode)
     {
-        return SetStatus(DllExports::GdipSetClipGraphics(graphics, g ? g->graphics : NULL, combineMode));
+        return SetStatus(DllExports::GdipSetClipGraphics(nativeGraphics, g ? g->nativeGraphics : NULL, combineMode));
     }
 
     Status
@@ -1290,79 +1309,81 @@ class Graphics : public GdiplusBase
     Status
     SetClip(const Rect &rect, CombineMode combineMode)
     {
-        return SetStatus(DllExports::GdipSetClipRectI(graphics, rect.X, rect.Y, rect.Width, rect.Height, combineMode));
+        return SetStatus(
+            DllExports::GdipSetClipRectI(nativeGraphics, rect.X, rect.Y, rect.Width, rect.Height, combineMode));
     }
 
     Status
     SetClip(HRGN hRgn, CombineMode combineMode)
     {
-        return SetStatus(DllExports::GdipSetClipHrgn(graphics, hRgn, combineMode));
+        return SetStatus(DllExports::GdipSetClipHrgn(nativeGraphics, hRgn, combineMode));
     }
 
     Status
     SetClip(const RectF &rect, CombineMode combineMode)
     {
-        return SetStatus(DllExports::GdipSetClipRect(graphics, rect.X, rect.Y, rect.Width, rect.Height, combineMode));
+        return SetStatus(
+            DllExports::GdipSetClipRect(nativeGraphics, rect.X, rect.Y, rect.Width, rect.Height, combineMode));
     }
 
     Status
     SetCompositingMode(CompositingMode compositingMode)
     {
-        return SetStatus(DllExports::GdipSetCompositingMode(graphics, compositingMode));
+        return SetStatus(DllExports::GdipSetCompositingMode(nativeGraphics, compositingMode));
     }
 
     Status
     SetCompositingQuality(CompositingQuality compositingQuality)
     {
-        return SetStatus(DllExports::GdipSetCompositingQuality(graphics, compositingQuality));
+        return SetStatus(DllExports::GdipSetCompositingQuality(nativeGraphics, compositingQuality));
     }
 
     Status
     SetInterpolationMode(InterpolationMode interpolationMode)
     {
-        return SetStatus(DllExports::GdipSetInterpolationMode(graphics, interpolationMode));
+        return SetStatus(DllExports::GdipSetInterpolationMode(nativeGraphics, interpolationMode));
     }
 
     Status
     SetPageScale(REAL scale)
     {
-        return SetStatus(DllExports::GdipSetPageScale(graphics, scale));
+        return SetStatus(DllExports::GdipSetPageScale(nativeGraphics, scale));
     }
 
     Status
     SetPageUnit(Unit unit)
     {
-        return SetStatus(DllExports::GdipSetPageUnit(graphics, unit));
+        return SetStatus(DllExports::GdipSetPageUnit(nativeGraphics, unit));
     }
 
     Status
     SetPixelOffsetMode(PixelOffsetMode pixelOffsetMode)
     {
-        return SetStatus(DllExports::GdipSetPixelOffsetMode(graphics, pixelOffsetMode));
+        return SetStatus(DllExports::GdipSetPixelOffsetMode(nativeGraphics, pixelOffsetMode));
     }
 
     Status
     SetRenderingOrigin(INT x, INT y)
     {
-        return SetStatus(DllExports::GdipSetRenderingOrigin(graphics, x, y));
+        return SetStatus(DllExports::GdipSetRenderingOrigin(nativeGraphics, x, y));
     }
 
     Status
     SetSmoothingMode(SmoothingMode smoothingMode)
     {
-        return SetStatus(DllExports::GdipSetSmoothingMode(graphics, smoothingMode));
+        return SetStatus(DllExports::GdipSetSmoothingMode(nativeGraphics, smoothingMode));
     }
 
     Status
     SetTextContrast(UINT contrast)
     {
-        return SetStatus(DllExports::GdipSetTextContrast(graphics, contrast));
+        return SetStatus(DllExports::GdipSetTextContrast(nativeGraphics, contrast));
     }
 
     Status
     SetTextRenderingHint(TextRenderingHint newMode)
     {
-        return SetStatus(DllExports::GdipSetTextRenderingHint(graphics, newMode));
+        return SetStatus(DllExports::GdipSetTextRenderingHint(nativeGraphics, newMode));
     }
 
     Status
@@ -1374,25 +1395,25 @@ class Graphics : public GdiplusBase
     Status
     TransformPoints(CoordinateSpace destSpace, CoordinateSpace srcSpace, Point *pts, INT count)
     {
-        return SetStatus(DllExports::GdipTransformPointsI(graphics, destSpace, srcSpace, pts, count));
+        return SetStatus(DllExports::GdipTransformPointsI(nativeGraphics, destSpace, srcSpace, pts, count));
     }
 
     Status
     TranslateClip(INT dx, INT dy)
     {
-        return SetStatus(DllExports::GdipTranslateClipI(graphics, dx, dy));
+        return SetStatus(DllExports::GdipTranslateClipI(nativeGraphics, dx, dy));
     }
 
     Status
     TranslateClip(REAL dx, REAL dy)
     {
-        return SetStatus(DllExports::GdipTranslateClip(graphics, dx, dy));
+        return SetStatus(DllExports::GdipTranslateClip(nativeGraphics, dx, dy));
     }
 
     Status
     TranslateTransform(REAL dx, REAL dy, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipTranslateWorldTransform(graphics, dx, dy, order));
+        return SetStatus(DllExports::GdipTranslateWorldTransform(nativeGraphics, dx, dy, order));
     }
 
   private:
@@ -1408,12 +1429,19 @@ class Graphics : public GdiplusBase
     VOID
     SetGraphics(GpGraphics *graphics)
     {
-        this->graphics = graphics;
+        nativeGraphics = graphics;
     }
 
-  private:
+  protected:
+    GpGraphics *nativeGraphics;
     mutable Status status;
-    GpGraphics *graphics;
+
+    // get native
+    friend inline GpGraphics *&
+    getNat(const Graphics *graph)
+    {
+        return const_cast<Graphics *>(graph)->nativeGraphics;
+    }
 };
 
 #endif /* _GDIPLUSGRAPHICS_H */
