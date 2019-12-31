@@ -22,166 +22,217 @@
 class ImageAttributes : public GdiplusBase
 {
   public:
-    ImageAttributes(VOID)
+    ImageAttributes() : nativeImageAttr(NULL)
     {
+        lastStatus = DllExports::GdipCreateImageAttributes(&nativeImageAttr);
     }
 
-    Status ClearBrushRemapTable(VOID)
+    ~ImageAttributes()
+    {
+        DllExports::GdipDisposeImageAttributes(nativeImageAttr);
+    }
+
+    Status
+    ClearBrushRemapTable()
+    {
+        return ClearRemapTable(ColorAdjustTypeBrush);
+    }
+
+    Status
+    ClearColorKey(ColorAdjustType type = ColorAdjustTypeDefault)
+    {
+        return SetStatus(DllExports::GdipSetImageAttributesColorKeys(nativeImageAttr, type, FALSE, NULL, NULL));
+    }
+
+    Status
+    ClearColorMatrices(ColorAdjustType type = ColorAdjustTypeDefault)
+    {
+        return SetStatus(DllExports::GdipSetImageAttributesColorMatrix(
+            nativeImageAttr, type, FALSE, NULL, NULL, ColorMatrixFlagsDefault));
+    }
+
+    Status
+    ClearColorMatrix(ColorAdjustType type = ColorAdjustTypeDefault)
+    {
+        return SetStatus(DllExports::GdipSetImageAttributesColorMatrix(
+            nativeImageAttr, type, FALSE, NULL, NULL, ColorMatrixFlagsDefault));
+    }
+
+    Status
+    ClearGamma(ColorAdjustType type = ColorAdjustTypeDefault)
+    {
+        return SetStatus(DllExports::GdipSetImageAttributesGamma(nativeImageAttr, type, FALSE, 0.0));
+    }
+
+    Status
+    ClearNoOp(ColorAdjustType type = ColorAdjustTypeDefault)
+    {
+        return SetStatus(DllExports::GdipSetImageAttributesNoOp(nativeImageAttr, type, FALSE));
+    }
+
+    Status
+    ClearOutputChannel(ColorAdjustType type = ColorAdjustTypeDefault)
     {
         return NotImplemented;
     }
 
     Status
-    ClearColorKey(ColorAdjustType type)
+    ClearOutputChannelColorProfile(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipSetImageAttributesOutputChannelColorProfile(nativeImageAttr, type, FALSE, NULL));
     }
 
     Status
-    ClearColorMatrices(ColorAdjustType type)
+    ClearRemapTable(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesRemapTable(nativeImageAttr, type, FALSE, 0, NULL));
     }
 
     Status
-    ClearColorMatrix(ColorAdjustType type)
+    ClearThreshold(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesThreshold(nativeImageAttr, type, FALSE, 0.0));
+    }
+
+    ImageAttributes *
+    Clone()
+    {
+        GpImageAttributes *clone = NULL;
+        SetStatus(DllExports::GdipCloneImageAttributes(nativeImageAttr, &clone));
+        return new ImageAttributes(clone, lastStatus);
     }
 
     Status
-    ClearGamma(ColorAdjustType type)
+    GetAdjustedPalette(ColorPalette *colorPalette, ColorAdjustType colorAdjustType)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipGetImageAttributesAdjustedPalette(nativeImageAttr, colorPalette, colorAdjustType));
     }
 
     Status
-    ClearNoOp(ColorAdjustType type)
+    GetLastStatus()
     {
-        return NotImplemented;
+        return lastStatus;
     }
 
     Status
-    ClearOutputChannel(ColorAdjustType type)
+    Reset(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
-    }
-
-    Status
-    ClearOutputChannelColorProfile(ColorAdjustType type)
-    {
-        return NotImplemented;
-    }
-
-    Status
-    ClearRemapTable(ColorAdjustType type)
-    {
-        return NotImplemented;
-    }
-
-    Status
-    ClearThreshold(ColorAdjustType type)
-    {
-        return NotImplemented;
-    }
-
-    ImageAttributes *Clone(VOID)
-    {
-        return NULL;
-    }
-
-    Status
-    GetAdjustedPalette(ColorPalette *colorPalette, ColorPalette colorAdjustType)
-    {
-        return NotImplemented;
-    }
-
-    Status GetLastStatus(VOID)
-    {
-        return NotImplemented;
-    }
-
-    Status
-    Reset(ColorAdjustType type)
-    {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipResetImageAttributes(nativeImageAttr, type));
     }
 
     Status
     SetBrushRemapTable(UINT mapSize, ColorMap *map)
     {
-        return NotImplemented;
+        return SetRemapTable(mapSize, map, ColorAdjustTypeBrush);
     }
 
     Status
-    SetColorKey(const Color &colorLow, const Color &colorHigh, ColorAdjustType type)
+    SetColorKey(const Color &colorLow, const Color &colorHigh, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesColorKeys(
+            nativeImageAttr, type, TRUE, colorLow.GetValue(), colorHigh.GetValue()));
     }
 
     Status
     SetColorMatrices(
         const ColorMatrix *colorMatrix,
         const ColorMatrix *grayMatrix,
-        ColorMatrixFlags mode,
-        ColorAdjustType type)
+        ColorMatrixFlags mode = ColorMatrixFlagsDefault,
+        ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipSetImageAttributesColorMatrix(nativeImageAttr, type, TRUE, colorMatrix, grayMatrix, mode));
     }
 
     Status
-    SetColorMatrix(const ColorMatrix *colorMatrix, ColorMatrixFlags mode, ColorAdjustType type)
+    SetColorMatrix(
+        const ColorMatrix *colorMatrix,
+        ColorMatrixFlags mode = ColorMatrixFlagsDefault,
+        ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipSetImageAttributesColorMatrix(nativeImageAttr, type, TRUE, colorMatrix, NULL, mode));
     }
 
     Status
-    SetGamma(REAL gamma, ColorAdjustType type)
+    SetGamma(REAL gamma, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesGamma(nativeImageAttr, type, TRUE, gamma));
     }
 
     Status
-    SetNoOp(ColorAdjustType type)
+    SetNoOp(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesNoOp(nativeImageAttr, type, TRUE));
     }
 
     Status
-    SetOutputChannel(ColorChannelFlags channelFlags, ColorAdjustType type)
+    SetOutputChannel(ColorChannelFlags channelFlags, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesOutputChannel(nativeImageAttr, type, TRUE, channelFlags));
     }
 
     Status
-    SetOutputChannelColorProfile(const WCHAR *colorProfileFilename, ColorAdjustType type)
+    SetOutputChannelColorProfile(const WCHAR *colorProfileFilename, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesOutputChannelColorProfile(
+            nativeImageAttr, type, TRUE, colorProfileFilename));
     }
 
     Status
-    SetRemapTable(UINT mapSize, const ColorMap *map, ColorAdjustType type)
+    SetRemapTable(UINT mapSize, const ColorMap *map, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesRemapTable(nativeImageAttr, type, TRUE, mapSize, map));
     }
 
     Status
-    SetThreshold(REAL threshold, ColorAdjustType type)
+    SetThreshold(REAL threshold, ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesThreshold(nativeImageAttr, type, TRUE, threshold));
     }
 
     Status
-    SetToIdentity(ColorAdjustType type)
+    SetToIdentity(ColorAdjustType type = ColorAdjustTypeDefault)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetImageAttributesToIdentity(nativeImageAttr, type));
     }
 
     Status
-    SetWrapMode(WrapMode wrap, const Color &color, BOOL clamp)
+    SetWrapMode(WrapMode wrap, const Color &color = Color(), BOOL clamp = FALSE)
     {
-        return NotImplemented;
+        ARGB argb = color.GetValue();
+        return SetStatus(DllExports::GdipSetImageAttributesWrapMode(nativeImageAttr, wrap, argb, clamp));
     }
+
+  protected:
+    GpImageAttributes *nativeImageAttr;
+    mutable Status lastStatus;
+
+    ImageAttributes(GpImageAttributes *imageAttr, Status status) : nativeImageAttr(imageAttr), lastStatus(status)
+    {
+    }
+
+    VOID
+    SetNativeImageAttr(GpImageAttributes *imageAttr)
+    {
+        nativeImageAttr = imageAttr;
+    }
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
+    }
+
+  private:
+    // ImageAttributes is not copyable
+    ImageAttributes(const ImageAttributes &);
+    ImageAttributes &
+    operator=(const ImageAttributes &);
 };
 
 #endif /* _GDIPLUSIMAGEATTRIBUTES_H */
