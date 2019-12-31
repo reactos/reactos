@@ -93,6 +93,13 @@ class Brush : public GdiplusBase
     Brush(const Brush &);
     Brush &
     operator=(const Brush &);
+
+    // get native
+    friend inline GpBrush *&
+    getNat(const Brush *brush)
+    {
+        return const_cast<Brush *>(brush)->nativeBrush;
+    }
 };
 
 class HatchBrush : public Brush

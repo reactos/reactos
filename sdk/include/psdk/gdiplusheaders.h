@@ -655,6 +655,13 @@ class CachedBitmap : public GdiplusBase
     CachedBitmap(const CachedBitmap &);
     CachedBitmap &
     operator=(const CachedBitmap &);
+
+    // get native
+    friend inline GpCachedBitmap *&
+    getNat(const CachedBitmap *cb)
+    {
+        return const_cast<CachedBitmap *>(cb)->nativeCachedBitmap;
+    }
 };
 
 class FontCollection : public GdiplusBase
@@ -1366,6 +1373,13 @@ class Region : public GdiplusBase
             return status;
         this->status = status;
         return status;
+    }
+
+    // get native
+    friend inline GpRegion *&
+    getNat(const Region *region)
+    {
+        return const_cast<Region *>(region)->region;
     }
 };
 

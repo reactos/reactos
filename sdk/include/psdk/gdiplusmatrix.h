@@ -204,6 +204,13 @@ class Matrix : public GdiplusBase
             lastStatus = status;
         return status;
     }
+
+    // get native
+    friend inline GpMatrix *&
+    getNat(const Matrix *matrix)
+    {
+        return const_cast<Matrix *>(matrix)->nativeMatrix;
+    }
 };
 
 #endif /* _GDIPLUSMATRIX_H */

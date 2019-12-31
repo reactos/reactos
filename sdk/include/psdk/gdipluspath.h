@@ -26,6 +26,7 @@ class GraphicsPath : public GdiplusBase
 {
     friend class Region;
     friend class CustomLineCap;
+    friend class Graphics;
 
   public:
     GraphicsPath(const Point *points, const BYTE *types, INT count, FillMode fillMode) : nativePath(NULL)
@@ -598,6 +599,13 @@ class GraphicsPath : public GdiplusBase
     GraphicsPath(const GraphicsPath &);
     GraphicsPath &
     operator=(const GraphicsPath &);
+
+    // get native
+    friend inline GpPath *&
+    getNat(const GraphicsPath *path)
+    {
+        return const_cast<GraphicsPath *>(path)->nativePath;
+    }
 };
 
 class GraphicsPathIterator : public GdiplusBase
