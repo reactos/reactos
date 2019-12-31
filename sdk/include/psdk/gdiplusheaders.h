@@ -1404,6 +1404,7 @@ class CustomLineCap : public GdiplusBase
     }
 
   private:
+    // CustomLineCap is not copyable
     CustomLineCap(const CustomLineCap &);
     CustomLineCap &
     operator=(const CustomLineCap &);
