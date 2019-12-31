@@ -21,59 +21,85 @@
 
 class CustomLineCap;
 
+GpCustomLineCap*& getNat(const CustomLineCap *cap);
+
 class Pen : public GdiplusBase
 {
-    friend class Graphics;
-
   public:
-    Pen(const Brush *brush, REAL width = 1.0f)
+    friend class Graphics;
+    friend class GraphicsPath;
+
+    Pen(const Brush *brush, REAL width = 1.0f) : nativePen(NULL)
     {
+        lastStatus = DllExports::GdipCreatePen2(brush->nativeBrush, width, UnitWorld, &nativePen);
     }
 
-    Pen(const Color &color, REAL width = 1.0f)
+    Pen(const Color &color, REAL width = 1.0f) : nativePen(NULL)
     {
-        Unit unit = UnitWorld;
-        nativePen = NULL;
-        status = DllExports::GdipCreatePen1(color.GetValue(), width, unit, &nativePen);
+        lastStatus = DllExports::GdipCreatePen1(color.GetValue(), width, UnitWorld, &nativePen);
     }
 
-    Pen *Clone(VOID)
+    ~Pen()
     {
-        return NULL;
+        DllExports::GdipDeletePen(nativePen);
     }
 
-    PenAlignment GetAlignment(VOID)
+    Pen *
+    Clone()
+    {
+        GpPen *clonePen = NULL;
+        SetStatus(DllExports::GdipClonePen(nativePen, &clonePen));
+        if (lastStatus != Ok)
+            return NULL;
+        Pen *newPen = new Pen(clonePen, lastStatus);
+        if (!newPen)
+            DllExports::GdipDeletePen(clonePen);
+        return newPen;
+    }
+
+    PenAlignment
+    GetAlignment()
     {
         PenAlignment penAlignment;
         SetStatus(DllExports::GdipGetPenMode(nativePen, &penAlignment));
         return penAlignment;
     }
 
-    Brush *GetBrush(VOID)
+    Brush *
+    GetBrush()
     {
+        // FIXME
         return NULL;
     }
 
     Status
     GetColor(Color *color)
     {
+        if (!color)
+            return SetStatus(InvalidParameter);
+
         ARGB argb;
-        Status status = SetStatus(DllExports::GdipGetPenColor(nativePen, &argb));
-        if (color)
-            color->SetValue(argb);
-        return status;
+        SetStatus(DllExports::GdipGetPenColor(nativePen, &argb));
+        color->SetValue(argb);
+        return lastStatus;
     }
 
     Status
     GetCompoundArray(REAL *compoundArray, INT count)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipGetPenCompoundArray(nativePen,
-                               // count));
+        if (!compoundArray || count <= 0)
+            return SetStatus(InvalidParameter);
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipGetPenCompoundArray(nativePen, compoundArray, count));
+#endif
     }
 
-    INT GetCompoundArrayCount(VOID)
+    INT
+    GetCompoundArrayCount()
     {
-        INT count;
+        INT count = 0;
         SetStatus(DllExports::GdipGetPenCompoundCount(nativePen, &count));
         return count;
     }
@@ -81,23 +107,35 @@ class Pen : public GdiplusBase
     Status
     GetCustomEndCap(CustomLineCap *customCap)
     {
-        return NotImplemented;
+        if (!customCap)
+            return SetStatus(InvalidParameter);
+
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipGetPenCustomEndCap(nativePen, &getNat(customCap)));
+#endif
     }
 
     Status
     GetCustomStartCap(CustomLineCap *customCap)
     {
-        return NotImplemented;
+        if (!customCap)
+            return SetStatus(InvalidParameter);
+
+        return SetStatus(DllExports::GdipGetPenCustomStartCap(nativePen, &getNat(customCap)));
     }
 
-    DashCap GetDashCap(VOID)
+    DashCap
+    GetDashCap()
     {
         DashCap dashCap;
         SetStatus(DllExports::GdipGetPenDashCap197819(nativePen, &dashCap));
         return dashCap;
     }
 
-    REAL GetDashOffset(VOID)
+    REAL
+    GetDashOffset()
     {
         REAL offset;
         SetStatus(DllExports::GdipGetPenDashOffset(nativePen, &offset));
@@ -107,57 +145,68 @@ class Pen : public GdiplusBase
     Status
     GetDashPattern(REAL *dashArray, INT count)
     {
+        if (dashArray == NULL || count <= 0)
+            return SetStatus(InvalidParameter);
+
         return SetStatus(DllExports::GdipGetPenDashArray(nativePen, dashArray, count));
     }
 
-    INT GetDashPatternCount(VOID)
+    INT
+    GetDashPatternCount()
     {
-        INT count;
+        INT count = 0;
         SetStatus(DllExports::GdipGetPenDashCount(nativePen, &count));
         return count;
     }
 
-    DashStyle GetDashStyle(VOID)
+    DashStyle
+    GetDashStyle()
     {
         DashStyle dashStyle;
         SetStatus(DllExports::GdipGetPenDashStyle(nativePen, &dashStyle));
         return dashStyle;
     }
 
-    LineCap GetEndCap(VOID)
+    LineCap
+    GetEndCap()
     {
         LineCap endCap;
         SetStatus(DllExports::GdipGetPenEndCap(nativePen, &endCap));
         return endCap;
     }
 
-    Status GetLastStatus(VOID)
+    Status
+    GetLastStatus() const
     {
-        return status;
+        return lastStatus;
     }
 
-    LineJoin GetLineJoin(VOID)
+    LineJoin
+    GetLineJoin()
     {
         LineJoin lineJoin;
         SetStatus(DllExports::GdipGetPenLineJoin(nativePen, &lineJoin));
         return lineJoin;
     }
 
-    REAL GetMiterLimit(VOID)
+    REAL
+    GetMiterLimit()
     {
         REAL miterLimit;
         SetStatus(DllExports::GdipGetPenMiterLimit(nativePen, &miterLimit));
         return miterLimit;
     }
 
-    PenType GetPenType(VOID)
+    PenType
+    GetPenType()
     {
         PenType type;
         SetStatus(DllExports::GdipGetPenFillType(nativePen, &type));
         return type;
     }
 
-    LineCap GetStartCap(VOID)
+    LineCap
+    GetStartCap()
     {
         LineCap startCap;
         SetStatus(DllExports::GdipGetPenStartCap(nativePen, &startCap));
@@ -167,10 +216,11 @@ class Pen : public GdiplusBase
     Status
     GetTransform(Matrix *matrix)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPenTransform(nativePen, matrix->nativeMatrix));
     }
 
-    REAL GetWidth(VOID)
+    REAL
+    GetWidth()
     {
         REAL width;
         SetStatus(DllExports::GdipGetPenWidth(nativePen, &width));
@@ -178,26 +228,29 @@ class Pen : public GdiplusBase
     }
 
     Status
-    MultiplyTransform(Matrix *matrix, MatrixOrder order)
+    MultiplyTransform(Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, matrix
-                               // ? matrix->nativeMatrix : NULL, order));
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, matrix->nativeMatrix, order));
+#endif
     }
 
-    Status ResetTransform(VOID)
+    Status
+    ResetTransform()
     {
         return SetStatus(DllExports::GdipResetPenTransform(nativePen));
     }
 
     Status
-    RotateTransform(REAL angle, MatrixOrder order)
+    RotateTransform(REAL angle, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented; // FIXME: not available: SetStatus(DllExports::GdipRotatePenTransform(nativePen, angle,
-                               // order));
+        return SetStatus(DllExports::GdipRotatePenTransform(nativePen, angle, order));
     }
 
     Status
-    ScaleTransform(REAL sx, REAL sy, MatrixOrder order)
+    ScaleTransform(REAL sx, REAL sy, MatrixOrder order = MatrixOrderPrepend)
     {
         return SetStatus(DllExports::GdipScalePenTransform(nativePen, sx, sy, order));
     }
@@ -211,7 +264,8 @@ class Pen : public GdiplusBase
     Status
     SetBrush(const Brush *brush)
     {
-        return SetStatus(DllExports::GdipSetPenBrushFill(nativePen, brush ? brush->nativeBrush : NULL));
+        GpBrush *theBrush = brush ? brush->nativeBrush : NULL;
+        return SetStatus(DllExports::GdipSetPenBrushFill(nativePen, theBrush));
     }
 
     Status
@@ -229,13 +283,15 @@ class Pen : public GdiplusBase
     Status
     SetCustomEndCap(const CustomLineCap *customCap)
     {
-        return NotImplemented;
+        GpCustomLineCap *cap = customCap ? getNat(customCap) : NULL;
+        return SetStatus(DllExports::GdipSetPenCustomEndCap(nativePen, cap));
     }
 
     Status
     SetCustomStartCap(const CustomLineCap *customCap)
     {
-        return NotImplemented;
+        GpCustomLineCap *cap = customCap ? getNat(customCap) : NULL;
+        return SetStatus(DllExports::GdipSetPenCustomStartCap(nativePen, cap));
     }
 
     Status
@@ -295,7 +351,8 @@ class Pen : public GdiplusBase
     Status
     SetTransform(const Matrix *matrix)
     {
-        return SetStatus(DllExports::GdipSetPenTransform(nativePen, matrix ? matrix->nativeMatrix : NULL));
+        GpMatrix *mat = matrix ? matrix->nativeMatrix : NULL;
+        return SetStatus(DllExports::GdipSetPenTransform(nativePen, mat));
     }
 
     Status
@@ -304,20 +361,39 @@ class Pen : public GdiplusBase
         return SetStatus(DllExports::GdipSetPenWidth(nativePen, width));
     }
 
-  private:
-    GpPen *nativePen;
+    Status
+    TranslateTransform(REAL dx, REAL dy, MatrixOrder order = MatrixOrderPrepend)
+    {
+        return SetStatus(DllExports::GdipTranslatePenTransform(nativePen, dx, dy, order));
+    }
 
-  private:
-    mutable Status status;
+  protected:
+    GpPen *nativePen;
+    mutable Status lastStatus;
 
     Status
     SetStatus(Status status) const
     {
-        if (status == Ok)
-            return status;
-        this->status = status;
+        if (status != Ok)
+            lastStatus = status;
         return status;
     }
+
+    Pen(GpPen *pen, Status status) : nativePen(pen), lastStatus(status)
+    {
+    }
+
+    VOID
+    SetNativePen(GpPen *pen)
+    {
+        nativePen = pen;
+    }
+
+  private:
+    // Pen is not copyable
+    Pen(const Pen &);
+    Pen &
+    operator=(const Pen &);
 };
 
 #endif /* _GDIPLUSPEN_H */
