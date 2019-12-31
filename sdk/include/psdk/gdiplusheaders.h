@@ -689,6 +689,12 @@ class FontCollection : public GdiplusBase
             lastStatus = status;
         return status;
     }
+
+  private:
+    // FontCollection is not copyable
+    FontCollection(const FontCollection &);
+    FontCollection &
+    operator=(const FontCollection &);
 };
 
 class FontFamily : public GdiplusBase
