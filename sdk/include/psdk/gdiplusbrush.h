@@ -89,6 +89,7 @@ class Brush : public GdiplusBase
     }
 
   private:
+    // Brush is not copyable
     Brush(const Brush &);
     Brush &
     operator=(const Brush &);
