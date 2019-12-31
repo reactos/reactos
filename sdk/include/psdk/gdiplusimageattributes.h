@@ -106,7 +106,7 @@ class ImageAttributes : public GdiplusBase
 
         ImageAttributes *newImageAttr = new ImageAttributes(clone, lastStatus);
         if (newImageAttr == NULL)
-            SetStatus(DllExports::GdipDisposeImageAttributes(nativeImageAttr));
+            SetStatus(DllExports::GdipDisposeImageAttributes(clone));
 
         return newImageAttr;
     }
