@@ -24,6 +24,9 @@ class Matrix : public GdiplusBase
     friend class Pen;
     friend class Region;
     friend class GraphicsPath;
+    friend class Brush;
+    friend class LinearGradientBrush;
+    friend class TextureBrush;
 
   public:
     Matrix(const RectF &rect, const PointF *dstplg)

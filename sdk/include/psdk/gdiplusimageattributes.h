@@ -22,6 +22,8 @@
 class ImageAttributes : public GdiplusBase
 {
   public:
+    friend class TextureBrush;
+
     ImageAttributes() : nativeImageAttr(NULL)
     {
         lastStatus = DllExports::GdipCreateImageAttributes(&nativeImageAttr);
