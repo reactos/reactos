@@ -3,7 +3,7 @@
 
 function version
 {
-  echo "$(basename ${0}) version 0.0.1"
+  echo "$(basename ${0}) version 0.0.2"
 }
 
 function usage
@@ -19,12 +19,6 @@ Options:
     --version    print $(basename ${0}) version
 EOF
 }
-
-if ! type "clang-format" > /dev/null 2>&1
-then
-  echo ERROR: Program clang-format is not found.
-  exit 1
-fi
 
 case ${1} in
   --help)
