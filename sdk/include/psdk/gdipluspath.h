@@ -25,6 +25,7 @@ class Graphics;
 class GraphicsPath : public GdiplusBase
 {
     friend class Region;
+    friend class CustomLineCap;
 
   public:
     GraphicsPath(const Point *points, const BYTE *types, INT count, FillMode fillMode) : nativePath(NULL)
