@@ -326,6 +326,7 @@ HistoryDeleteBuffers(PCONSRV_CONSOLE Console)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepGetCommandHistory */
 CSR_API(SrvGetConsoleCommandHistory)
 {
     NTSTATUS Status;
@@ -415,6 +416,7 @@ CSR_API(SrvGetConsoleCommandHistory)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetCommandHistoryLength */
 CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     NTSTATUS Status;
@@ -458,6 +460,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     return Status;
 }
 
+/* API_NUMBER: ConsolepExpungeCommandHistory */
 CSR_API(SrvExpungeConsoleCommandHistory)
 {
     NTSTATUS Status;
@@ -487,6 +490,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
     return Status;
 }
 
+/* API_NUMBER: ConsolepSetNumberOfCommands */
 CSR_API(SrvSetConsoleNumberOfCommands)
 {
     NTSTATUS Status;
@@ -539,6 +543,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetHistory */
 CSR_API(SrvGetConsoleHistory)
 {
 #if 0 // Vista+
@@ -560,6 +565,7 @@ CSR_API(SrvGetConsoleHistory)
 #endif
 }
 
+/* API_NUMBER: ConsolepSetHistory */
 CSR_API(SrvSetConsoleHistory)
 {
 #if 0 // Vista+
@@ -581,6 +587,7 @@ CSR_API(SrvSetConsoleHistory)
 #endif
 }
 
+/* API_NUMBER: ConsolepSetCommandHistoryMode */
 CSR_API(SrvSetConsoleCommandHistoryMode)
 {
     NTSTATUS Status;

@@ -871,6 +871,7 @@ CSR_API(SrvOpenConsole)
     return Status;
 }
 
+/* API_NUMBER: ConsolepDuplicateHandle */
 CSR_API(SrvDuplicateHandle)
 {
     NTSTATUS Status;
@@ -944,6 +945,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetHandleInformation */
 CSR_API(SrvGetHandleInformation)
 {
     NTSTATUS Status;
@@ -992,6 +994,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepSetHandleInformation */
 CSR_API(SrvSetHandleInformation)
 {
     NTSTATUS Status;
@@ -1042,6 +1045,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepCloseHandle */
 CSR_API(SrvCloseHandle)
 {
     NTSTATUS Status;
@@ -1062,6 +1066,7 @@ CSR_API(SrvCloseHandle)
     return Status;
 }
 
+/* API_NUMBER: ConsolepVerifyIoHandle */
 CSR_API(SrvVerifyConsoleIoHandle)
 {
     NTSTATUS Status;

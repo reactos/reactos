@@ -548,6 +548,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepReadConsole */
 CSR_API(SrvReadConsole)
 {
     NTSTATUS Status;
@@ -605,6 +606,7 @@ CSR_API(SrvReadConsole)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetConsoleInput */
 CSR_API(SrvGetConsoleInput)
 {
     NTSTATUS Status;
@@ -669,6 +671,8 @@ ConDrvWriteConsoleInput(IN PCONSOLE Console,
                         IN ULONG NumEventsToWrite,
                         OUT PULONG NumEventsWritten OPTIONAL);
 #endif
+
+/* API_NUMBER: ConsolepWriteConsoleInput */
 CSR_API(SrvWriteConsoleInput)
 {
     NTSTATUS Status;
@@ -752,6 +756,7 @@ CSR_API(SrvWriteConsoleInput)
 NTSTATUS NTAPI
 ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
                               IN PCONSOLE_INPUT_BUFFER InputBuffer);
+/* API_NUMBER: ConsolepFlushInputBuffer */
 CSR_API(SrvFlushConsoleInputBuffer)
 {
     NTSTATUS Status;
@@ -776,6 +781,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
                                     IN PCONSOLE_INPUT_BUFFER InputBuffer,
                                     OUT PULONG NumberOfEvents);
+/* API_NUMBER: ConsolepGetNumberOfInputEvents */
 CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;
