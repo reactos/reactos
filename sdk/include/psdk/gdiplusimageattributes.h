@@ -101,6 +101,8 @@ class ImageAttributes : public GdiplusBase
     {
         GpImageAttributes *clone = NULL;
         SetStatus(DllExports::GdipCloneImageAttributes(nativeImageAttr, &clone));
+        if (lastStatus != Ok)
+            return NULL;
         return new ImageAttributes(clone, lastStatus);
     }
 
