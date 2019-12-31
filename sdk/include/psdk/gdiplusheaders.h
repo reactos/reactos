@@ -1437,6 +1437,13 @@ class CustomLineCap : public GdiplusBase
     CustomLineCap(const CustomLineCap &);
     CustomLineCap &
     operator=(const CustomLineCap &);
+
+    // get native
+    friend inline GpCustomLineCap *&
+    getNat(const CustomLineCap *cap)
+    {
+        return const_cast<CustomLineCap *>(cap)->nativeCap;
+    }
 };
 
 inline TextureBrush::TextureBrush(Image *image, WrapMode wrapMode, const RectF &dstRect)
