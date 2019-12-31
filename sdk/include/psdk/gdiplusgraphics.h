@@ -719,53 +719,54 @@ class Graphics : public GdiplusBase
     Status
     FillClosedCurve(const Brush *brush, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillClosedCurveI(graphics, brush ? brush->brush : NULL, points, count));
+        return SetStatus(DllExports::GdipFillClosedCurveI(graphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const Point *points, INT count, FillMode fillMode, REAL tension)
     {
-        return SetStatus(
-            DllExports::GdipFillClosedCurve2I(graphics, brush ? brush->brush : NULL, points, count, tension, fillMode));
+        return SetStatus(DllExports::GdipFillClosedCurve2I(
+            graphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillClosedCurve(graphics, brush ? brush->brush : NULL, points, count));
+        return SetStatus(DllExports::GdipFillClosedCurve(graphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillClosedCurve(const Brush *brush, const PointF *points, INT count, FillMode fillMode, REAL tension)
     {
-        return SetStatus(
-            DllExports::GdipFillClosedCurve2(graphics, brush ? brush->brush : NULL, points, count, tension, fillMode));
+        return SetStatus(DllExports::GdipFillClosedCurve2(
+            graphics, brush ? brush->nativeBrush : NULL, points, count, tension, fillMode));
     }
 
     Status
     FillEllipse(const Brush *brush, const Rect &rect)
     {
         return SetStatus(DllExports::GdipFillEllipseI(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillEllipse(const Brush *brush, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipFillEllipse(graphics, brush ? brush->brush : NULL, x, y, width, height));
+        return SetStatus(DllExports::GdipFillEllipse(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillEllipse(const Brush *brush, const RectF &rect)
     {
         return SetStatus(DllExports::GdipFillEllipse(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillEllipse(const Brush *brush, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipFillEllipseI(graphics, brush ? brush->brush : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipFillEllipseI(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
@@ -778,90 +779,96 @@ class Graphics : public GdiplusBase
     FillPie(const Brush *brush, const Rect &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPieI(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     FillPie(const Brush *brush, INT x, INT y, INT width, INT height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPieI(
-            graphics, brush ? brush->brush : NULL, x, y, width, height, startAngle, sweepAngle));
+            graphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     FillPie(const Brush *brush, REAL x, REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPie(
-            graphics, brush ? brush->brush : NULL, x, y, width, height, startAngle, sweepAngle));
+            graphics, brush ? brush->nativeBrush : NULL, x, y, width, height, startAngle, sweepAngle));
     }
 
     Status
     FillPie(const Brush *brush, RectF &rect, REAL startAngle, REAL sweepAngle)
     {
         return SetStatus(DllExports::GdipFillPie(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle, sweepAngle));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height, startAngle,
+            sweepAngle));
     }
 
     Status
     FillPolygon(const Brush *brush, const Point *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillPolygon2I(graphics, brush ? brush->brush : NULL, points, count));
+        return SetStatus(DllExports::GdipFillPolygon2I(graphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillPolygon(const Brush *brush, const PointF *points, INT count)
     {
-        return SetStatus(DllExports::GdipFillPolygon2(graphics, brush ? brush->brush : NULL, points, count));
+        return SetStatus(DllExports::GdipFillPolygon2(graphics, brush ? brush->nativeBrush : NULL, points, count));
     }
 
     Status
     FillPolygon(const Brush *brush, const Point *points, INT count, FillMode fillMode)
     {
-        return SetStatus(DllExports::GdipFillPolygonI(graphics, brush ? brush->brush : NULL, points, count, fillMode));
+        return SetStatus(
+            DllExports::GdipFillPolygonI(graphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
     }
 
     Status
     FillPolygon(const Brush *brush, const PointF *points, INT count, FillMode fillMode)
     {
-        return SetStatus(DllExports::GdipFillPolygon(graphics, brush ? brush->brush : NULL, points, count, fillMode));
+        return SetStatus(
+            DllExports::GdipFillPolygon(graphics, brush ? brush->nativeBrush : NULL, points, count, fillMode));
     }
 
     Status
     FillRectangle(const Brush *brush, const Rect &rect)
     {
         return SetStatus(DllExports::GdipFillRectangleI(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillRectangle(const Brush *brush, const RectF &rect)
     {
         return SetStatus(DllExports::GdipFillRectangle(
-            graphics, brush ? brush->brush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
+            graphics, brush ? brush->nativeBrush : NULL, rect.X, rect.Y, rect.Width, rect.Height));
     }
 
     Status
     FillRectangle(const Brush *brush, REAL x, REAL y, REAL width, REAL height)
     {
-        return SetStatus(DllExports::GdipFillRectangle(graphics, brush ? brush->brush : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipFillRectangle(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillRectangle(const Brush *brush, INT x, INT y, INT width, INT height)
     {
-        return SetStatus(DllExports::GdipFillRectangleI(graphics, brush ? brush->brush : NULL, x, y, width, height));
+        return SetStatus(
+            DllExports::GdipFillRectangleI(graphics, brush ? brush->nativeBrush : NULL, x, y, width, height));
     }
 
     Status
     FillRectangles(const Brush *brush, const Rect *rects, INT count)
     {
-        return SetStatus(DllExports::GdipFillRectanglesI(graphics, brush ? brush->brush : NULL, rects, count));
+        return SetStatus(DllExports::GdipFillRectanglesI(graphics, brush ? brush->nativeBrush : NULL, rects, count));
     }
 
     Status
     FillRectangles(const Brush *brush, const RectF *rects, INT count)
     {
-        return SetStatus(DllExports::GdipFillRectangles(graphics, brush ? brush->brush : NULL, rects, count));
+        return SetStatus(DllExports::GdipFillRectangles(graphics, brush ? brush->nativeBrush : NULL, rects, count));
     }
 
     Status

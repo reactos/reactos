@@ -210,7 +210,7 @@ class Pen : public GdiplusBase
     Status
     SetBrush(const Brush *brush)
     {
-        return SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->brush : NULL));
+        return SetStatus(DllExports::GdipSetPenBrushFill(pen, brush ? brush->nativeBrush : NULL));
     }
 
     Status
