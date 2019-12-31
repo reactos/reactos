@@ -1332,13 +1332,19 @@ class Region : public GdiplusBase
 class CustomLineCap : public GdiplusBase
 {
   public:
-    CustomLineCap(const GraphicsPath *fillPath, const GraphicsPath *strokePath, LineCap baseCap, REAL baseInset);
+    CustomLineCap(const GraphicsPath *fillPath, const GraphicsPath *strokePath, LineCap baseCap, REAL baseInset = 0);
+
+    ~CustomLineCap();
+
     CustomLineCap *
     Clone();
+
     LineCap
     GetBaseCap();
+
     REAL
     GetBaseInset();
+
     Status
     GetLastStatus();
 
@@ -1347,6 +1353,7 @@ class CustomLineCap : public GdiplusBase
 
     LineJoin
     GetStrokeJoin();
+
     REAL
     GetWidthScale();
 
@@ -1369,7 +1376,37 @@ class CustomLineCap : public GdiplusBase
     SetWidthScale(IN REAL widthScale);
 
   protected:
-    CustomLineCap();
+    GpCustomLineCap *nativeCap;
+    mutable Status lastStatus;
+
+    CustomLineCap() : nativeCap(NULL), lastStatus(Ok)
+    {
+    }
+
+    CustomLineCap(GpCustomLineCap *nativeCap, Status status)
+    {
+        lastStatus = status;
+        SetNativeCap(nativeCap);
+    }
+
+    void
+    SetNativeCap(GpCustomLineCap *cap)
+    {
+        nativeCap = cap;
+    }
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status == Ok)
+            lastStatus = status;
+        return status;
+    }
+
+  private:
+    CustomLineCap(const CustomLineCap &);
+    CustomLineCap &
+    operator=(const CustomLineCap &);
 };
 
 #endif /* _GDIPLUSHEADERS_H */
