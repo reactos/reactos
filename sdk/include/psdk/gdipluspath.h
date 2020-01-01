@@ -304,7 +304,9 @@ class GraphicsPath : public GdiplusBase
         const Rect &layoutRect,
         const StringFormat *format)
     {
-        return SetStatus(NotImplemented);
+        return SetStatus(DllExports::GdipAddPathStringI(
+            nativePath, string, length, family ? getNat(family) : NULL, style, emSize, &layoutRect,
+            format ? getNat(format) : NULL));
     }
 
     Status
@@ -317,7 +319,10 @@ class GraphicsPath : public GdiplusBase
         const PointF &origin,
         const StringFormat *format)
     {
-        return SetStatus(NotImplemented);
+        RectF rect(origin.X, origin.Y, 0.0f, 0.0f);
+        return SetStatus(DllExports::GdipAddPathString(
+            nativePath, string, length, family ? getNat(family) : NULL, style, emSize, &rect,
+            format ? getNat(format) : NULL));
     }
 
     Status
@@ -330,7 +335,10 @@ class GraphicsPath : public GdiplusBase
         const Point &origin,
         const StringFormat *format)
     {
-        return SetStatus(NotImplemented);
+        Rect rect(origin.X, origin.Y, 0, 0);
+        return SetStatus(DllExports::GdipAddPathStringI(
+            nativePath, string, length, family ? getNat(family) : NULL, style, emSize, &rect,
+            format ? getNat(format) : NULL));
     }
 
     Status
@@ -343,7 +351,9 @@ class GraphicsPath : public GdiplusBase
         const RectF &layoutRect,
         const StringFormat *format)
     {
-        return SetStatus(NotImplemented);
+        return SetStatus(DllExports::GdipAddPathString(
+            nativePath, string, length, family ? getNat(family) : NULL, style, emSize, &layoutRect,
+            format ? getNat(format) : NULL));
     }
 
     Status
@@ -510,12 +520,8 @@ class GraphicsPath : public GdiplusBase
     Status
     Outline(const Matrix *matrix, REAL flatness)
     {
-#if 1
-        return SetStatus(NotImplemented); // FIXME
-#else
         GpMatrix *nativeMatrix = matrix ? getNat(matrix) : NULL;
         return SetStatus(DllExports::GdipWindingModeOutline(nativePath, nativeMatrix, flatness));
-#endif
     }
 
     Status
@@ -879,11 +885,7 @@ class PathGradientBrush : public Brush
     Status
     GetTransform(Matrix *matrix) const
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipGetPathGradientTransform(GetNativeGradient(), getNat(matrix)));
-#endif
     }
 
     WrapMode
@@ -897,41 +899,25 @@ class PathGradientBrush : public Brush
     Status
     MultiplyTransform(Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipMultiplyPathGradientTransform(GetNativeGradient(), getNat(matrix), order));
-#endif
     }
 
     Status
     ResetTransform()
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipResetPathGradientTransform(GetNativeGradient()));
-#endif
     }
 
     Status
     RotateTransform(REAL angle, MatrixOrder order = MatrixOrderPrepend)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipRotatePathGradientTransform(GetNativeGradient(), angle, order));
-#endif
     }
 
     Status
     ScaleTransform(REAL sx, REAL sy, MatrixOrder order = MatrixOrderPrepend)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipScalePathGradientTransform(GetNativeGradient(), sx, sy, order));
-#endif
     }
 
     Status
@@ -950,11 +936,7 @@ class PathGradientBrush : public Brush
     Status
     SetBlendTriangularShape(REAL focus, REAL scale = 1.0f)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipSetPathGradientLinearBlend(GetNativeGradient(), focus, scale));
-#endif
     }
 
     Status
@@ -1010,11 +992,7 @@ class PathGradientBrush : public Brush
     Status
     SetTransform(const Matrix *matrix)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipSetPathGradientTransform(GetNativeGradient(), getNat(matrix)));
-#endif
     }
 
     Status
@@ -1026,11 +1004,7 @@ class PathGradientBrush : public Brush
     Status
     TranslateTransform(REAL dx, REAL dy, MatrixOrder order = MatrixOrderPrepend)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipTranslatePathGradientTransform(GetNativeGradient(), dx, dy, order));
-#endif
     }
 
   protected:

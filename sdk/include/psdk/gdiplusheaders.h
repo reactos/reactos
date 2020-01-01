@@ -84,7 +84,6 @@ class Image : public GdiplusBase
     GetEncoderParameterList(const CLSID *clsidEncoder, UINT size, EncoderParameters *buffer)
     {
 #if 1
-        // FIXME: Not available yet
         return SetStatus(NotImplemented);
 #else
         return SetStatus(DllExports::GdipGetEncoderParameterList(nativeImage, clsidEncoder, size, buffer));
@@ -94,14 +93,9 @@ class Image : public GdiplusBase
     UINT
     GetEncoderParameterListSize(const CLSID *clsidEncoder)
     {
-#if 1
-        // FIXME: Not available yet
-        return SetStatus(NotImplemented);
-#else
         UINT size = 0;
         SetStatus(DllExports::GdipGetEncoderParameterListSize(nativeImage, clsidEncoder, &size));
         return size;
-#endif
     }
 
     UINT
@@ -292,12 +286,7 @@ class Image : public GdiplusBase
     Status
     SaveAdd(const EncoderParameters *encoderParams)
     {
-#if 1
-        // FIXME: Not available yet
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipSaveAdd(nativeImage, encoderParams));
-#endif
     }
 
     Status
@@ -1457,10 +1446,8 @@ class CustomLineCap : public GdiplusBase
     {
     }
 
-    CustomLineCap(GpCustomLineCap *nativeCap, Status status)
+    CustomLineCap(GpCustomLineCap *cap, Status status) : nativeCap(cap), lastStatus(status)
     {
-        lastStatus = status;
-        SetNativeCap(nativeCap);
     }
 
     void
@@ -1494,9 +1481,6 @@ class CustomLineCap : public GdiplusBase
 inline Image *
 TextureBrush::GetImage() const
 {
-#if 1
-    return NULL; // FIXME
-#else
     GpImage *image = NULL;
     GpTexture *texture = GetNativeTexture();
     SetStatus(DllExports::GdipGetTextureImage(texture, &image));
@@ -1507,7 +1491,6 @@ TextureBrush::GetImage() const
     if (!newImage)
         DllExports::GdipDisposeImage(image);
     return newImage;
-#endif
 }
 
 #endif /* _GDIPLUSHEADERS_H */

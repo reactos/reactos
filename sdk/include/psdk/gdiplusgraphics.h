@@ -1084,11 +1084,7 @@ class Graphics : public GdiplusBase
     Status
     GetRenderingOrigin(INT *x, INT *y) const
     {
-#if 1
-        return SetStatus(NotImplemented); // FIXME
-#else
         return SetStatus(DllExports::GdipGetRenderingOrigin(nativeGraphics, x, y));
-#endif
     }
 
     SmoothingMode
@@ -1240,13 +1236,9 @@ class Graphics : public GdiplusBase
     BOOL
     IsVisibleClipEmpty() const
     {
-#if 1
-        return FALSE; // FIXME
-#else
         BOOL flag = FALSE;
         SetStatus(DllExports::GdipIsVisibleClipEmpty(nativeGraphics, &flag));
         return flag;
-#endif
     }
 
     Status

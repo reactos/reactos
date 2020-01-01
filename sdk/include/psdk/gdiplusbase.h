@@ -79,6 +79,9 @@ getNat(const Font *font);
 GpFontCollection *&
 getNat(const FontCollection *fc);
 
+GpFontFamily *&
+getNat(const FontFamily *ff);
+
 GpGraphics *&
 getNat(const Graphics *graphics);
 

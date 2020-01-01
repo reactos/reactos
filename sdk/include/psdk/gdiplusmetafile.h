@@ -85,15 +85,10 @@ class Metafile : public Image
 
     Metafile(IStream *stream, HDC referenceHdc, EmfType type = EmfTypeEmfPlusDual, const WCHAR *description = NULL)
     {
-#if 1
-        // FIXME
-        SetNativeImage(NULL);
-#else
         GpMetafile *metafile = NULL;
         lastStatus = DllExports::GdipRecordMetafileStream(
             stream, referenceHdc, type, NULL, MetafileFrameUnitGdi, description, &metafile);
         SetNativeImage(metafile);
-#endif
     }
 
     Metafile(
