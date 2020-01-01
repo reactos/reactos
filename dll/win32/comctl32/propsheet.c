@@ -3580,6 +3580,27 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         SetFocus(GetDlgItem(hwnd, IDOK));
       }
+#ifdef __REACTOS__
+      { /* try to fit it into the desktop */
+          RECT rcWork;
+          RECT rcDlg;
+          int dx, dy;
+          int cx, cy;
+
+          GetWindowRect(hwnd, &rcDlg);
+          SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0);
+          dx = rcDlg.right - rcWork.right;
+          dy = rcDlg.bottom - rcWork.bottom;
+          cx = rcDlg.right - rcDlg.left;
+          cy = rcDlg.bottom - rcDlg.top;
+          if (dx > 0)
+              rcDlg.left -= dx;
+          if (dy > 0)
+              rcDlg.top -= dy;
+
+          MoveWindow(hwnd, rcDlg.left, rcDlg.top, cx, cy, FALSE);
+      }
+#endif
 
       if (IS_INTRESOURCE(psInfo->ppshheader.pszCaption) &&
               psInfo->ppshheader.hInstance)
