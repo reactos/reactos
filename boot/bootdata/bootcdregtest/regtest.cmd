@@ -1,5 +1,5 @@
 @echo off
-set WINETEST_DEBUG=0
+set WINETEST_DEBUG=2
 set WINETEST_PLATFORM=reactos
 
 :: On the first boot, we're started through RunOnce.
