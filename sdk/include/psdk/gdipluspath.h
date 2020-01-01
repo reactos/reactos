@@ -420,73 +420,89 @@ class GraphicsPath : public GdiplusBase
     }
 
     Status
-    GetPathPoints(Point *points, INT count)
+    GetPathPoints(Point *points, INT count) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathPointsI(nativePath, points, count));
     }
 
     Status
-    GetPathPoints(PointF *points, INT count)
+    GetPathPoints(PointF *points, INT count) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathPoints(nativePath, points, count));
     }
 
     Status
-    GetPathTypes(BYTE *types, INT count)
+    GetPathTypes(BYTE *types, INT count) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathTypes(nativePath, types, count));
     }
 
     INT
-    GetPointCount()
+    GetPointCount() const
     {
-        return 0;
+        INT count = 0;
+        SetStatus(DllExports::GdipGetPointCount(nativePath, &count));
+        return count;
     }
 
     BOOL
     IsOutlineVisible(const Point &point, const Pen *pen, const Graphics *g)
     {
-        return FALSE;
+        return IsOutlineVisible(point.X, point.Y, pen, g);
     }
 
     BOOL
     IsOutlineVisible(REAL x, REAL y, const Pen *pen, const Graphics *g)
     {
-        return FALSE;
+        GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
+        GpPen *nativePen = pen ? getNat(pen) : NULL;
+        BOOL flag = FALSE;
+        SetStatus(DllExports::GdipIsOutlineVisiblePathPoint(nativePath, x, y, nativePen, nativeGraphics, &flag));
+        return flag;
     }
 
     BOOL
     IsOutlineVisible(INT x, INT y, const Pen *pen, const Graphics *g)
     {
-        return FALSE;
+        GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
+        GpPen *nativePen = pen ? getNat(pen) : NULL;
+        BOOL flag = FALSE;
+        SetStatus(DllExports::GdipIsOutlineVisiblePathPointI(nativePath, x, y, nativePen, nativeGraphics, &flag));
+        return flag;
     }
 
     BOOL
     IsOutlineVisible(const PointF &point, const Pen *pen, const Graphics *g)
     {
-        return FALSE;
+        return IsOutlineVisible(point.X, point.Y, pen, g);
     }
 
     BOOL
-    IsVisible(REAL x, REAL y, const Graphics *g)
+    IsVisible(REAL x, REAL y, const Graphics *g) const
     {
-        return FALSE;
+        GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
+        BOOL flag = FALSE;
+        SetStatus(DllExports::GdipIsVisiblePathPoint(nativePath, x, y, nativeGraphics, &flag));
+        return flag;
     }
 
     BOOL
-    IsVisible(const PointF &point, const Graphics *g)
+    IsVisible(const PointF &point, const Graphics *g) const
     {
         return IsVisible(point.X, point.Y, g);
     }
 
     BOOL
-    IsVisible(INT x, INT y, const Graphics *g)
+    IsVisible(INT x, INT y, const Graphics *g) const
     {
-        return FALSE;
+        GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
+        BOOL flag = FALSE;
+        SetStatus(DllExports::GdipIsVisiblePathPointI(nativePath, x, y, nativeGraphics, &flag));
+        return flag;
     }
 
     BOOL
-    IsVisible(const Point &point, const Graphics *g)
+    IsVisible(const Point &point, const Graphics *g) const
     {
         return IsVisible(point.X, point.Y, g);
     }
@@ -494,7 +510,12 @@ class GraphicsPath : public GdiplusBase
     Status
     Outline(const Matrix *matrix, REAL flatness)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented); // FIXME
+#else
+        GpMatrix *nativeMatrix = matrix ? getNat(matrix) : NULL;
+        return SetStatus(DllExports::GdipWindingModeOutline(nativePath, nativeMatrix, flatness));
+#endif
     }
 
     Status
@@ -601,273 +622,377 @@ class GraphicsPathIterator : public GdiplusBase
   public:
     GraphicsPathIterator(GraphicsPath *path)
     {
+        GpPathIterator *it = NULL;
+        GpPath *nativePath = path ? getNat(path) : NULL;
+        lastStatus = DllExports::GdipCreatePathIter(&it, nativePath);
+        nativeIterator = it;
+    }
+
+    ~GraphicsPathIterator()
+    {
+        DllExports::GdipDeletePathIter(nativeIterator);
     }
 
     INT
     CopyData(PointF *points, BYTE *types, INT startIndex, INT endIndex)
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterCopyData(nativeIterator, &resultCount, points, types, startIndex, endIndex));
+        return resultCount;
     }
 
     INT
     Enumerate(PointF *points, BYTE *types, INT count)
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterEnumerate(nativeIterator, &resultCount, points, types, count));
+        return resultCount;
     }
 
     INT
-    GetCount()
+    GetCount() const
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterGetCount(nativeIterator, &resultCount));
+        return resultCount;
     }
 
     Status
     GetLastStatus() const
     {
-        return NotImplemented;
+        return lastStatus;
     }
 
     INT
     GetSubpathCount() const
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterGetSubpathCount(nativeIterator, &resultCount));
+        return resultCount;
     }
 
     BOOL
     HasCurve() const
     {
-        return FALSE;
+        BOOL hasCurve;
+        SetStatus(DllExports::GdipPathIterHasCurve(nativeIterator, &hasCurve));
+        return hasCurve;
     }
 
     INT
     NextMarker(GraphicsPath *path)
     {
-        return 0;
+        INT resultCount;
+        GpPath *nativePath = path ? getNat(path) : NULL;
+        SetStatus(DllExports::GdipPathIterNextMarkerPath(nativeIterator, &resultCount, nativePath));
+        return resultCount;
     }
 
     INT
     NextMarker(INT *startIndex, INT *endIndex)
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterNextMarker(nativeIterator, &resultCount, startIndex, endIndex));
+        return resultCount;
     }
 
     INT
     NextPathType(BYTE *pathType, INT *startIndex, INT *endIndex)
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterNextPathType(nativeIterator, &resultCount, pathType, startIndex, endIndex));
+        return resultCount;
     }
 
     INT
     NextSubpath(GraphicsPath *path, BOOL *isClosed)
     {
-        return 0;
+        GpPath *nativePath = path ? getNat(path) : NULL;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterNextSubpathPath(nativeIterator, &resultCount, nativePath, isClosed));
+        return resultCount;
     }
 
     INT
     NextSubpath(INT *startIndex, INT *endIndex, BOOL *isClosed)
     {
-        return 0;
+        INT resultCount;
+        SetStatus(DllExports::GdipPathIterNextSubpath(nativeIterator, &resultCount, startIndex, endIndex, isClosed));
+        return resultCount;
     }
 
     VOID
     Rewind()
     {
+        SetStatus(DllExports::GdipPathIterRewind(nativeIterator));
+    }
+
+  protected:
+    GpPathIterator *nativeIterator;
+    mutable Status lastStatus;
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
     }
 };
 
 class PathGradientBrush : public Brush
 {
   public:
-    PathGradientBrush(const Point *points, INT count, WrapMode wrapMode)
+    friend class Pen;
+
+    PathGradientBrush(const Point *points, INT count, WrapMode wrapMode = WrapModeClamp)
     {
+        GpPathGradient *brush = NULL;
+        lastStatus = DllExports::GdipCreatePathGradientI(points, count, wrapMode, &brush);
+        SetNativeBrush(brush);
     }
 
-    PathGradientBrush(const PointF *points, INT count, WrapMode wrapMode)
+    PathGradientBrush(const PointF *points, INT count, WrapMode wrapMode = WrapModeClamp)
     {
+        GpPathGradient *brush = NULL;
+        lastStatus = DllExports::GdipCreatePathGradient(points, count, wrapMode, &brush);
+        SetNativeBrush(brush);
     }
 
     PathGradientBrush(const GraphicsPath *path)
     {
+        GpPathGradient *brush = NULL;
+        lastStatus = DllExports::GdipCreatePathGradientFromPath(getNat(path), &brush);
+        SetNativeBrush(brush);
     }
 
     INT
-    GetBlendCount()
+    GetBlendCount() const
     {
-        return 0;
+        INT count = 0;
+        SetStatus(DllExports::GdipGetPathGradientBlendCount(GetNativeGradient(), &count));
+        return count;
     }
 
     Status
-    GetBlend(REAL *blendFactors, REAL *blendPositions, INT count)
+    GetBlend(REAL *blendFactors, REAL *blendPositions, INT count) const
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipGetPathGradientBlend(GetNativeGradient(), blendFactors, blendPositions, count));
     }
 
     Status
-    GetCenterColor(Color *color)
+    GetCenterColor(Color *color) const
     {
-        return NotImplemented;
+        if (color != NULL)
+            return SetStatus(InvalidParameter);
+
+        ARGB argb;
+        SetStatus(DllExports::GdipGetPathGradientCenterColor(GetNativeGradient(), &argb));
+        color->SetValue(argb);
+        return GetLastStatus();
     }
 
     Status
-    GetCenterPoint(Point *point)
+    GetCenterPoint(Point *point) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathGradientCenterPointI(GetNativeGradient(), point));
     }
 
     Status
-    GetCenterPoint(PointF *point)
+    GetCenterPoint(PointF *point) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathGradientCenterPoint(GetNativeGradient(), point));
     }
 
     Status
-    GetFocusScales(REAL *xScale, REAL *yScale)
+    GetFocusScales(REAL *xScale, REAL *yScale) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathGradientFocusScales(GetNativeGradient(), xScale, yScale));
     }
 
     BOOL
-    GetGammaCorrection()
+    GetGammaCorrection() const
     {
-        return FALSE;
+        BOOL useGammaCorrection;
+        SetStatus(DllExports::GdipGetPathGradientGammaCorrection(GetNativeGradient(), &useGammaCorrection));
+        return useGammaCorrection;
     }
 
     Status
-    GetGraphicsPath(GraphicsPath *path)
+    GetGraphicsPath(GraphicsPath *path) const
+    {
+        if (!path)
+            return SetStatus(InvalidParameter);
+
+        return SetStatus(DllExports::GdipGetPathGradientPath(GetNativeGradient(), getNat(path)));
+    }
+
+    INT
+    GetInterpolationColorCount() const
+    {
+        INT count = 0;
+        SetStatus(DllExports::GdipGetPathGradientPresetBlendCount(GetNativeGradient(), &count));
+        return count;
+    }
+
+    Status
+    GetInterpolationColors(Color *presetColors, REAL *blendPositions, INT count) const
     {
         return NotImplemented;
     }
 
     INT
-    GetInterpolationColorCount()
+    GetPointCount() const
     {
-        return 0;
+        INT count;
+        SetStatus(DllExports::GdipGetPathGradientPointCount(GetNativeGradient(), &count));
+        return count;
     }
 
     Status
-    GetInterpolationColors(Color *presetColors, REAL *blendPositions, INT count)
+    GetRectangle(RectF *rect) const
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipGetPathGradientRect(GetNativeGradient(), rect));
+    }
+
+    Status
+    GetRectangle(Rect *rect) const
+    {
+        return SetStatus(DllExports::GdipGetPathGradientRectI(GetNativeGradient(), rect));
     }
 
     INT
-    GetPointCount()
+    GetSurroundColorCount() const
     {
-        return 0;
+        INT count;
+        SetStatus(DllExports::GdipGetPathGradientSurroundColorCount(GetNativeGradient(), &count));
+        return count;
     }
 
     Status
-    GetRectangle(RectF *rect)
+    GetSurroundColors(Color *colors, INT *count) const
     {
         return NotImplemented;
     }
 
     Status
-    GetRectangle(Rect *rect)
+    GetTransform(Matrix *matrix) const
     {
-        return NotImplemented;
-    }
-
-    INT
-    GetSurroundColorCount()
-    {
-        return 0;
-    }
-
-    Status
-    GetSurroundColors(Color *colors, INT *count)
-    {
-        return NotImplemented;
-    }
-
-    Status
-    GetTransform(Matrix *matrix)
-    {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipGetPathGradientTransform(GetNativeGradient(), getNat(matrix)));
+#endif
     }
 
     WrapMode
-    GetWrapMode()
+    GetWrapMode() const
     {
-        return WrapModeTile;
+        WrapMode wrapMode;
+        SetStatus(DllExports::GdipGetPathGradientWrapMode(GetNativeGradient(), &wrapMode));
+        return wrapMode;
     }
 
     Status
-    MultiplyTransform(Matrix *matrix, MatrixOrder order)
+    MultiplyTransform(Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipMultiplyPathGradientTransform(GetNativeGradient(), getNat(matrix), order));
+#endif
     }
 
     Status
     ResetTransform()
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipResetPathGradientTransform(GetNativeGradient()));
+#endif
     }
 
     Status
-    RotateTransform(REAL angle, MatrixOrder order)
+    RotateTransform(REAL angle, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipRotatePathGradientTransform(GetNativeGradient(), angle, order));
+#endif
     }
 
     Status
-    ScaleTransform(REAL sx, REAL sy, MatrixOrder order)
+    ScaleTransform(REAL sx, REAL sy, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipScalePathGradientTransform(GetNativeGradient(), sx, sy, order));
+#endif
     }
 
     Status
     SetBlend(REAL *blendFactors, REAL *blendPositions, INT count)
     {
-        return NotImplemented;
+        return SetStatus(
+            DllExports::GdipSetPathGradientBlend(GetNativeGradient(), blendFactors, blendPositions, count));
     }
 
     Status
     SetBlendBellShape(REAL focus, REAL scale)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientSigmaBlend(GetNativeGradient(), focus, scale));
     }
 
     Status
-    SetBlendTriangularShape(REAL focus, REAL scale)
+    SetBlendTriangularShape(REAL focus, REAL scale = 1.0f)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipSetPathGradientLinearBlend(GetNativeGradient(), focus, scale));
+#endif
     }
 
     Status
     SetCenterColor(const Color &color)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientCenterColor(GetNativeGradient(), color.GetValue()));
     }
 
     Status
     SetCenterPoint(const Point &point)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientCenterPointI(GetNativeGradient(), const_cast<Point *>(&point)));
     }
 
     Status
     SetCenterPoint(const PointF &point)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientCenterPoint(GetNativeGradient(), const_cast<PointF *>(&point)));
     }
 
     Status
     SetFocusScales(REAL xScale, REAL yScale)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientFocusScales(GetNativeGradient(), xScale, yScale));
     }
 
     Status
     SetGammaCorrection(BOOL useGammaCorrection)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientGammaCorrection(GetNativeGradient(), useGammaCorrection));
     }
 
     Status
     SetGraphicsPath(const GraphicsPath *path)
     {
-        return NotImplemented;
+        if (!path)
+            return SetStatus(InvalidParameter);
+        return SetStatus(DllExports::GdipSetPathGradientPath(GetNativeGradient(), getNat(path)));
     }
 
     Status
@@ -885,19 +1010,38 @@ class PathGradientBrush : public Brush
     Status
     SetTransform(const Matrix *matrix)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipSetPathGradientTransform(GetNativeGradient(), getNat(matrix)));
+#endif
     }
 
     Status
     SetWrapMode(WrapMode wrapMode)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipSetPathGradientWrapMode(GetNativeGradient(), wrapMode));
     }
 
     Status
-    TranslateTransform(REAL dx, REAL dy, MatrixOrder order)
+    TranslateTransform(REAL dx, REAL dy, MatrixOrder order = MatrixOrderPrepend)
     {
-        return NotImplemented;
+#if 1
+        return SetStatus(NotImplemented);
+#else
+        return SetStatus(DllExports::GdipTranslatePathGradientTransform(GetNativeGradient(), dx, dy, order));
+#endif
+    }
+
+  protected:
+    GpPathGradient *
+    GetNativeGradient() const
+    {
+        return static_cast<GpPathGradient *>(nativeBrush);
+    }
+
+    PathGradientBrush()
+    {
     }
 };
 
