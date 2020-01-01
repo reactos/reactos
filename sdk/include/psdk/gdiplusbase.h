@@ -61,6 +61,7 @@ class Matrix;
 class Metafile;
 class Pen;
 class Region;
+class StringFormat;
 
 // get native
 GpBrush *&
@@ -71,6 +72,9 @@ getNat(const CachedBitmap *cb);
 
 GpCustomLineCap *&
 getNat(const CustomLineCap *cap);
+
+GpFont *&
+getNat(const Font *font);
 
 GpFontCollection *&
 getNat(const FontCollection *fc);
@@ -90,10 +94,16 @@ getNat(const ImageAttributes *ia);
 GpMatrix *&
 getNat(const Matrix *matrix);
 
+GpMetafile *&
+getNat(const Metafile *metafile);
+
 GpPen *&
 getNat(const Pen *pen);
 
 GpRegion *&
 getNat(const Region *region);
+
+GpStringFormat *&
+getNat(const StringFormat *sf);
 
 #endif /* _GDIPLUSBASE_H */
