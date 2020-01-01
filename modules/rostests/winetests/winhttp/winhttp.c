@@ -4878,15 +4878,24 @@ START_TEST (winhttp)
     test_not_modified(si.port);
     test_basic_authentication(si.port);
     test_multi_authentication(si.port);
+    trace("test_large_data_authentication\n");
     test_large_data_authentication(si.port);
+    trace("test_bad_header\n");
     test_bad_header(si.port);
+    trace("test_multiple_reads\n");
     test_multiple_reads(si.port);
+    trace("test_cookies\n");
     test_cookies(si.port);
+    trace("test_request_path_escapes\n");
     test_request_path_escapes(si.port);
+    trace("test_passport_auth\n");
     test_passport_auth(si.port);
+    trace("test_basic_request\n");
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, NULL, quitW);
+
+    trace("WaitForSingleObject\n");
 
     WaitForSingleObject(thread, 3000);
     CloseHandle(thread);
