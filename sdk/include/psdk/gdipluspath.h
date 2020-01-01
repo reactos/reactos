@@ -446,13 +446,13 @@ class GraphicsPath : public GdiplusBase
     }
 
     BOOL
-    IsOutlineVisible(const Point &point, const Pen *pen, const Graphics *g)
+    IsOutlineVisible(const Point &point, const Pen *pen, const Graphics *g) const
     {
         return IsOutlineVisible(point.X, point.Y, pen, g);
     }
 
     BOOL
-    IsOutlineVisible(REAL x, REAL y, const Pen *pen, const Graphics *g)
+    IsOutlineVisible(REAL x, REAL y, const Pen *pen, const Graphics *g) const
     {
         GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
         GpPen *nativePen = pen ? getNat(pen) : NULL;
@@ -462,7 +462,7 @@ class GraphicsPath : public GdiplusBase
     }
 
     BOOL
-    IsOutlineVisible(INT x, INT y, const Pen *pen, const Graphics *g)
+    IsOutlineVisible(INT x, INT y, const Pen *pen, const Graphics *g) const
     {
         GpGraphics *nativeGraphics = g ? getNat(g) : NULL;
         GpPen *nativePen = pen ? getNat(pen) : NULL;
@@ -472,7 +472,7 @@ class GraphicsPath : public GdiplusBase
     }
 
     BOOL
-    IsOutlineVisible(const PointF &point, const Pen *pen, const Graphics *g)
+    IsOutlineVisible(const PointF &point, const Pen *pen, const Graphics *g) const
     {
         return IsOutlineVisible(point.X, point.Y, pen, g);
     }
