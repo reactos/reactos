@@ -73,17 +73,24 @@ i386PrintText(CHAR *pszText)
 }
 
 static void
-PrintText(const CHAR *format, ...)
+PrintTextV(const CHAR *Format, va_list args)
+{
+    CHAR Buffer[512];
+
+    _vsnprintf(Buffer, sizeof(Buffer), Format, args);
+    Buffer[sizeof(Buffer) - 1] = ANSI_NULL;
+
+    i386PrintText(Buffer);
+}
+
+static void
+PrintText(const CHAR *Format, ...)
 {
     va_list argptr;
-    CHAR buffer[256];
 
-    va_start(argptr, format);
-    _vsnprintf(buffer, sizeof(buffer), format, argptr);
-    buffer[sizeof(buffer) - 1] = ANSI_NULL;
+    va_start(argptr, Format);
+    PrintTextV(Format, argptr);
     va_end(argptr);
-
-    i386PrintText(buffer);
 }
 
 static void
@@ -187,7 +194,6 @@ FrLdrBugCheckWithMessage(
     PSTR Format,
     ...)
 {
-    CHAR Buffer[1024];
     va_list argptr;
 
     MachVideoHideShowTextCursor(FALSE);
@@ -205,11 +211,8 @@ FrLdrBugCheckWithMessage(
     }
 
     va_start(argptr, Format);
-    _vsnprintf(Buffer, sizeof(Buffer), Format, argptr);
+    PrintTextV(Format, argptr);
     va_end(argptr);
-    Buffer[sizeof(Buffer) - 1] = 0;
-
-    i386PrintText(Buffer);
 
     _disable();
     __halt();
