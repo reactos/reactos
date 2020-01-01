@@ -19,12 +19,6 @@
 #ifndef _GDIPLUSPEN_H
 #define _GDIPLUSPEN_H
 
-class CustomLineCap;
-
-// get native
-GpCustomLineCap *&
-getNat(const CustomLineCap *cap);
-
 class Pen : public GdiplusBase
 {
   public:
@@ -33,7 +27,7 @@ class Pen : public GdiplusBase
 
     Pen(const Brush *brush, REAL width = 1.0f) : nativePen(NULL)
     {
-        lastStatus = DllExports::GdipCreatePen2(brush->nativeBrush, width, UnitWorld, &nativePen);
+        lastStatus = DllExports::GdipCreatePen2(getNat(brush), width, UnitWorld, &nativePen);
     }
 
     Pen(const Color &color, REAL width = 1.0f) : nativePen(NULL)
@@ -218,7 +212,7 @@ class Pen : public GdiplusBase
     Status
     GetTransform(Matrix *matrix)
     {
-        return SetStatus(DllExports::GdipGetPenTransform(nativePen, matrix->nativeMatrix));
+        return SetStatus(DllExports::GdipGetPenTransform(nativePen, getNat(matrix)));
     }
 
     REAL
@@ -235,7 +229,7 @@ class Pen : public GdiplusBase
 #if 1
         return SetStatus(NotImplemented);
 #else
-        return SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, matrix->nativeMatrix, order));
+        return SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, getNat(matrix), order));
 #endif
     }
 
@@ -266,7 +260,7 @@ class Pen : public GdiplusBase
     Status
     SetBrush(const Brush *brush)
     {
-        GpBrush *theBrush = brush ? brush->nativeBrush : NULL;
+        GpBrush *theBrush = brush ? getNat(brush) : NULL;
         return SetStatus(DllExports::GdipSetPenBrushFill(nativePen, theBrush));
     }
 
@@ -353,7 +347,7 @@ class Pen : public GdiplusBase
     Status
     SetTransform(const Matrix *matrix)
     {
-        GpMatrix *mat = matrix ? matrix->nativeMatrix : NULL;
+        GpMatrix *mat = matrix ? getNat(matrix) : NULL;
         return SetStatus(DllExports::GdipSetPenTransform(nativePen, mat));
     }
 

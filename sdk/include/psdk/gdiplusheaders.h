@@ -310,7 +310,7 @@ class Image : public GdiplusBase
         if (!newImage)
             return SetStatus(InvalidParameter);
 
-        return SetStatus(DllExports::GdipSaveAddImage(nativeImage, newImage->nativeImage, encoderParams));
+        return SetStatus(DllExports::GdipSaveAddImage(nativeImage, getNat(newImage), encoderParams));
 #endif
     }
 
@@ -385,10 +385,6 @@ class Image : public GdiplusBase
         return const_cast<Image *>(image)->nativeImage;
     }
 };
-
-// get native
-GpGraphics *&
-getNat(const Graphics *graph);
 
 class Bitmap : public Image
 {
@@ -714,6 +710,13 @@ class FontCollection : public GdiplusBase
     FontCollection(const FontCollection &);
     FontCollection &
     operator=(const FontCollection &);
+
+    // get native
+    friend inline GpFontCollection *&
+    getNat(const FontCollection *fc)
+    {
+        return const_cast<FontCollection *>(fc)->nativeFontCollection;
+    }
 };
 
 class FontFamily : public GdiplusBase
@@ -727,7 +730,7 @@ class FontFamily : public GdiplusBase
 
     FontFamily(const WCHAR *name, const FontCollection *fontCollection)
     {
-        GpFontCollection *theCollection = fontCollection ? fontCollection->nativeFontCollection : NULL;
+        GpFontCollection *theCollection = fontCollection ? getNat(fontCollection) : NULL;
         status = DllExports::GdipCreateFontFamilyFromName(name, theCollection, &fontFamily);
     }
 
@@ -833,6 +836,13 @@ class FontFamily : public GdiplusBase
             return status;
         this->status = status;
         return status;
+    }
+
+    // get native
+    friend inline GpFontFamily *&
+    getNat(const FontFamily *ff)
+    {
+        return const_cast<FontFamily *>(ff)->fontFamily;
     }
 };
 
@@ -1001,6 +1011,13 @@ class Font : public GdiplusBase
         this->status = status;
         return status;
     }
+
+    // get native
+    friend inline GpFont *&
+    getNat(const Font *font)
+    {
+        return const_cast<Font *>(font)->font;
+    }
 };
 
 class Region : public GdiplusBase
@@ -1027,7 +1044,7 @@ class Region : public GdiplusBase
 
     Region(const GraphicsPath *path)
     {
-        lastStatus = DllExports::GdipCreateRegionPath(path->nativePath, &nativeRegion);
+        lastStatus = DllExports::GdipCreateRegionPath(getNat(path), &nativeRegion);
     }
 
     Region(HRGN hRgn)
@@ -1052,7 +1069,7 @@ class Region : public GdiplusBase
     Status
     Complement(const GraphicsPath *path)
     {
-        GpPath *thePath = path ? path->nativePath : NULL;
+        GpPath *thePath = path ? getNat(path) : NULL;
         return SetStatus(DllExports::GdipCombineRegionPath(nativeRegion, thePath, CombineModeComplement));
     }
 
@@ -1088,7 +1105,7 @@ class Region : public GdiplusBase
     Exclude(const GraphicsPath *path)
     {
         return SetStatus(
-            DllExports::GdipCombineRegionPath(nativeRegion, path ? path->nativePath : NULL, CombineModeExclude));
+            DllExports::GdipCombineRegionPath(nativeRegion, path ? getNat(path) : NULL, CombineModeExclude));
     }
 
     Status
@@ -1159,22 +1176,20 @@ class Region : public GdiplusBase
     Status
     GetRegionScans(const Matrix *matrix, Rect *rects, INT *count) const
     {
-        return SetStatus(
-            DllExports::GdipGetRegionScansI(nativeRegion, rects, count, matrix ? matrix->nativeMatrix : NULL));
+        return SetStatus(DllExports::GdipGetRegionScansI(nativeRegion, rects, count, matrix ? getNat(matrix) : NULL));
     }
 
     Status
     GetRegionScans(const Matrix *matrix, RectF *rects, INT *count) const
     {
-        return SetStatus(
-            DllExports::GdipGetRegionScans(nativeRegion, rects, count, matrix ? matrix->nativeMatrix : NULL));
+        return SetStatus(DllExports::GdipGetRegionScans(nativeRegion, rects, count, matrix ? getNat(matrix) : NULL));
     }
 
     UINT
     GetRegionScansCount(const Matrix *matrix) const
     {
         UINT count;
-        SetStatus(DllExports::GdipGetRegionScansCount(nativeRegion, &count, matrix ? matrix->nativeMatrix : NULL));
+        SetStatus(DllExports::GdipGetRegionScansCount(nativeRegion, &count, matrix ? getNat(matrix) : NULL));
         return count;
     }
 
@@ -1187,7 +1202,7 @@ class Region : public GdiplusBase
     Status
     Intersect(const GraphicsPath *path)
     {
-        GpPath *thePath = path ? path->nativePath : NULL;
+        GpPath *thePath = path ? getNat(path) : NULL;
         return SetStatus(DllExports::GdipCombineRegionPath(nativeRegion, thePath, CombineModeIntersect));
     }
 
@@ -1303,7 +1318,7 @@ class Region : public GdiplusBase
     Status
     Transform(const Matrix *matrix)
     {
-        return SetStatus(DllExports::GdipTransformRegion(nativeRegion, matrix ? matrix->nativeMatrix : NULL));
+        return SetStatus(DllExports::GdipTransformRegion(nativeRegion, matrix ? getNat(matrix) : NULL));
     }
 
     Status
@@ -1340,15 +1355,13 @@ class Region : public GdiplusBase
     Status
     Union(const GraphicsPath *path)
     {
-        return SetStatus(
-            DllExports::GdipCombineRegionPath(nativeRegion, path ? path->nativePath : NULL, CombineModeUnion));
+        return SetStatus(DllExports::GdipCombineRegionPath(nativeRegion, path ? getNat(path) : NULL, CombineModeUnion));
     }
 
     Status
     Xor(const GraphicsPath *path)
     {
-        return SetStatus(
-            DllExports::GdipCombineRegionPath(nativeRegion, path ? path->nativePath : NULL, CombineModeXor));
+        return SetStatus(DllExports::GdipCombineRegionPath(nativeRegion, path ? getNat(path) : NULL, CombineModeXor));
     }
 
     Status

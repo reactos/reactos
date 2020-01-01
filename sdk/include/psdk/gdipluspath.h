@@ -19,9 +19,6 @@
 #ifndef _GDIPLUSPATH_H
 #define _GDIPLUSPATH_H
 
-class FontFamily;
-class Graphics;
-
 class GraphicsPath : public GdiplusBase
 {
     friend class Region;
@@ -233,10 +230,7 @@ class GraphicsPath : public GdiplusBase
     Status
     AddPath(const GraphicsPath *addingPath, BOOL connect)
     {
-        GpPath *nativePath2 = NULL;
-        if (addingPath)
-            nativePath2 = addingPath->nativePath;
-
+        GpPath *nativePath2 = addingPath ? getNat(addingPath) : NULL;
         return SetStatus(DllExports::GdipAddPathPath(nativePath, nativePath2, connect));
     }
 
@@ -383,10 +377,7 @@ class GraphicsPath : public GdiplusBase
     Status
     Flatten(const Matrix *matrix, REAL flatness)
     {
-        GpMatrix *nativeMatrix = NULL;
-        if (matrix)
-            nativeMatrix = matrix->nativeMatrix;
-
+        GpMatrix *nativeMatrix = matrix ? getNat(matrix) : NULL;
         return SetStatus(DllExports::GdipFlattenPath(nativePath, nativeMatrix, flatness));
     }
 
@@ -553,10 +544,7 @@ class GraphicsPath : public GdiplusBase
         WarpMode warpMode,
         REAL flatness)
     {
-        GpMatrix *nativeMatrix = NULL;
-        if (matrix)
-            nativeMatrix = matrix->nativeMatrix;
-
+        GpMatrix *nativeMatrix = matrix ? getNat(matrix) : NULL;
         return SetStatus(DllExports::GdipWarpPath(
             nativePath, nativeMatrix, destPoints, count, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, warpMode,
             flatness));

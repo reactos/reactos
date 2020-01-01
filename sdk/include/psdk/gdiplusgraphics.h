@@ -19,39 +19,6 @@
 #ifndef _GDIPLUSGRAPHICS_H
 #define _GDIPLUSGRAPHICS_H
 
-class Image;
-class ImageAttributes;
-class CachedBitmap;
-class Region;
-class Font;
-class GraphicsPath;
-class Metafile;
-
-// get native
-GpImage *&
-getNat(const Image *image);
-
-GpPen *&
-getNat(const Pen *pen);
-
-GpBrush *&
-getNat(const Brush *brush);
-
-GpCachedBitmap *&
-getNat(const CachedBitmap *cb);
-
-GpImageAttributes *&
-getNat(const ImageAttributes *ia);
-
-GpRegion *&
-getNat(const Region *region);
-
-GpMatrix *&
-getNat(const Matrix *matrix);
-
-GpPath *&
-getNat(const GraphicsPath *path);
-
 class Graphics : public GdiplusBase
 {
     friend class Region;
@@ -1401,7 +1368,7 @@ class Graphics : public GdiplusBase
     Status
     SetClip(const Graphics *g, CombineMode combineMode = CombineModeReplace)
     {
-        return SetStatus(DllExports::GdipSetClipGraphics(nativeGraphics, g ? g->nativeGraphics : NULL, combineMode));
+        return SetStatus(DllExports::GdipSetClipGraphics(nativeGraphics, g ? getNat(g) : NULL, combineMode));
     }
 
     Status
@@ -1553,9 +1520,9 @@ class Graphics : public GdiplusBase
 
     // get native
     friend inline GpGraphics *&
-    getNat(const Graphics *graph)
+    getNat(const Graphics *graphics)
     {
-        return const_cast<Graphics *>(graph)->nativeGraphics;
+        return const_cast<Graphics *>(graphics)->nativeGraphics;
     }
 };
 
