@@ -47,4 +47,53 @@ class GdiplusBase
     }
 };
 
+class Brush;
+class CachedBitmap;
+class CustomLineCap;
+class Font;
+class FontCollection;
+class FontFamily;
+class Graphics;
+class GraphicsPath;
+class Image;
+class ImageAttributes;
+class Matrix;
+class Metafile;
+class Pen;
+class Region;
+
+// get native
+GpBrush *&
+getNat(const Brush *brush);
+
+GpCachedBitmap *&
+getNat(const CachedBitmap *cb);
+
+GpCustomLineCap *&
+getNat(const CustomLineCap *cap);
+
+GpFontCollection *&
+getNat(const FontCollection *fc);
+
+GpGraphics *&
+getNat(const Graphics *graphics);
+
+GpPath *&
+getNat(const GraphicsPath *path);
+
+GpImage *&
+getNat(const Image *image);
+
+GpImageAttributes *&
+getNat(const ImageAttributes *ia);
+
+GpMatrix *&
+getNat(const Matrix *matrix);
+
+GpPen *&
+getNat(const Pen *pen);
+
+GpRegion *&
+getNat(const Region *region);
+
 #endif /* _GDIPLUSBASE_H */

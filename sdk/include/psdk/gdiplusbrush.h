@@ -19,8 +19,6 @@
 #ifndef _GDIPLUSBRUSH_H
 #define _GDIPLUSBRUSH_H
 
-class Image;
-
 class Brush : public GdiplusBase
 {
   public:
@@ -302,7 +300,7 @@ class LinearGradientBrush : public Brush
     GetTransform(Matrix *matrix) const
     {
         GpLineGradient *gradient = GetNativeGradient();
-        return SetStatus(DllExports::GdipGetLineTransform(gradient, matrix->nativeMatrix));
+        return SetStatus(DllExports::GdipGetLineTransform(gradient, getNat(matrix)));
     }
 
     WrapMode
@@ -319,7 +317,7 @@ class LinearGradientBrush : public Brush
     MultiplyTransform(const Matrix *matrix, MatrixOrder order)
     {
         GpLineGradient *gradient = GetNativeGradient();
-        return SetStatus(DllExports::GdipMultiplyLineTransform(gradient, matrix->nativeMatrix, order));
+        return SetStatus(DllExports::GdipMultiplyLineTransform(gradient, getNat(matrix), order));
     }
 
     Status
@@ -388,7 +386,7 @@ class LinearGradientBrush : public Brush
     SetTransform(const Matrix *matrix)
     {
         GpLineGradient *gradient = GetNativeGradient();
-        return SetStatus(DllExports::GdipSetLineTransform(gradient, matrix->nativeMatrix));
+        return SetStatus(DllExports::GdipSetLineTransform(gradient, getNat(matrix)));
     }
 
     Status
@@ -502,10 +500,6 @@ class SolidBrush : Brush
     }
 };
 
-// get native
-GpImage *&
-getNat(const Image *image);
-
 class TextureBrush : Brush
 {
   public:
@@ -520,7 +514,7 @@ class TextureBrush : Brush
     TextureBrush(Image *image, Rect &dstRect, ImageAttributes *imageAttributes)
     {
         GpTexture *texture = NULL;
-        GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
+        GpImageAttributes *attrs = imageAttributes ? getNat(imageAttributes) : NULL;
         lastStatus = DllExports::GdipCreateTextureIA(
             getNat(image), attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
         SetNativeBrush(texture);
@@ -544,7 +538,7 @@ class TextureBrush : Brush
     TextureBrush(Image *image, RectF &dstRect, ImageAttributes *imageAttributes)
     {
         GpTexture *texture = NULL;
-        GpImageAttributes *attrs = imageAttributes ? imageAttributes->nativeImageAttr : NULL;
+        GpImageAttributes *attrs = imageAttributes ? getNat(imageAttributes) : NULL;
         lastStatus = DllExports::GdipCreateTextureIA(
             getNat(image), attrs, dstRect.X, dstRect.Y, dstRect.Width, dstRect.Height, &texture);
         SetNativeBrush(texture);
@@ -573,7 +567,7 @@ class TextureBrush : Brush
     GetTransform(Matrix *matrix) const
     {
         GpTexture *texture = GetNativeTexture();
-        return SetStatus(DllExports::GdipGetTextureTransform(texture, matrix->nativeMatrix));
+        return SetStatus(DllExports::GdipGetTextureTransform(texture, getNat(matrix)));
     }
 
     WrapMode
@@ -589,7 +583,7 @@ class TextureBrush : Brush
     MultiplyTransform(Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
     {
         GpTexture *texture = GetNativeTexture();
-        return SetStatus(DllExports::GdipMultiplyTextureTransform(texture, matrix->nativeMatrix, order));
+        return SetStatus(DllExports::GdipMultiplyTextureTransform(texture, getNat(matrix), order));
     }
 
     Status
@@ -617,7 +611,7 @@ class TextureBrush : Brush
     SetTransform(const Matrix *matrix)
     {
         GpTexture *texture = GetNativeTexture();
-        return SetStatus(DllExports::GdipSetTextureTransform(texture, matrix->nativeMatrix));
+        return SetStatus(DllExports::GdipSetTextureTransform(texture, getNat(matrix)));
     }
 
     Status

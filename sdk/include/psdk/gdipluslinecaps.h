@@ -27,8 +27,8 @@ inline CustomLineCap::CustomLineCap(
     : nativeCap(NULL)
 {
     nativeCap = NULL;
-    GpPath *nativeFillPath = fillPath ? fillPath->nativePath : NULL;
-    GpPath *nativeStrokePath = strokePath ? strokePath->nativePath : NULL;
+    GpPath *nativeFillPath = fillPath ? getNat(fillPath) : NULL;
+    GpPath *nativeStrokePath = strokePath ? getNat(strokePath) : NULL;
     lastStatus = DllExports::GdipCreateCustomLineCap(nativeFillPath, nativeStrokePath, baseCap, baseInset, &nativeCap);
 }
 

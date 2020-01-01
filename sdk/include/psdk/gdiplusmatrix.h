@@ -70,7 +70,7 @@ class Matrix : public GdiplusBase
     Equals(const Matrix *matrix)
     {
         BOOL result;
-        SetStatus(DllExports::GdipIsMatrixEqual(nativeMatrix, matrix ? matrix->nativeMatrix : NULL, &result));
+        SetStatus(DllExports::GdipIsMatrixEqual(nativeMatrix, matrix ? getNat(matrix) : NULL, &result));
         return result;
     }
 
@@ -111,7 +111,7 @@ class Matrix : public GdiplusBase
     Status
     Multiply(const Matrix *matrix, MatrixOrder order)
     {
-        return SetStatus(DllExports::GdipMultiplyMatrix(nativeMatrix, matrix ? matrix->nativeMatrix : NULL, order));
+        return SetStatus(DllExports::GdipMultiplyMatrix(nativeMatrix, matrix ? getNat(matrix) : NULL, order));
     }
 
     REAL OffsetX(VOID)
