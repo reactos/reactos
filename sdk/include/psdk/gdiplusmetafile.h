@@ -242,6 +242,13 @@ class Metafile : public Image
     {
         return static_cast<GpMetafile *>(nativeImage);
     }
+
+    // get native
+    friend inline GpMetafile *&
+    getNat(const Metafile *metafile)
+    {
+        return reinterpret_cast<GpMetafile *&>(const_cast<Metafile *>(metafile)->nativeImage);
+    }
 };
 
 #endif /* _GDIPLUSMETAFILE_H */

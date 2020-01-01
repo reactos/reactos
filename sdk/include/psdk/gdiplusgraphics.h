@@ -25,6 +25,7 @@ class Graphics : public GdiplusBase
     friend class Font;
     friend class Bitmap;
     friend class CachedBitmap;
+    friend class ImageAttributes;
 
   public:
     Graphics(Image *image)
@@ -248,7 +249,9 @@ class Graphics : public GdiplusBase
         INT flags,
         const Matrix *matrix)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipDrawDriverString(
+            nativeGraphics, text, length, font ? getNat(font) : NULL, brush ? getNat(brush) : NULL, positions, flags,
+            matrix ? getNat(matrix) : NULL));
     }
 
     Status
@@ -569,13 +572,17 @@ class Graphics : public GdiplusBase
         const StringFormat *stringFormat,
         const Brush *brush)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipDrawString(
+            nativeGraphics, string, length, font ? getNat(font) : NULL, &layoutRect,
+            stringFormat ? getNat(stringFormat) : NULL, brush ? brush->nativeBrush : NULL));
     }
 
     Status
     DrawString(const WCHAR *string, INT length, const Font *font, const PointF &origin, const Brush *brush)
     {
-        return NotImplemented;
+        RectF rect(origin.X, origin.Y, 0.0f, 0.0f);
+        return SetStatus(DllExports::GdipDrawString(
+            nativeGraphics, string, length, font ? getNat(font) : NULL, &rect, NULL, brush ? getNat(brush) : NULL));
     }
 
     Status
@@ -587,7 +594,10 @@ class Graphics : public GdiplusBase
         const StringFormat *stringFormat,
         const Brush *brush)
     {
-        return NotImplemented;
+        RectF rect(origin.X, origin.Y, 0.0f, 0.0f);
+        return SetStatus(DllExports::GdipDrawString(
+            nativeGraphics, string, length, font ? getNat(font) : NULL, &rect,
+            stringFormat ? getNat(stringFormat) : NULL, brush ? getNat(brush) : NULL));
     }
 
     Status
@@ -599,12 +609,12 @@ class Graphics : public GdiplusBase
     Status
     EnumerateMetafile(
         const Metafile *metafile,
-        const Metafile &destPoint,
+        const PointF &destPoint,
         EnumerateMetafileProc callback,
         VOID *callbackData = NULL,
-        ImageAttributes *imageAttributes = NULL)
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -613,10 +623,10 @@ class Graphics : public GdiplusBase
         const Point *destPoints,
         INT count,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -626,10 +636,10 @@ class Graphics : public GdiplusBase
         const Rect &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -638,10 +648,10 @@ class Graphics : public GdiplusBase
         const PointF *destPoints,
         INT count,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -649,10 +659,10 @@ class Graphics : public GdiplusBase
         const Metafile *metafile,
         const Rect &destRect,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -662,10 +672,10 @@ class Graphics : public GdiplusBase
         const RectF &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -673,23 +683,23 @@ class Graphics : public GdiplusBase
         const Metafile *metafile,
         const RectF &destRect,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
     EnumerateMetafile(
         const Metafile *metafile,
         const PointF &destPoint,
-        const Rect &srcRect,
+        const RectF &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -700,10 +710,10 @@ class Graphics : public GdiplusBase
         const Rect &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -713,35 +723,35 @@ class Graphics : public GdiplusBase
         const Rect &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
     EnumerateMetafile(
         const Metafile *metafile,
-        const Point *destPoints,
+        const PointF *destPoints,
         INT count,
         const RectF &srcRect,
         Unit srcUnit,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
     EnumerateMetafile(
         const Metafile *metafile,
-        const PointF &destPoint,
+        const Point &destPoint,
         EnumerateMetafileProc callback,
-        VOID *callbackData,
-        ImageAttributes *imageAttributes)
+        VOID *callbackData = NULL,
+        const ImageAttributes *imageAttributes = NULL)
     {
-        return NotImplemented;
+        return SetStatus(NotImplemented);
     }
 
     Status
@@ -1344,7 +1354,7 @@ class Graphics : public GdiplusBase
     Status
     Restore(GraphicsState gstate)
     {
-        return NotImplemented;
+        return SetStatus(DllExports::GdipRestoreGraphics(nativeGraphics, gstate));
     }
 
     Status
@@ -1356,7 +1366,9 @@ class Graphics : public GdiplusBase
     GraphicsState
     Save()
     {
-        return 0;
+        GraphicsState gstate;
+        SetStatus(DllExports::GdipSaveGraphics(nativeGraphics, &gstate));
+        return gstate;
     }
 
     Status

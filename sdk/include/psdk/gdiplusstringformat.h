@@ -211,6 +211,13 @@ class StringFormat : public GdiplusBase
             lastStatus = status;
         return status;
     }
+
+    // get native
+    friend inline GpStringFormat *&
+    getNat(const StringFormat *sf)
+    {
+        return const_cast<StringFormat *>(sf)->nativeFormat;
+    }
 };
 
 #endif /* _GDIPLUSSTRINGFORMAT_H */
