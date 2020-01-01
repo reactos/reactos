@@ -106,11 +106,7 @@ class Pen : public GdiplusBase
         if (!customCap)
             return SetStatus(InvalidParameter);
 
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipGetPenCustomEndCap(nativePen, &getNat(customCap)));
-#endif
     }
 
     Status
@@ -226,11 +222,7 @@ class Pen : public GdiplusBase
     Status
     MultiplyTransform(Matrix *matrix, MatrixOrder order = MatrixOrderPrepend)
     {
-#if 1
-        return SetStatus(NotImplemented);
-#else
         return SetStatus(DllExports::GdipMultiplyPenTransform(nativePen, getNat(matrix), order));
-#endif
     }
 
     Status

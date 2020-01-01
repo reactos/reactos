@@ -496,6 +496,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipGetDpiY(GpGraphics *, REAL *);
     GpStatus WINGDIPAPI
+    GdipGetEncoderParameterListSize(GpImage *, GDIPCONST CLSID *, UINT *);
+    GpStatus WINGDIPAPI
     GdipGetImageDecoders(UINT, UINT, ImageCodecInfo *);
     GpStatus WINGDIPAPI
     GdipGetImageDecodersSize(UINT *, UINT *);
@@ -511,6 +513,8 @@ extern "C"
     GdipGetPageUnit(GpGraphics *, GpUnit *);
     GpStatus WINGDIPAPI
     GdipGetPixelOffsetMode(GpGraphics *, PixelOffsetMode *);
+    GpStatus WINGDIPAPI
+    GdipGetRenderingOrigin(GpGraphics *, INT *, INT *);
     GpStatus WINGDIPAPI
     GdipGetSmoothingMode(GpGraphics *, SmoothingMode *);
     GpStatus WINGDIPAPI
@@ -531,6 +535,8 @@ extern "C"
     GdipInitializePalette(ColorPalette *, PaletteType, INT, BOOL, GpBitmap *);
     GpStatus WINGDIPAPI
     GdipIsClipEmpty(GpGraphics *, BOOL *);
+    GpStatus WINGDIPAPI
+    GdipIsVisibleClipEmpty(GpGraphics *, BOOL *);
     GpStatus WINGDIPAPI
     GdipIsVisiblePoint(GpGraphics *, REAL, REAL, BOOL *);
     GpStatus WINGDIPAPI
@@ -602,6 +608,8 @@ extern "C"
     GdipRestoreGraphics(GpGraphics *, GraphicsState);
     GpStatus WINGDIPAPI
     GdipRotateWorldTransform(GpGraphics *, REAL, GpMatrixOrder);
+    GpStatus WINGDIPAPI
+    GdipSaveAdd(GpImage *, GDIPCONST EncoderParameters *);
     GpStatus WINGDIPAPI
     GdipSaveGraphics(GpGraphics *, GraphicsState *);
     GpStatus WINGDIPAPI
@@ -794,6 +802,8 @@ extern "C"
     GdipWarpPath(GpPath *, GpMatrix *, GDIPCONST GpPointF *, INT, REAL, REAL, REAL, REAL, WarpMode, REAL);
     GpStatus WINGDIPAPI
     GdipWidenPath(GpPath *, GpPen *, GpMatrix *, REAL);
+    GpStatus WINGDIPAPI
+    GdipWindingModeOutline(GpPath *, GpMatrix *, REAL);
 
     /* HatchBrush */
     GpStatus WINGDIPAPI
@@ -1071,6 +1081,15 @@ extern "C"
     GdipSetMetafileDownLevelRasterizationLimit(GpMetafile *, UINT);
     GpStatus WINGDIPAPI
     GdipRecordMetafile(HDC, EmfType, GDIPCONST GpRectF *, MetafileFrameUnit, GDIPCONST WCHAR *, GpMetafile **);
+    GpStatus WINGDIPAPI
+    GdipRecordMetafileStream(
+        IStream *,
+        HDC,
+        EmfType,
+        GDIPCONST GpRectF *,
+        MetafileFrameUnit,
+        GDIPCONST WCHAR *,
+        GpMetafile **);
 
     /* MetafileHeader */
     GpStatus WINGDIPAPI
@@ -1125,9 +1144,23 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipGetPathGradientRectI(GpPathGradient *, GpRect *);
     GpStatus WINGDIPAPI
+    GdipGetPathGradientSurroundColorCount(GpPathGradient *, INT *);
+    GpStatus WINGDIPAPI
     GdipGetPathGradientSurroundColorsWithCount(GpPathGradient *, ARGB *, INT *);
     GpStatus WINGDIPAPI
+    GdipGetPathGradientTransform(GpPathGradient *, GpMatrix *);
+    GpStatus WINGDIPAPI
     GdipGetPathGradientWrapMode(GpPathGradient *, GpWrapMode *);
+    GpStatus WINGDIPAPI
+    GdipMultiplyPathGradientTransform(GpPathGradient *, GDIPCONST GpMatrix *, GpMatrixOrder);
+    GpStatus WINGDIPAPI
+    GdipResetPathGradientTransform(GpPathGradient *);
+    GpStatus WINGDIPAPI
+    GdipRotatePathGradientTransform(GpPathGradient *, REAL, GpMatrixOrder);
+    GpStatus WINGDIPAPI
+    GdipScalePathGradientTransform(GpPathGradient *, REAL, REAL, GpMatrixOrder);
+    GpStatus WINGDIPAPI
+    GdipSetPathGradientLinearBlend(GpPathGradient *, REAL, REAL);
     GpStatus WINGDIPAPI
     GdipSetPathGradientBlend(GpPathGradient *, GDIPCONST REAL *, GDIPCONST REAL *, INT);
     GpStatus WINGDIPAPI
@@ -1147,9 +1180,11 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipSetPathGradientSurroundColorsWithCount(GpPathGradient *, GDIPCONST ARGB *, INT *);
     GpStatus WINGDIPAPI
+    GdipSetPathGradientTransform(GpPathGradient *, GpMatrix *);
+    GpStatus WINGDIPAPI
     GdipSetPathGradientWrapMode(GpPathGradient *, GpWrapMode);
     GpStatus WINGDIPAPI
-    GdipGetPathGradientSurroundColorCount(GpPathGradient *, INT *);
+    GdipTranslatePathGradientTransform(GpPathGradient *, REAL, REAL, GpMatrixOrder);
 
     /* PathIterator */
     GpStatus WINGDIPAPI
@@ -1404,6 +1439,8 @@ extern "C"
     GdipCreateTextureIA(GpImage *, GDIPCONST GpImageAttributes *, REAL, REAL, REAL, REAL, GpTexture **);
     GpStatus WINGDIPAPI
     GdipCreateTextureIAI(GpImage *, GDIPCONST GpImageAttributes *, INT, INT, INT, INT, GpTexture **);
+    GpStatus WINGDIPAPI
+    GdipGetTextureImage(GpTexture *, GpImage **);
     GpStatus WINGDIPAPI
     GdipGetTextureTransform(GpTexture *, GpMatrix *);
     GpStatus WINGDIPAPI
