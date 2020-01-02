@@ -275,7 +275,6 @@
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
 /drivers/usb/                           @ThFabba @Extravert-ir
-/sdk/lib/drivers/libusb/                @ThFabba @Extravert-ir
 /sdk/include/reactos/drivers/usbport/   @ThFabba @Extravert-ir
 
 # Virtual CD-ROM
