@@ -3228,8 +3228,11 @@ static void test_multiple_reads(int port)
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     ok(ret, "failed to send request %u\n", GetLastError());
 
+    trace("waiting for response\n");
     ret = WinHttpReceiveResponse(req, NULL);
     ok(ret == TRUE, "expected success\n");
+
+    trace("finished waiting for response\n");
 
     for (;;)
     {
@@ -3249,6 +3252,7 @@ static void test_multiple_reads(int port)
             HeapFree( GetProcessHeap(), 0, buf );
             if (!bytes_read) break;
             total_len += bytes_read;
+            trace("read bytes %u, total_len: %u\n", bytes_read, total_len);
         }
         if (!len) break;
     }
