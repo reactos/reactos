@@ -4896,11 +4896,11 @@ START_TEST (winhttp)
         test_request_path_escapes(si.port);
         trace("test_passport_auth\n");
         test_passport_auth(si.port);
-    }
 
-    trace("test_basic_request\n");
-    /* send the basic request again to shutdown the server thread */
-    test_basic_request(si.port, NULL, quitW);
+        trace("test_basic_request\n");
+        /* send the basic request again to shutdown the server thread */
+        test_basic_request(si.port, NULL, quitW);
+    }
 
     trace("WaitForSingleObject\n");
 
