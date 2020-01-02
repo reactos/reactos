@@ -67,6 +67,16 @@ GetEnhancedVerifierOptions(
     __out PULONG Options
 );
 
+VOID
+LibraryLogEvent(
+    __in PDRIVER_OBJECT DriverObject,
+    __in NTSTATUS       ErrorCode,
+    __in NTSTATUS       FinalStatus,
+    __in PWSTR          ErrorInsertionString,
+    __in_bcount(RawDataLen) PVOID    RawDataBuf,
+    __in USHORT         RawDataLen
+);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

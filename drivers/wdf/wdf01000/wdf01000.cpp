@@ -8,9 +8,14 @@
 #include "common/fxldr.h"
 #include "common/fxglobals.h"
 #include "wdf.h"
+#include "common/fxmacros.h"
 
+#define DRIVER_OBJECT_EXTENSION_IDENTIFIER      DriverEntry
 #define KMDF_DEVICE_NAME L"\\Device\\KMDF"
-
+#define DRIVER_PARAMETERS L"Parameters"
+#define REGISTRY_KMDF_MAJOR_VERSION L"MajorVersion"
+#define REGISTRY_KMDF_MINOR_VERSION L"MinorVersion"
+#define REGISTRY_KMDF_BUILD_NUMBER L"BuildNumber"
 
 //----- Declarations -----//
 #ifndef __WDF_MAJOR_VERSION
@@ -110,7 +115,22 @@ WdfRegisterLibrary(
 	PUNICODE_STRING LibraryDeviceName
 );
 
+VOID
+WdfWriteKmdfVersionToRegistry(
+    __in PDRIVER_OBJECT   DriverObject,
+    __in PUNICODE_STRING  RegistryPath
+    );
+
+VOID
+WdfDeleteKmdfVersionFromRegistry(
+    __in PDRIVER_OBJECT   DriverObject
+    );
+
 //----------//
+
+typedef struct _DRV_EXTENSION {
+    UNICODE_STRING ParametersRegistryPath;
+} DRV_EXTENSION, *PDRV_EXTENSION;
 
 extern "C"
 NTSTATUS
@@ -180,7 +200,7 @@ DriverUnload(
 	//
 	// Delete KMDF version from registry before destroying the Driver Object
 	//
-	//WdfDeleteKmdfVersionFromRegistry(DriverObject);
+	WdfDeleteKmdfVersionFromRegistry(DriverObject);
 
 	//
 	// Make sure everything is deleted.  Since the driver is considered a legacy
@@ -234,6 +254,7 @@ WdfBindClientHelper(
 
 #define EVTLOG_MESSAGE_SIZE 70
 #define RAW_DATA_SIZE 4
+#define WDFVER_MINOR_VERSION_NOT_SUPPORTED 0x80070001
 
 extern "C"
 NTSTATUS
@@ -246,7 +267,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 	NTSTATUS           status = STATUS_INVALID_PARAMETER;
 	PFX_DRIVER_GLOBALS pFxDriverGlobals;
 	WCHAR              insertString[EVTLOG_MESSAGE_SIZE];
-	//ULONG              rawData[RAW_DATA_SIZE];
+	ULONG              rawData[RAW_DATA_SIZE];
 	PCLIENT_INFO       clientInfo = NULL;
 
 	__Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT) ": enter\n"));
@@ -274,17 +295,17 @@ WDF_LIBRARY_REGISTER_CLIENT(
 			__Print(("ERROR: RtlStringCchPrintfW failed with Status 0x%x\n", status2));
 			return status;
 		}
-		//rawData[0] = Info->Version.Major;
-		//rawData[1] = Info->Version.Minor;
-		//rawData[2] = WdfLibraryInfo.Version.Major;
-		//rawData[3] = WdfLibraryInfo.Version.Minor;
+		rawData[0] = Info->Version.Major;
+		rawData[1] = Info->Version.Minor;
+		rawData[2] = WdfLibraryInfo.Version.Major;
+		rawData[3] = WdfLibraryInfo.Version.Minor;
 
-		/*LibraryLogEvent(FxLibraryGlobals.DriverObject,
+		LibraryLogEvent(FxLibraryGlobals.DriverObject,
 			WDFVER_MINOR_VERSION_NOT_SUPPORTED,
 			status,
 			insertString,
 			rawData,
-			sizeof(rawData));*/
+			sizeof(rawData));
 
 		return status;
 	}
@@ -466,7 +487,249 @@ DriverEntry(
 	//
 	// Write KMDF version to registry
 	//
-	//WdfWriteKmdfVersionToRegistry(DriverObject, RegistryPath);
+	WdfWriteKmdfVersionToRegistry(DriverObject, RegistryPath);
 
 	return STATUS_SUCCESS;
+}
+
+VOID
+WdfWriteKmdfVersionToRegistry(
+    __in PDRIVER_OBJECT   DriverObject,
+    __in PUNICODE_STRING  RegistryPath
+    )
+{
+    NTSTATUS status;
+    OBJECT_ATTRIBUTES objectAttributes;
+    HANDLE driverKey;
+    HANDLE parametersKey;
+    UNICODE_STRING valueName;
+    UNICODE_STRING parametersPath;
+    PDRV_EXTENSION driverExtension;
+
+    driverKey = NULL;
+    parametersKey = NULL;
+    driverExtension = NULL;
+
+    RtlInitUnicodeString(&parametersPath, DRIVER_PARAMETERS);
+
+    InitializeObjectAttributes(&objectAttributes,
+                               RegistryPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    status = ZwOpenKey(&driverKey, KEY_CREATE_SUB_KEY, &objectAttributes);
+    if (!NT_SUCCESS(status))
+	{
+        __Print(("WdfWriteKmdfVersionToRegistry: Failed to open HKLM\\%S\n",
+                 RegistryPath->Buffer));
+        goto out;
+    }
+
+    InitializeObjectAttributes(&objectAttributes,
+                               &parametersPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               driverKey,
+                               NULL);
+
+    //
+    // Open or create key and get a handle
+    //
+    status = ZwCreateKey(&parametersKey,
+                         KEY_SET_VALUE,
+                         &objectAttributes,
+                         0,
+                         (PUNICODE_STRING) NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+
+    if (!NT_SUCCESS(status))
+	{
+        __Print(("WdfWriteKmdfVersionToRegistry: Failed to open HKLM\\%S\\%S\n",
+                 RegistryPath->Buffer, parametersPath.Buffer));
+        goto out;
+    }
+
+    //
+    // Set Major Version
+    //
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_MAJOR_VERSION);
+
+    status = ZwSetValueKey(parametersKey,
+                           &valueName,
+                           0,
+                           REG_DWORD,
+                           &WdfLibraryInfo.Version.Major,
+                           sizeof(WdfLibraryInfo.Version.Major));
+
+    if (!NT_SUCCESS(status))
+	{
+        __Print(("WdfWriteKmdfVersionToRegistry: Failed to set Major Version\n"));
+        goto out;
+    }
+
+    //
+    // Set Minor Version
+    //
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_MINOR_VERSION);
+
+    status = ZwSetValueKey(parametersKey,
+                           &valueName,
+                           0,
+                           REG_DWORD,
+                           &WdfLibraryInfo.Version.Minor,
+                           sizeof(WdfLibraryInfo.Version.Minor));
+
+    if (!NT_SUCCESS(status))
+	{
+        __Print(("WdfWriteKmdfVersionToRegistry: Failed to set Minor Version\n"));
+        goto out;
+    }
+
+
+    //
+    // Set Build Number
+    //
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_BUILD_NUMBER);
+
+    status = ZwSetValueKey(parametersKey,
+                           &valueName,
+                           0,
+                           REG_DWORD,
+                           &WdfLibraryInfo.Version.Build,
+                           sizeof(WdfLibraryInfo.Version.Build));
+
+    if (!NT_SUCCESS(status))
+	{
+        __Print(("WdfWriteKmdfVersionToRegistry: Failed to set Build Number\n"));
+        goto out;
+    }
+
+    //
+    // Create a Driver Extension to store the registry path, where we write the
+    // version of the wdf01000.sys that's loaded in memory
+    //
+    status = IoAllocateDriverObjectExtension(DriverObject,
+                                             (PVOID) DRIVER_OBJECT_EXTENSION_IDENTIFIER,
+                                             sizeof(DRV_EXTENSION),
+                                             (PVOID *)&driverExtension);
+
+    if (!NT_SUCCESS(status) || driverExtension == NULL)
+	{
+        goto out;
+    }
+
+    driverExtension->ParametersRegistryPath.Buffer = (PWCHAR) ExAllocatePoolWithTag(
+                                                                PagedPool,
+                                                                RegistryPath->MaximumLength,
+                                                                FX_TAG);
+    
+	if (driverExtension->ParametersRegistryPath.Buffer == NULL)
+	{
+        goto out;
+    }
+
+    driverExtension->ParametersRegistryPath.MaximumLength = RegistryPath->MaximumLength;
+    RtlCopyUnicodeString(&(driverExtension->ParametersRegistryPath), RegistryPath);
+
+out:
+    if (driverKey != NULL)
+	{
+        ZwClose(driverKey);
+    }
+
+    if (parametersKey != NULL)
+	{
+        ZwClose(parametersKey);
+    }
+
+    return;
+}
+
+VOID
+WdfDeleteKmdfVersionFromRegistry(
+    __in PDRIVER_OBJECT   DriverObject
+    )
+{
+    PUNICODE_STRING registryPath;
+    OBJECT_ATTRIBUTES objectAttributes;
+    HANDLE driverKey;
+    HANDLE parametersKey;
+    UNICODE_STRING valueName;
+    NTSTATUS status;
+    UNICODE_STRING parametersPath;
+    PDRV_EXTENSION driverExtension;
+
+    RtlInitUnicodeString(&parametersPath, DRIVER_PARAMETERS);
+
+    driverKey = NULL;
+    parametersKey = NULL;
+
+    driverExtension = (PDRV_EXTENSION)IoGetDriverObjectExtension(DriverObject,
+                                                                 DRIVER_OBJECT_EXTENSION_IDENTIFIER);
+
+    if (driverExtension == NULL || driverExtension->ParametersRegistryPath.Buffer == NULL)
+	{
+        return;
+    }
+
+    registryPath = &driverExtension->ParametersRegistryPath;
+
+    InitializeObjectAttributes(&objectAttributes,
+                               registryPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    status = ZwOpenKey(&driverKey, KEY_SET_VALUE, &objectAttributes);
+    if (!NT_SUCCESS(status))
+	{
+        goto out;
+    }
+
+    InitializeObjectAttributes(&objectAttributes,
+                               &parametersPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               driverKey,
+                               NULL);
+    //
+    // Open the key for deletion
+    //
+    status = ZwOpenKey(&parametersKey,
+                       DELETE,
+                       &objectAttributes);
+
+    if (!NT_SUCCESS(status))
+	{
+        goto out;
+    }
+
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_MAJOR_VERSION);
+    ZwDeleteValueKey(parametersKey, &valueName);
+
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_MINOR_VERSION);
+    ZwDeleteValueKey(parametersKey, &valueName);
+
+    RtlInitUnicodeString(&valueName, REGISTRY_KMDF_BUILD_NUMBER);
+    ZwDeleteValueKey(parametersKey, &valueName);
+
+    ZwDeleteKey(parametersKey);
+
+out:
+    if (driverExtension->ParametersRegistryPath.Buffer != NULL)
+	{
+        ExFreePool(driverExtension->ParametersRegistryPath.Buffer);
+    }
+
+    if (driverKey != NULL)
+	{
+        ZwClose(driverKey);
+    }
+
+    if (parametersKey != NULL)
+	{
+        ZwClose(parametersKey);
+    }
+
+    return;
 }

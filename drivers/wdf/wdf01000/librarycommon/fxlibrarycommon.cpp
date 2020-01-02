@@ -324,3 +324,95 @@ GetEnhancedVerifierOptions(
         }
     }
 }
+
+VOID
+LibraryLogEvent(
+    __in PDRIVER_OBJECT DriverObject,
+    __in NTSTATUS       ErrorCode,
+    __in NTSTATUS       FinalStatus,
+    __in PWSTR          ErrorInsertionString,
+    __in_bcount(RawDataLen) PVOID    RawDataBuf,
+    __in USHORT         RawDataLen
+    )
+/*++
+
+
+Routine Description:
+
+    Logs an error to the system event log.
+
+    Arguments:
+
+    DriverObject - Pointer to driver object reporting the error.
+
+    ErrorCode    - Indicates the type of error, system or driver-defined.
+
+    ErrorInsertionString - Null-terminated Unicode string inserted into error
+    description, as defined by error code.
+
+Return Value:
+
+None.
+
+--*/
+{
+    PIO_ERROR_LOG_PACKET errorLogEntry;
+    size_t               errorLogEntrySize;                  // [including null]
+    size_t               errorInsertionStringByteSize = 0;
+
+    if (ErrorInsertionString)
+	{
+        errorInsertionStringByteSize = wcslen(ErrorInsertionString) * sizeof(WCHAR);
+        errorInsertionStringByteSize += sizeof(UNICODE_NULL);
+    }
+
+    errorLogEntrySize = sizeof(IO_ERROR_LOG_PACKET) + RawDataLen + errorInsertionStringByteSize;
+
+    //
+    // Log an error.
+    //
+    //
+    // prefast complains about comparison of constant with constant here
+    //
+#pragma prefast(suppress:__WARNING_CONST_CONST_COMP, "If ErrorInsertionString is not null then this is not a constant")
+    if (errorLogEntrySize <= ERROR_LOG_MAXIMUM_SIZE)
+	{
+
+        errorLogEntry = (PIO_ERROR_LOG_PACKET)IoAllocateErrorLogEntry(DriverObject,
+            (UCHAR)errorLogEntrySize);
+
+        if (errorLogEntry != NULL)
+		{
+
+            RtlZeroMemory(errorLogEntry, errorLogEntrySize);
+
+            errorLogEntry->ErrorCode = ErrorCode;
+            errorLogEntry->FinalStatus = FinalStatus;
+            errorLogEntry->NumberOfStrings = (ErrorInsertionString) ? 1 : 0;
+            errorLogEntry->DumpDataSize = RawDataLen;
+            errorLogEntry->StringOffset = (FIELD_OFFSET(IO_ERROR_LOG_PACKET, DumpData)) + errorLogEntry->DumpDataSize;
+
+            //
+            // Insertion strings follow dumpdata and since there is no dumpdata we place the
+            // insertion string at the start offset of the dumpdata.
+            //
+            if (RawDataBuf)
+			{
+                RtlCopyMemory(errorLogEntry->DumpData,
+                    RawDataBuf,
+                    RawDataLen);
+            }
+
+            if (ErrorInsertionString)
+			{
+                RtlCopyMemory(((PCHAR)errorLogEntry->DumpData) + RawDataLen,
+                    ErrorInsertionString,
+                    errorInsertionStringByteSize);
+            }
+
+            IoWriteErrorLogEntry(errorLogEntry);
+        }
+    }
+
+    return;
+}
