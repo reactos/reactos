@@ -65,6 +65,7 @@ list(APPEND SOURCE
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c
+    RtlValidateUnicodeString.c
     StackOverflow.c
     SystemInfo.c
     Timer.c

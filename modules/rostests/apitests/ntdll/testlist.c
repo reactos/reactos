@@ -64,6 +64,7 @@ extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
+extern void func_RtlValidateUnicodeString(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
 
@@ -130,6 +131,7 @@ const struct test winetest_testlist[] =
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
+    { "RtlValidateUnicodeString",       func_RtlValidateUnicodeString },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
 
