@@ -3753,11 +3753,7 @@ static void test_conn_close(int port)
     SET_EXPECT(INTERNET_STATUS_CONNECTION_CLOSED);
     SET_EXPECT(INTERNET_STATUS_REQUEST_COMPLETE);
     SetEvent(conn_close_event);
-#ifdef ROSTESTS_73_FIXED
     WaitForSingleObject(complete_event, INFINITE);
-#else /* ROSTESTS_73_FIXED */
-    ok(WaitForSingleObject(complete_event, 5000) == WAIT_OBJECT_0, "Wait timed out\n");
-#endif /* ROSTESTS_73_FIXED */
     ok(req_error == ERROR_SUCCESS, "req_error = %u\n", req_error);
     CLEAR_NOTIFIED(INTERNET_STATUS_RESPONSE_RECEIVED);
     CHECK_NOTIFIED(INTERNET_STATUS_CLOSING_CONNECTION);
