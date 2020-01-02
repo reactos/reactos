@@ -1,5 +1,8 @@
 #include "common/fxglobals.h"
 #include "common/fxpool.h"
+#include "common/fxmacros.h"
+#include "common/mxmemory.h"
+#include "common/dbgtrace.h"
 
 extern "C" {
 
@@ -155,7 +158,7 @@ FxLibraryGlobalsDecommission(
     //
     ASSERT(IsListEmpty(&FxLibraryGlobals.FxDriverGlobalsList));
 
-//#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
     //
     // Cleanup for the driver usage tracker.
     //
@@ -165,7 +168,7 @@ FxLibraryGlobalsDecommission(
     // Deregister from the global (library) bugcheck callbacks.
     //
     FxUninitializeBugCheckDriverInfo();
-//#endif
+#endif
 
     FxLibraryGlobals.FxDriverGlobalsListLock.Uninitialize();
 
@@ -178,11 +181,221 @@ FxAllocateDriverGlobals(
     VOID
     )
 {
-    //PFX_DRIVER_GLOBALS  pFxDriverGlobals;
-    //KIRQL               irql;
+    PFX_DRIVER_GLOBALS  pFxDriverGlobals;
+    KIRQL               irql;
     //NTSTATUS            status;
 
-	return NULL;
+    pFxDriverGlobals = (PFX_DRIVER_GLOBALS)
+        MxMemory::MxAllocatePoolWithTag(NonPagedPool, sizeof(FX_DRIVER_GLOBALS), FX_TAG);
+
+    if (pFxDriverGlobals == NULL)
+	{
+        return NULL;
+    }
+
+    RtlZeroMemory(pFxDriverGlobals, sizeof(FX_DRIVER_GLOBALS));
+
+    //
+    // Initialize this new FxDriverGlobals structure.
+    //
+    FxLibraryGlobals.FxDriverGlobalsListLock.Acquire(&irql);
+    InsertHeadList(&FxLibraryGlobals.FxDriverGlobalsList,
+                   &pFxDriverGlobals->Linkage);
+    FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
+
+    pFxDriverGlobals->WdfHandleMask                  = 0xFFFFFFF8;//FxHandleValueMask;
+    pFxDriverGlobals->WdfVerifierAllocateFailCount   = (ULONG) -1;
+    pFxDriverGlobals->Driver                         = NULL;
+    pFxDriverGlobals->DebugExtension                 = NULL;
+    pFxDriverGlobals->LibraryGlobals                 = &FxLibraryGlobals;
+	pFxDriverGlobals->WdfTraceDelayTime              = 0;
+    pFxDriverGlobals->WdfLogHeader                   = NULL;
+
+    //
+    // Verifier settings.  Off by default.
+    //
+    pFxDriverGlobals->SetVerifierState(FALSE);
+
+    //
+    // By default don't apply latest-version restricted verifier checks
+    // to downlevel version drivers.
+    //
+    pFxDriverGlobals->FxVerifyDownlevel              = FALSE;
+
+    //
+    // Verbose is separate knob
+    //
+    pFxDriverGlobals->FxVerboseOn                    = FALSE;
+
+    //
+    // Do not parent queue presented requests.
+    // This performance optimization is on by default.
+    //
+    pFxDriverGlobals->FxRequestParentOptimizationOn  = TRUE;
+
+    //
+    // Enhanced verifier options. Off by default
+    //
+    pFxDriverGlobals->FxEnhancedVerifierOptions = 0;
+
+    //
+    // Minidump log related settings.
+    //
+    pFxDriverGlobals->FxForceLogsInMiniDump          = FALSE;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = TRUE;
+//    pFxDriverGlobals->IsUserModeDriver               = FALSE;
+#else
+    pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = FALSE;
+//    pFxDriverGlobals->IsUserModeDriver               = TRUE;
+#endif
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Minidump driver info related settings.
+    //
+    pFxDriverGlobals->BugCheckDriverInfoIndex        = 0;
+#endif
+
+    return &pFxDriverGlobals->Public;
+}
+
+VOID
+FxFreeDriverGlobals(
+    __in PWDF_DRIVER_GLOBALS DriverGlobals
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    KIRQL irql;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    FxLibraryGlobals.FxDriverGlobalsListLock.Acquire(&irql);
+    RemoveEntryList(&pFxDriverGlobals->Linkage);
+    InitializeListHead(&pFxDriverGlobals->Linkage);
+    FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
+
+    if (pFxDriverGlobals->DebugExtension != NULL)
+	{
+
+        FxFreeAllocatedMdlsDebugInfo(pFxDriverGlobals->DebugExtension);
+
+        if (pFxDriverGlobals->DebugExtension->ObjectDebugInfo != NULL)
+		{
+            MxMemory::MxFreePool(pFxDriverGlobals->DebugExtension->ObjectDebugInfo);
+            pFxDriverGlobals->DebugExtension->ObjectDebugInfo = NULL;
+        }
+
+        pFxDriverGlobals->DebugExtension->AllocatedTagTrackersLock.Uninitialize();
+
+        MxMemory::MxFreePool(pFxDriverGlobals->DebugExtension);
+        pFxDriverGlobals->DebugExtension = NULL;
+    }
+
+    MxMemory::MxFreePool(pFxDriverGlobals);
+}
+
+VOID
+FxDestroy(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+
+/*++
+
+Routine Description:
+
+    This is the global framework uninitialization routine.
+
+    It is here for symmetry, and to allow a shared DLL based frameworks
+    to unload safely.
+
+Arguments:
+
+
+Returns:
+
+    NTSTATUS
+
+--*/
+
+{
+    //
+    // Lock verifier package
+    //
+    FxVerifierLockDestroy(FxDriverGlobals);
+
+    //
+    // Cleanup frameworks structures
+    //
+    FxPoolPackageDestroy(FxDriverGlobals);
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    //
+    // Deregister from the bugcheck callbacks.
+    //
+    FxUnregisterBugCheckCallback(FxDriverGlobals);
+
+    //
+    // Purge driver info from bugcheck data.
+    //
+    FxPurgeBugCheckDriverInfo(FxDriverGlobals);
+#endif
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    //
+    // unlock verifier image sections
+    //
+    //if(FxDriverGlobals->FxVerifierOn){
+    //    UnlockVerifierSection(FxDriverGlobals);
+    //}
+#endif
+
+    return;
+}
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+VOID
+UnlockVerifierSection(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    if( FxLibraryGlobals.EnhancedVerifierSectionHandle != NULL)
+	{
+        //LONG count;
+
+        //count = InterlockedDecrement(&FxLibraryGlobals.VerifierSectionHandleRefCount);
+        //ASSERT(count >= 0);
+
+        MmUnlockPagableImageSection(FxLibraryGlobals.EnhancedVerifierSectionHandle);
+        //DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDRIVER,
+        //                    "Decrement UnLock counter (%d) for Verifier Paged Memory "
+        //                    "with driver globals %p",
+        //                    count, FxDriverGlobals);
+    }
+}
+#endif
+
+VOID
+FxFreeAllocatedMdlsDebugInfo(
+    __in FxDriverGlobalsDebugExtension* DebugExtension
+    )
+{
+    FxAllocatedMdls* pNext, *pCur;
+
+    pNext = DebugExtension->AllocatedMdls.Next;
+
+    //
+    // MDL leaks were already checked for in FxPoolDestroy, just free all
+    // the tables here.
+    //
+    while (pNext != NULL)
+	{
+        pCur = pNext;
+        pNext = pCur->Next;
+
+        ExFreePool(pCur);
+    }
 }
 
 }

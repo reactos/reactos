@@ -4,6 +4,7 @@
 #include "common/fxregkey.h"
 #include "common/fxautoregistry.h"
 #include "common/fxpool.h"
+#include "common/fxtrace.h"
 #include "fxdynamics.h"
 
 
@@ -175,6 +176,11 @@ FxLibraryCommonRegisterClient(
 		{
 			RtlCopyMemory(Info->FuncTable, &WdfVersion.Functions, sizeof(size_t) * WdfVersion.FuncCount);
 		}
+
+		//status = STATUS_SUCCESS;
+
+        __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                 ": WdfFunctions %p\n", Info->FuncTable));
 	}
 	
 Done:
@@ -191,20 +197,61 @@ FxLibraryCommonUnregisterClient(
 	__in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
 )
 {
-	NTSTATUS status;
+    NTSTATUS status;
 
-	__Print((LITERAL(WDF_LIBRARY_UNREGISTER_CLIENT) ": enter\n"));
+    __Print((LITERAL(WDF_LIBRARY_UNREGISTER_CLIENT) ": enter\n"));
 
-	ASSERT(Info);
-	ASSERT(WdfDriverGlobals);
-	
-	status = STATUS_UNSUCCESSFUL;
+    ASSERT(Info);
+    ASSERT(WdfDriverGlobals);
 
+    if (Info != NULL && WdfDriverGlobals != NULL)
+	{
+        PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
-	__Print((LITERAL(WDF_LIBRARY_UNREGISTER_CLIENT)
-		": exit: status %X\n", status));
+        status = STATUS_SUCCESS;
 
-	return status;
+        pFxDriverGlobals = GetFxDriverGlobals(WdfDriverGlobals);
+
+        //
+        // Destroy this FxDriver instance, if its still indicated.
+        //
+        if (pFxDriverGlobals->Driver != NULL)
+		{
+            //
+            // Association support, we are a root with no parent
+            //
+            pFxDriverGlobals->Driver->DeleteObject();
+
+            FxDestroy(pFxDriverGlobals);
+        }
+
+        //
+        // Stop IFR logging
+        //
+        FxIFRStop(pFxDriverGlobals);
+
+        //
+        // unlock enhanced-verifier image sections
+        //
+        if (IsFxVerifierFunctionTableHooking(pFxDriverGlobals))
+		{
+            UnlockVerifierSection(pFxDriverGlobals);
+        }
+
+        //
+        // This will free the client's FxDriverGlobals area
+        //
+        FxFreeDriverGlobals(WdfDriverGlobals);
+    }
+    else
+	{
+        status = STATUS_UNSUCCESSFUL;
+    }
+
+    __Print((LITERAL(WDF_LIBRARY_UNREGISTER_CLIENT)
+             ": exit: status %X\n", status));
+
+    return status;
 }
 
 BOOLEAN

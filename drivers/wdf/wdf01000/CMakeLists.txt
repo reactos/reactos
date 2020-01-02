@@ -3,14 +3,19 @@ include_directories(
     include)
 #    ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.9)
 
-add_definitions(-D__WDF_MAJOR_VERSION=1 -D__WDF_MINOR_VERSION=9 -D__WDF_BUILD_NUMBER=7600 -DWDF_DEVICE_NO_WDMSEC_H)
+add_definitions(-D__WDF_MAJOR_VERSION=1 -D__WDF_MINOR_VERSION=9 -D__WDF_BUILD_NUMBER=7600 -DWDF_DEVICE_NO_WDMSEC_H -DFX_CORE_MODE=1 -DFX_CORE_KERNEL_MODE=1 -DDBG)
 
 list(APPEND SOURCE
     wdf01000.cpp
     librarycommon/fxlibrarycommon.cpp
     object/globals.cpp
+    object/fxverifierlock.cpp
+    object/wdfpool.cpp
+    object/dbgtrace.cpp
     support/fxregkey.cpp
     core/fxbugcheckcallback.cpp
+    core/tracing.cpp
+    primitives/mxgeneral.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})

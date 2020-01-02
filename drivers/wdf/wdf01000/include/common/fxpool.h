@@ -3,12 +3,184 @@
 
 #include <ntddk.h>
 #include "wdf.h"
+#include "common/mxlock.h"
+#include "common/mxpagedlock.h"
+//#include "common/fxglobals.h"
+
+
+// forward definitions
+typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
+
+//
+// Common pool header for small allocations (less than PAGE_SIZE)
+//
+struct FX_POOL_HEADER {
+
+    PVOID                 Base;
+
+    PFX_DRIVER_GLOBALS    FxDriverGlobals;
+
+    DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) ULONG AllocationStart[1];
+};
+
+typedef FX_POOL_HEADER* PFX_POOL_HEADER;
+
+#define FX_POOL_HEADER_SIZE      FIELD_OFFSET(FX_POOL_HEADER, AllocationStart)
+
+//
+// This structure described an indivdually tracked pool.
+//
+// The frameworks tracks pool on behalf of the frameworks (global),
+// and per driver.
+//
+
+struct FX_POOL {
+    MxLockNoDynam       NonPagedLock;
+    LIST_ENTRY          NonPagedHead;
+
+    MxPagedLockNoDynam  PagedLock;
+    LIST_ENTRY          PagedHead;
+
+    // Current Pool Usage Information
+    SIZE_T      NonPagedBytes;
+    SIZE_T      PagedBytes;
+
+    ULONG       NonPagedAllocations;
+    ULONG       PagedAllocations;
+
+    // Peak Pool Usage Information
+    SIZE_T      PeakNonPagedBytes;
+    SIZE_T      PeakPagedBytes;
+
+    ULONG       PeakNonPagedAllocations;
+    ULONG       PeakPagedAllocations;
+};
+
+typedef FX_POOL *PFX_POOL;
+
+//
+// This structure is allocated along with the pool item and
+// is used to track it.
+//
+// Note: We would be messing up cache aligned if its greater
+//       than 16.
+//
+//       Our struct is 7 DWORD's on an x86, and 11 DWORDS on 64 bit
+//       machines.
+//
+//       This rounds up to 8 or 12 DWORDS.
+//
+//
+struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) FX_POOL_TRACKER {
+    LIST_ENTRY Link;
+    PFX_POOL   Pool;
+    ULONG      Tag;
+    SIZE_T     Size;
+    POOL_TYPE  PoolType;
+    PVOID      CallersAddress;
+};
+
+typedef FX_POOL_TRACKER *PFX_POOL_TRACKER;
+
 
 extern "C"
 _Must_inspect_result_
 PWDF_DRIVER_GLOBALS
 FxAllocateDriverGlobals(
     VOID
+    );
+
+extern "C"
+VOID
+FxFreeDriverGlobals(
+    __in PWDF_DRIVER_GLOBALS DriverGlobals
+    );
+
+
+BOOLEAN
+FxIsPagedPoolType(
+    __in POOL_TYPE Type
+    );
+
+
+/*++
+
+Routine Description:
+
+    Release tracked pool
+
+Arguments:
+
+    Pool - FX_POOL object allocation is tracked in
+
+    ptr - Pointer to pool to release
+
+Returns:
+
+--*/
+void
+FxPoolFree(
+    /*__in_xcount(ptr is at an offset from AllocationStart)*/  PVOID ptr
+    );
+
+
+/*++
+
+Routine Description:
+
+    Destroy the pool support package at unload time
+
+    This must be after the last free
+
+Arguments:
+
+Returns:
+
+    status
+
+--*/
+VOID
+FxPoolPackageDestroy(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+/*++
+
+Routine Description:
+
+    Destory the FX_POOL tracking object
+
+Arguments:
+
+    Pool    - FX_POOL object for tracking allocations
+
+--*/
+VOID
+FxPoolDestroy(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL  Pool
+    );
+
+
+/*++
+
+Routine Description:
+
+    Dump the FX_POOL tracking object
+
+Arguments:
+
+    Pool    - FX_POOL object for tracking allocations
+
+Returns:
+
+    STATUS_SUCCESS
+
+--*/
+NTSTATUS
+FxPoolDump(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL  Pool
     );
 
 #endif //_FXPOOL_H_

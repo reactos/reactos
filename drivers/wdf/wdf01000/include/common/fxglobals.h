@@ -1,5 +1,3 @@
-
-
 #ifndef _FXGLOBALS_H
 #define _FXGLOBALS_H
 
@@ -8,6 +6,9 @@
 #include "common/fxldr.h"
 #include "fxbugcheck.h"
 #include "common/mxlock.h"
+#include "common/fxobject.h"
+#include "common/fxdriver.h"
+#include "common/fxpool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +30,151 @@ FxInitializeBugCheckDriverInfo();
 VOID
 FxUninitializeBugCheckDriverInfo();
 
+VOID
+FxDestroy(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+void
+FxVerifierLockDestroy(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+VOID
+FxUnregisterBugCheckCallback(
+    __inout PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+VOID
+FxPurgeBugCheckDriverInfo(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+VOID
+UnlockVerifierSection(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+#endif
+
+
+struct FxMdlDebugInfo {
+    PMDL Mdl;
+    FxObject* Owner;
+    PVOID Caller;
+};
+
+#define NUM_MDLS_IN_INFO (16)
+
+struct FxAllocatedMdls {
+    FxMdlDebugInfo Info[NUM_MDLS_IN_INFO];
+    ULONG Count;
+    struct FxAllocatedMdls* Next;
+};
+
+struct FxObjectDebugInfo {
+    //
+    // FX_OBJECT_TYPES enum value
+    //
+    USHORT ObjectType;
+
+    union {
+        //
+        // Combo of values from FxObjectDebugInfoFlags
+        //
+        USHORT DebugFlags;
+
+        //
+        // Break out of DebugFlags as individual fields.  This is used by the
+        // debugger extension to reference the values w/out knowing the actual
+        // enum values.
+        //
+        struct {
+            USHORT TrackReferences : 1;
+            USHORT TrackObjectCountForLeak : 1;
+        } Bits;
+    } u;
+};
+
+struct FxDriverGlobalsDebugExtension {
+    //
+    // Debug information per object.  List is sorted by
+    // FxObjectDebugInfo::ObjectType, length is the same as FxObjectsInfo.
+    //
+    FxObjectDebugInfo* ObjectDebugInfo;
+
+    //
+    // Track allocated Mdls only in kernel mode version
+    //
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    FxAllocatedMdls AllocatedMdls;
+
+    KSPIN_LOCK AllocatedMdlsLock;
+#endif
+
+    //
+    // List of all allocated tag trackers for this driver.  This is used to keep
+    // track of orphaned objects due to leaked reference counts in the debugger
+    // extension.
+    //
+    LIST_ENTRY AllocatedTagTrackersListHead;
+
+    //
+    // Synchronizes access to AllocatedTagTrackersListHead
+    //
+    MxLock AllocatedTagTrackersLock;
+};
+
+VOID
+FxFreeAllocatedMdlsDebugInfo(
+    __in FxDriverGlobalsDebugExtension* DebugExtension
+    );
+
 typedef struct _FX_DRIVER_GLOBALS
 {
+public:
+	VOID
+    SetVerifierState(
+        __in BOOLEAN State
+        )
+    {
+        //
+        // Master switch
+        //
+        FxVerifierOn                = State;
+
+        FxVerifierHandle            = State;
+        FxVerifierIO                = State;
+        FxVerifierLock              = State;
+        FxPoolTrackingOn            = State;
+
+        //
+        // Following can be overridden by the registry settings
+        // WDFVERIFY matches the state of the verifier.
+        //
+        FxVerifyOn                  = State;
+        FxVerifierDbgBreakOnError   = State;
+        FxVerifierDbgBreakOnDeviceStateError = FALSE;
+
+        //
+        // Set the public flags for consumption by client drivers.
+        //
+        if (State)
+		{
+			//Public.DriverFlags |= (WdfVerifyOn | WdfVerifierOn);
+            Public.DriverFlags |= 0xC;
+        }
+    }
+
+	BOOLEAN
+    IsPoolTrackingOn(
+        VOID
+        )
+    {
+        return (FxPoolTrackingOn) ? TRUE : FALSE;
+    }
+	
+
 	//
     // Link list of driver FxDriverGlobals on this WDF Version.
     //
@@ -57,8 +201,8 @@ typedef struct _FX_DRIVER_GLOBALS
 	//
     // Backpointer to Fx driver object
     //
-	//FxDriver* Driver;
-	//FxDriverGlobalsDebugExtension* DebugExtension;
+	FxDriver* Driver;
+	FxDriverGlobalsDebugExtension* DebugExtension;
 	FxLibraryGlobalsType* LibraryGlobals;
 	ULONG WdfTraceDelayTime;
 
@@ -70,7 +214,7 @@ typedef struct _FX_DRIVER_GLOBALS
 	//
     // The driver's memory pool header
     //
-	//FX_POOL FxPoolFrameworks;
+	FX_POOL FxPoolFrameworks;
 
 	//
     // Framworks Pool Tracking
@@ -80,7 +224,7 @@ typedef struct _FX_DRIVER_GLOBALS
 	//
     // FxVerifierLock per driver state
     //
-	//MxLock ThreadTableLock;
+	MxLock ThreadTableLock;
 	PLIST_ENTRY ThreadTable;
 
 	//
@@ -327,6 +471,26 @@ public:
 
 	VOID
     Uninitialize();
+
+	VOID
+    Deregister(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals
+        );
+
+private:
+    //
+    // Returns the per-processor cache-aligned driver usage ref structure for
+    // given processor.
+    //
+    __inline
+    PFX_DRIVER_TRACKER_ENTRY
+    GetProcessorDriverEntryRef(
+        __in ULONG Index
+        )
+    {
+        return ((PFX_DRIVER_TRACKER_ENTRY) (((PUCHAR)m_DriverUsage) +
+                    Index * m_EntrySize));
+    }
 
 	//
     // Data members.

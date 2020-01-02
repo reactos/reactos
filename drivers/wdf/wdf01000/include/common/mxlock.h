@@ -45,6 +45,44 @@ Uninitialize()
     CLEAR_DBGFLAG_INITIALIZED;
 }
 
-};    
+_Acquires_lock_(this->m_Lock)
+__drv_maxIRQL(DISPATCH_LEVEL)
+__drv_setsIRQL(DISPATCH_LEVEL)
+__inline
+VOID
+Acquire(
+    __out __drv_deref(__drv_savesIRQL) KIRQL * OldIrql
+    )
+{
+    ASSERT_DBGFLAG_INITIALIZED;
+    
+    KeAcquireSpinLock(&m_Lock, OldIrql);
+}
+
+_Releases_lock_(this->m_Lock)
+__drv_requiresIRQL(DISPATCH_LEVEL)
+__inline
+VOID
+Release(
+    __drv_restoresIRQL KIRQL NewIrql
+    )
+{
+    ASSERT_DBGFLAG_INITIALIZED;
+
+    KeReleaseSpinLock(&m_Lock, NewIrql);    
+}
+
+};
+
+class MxLock : public MxLockNoDynam
+{
+public:    
+    __inline
+    MxLock();
+    
+    __inline
+    ~MxLock();
+};
+
 
 #endif //_MXLOCK_H_

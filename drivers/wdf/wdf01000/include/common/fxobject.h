@@ -10,6 +10,18 @@
 #define _FXOBJECT_H_
 
 class FxObject {
+
+public:
+    //
+    // Request that an object be deleted.
+    //
+    // This can be the result of a WDF API or a WDM event.
+    //
+    virtual
+    VOID
+    DeleteObject(
+        VOID
+        );
 };
 
 #endif //_FXOBJECT_H_
