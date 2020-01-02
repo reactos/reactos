@@ -849,6 +849,13 @@ int main( int argc, char **argv )
            #expression, (size_t)(result), _value); \
     } while (0)
 
+#define ok_int64(expression, result) \
+    do { \
+        __int64 _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%llx), got: %llx\n", \
+           #expression, (__int64)(result), _value); \
+    } while (0)
+
 #define ok_char(expression, result) ok_hex(expression, result)
 
 #define ok_err(error) \

@@ -8,6 +8,14 @@
 #define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsValidOemCharacter(
+    _Inout_ PWCHAR Char);
+
 START_TEST(RtlIsValidOemCharacter)
 {
     const WCHAR ValidCharsEn[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~!#$%^&*()_+|`:;\"'-/\\ ";

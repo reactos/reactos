@@ -37,38 +37,40 @@ list(APPEND SOURCE
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
     NtWriteFile.c
-    RtlAllocateHeap.c
-    RtlBitmap.c
-    RtlComputePrivatizedDllName_U.c
-    RtlCopyMappedMemory.c
-    RtlDeleteAce.c
-    RtlDetermineDosPathNameType.c
-    RtlDoesFileExists.c
-    RtlDosApplyFileIsolationRedirection_Ustr.c
-    RtlDosPathNameToNtPathName_U.c
-    RtlDosSearchPath_U.c
-    RtlDosSearchPath_Ustr.c
-    RtlFirstFreeAce.c
-    RtlGenerate8dot3Name.c
-    RtlGetFullPathName_U.c
-    RtlGetFullPathName_Ustr.c
-    RtlGetFullPathName_UstrEx.c
-    RtlGetLengthWithoutTrailingPathSeperators.c
-    RtlGetLongestNtPathLength.c
-    RtlHandle.c
-    RtlImageRvaToVa.c
-    RtlIsNameLegalDOS8Dot3.c
-    RtlMemoryStream.c
-    RtlNtPathNameToDosPathName.c
-    RtlpEnsureBufferSize.c
-    RtlQueryTimeZoneInfo.c
-    RtlReAllocateHeap.c
-    RtlUnicodeStringToAnsiString.c
-    RtlUpcaseUnicodeStringToCountedOemString.c
     StackOverflow.c
     SystemInfo.c
     Timer.c
     precomp.h)
+
+list(APPEND RTL_SOURCE
+    ../rtl/RtlAllocateHeap.c
+    ../rtl/RtlBitmap.c
+    ../rtl/RtlComputePrivatizedDllName_U.c
+    ../rtl/RtlCopyMappedMemory.c
+    ../rtl/RtlDeleteAce.c
+    ../rtl/RtlDetermineDosPathNameType.c
+    ../rtl/RtlDoesFileExists.c
+    ../rtl/RtlDosApplyFileIsolationRedirection_Ustr.c
+    ../rtl/RtlDosPathNameToNtPathName_U.c
+    ../rtl/RtlDosSearchPath_U.c
+    ../rtl/RtlDosSearchPath_Ustr.c
+    ../rtl/RtlFirstFreeAce.c
+    ../rtl/RtlGenerate8dot3Name.c
+    ../rtl/RtlGetFullPathName_U.c
+    ../rtl/RtlGetFullPathName_Ustr.c
+    ../rtl/RtlGetFullPathName_UstrEx.c
+    ../rtl/RtlGetLengthWithoutTrailingPathSeperators.c
+    ../rtl/RtlGetLongestNtPathLength.c
+    ../rtl/RtlHandle.c
+    ../rtl/RtlImageRvaToVa.c
+    ../rtl/RtlIsNameLegalDOS8Dot3.c
+    ../rtl/RtlMemoryStream.c
+    ../rtl/RtlNtPathNameToDosPathName.c
+    ../rtl/RtlpEnsureBufferSize.c
+    ../rtl/RtlQueryTimeZoneInfo.c
+    ../rtl/RtlReAllocateHeap.c
+    ../rtl/RtlUnicodeStringToAnsiString.c
+    ../rtl/RtlUpcaseUnicodeStringToCountedOemString.c)
 
 if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
@@ -77,6 +79,7 @@ endif()
 add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/load_notifications/load_notifications.dll)
 add_executable(ntdll_apitest
     ${SOURCE}
+    ${RTL_SOURCE}
     ${ntdll_apitest_asm}
     testdata.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def
