@@ -4887,7 +4887,7 @@ START_TEST (winhttp)
     trace("test_bad_header\n");
     test_bad_header(si.port);
     trace("test_multiple_reads\n");
-    if (0)
+    if (1)
     {
         test_multiple_reads(si.port);
         trace("test_cookies\n");
