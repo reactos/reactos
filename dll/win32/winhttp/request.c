@@ -2976,7 +2976,7 @@ static BOOL query_data_available( struct request *request, DWORD *available, BOO
     }
 
 done:
-    TRACE("%u bytes available\n", count);
+    ERR("%u bytes available\n", count);
     if (async)
     {
         if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE, &count, sizeof(count) );
@@ -3007,7 +3007,7 @@ BOOL WINAPI WinHttpQueryDataAvailable( HINTERNET hrequest, LPDWORD available )
     BOOL ret;
     struct request *request;
 
-    TRACE("%p, %p\n", hrequest, available);
+    ERR("%p, %p\n", hrequest, available);
 
     if (!(request = (struct request *)grab_object( hrequest )))
     {
