@@ -4888,15 +4888,17 @@ START_TEST (winhttp)
     test_bad_header(si.port);
     trace("test_multiple_reads\n");
     if (0)
+    {
         test_multiple_reads(si.port);
-    trace("test_cookies\n");
-    test_cookies(si.port);
-    trace("test_request_path_escapes\n");
-    test_request_path_escapes(si.port);
-    trace("test_passport_auth\n");
-    test_passport_auth(si.port);
-    trace("test_basic_request\n");
+        trace("test_cookies\n");
+        test_cookies(si.port);
+        trace("test_request_path_escapes\n");
+        test_request_path_escapes(si.port);
+        trace("test_passport_auth\n");
+        test_passport_auth(si.port);
+    }
 
+    trace("test_basic_request\n");
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, NULL, quitW);
 
