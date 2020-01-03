@@ -1691,6 +1691,21 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
 }
 
 #ifdef _M_AMD64
+
+FORCEINLINE
+ULONG
+MiCountUsedPageTableEntries(PVOID Address)
+{
+    PMMPTE PointerPte = MiPdeToPte(MiAddressToPde(Address));
+    ULONG i, count = 0;
+    for (i = 0; i < PTE_PER_PAGE; i++)
+    {
+        if (PointerPte[i].u.Long != 0)
+            count++;
+    }
+    return count;
+}
+
 FORCEINLINE
 VOID
 MiIncrementPageTableReferences(IN PVOID Address)
@@ -1703,6 +1718,14 @@ MiIncrementPageTableReferences(IN PVOID Address)
 
     *RefCount += 1;
     ASSERT(*RefCount <= PTE_PER_PAGE);
+
+    {
+        ULONG count = MiCountUsedPageTableEntries(Address);
+        //DbgPrint("+++ Address=%p PFN 0x%lx => %lu (%lu)\n", Address, PointerPde->u.Hard.PageFrameNumber, *RefCount, count);
+        if ((count != *RefCount) && (count + 1 != *RefCount)) __debugbreak();
+        //if (PointerPde->u.Hard.PageFrameNumber == 0xa04) __debugbreak();
+    }
+
 }
 
 FORCEINLINE
@@ -1717,6 +1740,12 @@ MiDecrementPageTableReferences(IN PVOID Address)
 
     *RefCount -= 1;
     ASSERT(*RefCount < PTE_PER_PAGE);
+
+    {
+        ULONG count = MiCountUsedPageTableEntries(Address);
+        //DbgPrint("--- Address=%p PFN 0x%lx => %lu (%lu)\n", Address, PointerPde->u.Hard.PageFrameNumber, *RefCount, count);
+        if ((count != *RefCount) && (count != *RefCount + 1)) __debugbreak();
+    }
 
     return *RefCount;
 }
