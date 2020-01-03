@@ -60,7 +60,7 @@ KiCheckTimerTable(IN ULARGE_INTEGER CurrentTime)
                 {
                     /* This is bad, breakpoint! */
                     DPRINT1("Invalid timer state!\n");
-                    DbgBreakPoint();
+                    //DbgBreakPoint();
                 }
             }
         }
