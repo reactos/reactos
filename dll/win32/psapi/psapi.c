@@ -43,13 +43,14 @@ FindDeviceDriver(IN PVOID ImageBase,
                  OUT PRTL_PROCESS_MODULE_INFORMATION MatchingModule)
 {
     NTSTATUS Status;
-    DWORD NewSize, Count;
+    DWORD i, j, RequiredSize;
     PRTL_PROCESS_MODULES Information;
     RTL_PROCESS_MODULE_INFORMATION Module;
     /* By default, to prevent too many reallocations, we already make room for 4 modules */
     DWORD Size = sizeof(RTL_PROCESS_MODULES) + 3 * sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
-    do
+    /* Only try 5 times */
+    for (i = 0; i < 5; i++)
     {
         /* Allocate a buffer to hold modules information */
         Information = LocalAlloc(LMEM_FIXED, Size);
@@ -60,13 +61,10 @@ FindDeviceDriver(IN PVOID ImageBase,
         }
 
         /* Query information */
-        Status = NtQuerySystemInformation(SystemModuleInformation, Information, Size, &Count);
-        /* In case of an error */
+        Status = NtQuerySystemInformation(SystemModuleInformation, Information, Size, &RequiredSize);
         if (!NT_SUCCESS(Status))
         {
-            /* Save the amount of output modules */
-            NewSize = Information->NumberOfModules;
-            /* And free buffer */
+            /* Free the current buffer */
             LocalFree(Information);
 
             /* If it was not a length mismatch (ie, buffer too small), just leave */
@@ -76,21 +74,8 @@ FindDeviceDriver(IN PVOID ImageBase,
                 return FALSE;
             }
 
-            /* Compute new size length */
-            ASSERT(Size >= sizeof(RTL_PROCESS_MODULES));
-            NewSize *= sizeof(RTL_PROCESS_MODULE_INFORMATION);
-            NewSize += sizeof(ULONG);
-            ASSERT(NewSize >= sizeof(RTL_PROCESS_MODULES));
-            /* Check whether it is really bigger - otherwise, leave */
-            if (NewSize < Size)
-            {
-                ASSERT(NewSize > Size);
-                SetLastError(RtlNtStatusToDosError(STATUS_INFO_LENGTH_MISMATCH));
-                return FALSE;
-            }
-
             /* Loop again with that new buffer */
-            Size = NewSize;
+            Size = RequiredSize;
             continue;
         }
 
@@ -101,9 +86,9 @@ FindDeviceDriver(IN PVOID ImageBase,
         }
 
         /* Try to find which module matches the base address given */
-        for (Count = 0; Count < Information->NumberOfModules; ++Count)
+        for (j = 0; j < Information->NumberOfModules; ++j)
         {
-            Module = Information->Modules[Count];
+            Module = Information->Modules[j];
             if (Module.ImageBase == ImageBase)
             {
                 /* Copy the matching module and leave */
@@ -115,7 +100,7 @@ FindDeviceDriver(IN PVOID ImageBase,
 
         /* If we arrive here, it means we were not able to find matching base address */
         break;
-    } while (TRUE);
+    }
 
     /* Release and leave */
     LocalFree(Information);
@@ -231,7 +216,7 @@ CallBackConvertToAscii(LPVOID pContext,
                        LPCWSTR lpFilename)
 {
     BOOL Ret;
-    DWORD Len;
+    SIZE_T Len;
     LPSTR AnsiFileName;
     PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
 
@@ -646,7 +631,7 @@ GetDeviceDriverBaseNameA(LPVOID ImageBase,
                          LPSTR lpBaseName,
                          DWORD nSize)
 {
-    DWORD Len, LenWithNull;
+    SIZE_T Len, LenWithNull;
     RTL_PROCESS_MODULE_INFORMATION Module;
 
     /* Get the associated device driver to the base address */
@@ -685,7 +670,7 @@ GetDeviceDriverFileNameA(LPVOID ImageBase,
                          LPSTR lpFilename,
                          DWORD nSize)
 {
-    DWORD Len, LenWithNull;
+    SIZE_T Len, LenWithNull;
     RTL_PROCESS_MODULE_INFORMATION Module;
 
     /* Get the associated device driver to the base address */
