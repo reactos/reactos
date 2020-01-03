@@ -34,7 +34,7 @@ START_TEST(RtlValidateUnicodeString)
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 
     // With a non-NULL but empty buffer, and zero lengths.
-    String.Buffer = L"";
+    RtlInitEmptyUnicodeString(&String, L"", 0);
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_SUCCESS, "Status = 0x%lx\n", Status);
     Status = RtlValidateUnicodeString(1, &String);
@@ -43,7 +43,7 @@ START_TEST(RtlValidateUnicodeString)
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 
     // With a non-NULL but empty buffer, and zero Length, non-zero MaximumLength.
-    String.Buffer = L"";
+    RtlInitEmptyUnicodeString(&String, L"", sizeof(WCHAR));
     String.Length = 0;
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_SUCCESS, "Status = 0x%lx\n", Status);
@@ -78,7 +78,8 @@ START_TEST(RtlValidateUnicodeString)
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 
-    // NULL buffer, non-zero Length, zero MaximumLength.
+    // NULL buffer, non-zero Length, zero MaximumLength
+    // (tests also the case Length > MaximumLength that must fail).
     String = ValidString;
     String.Buffer = NULL;
     String.MaximumLength = 0;
@@ -98,7 +99,6 @@ START_TEST(RtlValidateUnicodeString)
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 
-    String = ValidString;
     String.MaximumLength--; // MaximumLength was already >= 2 so it remains > 0.
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
