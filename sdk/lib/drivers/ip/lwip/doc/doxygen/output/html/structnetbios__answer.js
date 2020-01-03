@@ -1,0 +1,28 @@
+var structnetbios__answer =
+[
+    [ "answer_name", "structnetbios__answer.html#abf746cd54add594216ddc3683c741406", null ],
+    [ "answer_name_flags", "structnetbios__answer.html#a2729b7249e3d23309624cb19fa0dbfc4", null ],
+    [ "jumpers", "structnetbios__answer.html#a69cd3e8b8265531a7ce3e5cbd4911683", null ],
+    [ "max_number_of_pending_sessions", "structnetbios__answer.html#a58aba600ed34b7c689606c296ef57c8c", null ],
+    [ "max_total_number_of_command_blocks", "structnetbios__answer.html#a9cf85c173fe0d99c1c4e7e09aaeed9b8", null ],
+    [ "max_total_sessions_possible", "structnetbios__answer.html#a0069c9ae014881298828660787fa945e", null ],
+    [ "name_size", "structnetbios__answer.html#a5828dc04e01a1f7b734019db428fd46d", null ],
+    [ "number_of_alignment_errors", "structnetbios__answer.html#ab4f9ff63bd5529418c07762506189ad2", null ],
+    [ "number_of_collisions", "structnetbios__answer.html#a45b7aec200434d3aaabc3ea6ebc46c1e", null ],
+    [ "number_of_crcs", "structnetbios__answer.html#ab23a11db86a170b46aa8f8af434534d8", null ],
+    [ "number_of_free_command_blocks", "structnetbios__answer.html#af41cbffb0ac6a9db3305b3fc64646219", null ],
+    [ "number_of_good_receives", "structnetbios__answer.html#a0eab7dbe733cc50f515126649de596ea", null ],
+    [ "number_of_good_sends", "structnetbios__answer.html#aa6088bca2a59ffcd077a474330511abd", null ],
+    [ "number_of_names", "structnetbios__answer.html#ac4a95ccabbb945c9470e0cfd470be491", null ],
+    [ "number_of_no_resource_condition", "structnetbios__answer.html#a62946dd0f27e9f9b9f295dcde4d3ea42", null ],
+    [ "number_of_pending_sessions", "structnetbios__answer.html#a66098747155d5bd56f1c92aa8da10c1d", null ],
+    [ "number_of_retransmits", "structnetbios__answer.html#ab175ad0f89102b3b3f81a41b5a72b321", null ],
+    [ "number_of_send_aborts", "structnetbios__answer.html#a1560e3864a0821acea9410e8c1d21408", null ],
+    [ "period_of_statistics", "structnetbios__answer.html#a31ec9ea28b5801b9bb5f1b240d3412de", null ],
+    [ "query_name", "structnetbios__answer.html#aa024ce7e0e233c42393f5c3c378d3f9b", null ],
+    [ "session_data_packet_size", "structnetbios__answer.html#abec38f20bb460ddc2d6e8c9b9208608c", null ],
+    [ "test_result", "structnetbios__answer.html#a91116fe26c8050ee166053f377b40c7f", null ],
+    [ "total_number_of_command_blocks", "structnetbios__answer.html#a4c7ea5d1839fd27232877880e43485a2", null ],
+    [ "unit_id", "structnetbios__answer.html#aeed6aa8ba4f8bb107d141b3b3d0a1787", null ],
+    [ "version_number", "structnetbios__answer.html#a151dce0f0bf626b2a54fbb75775237ba", null ]
+];
