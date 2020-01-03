@@ -662,28 +662,32 @@ SeQuerySecurityDescriptorInfo(
 
     /* Calculate the required security descriptor length */
     Control = SE_SELF_RELATIVE;
-    if ((*SecurityInformation & OWNER_SECURITY_INFORMATION) &&
-        (ObjectSd->Owner != NULL))
+    if (*SecurityInformation & OWNER_SECURITY_INFORMATION)
     {
-        Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
-        OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-        Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
+        Owner = SepGetOwnerFromDescriptor(ObjectSd);
+        if (Owner != NULL)
+        {
+            OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+            Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
+        }
     }
 
-    if ((*SecurityInformation & GROUP_SECURITY_INFORMATION) &&
-        (ObjectSd->Group != NULL))
+    if (*SecurityInformation & GROUP_SECURITY_INFORMATION)
     {
-        Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
-        GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-        Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
+        Group = SepGetGroupFromDescriptor(ObjectSd);
+        if (Group != NULL)
+        {
+            GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+            Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
+        }
     }
 
     if ((*SecurityInformation & DACL_SECURITY_INFORMATION) &&
         (ObjectSd->Control & SE_DACL_PRESENT))
     {
-        if (ObjectSd->Dacl != NULL)
+        Dacl = SepGetDaclFromDescriptor(ObjectSd);
+        if (Dacl != NULL)
         {
-            Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
             DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
         }
 
@@ -693,9 +697,9 @@ SeQuerySecurityDescriptorInfo(
     if ((*SecurityInformation & SACL_SECURITY_INFORMATION) &&
         (ObjectSd->Control & SE_SACL_PRESENT))
     {
-        if (ObjectSd->Sacl != NULL)
+        Sacl = SepGetSaclFromDescriptor(ObjectSd);
+        if (Sacl != NULL)
         {
-            Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
             SaclLength = ROUND_UP(Sacl->AclSize, 4);
         }
 
