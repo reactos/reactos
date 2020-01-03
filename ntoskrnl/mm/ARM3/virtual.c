@@ -544,6 +544,12 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 {
     PMMPTE PointerPte, PrototypePte, LastPrototypePte;
     PMMPDE PointerPde;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPPE PointerPpe;
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPPE PointerPxe;
+#endif
     MMPTE TempPte;
     PEPROCESS CurrentProcess;
     KIRQL OldIrql;
@@ -557,6 +563,12 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     CurrentProcess = PsGetCurrentProcess();
     PointerPde = MiAddressToPde(Va);
     PointerPte = MiAddressToPte(Va);
+#if (_MI_PAGING_LEVELS >= 3)
+    PointerPpe = MiAddressToPpe((PVOID)Va);
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+    PointerPxe = MiAddressToPxe((PVOID)Va);
+#endif
 
     /* Check if this is a section VAD or a VM VAD */
     if (!(Vad) || (Vad->u.VadFlags.PrivateMemory) || !(Vad->FirstPrototypePte))
@@ -577,6 +589,45 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     /* Loop the PTE for each VA */
     while (TRUE)
     {
+#if (_MI_PAGING_LEVELS >= 4)
+        /* First keep going until we find a valid PDE */
+        while (!PointerPxe->u.Long)
+        {
+            /* There are gaps in the address space */
+            AddressGap = TRUE;
+
+            /* Still no valid PDE, try the next 4MB (or whatever) */
+            PointerPxe++;
+
+            /* Update the PTE on this new boundary */
+            PointerPpe = MiPteToAddress(PointerPxe);
+            PointerPde = MiPteToAddress(PointerPpe);
+            PointerPte = MiPteToAddress(PointerPde);
+
+            /* Check if all the PDEs are invalid, so there's nothing to free */
+            Va = (ULONG_PTR)MiPteToAddress(PointerPte);
+            if (Va > EndingAddress) return;
+        }
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        /* First keep going until we find a valid PDE */
+        while (!PointerPpe->u.Long)
+        {
+            /* There are gaps in the address space */
+            AddressGap = TRUE;
+
+            /* Still no valid PDE, try the next 4MB (or whatever) */
+            PointerPpe++;
+
+            /* Update the PTE on this new boundary */
+            PointerPde = MiPteToAddress(PointerPpe);
+            PointerPte = MiPteToAddress(PointerPde);
+
+            /* Check if all the PDEs are invalid, so there's nothing to free */
+            Va = (ULONG_PTR)MiPteToAddress(PointerPte);
+            if (Va > EndingAddress) return;
+        }
+#endif
         /* First keep going until we find a valid PDE */
         while (!PointerPde->u.Long)
         {
