@@ -1822,8 +1822,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         DWORD filter, D3DCOLOR color_key)
 {
     const struct pixel_format_desc *srcformatdesc, *destformatdesc;
-    IDirect3DSurface9 *surface = dst_surface;
-    IDirect3DDevice9 *device;
+    IDirect3DSurface9 *surface;
     D3DSURFACE_DESC surfdesc;
     D3DLOCKED_RECT lockrect;
     struct volume src_size, dst_size;
@@ -1883,25 +1882,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         return E_NOTIMPL;
     }
 
-    if (surfdesc.Pool == D3DPOOL_DEFAULT && !(surfdesc.Usage & D3DUSAGE_DYNAMIC))
-    {
-        IDirect3DSurface9_GetDevice(dst_surface, &device);
-        hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, surfdesc.Width,
-                surfdesc.Height, surfdesc.Format, D3DPOOL_SYSTEMMEM, &surface, NULL);
-        IDirect3DDevice9_Release(device);
-        if (FAILED(hr))
-        {
-            WARN("Failed to create staging surface, hr %#x.\n", hr);
-            return D3DERR_INVALIDCALL;
-        }
-    }
-
-    if (FAILED(IDirect3DSurface9_LockRect(surface, &lockrect, dst_rect, 0)))
-    {
-        if (surface != dst_surface)
-            IDirect3DSurface9_Release(surface);
-        return D3DXERR_INVALIDDATA;
-    }
+    if (FAILED(hr = lock_surface(dst_surface, &lockrect, &surface, TRUE)))
+        return hr;
 
     if (src_format == surfdesc.Format
             && dst_size.width == src_size.width
@@ -1916,8 +1898,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                     && src_size.height != surfdesc.Height))
         {
             WARN("Source rect %s is misaligned.\n", wine_dbgstr_rect(src_rect));
-            hr = D3DXERR_INVALIDDATA;
-            goto done;
+            unlock_surface(dst_surface, &lockrect, surface, FALSE);
+            return D3DXERR_INVALIDDATA;
         }
 
         copy_pixels(src_memory, src_pitch, 0, lockrect.pBits, lockrect.Pitch, 0,
@@ -1929,8 +1911,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                 || !is_conversion_to_supported(destformatdesc))
         {
             FIXME("Unsupported format conversion %#x -> %#x.\n", src_format, surfdesc.Format);
-            hr = E_NOTIMPL;
-            goto done;
+            unlock_surface(dst_surface, &lockrect, surface, FALSE);
+            return E_NOTIMPL;
         }
 
         if ((filter & 0xf) == D3DX_FILTER_NONE)
@@ -1950,21 +1932,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         }
     }
 
-    hr = D3D_OK;
-done:
-    IDirect3DSurface9_UnlockRect(surface);
-    if (surface != dst_surface)
-    {
-        if (SUCCEEDED(hr))
-        {
-            IDirect3DSurface9_GetDevice(dst_surface, &device);
-            hr = IDirect3DDevice9_UpdateSurface(device, surface, NULL, dst_surface, NULL);
-            IDirect3DDevice9_Release(device);
-        }
-        IDirect3DSurface9_Release(surface);
-    }
-
-    return hr;
+    return unlock_surface(dst_surface, &lockrect, surface, TRUE);
 }
 
 /************************************************************
