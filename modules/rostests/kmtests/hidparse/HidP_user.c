@@ -19,7 +19,13 @@ START_TEST(HidPDescription)
     DWORD Error;
 
     ServiceHandle = NULL;
-    KmtStartService(L"hidusb", &ServiceHandle);
+    Error = KmtStartService(L"hidusb", &ServiceHandle);
+    ok(Error == ERROR_SUCCESS, "Could not start service hidusb (Error=0x%lx). Sipping tests.\n", Error);
+    if (Error != ERROR_SUCCESS)
+    {
+        return;
+    }
+
     CloseServiceHandle(ServiceHandle);
 
     KmtLoadDriver(L"HidP", FALSE);
