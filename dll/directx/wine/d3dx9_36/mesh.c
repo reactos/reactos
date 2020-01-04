@@ -7186,6 +7186,33 @@ cleanup:
     return hr;
 }
 
+
+/*************************************************************************
+ * D3DXOptimizeVertices    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXOptimizeVertices(const void *indices, UINT num_faces,
+        UINT num_vertices, BOOL indices_are_32bit, DWORD *vertex_remap)
+{
+    UINT i;
+
+    FIXME("indices %p, num_faces %u, num_vertices %u, indices_are_32bit %#x, vertex_remap %p semi-stub.\n",
+            indices, num_faces, num_vertices, indices_are_32bit, vertex_remap);
+
+    if (!vertex_remap)
+    {
+        WARN("vertex remap pointer is NULL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    for (i = 0; i < num_vertices; i++)
+    {
+        vertex_remap[i] = i;
+    }
+
+    return D3D_OK;
+}
+
+
 /*************************************************************************
  * D3DXOptimizeFaces    (D3DX9_36.@)
  *
