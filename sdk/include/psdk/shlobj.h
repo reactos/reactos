@@ -2126,6 +2126,23 @@ typedef struct _DROPFILES
   BOOL  fWide;
 } DROPFILES, *LPDROPFILES;
 
+
+/*
+ * FILEDESCRIPTOR[A|W].dwFlags
+ */
+#define FD_CLSID        0x00000001
+#define FD_SIZEPOINT    0x00000002
+#define FD_ATTRIBUTES   0x00000004
+#define FD_CREATETIME   0x00000008
+#define FD_ACCESSTIME   0x00000010
+#define FD_WRITESTIME   0x00000020
+#define FD_FILESIZE     0x00000040
+#define FD_PROGRESSUI   0x00004000
+#define FD_LINKUI       0x00008000
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define FD_UNICODE      0x80000000
+#endif
+
 /*
  * Properties of a file in the clipboard
  */
