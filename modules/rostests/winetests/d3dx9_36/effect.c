@@ -343,7 +343,7 @@ static void test_create_effect_and_pool(IDirect3DDevice9 *device)
 
     hr = pool->lpVtbl->QueryInterface(pool, &IID_ID3DXEffectPool, (void **)&pool2);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK)\n", hr);
-    ok(pool == pool2, "Release failed, got %p, expected %p\n", pool2, pool);
+    ok(pool == pool2, "Got effect pool %p, expected %p.\n", pool2, pool);
 
     count = pool2->lpVtbl->Release(pool2);
     ok(count == 1, "Release failed, got %u, expected 1\n", count);
@@ -359,7 +359,7 @@ static void test_create_effect_and_pool(IDirect3DDevice9 *device)
 
     hr = effect->lpVtbl->GetPool(effect, &pool);
     ok(hr == D3D_OK, "GetPool failed, got %x, expected 0 (D3D_OK)\n", hr);
-    ok(pool == pool2, "GetPool failed, got %p, expected %p\n", pool2, pool);
+    ok(pool == pool2, "Got effect pool %p, expected %p.\n", pool2, pool);
 
     count = pool2->lpVtbl->Release(pool2);
     ok(count == 2, "Release failed, got %u, expected 2\n", count);
