@@ -745,7 +745,7 @@ GdiFixUpHandle(HGDIOBJ hGdiObj)
     Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
 
     /* Rebuild handle for Object */
-    return hGdiObj = (HGDIOBJ)(((LONG_PTR)(hGdiObj)) | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
+    return hGdiObj = (HGDIOBJ)(((ULONG_PTR)(hGdiObj)) | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
 }
 
 /*
