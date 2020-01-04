@@ -3332,6 +3332,13 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
         goto end;
     }
 
+    if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
+    {
+        hr = create_dummy_skin(&mesh_data->skin_info);
+        if (FAILED(hr))
+            goto end;
+    }
+
     hr = D3D_OK;
 
 end:

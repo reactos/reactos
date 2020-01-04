@@ -94,7 +94,7 @@ static ULONG WINAPI d3dx9_skin_info_Release(ID3DXSkinInfo *iface)
             HeapFree(GetProcessHeap(), 0, skin->bones[i].vertices);
             HeapFree(GetProcessHeap(), 0, skin->bones[i].weights);
         }
-        HeapFree(GetProcessHeap(), 0, skin->bones);
+        if (skin->bones) HeapFree(GetProcessHeap(), 0, skin->bones);
         HeapFree(GetProcessHeap(), 0, skin);
     }
 
@@ -494,4 +494,24 @@ HRESULT WINAPI D3DXCreateSkinInfoFVF(DWORD num_vertices, DWORD fvf, DWORD num_bo
         return hr;
 
     return D3DXCreateSkinInfo(num_vertices, declaration, num_bones, skin_info);
+}
+
+HRESULT create_dummy_skin(ID3DXSkinInfo **iface)
+{
+    static const D3DVERTEXELEMENT9 empty_declaration = D3DDECL_END();
+    struct d3dx9_skin_info *object = NULL;
+
+    object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
+    if (!object) return E_OUTOFMEMORY;
+
+    object->ID3DXSkinInfo_iface.lpVtbl = &d3dx9_skin_info_vtbl;
+    object->ref = 1;
+    object->num_vertices = 0;
+    object->num_bones = 0;
+    object->vertex_declaration[0] = empty_declaration;
+    object->fvf = 0;
+    object->bones = NULL;
+
+    *iface = &object->ID3DXSkinInfo_iface;
+    return D3D_OK;
 }
