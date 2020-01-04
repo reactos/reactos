@@ -410,4 +410,6 @@ struct ctab_constant {
 const struct ctab_constant *d3dx_shader_get_ctab_constant(ID3DXConstantTable *iface,
         D3DXHANDLE constant) DECLSPEC_HIDDEN;
 
+HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
+
 #endif /* __WINE_D3DX9_PRIVATE_H */
