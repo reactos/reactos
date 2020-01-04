@@ -1007,59 +1007,103 @@ static void WINAPI fillfunc(D3DXVECTOR4 *value, const D3DXVECTOR2 *texcoord,
 
 static void test_D3DXFillTexture(IDirect3DDevice9 *device)
 {
+    static const struct
+    {
+        DWORD usage;
+        D3DPOOL pool;
+    }
+    test_access_types[] =
+    {
+        {0,  D3DPOOL_MANAGED},
+        {0,  D3DPOOL_DEFAULT},
+        {D3DUSAGE_RENDERTARGET, D3DPOOL_DEFAULT},
+    };
+
     IDirect3DTexture9 *tex;
     HRESULT hr;
     D3DLOCKED_RECT lock_rect;
     DWORD x, y, m;
     DWORD v[4], e[4];
     DWORD value, expected, size, pitch;
+    unsigned int i;
 
-    size = 4;
-    hr = IDirect3DDevice9_CreateTexture(device, size, size, 0, 0, D3DFMT_A8R8G8B8,
-                                        D3DPOOL_MANAGED, &tex, NULL);
-
-    if (SUCCEEDED(hr))
+    for (i = 0; i < ARRAY_SIZE(test_access_types); ++i)
     {
+        size = 4;
+        hr = IDirect3DDevice9_CreateTexture(device, size, size, 0, test_access_types[i].usage,
+                D3DFMT_A8R8G8B8, test_access_types[i].pool, &tex, NULL);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
+
         hr = D3DXFillTexture(tex, fillfunc, NULL);
-        ok(hr == D3D_OK, "D3DXFillTexture returned %#x, expected %#x\n", hr, D3D_OK);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
 
         for (m = 0; m < 3; m++)
         {
-            hr = IDirect3DTexture9_LockRect(tex, m, &lock_rect, NULL, D3DLOCK_READONLY);
-            ok(hr == D3D_OK, "Couldn't lock the texture, error %#x\n", hr);
-            if (SUCCEEDED(hr))
+            IDirect3DSurface9 *src_surface, *temp_surface;
+
+            hr = IDirect3DTexture9_GetSurfaceLevel(tex, m, &src_surface);
+            ok(hr == D3D_OK, "Unexpected hr %#x, i %u, m %u.\n", hr, i, m);
+            temp_surface = src_surface;
+
+            if (FAILED(hr = IDirect3DSurface9_LockRect(src_surface, &lock_rect, NULL, D3DLOCK_READONLY)))
             {
-                pitch = lock_rect.Pitch / sizeof(DWORD);
-                for (y = 0; y < size; y++)
-                {
-                    for (x = 0; x < size; x++)
-                    {
-                        value = ((DWORD *)lock_rect.pBits)[y * pitch + x];
-                        v[0] = (value >> 24) & 0xff;
-                        v[1] = (value >> 16) & 0xff;
-                        v[2] = (value >> 8) & 0xff;
-                        v[3] = value & 0xff;
-
-                        e[0] = 0xff;
-                        e[1] = (x + 0.5f) / size * 255.0f + 0.5f;
-                        e[2] = (y + 0.5f) / size * 255.0f + 0.5f;
-                        e[3] = 255.0f / size + 0.5f;
-                        expected = e[0] << 24 | e[1] << 16 | e[2] << 8 | e[3];
-
-                        ok(color_match(v, e),
-                           "Texel at (%u, %u) doesn't match: %#x, expected %#x\n",
-                           x, y, value, expected);
-                    }
-                }
-                IDirect3DTexture9_UnlockRect(tex, m);
+                hr = IDirect3DDevice9_CreateRenderTarget(device, size, size,
+                        D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, TRUE, &temp_surface, NULL);
+                ok(hr == D3D_OK, "Unexpected hr %#x, i %u, m %u.\n", hr, i, m);
+                hr = IDirect3DDevice9_StretchRect(device, src_surface, NULL, temp_surface, NULL, D3DTEXF_NONE);
+                ok(hr == D3D_OK, "Unexpected hr %#x, i %u, m %u.\n", hr, i, m);
+                hr = IDirect3DSurface9_LockRect(temp_surface, &lock_rect, NULL, D3DLOCK_READONLY);
+                ok(hr == D3D_OK, "Unexpected hr %#x, i %u, m %u.\n", hr, i, m);
             }
+
+            pitch = lock_rect.Pitch / sizeof(DWORD);
+            for (y = 0; y < size; y++)
+            {
+                for (x = 0; x < size; x++)
+                {
+                    value = ((DWORD *)lock_rect.pBits)[y * pitch + x];
+                    v[0] = (value >> 24) & 0xff;
+                    v[1] = (value >> 16) & 0xff;
+                    v[2] = (value >> 8) & 0xff;
+                    v[3] = value & 0xff;
+
+                    e[0] = 0xff;
+                    e[1] = (x + 0.5f) / size * 255.0f + 0.5f;
+                    e[2] = (y + 0.5f) / size * 255.0f + 0.5f;
+                    e[3] = 255.0f / size + 0.5f;
+                    expected = e[0] << 24 | e[1] << 16 | e[2] << 8 | e[3];
+
+                    ok(color_match(v, e),
+                            "Texel at (%u, %u) doesn't match: %#x, expected %#x, i %u, m %u.\n",
+                            x, y, value, expected, i, m);
+                }
+            }
+            IDirect3DSurface9_UnlockRect(temp_surface);
+            if (temp_surface != src_surface)
+                IDirect3DSurface9_Release(temp_surface);
+            IDirect3DSurface9_Release(src_surface);
             size >>= 1;
         }
-
         IDirect3DTexture9_Release(tex);
     }
-    else
-        skip("Failed to create texture\n");
+
+    hr = IDirect3DDevice9_CreateTexture(device, 256, 256, 1, D3DUSAGE_DEPTHSTENCIL,
+            D3DFMT_D16_LOCKABLE, D3DPOOL_DEFAULT, &tex, NULL);
+    if (hr == D3D_OK)
+    {
+        hr = D3DXFillTexture(tex, fillfunc, NULL);
+        todo_wine ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+        IDirect3DTexture9_Release(tex);
+    }
+
+    hr = IDirect3DDevice9_CreateTexture(device, 256, 256, 1, D3DUSAGE_DEPTHSTENCIL,
+            D3DFMT_D16, D3DPOOL_DEFAULT, &tex, NULL);
+    if (hr == D3D_OK)
+    {
+        hr = D3DXFillTexture(tex, fillfunc, NULL);
+        ok(hr == D3DERR_INVALIDCALL, "Unexpected hr %#x.\n", hr);
+        IDirect3DTexture9_Release(tex);
+    }
 
     hr = IDirect3DDevice9_CreateTexture(device, 4, 4, 1, 0, D3DFMT_A1R5G5B5,
                                         D3DPOOL_MANAGED, &tex, NULL);

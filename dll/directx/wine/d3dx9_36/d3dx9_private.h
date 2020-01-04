@@ -121,6 +121,10 @@ HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *d
     const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
 HRESULT load_volume_texture_from_dds(IDirect3DVolumeTexture9 *volume_texture, const void *src_data,
     const PALETTEENTRY *palette, DWORD filter, DWORD color_key, const D3DXIMAGE_INFO *src_info) DECLSPEC_HIDDEN;
+HRESULT lock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
+        IDirect3DSurface9 **temp_surface, BOOL write) DECLSPEC_HIDDEN;
+HRESULT unlock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
+        IDirect3DSurface9 *temp_surface, BOOL update) DECLSPEC_HIDDEN;
 
 unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
 float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;

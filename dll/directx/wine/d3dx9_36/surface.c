@@ -199,49 +199,70 @@ static const struct {
     { 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000, D3DFMT_X8B8G8R8 },
 };
 
-static HRESULT lock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
-        IDirect3DSurface9 **temp_surface)
+HRESULT lock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
+        IDirect3DSurface9 **temp_surface, BOOL write)
 {
     IDirect3DDevice9 *device;
     D3DSURFACE_DESC desc;
+    DWORD lock_flag;
     HRESULT hr;
 
+    lock_flag = write ? D3DLOCK_DISCARD : D3DLOCK_READONLY;
     *temp_surface = NULL;
-    if (FAILED(hr = IDirect3DSurface9_LockRect(surface, lock, NULL, D3DLOCK_READONLY)))
+    if (FAILED(hr = IDirect3DSurface9_LockRect(surface, lock, NULL, lock_flag)))
     {
         IDirect3DSurface9_GetDevice(surface, &device);
         IDirect3DSurface9_GetDesc(surface, &desc);
-        if (FAILED(hr = IDirect3DDevice9_CreateRenderTarget(device, desc.Width, desc.Height,
-                desc.Format, D3DMULTISAMPLE_NONE, 0, TRUE, temp_surface, NULL)))
+
+        hr = write ? IDirect3DDevice9_CreateOffscreenPlainSurface(device, desc.Width, desc.Height,
+                desc.Format, D3DPOOL_SYSTEMMEM, temp_surface, NULL)
+                : IDirect3DDevice9_CreateRenderTarget(device, desc.Width, desc.Height,
+                desc.Format, D3DMULTISAMPLE_NONE, 0, TRUE, temp_surface, NULL);
+        if (FAILED(hr))
         {
+            WARN("Failed to create temporary surface, surface %p, format %#x,"
+                    " usage %#x, pool %#x, write %#x, width %u, height %u.\n",
+                    surface, desc.Format, desc.Usage, desc.Pool, write, desc.Width, desc.Height);
             IDirect3DDevice9_Release(device);
             return hr;
         }
 
-        if (SUCCEEDED(hr = IDirect3DDevice9_StretchRect(device, surface, NULL, *temp_surface, NULL, D3DTEXF_NONE)))
-            hr = IDirect3DSurface9_LockRect(*temp_surface, lock, NULL, D3DLOCK_READONLY);
+        if (write || SUCCEEDED(hr = IDirect3DDevice9_StretchRect(device, surface, NULL,
+                *temp_surface, NULL, D3DTEXF_NONE)))
+            hr = IDirect3DSurface9_LockRect(*temp_surface, lock, NULL, lock_flag);
+
         IDirect3DDevice9_Release(device);
         if (FAILED(hr))
         {
-            WARN("Failed to lock surface %p, usage %#x, pool %#x.\n",
-                    surface, desc.Usage, desc.Pool);
+            WARN("Failed to lock surface %p, write %#x, usage %#x, pool %#x.\n",
+                    surface, write, desc.Usage, desc.Pool);
             IDirect3DSurface9_Release(*temp_surface);
             *temp_surface = NULL;
             return hr;
         }
+        TRACE("Created temporary surface %p.\n", surface);
     }
     return hr;
 }
 
-static HRESULT unlock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
-        IDirect3DSurface9 *temp_surface)
+HRESULT unlock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
+        IDirect3DSurface9 *temp_surface, BOOL update)
 {
+    IDirect3DDevice9 *device;
     HRESULT hr;
 
     if (!temp_surface)
         return IDirect3DSurface9_UnlockRect(surface);
 
     hr = IDirect3DSurface9_UnlockRect(temp_surface);
+    if (update)
+    {
+        IDirect3DSurface9_GetDevice(surface, &device);
+        if (FAILED(hr = IDirect3DDevice9_UpdateSurface(device, temp_surface, NULL, surface, NULL)))
+            WARN("Updating surface failed, hr %#x, surface %p, temp_surface %p.\n",
+                    hr, surface, temp_surface);
+        IDirect3DDevice9_Release(device);
+    }
     IDirect3DSurface9_Release(temp_surface);
     return hr;
 }
@@ -2026,13 +2047,13 @@ HRESULT WINAPI D3DXLoadSurfaceFromSurface(IDirect3DSurface9 *dst_surface,
         src_rect = &s;
     }
 
-    if (FAILED(lock_surface(src_surface, &lock, &temp_surface)))
+    if (FAILED(lock_surface(src_surface, &lock, &temp_surface, FALSE)))
         return D3DXERR_INVALIDDATA;
 
     hr = D3DXLoadSurfaceFromMemory(dst_surface, dst_palette, dst_rect, lock.pBits,
             src_desc.Format, lock.Pitch, src_palette, src_rect, filter, color_key);
 
-    if (FAILED(unlock_surface(src_surface, &lock, temp_surface)))
+    if (FAILED(unlock_surface(src_surface, &lock, temp_surface, FALSE)))
         return D3DXERR_INVALIDDATA;
 
     return hr;
