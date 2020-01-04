@@ -1,0 +1,152 @@
+diff --git a/modules/rostests/winetests/d3dx9_36/mesh.c b/modules/rostests/winetests/d3dx9_36/mesh.c
+index 904a452..ea0b867 100644
+--- a/modules/rostests/winetests/d3dx9_36/mesh.c
++++ b/modules/rostests/winetests/d3dx9_36/mesh.c
+@@ -25,6 +25,9 @@
+ #include <limits.h>
+ #include "wine/test.h"
+ #include "d3dx9.h"
++#include "initguid.h"
++#include "rmxftmpl.h"
++#include "rmxfguid.h"
+ 
+ #ifndef NAN
+ /* From wine/port.h */
+@@ -2544,6 +2547,129 @@ static void D3DXLoadMeshTest(void)
+     free_test_context(test_context);
+ }
+ 
++static ID3DXFileData *get_mesh_data(const char *memory, SIZE_T length)
++{
++    D3DXF_FILELOADMEMORY source;
++    ID3DXFileEnumObject *enumobj = NULL;
++    ID3DXFileData *filedata = NULL;
++    ID3DXFileData *ret = NULL;
++    ID3DXFile *d3dxfile = NULL;
++    SIZE_T i, nb_children;
++    HRESULT hr;
++    GUID guid;
++
++    hr = D3DXFileCreate(&d3dxfile);
++    if (FAILED(hr)) return NULL;
++
++    hr = d3dxfile->lpVtbl->RegisterTemplates(d3dxfile, D3DRM_XTEMPLATES, D3DRM_XTEMPLATE_BYTES);
++    if (FAILED(hr)) goto cleanup;
++
++    source.lpMemory = (void *)memory;
++    source.dSize    = length;
++
++    hr = d3dxfile->lpVtbl->CreateEnumObject(d3dxfile, &source, D3DXF_FILELOAD_FROMMEMORY, &enumobj);
++    if (FAILED(hr)) goto cleanup;
++
++    hr = enumobj->lpVtbl->GetChildren(enumobj, &nb_children);
++    if (FAILED(hr)) goto cleanup;
++
++    for (i = 0; i < nb_children; i++)
++    {
++        hr = enumobj->lpVtbl->GetChild(enumobj, i, &filedata);
++        if (FAILED(hr)) goto cleanup;
++
++        hr = filedata->lpVtbl->GetType(filedata, &guid);
++        if (SUCCEEDED(hr) && IsEqualGUID(&guid, &TID_D3DRMMesh))
++        {
++            ret = filedata;
++            break;
++        }
++        else
++            filedata->lpVtbl->Release(filedata);
++    }
++
++cleanup:
++    if (enumobj) enumobj->lpVtbl->Release(enumobj);
++    if (d3dxfile) d3dxfile->lpVtbl->Release(d3dxfile);
++
++    return ret;
++}
++
++static void D3DXLoadSkinMeshFromXofTest(void)
++{
++    static const char simple_xfile[] =
++        "xof 0303txt 0032"
++        "Mesh {"
++            "3;"
++            "0.0; 0.0; 0.0;,"
++            "0.0; 1.0; 0.0;,"
++            "1.0; 1.0; 0.0;;"
++            "1;"
++            "3; 0, 1, 2;;"
++        "}";
++    ID3DXBuffer *adjacency, *materials, *effects;
++    D3DPRESENT_PARAMETERS d3dpp;
++    IDirect3DDevice9 *device;
++    ID3DXFileData *filedata;
++    ID3DXSkinInfo *skininfo;
++    ID3DXMesh *mesh;
++    IDirect3D9 *d3d;
++    DWORD mat_count;
++    HRESULT hr;
++    HWND hwnd;
++
++    if (!(hwnd = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0,
++            640, 480, NULL, NULL, NULL, NULL)))
++    {
++        skip("Couldn't create application window\n");
++        return;
++    }
++
++    d3d = Direct3DCreate9(D3D_SDK_VERSION);
++    if (!d3d)
++    {
++        skip("Couldn't create IDirect3D9 object\n");
++        DestroyWindow(hwnd);
++        return;
++    }
++
++    ZeroMemory(&d3dpp, sizeof(d3dpp));
++    d3dpp.Windowed   = TRUE;
++    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
++
++    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &device);
++    IDirect3D9_Release(d3d);
++    if (FAILED(hr))
++    {
++        skip("Failed to create IDirect3DDevice9 object %#x\n", hr);
++        DestroyWindow(hwnd);
++        return;
++    }
++
++    filedata = get_mesh_data(simple_xfile, sizeof(simple_xfile) - 1);
++    ok(filedata != NULL, "Failed to load mesh data\n");
++
++    adjacency = materials = effects = NULL;
++    skininfo = NULL;
++    mesh = NULL;
++
++    hr = D3DXLoadSkinMeshFromXof(filedata, 0, device, &adjacency, &materials, &effects, &mat_count, &skininfo, &mesh);
++    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK)\n", hr);
++    ok(skininfo != NULL, "Expected non-null skininfo\n");
++
++    /* FIXME: Add additional tests for skininfo interface. */
++
++    if (adjacency) adjacency->lpVtbl->Release(adjacency);
++    if (materials) materials->lpVtbl->Release(materials);
++    if (effects) effects->lpVtbl->Release(effects);
++    if (skininfo) skininfo->lpVtbl->Release(skininfo);
++    if (mesh) mesh->lpVtbl->Release(mesh);
++
++    filedata->lpVtbl->Release(filedata);
++    IDirect3DDevice9_Release(device);
++    DestroyWindow(hwnd);
++}
++
+ static BOOL compute_box(struct mesh *mesh, float width, float height, float depth)
+ {
+     unsigned int i, face;
+@@ -11222,6 +11348,7 @@ START_TEST(mesh)
+     D3DXCreateMeshTest();
+     D3DXCreateMeshFVFTest();
+     D3DXLoadMeshTest();
++    D3DXLoadSkinMeshFromXofTest();
+     D3DXCreateBoxTest();
+     D3DXCreatePolygonTest();
+     D3DXCreateSphereTest();
