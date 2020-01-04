@@ -530,6 +530,7 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
     BYTE *pixels;
     struct volume volume;
     const struct pixel_format_desc *pixel_format;
+    IDirect3DSurface9 *temp_surface;
 
     if (src_rect)
     {
@@ -569,7 +570,7 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
         return hr;
     }
 
-    hr = IDirect3DSurface9_LockRect(src_surface, &locked_rect, NULL, D3DLOCK_READONLY);
+    hr = lock_surface(src_surface, &locked_rect, &temp_surface, FALSE);
     if (FAILED(hr))
     {
         ID3DXBuffer_Release(buffer);
@@ -582,7 +583,7 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
     copy_pixels(locked_rect.pBits, locked_rect.Pitch, 0, pixels, dst_pitch, 0,
         &volume, pixel_format);
 
-    IDirect3DSurface9_UnlockRect(src_surface);
+    unlock_surface(src_surface, &locked_rect, temp_surface, FALSE);
 
     *dst_buffer = buffer;
     return D3D_OK;
@@ -2124,6 +2125,7 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     WICPixelFormatGUID wic_pixel_format;
     D3DFORMAT d3d_pixel_format;
     D3DSURFACE_DESC src_surface_desc;
+    IDirect3DSurface9 *temp_surface;
     D3DLOCKED_RECT locked_rect;
     int width, height;
     STATSTG stream_stats;
@@ -2131,7 +2133,7 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     ID3DXBuffer *buffer;
     DWORD size;
 
-    TRACE("(%p, %#x, %p, %p, %s)\n",
+    TRACE("dst_buffer %p, file_format %#x, src_surface %p, src_palette %p, src_rect %s.\n",
         dst_buffer, file_format, src_surface, src_palette, wine_dbgstr_rect(src_rect));
 
     if (!dst_buffer || !src_surface) return D3DERR_INVALIDCALL;
@@ -2225,16 +2227,14 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     if (SUCCEEDED(hr) && d3d_pixel_format != D3DFMT_UNKNOWN)
     {
         TRACE("Using pixel format %s %#x\n", debugstr_guid(&wic_pixel_format), d3d_pixel_format);
-
         if (src_surface_desc.Format == d3d_pixel_format) /* Simple copy */
         {
-            hr = IDirect3DSurface9_LockRect(src_surface, &locked_rect, src_rect, D3DLOCK_READONLY);
-            if (FAILED(hr))
+            if (FAILED(hr = lock_surface(src_surface, &locked_rect, &temp_surface, FALSE)))
                 goto cleanup;
 
             IWICBitmapFrameEncode_WritePixels(frame, height,
                 locked_rect.Pitch, height * locked_rect.Pitch, locked_rect.pBits);
-            IDirect3DSurface9_UnlockRect(src_surface);
+            unlock_surface(src_surface, &locked_rect, temp_surface, FALSE);
         }
         else /* Pixel format conversion */
         {
@@ -2264,16 +2264,14 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
                 hr = E_OUTOFMEMORY;
                 goto cleanup;
             }
-
-            hr = IDirect3DSurface9_LockRect(src_surface, &locked_rect, src_rect, D3DLOCK_READONLY);
-            if (FAILED(hr))
+            if (FAILED(hr = lock_surface(src_surface, &locked_rect, &temp_surface, FALSE)))
             {
                 HeapFree(GetProcessHeap(), 0, dst_data);
                 goto cleanup;
             }
             convert_argb_pixels(locked_rect.pBits, locked_rect.Pitch, 0, &size, src_format_desc,
                 dst_data, dst_pitch, 0, &size, dst_format_desc, 0, NULL);
-            IDirect3DSurface9_UnlockRect(src_surface);
+            unlock_surface(src_surface, &locked_rect, temp_surface, FALSE);
 
             IWICBitmapFrameEncode_WritePixels(frame, height, dst_pitch, dst_pitch * height, dst_data);
             HeapFree(GetProcessHeap(), 0, dst_data);
