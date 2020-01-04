@@ -10362,6 +10362,27 @@ cleanup:
     free_test_context(test_context);
 }
 
+static void test_optimize_vertices(void)
+{
+    HRESULT hr;
+    DWORD vertex_remap[3];
+    const DWORD indices[] = {0, 1, 2};
+    const UINT num_faces = 1;
+    const UINT num_vertices = 3;
+
+    hr = D3DXOptimizeVertices(indices, num_faces,
+                              num_vertices, FALSE,
+                              vertex_remap);
+    ok(hr == D3D_OK, "D3DXOptimizeVertices failed. Got %x, expected D3D_OK.\n", hr);
+
+    /* vertex_remap must not be NULL */
+    hr = D3DXOptimizeVertices(indices, num_faces,
+                              num_vertices, FALSE,
+                              NULL);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeVertices passed NULL vertex_remap "
+            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+}
+
 static void test_optimize_faces(void)
 {
     HRESULT hr;
@@ -11250,6 +11271,7 @@ START_TEST(mesh)
     test_weld_vertices();
     test_clone_mesh();
     test_valid_mesh();
+    test_optimize_vertices();
     test_optimize_faces();
     test_compute_normals();
     test_D3DXFrameFind();
