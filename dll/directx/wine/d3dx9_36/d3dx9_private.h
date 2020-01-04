@@ -125,6 +125,8 @@ HRESULT lock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
         IDirect3DSurface9 **temp_surface, BOOL write) DECLSPEC_HIDDEN;
 HRESULT unlock_surface(IDirect3DSurface9 *surface, D3DLOCKED_RECT *lock,
         IDirect3DSurface9 *temp_surface, BOOL update) DECLSPEC_HIDDEN;
+HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture,
+    const PALETTEENTRY *src_palette) DECLSPEC_HIDDEN;
 
 unsigned short float_32_to_16(const float in) DECLSPEC_HIDDEN;
 float float_16_to_32(const unsigned short in) DECLSPEC_HIDDEN;
