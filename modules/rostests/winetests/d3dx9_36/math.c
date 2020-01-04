@@ -640,12 +640,717 @@ static void D3DXMatrixTest(void)
 
 /*____________D3DXMatrixTransformation______________*/
     set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            8.5985f, -21.024f, 14.383499, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            0.0f, 52.0f, 54.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            18.2985f, -29.624001f, 15.683499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, NULL, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            9.7f, 43.400002f, 55.299999f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            8.5985f, -21.024f, 14.383499, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            8.5985f, -21.024f, 14.383499, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            8.5985f, -21.024f, 14.383499, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            104.565598f, -35.492798f, -25.306400f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            0.0f, 52.0f, 54.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            -287420.0f, -14064.0f, 37122.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            18.2985f, -29.624001f, 15.683499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, NULL, &axis, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            18.2985f, -29.624001f, 15.683499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, NULL, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            18.2985f, -29.624001f, 15.683499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, NULL, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            114.265594f, -44.092796f, -24.006401f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, -3.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 7.0f, 0.0f,
+            9.7f, 43.400002f, 55.299999f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            9.7f, -8.6f, 1.3f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            -287410.3125f, -14072.599609f, 37123.300781f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, NULL, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            8.598499f, -21.024f, 14.383499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            113.164093f, -56.5168f, -10.922897f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            0.9504f, -0.8836f, 0.9244f, 0.0f,
+            1.0212f, 0.1936f, -1.3588f, 0.0f,
+            8.5985f, -21.024f, 14.383499, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, NULL, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            86280.34375f, -357366.3125f, -200024.125f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, NULL, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            -287410.3125f, -14064.0f, 37122.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, &eye, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 512);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            86280.34375f, -357366.3125f, -200009.75f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, &eye, &r, NULL);
+    expect_matrix(&expectedmat, &gotmat, 2048);
+
+    set_matrix(&expectedmat,
+            25521.0f, 39984.0f, 20148.0f, 0.0f,
+            39984.0f, 4933.0f, -3324.0f, 0.0f,
+            20148.0f, -3324.0f, -5153.0f, 0.0f,
+            -287410.3125f, -14072.599609f, 37123.300781f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, &eye, NULL, &last);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            86290.046875f, -357374.90625f, -200022.828125f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, &q, &axis, NULL, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    set_matrix(&expectedmat,
             -0.21480007f, 1.3116000f, 0.47520003f, 0.0f,
             0.95040143f, -0.88360137f, 0.92439979f, 0.0f,
             1.0212044f, 0.19359307f, -1.3588026f, 0.0f,
             18.298532f, -29.624001f, 15.683499f, 1.0f);
     D3DXMatrixTransformation(&gotmat, &at, &q, NULL, &eye, &r, &last);
     expect_matrix(&expectedmat, &gotmat, 512);
+
+    set_matrix(&expectedmat,
+            -0.2148f, 1.3116f, 0.4752f, 0.0f,
+            -2.8512f, 2.6508f, -2.7732f, 0.0f,
+            7.148399f, 1.3552f, -9.5116f, 0.0f,
+            122.86409f, -65.116798f, -9.622897f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, &at, NULL, &axis, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 8);
+
+    set_matrix(&expectedmat,
+            53094.015625f, 2044.133789f, 21711.687500f, 0.0f,
+            -7294.705078f, 47440.683594f, 28077.113281, 0.0f,
+            -12749.161133f, 28365.580078f, 13503.520508f, 0.0f,
+            18.2985f, -29.624001f, 15.683499f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, &eye, &r, &last);
+    expect_matrix(&expectedmat, &gotmat, 32);
+
+    q.x = 1.0f, q.y = 1.0f, q.z = 1.0f, q.w = 1.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 2.0f,
+
+    set_matrix(&expectedmat,
+            41.0f, -12.0f, -24.0f, 0.0f,
+            -12.0f, 25.0f, -12.0f, 0.0f,
+            -24.0f, -12.0f, 34.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 1.0f, q.z = 1.0f, q.w = 1.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            57.0f, -12.0f, -36.0f, 0.0f,
+            -12.0f, 25.0f, -12.0f, 0.0f,
+            -36.0f, -12.0f, 43.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 1.0f, q.z = 1.0f, q.w = 0.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            25.0f, 0.0f, -20.0f, 0.0f,
+            0.0f, 25.0f, -20.0f, 0.0f,
+            -20.0f, -20.0f, 35.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 1.0f, q.z = 0.0f, q.w = 0.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            5.0f, -4.0f, 0.0f, 0.0f,
+            -4.0f, 5.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 27.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 0.0f, q.z = 0.0f, q.w = 0.0f,
+    axis.x = 5.0f, axis.y = 2.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            5.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 2.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 0.0f, q.z = 0.0f, q.w = 0.0f,
+    axis.x = 1.0f, axis.y = 4.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 4.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 0.0f, q.y = 1.0f, q.z = 0.0f, q.w = 0.0f,
+    axis.x = 1.0f, axis.y = 4.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 4.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 0.0f, q.z = 0.0f, q.w = 1.0f,
+    axis.x = 1.0f, axis.y = 4.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 8.0f, -6.0f, 0.0f,
+            0.0f, -6.0f, 17.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 0.0f, q.z = 0.0f, q.w = 1.0f,
+    axis.x = 0.0f, axis.y = 4.0f, axis.z = 0.0f,
+
+    set_matrix(&expectedmat,
+            0.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 4.0f, -8.0f, 0.0f,
+            0.0f, -8.0f, 16.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 0.0f, q.y = 1.0f, q.z = 0.0f, q.w = 1.0f,
+    axis.x = 1.0f, axis.y = 4.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            5.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 4.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 5.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 1.0f, q.y = 0.0f, q.z = 0.0f, q.w = 0.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 3.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 3.0f, axis.y = 3.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            3796587.0f, -1377948.0f, -1589940.0f, 0.0f,
+            -1377948.0f, 3334059.0f, -1879020.0f, 0.0f,
+            -1589940.0f, -1879020.0f, 2794443.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            1265529.0f, -459316.0f, -529980.0f, 0.0f,
+            -459316.0f, 1111353.0f, -626340.0f, 0.0f,
+            -529980.0f, -626340.0f, 931481.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 1.0f, axis.y = 1.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            2457497.0f, -434612.0f, -1423956.0f, 0.0f,
+            -434612.0f, 1111865.0f, -644868.0f, 0.0f,
+            -1423956.0f, -644868.0f, 1601963.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 0.0f, axis.y = 0.0f, axis.z = 3.0f,
+
+    set_matrix(&expectedmat,
+            1787952.0f, 37056.0f, -1340964.0f, 0.0f,
+            37056.0f, 768.0f, -27792.0f, 0.0f,
+            -1340964.0f, -27792.0f, 1005723.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 0.0f, axis.y = 0.0f, axis.z = 1.0f,
+
+    set_matrix(&expectedmat,
+            595984.0f, 12352.0f, -446988.0f, 0.0f,
+            12352.0f, 256.0f, -9264.0f, 0.0f,
+            -446988.0f, -9264.0f, 335241.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 0.0f, axis.y = 3.0f, axis.z = 0.0f,
+
+    set_matrix(&expectedmat,
+            150528.0f, 464352.0f, -513408.0f, 0.0f,
+            464352.0f, 1432443.0f, -1583772.0f, 0.0f,
+            -513408.0f, -1583772.0f, 1751088.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 0.0f, axis.y = 1.0f, axis.z = 0.0f,
+
+    set_matrix(&expectedmat,
+            50176.0f, 154784.0f, -171136.0f, 0.0f,
+            154784.0f, 477481.0f, -527924.0f, 0.0f,
+            -171136.0f, -527924.0f, 583696.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
+
+    q.x = 11.0f, q.y = 13.0f, q.z = 15.0f, q.w = 17.0f,
+    axis.x = 1.0f, axis.y = 0.0f, axis.z = 0.0f,
+
+    set_matrix(&expectedmat,
+            619369.0f, -626452.0f, 88144.0f, 0.0f,
+            -626452.0f, 633616.0f, -89152.0f, 0.0f,
+            88144.0f, -89152, 12544.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXMatrixTransformation(&gotmat, NULL, &q, &axis, NULL, NULL, NULL);
+    expect_matrix(&expectedmat, &gotmat, 0);
 
 /*____________D3DXMatrixTranslation______________*/
     set_matrix(&expectedmat,
