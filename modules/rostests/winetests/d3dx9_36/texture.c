@@ -1423,8 +1423,14 @@ static void test_D3DXFillVolumeTexture(IDirect3DDevice9 *device)
 
     size = 4;
     hr = IDirect3DDevice9_CreateVolumeTexture(device, size, size, size, 0, 0, D3DFMT_A8R8G8B8,
-                                              D3DPOOL_MANAGED, &tex, NULL);
+            D3DPOOL_DEFAULT, &tex, NULL);
+    ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+    hr = D3DXFillVolumeTexture(tex, fillfunc_volume, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Unexpected hr %#x.\n", hr);
+    IDirect3DVolumeTexture9_Release(tex);
 
+    hr = IDirect3DDevice9_CreateVolumeTexture(device, size, size, size, 0, 0, D3DFMT_A8R8G8B8,
+            D3DPOOL_MANAGED, &tex, NULL);
     if (SUCCEEDED(hr))
     {
         hr = D3DXFillVolumeTexture(tex, fillfunc_volume, NULL);
