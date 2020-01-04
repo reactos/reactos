@@ -526,7 +526,10 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
 
     /* Integrity checks */
     ASSERT((pentry->FullUnique & 0x1f) == pentry->Objt);
-    ASSERT(pentry->einfo.pobj && pentry->einfo.pobj->hHmgr == hobj);
+    ASSERT(pentry->einfo.pobj != NULL);
+
+    /* Check if lower 32 bits match, the upper 32 bits are ignored */
+    ASSERT(pentry->einfo.pobj->hHmgr == UlongToPtr(PtrToUlong(hobj)));
 
     return pentry;
 }
