@@ -253,6 +253,13 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         return height;
     }
 
+    if (format & DT_CENTER)
+    {
+        UINT new_width = calc_rect.right - calc_rect.left;
+        calc_rect.left = (rect->right + rect->left - new_width) / 2;
+        calc_rect.right = calc_rect.left + new_width;
+    }
+
     if (height && (calc_rect.left < calc_rect.right))
     {
         D3DLOCKED_RECT locked_rect;
