@@ -810,79 +810,53 @@ D3DXMATRIX * WINAPI D3DXMatrixTransformation(D3DXMATRIX *out, const D3DXVECTOR3 
     return out;
 }
 
-D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *pout, const D3DXVECTOR2 *pscalingcenter, FLOAT scalingrotation, const D3DXVECTOR2 *pscaling, const D3DXVECTOR2 *protationcenter, FLOAT rotation, const D3DXVECTOR2 *ptranslation)
+static void vec3_from_vec2(D3DXVECTOR3 *v3, const D3DXVECTOR2 *v2)
 {
-    D3DXQUATERNION rot, sca_rot;
-    D3DXVECTOR3 rot_center, sca, sca_center, trans;
+    if (!v2)
+        return;
 
-    TRACE("pout %p, pscalingcenter %p, scalingrotation %f, pscaling %p, protztioncenter %p, rotation %f, ptranslation %p\n",
-        pout, pscalingcenter, scalingrotation, pscaling, protationcenter, rotation, ptranslation);
+    v3->x = v2->x;
+    v3->y = v2->y;
+    v3->z = 0.0f;
+}
 
-    if ( pscalingcenter )
-    {
-        sca_center.x=pscalingcenter->x;
-        sca_center.y=pscalingcenter->y;
-        sca_center.z=0.0f;
-    }
-    else
-    {
-        sca_center.x=0.0f;
-        sca_center.y=0.0f;
-        sca_center.z=0.0f;
-    }
+D3DXMATRIX * WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *out, const D3DXVECTOR2 *scaling_center,
+        float scaling_rotation, const D3DXVECTOR2 *scaling, const D3DXVECTOR2 *rotation_center,
+        float rotation, const D3DXVECTOR2 *translation)
+{
+    D3DXVECTOR3 r_c, s, s_c, t;
+    D3DXQUATERNION r, s_r;
 
-    if ( pscaling )
-    {
-        sca.x=pscaling->x;
-        sca.y=pscaling->y;
-        sca.z=1.0f;
-    }
-    else
-    {
-        sca.x=1.0f;
-        sca.y=1.0f;
-        sca.z=1.0f;
-    }
+    TRACE("out %p, scaling_center %p, scaling_rotation %.8e, scaling %p, rotation_center %p, "
+            "rotation %.8e, translation %p.\n",
+            out, scaling_center, scaling_rotation, scaling, rotation_center, rotation, translation);
 
-    if ( protationcenter )
+    vec3_from_vec2(&s_c, scaling_center);
+    vec3_from_vec2(&s, scaling);
+    if (scaling)
+        s.z = 1.0f;
+    vec3_from_vec2(&r_c, rotation_center);
+    vec3_from_vec2(&t, translation);
+
+    if (rotation)
     {
-        rot_center.x=protationcenter->x;
-        rot_center.y=protationcenter->y;
-        rot_center.z=0.0f;
-    }
-    else
-    {
-        rot_center.x=0.0f;
-        rot_center.y=0.0f;
-        rot_center.z=0.0f;
+        r.w = cosf(rotation / 2.0f);
+        r.x = 0.0f;
+        r.y = 0.0f;
+        r.z = sinf(rotation / 2.0f);
     }
 
-    if ( ptranslation )
+    if (scaling_rotation)
     {
-        trans.x=ptranslation->x;
-        trans.y=ptranslation->y;
-        trans.z=0.0f;
-    }
-    else
-    {
-        trans.x=0.0f;
-        trans.y=0.0f;
-        trans.z=0.0f;
+        s_r.w = cosf(scaling_rotation / 2.0f);
+        s_r.x = 0.0f;
+        s_r.y = 0.0f;
+        s_r.z = sinf(scaling_rotation / 2.0f);
     }
 
-    rot.w=cosf(rotation/2.0f);
-    rot.x=0.0f;
-    rot.y=0.0f;
-    rot.z=sinf(rotation/2.0f);
-
-    sca_rot.w=cosf(scalingrotation/2.0f);
-    sca_rot.x=0.0f;
-    sca_rot.y=0.0f;
-    sca_rot.z=sinf(scalingrotation/2.0f);
-
-    D3DXMatrixTransformation(pout, &sca_center, &sca_rot, &sca, &rot_center, &rot, &trans);
-
-    return pout;
+    return D3DXMatrixTransformation(out, scaling_center ? &s_c : NULL,
+            scaling_rotation ? &s_r : NULL, scaling ? &s : NULL, rotation_center ? &r_c: NULL,
+            rotation ? &r : NULL, translation ? &t : NULL);
 }
 
 D3DXMATRIX* WINAPI D3DXMatrixTranslation(D3DXMATRIX *pout, FLOAT x, FLOAT y, FLOAT z)
