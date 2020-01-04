@@ -13,6 +13,18 @@ EXTERN __chkstk:PROC
 
 .code64
 
+; VOID
+; LeafFunction (
+;     PVOID* p,
+;     PVOID x);
+;
+PUBLIC LeafFunction
+FUNC LeafFunction
+    .ENDPROLOG
+    mov [rcx], rdx
+    ret
+ENDFUNC
+
 ;
 ; VOID
 ; UnwindCallWrapper (
@@ -146,11 +158,11 @@ FUNC UnwindStub4
     ; Capture the context
     call RtlCaptureContext ; 0x04
 
-    mov 
+   ; mov 
 
     ; restore the context
     xor rdx, rdx
-    call RtlRestoreContext
+   ; call RtlRestoreContext
 
 ENDFUNC
 

@@ -42,6 +42,7 @@ extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
 #ifdef _M_AMD64
 extern void func_RtlCaptureContext(void);
+extern void func_RtlDispatchException(void);
 extern void func_RtlVirtualUnwind(void);
 #endif
 extern void func_RtlComputePrivatizedDllName_U(void);
@@ -115,6 +116,7 @@ const struct test winetest_testlist[] =
     { "RtlBitmapApi",                   func_RtlBitmap },
 #ifdef _M_AMD64
     { "RtlCaptureContext",              func_RtlCaptureContext },
+    { "RtlDispatchException",           func_RtlDispatchException },
     { "RtlVirtualUnwind",               func_RtlVirtualUnwind },
 #endif
     { "RtlComputePrivatizedDllName_U",  func_RtlComputePrivatizedDllName_U },
@@ -144,8 +146,10 @@ const struct test winetest_testlist[] =
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
     { "RtlValidateUnicodeString",       func_RtlValidateUnicodeString },
+#ifndef _RTL_TEST
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
+#endif
 
     { 0, 0 }
 };
