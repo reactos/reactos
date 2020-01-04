@@ -821,47 +821,55 @@ int main( int argc, char **argv )
 
 // Some helpful definitions
 
-#define ok_hex(expression, result) \
+#define ok_hex_(file, line, expression, result) \
     do { \
         int _value = (expression); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
+        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
            #expression, (int)(result), _value); \
     } while (0)
+#define ok_hex(expression, result)      ok_hex_(__FILE__, __LINE__, expression, result)
 
-#define ok_dec(expression, result) \
+#define ok_dec_(file, line, expression, result) \
     do { \
         int _value = (expression); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
+        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
            #expression, (int)(result), _value); \
     } while (0)
+#define ok_dec(expression, result)      ok_dec_(__FILE__, __LINE__, expression, result)
 
-#define ok_ptr(expression, result) \
+#define ok_ptr_(file, line, expression, result) \
     do { \
         void *_value = (expression); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
            #expression, (void*)(result), _value); \
     } while (0)
+#define ok_ptr(expression, result)      ok_ptr_(__FILE__, __LINE__, expression, result)
 
-#define ok_size_t(expression, result) \
+#define ok_size_t_(file, line, expression, result) \
     do { \
         size_t _value = (expression); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
+        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
            #expression, (size_t)(result), _value); \
     } while (0)
+#define ok_size_t(expression, result)   ok_size_t_(__FILE__, __LINE__, expression, result)
 
 #define ok_char(expression, result) ok_hex(expression, result)
 
-#define ok_err(error) \
-    ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
+#define ok_err_(file, line, error) \
+    ok_(file, line)(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
+#define ok_err(error)      ok_err_(__FILE__, __LINE__, error)
 
-#define ok_str(x, y) \
-    ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+#define ok_str_(file, line, x, y) \
+    ok_(file, line)(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+#define ok_str(x, y)      ok_str_(__FILE__, __LINE__, x, y)
 
-#define ok_wstr(x, y) \
-    ok(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+#define ok_wstr_(file, line, x, y) \
+    ok_(file, line)(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+#define ok_wstr(x, y)     ok_wstr_(__FILE__, __LINE__, x, y)
 
 #define ok_long(expression, result) ok_hex(expression, result)
 #define ok_int(expression, result) ok_dec(expression, result)
+#define ok_int_(file, line, expression, result) ok_dec_(file, line, expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
 
