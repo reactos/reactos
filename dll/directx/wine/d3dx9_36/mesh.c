@@ -1695,11 +1695,7 @@ static HRESULT WINAPI d3dx9_mesh_OptimizeInplace(ID3DXMesh *iface, DWORD flags, 
         if (FAILED(hr)) goto cleanup;
     } else if (flags & D3DXMESHOPT_ATTRSORT) {
         if (!(flags & D3DXMESHOPT_IGNOREVERTS))
-        {
             FIXME("D3DXMESHOPT_ATTRSORT vertex reordering not implemented.\n");
-            hr = E_NOTIMPL;
-            goto cleanup;
-        }
 
         hr = iface->lpVtbl->LockAttributeBuffer(iface, 0, &attrib_buffer);
         if (FAILED(hr)) goto cleanup;
