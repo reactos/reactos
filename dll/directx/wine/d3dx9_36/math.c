@@ -744,82 +744,70 @@ D3DXMATRIX* WINAPI D3DXMatrixShadow(D3DXMATRIX *pout, const D3DXVECTOR4 *plight,
     return pout;
 }
 
-D3DXMATRIX* WINAPI D3DXMatrixTransformation(D3DXMATRIX *pout, const D3DXVECTOR3 *pscalingcenter, const D3DXQUATERNION *pscalingrotation, const D3DXVECTOR3 *pscaling, const D3DXVECTOR3 *protationcenter, const D3DXQUATERNION *protation, const D3DXVECTOR3 *ptranslation)
+D3DXMATRIX * WINAPI D3DXMatrixTransformation(D3DXMATRIX *out, const D3DXVECTOR3 *scaling_center,
+        const D3DXQUATERNION *scaling_rotation, const D3DXVECTOR3 *scaling,
+        const D3DXVECTOR3 *rotation_center, const D3DXQUATERNION *rotation,
+        const D3DXVECTOR3 *translation)
 {
-    D3DXMATRIX m1, m2, m3, m4, m5, m6, m7;
-    D3DXQUATERNION prc;
-    D3DXVECTOR3 psc, pt;
+    static const D3DXVECTOR3 zero_vector;
+    D3DXMATRIX m1, msr1, ms, msr, msc, mrc1, mr, mrc, mt;
+    D3DXVECTOR3 sc, rc;
+    D3DXQUATERNION q;
 
-    TRACE("pout %p, pscalingcenter %p, pscalingrotation %p, pscaling %p, protationcentr %p, protation %p, ptranslation %p\n",
-        pout, pscalingcenter, pscalingrotation, pscaling, protationcenter, protation, ptranslation);
+    TRACE("out %p, scaling_center %p, scaling_rotation %p, scaling %p, rotation_center %p,"
+            " rotation %p, translation %p.\n",
+            out, scaling_center, scaling_rotation, scaling, rotation_center, rotation, translation);
 
-    if ( !pscalingcenter )
+    if (scaling)
     {
-        psc.x = 0.0f;
-        psc.y = 0.0f;
-        psc.z = 0.0f;
+        sc = scaling_center ? *scaling_center : zero_vector;
+        D3DXMatrixTranslation(&m1, -sc.x, -sc.y, -sc.z);
+        if (scaling_rotation)
+        {
+            q.x = -scaling_rotation->x;
+            q.y = -scaling_rotation->y;
+            q.z = -scaling_rotation->z;
+            q.w = scaling_rotation->w;
+            D3DXMatrixRotationQuaternion(&msr1, &q);
+            D3DXMatrixMultiply(&m1, &m1, &msr1);
+        }
+        D3DXMatrixScaling(&ms, scaling->x, scaling->y, scaling->z);
+        D3DXMatrixMultiply(&m1, &m1, &ms);
+        if (scaling_rotation)
+        {
+            D3DXMatrixRotationQuaternion(&msr, scaling_rotation);
+            D3DXMatrixMultiply(&m1, &m1, &msr);
+        }
+        D3DXMatrixTranslation(&msc, sc.x, sc.y, sc.z);
+        D3DXMatrixMultiply(&m1, &m1, &msc);
     }
     else
     {
-        psc.x = pscalingcenter->x;
-        psc.y = pscalingcenter->y;
-        psc.z = pscalingcenter->z;
+        D3DXMatrixIdentity(&m1);
     }
 
-    if ( !protationcenter )
+    if (rotation)
     {
-        prc.x = 0.0f;
-        prc.y = 0.0f;
-        prc.z = 0.0f;
+        rc = rotation_center ? *rotation_center : zero_vector;
+        D3DXMatrixTranslation(&mrc1, -rc.x, -rc.y, -rc.z);
+        D3DXMatrixMultiply(&m1, &m1, &mrc1);
+        D3DXMatrixRotationQuaternion(&mr, rotation);
+        D3DXMatrixMultiply(&m1, &m1, &mr);
+        D3DXMatrixTranslation(&mrc, rc.x, rc.y, rc.z);
+        D3DXMatrixMultiply(&m1, &m1, &mrc);
+    }
+
+    if (translation)
+    {
+        D3DXMatrixTranslation(&mt, translation->x, translation->y, translation->z);
+        D3DXMatrixMultiply(out, &m1, &mt);
     }
     else
     {
-        prc.x = protationcenter->x;
-        prc.y = protationcenter->y;
-        prc.z = protationcenter->z;
+        *out = m1;
     }
 
-    if ( !ptranslation )
-    {
-        pt.x = 0.0f;
-        pt.y = 0.0f;
-        pt.z = 0.0f;
-    }
-    else
-    {
-        pt.x = ptranslation->x;
-        pt.y = ptranslation->y;
-        pt.z = ptranslation->z;
-    }
-
-    D3DXMatrixTranslation(&m1, -psc.x, -psc.y, -psc.z);
-
-    if ( !pscalingrotation )
-    {
-        D3DXMatrixIdentity(&m2);
-        D3DXMatrixIdentity(&m4);
-    }
-    else
-    {
-        D3DXMatrixRotationQuaternion(&m4, pscalingrotation);
-        D3DXMatrixInverse(&m2, NULL, &m4);
-    }
-
-    if ( !pscaling ) D3DXMatrixIdentity(&m3);
-    else D3DXMatrixScaling(&m3, pscaling->x, pscaling->y, pscaling->z);
-
-    if ( !protation ) D3DXMatrixIdentity(&m6);
-    else D3DXMatrixRotationQuaternion(&m6, protation);
-
-    D3DXMatrixTranslation(&m5, psc.x - prc.x,  psc.y - prc.y,  psc.z - prc.z);
-    D3DXMatrixTranslation(&m7, prc.x + pt.x, prc.y + pt.y, prc.z + pt.z);
-    D3DXMatrixMultiply(&m1, &m1, &m2);
-    D3DXMatrixMultiply(&m1, &m1, &m3);
-    D3DXMatrixMultiply(&m1, &m1, &m4);
-    D3DXMatrixMultiply(&m1, &m1, &m5);
-    D3DXMatrixMultiply(&m1, &m1, &m6);
-    D3DXMatrixMultiply(pout, &m1, &m7);
-    return pout;
+    return out;
 }
 
 D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(D3DXMATRIX *pout, const D3DXVECTOR2 *pscalingcenter, FLOAT scalingrotation, const D3DXVECTOR2 *pscaling, const D3DXVECTOR2 *protationcenter, FLOAT rotation, const D3DXVECTOR2 *ptranslation)
