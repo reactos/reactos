@@ -29,6 +29,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
+HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT, IWICImagingFactory**);
 
 /* Wine-specific WIC GUIDs */
 DEFINE_GUID(GUID_WineContainerFormatTga, 0x0c44fda1,0xa5c5,0x4298,0x96,0x85,0x47,0x3f,0xc1,0x7c,0xd3,0x22);
@@ -861,7 +862,6 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
     IWICBitmapDecoder *decoder = NULL;
     IWICStream *stream;
     HRESULT hr;
-    HRESULT initresult;
     BOOL dib;
 
     TRACE("(%p, %d, %p)\n", data, datasize, info);
@@ -880,9 +880,7 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
     /* In case of DIB file, convert it to BMP */
     dib = convert_dib_to_bmp((void**)&data, &datasize);
 
-    initresult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-
-    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, (void**)&factory);
+    hr = WICCreateImagingFactory_Proxy(WINCODEC_SDK_VERSION, &factory);
 
     if (SUCCEEDED(hr)) {
         IWICImagingFactory_CreateStream(factory, &stream);
@@ -967,9 +965,6 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
 
     if (decoder)
         IWICBitmapDecoder_Release(decoder);
-
-    if (SUCCEEDED(initresult))
-        CoUninitialize();
 
     if (dib)
         HeapFree(GetProcessHeap(), 0, (void*)data);
@@ -1108,7 +1103,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(IDirect3DSurface9 *pDestSurface,
         const RECT *pSrcRect, DWORD dwFilter, D3DCOLOR Colorkey, D3DXIMAGE_INFO *pSrcInfo)
 {
     D3DXIMAGE_INFO imginfo;
-    HRESULT hr, com_init;
+    HRESULT hr;
 
     IWICImagingFactory *factory = NULL;
     IWICBitmapDecoder *decoder;
@@ -1161,9 +1156,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(IDirect3DSurface9 *pDestSurface,
     if (imginfo.ImageFileFormat == D3DXIFF_DIB)
         convert_dib_to_bmp((void**)&pSrcData, &SrcDataSize);
 
-    com_init = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-
-    if (FAILED(CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, (void**)&factory)))
+    if (FAILED(WICCreateImagingFactory_Proxy(WINCODEC_SDK_VERSION, &factory)))
         goto cleanup_err;
 
     if (FAILED(IWICImagingFactory_CreateStream(factory, &stream)))
@@ -1263,9 +1256,6 @@ cleanup_bmp:
 cleanup_err:
     if (factory)
         IWICImagingFactory_Release(factory);
-
-    if (SUCCEEDED(com_init))
-        CoUninitialize();
 
     if (imginfo.ImageFileFormat == D3DXIFF_DIB)
         HeapFree(GetProcessHeap(), 0, (void*)pSrcData);
@@ -2087,10 +2077,10 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     IPropertyBag2 *encoder_options = NULL;
     IStream *stream = NULL;
     HRESULT hr;
-    HRESULT initresult;
-    const CLSID *encoder_clsid;
+    const GUID *container_format;
     const GUID *pixel_format_guid;
     WICPixelFormatGUID wic_pixel_format;
+    IWICImagingFactory *factory;
     D3DFORMAT d3d_pixel_format;
     D3DSURFACE_DESC src_surface_desc;
     IDirect3DSurface9 *temp_surface;
@@ -2116,13 +2106,13 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     {
         case D3DXIFF_BMP:
         case D3DXIFF_DIB:
-            encoder_clsid = &CLSID_WICBmpEncoder;
+            container_format = &GUID_ContainerFormatBmp;
             break;
         case D3DXIFF_PNG:
-            encoder_clsid = &CLSID_WICPngEncoder;
+            container_format = &GUID_ContainerFormatPng;
             break;
         case D3DXIFF_JPG:
-            encoder_clsid = &CLSID_WICJpegEncoder;
+            container_format = &GUID_ContainerFormatJpeg;
             break;
         case D3DXIFF_DDS:
             return save_dds_surface_to_memory(dst_buffer, src_surface, src_rect);
@@ -2160,10 +2150,11 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
         height = src_surface_desc.Height;
     }
 
-    initresult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    hr = WICCreateImagingFactory_Proxy(WINCODEC_SDK_VERSION, &factory);
+    if (FAILED(hr)) goto cleanup_err;
 
-    hr = CoCreateInstance(encoder_clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICBitmapEncoder, (void **)&encoder);
+    hr = IWICImagingFactory_CreateEncoder(factory, container_format, NULL, &encoder);
+    IWICImagingFactory_Release(factory);
     if (FAILED(hr)) goto cleanup_err;
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
@@ -2293,8 +2284,6 @@ cleanup:
     if (encoder_options) IPropertyBag2_Release(encoder_options);
 
     if (encoder) IWICBitmapEncoder_Release(encoder);
-
-    if (SUCCEEDED(initresult)) CoUninitialize();
 
     return hr;
 }
