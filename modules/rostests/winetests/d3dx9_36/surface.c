@@ -847,21 +847,24 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
 
     /* non-lockable render target */
     hr = IDirect3DDevice9_CreateRenderTarget(device, 256, 256, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_NONE, 0, FALSE, &newsurf, NULL);
-    if (SUCCEEDED(hr)) {
-        hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
-        ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x\n", hr, D3D_OK);
-
-        IDirect3DSurface9_Release(newsurf);
-    } else skip("Failed to create render target surface\n");
+    ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+    IDirect3DSurface9_Release(newsurf);
 
     /* non-lockable multisampled render target */
     hr = IDirect3DDevice9_CreateRenderTarget(device, 256, 256, D3DFMT_A8R8G8B8, D3DMULTISAMPLE_2_SAMPLES, 0, FALSE, &newsurf, NULL);
-    if (SUCCEEDED(hr)) {
+    if (SUCCEEDED(hr))
+    {
        hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
-       ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x\n", hr, D3D_OK);
+       ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
 
        IDirect3DSurface9_Release(newsurf);
-    } else skip("Failed to create multisampled render target.\n");
+    }
+    else
+    {
+        skip("Failed to create multisampled render target.\n");
+    }
 
     hr = IDirect3DDevice9_GetRenderTarget(device, 0, &newsurf);
     ok(hr == D3D_OK, "IDirect3DDevice9_GetRenderTarget returned %#x, expected %#x.\n", hr, D3D_OK);
