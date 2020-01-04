@@ -1906,10 +1906,7 @@ HRESULT WINAPI D3DXSaveTextureToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     if (!dst_buffer || !src_texture) return D3DERR_INVALIDCALL;
 
     if (file_format == D3DXIFF_DDS)
-    {
-        FIXME("DDS file format isn't supported yet\n");
-        return E_NOTIMPL;
-    }
+        return save_dds_texture_to_memory(dst_buffer, src_texture, src_palette);
 
     type = IDirect3DBaseTexture9_GetType(src_texture);
     switch (type)
