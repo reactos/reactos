@@ -7537,6 +7537,24 @@ done:
 }
 
 /*************************************************************************
+ * D3DXComputeTangent    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeTangent(ID3DXMesh *mesh, DWORD stage_idx, DWORD tangent_idx,
+        DWORD binorm_idx, DWORD wrap, const DWORD *adjacency)
+{
+    TRACE("mesh %p, stage_idx %d, tangent_idx %d, binorm_idx %d, wrap %d, adjacency %p.\n",
+           mesh, stage_idx, tangent_idx, binorm_idx, wrap, adjacency);
+
+    return D3DXComputeTangentFrameEx( mesh, D3DDECLUSAGE_TEXCOORD, stage_idx,
+            ( binorm_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_BINORMAL,
+            binorm_idx,
+            ( tangent_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_TANGENT,
+            tangent_idx, D3DX_DEFAULT, 0,
+            ( wrap ? D3DXTANGENT_WRAP_UV : 0 ) | D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_ORTHOGONALIZE_FROM_U,
+            adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
+}
+
+/*************************************************************************
  * D3DXComputeNormals    (D3DX9_36.@)
  */
 HRESULT WINAPI D3DXComputeNormals(struct ID3DXBaseMesh *mesh, const DWORD *adjacency)
