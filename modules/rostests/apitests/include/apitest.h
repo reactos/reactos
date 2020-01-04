@@ -32,4 +32,7 @@
        ExceptionStatus, (ExpectedStatus));          \
 }
 
+#define ok_hr(status, expected)                 ok_hex(status, expected)
+#define ok_hr_(file, line, status, expected)    ok_hex_(file, line, status, expected)
+
 #endif /* _APITEST_H */
