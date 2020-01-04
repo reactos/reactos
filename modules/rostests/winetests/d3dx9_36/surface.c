@@ -1253,16 +1253,30 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
 
 static void test_D3DXSaveSurfaceToFileInMemory(IDirect3DDevice9 *device)
 {
-    HRESULT hr;
-    RECT rect;
-    ID3DXBuffer *buffer;
-    IDirect3DSurface9 *surface;
+    static const struct
+    {
+        DWORD usage;
+        D3DPOOL pool;
+    }
+    test_access_types[] =
+    {
+        {0,  D3DPOOL_MANAGED},
+        {0,  D3DPOOL_DEFAULT},
+        {D3DUSAGE_RENDERTARGET, D3DPOOL_DEFAULT},
+    };
+
     struct
     {
          DWORD magic;
          struct dds_header header;
          BYTE *data;
     } *dds;
+    IDirect3DSurface9 *surface;
+    IDirect3DTexture9 *texture;
+    ID3DXBuffer *buffer;
+    unsigned int i;
+    HRESULT hr;
+    RECT rect;
 
     hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, 4, 4, D3DFMT_A8R8G8B8, D3DPOOL_SCRATCH, &surface, NULL);
     if (FAILED(hr)) {
@@ -1317,6 +1331,27 @@ static void test_D3DXSaveSurfaceToFileInMemory(IDirect3DDevice9 *device)
     ID3DXBuffer_Release(buffer);
 
     IDirect3DSurface9_Release(surface);
+
+    for (i = 0; i < ARRAY_SIZE(test_access_types); ++i)
+    {
+        hr = IDirect3DDevice9_CreateTexture(device, 4, 4, 0, test_access_types[i].usage,
+                D3DFMT_A8R8G8B8, test_access_types[i].pool, &texture, NULL);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
+
+        hr = IDirect3DTexture9_GetSurfaceLevel(texture, 0, &surface);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
+
+        hr = D3DXSaveSurfaceToFileInMemory(&buffer, D3DXIFF_DDS, surface, NULL, NULL);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
+        ID3DXBuffer_Release(buffer);
+
+        hr = D3DXSaveSurfaceToFileInMemory(&buffer, D3DXIFF_BMP, surface, NULL, NULL);
+        ok(hr == D3D_OK, "Unexpected hr %#x, i %u.\n", hr, i);
+        ID3DXBuffer_Release(buffer);
+
+        IDirect3DSurface9_Release(surface);
+        IDirect3DTexture9_Release(texture);
+    }
 }
 
 static void test_D3DXSaveSurfaceToFile(IDirect3DDevice9 *device)
