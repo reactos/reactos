@@ -245,10 +245,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
+    /* Zero out the context to avoid leaking kernel stack memor to user mode */
+    RtlZeroMemory(&Context, sizeof(Context));
+
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_ALL;
 
-    /* Get a Context */
+    /* Get the Context from the trap and exception frame */
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
 
     /* Look at our exception code */
