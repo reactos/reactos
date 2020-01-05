@@ -135,8 +135,6 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
     Type = MemoryArea->Type;
     if (Type == MEMORY_AREA_SECTION_VIEW)
     {
-        BOOLEAN Attached = FALSE;
-        KAPC_STATE ApcState;
         ULONG_PTR Entry;
         Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
                  ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea));
@@ -168,22 +166,10 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
         MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
         MmUnlockAddressSpace(AddressSpace);
 
-        /* Attach to the target process */
-        if (Process != PsGetCurrentProcess())
-        {
-            KeStackAttachProcess(&Process->Pcb, &ApcState);
-            Attached = TRUE;
-        }
-
         /*
          * Do the actual page out work.
          */
         Status = MmPageOutSectionView(AddressSpace, MemoryArea, Address, Entry);
-
-        if (Attached)
-        {
-            KeUnstackDetachProcess(&ApcState);
-        }
     }
     else if (Type == MEMORY_AREA_CACHE)
     {

@@ -1925,10 +1925,19 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
     MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
     BOOLEAN WasDirty;
     PFN_NUMBER Page = 0;
+    KAPC_STATE ApcState;
+    BOOLEAN Attached = FALSE;
 
     PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
     if (Process)
     {
+        /* Attach to the target process */
+        if (Process != PsGetCurrentProcess())
+        {
+            KeStackAttachProcess(&Process->Pcb, &ApcState);
+            Attached = TRUE;
+        }
+
         MmLockAddressSpace(&Process->Vm);
     }
 
@@ -1951,9 +1960,15 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
                                          &PageOutContext->SectionEntry);
         MmUnlockSectionSegment(PageOutContext->Segment);
     }
+
     if (Process)
     {
         MmUnlockAddressSpace(&Process->Vm);
+    }
+
+    if (Attached)
+    {
+        KeUnstackDetachProcess(&ApcState);
     }
 
     if (PageOutContext->Private)
@@ -1979,8 +1994,17 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     BOOLEAN IsImageSection;
 #endif
     BOOLEAN DirectMapped;
+    KAPC_STATE ApcState;
+    BOOLEAN Attached = FALSE;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     KIRQL OldIrql;
+
+    /* Attach to the target process */
+    if ((Process != NULL) && (Process != PsGetCurrentProcess()))
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
 
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -2056,7 +2080,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                Page, MmGetReferenceCountPage(Page));
         MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
         MmUnlockSectionSegment(Context.Segment);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
     }
 
     /*
@@ -2136,7 +2161,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             MmUnlockSectionSegment(Context.Segment);
             MmReleasePageMemoryConsumer(MC_USER, Page);
             MiSetPageEvent(NULL, NULL);
-            return(STATUS_SUCCESS);
+            Status = STATUS_SUCCESS;
+            goto Exit;
         }
     }
     else if (Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
@@ -2158,7 +2184,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             }
             MmReleasePageMemoryConsumer(MC_USER, Page);
             MiSetPageEvent(NULL, NULL);
-            return(STATUS_SUCCESS);
+            Status = STATUS_SUCCESS;
+            goto Exit;
         }
     }
     else if (!Context.Private && DirectMapped)
@@ -2182,7 +2209,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         }
 #endif
         MiSetPageEvent(NULL, NULL);
-        return(STATUS_SUCCESS);
+        Status = STATUS_SUCCESS;
+        goto Exit;
     }
     else if (!Context.WasDirty && !DirectMapped && !Context.Private)
     {
@@ -2194,7 +2222,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         }
         MmReleasePageMemoryConsumer(MC_USER, Page);
         MiSetPageEvent(NULL, NULL);
-        return(STATUS_SUCCESS);
+        Status = STATUS_SUCCESS;
+        goto Exit;
     }
     else if (!Context.WasDirty && Context.Private && SwapEntry != 0)
     {
@@ -2212,7 +2241,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         }
         MmReleasePageMemoryConsumer(MC_USER, Page);
         MiSetPageEvent(NULL, NULL);
-        return(STATUS_SUCCESS);
+        Status = STATUS_SUCCESS;
+        goto Exit;
     }
 
     /*
@@ -2269,7 +2299,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             }
             MmUnlockAddressSpace(AddressSpace);
             MiSetPageEvent(NULL, NULL);
-            return(STATUS_PAGEFILE_QUOTA);
+            Status = STATUS_PAGEFILE_QUOTA;
+            goto Exit;
         }
     }
 
@@ -2316,7 +2347,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         }
         MmUnlockAddressSpace(AddressSpace);
         MiSetPageEvent(NULL, NULL);
-        return(STATUS_UNSUCCESSFUL);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
     }
 
     /*
@@ -2365,7 +2397,15 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     }
 
     MiSetPageEvent(NULL, NULL);
-    return(STATUS_SUCCESS);
+    Status = STATUS_SUCCESS;
+
+Exit:
+    if (Attached)
+    {
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    return Status;
 }
 
 NTSTATUS
