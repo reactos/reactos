@@ -81,7 +81,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceGetAlignmentRequirement;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceSetAlignmentRequirement;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitFree;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetPnpPowerEventCallbacks;
+	PFN_WDFDEVICEINITSETPNPPOWEREVENTCALLBACKS   pfnWdfDeviceInitSetPnpPowerEventCallbacks;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetPowerPolicyEventCallbacks;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetPowerPolicyOwnership;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitRegisterPnpStateChangeCallback;
@@ -101,9 +101,9 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetRequestAttributes;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitAssignWdmIrpPreprocessCallback;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetIoInCallerContextCallback;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceCreate;
+	PFN_WDFDEVICECREATE   pfnWdfDeviceCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceSetStaticStopRemove;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceCreateDeviceInterface;
+	PFN_WDFDEVICECREATEDEVICEINTERFACE   pfnWdfDeviceCreateDeviceInterface;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceSetDeviceInterfaceState;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceRetrieveDeviceInterfaceString;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceCreateSymbolicLink;
@@ -118,7 +118,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceResumeIdle;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceGetFileObject;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceEnqueueRequest;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceGetDefaultQueue;
+	PFN_WDFDEVICEGETDEFAULTQUEUE   pfnWdfDeviceGetDefaultQueue;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceConfigureRequestDispatching;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDmaEnablerCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDmaEnablerGetMaximumLength;
@@ -148,8 +148,8 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfDriverOpenParametersRegistryKey;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWdmDriverGetWdfDriverHandle;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDriverRegisterTraceInfo;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDriverRetrieveVersionString;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDriverIsVersionAvailable;
+	PFN_WDFDRIVERRETRIEVEVERSIONSTRING   pfnWdfDriverRetrieveVersionString;
+	PFN_WDFDRIVERISVERSIONAVAILABLE   pfnWdfDriverIsVersionAvailable;
 	PFN_WDFUNIMPLEMENTED   pfnWdfFdoInitWdmGetPhysicalDevice;
 	PFN_WDFUNIMPLEMENTED   pfnWdfFdoInitOpenRegistryKey;
 	PFN_WDFUNIMPLEMENTED   pfnWdfFdoInitQueryProperty;
@@ -178,11 +178,11 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfInterruptGetInfo;
 	PFN_WDFUNIMPLEMENTED   pfnWdfInterruptSetPolicy;
 	PFN_WDFUNIMPLEMENTED   pfnWdfInterruptGetDevice;
-	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueCreate;
+	PFN_WDFIOQUEUECREATE   pfnWdfIoQueueCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueGetState;
-	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueStart;
+	PFN_WDFIOQUEUESTART   pfnWdfIoQueueStart;
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueStop;
-	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueStopSynchronously;
+	PFN_WDFIOQUEUESTOPSYNCHRONOUSLY   pfnWdfIoQueueStopSynchronously;
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueGetDevice;
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueRetrieveNextRequest;
 	PFN_WDFUNIMPLEMENTED   pfnWdfIoQueueRetrieveRequestByFileObject;
@@ -222,8 +222,8 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryCreatePreallocated;
 	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryGetBuffer;
 	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryAssignBuffer;
-	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryCopyToBuffer;
-	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryCopyFromBuffer;
+	PFN_WDFMEMORYCOPYTOBUFFER   pfnWdfMemoryCopyToBuffer;
+	PFN_WDFMEMORYCOPYFROMBUFFER   pfnWdfMemoryCopyFromBuffer;
 	PFN_WDFUNIMPLEMENTED   pfnWdfLookasideListCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryCreateFromLookaside;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceMiniportCreate;
@@ -234,7 +234,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectReferenceActual;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectDereferenceActual;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectCreate;
-	PFN_WDFUNIMPLEMENTED   pfnWdfObjectDelete;
+	PFN_WDFOBJECTDELETE   pfnWdfObjectDelete;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectQuery;
 	PFN_WDFUNIMPLEMENTED   pfnWdfPdoInitAllocate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfPdoInitSetEventCallbacks;
@@ -281,34 +281,34 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestWdmFormatUsingStackLocation;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestSend;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetStatus;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestMarkCancelable;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestUnmarkCancelable;
+	PFN_WDFREQUESTMARKCANCELABLE   pfnWdfRequestMarkCancelable;
+	PFN_WDFREQUESTUNMARKCANCELABLE   pfnWdfRequestUnmarkCancelable;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestIsCanceled;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestCancelSentRequest;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestIsFrom32BitProcess;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestSetCompletionRoutine;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetCompletionParams;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestAllocateTimer;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestComplete;
+	PFN_WDFREQUESTCOMPLETE   pfnWdfRequestComplete;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestCompleteWithPriorityBoost;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestCompleteWithInformation;
+	PFN_WDFREQUESTCOMPLETEWITHINFORMATION   pfnWdfRequestCompleteWithInformation;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetParameters;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveInputMemory;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveOutputMemory;
+	PFN_WDFREQUESTRETRIEVEINPUTMEMORY   pfnWdfRequestRetrieveInputMemory;
+	PFN_WDFREQUESTRETRIEVEOUTPUTMEMORY   pfnWdfRequestRetrieveOutputMemory;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveInputBuffer;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveOutputBuffer;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveInputWdmMdl;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveOutputWdmMdl;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveUnsafeUserInputBuffer;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRetrieveUnsafeUserOutputBuffer;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestSetInformation;
+	PFN_WDFREQUESTSETINFORMATION   pfnWdfRequestSetInformation;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetInformation;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetFileObject;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestProbeAndLockUserBufferForRead;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestProbeAndLockUserBufferForWrite;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetRequestorMode;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestForwardToIoQueue;
-	PFN_WDFUNIMPLEMENTED   pfnWdfRequestGetIoQueue;
+	PFN_WDFREQUESTGETIOQUEUE   pfnWdfRequestGetIoQueue;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestRequeue;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestStopAcknowledge;
 	PFN_WDFUNIMPLEMENTED   pfnWdfRequestWdmGetIrp;
@@ -334,8 +334,8 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfCmResourceListGetDescriptor;
 	PFN_WDFUNIMPLEMENTED   pfnWdfCmResourceListRemove;
 	PFN_WDFUNIMPLEMENTED   pfnWdfCmResourceListRemoveByDescriptor;
-	PFN_WDFUNIMPLEMENTED   pfnWdfStringCreate;
-	PFN_WDFUNIMPLEMENTED   pfnWdfStringGetUnicodeString;
+	PFN_WDFSTRINGCREATE   pfnWdfStringCreate;
+	PFN_WDFSTRINGGETUNICODESTRING   pfnWdfStringGetUnicodeString;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectAcquireLock;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectReleaseLock;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWaitLockCreate;
@@ -344,10 +344,10 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockAcquire;
 	PFN_WDFUNIMPLEMENTED   pfnWdfSpinLockRelease;
-	PFN_WDFUNIMPLEMENTED   pfnWdfTimerCreate;
-	PFN_WDFUNIMPLEMENTED   pfnWdfTimerStart;
-	PFN_WDFUNIMPLEMENTED   pfnWdfTimerStop;
-	PFN_WDFUNIMPLEMENTED   pfnWdfTimerGetParentObject;
+	PFN_WDFTIMERCREATE   pfnWdfTimerCreate;
+	PFN_WDFTIMERSTART   pfnWdfTimerStart;
+	PFN_WDFTIMERSTOP   pfnWdfTimerStop;
+	PFN_WDFTIMERGETPARENTOBJECT   pfnWdfTimerGetParentObject;
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbTargetDeviceCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbTargetDeviceRetrieveInformation;
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbTargetDeviceGetDeviceDescriptor;
@@ -393,7 +393,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbInterfaceGetNumConfiguredPipes;
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbInterfaceGetConfiguredPipe;
 	PFN_WDFUNIMPLEMENTED   pfnWdfUsbTargetPipeWdmGetPipeHandle;
-	PFN_WDFUNIMPLEMENTED   pfnWdfVerifierDbgBreakPoint;
+	PFN_WDFVERIFIERDBGBREAKPOINT   pfnWdfVerifierDbgBreakPoint;
 	PFN_WDFUNIMPLEMENTED   pfnWdfVerifierKeBugCheck;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWmiProviderCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfWmiProviderGetDevice;
@@ -437,6 +437,7 @@ typedef struct _WDFVERSION {
 
 } WDFVERSION, *PWDFVERSION;
 
+// ----- WDFDRIVER ----- //
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
@@ -455,6 +456,356 @@ WDFEXPORT(WdfDriverCreate)(
     _Out_opt_
     WDFDRIVER* Driver
     );
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverRetrieveVersionString)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in
+    WDFSTRING String
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+BOOLEAN
+WDFEXPORT(WdfDriverIsVersionAvailable)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in
+    PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
+    );
+
+// ----- WDFDRIVER ----- //
+
+// ----- WDFDEVICE -----//
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PWDFDEVICE_INIT DeviceInit,
+    __in
+    PWDF_PNPPOWER_EVENT_CALLBACKS PnpPowerEventCallbacks
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __inout
+    PWDFDEVICE_INIT* DeviceInit,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES DeviceAttributes,
+    __out
+    WDFDEVICE* Device
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceCreateDeviceInterface)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDEVICE Device,
+    __in
+    CONST GUID *InterfaceClassGUID,
+    __in_opt
+    PCUNICODE_STRING ReferenceString
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFQUEUE
+WDFEXPORT(WdfDeviceGetDefaultQueue)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDEVICE Device
+    );
+
+// ----- WDFDEVICE -----//
+
+// ----- WDFIO -----//
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfIoQueueStart)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFQUEUE Queue
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfIoQueueCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDEVICE Device,
+    __in
+    PWDF_IO_QUEUE_CONFIG Config,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES QueueAttributes,
+    __out_opt
+    WDFQUEUE* Queue
+    );
+
+__drv_maxIRQL(PASSIVE_LEVEL)
+VOID
+WDFEXPORT(WdfIoQueueStopSynchronously)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFQUEUE Queue
+    );
+
+// ----- WDFIO -----//
+
+// ----- WDFTIMER -----//
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfTimerCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PWDF_TIMER_CONFIG Config,
+    __in
+    PWDF_OBJECT_ATTRIBUTES Attributes,
+    __out
+    WDFTIMER * Timer
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+BOOLEAN
+WDFEXPORT(WdfTimerStart)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFTIMER Timer,
+    __in
+    LONGLONG DueTime
+    );
+
+__drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
+__drv_when(Wait == __false, __drv_maxIRQL(DISPATCH_LEVEL))
+BOOLEAN
+WDFEXPORT(WdfTimerStop)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFTIMER Timer,
+    __in
+    BOOLEAN  Wait
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFOBJECT
+WDFEXPORT(WdfTimerGetParentObject)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFTIMER Timer
+    );
+
+// ----- WDFTIMER -----//
+
+// ----- WDFREQUEST -----//
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFQUEUE
+WDFAPI
+WDFEXPORT(WdfRequestGetIoQueue)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFAPI
+WDFEXPORT(WdfRequestCompleteWithInformation)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request,
+    __in
+    NTSTATUS RequestStatus,
+    __in
+    ULONG_PTR Information
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFAPI
+WDFEXPORT(WdfRequestRetrieveOutputMemory)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request,
+    __out
+    WDFMEMORY *Memory
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFAPI
+WDFEXPORT(WdfRequestComplete)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request,
+    __in
+    NTSTATUS RequestStatus
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFAPI
+WDFEXPORT(WdfRequestSetInformation)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request,
+    __in
+    ULONG_PTR Information
+    );
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfRequestMarkCancelable)(
+   __in
+   PWDF_DRIVER_GLOBALS DriverGlobals,
+   __in
+   WDFREQUEST Request,
+   __in
+   PFN_WDF_REQUEST_CANCEL  EvtRequestCancel
+   );
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFAPI
+WDFEXPORT(WdfRequestRetrieveInputMemory)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFREQUEST Request,
+    __out
+    WDFMEMORY *Memory
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfRequestUnmarkCancelable)(
+   __in
+   PWDF_DRIVER_GLOBALS DriverGlobals,
+   __in
+   WDFREQUEST Request
+   );
+
+// ----- WDFREQUEST -----//
+
+// ----- WDFMEMORY -----//
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFAPI
+WDFEXPORT(WdfMemoryCopyToBuffer)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFMEMORY SourceMemory,
+    __in
+    size_t SourceOffset,
+    __out_bcount( NumBytesToCopyTo)
+    PVOID Buffer,
+    __in
+    __drv_when(NumBytesToCopyTo == 0, __drv_reportError(NumBytesToCopyTo cannot be zero))
+    size_t NumBytesToCopyTo
+    );
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFAPI
+WDFEXPORT(WdfMemoryCopyFromBuffer)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFMEMORY DestinationMemory,
+    __in
+    size_t DestinationOffset,
+    __in
+    PVOID Buffer,
+    __in
+    __drv_when(NumBytesToCopyFrom == 0, __drv_reportError(NumBytesToCopyFrom cannot be zero))
+    size_t NumBytesToCopyFrom
+    );
+
+// ----- WDFMEMORY -----//
+
+// ----- WDFSTRING -----//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfStringCreate)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in_opt
+    PCUNICODE_STRING UnicodeString,
+    __in_opt
+    PWDF_OBJECT_ATTRIBUTES StringAttributes,
+    __out
+    WDFSTRING* String
+    );
+
+__drv_maxIRQL(PASSIVE_LEVEL)
+VOID
+WDFEXPORT(WdfStringGetUnicodeString)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFSTRING String,
+    __out
+    PUNICODE_STRING UnicodeString
+    );
+
+// ----- WDFSTRING -----//
+
+// ----- WDFOBJECT -----//
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI    
+VOID
+WDFEXPORT(WdfObjectDelete)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFOBJECT Object
+    );
+
+// ----- WDFOBJECT -----//
+
+// ----- WDFVERIFIER -----//
+VOID
+WDFEXPORT(WdfVerifierDbgBreakPoint)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals
+    );
+
+// ----- WDFVERIFIER -----//
 
 extern WDFVERSION WdfVersion;
 
@@ -517,6 +868,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -536,6 +888,9 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfDeviceCreate),
+			NotImplemented,
+			WDFEXPORT(WdfDeviceCreateDeviceInterface),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -550,11 +905,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfDeviceGetDefaultQueue),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -584,6 +935,8 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfDriverRetrieveVersionString),
+			WDFEXPORT(WdfDriverIsVersionAvailable),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -612,8 +965,11 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfIoQueueCreate),
 			NotImplemented,
+			WDFEXPORT(WdfIoQueueStart),
 			NotImplemented,
+			WDFEXPORT(WdfIoQueueStopSynchronously),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -653,6 +1009,8 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfMemoryCopyToBuffer),
+			WDFEXPORT(WdfMemoryCopyFromBuffer),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -663,6 +1021,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfObjectDelete),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -709,26 +1068,34 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfRequestMarkCancelable),
+			WDFEXPORT(WdfRequestUnmarkCancelable),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfRequestComplete),
 			NotImplemented,
+			WDFEXPORT(WdfRequestCompleteWithInformation),
 			NotImplemented,
+			WDFEXPORT(WdfRequestRetrieveInputMemory),
+			WDFEXPORT(WdfRequestRetrieveOutputMemory),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfRequestSetInformation),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfRequestGetIoQueue),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -754,6 +1121,8 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfStringCreate),
+			WDFEXPORT(WdfStringGetUnicodeString),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -762,6 +1131,10 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
+			WDFEXPORT(WdfTimerCreate),
+			WDFEXPORT(WdfTimerStart),
+			WDFEXPORT(WdfTimerStop),
+			WDFEXPORT(WdfTimerGetParentObject),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
@@ -807,29 +1180,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfVerifierDbgBreakPoint),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,

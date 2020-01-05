@@ -31,8 +31,42 @@ WDFEXPORT(WdfDriverCreate)(
     UNREFERENCED_PARAMETER(DriverConfig);
     UNREFERENCED_PARAMETER(Driver);
 
-    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __FUNCTION__" not implemented\r\n");
+    WDFNOTIMPLEMENTED();
     return STATUS_UNSUCCESSFUL;
 }
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverRetrieveVersionString)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in
+    WDFSTRING String
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+BOOLEAN
+WDFEXPORT(WdfDriverIsVersionAvailable)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDRIVER Driver,
+    __in
+    PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
+    )
+{
+    WDFNOTIMPLEMENTED();
+    return STATUS_UNSUCCESSFUL;
+}
+
 
 } // extern "C"

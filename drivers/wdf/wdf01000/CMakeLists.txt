@@ -12,10 +12,20 @@ list(APPEND SOURCE
     object/fxverifierlock.cpp
     object/wdfpool.cpp
     object/dbgtrace.cpp
+    object/fxobjectapi.cpp
     support/fxregkey.cpp
+    support/fxstringapi.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
     core/fxdriverapi.cpp
+    core/fxdeviceapi.cpp
+    core/fxdeviceinitapi.cpp
+    core/fxdeviceinterfaceapi.cpp
+    core/fxtimerapi.cpp
+    core/fxrequestapi.cpp
+    core/fxmemorybufferapi.cpp
+    core/verifierapi.cpp
+    io/fxioqueueapi.cpp
     primitives/mxgeneral.cpp
 )
 
