@@ -474,6 +474,11 @@ KiGetUserModeStackAddress(void)
 }
 
 VOID
+KiGetTrapContext(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _Out_ PCONTEXT Context);
+
+VOID
 KiSetTrapContext(
     _Out_ PKTRAP_FRAME TrapFrame,
     _In_ PCONTEXT Context,
