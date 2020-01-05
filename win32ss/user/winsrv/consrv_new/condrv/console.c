@@ -582,6 +582,7 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     /* Set-up the code page */
     Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+    Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;

@@ -318,6 +318,7 @@ typedef struct _CONSOLE
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
 
     COLORREF Colors[16];                    /* Colour palette */
+    BOOLEAN IsCJK;                          /* Chinese, Japanese or Korean? */
 
 } CONSOLE, *PCONSOLE;
 
