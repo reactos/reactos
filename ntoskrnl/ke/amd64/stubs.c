@@ -432,6 +432,33 @@ NtVdmControl(IN ULONG ControlCode,
 }
 
 VOID
+RtlGetUnwindContext(
+    _In_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame);
+
+VOID
+KiGetTrapContextInternal(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ PCONTEXT Context)
+{
+    ULONG64 TargetFrame;
+    __debugbreak();
+
+    /* Capture the current context */
+    Context->ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
+    RtlCaptureContext(Context);
+
+    /* Get the volatile register context from the trap frame */
+    KeTrapFrameToContext(TrapFrame, NULL, Context);
+
+    /* The target frame is 0x80 bytes before the trap frame */
+    TargetFrame = (ULONG64)TrapFrame - 0x80;
+
+    /* Get the nonvolatiles on the stack */
+    RtlGetUnwindContext(Context, TargetFrame);
+}
+
+VOID
 RtlSetUnwindContext(
     _In_ PCONTEXT Context,
     _In_ DWORD64 TargetFrame);
