@@ -824,32 +824,36 @@ int main( int argc, char **argv )
 #define ok_hex_(file, line, expression, result) \
     do { \
         int _value = (expression); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
-           #expression, (int)(result), _value); \
+        int _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
+           #expression, _result, _value); \
     } while (0)
 #define ok_hex(expression, result)      ok_hex_(__FILE__, __LINE__, expression, result)
 
 #define ok_dec_(file, line, expression, result) \
     do { \
         int _value = (expression); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
-           #expression, (int)(result), _value); \
+        int _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
+           #expression, _result, _value); \
     } while (0)
 #define ok_dec(expression, result)      ok_dec_(__FILE__, __LINE__, expression, result)
 
 #define ok_ptr_(file, line, expression, result) \
     do { \
         void *_value = (expression); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
-           #expression, (void*)(result), _value); \
+        void *_result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+           #expression, _result, _value); \
     } while (0)
 #define ok_ptr(expression, result)      ok_ptr_(__FILE__, __LINE__, expression, result)
 
 #define ok_size_t_(file, line, expression, result) \
     do { \
         size_t _value = (expression); \
-        ok_(file, line)(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
-           #expression, (size_t)(result), _value); \
+        size_t _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
+           #expression, _result, _value); \
     } while (0)
 #define ok_size_t(expression, result)   ok_size_t_(__FILE__, __LINE__, expression, result)
 
