@@ -47,9 +47,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 #define DEFAULT_RESOLVE_TIMEOUT             0
-#define DEFAULT_CONNECT_TIMEOUT             20000
-#define DEFAULT_SEND_TIMEOUT                30000
-#define DEFAULT_RECEIVE_TIMEOUT             30000
+#define DEFAULT_CONNECT_TIMEOUT             5000
+#define DEFAULT_SEND_TIMEOUT                5000
+#define DEFAULT_RECEIVE_TIMEOUT             5000
 #define DEFAULT_RECEIVE_RESPONSE_TIMEOUT    5000
 
 void send_callback( struct object_header *hdr, DWORD status, void *info, DWORD buflen )
