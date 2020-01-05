@@ -1074,8 +1074,6 @@ Cleanup:
     return Status;
 }
 
-int mk_wcwidth_cjk(wchar_t ucs);
-
 NTSTATUS NTAPI
 ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,

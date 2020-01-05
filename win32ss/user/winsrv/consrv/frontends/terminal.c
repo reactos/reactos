@@ -492,8 +492,6 @@ ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT Scroll
     UpdateRect->Bottom = Buff->CursorPosition.Y;
 }
 
-int mk_wcwidth_cjk(wchar_t ucs);
-
 static NTSTATUS
 ConioWriteConsole(PFRONTEND FrontEnd,
                   PTEXTMODE_SCREEN_BUFFER Buff,

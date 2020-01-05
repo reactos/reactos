@@ -369,4 +369,7 @@ NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 
+/* wcwidth.c */
+int mk_wcwidth_cjk(wchar_t ucs);
+
 /* EOF */
