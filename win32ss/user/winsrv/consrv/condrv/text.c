@@ -1087,7 +1087,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 {
     ULONG X, Y, i;
     PCHAR_INFO Ptr;
-    BOOL bLead, bDBCS;
+    BOOL bLead, bFullwidth;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL)
     {
@@ -1118,10 +1118,10 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 
     /* for Chinese, Japanese and Korean: */
     bLead = TRUE;
-    bDBCS = FALSE;
+    bFullwidth = FALSE;
     if (Console->IsCJK)
     {
-        bDBCS = (mk_wcwidth_cjk(Code.UnicodeChar) == 2);
+        bFullwidth = (mk_wcwidth_cjk(Code.UnicodeChar) == 2);
         if (X > 0)
         {
             Ptr = &Buffer->Buffer[X - 1 + Y * Buffer->ScreenBufferSize.X];
@@ -1143,7 +1143,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             case CODE_ASCII:
             case CODE_UNICODE:
                 Ptr->Char.UnicodeChar = Code.UnicodeChar;
-                if (bDBCS)
+                if (bFullwidth)
                 {
                     if (bLead)
                         Ptr->Attributes = Buffer->ScreenDefaultAttrib | COMMON_LVB_LEADING_BYTE;
@@ -1176,7 +1176,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         bLead = !bLead;
     }
 
-    if ((NumCodesToWrite & 1) & bDBCS)
+    if ((NumCodesToWrite & 1) & bFullwidth)
     {
         if (X + Y * Buffer->ScreenBufferSize.X > 0)
         {
