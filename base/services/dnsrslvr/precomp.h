@@ -27,6 +27,7 @@
 typedef struct _RESOLVER_CACHE_ENTRY
 {
     LIST_ENTRY CacheLink;
+    BOOL bHostsFileEntry;
     PDNS_RECORDW Record;
 } RESOLVER_CACHE_ENTRY, *PRESOLVER_CACHE_ENTRY;
 
@@ -42,7 +43,14 @@ typedef struct _RESOLVER_CACHE
 VOID DnsIntCacheInitialize(VOID);
 VOID DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry);
 VOID DnsIntCacheFree(VOID);
-VOID DnsIntCacheFlush(VOID);
+
+#define CACHE_FLUSH_HOSTS_FILE_ENTRIES     0x00000001
+#define CACHE_FLUSH_NON_HOSTS_FILE_ENTRIES 0x00000002
+#define CACHE_FLUSH_ALL                    0x00000003
+
+DNS_STATUS
+DnsIntCacheFlush(
+    _In_ ULONG ulFlags);
 
 DNS_STATUS
 DnsIntCacheGetEntryByName(
@@ -51,8 +59,14 @@ DnsIntCacheGetEntryByName(
     DWORD dwFlags,
     PDNS_RECORDW *Record);
 
-VOID DnsIntCacheAddEntry(PDNS_RECORDW Record);
-BOOL DnsIntCacheRemoveEntryByName(LPCWSTR Name);
+VOID
+DnsIntCacheAddEntry(
+    _In_ PDNS_RECORDW Record,
+    _In_ BOOL bHostsFileEntry);
+
+BOOL
+DnsIntCacheRemoveEntryByName(
+    _In_ LPCWSTR Name);
 
 DNS_STATUS
 DnsIntCacheGetEntries(

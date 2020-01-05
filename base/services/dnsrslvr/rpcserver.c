@@ -62,11 +62,10 @@ __stdcall
 R_ResolverFlushCache(
     _In_ DNSRSLVR_HANDLE pwszServerName)
 {
-    DPRINT("R_ResolverFlushCache()\n");
+    DPRINT("R_ResolverFlushCache(%S)\n",
+           pwszServerName);
 
-    // FIXME Should store (and flush) entries by server handle
-    DnsIntCacheFlush();
-    return ERROR_SUCCESS;
+    return DnsIntCacheFlush(CACHE_FLUSH_NON_HOSTS_FILE_ENTRIES);
 }
 
 
@@ -126,7 +125,7 @@ R_ResolverQuery(
             if (Status == ERROR_SUCCESS)
             {
                 DPRINT("DNS query successful!\n");
-                DnsIntCacheAddEntry(*ppResultRecords);
+                DnsIntCacheAddEntry(*ppResultRecords, FALSE);
             }
         }
     }

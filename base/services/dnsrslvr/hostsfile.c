@@ -113,7 +113,7 @@ AddIpv4HostEntries(
 
     /* Prepare the PTR record */
     swprintf(szReverseName,
-             L"%u.%u.%u.%u.in-addr.arpa",
+             L"%u.%u.%u.%u.in-addr.arpa.",
              pAddress->S_un.S_un_b.s_b4,
              pAddress->S_un.S_un_b.s_b3,
              pAddress->S_un.S_un_b.s_b2,
@@ -130,8 +130,8 @@ AddIpv4HostEntries(
 
     PtrRecord.Data.PTR.pNameHost = pszHostName;
 
-    DnsIntCacheAddEntry(&ARecord);
-    DnsIntCacheAddEntry(&PtrRecord);
+    DnsIntCacheAddEntry(&ARecord, TRUE);
+    DnsIntCacheAddEntry(&PtrRecord, TRUE);
 }
 
 
@@ -171,7 +171,7 @@ AddIpv6HostEntries(
         szReverseName[j + 2] = szHexChar[(pAddress->u.Byte[k] >> 4) & 0xF];
         szReverseName[j + 3] = L'.';
     }
-    wcscat(szReverseName, L"ip6.arpa");
+    wcscat(szReverseName, L"ip6.arpa.");
 
     ZeroMemory(&PtrRecord, sizeof(DNS_RECORDW));
 
@@ -184,8 +184,8 @@ AddIpv6HostEntries(
 
     PtrRecord.Data.PTR.pNameHost = pszHostName;
 
-    DnsIntCacheAddEntry(&AAAARecord);
-    DnsIntCacheAddEntry(&PtrRecord);
+    DnsIntCacheAddEntry(&AAAARecord, TRUE);
+    DnsIntCacheAddEntry(&PtrRecord, TRUE);
 }
 
 

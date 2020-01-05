@@ -44,7 +44,7 @@ DnsIntCacheFree(VOID)
     if (!DnsCache.RecordList.Flink)
         return;
 
-    DnsIntCacheFlush();
+    DnsIntCacheFlush(CACHE_FLUSH_ALL);
 
     DeleteCriticalSection(&DnsCache.Lock);
     DnsCacheInitialized = FALSE;
@@ -65,13 +65,14 @@ DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
     HeapFree(GetProcessHeap(), 0, CacheEntry);
 }
 
-VOID
-DnsIntCacheFlush(VOID)
+DNS_STATUS
+DnsIntCacheFlush(
+    _In_ ULONG ulFlags)
 {
-    PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry, NextEntry;
     PRESOLVER_CACHE_ENTRY CacheEntry;
 
-    DPRINT("DnsIntCacheFlush()\n");
+    DPRINT("DnsIntCacheFlush(%lu)\n", ulFlags);
 
     /* Lock the cache */
     DnsCacheLock();
@@ -80,18 +81,24 @@ DnsIntCacheFlush(VOID)
     Entry = DnsCache.RecordList.Flink;
     while (Entry != &DnsCache.RecordList)
     {
+        NextEntry = Entry->Flink;
+
         /* Get this entry */
         CacheEntry = CONTAINING_RECORD(Entry, RESOLVER_CACHE_ENTRY, CacheLink);
 
         /* Remove it from list */
-        DnsIntCacheRemoveEntryItem(CacheEntry);
+        if (((ulFlags & CACHE_FLUSH_HOSTS_FILE_ENTRIES) && (CacheEntry->bHostsFileEntry != FALSE)) ||
+            ((ulFlags & CACHE_FLUSH_NON_HOSTS_FILE_ENTRIES) && (CacheEntry->bHostsFileEntry == FALSE)))
+            DnsIntCacheRemoveEntryItem(CacheEntry);
 
         /* Move to the next entry */
-        Entry = DnsCache.RecordList.Flink;
+        Entry = NextEntry;
     }
 
     /* Unlock the cache */
     DnsCacheUnlock();
+
+    return ERROR_SUCCESS;
 }
 
 DNS_STATUS
@@ -178,11 +185,14 @@ DnsIntCacheRemoveEntryByName(LPCWSTR Name)
 }
 
 VOID
-DnsIntCacheAddEntry(PDNS_RECORDW Record)
+DnsIntCacheAddEntry(
+    _In_ PDNS_RECORDW Record,
+    _In_ BOOL bHostsFileEntry)
 {
     PRESOLVER_CACHE_ENTRY Entry;
 
-    DPRINT("DnsIntCacheAddEntry(%p)\n", Record);
+    DPRINT("DnsIntCacheAddEntry(%p %u)\n",
+           Record, bHostsFileEntry);
 
     DPRINT("Name: %S\n", Record->pName);
     DPRINT("TTL: %lu\n", Record->dwTtl);
@@ -195,6 +205,7 @@ DnsIntCacheAddEntry(PDNS_RECORDW Record)
     if (!Entry)
         return;
 
+    Entry->bHostsFileEntry = bHostsFileEntry;
     Entry->Record = DnsRecordSetCopyEx(Record, DnsCharSetUnicode, DnsCharSetUnicode);
 
     /* Insert it to our List */
