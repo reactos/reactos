@@ -582,7 +582,6 @@ ConDrvInitConsole(OUT PHANDLE NewConsoleHandle,
 
     /* Set-up the code page */
     Console->CodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
-    Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
@@ -1030,14 +1029,9 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
         return STATUS_INVALID_PARAMETER;
 
     if (InputCP)
-    {
         Console->CodePage = CodePage;
-    }
     else
-    {
         Console->OutputCodePage = CodePage;
-        Console->IsCJK = IsCJKCodePage(CodePage);
-    }
 
     return STATUS_SUCCESS;
 }
