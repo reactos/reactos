@@ -850,7 +850,7 @@ IntReadConsoleOutputStringAscii(IN PCONSOLE Console,
             }
         }
 
-        /* for Chinese, Japanese and Korean: */
+        /* For Chinese, Japanese and Korean */
         if (bCJK && (Ptr->Attributes & COMMON_LVB_LEADING_BYTE))
         {
             Xpos++;
@@ -907,7 +907,7 @@ IntReadConsoleOutputStringUnicode(IN PCONSOLE Console,
             }
         }
 
-        /* for Chinese, Japanese and Korean: */
+        /* For Chinese, Japanese and Korean */
         if (bCJK && (Ptr->Attributes & COMMON_LVB_LEADING_BYTE))
         {
             Xpos++;

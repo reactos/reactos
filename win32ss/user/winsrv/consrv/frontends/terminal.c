@@ -605,7 +605,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
         UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
-        /* For Chinese, Japanese and Korean: */
+        /* For Chinese, Japanese and Korean */
         if (bCJK && Buffer[i] >= 0x80 && mk_wcwidth_cjk(Buffer[i]) == 2)
         {
             /* Buffer[i] is a fullwidth character */
