@@ -408,13 +408,9 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
     Y = (TopLeft.Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
     Length = NumCodesToWrite;
 
-    // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work
-    // Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X]; // May work
-
     while (Length--)
     {
-        // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work either
-        Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
 
         /*
          * Change the current colors only if they are the old ones.
@@ -742,7 +738,7 @@ IntReadConsoleOutputStringAscii(IN PCONSOLE Console,
 
     for (i = 0; i < NumCodesToRead; ++i)
     {
-        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos);
 
         ConsoleOutputUnicodeToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
         ReadBuffer += CodeSize;
@@ -799,7 +795,7 @@ IntReadConsoleOutputStringUnicode(IN PCONSOLE Console,
 
     for (i = 0; i < NumCodesToRead; ++i, ++nNumChars)
     {
-        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos);
 
         *(PWCHAR)ReadBuffer = Ptr->Char.UnicodeChar;
         ReadBuffer += CodeSize;
@@ -855,7 +851,7 @@ IntReadConsoleOutputStringAttributes(IN PCONSOLE Console,
 
     for (i = 0; i < NumCodesToRead; ++i)
     {
-        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos);
 
         *(PWORD)ReadBuffer = Ptr->Attributes;
         ReadBuffer += CodeSize;
@@ -1023,13 +1019,10 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     X = WriteCoord->X;
     Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
     Length = NumCodesToWrite;
-    // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work
-    // Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X]; // May work
 
     while (Length--)
     {
-        // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work either
-        Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
 
         switch (CodeType)
         {
@@ -1122,7 +1115,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         bFullwidth = (mk_wcwidth_cjk(Code.UnicodeChar) == 2);
         if (X > 0)
         {
-            Ptr = &Buffer->Buffer[X - 1 + Y * Buffer->ScreenBufferSize.X];
+            Ptr = ConioCoordToPointer(Buffer, X - 1, Y);
             if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
             {
                 Ptr->Char.UnicodeChar = L' ';
@@ -1133,8 +1126,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 
     for (i = 0; i < NumCodesToWrite; ++i)
     {
-        // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work either
-        Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X];
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
 
         switch (CodeType)
         {
@@ -1175,7 +1167,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     {
         if (X + Y * Buffer->ScreenBufferSize.X > 0)
         {
-            Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X - 1];
+            Ptr = ConioCoordToPointer(Buffer, X - 1, Y);
             Ptr->Char.UnicodeChar = L' ';
             Ptr->Attributes &= ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE);
         }
