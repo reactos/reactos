@@ -186,11 +186,8 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if (ContextFlags & CONTEXT_INTEGER)
     {
         Context->Rax = TrapFrame->Rax;
-        Context->Rbx = TrapFrame->Rbx;
         Context->Rcx = TrapFrame->Rcx;
         Context->Rdx = TrapFrame->Rdx;
-        Context->Rsi = TrapFrame->Rsi;
-        Context->Rdi = TrapFrame->Rdi;
         Context->Rbp = TrapFrame->Rbp;
         Context->R8 = TrapFrame->R8;
         Context->R9 = TrapFrame->R9;
@@ -199,6 +196,9 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
         if (ExceptionFrame)
         {
+            Context->Rbx = ExceptionFrame->Rbx;
+            Context->Rsi = ExceptionFrame->Rsi;
+            Context->Rdi = ExceptionFrame->Rdi;
             Context->R12 = ExceptionFrame->R12;
             Context->R13 = ExceptionFrame->R13;
             Context->R14 = ExceptionFrame->R14;
