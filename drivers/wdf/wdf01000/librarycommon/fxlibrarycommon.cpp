@@ -177,7 +177,7 @@ FxLibraryCommonRegisterClient(
 			RtlCopyMemory(Info->FuncTable, &WdfVersion.Functions, sizeof(size_t) * WdfVersion.FuncCount);
 		}
 
-		//status = STATUS_SUCCESS;
+		status = STATUS_SUCCESS;
 
         __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
                  ": WdfFunctions %p\n", Info->FuncTable));

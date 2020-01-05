@@ -56,8 +56,6 @@ PCCH WdfLdrType = "Wdf01000";
 
 FxLibraryGlobalsType FxLibraryGlobals = { 0 };
 
-WDFVERSION WdfVersion;
-
 }
 
 extern "C"

@@ -4,6 +4,13 @@
 #include <ntddk.h>
 #include <wdf.h>
 
+//
+// Placeholder macro for a no-op
+//
+#define DO_NOTHING()                            (0)
+
+typedef PDRIVER_OBJECT          MdDriverObject;
+
 class Mx {
 
 public:
@@ -50,6 +57,30 @@ public:
     MxDbgBreakPoint()
     {
         DbgBreakPoint();
+    }
+
+    __inline
+    static
+    BOOLEAN
+    IsUM()
+    {
+        #if FX_CORE_MODE==FX_CORE_KERNEL_MODE
+        return FALSE;
+        #else
+        return TRUE;
+        #endif
+    }
+
+    __inline
+    static
+    BOOLEAN
+    IsKM()
+    {
+        #if FX_CORE_MODE==FX_CORE_KERNEL_MODE
+        return TRUE;
+        #else
+        return FALSE;
+        #endif        
     }
 
 };

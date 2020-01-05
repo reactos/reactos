@@ -15,10 +15,16 @@ list(APPEND SOURCE
     support/fxregkey.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
+    core/fxdriverapi.cpp
     primitives/mxgeneral.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})
+
+if(MSVC)
+    add_target_compile_flags(wdf01000 "/Gz")
+endif()
+
 set_module_type(wdf01000 kernelmodedriver)
 add_importlibs(wdf01000 ntoskrnl hal wdfldr)
 add_cd_file(TARGET wdf01000 DESTINATION reactos/system32/drivers FOR all)
