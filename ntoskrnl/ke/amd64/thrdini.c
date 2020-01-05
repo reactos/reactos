@@ -77,10 +77,11 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* Zero out the trap frame */
         RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
+        RtlZeroMemory(&InitFrame->ExceptionFrame, sizeof(KEXCEPTION_FRAME));
 
         /* Set up a trap frame from the context. */
         KeContextToTrapFrame(Context,
-                             NULL,
+                             &InitFrame->ExceptionFrame,
                              TrapFrame,
                              CONTEXT_AMD64 | ContextFlags,
                              UserMode);
