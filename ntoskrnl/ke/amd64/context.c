@@ -293,6 +293,28 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
+RtlGetUnwindContext(
+    _Out_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame);
+
+VOID
+KiGetTrapContextInternal(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _Out_ PCONTEXT Context)
+{
+    ULONG64 TargetFrame;
+
+    /* Get the volatile register context from the trap frame */
+    KeTrapFrameToContext(TrapFrame, NULL, Context);
+
+    /* The target frame is MAX_SYSCALL_PARAM_SIZE bytes before the trap frame */
+    TargetFrame = (ULONG64)TrapFrame - MAX_SYSCALL_PARAM_SIZE;
+
+    /* Get the nonvolatiles on the stack */
+    RtlGetUnwindContext(Context, TargetFrame);
+}
+
+VOID
 RtlSetUnwindContext(
     _In_ PCONTEXT Context,
     _In_ DWORD64 TargetFrame);
