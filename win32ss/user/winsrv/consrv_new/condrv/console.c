@@ -1029,9 +1029,14 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
         return STATUS_INVALID_PARAMETER;
 
     if (InputCP)
+    {
         Console->CodePage = CodePage;
+    }
     else
+    {
         Console->OutputCodePage = CodePage;
+        Console->IsCJK = IsCJKCodePage(CodePage);
+    }
 
     return STATUS_SUCCESS;
 }

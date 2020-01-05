@@ -6,17 +6,17 @@
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
-
 #include <coninput.h>
+#include "../../concfg/font.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS ********************************************************************/
 
@@ -219,6 +219,8 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     /* Set-up the code page */
     if (IsValidCodePage(ConsoleInfo->CodePage))
         Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+
+    Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
@@ -531,9 +533,14 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
         return STATUS_INVALID_PARAMETER;
 
     if (OutputCP)
+    {
         Console->OutputCodePage = CodePage;
+        Console->IsCJK = IsCJKCodePage(CodePage);
+    }
     else
+    {
         Console->InputCodePage = CodePage;
+    }
 
     return STATUS_SUCCESS;
 }

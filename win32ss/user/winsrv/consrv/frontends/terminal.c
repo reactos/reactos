@@ -508,7 +508,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
-    BOOL bCJK = IsCJKCodePage(Console->OutputCodePage);
+    BOOL bCJK = Console->IsCJK;
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
@@ -607,16 +607,56 @@ ConioWriteConsole(PFRONTEND FrontEnd,
         UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
-        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-
+        /* For Chinese, Japanese and Korean: */
         if (bCJK && Buffer[i] >= 0x80 && mk_wcwidth_cjk(Buffer[i]) == 2)
         {
             /* Buffer[i] is a fullwidth character */
-            /* FIXME */
-        }
 
-        Ptr->Char.UnicodeChar = Buffer[i];
-        if (Attrib) Ptr->Attributes = Buff->ScreenDefaultAttrib;
+            if (Buff->CursorPosition.X > 0)
+            {
+                /* Kill the previous leading byte */
+                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X - 1, Buff->CursorPosition.Y);
+                if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
+                {
+                    Ptr->Char.UnicodeChar = L' ';
+                    if (Attrib)
+                        Ptr->Attributes &= ~COMMON_LVB_LEADING_BYTE;
+                }
+            }
+
+            if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X - 1)
+            {
+                /* New line */
+                if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
+                {
+                    Buff->CursorPosition.X = 0;
+                    ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+                }
+                else
+                {
+                    Buff->CursorPosition.X = CursorStartX;
+                }
+            }
+
+            /* Set leading */
+            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            Ptr->Char.UnicodeChar = Buffer[i];
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib | COMMON_LVB_LEADING_BYTE;
+
+            /* Set trailing */
+            Buff->CursorPosition.X++;
+            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib | COMMON_LVB_TRAILING_BYTE;
+        }
+        else
+        {
+            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            Ptr->Char.UnicodeChar = Buffer[i];
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib;
+        }
 
         Buff->CursorPosition.X++;
         if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X)
@@ -630,6 +670,18 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             {
                 Buff->CursorPosition.X = CursorStartX;
             }
+        }
+    }
+
+    if (bCJK && Buff->CursorPosition.X > 0)
+    {
+        /* Delete trailing */
+        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+        if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+        {
+            Ptr->Char.UnicodeChar = L' ';
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib;
         }
     }
 

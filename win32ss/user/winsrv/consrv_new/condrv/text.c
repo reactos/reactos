@@ -654,7 +654,8 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                 WideCharToMultiByte(CodePage, 0, &Ptr->Char.UnicodeChar, 1,
                                     &CurCharInfo->Char.AsciiChar, 1, NULL, NULL);
             }
-            CurCharInfo->Attributes = Ptr->Attributes;
+            CurCharInfo->Attributes =
+                (Ptr->Attributes & ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE));
             ++Ptr;
             ++CurCharInfo;
         }

@@ -345,7 +345,7 @@ typedef struct _CONSOLE
 /****************************** Other properties ******************************/
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
-
+    BOOLEAN IsCJK;                          /* TRUE if Chinese, Japanese or Korean (CJK) */
 } CONSOLE; // , *PCONSOLE;
 
 /* console.c */

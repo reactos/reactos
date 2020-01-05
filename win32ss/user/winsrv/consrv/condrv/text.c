@@ -516,7 +516,8 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                 WideCharToMultiByte(Console->OutputCodePage, 0, &Ptr->Char.UnicodeChar, 1,
                                     &CurCharInfo->Char.AsciiChar, 1, NULL, NULL);
             }
-            CurCharInfo->Attributes = Ptr->Attributes;
+            CurCharInfo->Attributes =
+                (Ptr->Attributes & ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE));
             ++Ptr;
             ++CurCharInfo;
         }
@@ -723,6 +724,166 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     return Status;
 }
 
+NTSTATUS FASTCALL
+IntReadConsoleOutputStringAscii(IN PCONSOLE Console,
+                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                OUT PVOID StringBuffer,
+                                IN ULONG NumCodesToRead,
+                                IN PCOORD ReadCoord,
+                                OUT PULONG NumCodesRead OPTIONAL)
+{
+    ULONG CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
+    LPBYTE ReadBuffer = StringBuffer;
+    SHORT Xpos = ReadCoord->X;
+    SHORT Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    ULONG i;
+    PCHAR_INFO Ptr;
+    BOOL bCJK = Console->IsCJK;
+
+    for (i = 0; i < NumCodesToRead; ++i)
+    {
+        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+
+        ConsoleOutputUnicodeToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
+        ReadBuffer += CodeSize;
+
+        Xpos++;
+        if (Xpos == Buffer->ScreenBufferSize.X)
+        {
+            Xpos = 0;
+            Ypos++;
+            if (Ypos == Buffer->ScreenBufferSize.Y)
+            {
+                Ypos = 0;
+            }
+        }
+
+        /* for Chinese, Japanese and Korean: */
+        if (bCJK && (Ptr->Attributes & COMMON_LVB_LEADING_BYTE))
+        {
+            Xpos++;
+            if (Xpos == Buffer->ScreenBufferSize.X)
+            {
+                Xpos = 0;
+                Ypos++;
+                if (Ypos == Buffer->ScreenBufferSize.Y)
+                {
+                    Ypos = 0;
+                }
+            }
+            ++i;
+        }
+    }
+
+    if (NumCodesRead)
+        *NumCodesRead = i;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
+IntReadConsoleOutputStringUnicode(IN PCONSOLE Console,
+                                  IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                  OUT PVOID StringBuffer,
+                                  IN ULONG NumCodesToRead,
+                                  IN PCOORD ReadCoord,
+                                  OUT PULONG NumCodesRead OPTIONAL)
+{
+    ULONG CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
+    LPBYTE ReadBuffer = StringBuffer;
+    SHORT Xpos = ReadCoord->X;
+    SHORT Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    ULONG i, nNumChars = 0;
+    PCHAR_INFO Ptr;
+    BOOL bCJK = Console->IsCJK;
+
+    for (i = 0; i < NumCodesToRead; ++i, ++nNumChars)
+    {
+        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+
+        *(PWCHAR)ReadBuffer = Ptr->Char.UnicodeChar;
+        ReadBuffer += CodeSize;
+
+        Xpos++;
+        if (Xpos == Buffer->ScreenBufferSize.X)
+        {
+            Xpos = 0;
+            Ypos++;
+            if (Ypos == Buffer->ScreenBufferSize.Y)
+            {
+                Ypos = 0;
+            }
+        }
+
+        /* for Chinese, Japanese and Korean: */
+        if (bCJK && (Ptr->Attributes & COMMON_LVB_LEADING_BYTE))
+        {
+            Xpos++;
+            if (Xpos == Buffer->ScreenBufferSize.X)
+            {
+                Xpos = 0;
+                Ypos++;
+                if (Ypos == Buffer->ScreenBufferSize.Y)
+                {
+                    Ypos = 0;
+                }
+            }
+            ++i;
+        }
+    }
+
+    if (NumCodesRead)
+        *NumCodesRead = nNumChars;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
+IntReadConsoleOutputStringAttributes(IN PCONSOLE Console,
+                                     IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                     OUT PVOID StringBuffer,
+                                     IN ULONG NumCodesToRead,
+                                     IN PCOORD ReadCoord,
+                                     OUT PULONG NumCodesRead OPTIONAL)
+{
+    ULONG CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
+    LPBYTE ReadBuffer = StringBuffer;
+    SHORT Xpos = ReadCoord->X;
+    SHORT Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    ULONG i;
+    PCHAR_INFO Ptr;
+
+    for (i = 0; i < NumCodesToRead; ++i)
+    {
+        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
+
+        *(PWORD)ReadBuffer = Ptr->Attributes;
+        ReadBuffer += CodeSize;
+
+        Xpos++;
+        if (Xpos == Buffer->ScreenBufferSize.X)
+        {
+            Xpos = 0;
+            Ypos++;
+            if (Ypos == Buffer->ScreenBufferSize.Y)
+            {
+                Ypos = 0;
+            }
+        }
+    }
+
+    if (Xpos > 0 && Console->IsCJK)
+    {
+        ReadBuffer -= CodeSize;
+        *(PWORD)ReadBuffer &= ~COMMON_LVB_LEADING_BYTE;
+    }
+
+    if (NumCodesRead)
+        *NumCodesRead = NumCodesToRead;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS NTAPI
 ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -730,15 +891,8 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
                               OUT PVOID StringBuffer,
                               IN ULONG NumCodesToRead,
                               IN PCOORD ReadCoord,
-                              // OUT PCOORD EndCoord,
                               OUT PULONG NumCodesRead OPTIONAL)
 {
-    SHORT Xpos, Ypos;
-    PVOID ReadBuffer;
-    ULONG i;
-    ULONG CodeSize;
-    PCHAR_INFO Ptr;
-
     if (Console == NULL || Buffer == NULL || ReadCoord == NULL /* || EndCoord == NULL */)
     {
         return STATUS_INVALID_PARAMETER;
@@ -748,92 +902,38 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToRead == 0));
 
-    //
-    // FIXME: Make overflow checks on ReadCoord !!!!!!
-    //
-
-    if (NumCodesRead) *NumCodesRead = 0;
+    if (NumCodesRead)
+        *NumCodesRead = 0;
 
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
-            break;
+            return IntReadConsoleOutputStringAscii(Console,
+                                                   Buffer,
+                                                   StringBuffer,
+                                                   NumCodesToRead,
+                                                   ReadCoord,
+                                                   NumCodesRead);
 
         case CODE_UNICODE:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
-            break;
+            return IntReadConsoleOutputStringUnicode(Console,
+                                                     Buffer,
+                                                     StringBuffer,
+                                                     NumCodesToRead,
+                                                     ReadCoord,
+                                                     NumCodesRead);
 
         case CODE_ATTRIBUTE:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
-            break;
+            return IntReadConsoleOutputStringAttributes(Console,
+                                                        Buffer,
+                                                        StringBuffer,
+                                                        NumCodesToRead,
+                                                        ReadCoord,
+                                                        NumCodesRead);
 
         default:
             return STATUS_INVALID_PARAMETER;
     }
-
-    ReadBuffer = StringBuffer;
-    Xpos = ReadCoord->X;
-    Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
-
-    /*
-     * MSDN (ReadConsoleOutputAttribute and ReadConsoleOutputCharacter) :
-     *
-     * If the number of attributes (resp. characters) to be read from extends
-     * beyond the end of the specified screen buffer row, attributes (resp.
-     * characters) are read from the next row. If the number of attributes
-     * (resp. characters) to be read from extends beyond the end of the console
-     * screen buffer, attributes (resp. characters) up to the end of the console
-     * screen buffer are read.
-     *
-     * TODO: Do NOT loop up to NumCodesToRead, but stop before
-     * if we are going to overflow...
-     */
-    // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work
-    for (i = 0; i < min(NumCodesToRead, (ULONG)Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y); ++i)
-    {
-        // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work either
-        Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
-
-        switch (CodeType)
-        {
-            case CODE_ASCII:
-                ConsoleOutputUnicodeToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
-                break;
-
-            case CODE_UNICODE:
-                *(PWCHAR)ReadBuffer = Ptr->Char.UnicodeChar;
-                break;
-
-            case CODE_ATTRIBUTE:
-                *(PWORD)ReadBuffer = Ptr->Attributes;
-                break;
-        }
-        ReadBuffer = (PVOID)((ULONG_PTR)ReadBuffer + CodeSize);
-        // ++Ptr;
-
-        Xpos++;
-
-        if (Xpos == Buffer->ScreenBufferSize.X)
-        {
-            Xpos = 0;
-            Ypos++;
-
-            if (Ypos == Buffer->ScreenBufferSize.Y)
-            {
-                Ypos = 0;
-            }
-        }
-    }
-
-    // EndCoord->X = Xpos;
-    // EndCoord->Y = (Ypos - Buffer->VirtualY + Buffer->ScreenBufferSize.Y) % Buffer->ScreenBufferSize.Y;
-
-    if (NumCodesRead)
-        *NumCodesRead = (ULONG)((ULONG_PTR)ReadBuffer - (ULONG_PTR)StringBuffer) / CodeSize;
-    // <= NumCodesToRead
-
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
@@ -974,6 +1074,8 @@ Cleanup:
     return Status;
 }
 
+int mk_wcwidth_cjk(wchar_t ucs);
+
 NTSTATUS NTAPI
 ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -983,8 +1085,9 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL)
 {
-    ULONG X, Y, Length; // , Written = 0;
+    ULONG X, Y, i;
     PCHAR_INFO Ptr;
+    BOOL bLead, bDBCS;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL)
     {
@@ -1010,11 +1113,27 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 
     X = WriteCoord->X;
     Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
-    Length = NumCodesToWrite;
     // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work
     // Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X]; // May work
 
-    while (Length--)
+    /* for Chinese, Japanese and Korean: */
+    bLead = TRUE;
+    bDBCS = FALSE;
+    if (Console->IsCJK)
+    {
+        bDBCS = (mk_wcwidth_cjk(Code.UnicodeChar) == 2);
+        if (X > 0)
+        {
+            Ptr = &Buffer->Buffer[X - 1 + Y * Buffer->ScreenBufferSize.X];
+            if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
+            {
+                Ptr->Char.UnicodeChar = L' ';
+                Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            }
+        }
+    }
+
+    for (i = 0; i < NumCodesToWrite; ++i)
     {
         // Ptr = ConioCoordToPointer(Buffer, X, Y); // Doesn't work either
         Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X];
@@ -1024,6 +1143,17 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             case CODE_ASCII:
             case CODE_UNICODE:
                 Ptr->Char.UnicodeChar = Code.UnicodeChar;
+                if (bDBCS)
+                {
+                    if (bLead)
+                        Ptr->Attributes = Buffer->ScreenDefaultAttrib | COMMON_LVB_LEADING_BYTE;
+                    else
+                        Ptr->Attributes = Buffer->ScreenDefaultAttrib | COMMON_LVB_TRAILING_BYTE;
+                }
+                else
+                {
+                    Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+                }
                 break;
 
             case CODE_ATTRIBUTE:
@@ -1041,6 +1171,18 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             {
                 Y = 0;
             }
+        }
+
+        bLead = !bLead;
+    }
+
+    if ((NumCodesToWrite & 1) & bDBCS)
+    {
+        if (X + Y * Buffer->ScreenBufferSize.X > 0)
+        {
+            Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X - 1];
+            Ptr->Char.UnicodeChar = L' ';
+            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
         }
     }
 
