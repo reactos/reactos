@@ -1128,7 +1128,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
             {
                 Ptr->Char.UnicodeChar = L' ';
-                Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+                Ptr->Attributes &= ~COMMON_LVB_LEADING_BYTE;
             }
         }
     }
@@ -1143,16 +1143,13 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             case CODE_ASCII:
             case CODE_UNICODE:
                 Ptr->Char.UnicodeChar = Code.UnicodeChar;
+                Ptr->Attributes &= ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE);
                 if (bFullwidth)
                 {
                     if (bLead)
-                        Ptr->Attributes = Buffer->ScreenDefaultAttrib | COMMON_LVB_LEADING_BYTE;
+                        Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
                     else
-                        Ptr->Attributes = Buffer->ScreenDefaultAttrib | COMMON_LVB_TRAILING_BYTE;
-                }
-                else
-                {
-                    Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+                        Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
                 }
                 break;
 
@@ -1182,7 +1179,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         {
             Ptr = &Buffer->Buffer[X + Y * Buffer->ScreenBufferSize.X - 1];
             Ptr->Char.UnicodeChar = L' ';
-            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            Ptr->Attributes &= ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE);
         }
     }
 
