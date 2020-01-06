@@ -3228,8 +3228,11 @@ static void test_multiple_reads(int port)
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     ok(ret, "failed to send request %u\n", GetLastError());
 
+    trace("waiting for response\n");
     ret = WinHttpReceiveResponse(req, NULL);
     ok(ret == TRUE, "expected success\n");
+
+    trace("finished waiting for response\n");
 
     for (;;)
     {
@@ -3249,6 +3252,7 @@ static void test_multiple_reads(int port)
             HeapFree( GetProcessHeap(), 0, buf );
             if (!bytes_read) break;
             total_len += bytes_read;
+            trace("read bytes %u, total_len: %u\n", bytes_read, total_len);
         }
         if (!len) break;
     }
@@ -4880,6 +4884,22 @@ START_TEST (winhttp)
     test_multi_authentication(si.port);
     test_large_data_authentication(si.port);
     test_bad_header(si.port);
+#ifdef __REACTOS__
+    if (!winetest_interactive)
+    {
+        skip("Skipping tests due to hang. See ROSTESTS-350\n");
+    }
+    else
+    {
+        test_multiple_reads(si.port);
+        test_cookies(si.port);
+        test_request_path_escapes(si.port);
+        test_passport_auth(si.port);
+
+        /* send the basic request again to shutdown the server thread */
+        test_basic_request(si.port, NULL, quitW);
+    }
+#else
     test_multiple_reads(si.port);
     test_cookies(si.port);
     test_request_path_escapes(si.port);
@@ -4887,6 +4907,7 @@ START_TEST (winhttp)
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, NULL, quitW);
+#endif
 
     WaitForSingleObject(thread, 3000);
     CloseHandle(thread);
