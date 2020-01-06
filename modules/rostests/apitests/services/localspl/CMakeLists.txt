@@ -2,9 +2,9 @@
 add_subdirectory(dll)
 
 list(APPEND SOURCE
-    service.c
-    tests.c
-    testlist.c)
+    ../framework/remotesvc.c
+    ../framework/remotetests.c
+    tests.c)
 
 add_executable(localspl_apitest ${SOURCE})
 target_link_libraries(localspl_apitest wine ${PSEH_LIB})
