@@ -183,4 +183,81 @@ FxPoolDump(
     __in PFX_POOL  Pool
     );
 
+/*++
+
+Routine Description:
+
+    Initialize the FX_POOL tracking object
+
+Arguments:
+
+    Pool    - FX_POOL object for tracking allocations
+
+Returns:
+
+    status
+
+--*/
+_Must_inspect_result_
+NTSTATUS
+FxPoolInitialize(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL Pool
+    );
+
+/*++
+
+Routine Description:
+
+    Initialize the pool support package at startup time.
+
+    This must be called before the first allocation.
+
+Arguments:
+
+Returns:
+
+    STATUS_SUCCESS
+
+--*/
+_Must_inspect_result_
+NTSTATUS
+FxPoolPackageInitialize(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+/*++
+
+Routine Description:
+
+    Allocates system pool tracked in a FX_POOL tracking object.
+
+Arguments:
+
+    Pool    - FX_POOL object for tracking allocations
+
+    Type    - POOL_TYPE from ntddk.h
+
+    Size    - Size in bytes of the allocation
+
+    Tag     - Caller specified additional tag value for debugging/tracing
+
+    PVOID   - Caller's address, usefull for finding who allocated the memory
+
+Returns:
+
+    NULL - Could not allocate pool
+    !NULL - Pointer to pool of minimum Size bytes
+
+--*/
+PVOID
+FxPoolAllocator(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL  Pool,
+    __in POOL_TYPE Type,
+    __in SIZE_T    Size,
+    __in ULONG     Tag,
+    __in PVOID     CallersAddress
+    );
+
 #endif //_FXPOOL_H_

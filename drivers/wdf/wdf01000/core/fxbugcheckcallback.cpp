@@ -420,5 +420,328 @@ Done:
     FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
 }
 
+VOID
+FxCacheBugCheckDriverInfo(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    KIRQL                       irql;
+    PFX_DUMP_DRIVER_INFO_ENTRY  driverInfo      = NULL;
+    PFX_DUMP_DRIVER_INFO_ENTRY  oldDriverInfo   = NULL;
+    ULONG                       newCount        = 0;
+
+    //
+    // Clear driver index (0-based). Drivers do not use index 0.
+    //
+    FxDriverGlobals->BugCheckDriverInfoIndex = 0;
+
+    if (NULL == FxLibraryGlobals.BugCheckDriverInfo)
+    {
+        return;
+    }
+
+    FxLibraryGlobals.FxDriverGlobalsListLock.Acquire(&irql);
+
+    //
+    // Make sure we have enough space, else allocate some more memory.
+    //
+    if (FxLibraryGlobals.BugCheckDriverInfoIndex >=
+            FxLibraryGlobals.BugCheckDriverInfoCount)
+    {
+
+        //
+        // Just exit if no more space in dump buffer.
+        //
+        if ((FX_MAX_DUMP_DRIVER_INFO_COUNT - FX_DUMP_DRIVER_INFO_INCREMENT) <
+             FxLibraryGlobals.BugCheckDriverInfoCount)
+        {
+             ASSERT(FALSE);
+             goto Done;
+        }
+
+        newCount = FxLibraryGlobals.BugCheckDriverInfoCount +
+                      FX_DUMP_DRIVER_INFO_INCREMENT;  
+
+        //
+        // Allocate new buffer to hold driver info. 
+        //
+        driverInfo = (PFX_DUMP_DRIVER_INFO_ENTRY)MxMemory::MxAllocatePoolWithTag(
+                                NonPagedPool,
+                                sizeof(FX_DUMP_DRIVER_INFO_ENTRY)* newCount,
+                                FX_TAG);
+        
+        if (NULL == driverInfo)
+        {
+            goto Done;
+        }
+
+        //
+        // Copy data from old to new buffer.
+        //
+        RtlCopyMemory(driverInfo, 
+                      FxLibraryGlobals.BugCheckDriverInfo,
+                      FxLibraryGlobals.BugCheckDriverInfoCount *
+                        sizeof(FX_DUMP_DRIVER_INFO_ENTRY));
+        //
+        // Ok, replace global pointer and its count.
+        //
+        oldDriverInfo = FxLibraryGlobals.BugCheckDriverInfo;
+        FxLibraryGlobals.BugCheckDriverInfo = driverInfo;
+        FxLibraryGlobals.BugCheckDriverInfoCount = newCount;        
+        driverInfo = NULL; // just in case.
+
+        //
+        // Free old memory.
+        //
+        MxMemory::MxFreePool(oldDriverInfo);
+        oldDriverInfo = NULL;
+    }
+
+    ASSERT(FxLibraryGlobals.BugCheckDriverInfoIndex < 
+                FxLibraryGlobals.BugCheckDriverInfoCount);
+    //
+    // Compute ptr to free entry.
+    //
+    driverInfo = FxLibraryGlobals.BugCheckDriverInfo +
+                    FxLibraryGlobals.BugCheckDriverInfoIndex;
+    //
+    // Cache some of this driver's info.
+    //
+    driverInfo->FxDriverGlobals = FxDriverGlobals;
+    driverInfo->Version = FxDriverGlobals->WdfBindInfo->Version;
+
+    C_ASSERT(sizeof(driverInfo->DriverName) == 
+                sizeof(FxDriverGlobals->Public.DriverName));
+    RtlCopyMemory(driverInfo->DriverName,
+                  FxDriverGlobals->Public.DriverName,
+                  sizeof(driverInfo->DriverName));
+    driverInfo->DriverName[ARRAY_SIZE(driverInfo->DriverName) - 1] = '\0';     
+
+    //
+    // Cache this index for later when the driver is removed.
+    //
+    FxDriverGlobals->BugCheckDriverInfoIndex = 
+        FxLibraryGlobals.BugCheckDriverInfoIndex;
+
+    //
+    // Update global index.
+    //
+    FxLibraryGlobals.BugCheckDriverInfoIndex++;
+    
+Done:
+    
+    FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxpGetImageBase(
+    __in  PDRIVER_OBJECT DriverObject,
+    __out PVOID* ImageBase,
+    __out PULONG ImageSize
+    )
+{
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+    //ULONG modulesSize = 0;
+    //AUX_MODULE_EXTENDED_INFO* modules = NULL;
+    //AUX_MODULE_EXTENDED_INFO* module;
+    PVOID addressInImage = NULL;
+    ULONG numberOfModules;
+    ULONG i;
+
+    //
+    // Basic validation.
+    //
+    if (NULL == DriverObject || NULL == ImageBase || NULL == ImageSize)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
+
+    //
+    // Get the address of a well known entry in the Image.
+    //
+    addressInImage = (PVOID) DriverObject->DriverStart;
+    ASSERT(addressInImage != NULL);
+
+    //
+    // Initialize the AUX Kernel Library.
+    //
+    status = STATUS_UNSUCCESSFUL;
+
+    //
+    // TODO: Implement Auxiliary Kernel-Mode Library
+    //
+
+    //status = AuxKlibInitialize();
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    //
+    // Get size of area needed for loaded modules.
+    //
+    /*status = AuxKlibQueryModuleInformation(&modulesSize,
+                                           sizeof(AUX_MODULE_EXTENDED_INFO),
+                                           NULL);
+
+    if (!NT_SUCCESS(status) || (0 == modulesSize))
+    {
+        goto exit;
+    }
+
+    numberOfModules = modulesSize / sizeof(AUX_MODULE_EXTENDED_INFO);
+
+    //
+    // Allocate returned-sized memory for the modules area.
+    //
+    modules = (AUX_MODULE_EXTENDED_INFO*) ExAllocatePoolWithTag(PagedPool,
+                                                                modulesSize,
+                                                                '30LW');
+    if (NULL == modules)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto exit;
+    }
+
+    //
+    // Request the modules array be filled with module information.
+    //
+    status = AuxKlibQueryModuleInformation(&modulesSize,
+                                           sizeof(AUX_MODULE_EXTENDED_INFO),
+                                           modules);
+
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    //
+    // Traverse list, searching for the well known address in Image for which the
+    // module's Image Base Address is in its range.
+    //
+    module = modules;
+
+    for (i=0; i < numberOfModules; i++)
+    {
+
+        if (addressInImage >= module->BasicInfo.ImageBase &&
+            addressInImage < WDF_PTR_ADD_OFFSET(module->BasicInfo.ImageBase,
+                                                module->ImageSize))
+        {
+
+            *ImageBase = module->BasicInfo.ImageBase;
+            *ImageSize = module->ImageSize;
+
+            status = STATUS_SUCCESS;
+            goto exit;
+        }
+        module++;
+    }
+
+    status = STATUS_NOT_FOUND;*/
+
+exit:
+
+    /*if (modules != NULL)
+    {
+        ExFreePool(modules);
+        modules = NULL;
+    }*/
+
+    return status;
+}
+
+VOID
+FxRegisterBugCheckCallback(
+    __inout PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in    PDRIVER_OBJECT DriverObject
+    )
+{
+    UNICODE_STRING funcName;
+    PKBUGCHECK_REASON_CALLBACK_RECORD callbackRecord;
+    PFN_KE_REGISTER_BUGCHECK_REASON_CALLBACK funcPtr;
+    BOOLEAN enableDriverTracking;
+
+    //
+    // If any problem during this setup, disable driver tracking.
+    //
+    enableDriverTracking = FxDriverGlobals->FxTrackDriverForMiniDumpLog;
+    FxDriverGlobals->FxTrackDriverForMiniDumpLog = FALSE;
+
+    //
+    // Zero out callback record.
+    //
+    callbackRecord = &FxDriverGlobals->BugCheckCallbackRecord;
+    RtlZeroMemory(callbackRecord, sizeof(KBUGCHECK_REASON_CALLBACK_RECORD));
+
+    //
+    // Get the Image base address and size before registering the bugcheck
+    // callbacks. If the image base address and size cannot be computed,
+    // then the bugcheck callbacks depend on these values being properly
+    // set.
+    //
+    FxDriverGlobals->ImageAddress = NULL;
+    FxDriverGlobals->ImageSize = 0;
+
+    if (!NT_SUCCESS(FxpGetImageBase(DriverObject,
+                                   &FxDriverGlobals->ImageAddress,
+                                   &FxDriverGlobals->ImageSize)))
+    {
+        goto Done;
+    }
+
+    //
+    // The KeRegisterBugCheckReasonCallback exists for xp sp1 and above. So
+    // check whether this function is defined on the current OS and register
+    // for the bugcheck callback only if this function is defined.
+    //
+    RtlInitUnicodeString(&funcName, L"KeRegisterBugCheckReasonCallback");
+    funcPtr = (PFN_KE_REGISTER_BUGCHECK_REASON_CALLBACK)
+        MmGetSystemRoutineAddress(&funcName);
+
+    if (NULL == funcPtr)
+    {
+        goto Done;
+    }
+
+    //
+    // TODO: Need implement Processor Group (ProcGrp) compatibility library.
+    //       Used in DriverTracker.Register
+    //
+
+    goto Done;
+
+    //
+    // Register this driver with driver tracker.
+    //
+    //if (enableDriverTracking)
+    //{
+    //    if (NT_SUCCESS(FxLibraryGlobals.DriverTracker.Register(
+    //                        FxDriverGlobals)))
+    //    {
+    //        FxDriverGlobals->FxTrackDriverForMiniDumpLog = TRUE;
+    //    }
+    //}
+    
+    //
+    // Initialize the callback record.
+    //
+    //KeInitializeCallbackRecord(callbackRecord);
+
+    //
+    // Register the bugcheck callback.
+    //
+    //funcPtr(callbackRecord,
+    //        FxpBugCheckCallback,
+    //        KbCallbackSecondaryDumpData,
+    //        (PUCHAR)FxDriverGlobals->Public.DriverName);
+
+    //ASSERT(callbackRecord->CallbackRoutine != NULL);
+
+Done:;
+}
+
 
 }

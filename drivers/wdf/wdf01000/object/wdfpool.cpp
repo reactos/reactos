@@ -5,6 +5,7 @@
 #include "common/dbgtrace.h"
 #include "common/fxmdl.h"
 #include "common/fxverifier.h"
+#include <ntintsafe.h>
 
 
 #define WDF_REQUIRED_PARAMETER_IS_NULL 4
@@ -356,4 +357,404 @@ Returns:
     {
         return STATUS_SUCCESS;
     }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPoolInitialize(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL Pool
+    )
+/*++
+
+Routine Description:
+    Initialize the FX_POOL tracking object
+
+Arguments:
+    Pool    - FX_POOL object for tracking allocations
+
+Returns:
+    STATUS_SUCCESS
+
+--*/
+{
+    NTSTATUS status = STATUS_SUCCESS;
+
+    DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGPOOL,
+                        "Initializing Pool 0x%p, Tracking %d",
+                        Pool, FxDriverGlobals->IsPoolTrackingOn());
+
+    Pool->NonPagedLock.Initialize();
+
+    InitializeListHead( &Pool->NonPagedHead );
+
+    status = Pool->PagedLock.Initialize();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPOOL,
+                            "Initializing paged lock failed for Pool 0x%p, "
+                            "status %!STATUS!",
+                            Pool, status);
+        goto exit;
+    }
+
+    InitializeListHead( &Pool->PagedHead );
+
+    // Pool usage information
+    Pool->NonPagedBytes = 0;
+    Pool->PagedBytes = 0;
+
+    Pool->NonPagedAllocations = 0;
+    Pool->PagedAllocations = 0;
+
+    Pool->PeakNonPagedBytes = 0;
+    Pool->PeakPagedBytes = 0;
+
+    Pool->PeakNonPagedAllocations = 0;
+    Pool->PeakPagedAllocations = 0;
+
+exit:
+    if (!NT_SUCCESS(status))
+    {
+        //
+        // We disable pool tracking if we could not initialize the locks needed
+        //
+        // If we don't do this we would need another flag to make FxPoolDestroy
+        // not access the locks
+        //
+        FxDriverGlobals->FxPoolTrackingOn = FALSE;
+    }
+
+    //
+    // FxPoolDestroy will always be called even if we fail FxPoolInitialize
+    //
+    // FxPoolDestroy will uninitialize locks both in success and failure
+    // cases
+    //
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPoolPackageInitialize(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+/*++
+
+Routine Description:
+    Initialize the pool support package at startup time.
+
+    This must be called before the first allocation.
+
+Arguments:
+    FxDriverGlobals - DriverGlobals
+
+Returns:
+    STATUS_SUCCESS
+
+--*/
+{
+    return FxPoolInitialize(FxDriverGlobals, &FxDriverGlobals->FxPoolFrameworks);
+}
+
+PVOID
+FxPoolAllocator(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PFX_POOL  Pool,
+    __in POOL_TYPE Type,
+    __in SIZE_T    Size,
+    __in ULONG     Tag,
+    __in PVOID     Caller
+    )
+/*++
+
+Routine Description:
+
+    Allocates system pool tracked in a FX_POOL tracking object.
+
+Arguments:
+
+    Pool    - FX_POOL object for tracking allocations
+
+    Type    - POOL_TYPE from ntddk.h
+
+    Size    - Size in bytes of the allocation
+
+    Tag     - Caller specified additional tag value for debugging/tracing
+
+    Caller  - Caller's address
+
+Returns:
+
+    NULL - Could not allocate pool
+    !NULL - Pointer to pool of minimum Size bytes
+
+Remarks:
+
+    In kernel mode this routine conditionally adds header on top iff the
+    allocation size is < PAGE_SIZE. If the allocation size is >= PAGE_SIZE
+    the caller would expect a page aligned pointer, hence no header is added.
+    In addition, ExAllocatePool* functions guarantee that a buffer < PAGE_SIZE
+    doesn't straddle page boundary. This allows FxPoolFree to determine whether
+    a header is added to buffer or not based on whether the pointer passed in
+    is page aligned or not. (In addition, when pool tracking is ON, this
+    routine adds pool tracking header based on whether additional space for this
+    header will push the buffer size beyond PAGE_SIZE, which is an optimization.)
+
+    Such guarantees are not available with user mode allocator, hence in case
+    of user mode we always add the header. (In user mode a buffer < PAGE_SIZE
+    can straddle page boundary and the pointer returned may happen to be page
+    aligned, causing FxPoolFree to free the wrong pointer.)
+
+--*/
+{
+    PVOID ptr;
+    PCHAR pTrueBase;
+    PFX_POOL_TRACKER pTracker;
+    PFX_POOL_HEADER pHeader;
+    NTSTATUS status;
+    SIZE_T allocationSize;
+
+
+    ptr = NULL;
+
+    //
+    // Allocations of a zero request size are invalid.
+    //
+    // Besides, with a zero request size, special pool could place us
+    // at the end of a page, and adding our header would give us a page
+    // aligned address, which is ambiguous with large allocations.
+    //
+    if (Size == 0)
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPOOL,
+                            "Invalid Allocation Size of 0 requested");
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        return NULL;
+    }
+
+    if (FxDriverGlobals->IsPoolTrackingOn())
+    {
+
+        if (FxDriverGlobals->FxVerifierOn &&
+            (FxDriverGlobals->WdfVerifierAllocateFailCount != 0xFFFFFFFF))
+        {
+
+            //
+            // If the registry key VerifierAllocateFailCount is set, all allocations
+            // after the specified count are failed.
+            //
+            // This is a brutal test, but also ensures the framework can cleanup
+            // under low memory conditions as well.
+            //
+            if (FxDriverGlobals->WdfVerifierAllocateFailCount == 0)
+            {
+                DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPOOL,
+                                    "Allocation Fail Count exceeded");
+                return NULL;
+            }
+
+            // Decrement the count
+            InterlockedDecrement(&FxDriverGlobals->WdfVerifierAllocateFailCount);
+        }
+
+        //
+        // (Kernel mode only) PAGE_SIZE or greater allocations can not have our
+        // header since this would break the system allocators contract
+        // that PAGE_SIZE or greater allocations start on a whole page boundary
+        //
+
+        //
+        // For allocations less than a page size that will not fit with our
+        // header, we round up to a non-tracked whole page allocation so
+        // we don't burn two pages for this boundary condition.
+        //
+
+        // This if is the same as
+        // Size + sizeof(FX_POOL_TRACKER) + FX_POOL_HEADER_SIZE >= PAGE_SIZE
+        // BUT with no integer overflow
+        if (Mx::IsKM() && 
+            (Size >= PAGE_SIZE - sizeof(FX_POOL_TRACKER) - FX_POOL_HEADER_SIZE)
+            )
+        {
+
+            //
+            // Ensure that we ask for at least a page to ensure the
+            // allocation starts on a whole page.
+            //
+            if (Size < PAGE_SIZE)
+            {
+                Size = PAGE_SIZE;
+            }
+
+            ptr = MxMemory::MxAllocatePoolWithTag(Type, Size, Tag);
+
+            //
+            // The current system allocator returns paged aligned memory
+            // in this case, which we rely on to detect whether our header
+            // is present or not in FxPoolFree
+            //
+            ASSERT(((ULONG_PTR)ptr & (PAGE_SIZE-1)) == 0);
+        }
+        else
+        {
+            status = RtlSIZETAdd(Size,
+                                 sizeof(FX_POOL_TRACKER) + FX_POOL_HEADER_SIZE,
+                                 &allocationSize);
+
+            if (!NT_SUCCESS(status))
+            {
+                DoTraceLevelMessage(
+                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPOOL,
+                    "overflow: allocation tracker (%d) + header (%d) + pool "
+                    "request (%I64d)", sizeof(FX_POOL_TRACKER),
+                    FX_POOL_HEADER_SIZE, Size);
+
+                return NULL;
+            }
+
+            pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(
+                Type,
+                allocationSize,
+                Tag
+                );
+
+            if (pTrueBase == NULL)
+            {
+                return NULL;
+            }
+
+            pTracker = (PFX_POOL_TRACKER) pTrueBase;
+            pHeader  = WDF_PTR_ADD_OFFSET_TYPE(pTrueBase,
+                                               sizeof(FX_POOL_TRACKER),
+                                               PFX_POOL_HEADER);
+            pHeader->Base            = pTrueBase;
+            pHeader->FxDriverGlobals = FxDriverGlobals;
+
+            //
+            // Adjust the pointer to what we return to the driver
+            //
+            ptr = &pHeader->AllocationStart[0];
+
+            //
+            // Ensure the pointer we are returning is aligned on the proper
+            // boundary.
+            //
+            ASSERT( ((ULONG_PTR) ptr & (MEMORY_ALLOCATION_ALIGNMENT-1)) == 0);
+
+            //
+            // Ensure the pointer is still not page aligned after
+            // our adjustment. Otherwise the pool free code will
+            // get confused and call ExFreePool on the wrong ptr.
+            //
+            if (Mx::IsKM())
+            {
+                ASSERT(((ULONG_PTR)ptr & (PAGE_SIZE-1)) != 0 );
+            }
+
+            //
+            // We must separate paged and non-paged pool since
+            // the lock held differs as to whether we can accept
+            // page faults and block in the allocator.
+            //
+            if (FxIsPagedPoolType(Type))
+            {
+                //
+                // Format and insert the Tracker in the PagedHeader list.
+                //
+                FxPoolInsertPagedAllocateTracker(Pool,
+                                                 pTracker,
+                                                 Size,
+                                                 Tag,
+                                                 Caller);
+            }
+            else
+            {
+                //
+                // Format and insert the Tracker in the NonPagedHeader list.
+                //
+                FxPoolInsertNonPagedAllocateTracker(Pool,
+                                                    pTracker,
+                                                    Size,
+                                                    Tag,
+                                                    Caller);
+            }
+        }
+    }
+    else
+    {
+        //
+        // No pool tracking...
+        //
+
+        if ((Size < PAGE_SIZE) || Mx::IsUM())
+        {
+            //
+            // (Kernel mode only) See if adding our header promotes us past a
+            // page boundary
+            //
+            status = RtlSIZETAdd(Size,
+                                 FX_POOL_HEADER_SIZE,
+                                 &allocationSize);
+
+            if (!NT_SUCCESS(status)) {
+                DoTraceLevelMessage(
+                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPOOL,
+                    "overflow: header + pool request (%I64d)", Size);
+
+                return NULL;
+            }
+
+        }
+        else
+        {
+            //
+            // Is the raw request for alloc >= PAGE_SIZE ?  Then just use it.
+            //
+            allocationSize = Size;
+        }
+
+        //
+        // Is cooked size for alloc >= PAGE_SIZE ?  Then just do it.
+        //
+        if (allocationSize >= PAGE_SIZE && Mx::IsKM())
+        {
+            //
+            // Important to use allocationSize so that we get a page aligned
+            // allocation so that we know to just free the memory pointer as is
+            // when it is freed.
+            //
+            ptr = MxMemory::MxAllocatePoolWithTag(Type, allocationSize, Tag);
+            ASSERT(((ULONG_PTR)ptr & (PAGE_SIZE-1)) == 0);
+        }
+        else
+        {
+            pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(Type,
+                                                      allocationSize,
+                                                      Tag);
+
+            if (pTrueBase != NULL)
+            {
+
+                pHeader = (PFX_POOL_HEADER) pTrueBase;
+                pHeader->Base            = pTrueBase;
+                pHeader->FxDriverGlobals = FxDriverGlobals;
+
+                ptr = &pHeader->AllocationStart[0];
+
+                if (Mx::IsKM())
+                {
+                    //
+                    // Ensure the pointer is still not page aligned after
+                    // our adjustment. Otherwise the pool free code will
+                    // get confused and call ExFreePool on the wrong ptr.
+                    //
+                    ASSERT( ((ULONG_PTR)ptr & (PAGE_SIZE-1)) != 0 );
+                }
+            }
+        }
+    }
+
+    return ptr;
 }

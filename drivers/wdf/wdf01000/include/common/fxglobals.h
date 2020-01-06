@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+const LONG FX_OBJECT_LEAK_DETECTION_DISABLED = 0xFFFFFFFF;
+
 struct FxLibraryGlobalsType;
 extern RTL_OSVERSIONINFOW  gOsVersion;
 extern PCCH WdfLdrType;
@@ -56,6 +58,36 @@ UnlockVerifierSection(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     );
 #endif
+
+_Must_inspect_result_
+NTSTATUS
+FxInitialize(
+    __inout     PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in        MdDriverObject DriverObject,
+    __in        PCUNICODE_STRING RegistryPath,
+    __in_opt    PWDF_DRIVER_CONFIG DriverConfig //optional in user mode
+    );
+
+BOOLEAN
+IsWindowsVerifierOn(
+    _In_ MdDriverObject DriverObject
+    );
+
+void
+FxVerifierLockInitialize(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+VOID
+FxCacheBugCheckDriverInfo(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+VOID
+FxRegisterBugCheckCallback(
+    __inout PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in    PDRIVER_OBJECT DriverObject
+    );
 
 
 struct FxMdlDebugInfo {
@@ -173,6 +205,25 @@ public:
     {
         return (FxPoolTrackingOn) ? TRUE : FALSE;
     }
+
+	_Must_inspect_result_
+    BOOLEAN
+    IsVersionGreaterThanOrEqualTo(
+        __in ULONG  Major,
+        __in ULONG  Minor
+        )
+	{
+		if ((WdfBindInfo->Version.Major > Major) ||
+                (WdfBindInfo->Version.Major == Major &&
+                  WdfBindInfo->Version.Minor >= Minor))
+		{
+        	return TRUE;
+    	}
+    	else
+		{
+        	return FALSE;
+    	}
+	}
 	
 
 	//
@@ -326,6 +377,25 @@ public:
 	DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) WDF_DRIVER_GLOBALS Public;
 } FX_DRIVER_GLOBALS, *PFX_DRIVER_GLOBALS;
 
+__bcount(Size)
+PVOID
+FORCEINLINE
+FxPoolAllocateWithTag(
+    __in PFX_DRIVER_GLOBALS Globals,
+    __in POOL_TYPE Type,
+    __in size_t Size,
+    __in ULONG Tag
+    )
+{
+    return FxPoolAllocator(
+        Globals,
+        &Globals->FxPoolFrameworks,
+        Type,
+        Size,
+        Tag,
+        Globals->FxPoolTrackingOn ? _ReturnAddress() : NULL
+        );
+}
 
 enum FxMachineSleepStates
 {
@@ -470,7 +540,7 @@ public:
     Initialize();
 
 	VOID
-    Uninitialize();
+    Uninitialize();	
 
 	VOID
     Deregister(
@@ -604,6 +674,34 @@ struct FxLibraryGlobalsType
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;
+
+typedef struct _FX_OBJECT_INFO {
+    //
+    // The name of the object, ie "FxObject"
+    //
+    const CHAR* Name;
+
+    //
+    // The name of the external WDF handle that represents the object, ie
+    // WDFDEVICE.  If the object does not have an external handle, this field
+    // may be NULL.
+    //
+    const CHAR* HandleName;
+
+    //
+    // The minimum size of the object, ie sizeof(FxObject).  There are objects
+    // which allocate more than their sizeof() length.
+    //
+    USHORT Size;
+
+    //
+    // FX_OBJECT_TYPES value
+    //
+    USHORT ObjectType;
+
+} FX_OBJECT_INFO, *PFX_OBJECT_INFO;
+
+
 
 typedef
 BOOLEAN

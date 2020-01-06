@@ -12,6 +12,19 @@ protected:
 
 public:
 
+    _Must_inspect_result_
+    __inline
+    NTSTATUS
+    Initialize(
+        )
+    {
+        ExInitializeFastMutex(&m_Lock);
+
+        SET_DBGFLAG_INITIALIZED;
+    
+        return STATUS_SUCCESS;
+    }
+
     __inline
     VOID
     Uninitialize()

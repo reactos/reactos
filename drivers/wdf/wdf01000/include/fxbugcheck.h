@@ -13,6 +13,16 @@ extern "C" {
 typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
 
 //
+// Define the max data size the bugcheck callback can write. Per callback the 
+// total size is around 16K on 32bit OS (32K on 64bit OS).
+//
+#ifdef _WIN64
+#define FX_MAX_DUMP_SIZE                    (32*1024)
+#else
+#define FX_MAX_DUMP_SIZE                    (16*1024)
+#endif
+
+//
 // The initial/increment size of the array to hold driver info. 
 //
 #define FX_DUMP_DRIVER_INFO_INCREMENT       10      // # entries.
@@ -34,6 +44,14 @@ typedef struct _FX_DUMP_DRIVER_INFO_ENTRY {
     WDF_VERSION         Version;
     CHAR                DriverName[WDF_DRIVER_GLOBALS_NAME_LEN];
 } FX_DUMP_DRIVER_INFO_ENTRY, *PFX_DUMP_DRIVER_INFO_ENTRY;
+
+
+//
+// The max size of the array to hold the driver info. This is the max data
+// we can write into the minidump. 
+//
+#define FX_MAX_DUMP_DRIVER_INFO_COUNT \
+    (FX_MAX_DUMP_SIZE/sizeof(FX_DUMP_DRIVER_INFO_ENTRY))
 
 
 #ifdef __cplusplus
