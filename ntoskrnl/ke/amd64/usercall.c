@@ -66,11 +66,16 @@ KiInitializeUserApc(
     _SEH2_TRY
     {
         /* Probe the context */
-        ProbeForWrite(Context,  sizeof(CONTEXT), 16);
+        ProbeForWrite(Context, sizeof(CONTEXT), 16);
 
         /* Convert the current trap frame to a context */
         Context->ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
         KeTrapFrameToContext(TrapFrame, ExceptionFrame, Context);
+
+        if (ExceptionFrame == NULL)
+        {
+            __debugbreak();
+        }
 
         /* Set parameters for KiUserApcDispatcher */
         Context->P1Home = (ULONG64)NormalContext;

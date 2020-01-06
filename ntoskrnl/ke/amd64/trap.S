@@ -784,6 +784,8 @@ PUBLIC KiSystemCallEntry64
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], r10
     mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], r11
 
+    //mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbx], rbx
+
     /* Set sane segments */
     mov ax, (KGDT64_R3_DATA or RPL_MASK)
     mov ds, ax
@@ -835,6 +837,12 @@ no_user_apc_pending:
 
     /* Load user mode stack (It was copied to the trap frame) */
     mov rsp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rsp]
+
+    ; r8 points to the user stack
+    mov r8, rsp
+
+    ; r9 matches rbp
+    mov r9, rbp
 
     /* Swap gs back to user */
     swapgs
