@@ -21,6 +21,7 @@
  * Therefore, you can just attach your debugger to the spoolsv.exe process and set breakpoints on the localspl_apitest.dll code.
  */
 
+#define STANDALONE
 #include <apitest.h>
 
 #define WIN32_NO_STATUS
@@ -34,10 +35,10 @@
 #include <winspool.h>
 #include <winsplp.h>
 
-#include "localspl_apitest.h"
+#include "service_apitest.h"
+#include "testlist.h"
 
-
-static void
+void
 _RunRemoteTest(const char* szTestName)
 {
     BOOL bSuccessful = FALSE;
@@ -53,10 +54,6 @@ _RunRemoteTest(const char* szTestName)
     SERVICE_STATUS ServiceStatus;
     WCHAR wszFilePath[MAX_PATH + 20];
     WIN32_FIND_DATAW fd;
-
-    // Do a dummy EnumPrintersW call.
-    // This guarantees that the Spooler Service has actually loaded localspl.dll, which is a requirement for our injected DLL to work properly.
-    EnumPrintersW(PRINTER_ENUM_LOCAL | PRINTER_ENUM_NAME, NULL, 1, NULL, 0, &cbRead, &cbWritten);
 
     // Get the full path to our EXE file.
     if (!GetModuleFileNameW(NULL, wszFilePath, MAX_PATH))
@@ -206,19 +203,4 @@ Cleanup:
     // Prevent the testing framework from outputting another "0 tests executed" line in this case.
     if (bSuccessful)
         ExitProcess(0);
-}
-
-START_TEST(fpEnumPrinters)
-{
-    _RunRemoteTest("fpEnumPrinters");
-}
-
-START_TEST(fpGetPrintProcessorDirectory)
-{
-    _RunRemoteTest("fpGetPrintProcessorDirectory");
-}
-
-START_TEST(fpSetJob)
-{
-    _RunRemoteTest("fpSetJob");
 }

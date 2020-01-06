@@ -73,7 +73,7 @@ _DoDLLInjection()
     do
     {
         // Check if this is the spooler server process.
-        if (wcsicmp(pe.szExeFile, L"spoolsv.exe") != 0)
+        if (wcsicmp(pe.szExeFile, SERVICE_EXE_NAME) != 0)
             continue;
 
         // Open a handle to the process.

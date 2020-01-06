@@ -5,21 +5,18 @@
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
-#define __ROS_LONG64__
-
 #define STANDALONE
 #include <apitest.h>
+
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #include <io.h>
 #include <windef.h>
 #include <winbase.h>
-#include <wingdi.h>
-#include <winreg.h>
-#include <winspool.h>
-#include <winsplp.h>
 
-#include "../localspl_apitest.h"
+#include "../services_apitest.h"
+#include "../testlist.h"
 
 //#define NDEBUG
 #include <debug.h>
