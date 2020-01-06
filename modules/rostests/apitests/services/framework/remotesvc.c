@@ -17,7 +17,7 @@
 #include <winsplp.h>
 #include <tlhelp32.h>
 
-#include "localspl_apitest.h"
+#include "services_apitest.h"
 
 //#define NDEBUG
 #include <debug.h>

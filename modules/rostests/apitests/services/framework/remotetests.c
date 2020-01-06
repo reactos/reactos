@@ -35,7 +35,7 @@
 #include <winspool.h>
 #include <winsplp.h>
 
-#include "service_apitest.h"
+#include "services_apitest.h"
 #include "testlist.h"
 
 void
