@@ -20,25 +20,29 @@
  */
 VOID
 NTAPI
-RtlInitializeContext(IN HANDLE ProcessHandle,
-                     OUT PCONTEXT ThreadContext,
-                     IN PVOID ThreadStartParam  OPTIONAL,
-                     IN PTHREAD_START_ROUTINE ThreadStartAddress,
-                     IN PINITIAL_TEB StackBase)
+RtlInitializeContext(
+    _Reserved_ HANDLE ProcessHandle,
+    _Out_ PCONTEXT ThreadContext,
+    _In_ PVOID ThreadStartParam  OPTIONAL,
+    _In_ PTHREAD_START_ROUTINE ThreadStartAddress,
+    _In_ PINITIAL_TEB StackBase)
 {
+    /* Initialize everything to 0 */
+    RtlZeroMemory(ThreadContext, sizeof(*ThreadContext));
 
-    ThreadContext->Rax = 0;
-    ThreadContext->Rbx = 0;
+    /* Initialize StartAddress and Stack */
+    ThreadContext->Rip = (ULONG64)ThreadStartAddress;
+    ThreadContext->Rsp = (ULONG64)StackBase - 6 * sizeof(PVOID);
+
+    /* Align stack by 16 and substract 8 (unaligned on function entry) */
+    ThreadContext->Rsp &= ~15;
+    ThreadContext->Rsp -= 8;
+
+    /* Enable Interrupts */
+    ThreadContext->EFlags = EFLAGS_INTERRUPT_MASK;
+
+    /* Set start parameter */
     ThreadContext->Rcx = (ULONG64)ThreadStartParam;
-    ThreadContext->Rdx = 0;
-    ThreadContext->Rsi = 0;
-    ThreadContext->Rdi = 0;
-    ThreadContext->Rbp = 0;
-    ThreadContext->R8 = 0;
-    ThreadContext->R9 = 0;
-    ThreadContext->R10 = 0;
-    ThreadContext->R11 = 0;
-    ThreadContext->R12 = 0;
 
     /* Set the Selectors */
     if ((LONG64)ThreadStartAddress < 0)
@@ -61,17 +65,6 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
         ThreadContext->SegGs = KGDT64_R3_DATA |  RPL_MASK;
         ThreadContext->SegSs = KGDT64_R3_DATA |  RPL_MASK;
     }
-
-    /* Enable Interrupts */
-    ThreadContext->EFlags = EFLAGS_INTERRUPT_MASK;
-
-    /* Settings passed */
-    ThreadContext->Rip = (ULONG64)ThreadStartAddress;
-    ThreadContext->Rsp = (ULONG64)StackBase - 6 * sizeof(PVOID);
-
-    /* Align stack by 16 and substract 8 (unaligned on function entry) */
-    ThreadContext->Rsp &= ~15;
-    ThreadContext->Rsp -= 8;
 
     /* Only the basic Context is initialized */
     ThreadContext->ContextFlags = CONTEXT_CONTROL |
