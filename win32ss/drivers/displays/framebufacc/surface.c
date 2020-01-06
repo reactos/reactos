@@ -152,7 +152,7 @@ DrvEnableSurface(
    /* Setup surface and force the mapping */
    if (!InitSurface(ppdev, TRUE))
    {
-       return FALSE;
+       return NULL;
    }
 
    /* Rest the desktop vitual position */
@@ -180,7 +180,7 @@ DrvEnableSurface(
          break;
 
       default:
-         return FALSE;
+         return NULL;
    }
 
    ppdev->iDitherFormat = BitmapType;
@@ -193,7 +193,7 @@ DrvEnableSurface(
                                      ppdev->ScreenPtr);
    if (hSurface == NULL)
    {
-      return FALSE;
+      return NULL;
    }
 
    /* Which api we hooking to */
@@ -207,7 +207,7 @@ DrvEnableSurface(
    if (!EngAssociateSurface(hSurface, ppdev->hDevEng, ppdev->dwHooks))
    {
       EngDeleteSurface(hSurface);
-      return FALSE;
+      return NULL;
    }
 
    ppdev->hSurfEng = hSurface;

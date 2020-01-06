@@ -245,8 +245,8 @@ doBitBlt:
     // If VGADDIPaint can't do it, VGADDIBitBlt can.. or it might just loop back
     // here and we have a nice infinite loop
 
-    return( VGADDIBitBlt(Surface, (SURFOBJ *)NULL, (SURFOBJ *)NULL, ClipRegion,
-                        (XLATEOBJ *)NULL, &ClipRegion->rclBounds,
-                        NULL, (POINTL *)NULL, Brush, BrushOrigin,
+    return( VGADDIBitBlt(Surface, NULL, NULL, ClipRegion,
+                        NULL, &ClipRegion->rclBounds,
+                        NULL, NULL, Brush, BrushOrigin,
                         NULL) ); UNIMPLEMENTED */
 }

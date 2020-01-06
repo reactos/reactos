@@ -375,7 +375,7 @@ DrvDisableSurface(IN DHPDEV PDev)
     /* free any pending saved screen bit blocks */
 #if 0
     pSSB = pdsurf->ssbList;
-    while (pSSB != (PSAVED_SCREEN_BITS) NULL)
+    while (pSSB != NULL)
     {
         /* Point to the next saved screen bits block */
         pSSBNext = (PSAVED_SCREEN_BITS) pSSB->pvNextSSB;
@@ -450,7 +450,7 @@ DrvEnableSurface(IN DHPDEV PDev)
 
     /* dhsurf is of type DEVSURF, which is the drivers specialized surface type */
     dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
-    if (dhsurf == (DHSURF) 0)
+    if (dhsurf == NULL)
         goto error_done;
 
     pdsurf = (PDEVSURF) dhsurf;
@@ -485,7 +485,7 @@ DrvEnableSurface(IN DHPDEV PDev)
     } BANKING CODE UNIMPLEMENTED */
 
     if ((hsurf = EngCreateDeviceSurface(dhsurf, ppdev->sizeSurf, BMF_4BPP)) ==
-        (HSURF)0)
+        NULL)
     {
         /* Call to EngCreateDeviceSurface failed */
         DPRINT("EngCreateDeviceSurface call failed\n");
@@ -513,7 +513,7 @@ error_clean:
     EngFreeMem(dhsurf);
 
 error_done:
-    return (HSURF)0;
+    return NULL;
 }
 
 

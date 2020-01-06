@@ -69,10 +69,10 @@ VOID NTAPI vDisablePalette(PPDEV ppdev)
     if (ppdev->hpalDefault)
     {
         EngDeletePalette(ppdev->hpalDefault);
-        ppdev->hpalDefault = (HPALETTE) 0;
+        ppdev->hpalDefault = NULL;
     }
 
-    if (ppdev->pPal != (PPALETTEENTRY)NULL)
+    if (ppdev->pPal != NULL)
         EngFreeMem((PVOID)ppdev->pPal);
 }
 
@@ -151,7 +151,7 @@ BOOL NTAPI bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
                                                    (PULONG) ppdev->pPal,
                                                    0,0,0);
 
-        if (ppdev->hpalDefault == (HPALETTE) 0)
+        if (ppdev->hpalDefault == NULL)
         {
             RIP("DISP bInitDefaultPalette failed EngCreatePalette\n");
             EngFreeMem(ppdev->pPal);
@@ -168,12 +168,12 @@ BOOL NTAPI bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 
         ppdev->hpalDefault =
         pDevInfo->hpalDefault = EngCreatePalette(PAL_BITFIELDS,
-                                                   0,(PULONG) NULL,
+                                                   0, NULL,
                                                    ppdev->flRed,
                                                    ppdev->flGreen,
                                                    ppdev->flBlue);
 
-        if (ppdev->hpalDefault == (HPALETTE) 0)
+        if (ppdev->hpalDefault == NULL)
         {
             RIP("DISP bInitDefaultPalette failed EngCreatePalette\n");
             return(FALSE);

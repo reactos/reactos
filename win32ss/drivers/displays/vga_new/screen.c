@@ -670,7 +670,7 @@ DWORD *cbModeSize)
                            &ulTemp))
     {
         DISPDBG((0, "getAvailableModes failed VIDEO_QUERY_NUM_AVAIL_MODES\n"));
-        return(0);
+        return 0;
     }
 
     *cbModeSize = modes.ModeInformationLength;
@@ -683,7 +683,7 @@ DWORD *cbModeSize)
                         EngAllocMem(0, modes.NumModes *
                                     modes.ModeInformationLength, ALLOC_TAG);
 
-    if (*modeInformation == (PVIDEO_MODE_INFORMATION) NULL)
+    if (*modeInformation == NULL)
     {
         DISPDBG((0, "getAvailableModes failed EngAllocMem\n"));
 
@@ -706,9 +706,9 @@ DWORD *cbModeSize)
         DISPDBG((0, "getAvailableModes failed VIDEO_QUERY_AVAIL_MODES\n"));
 
         EngFreeMem(*modeInformation);
-        *modeInformation = (PVIDEO_MODE_INFORMATION) NULL;
+        *modeInformation = NULL;
 
-        return(0);
+        return 0;
     }
 
     //

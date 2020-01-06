@@ -86,12 +86,12 @@ VOID vDisablePalette(PPDEV ppdev)
     if (ppdev->hpalDefault)
     {
         EngDeletePalette(ppdev->hpalDefault);
-        ppdev->hpalDefault = (HPALETTE) 0;
+        ppdev->hpalDefault = NULL;
     }
 
 // eVb: 4.2 [VGARISC Change] - VGA Palette is static, no need to free
 #if 0
-    if (ppdev->pPal != (PPALETTEENTRY)NULL)
+    if (ppdev->pPal != NULL)
         EngFreeMem((PVOID)ppdev->pPal);
 #endif
 // eVb: 4.2 [END]
@@ -178,7 +178,7 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 // eVb: 4.4 [END]
                                                    0,0,0);
 
-        if (ppdev->hpalDefault == (HPALETTE) 0)
+        if (ppdev->hpalDefault == NULL)
         {
             RIP("DISP bInitDefaultPalette failed EngCreatePalette\n");
 // eVb: 4.5 [VGARISC Change] - VGA Palette is static, no need to free
@@ -199,12 +199,12 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 
         ppdev->hpalDefault =
         pDevInfo->hpalDefault = EngCreatePalette(PAL_BITFIELDS,
-                                                   0,(PULONG) NULL,
+                                                   0, NULL,
                                                    ppdev->flRed,
                                                    ppdev->flGreen,
                                                    ppdev->flBlue);
 
-        if (ppdev->hpalDefault == (HPALETTE) 0)
+        if (ppdev->hpalDefault == NULL)
         {
             RIP("DISP bInitDefaultPalette failed EngCreatePalette\n");
             return(FALSE);
