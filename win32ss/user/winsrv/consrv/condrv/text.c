@@ -1144,7 +1144,8 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                 break;
 
             case CODE_ATTRIBUTE:
-                Ptr->Attributes = Code.Attribute;
+                Ptr->Attributes &= ~0xFF;
+                Ptr->Attributes |= (Code.Attribute & 0xFF);
                 break;
         }
         // ++Ptr;
