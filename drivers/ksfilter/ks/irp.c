@@ -349,10 +349,9 @@ KsQueryInformationFile(
     PFAST_IO_DISPATCH FastIoDispatch;
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
-    IO_STATUS_BLOCK IoStatus;
+    IO_STATUS_BLOCK IoStatusBlock;
     KEVENT Event;
     LARGE_INTEGER Offset;
-    IO_STATUS_BLOCK StatusBlock;
     NTSTATUS Status;
 
     /* get related file object */
@@ -370,7 +369,7 @@ KsQueryInformationFile(
             /* use FastIoQueryBasicInfo routine */
             if (FastIoDispatch->FastIoQueryBasicInfo)
             {
-                return FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE, (PFILE_BASIC_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+                return FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE, (PFILE_BASIC_INFORMATION)FileInformation, &IoStatusBlock, DeviceObject);
             }
         }
         else if (FileInformationClass == FileStandardInformation)
@@ -378,10 +377,11 @@ KsQueryInformationFile(
             /* use FastIoQueryStandardInfo routine */
             if (FastIoDispatch->FastIoQueryStandardInfo)
             {
-                return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+                return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatusBlock, DeviceObject);
             }
         }
     }
+
     /* clear event */
     KeClearEvent(&FileObject->Event);
 
@@ -392,8 +392,7 @@ KsQueryInformationFile(
     Offset.QuadPart = 0L;
 
     /* build the request */
-    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION, IoGetRelatedDeviceObject(FileObject), NULL, 0, &Offset, &Event, &StatusBlock);
-
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION, IoGetRelatedDeviceObject(FileObject), NULL, 0, &Offset, &Event, &IoStatusBlock);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -418,7 +417,7 @@ KsQueryInformationFile(
        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
            Status = FileObject->FinalStatus;
        else
-           Status = StatusBlock.Status;
+           Status = IoStatusBlock.Status;
     }
 
     /* done */
@@ -482,7 +481,6 @@ KsSetInformationFile(
 
     /* build the irp */
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_INFORMATION, DeviceObject, NULL, 0, &Offset, &Event, &IoStatus);
-
     if (!Irp)
     {
         /* failed to allocate irp */
