@@ -375,8 +375,8 @@ KsQueryInformationFile(
         }
         else if (FileInformationClass == FileStandardInformation)
         {
-            /* use FastIoQueryBasicInfo routine */
-            if (FastIoDispatch->FastIoQueryBasicInfo)
+            /* use FastIoQueryStandardInfo routine */
+            if (FastIoDispatch->FastIoQueryStandardInfo)
             {
                 return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatus, DeviceObject);
             }
