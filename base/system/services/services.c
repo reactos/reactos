@@ -27,6 +27,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 
 BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
+BOOL ScmLiveSetup = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
 static HANDLE hScmSecurityServicesEvent = NULL;
 
@@ -46,6 +47,70 @@ PrintString(LPCSTR fmt, ...)
 
     OutputDebugStringA(buffer);
 #endif
+}
+
+DWORD
+CheckForLiveCD(VOID)
+{
+    WCHAR CommandLine[MAX_PATH];
+    HKEY hSetupKey;
+    DWORD dwSetupType;
+    DWORD dwType;
+    DWORD dwSize;
+    DWORD dwError;
+
+    DPRINT1("CheckSetup()\n");
+
+    /* Open the Setup key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\Setup",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hSetupKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Read the SetupType value */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hSetupKey,
+                               L"SetupType",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)&dwSetupType,
+                               &dwSize);
+
+    if (dwError != ERROR_SUCCESS ||
+        dwType != REG_DWORD ||
+        dwSize != sizeof(DWORD) ||
+        dwSetupType == 0)
+        goto done;
+
+    /* Read the CmdLine value */
+    dwSize = sizeof(CommandLine);
+    dwError = RegQueryValueExW(hSetupKey,
+                               L"CmdLine",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)CommandLine,
+                               &dwSize);
+
+    if (dwError != ERROR_SUCCESS ||
+        (dwType != REG_SZ &&
+         dwType != REG_EXPAND_SZ &&
+         dwType != REG_MULTI_SZ))
+        goto done;
+
+    /* Check for the '-mini' option */
+    if (wcsstr(CommandLine, L" -mini") != NULL)
+    {
+        DPRINT1("Running on LiveCD!\n");
+        ScmLiveSetup = TRUE;
+    }
+
+done:
+    RegCloseKey(hSetupKey);
+
+    return dwError;
 }
 
 
@@ -168,6 +233,13 @@ wWinMain(HINSTANCE hInstance,
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
+
+    dwError = CheckForLiveCD();
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("SERVICES: Failed to check for LiveCD (Error %lu)\n", dwError);
+        goto done;
+    }
 
     /* Make us critical */
     RtlSetProcessIsCritical(TRUE, NULL, TRUE);
