@@ -494,7 +494,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     LeaveCriticalSection(&Console->Lock);
 }
 
-/* For Chinese, Japanese and Korean: */
+/* For Chinese, Japanese and Korean */
 VOID
 GuiPaintTextModeBufferCJK(PTEXTMODE_SCREEN_BUFFER Buffer,
                           PGUI_CONSOLE_DATA GuiData,

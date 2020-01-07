@@ -993,7 +993,7 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
         {
             if (IsCJKCodePage(ActiveBuffer->Header.Console->OutputCodePage))
             {
-                /* For Chinese, Japanese and Korean: */
+                /* For Chinese, Japanese and Korean */
                 GuiPaintTextModeBufferCJK((PTEXTMODE_SCREEN_BUFFER)ActiveBuffer,
                                           GuiData, &ps.rcPaint, &rcPaint);
             }

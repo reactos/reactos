@@ -121,7 +121,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PRECT rcView,
                        PRECT rcFramebuffer);
 
-/* For Chinese, Japanese and Korean: */
+/* For Chinese, Japanese and Korean */
 VOID
 GuiPaintTextModeBufferCJK(PTEXTMODE_SCREEN_BUFFER Buffer,
                           PGUI_CONSOLE_DATA GuiData,
