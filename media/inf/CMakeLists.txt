@@ -35,9 +35,9 @@ list(APPEND INF_FILES
     scsi.inf
     shortcuts.inf
     unknown.inf
-#    usb.inf
-#    usbport.inf
-#    usbstor.inf
+    usb.inf
+    usbport.inf
+    usbstor.inf
     wdmaudio.inf
     wmiacpi.inf
     xboxdisp.inf)
