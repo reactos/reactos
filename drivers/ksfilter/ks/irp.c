@@ -367,17 +367,31 @@ KsQueryInformationFile(
         if (FileInformationClass == FileBasicInformation)
         {
             /* use FastIoQueryBasicInfo routine */
-            if (FastIoDispatch->FastIoQueryBasicInfo)
+            if (FastIoDispatch->FastIoQueryBasicInfo != NULL &&
+                FastIoDispatch->FastIoQueryBasicInfo(
+                  FileObject,
+                  TRUE,
+                  (PFILE_BASIC_INFORMATION)FileInformation,
+                  &IoStatusBlock,
+                  DeviceObject))
             {
-                return FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE, (PFILE_BASIC_INFORMATION)FileInformation, &IoStatusBlock, DeviceObject);
+                /* request was handled */
+                return IoStatusBlock.Status;
             }
         }
         else if (FileInformationClass == FileStandardInformation)
         {
             /* use FastIoQueryStandardInfo routine */
-            if (FastIoDispatch->FastIoQueryStandardInfo)
+            if (FastIoDispatch->FastIoQueryStandardInfo != NULL &&
+                FastIoDispatch->FastIoQueryStandardInfo(
+                  FileObject,
+                  TRUE,
+                  (PFILE_STANDARD_INFORMATION)FileInformation,
+                  &IoStatusBlock,
+                  DeviceObject))
             {
-                return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatusBlock, DeviceObject);
+                /* request was handled */
+                return IoStatusBlock.Status;
             }
         }
     }
