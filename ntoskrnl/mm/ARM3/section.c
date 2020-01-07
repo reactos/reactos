@@ -1508,7 +1508,7 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
 NTSTATUS
 NTAPI
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
-                      IN PSIZE_T MaximumSize,
+                      IN PULONG64 MaximumSize,
                       IN ULONG ProtectionMask,
                       IN ULONG AllocationAttributes)
 {
@@ -1546,7 +1546,12 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                                        sizeof(SEGMENT) +
                                        sizeof(MMPTE) * (PteCount - 1),
                                        'tSmM');
-    ASSERT(NewSegment);
+    if (NewSegment == NULL)
+    {
+        DPRINT1("Failed to allocate segment. PteCount = 0x%Ix\n", PteCount);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     *Segment = NewSegment;
 
     /* Now allocate the control area, which has the subsection structure */
@@ -2611,7 +2616,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* So this must be a pagefile-backed section, create the mappings needed */
         Status = MiCreatePagingFileMap(&NewSegment,
-                                       (PSIZE_T)InputMaximumSize,
+                                       &InputMaximumSize->QuadPart,
                                        ProtectionMask,
                                        AllocationAttributes);
         if (!NT_SUCCESS(Status)) return Status;
