@@ -490,7 +490,9 @@ NTAPI
 USBPORT_StopDevice(IN PDEVICE_OBJECT FdoDevice)
 {
     DPRINT1("USBPORT_StopDevice: UNIMPLEMENTED. FIXME\n");
+#ifndef NDEBUG_USBPORT_CORE
     DbgBreakPoint();
+#endif
     return STATUS_SUCCESS;
 }
 
