@@ -6,9 +6,9 @@
 #include "common/fxldr.h"
 #include "fxbugcheck.h"
 #include "common/mxlock.h"
-#include "common/fxobject.h"
-#include "common/fxdriver.h"
+#include "common/fxtypes.h"
 #include "common/fxpool.h"
+#include "common/mxgeneral.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,8 +17,13 @@ extern "C" {
 const LONG FX_OBJECT_LEAK_DETECTION_DISABLED = 0xFFFFFFFF;
 
 struct FxLibraryGlobalsType;
+class FxObject;
+class FxDriver;
 extern RTL_OSVERSIONINFOW  gOsVersion;
 extern PCCH WdfLdrType;
+
+#define DDI_ENTRY_IMPERSONATION_OK()
+#define DDI_ENTRY()
 
 NTSTATUS
 FxLibraryGlobalsCommission(VOID);
@@ -89,6 +94,19 @@ FxRegisterBugCheckCallback(
     __in    PDRIVER_OBJECT DriverObject
     );
 
+PCSTR
+FxObjectTypeToHandleName(
+    __in WDFTYPE ObjectType
+    );
+
+_Must_inspect_result_
+BOOLEAN
+FxVerifyObjectTypeInTable(
+    __in USHORT ObjectType
+    );
+
+
+
 
 struct FxMdlDebugInfo {
     PMDL Mdl;
@@ -102,6 +120,15 @@ struct FxAllocatedMdls {
     FxMdlDebugInfo Info[NUM_MDLS_IN_INFO];
     ULONG Count;
     struct FxAllocatedMdls* Next;
+};
+
+//
+// NOTE: any time you add a value to this enum, you must add a field to the
+// union in FxObjectDebugInfo.
+//
+enum FxObjectDebugInfoFlags {
+    FxObjectDebugTrackReferences = 0x0001,
+    FxObjectDebugTrackObjectCount = 0x0002,
 };
 
 struct FxObjectDebugInfo {
@@ -127,6 +154,14 @@ struct FxObjectDebugInfo {
         } Bits;
     } u;
 };
+
+_Must_inspect_result_
+BOOLEAN
+FxVerifierIsDebugInfoFlagSetForType(
+    _In_ FxObjectDebugInfo* DebugInfo,
+    _In_ WDFTYPE ObjectType,
+    _In_ FxObjectDebugInfoFlags Flag
+    );
 
 struct FxDriverGlobalsDebugExtension {
     //
@@ -204,6 +239,21 @@ public:
         )
     {
         return (FxPoolTrackingOn) ? TRUE : FALSE;
+    }
+
+    BOOLEAN
+    IsObjectDebugOn(
+        VOID
+        )
+    {
+        if (FxVerifierHandle)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
     }
 
 	_Must_inspect_result_
@@ -547,6 +597,27 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         );
 
+    //
+    // Tracks the driver usage on the current processor.
+    // KeGetCurrentProcessorNumberEx is called directly because the procgrp.lib
+    // provides the downlevel support for Vista, XP and Win2000.
+    //
+    __inline
+    VOID
+    TrackDriver(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals
+        )
+    {
+        ASSERT(m_PoolToFree != NULL);
+
+        //
+        // TODO: KeGetCurrentProcessorIndex
+        //
+        //GetProcessorDriverEntryRef(
+        //    KeGetCurrentProcessorIndex())->FxDriverGlobals =
+        //        FxDriverGlobals;
+    }
+
 private:
     //
     // Returns the per-processor cache-aligned driver usage ref structure for
@@ -729,6 +800,50 @@ GetFxDriverGlobals(
     )
 {
     return CONTAINING_RECORD( DriverGlobals, FX_DRIVER_GLOBALS, Public );
+}
+
+__bcount(Size)
+PVOID
+FORCEINLINE
+FxPoolAllocate(
+    __in PFX_DRIVER_GLOBALS Globals,
+    __in POOL_TYPE Type,
+    __in size_t Size
+    )
+{
+    //
+    // Always pass in the return address, regardless of the value of
+    // Globals->WdfPoolTrackingOn.
+    //
+    return FxPoolAllocator(
+        Globals,
+        &Globals->FxPoolFrameworks,
+        Type,
+        Size,
+        Globals->Tag,
+        _ReturnAddress()
+        );
+}
+
+//
+// This inline function tracks driver usage; This info is used by the
+// debug dump callback routine for selecting which driver's log to save
+// in the minidump. At this time we track the following OS to framework calls:
+//  (a) IRP dispatch (general, I/O, PnP, WMI).
+//  (b) Request's completion callbacks.
+//  (c) Work Item's (& System Work Item's) callback handlers.
+//  (d) Timer's callback handlers.
+//
+__inline
+VOID
+FX_TRACK_DRIVER(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    if (FxDriverGlobals->FxTrackDriverForMiniDumpLog)
+    {
+        FxLibraryGlobals.DriverTracker.TrackDriver(FxDriverGlobals);
+    }
 }
 
 #ifdef __cplusplus

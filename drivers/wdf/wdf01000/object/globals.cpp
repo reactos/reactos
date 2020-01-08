@@ -1146,4 +1146,102 @@ FxOverrideDefaultVerifierSettings(
 
 }
 
+PCSTR
+FxObjectTypeToHandleName(
+    __in WDFTYPE ObjectType
+    )
+{
+    ULONG i;
+
+    for (i = 0; i < FxObjectsInfoCount; i++)
+    {
+        if (ObjectType == FxObjectsInfo[i].ObjectType)
+        {
+            return FxObjectsInfo[i].HandleName;
+        }
+        else if (ObjectType > FxObjectsInfo[i].ObjectType)
+        {
+            continue;
+        }
+
+        return NULL;
+    }
+
+    return NULL;
+}
+
+_Must_inspect_result_
+BOOLEAN
+FxVerifyObjectTypeInTable(
+    __in USHORT ObjectType
+    )
+{
+    ULONG i;
+
+    for (i = 0; i < FxObjectsInfoCount; i++)
+    {
+        if (ObjectType == FxObjectsInfo[i].ObjectType)
+        {
+            return TRUE;
+        }
+        else if (ObjectType > FxObjectsInfo[i].ObjectType)
+        {
+            continue;
+        }
+
+        return FALSE;
+    }
+
+    return FALSE;
+}
+
+_Must_inspect_result_
+BOOLEAN
+FxVerifierIsDebugInfoFlagSetForType(
+    _In_ FxObjectDebugInfo* DebugInfo,
+    _In_ WDFTYPE ObjectType,
+    _In_ FxObjectDebugInfoFlags Flag
+    )
+
+/*++
+
+Routine Description:
+    For a given object type and flag, returns to the caller if the flag is set.
+
+Arguments:
+    DebugInfo - array of object debug info to search through
+
+    ObjectType - the type of the object to check
+
+    FxObjectDebugInfoFlags - Flag to check for
+
+Return Value:
+    TRUE if objects of the given type had its flag set.
+
+--*/
+
+{
+    ULONG i;
+
+    //
+    // Array size of DebugInfo is the same size as FxObjectsInfo
+    //
+    for (i = 0; i < FxObjectsInfoCount; i++)
+    {
+        if (ObjectType == DebugInfo[i].ObjectType)
+        {
+            return FLAG_TO_BOOL(DebugInfo[i].u.DebugFlags,
+                                Flag);
+        }
+        else if (ObjectType > FxObjectsInfo[i].ObjectType)
+        {
+            continue;
+        }
+
+        return FALSE;
+    }
+
+    return FALSE;
+}
+
 } //extern C

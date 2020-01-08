@@ -6,6 +6,7 @@
 #include "common/fxpool.h"
 #include "common/fxtrace.h"
 #include "fxdynamics.h"
+#include "common/fxdriver.h"
 
 
 NTSTATUS
