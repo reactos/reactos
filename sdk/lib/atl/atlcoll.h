@@ -157,6 +157,17 @@ class CElementTraits :
 };
 
 
+template<typename T, class Allocator = CCRTAllocator>
+class CHeapPtrElementTraits :
+    public CDefaultElementTraits< CHeapPtr<T, Allocator> >
+{
+public:
+    typedef CHeapPtr<T, Allocator>& INARGTYPE;
+    typedef T*& OUTARGTYPE;
+};
+
+
+
 template<typename E, class ETraits = CElementTraits<E> >
 class CAtlArray
 {
@@ -851,6 +862,23 @@ typename CAtlList<E, ETraits>::CNode* CAtlList< E, ETraits>::GetFreeNode()
 
     return m_FreeNode;
 }
+
+
+template<typename E, class Allocator = CCRTAllocator >
+class CHeapPtrList :
+    public CAtlList<CHeapPtr<E, Allocator>, CHeapPtrElementTraits<E, Allocator> >
+{
+public:
+    CHeapPtrList(_In_ UINT nBlockSize = 10) :
+        CAtlList<CHeapPtr<E, Allocator>, CHeapPtrElementTraits<E, Allocator> >(nBlockSize)
+    {
+    }
+
+private:
+    CHeapPtrList(const CHeapPtrList&);
+    CHeapPtrList& operator=(const CHeapPtrList*);
+};
+
 
 }
 

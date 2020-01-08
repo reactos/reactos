@@ -6,6 +6,7 @@
  */
 
 /* In case we are building against the MS headers, we need to disable assertions. */
+#undef ATLASSERT
 #define ATLASSERT(x)
 #define _ATL_NO_VARIANT_THROW
 

@@ -13,6 +13,8 @@ list(APPEND SOURCE
     CComHeapPtr.cpp
     CComObject.cpp
     CComQIPtr.cpp
+    CComVariant.cpp
+    CHeapPtrList.cpp
     CImage.cpp
     CRegKey.cpp
     CSimpleArray.cpp
@@ -22,7 +24,6 @@ list(APPEND SOURCE
 
 add_executable(atl_apitest
     ${SOURCE}
-    CComVariant.cpp
     testlist.c
     atl_apitest.rc)
 
