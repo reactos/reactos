@@ -12,11 +12,18 @@ list(APPEND SOURCE
     object/fxverifierlock.cpp
     object/wdfpool.cpp
     object/dbgtrace.cpp
+    object/fxobject.cpp
     object/fxobjectapi.cpp
+    object/fxvalidatefunctions.cpp
+    object/fxverifierbugcheck.cpp
+    object/handleapi.cpp
+    object/fxtagtracker.cpp
+    object/fxobjectstatemachine.cpp
     support/fxregkey.cpp
     support/fxstringapi.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
+    core/fxdriver.cpp
     core/fxdriverapi.cpp
     core/fxdeviceapi.cpp
     core/fxdeviceinitapi.cpp
@@ -25,6 +32,8 @@ list(APPEND SOURCE
     core/fxrequestapi.cpp
     core/fxmemorybufferapi.cpp
     core/verifierapi.cpp
+    core/fxdisposelist.cpp
+    core/fxsystemworkitem.cpp
     io/fxioqueueapi.cpp
     primitives/mxgeneral.cpp
 )
