@@ -66,39 +66,58 @@ VOID OnClearRecentItems(HWND hwnd)
         }
         while (FindNextFileW(hPath, &info));
         FindClose(hPath);
-        /* FIXME: Disable the button*/
+
         EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), FALSE);
     }
 }
 
+typedef void (*STARTMENU_CUSTOM_OPTION)(DWORD, DWORD);
+
+VOID DefaultFunc(DWORD dwItem, DWORD dwState);
 
 static struct
 {
     PCWSTR OptionName;
+    STARTMENU_CUSTOM_OPTION StartMenu_CustomOption;
     BOOL IsDirty;
-}
-
-ClassicOption[] =
-{
-    {L"Start_EnableDragDrop", FALSE},       // REG_DWORD
-    {L"Start_ShowRun", FALSE},              // REG_DWORD
-    {L"StartMenuScrollPrograms", FALSE},    // REG_SZ
-    {L"CascadeMyPictures", FALSE},          // REG_SZ
-    {L"CascadePrinters", FALSE},            // REG_SZ
-    {L"CascadeNetworkConnections", FALSE},  // REG_SZ
-    {L"CascadeMyDocuments", FALSE},         // REG_SZ
-    {L"CascadeControlPanel", FALSE},        // REG_SZ
-    {L"StartMenuFavorites", FALSE},         // REG_DWORD
-    {L"StartMenuAdminToolsRoot", FALSE},    // REG_SZ
-    {L"ShowSmallIcones", FALSE},            // REG_DWORD
-    {L"StartCustomMenus", FALSE},           // REG_DWORD
-    {NULL, FALSE}     // Last.IsDirty stores all current checkBtn state
+} ClassicOption[] = {
+    {L"Start_EnableDragDrop", DefaultFunc, FALSE},       // REG_DWORD
+    {L"Start_ShowRun", DefaultFunc, FALSE},              // REG_DWORD
+    {L"StartMenuScrollPrograms", DefaultFunc, FALSE},    // REG_SZ
+    {L"CascadeMyPictures", DefaultFunc, FALSE},          // REG_SZ
+    {L"CascadePrinters", DefaultFunc, FALSE},            // REG_SZ
+    {L"CascadeNetworkConnections", DefaultFunc, FALSE},  // REG_SZ
+    {L"CascadeMyDocuments", DefaultFunc, FALSE},         // REG_SZ
+    {L"CascadeControlPanel", DefaultFunc, FALSE},        // REG_SZ
+    {L"StartMenuFavorites", DefaultFunc, FALSE},         // REG_DWORD
+    {L"StartMenuAdminToolsRoot", DefaultFunc, FALSE},    // REG_SZ
+    {L"ShowSmallIcons", DefaultFunc, FALSE},            // REG_DWORD
+    {L"StartCustomMenus", DefaultFunc, FALSE},           // REG_DWORD
+    {NULL, NULL, FALSE}                                  // Last IsDirty stores the bitmap of all current checkBtn state
 };
 
-DWORD LoadUserConfData(INT *dwLength)
+VOID DefaultFunc(DWORD dwItem, DWORD dwState)
+{
+    WCHAR buf[128];
+    const WCHAR *ptr = dwState ? L"ON" : L"OFF";
+    wsprintf(buf, L"%s   %s\n", ClassicOption[dwItem].OptionName, ptr);
+
+    MessageBoxW(0, buf, L"Not implemented", MB_OK);
+}
+
+VOID ExecuteCustomOptions(DWORD dwItem, DWORD dwUserOptions, DWORD dwOptSize)
+{
+    for (DWORD idx = 0; idx < dwOptSize; idx++)
+    {
+        if ((dwItem >> idx) & 0x01)
+            ClassicOption[idx].StartMenu_CustomOption(idx, !((dwUserOptions >> idx) & 0x01));
+    }
+}
+
+DWORD LoadUserConfData(DWORD *dwLength)
 {
     HKEY hKey;
-    int iItem;
+    DWORD iItem;
     DWORD dwSize;
     DWORD dwType;
     DWORD dwStatus = 0;
@@ -127,7 +146,7 @@ DWORD LoadUserConfData(INT *dwLength)
         {
             if (dwType == REG_SZ)
             {
-                BOOL stat = ((lstrcmp(chBuffer, L"YES") == 0) || (lstrcmp(chBuffer, L"yes") == 0)) ? TRUE : FALSE;
+                BOOL stat = (lstrcmpiW(chBuffer, L"YES") == 0) ? TRUE : FALSE;
                 if (stat)
                     dwStatus |= (1 << iItem);
                 else
@@ -135,7 +154,7 @@ DWORD LoadUserConfData(INT *dwLength)
             }
             else if (dwType == REG_DWORD && dwSize == sizeof(REG_DWORD))
             {
-                DWORD regValue = *(reinterpret_cast<DWORD*>(chBuffer));
+                DWORD regValue = *(reinterpret_cast<DWORD *>(chBuffer));
                 if (regValue)
                     dwStatus |= (1 << iItem);
                 else
@@ -144,7 +163,7 @@ DWORD LoadUserConfData(INT *dwLength)
         }
     }
     *dwLength = iItem;
-           //  Save Current User options
+    //  Save Current User options
     ClassicOption[iItem].IsDirty = dwStatus;
     RegCloseKey(hKey);
     return dwStatus;
@@ -181,7 +200,7 @@ DWORD UpLoadUserConfData(DWORD &dwUserData)
                     ((IDS_DRAG_DROP + iItem) != IDS_SHOW_FAVORITES))
                 {
                     const wchar_t *sKey = ((dwQueryData >> iItem) & 0x01) ? L"YES" : L"NO";
-                    RegSetValueExW(hKey, ClassicOption[iItem].OptionName, NULL, REG_SZ, (LPBYTE) sKey, (lstrlen(sKey)+1)*sizeof(WCHAR));
+                    RegSetValueExW(hKey, ClassicOption[iItem].OptionName, NULL, REG_SZ, (LPBYTE) sKey, (lstrlen(sKey) + 1) * sizeof(WCHAR));
                 }
                 else
                 {
@@ -212,7 +231,7 @@ HWND InitClassicListView(HWND hwnd)
 
     LVCOLUMNW lvc = {0};
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-    lvc.pszText = NULL ;
+    lvc.pszText = NULL;
     lvc.cx = rcClient.right;
     SendMessage(hListView, LVM_INSERTCOLUMN, 0, (LPARAM)&lvc);
 
@@ -232,9 +251,9 @@ HWND InitClassicListView(HWND hwnd)
     return hListView;
 }
 
-void UpdateClassicOptions(HWND hListView)
+VOID UpdateClassicOptions(HWND hListView)
 {
-   int nItemCount = ListView_GetItemCount(hListView);
+    int nItemCount = ListView_GetItemCount(hListView);
     DWORD dwStatus = ClassicOption[nItemCount].IsDirty;
 
     for (int iItem = 0; iItem < nItemCount; iItem++)
@@ -250,14 +269,13 @@ void UpdateClassicOptions(HWND hListView)
         }
     }
     ClassicOption[nItemCount].IsDirty = dwStatus;
-
 }
 
 INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HWND hListView = NULL;
 
-    switch(Message)
+    switch (Message)
     {
         case WM_INITDIALOG:
             /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
@@ -305,9 +323,6 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     }
     return TRUE;
 }
-
-
-
 
 INT ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)
 {
