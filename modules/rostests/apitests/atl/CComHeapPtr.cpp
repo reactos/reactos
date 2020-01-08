@@ -1,14 +1,19 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for CComHeapPtr
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Test for CComHeapPtr
+ * COPYRIGHT:   Copyright 2015-2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
+#ifdef HAVE_APITEST
 #include <apitest.h>
+#else
+#include "atltest.h"
+#endif
 #include <atlbase.h>
 
-static PDWORD test_Alloc(DWORD value)
+static PDWORD
+test_Alloc(DWORD value)
 {
     PDWORD ptr = (PDWORD)::CoTaskMemAlloc(sizeof(DWORD));
     *ptr = value;
