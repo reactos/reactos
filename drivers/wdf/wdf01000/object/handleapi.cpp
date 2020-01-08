@@ -3,6 +3,7 @@
 #include "common/fxobject.h"
 #include "common/fxglobals.h"
 #include "common/dbgtrace.h"
+#include "common/fxverifier.h"
 #include <ntintsafe.h>
 
 
@@ -335,4 +336,132 @@ Arguments:
 
         Header->ContextTypeInfo = Attributes->ContextTypeInfo;
     }
+}
+
+//__inline
+VOID
+FxObjectHandleGetPtr(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in WDFOBJECT Handle,
+    __in WDFTYPE Type,
+    __out PVOID* PPObject
+    )
+/*++
+
+Routine Description:
+    Converts an externally facing WDF handle into its internal object.
+
+Arguments:
+    FxDriverGlobals - caller's globals
+    Handle - handle to convert into an object
+    Type - required type of the underlying object
+    PPObject - pointer to receive the underlying object
+
+  --*/
+{
+    WDFOBJECT_OFFSET offset;
+    FxObject* pObject;
+
+    if (Handle == NULL)
+    {
+        FxVerifierBugCheck(FxDriverGlobals,
+                           WDF_INVALID_HANDLE,
+                           (ULONG_PTR) Handle,
+                           Type);
+
+        /* NOTREACHED */
+        return;
+    }
+
+    offset = 0;
+    pObject = FxObject::_GetObjectFromHandle(Handle, &offset);
+
+    //
+    // The only DDI you can call on an object which has a ref count of zero is
+    // WdfObjectGetTypedContextWorker().
+    //
+    ASSERT(pObject->GetRefCnt() > 0);
+
+    //
+    // Do a quick non virtual call for the type and only do the slow QI if
+    // the first types do not match
+    //
+    if (pObject->GetType() == Type)
+    {
+        *PPObject = pObject;
+        ASSERT(offset == 0x0);
+        return;
+    }
+    else
+    {
+        FxObjectHandleGetPtrQI(pObject, PPObject, Handle, Type, offset);
+    }
+}
+
+VOID
+FxObjectHandleGetPtrQI(
+    __in    FxObject* Object,
+    __out   PVOID* PPObject,
+    __in    WDFOBJECT Handle,
+    __in    WDFTYPE Type,
+    __in    WDFOBJECT_OFFSET Offset
+    )
+/*++
+
+Routine Description:
+    Worker function for FxObjectHandleGetPtrXxx which will call
+    FxObject::QueryInterface when the Type does not match the object's built in
+    Type.
+
+Arguments:
+    Object - object to query
+    PPObject - pointer which will recieve the queried for object
+    Handle - handle which the caller passed to the framework
+    Type - required object type
+    Offset - offset of the handle within the object.  Nearly all handles will have
+        a zero object.
+
+  --*/
+{
+    FxQueryInterfaceParams params = { PPObject, Type, Offset };
+    NTSTATUS status;
+
+    *PPObject = NULL;
+
+    status = Object->QueryInterface(&params);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            Object->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Object Type Mismatch, Handle 0x%p, Type 0x%x, "
+            "Obj 0x%p, SB 0x%x",
+            Handle, Type, Object, Object->GetType());
+
+        FxVerifierBugCheck(Object->GetDriverGlobals(),
+                           WDF_INVALID_HANDLE,
+                           (ULONG_PTR) Handle,
+                           Type);
+
+        /* NOTREACHED */
+        return;
+    }
+}
+
+//__inline
+VOID
+FxObjectHandleCreate(
+    __in  FxObject* Object,
+    __out PWDFOBJECT Handle
+    )
+{
+#if FX_SUPER_DBG
+    if (Object->GetDriverGlobals()->FxVerifierHandle)
+    {
+        ASSERT(Object->GetObjectSize() > 0);
+        ASSERT(Object == Object->GetContextHeader()->Object);
+    }
+#endif
+    ASSERT((((ULONG_PTR) Object) & FxHandleFlagMask) == 0x0);
+    *Handle = Object->GetObjectHandle();
 }

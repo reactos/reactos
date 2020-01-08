@@ -48,6 +48,39 @@ enum FxHandleFlags {
 //
 extern __declspec(selectany) const ULONG_PTR FxHandleValueMask = (~((ULONG_PTR) FxHandleFlagMask));
 
+//typedef USHORT WDFOBJECT_OFFSET, *PWDFOBJECT_OFFSET;
+
+
+struct FxQueryInterfaceParams {
+    //
+    // We intentionally do not declare a constructor for this structure.
+    // Instead, code should use an inline initializer list.  This reduces the
+    // number of cycles on hot paths by removing a funciton call.
+    //
+    // FxQueryInterfaceParams(
+    //     PVOID* Object,
+    //     WDFTYPE Type
+    //     ) :
+    // Type(Type), Object(Object), Offset(0) {if (Object != NULL) *Object = NULL; }}
+
+    //
+    // Object to query for
+    //
+    PVOID* Object;
+
+    //
+    // Type for the object to query for
+    //
+    WDFTYPE Type;
+
+    //
+    // Offset of handle within its owning object.  If zero, the Object was the
+    // handle.  If not zero, ((PUCHAR) Object)-Offset will yield the owning
+    // Object.
+    //
+    WDFOBJECT_OFFSET Offset;
+};
+
 
 class FxVerifierLock;
 class FxTagTracker;
@@ -266,6 +299,11 @@ private:
         _In_ BOOLEAN
         );
 
+    FX_DECLARE_VF_FUNCTION(
+    VOID,
+    VerifyLeakDetectionConsiderObject
+        );
+
     VOID
     __inline
     Construct(
@@ -472,6 +510,12 @@ private:
         __in                    BOOLEAN CanDefer
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    AddChildObjectInternal(
+        __in FxObject* ChildObject
+        );
+
     
 public:
     //
@@ -627,6 +671,14 @@ public:
         return m_Type;
     }
 
+    USHORT
+    GetObjectSize(
+        VOID
+        )
+    {
+        return m_ObjectSize;
+    }
+
     LONG
     GetRefCnt(
         VOID
@@ -762,14 +814,139 @@ public:
         return c;
     }
 
+    //
+    // Sets that the object is a passive level only object who
+    // accesses page-able pool, routines, or has a driver
+    // specified passive constraint on callbacks such as
+    // Cleanup and Destroy.
+    //
+    VOID
+    MarkPassiveCallbacks(
+        __in FxObjectLockState State = ObjectLock
+        )
+    {
+        if (State == ObjectLock)
+        {
+            KIRQL   oldIrql;
 
-protected:
-    FxObject(
-        __in WDFTYPE Type,
-        __in USHORT Size,
-        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-        __in FxObjectType ObjectType
+            m_SpinLock.Acquire(&oldIrql);
+            m_ObjectFlags |= FXOBJECT_FLAGS_PASSIVE_CALLBACKS | FXOBJECT_FLAGS_PASSIVE_DISPOSE;
+            m_SpinLock.Release(oldIrql);
+        }
+        else
+        {
+            m_ObjectFlags |= FXOBJECT_FLAGS_PASSIVE_CALLBACKS | FXOBJECT_FLAGS_PASSIVE_DISPOSE;
+        }
+    }
+
+    static
+    FxObject*
+    _GetObjectFromHandle(
+        __in    WDFOBJECT Handle,
+        __inout PWDFOBJECT_OFFSET ObjectOffset
+        )
+    {
+        ULONG_PTR handle, flags;
+
+        handle = (ULONG_PTR) Handle;
+
+        //
+        // store the flags and then clear them off so we have a valid value
+        //
+        flags = FxHandleFlagMask & handle;
+        handle &= ~FxHandleFlagMask;
+
+        //
+        // It is assumed the caller has already set the offset to zero
+        //
+        // *ObjectOffset = 0;
+
+        //
+        // We always apply the mask
+        //
+        handle = handle ^ FxHandleValueMask;
+
+        if (flags & FxHandleFlagIsOffset)
+        {
+            //
+            // The handle is a pointer to an offset value.  Return the offset
+            // to the caller and then compute the object since the pointer
+            // to the offset is part of the object we are returning.
+            //
+            *ObjectOffset = *(PWDFOBJECT_OFFSET) handle;
+
+            return (FxObject*) (((PUCHAR) handle) - *ObjectOffset);
+        }
+        else
+        {
+            //
+            // No offset, no verification.  We pass the FxObject as the handle
+            //
+            return (FxObject*) handle;
+       }
+    }
+
+    //
+    // Request to make ParentObject the parent for this object.
+    //
+    _Must_inspect_result_
+    NTSTATUS
+    AssignParentObject(
+        __in FxObject* ParentObject
         );
+
+    _Must_inspect_result_
+    virtual
+    NTSTATUS
+    QueryInterface(
+        __in FxQueryInterfaceParams* Params
+        );
+
+    __inline
+    PFX_DRIVER_GLOBALS
+    GetDriverGlobals(
+        VOID
+        )
+    {
+        return m_Globals;
+    }
+
+    VOID
+    MarkCommitted(
+        VOID
+        )
+    {
+        //
+        // Since no client code is accessing the handle yet, we don't need to
+        // acquire the object state lock to set the flag since this will be
+        // the only thread touching m_ObjectFlags.
+        //
+        m_ObjectFlags |= FXOBJECT_FLAGS_COMMITTED;
+    }
+
+    CfxDevice*
+    GetDevice(
+        VOID
+        )
+    {
+        return m_Device;
+    }
+
+    CfxDeviceBase*
+    GetDeviceBase(
+        VOID
+        )
+    {
+        return m_DeviceBase;
+    }
+
+    VOID
+    SetDeviceBase(
+        __in CfxDeviceBase* DeviceBase
+        )
+    {
+        m_DeviceBase = DeviceBase;
+    }
 
     __inline
     FxContextHeader*
@@ -787,14 +964,14 @@ protected:
         }
     }
 
-    __inline
-    PFX_DRIVER_GLOBALS
-    GetDriverGlobals(
-        VOID
-        )
-    {
-        return m_Globals;
-    }
+protected:
+
+    FxObject(
+        __in WDFTYPE Type,
+        __in USHORT Size,
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in FxObjectType ObjectType
+        );    
 
     FxObjectDebugExtension*
     GetDebugExtension(

@@ -1,8 +1,8 @@
 #ifndef _FXHANDLE_H_
 #define _FXHANDLE_H_
 
-//#include "common/fxglobals.h"
-//#include "common/fxobject.h"
+#include "common/fxverifier.h"
+#include "common/fxtypes.h"
 #include "wdf.h"
 
 
@@ -123,6 +123,31 @@ FxContextHeaderInit(
     __in        FxContextHeader* Header,
     __in        FxObject* Object,
     __in_opt    PWDF_OBJECT_ATTRIBUTES Attributes
+    );
+
+//__inline
+VOID
+FxObjectHandleGetPtr(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in WDFOBJECT Handle,
+    __in WDFTYPE Type,
+    __out PVOID* PPObject
+    );
+
+VOID
+FxObjectHandleGetPtrQI(
+    __in FxObject* Object,
+    __out PVOID* PPObject,
+    __in WDFOBJECT Handle,
+    __in WDFTYPE Type,
+    __in WDFOBJECT_OFFSET Offset
+    );
+
+//__inline
+VOID
+FxObjectHandleCreate(
+    __in  FxObject* Object,
+    __out PWDFOBJECT Handle
     );
 
 #endif //_FXHANDLE_H_

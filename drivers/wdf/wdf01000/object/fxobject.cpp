@@ -460,3 +460,433 @@ FxObject::FinalRelease(
     }
 }
 
+_Must_inspect_result_
+NTSTATUS
+FxObject::Commit(
+    __in_opt    PWDF_OBJECT_ATTRIBUTES Attributes,
+    __out_opt   WDFOBJECT*             ObjectHandle,
+    __in_opt    FxObject* Parent,
+    __in        BOOLEAN  AssignDriverAsDefaultParent
+    )
+/*++
+
+Routine Description:
+     Commit the object before returning the handle to the caller.
+
+Arguments:
+     Attributes - PWDF_OBJECT_ATTRIBUTES to assign to this object
+
+     ObjectHandle - Location to return the objects handle
+
+Returns:
+     NTSTATUS of the result. STATUS_SUCCESS if success.
+
+     Returns WDFOBJECT handle if success.
+
+--*/
+{
+    NTSTATUS status;
+    WDFOBJECT object;
+    FxObject* parent;
+
+    parent = NULL;
+
+    if (m_ObjectSize == 0)
+    {
+        ASSERTMSG("Only external objects can call Commit()\n",
+                  m_ObjectSize != 0);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    //
+    // For an object to be committed into a handle, it needs to have an object
+    // size.  Internal objects set their size to zero as the indication they
+    // are internal and will not be converted into handles.
+    //
+    ASSERT(m_ObjectSize != 0);
+
+    //
+    // Caller has already validated basic WDF_OBJECT_ATTRIBUTES
+    // with FxValidateObjectAttributes
+    //
+
+    //
+    // Set object execution level constraint if specified
+    //
+    if (Attributes != NULL &&
+        Attributes->ExecutionLevel == WdfExecutionLevelPassive)
+    {
+        MarkPassiveCallbacks();
+    }
+
+    //
+    // Assign parent if supplied
+    //
+    if (Parent != NULL)
+    {
+        parent = Parent;
+    }
+    else if (Attributes != NULL && Attributes->ParentObject != NULL)
+    {
+        FxObjectHandleGetPtr(
+            m_Globals,
+            Attributes->ParentObject,
+            FX_TYPE_OBJECT,
+            (PVOID*)&parent
+            );
+    }
+    else
+    {
+        //
+        // If the object already does not have a parent, and
+        // one has not been specified we default it to FxDriver.
+        //
+        // We check to ensure we are not FxDriver being created.
+        //
+        if (AssignDriverAsDefaultParent &&
+            m_ParentObject == NULL)
+        {
+            //parent = FxToObjectItf::FxGetDriverAsDefaultParent(m_Globals, this);
+            if (m_Globals->Driver != this)
+            {
+                parent = m_Globals->Driver;
+            }
+        }
+    }
+
+    ASSERT(parent != this);
+
+    if (parent != NULL)
+    {
+        //
+        // Make it the parent of this object
+        //
+        status = AssignParentObject(parent);
+
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    }
+
+    //
+    // Now assign the optional EvtObjectCleanup, EvtObjectDestroy callbacks
+    //
+    if (Attributes != NULL)
+    {
+        FxContextHeader* pHeader;
+
+        pHeader = GetContextHeader();
+
+        if (Attributes->EvtDestroyCallback != NULL)
+        {
+            pHeader->EvtDestroyCallback = Attributes->EvtDestroyCallback;
+        }
+
+        if (Attributes->EvtCleanupCallback != NULL)
+        {
+            pHeader->EvtCleanupCallback = Attributes->EvtCleanupCallback;
+            m_ObjectFlags |= FXOBJECT_FLAGS_HAS_CLEANUP;
+        }
+    }
+
+    //
+    // We mark the handle as committed so that we can create the handle.
+    //
+    MarkCommitted();
+
+    //
+    // Create the object handle, assign EvtObjectCleanup, EvtObjectDestroy
+    //    
+    FxObjectHandleCreate(this, &object);
+
+    if (ObjectHandle != NULL)
+    {
+        *ObjectHandle = object;
+    }
+
+    VerifyLeakDetectionConsiderObject(m_Globals);
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxObject::AssignParentObject(
+    __in FxObject* ParentObject
+    )
+/*++
+
+Routine Description:
+    Assign a parent to the current object.      The parent can not be the same
+    object.
+
+Arguments:
+    ParentObject - Object to become the parent for this object
+
+Returns:
+
+Comments:
+
+    The caller "passes" its initial object reference to us, so we
+    do not take an additional reference on the object.
+
+    If we are deleted, Dispose() will be invoked on the object, and
+    its reference will be released.
+
+    This provides automatic deletion of associated child objects if
+    the object does not keep any extra references.
+
+--*/
+{
+    KIRQL oldIrql;
+    NTSTATUS status;
+
+    m_SpinLock.Acquire(&oldIrql);
+
+    //
+    // Can't add a parent if the current object is being deleted
+    //
+    if (m_ObjectState != FxObjectStateCreated) {
+        TraceDroppedEvent(FxObjectDroppedEventAssignParentObject);
+        m_SpinLock.Release(oldIrql);
+        return STATUS_DELETE_PENDING;
+    }
+
+    //
+    // Current Object can't already have a parent, and can't
+    // be its own parent.
+    //
+    if (m_ParentObject != NULL)
+    {
+        m_SpinLock.Release(oldIrql);
+        return STATUS_WDF_PARENT_ALREADY_ASSIGNED;
+    }
+
+    if (m_ParentObject == this)
+    {
+        m_SpinLock.Release(oldIrql);
+        return STATUS_WDF_PARENT_IS_SELF;
+    }
+
+    //
+    // We don't allow a parent object to be assigned after
+    // FxObject::Commit().
+    //
+    ASSERTMSG("Parent object can not be assigned after Commit()\n", !IsCommitted());
+
+    ASSERT(IsListEmpty(&this->m_ChildEntry));
+
+    status = ParentObject->AddChildObjectInternal(this);
+
+    if (NT_SUCCESS(status))
+    {
+        m_ParentObject = ParentObject;
+    }
+
+    m_SpinLock.Release(oldIrql);
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxObject::QueryInterface(
+    __in FxQueryInterfaceParams* Params
+    )
+{
+    NTSTATUS status;
+
+    if (Params->Type == FX_TYPE_OBJECT)
+    {
+        *Params->Object = this;
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        status = STATUS_NOINTERFACE;
+    }
+
+    return status;
+}
+
+VOID
+FX_VF_METHOD(FxObject, VerifyLeakDetectionConsiderObject) (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    UNREFERENCED_PARAMETER(FxDriverGlobals);
+
+    //
+    // Check to see if we are potentially leaking objects.
+    // Verify leak detection is enabled and that the object type
+    // is configured to be counted. We always count WDFDEVICE because
+    // we need it to scale the limit if there are multiple devices.
+    // 
+    /*if ((m_Globals->FxVerifyLeakDetection != NULL) &&
+        (m_Globals->FxVerifyLeakDetection->Enabled) &&
+        (FxVerifierIsDebugInfoFlagSetForType(
+            m_Globals->DebugExtension->ObjectDebugInfo,
+            m_Type,
+            FxObjectDebugTrackObjectCount) ||
+            (m_Type == FX_TYPE_DEVICE))
+        )
+    {
+
+        LONG c;
+        FxObjectDebugLeakDetection *leakDetection = m_Globals->FxVerifyLeakDetection;
+        FxObjectDebugExtension* pExtension = GetDebugExtension();
+
+        switch (m_Type) {
+        case FX_TYPE_REQUEST:
+        {
+            FxRequestBase* requestBase = static_cast<FxRequestBase*>(this);
+            if (!requestBase->IsAllocatedDriver())
+            {
+                //
+                // Only count driver allocated requests, not framwork or 
+                // IO from callers
+                //
+                return;
+            }
+            break;
+        }
+        case FX_TYPE_DEVICE:
+        {
+            // 
+            // Scale the threshold the verify check happens at. For every
+            // device created we increase the limit by a multiple.
+            //
+            if (m_Type == FX_TYPE_DEVICE)
+            {
+                c = InterlockedIncrement(&leakDetection->DeviceCnt);
+                if (c >= 2)
+                {
+                    //
+                    // We skip 0->1 because LimitScaled is initialized
+                    // to Limit
+                    //
+                    InterlockedExchangeAdd(&leakDetection->LimitScaled,
+                        leakDetection->Limit);
+                }
+            }
+            break;
+        }
+        }
+
+        pExtension->ObjectCounted = TRUE;
+        c = InterlockedIncrement(&leakDetection->ObjectCnt);
+
+        //
+        // Check for exceeding the limit (no interlocked protection)
+        //
+        if (c == leakDetection->LimitScaled)
+        {
+
+            //
+            // Potential leak of objects detected
+            // Device has exceeded WDF Verifiers peak threshold for 
+            // objects to be allocated. Use !wdfDriverInfo <drivername> 
+            // with flags 0x41 or 0x50 to see a list and count of objects 
+            // currently allocated. 
+            //
+            // To adjust this setting modify registry key 
+            // "ObjectLeakDetectionLimit", which is a REG_DWORD, 
+            // under the drivers Parameters\Wdf subkey. 0xFFFFFFFF 
+            // will disable the check, any other value to set the
+            // threshold.
+            //
+            // NOTE: the limit will be scaled based on the number of
+            // WDFDEVICE objects present under the driver.
+            //
+            DoTraceLevelMessage(
+                m_Globals, TRACE_LEVEL_ERROR, TRACINGOBJECT,
+                "WDF Verifier has detected an excessive number of "
+                "allocated WDF objects. Investigate with !wdfDriverInfo "
+                "<driverName> 0x41 or 0x50");
+
+            DoTraceLevelMessage(
+                m_Globals, TRACE_LEVEL_ERROR, TRACINGOBJECT,
+                "WDF Verifier found %u objects allocated, limit=%u,"
+                " and the scaled limit=%u",
+                c, leakDetection->Limit, leakDetection->LimitScaled);
+
+            FxVerifierDbgBreakPoint(m_Globals);
+
+            //
+            // Disable the check going forward
+            //
+            leakDetection->Enabled = FALSE;
+        }
+    }*/
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxObject::AddChildObjectInternal(
+    __in FxObject* ChildObject
+    )
+
+/*++
+
+Routine Description:
+    Called by an object to be added to this objects child list
+
+Arguments:
+    ChildObject - Object to add this this objects child list
+
+Returns:
+    NTSTATUS
+
+Comments:
+    The caller "passes" its initial object reference to us, so we
+    do not take an additional reference on the object.
+
+    If we are deleted, Dispose() will be invoked on the object, and
+    its reference will be released.
+
+    This provides automatic deletion of associated child objects if
+    the object does not keep any extra references.
+
+--*/
+{
+    KIRQL oldIrql;
+
+    m_SpinLock.Acquire(&oldIrql);
+
+    //
+    // Can't add child if the current object is being deleted
+    //
+    if (m_ObjectState != FxObjectStateCreated)
+    {
+        TraceDroppedEvent(FxObjectDroppedEventAddChildObjectInternal);
+        m_SpinLock.Release(oldIrql);
+        return STATUS_DELETE_PENDING;
+    }
+
+    //
+    // ChildObject can't already have a parent, and can't
+    // be its own parent.
+    //
+    ASSERT(ChildObject->m_ParentObject == NULL);
+    ASSERT(IsListEmpty(&ChildObject->m_ChildEntry));
+    ASSERT(ChildObject != this);
+
+    //
+    // Add to our m_ChildList
+    //
+    InsertTailList(&m_ChildListHead, &ChildObject->m_ChildEntry);
+
+    if (ChildObject->GetDeviceBase() == NULL)
+    {
+        //
+        // Propagate the device base downward to the child
+        //
+        ChildObject->SetDeviceBase(GetDeviceBase());
+    }
+    
+    m_SpinLock.Release(oldIrql);
+
+    return STATUS_SUCCESS;
+}
+

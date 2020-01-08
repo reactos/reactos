@@ -14,5 +14,6 @@
 #include "wdf11.h"
 
 #define WDFNOTIMPLEMENTED() (DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __FUNCTION__" not implemented\r\n"))
+typedef USHORT WDFOBJECT_OFFSET, *PWDFOBJECT_OFFSET;
 
 #endif //_WDF_H
