@@ -20,7 +20,7 @@ The following FSD are shared with: https://github.com/Microsoft/Windows-driver-s
 
 reactos/drivers/filesystems/fastfat_new     # Synced to 2817004
 reactos/drivers/filesystems/cdfs            # Synced to f73e552
-reactos/drivers/storage/floppy_new	    # Synced to 9d23d43
+reactos/drivers/storage/floppy_new          # Synced to 8fb512a
 
 The following FS libs are shared with: https://github.com/dosfstools/dosfstools
 reactos/sdk/lib/fslib/vfatlib/check         # Synced to 4.1

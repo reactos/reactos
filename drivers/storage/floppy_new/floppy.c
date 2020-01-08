@@ -699,7 +699,7 @@ Return Value:
         DeviceCount++;
 
         status = RtlStringCbPrintfA((PCCHAR) name,
-                                    sizeof(name)/sizeof(UCHAR),
+                                    sizeof(name),
                                     "\\Device\\Floppy%u",
                                     DeviceCount);
         if (NT_SUCCESS(status)) {
@@ -974,7 +974,7 @@ NTSTATUS ScsiFlopStartDevice(
     //
 
     RtlStringCbPrintfW(ntNameBuffer,
-                       sizeof(ntNameBuffer)/sizeof(WCHAR),
+                       sizeof(ntNameBuffer),
                        L"\\Device\\Floppy%u",
                        fdoExtension->DeviceNumber);
 
@@ -1020,7 +1020,7 @@ NTSTATUS ScsiFlopStartDevice(
     if (NT_SUCCESS(status)) {
 
         RtlStringCbPrintfW(arcNameBuffer,
-                           sizeof(arcNameBuffer)/sizeof(WCHAR),
+                           sizeof(arcNameBuffer),
                            L"\\ArcName\\scsi(%u)disk(%u)fdisk(%u)",
                            scsiAddress.PortNumber,
                            scsiAddress.TargetId,
@@ -1042,7 +1042,7 @@ NTSTATUS ScsiFlopStartDevice(
     //
 
     RtlStringCbPrintfW(arcNameBuffer,
-                       sizeof(arcNameBuffer)/sizeof(WCHAR),
+                       sizeof(arcNameBuffer),
                        L"\\ArcName\\multi(%u)disk(%u)fdisk(%u)",
                        0,
                        0,
