@@ -22,6 +22,7 @@ static const WCHAR u0414[] = {0x0414, 0}; /* Д */
 static const WCHAR u9580[] = {0x9580, 0}; /* 門 */
 static const WCHAR space[] = {L' ', 0};
 static const WCHAR ideograph_space = (WCHAR)0x3000; /* fullwidth space */
+static const WCHAR s_str[] = {L'A', 0x9580, 'B', 0};
 static LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
 static LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
 static BOOL s_bIs8Plus;
@@ -267,7 +268,7 @@ static void test_cp932(HANDLE hConOut)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int count;
     WCHAR str[32];
-    WORD attr, attrs[4];
+    WORD attr, attrs[16];
     CHAR_INFO buff[16];
     SMALL_RECT sr;
 
@@ -773,7 +774,7 @@ static void test_cp932(HANDLE hConOut)
         c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
         ok_int(ret, 1);
-        ok_long(len, ARRAYSIZE(attrs));
+        ok_long(len, 4);
         ok_int(attrs[0], ATTR);
         if (s_bIs8Plus)
         {
@@ -1075,7 +1076,7 @@ static void test_cp932(HANDLE hConOut)
         c.Y = 0;
         ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
         ok_int(ret, 1);
-        ok_long(len, ARRAYSIZE(attrs));
+        ok_long(len, 4);
         ok_int(attrs[0], ATTR);
         if (s_bIs8Plus)
         {
@@ -1087,6 +1088,144 @@ static void test_cp932(HANDLE hConOut)
             ok_int(attrs[1], ATTR);
             ok_int(attrs[2], ATTR);
         }
+        ok_int(attrs[3], ATTR);
+    }
+
+    /* FillConsoleOutputAttribute and WriteConsoleOutput */
+    {
+        c.X = c.Y = 0;
+        SetConsoleCursorPosition(hConOut, c);
+        okCURSOR(hConOut, c);
+        for (n = 0; n < count; ++n)
+        {
+            ret = WriteConsoleW(hConOut, space, lstrlenW(space), &len, NULL);
+            ok_int(ret, 1);
+            ok_long(len, 1);
+        }
+
+        /* fill attrs */
+        c.X = c.Y = 0;
+        SetConsoleCursorPosition(hConOut, c);
+        okCURSOR(hConOut, c);
+        ret = FillConsoleOutputAttribute(hConOut, 0xFFFF, 2, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 2);
+
+        /* read attrs */
+        memset(attrs, 0x7F, sizeof(attrs));
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 3, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 3);
+        if (s_bIs8Plus)
+        {
+            ok_int(attrs[0], 0xDCFF);
+            ok_int(attrs[1], 0xDCFF);
+        }
+        else
+        {
+            ok_int(attrs[0], 0xFCFF);
+            ok_int(attrs[1], 0xFCFF);
+        }
+        ok_int(attrs[2], ATTR);
+
+        /* fill attrs */
+        c.X = c.Y = 0;
+        SetConsoleCursorPosition(hConOut, c);
+        okCURSOR(hConOut, c);
+        ret = FillConsoleOutputAttribute(hConOut, ATTR, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+
+        /* write */
+        c.X = c.Y = 0;
+        sr.Left = 0;
+        sr.Top = 0;
+        sr.Right = 4;
+        sr.Bottom = 0;
+        buff[0].Char.UnicodeChar = L' ';
+        buff[0].Attributes = ATTR;
+        buff[1].Char.UnicodeChar = 0x9580;
+        buff[1].Attributes = ATTR | COMMON_LVB_LEADING_BYTE;
+        buff[2].Char.UnicodeChar = 0x9580;
+        buff[2].Attributes = ATTR | COMMON_LVB_TRAILING_BYTE;
+        buff[3].Char.UnicodeChar = L'A';
+        buff[3].Attributes = ATTR;
+        buff[4].Char.UnicodeChar = L' ';
+        buff[4].Attributes = 0xFFFF;
+        buffSize.X = 4;
+        buffSize.Y = 1;
+        ret = WriteConsoleOutputW(hConOut, buff, buffSize, c, &sr);
+        ok_int(ret, 1);
+        ok_int(sr.Left, 0);
+        ok_int(sr.Top, 0);
+        ok_int(sr.Right, 3);
+        ok_int(sr.Bottom, 0);
+
+        /* read attrs */
+        memset(attrs, 0x7F, sizeof(attrs));
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 6);
+        ok_int(attrs[0], ATTR);
+        ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+        ok_int(attrs[3], ATTR);
+        ok_int(attrs[4], ATTR);
+        ok_int(attrs[5], ATTR);
+    }
+
+    /* WriteConsoleOutputCharacterW and WriteConsoleOutputAttribute */
+    {
+        c.X = c.Y = 0;
+        SetConsoleCursorPosition(hConOut, c);
+        okCURSOR(hConOut, c);
+        for (n = 0; n < count; ++n)
+        {
+            ret = WriteConsoleW(hConOut, space, lstrlenW(space), &len, NULL);
+            ok_int(ret, 1);
+            ok_long(len, 1);
+        }
+
+        /* write attrs */
+        attrs[0] = ATTR;
+        attrs[1] = 0xFFFF;
+        attrs[2] = ATTR;
+        attrs[3] = 0;
+        ret = WriteConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+
+        /* read attrs */
+        memset(attrs, 0x7F, sizeof(attrs));
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+        ok_int(attrs[0], ATTR);
+        if (s_bIs8Plus)
+            ok_int(attrs[1], 0xDCFF);
+        else
+            ok_int(attrs[1], 0xFCFF);
+        ok_int(attrs[2], ATTR);
+        ok_int(attrs[3], 0);
+
+        /* fill attr */
+        ret = FillConsoleOutputAttribute(hConOut, ATTR, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+
+        /* write char */
+        ret = WriteConsoleOutputCharacterW(hConOut, s_str, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+
+        /* read attrs */
+        memset(attrs, 0x7F, sizeof(attrs));
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok_int(ret, 1);
+        ok_long(len, 4);
+        ok_int(attrs[0], ATTR);
+        ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
         ok_int(attrs[3], ATTR);
     }
 
