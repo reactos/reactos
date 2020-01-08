@@ -57,6 +57,50 @@ public:
         ExReleaseFastMutex(&m_Lock);
     }
 
+    __inline
+    VOID
+    AcquireUnsafe(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+    
+        ExAcquireFastMutexUnsafe(&m_Lock);
+    }
+
+    __inline
+    VOID
+    ReleaseUnsafe(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        ExReleaseFastMutexUnsafe(&m_Lock);
+    }
+
+};
+
+class MxPagedLock : public MxPagedLockNoDynam
+{
+public:    
+    __inline
+    MxPagedLock()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
+
+        //
+        // Temporarily call initialize from c'tor
+        // so that we don't have to churn all of the KMDF code
+        //
+    #ifndef MERGE_COMPLETE
+        (VOID) MxPagedLock::Initialize();
+    #endif
+    }
+    
+    __inline
+    ~MxPagedLock()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
+    }
 };
 
 #endif //_MXPAGEDLOCK_H_

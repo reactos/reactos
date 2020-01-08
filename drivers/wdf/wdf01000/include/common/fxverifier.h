@@ -3,6 +3,7 @@
 
 #include "fxglobals.h"
 #include "common/mxgeneral.h"
+#include "common/dbgtrace.h"
 
 enum FxEnhancedVerifierBitFlags {
     //
@@ -26,6 +27,26 @@ enum FxEnhancedVerifierBitFlags {
     // 
     FxEnhancedVerifierPerformanceAnalysisMask      = 0x00f00000,
 };
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+#define FxVerifierBugCheck(FxDriverGlobals, Error, ...)              \
+    FX_VERIFY_WITH_NAME(DRIVER(BadAction, Error),                    \
+                        TRAPMSG("WDF Violation: Please check"        \
+                        "tracelog for a description of this error"), \
+                        FxDriverGlobals->Public.DriverName)
+#else
+#define FxVerifierBugCheck(FxDriverGlobals, ...)              \
+        FxVerifierBugCheckWorker(FxDriverGlobals, __VA_ARGS__);
+#endif
+
+VOID
+__declspec(noreturn)
+FxVerifierBugCheckWorker(
+    __in     PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in     WDF_BUGCHECK_CODES WdfBugCheckCode,
+    __in_opt ULONG_PTR BugCheckParameter2 = 0,
+    __in_opt ULONG_PTR BugCheckParameter3 = 0
+    );
 
 __inline
 BOOLEAN
@@ -77,5 +98,60 @@ FxVerifierDbgBreakPoint(
             FxDriverGlobals->Public.DriverName, ext);
     }
 }
+
+__inline
+NTSTATUS
+FxVerifierCheckIrqlLevel(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in KIRQL    Irql
+    )
+/*++
+
+Routine Description:
+    Check that current IRQL matches expected IRQL.
+
+Arguments:
+    Irql  -  The expected IRQL
+
+Return Value:
+    STATUS_SUCCESS                if expected IRQL matches current IRQL.
+    STATUS_INVALID_DEVICE_REQUEST if expected IRQL does not match current IRQL.
+
+  --*/
+{
+    //
+    // Full treatment only if VerifierOn is set.
+    //
+    if (FxDriverGlobals->FxVerifierOn)
+    {
+
+        KIRQL currentIrql = Mx::MxGetCurrentIrql();
+
+        if (currentIrql <= Irql)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Called at wrong IRQL; at level %d, should be "
+                            "at level %d", currentIrql, Irql);
+
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    //
+    // If Verifier is turned off, always return success.
+    //
+    return STATUS_SUCCESS;
+}
+
+VOID
+__declspec(noreturn)
+FxVerifierNullBugCheck(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PVOID ReturnAddress
+    );
 
 #endif //_FXVERIFIER_H_

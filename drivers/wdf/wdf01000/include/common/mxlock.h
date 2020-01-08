@@ -21,67 +21,100 @@ public:
         return m_Lock;
     }
 
-__inline
-MxLockNoDynam()
-{
-    CLEAR_DBGFLAG_INITIALIZED;
+    __inline
+    MxLockNoDynam()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
 
-    Initialize();
-}
+        Initialize();
+    }
 
-__inline
-VOID
-Initialize()
-{
-    KeInitializeSpinLock(&m_Lock);
+    __inline
+    VOID
+    Initialize()
+    {
+        KeInitializeSpinLock(&m_Lock);
 
-    SET_DBGFLAG_INITIALIZED;
-}
+        SET_DBGFLAG_INITIALIZED;
+    }
 
-__inline
-VOID
-Uninitialize()
-{
-    CLEAR_DBGFLAG_INITIALIZED;
-}
+    __inline
+    VOID
+    Uninitialize()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
+    }
 
-_Acquires_lock_(this->m_Lock)
-__drv_maxIRQL(DISPATCH_LEVEL)
-__drv_setsIRQL(DISPATCH_LEVEL)
-__inline
-VOID
-Acquire(
-    __out __drv_deref(__drv_savesIRQL) KIRQL * OldIrql
-    )
-{
-    ASSERT_DBGFLAG_INITIALIZED;
-    
-    KeAcquireSpinLock(&m_Lock, OldIrql);
-}
+    _Acquires_lock_(this->m_Lock)
+    __drv_maxIRQL(DISPATCH_LEVEL)
+    __drv_setsIRQL(DISPATCH_LEVEL)
+    __inline
+    VOID
+    Acquire(
+        __out __drv_deref(__drv_savesIRQL) KIRQL * OldIrql
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
 
-_Releases_lock_(this->m_Lock)
-__drv_requiresIRQL(DISPATCH_LEVEL)
-__inline
-VOID
-Release(
-    __drv_restoresIRQL KIRQL NewIrql
-    )
-{
-    ASSERT_DBGFLAG_INITIALIZED;
+        KeAcquireSpinLock(&m_Lock, OldIrql);
+    }
 
-    KeReleaseSpinLock(&m_Lock, NewIrql);    
-}
+    _Releases_lock_(this->m_Lock)
+    __drv_requiresIRQL(DISPATCH_LEVEL)
+    __inline
+    VOID
+    Release(
+        __drv_restoresIRQL KIRQL NewIrql
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        KeReleaseSpinLock(&m_Lock, NewIrql);    
+    }
+
+    _Acquires_lock_(this->m_Lock)
+    __drv_requiresIRQL(DISPATCH_LEVEL)
+    __inline
+    VOID
+    AcquireAtDpcLevel(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        KeAcquireSpinLockAtDpcLevel(&m_Lock);
+    }
+
+    _Releases_lock_(this->m_Lock)
+    __drv_requiresIRQL(DISPATCH_LEVEL)
+    __inline
+    VOID
+    ReleaseFromDpcLevel(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        KeReleaseSpinLockFromDpcLevel(&m_Lock);
+    }
 
 };
 
 class MxLock : public MxLockNoDynam
 {
+
 public:    
     __inline
-    MxLock();
+    MxLock()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
+
+        MxLock::Initialize();
+    }
     
     __inline
-    ~MxLock();
+    ~MxLock()
+    {
+        CLEAR_DBGFLAG_INITIALIZED;
+    }
 };
 
 
