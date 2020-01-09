@@ -27,12 +27,12 @@ static void
 _DoDLLInjection()
 {
     DWORD cbDLLPath;
-    HANDLE hProcess;
-    HANDLE hSnapshot;
-    HANDLE hThread;
+    HANDLE hProcess = NULL;
+    HANDLE hSnapshot = INVALID_HANDLE_VALUE;
+    HANDLE hThread = NULL;
     PROCESSENTRY32W pe;
     PVOID pLoadLibraryAddress;
-    PVOID pLoadLibraryArgument;
+    PVOID pLoadLibraryArgument = NULL;
     PWSTR p;
     WCHAR wszFilePath[MAX_PATH];
 
@@ -67,7 +67,7 @@ _DoDLLInjection()
     if (!Process32FirstW(hSnapshot, &pe))
     {
         DPRINT("Process32FirstW failed with error %lu!\n", GetLastError());
-        return;
+        goto done;
     }
 
     do
@@ -81,7 +81,7 @@ _DoDLLInjection()
         if (!hProcess)
         {
             DPRINT("OpenProcess failed with error %lu!\n", GetLastError());
-            return;
+            goto done;
         }
 
         // Get the address of LoadLibraryW.
@@ -89,7 +89,7 @@ _DoDLLInjection()
         if (!pLoadLibraryAddress)
         {
             DPRINT("GetProcAddress failed with error %lu!\n", GetLastError());
-            return;
+            goto done;
         }
 
         // Allocate memory for the DLL path in the spooler process.
@@ -97,14 +97,14 @@ _DoDLLInjection()
         if (!pLoadLibraryArgument)
         {
             DPRINT("VirtualAllocEx failed with error %lu!\n", GetLastError());
-            return;
+            goto done;
         }
 
         // Write the DLL path to the process memory.
         if (!WriteProcessMemory(hProcess, pLoadLibraryArgument, wszFilePath, cbDLLPath, NULL))
         {
             DPRINT("WriteProcessMemory failed with error %lu!\n", GetLastError());
-            return;
+            goto done;
         }
 
         // Create a new thread in the spooler process that calls LoadLibraryW as the start routine with our DLL as the argument.
@@ -113,13 +113,23 @@ _DoDLLInjection()
         if (!hThread)
         {
             DPRINT("CreateRemoteThread failed with error %lu!\n", GetLastError());
-            return;
+            goto done;
         }
 
-        CloseHandle(hThread);
         break;
     }
     while (Process32NextW(hSnapshot, &pe));
+
+    WaitForSingleObject(hThread, 10000);
+done:
+    if (pLoadLibraryArgument != NULL)
+        VirtualFreeEx(hProcess, pLoadLibraryArgument, 0, MEM_RELEASE);
+    if (hSnapshot != INVALID_HANDLE_VALUE)
+        CloseHandle(hSnapshot);
+    if (hThread != NULL)
+        CloseHandle(hThread);
+    if (hProcess != NULL)
+        CloseHandle(hProcess);
 }
 
 static DWORD WINAPI
