@@ -953,13 +953,18 @@ IntWriteConsoleOutputStringAscii(
         goto Cleanup;
 
     /* Convert the ASCII string into Unicode before writing it to the console */
-    Length = MultiByteToWideChar(Console->OutputCodePage, 0, (PCHAR)StringBuffer, NumCodesToWrite, NULL, 0);
+    Length = MultiByteToWideChar(Console->OutputCodePage, 0,
+                                 (PCHAR)StringBuffer,
+                                 NumCodesToWrite,
+                                 NULL, 0);
     tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
     if (tmpString)
     {
         WriteBuffer = (LPBYTE)tmpString;
-        MultiByteToWideChar(
-            Console->OutputCodePage, 0, (PCHAR)StringBuffer, NumCodesToWrite, (PWCHAR)WriteBuffer, Length);
+        MultiByteToWideChar(Console->OutputCodePage, 0,
+                            (PCHAR)StringBuffer,
+                            NumCodesToWrite,
+                            (PWCHAR)WriteBuffer, Length);
     }
     else
     {
@@ -989,7 +994,8 @@ IntWriteConsoleOutputStringAscii(
         }
 
         /* For Chinese, Japanese and Korean */
-        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 && mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
+            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
             /* the leading byte */
             Ptr->Attributes = Buffer->ScreenDefaultAttrib;
@@ -1063,7 +1069,8 @@ IntWriteConsoleOutputStringUnicode(
         }
 
         /* For Chinese, Japanese and Korean */
-        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 && mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
+            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
             /* the leading byte */
             Ptr->Attributes = Buffer->ScreenDefaultAttrib;
