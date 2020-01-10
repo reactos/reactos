@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define COMMON_LEAD_TRAIL (COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE)
+
 /* GLOBALS ********************************************************************/
 
 /*
@@ -512,8 +514,7 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
                 WideCharToMultiByte(Console->OutputCodePage, 0, &Ptr->Char.UnicodeChar, 1,
                                     &CurCharInfo->Char.AsciiChar, 1, NULL, NULL);
             }
-            CurCharInfo->Attributes =
-                (Ptr->Attributes & ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE));
+            CurCharInfo->Attributes = (Ptr->Attributes & ~COMMON_LEAD_TRAIL);
             ++Ptr;
             ++CurCharInfo;
         }
@@ -932,6 +933,217 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     }
 }
 
+static NTSTATUS FASTCALL
+IntWriteConsoleOutputStringAscii(IN PCONSOLE Console,
+                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 IN PVOID StringBuffer,
+                                 IN ULONG NumCodesToWrite,
+                                 IN PCOORD WriteCoord,
+                                 OUT PULONG NumCodesWritten OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPBYTE WriteBuffer;
+    PWCHAR tmpString = NULL;
+    ULONG i, X, Y, Length;
+    PCHAR_INFO Ptr;
+    BOOL bCJK = Console->IsCJK;
+
+    if (!StringBuffer)
+        goto Cleanup;
+
+    /* Convert the ASCII string into Unicode before writing it to the console */
+    Length = MultiByteToWideChar(Console->OutputCodePage, 0,
+                                 (PCHAR)StringBuffer,
+                                 NumCodesToWrite,
+                                 NULL, 0);
+    tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    if (tmpString)
+    {
+        WriteBuffer = (LPBYTE)tmpString;
+        MultiByteToWideChar(Console->OutputCodePage, 0,
+                            (PCHAR)StringBuffer,
+                            NumCodesToWrite,
+                            (PWCHAR)WriteBuffer, Length);
+    }
+    else
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    X = WriteCoord->X;
+    Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+
+    for (i = 0; i < Length; ++i)
+    {
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
+
+        Ptr->Char.UnicodeChar = *(PWCHAR)WriteBuffer;
+        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
+
+        ++X;
+        if (X == Buffer->ScreenBufferSize.X)
+        {
+            X = 0;
+            ++Y;
+            if (Y == Buffer->ScreenBufferSize.Y)
+            {
+                Y = 0;
+            }
+        }
+
+        /* For Chinese, Japanese and Korean */
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
+            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        {
+            /* the leading byte */
+            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
+            ++i;
+
+            /* the trailing byte */
+            Ptr = ConioCoordToPointer(Buffer, X, Y);
+            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
+
+            ++X;
+            if (X == Buffer->ScreenBufferSize.X)
+            {
+                X = 0;
+                ++Y;
+                if (Y == Buffer->ScreenBufferSize.Y)
+                {
+                    Y = 0;
+                }
+            }
+        }
+    }
+
+Cleanup:
+    if (tmpString)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
+    if (NumCodesWritten)
+        *NumCodesWritten = NumCodesToWrite;
+    return Status;
+}
+
+static NTSTATUS FASTCALL
+IntWriteConsoleOutputStringUnicode(IN PCONSOLE Console,
+                                   IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                   IN PVOID StringBuffer,
+                                   IN ULONG NumCodesToWrite,
+                                   IN PCOORD WriteCoord,
+                                   OUT PULONG NumCodesWritten OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
+    ULONG i, X, Y, Length;
+    PCHAR_INFO Ptr;
+    BOOL bCJK = Console->IsCJK;
+
+    if (!WriteBuffer)
+        goto Cleanup;
+
+    X = WriteCoord->X;
+    Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    Length = NumCodesToWrite;
+
+    for (i = 0; i < Length; ++i)
+    {
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
+
+        Ptr->Char.UnicodeChar = *(PWCHAR)WriteBuffer;
+        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
+
+        ++X;
+        if (X == Buffer->ScreenBufferSize.X)
+        {
+            X = 0;
+            ++Y;
+            if (Y == Buffer->ScreenBufferSize.Y)
+            {
+                Y = 0;
+            }
+        }
+
+        /* For Chinese, Japanese and Korean */
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
+            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        {
+            /* the leading byte */
+            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
+            ++i;
+
+            /* the trailing byte */
+            Ptr = ConioCoordToPointer(Buffer, X, Y);
+            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
+            Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
+
+            ++X;
+            if (X == Buffer->ScreenBufferSize.X)
+            {
+                X = 0;
+                ++Y;
+                if (Y == Buffer->ScreenBufferSize.Y)
+                {
+                    Y = 0;
+                }
+            }
+        }
+    }
+
+Cleanup:
+    if (NumCodesWritten)
+        *NumCodesWritten = NumCodesToWrite;
+    return Status;
+}
+
+static NTSTATUS FASTCALL
+IntWriteConsoleOutputStringAttribute(IN PCONSOLE Console,
+                                     IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                     IN PVOID StringBuffer,
+                                     IN ULONG NumCodesToWrite,
+                                     IN PCOORD WriteCoord,
+                                     OUT PULONG NumCodesWritten OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
+    ULONG i, X, Y, Length;
+    PCHAR_INFO Ptr;
+
+    if (!WriteBuffer)
+        goto Cleanup;
+
+    X = WriteCoord->X;
+    Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
+    Length = NumCodesToWrite;
+
+    for (i = 0; i < Length; ++i)
+    {
+        Ptr = ConioCoordToPointer(Buffer, X, Y);
+
+        Ptr->Attributes = (*(PWORD)WriteBuffer & ~COMMON_LEAD_TRAIL);
+        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
+
+        ++X;
+        if (X == Buffer->ScreenBufferSize.X)
+        {
+            X = 0;
+            ++Y;
+            if (Y == Buffer->ScreenBufferSize.Y)
+            {
+                Y = 0;
+            }
+        }
+    }
+
+Cleanup:
+    if (NumCodesWritten)
+        *NumCodesWritten = NumCodesToWrite;
+    return Status;
+}
+
 NTSTATUS NTAPI
 ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -942,12 +1154,8 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
                                // OUT PCOORD EndCoord,
                                OUT PULONG NumCodesWritten OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID WriteBuffer = NULL;
-    PWCHAR tmpString = NULL;
-    ULONG X, Y, Length; // , Written = 0;
-    ULONG CodeSize;
-    PCHAR_INFO Ptr;
+    NTSTATUS Status;
+    SMALL_RECT UpdateRect;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL /* || EndCoord == NULL */)
     {
@@ -958,112 +1166,37 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     ASSERT(Console == Buffer->Header.Console);
     ASSERT((StringBuffer != NULL) || (StringBuffer == NULL && NumCodesToWrite == 0));
 
-    //
-    // FIXME: Make overflow checks on WriteCoord !!!!!!
-    //
-
-    if (NumCodesWritten) *NumCodesWritten = 0;
+    if (NumCodesWritten)
+        *NumCodesWritten = 0;
 
     switch (CodeType)
     {
         case CODE_ASCII:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, AsciiChar);
+            Status = IntWriteConsoleOutputStringAscii(Console, Buffer, StringBuffer,
+                NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         case CODE_UNICODE:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
+            Status = IntWriteConsoleOutputStringUnicode(Console, Buffer, StringBuffer,
+                NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         case CODE_ATTRIBUTE:
-            CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
+            Status = IntWriteConsoleOutputStringAttribute(Console, Buffer, StringBuffer,
+                NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         default:
-            return STATUS_INVALID_PARAMETER;
-    }
-
-    if (CodeType == CODE_ASCII)
-    {
-        /* Convert the ASCII string into Unicode before writing it to the console */
-        Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                     (PCHAR)StringBuffer,
-                                     NumCodesToWrite,
-                                     NULL, 0);
-        tmpString = WriteBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
-        if (WriteBuffer)
-        {
-            MultiByteToWideChar(Console->OutputCodePage, 0,
-                                (PCHAR)StringBuffer,
-                                NumCodesToWrite,
-                                (PWCHAR)WriteBuffer, Length);
-        }
-        else
-        {
-            Status = STATUS_NO_MEMORY;
-        }
-
-        // FIXME: Quick fix: fix the CodeType and CodeSize since the
-        // ASCII string was converted into UNICODE.
-        // A proper fix needs to be written.
-        CodeType = CODE_UNICODE;
-        CodeSize = RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
-    }
-    else
-    {
-        /* For CODE_UNICODE or CODE_ATTRIBUTE, we are already OK */
-        WriteBuffer = StringBuffer;
-    }
-
-    if (WriteBuffer == NULL || !NT_SUCCESS(Status)) goto Cleanup;
-
-    X = WriteCoord->X;
-    Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
-    Length = NumCodesToWrite;
-
-    while (Length--)
-    {
-        Ptr = ConioCoordToPointer(Buffer, X, Y);
-
-        switch (CodeType)
-        {
-            case CODE_ASCII:
-            case CODE_UNICODE:
-                Ptr->Char.UnicodeChar = *(PWCHAR)WriteBuffer;
-                break;
-
-            case CODE_ATTRIBUTE:
-                Ptr->Attributes = *(PWORD)WriteBuffer;
-                break;
-        }
-        WriteBuffer = (PVOID)((ULONG_PTR)WriteBuffer + CodeSize);
-        // ++Ptr;
-
-        // Written++;
-        if (++X == Buffer->ScreenBufferSize.X)
-        {
-            X = 0;
-
-            if (++Y == Buffer->ScreenBufferSize.Y)
-            {
-                Y = 0;
-            }
-        }
+            Status = STATUS_INVALID_PARAMETER;
+            break;
     }
 
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
-        SMALL_RECT UpdateRect;
         ConioComputeUpdateRect(Buffer, &UpdateRect, WriteCoord, NumCodesToWrite);
         TermDrawRegion(Console, &UpdateRect);
     }
 
-    // EndCoord->X = X;
-    // EndCoord->Y = (Y + Buffer->ScreenBufferSize.Y - Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
-
-Cleanup:
-    if (tmpString) RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
-
-    if (NumCodesWritten) *NumCodesWritten = NumCodesToWrite; // Written;
     return Status;
 }
 
@@ -1133,7 +1266,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
             case CODE_ASCII:
             case CODE_UNICODE:
                 Ptr->Char.UnicodeChar = Code.UnicodeChar;
-                Ptr->Attributes &= ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE);
+                Ptr->Attributes &= ~COMMON_LEAD_TRAIL;
                 if (bFullwidth)
                 {
                     if (bLead)
@@ -1144,18 +1277,17 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                 break;
 
             case CODE_ATTRIBUTE:
-                Ptr->Attributes &= ~0xFF;
-                Ptr->Attributes |= (Code.Attribute & 0xFF);
+                Ptr->Attributes &= ~COMMON_LEAD_TRAIL;
+                Ptr->Attributes |= (Code.Attribute & ~COMMON_LEAD_TRAIL);
                 break;
         }
-        // ++Ptr;
 
-        // Written++;
-        if (++X == Buffer->ScreenBufferSize.X)
+        ++X;
+        if (X == Buffer->ScreenBufferSize.X)
         {
             X = 0;
-
-            if (++Y == Buffer->ScreenBufferSize.Y)
+            ++Y;
+            if (Y == Buffer->ScreenBufferSize.Y)
             {
                 Y = 0;
             }
@@ -1170,7 +1302,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
         {
             Ptr = ConioCoordToPointer(Buffer, X - 1, Y);
             Ptr->Char.UnicodeChar = L' ';
-            Ptr->Attributes &= ~(COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE);
+            Ptr->Attributes &= ~COMMON_LEAD_TRAIL;
         }
     }
 
