@@ -54,8 +54,8 @@ BEGIN
     MENUITEM "Copiar &pasta...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ver para pasta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Selec. &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Inverter Selec.", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Seleccionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Inverter Selecção.", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -68,9 +68,9 @@ BEGIN
         MENUITEM "&Copiar", IDM_COPY
         MENUITEM "Co&lar", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Criar &Link", IDM_CREATELINK
+        MENUITEM "Criar &atalho", IDM_CREATELINK
         MENUITEM "&Apagar", IDM_DELETE
-        MENUITEM "&Renomear", IDM_RENAME
+        MENUITEM "&Mudar o nome", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Propriedades", IDM_PROPERTIES
     END
@@ -410,59 +410,59 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 274, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Tarefas", -1, 7, 10, 249, 45
+    GROUPBOX "Tarefas", -1, 7, 10, 259, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "Mostrar tarefas comuns nas &pastas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Utilizar pastas class&icas ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "Procurar pastas", -1, 7, 60, 249, 45, WS_TABSTOP
+    GROUPBOX "Procurar pastas", -1, 7, 60, 259, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Abrir cada pasta na &mesma janela", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Abrir cada pasta na sua &janela", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 249, 60
+    GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 259, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Clique simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 225, 10
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
     PUSHBUTTON "&Restaurar valores por defeito", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
 END
 
-IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 274, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
+    GROUPBOX "Vistas das Pastas", -1, 7, 10, 259, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
-    PUSHBUTTON "Aplicar a t&odas as Pastas", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Reiniciar todas as Pastas", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Pode aplicar a todas as pastas, a vista (tal como ""Detalhes"" ou ""Mosaico"") que está a utilizar nesta pasta.", -1, 60, 20, 180, 20
+    PUSHBUTTON "Aplicar a t&odas as Pastas", IDC_VIEW_APPLY_TO_ALL, 25, 50, 95, 14, WS_TABSTOP
+    PUSHBUTTON "&Reiniciar todas as Pastas", IDC_VIEW_RESET_ALL, 140, 50, 95, 14, WS_TABSTOP
     LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
-    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "Restaurar valores &predefinidos", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 259, 120
+    PUSHBUTTON "Restaurar valores &predefinidos", IDC_VIEW_RESTORE_DEFAULTS, 140, 215, 110, 14, WS_TABSTOP
 END
 
-IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
+IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 274, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Tipos de Ficheiros"
+CAPTION "Tipos de Ficheiro"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Tipos de ficheiros registados:", -1, 7, 10, 70, 10
-    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&Novo", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Apagar", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Detalhes para a extensão '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
+    CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 259, 80
+    PUSHBUTTON "&Novo...", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Apagar...", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Detalhes para a extensão '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 259, 70
     LTEXT "Abre com:", -1, 12, 140, 40, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
     LTEXT "Nome", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
     PUSHBUTTON "&Alterar...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "A&vançado", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 40
+    PUSHBUTTON "A&vançado...", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -473,12 +473,12 @@ BEGIN
     DEFPUSHBUTTON "&Sim", IDYES, 20, 122, 60, 14
     PUSHBUTTON "Sim para &todos", 12807, 85, 122, 60, 14
     PUSHBUTTON "&Não", IDNO, 150, 122, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 215, 122, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
     LTEXT "Esta pasta já contém um ficheiro com o nome '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "Esta pasta já contém um ficheiro sómente de leitura com o nome '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Esta pasta já contém um ficheiro de sistema com o nome '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "pretende substituir o ficheiro existente", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "Pretende substituir o ficheiro existente", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(data e tamanho desconhecido)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "por este?", -1, 44, 75, 228, 10, SS_NOPREFIX
@@ -492,9 +492,9 @@ CAPTION "Terminar sessão ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Tem a certeza que deseja terminar a sessão?", -1, 43, 15, 131, 8
+    LTEXT "Tem a certeza que deseja terminar a sessão?", -1, 43, 15, 170, 8
     DEFPUSHBUTTON "&Terminar a sessão", IDOK, 30, 38, 64, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 99, 38, 43, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -505,7 +505,7 @@ BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Tem a certeza que deseja encerrar?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Encerrar", IDOK, 47, 38, 47, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 99, 38, 47, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -547,8 +547,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Executar sempre a acção seleccionada.", 1004, 32, 171, 190, 10
-    DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 160, 185, 60, 14
+    DEFPUSHBUTTON "&OK", IDOK, 96, 185, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 185, 60, 14
 END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
@@ -561,8 +561,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Executar sempre a acção seleccionada", 1004, 32, 143, 190, 8
-    DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 159, 160, 60, 14
+    DEFPUSHBUTTON "&OK", IDOK, 94, 160, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 159, 160, 60, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
@@ -574,8 +574,8 @@ BEGIN
     LTEXT "O que pretende que o ReactOS faça?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Manter a sessão, deixando o computador a correr em baixa energia. O computador arranca quando tocar numa tecla ou mover o rato.", 8225, 39, 40, 167, 37
-    DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancelar", IDCANCEL, 75, 82, 60, 14
+    DEFPUSHBUTTON "&OK", 1, 7, 82, 60, 14, WS_GROUP
+    PUSHBUTTON "&Cancelar", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "&Ajuda", IDHELP, 144, 82, 60, 14
 END
 
@@ -586,16 +586,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Iniciar", IDOK, 53, 198, 60, 14
     PUSHBUTTON "&Fechar", IDCANCEL, 118, 198, 60, 14
-    LTEXT "Ca&pacidade:", -1, 7, 6, 169, 9
+    LTEXT "Capacidade:", -1, 7, 6, 169, 9
     COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Sistema de ficheiros", -1, 7, 35, 170, 9
+    LTEXT "Sistema de ficheiros", -1, 7, 35, 170, 9
     COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-    LTEXT "&Tamanho da unidade de alocação", -1, 7, 64, 170, 9
+    LTEXT "Tamanho da unidade de alocação", -1, 7, 64, 170, 9
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Nome do volume ", -1, 7, 93, 170, 9
+    LTEXT "Nome do volume ", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "&Opções", 4610, 7, 121, 170, 49
+    GROUPBOX "Opções", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "Formatação &Rápida", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Permitir Compressão", 28675, 16, 152, 155, 10
 END
@@ -616,16 +616,16 @@ END
 
 IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Trocar Icone"
+CAPTION "Alterar Icone"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Procurar icones no ficheiro:", -1, 7, 7, 179, 10
-    PUSHBUTTON "procurar...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    PUSHBUTTON "&Procurar...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Seleccione um icone na lista abaixo:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 135, 179, 50, 14
+    DEFPUSHBUTTON "&OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -637,9 +637,9 @@ BEGIN
     LTEXT "Este arquivo pode ser usado pelo sistema operacional ou por\n\
 outro aplicativo. Modificar este arquivo pode danificar o seu\n\
 sistema ou torná-lo instável.\n\n\
-Tem certeza de que deseja abrir este arquivo?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Sim", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "Não", IDNO, 180, 55, 50, 14
+Tem a certeza que deseja abrir este arquivo?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "&Sim", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "&Não", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
@@ -647,13 +647,13 @@ CAPTION "Criar nova extensão"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Extensão de arquivo:", -1, 10, 10, 85, 14
+    LTEXT "Extensão de arquivo:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< A&vançado", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "Tipo de ficheiro &associado:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< &Avançado", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "Tipo de ficheiro associado:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 190, 55, 60, 14
+    DEFPUSHBUTTON "&OK", IDOK, 125, 55, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
@@ -663,18 +663,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alterar &Icone", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Acções:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Alterar &Icone...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "Acções:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Novo...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
     PUSHBUTTON "&Editar...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
     PUSHBUTTON "&Remover", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Predefinição", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    PUSHBUTTON "Prede&finição", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
     AUTOCHECKBOX "Abrir após o download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
     AUTOCHECKBOX "&Mostrar sempre a extensão", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
     AUTOCHECKBOX "&Procurar na mesma janela", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
-    DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 160, 170, 60, 14
+    DEFPUSHBUTTON "&OK", IDOK, 95, 170, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
@@ -686,10 +686,10 @@ BEGIN
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
     LTEXT "Aplicativo usado para executar a acção:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
-    DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "&Procurar...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&Utilizar DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    DEFPUSHBUTTON "&OK", IDOK, 160, 20, 60, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
@@ -785,8 +785,8 @@ BEGIN
     IDS_CREATEFOLDER_CAPTION "Impossivel criar pasta"
     IDS_DELETEITEM_CAPTION "Confirmar exclusão do ficheiro"
     IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
-    IDS_DELETEITEM_TEXT "Tem certeza que deseja excluir '%1'?"
-    IDS_DELETEMULTIPLE_TEXT "Tem certeza que deseja excluir estes %1 itens?"
+    IDS_DELETEITEM_TEXT "Tem a certeza que deseja excluir '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Tem a certeza que deseja excluir estes %1 itens?"
     IDS_DELETESELECTED_TEXT "Tem a certeza que quer eliminar os item(s) seleccionado(s)?"
     IDS_TRASHITEM_TEXT "Tem a certeza que quer enviar '%1' para a reciclagem?"
     IDS_TRASHFOLDER_TEXT "Tem a certeza que quer enviar '%1' e todo o seu conteúdo para a reciclagem?"
@@ -874,7 +874,7 @@ BEGIN
     IDS_RECYCLEBIN_LOCATION "Localização da reciclagem"
     IDS_RECYCLEBIN_DISKSPACE "Espaço disponível"
     IDS_EMPTY_BITBUCKET "Esvaziar reciclagem"
-    IDS_PICK_ICON_TITLE "Escolha icone"
+    IDS_PICK_ICON_TITLE "Escolha um icone"
     IDS_PICK_ICON_FILTER "Ficheiros de icones (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Ficheiros executáveis (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
@@ -904,15 +904,15 @@ BEGIN
     IDS_TTF_FILE "Tipo de letra TrueType"
     IDS_OTF_FILE "Tipo de letra OpenType"
     IDS_HLP_FILE "Ficheiro de Ajuda"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "Icone"
     IDS_INI_FILE "Definições"
     IDS_LNK_FILE "Atalho"
     IDS_NT__FILE "Arquivo de configuração do NT DOS32"
     IDS_PIF_FILE "Arquivo de informações do programa NT VDM"
-    IDS_SCR_FILE "Protector de ecrã"
+    IDS_SCR_FILE "Protecção de ecrã"
     IDS_SYS_FILE "Ficheiro de Sistema"
     IDS_VXD_FILE "Controlador de Dispositivo Virtual"
-    IDS_ANY_FILE "%s-arquivo"
+    IDS_ANY_FILE "Arquivo %s"
 
     IDS_OPEN_VERB "Abrir"
     IDS_EXPLORE_VERB "Explorar"
@@ -920,7 +920,7 @@ BEGIN
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Procurar"
     IDS_PRINT_VERB "Imprimir"
-    IDS_CMD_VERB "Prompt de Comando aqui"
+    IDS_CMD_VERB "Linha de Comandos aqui"
 
     IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
     IDS_PRINTERS "Impressoras"
@@ -932,8 +932,8 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "Não existe um programa ReactOS configurado para abrir este tipo de ficheiro."
 
-    IDS_FILE_DETAILS "Detalhes para '%s' extensão"
-    IDS_FILE_DETAILSADV "Ficheiros com extensão '%s' são do tipo '%s'. Para mudar definições que afectam todos '%s' ficheiros, click Avançado."
+    IDS_FILE_DETAILS "Detalhes para extensão '%s'"
+    IDS_FILE_DETAILSADV "Ficheiros com extensão '%s' são do tipo '%s'. Para alterar as definições que afectam todos os ficheiros '%s', clique em Avançado."
     IDS_FILE_TYPES "Tipos de ficheiro"
     IDS_COLUMN_EXTENSION "Extensões"
 
@@ -942,21 +942,21 @@ BEGIN
     IDS_FILE_EXT_TYPE "Arquivo %s"
 
     IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Applicação desconhecida"
+    IDS_UNKNOWN_APP "Aplicação desconhecida"
     IDS_EXE_DESCRIPTION "Descrição:"
 
     IDS_MENU_EMPTY "(Vazio)"
     IDS_OBJECTS "%d Objetos"
-    IDS_OBJECTS_SELECTED "%d Objetos Seleccionados"
+    IDS_OBJECTS_SELECTED "%d Objectos Seleccionados"
 
     IDS_ADVANCED_FOLDER "Pastas e ficheiros"
-    IDS_ADVANCED_NET_CRAWLER "Pesquise automaticamente pastas e impressoras de rede"
+    IDS_ADVANCED_NET_CRAWLER "Pesquisar automaticamente pastas e impressoras de rede"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Exibir informações de tamanho de arquivo nas informações de pastas"
     IDS_ADVANCED_FRIENDLY_TREE "Exibir visualização simples na lista de pastas do Explorador"
     IDS_ADVANCED_WEB_VIEW_BARRICADE "Exibir o conteúdo das pastas do sistema"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Exibir o caminho completo na barra de endereço"
     IDS_ADVANCED_SHOW_FULL_PATH "Exibir o caminho completo na barra de título"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Não armazenar em cache miniaturas"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Não armazenar miniaturas em cache"
     IDS_ADVANCED_HIDDEN "Arquivos e pastas ocultos"
     IDS_ADVANCED_DONT_SHOW_HIDDEN "Não mostrar arquivos e pastas ocultos"
     IDS_ADVANCED_SHOW_HIDDEN "Mostrar arquivos e pastas ocultos"
@@ -967,7 +967,7 @@ BEGIN
     IDS_ADVANCED_PERSIST_BROWSERS "Restaurar janelas de pastas anteriores no início de sessão"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Mostrar painel de controle no meu computador"
     IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar arquivos NTFS criptografados ou compactados em cores"
-    IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descrição pop-up para itens de pasta e área de trabalho"
+    IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descrição pop-up para itens de pastas e área de trabalho"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"
@@ -976,10 +976,10 @@ BEGIN
     IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de arquivo %s. Deseja desassociar %s com %s e criar um novo tipo de arquivo?"
     IDS_NEWEXT_EXT_IN_USE "A extensão está em uso"
 
-    IDS_REMOVE_EXT "Se remover uma extensão de nome de arquivo registrado, não poderá abrir arquivos com esta extensão clicando duas vezes nos ícones. \n\nTem certeza de que deseja remover esta extensão?"
+    IDS_REMOVE_EXT "Se remover uma extensão de nome de arquivo registrado, não poderá abrir arquivos com esta extensão clicando duas vezes nos ícones. \n\nTem a certeza de que deseja remover esta extensão?"
     IDS_SPECIFY_ACTION "Deve especificar uma acção."
     IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do arquivo estão correctos."
-    IDS_REMOVE_ACTION "Tem certeza de que deseja remover esta acção?"
+    IDS_REMOVE_ACTION "Tem a certeza que deseja remover esta acção?"
     IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de arquivo. Digite um nome diferente e tente novamente."
     IDS_EXE_FILTER "Programas\0*.exe\0Todos os tipos\0*.*\0"
     IDS_EDITING_ACTION "Editar acção para o tipo: "
