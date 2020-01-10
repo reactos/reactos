@@ -933,7 +933,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
     }
 }
 
-static NTSTATUS FASTCALL
+static NTSTATUS
 IntWriteConsoleOutputStringAscii(
     IN PCONSOLE Console,
     IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -1028,7 +1028,7 @@ Cleanup:
     return Status;
 }
 
-static NTSTATUS FASTCALL
+static NTSTATUS
 IntWriteConsoleOutputStringUnicode(
     IN PCONSOLE Console,
     IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -1101,7 +1101,7 @@ Cleanup:
     return Status;
 }
 
-static NTSTATUS FASTCALL
+static NTSTATUS
 IntWriteConsoleOutputStringAttribute(
     IN PCONSOLE Console,
     IN PTEXTMODE_SCREEN_BUFFER Buffer,
