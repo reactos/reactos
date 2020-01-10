@@ -1043,7 +1043,7 @@ IntWriteConsoleOutputStringUnicode(
     PCHAR_INFO Ptr;
     BOOL bCJK = Console->IsCJK;
 
-    if (!WriteBuffer)
+    if (!StringBuffer)
         goto Cleanup;
 
     X = WriteCoord->X;
@@ -1115,7 +1115,7 @@ IntWriteConsoleOutputStringAttribute(
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
 
-    if (!WriteBuffer)
+    if (!StringBuffer)
         goto Cleanup;
 
     X = WriteCoord->X;
