@@ -934,12 +934,13 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
 }
 
 static NTSTATUS FASTCALL
-IntWriteConsoleOutputStringAscii(IN PCONSOLE Console,
-                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                 IN PVOID StringBuffer,
-                                 IN ULONG NumCodesToWrite,
-                                 IN PCOORD WriteCoord,
-                                 OUT PULONG NumCodesWritten OPTIONAL)
+IntWriteConsoleOutputStringAscii(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN PVOID StringBuffer,
+    IN ULONG NumCodesToWrite,
+    IN PCOORD WriteCoord,
+    OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LPBYTE WriteBuffer;
@@ -952,18 +953,13 @@ IntWriteConsoleOutputStringAscii(IN PCONSOLE Console,
         goto Cleanup;
 
     /* Convert the ASCII string into Unicode before writing it to the console */
-    Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                 (PCHAR)StringBuffer,
-                                 NumCodesToWrite,
-                                 NULL, 0);
+    Length = MultiByteToWideChar(Console->OutputCodePage, 0, (PCHAR)StringBuffer, NumCodesToWrite, NULL, 0);
     tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
     if (tmpString)
     {
         WriteBuffer = (LPBYTE)tmpString;
-        MultiByteToWideChar(Console->OutputCodePage, 0,
-                            (PCHAR)StringBuffer,
-                            NumCodesToWrite,
-                            (PWCHAR)WriteBuffer, Length);
+        MultiByteToWideChar(
+            Console->OutputCodePage, 0, (PCHAR)StringBuffer, NumCodesToWrite, (PWCHAR)WriteBuffer, Length);
     }
     else
     {
@@ -993,8 +989,7 @@ IntWriteConsoleOutputStringAscii(IN PCONSOLE Console,
         }
 
         /* For Chinese, Japanese and Korean */
-        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
-            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 && mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
             /* the leading byte */
             Ptr->Attributes = Buffer->ScreenDefaultAttrib;
@@ -1028,12 +1023,13 @@ Cleanup:
 }
 
 static NTSTATUS FASTCALL
-IntWriteConsoleOutputStringUnicode(IN PCONSOLE Console,
-                                   IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                   IN PVOID StringBuffer,
-                                   IN ULONG NumCodesToWrite,
-                                   IN PCOORD WriteCoord,
-                                   OUT PULONG NumCodesWritten OPTIONAL)
+IntWriteConsoleOutputStringUnicode(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN PVOID StringBuffer,
+    IN ULONG NumCodesToWrite,
+    IN PCOORD WriteCoord,
+    OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
@@ -1067,8 +1063,7 @@ IntWriteConsoleOutputStringUnicode(IN PCONSOLE Console,
         }
 
         /* For Chinese, Japanese and Korean */
-        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
-            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
+        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 && mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
             /* the leading byte */
             Ptr->Attributes = Buffer->ScreenDefaultAttrib;
@@ -1100,12 +1095,13 @@ Cleanup:
 }
 
 static NTSTATUS FASTCALL
-IntWriteConsoleOutputStringAttribute(IN PCONSOLE Console,
-                                     IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                     IN PVOID StringBuffer,
-                                     IN ULONG NumCodesToWrite,
-                                     IN PCOORD WriteCoord,
-                                     OUT PULONG NumCodesWritten OPTIONAL)
+IntWriteConsoleOutputStringAttribute(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN PVOID StringBuffer,
+    IN ULONG NumCodesToWrite,
+    IN PCOORD WriteCoord,
+    OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
@@ -1145,14 +1141,14 @@ Cleanup:
 }
 
 NTSTATUS NTAPI
-ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
-                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                               IN CODE_TYPE CodeType,
-                               IN PVOID StringBuffer,
-                               IN ULONG NumCodesToWrite,
-                               IN PCOORD WriteCoord,
-                               // OUT PCOORD EndCoord,
-                               OUT PULONG NumCodesWritten OPTIONAL)
+ConDrvWriteConsoleOutputString(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN CODE_TYPE CodeType,
+    IN PVOID StringBuffer,
+    IN ULONG NumCodesToWrite,
+    IN PCOORD WriteCoord,
+    OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status;
     SMALL_RECT UpdateRect;
@@ -1172,18 +1168,18 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     switch (CodeType)
     {
         case CODE_ASCII:
-            Status = IntWriteConsoleOutputStringAscii(Console, Buffer, StringBuffer,
-                NumCodesToWrite, WriteCoord, NumCodesWritten);
+            Status = IntWriteConsoleOutputStringAscii(
+                Console, Buffer, StringBuffer, NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         case CODE_UNICODE:
-            Status = IntWriteConsoleOutputStringUnicode(Console, Buffer, StringBuffer,
-                NumCodesToWrite, WriteCoord, NumCodesWritten);
+            Status = IntWriteConsoleOutputStringUnicode(
+                Console, Buffer, StringBuffer, NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         case CODE_ATTRIBUTE:
-            Status = IntWriteConsoleOutputStringAttribute(Console, Buffer, StringBuffer,
-                NumCodesToWrite, WriteCoord, NumCodesWritten);
+            Status = IntWriteConsoleOutputStringAttribute(
+                Console, Buffer, StringBuffer, NumCodesToWrite, WriteCoord, NumCodesWritten);
             break;
 
         default:
