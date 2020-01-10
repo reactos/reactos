@@ -912,7 +912,7 @@ BEGIN
     IDS_SCR_FILE "Protecção de ecrã"
     IDS_SYS_FILE "Ficheiro de Sistema"
     IDS_VXD_FILE "Controlador de Dispositivo Virtual"
-    IDS_ANY_FILE "arquivo %s"
+    IDS_ANY_FILE "Arquivo %s"
 
     IDS_OPEN_VERB "Abrir"
     IDS_EXPLORE_VERB "Explorar"
