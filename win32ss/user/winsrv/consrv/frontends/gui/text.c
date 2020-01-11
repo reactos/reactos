@@ -473,7 +473,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                             IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
                             /* Select the new font */
                             NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
-                            /* OldFont = */ SelectObject(GuiData->hMemDC, NewFont);
+                            SelectObject(GuiData->hMemDC, NewFont);
                         }
                     }
                 }
