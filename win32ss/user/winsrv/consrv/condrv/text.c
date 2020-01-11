@@ -1037,9 +1037,9 @@ IntWriteConsoleOutputStringAscii(
         return STATUS_NO_MEMORY;
 
     MultiByteToWideChar(Console->OutputCodePage, 0,
-                        (PCHAR)StringBuffer,
+                        StringBuffer,
                         NumCodesToWrite,
-                        (PWCHAR)tmpString, Length);
+                        tmpString, Length);
 
     Status = IntWriteConsoleOutputStringUnicode(Console,
                                                 Buffer,
