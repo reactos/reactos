@@ -934,101 +934,6 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
 }
 
 static NTSTATUS
-IntWriteConsoleOutputStringAscii(
-    IN PCONSOLE Console,
-    IN PTEXTMODE_SCREEN_BUFFER Buffer,
-    IN PVOID StringBuffer,
-    IN ULONG NumCodesToWrite,
-    IN PCOORD WriteCoord,
-    OUT PULONG NumCodesWritten OPTIONAL)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    LPBYTE WriteBuffer;
-    PWCHAR tmpString = NULL;
-    ULONG i, X, Y, Length;
-    PCHAR_INFO Ptr;
-    BOOL bCJK = Console->IsCJK;
-
-    if (!StringBuffer)
-        goto Cleanup;
-
-    /* Convert the ASCII string into Unicode before writing it to the console */
-    Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                 (PCHAR)StringBuffer,
-                                 NumCodesToWrite,
-                                 NULL, 0);
-    tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
-    if (tmpString)
-    {
-        WriteBuffer = (LPBYTE)tmpString;
-        MultiByteToWideChar(Console->OutputCodePage, 0,
-                            (PCHAR)StringBuffer,
-                            NumCodesToWrite,
-                            (PWCHAR)WriteBuffer, Length);
-    }
-    else
-    {
-        Status = STATUS_NO_MEMORY;
-        goto Cleanup;
-    }
-
-    X = WriteCoord->X;
-    Y = (WriteCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
-
-    for (i = 0; i < Length; ++i)
-    {
-        Ptr = ConioCoordToPointer(Buffer, X, Y);
-
-        Ptr->Char.UnicodeChar = *(PWCHAR)WriteBuffer;
-        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
-
-        ++X;
-        if (X == Buffer->ScreenBufferSize.X)
-        {
-            X = 0;
-            ++Y;
-            if (Y == Buffer->ScreenBufferSize.Y)
-            {
-                Y = 0;
-            }
-        }
-
-        /* For Chinese, Japanese and Korean */
-        if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
-            mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
-        {
-            /* the leading byte */
-            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
-            Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
-            ++i;
-
-            /* the trailing byte */
-            Ptr = ConioCoordToPointer(Buffer, X, Y);
-            Ptr->Attributes = Buffer->ScreenDefaultAttrib;
-            Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
-
-            ++X;
-            if (X == Buffer->ScreenBufferSize.X)
-            {
-                X = 0;
-                ++Y;
-                if (Y == Buffer->ScreenBufferSize.Y)
-                {
-                    Y = 0;
-                }
-            }
-        }
-    }
-
-Cleanup:
-    if (tmpString)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
-    if (NumCodesWritten)
-        *NumCodesWritten = NumCodesToWrite;
-    return Status;
-}
-
-static NTSTATUS
 IntWriteConsoleOutputStringUnicode(
     IN PCONSOLE Console,
     IN PTEXTMODE_SCREEN_BUFFER Buffer,
@@ -1098,6 +1003,44 @@ IntWriteConsoleOutputStringUnicode(
 Cleanup:
     if (NumCodesWritten)
         *NumCodesWritten = NumCodesToWrite;
+    return Status;
+}
+
+static NTSTATUS
+IntWriteConsoleOutputStringAscii(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN PVOID StringBuffer,
+    IN ULONG NumCodesToWrite,
+    IN PCOORD WriteCoord,
+    OUT PULONG NumCodesWritten OPTIONAL)
+{
+    NTSTATUS Status;
+    LPWSTR tmpString;
+    ULONG Length;
+
+    /* Convert the ASCII string into Unicode before writing it to the console */
+    Length = MultiByteToWideChar(Console->OutputCodePage, 0,
+                                 (PCHAR)StringBuffer,
+                                 NumCodesToWrite,
+                                 NULL, 0);
+    tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    if (!tmpString)
+        return STATUS_NO_MEMORY;
+
+    MultiByteToWideChar(Console->OutputCodePage, 0,
+                        (PCHAR)StringBuffer,
+                        NumCodesToWrite,
+                        (PWCHAR)tmpString, Length);
+
+    Status = IntWriteConsoleOutputStringUnicode(Console,
+                                                Buffer,
+                                                tmpString,
+                                                Length,
+                                                WriteCoord,
+                                                NumCodesWritten);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
     return Status;
 }
 
