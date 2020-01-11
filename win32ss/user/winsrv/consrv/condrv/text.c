@@ -943,7 +943,7 @@ IntWriteConsoleOutputStringUnicode(
     OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
+    LPWSTR WriteBuffer = StringBuffer;
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
     BOOL bCJK = Console->IsCJK;
@@ -959,8 +959,8 @@ IntWriteConsoleOutputStringUnicode(
     {
         Ptr = ConioCoordToPointer(Buffer, X, Y);
 
-        Ptr->Char.UnicodeChar = *(PWCHAR)WriteBuffer;
-        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, UnicodeChar);
+        Ptr->Char.UnicodeChar = *WriteBuffer;
+        ++WriteBuffer;
 
         ++X;
         if (X == Buffer->ScreenBufferSize.X)
@@ -1019,9 +1019,17 @@ IntWriteConsoleOutputStringAscii(
     LPWSTR tmpString;
     ULONG Length;
 
+    if (!StringBuffer)
+    {
+        if (NumCodesWritten)
+            *NumCodesWritten = NumCodesToWrite;
+
+        return STATUS_SUCCESS;
+    }
+
     /* Convert the ASCII string into Unicode before writing it to the console */
     Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                 (PCHAR)StringBuffer,
+                                 StringBuffer,
                                  NumCodesToWrite,
                                  NULL, 0);
     tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
@@ -1054,7 +1062,7 @@ IntWriteConsoleOutputStringAttribute(
     OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    LPBYTE WriteBuffer = (LPBYTE)StringBuffer;
+    WORD *WriteBuffer = StringBuffer;
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
 
@@ -1069,8 +1077,8 @@ IntWriteConsoleOutputStringAttribute(
     {
         Ptr = ConioCoordToPointer(Buffer, X, Y);
 
-        Ptr->Attributes = (*(PWORD)WriteBuffer & ~COMMON_LEAD_TRAIL);
-        WriteBuffer += RTL_FIELD_SIZE(CODE_ELEMENT, Attribute);
+        Ptr->Attributes = (*WriteBuffer & ~COMMON_LEAD_TRAIL);
+        ++WriteBuffer;
 
         ++X;
         if (X == Buffer->ScreenBufferSize.X)
