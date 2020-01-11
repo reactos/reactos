@@ -5,11 +5,7 @@
  * COPYRIGHT:   Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
  */
 
-#include <apitest.h>
-
-#include <windef.h>
-
-#include <../shared/dbgutil.h>
+#include <precomp.h>
 
 BOOL IsValidTag(
     _In_ char* tag3)
@@ -53,10 +49,8 @@ LPVOID HeapAllocTag(
         return NULL;
 
     res = HeapAlloc(hHeap, dwFlags, dwBytes + 3);
-    //trace("HeapAllocTag %.*s 0x%p ", 3, tag3, res);
     memcpy(res, tag3, 3);
     res = (PBYTE)res + 3;
-    //trace("-> 0x%p\n", res);
     return res;
 }
 

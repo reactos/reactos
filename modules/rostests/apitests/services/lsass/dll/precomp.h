@@ -27,7 +27,4 @@
 #include <lsafntable.h>
 #include <../shared/dbgutil.h>
 
-#define NDEBUG
-#include <debug.h>
-
 #endif
