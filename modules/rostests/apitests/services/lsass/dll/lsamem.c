@@ -75,12 +75,12 @@ BOOL HeapFreeTag(
 
     if (!HeapValidate(hHeap, 0, lpMem))
     {
-        trace("mem block at 0x%p is not from heap 0x%lx!\n", lpMemOrig, (ULONG)hHeap);
+        trace("mem block at 0x%p is not from heap 0x%p!\n", lpMemOrig, hHeap);
 
         // is the original pointer from our heap (without tag?)
         if (HeapValidate(hHeap, 0, lpMemOrig))
         {
-            trace("mem block at 0x%p (without tag) is from heap 0x%lx!\n", lpMem, (ULONG)hHeap);
+            trace("mem block at 0x%p (without tag) is from heap 0x%p!\n", lpMem, hHeap);
             return HeapFree(hHeap, dwFlags, lpMem);
         }
         else
@@ -96,7 +96,7 @@ BOOL HeapFreeTag(
             {
                 // only for interesst - is it from ProcessHeap?
                 //HANDLE hPsHeap = GetProcessHeap();
-                trace("(%i)  0x%lx\n", i, (ULONG)hHeapAry[i]);
+                trace("(%i)  0x%p\n", i, hHeapAry[i]);
                 if (HeapValidate(hHeapAry[i], 0, lpMemOrig))
                     trace("   ^^ its from this heap!!!\n");
             }
