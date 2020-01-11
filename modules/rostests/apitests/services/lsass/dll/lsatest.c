@@ -20,101 +20,11 @@ typedef struct _LSA_FUNCS
     ULONG fnTableCount;
 } LSA_FUNCS, *PLSA_FUNCS;
 
-static void TestLsaModeInitialize(
-    IN PLSA_FUNCS lsa)
+static LSA_SECPKG_FUNCTION_TABLE LsaFnTable = {0};
+
+static void InitFnTable()
 {
-    ULONG PackageVersion;
-    NTSTATUS res;
-
-    trace("testing SpLsaModeInitialize.\n");
-
-    res = lsa->SpLsaModeInitialize(SECPKG_INTERFACE_VERSION, &PackageVersion,
-                                   &lsa->fnTable, &lsa->fnTableCount);
-    ok(res == STATUS_SUCCESS, "SpLsaModeInitialize failed: 0x%x\n", (UINT)res);
-    if (res != STATUS_SUCCESS)
-        return;
-    ok(lsa->fnTable != NULL, "lsa.fnTable is NULL\n");
-    ok(lsa->fnTableCount == 1, "lsa.fnTableCount != 1\n");
-    ok(PackageVersion == SECPKG_INTERFACE_VERSION, "Unexpected version %lu of package!\n", PackageVersion);
-
-    ok(lsa->fnTable->InitializePackage == NULL, "InitializePackage != NULL\n");
-    ok(lsa->fnTable->LsaLogonUser == NULL, "LsaLogonUser != NULL\n");
-    ok(lsa->fnTable->CallPackage != NULL, "CallPackage == NULL\n");
-    ok(lsa->fnTable->LogonTerminated != NULL, "LogonTerminated == NULL\n");
-    ok(lsa->fnTable->CallPackageUntrusted != NULL, "CallPackageUntrusted == NULL\n");
-    ok(lsa->fnTable->CallPackagePassthrough != NULL, "CallPackagePassthrough == NULL\n");
-    ok(lsa->fnTable->LogonUserEx == NULL, "LogonUserEx != NULL\n");
-    ok(lsa->fnTable->LogonUserEx2 != NULL, "LogonUserEx2 == NULL\n");
-    ok(lsa->fnTable->Initialize != NULL, "Initialize == NULL\n");
-    ok(lsa->fnTable->Shutdown != NULL, "Shutdown == NULL\n");
-    ok(lsa->fnTable->GetInfo != NULL, "GetInfo == NULL\n");
-    ok(lsa->fnTable->AcceptCredentials != NULL, "AcceptCredentials == NULL\n");
-    ok(lsa->fnTable->SpAcquireCredentialsHandle != NULL, "SpAcquireCredentialsHandle == NULL\n");
-    ok(lsa->fnTable->SpQueryCredentialsAttributes != NULL, "SpQueryCredentialsAttributes == NULL\n");
-    ok(lsa->fnTable->FreeCredentialsHandle != NULL, "FreeCredentialsHandle == NULL\n");
-    ok(lsa->fnTable->SaveCredentials != NULL, "SaveCredentials == NULL\n");
-    ok(lsa->fnTable->GetCredentials != NULL, "GetCredentials == NULL\n");
-    ok(lsa->fnTable->DeleteCredentials != NULL, "DeleteCredentials == NULL\n");
-    ok(lsa->fnTable->InitLsaModeContext != NULL, "InitLsaModeContext == NULL\n");
-    ok(lsa->fnTable->AcceptLsaModeContext != NULL, "AcceptLsaModeContext == NULL\n");
-    ok(lsa->fnTable->DeleteContext != NULL, "DeleteContext == NULL\n");
-    ok(lsa->fnTable->ApplyControlToken != NULL, "ApplyControlToken == NULL\n");
-    ok(lsa->fnTable->GetUserInfo != NULL, "GetUserInfo == NULL\n");
-    ok(lsa->fnTable->GetExtendedInformation != NULL, "GetExtendedInformation == NULL\n");
-    ok(lsa->fnTable->SpQueryContextAttributes == NULL, "SpQueryContextAttributes != NULL\n");
-    ok(lsa->fnTable->SpAddCredentials == NULL, "SpAddCredentials != NULL\n");
-    ok(lsa->fnTable->SetExtendedInformation != NULL, "SetExtendedInformation == NULL\n");
-}
-
-SECPKG_PARAMETERS LsaParameters = {0};
-LSA_SECPKG_FUNCTION_TABLE LsaFnTable = {0};
-LSA_DISPATCH_TABLE LsaDpTable = {0};
-
-// a random id we use where we need a "AuthenticationPackageId"
-#define LSA_AUTH_PACKAGE_ID 6
-
-static void TestLsaSpInitialize(
-    IN PLSA_FUNCS lsa)
-{
-    NTSTATUS res;
-    SID sid;
-    DWORD size;
-    WCHAR DomainName[64];
-    WCHAR DnsDomainName[64];
-
-    #define PACKAGE_ID 0x2
-
-    trace("testing Initialize.\n");
-
-    if (lsa->fnTable->Initialize == NULL)
-    {
-        ok(FALSE, "Initialize is NULL!\n");
-        return;
-    }
-
-    size = ARRAY_SIZE(DomainName);
-    if (!GetComputerNameExW(ComputerNameNetBIOS, DomainName, &size))
-    {
-        ok(FALSE, "GetComputerNameExW failed with 0x%lx.\n", GetLastError());
-        DomainName[0] = 0;
-    }
-    size = ARRAY_SIZE(DnsDomainName);
-    if (!GetComputerNameExW(ComputerNameDnsDomain, DnsDomainName, &size))
-    {
-        ok(FALSE, "GetComputerNameExW failed with 0x%lx.\n", GetLastError());
-        DnsDomainName[0] = 0;
-    }
-
-    LsaParameters.Version = 2;
-    LsaParameters.MachineState = SECPKG_STATE_STANDALONE |
-                                 SECPKG_STATE_ENCRYPTION_PERMITTED |
-                                 SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED;
-
-    LsaParameters.SetupMode = 0;
-    RtlInitUnicodeString(&LsaParameters.DomainName, DomainName);
-    RtlInitUnicodeString(&LsaParameters.DnsDomainName, DnsDomainName);
-    LsaParameters.DomainSid = &sid;
-
+    RtlZeroMemory(&LsaFnTable, sizeof(LsaFnTable));
     LsaFnTable.CreateLogonSession = LsaFnCreateLogonSession;
     LsaFnTable.DeleteLogonSession = LsaFnDeleteLogonSession;
     LsaFnTable.AddCredential = LsaFnAddCredential;
@@ -165,11 +75,120 @@ static void TestLsaSpInitialize(
     LsaFnTable.ExpandAuthDataForDomain = LsaFnExpandAuthDataForDomain;
     LsaFnTable.AllocatePrivateHeap = LsaFnAllocatePrivateHeap;
     LsaFnTable.FreePrivateHeap = LsaFnFreePrivateHeap;
+}
+
+static void TestLsaModeInitialize(
+    IN PLSA_FUNCS lsa)
+{
+    ULONG PackageVersion;
+    NTSTATUS res;
+
+    trace("testing SpLsaModeInitialize.\n");
+
+    res = lsa->SpLsaModeInitialize(SECPKG_INTERFACE_VERSION, &PackageVersion,
+                                   &lsa->fnTable, &lsa->fnTableCount);
+    ok(res == STATUS_SUCCESS, "SpLsaModeInitialize failed: 0x%x\n", (UINT)res);
+    if (res != STATUS_SUCCESS)
+        return;
+    ok(lsa->fnTable != NULL, "lsa.fnTable is NULL\n");
+    ok(lsa->fnTableCount == 1, "lsa.fnTableCount != 1\n");
+    ok(PackageVersion == SECPKG_INTERFACE_VERSION, "Unexpected version %lu of package!\n", PackageVersion);
+
+    ok(lsa->fnTable->InitializePackage == NULL, "InitializePackage != NULL\n");
+    ok(lsa->fnTable->LsaLogonUser == NULL, "LsaLogonUser != NULL\n");
+    ok(lsa->fnTable->CallPackage != NULL, "CallPackage == NULL\n");
+    ok(lsa->fnTable->LogonTerminated != NULL, "LogonTerminated == NULL\n");
+    ok(lsa->fnTable->CallPackageUntrusted != NULL, "CallPackageUntrusted == NULL\n");
+    ok(lsa->fnTable->CallPackagePassthrough != NULL, "CallPackagePassthrough == NULL\n");
+    ok(lsa->fnTable->LogonUserEx == NULL, "LogonUserEx != NULL\n");
+    ok(lsa->fnTable->LogonUserEx2 != NULL, "LogonUserEx2 == NULL\n");
+    ok(lsa->fnTable->Initialize != NULL, "Initialize == NULL\n");
+    ok(lsa->fnTable->Shutdown != NULL, "Shutdown == NULL\n");
+    ok(lsa->fnTable->GetInfo != NULL, "GetInfo == NULL\n");
+    ok(lsa->fnTable->AcceptCredentials != NULL, "AcceptCredentials == NULL\n");
+    ok(lsa->fnTable->SpAcquireCredentialsHandle != NULL, "SpAcquireCredentialsHandle == NULL\n");
+    ok(lsa->fnTable->SpQueryCredentialsAttributes != NULL, "SpQueryCredentialsAttributes == NULL\n");
+    ok(lsa->fnTable->FreeCredentialsHandle != NULL, "FreeCredentialsHandle == NULL\n");
+    ok(lsa->fnTable->SaveCredentials != NULL, "SaveCredentials == NULL\n");
+    ok(lsa->fnTable->GetCredentials != NULL, "GetCredentials == NULL\n");
+    ok(lsa->fnTable->DeleteCredentials != NULL, "DeleteCredentials == NULL\n");
+    ok(lsa->fnTable->InitLsaModeContext != NULL, "InitLsaModeContext == NULL\n");
+    ok(lsa->fnTable->AcceptLsaModeContext != NULL, "AcceptLsaModeContext == NULL\n");
+    ok(lsa->fnTable->DeleteContext != NULL, "DeleteContext == NULL\n");
+    ok(lsa->fnTable->ApplyControlToken != NULL, "ApplyControlToken == NULL\n");
+    ok(lsa->fnTable->GetUserInfo != NULL, "GetUserInfo == NULL\n");
+    ok(lsa->fnTable->GetExtendedInformation != NULL, "GetExtendedInformation == NULL\n");
+    ok(lsa->fnTable->SpQueryContextAttributes == NULL, "SpQueryContextAttributes != NULL\n");
+    ok(lsa->fnTable->SpAddCredentials == NULL, "SpAddCredentials != NULL\n");
+    ok(lsa->fnTable->SetExtendedInformation != NULL, "SetExtendedInformation == NULL\n");
+}
+
+// a random id we use where we need a "AuthenticationPackageId"
+#define LSA_AUTH_PACKAGE_ID 6
+
+// Deactivated!
+// The call to lsa->fnTable->Initialize will make lsass.exe unstable.
+// Maybe it is not possible to call it a second time. Initialize was
+// already called by lsass.exe
+#if 0
+SECPKG_PARAMETERS LsaParameters = {0};
+static void TestLsaSpInitialize(
+    IN PLSA_FUNCS lsa)
+{
+    NTSTATUS res;
+    UCHAR SidBuffer[FIELD_OFFSET(SID, SubAuthority) + sizeof(ULONG) * 2];
+    PSID pSid;
+    SID_IDENTIFIER_AUTHORITY ntAuthority = { SECURITY_NT_AUTHORITY };
+    DWORD size;
+    WCHAR DomainName[64];
+    WCHAR DnsDomainName[64];
+
+    #define PACKAGE_ID 0x2
+
+    trace("testing Initialize.\n");
+
+    if (lsa->fnTable->Initialize == NULL)
+    {
+        ok(FALSE, "Initialize is NULL!\n");
+        return;
+    }
+
+    size = ARRAY_SIZE(DomainName);
+    if (!GetComputerNameExW(ComputerNameNetBIOS, DomainName, &size))
+    {
+        ok(FALSE, "GetComputerNameExW failed with 0x%lx.\n", GetLastError());
+        DomainName[0] = L'\0';
+    }
+    size = ARRAY_SIZE(DnsDomainName);
+    if (!GetComputerNameExW(ComputerNameDnsFullyQualified, DnsDomainName, &size))
+    {
+        ok(FALSE, "GetComputerNameExW failed with 0x%lx.\n", GetLastError());
+        DnsDomainName[0] = L'\0';
+    }
+
+    LsaParameters.Version = 2;
+    LsaParameters.MachineState = SECPKG_STATE_STANDALONE |
+                                 SECPKG_STATE_ENCRYPTION_PERMITTED |
+                                 SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED;
+
+    LsaParameters.SetupMode = 0;
+    RtlInitUnicodeString(&LsaParameters.DomainName, DomainName);
+    RtlInitUnicodeString(&LsaParameters.DnsDomainName, DnsDomainName);
+
+    pSid = SidBuffer;
+    RtlInitializeSid(pSid, &ntAuthority, 2);
+    *RtlSubAuthoritySid(pSid, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+    *RtlSubAuthoritySid(pSid, 1) = DOMAIN_ALIAS_RID_ADMINS;
+
+    ok(RtlValidSid(pSid), "SID is not valid!\n");
+
+    LsaParameters.DomainSid = pSid;
 
     res = lsa->fnTable->Initialize(PACKAGE_ID, &LsaParameters, &LsaFnTable);
     ok(res == STATUS_SUCCESS, "SpLsaInitialize failed: 0x%x\n", (UINT)res);
     ok(g_LogonId.LowPart != 0, "CreateLogonSession was not called!\n");
 }
+#endif
 
 static void TestLsaSpGetInfo(
     IN PLSA_FUNCS lsa)
@@ -186,8 +205,6 @@ static void TestLsaSpGetInfo(
     ok(info.wVersion == 1, "info.wVersion != 1 (is %i)\n", info.wVersion);
     ok(info.wRPCID == 10, "info.wRPCID != 10 (is %i)\n", info.wVersion);
     ok(wcscmp(info.Name, L"NTLM") == 0, "info.Name != NTLM (is %S)\n", info.Name);
-
-    trace("test end (TestLsaSpGetInfo)\n");
 }
 
 static void TestLsaSpGetExtendedInformation(
@@ -258,20 +275,11 @@ static void TestLsaApInitializePackage(
 
     trace("testing ApInitializePackage.\n");
 
-    LsaDpTable.CreateLogonSession = LsaFnCreateLogonSession;
-    LsaDpTable.DeleteLogonSession = LsaFnDeleteLogonSession;
-    LsaDpTable.AddCredential = LsaFnAddCredential;
-    LsaDpTable.GetCredentials = LsaFnGetCredentials;
-    LsaDpTable.DeleteCredential = LsaFnDeleteCredential;
-    LsaDpTable.AllocateLsaHeap = LsaFnAllocateLsaHeap;
-    LsaDpTable.FreeLsaHeap = LsaFnFreeLsaHeap;
-    LsaDpTable.AllocateClientBuffer = LsaFnAllocateClientBuffer;
-    LsaDpTable.FreeClientBuffer = LsaFnFreeClientBuffer;
-    LsaDpTable.CopyToClientBuffer = LsaFnCopyToClientBuffer;
-    LsaDpTable.CopyFromClientBuffer = LsaFnCopyFromClientBuffer;
-
-    // On WinXp lsa->fnTable->InitializePackage is NULL
-    // so we have to got it by GetProcAddress
+    // * On WinXp lsa->fnTable->InitializePackage is NULL
+    //   so we have to use the pointer returned by GetProcAddress
+    // * PLSA_DISPATCH_TABLE is a subset of LSA_SECPKG_FUNCTION_TABLE.
+    //   However LsaApInitializePackage (it seems) expects more than
+    //   PLSA_DISPATCH_TABLE. Passing only PLSA_DISPATCH_TABLE would fail.
     res = lsa->LsaApInitializePackage(LSA_AUTH_PACKAGE_ID, (PLSA_DISPATCH_TABLE)&LsaFnTable, NULL, NULL,
                                       &pAuthenticationPackageName);
     ok(res == STATUS_SUCCESS, "InitializePackage failed!\n");
@@ -291,11 +299,12 @@ START_TEST(msv1_0)
     LSA_FUNCS lsa;
 
     LsaFnInit();
+    InitFnTable();
 
-    lsa.hMsv1_0Dll = LoadLibraryW(MSV1_0_DLL);
+    lsa.hMsv1_0Dll = GetModuleHandle(MSV1_0_DLL);
     if (lsa.hMsv1_0Dll == NULL)
     {
-        ok(FALSE, "failed to load dll %S\n", MSV1_0_DLL);
+        ok(FALSE, "failed to get module handle of %S.\n", MSV1_0_DLL);
         goto done;
     }
 
@@ -315,7 +324,9 @@ START_TEST(msv1_0)
 
     TestLsaModeInitialize(&lsa);
 
+    #if 0
     TestLsaSpInitialize(&lsa);
+    #endif
 
     TestLsaSpGetInfo(&lsa);
 
@@ -326,7 +337,5 @@ START_TEST(msv1_0)
     TestLsaApInitializePackage(&lsa);
 
 done:
-    if (lsa.hMsv1_0Dll != NULL)
-        FreeLibrary(lsa.hMsv1_0Dll);
     LsaFnFini();
 }

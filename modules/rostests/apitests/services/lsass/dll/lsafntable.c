@@ -20,7 +20,7 @@ LUID g_LogonId = {0,0};
 #define HeapFreePVH(h,f,p) HeapFreeTag(h,f,p, "PVH")
 #define HeapIsPVH(p) HeapIsTag(p, "PVH")
 
-HANDLE hPrivateHeap;
+HANDLE hPrivateHeap = NULL;
 HANDLE hProcessHeap;
 
 void
