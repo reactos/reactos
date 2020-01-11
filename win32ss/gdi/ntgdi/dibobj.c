@@ -1288,7 +1288,7 @@ NtGdiStretchDIBitsInternal(
                                BitmapFormat(pbmi->bmiHeader.biBitCount,
                                             pbmi->bmiHeader.biCompression),
                                pbmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
-                               pbmi->bmiHeader.biSizeImage,
+                               cjMaxBits,
                                pvBits,
                                0);
 
