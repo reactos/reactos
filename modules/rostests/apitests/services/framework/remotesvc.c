@@ -27,6 +27,7 @@ static void
 _DoDLLInjection()
 {
     DWORD cbDLLPath;
+    DWORD res;
     HANDLE hProcess = NULL;
     HANDLE hSnapshot = INVALID_HANDLE_VALUE;
     HANDLE hThread = NULL;
@@ -120,7 +121,9 @@ _DoDLLInjection()
     }
     while (Process32NextW(hSnapshot, &pe));
 
-    WaitForSingleObject(hThread, 10000);
+    res = WaitForSingleObject(hThread, 10000);
+    if (res != WAIT_OBJECT_0)
+        DPRINT("WaitForSingleObject 0x%x.\n", res);
 done:
     if (pLoadLibraryArgument != NULL)
         VirtualFreeEx(hProcess, pLoadLibraryArgument, 0, MEM_RELEASE);

@@ -73,6 +73,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     // Run the test.
     run_test(szTestName);
 
+    fflush(fpStdout);
+
     // Restore stdout to the previous value.
     fclose(fpStdout);
     _dup2(iOldStdout, _fileno(stdout));
