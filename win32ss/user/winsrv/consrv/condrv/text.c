@@ -943,7 +943,7 @@ IntWriteConsoleOutputStringUnicode(
     OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    LPWSTR WriteBuffer = StringBuffer;
+    PWCHAR WriteBuffer = StringBuffer;
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
     BOOL bCJK = Console->IsCJK;
@@ -1016,7 +1016,7 @@ IntWriteConsoleOutputStringAscii(
     OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status;
-    LPWSTR tmpString;
+    PWCHAR tmpString;
     ULONG Length;
 
     if (!StringBuffer)
