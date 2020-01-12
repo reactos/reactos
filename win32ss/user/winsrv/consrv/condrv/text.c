@@ -735,7 +735,7 @@ IntReadConsoleOutputStringAscii(IN PCONSOLE Console,
     SHORT Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
     ULONG i;
     PCHAR_INFO Ptr;
-    BOOL bCJK = Console->IsCJK;
+    BOOLEAN bCJK = Console->IsCJK;
 
     for (i = 0; i < NumCodesToRead; ++i)
     {
@@ -792,7 +792,7 @@ IntReadConsoleOutputStringUnicode(IN PCONSOLE Console,
     SHORT Ypos = (ReadCoord->Y + Buffer->VirtualY) % Buffer->ScreenBufferSize.Y;
     ULONG i, nNumChars = 0;
     PCHAR_INFO Ptr;
-    BOOL bCJK = Console->IsCJK;
+    BOOLEAN bCJK = Console->IsCJK;
 
     for (i = 0; i < NumCodesToRead; ++i, ++nNumChars)
     {
@@ -946,7 +946,7 @@ IntWriteConsoleOutputStringUnicode(
     PWCHAR WriteBuffer = StringBuffer;
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
-    BOOL bCJK = Console->IsCJK;
+    BOOLEAN bCJK = Console->IsCJK;
 
     if (!StringBuffer)
         goto Cleanup;
@@ -1165,7 +1165,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
 {
     ULONG X, Y, i;
     PCHAR_INFO Ptr;
-    BOOL bLead, bFullwidth;
+    BOOLEAN bLead, bFullwidth;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL)
     {
