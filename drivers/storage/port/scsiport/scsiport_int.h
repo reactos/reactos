@@ -293,7 +293,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
     ULONG InterruptCount;
 
-    UCHAR POINTER_ALIGNMENT MiniPortDeviceExtension[1]; /* must be the last entry */
+    UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
 typedef struct _RESETBUS_PARAMS
