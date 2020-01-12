@@ -558,6 +558,17 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                     }
                     Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
                     Ptr->Char.UnicodeChar = L' ';
+
+                    if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+                    {
+                        /* Delete a full-width character */
+                        Ptr->Attributes  = Buff->ScreenDefaultAttrib;
+                        if (Buff->CursorPosition.X > 0)
+                            Buff->CursorPosition.X--;
+                        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+                        Ptr->Char.UnicodeChar = L' ';
+                    }
+
                     Ptr->Attributes  = Buff->ScreenDefaultAttrib;
                     UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
                     UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);

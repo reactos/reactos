@@ -991,17 +991,8 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
         /* Compose the current screen-buffer on-memory */
         if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
         {
-            if (IsCJKCodePage(ActiveBuffer->Header.Console->OutputCodePage))
-            {
-                /* For Chinese, Japanese and Korean */
-                GuiPaintTextModeBufferCJK((PTEXTMODE_SCREEN_BUFFER)ActiveBuffer,
-                                          GuiData, &ps.rcPaint, &rcPaint);
-            }
-            else
-            {
-                GuiPaintTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)ActiveBuffer,
-                                       GuiData, &ps.rcPaint, &rcPaint);
-            }
+            GuiPaintTextModeBuffer((PTEXTMODE_SCREEN_BUFFER)ActiveBuffer,
+                                   GuiData, &ps.rcPaint, &rcPaint);
         }
         else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
         {
