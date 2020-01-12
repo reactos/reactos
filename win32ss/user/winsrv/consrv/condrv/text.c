@@ -1032,7 +1032,7 @@ IntWriteConsoleOutputStringAscii(
                                  StringBuffer,
                                  NumCodesToWrite,
                                  NULL, 0);
-    tmpString = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+    tmpString = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
     if (!tmpString)
         return STATUS_NO_MEMORY;
 
@@ -1047,8 +1047,7 @@ IntWriteConsoleOutputStringAscii(
                                                 Length,
                                                 WriteCoord,
                                                 NumCodesWritten);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
+    ConsoleFreeHeap(tmpString);
     return Status;
 }
 
