@@ -977,9 +977,10 @@ IntWriteConsoleOutputStringUnicode(
         if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
             mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
+            /* A full-width character cannot cross a line boundary */
             if (X == Buffer->ScreenBufferSize.X - 1)
             {
-                /* new line */
+                /* go to next line */
                 X = 0;
                 ++Y;
                 if (Y == Buffer->ScreenBufferSize.Y)
