@@ -977,6 +977,18 @@ IntWriteConsoleOutputStringUnicode(
         if (bCJK && Ptr->Char.UnicodeChar >= 0x80 &&
             mk_wcwidth_cjk(Ptr->Char.UnicodeChar) == 2)
         {
+            if (X == Buffer->ScreenBufferSize.X - 1)
+            {
+                /* new line */
+                X = 0;
+                ++Y;
+                if (Y == Buffer->ScreenBufferSize.Y)
+                {
+                    Y = 0;
+                }
+                Ptr = ConioCoordToPointer(Buffer, X, Y);
+            }
+
             /* the leading byte */
             Ptr->Attributes = Buffer->ScreenDefaultAttrib;
             Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
