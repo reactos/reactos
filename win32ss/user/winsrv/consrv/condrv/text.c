@@ -1061,7 +1061,7 @@ IntWriteConsoleOutputStringAttribute(
     OUT PULONG NumCodesWritten OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    WORD *WriteBuffer = StringBuffer;
+    PWORD WriteBuffer = StringBuffer;
     ULONG i, X, Y, Length;
     PCHAR_INFO Ptr;
 
