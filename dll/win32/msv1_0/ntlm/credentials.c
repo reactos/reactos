@@ -1,23 +1,12 @@
 /*
- * Copyright 2011 Samuel Serapión
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
+ * PROJECT:     ReactOS ntlm implementation (msv1_0)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     ntlm credentials (header)
+ * COPYRIGHT:   Copyright 2011 Samuel Serapión
+ *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
  */
 
-#include "ntlmssp.h"
+#include "../precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -35,6 +24,7 @@ NtlmCredentialInitialize(VOID)
     return STATUS_SUCCESS;
 }
 
+#ifdef __UNUSED__
 BOOL
 NtlmCompareCredentials(IN NTLMSSP_CREDENTIAL Credential1,
                        IN NTLMSSP_CREDENTIAL Credential2)
@@ -42,6 +32,7 @@ NtlmCompareCredentials(IN NTLMSSP_CREDENTIAL Credential1,
     UNIMPLEMENTED;
     return FALSE;
 }
+#endif
 
 PNTLMSSP_CREDENTIAL
 NtlmReferenceCredential(IN ULONG_PTR Handle)
@@ -101,7 +92,7 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
         RemoveEntryList(&cred->Entry);
 
         /* delete object */
-        NtlmFree(cred);
+        MsvFree(cred);
     }
     LeaveCriticalSection(&CredentialCritSect);
 }
@@ -130,6 +121,7 @@ NtlmCredentialTerminate(VOID)
     return;
 }
 
+#ifdef __UNUSED__
 /* public functions */
 
 SECURITY_STATUS
@@ -474,3 +466,5 @@ FreeCredentialsHandle(PCredHandle phCredential)
 
     return SEC_E_OK;
 }
+
+#endif

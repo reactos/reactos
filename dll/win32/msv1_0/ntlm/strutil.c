@@ -8,8 +8,7 @@
  * COPYRIGHT:   Copyright 2019 Andreas Maier <staubim@quantentunnel.de>
  */
 
-#include <stdlib.h>
-#include <ntlmssp.h>
+#include "../precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);

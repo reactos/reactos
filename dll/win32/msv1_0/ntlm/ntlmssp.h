@@ -19,29 +19,9 @@
 #ifndef _NTLMSSP_H
 #define _NTLMSSP_H
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include "../precomp.h"
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
-#define SECURITY_WIN32
-#define _NO_KSECDD_IMPORT_
-#include <rpc.h>
-#include <sspi.h>
-#include <ntsecapi.h>
-#include <ntsecpkg.h>
-#include <ntstrsafe.h>
-#include <ntmsv1_0.h>
-#include <lm.h>
-#include <ciphers.h>
-
-#include "strutil.h"
-
-#include "wine/unicode.h"
-
+#ifdef __UNUSED__
 /* globals */
 extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
 extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
@@ -64,6 +44,7 @@ extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA
 #define NTLM_ENCRNDSESSION_KEY_LENGTH 16
 #define NTLM_SEALINGKEY_LENGTH 16
 #define NTLM_SIGNKEY_LENGTH 16
+#endif
 
 typedef struct _NTLMSSP_GLOBALS
 {
@@ -155,6 +136,7 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     NETSETUP_JOIN_STATUS lmJoinState;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
+#ifdef __UNUSED__
 typedef enum _NTLM_MODE {
     NtlmLsaMode = 1,
     NtlmUserMode
@@ -186,6 +168,7 @@ extern NTLM_MODE NtlmMode;
 #define NTLM_DEFAULT_TIMEOUT (5*60*1000) //context valid for 5 mins
 #define NTLM_MAX_BUF 1904
 #define NTLM_CRED_NULLSESSION SECPKG_CRED_RESERVED
+#endif
 
 typedef struct _NTLMSSP_CREDENTIAL
 {
@@ -209,6 +192,7 @@ typedef enum {
     PassedToService
 } NTLMSSP_CONTEXT_STATE, *PNTLMSSP_CONTEXT_STATE;
 
+#ifdef __UNUSED__
 /* context (client + server) base */
 typedef struct _NTLMSSP_CONTEXT_HDR
 {
@@ -291,6 +275,7 @@ typedef struct _NTLMSSP_CONTEXT_SVR
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
 /* private functions */
+#endif
 
 /* ntlmssp.c */
 BOOL
@@ -312,19 +297,7 @@ PNTLMSSP_GLOBALS getGlobals(VOID);
 PNTLMSSP_GLOBALS_CLI getGlobalsCli(VOID);
 PNTLMSSP_GLOBALS_SVR getGlobalsSvr(VOID);
 
-/* credentials.c */
-NTSTATUS
-NtlmCredentialInitialize(VOID);
-
-VOID
-NtlmCredentialTerminate(VOID);
-
-PNTLMSSP_CREDENTIAL
-NtlmReferenceCredential(IN ULONG_PTR Handle);
-
-VOID
-NtlmDereferenceCredential(IN ULONG_PTR Handle);
-
+#ifdef __UNUSED__
 /* context.c */
 
 NTSTATUS
@@ -420,5 +393,6 @@ NtlmPrintAvPairs(
 
 void
 PrintSignSealKeyInfo(PNTLMSSP_CONTEXT_MSG msg);
+#endif
 
 #endif

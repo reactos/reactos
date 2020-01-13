@@ -16,14 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "ntlmssp.h"
-#include "protocol.h"
+#include "../precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+#ifdef __UNUSED__
 /* globals */
 NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
+#endif
 
 NTLMSSP_GLOBALS ntlmGlobals;
 NTLMSSP_GLOBALS_CLI ntlmGlobalsCli;
@@ -92,6 +93,7 @@ getGlobalsSvr(VOID)
     return &ntlmGlobalsSvr;
 }
 
+#ifdef __UNUSED__
 /* private functions */
 
 BOOL
@@ -539,3 +541,4 @@ CompleteAuthToken(PCtxtHandle phContext,
         return SEC_E_INVALID_HANDLE;
     return SEC_E_OK;
 }
+#endif
