@@ -1488,11 +1488,11 @@ VOID
 typedef struct _DISPATCHER_CONTEXT
 {
     ULONG64 ControlPc;
-    PVOID ImageBase;
-    PVOID FunctionEntry;
-    PVOID EstablisherFrame;
+    ULONG64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG64 EstablisherFrame;
     ULONG64 TargetIp;
-    PVOID ContextRecord;
+    struct _CONTEXT *ContextRecord;
     PEXCEPTION_ROUTINE LanguageHandler;
     PVOID HandlerData;
     PUNWIND_HISTORY_TABLE HistoryTable;
