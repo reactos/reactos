@@ -47,19 +47,3 @@ void CDECL __setusermatherr(MSVCRT_matherr_func func)
   MSVCRT_default_matherr_func = func;
   TRACE(":new matherr handler %p\n", func);
 }
-
-
-#define _FPIEEE_RECORD void
-
-/*
- * @unimplemented
- */
-int _fpieee_flt(
-        unsigned long exception_code,
-        struct _EXCEPTION_POINTERS* ExceptionPointer,
-        int (*handler)(_FPIEEE_RECORD*)
-        )
-{
-    FIXME("Unimplemented!\n");
-    return 0;
-}
