@@ -99,6 +99,10 @@
 
 /* thiscall support */
 
+#ifdef _MSC_VER
+#define __thiscall __stdcall
+#endif
+
 #if defined(__i386__) && !defined(__MINGW32__)
 
 # ifdef _MSC_VER

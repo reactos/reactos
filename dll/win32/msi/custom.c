@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "wine/port.h"
+#include "wine/asm.h"
 
 #define COBJMACROS
 

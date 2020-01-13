@@ -16,6 +16,8 @@ extern "C" {
 #define EH_EXIT_UNWIND      0x04
 #define EH_STACK_INVALID    0x08
 #define EH_NESTED_CALL      0x10
+#define EH_TARGET_UNWIND    0x20
+#define EH_COLLIDED_UNWIND  0x40
 
 #define EXCEPTION_WINE_STUB       0x80000100
 #define EXCEPTION_WINE_ASSERTION  0x80000101
@@ -56,6 +58,7 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 
 #define __TRY _SEH2_TRY
 #define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
+#define __EXCEPT_CTX(func, ctx) _SEH2_EXCEPT((func)(GetExceptionInformation(), ctx))
 #define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
 #define __EXCEPT_ALL _SEH2_EXCEPT(_SEH_EXECUTE_HANDLER)
 #define __ENDTRY _SEH2_END
