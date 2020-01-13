@@ -244,100 +244,100 @@ AtaReadLogicalSectorsLBA(
 
     while (SectorCount > 0)
     {
-    /* Prevent sector count overflow, divide it into maximum possible chunks and loop each one */
-    if (UseLBA48)
-        BlockCount = min(SectorCount, USHRT_MAX);
-    else
-        BlockCount = min(SectorCount, UCHAR_MAX);
+        /* Prevent sector count overflow, divide it into maximum possible chunks and loop each one */
+        if (UseLBA48)
+            BlockCount = min(SectorCount, USHRT_MAX);
+        else
+            BlockCount = min(SectorCount, UCHAR_MAX);
 
-    /* Convert LBA into a format CHS if needed */
-    if (DeviceUnit->Flags & ATA_DEVICE_CHS)
-    {
-        ChsTemp = DeviceUnit->IdentifyData.SectorsPerTrack * DeviceUnit->IdentifyData.NumberOfHeads;
-        if (ChsTemp)
+        /* Convert LBA into a format CHS if needed */
+        if (DeviceUnit->Flags & ATA_DEVICE_CHS)
         {
-            Cylinder = SectorNumber / ChsTemp;
-            Head = (SectorNumber % ChsTemp) / DeviceUnit->IdentifyData.SectorsPerTrack;
-            Sector = (SectorNumber % DeviceUnit->IdentifyData.SectorsPerTrack) + 1;
+            ChsTemp = DeviceUnit->IdentifyData.SectorsPerTrack * DeviceUnit->IdentifyData.NumberOfHeads;
+            if (ChsTemp)
+            {
+                Cylinder = SectorNumber / ChsTemp;
+                Head = (SectorNumber % ChsTemp) / DeviceUnit->IdentifyData.SectorsPerTrack;
+                Sector = (SectorNumber % DeviceUnit->IdentifyData.SectorsPerTrack) + 1;
+            }
+            else
+            {
+                Cylinder = 0;
+                Head = 0;
+                Sector = 1;
+            }
+            Lba = (Sector & 0xFF) | ((Cylinder & 0xFFFFF) << 8) | ((Head & 0x0F) << 24);
         }
         else
         {
-            Cylinder = 0;
-            Head = 0;
-            Sector = 1;
+            Lba = SectorNumber;
         }
-        Lba = (Sector & 0xFF) | ((Cylinder & 0xFFFFF) << 8) | ((Head & 0x0F) << 24);
-    }
-    else
-    {
-        Lba = SectorNumber;
-    }
 
-    /* Select the drive */
-    if (!SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber))
-        return FALSE;
+        /* Select the drive */
+        if (!SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber))
+            return FALSE;
 
-    /* Disable interrupts */
+        /* Disable interrupts */
 #ifndef SARCH_PC98
-    AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_AltStatus, IDE_DC_DISABLE_INTERRUPTS);
-    StallExecutionProcessor(1);
+        AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_AltStatus, IDE_DC_DISABLE_INTERRUPTS);
+        StallExecutionProcessor(1);
 #endif
 
-    if (UseLBA48)
-    {
-        /* FIFO */
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, 0);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, ATA_PIO);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, (BlockCount & 0xFF) >> 8);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, BlockCount & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, (Lba >> 24) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, Lba & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 32) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 8) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 40) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 16) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_DriveSelect,
-                     IDE_USE_LBA | (DeviceUnit->DeviceNumber ? IDE_DRIVE_2 : IDE_DRIVE_1));
-        Command = IDE_COMMAND_READ_EXT;
-    }
-    else
-    {
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, ATA_PIO);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, BlockCount & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, Lba & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 8) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 16) & 0xFF);
-        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_DriveSelect,
-                     ((Lba >> 24) & 0x0F) |
-                     (DeviceUnit->Flags & ATA_DEVICE_CHS ? 0x00 : IDE_USE_LBA) |
-                     (DeviceUnit->DeviceNumber ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1));
-        Command = IDE_COMMAND_READ;
-    }
-
-    /* Send read command */
-    AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Command, Command);
-    StallExecutionProcessor(5);
-
-    for (RemainingBlockCount = BlockCount; RemainingBlockCount > 0; --RemainingBlockCount)
-    {
-        /* Wait for ready to transfer data block */
-        if (!WaitForFlags(DeviceUnit->Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_ERROR),
-                          IDE_STATUS_DRQ, ATA_READ_TIMEOUT))
+        if (UseLBA48)
         {
-            ERR("AtaReadLogicalSectorsLBA() failed. Status: 0x%02x, Error: 0x%02x\n",
-                AtaReadPort(DeviceUnit->Channel, IDX_IO1_i_Status),
-                AtaReadPort(DeviceUnit->Channel, IDX_IO1_i_Error));
-            return FALSE;
+            /* FIFO */
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, 0);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, ATA_PIO);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, (BlockCount & 0xFF) >> 8);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, BlockCount & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, (Lba >> 24) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, Lba & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 32) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 8) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 40) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 16) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_DriveSelect,
+                         IDE_USE_LBA | (DeviceUnit->DeviceNumber ? IDE_DRIVE_2 : IDE_DRIVE_1));
+            Command = IDE_COMMAND_READ_EXT;
+        }
+        else
+        {
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, ATA_PIO);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, BlockCount & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, Lba & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderLow, (Lba >> 8) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_CylinderHigh, (Lba >> 16) & 0xFF);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_DriveSelect,
+                         ((Lba >> 24) & 0x0F) |
+                         (DeviceUnit->Flags & ATA_DEVICE_CHS ? 0x00 : IDE_USE_LBA) |
+                         (DeviceUnit->DeviceNumber ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1));
+            Command = IDE_COMMAND_READ;
         }
 
-        /* Transfer the data block */
-        AtaReadBuffer(DeviceUnit->Channel, Buffer, DeviceUnit->SectorSize);
+        /* Send read command */
+        AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Command, Command);
+        StallExecutionProcessor(5);
 
-        Buffer = (PVOID)((ULONG_PTR)Buffer + DeviceUnit->SectorSize);
-    }
+        for (RemainingBlockCount = BlockCount; RemainingBlockCount > 0; --RemainingBlockCount)
+        {
+            /* Wait for ready to transfer data block */
+            if (!WaitForFlags(DeviceUnit->Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_ERROR),
+                              IDE_STATUS_DRQ, ATA_READ_TIMEOUT))
+            {
+                ERR("AtaReadLogicalSectorsLBA() failed. Status: 0x%02x, Error: 0x%02x\n",
+                    AtaReadPort(DeviceUnit->Channel, IDX_IO1_i_Status),
+                    AtaReadPort(DeviceUnit->Channel, IDX_IO1_i_Error));
+                return FALSE;
+            }
 
-    SectorNumber += BlockCount;
-    SectorCount -= BlockCount;
+            /* Transfer the data block */
+            AtaReadBuffer(DeviceUnit->Channel, Buffer, DeviceUnit->SectorSize);
+
+            Buffer = (PVOID)((ULONG_PTR)Buffer + DeviceUnit->SectorSize);
+        }
+
+        SectorNumber += BlockCount;
+        SectorCount -= BlockCount;
     }
 
     return TRUE;
