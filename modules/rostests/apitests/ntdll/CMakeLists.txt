@@ -129,9 +129,9 @@ if(MSVC_IDE)
 endif()
 
 # RTL tests with static linkage
-add_executable(rtl_apitest ${RTL_SOURCE} ${ntdll_apitest_asm} testlist.c rtl/libsupp.c)
-add_target_compile_flags(rtl_apitest "-D_RTL_TEST -D_NTSYSTEM_")
-target_link_libraries(rtl_apitest wine uuid ${PSEH_LIB} rtl)
-set_module_type(rtl_apitest win32cui)
-add_importlibs(rtl_apitest msvcrt advapi32 kernel32 ntdll)
+#add_executable(rtl_apitest ${RTL_SOURCE} ${ntdll_apitest_asm} testlist.c rtl/libsupp.c)
+#add_target_compile_flags(rtl_apitest "-D_RTL_TEST -D_NTSYSTEM_")
+#target_link_libraries(rtl_apitest wine uuid ${PSEH_LIB} rtl)
+#set_module_type(rtl_apitest win32cui)
+#add_importlibs(rtl_apitest msvcrt advapi32 kernel32 ntdll)
 
