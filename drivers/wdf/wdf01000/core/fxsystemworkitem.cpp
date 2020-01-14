@@ -214,3 +214,122 @@ FxSystemWorkItem::WorkItemHandler()
 
     return;
 }
+
+//
+// Public constructors
+//
+_Must_inspect_result_
+NTSTATUS
+FxSystemWorkItem::_Create(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PVOID              WdmObject,
+    __out FxSystemWorkItem** pObject
+    )
+{
+    NTSTATUS status;
+    FxSystemWorkItem* wi;
+
+    wi = new(FxDriverGlobals) FxSystemWorkItem(FxDriverGlobals);
+    if (wi == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    status = wi->Initialize(WdmObject);
+    if (!NT_SUCCESS(status))
+    {
+        wi->Release();
+        return status;
+    }
+
+    *pObject = wi;
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxSystemWorkItem::Initialize(
+    __in PVOID WdmObject
+    )
+{
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    NTSTATUS status;
+
+    //
+    // Mark this object as passive level to ensure that Dispose() is passive
+    //
+    MarkPassiveCallbacks(ObjectDoNotLock);
+
+    MarkDisposeOverride(ObjectDoNotLock);
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    status = m_WorkItemCompleted.Initialize(NotificationEvent, TRUE);
+    if (!NT_SUCCESS(status)) {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Could not initialize m_WorkItemCompleted event "
+                            "status %!status!", status);
+        return status;
+    }
+
+    status = m_RemoveEvent.Initialize(SynchronizationEvent, FALSE);
+    if(!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Could not initialize m_RemoveEvent event "
+                            "status %!status!", status);
+        return status;
+    }
+#endif
+
+    //
+    // Allocate the PIO_WORKITEM we will re-use
+    //
+    status = m_WorkItem.Allocate((MdDeviceObject) WdmObject);
+    if(!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Could not allocate IoWorkItem, insufficient resources");
+        return status;
+    }
+
+    ASSERT(m_WorkItem.GetWorkItem() != NULL);
+    
+    return STATUS_SUCCESS;
+}
+
+//
+// Wait until any outstanding WorkItem has completed safely
+//
+// Can only be called after Delete
+//
+// The caller must call AddRef() and Release() around this call
+// to ensure the FxSystemWorkItem remains valid while it is doing the
+// wait.
+//
+VOID
+FxSystemWorkItem::WaitForExit(
+    )
+{
+    NTSTATUS Status;
+
+    //
+    // Wait for current workitem to complete processing
+    //
+    Status = m_WorkItemCompleted.EnterCRAndWaitAndLeave();
+
+    ASSERT(NT_SUCCESS(Status));
+    UNREFERENCED_PARAMETER(Status);
+
+    //
+    // This assert is not under a lock, but the code in WorkItemHandler()
+    // clears m_Enqueued under the lock, thus releasing it with a memory
+    // barrier. Since we have ensured above that no one can re-queue a request
+    // due to m_RunningDown, we should not hit this assert unless there
+    // is a code problem with wakeup occuring while an outstanding
+    // workitem is running.
+    //
+    ASSERT(m_Enqueued == FALSE);
+
+    return;
+}

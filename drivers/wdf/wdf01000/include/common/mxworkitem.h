@@ -68,6 +68,25 @@ public:
             );        
     }
 
+    _Must_inspect_result_
+    __inline
+    NTSTATUS
+    Allocate(
+        __in MdDeviceObject DeviceObject,
+        __in_opt PVOID ThreadPoolEnv = NULL
+        )
+    {
+        UNREFERENCED_PARAMETER(ThreadPoolEnv);
+    
+        m_WorkItem = IoAllocateWorkItem(DeviceObject);
+        if (NULL == m_WorkItem)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
 protected:
     MdWorkItem m_WorkItem;
 

@@ -135,6 +135,22 @@ public:
         }
     }
 
+    static
+    _Must_inspect_result_
+    NTSTATUS
+    _Create(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in PVOID              WdmObject,
+        __out FxSystemWorkItem** pObject
+        );
+
+    VOID
+    WaitForExit(
+        VOID
+        );
+
+    DECLARE_INTERNAL_NEW_OPERATOR();
+
 private:
 
     FxSystemWorkItem(
@@ -154,6 +170,12 @@ private:
 
     VOID
     WorkItemHandler(
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    Initialize(
+        __in PVOID WdmObject
         );
 
 };
