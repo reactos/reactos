@@ -32,7 +32,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatikus elrendezés", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Ikonok igazitása", FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Ikonok igazítása", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Frissítés", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Kivágás", IDM_CUT
         MENUITEM "Másolás", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Beillesztés", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Parancsikon létrehozása", IDM_CREATELINK
         MENUITEM "Törlés", IDM_DELETE
@@ -84,7 +84,7 @@ BEGIN
         MENUITEM "&Move here", IDM_MOVEHERE
         MENUITEM "Create &shortcuts here", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Mégse", 0
     END
 END
 
@@ -130,7 +130,7 @@ END
 
 IDD_ABOUT DIALOGEX 0, 0, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About %s"
+CAPTION "%s névjegye"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
@@ -178,7 +178,7 @@ END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Parancsikon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", IDC_SHORTCUT_ICON, 8, 8, 21, 20, WS_VISIBLE
@@ -256,7 +256,7 @@ BEGIN
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Type of file:", 14004, 8, 35, 50, 10
-    CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
+    CONTROL "Fájl", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Opens with:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
     PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -288,9 +288,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "File version: ", 14000, 10, 10, 55, 10
+    LTEXT "Fájlverzió: ", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Description: ", 14002, 10, 27, 45, 10
+    LTEXT "Leírás: ", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Copyright: ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
@@ -377,7 +377,7 @@ BEGIN
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
     PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
     PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Cancel", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "Mégse", 14008, 122, 170, 60, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -401,13 +401,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
-    LTEXT "File:    ", 14001, 44, 25, 188, 20
+    LTEXT "Fájl:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programs", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 206, 236, 50, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 206, 236, 50, 14
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -494,7 +494,7 @@ BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Are you sure you want to log off?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Log Off", IDOK, 49, 38, 43, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 99, 38, 43, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -505,7 +505,7 @@ BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Are you sure you want to disconnect?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "&Disconnect", IDOK, 47, 38, 47, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 99, 38, 47, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -532,7 +532,7 @@ BEGIN
     LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 160, 186, 60, 14
 END
 
 IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
@@ -548,7 +548,7 @@ BEGIN
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 160, 185, 60, 14
 END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
@@ -575,7 +575,7 @@ BEGIN
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
 END
 
@@ -607,7 +607,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
     GROUPBOX "Check disk options", -1, 7, 6, 179, 40
-    PUSHBUTTON "Cancel", IDCANCEL, 128, 95, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
@@ -625,7 +625,7 @@ BEGIN
     LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 135, 179, 50, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -638,8 +638,8 @@ BEGIN
 another application. Modifying this file might damage your\n\
 system or make it less functional.\n\n\
 Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    DEFPUSHBUTTON "Igen", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Nem", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
@@ -653,7 +653,7 @@ BEGIN
     LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
@@ -725,14 +725,14 @@ BEGIN
     IDS_SHV_COLUMN_DISK_AVAILABLE "Rendelkezésre álló hely"
     IDS_SHV_COLUMN_OWNER "Tulajdonos"
     IDS_SHV_COLUMN_GROUP "Csoport"
-    IDS_SHV_COLUMN_FILENAME "Filename"
-    IDS_SHV_COLUMN_CATEGORY "Category"
+    IDS_SHV_COLUMN_FILENAME "Fájlnév"
+    IDS_SHV_COLUMN_CATEGORY "Kategória"
     IDS_SHV_COLUMN_DELFROM "Original location"
     IDS_SHV_COLUMN_DELDATE "Date deleted"
     IDS_SHV_COLUMN_FONTTYPE "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_COLUMN_WORKGROUP "Munkacsoport"
     IDS_SHV_COLUMN_NETLOCATION "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS "Documents"
+    IDS_SHV_COLUMN_DOCUMENTS "Dokumentumok"
     IDS_SHV_COLUMN_STATUS "Status"
     IDS_SHV_COLUMN_COMMENTS "Megjegyzések"
     IDS_SHV_COLUMN_LOCATION "Location"
@@ -741,8 +741,8 @@ BEGIN
     /* special folders */
     IDS_DESKTOP "Asztal"
     IDS_MYCOMPUTER "Számítógép"
-    IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
-    IDS_CONTROLPANEL "Control Panel"
+    IDS_RECYCLEBIN_FOLDER_NAME "Lomtár"
+    IDS_CONTROLPANEL "Vezérlőpult"
     IDS_ADMINISTRATIVETOOLS "Administrative Tools"
 
     /* special folders descriptions */
@@ -765,9 +765,9 @@ BEGIN
     IDS_CUT "Kivágás"
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename"
-    IDS_PASTE "Paste"
-    IDS_EJECT "Eject"
+    IDS_RENAME "Átnevezés"
+    IDS_PASTE "Beillesztés"
+    IDS_EJECT "Kiadás"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_DESKLINK "Desktop (Create shortcut)"
@@ -796,18 +796,18 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Állomány felülírása"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
+    IDS_FILEOOP_COPYING "Másolás..."
+    IDS_FILEOOP_MOVING "Áthelyezés..."
+    IDS_FILEOOP_DELETING "Törlés..."
     IDS_FILEOOP_FROM_TO "From %1 to %2"
     IDS_FILEOOP_FROM "From %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Újraindítás"
-    IDS_RESTART_PROMPT "Újra szeretnéd indítani a rendszert?"
+    IDS_RESTART_PROMPT "Újra szeretné indítani a rendszert?"
     IDS_SHUTDOWN_TITLE "Kikapcsolás"
-    IDS_SHUTDOWN_PROMPT "Kiakarod kapcsolni számítógépét?"
+    IDS_SHUTDOWN_PROMPT "Ki szeretné kapcsolni számítógépét?"
     
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
@@ -818,42 +818,42 @@ BEGIN
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
     IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
     IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0Minden fájl (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PROGRAMS "Start menü\\Programok"
     IDS_PERSONAL "Dokumentumok"
     IDS_FAVORITES "Kedvencek"
-    IDS_STARTUP "Start Menu\\Programs\\Automatikus indítás" /* MS style: Indítópult */
+    IDS_STARTUP "Start menü\\Programok\\Automatikus indítás" /* MS style: Indítópult */
     IDS_RECENT "Recent"
     IDS_SENDTO "SendTo"
-    IDS_STARTMENU "Start Menu"
+    IDS_STARTMENU "Start menü"
     IDS_MYMUSIC "Zenék"
     IDS_MYVIDEO "Videók"
     IDS_DESKTOPDIRECTORY "Asztal"
     IDS_NETHOOD "NetHood"
-    IDS_TEMPLATES "Templates"
-    IDS_APPDATA "Application Data"
+    IDS_TEMPLATES "Sablonok"
+    IDS_APPDATA "Alkalmazás adatok"
     IDS_PRINTHOOD "PrintHood"
-    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_LOCAL_APPDATA "Local Settings\\Alkalmazás adatok"
     IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES "Cookies"
+    IDS_COOKIES "Sütik"
     IDS_HISTORY "Local Settings\\History"
-    IDS_PROGRAM_FILES "Program Files"
+    IDS_PROGRAM_FILES "Programfájlok"
     IDS_MYPICTURES "Képek"
-    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_PROGRAM_FILES_COMMON "Programfájlok\\Common Files"
     IDS_COMMON_DOCUMENTS "Dokumentumok"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Felügyeleti eszközök"
+    IDS_ADMINTOOLS "Start menü\\Programok\\Felügyeleti eszközök"
     IDS_COMMON_MUSIC "Dokumentumok\\Zenék"
     IDS_COMMON_PICTURES "Dokumentumok\\Képek"
     IDS_COMMON_VIDEO "Dokumentumok\\Videók"
-    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_CDBURN_AREA "Local Settings\\Alkalmazás adatok\\Microsoft\\CD Burning"
     IDS_NETWORKPLACE "My Network Places"
 
-    IDS_NEWFOLDER "New Folder"
+    IDS_NEWFOLDER "Új mappa"
 
-    IDS_DRIVE_FIXED "Local Disk"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_FIXED "Helyi lemez"
+    IDS_DRIVE_CDROM "CD-meghajtó"
     IDS_DRIVE_NETWORK "Network Disk"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
     IDS_DRIVE_REMOVABLE "Removable Disk"
@@ -870,13 +870,13 @@ BEGIN
     FCIDM_SHVIEW_NEW "Ú&j"
     FCIDM_SHVIEW_NEWFOLDER "&Mappa"
     FCIDM_SHVIEW_NEWLINK "&Parancsikon"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_FOLDER_OPTIONS "Mappabeállítások"
     IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
     IDS_RECYCLEBIN_DISKSPACE "Space Available"
     IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
     IDS_PICK_ICON_TITLE "Choose Icon"
-    IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Ikonfájlok (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Minden fájl (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0Minden fájl (*.*)\0*.*\0"
 
     IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
     IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
@@ -887,32 +887,32 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
-    IDS_BAT_FILE "ReactOS Batch File"
-    IDS_CMD_FILE "ReactOS Command Script"
-    IDS_COM_FILE "DOS Application"
-    IDS_CPL_FILE "Control Panel Item"
-    IDS_CUR_FILE "Cursor"
+    IDS_BAT_FILE "ReactOS kötegfájl"
+    IDS_CMD_FILE "ReactOS parancsfájl"
+    IDS_COM_FILE "DOS alkalmazás"
+    IDS_CPL_FILE "Vezérlőpultelem"
+    IDS_CUR_FILE "Kurzor"
     IDS_DB__FILE "Database File"
-    IDS_DLL_FILE "Application Extension"
-    IDS_DRV_FILE "Device Driver"
+    IDS_DLL_FILE "Alkalmazáskiterjesztés"
+    IDS_DRV_FILE "Eszközillesztő"
     IDS_EFI_FILE "Extensible Firmware Interface Executable"
-    IDS_EXE_FILE "Application"
+    IDS_EXE_FILE "Alkalmazás"
     IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
+    IDS_OCX_FILE "ActiveX-vezérlő"
     IDS_TLB_FILE "Type Library"
-    IDS_FON_FILE "Font file"
-    IDS_TTF_FILE "TrueType Font file"
-    IDS_OTF_FILE "OpenType Font file"
-    IDS_HLP_FILE "Help File"
-    IDS_ICO_FILE "Icon"
-    IDS_INI_FILE "Configuration Settings"
-    IDS_LNK_FILE "Shortcut"
+    IDS_FON_FILE "Betűkészletfájl"
+    IDS_TTF_FILE "TrueType betűkészletfájl"
+    IDS_OTF_FILE "OpenType betűkészletfájl"
+    IDS_HLP_FILE "Súgófájl"
+    IDS_ICO_FILE "Ikon"
+    IDS_INI_FILE "Konfigurációs beállítások"
+    IDS_LNK_FILE "Parancsikon"
     IDS_NT__FILE "NT DOS32 Configuration File"
     IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
-    IDS_SYS_FILE "System File"
-    IDS_VXD_FILE "Virtual Device Driver"
-    IDS_ANY_FILE "%s-file"
+    IDS_SCR_FILE "Képernyőkímélő"
+    IDS_SYS_FILE "Rendszerfájl"
+    IDS_VXD_FILE "Virtuális eszközillesztő"
+    IDS_ANY_FILE "%s fájl"
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"
@@ -922,8 +922,8 @@ BEGIN
     IDS_PRINT_VERB "Print"
     IDS_CMD_VERB "Command Prompt here"
 
-    IDS_FILE_FOLDER "%u Files, %u Folders"
-    IDS_PRINTERS "Printers"
+    IDS_FILE_FOLDER "%u fájl, %u mappa"
+    IDS_PRINTERS "Nyomtatók"
     IDS_FONTS "Fonts"
     IDS_INSTALLNEWFONT "Install New Font..."
 
@@ -941,13 +941,13 @@ BEGIN
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "%s File"
 
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "bájt"
+    IDS_UNKNOWN_APP "Ismeretlen alkalmazás"
+    IDS_EXE_DESCRIPTION "Leírás:"
 
-    IDS_MENU_EMPTY "(Empty)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_MENU_EMPTY "(üres)"
+    IDS_OBJECTS "%d elem"
+    IDS_OBJECTS_SELECTED "%d kijelölt elem"
 
     IDS_ADVANCED_FOLDER "Files and Folders"
     IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
