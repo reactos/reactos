@@ -394,6 +394,10 @@ XboxVmpMapVideoMemory(
 
     /* Reuse framebuffer that was set up by firmware */
     FrameBuffer.QuadPart = *((PULONG)((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET));
+    /* Framebuffer address offset value is coming from the GPU within
+     * memory mapped I/O address space, so we're comparing only low
+     * 28 bits of the address within actual RAM address space */
+    FrameBuffer.QuadPart &= 0x0FFFFFFF;
     if (FrameBuffer.QuadPart != 0x3C00000 && FrameBuffer.QuadPart != 0x7C00000)
     {
         /* Check framebuffer address (high 4 MB of either 64 or 128 MB RAM) */
@@ -402,6 +406,7 @@ XboxVmpMapVideoMemory(
     /* Verify that framebuffer address is page-aligned */
     ASSERT(FrameBuffer.QuadPart % PAGE_SIZE == 0);
 
+    /* Return the address back to GPU memory mapped I/O */
     FrameBuffer.QuadPart += DeviceExtension->PhysFrameBufferStart.QuadPart;
     MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
     /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
