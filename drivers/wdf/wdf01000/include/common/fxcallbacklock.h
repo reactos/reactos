@@ -4,6 +4,7 @@
 
 #include "common/fxstump.h"
 #include "common/mxgeneral.h"
+#include "common/fxverifierlock.h"
 
 //
 // Callback locks track current owner. This is used to determine if a callback
@@ -38,6 +39,51 @@ public:
 
     virtual ~FxCallbackLock()
     {
+    }
+
+    virtual
+    void
+    Lock(
+        __out PKIRQL PreviousIrql
+        ) = 0;
+
+    virtual
+    void
+    Unlock(
+        __in KIRQL PreviousIrql
+        ) = 0;
+
+    virtual
+    BOOLEAN
+    IsOwner(
+        VOID
+        ) = 0;
+
+
+    VOID
+    CheckOwnership(
+        VOID
+        )
+    {
+        PFX_DRIVER_GLOBALS pFxDriverGlobals;
+
+        pFxDriverGlobals = GetDriverGlobals();
+
+        //
+        // If verify locks is on, catch drivers
+        // returning with the lock released.
+        //
+        if (pFxDriverGlobals->FxVerifierLock)
+        {
+            if (IsOwner() == FALSE)
+            {
+                DoTraceLevelMessage(
+                    pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                    "Callback: Driver released the callback lock 0x%p",
+                    this);
+                FxVerifierDbgBreakPoint(pFxDriverGlobals);
+            }
+        }
     }
 
 };
