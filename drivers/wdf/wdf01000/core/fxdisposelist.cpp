@@ -138,3 +138,110 @@ FxDisposeList::_WorkItemThunk(
 
     pThis->Unlock(irql);
 }
+
+NTSTATUS
+FxDisposeList::_Create(
+    PFX_DRIVER_GLOBALS FxDriverGlobals,
+    PVOID              WdmObject,
+    FxDisposeList**    pObject
+    )
+{
+    FxDisposeList* list;
+    NTSTATUS status;
+
+    *pObject = NULL;
+
+    list = new(FxDriverGlobals) FxDisposeList(FxDriverGlobals);
+
+    if (list == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    status = list->Initialize(WdmObject);
+
+    if (NT_SUCCESS(status))
+    {
+        *pObject = list;
+    }
+    else
+    {
+        list->DeleteFromFailedCreate();
+    }
+
+    return status;
+}
+
+NTSTATUS
+FxDisposeList::Initialize(
+    PVOID          WdmObject
+    )
+{
+    NTSTATUS status;
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+
+    MarkDisposeOverride(ObjectDoNotLock);   
+
+    status = FxSystemWorkItem::_Create(FxDriverGlobals,
+                                      WdmObject,
+                                      &m_SystemWorkItem
+                                      );
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                            "Could not allocate workitem: %!STATUS!", status);
+        return status;
+    }
+
+    m_WdmObject = WdmObject;
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+FxDisposeList::WaitForEmpty(
+    )
+
+/*++
+
+Routine Description:
+
+    Wait until the list goes empty with no items.
+
+    Note, on wakeup, new items could have been added, only the assurance
+    is that the list at least went empty for a moment.
+
+    This allows a waiter to wait for all previous Add() items to
+    finishing processing before return.
+
+Arguments:
+
+Returns:
+
+--*/
+
+{
+    KIRQL irql;
+    BOOLEAN wait;
+
+    Lock(&irql);
+
+    wait = TRUE;
+    
+    if (m_WorkItemThread == Mx::MxGetCurrentThread())
+    {
+        ASSERT(FALSE);
+        DrainListLocked(&irql);
+        wait = FALSE;
+    }
+
+    Unlock(irql);
+
+    if (wait)
+    {
+        m_SystemWorkItem->WaitForExit();
+    }
+
+    // Should only be true for an empty list
+    ASSERT(m_List.Next == NULL);    
+}

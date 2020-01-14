@@ -60,6 +60,19 @@ public:
     ~FxDisposeList(
         );
 
+    static
+    NTSTATUS
+    _Create(
+        PFX_DRIVER_GLOBALS FxDriverGlobals,
+        PVOID              WdmObject,
+        FxDisposeList**    pObject
+        );
+
+    NTSTATUS
+    Initialize(
+        PVOID wdmObject
+        );
+
     //
     // Add an object to the list.
     //
@@ -69,6 +82,16 @@ public:
     Add(
         FxObject* object
         );
+
+    //
+    // Waits until the list is empty
+    //
+    VOID
+    WaitForEmpty(
+        VOID
+        );
+
+    DECLARE_INTERNAL_NEW_OPERATOR();
 
 private:
 
