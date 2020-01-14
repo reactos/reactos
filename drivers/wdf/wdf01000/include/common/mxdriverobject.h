@@ -3,6 +3,11 @@
 
 #include "common/mxgeneral.h"
 
+
+typedef DRIVER_ADD_DEVICE MdDriverAddDeviceType, *MdDriverAddDevice;
+typedef DRIVER_UNLOAD MdDriverUnloadType, *MdDriverUnload;
+typedef DRIVER_DISPATCH MdDriverDispatchType, *MdDriverDispatch;
+
 //
 // Forward declare enum 
 //
@@ -32,6 +37,42 @@ public:
         ) :
         m_DriverObject(NULL)
     {
+    }
+
+    __inline
+    MdDriverObject
+    GetObject(
+        VOID
+        )
+    {
+        return m_DriverObject;
+    }
+
+    VOID
+    SetDriverExtensionAddDevice(
+        _In_ MdDriverAddDevice Value
+        )
+    {
+        m_DriverObject->DriverExtension->AddDevice = Value;
+    }
+
+    __inline
+    VOID
+    SetDriverUnload(
+        _In_ MdDriverUnload Value
+        )
+    {
+        m_DriverObject->DriverUnload = Value;
+    }
+
+    __inline
+    VOID
+    SetMajorFunction(
+        _In_ UCHAR i,
+        _In_ MdDriverDispatch Value
+        )
+    {
+        m_DriverObject->MajorFunction[i] = Value;
     }
 
 };

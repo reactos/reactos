@@ -984,3 +984,107 @@ Return Value:
         return PerformDisposingDisposeChildrenLocked(OldIrql, CanDefer);
     }
 }
+
+BOOLEAN
+FxObject::EarlyDispose(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Public early dipose functionality.  Removes the object from the parent's
+    list of children.  This assumes the caller or someone else will eventually
+    invoke DeleteObject() on this object.
+
+Arguments:
+    None
+
+Return Value:
+    BOOLEAN - same semantic as DisposeChildrenWorker.
+        TRUE - dispose of this object and its children occurred synchronously in
+               this call
+        FALSE - the dispose was pended to a work item
+
+  --*/
+{
+    NTSTATUS status;
+    KIRQL oldIrql;
+    BOOLEAN result;
+
+    //
+    // By default, we assume a synchronous diposal
+    //
+    result = TRUE;
+
+    m_SpinLock.Acquire(&oldIrql);
+
+    switch(m_ObjectState) {
+    case FxObjectStateCreated:
+        //
+        // If we have a parent object, notify it of our deletion
+        //
+        if (m_ParentObject != NULL)
+        {
+            //
+            // We call this holding our spinlock, the hierachy is child->parent
+            // when the lock is held across calls
+            //
+            status = m_ParentObject->RemoveChildObjectInternal(this);
+
+            if (status == STATUS_DELETE_PENDING)
+            {
+
+                //
+                // We won the race to ourselves (still FxObjectStateCreated),
+                // but lost the race on the parent who is going to try and
+                // dispose us through the PerformEarlyDipose().
+                //
+                // This is OK since the state machine protects us from
+                // doing improper actions, but we must not rundown and
+                // release our reference count till the parent object
+                // eventually calls our ParentDeleteEvent().
+                //
+                // So we note the state, and return waiting for the
+                // parent to dispose us.
+                //
+
+                //
+                // Wait for our parent to come in and dispose us through
+                // the PerformEarlyDipose().
+                //
+                SetObjectStateLocked(FxObjectStateWaitingForEarlyDispose);
+                m_SpinLock.Release(oldIrql);
+
+                return FALSE;
+            }
+            else
+            {
+                //
+                // We no longer have a parent object
+                //
+                m_ParentObject = NULL;
+            }
+        }
+
+        //
+        // Mark that this object was early disposed externally wrt the
+        // state machine.
+        //
+        m_ObjectFlags |= FXOBJECT_FLAGS_EARLY_DISPOSED_EXT;
+
+        //
+        // Start the dispose path.  This call will release the spinlock.
+        //
+        result = PerformEarlyDisposeWorkerAndUnlock(oldIrql, TRUE);
+        break;
+
+    default:
+        //
+        // Not in the right state for an early dispose
+        //
+        result = FALSE;
+        m_SpinLock.Release(oldIrql);
+    }
+
+    return result;
+}

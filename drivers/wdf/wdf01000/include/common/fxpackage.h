@@ -1,0 +1,35 @@
+#ifndef _FXPACKAGE_H_
+#define _FXPACKAGE_H_
+
+#include "common/fxnonpagedobject.h"
+#include "common/fxirp.h"
+
+class FxPackage : public FxNonPagedObject
+{
+public:
+
+    FxPackage(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in CfxDevice *Device,
+        __in WDFTYPE Type
+        );
+
+    virtual
+    NTSTATUS
+    Dispatch(
+        __in MdIrp Irp
+        ) = 0;
+
+    __inline
+    CfxDevice*
+    GetDevice(
+        VOID
+        )
+    {
+        return m_Device;
+    }
+
+    DECLARE_INTERNAL_NEW_OPERATOR();
+};
+
+#endif // _FXPACKAGE_H_

@@ -86,6 +86,23 @@ class FxVerifierLock;
 class FxTagTracker;
 class FxDisposeList;
 
+#define DECLARE_INTERNAL_NEW_OPERATOR()                     \
+    PVOID                                                   \
+    __inline                                             \
+    operator new(                                           \
+        __in size_t Size,                                        \
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals                 \
+        )                                                   \
+    {                                                       \
+        return FxObjectHandleAlloc(FxDriverGlobals,         \
+                                   NonPagedPool,            \
+                                   Size,                    \
+                                   0,                       \
+                                   WDF_NO_OBJECT_ATTRIBUTES,\
+                                   0,                       \
+                                   FxObjectTypeInternal);   \
+    }
+
 struct FxObjectDebugExtension {
     FxTagTracker* TagTracker;
 
@@ -962,6 +979,77 @@ public:
         {
             return GET_CONTEXT_HEADER();
         }
+    }
+
+    VOID
+    MarkNoDeleteDDI(
+        __in FxObjectLockState State = ObjectLock
+        )
+    {
+        if (State == ObjectLock)
+        {
+            KIRQL irql;
+
+            m_SpinLock.Acquire(&irql);
+            m_ObjectFlags |= FXOBJECT_FLAGS_NODELETEDDI;
+            m_SpinLock.Release(irql);
+        }
+        else
+        {
+            m_ObjectFlags |= FXOBJECT_FLAGS_NODELETEDDI;
+        }
+    }
+
+    VOID
+    MarkDisposeOverride(
+        __in FxObjectLockState State = ObjectLock
+        )
+    {
+        if (State == ObjectLock)
+        {
+            KIRQL irql;
+
+            m_SpinLock.Acquire(&irql);
+            m_ObjectFlags |= FXOBJECT_FLAGS_DISPOSE_OVERRIDE;
+            m_SpinLock.Release(irql);
+        }
+        else
+        {
+            m_ObjectFlags |= FXOBJECT_FLAGS_DISPOSE_OVERRIDE;
+        }
+    }
+
+    BOOLEAN
+    EarlyDispose(
+        VOID
+        );
+
+    ULONG
+    __inline
+    AddRef(
+        __in_opt   PVOID Tag = NULL,
+        __in       LONG Line = 0,
+        __in_opt   PCSTR File = NULL
+        )
+    {
+        FxTagTracker* pTagTracker;
+        ULONG c;
+
+        c = InterlockedIncrement(&m_Refcnt);
+
+        //
+        // Catch the transition from 0 to 1.  Since the REF_OBJ starts off at 1,
+        // we should never have to increment to get to this value.
+        //
+        ASSERT(c > 1);
+
+        pTagTracker = GetTagTracker();
+        if (pTagTracker != NULL)
+        {
+            pTagTracker->UpdateTagHistory(Tag, Line, File, TagAddRef, c);
+        }
+
+        return c;
     }
 
 protected:
