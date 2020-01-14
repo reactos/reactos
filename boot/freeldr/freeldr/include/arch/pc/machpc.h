@@ -60,7 +60,7 @@ extern ULONG FrldrBootPartition;
 
 LONG DiskReportError(BOOLEAN bShowError);
 BOOLEAN DiskResetController(UCHAR DriveNumber);
-BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
+// BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
 
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
