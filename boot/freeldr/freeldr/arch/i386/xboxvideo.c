@@ -158,7 +158,10 @@ XboxGetFramebufferSize(PVOID Offset)
     {
         TRACE("i = %d, base_addr_low = 0x%p, MemoryMap->length_low = 0x%p\n", i, MemoryMap->base_addr_low, MemoryMap->length_low);
 
-        if (MemoryMap->base_addr_low == (ULONG)Offset && MemoryMap->base_addr_high == 0)
+        /* Framebuffer address offset value is coming from the GPU within
+         * memory mapped I/O address space, so we're comparing only low
+         * 28 bits of the address within actual RAM address space */
+        if (MemoryMap->base_addr_low == ((ULONG)Offset & 0x0FFFFFFF) && MemoryMap->base_addr_high == 0)
         {
             TRACE("Video memory found\n");
             return MemoryMap->length_low;
