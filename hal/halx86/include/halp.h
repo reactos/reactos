@@ -87,13 +87,17 @@ VOID
 #define GRAPHICS_MODE_12 0x12           /* 80x30	 8x16  640x480	 16/256K */
 
 #if defined(SARCH_XBOX)
+//
+// For some unknown reason the PIT of the Xbox is fixed at 1.125000 MHz,
+// which is ~5.7% lower than on the PC.
+//
 #define PIT_FREQUENCY 1125000
 #else
 //
 // Commonly stated as being 1.19318MHz
 //
 // See ISA System Architecture 3rd Edition (Tom Shanley, Don Anderson, John Swindle)
-// P. 471
+// p. 471
 //
 // However, the true value is closer to 1.19318181[...]81MHz since this is 1/3rd
 // of the NTSC color subcarrier frequency which runs at 3.57954545[...]45MHz.
