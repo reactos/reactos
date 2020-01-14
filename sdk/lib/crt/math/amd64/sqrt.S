@@ -30,7 +30,7 @@ sqrt:
 
     /* x is positive, now check if it is NaN by checking if the unsigned
        integer value is larger than the highest valid positive value. */
-    mov rcx, 7FF0000000000000h
+    mov rcx, HEX(7FF0000000000000)
     cmp rax, rcx
     ja short x_is_nan
 
