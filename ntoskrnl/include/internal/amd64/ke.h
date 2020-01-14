@@ -282,16 +282,16 @@ KeQueryInterruptHandler(IN ULONG Vector)
                    (ULONG64)Idt->OffsetLow);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiSendEOI(VOID)
 {
     /* Write 0 to the apic EOI register */
     *((volatile ULONG*)APIC_EOI_REGISTER) = 0;
 }
 
-VOID
 FORCEINLINE
+VOID
 KiEndInterrupt(IN KIRQL Irql,
                IN PKTRAP_FRAME TrapFrame)
 {
@@ -300,8 +300,8 @@ KiEndInterrupt(IN KIRQL Irql,
     //KeLowerIrql(Irql);
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Anything else but Ring 0 is Ring 3 */

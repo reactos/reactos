@@ -124,8 +124,8 @@
 #define ValidKernelPpe ValidKernelPde
 
 /* Convert an address to a corresponding PTE */
-PMMPTE
 FORCEINLINE
+PMMPTE
 _MiAddressToPte(PVOID Address)
 {
     ULONG64 Offset = (ULONG64)Address >> (PTI_SHIFT - 3);
@@ -135,8 +135,8 @@ _MiAddressToPte(PVOID Address)
 #define MiAddressToPte(x) _MiAddressToPte((PVOID)(x))
 
 /* Convert an address to a corresponding PDE */
-PMMPTE
 FORCEINLINE
+PMMPTE
 _MiAddressToPde(PVOID Address)
 {
     ULONG64 Offset = (ULONG64)Address >> (PDI_SHIFT - 3);
@@ -146,8 +146,8 @@ _MiAddressToPde(PVOID Address)
 #define MiAddressToPde(x) _MiAddressToPde((PVOID)(x))
 
 /* Convert an address to a corresponding PPE */
-PMMPTE
 FORCEINLINE
+PMMPTE
 MiAddressToPpe(PVOID Address)
 {
     ULONG64 Offset = (ULONG64)Address >> (PPI_SHIFT - 3);
@@ -156,8 +156,8 @@ MiAddressToPpe(PVOID Address)
 }
 
 /* Convert an address to a corresponding PXE */
-PMMPTE
 FORCEINLINE
+PMMPTE
 MiAddressToPxe(PVOID Address)
 {
     ULONG64 Offset = (ULONG64)Address >> (PXI_SHIFT - 3);
@@ -166,8 +166,8 @@ MiAddressToPxe(PVOID Address)
 }
 
 /* Convert an address to a corresponding PTE offset/index */
-ULONG
 FORCEINLINE
+ULONG
 MiAddressToPti(PVOID Address)
 {
     return ((((ULONG64)Address) >> PTI_SHIFT) & 0x1FF);
@@ -175,8 +175,8 @@ MiAddressToPti(PVOID Address)
 #define MiAddressToPteOffset(x) MiAddressToPti(x) // FIXME: bad name
 
 /* Convert an address to a corresponding PDE offset/index */
-ULONG
 FORCEINLINE
+ULONG
 MiAddressToPdi(PVOID Address)
 {
     return ((((ULONG64)Address) >> PDI_SHIFT) & 0x1FF);
@@ -185,16 +185,16 @@ MiAddressToPdi(PVOID Address)
 #define MiGetPdeOffset(x) MiAddressToPdi(x)
 
 /* Convert an address to a corresponding PXE offset/index */
-ULONG
 FORCEINLINE
+ULONG
 MiAddressToPxi(PVOID Address)
 {
     return ((((ULONG64)Address) >> PXI_SHIFT) & 0x1FF);
 }
 
 /* Convert a PTE into a corresponding address */
-PVOID
 FORCEINLINE
+PVOID
 MiPteToAddress(PMMPTE PointerPte)
 {
     /* Use signed math */
@@ -202,8 +202,8 @@ MiPteToAddress(PMMPTE PointerPte)
 }
 
 /* Convert a PDE into a corresponding address */
-PVOID
 FORCEINLINE
+PVOID
 MiPdeToAddress(PMMPTE PointerPde)
 {
     /* Use signed math */
@@ -211,8 +211,8 @@ MiPdeToAddress(PMMPTE PointerPde)
 }
 
 /* Convert a PPE into a corresponding address */
-PVOID
 FORCEINLINE
+PVOID
 MiPpeToAddress(PMMPTE PointerPpe)
 {
     /* Use signed math */
@@ -220,8 +220,8 @@ MiPpeToAddress(PMMPTE PointerPpe)
 }
 
 /* Convert a PXE into a corresponding address */
-PVOID
 FORCEINLINE
+PVOID
 MiPxeToAddress(PMMPTE PointerPxe)
 {
     /* Use signed math */
@@ -291,15 +291,15 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 }
 
 INIT_FUNCTION
-VOID
 FORCEINLINE
+VOID
 MmInitGlobalKernelPageDirectory(VOID)
 {
     /* Nothing to do */
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 MiIsPdeForAddressValid(PVOID Address)
 {
     return ((MiAddressToPxe(Address)->u.Hard.Valid) &&
