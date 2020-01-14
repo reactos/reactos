@@ -129,4 +129,29 @@ FX_DECLARE_VF_FUNCTION_P1_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 }
 #endif
 
+#if FX_SUPER_DBG
+  #if defined(_X86_)
+    #define COVERAGE_TRAP() {_asm {int 3}}
+  #else
+    #define COVERAGE_TRAP() DbgBreakPoint()
+  #endif
+#else // FX_SUPER_DBG
+    #define COVERAGE_TRAP()
+#endif // FX_SUPER_DBG
+
+
+//
+// Macro to make sure that the code is not invoked for UM.
+//
+// Although it is usually preferable to move such code to *um file
+// so that it does not get compiled at all for um, in some cases such approach
+// might fragment the code too much. In such situation this macro can be used.
+//
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+#define WDF_VERIFY_KM_ONLY_CODE() \
+    Mx::MxAssertMsg("Unexpected invocation in user mode", FALSE);
+#else
+#define WDF_VERIFY_KM_ONLY_CODE()
+#endif
+
 #endif //_FX_MACROS_H_
