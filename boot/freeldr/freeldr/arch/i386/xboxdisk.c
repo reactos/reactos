@@ -58,44 +58,42 @@ XboxDiskInit(BOOLEAN Init)
     }
 }
 
-static
-inline
-BOOLEAN
-XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber, PDEVICE_UNIT *DeviceUnit)
+static inline
+PDEVICE_UNIT
+XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber)
 {
     /* Xbox has only 1 IDE controller and no floppy */
     if (DriveNumber < 0x80 || (DriveNumber & 0x0F) >= 2)
-        return FALSE;
+        return NULL;
 
     if (!AtaInitialized)
         XboxDiskInit(TRUE);
 
     /* HDD */
     if ((DriveNumber == 0x80) && HardDrive)
-    {
-        *DeviceUnit = HardDrive;
-        return TRUE;
-    }
+        return HardDrive;
 
     /* CD */
-    if ((DriveNumber & 0xF0) > 0x80 && CdDrive)
-    {
-        *DeviceUnit = CdDrive;
-        return TRUE;
-    }
+    if (((DriveNumber & 0xF0) > 0x80) && CdDrive)
+        return CdDrive;
 
-    return FALSE;
+    return NULL;
 }
 
 BOOLEAN
-XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+XboxDiskReadLogicalSectors(
+    IN UCHAR DriveNumber,
+    IN ULONGLONG SectorNumber,
+    IN ULONG SectorCount,
+    OUT PVOID Buffer)
 {
-    PDEVICE_UNIT DeviceUnit = NULL;
+    PDEVICE_UNIT DeviceUnit;
 
     TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
-    if (!XboxDiskDriveNumberToDeviceUnit(DriveNumber, &DeviceUnit))
+    DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
+    if (!DeviceUnit)
         return FALSE;
 
     return AtaAtapiReadLogicalSectorsLBA(DeviceUnit, SectorNumber, SectorCount, Buffer);
@@ -104,11 +102,12 @@ XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG Sect
 BOOLEAN
 XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
-    PDEVICE_UNIT DeviceUnit = NULL;
+    PDEVICE_UNIT DeviceUnit;
 
     TRACE("XboxDiskGetDriveGeometry(0x%x)\n", DriveNumber);
 
-    if (!XboxDiskDriveNumberToDeviceUnit(DriveNumber, &DeviceUnit))
+    DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
+    if (!DeviceUnit)
         return FALSE;
 
     Geometry->Cylinders = DeviceUnit->Cylinders;
@@ -122,15 +121,14 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 ULONG
 XboxDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
-    PDEVICE_UNIT DeviceUnit = NULL;
+    PDEVICE_UNIT DeviceUnit;
 
-    TRACE("XboxDiskGetCacheableBlockCount(0x%x)\n", DriveNumber);
-
-    if (!XboxDiskDriveNumberToDeviceUnit(DriveNumber, &DeviceUnit))
-        return 0;
+    DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
+    if (!DeviceUnit)
+        return 1; // Unknown count.
 
     /*
-     * If LBA is supported then the block size will be 64 sectors (32k)
+     * If LBA is supported then the block size will be 64 sectors (32k).
      * If not then the block size is the size of one track.
      */
     if (DeviceUnit->Flags & ATA_DEVICE_LBA)
@@ -138,3 +136,5 @@ XboxDiskGetCacheableBlockCount(UCHAR DriveNumber)
     else
         return DeviceUnit->Sectors;
 }
+
+/* EOF */
