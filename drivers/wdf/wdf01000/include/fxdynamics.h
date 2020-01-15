@@ -98,7 +98,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetDeviceClass;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetCharacteristics;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetFileObjectConfig;
-	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetRequestAttributes;
+	PFN_WDFDEVICEINITSETREQUESTATTRIBUTES   pfnWdfDeviceInitSetRequestAttributes;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitAssignWdmIrpPreprocessCallback;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceInitSetIoInCallerContextCallback;
 	PFN_WDFDEVICECREATE   pfnWdfDeviceCreate;
@@ -532,6 +532,17 @@ WDFEXPORT(WdfDeviceGetDefaultQueue)(
     WDFDEVICE Device
     );
 
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfDeviceInitSetRequestAttributes)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PWDFDEVICE_INIT DeviceInit,
+    __in
+    PWDF_OBJECT_ATTRIBUTES RequestAttributes
+    );
+
 // ----- WDFDEVICE -----//
 
 // ----- WDFIO -----//
@@ -885,7 +896,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfDeviceInitSetRequestAttributes),
 			NotImplemented,
 			NotImplemented,
 			WDFEXPORT(WdfDeviceCreate),
