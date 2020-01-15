@@ -534,7 +534,7 @@ typedef NTSTATUS (NTAPI *SpLsaModeInitializeFn)(ULONG, PULONG,
  PSECPKG_FUNCTION_TABLE *, PULONG);
 
 /* User-mode entry point to SSP/APs */
-typedef NTSTATUS (WINAPI *SpUserModeInitializeFn)(ULONG, PULONG,
+typedef NTSTATUS (SEC_ENTRY *SpUserModeInitializeFn)(ULONG, PULONG,
  PSECPKG_USER_FUNCTION_TABLE *, PULONG);
 
 #ifdef __cplusplus
