@@ -1,16 +1,15 @@
 /*
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          hal/halx86/xbox/part_xbox.c
- * PURPOSE:       Xbox specific handling of partition tables
- * PROGRAMMER:    Ge van Geldorp (gvg@reactos.com)
- * UPDATE HISTORY:
- *             2004/12/04: Created
+ * PROJECT:         Xbox HAL
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Xbox specific handling of partition tables
+ * COPYRIGHT:       Copyright 2004 Ge van Geldorp (gvg@reactos.com)
+ *                  Copyright 2020 Stanislav Motylkov (x86corez@gmail.com)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "halxbox.h"
+#include <internal/tag.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -106,32 +105,51 @@ HalpXboxDeviceHasXboxPartitioning(IN PDEVICE_OBJECT DeviceObject,
     PVOID SectorData;
     LARGE_INTEGER Offset;
     NTSTATUS Status;
+    BOOLEAN HasMBRPartitioning;
 
     DPRINT("HalpXboxDeviceHasXboxPartitioning(%p %lu %p)\n",
            DeviceObject,
            SectorSize,
            HasXboxPartitioning);
 
-    SectorData = ExAllocatePool(PagedPool, SectorSize);
+    SectorData = ExAllocatePoolWithTag(PagedPool, SectorSize, TAG_HAL_XBOX);
     if (!SectorData)
     {
         return STATUS_NO_MEMORY;
+    }
+
+    Offset.QuadPart = 0;
+    Status = HalpXboxReadSector(DeviceObject, SectorSize, &Offset, SectorData);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    HasMBRPartitioning = (*((USHORT *)SectorData + (SectorSize / sizeof(USHORT)) - 1) == PARTITION_SIGNATURE);
+    if (HasMBRPartitioning)
+    {
+        *HasXboxPartitioning = FALSE;
+        goto Cleanup;
     }
 
     Offset.QuadPart = XBOX_SIGNATURE_SECTOR * SectorSize;
     Status = HalpXboxReadSector(DeviceObject, SectorSize, &Offset, SectorData);
     if (!NT_SUCCESS(Status))
     {
-        return Status;
+        goto Cleanup;
     }
 
     DPRINT("Signature 0x%02x 0x%02x 0x%02x 0x%02x\n",
            *((UCHAR *) SectorData), *((UCHAR *) SectorData + 1), *((UCHAR *) SectorData + 2), *((UCHAR *) SectorData + 3));
     *HasXboxPartitioning = (XBOX_SIGNATURE == *((ULONG *) SectorData));
-    ExFreePool(SectorData);
-    DPRINT("%s partitioning found\n", *HasXboxPartitioning ? "Xbox" : "MBR");
+Cleanup:
+    ExFreePoolWithTag(SectorData, TAG_HAL_XBOX);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("%s partitioning found\n", *HasXboxPartitioning ? "Xbox" : "MBR");
+    }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static VOID FASTCALL
@@ -202,7 +220,7 @@ HalpXboxIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                         PagedPool,
                         sizeof(DRIVE_LAYOUT_INFORMATION) +
                         XBOX_PARTITION_COUNT * sizeof(PARTITION_INFORMATION),
-                        'SYSF');
+                        TAG_FILE_SYSTEM);
     if (*PartitionBuffer == NULL)
     {
         return STATUS_NO_MEMORY;
