@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * Copyright 2011 Samuel SerapiÃ³n
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "ntlmssp.h"
+#include "precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);

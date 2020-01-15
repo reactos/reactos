@@ -17,8 +17,7 @@
  *
  */
 
-#include "ntlmssp.h"
-#include "protocol.h"
+#include <precomp.h>
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
@@ -227,7 +226,7 @@ NtlmAllocateContextHdr(BOOL isServer)
     ret->isServer = isServer;
 
     if(inLsaMode)
-        if(NtlmLsaFuncTable->GetCallInfo(&CallInfo))
+        if(LsaFunctions->GetCallInfo(&CallInfo))
             ret->ProcId = CallInfo.ProcessId;
 
     ret->RefCount = 1;
@@ -570,6 +569,7 @@ fail:
     return ret;
 }
 
+#ifdef __UNUSED__
 SECURITY_STATUS
 SEC_ENTRY
 InitializeSecurityContextA(IN OPTIONAL PCredHandle phCredential,
@@ -919,3 +919,4 @@ ApplyControlToken(IN PCtxtHandle phContext,
     return SEC_E_UNSUPPORTED_FUNCTION;
 }
 
+#endif

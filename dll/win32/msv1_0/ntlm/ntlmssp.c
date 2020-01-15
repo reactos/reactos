@@ -21,10 +21,8 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
-#ifdef __UNUSED__
 /* globals */
-NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
-#endif
+NTLM_MODE NtlmMode = NtlmUnknownMode;
 
 NTLMSSP_GLOBALS ntlmGlobals;
 NTLMSSP_GLOBALS_CLI ntlmGlobalsCli;
@@ -93,7 +91,6 @@ getGlobalsSvr(VOID)
     return &ntlmGlobalsSvr;
 }
 
-#ifdef __UNUSED__
 /* private functions */
 
 BOOL
@@ -332,6 +329,7 @@ NtlmTerminateGlobals(VOID)
     DeleteCriticalSection(&gsvr->cs);
 }
 
+#ifdef __UNUSED__
 /* public functions */
 
 static SecurityFunctionTableA ntlmTableA = {

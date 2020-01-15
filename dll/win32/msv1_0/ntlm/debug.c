@@ -17,8 +17,7 @@
  *
  */
 
-#include "ntlmssp.h"
-#include "protocol.h"
+#include <precomp.h>
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);

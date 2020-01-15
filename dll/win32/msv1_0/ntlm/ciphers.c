@@ -1,6 +1,5 @@
 
-#include "ntlmssp.h"
-#include "ciphers.h"
+#include "precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);

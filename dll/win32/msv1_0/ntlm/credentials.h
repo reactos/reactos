@@ -13,12 +13,23 @@ NtlmCredentialInitialize(VOID);
 VOID
 NtlmCredentialTerminate(VOID);
 
-#ifdef __UNUSED__
+SECURITY_STATUS
+SEC_ENTRY
+AcquireCredentialsHandleW(
+    IN OPTIONAL SEC_WCHAR *pszPrincipal,
+    IN OPTIONAL SEC_WCHAR *pszPackage,
+    IN ULONG fCredentialUse,
+    IN PLUID pLogonID,
+    IN PVOID pAuthData,
+    IN SEC_GET_KEY_FN pGetKeyFn,
+    IN PVOID pGetKeyArgument,
+    OUT PCredHandle phCredential,
+    OUT PTimeStamp ptsExpiry);
+
 PNTLMSSP_CREDENTIAL
 NtlmReferenceCredential(IN ULONG_PTR Handle);
 
 VOID
 NtlmDereferenceCredential(IN ULONG_PTR Handle);
-#endif
 
 #endif

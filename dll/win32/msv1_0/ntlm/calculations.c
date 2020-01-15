@@ -19,9 +19,7 @@
 
 /* this file contains algorithms defined in the MS-NLMP document */
 
-#include "ntlmssp.h"
-#include "protocol.h"
-#include "ciphers.h"
+#include <precomp.h>
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);

@@ -92,7 +92,7 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
         RemoveEntryList(&cred->Entry);
 
         /* delete object */
-        MsvFree(cred);
+        NtlmFree(cred);
     }
     LeaveCriticalSection(&CredentialCritSect);
 }
@@ -181,6 +181,7 @@ QueryCredentialsAttributesA(IN PCredHandle phCredential,
     //NtlmDereferenceCredential(phCredential->dwLower);
     return ret;
 }
+#endif
 
 SECURITY_STATUS
 SEC_ENTRY
@@ -338,6 +339,7 @@ quit:
     return ret;
 }
 
+#ifdef __NOTUSED__
 SECURITY_STATUS
 SEC_ENTRY
 AcquireCredentialsHandleA(SEC_CHAR *pszPrincipal,

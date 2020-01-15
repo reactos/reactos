@@ -17,11 +17,9 @@
  *
  */
 
-#include "ntlmssp.h"
-#include "protocol.h"
+#include <precomp.h>
 
 #include "wine/debug.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 void*
@@ -39,7 +37,7 @@ NtlmAllocate(
     switch(NtlmMode)
     {
         case NtlmLsaMode:
-            buffer = NtlmLsaFuncTable->AllocateLsaHeap(Size);
+            buffer = LsaFunctions->AllocateLsaHeap(Size);
             if (buffer != NULL)
                 RtlZeroMemory(buffer, Size);
             break;
@@ -62,7 +60,7 @@ NtlmFree(
         switch (NtlmMode)
         {
             case NtlmLsaMode:
-                NtlmLsaFuncTable->FreeLsaHeap(Buffer);
+                LsaFunctions->FreeLsaHeap(Buffer);
                 break;
             case NtlmUserMode:
                 HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, Buffer);
@@ -172,7 +170,7 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
          /* LSA server must map the user provided buffer into its address space */
          if(inLsaMode)
          {
-             if (!NT_SUCCESS(NtlmLsaFuncTable->MapBuffer(Buffer, Buffer)))
+             if (!NT_SUCCESS(LsaFunctions->MapBuffer(Buffer, Buffer)))
                  return FALSE;
          }
          *pOutBuffer = Buffer;
@@ -404,3 +402,34 @@ NtlmStructWriteStrW(
     *pOffset += datalen;
 }
 
+void
+NtlmInit(
+    _In_ NTLM_MODE mode)
+{
+    if (mode != NtlmUnknownMode)
+    {
+        if (mode != NtlmMode)
+        {
+            WARN("Initializing in different mode ... skipping!");
+            return;
+        }
+    }
+    NtlmMode = mode;
+
+    init_strutil(NtlmAllocate, NtlmFree);
+    NtlmInitializeGlobals();
+    NtlmInitializeRNG();
+    NtlmInitializeProtectedMemory();
+    NtlmCredentialInitialize();
+    NtlmContextInitialize();
+}
+
+void
+NtlmFini(void)
+{
+    NtlmContextTerminate();
+    NtlmCredentialTerminate();
+    NtlmTerminateRNG();
+    NtlmTerminateProtectedMemory();
+    NtlmTerminateGlobals();
+}

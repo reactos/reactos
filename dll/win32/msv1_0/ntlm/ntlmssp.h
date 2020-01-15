@@ -19,14 +19,13 @@
 #ifndef _NTLMSSP_H
 #define _NTLMSSP_H
 
-#include "../precomp.h"
-
 #ifdef __UNUSED__
 /* globals */
 extern SECPKG_FUNCTION_TABLE NtLmPkgFuncTable; //functions we provide to LSA in SpLsaModeInitialize
 extern PSECPKG_DLL_FUNCTIONS NtlmPkgDllFuncTable; //fuctions provided by LSA in SpInstanceInit
 extern SECPKG_USER_FUNCTION_TABLE NtlmUmodeFuncTable; //fuctions we provide via SpUserModeInitialize
 extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA in SpInitialize
+#endif
 
 /* client configuraion flags CliLMLevel
  * (settings depends on (registry-Key) LMCompatibilityLevel) */
@@ -44,7 +43,6 @@ extern PLSA_SECPKG_FUNCTION_TABLE NtlmLsaFuncTable; // functions provided by LSA
 #define NTLM_ENCRNDSESSION_KEY_LENGTH 16
 #define NTLM_SEALINGKEY_LENGTH 16
 #define NTLM_SIGNKEY_LENGTH 16
-#endif
 
 typedef struct _NTLMSSP_GLOBALS
 {
@@ -136,8 +134,9 @@ typedef struct _NTLMSSP_GLOBALS_SVR
     NETSETUP_JOIN_STATUS lmJoinState;
 } NTLMSSP_GLOBALS_SVR, *PNTLMSSP_GLOBALS_SVR;
 
-#ifdef __UNUSED__
-typedef enum _NTLM_MODE {
+typedef enum _NTLM_MODE
+{
+    NtlmUnknownMode = 0,
     NtlmLsaMode = 1,
     NtlmUserMode
 } NTLM_MODE, *PNTLM_MODE;
@@ -147,6 +146,7 @@ extern NTLM_MODE NtlmMode;
 #define inLsaMode (NtlmMode == NtlmLsaMode)
 #define inUserMode (NtlmMode == NtlmUserMode)
 
+#ifdef __UNUSED__
 #define NTLM_NAME_A "NTLM\0"
 #define NTLM_NAME_W L"NTLM\0"
 
@@ -164,11 +164,11 @@ extern NTLM_MODE NtlmMode;
         SECPKG_FLAG_NEGOTIABLE | \
         SECPKG_FLAG_PRIVACY | \
         SECPKG_FLAG_TOKEN_ONLY)
+#endif
 
 #define NTLM_DEFAULT_TIMEOUT (5*60*1000) //context valid for 5 mins
 #define NTLM_MAX_BUF 1904
 #define NTLM_CRED_NULLSESSION SECPKG_CRED_RESERVED
-#endif
 
 typedef struct _NTLMSSP_CREDENTIAL
 {
@@ -192,7 +192,6 @@ typedef enum {
     PassedToService
 } NTLMSSP_CONTEXT_STATE, *PNTLMSSP_CONTEXT_STATE;
 
-#ifdef __UNUSED__
 /* context (client + server) base */
 typedef struct _NTLMSSP_CONTEXT_HDR
 {
@@ -275,7 +274,6 @@ typedef struct _NTLMSSP_CONTEXT_SVR
 } NTLMSSP_CONTEXT_SVR, *PNTLMSSP_CONTEXT_SVR;
 
 /* private functions */
-#endif
 
 /* ntlmssp.c */
 BOOL
@@ -297,7 +295,6 @@ PNTLMSSP_GLOBALS getGlobals(VOID);
 PNTLMSSP_GLOBALS_CLI getGlobalsCli(VOID);
 PNTLMSSP_GLOBALS_SVR getGlobalsSvr(VOID);
 
-#ifdef __UNUSED__
 /* context.c */
 
 NTSTATUS
@@ -367,10 +364,19 @@ void
 NtlmFree(
     IN void* Buffer);
 
+void
+NtlmInit(
+    _In_ NTLM_MODE mode);
+
+void
+NtlmFini(void);
+
+#ifdef __UNUSED__
 BOOLEAN
 NtlmHasIntervalElapsed(
     IN LARGE_INTEGER Start,
     IN LONG Timeout);
+#endif
 
 BOOLEAN
 NtlmGetSecBuffer(
@@ -393,6 +399,5 @@ NtlmPrintAvPairs(
 
 void
 PrintSignSealKeyInfo(PNTLMSSP_CONTEXT_MSG msg);
-#endif
 
 #endif
