@@ -143,7 +143,7 @@ endif
     rep movsw                                   // Move our 512 bytes boot sector to the [0000:7C00]
     pop si
 
-    jmp HEX(0000):relocated                     // Jump into relocated code
+    ljmp16 0, relocated                         // Jump into relocated code
 
 relocated:
     xor ax, ax                                  // Clean-up segments
@@ -480,11 +480,10 @@ Reboot:
      * and http://www.webtech.co.jp/company/doc/undocumented_mem/io_cpu.txt
      */
     xor ax, ax
-    outb HEX(0F0), al
+    out HEX(0F0), al
 
     hlt
-Halt:
-    jmp short Halt                              // Spin
+    jmp short $ - 1                             // Spin
 
 VRAMOffset:
     .word 0
