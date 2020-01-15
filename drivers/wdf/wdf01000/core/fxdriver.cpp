@@ -2,6 +2,9 @@
 #include "common/fxmacros.h"
 #include "common/fxglobals.h"
 #include "common/fxtrace.h"
+#include "common/mxdriverobject.h"
+#include "common/fxdevice.h"
+#include "common/fxdeviceinit.h"
 #include "wdf.h"
 #include <ntstrsafe.h>
 
@@ -294,4 +297,532 @@ Return Value:
 
         FxDriverGlobals->Public.DriverTag = FxDriverGlobals->Tag;
     }
+}
+
+
+_Must_inspect_result_
+NTSTATUS
+FxDriver::Initialize(
+    __in PCUNICODE_STRING ArgRegistryPath,
+    __in PWDF_DRIVER_CONFIG Config,
+    __in_opt PWDF_OBJECT_ATTRIBUTES DriverAttributes
+    )
+{
+    PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
+    NTSTATUS status;
+
+    // WDFDRIVER can not be deleted by the device driver
+    MarkNoDeleteDDI();
+
+    MarkDisposeOverride(ObjectDoNotLock);
+
+    //
+    // Configure Constraints
+    //
+    ConfigureConstraints(DriverAttributes);
+
+    if (m_DriverObject.GetObject() == NULL)
+    {
+        status = STATUS_UNSUCCESSFUL;
+        goto exit;
+    }
+
+    // Allocate FxDisposeList
+    status = FxDisposeList::_Create(FxDriverGlobals, m_DriverObject.GetObject(), &m_DisposeList);
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    //
+    // Store FxDriver in Driver object extension
+    //
+    status = AllocateDriverObjectExtensionAndStoreFxDriver();
+    if (!NT_SUCCESS(status))
+    {
+        goto exit;
+    }
+
+    //
+    // Store away the callback functions.
+    //
+    if ((Config->DriverInitFlags & WdfDriverInitNoDispatchOverride) == 0)
+    {
+        //
+        // Caller doesn't want to override the dispatch table.  That
+        // means that they want to create everything and still be in
+        // control (or at least the port driver will take over)
+        //
+        m_DriverDeviceAdd.Method  = Config->EvtDriverDeviceAdd;
+        m_DriverUnload.Method     = Config->EvtDriverUnload;
+    }
+
+    if (ArgRegistryPath != NULL)
+    {
+        USHORT length;
+
+        length = ArgRegistryPath->Length + sizeof(UNICODE_NULL);
+
+        m_RegistryPath.Length = ArgRegistryPath->Length;
+        m_RegistryPath.MaximumLength = length;
+        m_RegistryPath.Buffer = (PWSTR) FxPoolAllocate(
+            GetDriverGlobals(), PagedPool, length);
+
+        if (m_RegistryPath.Buffer != NULL)
+        {
+            RtlCopyMemory(m_RegistryPath.Buffer,
+                          ArgRegistryPath->Buffer,
+                          ArgRegistryPath->Length);
+
+            //
+            // other parts of WDF assumes m_RegistryPath.Buffer is
+            // a null terminated string.  make sure it is.
+            //
+            m_RegistryPath.Buffer[length/sizeof(WCHAR)- 1] = UNICODE_NULL;
+        }
+        else
+        {
+            //
+            // We failed to allocate space for the registry path
+            // so set the length to 0.
+            //
+            m_RegistryPath.Length = 0;
+            m_RegistryPath.MaximumLength = 0;
+
+            status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    //
+    // If we are driver companion, return early skipping below
+    // operations that which we don't need for a companion
+    //
+    /*if (FxDriverGlobals->IsCompanion())
+    {
+        //
+        // Companion driver, set our routines up
+        //
+        m_DriverObject.SetDriverExtensionAddDevice(AddDevice);
+        m_DriverObject.SetDriverUnload(Unload);
+
+        goto exit;
+    }*/
+
+    if (NT_SUCCESS(status))
+    {
+        if ((Config->DriverInitFlags & WdfDriverInitNoDispatchOverride) == 0)
+        {
+            UCHAR i;
+
+            //
+            // Set up dispatch routines.
+            //
+            if (Config->DriverInitFlags & WdfDriverInitNonPnpDriver)
+            {
+                //
+                // NT4 style drivers must clear the AddDevice field in the
+                // driver object so that they can be unloaded while still
+                // having device objects around.
+                //
+                // If AddDevice is set, NT considers the driver a pnp driver
+                // and will not allow net stop to unload the driver.
+                //
+                m_DriverObject.SetDriverExtensionAddDevice(NULL);
+
+                //
+                // Unload for an NT4 driver is still optional if the driver
+                // does not want to be stopped (through net stop for
+                // instance).
+                //
+                if (Config->EvtDriverUnload != NULL)
+                {
+                    m_DriverObject.SetDriverUnload(Unload);
+                }
+                else
+                {
+                    m_DriverObject.SetDriverUnload(NULL);
+                }
+            }
+            else
+            {
+                //
+                // PnP driver, set our routines up
+                //
+                m_DriverObject.SetDriverExtensionAddDevice(AddDevice);
+                m_DriverObject.SetDriverUnload(Unload);
+            }
+
+            //
+            // For any major control code that we use a remove lock, the
+            // following locations must be updated:
+            //
+            // 1)  FxDevice::_RequiresRemLock() which decides if the remlock
+            //          is required
+            // 2)  FxDefaultIrpHandler::Dispatch might need to be changed if
+            //          there is catchall generic post processing that must be done
+            // 3)  Whereever the major code irp handler completes the irp or
+            //          sends it down the stack.  A good design would have all
+            //          spots in the irp handler where this is done to call a
+            //          common function.
+            //
+            WDFCASSERT(IRP_MN_REMOVE_DEVICE != 0x0);
+
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+            for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+            {
+                if (FxDevice::_RequiresRemLock(i, 0x0) == FxDeviceRemLockNotRequired)
+                {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::Dispatch);
+                }
+                else
+                {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::DispatchWithLock);
+                }
+            }
+#else // USER_MODE
+            for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+            {
+                if (FxDevice::_RequiresRemLock(i, 0x0) == FxDeviceRemLockNotRequired)
+                {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::DispatchUm);
+                }
+                else
+                {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::DispatchWithLockUm);
+                }
+            }
+#endif
+        }
+
+        //
+        // Determine if the debugger is connected.
+        //
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+        if (KD_DEBUGGER_ENABLED == TRUE && KD_DEBUGGER_NOT_PRESENT == FALSE)
+        {
+            m_DebuggerConnected = TRUE;
+        }
+#endif
+        //
+        // Log this notable event after tracing has been initialized.
+        //
+
+        if ((Config->DriverInitFlags & WdfDriverInitNonPnpDriver) &&
+            Config->EvtDriverUnload == NULL)
+        {
+
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDRIVER,
+                "Driver Object %p, reg path %wZ cannot be "
+                "unloaded, no DriverUnload routine specified",
+                m_DriverObject.GetObject(), &m_RegistryPath);
+        }
+
+#if FX_IS_USER_MODE
+        //
+        // Open a R/W handle to the driver's service parameters key
+        //
+        status = OpenDriverKey(UMINT::WdfPropertyStoreRootDriverParametersKey);
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
+                "Cannot open Driver Parameters key %!STATUS!",
+                status);
+            goto exit;
+        }
+
+        status = OpenDriverKey(UMINT::WdfPropertyStoreRootDriverPersistentStateKey);
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
+                "Cannot open Driver Persistent State key %!STATUS!",
+                status);
+            goto exit;
+        }
+
+        status = InitDriverDataDirectory();
+        if (!NT_SUCCESS(status))
+        {
+            goto exit;
+        }
+#endif
+    }
+
+exit:
+    return status;
+}
+
+VOID
+FxDriver::ConfigureConstraints(
+    __in_opt PWDF_OBJECT_ATTRIBUTES DriverAttributes
+    )
+/*++
+
+Routine Description:
+
+    Determine the pointer to the proper lock to acquire
+    for event callbacks from the FxDriver to the device driver
+    depending on the configured locking model.
+
+Arguments:
+    DriverAttributes - caller supplied scope and level, used only if they
+        are not InheritFromParent.
+
+Returns:
+    None
+
+--*/
+{
+    BOOLEAN automaticLockingRequired;
+
+    automaticLockingRequired = FALSE;
+
+    // Initialize the mutex lock
+    m_CallbackMutexLock.Initialize(this);
+
+    MarkPassiveCallbacks(ObjectDoNotLock);
+
+    m_CallbackLockPtr = &m_CallbackMutexLock;
+    m_CallbackLockObjectPtr = this;
+
+    //
+    // Use the caller supplied scope and level only if they are not
+    // InheritFromParent.
+    //
+    if (DriverAttributes != NULL)
+    {
+
+        if (DriverAttributes->ExecutionLevel !=
+                WdfExecutionLevelInheritFromParent)
+        {
+            m_ExecutionLevel = DriverAttributes->ExecutionLevel;
+        }
+
+        if (DriverAttributes->SynchronizationScope !=
+                WdfSynchronizationScopeInheritFromParent)
+        {
+            m_SynchronizationScope = DriverAttributes->SynchronizationScope;
+        }
+    }
+
+    //
+    // If the driver asks for any synchronization, we synchronize the
+    // WDFDRIVER object's own callbacks as well.
+    //
+    // (No option to extend synchronization for regular operations
+    //  across all WDFDEVICE objects)
+    //
+    if (m_SynchronizationScope == WdfSynchronizationScopeDevice ||
+        m_SynchronizationScope == WdfSynchronizationScopeQueue)
+    {
+        automaticLockingRequired = TRUE;
+    }
+
+    //
+    // No FxDriver events are delivered from a thread that is
+    // not already at PASSIVE_LEVEL, so we don't need to
+    // allocate an FxSystemWorkItem if the execution level
+    // constraint is WdfExecutionLevelPassive.
+    //
+    // If any events are added FxDriver that could occur on a thread
+    // that is above PASSIVE_LEVEL, then an FxSystemWorkItem would
+    // need to be allocated to deliver those events similar to the
+    // code in FxIoQueue.
+    //
+
+    //
+    // Configure FxDriver event callback locks
+    //
+    if (automaticLockingRequired)
+    {
+        m_DriverDeviceAdd.SetCallbackLockPtr(m_CallbackLockPtr);
+    }
+    else
+    {
+        m_DriverDeviceAdd.SetCallbackLockPtr(NULL);
+    }
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxDriver::AllocateDriverObjectExtensionAndStoreFxDriver(
+    VOID
+    )
+{
+    NTSTATUS status;
+    FxDriver** ppDriver;
+    
+    //
+    // Prefast is much happier if we take the size of the type rather then
+    // the size of the variable.
+    //
+    status = Mx::MxAllocateDriverObjectExtension( m_DriverObject.GetObject(),
+                                                  FX_DRIVER_ID,
+                                                  sizeof(FxDriver**),
+                                                  (PVOID*)&ppDriver);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+    
+    //
+    // If we succeeded in creating the driver object extension,
+    // then store our FxDriver pointer in the DriverObjectExtension.
+    //
+    *ppDriver = this;
+
+    return STATUS_SUCCESS;
+}
+
+FxDriver*
+FxDriver::GetFxDriver(
+    __in MdDriverObject DriverObject
+    )
+{
+    FxDriver* objExt;
+    objExt = *(FxDriver **)Mx::MxGetDriverObjectExtension(DriverObject,
+                                                       FX_DRIVER_ID);
+    ASSERT(objExt != NULL);
+
+    return objExt;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxDriver::AddDevice(
+    _In_ MdDeviceObject PhysicalDeviceObject
+    )
+{
+    WDFDEVICE_INIT init(this);
+    FxDevice* pDevice;
+    NTSTATUS status;
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Enter AddDevice PDO %p", PhysicalDeviceObject);
+
+    pDevice = NULL;
+    init.CreatedOnStack = TRUE;
+
+    init.InitType = FxDeviceInitTypeFdo;
+    init.Fdo.PhysicalDevice = PhysicalDeviceObject;
+
+    status = m_DriverDeviceAdd.Invoke(GetHandle(), &init);
+
+    //
+    // Caller returned w/out creating a device, we are done.  Returning
+    // STATUS_SUCCESS w/out creating a device and attaching to the stack is OK,
+    // especially for filter drivers which selectively attach to devices.
+    //
+    if (init.CreatedDevice == NULL)
+    {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+                            "Driver did not create a device in "
+                            "EvtDriverAddDevice, status %!STATUS!", status);
+
+        //
+        // We do not let filters affect the building of the rest of the stack.
+        // If they return error, we convert it to STATUS_SUCCESS.
+        //
+        if (init.Fdo.Filter && !NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "Filter returned %!STATUS! without creating a WDFDEVICE, "
+                "converting to STATUS_SUCCESS", status);
+            status = STATUS_SUCCESS;
+        }
+
+        return status;
+    }
+
+    pDevice = (FxDevice*)init.CreatedDevice;
+
+    if (NT_SUCCESS(status))
+    {
+        //
+        // Make sure that DO_DEVICE_INITIALIZING is cleared.
+        // FxDevice::FdoInitialize does not do this b/c the driver writer may
+        // want the bit set until sometime after WdfDeviceCreate returns
+        //
+        pDevice->FinishInitializing();
+    }
+    else
+    {
+        //
+        // Created a device, but returned error.
+        //
+        ASSERT(pDevice->IsPnp());
+        ASSERT(pDevice->m_CurrentPnpState == WdfDevStatePnpInit);
+
+        status = pDevice->DeleteDeviceFromFailedCreate(status, TRUE);
+        pDevice = NULL;
+    }
+
+    DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
+                        "Exit, status %!STATUS!", status);
+
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxDriver::AddDevice(
+    __in MdDriverObject DriverObject,
+    __in MdDeviceObject PhysicalDeviceObject
+    )
+{
+    FxDriver *pDriver;
+
+    pDriver = FxDriver::GetFxDriver(DriverObject);
+
+    if (pDriver != NULL)
+    {
+        return pDriver->AddDevice(PhysicalDeviceObject);
+    }
+
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID
+FxDriver::Unload(
+    __in MdDriverObject DriverObject
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDriver *pDriver;
+
+    pDriver = FxDriver::GetFxDriver(DriverObject);
+    if (pDriver == NULL)
+    {
+        return;
+    }
+
+    pFxDriverGlobals = pDriver->GetDriverGlobals();
+
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
+                        "Unloading WDFDRIVER %p, PDRIVER_OBJECT_UM %p",
+                        pDriver->GetHandle(), DriverObject);
+    //
+    // Invoke the driver if they specified an unload routine.
+    //
+    if (pDriver->m_DriverUnload.Method)
+    {
+        pDriver->m_DriverUnload.Invoke(pDriver->GetHandle());
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
+                            "Driver unload routine Exit WDFDRIVER %p, PDRIVER_OBJECT_UM %p",
+                            pDriver->GetHandle(), DriverObject);
+    }
+
+    //
+    // Delete the FxDriver object.
+    //
+    // This releases the FxDriver reference.  Must be called at PASSIVE
+    //
+    pDriver->DeleteObject();
+
+    pFxDriverGlobals->Driver = NULL;
+
+    FxDestroy(pFxDriverGlobals);
 }

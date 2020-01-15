@@ -8,11 +8,18 @@
 #include "common/mxgeneral.h"
 #include "common/mxdriverobject.h"
 #include "common/fxcallbackmutexlock.h"
+#include "common/fxdrivercallbacks.h"
 #include "wdf.h"
 
 
 // forward definitions
 typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
+
+//
+// Unique value to retrieve the FxDriver* from the MdDriverObject.  Use a value
+// that is not exposed to the driver writer through the dispatch table or WDM.
+//
+#define FX_DRIVER_ID (FxDriver::GetFxDriver)
 
 //
 // The following are support classes for FxDriver
@@ -29,7 +36,7 @@ private:
     //
     // Callbacks to device driver
     //
-    //FxDriverDeviceAdd m_DriverDeviceAdd;
+    FxDriverDeviceAdd m_DriverDeviceAdd;
 
     //
     // This represents any constraints on callbacks
@@ -72,7 +79,16 @@ private:
     //
     FxDisposeList*    m_DisposeList;
 
+    static
+    MdDriverAddDeviceType AddDevice;
+
 public:
+
+    // This is public to allow the C function FxCoreDriverUnload to call it
+    FxDriverUnload              m_DriverUnload;
+
+    static
+    MdDriverUnloadType Unload;
 
     virtual
     VOID
@@ -127,7 +143,70 @@ public:
     {
         return m_DisposeList;
     }
+
+    //
+    // The following methods support the callback constraints
+    // and handle locking and deferral
+    //
+    VOID
+    ConfigureConstraints(
+        __in_opt PWDF_OBJECT_ATTRIBUTES DriverAttributes
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    AllocateDriverObjectExtensionAndStoreFxDriver(
+        VOID
+        );
+
+    static
+    FxDriver*
+    GetFxDriver(
+        __in MdDriverObject DriverObject
+        );
+
+    __inline
+    WDFDRIVER
+    GetHandle(
+        VOID
+        )
+    {
+        return (WDFDRIVER) GetObjectHandle();
+    }
+
+    #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+
+    _Must_inspect_result_
+    NTSTATUS
+    AddDevice(
+        __in MdDeviceObject PhysicalDeviceObject
+        );
+
+    #else
+
+    _Must_inspect_result_
+    NTSTATUS
+    AddDevice(
+        _In_  IWudfDeviceStack *        DevStack,
+        _In_  LPCWSTR                   KernelDeviceName,
+        _In_opt_ HKEY                   PdoKey,
+        _In_  LPCWSTR                   ServiceName,
+        _In_  LPCWSTR                   DevInstanceID,
+        _In_  ULONG                     DriverID
+        );
+
+    #endif
+
+    __inline
+    MdDriverObject
+    GetDriverObject(
+        VOID
+        )
+    {
+        return m_DriverObject.GetObject();
+    }
     
 };
+
 
 #endif //_FXDRIVER_H_
