@@ -26,6 +26,7 @@ list(APPEND SOURCE
     core/fxdriver.cpp
     core/fxdriverapi.cpp
     core/fxdeviceapi.cpp
+    core/fxdeviceinit.cpp
     core/fxdeviceinitapi.cpp
     core/fxdeviceinterfaceapi.cpp
     core/fxtimerapi.cpp
@@ -34,8 +35,15 @@ list(APPEND SOURCE
     core/verifierapi.cpp
     core/fxdisposelist.cpp
     core/fxsystemworkitem.cpp
+    core/fxdevice.cpp
+    core/fxsystemthread.cpp
     io/fxioqueueapi.cpp
     primitives/mxgeneral.cpp
+    irphandlers/fxpkgpnp.cpp
+    irphandlers/pnpstatemachine.cpp
+    irphandlers/pnpcallbacks.cpp
+    irphandlers/eventqueue.cpp
+    irphandlers/powerpolicystatemachine.cpp
 )
 
 add_library(wdf01000 MODULE ${SOURCE})
