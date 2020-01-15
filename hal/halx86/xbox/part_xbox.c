@@ -120,7 +120,7 @@ HalpXboxDeviceHasXboxPartitioning(IN PDEVICE_OBJECT DeviceObject,
 
     Offset.QuadPart = XBOX_SIGNATURE_SECTOR * SectorSize;
     Status = HalpXboxReadSector(DeviceObject, SectorSize, &Offset, SectorData);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
@@ -152,12 +152,12 @@ HalpXboxExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     *Buffer = NULL;
 
     Status = HalpXboxDeviceHasXboxPartitioning(DeviceObject, SectorSize, &HasXboxPartitioning);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         return;
     }
 
-    if (! HasXboxPartitioning)
+    if (!HasXboxPartitioning)
     {
         DPRINT("Delegating to standard MBR code\n");
         NtoskrnlExamineMBR(DeviceObject, SectorSize, MBRTypeIdentifier, Buffer);
@@ -186,12 +186,12 @@ HalpXboxIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
            PartitionBuffer);
 
     Status = HalpXboxDeviceHasXboxPartitioning(DeviceObject, SectorSize, &HasXboxPartitioning);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    if (! HasXboxPartitioning)
+    if (!HasXboxPartitioning)
     {
         DPRINT("Delegating to standard MBR code\n");
         return NtoskrnlIoReadPartitionTable(DeviceObject, SectorSize,
@@ -203,7 +203,7 @@ HalpXboxIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                         sizeof(DRIVE_LAYOUT_INFORMATION) +
                         XBOX_PARTITION_COUNT * sizeof(PARTITION_INFORMATION),
                         'SYSF');
-    if (NULL == *PartitionBuffer)
+    if (*PartitionBuffer == NULL)
     {
         return STATUS_NO_MEMORY;
     }
@@ -251,7 +251,7 @@ HalpXboxIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
            PartitionType);
 
     Status = HalpXboxDeviceHasXboxPartitioning(DeviceObject, SectorSize, &HasXboxPartitioning);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
@@ -286,7 +286,7 @@ HalpXboxIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
            PartitionBuffer);
 
     Status = HalpXboxDeviceHasXboxPartitioning(DeviceObject, SectorSize, &HasXboxPartitioning);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
