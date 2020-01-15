@@ -1193,6 +1193,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     LARGE_INTEGER PasswordLastSet;
     DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
+    UNICODE_STRING LogonDom;
+    UNICODE_STRING LogonUser;
+    UNICODE_STRING LogonPass;
 
     TRACE("LsaApLogonUserEx2()\n");
 
@@ -1244,29 +1247,36 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Fix-up pointers in the authentication info */
         PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
-        Status = RtlValidateUnicodeString(0, &LogonInfo->LogonDomainName);
+        /* We have to fix the string pointers.
+         * Changing the original pointer will make lsass unstable.
+         * So we need to make a copy of it. */
+        LogonDom = LogonInfo->LogonDomainName;
+        LogonUser = LogonInfo->UserName;
+        LogonPass = LogonInfo->Password;
+
+        Status = RtlValidateUnicodeString(0, &LogonDom);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
         /* LogonDomainName is optional and can be an empty string */
-        if (LogonInfo->LogonDomainName.Length)
+        if (LogonDom.Length)
         {
             // TODO: Check for Buffer limits wrt. ClientBufferBase and alignment.
-            LogonInfo->LogonDomainName.Buffer = FIXUP_POINTER(LogonInfo->LogonDomainName.Buffer, PtrOffset);
-            LogonInfo->LogonDomainName.MaximumLength = LogonInfo->LogonDomainName.Length;
+            LogonDom.Buffer = FIXUP_POINTER(LogonDom.Buffer, PtrOffset);
+            LogonDom.MaximumLength = LogonDom.Length;
         }
         else
         {
-            LogonInfo->LogonDomainName.Buffer = NULL;
-            LogonInfo->LogonDomainName.MaximumLength = 0;
+            LogonDom.Buffer = NULL;
+            LogonDom.MaximumLength = 0;
         }
 
-        Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
+        Status = RtlValidateUnicodeString(0, &LogonUser);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
         /* UserName is mandatory and cannot be an empty string */
         // TODO: Check for Buffer limits wrt. ClientBufferBase and alignment.
-        LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
-        LogonInfo->UserName.MaximumLength = LogonInfo->UserName.Length;
+        LogonUser.Buffer = FIXUP_POINTER(LogonUser.Buffer, PtrOffset);
+        LogonUser.MaximumLength = LogonUser.Length;
 
         Status = RtlValidateUnicodeString(0, &LogonInfo->Password);
         if (!NT_SUCCESS(Status))
@@ -1275,20 +1285,21 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         if (LogonInfo->Password.Length)
         {
             // TODO: Check for Buffer limits wrt. ClientBufferBase and alignment.
-            LogonInfo->Password.Buffer = FIXUP_POINTER(LogonInfo->Password.Buffer, PtrOffset);
-            LogonInfo->Password.MaximumLength = LogonInfo->Password.Length;
+            LogonPass.Buffer = FIXUP_POINTER(LogonPass.Buffer, PtrOffset);
+            LogonPass.MaximumLength = LogonPass.Length;
         }
         else
         {
-            LogonInfo->Password.Buffer = NULL;
-            LogonInfo->Password.MaximumLength = 0;
+            LogonPass.Buffer = NULL;
+            LogonPass.MaximumLength = 0;
         }
 
-        TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
-        TRACE("User: %S\n", LogonInfo->UserName.Buffer);
-        TRACE("Password: %S\n", LogonInfo->Password.Buffer);
-
-        // TODO: If LogonType == Service, do some extra work using LogonInfo->Password.
+        TRACE("Domain: %.*S\n",
+            LogonDom.Length / sizeof(WCHAR), LogonDom.Buffer);
+        TRACE("User: %.*S\n",
+            LogonUser.Length / sizeof(WCHAR), LogonUser.Buffer);
+        TRACE("Password: %.*S\n",
+            LogonPass.Length / sizeof(WCHAR), LogonPass.Buffer);
     }
     else
     {
@@ -1306,7 +1317,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     /* Check for special accounts */
     // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
-    if (RtlEqualUnicodeString(&LogonInfo->LogonDomainName, &NtAuthorityU, TRUE))
+    if (RtlEqualUnicodeString(&LogonDom, &NtAuthorityU, TRUE))
     {
         SpecialAccount = TRUE;
 
@@ -1318,7 +1329,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             return Status;
         }
 
-        if (RtlEqualUnicodeString(&LogonInfo->UserName, &LocalServiceU, TRUE))
+        if (RtlEqualUnicodeString(&LogonUser, &LocalServiceU, TRUE))
         {
             TRACE("SpecialAccount: LocalService\n");
 
@@ -1337,7 +1348,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             UserInfo->All.UserId = SECURITY_LOCAL_SERVICE_RID;
             UserInfo->All.PrimaryGroupId = SECURITY_LOCAL_SERVICE_RID;
         }
-        else if (RtlEqualUnicodeString(&LogonInfo->UserName, &NetworkServiceU, TRUE))
+        else if (RtlEqualUnicodeString(&LogonUser, &NetworkServiceU, TRUE))
         {
             TRACE("SpecialAccount: NetworkService\n");
 
@@ -1396,9 +1407,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             goto done;
         }
 
-        Names[0].Length = LogonInfo->UserName.Length;
-        Names[0].MaximumLength = LogonInfo->UserName.MaximumLength;
-        Names[0].Buffer = LogonInfo->UserName.Buffer;
+        Names[0].Length = LogonUser.Length;
+        Names[0].MaximumLength = LogonUser.MaximumLength;
+        Names[0].Buffer = LogonUser.Buffer;
 
         /* Try to get the RID for the user name */
         Status = SamrLookupNamesInDomain(DomainHandle,
@@ -1447,8 +1458,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Check the password */
         if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
         {
-            Status = MsvpCheckPassword(&LogonInfo->Password,
-                                       UserInfo);
+            Status = MsvpCheckPassword(&LogonPass, UserInfo);
             if (!NT_SUCCESS(Status))
             {
                 ERR("MsvpCheckPassword failed (Status %08lx)\n", Status);
@@ -1478,14 +1488,17 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             }
 
             /* Check if the account expired */
-            AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
-            AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
-            if (LogonTime.QuadPart >= AccountExpires.QuadPart)
+            if (!(UserInfo->All.UserAccountControl & USER_DONT_EXPIRE_PASSWORD))
             {
-                ERR("Account expired!\n");
-                *SubStatus = STATUS_ACCOUNT_EXPIRED;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
+                AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
+                AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
+                if (LogonTime.QuadPart >= AccountExpires.QuadPart)
+                {
+                    ERR("Account expired!\n");
+                    *SubStatus = STATUS_ACCOUNT_EXPIRED;
+                    Status = STATUS_ACCOUNT_RESTRICTION;
+                    goto done;
+                }
             }
 
             /* Check if the password expired */
@@ -1595,13 +1608,13 @@ done:
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AccountName != NULL)
     {
-        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->UserName.Length +
+        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonUser.Length +
                                                                sizeof(UNICODE_NULL));
         if ((*AccountName)->Buffer != NULL)
         {
-            (*AccountName)->MaximumLength = LogonInfo->UserName.Length +
+            (*AccountName)->MaximumLength = LogonUser.Length +
                                             sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AccountName, &LogonInfo->UserName);
+            RtlCopyUnicodeString(*AccountName, &LogonUser);
         }
     }
 
@@ -1609,13 +1622,13 @@ done:
     *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AuthenticatingAuthority != NULL)
     {
-        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->LogonDomainName.Length +
+        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonDom.Length +
                                                                            sizeof(UNICODE_NULL));
         if ((*AuthenticatingAuthority)->Buffer != NULL)
         {
-            (*AuthenticatingAuthority)->MaximumLength = LogonInfo->LogonDomainName.Length +
+            (*AuthenticatingAuthority)->MaximumLength = LogonDom.Length +
                                                         sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonInfo->LogonDomainName);
+            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonDom);
         }
     }
 
