@@ -129,7 +129,7 @@ endif
      * ESP   = 0000:7BF0  ESP   = 0000:7BF0
      * CS:IP = 0000:7C4E  CS:IP = 1FE0:004E
     */
-    mov ax, [BOOT_DAUA]                         // Get the Device Address/Unit Address (DA/UA)
+    mov ax, word ptr ds:[BOOT_DAUA]             // Get the Device Address/Unit Address (DA/UA)
     mov si, ax
 
     push si
@@ -483,7 +483,8 @@ Reboot:
     out HEX(0F0), al
 
     hlt
-    jmp short $ - 1                             // Spin
+Halt:
+    jmp short Halt                              // Spin
 
 VRAMOffset:
     .word 0
