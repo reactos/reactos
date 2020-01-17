@@ -38,7 +38,7 @@ END
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Este dispositivo está funcionando correctamente."
+    IDS_DEV_NO_PROBLEM "Este dispositivo está a funcionar correctamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo não está correctamente configurado."
     IDS_DEV_DEVLOADER_FAILED "O ReactOS não pôde carregar o driver para este dispositivo porque o computador está a reportar dois tipos de barramento %1."
     IDS_DEV_DEVLOADER_FAILED2 "O(s) carregadore(es) do dispositivo %1 não pôde/puderam carregar o driver do dispositivo para este dispositivo."
@@ -47,7 +47,7 @@ BEGIN
     IDS_DEV_LACKED_ARBITRATOR "O driver para este dispositivo requisitou um recurso que o ReactOS não sabe como manusear."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Outro dispositivo está a usar os recursos que este dispositivo necessita."
     IDS_DEV_FAILED_FILTER "Os drivers para este dispositivo precisam ser reinstalados."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo não está a funcionaro correctamente porque o ReactOS não pôde carregar o arquivo %1 que carrega os drivers para o dispositivo."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo não está a funcionar correctamente porque o ReactOS não pôde carregar o arquivo %1 que carrega os drivers para o dispositivo."
     IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo não está a funcionar correctamente porque o arquivo %1 que carrega os drivers para este dispositivo está danificado."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Falha no dispositivo: tente mudar o driver para este dispositivo. Se isto não funcionar, consulte a documentação do seu hardware."
     IDS_DEV_INVALID_DATA "Este dispositivo não está a funcionar correctamente porque a BIOS do seu computador está a reportar os recursos para este dispositivo incorretamente."
@@ -177,8 +177,8 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalhes do driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "Exibir detalhes sobre os arquivos de driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Actualizar Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Actualiza o driver dede dispositivo.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizar driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Actualiza o controlador deste dispositivo.", -1, 91, 138, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Repor Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
     LTEXT "Se o dispositivo falhar após actualização,reverta para o driver instalado anteriormente.", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "&Desinstalar", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
@@ -244,16 +244,15 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "Confirmar Remoção do dispositivo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
-    DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    LTEXT "Aviso: Está prestes a desinstalar este dispositivo do seu sistema.", -1, 7, 37, 204, 50
+    DEFPUSHBUTTON "&OK", IDOK, 110, 100, 50, 14
+    PUSHBUTTON "&Cancelar", IDCANCEL, 166, 100, 50, 14
 END
-
 
 /*
  This code relates to the device manager GUI
@@ -277,7 +276,7 @@ BEGIN
         MENUITEM "Recursos por tipo",           IDM_RESBYTYPE, GRAYED
         MENUITEM "Recursos por ligação",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Mostrardispositivos ocultos",         IDM_SHOWHIDDEN
+        MENUITEM "Mostrar dispositivos ocultos",         IDM_SHOWHIDDEN
     END
     POPUP "Ajuda"
     BEGIN
@@ -285,13 +284,13 @@ BEGIN
     END
 END
 
-
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Gestor de dispositivos"
-  IDS_CONFIRM_DISABLE       "Desativar este dispositivo fará com que pare de funcionar. \r\nDeseja realmente desactivá-lo?"
+  IDS_CONFIRM_DISABLE       "Desactivar este dispositivo fará com que pare de funcionar. \r\nDeseja realmente desactiva-lo?"
   IDS_CONFIRM_UNINSTALL     "Aviso: Está prestes a desinstalar este dispositivo do sistema.\r\nDeseja continuar?"
 END
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_MENU_UPDATE           "Actualizar software do driver..."
@@ -321,7 +320,7 @@ BEGIN
   IDS_HINT_SCAN         " Verificar se há novos dispositivos plug and play."
   IDS_HINT_ENABLE       " Habilita o dispositivo seleccionado."
   IDS_HINT_DISABLE      " Desabilita o dispositivo seleccionado."
-  IDS_HINT_UPDATE       " Inicia o assistente Atualizar software de driver para o dispositivo seleccionado."
+  IDS_HINT_UPDATE       " Inicia o assistente Actualizar software de driver para o dispositivo seleccionado."
   IDS_HINT_UNINSTALL    " Desinstala o driver para o dispositivo seleccionado."
   IDS_HINT_ADD          " Adiciona um dispositivo legado (não Plug and Play) ao computador."
   IDS_HINT_ABOUT        " Acerca de ReactOS Gestor de dispositivos."
