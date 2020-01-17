@@ -1294,12 +1294,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonPass.MaximumLength = 0;
         }
 
-        TRACE("Domain: %.*S\n",
-            LogonDom.Length / sizeof(WCHAR), LogonDom.Buffer);
-        TRACE("User: %.*S\n",
-            LogonUser.Length / sizeof(WCHAR), LogonUser.Buffer);
-        TRACE("Password: %.*S\n",
-            LogonPass.Length / sizeof(WCHAR), LogonPass.Buffer);
+        TRACE("Domain: %.*S\n", LogonDom.Length / sizeof(WCHAR), LogonDom.Buffer);
+        TRACE("User: %.*S\n", LogonUser.Length / sizeof(WCHAR), LogonUser.Buffer);
+        TRACE("Password: %.*S\n", LogonPass.Length / sizeof(WCHAR), LogonPass.Buffer);
     }
     else
     {
@@ -1608,12 +1605,10 @@ done:
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AccountName != NULL)
     {
-        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonUser.Length +
-                                                               sizeof(UNICODE_NULL));
+        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonUser.Length + sizeof(UNICODE_NULL));
         if ((*AccountName)->Buffer != NULL)
         {
-            (*AccountName)->MaximumLength = LogonUser.Length +
-                                            sizeof(UNICODE_NULL);
+            (*AccountName)->MaximumLength = LogonUser.Length + sizeof(UNICODE_NULL);
             RtlCopyUnicodeString(*AccountName, &LogonUser);
         }
     }
@@ -1622,12 +1617,10 @@ done:
     *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AuthenticatingAuthority != NULL)
     {
-        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonDom.Length +
-                                                                           sizeof(UNICODE_NULL));
+        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonDom.Length + sizeof(UNICODE_NULL));
         if ((*AuthenticatingAuthority)->Buffer != NULL)
         {
-            (*AuthenticatingAuthority)->MaximumLength = LogonDom.Length +
-                                                        sizeof(UNICODE_NULL);
+            (*AuthenticatingAuthority)->MaximumLength = LogonDom.Length + sizeof(UNICODE_NULL);
             RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonDom);
         }
     }
