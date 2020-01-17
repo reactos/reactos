@@ -4,6 +4,8 @@
 #include "common/dbgtrace.h"
 #include "common/fxdriver.h"
 #include "common/fxverifier.h"
+#include "common/fxstring.h"
+#include "common/fxmacros.h"
 
 //
 // extern the whole file
@@ -299,6 +301,7 @@ WDFEXPORT(WdfDriverCreate)(
     return status;
 }
 
+
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
@@ -311,8 +314,67 @@ WDFEXPORT(WdfDriverRetrieveVersionString)(
     WDFSTRING String
     )
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDriver* pDriver;
+    FxString* pString;
+    NTSTATUS status;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    const PWCHAR pVersionStr =
+        L"Kernel Mode Driver Framework version "
+        FX_MAKE_WSTR(__WDF_MAJOR_VERSION) L"."
+        FX_MAKE_WSTR(__WDF_MINOR_VERSION) L"."
+        FX_MAKE_WSTR(__WDF_BUILD_NUMBER) ;
+
+    const PWCHAR pVersionStrVerifier =
+        L"Kernel Mode Driver Framework (verifier on) version "
+        FX_MAKE_WSTR(__WDF_MAJOR_VERSION) L"."
+        FX_MAKE_WSTR(__WDF_MINOR_VERSION) L"."
+        FX_MAKE_WSTR(__WDF_BUILD_NUMBER);
+#else // USER_MODE
+    const PWCHAR pVersionStr =
+        L"User Mode Driver Framework version "
+        FX_MAKE_WSTR(__WUDF_MAJOR_VERSION_STRING) L"."
+        FX_MAKE_WSTR(__WUDF_MINOR_VERSION_STRING) L"."
+        FX_MAKE_WSTR(__WUDF_SERVICE_VERSION) ;
+
+    const PWCHAR pVersionStrVerifier =
+        L"User Mode Driver Framework (verifier on) version "
+        FX_MAKE_WSTR(__WUDF_MAJOR_VERSION_STRING) L"."
+        FX_MAKE_WSTR(__WUDF_MINOR_VERSION_STRING) L"."
+        FX_MAKE_WSTR(__WUDF_SERVICE_VERSION);
+#endif
+
+    //
+    // Even though it is unused, still convert it to make sure a valid handle is
+    // being passed in.
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Driver,
+                                   FX_TYPE_DRIVER,
+                                   (PVOID *)&pDriver,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, String);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         String,
+                         FX_TYPE_STRING,
+                         (PVOID *)&pString);
+
+    status = pString->Assign(
+        pFxDriverGlobals->FxVerifierOn ? pVersionStrVerifier : pVersionStr
+        );
+
+    return status;
 }
 
 

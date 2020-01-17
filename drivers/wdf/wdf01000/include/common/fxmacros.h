@@ -154,4 +154,7 @@ FX_DECLARE_VF_FUNCTION_P1_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 #define WDF_VERIFY_KM_ONLY_CODE()
 #endif
 
+#define FX_MAKE_WSTR_WORKER(x) L ## #x
+#define FX_MAKE_WSTR(x) FX_MAKE_WSTR_WORKER(x)
+
 #endif //_FX_MACROS_H_
