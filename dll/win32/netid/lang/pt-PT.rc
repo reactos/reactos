@@ -27,7 +27,7 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Alteraões do nome do computador/Domínio"
+CAPTION "Alterar o nome do computador/Domínio"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "(mensagem vai aqui)", 1017, 7, 5, 218, 30
