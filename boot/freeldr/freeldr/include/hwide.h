@@ -1,7 +1,7 @@
 /*
  * PROJECT:     FreeLoader
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     ATA/ATAPI polled I/O driver header file.
+ * PURPOSE:     ATA/ATAPI programmed I/O driver header file.
  * COPYRIGHT:   Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
  */
 
@@ -35,8 +35,7 @@
 #define IDX_IO1_o_DriveSelect   0x0C
 #define IDX_IO1_o_Command       0x0E
 
-#define IDX_IO2_o_AltStatus     0x10C
-#define IDX_IO2_o_Control       0x10E
+#define IDX_IO2_o_Control       0x10C
 #define IDE_IO_o_BankSelect     0x432
 #else /* SARCH_PC98 */
 #define IDX_IO1_i_Data          0x00
@@ -60,8 +59,7 @@
 #define IDX_IO1_o_DriveSelect   0x06
 #define IDX_IO1_o_Command       0x07
 
-#define IDX_IO2_o_AltStatus     0x206
-#define IDX_IO2_o_Control       0x207
+#define IDX_IO2_o_Control       0x206
 #endif
 
 /*
