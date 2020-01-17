@@ -111,7 +111,29 @@ WDFEXPORT(WdfStringGetUnicodeString)(
     PUNICODE_STRING UnicodeString
     )
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxString* pString;
+    NTSTATUS status;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   String,
+                                   FX_TYPE_STRING,
+                                   (PVOID*) &pString,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, UnicodeString);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
+
+    RtlCopyMemory(UnicodeString,
+                  pString->GetUnicodeString(),
+                  sizeof(UNICODE_STRING));
 }
 
 } // extern "C"

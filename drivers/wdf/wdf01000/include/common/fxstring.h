@@ -25,6 +25,15 @@ public:
         return &m_UnicodeString;
     }
 
+    PUNICODE_STRING
+    __inline
+    GetUnicodeString(
+        VOID
+        )
+    {
+        return &m_UnicodeString;
+    }
+
     _Must_inspect_result_
     NTSTATUS
     Assign(
