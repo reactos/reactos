@@ -1,8 +1,8 @@
 /*
  * PROJECT:     FreeLoader
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     ATA/ATAPI polled I/O driver.
- * COPYRIGHT:   Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
+ * PURPOSE:     ATA/ATAPI programmed I/O driver.
+ * COPYRIGHT:   Copyright 2019-2020 Dmitry Borisov (di.sean@protonmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -21,10 +21,7 @@ DBG_DEFAULT_CHANNEL(DISK);
 
 #define TAG_ATA_DEVICE 'DatA'
 #define ATAPI_PACKET_SIZE(IdentifyData) (IdentifyData.AtapiCmdSize ? 16 : 12)
-
-/* Used in WaitForFlags() and should be 31 seconds (31e5), but it's too much for polled I/O */
-#define ATA_STATUS_TIMEOUT 36000
-#define ATA_READ_TIMEOUT   4e5
+#define ATA_STATUS_TIMEOUT 31e5
 
 #define AtaWritePort(Channel, Port, Data) \
     WRITE_PORT_UCHAR(UlongToPtr(BaseArray[(Channel)] + (Port)), (Data))
@@ -70,6 +67,22 @@ WaitForFlags(
 
 static
 BOOLEAN
+WaitForFlagsOr(
+    IN UCHAR Channel,
+    IN UCHAR FirstValue,
+    IN UCHAR SecondValue,
+    IN ULONG Timeout
+);
+
+static
+BOOLEAN
+WaitForBusy(
+    IN UCHAR Channel,
+    IN ULONG Timeout
+);
+
+static
+VOID
 SelectDevice(
     IN UCHAR Channel,
     IN UCHAR DeviceNumber
@@ -81,6 +94,19 @@ IdentifyDevice(
     IN UCHAR Channel,
     IN UCHAR DeviceNumber,
     OUT PDEVICE_UNIT *DeviceUnit
+);
+
+static
+BOOLEAN
+AtapiRequestSense(
+    IN PDEVICE_UNIT DeviceUnit,
+    OUT PSENSE_DATA SenseData
+);
+
+static
+VOID
+AtapiPrintSenseData(
+    IN PDEVICE_UNIT DeviceUnit
 );
 
 static
@@ -274,21 +300,23 @@ AtaReadLogicalSectorsLBA(
         }
 
         /* Select the drive */
-        if (!SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber))
+        SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber);
+        if (!WaitForBusy(DeviceUnit->Channel, ATA_STATUS_TIMEOUT))
+        {
+            ERR("AtaReadLogicalSectorsLBA() failed. Device is busy.\n");
             return FALSE;
+        }
 
         /* Disable interrupts */
-#ifndef SARCH_PC98
-        AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_AltStatus, IDE_DC_DISABLE_INTERRUPTS);
+        AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_Control, IDE_DC_DISABLE_INTERRUPTS);
         StallExecutionProcessor(1);
-#endif
 
         if (UseLBA48)
         {
             /* FIFO */
             AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, 0);
             AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_Feature, ATA_PIO);
-            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, (BlockCount & 0xFF) >> 8);
+            AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, (BlockCount >> 8) & 0xFF);
             AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockCount, BlockCount & 0xFF);
             AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, (Lba >> 24) & 0xFF);
             AtaWritePort(DeviceUnit->Channel, IDX_IO1_o_BlockNumber, Lba & 0xFF);
@@ -321,8 +349,8 @@ AtaReadLogicalSectorsLBA(
         for (RemainingBlockCount = BlockCount; RemainingBlockCount > 0; --RemainingBlockCount)
         {
             /* Wait for ready to transfer data block */
-            if (!WaitForFlags(DeviceUnit->Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_ERROR),
-                              IDE_STATUS_DRQ, ATA_READ_TIMEOUT))
+            if (!WaitForFlags(DeviceUnit->Channel, IDE_STATUS_DRQ,
+                              IDE_STATUS_DRQ, ATA_STATUS_TIMEOUT))
             {
                 ERR("AtaReadLogicalSectorsLBA() failed. Status: 0x%02x, Error: 0x%02x\n",
                     AtaReadPort(DeviceUnit->Channel, IDX_IO1_i_Status),
@@ -351,9 +379,15 @@ AtaSendAtapiPacket(
     IN UCHAR PacketSize,
     IN USHORT ByteCount)
 {
-    /* No DRQ for TEST UNIT READY */
-    BOOLEAN NoData = (AtapiPacket[0] == SCSIOP_TEST_UNIT_READY);
-    UCHAR ExpectedFlags = NoData ? IDE_STATUS_DRDY : (IDE_STATUS_DRQ | IDE_STATUS_DRDY);
+    /*
+     * REQUEST SENSE is used by driver to clear the ATAPI 'Bus reset' indication.
+     * TEST UNIT READY doesn't require space for returned data.
+     */
+    UCHAR ExpectedFlagsMask = (AtapiPacket[0] == SCSIOP_REQUEST_SENSE) ?
+                               IDE_STATUS_DRDY : (IDE_STATUS_DRQ | IDE_STATUS_DRDY);
+    UCHAR ExpectedFlags = ((AtapiPacket[0] == SCSIOP_TEST_UNIT_READY) ||
+                           (AtapiPacket[0] == SCSIOP_REQUEST_SENSE)) ?
+                           IDE_STATUS_DRDY : (IDE_STATUS_DRQ | IDE_STATUS_DRDY);
 
     /* PIO mode */
     AtaWritePort(Channel, IDX_ATAPI_IO1_o_Feature, ATA_PIO);
@@ -365,8 +399,7 @@ AtaSendAtapiPacket(
     /* Prepare to transfer a device command via a command packet */
     AtaWritePort(Channel, IDX_ATAPI_IO1_o_Command, IDE_COMMAND_ATAPI_PACKET);
     StallExecutionProcessor(50);
-    if (!WaitForFlags(Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_ERROR),
-                      IDE_STATUS_DRQ, NoData ? ATA_STATUS_TIMEOUT : ATA_READ_TIMEOUT))
+    if (!WaitForFlagsOr(Channel, IDE_STATUS_DRQ, IDE_STATUS_DRDY, ATA_STATUS_TIMEOUT))
     {
         ERR("AtaSendAtapiPacket(0x%x) failed. A device error occurred Status: 0x%02x, Error: 0x%02x\n",
             AtapiPacket[0], AtaReadPort(Channel, IDX_ATAPI_IO1_i_Status), AtaReadPort(Channel, IDX_ATAPI_IO1_i_Error));
@@ -375,8 +408,7 @@ AtaSendAtapiPacket(
 
     /* Command packet transfer */
     AtaWriteBuffer(Channel, AtapiPacket, PacketSize);
-    if (!WaitForFlags(Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_DRDY | IDE_STATUS_ERROR),
-                      ExpectedFlags, NoData ? ATA_STATUS_TIMEOUT : ATA_READ_TIMEOUT))
+    if (!WaitForFlags(Channel, ExpectedFlagsMask, ExpectedFlags, ATA_STATUS_TIMEOUT))
     {
         TRACE("AtaSendAtapiPacket(0x%x) failed. An execution error occurred Status: 0x%02x, Error: 0x%02x\n",
               AtapiPacket[0], AtaReadPort(Channel, IDX_ATAPI_IO1_i_Status), AtaReadPort(Channel, IDX_ATAPI_IO1_i_Error));
@@ -398,28 +430,25 @@ AtapiReadLogicalSectorLBA(
     BOOLEAN Success;
 
     /* Select the drive */
-    if (!SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber))
+    SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber);
+    if (!WaitForBusy(DeviceUnit->Channel, ATA_STATUS_TIMEOUT))
+    {
+        ERR("AtapiReadLogicalSectorLBA() failed. Device is busy!\n");
         return FALSE;
+    }
 
     /* Disable interrupts */
-    AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_AltStatus, IDE_DC_DISABLE_INTERRUPTS);
+    AtaWritePort(DeviceUnit->Channel, IDX_IO2_o_Control, IDE_DC_DISABLE_INTERRUPTS);
     StallExecutionProcessor(1);
 
     /* Send the SCSI READ command */
     RtlZeroMemory(&AtapiPacket, sizeof(AtapiPacket));
-#if defined(SARCH_PC98)
     AtapiPacket[0] = SCSIOP_READ;
-    AtapiPacket[8] = 1;
-    AtapiPacket[9] = 0;
-#else
-    AtapiPacket[0] = SCSIOP_READ12;
-    AtapiPacket[8] = 0;
-    AtapiPacket[9] = 1;
-#endif
     AtapiPacket[2] = (SectorNumber >> 24) & 0xFF;
     AtapiPacket[3] = (SectorNumber >> 16) & 0xFF;
     AtapiPacket[4] = (SectorNumber >> 8) & 0xFF;
     AtapiPacket[5] = SectorNumber & 0xFF;
+    AtapiPacket[8] = 1;
     Success = AtaSendAtapiPacket(DeviceUnit->Channel,
                                  AtapiPacket,
                                  ATAPI_PACKET_SIZE(DeviceUnit->IdentifyData),
@@ -427,6 +456,7 @@ AtapiReadLogicalSectorLBA(
     if (!Success)
     {
         ERR("AtapiReadLogicalSectorLBA() failed. A read error occurred.\n");
+        AtapiPrintSenseData(DeviceUnit);
         return FALSE;
     }
 
@@ -461,11 +491,61 @@ AtapiCapacityDetect(
 
         *SectorSize = (AtapiCapacity[4] << 24) | (AtapiCapacity[5] << 16) |
                       (AtapiCapacity[6] << 8) | AtapiCapacity[7];
+
+        /* If device reports a non-zero block length, reset to defaults (we use READ command instead of READ CD) */
+        if (*SectorSize != 0)
+            *SectorSize = 2048;
     }
     else
     {
         *TotalSectors = 0;
         *SectorSize = 0;
+
+        AtapiPrintSenseData(DeviceUnit);
+    }
+}
+
+static
+BOOLEAN
+AtapiRequestSense(
+    IN PDEVICE_UNIT DeviceUnit,
+    OUT PSENSE_DATA SenseData)
+{
+    UCHAR AtapiPacket[16];
+    BOOLEAN Success;
+
+    RtlZeroMemory(&AtapiPacket, sizeof(AtapiPacket));
+    RtlZeroMemory(SenseData, sizeof(SENSE_DATA));
+    AtapiPacket[0] = SCSIOP_REQUEST_SENSE;
+    AtapiPacket[4] = SENSE_BUFFER_SIZE;
+    Success = AtaSendAtapiPacket(DeviceUnit->Channel,
+                                 AtapiPacket,
+                                 ATAPI_PACKET_SIZE(DeviceUnit->IdentifyData),
+                                 SENSE_BUFFER_SIZE);
+    if (Success)
+    {
+        AtaReadBuffer(DeviceUnit->Channel, SenseData, SENSE_BUFFER_SIZE);
+        return TRUE;
+    }
+    else
+    {
+        ERR("Cannot read the sense data.\n");
+        return FALSE;
+    }
+}
+
+static
+VOID
+AtapiPrintSenseData(IN PDEVICE_UNIT DeviceUnit)
+{
+    SENSE_DATA SenseData;
+
+    if (AtapiRequestSense(DeviceUnit, &SenseData))
+    {
+        ERR("SK 0x%x, ASC 0x%x, ASCQ 0x%x\n",
+            SenseData.SenseKey,
+            SenseData.AdditionalSenseCode,
+            SenseData.AdditionalSenseCodeQualifier);
     }
 }
 
@@ -479,7 +559,8 @@ AtapiReadyCheck(IN OUT PDEVICE_UNIT DeviceUnit)
     BOOLEAN Success;
 
     /* Select the drive */
-    if (!SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber))
+    SelectDevice(DeviceUnit->Channel, DeviceUnit->DeviceNumber);
+    if (!WaitForBusy(DeviceUnit->Channel, ATA_STATUS_TIMEOUT))
         return FALSE;
 
     /* Send the SCSI TEST UNIT READY command */
@@ -490,16 +571,7 @@ AtapiReadyCheck(IN OUT PDEVICE_UNIT DeviceUnit)
                        ATAPI_PACKET_SIZE(DeviceUnit->IdentifyData),
                        0);
 
-    /* Send the SCSI REQUEST SENSE command */
-    RtlZeroMemory(&AtapiPacket, sizeof(AtapiPacket));
-    RtlZeroMemory(&SenseData, SENSE_BUFFER_SIZE);
-    AtapiPacket[0] = SCSIOP_REQUEST_SENSE;
-    AtapiPacket[4] = SENSE_BUFFER_SIZE;
-    Success = AtaSendAtapiPacket(DeviceUnit->Channel,
-                                 AtapiPacket,
-                                 ATAPI_PACKET_SIZE(DeviceUnit->IdentifyData),
-                                 SENSE_BUFFER_SIZE);
-    if (!Success)
+    if (!AtapiRequestSense(DeviceUnit, &SenseData))
         return FALSE;
 
     AtaReadBuffer(DeviceUnit->Channel, &SenseData, SENSE_BUFFER_SIZE);
@@ -531,7 +603,10 @@ AtapiReadyCheck(IN OUT PDEVICE_UNIT DeviceUnit)
                                                  ATAPI_PACKET_SIZE(DeviceUnit->IdentifyData),
                                                  MAXIMUM_CDROM_SIZE);
                     if (!Success)
+                    {
+                        AtapiPrintSenseData(DeviceUnit);
                         return FALSE;
+                    }
 
                     AtaReadBuffer(DeviceUnit->Channel, &DummyData, MAXIMUM_CDROM_SIZE);
                     /* fall through */
@@ -578,14 +653,66 @@ WaitForFlags(
     IN UCHAR ExpectedValue,
     IN ULONG Timeout)
 {
+    UCHAR Status;
+
+    ASSERT(Timeout != 0);
+
+    WaitForBusy(Channel, ATA_STATUS_TIMEOUT);
+
+    while (Timeout--)
+    {
+        StallExecutionProcessor(10);
+
+        Status = AtaReadPort(Channel, IDX_IO1_i_Status);
+        if (Status & IDE_STATUS_ERROR)
+            return FALSE;
+        else if ((Status & Flags) == ExpectedValue)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static
+BOOLEAN
+WaitForFlagsOr(
+    IN UCHAR Channel,
+    IN UCHAR FirstValue,
+    IN UCHAR SecondValue,
+    IN ULONG Timeout)
+{
+    UCHAR Status;
+
+    ASSERT(Timeout != 0);
+
+    WaitForBusy(Channel, ATA_STATUS_TIMEOUT);
+
+    while (Timeout--)
+    {
+        StallExecutionProcessor(10);
+
+        Status = AtaReadPort(Channel, IDX_IO1_i_Status);
+        if (Status & IDE_STATUS_ERROR)
+            return FALSE;
+        else if ((Status & FirstValue) || (Status & SecondValue))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static
+BOOLEAN
+WaitForBusy(
+    IN UCHAR Channel,
+    IN ULONG Timeout)
+{
     ASSERT(Timeout != 0);
 
     while (Timeout--)
     {
-        if ((AtaReadPort(Channel, IDX_IO1_i_Status) & Flags) == ExpectedValue)
+        StallExecutionProcessor(10);
+
+        if ((AtaReadPort(Channel, IDX_IO1_i_Status) & IDE_STATUS_BUSY) == 0)
             return TRUE;
-        else
-            StallExecutionProcessor(10);
     }
     return FALSE;
 }
@@ -597,31 +724,25 @@ AtaHardReset(IN UCHAR Channel)
     TRACE("AtaHardReset(Controller %d)\n", Channel);
 
     AtaWritePort(Channel, IDX_IO2_o_Control, IDE_DC_RESET_CONTROLLER);
-    StallExecutionProcessor(200000);
+    StallExecutionProcessor(100000);
     AtaWritePort(Channel, IDX_IO2_o_Control, IDE_DC_REENABLE_CONTROLLER);
-    StallExecutionProcessor(1);
+    StallExecutionProcessor(5);
+    WaitForBusy(Channel, ATA_STATUS_TIMEOUT);
 }
 
 static
-BOOLEAN
+VOID
 SelectDevice(IN UCHAR Channel, IN UCHAR DeviceNumber)
 {
 #if defined(SARCH_PC98)
     /* Select IDE Channel */
     WRITE_PORT_UCHAR((PUCHAR)IDE_IO_o_BankSelect, Channel);
-    StallExecutionProcessor(1);
+    StallExecutionProcessor(5);
 #endif
 
     AtaWritePort(Channel, IDX_IO1_o_DriveSelect,
                  DeviceNumber ? IDE_DRIVE_SELECT_2 : IDE_DRIVE_SELECT_1);
-    StallExecutionProcessor(500);
-    if (!WaitForFlags(Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ), 0, ATA_STATUS_TIMEOUT))
-    {
-        TRACE("SelectDevice() failed. Device(%d:%d) is busy.\n", Channel, DeviceNumber);
-        return FALSE;
-    }
-
-    return TRUE;
+    StallExecutionProcessor(5);
 }
 
 static
@@ -631,11 +752,10 @@ IdentifyDevice(
     IN UCHAR DeviceNumber,
     OUT PDEVICE_UNIT *DeviceUnit)
 {
-    UCHAR SignatureLow, SignatureHigh;
+    UCHAR SignatureLow, SignatureHigh, SignatureCount, SignatureNumber;
+    UCHAR Command;
     IDENTIFY_DATA Id;
-    INQUIRYDATA AtapiInquiry;
-    BOOLEAN Success;
-    UCHAR AtapiPacket[16];
+    SENSE_DATA SenseData;
     ULONG i;
     ULONG SectorSize;
     ULONGLONG TotalSectors;
@@ -644,50 +764,61 @@ IdentifyDevice(
     TRACE("IdentifyDevice() Channel = %x, Device = %x, BaseIoAddress = 0x%x\n",
           Channel, DeviceNumber, BaseArray[Channel]);
 
+    /* Look at controller */
+    SelectDevice(Channel, DeviceNumber);
+    StallExecutionProcessor(5);
+    AtaWritePort(Channel, IDX_IO1_o_BlockNumber, 0x55);
+    AtaWritePort(Channel, IDX_IO1_o_BlockNumber, 0x55);
+    StallExecutionProcessor(5);
+    if (AtaReadPort(Channel, IDX_IO1_i_BlockNumber) != 0x55)
+        goto Failure;
+
     /* Reset the controller */
     AtaHardReset(Channel);
 
     /* Select the drive */
-    if (!SelectDevice(Channel, DeviceNumber))
+    SelectDevice(Channel, DeviceNumber);
+    if (!WaitForBusy(Channel, ATA_STATUS_TIMEOUT))
         goto Failure;
 
-    /* Send the IDENTIFY DEVICE command */
-    AtaWritePort(Channel, IDX_IO1_o_Command, IDE_COMMAND_IDENTIFY);
-    StallExecutionProcessor(50);
-    if (WaitForFlags(Channel, (IDE_STATUS_BUSY | IDE_STATUS_DRQ | IDE_STATUS_ERROR),
-                     IDE_STATUS_DRQ, ATA_STATUS_TIMEOUT))
-    {
-        SignatureLow = AtaReadPort(Channel, IDX_IO1_i_CylinderLow);
-        SignatureHigh = AtaReadPort(Channel, IDX_IO1_i_CylinderHigh);
-        TRACE("IdentifyDevice(): SignatureLow = 0x%x, SignatureHigh = 0x%x\n", SignatureLow, SignatureHigh);
-        if (SignatureLow == 0x00 && SignatureHigh == 0x00)
-        {
-            /* This is PATA */
-            TRACE("IdentifyDevice(): Found PATA device at %d:%d\n", Channel, DeviceNumber);
-            goto Identify;
-        }
-    }
-
-    /* If not PATA, ATAPI maybe? Send the IDENTIFY PACKET DEVICE command */
-    AtaWritePort(Channel, IDX_ATAPI_IO1_o_Command, IDE_COMMAND_ATAPI_IDENTIFY);
-    StallExecutionProcessor(500);
+    /* Signature check */
     SignatureLow = AtaReadPort(Channel, IDX_IO1_i_CylinderLow);
     SignatureHigh = AtaReadPort(Channel, IDX_IO1_i_CylinderHigh);
-    TRACE("IdentifyDevice(): SignatureLow = 0x%x, SignatureHigh = 0x%x\n", SignatureLow, SignatureHigh);
-    /* Check for devices that implements the PACKET Command feature */
-    if (SignatureLow == ATAPI_MAGIC_LSB && SignatureHigh == ATAPI_MAGIC_MSB)
+    SignatureCount = AtaReadPort(Channel, IDX_IO1_i_BlockCount);
+    SignatureNumber = AtaReadPort(Channel, IDX_IO1_i_BlockNumber);
+    TRACE("IdentifyDevice(): SL = 0x%x, SH = 0x%x, SC = 0x%x, SN = 0x%x\n",
+          SignatureLow, SignatureHigh, SignatureCount, SignatureNumber);
+    if (SignatureLow == 0x00 && SignatureHigh == 0x00 &&
+        SignatureCount == 0x01 && SignatureNumber == 0x01)
     {
-        /* This is ATAPI */
-        Flags |= ATA_DEVICE_ATAPI | ATA_DEVICE_LBA | ATA_DEVICE_NOT_READY;
+        TRACE("IdentifyDevice(): Found PATA device at %d:%d\n", Channel, DeviceNumber);
+        Command = IDE_COMMAND_IDENTIFY;
+    }
+    else if (SignatureLow == ATAPI_MAGIC_LSB &&
+             SignatureHigh == ATAPI_MAGIC_MSB)
+    {
         TRACE("IdentifyDevice(): Found ATAPI device at %d:%d\n", Channel, DeviceNumber);
-        goto Identify;
+        Flags |= ATA_DEVICE_ATAPI | ATA_DEVICE_LBA | ATA_DEVICE_NOT_READY;
+        Command = IDE_COMMAND_ATAPI_IDENTIFY;
     }
     else
     {
         goto Failure;
     }
 
-Identify:
+    /* Disable interrupts */
+    AtaWritePort(Channel, IDX_IO2_o_Control, IDE_DC_DISABLE_INTERRUPTS);
+    StallExecutionProcessor(5);
+
+    /* Send the identify command */
+    AtaWritePort(Channel, IDX_IO1_o_Command, Command);
+    StallExecutionProcessor(50);
+    if (!WaitForFlags(Channel, IDE_STATUS_DRQ, IDE_STATUS_DRQ, ATA_STATUS_TIMEOUT))
+    {
+        ERR("IdentifyDevice(): Identify command failed.\n");
+        goto Failure;
+    }
+
     /* Receive parameter information from the device */
     AtaReadBuffer(Channel, &Id, IDENTIFY_DATA_SIZE);
 
@@ -705,25 +836,6 @@ Identify:
     TRACE("FR %.*s\n", sizeof(Id.FirmwareRevision), Id.FirmwareRevision);
     TRACE("MN %.*s\n", sizeof(Id.ModelNumber), Id.ModelNumber);
 
-    /* Detect the type of device */
-    if (Flags & ATA_DEVICE_ATAPI)
-    {
-        /* Send the SCSI INQUIRY command */
-        RtlZeroMemory(&AtapiPacket, sizeof(AtapiPacket));
-        AtapiPacket[0] = SCSIOP_INQUIRY;
-        AtapiPacket[4] = INQUIRYDATABUFFERSIZE;
-        Success = AtaSendAtapiPacket(Channel, AtapiPacket, ATAPI_PACKET_SIZE(Id), INQUIRYDATABUFFERSIZE);
-        if (!Success)
-            goto Failure;
-
-        AtaReadBuffer(Channel, &AtapiInquiry, INQUIRYDATABUFFERSIZE);
-        if (AtapiInquiry.DeviceType != READ_ONLY_DIRECT_ACCESS_DEVICE)
-        {
-            TRACE("IdentifyDevice(): Unsupported device type 0x%x!\n", AtapiInquiry.DeviceType);
-            goto Failure;
-        }
-    }
-
     /* Allocate a new device unit structure */
     *DeviceUnit = FrLdrTempAlloc(sizeof(DEVICE_UNIT), TAG_ATA_DEVICE);
     if (*DeviceUnit == NULL)
@@ -737,9 +849,16 @@ Identify:
     (*DeviceUnit)->DeviceNumber = DeviceNumber;
     (*DeviceUnit)->IdentifyData = Id;
 
-    /* Detect a medium's capacity */
     if (Flags & ATA_DEVICE_ATAPI)
     {
+        /* Clear the ATAPI 'Bus reset' indication */
+        for (i = 0; i < 10; ++i)
+        {
+            AtapiRequestSense(*DeviceUnit, &SenseData);
+            StallExecutionProcessor(10);
+        }
+
+        /* Detect a medium's capacity */
         AtapiCapacityDetect(*DeviceUnit, &TotalSectors, &SectorSize);
         if (SectorSize == 0 || TotalSectors == 0)
         {
