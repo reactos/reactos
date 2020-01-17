@@ -21,6 +21,8 @@ list(APPEND SOURCE
     object/fxobjectstatemachine.cpp
     support/fxregkey.cpp
     support/fxstringapi.cpp
+    support/fxstring.cpp
+    support/stringutil.cpp
     core/fxbugcheckcallback.cpp
     core/tracing.cpp
     core/fxdriver.cpp

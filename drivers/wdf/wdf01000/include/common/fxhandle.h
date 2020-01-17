@@ -150,4 +150,13 @@ FxObjectHandleCreate(
     __out PWDFOBJECT Handle
     );
 
+VOID
+FxObjectHandleGetPtrAndGlobals(
+    __in  PFX_DRIVER_GLOBALS CallersGlobals,
+    __in  WDFOBJECT Handle,
+    __in  WDFTYPE   Type,
+    __out PVOID*    PPObject,
+    __out PFX_DRIVER_GLOBALS* ObjectGlobals
+    );
+
 #endif //_FXHANDLE_H_

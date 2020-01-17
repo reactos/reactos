@@ -1052,6 +1052,30 @@ public:
         return c;
     }
 
+    VOID
+    MarkPassiveDispose(
+        __in FxObjectLockState State = ObjectLock
+        )
+    {
+        //
+        // Object which can have > passive level locks, but needs to be Dispose()'d
+        // at passive level.  This means that the object's client cleanup
+        // routines will also be guaranteed to run at passive.
+        //
+        if (State == ObjectLock)
+        {
+            KIRQL   oldIrql;
+
+            m_SpinLock.Acquire(&oldIrql);
+            m_ObjectFlags |= FXOBJECT_FLAGS_PASSIVE_DISPOSE;
+            m_SpinLock.Release(oldIrql);
+        }
+        else
+        {
+            m_ObjectFlags |= FXOBJECT_FLAGS_PASSIVE_DISPOSE;
+        }
+    }
+
 protected:
 
     FxObject(

@@ -465,3 +465,41 @@ FxObjectHandleCreate(
     ASSERT((((ULONG_PTR) Object) & FxHandleFlagMask) == 0x0);
     *Handle = Object->GetObjectHandle();
 }
+
+VOID
+FxObjectHandleGetPtrAndGlobals(
+    __in  PFX_DRIVER_GLOBALS CallersGlobals,
+    __in  WDFOBJECT Handle,
+    __in  WDFTYPE   Type,
+    __out PVOID*    PPObject,
+    __out PFX_DRIVER_GLOBALS* ObjectGlobals
+    )
+/*++
+
+Routine Description:
+    Converts an externally facing WDF handle into its internal object.
+
+Arguments:
+    FxDriverGlobals - caller's globals
+    Handle - handle to convert into an object
+    Type - required type of the underlying object
+    PPObject - pointer to receive the underlying object
+    ObjectGlobals - pointer to receive the underlying object's globals.
+
+  --*/
+{
+    //
+    // All FX_TYPEs except for IFX_TYPE_MEMORY derive from FxObject, so our cast
+    // below will work with all types but IFX_TYPE_MEMORY (in which case the caller
+    // should call FxObjectHandleGetPtr and then get the globals on their own
+    // from the IFxMemory interface).
+    //
+    ASSERT(Type != IFX_TYPE_MEMORY);
+
+    FxObjectHandleGetPtr(CallersGlobals,
+                         Handle,
+                         Type,
+                         PPObject);
+
+    *ObjectGlobals = ((FxObject*) (*PPObject))->GetDriverGlobals();
+}

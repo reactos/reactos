@@ -10,6 +10,32 @@ public:
     // MaximumLength describes the size of the buffer in bytes
     //
     UNICODE_STRING m_UnicodeString;
+
+public:
+    FxString(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals
+        );
+
+    ~FxString();
+
+    __inline
+    operator PUNICODE_STRING(
+        )
+    {
+        return &m_UnicodeString;
+    }
+
+    _Must_inspect_result_
+    NTSTATUS
+    Assign(
+        __in const UNICODE_STRING* UnicodeString
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    Assign(
+        __in PCWSTR SourceString
+        );
 };
 
 #endif //_FXSTRING_H_

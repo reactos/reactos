@@ -83,4 +83,53 @@ FxValidateUnicodeString(
     return STATUS_SUCCESS;
 }
 
+_Must_inspect_result_
+NTSTATUS
+__inline
+FxValidateObjectAttributesForParentHandle(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PWDF_OBJECT_ATTRIBUTES Attributes,
+    __in ULONG Flags = FX_VALIDATE_OPTION_NONE_SPECIFIED
+    )
+{
+    if (Attributes == NULL)
+    {
+        if (Flags & FX_VALIDATE_OPTION_PARENT_REQUIRED)
+        {
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "WDF_OBJECT_ATTRIBUTES required, %!STATUS!",
+                (ULONG) STATUS_WDF_PARENT_NOT_SPECIFIED);
+        }
+        return STATUS_WDF_PARENT_NOT_SPECIFIED;
+    }
+
+    if (Attributes->Size != sizeof(WDF_OBJECT_ATTRIBUTES))
+    {
+        //
+        // Size is wrong, bail out
+        //
+        DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGAPIERROR,
+                            "Attributes %p Size incorrect, expected %d, got %d, %!STATUS!",
+                            Attributes, sizeof(WDF_OBJECT_ATTRIBUTES),
+                            Attributes->Size, STATUS_INFO_LENGTH_MISMATCH);
+
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    if (Attributes->ParentObject == NULL)
+    {
+        if (Flags & FX_VALIDATE_OPTION_PARENT_REQUIRED)
+        {
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "ParentObject required in WDF_OBJECT_ATTRIBUTES %p, %!STATUS!",
+                Attributes, STATUS_WDF_PARENT_NOT_SPECIFIED);
+        }
+        return STATUS_WDF_PARENT_NOT_SPECIFIED;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 #endif //_FXVALIDATEFUNCTIONS_H_

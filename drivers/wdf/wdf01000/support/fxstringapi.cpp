@@ -1,4 +1,8 @@
-#include "wdf.h"
+#include "common/fxstring.h"
+#include "common/fxglobals.h"
+#include "common/fxvalidatefunctions.h"
+#include "common/fxhandle.h"
+
 
 extern "C" {
 
@@ -16,8 +20,84 @@ WDFEXPORT(WdfStringCreate)(
     WDFSTRING* String
     )
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxString* pString;
+    NTSTATUS status;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    //
+    // Get the parent's globals if it is present
+    //
+    if (NT_SUCCESS(FxValidateObjectAttributesForParentHandle(pFxDriverGlobals,
+                                                             StringAttributes)))
+    {
+        FxObject* pParent;
+
+        FxObjectHandleGetPtrAndGlobals(pFxDriverGlobals,
+                                       StringAttributes->ParentObject,
+                                       FX_TYPE_OBJECT,
+                                       (PVOID*)&pParent,
+                                       &pFxDriverGlobals);
+    }
+
+    FxPointerNotNull(pFxDriverGlobals, String);
+
+    *String = NULL;
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    status = FxValidateObjectAttributes(pFxDriverGlobals, StringAttributes);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    if (UnicodeString != NULL)
+    {
+        status = FxValidateUnicodeString(pFxDriverGlobals, UnicodeString);
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    }
+
+    pString = new (pFxDriverGlobals, StringAttributes) FxString(pFxDriverGlobals);
+
+    if (pString != NULL)
+    {
+        if (UnicodeString != NULL)
+        {
+            status = pString->Assign(UnicodeString);
+        }
+
+        if (NT_SUCCESS(status))
+        {
+            status = pString->Commit(StringAttributes, (WDFOBJECT*)String);
+        }
+
+        if (!NT_SUCCESS(status))
+        {
+            pString->DeleteFromFailedCreate();
+            pString = NULL;
+        }
+    }
+    else
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+            "Could not allocate WDFSTRING handle, %!STATUS!", status);
+    }
+
+    return status;
 }
 
 __drv_maxIRQL(PASSIVE_LEVEL)
