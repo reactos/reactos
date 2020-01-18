@@ -214,27 +214,49 @@ InputList_Destroy(VOID)
 
 
 static BOOL
-InputList_PrepareUserRegistry(VOID)
+InputList_PrepareUserRegistry(BOOL bDefaultUser)
 {
     BOOL bResult = FALSE;
     HKEY hTempKey = NULL;
     HKEY hKey = NULL;
 
-    if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                      L"Keyboard Layout",
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hKey) == ERROR_SUCCESS)
+    if (bDefaultUser)
     {
-        RegDeleteKeyW(hKey, L"Preload");
-        RegDeleteKeyW(hKey, L"Substitutes");
+        if (RegOpenKeyExW(HKEY_USERS,
+                          L".DEFAULT\\Keyboard Layout",
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            RegDeleteKeyW(hKey, L"Preload");
+            RegDeleteKeyW(hKey, L"Substitutes");
 
-        RegCloseKey(hKey);
+            RegCloseKey(hKey);
+        }
+
+        if (RegCreateKeyW(HKEY_USERS, L".DEFAULT\\Keyboard Layout", &hKey) != ERROR_SUCCESS)
+        {
+            goto Cleanup;
+        }
     }
-
-    if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) != ERROR_SUCCESS)
+    else
     {
-        goto Cleanup;
+        if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"Keyboard Layout",
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            RegDeleteKeyW(hKey, L"Preload");
+            RegDeleteKeyW(hKey, L"Substitutes");
+
+            RegCloseKey(hKey);
+        }
+
+        if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) != ERROR_SUCCESS)
+        {
+            goto Cleanup;
+        }
     }
 
     if (RegCreateKeyW(hKey, L"Preload", &hTempKey) != ERROR_SUCCESS)
@@ -284,6 +306,24 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         StringCchPrintfW(szPreload, ARRAYSIZE(szPreload), L"%08X", pNode->pLocale->dwId);
     }
 
+    /* default user */
+    if (RegOpenKeyExW(HKEY_USERS,
+                      L".DEFAULT\\Keyboard Layout\\Preload",
+                      0,
+                      KEY_SET_VALUE,
+                      &hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey,
+                       szMethodIndex,
+                       0,
+                       REG_SZ,
+                       (LPBYTE)szPreload,
+                       (wcslen(szPreload) + 1) * sizeof(WCHAR));
+
+        RegCloseKey(hKey);
+    }
+
+    /* current user */
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Keyboard Layout\\Preload",
                       0,
@@ -350,7 +390,7 @@ InputList_Process(VOID)
             if (UnloadKeyboardLayout(pCurrent->hkl))
             {
                 /* Only unload the edited input method, but does not delete it from the list */
-                if (!(pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
+                if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED)
                 {
                     InputList_RemoveNode(pCurrent);
                 }
@@ -358,7 +398,8 @@ InputList_Process(VOID)
         }
     }
 
-    InputList_PrepareUserRegistry();
+    InputList_PrepareUserRegistry(FALSE);
+    InputList_PrepareUserRegistry(TRUE);
 
     /* Find default input method */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
@@ -392,7 +433,7 @@ InputList_Process(VOID)
 
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
-        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+        if (pCurrent->wFlags & (INPUT_LIST_NODE_FLAG_DEFAULT | INPUT_LIST_NODE_FLAG_DELETED))
             continue;
 
         InputList_AddInputMethodToUserRegistry(dwIndex, pCurrent);
