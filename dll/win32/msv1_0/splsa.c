@@ -90,6 +90,7 @@ SpInitialize(
     fdTRACE("> PackageId %0xlx, Parameters %p, FunctionTable %p\n",
         PackageId, Parameters, FunctionTable);
 
+    LsaFunctions = FunctionTable;
     NtlmInit(NtlmLsaMode);
 
     return status;

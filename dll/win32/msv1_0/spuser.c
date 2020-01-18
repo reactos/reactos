@@ -2,11 +2,12 @@
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/msv1_0/msv1_0.c
- * PURPOSE:     User mode functions provided by SpUserModeInitialize
- * COPYRIGHT:   Copyright 2020 Andreas Maier <staubim@quantentunnel.de>
+ * PURPOSE:     Functions needed to fill PSECPKG_USER_FUNCTION_TABLE
+ *              (SpUserModeInitialize)
+ * COPYRIGHT:   Copyright 2019 Andreas Maier <staubim@quantentunnel.de>
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
@@ -38,7 +39,8 @@ SpInstanceInit(
     }
 
     UsrFunctionTable = FunctionTable;
-    NtlmMode = NtlmUserMode;
+    NtlmInit(NtlmUserMode);
+
     return STATUS_SUCCESS;
 }
 
@@ -218,7 +220,7 @@ void _fdTRACE(
     if (filepart == NULL)
         filepart = "\\";
 
-    sprintf(buf2, "%s:%i [0x%08lx] %s",
-            filepart, line, GetCurrentThreadId(), buf);
+    sprintf(buf2, "%s:%i [0x%04lx:0x%04lx] %s",
+            filepart, line, GetCurrentProcessId(), GetCurrentThreadId(), buf);
     TRACE(buf2);
 }

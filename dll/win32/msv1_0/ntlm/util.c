@@ -406,7 +406,7 @@ void
 NtlmInit(
     _In_ NTLM_MODE mode)
 {
-    if (mode != NtlmUnknownMode)
+    if (NtlmMode != NtlmUnknownMode)
     {
         if (mode != NtlmMode)
         {
