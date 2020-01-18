@@ -1,6 +1,7 @@
 #include "common/fxglobals.h"
 #include "common/fxdevice.h"
 #include "common/fxdeviceinit.h"
+#include "common/fxvalidatefunctions.h"
 
 
 extern "C" {
@@ -81,7 +82,33 @@ WDFEXPORT(WdfDeviceInitSetRequestAttributes)(
     PWDF_OBJECT_ATTRIBUTES RequestAttributes
     )
 {
-    WDFNOTIMPLEMENTED();
+    DDI_ENTRY();
+        
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+
+    FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
+    pFxDriverGlobals = DeviceInit->DriverGlobals;
+
+    FxPointerNotNull(pFxDriverGlobals, RequestAttributes);
+
+    //
+    // Parent of all requests created from WDFDEVICE are parented by the
+    // WDFDEVICE.
+    //
+    status = FxValidateObjectAttributes(pFxDriverGlobals,
+                                        RequestAttributes,
+                                        FX_VALIDATE_OPTION_PARENT_NOT_ALLOWED);
+
+    if (!NT_SUCCESS(status))
+    {
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    RtlCopyMemory(&DeviceInit->RequestAttributes,
+                  RequestAttributes,
+                  sizeof(WDF_OBJECT_ATTRIBUTES));
 }
 
 } // extern "C"
