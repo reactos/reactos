@@ -2408,7 +2408,13 @@ static enum fill_status fill_datafile( struct table *table, const struct expr *c
                         goto done;
                     }
                     if (!wcscmp( data.cFileName, dotW ) || !wcscmp( data.cFileName, dotdotW )) continue;
-                    new_path = append_path( path, data.cFileName, &len );
+
+                    if (!(new_path = append_path( path, data.cFileName, &len )))
+                    {
+                        status = FILL_STATUS_FAILED;
+                        FindClose( handle );
+                        goto done;
+                    }
 
                     if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                     {
@@ -2421,6 +2427,7 @@ static enum fill_status fill_datafile( struct table *table, const struct expr *c
                     rec = (struct record_datafile *)(table->data + offset);
                     rec->name    = build_name( root[0], new_path );
                     rec->version = get_file_version( rec->name );
+                    heap_free( new_path );
                     if (!match_row( table, row, cond, &status ))
                     {
                         free_row_values( table, row );
@@ -2532,7 +2539,13 @@ static enum fill_status fill_directory( struct table *table, const struct expr *
                         !wcscmp( data.cFileName, dotW ) || !wcscmp( data.cFileName, dotdotW ))
                         continue;
 
-                    new_path = append_path( path, data.cFileName, &len );
+                    if (!(new_path = append_path( path, data.cFileName, &len )))
+                    {
+                        FindClose( handle );
+                        status = FILL_STATUS_FAILED;
+                        goto done;
+                    }
+
                     if (!(push_dir( dirstack, new_path, len )))
                     {
                         heap_free( new_path );
@@ -2543,6 +2556,7 @@ static enum fill_status fill_directory( struct table *table, const struct expr *
                     rec = (struct record_directory *)(table->data + offset);
                     rec->accessmask = FILE_ALL_ACCESS;
                     rec->name       = build_name( root[0], new_path );
+                    heap_free( new_path );
                     if (!match_row( table, row, cond, &status ))
                     {
                         free_row_values( table, row );
