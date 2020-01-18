@@ -1018,6 +1018,11 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        case MsV1_0SetProcessOption:
+            // FIXME: Maybe we should set the SE_TCB_NAME-privileg?
+            Status = STATUS_SUCCESS;
+            break;
+
         default:
             return STATUS_INVALID_PARAMETER;
     }
