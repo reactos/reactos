@@ -1775,8 +1775,6 @@ SpUserModeInitialize(
     _Out_ PSECPKG_USER_FUNCTION_TABLE *ppTables,
     _Out_ PULONG pcTables)
 {
-    SECPKG_USER_FUNCTION_TABLE Tables[1];
-
     TRACE("SpUserModeInitialize(0x%lx %p %p %p)\n",
           LsaVersion, PackageVersion, ppTables, pcTables);
 
@@ -1785,24 +1783,24 @@ SpUserModeInitialize(
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
 
-    RtlZeroMemory(&Tables, sizeof(Tables));
+    RtlZeroMemory(UsrTables, sizeof(UsrTables));
 
-//    Tables[0].InstanceInit = SpInstanceInit;
-//    Tables[0].InitUserModeContext = NULL;
-//    Tables[0].MakeSignature = NULL;
-//    Tables[0].VerifySignature = NULL;
-//    Tables[0].SealMessage = NULL;
-//    Tables[0].UnsealMessage = NULL;
-//    Tables[0].GetContextToken = NULL;
-//    Tables[0].SpQueryContextAttributes = NULL;
-//    Tables[0].CompleteAuthToken = NULL;
-//    Tables[0].DeleteUserModeContext = NULL;
-//    Tables[0].FormatCredentials = NULL;
-//    Tables[0].MarshallSupplementalCreds = NULL;
-//    Tables[0].ExportContext = NULL;
-//    Tables[0].ImportContext = NULL;
+//    UsrTables[0].InstanceInit = SpInstanceInit;
+//    UsrTables[0].InitUserModeContext = NULL;
+//    UsrTables[0].MakeSignature = NULL;
+//    UsrTables[0].VerifySignature = NULL;
+//    UsrTables[0].SealMessage = NULL;
+//    UsrTables[0].UnsealMessage = NULL;
+//    UsrTables[0].GetContextToken = NULL;
+//    UsrTables[0].SpQueryContextAttributes = NULL;
+//    UsrTables[0].CompleteAuthToken = NULL;
+//    UsrTables[0].DeleteUserModeContext = NULL;
+//    UsrTables[0].FormatCredentials = NULL;
+//    UsrTables[0].MarshallSupplementalCreds = NULL;
+//    UsrTables[0].ExportContext = NULL;
+//    UsrTables[0].ImportContext = NULL;
 
-    *ppTables = Tables;
+    *ppTables = UsrTables;
     *pcTables = 1;
 
     return STATUS_SUCCESS;
