@@ -292,6 +292,14 @@ endif()
 add_dependencies(freeldr_pe asm)
 add_dependencies(freeldr_pe_dbg asm)
 
+if(SARCH STREQUAL "pc98")
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/PC98)
+    add_custom_target(pc98bootfdd
+        COMMAND native-fatten ${REACTOS_BINARY_DIR}/PC98/ReactOS-98.IMG -format 2880 ROS98BOOT -boot ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/pc98/fat12fdd.bin -add ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys FREELDR.SYS -add ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.ini FREELDR.INI
+        DEPENDS native-fatten fat12pc98 freeldr
+        VERBATIM)
+endif()
+
 if(NOT ARCH STREQUAL "arm")
     concatenate_files(
         ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
