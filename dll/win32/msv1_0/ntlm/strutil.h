@@ -110,6 +110,16 @@ ExtAStrIsEqual2(
     IN PEXT_STRING_A v1,
     char* v2);
 BOOL
+ExtWStrIsEqual1(
+    IN PEXT_STRING_W v1,
+    IN PEXT_STRING_W v2,
+    IN BOOL IgnoreCase);
+BOOL
+ExtWStrIsEqual2(
+    IN PEXT_STRING_W v1,
+    IN WCHAR* v2,
+    IN BOOL IgnoreCase);
+BOOL
 ExtDataIsEqual1(
     IN PEXT_DATA v1,
     IN PEXT_DATA v2);

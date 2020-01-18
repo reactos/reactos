@@ -340,6 +340,36 @@ ExtAStrIsEqual1(
 }
 
 BOOL
+ExtWStrIsEqual2(
+    IN PEXT_STRING_W v1,
+    IN WCHAR* v2,
+    IN BOOL IgnoreCase)
+{
+    if (v1->bUsed != (wcslen(v2) * sizeof(WCHAR)))
+        return FALSE;
+    if (IgnoreCase)
+        //return wcsnicmp((WCHAR*)v1->Buffer, v2, v1->bUsed / sizeof(WCHAR));
+        return wcsicmp((WCHAR*)v1->Buffer, v2);
+    else
+        return (memcmp(v1->Buffer, v2, v1->bUsed) == 0);
+}
+BOOL
+ExtWStrIsEqual1(
+    IN PEXT_STRING_W v1,
+    IN PEXT_STRING_W v2,
+    IN BOOL IgnoreCase)
+{
+    if (v1->bUsed != v2->bUsed)
+        return FALSE;
+
+    if (IgnoreCase)
+        //return wcsnicmp((WCHAR*)v1->Buffer, (WCHAR*)v2->Buffer, v1->bUsed / sizeof(WCHAR));
+        return wcsicmp((WCHAR*)v1->Buffer, (WCHAR*)v2->Buffer);
+    else
+        return (memcmp(v1->Buffer, v2->Buffer, v1->bUsed) == 0);;
+}
+
+BOOL
 ExtDataIsEqual1(
     IN PEXT_DATA v1,
     IN PEXT_DATA v2)
