@@ -154,28 +154,28 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
         return FALSE;
 
     /* check how many buffers we have */
-    if(pInputDesc->cBuffers < BufferIndex)
+    if (BufferIndex >= pInputDesc->cBuffers)
         return FALSE;
 
     /* get buffer */
-     Buffer = &pInputDesc->pBuffers[BufferIndex];
+    Buffer = &pInputDesc->pBuffers[BufferIndex];
 
-     /* detect a SECBUFFER_TOKEN */
-     if ((Buffer->BufferType & (~SECBUFFER_READONLY)) == SECBUFFER_TOKEN)
-     {
-         /* detect read only buffer */
-         if (OutputToken && (Buffer->BufferType & SECBUFFER_READONLY))
-             return  FALSE;
+    /* detect a SECBUFFER_TOKEN */
+    if ((Buffer->BufferType & (~SECBUFFER_READONLY)) == SECBUFFER_TOKEN)
+    {
+        /* detect read only buffer */
+        if (OutputToken && (Buffer->BufferType & SECBUFFER_READONLY))
+            return  FALSE;
 
-         /* LSA server must map the user provided buffer into its address space */
-         if(inLsaMode)
-         {
-             if (!NT_SUCCESS(LsaFunctions->MapBuffer(Buffer, Buffer)))
-                 return FALSE;
-         }
-         *pOutBuffer = Buffer;
-         return TRUE;
-     }
+        /* LSA server must map the user provided buffer into its address space */
+        if(inLsaMode)
+        {
+            if (!NT_SUCCESS(LsaFunctions->MapBuffer(Buffer, Buffer)))
+                return FALSE;
+        }
+        *pOutBuffer = Buffer;
+        return TRUE;
+    }
     return FALSE;
 }
 
