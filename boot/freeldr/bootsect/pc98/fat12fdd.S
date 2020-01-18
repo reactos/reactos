@@ -145,8 +145,8 @@ relocated:
     mov ds, ax
 
     test byte ptr ds:[HEX(501)], HEX(08)        // High-resolution mode check
-    mov ax, HEX(0E000)
     jz VideoTestNormalMode
+    mov ax, HEX(0E000)
     jmp short VideoTestDone
 VideoTestNormalMode:
     mov ax, HEX(0A000)
