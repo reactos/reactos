@@ -624,6 +624,15 @@ public:
     //
     #define GET_CONTEXT_HEADER() WDF_PTR_ADD_OFFSET_TYPE(this, m_ObjectSize, FxContextHeader*)
 
+    BOOLEAN
+    IsNoDeleteDDI(
+        VOID
+        )
+    {
+        // No need for lock since its only set in constructor/init
+        return FLAG_TO_BOOL(m_ObjectFlags, FXOBJECT_FLAGS_NODELETEDDI);
+    }
+
     //
     // Commit the WDF object before returning handle to the caller.
     //
