@@ -390,8 +390,75 @@ WDFEXPORT(WdfDriverIsVersionAvailable)(
     PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
     )
 {
-    WDFNOTIMPLEMENTED();
-    return STATUS_UNSUCCESSFUL;
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDriver* pDriver;
+    NTSTATUS status;
+    ULONG major, minor;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    major = __WDF_MAJOR_VERSION;
+    minor = __WDF_MINOR_VERSION;
+#else
+    major = __WUDF_MAJOR_VERSION;
+    minor = __WUDF_MINOR_VERSION;
+#endif
+
+    //
+    // Even though it is unused, still convert it to make sure a valid handle is
+    // being passed in.
+    //
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Driver,
+                                   FX_TYPE_DRIVER,
+                                   (PVOID *)&pDriver,
+                                   &pFxDriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, VersionAvailableParams);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status))
+    {
+        return FALSE;
+    }
+
+    if (VersionAvailableParams->Size != sizeof(WDF_DRIVER_VERSION_AVAILABLE_PARAMS))
+    {
+        status = STATUS_INFO_LENGTH_MISMATCH;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
+            "VersionAvailableParams Size 0x%x, expected 0x%x, %!STATUS!",
+            VersionAvailableParams->Size, sizeof(WDF_DRIVER_VERSION_AVAILABLE_PARAMS),
+            status);
+
+        return FALSE;
+    }
+
+    //
+    // We log at TRACE_LEVEL_INFORMATION so that we know it gets into the IFR at
+    // all times.  This will make it easier to debug drivers which fail to load
+    // when a new minor version of WDF is installed b/c they are failing
+    // version checks.
+    //
+    DoTraceLevelMessage(
+        pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDRIVER,
+        "IsVersionAvailable, current WDF ver major %d, minor %d, caller asking "
+        "about major %d, minor %d", major, minor,
+        VersionAvailableParams->MajorVersion, VersionAvailableParams->MinorVersion);
+
+    //
+    // Currently we only support one major version per KMDF binary and we support
+    // all minor versions of that major version down to 0x0.
+    //
+    if (VersionAvailableParams->MajorVersion == major &&
+        VersionAvailableParams->MinorVersion <= minor)
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 
