@@ -475,6 +475,7 @@ DnsQuery_W(LPCWSTR Name,
 {
     DWORD dwRecords = 0;
     PDNS_RECORDW pRecord = NULL;
+    size_t NameLen, i;
     DNS_STATUS Status = ERROR_SUCCESS;
 
     DPRINT("DnsQuery_W()\n");
@@ -492,6 +493,31 @@ DnsQuery_W(LPCWSTR Name,
     {
         *QueryResultSet = (PDNS_RECORD)pRecord;
         return ERROR_SUCCESS;
+    }
+
+    /*
+     * Check allowed characters
+     * According to RFC a-z,A-Z,0-9,-,_, but can't start or end with - or _
+     */
+    NameLen = wcslen(Name);
+    if (Name[0] == L'-' || Name[0] == L'_' || Name[NameLen - 1] == L'-' ||
+        Name[NameLen - 1] == L'_' || wcsstr(Name, L"..") != NULL)
+    {
+        return ERROR_INVALID_NAME;
+    }
+
+    i = 0;
+    while (i < NameLen)
+    {
+        if (!((Name[i] >= L'a' && Name[i] <= L'z') ||
+              (Name[i] >= L'A' && Name[i] <= L'Z') ||
+              (Name[i] >= L'0' && Name[i] <= L'9') ||
+              Name[i] == L'-' || Name[i] == L'_' || Name[i] == L'.'))
+        {
+            return DNS_ERROR_INVALID_NAME_CHAR;
+        }
+
+        i++;
     }
 
     RpcTryExcept
@@ -635,7 +661,7 @@ Query_Main(LPCWSTR Name,
     int adns_error;
     adns_answer *answer;
     LPSTR CurrentName;
-    unsigned i, CNameLoop;
+    unsigned CNameLoop;
     PFIXED_INFO network_info;
     ULONG network_info_blen = 0;
     DWORD network_info_result;
@@ -679,29 +705,6 @@ Query_Main(LPCWSTR Name,
                             NULL,
                             0);
         NameLen--;
-
-        /* Check allowed characters
-        * According to RFC a-z,A-Z,0-9,-,_, but can't start or end with - or _
-        */
-        if (AnsiName[0] == '-' || AnsiName[0] == '_' || AnsiName[NameLen - 1] == '-' ||
-            AnsiName[NameLen - 1] == '_' || strstr(AnsiName, "..") != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            return ERROR_INVALID_NAME;
-        }
-        i = 0;
-        while (i < NameLen)
-        {
-            if (!((AnsiName[i] >= 'a' && AnsiName[i] <= 'z') ||
-                  (AnsiName[i] >= 'A' && AnsiName[i] <= 'Z') ||
-                  (AnsiName[i] >= '0' && AnsiName[i] <= '9') ||
-                  AnsiName[i] == '-' || AnsiName[i] == '_' || AnsiName[i] == '.'))
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return DNS_ERROR_INVALID_NAME_CHAR;
-            }
-            i++;
-        }
 
         network_info_result = GetNetworkParams(NULL, &network_info_blen);
         network_info = (PFIXED_INFO)RtlAllocateHeap(RtlGetProcessHeap(), 0, (size_t)network_info_blen);
