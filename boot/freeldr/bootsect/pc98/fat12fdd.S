@@ -20,12 +20,6 @@
  */
 #define BOOT_DAUA HEX(0584)
 
-/*
- * Text video RAM is located at segments 0A000h (characters) and 0A200h (attributes)
- * See https://people.freebsd.org/~kato/pc98-arch.html#memmap
- */
-#define VRAM_TEXTMODE_ADDRESS HEX(0A000)
-
 DataAreaStartHigh    = 2
 DataAreaStartLow     = 4
 BiosCHSDriveSizeHigh = 6
@@ -149,6 +143,15 @@ relocated:
     xor ax, ax                                  // Clean-up segments
     mov es, ax
     mov ds, ax
+
+    test byte ptr ds:[HEX(501)], HEX(08)        // High-resolution mode check
+    mov ax, HEX(0E000)
+    jz VideoTestNormalMode
+    jmp short VideoTestDone
+VideoTestNormalMode:
+    mov ax, HEX(0A000)
+VideoTestDone:
+    mov word ptr BP_REL(VramSegment), ax
 
     mov ax, si
     mov byte ptr BP_REL(BootDrive), al          // Save the boot drive
@@ -357,33 +360,14 @@ PutChar:
     push di
     push es
 
-    push VRAM_TEXTMODE_ADDRESS
+    push word ptr BP_REL(VramSegment)
     pop es
-    mov di, word ptr BP_REL(VRAMOffset)         // ES:DI = 0A000:VRAMOffset
-
-    cmp di, VGA_WIDTH * VGA_HEIGHT * 2          // Needs to scroll
-    jb short .PutCharWrite
-
-    push ds                                     // Save the string ptr
-    push si
-
-    mov si, VGA_WIDTH * 2
-    push VRAM_TEXTMODE_ADDRESS
-    pop ds                                      // DS:SI = 0A000:80 * 2
-    xor di, di                                  // ES:DI = 0A000:0
-    mov cx, VGA_WIDTH * (VGA_HEIGHT - 1)
-
-    rep movsw                                   // Scroll screen
-
-    pop si                                      // Restore the string ptr
-    pop ds
-
+    mov di, word ptr BP_REL(VramOffset)         // ES:DI = VramSegment:VramOffset
     .PutCharWrite:
         xor ah, ah
         stosw                                   // Write ASCII directly to the VRAM
 
-        mov word ptr BP_REL(VRAMOffset), di
-
+        mov word ptr BP_REL(VramOffset), di
     pop es
     pop di
 
@@ -410,12 +394,12 @@ PrintString:
     jmp short PrintString
 
     .PrintStringHandleCR:
-        mov ax, word ptr BP_REL(VRAMOffset)
+        mov ax, word ptr BP_REL(VramOffset)
         mov dl, VGA_WIDTH * 2
         div dl
         inc ax
         mul dl
-        mov word ptr BP_REL(VRAMOffset), ax
+        mov word ptr BP_REL(VramOffset), ax
         inc si                                  // Skip the next LF character
      jmp short PrintString
 
@@ -486,7 +470,9 @@ Reboot:
 Halt:
     jmp short Halt                              // Spin
 
-VRAMOffset:
+VramSegment:
+    .word 0
+VramOffset:
     .word 0
 msgDiskError:
     .ascii "ERR", CR, LF, NUL
