@@ -9,25 +9,29 @@ static MUI_ENTRY huHUSetupInitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         20,
         "K\202rem v\240rjon am\241g a Reactos telep\241t\213 inicializ\240lja mag\240t",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         21,
         "\202s felt\202rk\202pezi az eszk\224zeit...",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "K\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -43,37 +47,43 @@ static MUI_ENTRY huHULanguagePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Nyelv kiv\240laszt\240sa",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  K\202rj\201k v\240lassza ki a telep\241t\202s folyam\240n haszn\240lni k\241v\240nt nyelvet.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Ez a nyelv lesz az alap\202rtelmezett a telep\241tett rendszeren.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s  F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -89,67 +99,78 @@ static MUI_ENTRY huHUWelcomePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "\232dv\224z\224lj\201k a ReactOS telep\241t\213ben",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "A telep\241t\213nek ez a r\202sze felm\240solja a ReactOS oper\240ci\242s rendszert",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "a sz\240m\241t\242g\202pre \202s el\213k\202sz\241ti a telep\241t\202s m\240sodik szakasz\240t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Nyomjon ENTER-t a ReactOS telep\241t\202s\202hez vagy friss\241t\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Nyomjon R-t egy megl\202v\213, m\240r telep\241tett ReactOS helyre\240ll\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Nyomjon L-t a licencfelt\202telek megtekint\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "Tov\240bbi inform\240ci\242k\202rt l\240togasson el a",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "http://www.reactos.org weboldalra.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s  R = Helyre\240ll\241t\240s  L = Licenc  F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -165,61 +186,71 @@ static MUI_ENTRY huHUIntroPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "ReactOS verzi\242inform\240ci\242k",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "A ReactOS alfa \240llapotban van, ami azt jelenti, hogy m\202g",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "rengeteg funkci\242 hi\240nyzik \202s er\213sen fejleszt\202s alatt \240ll.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "Csak tesztel\202sre aj\240nlott, nem alkalmas mindennapi haszn\240latra.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "Amennyiben nem virtu\240lis g\202pre telep\241ti, mentse le el\213tte az adatait,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "vagy tesztelje egy m\240sodlagos, nem akt\241van haszn\240lt sz\240m\241t\242g\202pen.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Nyomjon ENTER-t a telep\241t\202s folytat\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -235,121 +266,141 @@ static MUI_ENTRY huHULicensePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         6,
         "Licenc:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         8,
         "A ReactOS rendszer GNU GPL licenc alatt lett k\224zreadva",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         9,
         "olyan r\202szekkel, amelyek m\240s kompatibilis lincenc\373 k\242dokat",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "tartalmaznak, mint X11 vagy BSD \202s GNU LGPL licencek.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "Ez\202rt az \224sszes szoftver, amely a ReactOS rendszer r\202sze,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "a GNU GPL alatt ker\201l kiad\240sra az eredeti licenc fenntart\240sa",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "mellett.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Ez a szoftver GARANCIA N\220LK\232L lett k\224zreadva haszn\240lati",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         16,
         "korl\240toz\240sok n\202lk\201l, kiv\202ve a vonatkoz\242 helyi \202s nemzetk\224zi",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "t\224rv\202nyeket. A ReactOS licence csak a harmadik feleknek t\224rt\202n\213",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "terjeszt\202sekre vonatkozik. Ha valamilyen okb\242l nem kapta meg",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "a GNU General Public License egy p\202ld\240ny\240t, k\202rj\201k l\240togasson el",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         20,
         "a http://www.gnu.org/licenses/licenses.html weboldalra.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "Garancia:",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         24,
         "Ez szabad szoftver; a m\240sol\240si felt\202telekhez l\240sd a forr\240sk\242dot.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "Minden GARANCIA N\220LK\232L lett k\224zreadva, az ELADHAT\340S\265GRA vagy",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "VALAMELY C\220LRA VAL\340 ALKALMAZHAT\340S\265GRA val\242 sz\240rmaztatott",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         27,
         "garanci\240t is bele\202rtve.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Vissza",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -365,79 +416,92 @@ static MUI_ENTRY huHUDevicePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Az al\240bbi lista a jelenlegi eszk\224zbe\240ll\241t\240sokat mutatja.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         24,
         11,
         "Sz\240m\241t\242g\202p:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         12,
         "Kijelz\213:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         13,
         "Billenty\373zet:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         14,
         "Billenty\373zetkioszt\240s:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         24,
         16,
         "Elfogad\240s:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT,
+        TEXT_ID_STATIC
     },
     {
         25,
         16,
         "Be\240ll\241t\240sok elfogad\240sa",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         19,
         "A LE / FEL gombokkal tud kijel\224lni egy elemet \202s az ENTER lenyom\240s\240val",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         20,
         "tud kiv\240lasztani egy alternat\241v be\240ll\241t\240st.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         23,
         "Ha az \224sszes be\240ll\241t\240s megfelel\213, jel\224lje ki a \"Be\240ll\241t\240sok elfogad\240sa\"",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         24,
         "sort, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -453,55 +517,64 @@ static MUI_ENTRY huHURepairPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A ReactOS telep\241t\213 korai fejleszt\202si f\240zisban van. M\202g nem",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "t\240mogatja egy teljes \202rt\202k\373 telep\241t\213 \224sszes funkci\242j\240t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "A helyre\240ll\241t\242 funkci\242 m\202g nincs implement\240lva.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Nyomjon U-t az oper\240ci\242s rendszer friss\241t\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Nyomjon R-t a helyre\240ll\241t\240si konzol ind\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Nyomjon ESC-et a f\213oldalra val\242 visszat\202r\202shez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ESC = F\213oldal  U = Friss\241t\202s  R = Helyre\240ll\241t\240s  ENTER = \351jraind\241t\240s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -517,61 +590,71 @@ static MUI_ENTRY huHUUpgradePageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A ReactOS telep\241t\213 friss\241teni tudja az al\240bbi megl\202v\213 ReactOS",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "telep\241t\202sek egyik\202t, vagy, ha egy ReactOS rendszer megs\202r\201lt,",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "megpr\242b\240lhatja kijav\241tani azt.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "A jav\241t\240si funkci\242 f\202lk\202sz \202s m\202g nem el\202rhet\213.",
-        TEXT_STYLE_HIGHLIGHT
+        TEXT_STYLE_HIGHLIGHT,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Haszn\240lja a FEL / LE gombokat egy rendszer kijel\224l\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Nyomjon U-t a kiv\240lasztott rendszer friss\241t\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Nyomjon ESC-et egy \243j telep\241t\202s ind\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon F3-at a telep\241t\202s megszak\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "U = Friss\241t\202s   ESC = Ne friss\241tsen   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -587,43 +670,50 @@ static MUI_ENTRY huHUComputerPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A sz\240m\241t\242g\202p t\241pus\240nak megv\240ltoztat\240sa.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Haszn\240lja a FEL / LE gombokat a sz\240m\241t\242g\202p t\241pus\240nak",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   kiv\240laszt\240s\240hoz, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a sz\240m\241t\242g\202p",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   t\241pus\240nak megv\240ltoztat\240sa n\202lk\201l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -639,37 +729,43 @@ static MUI_ENTRY huHUFlushPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "A rendszer most megbizonyosodik r\242la hogy minden adat",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         7,
         "ki\241r\240sra ker\201lt.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "Ez egy percet vehet ig\202nybe.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         10,
         "Mikor k\202sz, a sz\240m\241t\242g\202p automatikusan \243jraindul.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Gyors\241t\242t\240r ki\201r\241t\202se",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -685,37 +781,43 @@ static MUI_ENTRY huHUQuitPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "A ReactOS nincs teljesen feltelep\241tve.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "T\240vol\241tsa el a floppy lemezt az A: meghajt\242b\242l \202s",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "minden CD-t a CD olvas\242kb\242l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "K\202rem v\240rjon...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -731,42 +833,49 @@ static MUI_ENTRY huHUDisplayPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Kijelz\213 t\241pus\240nak megv\240ltoztat\240sa.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {   8,
         10,
          "\x07  Haszn\240lja a FEL / LE gombokat a kijelz\213 t\241pus\240nak kijel\224l\202s\202hez.",
-         TEXT_STYLE_NORMAL
+         TEXT_STYLE_NORMAL,
+         TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   Majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a kijelz\213 t\241pus\240nak",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   megv\240ltoztat\240sa n\202lk\201l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -782,37 +891,43 @@ static MUI_ENTRY huHUSuccessPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         10,
         6,
         "A ReactOS alapvet\213 \224sszetev\213i sikeresen feltelep\201ltek.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         8,
         "T\240vol\241tsa el a floppy lemezt az A: meghajt\242b\242l \202s",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         9,
         "minden CD-t a CD olvas\242kb\242l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         10,
         11,
         "Nyomjon ENTER-t a sz\240m\241t\242g\202p \243jraind\241t\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -828,37 +943,43 @@ static MUI_ENTRY huHUBootPageEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "a sz\240m\241t\242g\202p merevlemez\202re.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "az A: meghajt\242ba, majd nyomjon ENTER-t.",
         TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -875,61 +996,71 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Az al\240bbi list\240ban l\240that\242ak a megl\202v\213 part\241ci\242k \202s a nem haszn\240lt",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "t\240rhely \243j part\241ci\242k l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "\x07  Haszn\240lja a FEL / LE gombokat egy elem kijel\224l\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Nyomjon ENTER-t a ReactOS kijel\224lt part\241ci\242ra val\242 telep\241t\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "\x07  Nyomjon P-t egy els\213dleges part\241ci\242 l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         17,
         "\x07  Nyomjon E-t egy kiterjesztett part\241ci\242 l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         19,
         "\x07  Nyomjon L-t egy logikai part\241ci\242 l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon D-t egy megl\202v\213 part\241ci\242 t\224rl\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "K\202rem v\240rjon...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -945,91 +1076,106 @@ static MUI_ENTRY huHUConfirmDeleteSystemPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A rendszerpart\241ci\242 t\224rl\202s\202t v\240lasztotta.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
         "A rendszerpart\241ci\242kon lehetnek diagnosztikai programok, hardver",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         11,
         "konfigur\240l\242 programok, programok, melyek egy oper\240ci\242s rendszert",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         12,
         "(pl. ReactOS) ind\241tanak vagy egy\202b szoftverek, melyeket",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         13,
         "a hardver gy\240rt\242ja adott.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "Csak akkor t\224r\224lj\224n egy rendszerpart\241ci\242t, ha biztos benne hogy",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "nincsenek rajta ilyen programok, vagy ha biztos benne hogy t\224r\224lni",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         17,
         "szeretn\202. Ha t\224rli a part\241ci\242t, lehet hogy nem fogja tudni elind\241tani",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         18,
         "a sz\240m\241t\242g\202pet a merevlemezr\213l am\241g nem v\202gez a ReactOS telep\241t\202s\202vel.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon ENTER-t a rendszerpart\241ci\242 t\224rl\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         22,
         "   K\202s\213bb \243jra meg kell er\213s\241tenie a part\241ci\242 t\224rl\202s\202t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         25,
         "\x07  Nyomjon ESC-et az el\213z\213 oldalra val\242 visszat\202r\202shez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         26,
         "   A part\241ci\242 nem lesz t\224r\224lve.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s  ESC = M\202gse",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1045,31 +1191,29 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Part\241ci\242 form\240z\240sa",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         10,
-        "A telep\241t\213 most form\240zni fogja a part\241ci\242t.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        11,
-        "Nyomjon ENTER-t a folytat\240shoz.",
-        TEXT_STYLE_NORMAL
+        "A telep\241t\213 most form\240zni fogja a part\241ci\242t. Nyomjon ENTER-t a folytat\240shoz.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_FORMAT_PROMPT
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1085,43 +1229,50 @@ static MUI_ENTRY huHUInstallDirectoryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A telep\241t\213 felm\240solja a ReactOS f\240jljait a kijel\224lt part\241ci\242ra.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         9,
         "V\240lasszon egy mapp\240t ahov\240 a ReactOS-t telep\241teni szeretn\202:",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         14,
         "Az aj\240nlott mappa megv\240ltoztat\240s\240hoz nyomjon BACKSPACE-t, hogy",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         15,
         "kit\224r\224lje a karaktereket, majd g\202pelje be a k\241v\240nt mappa nev\202t ahov\240",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         6,
         16,
         "a ReactOS-t telep\241teni szeretn\202.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1137,31 +1288,36 @@ static MUI_ENTRY huHUFileCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         0,
         12,
         "K\202rem v\240rjon, am\241g a ReactOS telep\241t\213 felm\240solja a f\240jlokat a ReactOS",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         13,
         "rendszer mapp\240ba.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         0,
         14,
         "Ez p\240r percet vehet ig\202nybe.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
+        TEXT_ID_STATIC
     },
     {
         50,
         0,
         "\xB3 K\202rem v\240rjon...    ",
-        TEXT_TYPE_STATUS
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1177,43 +1333,50 @@ static MUI_ENTRY huHUBootLoaderEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "Boot loader telep\241t\202se",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         12,
         "Rendszerbet\224lt\213 merevlemezre telep\241t\202se (MBR \202s VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "Rendszerbet\224lt\213 merevlemezre telep\241t\202se (csak VBR).",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "Rendszerbet\224lt\213 floppy lemezre telep\241t\202se.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         15,
         "Rendszerbet\224lt\213 telep\241t\202s\202nek kihagy\240sa.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1229,43 +1392,50 @@ static MUI_ENTRY huHUKeyboardSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A billenty\373zet t\241pus\240nak megv\240ltoztat\240sa.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Haszn\240lja a FEL / LE gombokat a billenty\373zet t\241pus\240nak",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   kijel\224l\202s\202hez, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez a billenty\373zet",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   t\241pus\240nak megv\240ltoztat\240sa n\202lk\201l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1281,43 +1451,50 @@ static MUI_ENTRY huHULayoutSettingsEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "K\202rj\201k v\240lassza ki az alap\202rtelmezett billenty\373zetkioszt\240st.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         10,
         "\x07  Haszn\240lja a FEL / LE gombokat a v\240lasztott billenty\373zetkioszt\240s",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         11,
         "   kijel\213l\202s\202hez, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         13,
         "\x07  Nyomjon ESC-et az el\213z\213 oldalra visszat\202r\202shez",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         14,
         "   a billenty\373zetkioszt\240s megv\240ltoztat\240sa n\202lk\201l.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1334,19 +1511,22 @@ static MUI_ENTRY huHUPrepareCopyEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A telep\241t\213 el\213k\202sz\241ti a sz\240m\241t\242g\202pet a ReactOS f\240jlok m\240sol\240s\240ra.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "M\240soland\242 f\240jlok list\240j\240nak l\202trehoz\240sa...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1363,7 +1543,8 @@ static MUI_ENTRY huHUSelectFSEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
@@ -1393,7 +1574,8 @@ static MUI_ENTRY huHUSelectFSEntries[] =
         0,
         0,
         "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
 
     {
@@ -1410,37 +1592,43 @@ static MUI_ENTRY huHUDeletePartitionEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A part\241ci\242 t\224rl\202s\202t v\240lasztotta",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         18,
         "\x07  Nyomjon L-t a part\241ci\242 t\224rl\202s\202hez.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         11,
         19,
         "FIGYELEM: A part\241ci\242n l\202v\213 \224sszes adat el fog veszni!",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         8,
         21,
         "\x07  Nyomjon ESC-et ha m\202gsem szeretn\202 t\224r\224lni.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "L = Part\241ci\242 t\224rl\202se   ESC = M\202gse   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
@@ -1456,19 +1644,22 @@ static MUI_ENTRY huHURegistryEntries[] =
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
     },
     {
         6,
         8,
         "A telep\241t\213 a rendszerbe\240ll\241t\240sokat friss\241ti.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
     },
     {
         0,
         0,
         "Regisztr\240ci\242s adatb\240zis gy\373jt\213k l\202trehoz\240sa...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
     },
     {
         0,
