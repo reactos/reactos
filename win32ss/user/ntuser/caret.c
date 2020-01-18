@@ -217,10 +217,13 @@ co_IntSetCaretPos(int X, int Y)
       if(ThreadQueue->CaretInfo.Pos.x != X || ThreadQueue->CaretInfo.Pos.y != Y)
       {
          co_IntHideCaret(&ThreadQueue->CaretInfo);
-         ThreadQueue->CaretInfo.Showing = 1;
          ThreadQueue->CaretInfo.Pos.x = X;
          ThreadQueue->CaretInfo.Pos.y = Y;
-         co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
+         if (ThreadQueue->CaretInfo.Visible)
+         {
+            ThreadQueue->CaretInfo.Showing = 1;
+            co_IntDrawCaret(pWnd, &ThreadQueue->CaretInfo);
+         }
 
          IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_CARET, CHILDID_SELF, 0);

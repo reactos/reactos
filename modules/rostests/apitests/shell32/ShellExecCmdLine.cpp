@@ -7,6 +7,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <versionhelpers.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -430,6 +431,13 @@ START_TEST(ShellExecCmdLine)
     using namespace std;
 
 #ifndef ShellExecCmdLine
+    // CHECKME
+    if (!IsWindowsVistaOrGreater())
+    {
+        skip("ShellExecCmdLine is not available on this platform\n");
+        return;
+    }
+
     HMODULE hShell32 = GetModuleHandleA("shell32");
     g_pShellExecCmdLine = (SHELLEXECCMDLINE)GetProcAddress(hShell32, (LPCSTR)(INT_PTR)265);
     if (!g_pShellExecCmdLine)

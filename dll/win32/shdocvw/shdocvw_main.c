@@ -20,17 +20,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 #include "shdocvw.h"
 
 #include "winreg.h"
+#ifdef __REACTOS__
+#include "winnls.h"
+#endif
 #include "shlwapi.h"
 #include "wininet.h"
 #include "isguids.h"

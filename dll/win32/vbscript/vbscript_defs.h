@@ -234,3 +234,40 @@
 #define DISPID_REGEXP_TEST          10005
 #define DISPID_REGEXP_REPLACE       10006
 #define DISPID_REGEXP_MULTILINE     10007
+
+/* error codes */
+#define VBSE_ILLEGAL_FUNC_CALL              5
+#define VBSE_OVERFLOW                       6
+#define VBSE_OUT_OF_MEMORY                  7
+#define VBSE_OUT_OF_BOUNDS                  9
+#define VBSE_ARRAY_LOCKED                  10
+#define VBSE_TYPE_MISMATCH                 13
+#define VBSE_FILE_NOT_FOUND                53
+#define VBSE_IO_ERROR                      57
+#define VBSE_FILE_ALREADY_EXISTS           58
+#define VBSE_DISK_FULL                     61
+#define VBSE_TOO_MANY_FILES                67
+#define VBSE_PERMISSION_DENIED             70
+#define VBSE_PATH_FILE_ACCESS              75
+#define VBSE_PATH_NOT_FOUND                76
+#define VBSE_OBJECT_VARIABLE_NOT_SET       91
+#define VBSE_ILLEGAL_NULL_USE              94
+#define VBSE_CANT_CREATE_TMP_FILE         322
+#define VBSE_CANT_CREATE_OBJECT           429
+#define VBSE_OLE_NOT_SUPPORTED            430
+#define VBSE_OLE_FILE_NOT_FOUND           432
+#define VBSE_OLE_NO_PROP_OR_METHOD        438
+#define VBSE_ACTION_NOT_SUPPORTED         445
+#define VBSE_NAMED_ARGS_NOT_SUPPORTED     446
+#define VBSE_LOCALE_SETTING_NOT_SUPPORTED 447
+#define VBSE_NAMED_PARAM_NOT_FOUND        448
+#define VBSE_PARAMETER_NOT_OPTIONAL       449
+#define VBSE_FUNC_ARITY_MISMATCH          450
+#define VBSE_NOT_ENUM                     451
+#define VBSE_INVALID_DLL_FUNCTION_NAME    453
+#define VBSE_INVALID_TYPELIB_VARIABLE     458
+#define VBSE_SERVER_NOT_FOUND             462
+
+#define VBS_COMPILE_ERROR                4096
+#define VBS_RUNTIME_ERROR                4097
+#define VBS_UNKNOWN_RUNTIME_ERROR        4098

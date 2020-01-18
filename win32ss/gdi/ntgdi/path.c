@@ -222,7 +222,7 @@ BOOL PATH_RestorePath( DC *dst, DC *src )
        PATH_AssignGdiPath(pdstPath, psrcPath);
 
        PATH_UnlockPath(pdstPath);
-       PATH_UnlockPath(psrcPath);       
+       PATH_UnlockPath(psrcPath);
     }
     else
     {
@@ -1405,7 +1405,7 @@ PATH_PathToRegion(
     INT Mode,
     PREGION Rgn)
 {
-    int i, pos, polygons; 
+    int i, pos, polygons;
     PULONG counts;
     int Ret;
 
@@ -2694,8 +2694,21 @@ NtGdiGetPath(
 {
     INT ret = -1;
     PPATH pPath;
+    DC *dc;
 
-    DC *dc = DC_LockDc(hDC);
+    _SEH2_TRY
+    {
+        ProbeForWrite(Points, nSize * sizeof(*Points), sizeof(ULONG));
+        ProbeForWrite(Types, nSize, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return -1);
+    }
+    _SEH2_END
+
+    dc = DC_LockDc(hDC);
     DPRINT("NtGdiGetPath start\n");
     if (!dc)
     {

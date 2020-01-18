@@ -17,9 +17,9 @@
  */
 
 #include <windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-#include <wine/unicode.h>
 #include <wine/heap.h>
 
 #include "reg.h"
@@ -92,7 +92,7 @@ static size_t export_value_name(HANDLE hFile, WCHAR *name, size_t len)
     {
         WCHAR *str = escape_string(name, len, &line_len);
         WCHAR *buf = heap_xalloc((line_len + 4) * sizeof(WCHAR));
-        line_len = sprintfW(buf, quoted_fmt, str);
+        line_len = swprintf(buf, quoted_fmt, str);
         write_file(hFile, buf);
         heap_free(buf);
         heap_free(str);
@@ -116,7 +116,7 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
         len = size / sizeof(WCHAR) - 1;
     str = escape_string(data, len, &line_len);
     *buf = heap_xalloc((line_len + 3) * sizeof(WCHAR));
-    sprintfW(*buf, fmt, str);
+    swprintf(*buf, fmt, str);
     heap_free(str);
 }
 
@@ -125,7 +125,7 @@ static void export_dword_data(WCHAR **buf, DWORD *data)
     static const WCHAR fmt[] = {'d','w','o','r','d',':','%','0','8','x',0};
 
     *buf = heap_xalloc(15 * sizeof(WCHAR));
-    sprintfW(*buf, fmt, *data);
+    swprintf(*buf, fmt, *data);
 }
 
 static size_t export_hex_data_type(HANDLE hFile, DWORD type)
@@ -142,7 +142,7 @@ static size_t export_hex_data_type(HANDLE hFile, DWORD type)
     else
     {
         WCHAR *buf = heap_xalloc(15 * sizeof(WCHAR));
-        line_len = sprintfW(buf, hexp_fmt, type);
+        line_len = swprintf(buf, hexp_fmt, type);
         write_file(hFile, buf);
         heap_free(buf);
     }
@@ -168,7 +168,7 @@ static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
 
     for (i = 0, pos = 0; i < size; i++)
     {
-        pos += sprintfW(*buf + pos, fmt, ((BYTE *)data)[i]);
+        pos += swprintf(*buf + pos, fmt, ((BYTE *)data)[i]);
         if (i == num_commas) break;
         (*buf)[pos++] = ',';
         (*buf)[pos] = 0;
@@ -233,7 +233,7 @@ static void export_key_name(HANDLE hFile, WCHAR *name)
     WCHAR *buf;
 
     buf = heap_xalloc((lstrlenW(name) + 7) * sizeof(WCHAR));
-    sprintfW(buf, fmt, name);
+    swprintf(buf, fmt, name);
     write_file(hFile, buf);
     heap_free(buf);
 }
@@ -316,7 +316,7 @@ static void export_file_header(HANDLE hFile)
 {
     static const WCHAR header[] = { 0xfeff,'W','i','n','d','o','w','s',' ',
                                    'R','e','g','i','s','t','r','y',' ','E','d','i','t','o','r',' ',
-                                   'V','e','r','s','i','o','n',' ','5','.','0','0','\r','\n'};
+                                   'V','e','r','s','i','o','n',' ','5','.','0','0','\r','\n',0};
 
     write_file(hFile, header);
 }
@@ -361,7 +361,7 @@ static HANDLE get_file_handle(WCHAR *filename, BOOL overwrite_file)
 
 static BOOL is_overwrite_switch(const WCHAR *s)
 {
-    if (strlenW(s) > 2)
+    if (lstrlenW(s) > 2)
         return FALSE;
 
     if ((s[0] == '/' || s[0] == '-') && (s[1] == 'y' || s[1] == 'Y'))
@@ -405,6 +405,6 @@ int reg_export(int argc, WCHAR *argv[])
 
 error:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, struprW(argv[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argv[1]));
     return 1;
 }

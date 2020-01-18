@@ -715,7 +715,7 @@ static void test_synthesized(void)
     r = CloseClipboard();
     ok(r, "gle %d\n", GetLastError());
 
-    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         r = OpenClipboard(NULL);
         ok(r, "%u: gle %d\n", i, GetLastError());
@@ -2054,7 +2054,7 @@ static void test_string_data(void)
     char bufferA[12];
     WCHAR bufferW[12];
 
-    for (i = 0; i < sizeof(test_data) / sizeof(test_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(test_data); i++)
     {
         /* 1-byte Unicode strings crash on Win64 */
 #ifdef _WIN64

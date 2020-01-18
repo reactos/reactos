@@ -44,7 +44,7 @@ typedef struct _BOOT_STORE_OPTIONS
  * IS_INTRESOURCE macros for Win32 resources.
  *
  * A key consists of either a boot ID number, comprised between 0 and
- * MAX_USHORT == 0xFFFF == 65535, or can be a pointer to a human-readable
+ * MAXUSHORT == 0xFFFF == 65535, or can be a pointer to a human-readable
  * string (section name), as in the case of FreeLDR, or to a GUID, as in the
  * case of BOOTMGR.
  *

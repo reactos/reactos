@@ -2,8 +2,6 @@
 #ifndef _WBEMPROX_PRECOMP_H_
 #define _WBEMPROX_PRECOMP_H_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define _INC_WINDOWS

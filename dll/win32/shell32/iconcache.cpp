@@ -866,12 +866,13 @@ EXTERN_C INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT b
 /*************************************************************************
  * ExtractIconExW            [SHELL32.@]
  * RETURNS
- *  0 no icon found
- *  -1 file is not valid
+ *  0 no icon found (or the file is not valid)
  *  or number of icons extracted
  */
 UINT WINAPI ExtractIconExW(LPCWSTR lpszFile, INT nIconIndex, HICON * phiconLarge, HICON * phiconSmall, UINT nIcons)
 {
+    UINT ret = 0;
+
     /* get entry point of undocumented function PrivateExtractIconExW() in user32 */
 #if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
     static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
@@ -881,13 +882,24 @@ UINT WINAPI ExtractIconExW(LPCWSTR lpszFile, INT nIconIndex, HICON * phiconLarge
         PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
 
         if (!PrivateExtractIconExW)
-        return 0;
+        return ret;
     }
 #endif
 
     TRACE("%s %i %p %p %i\n", debugstr_w(lpszFile), nIconIndex, phiconLarge, phiconSmall, nIcons);
+    ret = PrivateExtractIconExW(lpszFile, nIconIndex, phiconLarge, phiconSmall, nIcons);
 
-    return PrivateExtractIconExW(lpszFile, nIconIndex, phiconLarge, phiconSmall, nIcons);
+    /* PrivateExtractIconExW() may return -1 if the provided file is not a valid PE image file or the said
+     * file couldn't be found. The behaviour is correct although ExtractIconExW() only returns the successfully
+     * extracted icons from a file. In such scenario, simply return 0.
+    */
+    if (ret == 0xFFFFFFFF)
+    {
+        WARN("Invalid file or couldn't be found - %s\n", debugstr_w(lpszFile));
+        ret = 0;
+    }
+
+    return ret;
 }
 
 /*************************************************************************

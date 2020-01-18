@@ -2,8 +2,6 @@
 #ifndef _WUAPI_PRECOMP_H_
 #define _WUAPI_PRECOMP_H_
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

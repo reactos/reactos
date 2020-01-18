@@ -983,6 +983,7 @@ ConSrvSetConsoleProcessFocus(IN PCONSRV_CONSOLE Console,
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+/* API_NUMBER: ConsolepAlloc */
 CSR_API(SrvAllocConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1052,6 +1053,7 @@ CSR_API(SrvAllocConsole)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepAttach */
 CSR_API(SrvAttachConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1139,6 +1141,7 @@ Quit:
     return Status;
 }
 
+/* API_NUMBER: ConsolepFree */
 CSR_API(SrvFreeConsole)
 {
     return ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
@@ -1148,6 +1151,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      OUT PULONG ConsoleMode);
+/* API_NUMBER: ConsolepGetMode */
 CSR_API(SrvGetConsoleMode)
 {
     NTSTATUS Status;
@@ -1191,6 +1195,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode);
+/* API_NUMBER: ConsolepSetMode */
 CSR_API(SrvSetConsoleMode)
 {
 #define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS | \
@@ -1244,6 +1249,7 @@ CSR_API(SrvSetConsoleMode)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetTitle */
 CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
@@ -1303,6 +1309,7 @@ CSR_API(SrvGetConsoleTitle)
     return Status;
 }
 
+/* API_NUMBER: ConsolepSetTitle */
 CSR_API(SrvSetConsoleTitle)
 {
     NTSTATUS Status;
@@ -1385,6 +1392,7 @@ NTSTATUS NTAPI
 ConDrvGetConsoleCP(IN PCONSOLE Console,
                    OUT PUINT CodePage,
                    IN BOOLEAN OutputCP);
+/* API_NUMBER: ConsolepGetCP */
 CSR_API(SrvGetConsoleCP)
 {
     NTSTATUS Status;
@@ -1409,6 +1417,7 @@ NTSTATUS NTAPI
 ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
                    IN BOOLEAN OutputCP);
+/* API_NUMBER: ConsolepSetCP */
 CSR_API(SrvSetConsoleCP)
 {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
@@ -1429,6 +1438,7 @@ CSR_API(SrvSetConsoleCP)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGetProcessList */
 CSR_API(SrvGetConsoleProcessList)
 {
     NTSTATUS Status;
@@ -1455,6 +1465,7 @@ CSR_API(SrvGetConsoleProcessList)
     return Status;
 }
 
+/* API_NUMBER: ConsolepGenerateCtrlEvent */
 CSR_API(SrvGenerateConsoleCtrlEvent)
 {
     NTSTATUS Status;
@@ -1472,6 +1483,7 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     return Status;
 }
 
+/* API_NUMBER: ConsolepNotifyLastClose */
 CSR_API(SrvConsoleNotifyLastClose)
 {
     NTSTATUS Status;
@@ -1497,8 +1509,7 @@ CSR_API(SrvConsoleNotifyLastClose)
     return Status;
 }
 
-
-
+/* API_NUMBER: ConsolepGetMouseInfo */
 CSR_API(SrvGetConsoleMouseInfo)
 {
     NTSTATUS Status;
@@ -1515,12 +1526,14 @@ CSR_API(SrvGetConsoleMouseInfo)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepSetKeyShortcuts */
 CSR_API(SrvSetConsoleKeyShortcuts)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepGetKeyboardLayoutName */
 CSR_API(SrvGetConsoleKeyboardLayoutName)
 {
     NTSTATUS Status;
@@ -1540,42 +1553,49 @@ CSR_API(SrvGetConsoleKeyboardLayoutName)
     return STATUS_SUCCESS;
 }
 
+/* API_NUMBER: ConsolepCharType */
 CSR_API(SrvGetConsoleCharType)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepSetLocalEUDC */
 CSR_API(SrvSetConsoleLocalEUDC)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepSetCursorMode */
 CSR_API(SrvSetConsoleCursorMode)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepGetCursorMode */
 CSR_API(SrvGetConsoleCursorMode)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepGetNlsMode */
 CSR_API(SrvGetConsoleNlsMode)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepSetNlsMode */
 CSR_API(SrvSetConsoleNlsMode)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/* API_NUMBER: ConsolepGetLangId */
 CSR_API(SrvGetConsoleLangId)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);

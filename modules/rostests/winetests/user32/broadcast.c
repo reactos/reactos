@@ -130,39 +130,15 @@ if (0) /* TODO: Check the hang flags */
     ok(0, "Returned: %d\n", ret);
 }
 
-    recips = BSM_APPLICATIONS;
-    ResetEvent(hevent);
-    ret = broadcast( BSF_POSTMESSAGE|BSF_QUERY, &recips, WM_NULL, 100, 0 );
-    ok(ret==1, "Returned: %d\n", ret);
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    PulseEvent(hevent);
-
     SetLastError( 0xdeadbeef );
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_POSTMESSAGE|BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, 0 );
-    if (ret)
-    {
-        ok(ret==1, "Returned: %d\n", ret);
-        ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
-        PulseEvent(hevent);
-
-        recips = BSM_APPLICATIONS;
-        ret = broadcast( BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY );
-        ok(ret==1, "Returned: %d\n", ret);
-        ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-        PulseEvent(hevent);
-
-        recips = BSM_APPLICATIONS;
-        ret = broadcast( BSF_SENDNOTIFYMESSAGE|BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY );
-        ok(!ret, "Returned: %d\n", ret);
-        ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-        PulseEvent(hevent);
-    }
-    else  /* BSF_SENDNOTIFYMESSAGE not supported on NT4 */
-        ok( GetLastError() == ERROR_INVALID_PARAMETER, "failed with err %u\n", GetLastError() );
+    ok(ret==1, "Returned: %d\n", ret);
+    ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
+    PulseEvent(hevent);
 
     recips = BSM_APPLICATIONS;
-    ret = broadcast( 0, &recips, WM_NULL, 100, 0 );
+    ret = broadcast( BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY );
     ok(ret==1, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     PulseEvent(hevent);
@@ -217,13 +193,6 @@ if (0) /* TODO: Check the hang flags */
 }
 
     recips = BSM_APPLICATIONS;
-    ResetEvent(hevent);
-    ret = broadcastex( BSF_POSTMESSAGE|BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d\n", ret);
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    PulseEvent(hevent);
-
-    recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_POSTMESSAGE|BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, 0, NULL );
     ok(ret==1, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
@@ -233,84 +202,6 @@ if (0) /* TODO: Check the hang flags */
     ret = broadcastex( BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
     ok(ret==1, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    PulseEvent(hevent);
-
-    recips = BSM_APPLICATIONS;
-    ret = broadcastex( BSF_SENDNOTIFYMESSAGE|BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
-    ok(!ret, "Returned: %d\n", ret);
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    PulseEvent(hevent);
-
-    recips = BSM_APPLICATIONS;
-    ret = broadcastex( 0, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d\n", ret);
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    PulseEvent(hevent);
-}
-
-static void test_noprivileges(void)
-{
-    HANDLE token;
-    DWORD recips;
-    BOOL ret;
-
-    static const DWORD BSM_ALL_RECIPS = BSM_VXDS | BSM_NETDRIVER |
-                                        BSM_INSTALLABLEDRIVERS | BSM_APPLICATIONS;
-
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
-    {
-        skip("Can't open security token for process\n");
-        return;
-    }
-    if (!AdjustTokenPrivileges(token, TRUE, NULL, 0, NULL, NULL))
-    {
-        skip("Can't adjust security token for process\n");
-        return;
-    }
-
-    trace("Trying privileged edition!\n");
-    SetLastError(0xcafebabe);
-    recips = BSM_ALLDESKTOPS;
-    ResetEvent(hevent);
-    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == BSM_ALLDESKTOPS ||
-       recips == BSM_ALL_RECIPS, /* win2k3 */
-       "Received by: %08x\n", recips);
-    PulseEvent(hevent);
-
-    SetLastError(0xcafebabe);
-    recips = BSM_ALLCOMPONENTS;
-    ResetEvent(hevent);
-    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == BSM_ALLCOMPONENTS ||
-       recips == BSM_ALL_RECIPS, /* win2k3 */
-       "Received by: %08x\n", recips);
-    PulseEvent(hevent);
-
-    SetLastError(0xcafebabe);
-    recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
-    ResetEvent(hevent);
-    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
-       recips == BSM_APPLICATIONS, /* win2k3 */
-       "Received by: %08x\n", recips);
-    PulseEvent(hevent);
-
-    SetLastError(0xcafebabe);
-    recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
-    ResetEvent(hevent);
-    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
-    ok(!ret, "Returned: %d\n", ret);
-    ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
-    ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
-       recips == BSM_APPLICATIONS, /* win2k3 */
-       "Received by: %08x\n", recips);
     PulseEvent(hevent);
 }
 
@@ -330,7 +221,4 @@ START_TEST(broadcast)
 
     trace("Running BroadcastSystemMessageExW tests\n");
     test_parametersEx(BroadcastSystemMessageExW);
-
-    trace("Attempting privileges checking tests\n");
-    test_noprivileges();
 }

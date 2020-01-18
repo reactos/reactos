@@ -8,6 +8,7 @@
 #define COM_NO_WINDOWS_H
 
 #include <apitest.h>
+#include <apitest_guard.h>
 #include <ndk/ntndk.h>
 #include <strsafe.h>
 

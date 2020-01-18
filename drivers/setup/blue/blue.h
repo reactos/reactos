@@ -1,53 +1,71 @@
 /*
- * PROJECT:         ReactOS Setup Driver
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/setup/blue/font.h
- * PURPOSE:         Loading specific fonts into VGA
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ * PROJECT:     ReactOS Console Text-Mode Device Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Main Header File.
+ * COPYRIGHT:   Copyright 1999 Boudewijn Dekker
+ *              Copyright 1999-2019 Eric Kohl
  */
 
 #ifndef _BLUE_PCH_
 #define _BLUE_PCH_
 
-#include <wdm.h>
+#include <ntifs.h>
+
+#define TAG_BLUE    'EULB'
+
+#define TAB_WIDTH   8
+#define MAX_PATH    260
 
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 
 // Define material that normally comes from PSDK
 // This is mandatory to prevent any inclusion of
 // user-mode stuff.
-typedef struct tagCOORD {
-  SHORT X;
-  SHORT Y;
+typedef struct tagCOORD
+{
+    SHORT X;
+    SHORT Y;
 } COORD, *PCOORD;
 
-typedef struct tagSMALL_RECT {
-  SHORT Left;
-  SHORT Top;
-  SHORT Right;
-  SHORT Bottom;
+typedef struct tagSMALL_RECT
+{
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
 } SMALL_RECT;
 
-typedef struct tagCONSOLE_SCREEN_BUFFER_INFO {
-  COORD      dwSize;
-  COORD      dwCursorPosition;
-  USHORT     wAttributes;
-  SMALL_RECT srWindow;
-  COORD      dwMaximumWindowSize;
+typedef struct tagCONSOLE_SCREEN_BUFFER_INFO
+{
+    COORD      dwSize;
+    COORD      dwCursorPosition;
+    USHORT     wAttributes;
+    SMALL_RECT srWindow;
+    COORD      dwMaximumWindowSize;
 } CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO;
 
-typedef struct tagCONSOLE_CURSOR_INFO {
-  ULONG    dwSize;
-  BOOLEAN  bVisible;
+typedef struct tagCONSOLE_CURSOR_INFO
+{
+    ULONG dwSize;
+    INT   bVisible; // BOOL
 } CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO;
 
 #define ENABLE_PROCESSED_OUTPUT                 0x0001
 #define ENABLE_WRAP_AT_EOL_OUTPUT               0x0002
 
 #include <blue/ntddblue.h>
-#include <ndk/inbvfuncs.h>
 
-#define TAG_BLUE 'EULB'
+/*
+ * Color attributes for text and screen background
+ */
+#define FOREGROUND_BLUE                 0x0001
+#define FOREGROUND_GREEN                0x0002
+#define FOREGROUND_RED                  0x0004
+#define FOREGROUND_INTENSITY            0x0008
+#define BACKGROUND_BLUE                 0x0010
+#define BACKGROUND_GREEN                0x0020
+#define BACKGROUND_RED                  0x0040
+#define BACKGROUND_INTENSITY            0x0080
 
 typedef struct _CFHEADER
 {
@@ -113,10 +131,6 @@ typedef struct _CFFILE
 #define ATTRC_READREG      ((PUCHAR)0x3c1)
 #define ATTRC_INPST1       ((PUCHAR)0x3da)
 
-#define TAB_WIDTH          8
-
-#define MAX_PATH           260
-
 #define MISC         (PUCHAR)0x3c2
 #define SEQ          (PUCHAR)0x3c4
 #define SEQDATA      (PUCHAR)0x3c5
@@ -130,7 +144,6 @@ typedef struct _CFFILE
 #define PELINDEX     (PUCHAR)0x3c8
 #define PELDATA      (PUCHAR)0x3c9
 
-void ScrLoadFontTable(UINT32 CodePage);
-NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField);
+VOID ScrLoadFontTable(_In_ ULONG CodePage);
 
 #endif /* _BLUE_PCH_ */

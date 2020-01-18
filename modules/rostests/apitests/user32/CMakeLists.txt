@@ -10,6 +10,7 @@ list(APPEND SOURCE
     DestroyCursorIcon.c
     DM_REPOSITION.c
     DrawIconEx.c
+    DrawText.c
     desktop.c
     EmptyClipboard.c
     EnumDisplaySettings.c

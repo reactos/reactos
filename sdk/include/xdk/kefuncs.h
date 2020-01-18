@@ -44,19 +44,6 @@ KeInvalidateRangeAllCaches(
   _In_ PVOID BaseAddress,
   _In_ ULONG Length);
 $endif (_NTDDK_)
-$if (_NTIFS_)
-
-NTSTATUS
-NTAPI
-KeGetProcessorNumberFromIndex(
-  _In_ ULONG ProcIndex,
-  _Out_ PPROCESSOR_NUMBER ProcNumber);
-
-ULONG
-NTAPI
-KeGetProcessorIndexFromNumber(
-  _In_ PPROCESSOR_NUMBER ProcNumber);
-$endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 

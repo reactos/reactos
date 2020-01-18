@@ -237,6 +237,15 @@ FONT 8, "MS Sans Serif"
     CONTROL "oddlengthtext", -1, "TESTCONTROL", WS_CHILD|WS_VISIBLE|WS_BORDER|WS_TABSTOP, 10,60,100,50 { 1,2,3,4,5 }
 }
 
+GETDLGITEM_TEST_DIALOG DIALOGEX 6, 15, 207, 111
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Test Dialog"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Text1",-1,10,10,100,50
+    LTEXT "Text2",-2,10,10,100,50
+}
+
 /* @makedep: test_mono.bmp */
 100 BITMAP test_mono.bmp
 

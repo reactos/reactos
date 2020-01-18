@@ -2115,26 +2115,17 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
     ZeroMemory(&vertInfo, sizeof(SCROLLINFO));
     vertInfo.cbSize = sizeof(SCROLLINFO);
 #ifdef __REACTOS__ /* CORE-16466 part 2 of 4 */
-    vertInfo.nPage = max((infoPtr->rcList.bottom - infoPtr->rcList.top), 0);
+    vertInfo.nPage = max(0, infoPtr->rcList.bottom - infoPtr->rcList.top);
 #else
     vertInfo.nPage = infoPtr->rcList.bottom - infoPtr->rcList.top;
 #endif
 
     if (infoPtr->uView == LV_VIEW_DETAILS)
     {
-#ifdef __REACTOS__ /* CORE-16466 part 3 of 4 */
-        if (vertInfo.nPage != 0)
-        {
-            vertInfo.nMax = infoPtr->nItemCount;
-
-            /* scroll by at least one page */
-            if (vertInfo.nPage < infoPtr->nItemHeight)
-                vertInfo.nPage = infoPtr->nItemHeight;
-
-            if (infoPtr->nItemHeight > 0)
-                vertInfo.nPage /= infoPtr->nItemHeight;
-        }
-#else
+#ifdef __REACTOS__ /* CORE-16466 part 3a of 4 */
+      if (vertInfo.nPage != 0)
+      {
+#endif
 	vertInfo.nMax = infoPtr->nItemCount;
 	
 	/* scroll by at least one page */
@@ -2143,6 +2134,8 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
 
         if (infoPtr->nItemHeight > 0)
             vertInfo.nPage /= infoPtr->nItemHeight;
+#ifdef __REACTOS__ /* CORE-16466 part 3b of 4 */
+      }
 #endif
     }
     else if (infoPtr->uView != LV_VIEW_LIST) /* LV_VIEW_ICON, or LV_VIEW_SMALLICON */

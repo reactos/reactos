@@ -950,7 +950,7 @@ HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
                     {
                         HWND tlw;
                         m_menuBand->_GetTopLevelWindow(&tlw);
-                        SendMessageW(tlw, WM_CANCELMODE, 0, 0);
+                        ::SendMessageW(tlw, WM_CANCELMODE, 0, 0);
                         PostMessageW(WM_USER_CHANGETRACKEDITEM, index, MAKELPARAM(m_isTrackingPopup, FALSE));
                     }
                     else

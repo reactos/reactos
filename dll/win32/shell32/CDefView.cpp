@@ -908,29 +908,32 @@ HRESULT CDefView::FillList()
     DWORD         dwFetched;
     HRESULT       hRes;
     HDPA          hdpa;
-    HKEY          hKey;
     DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
+    DWORD dwValue, cbValue;
 
     TRACE("%p\n", this);
 
     /* determine if there is a setting to show all the hidden files/folders */
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    dwValue = 1;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"Hidden", NULL, &dwValue, &cbValue);
+    if (dwValue == 1)
     {
-        DWORD dataLength, flagVal;
+        dFlags |= SHCONTF_INCLUDEHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
+    }
 
-        dataLength = sizeof(flagVal);
-        if (RegQueryValueExW(hKey, L"Hidden", NULL, NULL, (LPBYTE)&flagVal, &dataLength) == ERROR_SUCCESS)
-        {
-            /* if the value is 1, then show all hidden files/folders */
-            if (flagVal == 1)
-            {
-                dFlags |= SHCONTF_INCLUDEHIDDEN;
-                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
-            }
-        }
-
-        /* close the key */
-        RegCloseKey(hKey);
+    dwValue = 0;
+    cbValue = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                L"ShowSuperHidden", NULL, &dwValue, &cbValue);
+    if (dwValue)
+    {
+        dFlags |= SHCONTF_INCLUDESUPERHIDDEN;
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
     }
 
     /* get the itemlist from the shfolder */
@@ -1426,6 +1429,24 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!m_hContextMenu) 
         return E_FAIL;
 
+    if (lParam != ~0)   // unless app key (menu key) was pressed
+    {
+        x = GET_X_LPARAM(lParam);
+        y = GET_Y_LPARAM(lParam);
+
+        LV_HITTESTINFO hittest = { { x, y } };
+        ScreenToClient(&hittest.pt);
+        m_ListView.HitTest(&hittest);
+
+        // Right-Clicked item is selected? If selected, no selection change.
+        // If not selected, then reset the selection and select the item.
+        if ((hittest.flags & LVHT_ONITEM) &&
+            m_ListView.GetItemState(hittest.iItem, LVIS_SELECTED) != LVIS_SELECTED)
+        {
+            SelectItem(hittest.iItem, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE);
+        }
+    }
+
     m_cidl = m_ListView.GetSelectedCount();
 
     hResult = GetItemObject( m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
@@ -1471,11 +1492,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         m_ListView.ClientToScreen(&pt);
         x = pt.x;
         y = pt.y;
-    }
-    else
-    {
-        x = GET_X_LPARAM(lParam);
-        y = GET_Y_LPARAM(lParam);
     }
 
     uCommand = TrackPopupMenu(m_hContextMenu,

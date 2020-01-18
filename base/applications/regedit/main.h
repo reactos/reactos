@@ -61,6 +61,7 @@ typedef struct
     HWND    hListWnd;
     HWND    hAddressBarWnd;
     HWND    hAddressBtnWnd;
+    HICON   hArrowIcon;
     int     nFocusPanel;      /* 0: left  1: right */
     int     nSplitPos;
     WINDOWPLACEMENT pos;

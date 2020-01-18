@@ -60,6 +60,7 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 #define __EXCEPT_ALL _SEH2_EXCEPT(_SEH_EXECUTE_HANDLER)
 #define __ENDTRY _SEH2_END
 #define __FINALLY(func) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); }
+#define __FINALLY_CTX(func, ctx) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination(), ctx); }; _SEH2_END
 
 #ifndef GetExceptionCode
 #define GetExceptionCode() _SEH2_GetExceptionCode()

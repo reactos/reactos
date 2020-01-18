@@ -386,7 +386,7 @@ WaitStart:
         /* Setup a new wait */
         Thread->WaitIrql = KeRaiseIrqlToSynchLevel();
         KxDelayThreadWait();
-        KiAcquireDispatcherLockAtDpcLevel();
+        KiAcquireDispatcherLockAtSynchLevel();
     }
 
     /* We're done! */
@@ -403,7 +403,7 @@ NoWait:
     }
 
     /* Unlock the dispatcher and adjust the quantum for a no-wait */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
     KiAdjustQuantumThread(Thread);
     return STATUS_SUCCESS;
 }
@@ -431,7 +431,7 @@ KeWaitForSingleObject(IN PVOID Object,
     ULONG Hand = 0;
 
     if (Thread->WaitNext)
-        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
     else
         ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
                (KeGetCurrentIrql() == DISPATCH_LEVEL &&
@@ -540,7 +540,7 @@ KeWaitForSingleObject(IN PVOID Object,
             else
             {
                 /* Otherwise, unlock the dispatcher */
-                KiReleaseDispatcherLockFromDpcLevel();
+                KiReleaseDispatcherLockFromSynchLevel();
             }
 
             /* Do the actual swap */
@@ -562,7 +562,7 @@ WaitStart:
         /* Setup a new wait */
         Thread->WaitIrql = KeRaiseIrqlToSynchLevel();
         KxSingleThreadWait();
-        KiAcquireDispatcherLockAtDpcLevel();
+        KiAcquireDispatcherLockAtSynchLevel();
     }
 
     /* Wait complete */
@@ -571,7 +571,7 @@ WaitStart:
 
 DontWait:
     /* Release dispatcher lock but maintain high IRQL */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);
@@ -604,7 +604,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     ULONG Index, Hand = 0;
 
     if (Thread->WaitNext)
-        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
     else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
              (!Timeout || Timeout->QuadPart != 0))
     {
@@ -835,7 +835,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             else
             {
                 /* Otherwise, unlock the dispatcher */
-                KiReleaseDispatcherLockFromDpcLevel();
+                KiReleaseDispatcherLockFromSynchLevel();
             }
 
             /* Swap the thread */
@@ -858,7 +858,7 @@ WaitStart:
         /* Setup a new wait */
         Thread->WaitIrql = KeRaiseIrqlToSynchLevel();
         KxMultiThreadWait();
-        KiAcquireDispatcherLockAtDpcLevel();
+        KiAcquireDispatcherLockAtSynchLevel();
     }
 
     /* We are done */
@@ -867,7 +867,7 @@ WaitStart:
 
 DontWait:
     /* Release dispatcher lock but maintain high IRQL */
-    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseDispatcherLockFromSynchLevel();
 
     /* Adjust the Quantum and return the wait status */
     KiAdjustQuantumThread(Thread);

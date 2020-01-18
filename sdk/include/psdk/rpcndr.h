@@ -141,7 +141,7 @@ void __RPC_USER MIDL_user_free(void *);
    (RpcExceptionCode() == RPC_X_BAD_STUB_DATA) || \
    (RpcExceptionCode() == RPC_S_INVALID_BOUND))
 
-typedef struct tagNDR_SCONTEXT
+typedef struct _NDR_SCONTEXT
 {
   void *pad[2];
   void *userContext;

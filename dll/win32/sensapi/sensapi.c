@@ -22,8 +22,6 @@
  * connections. For Wine we just report that we are always connected.
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -39,7 +37,6 @@
 
 #include "uuids.h"
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(sensapi);

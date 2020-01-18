@@ -63,7 +63,7 @@ Used Version: 0.1.9
 Website: http://www.mega-nerd.com/SRC/download.html
 
 Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.25.12
+Used Version: 1.25.13
 Website: http://www.mpg123.de/
 
 Title:  STLport
@@ -79,7 +79,7 @@ Used Version: 9c
 Website: http://www.ijg.org/
 
 Title: libtiff
-Used Version: 4.0.10
+Used Version: 4.1.0
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS

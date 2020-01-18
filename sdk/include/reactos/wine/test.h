@@ -53,6 +53,8 @@ extern "C" {
 /* debug level */
 extern int winetest_debug;
 
+extern int report_success;
+
 /* running in interactive mode? */
 extern int winetest_interactive;
 
@@ -63,8 +65,12 @@ extern void winetest_set_location( const char* file, int line );
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
+extern void winetest_start_nocount(unsigned int flags);
+extern int winetest_loop_nocount(void);
+extern void winetest_end_nocount(void);
 extern int winetest_get_mainargs( char*** pargv );
 extern LONG winetest_get_failures(void);
+extern LONG winetest_get_successes(void);
 extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
@@ -121,6 +127,7 @@ extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) 
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
+extern void __winetest_cdecl winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
 
 #else /* __GNUC__ */
 # define WINETEST_PRINTF_ATTR(fmt,args)
@@ -128,6 +135,7 @@ extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
 extern void __winetest_cdecl winetest_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_trace( const char *msg, ... );
+extern void __winetest_cdecl winetest_print(const char* msg, ...);
 
 #endif /* __GNUC__ */
 
@@ -154,6 +162,14 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 #define todo_wine               todo_if(!strcmp(winetest_platform, "wine"))
 #define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
+
+#define ros_skip_flaky          for (winetest_start_nocount(3); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
+
+#define disable_success_count   for (winetest_start_nocount(1); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -241,7 +257,7 @@ int winetest_interactive = 0;
 const char *winetest_platform = "windows";
 
 /* report successful tests (BOOL) */
-static int report_success = 0;
+int report_success = 0;
 
 /* passing arguments around */
 static int winetest_argc;
@@ -261,6 +277,7 @@ typedef struct
     const char* current_file;        /* file of current check */
     int current_line;                /* line of current check */
     unsigned int todo_level;         /* current todo nesting level */
+    unsigned int nocount_level;
     int todo_do_loop;
     char *str_pos;                   /* position in debug buffer */
     char strings[2000];              /* buffer for debug strings */
@@ -356,6 +373,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             fprintf( stdout, __winetest_file_line_prefix ": Test succeeded inside todo block: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&todo_failures);
             return 0;
         }
@@ -368,6 +386,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
                          data->current_file, data->current_line );
                 vfprintf(stdout, msg, args);
             }
+            if ((data->nocount_level & 1) == 0)
             InterlockedIncrement(&todo_successes);
             return 1;
         }
@@ -379,14 +398,16 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             fprintf( stdout, __winetest_file_line_prefix ": Test failed: ",
                      data->current_file, data->current_line );
             vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&failures);
             return 0;
         }
         else
         {
-            if (report_success)
+            if (report_success && (data->nocount_level & 1) == 0)
                 fprintf( stdout, __winetest_file_line_prefix ": Test succeeded\n",
                          data->current_file, data->current_line);
+            if ((data->nocount_level & 1) == 0)
             InterlockedIncrement(&successes);
             return 1;
         }
@@ -414,6 +435,17 @@ void __winetest_cdecl winetest_trace( const char *msg, ... )
         vfprintf(stdout, msg, valist);
         __winetest_va_end(valist);
     }
+}
+
+void __winetest_cdecl winetest_print(const char* msg, ...)
+{
+    __winetest_va_list valist;
+    tls_data* data = get_tls_data();
+
+    fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
+    __winetest_va_start(valist, msg);
+    vfprintf(stdout, msg, valist);
+    __winetest_va_end(valist);
 }
 
 void winetest_vskip( const char *msg, __winetest_va_list args )
@@ -469,6 +501,34 @@ void winetest_end_todo(void)
     data->todo_level >>= 1;
 }
 
+void winetest_start_nocount(unsigned int flags)
+{
+    tls_data* data = get_tls_data();
+
+    /* The lowest 2 bits of nocount_level specify whether counting of successes
+       and/or failures is disabled. For each nested level the bits are shifted
+       left, the new lowest 2 bits are copied from the previous state and ored
+       with the new mask. This allows nested handling of both states up tp a
+       level of 16. */
+    flags |= data->nocount_level & 3;
+    data->nocount_level = (data->nocount_level << 2) | flags;
+    data->todo_do_loop = 1;
+}
+
+int winetest_loop_nocount(void)
+{
+    tls_data* data = get_tls_data();
+    int do_loop = data->todo_do_loop;
+    data->todo_do_loop = 0;
+    return do_loop;
+}
+
+void winetest_end_nocount(void)
+{
+    tls_data* data = get_tls_data();
+    data->nocount_level >>= 2;
+}
+
 int winetest_get_mainargs( char*** pargv )
 {
     *pargv = winetest_argv;
@@ -478,6 +538,11 @@ int winetest_get_mainargs( char*** pargv )
 LONG winetest_get_failures(void)
 {
     return failures;
+}
+
+LONG winetest_get_successes(void)
+{
+    return successes;
 }
 
 void winetest_add_failures( LONG new_failures )

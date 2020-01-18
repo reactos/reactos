@@ -14,9 +14,9 @@ BEGIN
     LTEXT "ワークグループ:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "ネットワーク ID ウィザードを使ってドメインへの参加およびローカル ユーザーの作成を行うには、[ネットワーク ID] をクリックしてください。", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON "ネットワーク ID(&N)...", IDC_NETWORK_ID, 190, 114, 58, 15
+    PUSHBUTTON "ネットワーク ID(&N)...", IDC_NETWORK_ID, 180, 114, 78, 15
     LTEXT "コンピュータ名を変更したりドメインに参加したりするには [変更] をクリックしてください。", IDC_STATIC, 6, 149, 170, 17
-    PUSHBUTTON "変更(&C)...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
+    PUSHBUTTON "変更(&C)...", IDC_NETWORK_PROPERTY, 180, 149, 78, 15
     LTEXT "注意: このコンピュータの ID を変更できるのは管理者のみです。", IDC_STATIC, 6, 179, 300, 9
 END
 

@@ -2769,13 +2769,6 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
     return FALSE;
 }
 
-EXTERN_C HRESULT
-WINAPI
-SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
-                           UINT cidl,
-                           PCUITEMID_CHILD_ARRAY apidl,
-                           DWORD dwFlags);
-
 /**************************************************************************
 * SH_GetTargetTypeByPath
 *

@@ -42,10 +42,8 @@ CClassNode::SetupNode()
                                      0);
     if (hKey != INVALID_HANDLE_VALUE)
     {
-        Size = DISPLAY_NAME_LEN;
-        Type = REG_SZ;
-
         // Lookup the class description (win7+)
+        Size = sizeof(m_DisplayName);
         Success = RegQueryValueExW(hKey,
                                    L"ClassDesc",
                                    NULL,
@@ -54,22 +52,31 @@ CClassNode::SetupNode()
                                    &Size);
         if (Success == ERROR_SUCCESS)
         {
+            if (Type != REG_SZ)
+            {
+                Success = ERROR_INVALID_DATA;
+            }
             // Check if the string starts with an @
-            if (m_DisplayName[0] == L'@')
+            else if (m_DisplayName[0] == L'@')
             {
                 // The description is located in a module resource
-                Success = ConvertResourceDescriptorToString(m_DisplayName, DISPLAY_NAME_LEN);
+                Success = ConvertResourceDescriptorToString(m_DisplayName, sizeof(m_DisplayName));
             }
         }
         else if (Success == ERROR_FILE_NOT_FOUND)
         {
             // WinXP stores the description in the default value
+            Size = sizeof(m_DisplayName);
             Success = RegQueryValueExW(hKey,
                                        NULL,
                                        NULL,
                                        &Type,
                                        (LPBYTE)m_DisplayName,
                                        &Size);
+            if (Success == ERROR_SUCCESS && Type != REG_SZ)
+            {
+                Success = ERROR_INVALID_DATA;
+            }
         }
 
         // Close the registry key
@@ -84,7 +91,7 @@ CClassNode::SetupNode()
     if (Success != ERROR_SUCCESS)
     {
         // Use the class name as the description
-        RequiredSize = DISPLAY_NAME_LEN;
+        RequiredSize = _countof(m_DisplayName);
         (VOID)SetupDiClassNameFromGuidW(&m_ClassGuid,
                                         m_DisplayName,
                                         RequiredSize,

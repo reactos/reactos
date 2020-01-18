@@ -463,6 +463,26 @@ NTSTATUS WINAPI RtlCreateTimer(HANDLE TimerQueue, PHANDLE NewTimer,
     return status;
 }
 
+NTSTATUS
+WINAPI
+RtlSetTimer(
+    HANDLE TimerQueue,
+    PHANDLE NewTimer,
+    WAITORTIMERCALLBACKFUNC Callback,
+    PVOID Parameter,
+    DWORD DueTime,
+    DWORD Period,
+    ULONG Flags)
+{
+    return RtlCreateTimer(TimerQueue,
+                          NewTimer,
+                          Callback,
+                          Parameter,
+                          DueTime,
+                          Period,
+                          Flags);
+}
+
 /***********************************************************************
  *              RtlUpdateTimer   (NTDLL.@)
  *
@@ -555,6 +575,16 @@ NTSTATUS WINAPI RtlDeleteTimer(HANDLE TimerQueue, HANDLE Timer,
     }
 
     return status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlCancelTimer(HANDLE TimerQueue, HANDLE Timer)
+{
+    return RtlDeleteTimer(TimerQueue, Timer, NULL);
 }
 
 /*

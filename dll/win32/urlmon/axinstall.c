@@ -213,8 +213,8 @@ static HRESULT extract_cab_file(install_ctx_t *ctx)
         return hres;
     }
 
-    path_len = strlenW(ctx->tmp_dir);
-    file_len = strlenW(ctx->file_name);
+    path_len = lstrlenW(ctx->tmp_dir);
+    file_len = lstrlenW(ctx->file_name);
     ctx->install_file = heap_alloc((path_len+file_len+2)*sizeof(WCHAR));
     if(!ctx->install_file)
         return E_OUTOFMEMORY;
@@ -278,13 +278,13 @@ static void expand_command(install_ctx_t *ctx, const WCHAR *cmd, WCHAR *buf, siz
 
     static const WCHAR expand_dirW[] = {'%','E','X','T','R','A','C','T','_','D','I','R','%'};
 
-    while((ptr = strchrW(ptr, '%'))) {
+    while((ptr = wcschr(ptr, '%'))) {
         if(buf)
             memcpy(buf+len, prev_ptr, ptr-prev_ptr);
         len += ptr-prev_ptr;
 
-        if(!strncmpiW(ptr, expand_dirW, ARRAY_SIZE(expand_dirW))) {
-            len2 = strlenW(ctx->tmp_dir);
+        if(!_wcsnicmp(ptr, expand_dirW, ARRAY_SIZE(expand_dirW))) {
+            len2 = lstrlenW(ctx->tmp_dir);
             if(buf)
                 memcpy(buf+len, ctx->tmp_dir, len2*sizeof(WCHAR));
             len += len2;
@@ -301,8 +301,8 @@ static void expand_command(install_ctx_t *ctx, const WCHAR *cmd, WCHAR *buf, siz
     }
 
     if(buf)
-        strcpyW(buf+len, prev_ptr);
-    *size = len + strlenW(prev_ptr) + 1;
+        lstrcpyW(buf+len, prev_ptr);
+    *size = len + lstrlenW(prev_ptr) + 1;
 }
 
 static HRESULT process_hook_section(install_ctx_t *ctx, const WCHAR *sect_name)
@@ -318,8 +318,8 @@ static HRESULT process_hook_section(install_ctx_t *ctx, const WCHAR *sect_name)
     if(!len)
         return S_OK;
 
-    for(key = buf; *key; key += strlenW(key)+1) {
-        if(!strcmpiW(key, runW)) {
+    for(key = buf; *key; key += lstrlenW(key)+1) {
+        if(!wcsicmp(key, runW)) {
             WCHAR *cmd;
             size_t size;
 
@@ -362,7 +362,7 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
     if(len) {
         default_install = FALSE;
 
-        for(key = buf; *key; key += strlenW(key)+1) {
+        for(key = buf; *key; key += lstrlenW(key)+1) {
             TRACE("[Setup Hooks] key: %s\n", debugstr_w(key));
 
             len = GetPrivateProfileStringW(setup_hooksW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
@@ -382,7 +382,7 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
     if(len) {
         default_install = FALSE;
 
-        for(key = buf; *key; key += strlenW(key)+1) {
+        for(key = buf; *key; key += lstrlenW(key)+1) {
             TRACE("[Add.Code] key: %s\n", debugstr_w(key));
 
             len = GetPrivateProfileStringW(add_codeW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
@@ -472,7 +472,7 @@ static void update_counter(install_ctx_t *ctx, HWND hwnd)
     }else {
         WCHAR buf[100];
         LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALLN, buf, ARRAY_SIZE(buf));
-        sprintfW(text, buf, ctx->counter);
+        swprintf(text, buf, ctx->counter);
     }
 
     SetDlgItemTextW(hwnd, ID_AXINSTALL_INSTALL_BTN, text);
@@ -574,22 +574,22 @@ static HRESULT install_file(install_ctx_t *ctx, const WCHAR *cache_file)
     if(SUCCEEDED(hres)) {
         const WCHAR *ptr, *ptr2, *ext;
 
-        ptr = strrchrW(path, '/');
+        ptr = wcsrchr(path, '/');
         if(!ptr)
             ptr = path;
         else
             ptr++;
 
-        ptr2 = strrchrW(ptr, '\\');
+        ptr2 = wcsrchr(ptr, '\\');
         if(ptr2)
             ptr = ptr2+1;
 
         ctx->file_name = ptr;
-        ext = strrchrW(ptr, '.');
+        ext = wcsrchr(ptr, '.');
         if(!ext)
             ext = ptr;
 
-        if(!strcmpiW(ext, cab_extW)) {
+        if(!wcsicmp(ext, cab_extW)) {
             hres = install_cab_file(ctx);
         }else {
             FIXME("Unsupported extension %s\n", debugstr_w(ext));
@@ -606,7 +606,7 @@ static void failure_msgbox(install_ctx_t *ctx, HRESULT hres)
     WCHAR buf[1024], fmt[1024];
 
     LoadStringW(urlmon_instance, IDS_AXINSTALL_FAILURE, fmt, ARRAY_SIZE(fmt));
-    sprintfW(buf, fmt, hres);
+    swprintf(buf, fmt, hres);
     MessageBoxW(ctx->hwnd, buf, NULL, MB_OK);
 }
 

@@ -1,6 +1,6 @@
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_WINNT=0x502)
-add_definitions(-DWINVER=0x600 -D_WIN32_WINNT=0x600)
+add_definitions(-DWINVER=0x602 -D_WIN32_WINNT=0x602)
 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
@@ -25,6 +25,7 @@ list(APPEND SOURCE
     menu.c
     monitor.c
     msg.c
+    rawinput.c
     resource.c
     scroll.c
     static.c

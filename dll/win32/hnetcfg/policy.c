@@ -226,7 +226,11 @@ static HRESULT WINAPI netfw_rules_Item(
     fw_rules *This = impl_from_INetFwRules( iface );
 
     FIXME("%p, %s, %p\n", This, debugstr_w(name), rule);
+#ifdef __REACTOS__
+    return S_OK;    /* CORE-16372 Jansen's hack */
+#else
     return E_NOTIMPL;
+#endif
 }
 
 static HRESULT WINAPI netfw_rules_get__NewEnum(

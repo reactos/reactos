@@ -60,4 +60,9 @@ HRESULT get_code_page(xml_encoding,UINT*) DECLSPEC_HIDDEN;
 const WCHAR *get_encoding_name(xml_encoding) DECLSPEC_HIDDEN;
 xml_encoding get_encoding_from_codepage(UINT) DECLSPEC_HIDDEN;
 
+BOOL is_ncnamechar(WCHAR ch) DECLSPEC_HIDDEN;
+BOOL is_pubchar(WCHAR ch) DECLSPEC_HIDDEN;
+BOOL is_namestartchar(WCHAR ch) DECLSPEC_HIDDEN;
+BOOL is_namechar(WCHAR ch) DECLSPEC_HIDDEN;
+
 #endif /* __XMLLITE_PRIVATE__ */

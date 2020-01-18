@@ -264,13 +264,26 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
         CoTaskMemFree(pidl);
         pidl = NULL;
     }
-    ok(pidl != NULL, "pidl is NULL\n");
+    ok(pidl != NULL, "Line %d: pidl is NULL\n", line);
     pDropTarget = NULL;
     PITEMID_CHILD pidlLast = ILFindLastID(pidl);
     hr = s_pDesktop->GetUIObjectOf(NULL, 1, &pidlLast, IID_IDropTarget,
                                    NULL, (LPVOID *)&pDropTarget);
     CoTaskMemFree(pidl);
     ok_long(hr, S_OK);
+
+    if (!pDropTarget)
+    {
+        skip("Line %d: pDropTarget was NULL\n", line);
+
+        // clean up
+        DeleteFileW(s_szSrcTestFile);
+        DeleteFileW(s_szDestTestFile);
+        DoDeleteSpecW(s_szDestLinkSpec);
+        ILFree(pidlDesktop);
+
+        return;
+    }
 
     // DragEnter
     POINTL ptl = { 0, 0 };

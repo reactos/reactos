@@ -891,7 +891,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
 
     // Copy and retrieve the root path from get given string
     WCHAR wszRootPathName[MAX_PATH];
-    StringCbCopy(wszRootPathName, sizeof(wszRootPathName), wszPath);
+    StringCbCopyW(wszRootPathName, sizeof(wszRootPathName), wszPath);
     PathStripToRootW(wszRootPathName);
 
     // Test to see if the drive is fixed (non removable)

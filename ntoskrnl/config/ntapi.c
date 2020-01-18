@@ -1395,7 +1395,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pPrivateVer, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pPrivateVer);
             }
 
             /* Return the expected version */
@@ -1408,7 +1408,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
             /* For user mode, probe it */
             if (PreviousMode != KernelMode)
             {
-                ProbeForRead(pSafeMode, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(pSafeMode);
             }
 
             /* Return the safe boot mode state */
@@ -1473,6 +1473,7 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     PCM_KEY_BODY KeyBody = NULL;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    ULONG SubKeys;
 
     DPRINT("NtQueryOpenSubKeys()\n");
 
@@ -1543,14 +1544,25 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     }
 
     /* Call the internal API */
-    *HandleCount = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
-                                           FALSE, FALSE);
+    SubKeys = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
+                                      FALSE, FALSE);
 
     /* Unlock the registry */
     CmpUnlockRegistry();
 
     /* Dereference the key object */
     ObDereferenceObject(KeyBody);
+
+    /* Write back the result */
+    _SEH2_TRY
+    {
+        *HandleCount = SubKeys;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     DPRINT("Done.\n");
 

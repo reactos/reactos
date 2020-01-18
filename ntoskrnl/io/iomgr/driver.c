@@ -1186,6 +1186,7 @@ IopInitializeSystemDrivers(VOID)
 NTSTATUS NTAPI
 IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 {
+    UNICODE_STRING Backslash = RTL_CONSTANT_STRING(L"\\");
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     UNICODE_STRING ImagePath;
     UNICODE_STRING ServiceName;
@@ -1194,7 +1195,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     PDEVICE_OBJECT DeviceObject;
     PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     NTSTATUS Status;
-    PWSTR Start;
+    USHORT LastBackslash;
     BOOLEAN SafeToUnload = TRUE;
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING CapturedServiceName;
@@ -1230,19 +1231,34 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /*
      * Get the service name from the registry key name
      */
-    Start = wcsrchr(CapturedServiceName.Buffer, L'\\');
-    if (Start == NULL)
-        Start = CapturedServiceName.Buffer;
+    Status = RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END,
+                                        &CapturedServiceName,
+                                        &Backslash,
+                                        &LastBackslash);
+    if (NT_SUCCESS(Status))
+    {
+        NT_ASSERT(CapturedServiceName.Length >= LastBackslash + sizeof(WCHAR));
+        ServiceName.Buffer = &CapturedServiceName.Buffer[LastBackslash / sizeof(WCHAR) + 1];
+        ServiceName.Length = CapturedServiceName.Length - LastBackslash - sizeof(WCHAR);
+        ServiceName.MaximumLength = CapturedServiceName.MaximumLength - LastBackslash - sizeof(WCHAR);
+    }
     else
-        Start++;
-
-    RtlInitUnicodeString(&ServiceName, Start);
+    {
+        ServiceName = CapturedServiceName;
+    }
 
     /*
      * Construct the driver object name
      */
-    ObjectName.Length = ((USHORT)wcslen(Start) + 8) * sizeof(WCHAR);
-    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
+    Status = RtlUShortAdd(sizeof(DRIVER_ROOT_NAME),
+                          ServiceName.Length,
+                          &ObjectName.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
+        return Status;
+    }
+    ObjectName.Length = 0;
     ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                               ObjectName.MaximumLength,
                                               TAG_IO);
@@ -1251,9 +1267,8 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
         ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
-    memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
-    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = UNICODE_NULL;
+    NT_VERIFY(NT_SUCCESS(RtlAppendUnicodeToString(&ObjectName, DRIVER_ROOT_NAME)));
+    NT_VERIFY(NT_SUCCESS(RtlAppendUnicodeStringToString(&ObjectName, &ServiceName)));
 
     /*
      * Find the driver object

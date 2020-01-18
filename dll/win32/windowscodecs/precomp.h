@@ -2,9 +2,6 @@
 #ifndef WINCODECS_PRECOMP_H
 #define WINCODECS_PRECOMP_H
 
-#include <wine/config.h>
-#include <wine/port.h>
-
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

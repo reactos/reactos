@@ -2106,16 +2106,55 @@ RtlDuplicateUnicodeString(
     _Out_ PUNICODE_STRING DestinationString
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindCharInUnicodeString(
+    _In_ ULONG Flags,
+    _In_ PCUNICODE_STRING SearchString,
+    _In_ PCUNICODE_STRING MatchString,
+    _Out_ PUSHORT Position
+);
+
 //
 // Memory Functions
 //
+#if defined(_M_AMD64)
+
+FORCEINLINE
+VOID
+RtlFillMemoryUlong(
+    _Out_writes_bytes_all_(Length) PVOID Destination,
+    _In_ SIZE_T Length,
+    _In_ ULONG Pattern)
+{
+    PULONG Address = (PULONG)Destination;
+    if ((Length /= 4) != 0) {
+        if (((ULONG64)Address & 4) != 0) {
+            *Address = Pattern;
+            if ((Length -= 1) == 0) {
+                return;
+            }
+            Address += 1;
+        }
+        __stosq((PULONG64)(Address), Pattern | ((ULONG64)Pattern << 32), Length / 2);
+        if ((Length & 1) != 0) Address[Length - 1] = Pattern;
+    }
+    return;
+}
+
+#define RtlFillMemoryUlonglong(Destination, Length, Pattern)                \
+    __stosq((PULONG64)(Destination), Pattern, (Length) / 8)
+
+#else
+
 NTSYSAPI
 VOID
 NTAPI
 RtlFillMemoryUlong(
-    _In_ PVOID Destination,
+    _Out_writes_bytes_all_(Length) PVOID Destination,
     _In_ SIZE_T Length,
-    _In_ ULONG Fill
+    _In_ ULONG Pattern
 );
 
 NTSYSAPI
@@ -2126,6 +2165,8 @@ RtlFillMemoryUlonglong(
     _In_ SIZE_T Length,
     _In_ ULONGLONG Pattern
 );
+
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -2163,16 +2204,6 @@ RtlEqualUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlFindCharInUnicodeString(
-    _In_ ULONG Flags,
-    _In_ PCUNICODE_STRING SearchString,
-    _In_ PCUNICODE_STRING MatchString,
-    _Out_ PUSHORT Position
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

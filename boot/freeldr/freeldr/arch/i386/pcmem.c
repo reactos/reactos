@@ -302,7 +302,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         if (Regs.x.ecx == 0)
         {
-            TRACE("Discard empty entry. (would-be-PcBiosMapCount = %lu)\n",
+            TRACE("Discarding empty entry. (would-be-PcBiosMapCount = %lu)\n",
                   PcBiosMapCount);
             goto nextRange;
         }
@@ -332,13 +332,18 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         if (((PBIOS_MEMORY_MAP)BIOSCALLBUFFER)->ExtendedAttributes.Enabled_Reserved == 0)
         {
-            WARN("Discard disabled/invalid entry. (would-be-PcBiosMapCount = %lu)\n",
+            WARN("Discarding disabled/invalid entry. (would-be-PcBiosMapCount = %lu)\n",
                  PcBiosMapCount);
             /* This unlikely case was correct between ACPI 3.0 and 4.0, so assume all is fine.
              * Unless we would be ready to drop ACPI 3.0 compatibility.
              */
             goto nextRange;
         }
+
+        /*
+         * Other deprecated ExtendedAttributes flags such as NonVolatile_Deprecated_Reserved
+         * or SlowAccess_Deprecated_Reserved are simply ignored.
+         */
 
         /* Copy data to global buffer */
         RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, sizeof(BIOS_MEMORY_MAP));
@@ -362,7 +367,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
         {
-            TRACE("Discard empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0)\n",
+            TRACE("Discarding empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0)\n",
                   PcBiosMapCount, PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
             goto nextRange;
         }

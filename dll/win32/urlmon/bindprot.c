@@ -509,15 +509,19 @@ static HRESULT WINAPI BindProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
 
         hres = IClassFactory_CreateInstance(cf, (IUnknown*)&This->IInternetBindInfo_iface,
                 &IID_IUnknown, (void**)&protocol_unk);
+        if(SUCCEEDED(hres)) {
+            hres = IUnknown_QueryInterface(protocol_unk, &IID_IInternetProtocol, (void**)&protocol);
+            if(SUCCEEDED(hres))
+                This->protocol_unk = protocol_unk;
+            else
+                IUnknown_Release(protocol_unk);
+        }
+        else if(hres == CLASS_E_NOAGGREGATION)
+            hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&protocol);
+
         IClassFactory_Release(cf);
         if(FAILED(hres))
             return hres;
-
-        hres = IUnknown_QueryInterface(protocol_unk, &IID_IInternetProtocol, (void**)&protocol);
-        if(FAILED(hres)) {
-            IUnknown_Release(protocol_unk);
-            return hres;
-        }
     }
 
     StringFromCLSID(&clsid, &clsid_str);
@@ -703,8 +707,11 @@ static HRESULT WINAPI ProtocolHandler_Terminate(IInternetProtocol *iface, DWORD 
 
     if(This->protocol) {
         IInternetProtocol_Terminate(This->protocol, 0);
-        IInternetProtocol_Release(This->protocol);
-        This->protocol = NULL;
+
+        if (This->protocol_unk) {
+            IInternetProtocol_Release(This->protocol);
+            This->protocol = NULL;
+        }
     }
 
     set_binding_sink(This, NULL, NULL);

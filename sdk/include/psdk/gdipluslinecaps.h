@@ -19,137 +19,211 @@
 #ifndef _GDIPLUSLINECAPS_H
 #define _GDIPLUSLINECAPS_H
 
-inline
-CustomLineCap::CustomLineCap(const GraphicsPath *fillPath,
-  const GraphicsPath *strokePath, LineCap baseCap, REAL baseInset)
+inline CustomLineCap::CustomLineCap(
+    const GraphicsPath *fillPath,
+    const GraphicsPath *strokePath,
+    LineCap baseCap,
+    REAL baseInset)
+    : nativeCap(NULL)
 {
+    nativeCap = NULL;
+    GpPath *nativeFillPath = fillPath ? getNat(fillPath) : NULL;
+    GpPath *nativeStrokePath = strokePath ? getNat(strokePath) : NULL;
+    lastStatus = DllExports::GdipCreateCustomLineCap(nativeFillPath, nativeStrokePath, baseCap, baseInset, &nativeCap);
+}
+
+inline CustomLineCap::~CustomLineCap()
+{
+    DllExports::GdipDeleteCustomLineCap(nativeCap);
 }
 
 inline CustomLineCap *
-CustomLineCap::Clone(VOID)
+CustomLineCap::Clone()
 {
-  return NULL;
+    GpCustomLineCap *cap = NULL;
+    SetStatus(DllExports::GdipCloneCustomLineCap(nativeCap, &cap));
+    if (lastStatus != Ok)
+        return NULL;
+
+    CustomLineCap *newLineCap = new CustomLineCap(cap, lastStatus);
+    if (newLineCap == NULL)
+    {
+        SetStatus(DllExports::GdipDeleteCustomLineCap(cap));
+    }
+
+    return newLineCap;
 }
 
 inline LineCap
-CustomLineCap::GetBaseCap(VOID)
+CustomLineCap::GetBaseCap()
 {
-  return LineCapFlat;
+    LineCap baseCap;
+    SetStatus(DllExports::GdipGetCustomLineCapBaseCap(nativeCap, &baseCap));
+    return baseCap;
 }
 
 inline REAL
-CustomLineCap::GetBaseInset(VOID)
+CustomLineCap::GetBaseInset()
 {
-  return 0;
+    REAL inset;
+    SetStatus(DllExports::GdipGetCustomLineCapBaseInset(nativeCap, &inset));
+    return inset;
 }
 
 inline Status
-CustomLineCap::GetLastStatus(VOID)
+CustomLineCap::GetLastStatus()
 {
-  return Ok;
+    return lastStatus;
 }
 
 inline Status
 CustomLineCap::GetStrokeCaps(LineCap *startCap, LineCap *endCap)
 {
-  return Ok;
+#if 1
+    return SetStatus(NotImplemented);
+#else
+    return SetStatus(DllExports::GdipGetCustomLineCapStrokeCaps(nativeCap, startCap, endCap));
+#endif
 }
 
 inline LineJoin
-CustomLineCap::GetStrokeJoin(VOID)
+CustomLineCap::GetStrokeJoin()
 {
-  return LineJoinMiter;
+    LineJoin lineJoin;
+    SetStatus(DllExports::GdipGetCustomLineCapStrokeJoin(nativeCap, &lineJoin));
+    return lineJoin;
 }
 
 inline REAL
-CustomLineCap::GetWidthScale(VOID)
+CustomLineCap::GetWidthScale()
 {
-  return 0;
+    REAL widthScale;
+    SetStatus(DllExports::GdipGetCustomLineCapWidthScale(nativeCap, &widthScale));
+    return widthScale;
 }
 
 inline Status
 CustomLineCap::SetBaseCap(LineCap baseCap)
 {
-  return Ok;
+    return SetStatus(DllExports::GdipSetCustomLineCapBaseCap(nativeCap, baseCap));
 }
 
 inline Status
 CustomLineCap::SetBaseInset(REAL inset)
 {
-  return Ok;
+    return SetStatus(DllExports::GdipSetCustomLineCapBaseInset(nativeCap, inset));
 }
 
 inline Status
 CustomLineCap::SetStrokeCap(LineCap strokeCap)
 {
-  return Ok;
+    return SetStrokeCaps(strokeCap, strokeCap);
 }
 
 inline Status
 CustomLineCap::SetStrokeCaps(LineCap startCap, LineCap endCap)
 {
-  return Ok;
+    return SetStatus(DllExports::GdipSetCustomLineCapStrokeCaps(nativeCap, startCap, endCap));
 }
 
 inline Status
 CustomLineCap::SetStrokeJoin(LineJoin lineJoin)
 {
-  return Ok;
+    return SetStatus(DllExports::GdipSetCustomLineCapStrokeJoin(nativeCap, lineJoin));
 }
 
 inline Status
 CustomLineCap::SetWidthScale(IN REAL widthScale)
 {
-  return Ok;
+    return SetStatus(DllExports::GdipSetCustomLineCapWidthScale(nativeCap, widthScale));
 }
-
 
 class AdjustableArrowCap : public CustomLineCap
 {
-public:
-  AdjustableArrowCap(REAL height, REAL width, BOOL isFilled)
-  {
-  }
+  public:
+    AdjustableArrowCap(REAL height, REAL width, BOOL isFilled)
+    {
+        GpAdjustableArrowCap *cap = NULL;
+        lastStatus = DllExports::GdipCreateAdjustableArrowCap(height, width, isFilled, &cap);
+        SetNativeCap(cap);
+    }
 
-  REAL GetHeight(VOID)
-  {
-    return 0;
-  }
+    REAL
+    GetHeight()
+    {
+        REAL height;
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        SetStatus(DllExports::GdipGetAdjustableArrowCapHeight(cap, &height));
+        return height;
+    }
 
-  REAL GetMiddleInset(VOID)
-  {
-    return 0;
-  }
+    REAL
+    GetMiddleInset()
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        REAL middleInset;
+        SetStatus(DllExports::GdipGetAdjustableArrowCapMiddleInset(cap, &middleInset));
+        return middleInset;
+    }
 
-  REAL GetWidth(VOID)
-  {
-    return 0;
-  }
+    REAL
+    GetWidth()
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        REAL width;
+        SetStatus(DllExports::GdipGetAdjustableArrowCapWidth(cap, &width));
+        return width;
+    }
 
-  BOOL IsFilled(VOID)
-  {
-    return FALSE;
-  }
+    BOOL
+    IsFilled()
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        BOOL isFilled;
+        SetStatus(DllExports::GdipGetAdjustableArrowCapFillState(cap, &isFilled));
+        return isFilled;
+    }
 
-  Status SetFillState(BOOL isFilled)
-  {
-    return Ok;
-  }
+    Status
+    SetFillState(BOOL isFilled)
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        return SetStatus(DllExports::GdipSetAdjustableArrowCapFillState(cap, isFilled));
+    }
 
-  Status SetHeight(REAL height)
-  {
-    return Ok;
-  }
+    Status
+    SetHeight(REAL height)
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        return SetStatus(DllExports::GdipSetAdjustableArrowCapHeight(cap, height));
+    }
 
-  Status SetMiddleInset(REAL middleInset)
-  {
-    return Ok;
-  }
+    Status
+    SetMiddleInset(REAL middleInset)
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        return SetStatus(DllExports::GdipSetAdjustableArrowCapMiddleInset(cap, middleInset));
+    }
 
-  Status SetWidth(REAL width)
-  {
-    return Ok;
-  }
+    Status
+    SetWidth(REAL width)
+    {
+        GpAdjustableArrowCap *cap = GetNativeAdjustableArrowCap();
+        return SetStatus(DllExports::GdipSetAdjustableArrowCapWidth(cap, width));
+    }
+
+  protected:
+    GpAdjustableArrowCap *
+    GetNativeAdjustableArrowCap() const
+    {
+        return static_cast<GpAdjustableArrowCap *>(nativeCap);
+    }
+
+  private:
+    // AdjustableArrowCap is not copyable
+    AdjustableArrowCap(const AdjustableArrowCap &);
+    AdjustableArrowCap &
+    operator=(const AdjustableArrowCap &);
 };
 
 #endif /* _GDIPLUSLINECAPS_H */

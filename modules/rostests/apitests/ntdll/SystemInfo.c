@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <versionhelpers.h>
 
 #define ntv6(x) (LOBYTE(LOWORD(GetVersion())) >= 6 ? (x) : 0)
 
@@ -21,6 +22,10 @@ Test_Flags(void)
     ULONG Buffer2[2];
     PSYSTEM_FLAGS_INFORMATION FlagsInfo = (PVOID)Buffer;
     BOOLEAN PrivilegeEnabled;
+
+    /* Make sure we don't have debug privileges initially, otherwise WHS testbot fails */
+    Status = RtlAdjustPrivilege(SE_SYSTEMTIME_PRIVILEGE, FALSE, FALSE, &PrivilegeEnabled);
+    ok(Status == STATUS_SUCCESS, "RtlAdjustPrivilege returned %lx\n", Status);
 
     /* Query */
     ReturnLength = 0x55555555;
@@ -130,7 +135,7 @@ Test_Flags(void)
     ok(Status == STATUS_INFO_LENGTH_MISMATCH, "NtSetSystemInformation returned %lx\n", Status);
 
     Status = NtSetSystemInformation(SystemFlagsInformation, NULL, sizeof(SYSTEM_FLAGS_INFORMATION));
-    ok(Status == STATUS_ACCESS_DENIED, "NtSetSystemInformation returned %lx\n", Status);
+    ok(Status == (IsWindows7OrGreater() ? STATUS_ACCESS_DENIED : STATUS_ACCESS_VIOLATION), "NtSetSystemInformation returned %lx\n", Status);
 
     Status = NtSetSystemInformation(SystemFlagsInformation, (PVOID)2, sizeof(SYSTEM_FLAGS_INFORMATION));
     ok(Status == STATUS_DATATYPE_MISALIGNMENT, "NtSetSystemInformation returned %lx\n", Status);
@@ -183,6 +188,10 @@ Test_TimeAdjustment(void)
     ULONG ReturnLength;
     BOOLEAN PrivilegeEnabled;
 
+    /* Make sure we don't have debug privileges initially, otherwise WHS testbot fails */
+    Status = RtlAdjustPrivilege(SE_SYSTEMTIME_PRIVILEGE, FALSE, FALSE, &PrivilegeEnabled);
+    ok(Status == STATUS_SUCCESS, "RtlAdjustPrivilege returned %lx\n", Status);
+
     SetTimeInfo.TimeAdjustment = 0;
     SetTimeInfo.Enable = 0;
 
@@ -216,7 +225,7 @@ Test_TimeAdjustment(void)
     Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
                                     &SetTimeInfo,
                                     sizeof(SetTimeInfo));
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_2);
+    ok_ntstatus(Status, IsWindows7OrGreater() ? STATUS_INTEGER_DIVIDE_BY_ZERO : STATUS_INVALID_PARAMETER_2);
 
     /* Set huge value */
     SetTimeInfo.TimeAdjustment = -1;
@@ -232,7 +241,7 @@ Test_TimeAdjustment(void)
                                       sizeof(GetTimeInfo),
                                       &ReturnLength);
     ok_ntstatus(Status, STATUS_SUCCESS);
-    ok_long(GetTimeInfo.TimeAdjustment, -1);
+    ok_long(GetTimeInfo.TimeAdjustment, IsWindows7OrGreater() ? 0x7076cc : -1);
     ok_long(GetTimeInfo.Enable, 0);
 
     /* set Enable to 1 */

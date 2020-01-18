@@ -312,6 +312,21 @@ RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
 }
 
 /*
+ * @unimplemented
+ */
+LONG
+NTAPI
+RtlUnhandledExceptionFilter2(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo,
+    _In_ ULONG Flags)
+{
+    /* This is used by the security cookie checks, and also called externally */
+    UNIMPLEMENTED;
+    PrintStackTrace(ExceptionInfo);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
  * @implemented
  */
 VOID

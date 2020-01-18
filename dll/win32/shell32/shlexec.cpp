@@ -1845,7 +1845,11 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if (sei_tmp.fMask & unsupportedFlags)
     {
-        FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
+        // SEE_MASK_IDLIST is not in unsupportedFlags, but the check above passes because SEE_MASK_INVOKEIDLIST is in it
+        if ((sei_tmp.fMask & unsupportedFlags) != SEE_MASK_IDLIST)
+        {
+            FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
+        }
     }
 
     /* process the IDList */

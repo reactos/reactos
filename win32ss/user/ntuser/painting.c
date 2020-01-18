@@ -1092,7 +1092,7 @@ UpdateThreadWindows(PWND pWnd, PTHREADINFO pti, HRGN hRgn)
       }
       else
       {
-          if (IsThreadSuspended(pwndTemp->head.pti) || MsqIsHung(pwndTemp->head.pti))
+          if (IsThreadSuspended(pwndTemp->head.pti) || MsqIsHung(pwndTemp->head.pti, MSQ_HUNG))
           {
              UpdateTheadChildren(pwndTemp, hRgn);
           }

@@ -5,9 +5,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Üdvözlünk a ReactOS telepítőben.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "A ReactOS telepítő segítségével feltelepítjük a ReactOS rendszert a számítógépedre. A telepítő előbb összegyűjt pár információt, majd véglegesítjük a telepítést.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Kattints a Tovább gombra a folytatáshoz.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Üdvözöljük a ReactOS telepítőben.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "A ReactOS telepítő segítségével feltelepítjük a ReactOS rendszert a számítógépre. A telepítő előbb összegyűjt pár információt, majd véglegesítjük a telepítést.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Kattintson a Tovább gombra a folytatáshoz.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 153
@@ -17,9 +17,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "A ReactOS fejlesztők szeretnének köszönetet mondani az alábbi Open Source projekteknek amelyeket (részben) felhasználtak a ReactOS fejlesztéséhez:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "A ReactOS a GPL licencével rendelkezik, így a felhasználásához és terjesztéséhez ezt a licencet kell figyelembe venni.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "A ReactOS a GPL licencével rendelkezik, így a felhasználásához és terjesztéséhez ezt a licencet kell figyelembe vennie.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Licenc megtekintése...", IDC_VIEWGPL, 200, 120, 90, 19
-    LTEXT "Kattints a Tovább gombra a folytatáshoz.", IDC_STATIC, 15, 136, 170, 17
+    LTEXT "Kattintson a Tovább gombra a folytatáshoz.", IDC_STATIC, 15, 136, 170, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -28,7 +28,7 @@ CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Add meg a neved és ha van ilyen a céged nevét.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Adja meg a nevét és ha van ilyen a cég nevét.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Név:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Cég neve:", IDC_STATIC, 54, 57, 44, 8
@@ -41,12 +41,12 @@ CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Adj egy nevet a számítógépednek, ami nem több mint 15 betű. Ha hálózaton vagy, akkor ennek a névnek egyedinek kell lennie.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Adjon egy nevet a számítógépnek, ami nem több mint 15 betű. Ha hálózaton van, akkor ennek a névnek egyedinek kell lennie.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Számítógépnév:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A telepítő létrehoz egy felhasználói fiókot, a Rendszergazdát. Ezzel a fiókkal teljes jogod van a számítógéped felett.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Adj meg egy jelszót, ami nem több mint 127 karakter.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "A telepítő létrehoz egy felhasználói fiókot, a Rendszergazdát. Ezzel a fiókkal teljes joga van a számítógépe felett.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Adjon meg egy jelszót, ami nem több mint 127 karakter.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Jelszó:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Megerősítés:", IDC_STATIC, 54, 123, 75, 8
@@ -61,10 +61,10 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "A rendszer területi beállításait érdemes a használni kívánt nyelvhez igazítani.\nA felhasználói területi beállítások határozzák meg hogy a számok, pénznemek és dátumok hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
     LTEXT "", IDC_LOCALETEXT, 53, 35, 250, 16
-    LTEXT "A rendszer vagy felhasználói területi beállítások megváltoztatásához kattints a Testreszabás gombra.", IDC_STATIC, 53, 56, 184, 16
+    LTEXT "A rendszer vagy felhasználói területi beállítások megváltoztatásához kattintson a Testreszabás gombra.", IDC_STATIC, 53, 56, 184, 16
     PUSHBUTTON "Te&streszabás...", IDC_CUSTOMLOCALE, 245, 57, 60, 14
     LTEXT "A billentyűzetkiosztás határozza meg a karaktereket,\namelyek megjelennek gépeléskor.", IDC_STATIC, 53, 86, 253, 16
-    LTEXT "A billentyűzetkiosztás megváltoztatásához kattints\na Testreszabás gombra.", IDC_STATIC, 53, 116, 230, 16
+    LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 116, 230, 16
     PUSHBUTTON "Test&reszabás...", IDC_CUSTOMLAYOUT, 245, 122, 60, 14
 END
 
@@ -106,9 +106,9 @@ CAPTION "A ReactOS telepítésének befejezése"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A telepítés befejezése", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Sikeresen feltelepítetted a ReactOS rendszert.\n\nHa a befejezésre kattintasz, a számítógép újraindul.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Sikeresen feltelepítette a ReactOS rendszert.\n\nHa a befejezésre kattint, a számítógép újraindul.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Ha van CD vagy DVD lemez a meghajtóban, vedd ki, és utána kattints a befejezés gombra.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Ha van CD vagy DVD lemez a meghajtóban, vegye ki, és utána kattintson a befejezés gombra.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -122,7 +122,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Kérlek várj..."
+CAPTION "Kérem várjon..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
@@ -154,22 +154,22 @@ BEGIN
     IDS_OWNERTITLE "A ReactOS testreszabása"
     IDS_OWNERSUBTITLE "Ezt az információt fel fogja használni a ReactOS, hogy személyessé tegye a rendszert."
     IDS_COMPUTERTITLE "Számítógépnév és a rendszergazda jelszava"
-    IDS_COMPUTERSUBTITLE "Meg kell adnod egy számítógép nevet és a rendszergazda jelszavát."
+    IDS_COMPUTERSUBTITLE "Meg kell adnia egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE "Területi beállítások"
-    IDS_LOCALESUBTITLE "Beállíthatod, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
+    IDS_LOCALESUBTITLE "Beállíthatja, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
     IDS_DATETIMETITLE "Dátum és idő"
-    IDS_DATETIMESUBTITLE "Beállíthatod a számítógép dátumát és óráját."
-    IDS_PROCESSTITLE "Összetevők regisztrációja"
-    IDS_PROCESSSUBTITLE "Kérlek várj..."
+    IDS_DATETIMESUBTITLE "Beállíthatja a számítógép dátumát és óráját."
+    IDS_PROCESSTITLE "Összetevők regisztrálása"
+    IDS_PROCESSSUBTITLE "Kérem várjon..."
     IDS_THEMESELECTIONTITLE "Megjelenés"
-    IDS_THEMESELECTIONSUBTITLE "Válaszd ki a kívánt témát."
+    IDS_THEMESELECTIONSUBTITLE "Válassza ki a kívánt témát."
 END
 
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS telepítő"
     IDS_UNKNOWN_ERROR "Hiba lépett fel, de nem tudni annak okát."
-    IDS_REGISTERING_COMPONENTS "Komponensek regisztrációja..."
+    IDS_REGISTERING_COMPONENTS "Komponensek regisztrálása..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary hiba: "
     IDS_GETPROCADDR_FAILED "GetProcAddr hiba: "
     IDS_REGSVR_FAILED "DllRegisterServer hiba: "
@@ -188,12 +188,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "A telepítő nem tud továbblépni, amíg nem adod meg a nevedet."
+    IDS_WZD_NAME "A telepítő nem tud továbblépni, amíg nem adja meg a nevét."
     IDS_WZD_SETCOMPUTERNAME "A telepítőnek nem sikerült beállítania a számítógép nevét."
-    IDS_WZD_COMPUTERNAME "A telepítő nem tud továbblépni, amíg nem adod meg a számítógép nevét."
-    IDS_WZD_PASSWORDEMPTY "Meg kell adnod egy jelszót."
-    IDS_WZD_PASSWORDMATCH "A megadott jelszavak nem egyeznek. Kérlek add meg újra a kívánt jelszót."
-    IDS_WZD_PASSWORDCHAR "A megadott jelszó érvénytelen karaktereket tartalmaz. Kérlek érvényes jelszót adj meg."
+    IDS_WZD_COMPUTERNAME "A telepítő nem tud továbblépni, amíg nem adja meg a számítógép nevét."
+    IDS_WZD_PASSWORDEMPTY "Meg kell adnia egy jelszót."
+    IDS_WZD_PASSWORDMATCH "A megadott jelszavak nem egyeznek. Kérjük adja meg újra a kívánt jelszót."
+    IDS_WZD_PASSWORDCHAR "A megadott jelszó érvénytelen karaktereket tartalmaz. Kérjük érvényes jelszót adjon meg."
     IDS_WZD_LOCALTIME "A telepítőnek nem sikerült beállítania a helyi időt."
 END
 

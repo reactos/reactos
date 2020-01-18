@@ -52,9 +52,9 @@ START_TEST(LoadImage)
         
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_SHARED);
         ok(hCopy != NULL, "\n");
-        ok(DestroyIcon(hCopy), "\n");
+        ok(DestroyIcon(hCopy), "DestroyIcon should succeed.\n");
         /* This one is shared */
-        ok(DestroyIcon(hCopy), "\n");
+        ok(DestroyIcon(hCopy) == 0, "DestroyIcon should fail.\n");
 
         /* Try various usual functions */
         hdcScreen = CreateDCW(L"DISPLAY", NULL, NULL, NULL);

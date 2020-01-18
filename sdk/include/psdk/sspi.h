@@ -134,6 +134,7 @@ typedef struct _SecPkgInfoW
 #define SECPKG_FLAG_NEGOTIABLE2              0x00200000
 #define SECPKG_FLAG_APPCONTAINER_PASSTHROUGH 0x00400000
 #define SECPKG_FLAG_APPCONTAINER_CHECKS      0x00800000
+#define SECPKG_FLAG_APPLY_LOOPBACK           0x02000000
 
 typedef struct _SecBuffer {
   ULONG cbBuffer;

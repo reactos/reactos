@@ -43,8 +43,8 @@ OpenShellFolder(LPWSTR lpFolderCLSID)
      * Open a shell folder using "explorer.exe". The passed CLSIDs
      * are all subfolders of the "Control Panel" shell folder.
      */
-    StringCbCopy(szParameters, sizeof(szParameters), L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}");
-    StringCbCat(szParameters,sizeof(szParameters), lpFolderCLSID);
+    StringCbCopyW(szParameters, sizeof(szParameters), L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}");
+    StringCbCatW(szParameters, sizeof(szParameters), lpFolderCLSID);
 
     return (INT_PTR)ShellExecuteW(NULL,
                                   L"open",

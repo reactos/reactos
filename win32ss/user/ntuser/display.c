@@ -9,7 +9,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
-BOOL gbBaseVideo = 0;
+BOOL gbBaseVideo = FALSE;
 static PPROCESSINFO gpFullscreen = NULL;
 
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
@@ -165,24 +165,13 @@ InitVideo(VOID)
 
     TRACE("----------------------------- InitVideo() -------------------------------\n");
 
-    /* Open the key for the boot command line */
-    Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
+    /* Check if VGA mode is requested, by finding the special volatile key created by VIDEOPRT */
+    Status = RegOpenKey(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo", &hkey);
     if (NT_SUCCESS(Status))
-    {
-        cbValue = sizeof(awcBuffer);
-        Status = RegQueryValue(hkey, L"SystemStartOptions", REG_SZ, awcBuffer, &cbValue);
-        if (NT_SUCCESS(Status))
-        {
-            /* Check if VGA mode is requested. */
-            if (wcsstr(awcBuffer, L"BASEVIDEO") != 0)
-            {
-                ERR("VGA mode requested.\n");
-                gbBaseVideo = TRUE;
-            }
-        }
-
         ZwClose(hkey);
-    }
+    gbBaseVideo = NT_SUCCESS(Status);
+    if (gbBaseVideo)
+        ERR("VGA mode requested.\n");
 
     /* Open the key for the adapters */
     Status = RegOpenKey(KEY_VIDEO, &hkey);
@@ -283,6 +272,45 @@ InitVideo(VOID)
     InitSysParams();
 
     return STATUS_SUCCESS;
+}
+
+VOID
+UserRefreshDisplay(IN PPDEVOBJ ppdev)
+{
+    ULONG_PTR ulResult;
+    // PVOID pvOldCursor;
+
+    // TODO: Re-enable the cursor reset code once this function becomes called
+    // from within a Win32 thread... Indeed UserSetCursor() requires this, but
+    // at the moment this function is directly called from a separate thread
+    // from within videoprt, instead of by a separate win32k system thread.
+
+    if (!ppdev)
+        return;
+
+    PDEVOBJ_vReference(ppdev);
+
+    /* Remove mouse pointer */
+    // pvOldCursor = UserSetCursor(NULL, TRUE);
+
+    /* Do the mode switch -- Use the actual same current mode */
+    ulResult = PDEVOBJ_bSwitchMode(ppdev, ppdev->pdmwDev);
+    ASSERT(ulResult);
+
+    /* Restore mouse pointer, no hooks called */
+    // pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
+    // ASSERT(pvOldCursor == NULL);
+
+    /* Update the system metrics */
+    InitMetrics();
+
+    /* Set new size of the monitor */
+    // UserUpdateMonitorSize((HDEV)ppdev);
+
+    //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
+    UserRedrawDesktop();
+
+    PDEVOBJ_vRelease(ppdev);
 }
 
 NTSTATUS
@@ -557,7 +585,7 @@ UserEnumRegistryDisplaySettings(
         ZwClose(hkey);
         return STATUS_SUCCESS;
     }
-    return Status ;
+    return Status;
 }
 
 NTSTATUS
@@ -568,6 +596,7 @@ NtUserEnumDisplaySettings(
     OUT LPDEVMODEW lpDevMode,
     IN DWORD dwFlags)
 {
+    UNICODE_STRING ustrDeviceUser;
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
     NTSTATUS Status;
@@ -592,7 +621,7 @@ NtUserEnumDisplaySettings(
     }
     _SEH2_END;
 
-    if (lpDevMode->dmSize != sizeof(DEVMODEW))
+    if (cbSize != sizeof(DEVMODEW))
     {
         return STATUS_BUFFER_TOO_SMALL;
     }
@@ -605,15 +634,17 @@ NtUserEnumDisplaySettings(
         _SEH2_TRY
         {
             /* Probe the UNICODE_STRING and the buffer */
-            ProbeForReadUnicodeString(pustrDevice);
+            ustrDeviceUser = ProbeForReadUnicodeString(pustrDevice);
 
-            if (!pustrDevice->Length || !pustrDevice->Buffer)
+            if (!ustrDeviceUser.Length || !ustrDeviceUser.Buffer)
                 ExRaiseStatus(STATUS_NO_MEMORY);
 
-            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, sizeof(UCHAR));
+            ProbeForRead(ustrDeviceUser.Buffer,
+                         ustrDeviceUser.Length,
+                         sizeof(UCHAR));
 
             /* Copy the string */
-            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
+            RtlCopyUnicodeString(&ustrDevice, &ustrDeviceUser);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -674,6 +705,7 @@ NtUserEnumDisplaySettings(
 
     return Status;
 }
+
 VOID
 UserUpdateFullscreen(
     DWORD flags)
@@ -1012,4 +1044,3 @@ NtUserChangeDisplaySettings(
 
     return lRet;
 }
-

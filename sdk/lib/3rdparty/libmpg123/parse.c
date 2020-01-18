@@ -509,6 +509,8 @@ int read_frame(mpg123_handle *fr)
 
 	if(halfspeed_do(fr) == 1) return 1;
 
+	/* From now on, old frame data is tainted by parsing attempts. */
+	fr->to_decode = fr->to_ignore = FALSE;
 read_again:
 	/* In case we are looping to find a valid frame, discard any buffered data before the current position.
 	   This is essential to prevent endless looping, always going back to the beginning when feeder buffer is exhausted. */

@@ -104,7 +104,7 @@ END_COM_MAP()
 };
 
 CDesktopBrowser::CDesktopBrowser():
-    m_hAccel(NULL),    
+    m_hAccel(NULL),
     m_hWndShellView(NULL)
 {
 }
@@ -184,7 +184,7 @@ HRESULT CDesktopBrowser::_Resize()
 }
 
 HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
-{  
+{
     CComPtr<IShellFolder> psfDesktop;
     HRESULT hRet;
     hRet = SHGetDesktopFolder(&psfDesktop);
@@ -284,7 +284,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT
      * find an open shell window that shows the requested pidl and activate it
      */
 
-    DWORD dwFlags = ((wFlags & SBSP_EXPLOREMODE) != 0) ? SH_EXPLORER_CMDLINE_FLAG_E : 0; 
+    DWORD dwFlags = ((wFlags & SBSP_EXPLOREMODE) != 0) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
     return SHOpenNewFrame(ILClone(pidl), NULL, 0, dwFlags);
 }
 
@@ -390,13 +390,17 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LPVOID lpEnvironment;
-    RegenerateUserEnvironment(&lpEnvironment, TRUE);
+    if (uMsg == WM_SETTINGCHANGE /* == WM_WININICHANGE */ &&
+        lstrcmpiW((LPCWSTR)lParam, L"Environment") == 0)
+    {
+        LPVOID lpEnvironment;
+        RegenerateUserEnvironment(&lpEnvironment, TRUE);
+    }
 
     if (m_hWndShellView)
     {
         /* Forward the message */
-        SendMessageW(m_hWndShellView, uMsg, wParam, lParam);
+        ::SendMessageW(m_hWndShellView, uMsg, wParam, lParam);
     }
 
     if (uMsg == WM_SETTINGCHANGE && wParam == SPI_SETWORKAREA && m_hWndShellView != NULL)
@@ -473,14 +477,14 @@ BOOL WINAPI SHDesktopMessageLoop(HANDLE hDesktop)
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
-    while ((bRet = GetMessageW(&Msg, NULL, 0, 0)) != 0)
+    while ((bRet = ::GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
         if (bRet != -1)
         {
             if (shellView->TranslateAcceleratorW(&Msg) != S_OK)
             {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                ::TranslateMessage(&Msg);
+                ::DispatchMessageW(&Msg);
             }
         }
     }

@@ -1,3 +1,6 @@
+
+PROJECT(ApiTests)
+
 include_directories(include)
 
 add_subdirectory(advapi32)

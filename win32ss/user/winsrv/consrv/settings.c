@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "../concfg/font.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -59,6 +60,8 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
         Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, TRUE);    // Output
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, FALSE);   // Input
+
+        Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
     }
 
     // FIXME: Check ConsoleInfo->WindowSize with respect to

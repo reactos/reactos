@@ -119,6 +119,7 @@ Test_ProcessTimes(void)
                                        sizeof(KERNEL_USER_TIMES),
                                        NULL);
     ok_hex(Status, STATUS_SUCCESS);
+    ros_skip_flaky
     ok(Times1.CreateTime.QuadPart < TestStartTime.QuadPart,
        "CreateTime is %I64u, expected < %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart);
     ok(Times1.CreateTime.QuadPart > TestStartTime.QuadPart - 100000000LL,
@@ -126,6 +127,7 @@ Test_ProcessTimes(void)
     ok(Times1.ExitTime.QuadPart == 0,
        "ExitTime is %I64u, expected 0\n", Times1.ExitTime.QuadPart);
     ok(Times1.KernelTime.QuadPart != 0, "KernelTime is 0\n");
+    ros_skip_flaky
     ok(Times1.UserTime.QuadPart != 0, "UserTime is 0\n");
 
     /* Do some busy waiting to increase UserTime */
@@ -162,9 +164,11 @@ Test_ProcessTimes(void)
     /* Time values must have increased */
     ok(Times2.KernelTime.QuadPart > Times1.KernelTime.QuadPart,
        "KernelTime values inconsistent. Expected %I64u > %I64u\n", Times2.KernelTime.QuadPart, Times1.KernelTime.QuadPart);
+    ros_skip_flaky
     ok(Times2.UserTime.QuadPart > Times1.UserTime.QuadPart,
        "UserTime values inconsistent. Expected %I64u > %I64u\n", Times2.UserTime.QuadPart, Times1.UserTime.QuadPart);
     /* They can't have increased by more than wall clock time difference (we only have one thread) */
+    ros_skip_flaky
     ok(Times2.KernelTime.QuadPart - Times1.KernelTime.QuadPart < Time2.QuadPart - Time1.QuadPart,
        "KernelTime values inconsistent. Expected %I64u - %I64u < %I64u\n",
        Times2.KernelTime.QuadPart, Times1.KernelTime.QuadPart, Time2.QuadPart - Time1.QuadPart);

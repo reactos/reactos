@@ -34,7 +34,6 @@
 #include "wscript.h"
 
 #include <wine/debug.h>
-#include <wine/unicode.h>
 
 #ifdef _WIN64
 
@@ -90,7 +89,7 @@ static HRESULT WINAPI ActiveScriptSite_GetItemInfo(IActiveScriptSite *iface,
 {
     WINE_TRACE("(%s %x %p %p)\n", wine_dbgstr_w(pstrName), dwReturnMask, ppunkItem, ppti);
 
-    if(strcmpW(pstrName, wshW) && strcmpW(pstrName, wscriptW))
+    if(lstrcmpW(pstrName, wshW) && lstrcmpW(pstrName, wscriptW))
         return E_FAIL;
 
     if(dwReturnMask & SCRIPTINFO_ITYPEINFO) {
@@ -264,7 +263,7 @@ static BOOL get_engine_clsid(const WCHAR *ext, CLSID *clsid)
 
     WINE_TRACE("fileid is %s\n", wine_dbgstr_w(fileid));
 
-    strcatW(fileid, script_engineW);
+    lstrcatW(fileid, script_engineW);
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, fileid, &hkey);
     if(res != ERROR_SUCCESS)
         return FALSE;
@@ -403,11 +402,11 @@ static BOOL set_host_properties(const WCHAR *prop)
     else
         ++prop;
 
-    if(strcmpiW(prop, iactive) == 0)
+    if(wcsicmp(prop, iactive) == 0)
         wshInteractive = VARIANT_TRUE;
-    else if(strcmpiW(prop, batch) == 0)
+    else if(wcsicmp(prop, batch) == 0)
         wshInteractive = VARIANT_FALSE;
-    else if(strcmpiW(prop, nologoW) == 0)
+    else if(wcsicmp(prop, nologoW) == 0)
         WINE_FIXME("ignored %s switch\n", debugstr_w(nologoW));
     else
     {
@@ -453,7 +452,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
     if(!res || res > ARRAY_SIZE(scriptFullName))
         return 1;
 
-    ext = strrchrW(filepart, '.');
+    ext = wcsrchr(filepart, '.');
     if(!ext || !get_engine_clsid(ext, &clsid)) {
         WINE_FIXME("Could not find engine for %s\n", wine_dbgstr_w(ext));
         return 1;

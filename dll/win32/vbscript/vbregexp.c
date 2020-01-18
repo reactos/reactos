@@ -1335,7 +1335,7 @@ static HRESULT WINAPI RegExp2_Execute(IRegExp2 *iface,
 
     if(!This->regexp) {
         This->regexp = regexp_new(NULL, &This->pool, This->pattern,
-                strlenW(This->pattern), This->flags, FALSE);
+                lstrlenW(This->pattern), This->flags, FALSE);
         if(!This->regexp)
             return E_FAIL;
     }else {
@@ -1402,7 +1402,7 @@ static HRESULT WINAPI RegExp2_Test(IRegExp2 *iface, BSTR sourceString, VARIANT_B
 
     if(!This->regexp) {
         This->regexp = regexp_new(NULL, &This->pool, This->pattern,
-                strlenW(This->pattern), This->flags, FALSE);
+                lstrlenW(This->pattern), This->flags, FALSE);
         if(!This->regexp)
             return E_FAIL;
     }else {

@@ -20,7 +20,7 @@ static BOOL DnsCacheInitialized = FALSE;
 VOID
 DnsIntCacheInitialize(VOID)
 {
-    DPRINT("DnsIntCacheInitialize\n");
+    DPRINT("DnsIntCacheInitialize()\n");
 
     /* Check if we're initialized */
     if (DnsCacheInitialized)
@@ -35,7 +35,7 @@ DnsIntCacheInitialize(VOID)
 VOID
 DnsIntCacheFree(VOID)
 {
-    DPRINT("DnsIntCacheFree\n");
+    DPRINT("DnsIntCacheFree()\n");
 
     /* Check if we're initialized */
     if (!DnsCacheInitialized)
@@ -44,7 +44,7 @@ DnsIntCacheFree(VOID)
     if (!DnsCache.RecordList.Flink)
         return;
 
-    DnsIntCacheFlush();
+    DnsIntCacheFlush(CACHE_FLUSH_ALL);
 
     DeleteCriticalSection(&DnsCache.Lock);
     DnsCacheInitialized = FALSE;
@@ -53,7 +53,7 @@ DnsIntCacheFree(VOID)
 VOID
 DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
 {
-    DPRINT("DnsIntCacheRemoveEntryItem %p\n", CacheEntry);
+    DPRINT("DnsIntCacheRemoveEntryItem(%p)\n", CacheEntry);
 
     /* Remove the entry from the list */
     RemoveEntryList(&CacheEntry->CacheLink);
@@ -65,13 +65,14 @@ DnsIntCacheRemoveEntryItem(PRESOLVER_CACHE_ENTRY CacheEntry)
     HeapFree(GetProcessHeap(), 0, CacheEntry);
 }
 
-VOID
-DnsIntCacheFlush(VOID)
+DNS_STATUS
+DnsIntCacheFlush(
+    _In_ ULONG ulFlags)
 {
-    PLIST_ENTRY Entry;
+    PLIST_ENTRY Entry, NextEntry;
     PRESOLVER_CACHE_ENTRY CacheEntry;
 
-    DPRINT("DnsIntCacheFlush\n");
+    DPRINT("DnsIntCacheFlush(%lu)\n", ulFlags);
 
     /* Lock the cache */
     DnsCacheLock();
@@ -80,29 +81,39 @@ DnsIntCacheFlush(VOID)
     Entry = DnsCache.RecordList.Flink;
     while (Entry != &DnsCache.RecordList)
     {
+        NextEntry = Entry->Flink;
+
         /* Get this entry */
         CacheEntry = CONTAINING_RECORD(Entry, RESOLVER_CACHE_ENTRY, CacheLink);
 
         /* Remove it from list */
-        DnsIntCacheRemoveEntryItem(CacheEntry);
+        if (((ulFlags & CACHE_FLUSH_HOSTS_FILE_ENTRIES) && (CacheEntry->bHostsFileEntry != FALSE)) ||
+            ((ulFlags & CACHE_FLUSH_NON_HOSTS_FILE_ENTRIES) && (CacheEntry->bHostsFileEntry == FALSE)))
+            DnsIntCacheRemoveEntryItem(CacheEntry);
 
         /* Move to the next entry */
-        Entry = DnsCache.RecordList.Flink;
+        Entry = NextEntry;
     }
 
     /* Unlock the cache */
     DnsCacheUnlock();
+
+    return ERROR_SUCCESS;
 }
 
-BOOL
-DnsIntCacheGetEntryFromName(LPCWSTR Name,
-                            PDNS_RECORDW *Record)
+DNS_STATUS
+DnsIntCacheGetEntryByName(
+    LPCWSTR Name,
+    WORD wType,
+    DWORD dwFlags,
+    PDNS_RECORDW *Record)
 {
-    BOOL Ret = FALSE;
+    DNS_STATUS Status = DNS_INFO_NO_RECORDS;
     PRESOLVER_CACHE_ENTRY CacheEntry;
     PLIST_ENTRY NextEntry;
 
-    DPRINT("DnsIntCacheGetEntryFromName %ws %p\n", Name, Record);
+    DPRINT("DnsIntCacheGetEntryByName(%S %hu 0x%lx %p)\n",
+           Name, wType, dwFlags, Record);
 
     /* Assume failure */
     *Record = NULL;
@@ -122,7 +133,7 @@ DnsIntCacheGetEntryFromName(LPCWSTR Name,
         {
             /* Copy the entry and return it */
             *Record = DnsRecordSetCopyEx(CacheEntry->Record, DnsCharSetUnicode, DnsCharSetUnicode);
-            Ret = TRUE;
+            Status = ERROR_SUCCESS;
             break;
         }
 
@@ -132,8 +143,7 @@ DnsIntCacheGetEntryFromName(LPCWSTR Name,
     /* Release the cache */
     DnsCacheUnlock();
 
-    /* Return */
-    return Ret;
+    return Status;
 }
 
 BOOL
@@ -143,7 +153,7 @@ DnsIntCacheRemoveEntryByName(LPCWSTR Name)
     PRESOLVER_CACHE_ENTRY CacheEntry;
     PLIST_ENTRY NextEntry;
 
-    DPRINT("DnsIntCacheRemoveEntryByName %ws\n", Name);
+    DPRINT("DnsIntCacheRemoveEntryByName(%S)\n", Name);
 
     /* Lock the cache */
     DnsCacheLock();
@@ -175,11 +185,17 @@ DnsIntCacheRemoveEntryByName(LPCWSTR Name)
 }
 
 VOID
-DnsIntCacheAddEntry(PDNS_RECORDW Record)
+DnsIntCacheAddEntry(
+    _In_ PDNS_RECORDW Record,
+    _In_ BOOL bHostsFileEntry)
 {
     PRESOLVER_CACHE_ENTRY Entry;
 
-    DPRINT("DnsIntCacheRemoveEntryByName %p\n", Record);
+    DPRINT("DnsIntCacheAddEntry(%p %u)\n",
+           Record, bHostsFileEntry);
+
+    DPRINT("Name: %S\n", Record->pName);
+    DPRINT("TTL: %lu\n", Record->dwTtl);
 
     /* Lock the cache */
     DnsCacheLock();
@@ -189,6 +205,7 @@ DnsIntCacheAddEntry(PDNS_RECORDW Record)
     if (!Entry)
         return;
 
+    Entry->bHostsFileEntry = bHostsFileEntry;
     Entry->Record = DnsRecordSetCopyEx(Record, DnsCharSetUnicode, DnsCharSetUnicode);
 
     /* Insert it to our List */
@@ -196,4 +213,61 @@ DnsIntCacheAddEntry(PDNS_RECORDW Record)
 
     /* Release the cache */
     DnsCacheUnlock();
+}
+
+DNS_STATUS
+DnsIntCacheGetEntries(
+    _Out_ DNS_CACHE_ENTRY **ppCacheEntries)
+{
+    PRESOLVER_CACHE_ENTRY CacheEntry;
+    PLIST_ENTRY NextEntry;
+    PDNS_CACHE_ENTRY pLastEntry = NULL, pNewEntry;
+
+    /* Lock the cache */
+    DnsCacheLock();
+
+    *ppCacheEntries = NULL;
+
+    NextEntry = DnsCache.RecordList.Flink;
+    while (NextEntry != &DnsCache.RecordList)
+    {
+        /* Get the Current Entry */
+        CacheEntry = CONTAINING_RECORD(NextEntry, RESOLVER_CACHE_ENTRY, CacheLink);
+
+        DPRINT("1 %S %lu\n", CacheEntry->Record->pName, CacheEntry->Record->wType);
+        if (CacheEntry->Record->pNext)
+        {
+            DPRINT("2 %S %lu\n", CacheEntry->Record->pNext->pName, CacheEntry->Record->pNext->wType);
+        }
+
+        pNewEntry = midl_user_allocate(sizeof(DNS_CACHE_ENTRY));
+        if (pNewEntry == NULL)
+        {
+            return ERROR_OUTOFMEMORY;
+        }
+
+        pNewEntry->pszName = midl_user_allocate((wcslen(CacheEntry->Record->pName) + 1) * sizeof(WCHAR));
+        if (pNewEntry->pszName == NULL)
+        {
+            return ERROR_OUTOFMEMORY;
+        }
+
+        wcscpy(pNewEntry->pszName, CacheEntry->Record->pName);
+        pNewEntry->wType1 = CacheEntry->Record->wType;
+        pNewEntry->wType2 = 0;
+        pNewEntry->wFlags = 0;
+
+        if (pLastEntry == NULL)
+            *ppCacheEntries = pNewEntry;
+        else
+            pLastEntry->pNext = pNewEntry;
+        pLastEntry = pNewEntry;
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the cache */
+    DnsCacheUnlock();
+
+    return ERROR_SUCCESS;
 }

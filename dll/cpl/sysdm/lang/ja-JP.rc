@@ -31,15 +31,15 @@ BEGIN
     GROUPBOX "デバイス マネージャ", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    PUSHBUTTON "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 130, 48, 110, 15
     GROUPBOX "ハードウェア ウィザード", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "ハードウェアウィザードはハードウェアのインストール、アンインストール、修復、 取り外し、取り出し、設定の手助けをします。", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "ハードウェア ウィザード(&H)...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    PUSHBUTTON "ハードウェア ウィザード(&H)...", IDC_HARDWARE_WIZARD, 130, 120, 110, 15
     GROUPBOX "ハードウェア プロファイル", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "ハードウェアプロファイルは別のハードウェアの構成を設定し、格納する方法を 提供します。", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON "ハードウェア プロファイル(&W)...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+    PUSHBUTTON "ハードウェア プロファイル(&W)...", IDC_HARDWARE_PROFILE, 130, 190, 110, 15
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
@@ -210,7 +210,7 @@ BEGIN
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "秒", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "手動で起動オプションファイルを編集する場合は[編集]をクリックしてください", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "手動で起動オプションファイルを編集する場合は\n[編集]をクリックしてください", IDC_STATIC, 14, 79, 187, 18
     PUSHBUTTON "編集(&E)", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "システム障害", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "システム ログにイベントを書き込む(&W)", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
@@ -324,24 +324,24 @@ BEGIN
     IDS_USERPROFILE_MODIFIED "変更日"
     IDS_USERPROFILE_LOCAL "Local"
     IDS_USERPROFILE_ROAMING "Roaming"
-    IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
+    IDS_USERPROFILE_MANDATORY "必須"
+    IDS_USERPROFILE_CONFIRM_DELETE "%s のプロファイルを削除してもいいですか?"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "削除の確認"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
     IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
-    IDS_MESSAGEBOXTITLE "System control panel applet"
-    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
-    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
+    IDS_MESSAGEBOXTITLE "システム コントロール パネル アプレット"
+    IDS_WARNINITIALSIZE "ページングファイルの初期サイズの数値を入力して下さい。"
+    IDS_WARNMAXIMUMSIZE "ページングファイルの最大サイズの数値を入力して下さい。"
+    IDS_WARNINITIALRANGE "ページングファイルの初期サイズは16 MB以上でなければなりません。また、選択中のドライブの利用可能なサイズを超えてはいけません。"
+    IDS_WARNMAXIMUMRANGE "ページングファイルの最大サイズは初期サイズ以上でなければなりません。また、4095 MB か選択中のドライブの利用可能なサイズを超えてはいけません。"
     IDS_PAGEFILE_NONE "なし"
-    IDS_PAGEFILE_SYSTEM "System Managed"
-    IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
+    IDS_PAGEFILE_SYSTEM "システム管理"
+    IDS_INFOREBOOT "変更を適用するには、コンピュータを再起動する必要があります。"
     IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
-    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "プロファイル削除の確認"
+    IDS_HWPROFILE_CONFIRM_DELETE "ハードウェア プロファイル ""%s"" を削除してもよいですか?"
+    IDS_HWPROFILE_ALREADY_IN_USE "プロファイル名は使用中です。"
+    IDS_HWPROFILE_PROFILE "プロファイル"
+    IDS_HWPROFILE_WARNING "警告"
 END

@@ -1,0 +1,35 @@
+# full manual is at https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+---
+BasedOnStyle: Microsoft
+
+IndentWidth:     4
+UseTab:          Never
+
+IndentCaseLabels: true
+
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+BinPackParameters: false
+BinPackArguments: true
+
+# This applies to () [] <>
+AlignAfterOpenBracket: AlwaysBreak
+
+# Always break before braces
+BreakBeforeBraces: Allman
+
+# return type on it's own line
+AlwaysBreakAfterReturnType: All
+
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles:  false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+...

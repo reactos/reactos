@@ -31,7 +31,6 @@
 
 #include <string.h>
 #include "wine/list.h"
-#include "wine/unicode.h"
 
 /* Background copy job vtbl and related data */
 typedef struct
@@ -118,15 +117,15 @@ BOOL transitionJobState(BackgroundCopyJobImpl *job, BG_JOB_STATE from, BG_JOB_ST
 /* Little helper functions */
 static inline WCHAR *strdupW(const WCHAR *src)
 {
-    WCHAR *dst = HeapAlloc(GetProcessHeap(), 0, (strlenW(src) + 1) * sizeof(WCHAR));
-    if (dst) strcpyW(dst, src);
+    WCHAR *dst = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(src) + 1) * sizeof(WCHAR));
+    if (dst) lstrcpyW(dst, src);
     return dst;
 }
 
 static inline WCHAR *co_strdupW(const WCHAR *src)
 {
-    WCHAR *dst = CoTaskMemAlloc((strlenW(src) + 1) * sizeof(WCHAR));
-    if (dst) strcpyW(dst, src);
+    WCHAR *dst = CoTaskMemAlloc((lstrlenW(src) + 1) * sizeof(WCHAR));
+    if (dst) lstrcpyW(dst, src);
     return dst;
 }
 
@@ -136,10 +135,10 @@ static inline HRESULT return_strval(const WCHAR *str, WCHAR **ret)
 
     if (!ret) return E_INVALIDARG;
 
-    len = strlenW(str);
+    len = lstrlenW(str);
     *ret = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
     if (!*ret) return E_OUTOFMEMORY;
-    strcpyW(*ret, str);
+    lstrcpyW(*ret, str);
     return S_OK;
 }
 

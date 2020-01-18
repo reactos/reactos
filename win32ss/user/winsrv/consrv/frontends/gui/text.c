@@ -405,54 +405,88 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
     OldFont = SelectObject(GuiData->hMemDC, NewFont);
 
-    for (Line = TopLine; Line <= BottomLine; Line++)
+    if (Console->IsCJK)
     {
-        WCHAR LineBuffer[80];   // Buffer containing a part or all the line to be displayed
-        From  = ConioCoordToPointer(Buffer, LeftColumn, Line);  // Get the first code of the line
-        Start = LeftColumn;
-        To    = LineBuffer;
-
-        for (Char = LeftColumn; Char <= RightColumn; Char++)
+        for (Line = TopLine; Line <= BottomLine; Line++)
         {
-            /*
-             * We flush the buffer if the new attribute is different
-             * from the current one, or if the buffer is full.
-             */
-            if (From->Attributes != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
+            for (Char = LeftColumn; Char <= RightColumn; Char++)
             {
-                TextOutW(GuiData->hMemDC,
-                         Start * GuiData->CharWidth,
-                         Line  * GuiData->CharHeight,
-                         LineBuffer,
-                         Char - Start);
-                Start = Char;
-                To    = LineBuffer;
+                From = ConioCoordToPointer(Buffer, Char, Line);
                 Attribute = From->Attributes;
-                if (Attribute != LastAttribute)
-                {
-                    LastAttribute = Attribute;
-                    SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
-                    SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
+                SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
+                SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(Attribute)));
 
-                    /* Change underline state if needed */
-                    if (!!(LastAttribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
+                /* Change underline state if needed */
+                if (!!(Attribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
+                {
+                    IsUnderline = !!(Attribute & COMMON_LVB_UNDERSCORE);
+
+                    /* Select the new font */
+                    NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
+                    SelectObject(GuiData->hMemDC, NewFont);
+                }
+
+                if (Attribute & COMMON_LVB_TRAILING_BYTE)
+                    continue;
+
+                TextOutW(GuiData->hMemDC,
+                         Char * GuiData->CharWidth,
+                         Line * GuiData->CharHeight,
+                         &From->Char.UnicodeChar, 1);
+            }
+        }
+    }
+    else
+    {
+        for (Line = TopLine; Line <= BottomLine; Line++)
+        {
+            WCHAR LineBuffer[80];   // Buffer containing a part or all the line to be displayed
+            From  = ConioCoordToPointer(Buffer, LeftColumn, Line);  // Get the first code of the line
+            Start = LeftColumn;
+            To    = LineBuffer;
+
+            for (Char = LeftColumn; Char <= RightColumn; Char++)
+            {
+                /*
+                 * We flush the buffer if the new attribute is different
+                 * from the current one, or if the buffer is full.
+                 */
+                if (From->Attributes != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
+                {
+                    TextOutW(GuiData->hMemDC,
+                             Start * GuiData->CharWidth,
+                             Line  * GuiData->CharHeight,
+                             LineBuffer,
+                             Char - Start);
+                    Start = Char;
+                    To    = LineBuffer;
+                    Attribute = From->Attributes;
+                    if (Attribute != LastAttribute)
                     {
-                        IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
-                        /* Select the new font */
-                        NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
-                        /* OldFont = */ SelectObject(GuiData->hMemDC, NewFont);
+                        LastAttribute = Attribute;
+                        SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
+                        SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
+
+                        /* Change underline state if needed */
+                        if (!!(LastAttribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
+                        {
+                            IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
+                            /* Select the new font */
+                            NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
+                            SelectObject(GuiData->hMemDC, NewFont);
+                        }
                     }
                 }
+
+                *(To++) = (From++)->Char.UnicodeChar;
             }
 
-            *(To++) = (From++)->Char.UnicodeChar;
+            TextOutW(GuiData->hMemDC,
+                     Start * GuiData->CharWidth,
+                     Line  * GuiData->CharHeight,
+                     LineBuffer,
+                     RightColumn - Start + 1);
         }
-
-        TextOutW(GuiData->hMemDC,
-                 Start * GuiData->CharWidth,
-                 Line  * GuiData->CharHeight,
-                 LineBuffer,
-                 RightColumn - Start + 1);
     }
 
     /* Restore the old font */
@@ -479,12 +513,35 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
             OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
 
-            PatBlt(GuiData->hMemDC,
-                   CursorX * GuiData->CharWidth,
-                   CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
-                   GuiData->CharWidth,
-                   CursorHeight,
-                   PATCOPY);
+            if (Attribute & COMMON_LVB_LEADING_BYTE)
+            {
+                /* The caret is on the leading byte */
+                PatBlt(GuiData->hMemDC,
+                       CursorX * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth * 2,
+                       CursorHeight,
+                       PATCOPY);
+            }
+            else if (Attribute & COMMON_LVB_TRAILING_BYTE)
+            {
+                /* The caret is on the trailing byte */
+                PatBlt(GuiData->hMemDC,
+                       (CursorX - 1) * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth * 2,
+                       CursorHeight,
+                       PATCOPY);
+            }
+            else
+            {
+                PatBlt(GuiData->hMemDC,
+                       CursorX * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth,
+                       CursorHeight,
+                       PATCOPY);
+            }
 
             SelectObject(GuiData->hMemDC, OldBrush);
             DeleteObject(CursorBrush);

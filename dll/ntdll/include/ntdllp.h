@@ -29,6 +29,16 @@ typedef struct _LDRP_TLS_DATA
     IMAGE_TLS_DIRECTORY TlsDirectory;
 } LDRP_TLS_DATA, *PLDRP_TLS_DATA;
 
+typedef
+NTSTATUS
+(NTAPI* PLDR_APP_COMPAT_DLL_REDIRECTION_CALLBACK_FUNCTION)(
+    _In_ ULONG Flags,
+    _In_ PCWSTR DllName,
+    _In_ PCWSTR DllPath OPTIONAL,
+    _Inout_opt_ PULONG DllCharacteristics,
+    _In_ PVOID CallbackData,
+    _Outptr_ PWSTR* EffectiveDllPath);
+
 /* Global data */
 extern RTL_CRITICAL_SECTION LdrpLoaderLock;
 extern BOOLEAN LdrpInLdrInit;

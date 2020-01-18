@@ -21,124 +21,203 @@
 
 class StringFormat : public GdiplusBase
 {
-public:
-  StringFormat(INT formatFlags, LANGID language)
-  {
-  }
+  public:
+    StringFormat(INT formatFlags = 0, LANGID language = LANG_NEUTRAL) : nativeFormat(NULL)
+    {
+        lastStatus = DllExports::GdipCreateStringFormat(formatFlags, language, &nativeFormat);
+    }
 
-  StringFormat(const StringFormat *format)
-  {
-  }
+    StringFormat(const StringFormat *format) : nativeFormat(NULL)
+    {
+        lastStatus = DllExports::GdipCloneStringFormat(format ? format->nativeFormat : NULL, &nativeFormat);
+    }
 
-  StringFormat *Clone(VOID)
-  {
-    return NULL;
-  }
+    StringFormat *
+    Clone() const
+    {
+        GpStringFormat *cloneFormat = NULL;
 
-  static const StringFormat *GenericDefault(VOID)
-  {
-    return NULL;
-  }
+        lastStatus = DllExports::GdipCloneStringFormat(nativeFormat, &cloneFormat);
+        if (lastStatus != Ok)
+            return NULL;
 
-  static const StringFormat *GenericTypographic(VOID)
-  {
-    return NULL;
-  }
+        StringFormat *newFormat = new StringFormat(cloneFormat, lastStatus);
+        if (!newFormat)
+            DllExports::GdipDeleteStringFormat(cloneFormat);
+        return newFormat;
+    }
 
-  StringAlignment GetAlignment(VOID) const
-  {
-    return StringAlignmentNear;
-  }
+    ~StringFormat()
+    {
+        DllExports::GdipDeleteStringFormat(nativeFormat);
+    }
 
-  LANGID GetDigitSubstitutionLanguage(VOID) const
-  {
-    return 0;
-  }
+    static const StringFormat *
+    GenericDefault()
+    {
+        return NULL; // FIXME
+    }
 
-  StringDigitSubstitute GetDigitSubstitutionMethod(VOID) const
-  {
-    return StringDigitSubstituteNone;
-  }
+    static const StringFormat *
+    GenericTypographic()
+    {
+        return NULL; // FIXME
+    }
 
-  INT GetFormatFlags(VOID) const
-  {
-    return 0;
-  }
+    StringAlignment
+    GetAlignment() const
+    {
+        StringAlignment alignment;
+        SetStatus(DllExports::GdipGetStringFormatAlign(nativeFormat, &alignment));
+        return alignment;
+    }
 
-  HotkeyPrefix GetHotkeyPrefix(VOID) const
-  {
-    return HotkeyPrefixNone;
-  }
+    LANGID
+    GetDigitSubstitutionLanguage() const
+    {
+        LANGID language;
+        SetStatus(DllExports::GdipGetStringFormatDigitSubstitution(nativeFormat, &language, NULL));
+        return language;
+    }
 
-  Status GetLastStatus(VOID) const
-  {
-    return NotImplemented;
-  }
+    StringDigitSubstitute
+    GetDigitSubstitutionMethod() const
+    {
+        StringDigitSubstitute substitute;
+        SetStatus(DllExports::GdipGetStringFormatDigitSubstitution(nativeFormat, NULL, &substitute));
+        return substitute;
+    }
 
-  StringAlignment GetLineAlignment(VOID) const
-  {
-    return StringAlignmentNear;
-  }
+    INT
+    GetFormatFlags() const
+    {
+        INT flags;
+        SetStatus(DllExports::GdipGetStringFormatFlags(nativeFormat, &flags));
+        return flags;
+    }
 
-  INT GetMeasurableCharacterRangeCount(VOID) const
-  {
-    return 0;
-  }
+    HotkeyPrefix
+    GetHotkeyPrefix() const
+    {
+        HotkeyPrefix hotkeyPrefix;
+        SetStatus(DllExports::GdipGetStringFormatHotkeyPrefix(nativeFormat, reinterpret_cast<INT *>(&hotkeyPrefix)));
+        return hotkeyPrefix;
+    }
 
-  INT GetTabStopCount(VOID) const
-  {
-    return 0;
-  }
+    Status
+    GetLastStatus() const
+    {
+        return lastStatus;
+    }
 
-  Status GetTabStops(INT count, REAL *firstTabOffset, REAL *tabStops) const
-  {
-    return NotImplemented;
-  }
+    StringAlignment
+    GetLineAlignment() const
+    {
+        StringAlignment alignment;
+        SetStatus(DllExports::GdipGetStringFormatLineAlign(nativeFormat, &alignment));
+        return alignment;
+    }
 
-  StringTrimming GetTrimming(VOID) const
-  {
-    return StringTrimmingNone;
-  }
+    INT
+    GetMeasurableCharacterRangeCount() const
+    {
+        INT count;
+        SetStatus(DllExports::GdipGetStringFormatMeasurableCharacterRangeCount(nativeFormat, &count));
+        return count;
+    }
 
-  Status SetAlignment(StringAlignment align)
-  {
-    return NotImplemented;
-  }
+    INT
+    GetTabStopCount() const
+    {
+        INT count;
+        SetStatus(DllExports::GdipGetStringFormatTabStopCount(nativeFormat, &count));
+        return count;
+    }
 
-  Status SetDigitSubstitution(LANGID language, StringDigitSubstitute substitute)
-  {
-    return NotImplemented;
-  }
+    Status
+    GetTabStops(INT count, REAL *firstTabOffset, REAL *tabStops) const
+    {
+        return SetStatus(DllExports::GdipGetStringFormatTabStops(nativeFormat, count, firstTabOffset, tabStops));
+    }
 
-  Status SetFormatFlags(INT flags)
-  {
-    return NotImplemented;
-  }
+    StringTrimming
+    GetTrimming() const
+    {
+        StringTrimming trimming;
+        SetStatus(DllExports::GdipGetStringFormatTrimming(nativeFormat, &trimming));
+        return trimming;
+    }
 
-  Status SetHotkeyPrefix(HotkeyPrefix hotkeyPrefix)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetAlignment(StringAlignment align)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatAlign(nativeFormat, align));
+    }
 
-  Status SetLineAlignment(StringAlignment align)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetDigitSubstitution(LANGID language, StringDigitSubstitute substitute)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatDigitSubstitution(nativeFormat, language, substitute));
+    }
 
-  Status SetMeasurableCharacterRanges(INT rangeCount, const CharacterRange *ranges)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetFormatFlags(INT flags)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatFlags(nativeFormat, flags));
+    }
 
-  Status SetTabStops(REAL firstTabOffset, INT count, const REAL *tabStops)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetHotkeyPrefix(HotkeyPrefix hotkeyPrefix)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatHotkeyPrefix(nativeFormat, INT(hotkeyPrefix)));
+    }
 
-  Status SetTrimming(StringTrimming trimming)
-  {
-    return NotImplemented;
-  }
+    Status
+    SetLineAlignment(StringAlignment align)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatLineAlign(nativeFormat, align));
+    }
+
+    Status
+    SetMeasurableCharacterRanges(INT rangeCount, const CharacterRange *ranges)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatMeasurableCharacterRanges(nativeFormat, rangeCount, ranges));
+    }
+
+    Status
+    SetTabStops(REAL firstTabOffset, INT count, const REAL *tabStops)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatTabStops(nativeFormat, firstTabOffset, count, tabStops));
+    }
+
+    Status
+    SetTrimming(StringTrimming trimming)
+    {
+        return SetStatus(DllExports::GdipSetStringFormatTrimming(nativeFormat, trimming));
+    }
+
+  protected:
+    GpStringFormat *nativeFormat;
+    mutable Status lastStatus;
+
+    StringFormat(GpStringFormat *format, Status status) : nativeFormat(format), lastStatus(status)
+    {
+    }
+
+    Status
+    SetStatus(Status status) const
+    {
+        if (status != Ok)
+            lastStatus = status;
+        return status;
+    }
+
+    // get native
+    friend inline GpStringFormat *&
+    getNat(const StringFormat *sf)
+    {
+        return const_cast<StringFormat *>(sf)->nativeFormat;
+    }
 };
 
 #endif /* _GDIPLUSSTRINGFORMAT_H */

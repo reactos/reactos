@@ -300,7 +300,41 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
         m_fAcceptFmt = TRUE;
 
     m_grfKeyState = dwKeyState;
-    m_dwDefaultEffect = DROPEFFECT_MOVE;
+
+#define D_NONE DROPEFFECT_NONE
+#define D_COPY DROPEFFECT_COPY
+#define D_MOVE DROPEFFECT_MOVE
+#define D_LINK DROPEFFECT_LINK
+    m_dwDefaultEffect = *pdwEffect;
+    switch (*pdwEffect & (D_COPY | D_MOVE | D_LINK))
+    {
+        case D_COPY | D_MOVE:
+            if (dwKeyState & MK_CONTROL)
+                m_dwDefaultEffect = D_COPY;
+            else
+                m_dwDefaultEffect = D_MOVE;
+            break;
+        case D_COPY | D_MOVE | D_LINK:
+            if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == (MK_SHIFT | MK_CONTROL))
+                m_dwDefaultEffect = D_LINK;
+            else if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == MK_CONTROL)
+                m_dwDefaultEffect = D_COPY;
+            else
+                m_dwDefaultEffect = D_MOVE;
+            break;
+        case D_COPY | D_LINK:
+            if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == (MK_SHIFT | MK_CONTROL))
+                m_dwDefaultEffect = D_LINK;
+            else
+                m_dwDefaultEffect = D_COPY;
+            break;
+        case D_MOVE | D_LINK:
+            if ((dwKeyState & (MK_SHIFT | MK_CONTROL)) == (MK_SHIFT | MK_CONTROL))
+                m_dwDefaultEffect = D_LINK;
+            else
+                m_dwDefaultEffect = D_MOVE;
+            break;
+    }
 
     STGMEDIUM medium;
     if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)))
@@ -317,7 +351,11 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
         ReleaseStgMedium(&medium);
     }
 
-    _QueryDrop(dwKeyState, pdwEffect);
+    if (!m_fAcceptFmt)
+        *pdwEffect = DROPEFFECT_NONE;
+    else
+        *pdwEffect = m_dwDefaultEffect;
+
     return S_OK;
 }
 

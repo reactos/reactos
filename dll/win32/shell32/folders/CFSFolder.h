@@ -32,12 +32,12 @@ class CFSFolder :
     public IShellFolderViewCB
 {
     private:
-        CLSID *pclsid;
+        const CLSID *m_pclsid;
 
         /* both paths are parsible from the desktop */
-        LPWSTR sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
+        LPWSTR m_sPathTarget;     /* complete path to target used for enumeration and ChangeNotify */
 
-        LPITEMIDLIST pidlRoot; /* absolute pidl */
+        LPITEMIDLIST m_pidlRoot; /* absolute pidl */
 
         DWORD m_bGroupPolicyActive;
         HRESULT _CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppvOut);

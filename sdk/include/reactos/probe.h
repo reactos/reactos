@@ -180,7 +180,18 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 
                     /* Set it as the buffer */
                     Dest->Buffer = Buffer;
-                    Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
+                    if (Dest->Length % sizeof(WCHAR))
+                    {
+                        Dest->Length--;
+                    }
+                    if (Dest->Length >= UNICODE_STRING_MAX_BYTES)
+                    {
+                        Dest->MaximumLength = Dest->Length;
+                    }
+                    else
+                    {
+                        Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
+                    }
                 }
                 else
                 {

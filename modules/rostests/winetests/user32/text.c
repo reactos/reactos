@@ -277,6 +277,21 @@ static void test_DrawTextCalcRect(void)
     ok(textheight==0,"Got textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
+    /* When offset to top is zero, return 1 */
+    SetRectEmpty(&rect);
+    textheight = DrawTextExW(hdc, textW, -1, &rect, DT_SINGLELINE | DT_CALCRECT | DT_BOTTOM, NULL);
+    ok(textheight == 1, "Expect returned height:1 got:%d\n", textheight);
+
+    SetRect(&rect, 0, 100, 0, 100);
+    textheight = DrawTextExW(hdc, textW, -1, &rect, DT_SINGLELINE | DT_CALCRECT | DT_BOTTOM, NULL);
+    ok(textheight == 1, "Expect returned height:1 got:%d\n", textheight);
+
+    SetRectEmpty(&rect);
+    textheight = DrawTextExW(hdc, textW, -1, &rect, DT_SINGLELINE | DT_CALCRECT | DT_TOP, NULL);
+    /* Set top to text height and bottom zero, so bottom of drawn text to top is zero when DT_VCENTER is used */
+    SetRect(&rect, 0, textheight, 0, 0);
+    textheight = DrawTextExW(hdc, textW, -1, &rect, DT_SINGLELINE | DT_CALCRECT | DT_VCENTER, NULL);
+    ok(textheight == 1, "Expect returned height:1 got:%d\n", textheight);
 
     /* invalid dtp size test */
     dtp.cbSize = -1; /* Invalid */
@@ -750,7 +765,7 @@ static void test_CharToOem_OemToChar(void)
     char oem;
     WCHAR uni, expect;
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         const char *expected = tests[i].ret ? helloWorld : "";
         const char *src = tests[i].src ? helloWorld : NULL;
@@ -777,7 +792,7 @@ static void test_CharToOem_OemToChar(void)
         ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
     }
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         const char *expected = tests[i].ret ? helloWorld : "";
         const WCHAR *src = tests[i].src ? helloWorldW : NULL;
@@ -789,12 +804,12 @@ static void test_CharToOem_OemToChar(void)
         ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
 
         memset(buf, 0, sizeof(buf));
-        ret = CharToOemBuffW(src, dst, sizeof(helloWorldW)/sizeof(WCHAR));
+        ret = CharToOemBuffW(src, dst, ARRAY_SIZE(helloWorldW));
         ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
         ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
     }
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         const WCHAR *expected = tests[i].ret ? helloWorldW : emptyW;
         const char *src = tests[i].src ? helloWorld : NULL;

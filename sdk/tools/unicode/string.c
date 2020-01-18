@@ -23,7 +23,6 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define WINE_UNICODE_INLINE  /* nothing */
 #include "wine/unicode.h"
 
 #ifdef __REACTOS__
@@ -469,14 +468,19 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
                 /* FIXME: for unrecognised types, should ignore % when printing */
                 char *bufaiter = bufa;
                 if (*iter == 'p')
+#ifdef __REACTOS__
                     sprintf(bufaiter, "%p", va_arg(valist, void*));
+#else
+                    sprintf(bufaiter, "%0*lX", 2 * (int)sizeof(void*),
+                            (unsigned long)va_arg(valist, void *));
+#endif
                 else
                 {
                     *fmta++ = *iter;
                     *fmta = '\0';
                     if (*iter == 'a' || *iter == 'A' ||
                         *iter == 'e' || *iter == 'E' ||
-                        *iter == 'f' || *iter == 'F' || 
+                        *iter == 'f' || *iter == 'F' ||
                         *iter == 'g' || *iter == 'G')
                         sprintf(bufaiter, fmtbufa, va_arg(valist, double));
                     else

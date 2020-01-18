@@ -26,6 +26,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
+extern multiboot_info_t * MultibootInfoPtr;
 extern PVOID FrameBuffer;
 extern ULONG FrameBufferSize;
 
@@ -98,30 +99,107 @@ XboxMemInit(VOID)
     AvailableMemoryMb = InstalledMemoryMb;
 }
 
+memory_map_t *
+XboxGetMultibootMemoryMap(INT * Count)
+{
+    memory_map_t * MemoryMap;
+
+    if (!MultibootInfoPtr)
+    {
+        ERR("Multiboot info structure not found!\n");
+        return NULL;
+    }
+
+    if (!(MultibootInfoPtr->flags & MB_INFO_FLAG_MEMORY_MAP))
+    {
+        ERR("Multiboot memory map is not passed!\n");
+        return NULL;
+    }
+
+    MemoryMap = (memory_map_t *)MultibootInfoPtr->mmap_addr;
+
+    if (!MemoryMap ||
+        MultibootInfoPtr->mmap_length == 0 ||
+        MultibootInfoPtr->mmap_length % sizeof(memory_map_t) != 0)
+    {
+        ERR("Multiboot memory map structure is malformed!\n");
+        return NULL;
+    }
+
+    *Count = MultibootInfoPtr->mmap_length / sizeof(memory_map_t);
+    return MemoryMap;
+}
+
+TYPE_OF_MEMORY
+XboxMultibootMemoryType(ULONG Type)
+{
+    switch (Type)
+    {
+        case 0: // Video RAM
+            return LoaderFirmwarePermanent;
+        case 1: // Available RAM
+            return LoaderFree;
+        case 3: // ACPI area
+            return LoaderFirmwareTemporary;
+        case 4: // Hibernation area
+            return LoaderSpecialMemory;
+        case 5: // Reserved or invalid memory
+            return LoaderSpecialMemory;
+        default:
+            return LoaderFirmwarePermanent;
+    }
+}
+
 FREELDR_MEMORY_DESCRIPTOR XboxMemoryMap[MAX_BIOS_DESCRIPTORS + 1];
 
 PFREELDR_MEMORY_DESCRIPTOR
 XboxMemGetMemoryMap(ULONG *MemoryMapSize)
 {
+    memory_map_t * MbMap;
+    INT Count, i;
+
     TRACE("XboxMemGetMemoryMap()\n");
-    /* FIXME: Obtain memory map via multiboot spec */
 
-    /* Synthesize memory map */
-
-    /* Available RAM block */
-    SetMemory(XboxMemoryMap,
-              0,
-              AvailableMemoryMb * 1024 * 1024,
-              LoaderFree);
-
-    if (FrameBufferSize != 0)
+    MbMap = XboxGetMultibootMemoryMap(&Count);
+    if (MbMap)
     {
-        /* Video memory */
-        ReserveMemory(XboxMemoryMap,
-                      (ULONG_PTR)FrameBuffer,
-                      FrameBufferSize,
-                      LoaderFirmwarePermanent,
-                      "Video memory");
+        /* Obtain memory map via multiboot spec */
+
+        for (i = 0; i < Count; i++, MbMap++)
+        {
+            TRACE("i = %d, base_addr_low = 0x%p, length_low = 0x%p\n", i, MbMap->base_addr_low, MbMap->length_low);
+
+            if (MbMap->base_addr_high > 0 || MbMap->length_high > 0)
+            {
+                ERR("Memory descriptor base or size is greater than 4 GB, should not happen on Xbox!\n");
+                ASSERT(FALSE);
+            }
+
+            SetMemory(XboxMemoryMap,
+                      MbMap->base_addr_low,
+                      MbMap->length_low,
+                      XboxMultibootMemoryType(MbMap->type));
+        }
+    }
+    else
+    {
+        /* Synthesize memory map */
+
+        /* Available RAM block */
+        SetMemory(XboxMemoryMap,
+                  0,
+                  AvailableMemoryMb * 1024 * 1024,
+                  LoaderFree);
+
+        if (FrameBufferSize != 0)
+        {
+            /* Video memory */
+            ReserveMemory(XboxMemoryMap,
+                          (ULONG_PTR)FrameBuffer,
+                          FrameBufferSize,
+                          LoaderFirmwarePermanent,
+                          "Video memory");
+        }
     }
 
     *MemoryMapSize = PcMemFinalizeMemoryMap(XboxMemoryMap);

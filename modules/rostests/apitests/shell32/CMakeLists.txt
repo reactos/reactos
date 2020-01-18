@@ -18,6 +18,7 @@ list(APPEND SOURCE
     CUserNotification.cpp
     Control_RunDLLW.cpp
     DragDrop.cpp
+    ExtractIconEx.cpp
     IShellFolderViewCB.cpp
     OpenAs_RunDLL.cpp
     PathResolve.cpp
@@ -26,6 +27,7 @@ list(APPEND SOURCE
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
+    ShellExecuteW.cpp
     ShellState.cpp
     SHLimitInputEdit.cpp
     menu.cpp

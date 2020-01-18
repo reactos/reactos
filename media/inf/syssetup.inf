@@ -102,6 +102,7 @@ AddReg=Classes
 11,,rsabase.dll,1
 11,,rsaenh.dll,1
 11,,scrrun.dll,1
+11,,sendmail.dll,1
 11,,shdocvw.dll,3
 11,,shell32.dll,3
 11,,softpub.dll,1

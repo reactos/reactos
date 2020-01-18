@@ -79,13 +79,17 @@ static struct {
     LONG last_hook_up;
     LONG last_hook_syskey_down;
     LONG last_hook_syskey_up;
+    WORD vk;
     BOOL expect_alt;
     BOOL sendinput_broken;
 } key_status;
 
-static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
+static BOOL (WINAPI *pGetCurrentInputMessageSource)( INPUT_MESSAGE_SOURCE *source );
+static BOOL (WINAPI *pGetPointerType)(UINT32, POINTER_INPUT_TYPE*);
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
 static UINT (WINAPI *pGetRawInputDeviceList) (PRAWINPUTDEVICELIST, PUINT, UINT);
+static UINT (WINAPI *pGetRawInputDeviceInfoW) (HANDLE, UINT, void *, UINT *);
+static UINT (WINAPI *pGetRawInputDeviceInfoA) (HANDLE, UINT, void *, UINT *);
 static int  (WINAPI *pGetWindowRgnBox)(HWND, LPRECT);
 
 #define MAXKEYEVENTS 12
@@ -119,15 +123,6 @@ typedef struct
         HARDWAREINPUT   hi;
     } u;
 } TEST_INPUT;
-
-#define ADDTOINPUTS(kev) \
-inputs[evtctr].type = INPUT_KEYBOARD; \
-    ((TEST_INPUT*)inputs)[evtctr].u.ki.wVk = GETVKEY[ kev]; \
-    ((TEST_INPUT*)inputs)[evtctr].u.ki.wScan = GETSCAN[ kev]; \
-    ((TEST_INPUT*)inputs)[evtctr].u.ki.dwFlags = GETFLAGS[ kev]; \
-    ((TEST_INPUT*)inputs)[evtctr].u.ki.dwExtraInfo = 0; \
-    ((TEST_INPUT*)inputs)[evtctr].u.ki.time = ++timetag; \
-    if( kev) evtctr++;
 
 typedef struct {
     UINT    message;
@@ -164,15 +159,16 @@ static void init_function_pointers(void)
     HMODULE hdll = GetModuleHandleA("user32");
 
 #define GET_PROC(func) \
-    p ## func = (void*)GetProcAddress(hdll, #func); \
-    if(!p ## func) \
-      trace("GetProcAddress(%s) failed\n", #func);
+    if (!(p ## func = (void*)GetProcAddress(hdll, #func))) \
+      trace("GetProcAddress(%s) failed\n", #func)
 
-    GET_PROC(SendInput)
-    GET_PROC(GetMouseMovePointsEx)
-    GET_PROC(GetRawInputDeviceList)
-    GET_PROC(GetWindowRgnBox)
-
+    GET_PROC(GetCurrentInputMessageSource);
+    GET_PROC(GetMouseMovePointsEx);
+    GET_PROC(GetPointerType);
+    GET_PROC(GetRawInputDeviceList);
+    GET_PROC(GetRawInputDeviceInfoW);
+    GET_PROC(GetRawInputDeviceInfoA);
+    GET_PROC(GetWindowRgnBox);
 #undef GET_PROC
 }
 
@@ -232,17 +228,25 @@ static int KbdMessage( KEV kev, WPARAM *pwParam, LPARAM *plParam )
  */
 static BOOL do_test( HWND hwnd, int seqnr, const KEV td[] )
 {
-    INPUT inputs[MAXKEYEVENTS];
+    TEST_INPUT inputs[MAXKEYEVENTS];
     KMSG expmsg[MAXKEYEVENTS];
     MSG msg;
     char buf[100];
-    UINT evtctr=0;
+    UINT evtctr=0, ret;
     int kmctr, i;
 
     buf[0]='\0';
     TrackSysKey=0; /* see input.c */
-    for( i = 0; i < MAXKEYEVENTS; i++) {
-        ADDTOINPUTS(td[i])
+    for (i = 0; i < MAXKEYEVENTS; i++)
+    {
+        inputs[evtctr].type = INPUT_KEYBOARD;
+        inputs[evtctr].u.ki.wVk = GETVKEY[td[i]];
+        inputs[evtctr].u.ki.wScan = GETSCAN[td[i]];
+        inputs[evtctr].u.ki.dwFlags = GETFLAGS[td[i]];
+        inputs[evtctr].u.ki.dwExtraInfo = 0;
+        inputs[evtctr].u.ki.time = ++timetag;
+        if (td[i]) evtctr++;
+
         strcat(buf, getdesc[td[i]]);
         if(td[i])
             expmsg[i].message = KbdMessage(td[i], &(expmsg[i].wParam), &(expmsg[i].lParam));
@@ -252,8 +256,8 @@ static BOOL do_test( HWND hwnd, int seqnr, const KEV td[] )
     for( kmctr = 0; kmctr < MAXKEYEVENTS && expmsg[kmctr].message; kmctr++)
         ;
     ok( evtctr <= MAXKEYEVENTS, "evtctr is above MAXKEYEVENTS\n" );
-    if( evtctr != pSendInput(evtctr, &inputs[0], sizeof(INPUT)))
-       ok (FALSE, "SendInput failed to send some events\n");
+    ret = SendInput(evtctr, (INPUT *)inputs, sizeof(INPUT));
+    ok(ret == evtctr, "SendInput failed to send some events\n");
     i = 0;
     if (winetest_debug > 1)
         trace("======== key stroke sequence #%d: %s =============\n",
@@ -700,14 +704,17 @@ static struct message sent_messages[MAXKEYMESSAGES];
 static UINT sent_messages_cnt;
 
 /* Verify that only specified key state transitions occur */
-static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, const struct sendinput_test_s *test)
+static void compare_and_check(int id, BYTE *ks1, BYTE *ks2,
+    const struct sendinput_test_s *test, BOOL foreground)
 {
     int i, failcount = 0;
     const struct transition_s *t = test->expected_transitions;
     UINT actual_cnt = 0;
     const struct message *expected = test->expected_messages;
 
-    while (t->wVk) {
+    while (t->wVk && foreground) {
+        /* We won't receive any information from GetKeyboardState() if we're
+         * not the foreground window. */
         BOOL matched = ((ks1[t->wVk]&0x80) == (t->before_state&0x80)
                        && (ks2[t->wVk]&0x80) == (~t->before_state&0x80));
 
@@ -790,6 +797,13 @@ static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, const struct sendinp
             expected++;
             continue;
         }
+        else if (!(expected->flags & hook) && !foreground)
+        {
+            /* If we weren't able to receive foreground status, we won't get
+             * any window messages. */
+            expected++;
+            continue;
+        }
         /* NT4 doesn't send SYSKEYDOWN/UP to hooks, only KEYDOWN/UP */
         else if ((expected->flags & hook) &&
                  (expected->message == WM_SYSKEYDOWN || expected->message == WM_SYSKEYUP) &&
@@ -826,7 +840,7 @@ static void compare_and_check(int id, BYTE *ks1, BYTE *ks2, const struct sendinp
         expected++;
     }
     /* skip all optional trailing messages */
-    while (expected->message && (expected->flags & optional))
+    while (expected->message && ((expected->flags & optional) || (!(expected->flags & hook) && !foreground)))
         expected++;
 
 
@@ -857,16 +871,7 @@ static LRESULT CALLBACK WndProc2(HWND hWnd, UINT Msg, WPARAM wParam,
 {
     if (winetest_debug > 1) trace("MSG:  %8x W:%8lx L:%8lx\n", Msg, wParam, lParam);
 
-    if (Msg != WM_PAINT &&
-        Msg != WM_NCPAINT &&
-        Msg != WM_SYNCPAINT &&
-        Msg != WM_ERASEBKGND &&
-        Msg != WM_NCHITTEST &&
-        Msg != WM_GETTEXT &&
-        Msg != WM_GETICON &&
-        Msg != WM_IME_SELECT &&
-        Msg != WM_DEVICECHANGE &&
-        Msg != WM_TIMECHANGE)
+    if ((Msg >= WM_KEYFIRST && Msg <= WM_KEYLAST) || Msg == WM_SYSCOMMAND)
     {
         ok(sent_messages_cnt < MAXKEYMESSAGES, "Too many messages\n");
         if (sent_messages_cnt < MAXKEYMESSAGES)
@@ -915,6 +920,7 @@ static void test_Input_blackbox(void)
     int ii;
     BYTE ks1[256], ks2[256];
     LONG_PTR prevWndProc;
+    BOOL foreground;
     HWND window;
     HHOOK hook;
 
@@ -928,7 +934,9 @@ static void test_Input_blackbox(void)
         NULL, NULL);
     ok(window != NULL, "error: %d\n", (int) GetLastError());
     SetWindowPos( window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE );
-    SetForegroundWindow( window );
+    foreground = SetForegroundWindow( window );
+    if (!foreground)
+        skip("Failed to set foreground window; some tests will be skipped.\n");
 
     if (!(hook = SetWindowsHookExA(WH_KEYBOARD_LL, hook_proc, GetModuleHandleA( NULL ), 0)))
     {
@@ -948,24 +956,15 @@ static void test_Input_blackbox(void)
     i.u.ki.time = 0;
     i.u.ki.dwExtraInfo = 0;
 
-    for (ii = 0; ii < sizeof(sendinput_test)/sizeof(struct sendinput_test_s)-1;
-         ii++) {
+    for (ii = 0; ii < ARRAY_SIZE(sendinput_test)-1; ii++) {
         GetKeyboardState(ks1);
         i.u.ki.wScan = ii+1 /* useful for debugging */;
         i.u.ki.dwFlags = sendinput_test[ii].dwFlags;
         i.u.ki.wVk = sendinput_test[ii].wVk;
-        pSendInput(1, (INPUT*)&i, sizeof(TEST_INPUT));
+        SendInput(1, (INPUT*)&i, sizeof(TEST_INPUT));
         empty_message_queue();
         GetKeyboardState(ks2);
-        if (!ii && sent_messages_cnt <= 1 && !memcmp( ks1, ks2, sizeof(ks1) ))
-        {
-            win_skip( "window doesn't receive the queued input\n" );
-            /* release the key */
-            i.u.ki.dwFlags |= KEYEVENTF_KEYUP;
-            pSendInput(1, (INPUT*)&i, sizeof(TEST_INPUT));
-            break;
-        }
-        compare_and_check(ii, ks1, ks2, &sendinput_test[ii]);
+        compare_and_check(ii, ks1, ks2, &sendinput_test[ii], foreground);
     }
 
     empty_message_queue();
@@ -973,7 +972,7 @@ static void test_Input_blackbox(void)
     UnhookWindowsHookEx(hook);
 }
 
-static void reset_key_status(void)
+static void reset_key_status(WORD vk)
 {
     key_status.last_key_down = -1;
     key_status.last_key_up = -1;
@@ -985,6 +984,7 @@ static void reset_key_status(void)
     key_status.last_hook_up = -1;
     key_status.last_hook_syskey_down = -1;
     key_status.last_hook_syskey_up = -1;
+    key_status.vk = vk;
     key_status.expect_alt = FALSE;
     key_status.sendinput_broken = FALSE;
 }
@@ -1004,8 +1004,8 @@ static void test_unicode_keys(HWND hwnd, HHOOK hook)
     inputs[0].u.ki.wScan = 0x3c0;
     inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
 
-    reset_key_status();
-    pSendInput(1, (INPUT*)inputs, sizeof(INPUT));
+    reset_key_status(VK_PACKET);
+    SendInput(1, (INPUT*)inputs, sizeof(INPUT));
     while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
         if(msg.message == WM_KEYDOWN && msg.wParam == VK_PACKET){
             TranslateMessage(&msg);
@@ -1026,8 +1026,8 @@ static void test_unicode_keys(HWND hwnd, HHOOK hook)
     inputs[1].u.ki.wScan = 0x3c0;
     inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
 
-    reset_key_status();
-    pSendInput(1, (INPUT*)(inputs+1), sizeof(INPUT));
+    reset_key_status(VK_PACKET);
+    SendInput(1, (INPUT*)(inputs+1), sizeof(INPUT));
     while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
         if(msg.message == WM_KEYDOWN && msg.wParam == VK_PACKET){
             TranslateMessage(&msg);
@@ -1051,9 +1051,9 @@ static void test_unicode_keys(HWND hwnd, HHOOK hook)
     inputs[1].u.ki.wScan = 0x3041;
     inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE;
 
-    reset_key_status();
+    reset_key_status(VK_PACKET);
     key_status.expect_alt = TRUE;
-    pSendInput(2, (INPUT*)inputs, sizeof(INPUT));
+    SendInput(2, (INPUT*)inputs, sizeof(INPUT));
     while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
         if(msg.message == WM_SYSKEYDOWN && msg.wParam == VK_PACKET){
             TranslateMessage(&msg);
@@ -1078,9 +1078,9 @@ static void test_unicode_keys(HWND hwnd, HHOOK hook)
     inputs[0].u.ki.wScan = 0;
     inputs[0].u.ki.dwFlags = KEYEVENTF_KEYUP;
 
-    reset_key_status();
+    reset_key_status(VK_PACKET);
     key_status.expect_alt = TRUE;
-    pSendInput(2, (INPUT*)inputs, sizeof(INPUT));
+    SendInput(2, (INPUT*)inputs, sizeof(INPUT));
     while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
         if(msg.message == WM_SYSKEYDOWN && msg.wParam == VK_PACKET){
             TranslateMessage(&msg);
@@ -1093,6 +1093,32 @@ static void test_unicode_keys(HWND hwnd, HHOOK hook)
         if(hook)
             ok(key_status.last_hook_up == 0x3041,
                 "Last hook up msg should have been 0x3041, was: 0x%x\n", key_status.last_hook_up);
+    }
+
+    /* Press and release, non-zero key code. */
+    inputs[0].u.ki.wVk = 0x51;
+    inputs[0].u.ki.wScan = 0x123;
+    inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+
+    inputs[1].u.ki.wVk = 0x51;
+    inputs[1].u.ki.wScan = 0x123;
+    inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+    reset_key_status(inputs[0].u.ki.wVk);
+    SendInput(2, (INPUT*)inputs, sizeof(INPUT));
+    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    if (!key_status.sendinput_broken)
+    {
+        ok(key_status.last_key_down == 0x51, "Unexpected key down %#x.\n", key_status.last_key_down);
+        ok(key_status.last_key_up == 0x51, "Unexpected key up %#x.\n", key_status.last_key_up);
+        if (hook)
+            todo_wine
+            ok(key_status.last_hook_up == 0x23, "Unexpected hook message %#x.\n", key_status.last_hook_up);
     }
 }
 
@@ -1134,7 +1160,8 @@ static LRESULT CALLBACK llkbd_unicode_hook(int nCode, WPARAM wParam, LPARAM lPar
                 ok(info->vkCode == VK_LMENU, "vkCode should have been VK_LMENU[0x%04x], was: 0x%x\n", VK_LMENU, info->vkCode);
                 key_status.expect_alt = FALSE;
             }else
-                ok(info->vkCode == VK_PACKET, "vkCode should have been VK_PACKET[0x%04x], was: 0x%x\n", VK_PACKET, info->vkCode);
+            todo_wine_if(key_status.vk != VK_PACKET)
+                ok(info->vkCode == key_status.vk, "Unexpected vkCode %#x, expected %#x.\n", info->vkCode, key_status.vk);
         }
         switch(wParam){
         case WM_KEYDOWN:
@@ -1569,7 +1596,7 @@ static void test_GetMouseMovePointsEx(void)
 static void test_GetRawInputDeviceList(void)
 {
     RAWINPUTDEVICELIST devices[32];
-    UINT ret, oret, devcount, odevcount;
+    UINT ret, oret, devcount, odevcount, i;
     DWORD err;
 
     SetLastError(0xdeadbeef);
@@ -1601,16 +1628,82 @@ static void test_GetRawInputDeviceList(void)
     ret = pGetRawInputDeviceList(devices, &devcount, sizeof(devices[0]));
     ok(ret > 0, "expected non-zero\n");
 
+    for(i = 0; i < devcount; ++i)
+    {
+        WCHAR name[128];
+        char nameA[128];
+        UINT sz, len;
+        RID_DEVICE_INFO info;
+        HANDLE file;
+
+        /* get required buffer size */
+        name[0] = '\0';
+        sz = 5;
+        ret = pGetRawInputDeviceInfoW(devices[i].hDevice, RIDI_DEVICENAME, name, &sz);
+        ok(ret == -1, "GetRawInputDeviceInfo gave wrong failure: %d\n", err);
+        ok(sz > 5 && sz < ARRAY_SIZE(name), "Size should have been set and not too large (got: %u)\n", sz);
+
+        /* buffer size for RIDI_DEVICENAME is in CHARs, not BYTEs */
+        ret = pGetRawInputDeviceInfoW(devices[i].hDevice, RIDI_DEVICENAME, name, &sz);
+        ok(ret == sz, "GetRawInputDeviceInfo gave wrong return: %d\n", err);
+        len = lstrlenW(name);
+        ok(len + 1 == ret, "GetRawInputDeviceInfo returned wrong length (name: %u, ret: %u)\n", len + 1, ret);
+
+        /* test A variant with same size */
+        ret = pGetRawInputDeviceInfoA(devices[i].hDevice, RIDI_DEVICENAME, nameA, &sz);
+        ok(ret == sz, "GetRawInputDeviceInfoA gave wrong return: %d\n", err);
+        len = strlen(nameA);
+        ok(len + 1 == ret, "GetRawInputDeviceInfoA returned wrong length (name: %u, ret: %u)\n", len + 1, ret);
+
+        /* buffer size for RIDI_DEVICEINFO is in BYTEs */
+        memset(&info, 0, sizeof(info));
+        info.cbSize = sizeof(info);
+        sz = sizeof(info) - 1;
+        ret = pGetRawInputDeviceInfoW(devices[i].hDevice, RIDI_DEVICEINFO, &info, &sz);
+        ok(ret == -1, "GetRawInputDeviceInfo gave wrong failure: %d\n", err);
+        ok(sz == sizeof(info), "GetRawInputDeviceInfo set wrong size\n");
+
+        ret = pGetRawInputDeviceInfoW(devices[i].hDevice, RIDI_DEVICEINFO, &info, &sz);
+        ok(ret == sizeof(info), "GetRawInputDeviceInfo gave wrong return: %d\n", err);
+        ok(sz == sizeof(info), "GetRawInputDeviceInfo set wrong size\n");
+        ok(info.dwType == devices[i].dwType, "GetRawInputDeviceInfo set wrong type: 0x%x\n", info.dwType);
+
+        memset(&info, 0, sizeof(info));
+        info.cbSize = sizeof(info);
+        ret = pGetRawInputDeviceInfoA(devices[i].hDevice, RIDI_DEVICEINFO, &info, &sz);
+        ok(ret == sizeof(info), "GetRawInputDeviceInfo gave wrong return: %d\n", err);
+        ok(sz == sizeof(info), "GetRawInputDeviceInfo set wrong size\n");
+        ok(info.dwType == devices[i].dwType, "GetRawInputDeviceInfo set wrong type: 0x%x\n", info.dwType);
+
+        /* setupapi returns an NT device path, but CreateFile() < Vista can't
+         * understand that; so use the \\?\ prefix instead */
+        name[1] = '\\';
+        file = CreateFileW(name, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+        todo_wine_if(info.dwType != RIM_TYPEHID)
+            ok(file != INVALID_HANDLE_VALUE, "Failed to open %s, error %u\n", wine_dbgstr_w(name), GetLastError());
+        CloseHandle(file);
+    }
+
     /* check if variable changes from larger to smaller value */
-    devcount = odevcount = sizeof(devices) / sizeof(devices[0]);
+    devcount = odevcount = ARRAY_SIZE(devices);
     oret = ret = pGetRawInputDeviceList(devices, &odevcount, sizeof(devices[0]));
     ok(ret > 0, "expected non-zero\n");
     ok(devcount == odevcount, "expected %d, got %d\n", devcount, odevcount);
     devcount = odevcount;
-    odevcount = sizeof(devices) / sizeof(devices[0]);
+    odevcount = ARRAY_SIZE(devices);
     ret = pGetRawInputDeviceList(NULL, &odevcount, sizeof(devices[0]));
     ok(ret == 0, "expected 0, got %d\n", ret);
     ok(odevcount == oret, "expected %d, got %d\n", oret, odevcount);
+}
+
+static void test_GetRawInputData(void)
+{
+    UINT size;
+    UINT ret;
+
+    /* Null raw input handle */
+    ret = GetRawInputData(NULL, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+    ok(ret == ~0U, "Expect ret %u, got %u\n", ~0U, ret);
 }
 
 static void test_key_map(void)
@@ -1649,7 +1742,7 @@ static void test_key_map(void)
        "Scan code -> vKey = %x (not VK_RSHIFT)\n", kR);
 
     /* test that MAPVK_VSC_TO_VK prefers the non-numpad vkey if there's ambiguity */
-    for (i = 0; i < sizeof(numpad_collisions)/sizeof(numpad_collisions[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(numpad_collisions); i++)
     {
         UINT numpad_scan = MapVirtualKeyExA(numpad_collisions[i][0],  MAPVK_VK_TO_VSC, kl);
         UINT other_scan  = MapVirtualKeyExA(numpad_collisions[i][1],  MAPVK_VK_TO_VSC, kl);
@@ -1747,7 +1840,7 @@ static void test_ToUnicode(void)
            "ToUnicode didn't null-terminate the buffer when there was room.\n");
     }
 
-    for (i = 0; i < sizeof(utests) / sizeof(utests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(utests); i++)
     {
         UINT vk = utests[i].vk, mod = utests[i].modifiers, scan;
 
@@ -1890,7 +1983,7 @@ static void test_key_names(void)
     ok( buffer[0] == 0, "wrong string '%s'\n", buffer );
 
     memset( bufferW, 0xcc, sizeof(bufferW) );
-    ret = GetKeyNameTextW( lparam, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+    ret = GetKeyNameTextW( lparam, bufferW, ARRAY_SIZE(bufferW));
     ok( ret > 0, "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
     ok( ret == lstrlenW(bufferW), "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
 
@@ -2274,6 +2367,25 @@ static void test_Input_mouse(void)
         ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
     }
 
+    get_dc_region(&region, hwnd, DCX_PARENTCLIP);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, hwnd, DCX_WINDOW | DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, hwnd, DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_PARENTCLIP);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_WINDOW | DCX_USESTYLE);
+    ok(region.left == 110 && region.top == 110 && region.right == 130 && region.bottom == 130,
+       "expected region (110,110)-(130,130), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+
     got_button_down = got_button_up = FALSE;
     simulate_click(TRUE, 150, 150);
     while (wait_for_message(&msg))
@@ -2314,13 +2426,11 @@ static void test_Input_mouse(void)
 
         if (msg.message == WM_LBUTTONDOWN)
         {
-            todo_wine
             ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
             got_button_down = TRUE;
         }
         else if (msg.message == WM_LBUTTONUP)
         {
-            todo_wine
             ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
             got_button_up = TRUE;
             break;
@@ -2372,25 +2482,6 @@ static void test_Input_mouse(void)
         ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
     }
 
-    get_dc_region(&region, hwnd, DCX_PARENTCLIP);
-    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
-       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
-    get_dc_region(&region, hwnd, DCX_WINDOW | DCX_USESTYLE);
-    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
-       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
-    get_dc_region(&region, hwnd, DCX_USESTYLE);
-    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
-       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
-    get_dc_region(&region, static_win, DCX_PARENTCLIP);
-    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
-       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
-    get_dc_region(&region, static_win, DCX_WINDOW | DCX_USESTYLE);
-    ok(region.left == 110 && region.top == 110 && region.right == 130 && region.bottom == 130,
-       "expected region (110,110)-(130,130), got %s\n", wine_dbgstr_rect(&region));
-    get_dc_region(&region, static_win, DCX_USESTYLE);
-    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
-       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
-
     got_button_down = got_button_up = FALSE;
     simulate_click(TRUE, 150, 150);
     while (wait_for_message(&msg))
@@ -2399,11 +2490,13 @@ static void test_Input_mouse(void)
 
         if (msg.message == WM_LBUTTONDOWN)
         {
+            todo_wine
             ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
             got_button_down = TRUE;
         }
         else if (msg.message == WM_LBUTTONUP)
         {
+            todo_wine
             ok(msg.hwnd == button_win, "msg.hwnd = %p\n", msg.hwnd);
             got_button_up = TRUE;
             break;
@@ -2832,6 +2925,7 @@ static void test_GetKeyState(void)
     result = WaitForSingleObject(semaphores[0], 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
 
+    SetForegroundWindow(hwnd);
     SetFocus(hwnd);
     keybd_event('X', 0, 0, 0);
 
@@ -2885,19 +2979,205 @@ static void test_OemKeyScan(void)
     }
 }
 
+static INPUT_MESSAGE_SOURCE expect_src;
+
+static LRESULT WINAPI msg_source_proc( HWND hwnd, UINT message, WPARAM wp, LPARAM lp )
+{
+    INPUT_MESSAGE_SOURCE source;
+    MSG msg;
+
+    ok( pGetCurrentInputMessageSource( &source ), "GetCurrentInputMessageSource failed\n" );
+    switch (message)
+    {
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+        ok( source.deviceType == expect_src.deviceType || /* also accept system-generated WM_MOUSEMOVE */
+            (message == WM_MOUSEMOVE && source.deviceType == IMDT_UNAVAILABLE),
+            "%x: wrong deviceType %x/%x\n", message, source.deviceType, expect_src.deviceType );
+        ok( source.originId == expect_src.originId ||
+            (message == WM_MOUSEMOVE && source.originId == IMO_SYSTEM),
+            "%x: wrong originId %x/%x\n", message, source.originId, expect_src.originId );
+        SendMessageA( hwnd, WM_USER, 0, 0 );
+        PostMessageA( hwnd, WM_USER, 0, 0 );
+        if (PeekMessageW( &msg, hwnd, WM_USER, WM_USER, PM_REMOVE )) DispatchMessageW( &msg );
+        ok( source.deviceType == expect_src.deviceType || /* also accept system-generated WM_MOUSEMOVE */
+            (message == WM_MOUSEMOVE && source.deviceType == IMDT_UNAVAILABLE),
+            "%x: wrong deviceType %x/%x\n", message, source.deviceType, expect_src.deviceType );
+        ok( source.originId == expect_src.originId ||
+            (message == WM_MOUSEMOVE && source.originId == IMO_SYSTEM),
+            "%x: wrong originId %x/%x\n", message, source.originId, expect_src.originId );
+        break;
+    default:
+        ok( source.deviceType == IMDT_UNAVAILABLE, "%x: wrong deviceType %x\n",
+            message, source.deviceType );
+        ok( source.originId == 0, "%x: wrong originId %x\n", message, source.originId );
+        break;
+    }
+
+    return DefWindowProcA( hwnd, message, wp, lp );
+}
+
+static void test_input_message_source(void)
+{
+    WNDCLASSA cls;
+    TEST_INPUT inputs[2];
+    HWND hwnd;
+    RECT rc;
+    MSG msg;
+
+    cls.style = 0;
+    cls.lpfnWndProc = msg_source_proc;
+    cls.cbClsExtra = 0;
+    cls.cbWndExtra = 0;
+    cls.hInstance = GetModuleHandleA(0);
+    cls.hIcon = 0;
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
+    cls.hbrBackground = 0;
+    cls.lpszMenuName = NULL;
+    cls.lpszClassName = "message source class";
+    RegisterClassA(&cls);
+    hwnd = CreateWindowA( cls.lpszClassName, "test", WS_OVERLAPPED, 0, 0, 100, 100,
+                          0, 0, 0, 0 );
+    ShowWindow( hwnd, SW_SHOWNORMAL );
+    UpdateWindow( hwnd );
+    SetForegroundWindow( hwnd );
+    SetFocus( hwnd );
+
+    inputs[0].type = INPUT_KEYBOARD;
+    inputs[0].u.ki.dwExtraInfo = 0;
+    inputs[0].u.ki.time = 0;
+    inputs[0].u.ki.wVk = 0;
+    inputs[0].u.ki.wScan = 0x3c0;
+    inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+    inputs[1] = inputs[0];
+    inputs[1].u.ki.dwFlags |= KEYEVENTF_KEYUP;
+
+    expect_src.deviceType = IMDT_UNAVAILABLE;
+    expect_src.originId = IMO_UNAVAILABLE;
+    SendMessageA( hwnd, WM_KEYDOWN, 0, 0 );
+    SendMessageA( hwnd, WM_MOUSEMOVE, 0, 0 );
+
+    SendInput( 2, (INPUT *)inputs, sizeof(INPUT) );
+    while (PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ))
+    {
+        expect_src.deviceType = IMDT_KEYBOARD;
+        expect_src.originId = IMO_INJECTED;
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+    GetWindowRect( hwnd, &rc );
+    simulate_click( TRUE, (rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2 );
+    simulate_click( FALSE, (rc.left + rc.right) / 2 + 1, (rc.top + rc.bottom) / 2 + 1 );
+    while (PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ))
+    {
+        expect_src.deviceType = IMDT_MOUSE;
+        expect_src.originId = IMO_INJECTED;
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+
+    expect_src.deviceType = IMDT_UNAVAILABLE;
+    expect_src.originId = IMO_UNAVAILABLE;
+    SendMessageA( hwnd, WM_KEYDOWN, 0, 0 );
+    SendMessageA( hwnd, WM_LBUTTONDOWN, 0, 0 );
+    PostMessageA( hwnd, WM_KEYUP, 0, 0 );
+    PostMessageA( hwnd, WM_LBUTTONUP, 0, 0 );
+    while (PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ))
+    {
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+
+    expect_src.deviceType = IMDT_UNAVAILABLE;
+    expect_src.originId = IMO_SYSTEM;
+    SetCursorPos( (rc.left + rc.right) / 2 - 1, (rc.top + rc.bottom) / 2 - 1 );
+    while (PeekMessageW( &msg, hwnd, 0, 0, PM_REMOVE ))
+    {
+        TranslateMessage( &msg );
+        DispatchMessageW( &msg );
+    }
+
+    DestroyWindow( hwnd );
+    UnregisterClassA( cls.lpszClassName, GetModuleHandleA(0) );
+}
+
+static void test_GetPointerType(void)
+{
+    BOOL ret;
+    POINTER_INPUT_TYPE type = -1;
+    UINT id = 0;
+
+    SetLastError(0xdeadbeef);
+    ret = pGetPointerType(id, NULL);
+    ok(!ret, "GetPointerType should have failed.\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected error ERROR_INVALID_PARAMETER, got %u.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetPointerType(id, &type);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected error ERROR_INVALID_PARAMETER, got %u.\n", GetLastError());
+    ok(!ret, "GetPointerType failed, got type %d for %u.\n", type, id );
+    ok(type == -1, " type %d\n", type );
+
+    id = 1;
+    ret = pGetPointerType(id, &type);
+    ok(ret, "GetPointerType failed, got type %d for %u.\n", type, id );
+    ok(type == PT_MOUSE, " type %d\n", type );
+}
+
+static void test_GetKeyboardLayoutList(void)
+{
+    int cnt, cnt2;
+    HKL *layouts;
+    ULONG_PTR baselayout;
+    LANGID langid;
+
+    baselayout = GetUserDefaultLCID();
+    langid = PRIMARYLANGID(LANGIDFROMLCID(baselayout));
+    if (langid == LANG_CHINESE || langid == LANG_JAPANESE || langid == LANG_KOREAN)
+        baselayout = MAKELONG( baselayout, 0xe001 ); /* IME */
+    else
+        baselayout |= baselayout << 16;
+
+    cnt = GetKeyboardLayoutList(0, NULL);
+    /* Most users will not have more than a few keyboard layouts installed at a time. */
+    ok(cnt > 0 && cnt < 10, "Layout count %d\n", cnt);
+    if (cnt > 0)
+    {
+        layouts = HeapAlloc(GetProcessHeap(), 0, sizeof(*layouts) * cnt );
+
+        cnt2 = GetKeyboardLayoutList(cnt, layouts);
+        ok(cnt == cnt2, "wrong value %d!=%d\n", cnt, cnt2);
+        for(cnt = 0; cnt < cnt2; cnt++)
+        {
+            if(layouts[cnt] == (HKL)baselayout)
+                break;
+        }
+        ok(cnt < cnt2, "Didnt find current keyboard\n");
+
+        HeapFree(GetProcessHeap(), 0, layouts);
+    }
+}
+
 START_TEST(input)
 {
+    POINT pos;
+
     init_function_pointers();
+    GetCursorPos( &pos );
 
-    if (pSendInput)
-    {
-        test_Input_blackbox();
-        test_Input_whitebox();
-        test_Input_unicode();
-        test_Input_mouse();
-    }
-    else win_skip("SendInput is not available\n");
-
+    test_Input_blackbox();
+    test_Input_whitebox();
+    test_Input_unicode();
+    test_Input_mouse();
     test_keynames();
     test_mouse_ll_hook();
     test_key_map();
@@ -2909,6 +3189,8 @@ START_TEST(input)
     test_attach_input();
     test_GetKeyState();
     test_OemKeyScan();
+    test_GetRawInputData();
+    test_GetKeyboardLayoutList();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();
@@ -2919,4 +3201,16 @@ START_TEST(input)
         test_GetRawInputDeviceList();
     else
         win_skip("GetRawInputDeviceList is not available\n");
+
+    if (pGetCurrentInputMessageSource)
+        test_input_message_source();
+    else
+        win_skip("GetCurrentInputMessageSource is not available\n");
+
+    SetCursorPos( pos.x, pos.y );
+
+    if(pGetPointerType)
+        test_GetPointerType();
+    else
+        win_skip("GetPointerType is not available\n");
 }

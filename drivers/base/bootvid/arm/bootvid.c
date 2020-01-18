@@ -25,7 +25,7 @@
 
 PUSHORT VgaArmBase;
 PHYSICAL_ADDRESS VgaPhysical;
-BOOLEAN NextLine = FALSE;
+BOOLEAN ClearRow = FALSE;
 UCHAR VidpTextColor = 0xF;
 ULONG VidpCurrentX = 0;
 ULONG VidpCurrentY = 0;
@@ -33,8 +33,8 @@ ULONG VidpScrollRegion[4] =
 {
     0,
     0,
-    640 - 1,
-    480 - 1
+    SCREEN_WIDTH  - 1,
+    SCREEN_HEIGHT - 1
 };
 
 typedef struct _VGA_COLOR
@@ -66,42 +66,33 @@ VGA_COLOR VidpVga8To16BitTransform[16] =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-USHORT
 FORCEINLINE
+USHORT
 VidpBuildColor(IN UCHAR Color)
 {
     UCHAR Red, Green, Blue;
 
-    //
-    // Extract color components
-    //
-    Red = VidpVga8To16BitTransform[Color].Red;
+    /* Extract color components */
+    Red   = VidpVga8To16BitTransform[Color].Red;
     Green = VidpVga8To16BitTransform[Color].Green;
-    Blue = VidpVga8To16BitTransform[Color].Blue;
+    Blue  = VidpVga8To16BitTransform[Color].Blue;
 
-    //
-    // Build the 16-bit color mask
-    //
+    /* Build the 16-bit color mask */
     return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
 }
 
-
-VOID
 FORCEINLINE
+VOID
 VidpSetPixel(IN ULONG Left,
              IN ULONG Top,
              IN UCHAR Color)
 {
     PUSHORT PixelPosition;
 
-    //
-    // Calculate the pixel position
-    //
-    PixelPosition = &VgaArmBase[Left + (Top * 640)];
+    /* Calculate the pixel position */
+    PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
 
-    //
-    // Set our color
-    //
+    /* Set our color */
     WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
 }
 
@@ -111,22 +102,20 @@ DisplayCharacter(IN CHAR Character,
                  IN ULONG Left,
                  IN ULONG Top,
                  IN ULONG TextColor,
-                 IN ULONG BackTextColor)
+                 IN ULONG BackColor)
 {
     PUCHAR FontChar;
     ULONG i, j, XOffset;
 
     /* Get the font line for this character */
-    FontChar = &FontData[Character * 13 - Top];
+    FontChar = &FontData[Character * BOOTCHAR_HEIGHT - Top];
 
     /* Loop each pixel height */
-    i = 13;
-    do
+    for (i = BOOTCHAR_HEIGHT; i > 0; --i)
     {
         /* Loop each pixel width */
-        j = 128;
         XOffset = Left;
-        do
+        for (j = (1 << 7); j > 0; j >>= 1)
         {
             /* Check if we should draw this pixel */
             if (FontChar[Top] & (UCHAR)j)
@@ -134,20 +123,22 @@ DisplayCharacter(IN CHAR Character,
                 /* We do, use the given Text Color */
                 VidpSetPixel(XOffset, Top, (UCHAR)TextColor);
             }
-            else if (BackTextColor < 16)
+            else if (BackColor < 16)
             {
-                /* This is a background pixel. We're drawing it unless it's */
-                /* transparent. */
-                VidpSetPixel(XOffset, Top, (UCHAR)BackTextColor);
+                /*
+                 * This is a background pixel. We're drawing it
+                 * unless it's transparent.
+                 */
+                VidpSetPixel(XOffset, Top, (UCHAR)BackColor);
             }
 
             /* Increase X Offset */
             XOffset++;
-        } while (j >>= 1);
+        }
 
         /* Move to the next Y ordinate */
         Top++;
-    } while (--i);
+    }
 }
 
 VOID
@@ -159,15 +150,11 @@ VgaScroll(IN ULONG Scroll)
     PUSHORT i, j;
 
     /* Set memory positions of the scroll */
-    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * 80) + (VidpScrollRegion[0] >> 3)];
-    DestOffset = &SourceOffset[Scroll * 80];
-
-    /* Save top and check if it's above the bottom */
-    Top = VidpScrollRegion[1];
-    if (Top > VidpScrollRegion[3]) return;
+    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * (SCREEN_WIDTH / 8)) + (VidpScrollRegion[0] >> 3)];
+    DestOffset = &SourceOffset[Scroll * (SCREEN_WIDTH / 8)];
 
     /* Start loop */
-    do
+    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
     {
         /* Set number of bytes to loop and start offset */
         Offset = VidpScrollRegion[0] >> 3;
@@ -196,41 +183,36 @@ VgaScroll(IN ULONG Scroll)
         }
 
         /* Move to the next line */
-        SourceOffset += 80;
-        DestOffset += 80;
-
-        /* Increase top */
-        Top++;
-
-        /* Make sure we don't go past the scroll region */
-    } while (Top <= VidpScrollRegion[3]);
+        SourceOffset += (SCREEN_WIDTH / 8);
+        DestOffset += (SCREEN_WIDTH / 8);
+    }
 }
 
 VOID
 NTAPI
 PreserveRow(IN ULONG CurrentTop,
             IN ULONG TopDelta,
-            IN BOOLEAN Direction)
+            IN BOOLEAN Restore)
 {
     PUSHORT Position1, Position2;
     ULONG Count;
 
-    /* Check which way we're preserving */
-    if (Direction)
+    /* Calculate the position in memory for the row */
+    if (Restore)
     {
-        /* Calculate the position in memory for the row */
-        Position1 = &VgaArmBase[CurrentTop * 80];
-        Position2 = &VgaArmBase[0x9600];
+        /* Restore the row by copying back the contents saved off-screen */
+        Position1 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
+        Position2 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
     }
     else
     {
-        /* Calculate the position in memory for the row */
-        Position1 = &VgaArmBase[0x9600];
-        Position2 = &VgaArmBase[CurrentTop * 80];
+        /* Preserve the row by saving its contents off-screen */
+        Position1 = &VgaArmBase[SCREEN_HEIGHT * (SCREEN_WIDTH / 8)];
+        Position2 = &VgaArmBase[CurrentTop * (SCREEN_WIDTH / 8)];
     }
 
     /* Set the count and loop every pixel */
-    Count = TopDelta * 80;
+    Count = TopDelta * (SCREEN_WIDTH / 8);
     while (Count--)
     {
         /* Write the data back on the other position */
@@ -255,8 +237,8 @@ VidpInitializeDisplay(VOID)
     //
     // Initialize timings to 640x480
     //
-    WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(640));
-    WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(480));
+    WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(SCREEN_WIDTH));
+    WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(SCREEN_HEIGHT));
 
     //
     // Enable the LCD Display
@@ -327,7 +309,7 @@ VidResetDisplay(IN BOOLEAN HalReset)
     // Re-initialize the palette and fill the screen black
     //
     //InitializePalette();
-    VidSolidColorFill(0, 0, 639, 479, 0);
+    VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
 }
 
 /*
@@ -424,48 +406,50 @@ VOID
 NTAPI
 VidDisplayString(IN PUCHAR String)
 {
-    ULONG TopDelta = 14;
+    ULONG TopDelta = BOOTCHAR_HEIGHT + 1;
 
     /* Start looping the string */
-    while (*String)
+    for (; *String; ++String)
     {
         /* Treat new-line separately */
         if (*String == '\n')
         {
             /* Modify Y position */
             VidpCurrentY += TopDelta;
-            if (VidpCurrentY >= VidpScrollRegion[3])
+            if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
             {
-                /* Scroll the view */
+                /* Scroll the view and clear the current row */
                 VgaScroll(TopDelta);
                 VidpCurrentY -= TopDelta;
-
-                /* Preserve row */
                 PreserveRow(VidpCurrentY, TopDelta, TRUE);
+            }
+            else
+            {
+                /* Preserve the current row */
+                PreserveRow(VidpCurrentY, TopDelta, FALSE);
             }
 
             /* Update current X */
             VidpCurrentX = VidpScrollRegion[0];
 
-            /* Preserve the current row */
-            PreserveRow(VidpCurrentY, TopDelta, FALSE);
+            /* No need to clear this row */
+            ClearRow = FALSE;
         }
         else if (*String == '\r')
         {
             /* Update current X */
             VidpCurrentX = VidpScrollRegion[0];
 
-            /* Check if we're being followed by a new line */
-            if (String[1] != '\n') NextLine = TRUE;
+            /* If a new-line does not follow we will clear the current row */
+            if (String[1] != '\n') ClearRow = TRUE;
         }
         else
         {
-            /* Check if we had a \n\r last time */
-            if (NextLine)
+            /* Clear the current row if we had a return-carriage without a new-line */
+            if (ClearRow)
             {
-                /* We did, preserve the current row */
                 PreserveRow(VidpCurrentY, TopDelta, TRUE);
-                NextLine = FALSE;
+                ClearRow = FALSE;
             }
 
             /* Display this character */
@@ -477,27 +461,27 @@ VidDisplayString(IN PUCHAR String)
             VidpCurrentX += 8;
 
             /* Check if we should scroll */
-            if (VidpCurrentX > VidpScrollRegion[2])
+            if (VidpCurrentX + 7 > VidpScrollRegion[2])
             {
                 /* Update Y position and check if we should scroll it */
                 VidpCurrentY += TopDelta;
-                if (VidpCurrentY > VidpScrollRegion[3])
+                if (VidpCurrentY + TopDelta - 1 > VidpScrollRegion[3])
                 {
-                    /* Do the scroll */
+                    /* Scroll the view and clear the current row */
                     VgaScroll(TopDelta);
                     VidpCurrentY -= TopDelta;
-
-                    /* Save the row */
                     PreserveRow(VidpCurrentY, TopDelta, TRUE);
                 }
+                else
+                {
+                    /* Preserve the current row */
+                    PreserveRow(VidpCurrentY, TopDelta, FALSE);
+                }
 
-                /* Update X */
+                /* Update current X */
                 VidpCurrentX = VidpScrollRegion[0];
             }
         }
-
-        /* Get the next character */
-        String++;
     }
 }
 

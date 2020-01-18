@@ -1043,62 +1043,6 @@ IntLoadSystemFonts(VOID)
     }
 }
 
-static BYTE
-ItalicFromStyle(const char *style_name)
-{
-    if (style_name == NULL || style_name[0] == 0)
-        return FALSE;
-    if (strstr(style_name, "Italic") != NULL)
-        return TRUE;
-    if (strstr(style_name, "Oblique") != NULL)
-        return TRUE;
-    return FALSE;
-}
-
-static LONG
-WeightFromStyle(const char *style_name)
-{
-    if (style_name == NULL || style_name[0] == 0)
-        return FW_NORMAL;
-    if (strstr(style_name, "Regular") != NULL)
-        return FW_REGULAR;
-    if (strstr(style_name, "Normal") != NULL)
-        return FW_NORMAL;
-    if (strstr(style_name, "SemiBold") != NULL)
-        return FW_SEMIBOLD;
-    if (strstr(style_name, "UltraBold") != NULL)
-        return FW_ULTRABOLD;
-    if (strstr(style_name, "DemiBold") != NULL)
-        return FW_DEMIBOLD;
-    if (strstr(style_name, "ExtraBold") != NULL)
-        return FW_EXTRABOLD;
-    if (strstr(style_name, "Bold") != NULL)
-        return FW_BOLD;
-    if (strstr(style_name, "UltraLight") != NULL)
-        return FW_ULTRALIGHT;
-    if (strstr(style_name, "ExtraLight") != NULL)
-        return FW_EXTRALIGHT;
-    if (strstr(style_name, "Light") != NULL)
-        return FW_LIGHT;
-    if (strstr(style_name, "Hairline") != NULL)
-        return 50;
-    if (strstr(style_name, "Book") != NULL)
-        return 350;
-    if (strstr(style_name, "ExtraBlack") != NULL)
-        return 950;
-    if (strstr(style_name, "UltraBlack") != NULL)
-        return 1000;
-    if (strstr(style_name, "Black") != NULL)
-        return FW_BLACK;
-    if (strstr(style_name, "Medium") != NULL)
-        return FW_MEDIUM;
-    if (strstr(style_name, "Thin") != NULL)
-        return FW_THIN;
-    if (strstr(style_name, "Heavy") != NULL)
-        return FW_HEAVY;
-    return FW_NORMAL;
-}
-
 static FT_Error
 IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
@@ -1279,10 +1223,31 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont)
             /* Set face */
             FontGDI->SharedFace = SharedFace;
             FontGDI->CharSet = ANSI_CHARSET;
-            FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
+            FontGDI->OriginalItalic = FALSE;
             FontGDI->RequestItalic = FALSE;
-            FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
+            FontGDI->OriginalWeight = FW_NORMAL;
             FontGDI->RequestWeight = FW_NORMAL;
+
+            IntLockFreeType();
+            if (FT_IS_SFNT(Face))
+            {
+                pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
+                if (pOS2)
+                {
+                    FontGDI->OriginalItalic = !!(pOS2->fsSelection & 0x1);
+                    FontGDI->OriginalWeight = pOS2->usWeightClass;
+                }
+            }
+            else
+            {
+                Error = FT_Get_WinFNT_Header(Face, &WinFNT);
+                if (!Error)
+                {
+                    FontGDI->OriginalItalic = !!WinFNT.italic;
+                    FontGDI->OriginalWeight = WinFNT.weight;
+                }
+            }
+            IntUnLockFreeType();
 
             /* Entry->FaceName */
             RtlInitAnsiString(&AnsiString, Face->family_name);
@@ -2269,9 +2234,9 @@ static BOOL face_has_symbol_charmap(FT_Face ft_face)
 }
 
 static void FASTCALL
-FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
-         TT_OS2 *pOS2, TT_HoriHeader *pHori,
-         FT_WinFNT_HeaderRec *pFNT, BOOL RealFont)
+FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
+       TT_OS2 *pOS2, TT_HoriHeader *pHori,
+       FT_WinFNT_HeaderRec *pFNT)
 {
     FT_Fixed XScale, YScale;
     int Ascent, Descent;
@@ -2299,24 +2264,17 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar      = pFNT->default_char + pFNT->first_char;
         TM->tmBreakChar        = pFNT->break_char + pFNT->first_char;
         TM->tmPitchAndFamily   = pFNT->pitch_and_family;
-        if (RealFont)
-        {
-            TM->tmWeight       = FontGDI->OriginalWeight;
-            TM->tmItalic       = FontGDI->OriginalItalic;
-            TM->tmUnderlined   = pFNT->underline;
-            TM->tmStruckOut    = pFNT->strike_out;
-            TM->tmCharSet      = pFNT->charset;
-        }
-        else
-        {
-            TM->tmWeight       = FontGDI->RequestWeight;
-            TM->tmItalic       = FontGDI->RequestItalic;
-            TM->tmUnderlined   = FontGDI->RequestUnderline;
-            TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-            TM->tmCharSet      = FontGDI->CharSet;
-        }
+        TM->tmWeight       = FontGDI->RequestWeight;
+        TM->tmItalic       = FontGDI->RequestItalic;
+        TM->tmUnderlined   = FontGDI->RequestUnderline;
+        TM->tmStruckOut    = FontGDI->RequestStrikeOut;
+        TM->tmCharSet      = FontGDI->CharSet;
         return;
     }
+
+    ASSERT(pOS2);
+    if (!pOS2)
+        return;
 
     if ((FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent == 0)
     {
@@ -2351,21 +2309,14 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
     TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
 
-    if (RealFont)
+    if (FontGDI->OriginalWeight != FW_DONTCARE &&
+        FontGDI->OriginalWeight != FW_NORMAL)
     {
         TM->tmWeight = FontGDI->OriginalWeight;
     }
     else
     {
-        if (FontGDI->OriginalWeight != FW_DONTCARE &&
-            FontGDI->OriginalWeight != FW_NORMAL)
-        {
-            TM->tmWeight = FontGDI->OriginalWeight;
-        }
-        else
-        {
-            TM->tmWeight = FontGDI->RequestWeight;
-        }
+        TM->tmWeight = FontGDI->RequestWeight;
     }
 
     TM->tmOverhang = 0;
@@ -2403,25 +2354,16 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar = TM->tmBreakChar - 1;
     }
 
-    if (RealFont)
+    if (FontGDI->OriginalItalic || FontGDI->RequestItalic)
     {
-        TM->tmItalic = FontGDI->OriginalItalic;
-        TM->tmUnderlined = FALSE;
-        TM->tmStruckOut  = FALSE;
+        TM->tmItalic = 0xFF;
     }
     else
     {
-        if (FontGDI->OriginalItalic || FontGDI->RequestItalic)
-        {
-            TM->tmItalic = 0xFF;
-        }
-        else
-        {
-            TM->tmItalic = 0;
-        }
-        TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
-        TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
+        TM->tmItalic = 0;
     }
+    TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
+    TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
 
     if (!FT_IS_FIXED_WIDTH(Face))
     {
@@ -2504,14 +2446,6 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     }
 
     TM->tmCharSet = FontGDI->CharSet;
-}
-
-static void FASTCALL
-FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
-       TT_OS2 *pOS2, TT_HoriHeader *pHori,
-       FT_WinFNT_HeaderRec *pFNT)
-{
-    FillTMEx(TM, FontGDI, pOS2, pHori, pFNT, FALSE);
 }
 
 static NTSTATUS
@@ -3481,7 +3415,7 @@ static unsigned int get_native_glyph_outline(FT_Outline *outline, unsigned int b
         while (point <= outline->contours[contour])
         {
             ppc = (TTPOLYCURVE *)(buf + needed);
-            type = outline->tags[point] & FT_Curve_Tag_On ?
+            type = (outline->tags[point] & FT_Curve_Tag_On) ?
                 TT_PRIM_LINE : TT_PRIM_QSPLINE;
             cpfx = 0;
             do
@@ -3564,7 +3498,7 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
         while (point <= outline->contours[contour])
         {
             ppc = (TTPOLYCURVE *)(buf + needed);
-            type = outline->tags[point] & FT_Curve_Tag_On ?
+            type = (outline->tags[point] & FT_Curve_Tag_On) ?
                 TT_PRIM_LINE : TT_PRIM_CSPLINE;
             cpfx = 0;
             do
@@ -4445,7 +4379,10 @@ TextIntGetTextExtentPoint(PDC dc,
 
         if (EmuBold || EmuItalic || !realglyph)
         {
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -5073,23 +5010,20 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         GOT_PENALTY("SizeSynth", 50);
     }
 
-    if (!!LogFont->lfItalic != !!TM->tmItalic)
+    if (!LogFont->lfItalic && TM->tmItalic)
     {
-        if (!LogFont->lfItalic && ItalicFromStyle(style_name))
-        {
-            /* Italic Penalty 4 */
-            /* Requested font and candidate font do not agree on italic status,
-               and the desired result cannot be simulated. */
-            /* Adjusted to 40 to satisfy (Oblique Penalty > Book Penalty). */
-            GOT_PENALTY("Italic", 40);
-        }
-        else if (LogFont->lfItalic && !ItalicFromStyle(style_name))
-        {
-            /* ItalicSim Penalty 1 */
-            /* Requested italic font but the candidate is not italic,
-               although italics can be simulated. */
-            GOT_PENALTY("ItalicSim", 1);
-        }
+        /* Italic Penalty 4 */
+        /* Requested font and candidate font do not agree on italic status,
+           and the desired result cannot be simulated. */
+        /* Adjusted to 40 to satisfy (Oblique Penalty > Book Penalty). */
+        GOT_PENALTY("Italic", 40);
+    }
+    else if (LogFont->lfItalic && !TM->tmItalic)
+    {
+        /* ItalicSim Penalty 1 */
+        /* Requested italic font but the candidate is not italic,
+           although italics can be simulated. */
+        GOT_PENALTY("ItalicSim", 1);
     }
 
     if (LogFont->lfOutPrecision == OUT_TT_PRECIS)
@@ -5347,7 +5281,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
     LOGFONTW SubstitutedLogFont;
-    FT_Face Face;
 
     if (!pTextObj)
     {
@@ -5438,13 +5371,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             FontGdi->RequestWeight = pLogFont->lfWeight;
         else
             FontGdi->RequestWeight = FW_NORMAL;
-
-        Face = FontGdi->SharedFace->Face;
-
-        //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
-
-        if (!FontGdi->OriginalItalic)
-            FontGdi->OriginalItalic = ItalicFromStyle(Face->style_name);
 
         TextObj->fl |= TEXTOBJECT_INIT;
         Status = STATUS_SUCCESS;
@@ -6253,7 +6179,7 @@ IntExtTextOutW(
     /*
      * Process the horizontal alignment and modify XStart accordingly.
      */
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
+    DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     if (pdcattr->flTextAlign & (TA_RIGHT | TA_CENTER))
     {
         ULONGLONG TextWidth = 0;
@@ -6286,7 +6212,10 @@ IntExtTextOutW(
                                                RenderMode, pmxWorldToDevice);
             if (!realglyph)
             {
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+                if (EmuItalic)
+                    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+                else
+                    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
                 if (error)
                 {
                     DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6381,7 +6310,10 @@ IntExtTextOutW(
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6503,7 +6435,10 @@ IntExtTextOutW(
                                            RenderMode, pmxWorldToDevice);
         if (!realglyph)
         {
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (EmuItalic)
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_NO_BITMAP);
+            else
+                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
                 DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
@@ -6837,7 +6772,7 @@ NtGdiExtTextOutW(
         if (UnsafeDx)
         {
             /* If ETO_PDY is specified, we have pairs of INTs */
-            DxSize = (Count * sizeof(INT)) * (fuOptions & ETO_PDY ? 2 : 1);
+            DxSize = (Count * sizeof(INT)) * ((fuOptions & ETO_PDY) ? 2 : 1);
             BufSize += DxSize;
         }
 

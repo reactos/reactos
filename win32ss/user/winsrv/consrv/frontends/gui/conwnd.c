@@ -149,7 +149,7 @@ RegisterConWndClass(IN HINSTANCE hInstance)
     WndClass.hIcon = ghDefaultIcon;
     WndClass.hIconSm = ghDefaultIconSm;
     WndClass.hCursor = ghDefaultCursor;
-    WndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH); // The color of a terminal when it is switched off.
+    WndClass.hbrBackground = NULL;
     WndClass.lpszMenuName = NULL;
     WndClass.cbClsExtra = 0;
     WndClass.cbWndExtra = GWLP_CONWND_ALLOC;
@@ -2037,7 +2037,7 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     PCONSRV_CONSOLE Console = GuiData->Console;
 
     /* Do nothing if the window is hidden */
-    if (!GuiData->IsWindowVisible) return;
+    if (!GuiData->IsWindowVisible || IsIconic(GuiData->hWindow)) return;
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -2067,8 +2067,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         if ((windy % HeightUnit) >= (HeightUnit / 2)) ++chary;
 
         /* Compensate for added scroll bars in window */
-        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL); // Window will have a horizontal scroll bar
-        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL); // Window will have a vertical scroll bar
+        if (Buff->ViewSize.X < Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL); // Window will have a horizontal scroll bar
+        if (Buff->ViewSize.Y < Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL); // Window will have a vertical scroll bar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
@@ -2213,6 +2213,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             if (OnClose(GuiData)) goto Default;
             break;
+
+        case WM_ERASEBKGND:
+            return TRUE;
 
         case WM_PAINT:
             OnPaint(GuiData);

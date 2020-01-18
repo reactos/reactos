@@ -307,7 +307,7 @@ HINTERNET get_internet_session(IInternetBindInfo *bind_info)
 void update_user_agent(WCHAR *user_agent)
 {
     if(internet_session)
-        InternetSetOptionW(internet_session, INTERNET_OPTION_USER_AGENT, user_agent, strlenW(user_agent));
+        InternetSetOptionW(internet_session, INTERNET_OPTION_USER_AGENT, user_agent, lstrlenW(user_agent));
 }
 
 HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,

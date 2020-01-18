@@ -25,15 +25,12 @@ static LRESULT WINAPI redraw_window_procA(
     HWND hwnd,
     UINT msg,
     WPARAM wparam,
-    LPARAM lparam,
-    DWORD ExtraData,
-    DWORD ExtraData1,
-    DWORD ExtraData2,
-    DWORD ExtraData3)
+    LPARAM lparam)
 {
     switch (msg)
     {
         case WM_PAINT:
+            break;
             WMPAINT_count++;
             trace("Doing WM_PAINT %d/%d\n", WMPAINT_count, WMPAINT_COUNT_THRESHOLD);
 
@@ -83,7 +80,7 @@ static void test_wndproc(void)
     HWND hwndMain;
 
     cls.style = CS_DBLCLKS;
-    cls.lpfnWndProc = (WNDPROC)redraw_window_procA;
+    cls.lpfnWndProc = redraw_window_procA;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
@@ -104,6 +101,7 @@ static void test_wndproc(void)
 
     hwndMain = CreateWindowA(cls.lpszClassName, "Main Window", WS_OVERLAPPEDWINDOW,
                              CW_USEDEFAULT, 0, 100, 100, NULL, NULL, NULL, NULL);
+
     ok(hwndMain != NULL, "CreateWindowA() failed: LastError = %lu\n", GetLastError());
 
     ok(WMPAINT_count == 0,

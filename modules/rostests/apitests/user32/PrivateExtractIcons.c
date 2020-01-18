@@ -44,7 +44,14 @@ START_TEST(PrivateExtractIcons)
         ok((IconTests[i].bhIconValid && ahIcon) || (!IconTests[i].bhIconValid && !ahIcon),
             "PrivateExtractIconsW(%u): icon expected to be %s, but got 0x%p\n",
             i, IconTests[i].bhIconValid ? "valid" : "not valid", ahIcon);
-        ok(aIconId != 0xdeadbeef, "PrivateExtractIconsW(%u): id not set\n", i);
+        if (cIcons == 0xFFFFFFFF)
+        {
+            ok(aIconId == 0xdeadbeef, "PrivateExtractIconsW(%u): id should not be set\n", i);
+        }
+        else
+        {
+            ok(aIconId != 0xdeadbeef, "PrivateExtractIconsW(%u): id not set\n", i);
+        }
         if (ahIcon && ahIcon != (HICON)UlongToHandle(0xdeadbeef))
             DestroyIcon(ahIcon);
     }

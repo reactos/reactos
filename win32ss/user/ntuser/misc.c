@@ -296,10 +296,9 @@ NtUserGetThreadState(
          {
            PTHREADINFO pti;
            pti = PsGetCurrentThreadWin32Thread();
-           pti->timeLast = EngGetTickCount32();
-           pti->pcti->tickLastMsgChecked = pti->timeLast;
+           pti->pcti->timeLastRead = EngGetTickCount32();
+           break;
          }
-         break;
 
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);

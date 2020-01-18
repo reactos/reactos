@@ -91,9 +91,9 @@ DsppLoadFontFile (
     if (!FontDirectory)
     {
         /* Use the boot device and boot directory */
+        CustomDevice = FALSE;
         FontDevice = BlpBootDevice;
         FontDirectory = L"\\EFI\\Microsoft\\Boot\\Fonts";
-        CustomDevice = FALSE;
     }
     else
     {
@@ -157,8 +157,9 @@ Quickie:
     }
 
     /* Check if we had a custom font directory allocated and free it */
-    if ((FontDirectory) && (CustomDirectory))
+    if ((CustomDirectory) && (CustomDevice))
     {
+        ASSERT(FontDirectory);
         BlMmFreeHeap(FontDirectory);
     }
 

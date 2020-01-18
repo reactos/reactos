@@ -26,9 +26,9 @@ struct ColorMatrix
 
 enum ColorMatrixFlags
 {
-    ColorMatrixFlagsDefault    = 0,
-    ColorMatrixFlagsSkipGrays  = 1,
-    ColorMatrixFlagsAltGray    = 2
+    ColorMatrixFlagsDefault = 0,
+    ColorMatrixFlagsSkipGrays = 1,
+    ColorMatrixFlagsAltGray = 2
 };
 
 enum ColorAdjustType
@@ -68,6 +68,6 @@ typedef enum HistogramFormat HistogramFormat;
 typedef struct ColorMatrix ColorMatrix;
 typedef struct ColorMap ColorMap;
 
-#endif  /* end of c typedefs */
+#endif /* end of c typedefs */
 
-#endif  /* _GDIPLUSCOLORMATRIX_H */
+#endif /* _GDIPLUSCOLORMATRIX_H */

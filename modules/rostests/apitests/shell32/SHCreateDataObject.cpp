@@ -416,8 +416,8 @@ START_TEST(SHCreateDataObject)
     if (!pSHCreateDataObject)
     {
         skip("shell32!SHCreateDataObject not exported\n");
+        return;
     }
-
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 

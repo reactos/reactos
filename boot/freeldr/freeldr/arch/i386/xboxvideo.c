@@ -30,6 +30,7 @@ static ULONG ScreenWidth;
 static ULONG ScreenHeight;
 static ULONG BytesPerPixel;
 static ULONG Delta;
+extern multiboot_info_t * MultibootInfoPtr;
 
 #define CHAR_WIDTH  8
 #define CHAR_HEIGHT 16
@@ -127,6 +128,49 @@ NvGetCrtc(UCHAR Index)
     return *((PUCHAR) NV2A_CRTC_REGISTER_VALUE);
 }
 
+ULONG
+XboxGetFramebufferSize(PVOID Offset)
+{
+    memory_map_t * MemoryMap;
+    INT Count, i;
+
+    if (!MultibootInfoPtr)
+    {
+        return 0;
+    }
+
+    if (!(MultibootInfoPtr->flags & MB_INFO_FLAG_MEMORY_MAP))
+    {
+        return 0;
+    }
+
+    MemoryMap = (memory_map_t *)MultibootInfoPtr->mmap_addr;
+
+    if (!MemoryMap ||
+        MultibootInfoPtr->mmap_length == 0 ||
+        MultibootInfoPtr->mmap_length % sizeof(memory_map_t) != 0)
+    {
+        return 0;
+    }
+
+    Count = MultibootInfoPtr->mmap_length / sizeof(memory_map_t);
+    for (i = 0; i < Count; i++, MemoryMap++)
+    {
+        TRACE("i = %d, base_addr_low = 0x%p, MemoryMap->length_low = 0x%p\n", i, MemoryMap->base_addr_low, MemoryMap->length_low);
+
+        /* Framebuffer address offset value is coming from the GPU within
+         * memory mapped I/O address space, so we're comparing only low
+         * 28 bits of the address within actual RAM address space */
+        if (MemoryMap->base_addr_low == ((ULONG)Offset & 0x0FFFFFFF) && MemoryMap->base_addr_high == 0)
+        {
+            TRACE("Video memory found\n");
+            return MemoryMap->length_low;
+        }
+    }
+    ERR("Video memory not found!\n");
+    return 0;
+}
+
 VOID
 XboxVideoInit(VOID)
 {
@@ -135,8 +179,13 @@ XboxVideoInit(VOID)
   /* Verify that framebuffer address is page-aligned */
   ASSERT((ULONG_PTR)FrameBuffer % PAGE_SIZE == 0);
 
-  /* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
-  FrameBufferSize = 4 * 1024 * 1024;
+  /* Obtain framebuffer memory size from multiboot memory map */
+  if ((FrameBufferSize = XboxGetFramebufferSize(FrameBuffer)) == 0)
+  {
+    /* Fallback to Cromwell standard which reserves high 4 MB of RAM */
+    FrameBufferSize = 4 * 1024 * 1024;
+    WARN("Could not detect framebuffer memory size, fallback to 4 MB\n");
+  }
 
   ScreenWidth = *((PULONG) NV2A_RAMDAC_FP_HVALID_END) + 1;
   ScreenHeight = *((PULONG) NV2A_RAMDAC_FP_VVALID_END) + 1;

@@ -15,7 +15,7 @@ wine-patches@winehq.com and ros-dev@reactos.org
 
 The following build tools are shared with Wine.
 
-sdk/tools/unicode               # Synced to WineStaging-3.3
+sdk/tools/unicode               # Synced to WineStaging-4.18
 sdk/tools/widl                  # Synced to WineStaging-4.0
 sdk/tools/wpp                   # Synced to WineStaging-2.9
 
@@ -141,99 +141,99 @@ dll/win32/objsel              # Synced to WineStaging-4.18
 dll/win32/odbc32              # Synced to WineStaging-4.18. Depends on port of Linux ODBC.
 dll/win32/odbccp32            # Synced to WineStaging-4.18
 dll/win32/ole32               # Synced to WineStaging-4.18
-dll/win32/oleacc              # Synced to WineStaging-4.0
-dll/win32/oleaut32            # Synced to WineStaging-4.0
-dll/win32/olecli32            # Synced to WineStaging-3.3
-dll/win32/oledlg              # Synced to WineStaging-4.0
+dll/win32/oleacc              # Synced to WineStaging-4.18
+dll/win32/oleaut32            # Synced to WineStaging-4.18
+dll/win32/olecli32            # Synced to WineStaging-4.18
+dll/win32/oledlg              # Synced to WineStaging-4.18
 dll/win32/olepro32            # Synced to WineStaging-3.3
-dll/win32/olesvr32            # Synced to WineStaging-3.3
+dll/win32/olesvr32            # Synced to WineStaging-4.18
 dll/win32/olethk32            # Synced to WineStaging-3.3
-dll/win32/pdh                 # Synced to WineStaging-4.0
-dll/win32/pidgen              # Synced to WineStaging-4.0
+dll/win32/pdh                 # Synced to WineStaging-4.18
+dll/win32/pidgen              # Synced to WineStaging-4.18
 dll/win32/powrprof            # Forked at Wine-1.0rc5
-dll/win32/printui             # Synced to WineStaging-3.3
-dll/win32/propsys             # Synced to WineStaging-4.0
+dll/win32/printui             # Synced to WineStaging-4.18
+dll/win32/propsys             # Synced to WineStaging-4.18
 dll/win32/pstorec             # Synced to WineStaging-3.3
-dll/win32/qmgr                # Synced to WineStaging-4.0
+dll/win32/qmgr                # Synced to WineStaging-4.18
 dll/win32/qmgrprxy            # Synced to WineStaging-2.9
-dll/win32/query               # Synced to WineStaging-3.3
+dll/win32/query               # Synced to WineStaging-4.18
 dll/win32/rasapi32            # Synced to WineStaging-3.3
 dll/win32/resutils            # Synced to WineStaging-3.3
-dll/win32/riched20            # Synced to WineStaging-4.0
+dll/win32/riched20            # Synced to WineStaging-4.18
 dll/win32/riched32            # Synced to WineStaging-3.3
-dll/win32/rpcrt4              # Synced to WineStaging-4.0
+dll/win32/rpcrt4              # Synced to WineStaging-4.18
 dll/win32/rsabase             # Synced to WineStaging-3.3
 dll/win32/rsaenh              # Synced to WineStaging-2.9
-dll/win32/sccbase             # Synced to WineStaging-3.3
+dll/win32/sccbase             # Synced to WineStaging-4.18
 dll/win32/schannel            # Synced to WineStaging-3.3
-dll/win32/scrrun              # Synced to WineStaging-3.3
+dll/win32/scrrun              # Synced to WineStaging-4.18
 dll/win32/secur32             # Forked
 dll/win32/security            # Forked (different .spec)
-dll/win32/sensapi             # Synced to WineStaging-3.3
+dll/win32/sensapi             # Synced to WineStaging-4.18
 dll/win32/setupapi            # Forked at Wine-20050524
 dll/win32/shdoclc             # Synced to WineStaging-3.3
-dll/win32/shdocvw             # Synced to WineStaging-4.0
+dll/win32/shdocvw             # Synced to WineStaging-4.18
 dll/win32/shell32             # Forked at Wine-20071011
 dll/win32/shfolder            # Synced to WineStaging-3.3
 dll/win32/shlwapi             # Synced to WineStaging-3.3
-dll/win32/slbcsp              # Synced to WineStaging-3.3
-dll/win32/snmpapi             # Synced to WineStaging-3.3
+dll/win32/slbcsp              # Synced to WineStaging-4.18
+dll/win32/snmpapi             # Synced to WineStaging-4.18
 dll/win32/softpub             # Synced to WineStaging-2.9
 dll/win32/stdole2.tlb         # Synced to WineStaging-3.3
 dll/win32/stdole32.tlb        # Synced to WineStaging-3.3
-dll/win32/sti                 # Synced to WineStaging-3.3
-dll/win32/sxs                 # Synced to WineStaging-4.0
-dll/win32/t2embed             # Synced to WineStaging-4.0
-dll/win32/tapi32              # Synced to WineStaging-3.3
+dll/win32/sti                 # Synced to WineStaging-4.18
+dll/win32/sxs                 # Synced to WineStaging-4.18
+dll/win32/t2embed             # Synced to WineStaging-4.18
+dll/win32/tapi32              # Synced to WineStaging-4.18
 dll/win32/traffic             # Synced to WineStaging-3.3
-dll/win32/twain_32            # Synced to WineStaging-3.3
-dll/win32/updspapi            # Synced to WineStaging-3.3
+dll/win32/twain_32            # Synced to WineStaging-4.18
+dll/win32/updspapi            # Synced to WineStaging-4.18
 dll/win32/url                 # Synced to WineStaging-3.3
-dll/win32/urlmon              # Synced to WineStaging-4.0
-dll/win32/usp10               # Synced to WineStaging-4.0
+dll/win32/urlmon              # Synced to WineStaging-4.18
+dll/win32/usp10               # Synced to WineStaging-4.18
 dll/win32/uxtheme             # Forked
-dll/win32/vbscript            # Synced to WineStaging-4.0
-dll/win32/version             # Synced to WineStaging-4.0
-dll/win32/vssapi              # Synced to WineStaging-2.9
-dll/win32/wbemdisp            # Synced to WineStaging-4.0
-dll/win32/wbemprox            # Synced to WineStaging-4.0
-dll/win32/windowscodecs       # Synced to WineStaging-4.0
+dll/win32/vbscript            # Synced to WineStaging-4.18
+dll/win32/version             # Synced to WineStaging-4.18
+dll/win32/vssapi              # Synced to WineStaging-4.18
+dll/win32/wbemdisp            # Synced to WineStaging-4.18
+dll/win32/wbemprox            # Synced to WineStaging-4.18
+dll/win32/windowscodecs       # Synced to WineStaging-4.18
 dll/win32/windowscodecsext    # Synced to WineStaging-2.9
-dll/win32/winemp3.acm         # Synced to WineStaging-3.3
+dll/win32/winemp3.acm         # Synced to WineStaging-4.18
 dll/win32/wing32              # Synced to WineStaging-3.3
-dll/win32/winhttp             # Synced to WineStaging-3.9
-dll/win32/wininet             # Synced to WineStaging-3.9
+dll/win32/winhttp             # Synced to WineStaging-4.18
+dll/win32/wininet             # Synced to WineStaging-4.18
 dll/win32/winmm               # Forked at Wine-20050628
 dll/win32/winmm/midimap       # Forked at Wine-20050628
 dll/win32/winmm/wavemap       # Forked at Wine-20050628
-dll/win32/winscard            # Synced to WineStaging-3.3
-dll/win32/wintrust            # Synced to WineStaging-3.9
-dll/win32/wldap32             # Synced to WineStaging-3.3
+dll/win32/winscard            # Synced to WineStaging-4.18
+dll/win32/wintrust            # Synced to WineStaging-4.18
+dll/win32/wldap32             # Synced to WineStaging-4.18
 dll/win32/wmi                 # Synced to WineStaging-2.9
-dll/win32/wmiutils            # Synced to WineStaging-3.3
-dll/win32/wmvcore             # Synced to WineStaging-3.9
-dll/win32/wshom.ocx           # Synced to WineStaging-3.3
-dll/win32/wtsapi32            # Synced to WineStaging-3.9
-dll/win32/wuapi               # Synced to WineStaging-3.3
+dll/win32/wmiutils            # Synced to WineStaging-4.18
+dll/win32/wmvcore             # Synced to WineStaging-4.18
+dll/win32/wshom.ocx           # Synced to WineStaging-4.18
+dll/win32/wtsapi32            # Synced to WineStaging-4.18
+dll/win32/wuapi               # Synced to WineStaging-4.18
 dll/win32/xinput1_1           # Synced to WineStaging-2.9
 dll/win32/xinput1_2           # Synced to WineStaging-2.9
 dll/win32/xinput1_3           # Synced to WineStaging-2.9
 dll/win32/xinput9_1_0         # Synced to WineStaging-2.9
-dll/win32/xmllite             # Synced to WineStaging-3.3
+dll/win32/xmllite             # Synced to WineStaging-4.18
 dll/win32/xolehlp             # Synced to WineStaging-3.21
 
-dll/cpl/inetcpl               # Synced to WineStaging-3.17
+dll/cpl/inetcpl               # Synced to WineStaging-4.18
 
-win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-3.3 (known there as /dll/win32/localui)
+win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-4.18 (known there as /dll/win32/localui)
 
 ReactOS shares the following programs with Winehq.
 
-base/applications/cmdutils/cscript  # Synced to WineStaging-3.17
-base/applications/cmdutils/reg      # Synced to WineStaging-3.17
+base/applications/cmdutils/cscript  # Synced to WineStaging-4.18
+base/applications/cmdutils/reg      # Synced to WineStaging-4.18
 base/applications/cmdutils/schtasks # Synced to WineStaging-3.3
 base/applications/cmdutils/taskkill # Synced to WineStaging-3.17
 base/applications/cmdutils/wmic     # Synced to WineStaging-4.0
-base/applications/cmdutils/wscript  # Synced to WineStaging-3.17
+base/applications/cmdutils/wscript  # Synced to WineStaging-4.18
 base/applications/cmdutils/xcopy    # Synced to WineStaging-3.17
 base/applications/games/winmine     # Synced to WineStaging-2.16 with our own resources.
 base/applications/extrac32          # Synced to WineStaging-4.0

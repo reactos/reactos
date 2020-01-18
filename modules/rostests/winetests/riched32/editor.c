@@ -1263,8 +1263,8 @@ static void test_enter(void)
   SendMessageW(hwndRichEdit, WM_CHAR, 'T', 0);
   SendMessageW(hwndRichEdit, WM_CHAR, '\r', 0);
 
-  SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
-  ok(result == 1, "Got %d\n", (int)result);
+  result = SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
+  ok(result == 3, "Got %ld\n", result);
   format_test_result(resultbuf, buf);
   format_test_result(expectedbuf, "T\r\n");
   result = strcmp(resultbuf, expectedbuf);
@@ -1358,7 +1358,7 @@ static void test_EM_EXSETSEL(void)
         /* Test with multibyte character */
         SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
         /*                                                 012345  6   7 8901 */
-        cr.cpMin = 4, cr.cpMax = 8;
+        cr.cpMin = 4; cr.cpMax = 8;
         result =  SendMessageA(hwndRichEdit, EM_EXSETSEL, 0, (LPARAM)&cr);
         todo_wine ok(result == 7, "EM_EXSETSEL return %ld expected 7\n", result);
         result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, sizeof(bufA), (LPARAM)bufA);

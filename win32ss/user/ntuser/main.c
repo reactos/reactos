@@ -467,6 +467,7 @@ InitThreadCallback(PETHREAD Thread)
     IntReferenceProcessInfo(ptiCurrent->ppi);
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
+    ptiCurrent->pcti = &ptiCurrent->cti;
 
     /* Mark the process as having threads */
     ptiCurrent->ppi->W32PF_flags |= W32PF_THREADCONNECTED;
@@ -503,7 +504,8 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    ptiCurrent->timeLast = EngGetTickCount32();
+    ptiCurrent->pcti->timeLastRead = EngGetTickCount32();
+
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if (ptiCurrent->MessageQueue == NULL)
     {
@@ -523,8 +525,6 @@ InitThreadCallback(PETHREAD Thread)
     /* CSRSS threads have some special features */
     if (Process == gpepCSRSS || !gpepCSRSS)
         ptiCurrent->TIF_flags = TIF_CSRSSTHREAD | TIF_DONTATTACHQUEUE;
-
-    ptiCurrent->pcti = &ptiCurrent->cti;
 
     /* Initialize the CLIENTINFO */
     pci = (PCLIENTINFO)pTeb->Win32ClientInfo;

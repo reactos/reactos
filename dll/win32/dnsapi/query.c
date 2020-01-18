@@ -16,6 +16,123 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+BOOL
+ParseIpv4Address(
+    _In_ PCWSTR AddressString,
+    _Out_ PIN_ADDR pAddress)
+{
+    PCWSTR pTerminator = NULL;
+    NTSTATUS Status;
+
+    Status = RtlIpv4StringToAddressW(AddressString,
+                                     TRUE,
+                                     &pTerminator,
+                                     pAddress);
+    if (NT_SUCCESS(Status) && pTerminator != NULL && *pTerminator == L'\0')
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+BOOL
+ParseIpv6Address(
+    _In_ PCWSTR AddressString,
+    _Out_ PIN6_ADDR pAddress)
+{
+    PCWSTR pTerminator = NULL;
+    NTSTATUS Status;
+
+    Status = RtlIpv6StringToAddressW(AddressString,
+                                     &pTerminator,
+                                     pAddress);
+    if (NT_SUCCESS(Status) && pTerminator != NULL && *pTerminator == L'\0')
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+PDNS_RECORDW
+CreateRecordForIpAddress(
+    _In_ PCWSTR Name,
+    _In_ WORD Type)
+{
+    IN_ADDR Ip4Address;
+    IN6_ADDR Ip6Address;
+    PDNS_RECORDW pRecord = NULL;
+
+    if (Type == DNS_TYPE_A)
+    {
+        if (ParseIpv4Address(Name, &Ip4Address))
+        {
+            pRecord = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      sizeof(DNS_RECORDW));
+            if (pRecord == NULL)
+                return NULL;
+
+            pRecord->pName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                             0,
+                                             (wcslen(Name) + 1) * sizeof(WCHAR));
+            if (pRecord == NULL)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, pRecord);
+                return NULL;
+            }
+
+            wcscpy(pRecord->pName, Name);
+            pRecord->wType = DNS_TYPE_A;
+            pRecord->wDataLength = sizeof(DNS_A_DATA);
+            pRecord->Flags.S.Section = DnsSectionQuestion;
+            pRecord->Flags.S.CharSet = DnsCharSetUnicode;
+            pRecord->dwTtl = 7 * 24 * 60 * 60;
+
+            pRecord->Data.A.IpAddress = Ip4Address.S_un.S_addr;
+
+            return pRecord;
+        }
+    }
+    else if (Type == DNS_TYPE_AAAA)
+    {
+        if (ParseIpv6Address(Name, &Ip6Address))
+        {
+            pRecord = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      sizeof(DNS_RECORDW));
+            if (pRecord == NULL)
+                return NULL;
+
+            pRecord->pName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                             0,
+                                             (wcslen(Name) + 1) * sizeof(WCHAR));
+            if (pRecord == NULL)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, pRecord);
+                return NULL;
+            }
+
+            wcscpy(pRecord->pName, Name);
+            pRecord->wType = DNS_TYPE_AAAA;
+            pRecord->wDataLength = sizeof(DNS_AAAA_DATA);
+            pRecord->Flags.S.Section = DnsSectionQuestion;
+            pRecord->Flags.S.CharSet = DnsCharSetUnicode;
+            pRecord->dwTtl = 7 * 24 * 60 * 60;
+
+            CopyMemory(&pRecord->Data.AAAA.Ip6Address,
+                       &Ip6Address.u.Byte,
+                       sizeof(IN6_ADDR));
+
+            return pRecord;
+        }
+    }
+
+    return NULL;
+}
+
 
 /* DnsQuery ****************************
  * Begin a DNS query, and allow the result to be placed in the application
@@ -223,9 +340,15 @@ DnsQuery_CodePage(UINT CodePage,
         }
 
         if (CodePage == CP_ACP)
+        {
             ConvertedRecord->pName = DnsWToC((PWCHAR)QueryResultWide->pName);
+            ConvertedRecord->Flags.S.CharSet = DnsCharSetAnsi;
+        }
         else
+        {
             ConvertedRecord->pName = DnsWToUTF8((PWCHAR)QueryResultWide->pName);
+            ConvertedRecord->Flags.S.CharSet = DnsCharSetUtf8;
+        }
 
         ConvertedRecord->wType = QueryResultWide->wType;
 
@@ -341,6 +464,82 @@ DnsQuery_UTF8(LPCSTR Name,
     return DnsQuery_CodePage(CP_UTF8, Name, Type, Options, Extra, QueryResultSet, Reserved);
 }
 
+DNS_STATUS
+WINAPI
+DnsQuery_W(LPCWSTR Name,
+           WORD Type,
+           DWORD Options,
+           PVOID Extra,
+           PDNS_RECORD *QueryResultSet,
+           PVOID *Reserved)
+{
+    DWORD dwRecords = 0;
+    PDNS_RECORDW pRecord = NULL;
+    size_t NameLen, i;
+    DNS_STATUS Status = ERROR_SUCCESS;
+
+    DPRINT("DnsQuery_W()\n");
+
+    if ((Name == NULL) ||
+        (QueryResultSet == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    *QueryResultSet = NULL;
+
+    /* Create an A or AAAA record for an IP4 or IP6 address */
+    pRecord = CreateRecordForIpAddress(Name,
+                                       Type);
+    if (pRecord != NULL)
+    {
+        *QueryResultSet = (PDNS_RECORD)pRecord;
+        return ERROR_SUCCESS;
+    }
+
+    /*
+     * Check allowed characters
+     * According to RFC a-z,A-Z,0-9,-,_, but can't start or end with - or _
+     */
+    NameLen = wcslen(Name);
+    if (Name[0] == L'-' || Name[0] == L'_' || Name[NameLen - 1] == L'-' ||
+        Name[NameLen - 1] == L'_' || wcsstr(Name, L"..") != NULL)
+    {
+        return ERROR_INVALID_NAME;
+    }
+
+    i = 0;
+    while (i < NameLen)
+    {
+        if (!((Name[i] >= L'a' && Name[i] <= L'z') ||
+              (Name[i] >= L'A' && Name[i] <= L'Z') ||
+              (Name[i] >= L'0' && Name[i] <= L'9') ||
+              Name[i] == L'-' || Name[i] == L'_' || Name[i] == L'.'))
+        {
+            return DNS_ERROR_INVALID_NAME_CHAR;
+        }
+
+        i++;
+    }
+
+    RpcTryExcept
+    {
+        Status = R_ResolverQuery(NULL,
+                                 Name,
+                                 Type,
+                                 Options,
+                                 &dwRecords,
+                                 (DNS_RECORDW **)QueryResultSet);
+        DPRINT("R_ResolverQuery() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
 WCHAR
 *xstrsave(const WCHAR *str)
 {
@@ -377,97 +576,6 @@ CHAR
     return p;
 }
 
-HANDLE
-OpenNetworkDatabase(LPCWSTR Name)
-{
-    PWSTR ExpandedPath;
-    PWSTR DatabasePath;
-    INT ErrorCode;
-    HKEY DatabaseKey;
-    DWORD RegType;
-    DWORD RegSize = 0;
-    size_t StringLength;
-    HANDLE ret;
-
-    ExpandedPath = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (!ExpandedPath)
-        return INVALID_HANDLE_VALUE;
-
-    /* Open the database path key */
-    ErrorCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                              L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                              0,
-                              KEY_READ,
-                              &DatabaseKey);
-    if (ErrorCode == NO_ERROR)
-    {
-        /* Read the actual path */
-        ErrorCode = RegQueryValueExW(DatabaseKey,
-                                     L"DatabasePath",
-                                     NULL,
-                                     &RegType,
-                                     NULL,
-                                     &RegSize);
-
-        DatabasePath = HeapAlloc(GetProcessHeap(), 0, RegSize);
-        if (!DatabasePath)
-        {
-            HeapFree(GetProcessHeap(), 0, ExpandedPath);
-            return INVALID_HANDLE_VALUE;
-        }
-
-        /* Read the actual path */
-        ErrorCode = RegQueryValueExW(DatabaseKey,
-                                     L"DatabasePath",
-                                     NULL,
-                                     &RegType,
-                                     (LPBYTE)DatabasePath,
-                                     &RegSize);
-
-        /* Close the key */
-        RegCloseKey(DatabaseKey);
-
-        /* Expand the name */
-        ExpandEnvironmentStringsW(DatabasePath, ExpandedPath, MAX_PATH);
-
-        HeapFree(GetProcessHeap(), 0, DatabasePath);
-    }
-    else
-    {
-        /* Use defalt path */
-        GetSystemDirectoryW(ExpandedPath, MAX_PATH);
-        StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
-        if (ExpandedPath[StringLength - 1] != L'\\')
-        {
-            /* It isn't, so add it ourselves */
-            StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
-        }
-        StringCchCatW(ExpandedPath, MAX_PATH, L"DRIVERS\\ETC\\");
-    }
-
-    /* Make sure that the path is backslash-terminated */
-    StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
-    if (ExpandedPath[StringLength - 1] != L'\\')
-    {
-        /* It isn't, so add it ourselves */
-        StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
-    }
-
-    /* Add the database name */
-    StringCchCatW(ExpandedPath, MAX_PATH, Name);
-
-    /* Return a handle to the file */
-    ret = CreateFileW(ExpandedPath,
-                      FILE_READ_DATA,
-                      FILE_SHARE_READ,
-                      NULL,
-                      OPEN_EXISTING,
-                      FILE_ATTRIBUTE_NORMAL,
-                      NULL);
-
-    HeapFree(GetProcessHeap(), 0, ExpandedPath);
-    return ret;
-}
 
 /* This function is far from perfect but it works enough */
 IP4_ADDRESS
@@ -540,223 +648,6 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
     return ret;
 }
 
-BOOL
-ParseV4Address(LPCSTR AddressString,
-    OUT PDWORD pAddress)
-{
-    CHAR * cp = (CHAR *)AddressString;
-    DWORD val, base;
-    unsigned char c;
-    DWORD parts[4], *pp = parts;
-    if (!AddressString)
-        return FALSE;
-    if (!isdigit(*cp)) return FALSE;
-
-again:
-    /*
-    * Collect number up to ``.''.
-    * Values are specified as for C:
-    * 0x=hex, 0=octal, other=decimal.
-    */
-    val = 0; base = 10;
-    if (*cp == '0') {
-        if (*++cp == 'x' || *cp == 'X')
-            base = 16, cp++;
-        else
-            base = 8;
-    }
-    while ((c = *cp)) {
-        if (isdigit(c)) {
-            val = (val * base) + (c - '0');
-            cp++;
-            continue;
-        }
-        if (base == 16 && isxdigit(c)) {
-            val = (val << 4) + (c + 10 - (islower(c) ? 'a' : 'A'));
-            cp++;
-            continue;
-        }
-        break;
-    }
-    if (*cp == '.') {
-        /*
-        * Internet format:
-        *    a.b.c.d
-        */
-        if (pp >= parts + 4) return FALSE;
-        *pp++ = val;
-        cp++;
-        goto again;
-    }
-    /*
-    * Check for trailing characters.
-    */
-    if (*cp && *cp > ' ') return FALSE;
-
-    if (pp >= parts + 4) return FALSE;
-    *pp++ = val;
-    /*
-    * Concoct the address according to
-    * the number of parts specified.
-    */
-    if ((DWORD)(pp - parts) != 4) return FALSE;
-    if (parts[0] > 0xff || parts[1] > 0xff || parts[2] > 0xff || parts[3] > 0xff) return FALSE;
-    val = (parts[3] << 24) | (parts[2] << 16) | (parts[1] << 8) | parts[0];
-
-    if (pAddress)
-        *pAddress = val;
-
-    return TRUE;
-}
-
-/* This function is far from perfect but it works enough */
-IP4_ADDRESS
-FindEntryInHosts(CONST CHAR * name)
-{
-    BOOL Found = FALSE;
-    HANDLE HostsFile;
-    CHAR HostsDBData[BUFSIZ] = { 0 };
-    PCHAR AddressStr, DnsName = NULL, AddrTerm, NameSt, NextLine, ThisLine, Comment;
-    UINT ValidData = 0;
-    DWORD ReadSize;
-    DWORD Address;
-
-    /* Open the network database */
-    HostsFile = OpenNetworkDatabase(L"hosts");
-    if (HostsFile == INVALID_HANDLE_VALUE)
-    {
-        WSASetLastError(WSANO_RECOVERY);
-        return 0;
-    }
-
-    while (!Found && ReadFile(HostsFile,
-        HostsDBData + ValidData,
-        sizeof(HostsDBData) - ValidData,
-        &ReadSize,
-        NULL))
-    {
-        ValidData += ReadSize;
-        ReadSize = 0;
-        NextLine = ThisLine = HostsDBData;
-
-        /* Find the beginning of the next line */
-        while ((NextLine < HostsDBData + ValidData) &&
-               (*NextLine != '\r') &&
-               (*NextLine != '\n'))
-        {
-            NextLine++;
-        }
-
-        /* Zero and skip, so we can treat what we have as a string */
-        if (NextLine > HostsDBData + ValidData)
-            break;
-
-        *NextLine = 0;
-        NextLine++;
-
-        Comment = strchr(ThisLine, '#');
-        if (Comment)
-            *Comment = 0; /* Terminate at comment start */
-
-        AddressStr = ThisLine;
-        /* Find the first space separating the IP address from the DNS name */
-        AddrTerm = strchr(ThisLine, ' ');
-        if (AddrTerm)
-        {
-            /* Terminate the address string */
-            *AddrTerm = 0;
-
-            /* Find the last space before the DNS name */
-            NameSt = strrchr(ThisLine, ' ');
-
-            /* If there is only one space (the one we removed above), then just use the address terminator */
-            if (!NameSt)
-                NameSt = AddrTerm;
-
-            /* Move from the space to the first character of the DNS name */
-            NameSt++;
-
-            DnsName = NameSt;
-
-            if (!stricmp(name, DnsName) || !stricmp(name, AddressStr))
-            {
-                Found = TRUE;
-                break;
-            }
-        }
-
-        /* Get rid of everything we read so far */
-        while (NextLine <= HostsDBData + ValidData &&
-            isspace(*NextLine))
-        {
-            NextLine++;
-        }
-
-        if (HostsDBData + ValidData - NextLine <= 0)
-            break;
-
-        memmove(HostsDBData, NextLine, HostsDBData + ValidData - NextLine);
-        ValidData -= NextLine - HostsDBData;
-    }
-
-    CloseHandle(HostsFile);
-
-    if (!Found)
-    {
-        WSASetLastError(WSANO_DATA);
-        return 0;
-    }
-
-    if (strstr(AddressStr, ":"))
-    {
-        WSASetLastError(WSAEINVAL);
-        return 0;
-    }
-
-    if (!ParseV4Address(AddressStr, &Address))
-    {
-        WSASetLastError(WSAEINVAL);
-        return 0;
-    }
-
-    return Address;
-}
-
-DNS_STATUS WINAPI
-DnsQuery_W(LPCWSTR Name,
-           WORD Type,
-           DWORD Options,
-           PVOID Extra,
-           PDNS_RECORD *QueryResultSet,
-           PVOID *Reserved)
-{
-    DWORD dwRecords = 0;
-    DNS_STATUS Status = ERROR_SUCCESS;
-
-    DPRINT("DnsQuery_W()\n");
-
-    *QueryResultSet = NULL;
-
-    RpcTryExcept
-    {
-        Status = R_ResolverQuery(NULL,
-                                 Name,
-                                 Type,
-                                 Options,
-                                 &dwRecords,
-                                 (DNS_RECORDW **)QueryResultSet);
-        DPRINT("R_ResolverQuery() returned %lu\n", Status);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = RpcExceptionCode();
-        DPRINT("Exception returned %lu\n", Status);
-    }
-    RpcEndExcept;
-
-    return Status;
-}
-
 
 DNS_STATUS
 WINAPI
@@ -770,7 +661,7 @@ Query_Main(LPCWSTR Name,
     int adns_error;
     adns_answer *answer;
     LPSTR CurrentName;
-    unsigned i, CNameLoop;
+    unsigned CNameLoop;
     PFIXED_INFO network_info;
     ULONG network_info_blen = 0;
     DWORD network_info_result;
@@ -814,72 +705,6 @@ Query_Main(LPCWSTR Name,
                             NULL,
                             0);
         NameLen--;
-        /* Is it an IPv4 address? */
-        if (ParseV4Address(AnsiName, &Address))
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-
-            if (NULL == *QueryResultSet)
-            {
-                return ERROR_OUTOFMEMORY;
-            }
-
-            (*QueryResultSet)->pNext = NULL;
-            (*QueryResultSet)->wType = Type;
-            (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-            (*QueryResultSet)->Data.A.IpAddress = Address;
-
-            (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
-
-            return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
-        }
-
-        /* Check allowed characters
-        * According to RFC a-z,A-Z,0-9,-,_, but can't start or end with - or _
-        */
-        if (AnsiName[0] == '-' || AnsiName[0] == '_' || AnsiName[NameLen - 1] == '-' ||
-            AnsiName[NameLen - 1] == '_' || strstr(AnsiName, "..") != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            return ERROR_INVALID_NAME;
-        }
-        i = 0;
-        while (i < NameLen)
-        {
-            if (!((AnsiName[i] >= 'a' && AnsiName[i] <= 'z') ||
-                  (AnsiName[i] >= 'A' && AnsiName[i] <= 'Z') ||
-                  (AnsiName[i] >= '0' && AnsiName[i] <= '9') ||
-                  AnsiName[i] == '-' || AnsiName[i] == '_' || AnsiName[i] == '.'))
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return DNS_ERROR_INVALID_NAME_CHAR;
-            }
-            i++;
-        }
-
-        if ((Options & DNS_QUERY_NO_HOSTS_FILE) == 0)
-        {
-            if ((Address = FindEntryInHosts(AnsiName)) != 0)
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
-
-                if (NULL == *QueryResultSet)
-                {
-                    return ERROR_OUTOFMEMORY;
-                }
-
-                (*QueryResultSet)->pNext = NULL;
-                (*QueryResultSet)->wType = Type;
-                (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-                (*QueryResultSet)->Data.A.IpAddress = Address;
-
-                (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
-
-                return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
-            }
-        }
 
         network_info_result = GetNetworkParams(NULL, &network_info_blen);
         network_info = (PFIXED_INFO)RtlAllocateHeap(RtlGetProcessHeap(), 0, (size_t)network_info_blen);
@@ -922,6 +747,8 @@ Query_Main(LPCWSTR Name,
             (*QueryResultSet)->pNext = NULL;
             (*QueryResultSet)->wType = Type;
             (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+            (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
+            (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
             (*QueryResultSet)->Data.A.IpAddress = Address;
 
             (*QueryResultSet)->pName = (LPSTR)DnsCToW(HostWithDomainName);
@@ -1013,6 +840,8 @@ Query_Main(LPCWSTR Name,
                 (*QueryResultSet)->pNext = NULL;
                 (*QueryResultSet)->wType = Type;
                 (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+                (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
+                (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
                 (*QueryResultSet)->Data.A.IpAddress = answer->rrs.addr->addr.inet.sin_addr.s_addr;
 
                 adns_finish(astate);
@@ -1122,7 +951,42 @@ DnsFlushResolverCache(VOID)
     return (Status == ERROR_SUCCESS);
 }
 
-DNS_STATUS
+BOOL
+WINAPI
+DnsGetCacheDataTable(
+    _Out_ PDNS_CACHE_ENTRY *DnsCache)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+    PDNS_CACHE_ENTRY CacheEntries = NULL;
+
+    if (DnsCache == NULL)
+        return FALSE;
+
+    RpcTryExcept
+    {
+        Status = CRrReadCache(NULL,
+                              &CacheEntries);
+        DPRINT("CRrReadCache() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT1("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    if (Status != ERROR_SUCCESS)
+        return FALSE;
+
+    if (CacheEntries == NULL)
+        return FALSE;
+
+    *DnsCache = CacheEntries;
+
+    return TRUE;
+}
+
+DWORD
 WINAPI
 GetCurrentTimeInSeconds(VOID)
 {

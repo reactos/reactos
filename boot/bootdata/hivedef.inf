@@ -83,17 +83,19 @@ HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
 
+HKCU,"Control Panel\Desktop\WindowMetrics","AppliedDPI",0x00010003,0x00000060
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","CaptionWidth",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","CaptionHeight",2,"18"
-HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionWidth",2,"13"
+HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionWidth",2,"12"
 HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionHeight",2,"15"
 HKCU,"Control Panel\Desktop\WindowMetrics","MenuWidth",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconSpacing",2,"75"
+HKCU,"Control Panel\Desktop\WindowMetrics","IconTitleWrap",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconVerticalspacing",2,"75"
 HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000003,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
@@ -1892,6 +1894,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShad
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010003,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010003,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","Hidden",0x00010003,1
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ShowSuperHidden",0x00010003,0
 
 ; ComDlg32
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32",,0x00000012
