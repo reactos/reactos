@@ -487,6 +487,7 @@ UDFCommonCreate(
 
         if (Vcb->SoftEjectReq) { 
             AdPrint(("    Eject requested\n"));
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_FILE_INVALID);
         }
 
@@ -494,6 +495,7 @@ UDFCommonCreate(
         if ((Vcb->VCBFlags & UDF_VCB_FLAGS_VOLUME_LOCKED) &&
             (Vcb->VolumeLockPID != GetCurrentPID())) {
             AdPrint(("    Volume is locked\n"));
+            ReturnedInformation = 0;
             RC = STATUS_ACCESS_DENIED;
             try_return(RC);
         }
@@ -564,22 +566,26 @@ UDFCommonCreate(
             //  If a volume open is requested, perform checks to ensure that
             //  invalid options have not also been specified ...
             if ((OpenTargetDirectory) || (PtrExtAttrBuffer)) {
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
 
             if (DirectoryOnlyRequested) {
                 // a volume is not a directory
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_NOT_A_DIRECTORY);
             }
 
 #ifndef UDF_READ_ONLY_BUILD
             if (DeleteOnCloseSpecified) {
                 // delete volume.... hmm
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_CANNOT_DELETE);
             }
 
             if ((RequestedDisposition != FILE_OPEN) && (RequestedDisposition != FILE_OPEN_IF)) {
                 // cannot create a new volume, I'm afraid ...
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_ACCESS_DENIED);
             }
 #endif //UDF_READ_ONLY_BUILD
@@ -743,6 +749,7 @@ op_vol_accs_dnd:
         // we should check appropriate privilege if OpenForBackup requested
         if(OpenForBackup) {
             if (!SeSinglePrivilegeCheck(SeExports->SeBackupPrivilege, UserMode)) {
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_PRIVILEGE_NOT_HELD);
             }
         }
@@ -774,6 +781,7 @@ op_vol_accs_dnd:
 
             if (TargetObjectName.Length != sizeof(FILE_ID)) {
                 AdPrint(("    Invalid file ID\n"));
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
             Id = *((FILE_ID*)(TargetObjectName.Buffer));
@@ -781,12 +789,14 @@ op_vol_accs_dnd:
             if ((RequestedDisposition != FILE_OPEN) &&
                 (RequestedDisposition != FILE_OPEN_IF)) {
                 AdPrint(("    Illegal disposition for ID open\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_ACCESS_DENIED);
             }
 
             RC = UDFGetOpenParamsByFileId(Vcb, Id, &TmpPath, &IgnoreCase);
             if(!NT_SUCCESS(RC)) {
                 AdPrint(("    ID open failed\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
             // simulate absolute path open
@@ -794,6 +804,7 @@ op_vol_accs_dnd:
                !NT_SUCCESS(RC = MyAppendUnicodeStringToStringTag(&TargetObjectName, TmpPath, MEM_USABS_TAG))) {*/
             if(!NT_SUCCESS(RC = MyCloneUnicodeString(&TargetObjectName, TmpPath))) {
                 AdPrint(("    Init String failed\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
             //ASSERT(TargetObjectName.Buffer);
@@ -838,6 +849,7 @@ op_vol_accs_dnd:
             //  the I/O Manager will perform checks on the FSD's behalf)
             if (!(RelatedObjectName.Length) || (RelatedObjectName.Buffer[0] != L'\\')) {
                 AdPrint(("    Wrong pathname (1)\n"));
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 RC = STATUS_INVALID_PARAMETER;
                 try_return(RC);
             }
@@ -847,6 +859,7 @@ op_vol_accs_dnd:
             if (TargetObjectName.Length && (TargetObjectName.Buffer[0] == L'\\')) {
                 AdPrint(("    Wrong pathname (2)\n"));
                 RC = STATUS_INVALID_PARAMETER;
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC);
             }
             // Create an absolute path-name. We could potentially use
@@ -884,6 +897,7 @@ op_vol_accs_dnd:
             ASSERT(TargetObjectName.Buffer);
             if (!TargetObjectName.Length || TargetObjectName.Buffer[0] != L'\\') {
                 AdPrint(("    Wrong target name (1)\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
 /*            if(!NT_SUCCESS(RC = MyInitUnicodeString(&AbsolutePathName, L"")) ||
@@ -901,6 +915,7 @@ op_vol_accs_dnd:
             if ((AbsolutePathName.Length > 2*sizeof(WCHAR)) &&
                 (AbsolutePathName.Buffer[2] == L'\\')) {
                 AdPrint(("    Wrong target name (2)\n"));
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return (RC = STATUS_OBJECT_NAME_INVALID);
             }
             //  Slide the name down in the buffer.
@@ -940,6 +955,7 @@ op_vol_accs_dnd:
                  (RequestedDisposition == FILE_OVERWRITE_IF)) {
                 AdPrint(("    Can't overwrite RootDir\n"));
                 RC = STATUS_FILE_IS_A_DIRECTORY;
+                ReturnedInformation = 0;
                 try_return(RC);
             }
 
@@ -950,6 +966,7 @@ op_vol_accs_dnd:
             if (DeleteOnCloseSpecified) {
                 // delete RootDir.... rather strange idea... I dislike it
                 AdPrint(("    Can't delete RootDir\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_CANNOT_DELETE);
             }
 
@@ -964,6 +981,7 @@ op_vol_accs_dnd:
             RC = UDFCheckAccessRights(PtrNewFileObject, AccessState, PtrNewFcb, PtrNewCcb, DesiredAccess, ShareAccess);
             if(!NT_SUCCESS(RC)) {
                 AdPrint(("    Access/Sharing violation (RootDir)\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
 
@@ -985,6 +1003,7 @@ op_vol_accs_dnd:
 //            BrutePoint();
             // We don't handle OpenTargetDirectory in this case
             if(OpenTargetDirectory)
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_INVALID_PARAMETER);
 
             // Init environment to simulate normal open procedure behavior
@@ -1026,12 +1045,14 @@ op_vol_accs_dnd:
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
             ReturnedInformation = 0;
             AdPrint(("    Can't open File on blank volume ;)\n"));
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_OBJECT_NAME_NOT_FOUND);
         }
 
         //AdPrint(("    Opening file %ws %8.8x\n",AbsolutePathName.Buffer, PtrNewFileObject));
 
         if(AbsolutePathName.Length > UDF_X_PATH_LEN*sizeof(WCHAR)) {
+            ReturnedInformation = 0;
             try_return(RC = STATUS_OBJECT_NAME_INVALID);
         }
 
@@ -1039,9 +1060,11 @@ op_vol_accs_dnd:
         // (sometimes we can see here very strange characters ;)
         if(!UDFIsNameValid(&AbsolutePathName, &StreamOpen, &SNameIndex)) {
             AdPrint(("    Absolute path is not valid\n"));
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_OBJECT_NAME_INVALID);
         }
         if(StreamOpen && !UDFStreamsSupported(Vcb)) {
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_OBJECT_NAME_INVALID);
         }
 
@@ -1061,6 +1084,7 @@ op_vol_accs_dnd:
                 ASSERT(TargetObjectName.Buffer);
                 if(!NT_SUCCESS(RC = MyCloneUnicodeString(&TailName, &TargetObjectName))) {
                     AdPrint(("    Init String 'TargetObjectName' failed\n"));
+                    ReturnedInformation = 0;
                     try_return(RC);
                 }
                 TailNameBuffer = TailName.Buffer;
@@ -1158,6 +1182,7 @@ op_vol_accs_dnd:
                 // check path fragment size
                 if(CurName.Length > UDF_X_NAME_LEN * sizeof(WCHAR)) {
                     AdPrint(("    Path component is too long\n"));
+                    ReturnedInformation = 0;
                     try_return(RC = STATUS_OBJECT_NAME_INVALID);
                 }
                 // ...and now release previously acquired objects,
@@ -1366,6 +1391,7 @@ Skip_open_attempt:
                                                       UDF_FCB_DELETED |
                                                       UDF_FCB_POSTED_RENAME)) {
                     AdPrint(("  Return DeletePending (no err)\n"));
+                    ReturnedInformation = 0;
                     try_return(RC = STATUS_DELETE_PENDING);
                 }
                 // update last good state information...
@@ -1418,6 +1444,7 @@ Skip_open_attempt:
                TailName.Length) {
                 AdPrint(("    Target name should not contain (back)slashes\n"));
                 NewFileInfo = NULL;
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_OBJECT_NAME_INVALID);
             }
 
@@ -1450,6 +1477,7 @@ Skip_open_attempt:
             } else {
                 AdPrint(("  Open Target: unexpected error\n"));
                 NewFileInfo = NULL;
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_OBJECT_NAME_INVALID);
             }
 
@@ -1465,6 +1493,7 @@ Skip_open_attempt:
             ASSERT_REF(PtrNewFcb->ReferenceCount >= NewFileInfo->RefCount);
             if (!NT_SUCCESS(RC)) {
                 AdPrint(("    Can't perform OpenFile operation for target\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
             PtrNewCcb = (PtrUDFCCB)(PtrNewFileObject->FsContext2);
@@ -1474,7 +1503,7 @@ Skip_open_attempt:
             if(!NT_SUCCESS(RC)) {
                 AdPrint(("    Access/Share access check failed (Open Target)\n"));
             }
-            
+            ReturnedInformation = 0;
             try_return(RC);
         }
 
@@ -1494,12 +1523,14 @@ Skip_open_attempt:
             } else {
                 //  Any other operation return STATUS_ACCESS_DENIED.
                 AdPrint(("    Can't create due to unexpected error\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
             // Object was not found, create if requested
             if ((RequestedDisposition != FILE_CREATE) && (RequestedDisposition != FILE_OPEN_IF) &&
                  (RequestedDisposition != FILE_OVERWRITE_IF) && (RequestedDisposition != FILE_SUPERSEDE)) {
                 AdPrint(("    File doesn't exist (2)\n"));
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC);
             }
             // Check Volume ReadOnly attr
@@ -1508,6 +1539,7 @@ Skip_open_attempt:
 #endif //UDF_READ_ONLY_BUILD
                 ReturnedInformation = 0;
                 AdPrint(("    Write protected\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_MEDIA_WRITE_PROTECTED);
 #ifndef UDF_READ_ONLY_BUILD
             }
@@ -1515,6 +1547,7 @@ Skip_open_attempt:
             if(DeleteOnCloseSpecified &&
                (FileAttributes & FILE_ATTRIBUTE_READONLY)) {
                 AdPrint(("    Can't create r/o file marked for deletion\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_CANNOT_DELETE);
             }
 
@@ -1524,6 +1557,7 @@ Skip_open_attempt:
             for(TmpBuffer = LastGoodTail.Buffer; *TmpBuffer; TmpBuffer++) {
                 if((*TmpBuffer) == L'\\') {
                     AdPrint(("    Target name should not contain (back)slashes\n"));
+                    ReturnedInformation = 0;
                     try_return(RC = STATUS_OBJECT_NAME_INVALID);
                 }
             }
@@ -1531,6 +1565,7 @@ Skip_open_attempt:
                ((IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_TEMPORARY) ||
                  StreamOpen || FALSE)) {
                 AdPrint(("    Creation of _temporary_ directory not permited\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_INVALID_PARAMETER);
             }
             // check access rights
@@ -1538,6 +1573,7 @@ Skip_open_attempt:
             RC = UDFCheckAccessRights(NULL, NULL, OldRelatedFileInfo->Fcb, PtrRelatedCCB, DirectoryOnlyRequested ? FILE_ADD_SUBDIRECTORY : FILE_ADD_FILE, 0);
             if(!NT_SUCCESS(RC)) {
                 AdPrint(("    Creation of File/Dir not permitted\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
             // Note that a FCB structure will be allocated at this time
@@ -1786,6 +1822,7 @@ Undo_Create_1:
                 BrutePoint();
                 UDFFlushFile__(Vcb, NewFileInfo);
                 UDFUnlinkFile__(Vcb, NewFileInfo, TRUE);
+                ReturnedInformation = 0;
                 try_return(RC);
             }
 
@@ -1844,6 +1881,7 @@ AlreadyOpened:
         if(RequestedDisposition == FILE_CREATE) {
             ReturnedInformation = FILE_EXISTS;
             AdPrint(("    Object name collision\n"));
+            ReturnedInformation = 0;
             try_return(RC = STATUS_OBJECT_NAME_COLLISION);
         }
 
@@ -1874,6 +1912,7 @@ AlreadyOpened:
         if(DeleteOnCloseSpecified && (PtrNewFcb->FCBFlags & UDF_FCB_READ_ONLY)) {
             AdPrint(("    Can't delete Read-Only file\n"));
             RC = STATUS_CANNOT_DELETE;
+            ReturnedInformation = 0;
             try_return(RC);
         }
         // Check share access and fail if the share conflicts with an existing
@@ -1883,6 +1922,7 @@ AlreadyOpened:
         RC = UDFCheckAccessRights(PtrNewFileObject, AccessState, PtrNewFcb, PtrNewCcb, DesiredAccess, ShareAccess);
         if(!NT_SUCCESS(RC)) {
             AdPrint(("    Access/Share access check failed\n"));
+            ReturnedInformation = 0;
             try_return(RC);
         }
 
@@ -1905,6 +1945,7 @@ AlreadyOpened:
                     RC = DeleteOnCloseSpecified ? STATUS_CANNOT_DELETE :
                                                   STATUS_SHARING_VIOLATION;
                     AdPrint(("    File is mapped or deletion in progress\n"));
+                    ReturnedInformation = 0;
                     try_return (RC);
                 }
                 NtReqFcb->AcqFlushCount--;
@@ -1926,6 +1967,7 @@ AlreadyOpened:
 
         if(DeleteOnCloseSpecified && UDFIsADirectory(NewFileInfo) && !UDFIsDirEmpty__(NewFileInfo)) {
             AdPrint(("    Directory in not empry\n"));
+            ReturnedInformation = 0;
             try_return (RC = STATUS_DIRECTORY_NOT_EMPTY);
         }
 
@@ -1941,6 +1983,7 @@ AlreadyOpened:
             RC = UDFCheckAccessRights(NULL, NULL, OldRelatedFileInfo->Fcb, PtrRelatedCCB, FILE_DELETE_CHILD, 0);
             if(!NT_SUCCESS(RC)) {
                 AdPrint(("    Read-only. DeleteOnClose attempt failed\n"));
+                ReturnedInformation = 0;
                 try_return (RC = STATUS_CANNOT_DELETE);
             }
         }
@@ -1972,6 +2015,7 @@ AlreadyOpened:
                 }
                 if(!NT_SUCCESS(RC)) {
                     AdPrint(("    Can't supersede. DELETE permission required\n"));
+                    ReturnedInformation = 0;
                     try_return (RC);
                 }
             } else {
@@ -1981,6 +2025,7 @@ AlreadyOpened:
                             FILE_WRITE_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES, 0);
                 if(!NT_SUCCESS(RC)) {
                     AdPrint(("    Can't overwrite. Permission denied\n"));
+                    ReturnedInformation = 0;
                     try_return (RC);
                 }
             }
@@ -1988,6 +2033,7 @@ AlreadyOpened:
             if( (TmpFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) &
                 (FileAttributes ^ (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) ) {
                 AdPrint(("    The Hidden and/or System bits do not match\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_ACCESS_DENIED);
             }
 
@@ -1997,6 +2043,7 @@ AlreadyOpened:
             if (!MmCanFileBeTruncated( &NtReqFcb->SectionObject,
                                        &(UDFGlobalData.UDFLargeZero) )) {
                 AdPrint(("    Can't truncate. File is mapped\n"));
+                ReturnedInformation = 0;
                 try_return(RC = STATUS_USER_MAPPED_FILE);
             }
 
@@ -2011,6 +2058,7 @@ AlreadyOpened:
             // Set file sizes
             if(!NT_SUCCESS(RC = UDFResizeFile__(Vcb, NewFileInfo, 0))) {
                 AdPrint(("    Error during resize operation\n"));
+                ReturnedInformation = 0;
                 try_return(RC);
             }
 /*            if(AllocationSize) {
