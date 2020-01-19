@@ -556,7 +556,10 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
         return FALSE;
     }
 
-    /* Try to also set DNS hostname */
+    /* Set the physical DNS domain */
+    SetComputerNameExW(ComputerNamePhysicalDnsDomain, L"");
+
+    /* Set the physical DNS hostname */
     SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
     /* Set the accounts domain name */
