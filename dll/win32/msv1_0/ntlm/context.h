@@ -11,17 +11,18 @@
 
 SECURITY_STATUS
 SEC_ENTRY
-InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
-                           IN OPTIONAL PCtxtHandle phContext,
-                           IN OPTIONAL SEC_WCHAR *pszTargetName,
-                           IN ULONG fContextReq,
-                           IN ULONG Reserved1,
-                           IN ULONG TargetDataRep,
-                           IN OPTIONAL PSecBufferDesc pInput,
-                           IN ULONG Reserved2,
-                           IN OUT OPTIONAL PCtxtHandle phNewContext,
-                           IN OUT OPTIONAL PSecBufferDesc pOutput,
-                           OUT ULONG *pfContextAttr,
-                           OUT OPTIONAL PTimeStamp ptsExpiry);
+NtlmInitializeSecurityContext(
+    IN OPTIONAL LSA_SEC_HANDLE hCredential,
+    IN OPTIONAL LSA_SEC_HANDLE hContext,
+    IN OPTIONAL SEC_WCHAR *pszTargetName,
+    IN ULONG fContextReq,
+    IN ULONG Reserved1,
+    IN ULONG TargetDataRep,
+    IN OPTIONAL PSecBufferDesc pInput,
+    IN ULONG Reserved2,
+    IN OUT OPTIONAL PLSA_SEC_HANDLE phNewContext,
+    IN OUT OPTIONAL PSecBufferDesc pOutput,
+    OUT ULONG *pfContextAttr,
+    OUT OPTIONAL PTimeStamp ptsExpiry);
 
 #endif

@@ -179,6 +179,72 @@ NtlmGetSecBuffer(IN OPTIONAL PSecBufferDesc pInputDesc,
     return FALSE;
 }
 
+/**
+ * @brief returns a specific BufferType from an
+ *        PSecBufferDesc struct.
+ * @param pInputDesc
+ * @param BufferType that should returned
+ * @param BufferIndex if pInputDesc has more buffers of the same type
+ *      you can choose the second(1) or third(2) and so on
+ * @param OutputBuffer TRUE checks if the buffer is writeable
+ * @param pOutBuffer returned buffer
+ * @return
+ */
+BOOLEAN
+NtlmGetSecBufferType(
+    _In_ OPTIONAL PSecBufferDesc pInputDesc,
+    _In_ ULONG BufferType,
+    _In_ ULONG BufferIndex,
+    _In_ BOOLEAN OutputBuffer,
+    _Out_ PSecBuffer *pOutBuffer)
+{
+    int i;
+    PSecBuffer Buffer;
+
+    ASSERT(pOutBuffer != NULL);
+    if (!pInputDesc)
+    {
+        *pOutBuffer = NULL;
+        return TRUE;
+    }
+
+    // check version
+    if (pInputDesc->ulVersion != SECBUFFER_VERSION)
+        return FALSE;
+
+    // check how many buffers we have */
+    if (BufferIndex >= pInputDesc->cBuffers)
+        return FALSE;
+
+    *pOutBuffer = NULL;
+    for (i = 0; i < pInputDesc->cBuffers; i++)
+    {
+        Buffer = &pInputDesc->pBuffers[i];
+        // is buffer type is what we want?
+        if ((Buffer->BufferType & (~SECBUFFER_ATTRMASK)) != BufferType)
+            continue;
+        // respect index
+        if (BufferIndex == 0)
+        {
+            *pOutBuffer = Buffer;
+            break;
+        }
+        BufferIndex--;
+    }
+    // if we need it for output we check for readonly.
+    if (OutputBuffer && (Buffer->BufferType & SECBUFFER_READONLY))
+        return FALSE;
+
+    // LSA server must map the user provided buffer into its address space
+    if ((*pOutBuffer) && (inLsaMode))
+    {
+        if (!NT_SUCCESS(LsaFunctions->MapBuffer(*pOutBuffer, *pOutBuffer)))
+            return FALSE;
+    }
+
+    return (*pOutBuffer != NULL);
+}
+
 SECURITY_STATUS
 NtlmBlobToExtStringRef(
   IN PSecBuffer InputBuffer,

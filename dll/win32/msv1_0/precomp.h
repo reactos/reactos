@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <wchar.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>

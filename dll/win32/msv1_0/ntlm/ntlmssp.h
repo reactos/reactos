@@ -181,6 +181,7 @@ typedef struct _NTLMSSP_CREDENTIAL
     ULONG ProcId;
     HANDLE SecToken;
     LUID LogonId;
+    TimeStamp ExpirationTime;
 } NTLMSSP_CREDENTIAL, *PNTLMSSP_CREDENTIAL;
 
 typedef enum {
@@ -384,6 +385,14 @@ NtlmGetSecBuffer(
     IN ULONG BufferIndex,
     OUT PSecBuffer *pOutBuffer,
     IN BOOLEAN Output);
+
+BOOLEAN
+NtlmGetSecBufferType(
+    _In_ OPTIONAL PSecBufferDesc pInputDesc,
+    _In_ ULONG BufferType,
+    _In_ ULONG BufferIndex,
+    _In_ BOOLEAN OutputBuffer,
+    _Out_ PSecBuffer *pOutBuffer);
 
 /* debug.c */
 

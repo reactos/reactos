@@ -183,26 +183,165 @@ QueryCredentialsAttributesA(IN PCredHandle phCredential,
 }
 #endif
 
+/**
+ * @brief lookup credentials
+ *
+ * @param LogonId
+ * @param CredentialsUseFlags
+ * @param Unknown1
+ * @param S1
+ * @param Password
+ * @return
+ */
+BOOLEAN
+LookupCrdentialsHandle(
+    _In_ PLUID LogonId,
+    _In_ ULONG CredentialsUseFlags,
+    _In_ DWORD ProcessId,
+    _In_ PEXT_STRING_W UserName, /* domain or name */
+    _In_ PEXT_STRING_W Password,
+    //_In_ BOOLEAN Impersonating,
+    _Out_ PNTLMSSP_CREDENTIAL *FoundCred)
+{
+    //PNTLMSSP_GLOBALS g;
+    PNTLMSSP_CREDENTIAL Cred;
+    *FoundCred = NULL;
+
+    EnterCriticalSection(&CredentialCritSect);
+    while (!IsListEmpty(&ValidCredentialList))
+    {
+        Cred = CONTAINING_RECORD(ValidCredentialList.Flink, NTLMSSP_CREDENTIAL, Entry);
+        //FIXME: What should be equal?
+        //FIXME: compare password??
+        //FIXME: Check expirationtime ...
+        if ((Cred->LogonId.LowPart != LogonId->LowPart) ||
+            (Cred->LogonId.HighPart != LogonId->HighPart) ||
+            (Cred->UseFlags != CredentialsUseFlags) ||
+            (!ExtWStrIsEqual1(&Cred->UserNameW, UserName, FALSE)))
+            //(!ExtWStrIsEqual1(&Cred->DomainNameW, DomainName, FALSE))
+            continue;
+        // we found it.
+        *FoundCred = Cred;
+        break;
+    }
+    LeaveCriticalSection(&CredentialCritSect);
+
+    return (*FoundCred != NULL);
+}
+
+NTSTATUS
+IntAcquireCredentialsHandle(
+    _In_ PLUID LogonId,
+    _In_ PSECPKG_CLIENT_INFO ClientInfo,
+    _In_ ULONG CredentialsUseFlags,
+    _In_ PLSA_SEC_HANDLE CredentialsHandle,
+    _In_ PEXT_STRING_W UserName,
+    _In_ PEXT_STRING_W Domain,
+    _In_ PEXT_STRING_W Password,
+    _Out_ PNTLMSSP_CREDENTIAL *Cred,
+    _Out_ PTimeStamp ExpirationTime)
+{
+    //NTSTATUS ret;
+    PNTLMSSP_GLOBALS g;
+    PNTLMSSP_CREDENTIAL NewCred;
+
+    if (CredentialsUseFlags != SECPKG_CRED_OUTBOUND)
+    {
+        // FIXME: todo check machine login
+    }
+
+    if (LookupCrdentialsHandle(LogonId, CredentialsUseFlags,
+                                ClientInfo->ProcessID, UserName,
+                                Password, Cred))
+        return STATUS_SUCCESS;
+
+    // we need to build a credential
+    NewCred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
+    NewCred->RefCount = 1;
+    NewCred->LogonId = *LogonId;
+    NewCred->ProcId = ClientInfo->ProcessID;
+    NewCred->UseFlags = CredentialsUseFlags;
+    // FIXME: What is a suitable value for ExpirationTime
+    NewCred->ExpirationTime.HighPart = 0x7FFFFF36;
+    NewCred->ExpirationTime.LowPart = 0xD5969FFF;
+
+    g = lockGlobals();
+    NewCred->SecToken = g->NtlmSystemSecurityToken; //FIXME
+    unlockGlobals(&g);
+
+    /* NEEDED??
+     *  FIX ME: check against LSA token * /
+    if ((cred->SecToken == NULL) && !(CredentialsUseFlags & NTLM_CRED_NULLSESSION))
+    {
+        / * check privilages? * /
+        cred->LogonId = luidToUse;
+    } */
+
+    if(Domain->Buffer != NULL)
+        NewCred->DomainNameW = *Domain;
+
+    if(UserName->Buffer != NULL)
+        NewCred->UserNameW = *UserName;
+
+    if(Password->Buffer != NULL)
+    {
+        NtlmProtectMemory(Password->Buffer, Password->bUsed);
+        NewCred->PasswordW = *Password;
+    }
+
+    EnterCriticalSection(&CredentialCritSect);
+    InsertHeadList(&ValidCredentialList, &NewCred->Entry);
+    LeaveCriticalSection(&CredentialCritSect);
+
+    TRACE("added credential %x\n", NewCred);
+    TRACE("%s %s %s\n", debugstr_w((WCHAR*)UserName->Buffer),
+          debugstr_w((WCHAR*)Password->Buffer),
+          debugstr_w((WCHAR*)Domain->Buffer));
+
+    /* return cred */
+    //CredentialsHandle->HighPart = CredentialsUseFlags;
+    //CredentialsHandle->LowPart = (ULONG_PTR)cred;
+    *Cred = NewCred;
+    *ExpirationTime = NewCred->ExpirationTime;
+
+//done:
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief LSA mode only!
+ * @param OPTIONAL
+ * @param pszPrincipal
+ * @param OPTIONAL
+ * @param pszPackage
+ * @param ULONG
+ * @param PLUID
+ * @param PVOID
+ * @param SEC_GET_KEY_FN
+ * @param PVOID
+ * @param PCredHandle
+ * @param PTimeStamp
+ */
 SECURITY_STATUS
 SEC_ENTRY
-AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
-                          IN OPTIONAL SEC_WCHAR *pszPackage,
-                          IN ULONG fCredentialUse,
-                          IN PLUID pLogonID,
-                          IN PVOID pAuthData,
-                          IN SEC_GET_KEY_FN pGetKeyFn,
-                          IN PVOID pGetKeyArgument,
-                          OUT PCredHandle phCredential,
-                          OUT PTimeStamp ptsExpiry)
+NtlmAcquireCredentialsHandle(
+    IN OPTIONAL SEC_WCHAR *pszPrincipal,
+    IN OPTIONAL SEC_WCHAR *pszPackage,
+    IN ULONG fCredentialUse,
+    IN PLUID pLogonID,
+    IN PVOID pAuthData,
+    IN SEC_GET_KEY_FN pGetKeyFn,
+    IN PVOID pGetKeyArgument,
+    OUT PLSA_SEC_HANDLE phCredential,
+    OUT PTimeStamp ptsExpiry)
 {
-
-    PNTLMSSP_CREDENTIAL cred = NULL;
-    PNTLMSSP_GLOBALS g;
+    NTSTATUS status;
     SECURITY_STATUS ret = SEC_E_OK;
-    ULONG credFlags = fCredentialUse;
+    //ULONG credFlags = fCredentialUse;
     EXT_STRING username, domain, password;
-    BOOL foundCred = FALSE;
-    LUID luidToUse = SYSTEM_LUID;
+    //BOOL foundCred = FALSE;
+    //LUID luidToUse = SYSTEM_LUID;
+    PNTLMSSP_CREDENTIAL Cred;
 
     TRACE("AcquireCredentialsHandleW(%s, %s, 0x%08x, %p, %p, %p, %p, %p, %p)\n",
      debugstr_w(pszPrincipal), debugstr_w(pszPackage), fCredentialUse,
@@ -216,13 +355,68 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     ExtWStrInit(&domain, NULL);
     ExtWStrInit(&password, NULL);
 
-    if(fCredentialUse == SECPKG_CRED_OUTBOUND)
+    if (fCredentialUse == SECPKG_CRED_OUTBOUND)
     {
-        if (pAuthData)
+        SECPKG_CLIENT_INFO ClientInfo;
+
+        status = LsaFunctions->GetClientInfo(&ClientInfo);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("LsaFunctions->GetClientInfo failed!\n");
+            ret = SEC_E_INTERNAL_ERROR;
+            goto quit;
+        }
+
+        if (pLogonID != NULL)
+        {
+            if ((pLogonID->LowPart != 0) ||
+                (pLogonID->HighPart != 0))
+            {
+                //...
+                ERR("FIMXE -> We have a Logon Id!\n");
+            }
+            // label: CmpAuthData
+            else if (pAuthData == NULL)
+            {
+                // compare ucs
+                if (FALSE)//pwd != NULL)
+                {
+                    /*res = NtLmDuplicatePassword(dst, src);
+                    if (NT_SUCCESS(res))
+                        goto quit;*/
+                    // duplicate pwd NtLmDuplicatePassword
+                    // check error
+                } else
+                {
+
+                }
+                ret = IntAcquireCredentialsHandle(
+                    pLogonID, &ClientInfo,
+                    fCredentialUse, (PLSA_SEC_HANDLE)phCredential,
+                    &username, &domain, &password, &Cred, ptsExpiry);
+                if (NT_SUCCESS(ret))
+                {
+                    // we're done
+                    *phCredential = (LSA_SEC_HANDLE)Cred;
+                    goto quit;
+                }
+            } else
+            {
+                //TODO
+            }
+        }
+        else
+        {
+            // TODO LogonId = NULL ->
+            // use ClientInfo.LogonId + Test
+        }
+
+
+        /*if (pAuthData)
         {
             PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
 
-            /* detect null session */
+            / * detect null session * /
             if ((auth_data->User) && (auth_data->Password) &&
                 (auth_data->Domain) && (!auth_data->UserLength) &&
                 (!auth_data->PasswordLength) &&(!auth_data->DomainLength))
@@ -231,7 +425,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
                 credFlags |= NTLM_CRED_NULLSESSION;
             }
 
-            /* create unicode strings and null terminate buffers */
+            / * create unicode strings and null terminate buffers * /
 
             if ((auth_data->User) &&
                 (!ExtWStrSetN(&username, auth_data->User, auth_data->UserLength)))
@@ -257,6 +451,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
         else
         {
             PWKSTA_USER_INFO_1 pUsrInfo1 = NULL;
+            SECPKG_CLIENT_INFO ClientInfo;
 
             if (NetWkstaUserGetInfo(NULL, 1, (LPBYTE*)&pUsrInfo1) != NERR_Success)
             {
@@ -274,58 +469,10 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
                 goto quit;
             }
             NetApiBufferFree(pUsrInfo1);
-        }
+        }*/
     }
 
-    /* FIXME: LOOKUP STORED CREDENTIALS!!! */
-
-    /* we need to build a credential */
-    if(!foundCred)
-    {
-        cred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
-        cred->RefCount = 1;
-        cred->ProcId = GetCurrentProcessId();//FIXME
-        cred->UseFlags = credFlags;
-
-        g = lockGlobals();
-        cred->SecToken = g->NtlmSystemSecurityToken; //FIXME
-        unlockGlobals(&g);
-
-        /* FIX ME: check against LSA token */
-        if((cred->SecToken == NULL) && !(credFlags & NTLM_CRED_NULLSESSION))
-        {
-            /* check privilages? */
-            cred->LogonId = luidToUse;
-        }
-
-        if(domain.Buffer != NULL)
-            cred->DomainNameW = domain;
-
-        if(username.Buffer != NULL)
-            cred->UserNameW = username;
-
-        if(password.Buffer != NULL)
-        {
-            NtlmProtectMemory(password.Buffer, password.bUsed);
-            cred->PasswordW = password;
-        }
-
-        EnterCriticalSection(&CredentialCritSect);
-        InsertHeadList(&ValidCredentialList, &cred->Entry);
-        LeaveCriticalSection(&CredentialCritSect);
-
-        TRACE("added credential %x\n",cred);
-        TRACE("%s %s %s\n", debugstr_w((WCHAR*)username.Buffer),
-              debugstr_w((WCHAR*)password.Buffer),
-              debugstr_w((WCHAR*)domain.Buffer));
-    }
-
-    /* return cred */
-    phCredential->dwUpper = credFlags;
-    phCredential->dwLower = (ULONG_PTR)cred;
-
-    ptsExpiry->HighPart = 0x7FFFFF36;
-    ptsExpiry->LowPart = 0xD5969FFF;
+    TRACE("returning ...\n");
 
     /* free strings as we used recycled credentials */
     //if(foundCred)

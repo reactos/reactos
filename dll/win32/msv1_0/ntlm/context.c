@@ -411,7 +411,10 @@ CliCreateContext(
     ValidateNegFlg(gcli->ClientConfigFlags, &context->NegFlg, TRUE, FALSE);
 
     context->Credential = cred;
-    //*ptsExpiry = 
+
+    if (ptsExpiry)
+        *ptsExpiry = cred->ExpirationTime;
+
     *pNewContext = context;
 
     return ret;
@@ -426,18 +429,19 @@ fail:
 
 SECURITY_STATUS
 SEC_ENTRY
-InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
-                           IN OPTIONAL PCtxtHandle phContext,
-                           IN OPTIONAL SEC_WCHAR *pszTargetName,
-                           IN ULONG fContextReq,
-                           IN ULONG Reserved1,
-                           IN ULONG TargetDataRep,
-                           IN OPTIONAL PSecBufferDesc pInput,
-                           IN ULONG Reserved2,
-                           IN OUT OPTIONAL PCtxtHandle phNewContext,
-                           IN OUT OPTIONAL PSecBufferDesc pOutput,
-                           OUT ULONG *pfContextAttr,
-                           OUT OPTIONAL PTimeStamp ptsExpiry)
+NtlmInitializeSecurityContext(
+    IN OPTIONAL LSA_SEC_HANDLE hCredential,
+    IN OPTIONAL LSA_SEC_HANDLE hContext,
+    IN OPTIONAL SEC_WCHAR *pszTargetName,
+    IN ULONG fContextReq,
+    IN ULONG Reserved1,
+    IN ULONG TargetDataRep,
+    IN OPTIONAL PSecBufferDesc pInput,
+    IN ULONG Reserved2,
+    IN OUT OPTIONAL PLSA_SEC_HANDLE phNewContext,
+    IN OUT OPTIONAL PSecBufferDesc pOutput,
+    OUT ULONG *pfContextAttr,
+    OUT OPTIONAL PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PSecBuffer InputToken1, InputToken2 = NULL;
@@ -445,7 +449,7 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     SecBufferDesc BufferDesc;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
 
-    TRACE("%p %p %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", phCredential, phContext,
+    TRACE("0x%lx 0x%lx %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", hCredential, hContext,
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
      Reserved1, phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
@@ -453,21 +457,19 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
         WARN("SECURITY_NETWORK_DREP!!\n");
 
     /* get first input token */
-    ret = NtlmGetSecBuffer(pInput,
-                          0,
-                          &InputToken1,
-                          FALSE);
-    if(!ret)
+    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
+                               FALSE, &InputToken1);
+    if (!ret)
     {
-        ERR("Failed to get input token!\n");
-        return SEC_E_INVALID_TOKEN;
+        // should be ok? -> yes -> remove warning
+        WARN("Failed to get input token!\n");
+        InputToken1 = NULL;
+        //return SEC_E_INVALID_TOKEN;
     }
 
-    /* get first output token */
-    ret = NtlmGetSecBuffer(pOutput,
-                          0,
-                          &OutputToken1,
-                          TRUE);
+    // get first output token
+    ret = NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
+                               TRUE, &OutputToken1);
     if(!ret)
     {
         ERR("Failed to get output token!\n");
@@ -475,16 +477,16 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     }
 
     /* first call! nego message creation */
-    if(!phContext && !pInput)
+    if ((hContext == 0) && (InputToken1 == NULL))
     {
-        if(!phCredential)
+        if(!hCredential)
         {
             ret = SEC_E_INVALID_HANDLE;
             goto fail;
         }
 
         /* new context is referenced! */
-        ret = CliCreateContext(phCredential->dwLower,
+        ret = CliCreateContext(hCredential,//phCredential->dwLower,
                                pszTargetName,
                                fContextReq,
                                &newContext,
@@ -500,12 +502,14 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
         ret = CliGenerateNegotiateMessage(newContext,
                                           fContextReq,
                                           OutputToken1);
-        /* set result */
-        phNewContext->dwUpper = newContext->NegFlg;
-        phNewContext->dwLower = (ULONG_PTR)newContext;
+
+        if ((NT_SUCCESS(ret)) && (inLsaMode))
+            LsaFunctions->MapBuffer(OutputToken1, OutputToken1);
+        // set result
+        *phNewContext = (LSA_SEC_HANDLE)newContext;
 
     }
-    else if(phContext)       /* challenge! */
+    else if (hContext != 0)       /* challenge! */
     {
         TRACE("ISC challenged!\n");
         if (fContextReq & ISC_REQ_USE_SUPPLIED_CREDS)
@@ -521,9 +525,10 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                 return SEC_E_INVALID_TOKEN;
             }
         }
-        *phNewContext = *phContext;
+        *phNewContext = hContext;
         ret = CliGenerateAuthenticationMessage(
-            phNewContext->dwLower, fContextReq,
+            //phNewContext->dwLower, fContextReq,
+            (ULONG_PTR)phNewContext, fContextReq,
             InputToken1, InputToken2,
             OutputToken1, OutputToken2,
             pfContextAttr, ptsExpiry);

@@ -15,7 +15,7 @@ NtlmCredentialTerminate(VOID);
 
 SECURITY_STATUS
 SEC_ENTRY
-AcquireCredentialsHandleW(
+NtlmAcquireCredentialsHandle(
     IN OPTIONAL SEC_WCHAR *pszPrincipal,
     IN OPTIONAL SEC_WCHAR *pszPackage,
     IN ULONG fCredentialUse,
@@ -23,7 +23,7 @@ AcquireCredentialsHandleW(
     IN PVOID pAuthData,
     IN SEC_GET_KEY_FN pGetKeyFn,
     IN PVOID pGetKeyArgument,
-    OUT PCredHandle phCredential,
+    OUT PLSA_SEC_HANDLE phCredential,
     OUT PTimeStamp ptsExpiry);
 
 PNTLMSSP_CREDENTIAL

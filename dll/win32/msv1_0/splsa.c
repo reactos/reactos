@@ -2,8 +2,9 @@
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/msv1_0/msv1_0.c
- * PURPOSE:     LSA mode functions provided by SpLsaModeInitialize
- * COPYRIGHT:   Copyright 2020 Andreas Maier <staubim@quantentunnel.de>
+ * PURPOSE:     Functions needed to fill PSECPKG_USER_FUNCTION_TABLE
+ *              (SpUserModeInitialize)
+ * COPYRIGHT:   Copyright 2019 Andreas Maier <staubim@quantentunnel.de>
  */
 
 #include "precomp.h"
@@ -84,15 +85,45 @@ SpInitialize(
     _In_ PSECPKG_PARAMETERS Parameters,
     _In_ PLSA_SECPKG_FUNCTION_TABLE FunctionTable)
 {
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS status;
 
     fdTRACE("LsaSpInitialize\n");
     fdTRACE("> PackageId %0xlx, Parameters %p, FunctionTable %p\n",
         PackageId, Parameters, FunctionTable);
 
-    LsaFunctions = FunctionTable;
-    NtlmInit(NtlmLsaMode);
+    //_SEH2_TRY
+    {
+        NtLmPackageId = PackageId;
+        LsaFunctions = FunctionTable;
 
+        NtlmInit(NtlmLsaMode);
+
+        status = NtAllocateLocallyUniqueId(&NtLmGlobalLuidMachineLogon);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("AllocateLocallyUniqueId failed!\n");
+            goto done;
+        }
+
+        status = LsaFunctions->CreateLogonSession(&NtLmGlobalLuidMachineLogon);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("AllocateLocallyUniqueId failed (0x%x)!\n", status);
+            goto done;
+        }
+        TRACE("Logon session id created %x.%x\n",
+              NtLmGlobalLuidMachineLogon.LowPart,
+              NtLmGlobalLuidMachineLogon.HighPart);
+
+        TRACE("ok\n");
+    }
+    //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+     //   status = STATUS_INTERNAL_ERROR;
+    }
+
+    //_SEH2_END;
+done:
     return status;
 }
 
@@ -101,6 +132,7 @@ LsaSpShutDown(void)
 {
     fdTRACE("LsaSpShutDown()\n");
 
+    //TODO FiniLsaPort + port freigeben / löschen
     NtlmFini();
 
     return STATUS_SUCCESS;
@@ -113,7 +145,20 @@ LsaSpAcceptCredentials(
     _In_ PUNICODE_STRING AccountName,
     _In_ PSECPKG_PRIMARY_CRED PrimaryCredentials)
 {
-    return STATUS_SUCCESS;
+    NTSTATUS status = STATUS_SUCCESS;
+
+    if (PrimaryCredentials->Flags && SECPKG_CRED_INBOUND)
+    {
+        // FIXME: Check special Login Id's
+        if ((PrimaryCredentials->LogonId.LowPart == 0x3E7) &&
+            (PrimaryCredentials->LogonId.HighPart != 0))
+        {
+            // todo ...
+            goto done;
+        }
+    }
+done:
+    return status;
 }
 
 /* MS doc says name must be SpAcceptCredentials! */
@@ -160,7 +205,7 @@ LsaSpAcquireCredentialsHandle(
           AuthorizationData, GetKeyFunciton, GetKeyArgument,
           CredentialHandle, ExpirationTime);
 
-    status = AcquireCredentialsHandleW(
+    status = NtlmAcquireCredentialsHandle(
         PrincipalName->Buffer,
         NULL,
         CredentialUseFlags,
@@ -168,7 +213,7 @@ LsaSpAcquireCredentialsHandle(
         AuthorizationData,
         GetKeyFunciton,
         GetKeyArgument,
-        (PSecHandle)CredentialHandle,
+        CredentialHandle,
         ExpirationTime);
 
     fdTRACE("RESULT 0x%x, Handle 0x%x\n", status, *CredentialHandle);
@@ -296,20 +341,21 @@ LsaSpInitLsaModeContext(
           NewContextHandle, OutputBuffers, ContextAttributes,
           ExpirationTime, MappedContext, ContextData);
 
-    status = InitializeSecurityContextW(
-        (PCredHandle)&CredentialHandle,
-        (PCtxtHandle)&ContextHandle,
+    status = NtlmInitializeSecurityContext(
+        CredentialHandle,
+        ContextHandle,
         TargetName->Buffer,
         ContextRequirements,
         0,//IN ULONG Reserved1,
         TargetDataRep,
         InputBuffers,
         0,//IN ULONG Reserved2,
-        (PCtxtHandle)&NewContextHandle,
+        NewContextHandle,
         OutputBuffers,
         ContextAttributes,
         ExpirationTime);
     // UNUSED: MappedContext / ContextData
+    *MappedContext = FALSE;
 
     fdTRACE("0x%x\n", status);
 
