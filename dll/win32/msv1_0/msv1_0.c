@@ -1790,20 +1790,20 @@ SpUserModeInitialize(
 
     RtlZeroMemory(UsrTables, sizeof(UsrTables));
 
-//    UsrTables[0].InstanceInit = SpInstanceInit;
-//    UsrTables[0].InitUserModeContext = NULL;
-//    UsrTables[0].MakeSignature = NULL;
-//    UsrTables[0].VerifySignature = NULL;
-//    UsrTables[0].SealMessage = NULL;
-//    UsrTables[0].UnsealMessage = NULL;
-//    UsrTables[0].GetContextToken = NULL;
-//    UsrTables[0].SpQueryContextAttributes = NULL;
-//    UsrTables[0].CompleteAuthToken = NULL;
-//    UsrTables[0].DeleteUserModeContext = NULL;
-//    UsrTables[0].FormatCredentials = NULL;
-//    UsrTables[0].MarshallSupplementalCreds = NULL;
-//    UsrTables[0].ExportContext = NULL;
-//    UsrTables[0].ImportContext = NULL;
+    UsrTables[0].InstanceInit = SpInstanceInit;
+    UsrTables[0].InitUserModeContext = UsrSpInitUserModeContext;
+    UsrTables[0].MakeSignature = UsrSpMakeSignature;
+    UsrTables[0].VerifySignature = UsrSpVerifySignature;
+    UsrTables[0].SealMessage = UsrSpSealMessage;
+    UsrTables[0].UnsealMessage = UsrSpUnsealMessage;
+    UsrTables[0].GetContextToken = UsrSpGetContextToken;
+    UsrTables[0].SpQueryContextAttributes = UsrSpQueryContextAttributes;
+    UsrTables[0].CompleteAuthToken = UsrSpCompleteAuthToken;
+    UsrTables[0].DeleteUserModeContext = UsrSpDeleteUserModeContext;
+    UsrTables[0].FormatCredentials = UsrSpFormatCredentials;
+    UsrTables[0].MarshallSupplementalCreds = UsrSpMarshallSupplementalCreds;
+    UsrTables[0].ExportContext = UsrSpExportSecurityContext;
+    UsrTables[0].ImportContext = UsrSpImportSecurityContext;
 
     *ppTables = UsrTables;
     *pcTables = 1;
