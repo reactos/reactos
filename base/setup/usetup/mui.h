@@ -2,10 +2,11 @@
 
 typedef struct
 {
-    BYTE X;
-    BYTE Y;
+    SHORT X;
+    SHORT Y;
     LPCSTR Buffer;
     DWORD Flags;
+    INT TextID;
 } MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
@@ -71,6 +72,42 @@ LPSTR
 MUIGetString(
     ULONG Number);
 
+const MUI_ENTRY *
+MUIGetEntry(
+    IN ULONG Page,
+    IN INT TextID);
+
+VOID
+MUIClearText(
+    IN ULONG Page,
+    IN INT TextID);
+
+VOID
+MUIClearStyledText(
+    IN ULONG Page,
+    IN INT TextID,
+    IN INT Flags);
+
+VOID
+MUISetText(
+    IN ULONG Page,
+    IN INT TextID);
+
+VOID
+MUISetStyledText(
+    IN ULONG Page,
+    IN INT TextID,
+    IN INT Flags);
+
+/* MUI Text IDs */
+
+/* Static MUI Text */
+#define TEXT_ID_STATIC (-1)
+
+/* Dynamic MUI Text IDs */
+#define TEXT_ID_FORMAT_PROMPT 1
+
+/* MUI Strings */
 #define STRING_PLEASEWAIT                1
 #define STRING_INSTALLCREATEPARTITION    2
 #define STRING_INSTALLCREATELOGICAL      60

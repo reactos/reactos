@@ -3388,6 +3388,11 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
         {
+            /*
+             * Remove the "Press ENTER to continue" message prompt when the ENTER
+             * key is pressed as the user wants to begin the partition formatting.
+            */
+            MUIClearStyledText(FORMAT_PARTITION_PAGE, TEXT_ID_FORMAT_PROMPT, TEXT_TYPE_REGULAR);
             CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
             if (!PreparePartitionForFormatting(PartEntry, SelectedFileSystem->FileSystem))
