@@ -70,12 +70,23 @@ public:
     class CExtractSettingsPage : public CPropertyPageImpl<CExtractSettingsPage>
     {
     private:
+        HANDLE m_hExtractionThread;
+        HANDLE m_hExtractionMutex;
+        bool m_bExtractionThreadOver;
+        bool m_bExtractionThreadSuccess;
+        bool m_bExtractionThreadCancel;
+
         CZipExtract* m_pExtract;
         CStringA* m_pPassword;
 
     public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
             :CPropertyPageImpl<CExtractSettingsPage>(MAKEINTRESOURCE(IDS_WIZ_TITLE))
+            ,m_hExtractionThread(INVALID_HANDLE_VALUE)
+            ,m_hExtractionMutex(INVALID_HANDLE_VALUE)
+            ,m_bExtractionThreadOver(true)
+            ,m_bExtractionThreadSuccess(false)
+            ,m_bExtractionThreadCancel(false)
             ,m_pExtract(extract)
             ,m_pPassword(password)
         {
@@ -95,6 +106,42 @@ public:
 
         int OnWizardNext()
         {
+            if (m_hExtractionMutex != INVALID_HANDLE_VALUE)
+            {
+                WaitForSingleObject(m_hExtractionMutex, INFINITE);
+                if (m_bExtractionThreadOver)
+                {
+                    if (m_bExtractionThreadSuccess)
+                    {
+                        ReleaseMutex(m_hExtractionMutex);
+                        return 0;
+                    }
+                    else if (m_bExtractionThreadCancel)
+                    {
+                        SetWindowLongPtr(DWLP_MSGRESULT, -1);
+
+                        ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
+                        ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
+                        ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
+                        SetWizardButtons(PSWIZB_NEXT);
+
+                        CWindow Progress(GetDlgItem(IDC_PROGRESS));
+                        Progress.SendMessage(PBM_SETRANGE32, 0, 1);
+                        Progress.SendMessage(PBM_SETPOS, 0, 0);
+
+                        m_bExtractionThreadCancel = false;
+                        ReleaseMutex(m_hExtractionMutex);
+
+                        return TRUE;
+                    }
+                }
+                ReleaseMutex(m_hExtractionMutex);
+            }
+            else
+            {
+                m_hExtractionMutex = CreateMutex(NULL, FALSE, NULL);
+            }
+
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
             ::EnableWindow(GetDlgItem(IDC_DIRECTORY), FALSE);
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
@@ -103,9 +150,21 @@ public:
             if (m_pExtract->m_DirectoryChanged)
                 UpdateDirectory();
 
-            if (!m_pExtract->Extract(m_hWnd, GetDlgItem(IDC_PROGRESS)))
+            if (m_hExtractionThread != INVALID_HANDLE_VALUE)
             {
-                /* Extraction failed, do not go to the next page */
+                CloseHandle(m_hExtractionThread);
+                m_hExtractionThread = INVALID_HANDLE_VALUE;
+            }
+            m_hExtractionThread = CreateThread(
+                NULL, 0,
+                &CExtractSettingsPage::ExtractEntry,
+                this,
+                CREATE_SUSPENDED,
+                NULL);
+
+            if (!m_hExtractionThread)
+            {
+                /* Extraction thread creation failed, do not go to the next page */
                 SetWindowLongPtr(DWLP_MSGRESULT, -1);
 
                 ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
@@ -113,9 +172,51 @@ public:
                 ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
                 SetWizardButtons(PSWIZB_NEXT);
 
+                m_hExtractionThread = INVALID_HANDLE_VALUE;
+
                 return TRUE;
             }
+            ResumeThread(m_hExtractionThread);
+            return -1;
+        }
+
+        static DWORD WINAPI ExtractEntry(LPVOID lpParam)
+        {
+            CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
+            WaitForSingleObject(pPage->m_hExtractionMutex, INFINITE);
+            {
+                pPage->m_bExtractionThreadOver =  false;
+                pPage->m_bExtractionThreadCancel = false;
+            }
+            ReleaseMutex(pPage->m_hExtractionMutex);
+            bool res = pPage->m_pExtract->Extract(pPage->m_hWnd, pPage->GetDlgItem(IDC_PROGRESS), pPage->m_hExtractionMutex, &(pPage->m_bExtractionThreadCancel));
+            WaitForSingleObject(pPage->m_hExtractionMutex, INFINITE);
+            {
+                pPage->m_bExtractionThreadSuccess =  res;
+                pPage->m_bExtractionThreadOver =  true;
+            }
+            ReleaseMutex(pPage->m_hExtractionMutex);
+            pPage->SetWizardButtons(PSWIZB_NEXT);
+            PropSheet_PressButton(pPage->GetParent().m_hWnd, PSBTN_NEXT);
+
             return 0;
+        }
+		
+        BOOL OnQueryCancel()
+        {
+            if (m_hExtractionMutex != INVALID_HANDLE_VALUE)
+            {
+                bool bIsRunning = false;
+                WaitForSingleObject(m_hExtractionMutex, INFINITE);
+                m_bExtractionThreadCancel = true;
+                bIsRunning = !m_bExtractionThreadOver;
+                ReleaseMutex(m_hExtractionMutex);
+                if (bIsRunning)
+                {
+                    return TRUE;
+                }
+            }
+            return FALSE;
         }
 
         struct browse_info
@@ -268,7 +369,7 @@ public:
         PropertySheetW(&psh);
     }
 
-    bool Extract(HWND hDlg, HWND hProgress)
+    bool Extract(HWND hDlg, HWND hProgress, HANDLE hExtractionMutex, bool* bCancel)
     {
         unz_global_info64 gi;
         uf = unzOpen2_64(m_Filename.GetString(), &g_FFunc);
@@ -301,6 +402,15 @@ public:
         bool bOverwriteAll = false;
         while (zipEnum.next(Name, Info))
         {
+            WaitForSingleObject(hExtractionMutex, INFINITE);
+            if (*bCancel)
+            {
+                ReleaseMutex(hExtractionMutex);
+                Close();
+                return false;
+            }
+            ReleaseMutex(hExtractionMutex);
+
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             char CombinedPath[MAX_PATH * 2] = { 0 };
@@ -387,6 +497,9 @@ public:
                         case eNo:
                             break;
                         case eCancel:
+                            WaitForSingleObject(hExtractionMutex, INFINITE);
+                            *bCancel = true;
+                            ReleaseMutex(hExtractionMutex);
                             unzCloseCurrentFile(uf);
                             Close();
                             return false;
