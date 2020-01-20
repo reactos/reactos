@@ -145,12 +145,12 @@ IntSelectClipRgn(
                 }
             }
             //EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
-
+#if 0
             rcl.left   += dc->ptlDCOrig.x;
             rcl.top    += dc->ptlDCOrig.y;
             rcl.right  += dc->ptlDCOrig.x;
             rcl.bottom += dc->ptlDCOrig.y;
-
+#endif
             prgnClip = IntSysCreateRectpRgnIndirect(&rcl);
 
             Ret = IntGdiCombineRgn(prgnNClip, prgnClip, prgn, fnMode);
@@ -439,9 +439,10 @@ NtGdiExcludeClipRect(
     _In_ INT xRight,
     _In_ INT yBottom)
 {
-    INT iComplexity;
+    INT iComplexity = ERROR;
     RECTL rect;
     PDC pdc;
+    PREGION prgn;
 
     /* Lock the DC */
     pdc = DC_LockDc(hdc);
@@ -452,45 +453,24 @@ NtGdiExcludeClipRect(
     }
 
     /* Convert coordinates to device space */
-    rect.left = xLeft;
-    rect.top = yTop;
-    rect.right = xRight;
+    rect.left   = xLeft;
+    rect.top    = yTop;
+    rect.right  = xRight;
     rect.bottom = yBottom;
     RECTL_vMakeWellOrdered(&rect);
     IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    /* Check if we already have a clip region */
-    if (pdc->dclevel.prgnClip != NULL)
+    prgn = IntSysCreateRectpRgnIndirect(&rect);
+    if ( prgn )
     {
-        /* We have a region, subtract the rect */
-        iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
-                                                 pdc->dclevel.prgnClip,
-                                                 &rect);
-    }
-    else
-    {
-        /* We don't have a clip region yet, create an empty region */
-        pdc->dclevel.prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
-        if (pdc->dclevel.prgnClip == NULL)
-        {
-            iComplexity = ERROR;
-        }
-        else
-        {
-            /* Subtract the rect from the VIS region */
-            iComplexity = REGION_SubtractRectFromRgn(pdc->dclevel.prgnClip,
-                                                     pdc->prgnVis,
-                                                     &rect);
-        }
+        iComplexity = IntSelectClipRgn( pdc, prgn, RGN_DIFF );
+
+        REGION_Delete(prgn);
     }
 
     /* Emulate Windows behavior */
     if (iComplexity == SIMPLEREGION)
         iComplexity = COMPLEXREGION;
-
-    /* If we succeeded, mark the RAO region as dirty */
-    if (iComplexity != ERROR)
-        pdc->fs |= DC_FLAG_DIRTY_RAO;
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);
@@ -507,10 +487,10 @@ NtGdiIntersectClipRect(
     _In_ INT xRight,
     _In_ INT yBottom)
 {
-    INT iComplexity;
+    INT iComplexity = ERROR;
     RECTL rect;
-    PREGION prgnNew;
     PDC pdc;
+    PREGION prgn;
 
     DPRINT("NtGdiIntersectClipRect(%p, %d,%d-%d,%d)\n",
             hdc, xLeft, yTop, xRight, yBottom);
@@ -524,39 +504,24 @@ NtGdiIntersectClipRect(
     }
 
     /* Convert coordinates to device space */
-    rect.left = xLeft;
-    rect.top = yTop;
-    rect.right = xRight;
+    rect.left   = xLeft;
+    rect.top    = yTop;
+    rect.right  = xRight;
     rect.bottom = yBottom;
+    RECTL_vMakeWellOrdered(&rect);
     IntLPtoDP(pdc, (LPPOINT)&rect, 2);
 
-    /* Check if we already have a clip region */
-    if (pdc->dclevel.prgnClip != NULL)
+    prgn = IntSysCreateRectpRgnIndirect(&rect);
+    if ( prgn )
     {
-        /* We have a region, crop it */
-        iComplexity = REGION_CropRegion(pdc->dclevel.prgnClip,
-                                        pdc->dclevel.prgnClip,
-                                        &rect);
-    }
-    else
-    {
-        /* We don't have a region yet, allocate a new one */
-        prgnNew = IntSysCreateRectpRgnIndirect(&rect);
-        if (prgnNew == NULL)
-        {
-            iComplexity = ERROR;
-        }
-        else
-        {
-            /* Set the new region */
-            pdc->dclevel.prgnClip = prgnNew;
-            iComplexity = SIMPLEREGION;
-        }
+        iComplexity = IntSelectClipRgn( pdc, prgn, RGN_AND );
+
+        REGION_Delete(prgn);
     }
 
-    /* If we succeeded, mark the RAO region as dirty */
-    if (iComplexity != ERROR)
-        pdc->fs |= DC_FLAG_DIRTY_RAO;
+    /* Emulate Windows behavior */
+    if ( iComplexity == SIMPLEREGION )
+        iComplexity = COMPLEXREGION;
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);
