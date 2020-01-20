@@ -1024,6 +1024,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
         DPRINT1("Exception while getting callers!\n");
         i = 0;
     }
+    _SEH2_END;
 
     DPRINT("RtlWalkFrameChain returns %ld\n", i);
     return i;
