@@ -1016,7 +1016,7 @@ AddBootStoreEntry(
     }
     else
     {
-        DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
         return STATUS_NOT_SUPPORTED;
     }
 }
@@ -1152,7 +1152,7 @@ QueryBootStoreOptions(
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
     if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
     {
-        DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
         return STATUS_NOT_SUPPORTED;
     }
 
