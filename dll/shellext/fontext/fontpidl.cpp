@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     pidl handling
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -31,8 +31,8 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index)
 
 const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
 {
-    const FontPidlEntry* zipPidl = (const FontPidlEntry*)pidl;
-    if (zipPidl->Magic == 'fp')
-        return zipPidl;
+    const FontPidlEntry* fontEntry = (const FontPidlEntry*)pidl;
+    if (fontEntry->Magic == 'fp')
+        return fontEntry;
     return NULL;
 }

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -22,6 +22,10 @@ struct FolderViewColumns
 static FolderViewColumns g_ColumnDefs[] =
 {
     { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT },
+    { IDS_COL_FILENAME,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT },
+    { IDS_COL_SIZE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT },
+    { IDS_COL_MODIFIED,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT },
+    { IDS_COL_ATTR,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   12, LVCFMT_RIGHT },
 };
 
 
@@ -134,10 +138,83 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         return E_FAIL;
     }
 
+    // Name, ReactOS specific?
+    if (iColumn == 0)
+        return GetDisplayNameOf(pidl, 0, &psd->str);
+
+    const FontPidlEntry* fontEntry = _FontFromIL(pidl);
+    if (!fontEntry)
+    {
+        ERR("ERROR, not a font PIDL!\n");
+        return E_FAIL;
+    }
+
+    // If we got here, we are in details view!
+    // Let's see if we got info about this file that we can re-use
+    if (m_LastDetailsFontName != fontEntry->Name)
+    {
+        CStringW File = g_FontCache->Filename(fontEntry, true);
+        HANDLE hFile = FindFirstFileW(File, &m_LastDetailsFileData);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            m_LastDetailsFontName.Empty();
+            ERR("Unable to query info about %S\n", File.GetString());
+            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        }
+        FindClose(hFile);
+        m_LastDetailsFontName = fontEntry->Name;
+    }
+
+    // Most code borrowed from CFSFolder::GetDetailsOf
+    FILETIME lft;
+    SYSTEMTIME time;
+    int ret;
+    LARGE_INTEGER FileSize;
+    CStringA AttrLetters;
     switch (iColumn)
     {
-    case 0: /* Name, ReactOS specific? */
-        return GetDisplayNameOf(pidl, 0, &psd->str);
+    case 1: // Filename
+        return SHSetStrRet(&psd->str, m_LastDetailsFileData.cFileName);
+    case 2: // Size
+        psd->str.uType = STRRET_CSTR;
+        FileSize.HighPart = m_LastDetailsFileData.nFileSizeHigh;
+        FileSize.LowPart = m_LastDetailsFileData.nFileSizeLow;
+        StrFormatKBSizeA(FileSize.QuadPart, psd->str.cStr, MAX_PATH);
+        return S_OK;
+    case 3: // Modified
+        FileTimeToLocalFileTime(&m_LastDetailsFileData.ftLastWriteTime, &lft);
+        FileTimeToSystemTime (&lft, &time);
+        psd->str.uType = STRRET_CSTR;
+        ret = GetDateFormatA(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, psd->str.cStr, MAX_PATH);
+        if (ret < 1)
+        {
+            ERR("GetDateFormatA failed\n");
+            return E_FAIL;
+        }
+        psd->str.cStr[ret-1] = ' ';
+        GetTimeFormatA(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &psd->str.cStr[ret], MAX_PATH - ret);
+        return S_OK;
+    case 4: // Attributes
+        AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
+        if (AttrLetters.GetLength() != 5)
+        {
+            ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
+            return E_FAIL;
+        }
+        psd->str.uType = STRRET_CSTR;
+        ret = 0;
+        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+            psd->str.cStr[ret++] = AttrLetters[0];
+        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+            psd->str.cStr[ret++] = AttrLetters[1];
+        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
+            psd->str.cStr[ret++] = AttrLetters[2];
+        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+            psd->str.cStr[ret++] = AttrLetters[3];
+        if (m_LastDetailsFileData.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
+            psd->str.cStr[ret++] = AttrLetters[4];
+        psd->str.cStr[ret] = '\0';
+        return S_OK;
     default:
         break;
     }
@@ -332,27 +409,29 @@ STDMETHODIMP CFontExt::GetCurFolder(LPITEMIDLIST *ppidl)
 // *** IPersistFolder methods ***
 STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
 {
-    WCHAR PidlPath[MAX_PATH + 1] = {0}, Expected[MAX_PATH + 1];
+    WCHAR PidlPath[MAX_PATH + 1] = {0}, FontsDir[MAX_PATH + 1];
     if (!SHGetPathFromIDListW(pidl, PidlPath))
     {
         ERR("Unable to extract path from pidl\n");
         return E_FAIL;
     }
 
-    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, Expected);
-    if (!SUCCEEDED(hr))
+    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, FontsDir);
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         ERR("Unable to get fonts path (0x%x)\n", hr);
         return hr;
     }
 
-    if (_wcsicmp(PidlPath, Expected))
+    if (_wcsicmp(PidlPath, FontsDir))
     {
         ERR("CFontExt View initializing on unexpected folder: '%S'\n", PidlPath);
         return E_FAIL;
     }
 
     m_Folder.Attach(ILClone(pidl));
+    StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
+    g_FontCache->SetFontDir(FontsDir);
 
     return S_OK;
 }
@@ -397,13 +476,8 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 {
     *pdwEffect = DROPEFFECT_NONE;
 
-    WCHAR szFontsDir[MAX_PATH];
-    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, szFontsDir);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-
     CComHeapPtr<CIDA> cida;
-    hr = _GetCidlFromDataObject(pDataObj, &cida);
+    HRESULT hr = _GetCidlFromDataObject(pDataObj, &cida);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -471,7 +545,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 
     for (size_t iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
     {
-        HRESULT hr = DoInstallFontFile(FontPaths[iItem], szFontsDir, keyFonts.m_hKey);
+        HRESULT hr = DoInstallFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts.m_hKey);
         if (FAILED_UNEXPECTEDLY(hr))
         {
             bOK = FALSE;

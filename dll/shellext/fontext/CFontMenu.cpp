@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontMenu implementation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -69,20 +69,9 @@ static void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
     WCHAR FontViewerPath[MAX_PATH] = L"%SystemRoot%\\System32\\fontview.exe";
     WCHAR FontPathArg[MAX_PATH + 3];
 
-    CStringW Path = g_FontCache->Filename(fontEntry);
+    CStringW Path = g_FontCache->Filename(fontEntry, true);
     if (!Path.IsEmpty())
     {
-        if (PathIsRelativeW(Path))
-        {
-            WCHAR FontsDir[MAX_PATH];
-            HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, FontsDir);
-            if (!FAILED_UNEXPECTEDLY(hr))
-            {
-                StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
-                Path = FontsDir + Path;
-            }
-        }
-
         // '/d' disables the install button
         StringCchPrintfW(FontPathArg, _countof(FontPathArg), L"/d %s", Path.GetString());
         PathQuoteSpacesW(FontPathArg + 3);

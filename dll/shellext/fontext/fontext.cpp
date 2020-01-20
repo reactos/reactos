@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Shell extension entry point
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -59,11 +59,11 @@ STDAPI DllRegisterServer()
     HRESULT hr;
 
     hr = gModule.DllRegisterServer(FALSE);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, Path);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     // Make this a system folder:

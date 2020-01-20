@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontMenu implementation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -45,11 +45,6 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
     // Now that we have an IDataObject with the shell itemid list (CFSTR_SHELLIDLIST, aka HIDA) format
     // we will augment this IDataObject with the CF_HDROP format. (Full filepaths)
     // This enabled the objects for the 'copy' and drag to copy actions
-    WCHAR FontsDir[MAX_PATH];
-    hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, FontsDir);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return S_OK;
-    StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
 
     CComHeapPtr<BYTE> data;
 
@@ -63,15 +58,9 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
         const FontPidlEntry* fontEntry = _FontFromIL(apidl[n]);
         if (fontEntry)
         {
-            CStringW File = g_FontCache->Filename(fontEntry);
+            CStringW File = g_FontCache->Filename(fontEntry, true);
             if (!File.IsEmpty())
             {
-                // Ensure this is a full path
-                if (PathIsRelativeW(File))
-                {
-                    File = FontsDir + File;
-                }
-
                 // Now append the path (+ nullterminator) to the buffer
                 UINT len = offset + (File.GetLength() + 1) * sizeof(WCHAR);
                 data.ReallocateBytes(len);

@@ -22,7 +22,8 @@ list(APPEND SOURCE
     fontext.cpp
     fontpidl.cpp
     fontpidl.hpp
-    precomp.h)
+    precomp.h
+    resource.h)
 
 add_library(fontext MODULE
     ${SOURCE}

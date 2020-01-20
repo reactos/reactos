@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     font list cache handling
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -27,6 +27,7 @@ class CFontCache
 {
 private:
     CAtlArray<CFontInfo> m_Fonts;
+    CStringW m_FontFolderPath;
 
 protected:
     CFontCache();
@@ -35,9 +36,12 @@ protected:
     void Read();
 
 public:
+    void SetFontDir(const LPCWSTR Path);
+    const CStringW& FontPath() const { return m_FontFolderPath; }
+
     size_t Size();
     CStringW Name(size_t Index);
-    CStringW Filename(const FontPidlEntry* fontEntry);
+    CStringW Filename(const FontPidlEntry* fontEntry, bool alwaysFullPath = false);
 
     friend class CFontExtModule;
 };

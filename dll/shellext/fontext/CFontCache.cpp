@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     font list cache handling
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -68,6 +68,12 @@ CFontCache::CFontCache()
 {
 }
 
+void CFontCache::SetFontDir(const LPCWSTR Path)
+{
+    if (m_FontFolderPath.IsEmpty())
+        m_FontFolderPath = Path;
+}
+
 size_t CFontCache::Size()
 {
     if (m_Fonts.GetCount() == 0u)
@@ -87,23 +93,34 @@ CStringW CFontCache::Name(size_t Index)
     return m_Fonts[Index].Name();
 }
 
-CStringW CFontCache::Filename(const FontPidlEntry* fontEntry)
+CStringW CFontCache::Filename(const FontPidlEntry* fontEntry, bool alwaysFullPath)
 {
+    CStringW File;
+
     if (fontEntry->Index < m_Fonts.GetCount())
     {
         CFontInfo& info = m_Fonts[fontEntry->Index];
 
         if (info.Name().CompareNoCase(fontEntry->Name) == 0)
-            return info.File();
+            File = info.File();
     }
 
-    for (UINT n = 0; n < Size(); ++n)
+    for (UINT n = 0; File.IsEmpty() && n < Size(); ++n)
     {
         if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name) == 0)
-            return m_Fonts[n].File();
+            File = m_Fonts[n].File();
     }
 
-    return CStringW();
+    if (!File.IsEmpty() && alwaysFullPath)
+    {
+        // Ensure this is a full path
+        if (PathIsRelativeW(File))
+        {
+            File = m_FontFolderPath + File;
+        }
+    }
+
+    return File;
 }
 
 void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
