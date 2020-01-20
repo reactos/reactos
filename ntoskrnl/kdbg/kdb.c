@@ -1606,7 +1606,9 @@ KdbEnterDebuggerException(
         {
             /* FIXME: Add noexec memory stuff */
             ULONG_PTR TrapCr2;
+#ifndef _M_AMD64
             ULONG Err;
+#endif
 
             TrapCr2 = __readcr2();
 #ifndef _M_AMD64
