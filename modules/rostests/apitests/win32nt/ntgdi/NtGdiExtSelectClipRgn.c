@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for NtGdiCombineRgn
+ * PURPOSE:         Test for NtGdiExtSelectClipRgn
  * PROGRAMMERS:
  */
 

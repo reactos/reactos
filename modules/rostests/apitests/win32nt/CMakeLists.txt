@@ -18,6 +18,7 @@ list(APPEND SOURCE
     ntgdi/NtGdiDoPalette.c
     ntgdi/NtGdiEngCreatePalette.c
     ntgdi/NtGdiEnumFontOpen.c
+    ntgdi/NtGdiExcludeClipRect.c
     ntgdi/NtGdiExtSelectClipRgn.c
     ntgdi/NtGdiExtTextOutW.c
     #ntgdi/NtGdiFlushUserBatch.c
@@ -26,6 +27,8 @@ list(APPEND SOURCE
     ntgdi/NtGdiGetFontResourceInfoInternalW.c
     ntgdi/NtGdiGetRandomRgn.c
     ntgdi/NtGdiGetStockObject.c
+    ntgdi/NtGdiIntersectClipRect.c
+    ntgdi/NtGdiOffsetClipRgn.c
     ntgdi/NtGdiPolyPolyDraw.c
     ntgdi/NtGdiRestoreDC.c
     ntgdi/NtGdiSaveDC.c
