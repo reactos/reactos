@@ -332,7 +332,7 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
 }
 
 /* Check the character is Chinese, Japanese, Korean and/or Thai */
-inline BOOL IsCJKT(WCHAR wch)
+FORCEINLINE BOOL IsCJKT(WCHAR wch)
 {
     if (0x0E00 <= wch && wch <= 0x0E7F)
         return TRUE;    /* Thai */
