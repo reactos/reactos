@@ -19,7 +19,7 @@ BEGIN
     IDS_STARTUP "Başlat Seçkesi\\İzlenceler\\Başlangıç"
     IDS_LOCALSETTINGS "Yerli Ayarlar"
     IDS_LOCALAPPDATA "Yerli Ayarlar\\Uygulama Verisi"
-    IDS_TEMP "Yerli Ayarlar\\Geçici"
+    IDS_TEMP "Yerli Ayarlar\\Geçici" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Yerli Ayarlar\\Geçici Umûmî Ağ Kütükleri"
     IDS_HISTORY "Yerli Ayarlar\\Geçmiş"
     IDS_COOKIES "Tanımlama Bilgileri"

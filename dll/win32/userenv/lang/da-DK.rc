@@ -17,7 +17,7 @@ BEGIN
     IDS_STARTUP "Start Menu\\Programmer\\Opstart"
     IDS_LOCALSETTINGS "Lokale Indstillinger"
     IDS_LOCALAPPDATA "Lokale Indstillinger\\Application Data"
-    IDS_TEMP "Lokale Indstillinger\\Temp"
+    IDS_TEMP "Lokale Indstillinger\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Lokale Indstillinger\\Midlertidige Internet Filer"
     IDS_HISTORY "Lokale Indstillinger\\Historie"
     IDS_COOKIES "Cookies"
