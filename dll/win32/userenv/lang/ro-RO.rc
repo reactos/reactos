@@ -23,7 +23,7 @@ BEGIN
     IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
     IDS_LOCALSETTINGS "Preferințe locale"
     IDS_LOCALAPPDATA "Preferințe locale\\Date de aplicație"
-    IDS_TEMP "Preferințe locale\\Temp"
+    IDS_TEMP "Preferințe locale\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_HISTORY "Preferințe locale\\Istoric"
     IDS_COOKIES "Cookies"

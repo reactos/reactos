@@ -22,7 +22,7 @@ BEGIN
     IDS_STARTUP "Fillo Menu\\Programe\\Fillimi"
     IDS_LOCALSETTINGS "Cilësimet lokale"
     IDS_LOCALAPPDATA "Cilësimet lokale\\Aplikacion Data"
-    IDS_TEMP "Cilësimet lokale\\Përk"
+    IDS_TEMP "Cilësimet lokale\\Përk" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Cilësimet lokale\\Dokumente Interneti Përkohshëm"
     IDS_HISTORY "Cilësimet lokale\\Historia"
     IDS_COOKIES "Biskota"

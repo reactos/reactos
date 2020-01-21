@@ -17,7 +17,7 @@ BEGIN
     IDS_STARTUP "Menu Mulai\\Program\\StartUp"
     IDS_LOCALSETTINGS "Setelan Lokal"
     IDS_LOCALAPPDATA "Setelan Lokal\\Data Aplikasi"
-    IDS_TEMP "Setelan Lokal\\Temp"
+    IDS_TEMP "Setelan Lokal\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Setelan Lokal\\Berkas Internet Sementara"
     IDS_HISTORY "Setelan Lokal\\Riwayat"
     IDS_COOKIES "Kuki"
