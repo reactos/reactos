@@ -6982,6 +6982,11 @@ NtGdiGetCharABCWidthsW(
             }
         }
 
+        if (!found && face->num_charmaps > 0)
+        {
+            found = face->charmaps[0];
+        }
+
         if (!found)
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
@@ -7170,6 +7175,11 @@ NtGdiGetCharWidthW(
                 found = charmap;
                 break;
             }
+        }
+
+        if (!found && face->num_charmaps > 0)
+        {
+            found = face->charmaps[0];
         }
 
         if (!found)
