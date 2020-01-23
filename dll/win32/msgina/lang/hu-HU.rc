@@ -1,0 +1,227 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+IDD_STATUS DIALOGEX 0, 0, 275, 78
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Kérem várjon..."
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUS_MESSAGE, 7, 59, 261, 12, SS_WORDELLIPSIS
+END
+
+IDD_WELCOME DIALOGEX 0, 0, 275, 78
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Üdvözöljük a ReactOS-ben"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
+    ICON IDI_KEYBOARD, IDC_STATIC, 7, 53, 32, 32
+    LTEXT "Nyomja meg a Ctrl-Alt-Del billentyűkombinációt a kezdéshez.", IDC_STATIC, 38, 59, 230, 14
+END
+
+IDD_LOGON DIALOGEX 0, 0, 275, 147
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Bejelentkezés"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
+    LTEXT "Felhasználónév:", IDC_STATIC, 6, 60, 52, 8
+    EDITTEXT IDC_LOGON_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
+    LTEXT "Jelszó:", IDC_STATIC, 6, 78, 52, 8
+    EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Bejelentkezés ide:", IDC_STATIC, 6, 96, 52, 8
+    COMBOBOX IDC_LOGON_DOMAIN, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "OK",IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Mégse", IDCANCEL, 160, 122, 50, 14
+    PUSHBUTTON "&Leállítás", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
+END
+
+IDD_SECURITY DIALOGEX 0, 0, 275, 164
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Biztonság"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    GROUPBOX "Bejelentkezési információ", IDC_STATIC, 7, 50, 261, 52
+    LTEXT "<Üzenet>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
+    LTEXT "<Bejelentkezés dátuma>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
+    CTEXT "Mit szeretne csinálni?", IDC_STATIC, 10, 108, 255, 8
+    PUSHBUTTON "Számítógép &zárolása", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    PUSHBUTTON "&Kijelentkezés...", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
+    PUSHBUTTON "&Leállítás...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
+    PUSHBUTTON "&Jelszó megváltoztatása...", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
+    PUSHBUTTON "&Feladatkezelő", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 188, 143, 80, 14
+END
+
+IDD_LOCKED DIALOGEX 0, 0, 275, 121
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Számítógép lezárva"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
+    LTEXT "A számítógépet használják és lezárták.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<Üzenet>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
+    LTEXT "Nyomja meg a Ctrl-Alt-Del billentyűkombinációt a számítógép feloldásához.", IDC_STATIC, 36, 106, 232, 8
+END
+
+IDD_UNLOCK DIALOGEX 0, 0, 275, 179
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Számítógép feloldása"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
+    LTEXT "A számítógépet használják és lezárták.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<Üzenet>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
+    LTEXT "Felhasználónév:", IDC_STATIC, 36, 107, 40, 8
+    EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
+    LTEXT "Jelszó:", IDC_STATIC, 36, 125, 42, 8
+    EDITTEXT IDC_UNLOCK_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Mégse", IDCANCEL, 144, 154, 50, 14
+END
+
+IDD_CHANGEPWD DIALOGEX 0, 0, 275, 166
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Jelszó megváltoztatása"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    LTEXT "Felhasználónév:", IDC_STATIC, 7, 61, 78, 8
+    EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
+    LTEXT "Bejelentkezés ide:", IDC_STATIC, 7, 78, 78, 8
+    COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
+    LTEXT "Régi jelszó:", IDC_STATIC, 7, 95, 78, 8
+    EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Új jelszó:", IDC_STATIC, 7, 111, 78, 8
+    EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Új jelszó megerősítés:", IDC_STATIC, 7, 127, 78, 8
+    EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Mégse", IDCANCEL, 218, 145, 50, 14
+END
+
+IDD_LOGOFF DIALOGEX 0, 0, 188, 60
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
+CAPTION "Kijelentkezés a ReactOS-ből"
+FONT 8, "MS Shell Dlg", 400, 0, 1
+BEGIN
+    ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
+    LTEXT "Biztosan ki szeretne jelentkezni?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Igen", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Nem", IDNO, 95, 39, 50, 14
+END
+
+IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+// STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "ReactOS leállítása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
+    ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Mit szeretne csinálni a számítógéppel?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
+    DEFPUSHBUTTON "OK", IDOK, 143, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "Mégse", IDCANCEL, 204, 122, 55, 14
+
+    // DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    // PUSHBUTTON "Mégse", IDCANCEL, 143, 122, 55, 14
+    // PUSHBUTTON "&Súgó", IDHELP, 204, 122, 55, 14
+END
+
+IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+// STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "ReactOS leállítása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Mit szeretne csinálni a számítógéppel?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
+    GROUPBOX "Leállítási napló", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Válassza ki az alábbiak közül, hogy melyik írja le legjobban a számítógép leállításának az okát.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Opciók:", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "&Tervezett", IDC_REASON_PLANNED, 182, 154, 47, 10
+    COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
+    LTEXT "&Megjegyzés:", IDC_STATIC, 39, 214, 80, 8
+    EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 150, 276, 55, 14, WS_GROUP
+    PUSHBUTTON "Mégse", IDCANCEL, 211, 276, 55, 14
+
+    // DEFPUSHBUTTON "OK", IDOK, 87, 276, 55, 14, WS_GROUP
+    // PUSHBUTTON "Mégse", IDCANCEL, 150, 276, 55, 14
+    // PUSHBUTTON "&Súgó", IDHELP, 211, 276, 55, 14
+END
+
+IDD_LEGALNOTICE DIALOGEX 0, 0, 280, 200
+STYLE DS_MODALFRAME | DS_SHELLFONT | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 115, 179, 50, 14
+END
+
+IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 275, 146
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Luna-XP stílusú leállítási párbeszédpanel."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LOGGEDOUTSAS "Üdvözöljük!"
+    IDS_LOCKEDSAS "A számítógép le van zárva."
+    IDS_PRESSCTRLALTDELETE "Nyomja meg a Control+Alt+Del billentyűkombinációt a belépéshez."
+    IDS_ASKFORUSER "Felhasználónév: "
+    IDS_ASKFORPASSWORD "Jelszó: "
+    IDS_FORCELOGOFF "Ezzel kilépteti a jelenlegi felhasználót és minden nem mentett adat elveszik. Biztosan folytatja?"
+    IDS_LOCKMSG "Csak %s vagy egy rendszergazda tudja feloldani a számítógépet."
+    IDS_LOGONMSG "%s névvel van bejelentkezve."
+    IDS_LOGONDATE "Bejelentkezés dátuma: %s %s"
+    IDS_COMPUTERLOCKED "Számítógép lezárva"
+    IDS_LOCKEDWRONGPASSWORD "Hibás jelszó. Kérem adja meg újra a jelszavát. A kis- és nagybetűk meg vannak különböztetve a jelszavakban."
+    IDS_LOCKEDWRONGUSER "A számítógép le van zárva. Csak %s\\%s vagy egy rendszergazda tudja feloldani a számítógépet."
+    IDS_CHANGEPWDTITLE "Jelszó megváltoztatása"
+    IDS_NONMATCHINGPASSWORDS "A megadott jelszavak nem egyeznek. Mindkét szövegmezőbe ugyanazt a jelszót írja."
+    IDS_PASSWORDCHANGED "A jelszava megváltozott."
+    IDS_LOGONTITLE "Bejelentkezési üzenet."
+    IDS_LOGONWRONGUSERORPWD "A rendszer nem tudta beléptetni. Ellenőrizze a felhasználónevet és a tartományt, majd adja meg újra a jelszavát. A kis- és nagybetűk meg vannak különböztetve a jelszavakban."
+    IDS_LOGONUSERDISABLED "A fiókját letiltották. Kérjük keresse fel a rendszergazdát."
+    IDS_PASSWORDMUSTCHANGE "Az első bejelentkezéskor meg kell változtatnia a jelszavát."
+    IDS_PASSWORDEXPIRED "A jelszava lejárt, ezért meg kell változtatni."
+    IDS_ACCOUNTEXPIRED "A fiókja lejárt. Kérjük keresse fel a rendszergazdát."
+    IDS_ACCOUNTLOCKED "Nem sikerült beléptetni, mert a fiókját zárolták. Kérjük keresse fel a rendszergazdát."
+    IDS_INVALIDLOGONHOURS "A fiókján olyan időkorlátozás van, amely miatt jelenleg nem tud belépni. Kérjük próbálja újra később."
+    IDS_INVALIDWORKSTATION "A fiókja úgy van beállítva hogy nem használhatja ezt a számítógépet. Kérjük próbálkozzon egy másik számítógéppel."
+    IDS_ACCOUNTRESTRICTION "Fiókkorlátozás miatt nem sikerült a bejelentkezés."
+END
+
+/* Shutdown Dialog Strings */
+STRINGTABLE
+BEGIN
+    IDS_SHUTDOWN_LOGOFF "Kijelentkezés - ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Leállítás"
+    IDS_SHUTDOWN_RESTART "Újraindítás"
+    IDS_SHUTDOWN_SLEEP "Alvás"
+    IDS_SHUTDOWN_HIBERNATE "Hibernálás"
+    /* Shut down descriptions */
+    IDS_SHUTDOWN_LOGOFF_DESC "Befejezi a jelenlegi munkamenetet és lehetővé teszi hogy más felhasználók jelentkezzenek be."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Befejezi a jelenlegi munkamenetet és leállítja a rendszert hogy biztonságosan áramtalaníthassa a számítógépet."
+    IDS_SHUTDOWN_RESTART_DESC "Befejezi a jelenlegi munkamenetet és újraindítja a rendszert."
+    IDS_SHUTDOWN_SLEEP_DESC "Alvó állapotba teszi a rendszert."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Elmenti a jelenlegi munkamenetet és leállítja a számítógépet."
+END
