@@ -1,7 +1,7 @@
 
 add_subdirectory(access)
 add_subdirectory(appwiz)
-add_subdirectory(console)#Warning: console\\/lang/cs-CZ.rc:143: unrecognized escape sequence
+add_subdirectory(console)
 add_subdirectory(desk)
 add_subdirectory(hdwwiz)
 add_subdirectory(inetcpl)
