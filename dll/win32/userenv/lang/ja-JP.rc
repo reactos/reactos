@@ -18,7 +18,7 @@ BEGIN
     IDS_LOCALSETTINGS "ローカル設定"
     IDS_LOCALAPPDATA "ローカル設定\\アプリのデータ"
     IDS_TEMP "ローカル設定\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "ローカル設定\\一時インターネットファイル"
+    IDS_CACHE "ローカル設定\\インターネット一時ファイル"
     IDS_HISTORY "ローカル設定\\履歴"
     IDS_COOKIES "クッキー"
 END
