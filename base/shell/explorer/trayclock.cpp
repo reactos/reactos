@@ -696,7 +696,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
     if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
     {
         g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-        bRealign = TRUE;
+        if (!g_TaskbarSettings.sr.HideClock)
+        {
+            bRealign = TRUE;
+
+            ResetTime();
+        }
     }
 
     if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
