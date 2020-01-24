@@ -505,7 +505,7 @@ typedef struct _MMSUBSECTION_FLAGS2
 } MMSUBSECTION_FLAGS2;
 
 //
-// Control Area Structures
+// Control Area Structures (8-byte aligned)
 //
 typedef struct _CONTROL_AREA
 {
@@ -528,6 +528,7 @@ typedef struct _CONTROL_AREA
     ULONG WritableUserReferences;
     ULONG QuadwordPad;
 } CONTROL_AREA, *PCONTROL_AREA;
+C_ASSERT((sizeof(CONTROL_AREA) % 8) == 0);
 
 typedef struct _LARGE_CONTROL_AREA
 {
@@ -553,9 +554,10 @@ typedef struct _LARGE_CONTROL_AREA
     LIST_ENTRY UserGlobalList;
     ULONG SessionId;
 } LARGE_CONTROL_AREA, *PLARGE_CONTROL_AREA;
+C_ASSERT((sizeof(LARGE_CONTROL_AREA) % 8) == 0);
 
 //
-// Subsection and Mapped Subsection
+// Subsection and Mapped Subsection (8-byte aligned)
 //
 typedef struct _SUBSECTION
 {
@@ -572,6 +574,7 @@ typedef struct _SUBSECTION
     ULONG PtesInSubsection;
     struct _SUBSECTION *NextSubsection;
 } SUBSECTION, *PSUBSECTION;
+C_ASSERT((sizeof(SUBSECTION) % 8) == 0);
 
 typedef struct _MSUBSECTION
 {
@@ -595,6 +598,7 @@ typedef struct _MSUBSECTION
         MMSUBSECTION_FLAGS2 SubsectionFlags2;
     } u2;
 } MSUBSECTION, *PMSUBSECTION;
+C_ASSERT((sizeof(MSUBSECTION) % 8) == 0);
 
 //
 // Segment Object
