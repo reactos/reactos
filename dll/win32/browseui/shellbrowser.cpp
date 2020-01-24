@@ -3590,7 +3590,7 @@ LRESULT CShellBrowser::OnDisconnectNetworkDrive(WORD wNotifyCode, WORD wID, HWND
 
 LRESULT CShellBrowser::OnAboutReactOS(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    ShellAbout(m_hWnd, _T("ReactOS"), _T(""), NULL);
+    ShellAbout(m_hWnd, _T("ReactOS"), NULL, NULL);
     return 0;
 }
 

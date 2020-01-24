@@ -28,6 +28,6 @@ void OnAbout(void)
     HICON taskmgrIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TASKMANAGER));
 
     LoadStringW(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(WCHAR));
-    ShellAboutW(hMainWnd, szTaskmgr, 0, taskmgrIcon);
+    ShellAboutW(hMainWnd, szTaskmgr, NULL, taskmgrIcon);
     DeleteObject(taskmgrIcon);
 }

@@ -1000,8 +1000,8 @@ static void DialogOpenFile(void)
 
 static void dialog_about(void)
 {
-    HICON icon = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
-    ShellAboutW(hMainWnd, wszAppTitle, 0, icon);
+    HICON icon = LoadImageW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
+    ShellAboutW(hMainWnd, wszAppTitle, NULL, icon);
 }
 
 static INT_PTR CALLBACK formatopts_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

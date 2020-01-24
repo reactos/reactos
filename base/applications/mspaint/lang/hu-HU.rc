@@ -188,7 +188,7 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "ReactOS Paint"
-    IDS_INFOTEXT "A ReactOS Paint a GNU Lesser General Public License (LGPL) alatt érhetõ el (lásd www.gnu.org)"
+    IDS_INFOTEXT "A GNU Lesser General Public License (LGPL) alatt érhetõ el (lásd www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Kívánja menteni %s változásait?"
     IDS_DEFAULTFILENAME "Névtelen.bmp"
     IDS_MINIATURETITLE "Miniatúra"

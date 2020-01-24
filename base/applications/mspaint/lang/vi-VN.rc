@@ -196,7 +196,7 @@ BEGIN
     IDS_PROGRAMNAME "Vẽ"
     IDS_WINDOWTITLE "%s - Vẽ"
     IDS_INFOTITLE "Trình Vẽ cho ReactOS"
-    IDS_INFOTEXT "Trình Vẽ cho ReactOS được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
+    IDS_INFOTEXT "Được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Bạn có muốn lưu lại những thay đổi trong %s?"
     IDS_DEFAULTFILENAME "Khongten.bmp"
     IDS_MINIATURETITLE "Ảnh nhỏ"
