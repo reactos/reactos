@@ -831,7 +831,7 @@ BEGIN
 
     /* ATTENTION: If there is no special situation, please DO NOT change 
     English folder names into Chinese, or it may cause problems in the system. */
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "「開始」功能表\\程式"
     IDS_PERSONAL "我的文件"
     IDS_FAVORITES "我的最愛"

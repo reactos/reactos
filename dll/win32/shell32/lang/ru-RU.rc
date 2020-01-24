@@ -827,7 +827,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Обзор"
     IDS_RUNDLG_BROWSE_FILTER "Исполняемые файлы (*.exe)\0*.exe\0Все файлы (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Главное меню\\Программы"
     IDS_PERSONAL "Мои документы"
     IDS_FAVORITES "Избранное"

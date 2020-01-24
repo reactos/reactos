@@ -822,7 +822,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Göz At"
     IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Kütükler (*.exe)\0*.exe\0Tüm Kütükler (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Başlat Seçkesi\\İzlenceler"
     IDS_PERSONAL "Belgelerim"
     IDS_FAVORITES "Yer İmleri"

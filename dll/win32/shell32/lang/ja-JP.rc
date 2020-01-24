@@ -817,7 +817,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "参照"
     IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "スタート メニュー\\プログラム"
     IDS_PERSONAL "マイ ドキュメント"
     IDS_FAVORITES "お気に入り"

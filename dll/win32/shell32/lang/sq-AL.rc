@@ -824,7 +824,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Shfletp"
     IDS_RUNDLG_BROWSE_FILTER "Dokumentë Ekzekutues (*.exe)\0*.exe\0T'gjith Dokumentat (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Fillo Menu\\Programe"
     IDS_PERSONAL "Dokumentet e'mi"
     IDS_FAVORITES "Preferuarat"

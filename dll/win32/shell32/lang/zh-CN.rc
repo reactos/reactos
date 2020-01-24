@@ -828,7 +828,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "浏览"
     IDS_RUNDLG_BROWSE_FILTER "可执行文件 (*.exe)\0*.exe\0所有文件 (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     /* ATTENTION: If there is no special situation, please DO NOT change
     English folder names into Chinese, or it may cause problems in the system. */
     IDS_PROGRAMS "「开始」菜单\\程序"

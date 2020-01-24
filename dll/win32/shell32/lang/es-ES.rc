@@ -828,7 +828,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Examinar"
     IDS_RUNDLG_BROWSE_FILTER "Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menú Inicio\\Programas"
     IDS_PERSONAL "Mis documentos"
     IDS_FAVORITES "Favoritos"

@@ -822,7 +822,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "עיון"
     IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "תפריט ההתחלה\\תכניות"
     IDS_PERSONAL "המסמכים שלי"
     IDS_FAVORITES "מועדפים"

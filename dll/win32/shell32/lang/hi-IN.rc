@@ -815,7 +815,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "ब्राउज़"
     IDS_RUNDLG_BROWSE_FILTER "एक्सेक्यूटेबल फ़ाइलें (*.exe)\0*.exe\0सारे फ़ाइलें (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "प्रारंभ मेनू\\प्रोग्राम"
     IDS_PERSONAL "मेरे डॉक्यूमेंट"
     IDS_FAVORITES "पसंदीदा"

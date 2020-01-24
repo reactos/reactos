@@ -820,7 +820,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "Bläddra"
     IDS_RUNDLG_BROWSE_FILTER "Körbara filer (*.exe)\0*.exe\0Alla filer (*.*)\0*.*\0"
 
-    /* shell folder path default values */
+    /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Start-meny\\Program"
     IDS_PERSONAL "Mina dokument"
     IDS_FAVORITES "Favoriter"
