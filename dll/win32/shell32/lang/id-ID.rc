@@ -815,7 +815,7 @@ BEGIN
     IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
     IDS_RUNDLG_BROWSE_ERROR "Tidak bisa menampilkan kotak dialog Jelajah (kesalahan internal)"
     IDS_RUNDLG_BROWSE_CAPTION "Jelajah"
-    IDS_RUNDLG_BROWSE_FILTER "Berkas Eksekusi (*.exe)\0*.exe\x00Semua Berkas (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Berkas Eksekusi (*.exe)\0*.exe\0Semua Berkas (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS "Menu Mulai\\Program"
