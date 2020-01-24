@@ -1537,6 +1537,40 @@ LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
     UNIMPLEMENTED;
 }
 
+BOOLEAN
+NTAPI
+LdrpDisableProcessCompatGuidDetection(VOID)
+{
+    UNICODE_STRING PolicyKey = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\Software\\Policies\\Microsoft\\Windows\\AppCompat");
+    UNICODE_STRING DisableDetection = RTL_CONSTANT_STRING(L"DisableCompatGuidDetection");
+    OBJECT_ATTRIBUTES PolicyKeyAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&PolicyKey, OBJ_CASE_INSENSITIVE);
+    KEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    ULONG ResultLength;
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+
+    Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &PolicyKeyAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        Status = NtQueryValueKey(KeyHandle,
+                                 &DisableDetection,
+                                 KeyValuePartialInformation,
+                                 &KeyInfo,
+                                 sizeof(KeyInfo),
+                                 &ResultLength);
+        NtClose(KeyHandle);
+        if ((NT_SUCCESS(Status)) &&
+            (KeyInfo.Type == REG_DWORD) &&
+            (KeyInfo.DataLength == sizeof(ULONG)) &&
+            (KeyInfo.Data[0] == TRUE))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
 VOID
 NTAPI
 LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
@@ -1610,6 +1644,12 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
             if (ContextCompatInfo->Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS &&
                 RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, KnownCompatGuids[cur].Guid, sizeof(GUID)) == sizeof(GUID))
             {
+                if (LdrpDisableProcessCompatGuidDetection())
+                {
+                    DPRINT1("LdrpInitializeProcessCompat: Not applying automatic fix for winver 0x%x due to policy\n", KnownCompatGuids[cur].Version);
+                    return;
+                }
+
                 /* If this process did not need shim data before, allocate and store it */
                 if (pShimData == NULL)
                 {
