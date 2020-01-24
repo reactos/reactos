@@ -6,6 +6,7 @@ English folder names into Chinese, or it may cause problems in the system. */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"

@@ -1,5 +1,6 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documentos e definições"

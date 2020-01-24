@@ -1,5 +1,6 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Dokumenter og innstillinger"

@@ -1,5 +1,6 @@
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
+/* See also: dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Lokale Indstillinger"
