@@ -2199,7 +2199,7 @@ MsqIsHung(PTHREADINFO pti, DWORD TimeOut)
        !PsGetThreadFreezeCount(pti->pEThread) &&
        !(pti->ppi->W32PF_flags & W32PF_APPSTARTING))
     {
-        ERR("\nMsqIsHung(pti %p, TimeOut %lu)\n"
+        TRACE("\nMsqIsHung(pti %p, TimeOut %lu)\n"
             "pEThread %p, ThreadsProcess %p, ImageFileName '%s'\n"
             "dwTimeStamp = %lu\n"
             "pti->pcti->timeLastRead = %lu\n"
