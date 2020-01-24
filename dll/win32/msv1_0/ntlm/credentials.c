@@ -14,7 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 CRITICAL_SECTION CredentialCritSect;
 LIST_ENTRY ValidCredentialList;
 
-
 /* private functions */
 NTSTATUS
 NtlmCredentialInitialize(VOID)
@@ -121,41 +120,137 @@ NtlmCredentialTerminate(VOID)
     return;
 }
 
-#ifdef __UNUSED__
-/* public functions */
-
 SECURITY_STATUS
 SEC_ENTRY
-QueryCredentialsAttributesW(PCredHandle phCredential,
-                            ULONG ulAttribute,
-                            PVOID pBuffer)
+NtlmQueryCredentialsAttributes_Names(
+    IN PNTLMSSP_CREDENTIAL Cred,
+    IN ULONG ulAttribute,
+    IN OUT PVOID pBuffer)
 {
-    PNTLMSSP_CREDENTIAL credentials = NULL;
-    PSecPkgContext_NamesW credname;
     SECURITY_STATUS ret;
+    PVOID LsaClientUserName = NULL;
+    SEC_WCHAR *LocalUserName = NULL;
+    ULONG BytesNeeded;
+    SecPkgContext_NamesW CredNamesW;
+    // we return unicode ... for the return value
+    // i'm not sure how to distinguish between
+    // unicode and ansi.
+    BytesNeeded = Cred->UserNameW.bUsed +
+                  sizeof(WCHAR);
 
-    TRACE("(%p, %lx, %p)\n", phCredential, ulAttribute, pBuffer);
+    LocalUserName = NtlmAllocate(BytesNeeded, TRUE);
+    if (Cred->UserNameW.bUsed > 0)
+        wcsncpy(LocalUserName,
+                (WCHAR*)Cred->UserNameW.Buffer,
+                BytesNeeded / sizeof(WCHAR));
 
-    credentials = NtlmReferenceCredential(phCredential->dwLower);
-
-    switch(ulAttribute)
+    // lsa mode: copy data to client
+    if (inUserMode)
     {
-    case SECPKG_ATTR_NAMES:
-        credname = (PSecPkgContext_NamesW) pBuffer;
-        credname->sUserName = _wcsdup((WCHAR*)credentials->UserNameW.Buffer);
+        CredNamesW.sUserName = LocalUserName;
+        memcpy(pBuffer, &CredNamesW, sizeof(SecPkgContext_NamesW));
         ret = SEC_E_OK;
-        break;
-    default:
-        FIXME("QueryCredentialsAttributesW(%p, %lx, %p) Unimplemented\n",
-            phCredential, ulAttribute, pBuffer);
-        ret = SEC_E_UNSUPPORTED_FUNCTION;
-        break;
+        goto done;
     }
 
-    NtlmDereferenceCredential(phCredential->dwLower);
+    if (inLsaMode)
+    {
+        NTSTATUS status;
+
+        // allocate client buffer for username
+        status = LsaFunctions->AllocateClientBuffer(NULL, BytesNeeded,
+                                                    &LsaClientUserName);
+        if (!NT_SUCCESS(status))
+        {
+            ret = status;
+            goto done;
+        }
+
+        // copy username to clientbuffer
+        status = LsaFunctions->CopyToClientBuffer(NULL, BytesNeeded,
+                                                  LsaClientUserName,
+                                                  LocalUserName);
+        if (!NT_SUCCESS(status))
+        {
+            TRACE("CopyToClientBuffer failed!\n");
+            ret = status;
+            goto done;
+        }
+
+        // copy SecPkgContext_NamesW (struct) to client buffer
+        CredNamesW.sUserName = LsaClientUserName;
+        status = LsaFunctions->CopyToClientBuffer(NULL, sizeof(SecPkgContext_NamesW),
+                                                  pBuffer, &CredNamesW);
+        if (!NT_SUCCESS(status))
+        {
+            TRACE("CopyToClientBuffer failed!\n");
+            ret = status;
+            goto done;
+        }
+
+        ret = SEC_E_OK;
+        goto done;
+    }
+
+    ERR("unknown mode!");
+    ret = SEC_E_INTERNAL_ERROR;
+
+done:
+    if (inLsaMode)
+    {
+        if (ret != SEC_E_OK)
+        {
+            if (LsaClientUserName != NULL)
+                LsaFunctions->FreeClientBuffer(NULL, LsaClientUserName);
+        }
+        // LocalUserName was only temporary in lsa mode
+        if (LocalUserName != NULL)
+            NtlmFree(LocalUserName, TRUE);
+    }
+
     return ret;
 }
 
+SECURITY_STATUS
+SEC_ENTRY
+NtlmQueryCredentialsAttributes(
+    IN LSA_SEC_HANDLE hCredential,
+    IN ULONG ulAttribute,
+    IN OUT PVOID pBuffer)
+{
+    PNTLMSSP_CREDENTIAL credentials = NULL;
+    SECURITY_STATUS ret;
+
+    TRACE("(%p, %lx, %p)\n", hCredential, ulAttribute, pBuffer);
+
+    if (hCredential == 0)
+    {
+        ERR("NtlmQueryCredentialsAttributes called with hCredential = 0\n");
+        return SEC_E_INVALID_HANDLE;
+    }
+
+    credentials = NtlmReferenceCredential(hCredential);
+
+    switch (ulAttribute)
+    {
+        case SECPKG_CRED_ATTR_NAMES:
+        {
+            ret = NtlmQueryCredentialsAttributes_Names(credentials, ulAttribute, pBuffer);
+            break;
+        }
+        default:
+        {
+            FIXME("QueryCredentialsAttributesW(%p, %lx, %p) Unimplemented\n",
+                hCredential, ulAttribute, pBuffer);
+            ret = SEC_E_UNSUPPORTED_FUNCTION;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+#ifdef __UNUSED__
 SECURITY_STATUS
 SEC_ENTRY
 QueryCredentialsAttributesA(IN PCredHandle phCredential,
@@ -358,7 +453,7 @@ NtlmAcquireCredentialsHandle(
     ExtWStrInit(&domain, NULL);
     ExtWStrInit(&password, NULL);
 
-    if (fCredentialUse == SECPKG_CRED_OUTBOUND)
+    if ((fCredentialUse & SECPKG_CRED_BOTH) != 0)
     {
         SECPKG_CLIENT_INFO ClientInfo;
 
@@ -603,20 +698,19 @@ AcquireCredentialsHandleA(SEC_CHAR *pszPrincipal,
     
     return ret;
 }
+#endif
 
 SECURITY_STATUS
 SEC_ENTRY
-FreeCredentialsHandle(PCredHandle phCredential)
+NtlmFreeCredentialsHandle(
+    LSA_SEC_HANDLE hCredential)
 {
-    TRACE("FreeCredentialsHandle %x %x\n", phCredential, phCredential->dwLower);
+    TRACE("FreeCredentialsHandle %x\n", hCredential);
 
-    if(!phCredential)
+    if(hCredential == 0)
         return SEC_E_INVALID_HANDLE;
 
-    NtlmDereferenceCredential(phCredential->dwLower);
-    phCredential = NULL;
+    NtlmDereferenceCredential(hCredential);
 
     return SEC_E_OK;
 }
-
-#endif

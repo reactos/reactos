@@ -223,23 +223,35 @@ LsaSpAcquireCredentialsHandle(
 
 NTSTATUS NTAPI
 LsaSpQueryCredentialsAttributes(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PVOID p3)
+    LSA_SEC_HANDLE CredentialHandle,
+    ULONG CredentialAttribute,
+    PVOID Buffer)
 {
-    fdTRACE("LsaSpQueryCredentialsAttributes(%p %i %p)\n",
-          p1, p2, p3);
+    SECURITY_STATUS status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("LsaSpQueryCredentialsAttributes(%p %i %p) {\n",
+          CredentialHandle, CredentialAttribute, Buffer);
+
+    // FIXME we mix SECURITY_STATUS + NTSTATUS ..
+    status = NtlmQueryCredentialsAttributes(
+        CredentialHandle, CredentialAttribute, Buffer);
+
+    fdTRACE("RESULT 0x%x }\n", status);
+
+    return status;
 }
 
 NTSTATUS NTAPI
 LsaSpFreeCredentialsHandle(
-    LSA_SEC_HANDLE p1)
+    IN LSA_SEC_HANDLE CredentialHandle)
 {
-    fdTRACE("LsaSpFreeCredentialsHandle(%p)\n", p1);
+    SECURITY_STATUS status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("LsaSpFreeCredentialsHandle(%p) {\n", CredentialHandle);
+    status = NtlmFreeCredentialsHandle(CredentialHandle);
+    fdTRACE("RESULT 0x%x }\n", status);
+
+    return status;
 }
 
 NTSTATUS NTAPI
@@ -357,29 +369,53 @@ LsaSpInitLsaModeContext(
     // UNUSED: MappedContext / ContextData
     *MappedContext = FALSE;
 
+    NtlmPrintHexDump(OutputBuffers->pBuffers[2].pvBuffer, OutputBuffers->pBuffers[2].cbBuffer);
+
     fdTRACE("0x%x\n", status);
 
     return status;
 }
 
+ULONG doBreak = 1;
+
 NTSTATUS NTAPI
 LsaSpAcceptLsaModeContext(
-    LSA_SEC_HANDLE p1,
-    LSA_SEC_HANDLE p2,
-    PSecBufferDesc p3,
-    ULONG p4,
-    ULONG p5,
-    PLSA_SEC_HANDLE p6,
-    PSecBufferDesc p7,
-    PULONG p8,
-    PTimeStamp p9,
-    PBOOLEAN p10,
-    PSecBuffer p11)
+    LSA_SEC_HANDLE CredentialHandle,
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc InputBuffer,
+    ULONG ContextRequirements,
+    ULONG TargetDataRep,
+    PLSA_SEC_HANDLE NewContextHandle,
+    PSecBufferDesc OutputBuffer,
+    PULONG ContextAttributes,
+    PTimeStamp ExpirationTime,
+    PBOOLEAN MappedContext,
+    PSecBuffer ContextData)
 {
+    SECURITY_STATUS status;
     fdTRACE("LsaSpAcceptLsaModeContext(%p %p %p %p %i %i %p %p %p %p %p)\n",
-          p1, p2, p3, p4, p4, p5, p6, p7, p8, p9, p10, p11);
+          CredentialHandle, ContextHandle, InputBuffer, ContextRequirements,
+          TargetDataRep, NewContextHandle, OutputBuffer,
+          ContextAttributes, ExpirationTime, MappedContext, ContextData);
 
-    return ERROR_NOT_SUPPORTED;
+    if (doBreak == 1)
+    {
+        __debugbreak();
+        doBreak = 0;
+    }
+
+    //FIXME: we mix SECURITY_STATUS / NTSTATUS
+    status = NtlmAcceptSecurityContext(
+        CredentialHandle, ContextHandle, InputBuffer,
+        ContextRequirements, TargetDataRep, NewContextHandle,
+        OutputBuffer, ContextAttributes, ExpirationTime);
+    //FIXME: what to do with MappedContext
+    *MappedContext = FALSE;
+    //+ContextData ..
+
+    fdTRACE("0x%x\n", status);
+
+    return status;
 }
 
 NTSTATUS NTAPI

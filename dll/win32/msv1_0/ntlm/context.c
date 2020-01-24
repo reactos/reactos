@@ -446,7 +446,6 @@ NtlmInitializeSecurityContext(
     SECURITY_STATUS ret = SEC_E_OK;
     PSecBuffer InputToken1, InputToken2 = NULL;
     PSecBuffer OutputToken1, OutputToken2 = NULL;
-    SecBufferDesc BufferDesc;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
 
     TRACE("0x%lx 0x%lx %s 0x%08lx %lx %lx %p %lx %p %p %p %p\n", hCredential, hContext,
@@ -503,8 +502,6 @@ NtlmInitializeSecurityContext(
                                           fContextReq,
                                           OutputToken1);
 
-        if ((NT_SUCCESS(ret)) && (inLsaMode))
-            LsaFunctions->MapBuffer(OutputToken1, OutputToken1);
         // set result
         *phNewContext = (LSA_SEC_HANDLE)newContext;
 
@@ -527,8 +524,7 @@ NtlmInitializeSecurityContext(
         }
         *phNewContext = hContext;
         ret = CliGenerateAuthenticationMessage(
-            //phNewContext->dwLower, fContextReq,
-            (ULONG_PTR)phNewContext, fContextReq,
+            hContext, fContextReq,
             InputToken1, InputToken2,
             OutputToken1, OutputToken2,
             pfContextAttr, ptsExpiry);
@@ -545,16 +541,8 @@ NtlmInitializeSecurityContext(
         goto fail;
     }
 
-    /* build blob with the output message */
-    BufferDesc.ulVersion = SECBUFFER_VERSION;
-    BufferDesc.cBuffers = 1;
-    BufferDesc.pBuffers = OutputToken1;
-
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ISC_RET_ALLOCATED_MEMORY;
-
-    if(pOutput)
-        *pOutput = BufferDesc;
 
     return ret;
 
@@ -748,75 +736,71 @@ QueryContextAttributesA(
 {
     return QueryContextAttributesAW(phContext, ulAttribute, pBuffer, FALSE);
 }
+#endif
 
 SECURITY_STATUS
 SEC_ENTRY
-AcceptSecurityContext(IN PCredHandle phCredential,
-                      IN OUT PCtxtHandle phContext,
-                      IN PSecBufferDesc pInput,
-                      IN ULONG fContextReq,
-                      IN ULONG TargetDataRep,
-                      IN OUT PCtxtHandle phNewContext,
-                      IN OUT PSecBufferDesc pOutput,
-                      OUT ULONG *pfContextAttr,
-                      OUT PTimeStamp ptsExpiry)
+NtlmAcceptSecurityContext(
+    IN LSA_SEC_HANDLE hCredential,
+    IN LSA_SEC_HANDLE hContext,
+    IN PSecBufferDesc pInput,
+    IN ULONG fContextReq,
+    IN ULONG TargetDataRep,
+    IN OUT PLSA_SEC_HANDLE phNewContext,
+    IN OUT PSecBufferDesc pOutput,
+    OUT ULONG *pfContextAttr,
+    OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     PSecBuffer InputToken1, InputToken2 = NULL;
     PSecBuffer OutputToken1, OutputToken2 = NULL;
-    SecBufferDesc BufferDesc;
     USER_SESSION_KEY sessionKey;
     ULONG userflags;
 
-    TRACE("AcceptSecurityContext %p %p %p %lx %lx %p %p %p %p\n", phCredential, phContext, pInput,
-        fContextReq, TargetDataRep, phNewContext, pOutput, pfContextAttr, ptsExpiry);
+    TRACE("AcceptSecurityContext %lx %lx %p %lx %lx %p %p %p %p\n",
+        hCredential, hContext, pInput, fContextReq, TargetDataRep,
+        phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
-    /* get first input token */
-    ret = NtlmGetSecBuffer(pInput,
-                          0,
-                          &InputToken1,
-                          FALSE);
-    if(!ret)
+    // get first input token
+    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
+                               FALSE, &InputToken1);
+    if (!ret)
     {
         ERR("Failed to get input token!\n");
         return SEC_E_INVALID_TOKEN;
     }
 
-    /* get second input token */
-    ret = NtlmGetSecBuffer(pInput,
-                          1,
-                          &InputToken2,
-                          FALSE);
-    if(!ret)
+    // get second input token
+    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 1,
+                               FALSE, &InputToken2);
+    if (!ret)
     {
         ERR("Failed to get input token 2!\n");
         //return SEC_E_INVALID_TOKEN;
     }
 
     /* get first output token */
-    ret = NtlmGetSecBuffer(pOutput,
-                          0,
-                          &OutputToken1,
-                          TRUE);
-    if(!ret)
+    ret = NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
+                               TRUE, &OutputToken1);
+    if (!ret)
     {
         ERR("Failed to get output token!\n");
         return SEC_E_BUFFER_TOO_SMALL;
     }
 
-    /* first call */
-    if(!phContext)// && !InputToken2)
+    // first call
+    if (hContext == 0)// && !InputToken2)
     {
-        if(!phCredential)
+        if (hCredential == 0)
         {
             ret = SEC_E_INVALID_HANDLE;
             goto fail;
         }
-        /* initialize with 0 to create a new context */
-        phNewContext->dwLower = 0;
-        TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
-        ret = SvrHandleNegotiateMessage(phCredential->dwLower,
-                                        &phNewContext->dwLower,
+        // initialize with 0 to create a new context
+        *phNewContext = 0;
+        TRACE("phNewContext->dwLower %lx\n", *phNewContext);
+        ret = SvrHandleNegotiateMessage(hCredential,
+                                        phNewContext,
                                         fContextReq,
                                         InputToken1,
                                         InputToken2,
@@ -827,9 +811,9 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     }
     else
     {
-        *phNewContext = *phContext;
-        TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
-        ret = SvrHandleAuthenticateMessage(phNewContext->dwLower,
+        *phNewContext = hContext;
+        TRACE("phNewContext->dwLower %lx\n", *phNewContext);
+        ret = SvrHandleAuthenticateMessage((ULONG_PTR)*phNewContext,
                                            fContextReq,
                                            InputToken1,
                                            OutputToken1,
@@ -845,20 +829,15 @@ AcceptSecurityContext(IN PCredHandle phCredential,
         goto fail;
     }
 
-    /* build blob with the output message */
-    BufferDesc.ulVersion = SECBUFFER_VERSION;
-    BufferDesc.cBuffers = 1;
-    BufferDesc.pBuffers = OutputToken1;
-
     if(fContextReq & ASC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ASC_RET_ALLOCATED_MEMORY;
 
-    *pOutput = BufferDesc;
     return ret;
 fail:
     return ret;
 }
 
+#ifdef __UNUSED__
 SECURITY_STATUS
 SEC_ENTRY
 DeleteSecurityContext(PCtxtHandle phContext)

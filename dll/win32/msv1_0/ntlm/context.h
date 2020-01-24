@@ -25,4 +25,17 @@ NtlmInitializeSecurityContext(
     OUT ULONG *pfContextAttr,
     OUT OPTIONAL PTimeStamp ptsExpiry);
 
+SECURITY_STATUS
+SEC_ENTRY
+NtlmAcceptSecurityContext(
+    IN LSA_SEC_HANDLE hCredential,
+    IN LSA_SEC_HANDLE hContext,
+    IN PSecBufferDesc pInput,
+    IN ULONG fContextReq,
+    IN ULONG TargetDataRep,
+    IN OUT PLSA_SEC_HANDLE phNewContext,
+    IN OUT PSecBufferDesc pOutput,
+    OUT ULONG *pfContextAttr,
+    OUT PTimeStamp ptsExpiry);
+
 #endif

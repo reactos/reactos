@@ -362,8 +362,8 @@ CliGenerateAuthenticationMessage(
 /* ??? message functions */
 SECURITY_STATUS
 SvrHandleNegotiateMessage(
-    IN ULONG_PTR hCredential,
-    IN OUT PULONG_PTR phContext,
+    IN LSA_SEC_HANDLE hCredential,
+    IN OUT PLSA_SEC_HANDLE phContext,
     IN ULONG ASCContextReq,
     IN PSecBuffer InputToken1,
     IN PSecBuffer InputToken2,

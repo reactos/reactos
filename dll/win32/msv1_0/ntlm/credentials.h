@@ -26,6 +26,18 @@ NtlmAcquireCredentialsHandle(
     OUT PLSA_SEC_HANDLE phCredential,
     OUT PTimeStamp ptsExpiry);
 
+SECURITY_STATUS
+SEC_ENTRY
+NtlmFreeCredentialsHandle(
+    LSA_SEC_HANDLE hCredential);
+
+SECURITY_STATUS
+SEC_ENTRY
+NtlmQueryCredentialsAttributes(
+    IN LSA_SEC_HANDLE hCredential,
+    IN ULONG ulAttribute,
+    IN OUT PVOID pBuffer);
+
 PNTLMSSP_CREDENTIAL
 NtlmReferenceCredential(IN ULONG_PTR Handle);
 

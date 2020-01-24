@@ -74,7 +74,7 @@ LsaSpQueryCredentialsAttributes(
 
 NTSTATUS NTAPI
 LsaSpFreeCredentialsHandle(
-    LSA_SEC_HANDLE p1);
+    IN LSA_SEC_HANDLE CredentialHandle);
 
 NTSTATUS NTAPI
 LsaSpSaveCredentials(
@@ -113,17 +113,17 @@ LsaSpInitLsaModeContext(
 
 NTSTATUS NTAPI
 LsaSpAcceptLsaModeContext(
-    LSA_SEC_HANDLE p1,
-    LSA_SEC_HANDLE p2,
-    PSecBufferDesc p3,
-    ULONG p4,
-    ULONG p5,
-    PLSA_SEC_HANDLE p6,
-    PSecBufferDesc p7,
-    PULONG p8,
-    PTimeStamp p9,
-    PBOOLEAN p10,
-    PSecBuffer p11);
+    LSA_SEC_HANDLE CredentialHandle,
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc InputBuffer,
+    ULONG ContextRequirements,
+    ULONG TargetDataRep,
+    PLSA_SEC_HANDLE NewContextHandle,
+    PSecBufferDesc OutputBuffer,
+    PULONG ContextAttributes,
+    PTimeStamp ExpirationTime,
+    PBOOLEAN MappedContext,
+    PSecBuffer ContextData);
 
 NTSTATUS NTAPI
 LsaSpDeleteContext(
@@ -148,9 +148,9 @@ LsaSpGetExtendedInformation(
 
 NTSTATUS NTAPI
 LsaSpQueryContextAttributes(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PVOID p3);
+    LSA_SEC_HANDLE CredentialHandle,
+    ULONG CredentialAttribute,
+    PVOID Buffer);
 
 NTSTATUS NTAPI
 LsaSpAddCredentials(
