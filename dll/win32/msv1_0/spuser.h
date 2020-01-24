@@ -53,9 +53,9 @@ UsrSpGetContextToken(
 
 NTSTATUS NTAPI
 UsrSpQueryContextAttributes(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PVOID p3);
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN ULONG ContextAttribute,
+    IN OUT PVOID Buffer);
 
 NTSTATUS NTAPI
 UsrSpCompleteAuthToken(

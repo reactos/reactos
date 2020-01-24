@@ -39,7 +39,7 @@ SpInstanceInit(
     }
 
     UsrFunctionTable = FunctionTable;
-    NtlmInit(NtlmUserMode);
+    //NtlmInit(NtlmUserMode);
 
     return STATUS_SUCCESS;
 }
@@ -120,14 +120,19 @@ UsrSpGetContextToken(
 
 NTSTATUS NTAPI
 UsrSpQueryContextAttributes(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PVOID p3)
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN ULONG ContextAttribute,
+    IN OUT PVOID Buffer)
 {
-    fdTRACE("UsrSpQueryContextAttributes(%p 0x%x %p)\n",
-          p1, p2, p3);
+    SECURITY_STATUS status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpQueryContextAttributes(%p 0x%x %p)\n",
+            ContextHandle, ContextAttribute, Buffer);
+
+    status = NtlmQueryContextAttributesAW(ContextHandle, ContextAttribute, Buffer, TRUE);
+
+    fdTRACE("Status %x\n", status);
+    return status;
 }
 
 NTSTATUS NTAPI

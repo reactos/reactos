@@ -602,13 +602,14 @@ InitializeSecurityContextA(IN OPTIONAL PCredHandle phCredential,
     HeapFree(GetProcessHeap(), 0, target);
     return ret;
 }
+#endif
 
 SECURITY_STATUS
 SEC_ENTRY
-QueryContextAttributesAW(
-    IN PCtxtHandle phContext,
+NtlmQueryContextAttributesAW(
+    IN LSA_SEC_HANDLE hContext,
     IN ULONG ulAttribute,
-    OUT void *pBuffer,
+    OUT PVOID pBuffer,
     IN BOOL isUnicode)
 {
     const WCHAR* PKG_NAME_W = L"NTLM";
@@ -617,9 +618,9 @@ QueryContextAttributesAW(
     const char* PKG_COMMENT_A = "NTLM Security Package";
 
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT_HDR context = NtlmReferenceContextHdr(phContext->dwLower);
+    PNTLMSSP_CONTEXT_HDR context = NtlmReferenceContextHdr(hContext);
 
-    TRACE("%p %lx %p\n", phContext, ulAttribute, pBuffer);
+    TRACE("%p %lx %p\n", hContext, ulAttribute, pBuffer);
 
     if (!context)
         return SEC_E_INVALID_HANDLE;
@@ -668,7 +669,7 @@ QueryContextAttributesAW(
                           (wcslen(PKG_NAME_W) + 1) * sizeof(WCHAR) +
                           (wcslen(PKG_COMMENT_W) + 1) * sizeof(WCHAR);
 
-                spiW = (PSecPkgInfoW)NtlmAllocate(spiSize);
+                spiW = (PSecPkgInfoW)NtlmAllocate(spiSize, FALSE);
                 spiW->fCapabilities = 0x82b37;
                 spiW->cbMaxToken = 2888;
                 spiW->wVersion = 1;
@@ -690,7 +691,7 @@ QueryContextAttributesAW(
                           (strlen(PKG_NAME_A) + 1) * sizeof(char) +
                           (strlen(PKG_COMMENT_A) + 1) * sizeof(char);
 
-                spiA = (PSecPkgInfoA)NtlmAllocate(spiSize);
+                spiA = (PSecPkgInfoA)NtlmAllocate(spiSize, FALSE);
                 spiA->fCapabilities = 0x82b37;
                 spiA->cbMaxToken = 2888;
                 spiA->wVersion = 1;
@@ -717,6 +718,7 @@ QueryContextAttributesAW(
     return ret;
 }
 
+#ifdef __UNUSED__
 SECURITY_STATUS
 SEC_ENTRY
 QueryContextAttributesW(

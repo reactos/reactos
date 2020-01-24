@@ -38,4 +38,12 @@ NtlmAcceptSecurityContext(
     OUT ULONG *pfContextAttr,
     OUT PTimeStamp ptsExpiry);
 
+SECURITY_STATUS
+SEC_ENTRY
+NtlmQueryContextAttributesAW(
+    IN LSA_SEC_HANDLE hContext,
+    IN ULONG ulAttribute,
+    OUT PVOID pBuffer,
+    IN BOOL isUnicode);
+
 #endif
