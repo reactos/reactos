@@ -357,20 +357,22 @@ NtlmUnProtectMemory(
 
 /* util.c */
 
-void*
+PVOID
 NtlmAllocate(
-    IN size_t Size);
+    IN size_t Size,
+    IN BOOL UsePrivateLsaHeap);
 
-void
+VOID
 NtlmFree(
-    IN void* Buffer);
+    IN PVOID Buffer,
+    IN BOOL FromPrivateLsaHeap);
 
-void
+VOID
 NtlmInit(
     _In_ NTLM_MODE mode);
 
-void
-NtlmFini(void);
+VOID
+NtlmFini(VOID);
 
 #ifdef __UNUSED__
 BOOLEAN

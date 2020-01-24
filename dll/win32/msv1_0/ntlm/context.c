@@ -173,7 +173,7 @@ NtlmDereferenceContext(IN ULONG_PTR Handle)
         RemoveEntryList(&context->Entry);
 
         /* delete object */
-        NtlmFree(context);
+        NtlmFree(context, FALSE);
     }
 
     LeaveCriticalSection(&ContextCritSect);
@@ -212,7 +212,7 @@ NtlmAllocateContextHdr(BOOL isServer)
     ULONG ctxSize = (isServer) ? sizeof(NTLMSSP_CONTEXT_SVR) :
                                  sizeof(NTLMSSP_CONTEXT_CLI);
 
-    ret = (PNTLMSSP_CONTEXT_HDR)NtlmAllocate(ctxSize);
+    ret = (PNTLMSSP_CONTEXT_HDR)NtlmAllocate(ctxSize, FALSE);
 
     if(!ret)
     {
@@ -566,9 +566,9 @@ fail:
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
     {
         if(OutputToken1 && OutputToken1->pvBuffer)
-            NtlmFree(OutputToken1->pvBuffer);
+            NtlmFree(OutputToken1->pvBuffer, FALSE);
         if(OutputToken2 && OutputToken2->pvBuffer)
-            NtlmFree(OutputToken2->pvBuffer);
+            NtlmFree(OutputToken2->pvBuffer, FALSE);
     }
 
     return ret;

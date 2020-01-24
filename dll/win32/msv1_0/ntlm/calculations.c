@@ -194,7 +194,7 @@ SIGNKEY(
     ULONG len = strlen(magic) + 1;
     UCHAR *md5_input = NULL;
 
-    md5_input = NtlmAllocate(16 + len);
+    md5_input = NtlmAllocate(16 + len, FALSE);
     if (!md5_input)
         return FALSE;
 
@@ -202,7 +202,7 @@ SIGNKEY(
     memcpy(md5_input + 16, magic, len);
     MD5(md5_input, len + 16, Result);
 
-    NtlmFree(md5_input);
+    NtlmFree(md5_input, FALSE);
 
     return TRUE;
 }
@@ -225,7 +225,7 @@ SEALKEY(
         UCHAR* md5_input;
         ULONG key_len;
 
-        md5_input = (UCHAR*)NtlmAllocate(16+len);
+        md5_input = (UCHAR*)NtlmAllocate(16+len, FALSE);
         if(!md5_input)
         {
             ERR("Out of memory\n");
@@ -309,7 +309,7 @@ MAC(
         //Set NTLMSSP_MESSAGE_SIGNATURE.Checksum to RC4(Handle,
         //HMAC_MD5(SigningKey, ConcatenationOf(SeqNum, Message))[0..7])
         dataLen = sizeof(ULONG) + msgLen;
-        data = NtlmAllocate(dataLen);
+        data = NtlmAllocate(dataLen, FALSE);
         memcpy(data + sizeof(ULONG), msg, msgLen);
         *(PULONG)(data) = *pSeqNum;
         HMAC_MD5(SigningKey, SigningKeyLength, data, dataLen, dataMD5);
@@ -333,7 +333,7 @@ MAC(
         pmsig->Version = 1;
         pmsig->SeqNum = *pSeqNum;
 
-        NtlmFree(data);
+        NtlmFree(data, FALSE);
 
         (*pSeqNum)++;
     }
@@ -709,12 +709,12 @@ ComputeResponseNTLMv2(
         //  HMAC_MD5(ResponseKeyNT,
         //           ConcatenationOf(CHALLENGE_MESSAGE.ServerChallenge,temp))
         ccTempLen = MSV1_0_CHALLENGE_LENGTH + tempLen;
-        ccTemp = NtlmAllocate(ccTempLen);
+        ccTemp = NtlmAllocate(ccTempLen, FALSE);
         memcpy(ccTemp, ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
         memcpy(ccTemp + MSV1_0_CHALLENGE_LENGTH, temp, tempLen);
         HMAC_MD5(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH,
                  ccTemp, ccTempLen, NTProofStr);
-        NtlmFree(ccTemp);
+        NtlmFree(ccTemp, FALSE);
 
         //Set NtChallengeResponse to ConcatenationOf(NTProofStr, temp)
         //memcpy(&NtChallengeResponse[0], NTProofStr, ARRAYSIZE(NTProofStr));//16
@@ -734,13 +734,13 @@ ComputeResponseNTLMv2(
         //ConcatenationOf(CHALLENGE_MESSAGE.ServerChallenge, ClientChallenge)),
         //ClientChallenge )
         ccTempLen = 2 * MSV1_0_CHALLENGE_LENGTH;
-        ccTemp = NtlmAllocate(ccTempLen);
+        ccTemp = NtlmAllocate(ccTempLen, FALSE);
         memcpy(ccTemp, ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
         memcpy(ccTemp + MSV1_0_CHALLENGE_LENGTH, ClientChallenge, MSV1_0_CHALLENGE_LENGTH);
         HMAC_MD5(ResponseKeyNT, MSV1_0_NT_OWF_PASSWORD_LENGTH,
                  ccTemp, ccTempLen,
                  pLmChallengeResponse->Response);
-        NtlmFree(ccTemp);
+        NtlmFree(ccTemp, FALSE);
         memcpy(pLmChallengeResponse->ChallengeFromClient, ClientChallenge, 8);
         #ifdef VALIDATE_NTLMv2
         TRACE("**** VALIDATE **** LmChallengeResponse\n");

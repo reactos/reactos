@@ -92,7 +92,7 @@ NtlmDereferenceCredential(IN ULONG_PTR Handle)
         RemoveEntryList(&cred->Entry);
 
         /* delete object */
-        NtlmFree(cred);
+        NtlmFree(cred, FALSE);
     }
     LeaveCriticalSection(&CredentialCritSect);
 }
@@ -203,20 +203,23 @@ LookupCrdentialsHandle(
     //_In_ BOOLEAN Impersonating,
     _Out_ PNTLMSSP_CREDENTIAL *FoundCred)
 {
-    //PNTLMSSP_GLOBALS g;
+    PLIST_ENTRY CredEntry;
     PNTLMSSP_CREDENTIAL Cred;
     *FoundCred = NULL;
 
     EnterCriticalSection(&CredentialCritSect);
-    while (!IsListEmpty(&ValidCredentialList))
+    for (CredEntry = ValidCredentialList.Flink;
+         CredEntry != &ValidCredentialList;
+         CredEntry = CredEntry->Flink)
     {
-        Cred = CONTAINING_RECORD(ValidCredentialList.Flink, NTLMSSP_CREDENTIAL, Entry);
+        Cred = CONTAINING_RECORD(CredEntry, NTLMSSP_CREDENTIAL, Entry);
         //FIXME: What should be equal?
         //FIXME: compare password??
         //FIXME: Check expirationtime ...
         if ((Cred->LogonId.LowPart != LogonId->LowPart) ||
             (Cred->LogonId.HighPart != LogonId->HighPart) ||
             (Cred->UseFlags != CredentialsUseFlags) ||
+            (Cred->ProcId != ProcessId) ||
             (!ExtWStrIsEqual1(&Cred->UserNameW, UserName, FALSE)))
             //(!ExtWStrIsEqual1(&Cred->DomainNameW, DomainName, FALSE))
             continue;
@@ -256,7 +259,7 @@ IntAcquireCredentialsHandle(
         return STATUS_SUCCESS;
 
     // we need to build a credential
-    NewCred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
+    NewCred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL), FALSE);
     NewCred->RefCount = 1;
     NewCred->LogonId = *LogonId;
     NewCred->ProcId = ClientInfo->ProcessID;

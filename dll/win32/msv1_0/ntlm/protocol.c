@@ -115,7 +115,7 @@ CliGenerateNegotiateMessage(
     else
     {
         /* allocate */
-        OutputToken->pvBuffer = NtlmAllocate(messageSize);
+        OutputToken->pvBuffer = NtlmAllocate(messageSize, FALSE);
         OutputToken->cbBuffer = messageSize;
 
         if(!OutputToken->pvBuffer)
@@ -356,7 +356,7 @@ SvrGenerateChallengeMessage(
          * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
          * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
          */
-        OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
+        OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF, FALSE);
         OutputToken->cbBuffer = NTLM_MAX_BUF;
     }
     else
@@ -463,7 +463,7 @@ SvrHandleNegotiateMessage(
     }
 
     /* allocate a buffer for it */
-    if(!(negoMessage = NtlmAllocate(sizeof(NEGOTIATE_MESSAGE))))
+    if (!(negoMessage = NtlmAllocate(sizeof(NEGOTIATE_MESSAGE), FALSE)))
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         goto exit;
@@ -646,7 +646,7 @@ SvrHandleNegotiateMessage(
     //    *pASCContextAttr |= ASC_RET_INTEGRITY;
 
 exit:
-    if(negoMessage) NtlmFree(negoMessage);
+    if(negoMessage) NtlmFree(negoMessage, FALSE);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
     if (context) NtlmDereferenceContext((ULONG_PTR)context);
     ExtStrFree(&OemDomainName);
@@ -1044,7 +1044,7 @@ CliGenerateAuthenticationMessage(
     else
     {
         /* allocate */
-        if(!(OutputToken1->pvBuffer = NtlmAllocate(messageSize)))
+        if (!(OutputToken1->pvBuffer = NtlmAllocate(messageSize, FALSE)))
         {
             ret = SEC_E_INSUFFICIENT_MEMORY;
             goto quit;
@@ -1120,7 +1120,7 @@ quit:
         /* maybe free authmessage */
         if ((ISCContextReq & ISC_REQ_ALLOCATE_MEMORY) &&
             (authmessage))
-            NtlmFree(authmessage);
+            NtlmFree(authmessage, FALSE);
     }
     if(context) NtlmDereferenceContext((ULONG_PTR)context);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
@@ -1668,7 +1668,7 @@ SvrHandleAuthenticateMessage(
     }
 
     /* allocate a buffer for it */
-    if(!(ad.authMessage = NtlmAllocate(sizeof(AUTHENTICATE_MESSAGE))))
+    if (!(ad.authMessage = NtlmAllocate(sizeof(AUTHENTICATE_MESSAGE), FALSE)))
     {
         ERR("failed to allocate authMessage buffer!\n");
         ret = SEC_E_INSUFFICIENT_MEMORY;

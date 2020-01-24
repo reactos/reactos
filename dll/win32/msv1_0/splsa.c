@@ -426,7 +426,7 @@ LsaSpGetExtendedInformation(
         case SecpkgContextThunks:
         {
             PSECPKG_EXTENDED_INFORMATION pInfo;
-            pInfo = NtlmAllocate(sizeof(SECPKG_EXTENDED_INFORMATION));
+            pInfo = NtlmAllocate(sizeof(SECPKG_EXTENDED_INFORMATION), FALSE);
             if (pInfo == NULL)
                 return STATUS_NO_MEMORY;
 
@@ -449,7 +449,7 @@ LsaSpGetExtendedInformation(
             // allocate memory at once: for struct and string
             // (WinXP does it in the same way 30(struct) + 204(wchar) bytes).
             buffer = NtlmAllocate(sizeof(SECPKG_EXTENDED_INFORMATION) +
-                                                  (MAX_PATH_SHORT * sizeof(WCHAR)));
+                                  MAX_PATH_SHORT * sizeof(WCHAR), FALSE);
             if (buffer == NULL)
             {
                 ERR("Failed to allocate memmory!\n");

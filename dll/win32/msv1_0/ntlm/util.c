@@ -24,7 +24,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 void*
 NtlmAllocate(
-    IN size_t Size)
+    IN size_t Size,
+    IN BOOL UsePrivateLsaHeap)
 {
     PVOID buffer = NULL;
 
@@ -37,37 +38,57 @@ NtlmAllocate(
     switch(NtlmMode)
     {
         case NtlmLsaMode:
-            buffer = LsaFunctions->AllocateLsaHeap(Size);
+        {
+            if (UsePrivateLsaHeap)
+                buffer = LsaFunctions->AllocatePrivateHeap(Size);
+            else
+                buffer = LsaFunctions->AllocateLsaHeap(Size);
+
             if (buffer != NULL)
                 RtlZeroMemory(buffer, Size);
             break;
+        }
         case NtlmUserMode:
+        {
             buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
             break;
+        }
         default:
+        {
             ERR("NtlmState unknown!\n");
             break;
+        }
     }
     return buffer;
 }
 
 void
 NtlmFree(
-    IN void* Buffer)
+    IN PVOID Buffer,
+    IN BOOL FromPrivateLsaHeap)
 {
     if (Buffer)
     {
         switch (NtlmMode)
         {
             case NtlmLsaMode:
-                LsaFunctions->FreeLsaHeap(Buffer);
+            {
+                if (FromPrivateLsaHeap)
+                    LsaFunctions->FreePrivateHeap(Buffer);
+                else
+                    LsaFunctions->FreeLsaHeap(Buffer);
                 break;
+            }
             case NtlmUserMode:
+            {
                 HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, Buffer);
                 break;
+            }
             default:
+            {
                 ERR("NtlmState unknown!\n");
                 break;
+            }
         }
     }
     else
@@ -468,7 +489,21 @@ NtlmStructWriteStrW(
     *pOffset += datalen;
 }
 
-void
+PVOID
+StrUtilAlloc(
+    IN size_t Size)
+{
+    return NtlmAllocate(Size, FALSE);
+}
+
+VOID
+StrUtilFree(
+    IN PVOID Buffer)
+{
+    NtlmFree(Buffer, FALSE);
+}
+
+VOID
 NtlmInit(
     _In_ NTLM_MODE mode)
 {
@@ -482,7 +517,7 @@ NtlmInit(
     }
     NtlmMode = mode;
 
-    init_strutil(NtlmAllocate, NtlmFree);
+    init_strutil(StrUtilAlloc, StrUtilFree);
     NtlmInitializeGlobals();
     NtlmInitializeRNG();
     NtlmInitializeProtectedMemory();
@@ -490,8 +525,8 @@ NtlmInit(
     NtlmContextInitialize();
 }
 
-void
-NtlmFini(void)
+VOID
+NtlmFini(VOID)
 {
     NtlmContextTerminate();
     NtlmCredentialTerminate();
