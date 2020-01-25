@@ -72,8 +72,6 @@ public:
     private:
         HANDLE m_hExtractionThread;
         HANDLE m_hExtractionMutex;
-        bool m_bExtractionThreadOver;
-        bool m_bExtractionThreadSuccess;
         bool m_bExtractionThreadCancel;
 
         CZipExtract* m_pExtract;
@@ -82,10 +80,8 @@ public:
     public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
             :CPropertyPageImpl<CExtractSettingsPage>(MAKEINTRESOURCE(IDS_WIZ_TITLE))
-            ,m_hExtractionThread(INVALID_HANDLE_VALUE)
-            ,m_hExtractionMutex(INVALID_HANDLE_VALUE)
-            ,m_bExtractionThreadOver(true)
-            ,m_bExtractionThreadSuccess(false)
+            ,m_hExtractionThread(NULL)
+            ,m_hExtractionMutex(NULL)
             ,m_bExtractionThreadCancel(false)
             ,m_pExtract(extract)
             ,m_pPassword(password)
@@ -106,42 +102,38 @@ public:
 
         int OnWizardNext()
         {
-            if (m_hExtractionMutex != INVALID_HANDLE_VALUE)
+            if (m_hExtractionThread != NULL)
             {
-                WaitForSingleObject(m_hExtractionMutex, INFINITE);
-                if (m_bExtractionThreadOver)
+                /* We enter here when extraction has finished, and go to next page if it succeeded */
+                WaitForSingleObject(m_hExtractionThread, INFINITE);
+                CloseHandle(m_hExtractionThread);
+                m_hExtractionThread = NULL;
+                CloseHandle(m_hExtractionMutex);
+                m_hExtractionMutex = NULL;
+                m_pExtract->Release();
+                if (!m_bExtractionThreadCancel)
+                    return 0;
+                else
                 {
-                    if (m_bExtractionThreadSuccess)
-                    {
-                        ReleaseMutex(m_hExtractionMutex);
-                        return 0;
-                    }
-                    else if (m_bExtractionThreadCancel)
-                    {
-                        SetWindowLongPtr(DWLP_MSGRESULT, -1);
-
-                        ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
-                        ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
-                        ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
-                        SetWizardButtons(PSWIZB_NEXT);
-
-                        CWindow Progress(GetDlgItem(IDC_PROGRESS));
-                        Progress.SendMessage(PBM_SETRANGE32, 0, 1);
-                        Progress.SendMessage(PBM_SETPOS, 0, 0);
-
-                        m_bExtractionThreadCancel = false;
-                        ReleaseMutex(m_hExtractionMutex);
-
-                        return TRUE;
-                    }
+                    SetWindowLongPtr(DWLP_MSGRESULT, -1);
+                    return TRUE;
                 }
-                ReleaseMutex(m_hExtractionMutex);
-            }
-            else
-            {
-                m_hExtractionMutex = CreateMutex(NULL, FALSE, NULL);
             }
 
+            /* We end up here if the user manually clicks Next: start extraction*/
+            m_bExtractionThreadCancel = false;
+
+            m_hExtractionMutex = CreateMutex(NULL, FALSE, NULL);
+            if (!m_hExtractionMutex)
+            {
+                /* Extraction mutex creation failed, do not go to the next page */
+                DWORD err = GetLastError();
+                DPRINT1("ERROR, m_hExtractionMutex: CreateMutex failed: 0x%x\n", err);
+                SetWindowLongPtr(DWLP_MSGRESULT, -1);
+                return TRUE;
+            }
+
+            /* Grey out every control during extraction to prevent user interaction */
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
             ::EnableWindow(GetDlgItem(IDC_DIRECTORY), FALSE);
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
@@ -150,71 +142,73 @@ public:
             if (m_pExtract->m_DirectoryChanged)
                 UpdateDirectory();
 
-            if (m_hExtractionThread != INVALID_HANDLE_VALUE)
-            {
-                CloseHandle(m_hExtractionThread);
-                m_hExtractionThread = INVALID_HANDLE_VALUE;
-            }
+            m_pExtract->AddRef();
+
             m_hExtractionThread = CreateThread(
                 NULL, 0,
                 &CExtractSettingsPage::ExtractEntry,
                 this,
-                CREATE_SUSPENDED,
+                0,
                 NULL);
 
             if (!m_hExtractionThread)
             {
                 /* Extraction thread creation failed, do not go to the next page */
+                DWORD err = GetLastError();
+                DPRINT1("ERROR, m_hExtractionThread: CreateThread failed: 0x%x\n", err);
+                CloseHandle(m_hExtractionMutex);
+                m_hExtractionMutex = NULL;
+                m_pExtract->Release();
+
                 SetWindowLongPtr(DWLP_MSGRESULT, -1);
 
                 ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
                 SetWizardButtons(PSWIZB_NEXT);
-
-                m_hExtractionThread = INVALID_HANDLE_VALUE;
-
-                return TRUE;
             }
-            ResumeThread(m_hExtractionThread);
-            return -1;
+            return TRUE;
         }
 
         static DWORD WINAPI ExtractEntry(LPVOID lpParam)
         {
             CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
-            WaitForSingleObject(pPage->m_hExtractionMutex, INFINITE);
-            {
-                pPage->m_bExtractionThreadOver =  false;
-                pPage->m_bExtractionThreadCancel = false;
-            }
-            ReleaseMutex(pPage->m_hExtractionMutex);
             bool res = pPage->m_pExtract->Extract(pPage->m_hWnd, pPage->GetDlgItem(IDC_PROGRESS), pPage->m_hExtractionMutex, &(pPage->m_bExtractionThreadCancel));
             WaitForSingleObject(pPage->m_hExtractionMutex, INFINITE);
             {
-                pPage->m_bExtractionThreadSuccess =  res;
-                pPage->m_bExtractionThreadOver =  true;
+                /* Failing and cancelling extraction both mean we stay on the same property page */
+                pPage->m_bExtractionThreadCancel = !res;
             }
             ReleaseMutex(pPage->m_hExtractionMutex);
+
             pPage->SetWizardButtons(PSWIZB_NEXT);
-            PropSheet_PressButton(pPage->GetParent().m_hWnd, PSBTN_NEXT);
+            if (!res)
+            {
+                /* Extraction failed/cancelled: the page becomes interactive again */
+                ::EnableWindow(pPage->GetDlgItem(IDC_BROWSE), TRUE);
+                ::EnableWindow(pPage->GetDlgItem(IDC_DIRECTORY), TRUE);
+                ::EnableWindow(pPage->GetDlgItem(IDC_PASSWORD), TRUE);
+                pPage->SetWizardButtons(PSWIZB_NEXT);
+
+                /* Reset the progress bar's appearance */
+                CWindow Progress(pPage->GetDlgItem(IDC_PROGRESS));
+                Progress.SendMessage(PBM_SETRANGE32, 0, 1);
+                Progress.SendMessage(PBM_SETPOS, 0, 0);
+            }
+            SendMessageCallback(pPage->GetParent().m_hWnd, PSM_PRESSBUTTON, PSBTN_NEXT, 0, NULL, NULL);
 
             return 0;
         }
 		
         BOOL OnQueryCancel()
         {
-            if (m_hExtractionMutex != INVALID_HANDLE_VALUE)
+            if (m_hExtractionMutex != NULL)
             {
-                bool bIsRunning = false;
+                /* Extraction will check the value of m_bExtractionThreadCancel between each file in the archive */
                 WaitForSingleObject(m_hExtractionMutex, INFINITE);
                 m_bExtractionThreadCancel = true;
-                bIsRunning = !m_bExtractionThreadOver;
                 ReleaseMutex(m_hExtractionMutex);
-                if (bIsRunning)
-                {
-                    return TRUE;
-                }
+                return TRUE;
             }
             return FALSE;
         }
