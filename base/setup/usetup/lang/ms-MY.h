@@ -1317,7 +1317,7 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 

@@ -1334,7 +1334,7 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 

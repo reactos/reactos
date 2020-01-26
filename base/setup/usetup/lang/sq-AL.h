@@ -1332,7 +1332,7 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 

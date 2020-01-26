@@ -1330,7 +1330,7 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
         0,
         "ENTER = Kontynuacja   F3 = Wyj\230cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
+        0
     },
     {
         0,

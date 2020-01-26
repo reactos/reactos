@@ -1333,7 +1333,7 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
