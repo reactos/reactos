@@ -39,7 +39,7 @@ SpInstanceInit(
     }
 
     UsrFunctionTable = FunctionTable;
-    //NtlmInit(NtlmUserMode);
+    NtlmInit(NtlmUserMode);
 
     return STATUS_SUCCESS;
 }
