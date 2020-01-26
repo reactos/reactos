@@ -1309,7 +1309,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 

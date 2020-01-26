@@ -1336,7 +1336,7 @@ static MUI_ENTRY ptBRFormatPartitionEntries[] =
         0,
         "ENTER=Continuar  F3=Sair",
         TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
+        0
     },
     {
         0,

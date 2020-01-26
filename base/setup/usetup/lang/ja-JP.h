@@ -1328,7 +1328,7 @@ static MUI_ENTRY jaJPFormatPartitionEntries[] =
         0,
         0,
         NULL,
-        TEXT_STYLE_NORMAL
+        0
     }
 };
 
