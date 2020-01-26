@@ -10,6 +10,12 @@
 #define _CONTEXT_H_
 
 SECURITY_STATUS
+NtlmContextInitialize(VOID);
+
+VOID
+NtlmContextTerminate(VOID);
+
+SECURITY_STATUS
 SEC_ENTRY
 NtlmInitializeSecurityContext(
     IN OPTIONAL LSA_SEC_HANDLE hCredential,

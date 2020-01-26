@@ -298,12 +298,6 @@ PNTLMSSP_GLOBALS_SVR getGlobalsSvr(VOID);
 
 /* context.c */
 
-NTSTATUS
-NtlmContextInitialize(VOID);
-
-VOID
-NtlmContextTerminate(VOID);
-
 PNTLMSSP_CONTEXT_CLI
 NtlmAllocateContextCli(VOID);
 PNTLMSSP_CONTEXT_SVR

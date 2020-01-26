@@ -25,13 +25,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 CRITICAL_SECTION ContextCritSect;
 LIST_ENTRY ValidContextList;
 
-NTSTATUS
+SECURITY_STATUS
 NtlmContextInitialize(VOID)
 {
     InitializeCriticalSection(&ContextCritSect);
     InitializeListHead(&ValidContextList);
 
-    return STATUS_SUCCESS;
+    return SEC_E_OK;
 }
 
 PNTLMSSP_CONTEXT_HDR
