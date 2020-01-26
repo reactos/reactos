@@ -22,11 +22,11 @@ typedef enum bfd_architecture
 {
   bfd_arch_i386,
 } bfd_arch;
-typedef unsigned int bfd_vma;
+typedef uintptr_t bfd_vma;
 typedef unsigned char bfd_byte;
 enum bfd_endian { BFD_ENDIAN_BIG, BIG_ENDIAN_LITTLE, BFD_ENDIAN_UNKNOWN };
 typedef void* bfd;
-typedef signed int bfd_signed_vma;
+typedef intptr_t bfd_signed_vma;
 #define bfd_mach_x86_64_intel_syntax 0
 #define bfd_mach_x86_64 1
 #define bfd_mach_i386_i386_intel_syntax 2
@@ -36,7 +36,7 @@ typedef signed int bfd_signed_vma;
 #define _(X) X
 #define ATTRIBUTE_UNUSED
 extern int sprintf(char *str, const char *format, ...);
-#define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%X", VMA)
+#define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%IX", VMA)
 struct disassemble_info;
 
 int
@@ -63,20 +63,20 @@ KdbpNopPrintDisasm(void* Ignored, const char* fmt, ...)
 }
 
 static int
-KdbpReadMemory(unsigned int Addr, unsigned char* Data, unsigned int Length,
+KdbpReadMemory(uintptr_t Addr, unsigned char* Data, unsigned int Length,
 	       struct disassemble_info * Ignored)
 {
   return KdbpSafeReadMemory(Data, (void *)Addr, Length); /* 0 means no error */
 }
 
 static void
-KdbpMemoryError(int Status, unsigned int Addr,
+KdbpMemoryError(int Status, uintptr_t Addr,
 	        struct disassemble_info * Ignored)
 {
 }
 
 static void
-KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
+KdbpPrintAddressInCode(uintptr_t Addr, struct disassemble_info * Ignored)
 {
     if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
@@ -85,14 +85,14 @@ KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 }
 
 static void
-KdbpNopPrintAddress(unsigned int Addr, struct disassemble_info * Ignored)
+KdbpNopPrintAddress(uintptr_t Addr, struct disassemble_info * Ignored)
 {
 }
 
 #include "dis-asm.h"
 
 LONG
-KdbpGetInstLength(IN ULONG Address)
+KdbpGetInstLength(IN ULONG_PTR Address)
 {
   disassemble_info info;
 
@@ -101,7 +101,11 @@ KdbpGetInstLength(IN ULONG Address)
   info.application_data = NULL;
   info.flavour = bfd_target_unknown_flavour;
   info.arch = bfd_arch_i386;
+#ifdef _M_AMD64
+  info.mach = bfd_mach_x86_64;
+#else
   info.mach = bfd_mach_i386_i386;
+#endif
   info.insn_sets = 0;
   info.flags = 0;
   info.read_memory_func = KdbpReadMemory;
@@ -118,7 +122,7 @@ KdbpGetInstLength(IN ULONG Address)
 }
 
 LONG
-KdbpDisassemble(IN ULONG Address, IN ULONG IntelSyntax)
+KdbpDisassemble(IN ULONG_PTR Address, IN ULONG IntelSyntax)
 {
   disassemble_info info;
 
@@ -263,7 +267,11 @@ struct dis_private {
 #define FWAIT_OPCODE (0x9b)
 
 /* Set to 1 for 64bit mode disassembly.  */
+#ifdef _M_AMD64
+static int mode_64bit = 1;
+#else
 static int mode_64bit;
+#endif
 
 /* Flags for the prefixes for the current instruction.  See below.  */
 static int prefixes;
@@ -2079,7 +2087,7 @@ static int
 print_insn (bfd_vma pc, disassemble_info *info)
 {
   const struct dis386 *dp;
-  int i;
+  intptr_t i;
   char *first, *second, *third;
   int needcomma;
   unsigned char uses_SSE_prefix;
@@ -2152,7 +2160,11 @@ print_insn (bfd_vma pc, disassemble_info *info)
 	p++;
     }
 #else
+#ifdef _M_AMD64
+  mode_64bit = 1;
+#else
   mode_64bit = 0;
+#endif
   priv.orig_sizeflag = AFLAG | DFLAG;
   /*intel_syntax = 0;*/
 #endif
@@ -3188,7 +3200,7 @@ print_operand_value (char *buf, int hex, bfd_vma disp)
 	  if (v < 0)
 	    {
 	      *(buf++) = '-';
-	      v = -disp;
+	      v = -v;
 	      /* Check for possible overflow on 0x8000000000000000.  */
 	      if (v < 0)
 		{

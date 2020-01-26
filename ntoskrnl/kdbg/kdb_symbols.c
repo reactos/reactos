@@ -175,7 +175,7 @@ KdbSymPrintAddress(
             /* Use KdpPrintString because KdpDprintf is limited wrt string size */
             KdpDprintf("<%s:%x (", ModuleNameAnsi, RelativeAddress);
             str.Buffer = FileName;
-            str.Length = strnlen(FileName, sizeof(FileName));
+            str.Length = (USHORT)strnlen(FileName, sizeof(FileName));
             str.MaximumLength = sizeof(FileName);
             KdpPrintString(&str);
             KdpDprintf(":%d (%s))>", LineNumber, FunctionName);
