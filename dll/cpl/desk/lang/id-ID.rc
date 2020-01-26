@@ -31,7 +31,7 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "menit", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL "Pintai &kata sandi saat melanjutkan", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+            BS_AUTOCHECKBOX | WS_TABSTOP, 106, 120, 119, 19
     GROUPBOX "Fitur pen&yimpan Daya monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Untuk mengatur setelan daya monitor, klik Daya.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "&Daya...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -127,8 +127,8 @@ BEGIN
     LTEXT "<tidak ada>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "Area &Layar", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Kurangi", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Lebihkan", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "Kurang", 1815, 9, 137, 25, 9, NOT WS_GROUP
+    LTEXT "Lebih", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "&Warna", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -190,8 +190,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+    IDS_STANDARDEFFECT "Standar"
+    IDS_CLEARTYPEEFFECT "Antialias FreeType"
 END
 
 STRINGTABLE
@@ -266,6 +266,6 @@ STRINGTABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Pengaturan Tampilan"
     IDS_APPLY_FAILED "Gagal menerapkan setelan baru..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_APPLY_NEEDS_RESTART "Anda harus memulai ulang komputer untuk menerapkan perubahan."
     IDS_TIMEOUTTEXT "Mengembalikan setelan sebelumnya dalam %d detik."
 END

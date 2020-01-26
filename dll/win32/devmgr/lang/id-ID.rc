@@ -136,7 +136,7 @@ BEGIN
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "Pecahkan &Masalah...", IDC_TROUBLESHOOT, 85, 140, 54, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Pecahkan &Masalah...", IDC_TROUBLESHOOT, 68, 140, 74, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "P&roperti", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
@@ -178,7 +178,7 @@ BEGIN
     PUSHBUTTON "Rincian &Driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "Untuk melihat rincian tentang berkas driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Perbarui Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Update the device driver.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    LTEXT "Memperbarui driver perangkat.", -1, 91, 138, 154, 17, SS_NOPREFIX
     PUSHBUTTON "P&utar kembali Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
     LTEXT "Jika terjadi kegagalan perangkat setelah diperbarui, putar ulang ke driver yang telah dipasang sebelumnya.", -1, 91, 162, 154, 25, SS_NOPREFIX
     PUSHBUTTON "&Bongkar", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
@@ -244,14 +244,14 @@ END
 
 IDD_UNINSTALLDRIVER DIALOGEX 0, 0, 224, 121
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Confirm Device Removal"
+CAPTION "Konfirmasi Penghapusan Perangkat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Warning: You are about to uninstall this device from your system.", -1, 7, 37, 204, 50
+    LTEXT "Peringatan: anda akan mencopot perangkat ini dari sistem anda.", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "OK", IDOK, 110, 100, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 166, 100, 50, 14
+    PUSHBUTTON "Batal", IDCANCEL, 166, 100, 50, 14
 END
 
 
@@ -288,9 +288,9 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Manajer Perangkat ReactOS"
+  IDS_CONFIRM_DISABLE       "Mematikan perangkat ini akan menyebabkan fungsionalitasnya berhenti.\r\nYakin ingin mematikannya?"
+  IDS_CONFIRM_UNINSTALL     "Peringatan: Anda akan mencopot perangkat ini dari sistem anda.\r\nIngin melanjutkan?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

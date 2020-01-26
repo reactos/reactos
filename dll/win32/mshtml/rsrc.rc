@@ -64,6 +64,9 @@
 #ifdef LANGUAGE_HU_HU
     #include "lang/Hu.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/Id.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/It.rc"
 #endif

@@ -241,10 +241,10 @@ BEGIN
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atribut:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 70, 10
-    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 151, 70, 10
-    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 70, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 188, 53, 10
+    AUTOCHECKBOX "&Tersembunyi", 14022, 112, 188, 53, 10
+    AUTOCHECKBOX "&Arsip", 14023, 181, 188, 49, 10
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 166, 185, 64, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -276,11 +276,11 @@ BEGIN
     LTEXT "Diakses:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Atribut:", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 188, 67, 10
-    AUTOCHECKBOX "&Tersembunyi", 14022, 126, 188, 50, 10
-    AUTOCHECKBOX "&Arsip", 14023, 181, 188, 49, 10
-    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    LTEXT "Atribut:", 14020, 8, 189, 53, 10
+    AUTOCHECKBOX "&Hanya-baca", 14021, 58, 151, 53, 10
+    AUTOCHECKBOX "&Tersembunyi", 14022, 112, 151, 50, 10
+    AUTOCHECKBOX "&Arsip", 14023, 181, 151, 70, 10
+    PUSHBUTTON "Tin&gkat Lanjut...", 14028, 165, 150, 63, 14, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -367,7 +367,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Akun pengguna mana yang ingin anda gunakan untuk menjalankan program ini?", -1, 10, 20, 220, 20
     CHECKBOX "Pengguna Saat Ini %s", 14000, 10, 45, 150, 10
-    LTEXT "Lindungi komputer dan data saya dari aktivitas program tanpa izin", -1, 25, 57, 200, 10, WS_DISABLED
+    LTEXT "Lindungi komputer dan data dari aktivitas program tanpa izin", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Opsi ini dapat mencegah virus komputer yang dapat membahayakan komputer atau data pribadi Anda, tetapi memilihnya dapat menyebabkan program berfungsi tidak semestinya.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "Pengguna berikut:", 14002, 10, 100, 90, 10
     LTEXT "Nama pengguna:", -1, 20, 118, 54, 10
@@ -423,13 +423,13 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Buka setiap folder di jen&dela sendiri", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "Klik item sebagai berikut", -1, 7, 110, 249, 60
+    GROUPBOX "Klik item sebagai berikut", -1, 7, 110, 249, 76
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "S&atu klik untuk membuka butir (arahkan untuk pilih)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "D&ua klik untuk membuka butir (satu klik untuk pilih)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    AUTORADIOBUTTON "Garis bawahi judul ikon yang konsisten dengan browser saya", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Garis bawahi judul ikon hanya ketika saya &mengarahkan ke judul tersebut", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
-    PUSHBUTTON "&Kembalikan asal", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
+    AUTORADIOBUTTON "D&ua klik untuk membuka butir (satu klik untuk pilih)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 172, 170, 10
+    AUTORADIOBUTTON "Garis bawahi judul ikon yang konsisten dengan browser saya", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 203, 16, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Garis bawahi judul ikon hanya ketika saya &mengarahkan ke judul tersebut", IDC_FOLDER_OPTIONS_ULPOINT, 50, 152, 203, 16
+    PUSHBUTTON "&Kembalikan asal", IDC_FOLDER_OPTIONS_RESTORE, 167, 190, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -440,8 +440,8 @@ BEGIN
     GROUPBOX "Tampilan folder", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Anda bisa menerapkan (baik Rinci maupun Ubin) yang\nanda gunakan untuk folder ini ke semua folder.", -1, 60, 20, 180, 20
-    PUSHBUTTON "&Terapkan ke Semua Folder", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Reset Semua Folder", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Terapkan ke Semua Folder", IDC_VIEW_APPLY_TO_ALL, 60, 50, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Reset Semua Folder", IDC_VIEW_RESET_ALL, 150, 50, 75, 14, WS_TABSTOP
     LTEXT "Pengaturan tingkat lanjut:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "&Kembalikan asal", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
@@ -455,14 +455,14 @@ BEGIN
     LTEXT "Jenis berkas &terdaftar:", -1, 7, 10, 70, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Baru", IDC_FILETYPES_NEW, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Hapus", IDC_FILETYPES_DELETE, 180, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Hapus", IDC_FILETYPES_DELETE, 180, 110, 52, 14, WS_TABSTOP
     GROUPBOX "Rincian untuk ekstensi '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 130, 249, 70
     LTEXT "Buka dengan:", -1, 12, 140, 40, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
     LTEXT "Appname", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
-    PUSHBUTTON "&Ganti...", IDC_FILETYPES_CHANGE, 180, 140, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Ganti...", IDC_FILETYPES_CHANGE, 180, 140, 52, 14, WS_TABSTOP
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "Tin&gkat Lanjut", IDC_FILETYPES_ADVANCED, 180, 175, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Tin&gkat Lanjut", IDC_FILETYPES_ADVANCED, 180, 175, 52, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -513,13 +513,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Putar Otomatis"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Pilih jenis konten, kemudian pilih tindakan untuk ReactOS agar menjalankan secara otomatis ketika jenis tersebut digunakan pada perangkat ini:", 1000, 7, 7, 215, 20
-    CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Tindakan", -1, 7, 45, 212, 146
-    AUTORADIOBUTTON "Pilih &Tindakan untuk menjalankan:", 1005, 14, 54, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-    AUTORADIOBUTTON "Anjurkan saya setiap waktu untuk &memilih tindakan", 1006, 14, 177, 202, 10
-    PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+    LTEXT "&Pilih jenis konten, kemudian pilih tindakan untuk ReactOS agar menjalankan secara otomatis ketika jenis tersebut digunakan pada perangkat ini:", 1000, 7, 7, 215, 26
+    CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 33, 212, 200
+    GROUPBOX "Tindakan", -1, 7, 48, 212, 146
+    AUTORADIOBUTTON "Pilih &Tindakan untuk menjalankan:", 1005, 14, 57, 202, 10, WS_GROUP
+    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 24, 69, 192, 107
+    AUTORADIOBUTTON "Anjurkan saya setiap waktu untuk &memilih tindakan", 1006, 14, 180, 202, 10
+    PUSHBUTTON "&Kembalikan Asal", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
@@ -542,9 +542,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "ReactOS dapat melakukan tindakan yang sama setiap kali Anda memasukkan disk atau menghubungkan perangkat dengan jenis berkas ini:", 1001, 30, 7, 193, 20
-    ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
-    EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Apa yang ingin ReactOS lakukan?", 1002, 32, 41, 190, 8
+    ICON "", 1005, 32, 30, 11, 10, SS_REALSIZECONTROL
+    EDITTEXT 1006, 49, 31, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Apa yang ingin ReactOS lakukan?", 1002, 32, 43, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Selalu lakukan tindakan terpilih.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -608,8 +608,8 @@ BEGIN
     DEFPUSHBUTTON "Mulai", IDOK, 63, 95, 60, 14
     GROUPBOX "Pilihan pengecekan disk", -1, 7, 6, 179, 40
     PUSHBUTTON "Batal", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "P&erbaiki kesalahan sistem berkas secara otomatis", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Pindai dan coba pemulihan sektor yang buruk", 14001, 12, 30, 165, 10
+    AUTOCHECKBOX "P&erbaiki kesalahan sistem berkas secara otomatis", 14000, 12, 15, 170, 10
+    AUTOCHECKBOX "&Pindai dan coba pemulihan sektor yang buruk", 14001, 12, 30, 170, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -634,12 +634,9 @@ CAPTION "Peringatan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "Berkas ini dapat digunakan oleh sistem operasi atau aplikasi lain.\n\
-Memodifikasi berkas ini dapat merusak sistem atau membuatnya \n\
-kurang berfungsi.\n\n\
-Anda yakin ingin membuka berkas ini?", IDC_STATIC, 35, 5, 230, 60
+    LTEXT "Berkas ini dapat digunakan oleh sistem operasi atau aplikasi\nlain. Memodifikasi berkas ini dapat merusak sistem atau\nmembuat fungsinya berkurang.\n\nAnda yakin ingin membuka berkas ini?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "Ya", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    PUSHBUTTON "Tidak", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
@@ -684,7 +681,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Tindakan:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "&Aplikasi yang digunakan untuk melakukan tindakan:", -1, 5, 42, 150, 10
+    LTEXT "&Aplikasi yang digunakan untuk melakukan tindakan:", -1, 5, 37, 150, 16
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Jelajah...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&Gunakan DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
@@ -769,17 +766,17 @@ BEGIN
     IDS_PASTE "Tempel"
     IDS_EJECT "Keluarkan"
     IDS_DISCONNECT "Putuskan"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "&Buka lokasi berkas"
+    IDS_DESKLINK "Desktop (Buat pintasan)"
+    IDS_SENDTO_MENU "Kiri&m Ke"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Kesalahan memindahkan Berkas atau Folder"
+    IDS_COPYERRORTITLE "Kesalahan menyalin Berkas atau Folder"
+    IDS_MOVEERRORSAMEFOLDER "Tidak bisa memindahkan '%s': Folder tujuan sama dengan folder asal."
+    IDS_MOVEERRORSAME "Tidak bisa memindahkan '%s': Nama berkas asal dan tujuan sama."
+    IDS_COPYERRORSAME "Tidak bisa menyalin '%s': Nama berkas asal dan tujuan sama."
+    IDS_MOVEERRORSUBFOLDER "Tidak bisa memindahkan '%s': Folder tujuan merupakan subfolder dari folder asal."
+    IDS_COPYERRORSUBFOLDER "Tidak bisa menyalin '%s': Folder tujuan merupakan subfolder dari folder asal."
 
     IDS_CREATEFOLDER_DENIED "Tidak bisa membuat folder folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Tidak bisa membuat folder"
@@ -794,7 +791,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "Butir ini '%1' tidak bisa dikirim ke Tampungan Daur Ulang. Anda ingin menghapusnya?"
     IDS_OVERWRITEFILE_TEXT "Folder ini sudah berisi berkas bernama '%1'.\n\nAnda ingin menggantinya?"
     IDS_OVERWRITEFILE_CAPTION "Konfirmasi Penggantian Berkas"
-    IDS_OVERWRITEFOLDER_TEXT "Folder ini sudah berisi folder bernama '%1'.\n\nJika berkas dalam folder tujuan memiliki nama yang sama dengan berkas dalam folder\nterpilih mereka akan diganti. Anda masih ingin memindahkan atau menyalin\n folder?"
+    IDS_OVERWRITEFOLDER_TEXT "Folder ini sudah berisi folder bernama '%1'.\n\nJika berkas dalam folder tujuan memiliki nama yang sama dengan berkas dalam folder\nterpilih mereka akan diganti. Anda masih ingin memindahkan atau menyalin\nfolder?"
 
     IDS_FILEOOP_COPYING "Menyalin..."
     IDS_FILEOOP_MOVING "Memindahkan..."
@@ -815,10 +812,10 @@ BEGIN
     IDS_FORMAT_COMPLETE "Format Selesai."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
+    IDS_RUNDLG_BROWSE_ERROR "Tidak bisa menampilkan kotak dialog Jelajah (kesalahan internal)"
+    IDS_RUNDLG_BROWSE_CAPTION "Jelajah"
+    IDS_RUNDLG_BROWSE_FILTER "Berkas Eksekusi (*.exe)\0*.exe\0Semua Berkas (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Mulai\\Program"
@@ -878,12 +875,12 @@ BEGIN
     IDS_PICK_ICON_FILTER "Berkas Ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Semua Berkas (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Berkas Eksekusi (*.exe)\0*.exe\0Semua Berkas (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "Tidak bisa mengunci volume (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "Tidak bisa mengeluarkan volume (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "Tidak bisa mengeluarkan media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Tidak bisa menampilkan properti (Error Code: %lu)."
-    IDS_CANTDISCONNECT "Tidak bisa memutuskan (Error Code: %lu)."
-    IDS_NONE "(None)"
+    IDS_CANTLOCKVOLUME "Tidak bisa mengunci volume (Kode Kesalahan: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Tidak bisa mengeluarkan volume (Kode Kesalahan: %lu)."
+    IDS_CANTEJECTMEDIA "Tidak bisa mengeluarkan media (Kode Kesalahan: %lu)."
+    IDS_CANTSHOWPROPERTIES "Tidak bisa menampilkan properti (Kode Kesalahan: %lu)."
+    IDS_CANTDISCONNECT "Tidak bisa memutuskan (Kode Kesalahan: %lu)."
+    IDS_NONE "(Tidak ada)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -920,7 +917,7 @@ BEGIN
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Cari"
     IDS_PRINT_VERB "Cetak"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Perintah Cepat di sini"
 
     IDS_FILE_FOLDER "%u Berkas, %u Folder"
     IDS_PRINTERS "Printer"
@@ -930,7 +927,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Ukuran alokasi asli"
     IDS_COPY_OF "Salinan"
 
-    IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
+    IDS_SHLEXEC_NOASSOC "Tidak ada proram ReactOS yang diatur untuk membuka berkas tipe ini."
 
     IDS_FILE_DETAILS "Rincian untuk ekstensi '%s'"
     IDS_FILE_DETAILSADV "Berkas dengan ekstensi '%s' adalah untuk jenis '%s'. Mengubah setelan akan berpengaruh ke berkas '%s', klik Tingkat Lanjut."

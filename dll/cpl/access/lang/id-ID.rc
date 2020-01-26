@@ -201,17 +201,17 @@ BEGIN
                  12, 49, 222, 14
     GROUPBOX "Kecepatan penunjuk", -1, 6, 83, 234, 83
     LTEXT "Kecepatan &puncak:", -1, 12, 96, 48, 11
-    LTEXT "Rendah", -1, 66, 96, 18, 11
+    LTEXT "Rendah", -1, 62, 96, 24, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
-    LTEXT "Tinggi", -1, 204, 96, 18, 11
+    LTEXT "Tinggi", -1, 204, 96, 20, 11
     LTEXT "&Akselerasi:", -1, 12, 123, 48, 11
-    LTEXT "Lambat", -1, 66, 123, 18, 11
+    LTEXT "Lambat", -1, 62, 123, 24, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Cepat", -1, 204, 123, 18, 11
+    LTEXT "Cepat", -1, 204, 123, 20, 11
     AUTOCHECKBOX "&Tekan dan tahan Ctrl untuk mempercepat dan Shift untuk memperlambat", IDC_MOUSEKEYS_SPEED_CHECK,
-                 12, 142, 222, 14
+                 12, 142, 222, 20
     LTEXT "Gunakan MouseKeys ketika NumLock:", -1, 6, 171, 120, 11
     AUTORADIOBUTTON "&Nyala", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
     AUTORADIOBUTTON "&Mati", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
