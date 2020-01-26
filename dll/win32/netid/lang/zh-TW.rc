@@ -73,9 +73,10 @@ BEGIN
     25 "您可以更改名稱和這部電腦的會員。更改可能會影響對網路資源的訪問。"
     1021 "注意: 只有管理員纔可以更改此電腦的標識。"
     1022 "注意: 不能更改電腦的標識，因為:"
-    1030 "新的電腦名稱 ""%s"" 包含不允許使用的字元。不允許使用的字元包括 ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
-    /* Windows allows using these characters, although it displays a warning message.
-       Forbidding the use of these characters means incompatibility with Windows. */
+    1029 "The new computer name ""%1"" is a number. The name may not be a number."
+    1030 "新的電腦名稱 ""%1"" 包含不允許使用的字元。不允許使用的字元包括 ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / and ?"
+    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
+    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
     3210 "詳細資訊(&D) >>"
     3220 "<< 詳細資訊(&D)"
     4000 "資訊"
