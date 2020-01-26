@@ -390,8 +390,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     CHAR  NameA[255];
     BOOL ret;
     DWORD i;
-    PPRINTER_INFO_4W ppi4w = NULL;
-    PPRINTER_INFO_4A ppi4a = NULL;
+    PPRINTER_INFO_4W ppi4w;
+    PPRINTER_INFO_4A ppi4a;
 
     TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
     if (Name == NULL)
@@ -408,7 +408,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     ppi4w = (PPRINTER_INFO_4W)pPrinterEnum;
     ppi4a = (PPRINTER_INFO_4A)pPrinterEnum;
 
-    for (i = 0; i < *pcReturned; i++)
+    for (i = 0; i < (DWORD)*pcReturned; i++)
     {
         if (ppi4w[i].pPrinterName)
         {
@@ -614,6 +614,7 @@ BOOL WINAPI
 GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     TRACE("GetPrinterA(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
+    if(pcbNeeded) *pcbNeeded = 0;
     return FALSE;
 }
 
@@ -621,6 +622,7 @@ BOOL WINAPI
 GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     TRACE("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    if(pcbNeeded) *pcbNeeded = 0;
     return FALSE;
 }
 
