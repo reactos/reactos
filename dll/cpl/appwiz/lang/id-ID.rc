@@ -46,7 +46,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hapus Pintasan/Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Untuk menghapus butir dari menu Mulai, pilih butir dan klik Hapus .", -1, 10, 10, 192, 16
+    LTEXT "&Untuk menghapus butir dari menu Mulai, pilih butir dan klik Hapus.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
     PUSHBUTTON "&Hapus", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
