@@ -386,8 +386,38 @@ Cleanup:
 BOOL WINAPI
 EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    WCHAR NameW[255];
+    CHAR  NameA[255];
+    BOOL ret;
+    INT i;
+    PPRINTER_INFO_4W ppi4w = NULL;
+    PPRINTER_INFO_4A ppi4a = NULL;
+
     TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    return FALSE;
+    if (Name == NULL)
+        NameW[0] = UNICODE_NULL;
+    else
+    /* https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
+        MultiByteToWideChar(CP_ACP, 0, Name, -1, NameW, 255);
+    ret = EnumPrintersW(Flags, NameW, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+
+    ppi4w = (PPRINTER_INFO_4W)pPrinterEnum;
+    ppi4a = (PPRINTER_INFO_4A)pPrinterEnum;
+
+    for (i = 0; i < (DWORD)*pcReturned; i++)
+    {
+        if(ppi4w[i].pPrinterName)
+        {
+            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, NameA, (int) wcslen(ppi4w[i].pPrinterName) + sizeof(CHAR), NULL, NULL);
+            strcpy(ppi4a[i].pPrinterName, NameA);
+        }
+        if(ppi4w[i].pServerName)
+        {
+            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pServerName, -1, NameA, (int) wcslen(ppi4w[i].pServerName) + sizeof(CHAR), NULL, NULL);
+            strcpy(ppi4a[i].pServerName, NameA);
+        }
+    }
+    return ret;
 }
 
 BOOL WINAPI
