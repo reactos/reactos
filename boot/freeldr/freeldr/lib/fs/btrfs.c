@@ -22,15 +22,16 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 #define INVALID_ADDRESS _UI64_MAX
 #define READ_ERROR _UI64_MAX
 
-struct BTRFS_INFO {
+typedef struct _BTRFS_INFO
+{
     ULONG DeviceId;
     struct btrfs_super_block SuperBlock;
     struct btrfs_chunk_map ChunkMap;
     struct btrfs_root_item FsRoot;
     struct btrfs_root_item ExtentRoot;
-};
+} BTRFS_INFO;
 
-struct BTRFS_INFO *BtrFsInfo;
+PBTRFS_INFO BtrFsVolumes[MAX_FDS];
 
 /* compare function used for bin_search */
 typedef int (*cmp_func)(const void *ptr1, const void *ptr2);
@@ -83,9 +84,8 @@ static int btrfs_comp_chunk_map(struct btrfs_chunk_map_item *m1,
 }
 
 /* insert a new chunk mapping item */
-static void insert_chunk_item(struct btrfs_chunk_map_item *item)
+static void insert_chunk_item(struct btrfs_chunk_map *chunk_map, struct btrfs_chunk_map_item *item)
 {
-    struct btrfs_chunk_map *chunk_map = &BtrFsInfo->ChunkMap;
     int ret;
     int slot;
     int i;
@@ -119,7 +119,9 @@ static void insert_chunk_item(struct btrfs_chunk_map_item *item)
     chunk_map->cur_length++;
 }
 
-static inline void insert_map(const struct btrfs_disk_key *key, struct btrfs_chunk *chunk)
+static inline void insert_map(struct btrfs_chunk_map *chunk_map,
+                              const struct btrfs_disk_key *key,
+                              struct btrfs_chunk *chunk)
 {
     struct btrfs_stripe *stripe = &chunk->stripe;
     struct btrfs_stripe *stripe_end = stripe + chunk->num_stripes;
@@ -132,13 +134,12 @@ static inline void insert_map(const struct btrfs_disk_key *key, struct btrfs_chu
         TRACE("stripe: %p\n", stripe);
         item.devid = stripe->devid;
         item.physical = stripe->offset;
-        TRACE("inserting chunk log: %llx len: %llx devid: %llx phys: %llx\n", item.logical, item.length, item.devid,
-              item.physical);
-        insert_chunk_item(&item);
+        TRACE("inserting chunk log: %llx len: %llx devid: %llx phys: %llx\n",
+              item.logical, item.length, item.devid, item.physical);
+        insert_chunk_item(chunk_map, &item);
     }
 
 #if 0
-    struct btrfs_chunk_map *chunk_map = &BtrFsInfo->ChunkMap;
     struct btrfs_chunk_map_item *itm;
     int i;
 
@@ -152,8 +153,7 @@ static inline void insert_map(const struct btrfs_disk_key *key, struct btrfs_chu
               itm->logical + itm->length,
               itm->physical,
               itm->physical + itm->length,
-              itm->devid
-        );
+              itm->devid);
     }
 #endif
 }
@@ -164,10 +164,10 @@ static inline unsigned long btrfs_chunk_item_size(int num_stripes)
            sizeof(struct btrfs_stripe) * (num_stripes - 1);
 }
 
-static inline void init_path(struct btrfs_path *path)
+static inline void init_path(const struct btrfs_super_block *sb, struct btrfs_path *path)
 {
     memset(path, 0, sizeof(*path));
-    path->tree_buf = FrLdrTempAlloc(BtrFsInfo->SuperBlock.nodesize, TAG_BTRFS_NODE);
+    path->tree_buf = FrLdrTempAlloc(sb->nodesize, TAG_BTRFS_NODE);
 }
 
 static inline void free_path(struct btrfs_path *path)
@@ -187,7 +187,7 @@ static inline UCHAR *path_current_data(struct btrfs_path *path)
 
 static inline const struct btrfs_disk_key *path_current_disk_key(struct btrfs_path *path)
 {
-    return (const struct btrfs_disk_key *) &path_current_item(path)->key;
+    return &path_current_item(path)->key;
 }
 
 
@@ -228,9 +228,8 @@ static int btrfs_comp_keys_type(const struct btrfs_disk_key *k1,
  * from sys_chunk_array or chunk_tree, we can convert a logical address to
  * a physical address we can not support multi device case yet
  */
-static u64 logical_physical(u64 logical)
+static u64 logical_physical(struct btrfs_chunk_map *chunk_map, u64 logical)
 {
-    struct btrfs_chunk_map *chunk_map = &BtrFsInfo->ChunkMap;
     struct btrfs_chunk_map_item item;
     int slot, ret;
 
@@ -251,7 +250,7 @@ static u64 logical_physical(u64 logical)
     return chunk_map->map[slot - 1].physical + logical - chunk_map->map[slot - 1].logical;
 }
 
-static BOOLEAN disk_read(u64 physical, void *dest, u32 count)
+static BOOLEAN disk_read(ULONG DeviceId, u64 physical, void *dest, u32 count)
 {
     LARGE_INTEGER Position;
     ULONG Count;
@@ -261,14 +260,14 @@ static BOOLEAN disk_read(u64 physical, void *dest, u32 count)
         return FALSE;
 
     Position.QuadPart = physical;
-    Status = ArcSeek(BtrFsInfo->DeviceId, &Position, SeekAbsolute);
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
         ERR("ArcSeek returned status %lu\n", Status);
         return FALSE;
     }
 
-    Status = ArcRead(BtrFsInfo->DeviceId, dest, count, &Count);
+    Status = ArcRead(DeviceId, dest, count, &Count);
     if (Status != ESUCCESS || Count != count)
     {
         ERR("ArcRead returned status %lu\n", Status);
@@ -278,13 +277,14 @@ static BOOLEAN disk_read(u64 physical, void *dest, u32 count)
     return TRUE;
 }
 
-static BOOLEAN _BtrFsSearchTree(u64 loffset, u8 level, struct btrfs_disk_key *key,
-                                struct btrfs_path *path)
+static BOOLEAN
+_BtrFsSearchTree(PBTRFS_INFO BtrFsInfo, u64 loffset, u8 level,
+                 struct btrfs_disk_key *key, struct btrfs_path *path)
 {
-    struct btrfs_super_block *sb = &BtrFsInfo->SuperBlock;
     union tree_buf *tree_buf = path->tree_buf;
     int slot, ret, lvl;
     u64 physical, logical = loffset;
+
     TRACE("BtrFsSearchTree called: offset: 0x%llx, level: %u (%llu %u %llu)\n",
           loffset, level, key->objectid, key->type, key->offset);
 
@@ -296,18 +296,20 @@ static BOOLEAN _BtrFsSearchTree(u64 loffset, u8 level, struct btrfs_disk_key *ke
 
     for (lvl = level; lvl >= 0; lvl--)
     {
-        physical = logical_physical(logical);
+        physical = logical_physical(&BtrFsInfo->ChunkMap, logical);
 
-        if (!disk_read(physical, &tree_buf->header, sb->nodesize))
+        if (!disk_read(BtrFsInfo->DeviceId, physical, &tree_buf->header,
+                       BtrFsInfo->SuperBlock.nodesize))
         {
-            ERR("Error when reading tree node, loffset: 0x%llx, poffset: 0x%llx, level: %u\n", logical, physical, lvl);
+            ERR("Error when reading tree node, loffset: 0x%llx, poffset: 0x%llx, level: %u\n",
+                logical, physical, lvl);
             return FALSE;
         }
 
-
         if (tree_buf->header.level != lvl)
         {
-            ERR("Error when searching in tree: expected lvl=%u but got %u\n", lvl, tree_buf->header.level);
+            ERR("Error when searching in tree: expected lvl=%u but got %u\n",
+                lvl, tree_buf->header.level);
             return FALSE;
         }
 
@@ -353,13 +355,15 @@ static BOOLEAN _BtrFsSearchTree(u64 loffset, u8 level, struct btrfs_disk_key *ke
 }
 
 static inline BOOLEAN
-BtrFsSearchTree(const struct btrfs_root_item *root, struct btrfs_disk_key *key, struct btrfs_path *path)
+BtrFsSearchTree(PBTRFS_INFO BtrFsInfo, const struct btrfs_root_item *root,
+                struct btrfs_disk_key *key, struct btrfs_path *path)
 {
-    return _BtrFsSearchTree(root->bytenr, root->level, key, path);
+    return _BtrFsSearchTree(BtrFsInfo, root->bytenr, root->level, key, path);
 }
 
 static inline BOOLEAN
-BtrFsSearchTreeType(const struct btrfs_root_item *root, u64 objectid, u8 type, struct btrfs_path *path)
+BtrFsSearchTreeType(PBTRFS_INFO BtrFsInfo, const struct btrfs_root_item *root,
+                    u64 objectid, u8 type, struct btrfs_path *path)
 {
     struct btrfs_disk_key key;
 
@@ -367,7 +371,8 @@ BtrFsSearchTreeType(const struct btrfs_root_item *root, u64 objectid, u8 type, s
     key.type = type;
     key.offset = 0;
 
-    _BtrFsSearchTree(root->bytenr, root->level, &key, path);
+    if (!_BtrFsSearchTree(BtrFsInfo, root->bytenr, root->level, &key, path))
+        return FALSE;
 
     if (path_current_disk_key(path)->objectid && !btrfs_comp_keys_type(&key, path_current_disk_key(path)))
         return TRUE;
@@ -376,8 +381,8 @@ BtrFsSearchTreeType(const struct btrfs_root_item *root, u64 objectid, u8 type, s
 }
 
 /* return 0 if slot found */
-static int next_slot(struct btrfs_disk_key *key,
-                     struct btrfs_path *path)
+static int next_slot(PBTRFS_INFO BtrFsInfo,
+                     struct btrfs_disk_key *key, struct btrfs_path *path)
 {
     int slot, level = 1;
 
@@ -395,13 +400,13 @@ static int next_slot(struct btrfs_disk_key *key,
             if (slot >= path->itemsnr[level])
             {
                 level++;
-                continue;;
+                continue;
             }
             path->slots[level] = slot;
             path->slots[level - 1] = 0; /* reset low level slots info */
             path->itemsnr[level - 1] = 0;
             path->offsets[level - 1] = 0;
-            _BtrFsSearchTree(path->offsets[level], level, key, path);
+            _BtrFsSearchTree(BtrFsInfo, path->offsets[level], level, key, path);
             break;
         }
         if (level == BTRFS_MAX_LEVEL)
@@ -432,9 +437,9 @@ static int prev_slot(struct btrfs_disk_key *key,
 /*
  * read chunk_array in super block
  */
-static void btrfs_read_sys_chunk_array()
+static void btrfs_read_sys_chunk_array(PBTRFS_INFO BtrFsInfo)
 {
-    struct btrfs_super_block *sb = &BtrFsInfo->SuperBlock;
+    const struct btrfs_super_block *sb = &BtrFsInfo->SuperBlock;
     struct btrfs_disk_key *key;
     struct btrfs_chunk *chunk;
     u16 cur;
@@ -445,7 +450,8 @@ static void btrfs_read_sys_chunk_array()
     while (cur < sb->sys_chunk_array_size)
     {
         key = (struct btrfs_disk_key *) (sb->sys_chunk_array + cur);
-        TRACE("chunk key objectid: %llx, offset: %llx, type: %u\n", key->objectid, key->offset, key->type);
+        TRACE("chunk key objectid: %llx, offset: %llx, type: %u\n",
+              key->objectid, key->offset, key->type);
         cur += sizeof(*key);
         chunk = (struct btrfs_chunk *) (sb->sys_chunk_array + cur);
         TRACE("chunk length: %llx\n", chunk->length);
@@ -460,17 +466,16 @@ static void btrfs_read_sys_chunk_array()
 
         cur += btrfs_chunk_item_size(chunk->num_stripes);
         TRACE("read_sys_chunk_array() cur=%d\n", cur);
-        insert_map((const struct btrfs_disk_key *) key, chunk);
+        insert_map(&BtrFsInfo->ChunkMap, key, chunk);
     }
 }
-
 
 /*
  * read chunk items from chunk_tree and insert them to chunk map
  * */
-static void btrfs_read_chunk_tree()
+static void btrfs_read_chunk_tree(PBTRFS_INFO BtrFsInfo)
 {
-    struct btrfs_super_block *sb = &BtrFsInfo->SuperBlock;
+    const struct btrfs_super_block *sb = &BtrFsInfo->SuperBlock;
     struct btrfs_disk_key ignore_key;
     struct btrfs_disk_key search_key;
     struct btrfs_chunk *chunk;
@@ -488,8 +493,8 @@ static void btrfs_read_chunk_tree()
         search_key.objectid = BTRFS_FIRST_CHUNK_TREE_OBJECTID;
         search_key.type = BTRFS_CHUNK_ITEM_KEY;
         search_key.offset = 0;
-        init_path(&path);
-        _BtrFsSearchTree(sb->chunk_root, sb->chunk_root_level, &search_key, &path);
+        init_path(sb, &path);
+        _BtrFsSearchTree(BtrFsInfo, sb->chunk_root, sb->chunk_root_level, &search_key, &path);
         do
         {
             /* skip information about underlying block
@@ -501,8 +506,8 @@ static void btrfs_read_chunk_tree()
                 break;
 
             chunk = (struct btrfs_chunk *) (path_current_data(&path));
-            insert_map(path_current_disk_key(&path), chunk);
-        } while (!next_slot(&search_key, &path));
+            insert_map(&BtrFsInfo->ChunkMap, path_current_disk_key(&path), chunk);
+        } while (!next_slot(BtrFsInfo, &search_key, &path));
         free_path(&path);
     }
 }
@@ -536,7 +541,8 @@ static BOOLEAN verify_dir_item(struct btrfs_dir_item *item, u32 start, u32 total
 }
 
 
-static struct btrfs_dir_item *BtrFsMatchDirItemName(struct btrfs_path *path, const char *name, int name_len)
+static struct btrfs_dir_item *
+BtrFsMatchDirItemName(struct btrfs_path *path, const char *name, int name_len)
 {
     struct btrfs_dir_item *item = (struct btrfs_dir_item *) path_current_data(path);
     u32 cur = 0, this_len;
@@ -559,8 +565,11 @@ static struct btrfs_dir_item *BtrFsMatchDirItemName(struct btrfs_path *path, con
     return NULL;
 }
 
-static BOOLEAN BtrFsLookupDirItem(const struct btrfs_root_item *root, u64 dir, const char *name, int name_len,
-                                  struct btrfs_dir_item *item)
+static BOOLEAN
+BtrFsLookupDirItem(PBTRFS_INFO BtrFsInfo,
+                  const struct btrfs_root_item *root, u64 dir,
+                  const char *name, int name_len,
+                  struct btrfs_dir_item *item)
 {
     struct btrfs_path path;
     struct btrfs_disk_key key;
@@ -569,9 +578,9 @@ static BOOLEAN BtrFsLookupDirItem(const struct btrfs_root_item *root, u64 dir, c
     key.objectid = dir;
     key.type = BTRFS_DIR_ITEM_KEY;
     key.offset = btrfs_crc32c(name, name_len);
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
 
-    if (!BtrFsSearchTree(root, &key, &path))
+    if (!BtrFsSearchTree(BtrFsInfo, root, &key, &path))
     {
         free_path(&path);
         return FALSE;
@@ -585,8 +594,11 @@ static BOOLEAN BtrFsLookupDirItem(const struct btrfs_root_item *root, u64 dir, c
     return res != NULL;
 }
 
-static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_haystack, const char *name, int name_len,
-                                   struct btrfs_dir_item *ret_item)
+static BOOLEAN
+BtrFsLookupDirItemI(PBTRFS_INFO BtrFsInfo,
+                   const struct btrfs_root_item *root, u64 dir_haystack,
+                   const char *name, int name_len,
+                   struct btrfs_dir_item *ret_item)
 {
     struct btrfs_path path;
     struct btrfs_disk_key key;
@@ -597,9 +609,9 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
     key.objectid = dir_haystack;
     key.type = BTRFS_DIR_INDEX_KEY;
     key.offset = 0;
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
 
-    BtrFsSearchTree(root, &key, &path);
+    BtrFsSearchTree(BtrFsInfo, root, &key, &path);
 
     if (btrfs_comp_keys_type(&key, path_current_disk_key(&path)))
         goto cleanup;
@@ -608,8 +620,8 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
     {
         item = (struct btrfs_dir_item *) path_current_data(&path);
         // TRACE("slot: %ld, KEY (%llu %u %llu) %.*s\n",
-        //         path.slots[0], path.item.key.objectid, path.item.key.type,
-        //         path.item.key.offset, item->name_len, (char *)item + sizeof(*item));
+        //       path.slots[0], path.item.key.objectid, path.item.key.type,
+        //       path.item.key.offset, item->name_len, (char *)item + sizeof(*item));
 
         if (verify_dir_item(item, 0, sizeof(*item) + item->name_len))
             continue;
@@ -626,7 +638,7 @@ static BOOLEAN BtrFsLookupDirItemI(const struct btrfs_root_item *root, u64 dir_h
             goto cleanup;
         }
 
-    } while (!next_slot(&key, &path));
+    } while (!next_slot(BtrFsInfo, &key, &path));
 
 cleanup:
     free_path(&path);
@@ -638,13 +650,13 @@ cleanup:
 ////////////////////////////////////////
 
 static u64 btrfs_read_extent_inline(struct btrfs_path *path,
-                                    struct btrfs_file_extent_item *extent, u64 offset,
-                                    u64 size, char *out)
+                                    struct btrfs_file_extent_item *extent,
+                                    u64 offset, u64 size, char *out)
 {
     u32 dlen;
     const char *cbuf;
     const int data_off = offsetof(
-    struct btrfs_file_extent_item, disk_bytenr);
+        struct btrfs_file_extent_item, disk_bytenr);
 
     cbuf = (const char *) extent + data_off;
     dlen = extent->ram_bytes;
@@ -671,7 +683,9 @@ static u64 btrfs_read_extent_inline(struct btrfs_path *path,
     return READ_ERROR;
 }
 
-static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_extent_item *extent,
+static u64 btrfs_read_extent_reg(PBTRFS_INFO BtrFsInfo,
+                                 struct btrfs_path *path,
+                                 struct btrfs_file_extent_item *extent,
                                  u64 offset, u64 size, char *out)
 {
     u64 physical, dlen;
@@ -694,7 +708,7 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
         return size;
     }
 
-    physical = logical_physical(extent->disk_bytenr);
+    physical = logical_physical(&BtrFsInfo->ChunkMap, extent->disk_bytenr);
     if (physical == INVALID_ADDRESS)
     {
         ERR("Unable to convert logical address to physical: %llu\n", extent->disk_bytenr);
@@ -712,7 +726,9 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
 
             temp_out = FrLdrTempAlloc(SECTOR_SIZE, TAG_BTRFS_FILE);
 
-            if (!disk_read(ALIGN_DOWN_BY(physical, SECTOR_SIZE), temp_out, SECTOR_SIZE))
+            if (!disk_read(BtrFsInfo->DeviceId,
+                           ALIGN_DOWN_BY(physical, SECTOR_SIZE),
+                           temp_out, SECTOR_SIZE))
             {
                 FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
                 return READ_ERROR;
@@ -730,11 +746,16 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
             memcpy(out, temp_out + shift, SECTOR_SIZE - shift);
             FrLdrTempFree(temp_out, TAG_BTRFS_FILE);
 
-            if (!disk_read(physical + SECTOR_SIZE - shift, out + SECTOR_SIZE - shift, size - SECTOR_SIZE + shift))
+            if (!disk_read(BtrFsInfo->DeviceId,
+                           physical + SECTOR_SIZE - shift,
+                           out + SECTOR_SIZE - shift,
+                           size - SECTOR_SIZE + shift))
+            {
                 return READ_ERROR;
+            }
         } else
         {
-            if (!disk_read(physical, out, size))
+            if (!disk_read(BtrFsInfo->DeviceId, physical, out, size))
                 return READ_ERROR;
         }
 
@@ -745,7 +766,9 @@ static u64 btrfs_read_extent_reg(struct btrfs_path *path, struct btrfs_file_exte
     return READ_ERROR;
 }
 
-static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offset, u64 size, char *buf)
+static u64 btrfs_file_read(PBTRFS_INFO BtrFsInfo,
+                           const struct btrfs_root_item *root,
+                           u64 inr, u64 offset, u64 size, char *buf)
 {
     struct btrfs_path path;
     struct btrfs_disk_key key;
@@ -759,9 +782,9 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
     key.objectid = inr;
     key.type = BTRFS_EXTENT_DATA_KEY;
     key.offset = offset;
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
 
-    find_res = BtrFsSearchTree(root, &key, &path);
+    find_res = BtrFsSearchTree(BtrFsInfo, root, &key, &path);
 
     /* if we found greater key, switch to the previous one */
     if (!find_res && btrfs_comp_keys(&key, path_current_disk_key(&path)) < 0)
@@ -796,7 +819,7 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
         }
         else
         {
-            rd = btrfs_read_extent_reg(&path, extent, offset_in_extent, size, buf);
+            rd = btrfs_read_extent_reg(BtrFsInfo, &path, extent, offset_in_extent, size, buf);
         }
 
         if (rd == READ_ERROR)
@@ -813,7 +836,7 @@ static u64 btrfs_file_read(const struct btrfs_root_item *root, u64 inr, u64 offs
 
         if (!size)
             break;
-    } while (!(res = next_slot(&key, &path)));
+    } while (!(res = next_slot(BtrFsInfo, &key, &path)));
 
     if (res)
     {
@@ -832,15 +855,16 @@ out:
 ////////////////////////////////////////
 
 
-static u64 btrfs_lookup_inode_ref(const struct btrfs_root_item *root, u64 inr,
+static u64 btrfs_lookup_inode_ref(PBTRFS_INFO BtrFsInfo,
+                                  const struct btrfs_root_item *root, u64 inr,
                                   struct btrfs_inode_ref *refp, char *name)
 {
     struct btrfs_path path;
     struct btrfs_inode_ref *ref;
     u64 ret = INVALID_INODE;
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
 
-    if (BtrFsSearchTreeType(root, inr, BTRFS_INODE_REF_KEY, &path))
+    if (BtrFsSearchTreeType(BtrFsInfo, root, inr, BTRFS_INODE_REF_KEY, &path))
     {
         ref = (struct btrfs_inode_ref *) path_current_data(&path);
 
@@ -853,7 +877,8 @@ static u64 btrfs_lookup_inode_ref(const struct btrfs_root_item *root, u64 inr,
     return ret;
 }
 
-static int btrfs_lookup_inode(const struct btrfs_root_item *root,
+static int btrfs_lookup_inode(PBTRFS_INFO BtrFsInfo,
+                              const struct btrfs_root_item *root,
                               struct btrfs_disk_key *location,
                               struct btrfs_inode_item *item,
                               struct btrfs_root_item *new_root)
@@ -870,10 +895,10 @@ static int btrfs_lookup_inode(const struct btrfs_root_item *root,
 //        location->type = BTRFS_INODE_ITEM_KEY;
 //        location->offset = 0;
 //    }
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
     TRACE("Searching inode (%llu %u %llu)\n", location->objectid, location->type, location->offset);
 
-    if (BtrFsSearchTree(&tmp_root, location, &path))
+    if (BtrFsSearchTree(BtrFsInfo, &tmp_root, location, &path))
     {
         if (item)
             *item = *((struct btrfs_inode_item *) path_current_data(&path));
@@ -888,16 +913,18 @@ static int btrfs_lookup_inode(const struct btrfs_root_item *root,
     return res;
 }
 
-static BOOLEAN btrfs_readlink(const struct btrfs_root_item *root, u64 inr, char **target)
+static BOOLEAN btrfs_readlink(PBTRFS_INFO BtrFsInfo,
+                              const struct btrfs_root_item *root,
+                              u64 inr, char **target)
 {
     struct btrfs_path path;
     struct btrfs_file_extent_item *extent;
     char *data_ptr;
     BOOLEAN res = FALSE;
 
-    init_path(&path);
+    init_path(&BtrFsInfo->SuperBlock, &path);
 
-    if (!BtrFsSearchTreeType(root, inr, BTRFS_EXTENT_DATA_KEY, &path))
+    if (!BtrFsSearchTreeType(BtrFsInfo, root, inr, BTRFS_EXTENT_DATA_KEY, &path))
         goto out;
 
     extent = (struct btrfs_file_extent_item *) path_current_data(&path);
@@ -924,7 +951,7 @@ static BOOLEAN btrfs_readlink(const struct btrfs_root_item *root, u64 inr, char 
     }
 
     data_ptr = (char *) extent + offsetof(
-    struct btrfs_file_extent_item, disk_bytenr);
+        struct btrfs_file_extent_item, disk_bytenr);
 
     *target = FrLdrTempAlloc(extent->ram_bytes + 1, TAG_BTRFS_LINK);
     if (!*target)
@@ -945,7 +972,8 @@ out:
 
 /* inr must be a directory (for regular files with multiple hard links this
    function returns only one of the parents of the file) */
-static u64 get_parent_inode(const struct btrfs_root_item *root, u64 inr,
+static u64 get_parent_inode(PBTRFS_INFO BtrFsInfo,
+                            const struct btrfs_root_item *root, u64 inr,
                             struct btrfs_inode_item *inode_item)
 {
     struct btrfs_disk_key key;
@@ -974,14 +1002,14 @@ static u64 get_parent_inode(const struct btrfs_root_item *root, u64 inr,
             key.type = BTRFS_INODE_ITEM_KEY;
             key.offset = 0;
 
-            if (btrfs_lookup_inode(root, &key, inode_item, NULL))
+            if (btrfs_lookup_inode(BtrFsInfo, root, &key, inode_item, NULL))
                 return INVALID_INODE;
         }
 
         return inr;
     }
 
-    res = btrfs_lookup_inode_ref(root, inr, NULL, NULL);
+    res = btrfs_lookup_inode_ref(BtrFsInfo, root, inr, NULL, NULL);
     if (res == INVALID_INODE)
         return INVALID_INODE;
 
@@ -991,7 +1019,7 @@ static u64 get_parent_inode(const struct btrfs_root_item *root, u64 inr,
         key.type = BTRFS_INODE_ITEM_KEY;
         key.offset = 0;
 
-        if (btrfs_lookup_inode(root, &key, inode_item, NULL))
+        if (btrfs_lookup_inode(BtrFsInfo, root, &key, inode_item, NULL))
             return INVALID_INODE;
     }
 
@@ -1021,7 +1049,8 @@ static inline const char *skip_current_directories(const char *cur)
     return cur;
 }
 
-static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const char *path,
+static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
+                             const struct btrfs_root_item *root, u64 inr, const char *path,
                              u8 *type_p, struct btrfs_inode_item *inode_item_p, int symlink_limit)
 {
     struct btrfs_dir_item item;
@@ -1055,7 +1084,7 @@ static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const 
         if (len == 2 && cur[0] == '.' && cur[1] == '.')
         {
             cur += 2;
-            inr = get_parent_inode(root, inr, &inode_item);
+            inr = get_parent_inode(BtrFsInfo, root, inr, &inode_item);
             if (inr == INVALID_INODE)
                 return INVALID_INODE;
 
@@ -1066,16 +1095,16 @@ static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const 
         if (!*cur)
             break;
 
-        if (!BtrFsLookupDirItem(root, inr, cur, len, &item))
+        if (!BtrFsLookupDirItem(BtrFsInfo, root, inr, cur, len, &item))
         {
             TRACE("Try to find case-insensitive, path=%s inr=%llu s=%.*s\n", path, inr, len, cur);
-            if (!BtrFsLookupDirItemI(root, inr, cur, len, &item))
+            if (!BtrFsLookupDirItemI(BtrFsInfo, root, inr, cur, len, &item))
                 return INVALID_INODE;
         }
 
         type = item.type;
         have_inode = 1;
-        if (btrfs_lookup_inode(root, &item.location, &inode_item, NULL))
+        if (btrfs_lookup_inode(BtrFsInfo, root, &item.location, &inode_item, NULL))
             return INVALID_INODE;
 
         if (type == BTRFS_FT_SYMLINK && symlink_limit >= 0)
@@ -1087,10 +1116,10 @@ static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const 
             }
 
             /* btrfs_readlink allocates link_target by itself */
-            if (!btrfs_readlink(root, item.location.objectid, &link_target))
+            if (!btrfs_readlink(BtrFsInfo, root, item.location.objectid, &link_target))
                 return INVALID_INODE;
 
-            inr = btrfs_lookup_path(root, inr, link_target, &type, &inode_item, symlink_limit - 1);
+            inr = btrfs_lookup_path(BtrFsInfo, root, inr, link_target, &type, &inode_item, symlink_limit - 1);
 
             FrLdrTempFree(link_target, TAG_BTRFS_LINK);
 
@@ -1119,7 +1148,7 @@ static u64 btrfs_lookup_path(const struct btrfs_root_item *root, u64 inr, const 
             key.type = BTRFS_INODE_ITEM_KEY;
             key.offset = 0;
 
-            if (btrfs_lookup_inode(root, &key, &inode_item, NULL))
+            if (btrfs_lookup_inode(BtrFsInfo, root, &key, &inode_item, NULL))
                 return INVALID_INODE;
         }
 
@@ -1155,6 +1184,8 @@ ARC_STATUS BtrFsGetFileInformation(ULONG FileId, FILEINFORMATION *Information)
 
 ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
 {
+    PBTRFS_INFO BtrFsInfo;
+    ULONG DeviceId;
     u64 inr;
     u8 type;
 
@@ -1163,10 +1194,17 @@ ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
 
     TRACE("BtrFsOpen %s\n", Path);
 
+    /* Check parameters */
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
-    inr = btrfs_lookup_path(&BtrFsInfo->FsRoot, BtrFsInfo->FsRoot.root_dirid, Path, &type, &temp_file_info.inode, 40);
+    /* Get underlying device */
+    DeviceId = FsGetDeviceId(*FileId);
+    BtrFsInfo = BtrFsVolumes[DeviceId];
+
+    inr = btrfs_lookup_path(BtrFsInfo, &BtrFsInfo->FsRoot,
+                            BtrFsInfo->FsRoot.root_dirid,
+                            Path, &type, &temp_file_info.inode, 40);
 
     if (inr == INVALID_INODE)
     {
@@ -1189,7 +1227,8 @@ ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
     if (!phandle)
         return ENOMEM;
 
-    memcpy(phandle, &temp_file_info, sizeof(btrfs_file_info));
+    RtlCopyMemory(phandle, &temp_file_info, sizeof(btrfs_file_info));
+    phandle->Volume = BtrFsInfo;
 
     FsSetDeviceSpecific(*FileId, phandle);
     return ESUCCESS;
@@ -1208,7 +1247,8 @@ ARC_STATUS BtrFsRead(ULONG FileId, VOID *Buffer, ULONG Size, ULONG *BytesRead)
     if (Size > phandle->inode.size)
         Size = phandle->inode.size;
 
-    rd = btrfs_file_read(&BtrFsInfo->FsRoot, phandle->inr, phandle->position, Size, Buffer);
+    rd = btrfs_file_read(phandle->Volume, &phandle->Volume->FsRoot,
+                         phandle->inr, phandle->position, Size, Buffer);
     if (rd == READ_ERROR)
     {
         TRACE("An error occured while reading file %lu\n", FileId);
@@ -1256,18 +1296,20 @@ const DEVVTBL BtrFsFuncTable =
 
 const DEVVTBL *BtrFsMount(ULONG DeviceId)
 {
+    PBTRFS_INFO BtrFsInfo;
     struct btrfs_path path;
     struct btrfs_root_item fs_root_item;
 
     TRACE("Enter BtrFsMount(%lu)\n", DeviceId);
 
-    BtrFsInfo = FrLdrTempAlloc(sizeof(struct BTRFS_INFO), TAG_BTRFS_INFO);
+    BtrFsInfo = FrLdrTempAlloc(sizeof(BTRFS_INFO), TAG_BTRFS_INFO);
     if (!BtrFsInfo)
         return NULL;
-    RtlZeroMemory(BtrFsInfo, sizeof(struct BTRFS_INFO));
+    RtlZeroMemory(BtrFsInfo, sizeof(BTRFS_INFO));
 
     /* Read the SuperBlock */
-    if (!disk_read(BTRFS_SUPER_INFO_OFFSET, &BtrFsInfo->SuperBlock, sizeof(struct btrfs_super_block)))
+    if (!disk_read(DeviceId, BTRFS_SUPER_INFO_OFFSET,
+                   &BtrFsInfo->SuperBlock, sizeof(BtrFsInfo->SuperBlock)))
     {
         FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
         return NULL;
@@ -1285,24 +1327,27 @@ const DEVVTBL *BtrFsMount(ULONG DeviceId)
 
     btrfs_init_crc32c();
 
-    btrfs_read_sys_chunk_array();
-    btrfs_read_chunk_tree();
+    btrfs_read_sys_chunk_array(BtrFsInfo);
+    btrfs_read_chunk_tree(BtrFsInfo);
 
     /* setup roots */
     fs_root_item.bytenr = BtrFsInfo->SuperBlock.root;
     fs_root_item.level = BtrFsInfo->SuperBlock.root_level;
 
-    init_path(&path);
-    if (!BtrFsSearchTreeType(&fs_root_item, BTRFS_FS_TREE_OBJECTID, BTRFS_ROOT_ITEM_KEY, &path))
+    init_path(&BtrFsInfo->SuperBlock, &path);
+    if (!BtrFsSearchTreeType(BtrFsInfo, &fs_root_item, BTRFS_FS_TREE_OBJECTID, BTRFS_ROOT_ITEM_KEY, &path))
     {
-        FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
         free_path(&path);
+        FrLdrTempFree(BtrFsInfo, TAG_BTRFS_INFO);
         return NULL;
     }
 
     BtrFsInfo->FsRoot = *(struct btrfs_root_item *) path_current_data(&path);
 
     free_path(&path);
+
+    /* Remember BTRFS volume information */
+    BtrFsVolumes[DeviceId] = BtrFsInfo;
 
     TRACE("BtrFsMount(%lu) success\n", DeviceId);
     return &BtrFsFuncTable;
