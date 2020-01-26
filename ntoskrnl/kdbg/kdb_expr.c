@@ -437,8 +437,8 @@ RpnpParseExpression(
     RPN_OP ComparativeOp;
     BOOLEAN ComparativeOpFilled = FALSE;
     BOOLEAN IsComparativeOp;
-    INT i, i2;
-    ULONG ul;
+    INT_PTR i, i2;
+    ULONG64 ull;
     UCHAR MemorySize;
     CHAR Buffer[16];
     BOOLEAN First;
@@ -596,13 +596,12 @@ get_operand:
             else
             {
                 /* Immediate value */
-                /* FIXME: Need string to ULONGLONG function */
-                ul = strtoul(p, &pend, 0);
+                ull = strtoull(p, &pend, 0);
                 if (p != pend)
                 {
                     RpnOp.Type = RpnOpImmediate;
                     RpnOp.CharacterOffset = CharacterOffset;
-                    RpnOp.Data.Immediate = (ULONGLONG)ul;
+                    RpnOp.Data.Immediate = ull;
                     CharacterOffset += pend - p;
                     p = pend;
                 }
