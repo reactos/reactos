@@ -36,7 +36,7 @@ typedef LONG_PTR bfd_signed_vma;
 #define _(X) X
 #define ATTRIBUTE_UNUSED
 extern int sprintf(char *str, const char *format, ...);
-#define sprintf_vma(BUF, VMA) sprintf(BUF, "%p", VMA)
+#define sprintf_vma(BUF, VMA) sprintf(BUF, "%p", (PVOID)VMA)
 #include <setjmp.h>
 #define _INC_SETJMPEX
 struct disassemble_info;
@@ -80,7 +80,7 @@ KdbpMemoryError(int Status, ULONG_PTR Addr,
 static void
 KdbpPrintAddressInCode(ULONG_PTR Addr, struct disassemble_info * Ignored)
 {
-  if (!KdbSymPrintAddress((void*)Addr))
+  if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
       DbgPrint("<%p>", Addr);
     }

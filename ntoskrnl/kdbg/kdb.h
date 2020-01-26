@@ -78,12 +78,12 @@ typedef enum _KDB_OUTPUT_SETTINGS
 
 LONG
 KdbpDisassemble(
-   IN ULONG Address,
+   IN ULONG_PTR Address,
    IN ULONG IntelSyntax);
 
 LONG
 KdbpGetInstLength(
-   IN ULONG Address);
+   IN ULONG_PTR Address);
 
 /* from i386/kdb_help.S */
 

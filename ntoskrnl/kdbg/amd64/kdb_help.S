@@ -3,6 +3,10 @@
 
 #include <ksamd64.inc>
 
+.code64
+
+EXTERN KdbEnterDebuggerException : PROC
+
 PUBLIC KdbEnter
 KdbEnter:
 
@@ -11,12 +15,12 @@ KdbEnter:
 //  .pushreg ?
 
     /* Make room for a KTRAP_FRAME */
-    sub rsp, SIZE_KTRAP_FRAME
-//    .allocstack SIZE_KTRAP_FRAME
+    sub rsp, KTRAP_FRAME_LENGTH
+//    .allocstack KTRAP_FRAME_LENGTH
 
     /* Save rbp */
     mov [rsp + KTRAP_FRAME_Rbp], rbp
-    
+
     /* Save non-volatile registers */
     mov [rsp + KTRAP_FRAME_Rbx], rbx
     mov [rsp + KTRAP_FRAME_Rdi], rdi
@@ -74,7 +78,7 @@ KdbEnter:
     mov [rsp + KTRAP_FRAME_Dr7], rax
 
     /* Point rbp, where rsp was before */
-    lea rbp, [rsp + SIZE_KTRAP_FRAME]
+    lea rbp, [rsp + KTRAP_FRAME_LENGTH]
     mov [rsp + KTRAP_FRAME_Rsp], rbp
 
     /* Store the EFLAGS we previously pushed on the stack */
@@ -90,7 +94,7 @@ KdbEnter:
 
     /* Clear all breakpoint enables in dr7. */
     mov rax, dr7
-    and rax, 0xFFFF0000
+    and rax, HEX(0FFFF0000)
     mov dr7, rax
 
     /* Call KDB */
@@ -131,7 +135,7 @@ KdbEnter:
 
     ret
 
-.globl KdbpStackSwitchAndCall
+PUBLIC KdbpStackSwitchAndCall
 KdbpStackSwitchAndCall:
 
     /* Save old stack */

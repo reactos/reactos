@@ -137,6 +137,9 @@ KdbpTrapFrameToKdbTrapFrame(
     PKTRAP_FRAME TrapFrame,
     PKDB_KTRAP_FRAME KdbTrapFrame)
 {
+#ifdef _M_AMD64
+    KdbTrapFrame->Tf = *TrapFrame;
+#else
     /* Copy the TrapFrame only up to Eflags and zero the rest*/
     RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
     RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
@@ -152,6 +155,7 @@ KdbpTrapFrameToKdbTrapFrame(
 
 
     /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+#endif
 }
 
 static VOID
@@ -159,6 +163,9 @@ KdbpKdbTrapFrameToTrapFrame(
     PKDB_KTRAP_FRAME KdbTrapFrame,
     PKTRAP_FRAME TrapFrame)
 {
+#ifdef _M_AMD64
+    *TrapFrame = KdbTrapFrame->Tf;
+#else
     /* Copy the TrapFrame only up to Eflags and zero the rest*/
     RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
 
@@ -168,6 +175,7 @@ KdbpKdbTrapFrameToTrapFrame(
     KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
 
     /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+#endif
 }
 
 static VOID
@@ -393,7 +401,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Get the interrupt descriptor */
-    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)((ULONG_PTR)Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
     {
         /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
         return FALSE;
@@ -710,7 +718,11 @@ KdbpIsBreakPointOurs(
 
     if (ExceptionCode == STATUS_BREAKPOINT) /* Software interrupt */
     {
+#ifdef _M_AMD64
+        ULONG_PTR BpEip = (ULONG_PTR)TrapFrame->Rip - 1; /* Get EIP of INT3 instruction */
+#else
         ULONG_PTR BpEip = (ULONG_PTR)TrapFrame->Eip - 1; /* Get EIP of INT3 instruction */
+#endif
         for (i = 0; i < KdbSwBreakPointCount; i++)
         {
             ASSERT((KdbSwBreakPoints[i]->Type == KdbBreakPointSoftware ||
@@ -1382,7 +1394,11 @@ KdbEnterDebuggerException(
                KiDispatchException accounts for that. Whatever we do here with
                the TrapFrame does not matter anyway, since KiDispatchException
                will overwrite it with the values from the Context! */
+#ifdef _M_AMD64
+            TrapFrame->Rip--;
+#else
             TrapFrame->Eip--;
+#endif
         }
 
         if ((BreakPoint->Type == KdbBreakPointHardware) &&
@@ -1406,8 +1422,13 @@ KdbEnterDebuggerException(
 
             if (--KdbNumSingleSteps > 0)
             {
+#ifdef _M_AMD64
+                if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Rip)) ||
+                    (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Rip)))
+#else
                 if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
                     (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
+#endif
                 {
                     Context->EFlags |= EFLAGS_TF;
                 }
@@ -1455,8 +1476,13 @@ KdbEnterDebuggerException(
 
         if (BreakPoint->Type == KdbBreakPointSoftware)
         {
+#ifdef _M_AMD64
+            KdbpPrint("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+                      KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Rip);
+#else
             KdbpPrint("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
                       KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
+#endif
         }
         else if (BreakPoint->Type == KdbBreakPointHardware)
         {
@@ -1509,8 +1535,13 @@ KdbEnterDebuggerException(
             /*ASSERT((Context->Eflags & EFLAGS_TF) != 0);*/
             if (--KdbNumSingleSteps > 0)
             {
+#ifdef _M_AMD64
+                if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Rip)) ||
+                    (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Rip)))
+#else
                 if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
                     (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
+#endif
                 {
                     Context->EFlags &= ~EFLAGS_TF;
                 }
@@ -1548,9 +1579,13 @@ KdbEnterDebuggerException(
         {
             return kdHandleException;
         }
-
+#ifdef _M_AMD64
+        KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+                  TrapFrame->SegCs & 0xffff, TrapFrame->Rip - 1);
+#else
         KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
                   TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
+#endif
     }
     else
     {
@@ -1574,10 +1609,9 @@ KdbEnterDebuggerException(
             ULONG Err;
 
             TrapCr2 = __readcr2();
-
+#ifndef _M_AMD64
             Err = TrapFrame->ErrCode;
             KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
-
             if ((Err & (1 << 0)) == 0)
             {
                 KdbpPrint("Page not present.\n");
@@ -1589,6 +1623,7 @@ KdbEnterDebuggerException(
                 else
                     KdbpPrint("Page protection violation.\n");
             }
+#endif
         }
     }
 
@@ -1627,9 +1662,13 @@ KdbEnterDebuggerException(
     {
         /* Variable explains itself! */
         KdbpEvenThoughWeHaveABreakPointToReenableWeAlsoHaveARealSingleStep = TRUE;
-
+#ifdef _M_AMD64
+        if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Rip)) ||
+            (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Rip)))
+#else
         if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
             (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
+#endif
         {
             ASSERT((KdbCurrentTrapFrame->Tf.EFlags & EFLAGS_TF) == 0);
             /*KdbCurrentTrapFrame->Tf.EFlags &= ~EFLAGS_TF;*/
@@ -1672,11 +1711,13 @@ continue_execution:
     /* Clear debug status */
     if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
     {
+#ifndef _M_AMD64
         /* Set the RF flag so we don't trigger the same breakpoint again. */
         if (Resume)
         {
             TrapFrame->EFlags |= EFLAGS_RF;
         }
+#endif
 
         /* Clear dr6 status flags. */
         TrapFrame->Dr6 &= ~0x0000e00f;
@@ -1684,7 +1725,11 @@ continue_execution:
         if (!(KdbEnteredOnSingleStep && KdbSingleStepOver))
         {
             /* Skip the current instruction */
+#ifdef _M_AMD64
+            Context->Rip++;
+#else
             Context->Eip++;
+#endif
         }
     }
 

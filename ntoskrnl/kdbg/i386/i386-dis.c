@@ -92,7 +92,7 @@ KdbpNopPrintAddress(unsigned int Addr, struct disassemble_info * Ignored)
 #include "dis-asm.h"
 
 LONG
-KdbpGetInstLength(IN ULONG Address)
+KdbpGetInstLength(IN ULONG_PTR Address)
 {
   disassemble_info info;
 

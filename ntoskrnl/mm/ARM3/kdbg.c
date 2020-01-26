@@ -144,7 +144,7 @@ VOID
 ExpKdbgExtPoolUsedGetTag(PCHAR Arg, PULONG Tag, PULONG Mask)
 {
     CHAR Tmp[4];
-    ULONG Len;
+    SIZE_T Len;
     USHORT i;
 
     /* Get the tag */
@@ -175,7 +175,7 @@ ExpKdbgExtPoolUsed(
 {
     ULONG Tag = 0;
     ULONG Mask = 0;
-    ULONG Flags = 0;
+    ULONG_PTR Flags = 0;
 
     if (Argc > 1)
     {

@@ -23,23 +23,19 @@ set(LTCG FALSE CACHE BOOL
 set(DBG TRUE CACHE BOOL
 "Whether to compile for debugging.")
 
-set(KDBG FALSE CACHE BOOL
+set(KDBG TRUE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
 
 set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
 If you don't use GDB, don't enable this.")
 
-set(_WINKD_ TRUE CACHE BOOL
+set(_WINKD_ FALSE CACHE BOOL
 "Whether to compile with the KD protocol.")
 
 set(_ELF_ FALSE CACHE BOOL
 "Whether to compile support for ELF files.
 Do not enable unless you know what you're doing.")
-
-set(USERMODE TRUE CACHE BOOL
-"Whether to compile any usermode parts. This is while kernel mode is under
- heavy development and usermode part not relevant for bootcd.")
 
 if(MSVC)
 set(_PREFAST_ FALSE CACHE BOOL

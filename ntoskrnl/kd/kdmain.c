@@ -255,7 +255,11 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
     {
         /* Bump EIP to the instruction following the int 2C */
+#ifdef _M_AMD64
+        Context->Rip += 2;
+#else
         Context->Eip += 2;
+#endif
     }
 #endif
 
