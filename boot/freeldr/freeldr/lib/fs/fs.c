@@ -394,7 +394,7 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     pNewEntry->FuncTable = FuncTable;
     pNewEntry->ReferenceCount = 0;
     pNewEntry->Prefix = (CHAR*)(pNewEntry + 1);
-    memcpy(pNewEntry->Prefix, Prefix, Length);
+    RtlCopyMemory(pNewEntry->Prefix, Prefix, Length);
 
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
 }
