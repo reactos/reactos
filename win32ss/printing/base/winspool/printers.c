@@ -384,44 +384,101 @@ Cleanup:
 }
 
 BOOL WINAPI
-EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+EnumPrintersA(DWORD Flags, PSTR pName, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    WCHAR NameW[255];
-    CHAR  NameA[255];
-    BOOL ret;
+    BOOL bReturnValue = FALSE;
+    DWORD cch;
+    PWSTR pwszName = NULL;
+    PSTR pszPrinterName = NULL;
+    PSTR pszServerName = NULL;
     DWORD i;
-    PPRINTER_INFO_4W ppi4w;
-    PPRINTER_INFO_4A ppi4a;
+    PPRINTER_INFO_4W ppi4w = NULL;
+    PPRINTER_INFO_4A ppi4a = NULL;
 
-    TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    if (Name == NULL)
-    {
-        NameW[0] = UNICODE_NULL;
-    }
-    else
-    {
-    /* https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
-        MultiByteToWideChar(CP_ACP, 0, Name, -1, NameW, ARRAYSIZE(NameW));
-    }
-    ret = EnumPrintersW(Flags, NameW, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, pName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
+    if (pName)
+    {
+        // Convert pName to a Unicode string pwszName.
+        cch = strlen(pName);
+
+        pwszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!pwszName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pName, -1, pwszName, cch + 1);
+        HeapFree(hProcessHeap, 0, pwszName);
+    }
+
+    bReturnValue = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+
+    TRACE("*pcReturned is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcReturned, bReturnValue, GetLastError());
+
+    /* We are mapping two different pointers to the pPrinterEnum pointer here so that */
+    /* we can do in-place conversion. We read the Unicode response from the EnumPrintersW and */
+    /* then we write back the ASCII conversion into the same buffer for our EnumPrintersA output */
+
+    /* mapping to pPrinterEnum for Unicode (w) characters */
     ppi4w = (PPRINTER_INFO_4W)pPrinterEnum;
+    /* mapping to pPrinterEnum for ASCII (a) characters */
     ppi4a = (PPRINTER_INFO_4A)pPrinterEnum;
 
-    for (i = 0; i < (DWORD)*pcReturned; i++)
+    for (i = 0; i < *pcReturned; i++)
     {
         if (ppi4w[i].pPrinterName)
         {
-            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, NameA, ARRAYSIZE(NameA), NULL, NULL);
-            strcpy(ppi4a[i].pPrinterName, NameA);
+            // Convert Unicode pPrinterName to a ASCII string pszPrinterName.
+            cch = wcslen(ppi4w[i].pPrinterName);
+
+            pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+            if (!pszPrinterName)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                ERR("HeapAlloc failed!\n");
+                goto Cleanup;
+            }
+
+            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, pszPrinterName, cch + 1, NULL, NULL);
+            strcpy(ppi4a[i].pPrinterName, pszPrinterName);
+
+            HeapFree(hProcessHeap, 0, pszPrinterName);
         }
+
         if (ppi4w[i].pServerName)
         {
-            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pServerName, -1, NameA, ARRAYSIZE(NameA), NULL, NULL);
-            strcpy(ppi4a[i].pServerName, NameA);
+            // Convert Unicode pServerName to a ASCII string pszServerName.
+            cch = wcslen(ppi4w[i].pServerName);
+
+            pszServerName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+            if (!pszServerName)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                ERR("HeapAlloc failed!\n");
+                goto Cleanup;
+            }
+
+            WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pServerName, -1, pszServerName, cch + 1, NULL, NULL);
+            strcpy(ppi4a[i].pServerName, pszServerName);
+
+            HeapFree(hProcessHeap, 0, pszServerName);
         }
     }
-    return ret;
+
+Cleanup:
+    if (pwszName)
+        HeapFree(hProcessHeap, 0, pwszName);
+
+    if (pszPrinterName)
+        HeapFree(hProcessHeap, 0, pszPrinterName);
+
+    if (pszServerName)
+        HeapFree(hProcessHeap, 0, pszServerName);
+
+    return bReturnValue;
 }
 
 BOOL WINAPI
