@@ -3,6 +3,7 @@
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */
+#define IDI_NONE 101
 
 #define IDC_STATIC -1
 
