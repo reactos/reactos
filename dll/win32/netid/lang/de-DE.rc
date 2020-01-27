@@ -72,7 +72,7 @@ BEGIN
     4 "Computernamen ändern"
     5 "Arbeitsgruppe:"
     6 "Domäne:"
-    7 "Der Domänenname ""%1"" enspricht nicht den Internet-DNS-Richtlinien, obwohl er ein gültiger ReactOS-Name ist. Verwenden Sie den ReactOS DNS-Server für nicht standardmäßige Namen."
+    7 "Der Domänenname ""%1"" entspricht nicht den Internet-DNS-Richtlinien, obwohl er ein gültiger ReactOS-Name ist. Verwenden Sie den ReactOS DNS-Server für nicht standardmäßige Namen."
     8 "Der Domänenname ""%1"" ist nicht richtig formatiert. Domänen werden mit einem Punkt (.) abgetrennt. Jede Domäne ist auf 63 Zeichen begrenzt. Beispiel: domain-1.reactos.org."
     10 "Der neue Computername ""%1"" ist zu lang. Der Name darf nicht länger als 63 Zeichen sein."
     11 "Der neue Computername wurde nicht ordnungsgemäß formatiert. Standardnamen dürfen Buchstaben (a-z, A-Z), Zahlen (0-9) und Bindestriche (-), aber keine Leerzeichen oder Punkte (.) enthalten. Der Name darf nicht ausschließlich aus Ziffern bestehen."
