@@ -237,7 +237,7 @@ WelcomeDlgProc(HWND hwndDlg,
             break;
         case WM_NOTIFY:
             lppsn  = (LPPSHNOTIFY) lParam;
-            pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
+            pContext = (PCREATE_LINK_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_WIZNEXT)
             {
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
