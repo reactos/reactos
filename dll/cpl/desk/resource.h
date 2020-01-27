@@ -13,6 +13,7 @@
 #define IDD_SETTINGS         103
 #define IDD_ADVAPPEARANCE    104
 #define IDD_EFFAPPEARANCE    105
+#define IDD_THEMES           106
 #define IDD_ADVANCED_GENERAL 200
 #define IDD_CONFIRMSETTINGS  201
 
