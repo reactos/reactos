@@ -190,6 +190,7 @@ WelcomeDlgProc(HWND hwndDlg,
     WCHAR szDesc[100];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
+    LPWSTR pch;
 
     switch(uMsg)
     {
@@ -236,10 +237,9 @@ WelcomeDlgProc(HWND hwndDlg,
             break;
         case WM_NOTIFY:
             lppsn  = (LPPSHNOTIFY) lParam;
+            pContext = (PCREATE_LINK_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_WIZNEXT)
             {
-                LPWSTR pch;
-                pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
                 StrTrimW(pContext->szTarget, L" \t");
 
@@ -278,6 +278,12 @@ WelcomeDlgProc(HWND hwndDlg,
                     MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                 }
             }
+            else if (lppsn->hdr.code == PSN_RESET)
+            {
+                /* The user has clicked [Cancel] */
+                DeleteFileW(pContext->szOldFile);
+                SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, pContext->szOldFile, NULL);
+            }
             break;
     }
     return FALSE;
@@ -293,6 +299,7 @@ FinishDlgProc(HWND hwndDlg,
     LPPROPSHEETPAGEW ppsp;
     PCREATE_LINK_CONTEXT pContext;
     LPPSHNOTIFY lppsn;
+    LPWSTR pch;
 
     switch(uMsg)
     {
@@ -323,17 +330,12 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_WIZFINISH)
             {
-                LPWSTR pch;
-                DWORD attrs;
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, MAX_PATH);
                 StrTrimW(pContext->szDescription, L" \t");
 
                 /* if old shortcut file exists, then delete it now */
-                attrs = GetFileAttributesW(pContext->szOldFile);
-                if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY))
-                {
-                    DeleteFileW(pContext->szOldFile);
-                }
+                DeleteFileW(pContext->szOldFile);
+                SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, pContext->szOldFile, NULL);
 
                 if (IsInternetLocation(pContext->szTarget))
                 {
@@ -376,6 +378,12 @@ FinishDlgProc(HWND hwndDlg,
                     }
                 }
             }
+            else if (lppsn->hdr.code == PSN_RESET)
+            {
+                /* The user has clicked [Cancel] */
+                DeleteFileW(pContext->szOldFile);
+                SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, pContext->szOldFile, NULL);
+            }
             break;
     }
     return FALSE;
@@ -406,9 +414,9 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     PROPSHEETPAGE psp;
     UINT nPages = 0;
     UINT nLength;
-    DWORD attrs;
     PCREATE_LINK_CONTEXT pContext;
     WCHAR szMessage[128];
+    LPWSTR pch;
 
     pContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pContext));
     if (!pContext)
@@ -430,8 +438,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         return FALSE;
     }
 
-    attrs = GetFileAttributesW(szPath);
-    if (attrs == INVALID_FILE_ATTRIBUTES)
+    if (!PathFileExistsW(szPath))
     {
         HeapFree(GetProcessHeap(), 0, pContext);
 
@@ -442,13 +449,21 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     }
 
     /* build the pContext->szOrigin and pContext->szOldFile */
-    StringCchCopyW(pContext->szOrigin, _countof(pContext->szOrigin), szPath);
-    pContext->szOldFile[0] = 0;
-    if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
+    if (PathIsDirectoryW(szPath))
     {
-        LPWSTR pch;
-        StringCchCopyW(pContext->szOldFile, _countof(pContext->szOldFile), szPath);
+        StringCchCopyW(pContext->szOrigin, _countof(pContext->szOrigin), szPath);
+        pContext->szOldFile[0] = 0;
+    }
+    else
+    {
+        StringCchCopyW(pContext->szOrigin, _countof(pContext->szOrigin), szPath);
         pch = PathFindFileNameW(pContext->szOrigin);
+        if (pch && *pch)
+            *pch = 0;
+
+        StringCchCopyW(pContext->szOldFile, _countof(pContext->szOldFile), szPath);
+
+        pch = PathFindFileNameW(szPath);
         if (pch && *pch)
         {
             /* build szDescription */
