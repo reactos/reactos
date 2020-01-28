@@ -12,6 +12,7 @@
 
 #include "appwiz.h"
 #include <strsafe.h>
+#include <shellapi.h>
 
 BOOL
 IsShortcut(HKEY hKey)
@@ -176,6 +177,21 @@ BOOL IsInternetLocation(LPCWSTR pszLocation)
     return (PathIsURLW(pszLocation) || wcsstr(pszLocation, L"www.") == pszLocation);
 }
 
+void DoConvertNameForFileSystem(LPWSTR szName)
+{
+    LPWSTR pch1, pch2;
+    for (pch1 = pch2 = szName; *pch1; ++pch1)
+    {
+        if (wcschr(L"\\/:*?\"<>|", *pch1) != 0)
+        {
+            continue;
+        }
+        *pch2 = *pch1;
+        ++pch2;
+    }
+    *pch2 = 0;
+}
+
 INT_PTR
 CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
@@ -191,6 +207,7 @@ WelcomeDlgProc(HWND hwndDlg,
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
     LPWSTR pch;
+    SHFILEINFOW FileInfo = { NULL };
 
     switch(uMsg)
     {
@@ -259,6 +276,10 @@ WelcomeDlgProc(HWND hwndDlg,
                     SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_LOCATION));
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
 
+                    /* get display name */
+                    if (SHGetFileInfoW(pContext->szTarget, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
+                        StringCbCopyW(pContext->szDescription, sizeof(pContext->szDescription), FileInfo.szDisplayName);
+
                     /* set working directory */
                     StringCchCopyW(pContext->szWorkingDirectory, _countof(pContext->szWorkingDirectory),
                                    pContext->szTarget);
@@ -307,7 +328,10 @@ FinishDlgProc(HWND hwndDlg,
             ppsp = (LPPROPSHEETPAGEW)lParam;
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
+
+            DoConvertNameForFileSystem(pContext->szDescription);
             SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
+
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
             break;
         case WM_COMMAND:
