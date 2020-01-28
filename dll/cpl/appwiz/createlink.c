@@ -207,7 +207,7 @@ WelcomeDlgProc(HWND hwndDlg,
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
     LPWSTR pch;
-    SHFILEINFOW FileInfo = { NULL };
+    SHFILEINFOW FileInfo;
 
     switch(uMsg)
     {
@@ -277,6 +277,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
 
                     /* get display name */
+                    FileInfo.szDisplayName[0] = 0;
                     if (SHGetFileInfoW(pContext->szTarget, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
                         StringCbCopyW(pContext->szDescription, sizeof(pContext->szDescription), FileInfo.szDisplayName);
 
