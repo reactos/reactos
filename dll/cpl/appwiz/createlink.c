@@ -323,6 +323,9 @@ WelcomeDlgProc(HWND hwndDlg,
                 {
                     /* not found */
                     WCHAR szError[MAX_PATH + 100];
+
+                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
+
                     LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
                     StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
@@ -401,6 +404,8 @@ FinishDlgProc(HWND hwndDlg,
 
                 if (!DoValidateShortcutName(pContext))
                 {
+                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, EM_SETSEL, 0, -1);
+
                     LoadStringW(hApplet, IDS_INVALID_NAME, szMessage, _countof(szMessage));
                     MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
 
