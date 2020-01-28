@@ -368,6 +368,7 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
 
+            /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
             DoConvertNameForFileSystem(pContext->szDescription);
             SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
 
