@@ -17,6 +17,12 @@
 #define IDD_ADVANCED_GENERAL 200
 #define IDD_CONFIRMSETTINGS  201
 
+/* Themes Page */
+#define IDC_THEMES_COMBOBOX 1000
+#define IDC_THEMES_SAVE_AS 1001
+#define IDC_THEMES_DELETE 1002
+#define IDC_THEMES_PREVIEW 1003
+
 /* Background Page */
 #define IDC_BACKGROUND_LIST          1000
 #define IDC_MONITOR                  1001
