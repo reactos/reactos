@@ -185,6 +185,7 @@ DoConvertNameForFileSystem(LPWSTR szName)
     {
         if (wcschr(L"\\/:*?\"<>|", *pch1) != NULL)
         {
+            /* *pch1 is an invalid character */
             continue;
         }
         *pch2 = *pch1;
