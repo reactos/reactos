@@ -398,8 +398,7 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_WIZFINISH)
             {
-                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription,
-                                _countof(pContext->szDescription));
+                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, _countof(pContext->szDescription));
                 StrTrimW(pContext->szDescription, L" \t");
 
                 if (!DoValidateShortcutName(pContext))
@@ -602,7 +601,7 @@ NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     WCHAR szFile[MAX_PATH];
 
-    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR) lParam1, -1, szFile, _countof(szFile)))
+    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR)lParam1, -1, szFile, _countof(szFile)))
     {
         return ShowCreateShortcutWizard(hwndCPl, szFile);
     }
