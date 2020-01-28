@@ -308,7 +308,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     /* get display name */
                     FileInfo.szDisplayName[0] = 0;
                     if (SHGetFileInfoW(pContext->szTarget, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
-                        StringCbCopyW(pContext->szDescription, sizeof(pContext->szDescription), FileInfo.szDisplayName);
+                        StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), FileInfo.szDisplayName);
 
                     /* set working directory */
                     StringCchCopyW(pContext->szWorkingDirectory, _countof(pContext->szWorkingDirectory),
