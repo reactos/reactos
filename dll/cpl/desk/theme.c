@@ -1059,6 +1059,7 @@ cleanup:
     return ret;
 }
 
+/* TODO: */
 INT_PTR CALLBACK
 ThemesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
