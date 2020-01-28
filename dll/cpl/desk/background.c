@@ -203,6 +203,8 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
         return i;
     }
 
+    himl = ListView_GetImageList(hwndBackgroundList, LVSIL_SMALL);
+
     token = _tcstok(szFileTypes, separators);
     while (token != NULL)
     {
@@ -227,19 +229,13 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
             /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
             if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcsicmp(wallpaperFilename, filename) != 0))
             {
-                himl = (HIMAGELIST)SHGetFileInfo(filename,
-                                                0,
-                                                &sfi,
-                                                sizeof(sfi),
-                                                SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                                SHGFI_DISPLAYNAME);
-                if (himl == NULL)
-                    break;
-
-                if (i++ == 0)
-                {
-                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
-                }
+                SHGetFileInfo(filename,
+                              0,
+                              &sfi,
+                              sizeof(sfi),
+                              SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+                sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+                i++;
 
                 backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
 
@@ -320,7 +316,7 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 
     cx = GetSystemMetrics(SM_CXSMICON);
     cy = GetSystemMetrics(SM_CYSMICON);
-    himl = ImageList_Create(cx, cy, ILC_COLOR24 | ILC_MASK, 16, 0);
+    himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 0, 0);
     hIcon = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_NONE), IMAGE_ICON, cx, cy, 0);
 
     ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
