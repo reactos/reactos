@@ -14,7 +14,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDC_DESK_ICON ICON "resources/applet.ico"
 IDC_DESK_ICON2 ICON "resources/applet.ico"
-IDI_NONE ICON "resources/none.ico"
 
 IDC_MONITOR BITMAP "resources/monitor.bmp"
 

@@ -309,6 +309,7 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
     HRESULT hr;
     HICON hIcon;
     INT cx, cy;
+    HINSTANCE hShell32;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
@@ -317,7 +318,11 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
     cx = GetSystemMetrics(SM_CXSMICON);
     cy = GetSystemMetrics(SM_CYSMICON);
     himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 0, 0);
-    hIcon = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_NONE), IMAGE_ICON, cx, cy, 0);
+
+    /* Load (None) icon */
+    hShell32 = LoadLibraryEx(L"shell32", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    hIcon = (HICON)LoadImageW(hShell32, MAKEINTRESOURCEW(200), IMAGE_ICON, cx, cy, 0);
+    FreeLibrary(hShell32);
 
     ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
 
