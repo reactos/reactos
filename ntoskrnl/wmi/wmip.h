@@ -12,6 +12,7 @@ typedef struct _WMIP_IRP_CONTEXT
 
 typedef struct _WMIP_GUID_OBJECT
 {
+    KEVENT Event;
     GUID Guid;
     PIRP Irp;
     LIST_ENTRY IrpLink;
