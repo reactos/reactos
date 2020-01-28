@@ -16,6 +16,7 @@
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
+INT_PTR CALLBACK ThemesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -112,6 +113,7 @@ static const struct
     LPWSTR Name;
 } PropPages[] =
 {
+    /* { IDD_THEMES, ThemesPageProc, NULL, L"Themes" }, */ /* TODO: */
     { IDD_BACKGROUND, BackgroundPageProc, NULL, L"Desktop" },
     { IDD_SCREENSAVER, ScreenSaverPageProc, NULL, L"Screen Saver" },
     { IDD_APPEARANCE, AppearancePageProc, NULL, L"Appearance" },

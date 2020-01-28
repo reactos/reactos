@@ -13,8 +13,15 @@
 #define IDD_SETTINGS         103
 #define IDD_ADVAPPEARANCE    104
 #define IDD_EFFAPPEARANCE    105
+#define IDD_THEMES           106
 #define IDD_ADVANCED_GENERAL 200
 #define IDD_CONFIRMSETTINGS  201
+
+/* Themes Page */
+#define IDC_THEMES_COMBOBOX 1000
+#define IDC_THEMES_SAVE_AS 1001
+#define IDC_THEMES_DELETE 1002
+#define IDC_THEMES_PREVIEW 1003
 
 /* Background Page */
 #define IDC_BACKGROUND_LIST          1000
