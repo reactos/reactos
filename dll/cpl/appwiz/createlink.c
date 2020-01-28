@@ -328,6 +328,7 @@ FinishDlgProc(HWND hwndDlg,
     PCREATE_LINK_CONTEXT pContext;
     LPPSHNOTIFY lppsn;
     LPWSTR pch;
+    WCHAR szText[MAX_PATH];
 
     switch(uMsg)
     {
@@ -347,7 +348,13 @@ FinishDlgProc(HWND hwndDlg,
                 case EN_CHANGE:
                     if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_NAME, WM_GETTEXTLENGTH, 0, 0))
                     {
-                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
+                        GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, szText, _countof(szText));
+                        StrTrimW(szText, L" \t");
+                        DoConvertNameForFileSystem(szText);
+                        if (szText[0])
+                            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
+                        else
+                            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
                     }
                     else
                     {
