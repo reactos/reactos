@@ -411,7 +411,6 @@ EnumPrintersA(DWORD Flags, PSTR pName, DWORD Level, PBYTE pPrinterEnum, DWORD cb
         }
 
         MultiByteToWideChar(CP_ACP, 0, pName, -1, pwszName, cch + 1);
-        HeapFree(hProcessHeap, 0, pwszName);
     }
 
     bReturnValue = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
