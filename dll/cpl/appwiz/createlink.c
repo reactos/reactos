@@ -298,6 +298,8 @@ WelcomeDlgProc(HWND hwndDlg,
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
                     StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
                     MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
+
+                    /* prevent the wizard to go next */
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                     return TRUE;
                 }
