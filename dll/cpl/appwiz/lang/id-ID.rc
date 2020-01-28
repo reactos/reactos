@@ -85,4 +85,5 @@ BEGIN
     IDS_NO_MEMORY "Tidak ada memori yang bisa dialokasikan!"
     IDS_NO_DIRECTORY "Direktori belum diberi!"
     IDS_INVALID_PATH "Jalur yang diberikan tidak sah!"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END

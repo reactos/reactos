@@ -85,4 +85,5 @@ BEGIN
     IDS_NO_MEMORY "Невозможно выделить память."
     IDS_NO_DIRECTORY "Не указано ни одного каталога!"
     IDS_INVALID_PATH "Указанный путь неверен!"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END

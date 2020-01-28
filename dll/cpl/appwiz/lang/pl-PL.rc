@@ -95,4 +95,5 @@ BEGIN
     IDS_NO_MEMORY "Nie można przydzielić pamięci!"
     IDS_NO_DIRECTORY "Nie podano ścieżki!"
     IDS_INVALID_PATH "Podana ścieżka jest niepoprawna!"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END
