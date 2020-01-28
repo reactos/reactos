@@ -359,6 +359,7 @@ FinishDlgProc(HWND hwndDlg,
             {
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, MAX_PATH);
                 StrTrimW(pContext->szDescription, L" \t");
+                DoConvertNameForFileSystem(pContext->szDescription);
 
                 /* if old shortcut file exists, then delete it now */
                 DeleteFileW(pContext->szOldFile);
