@@ -231,7 +231,7 @@ WelcomeDlgProc(HWND hwndDlg,
     LPPROPSHEETPAGEW ppsp;
     PCREATE_LINK_CONTEXT pContext;
     LPPSHNOTIFY lppsn;
-    WCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH * 2];
     WCHAR szDesc[100];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
@@ -284,10 +284,17 @@ WelcomeDlgProc(HWND hwndDlg,
         case WM_NOTIFY:
             lppsn  = (LPPSHNOTIFY) lParam;
             pContext = (PCREATE_LINK_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (lppsn->hdr.code == PSN_WIZNEXT)
+            if (lppsn->hdr.code == PSN_SETACTIVE)
+            {
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget);
+            }
+            else if (lppsn->hdr.code == PSN_WIZNEXT)
             {
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
                 StrTrimW(pContext->szTarget, L" \t");
+
+                ExpandEnvironmentStringsW(pContext->szTarget, szPath, _countof(szPath));
+                StringCchCopyW(pContext->szTarget, _countof(pContext->szTarget), szPath);
 
                 if (IsInternetLocation(pContext->szTarget))
                 {
@@ -336,7 +343,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     return TRUE;
                 }
             }
-            else if (lppsn->hdr.code == PSN_RESET)
+            else if (lppsn->hdr.code == PSN_RESET && !lppsn->lParam)
             {
                 /* The user has clicked [Cancel] */
                 DeleteFileW(pContext->szOldFile);
@@ -367,11 +374,6 @@ FinishDlgProc(HWND hwndDlg,
             ppsp = (LPPROPSHEETPAGEW)lParam;
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
-
-            /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
-            DoConvertNameForFileSystem(pContext->szDescription);
-            SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
-
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
             break;
         case WM_COMMAND:
@@ -397,7 +399,13 @@ FinishDlgProc(HWND hwndDlg,
         case WM_NOTIFY:
             lppsn  = (LPPSHNOTIFY) lParam;
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (lppsn->hdr.code == PSN_WIZFINISH)
+            if (lppsn->hdr.code == PSN_SETACTIVE)
+            {
+                /* TODO: Use shell32!PathCleanupSpec instead of DoConvertNameForFileSystem */
+                DoConvertNameForFileSystem(pContext->szDescription);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
+            }
+            else if (lppsn->hdr.code == PSN_WIZFINISH)
             {
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, _countof(pContext->szDescription));
                 StrTrimW(pContext->szDescription, L" \t");
@@ -458,7 +466,7 @@ FinishDlgProc(HWND hwndDlg,
                     }
                 }
             }
-            else if (lppsn->hdr.code == PSN_RESET)
+            else if (lppsn->hdr.code == PSN_RESET && !lppsn->lParam)
             {
                 /* The user has clicked [Cancel] */
                 DeleteFileW(pContext->szOldFile);
