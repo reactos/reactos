@@ -177,6 +177,7 @@ BOOL IsInternetLocation(LPCWSTR pszLocation)
     return (PathIsURLW(pszLocation) || wcsstr(pszLocation, L"www.") == pszLocation);
 }
 
+/* Remove all invalid characters from the name */
 void
 DoConvertNameForFileSystem(LPWSTR szName)
 {
@@ -212,7 +213,7 @@ DoValidateShortcutName(PCREATE_LINK_CONTEXT pContext)
     {
         if (wcschr(L"\\/:*?\"<>|", *pch) != NULL)
         {
-            /* *pch1 is an invalid character */
+            /* *pch is an invalid character */
             return FALSE;
         }
     }
