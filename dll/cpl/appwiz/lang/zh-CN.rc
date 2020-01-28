@@ -94,4 +94,5 @@ BEGIN
     IDS_NO_MEMORY "没有可以分配的内存空间。"
     IDS_NO_DIRECTORY "没有指定路径。"
     IDS_INVALID_PATH "指定的路径无效。"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END

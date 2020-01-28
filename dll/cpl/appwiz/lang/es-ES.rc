@@ -94,4 +94,5 @@ BEGIN
     IDS_NO_MEMORY "No se pudo asignar memoria"
     IDS_NO_DIRECTORY "No se ha especificado directorio alguno"
     IDS_INVALID_PATH "La ruta proporcionada es inválida"
+    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
 END

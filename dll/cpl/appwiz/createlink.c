@@ -194,6 +194,32 @@ DoConvertNameForFileSystem(LPWSTR szName)
     *pch2 = 0;
 }
 
+BOOL
+DoValidateShortcutName(PCREATE_LINK_CONTEXT pContext)
+{
+    SIZE_T cch;
+    LPCWSTR pch, pszName = pContext->szDescription;
+
+    if (!pszName || !pszName[0])
+        return FALSE;
+
+    cch = wcslen(pContext->szOrigin) + wcslen(pszName) + 1;
+    if (cch >= MAX_PATH)
+        return FALSE;
+
+    pch = pszName;
+    for (pch = pszName; *pch; ++pch)
+    {
+        if (wcschr(L"\\/:*?\"<>|", *pch) != NULL)
+        {
+            /* *pch1 is an invalid character */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 INT_PTR
 CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
@@ -329,6 +355,7 @@ FinishDlgProc(HWND hwndDlg,
     LPPSHNOTIFY lppsn;
     LPWSTR pch;
     WCHAR szText[MAX_PATH];
+    WCHAR szMessage[128];
 
     switch(uMsg)
     {
@@ -350,7 +377,6 @@ FinishDlgProc(HWND hwndDlg,
                     {
                         GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, szText, _countof(szText));
                         StrTrimW(szText, L" \t");
-                        DoConvertNameForFileSystem(szText);
                         if (szText[0])
                             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
                         else
@@ -371,7 +397,16 @@ FinishDlgProc(HWND hwndDlg,
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription,
                                 _countof(pContext->szDescription));
                 StrTrimW(pContext->szDescription, L" \t");
-                DoConvertNameForFileSystem(pContext->szDescription);
+
+                if (!DoValidateShortcutName(pContext))
+                {
+                    LoadStringW(hApplet, IDS_INVALID_NAME, szMessage, _countof(szMessage));
+                    MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
+
+                    /* prevent the wizard to go next */
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
+                    return TRUE;
+                }
 
                 /* if old shortcut file exists, then delete it now */
                 DeleteFileW(pContext->szOldFile);
@@ -392,7 +427,6 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateInternetShortcut(pContext))
                     {
-                        WCHAR szMessage[128];
                         LoadStringW(hApplet, IDS_CANTMAKEINETSHORTCUT, szMessage, _countof(szMessage));
                         MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
                     }
