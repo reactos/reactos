@@ -203,6 +203,8 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
         return i;
     }
 
+    himl = ListView_GetImageList(hwndBackgroundList, LVSIL_SMALL);
+
     token = _tcstok(szFileTypes, separators);
     while (token != NULL)
     {
@@ -227,19 +229,13 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
             /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
             if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcsicmp(wallpaperFilename, filename) != 0))
             {
-                himl = (HIMAGELIST)SHGetFileInfo(filename,
-                                                0,
-                                                &sfi,
-                                                sizeof(sfi),
-                                                SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                                SHGFI_DISPLAYNAME);
-                if (himl == NULL)
-                    break;
-
-                if (i++ == 0)
-                {
-                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
-                }
+                SHGetFileInfo(filename,
+                              0,
+                              &sfi,
+                              sizeof(sfi),
+                              SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+                sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+                i++;
 
                 backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
 
@@ -311,10 +307,19 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
     BackgroundItem *backgroundItem = NULL;
     HWND hwndBackgroundList;
     HRESULT hr;
+    HICON hIcon;
+    INT cx, cy;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
     GetClientRect(hwndBackgroundList, &clientRect);
+
+    cx = GetSystemMetrics(SM_CXSMICON);
+    cy = GetSystemMetrics(SM_CYSMICON);
+    himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 0, 0);
+    hIcon = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_NONE), IMAGE_ICON, cx, cy, 0);
+
+    ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
 
     /* Add a new column to the list */
     ZeroMemory(&dummy, sizeof(LV_COLUMN));
@@ -335,9 +340,10 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
     listItem.state      = 0;
     listItem.pszText    = backgroundItem->szDisplayName;
-    listItem.iImage     = -1;
+    listItem.iImage     = ImageList_AddIcon(himl, hIcon);
     listItem.iItem      = pData->listViewItemCount;
     listItem.lParam     = pData->listViewItemCount;
+    hIcon = NULL;
 
     (void)ListView_InsertItem(hwndBackgroundList, &listItem);
     ListView_SetItemState(hwndBackgroundList,
@@ -385,55 +391,51 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
                 }
             }
 
-            himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
-                                             0,
-                                             &sfi,
-                                             sizeof(sfi),
-                                             SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                             SHGFI_DISPLAYNAME);
-            if (himl != NULL)
+            SHGetFileInfoW(wallpaperFilename,
+                           0,
+                           &sfi,
+                           sizeof(sfi),
+                           SHGFI_ICON | SHGFI_SMALLICON |
+                           SHGFI_DISPLAYNAME);
+            sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+
+            i++;
+
+            backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
+
+            backgroundItem->bWallpaper = TRUE;
+
+            hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+            if (FAILED(hr))
             {
-                if (i++ == 0)
-                {
-                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
-                }
-
-                backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
-
-                backgroundItem->bWallpaper = TRUE;
-
-                hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
-                if (FAILED(hr))
-                {
-                    RegCloseKey(regKey);
-                    return;
-                }
-
-                PathRemoveExtension(backgroundItem->szDisplayName);
-
-                hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
-                if (FAILED(hr))
-                {
-                    RegCloseKey(regKey);
-                    return;
-                }
-
-                ZeroMemory(&listItem, sizeof(LV_ITEM));
-                listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-                listItem.state      = 0;
-                listItem.pszText    = backgroundItem->szDisplayName;
-                listItem.iImage     = sfi.iIcon;
-                listItem.iItem      = pData->listViewItemCount;
-                listItem.lParam     = pData->listViewItemCount;
-
-                (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-                ListView_SetItemState(hwndBackgroundList,
-                                      pData->listViewItemCount,
-                                      LVIS_SELECTED,
-                                      LVIS_SELECTED);
-
-                pData->listViewItemCount++;
+                RegCloseKey(regKey);
+                return;
             }
+
+            PathRemoveExtension(backgroundItem->szDisplayName);
+
+            hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
+            if (FAILED(hr))
+            {
+                RegCloseKey(regKey);
+                return;
+            }
+
+            ZeroMemory(&listItem, sizeof(LV_ITEM));
+            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+            listItem.state      = 0;
+            listItem.pszText    = backgroundItem->szDisplayName;
+            listItem.iImage     = sfi.iIcon;
+            listItem.iItem      = pData->listViewItemCount;
+            listItem.lParam     = pData->listViewItemCount;
+
+            (void)ListView_InsertItem(hwndBackgroundList, &listItem);
+            ListView_SetItemState(hwndBackgroundList,
+                                  pData->listViewItemCount,
+                                  LVIS_SELECTED,
+                                  LVIS_SELECTED);
+
+            pData->listViewItemCount++;
         }
 
         RegCloseKey(regKey);
@@ -640,8 +642,10 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
     size_t sizeRemain;
     SIZE_T buffersize;
     BOOL success;
+    HIMAGELIST himl;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
+    himl = ListView_GetImageList(hwndBackgroundList, LVSIL_SMALL);
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
@@ -715,7 +719,8 @@ OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
                       0,
                       &sfi,
                       sizeof(sfi),
-                      SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+                      SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME);
+        sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
 
         backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
 
