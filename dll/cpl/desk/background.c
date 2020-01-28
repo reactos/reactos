@@ -320,9 +320,11 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
     himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 0, 0);
 
     /* Load (None) icon */
+#define IDI_SHELL_NO 200
     hShell32 = LoadLibraryEx(L"shell32", NULL, LOAD_LIBRARY_AS_DATAFILE);
-    hIcon = (HICON)LoadImageW(hShell32, MAKEINTRESOURCEW(200), IMAGE_ICON, cx, cy, 0);
+    hIcon = (HICON)LoadImageW(hShell32, MAKEINTRESOURCEW(IDI_SHELL_NO), IMAGE_ICON, cx, cy, 0);
     FreeLibrary(hShell32);
+#undef IDI_SHELL_NO
 
     ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
 
