@@ -113,7 +113,7 @@ static const struct
     LPWSTR Name;
 } PropPages[] =
 {
-    { IDD_THEMES, ThemesPageProc, NULL, L"Themes" },
+    /* { IDD_THEMES, ThemesPageProc, NULL, L"Themes" }, */ /* TODO: */
     { IDD_BACKGROUND, BackgroundPageProc, NULL, L"Desktop" },
     { IDD_SCREENSAVER, ScreenSaverPageProc, NULL, L"Screen Saver" },
     { IDD_APPEARANCE, AppearancePageProc, NULL, L"Appearance" },
