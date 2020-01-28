@@ -182,7 +182,7 @@ void DoConvertNameForFileSystem(LPWSTR szName)
     LPWSTR pch1, pch2;
     for (pch1 = pch2 = szName; *pch1; ++pch1)
     {
-        if (wcschr(L"\\/:*?\"<>|", *pch1) != 0)
+        if (wcschr(L"\\/:*?\"<>|", *pch1) != NULL)
         {
             continue;
         }
