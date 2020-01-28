@@ -11,8 +11,8 @@
  */
 
 #include "appwiz.h"
-#include <strsafe.h>
 #include <shellapi.h>
+#include <strsafe.h>
 
 BOOL
 IsShortcut(HKEY hKey)
@@ -177,7 +177,8 @@ BOOL IsInternetLocation(LPCWSTR pszLocation)
     return (PathIsURLW(pszLocation) || wcsstr(pszLocation, L"www.") == pszLocation);
 }
 
-void DoConvertNameForFileSystem(LPWSTR szName)
+void
+DoConvertNameForFileSystem(LPWSTR szName)
 {
     LPWSTR pch1, pch2;
     for (pch1 = pch2 = szName; *pch1; ++pch1)
