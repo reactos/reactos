@@ -608,7 +608,11 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     if (IsEqualIID (riid, IID_IContextMenu))
     {
-        if (_ILIsSpecialFolder(apidl[0]))
+        if (cidl == 0)
+        {
+            hr = CDefViewBckgrndMenu_CreateInstance(this, riid, &pObj);
+        }
+        else if (_ILIsSpecialFolder(apidl[0]))
         {
             hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
         }
