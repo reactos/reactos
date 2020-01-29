@@ -152,7 +152,7 @@ public:
 
     static LPWSTR FormatMessageV(
         _In_z_ LPCWSTR pszFormat,
-        _In_ va_list* pArgList)
+        _In_opt_ va_list* pArgList)
     {
         LPWSTR psz = NULL;
         ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
@@ -301,7 +301,7 @@ public:
 
     static LPSTR FormatMessageV(
         _In_z_ LPCSTR pszFormat,
-        _In_ va_list* pArgList)
+        _In_opt_ va_list* pArgList)
     {
         LPSTR psz = NULL;
         ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
