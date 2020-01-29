@@ -460,6 +460,30 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
     return hr;
 }
 
+/* https://stackoverflow.com/questions/33405201/waitforinputidle-doesnt-work-for-starting-mspaint-programmatically */
+static HHOOK s_hCBTHook = NULL;
+static BOOL s_bDidWake = FALSE;
+static DWORD s_dwProcessId = 0;
+
+/* CBT procedure for waiting process. See below. */
+static LRESULT CALLBACK
+CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    DWORD dwProcessId;
+
+    if (nCode < 0)
+        return CallNextHookEx(s_hCBTHook, nCode, wParam, lParam);
+
+    if (nCode == HCBT_ACTIVATE)
+    {
+        GetWindowThreadProcessId((HWND)wParam, &dwProcessId);
+        if (s_dwProcessId == dwProcessId)
+            s_bDidWake = TRUE;
+    }
+
+    return 0;
+}
+
 /*************************************************************************
  *    SHELL_ExecuteW [Internal]
  *
@@ -497,7 +521,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
-    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
+    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT | CREATE_SUSPENDED;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
         dwCreationFlags |= CREATE_NEW_CONSOLE;
     startup.lpTitle = (LPWSTR)(psei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE) ? psei->lpClass : NULL);
@@ -505,14 +529,36 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     if (psei->fMask & SEE_MASK_HASLINKNAME)
         startup.dwFlags |= STARTF_TITLEISLINKNAME;
 
+    /* Create CBT hook for waiting for process */
+    s_bDidWake = FALSE;
+    s_dwProcessId = 0;
+    s_hCBTHook = SetWindowsHookEx(WH_CBT, CBTProc, NULL, 0);
+
     if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
                        lpDirectory, &startup, &info))
     {
+        s_dwProcessId = info.dwProcessId;
+        ResumeThread(info.hThread);
+
         /* Give 30 seconds to the app to come up, if desired. Probably only needed
            when starting app immediately before making a DDE connection. */
         if (shWait)
+        {
             if (WaitForInputIdle(info.hProcess, 30000) == WAIT_FAILED)
-                WARN("WaitForInputIdle failed: Error %d\n", GetLastError() );
+            {
+                /* The process is a console application or does not have a
+                   message queue. */
+                WARN("WaitForInputIdle failed: Error %d\n", GetLastError());
+
+                /* Wait for CBT */
+                for (UINT i = 0; i < 300; ++i)
+                {
+                    if (s_bDidWake)
+                        break;
+                    Sleep(100);
+                }
+            }
+        }
         retval = 33;
 
         if (psei->fMask & SEE_MASK_NOCLOSEPROCESS)
@@ -528,6 +574,9 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     }
 
     TRACE("returning %lu\n", retval);
+
+    UnhookWindowsHookEx(s_hCBTHook);
+    s_hCBTHook = NULL;
 
     psei_out->hInstApp = (HINSTANCE)retval;
 
