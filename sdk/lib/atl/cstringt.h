@@ -151,7 +151,7 @@ public:
     }
 
     static LPWSTR
-    FormatMessageV(_In_z_ LPCWSTR pszFormat, _In_opt_ va_list* pArgList)
+    FormatMessageV(_In_z_ LPCWSTR pszFormat, _In_opt_ va_list *pArgList)
     {
         LPWSTR psz = NULL;
         ::FormatMessageW(
@@ -300,7 +300,7 @@ public:
     }
 
     static LPSTR
-    FormatMessageV(_In_z_ LPCSTR pszFormat, _In_opt_ va_list* pArgList)
+    FormatMessageV(_In_z_ LPCSTR pszFormat, _In_opt_ va_list *pArgList)
     {
         LPSTR psz = NULL;
         ::FormatMessageA(
@@ -733,7 +733,7 @@ public:
     }
 
     void
-    FormatMessageV(PCXSTR pszFormat, va_list* pArgList)
+    FormatMessageV(PCXSTR pszFormat, va_list *pArgList)
     {
         PXSTR psz = StringTraits::FormatMessageV(pszFormat, pArgList);
         if (!psz)
