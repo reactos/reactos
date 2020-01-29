@@ -150,7 +150,9 @@ public:
         return ::vswprintf(pszDest, pszFormat, args);
     }
 
-    static LPWSTR FormatMessageV(LPWSTR pszFormat, va_list* pArgList)
+    static LPWSTR FormatMessageV(
+        _In_z_ LPCWSTR pszFormat,
+        _In_ va_list* pArgList)
     {
         LPWSTR psz = NULL;
         ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
@@ -297,7 +299,9 @@ public:
         return ::vsprintf(pszDest, pszFormat, args);
     }
 
-    static LPSTR FormatMessageV(LPSTR pszFormat, va_list* pArgList)
+    static LPSTR FormatMessageV(
+        _In_z_ LPCSTR pszFormat,
+        _In_ va_list* pArgList)
     {
         LPSTR psz = NULL;
         ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
