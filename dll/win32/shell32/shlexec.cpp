@@ -465,7 +465,7 @@ static HHOOK s_hCBTHook = NULL;
 static BOOL s_bDidWake = FALSE;
 static DWORD s_dwProcessId = 0;
 
-/* CBT procedure for waiting process. See below. */
+/* CBT procedure for waiting process. See SHELL_ExecuteW. */
 static LRESULT CALLBACK
 CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
