@@ -25,21 +25,11 @@ public:
         HICON hIcon = LoadIcon(NULL, IDI_EXCLAMATION);
         SendDlgItemMessage(IDC_EXCLAMATION_ICON, STM_SETICON, (WPARAM)hIcon);
 
-        /* Our CString does not support FormatMessage yet */
-        CStringA message(MAKEINTRESOURCE(IDS_OVERWRITEFILE_TEXT));
-        CHeapPtr<CHAR, CLocalAllocator> formatted;
+        CStringA message;
+        message.FormatMessage(IDS_OVERWRITEFILE_TEXT, m_Filename.GetString());
+        ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, message);
 
-        DWORD_PTR args[2] =
-        {
-            (DWORD_PTR)m_Filename.GetString(),
-            NULL
-        };
-
-        ::FormatMessageA(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                         message, 0, 0, (LPSTR)&formatted, 0, (va_list*)args);
-
-        ::SetDlgItemTextA(m_hWnd, IDC_MESSAGE, formatted);
-        return 0;
+        return TRUE;
     }
 
     LRESULT OnButton(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
