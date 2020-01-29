@@ -615,6 +615,32 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     return 0;
 }
 
+static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
+{
+    SendMessageW(info->hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)rename);
+    SendMessageW(info->hwndTreeView, TVM_EDITLABELW, 0, (LPARAM)rename);
+    return S_OK;
+}
+
+static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydown)
+{
+    HTREEITEM selected_item;
+
+    /* Old dialog doesn't support those advanced features */
+    if (!(info->lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
+        return 0;
+
+    selected_item = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
+
+    switch (keydown->wVKey)
+    {
+    case VK_F2:
+        BrsFolder_Rename(info, selected_item);
+        break;
+    }
+    return 0;
+}
+
 static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh )
 {
     NMTREEVIEWW *pnmtv = (NMTREEVIEWW *)lpnmh;
@@ -641,6 +667,9 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
     case TVN_ENDLABELEDITA:
     case TVN_ENDLABELEDITW:
         return BrsFolder_Treeview_Rename( info, (LPNMTVDISPINFOW)pnmtv );
+    
+	case TVN_KEYDOWN:
+        return BrsFolder_Treeview_Keydown( info, (LPNMTVKEYDOWN)pnmtv );
 
     default:
         WARN("unhandled (%d)\n", pnmtv->hdr.code);
@@ -721,13 +750,6 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
     return TRUE;
-}
-
-static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
-{
-    SendMessageW(info->hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)rename);
-    SendMessageW(info->hwndTreeView, TVM_EDITLABELW, 0, (LPARAM)rename);
-    return S_OK;
 }
 
 static HRESULT BrsFolder_NewFolder(browse_info *info)
