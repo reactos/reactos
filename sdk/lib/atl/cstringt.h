@@ -735,11 +735,11 @@ public:
     void FormatMessageV(PCXSTR pszFormat, va_list* pArgList)
     {
         PXSTR psz = StringTraits::FormatMessageV(pszFormat, pArgList);
-        if (psz)
-        {
-            *this = psz;
-            ::LocalFree(psz);
-        }
+        if (!psz)
+            CThisSimpleString::ThrowMemoryException();
+
+        *this = psz;
+        ::LocalFree(psz);
     }
 
     int Replace(PCXSTR pszOld, PCXSTR pszNew)
