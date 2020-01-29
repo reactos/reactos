@@ -919,6 +919,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     PCM_KEYBOARD_DEVICE_DATA KeyboardData;
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
     ULONG Size;
+    REGS Regs;
 
     /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2
     if (DetectKeyboardDevice()) */
@@ -944,12 +945,21 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
         PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
 
+        /* Int 16h AH=02h
+         * KEYBOARD - GET SHIFT FLAGS
+         *
+         * Return:
+         * AL - shift flags
+         */
+        Regs.b.ah = 0x02;
+        Int386(0x16, &Regs, &Regs);
+
         KeyboardData = (PCM_KEYBOARD_DEVICE_DATA)(PartialDescriptor + 1);
         KeyboardData->Version = 1;
         KeyboardData->Revision = 1;
         KeyboardData->Type = 4;
         KeyboardData->Subtype = 0;
-        KeyboardData->KeyboardFlags = 0x20;
+        KeyboardData->KeyboardFlags = Regs.b.al;
 
         /* Create controller key */
         FldrCreateComponentKey(ControllerKey,
