@@ -566,7 +566,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 /* Initialize the PFN */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
                                                (PMMPTE)PointerPde,
-                                               MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
+                                               MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_PER_PAGE]);
 #endif
 
                 //
