@@ -491,9 +491,6 @@ public:
                         case eNo:
                             break;
                         case eCancel:
-                            WaitForSingleObject(hExtractionMutex, INFINITE);
-                            *bCancel = true;
-                            ReleaseMutex(hExtractionMutex);
                             unzCloseCurrentFile(uf);
                             Close();
                             return false;
