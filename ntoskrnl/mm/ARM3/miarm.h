@@ -27,11 +27,8 @@
 /* Size of a page directory */
 #define PD_SIZE  (PDE_PER_PAGE * sizeof(MMPDE))
 
-/* Stop using these! */
-#define PD_COUNT  PPE_PER_PAGE
-
 /* Size of all page directories for a process */
-#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+#define SYSTEM_PD_SIZE (PPE_PER_PAGE * PD_SIZE)
 #ifdef _M_IX86
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
@@ -642,7 +639,7 @@ extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
 extern PMMPDE MiHighestUserPde;
-extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+extern PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
 extern BOOLEAN MmZeroingPageThreadActive;
