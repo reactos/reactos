@@ -48,5 +48,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Matrix Bildschirmschoner"
+    IDS_DESCRIPTION         "Matrix-Bildschirmschoner"
 END
