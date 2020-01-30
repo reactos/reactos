@@ -812,7 +812,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
             /* Now get the PTE and scan the pages */
             PointerPte = MiAddressToPte(BaseAddress);
-            for (j = 0; j < PTE_COUNT; j++)
+            for (j = 0; j < PTE_PER_PAGE; j++)
             {
                 /* Check for a valid PTE */
                 if (PointerPte->u.Hard.Valid == 1)
@@ -1439,7 +1439,7 @@ MiAddHalIoMappings(VOID)
         {
             /* Get the PTE for it and scan each page */
             PointerPte = MiAddressToPte(BaseAddress);
-            for (j = 0 ; j < PTE_COUNT; j++)
+            for (j = 0; j < PTE_PER_PAGE; j++)
             {
                 /* Does the HAL own this page? */
                 if (PointerPte->u.Hard.Valid == 1)
