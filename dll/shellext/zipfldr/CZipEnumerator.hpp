@@ -52,7 +52,8 @@ public:
                     name = tmp.Mid(len, pos - len);
                     folder = true;
                 }
-                tmp = name.MakeLower();
+                tmp = name;
+                tmp.MakeLower();
 
                 POSITION it = m_Returned.Find(tmp);
                 if (!name.IsEmpty() && !it)
