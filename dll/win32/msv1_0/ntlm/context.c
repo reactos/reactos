@@ -22,12 +22,15 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+// lsa mode context
 CRITICAL_SECTION ContextCritSect;
 LIST_ENTRY ValidContextList;
 
 SECURITY_STATUS
 NtlmContextInitialize(VOID)
 {
+    __wine_dbch_ntlm.flags = 0x1;
+
     InitializeCriticalSection(&ContextCritSect);
     InitializeListHead(&ValidContextList);
 
@@ -35,12 +38,13 @@ NtlmContextInitialize(VOID)
 }
 
 PNTLMSSP_CONTEXT_HDR
-NtlmReferenceContextHdr(IN ULONG_PTR Handle)
+NtlmReferenceContextHdr(
+    IN LSA_SEC_HANDLE ContextHandle)
 {
     PNTLMSSP_CONTEXT_HDR context;
     EnterCriticalSection(&ContextCritSect);
 
-    context = (PNTLMSSP_CONTEXT_HDR)Handle;
+    context = (PNTLMSSP_CONTEXT_HDR)ContextHandle;
 
     /* sanity */
     ASSERT(context);
@@ -135,12 +139,13 @@ NtlmReferenceContextMsg(
 
 
 VOID
-NtlmDereferenceContext(IN ULONG_PTR Handle)
+NtlmDereferenceContext(
+    IN LSA_SEC_HANDLE ContextHandle)
 {
     PNTLMSSP_CONTEXT_HDR context;
     EnterCriticalSection(&ContextCritSect);
 
-    context = (PNTLMSSP_CONTEXT_HDR)Handle;
+    context = (PNTLMSSP_CONTEXT_HDR)ContextHandle;
 
     /* sanity */
     ASSERT(context);
@@ -204,7 +209,8 @@ NtlmContextTerminate(VOID)
 }
 
 PNTLMSSP_CONTEXT_HDR
-NtlmAllocateContextHdr(BOOL isServer)
+NtlmAllocateContextHdr(
+    IN BOOL isServer)
 {
     SECPKG_CALL_INFO CallInfo;
     PNTLMSSP_CONTEXT_HDR ret;
@@ -425,6 +431,54 @@ fail:
     return ret;
 }
 
+/**
+ * @brief Map a security context created in lsa mode for
+          for user mode. This function is called by
+          InitLsaModeContext and AcceptLsaModeContext.
+          A mapped context is only needed if the flag
+          DATAGRAM or LOCAL_CALL (ContextAttribute) is
+          set.
+ * @param Context the context
+ * @param ContextAttr value of ContextAttribute that will
+ *        be returned from Init/AcceptLsaModeContext
+ * @param MappedContext will be set to true if a mapped
+ *        context is returned.
+ * @param Context Mapped context.
+ */
+SECURITY_STATUS
+MapSecurityContext(
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN OUT PSecBuffer MappedContext)
+{
+    PNTLMSSP_CONTEXT_HDR ContextHdr;
+    ULONG ContextSize;
+
+    // * This is not really what windows is doing.
+    //   It's very unsecure to return our "internal" key
+    //   states (i think).
+    // * But my target for now is to get it work.
+    // * Windows generates a "packed context". I need to
+    //   investigate more what's in there. I guess windows
+    //   computes the internal context from these values to
+    //   avoid giving out to much internals (crypt-key-states
+    //   and so on)
+    ContextHdr = NtlmReferenceContextHdr(ContextHandle);
+    if (ContextHdr->isServer)
+        ContextSize = sizeof(NTLMSSP_CONTEXT_SVR);
+    else
+        ContextSize = sizeof(NTLMSSP_CONTEXT_CLI);
+
+    MappedContext->cbBuffer = ContextSize;//0x29a;
+    MappedContext->BufferType = SECBUFFER_EMPTY;
+    MappedContext->pvBuffer = NtlmAllocate(MappedContext->cbBuffer, FALSE);
+
+    RtlCopyMemory(MappedContext->pvBuffer, ContextHdr, ContextSize);
+
+    NtlmDereferenceContext(ContextHandle);
+
+    return SEC_E_OK;
+}
+
 /* public functions */
 
 SECURITY_STATUS
@@ -441,9 +495,12 @@ NtlmInitializeSecurityContext(
     IN OUT OPTIONAL PLSA_SEC_HANDLE phNewContext,
     IN OUT OPTIONAL PSecBufferDesc pOutput,
     OUT ULONG *pfContextAttr,
-    OUT OPTIONAL PTimeStamp ptsExpiry)
+    OUT OPTIONAL PTimeStamp ptsExpiry,
+    OUT PBOOLEAN MappedContext,
+    OUT PSecBuffer ContextData)
 {
     SECURITY_STATUS ret = SEC_E_OK;
+    SECURITY_STATUS RetTmp;
     PSecBuffer InputToken1, InputToken2 = NULL;
     PSecBuffer OutputToken1, OutputToken2 = NULL;
     PNTLMSSP_CONTEXT_CLI newContext = NULL;
@@ -452,13 +509,14 @@ NtlmInitializeSecurityContext(
      debugstr_w(pszTargetName), fContextReq, Reserved1, TargetDataRep, pInput,
      Reserved1, phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
+    *MappedContext = FALSE;
+
     if(TargetDataRep == SECURITY_NETWORK_DREP)
         WARN("SECURITY_NETWORK_DREP!!\n");
 
-    /* get first input token */
-    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
-                               FALSE, &InputToken1);
-    if (!ret)
+    // get first input token
+    if (!NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
+                              FALSE, &InputToken1))
     {
         // should be ok? -> yes -> remove warning
         WARN("Failed to get input token!\n");
@@ -466,10 +524,9 @@ NtlmInitializeSecurityContext(
         //return SEC_E_INVALID_TOKEN;
     }
 
-    // get first output token
-    ret = NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
-                               TRUE, &OutputToken1);
-    if(!ret)
+    // get first output token;
+    if (!NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
+                              TRUE, &OutputToken1))
     {
         ERR("Failed to get output token!\n");
         return SEC_E_BUFFER_TOO_SMALL;
@@ -485,16 +542,16 @@ NtlmInitializeSecurityContext(
         }
 
         /* new context is referenced! */
-        ret = CliCreateContext(hCredential,//phCredential->dwLower,
-                               pszTargetName,
-                               fContextReq,
-                               &newContext,
-                               pfContextAttr,
-                               ptsExpiry);
-
-        if(!newContext || !NT_SUCCESS(ret))
+        RetTmp = CliCreateContext(hCredential,//phCredential->dwLower,
+                                  pszTargetName,
+                                  fContextReq,
+                                  &newContext,
+                                  pfContextAttr,
+                                  ptsExpiry);
+        if (!newContext || !NT_SUCCESS(RetTmp))
         {
-            ERR("NtlmCreateNegoContext failed with %lx\n", ret);
+            ERR("NtlmCreateNegoContext failed with %lx\n", RetTmp);
+            ret = RetTmp;
             goto fail;
         }
 
@@ -512,11 +569,11 @@ NtlmInitializeSecurityContext(
         if (fContextReq & ISC_REQ_USE_SUPPLIED_CREDS)
         {
             /* get second input token */
-            ret = NtlmGetSecBuffer(pInput,
+            RetTmp = NtlmGetSecBuffer(pInput,
                                   1,
                                   &InputToken2,
                                   FALSE);
-            if(!ret)
+            if (!RetTmp)
             {
                 ERR("Failed to get input token!\n");
                 return SEC_E_INVALID_TOKEN;
@@ -532,17 +589,33 @@ NtlmInitializeSecurityContext(
     else
     {
         ERR("bad call to InitializeSecurityContext\n");
+        ret = SEC_E_INVALID_HANDLE;
         goto fail;
     }
 
-    if(!NT_SUCCESS(ret))
+    if (!NT_SUCCESS(ret))
     {
         ERR("failed with %lx\n", ret);
+        __debugbreak();
         goto fail;
     }
 
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ISC_RET_ALLOCATED_MEMORY;
+
+    if ( ((ret == SEC_I_CONTINUE_NEEDED) && ((*pfContextAttr) & ~ISC_RET_DATAGRAM)) ||
+         ((ret == SEC_E_OK) && ((*pfContextAttr) & ~0x08000000)) )
+    {
+        TRACE("Mapping security context!");
+        RetTmp = MapSecurityContext(*phNewContext, ContextData);
+        if (RetTmp != SEC_E_OK)
+        {
+            ERR("MapSecurityContext failed\n");
+            ret = RetTmp;
+            goto fail;
+        }
+        *MappedContext = TRUE;
+    }
 
     return ret;
 
@@ -606,8 +679,8 @@ InitializeSecurityContextA(IN OPTIONAL PCredHandle phCredential,
 
 SECURITY_STATUS
 SEC_ENTRY
-NtlmQueryContextAttributesAW(
-    IN LSA_SEC_HANDLE hContext,
+NtlmQueryContextAttributes(
+    IN PNTLMSSP_CONTEXT_HDR Context,
     IN ULONG ulAttribute,
     OUT PVOID pBuffer,
     IN BOOL isUnicode)
@@ -618,11 +691,10 @@ NtlmQueryContextAttributesAW(
     const char* PKG_COMMENT_A = "NTLM Security Package";
 
     SECURITY_STATUS ret = SEC_E_OK;
-    PNTLMSSP_CONTEXT_HDR context = NtlmReferenceContextHdr(hContext);
 
-    TRACE("%p %lx %p\n", hContext, ulAttribute, pBuffer);
+    TRACE("%p %lx %p\n", Context, ulAttribute, pBuffer);
 
-    if (!context)
+    if (!Context)
         return SEC_E_INVALID_HANDLE;
 
     switch(ulAttribute)
@@ -641,10 +713,10 @@ NtlmQueryContextAttributesAW(
             ULONG negoFlags;
             PSecPkgContext_Flags spcf = (PSecPkgContext_Flags)pBuffer;
             spcf->Flags = 0;
-            if (context->isServer)
-                negoFlags = ((PNTLMSSP_CONTEXT_SVR)context)->cli_NegFlg;
+            if (Context->isServer)
+                negoFlags = ((PNTLMSSP_CONTEXT_SVR)Context)->cli_NegFlg;
             else
-                negoFlags = ((PNTLMSSP_CONTEXT_CLI)context)->NegFlg;
+                negoFlags = ((PNTLMSSP_CONTEXT_CLI)Context)->NegFlg;
             if (negoFlags & NTLMSSP_NEGOTIATE_SIGN)
                 spcf->Flags |= ISC_RET_INTEGRITY;
             if (negoFlags & NTLMSSP_NEGOTIATE_SEAL)
@@ -714,7 +786,6 @@ NtlmQueryContextAttributesAW(
         ret = SEC_E_UNSUPPORTED_FUNCTION;
     }
 
-    NtlmDereferenceContext((ULONG_PTR)context);
     return ret;
 }
 
@@ -751,9 +822,12 @@ NtlmAcceptSecurityContext(
     IN OUT PLSA_SEC_HANDLE phNewContext,
     IN OUT PSecBufferDesc pOutput,
     OUT ULONG *pfContextAttr,
-    OUT PTimeStamp ptsExpiry)
+    OUT PTimeStamp ptsExpiry,
+    OUT PBOOLEAN MappedContext,
+    OUT PSecBuffer ContextData)
 {
     SECURITY_STATUS ret = SEC_E_OK;
+    BOOL RetTmp;
     PSecBuffer InputToken1, InputToken2 = NULL;
     PSecBuffer OutputToken1, OutputToken2 = NULL;
     USER_SESSION_KEY sessionKey;
@@ -763,28 +837,27 @@ NtlmAcceptSecurityContext(
         hCredential, hContext, pInput, fContextReq, TargetDataRep,
         phNewContext, pOutput, pfContextAttr, ptsExpiry);
 
+    *MappedContext = FALSE;
+
     // get first input token
-    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
-                               FALSE, &InputToken1);
-    if (!ret)
+    if (!NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 0,
+                              FALSE, &InputToken1))
     {
         ERR("Failed to get input token!\n");
         return SEC_E_INVALID_TOKEN;
     }
 
     // get second input token
-    ret = NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 1,
-                               FALSE, &InputToken2);
-    if (!ret)
+    if (!NtlmGetSecBufferType(pInput, SECBUFFER_TOKEN, 1,
+                              FALSE, &InputToken2))
     {
         ERR("Failed to get input token 2!\n");
         //return SEC_E_INVALID_TOKEN;
     }
 
-    /* get first output token */
-    ret = NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
-                               TRUE, &OutputToken1);
-    if (!ret)
+    // get first output token
+    if (!NtlmGetSecBufferType(pOutput, SECBUFFER_TOKEN, 0,
+                              TRUE, &OutputToken1))
     {
         ERR("Failed to get output token!\n");
         return SEC_E_BUFFER_TOO_SMALL;
@@ -833,6 +906,19 @@ NtlmAcceptSecurityContext(
 
     if(fContextReq & ASC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ASC_RET_ALLOCATED_MEMORY;
+
+    if ((ret == SEC_E_OK) && ((*pfContextAttr) & ~0x08000000))
+    {
+        TRACE("Mapping security context!");
+        RetTmp = MapSecurityContext(*phNewContext, ContextData);
+        if (RetTmp != SEC_E_OK)
+        {
+            ERR("MapSecurityContext failed\n");
+            ret = RetTmp;
+            goto fail;
+        }
+        *MappedContext = TRUE;
+    }
 
     return ret;
 fail:

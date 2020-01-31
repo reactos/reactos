@@ -45,17 +45,6 @@ SpInstanceInit(
 }
 
 NTSTATUS NTAPI
-UsrSpInitUserModeContext(
-    LSA_SEC_HANDLE p1,
-    PSecBuffer p2)
-{
-    fdTRACE("UsrSpInitUserModeContext(%p %p)\n",
-          p1, p2);
-
-    return ERROR_NOT_SUPPORTED;
-}
-
-NTSTATUS NTAPI
 UsrSpMakeSignature(
     LSA_SEC_HANDLE p1,
     ULONG p2,
@@ -124,15 +113,25 @@ UsrSpQueryContextAttributes(
     IN ULONG ContextAttribute,
     IN OUT PVOID Buffer)
 {
-    SECURITY_STATUS status;
+    SECURITY_STATUS Status;
+    PNTLMSSP_CONTEXT_USR UsrContext;
 
     fdTRACE("UsrSpQueryContextAttributes(%p 0x%x %p)\n",
             ContextHandle, ContextAttribute, Buffer);
 
-    status = NtlmQueryContextAttributesAW(ContextHandle, ContextAttribute, Buffer, TRUE);
+    UsrContext = NtlmUsrReferenceContext(ContextHandle);
+    if (UsrContext == NULL)
+    {
+        ERR("Invalid context handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
 
-    fdTRACE("Status %x\n", status);
-    return status;
+    Status = NtlmQueryContextAttributes(UsrContext->Hdr, ContextAttribute, Buffer, TRUE);
+
+    NtlmUsrDereferenceContext(UsrContext);
+
+    fdTRACE("Status %x\n", Status);
+    return Status;
 }
 
 NTSTATUS NTAPI

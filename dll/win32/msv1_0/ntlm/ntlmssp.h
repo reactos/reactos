@@ -198,7 +198,7 @@ typedef struct _NTLMSSP_CONTEXT_HDR
 {
     LIST_ENTRY Entry;
     BOOL isServer;
-    ULONG RefCount;
+    LONG RefCount;
     LARGE_INTEGER StartTime;
     ULONG ProcId;
     ULONG Timeout;
@@ -304,7 +304,9 @@ PNTLMSSP_CONTEXT_SVR
 NtlmAllocateContextSvr(VOID);
 
 PNTLMSSP_CONTEXT_HDR
-NtlmReferenceContextHdr(IN ULONG_PTR Handle);
+NtlmReferenceContextHdr(
+    IN LSA_SEC_HANDLE ContextHandle);
+
 PNTLMSSP_CONTEXT_MSG
 NtlmReferenceContextMsg(
     IN ULONG_PTR Handle,
@@ -319,7 +321,8 @@ PNTLMSSP_CONTEXT_SVR
 NtlmReferenceContextSvr(IN ULONG_PTR Handle);
 
 VOID
-NtlmDereferenceContext(IN ULONG_PTR Handle);
+NtlmDereferenceContext(
+    IN LSA_SEC_HANDLE ContextHandle);
 
 /* crypt.c */
 BOOL

@@ -29,7 +29,9 @@ NtlmInitializeSecurityContext(
     IN OUT OPTIONAL PLSA_SEC_HANDLE phNewContext,
     IN OUT OPTIONAL PSecBufferDesc pOutput,
     OUT ULONG *pfContextAttr,
-    OUT OPTIONAL PTimeStamp ptsExpiry);
+    OUT OPTIONAL PTimeStamp ptsExpiry,
+    OUT PBOOLEAN MappedContext,
+    OUT PSecBuffer ContextData);
 
 SECURITY_STATUS
 SEC_ENTRY
@@ -42,14 +44,20 @@ NtlmAcceptSecurityContext(
     IN OUT PLSA_SEC_HANDLE phNewContext,
     IN OUT PSecBufferDesc pOutput,
     OUT ULONG *pfContextAttr,
-    OUT PTimeStamp ptsExpiry);
+    OUT PTimeStamp ptsExpiry,
+    OUT PBOOLEAN MappedContext,
+    OUT PSecBuffer ContextData);
 
 SECURITY_STATUS
 SEC_ENTRY
-NtlmQueryContextAttributesAW(
-    IN LSA_SEC_HANDLE hContext,
+NtlmQueryContextAttributes(
+    IN PNTLMSSP_CONTEXT_HDR Context,
     IN ULONG ulAttribute,
     OUT PVOID pBuffer,
     IN BOOL isUnicode);
+
+PNTLMSSP_CONTEXT_HDR
+NtlmAllocateContextHdr(
+    IN BOOL isServer);
 
 #endif

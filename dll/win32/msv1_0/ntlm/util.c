@@ -523,6 +523,11 @@ NtlmInit(
     NtlmInitializeProtectedMemory();
     NtlmCredentialInitialize();
     NtlmContextInitialize();
+    if (NtlmMode == NtlmUserMode)
+    {
+        NtlmUsrContextInitialize();
+    }
+
 }
 
 VOID

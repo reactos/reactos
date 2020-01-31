@@ -20,6 +20,7 @@ list(APPEND SOURCE
     precomp.h
     splsa.c
     spuser.c
+    usercontext.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0.def)
 

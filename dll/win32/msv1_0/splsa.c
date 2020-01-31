@@ -365,11 +365,11 @@ LsaSpInitLsaModeContext(
         NewContextHandle,
         OutputBuffers,
         ContextAttributes,
-        ExpirationTime);
-    // UNUSED: MappedContext / ContextData
-    *MappedContext = FALSE;
+        ExpirationTime,
+        MappedContext,
+        ContextData);
 
-    NtlmPrintHexDump(OutputBuffers->pBuffers[2].pvBuffer, OutputBuffers->pBuffers[2].cbBuffer);
+    //NtlmPrintHexDump(OutputBuffers->pBuffers[2].pvBuffer, OutputBuffers->pBuffers[2].cbBuffer);
 
     fdTRACE("0x%x\n", status);
 
@@ -392,7 +392,7 @@ LsaSpAcceptLsaModeContext(
     PBOOLEAN MappedContext,
     PSecBuffer ContextData)
 {
-    SECURITY_STATUS status;
+    SECURITY_STATUS Status;
     fdTRACE("LsaSpAcceptLsaModeContext(%p %p %p %p %i %i %p %p %p %p %p)\n",
           CredentialHandle, ContextHandle, InputBuffer, ContextRequirements,
           TargetDataRep, NewContextHandle, OutputBuffer,
@@ -405,17 +405,15 @@ LsaSpAcceptLsaModeContext(
     }
 
     //FIXME: we mix SECURITY_STATUS / NTSTATUS
-    status = NtlmAcceptSecurityContext(
+    Status = NtlmAcceptSecurityContext(
         CredentialHandle, ContextHandle, InputBuffer,
         ContextRequirements, TargetDataRep, NewContextHandle,
-        OutputBuffer, ContextAttributes, ExpirationTime);
-    //FIXME: what to do with MappedContext
-    *MappedContext = FALSE;
-    //+ContextData ..
+        OutputBuffer, ContextAttributes, ExpirationTime,
+        MappedContext, ContextData);
 
-    fdTRACE("0x%x\n", status);
+    fdTRACE("0x%x\n", Status);
 
-    return status;
+    return Status;
 }
 
 NTSTATUS NTAPI

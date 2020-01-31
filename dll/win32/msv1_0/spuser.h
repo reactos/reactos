@@ -14,11 +14,6 @@ SpInstanceInit(
     PVOID *UserFunctions);
 
 NTSTATUS NTAPI
-UsrSpInitUserModeContext(
-    LSA_SEC_HANDLE p1,
-    PSecBuffer p2);
-
-NTSTATUS NTAPI
 UsrSpMakeSignature(
     LSA_SEC_HANDLE p1,
     ULONG p2,

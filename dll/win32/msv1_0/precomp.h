@@ -42,13 +42,14 @@
 #include "lsa.h"
 #include "msv1_0.h"
 #include "ntlm/ciphers.h"
-#include "ntlm/context.h"
 #include "ntlm/strutil.h"
 #include "ntlm/ntlmssp.h"
+#include "ntlm/context.h"
 #include "ntlm/protocol.h"
 #include "ntlm/credentials.h"
 #include "splsa.h"
 #include "spuser.h"
+#include "usercontext.h"
 
 #include "pseh/pseh2.h"
 
