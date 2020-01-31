@@ -1974,6 +1974,7 @@ WSPConnect(SOCKET Handle,
     if (Socket->SharedData->NonBlocking)
     {
         ERR("Async Connect UNIMPLEMENTED!\n");
+        return WSAECONNREFUSED; /* workaround */
     }
 
     /* Send IOCTL */
