@@ -424,7 +424,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
     // Check for invalid levels here for early error return. MSDN says that only 1, 2, 4, and 5 are allowable.
-    if (Level !=  1 && Level != 2 && Level != 4 && Level != 5)
+    if (Level != 1 && Level != 2 && Level != 4 && Level != 5)
     {
         SetLastError(ERROR_INVALID_LEVEL);
         ERR("Invalid Level!\n");
@@ -530,9 +530,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                     HeapFree(hProcessHeap, 0, pszComment);
                 }
+
                 break;
             }
-
 
             case 2:
             {
@@ -669,7 +669,6 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     HeapFree(hProcessHeap, 0, pszLocation);
                 }
 
-
                 if (ppi2w[i].pSepFile)
                 {
                     // Convert Unicode pSepFile to a ANSI string pszSepFile.
@@ -708,7 +707,6 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     HeapFree(hProcessHeap, 0, pszPrintProcessor);
                 }
 
-
                 if (ppi2w[i].pDatatype)
                 {
                     // Convert Unicode pDatatype to a ANSI string pszDatatype.
@@ -746,8 +744,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                     HeapFree(hProcessHeap, 0, pszParameters);
                 }
-                break;
 
+                break;
             }
 
             case 4:
@@ -789,6 +787,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                     HeapFree(hProcessHeap, 0, pszServerName);
                 }
+
                 break;
             }
 
@@ -831,14 +830,13 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                     HeapFree(hProcessHeap, 0, pszPortName);
                 }
+
                 break;
             }
-
         }   // switch
     }       // for
 
 Cleanup:
-
     return bReturnValue;
 }
 
