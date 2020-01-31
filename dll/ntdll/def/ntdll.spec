@@ -679,7 +679,7 @@
 @ stdcall RtlGetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlGetSetBootStatusData(ptr long long ptr long long)
 @ stdcall RtlGetThreadErrorMode()
-@ stdcall -stub RtlGetUnloadEventTrace()
+@ stdcall RtlGetUnloadEventTrace()
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
 @ stdcall RtlHashUnicodeString(ptr long long ptr)

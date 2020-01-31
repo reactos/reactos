@@ -10,7 +10,17 @@
 #define NDEBUG
 #include <debug.h>
 
+static RTL_UNLOAD_EVENT_TRACE RtlpUnloadEventTrace[RTL_UNLOAD_EVENT_TRACE_NUMBER];
+
 /* FUNCTIONS ******************************************************************/
+
+PRTL_UNLOAD_EVENT_TRACE
+NTAPI
+RtlGetUnloadEventTrace(VOID)
+{
+    /* Just return a pointer to an array, according to MSDN */
+    return RtlpUnloadEventTrace;
+}
 
 BOOLEAN
 NTAPI
