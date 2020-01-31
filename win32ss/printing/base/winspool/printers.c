@@ -476,7 +476,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                         ERR("HeapAlloc failed!\n");
-                       goto Cleanup;
+                        goto Cleanup;
                     }
 
                     WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pDescription, -1, pszDescription, cch + 1, NULL, NULL);
@@ -538,7 +538,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                         ERR("HeapAlloc failed!\n");
-                       goto Cleanup;
+                        goto Cleanup;
                     }
 
                     WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pServerName, -1, pszServerName, cch + 1, NULL, NULL);
@@ -754,7 +754,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                         ERR("HeapAlloc failed!\n");
-                       goto Cleanup;
+                        goto Cleanup;
                     }
 
                     WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, pszPrinterName, cch + 1, NULL, NULL);
