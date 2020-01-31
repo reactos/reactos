@@ -194,6 +194,14 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
     return 0;
 }
 
+INT WINAPI
+DocumentEvent( HANDLE hPrinter, HDC hdc, int iEsc, ULONG cbIn, PVOID pvIn, ULONG cbOut, PVOID pvOut)
+{
+    ERR("DocumentEvent(%p, %p, %lu, %lu, %p, %lu, %p)\n", hPrinter, hdc, iEsc, cbIn, pvIn, cbOut, pvOut);
+    UNIMPLEMENTED;
+    return DOCUMENTEVENT_UNSUPPORTED;
+}
+
 LONG WINAPI
 DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput, DWORD fMode)
 {
@@ -1042,7 +1050,7 @@ GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDri
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
-    TRACE("GetPrinterDriverW(%p, %S, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    ERR("GetPrinterDriverW(%p, %S, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
 
     // Sanity checks.
     if (!pHandle)
@@ -1076,7 +1084,7 @@ GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDri
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        ASSERT(Level <= 3);
+        ASSERT(Level <= 5);
         MarshallUpStructure(cbBuf, pDriverInfo, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
     }
 
@@ -1470,6 +1478,14 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
     TRACE("SetPrinterW(%p, %lu, %p, %lu)\n", hPrinter, Level, pPrinter, Command);
     UNIMPLEMENTED;
     return FALSE;
+}
+
+BOOL WINAPI
+SplDriverUnloadComplete(LPWSTR pDriverFile)
+{
+    ERR("DriverUnloadComplete(%S)\n", pDriverFile);
+    UNIMPLEMENTED;
+    return TRUE; // return true for now.
 }
 
 DWORD WINAPI
