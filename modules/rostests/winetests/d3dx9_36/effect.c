@@ -3113,7 +3113,7 @@ static void test_effect_states(IDirect3DDevice9 *device)
     test_effect_clear_vconsts(device);
 
     hr = effect->lpVtbl->BeginPass(effect, 0);
-    todo_wine ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
 
     hr = IDirect3DDevice9_GetTransform(device, D3DTS_WORLDMATRIX(1), &mat);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
@@ -3158,11 +3158,11 @@ static void test_effect_states(IDirect3DDevice9 *device)
      * contain garbage data on native. */
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 1, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    todo_wine ok(fvect.x == 3.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+    ok(fvect.x == 3.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
             fvect.x, fvect.y, fvect.z, fvect.w);
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 2, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    todo_wine ok(fvect.x == 1.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+    ok(fvect.x == 1.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
             fvect.x, fvect.y, fvect.z, fvect.w);
 
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 3, &fvect.x, 1);
@@ -3173,7 +3173,7 @@ static void test_effect_states(IDirect3DDevice9 *device)
 
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 4, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    todo_wine ok(fvect.x == 4.0f && fvect.y == 4.0f && fvect.z == 4.0f && fvect.w == 4.0f,
+    ok(fvect.x == 4.0f && fvect.y == 4.0f && fvect.z == 4.0f && fvect.w == 4.0f,
             "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
             fvect.x, fvect.y, fvect.z, fvect.w);
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 5, &fvect.x, 1);
@@ -3193,7 +3193,7 @@ static void test_effect_states(IDirect3DDevice9 *device)
             fvect.x, fvect.y, fvect.z, fvect.w);
 
     hr = effect->lpVtbl->EndPass(effect);
-    todo_wine ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
     hr = IDirect3DDevice9_GetRenderState(device, D3DRS_BLENDOP, &value);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
     ok(value == 2, "Got result %u, expected %u\n", value, 2);
