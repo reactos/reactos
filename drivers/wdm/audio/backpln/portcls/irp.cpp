@@ -262,8 +262,14 @@ PortClsPower(
                 PowerState = *((POWER_STATE*)&IoStack->Parameters.Power.State.DeviceState);
                 Status = DeviceExtension->AdapterPowerManagement->QueryPowerChangeState(PowerState);
 
-                // sanity check
-                PC_ASSERT(Status == STATUS_SUCCESS);
+                if (!NT_SUCCESS(Status))
+                {
+                    // fail the IRP if the adapter power manager failed
+                    PoStartNextPowerIrp(Irp);
+                    Irp->IoStatus.Status = Status;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    return Status;
+                }
             }
 
             // only forward query requests
