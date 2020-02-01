@@ -274,6 +274,7 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
                       IN PMMPTE PointerPte)
 {
     /* Store the Address */
+    ASSERT((LONG64)PointerPte < 0);
     NewPte->u.Long = (ULONG64)PointerPte << 16;
 
     /* Mark this as a prototype PTE */

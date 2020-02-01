@@ -949,6 +949,19 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 {
     PMMPDE PointerPde;
 
+#if (_MI_PAGING_LEVELS >= 4)
+    if (!MiAddressToPxe(Address)->u.Hard.Valid)
+    {
+        return FALSE;
+    }
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+    if (!MiAddressToPpe(Address)->u.Hard.Valid)
+    {
+        return FALSE;
+    }
+#endif
+
     /* Large pages are never paged out, always physically resident */
     PointerPde = MiAddressToPde(Address);
     return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
