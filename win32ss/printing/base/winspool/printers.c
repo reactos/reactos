@@ -449,9 +449,13 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
  
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
     bReturnValue = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-    HeapFree(hProcessHeap, 0, pwszName);
 
     TRACE("*pcReturned is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcReturned, bReturnValue, GetLastError());
+
+    if (!bReturnValue)
+    {
+        goto Cleanup;
+    }
 
     /* We are mapping multiple different pointers to the same pPrinterEnum pointer here so that */
     /* we can do in-place conversion. We read the Unicode response from the EnumPrintersW and */
@@ -838,6 +842,10 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     }       // for
 
 Cleanup:
+    if (pwszName)
+    {
+        HeapFree(hProcessHeap, 0, pwszName);
+    }
 
     return bReturnValue;
 }
