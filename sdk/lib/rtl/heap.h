@@ -203,22 +203,25 @@ typedef struct _HEAP_LIST_LOOKUP
     PLIST_ENTRY *ListHints;
 } HEAP_LIST_LOOKUP, *PHEAP_LIST_LOOKUP;
 
+#define HEAP_SEGMENT_MEMBERS                \
+    HEAP_ENTRY Entry;                       \
+    ULONG SegmentSignature;                 \
+    ULONG SegmentFlags;                     \
+    LIST_ENTRY SegmentListEntry;            \
+    struct _HEAP *Heap;                     \
+    PVOID BaseAddress;                      \
+    ULONG NumberOfPages;                    \
+    PHEAP_ENTRY FirstEntry;                 \
+    PHEAP_ENTRY LastValidEntry;             \
+    ULONG NumberOfUnCommittedPages;         \
+    ULONG NumberOfUnCommittedRanges;        \
+    USHORT SegmentAllocatorBackTraceIndex;  \
+    USHORT Reserved;                        \
+    LIST_ENTRY UCRSegmentList
+
 typedef struct _HEAP
 {
-    HEAP_ENTRY Entry;
-    ULONG SegmentSignature;
-    ULONG SegmentFlags;
-    LIST_ENTRY SegmentListEntry;
-    struct _HEAP *Heap;
-    PVOID BaseAddress;
-    ULONG NumberOfPages;
-    PHEAP_ENTRY FirstEntry;
-    PHEAP_ENTRY LastValidEntry;
-    ULONG NumberOfUnCommittedPages;
-    ULONG NumberOfUnCommittedRanges;
-    USHORT SegmentAllocatorBackTraceIndex;
-    USHORT Reserved;
-    LIST_ENTRY UCRSegmentList;
+    HEAP_SEGMENT_MEMBERS;
 
     ULONG Flags;
     ULONG ForceFlags;
@@ -271,20 +274,7 @@ typedef struct _HEAP
 
 typedef struct _HEAP_SEGMENT
 {
-    HEAP_ENTRY Entry;
-    ULONG SegmentSignature;
-    ULONG SegmentFlags;
-    LIST_ENTRY SegmentListEntry;
-    PHEAP Heap;
-    PVOID BaseAddress;
-    ULONG NumberOfPages;
-    PHEAP_ENTRY FirstEntry;
-    PHEAP_ENTRY LastValidEntry;
-    ULONG NumberOfUnCommittedPages;
-    ULONG NumberOfUnCommittedRanges;
-    USHORT SegmentAllocatorBackTraceIndex;
-    USHORT Reserved;
-    LIST_ENTRY UCRSegmentList;
+    HEAP_SEGMENT_MEMBERS;
 } HEAP_SEGMENT, *PHEAP_SEGMENT;
 
 typedef struct _HEAP_UCR_DESCRIPTOR
