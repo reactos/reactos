@@ -2969,6 +2969,20 @@ static void rotate_X(FLOAT *out, UINT order, FLOAT a, FLOAT *in)
     out[35] = 0.9057110548f * in[31] - 0.4192627370f * in[33] + 0.0624999329f * in[35];
 }
 
+HRESULT WINAPI D3DXSHProjectCubeMap(UINT order, IDirect3DCubeTexture9 *cubemap, FLOAT *rout, FLOAT *gout, FLOAT *bout)
+{
+    FIXME("order %u, cubemap %p, rout %p, gout %p, bout %p: stub!\n", order, cubemap, rout, gout, bout);
+
+    if(!cubemap || order < D3DXSH_MINORDER || order > D3DXSH_MAXORDER)
+        return D3DERR_INVALIDCALL;
+
+    *rout = 0.0f;
+    *gout = 0.0f;
+    *bout = 0.0f;
+
+    return D3D_OK;
+}
+
 FLOAT* WINAPI D3DXSHRotate(FLOAT *out, UINT order, const D3DXMATRIX *matrix, const FLOAT *in)
 {
     FLOAT alpha, beta, gamma, sinb, temp[36], temp1[36];
