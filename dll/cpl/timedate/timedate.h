@@ -16,6 +16,7 @@
 #include <wchar.h>
 #include <commctrl.h>
 #include <cpl.h>
+#include <debug.h>
 
 #include "resource.h"
 
