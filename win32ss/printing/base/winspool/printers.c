@@ -434,9 +434,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     if (Name)
     {
         // Convert pName to a Unicode string pwszName.
-        cch = strlen(Name);
+        cch = strlen(Name) + 1;
 
-        pwszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        pwszName = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!pwszName)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -444,7 +444,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, Name, -1, pwszName, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, Name, -1, pwszName, cch);
     }
  
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
@@ -477,9 +477,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi1w[i].pDescription)
                 {
                     // Convert Unicode pDescription to a ANSI string pszDescription.
-                    cch = wcslen(ppi1w[i].pDescription);
+                    cch = wcslen(ppi1w[i].pDescription) + 1;
 
-                    pszDescription = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszDescription = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszDescription)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -487,8 +487,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pDescription, -1, pszDescription, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi1a[i].pDescription, cch + 1, pszDescription);
+                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pDescription, -1, pszDescription, cch, NULL, NULL);
+                    StringCchCopyA(ppi1a[i].pDescription, cch, pszDescription);
 
                     HeapFree(hProcessHeap, 0, pszDescription);
                 }
@@ -496,9 +496,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi1w[i].pName)
                 {
                     // Convert Unicode pName to a ANSI string pszName.
-                    cch = wcslen(ppi1w[i].pName);
+                    cch = wcslen(ppi1w[i].pName) + 1;
 
-                    pszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -506,8 +506,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pName, -1, pszName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi1a[i].pName, cch + 1, pszName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pName, -1, pszName, cch, NULL, NULL);
+                    StringCchCopyA(ppi1a[i].pName, cch, pszName);
 
                     HeapFree(hProcessHeap, 0, pszName);
                 }
@@ -515,9 +515,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi1w[i].pComment)
                 {
                     // Convert Unicode pComment to a ANSI string pszComment.
-                    cch = wcslen(ppi1w[i].pComment);
+                    cch = wcslen(ppi1w[i].pComment) + 1;
 
-                    pszComment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszComment = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszComment)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -525,8 +525,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pComment, -1, pszComment, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi1a[i].pComment, cch + 1, pszComment);
+                    WideCharToMultiByte(CP_ACP, 0, ppi1w[i].pComment, -1, pszComment, cch, NULL, NULL);
+                    StringCchCopyA(ppi1a[i].pComment, cch, pszComment);
 
                     HeapFree(hProcessHeap, 0, pszComment);
                 }
@@ -539,9 +539,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pServerName)
                 {
                     // Convert Unicode pServerName to a ANSI string pszServerName.
-                    cch = wcslen(ppi2w[i].pServerName);
+                    cch = wcslen(ppi2w[i].pServerName) + 1;
 
-                    pszServerName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszServerName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszServerName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -549,8 +549,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pServerName, -1, pszServerName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pServerName, cch + 1, pszServerName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pServerName, -1, pszServerName, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pServerName, cch, pszServerName);
 
                     HeapFree(hProcessHeap, 0, pszServerName);
                 }
@@ -558,9 +558,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pPrinterName)
                 {
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
-                    cch = wcslen(ppi2w[i].pPrinterName);
+                    cch = wcslen(ppi2w[i].pPrinterName) + 1;
 
-                    pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPrinterName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -568,8 +568,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPrinterName, -1, pszPrinterName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pPrinterName, cch + 1, pszPrinterName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPrinterName, -1, pszPrinterName, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pPrinterName, cch, pszPrinterName);
 
                     HeapFree(hProcessHeap, 0, pszPrinterName);
                 }
@@ -577,9 +577,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pShareName)
                 {
                     // Convert Unicode pShareName to a ANSI string pszShareName.
-                    cch = wcslen(ppi2w[i].pShareName);
+                    cch = wcslen(ppi2w[i].pShareName) + 1;
 
-                    pszShareName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszShareName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszShareName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -587,8 +587,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pShareName, -1, pszShareName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pShareName, cch + 1, pszShareName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pShareName, -1, pszShareName, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pShareName, cch, pszShareName);
 
                     HeapFree(hProcessHeap, 0, pszShareName);
                 }
@@ -596,9 +596,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pPortName)
                 {
                     // Convert Unicode pPortName to a ANSI string pszPortName.
-                    cch = wcslen(ppi2w[i].pPortName);
+                    cch = wcslen(ppi2w[i].pPortName) + 1;
 
-                    pszPortName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPortName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPortName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -606,8 +606,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPortName, -1, pszPortName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pPortName, cch + 1, pszPortName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPortName, -1, pszPortName, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pPortName, cch, pszPortName);
 
                     HeapFree(hProcessHeap, 0, pszPortName);
                 }
@@ -615,9 +615,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pDriverName)
                 {
                     // Convert Unicode pDriverName to a ANSI string pszDriverName.
-                    cch = wcslen(ppi2w[i].pDriverName);
+                    cch = wcslen(ppi2w[i].pDriverName) + 1;
 
-                    pszDriverName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszDriverName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszDriverName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -625,8 +625,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pDriverName, -1, pszDriverName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pDriverName, cch + 1, pszDriverName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pDriverName, -1, pszDriverName, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pDriverName, cch, pszDriverName);
 
                     HeapFree(hProcessHeap, 0, pszDriverName);
                 }
@@ -634,9 +634,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pComment)
                 {
                     // Convert Unicode pComment to a ANSI string pszComment.
-                    cch = wcslen(ppi2w[i].pComment);
+                    cch = wcslen(ppi2w[i].pComment) + 1;
 
-                    pszComment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszComment = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszComment)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -644,8 +644,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pComment, -1, pszComment, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pComment, cch + 1, pszComment);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pComment, -1, pszComment, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pComment, cch, pszComment);
 
                     HeapFree(hProcessHeap, 0, pszComment);
                 }
@@ -653,9 +653,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pLocation)
                 {
                     // Convert Unicode pLocation to a ANSI string pszLocation.
-                    cch = wcslen(ppi2w[i].pLocation);
+                    cch = wcslen(ppi2w[i].pLocation) + 1;
 
-                    pszLocation = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszLocation = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszLocation)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -663,8 +663,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pLocation, -1, pszLocation, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pLocation, cch + 1, pszLocation);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pLocation, -1, pszLocation, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pLocation, cch, pszLocation);
 
                     HeapFree(hProcessHeap, 0, pszLocation);
                 }
@@ -672,9 +672,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pSepFile)
                 {
                     // Convert Unicode pSepFile to a ANSI string pszSepFile.
-                    cch = wcslen(ppi2w[i].pSepFile);
+                    cch = wcslen(ppi2w[i].pSepFile) + 1;
 
-                    pszSepFile = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszSepFile = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszSepFile)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -682,8 +682,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pSepFile, -1, pszSepFile, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pSepFile, cch + 1, pszSepFile);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pSepFile, -1, pszSepFile, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pSepFile, cch, pszSepFile);
 
                     HeapFree(hProcessHeap, 0, pszSepFile);
                 }
@@ -691,9 +691,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pPrintProcessor)
                 {
                     // Convert Unicode pPrintProcessor to a ANSI string pszPrintProcessor.
-                    cch = wcslen(ppi2w[i].pPrintProcessor);
+                    cch = wcslen(ppi2w[i].pPrintProcessor) + 1;
 
-                    pszPrintProcessor = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPrintProcessor = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPrintProcessor)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -701,8 +701,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPrintProcessor, -1, pszPrintProcessor, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pPrintProcessor, cch + 1, pszPrintProcessor);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pPrintProcessor, -1, pszPrintProcessor, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pPrintProcessor, cch, pszPrintProcessor);
 
                     HeapFree(hProcessHeap, 0, pszPrintProcessor);
                 }
@@ -710,9 +710,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pDatatype)
                 {
                     // Convert Unicode pDatatype to a ANSI string pszDatatype.
-                    cch = wcslen(ppi2w[i].pDatatype);
+                    cch = wcslen(ppi2w[i].pDatatype) + 1;
 
-                    pszDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszDatatype = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszDatatype)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -720,8 +720,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pDatatype, -1, pszDatatype, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pDatatype, cch + 1, pszDatatype);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pDatatype, -1, pszDatatype, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pDatatype, cch, pszDatatype);
 
                     HeapFree(hProcessHeap, 0, pszDatatype);
                 }
@@ -729,9 +729,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi2w[i].pParameters)
                 {
                     // Convert Unicode pParameters to a ANSI string pszParameters.
-                    cch = wcslen(ppi2w[i].pParameters);
+                    cch = wcslen(ppi2w[i].pParameters) + 1;
 
-                    pszParameters = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszParameters = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszParameters)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -739,8 +739,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pParameters, -1, pszParameters, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi2a[i].pParameters, cch + 1, pszParameters);
+                    WideCharToMultiByte(CP_ACP, 0, ppi2w[i].pParameters, -1, pszParameters, cch, NULL, NULL);
+                    StringCchCopyA(ppi2a[i].pParameters, cch, pszParameters);
 
                     HeapFree(hProcessHeap, 0, pszParameters);
                 }
@@ -753,9 +753,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi4w[i].pPrinterName)
                 {
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
-                    cch = wcslen(ppi4w[i].pPrinterName);
+                    cch = wcslen(ppi4w[i].pPrinterName) + 1;
 
-                    pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPrinterName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -763,8 +763,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, pszPrinterName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi4a[i].pPrinterName, cch + 1, pszPrinterName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pPrinterName, -1, pszPrinterName, cch, NULL, NULL);
+                    StringCchCopyA(ppi4a[i].pPrinterName, cch, pszPrinterName);
 
                     HeapFree(hProcessHeap, 0, pszPrinterName);
                 }
@@ -772,9 +772,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi4w[i].pServerName)
                 {
                     // Convert Unicode pServerName to a ANSI string pszServerName.
-                    cch = wcslen(ppi4w[i].pServerName);
+                    cch = wcslen(ppi4w[i].pServerName) + 1;
 
-                    pszServerName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszServerName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszServerName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -782,8 +782,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pServerName, -1, pszServerName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi4a[i].pServerName, cch + 1, pszServerName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi4w[i].pServerName, -1, pszServerName, cch, NULL, NULL);
+                    StringCchCopyA(ppi4a[i].pServerName, cch, pszServerName);
 
                     HeapFree(hProcessHeap, 0, pszServerName);
                 }
@@ -796,9 +796,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi5w[i].pPrinterName)
                 {
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
-                    cch = wcslen(ppi5w[i].pPrinterName);
+                    cch = wcslen(ppi5w[i].pPrinterName) + 1;
 
-                    pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPrinterName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -806,8 +806,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi5w[i].pPrinterName, -1, pszPrinterName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi5a[i].pPrinterName, cch + 1, pszPrinterName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi5w[i].pPrinterName, -1, pszPrinterName, cch, NULL, NULL);
+                    StringCchCopyA(ppi5a[i].pPrinterName, cch, pszPrinterName);
 
                     HeapFree(hProcessHeap, 0, pszPrinterName);
                 }
@@ -815,9 +815,9 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                 if (ppi5w[i].pPortName)
                 {
                     // Convert Unicode pPortName to a ANSI string pszPortName.
-                    cch = wcslen(ppi5w[i].pPortName);
+                    cch = wcslen(ppi5w[i].pPortName) + 1;
 
-                    pszPortName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+                    pszPortName = HeapAlloc(hProcessHeap, 0, cch * sizeof(CHAR));
                     if (!pszPortName)
                     {
                         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -825,8 +825,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                         goto Cleanup;
                     }
 
-                    WideCharToMultiByte(CP_ACP, 0, ppi5w[i].pPortName, -1, pszPortName, cch + 1, NULL, NULL);
-                    StringCchCopyA(ppi5a[i].pPortName, cch + 1, pszPortName);
+                    WideCharToMultiByte(CP_ACP, 0, ppi5w[i].pPortName, -1, pszPortName, cch, NULL, NULL);
+                    StringCchCopyA(ppi5a[i].pPortName, cch, pszPortName);
 
                     HeapFree(hProcessHeap, 0, pszPortName);
                 }
@@ -1153,9 +1153,9 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
     if (pPrinterName)
     {
         // Convert pPrinterName to a Unicode string pwszPrinterName
-        cch = strlen(pPrinterName);
+        cch = strlen(pPrinterName) + 1;
 
-        pwszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        pwszPrinterName = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!pwszPrinterName)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1163,7 +1163,7 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pPrinterName, -1, pwszPrinterName, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, pPrinterName, -1, pwszPrinterName, cch);
     }
 
     if (pDefault)
@@ -1173,9 +1173,9 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
         if (pDefault->pDatatype)
         {
             // Convert pDefault->pDatatype to a Unicode string wDefault.pDatatype
-            cch = strlen(pDefault->pDatatype);
+            cch = strlen(pDefault->pDatatype) + 1;
 
-            wDefault.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+            wDefault.pDatatype = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
             if (!wDefault.pDatatype)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1183,7 +1183,7 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
                 goto Cleanup;
             }
 
-            MultiByteToWideChar(CP_ACP, 0, pDefault->pDatatype, -1, wDefault.pDatatype, cch + 1);
+            MultiByteToWideChar(CP_ACP, 0, pDefault->pDatatype, -1, wDefault.pDatatype, cch);
         }
 
         if (pDefault->pDevMode)
@@ -1328,9 +1328,9 @@ SetDefaultPrinterA(LPCSTR pszPrinter)
     if (pszPrinter)
     {
         // Convert pszPrinter to a Unicode string pwszPrinter
-        cch = strlen(pszPrinter);
+        cch = strlen(pszPrinter) + 1;
 
-        pwszPrinter = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        pwszPrinter = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!pwszPrinter)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1338,7 +1338,7 @@ SetDefaultPrinterA(LPCSTR pszPrinter)
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pszPrinter, -1, pwszPrinter, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, pszPrinter, -1, pwszPrinter, cch);
     }
 
     bReturnValue = SetDefaultPrinterW(pwszPrinter);
@@ -1514,9 +1514,9 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
     if (pDocInfo1->pDatatype)
     {
         // Convert pDocInfo1->pDatatype to a Unicode string wDocInfo1.pDatatype
-        cch = strlen(pDocInfo1->pDatatype);
+        cch = strlen(pDocInfo1->pDatatype) + 1;
 
-        wDocInfo1.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        wDocInfo1.pDatatype = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!wDocInfo1.pDatatype)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
@@ -1524,15 +1524,15 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDatatype, -1, wDocInfo1.pDatatype, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDatatype, -1, wDocInfo1.pDatatype, cch);
     }
 
     if (pDocInfo1->pDocName)
     {
         // Convert pDocInfo1->pDocName to a Unicode string wDocInfo1.pDocName
-        cch = strlen(pDocInfo1->pDocName);
+        cch = strlen(pDocInfo1->pDocName) + 1;
 
-        wDocInfo1.pDocName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        wDocInfo1.pDocName = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!wDocInfo1.pDocName)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
@@ -1540,15 +1540,15 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDocName, -1, wDocInfo1.pDocName, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pDocName, -1, wDocInfo1.pDocName, cch);
     }
 
     if (pDocInfo1->pOutputFile)
     {
         // Convert pDocInfo1->pOutputFile to a Unicode string wDocInfo1.pOutputFile
-        cch = strlen(pDocInfo1->pOutputFile);
+        cch = strlen(pDocInfo1->pOutputFile) + 1;
 
-        wDocInfo1.pOutputFile = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        wDocInfo1.pOutputFile = HeapAlloc(hProcessHeap, 0, cch * sizeof(WCHAR));
         if (!wDocInfo1.pOutputFile)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
@@ -1556,7 +1556,7 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
             goto Cleanup;
         }
 
-        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pOutputFile, -1, wDocInfo1.pOutputFile, cch + 1);
+        MultiByteToWideChar(CP_ACP, 0, pDocInfo1->pOutputFile, -1, wDocInfo1.pOutputFile, cch);
     }
 
     dwReturnValue = StartDocPrinterW(hPrinter, Level, (PBYTE)&wDocInfo1);
