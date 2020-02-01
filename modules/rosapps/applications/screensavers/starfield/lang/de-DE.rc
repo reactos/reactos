@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Starfield-Bildschirmschoner"
+    IDS_DESCRIPTION "Starfield Bildschirmschoner"
     IDS_TITLE       "Über"
     IDS_TEXT        "Keinerlei Einstellungen notwendig."
 END

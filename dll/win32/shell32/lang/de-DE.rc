@@ -776,7 +776,7 @@ BEGIN
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
     IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"
-    IDS_MOVEERRORSAMEFOLDER "'%s'kann nicht verschoben werden: Quell- und Zielordner sind identisch."
+    IDS_MOVEERRORSAMEFOLDER "'%s' kann nicht verschoben werden: Quell- und Zielordner sind identisch."
     IDS_MOVEERRORSAME "'%s' kann nicht verschoben werden: Quell- und Zieldatei sind identisch."
     IDS_COPYERRORSAME "'%s' kann nicht kopiert werden: Quell- und Zieldatei sind identisch."
     IDS_MOVEERRORSUBFOLDER "'%s' kann nicht verschoben werden: Der Zielorder ist ein Unterordner des Quellordners."

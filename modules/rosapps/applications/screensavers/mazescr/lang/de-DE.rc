@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_DLG_SCREEN DIALOGEX DISCARDABLE  0, 0, 276, 112
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Labyrinth-Bildschirmschoner Einstellungen"
+CAPTION "Labyrinth Bildschirmschoner Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Labyrinthgröße:",IDC_STATIC,7,7,90,12,SS_CENTERIMAGE
@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Über"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT           "Labyrinths-Bildschirmschoner 1.0",IDC_STATIC,7,7,215,9
+    CTEXT           "Labyrinth Bildschirmschoner 1.0",IDC_STATIC,7,7,215,9
     LTEXT           "[06-21-85] Martin Weiss - Originalcode",IDC_STATIC,7,20,215,8
     LTEXT           "[01-29-88] Dave Lemke - Hacked für X11",IDC_STATIC,7,29,215,8
     LTEXT           "[10-04-88] Richard Hess - UnHacked für X11",IDC_STATIC,7,38,215,8
@@ -41,5 +41,5 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DESCRIPTION         "Labyrinth-Bildschirmschoner"
+    IDS_DESCRIPTION         "Labyrinth Bildschirmschoner"
 END
