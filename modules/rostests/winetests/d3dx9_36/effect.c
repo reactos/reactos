@@ -2933,7 +2933,10 @@ technique tech0
    pass p0
    {
        vertexshader = vs_arr1[1];
-       VertexShaderConstant1[3] = {2,2,2,2};
+       VertexShaderConstant1[1] = 3.0f;
+       VertexShaderConstant4[2] = 1;
+       VertexShaderConstant1[3] = {2, 2, 2, 2};
+       VertexShaderConstant4[4] = {4, 4, 4, 4, 5, 5, 5, 5, 6};
        BlendOp = 2;
        AlphaOp[3] = 4;
        ZEnable = true;
@@ -2948,7 +2951,7 @@ technique tech0
 #endif
 static const DWORD test_effect_states_effect_blob[] =
 {
-    0xfeff0901, 0x000002e8, 0x00000000, 0x00000010, 0x00000004, 0x00000020, 0x00000000, 0x00000002,
+    0xfeff0901, 0x00000368, 0x00000000, 0x00000010, 0x00000004, 0x00000020, 0x00000000, 0x00000002,
     0x00000001, 0x00000002, 0x00000008, 0x615f7376, 0x00317272, 0x0000000a, 0x00000004, 0x00000074,
     0x00000000, 0x00000000, 0x00000002, 0x00000002, 0x00000002, 0x00000000, 0x00000000, 0x00000000,
     0x00000001, 0x00000001, 0x00000001, 0x000000ab, 0x00000100, 0x00000044, 0x00000040, 0x00000009,
@@ -2956,8 +2959,12 @@ static const DWORD test_effect_states_effect_blob[] =
     0x00000004, 0x00000004, 0x40800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x40c00000, 0x00000007, 0x656d6163, 0x00006172, 0x00000005, 0x57454956, 0x00000000,
-    0x00000003, 0x00000010, 0x00000004, 0x00000000, 0x00000000, 0x00000000, 0x40000000, 0x40000000,
+    0x00000003, 0x00000010, 0x00000004, 0x00000000, 0x00000000, 0x00000000, 0x40400000, 0x00000003,
+    0x00000003, 0x00000000, 0x00000000, 0x00000000, 0x00000001, 0x00000001, 0x3f800000, 0x00000003,
+    0x00000003, 0x00000000, 0x00000000, 0x00000000, 0x00000001, 0x00000001, 0x40000000, 0x40000000,
     0x40000000, 0x40000000, 0x00000003, 0x00000003, 0x00000000, 0x00000000, 0x00000000, 0x00000004,
+    0x00000001, 0x40800000, 0x40800000, 0x40800000, 0x40800000, 0x40a00000, 0x40a00000, 0x40a00000,
+    0x40a00000, 0x40c00000, 0x00000003, 0x00000003, 0x00000000, 0x00000000, 0x00000000, 0x00000009,
     0x00000001, 0x00000002, 0x00000002, 0x00000002, 0x00000000, 0x00000000, 0x00000000, 0x00000001,
     0x00000001, 0x00000004, 0x00000002, 0x00000002, 0x00000000, 0x00000000, 0x00000000, 0x00000001,
     0x00000001, 0x00000001, 0x00000002, 0x00000002, 0x00000000, 0x00000000, 0x00000000, 0x00000001,
@@ -2973,33 +2980,35 @@ static const DWORD test_effect_states_effect_blob[] =
     0x00000001, 0x00000000, 0x0000000a, 0x00000004, 0x00000000, 0x00000000, 0x00000000, 0x00000003,
     0x00003070, 0x00000006, 0x68636574, 0x00000030, 0x00000003, 0x00000001, 0x00000005, 0x00000004,
     0x00000004, 0x00000018, 0x00000000, 0x00000000, 0x0000002c, 0x00000060, 0x00000000, 0x00000000,
-    0x00000084, 0x000000a0, 0x00000000, 0x00000000, 0x000002dc, 0x00000000, 0x00000001, 0x000002d4,
-    0x00000000, 0x0000000b, 0x00000092, 0x00000000, 0x000000fc, 0x000000f8, 0x00000098, 0x00000003,
-    0x00000120, 0x00000110, 0x0000004b, 0x00000000, 0x00000140, 0x0000013c, 0x0000006b, 0x00000003,
-    0x00000160, 0x0000015c, 0x00000000, 0x00000000, 0x00000180, 0x0000017c, 0x0000007d, 0x00000001,
-    0x000001dc, 0x0000019c, 0x0000007c, 0x00000000, 0x00000238, 0x000001f8, 0x00000091, 0x00000002,
-    0x00000258, 0x00000254, 0x00000084, 0x00000002, 0x00000278, 0x00000274, 0x00000088, 0x00000002,
-    0x000002a0, 0x00000294, 0x000000b2, 0x00000001, 0x000002c0, 0x000002bc, 0x00000002, 0x00000003,
-    0x00000001, 0x0000002c, 0xfffe0101, 0x00000051, 0xa00f0000, 0x3f800000, 0x3f800000, 0x3f800000,
-    0x3f800000, 0x00000001, 0xc00f0000, 0xa0e40000, 0x0000ffff, 0x00000002, 0x0000002c, 0xfffe0200,
-    0x05000051, 0xa00f0000, 0x40000000, 0x40000000, 0x40000000, 0x40000000, 0x02000001, 0xc00f0000,
-    0xa0e40000, 0x0000ffff, 0x00000000, 0x00000000, 0xffffffff, 0x0000000a, 0x00000001, 0x00000009,
-    0x706d6173, 0x3172656c, 0x00000000, 0x00000000, 0x00000000, 0xffffffff, 0x00000006, 0x00000000,
-    0x0000016c, 0x46580200, 0x0030fffe, 0x42415443, 0x0000001c, 0x0000008b, 0x46580200, 0x00000001,
-    0x0000001c, 0x20000100, 0x00000088, 0x00000030, 0x00000002, 0x00000004, 0x00000038, 0x00000048,
-    0x656d6163, 0xab006172, 0x00030003, 0x00040004, 0x00000001, 0x00000000, 0x40800000, 0x00000000,
+    0x00000084, 0x000000a0, 0x00000000, 0x00000000, 0x0000035c, 0x00000000, 0x00000001, 0x00000354,
+    0x00000000, 0x0000000e, 0x00000092, 0x00000000, 0x000000fc, 0x000000f8, 0x00000098, 0x00000001,
+    0x00000114, 0x00000110, 0x0000009b, 0x00000002, 0x00000134, 0x00000130, 0x00000098, 0x00000003,
+    0x00000160, 0x00000150, 0x0000009b, 0x00000004, 0x000001a0, 0x0000017c, 0x0000004b, 0x00000000,
+    0x000001c0, 0x000001bc, 0x0000006b, 0x00000003, 0x000001e0, 0x000001dc, 0x00000000, 0x00000000,
+    0x00000200, 0x000001fc, 0x0000007d, 0x00000001, 0x0000025c, 0x0000021c, 0x0000007c, 0x00000000,
+    0x000002b8, 0x00000278, 0x00000091, 0x00000002, 0x000002d8, 0x000002d4, 0x00000084, 0x00000002,
+    0x000002f8, 0x000002f4, 0x00000088, 0x00000002, 0x00000320, 0x00000314, 0x000000b2, 0x00000001,
+    0x00000340, 0x0000033c, 0x00000002, 0x00000003, 0x00000001, 0x0000002c, 0xfffe0101, 0x00000051,
+    0xa00f0000, 0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000, 0x00000001, 0xc00f0000, 0xa0e40000,
+    0x0000ffff, 0x00000002, 0x0000002c, 0xfffe0200, 0x05000051, 0xa00f0000, 0x40000000, 0x40000000,
+    0x40000000, 0x40000000, 0x02000001, 0xc00f0000, 0xa0e40000, 0x0000ffff, 0x00000000, 0x00000000,
+    0xffffffff, 0x0000000d, 0x00000001, 0x00000009, 0x706d6173, 0x3172656c, 0x00000000, 0x00000000,
+    0x00000000, 0xffffffff, 0x00000009, 0x00000000, 0x0000016c, 0x46580200, 0x0030fffe, 0x42415443,
+    0x0000001c, 0x0000008b, 0x46580200, 0x00000001, 0x0000001c, 0x20000100, 0x00000088, 0x00000030,
+    0x00000002, 0x00000004, 0x00000038, 0x00000048, 0x656d6163, 0xab006172, 0x00030003, 0x00040004,
+    0x00000001, 0x00000000, 0x40800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x40c00000, 0x4d007874, 0x6f726369,
-    0x74666f73, 0x29522820, 0x534c4820, 0x6853204c, 0x72656461, 0x6d6f4320, 0x656c6970, 0x2e392072,
-    0x392e3932, 0x332e3235, 0x00313131, 0x0002fffe, 0x54494c43, 0x00000000, 0x0024fffe, 0x434c5846,
-    0x00000004, 0x10000004, 0x00000001, 0x00000000, 0x00000002, 0x00000000, 0x00000000, 0x00000004,
-    0x00000000, 0x10000004, 0x00000001, 0x00000000, 0x00000002, 0x00000004, 0x00000000, 0x00000004,
-    0x00000004, 0x10000004, 0x00000001, 0x00000000, 0x00000002, 0x00000008, 0x00000000, 0x00000004,
-    0x00000008, 0x10000004, 0x00000001, 0x00000000, 0x00000002, 0x0000000c, 0x00000000, 0x00000004,
-    0x0000000c, 0xf0f0f0f0, 0x0f0f0f0f, 0x0000ffff, 0x00000000, 0x00000000, 0xffffffff, 0x00000000,
-    0x00000001, 0x0000000b, 0x615f7376, 0x5b317272, 0x00005d31,
+    0x00000000, 0x40c00000, 0x4d007874, 0x6f726369, 0x74666f73, 0x29522820, 0x534c4820, 0x6853204c,
+    0x72656461, 0x6d6f4320, 0x656c6970, 0x2e392072, 0x392e3932, 0x332e3235, 0x00313131, 0x0002fffe,
+    0x54494c43, 0x00000000, 0x0024fffe, 0x434c5846, 0x00000004, 0x10000004, 0x00000001, 0x00000000,
+    0x00000002, 0x00000000, 0x00000000, 0x00000004, 0x00000000, 0x10000004, 0x00000001, 0x00000000,
+    0x00000002, 0x00000004, 0x00000000, 0x00000004, 0x00000004, 0x10000004, 0x00000001, 0x00000000,
+    0x00000002, 0x00000008, 0x00000000, 0x00000004, 0x00000008, 0x10000004, 0x00000001, 0x00000000,
+    0x00000002, 0x0000000c, 0x00000000, 0x00000004, 0x0000000c, 0xf0f0f0f0, 0x0f0f0f0f, 0x0000ffff,
+    0x00000000, 0x00000000, 0xffffffff, 0x00000000, 0x00000001, 0x0000000b, 0x615f7376, 0x5b317272,
+    0x00005d31,
 };
-#define TEST_EFFECT_STATES_VSHADER_POS 271
+#define TEST_EFFECT_STATES_VSHADER_POS 315
 
 static const D3DXVECTOR4 fvect_filler = {-9999.0f, -9999.0f, -9999.0f, -9999.0f};
 
@@ -3040,9 +3049,9 @@ static void test_effect_states(IDirect3DDevice9 *device)
     }}};
 
     IDirect3DVertexShader9 *vshader;
-    float float_data[4];
     ID3DXEffect *effect;
     UINT byte_code_size;
+    D3DXVECTOR4 fvect;
     void *byte_code;
     D3DLIGHT9 light;
     D3DMATRIX mat;
@@ -3104,7 +3113,7 @@ static void test_effect_states(IDirect3DDevice9 *device)
     test_effect_clear_vconsts(device);
 
     hr = effect->lpVtbl->BeginPass(effect, 0);
-    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
 
     hr = IDirect3DDevice9_GetTransform(device, D3DTS_WORLDMATRIX(1), &mat);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
@@ -3144,14 +3153,47 @@ static void test_effect_states(IDirect3DDevice9 *device)
     if (hr == D3D_OK)
         ok(light.Position.x == 4.0f && light.Position.y == 5.0f && light.Position.z == 6.0f,
                 "Got unexpected light position (%f, %f, %f).\n", light.Position.x, light.Position.y, light.Position.z);
-    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 3, float_data, 1);
+
+    /* Testing first value only for constants 1, 2 as the rest of the vector seem to
+     * contain garbage data on native. */
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 1, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    ok(float_data[0] == 2.0f && float_data[1] == 2.0f && float_data[2] == 2.0f && float_data[3] == 2.0f,
-            "Got unexpected vertex shader floats: (%f %f %f %f).\n",
-            float_data[0], float_data[1], float_data[2], float_data[3]);
+    todo_wine ok(fvect.x == 3.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 2, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(fvect.x == 1.0f, "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 3, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    ok(fvect.x == 2.0f && fvect.y == 2.0f && fvect.z == 2.0f && fvect.w == 2.0f,
+            "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 4, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(fvect.x == 4.0f && fvect.y == 4.0f && fvect.z == 4.0f && fvect.w == 4.0f,
+            "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 5, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
+            "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 6, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
+            "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
+    hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 7, &fvect.x, 1);
+    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    ok(!memcmp(&fvect, &fvect_filler, sizeof(fvect_filler)),
+            "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
+            fvect.x, fvect.y, fvect.z, fvect.w);
 
     hr = effect->lpVtbl->EndPass(effect);
-    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
+    todo_wine ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
     hr = IDirect3DDevice9_GetRenderState(device, D3DRS_BLENDOP, &value);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
     ok(value == 2, "Got result %u, expected %u\n", value, 2);
