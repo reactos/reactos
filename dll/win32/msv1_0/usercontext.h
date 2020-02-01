@@ -34,7 +34,8 @@ NtlmUsrContextInitialize(VOID);
 
 PNTLMSSP_CONTEXT_USR
 NtlmUsrReferenceContext(
-    IN LSA_SEC_HANDLE ContextHandle);
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN BOOL IncRefCount);
 
 VOID
 NtlmUsrDereferenceContext(

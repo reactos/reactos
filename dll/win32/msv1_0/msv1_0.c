@@ -1271,7 +1271,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         // TODO: Check for Buffer limits wrt. ClientBufferBase and alignment.
         LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
         LogonInfo->UserName.MaximumLength = LogonInfo->UserName.Length;
-
         Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;

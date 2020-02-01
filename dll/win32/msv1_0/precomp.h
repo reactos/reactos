@@ -47,6 +47,7 @@
 #include "ntlm/context.h"
 #include "ntlm/protocol.h"
 #include "ntlm/credentials.h"
+#include "ntlm/messages.h"
 #include "splsa.h"
 #include "spuser.h"
 #include "usercontext.h"

@@ -33,7 +33,7 @@ LsaApLogonUser(
     DWORD p6,
     PHANDLE p7)
 {
-    fdTRACE("LsaApLogonUser(%S %S %S %S %i %i %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** LsaApLogonUser(%S %S %S %S %i %i %p)\n",
           p1, p2, p3, p4, p5, p6, p7);
 
     return ERROR_NOT_SUPPORTED;
@@ -56,7 +56,7 @@ LsaApLogonUserEx(
     PUNICODE_STRING *p13,
     PUNICODE_STRING *p14)
 {
-    fdTRACE("LsaApLogonUserEx(%p %i %p %p %i %p %p %p %p %p %p %p %p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** LsaApLogonUserEx(%p %i %p %p %i %p %p %p %p %p %p %p %p %p)\n",
           p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14);
 
     return ERROR_NOT_SUPPORTED;
@@ -259,7 +259,7 @@ LsaSpSaveCredentials(
     LSA_SEC_HANDLE p1,
     PSecBuffer p2)
 {
-    fdTRACE("LsaSpSaveCredentials(%p %p)\n", p1, p2);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpSaveCredentials(%p %p)\n", p1, p2);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -269,7 +269,7 @@ LsaSpGetCredentials(
     LSA_SEC_HANDLE p1,
     PSecBuffer p2)
 {
-    fdTRACE("LsaSpGetCredentials(%p %p)\n", p1, p2);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpGetCredentials(%p %p)\n", p1, p2);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -279,7 +279,7 @@ LsaSpDeleteCredentials(
     LSA_SEC_HANDLE p1,
     PSecBuffer p2)
 {
-    fdTRACE("LsaSpDeleteCredentials(%p %p)\n", p1, p2);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpDeleteCredentials(%p %p)\n", p1, p2);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -420,7 +420,7 @@ NTSTATUS NTAPI
 LsaSpDeleteContext(
     LSA_SEC_HANDLE p1)
 {
-    fdTRACE("LsaSpDeleteContext(%p)\n", p1);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpDeleteContext(%p)\n", p1);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -430,7 +430,7 @@ LsaSpApplyControlToken(
     LSA_SEC_HANDLE p1,
     PSecBufferDesc p2)
 {
-    fdTRACE("LsaSpApplyControlToken(%p %p)\n", p1, p2);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpApplyControlToken(%p %p)\n", p1, p2);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -441,7 +441,7 @@ LsaSpGetUserInfo(
     ULONG p2,
     PSecurityUserData *p3)
 {
-    fdTRACE("LsaSpGetUserInfo(%p %i %p)\n", p1, p2, p3);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpGetUserInfo(%p %i %p)\n", p1, p2, p3);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -529,7 +529,7 @@ LsaSpQueryContextAttributes(
     ULONG p2,
     PVOID p3)
 {
-    fdTRACE("LsaSpQueryContextAttributes(%p %i %p)\n", p1, p2, p3);
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpQueryContextAttributes(%p %i %p)\n", p1, p2, p3);
 
     return ERROR_NOT_SUPPORTED;
 }
@@ -545,7 +545,7 @@ LsaSpAddCredentials(
     PVOID p7,
     PTimeStamp p8)
 {
-    fdTRACE("LsaSpAddCredentials(%p %p %p %i %p %p %p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** LsaSpAddCredentials(%p %p %p %i %p %p %p %p)\n",
           p1, p2, p3, p4, p4, p5, p6, p7, p8);
 
     return ERROR_NOT_SUPPORTED;

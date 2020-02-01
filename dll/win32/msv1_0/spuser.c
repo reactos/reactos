@@ -16,6 +16,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 PSECPKG_DLL_FUNCTIONS UsrFunctionTable = NULL;
 SECPKG_USER_FUNCTION_TABLE UsrTables[1];
 
+ULONG x = 0;
+
 NTSTATUS NTAPI
 SpInstanceInit(
     ULONG Version,
@@ -46,15 +48,30 @@ SpInstanceInit(
 
 NTSTATUS NTAPI
 UsrSpMakeSignature(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PSecBufferDesc p3,
-    ULONG p4)
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN ULONG QualityOfProtection,
+    IN OUT PSecBufferDesc MessageBuffers,
+    IN ULONG MessageSequenceNumber)
 {
-    fdTRACE("UsrSpMakeSignature(%p 0x%x %p 0x%x)\n",
-          p1, p2, p3, p4);
+    PNTLMSSP_CONTEXT_USR UsrContext;
+    NTSTATUS Status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpMakeSignature(%p 0x%x %p 0x%x)\n",
+          ContextHandle, QualityOfProtection,
+          MessageBuffers, MessageSequenceNumber);
+
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
+    if (UsrContext == NULL)
+    {
+        TRACE("Invalid context handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+    Status = NtlmEncryptMessage(UsrContext->Hdr, QualityOfProtection,
+                                MessageBuffers, MessageSequenceNumber, TRUE);
+    NtlmUsrDereferenceContext(UsrContext);
+
+    fdTRACE("Status %x\n", Status);
+    return Status;
 }
 
 NTSTATUS NTAPI
@@ -64,7 +81,7 @@ UsrSpVerifySignature(
     ULONG p3,
     PULONG p4)
 {
-    fdTRACE("UsrSpVerifySignature(%p 0x%x %p 0x%x)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpVerifySignature(%p 0x%x %p 0x%x)\n",
           p1, p2, p3, p4);
 
     return ERROR_NOT_SUPPORTED;
@@ -77,7 +94,7 @@ UsrSpSealMessage(
     PSecBufferDesc p3,
     ULONG p4)
 {
-    fdTRACE("UsrSpSealMessage(%p 0x%x %p 0x%x)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpSealMessage(%p 0x%x %p 0x%x)\n",
           p1, p2, p3, p4);
 
     return ERROR_NOT_SUPPORTED;
@@ -90,7 +107,7 @@ UsrSpUnsealMessage(
     ULONG p3,
     PULONG p4)
 {
-    fdTRACE("UsrSpUnsealMessage(%p 0x%x %p 0x%x)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpUnsealMessage(%p 0x%x %p 0x%x)\n",
           p1, p2, p3, p4);
 
     return ERROR_NOT_SUPPORTED;
@@ -101,7 +118,7 @@ UsrSpGetContextToken(
     LSA_SEC_HANDLE p1,
     PHANDLE p2)
 {
-    fdTRACE("UsrSpGetContextToken(%p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpGetContextToken(%p %p)\n",
           p1, p2);
 
     return ERROR_NOT_SUPPORTED;
@@ -119,7 +136,7 @@ UsrSpQueryContextAttributes(
     fdTRACE("UsrSpQueryContextAttributes(%p 0x%x %p)\n",
             ContextHandle, ContextAttribute, Buffer);
 
-    UsrContext = NtlmUsrReferenceContext(ContextHandle);
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
     if (UsrContext == NULL)
     {
         ERR("Invalid context handle 0x%x\n", ContextHandle);
@@ -139,7 +156,7 @@ UsrSpCompleteAuthToken(
     LSA_SEC_HANDLE p1,
     PSecBufferDesc p2)
 {
-    fdTRACE("UsrSpGetContextToken(%p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpGetContextToken(%p %p)\n",
           p1, p2);
 
     return ERROR_NOT_SUPPORTED;
@@ -147,12 +164,24 @@ UsrSpCompleteAuthToken(
 
 NTSTATUS NTAPI
 UsrSpDeleteUserModeContext(
-    LSA_SEC_HANDLE p1)
+    LSA_SEC_HANDLE ContextHandle)
 {
-    fdTRACE("UsrSpDeleteUserModeContext(%p)\n",
-          p1);
+    PNTLMSSP_CONTEXT_USR UsrContext;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpDeleteUserModeContext(%p)\n",
+          ContextHandle);
+
+    // get user context without increasing ref count
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, FALSE);
+    if (UsrContext == NULL)
+    {
+        TRACE("Invalid handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+    // decrease refcount
+    NtlmUsrDereferenceContext(UsrContext);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI
@@ -160,7 +189,7 @@ UsrSpFormatCredentials(
     PSecBuffer p1,
     PSecBuffer p2)
 {
-    fdTRACE("UsrSpFormatCredentials(%p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpFormatCredentials(%p %p)\n",
           p1, p2);
 
     return ERROR_NOT_SUPPORTED;
@@ -173,7 +202,7 @@ UsrSpMarshallSupplementalCreds(
     PULONG p3,
     PVOID *p4)
 {
-    fdTRACE("UsrSpMarshallSupplementalCreds(0x%x %p %p %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpMarshallSupplementalCreds(0x%x %p %p %p)\n",
           p1, p2, p3, p4);
 
     return ERROR_NOT_SUPPORTED;
@@ -186,7 +215,7 @@ UsrSpExportSecurityContext(
     PSecBuffer p3,
     PHANDLE p4)
 {
-    fdTRACE("UsrSpExportSecurityContext(%p 0x%x %p 0x%x)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpExportSecurityContext(%p 0x%x %p 0x%x)\n",
           p1, p2, p3, p4);
 
     return ERROR_NOT_SUPPORTED;
@@ -198,7 +227,7 @@ UsrSpImportSecurityContext(
     HANDLE p2,
     PLSA_SEC_HANDLE p3)
 {
-    fdTRACE("UsrSpImportSecurityContext(%p 0x%x %p)\n",
+    fdTRACE("*** UNIMPLEMENTED *** UsrSpImportSecurityContext(%p 0x%x %p)\n",
           p1, p2, p3);
 
     return ERROR_NOT_SUPPORTED;

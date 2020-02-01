@@ -24,8 +24,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 /***********************************************************************
  *             EncryptMessage
  */
-SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
-        ULONG fQOP, PSecBufferDesc pMessage, ULONG MessageSeqNo)
+SECURITY_STATUS SEC_ENTRY
+NtlmEncryptMessage(
+    IN PNTLMSSP_CONTEXT_HDR Context,
+    IN ULONG fQOP,
+    IN OUT PSecBufferDesc pMessage,
+    IN ULONG MessageSeqNo,
+    IN BOOL SignOnly)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     BOOL bRet;
@@ -37,20 +42,21 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     PULONG pSeqNum;
     ULONG index, cli_NegFlg;
 
-    ERR("EncryptMessage(%p %d %p %d)\n", phContext, fQOP, pMessage, MessageSeqNo);
+    ERR("NtlmEncryptMessage(%p %d %p %d)\n", Context, fQOP, pMessage, MessageSeqNo);
 
     if(fQOP)
         FIXME("Ignoring fQOP\n");
 
-    if(!phContext)
+    if (!Context)
         return SEC_E_INVALID_HANDLE;
 
     if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
 
     /* get context, need to free it later! */
-    /*cli_msg = */NtlmReferenceContextMsg(phContext->dwLower, TRUE,
-                                      &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
+    /*cli_msg = */NtlmReferenceContextMsg((ULONG_PTR)Context, TRUE,
+                                          &cli_NegFlg, &pSealHandle,
+                                          &pSignKey, &pSeqNum);
     /*if (!ctxMsg->SendSealKey)
     {
         TRACE("context->SendSealKey is NULL\n");
@@ -91,6 +97,9 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     //printf("SigningKey (Server)\n");
     //NtlmPrintHexDump(cli_msg->ServerSigningKey, NTLM_SIGNKEY_LENGTH);
 
+    if (SignOnly)
+        cli_NegFlg &= ~NTLMSSP_NEGOTIATE_SEAL;
+
     bRet = SEAL(cli_NegFlg, pSealHandle, (UCHAR*)pSignKey,
                 NTLM_SIGNKEY_LENGTH, pSeqNum,
                 data_buffer->pvBuffer, data_buffer->cbBuffer,
@@ -107,7 +116,7 @@ SECURITY_STATUS SEC_ENTRY EncryptMessage(PCtxtHandle phContext,
     NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
-    NtlmDereferenceContext(phContext->dwLower);
+    NtlmDereferenceContext((ULONG_PTR)Context);
     return ret;
 }
 

@@ -26,7 +26,8 @@ NtlmUsrContextInitialize(VOID)
 
 PNTLMSSP_CONTEXT_USR
 NtlmUsrReferenceContext(
-    IN LSA_SEC_HANDLE ContextHandle)
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN BOOL IncRefCount)
 {
     PLIST_ENTRY ContextEntry;
     PNTLMSSP_CONTEXT_USR ContextUsr;
@@ -46,7 +47,8 @@ NtlmUsrReferenceContext(
 
         if (ContextUsr->ContextHandle == ContextHandle)
         {
-            InterlockedIncrement(&ContextUsr->Hdr->RefCount);
+            if (IncRefCount)
+                InterlockedIncrement(&ContextUsr->Hdr->RefCount);
             FoundContext = ContextUsr;
             break;
         }
@@ -113,7 +115,7 @@ UsrSpInitUserModeContext(
     UsrContextLockHeld = TRUE;
 
     // check if this context is already initialized
-    UsrContext = NtlmUsrReferenceContext(ContextHandle);
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
     if (UsrContext != NULL)
     {
         ULONG RefCount;
