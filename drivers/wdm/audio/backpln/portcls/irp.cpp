@@ -320,7 +320,7 @@ PortClsPower(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
                 // done
-                return Status;
+                return STATUS_PENDING;
             }
 
             // setup power context
@@ -339,7 +339,7 @@ PortClsPower(
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
                 // done
-                return Status;
+                return STATUS_PENDING;
             }
 
             // done
