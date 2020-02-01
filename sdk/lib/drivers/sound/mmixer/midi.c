@@ -72,7 +72,7 @@ MMixerAddMidiPin(
     MidiInfo->PinId = PinId;
 
     /* sanity check */
-    ASSERT(!DeviceName || (wcslen(DeviceName) + 1 < MAXPNAMELEN));
+    ASSERT(!DeviceName || (wcslen(DeviceName) < MAXPNAMELEN));
 
     /* copy device name */
     if (bInput && DeviceName)
