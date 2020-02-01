@@ -75,6 +75,12 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
         goto Cleanup;
     }
 
+    if (Level == 0 || Level > 3)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
     // Do the RPC call
     RpcTryExcept
     {
@@ -92,7 +98,7 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
         // Replace relative offset addresses in the output by absolute pointers for JOB_INFO_1W and JOB_INFO_2W.
         if (Level <= 2)
         {
-            ASSERT(Level >= 1);
+            ASSERT(Level >= 1 && Level <= 2);
             MarshallUpStructuresArray(cbBuf, pJob, *pcReturned, pJobInfoMarshalling[Level]->pInfo, pJobInfoMarshalling[Level]->cbStructureSize, TRUE);
         }
     }
@@ -121,6 +127,12 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWO
     if (!pHandle)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    if (Level == 0 || Level > 2)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
     }
 

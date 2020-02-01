@@ -63,6 +63,7 @@ _RpcGetPrinterDriver(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWOR
     if (GetPrinterDriverW(hPrinter, pEnvironment, Level, pDriverAligned, cbBuf, pcbNeeded))
     {
         // Replace relative offset addresses in the output by absolute pointers.
+        // TODO: Support 6 and 8 too.
         ASSERT(Level >= 1 && Level <= 5);
         MarshallDownStructure(pDriverAligned, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
     }

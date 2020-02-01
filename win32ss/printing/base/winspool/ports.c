@@ -87,6 +87,12 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
 
     TRACE("EnumPortsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
+    if (Level == 0 || Level > 2)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
     // Do the RPC call
     RpcTryExcept
     {
@@ -106,6 +112,7 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
         MarshallUpStructuresArray(cbBuf, pPorts, *pcReturned, pPortInfoMarshalling[Level]->pInfo, pPortInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

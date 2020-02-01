@@ -55,6 +55,12 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
 
     TRACE("EnumMonitorsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pMonitors, cbBuf, pcbNeeded, pcReturned);
 
+    if (Level == 0 || Level > 2)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
     // Do the RPC call
     RpcTryExcept
     {
@@ -74,6 +80,7 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
         MarshallUpStructuresArray(cbBuf, pMonitors, *pcReturned, pMonitorInfoMarshalling[Level]->pInfo, pMonitorInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

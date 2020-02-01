@@ -74,6 +74,8 @@ typedef struct _WINSPOOL_DOC_INFO_1 {
 }
 WINSPOOL_DOC_INFO_1;
 
+/* TODO: Add WINSPOOL_DOC_INFO_2 and WINSPOOL_DOC_INFO_3 */
+
 typedef struct _WINSPOOL_DRIVER_INFO_1
 {
     [string] WCHAR* pName;
@@ -124,6 +126,8 @@ typedef struct _WINSPOOL_DRIVER_INFO_4
     [size_is(cchPreviousNames), unique] WCHAR* pszzPreviousNames;
 }
 WINSPOOL_DRIVER_INFO_4;
+
+/* TODO: Add WINSPOOL_DRIVER_INFO_5 */
 
 typedef struct _WINSPOOL_DRIVER_INFO_6
 {
@@ -571,6 +575,7 @@ typedef struct _WINSPOOL_DOC_INFO_CONTAINER
 {
     DWORD Level;
 
+    /* TODO: Add WINSPOOL_DOC_INFO_2 and WINSPOOL_DOC_INFO_3 */
     [switch_is(Level)] union
     {
         [case(1)]
@@ -591,6 +596,7 @@ typedef struct _WINSPOOL_DRIVER_CONTAINER
 {
     DWORD Level;
 
+    /* TODO: Add WINSPOOL_DRIVER_INFO_5 */
     [switch_is(Level)] union
     {
         [case(1)]

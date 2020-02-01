@@ -427,7 +427,6 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     if (Level !=  1 && Level != 2 && Level != 4 && Level != 5)
     {
         SetLastError(ERROR_INVALID_LEVEL);
-        ERR("Invalid Level!\n");
         goto Cleanup;
     }
 
@@ -850,7 +849,7 @@ EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cb
     TRACE("EnumPrintersW(%lu, %S, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
     // Dismiss invalid levels already at this point.
-    if (Level == 3 || Level > 5)
+    if (Level == 0 || Level == 3 || Level > 5)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
@@ -1512,7 +1511,7 @@ GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDri
     }
 
     // Dismiss invalid levels already at this point.
-    if (Level > 8 || Level < 1)
+    if (Level == 0 || Level == 7 || Level > 8)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
@@ -1536,7 +1535,8 @@ GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDri
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        ASSERT(Level <= 5);
+        // TODO: Support 6 and 8 too.
+        ASSERT(Level >= 1 && Level <= 5);
         MarshallUpStructure(cbBuf, pDriverInfo, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
     }
 
@@ -1561,7 +1561,7 @@ GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
     }
 
     // Dismiss invalid levels already at this point.
-    if (Level > 9)
+    if (Level == 0 || Level > 9)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;

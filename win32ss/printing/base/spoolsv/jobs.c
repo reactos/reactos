@@ -59,7 +59,7 @@ _RpcEnumJobs(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWO
         // Replace absolute pointer addresses in the output by relative offsets for JOB_INFO_1W and JOB_INFO_2W.
         if (Level <= 2)
         {
-            ASSERT(Level >= 1);
+            ASSERT(Level >= 1 && Level <= 2);
             MarshallDownStructuresArray(pJobAligned, *pcReturned, pJobInfoMarshalling[Level]->pInfo, pJobInfoMarshalling[Level]->cbStructureSize, TRUE);
         }
     }
