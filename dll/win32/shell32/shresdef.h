@@ -312,6 +312,7 @@
 #define IDD_ABOUT              2
 #define IDC_ABOUT_ICON         0x3009
 #define IDC_ABOUT_APPNAME      0x3500
+#define IDC_ABOUT_VERSION      0x3501
 #define IDC_ABOUT_OTHERSTUFF   0x350D
 #define IDC_ABOUT_REG_USERNAME 0x3507
 #define IDC_ABOUT_REG_ORGNAME  0x3508
