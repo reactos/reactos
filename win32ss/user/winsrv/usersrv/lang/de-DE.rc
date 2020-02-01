@@ -35,7 +35,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SYSTEM_PROCESS          "Systemprozess"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "Unbekannter Sonftwarefehler"
-    IDS_OK_TERMINATE_PROGRAM    "Klicke auf OK, um das Programm zu schließen."
-    IDS_CANCEL_DEBUG_PROGRAM    "Klicke auf ABBRECHEN, um das Programm zu debuggen."
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "Unbekannter Softwarefehler"
+    IDS_OK_TERMINATE_PROGRAM    "Klicken Sie auf OK, um das Programm zu schließen."
+    IDS_CANCEL_DEBUG_PROGRAM    "Klicken Sie auf ABBRECHEN, um das Programm zu debuggen."
 END
