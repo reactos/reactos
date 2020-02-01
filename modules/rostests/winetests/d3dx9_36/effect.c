@@ -3178,12 +3178,12 @@ static void test_effect_states(IDirect3DDevice9 *device)
             fvect.x, fvect.y, fvect.z, fvect.w);
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 5, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    todo_wine ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
+    ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
             "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
             fvect.x, fvect.y, fvect.z, fvect.w);
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 6, &fvect.x, 1);
     ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK).\n", hr);
-    todo_wine ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
+    ok(fvect.x == 0.0f && fvect.y == 0.0f && fvect.z == 0.0f && fvect.w == 0.0f,
             "Got unexpected vertex shader constant (%.8e, %.8e, %.8e, %.8e).\n",
             fvect.x, fvect.y, fvect.z, fvect.w);
     hr = IDirect3DDevice9_GetVertexShaderConstantF(device, 7, &fvect.x, 1);
