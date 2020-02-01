@@ -2934,11 +2934,15 @@ static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum 
         return D3DERR_INVALIDCALL;
     }
 
-    if (param->bytes % const_tbl[op].elem_size)
+    if (param->bytes % const_tbl[op].elem_size || element_count > 1)
     {
+        unsigned int param_data_size;
+
         TRACE("Parameter size %u, rows %u, cols %u.\n", param->bytes, param->rows, param->columns);
 
-        if (++element_count > 1)
+        if (param->bytes % const_tbl[op].elem_size)
+            ++element_count;
+        if (element_count > 1)
         {
             WARN("Setting %u elements.\n", element_count);
             buffer = HeapAlloc(GetProcessHeap(), 0, const_tbl[op].elem_size * element_count);
@@ -2954,9 +2958,10 @@ static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum 
             assert(const_tbl[op].elem_size <= sizeof(value));
             buffer = &value;
         }
-        memcpy(buffer, value_ptr, param->bytes);
-        memset((unsigned char *)buffer + param->bytes, 0,
-                const_tbl[op].elem_size * element_count - param->bytes);
+        param_data_size = min(param->bytes, const_tbl[op].elem_size);
+        memcpy(buffer, value_ptr, param_data_size);
+        memset((unsigned char *)buffer + param_data_size, 0,
+                const_tbl[op].elem_size * element_count - param_data_size);
     }
 
     switch (op)
