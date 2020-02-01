@@ -954,6 +954,24 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
                 }
             }
 
+            /* For 32 bpp BMP, windowscodecs.dll never returns a format with alpha while
+             * d3dx9_xx.dll returns one if at least 1 pixel has a non zero alpha component */
+            if (SUCCEEDED(hr) && (info->Format == D3DFMT_X8R8G8B8) && (info->ImageFileFormat == D3DXIFF_BMP)) {
+                DWORD size = sizeof(DWORD) * info->Width * info->Height;
+                BYTE *buffer = HeapAlloc(GetProcessHeap(), 0, size);
+                hr = IWICBitmapFrameDecode_CopyPixels(frame, NULL, sizeof(DWORD) * info->Width, size, buffer);
+                if (SUCCEEDED(hr)) {
+                    DWORD i;
+                    for (i = 0; i < info->Width * info->Height; i++) {
+                        if (buffer[i*4+3]) {
+                            info->Format = D3DFMT_A8R8G8B8;
+                            break;
+                        }
+                    }
+                }
+                HeapFree(GetProcessHeap(), 0, buffer);
+            }
+
             if (frame)
                  IWICBitmapFrameDecode_Release(frame);
 
