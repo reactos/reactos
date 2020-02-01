@@ -67,24 +67,6 @@ static const unsigned char bmp_8bpp[] = {
 0x00,0x00
 };
 
-/* 2x2 bmp (32 bpp XRGB) */
-static const unsigned char bmp_32bpp_xrgb[] = {
-0x42,0x4d,0x46,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x36,0x00,0x00,0x00,0x28,0x00,
-0x00,0x00,0x02,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x01,0x00,0x20,0x00,0x00,0x00,
-0x00,0x00,0x10,0x00,0x00,0x00,0x12,0x0b,0x00,0x00,0x12,0x0b,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0xa0,0xb0,0xc0,0x00,0xa1,0xb1,0xc1,0x00,0xa2,0xb2,
-0xc2,0x00,0xa3,0xb3,0xc3,0x00
-};
-
-/* 2x2 bmp (32 bpp ARGB) */
-static const unsigned char bmp_32bpp_argb[] = {
-0x42,0x4d,0x46,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x36,0x00,0x00,0x00,0x28,0x00,
-0x00,0x00,0x02,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x01,0x00,0x20,0x00,0x00,0x00,
-0x00,0x00,0x10,0x00,0x00,0x00,0x12,0x0b,0x00,0x00,0x12,0x0b,0x00,0x00,0x00,0x00,
-0x00,0x00,0x00,0x00,0x00,0x00,0xa0,0xb0,0xc0,0x00,0xa1,0xb1,0xc1,0x00,0xa2,0xb2,
-0xc2,0x00,0xa3,0xb3,0xc3,0x01
-};
-
 static const unsigned char png_grayscale[] =
 {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
@@ -577,14 +559,6 @@ static void test_D3DXGetImageInfo(void)
     ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
     ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
     ok(info.Format == D3DFMT_P8, "Got format %u, expected %u\n", info.Format, D3DFMT_P8);
-    hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_xrgb, sizeof(bmp_32bpp_xrgb), &info);
-    ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
-    ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
-    ok(info.Format == D3DFMT_X8R8G8B8, "Got format %u, expected %u\n", info.Format, D3DFMT_X8R8G8B8);
-    hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_argb, sizeof(bmp_32bpp_argb), &info);
-    ok(hr == D3D_OK, "D3DXGetImageInfoFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
-    ok(info.Depth == 1, "Got depth %u, expected 1\n", info.Depth);
-    ok(info.Format == D3DFMT_A8R8G8B8, "Got format %u, expected %u\n", info.Format, D3DFMT_A8R8G8B8);
 
     /* Grayscale PNG */
     hr = D3DXGetImageInfoFromFileInMemory(png_grayscale, sizeof(png_grayscale), &info);
@@ -1224,7 +1198,7 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT3 format.\n");
+            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT3 format.\n");
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
         }
@@ -1250,7 +1224,7 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT5 format.\n");
+            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT5 format.\n");
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
         }
@@ -1263,10 +1237,10 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT1 format.\n");
+            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT1 format.\n");
 
             hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            ok(SUCCEEDED(hr), "Failed to convert pixels from DXT1 format.\n");
+            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels from DXT1 format.\n");
 
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
