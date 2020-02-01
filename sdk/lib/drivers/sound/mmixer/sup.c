@@ -838,6 +838,7 @@ MMixerGetDeviceNameWithComponentId(
                 if (Status == MM_STATUS_SUCCESS)
                 {
                     MixerContext->Copy(OutDeviceName, DeviceName, min(ResultLength, (MAXPNAMELEN-1)*2));
+                    MixerContext->Free(DeviceName);
                 }
 
                 MixerContext->CloseKey(hGuidKey);
