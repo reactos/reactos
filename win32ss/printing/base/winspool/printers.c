@@ -398,28 +398,21 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     BOOL bReturnValue = FALSE;
     DWORD cch;
     PWSTR pwszName = NULL;
-    PSTR pszPrinterName = NULL;
-    PSTR pszServerName = NULL;
-    PSTR pszDescription = NULL;
-    PSTR pszName = NULL;
-    PSTR pszComment = NULL;
-    PSTR pszShareName = NULL;
-    PSTR pszPortName = NULL;
-    PSTR pszDriverName = NULL;
-    PSTR pszLocation = NULL;
-    PSTR pszSepFile = NULL;
-    PSTR pszPrintProcessor = NULL;
-    PSTR pszDatatype = NULL;
-    PSTR pszParameters = NULL;
     DWORD i;
-    PPRINTER_INFO_1W ppi1w = NULL;
-    PPRINTER_INFO_1A ppi1a = NULL;
-    PPRINTER_INFO_2W ppi2w = NULL;
-    PPRINTER_INFO_2A ppi2a = NULL;
-    PPRINTER_INFO_4W ppi4w = NULL;
-    PPRINTER_INFO_4A ppi4a = NULL;
-    PPRINTER_INFO_5W ppi5w = NULL;
-    PPRINTER_INFO_5A ppi5a = NULL;
+
+    /* We are mapping multiple different pointers to the same pPrinterEnum pointer here so that
+       we can do in-place conversion. We will read the Unicode response from EnumPrintersW call
+       then write back the ANSI conversion into the same buffer for our EnumPrintersA output */
+    // Mappings to pPrinterEnum for ANSI (a) characters for Levels 1, 2, 4, and 5.
+    PPRINTER_INFO_1A ppi1a = (PPRINTER_INFO_1A)pPrinterEnum;
+    PPRINTER_INFO_2A ppi2a = (PPRINTER_INFO_2A)pPrinterEnum;
+    PPRINTER_INFO_4A ppi4a = (PPRINTER_INFO_4A)pPrinterEnum;
+    PPRINTER_INFO_5A ppi5a = (PPRINTER_INFO_5A)pPrinterEnum;
+    // Mappings to pPrinterEnum for Unicode (w) characters for Levels 1, 2, 4, and 5.
+    PPRINTER_INFO_1W ppi1w = (PPRINTER_INFO_1W)pPrinterEnum;
+    PPRINTER_INFO_2W ppi2w = (PPRINTER_INFO_2W)pPrinterEnum;
+    PPRINTER_INFO_4W ppi4w = (PPRINTER_INFO_4W)pPrinterEnum;
+    PPRINTER_INFO_5W ppi5w = (PPRINTER_INFO_5W)pPrinterEnum;
 
     TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
@@ -461,21 +454,6 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
         goto Cleanup;
     }
 
-    /* We are mapping multiple different pointers to the same pPrinterEnum pointer here so that */
-    /* we can do in-place conversion. We read the Unicode response from the EnumPrintersW and */
-    /* then we write back the ANSI conversion into the same buffer for our EnumPrintersA output */
-
-    /* mapping to pPrinterEnum for Unicode (w) characters for Levels 1, 2, 4, and 5 */
-    ppi1w = (PPRINTER_INFO_1W)pPrinterEnum;
-    ppi2w = (PPRINTER_INFO_2W)pPrinterEnum;
-    ppi4w = (PPRINTER_INFO_4W)pPrinterEnum;
-    ppi5w = (PPRINTER_INFO_5W)pPrinterEnum;
-    /* mapping to pPrinterEnum for ANSI (a) characters for Levels 1, 2, 4, and 5 */
-    ppi1a = (PPRINTER_INFO_1A)pPrinterEnum;
-    ppi2a = (PPRINTER_INFO_2A)pPrinterEnum;
-    ppi4a = (PPRINTER_INFO_4A)pPrinterEnum;
-    ppi5a = (PPRINTER_INFO_5A)pPrinterEnum;
-
     for (i = 0; i < *pcReturned; i++)
     {
         switch (Level)
@@ -484,6 +462,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
             {
                 if (ppi1w[i].pDescription)
                 {
+                    PSTR pszDescription;
+
                     // Convert Unicode pDescription to a ANSI string pszDescription.
                     cch = wcslen(ppi1w[i].pDescription) + 1;
 
@@ -503,6 +483,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi1w[i].pName)
                 {
+                    PSTR pszName;
+
                     // Convert Unicode pName to a ANSI string pszName.
                     cch = wcslen(ppi1w[i].pName) + 1;
 
@@ -522,6 +504,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi1w[i].pComment)
                 {
+                    PSTR pszComment;
+
                     // Convert Unicode pComment to a ANSI string pszComment.
                     cch = wcslen(ppi1w[i].pComment) + 1;
 
@@ -546,6 +530,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
             {
                 if (ppi2w[i].pServerName)
                 {
+                    PSTR pszServerName;
+
                     // Convert Unicode pServerName to a ANSI string pszServerName.
                     cch = wcslen(ppi2w[i].pServerName) + 1;
 
@@ -565,6 +551,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pPrinterName)
                 {
+                    PSTR pszPrinterName;
+
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
                     cch = wcslen(ppi2w[i].pPrinterName) + 1;
 
@@ -584,6 +572,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pShareName)
                 {
+                    PSTR pszShareName;
+
                     // Convert Unicode pShareName to a ANSI string pszShareName.
                     cch = wcslen(ppi2w[i].pShareName) + 1;
 
@@ -603,6 +593,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pPortName)
                 {
+                    PSTR pszPortName;
+
                     // Convert Unicode pPortName to a ANSI string pszPortName.
                     cch = wcslen(ppi2w[i].pPortName) + 1;
 
@@ -622,6 +614,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pDriverName)
                 {
+                    PSTR pszDriverName;
+
                     // Convert Unicode pDriverName to a ANSI string pszDriverName.
                     cch = wcslen(ppi2w[i].pDriverName) + 1;
 
@@ -641,6 +635,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pComment)
                 {
+                    PSTR pszComment;
+
                     // Convert Unicode pComment to a ANSI string pszComment.
                     cch = wcslen(ppi2w[i].pComment) + 1;
 
@@ -660,6 +656,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pLocation)
                 {
+                    PSTR pszLocation;
+
                     // Convert Unicode pLocation to a ANSI string pszLocation.
                     cch = wcslen(ppi2w[i].pLocation) + 1;
 
@@ -679,6 +677,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pSepFile)
                 {
+                    PSTR pszSepFile;
+
                     // Convert Unicode pSepFile to a ANSI string pszSepFile.
                     cch = wcslen(ppi2w[i].pSepFile) + 1;
 
@@ -698,6 +698,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pPrintProcessor)
                 {
+                    PSTR pszPrintProcessor;
+
                     // Convert Unicode pPrintProcessor to a ANSI string pszPrintProcessor.
                     cch = wcslen(ppi2w[i].pPrintProcessor) + 1;
 
@@ -717,6 +719,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pDatatype)
                 {
+                    PSTR pszDatatype;
+
                     // Convert Unicode pDatatype to a ANSI string pszDatatype.
                     cch = wcslen(ppi2w[i].pDatatype) + 1;
 
@@ -736,6 +740,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi2w[i].pParameters)
                 {
+                    PSTR pszParameters;
+
                     // Convert Unicode pParameters to a ANSI string pszParameters.
                     cch = wcslen(ppi2w[i].pParameters) + 1;
 
@@ -760,6 +766,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
             {
                 if (ppi4w[i].pPrinterName)
                 {
+                    PSTR pszPrinterName;
+
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
                     cch = wcslen(ppi4w[i].pPrinterName) + 1;
 
@@ -779,6 +787,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi4w[i].pServerName)
                 {
+                    PSTR pszServerName;
+
                     // Convert Unicode pServerName to a ANSI string pszServerName.
                     cch = wcslen(ppi4w[i].pServerName) + 1;
 
@@ -803,6 +813,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
             {
                 if (ppi5w[i].pPrinterName)
                 {
+                    PSTR pszPrinterName;
+
                     // Convert Unicode pPrinterName to a ANSI string pszPrinterName.
                     cch = wcslen(ppi5w[i].pPrinterName) + 1;
 
@@ -822,6 +834,8 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
 
                 if (ppi5w[i].pPortName)
                 {
+                    PSTR pszPortName;
+
                     // Convert Unicode pPortName to a ANSI string pszPortName.
                     cch = wcslen(ppi5w[i].pPortName) + 1;
 
