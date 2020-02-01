@@ -71,7 +71,6 @@ public:
     {
     private:
         HANDLE m_hExtractionThread;
-        HANDLE m_hExtractionMutex;
         bool m_bExtractionThreadCancel;
 
         CZipExtract* m_pExtract;
@@ -81,7 +80,6 @@ public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
             :CPropertyPageImpl<CExtractSettingsPage>(MAKEINTRESOURCE(IDS_WIZ_TITLE))
             ,m_hExtractionThread(NULL)
-            ,m_hExtractionMutex(NULL)
             ,m_bExtractionThreadCancel(false)
             ,m_pExtract(extract)
             ,m_pPassword(password)
@@ -108,8 +106,6 @@ public:
                 WaitForSingleObject(m_hExtractionThread, INFINITE);
                 CloseHandle(m_hExtractionThread);
                 m_hExtractionThread = NULL;
-                CloseHandle(m_hExtractionMutex);
-                m_hExtractionMutex = NULL;
                 m_pExtract->Release();
                 if (!m_bExtractionThreadCancel)
                     return 0;
@@ -122,16 +118,6 @@ public:
 
             /* We end up here if the user manually clicks Next: start extraction*/
             m_bExtractionThreadCancel = false;
-
-            m_hExtractionMutex = CreateMutex(NULL, FALSE, NULL);
-            if (!m_hExtractionMutex)
-            {
-                /* Extraction mutex creation failed, do not go to the next page */
-                DWORD err = GetLastError();
-                DPRINT1("ERROR, m_hExtractionMutex: CreateMutex failed: 0x%x\n", err);
-                SetWindowLongPtr(DWLP_MSGRESULT, -1);
-                return TRUE;
-            }
 
             /* Grey out every control during extraction to prevent user interaction */
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
@@ -156,8 +142,6 @@ public:
                 /* Extraction thread creation failed, do not go to the next page */
                 DWORD err = GetLastError();
                 DPRINT1("ERROR, m_hExtractionThread: CreateThread failed: 0x%x\n", err);
-                CloseHandle(m_hExtractionMutex);
-                m_hExtractionMutex = NULL;
                 m_pExtract->Release();
 
                 SetWindowLongPtr(DWLP_MSGRESULT, -1);
@@ -173,13 +157,9 @@ public:
         static DWORD WINAPI ExtractEntry(LPVOID lpParam)
         {
             CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
-            bool res = pPage->m_pExtract->Extract(pPage->m_hWnd, pPage->GetDlgItem(IDC_PROGRESS), pPage->m_hExtractionMutex, &(pPage->m_bExtractionThreadCancel));
-            WaitForSingleObject(pPage->m_hExtractionMutex, INFINITE);
-            {
-                /* Failing and cancelling extraction both mean we stay on the same property page */
-                pPage->m_bExtractionThreadCancel = !res;
-            }
-            ReleaseMutex(pPage->m_hExtractionMutex);
+            bool res = pPage->m_pExtract->Extract(pPage->m_hWnd, pPage->GetDlgItem(IDC_PROGRESS), &(pPage->m_bExtractionThreadCancel));
+            /* Failing and cancelling extraction both mean we stay on the same property page */
+            pPage->m_bExtractionThreadCancel = !res;
 
             pPage->SetWizardButtons(PSWIZB_NEXT);
             if (!res)
@@ -202,12 +182,10 @@ public:
 		
         BOOL OnQueryCancel()
         {
-            if (m_hExtractionMutex != NULL)
+            if (m_hExtractionThread != NULL)
             {
                 /* Extraction will check the value of m_bExtractionThreadCancel between each file in the archive */
-                WaitForSingleObject(m_hExtractionMutex, INFINITE);
                 m_bExtractionThreadCancel = true;
-                ReleaseMutex(m_hExtractionMutex);
                 return TRUE;
             }
             return FALSE;
@@ -363,7 +341,7 @@ public:
         PropertySheetW(&psh);
     }
 
-    bool Extract(HWND hDlg, HWND hProgress, HANDLE hExtractionMutex, bool* bCancel)
+    bool Extract(HWND hDlg, HWND hProgress, bool* bCancel)
     {
         unz_global_info64 gi;
         uf = unzOpen2_64(m_Filename.GetString(), &g_FFunc);
@@ -396,14 +374,11 @@ public:
         bool bOverwriteAll = false;
         while (zipEnum.next(Name, Info))
         {
-            WaitForSingleObject(hExtractionMutex, INFINITE);
             if (*bCancel)
             {
-                ReleaseMutex(hExtractionMutex);
                 Close();
                 return false;
             }
-            ReleaseMutex(hExtractionMutex);
 
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
@@ -522,6 +497,16 @@ public:
 
             do
             {
+                if (*bCancel)
+                {
+                    CloseHandle(hFile);
+                    BOOL deleteResult = DeleteFileA(FullPath);
+                    if(deleteResult != 0)
+                        DPRINT1("ERROR, DeleteFile: %d\n", deleteResult);
+                    Close();
+                    return false;
+                }
+
                 err = unzReadCurrentFile(uf, Buffer, sizeof(Buffer));
 
                 if (err < 0)
