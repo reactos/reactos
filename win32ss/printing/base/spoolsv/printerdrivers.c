@@ -49,6 +49,8 @@ _RpcGetPrinterDriver(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWOR
     DWORD dwErrorCode;
     PBYTE pDriverAligned;
 
+    ERR("_RpcGetPrinterDriver(%p, %lu, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriver, cbBuf, pcbNeeded);
+
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
     {
@@ -61,7 +63,7 @@ _RpcGetPrinterDriver(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWOR
     if (GetPrinterDriverW(hPrinter, pEnvironment, Level, pDriverAligned, cbBuf, pcbNeeded))
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        ASSERT(Level >= 1 && Level <= 3);
+        ASSERT(Level >= 1 && Level <= 5);
         MarshallDownStructure(pDriverAligned, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
     }
     else

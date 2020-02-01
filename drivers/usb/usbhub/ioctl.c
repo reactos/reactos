@@ -25,6 +25,7 @@ USBH_SelectConfigOrInterfaceComplete(IN PDEVICE_OBJECT DeviceObject,
     PUSBHUB_PORT_DATA PortData = NULL;
     NTSTATUS Status;
     KIRQL OldIrql;
+    PURB Urb;
 
     DPRINT("USBH_SelectConfigOrInterfaceComplete ... \n");
 
@@ -69,8 +70,13 @@ USBH_SelectConfigOrInterfaceComplete(IN PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        DPRINT1("USBH_SelectConfigOrInterfaceComplete: Status != STATUS_SUCCESS. FIXME\n");
-        DbgBreakPoint();
+        Urb = URB_FROM_IRP(Irp);
+        DPRINT1("USBH_SelectConfigOrInterfaceComplete: Status = 0x%lx, UsbdStatus = 0x%lx\n", Status, Urb->UrbHeader.Status);
+        if (Urb->UrbHeader.Status == USBD_STATUS_NO_BANDWIDTH)
+        {
+            DPRINT1("USBH_SelectConfigOrInterfaceComplete: USBD_STATUS_NO_BANDWIDTH. FIXME\n");
+            DbgBreakPoint();
+        }
     }
 
     return Status;

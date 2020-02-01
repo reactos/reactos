@@ -7,7 +7,6 @@
 
 #include "precomp.h"
 
-
 // Local Constants
 static DWORD dwDriverInfo1Offsets[] = {
     FIELD_OFFSET(DRIVER_INFO_1W, pName),
@@ -33,6 +32,29 @@ static DWORD dwDriverInfo3Offsets[] = {
     FIELD_OFFSET(DRIVER_INFO_3W, pDependentFiles),
     FIELD_OFFSET(DRIVER_INFO_3W, pMonitorName),
     FIELD_OFFSET(DRIVER_INFO_3W, pDefaultDataType),
+    MAXDWORD
+};
+
+static DWORD dwDriverInfo4Offsets[] = {
+    FIELD_OFFSET(DRIVER_INFO_4W, pName),
+    FIELD_OFFSET(DRIVER_INFO_4W, pEnvironment),
+    FIELD_OFFSET(DRIVER_INFO_4W, pDriverPath),
+    FIELD_OFFSET(DRIVER_INFO_4W, pDataFile),
+    FIELD_OFFSET(DRIVER_INFO_4W, pConfigFile),
+    FIELD_OFFSET(DRIVER_INFO_4W, pHelpFile),
+    FIELD_OFFSET(DRIVER_INFO_4W, pDependentFiles),
+    FIELD_OFFSET(DRIVER_INFO_4W, pMonitorName),
+    FIELD_OFFSET(DRIVER_INFO_4W, pDefaultDataType),
+    FIELD_OFFSET(DRIVER_INFO_4W, pszzPreviousNames),
+    MAXDWORD
+};
+
+static DWORD dwDriverInfo5Offsets[] = {
+    FIELD_OFFSET(DRIVER_INFO_5W, pName),
+    FIELD_OFFSET(DRIVER_INFO_5W, pEnvironment),
+    FIELD_OFFSET(DRIVER_INFO_5W, pDriverPath),
+    FIELD_OFFSET(DRIVER_INFO_5W, pDataFile),
+    FIELD_OFFSET(DRIVER_INFO_5W, pConfigFile),
     MAXDWORD
 };
 
@@ -118,7 +140,7 @@ _LocalGetPrinterDriverLevel3(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_3W* ppD
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
     pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath
     pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile
-    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";  // pConfigFile
+    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile
     pwszStrings[5] = L"";  // pHelpFile
     pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
     pwszStrings[7] = NULL;  // pMonitorName
@@ -148,6 +170,87 @@ _LocalGetPrinterDriverLevel3(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_3W* ppD
     (*ppDriverInfo)++;
 }
 
+static void
+_LocalGetPrinterDriverLevel4(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_4W* ppDriverInfo, PBYTE* ppDriverInfoEnd, PDWORD pcbNeeded)
+{
+    DWORD n;
+    PCWSTR pwszStrings[10];
+
+    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
+    pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
+    pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
+    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath
+    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile
+    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile
+    pwszStrings[5] = L"";  // pHelpFile
+    pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
+    pwszStrings[7] = NULL;  // pMonitorName
+    pwszStrings[8] = NULL;  // pDefaultDataType
+    pwszStrings[9] = NULL;  // pszzPreviousNames
+
+    // Calculate the string lengths.
+    if (!ppDriverInfo)
+    {
+        for (n = 0; n < _countof(pwszStrings); ++n)
+        {
+            if (pwszStrings[n])
+            {
+                *pcbNeeded += (wcslen(pwszStrings[n]) + 1) * sizeof(WCHAR);
+            }
+        }
+
+        *pcbNeeded += sizeof(DRIVER_INFO_4W);
+        return;
+    }
+
+    (*ppDriverInfo)->cVersion = 3;
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppDriverInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppDriverInfo), dwDriverInfo4Offsets, *ppDriverInfoEnd);
+    ToMultiSz((*ppDriverInfo)->pDependentFiles);
+    (*ppDriverInfo)++;
+}
+
+static void
+_LocalGetPrinterDriverLevel5(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_5W* ppDriverInfo, PBYTE* ppDriverInfoEnd, PDWORD pcbNeeded)
+{
+    DWORD n;
+    PCWSTR pwszStrings[5];
+
+    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
+    pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
+    pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
+    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath UniDrv.dll
+    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile.ppd
+    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile UniDrvUI.dll
+
+    // Calculate the string lengths.
+    if (!ppDriverInfo)
+    {
+        for (n = 0; n < _countof(pwszStrings); ++n)
+        {
+            if (pwszStrings[n])
+            {
+                *pcbNeeded += (wcslen(pwszStrings[n]) + 1) * sizeof(WCHAR);
+            }
+        }
+
+        *pcbNeeded += sizeof(DRIVER_INFO_5W);
+        return;
+    }
+
+    (*ppDriverInfo)->cVersion = 3;
+    // Driver attributes, like UMPD/KMPD.
+    (*ppDriverInfo)->dwDriverAttributes = 0; // UMPD/KMPD, So where are they?
+    // Number of times the configuration file for this driver has been upgraded or downgraded since the last spooler restart.
+    (*ppDriverInfo)->dwConfigVersion = 1;
+    // Number of times the driver file for this driver has been upgraded or downgraded since the last spooler restart.
+    (*ppDriverInfo)->dwDriverVersion = 1;
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppDriverInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppDriverInfo), dwDriverInfo5Offsets, *ppDriverInfoEnd);
+    (*ppDriverInfo)++;
+}
 
 BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
@@ -168,8 +271,8 @@ BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Le
 
     pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
 
-    // Only support 3 levels for now
-    if (Level > 3)
+    // Only support 5 levels for now
+    if (Level > 5)
     {
         // The caller supplied an invalid level.
         dwErrorCode = ERROR_INVALID_LEVEL;
@@ -185,6 +288,10 @@ BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Le
         _LocalGetPrinterDriverLevel2(pPrinterHandle, NULL, NULL, pcbNeeded);
     else if (Level == 3)
         _LocalGetPrinterDriverLevel3(pPrinterHandle, NULL, NULL, pcbNeeded);
+    else if (Level == 4)
+        _LocalGetPrinterDriverLevel4(pPrinterHandle, NULL, NULL, pcbNeeded);
+    else if (Level == 5)
+        _LocalGetPrinterDriverLevel5(pPrinterHandle, NULL, NULL, pcbNeeded);
 
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
@@ -202,6 +309,10 @@ BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Le
         _LocalGetPrinterDriverLevel2(pPrinterHandle, (PDRIVER_INFO_2W*)&pDriverInfo, &pEnd, NULL);
     else if (Level == 3)
         _LocalGetPrinterDriverLevel3(pPrinterHandle, (PDRIVER_INFO_3W*)&pDriverInfo, &pEnd, NULL);
+    else if (Level == 4)
+        _LocalGetPrinterDriverLevel4(pPrinterHandle, (PDRIVER_INFO_4W*)&pDriverInfo, &pEnd, NULL);
+    else if (Level == 5)
+        _LocalGetPrinterDriverLevel5(pPrinterHandle, (PDRIVER_INFO_5W*)&pDriverInfo, &pEnd, NULL);
 
     dwErrorCode = ERROR_SUCCESS;
 

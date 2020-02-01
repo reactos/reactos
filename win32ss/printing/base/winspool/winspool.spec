@@ -74,7 +74,7 @@
 173 stdcall DeviceCapabilitiesW(wstr wstr long ptr ptr)
 174 stub DeviceMode
 175 stub DevicePropertySheets
-176 stub DocumentEvent
+176 stdcall DocumentEvent(ptr ptr long long ptr long ptr)
 177 stdcall DocumentPropertiesA(ptr ptr ptr ptr ptr long)
 178 stdcall DocumentPropertiesW(ptr ptr ptr ptr ptr long)
 179 stub DocumentPropertySheets
@@ -186,7 +186,7 @@
 285 stdcall SetPrinterDataExW(ptr wstr wstr long ptr long)
 286 stdcall SetPrinterDataW(ptr wstr long ptr long)
 287 stdcall SetPrinterW(ptr long ptr long)
-288 stub SplDriverUnloadComplete
+288 stdcall SplDriverUnloadComplete(ptr)
 289 stub SpoolerDevQueryPrintW
 290 stdcall SpoolerInit()
 291 stub SpoolerPrinterEvent

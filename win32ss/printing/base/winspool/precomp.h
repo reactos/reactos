@@ -15,6 +15,7 @@
 #include <winreg.h>
 #include <winspool.h>
 #include <winspool_c.h>
+#include <winddiui.h>
 #include <ndk/rtlfuncs.h>
 
 #include <spoolss.h>
