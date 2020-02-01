@@ -395,7 +395,8 @@ Cleanup:
 BOOL WINAPI
 EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue = FALSE;
+    DWORD dwErrorCode;
+    BOOL bResult;
     DWORD cch;
     PWSTR pwszName = NULL;
     PSTR pszPrinterName = NULL;
@@ -426,7 +427,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     // Check for invalid levels here for early error return. MSDN says that only 1, 2, 4, and 5 are allowable.
     if (Level !=  1 && Level != 2 && Level != 4 && Level != 5)
     {
-        SetLastError(ERROR_INVALID_LEVEL);
+        dwErrorCode = ERROR_INVALID_LEVEL;
         ERR("Invalid Level!\n");
         goto Cleanup;
     }
@@ -439,7 +440,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
         pwszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszName)
         {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
@@ -448,11 +449,12 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
     }
  
     /* Ref: https://stackoverflow.com/questions/41147180/why-enumprintersa-and-enumprintersw-request-the-same-amount-of-memory */
-    bReturnValue = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    bResult = EnumPrintersW(Flags, pwszName, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    dwErrorCode = GetLastError();
 
-    TRACE("*pcReturned is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcReturned, bReturnValue, GetLastError());
+    TRACE("*pcReturned is '%d' and bResult is '%d' and dwErrorCode is '%ld'.\n", *pcReturned, bResult, dwErrorCode);
 
-    if (!bReturnValue)
+    if (!bResult)
     {
         goto Cleanup;
     }
@@ -486,7 +488,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszDescription = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszDescription)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -505,7 +507,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -524,7 +526,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszComment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszComment)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -548,7 +550,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszServerName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszServerName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -567,7 +569,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -586,7 +588,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszShareName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszShareName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -605,7 +607,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPortName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPortName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -624,7 +626,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszDriverName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszDriverName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -643,7 +645,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszComment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszComment)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -662,7 +664,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszLocation = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszLocation)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -682,7 +684,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszSepFile = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszSepFile)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -701,7 +703,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPrintProcessor = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPrintProcessor)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -721,7 +723,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszDatatype)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -740,7 +742,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszParameters = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszParameters)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -764,7 +766,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -783,7 +785,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszServerName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszServerName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -806,7 +808,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPrinterName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -825,7 +827,7 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
                     pszPortName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
                     if (!pszPortName)
                     {
-                        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
                         ERR("HeapAlloc failed!\n");
                         goto Cleanup;
                     }
@@ -841,13 +843,16 @@ EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbB
         }   // switch
     }       // for
 
+    dwErrorCode = ERROR_SUCCESS;
+
 Cleanup:
     if (pwszName)
     {
         HeapFree(hProcessHeap, 0, pwszName);
     }
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
