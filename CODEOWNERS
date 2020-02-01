@@ -215,6 +215,11 @@
 #   S: Maintained
 /dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
 
+# Printing
+#   M: ColinFinck, Colin Finck
+#   S: Maintained
+/win32ss/printing/ @ColinFinck
+
 # ReactOS API Tests
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
