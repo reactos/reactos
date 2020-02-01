@@ -25,9 +25,6 @@
 #include <limits.h>
 #include "wine/test.h"
 #include "d3dx9.h"
-#include "initguid.h"
-#include "rmxftmpl.h"
-#include "rmxfguid.h"
 
 #ifndef NAN
 /* From wine/port.h */
@@ -2545,129 +2542,6 @@ static void D3DXLoadMeshTest(void)
     test_LoadMeshFromX(device, framed_xfile, merged_vertex_buffer, framed_fvf, merged_index_buffer, default_materials, FALSE);
 
     free_test_context(test_context);
-}
-
-static ID3DXFileData *get_mesh_data(const char *memory, SIZE_T length)
-{
-    D3DXF_FILELOADMEMORY source;
-    ID3DXFileEnumObject *enumobj = NULL;
-    ID3DXFileData *filedata = NULL;
-    ID3DXFileData *ret = NULL;
-    ID3DXFile *d3dxfile = NULL;
-    SIZE_T i, nb_children;
-    HRESULT hr;
-    GUID guid;
-
-    hr = D3DXFileCreate(&d3dxfile);
-    if (FAILED(hr)) return NULL;
-
-    hr = d3dxfile->lpVtbl->RegisterTemplates(d3dxfile, D3DRM_XTEMPLATES, D3DRM_XTEMPLATE_BYTES);
-    if (FAILED(hr)) goto cleanup;
-
-    source.lpMemory = (void *)memory;
-    source.dSize    = length;
-
-    hr = d3dxfile->lpVtbl->CreateEnumObject(d3dxfile, &source, D3DXF_FILELOAD_FROMMEMORY, &enumobj);
-    if (FAILED(hr)) goto cleanup;
-
-    hr = enumobj->lpVtbl->GetChildren(enumobj, &nb_children);
-    if (FAILED(hr)) goto cleanup;
-
-    for (i = 0; i < nb_children; i++)
-    {
-        hr = enumobj->lpVtbl->GetChild(enumobj, i, &filedata);
-        if (FAILED(hr)) goto cleanup;
-
-        hr = filedata->lpVtbl->GetType(filedata, &guid);
-        if (SUCCEEDED(hr) && IsEqualGUID(&guid, &TID_D3DRMMesh))
-        {
-            ret = filedata;
-            break;
-        }
-        else
-            filedata->lpVtbl->Release(filedata);
-    }
-
-cleanup:
-    if (enumobj) enumobj->lpVtbl->Release(enumobj);
-    if (d3dxfile) d3dxfile->lpVtbl->Release(d3dxfile);
-
-    return ret;
-}
-
-static void D3DXLoadSkinMeshFromXofTest(void)
-{
-    static const char simple_xfile[] =
-        "xof 0303txt 0032"
-        "Mesh {"
-            "3;"
-            "0.0; 0.0; 0.0;,"
-            "0.0; 1.0; 0.0;,"
-            "1.0; 1.0; 0.0;;"
-            "1;"
-            "3; 0, 1, 2;;"
-        "}";
-    ID3DXBuffer *adjacency, *materials, *effects;
-    D3DPRESENT_PARAMETERS d3dpp;
-    IDirect3DDevice9 *device;
-    ID3DXFileData *filedata;
-    ID3DXSkinInfo *skininfo;
-    ID3DXMesh *mesh;
-    IDirect3D9 *d3d;
-    DWORD mat_count;
-    HRESULT hr;
-    HWND hwnd;
-
-    if (!(hwnd = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0,
-            640, 480, NULL, NULL, NULL, NULL)))
-    {
-        skip("Couldn't create application window\n");
-        return;
-    }
-
-    d3d = Direct3DCreate9(D3D_SDK_VERSION);
-    if (!d3d)
-    {
-        skip("Couldn't create IDirect3D9 object\n");
-        DestroyWindow(hwnd);
-        return;
-    }
-
-    ZeroMemory(&d3dpp, sizeof(d3dpp));
-    d3dpp.Windowed   = TRUE;
-    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &device);
-    IDirect3D9_Release(d3d);
-    if (FAILED(hr))
-    {
-        skip("Failed to create IDirect3DDevice9 object %#x\n", hr);
-        DestroyWindow(hwnd);
-        return;
-    }
-
-    filedata = get_mesh_data(simple_xfile, sizeof(simple_xfile) - 1);
-    ok(filedata != NULL, "Failed to load mesh data\n");
-
-    adjacency = materials = effects = NULL;
-    skininfo = NULL;
-    mesh = NULL;
-
-    hr = D3DXLoadSkinMeshFromXof(filedata, 0, device, &adjacency, &materials, &effects, &mat_count, &skininfo, &mesh);
-    ok(hr == D3D_OK, "Got result %x, expected 0 (D3D_OK)\n", hr);
-    ok(skininfo != NULL, "Expected non-null skininfo\n");
-
-    /* FIXME: Add additional tests for skininfo interface. */
-
-    if (adjacency) adjacency->lpVtbl->Release(adjacency);
-    if (materials) materials->lpVtbl->Release(materials);
-    if (effects) effects->lpVtbl->Release(effects);
-    if (skininfo) skininfo->lpVtbl->Release(skininfo);
-    if (mesh) mesh->lpVtbl->Release(mesh);
-
-    filedata->lpVtbl->Release(filedata);
-    IDirect3DDevice9_Release(device);
-    DestroyWindow(hwnd);
 }
 
 static BOOL compute_box(struct mesh *mesh, float width, float height, float depth)
@@ -5314,88 +5188,6 @@ static void test_create_skin_info(void)
 
     hr = D3DXCreateSkinInfo(1, NULL, 1, &skininfo);
     ok(hr == D3DERR_INVALIDCALL, "Expected D3DERR_INVALIDCALL, got %#x\n", hr);
-}
-
-static void test_update_skinned_mesh(void)
-{
-    static DWORD bone0_vertices[2] = { 1, 3 };
-    static FLOAT bone0_weights[2] = { 1.0f, 0.5f };
-    static DWORD bone1_vertices[2] = { 2, 3 };
-    static FLOAT bone1_weights[2] = { 1.0f, 0.5f };
-    static D3DMATRIX bones_matrix[2] =
-    { { { {
-               1.0f,  0.0f,  0.0f,  0.0f,
-               0.0f,  1.0f,  0.0f,  0.0f,
-               0.0f,  0.0f,  1.0f,  0.0f,
-               2.0f,  2.0f,  4.0f,  1.0f
-      } } },
-      { { {
-               1.0f,  0.0f,  0.0f,  0.0f,
-               0.0f,  1.0f,  0.0f,  0.0f,
-               0.0f,  0.0f,  1.0f,  0.0f,
-              -4.0f, -4.0f,  4.0f,  1.0f
-      } } } };
-    static D3DVECTOR vertices_src[] = {{  1.0f,  1.0f,  1.0f },
-                                       {  1.0f,  0.0f,  0.0f },
-                                       {  1.0f,  1.0f, -1.0f },
-                                       {  0.0f,  1.0f,  0.0f },
-                                       { -1.0f, -1.0f,  1.0f },
-                                       {  0.0f,  0.0f,  1.0f },
-                                       { -1.0f, -1.0f, -1.0f },
-                                       { -1.0f,  0.0f,  0.0f },
-                                      };
-    static D3DVECTOR vertices_ref[] = {{  0.0f,  0.0f,  0.0f },
-                                       {  0.0f,  0.0f,  0.0f },
-                                       {  3.0f,  3.0f,  3.0f },
-                                       {  0.0f,  1.0f,  0.0f },
-                                       { -5.0f, -5.0f,  5.0f },
-                                       {  0.0f,  0.0f,  1.0f },
-                                       { -2.0f, -2.0f,  3.0f },
-                                       { -1.0f,  0.0f,  0.0f },
-                                      };
-    D3DVECTOR vertices_dest[8];
-    HRESULT hr;
-    ID3DXSkinInfo *skin_info;
-    D3DXMATRIX matrix;
-    int i;
-
-    D3DXMatrixIdentity(&matrix);
-    for (i = 0; i < 8; i++)
-    {
-        vertices_dest[i].x = 10000.0f;
-        vertices_dest[i].y = 10000.0f;
-        vertices_dest[i].z = 10000.0f;
-    }
-
-    hr = D3DXCreateSkinInfoFVF(4, D3DFVF_XYZ | D3DFVF_NORMAL, 2, &skin_info);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-
-    skin_info->lpVtbl->SetBoneInfluence(skin_info, 0, 2, bone0_vertices, bone0_weights);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-    skin_info->lpVtbl->SetBoneOffsetMatrix(skin_info, 0, &matrix);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-    skin_info->lpVtbl->SetBoneInfluence(skin_info, 1, 2, bone1_vertices, bone1_weights);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-    skin_info->lpVtbl->SetBoneOffsetMatrix(skin_info, 1, &matrix);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-    skin_info->lpVtbl->UpdateSkinnedMesh(skin_info, bones_matrix, NULL, vertices_src, vertices_dest);
-    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
-    for (i = 0; i < 4; i++)
-    {
-        ok(compare(vertices_dest[i*2].x, vertices_ref[i*2].x), "Vertex[%d].position.x: got %g, expected %g\n",
-           i, vertices_dest[i*2].x, vertices_ref[i*2].x);
-        ok(compare(vertices_dest[i*2].y, vertices_ref[i*2].y), "Vertex[%d].position.y: got %g, expected %g\n",
-           i, vertices_dest[i*2].y, vertices_ref[i*2].y);
-        ok(compare(vertices_dest[i*2].z, vertices_ref[i*2].z), "Vertex[%d].position.z: got %g, expected %g\n",
-           i, vertices_dest[i*2].z, vertices_ref[i*2].z);
-        ok(compare(vertices_dest[i*2+1].x, vertices_ref[i*2+1].x), "Vertex[%d].normal.x: got %g, expected %g\n",
-           i, vertices_dest[i*2+1].x, vertices_ref[i*2+1].x);
-        ok(compare(vertices_dest[i*2+1].y, vertices_ref[i*2+1].y), "Vertex[%d].normal.y: got %g, expected %g\n",
-           i, vertices_dest[i*2+1].y, vertices_ref[i*2+1].y);
-        ok(compare(vertices_dest[i*2+1].z, vertices_ref[i*2+1].z), "Vertex[%d].normal.z: got %g, expected %g\n",
-           i, vertices_dest[i*2+1].z, vertices_ref[i*2+1].z);
-    }
-    skin_info->lpVtbl->Release(skin_info);
 }
 
 static void test_convert_adjacency_to_point_reps(void)
@@ -10362,10 +10154,10 @@ static void test_clone_mesh(void)
 
         hr = mesh->lpVtbl->CloneMesh(mesh, tc[i].clone_options, tc[i].new_declaration,
                                      test_context->device, &mesh_clone);
-        ok(hr == D3D_OK, "CloneMesh test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+        ok(hr == D3D_OK, "CloneMesh test case %d failed. Got %x\n, expected D3D_OK\n", i, hr);
 
         hr = mesh_clone->lpVtbl->GetDeclaration(mesh_clone, new_declaration);
-        ok(hr == D3D_OK, "GetDeclaration test case %d failed. Got %x, expected D3D_OK.\n", i, hr);
+        ok(hr == D3D_OK, "GetDeclaration test case %d failed. Got %x\n, expected D3D_OK\n", i, hr);
         /* Check declaration elements */
         for (j = 0; tc[i].new_declaration[j].Stream != 0xFF; j++)
         {
@@ -10552,7 +10344,7 @@ static void test_valid_mesh(void)
 
         hr = D3DXValidMesh(mesh, tc[i].adjacency, &errors_and_warnings);
         todo_wine ok(hr == tc[i].exp_hr, "D3DXValidMesh test case %d failed. "
-                "Got %x, expected %x.\n", i, hr, tc[i].exp_hr);
+                     "Got %x\n, expected %x\n", i, hr, tc[i].exp_hr);
 
         /* Note errors_and_warnings is deliberately not checked because that
          * would require copying wast amounts of the text output. */
@@ -10568,27 +10360,6 @@ static void test_valid_mesh(void)
 cleanup:
     if (mesh) mesh->lpVtbl->Release(mesh);
     free_test_context(test_context);
-}
-
-static void test_optimize_vertices(void)
-{
-    HRESULT hr;
-    DWORD vertex_remap[3];
-    const DWORD indices[] = {0, 1, 2};
-    const UINT num_faces = 1;
-    const UINT num_vertices = 3;
-
-    hr = D3DXOptimizeVertices(indices, num_faces,
-                              num_vertices, FALSE,
-                              vertex_remap);
-    ok(hr == D3D_OK, "D3DXOptimizeVertices failed. Got %x, expected D3D_OK.\n", hr);
-
-    /* vertex_remap must not be NULL */
-    hr = D3DXOptimizeVertices(indices, num_faces,
-                              num_vertices, FALSE,
-                              NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeVertices passed NULL vertex_remap "
-            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
 }
 
 static void test_optimize_faces(void)
@@ -10717,7 +10488,7 @@ static void test_optimize_faces(void)
                                tc[i].num_vertices, tc[i].indices_are_32bit,
                                face_remap);
         ok(hr == D3D_OK, "D3DXOptimizeFaces test case %d failed. "
-                "Got %x, expected D3D_OK.\n", i, hr);
+           "Got %x\n, expected D3D_OK\n", i, hr);
 
         /* Compare face remap with expected face remap */
         for (j = 0; j < tc[i].num_faces; j++)
@@ -10735,14 +10506,14 @@ static void test_optimize_faces(void)
                            tc[0].num_vertices, tc[0].indices_are_32bit,
                            NULL);
     ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces passed NULL face_remap "
-            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+       "pointer. Got %x\n, expected D3DERR_INVALIDCALL\n", hr);
 
     /* Number of faces must be smaller than 2^15 */
     hr = D3DXOptimizeFaces(tc[0].indices, 2 << 15,
                            tc[0].num_vertices, FALSE,
                            &smallest_face_remap);
     ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeFaces should not accept 2^15 "
-            "faces when using 16-bit indices. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
+    "faces when using 16-bit indices. Got %x\n, expected D3DERR_INVALIDCALL\n", hr);
 }
 
 static HRESULT clear_normals(ID3DXMesh *mesh)
@@ -11461,7 +11232,6 @@ START_TEST(mesh)
     D3DXCreateMeshTest();
     D3DXCreateMeshFVFTest();
     D3DXLoadMeshTest();
-    D3DXLoadSkinMeshFromXofTest();
     D3DXCreateBoxTest();
     D3DXCreatePolygonTest();
     D3DXCreateSphereTest();
@@ -11475,13 +11245,11 @@ START_TEST(mesh)
     D3DXGenerateAdjacencyTest();
     test_update_semantics();
     test_create_skin_info();
-    test_update_skinned_mesh();
     test_convert_adjacency_to_point_reps();
     test_convert_point_reps_to_adjacency();
     test_weld_vertices();
     test_clone_mesh();
     test_valid_mesh();
-    test_optimize_vertices();
     test_optimize_faces();
     test_compute_normals();
     test_D3DXFrameFind();

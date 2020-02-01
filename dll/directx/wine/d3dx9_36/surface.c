@@ -27,8 +27,6 @@
 #include "ole2.h"
 #include "wincodec.h"
 
-#include "wine/wined3d.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT, IWICImagingFactory**);
@@ -113,7 +111,6 @@ static const GUID *d3dformat_to_wic_guid(D3DFORMAT format)
 #define DDS_PF_RGB 0x40
 #define DDS_PF_YUV 0x200
 #define DDS_PF_LUMINANCE 0x20000
-#define DDS_PF_BUMPLUMINANCE 0x40000
 #define DDS_PF_BUMPDUDV 0x80000
 
 struct dds_pixel_format
@@ -337,17 +334,6 @@ static D3DFORMAT dds_bump_to_d3dformat(const struct dds_pixel_format *pixel_form
     return D3DFMT_UNKNOWN;
 }
 
-static D3DFORMAT dds_bump_luminance_to_d3dformat(const struct dds_pixel_format *pixel_format)
-{
-    if (pixel_format->bpp == 32 && pixel_format->rmask == 0x000000ff && pixel_format->gmask == 0x0000ff00
-            && pixel_format->bmask == 0x00ff0000)
-        return D3DFMT_X8L8V8U8;
-
-    WARN("Unknown bump pixel format (%u, %#x, %#x, %#x, %#x)\n", pixel_format->bpp,
-        pixel_format->rmask, pixel_format->gmask, pixel_format->bmask, pixel_format->amask);
-    return D3DFMT_UNKNOWN;
-}
-
 static D3DFORMAT dds_pixel_format_to_d3dformat(const struct dds_pixel_format *pixel_format)
 {
     TRACE("pixel_format: size %u, flags %#x, fourcc %#x, bpp %u.\n", pixel_format->size,
@@ -365,8 +351,6 @@ static D3DFORMAT dds_pixel_format_to_d3dformat(const struct dds_pixel_format *pi
         return dds_alpha_to_d3dformat(pixel_format);
     if (pixel_format->flags & DDS_PF_BUMPDUDV)
         return dds_bump_to_d3dformat(pixel_format);
-    if (pixel_format->flags & DDS_PF_BUMPLUMINANCE)
-        return dds_bump_luminance_to_d3dformat(pixel_format);
 
     WARN("Unknown pixel format (flags %#x, fourcc %#x, bpp %u, r %#x, g %#x, b %#x, a %#x)\n",
         pixel_format->flags, pixel_format->fourcc, pixel_format->bpp,
@@ -395,14 +379,6 @@ static HRESULT d3dformat_to_dds_pixel_format(struct dds_pixel_format *pixel_form
             if (pixel_format->amask) pixel_format->flags |= DDS_PF_ALPHA;
             return D3D_OK;
         }
-    }
-
-    /* Reuse dds_fourcc_to_d3dformat as D3DFORMAT and FOURCC are DWORD with same values */
-    if (dds_fourcc_to_d3dformat(d3dformat) != D3DFMT_UNKNOWN)
-    {
-        pixel_format->flags |= DDS_PF_FOURCC;
-        pixel_format->fourcc = d3dformat;
-        return D3D_OK;
     }
 
     WARN("Unknown pixel format %#x\n", d3dformat);
@@ -614,68 +590,6 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
     return D3D_OK;
 }
 
-static HRESULT get_surface(D3DRESOURCETYPE type, struct IDirect3DBaseTexture9 *tex,
-        int face, UINT level, struct IDirect3DSurface9 **surf)
-{
-    switch (type)
-    {
-        case D3DRTYPE_TEXTURE:
-            return IDirect3DTexture9_GetSurfaceLevel((IDirect3DTexture9*) tex, level, surf);
-        case D3DRTYPE_CUBETEXTURE:
-            return IDirect3DCubeTexture9_GetCubeMapSurface((IDirect3DCubeTexture9*) tex, face, level, surf);
-        default:
-            ERR("Unexpected texture type\n");
-            return E_NOTIMPL;
-    }
-}
-
-HRESULT save_dds_texture_to_memory(ID3DXBuffer **dst_buffer, IDirect3DBaseTexture9 *src_texture, const PALETTEENTRY *src_palette)
-{
-    HRESULT hr;
-    D3DRESOURCETYPE type;
-    UINT mip_levels;
-    IDirect3DSurface9 *surface;
-
-    type = IDirect3DBaseTexture9_GetType(src_texture);
-
-    if ((type !=  D3DRTYPE_TEXTURE) && (type != D3DRTYPE_CUBETEXTURE) && (type != D3DRTYPE_VOLUMETEXTURE))
-        return D3DERR_INVALIDCALL;
-
-    if (type == D3DRTYPE_CUBETEXTURE)
-    {
-        FIXME("Cube texture not supported yet\n");
-        return E_NOTIMPL;
-    }
-    else if (type == D3DRTYPE_VOLUMETEXTURE)
-    {
-        FIXME("Volume texture not supported yet\n");
-        return E_NOTIMPL;
-    }
-
-    mip_levels = IDirect3DTexture9_GetLevelCount(src_texture);
-
-    if (mip_levels > 1)
-    {
-        FIXME("Mipmap not supported yet\n");
-        return E_NOTIMPL;
-    }
-
-    if (src_palette)
-    {
-        FIXME("Saving surfaces with palettized pixel formats not implemented yet\n");
-        return E_NOTIMPL;
-    }
-
-    hr = get_surface(type, src_texture, D3DCUBEMAP_FACE_POSITIVE_X, 0, &surface);
-
-    if (SUCCEEDED(hr))
-    {
-        hr = save_dds_surface_to_memory(dst_buffer, surface, NULL);
-        IDirect3DSurface9_Release(surface);
-    }
-
-    return hr;
-}
 HRESULT load_volume_from_dds(IDirect3DVolume9 *dst_volume, const PALETTEENTRY *dst_palette,
     const D3DBOX *dst_box, const void *src_data, const D3DBOX *src_box, DWORD filter, D3DCOLOR color_key,
     const D3DXIMAGE_INFO *src_info)
@@ -1038,24 +952,6 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
                         hr = D3DXERR_INVALIDDATA;
                     }
                 }
-            }
-
-            /* For 32 bpp BMP, windowscodecs.dll never returns a format with alpha while
-             * d3dx9_xx.dll returns one if at least 1 pixel has a non zero alpha component */
-            if (SUCCEEDED(hr) && (info->Format == D3DFMT_X8R8G8B8) && (info->ImageFileFormat == D3DXIFF_BMP)) {
-                DWORD size = sizeof(DWORD) * info->Width * info->Height;
-                BYTE *buffer = HeapAlloc(GetProcessHeap(), 0, size);
-                hr = IWICBitmapFrameDecode_CopyPixels(frame, NULL, sizeof(DWORD) * info->Width, size, buffer);
-                if (SUCCEEDED(hr)) {
-                    DWORD i;
-                    for (i = 0; i < info->Width * info->Height; i++) {
-                        if (buffer[i*4+3]) {
-                            info->Format = D3DFMT_A8R8G8B8;
-                            break;
-                        }
-                    }
-                }
-                HeapFree(GetProcessHeap(), 0, buffer);
             }
 
             if (frame)
@@ -1878,24 +1774,6 @@ void point_filter_argb_pixels(const BYTE *src, UINT src_row_pitch, UINT src_slic
     }
 }
 
-typedef BOOL (*dxtn_conversion_func)(const BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out,
-                                     enum wined3d_format_id format, unsigned int w, unsigned int h);
-
-static dxtn_conversion_func get_dxtn_conversion_func(D3DFORMAT format, BOOL encode)
-{
-    switch (format)
-    {
-        case D3DFMT_DXT1:
-            return encode ? wined3d_dxt1_encode : wined3d_dxt1_decode;
-        case D3DFMT_DXT3:
-            return encode ? wined3d_dxt3_encode : wined3d_dxt3_decode;
-        case D3DFMT_DXT5:
-            return encode ? wined3d_dxt5_encode : wined3d_dxt5_decode;
-        default:
-            return NULL;
-    }
-}
-
 /************************************************************
  * D3DXLoadSurfaceFromMemory
  *
@@ -1935,12 +1813,10 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
 {
     const struct pixel_format_desc *srcformatdesc, *destformatdesc;
     IDirect3DSurface9 *surface;
-    void *tmp_src_memory = NULL, *tmp_dst_memory = NULL;
-    dxtn_conversion_func pre_convert = NULL, post_convert = NULL;
     D3DSURFACE_DESC surfdesc;
     D3DLOCKED_RECT lockrect;
     struct volume src_size, dst_size;
-    HRESULT hr = D3D_OK;
+    HRESULT hr;
 
     TRACE("(%p, %p, %s, %p, %#x, %u, %p, %s, %#x, 0x%08x)\n",
             dst_surface, dst_palette, wine_dbgstr_rect(dst_rect), src_memory, src_format,
@@ -2021,65 +1897,18 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     }
     else /* Stretching or format conversion. */
     {
-        UINT tmp_src_pitch, tmp_dst_pitch;
-
-        pre_convert  = get_dxtn_conversion_func(srcformatdesc->format, FALSE);
-        post_convert = get_dxtn_conversion_func(destformatdesc->format, TRUE);
-
-        if ((!pre_convert && !is_conversion_from_supported(srcformatdesc)) ||
-                (!post_convert && !is_conversion_to_supported(destformatdesc)))
+        if (!is_conversion_from_supported(srcformatdesc)
+                || !is_conversion_to_supported(destformatdesc))
         {
             FIXME("Unsupported format conversion %#x -> %#x.\n", src_format, surfdesc.Format);
             unlock_surface(dst_surface, &lockrect, surface, FALSE);
             return E_NOTIMPL;
         }
 
-        /* handle pre-conversion */
-        if (pre_convert)
-        {
-            tmp_src_memory = HeapAlloc(GetProcessHeap(), 0, src_size.width * src_size.height * sizeof(DWORD));
-            if (!tmp_src_memory)
-            {
-                hr = E_OUTOFMEMORY;
-                goto done;
-            }
-            tmp_src_pitch = src_size.width * sizeof(DWORD);
-            if (!pre_convert(src_memory, tmp_src_memory, src_pitch, tmp_src_pitch,
-                    WINED3DFMT_B8G8R8A8_UNORM, src_size.width, src_size.height))
-            {
-                hr = E_FAIL;
-                goto done;
-            }
-            srcformatdesc = get_format_info(D3DFMT_A8R8G8B8);
-        }
-        else
-        {
-            tmp_src_memory = (void *)src_memory;
-            tmp_src_pitch  = src_pitch;
-        }
-
-        /* handle post-conversion */
-        if (post_convert)
-        {
-            tmp_dst_memory = HeapAlloc(GetProcessHeap(), 0, dst_size.width * dst_size.height * sizeof(DWORD));
-            if (!tmp_dst_memory)
-            {
-                hr = E_OUTOFMEMORY;
-                goto done;
-            }
-            tmp_dst_pitch = dst_size.width * sizeof(DWORD);
-            destformatdesc = get_format_info(D3DFMT_A8R8G8B8);
-        }
-        else
-        {
-            tmp_dst_memory = lockrect.pBits;
-            tmp_dst_pitch  = lockrect.Pitch;
-        }
-
         if ((filter & 0xf) == D3DX_FILTER_NONE)
         {
-            convert_argb_pixels(tmp_src_memory, tmp_src_pitch, 0, &src_size, srcformatdesc,
-                    tmp_dst_memory, tmp_dst_pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
+            convert_argb_pixels(src_memory, src_pitch, 0, &src_size, srcformatdesc,
+                    lockrect.pBits, lockrect.Pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
         }
         else /* if ((filter & 0xf) == D3DX_FILTER_POINT) */
         {
@@ -2088,29 +1917,12 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
 
             /* Always apply a point filter until D3DX_FILTER_LINEAR,
              * D3DX_FILTER_TRIANGLE and D3DX_FILTER_BOX are implemented. */
-            point_filter_argb_pixels(tmp_src_memory, tmp_src_pitch, 0, &src_size, srcformatdesc,
-                    tmp_dst_memory, tmp_dst_pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
-        }
-
-        /* handle post-conversion */
-        if (post_convert)
-        {
-            if (!post_convert(tmp_dst_memory, lockrect.pBits, tmp_dst_pitch, lockrect.Pitch,
-                    WINED3DFMT_B8G8R8A8_UNORM, dst_size.width, dst_size.height))
-            {
-                hr = E_FAIL;
-            }
+            point_filter_argb_pixels(src_memory, src_pitch, 0, &src_size, srcformatdesc,
+                    lockrect.pBits, lockrect.Pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
         }
     }
 
-done:
-    if (pre_convert)
-        HeapFree(GetProcessHeap(), 0, tmp_src_memory);
-    if (post_convert)
-        HeapFree(GetProcessHeap(), 0, tmp_dst_memory);
-
-    unlock_surface(dst_surface, &lockrect, surface, TRUE);
-    return hr;
+    return unlock_surface(dst_surface, &lockrect, surface, TRUE);
 }
 
 /************************************************************
