@@ -20,7 +20,7 @@ TRAP_ENTRY HalpProfileInterrupt, (TF_VOLATILES OR TF_SEND_EOI)
 
 PUBLIC ApicSpuriousService
 ApicSpuriousService:
-    iret
+    iretq
 
 PUBLIC HackEoi
 HackEoi:
