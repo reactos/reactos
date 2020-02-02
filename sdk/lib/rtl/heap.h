@@ -217,7 +217,8 @@ typedef struct _HEAP_LIST_LOOKUP
     ULONG NumberOfUnCommittedRanges;        \
     USHORT SegmentAllocatorBackTraceIndex;  \
     USHORT Reserved;                        \
-    LIST_ENTRY UCRSegmentList
+    LIST_ENTRY UCRSegmentList;              \
+    PVOID LastEntryInSegment //FIXME: non-Vista
 
 typedef struct _HEAP
 {
