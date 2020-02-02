@@ -1485,17 +1485,14 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             }
 
             /* Check if the account expired */
-            if (!(UserInfo->All.UserAccountControl & USER_DONT_EXPIRE_PASSWORD))
+            AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
+            AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
+            if (LogonTime.QuadPart >= AccountExpires.QuadPart)
             {
-                AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
-                AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
-                if (LogonTime.QuadPart >= AccountExpires.QuadPart)
-                {
-                    ERR("Account expired!\n");
-                    *SubStatus = STATUS_ACCOUNT_EXPIRED;
-                    Status = STATUS_ACCOUNT_RESTRICTION;
-                    goto done;
-                }
+                ERR("Account expired!\n");
+                *SubStatus = STATUS_ACCOUNT_EXPIRED;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
             }
 
             /* Check if the password expired */
