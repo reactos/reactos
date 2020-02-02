@@ -108,7 +108,9 @@ public:
                 m_hExtractionThread = NULL;
                 m_pExtract->Release();
                 if (!m_bExtractionThreadCancel)
+                {
                     return 0;
+                }
                 else
                 {
                     SetWindowLongPtr(DWLP_MSGRESULT, -1);
@@ -116,7 +118,7 @@ public:
                 }
             }
 
-            /* We end up here if the user manually clicks Next: start extraction*/
+            /* We end up here if the user manually clicks Next: start extraction */
             m_bExtractionThreadCancel = false;
 
             /* Grey out every control during extraction to prevent user interaction */
@@ -168,7 +170,6 @@ public:
                 ::EnableWindow(pPage->GetDlgItem(IDC_BROWSE), TRUE);
                 ::EnableWindow(pPage->GetDlgItem(IDC_DIRECTORY), TRUE);
                 ::EnableWindow(pPage->GetDlgItem(IDC_PASSWORD), TRUE);
-                pPage->SetWizardButtons(PSWIZB_NEXT);
 
                 /* Reset the progress bar's appearance */
                 CWindow Progress(pPage->GetDlgItem(IDC_PROGRESS));
@@ -341,7 +342,7 @@ public:
         PropertySheetW(&psh);
     }
 
-    bool Extract(HWND hDlg, HWND hProgress, bool* bCancel)
+    bool Extract(HWND hDlg, HWND hProgress, const bool* bCancel)
     {
         unz_global_info64 gi;
         uf = unzOpen2_64(m_Filename.GetString(), &g_FFunc);
@@ -501,8 +502,8 @@ public:
                 {
                     CloseHandle(hFile);
                     BOOL deleteResult = DeleteFileA(FullPath);
-                    if(deleteResult != 0)
-                        DPRINT1("ERROR, DeleteFile: %d\n", deleteResult);
+                    if (deleteResult == 0)
+                        DPRINT1("ERROR, DeleteFileA: 0x%x\n", GetLastError());
                     Close();
                     return false;
                 }
