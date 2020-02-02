@@ -827,7 +827,7 @@ BOOL ReceiveBytes(
     while (cbRemaining)
     {
         cbRead = recv(s, (char*)pTemp, cbRemaining, 0);
-        if (cbRead < 0 || cbRead == SOCKET_ERROR)
+        if (cbRead <= 0 || cbRead == SOCKET_ERROR)
         {
             sync_err("recv failed: %d\n", WSAGetLastError());
             printerr(WSAGetLastError());

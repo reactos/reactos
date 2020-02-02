@@ -76,7 +76,7 @@ client2_ConnectAuthSocket(
         pHost = gethostbyname(AnsiServerName);
         if (!pHost)
         {
-            sync_err("Unable to resolve host name.\n");
+            sync_err("Unable to resolve host name (%s).\n", AnsiServerName);
             goto failed;
         }
 

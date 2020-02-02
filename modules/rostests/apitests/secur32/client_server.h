@@ -9,6 +9,10 @@
 #ifndef __CLIENT_SERVER_H__
 #define __CLIENT_SERVER_H__
 
+// enable only for debug
+//#define DBG_PRINT_MSG
+//#define DBG_PRINT_TRACE
+
 #pragma once
 
 #define UNICODE
@@ -32,6 +36,33 @@
 // #include <winsock.h>
 #include <winsock2.h>
 
+/*#include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wincrypt.h>*/
+//#define NTOS_MODE_USER
+/*#include <ndk/cmfuncs.h>*/
+//#include <ndk/kefuncs.h>
+/*#include <ndk/lpctypes.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>*/
+/*#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>*/
+
+#include <lmcons.h>
+#include <lmjoin.h>
+#include <lmwksta.h>
+#include <lmerr.h>
+#include <lmapibuf.h>
+
 #define SECURITY_WIN32  // Needed by sspi.h (SECURITY_WIN32 or SECURITY_KERNEL or SECURITY_MAC)
 #define _NO_KSECDD_IMPORT_
 #include <sspi.h>
@@ -41,8 +72,12 @@
 #endif
 
 // ntlmssp-protocol.h
-#include "ntlmssp.h"
-#include "protocol.h"
+#include "ntsecapi.h"
+#include "ntsecpkg.h"
+#include "ntlm/ciphers.h"
+#include "ntlm/strutil.h"
+#include "ntlm/ntlmssp.h"
+#include "ntlm/protocol.h"
 #include "client_server.h"
 
 #include "smb_nego.h"
@@ -128,6 +163,11 @@ do {   \
 } while (0)
 #endif
 
+#ifndef DBG_PRINT_TRACE
+#undef sync_trace
+#define sync_trace
+#endif
+
 #ifdef __MSVC__
 #define sync_msg(msg, ...) \
 { \
@@ -151,6 +191,10 @@ do {   \
 }
 #endif
 
+#ifndef DBG_PRINT_MSG
+#undef sync_msg
+#define sync_msg
+#endif
 
 #ifdef __MSVC__
 #define sync_err(msg, ...) sync_ok(FALSE, msg, __VA_ARGS__)
