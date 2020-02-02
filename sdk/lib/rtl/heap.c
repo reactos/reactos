@@ -665,16 +665,21 @@ RtlpFindAndCommitPages(PHEAP Heap,
             /* Calculate first and last entries */
             FirstEntry = (PHEAP_ENTRY)Address;
 
-            /* Go through the entries to find the last one */
-            if (PreviousUcr)
-                LastEntry = (PHEAP_ENTRY)((ULONG_PTR)PreviousUcr->Address + PreviousUcr->Size);
-            else
-                LastEntry = &Segment->Entry;
-
-            while (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
+            LastEntry = Segment->LastEntryInSegment;
+            if (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY) ||
+                LastEntry + LastEntry->Size != FirstEntry)
             {
-                ASSERT(LastEntry->Size != 0);
-                LastEntry += LastEntry->Size;
+                /* Go through the entries to find the last one */
+                if (PreviousUcr)
+                    LastEntry = (PHEAP_ENTRY)((ULONG_PTR)PreviousUcr->Address + PreviousUcr->Size);
+                else
+                    LastEntry = &Segment->Entry;
+
+                while (!(LastEntry->Flags & HEAP_ENTRY_LAST_ENTRY))
+                {
+                    ASSERT(LastEntry->Size != 0);
+                    LastEntry += LastEntry->Size;
+                }
             }
             ASSERT((LastEntry + LastEntry->Size) == FirstEntry);
 
