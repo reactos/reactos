@@ -29,10 +29,10 @@ UsrSpVerifySignature(
 
 NTSTATUS NTAPI
 UsrSpSealMessage(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PSecBufferDesc p3,
-    ULONG p4);
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN ULONG QualityOfProtection,
+    IN OUT PSecBufferDesc MessageBuffers,
+    IN ULONG MessageSequenceNumber);
 
 NTSTATUS NTAPI
 UsrSpUnsealMessage(

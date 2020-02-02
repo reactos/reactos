@@ -127,7 +127,7 @@ LsaSpAcceptLsaModeContext(
 
 NTSTATUS NTAPI
 LsaSpDeleteContext(
-    LSA_SEC_HANDLE p1);
+    LSA_SEC_HANDLE ContextHandle);
 
 NTSTATUS NTAPI
 LsaSpApplyControlToken(

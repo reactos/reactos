@@ -418,11 +418,13 @@ LsaSpAcceptLsaModeContext(
 
 NTSTATUS NTAPI
 LsaSpDeleteContext(
-    LSA_SEC_HANDLE p1)
+    LSA_SEC_HANDLE ContextHandle)
 {
-    fdTRACE("*** UNIMPLEMENTED *** LsaSpDeleteContext(%p)\n", p1);
+    fdTRACE("LsaSpDeleteContext(%p)\n", ContextHandle);
 
-    return ERROR_NOT_SUPPORTED;
+    NtlmDereferenceContext(ContextHandle);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI

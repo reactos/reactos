@@ -89,15 +89,30 @@ UsrSpVerifySignature(
 
 NTSTATUS NTAPI
 UsrSpSealMessage(
-    LSA_SEC_HANDLE p1,
-    ULONG p2,
-    PSecBufferDesc p3,
-    ULONG p4)
+    IN LSA_SEC_HANDLE ContextHandle,
+    IN ULONG QualityOfProtection,
+    IN OUT PSecBufferDesc MessageBuffers,
+    IN ULONG MessageSequenceNumber)
 {
-    fdTRACE("*** UNIMPLEMENTED *** UsrSpSealMessage(%p 0x%x %p 0x%x)\n",
-          p1, p2, p3, p4);
+    PNTLMSSP_CONTEXT_USR UsrContext;
+    NTSTATUS Status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpSealMessage(%p 0x%x %p 0x%x)\n",
+          ContextHandle, QualityOfProtection,
+          MessageBuffers, MessageSequenceNumber);
+
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
+    if (UsrContext == NULL)
+    {
+        TRACE("Invalid context handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+    Status = NtlmEncryptMessage(UsrContext->Hdr, QualityOfProtection,
+                                MessageBuffers, MessageSequenceNumber, FALSE);
+    NtlmUsrDereferenceContext(UsrContext);
+
+    fdTRACE("Status %x\n", Status);
+    return Status;
 }
 
 NTSTATUS NTAPI
