@@ -1294,9 +1294,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonPass.MaximumLength = 0;
         }
 
-        TRACE("Domain: %.*S\n", LogonDom.Length / sizeof(WCHAR), LogonDom.Buffer);
-        TRACE("User: %.*S\n", LogonUser.Length / sizeof(WCHAR), LogonUser.Buffer);
-        TRACE("Password: %.*S\n", LogonPass.Length / sizeof(WCHAR), LogonPass.Buffer);
+        TRACE("Domain: %wZ\n", &LogonDom);
+        TRACE("User: %wZ\n", &LogonUser);
+        TRACE("Password: %wZ\n", &LogonPass);
     }
     else
     {
