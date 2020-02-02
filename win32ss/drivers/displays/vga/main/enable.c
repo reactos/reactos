@@ -441,7 +441,7 @@ DrvEnableSurface(IN DHPDEV PDev)
     DPRINT("DrvEnableSurface() called\n");
 
     /* Initialize the VGA */
-    if (!VGAInitialized)
+    //if (!VGAInitialized)
     {
         if (!InitVGA(ppdev, TRUE))
             goto error_done;
