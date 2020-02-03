@@ -112,6 +112,7 @@
 @ stdcall _WinStationNotifyLogoff()
 @ stdcall _WinStationNotifyLogon(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall _WinStationNotifyNewSession(ptr ptr)
+@ stdcall _WinStationOpenSessionDirectory(ptr ptr)
 @ stdcall _WinStationReInitializeSecurity(ptr)
 @ stdcall _WinStationReadRegistry(ptr)
 @ stdcall _WinStationSessionInitialized()

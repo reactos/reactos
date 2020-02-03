@@ -119,3 +119,10 @@ WINSTAAPI WinStationCanLogonProceed(PVOID A,
 {
     UNIMPLEMENTED;
 }
+
+VOID
+WINSTAAPI _WinStationOpenSessionDirectory(PVOID A,
+                                          PVOID B)
+{
+    UNIMPLEMENTED;
+}
