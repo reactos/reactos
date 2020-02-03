@@ -21,6 +21,7 @@
 @ stdcall WinStationActivateLicense(ptr ptr ptr ptr)
 @ stdcall WinStationAutoReconnect(ptr)
 @ stdcall WinStationBroadcastSystemMessage(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
+@ stdcall WinStationCanLogonProceed(ptr ptr ptr)
 @ stdcall WinStationCheckAccess(ptr ptr ptr)
 @ stdcall WinStationCheckLoopBack(ptr ptr ptr ptr)
 @ stdcall WinStationCloseServer(ptr ptr ptr ptr)

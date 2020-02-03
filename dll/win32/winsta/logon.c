@@ -111,3 +111,11 @@ WINSTAAPI _WinStationNotifyLogon(PVOID A,
 {
     UNIMPLEMENTED;
 }
+
+VOID
+WINSTAAPI WinStationCanLogonProceed(PVOID A,
+                                    PVOID B,
+                                    PVOID C)
+{
+    UNIMPLEMENTED;
+}
