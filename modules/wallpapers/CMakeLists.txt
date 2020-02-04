@@ -9,6 +9,7 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_CirclesGold_2.jpg DESTINATI
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Hexagons.jpg DESTINATION reactos/Web/Wallpaper FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue.png DESTINATION reactos/Web/Wallpaper FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue_4x3.png DESTINATION reactos/Web/Wallpaper FOR all)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue_16x9.png DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue_16x9.png DESTINATION reactos/Web/Wallpaper FOR all
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Ocean.png DESTINATION reactos/Web/Wallpaper FOR all)
 add_subdirectory(Angelus)
 add_subdirectory(Silhouette)
