@@ -329,17 +329,15 @@ LookupCrdentialsHandle(
 
 NTSTATUS
 IntAcquireCredentialsHandle(
-    _In_ PLUID LogonId,
-    _In_ PSECPKG_CLIENT_INFO ClientInfo,
-    _In_ ULONG CredentialsUseFlags,
-    _In_ PLSA_SEC_HANDLE CredentialsHandle,
-    _In_ PEXT_STRING_W UserName,
-    _In_ PEXT_STRING_W Domain,
-    _In_ PEXT_STRING_W Password,
-    _Out_ PNTLMSSP_CREDENTIAL *Cred,
-    _Out_ PTimeStamp ExpirationTime)
+    IN PLUID LogonId,
+    IN PSECPKG_CLIENT_INFO ClientInfo,
+    IN ULONG CredentialsUseFlags,
+    IN PEXT_STRING_W UserName,
+    IN PEXT_STRING_W Domain,
+    IN PEXT_STRING_W Password,
+    OUT PNTLMSSP_CREDENTIAL *Cred,
+    OUT PTimeStamp ExpirationTime)
 {
-    //NTSTATUS ret;
     PNTLMSSP_GLOBALS g;
     PNTLMSSP_CREDENTIAL NewCred;
 
@@ -349,8 +347,8 @@ IntAcquireCredentialsHandle(
     }
 
     if (LookupCrdentialsHandle(LogonId, CredentialsUseFlags,
-                                ClientInfo->ProcessID, UserName,
-                                Password, Cred))
+                               ClientInfo->ProcessID, UserName,
+                               Password, Cred))
         return STATUS_SUCCESS;
 
     // we need to build a credential
@@ -375,16 +373,26 @@ IntAcquireCredentialsHandle(
         cred->LogonId = luidToUse;
     } */
 
-    if(Domain->Buffer != NULL)
-        NewCred->DomainNameW = *Domain;
-
-    if(UserName->Buffer != NULL)
-        NewCred->UserNameW = *UserName;
-
-    if(Password->Buffer != NULL)
+    if (Domain->Buffer != NULL)
     {
-        NtlmProtectMemory(Password->Buffer, Password->bUsed);
+        NewCred->DomainNameW = *Domain;
+        // prevent freeing from caller
+        ExtWStrInit(Domain, NULL);
+    }
+
+    if (UserName->Buffer != NULL)
+    {
+        NewCred->UserNameW = *UserName;
+        // prevent freeing from caller
+        ExtWStrInit(UserName, NULL);
+    }
+
+    if (Password->Buffer != NULL)
+    {
         NewCred->PasswordW = *Password;
+        // prevent freeing from caller
+        ExtWStrInit(Password, NULL);
+        NtlmProtectMemory(NewCred->PasswordW.Buffer, NewCred->PasswordW.bUsed);
     }
 
     EnterCriticalSection(&CredentialCritSect);
@@ -396,14 +404,173 @@ IntAcquireCredentialsHandle(
           debugstr_w((WCHAR*)Password->Buffer),
           debugstr_w((WCHAR*)Domain->Buffer));
 
-    /* return cred */
-    //CredentialsHandle->HighPart = CredentialsUseFlags;
-    //CredentialsHandle->LowPart = (ULONG_PTR)cred;
+    // return cred
     *Cred = NewCred;
     *ExpirationTime = NewCred->ExpirationTime;
 
-//done:
     return STATUS_SUCCESS;
+}
+
+SECURITY_STATUS
+IntAcquireCredWithAuthData(
+    IN PLUID LogonId,
+    IN PSECPKG_CLIENT_INFO ClientInfo,
+    IN PVOID pAuthData,
+    IN ULONG CredentialsUseFlags,
+    OUT PNTLMSSP_CREDENTIAL *NewCred,
+    OUT PTimeStamp ptsExpiry)
+{
+    NTSTATUS Status;
+    SECURITY_STATUS ret;
+    SECPKG_CALL_INFO CallInfo;
+    PSEC_WINNT_AUTH_IDENTITY_W AuthData;
+    ULONG UserNameByteLen;
+    ULONG PasswordByteLen;
+    ULONG DomainByteLen;
+    PVOID LocalBuffer = NULL;
+    UNICODE_STRING UserName;
+    UNICODE_STRING Password;
+    UNICODE_STRING Domain;
+    BOOLEAN IsAnsiCall;
+    // temp for conv -> EXT_STRING_W
+    EXT_STRING_W _UserName;
+    EXT_STRING_W _Password;
+    EXT_STRING_W _Domain;
+
+    RtlInitUnicodeString(&UserName, NULL);
+    RtlInitUnicodeString(&Password, NULL);
+    RtlInitUnicodeString(&Domain, NULL);
+    ExtWStrInit(&_UserName, NULL);
+    ExtWStrInit(&_Password, NULL);
+    ExtWStrInit(&_Domain, NULL);
+
+    Status = LsaFunctions->GetCallInfo(&CallInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+
+    IsAnsiCall = ((CallInfo.Attributes & SECPKG_CALL_ANSI) != 0);
+    if (IsAnsiCall)
+    {
+        WARN("ANSI call not supported!\n");
+        ret = SEC_E_UNSUPPORTED_FUNCTION;
+        goto done;
+    }
+
+    if (inLsaMode)
+    {
+        ULONG AuthDataSize = sizeof(SEC_WINNT_AUTH_IDENTITY_W);
+        ASSERT(sizeof(SEC_WINNT_AUTH_IDENTITY_W) == sizeof(SEC_WINNT_AUTH_IDENTITY_A));
+
+        LocalBuffer = NtlmAllocate(AuthDataSize, TRUE);
+        Status = LsaFunctions->CopyFromClientBuffer(NULL, AuthDataSize,
+                                                    LocalBuffer, pAuthData);
+        if (!NT_SUCCESS(Status))
+        {
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+
+        AuthData = (PSEC_WINNT_AUTH_IDENTITY_W)LocalBuffer;
+    }
+    else if (inUserMode)
+    {
+        AuthData = (PSEC_WINNT_AUTH_IDENTITY_W)pAuthData;
+    }
+    else
+    {
+        ERR("Unknown mode (lsa/user)!");
+        ret = SEC_E_INTERNAL_ERROR;
+        goto done;
+    }
+
+    // calculate string sizes and allocate memory
+    UserNameByteLen = AuthData->UserLength * sizeof(WCHAR);
+    PasswordByteLen = AuthData->PasswordLength * sizeof(WCHAR);
+    DomainByteLen = AuthData->DomainLength * sizeof(WCHAR);
+
+    if (!NtlmUnicodeStringAlloc(&UserName, UserNameByteLen + sizeof(WCHAR)) ||
+        !NtlmUnicodeStringAlloc(&Password, PasswordByteLen + sizeof(WCHAR)) ||
+        !NtlmUnicodeStringAlloc(&Domain, DomainByteLen + sizeof(WCHAR)))
+    {
+        ret = SEC_E_INSUFFICIENT_MEMORY;
+        goto done;
+    }
+
+    // copy data from client buffer
+    if (inLsaMode)
+    {
+        Status = LsaFunctions->CopyFromClientBuffer(NULL, UserNameByteLen,
+                                                    UserName.Buffer, AuthData->User);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("failed to allocate memory!");
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+        UserName.Length = UserNameByteLen;
+
+        Status = LsaFunctions->CopyFromClientBuffer(NULL, PasswordByteLen,
+                                                    Password.Buffer, AuthData->Password);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("failed to allocate memory!");
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+        Password.Length = PasswordByteLen;
+
+        Status = LsaFunctions->CopyFromClientBuffer(NULL, DomainByteLen,
+                                                    Domain.Buffer, AuthData->Domain);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("failed to allocate memory!");
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+        Domain.Length = DomainByteLen;
+    }
+    else
+    {
+        if (!NtlmUnicodeStringAllocAndCopyW(&UserName, AuthData->User, UserNameByteLen) ||
+            !NtlmUnicodeStringAllocAndCopyW(&Password, AuthData->Password, PasswordByteLen) ||
+            !NtlmUnicodeStringAllocAndCopyW(&Domain, AuthData->Domain, DomainByteLen))
+        {
+            ERR("failed to allocate memory!");
+            ret = SEC_E_INSUFFICIENT_MEMORY;
+            goto done;
+        }
+    }
+    
+
+    // detect null session
+    if ((UserName.Length == 0) &&
+        (Password.Length == 0) &&
+        (Domain.Length == 0))
+    {
+        WARN("Using null session.\n");
+        CredentialsUseFlags |= NTLM_CRED_NULLSESSION;
+    }
+
+    NtlmInitExtStrWFromUnicodeString(&_UserName, &UserName);
+    NtlmInitExtStrWFromUnicodeString(&_Password, &Password);
+    NtlmInitExtStrWFromUnicodeString(&_Domain, &Domain);
+    ret = IntAcquireCredentialsHandle(LogonId, ClientInfo,
+                                      CredentialsUseFlags,
+                                      &_UserName, &_Password, &_Domain,
+                                      NewCred, ptsExpiry);
+done:
+    if (LocalBuffer)
+        NtlmFree(LocalBuffer, TRUE);
+    NtlmUnicodeStringFree(&UserName);
+    NtlmUnicodeStringFree(&Password);
+    NtlmUnicodeStringFree(&Domain);
+    ExtStrFree(&_UserName);
+    ExtStrFree(&_Password);
+    ExtStrFree(&_Domain);
+    return ret;
 }
 
 /**
@@ -435,9 +602,7 @@ NtlmAcquireCredentialsHandle(
 {
     NTSTATUS status;
     SECURITY_STATUS ret = SEC_E_OK;
-    //ULONG credFlags = fCredentialUse;
     EXT_STRING username, domain, password;
-    //BOOL foundCred = FALSE;
     //LUID luidToUse = SYSTEM_LUID;
     PNTLMSSP_CREDENTIAL Cred;
 
@@ -489,8 +654,7 @@ NtlmAcquireCredentialsHandle(
 
                 }
                 ret = IntAcquireCredentialsHandle(
-                    pLogonID, &ClientInfo,
-                    fCredentialUse, (PLSA_SEC_HANDLE)phCredential,
+                    pLogonID, &ClientInfo, fCredentialUse,
                     &username, &domain, &password, &Cred, ptsExpiry);
                 if (NT_SUCCESS(ret))
                 {
@@ -500,7 +664,15 @@ NtlmAcquireCredentialsHandle(
                 }
             } else
             {
-                //TODO
+                ret = IntAcquireCredWithAuthData(
+                    pLogonID, &ClientInfo, pAuthData,
+                    fCredentialUse, &Cred, ptsExpiry);
+                if (NT_SUCCESS(ret))
+                {
+                    // we're done
+                    *phCredential = (LSA_SEC_HANDLE)Cred;
+                    goto quit;
+                }
             }
         }
         else
@@ -510,43 +682,7 @@ NtlmAcquireCredentialsHandle(
         }
 
 
-        /*if (pAuthData)
-        {
-            PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
-
-            / * detect null session * /
-            if ((auth_data->User) && (auth_data->Password) &&
-                (auth_data->Domain) && (!auth_data->UserLength) &&
-                (!auth_data->PasswordLength) &&(!auth_data->DomainLength))
-            {
-                WARN("Using null session.\n");
-                credFlags |= NTLM_CRED_NULLSESSION;
-            }
-
-            / * create unicode strings and null terminate buffers * /
-
-            if ((auth_data->User) &&
-                (!ExtWStrSetN(&username, auth_data->User, auth_data->UserLength)))
-            {
-            ret = SEC_E_INSUFFICIENT_MEMORY;
-            goto quit;
-            }
-
-            if ((auth_data->Password) &&
-                (!ExtWStrSetN(&password, auth_data->Password, auth_data->PasswordLength)))
-            {
-            ret = SEC_E_INSUFFICIENT_MEMORY;
-            goto quit;
-            }
-
-            if ((auth_data->Domain) &&
-                (!ExtWStrSetN(&domain, auth_data->Domain, auth_data->DomainLength)))
-            {
-                ret = SEC_E_INSUFFICIENT_MEMORY;
-                goto quit;
-            }
-        }
-        else
+        /*
         {
             PWKSTA_USER_INFO_1 pUsrInfo1 = NULL;
             SECPKG_CLIENT_INFO ClientInfo;
@@ -575,12 +711,9 @@ NtlmAcquireCredentialsHandle(
     /* free strings as we used recycled credentials */
     //if(foundCred)
 quit:
-    if (ret != SEC_E_OK)
-    {
-        ExtStrFree(&username);
-        ExtStrFree(&domain);
-        ExtStrFree(&password);
-    }
+    ExtStrFree(&username);
+    ExtStrFree(&domain);
+    ExtStrFree(&password);
     return ret;
 }
 

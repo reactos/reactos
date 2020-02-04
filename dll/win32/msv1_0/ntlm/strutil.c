@@ -379,3 +379,55 @@ ExtDataIsEqual1(
     return (memcmp(v1->Buffer, v2->Buffer, v1->bUsed) == 0);
 }
 
+BOOLEAN
+NtlmUnicodeStringAlloc(
+    IN OUT PUNICODE_STRING Dst,
+    IN size_t SizeInBytes)
+{
+    Dst->Length = 0;
+    Dst->MaximumLength = SizeInBytes;
+    Dst->Buffer = NtlmAllocate(SizeInBytes, FALSE);
+    return (Dst->Buffer != NULL);
+}
+
+VOID
+NtlmUnicodeStringFree(
+    IN OUT PUNICODE_STRING Dest)
+{
+    if ((!Dest) || (Dest->MaximumLength == 0))
+        return;
+    NtlmFree(Dest->Buffer, FALSE);
+    Dest->MaximumLength = 0;
+    Dest->Length = 0;
+    Dest->Buffer = NULL;
+}
+
+BOOLEAN
+NtlmUnicodeStringAllocAndCopyW(
+    IN OUT PUNICODE_STRING Dest,
+    IN PWCHAR Src,
+    IN ULONG SrcByteLength)
+{
+    Dest->Length = (SrcByteLength == 0) ? wcslen(Src) : SrcByteLength;
+    Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
+    Dest->Buffer = NtlmAllocate(Dest->MaximumLength, FALSE);
+    if (Dest->Buffer == NULL)
+        return FALSE;
+    memcpy(Dest->Buffer, Src, Dest->Length);
+    return TRUE;
+}
+
+BOOLEAN
+NtlmUnicodeStringAllocAndCopyA(
+    IN OUT PUNICODE_STRING Dest,
+    IN char* Src,
+    IN ULONG SrcByteLength)
+{
+    Dest->Length = (SrcByteLength == 0) ? strlen(Src) : SrcByteLength;
+    Dest->MaximumLength = Dest->Length + sizeof(char);
+    Dest->Buffer = NtlmAllocate(Dest->MaximumLength, FALSE);
+    if (Dest->Buffer == NULL)
+        return FALSE;
+    memcpy(Dest->Buffer, Src, Dest->Length);
+    return TRUE;
+}

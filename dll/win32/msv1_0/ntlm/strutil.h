@@ -154,4 +154,27 @@ void
 ExtStrFree(
     IN PEXT_STRING s);
 
+// NtlmUnicodeString helpers
+
+BOOLEAN
+NtlmUnicodeStringAlloc(
+    IN OUT PUNICODE_STRING Dest,
+    IN size_t SizeInBytes);
+
+VOID
+NtlmUnicodeStringFree(
+    IN OUT PUNICODE_STRING Dest);
+
+BOOLEAN
+NtlmUnicodeStringAllocAndCopyW(
+    IN OUT PUNICODE_STRING Dest,
+    IN PWCHAR Src,
+    IN ULONG SrcByteLength);
+
+BOOLEAN
+NtlmUnicodeStringAllocAndCopyA(
+    IN OUT PUNICODE_STRING Dest,
+    IN char* Src,
+    IN ULONG SrcByteLength);
+
 #endif

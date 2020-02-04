@@ -504,6 +504,26 @@ StrUtilFree(
 }
 
 VOID
+NtlmInitExtStrWFromUnicodeString(
+    OUT PEXT_STRING_W Dest,
+    IN PUNICODE_STRING Src)
+{
+    Dest->bUsed = Src->Length;
+    Dest->bAllocated = Src->MaximumLength;
+    Dest->Buffer = (PBYTE)Src->Buffer;
+}
+
+VOID
+NtlmInitUnicodeStringFromExtStrW(
+    OUT PUNICODE_STRING Dest,
+    IN PEXT_STRING_W Src)
+{
+    Dest->Length = Src->bUsed;
+    Dest->MaximumLength = Src->bAllocated;
+    Dest->Buffer = (PWCHAR)Src->Buffer;
+}
+
+VOID
 NtlmInit(
     _In_ NTLM_MODE mode)
 {
