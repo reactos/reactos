@@ -1280,7 +1280,6 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
                 HeapFree(hProcessHeap, 0, pszLocation);
             }
 
-
             if (ppi2w->pSepFile)
             {
                 PSTR pszSepFile;
