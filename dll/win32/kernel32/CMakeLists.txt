@@ -64,6 +64,9 @@ list(APPEND SOURCE
     client/file/rw.c
     client/file/tape.c
     client/file/volume.c
+    k32.h)
+
+list(APPEND WINE_SOURCE    
     wine/actctx.c
     wine/comm.c
     wine/lzexpand.c
@@ -81,8 +84,7 @@ list(APPEND SOURCE
     winnls/string/lcformat.c
     winnls/string/lstring.c
     winnls/string/nls.c
-    winnls/string/sortkey.c
-    k32.h)
+    winnls/string/sortkey.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
@@ -101,6 +103,7 @@ endif()
 add_asm_files(kernel32_asm ${ASM_SOURCE})
 add_library(kernel32 MODULE
     ${SOURCE}
+    ${WINE_SOURCE}
     ${kernel32_asm}
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_stubs.c
@@ -112,6 +115,7 @@ set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)

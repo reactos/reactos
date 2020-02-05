@@ -96,19 +96,6 @@ static PROFILE *MRUProfile[N_CACHED_PROFILES]={NULL};
 static const WCHAR emptystringW[] = {0};
 static const WCHAR wininiW[] = { 'w','i','n','.','i','n','i',0 };
 
-#ifdef __REACTOS__
-
-static RTL_CRITICAL_SECTION PROFILE_CritSect;
-static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &PROFILE_CritSect,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, 0
-};
-static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
-
-#else /* __REACTOS__ */
-
 static CRITICAL_SECTION PROFILE_CritSect;
 static CRITICAL_SECTION_DEBUG critsect_debug =
 {
@@ -117,8 +104,6 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": PROFILE_CritSect") }
 };
 static CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
-
-#endif /* __REACTOS__ */
 
 static const char hex[16] = "0123456789ABCDEF";
 

@@ -45,7 +45,11 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &SHELL32_ChangenotifyCS,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+#ifdef __REACTOS__
+      0, 0, 0
+#else
       0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_ChangenotifyCS") }
+#endif
 };
 static CRITICAL_SECTION SHELL32_ChangenotifyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 

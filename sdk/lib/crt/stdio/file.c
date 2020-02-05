@@ -1182,9 +1182,9 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
 /*********************************************************************
  *		_lseek (MSVCRT.@)
  */
-LONG CDECL _lseek(int fd, LONG offset, int whence)
+long  CDECL _lseek(int fd, long  offset, int whence)
 {
-    return (LONG)_lseeki64(fd, offset, whence);
+    return (long )_lseeki64(fd, offset, whence);
 }
 
 /*********************************************************************
@@ -1217,7 +1217,7 @@ void CDECL _unlock_file(FILE *file)
  *
  * This is untested; the underlying LockFile doesn't work yet.
  */
-int CDECL _locking(int fd, int mode, LONG nbytes)
+int CDECL _locking(int fd, int mode, long nbytes)
 {
   ioinfo *info = get_ioinfo(fd);
   BOOL ret;
@@ -1541,12 +1541,12 @@ FILE* CDECL _wfdopen(int fd, const wchar_t *mode)
 /*********************************************************************
  *		_filelength (MSVCRT.@)
  */
-LONG CDECL _filelength(int fd)
+long CDECL _filelength(int fd)
 {
-  LONG curPos = _lseek(fd, 0, SEEK_CUR);
+  long curPos = _lseek(fd, 0, SEEK_CUR);
   if (curPos != -1)
   {
-    LONG endPos = _lseek(fd, 0, SEEK_END);
+    long endPos = _lseek(fd, 0, SEEK_END);
     if (endPos != -1)
     {
       if (endPos != curPos)
@@ -3561,9 +3561,9 @@ __int64 CDECL _ftelli64(FILE* file)
 /*********************************************************************
  *		ftell (MSVCRT.@)
  */
-LONG CDECL ftell(FILE* file)
+long CDECL ftell(FILE* file)
 {
-  return (LONG)_ftelli64(file);
+  return (long)_ftelli64(file);
 }
 
 /*********************************************************************
