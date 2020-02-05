@@ -5316,6 +5316,88 @@ static void test_create_skin_info(void)
     ok(hr == D3DERR_INVALIDCALL, "Expected D3DERR_INVALIDCALL, got %#x\n", hr);
 }
 
+static void test_update_skinned_mesh(void)
+{
+    static DWORD bone0_vertices[2] = { 1, 3 };
+    static FLOAT bone0_weights[2] = { 1.0f, 0.5f };
+    static DWORD bone1_vertices[2] = { 2, 3 };
+    static FLOAT bone1_weights[2] = { 1.0f, 0.5f };
+    static D3DMATRIX bones_matrix[2] =
+    { { { {
+               1.0f,  0.0f,  0.0f,  0.0f,
+               0.0f,  1.0f,  0.0f,  0.0f,
+               0.0f,  0.0f,  1.0f,  0.0f,
+               2.0f,  2.0f,  4.0f,  1.0f
+      } } },
+      { { {
+               1.0f,  0.0f,  0.0f,  0.0f,
+               0.0f,  1.0f,  0.0f,  0.0f,
+               0.0f,  0.0f,  1.0f,  0.0f,
+              -4.0f, -4.0f,  4.0f,  1.0f
+      } } } };
+    static D3DVECTOR vertices_src[] = {{  1.0f,  1.0f,  1.0f },
+                                       {  1.0f,  0.0f,  0.0f },
+                                       {  1.0f,  1.0f, -1.0f },
+                                       {  0.0f,  1.0f,  0.0f },
+                                       { -1.0f, -1.0f,  1.0f },
+                                       {  0.0f,  0.0f,  1.0f },
+                                       { -1.0f, -1.0f, -1.0f },
+                                       { -1.0f,  0.0f,  0.0f },
+                                      };
+    static D3DVECTOR vertices_ref[] = {{  0.0f,  0.0f,  0.0f },
+                                       {  0.0f,  0.0f,  0.0f },
+                                       {  3.0f,  3.0f,  3.0f },
+                                       {  0.0f,  1.0f,  0.0f },
+                                       { -5.0f, -5.0f,  5.0f },
+                                       {  0.0f,  0.0f,  1.0f },
+                                       { -2.0f, -2.0f,  3.0f },
+                                       { -1.0f,  0.0f,  0.0f },
+                                      };
+    D3DVECTOR vertices_dest[8];
+    HRESULT hr;
+    ID3DXSkinInfo *skin_info;
+    D3DXMATRIX matrix;
+    int i;
+
+    D3DXMatrixIdentity(&matrix);
+    for (i = 0; i < 8; i++)
+    {
+        vertices_dest[i].x = 10000.0f;
+        vertices_dest[i].y = 10000.0f;
+        vertices_dest[i].z = 10000.0f;
+    }
+
+    hr = D3DXCreateSkinInfoFVF(4, D3DFVF_XYZ | D3DFVF_NORMAL, 2, &skin_info);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+
+    skin_info->lpVtbl->SetBoneInfluence(skin_info, 0, 2, bone0_vertices, bone0_weights);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+    skin_info->lpVtbl->SetBoneOffsetMatrix(skin_info, 0, &matrix);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+    skin_info->lpVtbl->SetBoneInfluence(skin_info, 1, 2, bone1_vertices, bone1_weights);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+    skin_info->lpVtbl->SetBoneOffsetMatrix(skin_info, 1, &matrix);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+    skin_info->lpVtbl->UpdateSkinnedMesh(skin_info, bones_matrix, NULL, vertices_src, vertices_dest);
+    ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+    for (i = 0; i < 4; i++)
+    {
+        ok(compare(vertices_dest[i*2].x, vertices_ref[i*2].x), "Vertex[%d].position.x: got %g, expected %g\n",
+           i, vertices_dest[i*2].x, vertices_ref[i*2].x);
+        ok(compare(vertices_dest[i*2].y, vertices_ref[i*2].y), "Vertex[%d].position.y: got %g, expected %g\n",
+           i, vertices_dest[i*2].y, vertices_ref[i*2].y);
+        ok(compare(vertices_dest[i*2].z, vertices_ref[i*2].z), "Vertex[%d].position.z: got %g, expected %g\n",
+           i, vertices_dest[i*2].z, vertices_ref[i*2].z);
+        ok(compare(vertices_dest[i*2+1].x, vertices_ref[i*2+1].x), "Vertex[%d].normal.x: got %g, expected %g\n",
+           i, vertices_dest[i*2+1].x, vertices_ref[i*2+1].x);
+        ok(compare(vertices_dest[i*2+1].y, vertices_ref[i*2+1].y), "Vertex[%d].normal.y: got %g, expected %g\n",
+           i, vertices_dest[i*2+1].y, vertices_ref[i*2+1].y);
+        ok(compare(vertices_dest[i*2+1].z, vertices_ref[i*2+1].z), "Vertex[%d].normal.z: got %g, expected %g\n",
+           i, vertices_dest[i*2+1].z, vertices_ref[i*2+1].z);
+    }
+    skin_info->lpVtbl->Release(skin_info);
+}
+
 static void test_convert_adjacency_to_point_reps(void)
 {
     HRESULT hr;
@@ -11393,6 +11475,7 @@ START_TEST(mesh)
     D3DXGenerateAdjacencyTest();
     test_update_semantics();
     test_create_skin_info();
+    test_update_skinned_mesh();
     test_convert_adjacency_to_point_reps();
     test_convert_point_reps_to_adjacency();
     test_weld_vertices();
