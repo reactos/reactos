@@ -441,6 +441,41 @@ HRESULT WINAPI D3DXCompileShader(const char *data, UINT length, const D3DXMACRO 
         }
     }
 
+    /* Filter out D3DCompile warning messages that are not present with D3DCompileShader */
+    if (SUCCEEDED(hr) && error_msgs && *error_msgs)
+    {
+        char *messages = ID3DXBuffer_GetBufferPointer(*error_msgs);
+        DWORD size     = ID3DXBuffer_GetBufferSize(*error_msgs);
+
+        /* Ensure messages are null terminated for safe processing */
+        if (size) messages[size - 1] = 0;
+
+        while (size > 1)
+        {
+            char *prev, *next;
+
+            /* Warning has the form "warning X3206: ... implicit truncation of vector type"
+               but we only search for "X3206:" in case d3dcompiler_43 has localization */
+            prev = next = strstr(messages, "X3206:");
+            if (!prev) break;
+
+            /* get pointer to beginning and end of current line */
+            while (prev > messages && *(prev - 1) != '\n') prev--;
+            while (next < messages + size - 1 && *next != '\n') next++;
+            if (next < messages + size - 1 && *next == '\n') next++;
+
+            memmove(prev, next, messages + size - next);
+            size -= (next - prev);
+        }
+
+        /* Only return a buffer if the resulting string is not empty as some apps depend on that */
+        if (size <= 1)
+        {
+            ID3DXBuffer_Release(*error_msgs);
+            *error_msgs = NULL;
+        }
+    }
+
     return hr;
 }
 
