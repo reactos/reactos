@@ -1,0 +1,66 @@
+diff --git a/dll/directx/wine/d3dx9_36/d3dx9_private.h b/dll/directx/wine/d3dx9_36/d3dx9_private.h
+index 158aae3..7a3d1cb 100644
+--- a/dll/directx/wine/d3dx9_36/d3dx9_private.h
++++ b/dll/directx/wine/d3dx9_36/d3dx9_private.h
+@@ -404,4 +404,6 @@ struct ctab_constant {
+ const struct ctab_constant *d3dx_shader_get_ctab_constant(ID3DXConstantTable *iface,
+         D3DXHANDLE constant) DECLSPEC_HIDDEN;
+ 
++HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
++
+ #endif /* __WINE_D3DX9_PRIVATE_H */
+diff --git a/dll/directx/wine/d3dx9_36/mesh.c b/dll/directx/wine/d3dx9_36/mesh.c
+index 2a9ee06..898a88c 100644
+--- a/dll/directx/wine/d3dx9_36/mesh.c
++++ b/dll/directx/wine/d3dx9_36/mesh.c
+@@ -3332,6 +3332,13 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
+         goto end;
+     }
+ 
++    if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
++    {
++        hr = create_dummy_skin(&mesh_data->skin_info);
++        if (FAILED(hr))
++            goto end;
++    }
++
+     hr = D3D_OK;
+ 
+ end:
+diff --git a/dll/directx/wine/d3dx9_36/skin.c b/dll/directx/wine/d3dx9_36/skin.c
+index f197d33..bed4b9f 100644
+--- a/dll/directx/wine/d3dx9_36/skin.c
++++ b/dll/directx/wine/d3dx9_36/skin.c
+@@ -94,7 +94,7 @@ static ULONG WINAPI d3dx9_skin_info_Release(ID3DXSkinInfo *iface)
+             HeapFree(GetProcessHeap(), 0, skin->bones[i].vertices);
+             HeapFree(GetProcessHeap(), 0, skin->bones[i].weights);
+         }
+-        HeapFree(GetProcessHeap(), 0, skin->bones);
++        if (skin->bones) HeapFree(GetProcessHeap(), 0, skin->bones);
+         HeapFree(GetProcessHeap(), 0, skin);
+     }
+ 
+@@ -495,3 +495,23 @@ HRESULT WINAPI D3DXCreateSkinInfoFVF(DWORD num_vertices, DWORD fvf, DWORD num_bo
+ 
+     return D3DXCreateSkinInfo(num_vertices, declaration, num_bones, skin_info);
+ }
++
++HRESULT create_dummy_skin(ID3DXSkinInfo **iface)
++{
++    static const D3DVERTEXELEMENT9 empty_declaration = D3DDECL_END();
++    struct d3dx9_skin_info *object = NULL;
++
++    object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
++    if (!object) return E_OUTOFMEMORY;
++
++    object->ID3DXSkinInfo_iface.lpVtbl = &d3dx9_skin_info_vtbl;
++    object->ref = 1;
++    object->num_vertices = 0;
++    object->num_bones = 0;
++    object->vertex_declaration[0] = empty_declaration;
++    object->fvf = 0;
++    object->bones = NULL;
++
++    *iface = &object->ID3DXSkinInfo_iface;
++    return D3D_OK;
++}
