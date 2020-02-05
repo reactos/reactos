@@ -335,10 +335,10 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
 
     if (fmt->block_width != 1 || fmt->block_height != 1)
     {
-        if (w < fmt->block_width)
-            w = fmt->block_width;
-        if (h < fmt->block_height)
-            h = fmt->block_height;
+        if (w % fmt->block_width)
+            w += fmt->block_width - w % fmt->block_width;
+        if (h % fmt->block_height)
+            h += fmt->block_height - h % fmt->block_height;
     }
 
     if ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) && (!is_pow2(w)))
