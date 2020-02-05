@@ -1826,7 +1826,7 @@ ExReturnPoolQuota(IN PVOID P)
                 DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
                         Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
                 KeBugCheckEx(BAD_POOL_CALLER,
-                             0x0D,
+                             POOL_BILLED_PROCESS_INVALID,
                              (ULONG_PTR)P,
                              Entry->PoolTag,
                              (ULONG_PTR)Process);
@@ -2659,7 +2659,7 @@ ExFreePoolWithTag(IN PVOID P,
                 DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
                         Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
                 KeBugCheckEx(BAD_POOL_CALLER,
-                             0x0D,
+                             POOL_BILLED_PROCESS_INVALID,
                              (ULONG_PTR)P,
                              Tag,
                              (ULONG_PTR)Process);
