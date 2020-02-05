@@ -1224,7 +1224,7 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT3 format.\n");
+            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT3 format.\n");
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
         }
@@ -1250,7 +1250,7 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT5 format.\n");
+            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT5 format.\n");
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
         }
@@ -1263,10 +1263,10 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
             hr = IDirect3DTexture9_GetSurfaceLevel(tex, 0, &newsurf);
             ok(SUCCEEDED(hr), "Failed to get the surface, hr %#x.\n", hr);
             hr = D3DXLoadSurfaceFromSurface(newsurf, NULL, NULL, surf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels to DXT1 format.\n");
+            ok(SUCCEEDED(hr), "Failed to convert pixels to DXT1 format.\n");
 
             hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
-            todo_wine ok(SUCCEEDED(hr), "Failed to convert pixels from DXT1 format.\n");
+            ok(SUCCEEDED(hr), "Failed to convert pixels from DXT1 format.\n");
 
             check_release((IUnknown*)newsurf, 1);
             check_release((IUnknown*)tex, 0);
