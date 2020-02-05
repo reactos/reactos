@@ -24,7 +24,7 @@
 @ stdcall -stub D3DXComputeIMTFromTexture(ptr ptr long long ptr ptr ptr)
 @ stdcall D3DXComputeNormalMap(ptr ptr ptr long long float)
 @ stdcall D3DXComputeNormals(ptr ptr)
-@ stdcall -stub D3DXComputeTangent(ptr long long long long ptr)
+@ stdcall D3DXComputeTangent(ptr long long long long ptr)
 @ stdcall -stub D3DXComputeTangentFrame(ptr long)
 @ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr)
 @ stdcall -stub D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr)
