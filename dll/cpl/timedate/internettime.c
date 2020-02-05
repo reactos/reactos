@@ -278,7 +278,7 @@ InetTimePageProc(HWND hwndDlg,
                     dwError = W32TimeSyncNow(L"localhost", 0, 0);
                     if (dwError != ERROR_SUCCESS)
                     {
-                        DisplayWin32Error(dwError);
+                        DPRINT("Failed to synchronize the time! Invalid NTP server name has been caught or no server name could be found (Error: %lu).\n", dwError);
                     }
                 }
                 break;
