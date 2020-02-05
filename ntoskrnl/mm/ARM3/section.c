@@ -512,7 +512,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
             TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
 
 #if (_MI_PAGING_LEVELS == 2)
-            ParentPage = MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT];
+            ParentPage = MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_PER_PAGE];
 #else
             ParentPage = MiPdeToPpe(PointerPde)->u.Hard.PageFrameNumber;
 #endif

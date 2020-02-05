@@ -360,8 +360,8 @@ MiBalancerThread(PVOID Unused)
                 KIRQL OldIrql = MiAcquirePfnLock();
                 PMMPDE pointerPde;
                 for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
-                        Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-                        Address += (PAGE_SIZE * PTE_COUNT))
+                     Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+                     Address += PTE_PER_PAGE * PAGE_SIZE)
                 {
                     if (MiQueryPageTableReferences((PVOID)Address) == 0)
                     {
