@@ -1,0 +1,94 @@
+diff --git a/dll/directx/wine/d3dx9_36/font.c b/dll/directx/wine/d3dx9_36/font.c
+index e8689bb..89005ce 100644
+--- a/dll/directx/wine/d3dx9_36/font.c
++++ b/dll/directx/wine/d3dx9_36/font.c
+@@ -213,9 +213,12 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
+     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
+             iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
+ 
+-    if (!string || count <= 0)
++    if (!string || count == 0)
+         return 0;
+ 
++    if (count < 0)
++       count = -1;
++
+     countW = MultiByteToWideChar(CP_ACP, 0, string, count, NULL, 0);
+     stringW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR));
+     if (stringW)
+@@ -238,9 +241,12 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
+     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
+             iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
+ 
+-    if (!string || count <= 0)
++    if (!string || count == 0)
+         return 0;
+ 
++    if (count < 0)
++       count = lstrlenW(string);
++
+     /* Strip terminating NULL characters */
+     while (count > 0 && !string[count-1])
+         count--;
+diff --git a/modules/rostests/winetests/d3dx9_36/core.c b/modules/rostests/winetests/d3dx9_36/core.c
+index fa874a5..841d07e 100644
+--- a/modules/rostests/winetests/d3dx9_36/core.c
++++ b/modules/rostests/winetests/d3dx9_36/core.c
+@@ -306,6 +306,7 @@ static void test_ID3DXSprite(IDirect3DDevice9 *device)
+ static void test_ID3DXFont(IDirect3DDevice9 *device)
+ {
+     static const WCHAR testW[] = {'t','e','s','t',0};
++    static const char testA[] = "test";
+     static const struct
+     {
+         int font_height;
+@@ -637,6 +638,49 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
+ 
+         ID3DXFont_Release(font);
+     }
++
++    /* ID3DXFont_DrawTextA, ID3DXFont_DrawTextW */
++    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
++    if (SUCCEEDED(hr)) {
++        RECT rect;
++        int height;
++
++        SetRect(&rect, 10, 10, 200, 200);
++
++        height = ID3DXFont_DrawTextA(font, NULL, testA, -2, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
++
++        height = ID3DXFont_DrawTextA(font, NULL, testA, -1, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
++
++        height = ID3DXFont_DrawTextA(font, NULL, testA, 0, &rect, 0, 0xFF00FF);
++        ok(height == 0, "DrawTextA returned %d, expected 0.\n", height);
++
++        height = ID3DXFont_DrawTextA(font, NULL, testA, 1, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
++
++        height = ID3DXFont_DrawTextA(font, NULL, testA, 2, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
++
++if (0) { /* Causes a lockup on windows 7. */
++        height = ID3DXFont_DrawTextW(font, NULL, testW, -2, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
++}
++
++        height = ID3DXFont_DrawTextW(font, NULL, testW, -1, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
++
++        height = ID3DXFont_DrawTextW(font, NULL, testW, 0, &rect, 0, 0xFF00FF);
++        ok(height == 0, "DrawTextW returned %d, expected 0.\n", height);
++
++        height = ID3DXFont_DrawTextW(font, NULL, testW, 1, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
++
++        height = ID3DXFont_DrawTextW(font, NULL, testW, 2, &rect, 0, 0xFF00FF);
++        ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
++
++        ID3DXFont_Release(font);
++    }
+ }
+ 
+ static void test_D3DXCreateRenderToSurface(IDirect3DDevice9 *device)
