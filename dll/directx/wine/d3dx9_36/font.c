@@ -235,7 +235,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
     struct d3dx_font *This = impl_from_ID3DXFont(iface);
-    RECT calc_rect = *rect;
+    RECT calc_rect;
     INT height;
 
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
@@ -251,11 +251,15 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     while (count > 0 && !string[count-1])
         count--;
 
+    if (rect)
+        calc_rect = *rect;
+
     height = DrawTextW(This->hdc, string, count, &calc_rect, format | DT_CALCRECT);
 
     if (format & DT_CALCRECT)
     {
-        *rect = calc_rect;
+        if (rect)
+            *rect = calc_rect;
         return height;
     }
 

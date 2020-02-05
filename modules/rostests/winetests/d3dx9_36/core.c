@@ -662,6 +662,15 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
         height = ID3DXFont_DrawTextA(font, NULL, testA, 2, &rect, 0, 0xFF00FF);
         ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
 
+        height = ID3DXFont_DrawTextA(font, NULL, testA, -1, NULL, 0, 0xFF00FF);
+        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
+
+        height = ID3DXFont_DrawTextA(font, NULL, testA, -1, NULL, DT_CALCRECT, 0xFF00FF);
+        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
+
+        height = ID3DXFont_DrawTextA(font, NULL, NULL, -1, NULL, 0, 0xFF00FF);
+        ok(height == 0, "DrawTextA returned %d, expected 0.\n", height);
+
 if (0) { /* Causes a lockup on windows 7. */
         height = ID3DXFont_DrawTextW(font, NULL, testW, -2, &rect, 0, 0xFF00FF);
         ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
@@ -678,6 +687,15 @@ if (0) { /* Causes a lockup on windows 7. */
 
         height = ID3DXFont_DrawTextW(font, NULL, testW, 2, &rect, 0, 0xFF00FF);
         ok(height == 12, "DrawTextW returned %d, expected 12.\n", height);
+
+        height = ID3DXFont_DrawTextW(font, NULL, testW, -1, NULL, 0, 0xFF00FF);
+        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
+
+        height = ID3DXFont_DrawTextW(font, NULL, testW, -1, NULL, DT_CALCRECT, 0xFF00FF);
+        ok(height == 12, "DrawTextA returned %d, expected 12.\n", height);
+
+        height = ID3DXFont_DrawTextW(font, NULL, NULL, -1, NULL, 0, 0xFF00FF);
+        ok(height == 0, "DrawTextA returned %d, expected 0.\n", height);
 
         ID3DXFont_Release(font);
     }
