@@ -31,8 +31,8 @@ Used Version: 8.0.4
 Website: http://www.mesa3d.org
 
 Title: Mesa3D glu libary
-Used Version: 9.0
-Website: ftp://ftp.freedesktop.org/pub/mesa/glu/
+Used Version: 9.0.1
+Website: https://gitlab.freedesktop.org/mesa/glu | ftp://ftp.freedesktop.org/pub/mesa/glu/
 
 Title: GNU adns
 Used Version: 1.0 REV 5
