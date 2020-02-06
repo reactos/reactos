@@ -197,7 +197,7 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
 INT WINAPI
 DocumentEvent( HANDLE hPrinter, HDC hdc, int iEsc, ULONG cbIn, PVOID pvIn, ULONG cbOut, PVOID pvOut)
 {
-    ERR("DocumentEvent(%p, %p, %lu, %lu, %p, %lu, %p)\n", hPrinter, hdc, iEsc, cbIn, pvIn, cbOut, pvOut);
+    TRACE("DocumentEvent(%p, %p, %lu, %lu, %p, %lu, %p)\n", hPrinter, hdc, iEsc, cbIn, pvIn, cbOut, pvOut);
     UNIMPLEMENTED;
     return DOCUMENTEVENT_UNSUPPORTED;
 }
@@ -1529,7 +1529,7 @@ GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDri
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
-        ERR("_RpcGetPrinter failed with exception code %lu!\n", dwErrorCode);
+        ERR("_RpcGetPrinterDriver failed with exception code %lu!\n", dwErrorCode);
     }
     RpcEndExcept;
 
@@ -1935,7 +1935,7 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
 BOOL WINAPI
 SplDriverUnloadComplete(LPWSTR pDriverFile)
 {
-    ERR("DriverUnloadComplete(%S)\n", pDriverFile);
+    TRACE("DriverUnloadComplete(%S)\n", pDriverFile);
     UNIMPLEMENTED;
     return TRUE; // return true for now.
 }
