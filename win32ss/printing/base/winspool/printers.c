@@ -1128,7 +1128,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
 
                 HeapFree(hProcessHeap, 0, pszComment);
             }
-        break;
+            break;
         }
 
         case 2:
@@ -1363,7 +1363,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
 
                 HeapFree(hProcessHeap, 0, pszParameters);
             }
-        break;
+            break;
         }
 
         case 4:
@@ -1409,7 +1409,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
 
                 HeapFree(hProcessHeap, 0, pszServerName);
             }
-        break;
+            break;
         }
 
         case 5:
@@ -1455,7 +1455,7 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
 
                 HeapFree(hProcessHeap, 0, pszPortName);
             }
-        break;
+            break;
         }
 
         case 7:
@@ -1480,11 +1480,11 @@ GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
 
                 HeapFree(hProcessHeap, 0, pszaObjectGUID);
             }
+            break;
         }
     }       // switch
 
 Cleanup:
-
     return bReturnValue;
 }
 
