@@ -1935,7 +1935,7 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
 BOOL WINAPI
 SplDriverUnloadComplete(LPWSTR pDriverFile)
 {
-    TRACE("DriverUnloadComplete(%S)\n", pDriverFile);
+    TRACE("SplDriverUnloadComplete(%S)\n", pDriverFile);
     UNIMPLEMENTED;
     return TRUE; // return true for now.
 }
