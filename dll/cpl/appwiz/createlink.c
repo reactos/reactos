@@ -597,11 +597,38 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     return TRUE;
 }
 
+/* InitCommonControls */
+typedef void (WINAPI *FN_InitCommonControls)(void);
+
+LONG CALLBACK
+ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPWSTR szPath)
+{
+    HINSTANCE hComCtl32;
+    FN_InitCommonControls fn;
+    LONG ret;
+
+    hComCtl32 = LoadLibraryW(L"comctl32.dll");
+    fn = (FN_InitCommonControls)GetProcAddress(hComCtl32, "InitCommonControls");
+    if (fn)
+    {
+        (*fn)();
+    }
+    else
+    {
+        MessageBoxW(NULL, L"InitCommonControls failed.", NULL, MB_ICONERROR)
+    }
+
+    ret = ShowCreateShortcutWizard(hwndCPl, szPath);
+
+    FreeLibrary(hComCtl32);
+    return ret;
+}
+
 LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR) lParam1);
+    return ShowCreateShortcutWizardComCtl32(hwndCPl, (LPWSTR) lParam1);
 }
 
 LONG
@@ -612,7 +639,7 @@ NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     if (MultiByteToWideChar(CP_ACP, 0, (LPSTR)lParam1, -1, szFile, _countof(szFile)))
     {
-        return ShowCreateShortcutWizard(hwndCPl, szFile);
+        return ShowCreateShortcutWizardComCtl32(hwndCPl, szFile);
     }
     return -1;
 }
