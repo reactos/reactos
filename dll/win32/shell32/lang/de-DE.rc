@@ -769,7 +769,7 @@ BEGIN
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Dateipfad öffnen"
     IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
-    IDS_SENDTO_MENU "Send&en an"
+    IDS_SENDTO_MENU "S&enden an"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
     IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"
