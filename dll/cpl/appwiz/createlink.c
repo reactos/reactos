@@ -11,6 +11,7 @@
  */
 
 #include "appwiz.h"
+#include <commctrl.h>
 #include <shellapi.h>
 #include <strsafe.h>
 
@@ -597,38 +598,12 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
     return TRUE;
 }
 
-/* InitCommonControls */
-typedef void (WINAPI *FN_InitCommonControls)(void);
-
-LONG CALLBACK
-ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPCWSTR szPath)
-{
-    HINSTANCE hComCtl32;
-    FN_InitCommonControls fn;
-    LONG ret;
-
-    hComCtl32 = LoadLibraryW(L"comctl32.dll");
-#if 1
-    fn = (FN_InitCommonControls)GetProcAddress(hComCtl32, (LPSTR)(DWORD_PTR)15);
-#else
-    fn = (FN_InitCommonControls)GetProcAddress(hComCtl32, "InitCommonControls");
-#endif
-    if (fn)
-        (*fn)();
-    else
-        MessageBoxW(NULL, L"InitCommonControls failed.", L"appwiz.cpl", MB_ICONERROR);
-
-    ret = ShowCreateShortcutWizard(hwndCPl, szPath);
-
-    FreeLibrary(hComCtl32);
-    return ret;
-}
-
 LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    return ShowCreateShortcutWizardComCtl32(hwndCPl, (LPWSTR)lParam1);
+    InitCommonControls();
+    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR)lParam1);
 }
 
 LONG
@@ -639,7 +614,8 @@ NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     if (MultiByteToWideChar(CP_ACP, 0, (LPSTR)lParam1, -1, szFile, _countof(szFile)))
     {
-        return ShowCreateShortcutWizardComCtl32(hwndCPl, szFile);
+        InitCommonControls();
+        return ShowCreateShortcutWizard(hwndCPl, szFile);
     }
     return -1;
 }
