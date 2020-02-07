@@ -178,10 +178,10 @@ HwDelay(VOID)
 
 static
 inline
-USHORT
-NextLFSR(USHORT Lfsr, USHORT InputBit)
+UCHAR
+NextLFSR(UCHAR Lfsr, UCHAR InputBit)
 {
-  ULONG NextLfsr = Lfsr >> 1;
+  UCHAR NextLfsr = Lfsr >> 1;
 
   NextLfsr |= (((Lfsr ^ NextLfsr) ^ InputBit)) << 7;
 
@@ -192,7 +192,7 @@ static
 VOID
 SendKey(VOID)
 {
-  USHORT i, Lfsr;
+  UCHAR i, Lfsr;
 
   HwDelay();
   WriteAddress(0x00);
@@ -241,7 +241,7 @@ static
 USHORT
 IsaPnpChecksum(PISAPNP_IDENTIFIER Identifier)
 {
-  USHORT i,j, Lfsr, Byte;
+  UCHAR i, j, Lfsr, Byte;
 
   Lfsr = ISAPNP_LFSR_SEED;
   for (i = 0; i < 8; i++)
