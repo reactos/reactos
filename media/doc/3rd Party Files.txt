@@ -27,7 +27,7 @@ Used Version: 2.9.0
 Website: http://www.freetype.org
 
 Title: Mesa3D
-Used Version: 8.0.4
+Used Version: 2.6
 Website: http://www.mesa3d.org
 
 Title: Mesa3D glu libary
