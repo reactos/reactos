@@ -616,7 +616,7 @@ ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPCWSTR szPath)
     if (fn)
         (*fn)();
     else
-        MessageBoxW(NULL, L"InitCommonControls failed.", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, L"InitCommonControls failed.", L"appwiz.cpl", MB_ICONERROR);
 
     ret = ShowCreateShortcutWizard(hwndCPl, szPath);
 
