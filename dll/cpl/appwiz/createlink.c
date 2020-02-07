@@ -608,15 +608,15 @@ ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPWSTR szPath)
     LONG ret;
 
     hComCtl32 = LoadLibraryW(L"comctl32.dll");
+#if 1
+    fn = (FN_InitCommonControls)GetProcAddress(hComCtl32, (LPSTR)(DWORD_PTR)15);
+#else
     fn = (FN_InitCommonControls)GetProcAddress(hComCtl32, "InitCommonControls");
+#endif
     if (fn)
-    {
         (*fn)();
-    }
     else
-    {
-        MessageBoxW(NULL, L"InitCommonControls failed.", NULL, MB_ICONERROR)
-    }
+        MessageBoxW(NULL, L"InitCommonControls failed.", NULL, MB_ICONERROR);
 
     ret = ShowCreateShortcutWizard(hwndCPl, szPath);
 
