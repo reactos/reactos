@@ -70,12 +70,17 @@ public:
     class CExtractSettingsPage : public CPropertyPageImpl<CExtractSettingsPage>
     {
     private:
+        HANDLE m_hExtractionThread;
+        bool m_bExtractionThreadCancel;
+
         CZipExtract* m_pExtract;
         CStringA* m_pPassword;
 
     public:
         CExtractSettingsPage(CZipExtract* extract, CStringA* password)
             :CPropertyPageImpl<CExtractSettingsPage>(MAKEINTRESOURCE(IDS_WIZ_TITLE))
+            ,m_hExtractionThread(NULL)
+            ,m_bExtractionThreadCancel(false)
             ,m_pExtract(extract)
             ,m_pPassword(password)
         {
@@ -95,6 +100,28 @@ public:
 
         int OnWizardNext()
         {
+            if (m_hExtractionThread != NULL)
+            {
+                /* We enter here when extraction has finished, and go to next page if it succeeded */
+                WaitForSingleObject(m_hExtractionThread, INFINITE);
+                CloseHandle(m_hExtractionThread);
+                m_hExtractionThread = NULL;
+                m_pExtract->Release();
+                if (!m_bExtractionThreadCancel)
+                {
+                    return 0;
+                }
+                else
+                {
+                    SetWindowLongPtr(DWLP_MSGRESULT, -1);
+                    return TRUE;
+                }
+            }
+
+            /* We end up here if the user manually clicks Next: start extraction */
+            m_bExtractionThreadCancel = false;
+
+            /* Grey out every control during extraction to prevent user interaction */
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
             ::EnableWindow(GetDlgItem(IDC_DIRECTORY), FALSE);
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
@@ -103,19 +130,63 @@ public:
             if (m_pExtract->m_DirectoryChanged)
                 UpdateDirectory();
 
-            if (!m_pExtract->Extract(m_hWnd, GetDlgItem(IDC_PROGRESS)))
+            m_pExtract->AddRef();
+
+            m_hExtractionThread = CreateThread(NULL, 0,
+                                               &CExtractSettingsPage::ExtractEntry,
+                                               this,
+                                               0, NULL);
+            if (!m_hExtractionThread)
             {
-                /* Extraction failed, do not go to the next page */
+                /* Extraction thread creation failed, do not go to the next page */
+                DWORD err = GetLastError();
+                DPRINT1("ERROR, m_hExtractionThread: CreateThread failed: 0x%x\n", err);
+                m_pExtract->Release();
+
                 SetWindowLongPtr(DWLP_MSGRESULT, -1);
 
                 ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
                 SetWizardButtons(PSWIZB_NEXT);
+            }
+            return TRUE;
+        }
 
+        static DWORD WINAPI ExtractEntry(LPVOID lpParam)
+        {
+            CExtractSettingsPage* pPage = (CExtractSettingsPage*)lpParam;
+            bool res = pPage->m_pExtract->Extract(pPage->m_hWnd, pPage->GetDlgItem(IDC_PROGRESS), &(pPage->m_bExtractionThreadCancel));
+            /* Failing and cancelling extraction both mean we stay on the same property page */
+            pPage->m_bExtractionThreadCancel = !res;
+
+            pPage->SetWizardButtons(PSWIZB_NEXT);
+            if (!res)
+            {
+                /* Extraction failed/cancelled: the page becomes interactive again */
+                ::EnableWindow(pPage->GetDlgItem(IDC_BROWSE), TRUE);
+                ::EnableWindow(pPage->GetDlgItem(IDC_DIRECTORY), TRUE);
+                ::EnableWindow(pPage->GetDlgItem(IDC_PASSWORD), TRUE);
+
+                /* Reset the progress bar's appearance */
+                CWindow Progress(pPage->GetDlgItem(IDC_PROGRESS));
+                Progress.SendMessage(PBM_SETRANGE32, 0, 1);
+                Progress.SendMessage(PBM_SETPOS, 0, 0);
+            }
+            SendMessageCallback(pPage->GetParent().m_hWnd, PSM_PRESSBUTTON, PSBTN_NEXT, 0, NULL, NULL);
+
+            return 0;
+        }
+		
+        BOOL OnQueryCancel()
+        {
+            if (m_hExtractionThread != NULL)
+            {
+                /* Extraction will check the value of m_bExtractionThreadCancel between each file in the archive */
+                m_bExtractionThreadCancel = true;
                 return TRUE;
             }
-            return 0;
+            return FALSE;
         }
 
         struct browse_info
@@ -268,7 +339,7 @@ public:
         PropertySheetW(&psh);
     }
 
-    bool Extract(HWND hDlg, HWND hProgress)
+    bool Extract(HWND hDlg, HWND hProgress, const bool* bCancel)
     {
         unz_global_info64 gi;
         uf = unzOpen2_64(m_Filename.GetString(), &g_FFunc);
@@ -301,6 +372,12 @@ public:
         bool bOverwriteAll = false;
         while (zipEnum.next(Name, Info))
         {
+            if (*bCancel)
+            {
+                Close();
+                return false;
+            }
+
             bool is_dir = Name.GetLength() > 0 && Name[Name.GetLength()-1] == '/';
 
             char CombinedPath[MAX_PATH * 2] = { 0 };
@@ -418,6 +495,16 @@ public:
 
             do
             {
+                if (*bCancel)
+                {
+                    CloseHandle(hFile);
+                    BOOL deleteResult = DeleteFileA(FullPath);
+                    if (deleteResult == 0)
+                        DPRINT1("ERROR, DeleteFileA: 0x%x\n", GetLastError());
+                    Close();
+                    return false;
+                }
+
                 err = unzReadCurrentFile(uf, Buffer, sizeof(Buffer));
 
                 if (err < 0)
@@ -451,7 +538,7 @@ public:
             LocalFileTimeToFileTime(&LocalFileTime, &FileTime);
             SetFileTime(hFile, &FileTime, &LastAccessTime, &FileTime);
 
-            /* Done.. */
+            /* Done */
             CloseHandle(hFile);
 
             if (err)
