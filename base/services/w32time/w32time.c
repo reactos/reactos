@@ -191,6 +191,13 @@ SetTime(VOID)
 
     DPRINT("Time Server is '%S'.\n", szData);
 
+    /* Is the given string empty? */
+    if (cbName == 0 || szData[0] == '\0')
+    {
+        DPRINT("The time NTP server couldn't be found, the string is empty!\n");
+        return ERROR_INVALID_DATA;
+    }
+
     ulTime = GetServerTime(szData);
 
     if (ulTime != 0)

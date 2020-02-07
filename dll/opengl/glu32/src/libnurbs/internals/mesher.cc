@@ -276,13 +276,13 @@ Mesher::output( int x )
 void
 Mesher::addLast( )
 {
-    register int ilast = itop;
+    int ilast = itop;
 
     if( lastedge == 0 ) {
 	if( equal( 0, 1 ) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i = 2; i < ilast; i++ ) {
+	    for( int i = 2; i < ilast; i++ ) {
 		swapMesh();
 		output( i );
 	    }
@@ -290,7 +290,7 @@ Mesher::addLast( )
 	} else if( equal( ilast-2, ilast-1) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i = ilast-3; i >= 0; i-- ) {
+	    for( int i = ilast-3; i >= 0; i-- ) {
 		output( i );
 		swapMesh();
 	    }
@@ -299,7 +299,7 @@ Mesher::addLast( )
 	    closeMesh();	openMesh();
 	    output( ilast );
 	    output( 0 );
-	    for( register int i = 1; i < ilast; i++ ) {
+	    for( int i = 1; i < ilast; i++ ) {
 		swapMesh();
 		output( i );
 	    }
@@ -309,7 +309,7 @@ Mesher::addLast( )
 	if( equal( 1, 0) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i = 2; i < ilast; i++ ) {
+	    for( int i = 2; i < ilast; i++ ) {
 		output( i );
 		swapMesh();
 	    }
@@ -317,7 +317,7 @@ Mesher::addLast( )
 	} else if( equal( ilast-1, ilast-2) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i = ilast-3; i >= 0; i-- ) {
+	    for( int i = ilast-3; i >= 0; i-- ) {
 		swapMesh();
 		output( i );
 	    }
@@ -326,7 +326,7 @@ Mesher::addLast( )
 	    closeMesh();	openMesh();
 	    output( 0 );
 	    output( ilast );
-	    for( register int i = 1; i < ilast; i++ ) {
+	    for( int i = 1; i < ilast; i++ ) {
 		output( i );
 		swapMesh();
 	    }
@@ -334,19 +334,19 @@ Mesher::addLast( )
 	}
     }
     closeMesh();
-    //for( register long k=0; k<=ilast; k++ ) pop( k );
+    //for( long k=0; k<=ilast; k++ ) pop( k );
 }
 
 void
 Mesher::addUpper( )
 {
-    register int ilast = itop;
+    int ilast = itop;
 
     if( lastedge == 0 ) {
 	if( equal( 0, 1 ) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i = 2; i < ilast; i++ ) {
+	    for( int i = 2; i < ilast; i++ ) {
 		swapMesh();
 		output( i );
 	    }
@@ -354,7 +354,7 @@ Mesher::addUpper( )
 	} else if( equal( ilast-2, ilast-1) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i = ilast-3; i >= 0; i-- ) {
+	    for( int i = ilast-3; i >= 0; i-- ) {
 		output( i );
 		swapMesh();
 	    }
@@ -363,14 +363,14 @@ Mesher::addUpper( )
 	    closeMesh();	openMesh();
 	    output( ilast );
 	    output( 0 );
-	    for( register int i = 1; i < ilast; i++ ) {
+	    for( int i = 1; i < ilast; i++ ) {
 		swapMesh();
 		output( i );
 	    }
 	    copy( ilast, ilast-1 );
 	}
 	lastedge = 1;
-        //for( register long k=0; k<ilast-1; k++ ) pop( k );
+        //for( long k=0; k<ilast-1; k++ ) pop( k );
 	move( 0, ilast-1 );
 	move( 1, ilast );
 	itop = 1;
@@ -383,7 +383,7 @@ Mesher::addUpper( )
 	if( equal( ilast-1, ilast-2 ) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i=ilast-3; i>=itop-1; i-- ) {
+	    for( int i=ilast-3; i>=itop-1; i-- ) {
 		swapMesh();
 		output( i );
 	    }
@@ -391,7 +391,7 @@ Mesher::addUpper( )
 	} else if( equal( itop, itop-1 ) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i = itop+1; i < ilast; i++ ) {
+	    for( int i = itop+1; i < ilast; i++ ) {
 		output( i );
 		swapMesh();
 	    }
@@ -400,13 +400,13 @@ Mesher::addUpper( )
 	    closeMesh();	openMesh();
 	    output( ilast );
 	    output( ilast-1 );
-	    for( register int i=ilast-2; i>=itop-1; i-- ) {
+	    for( int i=ilast-2; i>=itop-1; i-- ) {
 		swapMesh();
 		output( i );
 	    } 
 	    copy( ilast, itop-1 );
 	}
-        //for( register int k=itop; k<ilast; k++ ) pop( k );
+        //for( int k=itop; k<ilast; k++ ) pop( k );
 	move( itop, ilast );
     }
 }
@@ -414,13 +414,13 @@ Mesher::addUpper( )
 void
 Mesher::addLower()
 {
-    register int ilast = itop;
+    int ilast = itop;
 
     if( lastedge == 1 ) {
 	if( equal( 1, 0) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i = 2; i < ilast; i++ ) {
+	    for( int i = 2; i < ilast; i++ ) {
 		output( i );
 		swapMesh();
 	    }
@@ -428,7 +428,7 @@ Mesher::addLower()
 	} else if( equal( ilast-1, ilast-2) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i = ilast-3; i >= 0; i-- ) {
+	    for( int i = ilast-3; i >= 0; i-- ) {
 		swapMesh();
 		output( i );
 	    }
@@ -437,7 +437,7 @@ Mesher::addLower()
 	    closeMesh();	openMesh();
 	    output( 0 );
 	    output( ilast );
-	    for( register int i = 1; i < ilast; i++ ) {
+	    for( int i = 1; i < ilast; i++ ) {
 		output( i );
 		swapMesh();
 	    }
@@ -445,7 +445,7 @@ Mesher::addLower()
 	}
 
 	lastedge = 0;
-        //for( register long k=0; k<ilast-1; k++ ) pop( k );
+        //for( long k=0; k<ilast-1; k++ ) pop( k );
 	move( 0, ilast-1 );
 	move( 1, ilast );
 	itop = 1;
@@ -458,7 +458,7 @@ Mesher::addLower()
 	if( equal( ilast-2, ilast-1) ) {
 	    swapMesh();
 	    output( ilast );
-	    for( register int i=ilast-3; i>=itop-1; i--) {
+	    for( int i=ilast-3; i>=itop-1; i--) {
 		output( i );
 		swapMesh( );
 	    }
@@ -466,7 +466,7 @@ Mesher::addLower()
 	} else if( equal( itop-1, itop) ) {
 	    output( ilast );
 	    swapMesh();
-	    for( register int i=itop+1; i<ilast; i++ ) {
+	    for( int i=itop+1; i<ilast; i++ ) {
 		swapMesh( );
 		output( i );
 	    }
@@ -475,13 +475,13 @@ Mesher::addLower()
 	    closeMesh();	openMesh();
 	    output( ilast-1 );
 	    output( ilast );
-	    for( register int i=ilast-2; i>=itop-1; i-- ) {
+	    for( int i=ilast-2; i>=itop-1; i-- ) {
 		output( i );
 		swapMesh( );
 	    }
 	    copy( itop-1, ilast );
 	}
-        //for( register int k=itop; k<ilast; k++ ) pop( k );
+        //for( int k=itop; k<ilast; k++ ) pop( k );
 	move( itop, ilast );
     }
 }

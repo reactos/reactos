@@ -19,21 +19,16 @@
 #define _64K (64 * _1KB)
 
 /* Area mapped by a PDE */
-#define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
+#define PDE_MAPPED_VA  (PTE_PER_PAGE * PAGE_SIZE)
 
 /* Size of a page table */
-#define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
+#define PT_SIZE  (PTE_PER_PAGE * sizeof(MMPTE))
 
 /* Size of a page directory */
-#define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
-
-/* Stop using these! */
-#define PD_COUNT  PPE_PER_PAGE
-#define PDE_COUNT PDE_PER_PAGE
-#define PTE_COUNT PTE_PER_PAGE
+#define PD_SIZE  (PDE_PER_PAGE * sizeof(MMPDE))
 
 /* Size of all page directories for a process */
-#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+#define SYSTEM_PD_SIZE (PPE_PER_PAGE * PD_SIZE)
 #ifdef _M_IX86
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
@@ -644,7 +639,7 @@ extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
 extern PMMPDE MiHighestUserPde;
-extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+extern PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
 extern BOOLEAN MmZeroingPageThreadActive;
