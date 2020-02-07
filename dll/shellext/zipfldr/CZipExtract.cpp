@@ -132,13 +132,10 @@ public:
 
             m_pExtract->AddRef();
 
-            m_hExtractionThread = CreateThread(
-                NULL, 0,
-                &CExtractSettingsPage::ExtractEntry,
-                this,
-                0,
-                NULL);
-
+            m_hExtractionThread = CreateThread(NULL, 0,
+                                               &CExtractSettingsPage::ExtractEntry,
+                                               this,
+                                               0, NULL);
             if (!m_hExtractionThread)
             {
                 /* Extraction thread creation failed, do not go to the next page */
@@ -541,7 +538,7 @@ public:
             LocalFileTimeToFileTime(&LocalFileTime, &FileTime);
             SetFileTime(hFile, &FileTime, &LastAccessTime, &FileTime);
 
-            /* Done.. */
+            /* Done */
             CloseHandle(hFile);
 
             if (err)
