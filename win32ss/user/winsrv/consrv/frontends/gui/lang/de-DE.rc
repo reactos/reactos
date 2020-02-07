@@ -20,7 +20,7 @@ BEGIN
     IDS_SCROLLUP "Nach oben scrollen"
     IDS_SCROLLDOWN "Nach unten scrollen"
 */
-    IDS_TERMINAL_TITLE "ReactOS-Eingabeaufforderung"
+    IDS_TERMINAL_TITLE "ReactOS Eingabeaufforderung"
 END
 
 STRINGTABLE

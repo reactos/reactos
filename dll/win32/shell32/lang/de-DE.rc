@@ -769,7 +769,7 @@ BEGIN
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Dateipfad öffnen"
     IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
-    IDS_SENDTO_MENU "Senden an"
+    IDS_SENDTO_MENU "Send&en an"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
     IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"
@@ -809,7 +809,7 @@ BEGIN
     
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Lokalen Datenträger formatieren"
-    IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicke auf OK zum Formatieren. Klicke auf ABBRECHEN zum Beenden."
+    IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicken Sie auf OK zum Formatieren. Klicken Sie auf ABBRECHEN zum Beenden."
     IDS_FORMAT_COMPLETE "Formatieren abgeschlossen."
 
     /* Run File dialog */
