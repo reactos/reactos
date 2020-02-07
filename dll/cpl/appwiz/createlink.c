@@ -495,7 +495,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 }
 
 LONG CALLBACK
-ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
+ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
 {
     PROPSHEETHEADERW psh;
     HPROPSHEETPAGE ahpsp[2];
@@ -601,7 +601,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
 typedef void (WINAPI *FN_InitCommonControls)(void);
 
 LONG CALLBACK
-ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPWSTR szPath)
+ShowCreateShortcutWizardComCtl32(HWND hwndCPl, LPCWSTR szPath)
 {
     HINSTANCE hComCtl32;
     FN_InitCommonControls fn;
@@ -628,7 +628,7 @@ LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    return ShowCreateShortcutWizardComCtl32(hwndCPl, (LPWSTR) lParam1);
+    return ShowCreateShortcutWizardComCtl32(hwndCPl, (LPWSTR)lParam1);
 }
 
 LONG
