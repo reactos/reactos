@@ -288,7 +288,7 @@ FindTag(PUCHAR ReadDataPort, USHORT WantedTag, PVOID Buffer, ULONG Length)
     }
     else
     {
-      Peek(ReadDataPort, NULL, Length);
+      Peek(ReadDataPort, NULL, TagLen);
     }
   } while (Tag != ISAPNP_TAG_END);
 
