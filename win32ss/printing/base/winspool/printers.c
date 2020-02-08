@@ -17,6 +17,92 @@
 static const WCHAR wszWindowsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR wszDeviceValue[] = L"Device";
 
+BOOL strW2A(PWSTR wstring, PSTR pstring)
+{
+    // This converts an incoming Unicode string to an ANSI string
+    // Returns TRUE on failure, otherwise returns FALSE.
+
+    PSTR pszTemp;
+    DWORD cch;
+    BOOL bReturn = FALSE;
+
+    if (!wstring)
+    {
+        goto Exit;
+    }
+    else
+    {
+        cch = wcslen(wstring);
+    }
+
+    if (cch == 0)
+    {
+        goto Exit;
+    }
+
+    // Convert Unicode pName to a ANSI string pszTemp.
+    pszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+    if (!pszTemp)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        ERR("HeapAlloc failed!\n");
+        bReturn = TRUE;   // indicates a failure to be handled by caller
+        goto Exit;
+    }
+
+    WideCharToMultiByte(CP_ACP, 0, wstring, -1, pszTemp, cch + 1, NULL, NULL);
+    StringCchCopyA(pstring, cch + 1, pszTemp);
+
+    HeapFree(hProcessHeap, 0, pszTemp);
+
+Exit:
+
+    return bReturn;
+}
+
+BOOL strA2W(PSTR pstring, PWSTR wstring)
+{
+    // This converts an incoming ANSI string to an Unicode string
+    // Returns TRUE on failure, otherwise returns FALSE.
+
+    PWSTR pwszTemp;
+    DWORD cch;
+    BOOL bReturn = FALSE;
+
+    if (!pstring)
+    {
+        goto Exit;
+    }
+    else
+    {
+        cch = strlen(pstring);
+    }
+
+    if (cch == 0)
+    {
+        goto Exit;
+    }
+
+    // Convert ANSI pName to a Unicode string pwszTemp
+    pwszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+    if (!pwszTemp)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        ERR("HeapAlloc failed!\n");
+        bReturn = TRUE;   // indicates a failure to be handled by caller
+        goto Exit;
+    }
+
+    MultiByteToWideChar(CP_ACP, 0, pstring, -1, pwszTemp, cch + 1);
+    StringCchCopyW(wstring, cch + 1, pwszTemp);
+
+    HeapFree(hProcessHeap, 0, pwszTemp);
+
+Exit:
+
+    return bReturn;
+}
+
 static DWORD
 _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB_INFO_1W pAddJobInfo1)
 {
@@ -1490,10 +1576,225 @@ Cleanup:
 
 BOOL WINAPI
 GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
-{
-    ERR("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
-    if (pcbNeeded) *pcbNeeded = 0;
-    return FALSE;
+{   
+    /*
+     * We are mapping multiple different pointers to the same pDriverInfo pointer here so that
+     * we can do in-place conversion. We read the Unicode response from GetPrinterDriverW outputs and
+     * then we write back the ANSI conversion into the same buffer for our GetPrinterDriverA output
+     */
+    PDRIVER_INFO_1A pdi1a = (PDRIVER_INFO_1A)pDriverInfo;
+    PDRIVER_INFO_1W pdi1w = (PDRIVER_INFO_1W)pDriverInfo;
+    PDRIVER_INFO_2A pdi2a = (PDRIVER_INFO_2A)pDriverInfo;
+    PDRIVER_INFO_2W pdi2w = (PDRIVER_INFO_2W)pDriverInfo;
+    PDRIVER_INFO_3A pdi3a = (PDRIVER_INFO_3A)pDriverInfo;
+    PDRIVER_INFO_3W pdi3w = (PDRIVER_INFO_3W)pDriverInfo;
+    PDRIVER_INFO_4A pdi4a = (PDRIVER_INFO_4A)pDriverInfo;
+    PDRIVER_INFO_4W pdi4w = (PDRIVER_INFO_4W)pDriverInfo;
+    PDRIVER_INFO_5A pdi5a = (PDRIVER_INFO_5A)pDriverInfo;
+    PDRIVER_INFO_5W pdi5w = (PDRIVER_INFO_5W)pDriverInfo;
+    PDRIVER_INFO_6A pdi6a = (PDRIVER_INFO_6A)pDriverInfo;
+    PDRIVER_INFO_6W pdi6w = (PDRIVER_INFO_6W)pDriverInfo;
+
+    /*
+     * Map the incoming ANSI pEnvironment string to a Unicode one here so that we can do
+     * in-place conversion. We read the ANSI input and then we write back the Unicode
+     * conversion into the same buffer for use with our GetPrinterDriverW function in strA2W
+     */
+    PWSTR pwszEnvironment = (PWSTR)pEnvironment;
+
+    BOOL bReturnValue = FALSE;
+
+    TRACE("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+
+    // Check for invalid levels here for early error return. Should be 1-6.
+    if (Level <  1 || Level > 6)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        ERR("Invalid Level!\n");
+        goto Cleanup;
+    }
+
+    if (strA2W(pEnvironment, pwszEnvironment))
+        goto Cleanup;
+
+    bReturnValue = GetPrinterDriverW(hPrinter, pwszEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    TRACE("*pcbNeeded is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcbNeeded, bReturnValue, GetLastError());
+
+    if (!bReturnValue)
+    {
+        TRACE("GetPrinterDriverW failed!\n");
+        goto Cleanup;
+    }
+
+    // Do Unicode to ANSI conversions for strings based on Level
+    switch (Level)
+    {
+        case 1:
+        {
+            if (strW2A(pdi1w->pName, pdi1a->pName))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 2:
+        {
+            if (strW2A(pdi2w->pName, pdi2a->pName))
+                goto Cleanup;
+
+            if (strW2A(pdi2w->pEnvironment, pdi2a->pEnvironment))
+                goto Cleanup;
+
+            if (strW2A(pdi2w->pDriverPath, pdi2a->pDriverPath))
+                goto Cleanup;
+
+            if (strW2A(pdi2w->pDataFile, pdi2a->pDataFile))
+                goto Cleanup;
+
+            if (strW2A(pdi2w->pConfigFile, pdi2a->pConfigFile))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 3:
+        {
+            if (strW2A(pdi3w->pName, pdi3a->pName))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pEnvironment, pdi3a->pEnvironment))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pDriverPath, pdi3a->pDriverPath))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pDataFile, pdi3a->pDataFile))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pConfigFile, pdi3a->pConfigFile))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pHelpFile, pdi3a->pHelpFile))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pDependentFiles, pdi3a->pDependentFiles))
+                goto Cleanup;
+
+            if (strW2A(pdi3w->pMonitorName, pdi3a->pMonitorName))
+                goto Cleanup;
+ 
+            if (strW2A(pdi3w->pDefaultDataType, pdi3a->pDefaultDataType))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 4:
+        {
+            if (strW2A(pdi4w->pName, pdi4a->pName))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pEnvironment, pdi4a->pEnvironment))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pDriverPath, pdi4a->pDriverPath))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pDataFile, pdi4a->pDataFile))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pConfigFile, pdi4a->pConfigFile))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pHelpFile, pdi4a->pHelpFile))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pDependentFiles, pdi4a->pDependentFiles))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pMonitorName, pdi4a->pMonitorName))
+                goto Cleanup;
+ 
+            if (strW2A(pdi4w->pDefaultDataType, pdi4a->pDefaultDataType))
+                goto Cleanup;
+
+            if (strW2A(pdi4w->pszzPreviousNames, pdi4a->pszzPreviousNames))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 5:
+        {
+            if (strW2A(pdi5w->pName, pdi5a->pName))
+                goto Cleanup;
+
+            if (strW2A(pdi5w->pEnvironment, pdi5a->pEnvironment))
+                goto Cleanup;
+
+            if (strW2A(pdi5w->pDriverPath, pdi5a->pDriverPath))
+                goto Cleanup;
+
+            if (strW2A(pdi5w->pDataFile, pdi5a->pDataFile))
+                goto Cleanup;
+
+            if (strW2A(pdi5w->pConfigFile, pdi5a->pConfigFile))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 6:
+        {
+            if (strW2A(pdi6w->pName, pdi6a->pName))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pEnvironment, pdi6a->pEnvironment))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pDriverPath, pdi6a->pDriverPath))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pDataFile, pdi6a->pDataFile))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pConfigFile, pdi6a->pConfigFile))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pHelpFile, pdi6a->pHelpFile))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pDependentFiles, pdi6a->pDependentFiles))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pMonitorName, pdi6a->pMonitorName))
+                goto Cleanup;
+ 
+            if (strW2A(pdi6w->pDefaultDataType, pdi6a->pDefaultDataType))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pszzPreviousNames, pdi6a->pszzPreviousNames))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pszMfgName, pdi6a->pszMfgName))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pszOEMUrl, pdi6a->pszOEMUrl))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pszHardwareID, pdi6a->pszHardwareID))
+                goto Cleanup;
+
+            if (strW2A(pdi6w->pszProvider, pdi6a->pszProvider))
+                goto Cleanup;
+        }
+    }
+
+    bReturnValue = TRUE;
+
+Cleanup:
+
+    return bReturnValue;
 }
 
 BOOL WINAPI
