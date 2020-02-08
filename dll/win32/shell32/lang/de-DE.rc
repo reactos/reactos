@@ -155,7 +155,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS wird Ihnen zur Verfügung gestellt von:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -767,17 +767,17 @@ BEGIN
     IDS_PASTE "Einfügen"
     IDS_EJECT "Auswerfen"
     IDS_DISCONNECT "Trennen"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "Date&ipfad öffnen"
+    IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
+    IDS_SENDTO_MENU "S&enden an"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
+    IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"
+    IDS_MOVEERRORSAMEFOLDER "'%s' kann nicht verschoben werden: Quell- und Zielordner sind identisch."
+    IDS_MOVEERRORSAME "'%s' kann nicht verschoben werden: Quell- und Zieldatei sind identisch."
+    IDS_COPYERRORSAME "'%s' kann nicht kopiert werden: Quell- und Zieldatei sind identisch."
+    IDS_MOVEERRORSUBFOLDER "'%s' kann nicht verschoben werden: Der Zielorder ist ein Unterordner des Quellordners."
+    IDS_COPYERRORSUBFOLDER "'%s' kann nicht kopiert werden: Der Zielorder ist ein Unterordner des Quellordners."
 
     IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
     IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."
@@ -808,9 +808,9 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "Möchten Sie das System herunterfahren?"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Lokalen Datenträger formatieren"
+    IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicken Sie auf OK zum Formatieren. Klicken Sie auf ABBRECHEN zum Beenden."
+    IDS_FORMAT_COMPLETE "Formatieren abgeschlossen."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Anzeigen der Datei Ausführen Dialogbox nicht möglich (interner Fehler)"
@@ -887,15 +887,15 @@ BEGIN
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
     IDS_CMD_FILE "ReactOS-Befehlsskript"
-    IDS_COM_FILE "DOS Anwendung"
+    IDS_COM_FILE "DOS-Anwendung"
     IDS_CPL_FILE "Systemsteuerungselement"
     IDS_CUR_FILE "Cursor"
-    IDS_DB__FILE "Database File"
+    IDS_DB__FILE "Datenbankdatei"
     IDS_DLL_FILE "Programmbibliothek"
     IDS_DRV_FILE "Gerätetreiber"
     IDS_EFI_FILE "Extensible Firmware Interface Executable"
     IDS_EXE_FILE "Anwendung"
-    IDS_NLS_FILE "National Language Support File"
+    IDS_NLS_FILE "Sprachenunterstützungsdatei"
     IDS_OCX_FILE "ActiveX Control"
     IDS_TLB_FILE "Type Library"
     IDS_FON_FILE "Schriftartendatei"
@@ -905,7 +905,7 @@ BEGIN
     IDS_ICO_FILE "Icon"
     IDS_INI_FILE "Konfigurationseinstellungen"
     IDS_LNK_FILE "Verknüpfung"
-    IDS_NT__FILE "NT DOS32 Configuration File"
+    IDS_NT__FILE "NT DOS32 Konfigurationsdatei"
     IDS_PIF_FILE "NT VDM Programminformationsdatei"
     IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
