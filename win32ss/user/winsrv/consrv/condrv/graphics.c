@@ -71,7 +71,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
      */
     NewBuffer->ClientProcess = ProcessHandle;
 
-    /* Get infos from the graphics buffer information structure */
+    /* Get information from the graphics buffer information structure */
     NewBuffer->BitMapInfoLength = GraphicsInfo->Info.dwBitMapInfoLength;
 
     NewBuffer->BitMapInfo = ConsoleAllocHeap(HEAP_ZERO_MEMORY, NewBuffer->BitMapInfoLength);

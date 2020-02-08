@@ -1255,6 +1255,7 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
 
     if (GetType(Buff) == TEXTMODE_BUFFER)
     {
+        /* Repaint the caret */
         InvalidateCell(GuiData, Buff->CursorPosition.X, Buff->CursorPosition.Y);
         Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
 

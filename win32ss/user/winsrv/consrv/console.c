@@ -1200,6 +1200,7 @@ CSR_API(SrvSetConsoleMode)
 {
 #define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS | \
                                       ENABLE_INSERT_MODE    | ENABLE_QUICK_EDIT_MODE )
+// NOTE: Vista+ ENABLE_AUTO_POSITION is also a control mode.
 
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;

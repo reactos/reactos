@@ -236,10 +236,10 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         */
 
         /*
-         * This is Windows' behaviour
+         * This is Windows behaviour.
          */
 
-        /* Use the current console size. Regularize it if needed. */
+        /* Use the current console size. Normalize it if needed */
         TextModeInfo.ScreenBufferSize = Console->ConsoleSize;
         if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 1;
         if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 1;
@@ -258,7 +258,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     }
     else if (CreateScreenBufferRequest->ScreenBufferType == CONSOLE_GRAPHICS_BUFFER)
     {
-        /* Get infos from the graphics buffer information structure */
+        /* Get information from the graphics buffer information structure */
         if (!CsrValidateMessageBuffer(ApiMessage,
                                       (PVOID*)&CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMapInfo,
                                       CreateScreenBufferRequest->GraphicsBufferInfo.dwBitMapInfoLength,

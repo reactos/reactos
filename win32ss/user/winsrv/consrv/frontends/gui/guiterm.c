@@ -1238,7 +1238,7 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
         if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
         {
 #if 0
-            /* Load the terminal infos from the registry */
+            /* Load the terminal information from the registry */
             GuiConsoleReadUserSettings(&GuiInitInfo->TermInfo);
 #endif
 
