@@ -54,4 +54,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Следующая синхронизация через: %s в %s"
     IDS_INETTIMESYNCING "Подождите, пока РеактОС синхронизирует время с %s"
     IDS_INETTIMEERROR "Возникла ошибка во время синхронизации с %s"
+    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
+    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
 END
