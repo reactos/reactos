@@ -202,12 +202,93 @@ DocumentEvent( HANDLE hPrinter, HDC hdc, int iEsc, ULONG cbIn, PVOID pvIn, ULONG
     return DOCUMENTEVENT_UNSUPPORTED;
 }
 
+static PRINTER_INFO_9A * get_devmodeA(HANDLE hprn)
+{
+    PRINTER_INFO_9A *pi9 = NULL;
+    DWORD needed = 0;
+    BOOL res;
+
+    res = GetPrinterA(hprn, 9, NULL, 0, &needed);
+    if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+    {
+        pi9 = HeapAlloc(hProcessHeap, 0, needed);
+        res = GetPrinterA(hprn, 9, (LPBYTE)pi9, needed, &needed);
+    }
+
+    if (res)
+        return pi9;
+
+    ERR("GetPrinterA failed with %u\n", GetLastError());
+    HeapFree(hProcessHeap, 0, pi9);
+    return NULL;
+}
+
 LONG WINAPI
 DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput, DWORD fMode)
 {
+    HANDLE hUseHandle = NULL;
+    PRINTER_INFO_9A *pi9 = NULL;
+    LONG Result = -1, Length;
+
     TRACE("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
-    UNIMPLEMENTED;
-    return -1;
+
+    if (hPrinter)
+    {
+        hUseHandle = hPrinter;
+    }
+    else if (!OpenPrinterA(pDeviceName, &hUseHandle, NULL))
+    {
+        ERR("No handle, and no usable printer name passed in\n");
+        return -1;
+    }
+
+    pi9 = get_devmodeA(hUseHandle);
+
+    if (pi9)
+    {
+        Length = pi9->pDevMode->dmSize + pi9->pDevMode->dmDriverExtra;
+        // See wineps.drv PSDRV_ExtDeviceMode
+        if (fMode)
+        {
+            Result = 1; /* IDOK */
+
+            if (fMode & DM_IN_BUFFER)
+            {
+                FIXME("Merge pDevModeInput with pi9, write back to driver!\n");
+                // See wineps.drv PSDRV_MergeDevmodes
+            }
+
+            if (fMode & DM_IN_PROMPT)
+            {
+                FIXME("Show property sheet!\n");
+                Result = 2; /* IDCANCEL */
+            }
+
+            if (fMode & (DM_OUT_BUFFER | DM_OUT_DEFAULT))
+            {
+                if (pDevModeOutput)
+                {
+                    memcpy(pDevModeOutput, pi9->pDevMode, pi9->pDevMode->dmSize + pi9->pDevMode->dmDriverExtra);
+                }
+                else
+                {
+                    ERR("No pDevModeOutput\n");
+                    Result = -1;
+                }
+            }
+        }
+        else
+        {
+            Result = Length;
+        }
+
+        HeapFree(hProcessHeap, 0, pi9);
+    }
+
+    if (hUseHandle && !hPrinter)
+        ClosePrinter(hUseHandle);
+
+    return Result;
 }
 
 static PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
