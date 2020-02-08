@@ -120,8 +120,13 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
             /*
              * Sometimes, applications can put NULL chars into the screen-buffer
              * (this behaviour is allowed). Detect this and replace by a space.
+             * For full-width characters: copy only the character specified
+             * in the leading-byte cell, skipping the trailing-byte cell.
              */
-            *dstPos++ = (ptr[xPos].Char.UnicodeChar ? ptr[xPos].Char.UnicodeChar : L' ');
+            if (!(ptr[xPos].Attributes & COMMON_LVB_TRAILING_BYTE))
+            {
+                *dstPos++ = (ptr[xPos].Char.UnicodeChar ? ptr[xPos].Char.UnicodeChar : L' ');
+            }
         }
 
         /* Add newline characters if we are not in inline-text copy mode */
@@ -212,8 +217,13 @@ CopyLines(PTEXTMODE_SCREEN_BUFFER Buffer,
             /*
              * Sometimes, applications can put NULL chars into the screen-buffer
              * (this behaviour is allowed). Detect this and replace by a space.
+             * For full-width characters: copy only the character specified
+             * in the leading-byte cell, skipping the trailing-byte cell.
              */
-            *dstPos++ = (ptr[xPos].Char.UnicodeChar ? ptr[xPos].Char.UnicodeChar : L' ');
+            if (!(ptr[xPos].Attributes & COMMON_LVB_TRAILING_BYTE))
+            {
+                *dstPos++ = (ptr[xPos].Char.UnicodeChar ? ptr[xPos].Char.UnicodeChar : L' ');
+            }
         }
     }
 
@@ -351,6 +361,75 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     GlobalUnlock(hData);
 }
 
+static VOID
+GuiPaintCaret(
+    PTEXTMODE_SCREEN_BUFFER Buffer,
+    PGUI_CONSOLE_DATA GuiData,
+    ULONG TopLine,
+    ULONG BottomLine,
+    ULONG LeftColumn,
+    ULONG RightColumn)
+{
+    PCONSRV_CONSOLE Console = Buffer->Header.Console;
+
+    ULONG CursorX, CursorY, CursorHeight;
+    HBRUSH CursorBrush, OldBrush;
+    WORD Attribute;
+
+    if (Buffer->CursorInfo.bVisible &&
+        Buffer->CursorBlinkOn &&
+        !Buffer->ForceCursorOff)
+    {
+        CursorX = Buffer->CursorPosition.X;
+        CursorY = Buffer->CursorPosition.Y;
+        if (LeftColumn <= CursorX && CursorX <= RightColumn &&
+            TopLine    <= CursorY && CursorY <= BottomLine)
+        {
+            CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
+
+            Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
+            if (Attribute == DEFAULT_SCREEN_ATTRIB)
+                Attribute = Buffer->ScreenDefaultAttrib;
+
+            CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
+            OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
+
+            if (Attribute & COMMON_LVB_LEADING_BYTE)
+            {
+                /* The caret is on the leading byte */
+                PatBlt(GuiData->hMemDC,
+                       CursorX * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth * 2,
+                       CursorHeight,
+                       PATCOPY);
+            }
+            else if (Attribute & COMMON_LVB_TRAILING_BYTE)
+            {
+                /* The caret is on the trailing byte */
+                PatBlt(GuiData->hMemDC,
+                       (CursorX - 1) * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth * 2,
+                       CursorHeight,
+                       PATCOPY);
+            }
+            else
+            {
+                PatBlt(GuiData->hMemDC,
+                       CursorX * GuiData->CharWidth,
+                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                       GuiData->CharWidth,
+                       CursorHeight,
+                       PATCOPY);
+            }
+
+            SelectObject(GuiData->hMemDC, OldBrush);
+            DeleteObject(CursorBrush);
+        }
+    }
+}
+
 VOID
 GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                        PGUI_CONSOLE_DATA GuiData,
@@ -363,8 +442,6 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     PCHAR_INFO From;
     PWCHAR To;
     WORD LastAttribute, Attribute;
-    ULONG CursorX, CursorY, CursorHeight;
-    HBRUSH CursorBrush, OldBrush;
     HFONT OldFont, NewFont;
     BOOLEAN IsUnderline;
 
@@ -492,61 +569,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     /* Restore the old font */
     SelectObject(GuiData->hMemDC, OldFont);
 
-    /*
-     * Draw the caret
-     */
-    if (Buffer->CursorInfo.bVisible &&
-        Buffer->CursorBlinkOn &&
-        !Buffer->ForceCursorOff)
-    {
-        CursorX = Buffer->CursorPosition.X;
-        CursorY = Buffer->CursorPosition.Y;
-        if (LeftColumn <= CursorX && CursorX <= RightColumn &&
-            TopLine    <= CursorY && CursorY <= BottomLine)
-        {
-            CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
-
-            Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
-            if (Attribute == DEFAULT_SCREEN_ATTRIB)
-                Attribute = Buffer->ScreenDefaultAttrib;
-
-            CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
-            OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
-
-            if (Attribute & COMMON_LVB_LEADING_BYTE)
-            {
-                /* The caret is on the leading byte */
-                PatBlt(GuiData->hMemDC,
-                       CursorX * GuiData->CharWidth,
-                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
-                       GuiData->CharWidth * 2,
-                       CursorHeight,
-                       PATCOPY);
-            }
-            else if (Attribute & COMMON_LVB_TRAILING_BYTE)
-            {
-                /* The caret is on the trailing byte */
-                PatBlt(GuiData->hMemDC,
-                       (CursorX - 1) * GuiData->CharWidth,
-                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
-                       GuiData->CharWidth * 2,
-                       CursorHeight,
-                       PATCOPY);
-            }
-            else
-            {
-                PatBlt(GuiData->hMemDC,
-                       CursorX * GuiData->CharWidth,
-                       CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
-                       GuiData->CharWidth,
-                       CursorHeight,
-                       PATCOPY);
-            }
-
-            SelectObject(GuiData->hMemDC, OldBrush);
-            DeleteObject(CursorBrush);
-        }
-    }
+    /* Draw the caret */
+    GuiPaintCaret(Buffer, GuiData, TopLine, BottomLine, LeftColumn, RightColumn);
 
     LeaveCriticalSection(&Console->Lock);
 }
