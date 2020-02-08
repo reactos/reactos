@@ -8,7 +8,6 @@ list(APPEND SOURCE
     log2lines.c
     match.c
     options.c
-    revision.c
     stat.c
     util.c)
 
