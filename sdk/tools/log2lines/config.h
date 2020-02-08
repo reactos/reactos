@@ -5,10 +5,6 @@
 #define INVALID_BASE    0xFFFFFFFFL
 
 #define LOGBOTTOM       "--------"
-#define SVNDB           "svndb.log"
-#define SVNDB_INX       "svndb.inx"
-#define DEF_RANGE       500
-#define MAGIC_INX       0x494E585F //'INX_'
 #define DEF_OPT_DIR     "output-i386"
 #define SOURCES_ENV     "_ROSBE_ROSSOURCEDIR"
 #define CACHEFILE       "log2lines.cache"
