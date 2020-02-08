@@ -61,15 +61,6 @@ static UINT ALTER_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT ALTER_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
-{
-    MSIALTERVIEW *av = (MSIALTERVIEW*)view;
-
-    TRACE("%p %d %p\n", av, row, rec );
-
-    return av->table->ops->get_row(av->table, row, rec);
-}
-
 static UINT ITERATE_columns(MSIRECORD *row, LPVOID param)
 {
     (*(UINT *)param)++;
@@ -221,19 +212,13 @@ static UINT ALTER_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT ALTER_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
 static const MSIVIEWOPS alter_ops =
 {
     ALTER_fetch_int,
     ALTER_fetch_stream,
-    ALTER_get_row,
+    NULL,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -243,8 +228,6 @@ static const MSIVIEWOPS alter_ops =
     ALTER_get_column_info,
     ALTER_modify,
     ALTER_delete,
-    ALTER_find_matching_rows,
-    NULL,
     NULL,
     NULL,
     NULL,

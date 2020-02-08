@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +29,6 @@
 #include "query.h"
 #include "wine/list.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -658,6 +654,12 @@ const_val:
             if( !$$ )
                 YYABORT;
         }
+   | TK_NULL
+        {
+            $$ = EXPR_sval( info, NULL );
+            if ( !$$ )
+                YYABORT;
+        }
     ;
 
 column_val:
@@ -740,15 +742,15 @@ number:
 static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table )
 {
     static const WCHAR space[] = {' ',0};
-    DWORD len = strlenW( list ) + strlenW( table ) + 2;
+    DWORD len = lstrlenW( list ) + lstrlenW( table ) + 2;
     LPWSTR ret;
 
     ret = parser_alloc( info, len * sizeof(WCHAR) );
     if( ret )
     {
-        strcpyW( ret, list );
-        strcatW( ret, space );
-        strcatW( ret, table );
+        lstrcpyW( ret, list );
+        lstrcatW( ret, space );
+        lstrcatW( ret, table );
     }
     return ret;
 }
@@ -921,7 +923,8 @@ static struct expr * EXPR_sval( void *info, const struct sql_str *str )
     if( e )
     {
         e->type = EXPR_SVAL;
-        if( SQL_getstring( info, str, (LPWSTR *)&e->u.sval ) != ERROR_SUCCESS )
+        if( !str) e->u.sval = NULL;
+        else if( SQL_getstring( info, str, (LPWSTR *)&e->u.sval ) != ERROR_SUCCESS )
             return NULL; /* e will be freed by query destructor */
     }
     return e;
@@ -971,7 +974,7 @@ static BOOL SQL_MarkPrimaryKeys( column_info **cols,
         found = FALSE;
         for( c = *cols, idx = 0; c && !found; c = c->next, idx++ )
         {
-            if( strcmpW( k->column, c->column ) )
+            if( wcscmp( k->column, c->column ) )
                 continue;
             c->type |= MSITYPE_KEY;
             found = TRUE;

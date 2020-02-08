@@ -3,9 +3,16 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
+add_definitions(-D__WINESRC__)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
+
+set(OLD_IDL_FLAGS ${IDL_FLAGS})
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
+add_idl_headers(msi_idlheaders msiserver.idl winemsi.idl)
+add_rpc_files(client winemsi.idl)
+add_rpc_files(server winemsi.idl)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
 
 if(MSVC)
     #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
@@ -66,17 +73,18 @@ add_library(msi MODULE
     sql.tab.c
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_s.c
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
 
-add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msiserver.idl)
 set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb)
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
-add_dependencies(msi msi_idlheader)
-add_delay_importlibs(msi odbccp32 crypt32 wintrust)
-add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi urlmon user32 version wininet mspatcha
+add_dependencies(msi msi_idlheaders)
+add_delay_importlibs(msi odbccp32 wintrust crypt32 mspatcha)
+add_importlibs(msi urlmon wininet comctl32 shell32 shlwapi cabinet oleaut32 ole32 version user32 gdi32 advapi32 advapi32_vista rpcrt4 sxs
     #FIXME : should be in delayed imports
     imagehlp
     msvcrt

@@ -34,14 +34,14 @@
 /* Undocumented macros, especially those whose name start with YY_,
    are private implementation details.  Do not rely on them.  */
 
-#ifndef YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
-# define YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
+#ifndef YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
+# define YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
 #if YYDEBUG
-extern int sql_debug;
+extern int cond_debug;
 #endif
 
 /* Token type.  */
@@ -49,67 +49,44 @@ extern int sql_debug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    TK_ALTER = 258,
-    TK_AND = 259,
-    TK_BY = 260,
-    TK_CHAR = 261,
-    TK_COMMA = 262,
-    TK_CREATE = 263,
-    TK_DELETE = 264,
-    TK_DROP = 265,
-    TK_DISTINCT = 266,
-    TK_DOT = 267,
-    TK_EQ = 268,
-    TK_FREE = 269,
-    TK_FROM = 270,
-    TK_GE = 271,
-    TK_GT = 272,
-    TK_HOLD = 273,
-    TK_ADD = 274,
-    TK_ID = 275,
-    TK_ILLEGAL = 276,
-    TK_INSERT = 277,
-    TK_INT = 278,
-    TK_INTEGER = 279,
-    TK_INTO = 280,
-    TK_IS = 281,
-    TK_KEY = 282,
-    TK_LE = 283,
-    TK_LONG = 284,
-    TK_LONGCHAR = 285,
-    TK_LP = 286,
-    TK_LT = 287,
-    TK_LOCALIZABLE = 288,
-    TK_MINUS = 289,
-    TK_NE = 290,
-    TK_NOT = 291,
-    TK_NULL = 292,
-    TK_OBJECT = 293,
-    TK_OR = 294,
-    TK_ORDER = 295,
-    TK_PRIMARY = 296,
-    TK_RP = 297,
-    TK_SELECT = 298,
-    TK_SET = 299,
-    TK_SHORT = 300,
-    TK_SPACE = 301,
-    TK_STAR = 302,
-    TK_STRING = 303,
-    TK_TABLE = 304,
-    TK_TEMPORARY = 305,
-    TK_UPDATE = 306,
-    TK_VALUES = 307,
-    TK_WHERE = 308,
-    TK_WILDCARD = 309,
-    END_OF_FILE = 310,
-    ILLEGAL = 311,
-    SPACE = 312,
-    UNCLOSED_STRING = 313,
-    COMMENT = 314,
-    FUNCTION = 315,
-    COLUMN = 316,
-    TK_LIKE = 318,
-    TK_NEGATION = 319
+    COND_SPACE = 258,
+    COND_EOF = 259,
+    COND_OR = 260,
+    COND_AND = 261,
+    COND_NOT = 262,
+    COND_XOR = 263,
+    COND_IMP = 264,
+    COND_EQV = 265,
+    COND_LT = 266,
+    COND_GT = 267,
+    COND_EQ = 268,
+    COND_NE = 269,
+    COND_GE = 270,
+    COND_LE = 271,
+    COND_ILT = 272,
+    COND_IGT = 273,
+    COND_IEQ = 274,
+    COND_INE = 275,
+    COND_IGE = 276,
+    COND_ILE = 277,
+    COND_LPAR = 278,
+    COND_RPAR = 279,
+    COND_TILDA = 280,
+    COND_SS = 281,
+    COND_ISS = 282,
+    COND_ILHS = 283,
+    COND_IRHS = 284,
+    COND_LHS = 285,
+    COND_RHS = 286,
+    COND_PERCENT = 287,
+    COND_DOLLARS = 288,
+    COND_QUESTION = 289,
+    COND_AMPER = 290,
+    COND_EXCLAM = 291,
+    COND_IDENT = 292,
+    COND_NUMBER = 293,
+    COND_LITER = 294,
+    COND_ERROR = 295
   };
 #endif
 
@@ -117,17 +94,15 @@ extern int sql_debug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 64 "sql.y"
+#line 120 "cond.y"
 
-    struct sql_str str;
-    LPWSTR string;
-    column_info *column_list;
-    MSIVIEW *query;
-    struct expr *expr;
-    USHORT column_type;
-    int integer;
+    struct cond_str str;
+    struct value value;
+    LPWSTR identifier;
+    INT operator;
+    BOOL bool;
 
-#line 131 "sql.tab.h"
+#line 106 "cond.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -137,6 +112,6 @@ typedef union YYSTYPE YYSTYPE;
 
 
 
-int sql_parse (SQL_input *info);
+int cond_parse (COND_input *info);
 
-#endif /* !YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED  */
+#endif /* !YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED  */

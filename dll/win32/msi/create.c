@@ -24,7 +24,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -130,14 +129,14 @@ static const MSIVIEWOPS create_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
     CREATE_execute,
     CREATE_close,
     CREATE_get_dimensions,
     CREATE_get_column_info,
     CREATE_modify,
     CREATE_delete,
-    NULL,
-    NULL,
     NULL,
     NULL,
     NULL,
@@ -152,7 +151,7 @@ static UINT check_columns( const column_info *col_info )
     /* check for two columns with the same name */
     for( c1 = col_info; c1; c1 = c1->next )
         for( c2 = c1->next; c2; c2 = c2->next )
-            if (!strcmpW( c1->column, c2->column ))
+            if (!wcscmp( c1->column, c2->column ))
                 return ERROR_BAD_QUERY_SYNTAX;
 
     return ERROR_SUCCESS;

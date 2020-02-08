@@ -25,7 +25,6 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "msipriv.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -84,7 +83,7 @@ static const WCHAR regfont2[] =
  * Code based off of code located here
  * http://www.codeproject.com/gdi/fontnamefromfile.asp
  */
-static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
+static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWORD id )
 {
     TT_TABLE_DIRECTORY tblDir;
     BOOL bFound = FALSE;
@@ -96,8 +95,10 @@ static WCHAR *load_ttf_name_id( const WCHAR *filename, DWORD id )
     LPWSTR ret = NULL;
     int i;
 
-    handle = CreateFileW(filename ,GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL, 0 );
+    if (package)
+        handle = msi_create_file( package, filename, GENERIC_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL );
+    else
+        handle = CreateFileW( filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
     if (handle == INVALID_HANDLE_VALUE)
     {
         ERR("Unable to open font file %s\n", debugstr_w(filename));
@@ -175,12 +176,12 @@ end:
     return ret;
 }
 
-static WCHAR *font_name_from_file( const WCHAR *filename )
+static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
 {
     static const WCHAR truetypeW[] = {' ','(','T','r','u','e','T','y','p','e',')',0};
     WCHAR *name, *ret = NULL;
 
-    if ((name = load_ttf_name_id( filename, NAME_ID_FULL_FONT_NAME )))
+    if ((name = load_ttf_name_id( package, filename, NAME_ID_FULL_FONT_NAME )))
     {
         if (!name[0])
         {
@@ -188,36 +189,36 @@ static WCHAR *font_name_from_file( const WCHAR *filename )
             msi_free( name );
             return NULL;
         }
-        ret = msi_alloc( (strlenW( name ) + strlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
-        strcpyW( ret, name );
-        strcatW( ret, truetypeW );
+        ret = msi_alloc( (lstrlenW( name ) + lstrlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
+        lstrcpyW( ret, name );
+        lstrcatW( ret, truetypeW );
         msi_free( name );
     }
     return ret;
 }
 
-WCHAR *msi_font_version_from_file( const WCHAR *filename )
+WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
 {
     static const WCHAR fmtW[] = {'%','u','.','%','u','.','0','.','0',0};
     WCHAR *version, *p, *q, *ret = NULL;
 
-    if ((version = load_ttf_name_id( filename, NAME_ID_VERSION )))
+    if ((version = load_ttf_name_id( package, filename, NAME_ID_VERSION )))
     {
         int len, major = 0, minor = 0;
-        if ((p = strchrW( version, ';' ))) *p = 0;
+        if ((p = wcschr( version, ';' ))) *p = 0;
         p = version;
-        while (*p && !isdigitW( *p )) p++;
-        if ((q = strchrW( p, '.' )))
+        while (*p && !iswdigit( *p )) p++;
+        if ((q = wcschr( p, '.' )))
         {
-            major = atoiW( p );
+            major = wcstol( p, NULL, 10 );
             p = ++q;
-            while (*q && isdigitW( *q )) q++;
-            if (!*q || *q == ' ') minor = atoiW( p );
+            while (*q && iswdigit( *q )) q++;
+            if (!*q || *q == ' ') minor = wcstol( p, NULL, 10 );
             else major = 0;
         }
-        len = strlenW( fmtW ) + 20;
+        len = lstrlenW( fmtW ) + 20;
         ret = msi_alloc( len * sizeof(WCHAR) );
-        sprintfW( ret, fmtW, major, minor );
+        swprintf( ret, fmtW, major, minor );
         msi_free( version );
     }
     return ret;
@@ -258,7 +259,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont2,&hkey2);
 
     if (MSI_RecordIsNull(row,2))
-        name = font_name_from_file( file->TargetPath );
+        name = font_name_from_file( package, file->TargetPath );
     else
         name = msi_dup_record_field(row,2);
 
@@ -275,7 +276,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
     uipath = strdupW( file->TargetPath );
-    p = strrchrW(uipath,'\\');
+    p = wcsrchr(uipath,'\\');
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
@@ -293,6 +294,9 @@ UINT ACTION_RegisterFonts(MSIPACKAGE *package)
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT rc;
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szRegisterFonts);
 
     rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
@@ -338,7 +342,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont2, &hkey2 );
 
     if (MSI_RecordIsNull( row, 2 ))
-        name = font_name_from_file( file->TargetPath );
+        name = font_name_from_file( package, file->TargetPath );
     else
         name = msi_dup_record_field( row, 2 );
 
@@ -355,7 +359,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
     uipath = strdupW( file->TargetPath );
-    p = strrchrW( uipath,'\\' );
+    p = wcsrchr( uipath,'\\' );
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
@@ -373,6 +377,9 @@ UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT r;
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szUnregisterFonts);
 
     r = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (r != ERROR_SUCCESS)

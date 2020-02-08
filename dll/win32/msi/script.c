@@ -30,7 +30,6 @@
 #include "activscp.h"
 #include "oleauto.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "msiserver.h"
 
@@ -136,7 +135,7 @@ static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, 
     }
 
     /* Are we looking for the session object? */
-    if (!strcmpW(szSession, pstrName)) {
+    if (!wcscmp(szSession, pstrName)) {
         if (dwReturnMask & SCRIPTINFO_ITYPEINFO) {
             HRESULT hr = get_typeinfo(Session_tid, ppti);
             if (SUCCEEDED(hr))
