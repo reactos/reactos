@@ -141,6 +141,11 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
         return;
     }
 
+//
+// FIXME: Scrolling via keyboard shortcuts must be done differently,
+// without touching the internal VirtualY variable.
+//
+#if 0
     if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
          (VirtualKeyCode == VK_UP || VirtualKeyCode == VK_DOWN) )
     {
@@ -172,6 +177,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
         ConioDrawConsole(Console);
         return;
     }
+#endif
 
     /* Send the key press to the console driver */
 
