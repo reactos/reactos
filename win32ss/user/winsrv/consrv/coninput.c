@@ -19,9 +19,11 @@
 #define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)     \
     ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), NULL,  \
                     (Access), (LockConsole), INPUT_BUFFER)
+
 #define ConSrvGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
     ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), (Entry),                   \
                     (Access), (LockConsole), INPUT_BUFFER)
+
 #define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 
@@ -33,12 +35,16 @@
  *  ERROR_INVALID_PARAMETER."
  */
 #define ConsoleInputUnicodeToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+do { \
+    ASSERT((ULONG_PTR)(dChar) != (ULONG_PTR)(sWChar)); \
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL); \
+} while (0)
 
 #define ConsoleInputAnsiToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
+do { \
+    ASSERT((ULONG_PTR)(dWChar) != (ULONG_PTR)(sChar)); \
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1); \
+} while (0)
 
 
 typedef struct _GET_INPUT_INFO

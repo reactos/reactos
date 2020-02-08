@@ -29,8 +29,10 @@
 /* GLOBALS ********************************************************************/
 
 #define ConsoleOutputUnicodeToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+do { \
+    ASSERT((ULONG_PTR)(dChar) != (ULONG_PTR)(sWChar)); \
+    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL); \
+} while (0)
 
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"

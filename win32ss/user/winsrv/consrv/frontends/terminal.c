@@ -34,12 +34,16 @@
  *  ERROR_INVALID_PARAMETER."
  */
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
-    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
-    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+do { \
+    ASSERT((ULONG_PTR)(dChar) != (ULONG_PTR)(sWChar)); \
+    WideCharToMultiByte((Console)->InputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL); \
+} while (0)
 
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    ASSERT((ULONG_PTR)dWChar != (ULONG_PTR)sChar); \
-    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1)
+do { \
+    ASSERT((ULONG_PTR)(dWChar) != (ULONG_PTR)(sChar)); \
+    MultiByteToWideChar((Console)->InputCodePage, 0, (sChar), 1, (dWChar), 1); \
+} while (0)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
