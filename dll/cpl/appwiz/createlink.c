@@ -11,6 +11,7 @@
  */
 
 #include "appwiz.h"
+#include <commctrl.h>
 #include <shellapi.h>
 #include <strsafe.h>
 
@@ -495,7 +496,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 }
 
 LONG CALLBACK
-ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
+ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
 {
     PROPSHEETHEADERW psh;
     HPROPSHEETPAGE ahpsp[2];
@@ -601,7 +602,8 @@ LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR) lParam1);
+    InitCommonControls();
+    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR)lParam1);
 }
 
 LONG
@@ -612,6 +614,7 @@ NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     if (MultiByteToWideChar(CP_ACP, 0, (LPSTR)lParam1, -1, szFile, _countof(szFile)))
     {
+        InitCommonControls();
         return ShowCreateShortcutWizard(hwndCPl, szFile);
     }
     return -1;
