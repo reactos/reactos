@@ -97,7 +97,7 @@ wWinMain(HINSTANCE hInstance,
     else if (!_wcsicmp(lpCmdLine, L"mouse"))           return RunControlPanel(L"main.cpl @0");
     else if (!_wcsicmp(lpCmdLine, L"netconnections"))  return OpenShellFolder(L"\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}");
     else if (!_wcsicmp(lpCmdLine, L"netware"))         return RunControlPanel(L"nwc.cpl");
-    else if (!_wcsicmp(lpCmdLine, L"ports"))           return RunControlPanel(L"sysdm.cpl");      /* TODO: Switch to the "Computer Name" tab */
+    else if (!_wcsicmp(lpCmdLine, L"ports"))           return RunControlPanel(L"sysdm.cpl,,1");
     else if (!_wcsicmp(lpCmdLine, L"printers"))        return OpenShellFolder(L"\\::{2227A280-3AEA-1069-A2DE-08002B30309D}");
     else if (!_wcsicmp(lpCmdLine, L"scannercamera"))   return OpenShellFolder(L"\\::{E211B736-43FD-11D1-9EFB-0000F8757FCD}");
     else if (!_wcsicmp(lpCmdLine, L"schedtasks"))      return OpenShellFolder(L"\\::{D6277990-4C6A-11CF-8D87-00AA0060F5BF}");
