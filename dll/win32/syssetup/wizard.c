@@ -395,28 +395,28 @@ WriteProductOption(PRODUCT_OPTION nOption)
         case PRODUCT_OPTION_SERVER:
             /* write ProductSuite */
             pData = L"Terminal Server\0";
-            cbData = (lstrlenA("Terminal Server") + 2) * sizeof(WCHAR);
+            cbData = sizeof(L"Terminal Server\0");
             error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
             if (error)
                 break;
     
             /* write ProductType */
             pData = L"ServerNT";
-            cbData = (lstrlenW(pData) + 1) * sizeof(WCHAR);
+            cbData = sizeof(L"ServerNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
             break;
     
         case PRODUCT_OPTION_WORKSTATION:
             /* write ProductSuite */
             pData = L"\0";
-            cbData = 2 * sizeof(WCHAR);
+            cbData = sizeof(L"\0");
             error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
             if (error)
                 break;
     
             /* write ProductType */
             pData = L"WinNT";
-            cbData = (lstrlenW(pData) + 1) * sizeof(WCHAR);
+            cbData = sizeof(L"WinNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
             break;
     }
