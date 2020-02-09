@@ -129,13 +129,13 @@ PrintAttribute(
             if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 continue;
 
-            if (!wcscmp(findData.cFileName, L".") || !wcscmp(findData.cFileName, L".."))
+            if (!wcscmp(findData.cFileName, L".") ||
+                !wcscmp(findData.cFileName, L".."))
                 continue;
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound = PrintAttribute(szFullName, pszFile, bRecurse,
-                                    bDirectories) || bFound;
+            bFound != PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
         }
         while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
@@ -159,7 +159,8 @@ PrintAttribute(
         if (bIsDir && !bDirectories && !bExactMatch)
             continue;
 
-        if (!wcscmp(findData.cFileName, L".") || !wcscmp(findData.cFileName, L".."))
+        if (!wcscmp(findData.cFileName, L".") ||
+            !wcscmp(findData.cFileName, L".."))
             continue;
 
         wcscpy(pszFileName, findData.cFileName);
@@ -226,13 +227,14 @@ ChangeAttribute(
             if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 continue;
 
-            if (!wcscmp(findData.cFileName, L".") || !wcscmp(findData.cFileName, L".."))
+            if (!wcscmp(findData.cFileName, L".") ||
+                !wcscmp(findData.cFileName, L".."))
                 continue;
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound = ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories,
-                                     dwMask, dwAttrib) || bFound;
+            bFound != ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories, 
+                                      dwMask, dwAttrib);
         }
         while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
@@ -256,7 +258,8 @@ ChangeAttribute(
         if (bIsDir && !bDirectories && !bExactMatch)
             continue;
 
-        if (!wcscmp(findData.cFileName, L".") || !wcscmp(findData.cFileName, L".."))
+        if (!wcscmp(findData.cFileName, L".") ||
+            !wcscmp(findData.cFileName, L".."))
             continue;
 
         if (bRecurse && bIsDir && !bDirectories)
