@@ -473,8 +473,8 @@ ProductPageDlgProc(HWND hwndDlg,
 
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
             OnChooseServer(hwndDlg);
+            return TRUE;
         }
-        break;
 
         case WM_COMMAND:
             if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
