@@ -238,6 +238,24 @@ PropEnumProc(
     return TRUE;
 }
 
+static void
+DoNullFolderTest(HWND hEdt1)
+{
+    HRESULT hr;
+
+    _SEH2_TRY
+    {
+        hr = SHLimitInputEdit(hEdt1, NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        hr = 0xDEAD;
+    }
+    _SEH2_END;
+
+    ok_int(hr, 0xDEAD);
+}
+
 static INT_PTR CALLBACK
 DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -249,16 +267,7 @@ DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     HRESULT hr;
     WCHAR szText[64];
 
-    _SEH2_TRY
-    {
-        hr = SHLimitInputEdit(hEdt1, NULL);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        hr = 0xDEAD;
-    }
-    _SEH2_END;
-    ok_int(hr, 0xDEAD);
+    DoNullFolderTest(hEdt1);
 
     {
         CShellFolder sf(123, FALSE);
