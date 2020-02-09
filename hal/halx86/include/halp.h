@@ -534,7 +534,7 @@ extern ULONG PIT_FREQUENCY;
 VOID
 NTAPI
 HalInitializeBios(
-    _In_ ULONG Unknown,
+    _In_ ULONG Phase,
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 

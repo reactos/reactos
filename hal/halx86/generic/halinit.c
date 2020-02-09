@@ -136,6 +136,10 @@ HalInitSystem(IN ULONG BootPhase,
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
+
+#ifdef _M_AMD64
+        HalInitializeBios(0, LoaderBlock);
+#endif
     }
     else if (BootPhase == 1)
     {
@@ -146,7 +150,7 @@ HalInitSystem(IN ULONG BootPhase,
         HalpInitPhase1();
 
 #ifdef _M_AMD64
-        HalInitializeBios(0, LoaderBlock);
+        HalInitializeBios(1, LoaderBlock);
 #endif
     }
 
