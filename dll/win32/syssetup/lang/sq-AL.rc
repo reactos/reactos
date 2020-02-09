@@ -268,6 +268,6 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Please choose a product option."
     IDS_PRODUCTSERVERNAME "ReactOS Server (Default)"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "This is 2003 Server-like product."
-    IDS_PRODUCTWORKSTATIONINFO "This is XP-like product."
+    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
+    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
 END

@@ -428,7 +428,7 @@ WriteProductOption(PRODUCT_OPTION nOption)
 static void
 OnChooseServer(HWND hwndDlg)
 {
-    WCHAR szText[128];
+    WCHAR szText[256];
 
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
@@ -440,7 +440,7 @@ OnChooseServer(HWND hwndDlg)
 static void
 OnChooseWorkstation(HWND hwndDlg)
 {
-    WCHAR szText[128];
+    WCHAR szText[256];
 
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"(None)");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
