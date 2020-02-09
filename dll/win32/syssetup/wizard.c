@@ -442,7 +442,7 @@ OnChooseWorkstation(HWND hwndDlg)
 {
     WCHAR szText[256];
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"(None)");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
 
     LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
@@ -474,7 +474,7 @@ ProductPageDlgProc(HWND hwndDlg,
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Workstation");
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
             OnChooseServer(hwndDlg);
