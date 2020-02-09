@@ -394,8 +394,8 @@ WriteProductOption(PRODUCT_OPTION nOption)
     {
         case PRODUCT_OPTION_SERVER:
             /* write ProductSuite */
-            pData = L"Enterprise\0Terminal Server\0";
-            cbData = (lstrlenA("Enterprise") + lstrlenA("Terminal Server") + 3) * sizeof(WCHAR);
+            pData = L"Terminal Server\0";
+            cbData = (lstrlenA("Terminal Server") + 2) * sizeof(WCHAR);
             error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
             if (error)
                 break;
@@ -430,7 +430,7 @@ OnChooseServer(HWND hwndDlg)
 {
     WCHAR szText[128];
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Enterprise/Terminal Server");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Terminal Server");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
 
     LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
