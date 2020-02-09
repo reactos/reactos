@@ -28,7 +28,7 @@ IDI_ICON2 ICON "resources/2.ico"
 IDI_ICON3 ICON "resources/3.ico"
 IDI_ICON4 ICON "resources/4.ico"
 IDI_ICON5 ICON "resources/5.ico"
-IDI_ICON236 ICON "resources/236.ico"
+IDI_SYSTEM ICON "resources/system.ico"
 
 STRINGTABLE
 BEGIN
