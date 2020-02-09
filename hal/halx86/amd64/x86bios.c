@@ -14,15 +14,17 @@
 
 #include <fast486.h>
 
-/* This page serves as fallback for pages used by Mm */
-#define DEFAULT_PAGE 0x21
-
 /* GLOBALS *******************************************************************/
+
+/* This page serves as fallback for pages used by Mm */
+PFN_NUMBER x86BiosFallbackPfn;
 
 BOOLEAN x86BiosIsInitialized;
 LONG x86BiosBufferIsAllocated = 0;
 PUCHAR x86BiosMemoryMapping;
 
+/* This the physical address bios buffer  */
+PFN_NUMBER x86BiosBufferPhysical;
 
 VOID
 NTAPI
@@ -44,7 +46,7 @@ DbgDumpPage(PUCHAR MemBuffer, USHORT Segment)
 VOID
 NTAPI
 HalInitializeBios(
-    _In_ ULONG Unknown,
+    _In_ ULONG Phase,
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PPFN_NUMBER PfnArray;
@@ -52,63 +54,96 @@ HalInitializeBios(
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PLIST_ENTRY ListEntry;
     PMDL Mdl;
+    ULONG64 PhysicalAddress;
 
-    /* Allocate an MDL for 1MB */
-    Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
-    if (!Mdl)
+    if (Phase == 0)
     {
-        ASSERT(FALSE);
-    }
-
-    /* Get pointer to the pfn array */
-    PfnArray = MmGetMdlPfnArray(Mdl);
-
-    /* Fill the array with low memory PFNs */
-    for (Pfn = 0; Pfn < 0x100; Pfn++)
-    {
-        PfnArray[Pfn] = Pfn;
-    }
-
-    /* Loop the memory descriptors */
-    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        /* Get the memory descriptor */
-        Descriptor = CONTAINING_RECORD(ListEntry,
-                                       MEMORY_ALLOCATION_DESCRIPTOR,
-                                       ListEntry);
-
-        /* Check if the memory is in the low range */
-        if (Descriptor->BasePage < 0x100)
+        PhysicalAddress = HalpAllocPhysicalMemory(LoaderBlock,
+                                                  0x100000,
+                                                  1,
+                                                  FALSE);
+        if (PhysicalAddress == 0)
         {
-            /* Check if the memory type is firmware */
-            if (Descriptor->MemoryType != LoaderFirmwarePermanent &&
-                Descriptor->MemoryType != LoaderSpecialMemory)
+            ASSERT(FALSE);
+        }
+
+        x86BiosFallbackPfn = PhysicalAddress / PAGE_SIZE;
+        ASSERT(x86BiosFallbackPfn != 0);
+
+        /* Allocate a page for the buffer allocation */
+        x86BiosBufferPhysical = HalpAllocPhysicalMemory(LoaderBlock,
+                                                        0x100000 - PAGE_SIZE,
+                                                        1,
+                                                        FALSE);
+        if (x86BiosBufferPhysical == 0)
+        {
+            ASSERT(FALSE);
+        }
+    }
+    else
+    {
+
+        /* Allocate an MDL for 1MB */
+        Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
+        if (!Mdl)
+        {
+            ASSERT(FALSE);
+        }
+
+        /* Get pointer to the pfn array */
+        PfnArray = MmGetMdlPfnArray(Mdl);
+
+        /* Fill the array with the fallbck page */
+        for (Pfn = 0; Pfn < 0x100; Pfn++)
+        {
+            PfnArray[Pfn] = x86BiosFallbackPfn;
+        }
+
+        /* Loop the memory descriptors */
+        for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+             ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+             ListEntry = ListEntry->Flink)
+        {
+            /* Get the memory descriptor */
+            Descriptor = CONTAINING_RECORD(ListEntry,
+                                           MEMORY_ALLOCATION_DESCRIPTOR,
+                                           ListEntry);
+
+            /* Check if the memory is in the low range */
+            if (Descriptor->BasePage < 0x100)
             {
-                /* It's something else, so don't use it! */
-                Last = min(Descriptor->BasePage + Descriptor->PageCount, 0x100);
-                for (Pfn = Descriptor->BasePage; Pfn < Last; Pfn++)
+                /* Check if the memory type is firmware */
+                if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
+                    (Descriptor->MemoryType == LoaderSpecialMemory))
                 {
-                    /* Set each page to the default page */
-                    PfnArray[Pfn] = DEFAULT_PAGE;
+                    /* It's firmware, so map it! */
+                    Last = min(Descriptor->BasePage + Descriptor->PageCount, 0x100);
+                    for (Pfn = Descriptor->BasePage; Pfn < Last; Pfn++)
+                    {
+                        /* Set each page to the default page */
+                        PfnArray[Pfn] = Pfn;
+                    }
                 }
             }
         }
+
+        /* Map this page proper, too */
+        Pfn = x86BiosBufferPhysical / PAGE_SIZE;
+        PfnArray[Pfn] = Pfn;
+
+        Mdl->MdlFlags = MDL_PAGES_LOCKED;
+
+        /* Map the MDL to system space */
+        x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
+        ASSERT(x86BiosMemoryMapping);
+
+        DPRINT1("memory: %p, %p\n", *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
+        //DbgDumpPage(x86BiosMemoryMapping, 0xc351);
+
+        x86BiosIsInitialized = TRUE;
+
+        HalpBiosDisplayReset();
     }
-
-    Mdl->MdlFlags = MDL_PAGES_LOCKED;
-
-    /* Map the MDL to system space */
-    x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
-    ASSERT(x86BiosMemoryMapping);
-
-    DPRINT1("memory: %p, %p\n", *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
-    //DbgDumpPage(x86BiosMemoryMapping, 0xc351);
-
-    x86BiosIsInitialized = TRUE;
-    
-    HalpBiosDisplayReset();
 }
 
 NTSTATUS
@@ -134,7 +169,7 @@ x86BiosAllocateBuffer(
 
     /* The buffer is sufficient, return hardcoded address and size */
     *Size = PAGE_SIZE;
-    *Segment = 0x2000;
+    *Segment = x86BiosBufferPhysical / 16;
     *Offset = 0;
 
     return STATUS_SUCCESS;
@@ -290,7 +325,7 @@ ValidatePort(
         case 0x1CF: return (Size == 1);
         case 0x3B6: return (Size <= 2);
     }
-
+    return TRUE;
     return FALSE;
 }
 
