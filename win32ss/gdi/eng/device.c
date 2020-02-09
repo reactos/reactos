@@ -43,6 +43,7 @@ EngpPopulateDeviceModeList(
     PDEVMODEW pdm, pdmEnd;
     ULONG i, cModes = 0;
     BOOLEAN bModeMatch = FALSE;
+    PAGED_CODE();
 
     ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
     ASSERT(pGraphicsDevice->pDevModeList == NULL);
@@ -238,6 +239,7 @@ EngpRegisterGraphicsDevice(
     ULONG ulReturn;
     PWSTR pwsz;
     ULONG cj;
+    PAGED_CODE();
 
     TRACE("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 

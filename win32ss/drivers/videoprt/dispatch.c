@@ -1085,6 +1085,7 @@ IntVideoPortDispatchPnp(
     IN PIRP Irp)
 {
     PVIDEO_PORT_COMMON_EXTENSION CommonExtension = DeviceObject->DeviceExtension;
+    PAGED_CODE();
 
     if (CommonExtension->Fdo)
         return IntVideoPortDispatchFdoPnp(DeviceObject, Irp);

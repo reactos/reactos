@@ -65,6 +65,7 @@ IntVideoPortChildQueryId(
 {
     PWCHAR Buffer = NULL, StaticBuffer;
     UNICODE_STRING UnicodeStr;
+    PAGED_CODE();
     
     switch (IrpSp->Parameters.QueryId.IdType)
     {
@@ -322,6 +323,7 @@ IntVideoPortDispatchPdoPnp(
 {
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status = Irp->IoStatus.Status;
+    PAGED_CODE();
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 

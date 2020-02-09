@@ -124,6 +124,7 @@ UserInitialize(VOID)
       0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa };
     HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
+    PAGED_CODE();
 
     NT_ASSERT(PsGetCurrentThreadWin32Thread() != NULL);
 
@@ -178,6 +179,7 @@ NtUserInitialize(
     HANDLE hMediaRequestEvent)
 {
     NTSTATUS Status;
+    PAGED_CODE();
 
     TRACE("Enter NtUserInitialize(%lx, %p, %p)\n",
           dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);

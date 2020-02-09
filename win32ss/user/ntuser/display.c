@@ -75,6 +75,7 @@ InitDisplayDriver(
     HKEY hkey;
     DEVMODEW dmDefault;
     DWORD dwVga;
+    PAGED_CODE();
 
     TRACE("InitDisplayDriver(%S, %S);\n",
           pwszDeviceName, pwszRegKey);
@@ -162,6 +163,7 @@ InitVideo(VOID)
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG cbValue;
     HKEY hkey;
+    PAGED_CODE();
 
     TRACE("----------------------------- InitVideo() -------------------------------\n");
 

@@ -1533,6 +1533,7 @@ IopInitiatePnpIrp(IN PDEVICE_OBJECT DeviceObject,
                   IN PIO_STACK_LOCATION Stack OPTIONAL)
 {
     IO_STACK_LOCATION IoStackLocation;
+    PAGED_CODE();
 
     /* Fill out the stack information */
     RtlZeroMemory(&IoStackLocation, sizeof(IO_STACK_LOCATION));
@@ -1560,6 +1561,7 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
     PDEVICE_NODE ChildDeviceNode;
     PDEVICE_NODE NextDeviceNode;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Copy context data so we don't overwrite it in subsequent calls to this function */
     ParentDeviceNode = Context->DeviceNode;
@@ -1610,6 +1612,7 @@ NTSTATUS
 IopTraverseDeviceTree(PDEVICETREE_TRAVERSE_CONTEXT Context)
 {
     NTSTATUS Status;
+    PAGED_CODE();
 
     DPRINT("Context 0x%p\n", Context);
 
@@ -2242,6 +2245,7 @@ IopCreateDeviceInstancePath(
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
     BOOLEAN IsValidID;
+    PAGED_CODE();
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -2407,6 +2411,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     UNICODE_STRING ValueName;
     UNICODE_STRING InstancePathU;
     PDEVICE_OBJECT OldDeviceObject;
+    PAGED_CODE();
 
     DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
     DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
@@ -2719,6 +2724,7 @@ IopEnumerateDevice(
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
     ULONG i;
+    PAGED_CODE();
 
     DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
