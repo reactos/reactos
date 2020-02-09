@@ -63,7 +63,7 @@ typedef enum _NT_PRODUCT_TYPE
     NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
-/* FIXME: We cannot refresh the RtlGetNtProductType value before reboo. */
+/* FIXME: We cannot refresh the RtlGetNtProductType value before reboot. */
 static BOOL
 DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 {
