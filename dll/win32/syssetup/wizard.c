@@ -459,6 +459,7 @@ ProductPageDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
     INT iItem;
     WCHAR szText[64];
+    HICON hIcon;
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -477,6 +478,9 @@ ProductPageDlgProc(HWND hwndDlg,
 
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
             OnChooseServer(hwndDlg);
+
+            hIcon = LoadIcon(NULL, IDI_WINLOGO);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
             return TRUE;
         }
 
