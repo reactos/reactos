@@ -372,4 +372,9 @@ NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
 /* wcwidth.c */
 int mk_wcwidth_cjk(wchar_t ucs);
 
+// NOTE: The check against 0x80 is to avoid calling the helper function
+// for characters that we already know are not full-width.
+#define IS_FULL_WIDTH(wch)  \
+    (((USHORT)(wch) >= 0x0080) && (mk_wcwidth_cjk(wch) == 2))
+
 /* EOF */

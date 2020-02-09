@@ -510,13 +510,18 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
-    BOOL bCJK = Console->IsCJK;
+    BOOLEAN bFullwidth;
+    BOOLEAN bCJK = Console->IsCJK;
+
+    /* If nothing to write, bail out now */
+    if (Length == 0)
+        return STATUS_SUCCESS;
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
     UpdateRect.Left = Buff->ScreenBufferSize.X;
-    UpdateRect.Top = Buff->CursorPosition.Y;
-    UpdateRect.Right = -1;
+    UpdateRect.Top  = Buff->CursorPosition.Y;
+    UpdateRect.Right  = -1;
     UpdateRect.Bottom = Buff->CursorPosition.Y;
     ScrolledLines = 0;
 
@@ -532,28 +537,58 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             if (Buffer[i] == L'\r')
             {
                 Buff->CursorPosition.X = 0;
-                UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
+                CursorStartX = Buff->CursorPosition.X;
+                UpdateRect.Left  = min(UpdateRect.Left , Buff->CursorPosition.X);
                 UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
                 continue;
             }
             /* --- LF --- */
             else if (Buffer[i] == L'\n')
             {
-                Buff->CursorPosition.X = 0;
+                Buff->CursorPosition.X = 0; // TODO: Make this behaviour optional!
+                CursorStartX = Buff->CursorPosition.X;
                 ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
                 continue;
             }
             /* --- BS --- */
             else if (Buffer[i] == L'\b')
             {
-                /* Only handle BS if we're not on the first pos of the first line */
-                if (0 != Buff->CursorPosition.X || 0 != Buff->CursorPosition.Y)
+                /* Only handle BS if we are not on the first position of the first line */
+                if (Buff->CursorPosition.X == 0 && Buff->CursorPosition.Y == 0)
+                    continue;
+
+                if (Buff->CursorPosition.X == 0)
                 {
-                    if (0 == Buff->CursorPosition.X)
+                    /* Slide virtual position up */
+                    Buff->CursorPosition.X = Buff->ScreenBufferSize.X - 1;
+                    Buff->CursorPosition.Y--;
+                    // TODO? : Update CursorStartY = Buff->CursorPosition.Y;
+                    UpdateRect.Top = min(UpdateRect.Top, Buff->CursorPosition.Y);
+                }
+                else
+                {
+                    Buff->CursorPosition.X--;
+                }
+                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
+                if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
+                {
+                    /*
+                     * The cursor just moved on the leading byte of the same
+                     * current character. We should go one position before to
+                     * go to the actual previous character to erase.
+                     */
+
+                    /* Only handle BS if we are not on the first position of the first line */
+                    if (Buff->CursorPosition.X == 0 && Buff->CursorPosition.Y == 0)
+                        continue;
+
+                    if (Buff->CursorPosition.X == 0)
                     {
-                        /* slide virtual position up */
+                        /* Slide virtual position up */
                         Buff->CursorPosition.X = Buff->ScreenBufferSize.X - 1;
                         Buff->CursorPosition.Y--;
+                        // TODO? : Update CursorStartY = Buff->CursorPosition.Y;
                         UpdateRect.Top = min(UpdateRect.Top, Buff->CursorPosition.Y);
                     }
                     else
@@ -561,22 +596,31 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                         Buff->CursorPosition.X--;
                     }
                     Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-                    Ptr->Char.UnicodeChar = L' ';
-
-                    if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
-                    {
-                        /* Delete a full-width character */
-                        Ptr->Attributes  = Buff->ScreenDefaultAttrib;
-                        if (Buff->CursorPosition.X > 0)
-                            Buff->CursorPosition.X--;
-                        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-                        Ptr->Char.UnicodeChar = L' ';
-                    }
-
-                    Ptr->Attributes  = Buff->ScreenDefaultAttrib;
-                    UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
-                    UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
                 }
+
+                if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+                {
+                    /* The cursor is on the trailing byte of a full-width character */
+
+                    /* Delete its trailing byte... */
+                    Ptr->Char.UnicodeChar = L' ';
+                    if (Attrib)
+                        Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                    Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+
+                    if (Buff->CursorPosition.X > 0)
+                        Buff->CursorPosition.X--;
+                    /* ... and now its leading byte */
+                    Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+                }
+
+                Ptr->Char.UnicodeChar = L' ';
+                if (Attrib)
+                    Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+
+                UpdateRect.Left  = min(UpdateRect.Left , Buff->CursorPosition.X);
+                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
                 continue;
             }
             /* --- TAB --- */
@@ -584,28 +628,60 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             {
                 UINT EndX;
 
+                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
+                if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+                {
+                    /*
+                     * The cursor is on the trailing byte of a full-width character.
+                     * Go back one position to be on its leading byte.
+                     */
+                    if (Buff->CursorPosition.X > 0)
+                        Buff->CursorPosition.X--;
+                    Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+                }
+
                 UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
+
                 EndX = (Buff->CursorPosition.X + TAB_WIDTH) & ~(TAB_WIDTH - 1);
                 EndX = min(EndX, (UINT)Buff->ScreenBufferSize.X);
-                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
                 while ((UINT)Buff->CursorPosition.X < EndX)
                 {
                     Ptr->Char.UnicodeChar = L' ';
-                    Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                    if (Attrib)
+                        Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                    Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+
                     ++Ptr;
                     Buff->CursorPosition.X++;
                 }
-                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X - 1);
-                if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X)
+                if (Buff->CursorPosition.X < Buff->ScreenBufferSize.X)
+                {
+                    /* If the following cell is the trailing byte of a full-width character, reset it */
+                    if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+                    {
+                        Ptr->Char.UnicodeChar = L' ';
+                        if (Attrib)
+                            Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                        Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                    }
+                }
+                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
+
+                if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X)
                 {
                     if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
                     {
+                        /* Wrapping mode: Go to next line */
                         Buff->CursorPosition.X = 0;
+                        CursorStartX = Buff->CursorPosition.X;
                         ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
                     }
                     else
                     {
-                        Buff->CursorPosition.X--;
+                        /* The cursor wraps back to its starting position on the same line */
+                        Buff->CursorPosition.X = CursorStartX;
                     }
                 }
                 continue;
@@ -617,84 +693,126 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 continue;
             }
         }
-        UpdateRect.Left  = min(UpdateRect.Left, Buff->CursorPosition.X);
+        UpdateRect.Left  = min(UpdateRect.Left , Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
         /* For Chinese, Japanese and Korean */
-        if (bCJK && Buffer[i] >= 0x80 && mk_wcwidth_cjk(Buffer[i]) == 2)
+        bFullwidth = (bCJK && IS_FULL_WIDTH(Buffer[i]));
+
+        /* Check whether we can insert the full-width character */
+        if (bFullwidth)
         {
-            /* Buffer[i] is a fullwidth character */
-
-            if (Buff->CursorPosition.X > 0)
+            /* It spans two cells and should all fit on the current line */
+            if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X - 1)
             {
-                /* Kill the previous leading byte */
-                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X - 1, Buff->CursorPosition.Y);
-                if (Ptr->Attributes & COMMON_LVB_LEADING_BYTE)
-                {
-                    Ptr->Char.UnicodeChar = L' ';
-                    if (Attrib)
-                        Ptr->Attributes &= ~COMMON_LVB_LEADING_BYTE;
-                }
-            }
-
-            if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X - 1)
-            {
-                /* New line */
                 if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
                 {
+                    /* Wrapping mode: Go to next line */
                     Buff->CursorPosition.X = 0;
+                    CursorStartX = Buff->CursorPosition.X;
                     ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
                 }
                 else
                 {
+                    /* The cursor wraps back to its starting position on the same line */
                     Buff->CursorPosition.X = CursorStartX;
                 }
             }
 
-            /* Set leading */
-            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-            Ptr->Char.UnicodeChar = Buffer[i];
-            if (Attrib)
-                Ptr->Attributes = Buff->ScreenDefaultAttrib | COMMON_LVB_LEADING_BYTE;
-
-            /* Set trailing */
-            Buff->CursorPosition.X++;
-            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-            if (Attrib)
-                Ptr->Attributes = Buff->ScreenDefaultAttrib | COMMON_LVB_TRAILING_BYTE;
+            /*
+             * Now be sure we can fit the full-width character.
+             * If the screenbuffer is one cell wide we cannot display
+             * the full-width character, so just skip it.
+             */
+            if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X - 1)
+            {
+                DPRINT1("Cannot display full-width character! CursorPosition.X = %d, ScreenBufferSize.X = %d\n",
+                        Buff->CursorPosition.X, Buff->ScreenBufferSize.X);
+                continue;
+            }
         }
-        else
+
+        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+
+        /*
+         * Check whether we are overwriting part of a full-width character,
+         * in which case we need to invalidate it.
+         */
+        if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
         {
+            /*
+             * The cursor is on the trailing byte of a full-width character.
+             * Go back one position to kill the previous leading byte.
+             */
+            if (Buff->CursorPosition.X > 0)
+            {
+                Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X - 1, Buff->CursorPosition.Y);
+                Ptr->Char.UnicodeChar = L' ';
+                if (Attrib)
+                    Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            }
             Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+        }
+
+        /* Insert the character */
+        if (bFullwidth)
+        {
+            ASSERT(Buff->CursorPosition.X < Buff->ScreenBufferSize.X - 1);
+
+            /* Set the leading byte */
             Ptr->Char.UnicodeChar = Buffer[i];
             if (Attrib)
                 Ptr->Attributes = Buff->ScreenDefaultAttrib;
+            Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
+
+            /* Set the trailing byte */
+            Buff->CursorPosition.X++;
+            Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
+            // Ptr->Char.UnicodeChar = Buffer[i]; // L' ';
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib;
+            Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
+        }
+        else
+        {
+            Ptr->Char.UnicodeChar = Buffer[i];
+            if (Attrib)
+                Ptr->Attributes = Buff->ScreenDefaultAttrib;
+            Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
         }
 
+        ++Ptr;
         Buff->CursorPosition.X++;
-        if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X)
+
+        if (Buff->CursorPosition.X < Buff->ScreenBufferSize.X)
+        {
+            /* If the following cell is the trailing byte of a full-width character, reset it */
+            if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
+            {
+                Ptr->Char.UnicodeChar = L' ';
+                if (Attrib)
+                    Ptr->Attributes = Buff->ScreenDefaultAttrib;
+                Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            }
+        }
+
+        if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X)
         {
             if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
             {
+                /* Wrapping mode: Go to next line */
                 Buff->CursorPosition.X = 0;
+                CursorStartX = Buff->CursorPosition.X;
                 ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
             }
             else
             {
+                /* The cursor wraps back to its starting position on the same line */
                 Buff->CursorPosition.X = CursorStartX;
             }
-        }
-    }
-
-    if (bCJK && Buff->CursorPosition.X > 0)
-    {
-        /* Delete trailing */
-        Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-        if (Ptr->Attributes & COMMON_LVB_TRAILING_BYTE)
-        {
-            Ptr->Char.UnicodeChar = L' ';
-            if (Attrib)
-                Ptr->Attributes = Buff->ScreenDefaultAttrib;
         }
     }
 
