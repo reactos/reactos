@@ -248,12 +248,14 @@ WritePortSettings(
     HWND hwnd,
     PPORT_DATA pPortData)
 {
+    SP_PROPCHANGE_PARAMS PropChangeParams;
     DWORD dwDisposition;
     DWORD dwFilterResourceMethod;
     DWORD dwLegacy;
     DWORD dwPortNumber;
     DWORD dwPortMap;
     HKEY hKey;
+    BOOL bChanged = FALSE;
     DWORD dwError;
 
     TRACE("WritePortSettings(%p)\n", pPortData);
@@ -282,13 +284,12 @@ WritePortSettings(
                                      REG_DWORD,
                                      (PBYTE)&dwFilterResourceMethod,
                                      sizeof(dwFilterResourceMethod));
-            if (dwError != ERROR_SUCCESS)
-            {
-                ERR("RegSetValueExW failed (Error %lu)\n", dwError);
-            }
-
             RegCloseKey(hKey);
-            pPortData->dwFilterResourceMethod = dwFilterResourceMethod;
+            if (dwError == ERROR_SUCCESS)
+            {
+                pPortData->dwFilterResourceMethod = dwFilterResourceMethod;
+                bChanged = TRUE;
+            }
         }
     }
 
@@ -319,9 +320,8 @@ WritePortSettings(
 
             if (dwError == ERROR_SUCCESS)
             {
-                FIXME("Notify the driver!\n");
-
                 pPortData->dwLegacy = dwLegacy;
+                bChanged = TRUE;
             }
         }
     }
@@ -337,12 +337,38 @@ WritePortSettings(
             if (dwPortMap & 1 << dwPortNumber)
             {
                 ERR("Port LPT%lu is already in use!\n", dwPortNumber);
-                return;
             }
-
-            ChangePortNumber(pPortData,
-                             dwPortNumber);
+            else
+            {
+                ChangePortNumber(pPortData,
+                                 dwPortNumber);
+                bChanged = TRUE;
+            }
         }
+    }
+
+    if (bChanged)
+    {
+        /* Notify the system */
+        PostMessageW(HWND_BROADCAST,
+                     WM_WININICHANGE,
+                     0,
+                     (LPARAM)pPortData->szPortName);
+
+        /* Notify the installer (and device) */
+        PropChangeParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+        PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+        PropChangeParams.Scope = DICS_FLAG_GLOBAL;
+        PropChangeParams.StateChange = DICS_PROPCHANGE;
+
+        SetupDiSetClassInstallParams(pPortData->DeviceInfoSet,
+                                     pPortData->DeviceInfoData,
+                                     (PSP_CLASSINSTALL_HEADER)&PropChangeParams,
+                                     sizeof(SP_PROPCHANGE_PARAMS));
+
+        SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                  pPortData->DeviceInfoSet,
+                                  pPortData->DeviceInfoData);
     }
 }
 
