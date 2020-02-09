@@ -63,6 +63,7 @@ typedef enum _NT_PRODUCT_TYPE
     NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
+/* FIXME: RtlGetNtProductType won't work. */
 static BOOL
 DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 {
