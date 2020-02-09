@@ -1,13 +1,15 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for i18n console test
- * PROGRAMMERS:     Katayama Hirofumi MZ
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Tests for i18n console.
+ * COPYRIGHT:   Copyright 2017-2020 Katayama Hirofumi MZ
+ *              Copyright 2020 Hermes Belusca-Maito
  */
 
 #include "precomp.h"
 
-#define okCURSOR(hCon, c) do { \
+#define okCURSOR(hCon, c) \
+do { \
   CONSOLE_SCREEN_BUFFER_INFO __sbi; \
   BOOL expect = GetConsoleScreenBufferInfo((hCon), &__sbi) && \
                 __sbi.dwCursorPosition.X == (c).X && __sbi.dwCursorPosition.Y == (c).Y; \
@@ -15,8 +17,7 @@
      (c).X, (c).Y, __sbi.dwCursorPosition.X, __sbi.dwCursorPosition.Y); \
 } while (0)
 
-#define ATTR \
-    (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
+#define ATTR    (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 
 static const WCHAR u0414[] = {0x0414, 0}; /* Д */
 static const WCHAR u9580[] = {0x9580, 0}; /* 門 */
@@ -53,7 +54,7 @@ static void test_cp855(HANDLE hConOut)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int count;
     WCHAR str[32];
-    WORD attr;
+    WORD attrs[16];
 
     if (!IsValidCodePage(855))
     {
@@ -99,10 +100,17 @@ static void test_cp855(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 6, "len was: %ld\n", len);
-        ok(str[0] == 0x414, "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x414, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == 0x414, "str[2] was: 0x%04X\n", str[2]);
+        ok_long(len, 6);
+        ok_int(str[0], 0x414);
+        ok_int(str[1], 0x414);
+        ok_int(str[2], 0x414);
+
+        /* Read attributes at (0,0) */
+        c.X = c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 6);
+        ok_int(attrs[0], ATTR);
 
         /* Check cursor */
         c.X = 1;
@@ -136,10 +144,10 @@ static void test_cp855(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 6, "len was: %ld\n", len);
-        ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x414, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == 0x414, "str[2] was: 0x%04X\n", str[2]);
+        ok_long(len, 6);
+        ok_int(str[0], L' ');
+        ok_int(str[1], 0x414);
+        ok_int(str[2], 0x414);
     }
 
     /* "\u9580" */
@@ -171,7 +179,7 @@ static void test_cp855(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, L' ', csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+        ok_long(len, csbi.dwSize.X * csbi.dwSize.Y);
 
         /* Output u9580 "count" times at (1,0) */
         c.X = 1;
@@ -194,30 +202,30 @@ static void test_cp855(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, ideograph_space, csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+        ok_long(len, csbi.dwSize.X * csbi.dwSize.Y);
 
         /* Read characters at (0,0) */
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 6, "len was: %ld\n", len);
+        ok_long(len, 6);
         ok(str[0] == ideograph_space || str[0] == L'?', "str[0] was: 0x%04X\n", str[0]);
         ok(str[1] == ideograph_space || str[1] == L'?', "str[1] was: 0x%04X\n", str[1]);
         ok(str[2] == ideograph_space || str[2] == L'?', "str[2] was: 0x%04X\n", str[2]);
 
-        /* Read attr at (0,0) */
+        /* Read attributes at (0,0) */
         c.X = c.Y = 0;
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
         ok(ret, "ReadConsoleOutputAttribute failed\n");
-        ok(attr == ATTR, "attr was: %d\n", attr);
-        ok(len == 1, "len was %ld\n", len);
+        ok_long(len, 6);
+        ok_int(attrs[0], ATTR);
 
         /* Read characters at (1,0) */
         c.X = 1;
         c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 6, "len was: %ld\n", len);
+        ok_long(len, 6);
         ok(str[0] == ideograph_space || str[0] == L'?', "str[0] was: 0x%04X\n", str[0]);
         ok(str[1] == ideograph_space || str[1] == L'?', "str[1] was: 0x%04X\n", str[1]);
         ok(str[2] == ideograph_space || str[2] == L'?', "str[2] was: 0x%04X\n", str[2]);
@@ -230,13 +238,13 @@ static void test_cp855(HANDLE hConOut)
         ret = WriteConsoleW(hConOut, u9580, lstrlenW(u9580), &len, NULL);
         ok(ret && len == lstrlenW(u9580), "WriteConsoleW failed\n");
 
-        /* Read attr (1,0) */
+        /* Read attributes at (1,0) */
         c.X = 1;
         c.Y = 0;
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 1, c, &len);
         ok(ret, "ReadConsoleOutputAttribute failed\n");
-        ok(attr == ATTR, "attr was: %d\n", attr);
-        ok(len == 1, "len was %ld\n", len);
+        ok_long(len, 1);
+        ok_int(attrs[0], ATTR);
 
         /* Check cursor */
         c.X = 2;
@@ -247,9 +255,9 @@ static void test_cp855(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 6, "len was: %ld\n", len);
+        ok_long(len, 6);
         ok(str[0] == ideograph_space || str[0] == L'?', "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x9580 || str[1] == L'?', "str[1] was: 0x%04X\n", str[1]);
+        ok(str[1] == u9580[0] || str[1] == L'?', "str[1] was: 0x%04X\n", str[1]);
         ok(str[2] == ideograph_space || str[2] == L'?', "str[2] was: 0x%04X\n", str[2]);
     }
 
@@ -268,7 +276,7 @@ static void test_cp932(HANDLE hConOut)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int count;
     WCHAR str[32];
-    WORD attr, attrs[16];
+    WORD attrs[16];
     CHAR_INFO buff[16];
     SMALL_RECT sr;
 
@@ -317,10 +325,18 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 3, "len was: %ld\n", len);
-        ok(str[0] == 0x414, "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x414, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == 0x414, "str[2] was: 0x%04X\n", str[2]);
+        ok_long(len, 3);
+        ok_int(str[0], 0x414);
+        ok_int(str[1], 0x414);
+        ok_int(str[2], 0x414);
+
+        /* Read attributes at (0,0) */
+        c.X = c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 6);
+        ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
 
         /* Check cursor */
         c.X = 1;
@@ -355,10 +371,10 @@ static void test_cp932(HANDLE hConOut)
         c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 4, "len was: %ld\n", len);
-        ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == 0x414, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == 0x414, "str[2] was: 0x%04X\n", str[2]);
+        ok_long(len, 4);
+        ok_int(str[0], L' ');
+        ok_int(str[1], 0x414);
+        ok_int(str[2], 0x414);
     }
 
     /* "\u9580" */
@@ -390,7 +406,7 @@ static void test_cp932(HANDLE hConOut)
         c.X = c.Y = 0;
         ret = FillConsoleOutputCharacterW(hConOut, L' ', csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
-        ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+        ok_long(len, csbi.dwSize.X * csbi.dwSize.Y);
 
         /* Output u9580 "count" times at (1,0) */
         c.X = 1;
@@ -414,24 +430,30 @@ static void test_cp932(HANDLE hConOut)
         ret = FillConsoleOutputCharacterW(hConOut, ideograph_space, csbi.dwSize.X * csbi.dwSize.Y, c, &len);
         ok(ret, "FillConsoleOutputCharacterW failed\n");
         if (s_bIs8Plus)
-            ok(len == csbi.dwSize.X * csbi.dwSize.Y / 2, "len was: %ld\n", len);
+            ok_long(len, csbi.dwSize.X * csbi.dwSize.Y / 2);
         else
-            ok(len == csbi.dwSize.X * csbi.dwSize.Y, "len was: %ld\n", len);
+            ok_long(len, csbi.dwSize.X * csbi.dwSize.Y);
 
         /* Read characters at (0,0) */
         c.X = c.Y = 0;
         ret = ReadConsoleOutputCharacterW(hConOut, str, 3 * sizeof(WCHAR), c, &len);
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
-        ok(len == 3, "len was: %ld\n", len);
-        ok(str[0] == ideograph_space, "str[0] was: 0x%04X\n", str[0]);
-        ok(str[1] == ideograph_space, "str[1] was: 0x%04X\n", str[1]);
-        ok(str[2] == ideograph_space, "str[2] was: 0x%04X\n", str[2]);
+        ok_long(len, 3);
+        ok_int(str[0], ideograph_space);
+        ok_int(str[1], ideograph_space);
+        ok_int(str[2], ideograph_space);
 
-        /* Read attr */
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        /* Read attributes at (0,0) */
+        c.X = c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
         ok(ret, "ReadConsoleOutputAttribute failed\n");
-        ok(attr == ATTR, "attr was: %d\n", attr);
-        ok(len == 1, "len was %ld\n", len);
+        ok_long(len, 6);
+        ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
+        ok_int(attrs[2], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[3], ATTR | COMMON_LVB_TRAILING_BYTE);
+        ok_int(attrs[4], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[5], ATTR | COMMON_LVB_TRAILING_BYTE);
 
         /* Output u9580 "count" once at (1,0) */
         c.X = 1;
@@ -441,11 +463,61 @@ static void test_cp932(HANDLE hConOut)
         ret = WriteConsoleW(hConOut, u9580, lstrlenW(u9580), &len, NULL);
         ok(ret && len == lstrlenW(u9580), "WriteConsoleW failed\n");
 
-        /* Read attr */
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        /*
+         * Read attributes at (1,0) -
+         * Note that if only one attribute of a fullwidth character
+         * is retrieved, no leading/trailing byte flag is set!
+         */
+        c.X = 1;
+        c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 1, c, &len);
         ok(ret, "ReadConsoleOutputAttribute failed\n");
-        ok(attr == ATTR, "attr was: %d\n", attr);
-        ok(len == 1, "len was %ld\n", len);
+        ok_long(len, 1);
+        ok_int(attrs[0], ATTR);
+
+        /* Check that the same problem happens for the trailing byte */
+        c.X = 2;
+        c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 1, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 1);
+        ok_int(attrs[0], ATTR);
+
+        /* Read attributes at (1,0) */
+        c.X = 1;
+        c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 2, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 2);
+        ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
+
+        /* Read attributes at (1,0) */
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 3, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 3);
+        ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
+        if (s_bIs8Plus)
+            ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+        else
+            ok_int(attrs[2], ATTR);
+
+        /* Read attributes at (0,0) */
+        c.X = c.Y = 0;
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 4, c, &len);
+        ok(ret, "ReadConsoleOutputAttribute failed\n");
+        ok_long(len, 4);
+        if (s_bIs8Plus)
+            ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        else
+            ok_int(attrs[0], ATTR);
+        ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+        ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+        if (s_bIs8Plus)
+            ok_int(attrs[3], ATTR | COMMON_LVB_TRAILING_BYTE);
+        else
+            ok_int(attrs[3], ATTR);
 
         /* Check cursor */
         c.X = 3;
@@ -458,17 +530,17 @@ static void test_cp932(HANDLE hConOut)
         ok(ret, "ReadConsoleOutputCharacterW failed\n");
         if (s_bIs8Plus)
         {
-            ok(len == 3, "len was: %ld\n", len);
-            ok(str[0] == 0x3000, "str[0] was: 0x%04X\n", str[0]);
-            ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
-            ok(str[2] == 0x3000, "str[2] was: 0x%04X\n", str[2]);
+            ok_long(len, 3);
+            ok_int(str[0], ideograph_space);
+            ok_int(str[1], u9580[0]);
+            ok_int(str[2], ideograph_space);
         }
         else
         {
-            ok(len == 4, "len was: %ld\n", len);
-            ok(str[0] == L' ', "str[0] was: 0x%04X\n", str[0]);
-            ok(str[1] == 0x9580, "str[1] was: 0x%04X\n", str[1]);
-            ok(str[2] == L' ', "str[2] was: 0x%04X\n", str[2]);
+            ok_long(len, 4);
+            ok_int(str[0], L' ');
+            ok_int(str[1], u9580[0]);
+            ok_int(str[2], L' ');
         }
     }
 
@@ -505,16 +577,17 @@ static void test_cp932(HANDLE hConOut)
         ok_int(buff[0].Attributes, ATTR);
 
         /* read attr */
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 1, c, &len);
         ok_int(ret, 1);
-        ok_int(attr, ATTR);
         ok_long(len, 1);
+        ok_int(attrs[0], ATTR);
 
         /* read char */
         c.X = c.Y = 0;
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 4);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
         ok_int(str[2], L'A');
@@ -580,6 +653,7 @@ static void test_cp932(HANDLE hConOut)
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 3);
         ok_int(str[0], 0x0414);
         ok_int(str[1], L'A');
         ok_int(str[2], L'A');
@@ -650,6 +724,7 @@ static void test_cp932(HANDLE hConOut)
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 3);
         if (s_bIs8Plus)
         {
             ok_int(str[0], 0x0414);
@@ -712,6 +787,7 @@ static void test_cp932(HANDLE hConOut)
         /* read char */
         ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 2);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
 
@@ -748,7 +824,7 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, 'A');
+        ok_int(buff[0].Char.UnicodeChar, L'A');
         ok_int(buff[0].Attributes, ATTR);
         if (s_bIs8Plus)
         {
@@ -761,12 +837,12 @@ static void test_cp932(HANDLE hConOut)
         {
             ok_int(buff[1].Char.UnicodeChar, L' ');
             ok_int(buff[1].Attributes, ATTR);
-            ok_int(buff[2].Char.UnicodeChar, 'A');
+            ok_int(buff[2].Char.UnicodeChar, L'A');
             ok_int(buff[2].Attributes, ATTR);
         }
-        ok_int(buff[3].Char.UnicodeChar, 'A');
+        ok_int(buff[3].Char.UnicodeChar, L'A');
         ok_int(buff[3].Attributes, ATTR);
-        ok_int(buff[4].Char.UnicodeChar, 'A');
+        ok_int(buff[4].Char.UnicodeChar, L'A');
         ok_int(buff[4].Attributes, ATTR);
 
         /* read attrs */
@@ -822,15 +898,16 @@ static void test_cp932(HANDLE hConOut)
         ok_int(buff[0].Attributes, ATTR);
 
         /* read attr */
-        ret = ReadConsoleOutputAttribute(hConOut, &attr, 1, c, &len);
+        ret = ReadConsoleOutputAttribute(hConOut, attrs, 1, c, &len);
         ok_int(ret, 1);
-        ok_int(attr, ATTR);
         ok_long(len, 1);
+        ok_int(attrs[0], ATTR);
 
         /* read char */
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 2);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
 
@@ -864,14 +941,14 @@ static void test_cp932(HANDLE hConOut)
         /* check buff */
         if (s_bIs8Plus)
         {
-            ok_int(buff[0].Char.UnicodeChar, 0x9580);
+            ok_int(buff[0].Char.UnicodeChar, u9580[0]);
             ok_int(buff[0].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
-            ok_int(buff[1].Char.UnicodeChar, 0x9580);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
             ok_int(buff[1].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
         }
         else
         {
-            ok_int(buff[0].Char.UnicodeChar, 0x9580);
+            ok_int(buff[0].Char.UnicodeChar, u9580[0]);
             ok_int(buff[0].Attributes, ATTR);
             ok_int(buff[1].Char.UnicodeChar, L'A');
             ok_int(buff[1].Attributes, ATTR);
@@ -896,7 +973,8 @@ static void test_cp932(HANDLE hConOut)
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 4, c, &len);
         ok_int(ret, 1);
-        ok_int(str[0], 0x9580);
+        ok_long(len, 3);
+        ok_int(str[0], u9580[0]);
         ok_int(str[1], L'A');
         ok_int(str[2], L'A');
         if (s_bIs8Plus)
@@ -929,18 +1007,18 @@ static void test_cp932(HANDLE hConOut)
         /* check buff */
         if (s_bIs8Plus)
         {
-            ok_int(buff[0].Char.UnicodeChar, 0x9580);
+            ok_int(buff[0].Char.UnicodeChar, u9580[0]);
             ok_int(buff[0].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
-            ok_int(buff[1].Char.UnicodeChar, 0x9580);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
             ok_int(buff[1].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
-            ok_int(buff[2].Char.UnicodeChar, 0x9580);
+            ok_int(buff[2].Char.UnicodeChar, u9580[0]);
             ok_int(buff[2].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
         }
         else
         {
             ok_int(buff[0].Char.UnicodeChar, L' ');
             ok_int(buff[0].Attributes, ATTR);
-            ok_int(buff[1].Char.UnicodeChar, 0x9580);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
             ok_int(buff[1].Attributes, ATTR);
             ok_int(buff[2].Char.UnicodeChar, L'A');
             ok_int(buff[2].Attributes, ATTR);
@@ -996,9 +1074,9 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, 'A');
+        ok_int(buff[0].Char.UnicodeChar, L'A');
         ok_int(buff[0].Attributes, ATTR);
-        ok_int(buff[1].Char.UnicodeChar, 'A');
+        ok_int(buff[1].Char.UnicodeChar, L'A');
         ok_int(buff[1].Attributes, ATTR);
 
         /* read attr */
@@ -1014,6 +1092,7 @@ static void test_cp932(HANDLE hConOut)
         memset(str, 0x7F, sizeof(str));
         ret = ReadConsoleOutputCharacterW(hConOut, str, 2, c, &len);
         ok_int(ret, 1);
+        ok_long(len, 2);
         ok_int(str[0], L'A');
         ok_int(str[1], L'A');
 
@@ -1026,7 +1105,7 @@ static void test_cp932(HANDLE hConOut)
         /* fill by u9580 */
         c.X = 1;
         c.Y = 0;
-        ret = FillConsoleOutputCharacterW(hConOut, 0x9580, 1, c, &len);
+        ret = FillConsoleOutputCharacterW(hConOut, u9580[0], 1, c, &len);
         c.X = c.Y = 0;
         ok_int(ret, 1);
         ok_long(len, 1);
@@ -1050,25 +1129,25 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Bottom, 0);
 
         /* check buff */
-        ok_int(buff[0].Char.UnicodeChar, 'A');
+        ok_int(buff[0].Char.UnicodeChar, L'A');
         ok_int(buff[0].Attributes, ATTR);
         if (s_bIs8Plus)
         {
-            ok_int(buff[1].Char.UnicodeChar, 0x9580);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
             ok_int(buff[1].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
-            ok_int(buff[2].Char.UnicodeChar, 0x9580);
+            ok_int(buff[2].Char.UnicodeChar, u9580[0]);
             ok_int(buff[2].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
         }
         else
         {
             ok_int(buff[1].Char.UnicodeChar, L' ');
             ok_int(buff[1].Attributes, ATTR);
-            ok_int(buff[2].Char.UnicodeChar, 'A');
+            ok_int(buff[2].Char.UnicodeChar, L'A');
             ok_int(buff[2].Attributes, ATTR);
         }
-        ok_int(buff[3].Char.UnicodeChar, 'A');
+        ok_int(buff[3].Char.UnicodeChar, L'A');
         ok_int(buff[3].Attributes, ATTR);
-        ok_int(buff[4].Char.UnicodeChar, 'A');
+        ok_int(buff[4].Char.UnicodeChar, L'A');
         ok_int(buff[4].Attributes, ATTR);
 
         /* read attrs */
@@ -1142,11 +1221,12 @@ static void test_cp932(HANDLE hConOut)
         sr.Top = 0;
         sr.Right = 4;
         sr.Bottom = 0;
-        buff[0].Char.UnicodeChar = L' ';
-        buff[0].Attributes = ATTR;
-        buff[1].Char.UnicodeChar = 0x9580;
+        // Check how Read/WriteConsoleOutput() handle inconsistent DBCS flags.
+        buff[0].Char.UnicodeChar = u9580[0];
+        buff[0].Attributes = ATTR | COMMON_LVB_LEADING_BYTE;
+        buff[1].Char.UnicodeChar = u9580[0];
         buff[1].Attributes = ATTR | COMMON_LVB_LEADING_BYTE;
-        buff[2].Char.UnicodeChar = 0x9580;
+        buff[2].Char.UnicodeChar = u9580[0];
         buff[2].Attributes = ATTR | COMMON_LVB_TRAILING_BYTE;
         buff[3].Char.UnicodeChar = L'A';
         buff[3].Attributes = ATTR;
@@ -1161,15 +1241,66 @@ static void test_cp932(HANDLE hConOut)
         ok_int(sr.Right, 3);
         ok_int(sr.Bottom, 0);
 
+        /* read output */
+        sr.Left = 0;
+        sr.Top = 0;
+        sr.Right = 4;
+        sr.Bottom = 0;
+        memset(buff, 0x7F, sizeof(buff));
+        ret = ReadConsoleOutputW(hConOut, buff, buffSize, c, &sr);
+        ok_int(ret, 1);
+        ok_int(sr.Left, 0);
+        ok_int(sr.Top, 0);
+        ok_int(sr.Right, 3);
+        ok_int(sr.Bottom, 0);
+
+        /* check buff */
+        if (s_bIs8Plus)
+        {
+            ok_int(buff[0].Char.UnicodeChar, u9580[0]);
+            ok_int(buff[0].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
+            ok_int(buff[1].Attributes, ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(buff[2].Char.UnicodeChar, u9580[0]);
+            ok_int(buff[2].Attributes, ATTR | COMMON_LVB_TRAILING_BYTE);
+            ok_int(buff[3].Char.UnicodeChar, L'A');
+            ok_int(buff[3].Attributes, ATTR);
+            ok_int(buff[4].Char.UnicodeChar, 0x7F7F);
+            ok_int(buff[4].Attributes, 0x7F7F);
+        }
+        else
+        {
+            ok_int(buff[0].Char.UnicodeChar, u9580[0]);
+            ok_int(buff[0].Attributes, ATTR);
+            ok_int(buff[1].Char.UnicodeChar, u9580[0]);
+            ok_int(buff[1].Attributes, ATTR);
+            ok_int(buff[2].Char.UnicodeChar, 0);
+            ok_int(buff[2].Attributes, 0);
+            ok_int(buff[3].Char.UnicodeChar, 0);
+            ok_int(buff[3].Attributes, 0);
+            ok_int(buff[4].Char.UnicodeChar, 0x7F7F);
+            ok_int(buff[4].Attributes, 0x7F7F);
+        }
+
         /* read attrs */
+        c.X = c.Y = 0;
         memset(attrs, 0x7F, sizeof(attrs));
         ret = ReadConsoleOutputAttribute(hConOut, attrs, 6, c, &len);
         ok_int(ret, 1);
         ok_long(len, 6);
-        ok_int(attrs[0], ATTR);
-        ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
-        ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
-        ok_int(attrs[3], ATTR);
+        ok_int(attrs[0], ATTR | COMMON_LVB_LEADING_BYTE);
+        if (s_bIs8Plus)
+        {
+            ok_int(attrs[1], ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(attrs[2], ATTR | COMMON_LVB_TRAILING_BYTE);
+            ok_int(attrs[3], ATTR);
+        }
+        else
+        {
+            ok_int(attrs[1], ATTR | COMMON_LVB_TRAILING_BYTE);
+            ok_int(attrs[2], ATTR | COMMON_LVB_LEADING_BYTE);
+            ok_int(attrs[3], ATTR | COMMON_LVB_TRAILING_BYTE);
+        }
         ok_int(attrs[4], ATTR);
         ok_int(attrs[5], ATTR);
     }
