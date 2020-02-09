@@ -123,6 +123,7 @@ IntSelectClipRgn(
         {
             PREGION prgnClip;
             RECTL rcl;
+#if 0
             PSURFACE pSurface;
 
             // See IntSetDefaultRegion.
@@ -145,12 +146,14 @@ IntSelectClipRgn(
                 }
             }
             //EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
-#if 0
+//#if 0
             rcl.left   += dc->ptlDCOrig.x;
             rcl.top    += dc->ptlDCOrig.y;
             rcl.right  += dc->ptlDCOrig.x;
             rcl.bottom += dc->ptlDCOrig.y;
 #endif
+            REGION_GetRgnBox(dc->prgnVis, &rcl);
+
             prgnClip = IntSysCreateRectpRgnIndirect(&rcl);
 
             Ret = IntGdiCombineRgn(prgnNClip, prgnClip, prgn, fnMode);
