@@ -2,6 +2,7 @@
  * cdjpeg.h
  *
  * Copyright (C) 1994-1997, Thomas G. Lane.
+ * Modified 2019 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -121,7 +122,8 @@ EXTERN(cjpeg_source_ptr) jinit_read_bmp JPP((j_compress_ptr cinfo));
 EXTERN(djpeg_dest_ptr) jinit_write_bmp JPP((j_decompress_ptr cinfo,
 					    boolean is_os2));
 EXTERN(cjpeg_source_ptr) jinit_read_gif JPP((j_compress_ptr cinfo));
-EXTERN(djpeg_dest_ptr) jinit_write_gif JPP((j_decompress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_gif JPP((j_decompress_ptr cinfo,
+					    boolean is_lzw));
 EXTERN(cjpeg_source_ptr) jinit_read_ppm JPP((j_compress_ptr cinfo));
 EXTERN(djpeg_dest_ptr) jinit_write_ppm JPP((j_decompress_ptr cinfo));
 EXTERN(cjpeg_source_ptr) jinit_read_rle JPP((j_compress_ptr cinfo));

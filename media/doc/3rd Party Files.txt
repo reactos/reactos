@@ -75,7 +75,7 @@ Used Version: git commit 8765259
 Website: https://github.com/win-iconv/win-iconv
 
 Title: libjpeg
-Used Version: 9c
+Used Version: 9d
 Website: http://www.ijg.org/
 
 Title: libtiff

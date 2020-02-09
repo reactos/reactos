@@ -2,7 +2,7 @@
  * wrppm.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modified 2009-2017 by Guido Vollbeding.
+ * Modified 2009-2019 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -149,7 +149,6 @@ put_demapped_rgb (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
   (void) JFWRITE(dest->pub.output_file, dest->iobuffer, dest->buffer_width);
 }
 
-
 METHODDEF(void)
 put_demapped_gray (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
 		   JDIMENSION rows_supplied)
@@ -157,13 +156,13 @@ put_demapped_gray (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
   ppm_dest_ptr dest = (ppm_dest_ptr) dinfo;
   register char * bufferptr;
   register JSAMPROW ptr;
-  register JSAMPROW color_map = cinfo->colormap[0];
+  register JSAMPROW color_map0 = cinfo->colormap[0];
   register JDIMENSION col;
 
   ptr = dest->pub.buffer[0];
   bufferptr = dest->iobuffer;
   for (col = cinfo->output_width; col > 0; col--) {
-    PUTPPMSAMPLE(bufferptr, GETJSAMPLE(color_map[GETJSAMPLE(*ptr++)]));
+    PUTPPMSAMPLE(bufferptr, GETJSAMPLE(color_map0[GETJSAMPLE(*ptr++)]));
   }
   (void) JFWRITE(dest->pub.output_file, dest->iobuffer, dest->buffer_width);
 }
@@ -176,19 +175,17 @@ put_demapped_gray (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
 METHODDEF(void)
 start_output_ppm (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
 {
-  ppm_dest_ptr dest = (ppm_dest_ptr) dinfo;
-
   /* Emit file header */
   switch (cinfo->out_color_space) {
   case JCS_GRAYSCALE:
     /* emit header for raw PGM format */
-    fprintf(dest->pub.output_file, "P5\n%ld %ld\n%d\n",
+    fprintf(dinfo->output_file, "P5\n%ld %ld\n%d\n",
 	    (long) cinfo->output_width, (long) cinfo->output_height,
 	    PPM_MAXVAL);
     break;
   case JCS_RGB:
     /* emit header for raw PPM format */
-    fprintf(dest->pub.output_file, "P6\n%ld %ld\n%d\n",
+    fprintf(dinfo->output_file, "P6\n%ld %ld\n%d\n",
 	    (long) cinfo->output_width, (long) cinfo->output_height,
 	    PPM_MAXVAL);
     break;
@@ -222,9 +219,8 @@ jinit_write_ppm (j_decompress_ptr cinfo)
   ppm_dest_ptr dest;
 
   /* Create module interface object, fill in method pointers */
-  dest = (ppm_dest_ptr)
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				  SIZEOF(ppm_dest_struct));
+  dest = (ppm_dest_ptr) (*cinfo->mem->alloc_small)
+    ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(ppm_dest_struct));
   dest->pub.start_output = start_output_ppm;
   dest->pub.finish_output = finish_output_ppm;
 

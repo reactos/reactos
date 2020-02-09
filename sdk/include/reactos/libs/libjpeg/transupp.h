@@ -1,7 +1,7 @@
 /*
  * transupp.h
  *
- * Copyright (C) 1997-2013, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1997-2019, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -61,6 +61,11 @@
  *
  * A complementary lossless-wipe option is provided to discard (gray out) data
  * inside a given image region while losslessly preserving what is outside.
+ * Another option is lossless-drop, which replaces data at a given image
+ * position by another image.  Both source images must have the same
+ * subsampling values.  It is best if they also have the same quantization,
+ * otherwise quantization adaption occurs.  The trim option can be used with
+ * the drop option to requantize the drop file to the source file.
  *
  * We also provide a lossless-resize option, which is kind of a lossless-crop
  * operation in the DCT coefficient block domain - it discards higher-order
@@ -106,20 +111,22 @@ typedef enum {
 	JXFORM_ROT_90,		/* 90-degree clockwise rotation */
 	JXFORM_ROT_180,		/* 180-degree rotation */
 	JXFORM_ROT_270,		/* 270-degree clockwise (or 90 ccw) */
-	JXFORM_WIPE		/* wipe */
+	JXFORM_WIPE,		/* wipe */
+	JXFORM_DROP		/* drop */
 } JXFORM_CODE;
 
 /*
  * Codes for crop parameters, which can individually be unspecified,
  * positive or negative for xoffset or yoffset,
- * positive or forced for width or height.
+ * positive or force or reflect for width or height.
  */
 
 typedef enum {
-        JCROP_UNSET,
-        JCROP_POS,
-        JCROP_NEG,
-        JCROP_FORCE
+	JCROP_UNSET,
+	JCROP_POS,
+	JCROP_NEG,
+	JCROP_FORCE,
+	JCROP_REFLECT
 } JCROP_CODE;
 
 /*
@@ -134,19 +141,23 @@ typedef struct {
   boolean perfect;		/* if TRUE, fail if partial MCUs are requested */
   boolean trim;			/* if TRUE, trim partial MCUs as needed */
   boolean force_grayscale;	/* if TRUE, convert color image to grayscale */
-  boolean crop;			/* if TRUE, crop or wipe source image */
+  boolean crop;			/* if TRUE, crop or wipe source image, or drop */
 
   /* Crop parameters: application need not set these unless crop is TRUE.
    * These can be filled in by jtransform_parse_crop_spec().
    */
   JDIMENSION crop_width;	/* Width of selected region */
-  JCROP_CODE crop_width_set;	/* (forced disables adjustment) */
+  JCROP_CODE crop_width_set;	/* (force disables adjustment) */
   JDIMENSION crop_height;	/* Height of selected region */
-  JCROP_CODE crop_height_set;	/* (forced disables adjustment) */
+  JCROP_CODE crop_height_set;	/* (force disables adjustment) */
   JDIMENSION crop_xoffset;	/* X offset of selected region */
   JCROP_CODE crop_xoffset_set;	/* (negative measures from right edge) */
   JDIMENSION crop_yoffset;	/* Y offset of selected region */
   JCROP_CODE crop_yoffset_set;	/* (negative measures from bottom edge) */
+
+  /* Drop parameters: set by caller for drop request */
+  j_decompress_ptr drop_ptr;
+  jvirt_barray_ptr * drop_coef_arrays;
 
   /* Internal workspace: caller should not touch these */
   int num_components;		/* # of components in workspace */
