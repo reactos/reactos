@@ -1297,6 +1297,8 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         TRACE("Domain: %wZ\n", &LogonDom);
         TRACE("User: %wZ\n", &LogonUser);
         TRACE("Password: %wZ\n", &LogonPass);
+
+        // TODO: If LogonType == Service, do some extra work using LogonInfo->Password.
     }
     else
     {
