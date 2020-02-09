@@ -155,6 +155,7 @@ static int ecdsa_sign_internal( mbedtls_ecp_group *grp, mbedtls_mpi *r,
         MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &e, &e, s ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &e, &e, &t ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &k, &k, &t ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( &k, &k, &grp->N ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( s, &k, &grp->N ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( s, s, &e ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_mod_mpi( s, s, &grp->N ) );

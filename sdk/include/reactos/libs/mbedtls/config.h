@@ -1886,6 +1886,10 @@
  *
  * Enable the CTR_DRBG AES-256-based random generator.
  *
+ * \note This module only achieves a 256-bit security strength if
+ *       the generator is seeded with sufficient entropy.
+ *       See ctr_drbg.h for more details.
+ *
  * Module:  library/ctr_drbg.c
  * Caller:
  *
