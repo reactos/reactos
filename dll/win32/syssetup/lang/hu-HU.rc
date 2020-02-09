@@ -246,6 +246,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "Please choose a product option."
-    IDS_PRODUCTSERVER "This is 2003 Server-like product."
-    IDS_PRODUCTWORKSTATION "This is XP-like product."
+    IDS_PRODUCTSERVERNAME "ReactOS Server (Default)"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERINFO "This is 2003 Server-like product."
+    IDS_PRODUCTWORKSTATIONINFO "This is XP-like product."
 END

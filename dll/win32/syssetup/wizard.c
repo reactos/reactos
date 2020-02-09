@@ -433,7 +433,7 @@ OnChooseServer(HWND hwndDlg)
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Enterprise/Terminal Server");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
 
-    LoadStringW(hDllInstance, IDS_PRODUCTSERVER, szText, _countof(szText));
+    LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
 }
 
@@ -445,7 +445,7 @@ OnChooseWorkstation(HWND hwndDlg)
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"(None)");
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
 
-    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATION, szText, _countof(szText));
+    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
     SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
 }
 
@@ -458,6 +458,7 @@ ProductPageDlgProc(HWND hwndDlg,
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
     INT iItem;
+    WCHAR szText[64];
 
     pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -468,7 +469,10 @@ ProductPageDlgProc(HWND hwndDlg,
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Server (Default)");
+            LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Workstation");
 
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
