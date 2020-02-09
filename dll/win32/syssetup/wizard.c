@@ -355,9 +355,169 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_PRODUCT);
+                        return TRUE;
+                    }
+                    break;
+
+                case PSN_WIZBACK:
+                    pSetupData->UnattendSetup = FALSE;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+static BOOL
+WriteProductOption(PRODUCT_OPTION nOption)
+{
+    static const WCHAR s_szProductOptions[] = L"System\\CurrentControlSet\\Control\\ProductOptions";
+    HKEY hKey;
+    LONG error;
+    LPCWSTR pData;
+    DWORD cbData;
+    
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
+    if (error)
+        return FALSE;
+    
+    switch (nOption)
+    {
+        case PRODUCT_OPTION_SERVER:
+            /* write ProductSuite */
+            pData = L"Enterprise\0Terminal Server\0";
+            cbData = (lstrlenA("Enterprise") + lstrlenA("Terminal Server") + 3) * sizeof(WCHAR);
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            if (error)
+                break;
+    
+            /* write ProductType */
+            pData = L"ServerNT";
+            cbData = (lstrlenW(pData) + 1) * sizeof(WCHAR);
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            break;
+    
+        case PRODUCT_OPTION_WORKSTATION:
+            /* write ProductSuite */
+            pData = L"\0";
+            cbData = 2 * sizeof(WCHAR);
+            error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
+            if (error)
+                break;
+    
+            /* write ProductType */
+            pData = L"WinNT";
+            cbData = (lstrlenW(pData) + 1) * sizeof(WCHAR);
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
+            break;
+    }
+    
+    RegCloseKey(hKey);
+    return error == ERROR_SUCCESS;
+}
+
+static void
+OnChooseServer(HWND hwndDlg)
+{
+    WCHAR szText[128];
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"Enterprise/Terminal Server");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"ServerNT");
+
+    LoadStringW(hDllInstance, IDS_PRODUCTSERVER, szText, _countof(szText));
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+}
+
+static void
+OnChooseWorkstation(HWND hwndDlg)
+{
+    WCHAR szText[128];
+
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_SUITE, L"(None)");
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_TYPE, L"WinNT");
+
+    LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATION, szText, _countof(szText));
+    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+}
+
+static INT_PTR CALLBACK
+ProductPageDlgProc(HWND hwndDlg,
+                    UINT uMsg,
+                    WPARAM wParam,
+                    LPARAM lParam)
+{
+    LPNMHDR lpnm;
+    PSETUPDATA pSetupData;
+    INT iItem;
+
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
+
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Server (Default)");
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Workstation");
+
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
+            OnChooseServer(hwndDlg);
+        }
+        break;
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
+            {
+                iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                switch ((PRODUCT_OPTION)iItem)
+                {
+                    case PRODUCT_OPTION_SERVER:
+                        OnChooseServer(hwndDlg);
+                        break;
+
+                    case PRODUCT_OPTION_WORKSTATION:
+                        OnChooseWorkstation(hwndDlg);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            break;
+
+        case WM_NOTIFY:
+        {
+            lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Enable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    if (pSetupData->UnattendSetup)
+                    {
+                        pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
+                        WriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
+                    break;
+
+                case PSN_WIZNEXT:
+                    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
+                    pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
+                    WriteProductOption(pSetupData->ProductOption);
                     break;
 
                 case PSN_WIZBACK:
@@ -2670,7 +2830,7 @@ InstallWizard(VOID)
     PSETUPDATA pSetupData = NULL;
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
-    DWORD dwPageCount = 9, dwNetworkPageCount = 0;
+    DWORD dwPageCount = 10, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2735,6 +2895,14 @@ InstallWizard(VOID)
     psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_ACKSUBTITLE);
     psp.pszTemplate = MAKEINTRESOURCE(IDD_ACKPAGE);
     psp.pfnDlgProc = AckPageDlgProc;
+    phpage[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the Product page */
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PRODUCTTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PRODUCTSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PRODUCT);
+    psp.pfnDlgProc = ProductPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */

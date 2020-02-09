@@ -44,6 +44,12 @@ typedef struct _TIMEZONE_ENTRY
     ULONG Index;
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
+typedef enum _PRODUCT_OPTION
+{
+    PRODUCT_OPTION_SERVER,
+    PRODUCT_OPTION_WORKSTATION
+} PRODUCT_OPTION, *PPRODUCT_OPTION;
+
 /* Private Setup data shared between syssetup.dll and netshell.dll */
 typedef struct _SETUPDATA
 {
@@ -71,6 +77,8 @@ typedef struct _SETUPDATA
 
     UINT uFirstNetworkWizardPage;
     UINT uPostNetworkWizardPage;
+
+    PRODUCT_OPTION ProductOption;
 } SETUPDATA, *PSETUPDATA;
 
 

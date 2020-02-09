@@ -30,6 +30,7 @@
 #define IDI_ICON3 12
 #define IDI_ICON4 13
 #define IDI_ICON5 14
+#define IDI_ICON236 236
 
 #define IDC_STATIC -1
 
@@ -88,6 +89,13 @@
 #define IDC_PS2MOUSEFASTINIT   2305
 #define IDC_PS2MOUSEDEFAULTS   2306
 
+#define IDD_PRODUCT                2400
+#define IDC_PRODUCT_ICON           2401
+#define IDC_PRODUCT_OPTIONS        2402
+#define IDC_PRODUCT_SUITE          2403
+#define IDC_PRODUCT_TYPE           2404
+#define IDC_PRODUCT_DESCRIPTION    2405
+
 #define IDS_ACKTITLE    3010
 #define IDS_ACKSUBTITLE 3011
 
@@ -145,5 +153,10 @@
 #define IDS_LAUTUS  3801
 #define IDS_LUNAR   3802
 #define IDS_MIZU    3803
+
+#define IDS_PRODUCTTITLE        3900
+#define IDS_PRODUCTSUBTITLE     3901
+#define IDS_PRODUCTSERVER       3902
+#define IDS_PRODUCTWORKSTATION  3903
 
 #define IDR_GPL 4000

@@ -3,7 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
- * Copyright 2018-2019 Katayama Hirofumi MZ
+ * Copyright 2018-2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,51 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
 
+#ifdef __REACTOS__
+/* FIXME: Remove this */
+typedef enum _NT_PRODUCT_TYPE
+{
+    NtProductWinNt = 1,
+    NtProductLanManNt,
+    NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
+
+static BOOL
+DoGetProductType(PNT_PRODUCT_TYPE ProductType)
+{
+    static const WCHAR ProductOptions[] = L"System\\CurrentControlSet\\Control\\ProductOptions";
+    HKEY hKey;
+    LONG error;
+    WCHAR szValue[32];
+    DWORD cbValue;
+    static DWORD s_dwProductType = 0;
+
+    if (s_dwProductType != 0)
+    {
+        *ProductType = s_dwProductType;
+        return TRUE;
+    }
+
+    *ProductType = NtProductServer;
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ProductOptions, 0, KEY_READ, &hKey);
+    if (error)
+        return FALSE;
+
+    cbValue = sizeof(szValue);
+    error = RegQueryValueExW(hKey, L"ProductType", NULL, NULL, (LPBYTE)szValue, &cbValue);
+    if (!error)
+    {
+        if (lstrcmpW(szValue, L"WinNT") == 0)
+            *ProductType = NtProductWinNt;
+    }
+
+    s_dwProductType = *ProductType;
+
+    RegCloseKey(hKey);
+    return TRUE;
+}
+#endif
 /*
 	########## Combining and Constructing paths ##########
 */
@@ -648,6 +693,9 @@ static const WCHAR AllUsersW[] = {'P','u','b','l','i','c',0};
 
 typedef enum _CSIDL_Type {
     CSIDL_Type_User,
+#ifdef __REACTOS__
+    CSIDL_Type_InMyDocuments,
+#endif
     CSIDL_Type_AllUsers,
     CSIDL_Type_CurrVer,
     CSIDL_Type_Disallowed,
@@ -767,14 +815,22 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x0d - CSIDL_MYMUSIC */
         &FOLDERID_Music,
+#ifdef __REACTOS__
+        CSIDL_Type_InMyDocuments,
+#else
         CSIDL_Type_User,
+#endif
         My_MusicW,
         MAKEINTRESOURCEW(IDS_MYMUSIC),
         -IDI_SHELL_MY_MUSIC
     },
     { /* 0x0e - CSIDL_MYVIDEO */
         &FOLDERID_Videos,
+#ifdef __REACTOS__
+        CSIDL_Type_InMyDocuments,
+#else
         CSIDL_Type_User,
+#endif
         My_VideoW,
         MAKEINTRESOURCEW(IDS_MYVIDEO),
         -IDI_SHELL_MY_MOVIES
@@ -938,7 +994,11 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
+#ifdef __REACTOS__
+        CSIDL_Type_InMyDocuments,
+#else
         CSIDL_Type_User,
+#endif
         My_PicturesW,
         MAKEINTRESOURCEW(IDS_MYPICTURES),
         -IDI_SHELL_MY_PICTURES
@@ -1142,7 +1202,11 @@ static const CSIDL_DATA CSIDL_Data[] =
     },
     { /* 0x47 - CSIDL_DOWNLOADS */
         &FOLDERID_Downloads,
+#ifdef __REACTOS__
+        CSIDL_Type_InMyDocuments,
+#else
         CSIDL_Type_User,
+#endif
         NULL,
         DownloadsW
     },
@@ -1549,6 +1613,9 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 {
     HRESULT hr;
     WCHAR resourcePath[MAX_PATH];
+#ifdef __REACTOS__
+    NT_PRODUCT_TYPE ProductType;
+#endif
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
@@ -1589,6 +1656,26 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
         case CSIDL_Type_User:
             strcpyW(pszPath, UserProfileW);
             break;
+#ifdef __REACTOS__
+        case CSIDL_Type_InMyDocuments:
+            strcpyW(pszPath, UserProfileW);
+            if (DoGetProductType(&ProductType) && ProductType == NtProductWinNt)
+            {
+                if (IS_INTRESOURCE(CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath))
+                {
+                    WCHAR szItem[MAX_PATH];
+                    LoadStringW(shell32_hInstance,
+                                LOWORD(CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath),
+                                szItem, ARRAY_SIZE(szItem));
+                    PathAppendW(pszPath, szItem);
+                }
+                else
+                {
+                    PathAppendW(pszPath, CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath);
+                }
+            }
+            break;
+#endif
         case CSIDL_Type_AllUsers:
 #ifndef __REACTOS__
             strcpyW(pszPath, PublicProfileW);
@@ -1756,8 +1843,15 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
 
     if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
+#ifdef __REACTOS__
+    if (CSIDL_Data[folder].type != CSIDL_Type_User &&
+        CSIDL_Data[folder].type != CSIDL_Type_InMyDocuments)
+#else
     if (CSIDL_Data[folder].type != CSIDL_Type_User)
+#endif
+    {
         return E_INVALIDARG;
+    }
     if (!pszPath)
         return E_INVALIDARG;
 
@@ -2222,6 +2316,9 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
             hr = _SHGetCurrentVersionPath(dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_User:
+#ifdef __REACTOS__
+        case CSIDL_Type_InMyDocuments:
+#endif
             hr = _SHGetUserProfilePath(hToken, dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_AllUsers:
@@ -2387,7 +2484,13 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
 
         /* For CSIDL_Type_User we also use the GUID if no szValueName is provided */
         szValueName = CSIDL_Data[folders[i]].szValueName;
+#ifdef __REACTOS__
+        if (!szValueName &&
+            (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
+             CSIDL_Data[folders[i]].type == CSIDL_Type_InMyDocuments))
+#else
         if (!szValueName && CSIDL_Data[folders[i]].type == CSIDL_Type_User)
+#endif
         {
             StringFromGUID2( CSIDL_Data[folders[i]].id, buffer, 39 );
             szValueName = &buffer[0];
@@ -2403,7 +2506,12 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
         else
         {
             *path = '\0';
+#ifdef __REACTOS__
+            if (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
+                CSIDL_Data[folders[i]].type == CSIDL_Type_InMyDocuments)
+#else
             if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
+#endif
                 _SHGetUserProfilePath(hToken, SHGFP_TYPE_CURRENT, folders[i],
                  path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
