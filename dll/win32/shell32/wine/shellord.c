@@ -2172,14 +2172,9 @@ UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
     RemovePropW(pInfo->hwnd, L"UxSubclassInfo");
 
     CoTaskMemFree(pInfo->pwszValidChars);
-    pInfo->pwszValidChars = NULL;
-
     CoTaskMemFree(pInfo->pwszInvalidChars);
-    pInfo->pwszInvalidChars = NULL;
 
     SetWindowLongPtr(pInfo->hwnd, GWLP_WNDPROC, (LONG_PTR)pInfo->fnWndProc);
-    pInfo->fnWndProc = NULL;
-    pInfo->hwnd = NULL;
 
     HeapFree(GetProcessHeap(), 0, pInfo);
 }
@@ -2284,18 +2279,21 @@ UxSubclassInfo_Create(HWND hwnd, LPWSTR valid, LPWSTR invalid)
     pInfo->hwnd = hwnd;
     pInfo->pwszValidChars = valid;
     pInfo->pwszInvalidChars = invalid;
-    SetPropW(hwnd, L"UxSubclassInfo", pInfo);
+    if (!SetPropW(hwnd, L"UxSubclassInfo", pInfo))
+    {
+        UxSubclassInfo_Destroy(pInfo);
+        pInfo = NULL;
+    }
     return pInfo;
 }
 
 HRESULT WINAPI
 SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
 {
-    IItemNameLimits *pLimits = NULL;
+    IItemNameLimits *pLimits;
     HRESULT hr;
-    LPWSTR pwszValidChars = NULL;
-    LPWSTR pwszInvalidChars = NULL;
-    UxSubclassInfo *pInfo = NULL;
+    LPWSTR pwszValidChars, pwszInvalidChars;
+    UxSubclassInfo *pInfo;
 
     pInfo = GetPropW(hWnd, L"UxSubclassInfo");
     if (pInfo)
@@ -2305,12 +2303,13 @@ SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
     }
 
     hr = psf->lpVtbl->QueryInterface(psf, &IID_IItemNameLimits, (LPVOID *)&pLimits);
-    if (FAILED(hr) || !pLimits)
+    if (FAILED(hr))
     {
         ERR("hr: %x\n", hr);
         return hr;
     }
 
+    pwszValidChars = pwszInvalidChars = NULL;
     hr = pLimits->lpVtbl->GetValidCharacters(pLimits, &pwszValidChars, &pwszInvalidChars);
     if (FAILED(hr))
     {
