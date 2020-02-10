@@ -2,6 +2,7 @@
 #define _ISAPNP_PCH_
 
 #include <wdm.h>
+#include <ntstrsafe.h>
 
 #ifdef __cplusplus
 extern "C" {
