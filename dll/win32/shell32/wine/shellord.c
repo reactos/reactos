@@ -2148,3 +2148,174 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 {
     return SHTestTokenMembership(NULL, DOMAIN_ALIAS_RID_ADMINS);
 }
+
+/*************************************************************************
+ *              SHLimitInputEdit(SHELL32.@)
+ */
+
+typedef struct UxSubclassInfo
+{
+    HWND hwnd;
+    WNDPROC fnWndProc;
+    LPWSTR pwszValidChars;
+    LPWSTR pwszInvalidChars;
+} UxSubclassInfo;
+
+static void
+UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
+{
+    if (!pInfo)
+        return;
+
+    RemovePropW(pInfo->hwnd, L"UxSubclassInfo");
+
+    CoTaskMemFree(pInfo->pwszValidChars);
+    pInfo->pwszValidChars = NULL;
+
+    CoTaskMemFree(pInfo->pwszInvalidChars);
+    pInfo->pwszInvalidChars = NULL;
+
+    SetWindowLongPtr(pInfo->hwnd, GWLP_WNDPROC, (LONG_PTR)pInfo->fnWndProc);
+    pInfo->fnWndProc = NULL;
+    pInfo->hwnd = NULL;
+
+    HeapFree(GetProcessHeap(), 0, pInfo);
+}
+
+static LRESULT CALLBACK
+LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC fnWndProc;
+    UxSubclassInfo *pInfo = GetPropW(hwnd, L"UxSubclassInfo");
+    if (!pInfo)
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+
+    fnWndProc = pInfo->fnWndProc;
+
+    switch (uMsg)
+    {
+        case WM_CHAR:
+        {
+            if (pInfo->pwszInvalidChars)
+            {
+                if (wcschr(pInfo->pwszInvalidChars, (CHAR)wParam) != NULL)
+                {
+                    MessageBeep(0xFFFFFFFF);
+                    break;
+                }
+            }
+            else if (pInfo->pwszValidChars)
+            {
+                if (wcschr(pInfo->pwszValidChars, (CHAR)wParam) == NULL)
+                {
+                    MessageBeep(0xFFFFFFFF);
+                    break;
+                }
+            }
+            return fnWndProc(hwnd, uMsg, wParam, lParam);
+        }
+
+        case WM_IME_CHAR:
+        {
+            // TODO: DBCS
+            if (pInfo->pwszInvalidChars)
+            {
+                if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
+                {
+                    MessageBeep(0xFFFFFFFF);
+                    break;
+                }
+            }
+            else if (pInfo->pwszValidChars)
+            {
+                if (wcschr(pInfo->pwszValidChars, (WCHAR)wParam) == NULL)
+                {
+                    MessageBeep(0xFFFFFFFF);
+                    break;
+                }
+            }
+            return fnWndProc(hwnd, uMsg, wParam, lParam);
+        }
+
+        case WM_NCDESTROY:
+        {
+            UxSubclassInfo_Destroy(pInfo);
+            return fnWndProc(hwnd, uMsg, wParam, lParam);
+        }
+
+        default:
+            return fnWndProc(hwnd, uMsg, wParam, lParam);
+    }
+
+    return 0;
+}
+
+static UxSubclassInfo *
+UxSubclassInfo_Create(HWND hwnd, LPWSTR valid, LPWSTR invalid)
+{
+    UxSubclassInfo *pInfo;
+    pInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(UxSubclassInfo));
+    if (!pInfo)
+    {
+        ERR("HeapAlloc failed.\n");
+        CoTaskMemFree(valid);
+        CoTaskMemFree(invalid);
+        return NULL;
+    }
+
+    pInfo->fnWndProc = (WNDPROC)
+        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)LimitEditWindowProc);
+    if (!pInfo->fnWndProc)
+    {
+        ERR("SetWindowLongPtr failed\n");
+        CoTaskMemFree(valid);
+        CoTaskMemFree(invalid);
+        HeapFree(GetProcessHeap(), 0, pInfo);
+        return NULL;
+    }
+
+    pInfo->hwnd = hwnd;
+    pInfo->pwszValidChars = valid;
+    pInfo->pwszInvalidChars = invalid;
+    SetPropW(hwnd, L"UxSubclassInfo", pInfo);
+    return pInfo;
+}
+
+HRESULT WINAPI SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
+{
+    IItemNameLimits *pLimits = NULL;
+    HRESULT hr;
+    LPWSTR pwszValidChars = NULL;
+    LPWSTR pwszInvalidChars = NULL;
+    UxSubclassInfo *pInfo = NULL;
+
+    pInfo = GetPropW(hWnd, L"UxSubclassInfo");
+    if (pInfo)
+    {
+        UxSubclassInfo_Destroy(pInfo);
+        pInfo = NULL;
+    }
+
+    hr = psf->lpVtbl->QueryInterface(psf, &IID_IItemNameLimits, (LPVOID *)&pLimits);
+    if (FAILED(hr) || !pLimits)
+    {
+        ERR("hr: %x\n", hr);
+        return hr;
+    }
+
+    hr = pLimits->lpVtbl->GetValidCharacters(pLimits, &pwszValidChars, &pwszInvalidChars);
+    if (FAILED(hr))
+    {
+        ERR("hr: %x\n", hr);
+        pLimits->lpVtbl->Release(pLimits);
+        return hr;
+    }
+
+    pInfo = UxSubclassInfo_Create(hWnd, pwszValidChars, pwszInvalidChars);
+    if (!pInfo)
+        hr = E_FAIL;
+
+    pLimits->lpVtbl->Release(pLimits);
+
+    return hr;
+}
