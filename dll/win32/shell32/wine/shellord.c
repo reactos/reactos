@@ -2271,8 +2271,7 @@ UxSubclassInfo_Create(HWND hwnd, LPWSTR valid, LPWSTR invalid)
         return NULL;
     }
 
-    pInfo->fnWndProc = (WNDPROC)
-        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)LimitEditWindowProc);
+    pInfo->fnWndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)LimitEditWindowProc);
     if (!pInfo->fnWndProc)
     {
         ERR("SetWindowLongPtr failed\n");
@@ -2289,7 +2288,8 @@ UxSubclassInfo_Create(HWND hwnd, LPWSTR valid, LPWSTR invalid)
     return pInfo;
 }
 
-HRESULT WINAPI SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
+HRESULT WINAPI
+SHLimitInputEdit(HWND hWnd, IShellFolder *psf)
 {
     IItemNameLimits *pLimits = NULL;
     HRESULT hr;
