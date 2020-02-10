@@ -2153,6 +2153,8 @@ BOOL WINAPI IsUserAnAdmin(VOID)
  *              SHLimitInputEdit(SHELL32.@)
  */
 
+/* TODO: Show baloon popup window using SetWindowRgn */
+
 typedef struct UxSubclassInfo
 {
     HWND hwnd;
