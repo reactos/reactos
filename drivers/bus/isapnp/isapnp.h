@@ -32,7 +32,7 @@ typedef struct _ISAPNP_FDO_EXTENSION {
 
 typedef struct _ISAPNP_LOGICAL_DEVICE {
   ISAPNP_COMMON_EXTENSION Common;
-  USHORT VendorId;
+  UCHAR VendorId[3];
   USHORT ProdId;
   USHORT IoAddr;
   UCHAR IrqNo;

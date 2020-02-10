@@ -512,12 +512,14 @@ ProbeIsaPnpBus(PISAPNP_FDO_EXTENSION FdoExt)
 
       WriteLogicalDeviceNumber(LogDev);
 
-      LogDevice->VendorId = LogDevId.VendorId;
-      LogDevice->ProdId = LogDevId.ProdId;
+      LogDevice->VendorId[0] = ((LogDevId.VendorId >> 2) & 0x1f) + 'A' - 1,
+      LogDevice->VendorId[1] = (((LogDevId.VendorId & 0x3) << 3) | ((LogDevId.VendorId >> 13) & 0x7)) + 'A' - 1,
+      LogDevice->VendorId[2] = ((LogDevId.VendorId >> 8) & 0x1f) + 'A' - 1,
+      LogDevice->ProdId = RtlUshortByteSwap(LogDevId.ProdId);
       LogDevice->IoAddr = ReadIoBase(FdoExt->ReadDataPort, 0);
       LogDevice->IrqNo = ReadIrqNo(FdoExt->ReadDataPort, 0);
 
-      DPRINT1("Detected ISA PnP device - VID: 0x%x PID: 0x%x IoBase: 0x%x IRQ:0x%x\n",
+      DPRINT1("Detected ISA PnP device - VID: '%3s' PID: 0x%x IoBase: 0x%x IRQ:0x%x\n",
                LogDevice->VendorId, LogDevice->ProdId, LogDevice->IoAddr, LogDevice->IrqNo);
 
       WaitForKey();
