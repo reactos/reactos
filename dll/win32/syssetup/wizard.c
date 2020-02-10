@@ -385,11 +385,11 @@ WriteProductOption(PRODUCT_OPTION nOption)
     LONG error;
     LPCWSTR pData;
     DWORD cbData;
-    
+
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
     if (error)
         return FALSE;
-    
+
     switch (nOption)
     {
         case PRODUCT_OPTION_SERVER:
@@ -399,13 +399,13 @@ WriteProductOption(PRODUCT_OPTION nOption)
             error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
             if (error)
                 break;
-    
+
             /* write ProductType */
             pData = L"ServerNT";
             cbData = sizeof(L"ServerNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
             break;
-    
+
         case PRODUCT_OPTION_WORKSTATION:
             /* write ProductSuite */
             pData = L"\0";
@@ -413,14 +413,14 @@ WriteProductOption(PRODUCT_OPTION nOption)
             error = RegSetValueExW(hKey, L"ProductSuite", 0, REG_MULTI_SZ, (BYTE *)pData, cbData);
             if (error)
                 break;
-    
+
             /* write ProductType */
             pData = L"WinNT";
             cbData = sizeof(L"WinNT");
             error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (BYTE *)pData, cbData);
             break;
     }
-    
+
     RegCloseKey(hKey);
     return error == ERROR_SUCCESS;
 }
