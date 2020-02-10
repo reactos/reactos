@@ -2217,10 +2217,16 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_IME_CHAR:
         {
-            // TODO: DBCS
+            WCHAR wch = (WCHAR)wParam;
+            if (!IsWindowUnicode(hwnd))
+            {
+                WORD w = wch;
+                MultiByteToWideChar(CP_ACP, 0, (LPSTR)&w, 2, &wch, 1);
+            }
+
             if (pInfo->pwszInvalidChars)
             {
-                if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
+                if (wcschr(pInfo->pwszInvalidChars, wch) != NULL)
                 {
                     MessageBeep(0xFFFFFFFF);
                     break;
@@ -2228,7 +2234,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             else if (pInfo->pwszValidChars)
             {
-                if (wcschr(pInfo->pwszValidChars, (WCHAR)wParam) == NULL)
+                if (wcschr(pInfo->pwszValidChars, wch) == NULL)
                 {
                     MessageBeep(0xFFFFFFFF);
                     break;
