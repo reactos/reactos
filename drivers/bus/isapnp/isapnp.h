@@ -34,6 +34,7 @@ typedef struct _ISAPNP_LOGICAL_DEVICE {
   ISAPNP_COMMON_EXTENSION Common;
   UCHAR VendorId[3];
   USHORT ProdId;
+  ULONG SerialNumber;
   USHORT IoAddr;
   UCHAR IrqNo;
   UCHAR CSN;
