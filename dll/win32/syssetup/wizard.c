@@ -450,10 +450,7 @@ OnChooseWorkstation(HWND hwndDlg)
 }
 
 static INT_PTR CALLBACK
-ProductPageDlgProc(HWND hwndDlg,
-                    UINT uMsg,
-                    WPARAM wParam,
-                    LPARAM lParam)
+ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
