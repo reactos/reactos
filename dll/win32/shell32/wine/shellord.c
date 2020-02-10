@@ -2218,10 +2218,10 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_IME_CHAR:
         {
             WCHAR wch = (WCHAR)wParam;
-            if (!IsWindowUnicode(hwnd))
+            if (!IsWindowUnicode(hwnd) && HIBYTE(wch) != 0)
             {
-                WORD w = wch;
-                MultiByteToWideChar(CP_ACP, 0, (LPSTR)&w, 2, &wch, 1);
+                CHAR data[] = {HIBYTE(wch), LOBYTE(wch)};
+                MultiByteToWideChar(CP_ACP, 0, data, 2, &wch, 1);
             }
 
             if (pInfo->pwszInvalidChars)
