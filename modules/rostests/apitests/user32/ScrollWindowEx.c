@@ -3,54 +3,98 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for ScrollWindowEx
  * PROGRAMMERS:     Timo Kreuzer
+ *                  Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
 
 void Test_ScrollWindowEx()
 {
-	HWND hWnd;
-	HRGN hrgn;
-	int Result;
+    HWND hWnd, hChild1, hChild2;
+    HRGN hrgn;
+    int Result;
+    RECT rc, rcChild1, rcChild2;
+    INT x1, y1, x2, y2, dx, dy;
 
-	/* Create a window */
-	hWnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-	                    CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
-	                    NULL, NULL, 0, 0);
-	UpdateWindow(hWnd);
+    /* Create a window */
+    hWnd = CreateWindowW(L"STATIC", L"TestWindow",
+                         WS_POPUP | SS_WHITERECT | WS_VISIBLE,
+                         CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
+                         NULL, NULL, 0, 0);
+    ok(hWnd != NULL, "hWnd was NULL.\n");
+    UpdateWindow(hWnd);
 
-	/* Assert that no update region is there */
-	hrgn = CreateRectRgn(0,0,0,0);
-	Result = GetUpdateRgn(hWnd, hrgn, FALSE);
-	ok(Result == NULLREGION, "Result = %d\n", Result);
+    /* Assert that no update region is there */
+    hrgn = CreateRectRgn(0,0,0,0);
+    Result = GetUpdateRgn(hWnd, hrgn, FALSE);
+    ok(Result == NULLREGION, "Result = %d\n", Result);
 
-	Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, NULL, 0);
-	ok(Result == SIMPLEREGION, "Result = %d\n", Result);
-	Result = GetUpdateRgn(hWnd, hrgn, FALSE);
-	ok(Result == NULLREGION, "Result = %d\n", Result);
+    Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, NULL, 0);
+    ok(Result == SIMPLEREGION, "Result = %d\n", Result);
+    Result = GetUpdateRgn(hWnd, hrgn, FALSE);
+    ok(Result == NULLREGION, "Result = %d\n", Result);
 
-	Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, NULL, SW_INVALIDATE);
-	ok(Result == SIMPLEREGION, "Result = %d\n", Result);
-	Result = GetUpdateRgn(hWnd, hrgn, FALSE);
-	ok(Result == SIMPLEREGION, "Result = %d\n", Result);
-	UpdateWindow(hWnd);
+    Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, NULL, SW_INVALIDATE);
+    ok(Result == SIMPLEREGION, "Result = %d\n", Result);
+    Result = GetUpdateRgn(hWnd, hrgn, FALSE);
+    ok(Result == SIMPLEREGION, "Result = %d\n", Result);
+    UpdateWindow(hWnd);
 
-	// test invalid update region
-	DeleteObject(hrgn);
-	Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, hrgn, NULL, SW_INVALIDATE);
-	ok(Result == ERROR, "Result = %d\n", Result);
-	hrgn = CreateRectRgn(0,0,0,0);
-	UpdateWindow(hWnd);
+    // test invalid update region
+    DeleteObject(hrgn);
+    Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, hrgn, NULL, SW_INVALIDATE);
+    ok(Result == ERROR, "Result = %d\n", Result);
+    hrgn = CreateRectRgn(0,0,0,0);
+    UpdateWindow(hWnd);
 
-	// Test invalid updaterect pointer
-	Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, (LPRECT)1, SW_INVALIDATE);
-	ok(Result == ERROR, "Result = %d\n", Result);
-	Result = GetUpdateRgn(hWnd, hrgn, FALSE);
-	ok(Result == SIMPLEREGION, "Result = %d\n", Result);
+    // Test invalid updaterect pointer
+    Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, (LPRECT)1, SW_INVALIDATE);
+    ok(Result == ERROR, "Result = %d\n", Result);
+    Result = GetUpdateRgn(hWnd, hrgn, FALSE);
+    ok(Result == SIMPLEREGION, "Result = %d\n", Result);
 
-// test for alignment of rects
+    /* create child window 1 */
+    x1 = 1;
+    y1 = 3;
+    hChild1 = CreateWindowW(L"STATIC", L"Child1",
+                            WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
+                            x1, y1, 10, 10, hWnd, NULL, 0, 0);
+    ok(hChild1 != NULL, "hChild1 was NULL.\n");
+    UpdateWindow(hChild1);
 
-	DeleteObject(hrgn);
+    /* create child window 2 */
+    x2 = 5;
+    y2 = 7;
+    hChild2 = CreateWindowW(L"STATIC", L"Child2",
+                            WS_CHILD | WS_VISIBLE | SS_WHITERECT,
+                            x2, y2, 10, 10, hWnd, NULL, 0, 0);
+    ok(hChild2 != NULL, "hChild2 was NULL.\n");
+    UpdateWindow(hChild2);
+
+    /* scroll with child windows */
+    dx = 3;
+    dy = 8;
+    ScrollWindowEx(hWnd, dx, dy, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN);
+    UpdateWindow(hWnd);
+
+    /* check the positions */
+    GetWindowRect(hWnd, &rc);
+    GetWindowRect(hChild1, &rcChild1);
+    GetWindowRect(hChild2, &rcChild2);
+    ok_long(rcChild1.left - rc.left, x1 + dx);
+    ok_long(rcChild2.left - rc.left, x2 + dx);
+    ok_long(rcChild1.top - rc.top, y1 + dy);
+    ok_long(rcChild2.top - rc.top, y2 + dy);
+
+    /* scroll with child windows */
+    dx = 0;
+    dy = -10;
+    ScrollWindowEx(hWnd, dx, dy, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN);
+    UpdateWindow(hWnd);
+
+    DestroyWindow(hChild1);
+    DestroyWindow(hChild2);
+    DeleteObject(hrgn);
     DestroyWindow(hWnd);
 }
 
