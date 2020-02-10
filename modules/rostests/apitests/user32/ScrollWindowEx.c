@@ -86,11 +86,26 @@ void Test_ScrollWindowEx()
     ok_long(rcChild1.top - rc.top, y1 + dy);
     ok_long(rcChild2.top - rc.top, y2 + dy);
 
+    /* update */
+    x1 += dx;
+    y1 += dy;
+    x2 += dx;
+    y2 += dy;
+
     /* scroll with child windows */
-    dx = 0;
-    dy = -10;
+    dx = 9;
+    dy = -2;
     ScrollWindowEx(hWnd, dx, dy, NULL, NULL, NULL, NULL, SW_SCROLLCHILDREN);
     UpdateWindow(hWnd);
+
+    /* check the positions */
+    GetWindowRect(hWnd, &rc);
+    GetWindowRect(hChild1, &rcChild1);
+    GetWindowRect(hChild2, &rcChild2);
+    ok_long(rcChild1.left - rc.left, x1 + dx);
+    ok_long(rcChild2.left - rc.left, x2 + dx);
+    ok_long(rcChild1.top - rc.top, y1 + dy);
+    ok_long(rcChild2.top - rc.top, y2 + dy);
 
     DestroyWindow(hChild1);
     DestroyWindow(hChild2);
