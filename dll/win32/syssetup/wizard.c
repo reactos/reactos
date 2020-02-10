@@ -378,7 +378,7 @@ AckPageDlgProc(HWND hwndDlg,
 }
 
 static BOOL
-WriteProductOption(PRODUCT_OPTION nOption)
+DoWriteProductOption(PRODUCT_OPTION nOption)
 {
     static const WCHAR s_szProductOptions[] = L"System\\CurrentControlSet\\Control\\ProductOptions";
     HKEY hKey;
@@ -513,7 +513,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (pSetupData->UnattendSetup)
                     {
                         pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
-                        WriteProductOption(pSetupData->ProductOption);
+                        DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
@@ -522,7 +522,7 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case PSN_WIZNEXT:
                     iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
                     pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
-                    WriteProductOption(pSetupData->ProductOption);
+                    DoWriteProductOption(pSetupData->ProductOption);
                     break;
 
                 case PSN_WIZBACK:
