@@ -2198,7 +2198,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             if (pInfo->pwszInvalidChars)
             {
-                if (wcschr(pInfo->pwszInvalidChars, (CHAR)wParam) != NULL)
+                if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
                 {
                     MessageBeep(0xFFFFFFFF);
                     break;
@@ -2206,7 +2206,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             else if (pInfo->pwszValidChars)
             {
-                if (wcschr(pInfo->pwszValidChars, (CHAR)wParam) == NULL)
+                if (wcschr(pInfo->pwszValidChars, (WCHAR)wParam) == NULL)
                 {
                     MessageBeep(0xFFFFFFFF);
                     break;
