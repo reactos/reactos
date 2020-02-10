@@ -22,6 +22,9 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+#define NTLM_ALLOC_TAG "NTLM"
+#define NTLM_ALLOC_TAG_SIZE strlen(NTLM_ALLOC_TAG)
+
 void*
 NtlmAllocate(
     IN size_t Size,
@@ -34,6 +37,8 @@ NtlmAllocate(
         ERR("Allocating 0 bytes!\n");
         return NULL;
     }
+
+    Size += NTLM_ALLOC_TAG_SIZE;
 
     switch(NtlmMode)
     {
@@ -59,6 +64,10 @@ NtlmAllocate(
             break;
         }
     }
+
+    memcpy(buffer, NTLM_ALLOC_TAG, NTLM_ALLOC_TAG_SIZE);
+    buffer = (PBYTE)buffer + NTLM_ALLOC_TAG_SIZE;
+
     return buffer;
 }
 
@@ -69,6 +78,10 @@ NtlmFree(
 {
     if (Buffer)
     {
+        Buffer = (PBYTE)Buffer - NTLM_ALLOC_TAG_SIZE;
+        ASSERT(memcmp(Buffer, NTLM_ALLOC_TAG, NTLM_ALLOC_TAG_SIZE) == 0);
+        *(char*)Buffer = 'D';
+
         switch (NtlmMode)
         {
             case NtlmLsaMode:
@@ -506,27 +519,43 @@ StrUtilFree(
 VOID
 NtlmInitExtStrWFromUnicodeString(
     OUT PEXT_STRING_W Dest,
-    IN PUNICODE_STRING Src)
+    IN PUNICODE_STRING Src,
+    IN BOOLEAN SrcSetToNULL)
 {
     Dest->bUsed = Src->Length;
     Dest->bAllocated = Src->MaximumLength;
     Dest->Buffer = (PBYTE)Src->Buffer;
+    if (SrcSetToNULL)
+    {
+        Src->Length = 0;
+        Src->MaximumLength = 0;
+        Src->Buffer = NULL;
+    }
 }
 
 VOID
 NtlmInitUnicodeStringFromExtStrW(
     OUT PUNICODE_STRING Dest,
-    IN PEXT_STRING_W Src)
+    IN PEXT_STRING_W Src,
+    IN BOOLEAN SrcSetToNULL)
 {
     Dest->Length = Src->bUsed;
     Dest->MaximumLength = Src->bAllocated;
     Dest->Buffer = (PWCHAR)Src->Buffer;
+    if (SrcSetToNULL)
+    {
+        Src->bUsed = 0;
+        Src->bAllocated = 0;
+        Src->Buffer = NULL;
+    }
 }
 
 VOID
 NtlmInit(
     _In_ NTLM_MODE mode)
 {
+    __wine_dbch_ntlm.flags = 0xff;
+
     if (NtlmMode != NtlmUnknownMode)
     {
         if (mode != NtlmMode)

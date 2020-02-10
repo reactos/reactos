@@ -554,9 +554,9 @@ IntAcquireCredWithAuthData(
         CredentialsUseFlags |= NTLM_CRED_NULLSESSION;
     }
 
-    NtlmInitExtStrWFromUnicodeString(&_UserName, &UserName);
-    NtlmInitExtStrWFromUnicodeString(&_Password, &Password);
-    NtlmInitExtStrWFromUnicodeString(&_Domain, &Domain);
+    NtlmInitExtStrWFromUnicodeString(&_UserName, &UserName, TRUE);
+    NtlmInitExtStrWFromUnicodeString(&_Password, &Password, TRUE);
+    NtlmInitExtStrWFromUnicodeString(&_Domain, &Domain, TRUE);
     ret = IntAcquireCredentialsHandle(LogonId, ClientInfo,
                                       CredentialsUseFlags,
                                       &_UserName, &_Password, &_Domain,

@@ -907,9 +907,9 @@ NtlmAcceptSecurityContext(
     if(fContextReq & ASC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ASC_RET_ALLOCATED_MEMORY;
 
-    if ((ret == SEC_E_OK) && ((*pfContextAttr) & ~0x08000000))
+    if ((ret != SEC_E_OK) && ((*pfContextAttr) & ~0x08000000))
     {
-        TRACE("Mapping security context!");
+        TRACE("Mapping security context!\n");
         RetTmp = MapSecurityContext(*phNewContext, ContextData);
         if (RetTmp != SEC_E_OK)
         {

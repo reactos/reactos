@@ -43,8 +43,8 @@ UsrSpUnsealMessage(
 
 NTSTATUS NTAPI
 UsrSpGetContextToken(
-    LSA_SEC_HANDLE p1,
-    PHANDLE p2);
+    LSA_SEC_HANDLE ContextHandle,
+    PHANDLE ImpersonationToken);
 
 NTSTATUS NTAPI
 UsrSpQueryContextAttributes(
@@ -54,8 +54,8 @@ UsrSpQueryContextAttributes(
 
 NTSTATUS NTAPI
 UsrSpCompleteAuthToken(
-    LSA_SEC_HANDLE p1,
-    PSecBufferDesc p2);
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc InputBuffer);
 
 NTSTATUS NTAPI
 UsrSpDeleteUserModeContext(

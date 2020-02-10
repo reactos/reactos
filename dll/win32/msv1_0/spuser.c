@@ -130,13 +130,37 @@ UsrSpUnsealMessage(
 
 NTSTATUS NTAPI
 UsrSpGetContextToken(
-    LSA_SEC_HANDLE p1,
-    PHANDLE p2)
+    LSA_SEC_HANDLE ContextHandle,
+    PHANDLE ImpersonationToken)
 {
-    fdTRACE("*** UNIMPLEMENTED *** UsrSpGetContextToken(%p %p)\n",
-          p1, p2);
+    PNTLMSSP_CONTEXT_USR UsrContext;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpGetContextToken(%p %p)\n",
+          ContextHandle, ImpersonationToken);
+
+    if (ImpersonationToken == NULL)
+    {
+        ERR("ImpersonationToken is NULL.\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
+    // TODO: UsrContext(?->Hdr) should have a ImpersonationToken
+    //       If that Token = NULL return STATUS_INVALID_HANDLE
+    if (UsrContext == NULL)
+    {
+        ERR("Invalid user context handle 0x%x.\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    //FIXME: do something
+
+    // I dont know where to create or for what this is
+    // needed. So i give a handle that will easy to know.
+    *ImpersonationToken = (HANDLE)0xBEEFFEEB;
+
+    NtlmUsrDereferenceContext(UsrContext);
+    return SEC_E_OK;
 }
 
 NTSTATUS NTAPI
@@ -168,13 +192,24 @@ UsrSpQueryContextAttributes(
 
 NTSTATUS NTAPI
 UsrSpCompleteAuthToken(
-    LSA_SEC_HANDLE p1,
-    PSecBufferDesc p2)
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc InputBuffer)
 {
-    fdTRACE("*** UNIMPLEMENTED *** UsrSpGetContextToken(%p %p)\n",
-          p1, p2);
+    fdTRACE("UsrSpCompleteAuthToken(%p %p)\n",
+          ContextHandle, InputBuffer);
 
-    return ERROR_NOT_SUPPORTED;
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
+    if (UsrContext == NULL)
+    {
+        ERR("Invalid context handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    //FIXME: do something
+
+    NtlmUsrDereferenceContext(UsrContext);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI

@@ -4,11 +4,13 @@
 VOID
 NtlmInitExtStrWFromUnicodeString(
     OUT PEXT_STRING_W Dest,
-    IN PUNICODE_STRING Src);
+    IN PUNICODE_STRING Src,
+    IN BOOLEAN SrcSetToNULL);
 
 VOID
 NtlmInitUnicodeStringFromExtStrW(
     OUT PUNICODE_STRING Dest,
-    IN PEXT_STRING_W Src);
+    IN PEXT_STRING_W Src,
+    IN BOOLEAN SrcSetToNULL);
 
 #endif
