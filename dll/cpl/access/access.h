@@ -10,17 +10,16 @@
 #include <winuser.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <cpl.h>
 
 #include "resource.h"
-
-typedef LONG (CALLBACK *APPLET_INITPROC)(VOID);
 
 typedef struct _APPLET
 {
     INT idIcon;
     INT idName;
     INT idDescription;
-    APPLET_INITPROC AppletProc;
+    APPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
 
