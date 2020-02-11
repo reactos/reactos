@@ -26,7 +26,7 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 {
     HKEY hKey;
     LONG error;
-    WCHAR szValue[32];
+    WCHAR szValue[32] = {0};
     DWORD cbValue;
 
     *ProductType = NtProductServer;
