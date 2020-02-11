@@ -2230,32 +2230,34 @@ DoSanitizeClipboard(HWND hwnd, UxSubclassInfo *pInfo)
 
     hData = GetClipboardData(CF_UNICODETEXT);
     pszText = GlobalLock(hData);
-    if (pszText)
+    if (!pszText)
     {
-        GlobalUnlock(hData);
+        CloseClipboard();
+        return;
+    }
 
-        if (SHStrDupW(pszText, &pszSanitized) == S_OK)
+    SHStrDupW(pszText, &pszSanitized);
+    GlobalUnlock(hData);
+
+    if (pszSanitized &&
+        DoSanitizeText(pszSanitized, pInfo->pwszInvalidChars, pInfo->pwszValidChars))
+    {
+        MessageBeep(0xFFFFFFFF);
+
+        /* Update clipboard text */
+        cbData = (lstrlenW(pszSanitized) + 1) * sizeof(WCHAR);
+        hData = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, cbData);
+        pszText = GlobalLock(hData);
+        if (pszText)
         {
-            if (DoSanitizeText(pszSanitized, pInfo->pwszInvalidChars, pInfo->pwszValidChars))
-            {
-                MessageBeep(0xFFFFFFFF);
+            CopyMemory(pszText, pszSanitized, cbData);
+            GlobalUnlock(hData);
 
-                /* Update clipboard text */
-                cbData = (lstrlenW(pszSanitized) + 1) * sizeof(WCHAR);
-                hData = GlobalAlloc(GHND | GMEM_SHARE, cbData);
-                pszText = GlobalLock(hData);
-                if (pszText)
-                {
-                    CopyMemory(pszText, pszSanitized, cbData);
-                }
-                GlobalUnlock(hData);
-
-                SetClipboardData(CF_UNICODETEXT, hData);
-            }
-
-            CoTaskMemFree(pszSanitized);
+            SetClipboardData(CF_UNICODETEXT, hData);
         }
     }
+
+    CoTaskMemFree(pszSanitized);
 
     CloseClipboard();
 }
