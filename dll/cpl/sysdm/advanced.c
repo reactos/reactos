@@ -39,9 +39,9 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     error = RegQueryValueExW(hKey, L"ProductType", NULL, NULL, (LPBYTE)szValue, &cbValue);
     if (!error)
     {
-        if (lstrcmpW(szValue, L"WinNT") == 0)
+        if (lstrcmpiW(szValue, L"WinNT") == 0)
             *ProductType = NtProductWinNt;
-        else if (lstrcmpW(szValue, L"LanmanNT") == 0)
+        else if (lstrcmpiW(szValue, L"LanmanNT") == 0)
             *ProductType = NtProductLanManNt;
     }
 
