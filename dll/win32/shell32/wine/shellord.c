@@ -2185,15 +2185,13 @@ DoSanitizeText(LPWSTR pszSanitized, LPCWSTR pszInvalidChars, LPCWSTR pszValidCha
     LPWSTR pch1, pch2;
     BOOL bFound = FALSE;
 
-    pch1 = pch2 = pszSanitized;
-    while (*pch1)
+    for (pch1 = pch2 = pszSanitized; *pch1; ++pch1)
     {
         if (pszInvalidChars)
         {
             if (wcschr(pszInvalidChars, *pch1) != NULL)
             {
                 bFound = TRUE;
-                ++pch1;
                 continue;
             }
         }
@@ -2202,13 +2200,11 @@ DoSanitizeText(LPWSTR pszSanitized, LPCWSTR pszInvalidChars, LPCWSTR pszValidCha
             if (wcschr(pszValidChars, *pch1) == NULL)
             {
                 bFound = TRUE;
-                ++pch1;
                 continue;
             }
         }
 
         *pch2 = *pch1;
-        ++pch1;
         ++pch2;
     }
     *pch2 = 0;
