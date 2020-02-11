@@ -28,7 +28,8 @@ class CDesktopFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder2,
-    public IContextMenuCB
+    public IContextMenuCB,
+    public IItemNameLimits
 {
     private:
         /* both paths are parsible from the desktop */
@@ -79,6 +80,26 @@ class CDesktopFolder :
         // IContextMenuCB
         virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        /*** IItemNameLimits methods ***/
+
+        STDMETHODIMP GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+        {
+            return E_NOTIMPL;
+        }
+
+        STDMETHODIMP GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+        {
+            if (ppwszValidChars)
+            {
+                *ppwszValidChars = NULL;
+            }
+            if (ppwszInvalidChars)
+            {
+                SHStrDupW(L"\\/:*?\"<>|", ppwszInvalidChars);
+            }
+            return S_OK;
+        }
+
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLDESKTOP)
         DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(CDesktopFolder)
 
@@ -90,6 +111,7 @@ class CDesktopFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits, IItemNameLimits)
         END_COM_MAP()
 };
 
