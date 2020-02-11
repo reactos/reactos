@@ -2153,7 +2153,7 @@ BOOL WINAPI IsUserAnAdmin(VOID)
  *              SHLimitInputEdit(SHELL32.@)
  */
 
-/* TODO: Show baloon popup window using SetWindowRgn */
+/* TODO: Show baloon popup window with TTS_BALLOON */
 
 typedef struct UxSubclassInfo
 {
@@ -2174,7 +2174,7 @@ UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
     CoTaskMemFree(pInfo->pwszValidChars);
     CoTaskMemFree(pInfo->pwszInvalidChars);
 
-    SetWindowLongPtr(pInfo->hwnd, GWLP_WNDPROC, (LONG_PTR)pInfo->fnWndProc);
+    SetWindowLongPtrW(pInfo->hwnd, GWLP_WNDPROC, (LONG_PTR)pInfo->fnWndProc);
 
     HeapFree(GetProcessHeap(), 0, pInfo);
 }
@@ -2185,7 +2185,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     WNDPROC fnWndProc;
     UxSubclassInfo *pInfo = GetPropW(hwnd, L"UxSubclassInfo");
     if (!pInfo)
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 
     fnWndProc = pInfo->fnWndProc;
 
@@ -2209,7 +2209,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
                 }
             }
-            return fnWndProc(hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
         }
 
         case WM_IME_CHAR:
@@ -2237,17 +2237,17 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
                 }
             }
-            return fnWndProc(hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
         }
 
         case WM_NCDESTROY:
         {
             UxSubclassInfo_Destroy(pInfo);
-            return fnWndProc(hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
         }
 
         default:
-            return fnWndProc(hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
     }
 
     return 0;
@@ -2266,10 +2266,10 @@ UxSubclassInfo_Create(HWND hwnd, LPWSTR valid, LPWSTR invalid)
         return NULL;
     }
 
-    pInfo->fnWndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)LimitEditWindowProc);
+    pInfo->fnWndProc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)LimitEditWindowProc);
     if (!pInfo->fnWndProc)
     {
-        ERR("SetWindowLongPtr failed\n");
+        ERR("SetWindowLongPtrW failed\n");
         CoTaskMemFree(valid);
         CoTaskMemFree(invalid);
         HeapFree(GetProcessHeap(), 0, pInfo);
