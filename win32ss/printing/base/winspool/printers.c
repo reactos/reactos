@@ -17,92 +17,6 @@
 static const WCHAR wszWindowsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR wszDeviceValue[] = L"Device";
 
-BOOL strW2A(PWSTR wstring, PSTR pstring)
-{
-    // This converts an incoming Unicode string to an ANSI string
-    // Returns TRUE on failure, otherwise returns FALSE.
-
-    PSTR pszTemp;
-    DWORD cch;
-    BOOL bReturn = FALSE;
-
-    if (!wstring)
-    {
-        goto Exit;
-    }
-    else
-    {
-        cch = wcslen(wstring);
-    }
-
-    if (cch == 0)
-    {
-        goto Exit;
-    }
-
-    // Convert Unicode pName to a ANSI string pszTemp.
-    pszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
-    if (!pszTemp)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        ERR("HeapAlloc failed!\n");
-        bReturn = TRUE;   // indicates a failure to be handled by caller
-        goto Exit;
-    }
-
-    WideCharToMultiByte(CP_ACP, 0, wstring, -1, pszTemp, cch + 1, NULL, NULL);
-    StringCchCopyA(pstring, cch + 1, pszTemp);
-
-    HeapFree(hProcessHeap, 0, pszTemp);
-
-Exit:
-
-    return bReturn;
-}
-
-BOOL strA2W(PSTR pstring, PWSTR wstring)
-{
-    // This converts an incoming ANSI string to an Unicode string
-    // Returns TRUE on failure, otherwise returns FALSE.
-
-    PWSTR pwszTemp;
-    DWORD cch;
-    BOOL bReturn = FALSE;
-
-    if (!pstring)
-    {
-        goto Exit;
-    }
-    else
-    {
-        cch = strlen(pstring);
-    }
-
-    if (cch == 0)
-    {
-        goto Exit;
-    }
-
-    // Convert ANSI pName to a Unicode string pwszTemp
-    pwszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
-    if (!pwszTemp)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        ERR("HeapAlloc failed!\n");
-        bReturn = TRUE;   // indicates a failure to be handled by caller
-        goto Exit;
-    }
-
-    MultiByteToWideChar(CP_ACP, 0, pstring, -1, pwszTemp, cch + 1);
-    StringCchCopyW(wstring, cch + 1, pwszTemp);
-
-    HeapFree(hProcessHeap, 0, pwszTemp);
-
-Exit:
-
-    return bReturn;
-}
-
 static DWORD
 _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB_INFO_1W pAddJobInfo1)
 {
@@ -1579,30 +1493,18 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 {   
     /*
      * We are mapping multiple different pointers to the same pDriverInfo pointer here so that
-     * we can do in-place conversion. We read the Unicode response from GetPrinterDriverW outputs and
-     * then we write back the ANSI conversion into the same buffer for our GetPrinterDriverA output
+     * we can use the same incoming pointer for different Levels
      */
-    PDRIVER_INFO_1A pdi1a = (PDRIVER_INFO_1A)pDriverInfo;
     PDRIVER_INFO_1W pdi1w = (PDRIVER_INFO_1W)pDriverInfo;
-    PDRIVER_INFO_2A pdi2a = (PDRIVER_INFO_2A)pDriverInfo;
     PDRIVER_INFO_2W pdi2w = (PDRIVER_INFO_2W)pDriverInfo;
-    PDRIVER_INFO_3A pdi3a = (PDRIVER_INFO_3A)pDriverInfo;
     PDRIVER_INFO_3W pdi3w = (PDRIVER_INFO_3W)pDriverInfo;
-    PDRIVER_INFO_4A pdi4a = (PDRIVER_INFO_4A)pDriverInfo;
     PDRIVER_INFO_4W pdi4w = (PDRIVER_INFO_4W)pDriverInfo;
-    PDRIVER_INFO_5A pdi5a = (PDRIVER_INFO_5A)pDriverInfo;
     PDRIVER_INFO_5W pdi5w = (PDRIVER_INFO_5W)pDriverInfo;
-    PDRIVER_INFO_6A pdi6a = (PDRIVER_INFO_6A)pDriverInfo;
     PDRIVER_INFO_6W pdi6w = (PDRIVER_INFO_6W)pDriverInfo;
 
-    /*
-     * Map the incoming ANSI pEnvironment string to a Unicode one here so that we can do
-     * in-place conversion. We read the ANSI input and then we write back the Unicode
-     * conversion into the same buffer for use with our GetPrinterDriverW function in strA2W
-     */
-    PWSTR pwszEnvironment = (PWSTR)pEnvironment;
-
     BOOL bReturnValue = FALSE;
+    DWORD cch;
+    PWSTR pwszEnvironment = NULL;
 
     TRACE("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
 
@@ -1614,8 +1516,21 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
         goto Cleanup;
     }
 
-    if (strA2W(pEnvironment, pwszEnvironment))
-        goto Cleanup;
+    if (pEnvironment)
+    {
+        // Convert pEnvironment to a Unicode string pwszEnvironment.
+        cch = strlen(pEnvironment);
+
+        pwszEnvironment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!pwszEnvironment)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, pwszEnvironment, cch + 1);
+    }
 
     bReturnValue = GetPrinterDriverW(hPrinter, pwszEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
     TRACE("*pcbNeeded is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcbNeeded, bReturnValue, GetLastError());
@@ -1631,7 +1546,7 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     {
         case 1:
         {
-            if (strW2A(pdi1w->pName, pdi1a->pName))
+            if (!UnicodeToAnsiInPlace(pdi1w->pName))
                 goto Cleanup;
 
             break;
@@ -1639,19 +1554,19 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 
         case 2:
         {
-            if (strW2A(pdi2w->pName, pdi2a->pName))
+            if (!UnicodeToAnsiInPlace(pdi2w->pName))
                 goto Cleanup;
 
-            if (strW2A(pdi2w->pEnvironment, pdi2a->pEnvironment))
+            if (!UnicodeToAnsiInPlace(pdi2w->pEnvironment))
                 goto Cleanup;
 
-            if (strW2A(pdi2w->pDriverPath, pdi2a->pDriverPath))
+            if (!UnicodeToAnsiInPlace(pdi2w->pDriverPath))
                 goto Cleanup;
 
-            if (strW2A(pdi2w->pDataFile, pdi2a->pDataFile))
+            if (!UnicodeToAnsiInPlace(pdi2w->pDataFile))
                 goto Cleanup;
 
-            if (strW2A(pdi2w->pConfigFile, pdi2a->pConfigFile))
+            if (!UnicodeToAnsiInPlace(pdi2w->pConfigFile))
                 goto Cleanup;
 
             break;
@@ -1659,31 +1574,31 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 
         case 3:
         {
-            if (strW2A(pdi3w->pName, pdi3a->pName))
+            if (!UnicodeToAnsiInPlace(pdi3w->pName))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pEnvironment, pdi3a->pEnvironment))
+            if (!UnicodeToAnsiInPlace(pdi3w->pEnvironment))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pDriverPath, pdi3a->pDriverPath))
+            if (!UnicodeToAnsiInPlace(pdi3w->pDriverPath))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pDataFile, pdi3a->pDataFile))
+            if (!UnicodeToAnsiInPlace(pdi3w->pDataFile))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pConfigFile, pdi3a->pConfigFile))
+            if (!UnicodeToAnsiInPlace(pdi3w->pConfigFile))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pHelpFile, pdi3a->pHelpFile))
+            if (!UnicodeToAnsiInPlace(pdi3w->pHelpFile))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pDependentFiles, pdi3a->pDependentFiles))
+            if (!UnicodeToAnsiInPlace(pdi3w->pDependentFiles))
                 goto Cleanup;
 
-            if (strW2A(pdi3w->pMonitorName, pdi3a->pMonitorName))
+            if (!UnicodeToAnsiInPlace(pdi3w->pMonitorName))
                 goto Cleanup;
  
-            if (strW2A(pdi3w->pDefaultDataType, pdi3a->pDefaultDataType))
+            if (!UnicodeToAnsiInPlace(pdi3w->pDefaultDataType))
                 goto Cleanup;
 
             break;
@@ -1691,34 +1606,34 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 
         case 4:
         {
-            if (strW2A(pdi4w->pName, pdi4a->pName))
+            if (!UnicodeToAnsiInPlace(pdi4w->pName))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pEnvironment, pdi4a->pEnvironment))
+            if (!UnicodeToAnsiInPlace(pdi4w->pEnvironment))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pDriverPath, pdi4a->pDriverPath))
+            if (!UnicodeToAnsiInPlace(pdi4w->pDriverPath))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pDataFile, pdi4a->pDataFile))
+            if (!UnicodeToAnsiInPlace(pdi4w->pDataFile))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pConfigFile, pdi4a->pConfigFile))
+            if (!UnicodeToAnsiInPlace(pdi4w->pConfigFile))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pHelpFile, pdi4a->pHelpFile))
+            if (!UnicodeToAnsiInPlace(pdi4w->pHelpFile))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pDependentFiles, pdi4a->pDependentFiles))
+            if (!UnicodeToAnsiInPlace(pdi4w->pDependentFiles))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pMonitorName, pdi4a->pMonitorName))
+            if (!UnicodeToAnsiInPlace(pdi4w->pMonitorName))
                 goto Cleanup;
  
-            if (strW2A(pdi4w->pDefaultDataType, pdi4a->pDefaultDataType))
+            if (!UnicodeToAnsiInPlace(pdi4w->pDefaultDataType))
                 goto Cleanup;
 
-            if (strW2A(pdi4w->pszzPreviousNames, pdi4a->pszzPreviousNames))
+            if (!UnicodeToAnsiInPlace(pdi4w->pszzPreviousNames))
                 goto Cleanup;
 
             break;
@@ -1726,19 +1641,19 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 
         case 5:
         {
-            if (strW2A(pdi5w->pName, pdi5a->pName))
+            if (!UnicodeToAnsiInPlace(pdi5w->pName))
                 goto Cleanup;
 
-            if (strW2A(pdi5w->pEnvironment, pdi5a->pEnvironment))
+            if (!UnicodeToAnsiInPlace(pdi5w->pEnvironment))
                 goto Cleanup;
 
-            if (strW2A(pdi5w->pDriverPath, pdi5a->pDriverPath))
+            if (!UnicodeToAnsiInPlace(pdi5w->pDriverPath))
                 goto Cleanup;
 
-            if (strW2A(pdi5w->pDataFile, pdi5a->pDataFile))
+            if (!UnicodeToAnsiInPlace(pdi5w->pDataFile))
                 goto Cleanup;
 
-            if (strW2A(pdi5w->pConfigFile, pdi5a->pConfigFile))
+            if (!UnicodeToAnsiInPlace(pdi5w->pConfigFile))
                 goto Cleanup;
 
             break;
@@ -1746,46 +1661,46 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 
         case 6:
         {
-            if (strW2A(pdi6w->pName, pdi6a->pName))
+            if (!UnicodeToAnsiInPlace(pdi6w->pName))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pEnvironment, pdi6a->pEnvironment))
+            if (!UnicodeToAnsiInPlace(pdi6w->pEnvironment))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pDriverPath, pdi6a->pDriverPath))
+            if (!UnicodeToAnsiInPlace(pdi6w->pDriverPath))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pDataFile, pdi6a->pDataFile))
+            if (!UnicodeToAnsiInPlace(pdi6w->pDataFile))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pConfigFile, pdi6a->pConfigFile))
+            if (!UnicodeToAnsiInPlace(pdi6w->pConfigFile))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pHelpFile, pdi6a->pHelpFile))
+            if (!UnicodeToAnsiInPlace(pdi6w->pHelpFile))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pDependentFiles, pdi6a->pDependentFiles))
+            if (!UnicodeToAnsiInPlace(pdi6w->pDependentFiles))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pMonitorName, pdi6a->pMonitorName))
+            if (!UnicodeToAnsiInPlace(pdi6w->pMonitorName))
                 goto Cleanup;
  
-            if (strW2A(pdi6w->pDefaultDataType, pdi6a->pDefaultDataType))
+            if (!UnicodeToAnsiInPlace(pdi6w->pDefaultDataType))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pszzPreviousNames, pdi6a->pszzPreviousNames))
+            if (!UnicodeToAnsiInPlace(pdi6w->pszzPreviousNames))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pszMfgName, pdi6a->pszMfgName))
+            if (!UnicodeToAnsiInPlace(pdi6w->pszMfgName))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pszOEMUrl, pdi6a->pszOEMUrl))
+            if (!UnicodeToAnsiInPlace(pdi6w->pszOEMUrl))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pszHardwareID, pdi6a->pszHardwareID))
+            if (!UnicodeToAnsiInPlace(pdi6w->pszHardwareID))
                 goto Cleanup;
 
-            if (strW2A(pdi6w->pszProvider, pdi6a->pszProvider))
+            if (!UnicodeToAnsiInPlace(pdi6w->pszProvider))
                 goto Cleanup;
         }
     }
@@ -1793,6 +1708,9 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     bReturnValue = TRUE;
 
 Cleanup:
+
+    if (pwszEnvironment)
+        HeapFree(hProcessHeap, 0, pwszEnvironment);
 
     return bReturnValue;
 }
