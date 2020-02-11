@@ -2179,11 +2179,48 @@ UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
     HeapFree(GetProcessHeap(), 0, pInfo);
 }
 
+static BOOL
+DoSanitizeText(LPWSTR pszSanitized, LPCWSTR pszInvalidChars, LPCWSTR pszValidChars)
+{
+    LPWSTR pch1, pch2;
+    BOOL bFound = FALSE;
+
+    pch1 = pch2 = pszSanitized;
+    while (*pch1)
+    {
+        if (pszInvalidChars)
+        {
+            if (wcschr(pszInvalidChars, *pch1) != NULL)
+            {
+                bFound = TRUE;
+                ++pch1;
+                continue;
+            }
+        }
+        else if (pszValidChars)
+        {
+            if (wcschr(pszValidChars, *pch1) == NULL)
+            {
+                bFound = TRUE;
+                ++pch1;
+                continue;
+            }
+        }
+
+        *pch2 = *pch1;
+        ++pch1;
+        ++pch2;
+    }
+    *pch2 = 0;
+
+    return bFound;
+}
+
 static void
-DoCensoredPaste(HWND hwnd)
+DoSanitizeClipboard(HWND hwnd, UxSubclassInfo *pInfo)
 {
     HGLOBAL hData;
-    LPWSTR pszText, pszCensored, pch1, pch2;
+    LPWSTR pszText, pszSanitized;
     DWORD cbData;
 
     if (GetWindowLongPtrW(hwnd, GWL_STYLE) & ES_READONLY)
@@ -2193,35 +2230,31 @@ DoCensoredPaste(HWND hwnd)
 
     hData = GetClipboardData(CF_UNICODETEXT);
     pszText = GlobalLock(hData);
-    if (pszText && SHStrDupW(pszText, &pszCensored) == S_OK)
+    if (pszText)
     {
-        pch1 = pch2 = pszCensored;
-        while (*pch1)
+        GlobalUnlock(hData);
+
+        if (SHStrDupW(pszText, &pszSanitized) == S_OK)
         {
-            if (wcschr(INVALID_FILETITLE_CHARACTERSW, *pch1))
+            if (DoSanitizeText(pszSanitized, pInfo->pwszInvalidChars, pInfo->pwszValidChars))
             {
-                ++pch1;
-                continue;
+                MessageBeep(0xFFFFFFFF);
+
+                /* Update clipboard text */
+                cbData = (lstrlenW(pszSanitized) + 1) * sizeof(WCHAR);
+                hData = GlobalAlloc(GHND | GMEM_SHARE, cbData);
+                pszText = GlobalLock(hData);
+                if (pszText)
+                {
+                    CopyMemory(pszText, pszSanitized, cbData);
+                }
+                GlobalUnlock(hData);
+
+                SetClipboardData(CF_UNICODETEXT, hData);
             }
 
-            *pch2 = *pch1;
-            ++pch1;
-            ++pch2;
+            CoTaskMemFree(pszSanitized);
         }
-        *pch2 = 0;
-        GlobalUnlock(hData);
-
-        cbData = (lstrlenW(pszCensored) + 1) * sizeof(WCHAR);
-        hData = GlobalAlloc(GHND | GMEM_SHARE, cbData);
-        pszText = GlobalLock(hData);
-        if (pszText)
-        {
-            CopyMemory(pszText, pszCensored, cbData);
-        }
-        GlobalUnlock(hData);
-        CoTaskMemFree(pszCensored);
-
-        SetClipboardData(CF_UNICODETEXT, hData);
     }
 
     CloseClipboard();
@@ -2242,13 +2275,11 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_KEYDOWN:
             if (GetKeyState(VK_SHIFT) < 0 && wParam == VK_INSERT)
             {
-                DoCensoredPaste(hwnd);
-                return TRUE;
+                DoSanitizeClipboard(hwnd, pInfo);
             }
-            if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
+            else if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
             {
-                DoCensoredPaste(hwnd);
-                return TRUE;
+                DoSanitizeClipboard(hwnd, pInfo);
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
 
