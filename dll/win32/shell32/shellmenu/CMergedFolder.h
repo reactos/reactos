@@ -200,12 +200,14 @@ public:
 
     /*** IItemNameLimits methods ***/
 
-    STDMETHODIMP GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+    STDMETHODIMP
+    GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+    STDMETHODIMP
+    GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
     {
         if (ppwszValidChars)
         {
