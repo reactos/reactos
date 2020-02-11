@@ -2179,6 +2179,54 @@ UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
     HeapFree(GetProcessHeap(), 0, pInfo);
 }
 
+static void
+DoCensoredPaste(HWND hwnd)
+{
+    HGLOBAL hData;
+    LPWSTR pszText, pszCensored, pch1, pch2;
+    DWORD cbData;
+
+    if (GetWindowLongPtrW(hwnd, GWL_STYLE) & ES_READONLY)
+        return;
+    if (!OpenClipboard(hwnd))
+        return;
+
+    hData = GetClipboardData(CF_UNICODETEXT);
+    pszText = GlobalLock(hData);
+    if (pszText && SHStrDupW(pszText, &pszCensored) == S_OK)
+    {
+        pch1 = pch2 = pszCensored;
+        while (*pch1)
+        {
+            if (wcschr(INVALID_FILETITLE_CHARACTERSW, *pch1))
+            {
+                ++pch1;
+                continue;
+            }
+
+            *pch2 = *pch1;
+            ++pch1;
+            ++pch2;
+        }
+        *pch2 = 0;
+        GlobalUnlock(hData);
+
+        cbData = (lstrlenW(pszCensored) + 1) * sizeof(WCHAR);
+        hData = GlobalAlloc(GHND | GMEM_SHARE, cbData);
+        pszText = GlobalLock(hData);
+        if (pszText)
+        {
+            CopyMemory(pszText, pszCensored, cbData);
+        }
+        GlobalUnlock(hData);
+        CoTaskMemFree(pszCensored);
+
+        SetClipboardData(CF_UNICODETEXT, hData);
+    }
+
+    CloseClipboard();
+}
+
 static LRESULT CALLBACK
 LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -2191,8 +2239,25 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
+        case WM_KEYDOWN:
+            if (GetKeyState(VK_SHIFT) < 0 && wParam == VK_INSERT)
+            {
+                DoCensoredPaste(hwnd);
+                return TRUE;
+            }
+            if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
+            {
+                DoCensoredPaste(hwnd);
+                return TRUE;
+            }
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
+
         case WM_CHAR:
         {
+            if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
+            {
+                break;
+            }
             if (pInfo->pwszInvalidChars)
             {
                 if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
@@ -2212,9 +2277,19 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
         }
 
+        case WM_UNICHAR:
+            if (wParam == UNICODE_NOCHAR)
+                return TRUE;
+
+            /* FALL THROUGH */
+
         case WM_IME_CHAR:
         {
             WCHAR wch = (WCHAR)wParam;
+            if (GetKeyState(VK_CONTROL) < 0 && wch == L'V')
+            {
+                break;
+            }
             if (!IsWindowUnicode(hwnd) && HIBYTE(wch) != 0)
             {
                 CHAR data[] = {HIBYTE(wch), LOBYTE(wch)};
