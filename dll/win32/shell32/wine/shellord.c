@@ -2285,6 +2285,10 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
 
+        case WM_PASTE:
+            DoSanitizeClipboard(hwnd, pInfo);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
+
         case WM_CHAR:
         {
             if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
