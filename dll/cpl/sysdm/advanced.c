@@ -128,12 +128,46 @@ OnInitSysSettingsDialog(HWND hwndDlg)
     }
 }
 
+static BOOL
+DoEnableProcessPriviledge(LPCTSTR pszSE_)
+{
+    BOOL f;
+    HANDLE hProcess;
+    HANDLE hToken;
+    LUID luid;
+    TOKEN_PRIVILEGES tp;
+    
+    f = FALSE;
+    hProcess = GetCurrentProcess();
+    if (OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES, &hToken))
+    {
+        if (LookupPrivilegeValue(NULL, pszSE_, &luid))
+        {
+            tp.PrivilegeCount = 1;
+            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            tp.Privileges[0].Luid = luid;
+            f = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
+        }
+        CloseHandle(hToken);
+    }
+    return f;
+}
+
+static void
+DoExitOS(HWND hwndDlg)
+{
+    DoEnableProcessPriviledge(SE_SHUTDOWN_NAME);
+    ExitWindowsEx(EWX_REBOOT, 0);
+}
+
 INT_PTR CALLBACK
 SysSettingsDlgProc(HWND hwndDlg,
                    UINT uMsg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
+    WCHAR szText[128], szTitle[64];
+
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
@@ -147,7 +181,16 @@ SysSettingsDlgProc(HWND hwndDlg,
             {
                 case IDOK:
                     if (OnOK(hwndDlg))
+                    {
                         EndDialog(hwndDlg, IDOK);
+
+                        LoadStringW(hApplet, IDS_REBOOTNOWTEXT, szText, ARRAYSIZE(szText));
+                        LoadStringW(hApplet, IDS_REBOOTNOWTITLE, szTitle, ARRAYSIZE(szText));
+                        if (MessageBoxW(NULL, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDYES)
+                        {
+                            DoExitOS(hwndDlg);
+                        }
+                    }
                     return TRUE;
             }
             break;
