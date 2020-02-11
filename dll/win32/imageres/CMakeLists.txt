@@ -5,8 +5,7 @@ add_rc_deps(imageres.rc ${imageres_rc_deps})
 
 add_library(imageres MODULE
     ${SOURCE}
-    imageres.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/imageres.def)
+    imageres.rc)
 
 set_module_type(imageres win32dll ENTRYPOINT 0)
 add_cd_file(TARGET imageres DESTINATION reactos/system32 FOR all)
