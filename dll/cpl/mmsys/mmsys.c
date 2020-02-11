@@ -715,10 +715,14 @@ MmSysApplet(HWND hwnd,
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh; // = { 0 };
     TCHAR Caption[256];
+    INT nPage = 0;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(uMsg);
+
+    if (uMsg == CPL_STARTWPARMSW && lParam != 0)
+        nPage = _wtoi((PWSTR)lParam);
 
     LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
@@ -738,6 +742,9 @@ MmSysApplet(HWND hwnd,
     InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
     InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
     InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
+
+    if (nPage != 0 && nPage <= psh.nPages)
+        psh.nStartPage = nPage;
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -792,6 +799,9 @@ CPlApplet(HWND hwndCpl,
                                           lParam2);
             break;
         }
+
+        case CPL_STARTWPARMSW:
+            return Applets[(UINT)lParam1].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
     }
 
     return FALSE;
