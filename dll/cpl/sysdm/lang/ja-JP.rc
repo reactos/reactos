@@ -344,4 +344,6 @@ BEGIN
     IDS_HWPROFILE_ALREADY_IN_USE "プロファイル名は使用中です。"
     IDS_HWPROFILE_PROFILE "プロファイル"
     IDS_HWPROFILE_WARNING "警告"
+    IDS_PRODUCTSERVER "ReactOS Server (Default)"
+    IDS_PRODUCTWORKSTATION "ReactOS Workstation"
 END

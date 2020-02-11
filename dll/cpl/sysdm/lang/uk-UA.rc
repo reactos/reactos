@@ -352,4 +352,6 @@ BEGIN
     IDS_HWPROFILE_ALREADY_IN_USE "Ім'я вже зайнято."
     IDS_HWPROFILE_PROFILE "Профіль"
     IDS_HWPROFILE_WARNING "Увага"
+    IDS_PRODUCTSERVER "ReactOS Server (Default)"
+    IDS_PRODUCTWORKSTATION "ReactOS Workstation"
 END

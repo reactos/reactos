@@ -103,9 +103,13 @@ static VOID
 OnInitSysSettingsDialog(HWND hwndDlg)
 {
     NT_PRODUCT_TYPE Type;
+    WCHAR szText[64];
 
-    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Server");
-    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Workstation");
+    LoadStringW(hApplet, IDS_PRODUCTSERVER, szText, ARRAYSIZE(szText));
+    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+
+    LoadStringW(hApplet, IDS_PRODUCTWORKSTATION, szText, ARRAYSIZE(szText));
+    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
     if (DoGetProductType(&Type))
     {

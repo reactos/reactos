@@ -62,6 +62,10 @@
 
 #define IDS_UPTIME_FORMAT 140
 
+#define IDS_PRODUCTSERVER 150
+#define IDS_PRODUCTWORKSTATION 151
+
+
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
 #define IDC_MACHINELINE1     101

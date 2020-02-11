@@ -344,4 +344,6 @@ BEGIN
     IDS_HWPROFILE_ALREADY_IN_USE "Le nom de profil est déjà utilisé."
     IDS_HWPROFILE_PROFILE "Profil"
     IDS_HWPROFILE_WARNING "Attention"
+    IDS_PRODUCTSERVER "ReactOS Server (Default)"
+    IDS_PRODUCTWORKSTATION "ReactOS Workstation"
 END
