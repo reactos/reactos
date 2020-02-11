@@ -11,4 +11,11 @@ NtlmEncryptMessage(
     IN ULONG MessageSeqNo,
     IN BOOL SignOnly);
 
+SECURITY_STATUS SEC_ENTRY
+NtlmDecryptMessage(
+    IN PNTLMSSP_CONTEXT_HDR Context,
+    IN OUT PSecBufferDesc pMessage,
+    IN ULONG MessageSeqNo,
+    OUT PULONG pfQOP);
+
 #endif

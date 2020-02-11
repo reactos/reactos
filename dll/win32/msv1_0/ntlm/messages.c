@@ -123,8 +123,12 @@ exit:
 /***********************************************************************
  *             DecryptMessage
  */
-SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
-        PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
+SECURITY_STATUS SEC_ENTRY
+NtlmDecryptMessage(
+    IN PNTLMSSP_CONTEXT_HDR Context,
+    IN OUT PSecBufferDesc pMessage,
+    IN ULONG MessageSeqNo,
+    OUT PULONG pfQOP)
 {
     SECURITY_STATUS ret = SEC_E_OK;
     BOOL bRet;
@@ -137,16 +141,17 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
     ULONG index, cli_NegFlg, expectedSignLen;
     NTLMSSP_MESSAGE_SIGNATURE expectedSign;
 
-    ERR("DecryptMessage(%p %p %d)\n", phContext, pMessage, MessageSeqNo);
+    ERR("NtlmDecryptMessage(%p %p %d)\n",
+        Context, pMessage, MessageSeqNo);
 
-    if(!phContext)
+    if (!Context)
         return SEC_E_INVALID_HANDLE;
 
-    if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
+    if (!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
 
     /* get context, need to free it later! */
-    /*cli_msg = */NtlmReferenceContextMsg(phContext->dwLower, FALSE,
+    /*cli_msg = */NtlmReferenceContextMsg((ULONG_PTR)Context, FALSE,
                                       &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
     /*if (!ctxMsg->SendSealKey)
     {
@@ -217,6 +222,6 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage(PCtxtHandle phContext,
     NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
-    NtlmDereferenceContext(phContext->dwLower);
+    NtlmDereferenceContext((ULONG_PTR)Context);
     return ret;
 }

@@ -36,10 +36,10 @@ UsrSpSealMessage(
 
 NTSTATUS NTAPI
 UsrSpUnsealMessage(
-    LSA_SEC_HANDLE p1,
-    PSecBufferDesc p2,
-    ULONG p3,
-    PULONG p4);
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc MessageBuffers,
+    ULONG MessageSequenceNumber,
+    PULONG QualityOfProtection);
 
 NTSTATUS NTAPI
 UsrSpGetContextToken(

@@ -117,15 +117,31 @@ UsrSpSealMessage(
 
 NTSTATUS NTAPI
 UsrSpUnsealMessage(
-    LSA_SEC_HANDLE p1,
-    PSecBufferDesc p2,
-    ULONG p3,
-    PULONG p4)
+    LSA_SEC_HANDLE ContextHandle,
+    PSecBufferDesc MessageBuffers,
+    ULONG MessageSequenceNumber,
+    PULONG QualityOfProtection)
 {
-    fdTRACE("*** UNIMPLEMENTED *** UsrSpUnsealMessage(%p 0x%x %p 0x%x)\n",
-          p1, p2, p3, p4);
+    PNTLMSSP_CONTEXT_USR UsrContext;
+    NTSTATUS Status;
 
-    return ERROR_NOT_SUPPORTED;
+    fdTRACE("UsrSpUnsealMessage(%p 0x%x %p 0x%x)\n",
+          ContextHandle, MessageBuffers,
+          MessageSequenceNumber, QualityOfProtection);
+
+    UsrContext = NtlmUsrReferenceContext(ContextHandle, TRUE);
+    if (UsrContext == NULL)
+    {
+        TRACE("Invalid context handle 0x%x\n", ContextHandle);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    Status = NtlmDecryptMessage(UsrContext->Hdr, MessageBuffers,
+                                MessageSequenceNumber, QualityOfProtection);
+    NtlmUsrDereferenceContext(UsrContext);
+
+    fdTRACE("Status %x\n", Status);
+    return Status;
 }
 
 NTSTATUS NTAPI
@@ -195,6 +211,8 @@ UsrSpCompleteAuthToken(
     LSA_SEC_HANDLE ContextHandle,
     PSecBufferDesc InputBuffer)
 {
+    PNTLMSSP_CONTEXT_USR UsrContext;
+
     fdTRACE("UsrSpCompleteAuthToken(%p %p)\n",
           ContextHandle, InputBuffer);
 
