@@ -112,13 +112,13 @@ OnInitSysSettingsDialog(HWND hwndDlg)
         switch (Type)
         {
             case NtProductWinNt:
-                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, IDC_PRODUCTOPTIONS, 1);
+                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, 1, 0);
                 break;
             case NtProductLanManNt:
                 // FIXME: Not supported yet
                 break;
             case NtProductServer:
-                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, IDC_PRODUCTOPTIONS, 0);
+                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, 0, 0);
                 break;
         }
     }
