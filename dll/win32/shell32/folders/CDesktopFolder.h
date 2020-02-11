@@ -95,7 +95,7 @@ class CDesktopFolder :
             }
             if (ppwszInvalidChars)
             {
-                SHStrDupW(L"\\/:*?\"<>|", ppwszInvalidChars);
+                SHStrDupW(INVALID_FILETITLE_CHARACTERSW, ppwszInvalidChars);
             }
             return S_OK;
         }

@@ -698,6 +698,19 @@ IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR)
 EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
 /*****************************************************************************
+ * INVALID_FILETITLE_CHARACTERS
+ */
+
+#define INVALID_FILETITLE_CHARACTERSA "\\/:*?\"<>|"
+#define INVALID_FILETITLE_CHARACTERSW L"\\/:*?\"<>|"
+
+#ifdef UNICODE
+    #define INVALID_FILETITLE_CHARACTERS INVALID_FILETITLE_CHARACTERSW
+#else
+    #define INVALID_FILETITLE_CHARACTERS INVALID_FILETITLE_CHARACTERSA
+#endif
+
+/*****************************************************************************
  * Shell Link
  */
 #include <pshpack1.h>
