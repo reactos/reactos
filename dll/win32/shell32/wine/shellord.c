@@ -2231,7 +2231,6 @@ DoSanitizeClipboard(HWND hwnd, UxSubclassInfo *pInfo)
         CloseClipboard();
         return;
     }
-
     SHStrDupW(pszText, &pszSanitized);
     GlobalUnlock(hData);
 
@@ -2261,6 +2260,7 @@ static LRESULT CALLBACK
 LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC fnWndProc;
+    WCHAR wch;
     UxSubclassInfo *pInfo = GetPropW(hwnd, L"UxSubclassInfo");
     if (!pInfo)
         return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -2271,13 +2271,10 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_KEYDOWN:
             if (GetKeyState(VK_SHIFT) < 0 && wParam == VK_INSERT)
-            {
                 DoSanitizeClipboard(hwnd, pInfo);
-            }
             else if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
-            {
                 DoSanitizeClipboard(hwnd, pInfo);
-            }
+
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
 
         case WM_PASTE:
@@ -2285,7 +2282,6 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
 
         case WM_CHAR:
-        {
             if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
                 break;
 
@@ -2306,7 +2302,6 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
 
         case WM_UNICHAR:
             if (wParam == UNICODE_NOCHAR)
@@ -2315,8 +2310,7 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             /* FALL THROUGH */
 
         case WM_IME_CHAR:
-        {
-            WCHAR wch = (WCHAR)wParam;
+            wch = (WCHAR)wParam;
             if (GetKeyState(VK_CONTROL) < 0 && wch == L'V')
                 break;
 
@@ -2343,13 +2337,10 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
 
         case WM_NCDESTROY:
-        {
             UxSubclassInfo_Destroy(pInfo);
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
 
         default:
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
