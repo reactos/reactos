@@ -2254,7 +2254,6 @@ DoSanitizeClipboard(HWND hwnd, UxSubclassInfo *pInfo)
     }
 
     CoTaskMemFree(pszSanitized);
-
     CloseClipboard();
 }
 
@@ -2288,9 +2287,8 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CHAR:
         {
             if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
-            {
                 break;
-            }
+
             if (pInfo->pwszInvalidChars)
             {
                 if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
@@ -2320,9 +2318,8 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             WCHAR wch = (WCHAR)wParam;
             if (GetKeyState(VK_CONTROL) < 0 && wch == L'V')
-            {
                 break;
-            }
+
             if (!IsWindowUnicode(hwnd) && HIBYTE(wch) != 0)
             {
                 CHAR data[] = {HIBYTE(wch), LOBYTE(wch)};
