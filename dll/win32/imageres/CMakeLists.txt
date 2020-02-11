@@ -1,5 +1,3 @@
-spec2def(imageres.dll imageres.spec)
-
 add_definitions(-D_WINE)
 
 file(GLOB_RECURSE imageres_rc_deps res/*.*)

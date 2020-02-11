@@ -8,24 +8,14 @@
 #define COBJMACROS
 #define WIN32_NO_STATUS
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <wine/debug.h>
 #include "resource.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(imageres);
-
 BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+DllMainCRTStartup(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, lpvReserved);
-    switch (fdwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            break;
-
-        case DLL_PROCESS_DETACH:
-            break;
-    }
+    if (fdwReason == DLL_PROCESS_ATTACH)
+        DisableThreadLibraryCalls(hinstDll);
     return TRUE;
 }
