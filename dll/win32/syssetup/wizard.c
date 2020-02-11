@@ -381,7 +381,7 @@ static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
 {
     static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
-    static WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+    static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
     HKEY hKey;
     LONG error;
     LPCWSTR pData;
