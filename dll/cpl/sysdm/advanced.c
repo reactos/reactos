@@ -182,14 +182,13 @@ SysSettingsDlgProc(HWND hwndDlg,
                 case IDOK:
                     if (OnOK(hwndDlg))
                     {
-                        EndDialog(hwndDlg, IDOK);
-
                         LoadStringW(hApplet, IDS_REBOOTNOWTEXT, szText, ARRAYSIZE(szText));
                         LoadStringW(hApplet, IDS_REBOOTNOWTITLE, szTitle, ARRAYSIZE(szText));
                         if (MessageBoxW(NULL, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDYES)
                         {
                             DoExitOS(hwndDlg);
                         }
+                        EndDialog(hwndDlg, IDOK);
                     }
                     return TRUE;
             }
