@@ -15,7 +15,5 @@
 BOOL WINAPI
 DllMainCRTStartup(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
-    if (fdwReason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(hinstDll);
     return TRUE;
 }

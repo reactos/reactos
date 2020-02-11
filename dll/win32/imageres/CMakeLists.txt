@@ -11,6 +11,4 @@ add_library(imageres MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/imageres.def)
 
 set_module_type(imageres win32dll UNICODE)
-target_link_libraries(imageres wine)
-add_importlibs(imageres kernel32 ntdll)
 add_cd_file(TARGET imageres DESTINATION reactos/system32 FOR all)
