@@ -190,7 +190,11 @@ SysSettingsDlgProc(HWND hwndDlg,
                         }
                         EndDialog(hwndDlg, IDOK);
                     }
-                    return TRUE;
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
             }
             break;
     }
