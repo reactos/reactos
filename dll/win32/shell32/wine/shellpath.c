@@ -67,11 +67,11 @@ typedef enum _NT_PRODUCT_TYPE
 static BOOL
 DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 {
-    static const WCHAR ProductOptions[] = L"System\\CurrentControlSet\\Control\\ProductOptions";
+    static const WCHAR ProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
     HKEY hKey;
     LONG error;
     WCHAR szValue[32];
-    DWORD cbValue;
+    DWORD cbValue, dwType;
     static DWORD s_dwProductType = 0;
 
     if (s_dwProductType != 0)
@@ -87,8 +87,8 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
         return FALSE;
 
     cbValue = sizeof(szValue);
-    error = RegQueryValueExW(hKey, L"ProductType", NULL, NULL, (LPBYTE)szValue, &cbValue);
-    if (!error)
+    error = RegQueryValueExW(hKey, L"ProductType", NULL, &dwType, (LPBYTE)szValue, &cbValue);
+    if (!error && dwType == REG_SZ)
     {
         if (lstrcmpW(szValue, L"WinNT") == 0)
             *ProductType = NtProductWinNt;
