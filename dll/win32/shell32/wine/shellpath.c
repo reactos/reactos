@@ -92,6 +92,8 @@ DoGetProductType(PNT_PRODUCT_TYPE ProductType)
     {
         if (lstrcmpW(szValue, L"WinNT") == 0)
             *ProductType = NtProductWinNt;
+        else if (lstrcmpW(szValue, L"LanmanNT") == 0)
+            *ProductType = NtProductLanManNt;
     }
 
     s_dwProductType = *ProductType;
