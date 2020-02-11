@@ -17,57 +17,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-/* HACK: ReactOS specific changes, see bug-reports CORE-6611 and CORE-4620 (aka. #5003) */
-static VOID NTAPI
-SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
-{
-    CHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
-    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = (PVOID)Buffer;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG ReportAsWorkstation = 0;
-    HANDLE hKey;
-    ULONG Length;
-    NTSTATUS Status;
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
-    UNICODE_STRING ValName = RTL_CONSTANT_STRING(L"ReportAsWorkstation");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    /* Don't change anything if the key doesn't exist */
-    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
-    if (NT_SUCCESS(Status))
-    {
-        /* Get the value from the registry and make sure it's a 32-bit value */
-        Status = NtQueryValueKey(hKey,
-                                 &ValName,
-                                 KeyValuePartialInformation,
-                                 kvpInfo,
-                                 sizeof(Buffer),
-                                 &Length);
-        if (NT_SUCCESS(Status) &&
-            (kvpInfo->Type == REG_DWORD) &&
-            (kvpInfo->DataLength == sizeof(ULONG)))
-        {
-            /* Is the value set? */
-            ReportAsWorkstation = *(PULONG)kvpInfo->Data;
-            if ((VersionInformation->wProductType == VER_NT_SERVER) &&
-                (ReportAsWorkstation != 0))
-            {
-                /* It is, modify the product type to report a workstation */
-                VersionInformation->wProductType = VER_NT_WORKSTATION;
-                DPRINT1("We modified the reported OS from NtProductServer to NtProductWinNt\n");
-            }
-        }
-
-        /* Close the handle */
-        NtClose(hKey);
-    }
-}
-
 /**********************************************************************
  * NAME                         EXPORTED
  *  RtlGetNtProductType
@@ -197,8 +146,14 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
         InfoEx->wProductType = SharedUserData->NtProductType;
         InfoEx->wReserved = 0;
 
-        /* HACK: ReactOS specific changes, see bug-reports CORE-6611 and CORE-4620 (aka. #5003) */
-        SetRosSpecificInfo(InfoEx);
+        if (InfoEx->wProductType == VER_NT_SERVER)
+        {
+            NT_PRODUCT_TYPE ProductType;
+            if (RtlGetNtProductType(&ProductType) && ProductType == NtProductWinNt)
+            {
+                InfoEx->wProductType = VER_NT_WORKSTATION;
+            }
+        }
     }
 
     return STATUS_SUCCESS;

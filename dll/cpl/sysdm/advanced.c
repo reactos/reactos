@@ -11,75 +11,116 @@
 #include "precomp.h"
 
 static TCHAR BugLink[] = _T("http://jira.reactos.org/");
-static TCHAR ReportAsWorkstationKey[] = _T("SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
 
+typedef enum _NT_PRODUCT_TYPE
+{
+    NtProductWinNt = 1,
+    NtProductLanManNt,
+    NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
-static VOID
-OnOK(HWND hwndDlg)
+static const WCHAR ProductOptions[] = L"System\\CurrentControlSet\\Control\\ProductOptions";
+
+static BOOL
+DoGetProductType(PNT_PRODUCT_TYPE ProductType)
 {
     HKEY hKey;
-    DWORD ReportAsWorkstation;
+    LONG error;
+    WCHAR szValue[32];
+    DWORD cbValue;
 
-    ReportAsWorkstation = (SendDlgItemMessageW(hwndDlg,
-                                               IDC_REPORTASWORKSTATION,
-                                               BM_GETCHECK,
-                                               0,
-                                               0) == BST_CHECKED);
+    *ProductType = NtProductServer;
 
-    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-                       ReportAsWorkstationKey,
-                       0,
-                       NULL,
-                       0,
-                       KEY_WRITE,
-                       NULL,
-                       &hKey,
-                       NULL) == ERROR_SUCCESS)
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ProductOptions, 0, KEY_READ, &hKey);
+    if (error)
+        return FALSE;
+
+    cbValue = sizeof(szValue);
+    error = RegQueryValueExW(hKey, L"ProductType", NULL, NULL, (LPBYTE)szValue, &cbValue);
+    if (!error)
     {
-        RegSetValueEx(hKey,
-                      _T("ReportAsWorkstation"),
-                      0,
-                      REG_DWORD,
-                      (LPBYTE)&ReportAsWorkstation,
-                      sizeof(DWORD));
+        if (lstrcmpW(szValue, L"WinNT") == 0)
+            *ProductType = NtProductWinNt;
+        else if (lstrcmpW(szValue, L"LanmanNT") == 0)
+            *ProductType = NtProductLanManNt;
+    }
 
-        RegCloseKey(hKey);
+    RegCloseKey(hKey);
+    return TRUE;
+}
+
+static BOOL
+DoSetProductType(NT_PRODUCT_TYPE ProductType)
+{
+    HKEY hKey;
+    LONG error;
+    DWORD cbValue;
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ProductOptions, 0, KEY_WRITE, &hKey);
+    if (error)
+        return FALSE;
+
+    switch (ProductType)
+    {
+        case NtProductWinNt:
+            cbValue = sizeof(L"WinNT");
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (LPBYTE)L"WinNT", cbValue);
+            break;
+        case NtProductLanManNt:
+            // FIXME: Not supported yet
+            error = ERROR_NOT_SUPPORTED;
+            break;
+        case NtProductServer:
+            cbValue = sizeof(L"ServerNT");
+            error = RegSetValueExW(hKey, L"ProductType", 0, REG_SZ, (LPBYTE)L"ServerNT", cbValue);
+            break;
+    }
+
+    RegCloseKey(hKey);
+    return !error;
+}
+
+static BOOL
+OnOK(HWND hwndDlg)
+{
+    INT iItem;
+    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_GETCURSEL, 0, 0);
+
+    switch (iItem)
+    {
+        case 0:
+            DoSetProductType(NtProductServer);
+            return TRUE;
+        case 1:
+            DoSetProductType(NtProductWinNt);
+            return TRUE;
+        default:
+            return FALSE;
     }
 }
 
 static VOID
 OnInitSysSettingsDialog(HWND hwndDlg)
 {
-    HKEY hKey;
-    DWORD dwVal;
-    DWORD dwType = REG_DWORD;
-    DWORD cbData = sizeof(DWORD);
+    NT_PRODUCT_TYPE Type;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     ReportAsWorkstationKey,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS)
+    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Server");
+    SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_ADDSTRING, 0, (LPARAM)L"ReactOS Workstation");
+
+    if (DoGetProductType(&Type))
     {
-        if (RegQueryValueEx(hKey,
-                            _T("ReportAsWorkstation"),
-                            0,
-                            &dwType,
-                            (LPBYTE)&dwVal,
-                            &cbData) == ERROR_SUCCESS)
+        switch (Type)
         {
-            if (dwVal != FALSE)
-            {
-                // set the check box
-                SendDlgItemMessageW(hwndDlg,
-                                    IDC_REPORTASWORKSTATION,
-                                    BM_SETCHECK,
-                                    BST_CHECKED,
-                                    0);
-            }
+            case NtProductWinNt:
+                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, IDC_PRODUCTOPTIONS, 1);
+                break;
+            case NtProductLanManNt:
+                // FIXME: Not supported yet
+                break;
+            case NtProductServer:
+                SendDlgItemMessageW(hwndDlg, IDC_PRODUCTOPTIONS, CB_SETCURSEL, IDC_PRODUCTOPTIONS, 0);
+                break;
         }
-
-        RegCloseKey(hKey);
     }
 }
 
@@ -101,8 +142,8 @@ SysSettingsDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    OnOK(hwndDlg);
-                    EndDialog(hwndDlg, 0);
+                    if (OnOK(hwndDlg))
+                        EndDialog(hwndDlg, IDOK);
                     return TRUE;
             }
             break;

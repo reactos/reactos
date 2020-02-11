@@ -94,7 +94,7 @@
 
 /* System settings */
 #define IDD_SYSSETTINGS         800
-#define IDC_REPORTASWORKSTATION 801
+#define IDC_PRODUCTOPTIONS      801
 
 /* User profiles */
 #define IDD_USERPROFILE        500
