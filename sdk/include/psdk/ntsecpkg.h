@@ -41,6 +41,14 @@ extern "C" {
 #define SECPKG_INTERFACE_VERSION_6                  0x200000
 #define SECPKG_INTERFACE_VERSION_7                  0x400000
 
+/* Attributes for SECPKG_CALL_INFO */
+#define SECPKG_CALL_KERNEL_MODE     0x00000001  // Call originated in kernel mode
+#define SECPKG_CALL_ANSI            0x00000002  // Call came from ANSI stub
+#define SECPKG_CALL_URGENT          0x00000004  // Call designated urgent
+#define SECPKG_CALL_RECURSIVE       0x00000008  // Call is recursing
+#define SECPKG_CALL_IN_PROC         0x00000010  // Call originated in process
+#define SECPKG_CALL_CLEANUP         0x00000020  // Call is cleanup from a client
+
 /* enum definitions for Secure Service Provider/Authentication Packages */
 typedef enum _LSA_TOKEN_INFORMATION_TYPE {
     LsaTokenInformationNull,
