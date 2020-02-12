@@ -17,6 +17,7 @@
 #include <winspool_c.h>
 #include <winddiui.h>
 #include <ndk/rtlfuncs.h>
+#include <strsafe.h>
 
 #include <spoolss.h>
 #include <marshalling/marshalling.h>

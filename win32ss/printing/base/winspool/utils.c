@@ -5,7 +5,7 @@
 * COPYRIGHT:   Copyright 2020 Doug Lyons (douglyons@douglyons.com)
 */
 
-#include <strsafe.h>
+#include "precomp.h"
 
 BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
 {
