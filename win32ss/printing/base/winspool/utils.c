@@ -2,15 +2,20 @@
 * PROJECT:     ReactOS Spooler API
 * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * PURPOSE:     Utility Functions related to Print Processors
-* COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
+* COPYRIGHT:   Copyright 2020 Doug Lyons (douglyons@douglyons.com)
 */
 
 #include <strsafe.h>
 
 BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
 {
-    // This converts an incoming Unicode string to an ANSI string
-    // Returns FALSE on failure, otherwise returns TRUE.
+    /*
+     * This converts an incoming Unicode string to an ANSI string.
+     * It returns FALSE on failure, otherwise it returns TRUE.
+     * It is only useful for "in-place" conversions where the ANSI string goes
+     * back into the same place where the Unicode string came into this function.
+     * It seems that many of the functions involving printing can use this.
+     */
 
     PSTR pszField;
     DWORD cch;
@@ -37,7 +42,6 @@ BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
         goto Exit;
     }
 
-    // Convert Unicode pName to a ANSI string pszTemp.
     pszField = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
     if (!pszField)
     {
