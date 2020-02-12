@@ -486,8 +486,8 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_SERVER, 0);
-            OnChooseServer(hwndDlg);
+            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_WORKSTATION, 0);
+            OnChooseWorkstation(hwndDlg);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
             SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
@@ -525,7 +525,8 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        pSetupData->ProductOption = PRODUCT_OPTION_SERVER;
+                        pSetupData->ProductOption = PRODUCT_OPTION_WORKSTATION;
+                        OnChooseWorkstation(hwndDlg);
                         DoWriteProductOption(pSetupData->ProductOption);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
