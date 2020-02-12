@@ -3,6 +3,7 @@
  *
  * Copyright 2004 by Krzysztof Foltman
  * Copyright 2007-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,6 +33,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
+#include <shlobj.h>
 #include <wine/unicode.h>
 
 #include "wordpad.h"
@@ -811,6 +813,8 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
     SetFocus(hEditorWnd);
 
     set_caption(szOpenFileName);
+    if (szOpenFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
 
     lstrcpyW(wszFileName, szOpenFileName);
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
@@ -883,6 +887,9 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
 
     lstrcpyW(wszFileName, wszSaveFileName);
     set_caption(wszFileName);
+    if (wszFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, wszFileName);
+
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
     set_fileformat(format);
 

@@ -583,6 +583,7 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
 }
 
 
+#ifndef __REACTOS__
 /*************************************************************************
  * SHADD_compare_mru - helper function for SHAddToRecentDocs
  *
@@ -650,7 +651,33 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
      */
     return AddMRUData(mruhandle, buffer, *len);
 }
+#endif
 
+#ifdef __REACTOS__
+typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
+typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
+typedef struct tagMRUINFOW
+{
+    DWORD   cbSize;
+    UINT    uMax;
+    UINT    fFlags;
+    HKEY    hKey;
+    LPWSTR  lpszSubKey;
+    union
+    {
+        MRUStringCmpFnW string_cmpfn;
+        MRUBinaryCmpFn  binary_cmpfn;
+    } u;
+} MRUINFOW, *LPMRUINFOW;
+/* MRUINFO.fFlags */
+#define MRU_STRING     0 /* list will contain strings */
+#define MRU_BINARY     1 /* list will contain binary data */
+#define MRU_CACHEWRITE 2 /* only save list order to reg. is FreeMRUList */
+
+typedef HANDLE (WINAPI *FN_CreateMRUListW)(LPMRUINFOW);
+typedef int (WINAPI *FN_AddMRUStringW)(HANDLE, LPCWSTR);
+typedef int (WINAPI *FN_FreeMRUList)(HANDLE);
+#endif
 /*************************************************************************
  * SHAddToRecentDocs				[SHELL32.@]
  *
@@ -668,6 +695,234 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
  */
 void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 {
+#ifdef __REACTOS__
+    static const WCHAR szExplorerKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
+    INT ret;
+    WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[128], szData[1280];
+    DWORD data[64], datalen, type;
+    HANDLE hFind;
+    WIN32_FIND_DATAW find;
+    HKEY hExplorerKey;
+    LONG error;
+    LPWSTR pchDotExt, pchTargetTitle;
+    MRUINFOW mru = {sizeof(mru)};
+    HANDLE hMRUList;
+    IShellLinkW *psl = NULL;
+    HRESULT hr;
+    IPersistFile *pPf = NULL;
+    HWND hwnd = NULL;
+    HMODULE hComCtl32 = GetModuleHandleW(L"comctl32.dll");
+    FN_CreateMRUListW pCreateMRUListW;
+    FN_AddMRUStringW pAddMRUStringW;
+    FN_FreeMRUList pFreeMRUList;
+
+    TRACE("%04x %p\n", uFlags, pv);
+
+    pCreateMRUListW = (FN_CreateMRUListW)GetProcAddress(hComCtl32, (LPSTR)400);
+    pAddMRUStringW = (FN_AddMRUStringW)GetProcAddress(hComCtl32, (LPSTR)401);
+    pFreeMRUList = (FN_FreeMRUList)GetProcAddress(hComCtl32, (LPSTR)152);
+
+    if (!pCreateMRUListW || !pAddMRUStringW || !pFreeMRUList)
+    {
+        ERR("ComCtl32 %p has no MRU functions\n", hComCtl32);
+        return;
+    }
+
+#define CreateMRUListW (*pCreateMRUListW)
+#define AddMRUStringW (*pAddMRUStringW)
+#define FreeMRUList (*pFreeMRUList)
+
+    /* check policy */
+    ret = SHADD_get_policy("NoRecentDocsHistory", &type, data, &datalen);
+    if (ret > 0 && ret != ERROR_FILE_NOT_FOUND)
+    {
+        ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
+        return;
+    }
+    if (ret == ERROR_SUCCESS)
+    {
+        if (!(type == REG_DWORD || (type == REG_BINARY && datalen == 4)))
+        {
+            ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%d, len=%d\n",
+                type, datalen);
+            return;
+        }
+
+        TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
+        /* now test the actual policy value */
+        if (data[0] != 0)
+            return;
+    }
+
+    /* store to szTargetPath */
+    switch (uFlags)
+    {
+        case SHARD_PATHA:
+            MultiByteToWideChar(CP_ACP, 0, pv, -1, szTargetPath, ARRAYSIZE(szTargetPath));
+            break;
+        case SHARD_PATHW:
+            lstrcpynW(szTargetPath, pv, ARRAYSIZE(szTargetPath));
+            break;
+        case SHARD_PIDL:
+            SHGetPathFromIDListW(pv, szTargetPath);
+            break;
+        default:
+            FIXME("Unsupported flags: %u\n", uFlags);
+            return;
+    }
+
+    /* get recent folder */
+    if (!SHGetSpecialFolderPathW(hwnd, szLinkDir, CSIDL_RECENT, FALSE))
+    {
+        ERR("serious issues 1\n");
+        return;
+    }
+    TRACE("Users Recent dir %S\n", szLinkDir);
+
+    /* open Explorer key */
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, szExplorerKey,
+                            0, NULL, 0, KEY_READ | KEY_WRITE,
+                            NULL, &hExplorerKey, NULL);
+    if (error)
+    {
+        ERR("Failed to RegCreateKeyExW: 0x%08X\n", error);
+        return;
+    }
+
+    if (!pv)
+    {
+        TRACE("pv is NULL, so delete all shortcut files in %S\n", szLinkDir);
+
+        lstrcpynW(szLinkFile, szLinkDir, ARRAYSIZE(szLinkFile));
+        PathAppendW(szLinkFile, L"*.lnk");
+
+        hFind = FindFirstFileW(szLinkFile, &find);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                lstrcpynW(szLinkFile, szLinkDir, ARRAYSIZE(szLinkFile));
+                PathAppendW(szLinkFile, find.cFileName);
+                DeleteFileW(szLinkFile);
+            } while (FindNextFile(hFind, &find));
+            FindClose(hFind);
+        }
+
+        RegDeleteKeyW(hExplorerKey, L"RecentDocs");
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+
+    if (szTargetPath[0] == 0)
+    {
+        /* path is empty */
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+
+    /* check if file is a shortcut */
+    pchDotExt = PathFindExtensionW(szTargetPath);
+    while (lstrcmpiW(pchDotExt, L".lnk") == 0)
+    {
+        WCHAR szPath[MAX_PATH];
+        IShellLinkW *pShellLink;
+
+        IShellLink_ConstructFromPath(szTargetPath, &IID_IShellLinkW, (LPVOID*)&pShellLink);
+        IShellLinkW_GetPath(pShellLink, szPath, ARRAYSIZE(szPath), NULL, 0);
+        IShellLinkW_Release(pShellLink);
+
+        lstrcpynW(szTargetPath, szPath, ARRAYSIZE(szTargetPath));
+        pchDotExt = PathFindExtensionW(szTargetPath);
+    }
+    if (!lstrcmpiW(pchDotExt, L".exe"))
+    {
+        /* executables are not added */
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+
+    /* ***  JOB 0: Build strings *** */
+
+    pchTargetTitle = PathFindFileNameW(szTargetPath);
+
+    lstrcpyW(szDescription, L"Shortcut to ");
+    lstrcatW(szDescription, pchTargetTitle);
+
+    lstrcpynW(szLinkFile, szLinkDir, ARRAYSIZE(szLinkFile));
+    PathAppendW(szLinkFile, pchTargetTitle);
+    lstrcatW(szLinkFile, L".lnk");
+
+    lstrcpynW(szData, pchTargetTitle, ARRAYSIZE(szData));
+
+    /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
+
+    mru.uMax = 64;
+    mru.fFlags = MRU_BINARY;
+    mru.hKey = hExplorerKey;
+    mru.lpszSubKey = L"RecentDocs";
+    hMRUList = CreateMRUListW(&mru);
+    if (!hMRUList)
+    {
+        ERR("CreateMRUListW failed\n");
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+    AddMRUStringW(hMRUList, szData); /* FIXME: Make me compatible */
+    FreeMRUList(hMRUList);
+
+    RegCloseKey(hExplorerKey);
+
+    /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
+
+    hr = CoInitialize(NULL);
+    if (FAILED(hr))
+    {
+        ERR("CoInitialize: %08X\n", hr);
+        goto Quit;
+    }
+
+    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IShellLinkW, (LPVOID *)&psl);
+    if (FAILED(hr))
+    {
+        ERR("CoInitialize for IID_IShellLinkW: %08X\n", hr);
+        goto Quit;
+    }
+
+    hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID *)&pPf);
+    if (FAILED(hr))
+    {
+        ERR("IShellLinkW_QueryInterface: %08X\n", hr);
+        goto Quit;
+    }
+
+    if (uFlags == SHARD_PIDL)
+        hr = IShellLinkW_SetIDList(psl, pv);
+    else
+        hr = IShellLinkW_SetPath(psl, pv);
+
+    IShellLinkW_SetDescription(psl, szDescription);
+
+    hr = IPersistFile_Save(pPf, szLinkFile, TRUE);
+    if (FAILED(hr))
+    {
+        ERR("IPersistFile_Save: 0x%08X\n", hr);
+    }
+
+    hr = IPersistFile_SaveCompleted(pPf, szLinkFile);
+    if (FAILED(hr))
+    {
+        ERR("IPersistFile_SaveCompleted: 0x%08X\n", hr);
+    }
+
+Quit:
+    if (pPf)
+        IPersistFile_Release(pPf);
+    if (psl)
+        IShellLinkW_Release(psl);
+    CoUninitialize();
+    RegCloseKey(hExplorerKey);
+#else
 /* If list is a string list lpfnCompare has the following prototype
  * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
  * for binary lists the prototype is
@@ -1032,6 +1287,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     /* all done */
     RegCloseKey(HCUbasekey);
     return;
+#endif
 }
 
 /*************************************************************************
