@@ -18,6 +18,7 @@
 #include <windowsx.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -45,6 +46,98 @@ typedef struct _REGISTRATIONDATA
     PVOID DefaultContext;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
+/* FONT SUBSTITUTION WORKAROUND *********************************************************/
+
+/* Load font strings */
+#include "../../../base/setup/lib/mui.h"
+#include "../../../base/setup/lib/muifonts.h"
+
+static void
+DoCheckFontSubst(HKEY hKey, LPCWSTR pszFontDir, LPCWSTR pszFontFile, UINT nCount, ...)
+{
+    va_list va;
+    UINT i;
+    LPCWSTR arg;
+    WCHAR szFile[MAX_PATH];
+
+    va_start(va, nCount);
+
+    lstrcpyW(szFile, pszFontDir);
+    PathAppendW(szFile, pszFontFile);
+
+    if (PathFileExistsW(szFile))
+    {
+        for (i = 0; i < nCount; ++i)
+        {
+            arg = va_arg(va, LPCWSTR);
+            RegDeleteValueW(hKey, arg);
+        }
+    }
+
+    va_end(va);
+}
+
+static void
+DoFontSubstitutesWorkaround(void)
+{
+    LPCWSTR pszSubst = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes";
+    WCHAR szFontDir[MAX_PATH];
+    LONG error;
+    HKEY hKey;
+    DWORD cbData;
+    LANGID LangID;
+
+    GetWindowsDirectoryW(szFontDir, ARRAYSIZE(szFontDir));
+    PathAppendW(szFontDir, L"\\Fonts");
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, pszSubst, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        return;
+    }
+
+    DoCheckFontSubst(hKey, szFontDir, L"mingliu.ttc",
+                     4, L"MingLiU", L"PMingLiU", CTF_LocalName0, CTF_LocalName1);
+    DoCheckFontSubst(hKey, szFontDir, L"simsun.ttc",
+                     5, L"NSimSun", L"SimSun", CSF_LocalName0, CSF_LocalName1, CSF_LocalName2);
+    DoCheckFontSubst(hKey, szFontDir, L"mssong.ttf",
+                     2, L"MS Song", CSF_LocalName4);
+    DoCheckFontSubst(hKey, szFontDir, L"msmincho.ttc",
+                     4, L"MS Mincho", L"MS PMincho", JF_LocalName0, JF_LocalName1);
+    DoCheckFontSubst(hKey, szFontDir, L"msgothic.ttc",
+                     5, L"MS Gothic", L"MS PGothic", L"MS UI Gothic", JF_LocalName2, JF_LocalName3);
+
+    LangID = GetUserDefaultLangID();
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_CHINESE:
+            if (SUBLANGID(LangID) == SUBLANG_CHINESE_SIMPLIFIED)
+            {
+                cbData = sizeof(L"SimSun");
+                RegSetValueExW(hKey, L"MS Shell Dlg", 0, REG_SZ, (LPBYTE)L"SimSun", cbData);
+                RegSetValueExW(hKey, L"Tahoma", 0, REG_SZ, (LPBYTE)L"SimSun", cbData);
+            }
+            else
+            {
+                cbData = sizeof(L"PMingLiU");
+                RegSetValueExW(hKey, L"MS Shell Dlg", 0, REG_SZ, (LPBYTE)L"PMingLiU", cbData);
+                RegSetValueExW(hKey, L"Tahoma", 0, REG_SZ, (LPBYTE)L"PMingLiU", cbData);
+            }
+            break;
+
+        case LANG_JAPANESE:
+            cbData = sizeof(L"MS UI Gothic");
+            RegSetValueExW(hKey, L"MS Shell Dlg", 0, REG_SZ, (LPBYTE)L"MS UI Gothic", cbData);
+            RegSetValueExW(hKey, L"Tahoma", 0, REG_SZ, (LPBYTE)L"MS UI Gothic", cbData);
+            break;
+
+        case LANG_KOREAN:
+            /* FIXME */
+            break;
+    }
+
+    RegCloseKey(hKey);
+}
 
 /* FUNCTIONS ****************************************************************/
 
@@ -2045,6 +2138,9 @@ RegistrationProc(LPVOID Parameter)
     RegistrationData = (PREGISTRATIONDATA) Parameter;
     RegistrationData->Registered = 0;
     RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
+
+    /* ReactOS-specific font workaround */
+    DoFontSubstitutesWorkaround();
 
     _SEH2_TRY
     {
