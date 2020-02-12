@@ -737,9 +737,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (ret > 0 && ret != ERROR_FILE_NOT_FOUND)
     {
         ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
-        return;
     }
-    if (ret == ERROR_SUCCESS)
+    else if (ret == ERROR_SUCCESS)
     {
         if (!(type == REG_DWORD || (type == REG_BINARY && datalen == 4)))
         {
@@ -751,7 +750,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
         /* now test the actual policy value */
         if (data[0] != 0)
+        {
             return;
+        }
     }
 
     /* store to szTargetPath */
@@ -820,6 +821,14 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         return;
     }
 
+    hr = CoInitialize(NULL);
+    if (FAILED(hr))
+    {
+        ERR("CoInitialize: %08X\n", hr);
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+
     /* check if file is a shortcut */
     pchDotExt = PathFindExtensionW(szTargetPath);
     while (lstrcmpiW(pchDotExt, L".lnk") == 0)
@@ -873,13 +882,6 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     RegCloseKey(hExplorerKey);
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
-
-    hr = CoInitialize(NULL);
-    if (FAILED(hr))
-    {
-        ERR("CoInitialize: %08X\n", hr);
-        goto Quit;
-    }
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IShellLinkW, (LPVOID *)&psl);
