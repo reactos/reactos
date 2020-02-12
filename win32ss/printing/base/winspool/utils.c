@@ -17,46 +17,39 @@ BOOL UnicodeToAnsiInPlace(PWSTR pwszField)
      * It seems that many of the functions involving printing can use this.
      */
 
-    PSTR pszField;
+    PSTR pszTemp;
     DWORD cch;
-    BOOL bReturn = TRUE;
 
     /*
      * Map the incoming Unicode pwszField string to an ANSI one here so that we can do
      * in-place conversion. We read the Unicode input and then we write back the ANSI
      * conversion into the same buffer for use with our GetPrinterDriverA function
      */
-    PSTR pwszOutput = (PSTR)pwszField;
+    PSTR pszField = (PSTR)pwszField;
 
     if (!pwszField)
     {
-        goto Exit;
-    }
-    else
-    {
-        cch = wcslen(pwszField);
+        return TRUE;
     }
 
+    cch = wcslen(pwszField);
     if (cch == 0)
     {
-        goto Exit;
+        return TRUE;
     }
 
-    pszField = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
+    pszTemp = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(CHAR));
     if (!pszField)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         ERR("HeapAlloc failed!\n");
-        bReturn = FALSE;   // indicates a failure to be handled by caller
-        goto Exit;
+        return FALSE;   // indicates a failure to be handled by caller
     }
 
-    WideCharToMultiByte(CP_ACP, 0, pwszField, -1, pszField, cch + 1, NULL, NULL);
-    StringCchCopyA(pwszOutput, cch + 1, pszField);
+    WideCharToMultiByte(CP_ACP, 0, pwszField, -1, pszTemp, cch + 1, NULL, NULL);
+    StringCchCopyA(pszField, cch + 1, pszTemp);
 
-    HeapFree(hProcessHeap, 0, pszField);
+    HeapFree(hProcessHeap, 0, pszTemp);
 
-Exit:
-
-    return bReturn;
+    return TRUE;
 }
