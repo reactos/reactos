@@ -2179,10 +2179,88 @@ UxSubclassInfo_Destroy(UxSubclassInfo *pInfo)
     HeapFree(GetProcessHeap(), 0, pInfo);
 }
 
+static BOOL
+DoSanitizeText(LPWSTR pszSanitized, LPCWSTR pszInvalidChars, LPCWSTR pszValidChars)
+{
+    LPWSTR pch1, pch2;
+    BOOL bFound = FALSE;
+
+    for (pch1 = pch2 = pszSanitized; *pch1; ++pch1)
+    {
+        if (pszInvalidChars)
+        {
+            if (wcschr(pszInvalidChars, *pch1) != NULL)
+            {
+                bFound = TRUE;
+                continue;
+            }
+        }
+        else if (pszValidChars)
+        {
+            if (wcschr(pszValidChars, *pch1) == NULL)
+            {
+                bFound = TRUE;
+                continue;
+            }
+        }
+
+        *pch2 = *pch1;
+        ++pch2;
+    }
+    *pch2 = 0;
+
+    return bFound;
+}
+
+static void
+DoSanitizeClipboard(HWND hwnd, UxSubclassInfo *pInfo)
+{
+    HGLOBAL hData;
+    LPWSTR pszText, pszSanitized;
+    DWORD cbData;
+
+    if (GetWindowLongPtrW(hwnd, GWL_STYLE) & ES_READONLY)
+        return;
+    if (!OpenClipboard(hwnd))
+        return;
+
+    hData = GetClipboardData(CF_UNICODETEXT);
+    pszText = GlobalLock(hData);
+    if (!pszText)
+    {
+        CloseClipboard();
+        return;
+    }
+    SHStrDupW(pszText, &pszSanitized);
+    GlobalUnlock(hData);
+
+    if (pszSanitized &&
+        DoSanitizeText(pszSanitized, pInfo->pwszInvalidChars, pInfo->pwszValidChars))
+    {
+        MessageBeep(0xFFFFFFFF);
+
+        /* Update clipboard text */
+        cbData = (lstrlenW(pszSanitized) + 1) * sizeof(WCHAR);
+        hData = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, cbData);
+        pszText = GlobalLock(hData);
+        if (pszText)
+        {
+            CopyMemory(pszText, pszSanitized, cbData);
+            GlobalUnlock(hData);
+
+            SetClipboardData(CF_UNICODETEXT, hData);
+        }
+    }
+
+    CoTaskMemFree(pszSanitized);
+    CloseClipboard();
+}
+
 static LRESULT CALLBACK
 LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC fnWndProc;
+    WCHAR wch;
     UxSubclassInfo *pInfo = GetPropW(hwnd, L"UxSubclassInfo");
     if (!pInfo)
         return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -2191,8 +2269,22 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
+        case WM_KEYDOWN:
+            if (GetKeyState(VK_SHIFT) < 0 && wParam == VK_INSERT)
+                DoSanitizeClipboard(hwnd, pInfo);
+            else if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
+                DoSanitizeClipboard(hwnd, pInfo);
+
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
+
+        case WM_PASTE:
+            DoSanitizeClipboard(hwnd, pInfo);
+            return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
+
         case WM_CHAR:
-        {
+            if (GetKeyState(VK_CONTROL) < 0 && wParam == L'V')
+                break;
+
             if (pInfo->pwszInvalidChars)
             {
                 if (wcschr(pInfo->pwszInvalidChars, (WCHAR)wParam) != NULL)
@@ -2210,11 +2302,18 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
+
+        case WM_UNICHAR:
+            if (wParam == UNICODE_NOCHAR)
+                return TRUE;
+
+            /* FALL THROUGH */
 
         case WM_IME_CHAR:
-        {
-            WCHAR wch = (WCHAR)wParam;
+            wch = (WCHAR)wParam;
+            if (GetKeyState(VK_CONTROL) < 0 && wch == L'V')
+                break;
+
             if (!IsWindowUnicode(hwnd) && HIBYTE(wch) != 0)
             {
                 CHAR data[] = {HIBYTE(wch), LOBYTE(wch)};
@@ -2238,13 +2337,10 @@ LimitEditWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
 
         case WM_NCDESTROY:
-        {
             UxSubclassInfo_Destroy(pInfo);
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);
-        }
 
         default:
             return CallWindowProcW(fnWndProc, hwnd, uMsg, wParam, lParam);

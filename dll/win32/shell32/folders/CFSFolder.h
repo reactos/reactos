@@ -29,7 +29,8 @@ class CFSFolder :
     public IShellFolder2,
     public IPersistFolder3,
     public IContextMenuCB,
-    public IShellFolderViewCB
+    public IShellFolderViewCB,
+    public IItemNameLimits
 {
     private:
         const CLSID *m_pclsid;
@@ -88,6 +89,28 @@ class CFSFolder :
         // IShellFolderViewCB
         virtual HRESULT WINAPI MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        /*** IItemNameLimits methods ***/
+
+        STDMETHODIMP
+        GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+        {
+            return E_NOTIMPL;
+        }
+
+        STDMETHODIMP
+        GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+        {
+            if (ppwszValidChars)
+            {
+                *ppwszValidChars = NULL;
+            }
+            if (ppwszInvalidChars)
+            {
+                SHStrDupW(INVALID_FILETITLE_CHARACTERSW, ppwszInvalidChars);
+            }
+            return S_OK;
+        }
+
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
 
@@ -101,6 +124,7 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
+        COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits, IItemNameLimits)
         END_COM_MAP()
 
     protected:

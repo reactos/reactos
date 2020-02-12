@@ -1989,9 +1989,13 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             m_pSFParent->GetAttributesOf(1, &pidl, &dwAttr);
             if (SFGAO_CANRENAME & dwAttr)
             {
+                HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
+                SHLimitInputEdit(hEdit, m_pSFParent);
+
                 m_isEditing = TRUE;
                 return FALSE;
             }
+
             return TRUE;
         }
 
