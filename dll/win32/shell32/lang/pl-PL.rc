@@ -771,7 +771,7 @@ BEGIN
     IDS_PASTE "Włóż"
     IDS_EJECT "Wysuń"
     IDS_DISCONNECT "Odłącz"
-    IDS_OPENFILELOCATION "Otwórz lokalizację pliku"
+    IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
     IDS_DESKLINK "Pulpit (utwórz skrót)"
     IDS_SENDTO_MENU "Wyślij d&o"
 
