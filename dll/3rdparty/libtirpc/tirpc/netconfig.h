@@ -3,8 +3,13 @@
 
 //#include <features.h>
 
+#ifdef __REACTOS__
+    #undef NETCONFIG
+    extern char NETCONFIG[];
+#else
 // XXX Should be in, or come from, the registry!!!
 #define NETCONFIG "C:\\ReactOS\\System32\\drivers\\etc\\netconfig"
+#endif
 #define NETPATH	  "NETPATH"
 
 struct netconfig {
