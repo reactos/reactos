@@ -127,6 +127,9 @@ public:
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
             SetWizardButtons(0);
 
+            CStringW strExtracting(MAKEINTRESOURCEW(IDS_EXTRACTING));
+            SetDlgItemTextW(IDC_STATUSTEXT, strExtracting);
+
             if (m_pExtract->m_DirectoryChanged)
                 UpdateDirectory();
 
