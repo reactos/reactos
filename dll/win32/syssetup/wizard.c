@@ -107,6 +107,10 @@ DoFontSubstitutesWorkaround(void)
                      4, L"MS Mincho", L"MS PMincho", JF_LocalName0, JF_LocalName1);
     DoCheckFontSubst(hKey, szFontDir, L"msgothic.ttc",
                      5, L"MS Gothic", L"MS PGothic", L"MS UI Gothic", JF_LocalName2, JF_LocalName3);
+    DoCheckFontSubst(hKey, szFontDir, L"gulim.ttc",
+                     4, L"Gulim", L"GulimChe", KF_LocalName4, KF_LocalName5);
+    DoCheckFontSubst(hKey, szFontDir, L"batang.ttc",
+                     4, L"Batang", L"BatangChe", KF_LocalName0, KF_LocalName1);
 
     LangID = GetUserDefaultLangID();
     switch (PRIMARYLANGID(LangID))
@@ -133,7 +137,9 @@ DoFontSubstitutesWorkaround(void)
             break;
 
         case LANG_KOREAN:
-            /* FIXME */
+            cbData = sizeof(L"Batang");
+            RegSetValueExW(hKey, L"MS Shell Dlg", 0, REG_SZ, (LPBYTE)L"Batang", cbData);
+            RegSetValueExW(hKey, L"Tahoma", 0, REG_SZ, (LPBYTE)L"Batang", cbData);
             break;
     }
 
