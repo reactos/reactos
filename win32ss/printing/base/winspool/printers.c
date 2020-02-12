@@ -1513,7 +1513,7 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     {
         SetLastError(ERROR_INVALID_LEVEL);
         ERR("Invalid Level!\n");
-        goto Cleanup;
+        goto Exit;
     }
 
     if (pEnvironment)
@@ -1526,7 +1526,7 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             ERR("HeapAlloc failed!\n");
-            goto Cleanup;
+            goto Exit;
         }
 
         MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, pwszEnvironment, cch + 1);
