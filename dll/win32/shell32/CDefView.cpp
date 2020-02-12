@@ -1207,8 +1207,11 @@ HRESULT CDefView::FillFileMenu()
             DeleteMenu(hFileMenu, i, MF_BYPOSITION);
     }
 
+    m_cidl = m_ListView.GetSelectedCount();
+
     /* Store the context menu in m_pCM and keep it in order to invoke the selected command later on */
-    HRESULT hr = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pCM));
+    HRESULT hr = GetItemObject((m_cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND),
+                               IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
