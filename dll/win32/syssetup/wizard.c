@@ -46,6 +46,7 @@ typedef struct _REGISTRATIONDATA
     PVOID DefaultContext;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
+#ifdef __REACTOS__ /* This is a HACK! */
 /* FONT SUBSTITUTION WORKAROUND *********************************************************/
 
 /* Load font strings */
@@ -138,6 +139,7 @@ DoFontSubstitutesWorkaround(void)
 
     RegCloseKey(hKey);
 }
+#endif /* __REACTOS__ */
 
 /* FUNCTIONS ****************************************************************/
 
@@ -2139,8 +2141,10 @@ RegistrationProc(LPVOID Parameter)
     RegistrationData->Registered = 0;
     RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
 
+#ifdef __REACTOS__ /* HACK */
     /* ReactOS-specific font workaround */
     DoFontSubstitutesWorkaround();
+#endif
 
     _SEH2_TRY
     {
