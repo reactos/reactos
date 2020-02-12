@@ -17,6 +17,7 @@ list(APPEND SOURCE
     printers.c
     printprocessors.c
     printproviders.c
+    utils.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool_c.c)
 
 add_library(winspool MODULE

@@ -40,4 +40,7 @@ SPOOLER_HANDLE, *PSPOOLER_HANDLE;
 // main.c
 extern HANDLE hProcessHeap;
 
+// utils.c
+extern BOOL UnicodeToAnsiInPlace(PWSTR pwszField);
+
 #endif

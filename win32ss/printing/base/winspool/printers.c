@@ -1490,10 +1490,231 @@ Cleanup:
 
 BOOL WINAPI
 GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
-{
-    ERR("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
-    if (pcbNeeded) *pcbNeeded = 0;
-    return FALSE;
+{   
+    /*
+     * We are mapping multiple different pointers to the same pDriverInfo pointer here so that
+     * we can use the same incoming pointer for different Levels
+     */
+    PDRIVER_INFO_1W pdi1w = (PDRIVER_INFO_1W)pDriverInfo;
+    PDRIVER_INFO_2W pdi2w = (PDRIVER_INFO_2W)pDriverInfo;
+    PDRIVER_INFO_3W pdi3w = (PDRIVER_INFO_3W)pDriverInfo;
+    PDRIVER_INFO_4W pdi4w = (PDRIVER_INFO_4W)pDriverInfo;
+    PDRIVER_INFO_5W pdi5w = (PDRIVER_INFO_5W)pDriverInfo;
+    PDRIVER_INFO_6W pdi6w = (PDRIVER_INFO_6W)pDriverInfo;
+
+    BOOL bReturnValue = FALSE;
+    DWORD cch;
+    PWSTR pwszEnvironment = NULL;
+
+    TRACE("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+
+    // Check for invalid levels here for early error return. Should be 1-6.
+    if (Level <  1 || Level > 6)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        ERR("Invalid Level!\n");
+        goto Exit;
+    }
+
+    if (pEnvironment)
+    {
+        // Convert pEnvironment to a Unicode string pwszEnvironment.
+        cch = strlen(pEnvironment);
+
+        pwszEnvironment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!pwszEnvironment)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
+            goto Exit;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, pwszEnvironment, cch + 1);
+    }
+
+    bReturnValue = GetPrinterDriverW(hPrinter, pwszEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    TRACE("*pcbNeeded is '%d' and bReturnValue is '%d' and GetLastError is '%ld'.\n", *pcbNeeded, bReturnValue, GetLastError());
+
+    if (pwszEnvironment)
+    {
+        HeapFree(hProcessHeap, 0, pwszEnvironment);
+    }
+
+    if (!bReturnValue)
+    {
+        TRACE("GetPrinterDriverW failed!\n");
+        goto Exit;
+    }
+
+    // Do Unicode to ANSI conversions for strings based on Level
+    switch (Level)
+    {
+        case 1:
+        {
+            if (!UnicodeToAnsiInPlace(pdi1w->pName))
+                goto Exit;
+
+            break;
+        }
+
+        case 2:
+        {
+            if (!UnicodeToAnsiInPlace(pdi2w->pName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi2w->pEnvironment))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi2w->pDriverPath))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi2w->pDataFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi2w->pConfigFile))
+                goto Exit;
+
+            break;
+        }
+
+        case 3:
+        {
+            if (!UnicodeToAnsiInPlace(pdi3w->pName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pEnvironment))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pDriverPath))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pDataFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pConfigFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pHelpFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pDependentFiles))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi3w->pMonitorName))
+                goto Exit;
+ 
+            if (!UnicodeToAnsiInPlace(pdi3w->pDefaultDataType))
+                goto Exit;
+
+            break;
+        }
+
+        case 4:
+        {
+            if (!UnicodeToAnsiInPlace(pdi4w->pName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pEnvironment))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pDriverPath))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pDataFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pConfigFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pHelpFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pDependentFiles))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pMonitorName))
+                goto Exit;
+ 
+            if (!UnicodeToAnsiInPlace(pdi4w->pDefaultDataType))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi4w->pszzPreviousNames))
+                goto Exit;
+
+            break;
+        }
+
+        case 5:
+        {
+            if (!UnicodeToAnsiInPlace(pdi5w->pName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi5w->pEnvironment))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi5w->pDriverPath))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi5w->pDataFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi5w->pConfigFile))
+                goto Exit;
+
+            break;
+        }
+
+        case 6:
+        {
+            if (!UnicodeToAnsiInPlace(pdi6w->pName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pEnvironment))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pDriverPath))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pDataFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pConfigFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pHelpFile))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pDependentFiles))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pMonitorName))
+                goto Exit;
+ 
+            if (!UnicodeToAnsiInPlace(pdi6w->pDefaultDataType))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pszzPreviousNames))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pszMfgName))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pszOEMUrl))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pszHardwareID))
+                goto Exit;
+
+            if (!UnicodeToAnsiInPlace(pdi6w->pszProvider))
+                goto Exit;
+        }
+    }
+
+    bReturnValue = TRUE;
+
+Exit:
+
+    return bReturnValue;
 }
 
 BOOL WINAPI
