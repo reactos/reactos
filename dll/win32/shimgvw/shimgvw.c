@@ -18,12 +18,14 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <windowsx.h>
 #include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <gdiplus.h>
 #include <tchar.h>
+#include <shlobj.h>
 #include <strsafe.h>
 #include <shlwapi.h>
 
@@ -303,6 +305,9 @@ static void pLoadImage(LPWSTR szOpenFileName)
         return;
     }
     Anime_LoadInfo();
+
+    if (szOpenFileName && szOpenFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
 
     /* reset zoom */
     ResetZoom();
