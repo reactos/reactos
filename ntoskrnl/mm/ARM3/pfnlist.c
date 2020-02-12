@@ -611,7 +611,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     PMMCOLOR_TABLES ColorTable;
 
     /* Make sure the page index is valid */
-    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT((PageFrameIndex != 0) &&
            (PageFrameIndex <= MmHighestPhysicalPage) &&
            (PageFrameIndex >= MmLowestPhysicalPage));

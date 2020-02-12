@@ -533,6 +533,7 @@ MiAddDescriptorToDatabase(
     TYPE_OF_MEMORY MemoryType)
 {
     PMMPFN Pfn;
+    KIRQL OldIrql;
 
     ASSERT(!MiIsMemoryTypeInvisible(MemoryType));
 
@@ -541,6 +542,9 @@ MiAddDescriptorToDatabase(
     {
         /* Get the last pfn of this descriptor. Note we loop backwards */
         Pfn = &MmPfnDatabase[BasePage + PageCount - 1];
+
+        /* Lock the PFN Database */
+        OldIrql = MiAcquirePfnLock();
 
         /* Loop all pages */
         while (PageCount--)
@@ -552,6 +556,9 @@ MiAddDescriptorToDatabase(
             /* Go to the previous page */
             Pfn--;
         }
+
+        /* Release PFN database */
+        MiReleasePfnLock(OldIrql);
     }
     else if (MemoryType == LoaderXIPRom)
     {
@@ -668,8 +675,6 @@ NTAPI
 INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    KIRQL OldIrql;
-
     ASSERT(MxPfnAllocation != 0);
 
     /* Set some hardcoded addresses */
@@ -693,9 +698,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     MiBuildSystemPteSpace();
 
-    /* Need to be at DISPATCH_LEVEL for MiInsertPageInFreeList */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
     /* Map the PFN database pages */
     MiBuildPfnDatabase(LoaderBlock);
 
@@ -705,15 +707,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* PFNs are initialized now! */
     MiPfnsInitialized = TRUE;
 
-    //KeLowerIrql(OldIrql);
-
-    /* Need to be at DISPATCH_LEVEL for InitializePool */
-    //KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
     /* Initialize the nonpaged pool */
     InitializePool(NonPagedPool, 0);
-
-    KeLowerIrql(OldIrql);
 
     /* Initialize the balancer */
     MmInitializeBalancer((ULONG)MmAvailablePages, 0);
