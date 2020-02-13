@@ -45,6 +45,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 WINE_DECLARE_DEBUG_CHANNEL(pidl);
 
+#ifdef __REACTOS__
+#include <comctl32_undoc.h>
+#else
 /* FIXME: !!! move CREATEMRULIST and flags to header file !!! */
 /*        !!! it is in both here and comctl32undoc.c      !!! */
 typedef struct tagCREATEMRULIST
@@ -67,7 +70,7 @@ extern VOID WINAPI FreeMRUList(HANDLE hMRUList);
 extern INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
-
+#endif
 
 /*************************************************************************
  * ParseFieldA					[internal]
@@ -684,10 +687,6 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 }
 #endif
 
-#ifdef __REACTOS__
-#define NO_MRU_IMPORTS
-#include <comctl32_undoc.h>
-#endif
 /*************************************************************************
  * SHAddToRecentDocs				[SHELL32.@]
  *
@@ -720,28 +719,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     IShellLinkW *psl = NULL;
     HRESULT hr;
     IPersistFile *pPf = NULL;
-    HWND hwnd = NULL;
-    HMODULE hComCtl32 = GetModuleHandleW(L"comctl32.dll");
-    FN_CreateMRUListW pCreateMRUListW;
-    FN_AddMRUData pAddMRUData;
-    FN_FreeMRUList pFreeMRUList;
     BYTE Buffer[128];
     INT cbBuffer;
 
     TRACE("%04x %p\n", uFlags, pv);
-
-#define GET_PROC(hComCtl32, fn) p##fn = (FN_##fn)GetProcAddress((hComCtl32), (LPSTR)I_##fn)
-    GET_PROC(hComCtl32, CreateMRUListW);
-    GET_PROC(hComCtl32, AddMRUData);
-    GET_PROC(hComCtl32, FreeMRUList);
-    if (!pCreateMRUListW || !pAddMRUData || !pFreeMRUList)
-    {
-        ERR("ComCtl32 %p has no MRU functions\n", hComCtl32);
-        return;
-    }
-#define CreateMRUListW (*pCreateMRUListW)
-#define AddMRUData (*pAddMRUData)
-#define FreeMRUList (*pFreeMRUList)
 
     /* check policy */
     ret = SHADD_get_policy("NoRecentDocsHistory", &type, data, &datalen);
@@ -784,7 +765,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     /* get recent folder */
-    if (!SHGetSpecialFolderPathW(hwnd, szLinkDir, CSIDL_RECENT, FALSE))
+    if (!SHGetSpecialFolderPathW(NULL, szLinkDir, CSIDL_RECENT, FALSE))
     {
         ERR("serious issues 1\n");
         return;
@@ -1099,30 +1080,6 @@ Quit:
     }
 
     TRACE("full document name %s\n", debugstr_a(doc_name));
-
-#ifdef __REACTOS__
-    /* check if file is a shortcut */
-    ext = strrchr(doc_name, '.');
-    if (!lstrcmpiA(ext, ".lnk"))
-    {
-        WCHAR doc_nameW[MAX_PATH];
-        IShellLinkA* ShellLink;
-        int nLength = MultiByteToWideChar(CP_ACP, 0, doc_name, -1, doc_nameW, MAX_PATH);
-        if (nLength == 0)
-            return;
-
-        IShellLink_ConstructFromPath(doc_nameW, &IID_IShellLinkA, (LPVOID*)&ShellLink);
-        IShellLinkA_GetPath(ShellLink, doc_name, MAX_PATH, NULL, 0);
-        IShellLinkA_Release(ShellLink);
-    }
-
-    ext = strrchr(doc_name, '.');
-    if (!lstrcmpiA(ext, ".exe"))
-    {
-        /* executables are not added */
-        return;
-    }
-#endif
 
     PathStripPathA(doc_name);
     TRACE("stripped document name %s\n", debugstr_a(doc_name));
