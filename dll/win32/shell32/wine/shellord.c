@@ -600,38 +600,57 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
 static INT CALLBACK SHADD_compare_mru(LPCVOID data1, LPCVOID data2, DWORD cbData)
 {
 #ifdef __REACTOS__
-    return lstrcmpiW(data1, data2);
+    LPCWSTR psz1, psz2;
+    INT iCmp = lstrcmpiW(data1, data2);
+    if (iCmp != 0)
+        return iCmp;
+    psz1 = data1;
+    psz2 = data2;
+    psz1 += lstrlenW(psz1) + 1;
+    psz2 += lstrlenW(psz2) + 1;
+    return lstrcmpiW(psz1, psz2);
 #else
     return lstrcmpiA(data1, data2);
 #endif
 }
 
 #ifdef __REACTOS__
-static INT
-SHADD_add_mru_item(HANDLE hMRU, LPCWSTR pszTargetTitle, LPCWSTR pszLinkTitle,
-                   LPBYTE pbBuffer, INT *pcbBuffer)
+static BOOL
+DoStoreMRUData(LPBYTE pbBuffer, LPDWORD pcbBuffer,
+               LPCWSTR pszTargetTitle, LPCWSTR pszTargetPath, LPCWSTR pszLinkTitle)
 {
     /* FIXME: Make me compatible */
-    INT ib = 0, cb;
+    DWORD ib = 0, cb;
     INT cchTargetTitle = lstrlenW(pszTargetTitle);
+    INT cchTargetPath = lstrlenW(pszTargetPath);
     INT cchLinkTitle = lstrlenW(pszLinkTitle);
+
+    cb = (cchTargetTitle + 1 + cchTargetPath + 1 + cchLinkTitle + 2) * sizeof(WCHAR);
+    if (cb > *pcbBuffer)
+       return FALSE;
 
     ZeroMemory(pbBuffer, *pcbBuffer);
 
     cb = (cchTargetTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-        return -2;
+       return FALSE;
     CopyMemory(&pbBuffer[ib], pszTargetTitle, cb);
+    ib += cb;
+
+    cb = (cchTargetPath + 1) * sizeof(WCHAR);
+    if (ib + cb > *pcbBuffer)
+       return FALSE;
+    CopyMemory(&pbBuffer[ib], pszTargetPath, cb);
     ib += cb;
 
     cb = (cchLinkTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-        return -3;
+       return FALSE;
     CopyMemory(&pbBuffer[ib], pszLinkTitle, cb);
     ib += cb;
 
     *pcbBuffer = ib;
-    return AddMRUData(hMRU, pbBuffer, *pcbBuffer);
+    return TRUE;
 }
 #else
 /*************************************************************************
@@ -707,8 +726,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 #ifdef __REACTOS__
     static const WCHAR szExplorerKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer";
     INT ret;
-    WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[128], szData[1280];
-    DWORD data[64], datalen, type;
+    WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[128];
+    DWORD cbBuffer, data[64], datalen, type;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
     HKEY hExplorerKey;
@@ -719,8 +738,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     IShellLinkW *psl = NULL;
     HRESULT hr;
     IPersistFile *pPf = NULL;
-    BYTE Buffer[128];
-    INT cbBuffer;
+    BYTE Buffer[(MAX_PATH + 64) * sizeof(WCHAR)];
 
     TRACE("%04x %p\n", uFlags, pv);
 
@@ -809,9 +827,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         return;
     }
 
-    if (szTargetPath[0] == 0)
+    if (szTargetPath[0] == 0 || !PathFileExistsW(szTargetPath) ||
+        PathIsDirectoryW(szTargetPath))
     {
-        /* path is empty */
+        /* path is not normal file */
         RegCloseKey(hExplorerKey);
         return;
     }
@@ -846,9 +865,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         lstrcpynW(szTargetPath, szPath, ARRAYSIZE(szTargetPath));
         pchDotExt = PathFindExtensionW(szTargetPath);
 
-        if (++ret >= 16)
+        if (++ret >= 8)
         {
-            ERR("Shortcut loop?\n");
+            ERR("Link loop?\n");
             RegCloseKey(hExplorerKey);
             return;
         }
@@ -872,11 +891,20 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     lstrcatW(szLinkFile, L".lnk");
     pchLinkTitle = PathFindFileNameW(szLinkFile);
 
-    lstrcpynW(szData, pchTargetTitle, ARRAYSIZE(szData));
-
     /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
 
-    mru.uMax = 64;
+    /* store MRU data */
+    cbBuffer = sizeof(Buffer);
+    ret = DoStoreMRUData(Buffer, &cbBuffer, pchTargetTitle, szTargetPath, pchLinkTitle);
+    if (!ret)
+    {
+        ERR("DoStoreMRUData failed: %d\n", ret);
+        RegCloseKey(hExplorerKey);
+        return;
+    }
+
+    /* create MRU list */
+    mru.uMax = 16;
     mru.fFlags = MRU_BINARY | MRU_CACHEWRITE;
     mru.hKey = hExplorerKey;
     mru.lpszSubKey = L"RecentDocs";
@@ -889,14 +917,35 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         return;
     }
 
-    cbBuffer = sizeof(Buffer);
-    ret = SHADD_add_mru_item(hMRUList, pchTargetTitle, pchLinkTitle,
-                             Buffer, &cbBuffer);
+    /* already exists? */
+    ret = FindMRUData(hMRUList, Buffer, cbBuffer, NULL);
+    if (ret >= 0)
+    {
+        /* Just touch for speed */
+        HANDLE hFile;
+        hFile = CreateFileW(szLinkFile, GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(hFile);
+            TRACE("File '%S' already exists.\n", szLinkFile);
+            RegCloseKey(hExplorerKey);
+            return;
+        }
+    }
+
+    /* add MRU data */
+    ret = AddMRUData(hMRUList, Buffer, cbBuffer);
     if (ret < 0)
     {
-        ERR("SHADD_add_mru_item failed: %d\n", ret);
+        ERR("AddMRUData failed: %d\n", ret);
+        FreeMRUList(hMRUList);
+        RegCloseKey(hExplorerKey);
+        return;
     }
+
     FreeMRUList(hMRUList);
+
     RegCloseKey(hExplorerKey);
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
