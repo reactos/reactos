@@ -422,7 +422,8 @@ LsaSpDeleteContext(
 {
     fdTRACE("LsaSpDeleteContext(%p)\n", ContextHandle);
 
-    NtlmDereferenceContext(ContextHandle);
+    /* windows doesnt validate the handle too ... should we? */
+    NtlmDereferenceContext((PNTLMSSP_CONTEXT_HDR)ContextHandle);
 
     return STATUS_SUCCESS;
 }

@@ -86,20 +86,19 @@ NtlmReferenceContextCli(IN ULONG_PTR Handle)
     ASSERT(!c->isServer);
     return (PNTLMSSP_CONTEXT_CLI)c;
 }
-PNTLMSSP_CONTEXT_MSG
-NtlmReferenceContextMsg(
-    IN ULONG_PTR Handle,
+
+VOID
+NtlmGetContextMsgKeys(
+    IN PNTLMSSP_CONTEXT_HDR Context,
     IN BOOL isSending,
     OUT PULONG pNegFlg,
     OUT prc4_key* pSealHandle,
     OUT PBYTE* pSignKey,
     OUT PULONG* pSeqNum)
 {
-    PNTLMSSP_CONTEXT_HDR c;
-    c = NtlmReferenceContextHdr(Handle);
-    if (c->isServer)
+    if (Context->isServer)
     {
-        PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)c;
+        PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)Context;
         if (pNegFlg)
             *pNegFlg = csvr->cli_NegFlg;
         if (isSending)
@@ -114,11 +113,10 @@ NtlmReferenceContextMsg(
             *pSignKey    = (PBYTE)&csvr->cli_msg.ClientSigningKey;
             *pSeqNum     = &csvr->cli_msg.ClientSeqNum;
         }
-        return &csvr->cli_msg;
     }
     else
     {
-        PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)c;
+        PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)Context;
         if (pNegFlg)
             *pNegFlg = ccli->NegFlg;
         if (isSending)
@@ -133,52 +131,48 @@ NtlmReferenceContextMsg(
             *pSignKey    = (PBYTE)&ccli->msg.ServerSigningKey;
             *pSeqNum     = &ccli->msg.ServerSeqNum;
         }
-        return &ccli->msg;
     }
 }
 
 
 VOID
 NtlmDereferenceContext(
-    IN LSA_SEC_HANDLE ContextHandle)
+    IN PNTLMSSP_CONTEXT_HDR Context)
 {
-    PNTLMSSP_CONTEXT_HDR context;
     EnterCriticalSection(&ContextCritSect);
 
-    context = (PNTLMSSP_CONTEXT_HDR)ContextHandle;
-
     /* sanity */
-    ASSERT(context);
-    TRACE("%p refcount %lu\n",context, context->RefCount);
-    ASSERT(context->RefCount >= 1);
+    ASSERT(Context);
+    TRACE("%p refcount %lu\n", Context, Context->RefCount);
+    ASSERT(Context->RefCount >= 1);
 
     /* decrement reference */
-    context->RefCount--;
+    Context->RefCount--;
 
     /* check for object rundown */
-    if (context->RefCount == 0)
+    if (Context->RefCount == 0)
     {
-        TRACE("Deleting context %p\n",context);
+        TRACE("Deleting context %p\n", Context);
 
         /* dereference credential */
-        if (context->isServer)
+        if (Context->isServer)
         {
-            PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)context;
+            PNTLMSSP_CONTEXT_SVR csvr = (PNTLMSSP_CONTEXT_SVR)Context;
             if(csvr->Credential)
                 NtlmDereferenceCredential((ULONG_PTR)csvr->Credential);
         }
         else
         {
-            PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)context;
+            PNTLMSSP_CONTEXT_CLI ccli = (PNTLMSSP_CONTEXT_CLI)Context;
             if(ccli->Credential)
                 NtlmDereferenceCredential((ULONG_PTR)ccli->Credential);
         }
 
         /* remove from list */
-        RemoveEntryList(&context->Entry);
+        RemoveEntryList(&Context->Entry);
 
         /* delete object */
-        NtlmFree(context, FALSE);
+        NtlmFree(Context, FALSE);
     }
 
     LeaveCriticalSection(&ContextCritSect);
@@ -197,7 +191,7 @@ NtlmContextTerminate(VOID)
                                     NTLMSSP_CONTEXT_HDR,
                                     Entry);
 
-        NtlmDereferenceContext((ULONG_PTR)Context);
+        NtlmDereferenceContext(Context);
     }
 
     LeaveCriticalSection(&ContextCritSect);
@@ -427,7 +421,7 @@ CliCreateContext(
 
 fail:
     /* free resources */
-    NtlmDereferenceContext((ULONG_PTR)context);
+    NtlmDereferenceContext(&context->hdr);
     return ret;
 }
 
@@ -474,7 +468,7 @@ MapSecurityContext(
 
     RtlCopyMemory(MappedContext->pvBuffer, ContextHdr, ContextSize);
 
-    NtlmDereferenceContext(ContextHandle);
+    NtlmDereferenceContext(ContextHdr);
 
     return SEC_E_OK;
 }
@@ -622,7 +616,7 @@ NtlmInitializeSecurityContext(
 fail:
     /* free resources */
     if(newContext)
-        NtlmDereferenceContext((ULONG_PTR)newContext);
+        NtlmDereferenceContext(&newContext->hdr);
 
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
     {

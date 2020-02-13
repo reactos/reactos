@@ -307,14 +307,6 @@ PNTLMSSP_CONTEXT_HDR
 NtlmReferenceContextHdr(
     IN LSA_SEC_HANDLE ContextHandle);
 
-PNTLMSSP_CONTEXT_MSG
-NtlmReferenceContextMsg(
-    IN ULONG_PTR Handle,
-    IN BOOL isSending,
-    OUT PULONG pNegFlg,
-    OUT prc4_key* pSealHandle,
-    OUT PBYTE* pSignKey,
-    OUT PULONG* pSeqNum);
 PNTLMSSP_CONTEXT_CLI
 NtlmReferenceContextCli(IN ULONG_PTR Handle);
 PNTLMSSP_CONTEXT_SVR
@@ -322,7 +314,7 @@ NtlmReferenceContextSvr(IN ULONG_PTR Handle);
 
 VOID
 NtlmDereferenceContext(
-    IN LSA_SEC_HANDLE ContextHandle);
+    IN PNTLMSSP_CONTEXT_HDR Context);
 
 /* crypt.c */
 BOOL

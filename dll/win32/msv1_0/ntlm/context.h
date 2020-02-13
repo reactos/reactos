@@ -60,4 +60,14 @@ PNTLMSSP_CONTEXT_HDR
 NtlmAllocateContextHdr(
     IN BOOL isServer);
 
+
+VOID
+NtlmGetContextMsgKeys(
+    IN PNTLMSSP_CONTEXT_HDR Context,
+    IN BOOL isSending,
+    OUT PULONG pNegFlg,
+    OUT prc4_key* pSealHandle,
+    OUT PBYTE* pSignKey,
+    OUT PULONG* pSeqNum);
+
 #endif

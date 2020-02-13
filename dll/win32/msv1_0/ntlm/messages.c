@@ -38,7 +38,6 @@ NtlmEncryptMessage(
     PSecBuffer signature_buffer = NULL;
     prc4_key pSealHandle;
     PBYTE pSignKey;
-    //PNTLMSSP_CONTEXT_MSG cli_msg;
     PULONG pSeqNum;
     ULONG index, cli_NegFlg;
 
@@ -53,10 +52,9 @@ NtlmEncryptMessage(
     if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
 
-    /* get context, need to free it later! */
-    /*cli_msg = */NtlmReferenceContextMsg((ULONG_PTR)Context, TRUE,
-                                          &cli_NegFlg, &pSealHandle,
-                                          &pSignKey, &pSeqNum);
+    /* get context msg keys */
+    NtlmGetContextMsgKeys(Context, TRUE, &cli_NegFlg,
+                          &pSealHandle, &pSignKey, &pSeqNum);
     /*if (!ctxMsg->SendSealKey)
     {
         TRACE("context->SendSealKey is NULL\n");
@@ -116,7 +114,6 @@ NtlmEncryptMessage(
     NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
-    NtlmDereferenceContext((ULONG_PTR)Context);
     return ret;
 }
 
@@ -136,7 +133,6 @@ NtlmDecryptMessage(
     PSecBuffer signature_buffer = NULL;
     prc4_key pSealHandle;
     PBYTE pSignKey;
-    //PNTLMSSP_CONTEXT_MSG cli_msg;
     PULONG pSeqNum;
     ULONG index, cli_NegFlg, expectedSignLen;
     NTLMSSP_MESSAGE_SIGNATURE expectedSign;
@@ -150,9 +146,9 @@ NtlmDecryptMessage(
     if (!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
 
-    /* get context, need to free it later! */
-    /*cli_msg = */NtlmReferenceContextMsg((ULONG_PTR)Context, FALSE,
-                                      &cli_NegFlg, &pSealHandle, &pSignKey, &pSeqNum);
+    /* get context msg keys */
+    NtlmGetContextMsgKeys(Context, FALSE, &cli_NegFlg,
+                          &pSealHandle, &pSignKey, &pSeqNum);
     /*if (!ctxMsg->SendSealKey)
     {
         TRACE("context->SendSealKey is NULL\n");
@@ -222,6 +218,5 @@ NtlmDecryptMessage(
     NtlmPrintHexDump(data_buffer->pvBuffer, data_buffer->cbBuffer);
 
 exit:
-    NtlmDereferenceContext((ULONG_PTR)Context);
     return ret;
 }

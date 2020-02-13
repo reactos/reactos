@@ -648,7 +648,7 @@ SvrHandleNegotiateMessage(
 exit:
     if(negoMessage) NtlmFree(negoMessage, FALSE);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
-    if (context) NtlmDereferenceContext((ULONG_PTR)context);
+    if (context) NtlmDereferenceContext(&context->hdr);
     ExtStrFree(&OemDomainName);
     ExtStrFree(&OemWorkstationName);
 
@@ -1122,7 +1122,7 @@ quit:
             (authmessage))
             NtlmFree(authmessage, FALSE);
     }
-    if(context) NtlmDereferenceContext((ULONG_PTR)context);
+    if(context) NtlmDereferenceContext(&context->hdr);
     if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
     ExtStrFree(&NtResponseData);
     ExtStrFree(&ServerName);
@@ -1698,7 +1698,7 @@ SvrHandleAuthenticateMessage(
     ret = SEC_I_COMPLETE_NEEDED;
 
 quit:
-    NtlmDereferenceContext((ULONG_PTR)context);
+    NtlmDereferenceContext(&context->hdr);
     ExtStrFree(&ad.LmChallengeResponse);
     ExtStrFree(&ad.NtChallengeResponse);
     ExtStrFree(&ad.UserName);
