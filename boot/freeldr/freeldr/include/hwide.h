@@ -2,7 +2,7 @@
  * PROJECT:     FreeLoader
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     ATA/ATAPI programmed I/O driver header file.
- * COPYRIGHT:   Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
+ * COPYRIGHT:   Copyright 2019-2020 Dmitry Borisov (di.sean@protonmail.com)
  */
 
 /* GLOBALS ********************************************************************/
