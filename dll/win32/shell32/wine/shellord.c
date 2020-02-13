@@ -751,13 +751,15 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
         case SHARD_PATHA:
-            MultiByteToWideChar(CP_ACP, 0, pv, -1, szTargetPath, ARRAYSIZE(szTargetPath));
+            MultiByteToWideChar(CP_ACP, 0, pv, -1, szLinkDir, ARRAYSIZE(szLinkDir));
+            GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
             break;
         case SHARD_PATHW:
-            lstrcpynW(szTargetPath, pv, ARRAYSIZE(szTargetPath));
+            GetFullPathNameW(pv, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
             break;
         case SHARD_PIDL:
-            SHGetPathFromIDListW(pv, szTargetPath);
+            SHGetPathFromIDListW(pv, szLinkDir);
+            GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
             break;
         default:
             FIXME("Unsupported flags: %u\n", uFlags);
