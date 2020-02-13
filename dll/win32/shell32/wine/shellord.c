@@ -925,8 +925,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
                             FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
+            TRACE("Just touch file '%S'.\n", szLinkFile);
             CloseHandle(hFile);
-            TRACE("File '%S' already exists.\n", szLinkFile);
+            FreeMRUList(hMRUList);
             RegCloseKey(hExplorerKey);
             return;
         }
