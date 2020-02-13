@@ -742,9 +742,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         TRACE("policy value for NoRecentDocsHistory = %08x\n", data[0]);
         /* now test the actual policy value */
         if (data[0] != 0)
-        {
             return;
-        }
     }
 
     /* store to szTargetPath */
@@ -894,15 +892,12 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     cbBuffer = sizeof(Buffer);
     ret = SHADD_add_mru_item(hMRUList, pchTargetTitle, pchLinkTitle,
                              Buffer, &cbBuffer);
-
-    FreeMRUList(hMRUList);
-    RegCloseKey(hExplorerKey);
-
     if (ret == -1)
     {
         ERR("SHADD_add_mru_item failed\n");
-        goto Quit;
     }
+    FreeMRUList(hMRUList);
+    RegCloseKey(hExplorerKey);
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
 
