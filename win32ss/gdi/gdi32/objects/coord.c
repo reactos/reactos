@@ -458,7 +458,7 @@ GetWindowOrgEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -525,7 +525,7 @@ SetViewportExtEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -577,7 +577,7 @@ SetWindowOrgEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -648,7 +648,7 @@ SetWindowExtEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -669,7 +669,16 @@ SetViewportOrgEx(
         /* Do not set LastError here! */
         return FALSE;
     }
-
+    //// HACK : XP+ doesn't do this. See CORE-16656 & CORE-16644.
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+    {
+        if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
+        {
+            NtGdiFlush();
+            pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
+        }
+    }
+    ////
     if (lpPoint)
     {
         lpPoint->x = pdcattr->ptlViewportOrg.x;
