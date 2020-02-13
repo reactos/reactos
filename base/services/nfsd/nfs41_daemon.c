@@ -177,7 +177,7 @@ static bool_t check_for_files()
     }
     else
     {
-        fprintf("GetSystemDirectoryA failed with error %ld\n", GetLastError());
+        eprintf("GetSystemDirectoryA failed with error %ld\n", GetLastError());
         return FALSE;
     }
 
