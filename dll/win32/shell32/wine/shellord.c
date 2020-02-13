@@ -706,7 +706,7 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 {
 #ifdef __REACTOS__
-    static const WCHAR szExplorerKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
+    static const WCHAR szExplorerKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer";
     INT ret;
     WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[128], szData[1280];
     DWORD data[64], datalen, type;
