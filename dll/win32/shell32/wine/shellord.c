@@ -827,18 +827,33 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     /* check if file is a shortcut */
+    ret = 0;
     pchDotExt = PathFindExtensionW(szTargetPath);
     while (lstrcmpiW(pchDotExt, L".lnk") == 0)
     {
         WCHAR szPath[MAX_PATH];
-        IShellLinkW *pShellLink;
+        IShellLinkW *pShellLink = NULL;
 
-        IShellLink_ConstructFromPath(szTargetPath, &IID_IShellLinkW, (LPVOID*)&pShellLink);
+        hr = IShellLink_ConstructFromPath(szTargetPath, &IID_IShellLinkW, (LPVOID*)&pShellLink);
+        if (FAILED(hr))
+        {
+            ERR("IShellLink_ConstructFromPath: 0x%08X\n", hr);
+            RegCloseKey(hExplorerKey);
+            return;
+        }
+
         IShellLinkW_GetPath(pShellLink, szPath, ARRAYSIZE(szPath), NULL, 0);
         IShellLinkW_Release(pShellLink);
 
         lstrcpynW(szTargetPath, szPath, ARRAYSIZE(szTargetPath));
         pchDotExt = PathFindExtensionW(szTargetPath);
+
+        if (++ret >= 16)
+        {
+            ERR("Shortcut loop?\n");
+            RegCloseKey(hExplorerKey);
+            return;
+        }
     }
     if (!lstrcmpiW(pchDotExt, L".exe"))
     {
