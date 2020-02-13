@@ -877,7 +877,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
 
     mru.uMax = 64;
-    mru.fFlags = MRU_BINARY;
+    mru.fFlags = MRU_BINARY | MRU_CACHEWRITE;
     mru.hKey = hExplorerKey;
     mru.lpszSubKey = L"RecentDocs";
     mru.lpfnCompare = (MRUCMPPROCW)SHADD_compare_mru;
