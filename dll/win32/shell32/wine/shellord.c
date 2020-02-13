@@ -583,7 +583,6 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
 }
 
 
-#ifndef __REACTOS__
 /*************************************************************************
  * SHADD_compare_mru - helper function for SHAddToRecentDocs
  *
@@ -597,9 +596,41 @@ static INT SHADD_get_policy(LPCSTR policy, LPDWORD type, LPVOID buffer, LPDWORD 
  */
 static INT CALLBACK SHADD_compare_mru(LPCVOID data1, LPCVOID data2, DWORD cbData)
 {
+#ifdef __REACTOS__
+    return lstrcmpiW(data1, data2);
+#else
     return lstrcmpiA(data1, data2);
+#endif
 }
 
+#ifdef __REACTOS__
+static INT
+SHADD_add_mru_item(HANDLE hMRU, LPCWSTR pszTargetTitle, LPCWSTR pszLinkTitle,
+                   LPBYTE pbBuffer, INT *pcbBuffer)
+{
+    /* FIXME: Make me compatible */
+    INT ib = 0, cb;
+    INT cchTargetTitle = lstrlenW(pszTargetTitle);
+    INT cchLinkTitle = lstrlenW(pszLinkTitle);
+
+    ZeroMemory(pbBuffer, *pcbBuffer);
+
+    cb = (cchTargetTitle + 1) * sizeof(WCHAR);
+    if (ib + cb > *pcbBuffer)
+        return -1;
+    CopyMemory(&pbBuffer[ib], pszTargetTitle, cb);
+    ib += cb;
+
+    cb = (cchLinkTitle + 1) * sizeof(WCHAR);
+    if (ib + cb > *pcbBuffer)
+        return -1;
+    CopyMemory(&pbBuffer[ib], pszLinkTitle, cb);
+    ib += cb;
+
+    *pcbBuffer = ib;
+    return AddMRUData(hMRU, pbBuffer, *pcbBuffer);
+}
+#else
 /*************************************************************************
  * SHADD_create_add_mru_data - helper function for SHAddToRecentDocs
  *
@@ -683,7 +714,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     WIN32_FIND_DATAW find;
     HKEY hExplorerKey;
     LONG error;
-    LPWSTR pchDotExt, pchTargetTitle;
+    LPWSTR pchDotExt, pchTargetTitle, pchLinkTitle;
     MRUINFOW mru = {sizeof(mru)};
     HANDLE hMRUList;
     IShellLinkW *psl = NULL;
@@ -692,22 +723,24 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     HWND hwnd = NULL;
     HMODULE hComCtl32 = GetModuleHandleW(L"comctl32.dll");
     FN_CreateMRUListW pCreateMRUListW;
-    FN_AddMRUStringW pAddMRUStringW;
+    FN_AddMRUData pAddMRUData;
     FN_FreeMRUList pFreeMRUList;
+    BYTE Buffer[128];
+    INT cbBuffer;
 
     TRACE("%04x %p\n", uFlags, pv);
 
-#define GET_PROC(hComCtl32, fn) p##fn = (FN_##fn)GetProcAddress((hComCtl32), I_##fn)
+#define GET_PROC(hComCtl32, fn) p##fn = (FN_##fn)GetProcAddress((hComCtl32), (LPSTR)I_##fn)
     GET_PROC(hComCtl32, CreateMRUListW);
-    GET_PROC(hComCtl32, AddMRUStringW);
+    GET_PROC(hComCtl32, AddMRUData);
     GET_PROC(hComCtl32, FreeMRUList);
-    if (!pCreateMRUListW || !pAddMRUStringW || !pFreeMRUList)
+    if (!pCreateMRUListW || !pAddMRUData || !pFreeMRUList)
     {
         ERR("ComCtl32 %p has no MRU functions\n", hComCtl32);
         return;
     }
 #define CreateMRUListW (*pCreateMRUListW)
-#define AddMRUStringW (*pAddMRUStringW)
+#define AddMRUData (*pAddMRUData)
 #define FreeMRUList (*pFreeMRUList)
 
     /* check policy */
@@ -838,6 +871,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     lstrcpynW(szLinkFile, szLinkDir, ARRAYSIZE(szLinkFile));
     PathAppendW(szLinkFile, pchTargetTitle);
     lstrcatW(szLinkFile, L".lnk");
+    pchLinkTitle = PathFindFileNameW(szLinkFile);
 
     lstrcpynW(szData, pchTargetTitle, ARRAYSIZE(szData));
 
@@ -847,6 +881,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     mru.fFlags = MRU_BINARY;
     mru.hKey = hExplorerKey;
     mru.lpszSubKey = L"RecentDocs";
+    mru.lpfnCompare = (MRUCMPPROCW)SHADD_compare_mru;
     hMRUList = CreateMRUListW(&mru);
     if (!hMRUList)
     {
@@ -854,10 +889,19 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         RegCloseKey(hExplorerKey);
         return;
     }
-    AddMRUStringW(hMRUList, szData); /* FIXME: Make me compatible */
-    FreeMRUList(hMRUList);
 
+    cbBuffer = sizeof(Buffer);
+    ret = SHADD_add_mru_item(hMRUList, pchTargetTitle, pchLinkTitle,
+                             Buffer, &cbBuffer);
+
+    FreeMRUList(hMRUList);
     RegCloseKey(hExplorerKey);
+
+    if (ret == -1)
+    {
+        ERR("SHADD_add_mru_item failed\n");
+        goto Quit;
+    }
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
 
@@ -901,7 +945,6 @@ Quit:
     if (psl)
         IShellLinkW_Release(psl);
     CoUninitialize();
-    RegCloseKey(hExplorerKey);
 #else
 /* If list is a string list lpfnCompare has the following prototype
  * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
