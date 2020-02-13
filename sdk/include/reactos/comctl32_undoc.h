@@ -32,8 +32,11 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+// MRUINFOA.lpfnCompare for MRU_STRING
 typedef INT (CALLBACK *MRUCMPPROCA)(LPCSTR, LPCSTR);
+// MRUINFOW.lpfnCompare for MRU_STRING
 typedef INT (CALLBACK *MRUCMPPROCW)(LPCWSTR, LPCWSTR);
+// MRUINFO.lpfnCompare for MRU_BINARY
 typedef INT (CALLBACK *MRUBINARYCMPPROC)(LPCVOID, LPCVOID, DWORD);
 
 typedef struct _MRUINFOA
@@ -135,7 +138,7 @@ typedef INT (WINAPI *FN_FreeMRUList)(HANDLE);
 #define I_DelMRUString 156
 #define I_FreeMRUList 152
 
-// #define GET_PROC(hComCtl32, fn) fn = (FN_##fn)GetProcAddress((hComCtl32), I_##fn)
+// #define GET_PROC(hComCtl32, fn) fn = (FN_##fn)GetProcAddress((hComCtl32), (LPSTR)I_##fn)
 
 #ifdef __cplusplus
 } /* extern "C" */
