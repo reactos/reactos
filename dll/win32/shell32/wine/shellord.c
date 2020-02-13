@@ -654,29 +654,8 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 #endif
 
 #ifdef __REACTOS__
-typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
-typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
-typedef struct tagMRUINFOW
-{
-    DWORD   cbSize;
-    UINT    uMax;
-    UINT    fFlags;
-    HKEY    hKey;
-    LPWSTR  lpszSubKey;
-    union
-    {
-        MRUStringCmpFnW string_cmpfn;
-        MRUBinaryCmpFn  binary_cmpfn;
-    } u;
-} MRUINFOW, *LPMRUINFOW;
-/* MRUINFO.fFlags */
-#define MRU_STRING     0 /* list will contain strings */
-#define MRU_BINARY     1 /* list will contain binary data */
-#define MRU_CACHEWRITE 2 /* only save list order to reg. is FreeMRUList */
-
-typedef HANDLE (WINAPI *FN_CreateMRUListW)(LPMRUINFOW);
-typedef int (WINAPI *FN_AddMRUStringW)(HANDLE, LPCWSTR);
-typedef int (WINAPI *FN_FreeMRUList)(HANDLE);
+#define NO_MRU_IMPORTS
+#include <comctl32_undoc.h>
 #endif
 /*************************************************************************
  * SHAddToRecentDocs				[SHELL32.@]
@@ -718,16 +697,15 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
     TRACE("%04x %p\n", uFlags, pv);
 
-    pCreateMRUListW = (FN_CreateMRUListW)GetProcAddress(hComCtl32, (LPSTR)400);
-    pAddMRUStringW = (FN_AddMRUStringW)GetProcAddress(hComCtl32, (LPSTR)401);
-    pFreeMRUList = (FN_FreeMRUList)GetProcAddress(hComCtl32, (LPSTR)152);
-
+#define GET_PROC(hComCtl32, fn) p##fn = (FN_##fn)GetProcAddress((hComCtl32), I_##fn)
+    GET_PROC(hComCtl32, CreateMRUListW);
+    GET_PROC(hComCtl32, AddMRUStringW);
+    GET_PROC(hComCtl32, FreeMRUList);
     if (!pCreateMRUListW || !pAddMRUStringW || !pFreeMRUList)
     {
         ERR("ComCtl32 %p has no MRU functions\n", hComCtl32);
         return;
     }
-
 #define CreateMRUListW (*pCreateMRUListW)
 #define AddMRUStringW (*pAddMRUStringW)
 #define FreeMRUList (*pFreeMRUList)
