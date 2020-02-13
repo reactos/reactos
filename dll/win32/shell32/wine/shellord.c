@@ -733,11 +733,11 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     HKEY hExplorerKey;
     LONG error;
     LPWSTR pchDotExt, pchTargetTitle, pchLinkTitle;
-    MRUINFOW mru = {sizeof(mru)};
+    MRUINFOW mru;
     HANDLE hMRUList;
-    IShellLinkW *psl = NULL;
+    IShellLinkW *psl;
+    IPersistFile *pPf;
     HRESULT hr;
-    IPersistFile *pPf = NULL;
     BYTE Buffer[(MAX_PATH + 64) * sizeof(WCHAR)];
 
     TRACE("%04x %p\n", uFlags, pv);
@@ -904,6 +904,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     /* create MRU list */
+    mru.cbSize = sizeof(mru);
     mru.uMax = 16;
     mru.fFlags = MRU_BINARY | MRU_CACHEWRITE;
     mru.hKey = hExplorerKey;
@@ -949,6 +950,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     RegCloseKey(hExplorerKey);
 
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
+
+    psl = NULL;
+    pPf = NULL;
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IShellLinkW, (LPVOID *)&psl);
