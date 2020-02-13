@@ -377,7 +377,7 @@ static void RunShell(client_t *client)
       }
       else
       {
-         StringCchCopyA(cmd_path, ARRAYSIZE(cmd_path), "C:\\ReactOS\\system32\\cmd.exe");
+         ErrorExit("GetSystemDirectoryA failed\n");
       }
    }
 

@@ -381,7 +381,9 @@ static int config_init(
     }
     else
     {
-        StringCchCopyA(config_path, ARRAYSIZE(config_path), "C:\\ReactOS\\system32\\drivers\\etc\\ms-nfs41-idmap.conf");
+        status = GetLastError();
+        eprintf("GetSystemDirectoryA failed with %ld\n", GetLastError());
+        goto out;
     }
 #endif
 
