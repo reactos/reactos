@@ -748,22 +748,25 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     /* store to szTargetPath */
-    switch (uFlags)
+    if (pv)
     {
-        case SHARD_PATHA:
-            MultiByteToWideChar(CP_ACP, 0, pv, -1, szLinkDir, ARRAYSIZE(szLinkDir));
-            GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
-            break;
-        case SHARD_PATHW:
-            GetFullPathNameW(pv, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
-            break;
-        case SHARD_PIDL:
-            SHGetPathFromIDListW(pv, szLinkDir);
-            GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
-            break;
-        default:
-            FIXME("Unsupported flags: %u\n", uFlags);
-            return;
+        switch (uFlags)
+        {
+            case SHARD_PATHA:
+                MultiByteToWideChar(CP_ACP, 0, pv, -1, szLinkDir, ARRAYSIZE(szLinkDir));
+                GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
+                break;
+            case SHARD_PATHW:
+                GetFullPathNameW(pv, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
+                break;
+            case SHARD_PIDL:
+                SHGetPathFromIDListW(pv, szLinkDir);
+                GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
+                break;
+            default:
+                FIXME("Unsupported flags: %u\n", uFlags);
+                return;
+        }
     }
 
     /* get recent folder */
@@ -803,7 +806,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
             FindClose(hFind);
         }
 
-        RegDeleteKeyW(hExplorerKey, L"RecentDocs");
+        SHDeleteKeyW(hExplorerKey, L"RecentDocs");
         RegCloseKey(hExplorerKey);
         return;
     }
