@@ -619,7 +619,6 @@ static BOOL
 DoStoreMRUData(LPBYTE pbBuffer, LPDWORD pcbBuffer,
                LPCWSTR pszTargetTitle, LPCWSTR pszTargetPath, LPCWSTR pszLinkTitle)
 {
-    /* FIXME: Make me compatible */
     DWORD ib = 0, cb;
     INT cchTargetTitle = lstrlenW(pszTargetTitle);
     INT cchTargetPath = lstrlenW(pszTargetPath);
