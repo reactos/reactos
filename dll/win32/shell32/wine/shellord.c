@@ -725,7 +725,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 #ifdef __REACTOS__
     static const WCHAR szExplorerKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer";
     INT ret;
-    WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[128];
+    WCHAR szTargetPath[MAX_PATH], szLinkDir[MAX_PATH], szLinkFile[MAX_PATH], szDescription[80];
+    WCHAR szPath[MAX_PATH];
     DWORD cbBuffer, data[64], datalen, type;
     HANDLE hFind;
     WIN32_FIND_DATAW find;
@@ -847,10 +848,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     pchDotExt = PathFindExtensionW(szTargetPath);
     while (lstrcmpiW(pchDotExt, L".lnk") == 0)
     {
-        WCHAR szPath[MAX_PATH];
-        IShellLinkW *pShellLink = NULL;
-
-        hr = IShellLink_ConstructFromPath(szTargetPath, &IID_IShellLinkW, (LPVOID*)&pShellLink);
+        hr = IShellLink_ConstructFromPath(szTargetPath, &IID_IShellLinkW, (LPVOID*)&psl);
         if (FAILED(hr))
         {
             ERR("IShellLink_ConstructFromPath: 0x%08X\n", hr);
@@ -858,8 +856,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
             return;
         }
 
-        IShellLinkW_GetPath(pShellLink, szPath, ARRAYSIZE(szPath), NULL, 0);
-        IShellLinkW_Release(pShellLink);
+        IShellLinkW_GetPath(psl, szPath, ARRAYSIZE(szPath), NULL, 0);
+        IShellLinkW_Release(psl);
 
         lstrcpynW(szTargetPath, szPath, ARRAYSIZE(szTargetPath));
         pchDotExt = PathFindExtensionW(szTargetPath);
