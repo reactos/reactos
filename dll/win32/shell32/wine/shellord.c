@@ -620,13 +620,13 @@ SHADD_add_mru_item(HANDLE hMRU, LPCWSTR pszTargetTitle, LPCWSTR pszLinkTitle,
 
     cb = (cchTargetTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-        return -1;
+        return -2;
     CopyMemory(&pbBuffer[ib], pszTargetTitle, cb);
     ib += cb;
 
     cb = (cchLinkTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-        return -1;
+        return -3;
     CopyMemory(&pbBuffer[ib], pszLinkTitle, cb);
     ib += cb;
 
@@ -892,9 +892,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     cbBuffer = sizeof(Buffer);
     ret = SHADD_add_mru_item(hMRUList, pchTargetTitle, pchLinkTitle,
                              Buffer, &cbBuffer);
-    if (ret == -1)
+    if (ret < 0)
     {
-        ERR("SHADD_add_mru_item failed\n");
+        ERR("SHADD_add_mru_item failed: %d\n", ret);
     }
     FreeMRUList(hMRUList);
     RegCloseKey(hExplorerKey);
