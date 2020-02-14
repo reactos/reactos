@@ -734,9 +734,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     LONG error;
     LPWSTR pchDotExt, pchTargetTitle, pchLinkTitle;
     MRUINFOW mru;
-    HANDLE hMRUList;
-    IShellLinkW *psl;
-    IPersistFile *pPf;
+    HANDLE hMRUList = NULL;
+    IShellLinkW *psl = NULL;
+    IPersistFile *pPf = NULL;
     HRESULT hr;
     BYTE Buffer[(MAX_PATH + 64) * sizeof(WCHAR)];
 
@@ -764,6 +764,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
     /* store to szTargetPath */
+    szTargetPath[0] = 0;
     if (pv)
     {
         switch (uFlags)
@@ -772,13 +773,16 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
                 MultiByteToWideChar(CP_ACP, 0, pv, -1, szLinkDir, ARRAYSIZE(szLinkDir));
                 GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
                 break;
+
             case SHARD_PATHW:
                 GetFullPathNameW(pv, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
                 break;
+
             case SHARD_PIDL:
                 SHGetPathFromIDListW(pv, szLinkDir);
                 GetFullPathNameW(szLinkDir, ARRAYSIZE(szTargetPath), szTargetPath, NULL);
                 break;
+
             default:
                 FIXME("Unsupported flags: %u\n", uFlags);
                 return;
@@ -794,9 +798,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     TRACE("Users Recent dir %S\n", szLinkDir);
 
     /* open Explorer key */
-    error = RegCreateKeyExW(HKEY_CURRENT_USER, szExplorerKey,
-                            0, NULL, 0, KEY_READ | KEY_WRITE,
-                            NULL, &hExplorerKey, NULL);
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, szExplorerKey, 0, NULL, 0,
+                            KEY_READ | KEY_WRITE, NULL, &hExplorerKey, NULL);
     if (error)
     {
         ERR("Failed to RegCreateKeyExW: 0x%08X\n", error);
@@ -852,12 +855,12 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         if (FAILED(hr))
         {
             ERR("IShellLink_ConstructFromPath: 0x%08X\n", hr);
-            RegCloseKey(hExplorerKey);
-            return;
+            goto Quit;
         }
 
         IShellLinkW_GetPath(psl, szPath, ARRAYSIZE(szPath), NULL, 0);
         IShellLinkW_Release(psl);
+        psl = NULL;
 
         lstrcpynW(szTargetPath, szPath, ARRAYSIZE(szTargetPath));
         pchDotExt = PathFindExtensionW(szTargetPath);
@@ -865,15 +868,13 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         if (++ret >= 8)
         {
             ERR("Link loop?\n");
-            RegCloseKey(hExplorerKey);
-            return;
+            goto Quit;
         }
     }
     if (!lstrcmpiW(pchDotExt, L".exe"))
     {
         /* executables are not added */
-        RegCloseKey(hExplorerKey);
-        return;
+        goto Quit;
     }
 
     /* ***  JOB 0: Build strings *** */
@@ -896,8 +897,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (!ret)
     {
         ERR("DoStoreMRUData failed: %d\n", ret);
-        RegCloseKey(hExplorerKey);
-        return;
+        goto Quit;
     }
 
     /* create MRU list */
@@ -911,8 +911,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (!hMRUList)
     {
         ERR("CreateMRUListW failed\n");
-        RegCloseKey(hExplorerKey);
-        return;
+        goto Quit;
     }
 
     /* already exists? */
@@ -927,9 +926,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
         {
             TRACE("Just touch file '%S'.\n", szLinkFile);
             CloseHandle(hFile);
-            FreeMRUList(hMRUList);
-            RegCloseKey(hExplorerKey);
-            return;
+            goto Quit;
         }
     }
 
@@ -938,19 +935,10 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (ret < 0)
     {
         ERR("AddMRUData failed: %d\n", ret);
-        FreeMRUList(hMRUList);
-        RegCloseKey(hExplorerKey);
-        return;
+        goto Quit;
     }
 
-    FreeMRUList(hMRUList);
-
-    RegCloseKey(hExplorerKey);
-
     /* ***  JOB 2: Create shortcut in user's "Recent" directory  *** */
-
-    psl = NULL;
-    pPf = NULL;
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IShellLinkW, (LPVOID *)&psl);
@@ -987,11 +975,14 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     }
 
 Quit:
+    if (hMRUList)
+        FreeMRUList(hMRUList);
     if (pPf)
         IPersistFile_Release(pPf);
     if (psl)
         IShellLinkW_Release(psl);
     CoUninitialize();
+    RegCloseKey(hExplorerKey);
 #else
 /* If list is a string list lpfnCompare has the following prototype
  * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
