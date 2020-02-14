@@ -114,18 +114,20 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, HINSTANCE hDllInst, WORD idDlg, DLGPROC
 
 typedef enum RESFROM
 {
-    RESFROM_DESK, /* load from desk.cpl */
+    RESFROM_DESK,   /* load from desk.cpl */
     RESFROM_THEMEUI /* load from themeui.dll */
 } RESFROM;
 
-static const struct
+typedef struct _PROPPAGEDATA
 {
     RESFROM src;
     WORD idDlg;
     DLGPROC DlgProc;
     LPFNPSPCALLBACK Callback;
     LPWSTR Name;
-} PropPages[] =
+} PROPPAGEDATA, *PPROPPAGEDATA;
+
+static const PROPPAGEDATA PropPages[] =
 {
     /* { RESFROM_THEMEUI, IDD_THEMES, ThemesPageProc, NULL, L"Themes" }, */ /* TODO: */
     { RESFROM_DESK, IDD_BACKGROUND, BackgroundPageProc, NULL, L"Desktop" },
