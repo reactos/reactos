@@ -590,7 +590,6 @@ NtlmInitializeSecurityContext(
     if (!NT_SUCCESS(ret))
     {
         ERR("failed with %lx\n", ret);
-        __debugbreak();
         goto fail;
     }
 

@@ -376,8 +376,6 @@ LsaSpInitLsaModeContext(
     return status;
 }
 
-ULONG doBreak = 1;
-
 NTSTATUS NTAPI
 LsaSpAcceptLsaModeContext(
     LSA_SEC_HANDLE CredentialHandle,
@@ -397,12 +395,6 @@ LsaSpAcceptLsaModeContext(
           CredentialHandle, ContextHandle, InputBuffer, ContextRequirements,
           TargetDataRep, NewContextHandle, OutputBuffer,
           ContextAttributes, ExpirationTime, MappedContext, ContextData);
-
-    if (doBreak == 1)
-    {
-        __debugbreak();
-        doBreak = 0;
-    }
 
     //FIXME: we mix SECURITY_STATUS / NTSTATUS
     Status = NtlmAcceptSecurityContext(
