@@ -34,8 +34,10 @@ START_TEST(ShellExecuteW)
     }
     if (!GetEnvironmentVariableW(L"SystemDrive", SysDrive, _countof(SysDrive)))
     {
-        skip("GetEnvironmentVariableW('SystemDrive') failed\n");
-        return;
+        trace("GetEnvironmentVariableW('SystemDrive') failed\n");
+        SysDrive[0] = SysDir[0];
+        SysDrive[1] = L':';
+        SysDrive[2] = 0;
     }
     PathAddBackslashW(SysDrive);
 
