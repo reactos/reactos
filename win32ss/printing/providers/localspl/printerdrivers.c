@@ -3,9 +3,37 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions for printer driver information
  * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
+#include <strsafe.h>
+
+static WCHAR wszLocalSplFile[MAX_PATH] = L"";
+static WCHAR wszPrintUiFile[MAX_PATH] = L"";
+
+static BOOL
+DoInitPrinterDriversInternal(void)
+{
+    WCHAR szSysDir[MAX_PATH];
+
+    if (wszLocalSplFile[0] && wszPrintUiFile[0])
+        return TRUE;
+
+    if (!GetSystemDirectoryW(szSysDir, _countof(szSysDir)))
+    {
+        ERR("GetSystemDirectoryW failed\n");
+        return FALSE;
+    }
+
+    StringCbCopyW(wszLocalSplFile, sizeof(wszLocalSplFile), szSysDir);
+    StringCbCatW(wszLocalSplFile, sizeof(wszLocalSplFile), L"\\localspl.dll");
+
+    StringCbCopyW(wszPrintUiFile, sizeof(wszPrintUiFile), szSysDir);
+    StringCbCatW(wszPrintUiFile, sizeof(wszPrintUiFile), L"\\printui.dll");
+
+    return TRUE;
+}
 
 // Local Constants
 static DWORD dwDriverInfo1Offsets[] = {
@@ -91,7 +119,6 @@ _LocalGetPrinterDriverLevel1(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_1W* ppD
         return;
     }
 
-
     // Finally copy the structure and advance to the next one in the output buffer.
     *ppDriverInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppDriverInfo), dwDriverInfo1Offsets, *ppDriverInfoEnd);
     (*ppDriverInfo)++;
@@ -103,12 +130,11 @@ _LocalGetPrinterDriverLevel2(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_2W* ppD
     DWORD n;
     PCWSTR pwszStrings[5];
 
-    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath
-    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile
-    pwszStrings[4] = L"c:\\reactos\\system32\\localspl.dll";  // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszLocalSplFile;        // pConfigFile
 
     // Calculate the string lengths.
     if (!ppDriverInfo)
@@ -135,12 +161,11 @@ _LocalGetPrinterDriverLevel3(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_3W* ppD
     DWORD n;
     PCWSTR pwszStrings[9];
 
-    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath
-    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile
-    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile
     pwszStrings[5] = L"";  // pHelpFile
     pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
     pwszStrings[7] = NULL;  // pMonitorName
@@ -176,12 +201,11 @@ _LocalGetPrinterDriverLevel4(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_4W* ppD
     DWORD n;
     PCWSTR pwszStrings[10];
 
-    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath
-    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile
-    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile
     pwszStrings[5] = L"";  // pHelpFile
     pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
     pwszStrings[7] = NULL;  // pMonitorName
@@ -217,12 +241,11 @@ _LocalGetPrinterDriverLevel5(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_5W* ppD
     DWORD n;
     PCWSTR pwszStrings[5];
 
-    /* Clearly these things should not be hardcoded, so when it is needed, someone can add meaningfull values here */
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = L"c:\\reactos\\system32\\localspl.dll";  // pDriverPath UniDrv.dll
-    pwszStrings[3] = L"c:\\reactos\\system32\\localspl.dll";  // pDataFile.ppd
-    pwszStrings[4] = L"c:\\reactos\\system32\\printui.dll";   // pConfigFile UniDrvUI.dll
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath UniDrv.dll
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile.ppd
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile UniDrvUI.dll
 
     // Calculate the string lengths.
     if (!ppDriverInfo)
@@ -260,6 +283,8 @@ BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Le
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     TRACE("LocalGetPrinterDriver(%p, %lu, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+
+    DoInitPrinterDriversInternal();
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
