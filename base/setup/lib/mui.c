@@ -468,7 +468,8 @@ AddCodepageToRegistry(
     return TRUE;
 }
 
-static BOOLEAN
+static
+BOOLEAN
 AddFontsSettingsToRegistry(
     IN const MUI_SUBFONT * MuiSubFonts)
 {
@@ -581,7 +582,6 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
     switch (PRIMARYLANGID(LangID))
     {
         case LANG_CHINESE:
-            DPRINT1("LANG_CHINESE\n");
             if (SUBLANGID(LangID) == SUBLANG_CHINESE_SIMPLIFIED)
             {
                 if (pSettings->bFontSIMSUN)
@@ -595,13 +595,11 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
             break;
 
         case LANG_JAPANESE:
-            DPRINT1("LANG_JAPANESE\n");
             if (pSettings->bFontMSGOTHIC)
                 AddFontsSettingsToRegistry(JapaneseFontFixup);
             break;
 
         case LANG_KOREAN:
-            DPRINT1("LANG_KOREAN\n");
             if (pSettings->bFontBATANG)
                 AddFontsSettingsToRegistry(KoreanFontFixup);
             break;
