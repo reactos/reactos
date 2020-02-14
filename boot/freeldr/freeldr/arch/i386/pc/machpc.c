@@ -1416,6 +1416,32 @@ PcHwIdle(VOID)
      */
 }
 
+VOID __cdecl ChainLoadBiosBootSectorCode(
+    IN UCHAR BootDrive OPTIONAL,
+    IN ULONG BootPartition OPTIONAL)
+{
+    REGS Regs;
+
+    RtlZeroMemory(&Regs, sizeof(Regs));
+
+    /* Set the boot drive and the boot partition */
+    Regs.b.dl = (UCHAR)(BootDrive ? BootDrive : FrldrBootDrive);
+    Regs.b.dh = (UCHAR)(BootPartition ? BootPartition : FrldrBootPartition);
+
+    /*
+     * Don't stop the floppy drive motor when we are just booting a bootsector,
+     * a drive, or a partition. If we were to stop the floppy motor, the BIOS
+     * wouldn't be informed and if the next read is to a floppy then the BIOS
+     * will still think the motor is on and this will result in a read error.
+     */
+    // DiskStopFloppyMotor();
+
+    Relocator16Boot(&Regs,
+                    /* Stack segment:pointer */
+                    0x0000, 0x7C00,
+                    /* Code segment:pointer */
+                    0x0000, 0x7C00);
+}
 
 /******************************************************************************/
 

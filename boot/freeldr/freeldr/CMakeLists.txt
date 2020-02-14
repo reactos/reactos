@@ -121,7 +121,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/hwpci.c
         arch/i386/i386bug.c
         arch/i386/i386idt.c
-        arch/i386/i386rtl.c
         arch/i386/i386vid.c
         disk/scsiport.c)
 
@@ -129,6 +128,7 @@ if(ARCH STREQUAL "i386")
         list(APPEND FREELDR_ARC_SOURCE
             # FIXME: Abstract things better so we don't need to include /pc/* here
             arch/i386/pc/machpc.c       # machxbox.c depends on it
+            arch/i386/pc/pcbeep.c       # machxbox.c depends on it
             arch/i386/pc/pcdisk.c       # hwdisk.c depends on it
             arch/i386/pc/pcmem.c        # hwacpi.c/xboxmem.c depends on it
             arch/i386/xbox/machxbox.c
@@ -142,6 +142,7 @@ if(ARCH STREQUAL "i386")
     else()
         list(APPEND FREELDR_ARC_SOURCE
             arch/i386/pc/machpc.c
+            arch/i386/pc/pcbeep.c
             arch/i386/pc/pccons.c
             arch/i386/pc/pcdisk.c
             arch/i386/pc/pcmem.c
@@ -169,9 +170,9 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
         arch/i386/i386bug.c
-        arch/i386/i386rtl.c
         arch/i386/i386vid.c
         arch/i386/pc/machpc.c
+        arch/i386/pc/pcbeep.c
         arch/i386/pc/pccons.c
         arch/i386/pc/pcdisk.c
         arch/i386/pc/pcmem.c
