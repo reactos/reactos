@@ -132,9 +132,9 @@ _LocalGetPrinterDriverLevel2(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_2W* ppD
 
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = wszLocalSplFile; // pDriverPath
-    pwszStrings[3] = wszLocalSplFile; // pDataFile
-    pwszStrings[4] = wszLocalSplFile; // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszLocalSplFile;        // pConfigFile
 
     // Calculate the string lengths.
     if (!ppDriverInfo)
@@ -163,9 +163,9 @@ _LocalGetPrinterDriverLevel3(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_3W* ppD
 
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = wszLocalSplFile; // pDriverPath
-    pwszStrings[3] = wszLocalSplFile; // pDataFile
-    pwszStrings[4] = wszPrintUiFile; // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile
     pwszStrings[5] = L"";  // pHelpFile
     pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
     pwszStrings[7] = NULL;  // pMonitorName
@@ -203,9 +203,9 @@ _LocalGetPrinterDriverLevel4(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_4W* ppD
 
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = wszLocalSplFile; // pDriverPath
-    pwszStrings[3] = wszLocalSplFile; // pDataFile
-    pwszStrings[4] = wszPrintUiFile; // pConfigFile
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile
     pwszStrings[5] = L"";  // pHelpFile
     pwszStrings[6] = L"localspl.dll|printui.dll|";  // pDependentFiles, | is separator and terminator!
     pwszStrings[7] = NULL;  // pMonitorName
@@ -243,9 +243,9 @@ _LocalGetPrinterDriverLevel5(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_5W* ppD
 
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
     pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
-    pwszStrings[2] = wszLocalSplFile; // pDriverPath UniDrv.dll
-    pwszStrings[3] = wszLocalSplFile; // pDataFile.ppd
-    pwszStrings[4] = wszPrintUiFile; // pConfigFile UniDrvUI.dll
+    pwszStrings[2] = wszLocalSplFile;        // pDriverPath UniDrv.dll
+    pwszStrings[3] = wszLocalSplFile;        // pDataFile.ppd
+    pwszStrings[4] = wszPrintUiFile;         // pConfigFile UniDrvUI.dll
 
     // Calculate the string lengths.
     if (!ppDriverInfo)
