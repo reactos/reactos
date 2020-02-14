@@ -258,6 +258,8 @@ BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);
 
 // main.c
 extern const WCHAR wszCurrentEnvironment[];
+extern WCHAR wszLocalSplFile[];
+extern WCHAR wszPrintUiFile[];
 extern const DWORD cbCurrentEnvironment;
 extern const DWORD dwSpoolerMajorVersion;
 extern const DWORD dwSpoolerMinorVersion;
