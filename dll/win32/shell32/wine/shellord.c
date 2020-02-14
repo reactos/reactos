@@ -626,25 +626,25 @@ DoStoreMRUData(LPBYTE pbBuffer, LPDWORD pcbBuffer,
 
     cb = (cchTargetTitle + 1 + cchTargetPath + 1 + cchLinkTitle + 2) * sizeof(WCHAR);
     if (cb > *pcbBuffer)
-       return FALSE;
+        return FALSE;
 
     ZeroMemory(pbBuffer, *pcbBuffer);
 
     cb = (cchTargetTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-       return FALSE;
+        return FALSE;
     CopyMemory(&pbBuffer[ib], pszTargetTitle, cb);
     ib += cb;
 
     cb = (cchTargetPath + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-       return FALSE;
+        return FALSE;
     CopyMemory(&pbBuffer[ib], pszTargetPath, cb);
     ib += cb;
 
     cb = (cchLinkTitle + 1) * sizeof(WCHAR);
     if (ib + cb > *pcbBuffer)
-       return FALSE;
+        return FALSE;
     CopyMemory(&pbBuffer[ib], pszLinkTitle, cb);
     ib += cb;
 
