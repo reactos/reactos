@@ -564,19 +564,19 @@ AddCodePage(
 BOOL
 DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
 {
-    if (pSettings->bFontMINGLIU)
+    if (pSettings->bFoundFontMINGLIU)
         AddFontsSettingsToRegistry(FontFixupMINGLIU);
-    if (pSettings->bFontSIMSUN)
+    if (pSettings->bFoundFontSIMSUN)
         AddFontsSettingsToRegistry(FontFixupSIMSUN);
-    if (pSettings->bFontMSSONG)
+    if (pSettings->bFoundFontMSSONG)
         AddFontsSettingsToRegistry(FontFixupMSSONG);
-    if (pSettings->bFontMSGOTHIC)
+    if (pSettings->bFoundFontMSGOTHIC)
         AddFontsSettingsToRegistry(FontFixupMSGOTHIC);
-    if (pSettings->bFontMSMINCHO)
+    if (pSettings->bFoundFontMSMINCHO)
         AddFontsSettingsToRegistry(FontFixupMSMINCHO);
-    if (pSettings->bFontGULIM)
+    if (pSettings->bFoundFontGULIM)
         AddFontsSettingsToRegistry(FontFixupGULIM);
-    if (pSettings->bFontBATANG)
+    if (pSettings->bFoundFontBATANG)
         AddFontsSettingsToRegistry(FontFixupBATANG);
 
     switch (PRIMARYLANGID(LangID))
@@ -584,23 +584,23 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
         case LANG_CHINESE:
             if (SUBLANGID(LangID) == SUBLANG_CHINESE_SIMPLIFIED)
             {
-                if (pSettings->bFontSIMSUN)
+                if (pSettings->bFoundFontSIMSUN)
                     AddFontsSettingsToRegistry(SimplifiedChineseFontFixup);
             }
             else
             {
-                if (pSettings->bFontMINGLIU)
+                if (pSettings->bFoundFontMINGLIU)
                     AddFontsSettingsToRegistry(TraditionalChineseFontFixup);
             }
             break;
 
         case LANG_JAPANESE:
-            if (pSettings->bFontMSGOTHIC)
+            if (pSettings->bFoundFontMSGOTHIC)
                 AddFontsSettingsToRegistry(JapaneseFontFixup);
             break;
 
         case LANG_KOREAN:
-            if (pSettings->bFontBATANG)
+            if (pSettings->bFoundFontBATANG)
                 AddFontsSettingsToRegistry(KoreanFontFixup);
             break;
     }

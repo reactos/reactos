@@ -102,22 +102,22 @@ DoWatchDestFileName(LPCWSTR FileName)
         if (wcsicmp(FileName, L"mingliu.ttc") == 0)
         {
             DPRINT("mingliu.ttc found\n");
-            s_SubstSettings.bFontMINGLIU = TRUE;
+            s_SubstSettings.bFoundFontMINGLIU = TRUE;
         }
         else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
         {
             DPRINT("msgothic.ttc found\n");
-            s_SubstSettings.bFontMSGOTHIC = TRUE;
+            s_SubstSettings.bFoundFontMSGOTHIC = TRUE;
         }
         else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
         {
             DPRINT("msmincho.ttc found\n");
-            s_SubstSettings.bFontMSMINCHO = TRUE;
+            s_SubstSettings.bFoundFontMSMINCHO = TRUE;
         }
         else if (wcsicmp(FileName, L"mssong.ttf") == 0)
         {
             DPRINT("mssong.ttf found\n");
-            s_SubstSettings.bFontMSSONG = TRUE;
+            s_SubstSettings.bFoundFontMSSONG = TRUE;
         }
     }
     else
@@ -125,17 +125,17 @@ DoWatchDestFileName(LPCWSTR FileName)
         if (wcsicmp(FileName, L"simsun.ttc") == 0)
         {
             DPRINT("simsun.ttc found\n");
-            s_SubstSettings.bFontSIMSUN = TRUE;
+            s_SubstSettings.bFoundFontSIMSUN = TRUE;
         }
         else if (wcsicmp(FileName, L"gulim.ttc") == 0)
         {
             DPRINT("gulim.ttc found\n");
-            s_SubstSettings.bFontGULIM = TRUE;
+            s_SubstSettings.bFoundFontGULIM = TRUE;
         }
         else if (wcsicmp(FileName, L"batang.ttc") == 0)
         {
             DPRINT("batang.ttc found\n");
-            s_SubstSettings.bFontBATANG = TRUE;
+            s_SubstSettings.bFoundFontBATANG = TRUE;
         }
     }
 }

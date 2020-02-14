@@ -2,13 +2,13 @@
 
 typedef struct _FONTSUBSTSETTINGS
 {
-    BOOL bFontMINGLIU;
-    BOOL bFontSIMSUN;
-    BOOL bFontMSSONG;
-    BOOL bFontMSGOTHIC;
-    BOOL bFontMSMINCHO;
-    BOOL bFontGULIM;
-    BOOL bFontBATANG;
+    BOOL bFoundFontMINGLIU;
+    BOOL bFoundFontSIMSUN;
+    BOOL bFoundFontMSSONG;
+    BOOL bFoundFontMSGOTHIC;
+    BOOL bFoundFontMSMINCHO;
+    BOOL bFoundFontGULIM;
+    BOOL bFoundFontBATANG;
 } FONTSUBSTSETTINGS, *PFONTSUBSTSETTINGS;
 
 BOOL
