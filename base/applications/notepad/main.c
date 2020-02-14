@@ -5,6 +5,7 @@
  *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Copyright 2002 Andriy Palamarchuk
+ *  Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +25,7 @@
 
 #include "notepad.h"
 
+#include <shlobj.h>
 #include <strsafe.h>
 
 NOTEPAD_GLOBALS Globals;
@@ -48,6 +50,9 @@ VOID SetFileName(LPCTSTR szFileName)
     StringCchCopy(Globals.szFileName, ARRAY_SIZE(Globals.szFileName), szFileName);
     Globals.szFileTitle[0] = 0;
     GetFileTitle(szFileName, Globals.szFileTitle, ARRAY_SIZE(Globals.szFileTitle));
+
+    if (szFileName && szFileName[0])
+        SHAddToRecentDocs(SHARD_PATHW, szFileName);
 }
 
 /***********************************************************************
