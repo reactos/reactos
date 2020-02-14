@@ -34,7 +34,6 @@
 #include "cmdcons.h"
 #include "devinst.h"
 #include "format.h"
-#include "substset.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -102,18 +101,22 @@ DoWatchDestFileName(LPCWSTR FileName)
     {
         if (wcsicmp(FileName, L"mingliu.ttc") == 0)
         {
+            DPRINT1("mingliu.ttc found\n");
             s_SubstSettings.bFontMINGLIU = TRUE;
         }
         else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
         {
+            DPRINT1("msgothic.ttc found\n");
             s_SubstSettings.bFontMSGOTHIC = TRUE;
         }
         else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
         {
+            DPRINT1("msmincho.ttc found\n");
             s_SubstSettings.bFontMSMINCHO = TRUE;
         }
         else if (wcsicmp(FileName, L"mssong.ttf") == 0)
         {
+            DPRINT1("mssong.ttf found\n");
             s_SubstSettings.bFontMSSONG = TRUE;
         }
     }
@@ -121,14 +124,17 @@ DoWatchDestFileName(LPCWSTR FileName)
     {
         if (wcsicmp(FileName, L"simsun.ttc") == 0)
         {
+            DPRINT1("simsun.ttc found\n");
             s_SubstSettings.bFontSIMSUN = TRUE;
         }
         else if (wcsicmp(FileName, L"gulim.ttc") == 0)
         {
+            DPRINT1("gulim.ttc found\n");
             s_SubstSettings.bFontGULIM = TRUE;
         }
         else if (wcsicmp(FileName, L"batang.ttc") == 0)
         {
+            DPRINT1("batang.ttc found\n");
             s_SubstSettings.bFontBATANG = TRUE;
         }
     }
@@ -4287,7 +4293,8 @@ RegistryPage(PINPUT_RECORD Ir)
                            PartitionList,
                            InstallPartition->DriveLetter,
                            SelectedLanguageId,
-                           RegistryStatus);
+                           RegistryStatus,
+                           &s_SubstSettings);
     if (Error != ERROR_SUCCESS)
     {
         MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
@@ -4295,11 +4302,6 @@ RegistryPage(PINPUT_RECORD Ir)
     }
     else
     {
-#ifdef __REACTOS__
-        /* HACK */
-        DoRegistryFontFixup(&s_SubstSettings, USetupData.LanguageId);
-#endif
-
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
         return BOOT_LOADER_PAGE;
     }

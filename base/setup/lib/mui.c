@@ -515,7 +515,11 @@ AddFontsSettingsToRegistry(
         }
         else
         {
-            NtDeleteValueKey(KeyHandle, &ValueName);
+            Status = NtDeleteValueKey(KeyHandle, &ValueName);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtDeleteValueKey failed, Status = %lx\n", Status);
+            }
         }
 
         uIndex++;
@@ -577,6 +581,7 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
     switch (PRIMARYLANGID(LangID))
     {
         case LANG_CHINESE:
+            DPRINT1("LANG_CHINESE\n");
             if (SUBLANGID(LangID) == SUBLANG_CHINESE_SIMPLIFIED)
             {
                 if (pSettings->bFontSIMSUN)
@@ -590,11 +595,13 @@ DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
             break;
 
         case LANG_JAPANESE:
+            DPRINT1("LANG_JAPANESE\n");
             if (pSettings->bFontMSGOTHIC)
                 AddFontsSettingsToRegistry(JapaneseFontFixup);
             break;
 
         case LANG_KOREAN:
+            DPRINT1("LANG_KOREAN\n");
             if (pSettings->bFontBATANG)
                 AddFontsSettingsToRegistry(KoreanFontFixup);
             break;
