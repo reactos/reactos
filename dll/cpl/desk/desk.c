@@ -84,7 +84,6 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, HINSTANCE hDllInst, WORD idDlg, DLGPROC
 {
     HPROPSHEETPAGE hPage;
     PROPSHEETPAGE psp;
-    
 
     if (ppsh->nPages < MAX_DESK_PAGES)
     {
