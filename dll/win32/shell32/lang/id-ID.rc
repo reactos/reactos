@@ -135,8 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "Versi ", IDC_STATIC, 35, 65, 28, 10
-    LTEXT "", IDC_ABOUT_VERSION, 61, 65, 200, 10
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " Tim ReactOS\0", IDC_STATIC, 105, 75, 53, 10
@@ -744,6 +743,9 @@ BEGIN
     IDS_FOLDER_OPTIONS_DESCRIPTION "Sesuaikan tampilan berkas dan folder dan ubah asosiasi berkas."
     IDS_FONTS_DESCRIPTION "Tambah, ganti, dan atur fon pada komputer anda."
     IDS_PRINTERS_DESCRIPTION "Menampilkan printer terpasang dan printer faks serta membantu Anda menambahkan yang baru."
+
+    /* About shell dialog version string */
+    IDS_ABOUT_VERSION_STRING "Versi %S (%S)"
 
     /* context menus */
     IDS_VIEW_LARGE "Iko&n Besar"
