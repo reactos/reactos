@@ -407,3 +407,94 @@ MUI_SUBFONT HindiFonts[] =
     { L"Tms Rmn",                L"Times New Roman" },
     { NULL, NULL }
 };
+
+MUI_SUBFONT SimplifiedChineseFontFixup[] =
+{
+    { L"MS Shell Dlg", L"SimSun" },
+    { L"Tahoma", L"SimSun" },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT TraditionalChineseFontFixup[] =
+{
+    { L"MS Shell Dlg", L"PMingLiU" },
+    { L"Tahoma", L"PMingLiU" },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT JapaneseFontFixup[] =
+{
+    { L"MS Shell Dlg", L"MS UI Gothic" },
+    { L"Tahoma", L"MS UI Gothic" },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT KoreanFontFixup[] =
+{
+    { L"MS Shell Dlg", L"Batang" },
+    { L"Tahoma", L"Batang" },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupMINGLIU[] =
+{
+    { L"MingLiU", NULL },
+    { L"PMingLiU", NULL },
+    { CTF_LocalName0, NULL },
+    { CTF_LocalName1, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupSIMSUN[] =
+{
+    { L"NSimSun", NULL },
+    { L"SimSun", NULL },
+    { CSF_LocalName0, NULL },
+    { CSF_LocalName1, NULL },
+    { CSF_LocalName2, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupMSSONG[] =
+{
+    { L"MS Song", NULL },
+    { CSF_LocalName4, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupMSGOTHIC[] =
+{
+    { L"MS Gothic", NULL },
+    { L"MS PGothic", NULL },
+    { L"MS UI Gothic", NULL },
+    { JF_LocalName2, NULL },
+    { JF_LocalName3, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupMSMINCHO[] =
+{
+    { L"MS Mincho", NULL },
+    { L"MS PMincho", NULL },
+    { JF_LocalName0, NULL },
+    { JF_LocalName1, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupGULIM[] =
+{
+    { L"Gulim", NULL },
+    { L"GulimChe", NULL },
+    { KF_LocalName4, NULL },
+    { KF_LocalName5, NULL },
+    { NULL, NULL }
+};
+
+MUI_SUBFONT FontFixupBATANG[] =
+{
+    { L"Batang", NULL},
+    { L"BatangChe", NULL},
+    { KF_LocalName0, NULL},
+    { KF_LocalName1, NULL},
+    { NULL, NULL }
+};

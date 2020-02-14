@@ -1,0 +1,15 @@
+#pragma once
+
+typedef struct _FONTSUBSTSETTINGS
+{
+    BOOL bFontMINGLIU;
+    BOOL bFontSIMSUN;
+    BOOL bFontMSSONG;
+    BOOL bFontMSGOTHIC;
+    BOOL bFontMSMINCHO;
+    BOOL bFontGULIM;
+    BOOL bFontBATANG;
+} FONTSUBSTSETTINGS, *PFONTSUBSTSETTINGS;
+
+BOOL
+DoRegistryFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID);

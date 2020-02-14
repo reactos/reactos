@@ -34,6 +34,7 @@
 #include "cmdcons.h"
 #include "devinst.h"
 #include "format.h"
+#include "substset.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -87,6 +88,52 @@ static FORMATMACHINESTATE FormatState = Start;
 static PNTOS_INSTALLATION CurrentInstallation = NULL;
 static PGENERIC_LIST NtOsInstallsList = NULL;
 
+#ifdef __REACTOS__ /* HACK */
+
+/* FONT SUBSTITUTION WORKAROUND *************************************************/
+
+/* For font file check */
+FONTSUBSTSETTINGS s_SubstSettings = { FALSE };
+
+static void
+DoWatchDestFileName(LPCWSTR FileName)
+{
+    if (FileName[0] == 'm' || FileName[0] == 'M')
+    {
+        if (wcsicmp(FileName, L"mingliu.ttc") == 0)
+        {
+            s_SubstSettings.bFontMINGLIU = TRUE;
+        }
+        else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
+        {
+            s_SubstSettings.bFontMSGOTHIC = TRUE;
+        }
+        else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
+        {
+            s_SubstSettings.bFontMSMINCHO = TRUE;
+        }
+        else if (wcsicmp(FileName, L"mssong.ttf") == 0)
+        {
+            s_SubstSettings.bFontMSSONG = TRUE;
+        }
+    }
+    else
+    {
+        if (wcsicmp(FileName, L"simsun.ttc") == 0)
+        {
+            s_SubstSettings.bFontSIMSUN = TRUE;
+        }
+        else if (wcsicmp(FileName, L"gulim.ttc") == 0)
+        {
+            s_SubstSettings.bFontGULIM = TRUE;
+        }
+        else if (wcsicmp(FileName, L"batang.ttc") == 0)
+        {
+            s_SubstSettings.bFontBATANG = TRUE;
+        }
+    }
+}
+#endif  /* HACK */
 
 /* FUNCTIONS ****************************************************************/
 
@@ -4060,6 +4107,9 @@ FileCopyCallback(PVOID Context,
 
                 CONSOLE_SetStatusText(MUIGetString(STRING_COPYING),
                                       DstFileName);
+#ifdef __REACTOS__ /* HACK */
+                DoWatchDestFileName(DstFileName);
+#endif
             }
 
             SetupUpdateMemoryInfo(CopyContext, FALSE);
@@ -4245,6 +4295,11 @@ RegistryPage(PINPUT_RECORD Ir)
     }
     else
     {
+#ifdef __REACTOS__
+        /* HACK */
+        DoRegistryFixup(&s_SubstSettings, USetupData.LanguageId);
+#endif
+
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
         return BOOT_LOADER_PAGE;
     }
