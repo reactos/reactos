@@ -87,6 +87,59 @@ static FORMATMACHINESTATE FormatState = Start;
 static PNTOS_INSTALLATION CurrentInstallation = NULL;
 static PGENERIC_LIST NtOsInstallsList = NULL;
 
+#ifdef __REACTOS__ /* HACK */
+
+/* FONT SUBSTITUTION WORKAROUND *************************************************/
+
+/* For font file check */
+FONTSUBSTSETTINGS s_SubstSettings = { FALSE };
+
+static void
+DoWatchDestFileName(LPCWSTR FileName)
+{
+    if (FileName[0] == 'm' || FileName[0] == 'M')
+    {
+        if (wcsicmp(FileName, L"mingliu.ttc") == 0)
+        {
+            DPRINT("mingliu.ttc found\n");
+            s_SubstSettings.bFoundFontMINGLIU = TRUE;
+        }
+        else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
+        {
+            DPRINT("msgothic.ttc found\n");
+            s_SubstSettings.bFoundFontMSGOTHIC = TRUE;
+        }
+        else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
+        {
+            DPRINT("msmincho.ttc found\n");
+            s_SubstSettings.bFoundFontMSMINCHO = TRUE;
+        }
+        else if (wcsicmp(FileName, L"mssong.ttf") == 0)
+        {
+            DPRINT("mssong.ttf found\n");
+            s_SubstSettings.bFoundFontMSSONG = TRUE;
+        }
+    }
+    else
+    {
+        if (wcsicmp(FileName, L"simsun.ttc") == 0)
+        {
+            DPRINT("simsun.ttc found\n");
+            s_SubstSettings.bFoundFontSIMSUN = TRUE;
+        }
+        else if (wcsicmp(FileName, L"gulim.ttc") == 0)
+        {
+            DPRINT("gulim.ttc found\n");
+            s_SubstSettings.bFoundFontGULIM = TRUE;
+        }
+        else if (wcsicmp(FileName, L"batang.ttc") == 0)
+        {
+            DPRINT("batang.ttc found\n");
+            s_SubstSettings.bFoundFontBATANG = TRUE;
+        }
+    }
+}
+#endif  /* HACK */
 
 /* FUNCTIONS ****************************************************************/
 
@@ -4060,6 +4113,9 @@ FileCopyCallback(PVOID Context,
 
                 CONSOLE_SetStatusText(MUIGetString(STRING_COPYING),
                                       DstFileName);
+#ifdef __REACTOS__ /* HACK */
+                DoWatchDestFileName(DstFileName);
+#endif
             }
 
             SetupUpdateMemoryInfo(CopyContext, FALSE);
@@ -4237,7 +4293,8 @@ RegistryPage(PINPUT_RECORD Ir)
                            PartitionList,
                            InstallPartition->DriveLetter,
                            SelectedLanguageId,
-                           RegistryStatus);
+                           RegistryStatus,
+                           &s_SubstSettings);
     if (Error != ERROR_SUCCESS)
     {
         MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
