@@ -66,7 +66,7 @@ LoadPopupMenu(IN HINSTANCE hInstance,
 }
 
 LPCDLGTEMPLATE
-DoFindAndLoadDialog(HINSTANCE hInst, INT nDialogID)
+DoLoadDialog(HINSTANCE hInst, INT nDialogID)
 {
     HRSRC hRsrc;
     HGLOBAL hResData;
@@ -105,11 +105,11 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCAL
     if (ppsh->nPages < MAX_DESK_PAGES)
     {
         hInst = hThemeUI;
-        pResource = DoFindAndLoadDialog(hInst, idDlg);
+        pResource = DoLoadDialog(hInst, idDlg);
         if (!pResource)
         {
             hInst = hApplet;
-            pResource = DoFindAndLoadDialog(hInst, idDlg);
+            pResource = DoLoadDialog(hInst, idDlg);
         }
 
         ZeroMemory(&psp, sizeof(psp));

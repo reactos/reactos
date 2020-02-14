@@ -239,11 +239,11 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case IDC_APPEARANCE_EFFECTS:
                     hInst = hThemeUI;
-                    pResource = DoFindAndLoadDialog(hInst, IDD_EFFAPPEARANCE);
+                    pResource = DoLoadDialog(hInst, IDD_EFFAPPEARANCE);
                     if (!pResource)
                     {
                         hInst = hApplet;
-                        pResource = DoFindAndLoadDialog(hInst, IDD_EFFAPPEARANCE);
+                        pResource = DoLoadDialog(hInst, IDD_EFFAPPEARANCE);
                     }
 
                     if (DialogBoxIndirectParamW(hInst, pResource, hwndDlg, EffAppearanceDlgProc,
@@ -257,11 +257,11 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDC_APPEARANCE_ADVANCED:
                     hInst = hThemeUI;
-                    pResource = DoFindAndLoadDialog(hInst, IDD_ADVAPPEARANCE);
+                    pResource = DoLoadDialog(hInst, IDD_ADVAPPEARANCE);
                     if (!pResource)
                     {
                         hInst = hApplet;
-                        pResource = DoFindAndLoadDialog(hInst, IDD_ADVAPPEARANCE);
+                        pResource = DoLoadDialog(hInst, IDD_ADVAPPEARANCE);
                     }
 
                     if (DialogBoxIndirectParamW(hInst, pResource, hwndDlg, AdvAppearanceDlgProc,

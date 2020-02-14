@@ -763,11 +763,11 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     }
 
     hInst = hThemeUI;
-    pResource = DoFindAndLoadDialog(hThemeUI, IDD_CONFIRMSETTINGS);
+    pResource = DoLoadDialog(hInst, IDD_CONFIRMSETTINGS);
     if (!pResource)
     {
         hInst = hApplet;
-        pResource = DoFindAndLoadDialog(hApplet, IDD_CONFIRMSETTINGS);
+        pResource = DoLoadDialog(hInst, IDD_CONFIRMSETTINGS);
     }
 
     if (DialogBoxIndirectW(hInst, pResource, hwndDlg, ConfirmDlgProc) == IDYES)

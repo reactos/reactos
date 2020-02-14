@@ -51,7 +51,7 @@ typedef struct _DIBITMAP
 extern HINSTANCE hApplet;
 extern HINSTANCE hThemeUI;
 
-LPCDLGTEMPLATE DoFindAndLoadDialog(HINSTANCE hInst, INT nDialogID);
+LPCDLGTEMPLATE DoLoadDialog(HINSTANCE hInst, INT nDialogID);
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,
