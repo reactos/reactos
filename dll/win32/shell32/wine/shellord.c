@@ -882,11 +882,11 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     pchTargetTitle = PathFindFileNameW(szTargetPath);
 
     lstrcpyW(szDescription, L"Shortcut to ");
-    lstrcatW(szDescription, pchTargetTitle);
+    StrCatBuffW(szDescription, pchTargetTitle, ARRAYSIZE(szDescription));
 
     lstrcpynW(szLinkFile, szLinkDir, ARRAYSIZE(szLinkFile));
     PathAppendW(szLinkFile, pchTargetTitle);
-    lstrcatW(szLinkFile, L".lnk");
+    StrCatBuffW(szLinkFile, L".lnk", ARRAYSIZE(szLinkFile));
     pchLinkTitle = PathFindFileNameW(szLinkFile);
 
     /* ***  JOB 1: Update registry for ...\Explorer\RecentDocs list  *** */
