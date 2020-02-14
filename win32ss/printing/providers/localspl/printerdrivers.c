@@ -215,7 +215,7 @@ _LocalGetPrinterDriverLevel5(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_5W* ppD
     PCWSTR pwszStrings[5];
 
     pwszStrings[0] = pHandle->pPrinter->pwszPrinterDriver;  // pName
-    pwszStrings[1] = wszCurrentEnvironment; // pEnvironment
+    pwszStrings[1] = wszCurrentEnvironment;  // pEnvironment
     pwszStrings[2] = wszLocalSplFile; // pDriverPath UniDrv.dll
     pwszStrings[3] = wszLocalSplFile; // pDataFile.ppd
     pwszStrings[4] = wszPrintUiFile; // pConfigFile UniDrvUI.dll
