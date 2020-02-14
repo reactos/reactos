@@ -3,9 +3,37 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions for printer driver information
  * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
+#include <strsafe.h>
+
+static WCHAR wszLocalSplFile[MAX_PATH] = L"";
+static WCHAR wszPrintUiFile[MAX_PATH] = L"";
+
+static BOOL
+DoInitPrinterDriversInternal(void)
+{
+    WCHAR szSysDir[MAX_PATH];
+
+    if (wszLocalSplFile[0] && wszPrintUiFile[0])
+        return TRUE;
+
+    if (!GetSystemDirectoryW(szSysDir, _countof(szSysDir)))
+    {
+        ERR("GetSystemDirectoryW failed\n");
+        return FALSE;
+    }
+
+    StringCbCopyW(wszLocalSplFile, sizeof(wszLocalSplFile), szSysDir);
+    StringCbCatW(wszLocalSplFile, sizeof(wszLocalSplFile), L"\\localspl.dll");
+
+    StringCbCopyW(wszPrintUiFile, sizeof(wszPrintUiFile), szSysDir);
+    StringCbCatW(wszPrintUiFile, sizeof(wszPrintUiFile), L"\\printui.dll");
+
+    return TRUE;
+}
 
 // Local Constants
 static DWORD dwDriverInfo1Offsets[] = {
@@ -90,7 +118,6 @@ _LocalGetPrinterDriverLevel1(PLOCAL_PRINTER_HANDLE pHandle, PDRIVER_INFO_1W* ppD
         *pcbNeeded += sizeof(DRIVER_INFO_1W);
         return;
     }
-
 
     // Finally copy the structure and advance to the next one in the output buffer.
     *ppDriverInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppDriverInfo), dwDriverInfo1Offsets, *ppDriverInfoEnd);
@@ -256,6 +283,8 @@ BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Le
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
     TRACE("LocalGetPrinterDriver(%p, %lu, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+
+    DoInitPrinterDriversInternal();
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;

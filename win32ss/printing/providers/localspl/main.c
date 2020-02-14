@@ -17,8 +17,6 @@ DWORD cchSpoolDirectory;
 
 // Global Constants
 #include <prtprocenv.h>
-WCHAR wszLocalSplFile[MAX_PATH];
-WCHAR wszPrintUiFile[MAX_PATH];
 
 /** This is what the Spooler of Windows Server 2003 returns (for example using GetPrinterDataExW, SPLREG_MAJOR_VERSION/SPLREG_MINOR_VERSION) */
 const DWORD dwSpoolerMajorVersion = 3;
@@ -136,19 +134,6 @@ _InitializeLocalSpooler(void)
     DWORD cbData;
     DWORD dwErrorCode;
     HKEY hKey = NULL;
-    WCHAR szSysDir[MAX_PATH];
-
-    if (!GetSystemDirectoryW(szSysDir, _countof(szSysDir)))
-    {
-        ERR("GetSystemDirectoryW failed\n");
-        return FALSE;
-    }
-
-    lstrcpyW(wszLocalSplFile, szSysDir);
-    lstrcatW(wszLocalSplFile, L"\\localspl.dll");
-
-    lstrcpyW(wszPrintUiFile, szSysDir);
-    lstrcatW(wszPrintUiFile, L"\\printui.dll");
 
     // On startup, always create a volatile symbolic link in the registry if it doesn't exist yet.
     //   "SYSTEM\CurrentControlSet\Control\Print\Printers" -> "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers"
