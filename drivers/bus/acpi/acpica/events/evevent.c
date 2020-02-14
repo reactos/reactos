@@ -191,7 +191,7 @@ AcpiEvFixedEventInitialize (
 
     /*
      * Initialize the structure that keeps track of fixed event handlers and
-     * enable the fixed events.
+     * disable all of the fixed events.
      */
     for (i = 0; i < ACPI_NUM_FIXED_EVENTS; i++)
     {

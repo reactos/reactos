@@ -606,7 +606,7 @@ AcpiInstallMethod (
 
     MethodFlags = *ParserState.Aml++;
     AmlStart = ParserState.Aml;
-    AmlLength = ACPI_PTR_DIFF (ParserState.PkgEnd, AmlStart);
+    AmlLength = (UINT32) ACPI_PTR_DIFF (ParserState.PkgEnd, AmlStart);
 
     /*
      * Allocate resources up-front. We don't want to have to delete a new

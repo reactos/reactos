@@ -517,7 +517,7 @@
 #define ASL_CV_PRINT_ONE_COMMENT(a,b,c,d) CvPrintOneCommentType (a,b,c,d);
 #define ASL_CV_PRINT_ONE_COMMENT_LIST(a,b) CvPrintOneCommentList (a,b);
 #define ASL_CV_FILE_HAS_SWITCHED(a)       CvFileHasSwitched(a)
-#define ASL_CV_INIT_FILETREE(a,b,c)      CvInitFileTree(a,b,c);
+#define ASL_CV_INIT_FILETREE(a,b)      CvInitFileTree(a,b);
 
 #else
 
@@ -532,7 +532,7 @@
 #define ASL_CV_PRINT_ONE_COMMENT(a,b,c,d)
 #define ASL_CV_PRINT_ONE_COMMENT_LIST(a,b)
 #define ASL_CV_FILE_HAS_SWITCHED(a)       0
-#define ASL_CV_INIT_FILETREE(a,b,c)
+#define ASL_CV_INIT_FILETREE(a,b)
 
 #endif
 
