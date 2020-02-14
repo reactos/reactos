@@ -122,9 +122,9 @@ START_TEST(ShellExecuteW)
 }
 
 // Windows Server 2003 and Windows XP SP3 return values (Win 7 returns 42 in all cases)
-// ShellExecuteW(NULL, L"open",    L"rundll32.exe",          L"shell32.dll,Control_RunDLL desk.cpl", NULL, SW_SHOWNORMAL) = 42
-// ShellExecuteW(NULL, L"open",    L"notepad.exe",           NULL,                                   NULL, SW_SHOWNORMAL) = 42
-// ShellExecuteW(NULL, NULL,       L"C:\\Windows",           NULL,                                   NULL, SW_SHOWNORMAL) = 33
-// ShellExecuteW(NULL, L"open",    L"C:\\Windows\\system32", NULL,                                   NULL, SW_SHOWNORMAL) = 33
-// ShellExecuteW(NULL, L"explore", L"C:\\",                  NULL,                                   NULL, SW_SHOWNORMAL) = 33
-// ShellExecuteW(NULL, L"find",    L"C:\\",                  NULL,                                   NULL, SW_SHOWNORMAL) = 33
+// ShellExecuteW(NULL, L"open",    L"rundll32.exe", L"shell32.dll,Control_RunDLL desk.cpl", NULL, SW_SHOWNORMAL) = 42
+// ShellExecuteW(NULL, L"open",    L"notepad.exe",  NULL,                                   NULL, SW_SHOWNORMAL) = 42
+// ShellExecuteW(NULL, NULL,       WinDir,          NULL,                                   NULL, SW_SHOWNORMAL) = 33
+// ShellExecuteW(NULL, L"open",    SysDir,          NULL,                                   NULL, SW_SHOWNORMAL) = 33
+// ShellExecuteW(NULL, L"explore", SysDrive,        NULL,                                   NULL, SW_SHOWNORMAL) = 33
+// ShellExecuteW(NULL, L"find",    SysDrive,        NULL,                                   NULL, SW_SHOWNORMAL) = 33
