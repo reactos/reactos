@@ -554,6 +554,12 @@ PcMemFinalizeMemoryMap(
     ReserveMemory(MemoryMap, STACKLOW, STACKADDR - STACKLOW, LoaderOsloaderStack, "FreeLdr stack");
     ReserveMemory(MemoryMap, FREELDR_BASE, FrLdrImageSize, LoaderLoadedProgram, "FreeLdr image");
 
+    /* We need to make sure that we don't allocate the 4 MB chunk of physical memory starting at
+     * 0x40000000. The logic used in MempAllocatePTE means that the kernel mapping would be at
+     * 0xc0000000, which is where Windows needs the page directory to be mapped to (see
+     * MempAllocatePageTables). */
+    ReserveMemory(MemoryMap, 0x40000000, 0x400000, LoaderReserve, "Reserved");
+
     /* Default to 1 page above freeldr for the disk read buffer */
     DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
     DiskReadBufferSize = PAGE_SIZE;
