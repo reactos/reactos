@@ -78,20 +78,26 @@ DisplayAppletPropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 static BOOL
-InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCALLBACK pfnCallback)
+InitPropSheetPage(PROPSHEETHEADER *ppsh, HINSTANCE hDllInst, WORD idDlg, DLGPROC DlgProc,
+                  LPFNPSPCALLBACK pfnCallback)
 {
     HPROPSHEETPAGE hPage;
     PROPSHEETPAGE psp;
+    
 
     if (ppsh->nPages < MAX_DESK_PAGES)
     {
+        HRSRC hRsrc = FindResourceW(hDllInst, MAKEINTRESOURCEW(idDlg), RT_DIALOG);
+        HGLOBAL hResData = LoadResource(hDllInst, hRsrc);
+        LPCDLGTEMPLATE pResource = LockResource(hResData);
+
         ZeroMemory(&psp, sizeof(psp));
         psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT;
+        psp.dwFlags = PSP_DEFAULT | PSP_DLGINDIRECT;
         if (pfnCallback != NULL)
             psp.dwFlags |= PSP_USECALLBACK;
         psp.hInstance = hApplet;
-        psp.pszTemplate = MAKEINTRESOURCE(idDlg);
+        psp.pResource = pResource;
         psp.pfnDlgProc = DlgProc;
         psp.pfnCallback = pfnCallback;
 
@@ -105,19 +111,26 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCAL
     return FALSE;
 }
 
+typedef enum RESFROM
+{
+    RESFROM_DESK, /* load from desk.cpl */
+    RESFROM_THEMEUI /* load from themeui.dll */
+} RESFROM;
+
 static const struct
 {
+    RESFROM src;
     WORD idDlg;
     DLGPROC DlgProc;
     LPFNPSPCALLBACK Callback;
     LPWSTR Name;
 } PropPages[] =
 {
-    /* { IDD_THEMES, ThemesPageProc, NULL, L"Themes" }, */ /* TODO: */
-    { IDD_BACKGROUND, BackgroundPageProc, NULL, L"Desktop" },
-    { IDD_SCREENSAVER, ScreenSaverPageProc, NULL, L"Screen Saver" },
-    { IDD_APPEARANCE, AppearancePageProc, NULL, L"Appearance" },
-    { IDD_SETTINGS, SettingsPageProc, SettingsPageCallbackProc, L"Settings" },
+    /* { RESFROM_THEMEUI, IDD_THEMES, ThemesPageProc, NULL, L"Themes" }, */ /* TODO: */
+    { RESFROM_DESK, IDD_BACKGROUND, BackgroundPageProc, NULL, L"Desktop" },
+    { RESFROM_THEMEUI, IDD_SCREENSAVER, ScreenSaverPageProc, NULL, L"Screen Saver" },
+    { RESFROM_THEMEUI, IDD_APPEARANCE, AppearancePageProc, NULL, L"Appearance" },
+    { RESFROM_THEMEUI, IDD_SETTINGS, SettingsPageProc, SettingsPageCallbackProc, L"Settings" },
 };
 
 static int CALLBACK
@@ -150,6 +163,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     LPCWSTR pwszSelectedTab = NULL;
     LPCWSTR pwszFile = NULL;
     LPCWSTR pwszAction = NULL;
+    HINSTANCE hTHEMEUI;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -212,7 +226,9 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
 
-    for (i = 0; i != sizeof(PropPages) / sizeof(PropPages[0]); i++)
+    hTHEMEUI = LoadLibraryExW(L"themeui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+
+    for (i = 0; i < ARRAYSIZE(PropPages); ++i)
     {
         if (pwszSelectedTab && wcsicmp(pwszSelectedTab, PropPages[i].Name) == 0)
             psh.nStartPage = i;
@@ -226,13 +242,24 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
             continue;
         }
 
-        InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
+        switch (PropPages[i].src)
+        {
+            case RESFROM_DESK:
+                InitPropSheetPage(&psh, hApplet, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
+                break;
+
+            case RESFROM_THEMEUI:
+                InitPropSheetPage(&psh, hTHEMEUI, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
+                break;
+        }
     }
 
     /* NOTE: Don't call SHAddFromPropSheetExtArray here because this applet only allows
              replacing the background page but not extending the applet by more pages */
 
     PropertySheet(&psh);
+
+    FreeLibrary(hTHEMEUI);
 
 cleanup:
     if (hpsxa != NULL)

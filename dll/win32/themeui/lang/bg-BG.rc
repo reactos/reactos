@@ -1,4 +1,4 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
 CAPTION "Themes"
@@ -15,139 +15,139 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Salva schermo"
+CAPTION "ÑEÑ{ÑÇÑpÑ~ÑuÑ~ ÑÅÑÇÑuÑtÑÅÑpÑxÑyÑÑÑuÑ|"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX "&Salva schermo", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX "&ÑEÑ{ÑÇÑpÑ~ÑuÑ~ ÑÅÑÇÑuÑtÑÅÑpÑxÑyÑÑÑuÑ|", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Impostazioni", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "&Anteprima", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "&Attesa", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON "ÑNÑp&ÑÉÑÑÑÇÑÄÑzÑ{Ñy", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
+    PUSHBUTTON "ÑPÑÇÑu&ÑsÑ|ÑuÑt", IDC_SCREENS_TESTSC, 175, 102, 50, 15
+    LTEXT "&ÑIÑxÑâÑpÑ{ÑrÑpÑ~Ñu", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minuti", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Chiedere la &password al ripristino", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT "Ñ}ÑyÑ~ÑÖÑÑÑy", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL "ÑIÑÉÑ{ÑpÑ~Ñu Ñ~Ñp ÑÅÑpÑÇÑÄÑ|Ñp ÑÅÑÇÑy ÑyÑxÑáÑÄÑt", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&Funzioni di risparmio energetico del monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Per regolare le impostazioni premere Alimentazione.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "Alim&entazione...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
+    GROUPBOX "&ÑEÑ~ÑuÑÇÑsÑÄÑÉÑÅÑuÑÉÑÑÑëÑrÑpÑãÑy ÑrÑåÑxÑ}ÑÄÑwÑ~ÑÄÑÉÑÑÑy Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑp", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "ÑHÑp Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñp ÑxÑpÑáÑÇÑpÑ~ÑrÑpÑ~ÑuÑÑÑÄ Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑp, Ñ~ÑpÑÑÑyÑÉÑ~ÑuÑÑÑu ?ÑHÑpÑáÑÇÑpÑ~ÑrÑpÑ~Ñu...Åg.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "ÑHÑpÑáÑÇÑpÑ~ÑrÑpÑ~Ñu...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Aspetto"
+CAPTION "ÑOÑqÑ|ÑyÑ{"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Schema dei colori", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "ÑQÑpÑxÑàÑrÑuÑÑÑ{Ñp", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensione", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Effetti...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "A&vanzato...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&ÑEÑÜÑuÑ{ÑÑÑy", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "ÑOÑãÑu", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Avanzato"
+CAPTION "ÑQÑpÑxÑäÑyÑÇÑuÑ~ ÑÄÑqÑ|ÑyÑ{"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Elemento", 8, 5, 160, 50, 9
+    LTEXT "ÑXÑpÑÉÑÑ", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Dimensione", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&ÑQÑpÑxÑ}ÑuÑÇ", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "&Primo colore", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "ÑWÑrÑëÑÑ &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "&Secondo colore", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "ÑWÑrÑëÑÑ &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Carattere", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "ÑYÑÇÑyÑÜÑÑ", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensione del carattere", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "ÑQÑpÑxÑ}ÑuÑÇ Ñ~Ñp ÑäÑÇÑyÑÜÑÑÑp", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Colore", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
+    LTEXT "ÑWÑrÑëÑÑ", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    AUTOCHECKBOX "G", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
-    AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
-    PUSHBUTTON "Annulla", IDCANCEL, 191, 220, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
+    AUTOCHECKBOX "ÑX", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX "ÑK ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+    PUSHBUTTON "ÑOÑÑÑ{ÑpÑx", IDCANCEL, 191, 220, 50, 14
+    DEFPUSHBUTTON "ÑDÑÄÑqÑÇÑu", IDOK, 137, 220, 50, 14
 END
 
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effetti"
+CAPTION "ÑEÑÜÑuÑ{ÑÑÑy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Usare il seguente effetto per le transizioni in menu e tooltip",
+    CONTROL "ÑIÑx&ÑÅÑÄÑ|ÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑ|ÑuÑtÑ~ÑyÑÑÑu ÑÅÑÇÑuÑáÑÄÑtÑ~Ñy ÑuÑÜÑuÑ{ÑÑÑy ÑxÑp ÑyÑxÑqÑÄÑÇÑ~ÑyÑàÑyÑÑÑu Ñy ÑÅÑÄÑtÑÉÑ{ÑpÑxÑ{ÑyÑÑÑu",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "&ÑIÑxÑÅÑÄÑ|ÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑ|ÑuÑtÑ~ÑyÑë ÑÅÑÄÑáÑrÑpÑÑ ÑxÑp ÑyÑxÑsÑ|ÑpÑwÑtÑpÑ~Ñu ÑÇÑåÑqÑÄÑrÑuÑÑÑu Ñ~Ñp ÑuÑ{ÑÇÑpÑ~Ñ~ÑyÑÑÑu ÑäÑÇÑyÑÜÑÑÑÄÑrÑu", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "ÑIÑxÑÅÑÄÑ|ÑxÑrÑpÑ~&Ñu Ñ~Ñp ÑsÑÄÑ|ÑuÑ}Ñy ÑxÑ~ÑpÑâÑuÑÑÑp", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "ÑIÑxÑÄÑqÑÇÑpÑxÑëÑrÑpÑ~Ñu Ñ~Ñp &ÑÉÑuÑ~Ñ{Ñy ÑÅÑÄÑt ÑyÑxÑqÑÄÑÇÑ~ÑyÑàÑÑÑu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "ÑPÑÄÑ{ÑpÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑåÑtÑåÑÇÑwÑpÑ~ÑyÑuÑÑÑÄ Ñ~Ñp &ÑÅÑÇÑÄÑxÑÄÑÇÑàÑyÑÑÑu ÑÅÑÄ ÑrÑÇÑuÑ}Ñu Ñ~Ñp ÑrÑ|ÑpÑâÑuÑ~Ñu", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Nascondere la sottolineatura delle lettere di navigazione finche non √® premuto il tasto Alt",
+    CONTROL "ÑR&Ñ{ÑÇÑyÑrÑpÑ~Ñu Ñ~Ñp ÑÅÑÄÑtÑâÑuÑÇÑÑÑpÑrÑpÑ~ÑuÑÑÑÄ ÑxÑp Ñ{Ñ|ÑpÑrÑyÑpÑÑÑÖÑÇÑ~ÑÄÑÑÑÄ Ñ~ÑpÑÉÑÄÑâÑrÑpÑ~Ñu, ÑtÑÄ Ñ~ÑpÑÑÑyÑÉÑ{ÑpÑ~Ñu Ñ~Ñp Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
-    PUSHBUTTON "Annulla", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
+    PUSHBUTTON "ÑOÑÑÑ{ÑpÑx", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "ÑDÑÄÑqÑÇÑu", IDOK, 172, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Impostazioni"
+CAPTION "ÑNÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Trascinare le icone dei monitor in modo corrispondente alla disposizione fisica dei vostri monitor.", -1, 3, 3, 240, 20
+    LTEXT "ÑHÑpÑrÑ|ÑpÑâÑuÑÑÑu ÑxÑ~ÑpÑâÑuÑÑÑpÑÑÑp Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑyÑÑÑu ÑÑÑpÑ{Ñp, ÑâÑu ÑtÑp ÑÄÑÑÑsÑÄÑrÑpÑÇÑëÑÑ Ñ~Ñp ÑtÑuÑzÑÉÑÑÑrÑyÑÑÑuÑ|Ñ~ÑÄÑÑÑÄ ÑÇÑpÑxÑÅÑÄÑ|ÑÄÑwÑuÑ~ÑyÑu Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑyÑÑÑu ÑrÑy.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&Schermo", 1820, 3, 107, 70, 9
-    LTEXT "<none>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "&Risoluzione dello schermo", 1818, 3, 127, 115, 43
+    LTEXT "&ÑEÑ{ÑÇÑpÑ~", 1820, 3, 107, 70, 9
+    LTEXT "<Ñ~ÑëÑ}Ñp>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
+    GROUPBOX "&ÑQÑpÑxÑtÑuÑ|ÑyÑÑÑuÑ|Ñ~Ñp ÑÉÑÅÑÄÑÉÑÄÑqÑ~ÑÄÑÉÑÑ", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Min", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Max", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "ÑMÑpÑ|Ñ{Ñp", 1815, 9, 137, 25, 9, NOT WS_GROUP
+    LTEXT "ÑCÑÄÑ|ÑëÑ}Ñp", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX "&Colori", 1817, 125, 127, 115, 43
+    GROUPBOX "&ÑWÑrÑuÑÑÑÄÑrÑu", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
-    PUSHBUTTON "A&vanzate...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
+    PUSHBUTTON "ÑQÑpÑx&ÑäÑyÑÇÑuÑ~Ñy...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Generale"
+CAPTION "ÑOÑqÑãÑy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Monitor", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Dimensione font", -1, 14, 20, 222, 9
+    GROUPBOX "ÑEÑ{ÑÇÑpÑ~", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "ÑQÑpÑxÑ}ÑuÑÇ Ñ~Ñp ÑäÑÇÑyÑÜÑÑÑp", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibilit√†", -1, 7, 67, 237, 97
-    LTEXT "Alcuni programmi potrebbero funzionare in modo irregolare se non riavviate il computer dopo una modifica delle impostazioni dei colori.\r\n\nDopo la modifica delle impostazioni dei colori", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Riavviare il computer prima di applicare le nuove impostazioni.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Applicare le nuove impostazioni dei colori senza riavviare.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Chiedere prima di applicare le nuove impostazioni dei colori.", IDC_ASKME_RB, 14, 146, 228, 10
+    GROUPBOX "ÑRÑåÑrÑ}ÑuÑÉÑÑÑyÑ}ÑÄÑÉÑÑ", -1, 7, 67, 237, 97
+    LTEXT "ÑNÑëÑ{ÑÄÑy ÑÅÑÇÑyÑ|ÑÄÑwÑuÑ~ÑyÑë Ñ~ÑëÑ}Ñp ÑtÑp ÑÇÑpÑqÑÄÑÑÑëÑÑ ÑÅÑÇÑpÑrÑyÑ|Ñ~ÑÄ, ÑpÑ{ÑÄ Ñ~Ñu ÑÅÑÇÑuÑxÑpÑÅÑÖÑÉÑ~ÑuÑÑÑu Ñ{ÑÄÑ}ÑÅÑêÑÑÑåÑÇÑp, ÑÉÑ|ÑuÑt Ñ{ÑpÑÑÑÄ ÑÅÑÇÑÄÑ}ÑuÑ~ÑyÑÑÑu ÑàÑrÑuÑÑÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy.\r\nÑRÑ|ÑuÑt Ñ{ÑpÑÑÑÄ ÑÅÑÇÑÄÑ}ÑuÑ~Ñë ÑàÑrÑuÑÑÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&ÑPÑÇÑuÑxÑpÑÅÑÖÑÉÑ{ ÑÅÑÇÑuÑtÑy ÑÅÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu ÑàÑrÑuÑÑÑÄÑrÑy Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy.", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "ÑPÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy ÑqÑuÑx ÑÅÑÇÑuÑxÑpÑÅÑÖÑÉÑ{.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "ÑPÑyÑÑÑpÑ~Ñu ÑÅÑÇÑuÑtÑy ÑÅÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
@@ -163,29 +163,29 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BRICK "Rosso mattone"
-    IDS_EGGPLANT "Melanzana"
-    IDS_GOLIVE "Verde Oliva" //Spruce
-    IDS_HCONTRAST_1 "Contrasto elevato 1"
-    IDS_HCONTRAST_2 "Contrasto elevato 2"
-    IDS_HCONTRAST_BLACK "Nero a contrasto elevato"
-    IDS_HCONTRAST_WHITE "Bianco a contrasto elevato"
-    IDS_LILAC "Lilla"
-    IDS_MAPLE "Giallo cromo chiaro"
-    IDS_MARINE "Verde mare"
-    IDS_PLUM "Prugna"
-    IDS_PUMPKIN "Giallo cromo scuro"
-    IDS_RAIN "Grigio antracite"
+    IDS_BRICK "Brick"
+    IDS_EGGPLANT "Eggplant"
+    IDS_GOLIVE "Green Olive" //Spruce
+    IDS_HCONTRAST_1 "High Contrast 1"
+    IDS_HCONTRAST_2 "High Contrast 2"
+    IDS_HCONTRAST_BLACK "High Contrast Black"
+    IDS_HCONTRAST_WHITE "High Contrast White"
+    IDS_LILAC "Lilac"
+    IDS_MAPLE "Maple"
+    IDS_MARINE "Marine"
+    IDS_PLUM "Plum"
+    IDS_PUMPKIN "Pumpkin"
+    IDS_RAIN "Rainy Day"
     IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS classico"
+    IDS_CLASSIC "ReactOS Classic"
     IDS_STANDARD "ReactOS Standard"
-    IDS_ROSE "Rosa"
-    IDS_SAND "Sabbia" //Desert
-    IDS_SLATE "Lavagna"
+    IDS_ROSE "Rose"
+    IDS_SAND "Sand" //Desert
+    IDS_SLATE "Slate"
     IDS_SKY "Sky"
-    IDS_STORM "Tempesta"
-    IDS_TEAL "Verde acqua"
-    IDS_WHEAT "Tabacco"
+    IDS_STORM "Storm"
+    IDS_TEAL "Teal"
+    IDS_WHEAT "Wheat"
 END
 
 STRINGTABLE
