@@ -1380,6 +1380,7 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
     BOOL bRet;
 #ifdef __REACTOS__
     WCHAR szVersionString[256];
+    WCHAR szFormat[256];
 #endif
 
     TRACE("\n");
@@ -1395,7 +1396,8 @@ BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
 
 #ifdef __REACTOS__
     /* Output the version OS kernel strings */
-    StringCchPrintfW(szVersionString, _countof(szVersionString), L"%S (%S)", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+    LoadStringW(shell32_hInstance, IDS_ABOUT_VERSION_STRING, szFormat, _countof(szFormat));
+    StringCchPrintfW(szVersionString, _countof(szVersionString), szFormat, KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
 #endif
 
     info.szApp        = szApp;
