@@ -248,7 +248,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
 
-    hThemeUI = LoadLibraryExW(L"themeui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    hThemeUI = LoadLibraryW(L"themeui.dll");
+    RegisterPreviewControl(hThemeUI);
 
     for (i = 0; i < ARRAYSIZE(PropPages); ++i)
     {
@@ -272,6 +273,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     PropertySheet(&psh);
 
+    UnregisterPreviewControl(hThemeUI);
     FreeLibrary(hThemeUI);
     hThemeUI = NULL;
 
