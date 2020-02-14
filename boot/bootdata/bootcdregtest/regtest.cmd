@@ -11,14 +11,14 @@ if "%errorlevel%"=="1" (
     exit 0
 )
 
-move %WINDIR%\bin\redirtest1.dll %WINDIR%\bin\kernel32test_versioned.dll
-move %WINDIR%\bin\testdata\redirtest2.dll %WINDIR%\bin\testdata\kernel32test_versioned.dll
+move "%WINDIR%\bin\redirtest1.dll" "%WINDIR%\bin\kernel32test_versioned.dll"
+move "%WINDIR%\bin\testdata\redirtest2.dll" "%WINDIR%\bin\testdata\kernel32test_versioned.dll"
 if exist "%WINDIR%\bin\AHKAppTests.cmd" (
     dbgprint "Preparing AHK Application testing suite."
-    call %WINDIR%\bin\AHKAppTests.cmd
-    del %WINDIR%\bin\AHKAppTests.cmd
+    call "%WINDIR%\bin\AHKAppTests.cmd"
+    del "%WINDIR%\bin\AHKAppTests.cmd"
 )
 
 dbgprint --process "ipconfig"
-cd %WINDIR%\bin
+cd "%WINDIR%\bin"
 start rosautotest /r /s /n
