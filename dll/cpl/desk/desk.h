@@ -22,6 +22,7 @@
 #include <shlobj.h>
 #include <regstr.h>
 #include <dll/desk/deskcplx.h>
+#include <assert.h>
 #include <strsafe.h>
 #include <gdiplus.h>
 
@@ -49,6 +50,7 @@ typedef struct _DIBITMAP
 } DIBITMAP, *PDIBITMAP;
 
 extern HINSTANCE hApplet;
+extern HINSTANCE hThemeUI;
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,

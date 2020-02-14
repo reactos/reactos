@@ -23,7 +23,8 @@ INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 UINT CALLBACK SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp);
 
-HINSTANCE hApplet = 0;
+HINSTANCE hApplet = NULL;
+HINSTANCE hThemeUI = NULL;
 HWND hCPLWindow;
 
 /* Applets */
@@ -163,7 +164,6 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     LPCWSTR pwszSelectedTab = NULL;
     LPCWSTR pwszFile = NULL;
     LPCWSTR pwszAction = NULL;
-    HINSTANCE hTHEMEUI;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -226,7 +226,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
 
-    hTHEMEUI = LoadLibraryExW(L"themeui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    hThemeUI = LoadLibraryExW(L"themeui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
 
     for (i = 0; i < ARRAYSIZE(PropPages); ++i)
     {
@@ -249,7 +249,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
                 break;
 
             case RESFROM_THEMEUI:
-                InitPropSheetPage(&psh, hTHEMEUI, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
+                InitPropSheetPage(&psh, hThemeUI, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
                 break;
         }
     }
@@ -259,7 +259,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     PropertySheet(&psh);
 
-    FreeLibrary(hTHEMEUI);
+    FreeLibrary(hThemeUI);
+    hThemeUI = NULL;
 
 cleanup:
     if (hpsxa != NULL)

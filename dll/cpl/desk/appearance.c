@@ -236,8 +236,9 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_APPEARANCE_EFFECTS:
-                    if (DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_EFFAPPEARANCE),
-                                       hwndDlg, EffAppearanceDlgProc, (LPARAM)g) == IDOK)
+                    assert(hThemeUI != NULL);
+                    if (DialogBoxParamW(hThemeUI, MAKEINTRESOURCEW(IDD_EFFAPPEARANCE),
+                                        hwndDlg, EffAppearanceDlgProc, (LPARAM)g) == IDOK)
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         g->Scheme = g->SchemeAdv;
@@ -246,8 +247,9 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_APPEARANCE_ADVANCED:
-                    if (DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_ADVAPPEARANCE),
-                                       hwndDlg, AdvAppearanceDlgProc, (LPARAM)g) == IDOK)
+                    assert(hThemeUI != NULL);
+                    if (DialogBoxParamW(hThemeUI, MAKEINTRESOURCEW(IDD_ADVAPPEARANCE),
+                                        hwndDlg, AdvAppearanceDlgProc, (LPARAM)g) == IDOK)
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         g->bSchemeChanged = TRUE;

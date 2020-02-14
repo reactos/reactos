@@ -760,7 +760,8 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
             return;
     }
 
-    if (DialogBox(hApplet, MAKEINTRESOURCE(IDD_CONFIRMSETTINGS), hwndDlg, ConfirmDlgProc) == IDYES)
+    assert(hThemeUI != NULL);
+    if (DialogBoxW(hThemeUI, MAKEINTRESOURCEW(IDD_CONFIRMSETTINGS), hwndDlg, ConfirmDlgProc) == IDYES)
     {
         pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
         pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
