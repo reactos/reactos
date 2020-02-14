@@ -65,6 +65,22 @@ LoadPopupMenu(IN HINSTANCE hInstance,
     return hSubMenu;
 }
 
+LPCDLGTEMPLATE
+DoFindAndLoadDialog(HINSTANCE hInst, INT nDialogID)
+{
+    HRSRC hRsrc;
+    HGLOBAL hResData;
+    LPCDLGTEMPLATE pResource;
+
+    hRsrc = FindResourceW(hInst, MAKEINTRESOURCEW(nDialogID), RT_DIALOG);
+    if (!hRsrc)
+        return NULL;
+
+    hResData = LoadResource(hInst, hRsrc);
+    pResource = LockResource(hResData);
+    return pResource;
+}
+
 static BOOL CALLBACK
 DisplayAppletPropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
@@ -79,17 +95,22 @@ DisplayAppletPropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 static BOOL
-InitPropSheetPage(PROPSHEETHEADER *ppsh, HINSTANCE hDllInst, WORD idDlg, DLGPROC DlgProc,
-                  LPFNPSPCALLBACK pfnCallback)
+InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCALLBACK pfnCallback)
 {
     HPROPSHEETPAGE hPage;
     PROPSHEETPAGE psp;
+    HINSTANCE hInst;
+    LPCDLGTEMPLATE pResource;
 
     if (ppsh->nPages < MAX_DESK_PAGES)
     {
-        HRSRC hRsrc = FindResourceW(hDllInst, MAKEINTRESOURCEW(idDlg), RT_DIALOG);
-        HGLOBAL hResData = LoadResource(hDllInst, hRsrc);
-        LPCDLGTEMPLATE pResource = LockResource(hResData);
+        hInst = hThemeUI;
+        pResource = DoFindAndLoadDialog(hInst, idDlg);
+        if (!pResource)
+        {
+            hInst = hApplet;
+            pResource = DoFindAndLoadDialog(hInst, idDlg);
+        }
 
         ZeroMemory(&psp, sizeof(psp));
         psp.dwSize = sizeof(psp);
@@ -243,16 +264,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
             continue;
         }
 
-        switch (PropPages[i].src)
-        {
-            case RESFROM_DESK:
-                InitPropSheetPage(&psh, hApplet, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
-                break;
-
-            case RESFROM_THEMEUI:
-                InitPropSheetPage(&psh, hThemeUI, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
-                break;
-        }
+        InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
     }
 
     /* NOTE: Don't call SHAddFromPropSheetExtArray here because this applet only allows

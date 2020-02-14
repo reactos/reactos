@@ -217,6 +217,8 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     GLOBALS *g;
     LPNMHDR lpnm;
+    HINSTANCE hInst;
+    LPCDLGTEMPLATE pResource;
 
     g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -236,9 +238,16 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_APPEARANCE_EFFECTS:
-                    assert(hThemeUI != NULL);
-                    if (DialogBoxParamW(hThemeUI, MAKEINTRESOURCEW(IDD_EFFAPPEARANCE),
-                                        hwndDlg, EffAppearanceDlgProc, (LPARAM)g) == IDOK)
+                    hInst = hThemeUI;
+                    pResource = DoFindAndLoadDialog(hInst, IDD_EFFAPPEARANCE);
+                    if (!pResource)
+                    {
+                        hInst = hApplet;
+                        pResource = DoFindAndLoadDialog(hInst, IDD_EFFAPPEARANCE);
+                    }
+
+                    if (DialogBoxIndirectParamW(hInst, pResource, hwndDlg, EffAppearanceDlgProc,
+                                                (LPARAM)g) == IDOK)
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         g->Scheme = g->SchemeAdv;
@@ -247,9 +256,16 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_APPEARANCE_ADVANCED:
-                    assert(hThemeUI != NULL);
-                    if (DialogBoxParamW(hThemeUI, MAKEINTRESOURCEW(IDD_ADVAPPEARANCE),
-                                        hwndDlg, AdvAppearanceDlgProc, (LPARAM)g) == IDOK)
+                    hInst = hThemeUI;
+                    pResource = DoFindAndLoadDialog(hInst, IDD_ADVAPPEARANCE);
+                    if (!pResource)
+                    {
+                        hInst = hApplet;
+                        pResource = DoFindAndLoadDialog(hInst, IDD_ADVAPPEARANCE);
+                    }
+
+                    if (DialogBoxIndirectParamW(hInst, pResource, hwndDlg, AdvAppearanceDlgProc,
+                                                (LPARAM)g) == IDOK)
                     {
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         g->bSchemeChanged = TRUE;

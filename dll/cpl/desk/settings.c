@@ -727,6 +727,8 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
     TCHAR Message[1024], Title[256];
     DEVMODE devmode;
     LONG rc;
+    HINSTANCE hInst;
+    LPCDLGTEMPLATE pResource;
 
     RtlZeroMemory(&devmode, sizeof(devmode));
     devmode.dmSize = (WORD)sizeof(devmode);
@@ -760,8 +762,15 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
             return;
     }
 
-    assert(hThemeUI != NULL);
-    if (DialogBoxW(hThemeUI, MAKEINTRESOURCEW(IDD_CONFIRMSETTINGS), hwndDlg, ConfirmDlgProc) == IDYES)
+    hInst = hThemeUI;
+    pResource = DoFindAndLoadDialog(hThemeUI, IDD_CONFIRMSETTINGS);
+    if (!pResource)
+    {
+        hInst = hApplet;
+        pResource = DoFindAndLoadDialog(hApplet, IDD_CONFIRMSETTINGS);
+    }
+
+    if (DialogBoxIndirectW(hInst, pResource, hwndDlg, ConfirmDlgProc) == IDYES)
     {
         pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
         pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
