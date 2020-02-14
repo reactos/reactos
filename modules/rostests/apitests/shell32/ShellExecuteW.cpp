@@ -72,7 +72,7 @@ START_TEST(ShellExecuteW)
     hInstance = ShellExecuteW(NULL, NULL, WinDir, NULL, NULL, SW_SHOWNORMAL);
     ret = (INT)(UINT_PTR)hInstance;
     ok(ret > 31, "TEST #3: ret:%d, LastError: %ld\n", ret, GetLastError());
-    trace("TEST #3 ret: '%d'.\n", ret);
+    trace("TEST #3 ret: %d.\n", ret);
     if (hInstance) 
     {
         Sleep(WAIT_SLEEP);
