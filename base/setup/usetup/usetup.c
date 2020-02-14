@@ -4297,7 +4297,7 @@ RegistryPage(PINPUT_RECORD Ir)
     {
 #ifdef __REACTOS__
         /* HACK */
-        DoRegistryFixup(&s_SubstSettings, USetupData.LanguageId);
+        DoRegistryFontFixup(&s_SubstSettings, USetupData.LanguageId);
 #endif
 
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));

@@ -557,7 +557,7 @@ AddCodePage(
 
 #ifdef __REACTOS__ /* HACK */
 BOOL
-DoRegistryFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
+DoRegistryFontFixup(PFONTSUBSTSETTINGS pSettings, LANGID LangID)
 {
     if (pSettings->bFontMINGLIU)
         AddFontsSettingsToRegistry(FontFixupMINGLIU);
