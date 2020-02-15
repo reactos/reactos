@@ -838,7 +838,7 @@ BEGIN
     IDS_COOKIES "Бисквитки"
     IDS_HISTORY "Местни настройки\\History"
     IDS_PROGRAM_FILES "Program Files"
-    IDS_MYPICTURES "Моите изображения" // "Документите ми\\Изображенията ми"
+    IDS_MYPICTURES "Моите изображения" // "Изображенията ми"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Документи"
     IDS_ADMINTOOLS "Пусков изборник\\Приложения\\Управнически средства"
