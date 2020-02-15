@@ -762,14 +762,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
             return;
     }
 
-    hInst = hThemeUI;
-    pResource = DoLoadDialog(hInst, IDD_CONFIRMSETTINGS);
-    if (!pResource)
-    {
-        hInst = hApplet;
-        pResource = DoLoadDialog(hInst, IDD_CONFIRMSETTINGS);
-    }
-
+    pResource = DoLoadDialogDx(IDD_EFFAPPEARANCE, &hInst);
     if (DialogBoxIndirectW(hInst, pResource, hwndDlg, ConfirmDlgProc) == IDYES)
     {
         pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;

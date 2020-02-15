@@ -81,6 +81,25 @@ DoLoadDialog(HINSTANCE hInst, INT nDialogID)
     return pResource;
 }
 
+LPCDLGTEMPLATE
+DoLoadDialogDx(INT nDialogID, HINSTANCE *phInst)
+{
+    LPCDLGTEMPLATE ret = DoLoadDialog(hThemeUI, nDialogID);
+    if (ret)
+    {
+        *phInst = hThemeUI;
+        return ret;
+    }
+    ret = DoLoadDialog(hApplet, nDialogID);
+    if (ret)
+    {
+        *phInst = hApplet;
+        return ret;
+    }
+    *phInst = NULL;
+    return NULL;
+}
+
 static BOOL CALLBACK
 DisplayAppletPropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
@@ -104,13 +123,7 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCAL
 
     if (ppsh->nPages < MAX_DESK_PAGES)
     {
-        hInst = hThemeUI;
-        pResource = DoLoadDialog(hInst, idDlg);
-        if (!pResource)
-        {
-            hInst = hApplet;
-            pResource = DoLoadDialog(hInst, idDlg);
-        }
+        pResource = DoLoadDialogDx(idDlg, &hInst);
 
         ZeroMemory(&psp, sizeof(psp));
         psp.dwSize = sizeof(psp);
