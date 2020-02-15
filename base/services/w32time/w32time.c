@@ -237,7 +237,7 @@ ControlHandler(DWORD request)
 
 VOID
 WINAPI
-ServiceMain(DWORD argc, LPWSTR *argv)
+W32TmServiceMain(DWORD argc, LPWSTR *argv)
 {
     int   result;
     DWORD dwInterval;
