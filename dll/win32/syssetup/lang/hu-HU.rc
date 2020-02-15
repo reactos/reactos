@@ -220,7 +220,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Eszközök telepítése..."
 END
 
-/* ATTENTION: Synchronize the translation with dll/win32/shell32/lang */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
