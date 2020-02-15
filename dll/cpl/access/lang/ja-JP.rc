@@ -109,22 +109,22 @@ END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "スティッキーキー設定"
+CAPTION "固定キー設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "キー", -1, 6, 11, 234, 62
-    LTEXT "スティッキーキー機能を有効にするにはShiftキーを5回押して下さい。",
+    LTEXT "固定キー機能を有効にするにはShiftキーを5回押して下さい。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "スティッキーキーを有効にする(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
+    AUTOCHECKBOX "固定キーを有効にする(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "オプション", -1, 6, 83, 234, 44
     AUTOCHECKBOX "修飾キーを2回押すとロックする(&P)", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "一度に2つのキーが押されたらスティッキーをオフにする(&T)", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "一度に2つのキーが押されたら固定キーをオフにする(&T)", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
     GROUPBOX "通知", -1, 6, 133, 234, 44
     AUTOCHECKBOX "修飾キーが押されたら音を鳴らす(&M)", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "スティッキーの状態をスクリーンに表示(&S)", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "固定キーの状態をスクリーンに表示(&S)", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 189, 207, 50, 14
@@ -198,12 +198,12 @@ BEGIN
     AUTOCHECKBOX "&Use shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
     GROUPBOX "ポインタ速度", -1, 6, 83, 234, 83
-    LTEXT "&Top speed:", -1, 12, 96, 48, 11
+    LTEXT "最高速度(&T):", -1, 12, 96, 48, 11
     LTEXT "低い", -1, 66, 96, 18, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
     LTEXT "高い", -1, 204, 96, 18, 11
-    LTEXT "&Acceleration:", -1, 12, 123, 48, 11
+    LTEXT "加速(&A):", -1, 12, 123, 48, 11
     LTEXT "遅い", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
