@@ -249,6 +249,6 @@ BEGIN
     IDS_PRODUCTSUBTITLE "システムのふるまいに影響する製品オプションを選べます。"
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation (既定)"
-    IDS_PRODUCTSERVERINFO "システムはサーバとして認識されます。個人用フォルダ ""マイ ピクチャ"", ""マイ ビデオ"" and ""マイ ミュージック"" は ""マイ ドキュメント"" から独立しています。"
-    IDS_PRODUCTWORKSTATIONINFO "システムはワークステーションとして認識されます。個人用フォルダ ""マイ ピクチャ"", ""マイ ビデオ"" and ""マイ ミュージック"" は、""マイ ドキュメント"" の中にあります。"
+    IDS_PRODUCTSERVERINFO "システムはサーバとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は ""マイ ドキュメント"" から独立しています。"
+    IDS_PRODUCTWORKSTATIONINFO "システムはワークステーションとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は、""マイ ドキュメント"" の中にあります。"
 END
