@@ -241,7 +241,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Installing devices..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize the translation with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"

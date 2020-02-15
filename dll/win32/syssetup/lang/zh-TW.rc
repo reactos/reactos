@@ -244,7 +244,7 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "正在安裝裝置驅動程式..."
 END
 
-/* ATTENTION: Synchronize the translation of these strings with shell32 */
+/* ATTENTION: Synchronize the translation with dll/win32/shell32/lang */
 
 /* ATTENTION: If there is no special situation, please DO NOT change 
 English folder names into Chinese, or it may cause problems in the system. */
