@@ -1202,6 +1202,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     PUNICODE_STRING ErasePassword = NULL;
 
     TRACE("LsaApLogonUserEx2()\n");
+
     TRACE("LogonType: %lu\n", LogonType);
     TRACE("ProtocolSubmitBuffer: %p\n", ProtocolSubmitBuffer);
     TRACE("SubmitBufferSize: %lu\n", SubmitBufferSize);

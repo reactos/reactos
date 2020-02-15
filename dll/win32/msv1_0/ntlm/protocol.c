@@ -1408,7 +1408,7 @@ SvrAuthMsgProcessData(
         // ExpectedNtChallengeResponse)
         // If (AUTHENTICATE_MESSAGE.LmChallengeResponse !=
         // ExpectedLmChallengeResponse)
-        if (!ExtDataIsEqual1(&ad->NtChallengeResponse, &ExpectedNtChallengeResponse) ||
+        if (!ExtDataIsEqual1(&ad->NtChallengeResponse, &ExpectedNtChallengeResponse) &&
            ((ad->LmChallengeResponse.bUsed != 0) &&
             (!ExtDataIsEqual1(&ad->LmChallengeResponse, &ExpectedLmChallengeResponse))))
         {
