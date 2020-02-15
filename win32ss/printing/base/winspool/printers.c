@@ -239,47 +239,7 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
             ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
-
-        MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDevModeInput->dmDeviceName, -1, pdmwInput->dmDeviceName, CCHDEVICENAME);
-        pdmwInput->dmSpecVersion = pDevModeInput->dmSpecVersion;
-        pdmwInput->dmDriverVersion = pDevModeInput->dmDriverVersion;
-        pdmwInput->dmSize = pDevModeInput->dmSize;
-        pdmwInput->dmDriverExtra = pDevModeInput->dmDriverExtra;
-        pdmwInput->dmFields = pDevModeInput->dmFields;
-        pdmwInput->dmOrientation = pDevModeInput->dmOrientation;
-        pdmwInput->dmPaperSize = pDevModeInput->dmPaperSize;
-        pdmwInput->dmPaperLength = pDevModeInput->dmPaperLength;
-        pdmwInput->dmPaperWidth = pDevModeInput->dmPaperWidth;
-        pdmwInput->dmScale = pDevModeInput->dmScale;
-        pdmwInput->dmCopies = pDevModeInput->dmCopies;
-        pdmwInput->dmDefaultSource = pDevModeInput->dmDefaultSource;
-        pdmwInput->dmPrintQuality = pDevModeInput->dmPrintQuality;
-        pdmwInput->dmPosition = pDevModeInput->dmPosition;
-        pdmwInput->dmDisplayOrientation = pDevModeInput->dmDisplayOrientation;
-        pdmwInput->dmDisplayFixedOutput = pDevModeInput->dmDisplayFixedOutput;
-        pdmwInput->dmColor = pDevModeInput->dmColor;
-        pdmwInput->dmDuplex = pDevModeInput->dmDuplex;
-        pdmwInput->dmYResolution = pDevModeInput->dmYResolution;
-        pdmwInput->dmTTOption = pDevModeInput->dmTTOption;
-        pdmwInput->dmCollate = pDevModeInput->dmCollate;
-
-        MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDevModeInput->dmFormName, -1, pdmwInput->dmFormName, CCHFORMNAME);
-
-        pdmwInput->dmLogPixels = pDevModeInput->dmLogPixels;
-        pdmwInput->dmBitsPerPel = pDevModeInput->dmBitsPerPel;
-        pdmwInput->dmPelsWidth = pDevModeInput->dmPelsWidth;
-        pdmwInput->dmPelsHeight = pDevModeInput->dmPelsHeight;
-        pdmwInput->dmDisplayFlags = pDevModeInput->dmDisplayFlags;
-        pdmwInput->dmNup = pDevModeInput->dmNup;
-        pdmwInput->dmDisplayFrequency = pDevModeInput->dmDisplayFrequency;
-        pdmwInput->dmICMMethod = pDevModeInput->dmICMMethod;
-        pdmwInput->dmICMIntent = pDevModeInput->dmICMIntent;
-        pdmwInput->dmMediaType = pDevModeInput->dmMediaType;
-        pdmwInput->dmDitherType = pDevModeInput->dmDitherType; 
-        pdmwInput->dmReserved1 = pDevModeInput->dmReserved1;
-        pdmwInput->dmReserved2 = pDevModeInput->dmReserved2; 
-        pdmwInput->dmPanningWidth = pDevModeInput->dmPanningWidth;
-        pdmwInput->dmPanningHeight = pDevModeInput->dmPanningHeight;
+        RosConvertAnsiDevModeToUnicodeDevmode(pDevModeInput, pdmwInput);
     }
 
     if (pDevModeOutput)
@@ -310,47 +270,7 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
 
     if (pdmwOutput)
     {
-        WideCharToMultiByte(CP_ACP, 0, pdmwOutput->dmDeviceName, -1, (LPSTR)pDevModeOutput->dmDeviceName, CCHDEVICENAME, NULL, NULL);
-
-        pDevModeOutput->dmSpecVersion = pdmwOutput->dmSpecVersion;
-        pDevModeOutput->dmDriverVersion = pdmwOutput->dmDriverVersion;
-        pDevModeOutput->dmSize = pdmwOutput->dmSize;
-        pDevModeOutput->dmDriverExtra = pdmwOutput->dmDriverExtra;
-        pDevModeOutput->dmFields = pdmwOutput->dmFields;
-        pDevModeOutput->dmOrientation = pdmwOutput->dmOrientation;
-        pDevModeOutput->dmPaperSize = pdmwOutput->dmPaperSize;
-        pDevModeOutput->dmPaperLength = pdmwOutput->dmPaperLength;
-        pDevModeOutput->dmPaperWidth = pdmwOutput->dmPaperWidth;
-        pDevModeOutput->dmScale = pdmwOutput->dmScale;
-        pDevModeOutput->dmCopies = pdmwOutput->dmCopies;
-        pDevModeOutput->dmDefaultSource = pdmwOutput->dmDefaultSource;
-        pDevModeOutput->dmPrintQuality = pdmwOutput->dmPrintQuality;
-        pDevModeOutput->dmPosition = pdmwOutput->dmPosition;
-        pDevModeOutput->dmDisplayOrientation = pdmwOutput->dmDisplayOrientation;
-        pDevModeOutput->dmDisplayFixedOutput = pdmwOutput->dmDisplayFixedOutput;
-        pDevModeOutput->dmColor = pdmwOutput->dmColor;
-        pDevModeOutput->dmDuplex = pdmwOutput->dmDuplex;
-        pDevModeOutput->dmYResolution = pdmwOutput->dmYResolution;
-        pDevModeOutput->dmTTOption = pdmwOutput->dmTTOption;
-        pDevModeOutput->dmCollate = pdmwOutput->dmCollate;
-
-        WideCharToMultiByte(CP_ACP, 0, pdmwOutput->dmFormName, -1, (LPSTR)pDevModeOutput->dmFormName, CCHFORMNAME, NULL, NULL);
-
-        pDevModeOutput->dmLogPixels = pdmwOutput->dmLogPixels;
-        pDevModeOutput->dmBitsPerPel = pdmwOutput->dmBitsPerPel;
-        pDevModeOutput->dmPelsWidth = pdmwOutput->dmPelsWidth;
-        pDevModeOutput->dmPelsHeight = pdmwOutput->dmPelsHeight;
-        pDevModeOutput->dmDisplayFlags = pdmwOutput->dmDisplayFlags;
-        pDevModeOutput->dmNup = pdmwOutput->dmNup;
-        pDevModeOutput->dmDisplayFrequency = pdmwOutput->dmDisplayFrequency;
-        pDevModeOutput->dmICMMethod = pdmwOutput->dmICMMethod;
-        pDevModeOutput->dmICMIntent = pdmwOutput->dmICMIntent;
-        pDevModeOutput->dmMediaType = pdmwOutput->dmMediaType;
-        pDevModeOutput->dmDitherType = pdmwOutput->dmDitherType; 
-        pDevModeOutput->dmReserved1 = pdmwOutput->dmReserved1;
-        pDevModeOutput->dmReserved2 = pdmwOutput->dmReserved2; 
-        pDevModeOutput->dmPanningWidth = pdmwOutput->dmPanningWidth;
-        pDevModeOutput->dmPanningHeight = pdmwOutput->dmPanningHeight;
+     RosConvertUnicodeDevModeToAnsiDevmode(pdmwOutput, pDevModeOutput);
     }
 
 Cleanup:

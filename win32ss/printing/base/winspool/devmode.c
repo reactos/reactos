@@ -233,3 +233,104 @@ Failure:
     SetLastError(ERROR_INVALID_DATA);
     return FALSE;
 }
+
+void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pDevModeOutput)
+{
+    FIXME("This function should become ConvertAnsiDevModeToUnicodeDevmode when its parameters are known!\n");
+
+    // Check if a pDevModeInput and pDevModeOutput are both not NULL.
+    if (!pDevModeInput || !pDevModeOutput)
+        return;
+
+    MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDevModeInput->dmDeviceName, -1, pDevModeOutput->dmDeviceName, CCHDEVICENAME);
+    pDevModeOutput->dmSpecVersion = pDevModeInput->dmSpecVersion;
+    pDevModeOutput->dmDriverVersion = pDevModeInput->dmDriverVersion;
+    pDevModeOutput->dmSize = pDevModeInput->dmSize;
+    pDevModeOutput->dmDriverExtra = pDevModeInput->dmDriverExtra;
+    pDevModeOutput->dmFields = pDevModeInput->dmFields;
+    pDevModeOutput->dmOrientation = pDevModeInput->dmOrientation;
+    pDevModeOutput->dmPaperSize = pDevModeInput->dmPaperSize;
+    pDevModeOutput->dmPaperLength = pDevModeInput->dmPaperLength;
+    pDevModeOutput->dmPaperWidth = pDevModeInput->dmPaperWidth;
+    pDevModeOutput->dmScale = pDevModeInput->dmScale;
+    pDevModeOutput->dmCopies = pDevModeInput->dmCopies;
+    pDevModeOutput->dmDefaultSource = pDevModeInput->dmDefaultSource;
+    pDevModeOutput->dmPrintQuality = pDevModeInput->dmPrintQuality;
+    pDevModeOutput->dmPosition = pDevModeInput->dmPosition;
+    pDevModeOutput->dmDisplayOrientation = pDevModeInput->dmDisplayOrientation;
+    pDevModeOutput->dmDisplayFixedOutput = pDevModeInput->dmDisplayFixedOutput;
+    pDevModeOutput->dmColor = pDevModeInput->dmColor;
+    pDevModeOutput->dmDuplex = pDevModeInput->dmDuplex;
+    pDevModeOutput->dmYResolution = pDevModeInput->dmYResolution;
+    pDevModeOutput->dmTTOption = pDevModeInput->dmTTOption;
+    pDevModeOutput->dmCollate = pDevModeInput->dmCollate;
+    MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pDevModeInput->dmFormName, -1, pDevModeOutput->dmFormName, CCHFORMNAME);
+    pDevModeOutput->dmLogPixels = pDevModeInput->dmLogPixels;
+    pDevModeOutput->dmBitsPerPel = pDevModeInput->dmBitsPerPel;
+    pDevModeOutput->dmPelsWidth = pDevModeInput->dmPelsWidth;
+    pDevModeOutput->dmPelsHeight = pDevModeInput->dmPelsHeight;
+    pDevModeOutput->dmDisplayFlags = pDevModeInput->dmDisplayFlags;
+    pDevModeOutput->dmNup = pDevModeInput->dmNup;
+    pDevModeOutput->dmDisplayFrequency = pDevModeInput->dmDisplayFrequency;
+    pDevModeOutput->dmICMMethod = pDevModeInput->dmICMMethod;
+    pDevModeOutput->dmICMIntent = pDevModeInput->dmICMIntent;
+    pDevModeOutput->dmMediaType = pDevModeInput->dmMediaType;
+    pDevModeOutput->dmDitherType = pDevModeInput->dmDitherType; 
+    pDevModeOutput->dmReserved1 = pDevModeInput->dmReserved1;
+    pDevModeOutput->dmReserved2 = pDevModeInput->dmReserved2; 
+    pDevModeOutput->dmPanningWidth = pDevModeInput->dmPanningWidth;
+    pDevModeOutput->dmPanningHeight = pDevModeInput->dmPanningHeight;
+    
+    return;
+}
+
+
+void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pDevModeOutput)
+{
+    FIXME("This function should become ConvertUnicodeDevModeToAnsiDevmode when its parameters are known!\n");
+
+    // Check if a pDevModeInput and pDevModeOutput are both not NULL.
+    if (!pDevModeInput || !pDevModeOutput)
+        return;
+
+    WideCharToMultiByte(CP_ACP, 0, pDevModeInput->dmDeviceName, -1, (LPSTR)pDevModeOutput->dmDeviceName, CCHDEVICENAME, NULL, NULL);
+    pDevModeOutput->dmSpecVersion = pDevModeInput->dmSpecVersion;
+    pDevModeOutput->dmDriverVersion = pDevModeInput->dmDriverVersion;
+    pDevModeOutput->dmSize = pDevModeInput->dmSize;
+    pDevModeOutput->dmDriverExtra = pDevModeInput->dmDriverExtra;
+    pDevModeOutput->dmFields = pDevModeInput->dmFields;
+    pDevModeOutput->dmOrientation = pDevModeInput->dmOrientation;
+    pDevModeOutput->dmPaperSize = pDevModeInput->dmPaperSize;
+    pDevModeOutput->dmPaperLength = pDevModeInput->dmPaperLength;
+    pDevModeOutput->dmPaperWidth = pDevModeInput->dmPaperWidth;
+    pDevModeOutput->dmScale = pDevModeInput->dmScale;
+    pDevModeOutput->dmCopies = pDevModeInput->dmCopies;
+    pDevModeOutput->dmDefaultSource = pDevModeInput->dmDefaultSource;
+    pDevModeOutput->dmPrintQuality = pDevModeInput->dmPrintQuality;
+    pDevModeOutput->dmPosition = pDevModeInput->dmPosition;
+    pDevModeOutput->dmDisplayOrientation = pDevModeInput->dmDisplayOrientation;
+    pDevModeOutput->dmDisplayFixedOutput = pDevModeInput->dmDisplayFixedOutput;
+    pDevModeOutput->dmColor = pDevModeInput->dmColor;
+    pDevModeOutput->dmDuplex = pDevModeInput->dmDuplex;
+    pDevModeOutput->dmYResolution = pDevModeInput->dmYResolution;
+    pDevModeOutput->dmTTOption = pDevModeInput->dmTTOption;
+    pDevModeOutput->dmCollate = pDevModeInput->dmCollate;
+    WideCharToMultiByte(CP_ACP, 0, pDevModeInput->dmFormName, -1, (LPSTR)pDevModeOutput->dmFormName, CCHFORMNAME, NULL, NULL);
+    pDevModeOutput->dmLogPixels = pDevModeInput->dmLogPixels;
+    pDevModeOutput->dmBitsPerPel = pDevModeInput->dmBitsPerPel;
+    pDevModeOutput->dmPelsWidth = pDevModeInput->dmPelsWidth;
+    pDevModeOutput->dmPelsHeight = pDevModeInput->dmPelsHeight;
+    pDevModeOutput->dmDisplayFlags = pDevModeInput->dmDisplayFlags;
+    pDevModeOutput->dmNup = pDevModeInput->dmNup;
+    pDevModeOutput->dmDisplayFrequency = pDevModeInput->dmDisplayFrequency;
+    pDevModeOutput->dmICMMethod = pDevModeInput->dmICMMethod;
+    pDevModeOutput->dmICMIntent = pDevModeInput->dmICMIntent;
+    pDevModeOutput->dmMediaType = pDevModeInput->dmMediaType;
+    pDevModeOutput->dmDitherType = pDevModeInput->dmDitherType; 
+    pDevModeOutput->dmReserved1 = pDevModeInput->dmReserved1;
+    pDevModeOutput->dmReserved2 = pDevModeInput->dmReserved2; 
+    pDevModeOutput->dmPanningWidth = pDevModeInput->dmPanningWidth;
+    pDevModeOutput->dmPanningHeight = pDevModeInput->dmPanningHeight;
+
+    return;
+}
