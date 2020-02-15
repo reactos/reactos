@@ -11,14 +11,14 @@ if "%errorlevel%"=="1" (
     exit 0
 )
 
-move C:\ReactOS\bin\redirtest1.dll C:\ReactOS\bin\kernel32test_versioned.dll
-move C:\ReactOS\bin\testdata\redirtest2.dll C:\ReactOS\bin\testdata\kernel32test_versioned.dll
-if exist "C:\ReactOS\bin\AHKAppTests.cmd" (
+move "%WINDIR%\bin\redirtest1.dll" "%WINDIR%\bin\kernel32test_versioned.dll"
+move "%WINDIR%\bin\testdata\redirtest2.dll" "%WINDIR%\bin\testdata\kernel32test_versioned.dll"
+if exist "%WINDIR%\bin\AHKAppTests.cmd" (
     dbgprint "Preparing AHK Application testing suite."
-    call C:\ReactOS\bin\AHKAppTests.cmd
-    del C:\ReactOS\bin\AHKAppTests.cmd
+    call "%WINDIR%\bin\AHKAppTests.cmd"
+    del "%WINDIR%\bin\AHKAppTests.cmd"
 )
 
 dbgprint --process "ipconfig"
-cd C:\ReactOS\bin
+cd "%WINDIR%\bin"
 start rosautotest /r /s /n
