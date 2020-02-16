@@ -1284,9 +1284,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonInfo->Password.MaximumLength = 0;
         }
 
-        TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
-        TRACE("User: %S\n", LogonInfo->UserName.Buffer);
-        TRACE("Password: %S\n", LogonInfo->Password.Buffer);
+        TRACE("Domain: %wZ\n", &LogonInfo->LogonDomainName);
+        TRACE("User: %wZ\n", &LogonInfo->UserName);
+        TRACE("Password: %wZ\n", &LogonInfo->Password);
 
         // TODO: If LogonType == Service, do some extra work using LogonInfo->Password.
     }
@@ -1442,7 +1442,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             goto done;
         }
 
-        TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
+        TRACE("UserName: %wZ\n", &UserInfo->All.UserName);
 
         /* Check the password */
         if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
