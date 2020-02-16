@@ -44,8 +44,7 @@ typedef struct _DLG_DATA
 static PDLG_DATA
 DlgData_Create(HWND hwndDlg)
 {
-    PDLG_DATA pDlgData;
-    pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+    PDLG_DATA pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
     if (pDlgData)
     {
         SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
