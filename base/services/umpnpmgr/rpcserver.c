@@ -1526,7 +1526,9 @@ PNP_GetDeviceRegProp(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetDeviceRegProp() called\n");
+    DPRINT("PNP_GetDeviceRegProp(%p %S %lu %p %p %p %p 0x%08lx)\n",
+           hBinding, pDeviceID, ulProperty, pulRegDataType, Buffer,
+           pulTransferLen, pulLength, ulFlags);
 
     if (pulTransferLen == NULL || pulLength == NULL)
     {
@@ -1785,12 +1787,9 @@ PNP_SetDeviceRegProp(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_SetDeviceRegProp() called\n");
-
-    DPRINT("DeviceId: %S\n", pDeviceId);
-    DPRINT("Property: %lu\n", ulProperty);
-    DPRINT("DataType: %lu\n", ulDataType);
-    DPRINT("Length: %lu\n", ulLength);
+    DPRINT("PNP_SetDeviceRegProp(%p %S %lu %lu %p %lu 0x%08lx)\n",
+           hBinding, pDeviceId, ulProperty, ulDataType, Buffer,
+           ulLength, ulFlags);
 
     if (!IsValidDeviceInstanceID(pDeviceId))
         return CR_INVALID_DEVINST;
@@ -2036,24 +2035,58 @@ PNP_CreateKey(
     DWORD samDesired,
     DWORD ulFlags)
 {
-    HKEY hKey = 0;
+    HKEY hDeviceKey = NULL, hParametersKey = NULL;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
 
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        pszSubKey,
-                        0,
-                        NULL,
-                        0,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hKey,
-                        NULL))
-        return CR_REGISTRY_ERROR;
+    UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(samDesired);
 
-    /* FIXME: Set security key */
+    DPRINT("PNP_CreateKey(%p %S 0x%lx 0x%08lx)\n",
+           hBinding, pszSubKey, samDesired, ulFlags);
 
-    RegCloseKey(hKey);
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
-    return CR_SUCCESS;
+    if (!IsValidDeviceInstanceID(pszSubKey))
+        return CR_INVALID_DEVINST;
+
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszSubKey,
+                            0,
+                            KEY_WRITE,
+                            &hDeviceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ret = CR_INVALID_DEVNODE;
+        goto done;
+    }
+
+    dwError = RegCreateKeyExW(hDeviceKey,
+                              L"Device Parameters",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_ALL_ACCESS,
+                              NULL,
+                              &hParametersKey,
+                              NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ret = CR_REGISTRY_ERROR;
+        goto done;
+    }
+
+    /* FIXME: Set key security */
+
+done:
+    if (hParametersKey != NULL)
+        RegCloseKey(hParametersKey);
+
+    if (hDeviceKey != NULL)
+        RegCloseKey(hDeviceKey);
+
+    return ret;
 }
 
 
@@ -2085,6 +2118,9 @@ PNP_GetClassCount(
 
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
+
+    DPRINT("PNP_GetClassCount(%p %p 0x%08lx)\n",
+           hBinding, pulClassCount, ulFlags);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             REGSTR_PATH_CLASS,
@@ -2132,7 +2168,8 @@ PNP_GetClassName(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetClassName() called\n");
+    DPRINT("PNP_GetClassName(%p %S %p %p 0x%08lx)\n",
+           hBinding, pszClassGuid, Buffer, pulLength, ulFlags);
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class\\");
     if (lstrlenW(pszClassGuid) + 1 < sizeof(szKeyName)/sizeof(WCHAR)-(lstrlenW(szKeyName) * sizeof(WCHAR)))
@@ -2183,7 +2220,8 @@ PNP_DeleteClassKey(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetClassName(%S, %lx) called\n", pszClassGuid, ulFlags);
+    DPRINT("PNP_GetClassName(%p %S 0x%08lx)\n",
+           hBinding, pszClassGuid, ulFlags);
 
     if (ulFlags & CM_DELETE_CLASS_SUBKEYS)
     {
