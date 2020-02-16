@@ -57,6 +57,7 @@ static BOOL
 DlgData_LoadBitmaps(PDLG_DATA pDlgData)
 {
     BITMAP bm;
+
     if (!pDlgData)
         return FALSE;
 
