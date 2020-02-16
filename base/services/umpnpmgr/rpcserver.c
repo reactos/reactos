@@ -227,6 +227,36 @@ GetDeviceStatus(
 
 
 static
+CONFIGRET
+SetDeviceStatus(
+    _In_ LPWSTR pDeviceID,
+    _In_ DWORD ulStatus,
+    _In_ DWORD ulProblem)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("SetDeviceStatus(%S 0x%lx 0x%lx)\n",
+            pDeviceID, ulStatus, ulProblem);
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pDeviceID);
+    PlugPlayData.Operation = 1; /* Set status */
+    PlugPlayData.DeviceStatus = ulStatus;
+    PlugPlayData.DeviceProblem = ulProblem;
+
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
+}
+
+
+static
 BOOL
 IsValidDeviceInstanceID(
     _In_ PWSTR pszDeviceInstanceID)
@@ -3052,8 +3082,18 @@ PNP_RegisterDriver(
     LPWSTR pszDeviceID,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    DPRINT("PNP_RegisterDriver(%p %S 0x%lx)\n",
+           hBinding, pszDeviceID, ulFlags);
+
+    if (ulFlags & ~CM_REGISTER_DEVICE_DRIVER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!IsValidDeviceInstanceID(pszDeviceID))
+        return CR_INVALID_DEVINST;
+
+    SetDeviceStatus(pszDeviceID, 0, 0);
+
+    return CR_SUCCESS;
 }
 
 
