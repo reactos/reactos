@@ -73,7 +73,7 @@ DlgData_LoadBitmaps(PDLG_DATA pDlgData)
     pDlgData->BarWidth = bm.bmWidth;
     pDlgData->BarHeight = bm.bmHeight;
 
-    return pDlgData->hLogoBitmap && pDlgData->hBarBitmap;
+    return (pDlgData->hLogoBitmap != NULL && pDlgData->hBarBitmap != NULL);
 }
 
 static void
