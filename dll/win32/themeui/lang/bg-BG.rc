@@ -15,139 +15,139 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ÑEÑ{ÑÇÑpÑ~ÑuÑ~ ÑÅÑÇÑuÑtÑÅÑpÑxÑyÑÑÑuÑ|"
+CAPTION "–ï–∫—Ä–∞–Ω–µ–Ω –ø—Ä–µ–¥–ø–∞–∑–∏—Ç–µ–ª"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX "&ÑEÑ{ÑÇÑpÑ~ÑuÑ~ ÑÅÑÇÑuÑtÑÅÑpÑxÑyÑÑÑuÑ|", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX "&–ï–∫—Ä–∞–Ω–µ–Ω –ø—Ä–µ–¥–ø–∞–∑–∏—Ç–µ–ª", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "ÑNÑp&ÑÉÑÑÑÇÑÄÑzÑ{Ñy", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "ÑPÑÇÑu&ÑsÑ|ÑuÑt", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "&ÑIÑxÑâÑpÑ{ÑrÑpÑ~Ñu", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON "–ù–∞&—Å—Ç—Ä–æ–π–∫–∏", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
+    PUSHBUTTON "–ü—Ä–µ&–≥–ª–µ–¥", IDC_SCREENS_TESTSC, 175, 102, 50, 15
+    LTEXT "&–ò–∑—á–∞–∫–≤–∞–Ω–µ", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "Ñ}ÑyÑ~ÑÖÑÑÑy", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "ÑIÑÉÑ{ÑpÑ~Ñu Ñ~Ñp ÑÅÑpÑÇÑÄÑ|Ñp ÑÅÑÇÑy ÑyÑxÑáÑÄÑt", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT "–º–∏–Ω—É—Ç–∏", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL "–ò—Å–∫–∞–Ω–µ –Ω–∞ –ø–∞—Ä–æ–ª–∞ –ø—Ä–∏ –∏–∑—Ö–æ–¥", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&ÑEÑ~ÑuÑÇÑsÑÄÑÉÑÅÑuÑÉÑÑÑëÑrÑpÑãÑy ÑrÑåÑxÑ}ÑÄÑwÑ~ÑÄÑÉÑÑÑy Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑp", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "ÑHÑp Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñp ÑxÑpÑáÑÇÑpÑ~ÑrÑpÑ~ÑuÑÑÑÄ Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑp, Ñ~ÑpÑÑÑyÑÉÑ~ÑuÑÑÑu ?ÑHÑpÑáÑÇÑpÑ~ÑrÑpÑ~Ñu...Åg.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "ÑHÑpÑáÑÇÑpÑ~ÑrÑpÑ~Ñu...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
+    GROUPBOX "&–ï–Ω–µ—Ä–≥–æ—Å–ø–µ—Å—Ç—è–≤–∞—â–∏ –≤—ä–∑–º–æ–∂–Ω–æ—Å—Ç–∏ –Ω–∞ –º–æ–Ω–∏—Ç–æ—Ä–∞", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "–ó–∞ –Ω–∞—Å—Ç—Ä–æ–π–∫–∞ –∑–∞—Ö—Ä–∞–Ω–≤–∞–Ω–µ—Ç–æ –Ω–∞ –º–æ–Ω–∏—Ç–æ—Ä–∞, –Ω–∞—Ç–∏—Å–Ω–µ—Ç–µ ?–ó–∞—Ö—Ä–∞–Ω–≤–∞–Ω–µ...‚Äú.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "–ó–∞—Ö—Ä–∞–Ω–≤–∞–Ω–µ...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ÑOÑqÑ|ÑyÑ{"
+CAPTION "–û–±–ª–∏–∫"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "ÑQÑpÑxÑàÑrÑuÑÑÑ{Ñp", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "–†–∞–∑—Ü–≤–µ—Ç–∫–∞", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&ÑEÑÜÑuÑ{ÑÑÑy", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "ÑOÑãÑu", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&–ï—Ñ–µ–∫—Ç–∏", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "–û—â–µ", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "ÑQÑpÑxÑäÑyÑÇÑuÑ~ ÑÄÑqÑ|ÑyÑ{"
+CAPTION "–†–∞–∑—à–∏—Ä–µ–Ω –æ–±–ª–∏–∫"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "ÑXÑpÑÉÑÑ", 8, 5, 160, 50, 9
+    LTEXT "–ß–∞—Å—Ç", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&ÑQÑpÑxÑ}ÑuÑÇ", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&–†–∞–∑–º–µ—Ä", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "ÑWÑrÑëÑÑ &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "–¶–≤—è—Ç &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "ÑWÑrÑëÑÑ &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "–¶–≤—è—Ç &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "ÑYÑÇÑyÑÜÑÑ", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "–®—Ä–∏—Ñ—Ç", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "ÑQÑpÑxÑ}ÑuÑÇ Ñ~Ñp ÑäÑÇÑyÑÜÑÑÑp", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "–†–∞–∑–º–µ—Ä –Ω–∞ —à—Ä–∏—Ñ—Ç–∞", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "ÑWÑrÑëÑÑ", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
+    LTEXT "–¶–≤—è—Ç", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    AUTOCHECKBOX "ÑX", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
-    AUTOCHECKBOX "ÑK ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
-    PUSHBUTTON "ÑOÑÑÑ{ÑpÑx", IDCANCEL, 191, 220, 50, 14
-    DEFPUSHBUTTON "ÑDÑÄÑqÑÇÑu", IDOK, 137, 220, 50, 14
+    AUTOCHECKBOX "–ß", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX "–ö ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+    PUSHBUTTON "–û—Ç–∫–∞–∑", IDCANCEL, 191, 220, 50, 14
+    DEFPUSHBUTTON "–î–æ–±—Ä–µ", IDOK, 137, 220, 50, 14
 END
 
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "ÑEÑÜÑuÑ{ÑÑÑy"
+CAPTION "–ï—Ñ–µ–∫—Ç–∏"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ÑIÑx&ÑÅÑÄÑ|ÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑ|ÑuÑtÑ~ÑyÑÑÑu ÑÅÑÇÑuÑáÑÄÑtÑ~Ñy ÑuÑÜÑuÑ{ÑÑÑy ÑxÑp ÑyÑxÑqÑÄÑÇÑ~ÑyÑàÑyÑÑÑu Ñy ÑÅÑÄÑtÑÉÑ{ÑpÑxÑ{ÑyÑÑÑu",
+    CONTROL "–ò–∑&–ø–æ–ª–∑–≤–∞–Ω–µ –Ω–∞ —Å–ª–µ–¥–Ω–∏—Ç–µ –ø—Ä–µ—Ö–æ–¥–Ω–∏ –µ—Ñ–µ–∫—Ç–∏ –∑–∞ –∏–∑–±–æ—Ä–Ω–∏—Ü–∏—Ç–µ –∏ –ø–æ–¥—Å–∫–∞–∑–∫–∏—Ç–µ",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&ÑIÑxÑÅÑÄÑ|ÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑ|ÑuÑtÑ~ÑyÑë ÑÅÑÄÑáÑrÑpÑÑ ÑxÑp ÑyÑxÑsÑ|ÑpÑwÑtÑpÑ~Ñu ÑÇÑåÑqÑÄÑrÑuÑÑÑu Ñ~Ñp ÑuÑ{ÑÇÑpÑ~Ñ~ÑyÑÑÑu ÑäÑÇÑyÑÜÑÑÑÄÑrÑu", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "&–ò–∑–ø–æ–ª–∑–≤–∞–Ω–µ –Ω–∞ —Å–ª–µ–¥–Ω–∏—è –ø–æ—Ö–≤–∞—Ç –∑–∞ –∏–∑–≥–ª–∞–∂–¥–∞–Ω–µ —Ä—ä–±–æ–≤–µ—Ç–µ –Ω–∞ –µ–∫—Ä–∞–Ω–Ω–∏—Ç–µ —à—Ä–∏—Ñ—Ç–æ–≤–µ", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "ÑIÑxÑÅÑÄÑ|ÑxÑrÑpÑ~&Ñu Ñ~Ñp ÑsÑÄÑ|ÑuÑ}Ñy ÑxÑ~ÑpÑâÑuÑÑÑp", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "–ò–∑–ø–æ–ª–∑–≤–∞–Ω&–µ –Ω–∞ –≥–æ–ª–µ–º–∏ –∑–Ω–∞—á–µ—Ç–∞", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "ÑIÑxÑÄÑqÑÇÑpÑxÑëÑrÑpÑ~Ñu Ñ~Ñp &ÑÉÑuÑ~Ñ{Ñy ÑÅÑÄÑt ÑyÑxÑqÑÄÑÇÑ~ÑyÑàÑÑÑu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "–ò–∑–æ–±—Ä–∞–∑—è–≤–∞–Ω–µ –Ω–∞ &—Å–µ–Ω–∫–∏ –ø–æ–¥ –∏–∑–±–æ—Ä–Ω–∏—Ü—Ç–µ", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "ÑPÑÄÑ{ÑpÑxÑrÑpÑ~Ñu Ñ~Ñp ÑÉÑåÑtÑåÑÇÑwÑpÑ~ÑyÑuÑÑÑÄ Ñ~Ñp &ÑÅÑÇÑÄÑxÑÄÑÇÑàÑyÑÑÑu ÑÅÑÄ ÑrÑÇÑuÑ}Ñu Ñ~Ñp ÑrÑ|ÑpÑâÑuÑ~Ñu", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "–ü–æ–∫–∞–∑–≤–∞–Ω–µ –Ω–∞ —Å—ä–¥—ä—Ä–∂–∞–Ω–∏–µ—Ç–æ –Ω–∞ &–ø—Ä–æ–∑–æ—Ä—Ü–∏—Ç–µ –ø–æ –≤—Ä–µ–º–µ –Ω–∞ –≤–ª–∞—á–µ–Ω–µ", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "ÑR&Ñ{ÑÇÑyÑrÑpÑ~Ñu Ñ~Ñp ÑÅÑÄÑtÑâÑuÑÇÑÑÑpÑrÑpÑ~ÑuÑÑÑÄ ÑxÑp Ñ{Ñ|ÑpÑrÑyÑpÑÑÑÖÑÇÑ~ÑÄÑÑÑÄ Ñ~ÑpÑÉÑÄÑâÑrÑpÑ~Ñu, ÑtÑÄ Ñ~ÑpÑÑÑyÑÉÑ{ÑpÑ~Ñu Ñ~Ñp Alt",
+    CONTROL "–°&–∫—Ä–∏–≤–∞–Ω–µ –Ω–∞ –ø–æ–¥—á–µ—Ä—Ç–∞–≤–∞–Ω–µ—Ç–æ –∑–∞ –∫–ª–∞–≤–∏–∞—Ç—É—Ä–Ω–æ—Ç–æ –Ω–∞—Å–æ—á–≤–∞–Ω–µ, –¥–æ –Ω–∞—Ç–∏—Å–∫–∞–Ω–µ –Ω–∞ Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
-    PUSHBUTTON "ÑOÑÑÑ{ÑpÑx", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "ÑDÑÄÑqÑÇÑu", IDOK, 172, 165, 50, 14
+    PUSHBUTTON "–û—Ç–∫–∞–∑", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "–î–æ–±—Ä–µ", IDOK, 172, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ÑNÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy"
+CAPTION "–ù–∞—Å—Ç—Ä–æ–π–∫–∏"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ÑHÑpÑrÑ|ÑpÑâÑuÑÑÑu ÑxÑ~ÑpÑâÑuÑÑÑpÑÑÑp Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑyÑÑÑu ÑÑÑpÑ{Ñp, ÑâÑu ÑtÑp ÑÄÑÑÑsÑÄÑrÑpÑÇÑëÑÑ Ñ~Ñp ÑtÑuÑzÑÉÑÑÑrÑyÑÑÑuÑ|Ñ~ÑÄÑÑÑÄ ÑÇÑpÑxÑÅÑÄÑ|ÑÄÑwÑuÑ~ÑyÑu Ñ~Ñp Ñ}ÑÄÑ~ÑyÑÑÑÄÑÇÑyÑÑÑu ÑrÑy.", -1, 3, 3, 240, 20
+    LTEXT "–ó–∞–≤–ª–∞—á–µ—Ç–µ –∑–Ω–∞—á–µ—Ç–∞—Ç–∞ –Ω–∞ –º–æ–Ω–∏—Ç–æ—Ä–∏—Ç–µ —Ç–∞–∫–∞, —á–µ –¥–∞ –æ—Ç–≥–æ–≤–∞—Ä—è—Ç –Ω–∞ –¥–µ–π—Å—Ç–≤–∏—Ç–µ–ª–Ω–æ—Ç–æ —Ä–∞–∑–ø–æ–ª–æ–∂–µ–Ω–∏–µ –Ω–∞ –º–æ–Ω–∏—Ç–æ—Ä–∏—Ç–µ –≤–∏.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&ÑEÑ{ÑÇÑpÑ~", 1820, 3, 107, 70, 9
-    LTEXT "<Ñ~ÑëÑ}Ñp>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "&ÑQÑpÑxÑtÑuÑ|ÑyÑÑÑuÑ|Ñ~Ñp ÑÉÑÅÑÄÑÉÑÄÑqÑ~ÑÄÑÉÑÑ", 1818, 3, 127, 115, 43
+    LTEXT "&–ï–∫—Ä–∞–Ω", 1820, 3, 107, 70, 9
+    LTEXT "<–Ω—è–º–∞>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
+    GROUPBOX "&–†–∞–∑–¥–µ–ª–∏—Ç–µ–ª–Ω–∞ —Å–ø–æ—Å–æ–±–Ω–æ—Å—Ç", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "ÑMÑpÑ|Ñ{Ñp", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "ÑCÑÄÑ|ÑëÑ}Ñp", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "–ú–∞–ª–∫–∞", 1815, 9, 137, 25, 9, NOT WS_GROUP
+    LTEXT "–ì–æ–ª—è–º–∞", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX "&ÑWÑrÑuÑÑÑÄÑrÑu", 1817, 125, 127, 115, 43
+    GROUPBOX "&–¶–≤–µ—Ç–æ–≤–µ", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
-    PUSHBUTTON "ÑQÑpÑx&ÑäÑyÑÇÑuÑ~Ñy...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
+    PUSHBUTTON "–†–∞–∑&—à–∏—Ä–µ–Ω–∏...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ÑOÑqÑãÑy"
+CAPTION "–û–±—â–∏"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ÑEÑ{ÑÇÑpÑ~", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "ÑQÑpÑxÑ}ÑuÑÇ Ñ~Ñp ÑäÑÇÑyÑÜÑÑÑp", -1, 14, 20, 222, 9
+    GROUPBOX "–ï–∫—Ä–∞–Ω", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "–†–∞–∑–º–µ—Ä –Ω–∞ —à—Ä–∏—Ñ—Ç–∞", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
-    GROUPBOX "ÑRÑåÑrÑ}ÑuÑÉÑÑÑyÑ}ÑÄÑÉÑÑ", -1, 7, 67, 237, 97
-    LTEXT "ÑNÑëÑ{ÑÄÑy ÑÅÑÇÑyÑ|ÑÄÑwÑuÑ~ÑyÑë Ñ~ÑëÑ}Ñp ÑtÑp ÑÇÑpÑqÑÄÑÑÑëÑÑ ÑÅÑÇÑpÑrÑyÑ|Ñ~ÑÄ, ÑpÑ{ÑÄ Ñ~Ñu ÑÅÑÇÑuÑxÑpÑÅÑÖÑÉÑ~ÑuÑÑÑu Ñ{ÑÄÑ}ÑÅÑêÑÑÑåÑÇÑp, ÑÉÑ|ÑuÑt Ñ{ÑpÑÑÑÄ ÑÅÑÇÑÄÑ}ÑuÑ~ÑyÑÑÑu ÑàÑrÑuÑÑÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy.\r\nÑRÑ|ÑuÑt Ñ{ÑpÑÑÑÄ ÑÅÑÇÑÄÑ}ÑuÑ~Ñë ÑàÑrÑuÑÑÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&ÑPÑÇÑuÑxÑpÑÅÑÖÑÉÑ{ ÑÅÑÇÑuÑtÑy ÑÅÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu ÑàÑrÑuÑÑÑÄÑrÑy Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "ÑPÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy ÑqÑuÑx ÑÅÑÇÑuÑxÑpÑÅÑÖÑÉÑ{.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "ÑPÑyÑÑÑpÑ~Ñu ÑÅÑÇÑuÑtÑy ÑÅÑÇÑyÑ|ÑpÑsÑpÑ~Ñu Ñ~Ñp Ñ~ÑÄÑrÑyÑÑÑu Ñ~ÑpÑÉÑÑÑÇÑÄÑzÑ{Ñy", IDC_ASKME_RB, 14, 146, 228, 10
+    GROUPBOX "–°—ä–≤–º–µ—Å—Ç–∏–º–æ—Å—Ç", -1, 7, 67, 237, 97
+    LTEXT "–ù—è–∫–æ–∏ –ø—Ä–∏–ª–æ–∂–µ–Ω–∏—è –Ω—è–º–∞ –¥–∞ —Ä–∞–±–æ—Ç—è—Ç –ø—Ä–∞–≤–∏–ª–Ω–æ, –∞–∫–æ –Ω–µ –ø—Ä–µ–∑–∞–ø—É—Å–Ω–µ—Ç–µ –∫–æ–º–ø—é—Ç—ä—Ä–∞, —Å–ª–µ–¥ –∫–∞—Ç–æ –ø—Ä–æ–º–µ–Ω–∏—Ç–µ —Ü–≤–µ—Ç–æ–≤–∏—Ç–µ –Ω–∞—Å—Ç—Ä–æ–π–∫–∏.\r\n–°–ª–µ–¥ –∫–∞—Ç–æ –ø—Ä–æ–º–µ–Ω—è —Ü–≤–µ—Ç–æ–≤–∏—Ç–µ –Ω–∞—Å—Ç—Ä–æ–π–∫–∏", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&–ü—Ä–µ–∑–∞–ø—É—Å–∫ –ø—Ä–µ–¥–∏ –ø—Ä–∏–ª–∞–≥–∞–Ω–µ –Ω–∞ –Ω–æ–≤–∏—Ç–µ —Ü–≤–µ—Ç–æ–≤–∏ –Ω–∞—Å—Ç—Ä–æ–π–∫–∏.", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "–ü—Ä–∏–ª–∞–≥–∞–Ω–µ –Ω–∞ –Ω–æ–≤–∏—Ç–µ –Ω–∞—Å—Ç—Ä–æ–π–∫–∏ –±–µ–∑ –ø—Ä–µ–∑–∞–ø—É—Å–∫.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "–ü–∏—Ç–∞–Ω–µ –ø—Ä–µ–¥–∏ –ø—Ä–∏–ª–∞–≥–∞–Ω–µ –Ω–∞ –Ω–æ–≤–∏—Ç–µ –Ω–∞—Å—Ç—Ä–æ–π–∫–∏", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
