@@ -68,7 +68,6 @@ MmZeroPageThread(VOID)
                                  NULL,
                                  NULL);
         OldIrql = MiAcquirePfnLock();
-        MmZeroingPageThreadActive = TRUE;
 
         while (TRUE)
         {

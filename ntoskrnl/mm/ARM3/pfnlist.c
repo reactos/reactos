@@ -704,6 +704,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     if ((ListHead->Total >= 8) && !(MmZeroingPageThreadActive))
     {
         /* Set the event */
+        MmZeroingPageThreadActive = TRUE;
         KeSetEvent(&MmZeroingPageEvent, IO_NO_INCREMENT, FALSE);
     }
 
