@@ -207,7 +207,7 @@ GetDeviceStatus(
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pDeviceID);
-    PlugPlayData.Operation = 0; /* Get status */
+    PlugPlayData.Operation = PNP_GET_DEVICE_STATUS;
 
     Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
                                (PVOID)&PlugPlayData,
@@ -242,7 +242,7 @@ SetDeviceStatus(
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pDeviceID);
-    PlugPlayData.Operation = 1; /* Set status */
+    PlugPlayData.Operation = PNP_SET_DEVICE_STATUS;
     PlugPlayData.DeviceStatus = ulStatus;
     PlugPlayData.DeviceProblem = ulProblem;
 
@@ -367,7 +367,11 @@ PNP_GetVersion(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
+    DPRINT("PNP_GetVersion(%p %p)\n",
+           hBinding, pVersion);
+
     *pVersion = 0x0400;
+
     return CR_SUCCESS;
 }
 
@@ -383,7 +387,11 @@ PNP_GetGlobalState(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
+    DPRINT("PNP_GetGlobalState(%p %p 0x%08lx)\n",
+           hBinding, pulState, ulFlags);
+
     *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
+
     return CR_SUCCESS;
 }
 
@@ -396,7 +404,9 @@ PNP_InitDetection(
 {
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_InitDetection() called\n");
+    DPRINT("PNP_InitDetection(%p)\n",
+           hBinding);
+
     return CR_SUCCESS;
 }
 
@@ -415,7 +425,8 @@ PNP_ReportLogOn(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(Admin);
 
-    DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
+    DPRINT("PNP_ReportLogOn(%p %u, %u)\n",
+           hBinding, Admin, ProcessId);
 
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
@@ -466,8 +477,8 @@ PNP_ValidateDeviceInstance(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_ValidateDeviceInstance(%S %lx) called\n",
-           pDeviceID, ulFlags);
+    DPRINT("PNP_ValidateDeviceInstance(%p %S 0x%08lx)\n",
+           hBinding, pDeviceID, ulFlags);
 
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
@@ -507,13 +518,15 @@ PNP_GetRootDeviceInstance(
 
     UNREFERENCED_PARAMETER(hBinding);
 
-    DPRINT("PNP_GetRootDeviceInstance() called\n");
+    DPRINT("PNP_GetRootDeviceInstance(%p %S %lu)\n",
+           hBinding, pDeviceID, ulLength);
 
     if (!pDeviceID)
     {
         ret = CR_INVALID_POINTER;
         goto Done;
     }
+
     if (ulLength < lstrlenW(szRootDeviceInstanceID) + 1)
     {
         ret = CR_BUFFER_SMALL;
@@ -548,9 +561,9 @@ PNP_GetRelatedDeviceInstance(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetRelatedDeviceInstance() called\n");
-    DPRINT("  Relationship %ld\n", ulRelationship);
-    DPRINT("  DeviceId %S\n", pDeviceID);
+    DPRINT("PNP_GetRelatedDeviceInstance(%p %lu %S %p %p 0x%lx)\n",
+           hBinding, ulRelationship, pDeviceID, pRelatedDeviceId,
+           pulLength, ulFlags);
 
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
@@ -600,7 +613,9 @@ PNP_EnumerateSubKeys(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_EnumerateSubKeys() called\n");
+    DPRINT("PNP_EnumerateSubKeys(%p %lu %lu %p %lu %p 0x%08lx)\n",
+           hBinding, ulBranch, ulIndex, Buffer, ulLength,
+           pulRequiredLen, ulFlags);
 
     switch (ulBranch)
     {
@@ -1015,7 +1030,8 @@ PNP_GetDeviceList(
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetDeviceList() called\n");
+    DPRINT("PNP_GetDeviceList(%p %S %p %p 0x%08lx)\n",
+           hBinding, pszFilter, Buffer, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
         return CR_INVALID_FLAG;
@@ -1384,7 +1400,7 @@ PNP_GetDeviceListSize(
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%lx)\n",
+    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%08lx)\n",
            hBinding, pszFilter, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
@@ -1461,7 +1477,8 @@ PNP_GetDepth(
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
-    DPRINT("PNP_GetDepth() called\n");
+    DPRINT("PNP_GetDepth(%p %S %p 0x%08lx)\n",
+           hBinding, pszDeviceID, pulDepth, ulFlags);
 
     if (!IsValidDeviceInstanceID(pszDeviceID))
         return CR_INVALID_DEVINST;
