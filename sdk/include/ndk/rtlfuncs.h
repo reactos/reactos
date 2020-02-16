@@ -2435,6 +2435,22 @@ RtlFreeBuffer(
     Buffer->Size = Buffer->StaticSize;
 }
 
+NTSYSAPI
+VOID
+NTAPI
+RtlRunEncodeUnicodeString(
+    _Inout_ PUCHAR Hash,
+    _Inout_ PUNICODE_STRING String
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRunDecodeUnicodeString(
+    _In_ UCHAR Hash,
+    _Inout_ PUNICODE_STRING String
+);
+
 #endif /* NTOS_MODE_USER */
 
 //

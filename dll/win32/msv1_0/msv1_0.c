@@ -1193,6 +1193,8 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     LARGE_INTEGER PasswordLastSet;
     DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
+    UCHAR LogonPassHash;
+    PUNICODE_STRING ErasePassword = NULL;
 
     TRACE("LsaApLogonUserEx2()\n");
 
@@ -1268,6 +1270,18 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
+
+        /* MS docs says max length is 0xFF bytes. But thats not the full story:
+         *
+         * A Quote from https://groups.google.com/forum/#!topic/microsoft.public.win32.programmer.kernel/eFGcCo_ZObk:
+         * "... At least on my WinXP SP2. Domain and UserName are passed
+         * in clear text, but the Password is NOT. ..."
+         *
+         * If the higher byte of length != 0 we have to use RtlRunDecodeUnicodeString.
+         */
+        LogonPassHash = (LogonInfo->Password.Length >> 8) & 0xFF;
+        LogonInfo->Password.Length = LogonInfo->Password.Length & 0xFF;
+
         /* Password is optional and can be an empty string */
         if (LogonInfo->Password.Length)
         {
@@ -1280,6 +1294,15 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonInfo->Password.Buffer = NULL;
             LogonInfo->Password.MaximumLength = 0;
         }
+
+        /* Decode password */
+        if (LogonPassHash > 0)
+        {
+            RtlRunDecodeUnicodeString(LogonPassHash, &LogonInfo->Password);
+        }
+
+        /* ErasePassword will be "erased" before we return */
+        ErasePassword = &LogonInfo->Password;
 
         Status = RtlValidateUnicodeString(0, &LogonInfo->Password);
         if (!NT_SUCCESS(Status))
@@ -1574,6 +1597,12 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
 done:
+    /* Erase password */
+    if (ErasePassword)
+    {
+        RtlEraseUnicodeString(ErasePassword);
+    }
+
     /* Update the logon time/count or the bad password time/count */
     if ((UserHandle != NULL) &&
         (Status == STATUS_SUCCESS || Status == STATUS_WRONG_PASSWORD))
