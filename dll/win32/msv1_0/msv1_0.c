@@ -1244,9 +1244,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Fix-up pointers in the authentication info */
         PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
-        Status = RtlValidateUnicodeString(0, &LogonInfo->LogonDomainName);
-        if (!NT_SUCCESS(Status))
-            return STATUS_INVALID_PARAMETER;
         /* LogonDomainName is optional and can be an empty string */
         if (LogonInfo->LogonDomainName.Length)
         {
@@ -1259,16 +1256,16 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonInfo->LogonDomainName.Buffer = NULL;
             LogonInfo->LogonDomainName.MaximumLength = 0;
         }
-
-        Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
+        Status = RtlValidateUnicodeString(0, &LogonInfo->LogonDomainName);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
+
         /* UserName is mandatory and cannot be an empty string */
         // TODO: Check for Buffer limits wrt. ClientBufferBase and alignment.
         LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
         LogonInfo->UserName.MaximumLength = LogonInfo->UserName.Length;
 
-        Status = RtlValidateUnicodeString(0, &LogonInfo->Password);
+        Status = RtlValidateUnicodeString(0, &LogonInfo->UserName);
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
         /* Password is optional and can be an empty string */
@@ -1283,6 +1280,10 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             LogonInfo->Password.Buffer = NULL;
             LogonInfo->Password.MaximumLength = 0;
         }
+
+        Status = RtlValidateUnicodeString(0, &LogonInfo->Password);
+        if (!NT_SUCCESS(Status))
+            return STATUS_INVALID_PARAMETER;
 
         TRACE("Domain: %wZ\n", &LogonInfo->LogonDomainName);
         TRACE("User: %wZ\n", &LogonInfo->UserName);
