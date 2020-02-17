@@ -95,11 +95,15 @@ START_TEST(RtlValidateUnicodeString)
     /* Non-NULL buffer, odd lengths */
 
     String = ValidString;
-    String.Length--; // Length was already >= 2 so it remains > 0.
+    // Ensure to test with lengths > 0.
+    ASSERT(String.Length >= 2 * sizeof(WCHAR));
+
+    String.Length--;
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 
-    String.MaximumLength--; // MaximumLength was already >= 2 so it remains > 0.
+    String.Length = String.MaximumLength - sizeof(WCHAR);
+    String.MaximumLength--;
     Status = RtlValidateUnicodeString(0, &String);
     ok(Status == STATUS_INVALID_PARAMETER, "Status = 0x%lx\n", Status);
 }
