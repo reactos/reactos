@@ -3,6 +3,45 @@
 
 #include "common/fxglobals.h"
 
+
+/**
+ * Tracing Definitions:
+ */
+
+#if FX_CORE_MODE == FX_CORE_KERNEL_MODE
+#define WDF_FX_TRACE_WPPGUID        (544d4c9d,942c,46d5,bf50,df5cd9524a50)
+#elif FX_CORE_MODE == FX_CORE_USER_MODE
+#define WDF_FX_TRACE_WPPGUID        (485e7de9,0a80,11d8,ad15,505054503030)
+#endif
+
+#define WDF_FRAMEWORKS_TRACE_FLAGS                  \
+    WPP_DEFINE_WDF_CONTROL_GUID(                    \
+        KmdfTraceGuid,                              \
+        WDF_FX_TRACE_WPPGUID,                       \
+        WPP_DEFINE_BIT(TRACINGFULL)                 \
+        WPP_DEFINE_BIT(TRACINGERROR)                \
+        WPP_DEFINE_BIT(TRACINGDBGPRINT)             \
+        WPP_DEFINE_BIT(TRACINGFRAMEWORKS)           \
+        WPP_DEFINE_BIT(TRACINGAPI)                  \
+        WPP_DEFINE_BIT(TRACINGAPIERROR)             \
+        WPP_DEFINE_BIT(TRACINGRESOURCES)            \
+        WPP_DEFINE_BIT(TRACINGLOCKING)              \
+        WPP_DEFINE_BIT(TRACINGCONTEXT)              \
+        WPP_DEFINE_BIT(TRACINGPOOL)                 \
+        WPP_DEFINE_BIT(TRACINGHANDLE)               \
+        WPP_DEFINE_BIT(TRACINGPNP)                  \
+        WPP_DEFINE_BIT(TRACINGIO)                   \
+        WPP_DEFINE_BIT(TRACINGIOTARGET)             \
+        WPP_DEFINE_BIT(TRACINGDMA)                  \
+        WPP_DEFINE_BIT(TRACINGREQUEST)              \
+        WPP_DEFINE_BIT(TRACINGDRIVER)               \
+        WPP_DEFINE_BIT(TRACINGDEVICE)               \
+        WPP_DEFINE_BIT(TRACINGUSEROBJECT)           \
+        WPP_DEFINE_BIT(TRACINGOBJECT)               \
+        WPP_DEFINE_BIT(TRACINGPNPPOWERSTATES)       \
+        WPP_DEFINE_BIT(TRACINGIFRCAPTURE)           \
+        )
+
 #if !defined(EVENT_TRACING)
 
 #if !defined(TRACE_LEVEL_NONE)
@@ -35,6 +74,9 @@
 #define TRACINGPNP            0x00000200
 #define TRACINGDRIVER         0x00001000
 #define TRACINGPNPPOWERSTATES 0x00002000
+
+//Is correct ?
+#define TRACINGIOTARGET       0x00004000
 
 extern "C" {
 void
