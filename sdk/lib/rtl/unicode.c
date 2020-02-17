@@ -2554,17 +2554,16 @@ RtlValidateUnicodeString(
     {
         return STATUS_SUCCESS;
     }
-    else if (!((String->Buffer == NULL) && (String->Length != 0 || String->MaximumLength != 0)) &&
-              (String->Length % sizeof(WCHAR) == 0) &&
-              (String->MaximumLength % sizeof(WCHAR) == 0) &&
-              (String->Length <= String->MaximumLength))
+
+    if ((String->Buffer != NULL || String->MaximumLength == 0) &&
+        String->Length % sizeof(WCHAR) == 0 &&
+        String->MaximumLength % sizeof(WCHAR) == 0 &&
+        String->Length <= String->MaximumLength)
     {
         return STATUS_SUCCESS;
     }
-    else
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+
+    return STATUS_INVALID_PARAMETER;
 }
 
 /*
