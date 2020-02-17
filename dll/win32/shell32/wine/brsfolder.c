@@ -642,6 +642,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
         break;
     case VK_DELETE:
         {
+#ifndef __REACTOS__
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
             HRESULT hr;
@@ -662,6 +663,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
             /* perform the item deletion - tree view gets updated over shell notification */
             ISFHelper_DeleteItems(psfhlp, 1, &item_id);
             ISFHelper_Release(psfhlp);
+#endif
         }
         break;
     }
