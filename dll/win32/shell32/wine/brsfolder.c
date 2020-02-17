@@ -58,7 +58,7 @@ typedef struct tagbrowse_info
     LPITEMIDLIST  pidlRet;
     LAYOUT_DATA  *layout;  /* filled by LayoutInit, used by LayoutUpdate */
     SIZE          szMin;
-	ULONG         hNotify; /* change notification handle */
+    ULONG         hNotify; /* change notification handle */
 } browse_info;
 
 typedef struct tagTV_ITEMDATA
@@ -640,7 +640,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     case VK_F2:
         BrsFolder_Rename(info, selected_item);
         break;
-	case VK_DELETE:
+    case VK_DELETE:
         {
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
@@ -695,7 +695,7 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
     case TVN_ENDLABELEDITW:
         return BrsFolder_Treeview_Rename( info, (LPNMTVDISPINFOW)pnmtv );
     
-	case TVN_KEYDOWN:
+    case TVN_KEYDOWN:
         return BrsFolder_Treeview_Keydown( info, (LPNMTVKEYDOWN)pnmtv );
 
     default:
@@ -709,7 +709,7 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
 
 static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
 {
-	LPITEMIDLIST computer_pidl;
+    LPITEMIDLIST computer_pidl;
     SHChangeNotifyEntry ntreg;
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
 
@@ -1082,8 +1082,8 @@ static INT BrsFolder_OnDestroy(browse_info *info)
         SHFree(info->layout);
         info->layout = NULL;
     }
-	
-	SHChangeNotifyDeregister(info->hNotify);
+
+    SHChangeNotifyDeregister(info->hNotify);
 
     return 0;
 }
@@ -1202,7 +1202,7 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     case SHV_CHANGE_NOTIFY:
         return BrsFolder_OnChange(info, (const LPCITEMIDLIST*)wParam, (LONG)lParam);
 
-	case WM_DESTROY:
+    case WM_DESTROY:
         return BrsFolder_OnDestroy(info);
     }
     return FALSE;
