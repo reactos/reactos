@@ -5,6 +5,23 @@
 #include "common/fxglobals.h"
 
 
+FxEventQueue::FxEventQueue(
+    __in UCHAR QueueDepth
+    )
+{
+    m_PkgPnp = NULL;
+    m_EventWorker = NULL;
+
+    m_HistoryIndex = 0;
+    m_QueueHead = 0;
+    m_QueueTail = 0;
+    m_QueueDepth = QueueDepth;
+
+    m_WorkItemFinished = NULL;
+    m_QueueFlags = 0x0;
+    m_WorkItemRunningCount = 0x0;
+}
+
 BOOLEAN
 FxEventQueue::QueueToThreadWorker(
     VOID
@@ -283,4 +300,125 @@ Return Value:
     }
 
     return result;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxEventQueue::Initialize(
+    __in PFX_DRIVER_GLOBALS DriverGlobals
+    )
+{
+    NTSTATUS status;
+    
+    //
+    // For KM, lock initialize always succeeds. For UM, it might fail.
+    //
+    status = m_StateMachineLock.Initialize();
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(DriverGlobals, 
+            TRACE_LEVEL_ERROR, TRACINGPNP,
+            "Initializing state machine lock failed for EventQueue 0x%p, "
+            "status %!STATUS!",
+            this, status);
+    }
+
+    return status;
+}
+
+VOID
+FxEventQueue::Configure(
+    __in FxPkgPnp* Pnp,
+    __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+    __in PVOID Context
+    )
+{
+    m_PkgPnp = Pnp;
+    m_EventWorker = WorkerRoutine;
+    m_EventWorkerContext = Context;
+
+    return;
+}
+
+FxWorkItemEventQueue::FxWorkItemEventQueue(
+    __in UCHAR QueueDepth
+    ) : FxEventQueue(QueueDepth)
+{
+}
+
+FxWorkItemEventQueue::~FxWorkItemEventQueue()
+{
+    m_WorkItem.Free();
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxWorkItemEventQueue::Init(
+    __inout FxPkgPnp* Pnp,
+    __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+    __in PVOID WorkerContext
+    )
+{
+    NTSTATUS status;
+
+    Configure(Pnp, WorkerRoutine, WorkerContext);
+
+    status = m_WorkItem.Allocate(
+        (MdDeviceObject)FxLibraryGlobals.DriverObject
+        //(MdDeviceObject)(GetIoMgrObjectForWorkItemAllocation())
+        );
+
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxThreadedEventQueue::Init(
+    __inout FxPkgPnp* Pnp,
+    __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+    __in PVOID WorkerContext
+    )
+{
+    NTSTATUS status;
+
+    Configure(Pnp, WorkerRoutine, WorkerContext);
+
+    status = m_WorkItem.Allocate(Pnp->GetDevice()->GetDeviceObject());
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+FxThreadedEventQueue::FxThreadedEventQueue(
+    __in UCHAR QueueDepth
+    ) : FxEventQueue(QueueDepth)
+{
+    ExInitializeWorkItem(&m_EventWorkQueueItem,
+                         (PWORKER_THREAD_ROUTINE) _WorkerThreadRoutine,
+                         this);
+}
+
+FxThreadedEventQueue::~FxThreadedEventQueue(
+    VOID
+    )
+{
+    m_WorkItem.Free();
+}
+
+VOID
+FxThreadedEventQueue::_WorkerThreadRoutine(
+    __in PVOID Context
+    )
+{
+    FxThreadedEventQueue* This = (FxThreadedEventQueue *)Context;
+
+    This->EventQueueWorker();
 }

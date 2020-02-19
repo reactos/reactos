@@ -3,6 +3,7 @@
 
 #include "common/mxevent.h"
 #include "common/mxgeneral.h"
+#include "common/fxglobals.h"
 
 
 #if (FX_CORE_MODE==FX_CORE_USER_MODE)
@@ -48,6 +49,16 @@ struct FxCREvent {
         )
     {
         return m_Event.Initialize(SynchronizationEvent, InitialState);        
+    }
+
+    CHECK_RETURN_IF_USER_MODE
+    NTSTATUS
+    Initialize(
+        __in EVENT_TYPE Type,
+        __in BOOLEAN InitialState
+        )
+    {
+        return m_Event.Initialize(Type, InitialState);        
     }
 
     _Releases_lock_(_Global_critical_region_)  
@@ -118,6 +129,26 @@ struct FxCREvent {
         return this;
     }
 
+    //
+    // Return the underlying event
+    // PKEVENT in kernel mode and event HANDLE in user-mode
+    //
+    PVOID
+    GetEvent(
+        VOID
+        )
+    {
+        return m_Event.GetEvent();
+    }
+
+    LONG
+    ReadState(
+        VOID
+        )
+    {
+        return m_Event.ReadState();
+    }
+
 private:
     MxEvent m_Event;
 };
@@ -147,6 +178,14 @@ public:
 #endif
 
         m_OwningThread = NULL;
+    }
+
+    CHECK_RETURN_IF_USER_MODE
+    NTSTATUS
+    Initialize(
+        )
+    {
+        return m_Event.Initialize(SynchronizationEvent, TRUE);
     }
 
     __drv_when(Timeout == NULL, __drv_valueIs(==0))

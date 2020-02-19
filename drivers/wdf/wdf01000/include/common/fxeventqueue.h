@@ -58,6 +58,12 @@ struct FxEventQueue : public FxStump {
         __in UCHAR QueueDepth
         );
 
+    _Must_inspect_result_
+    NTSTATUS
+    Initialize(
+        __in PFX_DRIVER_GLOBALS DriverGlobals
+        );
+
     _Acquires_lock_(this->m_QueueLock)
     __drv_maxIRQL(DISPATCH_LEVEL)
     __drv_setsIRQL(DISPATCH_LEVEL)
@@ -187,6 +193,14 @@ struct FxEventQueue : public FxStump {
         );
 
 protected:
+
+    VOID
+    Configure(
+        __in FxPkgPnp* Pnp,
+        __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+        __in PVOID Context
+        );
+
     // index into the beginning of the circular event ring buffer
     UCHAR m_QueueHead;
 
@@ -289,6 +303,14 @@ struct FxWorkItemEventQueue : public FxEventQueue {
 
     ~FxWorkItemEventQueue();
 
+    _Must_inspect_result_
+    NTSTATUS
+    Init(
+        __inout FxPkgPnp* Pnp,
+        __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+        __in PVOID WorkerContext = NULL
+        );
+
     VOID
     QueueToThread(
         VOID
@@ -318,6 +340,35 @@ protected:
 // or work item depending on the power pagable status of the stack.
 //
 struct FxThreadedEventQueue : public FxEventQueue {
+
+    FxThreadedEventQueue(
+        __in UCHAR QueueDepth
+        );
+
+    ~FxThreadedEventQueue(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    Init(
+        __inout FxPkgPnp* Pnp,
+        __in PFN_PNP_EVENT_WORKER WorkerRoutine,
+        __in PVOID WorkerContext = NULL
+        );
+
+
+protected:
+
+    MxWorkItem m_WorkItem;
+
+    static
+    WORKER_THREAD_ROUTINE 
+    _WorkerThreadRoutine;
+
+    // work item used to queue to the thread
+    WORK_QUEUE_ITEM     m_EventWorkQueueItem;
+
 };
 
 #endif //_FXEVENTQUEUE_H_
