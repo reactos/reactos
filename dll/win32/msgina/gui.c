@@ -42,11 +42,12 @@ typedef struct _DLG_DATA
 } DLG_DATA, *PDLG_DATA;
 
 static PDLG_DATA
-DlgData_Create(HWND hwndDlg)
+DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
 {
     PDLG_DATA pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
     if (pDlgData)
     {
+        pDlgData->pgContext = pgContext;
         SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
     }
     return pDlgData;
@@ -184,7 +185,7 @@ StatusDialogProc(
             SetDlgItemTextW(hwndDlg, IDC_STATUS_MESSAGE, msg->pMessage);
             SetEvent(msg->StartupEvent);
 
-            pDlgData = DlgData_Create(hwndDlg);
+            pDlgData = DlgData_Create(hwndDlg, msg->Context);
             if (pDlgData == NULL)
                 return FALSE;
 
@@ -394,11 +395,9 @@ WelcomeDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = DlgData_Create(hwndDlg);
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
             DlgData_LoadBitmaps(pDlgData);
             return TRUE;
@@ -1168,12 +1167,10 @@ LogonDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = DlgData_Create(hwndDlg);
+            /* FIXME: take care of NoDomainUI */
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
-
-            /* FIXME: take care of NoDomainUI */
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
             DlgData_LoadBitmaps(pDlgData);
 
@@ -1444,11 +1441,9 @@ UnlockDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = DlgData_Create(hwndDlg);
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
             SetWelcomeText(hwndDlg);
 
@@ -1540,11 +1535,9 @@ LockedDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = DlgData_Create(hwndDlg);
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
             DlgData_LoadBitmaps(pDlgData);
 
