@@ -34,6 +34,16 @@ public:
         return &m_UnicodeString;
     }
 
+    VOID
+    __inline
+    ReleaseString(
+        __out PUNICODE_STRING ReleaseTo
+        )
+    {
+        RtlCopyMemory(ReleaseTo, &m_UnicodeString, sizeof(UNICODE_STRING));
+        RtlZeroMemory(&m_UnicodeString, sizeof(m_UnicodeString));
+    }
+
     _Must_inspect_result_
     NTSTATUS
     Assign(

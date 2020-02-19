@@ -228,3 +228,41 @@ FxRegKey::_QueryValue(
 
     return status;
 }
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+FxRegKey::_Create(
+    __in_opt  HANDLE ParentKey,
+    __in  PCUNICODE_STRING KeyName,
+    __out HANDLE* NewKey,
+    __in  ACCESS_MASK DesiredAccess,
+    __in  ULONG CreateOptions,
+    __out_opt PULONG CreateDisposition
+    )
+{
+    OBJECT_ATTRIBUTES oa;
+
+    AT_PASSIVE();
+
+    //
+    // Force OBJ_KERNEL_HANDLE because we are never passing the handle back
+    // up to a process and we don't want to create a handle in an arbitrary
+    // process from which that process can close the handle out from underneath
+    // us.
+    //
+    InitializeObjectAttributes(
+        &oa,
+        (PUNICODE_STRING) KeyName,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+        ParentKey,
+        NULL);
+
+    return ZwCreateKey(NewKey,
+                       DesiredAccess,
+                       &oa,
+                       0,
+                       0,
+                       CreateOptions,
+                       CreateDisposition);
+}

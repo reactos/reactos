@@ -62,6 +62,19 @@ public:
         __in ULONG DataLength
         );
 
+    static
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    _Create(
+        __in_opt  HANDLE ParentKey,
+        __in      PCUNICODE_STRING KeyName,
+        __out     HANDLE* NewKey,
+        __in      ACCESS_MASK DesiredAccess = KEY_ALL_ACCESS,
+        __in      ULONG CreateOptions = REG_OPTION_NON_VOLATILE,
+        __out_opt PULONG CreateDisposition = NULL
+        );
+
 private:
 
     static
