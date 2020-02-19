@@ -109,6 +109,25 @@ FX_VF_STUB_P1( qf, rt, rtDef, fnName, at1 )
 FX_DECLARE_VF_FUNCTION_P1_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnName, at1 )
 
 //
+// 2-Parameter Stub Macro
+//
+#define FX_VF_STUB_P2( qf, rt, rtDef, fnName, at1, at2 )                  \
+__inline                                                               \
+qf                                                                        \
+rt                                                                        \
+fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,  at1 a1, at2 a2 )        \
+FX_VF_GLOBAL_CHECK_SCOPE( rt, rtDef, fnName, (FxDriverGlobals, a1, a2 ))
+
+// 2-Parameter Extended FUNCTION Declaration Macro
+#define FX_DECLARE_VF_FUNCTION_P2_EX( qf, rt, rtDef, fnName, at1, at2 )  \
+FX_VF_FUNCTION_PROTOTYPE( qf, rt, fnName, at1, at2 )                     \
+FX_VF_STUB_P2( qf, rt, rtDef, fnName, at1, at2 )
+
+// 2-Parameter FUNCTION Declaration Macro
+#define FX_DECLARE_VF_FUNCTION_P2( rt, fnName, at1, at2 )        \
+FX_DECLARE_VF_FUNCTION_P2_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnName, at1, at2 )
+
+//
 // In some cases we assert for some condition to hold (such as asserting a ptr
 // to be non-NULL before accessing it), but prefast will still complain
 // (e.g., in the example given, about NULL ptr access). 

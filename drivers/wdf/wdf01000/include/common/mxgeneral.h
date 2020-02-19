@@ -4,16 +4,28 @@
 #include <ntddk.h>
 #include <wdf.h>
 
+
+//typedef EXT_CALLBACK MdExtCallbackType, *MdExtCallback;
+typedef KDEFERRED_ROUTINE MdDeferredRoutineType, *MdDeferredRoutine;
+#define FX_DEVICEMAP_PATH L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP\\"
+
 //
 // Placeholder macro for a no-op
 //
 #define DO_NOTHING()                            (0)
 
+typedef LPCWSTR                 MxFuncName;
 typedef PKTHREAD                MxThread;
-typedef PDRIVER_OBJECT          MdDriverObject;
-typedef PDEVICE_OBJECT          MdDeviceObject;
-typedef PIO_REMOVE_LOCK         MdRemoveLock;
 typedef PETHREAD                MdEThread;
+typedef PDEVICE_OBJECT          MdDeviceObject;
+typedef PDRIVER_OBJECT          MdDriverObject;
+typedef PFILE_OBJECT            MdFileObject;
+typedef PIO_REMOVE_LOCK         MdRemoveLock;
+typedef PCALLBACK_OBJECT        MdCallbackObject;
+typedef CALLBACK_FUNCTION       MdCallbackFunctionType, *MdCallbackFunction;
+typedef PKINTERRUPT             MdInterrupt;
+typedef KSERVICE_ROUTINE        MdInterruptServiceRoutineType, *MdInterruptServiceRoutine;
+typedef KSYNCHRONIZE_ROUTINE    MdInterruptSynchronizeRoutineType, *MdInterruptSynchronizeRoutine;
 
 class Mx {
 
@@ -277,6 +289,166 @@ public:
         )
     {
         return PsGetCurrentThread();
+    }
+
+    __inline
+    static
+    VOID
+    MxInitializeNPagedLookasideList(
+        _Out_     PNPAGED_LOOKASIDE_LIST Lookaside,
+        _In_opt_  PALLOCATE_FUNCTION Allocate,
+        _In_opt_  PFREE_FUNCTION Free,
+        _In_      ULONG Flags,
+        _In_      SIZE_T Size,
+        _In_      ULONG Tag,
+        _In_      USHORT Depth
+        )
+    {
+        ExInitializeNPagedLookasideList(Lookaside,
+                                            Allocate,
+                                            Free,
+                                            Flags,
+                                            Size,
+                                            Tag,
+                                            Depth);
+    }
+
+    __inline
+    static
+    NTSTATUS
+    CreateCallback(
+        __out PCALLBACK_OBJECT  *CallbackObject,
+        __in POBJECT_ATTRIBUTES  ObjectAttributes,
+        __in BOOLEAN  Create,
+        __in BOOLEAN  AllowMultipleCallbacks
+        )
+    {
+        return ExCreateCallback(
+            CallbackObject, 
+            ObjectAttributes, 
+            Create, 
+            AllowMultipleCallbacks);
+    }
+
+    __inline
+    static
+    PVOID
+    RegisterCallback(
+        __in PCALLBACK_OBJECT  CallbackObject,
+        __in MdCallbackFunction  CallbackFunction,
+        __in PVOID  CallbackContext
+        )
+    {
+        return ExRegisterCallback(
+            CallbackObject,
+            CallbackFunction, 
+            CallbackContext);
+    }
+
+    __inline
+    static
+    MdDeviceObject
+    MxAttachDeviceToDeviceStack(
+        _In_ MdDeviceObject SourceDevice,
+        _In_ MdDeviceObject TargetDevice
+        )
+    {
+        return IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
+    }
+
+    /*__inline
+    static
+    NTSTATUS
+    MxCreateDeviceSecure(
+          _In_      PDRIVER_OBJECT DriverObject,
+          _In_      ULONG DeviceExtensionSize,
+          _In_opt_  PUNICODE_STRING DeviceName,
+          _In_      DEVICE_TYPE DeviceType,
+          _In_      ULONG DeviceCharacteristics,
+          _In_      BOOLEAN Exclusive,
+          _In_      PCUNICODE_STRING DefaultSDDLString,
+          _In_opt_  LPCGUID DeviceClassGuid,
+          _Out_     MdDeviceObject *DeviceObject
+        )
+    {
+        return IoCreateDeviceSecure(DriverObject,
+                    DeviceExtensionSize,
+                    DeviceName,
+                    DeviceType,
+                    DeviceCharacteristics,
+                    Exclusive,
+                    DefaultSDDLString,
+                    DeviceClassGuid,
+                    DeviceObject);
+    }*/
+
+    __inline
+    static
+    NTSTATUS 
+    MxCreateDevice(
+        _In_      PDRIVER_OBJECT DriverObject,
+        _In_      ULONG DeviceExtensionSize,
+        _In_opt_  PUNICODE_STRING DeviceName,
+        _In_      DEVICE_TYPE DeviceType,
+        _In_      ULONG DeviceCharacteristics,
+        _In_      BOOLEAN Exclusive,
+        _Out_     MdDeviceObject *DeviceObject
+    )
+    {
+        return IoCreateDevice(DriverObject,
+                        DeviceExtensionSize,
+                        DeviceName,
+                        DeviceType,
+                        DeviceCharacteristics,
+                        Exclusive,
+                        DeviceObject);
+
+    }
+
+    __inline
+    static
+    VOID
+    MxInitializeRemoveLock(
+        __in MdRemoveLock  Lock,
+        __in ULONG  AllocateTag,
+        __in ULONG  MaxLockedMinutes,
+        __in ULONG  HighWatermark
+        )
+    {
+        IoInitializeRemoveLock(Lock, AllocateTag, MaxLockedMinutes, HighWatermark);
+    }
+
+    __inline
+    static
+    VOID
+    MxDeleteNPagedLookasideList(
+        _In_ PNPAGED_LOOKASIDE_LIST LookasideList
+        )
+    {
+        ExDeleteNPagedLookasideList(LookasideList);
+    }
+
+    _Releases_lock_(_Global_cancel_spin_lock_)
+    __drv_requiresIRQL(DISPATCH_LEVEL)
+    __inline
+    static
+    VOID
+    ReleaseCancelSpinLock(
+        __in __drv_restoresIRQL __drv_useCancelIRQL  KIRQL  Irql
+        )
+    {
+        IoReleaseCancelSpinLock(Irql);
+    }
+
+    __inline
+    static
+    PVOID
+    MxGetSystemAddressForMdlSafe(
+        __inout PMDL Mdl,
+        __in    ULONG Priority
+        )
+    {
+        return MmGetSystemAddressForMdlSafe(Mdl, (_MM_PAGE_PRIORITY)Priority);
     }
 
 };
