@@ -59,6 +59,12 @@ public:
         VOID
         ) = 0;
 
+    virtual
+    void
+    Initialize(
+        FxObject* ParentObject
+        ) = 0;
+
 
     VOID
     CheckOwnership(

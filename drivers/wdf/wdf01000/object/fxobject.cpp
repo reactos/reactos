@@ -890,3 +890,158 @@ Comments:
     return STATUS_SUCCESS;
 }
 
+_Must_inspect_result_
+FxObject*
+FxObject::GetParentObjectReferenced(
+    __in PVOID Tag
+    )
+
+/*++
+
+Routine Description:
+     Return this objects parent, which could be NULL if
+     the object is not part of an association, or this or
+     the parent object is deleting.
+
+     An extra reference is taken on the parent object which
+     must eventually be released by the caller.
+
+Arguments:
+    Tag - Tag to use when referencing the parent
+
+Returns:
+
+    Parent object, otherwise NULL if no parent for this object
+
+--*/
+
+{
+    KIRQL oldIrql;
+    FxObject* parentObject;
+
+    m_SpinLock.Acquire(&oldIrql);
+
+    if (m_ObjectState == FxObjectStateCreated)
+    {
+        parentObject = m_ParentObject;
+    }
+    else
+    {
+        // Parent is disposing us, or we are being disposed
+        parentObject = NULL;
+    }
+
+    if (parentObject != NULL)
+    {
+        parentObject->ADDREF(Tag);
+    }
+
+    m_SpinLock.Release(oldIrql);
+
+    return parentObject;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxObject::AddContext(
+    __in FxContextHeader *Header,
+    __in PVOID* Context,
+    __in PWDF_OBJECT_ATTRIBUTES Attributes
+    )
+{
+    FxContextHeader *pCur, **ppLast;
+    NTSTATUS status;
+    KIRQL irql;
+
+    status = STATUS_UNSUCCESSFUL;
+
+    pCur = GetContextHeader();
+
+    //
+    // This should never happen since all outward facing objects have a 
+    // context header; framework never calls this function on internal 
+    // objects.
+    //
+    ASSERT(pCur != NULL);
+    
+    //
+    // Acquire the lock to lock the object's state.  A side affect of grabbing
+    // the lock is that all updaters who want to add a context are serialized.
+    // All callers who want to find a context do not need to acquire the lock
+    // becuase they are not going to update the list, just read from it.
+    //
+    // Once a context has been added, it will not be removed until the object
+    // has been deleted.
+    //
+    m_SpinLock.Acquire(&irql);
+
+    if (m_ObjectState == FxObjectStateCreated && pCur != NULL)
+    {
+        //
+        // Iterate over the list of contexts already on this object and see if
+        // this type already is attached.
+        //
+        for (ppLast = &pCur->NextHeader;
+             pCur != NULL;
+             ppLast = &pCur->NextHeader, pCur = pCur->NextHeader)
+        {
+            if (pCur->ContextTypeInfo == Header->ContextTypeInfo)
+            {
+                //
+                // Dupe found, return error but give the caller the context
+                // pointer
+                //
+                if (Context != NULL)
+                {
+                    *Context = &pCur->Context[0];
+                }
+
+                status = STATUS_OBJECT_NAME_EXISTS;
+                break;
+            }
+        }
+
+        if (pCur == NULL)
+        {
+            //
+            // By using the interlocked to update, we don't need to use a lock
+            // when walking the list to find the context.   The only reason
+            // we are holding the object lock is to lock the current state
+            // (m_ObjectState) of the object.
+            //
+            InterlockedExchangePointer((PVOID*) ppLast, Header);
+            status = STATUS_SUCCESS;
+
+            if (Context != NULL)
+            {
+                *Context = &Header->Context[0];
+            }
+
+            //
+            // FxContextHeaderInit does not set these callbacks.  If this were
+            // the creation of the object itself, FxObject::Commit would have done
+            // this assignment.
+            //
+            Header->EvtDestroyCallback = Attributes->EvtDestroyCallback;
+
+            if (Attributes->EvtCleanupCallback != NULL)
+            {
+                Header->EvtCleanupCallback = Attributes->EvtCleanupCallback;
+                m_ObjectFlags |= FXOBJECT_FLAGS_HAS_CLEANUP;
+            }
+
+        }
+    }
+    else
+    {
+        //
+        // Object is being torn down, adding a context is a bad idea because we
+        // cannot guarantee that the cleanup or destroy routines will be called
+        //
+        status = STATUS_DELETE_PENDING;
+    }
+
+    m_SpinLock.Release(irql);
+
+    return status;
+}

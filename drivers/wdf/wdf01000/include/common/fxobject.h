@@ -17,6 +17,7 @@
 #include "common/fxtypedefs.h"
 #include "common/dbgtrace.h"
 #include "common/fxtagtracker.h"
+#include "common/fxpoolinlines.h"
 #include "wdf.h"
 
 
@@ -207,6 +208,15 @@ enum FXOBJECT_FLAGS {
 
 // forward definitions
 //typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
+
+//
+// The type itself is aligned, but the pointer is not b/c those interested in the
+// offset do not need it to be aligned.
+//
+// The offset is aligned on an 8 byte boundary so that we have the lower 3 bits
+// of the low byte to use for a bit field
+//
+typedef DECLSPEC_ALIGN(8) USHORT WDFOBJECT_OFFSET_ALIGNED;
 
 class FxObject {
 
@@ -665,6 +675,34 @@ public:
         VOID
         );
 
+    static
+    PFX_POOL_HEADER
+    _CleanupPointer(
+        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in FxObject* Object
+        )
+    {
+        PFX_POOL_HEADER pHeader;
+        PVOID pObjectBase;
+
+        pObjectBase = _GetBase(Object);
+
+        pHeader = CONTAINING_RECORD(pObjectBase, FX_POOL_HEADER, AllocationStart);
+
+        //
+        // If PoolTracker is on then do....
+        //
+        if (FxDriverGlobals->IsPoolTrackingOn())
+        {
+            //
+            // Decommission this NonPaged Allocation tracker
+            //
+            FxPoolRemoveNonPagedAllocateTracker((PFX_POOL_TRACKER) pHeader->Base);
+        }
+
+        return pHeader;
+    }
+
     BOOLEAN
     IsDebug(
         VOID
@@ -922,6 +960,14 @@ public:
         );
 
     _Must_inspect_result_
+    NTSTATUS
+    AddContext(
+        __in FxContextHeader *Header,
+        __in PVOID* Context,
+        __in PWDF_OBJECT_ATTRIBUTES Attributes
+        );
+
+    _Must_inspect_result_
     virtual
     NTSTATUS
     QueryInterface(
@@ -1085,6 +1131,15 @@ public:
         }
     }
 
+    //
+    // Adds a reference to the parent object pointer if != NULL
+    //
+    _Must_inspect_result_
+    FxObject*
+    GetParentObjectReferenced(
+        __in PVOID Tag
+        );
+
 protected:
 
     FxObject(
@@ -1171,6 +1226,11 @@ protected:
     {
         delete this;
     }
+
+    VOID
+    DeleteEarlyDisposedObject(
+        VOID
+        );
 
 };
 
