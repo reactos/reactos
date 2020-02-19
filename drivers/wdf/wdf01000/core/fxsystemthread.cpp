@@ -89,3 +89,30 @@ FxSystemThread::ExitThread()
 
     return TRUE;
 }
+
+BOOLEAN
+FxSystemThread::QueueWorkItem(
+    __inout PWORK_QUEUE_ITEM WorkItem
+    )
+{
+    KIRQL irql;
+    BOOLEAN result;
+
+    Lock(&irql);
+
+    if (m_Exit)
+    {
+        result = FALSE;
+    }
+    else
+    {
+        result = TRUE;
+        InsertTailList(&m_WorkList, &WorkItem->List);
+
+        m_WorkEvent.Set();
+    }
+
+    Unlock(irql);
+
+    return result;
+}

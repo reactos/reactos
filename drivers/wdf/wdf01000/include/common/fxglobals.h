@@ -106,7 +106,17 @@ FxVerifyObjectTypeInTable(
     );
 
 
+typedef enum FxTrackPowerOption : UCHAR {
+    FxTrackPowerNone = 0,
+    FxTrackPowerRefs,
+    FxTrackPowerRefsAndStack,
+    FxTrackPowerMaxValue
+} FxTrackPowerOption;
 
+typedef enum FxVerifierDownlevelOption {
+    NotOkForDownLevel = 0,
+    OkForDownLevel = 1,
+} FxVerifierDownLevelOption;
 
 struct FxMdlDebugInfo {
     PMDL Mdl;
@@ -190,6 +200,12 @@ struct FxDriverGlobalsDebugExtension {
     // Synchronizes access to AllocatedTagTrackersListHead
     //
     MxLock AllocatedTagTrackersLock;
+
+    //
+    // Whether we track power references for WDFDEVICE objects
+    // and optionally capture stack frames.
+    //
+    FxTrackPowerOption TrackPower;
 };
 
 VOID
@@ -274,6 +290,31 @@ public:
         	return FALSE;
     	}
 	}
+
+    _Must_inspect_result_
+    BOOLEAN
+    IsVerificationEnabled(
+        __in ULONG  Major,
+        __in ULONG  Minor,
+        __in FxVerifierDownlevelOption DownLevel
+        )
+    {
+        //
+        // those verifier checks that are restricted to specific version can be
+        // applied to previous version drivers if driver opts-in by setting a
+        // reg key (whose value is stored in FxVerifyDownlevel)
+        //
+        if (FxVerifierOn &&
+            (IsVersionGreaterThanOrEqualTo(Major, Minor) ||
+             (DownLevel ? FxVerifyDownlevel : FALSE)))
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
 	
 
 	//
@@ -843,6 +884,188 @@ FX_TRACK_DRIVER(
     if (FxDriverGlobals->FxTrackDriverForMiniDumpLog)
     {
         FxLibraryGlobals.DriverTracker.TrackDriver(FxDriverGlobals);
+    }
+}
+
+_Must_inspect_result_
+__inline
+PVOID
+FxAllocateFromNPagedLookasideListNoTracking (
+    __in PNPAGED_LOOKASIDE_LIST Lookaside
+    )
+/*++
+Routine Description:
+    This function removes (pops) the first entry from the specified
+    nonpaged lookaside list. This function was added to allow request allocated
+    by a lookaside list to be freed by ExFreePool and hence do no tracking of statistics.
+Arguments:
+    Lookaside - Supplies a pointer to a nonpaged lookaside list structure.
+Return Value:
+    If an entry is removed from the specified lookaside list, then the
+    address of the entry is returned as the function value. Otherwise,
+    NULL is returned.
+--*/
+{
+    PVOID Entry;
+    Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+    if (Entry == NULL)
+    {
+        Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                        Lookaside->L.Size,
+                                        Lookaside->L.Tag);
+    }
+    return Entry;
+}
+
+__inline
+ULONG
+FxRandom(
+    __inout PULONG RandomSeed
+    )
+/*++
+
+Routine Description:
+
+    Simple threadsafe random number generator to use at DISPATCH_LEVEL
+    (in kernel mode) because the system provided function RtlRandomEx
+    can be called at only passive-level.
+
+    This function requires the user to provide a variable used to seed
+    the generator, and it must be valid and initialized to some number.
+
+Return Value:
+
+   ULONG
+
+--*/
+{
+    *RandomSeed = *RandomSeed * 1103515245 + 12345;
+    return (ULONG)(*RandomSeed / 65536) % 32768;
+}
+
+__inline
+PVOID
+FxAllocateFromNPagedLookasideList (
+    _In_ PNPAGED_LOOKASIDE_LIST Lookaside,
+    _In_opt_ size_t ElementSize = 0
+    )
+
+/*++
+
+Routine Description:
+
+    This function removes (pops) the first entry from the specified
+    nonpaged lookaside list.
+
+Arguments:
+
+    Lookaside - Supplies a pointer to a nonpaged lookaside list structure.
+
+Return Value:
+
+    If an entry is removed from the specified lookaside list, then the
+    address of the entry is returned as the function value. Otherwise,
+    NULL is returned.
+
+--*/
+
+{
+
+    PVOID Entry;
+
+    UNREFERENCED_PARAMETER(ElementSize);
+
+    Lookaside->L.TotalAllocates += 1;
+
+    Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+
+    if (Entry == NULL) {
+        Lookaside->L.AllocateMisses += 1;
+        Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                        Lookaside->L.Size,
+                                        Lookaside->L.Tag);
+    }
+
+    return Entry;
+}
+
+__inline
+VOID
+FxFreeToNPagedLookasideListNoTracking (
+    __in PNPAGED_LOOKASIDE_LIST Lookaside,
+    __in PVOID Entry
+    )
+/*++
+
+Routine Description:
+
+    This function inserts (pushes) the specified entry into the specified
+    nonpaged lookaside list. This function was added to allow request allocated
+    by a lookaside list to be freed by ExFreePool and hence do no tracking of statistics.
+
+Arguments:
+
+    Lookaside - Supplies a pointer to a nonpaged lookaside list structure.
+
+    Entry - Supples a pointer to the entry that is inserted in the
+        lookaside list.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth)
+    {
+        (Lookaside->L.Free)(Entry);
+    }
+    else
+    {
+        InterlockedPushEntrySList(&Lookaside->L.ListHead,
+                                  (PSLIST_ENTRY)Entry);
+    }
+}
+
+__inline
+VOID
+FxFreeToNPagedLookasideList (
+    __in PNPAGED_LOOKASIDE_LIST Lookaside,
+    __in PVOID Entry
+    )
+/*++
+
+Routine Description:
+
+    This function inserts (pushes) the specified entry into the specified
+    nonpaged lookaside list.
+
+Arguments:
+
+    Lookaside - Supplies a pointer to a nonpaged lookaside list structure.
+
+    Entry - Supples a pointer to the entry that is inserted in the
+        lookaside list.
+
+Return Value:
+
+    None.
+
+--*/
+
+{
+    Lookaside->L.TotalFrees += 1;
+
+    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth)
+    {
+        Lookaside->L.FreeMisses += 1;
+        (Lookaside->L.Free)(Entry);
+    }
+    else
+    {
+        InterlockedPushEntrySList(&Lookaside->L.ListHead,
+                                  (PSLIST_ENTRY)Entry);
     }
 }
 

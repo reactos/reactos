@@ -82,6 +82,18 @@ public:
     }
 
     DECLARE_INTERNAL_NEW_OPERATOR();
+
+    //
+    // Queue a work item to the thread
+    //
+    // It is valid to queue work items before thread
+    // Initialize()/Initialize(FxSystemThread*) is called. The items
+    // remain queued until the system thread is started.
+    //
+    BOOLEAN
+    QueueWorkItem(
+        __inout PWORK_QUEUE_ITEM WorkItem
+        );
 };
 
 #endif //_FXSYSTEMTHREAD_H_

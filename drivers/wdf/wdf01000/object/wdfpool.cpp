@@ -758,3 +758,79 @@ Remarks:
 
     return ptr;
 }
+
+VOID
+FxMdlFreeDebug(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in PMDL Mdl
+    )
+{
+    FxDriverGlobalsDebugExtension* pExtension;
+    FxAllocatedMdls* pAllocated, **ppNext;
+    ULONG i;
+    KIRQL irql;
+    BOOLEAN found;
+
+    pExtension = FxDriverGlobals->DebugExtension;
+    if (pExtension == NULL)
+    {
+        IoFreeMdl(Mdl);
+        return;
+    }
+
+    found = FALSE;
+
+    pAllocated = &pExtension->AllocatedMdls;
+    ppNext = NULL;
+
+    KeAcquireSpinLock(&pExtension->AllocatedMdlsLock, &irql);
+
+    while (pAllocated != NULL)
+    {
+        for (i = 0; i < NUM_MDLS_IN_INFO; i++)
+        {
+            if (pAllocated->Info[i].Mdl != Mdl)
+            {
+                continue;
+            }
+
+            RtlZeroMemory(&pAllocated->Info[i],
+                          sizeof(pAllocated->Info[i]));
+
+            pAllocated->Count--;
+
+            if (pAllocated->Count == 0 &&
+                pAllocated != &pExtension->AllocatedMdls)
+            {
+                //
+                // Remove the current table from the chain
+                //
+                *ppNext = pAllocated->Next;
+
+                //
+                // And free it
+                //
+                ExFreePool(pAllocated);
+            }
+
+            IoFreeMdl(Mdl);
+            found = TRUE;
+            break;
+        }
+
+        if (found)
+        {
+            break;
+        }
+
+        ppNext = &pAllocated->Next;
+        pAllocated = pAllocated->Next;
+    }
+
+    KeReleaseSpinLock(&pExtension->AllocatedMdlsLock, irql);
+
+    if (found == FALSE)
+    {
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+    }
+}
