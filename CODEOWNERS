@@ -187,6 +187,11 @@
 #   S: Maintained
 /drivers/filters/mountmgr/ @HeisSpiter
 
+# Net command
+#   M: EricKohl, ekohl, Eric Kohl
+#   S: Maintained
+/base/applications/network/net/ @EricKohl
+
 # Network Drivers
 #   M:
 #   R: ThFabba, Thomas Faber
