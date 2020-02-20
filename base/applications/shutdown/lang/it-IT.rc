@@ -66,10 +66,10 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
 
     IDS_ERROR_SHUTDOWN_REBOOT "ERROR: Impossibile arrestare e riavviare al tempo stesso.\n"
     IDS_ERROR_TIMEOUT "ERROR: Il valore di timeout di u% è fuori dai limiti (0-315360000) \n"
-    IDS_ERROR_ABORT "ERROR: Impossibile interrompere l'arresto del sistema \n."
+    IDS_ERROR_ABORT "ERROR: Impossibile interrompere l'arresto del sistema.\n"
     IDS_ERROR_LOGOFF "ERROR: Impossibile disconnettersi dal sistema \n"
-    IDS_ERROR_SHUTDOWN "ERROR: Impossibile arrestare il sistema \n."
-    IDS_ERROR_RESTART "ERROR: Impossibile riavviare il sistema \n."
+    IDS_ERROR_SHUTDOWN "ERROR: Impossibile arrestare il sistema.\n"
+    IDS_ERROR_RESTART "ERROR: Impossibile riavviare il sistema.\n"
     IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: La lunghezza del commento supera il limite massimo di caratteri impostato dal sistema \n"
     IDS_ERROR_HIBERNATE "ERROR: Impossibile avviare il sistema in modalità sospensione. \n"
     IDS_ERROR_HIBERNATE_LOCAL "ERROR: La modalità sospensione non può essere avviata in modalità remota \n"

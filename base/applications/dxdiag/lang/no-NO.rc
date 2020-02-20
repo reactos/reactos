@@ -250,5 +250,5 @@ BEGIN
     IDS_DMUSIC_DLS "Supports DLS"
     IDS_DMUSIC_EXT "External"
     IDS_DMUSIC_PORT "Default Port"
-    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices\n.Do you wish to continue?\n"
+    IDS_DDDISABLE_MSG "This will disable all hardware acceleration for DirectDraw on all display devices.\nDo you wish to continue?\n"
 END

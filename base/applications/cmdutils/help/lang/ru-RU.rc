@@ -7,7 +7,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "Данная команда не поддерживается. Воспользуйтесь параметром ""%s /?""\n."
+    IDS_NO_ENTRY "Данная команда не поддерживается. Воспользуйтесь параметром ""%s /?"".\n"
 END
 
 STRINGTABLE

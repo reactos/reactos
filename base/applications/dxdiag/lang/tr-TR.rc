@@ -252,5 +252,5 @@ BEGIN
     IDS_DMUSIC_DLS "DLS'yi Destekler"
     IDS_DMUSIC_EXT "Dış"
     IDS_DMUSIC_PORT "Ön Tanımlı Giriş"
-    IDS_DDDISABLE_MSG "Bu, tüm görüntü aygıtlarında ReactDraw için tüm donanım ivmelerini edilginleştirecektir.\n. Sürdürmek ister misiniz?\n"
+    IDS_DDDISABLE_MSG "Bu, tüm görüntü aygıtlarında ReactDraw için tüm donanım ivmelerini edilginleştirecektir.\nSürdürmek ister misiniz?\n"
 END
