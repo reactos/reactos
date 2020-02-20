@@ -1,6 +1,7 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (February, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -169,7 +170,7 @@ CAPTION "Uruchamianie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Wpisz nazwę programu, folderu, katalogu lub zasobu internetowego a zostanie on otwarty przez system ReactOS.", 12289, 36, 11, 185, 24
+    LTEXT "Wpisz nazwę programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez system ReactOS.", 12289, 36, 11, 185, 24
     LTEXT "&Otwórz:", 12305, 7, 44, 25, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 43, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
@@ -243,7 +244,7 @@ BEGIN
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Atrybuty:", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "&Tylko do odczytu", 14021, 58, 151, 70, 10
-    AUTOCHECKBOX "&Ukryty", 14022, 126, 151, 70, 10
+    AUTOCHECKBOX "&Ukryty", 14022, 130, 151, 70, 10
     AUTOCHECKBOX "&Archiwalny", 14023, 181, 151, 70, 10
     PUSHBUTTON "Zaawa&nsowane...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
@@ -296,7 +297,7 @@ BEGIN
     LTEXT "Prawa autorskie: ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Pozostałe informacje o wersji: ", 14006, 6, 70, 222, 115
-    LTEXT "Nazwa: ", 14007, 13, 82, 50, 10
+    LTEXT "Nazwa elementu: ", 14007, 13, 82, 58, 10
     LTEXT "Wartość: ", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
@@ -343,12 +344,12 @@ BEGIN
     GROUPBOX "Sprawdzanie błędów", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Ta opcja sprawdzi wolumin w poszukiwaniu błędów.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Sprawdź...", 14000, 130, 45, 100, 15, WS_TABSTOP
+    PUSHBUTTON "&Sprawdź...", 14000, 130, 45, 100, 15, WS_TABSTOP
     GROUPBOX "Defragmentacja", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Ta opcja dokona defragmentacji plików woluminu.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragmentuj...", 14001, 130, 105, 100, 15, WS_TABSTOP
-    GROUPBOX "Kopia zapasowa", -1, 5, 130, 230, 60
+    PUSHBUTTON "&Defragmentuj...", 14001, 130, 105, 100, 15, WS_TABSTOP
+    GROUPBOX "&Kopia zapasowa", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Ta opcja wykona kopię zapasową plików tego woluminu.", -1, 40, 150, 160, 20
     PUSHBUTTON "Wykonaj kopię zapasową...", 14002, 130, 170, 100, 15, WS_TABSTOP
@@ -392,7 +393,7 @@ BEGIN
     EDITTEXT 14002, 116, 102, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "R&ozmiar maksymalny (MB):", -1, 20, 105, 90, 10
     RADIOBUTTON "Nie przenoś plików do &Kosza. Usuń pliki natychmiast", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Wyświetl okno dialogowe z potwierdzeniem usuwania", 14004, 20, 155, 180, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Wyświetl okno dialogowe potwierdzające usuwanie", 14004, 20, 155, 180, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -471,8 +472,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWIND
 CAPTION "Potwierdź zastąpienie pliku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Tak", IDYES, 20, 122, 60, 14
-    PUSHBUTTON "Tak na &Wszystkie", 12807, 85, 122, 60, 14
+    DEFPUSHBUTTON "&Tak", IDYES, 16, 122, 60, 14
+    PUSHBUTTON "Tak na &wszystkie", 12807, 81, 122, 64, 14
     PUSHBUTTON "&Nie", IDNO, 150, 122, 60, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
@@ -480,16 +481,16 @@ BEGIN
     LTEXT "Ten katalog zawiera już plik tylko do odczytu, o nazwie '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Ten katalog zawiera już plik systemowy o nazwie '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Czy chcesz zastąpić istniejący plik?", -1, 44, 35, 228, 10, SS_NOPREFIX
-    LTEXT "(data i rozmiar nieznane)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+    LTEXT "(nieznana data i rozmiar)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "nowym plikiem?", -1, 44, 75, 228, 10, SS_NOPREFIX
-    LTEXT "(data i rozmiar nieznane)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+    LTEXT "(nieznana data i rozmiar)", 12303, 79, 91, 198, 20, SS_NOPREFIX
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Wyloguj się z systemu ReactOS"
+CAPTION "Wylogowywanie z systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -606,7 +607,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Sprawdzanie dysku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Rozpocznij", IDOK, 63, 95, 60, 14
+    DEFPUSHBUTTON "&Rozpocznij", IDOK, 63, 95, 60, 14
     GROUPBOX "Opcje sprawdzania dysku", -1, 7, 6, 179, 40
     PUSHBUTTON "Anuluj", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Automatycznie naprawiaj błędy systemu plików", 14000, 16, 18, 165, 10
@@ -650,7 +651,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Rozszerzenie pliku:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "&Zaawansowane >>", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    PUSHBUTTON "<< &Zaawansowane", IDC_NEWEXT_ADVANCED, 180, 8, 70, 15
     LTEXT "&Skojarzony typ pliku:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
@@ -773,17 +774,17 @@ BEGIN
     IDS_PASTE "Włóż"
     IDS_EJECT "Wysuń"
     IDS_DISCONNECT "Odłącz"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_DESKLINK "Desktop (Create shortcut)"
-    IDS_SENDTO_MENU "Se&nd To"
+    IDS_OPENFILELOCATION "O&twórz lokalizację pliku"
+    IDS_DESKLINK "Pulpit (utwórz skrót)"
+    IDS_SENDTO_MENU "Wyślij d&o"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERRORTITLE "Błąd przenoszenia pliku lub folderu"
+    IDS_COPYERRORTITLE "Błąd kopiowania pliku lub folderu"
+    IDS_MOVEERRORSAMEFOLDER "Nie można przenieść  '%s': Folder docelowy jest taki sam jak folder źródłowy."
+    IDS_MOVEERRORSAME "Nie można przenieść  '%s': Nazwy plików źródłowego i docelowego są takie same."
+    IDS_COPYERRORSAME "Nie można skopiować  '%s': Nazwy plików źródłowego i docelowego są takie same."
+    IDS_MOVEERRORSUBFOLDER "Nie można przenieść  '%s': Folder docelowy jest podfolderem folderu źródłowego."
+    IDS_COPYERRORSUBFOLDER "Nie można skopiować  '%s': Folder docelowy jest podfolderem folderu źródłowego."
 
     IDS_CREATEFOLDER_DENIED "Nie można utworzyć folderu '%1'"
     IDS_CREATEFOLDER_CAPTION "Nie można utworzyć folderu"
@@ -887,7 +888,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Nie można wysunąć nośnika (kod błędu: %lu)."
     IDS_CANTSHOWPROPERTIES "Nie można pokazać właściwości (kod błędu: %lu)."
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
-    IDS_NONE "(None)"
+    IDS_NONE "(brak)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Katalog"
@@ -924,7 +925,7 @@ BEGIN
     IDS_EDIT_VERB "Edytuj"
     IDS_FIND_VERB "Wyszukaj"
     IDS_PRINT_VERB "Drukuj"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "&Wiersz poleceń tutaj"
 
     IDS_FILE_FOLDER "%u Plików, %u Katalogów"
     IDS_PRINTERS "Drukarki"
@@ -956,7 +957,7 @@ BEGIN
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Wyświetl informacje o rozmiarze plików w etykietach folderów"
-    IDS_ADVANCED_FRIENDLY_TREE "Wyświetl listę folderów Eskploratora w prostym widoku folderów"
+    IDS_ADVANCED_FRIENDLY_TREE "Wyświetl listę folderów Eksploratora w prostym widoku folderów"
     IDS_ADVANCED_WEB_VIEW_BARRICADE "Wyświetl zawartość folderów systemowych"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Wyświetl pełną ścieżkę na pasku adresu"
     IDS_ADVANCED_SHOW_FULL_PATH "Wyświetl pełną ścieżkę na pasku tytułu"
