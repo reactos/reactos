@@ -84,10 +84,3 @@ BEGIN
     4001 "新しいコンピュータ名を設定できませんでした。"
 END
 
-IDC_NETWORK_ID DIALOGEX 0,0,400,100
-
-BEGIN
-
-LTEXT "&ネットワークIDはありません。", -1, 7, 57, 348, 8
-
-END
