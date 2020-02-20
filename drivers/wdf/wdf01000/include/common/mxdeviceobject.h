@@ -29,6 +29,22 @@ public:
     {
     }
 
+    CCHAR
+    GetStackSize(
+        VOID
+        )
+    {
+        return m_DeviceObject->StackSize;
+    }
+
+    VOID
+    SetStackSize(
+        _In_ CCHAR Size
+        )
+    {
+        m_DeviceObject->StackSize = Size;
+    }
+
     __inline
     PVOID
     GetDeviceExtension(
@@ -83,6 +99,42 @@ public:
     {
         #pragma warning(disable:28129)
         m_DeviceObject->Flags = Flags;
+    }
+
+    __inline
+    VOID
+    SetDeviceType(
+        DEVICE_TYPE Value
+        )
+    {
+        m_DeviceObject->DeviceType = Value;
+    }
+    
+    __inline
+    VOID
+    SetCharacteristics(
+        ULONG Characteristics
+        )
+    {
+        m_DeviceObject->Characteristics = Characteristics;
+    }
+
+    __inline
+    DEVICE_TYPE
+    GetDeviceType(
+        VOID
+        )
+    {
+        return m_DeviceObject->DeviceType;
+    }
+
+    __inline
+    ULONG
+    GetCharacteristics(
+        VOID
+        )
+    {
+        return m_DeviceObject->Characteristics;
     }
 
 };

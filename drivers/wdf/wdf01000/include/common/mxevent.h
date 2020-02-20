@@ -111,6 +111,35 @@ public:
                         Timeout
                         );
     }
+
+    //
+    // GetEvent will return the underlying primitive event
+    // PKEVENT in case of kernel mode and event HANDLE in case of user-mode
+    //
+    __inline
+    PVOID
+    GetEvent(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        return &m_Event;
+    }
+
+    //
+    // NOTE: In user mode this function can only be called
+    // for a notification event (and not for a
+    // synchronization event)
+    //
+    __inline
+    LONG
+    ReadState(
+        )
+    {
+        ASSERT_DBGFLAG_INITIALIZED;
+
+        return KeReadStateEvent(&m_Event);
+    }
 };
 
 #endif //_MXEVENT_H_
