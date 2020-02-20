@@ -250,7 +250,7 @@
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
 #   S: Maintained
-/dll/shellext   @learn-more
+/dll/shellext/  @learn-more
 
 # UniATA
 #   M: ThFabba, Thomas Faber
