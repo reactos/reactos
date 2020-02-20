@@ -17,7 +17,7 @@ cmdAccounts(
     PUSER_MODALS_INFO_0 Info0 = NULL;
     PUSER_MODALS_INFO_1 Info1 = NULL;
     PUSER_MODALS_INFO_3 Info3 = NULL;
-    NT_PRODUCT_TYPE ProductType;
+    NT_PRODUCT_TYPE ProductType = NtProductWinNt;
     LPWSTR p;
     LPWSTR endptr;
     DWORD ParamErr;
