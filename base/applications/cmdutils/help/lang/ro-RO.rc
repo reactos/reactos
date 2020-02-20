@@ -9,7 +9,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "Această comandă nu este recunoscută de utilitarul manual.\nÎncercați ""%s /?""\n."
+    IDS_NO_ENTRY "Această comandă nu este recunoscută de utilitarul manual.\nÎncercați ""%s /?"".\n"
 END
 
 STRINGTABLE
