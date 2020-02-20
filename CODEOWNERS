@@ -121,8 +121,8 @@
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
-/sdk/cmake/     @learn-more @ThFabba
-*.cmake         @learn-more @ThFabba
+/sdk/cmake/ @learn-more @ThFabba
+*.cmake     @learn-more @ThFabba
 
 # File Patch API
 #   M: learn-more, learn_more, Mark Jansen
@@ -139,15 +139,15 @@
 # Filesystem Filter Manager
 #   M: gedmurphy, Ged, Ged Murphy
 #   S: Maintained
-/drivers/filters/fltmgr/ @gedmurphy
+/drivers/filters/fltmgr/    @gedmurphy
 
 # File Systems Run Time Library
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
-/modules/rostests/kmtests/ntos_fsrtl/       @HeisSpiter
-/modules/rostests/kmtests/novp_fsrtl/       @HeisSpiter
-/ntoskrnl/fsrtl/                            @HeisSpiter
-/sdk/lib/drivers/ntoskrnl_vista/fsrtl.c     @HeisSpiter
+/modules/rostests/kmtests/ntos_fsrtl/   @HeisSpiter
+/modules/rostests/kmtests/novp_fsrtl/   @HeisSpiter
+/ntoskrnl/fsrtl/                        @HeisSpiter
+/sdk/lib/drivers/ntoskrnl_vista/fsrtl.c @HeisSpiter
 
 # Freeloader
 #   M:
@@ -185,7 +185,7 @@
 # Mount Point Manager
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
 #   S: Maintained
-/drivers/filters/mountmgr/ @HeisSpiter
+/drivers/filters/mountmgr/  @HeisSpiter
 
 # Network Drivers
 #   M:
@@ -198,7 +198,7 @@
 #   R: ThFabba, Thomas Faber
 #   R: Extravert-ir, extravert34, Victor Perevertkin
 #   S: Maintained
-/drivers/network/dd/e1000/   @ThFabba @Extravert-ir
+/drivers/network/dd/e1000/  @ThFabba @Extravert-ir
 
 # Network File Systems kernel libraries
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
@@ -218,7 +218,7 @@
 # Printing
 #   M: ColinFinck, Colin Finck
 #   S: Maintained
-/win32ss/printing/ @ColinFinck
+/win32ss/printing/  @ColinFinck
 
 # ReactOS API Tests
 #   M:
@@ -255,7 +255,7 @@
 # UniATA
 #   M: ThFabba, Thomas Faber
 #   S: Upstream
-/drivers/storage/ide/uniata/   @ThFabba
+/drivers/storage/ide/uniata/    @ThFabba
 
 # Upstream File Systems
 #   M: HeisSpiter, Heis Spiter, Pierre Schweitzer
