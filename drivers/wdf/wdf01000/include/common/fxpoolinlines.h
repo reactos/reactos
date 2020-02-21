@@ -2,6 +2,56 @@
 #define _FXPOOLINLINES_H_
 
 #include "common/fxpool.h"
+#include "common/dbgtrace.h"
+#include <ntintsafe.h>
+
+
+_Must_inspect_result_
+NTSTATUS
+__inline
+FxPoolAddHeaderSize(
+    __in    PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in    size_t AllocationSize,
+    __out   size_t* NewSize
+    )
+{
+    NTSTATUS status;
+    size_t total;
+
+    total = AllocationSize;
+
+    //
+    // sizeof(FX_POOL_HEADER) is too large since it will contain enough memory
+    // for AllocationStart which we compute on our own.
+    //
+    status = RtlSizeTAdd(total, FX_POOL_HEADER_SIZE, &total);
+
+    if (!NT_SUCCESS(status))
+    {
+        DoTraceLevelMessage(
+            FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Size overflow, could not add pool header, %!STATUS!", status);
+
+        return status;
+    }
+
+    if (FxDriverGlobals->IsPoolTrackingOn())
+    {
+        status = RtlSizeTAdd(total, sizeof(FX_POOL_TRACKER), &total);
+
+        if (!NT_SUCCESS(status))
+        {
+            DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "Size overflow, could not add pool tracker, %!STATUS!", status);
+            return status;
+        }
+    }
+
+    *NewSize = total;
+
+    return STATUS_SUCCESS;
+}
 
 VOID
 __inline

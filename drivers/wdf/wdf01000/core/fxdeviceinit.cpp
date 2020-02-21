@@ -61,7 +61,7 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
     IoInCallerContextCallback = NULL;
 
-    InitializeListHead(&CxDeviceInitListHead);
+    //InitializeListHead(&CxDeviceInitListHead);
 
     //ReleaseHardwareOrderOnFailure = WdfReleaseHardwareOrderOnFailureEarly;
     
@@ -162,4 +162,58 @@ WDFDEVICE_INIT::~WDFDEVICE_INIT()
     }
 #endif
 
+}
+
+BOOLEAN
+WDFDEVICE_INIT::ShouldCreateSecure(
+    VOID
+    )
+{
+    //
+    // Driver explicitly set a class or SDDL, we have to create a secure
+    // device.  This will be true for all control devices (SDDL required)
+    // and raw PDOs (class required), could be true for FDOs or filters as
+    // well.
+    //
+    if (Security.DeviceClassSet || Security.Sddl != NULL)
+    {
+        return TRUE;
+    }
+
+    //
+    // See if there is a name for the device
+    //
+    if (HasName())
+    {
+        if (IsPdoInit())
+        {
+            ASSERT(Pdo.Raw == FALSE);
+
+            DoTraceLevelMessage(
+                DriverGlobals, 
+                TRACE_LEVEL_WARNING, 
+                TRACINGDEVICE,
+                "WDFDRIVER 0x%p asked for a named device object, but the PDO "
+                "will be created without a name because an SDDL string has not "
+                "been specified for the PDO.",
+                Driver
+                );
+            return FALSE;
+        }
+        else
+        {
+            //
+            // We are creating a named FDO or filter
+            //
+            ASSERT(IsFdoInit());
+            return TRUE;
+        }
+    }
+
+    //
+    // No name involved (FDO or filter)
+    //
+    ASSERT(IsFdoInit());
+
+    return FALSE;
 }

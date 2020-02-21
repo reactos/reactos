@@ -154,4 +154,55 @@ FxVerifierNullBugCheck(
     __in PVOID ReturnAddress
     );
 
+__inline
+BOOLEAN
+IsFxVerifierTestForwardProgressFailAll(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    if (FxDriverGlobals->FxEnhancedVerifierOptions & 
+            FxEnhancedVerifierForwardProgressFailAll)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+__inline
+BOOLEAN
+IsFxVerifierTestForwardProgress(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    if (FxDriverGlobals->FxEnhancedVerifierOptions & 
+            FxEnhancedVerifierForwardProgressMask)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+__inline
+BOOLEAN
+IsFxVerifierTestForwardProgressFailRandom(
+    __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    if (FxDriverGlobals->FxEnhancedVerifierOptions & 
+            FxEnhancedVerifierForwardProgressFailRandom)
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
 #endif //_FXVERIFIER_H_

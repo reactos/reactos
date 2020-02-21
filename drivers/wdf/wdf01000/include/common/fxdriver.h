@@ -26,6 +26,10 @@ typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
 //
 class FxDriver : public FxNonPagedObject {
 
+friend class FxDevice;
+friend class FxPackage;
+friend class FxWmiIrpHandler;
+
 private:
     
     MxDriverObject m_DriverObject;
@@ -204,6 +208,32 @@ public:
         )
     {
         return m_DriverObject.GetObject();
+    }
+
+    virtual
+    VOID
+    GetConstraints(
+        __out WDF_EXECUTION_LEVEL*       ExecutionLevel,
+        __out WDF_SYNCHRONIZATION_SCOPE* SynchronizationScope
+        ) {
+
+        if (ExecutionLevel != NULL)
+        {
+            *ExecutionLevel = m_ExecutionLevel;
+        }
+
+        if (SynchronizationScope != NULL)
+        {
+            *SynchronizationScope = m_SynchronizationScope;
+        }
+    }
+
+    __inline
+    PFN_WDF_DRIVER_DEVICE_ADD
+    GetDriverDeviceAddMethod(
+        )
+    {
+        return m_DriverDeviceAdd.Method;
     }
     
 };
