@@ -1360,6 +1360,57 @@ USBH_SyncGetStatus(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+USBH_SyncGetHubStatus(IN PUSBHUB_FDO_EXTENSION HubExtension,
+                      IN PUSB_HUB_STATUS_AND_CHANGE HubStatus,
+                      IN ULONG Length)
+{
+    BM_REQUEST_TYPE RequestType;
+
+    DPRINT("USBH_SyncGetHubStatus\n");
+
+    RequestType.B = 0;
+    RequestType.Recipient = BMREQUEST_TO_DEVICE;
+    RequestType.Type = BMREQUEST_CLASS;
+    RequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
+
+    return USBH_Transact(HubExtension,
+                         HubStatus,
+                         Length,
+                         BMREQUEST_DEVICE_TO_HOST,
+                         URB_FUNCTION_CLASS_DEVICE,
+                         RequestType,
+                         USB_REQUEST_GET_STATUS,
+                         0,
+                         0);
+}
+
+NTSTATUS
+NTAPI
+USBH_SyncClearHubStatus(IN PUSBHUB_FDO_EXTENSION HubExtension,
+                        IN USHORT RequestValue)
+{
+    BM_REQUEST_TYPE RequestType;
+
+    DPRINT("USBH_SyncClearHubStatus: RequestValue - %x\n", RequestValue);
+
+    RequestType.B = 0;
+    RequestType.Recipient = BMREQUEST_TO_DEVICE;
+    RequestType.Type = BMREQUEST_CLASS;
+    RequestType.Dir = BMREQUEST_HOST_TO_DEVICE;
+
+    return USBH_Transact(HubExtension,
+                         NULL,
+                         0,
+                         BMREQUEST_HOST_TO_DEVICE,
+                         URB_FUNCTION_CLASS_DEVICE,
+                         RequestType,
+                         USB_REQUEST_CLEAR_FEATURE,
+                         RequestValue,
+                         0);
+}
+
+NTSTATUS
+NTAPI
 USBH_SyncGetPortStatus(IN PUSBHUB_FDO_EXTENSION HubExtension,
                        IN USHORT Port,
                        IN PUSB_PORT_STATUS_AND_CHANGE PortStatus,
@@ -1787,6 +1838,35 @@ USBH_ChangeIndicationQueryChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
 VOID
 NTAPI
+USBH_ProcessHubStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
+                           IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
+{
+    USB_HUB_CHANGE HubStatusChange;
+
+    DPRINT_SCE("USBH_ProcessHubStateChange: HubStatus - %lx\n", HubStatus->AsUlong32);
+
+    HubStatusChange = HubStatus->HubChange;
+
+    if (HubStatusChange.LocalPowerChange)
+    {
+        DPRINT1("USBH_ProcessHubStateChange: LocalPowerChange\n");
+        USBH_SyncClearHubStatus(HubExtension,
+                                USBHUB_FEATURE_C_HUB_LOCAL_POWER);
+    }
+    else if (HubStatusChange.OverCurrentChange)
+    {
+        USBH_SyncClearHubStatus(HubExtension,
+                                USBHUB_FEATURE_C_HUB_OVER_CURRENT);
+        if (HubStatus->HubStatus.OverCurrent)
+        {
+            DPRINT1("USBH_ProcessHubStateChange: OverCurrent UNIMPLEMENTED. FIXME\n");
+            DbgBreakPoint();
+        }
+    }
+}
+
+VOID
+NTAPI
 USBH_ProcessPortStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
                             IN USHORT Port,
                             IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
@@ -2070,6 +2150,7 @@ USBH_ChangeIndicationWorker(IN PUSBHUB_FDO_EXTENSION HubExtension,
     PUSBHUB_PORT_PDO_EXTENSION LowerPortExtension;
     PUSBHUB_STATUS_CHANGE_CONTEXT WorkItem;
     USB_PORT_STATUS_AND_CHANGE PortStatus;
+    USB_HUB_STATUS_AND_CHANGE HubStatus;
     NTSTATUS Status;
     USHORT Port = 0;
 
@@ -2169,13 +2250,13 @@ Enum:
             Status = USBH_SyncGetPortStatus(HubExtension,
                                             Port,
                                             &PortStatus,
-                                            sizeof(USB_PORT_STATUS_AND_CHANGE));
+                                            sizeof(PortStatus));
         }
         else
         {
-            DPRINT1("USBH_ChangeIndicationWorker: USBH_SyncGetHubStatus() UNIMPLEMENTED. FIXME\n");
-            DbgBreakPoint();
-            Status = STATUS_ASSERTION_FAILURE;
+            Status = USBH_SyncGetHubStatus(HubExtension,
+                                           &HubStatus,
+                                           sizeof(HubStatus));
         }
 
         if (NT_SUCCESS(Status))
@@ -2188,8 +2269,8 @@ Enum:
             }
             else
             {
-                 DPRINT1("USBH_ChangeIndicationWorker: USBH_ProcessHubStateChange() UNIMPLEMENTED. FIXME\n");
-                 DbgBreakPoint();
+                USBH_ProcessHubStateChange(HubExtension,
+                                           &HubStatus);
             }
         }
         else
