@@ -143,6 +143,8 @@ TEXTMODE_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 PCHAR_INFO
 ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
 {
+    ASSERT(X < Buff->ScreenBufferSize.X);
+    ASSERT(Y < Buff->ScreenBufferSize.Y);
     return &Buff->Buffer[((Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y) * Buff->ScreenBufferSize.X + X];
 }
 
@@ -185,77 +187,165 @@ ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
 }
 
 /*
- * Move from one rectangle to another. We must be careful about the order that
- * this is done, to avoid overwriting parts of the source before they are moved.
+ * Copy from one rectangle to another. We must be careful about the order of
+ * operations, to avoid overwriting parts of the source before they are copied.
  */
 static VOID
-ConioMoveRegion(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
-                PSMALL_RECT SrcRegion,
-                PSMALL_RECT DstRegion,
-                PSMALL_RECT ClipRegion,
-                CHAR_INFO FillChar)
+ConioCopyRegion(
+    IN PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
+    IN PSMALL_RECT SrcRegion,
+    IN PCOORD DstOrigin)
 {
-    UINT Width  = ConioRectWidth(SrcRegion);
-    UINT Height = ConioRectHeight(SrcRegion);
-    INT SXOrg, SX, SY;
-    INT DXOrg, DX, DY;
-    INT XDelta, YDelta;
+    UINT Width, Height;
+    SHORT SY, DY;
+    SHORT YDelta;
+    PCHAR_INFO PtrSrc, PtrDst;
+#if 0
+    SHORT SXOrg, DXOrg;
+    SHORT SX, DX;
+    SHORT XDelta;
     UINT i, j;
-    CHAR_INFO Cell;
-    PCHAR_INFO SRow, DRow;
+#endif
+
+    if (ConioIsRectEmpty(SrcRegion))
+        return;
+
+#if 0
+    ASSERT(SrcRegion->Left   >= 0 && SrcRegion->Left   < ScreenBuffer->ScreenBufferSize.X);
+    ASSERT(SrcRegion->Right  >= 0 && SrcRegion->Right  < ScreenBuffer->ScreenBufferSize.X);
+    ASSERT(SrcRegion->Top    >= 0 && SrcRegion->Top    < ScreenBuffer->ScreenBufferSize.Y);
+    ASSERT(SrcRegion->Bottom >= 0 && SrcRegion->Bottom < ScreenBuffer->ScreenBufferSize.Y);
+    // ASSERT(DstOrigin->X >= 0 && DstOrigin->X < ScreenBuffer->ScreenBufferSize.X);
+    // ASSERT(DstOrigin->Y >= 0 && DstOrigin->Y < ScreenBuffer->ScreenBufferSize.Y);
+#endif
+
+    /* If the source and destination regions are the same, just bail out */
+    if ((SrcRegion->Left == DstOrigin->X) && (SrcRegion->Top == DstOrigin->Y))
+        return;
 
     SY = SrcRegion->Top;
-    DY = DstRegion->Top;
+    DY = DstOrigin->Y;
     YDelta = 1;
     if (SY < DY)
     {
         /* Moving down: work from bottom up */
         SY = SrcRegion->Bottom;
-        DY = DstRegion->Bottom;
+        DY = DstOrigin->Y + (SrcRegion->Bottom - SrcRegion->Top);
         YDelta = -1;
     }
 
+#if 0
     SXOrg = SrcRegion->Left;
-    DXOrg = DstRegion->Left;
+    DXOrg = DstOrigin->X;
     XDelta = 1;
     if (SXOrg < DXOrg)
     {
         /* Moving right: work from right to left */
         SXOrg = SrcRegion->Right;
-        DXOrg = DstRegion->Right;
+        DXOrg = DstOrigin->X + (SrcRegion->Right - SrcRegion->Left);
         XDelta = -1;
     }
+#endif
 
-    for (i = 0; i < Height; i++)
+    /* Loop through the source region */
+    Width  = ConioRectWidth(SrcRegion);
+    Height = ConioRectHeight(SrcRegion);
+#if 0
+    for (i = 0; i < Height; ++i, SY += YDelta, DY += YDelta)
+#else
+    for (; Height-- > 0; SY += YDelta, DY += YDelta)
+#endif
     {
-        SRow = ConioCoordToPointer(ScreenBuffer, 0, SY);
-        DRow = ConioCoordToPointer(ScreenBuffer, 0, DY);
-
+#if 0
         SX = SXOrg;
         DX = DXOrg;
 
-        // TODO: Correctly support "moving" full-width characters.
+        PtrSrc = ConioCoordToPointer(ScreenBuffer, SX, SY);
+        PtrDst = ConioCoordToPointer(ScreenBuffer, DX, DY);
+#else
+        PtrSrc = ConioCoordToPointer(ScreenBuffer, SrcRegion->Left, SY);
+        PtrDst = ConioCoordToPointer(ScreenBuffer, DstOrigin->X, DY);
+#endif
 
-        for (j = 0; j < Width; j++)
+        // TODO: Correctly support copying full-width characters.
+        // By construction the source region is supposed to contain valid
+        // (possibly fullwidth) characters, so for these after the copy
+        // we need to check the characters at the borders and adjust the
+        // attributes accordingly.
+
+#if 0
+        for (j = 0; j < Width; ++j, SX += XDelta, DX += XDelta)
         {
-            Cell = SRow[SX];
-            if (SX >= ClipRegion->Left && SX <= ClipRegion->Right &&
-                SY >= ClipRegion->Top  && SY <= ClipRegion->Bottom)
-            {
-                SRow[SX] = FillChar;
-            }
-            if (DX >= ClipRegion->Left && DX <= ClipRegion->Right &&
-                DY >= ClipRegion->Top  && DY <= ClipRegion->Bottom)
-            {
-                DRow[DX] = Cell;
-            }
-            SX += XDelta;
-            DX += XDelta;
+            *PtrDst = *PtrSrc;
+            PtrSrc += XDelta;
+            PtrDst += XDelta;
         }
-        SY += YDelta;
-        DY += YDelta;
+#else
+        /* RtlMoveMemory() takes into account for the direction of the copy */
+        RtlMoveMemory(PtrDst, PtrSrc, Width * sizeof(CHAR_INFO));
+#endif
     }
 }
+
+static VOID
+ConioFillRegion(
+    IN PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
+    IN PSMALL_RECT Region,
+    IN PSMALL_RECT ExcludeRegion OPTIONAL,
+    IN CHAR_INFO FillChar)
+{
+    SHORT X, Y;
+    PCHAR_INFO Ptr;
+    // BOOLEAN bFullwidth;
+
+    /* Bail out if the region to fill is empty */
+    if (ConioIsRectEmpty(Region))
+        return;
+
+    /* Sanitize the exclusion region: if it's empty, ignore the region */
+    if (ExcludeRegion && ConioIsRectEmpty(ExcludeRegion))
+        ExcludeRegion = NULL;
+
+#if 0
+    ASSERT(Region->Left   >= 0 && Region->Left   < ScreenBuffer->ScreenBufferSize.X);
+    ASSERT(Region->Right  >= 0 && Region->Right  < ScreenBuffer->ScreenBufferSize.X);
+    ASSERT(Region->Top    >= 0 && Region->Top    < ScreenBuffer->ScreenBufferSize.Y);
+    ASSERT(Region->Bottom >= 0 && Region->Bottom < ScreenBuffer->ScreenBufferSize.Y);
+
+    if (ExcludeRegion)
+    {
+        ASSERT(ExcludeRegion->Left   >= 0 && ExcludeRegion->Left   < ScreenBuffer->ScreenBufferSize.X);
+        ASSERT(ExcludeRegion->Right  >= 0 && ExcludeRegion->Right  < ScreenBuffer->ScreenBufferSize.X);
+        ASSERT(ExcludeRegion->Top    >= 0 && ExcludeRegion->Top    < ScreenBuffer->ScreenBufferSize.Y);
+        ASSERT(ExcludeRegion->Bottom >= 0 && ExcludeRegion->Bottom < ScreenBuffer->ScreenBufferSize.Y);
+    }
+#endif
+
+    // bFullwidth = (ScreenBuffer->Header.Console->IsCJK && IS_FULL_WIDTH(FillChar.Char.UnicodeChar));
+
+    /* Loop through the destination region */
+    for (Y = Region->Top; Y <= Region->Bottom; ++Y)
+    {
+        Ptr = ConioCoordToPointer(ScreenBuffer, Region->Left, Y);
+        for (X = Region->Left; X <= Region->Right; ++X)
+        {
+            // TODO: Correctly support filling with full-width characters.
+
+            if (!ExcludeRegion ||
+                !(X >= ExcludeRegion->Left && X <= ExcludeRegion->Right &&
+                  Y >= ExcludeRegion->Top  && Y <= ExcludeRegion->Bottom))
+            {
+                /* We are outside the excluded region, fill the destination */
+                *Ptr = FillChar;
+                // Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            }
+
+            ++Ptr;
+        }
+    }
+}
+
+
 
 // FIXME!
 NTSTATUS NTAPI
@@ -1366,24 +1456,25 @@ ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
-                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                IN BOOLEAN Unicode,
-                                IN PSMALL_RECT ScrollRectangle,
-                                IN BOOLEAN UseClipRectangle,
-                                IN PSMALL_RECT ClipRectangle OPTIONAL,
-                                IN PCOORD DestinationOrigin,
-                                IN CHAR_INFO FillChar)
+ConDrvScrollConsoleScreenBuffer(
+    IN PCONSOLE Console,
+    IN PTEXTMODE_SCREEN_BUFFER Buffer,
+    IN BOOLEAN Unicode,
+    IN PSMALL_RECT ScrollRectangle,
+    IN BOOLEAN UseClipRectangle,
+    IN PSMALL_RECT ClipRectangle OPTIONAL,
+    IN PCOORD DestinationOrigin,
+    IN CHAR_INFO FillChar)
 {
     COORD CapturedDestinationOrigin;
     SMALL_RECT ScreenBuffer;
+    SMALL_RECT CapturedClipRectangle;
     SMALL_RECT SrcRegion;
     SMALL_RECT DstRegion;
     SMALL_RECT UpdateRegion;
-    SMALL_RECT CapturedClipRectangle;
 
     if (Console == NULL || Buffer == NULL || ScrollRectangle == NULL ||
-        (UseClipRectangle ? ClipRectangle == NULL : FALSE) || DestinationOrigin == NULL)
+        (UseClipRectangle && (ClipRectangle == NULL)) || DestinationOrigin == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1404,14 +1495,14 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
 
     /* If the source was clipped on the left or top, adjust the destination accordingly */
     if (ScrollRectangle->Left < 0)
-    {
         CapturedDestinationOrigin.X -= ScrollRectangle->Left;
-    }
     if (ScrollRectangle->Top < 0)
-    {
         CapturedDestinationOrigin.Y -= ScrollRectangle->Top;
-    }
 
+    /*
+     * If a clip rectangle is provided, clip it to the screen buffer,
+     * otherwise use the latter one as the clip rectangle.
+     */
     if (UseClipRectangle)
     {
         CapturedClipRectangle = *ClipRectangle;
@@ -1425,14 +1516,44 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
         CapturedClipRectangle = ScreenBuffer;
     }
 
+    /*
+     * Windows compatibility: Do nothing if the intersection of the source region
+     * with the clip rectangle is empty, even if the intersection of destination
+     * region with the clip rectangle is NOT empty and therefore it would have
+     * been possible to copy contents to it...
+     */
+    if (!ConioGetIntersection(&UpdateRegion, &SrcRegion, &CapturedClipRectangle))
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Initialize the destination rectangle, of same size as the source rectangle */
     ConioInitRect(&DstRegion,
                   CapturedDestinationOrigin.Y,
                   CapturedDestinationOrigin.X,
                   CapturedDestinationOrigin.Y + ConioRectHeight(&SrcRegion) - 1,
                   CapturedDestinationOrigin.X + ConioRectWidth(&SrcRegion ) - 1);
 
+    if (ConioGetIntersection(&DstRegion, &DstRegion, &CapturedClipRectangle))
+    {
+        /*
+         * Build the region image, within the source region,
+         * of the destination region we should copy into.
+         */
+        SrcRegion.Left   += DstRegion.Left - CapturedDestinationOrigin.X;
+        SrcRegion.Top    += DstRegion.Top  - CapturedDestinationOrigin.Y;
+        SrcRegion.Right  = SrcRegion.Left + (DstRegion.Right - DstRegion.Left);
+        SrcRegion.Bottom = SrcRegion.Top  + (DstRegion.Bottom - DstRegion.Top);
+
+        /* Do the copy */
+        CapturedDestinationOrigin.X = DstRegion.Left;
+        CapturedDestinationOrigin.Y = DstRegion.Top;
+        ConioCopyRegion(Buffer, &SrcRegion, &CapturedDestinationOrigin);
+    }
+
     if (!Unicode)
     {
+        /* Conversion from the ASCII char to the UNICODE char */
         WCHAR tmp;
         ConsoleOutputAnsiToUnicodeChar(Console, &tmp, &FillChar.Char.AsciiChar);
         FillChar.Char.UnicodeChar = tmp;
@@ -1440,11 +1561,15 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
     /* Sanitize the attribute */
     FillChar.Attributes &= ~COMMON_LVB_SBCSDBCS;
 
-    ConioMoveRegion(Buffer, &SrcRegion, &DstRegion, &CapturedClipRectangle, FillChar);
+    /*
+     * Fill the intersection (== UpdateRegion) of the source region with the
+     * clip rectangle, excluding the destination region.
+     */
+    ConioFillRegion(Buffer, &UpdateRegion, &DstRegion, FillChar);
 
     if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
-        ConioGetUnion(&UpdateRegion, &SrcRegion, &DstRegion);
+        ConioGetUnion(&UpdateRegion, &UpdateRegion, &DstRegion);
         if (ConioGetIntersection(&UpdateRegion, &UpdateRegion, &CapturedClipRectangle))
         {
             /* Draw update region */
