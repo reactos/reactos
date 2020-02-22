@@ -25,7 +25,7 @@ USBH_Wait(IN ULONG Milliseconds)
     LARGE_INTEGER Interval;
 
     DPRINT("USBH_Wait: Milliseconds - %x\n", Milliseconds);
-    Interval.QuadPart = -10000LL * Milliseconds - ((ULONGLONG)KeQueryTimeIncrement() - 1); 
+    Interval.QuadPart = -10000LL * Milliseconds - ((ULONGLONG)KeQueryTimeIncrement() - 1);
     return KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
 
@@ -1399,7 +1399,7 @@ USBH_SyncClearPortStatus(IN PUSBHUB_FDO_EXTENSION HubExtension,
            RequestValue);
 
     RequestType.B = 0;
-    RequestType.Recipient = BMREQUEST_TO_DEVICE;
+    RequestType.Recipient = BMREQUEST_TO_OTHER;
     RequestType.Type = BMREQUEST_CLASS;
     RequestType.Dir = BMREQUEST_HOST_TO_DEVICE;
 
@@ -3122,7 +3122,7 @@ USBH_HubCompletePortIdleIrps(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
 VOID
 NTAPI
-USBH_HubCancelIdleIrp(IN PUSBHUB_FDO_EXTENSION HubExtension, 
+USBH_HubCancelIdleIrp(IN PUSBHUB_FDO_EXTENSION HubExtension,
                       IN PIRP IdleIrp)
 {
     DPRINT("USBH_HubCancelIdleIrp ... \n");
@@ -3218,7 +3218,7 @@ Wait:
 
 VOID
 NTAPI
-USBH_FdoWaitWakeIrpCompletion(IN PDEVICE_OBJECT DeviceObject, 
+USBH_FdoWaitWakeIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
                               IN UCHAR MinorFunction,
                               IN POWER_STATE PowerState,
                               IN PVOID Context,
@@ -3683,7 +3683,7 @@ USBH_FdoSubmitIdleRequestIrp(IN PUSBHUB_FDO_EXTENSION HubExtension)
         KeSetEvent(&HubExtension->IdleEvent, EVENT_INCREMENT, FALSE);
         return Status;
     }
- 
+
     IoStack = IoGetNextIrpStackLocation(Irp);
 
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
