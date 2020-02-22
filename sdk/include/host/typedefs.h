@@ -82,7 +82,7 @@ typedef WORD LANGID;
 #define MAXUSHORT USHRT_MAX
 
 /* Widely used structures */
-#include <pshpack4.h>
+
 #ifndef _HAVE_RTL_BITMAP
 typedef struct _RTL_BITMAP
 {
@@ -138,7 +138,6 @@ typedef struct _UNICODE_STRING
 } UNICODE_STRING, *PUNICODE_STRING;
 #endif
 
-#include <poppack.h>
 
 #ifndef _HAVE_LIST_ENTRY
 /* List Functions */
