@@ -2181,9 +2181,8 @@ MmArmInitSystem(IN ULONG Phase,
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
-        /* Set the zero page event */
-        KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
-        MmZeroingPageThreadActive = FALSE;
+        /* Set up the zero page event */
+        KeInitializeEvent(&MmZeroingPageEvent, NotificationEvent, FALSE);
 
         /* Initialize the dead stack S-LIST */
         InitializeSListHead(&MmDeadStackSListHead);

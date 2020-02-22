@@ -639,7 +639,6 @@ extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PPE_PER_PAGE];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
-extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;

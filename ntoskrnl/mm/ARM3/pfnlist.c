@@ -701,10 +701,9 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ColorTable->Count++;
 
     /* Notify zero page thread if enough pages are on the free list now */
-    if ((ListHead->Total >= 8) && !(MmZeroingPageThreadActive))
+    if (ListHead->Total >= 8)
     {
         /* Set the event */
-        MmZeroingPageThreadActive = TRUE;
         KeSetEvent(&MmZeroingPageEvent, IO_NO_INCREMENT, FALSE);
     }
 
