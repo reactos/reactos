@@ -205,7 +205,7 @@ VersionRegisterClass(
     WCHAR ClassNameBuf[MAX_PATH] = {0};
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame = { sizeof(Frame), 1 };
 
-    ERR("VersionRegisterClass: Attempting to call RegisterClassNameW in %S\n.", lpLibFileName);
+    ERR("VersionRegisterClass: Attempting to call RegisterClassNameW in %S.\n", lpLibFileName);
 
     RtlActivateActivationContextUnsafeFast(&Frame, Contex);
 
