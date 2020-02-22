@@ -156,6 +156,7 @@ AddInputEvents(PCONSOLE Console,
             /* Append the event to the beginning of the queue */
             InsertHeadList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
         }
+        _InterlockedIncrement((PLONG)&Console->InputBuffer.NumberOfEvents);
 
         // return STATUS_SUCCESS;
         Status = STATUS_SUCCESS;
@@ -170,14 +171,16 @@ Done:
 }
 
 static VOID
-PurgeInputBuffer(PCONSOLE Console)
+PurgeInputBuffer(IN PCONSOLE_INPUT_BUFFER InputBuffer)
 {
     PLIST_ENTRY CurrentEntry;
     ConsoleInput* Event;
 
-    while (!IsListEmpty(&Console->InputBuffer.InputEvents))
+    /* Discard all entries in the input event queue */
+    _InterlockedExchange((PLONG)&InputBuffer->NumberOfEvents, 0);
+    while (!IsListEmpty(&InputBuffer->InputEvents))
     {
-        CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
+        CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
         Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
         ConsoleFreeHeap(Event);
     }
@@ -206,6 +209,7 @@ ConDrvInitInputBuffer(IN PCONSOLE Console,
         return Status;
 
     Console->InputBuffer.InputBufferSize = InputBufferSize;
+    Console->InputBuffer.NumberOfEvents  = 0;
     InitializeListHead(&Console->InputBuffer.InputEvents);
     Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
                                 ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
@@ -216,7 +220,7 @@ ConDrvInitInputBuffer(IN PCONSOLE Console,
 VOID NTAPI
 ConDrvDeinitInputBuffer(IN PCONSOLE Console)
 {
-    PurgeInputBuffer(Console);
+    PurgeInputBuffer(&Console->InputBuffer);
     CloseHandle(Console->InputBuffer.ActiveEvent);
 }
 
@@ -303,6 +307,7 @@ ConDrvGetConsoleInput(IN PCONSOLE Console,
         /* Remove the events from the queue if needed */
         if (!KeepEvents)
         {
+            _InterlockedDecrement((PLONG)&InputBuffer->NumberOfEvents);
             RemoveEntryList(&Input->ListEntry);
             ConsoleFreeHeap(Input);
         }
@@ -352,9 +357,6 @@ NTSTATUS NTAPI
 ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
                               IN PCONSOLE_INPUT_BUFFER InputBuffer)
 {
-    PLIST_ENTRY CurrentEntry;
-    ConsoleInput* Event;
-
     if (Console == NULL || InputBuffer == NULL)
         return STATUS_INVALID_PARAMETER;
 
@@ -362,12 +364,7 @@ ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
     ASSERT(Console == InputBuffer->Header.Console);
 
     /* Discard all entries in the input event queue */
-    while (!IsListEmpty(&InputBuffer->InputEvents))
-    {
-        CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
-        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        ConsoleFreeHeap(Event);
-    }
+    PurgeInputBuffer(InputBuffer);
     ResetEvent(InputBuffer->ActiveEvent);
 
     return STATUS_SUCCESS;
@@ -378,24 +375,13 @@ ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
                                     IN PCONSOLE_INPUT_BUFFER InputBuffer,
                                     OUT PULONG NumberOfEvents)
 {
-    PLIST_ENTRY CurrentInput;
-
     if (Console == NULL || InputBuffer == NULL || NumberOfEvents == NULL)
         return STATUS_INVALID_PARAMETER;
 
     /* Validity check */
     ASSERT(Console == InputBuffer->Header.Console);
 
-    *NumberOfEvents = 0;
-
-    /* If there are any events ... */
-    CurrentInput = InputBuffer->InputEvents.Flink;
-    while (CurrentInput != &InputBuffer->InputEvents)
-    {
-        CurrentInput = CurrentInput->Flink;
-        (*NumberOfEvents)++;
-    }
-
+    *NumberOfEvents = InputBuffer->NumberOfEvents;
     return STATUS_SUCCESS;
 }
 

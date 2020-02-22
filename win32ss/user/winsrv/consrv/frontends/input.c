@@ -125,7 +125,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
     if (Fake) return;
 
     /* Process Ctrl-C and Ctrl-Break */
-    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
+    if ( (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT) &&
          Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
          (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80) )
     {

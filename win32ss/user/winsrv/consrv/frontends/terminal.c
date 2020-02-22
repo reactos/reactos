@@ -361,6 +361,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         while (!Console->LineComplete && !IsListEmpty(&InputBuffer->InputEvents))
         {
             /* Remove an input event from the queue */
+            _InterlockedDecrement((PLONG)&InputBuffer->NumberOfEvents);
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {
@@ -425,6 +426,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         while (i < NumCharsToRead && !IsListEmpty(&InputBuffer->InputEvents))
         {
             /* Remove an input event from the queue */
+            _InterlockedDecrement((PLONG)&InputBuffer->NumberOfEvents);
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {

@@ -189,9 +189,10 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG       InputBufferSize;    /* Size of this input buffer -- UNUSED!! */
-    LIST_ENTRY  InputEvents;        /* List head for input event queue */
-    HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
+    ULONG       InputBufferSize;    /* Size of this input buffer (maximum number of events) -- UNUSED!! */
+    ULONG       NumberOfEvents;     /* Current number of events in the queue */
+    LIST_ENTRY  InputEvents;        /* Input events queue list head */
+    HANDLE      ActiveEvent;        /* Event set when an input event is added to the queue */
 
     USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;

@@ -284,7 +284,7 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
                               CONSOLE_RUNNING,
                               LockConsole))
     {
-        InterlockedIncrement(&GrabConsole->ReferenceCount);
+        _InterlockedIncrement(&GrabConsole->ReferenceCount);
         *Console = GrabConsole;
         Status = STATUS_SUCCESS;
     }

@@ -1711,7 +1711,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
         }
     }
-    else if (Console->InputBuffer.Mode & ENABLE_MOUSE_INPUT)
+    else if (GetConsoleInputBufferMode(Console) & ENABLE_MOUSE_INPUT)
     {
         INPUT_RECORD er;
         WORD  wKeyState         = GET_KEYSTATE_WPARAM(wParam);
