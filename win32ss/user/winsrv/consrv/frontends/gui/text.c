@@ -57,12 +57,11 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
            Selection->Left, Selection->Top, Selection->Right, Selection->Bottom);
 
     /* Prevent against empty blocks */
-    if (Selection == NULL) return;
-    if (Selection->Left > Selection->Right || Selection->Top > Selection->Bottom)
+    if ((Selection == NULL) || ConioIsRectEmpty(Selection))
         return;
 
-    selWidth  = Selection->Right - Selection->Left + 1;
-    selHeight = Selection->Bottom - Selection->Top + 1;
+    selWidth  = ConioRectWidth(Selection);
+    selHeight = ConioRectHeight(Selection);
 
     /* Basic size for one line... */
     size = selWidth;

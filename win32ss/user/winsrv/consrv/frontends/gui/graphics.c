@@ -32,8 +32,8 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 
     if (Buffer->BitMap == NULL) return;
 
-    selWidth  = GuiData->Selection.srSelection.Right - GuiData->Selection.srSelection.Left + 1;
-    selHeight = GuiData->Selection.srSelection.Bottom - GuiData->Selection.srSelection.Top + 1;
+    selWidth  = ConioRectWidth(&GuiData->Selection.srSelection);
+    selHeight = ConioRectHeight(&GuiData->Selection.srSelection);
     DPRINT("Selection is (%d|%d) to (%d|%d)\n",
            GuiData->Selection.srSelection.Left,
            GuiData->Selection.srSelection.Top,

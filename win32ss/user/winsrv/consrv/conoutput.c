@@ -497,8 +497,8 @@ CSR_API(SrvReadConsoleOutput)
 
     DPRINT("SrvReadConsoleOutput\n");
 
-    NumCells = (ReadOutputRequest->ReadRegion.Right - ReadOutputRequest->ReadRegion.Left + 1) *
-               (ReadOutputRequest->ReadRegion.Bottom - ReadOutputRequest->ReadRegion.Top + 1);
+    NumCells = ConioRectWidth(&ReadOutputRequest->ReadRegion) *
+               ConioRectHeight(&ReadOutputRequest->ReadRegion);
 
     /*
      * For optimization purposes, Windows (and hence ReactOS, too, for
@@ -562,8 +562,8 @@ CSR_API(SrvWriteConsoleOutput)
 
     DPRINT("SrvWriteConsoleOutput\n");
 
-    NumCells = (WriteOutputRequest->WriteRegion.Right - WriteOutputRequest->WriteRegion.Left + 1) *
-               (WriteOutputRequest->WriteRegion.Bottom - WriteOutputRequest->WriteRegion.Top + 1);
+    NumCells = ConioRectWidth(&WriteOutputRequest->WriteRegion) *
+               ConioRectHeight(&WriteOutputRequest->WriteRegion);
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(Process),
                                      WriteOutputRequest->OutputHandle,

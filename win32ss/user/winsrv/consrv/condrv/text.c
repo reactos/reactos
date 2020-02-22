@@ -1607,15 +1607,14 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
     }
 
     /*
-     * The MSDN documentation on SetConsoleWindowInfo is partially wrong about
+     * The MSDN documentation on SetConsoleWindowInfo() is partially wrong about
      * the performed checks this API performs. While it is correct that the
      * 'Right'/'Bottom' members cannot be strictly smaller than the 'Left'/'Top'
-     * members, they can be equal.
+     * members (the rectangle cannot be empty), they can be equal (describe one cell).
      * Also, if the 'Left' or 'Top' members are negative, this is automatically
      * corrected for, and the window rectangle coordinates are shifted accordingly.
      */
-    if ((CapturedWindowRect.Right  < CapturedWindowRect.Left) ||
-        (CapturedWindowRect.Bottom < CapturedWindowRect.Top))
+    if (ConioIsRectEmpty(&CapturedWindowRect))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1627,8 +1626,8 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
     TermGetLargestConsoleWindowSize(Console, &LargestWindowSize);
     LargestWindowSize.X = min(LargestWindowSize.X, Buffer->ScreenBufferSize.X);
     LargestWindowSize.Y = min(LargestWindowSize.Y, Buffer->ScreenBufferSize.Y);
-    if ((CapturedWindowRect.Right - CapturedWindowRect.Left + 1 > LargestWindowSize.X) ||
-        (CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1 > LargestWindowSize.Y))
+    if ((ConioRectWidth(&CapturedWindowRect)  > LargestWindowSize.X) ||
+        (ConioRectHeight(&CapturedWindowRect) > LargestWindowSize.Y))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1652,8 +1651,8 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
     Buffer->ViewOrigin.X = CapturedWindowRect.Left;
     Buffer->ViewOrigin.Y = CapturedWindowRect.Top;
 
-    Buffer->ViewSize.X = CapturedWindowRect.Right - CapturedWindowRect.Left + 1;
-    Buffer->ViewSize.Y = CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1;
+    Buffer->ViewSize.X = ConioRectWidth(&CapturedWindowRect);
+    Buffer->ViewSize.Y = ConioRectHeight(&CapturedWindowRect);
 
     TermResizeTerminal(Console);
 
