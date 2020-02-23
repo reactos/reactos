@@ -228,7 +228,7 @@ typedef struct _WDFFUNCTIONS {
 	PFN_WDFUNIMPLEMENTED   pfnWdfMemoryCreateFromLookaside;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDeviceMiniportCreate;
 	PFN_WDFUNIMPLEMENTED   pfnWdfDriverMiniportUnload;
-	PFN_WDFUNIMPLEMENTED   pfnWdfObjectGetTypedContextWorker;
+	PFN_WDFOBJECTGETTYPEDCONTEXTWORKER   pfnWdfObjectGetTypedContextWorker;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectAllocateContext;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectContextGetObject;
 	PFN_WDFUNIMPLEMENTED   pfnWdfObjectReferenceActual;
@@ -807,6 +807,19 @@ WDFEXPORT(WdfObjectDelete)(
     WDFOBJECT Object
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
+WDFAPI
+PVOID
+FASTCALL
+WDFEXPORT(WdfObjectGetTypedContextWorker)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFOBJECT Handle,
+    _In_
+    PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    );
+
 // ----- WDFOBJECT -----//
 
 // ----- WDFVERIFIER -----//
@@ -1026,7 +1039,7 @@ static WDFVERSION WdfVersion = {
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,
-			NotImplemented,
+			WDFEXPORT(WdfObjectGetTypedContextWorker),
 			NotImplemented,
 			NotImplemented,
 			NotImplemented,

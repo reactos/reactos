@@ -617,4 +617,93 @@ Done:
     return status;
 }
 
+extern "C" {
 
+__drv_maxIRQL(DISPATCH_LEVEL+1)
+WDFAPI    
+PVOID
+FASTCALL
+WDFEXPORT(WdfObjectGetTypedContextWorker)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFOBJECT Handle,
+    __in
+    PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    )
+/*++
+
+Routine Description:
+    Retrieves the requested type from a handle
+
+Arguments:
+    Handle - the handle to retrieve the context from
+    TypeInfo - global constant pointer which describes the type.  Since the pointer
+        value is unique in all of kernel space, we will perform a pointer compare
+        instead of a deep structure compare
+
+Return Value:
+    A valid context pointere or NULL.  NULL is not a failure, querying for a type
+    not associated with the handle is a legitimate operation.
+
+  --*/
+{
+    DDI_ENTRY_IMPERSONATION_OK();
+
+    FxContextHeader* pHeader;
+    FxObject* pObject;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    WDFOBJECT_OFFSET offset;
+
+    FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), Handle);
+    
+    //
+    // Do not call FxObjectHandleGetPtr( , , FX_TYPE_OBJECT) because this is a
+    // hot spot / workhorse function that should be as efficient as possible.
+    //
+    // A call to FxObjectHandleGetPtr would :
+    // 1)  invoke a virtual call to QueryInterface
+    //
+    // 2)  ASSERT that the ref count of the object is > zero.  Since this is one
+    //     of the few functions that can be called in EvtObjectDestroy where the
+    //     ref count is zero, that is not a good side affect.
+    //
+    offset = 0;
+    pObject = FxObject::_GetObjectFromHandle(Handle, &offset);
+
+    //
+    // Use the object's globals, not the caller's
+    //
+    pFxDriverGlobals = pObject->GetDriverGlobals();
+
+    FxPointerNotNull(pFxDriverGlobals, TypeInfo);
+
+    pHeader = pObject->GetContextHeader();
+
+    for ( ; pHeader != NULL; pHeader = pHeader->NextHeader)
+    {
+        if (pHeader->ContextTypeInfo == TypeInfo)
+        {
+            return &pHeader->Context[0];
+        }
+    }
+
+    LPCSTR pGivenName;
+
+    if (TypeInfo->ContextName != NULL)
+    {
+        pGivenName = TypeInfo->ContextName;
+    }
+    else
+    {
+        pGivenName = "<no typename given>";
+    }
+
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGHANDLE,
+                        "Attempting to get context type %s from WDFOBJECT 0x%p",
+                        pGivenName, Handle);
+
+    return NULL;
+}
+
+} //extern "C"
