@@ -1857,7 +1857,7 @@ public:
         // When there is no control found, go to the first or last (depending on tab vs shift-tab)
         int current = direction > 0 ? 0 : (_countof(Controls) - 1);
         HWND hActive = ::GetFocus();
-        for (int n = 0; n < _countof(Controls); ++n)
+        for (size_t n = 0; n < _countof(Controls); ++n)
         {
             if (hActive == Controls[n])
             {
