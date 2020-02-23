@@ -25,6 +25,7 @@
 #define COBJMACROS
 
 #include <wine/atlbase.h>
+#include <wine/atlwin.h>
 
 #include <wine/test.h>
 
@@ -113,6 +114,55 @@ static void test_winmodule(void)
     ok(winmod.m_pCreateWndList == create_data+1, "winmod.m_pCreateWndList != create_data\n");
 }
 
+static void test_winclassinfo(void)
+{
+    _ATL_MODULEW winmod;
+    HRESULT hres;
+    int len, expectedLen;
+    ATOM atom;
+    WNDPROC wndProc;
+    _ATL_WNDCLASSINFOW wci =
+    {
+        /* .m_wc = */
+        {
+            sizeof(WNDCLASSEXW),
+            CS_VREDRAW | CS_HREDRAW,
+            DefWindowProcW,
+            0,
+            0,
+            NULL,
+            NULL,
+            LoadCursorW(NULL, (LPCWSTR)IDC_ARROW),
+            (HBRUSH)(COLOR_BTNFACE + 1),
+            NULL,
+            NULL,   /* LPCSTR lpszClassName; <-- We force ATL class name generation */
+            NULL
+        },
+        /* .m_lpszOrigName  = */ NULL,
+        /* .pWndProc        = */ NULL,
+        /* .m_lpszCursorID  = */ (LPCWSTR)IDC_ARROW,
+        /* .m_bSystemCursor = */ TRUE,
+        /* .m_atom          = */ 0,
+        /* .m_szAutoName    = */ L""
+    };
+
+    winmod.cbSize = sizeof(winmod);
+    winmod.m_pCreateWndList = (void*)0xdeadbeef;
+    hres = AtlModuleInit(&winmod, NULL, NULL);
+    ok(hres == S_OK, "AtlModuleInit failed: %08x\n", hres);
+    ok(!winmod.m_pCreateWndList, "winmod.m_pCreateWndList = %p\n", winmod.m_pCreateWndList);
+
+    atom = AtlModuleRegisterWndClassInfoW(&winmod, &wci, &wndProc);
+    ok(atom, "AtlModuleRegisterWndClassInfoA failed: %08x\n", atom);
+    ok(atom == wci.m_atom, "(atom = %08x) is != than (wci.m_atom = %08x)\n", atom, wci.m_atom);
+
+    ok(wcsncmp(wci.m_szAutoName, L"ATL:", 4) == 0, "wci.m_szAutoName = '%ls', expected starting with 'ATL:'\n", wci.m_szAutoName);
+
+    len = wcslen(wci.m_szAutoName);
+    expectedLen = sizeof("ATL:") + sizeof(void *) * 2 - 1;
+    ok(len == expectedLen, "wci.m_szAutoName has length %d, expected length %d\n", len, expectedLen);
+}
+
 static DWORD cb_val;
 
 static void WINAPI term_callback(DWORD dw)
@@ -156,5 +206,6 @@ START_TEST(module)
 {
     test_StructSize();
     test_winmodule();
+    test_winclassinfo();
     test_term();
 }
