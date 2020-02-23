@@ -185,9 +185,11 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     }
 
     /*
-     * Fix the screen buffer size if needed. The rule is:
-     * ScreenBufferSize >= ConsoleSize
+     * Set and fix the screen buffer size if needed.
+     * The rule is: ScreenBufferSize >= ConsoleSize
      */
+    if (ConsoleInfo->ScreenBufferSize.X == 0) ConsoleInfo->ScreenBufferSize.X = 1;
+    if (ConsoleInfo->ScreenBufferSize.Y == 0) ConsoleInfo->ScreenBufferSize.Y = 1;
     if (ConsoleInfo->ScreenBufferSize.X < ConsoleInfo->ConsoleSize.X)
         ConsoleInfo->ScreenBufferSize.X = ConsoleInfo->ConsoleSize.X;
     if (ConsoleInfo->ScreenBufferSize.Y < ConsoleInfo->ConsoleSize.Y)
@@ -224,10 +226,11 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
+    ScreenBufferInfo.ViewSize         = ConsoleInfo->ConsoleSize;
     ScreenBufferInfo.ScreenAttrib     = ConsoleInfo->ScreenAttrib;
     ScreenBufferInfo.PopupAttrib      = ConsoleInfo->PopupAttrib;
-    ScreenBufferInfo.IsCursorVisible  = TRUE;
     ScreenBufferInfo.CursorSize       = ConsoleInfo->CursorSize;
+    ScreenBufferInfo.IsCursorVisible  = TRUE;
 
     InitializeListHead(&Console->BufferList);
     Status = ConDrvCreateScreenBuffer(&NewBuffer,

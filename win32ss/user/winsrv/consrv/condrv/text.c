@@ -76,6 +76,12 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     if (Console == NULL || Buffer == NULL || TextModeInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
+    if ((TextModeInfo->ScreenBufferSize.X == 0) ||
+        (TextModeInfo->ScreenBufferSize.Y == 0))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     *Buffer = NULL;
 
     Status = CONSOLE_SCREEN_BUFFER_Initialize((PCONSOLE_SCREEN_BUFFER*)&NewBuffer,
@@ -95,10 +101,16 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewBuffer->ScreenBufferSize = NewBuffer->OldScreenBufferSize
-                                = TextModeInfo->ScreenBufferSize;
-    NewBuffer->ViewSize = NewBuffer->OldViewSize
-                        = Console->ConsoleSize;
+    NewBuffer->ScreenBufferSize = TextModeInfo->ScreenBufferSize;
+    NewBuffer->OldScreenBufferSize = NewBuffer->ScreenBufferSize;
+
+    /*
+     * Set and fix the view size if needed.
+     * The rule is: ScreenBufferSize >= ViewSize (== ConsoleSize)
+     */
+    NewBuffer->ViewSize.X = min(max(TextModeInfo->ViewSize.X, 1), NewBuffer->ScreenBufferSize.X);
+    NewBuffer->ViewSize.Y = min(max(TextModeInfo->ViewSize.Y, 1), NewBuffer->ScreenBufferSize.Y);
+    NewBuffer->OldViewSize = NewBuffer->ViewSize;
 
     NewBuffer->ViewOrigin.X = NewBuffer->ViewOrigin.Y = 0;
     NewBuffer->VirtualY = 0;
@@ -465,15 +477,11 @@ ConioResizeBuffer(PCONSOLE Console,
     ScreenBuffer->ScreenBufferSize = ScreenBuffer->OldScreenBufferSize = Size;
     ScreenBuffer->VirtualY = 0;
 
-    /* Ensure cursor and window are within buffer */
-    if (ScreenBuffer->CursorPosition.X >= Size.X)
-        ScreenBuffer->CursorPosition.X = Size.X - 1;
-    if (ScreenBuffer->CursorPosition.Y >= Size.Y)
-        ScreenBuffer->CursorPosition.Y = Size.Y - 1;
-    if (ScreenBuffer->ViewOrigin.X > Size.X - ScreenBuffer->ViewSize.X)
-        ScreenBuffer->ViewOrigin.X = Size.X - ScreenBuffer->ViewSize.X;
-    if (ScreenBuffer->ViewOrigin.Y > Size.Y - ScreenBuffer->ViewSize.Y)
-        ScreenBuffer->ViewOrigin.Y = Size.Y - ScreenBuffer->ViewSize.Y;
+    /* Ensure the cursor and the view are within the buffer */
+    ScreenBuffer->CursorPosition.X = min(ScreenBuffer->CursorPosition.X, Size.X - 1);
+    ScreenBuffer->CursorPosition.Y = min(ScreenBuffer->CursorPosition.Y, Size.Y - 1);
+    ScreenBuffer->ViewOrigin.X = min(ScreenBuffer->ViewOrigin.X, Size.X - ScreenBuffer->ViewSize.X);
+    ScreenBuffer->ViewOrigin.Y = min(ScreenBuffer->ViewOrigin.Y, Size.Y - ScreenBuffer->ViewSize.Y);
 
     /*
      * Trigger a buffer resize event

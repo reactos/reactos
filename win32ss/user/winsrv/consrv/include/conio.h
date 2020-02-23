@@ -105,8 +105,8 @@ struct _CONSOLE_SCREEN_BUFFER
     HPALETTE PaletteHandle;             /* Handle to the color palette associated to this buffer */
     UINT     PaletteUsage;              /* The new use of the system palette. See SetSystemPaletteUse 'uUsage' parameter */
 
-//  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
-//  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
+//  USHORT   ScreenDefaultAttrib;       /* Default screen char attribute */
+//  USHORT   PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
 };
 
@@ -141,6 +141,7 @@ struct _CONSOLE_SCREEN_BUFFER
 typedef struct _TEXTMODE_BUFFER_INFO
 {
     COORD   ScreenBufferSize;
+    COORD   ViewSize;
     USHORT  ScreenAttrib;
     USHORT  PopupAttrib;
     ULONG   CursorSize;
@@ -153,8 +154,8 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
 
     PCHAR_INFO Buffer;          /* Pointer to UNICODE screen buffer (Buffer->Char.UnicodeChar only is valid, not Char.AsciiChar) */
 
-    WORD ScreenDefaultAttrib;   /* Default screen char attribute */
-    WORD PopupDefaultAttrib;    /* Default popup char attribute */
+    USHORT ScreenDefaultAttrib; /* Default screen char attribute */
+    USHORT PopupDefaultAttrib;  /* Default popup char attribute */
 } TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
 
 

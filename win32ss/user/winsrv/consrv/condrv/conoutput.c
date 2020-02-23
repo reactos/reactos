@@ -82,7 +82,7 @@ ConDrvCreateScreenBuffer(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN ULONG BufferType,
                          IN PVOID ScreenBufferInfo)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     if ( Console == NULL || Buffer == NULL ||
         (BufferType != CONSOLE_TEXTMODE_BUFFER && BufferType != CONSOLE_GRAPHICS_BUFFER) )

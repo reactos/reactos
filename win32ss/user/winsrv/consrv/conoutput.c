@@ -204,6 +204,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     PVOID ScreenBufferInfo = NULL;
     TEXTMODE_BUFFER_INFO TextModeInfo = {{80, 25},
+                                         {80, 25},
                                          DEFAULT_SCREEN_ATTRIB,
                                          DEFAULT_POPUP_ATTRIB ,
                                          TRUE,
@@ -221,28 +222,17 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         ScreenBufferInfo = &TextModeInfo;
 
         /*
-        if (Console->ActiveBuffer)
-        {
-            TextModeInfo.ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
-            if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 80;
-            if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 25;
-
-            TextModeInfo.ScreenAttrib = Console->ActiveBuffer->ScreenBuffer.TextBuffer.ScreenDefaultAttrib;
-            TextModeInfo.PopupAttrib  = Console->ActiveBuffer->ScreenBuffer.TextBuffer.PopupDefaultAttrib;
-
-            TextModeInfo.IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
-            TextModeInfo.CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
-        }
-        */
-
-        /*
-         * This is Windows behaviour.
+         * This is Windows behaviour, as described by MSDN and verified manually:
+         *
+         * The newly created screen buffer will copy some properties from the
+         * active screen buffer at the time that this function is called.
+         * The behavior is as follows:
+         *     Font - copied from active screen buffer.
+         *     Display Window Size - copied from active screen buffer.
+         *     Buffer Size - matched to Display Window Size (NOT copied).
+         *     Default Attributes (colors) - copied from active screen buffer.
+         *     Default Popup Attributes (colors) - copied from active screen buffer.
          */
-
-        /* Use the current console size. Normalize it if needed */
-        TextModeInfo.ScreenBufferSize = Console->ConsoleSize;
-        if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 1;
-        if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 1;
 
         /* If we have an active screen buffer, use its attributes as the new ones */
         if (Console->ActiveBuffer && GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
@@ -252,9 +242,23 @@ CSR_API(SrvCreateConsoleScreenBuffer)
             TextModeInfo.ScreenAttrib = Buffer->ScreenDefaultAttrib;
             TextModeInfo.PopupAttrib  = Buffer->PopupDefaultAttrib;
 
-            TextModeInfo.IsCursorVisible = Buffer->CursorInfo.bVisible;
             TextModeInfo.CursorSize      = Buffer->CursorInfo.dwSize;
+            TextModeInfo.IsCursorVisible = Buffer->CursorInfo.bVisible;
+
+            /* Use the current view size */
+            TextModeInfo.ScreenBufferSize = Buffer->ViewSize;
+            TextModeInfo.ViewSize         = Buffer->ViewSize;
         }
+        else
+        {
+            /* Use the current console size */
+            TextModeInfo.ScreenBufferSize = Console->ConsoleSize;
+            TextModeInfo.ViewSize         = Console->ConsoleSize;
+        }
+
+        /* Normalize the screen buffer size if needed */
+        if (TextModeInfo.ScreenBufferSize.X == 0) TextModeInfo.ScreenBufferSize.X = 1;
+        if (TextModeInfo.ScreenBufferSize.Y == 0) TextModeInfo.ScreenBufferSize.Y = 1;
     }
     else if (CreateScreenBufferRequest->ScreenBufferType == CONSOLE_GRAPHICS_BUFFER)
     {
