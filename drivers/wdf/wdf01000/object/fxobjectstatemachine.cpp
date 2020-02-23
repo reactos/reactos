@@ -1088,3 +1088,64 @@ Return Value:
 
     return result;
 }
+
+VOID
+FxObject::DeleteEarlyDisposedObject(
+    VOID
+    )
+/*++
+
+Routine Description:
+    Deletes an object which has already been explicitly early disposed.
+
+Arguments:
+    None
+
+Return Value:
+    None
+
+  --*/
+{
+    BOOLEAN result;
+
+    ASSERT(m_ObjectFlags & FXOBJECT_FLAGS_EARLY_DISPOSED_EXT);
+    ASSERT(m_ObjectState == FxObjectStateDisposed);
+
+    result = MarkDeleteCalledLocked();
+    ASSERT(result);
+    UNREFERENCED_PARAMETER(result); //for fre build
+
+    if (m_ParentObject != NULL)
+    {
+        NTSTATUS status;
+        KIRQL irql;
+
+        m_SpinLock.Acquire(&irql);
+
+        if (m_ParentObject != NULL)
+        {
+            status = m_ParentObject->RemoveChildObjectInternal(this);
+
+            if (status == STATUS_DELETE_PENDING)
+            {
+                SetObjectStateLocked(FxObjectStateWaitingForParentDeleteAndDisposed);
+                m_SpinLock.Release(irql);
+                return;
+            }
+            else
+            {
+                //
+                // We no longer have a parent object
+                //
+                m_ParentObject = NULL;
+            }
+        }
+
+        m_SpinLock.Release(irql);
+    }
+
+    //
+    // This will release the spinlock
+    //
+    DeletedAndDisposedWorkerLocked(PASSIVE_LEVEL, FALSE);
+}

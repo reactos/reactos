@@ -4,7 +4,7 @@
 #include "common/fxpackage.h"
 
 class FxDefaultIrpHandler : public FxPackage {
-/*public:
+public:
     FxDefaultIrpHandler(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
         __in CfxDevice* Device
@@ -15,7 +15,7 @@ class FxDefaultIrpHandler : public FxPackage {
     NTSTATUS
     Dispatch(
         __in MdIrp Irp
-        );*/
+        );
 };
 
 #endif // _FXDEFAULTIRPHANDLER_H_

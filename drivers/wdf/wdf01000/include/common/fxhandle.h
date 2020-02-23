@@ -159,4 +159,13 @@ FxObjectHandleGetPtrAndGlobals(
     __out PFX_DRIVER_GLOBALS* ObjectGlobals
     );
 
+_Must_inspect_result_
+NTSTATUS
+FxObjectAllocateContext(
+    __in        FxObject*               Object,
+    __in        PWDF_OBJECT_ATTRIBUTES  Attributes,
+    __in        BOOLEAN                 AllowCallbacksOnly,
+    __deref_opt_out PVOID*              Context
+    );
+
 #endif //_FXHANDLE_H_

@@ -4,6 +4,7 @@
 #include "common/fxglobals.h"
 #include "common/dbgtrace.h"
 #include "common/fxverifier.h"
+#include "common/fxvalidatefunctions.h"
 #include <ntintsafe.h>
 
 
@@ -503,3 +504,117 @@ Arguments:
 
     *ObjectGlobals = ((FxObject*) (*PPObject))->GetDriverGlobals();
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxObjectAllocateContext(
+    __in        FxObject*               Object,
+    __in        PWDF_OBJECT_ATTRIBUTES  Attributes,
+    __in        BOOLEAN                 AllowCallbacksOnly,
+    __deref_opt_out PVOID*              Context
+    )
+/*++
+
+Routine Description:
+    Allocates an additional context on the object if it is in the correct state.
+
+Arguments:
+    Object - object on which to add a context
+    Attributes - attributes which describe the type and size of the new context
+    AllowEmptyContext -TRUE to allow logic to allocate the context's header only.
+    Context - optional pointer which will recieve the new context
+
+Return Value:
+    STATUS_SUCCESS upon success, STATUS_OBJECT_NAME_EXISTS if the context type
+    is already attached to the handle, and !NT_SUCCESS on failure
+
+  --*/
+{
+    PFX_DRIVER_GLOBALS  fxDriverGlobals;
+    NTSTATUS            status;
+    FxContextHeader *   header;
+    size_t              size;
+    BOOLEAN             relRef;
+    ULONG               flags;
+
+    fxDriverGlobals = Object->GetDriverGlobals();
+    header = NULL;
+    relRef = FALSE;
+
+    //
+    // Init validation flags.
+    //
+    flags = FX_VALIDATE_OPTION_ATTRIBUTES_REQUIRED;
+    if (fxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,11))
+    {
+        flags |= FX_VALIDATE_OPTION_PARENT_NOT_ALLOWED;
+    }
+    
+    //
+    // Basic validations.
+    //
+    status = FxValidateObjectAttributes(fxDriverGlobals, Attributes, flags); 
+    if (!NT_SUCCESS(status))
+    {
+        goto Done;
+    }
+
+    //
+    // Check for context type!
+    //
+    if (Attributes->ContextTypeInfo == NULL && AllowCallbacksOnly == FALSE)
+    {
+        status = STATUS_OBJECT_NAME_INVALID;
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGHANDLE,
+            "Attributes %p ContextTypeInfo is NULL, %!STATUS!",
+            Attributes, status);
+        goto Done;
+    }
+    
+    Object->ADDREF(&status);
+    relRef = TRUE;
+
+    //
+    // By passing 0's for raw object size and extra size, we can compute the
+    // size of only the header and its contents.
+    //
+    status = FxCalculateObjectTotalSize(fxDriverGlobals, 0, 0, Attributes, &size);
+    if (!NT_SUCCESS(status))
+    {
+        goto Done;
+    }
+
+    header = (FxContextHeader*)
+                FxPoolAllocate(fxDriverGlobals, NonPagedPool, size);
+
+    if (header == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Done;
+    }
+    
+    FxContextHeaderInit(header, Object, Attributes);
+
+    status = Object->AddContext(header, Context, Attributes);
+
+    //
+    // STATUS_OBJECT_NAME_EXISTS will not fail NT_SUCCESS, so check
+    // explicitly for STATUS_SUCCESS.
+    //
+    if (status != STATUS_SUCCESS)
+    {
+        FxPoolFree(header);
+    }
+
+Done:
+    
+    if (relRef)
+    {
+        Object->RELEASE(&status);
+    }
+    
+    return status;
+}
+
+
