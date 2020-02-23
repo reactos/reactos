@@ -37,12 +37,12 @@
 #endif
 
 typedef HRESULT (WINAPI _ATL_CREATORFUNC)(void* pv, REFIID riid, LPVOID* ppv);
-typedef HRESULT (WINAPI _ATL_CREATORARGFUNC)(void* pv, REFIID riid, LPVOID* ppv, DWORD dw);
-typedef HRESULT (WINAPI _ATL_MODULEFUNC)(DWORD dw);
+typedef HRESULT (WINAPI _ATL_CREATORARGFUNC)(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw);
+typedef HRESULT (WINAPI _ATL_MODULEFUNC)(DWORD_PTR dw);
 typedef LPCSTR (WINAPI _ATL_DESCRIPTIONFUNCA)(void);
 typedef LPCWSTR (WINAPI _ATL_DESCRIPTIONFUNCW)(void);
 typedef const struct _ATL_CATMAP_ENTRY* (_ATL_CATMAPFUNC)(void);
-typedef void (WINAPI _ATL_TERMFUNC)(DWORD dw);
+typedef void (WINAPI _ATL_TERMFUNC)(DWORD_PTR dw);
 
 typedef CRITICAL_SECTION CComCriticalSection;
 
@@ -234,7 +234,7 @@ typedef _ATL_MODULEW _ATL_WIN_MODULE;
 typedef struct _ATL_INTMAP_ENTRY_TAG
 {
     const IID* piid;
-    DWORD dw;
+    DWORD_PTR dw;
     _ATL_CREATORARGFUNC* pFunc;
 } _ATL_INTMAP_ENTRY;
 

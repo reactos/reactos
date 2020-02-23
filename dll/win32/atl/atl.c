@@ -217,7 +217,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
 
     while (pEntries[i].pFunc != 0)
     {
-        TRACE("Trying entry %i (%s %i %p)\n",i,debugstr_guid(pEntries[i].piid),
+        TRACE("Trying entry %i (%s %lx %p)\n",i,debugstr_guid(pEntries[i].piid),
               pEntries[i].dw, pEntries[i].pFunc);
 
         if (!pEntries[i].piid || IsEqualGUID(iid,pEntries[i].piid))
