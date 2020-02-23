@@ -890,16 +890,35 @@ NtSetValueKey(IN HANDLE KeyHandle,
     /* Probe and copy the data */
     if ((PreviousMode != KernelMode) && (DataSize != 0))
     {
-        PVOID DataCopy = ExAllocatePoolWithTag(PagedPool, DataSize, TAG_CM);
+        PVOID DataCopy = NULL;
+
+        _SEH2_TRY
+        {
+            ProbeForRead(Data, DataSize, 1);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+
+        DataCopy = ExAllocatePoolWithTag(PagedPool, DataSize, TAG_CM);
         if (!DataCopy)
         {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
         _SEH2_TRY
         {
-            ProbeForRead(Data, DataSize, 1);
             RtlCopyMemory(DataCopy, Data, DataSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -915,6 +934,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
             ObDereferenceObject(KeyObject);
             return Status;
         }
+
         Data = DataCopy;
     }
 
