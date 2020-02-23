@@ -420,6 +420,16 @@ UserDeleteW32Thread(PTHREADINFO pti)
    ExFreePoolWithTag(pti, USERTAG_THREADINFO);
 
    IntDereferenceProcessInfo(ppi);
+
+   {
+      // Find another queue for mouse cursor.
+      MSG msg;
+      msg.message = WM_MOUSEMOVE;
+      msg.wParam = UserGetMouseButtonsState();
+      msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+      msg.pt = gpsi->ptCursor;
+      co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
+   }
 }
 
 NTSTATUS
