@@ -4,7 +4,7 @@
 @ stub RoActivateInstance
 @ stub RoGetActivationFactory
 @ stub RoGetApartmentIdentifier
-@ stub RoInitialize
+# RoInitialize
 @ stub RoRegisterActivationFactories
 @ stub RoRegisterForApartmentShutdown
 @ stub RoRevokeActivationFactories
